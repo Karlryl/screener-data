@@ -1,0 +1,114 @@
+{
+  "schema": "early-detection-fixtures/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "outcomeFree": true,
+  "fixtures": [
+    {
+      "id": "PIT-LATEST-AVAILABLE",
+      "function": "assertKnownAt",
+      "input": {
+        "sourceClass": "issuer_release",
+        "observed_at": "2024-01-02T00:00:00Z",
+        "source_published_at": "2024-01-03T00:00:00Z"
+      },
+      "evaluationAt": "2024-01-03T12:00:00Z",
+      "expected": "2024-01-03T00:00:00.000Z"
+    },
+    {
+      "id": "MATRIX-RESEARCH-WATCH",
+      "function": "classifyCandidate",
+      "input": { "entityId": "ENTITY-1", "listingId": "LISTING-1", "vintageMonth": "2024-01", "vintageCalendar": [{ "vintageMonth": "2023-12", "closeDate": "2023-12-29", "closeAt": "2023-12-29T21:00:00Z", "nextOpenAt": "2024-01-02T14:30:00Z" }, { "vintageMonth": "2024-01", "closeDate": "2024-01-31", "closeAt": "2024-01-31T21:00:00Z", "nextOpenAt": "2024-02-01T14:30:00Z" }], "T": 2, "E": 2, "L": 1, "M": 0, "G": 0, "dataQuality": "accepted", "themeId": "THEME-1", "dimensionEvidence": { "T": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-T"] }, "E": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-E"] }, "L": { "level": 1, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-L"] } }, "signalKnownAt": "2024-01-01T00:00:00Z", "evaluationAt": "2024-01-31T21:00:00Z", "signalAvailableAt": "2024-02-01T14:30:00Z" },
+      "expected": { "state": "RESEARCH_WATCH", "elliottReview": false }
+    },
+    {
+      "id": "MATRIX-PRE-GROWTH",
+      "function": "classifyCandidate",
+      "input": { "entityId": "ENTITY-1", "listingId": "LISTING-1", "vintageMonth": "2024-01", "vintageCalendar": [{ "vintageMonth": "2023-12", "closeDate": "2023-12-29", "closeAt": "2023-12-29T21:00:00Z", "nextOpenAt": "2024-01-02T14:30:00Z" }, { "vintageMonth": "2024-01", "closeDate": "2024-01-31", "closeAt": "2024-01-31T21:00:00Z", "nextOpenAt": "2024-02-01T14:30:00Z" }], "T": 2, "E": 2, "L": 2, "M": 0, "G": 0, "dataQuality": "verified", "themeId": "THEME-1", "dimensionEvidence": { "T": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-T"] }, "E": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-E"] }, "L": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-L"] } }, "signalKnownAt": "2024-01-01T00:00:00Z", "evaluationAt": "2024-01-31T21:00:00Z", "signalAvailableAt": "2024-02-01T14:30:00Z" },
+      "expected": { "state": "PRE_GROWTH_CANDIDATE", "elliottReview": true }
+    },
+    {
+      "id": "MATRIX-MANAGEMENT-CAP",
+      "function": "classifyCandidate",
+      "input": { "entityId": "ENTITY-1", "listingId": "LISTING-1", "vintageMonth": "2024-01", "vintageCalendar": [{ "vintageMonth": "2023-12", "closeDate": "2023-12-29", "closeAt": "2023-12-29T21:00:00Z", "nextOpenAt": "2024-01-02T14:30:00Z" }, { "vintageMonth": "2024-01", "closeDate": "2024-01-31", "closeAt": "2024-01-31T21:00:00Z", "nextOpenAt": "2024-02-01T14:30:00Z" }], "T": 3, "E": 3, "L": 2, "M": 0, "G": 0, "dataQuality": "accepted", "managementOnly": true, "themeId": "THEME-1", "dimensionEvidence": { "T": { "level": 3, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-T"] }, "E": { "level": 3, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-E"] }, "L": { "level": 2, "entityId": "ENTITY-1", "themeId": "THEME-1", "knownAt": "2024-01-01T00:00:00Z", "sourceIds": ["S-L"] } }, "signalKnownAt": "2024-01-01T00:00:00Z", "evaluationAt": "2024-01-31T21:00:00Z", "signalAvailableAt": "2024-02-01T14:30:00Z" },
+      "expected": { "state": "REJECTED_HOLD", "elliottReview": false }
+    },
+    {
+      "id": "AI-FAIL-CLOSED",
+      "function": "aiRemoval",
+      "case": "nineteen_classified_one_unknown",
+      "minimumEvidenceCoverage": 0.95,
+      "expectedBelowMinimum": "NOT_READY"
+    },
+    {
+      "id": "OHLCV-CAPABILITY-GATE",
+      "function": "technicalSnapshot",
+      "inputCapability": "adjusted_close_only",
+      "expectedSqueezeStatus": "NOT_COMPUTABLE_OHLC_REQUIRED"
+    },
+    {
+      "id": "MARKET-RECOGNITION-M2-DERIVED",
+      "function": "deriveMarketRecognition",
+      "case": "raw_pit_bars_126_breakout_in_current_monthly_vintage",
+      "expectedLevel": 2
+    },
+    {
+      "id": "CONFIRMATORY-READINESS-GATE",
+      "function": "evaluateReadiness",
+      "allRequired": true,
+      "expectedWhenAnyMissing": "NOT_READY_TO_EXECUTE"
+    },
+    {
+      "id": "WILSON-70-OF-100-INCONCLUSIVE",
+      "function": "wilsonInterval",
+      "successes": 70,
+      "total": 100,
+      "expectedEstimate": 0.7,
+      "expectedLowerThan": 0.7
+    },
+    {
+      "id": "PRIMARY-THEME-L2-DETERMINISTIC",
+      "function": "selectPrimaryTheme",
+      "entityId": "E1",
+      "signalAvailableAt": "2024-01-31T21:00:00Z",
+      "rows": [
+        { "entityId": "E1", "themeId": "Z", "T": 3, "E": 2, "L": 2, "knownAt": "2024-01-01T00:00:00Z", "evidenceAccepted": true },
+        { "entityId": "E1", "themeId": "A", "T": 3, "E": 2, "L": 2, "knownAt": "2024-01-01T00:00:00Z", "evidenceAccepted": true },
+        { "entityId": "E1", "themeId": "L1", "T": 3, "E": 3, "L": 1, "knownAt": "2023-01-01T00:00:00Z", "evidenceAccepted": true }
+      ],
+      "expectedThemeId": "A"
+    },
+    {
+      "id": "PRIMARY-SIGNAL-FIRST-MONTHLY-TRANSITION",
+      "function": "selectPrimarySignals",
+      "vintageCalendar": [
+        { "vintageMonth": "2024-01", "closeDate": "2024-01-31", "closeAt": "2024-01-31T21:00:00Z", "nextOpenAt": "2024-02-01T14:30:00Z" },
+        { "vintageMonth": "2024-02", "closeDate": "2024-02-29", "closeAt": "2024-02-29T21:00:00Z", "nextOpenAt": "2024-03-01T14:30:00Z" },
+        { "vintageMonth": "2024-03", "closeDate": "2024-03-28", "closeAt": "2024-03-28T20:00:00Z", "nextOpenAt": "2024-04-01T13:30:00Z" }
+      ],
+      "rows": [
+        { "entityId": "E1", "listingId": "L1", "vintageMonth": "2024-01", "state": "RESEARCH_WATCH", "isPrimaryListing": true, "historyCompleteFrom": "2024-01", "evaluationAt": "2024-01-31T21:00:00Z", "signalAvailableAt": "2024-02-01T14:30:00Z" },
+        { "entityId": "E1", "listingId": "L1", "vintageMonth": "2024-02", "state": "PRE_GROWTH_CANDIDATE", "isPrimaryListing": true, "historyCompleteFrom": "2024-01", "evaluationAt": "2024-02-29T21:00:00Z", "signalAvailableAt": "2024-03-01T14:30:00Z" },
+        { "entityId": "E1", "listingId": "L1", "vintageMonth": "2024-03", "state": "MARKET_CONFIRMING", "isPrimaryListing": true, "historyCompleteFrom": "2024-01", "evaluationAt": "2024-03-28T20:00:00Z", "signalAvailableAt": "2024-04-01T13:30:00Z" }
+      ],
+      "expectedCount": 1,
+      "expectedFirstMonth": "2024-02"
+    },
+    {
+      "id": "MATCHING-DETERMINISTIC-TIE-BREAK",
+      "function": "matchControls",
+      "ratio": 5,
+      "signal": { "entityId": "S", "listingId": "LS", "isPrimaryListing": true, "sectorBranch": "TECH", "vintageMonth": "2024-01", "marketRegime": "bull", "marketCapUsd": 1000000000, "listingAgeSessions": 1000, "sectorRelativeReturn126": 0.2, "medianDollarVolume120Usd": 10000000 },
+      "controls": [
+        { "entityId": "B", "listingId": "L2", "isPrimaryListing": true, "sectorBranch": "TECH", "vintageMonth": "2024-01", "marketRegime": "bull", "state": "RESEARCH_WATCH", "neverPrimarySignalled": true, "marketCapUsd": 1000000000, "listingAgeSessions": 1000, "sectorRelativeReturn126": 0.2, "medianDollarVolume120Usd": 10000000 },
+        { "entityId": "A", "listingId": "L1", "isPrimaryListing": true, "sectorBranch": "TECH", "vintageMonth": "2024-01", "marketRegime": "bull", "state": "RESEARCH_WATCH", "neverPrimarySignalled": true, "marketCapUsd": 1000000000, "listingAgeSessions": 1000, "sectorRelativeReturn126": 0.2, "medianDollarVolume120Usd": 10000000 }
+      ],
+      "expectedEntityOrder": ["A", "B"]
+    },
+    {
+      "id": "HFEM-SUBSTANTIVE-FAIL-REJECTS-AUTOMATION",
+      "function": "evaluateHFem",
+      "gates": { "minimumMatureEvents": true, "minimumUniquePrimarySignals": true, "minimumFuturePositivesPerArm": true, "readinessComplete": true, "primaryBootstrapComputable": true, "technicalIncrementalityComputable": true, "nonAiEvidenceReady": true, "nonAiMinimumSample": true, "precisionLift": false, "precisionInterval": true, "medianLead": true, "preBreakoutDifference": true, "preBreakoutInterval": true, "unmatchedRate": true, "themeConcentration": true, "microcapConcentration": true, "marketRegimeConcentration": true, "nonAiRobustness": true, "technicalLogLossGain": true, "technicalLogLossInterval": true },
+      "expectedStatus": "AUTOMATION_REJECTED"
+    }
+  ]
+}

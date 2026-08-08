@@ -1,0 +1,26 @@
+{
+  "schema": "early-detection-hash-manifest/v1.2",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "parentProtocol": "FEM-SEC-US@1.1.0",
+  "parentStatus": "UNSEALED_REVIEW_REJECTED",
+  "lastSealedAncestor": "FEM-SEC-US@1.0.0",
+  "lastSealedAncestorManifestSha256": "bccdb61fa9ba73ee578049e9a4069a9db106bf90270d2b0fc6f167227c7cec42",
+  "sealedAt": "2026-08-08T16:18:19.354Z",
+  "algorithm": "SHA-256 over exact file bytes; manifest excludes itself",
+  "files": {
+    "lib/early-detection.js": "54bd56cf0356bbe1a97f6ff6d8b8559c2d3b721e1216d0f7b774e916da612017",
+    "protocol/early-detection/1.2.0/README.md": "4f829f6cc854d86f9cc49b6779ba85707d2a910a9c5507376a05cd9bb7c07de1",
+    "protocol/early-detection/1.2.0/confirmatory-runtime-lock.json": "e35a4c341de81d0b662a9265b1adc4f5a06f3fa2a8fbed520af72af4d4bb8871",
+    "protocol/early-detection/1.2.0/execution-gate-artifact-template.json": "996afef297cc2adc1e2d808e2fad4f0dcba46d6bcb6579450d3933a927419c20",
+    "protocol/early-detection/1.2.0/execution-gate-evidence-template.json": "fceb91502faaf1e76891ab776f8910c4865219b7e115cb2039609fd32b12b106",
+    "protocol/early-detection/1.2.0/CONFIRMATORY_RUNBOOK.md": "36ea8ef4de0f682505f91e768f14e590d231dae35df5180ae69901dde7d5e17f",
+    "protocol/early-detection/1.2.0/fixtures.json": "1435f02bb343830a2a4ae116c6eb15f58aae4ce18ee22b43abec3142aaf4b614",
+    "protocol/early-detection/1.2.0/preregistration.json": "894caf1c5ba0a65a17d1f252c62514dcf169168de14d78834e38811712d1e18f",
+    "protocol/early-detection/1.2.0/readiness-and-blockers.md": "ef14d73a404c8618c9f08643a2fa74f0ee162316adb0e83de0ed592078708ba9",
+    "protocol/early-detection/1.2.0/preseal-outcome-access-declaration.json": "bb383dd97ddc25de8f46ed3928b2b3e1db5a23283a8363598372fb30c4ad5240",
+    "scripts/early-detection-audit.js": "cebd5c19cc167a89ab054bf21f76bb86c84836249aa568df20c9bd191770f030",
+    "scripts/early-detection-confirmatory.py": "f20a107653709e2c9c45b937338faffd8d16b76e8d908e7a604b2340551e8aab",
+    "tests/early-detection-confirmatory.test.js": "49acc074a67315c19df36883f689b0c37cff7dd9cb12fdde817db8b7d1d8a220",
+    "tests/early-detection.test.js": "732cf9165492846a775496cc011585af3bdd2c5a45cc6b98124ab86a23b32e7b"
+  }
+}

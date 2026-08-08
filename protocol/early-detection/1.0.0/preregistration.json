@@ -1,0 +1,356 @@
+{
+  "schema": "early-detection-preregistration/v1",
+  "identity": {
+    "protocolId": "FEM-SEC-US",
+    "version": "1.0.0",
+    "status": "preregistered_not_executed",
+    "frozenAt": "2026-08-08T00:00:00+02:00",
+    "baseline": "GQS-00@1.0.0",
+    "productiveIntegration": "prohibited",
+    "relationshipToGes": "Separate experiment. GES-SEC-US-PILOT@1.0.0 remains unchanged and must not be reinterpreted by this protocol."
+  },
+  "researchQuestion": "Can a strictly point-in-time early-detection matrix identify durable growth companies at least two published quarters before first GQS qualification and, in a meaningful share of cases, before the primary price breakout?",
+  "currentVerdict": "OPEN_UNTIL_POINT_IN_TIME_TEST",
+  "systemBoundary": {
+    "gqsRole": "late fundamental growth-and-quality confirmation",
+    "matrixRole": "research prioritisation and handoff candidate generation",
+    "elliottRole": "separate valuation and timing review",
+    "neverProduced": [
+      "buy signal",
+      "fair value",
+      "price target",
+      "Elliott-wave count",
+      "guaranteed future theme"
+    ],
+    "scorePolicy": "No composite pseudo-precision score. Preserve dimensions and evidence quality separately."
+  },
+  "fiveClocks": {
+    "theme": "first public evidence that the technical, economic or regulatory development is becoming feasible or adopted",
+    "beneficiary": "first evidence that the specific company can capture material economic value",
+    "operations": "first evidence from orders, capacity, customers, backlog, product launch, investment or comparable operating facts",
+    "market": "first relative-strength, volume, industry-momentum or objective breakout event",
+    "fundamental": "first published growth/quality evidence and first GQS qualification"
+  },
+  "outcomes": {
+    "primaryGrowthBreakout": {
+      "sectorPercentileMinimum": 80,
+      "accelerationVsPriorFourQuarterMedianMinimum": 0.05,
+      "positiveGrowthQuartersRequiredOfNextFour": 3,
+      "growthMeasure": "point-in-time year-over-year revenue growth",
+      "eventDate": "first public availability timestamp of the qualifying quarter",
+      "maturityDate": "availability timestamp of q+4; q+1 through q+4 are outcome labels only and never signal inputs",
+      "denominatorRule": "growth_q = revenue_q / revenue_q-4 - 1 only when the as-filed prior-year denominator is positive"
+    },
+    "strictSecondaryGrowthBreakout": {
+      "absoluteRevenueGrowthMinimum": 0.25,
+      "otherPrimaryConditionsStillRequired": true
+    },
+    "durability": {
+      "minimumQuarters": 4,
+      "grossProfitOrSectorEconomicMeasureMustGrow": true,
+      "acquisitionOnlyGrowthRejected": true,
+      "economicallyDestructiveDilutionOrFinancingFlagged": true,
+      "plausibleValueCaptureMechanismRequired": true
+    },
+    "primaryPriceBreakout": {
+      "definition": "close_t > max(close_t-252 through close_t-1), with no other 252-session breakout in t-63 through t-1",
+      "secondaryLookbackSessions": 126,
+      "minimumCompletedSessions": 315,
+      "youngListingPolicy": "separately right-censored; never treated as no-breakout",
+      "signalAvailability": "next eligible market open after the qualifying close",
+      "priceSeries": "point-in-time split/dividend-adjusted closing history; later corporate actions must not rewrite historical feature values"
+    }
+  },
+  "technicalFeatures": {
+    "purpose": "information processing and market confirmation, never standalone investability",
+    "features": [
+      "63-session and 126-session total-return spread versus the historical sector benchmark and broad market",
+      "50-session and 200-session simple moving averages",
+      "MACD 12/26/9 with exponential moving averages seeded by the first simple average",
+      "Wilder RSI 14 with the original 14-change seed and recursive Wilder smoothing",
+      "current volume versus the median of the prior 120 completed sessions, excluding the current session",
+      "volatility compression",
+      "Bollinger 20/2 inside Keltner 20/1.5 using true range, with 20-session linear-regression endpoint of close minus the mean of Donchian midpoint and SMA",
+      "126-session and 252-session closing breakouts"
+    ],
+    "candidateStateRules": {
+      "M1": "positive 63-session and 126-session return spread versus the historical sector benchmark, with both benchmarks known at the close",
+      "M2": "126-session closing breakout after a 63-session quiet period",
+      "M3": "252-session closing breakout after a 63-session quiet period and positive 126-session sector-relative return"
+    },
+    "exploratoryOnly": ["MACD 12/26/9", "RSI 14", "volume anomaly", "volatility compression", "squeeze momentum"],
+    "exploratoryFamilyRule": "Exploratory indicators cannot set a candidate state. Any later confirmatory use requires a new sealed multiple-testing family.",
+    "historicalLowProhibition": "Historical lows may be described after the fact but never used as contemporaneous input.",
+    "missingOhlcvRule": "Squeeze and volume analyses are NOT_COMPUTABLE, not zero and not inferred from adjusted close."
+  },
+  "matrix": {
+    "dimensions": {
+      "T": {
+        "name": "theme_maturity",
+        "levels": {
+          "0": "speculation",
+          "1": "technical feasibility or scientific breakthrough",
+          "2": "observable investment, orders, regulation or commercial introduction",
+          "3": "accelerating real adoption with measurable bottlenecks or demand"
+        }
+      },
+      "E": {
+        "name": "beneficiary_evidence",
+        "levels": {
+          "0": "narrative mention only",
+          "1": "indirect or replaceable participation",
+          "2": "documented product, customer, order or necessary infrastructure",
+          "3": "material exposure, bottleneck, pricing power or hard-to-replace value capture"
+        },
+        "valueChainRoles": ["bottleneck_supplier", "infrastructure_supplier", "operator", "application_company", "narrative_only"]
+      },
+      "L": {
+        "name": "operational_leads",
+        "levels": {
+          "0": "no reliable signal",
+          "1": "one weak signal",
+          "2": "at least two independent signals",
+          "3": "repeated filing evidence or filing evidence plus independent external evidence"
+        },
+        "managementStatementsAloneMaximum": 1
+      },
+      "M": {
+        "name": "market_recognition",
+        "levels": {
+          "0": "no confirmation",
+          "1": "rising relative strength without breakout",
+          "2": "126-session breakout or confirmed volume/industry move",
+          "3": "252-session breakout with persistent relative strength"
+        }
+      },
+      "G": {
+        "name": "gqs_confirmation",
+        "levels": {
+          "0": "not qualified",
+          "1": "first qualification",
+          "2": "repeated or high qualification"
+        }
+      }
+    },
+    "states": {
+      "RESEARCH_WATCH": "T>=2 and E>=2 and L>=1",
+      "PRE_GROWTH_CANDIDATE": "T>=2 and E>=2 and L>=2 before outcome visibility",
+      "MARKET_CONFIRMING": "PRE_GROWTH_CANDIDATE plus M>=2",
+      "GQS_CONFIRMED": "G>=1; primary definition is first as-of monthly vintage in the unchanged sector branch's historical top decile of the eligible cohort; board entry and top-200 are secondary variants",
+      "ELLIOTT_REVIEW": "T>=2 and E>=2 and L>=2 with accepted data quality; independent of G and M",
+      "REJECTED_HOLD": "contradicted, narrative only, insufficient value capture or unacceptable data"
+    }
+  },
+  "operationalSignals": [
+    "backlog, RPO, bookings and order intake",
+    "important-customer count and concentration",
+    "capacity expansion and investment commitments",
+    "new production lines and commercial product launches",
+    "customer-supplier links",
+    "R&D efficiency, patents and scientific activity",
+    "government contracts, grants and regulatory clearances",
+    "segment margins and demand disclosures",
+    "insider and capital-allocation decisions when point-in-time available"
+  ],
+  "studyArms": {
+    "A_gqs_timing": "Growth event, price breakout, first GQS qualification and matrix signal for all reconstructable US entities.",
+    "B_technical_null": "Only price, volume and industry data may predict future growth breakout; no themes or later company data.",
+    "C_incremental_matrix": [
+      "GQS only",
+      "technical only",
+      "theme plus beneficiary",
+      "theme plus beneficiary plus operations",
+      "full matrix",
+      "full matrix without technical features"
+    ],
+    "D_ai_removal": [
+      "remove direct AI businesses",
+      "remove direct and necessary AI infrastructure",
+      "remove every plausibly material direct, infrastructure or indirect AI dependency"
+    ],
+    "E_two_year_stress": [
+      "AI capital-expenditure acceleration",
+      "data-centre investment plateau",
+      "overcapacity and price decline among AI suppliers",
+      "value migration from hardware to applications",
+      "energy or grid bottleneck",
+      "export controls or regulation",
+      "recession and higher financing costs",
+      "rotation from technology to other growth areas"
+    ]
+  },
+  "aiRemoval": {
+    "classes": ["direct", "infrastructure", "indirect", "narrative", "independent", "unknown"],
+    "minimumEvidenceCoverage": 0.95,
+    "materialityRule": "Material requires sourced revenue, backlog or capex exposure, or a documented necessary product function. Narrative mention is not material.",
+    "unclassifiedPolicy": "fail closed for the primary result; report sensitivity bounds with unknowns once included and once removed",
+    "robustnessThreshold": "Non-AI precision divided by total-universe precision is at least 0.80, while recall, signal count, base rate and 95 percent interval are reported, and no single replacement theme supplies more than 50 percent of remaining true positives."
+  },
+  "historicalTimeCapsules": {
+    "successAndMixed": [
+      "cloud computing",
+      "smartphones and mobile ecosystems",
+      "semiconductors and AI infrastructure",
+      "solar and batteries",
+      "shale gas and LNG",
+      "cybersecurity",
+      "GLP-1",
+      "industrial automation"
+    ],
+    "failuresOrLongDelays": [
+      "3D printing",
+      "metaverse",
+      "hydrogen mobility",
+      "cannabis",
+      "autonomous driving",
+      "earlier cleantech waves",
+      "selected genomics and biotechnology hype"
+    ],
+    "epistemicStatus": "Pseudo-prospective historical reconstruction, never fully blind. Claims are limited to the earliest evidence found in the frozen corpus, not the earliest evidence that existed in the world.",
+    "samplingRule": "Cases are drawn from a frozen theme-era population including winners, failures and matched controls; companies cannot be selected individually after outcomes are viewed.",
+    "requiredQuestions": [
+      "problem recognition",
+      "technical feasibility",
+      "commercial demand",
+      "winning value-chain layer",
+      "then-identifiable listed beneficiaries",
+      "operational leading indicators",
+      "price movement",
+      "GQS timing",
+      "failed apparent beneficiaries",
+      "rule that separates successes without hindsight"
+    ]
+  },
+  "futureThemeUniverse": [
+    "AI applications and productivity diffusion",
+    "edge and inference infrastructure",
+    "advanced packaging, HBM, chiplets and silicon photonics",
+    "grids, HVDC, power semiconductors and cooling",
+    "nuclear energy, fuel cycle and geothermal",
+    "long-duration storage and flexible electricity demand",
+    "robotics and industrial autonomy",
+    "defence autonomy and electronic warfare",
+    "post-quantum cryptography, quantum sensing and quantum computing",
+    "programmable biology and biomanufacturing",
+    "AI-assisted drug discovery",
+    "water, climate and recycling infrastructure",
+    "critical minerals",
+    "space infrastructure",
+    "reindustrialisation and autonomous laboratories"
+  ],
+  "themeEvidenceLevels": {
+    "A": "real-economy confirmed with early diffusion",
+    "B": "high entry probability with unresolved winners",
+    "C": "technically plausible but economically early",
+    "D": "predominantly speculative",
+    "E": "falsified or currently not investable"
+  },
+  "dataContract": {
+    "primaryFundamentals": "SEC as-filed filings and accession metadata",
+    "knownAt": "max(observed_at, source_published_at, filed_at) <= evaluation_at",
+    "requiredEntityFields": [
+      "entity_id", "CIK", "effective ticker", "listing_id", "security_id", "exchange", "effective dates",
+      "filing period", "acceptance timestamp", "publication timestamp", "availability timestamp",
+      "original value", "unit", "taxonomy concept", "later revisions", "source URL and locator",
+      "listing, acquisition, bankruptcy and delisting status", "corporate actions"
+    ],
+    "prices": "historically adjusted OHLCV with action provenance and delisting treatment",
+    "survivorship": "dead, acquired, bankrupt and delisted entities must remain in the historical universe",
+    "researchSourceStore": "append-only payload store with source-class-specific availability rule, content hash, immutable snapshot and frozen search corpus",
+    "claimFields": [
+      "claim_id", "claim_type", "claim_text", "source_id", "published_at", "known_at", "locator",
+      "evidence_quality", "counterevidence", "version_status"
+    ]
+  },
+  "splits": {
+    "development": "2009-01-01/2016-12-31",
+    "validationAndOneRuleCorrection": "2017-01-01/2020-12-31",
+    "lockedOutOfSample": "2021-01-01/2024-12-31",
+    "forwardObservationNoFinalScore": "2025-01-01/2026-12-31",
+    "correctionLimit": 1,
+    "testOutcomeAccessBeforeSeal": "prohibited",
+    "outcomeLock": "After any 2021-2024 outcome is opened, no rule change may retain confirmatory status. Any change starts a new protocol and future test window.",
+    "manualThemeConfirmation": "Independent confirmation of manually coded theme evidence remains prospective from protocol freeze. Historical coding is pseudo-prospective validation only."
+  },
+  "qualitativeCoding": {
+    "requiredFields": ["as_of", "source_id", "exact_locator", "published_at", "retrieved_at", "evidence_class", "counterevidence", "coder_id", "version"],
+    "blinding": "Coders receive only sources available by the cutoff and cannot see later sources, price paths, GQS dates or outcome labels.",
+    "doubleCoding": true,
+    "agreementGate": {
+      "weightedCohenKappaMinimumPerDimension": 0.70,
+      "exactAgreementMinimum": 0.80,
+      "failureAction": "Revise rules in development window only; do not open locked outcomes."
+    },
+    "equalResearchBudget": "Same source classes, query protocol and time budget for winners, failures and matched controls.",
+    "llmRestriction": "LLM-generated labels are never treated as blinded independent coding because the model may contain later knowledge."
+  },
+  "primarySuccessCriteria": {
+    "precisionLiftVsSectorSizeTimeBaselineMinimum": 1.5,
+    "precisionLift95PercentIntervalLowerBoundMinimum": 1.0,
+    "medianLeadVsFirstGqsPublishedQuartersMinimum": 2,
+    "leadDefinition": "at least two eligible 10-Q/10-K publication events after the matrix signal and before first GQS confirmation; also report calendar and trading-session distance",
+    "prePriceBreakoutImprovement": "statistically and economically superior to matched controls",
+    "concentrationLimits": [
+      "not solely AI-dependent",
+      "not solely micro-cap-dependent",
+      "not solely one market-regime-dependent"
+    ],
+    "technicalIncrementality": "technical data must add information after theme, beneficiary and operational evidence"
+  },
+  "failureRules": {
+    "hLate": "GQS first qualifies after the primary price breakout in at least 70 percent of mature durable-growth cases. This hypothesis is independent of matrix performance.",
+    "hFem": "FEM satisfies every primary matrix success criterion. This hypothesis is independent of whether GQS is late.",
+    "technicalGrowthDetectionRejectedIf": "technical-only arm fails matched growth-outcome baselines or loses significance after multiple-testing control.",
+    "automationRejectedIf": "full matrix fails any primary success criterion in the locked out-of-sample window.",
+    "fallback": "Keep GQS unchanged and operate early detection as manual, evidence-graded theme research."
+  },
+  "statistics": {
+    "unit": "historical entity-event",
+    "leadTime": "published quarters and trading sessions using availability timestamps",
+    "controls": ["historical sector", "size", "age", "liquidity", "market regime", "momentum"],
+    "baselines": ["random eligible", "sector matched", "size matched", "momentum matched"],
+    "primaryMeasures": ["precision", "recall", "base-rate lift", "signal count", "lead time", "pre-breakout share"],
+    "uncertainty": "entity-clustered confidence intervals and block-bootstrap sensitivity",
+    "multipleTesting": "false-discovery-rate correction across secondary specifications",
+    "missingness": "reported as missing; no zero fill and no future-derived imputation",
+    "ablationRequired": true
+  },
+  "premortem": [
+    "price leads every measurable public signal",
+    "correct theme but wrong beneficiaries",
+    "value captured by private firms or customers",
+    "bottleneck becomes commodity",
+    "management language mistaken for demand",
+    "modern vocabulary back-projected into old sources",
+    "survivorship bias",
+    "revised fundamentals leak backward",
+    "indicator specification mining",
+    "AI-era-only result",
+    "matrix merely rediscovers momentum",
+    "real growth already fully repriced",
+    "research priority misread as recommendation",
+    "paid data becomes hidden dependency",
+    "study becomes untestably broad"
+  ],
+  "executionGates": [
+    "protocolSealed",
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "independentAuditPassed",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "publicationGate": {
+    "centralClaimsSourced": true,
+    "tablesAndFiguresSourced": true,
+    "counterevidenceRecorded": true,
+    "wordFootnotesPreservedInPdf": true,
+    "unsourcedFactualClaimBlocksRelease": true
+  }
+}

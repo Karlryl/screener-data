@@ -1,0 +1,15 @@
+{
+  "schema": "early-detection-execution-gate-artifact/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "gate": null,
+  "status": "RED",
+  "confirmatoryInputFileSha256": null,
+  "componentSha256": {},
+  "researchCorpusSha256": null,
+  "verificationMethod": null,
+  "verifiedAt": null,
+  "evidence": [
+    { "evidenceId": null, "artifactPath": null, "sha256": null, "verifiedAt": null }
+  ],
+  "rule": "Create one run-specific artifact per gate outside this immutable directory. PASS requires the exact gate name, exact full-input hash, the complete gate-specific component hash set declared by the runner, a nonempty reproducible verification method, verifiedAt no later than authorization, and at least one unique evidence record with id/path/hash/time. The runner loads every evidence path from the same reachable remote commit, applies the path-traversal guard and recomputes its hash. Only researchCorpusSealed carries and attests the separate external researchCorpusSha256; the hash of this gate-attestation JSON remains an independent authenticity hash and never equals the corpus identity by rule."
+}

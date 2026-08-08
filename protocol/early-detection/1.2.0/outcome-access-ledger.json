@@ -1,0 +1,12 @@
+{
+  "schema": "early-detection-outcome-access-ledger/v2",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "lastSealedAncestor": "FEM-SEC-US@1.0.0",
+  "confirmatoryWindows": [
+    "2021-01-01/2024-12-31"
+  ],
+  "initialStatus": "NO_CONFIRMATORY_OUTCOME_ACCESS",
+  "events": [],
+  "chainAlgorithm": "For event n, eventHash = SHA-256 of canonical JSON containing previousHash and every event field except eventHash. previousHash for the first event is the liveLedgerInitialSha256 in the sealed declaration.",
+  "rule": "This file is append-only and intentionally excluded from the immutable protocol manifest. Any access to confirmatory labels or aggregate results must be appended and externally checkpointed before access. A confirmatory_execution_authorized event must bind runId, exact input-file SHA-256, gate-evidence-file SHA-256, research-corpus SHA-256, analysis cutoff and the remote protocol-manifest SHA-256 before the runner may read the input. Existing events may never be edited or removed; a nonempty ledger without a matching external event-count:tail-hash checkpoint fails verification."
+}

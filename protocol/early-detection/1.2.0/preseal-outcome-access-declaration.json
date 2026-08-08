@@ -1,0 +1,13 @@
+{
+  "schema": "early-detection-preseal-outcome-access/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "lastSealedAncestor": "FEM-SEC-US@1.0.0",
+  "confirmatoryWindows": [
+    "2021-01-01/2024-12-31"
+  ],
+  "status": "NO_CONFIRMATORY_OUTCOME_ACCESS",
+  "events": [],
+  "liveLedgerPath": "protocol/early-detection/1.2.0/outcome-access-ledger.json",
+  "liveLedgerInitialSha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
+  "rule": "This sealed declaration is immutable. The live ledger starts empty and is intentionally outside the protocol manifest. Every later access must be appended before access as a hash-chained event and the exact event-count, tail hash and ledger-file hash must be committed and pushed to the protected origin/main checkpoint before outcome access. A confirmatory run event additionally binds the exact input, gate-evidence, research-corpus and protocol-manifest hashes, run id and cutoff. Every post-seal verification compares local manifest files, ledger and checkpoint with origin/main; rollback therefore fails after any later checkpoint. Any later rule change loses confirmatory status and requires a new protocol and future test window."
+}

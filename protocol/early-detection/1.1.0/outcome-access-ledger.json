@@ -1,0 +1,11 @@
+{
+  "schema": "early-detection-outcome-access-ledger/v1",
+  "protocol": "FEM-SEC-US@1.1.0",
+  "parentProtocol": "FEM-SEC-US@1.0.0",
+  "confirmatoryWindows": [
+    "2021-01-01/2024-12-31"
+  ],
+  "status": "NO_CONFIRMATORY_OUTCOME_ACCESS",
+  "events": [],
+  "rule": "Any access to confirmatory labels or aggregate results must be appended before access. Any later rule change loses confirmatory status and requires a new protocol and future test window."
+}

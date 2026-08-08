@@ -1,0 +1,437 @@
+{
+  "schema": "early-detection-preregistration/v1.2",
+  "identity": {
+    "protocolId": "FEM-SEC-US",
+    "version": "1.2.0",
+    "status": "preregistered",
+    "frozenAt": "2026-08-08T16:17:00.000Z",
+    "parentProtocol": "FEM-SEC-US@1.1.0",
+    "parentStatus": "UNSEALED_REVIEW_REJECTED",
+    "lastSealedAncestor": "FEM-SEC-US@1.0.0",
+    "lastSealedAncestorManifestSha256": "bccdb61fa9ba73ee578049e9a4069a9db106bf90270d2b0fc6f167227c7cec42",
+    "baseline": "GQS-00@1.0.0",
+    "productiveIntegration": "prohibited",
+    "relationshipToGes": "Separate experiment. GES-SEC-US-PILOT@1.0.0 remains unchanged and must not be reinterpreted by this protocol."
+  },
+  "researchQuestion": "Can a strictly point-in-time early-detection matrix identify durable growth companies at least two published quarters before first GQS qualification and, in a meaningful share of cases, before the primary price breakout?",
+  "currentVerdict": "OPEN_UNTIL_POINT_IN_TIME_TEST",
+  "systemBoundary": {
+    "gqsRole": "current fundamental growth-and-quality confirmation baseline; its historical timing is an open hypothesis",
+    "matrixRole": "research prioritisation and handoff candidate generation",
+    "elliottRole": "separate valuation and timing review",
+    "neverProduced": [
+      "buy signal",
+      "fair value",
+      "price target",
+      "Elliott-wave count",
+      "guaranteed future theme"
+    ],
+    "scorePolicy": "No composite pseudo-precision score. Preserve dimensions and evidence quality separately."
+  },
+  "fiveClocks": {
+    "theme": "first public evidence that the technical, economic or regulatory development is becoming feasible or adopted",
+    "beneficiary": "first evidence that the specific company can capture material economic value",
+    "operations": "first evidence from orders, capacity, customers, backlog, product launch, investment or comparable operating facts",
+    "market": "first relative-strength, volume, industry-momentum or objective breakout event",
+    "fundamental": "first published growth/quality evidence and first GQS qualification"
+  },
+  "outcomes": {
+    "primaryGrowthBreakout": {
+      "sectorPercentileMinimum": 80,
+      "accelerationVsPriorFourQuarterMedianMinimum": 0.05,
+      "positiveGrowthQuartersRequiredOfNextFour": 3,
+      "growthMeasure": "point-in-time year-over-year revenue growth",
+      "requiredQuarterKey": "entity_id plus fiscal_year plus fiscal_quarter; array position and compressed available-row order are prohibited",
+      "continuityRule": "q-4, each of the four prior YoY observations, and q+1 through q+4 must be exact consecutive fiscal quarters; any missing required period makes the event NOT_COMPUTABLE",
+      "periodEnd": "descriptive fiscal period end only; it is never an availability timestamp",
+      "eventAvailableAt": "maximum exact timezone-qualified timestamp across the q filing contract, the sector-percentile computation inputs and the blinded value-capture adjudication; eventAt equals eventAvailableAt and can never equal periodEnd",
+      "maturityDate": "maximum source-class availability timestamp required to evaluate q+1 through q+4; q+1 through q+4 are outcome labels only and never signal inputs",
+      "denominatorRule": "growth_q = revenue_q / revenue_q-4 - 1 only when the as-filed prior-year denominator is positive",
+      "eventMultiplicityPrimary": "the qualifying q with the smallest fiscal sequence per entity only; duplicate entity/fiscal-quarter rows are prohibited. eventAvailableAt orders availability reporting but never changes which fiscal q is primary",
+      "eventMultiplicitySecondary": "a later event is counted only after at least 12 fiscal quarters from the prior counted event; uncertainty remains entity-clustered",
+      "sectorPercentileCutoff": "Fixed before cohort construction: the close of the first primary calendar-month vintage on or after the entity q filing knownAt. The percentile is computed once from facts available by that close and becomes available at the next eligible market open. The later eventAvailableAt cannot feed back into cohort selection.",
+      "sectorPercentileUniverse": "At the fixed sectorPercentileCutoff: domestic 10-Q/10-K operating issuers with an effective primary common-equity listing on NYSE, Nasdaq or NYSE American, including later delisted issuers; exclude funds, pre-merger SPACs, ADRs, foreign private issuers and OTC securities. The cohort uses the same frozen GQS sector branch, comparable fiscal period ends within plus/minus 45 days, exact q-4 availability and growth inputs known by the fixed cutoff; fewer than 20 peers is NOT_COMPUTABLE.",
+      "sectorPercentileFormula": "empirical midrank = 100 * (count growth below entity growth + 0.5 * count growth equal to entity growth) / cohort N; threshold is >=80 and equality is evaluated on the stored full-precision growth value"
+    },
+    "strictSecondaryGrowthBreakout": {
+      "absoluteRevenueGrowthMinimum": 0.25,
+      "otherPrimaryConditionsStillRequired": true
+    },
+    "contemporaneousGrowthVisibility": {
+      "ruleVersion": "FEM_VISIBLE_GROWTH_V1",
+      "purpose": "Live as-of gate only; it is not the durable outcome and never uses q+1 through q+4.",
+      "requiredHistory": "For primary classification, scan every q for the entity with exact consecutive fiscal quarters q-8 through q and q filing availability no later than evaluationAt. Callers cannot choose a target quarter. Once any assessed q is visible, visible remains true for all later primary vintages.",
+      "formula": "For q and q-1 through q-4, YoY growth uses each exact q-4 denominator. visible=true only when q sector midrank percentile is >=80 and q YoY growth minus the median YoY growth of q-1 through q-4 is >=0.05.",
+      "availability": "For every q whose filing is available by evaluationAt and has a complete nine-quarter window, the fixed-cutoff sector percentile must also be available. knownAt is the maximum required SEC filing and percentile availability across all assessed q and must be <= evaluationAt. A pending/missing percentile, nonpositive denominator, missing required timestamp, or no complete assessable window produces NOT_COMPUTABLE and cannot create a Pre-Growth Candidate.",
+      "implementationContract": "classifyCandidate accepts the raw as-filed quarter rows and internally calls the sealed growthVisibilityAt implementation. Caller-supplied visibility booleans, objects or hashes are ignored and cannot set a state. The derived result carries matching entityId/evaluationAt, exact knownAt and a canonical input fingerprint."
+    },
+    "durability": {
+      "minimumQuarters": 4,
+      "economicMeasureRule": "one frozen sector-appropriate measure named before outcome access; positive year-over-year growth in at least three of q+1 through q+4",
+      "perShareRule": "revenue per diluted weighted-average share has positive year-over-year growth in at least three of q+1 through q+4",
+      "acquisitionRule": "reported or adjudicated acquisition revenue contribution must be at most 50 percent in q through q+4. Every quarter carries acquisitionContributionKnownAt plus a source-class availability record, and the declared timestamp must equal that record's latest availability. eventAvailableAt includes q acquisition availability; maturityAt is the maximum of q event inputs and every q+1 through q+4 filing plus acquisition availability. Missing, source-less or timestamp-mismatched contribution makes the event NOT_COMPUTABLE.",
+      "valueCaptureRule": "a blinded, sourced value-capture mechanism must be accepted at q; missing or rejected evidence makes the event NOT_COMPUTABLE",
+      "financingRule": "the per-share rule is the primary dilution guard; financing dependence remains a reported secondary flag and cannot rescue a failed event"
+    },
+    "primaryPriceBreakout": {
+      "definition": "close_t > max(close_t-252 through close_t-1), with no other 252-session breakout in t-63 through t-1",
+      "secondaryLookbackSessions": 126,
+      "minimumCompletedSessions": 315,
+      "firstEligibleZeroBasedIndex": "lookback + quietSessions: 315 for the 252-session primary and 189 for the 126-session secondary",
+      "youngListingPolicy": "separately right-censored; never treated as no-breakout",
+      "signalAvailability": "next eligible market open after the qualifying close",
+      "priceSeries": "point-in-time split/dividend-adjusted closing history; later corporate actions must not rewrite historical feature values"
+    }
+  },
+  "technicalFeatures": {
+    "purpose": "information processing and market confirmation, never standalone investability",
+    "features": [
+      "63-session and 126-session total-return spread versus the historical sector benchmark and broad market",
+      "50-session and 200-session simple moving averages",
+      "MACD 12/26/9 with exponential moving averages seeded by the first simple average",
+      "Wilder RSI 14 with the original 14-change seed and recursive Wilder smoothing",
+      "current volume versus the median of the prior 120 completed sessions, excluding the current session",
+      "volatility compression",
+      "Bollinger 20/2 inside Keltner 20/1.5 using true range, with 20-session linear-regression endpoint of close minus the mean of Donchian midpoint and SMA",
+      "126-session and 252-session closing breakouts"
+    ],
+    "candidateStateRules": {
+      "M1": "positive 63-session and 126-session total-return spread versus both the historical sector benchmark and the broad-market benchmark; all four spreads must be positive and known at the close",
+      "M2": "126-session closing breakout after a 63-session inclusive quiet window, with breakout close after the previous monthly-vintage close and no later than the current vintage close; volume and industry movement cannot set M2",
+      "M3": "252-session closing breakout after a 63-session quiet period, with breakout close after the previous monthly-vintage close and no later than the current vintage close, plus positive 126-session sector-relative return"
+    },
+    "marketImplementationContract": "classifyCandidate internally derives FEM_MARKET_RECOGNITION_V1 from raw PIT-adjusted price bars, historical sector and broad-market benchmarks, the sealed exchange calendar's immediately preceding/current calendar-month vintage closes, entity_id, listing_id, vintageMonth and action provenance. Duplicate or skipped vintage months are invalid. Every panel has one explicit historyCompleteFrom plus panelStartReason: effective_listing_start, study_start or data_start; isListingStartVintage is true only on the first row of a genuine effective-listing-start panel. This completeness anchor is separate from the 315-session calculability threshold. Before 315 sessions or another frozen market-input minimum, M is explicitly NOT_COMPUTABLE with effective M=0 for candidate-state purposes; this may only downgrade MARKET_CONFIRMING to the independently valid T/E/L state and cannot reject PRE_GROWTH_CANDIDATE, ELLIOTT_REVIEW or GQS_CONFIRMED. Technical-only transitions and technical incrementality require computable M. A first computable M2/M3 without a prior computable M0/M1 is left-censored and cannot be a technical signal or control. The exchange calendar binds closeDate, exact timezone-qualified closeAt and nextOpenAt; M evidence knownAt must equal that closeAt, evaluationAt must equal that closeAt, and signalAvailableAt must equal the next eligible open. M evidence stores the canonical input hash. Caller-supplied M cannot create M1/M2/M3. For M3, the 126-session sector-relative return is evaluated at the 252-session breakout close, not at month end.",
+    "exploratoryOnly": ["MACD 12/26/9", "RSI 14", "volume anomaly", "volatility compression", "squeeze momentum"],
+    "exploratoryFamilyRule": "Exploratory indicators cannot set a candidate state. Any later confirmatory use requires a new sealed multiple-testing family.",
+    "historicalLowProhibition": "Historical lows may be described after the fact but never used as contemporaneous input.",
+    "missingOhlcvRule": "Squeeze and volume analyses are NOT_COMPUTABLE, not zero and not inferred from adjusted close."
+  },
+  "matrix": {
+    "coherenceContract": "T, E and L form the independent core and must each carry level, exact knownAt, source IDs and the same entity_id plus theme_id. Every referenced source record must pass its source-class availability contract, and each dimension knownAt equals the maximum availability of its referenced sources. The classifier computes signalKnownAt internally as the maximum accepted dimension knownAt; caller-supplied signalKnownAt cannot move it. Cross-theme, cross-entity, missing-source or timestamp-mismatched T/E/L assembly is REJECTED_HOLD. M is validated separately against the same entity/theme and can promote a valid PRE_GROWTH_CANDIDATE to MARKET_CONFIRMING; invalid M evidence is discarded with effective M=0 and cannot invalidate the T/E/L core.",
+    "dimensions": {
+      "T": {
+        "name": "theme_maturity",
+        "levels": {
+          "0": "speculation",
+          "1": "technical feasibility or scientific breakthrough",
+          "2": "observable investment, orders, regulation or commercial introduction",
+          "3": "accelerating real adoption with measurable bottlenecks or demand"
+        }
+      },
+      "E": {
+        "name": "beneficiary_evidence",
+        "levels": {
+          "0": "narrative mention only",
+          "1": "indirect or replaceable participation",
+          "2": "documented product, customer, order or necessary infrastructure",
+          "3": "material exposure, bottleneck, pricing power or hard-to-replace value capture"
+        },
+        "valueChainRoles": ["bottleneck_supplier", "infrastructure_supplier", "operator", "application_company", "narrative_only"]
+      },
+      "L": {
+        "name": "operational_leads",
+        "levels": {
+          "0": "no reliable signal",
+          "1": "one weak signal",
+          "2": "at least two independent signals",
+          "3": "repeated filing evidence or filing evidence plus independent external evidence"
+        },
+        "managementStatementsAloneMaximum": 1
+      },
+      "M": {
+        "name": "market_recognition",
+        "levels": {
+          "0": "no confirmation",
+          "1": "positive 63-session and 126-session total-return spread versus both the historical sector benchmark and the broad-market benchmark; all four spreads must be positive and known at the close",
+          "2": "126-session closing breakout after a 63-session inclusive quiet window, with breakout close after the previous monthly-vintage close and no later than the current vintage close; volume and industry movement cannot set M2",
+          "3": "252-session closing breakout after a 63-session quiet period, with breakout close after the previous monthly-vintage close and no later than the current vintage close, plus positive 126-session sector-relative return"
+        }
+      },
+      "G": {
+        "name": "gqs_confirmation",
+        "levels": {
+          "0": "not qualified",
+          "1": "first qualification",
+          "2": "top-decile qualification in two consecutive historical monthly vintages"
+        }
+      }
+    },
+    "states": {
+      "RESEARCH_WATCH": "T>=2 and E>=2 and L>=1",
+      "PRE_GROWTH_CANDIDATE": "T>=2 and E>=2 and L>=2 and growthVisible=false at evaluationAt; no future outcome timestamp may enter classification",
+      "MARKET_CONFIRMING": "PRE_GROWTH_CANDIDATE plus M>=2",
+      "GQS_CONFIRMED": "G>=1; primary definition is first as-of monthly vintage in the unchanged sector branch's historical top decile of the eligible cohort; board entry and top-200 are secondary variants",
+      "ELLIOTT_REVIEW": "T>=2 and E>=2 and L>=2 with accepted data quality and no contradiction; independent of G, M and later outcome realization",
+      "REJECTED_HOLD": "contradicted, narrative only, insufficient value capture or unacceptable data"
+    }
+  },
+  "operationalSignals": [
+    "backlog, RPO, bookings and order intake",
+    "important-customer count and concentration",
+    "capacity expansion and investment commitments",
+    "new production lines and commercial product launches",
+    "customer-supplier links",
+    "R&D efficiency, patents and scientific activity",
+    "government contracts, grants and regulatory clearances",
+    "segment margins and demand disclosures",
+    "insider and capital-allocation decisions when point-in-time available"
+  ],
+  "studyArms": {
+    "A_gqs_timing": "Growth event, price breakout, first GQS qualification and matrix signal for all reconstructable US entities.",
+    "B_technical_null": "Only price, volume and industry data may predict future growth breakout; no themes or later company data.",
+    "C_incremental_matrix": [
+      "GQS only",
+      "technical only",
+      "theme plus beneficiary",
+      "theme plus beneficiary plus operations",
+      "full matrix",
+      "full matrix without technical features"
+    ],
+    "D_ai_removal": [
+      "remove direct AI businesses",
+      "remove direct and necessary AI infrastructure",
+      "remove every plausibly material direct, infrastructure or indirect AI dependency"
+    ],
+    "E_two_year_stress": [
+      "AI capital-expenditure acceleration",
+      "data-centre investment plateau",
+      "overcapacity and price decline among AI suppliers",
+      "value migration from hardware to applications",
+      "energy or grid bottleneck",
+      "export controls or regulation",
+      "recession and higher financing costs",
+      "rotation from technology to other growth areas"
+    ]
+  },
+  "aiRemoval": {
+    "classes": ["direct", "infrastructure", "indirect", "narrative", "independent", "unknown"],
+    "minimumEvidenceCoverage": 0.95,
+    "joinKey": "effective-dated entity_id plus listing_id at evaluation_at; current ticker joins are prohibited",
+    "availabilityRule": "classification evidence must pass the source-class availability contract and known_at <= evaluation_at; exactly one effective classification row must exist, because overlaps are UNKNOWN and block the primary result",
+    "materialityRule": "Material requires sourced revenue, backlog or capex exposure, or a documented necessary product function. Narrative mention is not material.",
+    "unclassifiedPolicy": "any UNKNOWN blocks a single primary result. At coverage of at least 95 percent, report two complete sensitivity universes: UNKNOWN retained as non-AI and UNKNOWN removed with AI; both must account for every entity. Below 95 percent even sensitivity inference is NOT_READY.",
+    "robustnessThreshold": "In each UNKNOWN sensitivity, non-AI signal precision divided by total-universe signal precision is at least 0.80 and no single replacement theme supplies more than 50 percent of remaining signal true positives. Report mature signal and matched-control counts, signal precision with two-sided Wilson 95 percent interval, matched-control outcome base rate with two-sided Wilson 95 percent interval, precision lift with a two-sided 10,000 matched-set bootstrap interval, and true recall against the full mature non-AI locked growth-event population: entities with a FEM signal before eventAvailableAt divided by all eligible non-AI growth-event entities, with censored events separate and a two-sided Wilson 95 percent interval. The descriptive allocation of positives between retained matched arms must not be called recall. Classification coverage must be at least 95 percent in both the matched observations and the complete growth-event population. Both sensitivities require at least 50 mature signals, at least 200 mature retained signal-plus-control observations and a fully computable lift interval; otherwise H-FEM is INCONCLUSIVE."
+  },
+  "historicalTimeCapsules": {
+    "successAndMixed": [
+      "cloud computing",
+      "smartphones and mobile ecosystems",
+      "semiconductors and AI infrastructure",
+      "solar and batteries",
+      "shale gas and LNG",
+      "cybersecurity",
+      "GLP-1",
+      "industrial automation"
+    ],
+    "failuresOrLongDelays": [
+      "3D printing",
+      "metaverse",
+      "hydrogen mobility",
+      "cannabis",
+      "autonomous driving",
+      "earlier cleantech waves",
+      "selected genomics and biotechnology hype"
+    ],
+    "epistemicStatus": "Pseudo-prospective historical reconstruction, never fully blind. Claims are limited to the earliest evidence found in the frozen corpus, not the earliest evidence that existed in the world.",
+    "samplingRule": "Cases are drawn from a frozen theme-era population including winners, failures and matched controls; companies cannot be selected individually after outcomes are viewed.",
+    "requiredQuestions": [
+      "problem recognition",
+      "technical feasibility",
+      "commercial demand",
+      "winning value-chain layer",
+      "then-identifiable listed beneficiaries",
+      "operational leading indicators",
+      "price movement",
+      "GQS timing",
+      "failed apparent beneficiaries",
+      "rule that separates successes without hindsight"
+    ]
+  },
+  "futureThemeUniverse": [
+    "AI applications and productivity diffusion",
+    "edge and inference infrastructure",
+    "advanced packaging, HBM, chiplets and silicon photonics",
+    "grids, HVDC, power semiconductors and cooling",
+    "nuclear energy, fuel cycle and geothermal",
+    "long-duration storage and flexible electricity demand",
+    "robotics and industrial autonomy",
+    "defence autonomy and electronic warfare",
+    "post-quantum cryptography, quantum sensing and quantum computing",
+    "programmable biology and biomanufacturing",
+    "AI-assisted drug discovery",
+    "water, climate and recycling infrastructure",
+    "critical minerals",
+    "space infrastructure",
+    "reindustrialisation and autonomous laboratories"
+  ],
+  "themeEvidenceLevels": {
+    "A": "real-economy confirmed with early diffusion",
+    "B": "high entry probability with unresolved winners",
+    "C": "technically plausible but economically early",
+    "D": "predominantly speculative",
+    "E": "falsified or currently not suitable for evidence-based beneficiary mapping"
+  },
+  "dataContract": {
+    "primaryFundamentals": "SEC as-filed filings and accession metadata",
+    "knownAt": "max of every source-class-required timestamp, including SEC accepted_at, source_published_at, bar_available_at and observed_at where applicable; the result must be <= evaluation_at",
+    "requiredEntityFields": [
+      "entity_id", "CIK", "effective ticker", "listing_id", "security_id", "exchange", "effective dates",
+      "filing period", "acceptance timestamp", "publication timestamp", "availability timestamp",
+      "original value", "unit", "taxonomy concept", "later revisions", "source URL and locator",
+      "listing, acquisition, bankruptcy and delisting status", "corporate actions"
+    ],
+    "prices": "historically adjusted OHLCV with action provenance and delisting treatment",
+    "survivorship": "dead, acquired, bankrupt and delisted entities must remain in the historical universe",
+    "researchSourceStore": "append-only payload store with source-class-specific availability rule, content hash, immutable snapshot and frozen search corpus",
+    "bibliographicRegistryPolicy": "The day-level SOURCE_REGISTRY.csv supplied with the study documents claims but is never signal-eligible. Before any T/E/L or historical candidate use, a source must be promoted into the append-only research store with mapped source_class, exact timezone-qualified required timestamps, declared known_at equal to their computed maximum, payload hash and frozen cutoff.",
+    "claimFields": [
+      "claim_id", "claim_type", "claim_text", "source_id", "published_at", "known_at", "locator",
+      "evidence_quality", "counterevidence", "version_status"
+    ]
+  },
+  "splits": {
+    "development": "2009-01-01/2016-12-31",
+    "validationAndOneRuleCorrection": "2017-01-01/2020-12-31",
+    "lockedOutOfSample": "2021-01-01/2024-12-31",
+    "recentHistoricalHoldoutNoConfirmatoryStatus": "2025-01-01/2026-08-08",
+    "prospectiveObservationNoFinalScore": "strictly after the final 1.2.0 freeze timestamp through 2026-12-31",
+    "correctionLimit": 1,
+    "testOutcomeAccessBeforeSeal": "prohibited",
+    "outcomeLock": "After any 2021-2024 outcome is opened, no rule change may retain confirmatory status. Any change starts a new protocol and future test window.",
+    "manualThemeConfirmation": "Independent confirmation of manually coded theme evidence remains prospective from protocol freeze. Historical coding is pseudo-prospective validation only."
+  },
+  "qualitativeCoding": {
+    "requiredFields": ["as_of", "source_id", "exact_locator", "published_at", "retrieved_at", "evidence_class", "counterevidence", "coder_id", "version"],
+    "blinding": "Coders receive only sources available by the cutoff and cannot see later sources, price paths, GQS dates or outcome labels.",
+    "doubleCoding": true,
+    "agreementGate": {
+      "weightedCohenKappaMinimumPerDimension": 0.70,
+      "exactAgreementMinimum": 0.80,
+      "failureAction": "Revise rules in development window only; do not open locked outcomes."
+    },
+    "equalResearchBudget": "Same source classes, query protocol and time budget for winners, failures and matched controls.",
+    "llmRestriction": "LLM-generated labels are never treated as blinded independent coding because the model may contain later knowledge."
+  },
+  "primarySuccessCriteria": {
+    "minimumMatureEvents": 200,
+    "minimumMatrixSignals": 50,
+    "precisionLiftVsSectorSizeTimeBaselineMinimum": 1.5,
+    "precisionLift95PercentIntervalLowerBoundMinimum": 1.0,
+    "medianLeadVsFirstGqsPublishedQuartersMinimum": 2,
+    "leadDefinition": "Population: all future durable-growth-positive primary FEM signals with complete historical-GQS reconstruction and follow-up through outcome maturity. Lead is the count of eligible 10-Q/10-K publication events strictly after signalAvailableAt and strictly before first GQS confirmation. GQS at or before the signal gives zero. If no GQS confirmation exists through maturity, use the conservative right-censored lower bound equal to eligible filing events after signal through maturity; do not exclude it and flag it censored. The primary median is the ordinary median of these exact values/lower bounds, with the even-N median equal to the arithmetic mean of the two central sorted values. The gate passes only if that conservative median is at least two; also report censoring count, calendar days and trading sessions.",
+    "prePriceBreakoutImprovement": {
+      "endpoint": "Among future durable-growth positives in each arm, signalAvailableAt precedes the next eligible market open after the primary 252-session breakout close. If no breakout occurs before outcome visibility, count as pre-breakout. Listings without 315 completed sessions are right-censored and excluded with counts reported.",
+      "comparison": "full FEM signals versus future durable-growth-positive members of their five matched non-signalled controls at the same monthly vintage; non-positive controls are excluded from this endpoint but retained in precision and their count is reported",
+      "minimumFuturePositivesPerArm": 30,
+      "minimumAbsoluteDifference": 0.10,
+      "confidenceRule": "entity-cluster bootstrap 95 percent interval lower bound must exceed 0",
+      "bootstrapReplicates": 10000,
+      "seed": 20260808
+    },
+    "concentrationLimits": {
+      "maximumTruePositiveShareFromOneTheme": 0.50,
+      "maximumTruePositiveShareFromMicroCaps": 0.50,
+      "microCapDefinitionAtSignalUsd": 300000000,
+      "maximumTruePositiveShareFromOneMarketRegime": 0.60,
+      "nonAiRobustness": "after removal of all materially AI-dependent observations, both UNKNOWN sensitivities must retain at least 80 percent of total-universe signal precision, no replacement theme may exceed 50 percent of retained signal true positives, at least 50 mature signals and 200 retained mature signal-plus-control observations must remain, and every declared interval must be computable",
+      "primaryThemeAssignment": "At signalAvailableAt, among evidence-accepted coherent rows for the same entity with known_at<=signalAvailableAt and T>=2, E>=2 and L>=2, sort by T descending, E descending, L descending, earliest known_at ascending, then theme_id lexicographically; freeze the first row as primary_theme_id. Later-known, foreign-entity or unvalidated rows are ineligible. Concentration is computed only from this frozen primary theme."
+    },
+    "technicalIncrementality": {
+      "populationAndUnit": "One row per unique entity: every primary FEM signal, including signals excluded from the matched comparison for having fewer than five eligible controls, plus each globally non-reused matched-control entity at its matched signal vintage; restrict to observations with a mature eight-filing outcome. Development rows have signalAvailableAt in 2009-2016; the locked primary estimate uses 2021-2024 rows. Validation is reported but never pooled into the locked estimate.",
+      "primaryComparison": "Two binomial logistic models with intercept and main effects only: reduced uses integer ordinal T,E,L; full uses integer ordinal T,E,L,M. Levels retain their frozen 0-3 coding without centering, scaling, dummies, interactions or continuous covariates. Missing dimensions reject the row. Coefficients are fit once on 2009-2016 and then frozen; validation and locked predictions never refit them.",
+      "fitRule": "Unpenalized binomial maximum likelihood by deterministic IRLS, start every coefficient at zero, maximum 100 iterations, stop when maximum absolute coefficient change is below 1e-8. A singular information matrix, nonfinite value, absolute coefficient above 20, failure to converge or complete/quasi-complete separation makes technical incrementality NOT_COMPUTABLE and the H-FEM technical sample gate INCONCLUSIVE; no penalty, fallback or retuning is permitted.",
+      "lossRule": "For locked observations clip each frozen-model probability only for evaluation to [1e-15,1-1e-15]. Mean log loss is -mean(y*ln(p)+(1-y)*ln(1-p)). Relative reduction is (reduced log loss - full log loss) / reduced log loss; positive values favour M. The paired difference is computed on identical rows.",
+      "minimumRelativeLogLossReduction": 0.02,
+      "confidenceRule": "10,000 paired entity bootstrap replicates on the locked rows with NumPy PCG64 seed 20260809, sampling unique entities with replacement and recomputing both mean losses without refitting. Nearest-rank 2.5/97.5 percentiles form the interval. The point estimate must be at least 0.02 and the lower bound must exceed 0.",
+      "secondaryAreaUnderPrecisionRecallGain": "reported descriptively and never required for H-FEM",
+      "exploratoryIndicatorsExcluded": ["MACD", "RSI", "volume anomaly", "volatility compression", "squeeze momentum"]
+    }
+  },
+  "failureRules": {
+    "hLate": "Among at least 200 mature durable-growth events with complete entity history, 315 pre-event price sessions and follow-up through maturity: late=1 when the primary breakout becomes available before first GQS qualification, including missing GQS through maturity after a breakout; late=0 when GQS qualifies first or no primary breakout occurs by outcome visibility. First GQS timing requires a gap-free panel from the canonical 2009-01 study anchor or a ledger-bound later effective listing start; a data_start panel is left-censored and NOT_COMPUTABLE for H-LATE even when its first observed row is not qualified. Events censored before maturity are excluded and counted. Confirm only when the point estimate is >=0.70 and the two-sided Wilson 95 percent lower bound is >=0.70; reject when the point estimate is <0.70; otherwise conclude INCONCLUSIVE. H-LATE remains independent of matrix performance.",
+    "hFem": "H-FEM passes only when every named primary gate is true: at least 200 mature events; at least 50 unique-entity primary signals; precision lift >=1.5 and its 95 percent lower bound >=1.0; median lead >=2 published filing events; pre-breakout difference >=0.10 with 95 percent lower bound >0 and at least 30 future positives per arm; unmatched signals <=20 percent; all theme, microcap and market-regime concentration limits pass; non-AI robustness passes; technical relative log-loss improvement >=0.02 with 95 percent lower bound >0. AUPRC is secondary only. Failure of any substantive gate rejects automation; an unmet sample-size or readiness gate is INCONCLUSIVE, never a pass. This hypothesis is independent of whether GQS is late.",
+    "technicalOnlyNullTest": "Population is every entity's first point-in-time monthly transition from M0/M1 to M2/M3, using only PIT adjusted price, sector/market benchmark and sealed calendar inputs; T, E, L and G are never read. Unit is one transition per entity with mature eight-filing outcome. Match five globally non-reused controls from the same frozen sector branch, month and market regime on log market cap, listing age and log dollar volume using the same fixed calipers except sector-relative return is omitted because it is part of M. Primary metric is durable-growth precision lift over controls. Null H0 is lift<=1; one-sided alpha=0.05 is implemented as a 10,000 matched-set bootstrap 95 percent lower bound >1 with PCG64 seed 20260810. The technical-only claim requires point lift>=1.5, lower bound>1, at least 50 unique signals and at least 200 mature observations; insufficient sample is INCONCLUSIVE, otherwise failure rejects technical-alone growth detection. M2/M3 combined is the sole primary technical signal; separate M2, M3, RSI, MACD, volume and squeeze variants are secondary and Benjamini-Hochberg controlled at q=0.05 within one frozen family.",
+    "technicalGrowthDetectionRejectedIf": "The single primary technicalOnlyNullTest misses either lift threshold after its declared bootstrap or becomes NOT_COMPUTABLE; secondary specifications cannot rescue it.",
+    "automationRejectedIf": "full matrix fails any primary success criterion in the locked out-of-sample window.",
+    "fallback": "Keep GQS unchanged and operate early detection as manual, evidence-graded theme research."
+  },
+  "statistics": {
+    "unit": "one earliest mature durable-growth event per entity for primary outcome analysis; one earliest primary FEM signal per entity across its effective primary common-equity listing; 12-quarter-cooldown outcomes and signals are secondary",
+    "monthlyVintage": "The primary observation vintage is the final completed US trading session of each calendar month. Facts and market bars must be known by that session close; the generated state becomes signalAvailableAt only at the next eligible market open.",
+    "primarySignal": "The first monthly transition into PRE_GROWTH_CANDIDATE or MARKET_CONFIRMING while growthVisible=false. Every classified T/E/L row, including effective M0 when M is not yet calculable, is internally bound to entity_id, listing_id, vintageMonth and the same sealed, gap-free exchange calendar: evaluationAt equals that vintage's exact closeAt, signalAvailableAt equals exact nextOpenAt, and the candidate stores vintage, timestamps and calendar hash. Primary-signal selection revalidates that contract. Each entity panel must contain every consecutive monthly state from one explicit historyCompleteFrom and panelStartReason anchor; study_start is exactly 2009-01, effective_listing_start must equal the entity/listing-ledger month, and data_start is always left-censored and excluded from primary first-transition and never-signalled endpoints regardless of its first observed state. A gap is NOT_COMPUTABLE. The 315-session market threshold never requires a false listing-start flag. MARKET_CONFIRMING additionally requires computable market recognition with identical identity, timestamps and calendar hash. The entity/listing ledger must identify one effective primary common-equity listing; unresolved or overlapping primary listings are ineligible and counted.",
+    "secondarySignal": "Not enabled in confirmatory FEM-SEC-US@1.2.0. Any reset of once-visible growth or later candidate episode requires a new sealed protocol. Only 12-quarter-cooldown growth outcomes remain a secondary descriptive sensitivity.",
+    "primaryOutcomeHorizon": "A signalled or matched-control entity-vintage is a future durable-growth positive only when the earliest qualifying q eventAvailableAt occurs after signalAvailableAt and no later than the eighth subsequent eligible 10-Q/10-K filing event for that entity. The q outcome may mature after the signal split ends. Observations without eight subsequent filing events and without an already matured qualifying event are right-censored and excluded with counts reported.",
+    "splitAssignment": "FEM and control observations are assigned to development, validation or locked test by signalAvailableAt. Outcome q and maturity may fall after the split endpoint and are used only to label the already frozen observation. H-LATE events are assigned by eventAvailableAt. No rule fitting may use post-split labels.",
+    "nonSignalledControl": "At the same monthly vintage the control is not in PRE_GROWTH_CANDIDATE or MARKET_CONFIRMING and has never previously generated a primary FEM signal within a complete canonical-study-start or ledger-bound listing-start panel. Data-start panels cannot prove never-signalled status and are ineligible. Persisting, exited or previously signalled entities are ineligible as primary controls. The control receives the identical eight-filing-event horizon from that vintage.",
+    "leadTime": "published quarters and trading sessions using availability timestamps",
+    "primaryBaseline": "eligible non-signalled entity-vintage observations from the same frozen historical sector branch, calendar-month vintage and market regime, then deterministically nearest-matched on the four declared continuous features",
+    "matching": {
+      "ratio": "five controls per signal; matching parameters are fixed and any runtime override is rejected",
+      "exact": ["frozen historical GQS sector branch", "calendar-month vintage", "market regime"],
+      "nearest": ["log market capitalisation", "listing age sessions", "126-session sector-relative return", "120-session median dollar volume"],
+      "calipers": {"logMarketCap": 0.50, "listingAgeSessions": 252, "relativeReturn": 0.15, "logDollarVolume": 1.00},
+      "distance": "sum across the four nearest features of (absolute signal-control difference / declared caliper)^2; every feature must be nonmissing and within its own caliper, otherwise the control is ineligible",
+      "selection": "First freeze the complete set of all primary-signal entity_ids. Sort primary signals by signalAvailableAt, entity_id and listing_id. For each, exclude every entity that is a primary signal anywhere in the panel and every control entity already used by an earlier signal; require nonempty valid entity, listing, frozen sector, YYYY-MM vintage and one of bear/recovery/bull/neutral plus the effective primary listing. Sort eligible controls by distance, entity_id, listing_id and choose the first five unique entities. A control entity is globally unavailable after first selection, so signal-control overlap and cross-signal control reuse are prohibited. Multiple listings cannot occupy multiple slots and no randomness is used.",
+      "tieBreak": "distance, then ascending entity_id, then ascending listing_id",
+      "unmatchedRule": "signal excluded from matched precision/pre-breakout comparison and counted; more than 20 percent unmatched blocks H-FEM. Every unmatched signal remains in the technical-incrementality population so M's contribution is not estimated only on matchable signals."
+    },
+    "logDefinition": "At the monthly close, market capitalisation is the then-known point-in-time shares outstanding multiplied by the final adjusted close; listing age is the count of completed listing sessions; 120-session median dollar volume is the median of adjusted close times nonnegative volume across the final 120 completed sessions. Their logs use the natural logarithm of strictly positive USD values. The 126-session sector-relative return is recomputed from aligned PIT total-return bars as an unrounded decimal difference, so 0.15 means fifteen percentage points. Nonpositive, future-known, missing or noncomputable inputs are ineligible, never imputed.",
+    "marketRegimes": "using the point-in-time broad-market total-return series: bear when close is at least 20 percent below its trailing 252-session high, otherwise recovery when a bear observation occurred in the prior 126 sessions and close is at or above SMA200, otherwise bull when close is above SMA200, 126-session return is positive and drawdown is below 10 percent, otherwise neutral",
+    "baselines": ["primary exact-and-nearest matched baseline", "random eligible secondary", "sector-only secondary", "size-only secondary", "momentum-only secondary"],
+    "precisionDenominator": "all eligible signalled observations versus all eligible matched non-signalled observations; future non-positives remain in this denominator",
+    "preBreakoutDenominator": "future durable-growth positives only in each arm; non-positive controls are excluded and separately counted",
+    "primaryMeasures": ["precision", "recall", "base-rate lift", "signal count", "lead time", "pre-breakout share"],
+    "uncertainty": "Primary precision lift uses 10,000 nonparametric matched-set bootstrap replicates clustered by signal entity, NumPy PCG64 seed 20260808 and nearest-rank 2.5/97.5 percentiles. Technical log-loss incrementality uses 10,000 paired entity-cluster replicates with PCG64 seed 20260809 and the same two-sided percentile rule. The technical-only directional null uses the preregistered nearest-rank 5th percentile with PCG64 seed 20260810. Non-AI UNKNOWN-removed and UNKNOWN-retained precision-lift sensitivities use 10,000 matched-set replicates with PCG64 seeds 20260811 and 20260812; their signal precision, matched-control base rate and full-growth-event-population recall use two-sided Wilson 95 percent intervals. H-LATE uses the closed-form two-sided Wilson 95 percent interval. Every one of the exactly 10,000 declared bootstrap replicates must be finite; undefined replicates make that interval NOT_COMPUTABLE and the associated sample gate INCONCLUSIVE. No filtering, replacement interval or alternative seed may rescue a primary rule.",
+    "multipleTesting": "false-discovery-rate correction across secondary specifications",
+    "missingness": "reported as missing; no zero fill and no future-derived imputation",
+    "ablationRequired": true
+  },
+  "premortem": [
+    "price leads every measurable public signal",
+    "correct theme but wrong beneficiaries",
+    "value captured by private firms or customers",
+    "bottleneck becomes commodity",
+    "management language mistaken for demand",
+    "modern vocabulary back-projected into old sources",
+    "survivorship bias",
+    "revised fundamentals leak backward",
+    "indicator specification mining",
+    "AI-era-only result",
+    "matrix merely rediscovers momentum",
+    "real growth already fully repriced",
+    "research priority misread as recommendation",
+    "paid data becomes hidden dependency",
+    "study becomes untestably broad"
+  ],
+  "confirmatoryImplementation": {
+    "runner": "scripts/early-detection-confirmatory.py",
+    "runtimeLock": "protocol/early-detection/1.2.0/confirmatory-runtime-lock.json",
+    "sealRule": "The exact runner, runtime lock, preregistration, audit and negative tests must be present in the local SHA-256 manifest and byte-identical to the files addressed by origin/main before any input file is read.",
+    "authorizationRule": "The latest append-only, hash-chained and origin/main-checkpointed ledger event must be confirmatory_execution_authorized and bind runId, exact input-file SHA-256, execution-gate-evidence-file SHA-256, research-corpus SHA-256, analysisCutoffAt and protocol-manifest SHA-256. A zero-event genesis checkpoint never authorizes outcome access.",
+    "gateEvidenceRule": "The runner ignores caller-supplied readiness booleans. Each of the eleven non-code gates must have exactly one PASS artifact path, SHA-256 and commit that is an ancestor of fetched origin/main. Every artifact must attest both the authorized full-input byte hash and the exact gate-specific component hashes recomputed from the input component manifest, and must carry a reproducible verification method, a pre-authorization verifiedAt and at least one unique id/path/hash/time evidence record. Every evidence path is loaded from the same remote gate commit under the same traversal guard and its bytes are rehashed; missing, duplicate, inaccessible or mismatched evidence blocks execution. The research-corpus gate attests the separate external corpus-manifest hash in its researchCorpusSha256 field and component map. Its own artifact-file hash is an independent attestation-identity hash and is never equated with the corpus hash.",
+    "rawInputRule": "The runner requires entityListingLedger, historicalUniverse, femSignals, the complete femControlPool, technicalOnlySignals, the complete technicalOnlyControlPool, hLatePopulation and conceptMap as separately hashed components of one exact authorized input. It derives candidate states from source-bound T/E/L levels and raw growth visibility, derives growth labels from complete as-filed quarter rows, derives the first FEM and technical transitions from gap-free monthly panels, constructs deterministic five-to-one globally non-reused controls from the complete eligible pool using the frozen exact fields, calipers and tie-break, assigns splits, computes every interval and applies H-LATE, technical-only and H-FEM rules internally. Prepared candidate states, qualifies, matchedSets, technical-transition-only claims or pass/fail booleans are not accepted as outcome inputs.",
+    "numericalRule": "Python, NumPy, operating system, architecture, NumPy build configuration, PCG64 and 10,000 replicate count are exact-match locked. A runtime mismatch blocks execution and requires a new semantic protocol version before outcome access."
+  },
+  "executionGates": [
+    "protocolSealed",
+    "confirmatoryAnalysisImplementationSealed",
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "independentAuditPassed",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "publicationGate": {
+    "centralClaimsSourced": true,
+    "tablesAndFiguresSourced": true,
+    "counterevidenceRecorded": true,
+    "wordFootnotesPreservedInPdf": true,
+    "unsourcedFactualClaimBlocksRelease": true
+  }
+}

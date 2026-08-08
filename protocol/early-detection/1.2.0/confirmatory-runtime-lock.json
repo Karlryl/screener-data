@@ -1,0 +1,12 @@
+{
+  "schema": "early-detection-confirmatory-runtime/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "python": "3.12.13",
+  "numpy": "2.3.5",
+  "operatingSystem": "Windows",
+  "machine": "AMD64",
+  "numpyBuildConfigSha256": "266bbfb9b8d16e7e30485fc567f5c253490bbca8282e8386c8382e903a9c788f",
+  "bitGenerator": "numpy.random.PCG64",
+  "bootstrapReplicates": 10000,
+  "purpose": "Freeze the numerical runtime used by the sealed confirmatory runner. Any change requires a new semantic protocol version before outcome access."
+}
