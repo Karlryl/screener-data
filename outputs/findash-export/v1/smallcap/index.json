@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-07T05:47:40.922Z",
+  "generated_at": "2026-08-09T17:27:00.732Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 71.3
+    "coverage_pct": 71.5
   },
-  "generatedFromSnapshots": 587,
+  "generatedFromSnapshots": 534,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -38,15 +38,15 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 24,
+      "profitable": 26,
       "unprofitable": 18
     },
     "smallcap-consumer-staples": {
-      "profitable": 22,
+      "profitable": 21,
       "unprofitable": 0
     },
     "smallcap-energy": {
-      "profitable": 14,
+      "profitable": 12,
       "unprofitable": 7
     },
     "smallcap-financials": {
@@ -54,15 +54,15 @@
       "unprofitable": 9
     },
     "smallcap-health-care": {
-      "profitable": 22,
-      "unprofitable": 58
+      "profitable": 23,
+      "unprofitable": 60
     },
     "smallcap-industrials": {
-      "profitable": 34,
-      "unprofitable": 25
+      "profitable": 33,
+      "unprofitable": 24
     },
     "smallcap-it-services": {
-      "profitable": 3,
+      "profitable": 4,
       "unprofitable": 0
     },
     "smallcap-materials": {
@@ -78,7 +78,7 @@
       "unprofitable": 3
     },
     "smallcap-software-comm-services": {
-      "profitable": 39,
+      "profitable": 38,
       "unprofitable": 18
     },
     "smallcap-utilities": {
@@ -87,20 +87,17 @@
     }
   },
   "excluded": {
-    "balance-sheet-bank": 65,
-    "data-suspect": 12,
+    "balance-sheet-bank": 63,
+    "data-suspect": 11,
     "dup-issuer": 1,
     "insurer": 8,
     "lender-gp0": 7,
-    "mortgage-reit": 6,
-    "no-axes": 2,
-    "no-revenue": 41,
+    "mortgage-reit": 5,
+    "no-revenue": 38,
     "no-sector": 2,
-    "non-operating-rev": 25,
-    "smallcap-mcap-out-of-band": 18,
-    "smallcap-thin-coverage": 37,
+    "smallcap-thin-coverage": 38,
     "telecom": 5,
-    "unrouted": 14
+    "unrouted": 12
   },
-  "coverageFloor": 0.66
+  "coverageFloor": 0.68
 }
