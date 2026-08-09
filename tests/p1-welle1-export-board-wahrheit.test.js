@@ -153,6 +153,18 @@ test('AS-SK-002 E2E: reconcile-smallcap zieht _meta.count auf die geschriebene L
   assert.equal(nach._meta.band.maxUsd, 8e8, 'die uebrigen _meta-Felder duerfen dabei nicht verloren gehen');
 });
 
+// Review-Nachzug (silent-failure-hunter, Befund 1): der Nachzug oben sitzt HINTER
+// `if (!entfernt.length) return` — ein Lauf, der nichts entfernt, schreibt gar nicht und
+// heilt einen bereits schiefen Zaehler folglich auch nicht. Die Drift-Quelle ist zwar
+// geschlossen (count wird nur an zwei Stellen gesetzt: build-smallcap-universe.js beim Bau
+// und der Nachzug oben), aber genau das ist eine Annahme ueber die Zukunft. Deshalb der
+// Bestand selbst als Wachposten — er wird rot, egal welcher Weg den Zaehler schief macht.
+test('AS-SK-002 Bestand: watchlist-smallcap._meta.count deckt sich mit der Liste', () => {
+  const w = JSON.parse(fs.readFileSync(path.join(REPO, 'watchlist-smallcap.json'), 'utf8'));
+  assert.equal(w._meta.count, w.stocks.length,
+    '_meta.count (' + w._meta.count + ') luegt gegenueber der tatsaechlichen Liste (' + w.stocks.length + ')');
+});
+
 // ── AT-SK-ATH-001: ein ATH aus der Zukunft ist keine Anzeige ────────────────────────
 // ath/athDate kommen aus dem Max-Batch (prices-max/), lastClose/lastDate aus dem
 // rollenden 400-Tage-Store. Bleibt ein Ticker im 400d-Store stehen, liegt athDate
