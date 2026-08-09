@@ -58,6 +58,12 @@ function loadSmallcapUniverse(snapDir = SNAP) {
   return u;
 }
 
+function assertNonEmptyUniverse(universe) {
+  if (universe.length === 0) {
+    throw new Error('secAnnual-smallcap: kein snapshots-smallcap/ Universum gefunden - Build fehlgeschlagen, Altbestand unveraendert');
+  }
+}
+
 async function run() {
   // Wie in build-secannual.js (R609-4): der Wurf bei unlesbarem Store gehoert VOR jede
   // Netzrunde und vor den Universums-Check — ein Lauf, der ohnehin nichts schreiben darf,
@@ -68,10 +74,7 @@ async function run() {
 
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
   const uni = loadSmallcapUniverse();
-  if (uni.length === 0) {
-    console.log('::warning::secAnnual-smallcap: kein snapshots-smallcap/ Universum gefunden - Build uebersprungen, Datei unveraendert');
-    return;
-  }
+  assertNonEmptyUniverse(uni);
   const cands = uni.filter((s) => smallcapRoute(s).action === 'route').map((s) => s.meta.ticker);
   console.log('Small-Cap geroutet:', cands.length, 'von', uni.length, 'Snapshots');
   const tmap = await fetchSecTickers();
@@ -115,4 +118,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { run, loadSmallcapUniverse };
+module.exports = { run, loadSmallcapUniverse, assertNonEmptyUniverse };

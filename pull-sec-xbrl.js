@@ -136,6 +136,13 @@ function get(url, ifModifiedSince, _redirectDepth) {
 
 function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
 
+function validateCompanyfactsBody(body) {
+  try { return JSON.parse(body); }
+  catch (e) {
+    throw new Error('invalid SEC companyfacts JSON: ' + e.message);
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv);
   if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
@@ -222,6 +229,10 @@ async function main() {
         });
         notFound++;
       } else {
+        // A maintenance/proxy HTML page may arrive with HTTP 200. Validate before
+        // replacing the last known-good companyfacts body; the catch below counts
+        // the failure and keeps the old cache file untouched/retry-eligible.
+        validateCompanyfactsBody(res.body);
         writeFileAtomic(filePath, res.body);
         manifest.entries[t.cik] = {
           ticker: t.ticker,
@@ -286,4 +297,4 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { main, istNegativGesperrt, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS, _secRateLimit: SEC_RATE_LIMIT };
+module.exports = { main, istNegativGesperrt, validateCompanyfactsBody, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS, _secRateLimit: SEC_RATE_LIMIT };

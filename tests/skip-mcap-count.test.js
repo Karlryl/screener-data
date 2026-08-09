@@ -18,8 +18,8 @@ function check(name, fn) {
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
-// results traegt genau vier Status: ok, price-only, skipped-mcap, fx-unknown
-// (pull-yahoo.js: 2785 / 2061+2163 / 2710 / 2672). Nur skipped-mcap darf zaehlen.
+// results traegt genau fuenf Status: ok, price-only, skipped-mcap, fx-unknown,
+// failed-delete (pull-yahoo.js). Nur skipped-mcap darf zaehlen.
 const r = (status, n) => Array.from({ length: n }, (_, i) => ({ ticker: `T${status}${i}`, status }));
 const mix = (ok, priceOnly, mcap, fx) => [
   ...r('ok', ok), ...r('price-only', priceOnly), ...r('skipped-mcap', mcap), ...r('fx-unknown', fx),

@@ -77,7 +77,9 @@ function annualConcept(gaap, concept) {
       // Wert stammt. Ohne es ist jede Rueckrechnung vergiftet — ein Wert fuer 2016 in der
       // Fassung von 2019 war 2016 noch nicht bekannt. Was jetzt nicht mitgeschrieben wird,
       // fehlt spaeter unwiederbringlich (dieselbe Lektion wie beim Ticker-Mitschnitt).
-      if (!prev || x.end > prev.end) out.set(x.fy, { val: x.val, end: x.end, accn: x.accn, filed: x.filed || null });
+      const laterEnd = !prev || x.end > prev.end;
+      const sameEndLaterFiling = prev && x.end === prev.end && (x.filed || '') > (prev.filed || '');
+      if (laterEnd || sameEndLaterFiling) out.set(x.fy, { val: x.val, end: x.end, accn: x.accn, filed: x.filed || null });
     }
   }
   return out;

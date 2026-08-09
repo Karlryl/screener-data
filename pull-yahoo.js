@@ -136,6 +136,21 @@ let _lampErrors = 0;            // lamp/advisory-tally detectors that threw (dat
 let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catch on exotic input
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
+let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
+
+function _removeStaleFiles(paths, ticker, unlinkSync = fs.unlinkSync) {
+  const failed = [];
+  for (const filePath of paths) {
+    if (!fs.existsSync(filePath)) continue;
+    try { unlinkSync(filePath); }
+    catch (e) {
+      _snapshotDeleteErrors++;
+      failed.push({ path: filePath, error: e && e.message || String(e) });
+      _log('WARN', `  ${ticker}: stale Datei konnte nicht entfernt werden (${filePath}): ${e && e.message || e}`);
+    }
+  }
+  return failed;
+}
 
 // TASK 0.11: run a non-fatal "lamp"/advisory detector safely. On throw: count it
 // (run-level _lampErrors + per-snapshot meta._lampErrors, so the offending ticker is
@@ -2380,7 +2395,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // durch das volle Universum ersetzt.
         n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
-        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors },
+        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors },
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
@@ -2635,7 +2650,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const MIN_MCAP = MIN_MCAP_USD;
     const mcapNow = existing.marketCap && existing.marketCap.value;
     if (mcapNow != null && mcapNow < MIN_MCAP) {
-      try { fs.unlinkSync(fp); } catch (_) {}
+      const deleteFailures = _removeStaleFiles([fp], stock.ticker);
+      if (deleteFailures.length) {
+        throw new Error('price-only floor: stale snapshot removal failed: ' + deleteFailures[0].error);
+      }
       throw new Error('price-only floor: mcap=' + (mcapNow/1e9).toFixed(2) + 'B < $' + (MIN_MCAP/1e9).toFixed(0) + 'B — snapshot removed');
     }
     // Mark mode for downstream visibility
@@ -3348,8 +3366,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ⊘ ${stock.ticker} skipped: fx-unknown (currency=${canonical.meta.reportingCurrencyOriginal})`);
         const fxFilename = safeSnapshotFilename(stock.ticker);
         const fxOutPath = path.join(outputDir, fxFilename);
-        if (fs.existsSync(fxOutPath)) {
-          try { fs.unlinkSync(fxOutPath); } catch (e) {}
+        const deleteFailures = _removeStaleFiles([fxOutPath], stock.ticker);
+        if (deleteFailures.length) {
+          failures.push({ ticker: stock.ticker, error: 'fx-unknown stale snapshot removal failed: ' + deleteFailures[0].error });
+          results.push({ ticker: stock.ticker, status: 'failed-delete', reason: deleteFailures[0].error });
+          return;
         }
         results.push({ ticker: stock.ticker, status: 'fx-unknown', reason: `currency=${canonical.meta.reportingCurrencyOriginal}` });
         return;
@@ -3373,21 +3394,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Remove existing snapshot if was previously included
         const filename = safeSnapshotFilename(stock.ticker);
         const outPath = path.join(outputDir, filename);
-        if (fs.existsSync(outPath)) {
-          try { fs.unlinkSync(outPath); } catch (e) {}
-        }
         // Tag 134: also clean up the legacy un-sanitized name if it exists (migration step)
         const legacyFilename = `${stock.ticker.replace(/[^A-Z0-9.-]/gi, '_')}.json`;
-        if (legacyFilename !== filename) {
-          const legacyPath = path.join(outputDir, legacyFilename);
-          if (fs.existsSync(legacyPath)) { try { fs.unlinkSync(legacyPath); } catch (e) {} }
-        }
+        const legacyPath = path.join(outputDir, legacyFilename);
         // F-DP-035 (Tag 183): also clean up the 28-day FTS cache. Without this,
         // a ticker cycling around the $1B boundary gets fresh price mixed with
         // stale fundamentals when it bumps back above.
         const fundCachePath = path.join(__dirname, 'fundamentals-cache', filename);
-        if (fs.existsSync(fundCachePath)) {
-          try { fs.unlinkSync(fundCachePath); } catch (e) {}
+        const deleteFailures = _removeStaleFiles(
+          legacyFilename !== filename ? [outPath, legacyPath, fundCachePath] : [outPath, fundCachePath],
+          stock.ticker);
+        if (deleteFailures.length) {
+          failures.push({ ticker: stock.ticker, error: 'mcap stale data removal failed: ' + deleteFailures.map(x => x.path + ': ' + x.error).join('; ') });
+          results.push({ ticker: stock.ticker, status: 'failed-delete', reason });
+          return;
         }
         results.push({ ticker: stock.ticker, status: 'skipped-mcap', reason });
         return;  // skip this stock
@@ -3616,8 +3636,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
-  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors };
-  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors}`);
+  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors };
+  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
@@ -3936,8 +3956,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear, _mapFTSAnnualShares, _readFTSAnnualSharesFromCache, _writeFTSCache,
-  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors }),
-  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; },
+  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors }),
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; },
+  _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
