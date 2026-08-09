@@ -137,6 +137,26 @@ let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catc
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
 let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
+let _unparseableTimeAnchors = 0;
+let _unparseableTimeAnchorsDue = 0;
+let _ftsPartialTickers = 0;
+let _ftsFailedSeries = 0;
+
+function fundamentalsStaleness(meta, now = Date.now()) {
+  const candidates = meta ? [meta.fundamentalsAsOf, meta.fetchedAt] : [];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    const parsed = new Date(candidate).getTime();
+    if (Number.isFinite(parsed)) return { stale: (now - parsed) > FUNDAMENTALS_REFRESH_MS, unparseable: false };
+  }
+  return { stale: true, unparseable: true };
+}
+
+function ftsFailureSummary(fts) {
+  const keys = ['annualFin', 'quarterlyFin', 'annualCash', 'annualBs'];
+  const failedSeries = Number(fts && fts._failedSeries) || 0;
+  return { failedSeries, allEmpty: keys.every(k => !Array.isArray(fts && fts[k]) || fts[k].length === 0) };
+}
 
 function _removeStaleFiles(paths, ticker, unlinkSync = fs.unlinkSync) {
   const failed = [];
@@ -1749,7 +1769,7 @@ async function fetchFundamentalsTS(symbol, signal) {
   // Period: 5y back, jetzt
   const period1 = new Date(Date.now() - 5 * 365 * 86400 * 1000);
   const period2 = new Date();
-  const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [] };
+  const out = { annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [], _failedSeries: 0 };
   // F-PY-102: thread the abort signal into every FTS fetch so a wrapper timeout
   // cancels the in-flight request and frees the yahoo-finance2 queue slot.
   const mo = signal ? { fetchOptions: { signal } } : undefined;
@@ -1759,20 +1779,20 @@ async function fetchFundamentalsTS(symbol, signal) {
   try {
     await acquireYfSlot();
     out.annualFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'financials' }, mo);
-  } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual financials failed for ${symbol}: ${e.message}`); }
+  } catch (e) { out._failedSeries++; _log('WARN', `  fundamentalsTimeSeries annual financials failed for ${symbol}: ${e.message}`); }
   try {
     await acquireYfSlot();
     out.quarterlyFin = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'quarterly', module: 'financials' }, mo);
-  } catch (e) { _log('WARN', `  fundamentalsTimeSeries quarterly financials failed for ${symbol}: ${e.message}`); }
+  } catch (e) { out._failedSeries++; _log('WARN', `  fundamentalsTimeSeries quarterly financials failed for ${symbol}: ${e.message}`); }
   try {
     await acquireYfSlot();
     out.annualCash = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'cash-flow' }, mo);
-  } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual cash-flow failed for ${symbol}: ${e.message}`); }
+  } catch (e) { out._failedSeries++; _log('WARN', `  fundamentalsTimeSeries annual cash-flow failed for ${symbol}: ${e.message}`); }
   // Tag-28: Balance-Sheet via fundamentalsTimeSeries (für ROIC/Sloan/Net-Debt-EBITDA).
   try {
     await acquireYfSlot();
     out.annualBs = await yf.fundamentalsTimeSeries(symbol, { period1, period2, type: 'annual', module: 'balance-sheet' }, mo);
-  } catch (e) { _log('WARN', `  fundamentalsTimeSeries annual balance-sheet failed for ${symbol}: ${e.message}`); }
+  } catch (e) { out._failedSeries++; _log('WARN', `  fundamentalsTimeSeries annual balance-sheet failed for ${symbol}: ${e.message}`); }
   return out;
 }
 
@@ -2251,15 +2271,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _ftsCacheParseErrors = 0;
+  _unparseableTimeAnchors = 0;
+  _unparseableTimeAnchorsDue = 0;
+  _ftsPartialTickers = 0;
+  _ftsFailedSeries = 0;
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
   // processOne and the staleness sort. Format { ticker: { date, pulledAt } }.
-  // READ ONLY — never written here. {} on any failure so a missing/corrupt
-  // file degrades to the pre-diet behaviour (no earnings-forced fulls).
+  // READ ONLY — never written here. A failure remains non-fatal, but must be visible.
   let _earningsCalendar = {};
   try {
     _earningsCalendar = JSON.parse(fs.readFileSync(path.join(__dirname, 'earnings-calendar.json'), 'utf8')) || {};
   } catch (e) {
-    _log('WARN', `earnings-calendar.json not loaded (${e.message}) — earnings-forced fulls disabled this run`);
+    _log('WARN', `::warning::earnings-calendar.json nicht geladen (${e.message}) — earnings-forced fulls deaktiviert fuer diesen Lauf`);
   }
   const _today = new Date();
   const results = [];
@@ -2755,12 +2778,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // the live universe, not 100%. Missing/unparseable timestamp → not forced.
       const staleFundamentals = (youngEnough && _parsedSnapshot && _parsedSnapshot.meta)
         ? (() => {
-            const m = _parsedSnapshot.meta;
-            const anchor = m.fundamentalsAsOf || m.fetchedAt;
-            if (!anchor) return false;
-            const t = new Date(anchor).getTime();
-            if (!Number.isFinite(t)) return false;
-            return (Date.now() - t) > FUNDAMENTALS_REFRESH_MS;
+            const decision = fundamentalsStaleness(_parsedSnapshot.meta);
+            if (decision.unparseable) {
+              _unparseableTimeAnchors++;
+              if (decision.stale) _unparseableTimeAnchorsDue++;
+            }
+            return decision.stale;
           })()
         : false;
       // audit/fix F3-budget (2026-06-25): apply the per-run budget to TIME-based
@@ -2816,6 +2839,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
+      let _allFtsSeriesEmpty = false;
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
       try {
@@ -2992,6 +3016,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // 'timeout'/'ECONNRESET' token → correct errClass ('timeout'/'network')
         // instead of 'other' in the catch classifier.
         if (ftsFetchFailed || !fts) throw new Error('FTS fetch failed for ' + stock.ticker + (ftsLastErr ? ': ' + ftsLastErr.message : ''));
+        const ftsFailure = ftsFailureSummary(fts);
+        _allFtsSeriesEmpty = ftsFailure.allEmpty;
+        if (ftsFailure.failedSeries > 0) {
+          _ftsPartialTickers++;
+          _ftsFailedSeries += ftsFailure.failedSeries;
+        }
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
@@ -3469,7 +3499,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // fundamentals (not the daily-reset meta.asOf), and the eligibility gate uses it
       // to force a full refresh every FUNDAMENTALS_REFRESH_DAYS.
       canonical.meta = canonical.meta || {};
-      canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
+      if (!_allFtsSeriesEmpty) canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
+      else delete canonical.meta.fundamentalsAsOf;
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
@@ -3627,6 +3658,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   } else {
     _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
   }
+  if (_unparseableTimeAnchors > 0) _log('WARN', `::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
+  if (_ftsFailedSeries > 0) _log('WARN', `::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
 
   // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
   // writeManifestIncremental() — final manifest must agree with the snapshot
@@ -3899,12 +3932,16 @@ function needsFullPull(snapshotMeta, earningsEntry, today) {
     // Not-yet-reported earnings (future date) carry no new financials → price-only.
     if (earnT > todayT) return 'price-only';
 
-    // No last-full-pull clock → cannot prove the report is newer than our data.
-    // Be conservative: don't force an unbudgeted full on missing/garbage meta.
-    const asOf = snapshotMeta && snapshotMeta.fundamentalsAsOf;
-    if (!asOf) return 'price-only';
-    const asOfT = new Date(asOf).getTime();
-    if (!Number.isFinite(asOfT)) return 'price-only';
+    // Use the first parseable full-pull clock. If neither candidate is parseable,
+    // freshness cannot be proven, so an already-reported earnings event is due.
+    const anchors = snapshotMeta ? [snapshotMeta.fundamentalsAsOf, snapshotMeta.fetchedAt] : [];
+    let asOfT = NaN;
+    for (const anchor of anchors) {
+      if (!anchor) continue;
+      const parsed = new Date(anchor).getTime();
+      if (Number.isFinite(parsed)) { asOfT = parsed; break; }
+    }
+    if (!Number.isFinite(asOfT)) return 'full';
 
     // Earnings-Datum ist tags-genau (parst als UTC-Mitternacht). Ein Voll-Pull am
     // Earnings-TAG VOR der Veröffentlichung (asOf 02:39Z, Release 08:00) darf den
@@ -3933,6 +3970,7 @@ if (require.main === module) {
 }
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
+  fundamentalsStaleness, ftsFailureSummary,
   // 0.2/0.9 Sharding (Tag 279): fuer TDD
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
