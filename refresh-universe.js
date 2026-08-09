@@ -730,6 +730,46 @@ function capNewTickerAdmission(newTickers, existingSize, maxUniverse) {
   return newTickers.filter(info => budgetMap.has(info.ticker));
 }
 
+// Bug 17 (ADR-Dedup) als REINE Funktion, damit die Praesenz-Bedingung einzeln pruefbar ist:
+// ADR-Zeile aus der persistierten Watchlist droppen, wenn die Heimat-Zeile vorhanden ist;
+// komplementaere Metadaten vorher auf die Heimat-Zeile backfillen.
+//
+// R1-SK-012 (P0-Haertung 4, 09.08.2026): die Praesenz-Bedingung lautete
+// `!!homeRow || allTickers.has(home) || existing.has(home)`. allTickers ist die
+// KANDIDATEN-Map dieses Laufs und wird vom Persistenz-Cap (capNewTickerAdmission, kappt
+// nur newTickers) NICHT beschnitten — eine vom Cap verworfene Heimatzeile galt damit als
+// "present", die ADR-Zeile flog raus und die Heimat kam nie herein: die Firma verschwand
+// still aus dem Universum. Praesenz kann nur EINES heissen: es gibt eine echte Zeile in
+// der Liste, die gleich geschrieben wird. Deshalb sieht diese Funktion die Kandidaten-Map
+// gar nicht mehr — der Fehler ist per Signatur nicht mehr formulierbar.
+function repariereAdrBestand(stocks, adrPairs) {
+  // Index der aktuellen Zeilen (nach Class-Share-Repair) nach Ticker.
+  const rowIndex = new Map();
+  for (const s of stocks) {
+    if (s && s.ticker) rowIndex.set(String(s.ticker).toUpperCase(), s);
+  }
+  const adrDropSet = new Set();
+  let dropped = 0;
+  for (const [adr, home] of Object.entries(adrPairs || {})) {
+    if (adr.startsWith('_')) continue; // _comment ueberspringen
+    const adrKey = String(adr).toUpperCase();
+    const homeKey = String(home).toUpperCase();
+    const adrRow = rowIndex.get(adrKey);
+    if (!adrRow) continue; // ADR nicht in der Watchlist -> nichts zu tun
+    const homeRow = rowIndex.get(homeKey);
+    if (!homeRow) continue; // Heimat nicht persistiert -> Firma nicht verlieren
+    // Metadaten auf die Heimat-Watchlist-Zeile backfillen.
+    if (homeRow !== adrRow) {
+      if (!homeRow.name && adrRow.name) homeRow.name = adrRow.name;
+      if (!homeRow.sector_hint && adrRow.sector_hint) homeRow.sector_hint = adrRow.sector_hint;
+      if (!homeRow.isin && adrRow.isin) homeRow.isin = adrRow.isin;
+    }
+    adrDropSet.add(adrRow);
+    dropped++;
+  }
+  return { stocks: adrDropSet.size > 0 ? stocks.filter(s => !adrDropSet.has(s)) : stocks, dropped };
+}
+
 // Tag 510: die Bedingung des Doppelausfall-Waechters als REINE Funktion, damit sie
 // einzeln pruefbar ist (der Waechter selbst sitzt mitten in main() hinter Netzaufrufen).
 // Wahr genau dann, wenn BEIDE Yahoo-Kanaele im selben Lauf nichts geliefert haben:
@@ -1681,34 +1721,9 @@ async function main() {
     let adrPairs = {};
     try { adrPairs = JSON.parse(fs.readFileSync(path.join(__dirname, 'discovery', 'adr-dedup.json'), 'utf8')); }
     catch (e) { console.warn('  ADR-Watchlist-Repair uebersprungen:', e.message); adrPairs = {}; }
-    // Index der aktuellen wlRaw-Zeilen (nach Class-Share-Repair) nach Ticker.
-    const rowIndex = new Map();
-    for (const s of wlRaw.stocks) {
-      if (s && s.ticker) rowIndex.set(String(s.ticker).toUpperCase(), s);
-    }
-    const adrDropSet = new Set();
-    for (const [adr, home] of Object.entries(adrPairs)) {
-      if (adr.startsWith('_')) continue; // _comment ueberspringen
-      const adrKey = String(adr).toUpperCase();
-      const homeKey = String(home).toUpperCase();
-      const adrRow = rowIndex.get(adrKey);
-      if (!adrRow) continue; // ADR nicht in der Watchlist -> nichts zu tun
-      // Heimat present, wenn als Watchlist-Zeile ODER als frisch gemergter Kandidat vorhanden.
-      const homeRow = rowIndex.get(homeKey);
-      const homePresent = !!homeRow || allTickers.has(home) || existing.has(home);
-      if (!homePresent) continue; // Firma nicht verlieren
-      // Metadaten auf die Heimat-Watchlist-Zeile backfillen (falls sie eine Zeile ist).
-      if (homeRow && homeRow !== adrRow) {
-        if (!homeRow.name && adrRow.name) homeRow.name = adrRow.name;
-        if (!homeRow.sector_hint && adrRow.sector_hint) homeRow.sector_hint = adrRow.sector_hint;
-        if (!homeRow.isin && adrRow.isin) homeRow.isin = adrRow.isin;
-      }
-      adrDropSet.add(adrRow);
-      adrDropped++;
-    }
-    if (adrDropSet.size > 0) {
-      wlRaw.stocks = wlRaw.stocks.filter(s => !adrDropSet.has(s));
-    }
+    const r = repariereAdrBestand(wlRaw.stocks, adrPairs);
+    wlRaw.stocks = r.stocks;
+    adrDropped = r.dropped;
     if (adrDropped) console.log('  ADR-Watchlist-Repair: ' + adrDropped + ' Bestands-ADR-Zeilen entfernt (Heimat-Listing present).');
   }
 
@@ -1765,6 +1780,7 @@ module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   applyForeignPrefilterOutcome,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
+  repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"

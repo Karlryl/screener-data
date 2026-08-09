@@ -29,7 +29,12 @@ const { smallcapRoute } = require(path.join(ROOT, 'src/scoring/smallcap-route.js
 const { extractSecSeries } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
 const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'));
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
-const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity } = require('./build-secannual.js');
+// AX-SK-002 (P0-Haertung 4, 09.08.2026): ladeMergeBasis kommt aus build-secannual.js —
+// dieselbe Regel, EIN Ort. Hier stand die halbe Fix-Luecke zu F-CGPT-020: ein blankes
+// `catch (_) { out = {} }` machte eine VORHANDENE, aber unlesbare
+// external-data/sec-secannual-smallcap.json von "gibt es noch nicht" ununterscheidbar —
+// der Lauf schrieb seinen Teilbestand darueber und ging mit Exit 0 raus.
+const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity, ladeMergeBasis } = require('./build-secannual.js');
 
 // T569-F4: derselbe blanke `catch (_) { continue; }` wie in build-secannual.js, nur auf der
 // KLEINEREN Population (watchlist-smallcap.json fuehrt 596 Namen, on-disk liegen ~100) — die
@@ -54,6 +59,13 @@ function loadSmallcapUniverse(snapDir = SNAP) {
 }
 
 async function run() {
+  // Wie in build-secannual.js (R609-4): der Wurf bei unlesbarem Store gehoert VOR jede
+  // Netzrunde und vor den Universums-Check — ein Lauf, der ohnehin nichts schreiben darf,
+  // soll SEC nicht erst befragen, und der Wurf ist so netzfrei nachweisbar.
+  const out = ladeMergeBasis(OUT);
+  const preCount = Object.keys(out).length;
+  console.log('Merge-Basis:', preCount, 'bestehende Namen geladen');
+
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
   const uni = loadSmallcapUniverse();
   if (uni.length === 0) {
@@ -63,9 +75,6 @@ async function run() {
   const cands = uni.filter((s) => smallcapRoute(s).action === 'route').map((s) => s.meta.ticker);
   console.log('Small-Cap geroutet:', cands.length, 'von', uni.length, 'Snapshots');
   const tmap = await fetchSecTickers();
-  let out = {};
-  try { out = JSON.parse(fs.readFileSync(OUT, 'utf8')); console.log('Merge-Basis:', Object.keys(out).length, 'bestehende Namen geladen'); } catch (_) { out = {}; }
-  const preCount = Object.keys(out).length;
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, noSeries = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {

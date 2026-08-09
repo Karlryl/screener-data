@@ -23,10 +23,39 @@ const path = require('path');
 const { writeFileAtomic } = require('./lib/atomic-write.js');
 const { fetchNasdaqAll, isJunkSecurity } = require('./discovery/nasdaq-all.js');
 const { prefilterByMcap } = require('./discovery/mcap-prefilter.js');
+const { readJsonExistingOrThrow, FEHLT } = require('./lib/read-json.js');
 
 const MIN_USD = 300e6;
 const MAX_USD = 800e6;
 const DEFAULT_OUT = path.join(__dirname, 'watchlist-smallcap.json');
+
+// R1-SK-005 (P0-Haertung 4, 09.08.2026): der Builder schrieb watchlist-smallcap.json
+// BEDINGUNGSLOS. prefilterByMcap (Batch-Quotes) kann teilweise ausfallen — ein
+// rate-limitierter Lauf liefert dann eine Handvoll Namen, ersetzt damit den committeten
+// Kontrakt und meldet die kleine Zahl als Erfolg.
+// Ist-Bestand am 09.08.2026: 540 Namen (Erstbau 22.07. fand 775, Karls Reconcile vom
+// 08.08. bereinigte auf 540). Doppelschranke wie beim CI-Coverage-Gate (percent-only
+// Gates verschaerfen sich mit wachsendem Universum, absolute allein werden mit ihm lasch):
+//   - Anteil  50 % des Vorbestands -> traegt, solange ein grosser Vorbestand da ist (540 -> 270)
+//   - Absolut 200 -> traegt bei Erstanlage und wenn der Vorbestand selbst klein ist
+// Beide bewusst weit unter dem Ist: ein legitimer Bandwechsel/Reconcile (596 -> 540, -9 %)
+// laeuft durch, ein Teilausfall (einstellig bis wenige Dutzend) nicht.
+const MIN_SMALLCAP_ABSOLUT = 200;
+const MIN_SMALLCAP_ANTEIL = 0.5;
+
+// Wirft, wenn das neue Universum den Kontrakt nicht ersetzen darf. Ein unlesbarer
+// Vorbestand ist KEINE Erstanlage (lib/read-json.js) -> Wurf statt stiller Neuanlage.
+function pruefeMindestbestand(anzahlNeu, outPfad) {
+  const alt = readJsonExistingOrThrow(outPfad);
+  const vorher = alt === FEHLT ? 0 : (Array.isArray(alt.stocks) ? alt.stocks.length : 0);
+  const noetig = Math.max(MIN_SMALLCAP_ABSOLUT, Math.round(MIN_SMALLCAP_ANTEIL * vorher));
+  if (anzahlNeu < noetig) {
+    throw new Error(`Mindestzahl verfehlt: ${anzahlNeu} Namen < ${noetig} noetig `
+      + `(Vorbestand ${vorher}, Schranken: absolut ${MIN_SMALLCAP_ABSOLUT} / Anteil ${MIN_SMALLCAP_ANTEIL}). `
+      + `${outPfad} bleibt unveraendert — vermutlich ein Teilausfall der MCap-Vorpruefung.`);
+  }
+  return { vorher, noetig };
+}
 
 function parseArgs(argv) {
   const args = { limit: null, out: DEFAULT_OUT };
@@ -42,6 +71,13 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv);
+  // Ein --limit-Probelauf prueft absichtlich nur die ersten N Listing-Symbole und liefert
+  // deshalb legitim wenige Namen. Er darf dafuer aber nicht den committeten Kontrakt
+  // treffen — sonst waere die Mindestzahl-Schranke unten sein einziger Schutz und muesste
+  // gegen genau den Fall aufgeweicht werden, gegen den sie gebaut ist.
+  if (args.limit != null && args.out === DEFAULT_OUT) {
+    throw new Error('--limit ist ein Probelauf und schreibt nie in den Kontrakt: bitte --out <pfad> angeben');
+  }
   console.log(`[smallcap-builder] Band $${MIN_USD / 1e6}M-$${MAX_USD / 1e6}M, out=${args.out}${args.limit ? `, limit=${args.limit}` : ''}`);
 
   const listing = await fetchNasdaqAll(); // Map<symbol, {name, ...}>
@@ -82,12 +118,18 @@ async function main() {
     },
     stocks,
   };
+  const { vorher, noetig } = pruefeMindestbestand(stocks.length, args.out);
   writeFileAtomic(args.out, JSON.stringify(payload, null, 2));
-  console.log(`[smallcap-builder] geschrieben: ${stocks.length} Small-Cap-Kandidaten -> ${args.out}`);
+  console.log(`[smallcap-builder] geschrieben: ${stocks.length} Small-Cap-Kandidaten -> ${args.out} `
+    + `(Vorbestand ${vorher}, Mindestzahl ${noetig})`);
   if (stocks.length) {
     console.log('[smallcap-builder] Top-5 nach MCap: ' +
       stocks.slice(0, 5).map((s) => `${s.ticker}($${(s.marketCapUsd / 1e6).toFixed(0)}M)`).join(', '));
   }
 }
 
-main().catch((e) => { console.error('[smallcap-builder] FEHLER: ' + (e && e.message)); process.exit(1); });
+if (require.main === module) {
+  main().catch((e) => { console.error('[smallcap-builder] FEHLER: ' + (e && e.message)); process.exit(1); });
+}
+
+module.exports = { main, parseArgs, pruefeMindestbestand, DEFAULT_OUT, MIN_SMALLCAP_ABSOLUT, MIN_SMALLCAP_ANTEIL };

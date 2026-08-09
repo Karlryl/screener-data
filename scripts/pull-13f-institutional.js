@@ -461,6 +461,32 @@ function _isFullBookAmendment(amendmentType, baseCount, amendCount) {
   return baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO_FALLBACK;
 }
 
+// Merge the rows of a PARTIAL 13F-HR/A onto the base book. Pure/exported for
+// direct test coverage.
+//
+// AD-SK-001 fix (P0-Haertung 4, 2026-08-09): this used to be `merged.set(key, pos)`
+// with key = cusip|titleOfClass|putCall — one row per key. But a 13F info table
+// legitimately lists the SAME cusip several times (investmentDiscretion SOLE /
+// DEFINED / OTHER, several other managers), so the base loop alone already collapsed
+// real rows onto the last one; buildByTickerView() then summed a book that was
+// silently short. The key still defines the REPLACEMENT unit (an amendment restates a
+// security as a whole), but each key now holds a LIST, so no row is ever lost.
+function _mergeAmendmentOntoBase(basePositions, amendPositions) {
+  const _key = pos => [pos.cusip || '', pos.titleOfClass || '', pos.putCall || ''].join('|');
+  const merged = new Map();   // key -> rows; Map keeps first-insertion order on re-set
+  for (const pos of basePositions || []) {
+    if (!merged.has(_key(pos))) merged.set(_key(pos), []);
+    merged.get(_key(pos)).push(pos);
+  }
+  const restated = new Set();
+  for (const pos of amendPositions || []) {
+    const k = _key(pos);
+    if (!restated.has(k)) { restated.add(k); merged.set(k, []); }  // amendment replaces the whole group
+    merged.get(k).push(pos);
+  }
+  return [].concat(...merged.values());
+}
+
 // ─── Per-institution pull ───────────────────────────────────────────────
 async function pullInstitution13f(cik, displayName) {
   const paddedCik = padCik(cik);
@@ -612,12 +638,8 @@ async function pullInstitution13f(cik, displayName) {
 
   // Partial restatement: merge the /A rows onto the base book so we don't drop
   // the rest of the holdings. Amendment rows win on identity (cusip|class|putCall).
-  const _key = pos => [pos.cusip || '', pos.titleOfClass || '', pos.putCall || ''].join('|');
-  const merged = new Map();
-  for (const pos of base.positions) merged.set(_key(pos), pos);
-  for (const pos of amend.positions) merged.set(_key(pos), pos);
   return {
-    positions: Array.from(merged.values()),
+    positions: _mergeAmendmentOntoBase(base.positions, amend.positions),
     name,
     filingDate: newest.filingDate,
     reportPeriod,
@@ -1161,6 +1183,7 @@ module.exports = {
     pullInstitution13f,
     _selectPeriodFilings,   // BH-029: exposed for test coverage
     _isFullBookAmendment,   // BH-030: exposed for test coverage
+    _mergeAmendmentOntoBase, // AD-SK-001: exposed for test coverage
     _fetchAmendmentType,    // BH-030: exposed for test coverage (network; not called in hermetic tests)
     BOOTSTRAP_INSTITUTIONS,
     _normName,  // Tag 226a-1: exposed for test coverage
