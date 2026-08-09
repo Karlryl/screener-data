@@ -82,10 +82,36 @@ test('Wiring: reporting-Rate-Check nutzt _isValidFxRate statt "rate == null"', (
   assert.doesNotMatch(SRC, /if \(rate == null\) \{\s*\n\s*\/\/ unknown currency/,
     'die alte laxe Pruefung darf nicht wieder auftauchen');
 });
-test('Wiring: alle drei tradingRate-Lesestellen nutzen _isValidFxRate', () => {
-  const hits = SRC.match(/_isValidFxRate\(tradingRate\)/g) || [];
-  assert.equal(hits.length, 3,
-    '_applyTradingScale, _convertSnapshotToUSD und der price-only-Pfad muessen alle drei validieren; gefunden: ' + hits.length);
+// P0-Haertung 2 (09.08.2026): Dieser Waechter zaehlte frueher, wie oft das
+// Schreibmuster `_isValidFxRate(tradingRate)` im Quelltext vorkommt (erwartet: 3).
+// Die drei Lesestellen sind seither zu EINER zusammengelegt (_fxFactorFor) — der
+// Schutz ist strenger geworden, der Zaehl-Waechter wurde davon rot. Jetzt wird die
+// SACHE geprueft und AUSGEFUEHRT: an allen drei Wegen (Reporting-Kurs, Handelskurs,
+// price-only) darf ein 0/negativer/nicht-numerischer Kurs keinen Faktor erzeugen.
+test('Wiring: ungueltiger Kurs faellt an ALLEN drei Wegen closed (ausgefuehrt, nicht gegrept)', () => {
+  const PY = require('../pull-yahoo.js');
+  const { _fxFactorFor, _resolveTradingFx, _FX_TO_USD, _FX_PROVENANCE } = PY;
+  for (const bad of [0, -1, NaN, Infinity, '0.5', null]) {
+    _FX_TO_USD.XBAD = bad;
+    _FX_PROVENANCE.XBAD = 'live';
+    const wie = ' (Kurs=' + String(bad) + ')';
+    assert.equal(_fxFactorFor('XBAD'), null, 'kein Faktor aus ungueltigem Kurs' + wie);
+    // (1) Reporting-Kurs
+    const rep = _convertSnapshotToUSD({ meta: { reportingCurrency: 'XBAD' }, marketCap: { value: 1000 } });
+    assert.equal(rep.meta.fxConverted, false, 'Reporting-Weg muss fail-closed sein' + wie);
+    assert.equal(rep.meta.fxConversionFailed, true, 'Reporting-Weg muss den Fehler melden' + wie);
+    assert.equal(rep.marketCap.value, 1000, 'Werte unangetastet' + wie);
+    // (2) Handelskurs (USD-Bilanzierer mit Auslandsnotiz)
+    const trd = _convertSnapshotToUSD({ meta: { reportingCurrency: 'USD', tradingCurrency: 'XBAD' }, marketCap: { value: 1000 } });
+    assert.equal(trd.meta.fxConverted, false, 'Handels-Weg muss fail-closed sein' + wie);
+    assert.equal(trd.meta.fxConversionFailed, true, 'Handels-Weg muss den Fehler melden' + wie);
+    assert.equal(trd.marketCap.value, 1000, 'Werte unangetastet' + wie);
+    // (3) price-only-Schnellweg
+    assert.equal(_resolveTradingFx({ currency: 'XBAD', regularMarketPrice: 10 }, { meta: {} }).ok, false,
+      'price-only muss den Lauf verweigern' + wie);
+  }
+  delete _FX_TO_USD.XBAD;
+  delete _FX_PROVENANCE.XBAD;
   assert.doesNotMatch(SRC, /tradingRate != null && Number\.isFinite\(tradingRate\)/,
     'die alte Finite-only-Pruefung (ohne >0) darf nicht wieder auftauchen');
 });

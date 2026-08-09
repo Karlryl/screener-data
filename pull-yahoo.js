@@ -332,7 +332,16 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
 (function loadFx() {
   try {
     const fxPath = require('path').join(__dirname, 'fx-rates.json');
-    if (!require('fs').existsSync(fxPath)) return;
+    if (!require('fs').existsSync(fxPath)) {
+      // P0-Haertung 2 (F-CGPT-001): der einzige Weg in die Hartkodierung, der bisher
+      // NICHTS geloggt hat — fehlte die Datei, lief der Pull kommentarlos auf der
+      // hartkodierten Tabelle weiter. Die Snapshots tragen jetzt an jedem Bein
+      // fxRateSource='hardcoded-fallback' (scripts/watch-fx-sanity.js wird ab dem
+      // ersten Treffer rot), aber das Log soll es auch im Lauf selbst sagen.
+      console.warn('[FX] fx-rates.json FEHLT — es wird mit der hartkodierten Tabelle gerechnet. ' +
+        'Betroffene Snapshots tragen fxRateSource=hardcoded-fallback; watch-fx-sanity.js wird rot.');
+      return;
+    }
     const raw = JSON.parse(require('fs').readFileSync(fxPath, 'utf8'));
     if (!raw || !raw.rates || typeof raw.rates !== 'object') return;
     const fetchedAt = raw.fetchedAt ? new Date(raw.fetchedAt) : null;
@@ -420,6 +429,80 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
     console.log('[FX] fx-rates.json load failed: ' + e.message + ' — using fallback');
   }
 })();
+// P0-Haertung 2 (09.08.2026, F-CGPT-001): EINE Stelle, die aus einer Waehrungs-
+// Bezeichnung einen USD-Faktor macht — inklusive Pence-Sonderfall UND Herkunft des
+// Kurses. Vorher stand dieselbe Pence/Rate-Logik dreimal im Code (Reporting-Zweig,
+// Trading-Zweig, price-only) und NUR der Reporting-Zweig verriet, ob der Kurs live
+// oder aus der hartkodierten 2026-Q1-Tabelle stammte. Genau daran haengt der
+// Betriebs-Waechter scripts/watch-fx-sanity.js (er zaehlt meta.fxRateSource ===
+// 'hardcoded-fallback' und wird ab dem ersten Treffer rot) — die beiden anderen
+// Wege waren fuer ihn unsichtbar.
+//   provenance 'identity' = USD→USD. Das ist keine Umrechnung, sondern die Zahl 1;
+//   sie darf NIE als "hartkodiert umgerechnet" gezaehlt werden, sonst faerbt eine
+//   fehlende fx-rates.json das halbe US-Universum rot (2024 Snapshots) statt der
+//   tatsaechlich betroffenen Nicht-USD-Titel.
+// Rueckgabe: null = kein brauchbarer Kurs (Aufrufer muss fail-closed reagieren).
+function _fxFactorFor(ccyRaw) {
+  if (!ccyRaw) return null;
+  const s = String(ccyRaw);
+  // audit/fix GBP-pence (2026-06-25): case-SENSITIVE. 'GBp'/'GBX' sind Pence, 'GBP' nicht.
+  const isPence = s === 'GBp' || s === 'GBX' || s.toUpperCase() === 'GBPENCE';
+  const key = isPence ? 'GBP' : s.toUpperCase();
+  if (key === 'USD') return { factor: 1, provenance: 'identity', key };
+  const rate = FX_TO_USD[key];
+  if (!_isValidFxRate(rate)) return null;   // V-SK-001: 0/negativ/NaN ist kein Kurs
+  return {
+    factor: isPence ? rate / 100 : rate,
+    provenance: FX_PROVENANCE[key] || 'fallback-hardcoded',
+    key,
+  };
+}
+
+// P0-Haertung 2 (F-CGPT-001): Herkunft in den Snapshot stempeln — nur ABWAERTS.
+// Wurde IRGENDEIN Bein der Umrechnung (Reporting-Kurs ODER Handelskurs) hartkodiert
+// gerechnet, ist der Snapshot hartkodiert, auch wenn das andere Bein live war.
+// Der Live-Fall bleibt bewusst unangetastet: den schreibt der Reporting-Zweig seit
+// F-DQ-003 selbst, und der Waechter liest ausschliesslich den hartkodiert-Marker.
+function _stampFxSource(snap, provenance) {
+  if (snap && snap.meta && provenance === 'fallback-hardcoded') {
+    snap.meta.fxRateSource = 'hardcoded-fallback';
+  }
+}
+
+// P0-Haertung 2 (F-CGPT-003): traegt diese Quote ueberhaupt einen Nutzwert?
+// _priceOnlyUpdate prueft bisher nur `if (!q) throw` — eine wahrheitswerte, aber
+// leere Quote ({currency:'USD'}) laeuft durch, schreibt den Snapshot neu und meldet
+// Status 'price-only' (= Erfolg). Seam fuer tests/p0-haertung2-fx-ehrlichkeit.test.js.
+function _quoteHasSubstance(q) {
+  return !!q && (Number.isFinite(q.regularMarketPrice) || Number.isFinite(q.marketCap));
+}
+
+// P0-Haertung 2 (F-CGPT-002): Handelswaehrung des price-only-Laufs bestimmen.
+// Seam fuer tests/p0-haertung2-fx-ehrlichkeit.test.js — vorher lag die Entscheidung
+// im Closure von pullAll und war nur ueber einen echten Netz-Pull erreichbar.
+function _resolveTradingFx(q, existing) {
+  const meta = (existing && existing.meta) || {};
+  // Reihenfolge = Verlaesslichkeit: heutige Quote > im Snapshot festgehaltene
+  // Quote-Waehrung > meta.tradingCurrency (Mapper, Tag 204 — auf jedem Voll-Pull gesetzt).
+  const ccy = (q && q.currency)
+    || (existing && existing.price && existing.price.currency)
+    || meta.tradingCurrency
+    || null;
+  if (!ccy) {
+    // F-CGPT-002: Bisher wurde hier auf meta.fxRateApplied bzw. auf den Faktor 1
+    // zurueckgefallen — ein Yen-Kurs landete damit unveraendert als Dollar-Kurs im
+    // Snapshot, und der Lauf meldete Erfolg. Es gibt keinen ehrlichen Rateweg:
+    // fail-closed. Der Aufrufer faellt auf den Voll-Pull zurueck, der die Waehrung
+    // frisch holt; scheitert auch der, zaehlt der Ticker als Fehlschlag.
+    return { ok: false, reason: 'keine Handelswaehrung ableitbar (quote.currency, price.currency, meta.tradingCurrency alle leer)' };
+  }
+  const fx = _fxFactorFor(ccy);
+  if (!fx) {
+    return { ok: false, reason: 'kein brauchbarer USD-Kurs fuer Handelswaehrung ' + ccy };
+  }
+  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy) };
+}
+
 // Tag 134: stable region enum derived from currency + exchangeName.
 // Replaces the prior bug where meta.region held Yahoo's raw exchangeName
 // like "NasdaqGS" / "Frankfurt", which the engine then compared against
@@ -481,16 +564,16 @@ function _applyTradingScale(snap, financialFactor) {
     : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
   let tradingFactor = financialFactor; // default: no divergence → identity vs financial factor
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
-    // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
-    const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
-    const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
-    const tradingRate = FX_TO_USD[tradingKey];
-    // V-SK-001: was Number.isFinite() only — a 0 or negative tradingRate passed
-    // this check and zeroed/inverted marketCap & analyst targets silently.
-    if (_isValidFxRate(tradingRate)) {
-      tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
+    // P0-Haertung 2 (F-CGPT-001): Kurs UND Herkunft aus einer Hand (_fxFactorFor).
+    // Pence-Sonderfall und V-SK-001-Validierung stecken dort; neu ist der Stempel:
+    // ein hier hartkodiert umgerechneter marketCap machte den Snapshot bisher zu
+    // einem 'fxConverted:true' ohne jede Spur der 2026-Q1-Tabelle.
+    const tfx = _fxFactorFor(tradingCcyRaw);
+    if (tfx) {
+      tradingFactor = tfx.factor;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
+      _stampFxSource(snap, tfx.provenance);
     } else {
       // FAIL CLOSED — trading ccy differs but no finite rate; do not persist a
       // silently mis-scaled marketCap (mirrors the reporting-missing branch).
@@ -628,20 +711,17 @@ function _convertSnapshotToUSD(snap) {
   let tradingFactor = factor;  // default: equals financial factor (no special handling)
   let tradingOverride = false;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
-    // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
-    // /^GB[Xp]$/i matched the 'P' in 'GBP' under /i → GBP trading ccy was treated as
-    // pence → trading marketCap/price scaled by GBP_rate/100 (100× too small).
-    // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
-    const tradingPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
-    const tradingKey = tradingPence ? 'GBP' : tradingCcyRaw.toUpperCase();
-    const tradingRate = FX_TO_USD[tradingKey];
-    // V-SK-001: was Number.isFinite() only — a 0 or negative tradingRate passed
-    // this check and zeroed/inverted marketCap & analyst targets silently.
-    if (_isValidFxRate(tradingRate)) {
-      tradingFactor = tradingPence ? tradingRate / 100 : tradingRate;
+    // P0-Haertung 2 (F-CGPT-001): Pence-Sonderfall + V-SK-001-Validierung stecken in
+    // _fxFactorFor; neu ist der Herkunfts-Stempel. Der Reporting-Kurs kann live sein
+    // und der Handelskurs trotzdem aus der hartkodierten Tabelle stammen — dann ist
+    // der Snapshot als Ganzes hartkodiert umgerechnet und muss das auch sagen.
+    const tfx = _fxFactorFor(tradingCcyRaw);
+    if (tfx) {
+      tradingFactor = tfx.factor;
       tradingOverride = true;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
+      _stampFxSource(snap, tfx.provenance);
     } else {
       // audit/fix F4 (2026-06-25): FAIL CLOSED. The trading currency differs from the
       // reporting currency (ADR-class) but FX_TO_USD has no finite rate for it. The
@@ -1307,7 +1387,13 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // currency. Flag this case so the audit pipeline can surface affected tickers.
   // We can't detect the actual financialCurrency without external data, but we
   // CAN flag the uncertainty.
-  const _ccyAmbiguous = (_fc == null && _tc != null);
+  // P0-Haertung 2 (09.08.2026, Zwilling zu F-CGPT-002): `_tc != null` liess den
+  // SCHLIMMSTEN Fall durchrutschen — Yahoo liefert WEDER Handels- noch
+  // Bilanzierungswaehrung, rcOriginal faellt auf die Konstante 'USD', und der
+  // Snapshot behauptete danach eine gesicherte Waehrung. Auch das ist geraten,
+  // also wird es als geraten markiert; fuer OTC/Pink-Sheets greift damit die
+  // vorhandene F-NY-004-Fail-Closed-Regel unten mit.
+  const _ccyAmbiguous = (_fc == null);
   const exchangeName = _y(pr, 'exchangeName') || '';
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
@@ -2382,7 +2468,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     await acquireYfSlot(); // audit fix BH-043
     const q = await _withAbortTimeout((signal) => yf.quote(stock.yahoo_symbol, undefined, { fetchOptions: { signal } }), 8000, stock.ticker + '/quote-only'); // F-PY-102: abortable
-    if (!q) throw new Error('quote returned null');
+    // P0-Haertung 2 (F-CGPT-003): frueher nur `if (!q)`. Eine wahrheitswerte, aber
+    // leere Quote ({currency:'USD'}) aktualisierte nichts, schrieb den Snapshot
+    // trotzdem neu (_pullMode/_quality) und meldete Status 'price-only' = Erfolg.
+    // Ohne Preis UND ohne Marktkapitalisierung gibt es nichts zu buchen: Ausfall,
+    // Alt-Snapshot bleibt unberuehrt stehen.
+    if (!_quoteHasSubstance(q)) {
+      throw new Error('price-only refused: Quote ohne Preis und ohne marketCap — kein Nutzwert');
+    }
     // audit fix BH-047: a successful quote (this call didn't throw not-found) breaks
     // any prior not-found streak — the ticker is confirmed alive.
     if (existing.meta && existing.meta.notFoundStreak) delete existing.meta.notFoundStreak;
@@ -2410,31 +2503,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     if (origCcy && origCcy !== 'USD' && (fxAppliedRaw == null || !Number.isFinite(fxAppliedRaw))) {
       throw new Error('price-only refused: non-USD original (' + origCcy + ') with no fxRateApplied — full pull needed');
     }
-    const fxApplied = Number.isFinite(fxAppliedRaw) ? fxAppliedRaw : 1;
-    // Compute trading-currency-to-USD factor independent of fxApplied.
-    const tradingCcyRaw = (q.currency || (existing.price && existing.price.currency) || '').toString();
-    let tradingFactor;
-    if (tradingCcyRaw) {
-      // audit/fix GBP-pence (2026-06-25): case-SENSITIVE pence test (see ~line 313).
-      // Same /^GB[Xp]$/i defect in the price-only fast path — under /i it misclassified
-      // 'GBP' (pounds) trading quotes as pence, scaling price/marketCap by GBP_rate/100.
-      // Match ONLY genuine pence: 'GBp' (lowercase p) or 'GBX' (uppercase X).
-      const isPence = tradingCcyRaw === 'GBp' || tradingCcyRaw === 'GBX' || tradingCcyRaw.toUpperCase() === 'GBPENCE';
-      const tradingFxKey = isPence ? 'GBP' : tradingCcyRaw.toUpperCase();
-      const tradingRate = FX_TO_USD[tradingFxKey];
-      // V-SK-001: was Number.isFinite() only — a 0/negative rate silently
-      // zeroed/inverted price-only-path marketCap/price.
-      if (_isValidFxRate(tradingRate)) {
-        tradingFactor = isPence ? tradingRate / 100 : tradingRate;
-      }
-    }
-    if (tradingFactor == null) {
-      // q.currency missing or unrate-able. Fall back to legacy fxApplied path —
-      // correct when trading ccy == financial ccy (the bulk of the universe),
-      // wrong only for ADRs in this corner case (which the refused-throw above
-      // catches when origCcy is also broken).
-      tradingFactor = (fxApplied !== 1 && origCcy !== 'USD') ? fxApplied : 1;
-    }
+    // P0-Haertung 2: Pence-/Kurs-/Herkunfts-Logik liegt in _resolveTradingFx +
+    // _fxFactorFor (Modulebene, exportiert) — hier nur noch Anwenden.
+    const tradingFx = _resolveTradingFx(q, existing);
+    if (!tradingFx.ok) throw new Error('price-only refused: ' + tradingFx.reason);
+    const tradingFactor = tradingFx.factor;
+    _stampFxSource(existing, tradingFx.provenance);
     if (q.regularMarketPrice != null) {
       // audit fix BH-045: stamp asOf only when a price was actually written. The
       // unconditional stamp (moved) previously marked the F-CI-016 freshness gate's
@@ -3792,5 +3866,12 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,
   // V-SK-001 (Hard Review 2026-07-31): FX-rate validity predicate fuer TDD.
   _isValidFxRate,
+  // P0-Haertung 2 (09.08.2026): FX-Ehrlichkeit als Seams — der Waechter
+  // tests/p0-haertung2-fx-ehrlichkeit.test.js FUEHRT diese Entscheidungen aus,
+  // statt den Quelltext nach Schreibmustern abzusuchen. _FX_TO_USD/_FX_PROVENANCE
+  // sind die LEBENDEN Tabellen: Tests spielen darueber eine Kunst-Waehrung ein und
+  // brauchen dafuer weder Netz noch eine manipulierte fx-rates.json.
+  _fxFactorFor, _stampFxSource, _quoteHasSubstance, _resolveTradingFx,
+  _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
   // NRB-SK-001 (Hard Review 2026-07-31): fuer TDD.
   _nullOutImpossibleZeroRevenue };
