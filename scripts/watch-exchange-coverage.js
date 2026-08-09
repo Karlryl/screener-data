@@ -32,11 +32,27 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
+function loadBaseline(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code === 'ENOENT') return {};
+    throw new Error(`Exchange-Coverage-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
+  }
+}
+
 function median(values) {
   const sorted = values.filter(Number.isFinite).sort((a, b) => a - b);
   if (sorted.length === 0) return null;
   const m = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
+}
+
+function activeMedian(history) {
+  const lastPositive = history.findLastIndex((v) => Number.isFinite(v) && v > 0);
+  if (lastPositive < 0) return null;
+  let firstPositive = lastPositive;
+  while (firstPositive > 0 && Number.isFinite(history[firstPositive - 1]) && history[firstPositive - 1] > 0) firstPositive--;
+  return median(history.slice(firstPositive, lastPositive + 1));
 }
 
 function countByExchange(snapDir) {
@@ -56,7 +72,10 @@ function countByExchange(snapDir) {
 // window (see there).
 function isExchangeAlarming(todayCount, history) {
   if (history.length < WINDOW) return false; // still seeding — not enough history to judge
-  const med = median(history);
+  // Nullwerte vor dem juengsten Lebenszeichen sind Seed-/Totzeiten, keine gesunde
+  // Referenz. Nur die juengste zusammenhaengende positive Phase ist vergleichbar;
+  // durchgehend tote Reihen bleiben damit bewusst still.
+  const med = activeMedian(history);
   if (med === null || med <= 0) return false;
   if (todayCount === 0) return true;
   return (med - todayCount) / med > DROP_THRESHOLD;
@@ -71,7 +90,7 @@ function checkDrift(today, baseline) {
     const todayCount = today[ex] || 0;
     const history = (baseline[ex] || []).filter(Number.isFinite);
     if (!isExchangeAlarming(todayCount, history)) continue;
-    const med = median(history);
+    const med = activeMedian(history);
     if (todayCount === 0) {
       alerts.push(`${ex}: dropped to 0 (median ${med})`);
     } else {
@@ -124,7 +143,7 @@ function updateBaseline(baseline, today, dateStr) {
 
 function main() {
   const today = countByExchange(SNAP_DIR);
-  const baseline = loadJson(BASELINE_PATH, {});
+  const baseline = loadBaseline(BASELINE_PATH);
 
   console.log('Exchange coverage today: ' + JSON.stringify(today));
 
@@ -144,6 +163,9 @@ function main() {
   console.log('No exchange coverage drift.');
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  try { main(); }
+  catch (e) { console.error('::error::watch-exchange-coverage hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
+}
 
-module.exports = { countByExchange, checkDrift, updateBaseline, median, isExchangeAlarming };
+module.exports = { countByExchange, checkDrift, updateBaseline, median, activeMedian, isExchangeAlarming, loadBaseline };

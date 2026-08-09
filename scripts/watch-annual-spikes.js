@@ -27,7 +27,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { norm } = require('../src/scoring/snapshot.js'); // das einzige Tor zu snapshot.annual.*
+const { norm, periodEnds } = require('../src/scoring/snapshot.js'); // das einzige Tor zu snapshot.annual.*
 
 const ROOT = path.join(__dirname, '..');
 const SNAP_DIR = path.join(ROOT, 'snapshots');
@@ -89,6 +89,19 @@ function findeAusreisser(reihe, faktor = FAKTOR, minBetrag = MIN_BETRAG) {
     if (Math.abs(v) / nachbar >= faktor) treffer.push({ index: i, wert: v, links: l, rechts: r });
   }
   return treffer;
+}
+
+function stabilerSchluessel(x) {
+  const periode = x.periode || `werte:${x.links}|${x.wert}|${x.rechts}`;
+  return `${x.ticker}|${x.reihe}|${periode}`;
+}
+function istBekannt(x, bestand) {
+  // Altbestand (Indexschluessel) bleibt fuer die laufende und fuer eine um genau
+  // ein neues Geschaeftsjahr verschobene Generation lesbar. Neu geschriebene
+  // Baselines verwenden ausschliesslich die stabile Perioden-/Wertsignatur.
+  return bestand.has(stabilerSchluessel(x))
+    || bestand.has(`${x.ticker}|${x.reihe}|${x.index}`)
+    || (x.index > 0 && bestand.has(`${x.ticker}|${x.reihe}|${x.index - 1}`));
 }
 
 // Wie weit die heutige Population vom Aufnahme-Zeitpunkt abweichen darf, bevor der
@@ -159,8 +172,9 @@ function scanSnapshots(snapDir) {
     if (!annual) continue;
     const ticker = (s.meta && s.meta.ticker) || f.replace(/\.json$/, '');
     for (const name of REIHEN) {
+      const enden = periodEnds(s, name);
       for (const t of findeAusreisser(annual[name])) {
-        funde.push({ ticker, reihe: name, ...t });
+        funde.push({ ticker, reihe: name, periode: enden[t.index], ...t });
       }
     }
     capexWerte += norm(s, 'annualCapex').filter(Number.isFinite).length;
@@ -181,7 +195,7 @@ function main() {
   }
   const { funde, capexPositiv, capexWerte } = scan;
   const gelesen = scan.gescannt - scan.parseFehler;
-  const schluessel = (x) => `${x.ticker}|${x.reihe}|${x.index}`;
+  const schluessel = stabilerSchluessel;
   const basis = loadJson(BASELINE_PATH, {});
   const mio = (v) => (v / 1e6).toFixed(0);
 
@@ -254,13 +268,13 @@ function main() {
   }
 
   const bestand = new Set(basis.faelle || []);
-  const neu = funde.filter((x) => !bestand.has(schluessel(x)));
+  const neu = funde.filter((x) => !istBekannt(x, bestand));
 
   console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   // Vom Bestand nur eine Kostprobe, aber die Zahl bleibt genannt — kein stilles Kappen.
-  const bekannt = funde.filter((x) => bestand.has(schluessel(x)));
+  const bekannt = funde.filter((x) => istBekannt(x, bestand));
   for (const x of bekannt.slice(0, 15)) console.log(`  bek. ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   if (bekannt.length > 15) console.log(`  … und ${bekannt.length - 15} weitere bekannte`);
 
@@ -271,7 +285,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {

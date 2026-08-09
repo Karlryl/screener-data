@@ -46,7 +46,7 @@ function checkDetectors(vendors, existsFn) {
 }
 
 // Baut das Banner-Status-Objekt (coverage-status-Muster) aus den Befunden.
-function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, nowIso, monthTag) {
+function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, nowIso, monthTag, measurementErrors = []) {
   const driftFlags = [];
   const nTotal = manifestFacts && manifestFacts.n_total;
   if (Number.isFinite(nTotal) && (nTotal < 15000 || nTotal > 60000)) driftFlags.push(`Universe-Groesse n_total=${nTotal} ausserhalb Plausibilitaets-Range [15000..60000]`);
@@ -54,6 +54,7 @@ function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, now
   for (const m of detectors.missing) driftFlags.push(`DETEKTOR FEHLT: ${m.detector} (Register-Zeile "${m.vendor}") — struktureller Register-Drift`);
   const vendorWarnings = vendorResults.filter(v => !v.ok).map(v => `${v.name}: HTTP ${v.code || v.err || '?'}`);
   const needsHuman = true; // der Urteils-Teil ist per Definition jeden Monat faellig
+  for (const e of measurementErrors) driftFlags.push(`NICHT MESSBAR: ${e}`);
   return {
     schema: 'plan-check-status/v1',
     generated_at: nowIso,
@@ -63,6 +64,7 @@ function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, now
     drift_flags: driftFlags,
     vendor_status: vendorResults.map(v => ({ name: v.name, ok: !!v.ok, code: v.code != null ? v.code : null })),
     vendor_warnings: vendorWarnings,
+    measurement_errors: measurementErrors,
     checklist: CHECKLIST,
   };
 }
@@ -101,13 +103,14 @@ async function run() {
   const reportPath = get('--report', path.join('reports', `plan-check-${monthTag}.md`));
 
   const detectors = checkDetectors(VENDORS, (p) => fs.existsSync(p));
-  let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) {}
-  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) {}
+  const measurementErrors = [];
+  let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) { measurementErrors.push('Manifest snapshots/_manifest.json: ' + e.message); }
+  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { measurementErrors.push('Snapshot-Zahl: ' + e.message); }
 
   const vendorResults = [];
   for (const v of VENDORS) vendorResults.push(await probe(v, 20000));
 
-  const status = buildStatus(vendorResults, detectors, manifest, snapCount, now.toISOString(), monthTag);
+  const status = buildStatus(vendorResults, detectors, manifest, snapCount, now.toISOString(), monthTag, measurementErrors);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(status, null, 2) + '\n');
   fs.mkdirSync(path.dirname(reportPath), { recursive: true });
@@ -168,6 +171,12 @@ function selftest() {
     const s = buildStatus(VENDORS.map(v => ({ name: v.name, ok: true, code: 200 })), { missing: [], hard: false }, { n_total: 23689 }, 6088, '2026-07-08T00:00:00Z', '2026-07');
     const md = renderReport(s);
     assert.ok(md.includes('Urteils-Teil')); assert.ok(md.includes('Ist-Zustand-Block'));
+  });
+  t('buildStatus: null-Messung wird sichtbar und Bericht behauptet nicht "im Rahmen"', () => {
+    const vr = VENDORS.map(v => ({ name: v.name, ok: true, code: 200 }));
+    const s = buildStatus(vr, { missing: [], hard: false }, null, null, '2026-07-08T00:00:00Z', '2026-07', ['Manifest: EACCES']);
+    assert.ok(s.drift_flags.some(f => f.includes('NICHT MESSBAR')));
+    assert.ok(!renderReport(s).includes('Universe/Detektoren/Cache im Rahmen'));
   });
 
   console.log(`\nplan-check selftest: ${pass} ok, ${fail} fail`);

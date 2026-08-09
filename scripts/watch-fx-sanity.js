@@ -45,6 +45,14 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
+function loadBaseline(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code === 'ENOENT') return null;
+    throw new Error(`FX-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
+  }
+}
+
 // ── Grenzen-Audit C-3 (03.08.2026): wurde ueberhaupt hartkodiert umgerechnet? ───────────
 // Die Luecke, die das schliesst: pull-yahoo.js verwirft fx-rates.json ab FX_STALE_DAYS = 14
 // KOMPLETT und rechnet mit der 2024er Hartkodierung weiter (INR bis 14,5 % daneben, still,
@@ -223,7 +231,7 @@ function main() {
   console.log(`Over-cap counts — US-primary (>=${CAP_US / 1e6}M): ${scan.usOver}, foreign (>=${CAP_FOREIGN / 1e9}B): ${scan.foreignOver}`);
   console.log(`Hartkodiert umgerechnet: ${scan.n} Snapshots` + (scan.n ? ` (${Object.entries(scan.jeWaehrung).sort((a, b) => b[1] - a[1]).map(([c, k]) => c + ':' + k).join(', ')})` : ''));
 
-  const baseline = loadJson(BASELINE_PATH, null);
+  const baseline = loadBaseline(BASELINE_PATH);
   const problems = befunde(scan, baseline);
 
   const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
@@ -231,10 +239,14 @@ function main() {
   // Zweig von updateBaseline uebernimmt `today` unveraendert; seit Tag 520 waren dadurch
   // gescannt/parseFehler mit hineingerutscht, mit dem gemeinsamen Scan kaeme jetzt auch noch
   // die Waehrungs-Tabelle mit. Die Projektion haelt die Datei bei dem, was checkJump liest.
-  const nextBaseline = updateBaseline(baseline, { usOver: scan.usOver, foreignOver: scan.foreignOver }, dateStr);
-  fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
-  writeJsonAtomic(BASELINE_PATH, nextBaseline);
-  console.log('Baseline updated: ' + BASELINE_PATH);
+  // Ein Lauf ohne beobachtete Snapshots darf den letzten Vergleichsanker nicht
+  // durch zwei Null-Zaehler ersetzen.
+  if (scan.gescannt > 0) {
+    const nextBaseline = updateBaseline(baseline, { usOver: scan.usOver, foreignOver: scan.foreignOver }, dateStr);
+    fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
+    writeJsonAtomic(BASELINE_PATH, nextBaseline);
+    console.log('Baseline updated: ' + BASELINE_PATH);
+  } else console.error('::warning::FX-Baseline nicht aktualisiert: Scan hat nichts gesehen.');
 
   process.exitCode = exitCodeFor(problems);
   if (problems.length > 0) {
@@ -244,6 +256,9 @@ function main() {
   console.log('No FX-sanity drift.');
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  try { main(); }
+  catch (e) { console.error('::error::watch-fx-sanity hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
+}
 
-module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor, istHartkodiert, HARDCODED_MARKER, MARKER_FELDER };
+module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor, istHartkodiert, HARDCODED_MARKER, MARKER_FELDER, loadBaseline };

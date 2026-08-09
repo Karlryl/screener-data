@@ -174,6 +174,14 @@ function detectStatsDrift(today, history, threshold) {
   return alerts;
 }
 
+function uncheckedStats(today, history) {
+  const watched = ['yahooOk', 'fxRatesCount', 'earningsWithDate', 'priceTickerCount', 'snapshotsCount'];
+  if (!Array.isArray(history) || history.length < MIN_HISTORY_RUNS) return [];
+  const recent = history.slice(-MIN_HISTORY_RUNS);
+  return watched.filter((metric) => today[metric] == null
+    || recent.filter((r) => Number.isFinite(r && r[metric])).length < MIN_HISTORY_RUNS);
+}
+
 async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   if (!fs.existsSync(HIST_DIR)) fs.mkdirSync(HIST_DIR, { recursive: true });
@@ -196,8 +204,10 @@ async function main() {
   }
 
   const alerts = detectStatsDrift(today, history.slice(0, -1), DRIFT_THRESHOLD);
+  const unchecked = uncheckedStats(today, history.slice(0, -1));
   if (alerts.length === 0) {
-    console.log('  no drift detected.');
+    console.log('  no drift detected.' + (unchecked.length
+      ? ` (${unchecked.length} Metrik(en) ungeprueft: ${unchecked.join(', ')})` : ''));
     return 0;
   }
   console.log('  DRIFT DETECTED:');
@@ -242,7 +252,7 @@ async function runCli(mainImpl = main, io = {}) {
   }
 }
 
-module.exports = { collectStats, detectStatsDrift, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
+module.exports = { collectStats, detectStatsDrift, uncheckedStats, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
 
 if (require.main === module) {
   runCli();
