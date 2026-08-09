@@ -25,6 +25,7 @@ const OUT = path.join(ROOT, 'external-data', 'kr-secannual.json');
 // BH-013 fix: atomic tmp+rename write (was plain fs.writeFileSync — a crash mid-write left a
 // truncated kr-secannual.json). Same fix build-secannual.js already uses (Tag 189/BH-010).
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
+const { readJsonExistingOrThrow, FEHLT } = require(path.join(ROOT, 'lib/read-json.js'));
 function loadKey() {
   if (process.env.OPENDART_KEY) return process.env.OPENDART_KEY;
   try { return (fs.readFileSync(path.join(ROOT, '.env'), 'utf8').match(/OPENDART_KEY=(\w+)/) || [])[1]; }
@@ -83,16 +84,36 @@ function buildSeries(opByYear, revByYear, years) {
   return { fys, annualOpInc: fys.map((y) => cell(opByYear, y)), annualRev: fys.map((y) => cell(revByYear, y)) };
 }
 
-async function main() {
+// F-CGPT-021 (P0-Haertung 09.08.2026): der Writer startete mit `const out = {}` und schrieb
+// das Ergebnis EINES Laufs als kompletten Store. Live nachgestellt (echtes main(), Netz
+// gestubbt): antworten nur 2015-2017 und alle spaeteren Jahre laufen auf ECONNRESET, dann
+// genuegen drei Jahre fuer einen gruenen Neu-Write — die zehnjaehrige Historie und jeder
+// andere Name im Store waren weg, Exit 0.
+//
+// Semantik jetzt:
+//   Erstanlage      = kr-secannual.json fehlt (dann {} als Basis).
+//   Merge-Basis     = vorhandener Store; korrupt -> Wurf, nichts wird ueberschrieben.
+//   Ersetzen        = ein Ticker wird NUR ueberschrieben, wenn KEIN Jahresabruf fehlgeschlagen
+//                     ist. Ein Jahr, das die Quelle bewusst nicht liefert (status!='000', z.B.
+//                     noch nicht eingereicht), ist kein Fehler; ein Netz-/Parse-Fehler schon.
+//   Laut            = jeder fehlgeschlagene Jahresabruf faerbt den Lauf am Ende rot; der
+//                     Altbestand bleibt dabei erhalten (Merge-Write laeuft vorher).
+// opts ist der Test-Seam (getJSON/out) — Bauform wie SEC_SNAPSHOTS_DIR in build-secannual.
+async function main(opts = {}) {
+  const holen = opts.getJSON || getJSON;
+  const outPfad = opts.out || OUT;
   const KEY = loadKey();
   if (!KEY) { console.error('build-krannual: kein OPENDART_KEY (process.env oder .env)'); process.exit(1); }
-  const out = {};
+  const vorher = readJsonExistingOrThrow(outPfad);
+  const out = vorher === FEHLT ? {} : vorher;
+  const unvollstaendig = [];
   for (const [tk, corp] of Object.entries(KR)) {
     const opByYear = {}, revByYear = {};
+    let jahresFehler = 0;
     for (const yr of YEARS) {
       const u = `https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?crtfc_key=${KEY}`
         + `&corp_code=${corp}&bsns_year=${yr}&reprt_code=11011&fs_div=CFS`;
-      let j; try { j = await getJSON(u); } catch (_) { continue; }
+      let j; try { j = await holen(u); } catch (e) { jahresFehler++; console.warn(`${tk} ${yr}: Abruf fehlgeschlagen (${e.message})`); continue; }
       if (j.status !== '000' || !Array.isArray(j.list)) continue; // 013=keine Daten fuer das Jahr -> skip
       const rev = pick(j.list, 'ifrs-full_Revenue', /^매출액$/);
       const op = pick(j.list, 'dart_OperatingIncomeLoss', /^영업이익/);
@@ -104,6 +125,12 @@ async function main() {
     // Gate on finite-value counts, not array length -- the shared axis (BH-012) can now be
     // longer than either field's own coverage.
     const opCount = Object.keys(opByYear).length, revCount = Object.keys(revByYear).length;
+    if (jahresFehler > 0) {
+      unvollstaendig.push(`${tk}: ${jahresFehler} Jahresabruf(e) fehlgeschlagen`);
+      console.warn(`${tk}: ${jahresFehler} Jahresabruf(e) fehlgeschlagen (nur ${opCount}/${revCount} Jahre erreicht) `
+        + '-> Altbestand bleibt unveraendert, kein Teil-Ueberschreiben');
+      continue;
+    }
     if (opCount >= 3 && revCount >= 3) {
       // BH-013 fix: generatedAt/nfy freshness metadata, mirrors sec-secannual.json's `nfy` field
       // (build-secannual.js) so a future CI check can flag a stale/incomplete pull.
@@ -113,9 +140,15 @@ async function main() {
       console.warn(`${tk}: zu wenig Daten (op=${opCount}, rev=${revCount}) -> uebersprungen`);
     }
   }
-  writeFileAtomic(OUT, JSON.stringify(out, null, 1));
-  console.log(`geschrieben: ${OUT} (${Object.keys(out).length} Namen)`);
+  writeFileAtomic(outPfad, JSON.stringify(out, null, 1));
+  console.log(`geschrieben: ${outPfad} (${Object.keys(out).length} Namen)`);
+  // Erst schreiben (der Merge erhaelt den Altbestand), dann rot werden: ein stiller Exit 0
+  // ueber einem halb abgerufenen Lauf ist genau der Befund.
+  if (unvollstaendig.length) {
+    throw new Error('build-krannual unvollstaendig — ' + unvollstaendig.join('; ')
+      + ' (Altbestand erhalten, aber der Lauf hat NICHT aktualisiert)');
+  }
 }
-if (require.main === module) main();
+if (require.main === module) main().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
 
-module.exports = { numOf, buildSeries, yearsFor };
+module.exports = { numOf, buildSeries, yearsFor, main };

@@ -38,6 +38,26 @@ const ROOT = path.join(__dirname, '..');
 const DIR = path.join(ROOT, 'external-data', 'ticker-map');
 const GRUNDBILD = path.join(DIR, '_grundbild.json');
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
+const { readJsonExistingOrThrow, FEHLT } = require(path.join(ROOT, 'lib/read-json.js'));
+
+/**
+ * Grundbild von der Platte holen — die EINE Stelle, an der das passiert.
+ *
+ * F-CGPT-026 (P0-Haertung 09.08.2026): es gab zwei Leser, beide mit blankem catch.
+ * In run() bedeutete das: ein VORHANDENES, aber unlesbares Grundbild fiel auf `null`,
+ * der Erstanlage-Zweig sprang an und schrieb den heutigen Vollstand darueber. Damit ist
+ * der Nullpunkt jeder Rekonstruktion still ausgetauscht — die Tageszeilen davor gehoeren
+ * ab dann zu einem Bild, das es nicht mehr gibt, und "welche Ticker gab es am X?" ist
+ * dauerhaft falsch beantwortet. In rotiereGrundbild() bedeutete es: die Monats-Rotation
+ * (die Schadensbegrenzung fuer genau diesen Fall) wurde still uebersprungen.
+ *
+ * Erstanlage ist AUSSCHLIESSLICH die fehlende Datei -> null. Alles andere wirft; das
+ * Archiv unter archiv/ ist dann die Reparaturquelle, nicht der heutige Tag.
+ */
+function liesGrundbild(p = GRUNDBILD) {
+  const v = readJsonExistingOrThrow(p);
+  return v === FEHLT ? null : v;
+}
 
 const QUELLEN = {
   sec: 'https://www.sec.gov/files/company_tickers.json',
@@ -236,9 +256,9 @@ function alleZeilen(dir = DIR) {
  */
 function rotiereGrundbild(karte, datum, dir = DIR, trocken = false) {
   const gb = path.join(dir, '_grundbild.json');
-  let ab;
-  try { ab = alsGrundbild(JSON.parse(fs.readFileSync(gb, 'utf8'))).ab; }
-  catch (_) { return null; }   // kein/unlesbares Grundbild -> das ist Sache der Erstanlage in run()
+  const bild = liesGrundbild(gb);   // fehlt -> Sache der Erstanlage in run(); korrupt -> Wurf
+  if (!bild) return null;
+  const ab = alsGrundbild(bild).ab;
   if (ab && ab.slice(0, 7) === datum.slice(0, 7)) return null;   // in diesem Monat schon rotiert
   const archiv = path.join(dir, 'archiv', '_grundbild-bis-' + datum + '.json');
   if (fs.existsSync(archiv)) return null;   // eine Archiv-Kopie wird NIE ueberschrieben
@@ -287,8 +307,7 @@ async function run(argv = process.argv.slice(2)) {
   if (neu.size < 5000) throw new Error('nur ' + neu.size + ' Symbole erkannt — Quelle vermutlich kaputt, Tag NICHT geschrieben');
 
   fs.mkdirSync(DIR, { recursive: true });
-  let grundbild = null;
-  try { grundbild = JSON.parse(fs.readFileSync(GRUNDBILD, 'utf8')); } catch (_) { /* noch keins */ }
+  const grundbild = liesGrundbild();   // null = es gibt wirklich noch keins
 
   if (!grundbild) {
     const obj = Object.fromEntries([...neu.entries()].sort((a, b) => a[0].localeCompare(b[0])));
@@ -385,7 +404,7 @@ async function run(argv = process.argv.slice(2)) {
 
 module.exports = {
   baueKarte, diff, zustandAus, alleZeilen, alsText, summeVon, alsGrundbild, rotiereGrundbild,
-  QUELLEN, DIR, GRUNDBILD,
+  liesGrundbild, QUELLEN, DIR, GRUNDBILD,
 };
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });

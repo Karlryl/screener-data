@@ -51,7 +51,9 @@ const zlib = require('zlib');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 // Reuse the (now-extended) Form-4 XML parser — the full submission .txt
 // carries the ownership XML inline so parseForm4Xml works on it directly.
-const { parseForm4Xml } = require('./pull-insider-form4.js');
+// ladeForm4Cache: fail-loud-Leser fuer DIESE Datei — beide Skripte schreiben denselben
+// Cache, also gilt dieselbe Erstanlage-Regel (F-CGPT-029, s. Kommentar dort).
+const { parseForm4Xml, ladeForm4Cache } = require('./pull-insider-form4.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -167,6 +169,36 @@ function maxYmd(a, b) {
   if (!a) return b || null;
   if (!b) return a;
   return a > b ? a : b;
+}
+
+// ─── Cursor-Ehrlichkeit (F-CGPT-030, P0-Haertung 09.08.2026) ────────────
+// Der Cursor rueckte vor, SOBALD der Index-Abruf zurueckkam — auch bei 404, auch bevor
+// irgendetwas verarbeitet war. Live nachgestellt (echtes main(), Index 404 fuer den
+// Werktag 05.08.): lastIndexedDate=20260805, Log "no daily index (holiday/weekend/
+// not-yet-posted)", Exit 0. Der naechste Lauf startet HINTER dem Tag — die Form 4s
+// dieses Tages sind dauerhaft weg, weil dieses Skript nur ab dem Cursor nachlaedt.
+//
+// targetDates() liefert ausschliesslich Werktage. Ein 404 heisst hier also entweder
+//   (a) Boersenfeiertag  -> es wird NIE einen Index geben -> Cursor MUSS vorruecken,
+//                           sonst steht er fuer immer und die Nachlade-Spanne waechst
+//                           bis an MAX_CATCHUP_DAYS, oder
+//   (b) noch nicht gepostet (SEC stellt ~22:00 ET ein) -> der Index KOMMT noch ->
+//                           Cursor muss stehen bleiben.
+// Unterschieden wird am Alter statt an einem Feiertagskalender: was nach INDEX_KARENZ_TAGEN
+// nicht da ist, kommt nicht mehr. Kalender waere genauer, muesste aber gepflegt werden und
+// faellt bei jeder ungeplanten Schliessung (Trauertag, Sturm) auf denselben Fehler zurueck.
+// ponytail: Alters-Heuristik statt Feiertagskalender; Karenz notfalls hochsetzen.
+const INDEX_KARENZ_TAGE = 3;
+function indexNachreichbar(dateYmd, jetzt = Date.now(), karenzTage = INDEX_KARENZ_TAGE) {
+  return (jetzt - parseYmd(dateYmd).getTime()) < karenzTage * 86400000;
+}
+
+// Darf der "bis hier ist alles indiziert"-Cursor auf `date` gesetzt werden?
+// EINE Regel, zwei Aufrufer (404-Zweig und Ende der Tagesverarbeitung).
+function cursorDarfVor({ contiguous, notFound, date, jetzt, tagesFehler = 0, tagVollstaendig = true }) {
+  if (!contiguous) return false;                       // eine fruehere Luecke im Lauf blockt alles danach
+  if (notFound) return !indexNachreichbar(date, jetzt); // nur der endgueltig fehlende Index zaehlt als erledigt
+  return tagesFehler === 0 && tagVollstaendig;          // sonst: nur ein WIRKLICH abgearbeiteter Tag
 }
 
 // Build the list of target YYYYMMDD strings. The index is posted ~22:00 ET,
@@ -404,7 +436,7 @@ async function main() {
 
   // audit/fix BH-020: load the cache BEFORE computing target dates so the
   // last-successfully-indexed cursor (if any) can drive the date range.
-  const existing = readJsonSafe(FORM4_CACHE_PATH) || {};
+  const existing = ladeForm4Cache();
   const byTicker = (existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
@@ -460,12 +492,18 @@ async function main() {
       }
     }
     await sleep(RATE_DELAY_MS);
-    // audit/fix BH-020: this date's index was successfully retrieved
-    // (whether it has rows or is a legitimate holiday/weekend 404) — advance
-    // the cursor as long as no earlier date in this run left a gap.
-    if (cursorContiguous) lastIndexedDate = date;
     if (idxRes.notFound) {
-      console.log('[' + date + '] no daily index (holiday/weekend/not-yet-posted) — skipping');
+      // F-CGPT-030: nur ein Index, der nicht mehr kommt (Feiertag), gilt als erledigt.
+      if (cursorDarfVor({ contiguous: cursorContiguous, notFound: true, date, jetzt: Date.now() })) {
+        lastIndexedDate = date;
+        console.log('[' + date + '] kein Tagesindex und aelter als ' + INDEX_KARENZ_TAGE +
+          ' Tage (Boersenfeiertag) — Cursor rueckt vor');
+      } else {
+        cursorContiguous = false;
+        console.warn('::warning::[' + date + '] Tagesindex fehlt, ist aber juenger als ' +
+          INDEX_KARENZ_TAGE + ' Tage — SEC hat ihn vermutlich noch nicht eingestellt. Cursor ' +
+          'bleibt auf ' + (lastIndexedDate || 'null') + ', der naechste Lauf holt den Tag nach.');
+      }
       continue;
     }
 
@@ -476,9 +514,12 @@ async function main() {
       ' watchlist hits=' + hits.length);
 
     let dayFetched = 0, dayAdded = 0, dayPBuys = 0, dayParseErrors = 0;
+    // F-CGPT-030: der Tag gilt nur als indiziert, wenn er auch abgearbeitet wurde.
+    let dayErrors = 0, dayVollstaendig = true;
     for (const hit of hits) {
       if (fetchBudgetLeft <= 0) {
         console.log('  [sample] SAMPLE_LIMIT reached mid-date — stopping');
+        dayVollstaendig = false;   // abgebrochen -> der Tag ist NICHT durchindiziert
         break;
       }
       const ticker = cikToTicker.get(hit.cik);
@@ -501,13 +542,13 @@ async function main() {
           try { docRes = await httpGet(docUrl); }
           catch (e2) {
             console.warn('  [' + ticker + '] fetch ERROR (post-backoff) ' + hit.accession + ': ' + e2.message);
-            grandErrors++;
+            grandErrors++; dayErrors++;
             await sleep(RATE_DELAY_MS);
             continue;
           }
         } else {
           console.warn('  [' + ticker + '] fetch ERROR ' + hit.accession + ': ' + e.message);
-          grandErrors++;
+          grandErrors++; dayErrors++;
           await sleep(RATE_DELAY_MS);
           continue;
         }
@@ -565,6 +606,21 @@ async function main() {
     console.log('[' + date + '] done: fetched=' + dayFetched + ' txnsAdded=' +
       dayAdded + ' P-buys=' + dayPBuys + ' parseErrors=' + dayParseErrors);
 
+    // F-CGPT-030: Cursor NACH der Verarbeitung, und nur wenn sie durchlief. Bleibt er stehen,
+    // sperrt cursorContiguous auch alle spaeteren Tage dieses Laufs — der Cursor ist eine
+    // "bis hier LUECKENLOS"-Marke, kein Fortschrittsbalken. (dayParseErrors zaehlt bewusst
+    // NICHT mit: eine dauerhaft unparsbare Einreichung wuerde den Cursor sonst fuer immer
+    // festnageln; sie faellt ueber grandParseErrors ins Total-Failure-Gate.)
+    if (cursorDarfVor({ contiguous: cursorContiguous, notFound: false, date, jetzt: Date.now(),
+      tagesFehler: dayErrors, tagVollstaendig: dayVollstaendig })) {
+      lastIndexedDate = date;
+    } else {
+      cursorContiguous = false;
+      console.warn('::warning::[' + date + '] nicht vollstaendig indiziert (Abruffehler=' + dayErrors +
+        (dayVollstaendig ? '' : ', vorzeitig abgebrochen') + ') — Cursor bleibt auf ' +
+        (lastIndexedDate || 'null') + ', der naechste Lauf holt den Tag nach.');
+    }
+
     // audit/fix BH-020: never move the persisted cursor BACKWARD — guards
     // the SINGLE_DATE ad-hoc-backfill knob (an arbitrary, possibly older,
     // single date) from regressing a cursor that's already further ahead.
@@ -607,7 +663,8 @@ module.exports = {
   parseDailyForm4Rows, targetDates, buildMaps, mergeTransactions,
   _internals: {
     httpGet, quarterOf, ymd, parseYmd, withinLookback, txnKey,
-    purgeAmendedPeriod, maxYmd, resolveMergeTicker, _isTotalFailure
+    purgeAmendedPeriod, maxYmd, resolveMergeTicker, _isTotalFailure,
+    cursorDarfVor, indexNachreichbar, INDEX_KARENZ_TAGE
   },
   _secRateLimit: SEC_RATE_LIMIT
 };

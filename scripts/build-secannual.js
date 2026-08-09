@@ -34,6 +34,20 @@ const { fetchSecTickers } = require(path.join(ROOT, 'discovery/sec-tickers.js'))
 // BH-010 fix: atomic tmp+rename writes (was plain fs.writeFileSync — a crash
 // mid-write left a truncated companyfacts cache file or a truncated OUT).
 const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
+const { readJsonExistingOrThrow, FEHLT } = require(path.join(ROOT, 'lib/read-json.js'));
+
+// F-CGPT-020 (P0-Haertung 09.08.2026): hier stand `catch (_) { out = {} }`. Damit war eine
+// VORHANDENE, aber unlesbare sec-secannual.json von "gibt es noch nicht" nicht zu unterscheiden —
+// die Merge-Basis fiel auf leer, und der Lauf schrieb seinen Teilbestand darueber. Live
+// nachgestellt: korrupter Store + kein einziger ziehbarer Kandidat -> geschrieben wurde `{}`,
+// die komplette committete Datenschicht weg, Exit 0.
+// Erstanlage ist AUSSCHLIESSLICH die fehlende Datei. Alles andere (Syntaxmuell, halber Write,
+// Rechteproblem, `null`/Array statt Objekt) ist ein vorhandener Bestand -> Wurf, nichts wird
+// ueberschrieben.
+function ladeMergeBasis(p = OUT) {
+  const v = readJsonExistingOrThrow(p);
+  return v === FEHLT ? {} : v;
+}
 
 // T569-F4 (Review Tag 569): dieser Loader stand auf einem BLANKEN `catch (_) { continue; }` —
 // nicht einmal ein Zaehler. Sein Ergebnis wird COMMITTET (external-data/sec-secannual.json)
@@ -136,9 +150,9 @@ async function run() {
   // Overwrite->Merge (Court-Vorbedingung der Expansion): bestehenden Store als Basis laden -> ein Teil-/Abbruch-Lauf
   // oder ein geaendertes Kandidatenset LOESCHT keine schon abgedeckten Namen (Coverage akkumuliert non-ephemer).
   // Namen-Granularitaet: jedes out[tk] stammt aus EINEM extractSecSeries-Call (ein _fys) -> feld-kohaerent, nie gesplittet.
-  let out = {};
-  try { out = JSON.parse(fs.readFileSync(OUT, 'utf8')); console.log('Merge-Basis:', Object.keys(out).length, 'bestehende Namen geladen'); } catch (_) { out = {}; }
+  const out = ladeMergeBasis();
   const preCount = Object.keys(out).length;
+  console.log('Merge-Basis:', preCount, 'bestehende Namen geladen');
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
@@ -183,4 +197,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain, loadUniverse };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain, loadUniverse, ladeMergeBasis };

@@ -55,6 +55,7 @@ const https = require('https');
 
 // Tag 189: atomic tmp+rename writes for both cache files.
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+const { readJsonExistingOrThrow, FEHLT } = require('../lib/read-json.js');
 
 // ─── Config ─────────────────────────────────────────────────────────────
 const ROOT = path.join(__dirname, '..');
@@ -113,6 +114,22 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 function readJsonSafe(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
   catch (e) { return null; }
+}
+
+// F-CGPT-029 (P0-Haertung 09.08.2026): der Form-4-Cache wurde mit
+// `readJsonSafe(FORM4_CACHE_PATH) || {}` geladen — eine vorhandene, aber unlesbare Datei
+// war damit von "gibt es noch nicht" nicht zu unterscheiden. Live nachgestellt (echtes
+// main(), Netz gestubbt, SAMPLE_LIMIT=1): korrupter Cache -> byTicker startet leer -> nach
+// dem ersten Ticker wird der volle Cache neu geschrieben, jeder andere Name ist weg,
+// Exit 0. Der Cache ist ~42 MB Insider-Historie; sie ist nicht nachziehbar, weil das
+// Tagesskript nur ab dem Cursor nachlaedt.
+//
+// Erstanlage = Datei fehlt. Korrupt = vorhandener Bestand -> Wurf, nichts wird ueberschrieben.
+// Beide Form-4-Skripte teilen sich diesen Leser (pull-insider-form4-daily.js importiert ihn),
+// damit die Regel an EINER Stelle steht — sie schreiben dieselbe Datei.
+function ladeForm4Cache(p = FORM4_CACHE_PATH) {
+  const v = readJsonExistingOrThrow(p);
+  return v === FEHLT ? {} : v;
 }
 
 function ensureDir(p) {
@@ -529,7 +546,7 @@ async function main() {
   }
 
   // Load existing cache so we can honour the per-ticker TTL.
-  const existing = readJsonSafe(FORM4_CACHE_PATH) || {};
+  const existing = ladeForm4Cache();
   const byTicker = (existing && existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
@@ -668,7 +685,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  parseForm4Xml, selectUsTickers, loadTickerCikMap,
+  parseForm4Xml, selectUsTickers, loadTickerCikMap, ladeForm4Cache,
   _internals: { httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure },
   _secRateLimit: SEC_RATE_LIMIT
 };

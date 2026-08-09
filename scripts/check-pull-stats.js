@@ -64,6 +64,38 @@ function loadJson(p) {
     return null;
   }
 }
+// F-CGPT-033 (P0-Haertung 09.08.2026): die HISTORIE ist etwas anderes als eine Metrik-Quelle.
+// Fuer die Metriken oben ist loadJson()s null richtig (Tag 554/603: unbekannt statt geraten,
+// mit ::warning::). Fuer history.json war es toedlich: `loadJson(histPath) || []` machte aus
+// der unlesbaren Datei eine LEERE Historie, der heutige Punkt kam dazu, und die Datei wurde
+// mit genau einem Eintrag ueberschrieben. Damit sind alle Vorlaeufe weg und der Waechter
+// braucht wieder MIN_HISTORY_RUNS=4 Laeufe, bis er ueberhaupt urteilen kann — waehrend er
+// gruen meldet. Live nachgestellt: loadJson(korrupt) -> null, Historie faellt auf Laenge 1.
+//
+// Erstanlage = Datei fehlt (erster Lauf) -> []. Vorhanden, aber unlesbar oder kein Array =
+// Bestand -> Wurf; runCli faengt ihn ab (::error:: + Exit 1) und NICHTS wird ueberschrieben.
+// Bewusst nicht lib/read-json.js: das verlangt ein Objekt, die Historie ist ein Array.
+function ladeHistorie(p) {
+  let roh;
+  try { roh = fs.readFileSync(p, 'utf8'); }
+  catch (e) {
+    if (e.code === 'ENOENT') return [];
+    e.message = p + ' ist vorhanden, aber nicht lesbar (' + e.message + ') — kein Erstanlage-Fall';
+    throw e;
+  }
+  let wert;
+  try { wert = JSON.parse(roh); }
+  catch (e) {
+    throw new Error(p + ' ist vorhanden, aber unlesbar (' + e.message + ') — kein Erstanlage-Fall, '
+      + 'die Historie wird NICHT durch den heutigen Einzelpunkt ersetzt');
+  }
+  if (!Array.isArray(wert)) {
+    throw new Error(p + ' enthaelt kein Array, sondern ' + (wert === null ? 'null' : typeof wert)
+      + ' — kein Erstanlage-Fall, refusing to overwrite');
+  }
+  return wert;
+}
+
 function median(values) {
   const sorted = values.filter(v => Number.isFinite(v)).sort((a, b) => a - b);
   if (sorted.length === 0) return null;
@@ -148,8 +180,7 @@ async function main() {
   const today = collectStats();
 
   const histPath = path.join(HIST_DIR, 'history.json');
-  let history = loadJson(histPath) || [];
-  if (!Array.isArray(history)) history = [];
+  let history = ladeHistorie(histPath);
   // Avoid duplicate entries for same date
   history = history.filter(h => h && h.asOf !== today.asOf);
   history.push(today);
@@ -211,7 +242,7 @@ async function runCli(mainImpl = main, io = {}) {
   }
 }
 
-module.exports = { collectStats, detectStatsDrift, loadJson, median, HIST_DIR, OUT_DIR, runCli };
+module.exports = { collectStats, detectStatsDrift, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
 
 if (require.main === module) {
   runCli();
