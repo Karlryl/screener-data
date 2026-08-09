@@ -31,6 +31,14 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
+function loadBaseline(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code === 'ENOENT') return null;
+    throw new Error(`Unrouted-Label-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
+  }
+}
+
 function scanSnapshots(snapDir) {
   const labels = new Set();
   let routable = 0;
@@ -65,30 +73,48 @@ function mergeLabels(baselineLabels, todayLabels, baselineExists) {
   return Array.from(new Set([...baselineLabels, ...labelsToMerge])).sort();
 }
 
-function main() {
-  const { routable, noSector, labels } = scanSnapshots(SNAP_DIR);
-  const share = routable > 0 ? noSector / routable : 0;
-  console.log(`Routable: ${routable}, no-sector: ${noSector} (${(share * 100).toFixed(1)}%)`);
+const noSectorAnteil = (scan) => (scan.routable > 0 ? scan.noSector / scan.routable : 0);
 
-  const baseline = loadJson(BASELINE_PATH, null);
+// Alle Befunde eines Laufs plus die Schreib-Entscheidung — rein, ohne I/O.
+// Beides lag vorher inline in main() und war nur ueber Quelltext-Regexe pruefbar
+// ("steht die Zeile noch da?"). Solche Wachposten nageln ein Schreibmuster fest, nicht
+// die Sache: eine Umformulierung derselben Logik haette sie rot gemacht, ein echter
+// Verhaltensbruch bei gleicher Schreibweise nicht. Jetzt wird das VERHALTEN geprueft.
+function befundeFuer(scan, baseline) {
+  const share = noSectorAnteil(scan);
   const baselineLabels = baseline && Array.isArray(baseline.labels) ? baseline.labels : [];
   const baselineSet = new Set(baselineLabels);
-  const todayLabels = Array.from(labels).sort();
+  const todayLabels = Array.from(scan.labels || []).sort();
   const newLabels = todayLabels.filter((l) => !baselineSet.has(l));
 
-  const mergedLabels = mergeLabels(baselineLabels, todayLabels, !!baseline);
-  fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
-  writeJsonAtomic(BASELINE_PATH, { labels: mergedLabels, updatedAt: new Date().toISOString() });
-  console.log('Baseline updated: ' + BASELINE_PATH + ' (' + mergedLabels.length + ' known labels)');
-
   const problems = [];
-  if (routable > 0 && share > NO_SECTOR_THRESHOLD) {
+  if (scan.routable === 0) problems.push(`0 routable Snapshots (${SNAP_DIR} fehlt, ist leer oder lieferte keine routbaren Daten) — NICHTS geprueft`);
+  if (scan.routable > 0 && share > NO_SECTOR_THRESHOLD) {
     problems.push(`no-sector share ${(share * 100).toFixed(1)}% > ${(NO_SECTOR_THRESHOLD * 100).toFixed(0)}% of routable`);
   }
   if (baseline && newLabels.length > 0) {
     // Only flag as new once a baseline actually exists (first run is seeding).
     problems.push(`new industry/sector label(s) not in baseline: ${newLabels.join(', ')}`);
   }
+
+  // Ein Scan, der nichts gesehen hat, darf die Baseline nicht anfassen — er wuerde die
+  // bekannten Labels auf den leeren Stand von heute einkochen.
+  return { problems, darfSchreiben: scan.routable > 0, share, todayLabels, baselineLabels };
+}
+
+function main() {
+  const scan = scanSnapshots(SNAP_DIR);
+  console.log(`Routable: ${scan.routable}, no-sector: ${scan.noSector} (${(noSectorAnteil(scan) * 100).toFixed(1)}%)`);
+
+  const baseline = loadBaseline(BASELINE_PATH);
+  const { problems, darfSchreiben, todayLabels, baselineLabels } = befundeFuer(scan, baseline);
+
+  if (darfSchreiben) {
+    const mergedLabels = mergeLabels(baselineLabels, todayLabels, !!baseline);
+    fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
+    writeJsonAtomic(BASELINE_PATH, { labels: mergedLabels, updatedAt: new Date().toISOString() });
+    console.log('Baseline updated: ' + BASELINE_PATH + ' (' + mergedLabels.length + ' known labels)');
+  } else console.error('::warning::Unrouted-Baseline nicht aktualisiert: Scan hat nichts gesehen.');
 
   if (problems.length > 0) {
     console.error('::error::Unrouted-quote canary — ' + problems.join('; '));
@@ -98,6 +124,9 @@ function main() {
   console.log('No unrouted/taxonomy drift.');
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  try { main(); }
+  catch (e) { console.error('::error::watch-unrouted-quote hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
+}
 
-module.exports = { scanSnapshots, mergeLabels };
+module.exports = { scanSnapshots, mergeLabels, loadBaseline, befundeFuer, noSectorAnteil };

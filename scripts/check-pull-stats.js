@@ -174,6 +174,36 @@ function detectStatsDrift(today, history, threshold) {
   return alerts;
 }
 
+function uncheckedStats(today, history) {
+  const watched = ['yahooOk', 'fxRatesCount', 'earningsWithDate', 'priceTickerCount', 'snapshotsCount'];
+  if (!Array.isArray(history) || history.length < MIN_HISTORY_RUNS) return [];
+  const recent = history.slice(-MIN_HISTORY_RUNS);
+  return watched.filter((metric) => today[metric] == null
+    || recent.filter((r) => Number.isFinite(r && r[metric])).length < MIN_HISTORY_RUNS);
+}
+
+// Die Ergebniszeilen eines Laufs — rein, damit die Sichtbarkeit pruefbar ist.
+// Review-Befund 09.08.2026: die Liste der ungepruefte Metriken hing am DRIFTFREIEN Zweig.
+// Driftete irgendeine andere Metrik, verschwand die Blindheits-Information spurlos —
+// also genau dann, wenn am genauesten hingesehen wird. Jetzt steht sie vor beiden Zweigen.
+// Bewusst nur ::warning:: und kein Exit 1: die Messstellen (loadJson, priceTickerCount)
+// warnen bereits an der Ursache, und ein transienter Store-Glitch darf Karls einzigen
+// Alarmkanal — das rote X — nicht fuer einen ganzen Tag verbrennen.
+function fazitZeilen(alerts, unchecked) {
+  const zeilen = [];
+  if (unchecked.length) {
+    zeilen.push(`::warning::${unchecked.length} Metrik(en) ohne belastbaren Vergleich: ${unchecked.join(', ')}`
+      + ' — fuer sie ist der Drift-Waechter blind (heutiger Wert null oder zu wenige Referenzlaeufe).');
+  }
+  if (alerts.length === 0) {
+    zeilen.push('  no drift detected.');
+    return zeilen;
+  }
+  zeilen.push('  DRIFT DETECTED:');
+  for (const a of alerts) zeilen.push(`    ${a.metric}: today=${a.today} vs median=${a.median} (${(a.drift * 100).toFixed(0)}%)`);
+  return zeilen;
+}
+
 async function main() {
   if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
   if (!fs.existsSync(HIST_DIR)) fs.mkdirSync(HIST_DIR, { recursive: true });
@@ -196,14 +226,9 @@ async function main() {
   }
 
   const alerts = detectStatsDrift(today, history.slice(0, -1), DRIFT_THRESHOLD);
-  if (alerts.length === 0) {
-    console.log('  no drift detected.');
-    return 0;
-  }
-  console.log('  DRIFT DETECTED:');
-  for (const a of alerts) {
-    console.log(`    ${a.metric}: today=${a.today} vs median=${a.median} (${(a.drift*100).toFixed(0)}%)`);
-  }
+  const unchecked = uncheckedStats(today, history.slice(0, -1));
+  for (const z of fazitZeilen(alerts, unchecked)) console.log(z);
+  if (alerts.length === 0) return 0;
   if (process.env.ALLOW_PULL_DRIFT === '1') {
     console.log('  ALLOW_PULL_DRIFT=1 — not alerting.');
     return 0;
@@ -242,7 +267,7 @@ async function runCli(mainImpl = main, io = {}) {
   }
 }
 
-module.exports = { collectStats, detectStatsDrift, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
+module.exports = { collectStats, detectStatsDrift, uncheckedStats, fazitZeilen, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
 
 if (require.main === module) {
   runCli();
