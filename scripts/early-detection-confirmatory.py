@@ -1624,7 +1624,6 @@ def run_confirmatory(payload: dict[str, Any], derived_gates: dict[str, bool]) ->
 
 
 def self_test() -> dict[str, Any]:
-    verify_runtime_lock()
     def quarter_rows(entity: str, growing: bool = False, future_maturity: bool = False) -> list[dict[str, Any]]:
         revenues = ([100] * 4 + [105] * 4 + [140, 141, 142, 143, 144]) if growing else [100] * 17
         rows = []

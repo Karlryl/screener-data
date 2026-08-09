@@ -24,4 +24,11 @@ node --test tests/scoring/gqs00-freeze.test.js
 
 Der Verify-Lauf bricht bei jeder Register-, Source-, Kalibrierungs-, Fixture-, Trace- oder Preregistrierungsabweichung ab. Ein Negativtest verändert testweise ein Gewicht in einer Speicherkopie und beweist, dass sowohl der Registerhash als auch der ALNY-Golden-Score kippen.
 
+Die Source-Dateien werden im Checkout mit LF gehalten. Der Prüfer normalisiert
+Source-Text vor dem Hashen auf LF und akzeptiert beim Vergleich ausschließlich den
+für dieselben Bytes versiegelten LF- oder historischen CRLF-Hash. Damit bleibt das
+gemischt erzeugte Bestandssiegel auf Linux und Windows bytegleich prüfbar, ohne
+Dateien aus `src/scoring/` umzuschreiben; Dateimenge und Abweichungserkennung bleiben
+unverändert. Die JSON-Artefakte behalten ihre unveränderten LF-Byte-Hashes.
+
 `calibration/v4` bleibt bewusst ein separates Metadatum. Die semantische Formelidentität ist `GQS-00@1.0.0`; der bestehende Legacy-Feldname `formulaId` für Branchenzweige wird in den neuen Artefakten als `branchFormulaId` disambiguiert.

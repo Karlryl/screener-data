@@ -145,6 +145,11 @@ function fileSha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
+function sourceHashes(file) {
+  const lf = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+  return [sha256Text(lf), sha256Text(lf.replace(/\n/g, '\r\n'))];
+}
+
 function walkFiles(dir) {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -176,7 +181,7 @@ function buildRegistry() {
   const sourceFiles = {};
   for (const file of walkFiles(scoringDir)) {
     const rel = path.relative(REPO, file).replaceAll('\\', '/');
-    sourceFiles[rel] = fileSha256(file);
+    sourceFiles[rel] = sourceHashes(file)[0];
   }
   return {
     schema: 'gqs-formula-registry/v1',
@@ -500,7 +505,18 @@ function verify() {
   const equivalence = JSON.parse(fs.readFileSync(path.join(FREEZE_DIR, 'production-equivalence.json'), 'utf8'));
   const prereg = JSON.parse(fs.readFileSync(path.join(FREEZE_DIR, 'ges-sec-us-pilot-preregistration.json'), 'utf8'));
 
-  assert.deepEqual(registry, buildRegistry(), 'live GQS implementation differs from frozen registry/source hashes');
+  const rebuiltRegistry = buildRegistry();
+  const sealedSourceFiles = registry.immutableDefinitions.sourceFiles;
+  const rebuiltSourceFiles = rebuiltRegistry.immutableDefinitions.sourceFiles;
+  assert.deepEqual(Object.keys(sealedSourceFiles), Object.keys(rebuiltSourceFiles), 'sealed scoring source file set changed');
+  for (const rel of Object.keys(sealedSourceFiles)) {
+    assert(sourceHashes(path.join(REPO, rel)).includes(sealedSourceFiles[rel]), rel + ' differs from its sealed source hash');
+  }
+  const registryWithoutSourceHashes = structuredClone(registry);
+  const rebuiltWithoutSourceHashes = structuredClone(rebuiltRegistry);
+  registryWithoutSourceHashes.immutableDefinitions.sourceFiles = Object.keys(sealedSourceFiles);
+  rebuiltWithoutSourceHashes.immutableDefinitions.sourceFiles = Object.keys(rebuiltSourceFiles);
+  assert.deepEqual(registryWithoutSourceHashes, rebuiltWithoutSourceHashes, 'live GQS implementation differs from frozen registry');
   assert.equal(sha256Canonical(registry), manifest.formulaRegistrySha256, 'registry canonical hash mismatch');
   for (const name of HASH_TARGETS) {
     const file = path.join(FREEZE_DIR, name);

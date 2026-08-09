@@ -14,4 +14,11 @@ This runbook does not authorize an outcome access. It fixes the only permitted o
 
 Before reading `<raw-input.json>`, the runner checks the local manifest and every sealed file byte-for-byte against fetched `origin/main`, verifies the complete remote checkpoint history, validates the latest authorization event, and verifies every remote gate artifact. It then hashes the input bytes, recomputes every embedded component hash, compares them with every gate artifact and the bound corpus/cutoff, derives all labels/matches/splits/statistics internally and writes a result carrying both input and authorization identities.
 
+The portable `--self-test` exercises only the sealed analysis mechanics and is
+therefore intentionally independent of the host operating system. The real
+confirmatory execution calls `authorize_execution()`, whose first verification
+path is `verify_remote_seal_and_checkpoint()` and then `verify_runtime_lock()`;
+the locked Windows/Python/NumPy/machine requirements therefore remain mandatory
+before the raw input is read.
+
 Any mismatch blocks without a result. Any method or runtime change after outcome access requires a new semantic protocol and a future locked window.
