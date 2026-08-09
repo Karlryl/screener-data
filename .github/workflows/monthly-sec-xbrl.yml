@@ -216,8 +216,8 @@ jobs:
       # Cache, den .github/workflows/smallcap-pull.yml schreibt (gleiche Technik wie der
       # Restore-Schritt im scoring-Job von daily-pull.yml). continue-on-error: fehlt der
       # Cache (smallcap-pull.yml lief noch nie / evicted), bleibt snapshots-smallcap/ leer
-      # -> build-secannual-smallcap.js's eigener Empty-Universe-Guard greift (No-Op, kein
-      # Absturz), exakt wie beim Hauptkorpus-Pendant oben.
+      # -> build-secannual-smallcap.js's eigener Empty-Universe-Guard laesst den Step rot
+      # werden und bewahrt den Altbestand, statt den No-Op als erfolgreichen Build zu tarnen.
       - name: Restore Small-Cap Store (5.2 WEG 1b)
         continue-on-error: true
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0

@@ -145,9 +145,20 @@ function fileSha256(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
 
+// Zeilenenden-neutral, aber byte-genau: NIE ueber einen JS-String gehen. 'utf8' dekodiert
+// verlustbehaftet (jedes ungueltige Byte wird still U+FFFD), zwei verschiedene Dateien
+// bekaemen denselben Siegel-Hash. Fuer gueltiges UTF-8 sind die Hashes identisch zu vorher,
+// das bestehende Siegel bleibt also gueltig.
 function sourceHashes(file) {
-  const lf = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
-  return [sha256Text(lf), sha256Text(lf.replace(/\n/g, '\r\n'))];
+  const raw = fs.readFileSync(file);
+  const lf = [], crlf = [];
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] === 0x0d && raw[i + 1] === 0x0a) continue; // CR eines CRLF-Paares faellt weg
+    if (raw[i] === 0x0a) crlf.push(0x0d);                 // CRLF-Variante aus der LF-Variante
+    lf.push(raw[i]);
+    crlf.push(raw[i]);
+  }
+  return [lf, crlf].map((bytes) => crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex'));
 }
 
 function walkFiles(dir) {
@@ -508,14 +519,18 @@ function verify() {
   const rebuiltRegistry = buildRegistry();
   const sealedSourceFiles = registry.immutableDefinitions.sourceFiles;
   const rebuiltSourceFiles = rebuiltRegistry.immutableDefinitions.sourceFiles;
-  assert.deepEqual(Object.keys(sealedSourceFiles), Object.keys(rebuiltSourceFiles), 'sealed scoring source file set changed');
+  // sortiert vergleichen: die Reihenfolge kommt aus walkFiles() ueber OS-native Pfade
+  // (Backslash vs. Slash ordnen in Praefix-Faellen verschieden) — sonst False-Red auf einem OS.
+  const sealedKeys = Object.keys(sealedSourceFiles).sort();
+  const rebuiltKeys = Object.keys(rebuiltSourceFiles).sort();
+  assert.deepEqual(sealedKeys, rebuiltKeys, 'sealed scoring source file set changed');
   for (const rel of Object.keys(sealedSourceFiles)) {
     assert(sourceHashes(path.join(REPO, rel)).includes(sealedSourceFiles[rel]), rel + ' differs from its sealed source hash');
   }
   const registryWithoutSourceHashes = structuredClone(registry);
   const rebuiltWithoutSourceHashes = structuredClone(rebuiltRegistry);
-  registryWithoutSourceHashes.immutableDefinitions.sourceFiles = Object.keys(sealedSourceFiles);
-  rebuiltWithoutSourceHashes.immutableDefinitions.sourceFiles = Object.keys(rebuiltSourceFiles);
+  registryWithoutSourceHashes.immutableDefinitions.sourceFiles = sealedKeys;
+  rebuiltWithoutSourceHashes.immutableDefinitions.sourceFiles = rebuiltKeys;
   assert.deepEqual(registryWithoutSourceHashes, rebuiltWithoutSourceHashes, 'live GQS implementation differs from frozen registry');
   assert.equal(sha256Canonical(registry), manifest.formulaRegistrySha256, 'registry canonical hash mismatch');
   for (const name of HASH_TARGETS) {
@@ -591,6 +606,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  FREEZE_DIR, buildRegistry, canonicalStringify, sha256Canonical,
+  FREEZE_DIR, buildRegistry, canonicalStringify, sha256Canonical, sourceHashes,
   traceForCase, initialize, seal, verify,
 };

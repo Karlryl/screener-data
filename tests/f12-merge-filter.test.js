@@ -63,7 +63,12 @@ function lauf(tickerInWatchlist, dateien, opts = {}) {
   fs.writeFileSync(wlPfad, opts.kaputteWatchlist
     ? '{ das ist kein JSON'
     : JSON.stringify({ stocks: opts.watchlistEintraege || tickerInWatchlist.map((t) => ({ ticker: t })) }));
-  const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', ziel, '--watchlist', wlPfad],
+  // Hermetik: ohne --nav-register laese das Skript das PRODUKTIVE data-health/nav-holdings.json,
+  // und jede Aufnahme dort koennte diese Faelle still verschieben. Der NAV-Ausschluss wird in
+  // tests/nav-holdings-register.test.js geprueft — hier ist er ausdruecklich leer.
+  const navPfad = path.join(root, 'nav-register-leer.json');
+  fs.writeFileSync(navPfad, '[]');
+  const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', ziel, '--watchlist', wlPfad, '--nav-register', navPfad],
     { encoding: 'utf8', env: { ...process.env, ...(opts.env || {}) } });
   const manifestPfad = path.join(ziel, '_manifest.json');
   return {
