@@ -62,6 +62,39 @@ const MAX_UEBERSPRUNGEN_ANTEIL = 0.30;
  * Vorlauf statt absoluter Anteil) — eigener Punkt, bewusst nicht hier.
  */
 const DRIFT_VENTIL = 'ALLOW_UEBERSPRUNGEN_DRIFT';
+const NAV_REGISTER_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'nav-holdings.json');
+
+function ladeNavRegister(registerPfad) {
+  let eintraege;
+  try { eintraege = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
+  catch (e) { throw new Error(`${registerPfad}: ${e.message}`); }
+  if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Wurzel muss ein Array sein`);
+  const tickers = new Set();
+  // T612-L1 (Review Tag 612): die Dublette wird auf DATEINAMEN-Ebene gesucht, nicht auf der
+  // Rohstring-Ebene. safeSnapshotFilename faltet (Grossschreibung, [^A-Z0-9.-] -> _), also
+  // sind 'nflx' und 'NFLX' zwei verschiedene Rohstrings fuer EINE Datei — ein Register-Fehler,
+  // der als "zwei Eintraege" durchging und beim Pflegen die zweite Begruendung verstecken wuerde.
+  const dateinamen = new Map();
+  for (const [i, e] of eintraege.entries()) {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) throw new Error(`${registerPfad}: Eintrag ${i} ist kein Objekt`);
+    for (const feld of ['ticker', 'grund', 'beleg', 'aufgenommen']) {
+      if (typeof e[feld] !== 'string' || !e[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld ${feld} fehlt/ist leer`);
+    }
+    const ticker = e.ticker.trim();
+    if (tickers.has(ticker)) throw new Error(`${registerPfad}: Ticker ${ticker} ist doppelt`);
+    tickers.add(ticker);
+    // Ein Ticker ohne ableitbaren Dateinamen wird hier NICHT gemeldet: run() rechnet gleich
+    // danach dieselbe Abbildung und stoppt mit der spezifischen "unbrauchbarer Ticker"-Diagnose.
+    let datei = null;
+    try { datei = safeSnapshotFilename(ticker); } catch (_) { /* s. o. — run() meldet den Fall */ }
+    if (datei === null) continue;
+    if (dateinamen.has(datei)) {
+      throw new Error(`${registerPfad}: Ticker ${ticker} und ${dateinamen.get(datei)} zeigen auf dieselbe Snapshot-Datei ${datei}`);
+    }
+    dateinamen.set(datei, ticker);
+  }
+  return tickers;
+}
 
 /**
  * T569-F8 (Review Tag 569): das Ventil war ein SCHALTER (`=== '1'`) und damit ein Dauer-AN.
@@ -154,15 +187,16 @@ function schreibeEingangsZahl(ziel, gescannt) {
  *   uebersprungen = Snapshots ohne Watchlist-Eintrag.
  *   gescannt      = nur die echten Ticker-Snapshots (der Nenner des Zaehl-Logs).
  */
-function teileEingang(files, erlaubt) {
-  const uebernehmen = [], uebersprungen = [];
+function teileEingang(files, erlaubt, navDateinamen = new Set()) {
+  const uebernehmen = [], uebersprungen = [], navAusgeschlossen = [];
   let gescannt = 0;
   for (const f of files) {
     if (!f.endsWith('.json') || isMetadataSnapshot(f)) { uebernehmen.push(f); continue; }
     gescannt++;
-    if (erlaubt.has(f)) uebernehmen.push(f); else uebersprungen.push(f);
+    if (navDateinamen.has(f)) navAusgeschlossen.push(f);
+    else if (erlaubt.has(f)) uebernehmen.push(f); else uebersprungen.push(f);
   }
-  return { uebernehmen, uebersprungen, gescannt };
+  return { uebernehmen, uebersprungen, navAusgeschlossen, gescannt };
 }
 
 function run(argv) {
@@ -170,6 +204,23 @@ function run(argv) {
   const eingang = get('--eingang', 'snapshots-eingang');
   const ziel = get('--ziel', 'snapshots');
   const watchlistPfad = get('--watchlist', 'watchlist.json');
+  const navRegisterPfad = get('--nav-register', NAV_REGISTER_STANDARDPFAD);
+
+  let navTickers;
+  try { navTickers = ladeNavRegister(navRegisterPfad); }
+  catch (e) {
+    console.error(`::error::filter-snapshot-merge — NAV-Register nicht ladbar (${e.message}). Abbruch statt lautlosem Scoring ohne Ausschlussliste.`);
+    return 1;
+  }
+  // Dateiname -> Ticker (statt nur einer Namensmenge): teileEingang braucht nur `.has`, die
+  // Treffer-Wache (T612-M1) braucht zur Meldung den Ticker zurueck. Die Abbildung ist dank der
+  // Dateinamen-Dublettenpruefung in ladeNavRegister eindeutig.
+  let navDateinamen;
+  try { navDateinamen = new Map([...navTickers].map((t) => [safeSnapshotFilename(t), t])); }
+  catch (e) {
+    console.error(`::error::filter-snapshot-merge — NAV-Register enthaelt unbrauchbaren Ticker (${e.message}). Abbruch statt Teilfilterung.`);
+    return 1;
+  }
 
   // Ladefehler != leere Watchlist. Genau dieselbe Unterscheidung wie in loadUniverse
   // (S5-SC-001): eine unlesbare Datei liefert stocks=[] und wuerde hier ALLES als
@@ -191,7 +242,29 @@ function run(argv) {
     return 1;
   }
 
-  const { uebernehmen, uebersprungen, gescannt } = teileEingang(files, erlaubt);
+  const { uebernehmen, uebersprungen, navAusgeschlossen, gescannt } = teileEingang(files, erlaubt, navDateinamen);
+
+  // T612-M1 (Review Tag 612): ein Register-Eintrag, zu dem gar keine Datei im Eingang liegt, war
+  // still wirkungslos — ein Tippfehler (oder ein delisteter/umbenannter Name) haette das Register
+  // dauerhaft leerlaufen lassen, ohne dass es irgendwo auffaellt. Kein Hardstop: der Zustand ist
+  // beim Delisting legitim, und ein toter Eintrag schadet nichts ausser seiner eigenen Wirkung.
+  // Nur "Datei gar nicht im Eingang" ist der Warnfall — ein Treffer, der ausgeschlossen wurde,
+  // ist genau der Normalbetrieb.
+  const imEingang = new Set(files);
+  for (const [datei, ticker] of navDateinamen) {
+    if (!imEingang.has(datei)) {
+      console.error(`::warning::NAV-Register: ${ticker} hatte keinen Treffer im Eingang (delisted/umbenannt/Tippfehler?)`);
+    }
+  }
+
+  // T612-H1 (Review Tag 612): die Wachen unten rechnen ueber die um die Register-Treffer
+  // BEREINIGTE Population. NAV-Ausschluesse zaehlen in `gescannt`, landen aber nie in
+  // `uebersprungen` — mit `gescannt` als Nenner war `uebersprungen === gescannt` ab dem ersten
+  // Register-Treffer im Eingang unerreichbar, und der ALL-Stop (der teuerste Wachhund im Skript:
+  // Namensschema-/Watchlist-Bruch, komplettes Universum still weg) war dauerhaft ausgeknipst.
+  // `gescannt` bleibt die Zahl fuer den Coverage-Floor (schreibeEingangsZahl weiter unten) —
+  // der zaehlt bewusst den vollen Eingang, nicht die Pruef-Population.
+  const zuPruefen = gescannt - navAusgeschlossen.length;
 
   // 0 gescannte Snapshots ist ein eigener Befund: entweder ein Kaltstart ohne jeden
   // Shard-Cache oder ein leerer Download. Kein harter Stop (der Zustand ist legitim und
@@ -199,22 +272,22 @@ function run(argv) {
   // niemals still.
   if (gescannt === 0) {
     console.error(`::warning::filter-snapshot-merge — 0 Snapshots im Eingang ${eingang} gescannt (${files.length} Eintraege insgesamt). Kein Shard hat Snapshots geliefert; das Coverage-Gate entscheidet ueber den Lauf.`);
-  } else if (uebersprungen.length === gescannt) {
+  } else if (zuPruefen > 0 && uebersprungen.length === zuPruefen) {
     // Jeder einzelne Snapshot unautorisiert heisst nicht "alles Karteileichen", sondern
     // Namensschema- oder Watchlist-Bruch. Ohne diesen Stop waere das komplette Universum
     // still weg — die teuerste denkbare Variante eines leisen Fehlers.
-    console.error(`::error::filter-snapshot-merge — ALLE ${gescannt} Snapshots gelten als nicht autorisiert (Watchlist ${watchlistPfad}: ${wl.stocks.length} Eintraege). Das ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage. Stop.`);
+    console.error(`::error::filter-snapshot-merge — ALLE ${zuPruefen} Snapshots gelten als nicht autorisiert (Watchlist ${watchlistPfad}: ${wl.stocks.length} Eintraege). Das ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage. Stop.`);
     return 1;
-  } else if (gescannt >= MIN_GESCANNT_FUER_ANTEIL && uebersprungen.length > MAX_UEBERSPRUNGEN_ANTEIL * gescannt) {
+  } else if (zuPruefen >= MIN_GESCANNT_FUER_ANTEIL && uebersprungen.length > MAX_UEBERSPRUNGEN_ANTEIL * zuPruefen) {
     // F-12-R2 (Review Tag 563): derselbe Fehler eine Stufe frueher. Ein Bruch, der nicht
     // gleich 100 % erwischt, hat bisher still das halbe Universum aus dem Artefakt genommen —
     // und die Boards haetten auf der Reststrecke ganz normal gerankt.
-    const befund = `${uebersprungen.length} von ${gescannt} Snapshots nicht autorisiert (${(uebersprungen.length / gescannt * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage.`;
+    const befund = `${uebersprungen.length} von ${zuPruefen} Snapshots nicht autorisiert (${(uebersprungen.length / zuPruefen * 100).toFixed(1)} %), ueber der Schwelle ${(MAX_UEBERSPRUNGEN_ANTEIL * 100).toFixed(0)} %. Der reale Karteileichen-Bestand liegt bei ~15 %; so viel auf einmal ist ein Namensschema-/Watchlist-Bruch, keine Karteileichen-Lage.`;
     // T565-M1: Ventil (s. DRIFT_VENTIL oben) — der Anteil ratcht monoton, ein legitimer
     // Karteileichen-Berg darf den Tageslauf nicht dauerhaft toeten. Befund bleibt sichtbar.
     // T569-F8: der Ventil-Wert ist die OBERGRENZE, nicht ein An/Aus (s. ventilObergrenze).
     const deckel = ventilObergrenze(process.env[DRIFT_VENTIL]);
-    const istAnteil = uebersprungen.length / gescannt;
+    const istAnteil = uebersprungen.length / zuPruefen;
     if (deckel !== null && istAnteil <= deckel) {
       console.error(`::warning::filter-snapshot-merge — ${befund} ${DRIFT_VENTIL}=${process.env[DRIFT_VENTIL]} deckelt bis ${(deckel * 100).toFixed(0)} %: Lauf faehrt trotzdem weiter.`);
     } else {
@@ -230,10 +303,12 @@ function run(argv) {
   for (const f of uebernehmen) fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
   schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
 
+  const navTickerListe = navAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
+  console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
   console.log(`[f12-filter] ${uebersprungen.length} von ${gescannt} Snapshots uebersprungen (kein Watchlist-Eintrag) = ${anteil} % — ${uebernehmen.length} Dateien nach ${ziel} uebernommen. Nichts geloescht: ${eingang} bleibt vollstaendig. Eingangs-Zahl fuer den Coverage-Floor: ${MANIFEST_EINGANG_FELD}=${gescannt}.`);
   return 0;
 }
 
-module.exports = { autorisierteDateinamen, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze };
+module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze };
 if (require.main === module) process.exit(run(process.argv));
