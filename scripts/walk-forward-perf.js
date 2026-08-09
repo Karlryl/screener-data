@@ -798,11 +798,17 @@ function computeHorizonSummary(vintages, days) {
 function main() {
   // Tag 294: merge sharded price history (Legacy-Fallback inside loadAll). A
   // corrupt shard throws → treat as no-data (same graceful skip as before).
-  let history;
+  let history, ladeFehler = null;
   try { history = priceStore.loadAll(PRICES_DIR); }
-  catch (e) { history = null; }
+  catch (e) { history = null; ladeFehler = e.message; }
   if (!history || typeof history !== 'object' || Object.keys(history).length === 0) {
-    console.log('No prices/history.json — cannot compute walk-forward.');
+    // P0-Haertung 2026-08-09 (Review-Fund): "No prices/history.json" war bei einem Wurf
+    // schlicht falsch — seit loadAll bei korrupter _meta.json/fehlenden Shards wirft, ist
+    // "kaputt" der haeufigere Grund als "nicht da", und wer das liest, sucht an der
+    // falschen Stelle.
+    console.log(ladeFehler
+      ? 'Preis-Store nicht ladbar (' + ladeFehler + ') — kann Walk-Forward nicht rechnen.'
+      : 'No prices/history.json — cannot compute walk-forward.');
     return;
   }
 

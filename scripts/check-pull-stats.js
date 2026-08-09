@@ -94,8 +94,13 @@ function collectStats() {
 
   // Historical prices (Tag 294: sharded → count across shards; null on load error)
   let priceTickerCount = null;
+  // P0-Haertung 2026-08-09 (Review-Fund): der Catch war stumm. Seit loadAll auch bei
+  // korrupter _meta.json und bei fehlenden Shards wirft, faengt er GENAU die Faelle, gegen
+  // die die Haertung gebaut wurde — und detectStatsDrift ueberspringt null-Metriken (s. u.),
+  // der Drift-Waechter waere fuer die eigene Bugklasse blind geworden. Der Wert bleibt null
+  // (unbekannt ist ehrlicher als 0), aber der Grund steht jetzt im Lauf.
   try { priceTickerCount = Object.keys(priceStore.loadAll(path.join(ROOT, 'prices'))).length; }
-  catch (_) { /* corrupt shard → leave null, drift monitor treats as unknown */ }
+  catch (e) { console.log('::warning::priceTickerCount nicht messbar: Preis-Store nicht ladbar (' + e.message + ')'); }
   stats.priceTickerCount = priceTickerCount;
 
   // Universe
