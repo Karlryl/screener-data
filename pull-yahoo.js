@@ -3564,9 +3564,17 @@ async function main() {
   // Tag 153: delete committed _manifest.json before the pull so a mid-run SIGKILL cannot
   // leave yesterday's stale n_ok on disk, causing the quality gate to pass on partial data.
   const manifestPath = path.join(args.output, '_manifest.json');
+  // F-CGPT-005 (P0-Haertung 2026-08-09): das WARN hier war ein Loch in genau dem Schutz,
+  // den Tag 153 gebaut hat. Schlaegt das Loeschen fehl (EPERM/gesperrt/Verzeichnis) und der
+  // Lauf bricht danach vor dem ersten Checkpoint ab, steht das ALTE Erfolgs-Manifest
+  // unveraendert auf Platte und jeder nachgelagerte Job (coverage-gate, Merge, Scoring)
+  // haelt den Altstand fuer frisch — bei Exit 0. Fail-loud VOR dem Pull statt Warnung.
   if (fs.existsSync(manifestPath)) {
     try { fs.unlinkSync(manifestPath); _log('INFO', 'Deleted stale _manifest.json'); }
-    catch (e) { _log('WARN', 'Could not delete stale _manifest.json: ' + e.message); }
+    catch (e) {
+      throw new Error('Stale _manifest.json konnte nicht geloescht werden (' + e.message
+        + ') — Abbruch VOR dem Pull, sonst gilt der Altstand nachgelagert als frisch');
+    }
   }
   const watchlist = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
   if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {

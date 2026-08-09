@@ -234,11 +234,29 @@ async function run() {
     await sleep(PAUSE_MS);
   }
   await new Promise((res) => strom.end(res));
-  fs.renameSync(OUT + '.tmp', OUT);
-  console.log('fertig: ' + geschrieben + ' Zeilen -> ' + OUT + ' (' + (fs.statSync(OUT).size / 1e6).toFixed(1) + ' MB)'
-    + (kaputt ? ' | unlesbar: ' + kaputt : ''));
+  veroeffentliche(OUT + '.tmp', OUT, geschrieben, kaputt);
+  console.log('fertig: ' + geschrieben + ' Zeilen -> ' + OUT + ' (' + (fs.statSync(OUT).size / 1e6).toFixed(1) + ' MB)');
 }
 
-module.exports = { baueBloecke, cikKarte, usTicker, BULK_URL };
+/**
+ * F-CGPT-019 (P0-Haertung 2026-08-09): der rename lief frueher UNBEDINGT — ein
+ * fehlgeschlagener Range-Block (kaputt += b.eintraege.length) oder ein unlesbarer Eintrag
+ * legte den entstandenen Teilstand ueber den vollstaendigen Altbestand, und "unlesbar: n"
+ * stand nur als Textanhang in derselben Erfolgszeile. Exit 0, Historie weg.
+ *
+ * Regel: der Teilstand wird verworfen, der Altbestand bleibt unangetastet, der Lauf wird rot.
+ * Bewusst ohne Toleranzschwelle — dies ist ein monatliches Regenerierungs-Tool, ein
+ * Wiederholungslauf ist billiger als eine stille Luecke in der Langhistorie.
+ */
+function veroeffentliche(tmpPfad, outPfad, geschrieben, kaputt) {
+  if (kaputt > 0 || !(geschrieben > 0)) {
+    try { fs.unlinkSync(tmpPfad); } catch (_) { /* Temp-Rest ist harmlos, der Wurf zaehlt */ }
+    throw new Error('SEC-Bulk unvollstaendig: ' + geschrieben + ' Zeilen, ' + kaputt
+      + ' unlesbar — ' + outPfad + ' bleibt auf dem Altbestand (kein Teilstand-Ueberschreiben)');
+  }
+  fs.renameSync(tmpPfad, outPfad);
+}
+
+module.exports = { baueBloecke, cikKarte, usTicker, veroeffentliche, BULK_URL };
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
