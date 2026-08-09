@@ -69,13 +69,14 @@ function workflowStepObjects(text) {
     if (jobMatch) { job = jobMatch[1]; step = null; continue; }
     const stepMatch = indent === 6 && trimmed.match(/^- name:\s*(.+)$/);
     if (job && stepMatch) {
-      step = { job, name: stepMatch[1].trim(), if: null, run: '' };
+      step = { job, name: stepMatch[1].trim(), id: null, if: null, run: '' };
       steps.push(step);
       continue;
     }
     if (!step || indent !== 8) continue;
-    const field = trimmed.match(/^(if|run):\s*(.*)$/);
+    const field = trimmed.match(/^(id|if|run):\s*(.*)$/);
     if (!field) continue;
+    if (field[1] === 'id') step.id = field[2].trim();
     if (field[1] === 'if') step.if = field[2].trim();
     if (field[1] === 'run') {
       if (['|', '|-', '|+', '>', '>-'].includes(field[2].trim())) runIndent = indent;
@@ -347,6 +348,28 @@ test('R5-SK-001: der Restore-Schritt holt outputs/macro-regime.json vom gh-pages
   // Ein fehlender Branch/fehlende Datei (erster Deploy ueberhaupt) darf den Job
   // nicht rot machen — macro-regime.js's eigener Leerplatzhalter ist dort korrekt.
   assert.match(s, /proceeding without/);
+});
+
+// ── Review-Nachzug P0-Haertung (2026-08-09): das Staging des Shard-Manifests darf
+//    nicht allein an der DATEI haengen. Seit Tag 602 bricht pull-yahoo.js fail-loud
+//    ab, wenn ein stale _manifest.json nicht loeschbar ist — dann liegt genau dieses
+//    ALTE Manifest noch auf Platte und wurde vom `-f`-Test als frisches Shard-Ergebnis
+//    gestaged. Der Fix ist damit neutralisiert. Geprueft wird die SACHE: der cp-Zweig
+//    muss am outcome des Pull-Steps haengen (ueber dessen id), der else-Zweig (= "Shard
+//    fehlt", merge zaehlt partial) bleibt der Ausweg.
+test('P0-Review: Manifest-Staging gatet am Ergebnis des Pull-Steps, nicht nur an der Datei', () => {
+  const pull = workflowStep('pull', 'Run Yahoo Pull');
+  assert.ok(pull.id, 'Run Yahoo Pull braucht eine id, sonst ist sein outcome nicht referenzierbar');
+  const stage = workflowStep('pull', 'Stage shard manifest for merge');
+  const ref = new RegExp('steps\\.\\s*' + pull.id + '\\s*\\.outcome');
+  const zweig = stage.run.match(/\n?\s*if (.+); then\n([\s\S]*?)\n\s*else\b/);
+  assert.ok(zweig, 'keine if/else-Verzweigung im Staging-Step gefunden');
+  assert.match(zweig[1], ref,
+    'die Staging-Bedingung liest das Pull-Outcome nicht: ' + zweig[1]);
+  assert.match(zweig[2], /cp snapshots\/_manifest\.json/,
+    'der outcome-gegatete Zweig ist nicht der, der das Manifest stageed');
+  assert.match(zweig[1], /-f snapshots\/_manifest\.json/,
+    'die Datei-Existenz muss weiterhin mitgeprueft werden (Timeout vor dem ersten Flush)');
 });
 
 console.log('\nbh-b09-dailyyml.test.js: ' + pass + ' ok, ' + fail + ' fail');

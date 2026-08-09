@@ -31,9 +31,14 @@ function test(name, fn) {
 
 const ALT = { n_ok: 4711, n_total: 4711, partial: false, n_eingang_snapshots: 4711, _quelle: 'gueltiger Altstand' };
 
+// Review-Nachzug 2026-08-09: Temp-Ordner zentral sammeln und am Ende raeumen — ein
+// scheiternder assert sprang vorher am rmSync am Testende vorbei und liess den Ordner liegen.
+const tmpDirs = [];
+
 // Fixture: 2 Snapshots on disk, 1 Shard-Manifest, gueltiges Alt-Manifest.
 function baueFixture() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'merge-atomic-'));
+  tmpDirs.push(dir);
   fs.mkdirSync(path.join(dir, 'snapshots'));
   fs.mkdirSync(path.join(dir, 'shard-manifests'));
   for (const t of ['A', 'B']) fs.writeFileSync(path.join(dir, 'snapshots', t + '.json'), '{"meta":{"ticker":"' + t + '"}}');
@@ -84,7 +89,6 @@ test('normaler Lauf schreibt das gemergte Manifest', () => {
   const m = JSON.parse(fs.readFileSync(path.join(dir, 'snapshots', '_manifest.json'), 'utf8'));
   assert.equal(m.n_ok, 2);
   assert.equal(m.n_total, 2);
-  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('Abbruch mitten im Write laesst das gueltige Alt-Manifest UNVERSEHRT (kein Teilstand auf Platte)', () => {
@@ -97,8 +101,8 @@ test('Abbruch mitten im Write laesst das gueltige Alt-Manifest UNVERSEHRT (kein 
   assert.deepEqual(JSON.parse(roh), ALT, 'auf Platte muss der vollstaendige Altstand stehen, nie ein Bruchstueck');
   const reste = fs.readdirSync(path.join(dir, 'snapshots')).filter((f) => f.includes('_manifest.json.tmp'));
   assert.deepEqual(reste, [], 'die Temp-Datei des abgebrochenen Writes muss aufgeraeumt sein');
-  fs.rmSync(dir, { recursive: true, force: true });
 });
 
+for (const d of tmpDirs) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (_) {} }
 console.log(`\nmerge-shard-manifests-atomic.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

@@ -225,9 +225,18 @@ async function main() {
     history = priceStore.loadAll(args.out);
   } catch (e) {
     const bad = e.shardPath || histPath;
-    const backup = bad + '.corrupt.' + Date.now();
-    try { fs.copyFileSync(bad, backup); } catch (_) {}
-    _log('ERROR', 'price history load failed for ' + bad + ' (' + e.message + '). Backup saved to ' + backup);
+    // Review-Nachzug 2026-08-09: der leere catch hat behauptet, ein Backup liege vor,
+    // auch wenn copyFileSync scheiterte (bad ist ein Verzeichnis, EACCES, volle Platte).
+    // Genau dann ist die Meldung entscheidend — RESET_HISTORY=1 kippt danach den Altstand.
+    let backup = bad + '.corrupt.' + Date.now();
+    try {
+      fs.copyFileSync(bad, backup);
+    } catch (eBackup) {
+      _log('ERROR', 'Backup von ' + bad + ' nach ' + backup + ' FEHLGESCHLAGEN: ' + eBackup.message);
+      backup = null;
+    }
+    _log('ERROR', 'price history load failed for ' + bad + ' (' + e.message + '). '
+      + (backup ? 'Backup saved to ' + backup : 'KEIN Backup vorhanden — Datei nur im Originalzustand.'));
     if (process.env.RESET_HISTORY !== '1') {
       _log('ERROR', 'Refusing to overwrite — set RESET_HISTORY=1 to start fresh.');
       process.exit(1);

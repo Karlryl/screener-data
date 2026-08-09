@@ -610,6 +610,7 @@ jobs:
       # (> groesste plausible Shard-Groesse) -> der Kaltstart endet am 165-min-Timeout,
       # nie am Budget-Cap. Kostet nichts (reine Schutz-Obergrenze).
       - name: Run Yahoo Pull (shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }})
+        id: yahoo_pull
         env:
           FUNDAMENTALS_MAX_AGE_DAYS: '7'
           # 2026-06: market-cap floor $1B → $800M (broader US small/mid-cap set).
@@ -641,17 +642,23 @@ jobs:
         run: node scripts/verify-freshness.js ./snapshots "shard ${{ matrix.shard }}"
 
       # Shard-Manifest eindeutig auf shard-<i>.json umbenennen — der merge-Umzaehler
-      # liest ein Verzeichnis FLACH (readdirSync .json). if:always() -> auch ein
-      # getimeouteter Shard liefert sein (partial) Manifest.
+      # liest ein Verzeichnis FLACH (readdirSync .json). if:always() -> der Schritt
+      # laeuft auch nach einem roten Pull, damit der else-Zweig unten protokolliert.
+      # Review-Nachzug P0-Haertung (2026-08-09): die blosse Datei-Existenz reicht als
+      # Bedingung NICHT. Seit Tag 602 bricht pull-yahoo.js fail-loud ab, wenn das stale
+      # snapshots/_manifest.json nicht loeschbar ist — dann liegt genau dieses ALTE
+      # Manifest noch da und wurde hier als frisches Shard-Ergebnis gestaged (Fix
+      # neutralisiert). Also zusaetzlich am Step-Ergebnis gaten: alles ausser success
+      # nimmt denselben Weg wie "Shard fehlt" (merge zaehlt ihn, partial=true).
       - name: Stage shard manifest for merge
         if: always()
         run: |
           mkdir -p shard-manifest-out
-          if [ -f snapshots/_manifest.json ]; then
+          if [ "${{ steps.yahoo_pull.outcome }}" = "success" ] && [ -f snapshots/_manifest.json ]; then
             cp snapshots/_manifest.json shard-manifest-out/shard-${{ matrix.shard }}.json
             echo "Staged shard-${{ matrix.shard }}.json"
           else
-            echo "no manifest for shard ${{ matrix.shard }} (timeout before first flush) — merge counts it as a missing shard (partial=true)"
+            echo "no usable manifest for shard ${{ matrix.shard }} (pull outcome=${{ steps.yahoo_pull.outcome }}, timeout before first flush or fail-loud abort) — merge counts it as a missing shard (partial=true)"
           fi
 
       # Shard-Snapshots hochladen — OHNE die Manifeste (Glob-Negation), sonst
