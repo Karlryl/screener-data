@@ -1,6 +1,6 @@
 # restore-test-prices-max.ps1
 # Restore-Test fuer das prices-max-Backup (Masterplan-Befund d, Karl waehlte OneDrive).
-# Beweist, dass eine Backup-Kopie den Store vollstaendig und identisch wiederherstellt.
+# Prueft Count und Bytes vollstaendig sowie den Inhalt einer 20-Dateien-Stichprobe.
 # READ-ONLY gegenueber dem Original bis zum bewussten Move; NICHTS wird geloescht.
 #
 # Aufruf:  powershell -File scripts/restore-test-prices-max.ps1 -BackupDir <pfad-zur-kopie>
@@ -36,7 +36,7 @@ Write-Host ("Backup:   {0} Dateien, {1:N0} Bytes" -f $b.Count, $b.Bytes)
 
 $ok = ($o.Count -eq $b.Count) -and ($o.Bytes -eq $b.Bytes) -and ($o.Sample -eq $b.Sample)
 if ($ok) {
-  Write-Host "GRUEN: Datei-Anzahl, Gesamt-Bytes und Stichproben-SHA256 identisch. Backup ist echt." -ForegroundColor Green
+  Write-Host ("GRUEN: Count+Bytes vollstaendig identisch; Inhalt: Stichprobe {0}/{1} Dateien identisch - KEIN Vollbeweis." -f ([Math]::Min(20, $o.Count)), $o.Count) -ForegroundColor Green
   exit 0
 } else {
   Write-Host "ROT: Backup weicht ab (Count/Bytes/Sample) - NICHT vertrauen." -ForegroundColor Red

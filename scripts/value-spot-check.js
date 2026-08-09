@@ -117,7 +117,9 @@ function readSnapshot(dir, file) {
   } catch (e) { return null; }
 }
 
-async function run() {
+async function run(io = {}) {
+  const exit = io.exit || process.exit;
+  const error = io.error || console.error;
   const argv = process.argv;
   const get = (flag, def) => { const i = argv.indexOf(flag); return i >= 0 && argv[i + 1] ? argv[i + 1] : def; };
   const n = parseInt(get('--n', '8'), 10);
@@ -126,8 +128,8 @@ async function run() {
 
   let files = [];
   try { files = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')); }
-  catch (e) { console.error(`::warning::value-spot-check — Snapshot-Ordner ${snapDir} nicht lesbar (${e.message}); inconclusive.`); process.exit(0); }
-  if (files.length < MIN_COMPARABLE) { console.error(`::warning::value-spot-check — nur ${files.length} Snapshots; inconclusive.`); process.exit(0); }
+  catch (e) { error(`::error::value-spot-check — Snapshot-Ordner ${snapDir} nicht lesbar (${e.message}); Pruefer blind.`); exit(1); return; }
+  if (files.length < MIN_COMPARABLE) { error(`::warning::MESSAUSFALL: value-spot-check — nur ${files.length} Snapshots; keine Aussage zur Werte-Qualitaet.`); exit(0); return; }
 
   const picked = seededPick(files, Math.min(n, files.length), seed);
   const results = [];
@@ -148,15 +150,26 @@ async function run() {
   const line = `value-spot-check: status=${verdict.status} comparable=${verdict.comparable} mismatches=${verdict.mismatches} unreachable=${verdict.unreachable}${verdict.mismatchTickers.length ? ' [' + verdict.mismatchTickers.join(',') + ']' : ''} (seed=${seed})`;
   if (verdict.red) {
     console.error(`::error::WERT-SPOT-CHECK ROT — ${line}. >=${RED_MISMATCHES} Ticker zeigen strukturelle Wert-Abweichung >Faktor 3.16 im dimensionslosen mcap/rev-Verhaeltnis (Waehrungs-Leak/Skalen-Bug). Ticker+Werte oben.`);
-    process.exit(1);
+    exit(1);
+    return;
   }
   if (verdict.status === 'inconclusive') console.log(`::warning::${line} — kein Urteil (Yahoo gedrosselt/zu wenig Vergleichbare). Nicht rot.`);
   else console.log(`OK — ${line}.`);
-  process.exit(0);
+  exit(0);
+}
+
+async function runCli(main = run, io = {}) {
+  const exit = io.exit || process.exit;
+  const error = io.error || console.error;
+  try { await main(io); }
+  catch (e) {
+    error(`::error::value-spot-check crashed (${e && e.message}) — Pruefer abgestuerzt.`);
+    exit(1);
+  }
 }
 
 // --- runnable self-check: node scripts/value-spot-check.js --selftest ---
-function selftest() {
+async function selftest() {
   const assert = require('node:assert/strict');
   let pass = 0, fail = 0;
   const t = (n, fn) => { try { fn(); pass++; console.log('  ok   ' + n); } catch (e) { fail++; console.error('FAIL   ' + n + '\n       ' + e.message); } };
@@ -229,11 +242,20 @@ function selftest() {
     assert.deepEqual(seededPick(arr, 8, 202628), seededPick(arr, 8, 202628));
     assert.notDeepEqual(seededPick(arr, 8, 202628), seededPick(arr, 8, 202629));
   });
+  try {
+    const exits = [], errors = [];
+    await runCli(async () => { throw new Error('Selftest-Absturz'); }, {
+      exit: code => exits.push(code), error: line => errors.push(String(line)),
+    });
+    assert.deepEqual(exits, [1]);
+    assert.match(errors.join('\n'), /::error::.*Selftest-Absturz/);
+    pass++; console.log('  ok   CLI-Absturz -> ::error:: und Exit 1');
+  } catch (e) { fail++; console.error('FAIL   CLI-Absturz -> ::error:: und Exit 1\n       ' + e.message); }
 
   console.log(`\nvalue-spot-check selftest: ${pass} ok, ${fail} fail`);
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { ratio, evalTicker, classify, isoWeekSeed, seededPick, TOL_LOG10 };
-if (process.argv.includes('--selftest')) selftest();
-else if (require.main === module) run().catch(e => { console.error(`::warning::value-spot-check crashed (${e && e.message}) — inconclusive, nicht rot.`); process.exit(0); });
+module.exports = { ratio, evalTicker, classify, isoWeekSeed, seededPick, run, runCli, TOL_LOG10 };
+if (process.argv.includes('--selftest')) selftest().catch(e => { console.error(e); process.exit(1); });
+else if (require.main === module) runCli();

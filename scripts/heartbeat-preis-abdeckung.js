@@ -87,21 +87,24 @@ function messePreisAbdeckung(zeilen, alle, opts = {}) {
   };
 }
 
-function main() {
+function main(opts = {}) {
+  const fsApi = opts.fs || fs;
+  const storeApi = opts.store || store;
+  const log = opts.log || console.log;
   const wurzel = path.join(__dirname, '..');
   let zeilen;
   try {
-    zeilen = watchlistZeilen(JSON.parse(fs.readFileSync(path.join(wurzel, 'watchlist.json'), 'utf8')));
+    zeilen = watchlistZeilen(JSON.parse(fsApi.readFileSync(path.join(wurzel, 'watchlist.json'), 'utf8')));
   } catch (e) {
     // Auch der Messausfall wird ausgesprochen. Stumm exit 0 waere genau der Fehler,
     // den diese Messung aufdecken soll.
-    console.log('::warning::Preis-Abdeckung nicht messbar: watchlist.json nicht lesbar (' + e.message + ').');
+    log('::warning::MESSAUSFALL: watchlist.json nicht lesbar (' + e.message + ') — keine Aussage ueber Abdeckung.');
     return 0;
   }
   let alle;
-  try { alle = store.loadAll('prices'); }
+  try { alle = storeApi.loadAll('prices'); }
   catch (e) {
-    console.log('::warning::Preis-Abdeckung nicht messbar: Preis-Store nicht lesbar (' + e.message + ').');
+    log('::warning::MESSAUSFALL: Preis-Store nicht lesbar (' + e.message + ') — keine Aussage ueber Abdeckung.');
     return 0;
   }
 
@@ -113,7 +116,7 @@ function main() {
     // einer Karte null liefert (JSON.parse('null')), laesst die Messung mit TypeError
     // abbrechen, node endet auf 1, der Schritt faerbt rot — und ausgerechnet dann fehlen
     // die Kennzahlen, die erklaeren wuerden, wie schlimm es steht.
-    console.log('::warning::Preis-Abdeckung nicht messbar: Messung fehlgeschlagen (' + e.message + ').');
+    log('::warning::MESSAUSFALL: Messung fehlgeschlagen (' + e.message + ') — keine Aussage ueber Abdeckung.');
     return 0;
   }
   const anteil = m.leerAnteil == null ? 'n/a' : (m.leerAnteil * 100).toFixed(1) + ' %';

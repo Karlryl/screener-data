@@ -23,6 +23,57 @@ const dateien = [];
 })('scripts');
 
 let fehler = 0, geprueft = 0;
+
+const HAT_EXIT0 = /process\.exit\(\s*0\s*\)/;
+
+// Fensterbreite des Sicherheitsnetzes (siehe stillerErfolg). Am realen Bestand gemessen
+// (58 Einstiegspunkte: 55 im Repo + 3 lokal untracked): KEINE einzige Fundstelle, bei der
+// das rohe Fenster ein process.exit(0) sieht — also kein Falsch-Rot, das Fenster braucht
+// keine engere Begrenzung auf das syntaktische Ende des catch-Ausdrucks.
+const FENSTER = 900;
+
+// Liefert den vollstaendigen Callback-Block des Promise-.catch() an Position `start`.
+// Regex ist hier absichtlich ungeeignet: `}` in Template-Ausdruecken oder
+// verschachtelten Bloecken darf den Fund nicht vorzeitig abschneiden.
+function catchBlock(text, start) {
+  const open = text.indexOf('{', start + 7);
+  if (open < 0) return null;
+  let depth = 0, quote = null, escaped = false;
+  for (let i = open; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) { escaped = false; continue; }
+    if (quote) {
+      if (ch === '\\') escaped = true;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
+}
+
+// Prueft ALLE .catch(-Fundstellen — nicht nur die erste. Ein Verstoss in irgendeinem
+// catch macht den Waechter tot-gruen; der erste catch kann sauber sein und der zweite
+// (Nachlauf, Cleanup, Retry) still Erfolg melden.
+function stillerErfolg(text) {
+  for (let i = text.indexOf('.catch('); i >= 0; i = text.indexOf('.catch(', i + 1)) {
+    const block = catchBlock(text, i);
+    if (block && HAT_EXIT0.test(block)) return true;
+    // Sicherheitsnetz gegen Parser-Taeuschung: die Klammer-Zaehlung kennt weder
+    // Regex-Literale (`/}/` schliesst den Block zu frueh) noch brace-lose
+    // Arrow-Bodies (`e => process.exit(0)`) noch destrukturierte Parameter
+    // (`({ code }) => {…}` — das erste Klammerpaar ist der Parameter, nicht der
+    // Rumpf). In allen drei Faellen liefert catchBlock() null oder einen zu kurzen
+    // Block. Dann entscheidet das grobe Zeichen-Fenster. Falsch-Rot ist fuer diesen
+    // Waechter billig (Mensch schaut hin und verwirft), Falsch-Gruen ist genau der
+    // Schaden, gegen den er steht — also so herum.
+    if (HAT_EXIT0.test(text.slice(i, i + FENSTER))) return true;
+  }
+  return false;
+}
+
 for (const f of dateien) {
   // Kommentare RAUS, bevor gesucht wird. Beim ersten Anlauf schlug der Waechter auf einen
   // KOMMENTAR an, der process.exit(0) nur erwaehnt — die Zeile selbst war laengst
@@ -34,9 +85,7 @@ for (const f of dateien) {
   if (!/require\.main === module/.test(t)) continue;
   geprueft++;
   const rest = t.slice(t.indexOf('require.main === module'));
-  const mCatch = rest.match(/\.catch\((?:async\s*)?(?:\(|\w)[\s\S]{0,900}?\}\s*\)/);
-  if (!mCatch) continue;
-  if (/process\.exit\(\s*0\s*\)/.test(mCatch[0])) {
+  if (stillerErfolg(rest)) {
     console.error('FAIL   ' + f + ': meldet beim eigenen Absturz Erfolg (process.exit(0) im catch)');
     fehler++;
   }
@@ -47,6 +96,32 @@ for (const f of dateien) {
 if (geprueft === 0) {
   console.error('FAIL   kein Skript mit `require.main === module` gefunden — Suche kaputt');
   fehler++;
+}
+
+// Selbsttest der Erkennung. Alle drei Faelle wurden vom Stand 56bc9497 UEBERSEHEN
+// (nur erster catch geprueft / Klammer-Zaehlung getaeuscht) — sie sind der Rot-Beweis
+// fuer diesen Nachzug, nicht Dekoration.
+// Der Fueller haelt den zweiten catch weiter als FENSTER vom ersten weg — sonst wuerde
+// ihn schon das Sicherheitsnetz des ERSTEN catch einsammeln und der Fixture-Fall wuerde
+// die Schleife ueber alle Fundstellen gar nicht festnageln (beim Ausbau-Test gemessen).
+const fueller = '  zwischenschritt();\n'.repeat(60);
+const fixtures = [
+  ['zweiter .catch meldet Erfolg',
+    'if (require.main === module) {\n' +
+    '  main().catch(err => {\n    console.error(err);\n    process.exit(1);\n  });\n' +
+    fueller +
+    '  nachlauf().catch(err => {\n    console.error(err);\n    process.exit(0);\n  });\n}\n'],
+  ['Regex-Literal /}/ schneidet den Block ab',
+    'if (require.main === module) {\n  main().catch(err => {\n' +
+    '    if (/}/.test(String(err))) melde(err);\n    process.exit(0);\n  });\n}\n'],
+  ['brace-loser Arrow-Body',
+    'if (require.main === module) {\n  main().catch(e => process.exit(0));\n}\n'],
+];
+for (const [name, quelle] of fixtures) {
+  if (!stillerErfolg(quelle.slice(quelle.indexOf('require.main === module')))) {
+    console.error('FAIL   Fixture uebersehen: ' + name);
+    fehler++;
+  }
 }
 
 (async () => {
