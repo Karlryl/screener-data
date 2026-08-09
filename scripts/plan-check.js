@@ -45,26 +45,43 @@ function checkDetectors(vendors, existsFn) {
   return { missing, hard: missing.length > 0 };
 }
 
+// Normiert die Messfehler-Eintraege. Erlaubt sind {text, fehlend} und der blosse String.
+// fehlend===true heisst ENOENT: Datei/Verzeichnis existiert schlicht nicht — im Monats-
+// Workflow der Normalfall (bare checkout, snapshots/ ist gitignored), also kein rotes X.
+// Alles andere — Parse-Fehler, EACCES, und auch die Alt-Form ohne Ursachen-Angabe —
+// heisst "war da, konnte aber nicht gelesen werden" und gilt als blockierend. Unbekannte
+// Ursache faellt bewusst auf LAUT, nicht auf leise.
+function normMessfehler(measurementErrors) {
+  return (measurementErrors || []).map((e) => (typeof e === 'string'
+    ? { text: e, fehlend: false }
+    : { text: String(e && e.text), fehlend: !!(e && e.fehlend) }));
+}
+
 // Baut das Banner-Status-Objekt (coverage-status-Muster) aus den Befunden.
 function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, nowIso, monthTag, measurementErrors = []) {
   const driftFlags = [];
+  const messfehler = normMessfehler(measurementErrors);
   const nTotal = manifestFacts && manifestFacts.n_total;
   if (Number.isFinite(nTotal) && (nTotal < 15000 || nTotal > 60000)) driftFlags.push(`Universe-Groesse n_total=${nTotal} ausserhalb Plausibilitaets-Range [15000..60000]`);
   if (Number.isFinite(snapshotCount) && snapshotCount > 40000) driftFlags.push(`Snapshot-Zahl ${snapshotCount} > 40000 — Archiv-Pflege faellig (Grundgesetz 7)`);
   for (const m of detectors.missing) driftFlags.push(`DETEKTOR FEHLT: ${m.detector} (Register-Zeile "${m.vendor}") — struktureller Register-Drift`);
   const vendorWarnings = vendorResults.filter(v => !v.ok).map(v => `${v.name}: HTTP ${v.code || v.err || '?'}`);
   const needsHuman = true; // der Urteils-Teil ist per Definition jeden Monat faellig
-  for (const e of measurementErrors) driftFlags.push(`NICHT MESSBAR: ${e}`);
+  for (const e of messfehler) driftFlags.push(`NICHT MESSBAR: ${e.text}`);
+  // Review-Befund 09.08.2026: ein Messfehler landete NUR im Drift-Flag, also ::warning:: +
+  // Exit 0. Karls einziger Alarmkanal ist das rote X — ein Waechter, der nichts messen
+  // konnte, meldete damit gruen. Jetzt blockiert jeder Nicht-ENOENT-Grund mit.
+  const nichtMessbar = messfehler.some((e) => !e.fehlend);
   return {
     schema: 'plan-check-status/v1',
     generated_at: nowIso,
     month: monthTag,
     needs_human_review: needsHuman,
-    blocked: detectors.hard,                 // rotes X nur bei Register-Luege
+    blocked: detectors.hard || nichtMessbar, // rotes X bei Register-Luege ODER Nicht-messen-Koennen
     drift_flags: driftFlags,
     vendor_status: vendorResults.map(v => ({ name: v.name, ok: !!v.ok, code: v.code != null ? v.code : null })),
     vendor_warnings: vendorWarnings,
-    measurement_errors: measurementErrors,
+    measurement_errors: messfehler.map((e) => e.text),
     checklist: CHECKLIST,
   };
 }
@@ -72,7 +89,7 @@ function buildStatus(vendorResults, detectors, manifestFacts, snapshotCount, now
 function renderReport(status) {
   const L = [];
   L.push(`# Monats-Plan-Check ${status.month}`, '', `_Automatisch erzeugt ${status.generated_at} — Task 0.10._`, '');
-  L.push(status.blocked ? '## ❌ ROT — struktureller Register-Drift (Detektor fehlt)' : '## Maschinelle Befunde', '');
+  L.push(status.blocked ? '## ❌ ROT — Register-Drift (Detektor fehlt) oder nicht messbare Grundlage (Details in den Drift-Flags)' : '## Maschinelle Befunde', '');
   if (status.drift_flags.length) { L.push('**Drift-Flags:**'); for (const f of status.drift_flags) L.push(`- ⚠ ${f}`); L.push(''); }
   else L.push('_Keine Drift-Flags — Universe/Detektoren/Cache im Rahmen._', '');
   L.push('**Vendor-Reachability (4xx/5xx/timeout = nur Bericht, transient/key-gated):**');
@@ -104,8 +121,12 @@ async function run() {
 
   const detectors = checkDetectors(VENDORS, (p) => fs.existsSync(p));
   const measurementErrors = [];
-  let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) { measurementErrors.push('Manifest snapshots/_manifest.json: ' + e.message); }
-  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { measurementErrors.push('Snapshot-Zahl: ' + e.message); }
+  // fehlend = ENOENT. snapshots/ ist gitignored und der Monats-Workflow macht einen bare
+  // checkout ohne Restore — die Dateien FEHLEN dort planmaessig. Nur ein Lesefehler an
+  // vorhandenen Daten faerbt den Lauf rot (siehe buildStatus).
+  const messfehler = (was, e) => measurementErrors.push({ text: `${was}: ${e.message}`, fehlend: e.code === 'ENOENT' });
+  let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) { messfehler('Manifest snapshots/_manifest.json', e); }
+  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { messfehler('Snapshot-Zahl', e); }
 
   const vendorResults = [];
   for (const v of VENDORS) vendorResults.push(await probe(v, 20000));
@@ -120,7 +141,9 @@ async function run() {
   for (const v of status.vendor_status) console.log(`  vendor: ${v.name} -> ${v.ok ? 'ok' : 'WARN'}${v.code != null ? ' (' + v.code + ')' : ''}`);
   console.log(`plan-check: report=${reportPath} status=${outPath} needs_human_review=true blocked=${status.blocked}`);
   if (status.blocked) {
-    console.error(`::error::MONATS-PLAN-CHECK ROT — deklarierter Detektor fehlt (Register-Luege): ${detectors.missing.map(m => m.detector).join(', ')}. Register vs. Repo divergiert.`);
+    if (detectors.hard) console.error(`::error::MONATS-PLAN-CHECK ROT — deklarierter Detektor fehlt (Register-Luege): ${detectors.missing.map(m => m.detector).join(', ')}. Register vs. Repo divergiert.`);
+    const hart = measurementErrors.filter(e => !e.fehlend);
+    if (hart.length) console.error(`::error::MONATS-PLAN-CHECK ROT — der Check konnte nicht messen, obwohl die Daten da waren: ${hart.map(e => e.text).join('; ')}. Das ist kein fehlender Restore (ENOENT waere nur eine Warnung), sondern ein Lesefehler — die Befunde unten gelten fuer eine unvollstaendige Grundlage.`);
     process.exit(1);
   }
   console.log(`::warning::Monats-Plan-Review offen (needs_human_review) — ${status.drift_flags.length} Drift-Flag(s), ${status.vendor_warnings.length} Vendor-Warnung(en). Report: ${reportPath}. Kein rotes X (kein Detektor fehlt), aber Banner zeigt es.`);
@@ -177,6 +200,32 @@ function selftest() {
     const s = buildStatus(vr, { missing: [], hard: false }, null, null, '2026-07-08T00:00:00Z', '2026-07', ['Manifest: EACCES']);
     assert.ok(s.drift_flags.some(f => f.includes('NICHT MESSBAR')));
     assert.ok(!renderReport(s).includes('Universe/Detektoren/Cache im Rahmen'));
+  });
+
+  // Review-Nachzug Tag 618: NICHT MESSBAR war bisher IMMER nur ein Drift-Flag (::warning:: + Exit 0).
+  // Karls einziger Alarmkanal ist das rote X — ein Waechter, der nichts messen konnte, meldete gruen.
+  // Unterschieden wird nach Ursache: die Datei FEHLT (ENOENT) ist im Monats-Workflow der Normalfall
+  // (bare checkout, snapshots/ ist gitignored) und darf kein Falsch-Rot erzeugen; jeder ANDERE Grund
+  // (Parse-Fehler, EACCES) heisst "konnte nicht lesen, obwohl da war" und muss rot werden.
+  t('buildStatus: ENOENT-Messfehler -> nur Drift-Flag, KEIN rotes X (CI-Normalfall)', () => {
+    const vr = VENDORS.map(v => ({ name: v.name, ok: true, code: 200 }));
+    const s = buildStatus(vr, { missing: [], hard: false }, null, null, '2026-08-09T00:00:00Z', '2026-08',
+      [{ text: 'Manifest snapshots/_manifest.json: ENOENT: no such file or directory', fehlend: true }]);
+    assert.equal(s.blocked, false);
+    assert.ok(s.drift_flags.some(f => f.includes('NICHT MESSBAR')));
+  });
+  t('buildStatus: Korruption/EACCES -> blocked=true (rotes X: konnte nicht messen)', () => {
+    const vr = VENDORS.map(v => ({ name: v.name, ok: true, code: 200 }));
+    const s = buildStatus(vr, { missing: [], hard: false }, null, null, '2026-08-09T00:00:00Z', '2026-08',
+      [{ text: 'Manifest snapshots/_manifest.json: Unexpected token k in JSON', fehlend: false }]);
+    assert.equal(s.blocked, true);
+    assert.ok(s.drift_flags.some(f => f.includes('NICHT MESSBAR')));
+  });
+  t('buildStatus: Messfehler als blosser String -> blockierend (unbekannte Ursache = laut)', () => {
+    const vr = VENDORS.map(v => ({ name: v.name, ok: true, code: 200 }));
+    const s = buildStatus(vr, { missing: [], hard: false }, null, null, '2026-08-09T00:00:00Z', '2026-08', ['Manifest: EACCES']);
+    assert.equal(s.blocked, true);
+    assert.deepEqual(s.measurement_errors, ['Manifest: EACCES']);
   });
 
   console.log(`\nplan-check selftest: ${pass} ok, ${fail} fail`);

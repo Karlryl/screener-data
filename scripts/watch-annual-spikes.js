@@ -95,12 +95,60 @@ function stabilerSchluessel(x) {
   const periode = x.periode || `werte:${x.links}|${x.wert}|${x.rechts}`;
   return `${x.ticker}|${x.reihe}|${periode}`;
 }
-function istBekannt(x, bestand) {
+// Zaehlt die heutigen Funde je "ticker|reihe" — der Massstab, an dem unten entschieden
+// wird, ob die Legacy-Index-Toleranz ueberhaupt noch tragen kann.
+// Funde, die die stabile Signatur exakt trifft, bleiben AUSSEN VOR: sie verlassen
+// istBekannt() sofort und brauchen die Toleranz nie. Zaehlten sie mit, kippte der
+// Abgleich fuer die uebrigen Funde derselben Reihe und eine REINE Indexverschiebung
+// fiele faelschlich als NEU auf (Falsch-Rot, im Review reproduziert).
+// `bestand` ist Pflicht — ein vergessenes Argument wirft hier laut, statt still den
+// zu grossen Zaehler zu liefern.
+function fundeJeReihe(funde, bestand) {
+  const zaehler = new Map();
+  for (const x of funde) {
+    if (bestand.has(stabilerSchluessel(x))) continue;
+    const k = `${x.ticker}|${x.reihe}`;
+    zaehler.set(k, (zaehler.get(k) || 0) + 1);
+  }
+  return zaehler;
+}
+
+// Wie viele Bestandseintraege dieser Reihe noch im ALTEN Format stehen ("…|<index>",
+// dritter Abschnitt eine reine Zahl). Perioden-/Wertsignaturen zaehlen nicht mit — die
+// treffen exakt und brauchen keine Toleranz.
+function altIndexEintraege(bestand, ticker, reihe) {
+  const prefix = `${ticker}|${reihe}|`;
+  let n = 0;
+  for (const key of bestand) if (key.startsWith(prefix) && /^\d+$/.test(key.slice(prefix.length))) n++;
+  return n;
+}
+
+function istBekannt(x, bestand, heutigeFundeJeReihe = new Map()) {
+  // Die stabile Signatur trifft exakt und gilt immer.
+  if (bestand.has(stabilerSchluessel(x))) return true;
   // Altbestand (Indexschluessel) bleibt fuer die laufende und fuer eine um genau
   // ein neues Geschaeftsjahr verschobene Generation lesbar. Neu geschriebene
   // Baselines verwenden ausschliesslich die stabile Perioden-/Wertsignatur.
-  return bestand.has(stabilerSchluessel(x))
-    || bestand.has(`${x.ticker}|${x.reihe}|${x.index}`)
+  //
+  // REVIEW-BEFUND 09.08.2026: genau diese +-1-Toleranz verschluckte einen ECHTEN
+  // Neuzugang, sobald sein Index zufaellig auf oder neben einem Alt-Eintrag DERSELBEN
+  // Reihe lag — der Waechter schwieg ueber den Fall, fuer den er gebaut ist. Der
+  // Altbestand enthaelt nur "ticker|reihe|index" und keine Werte, eine Gegenprobe am
+  // Inhalt ist also unmoeglich. Was bleibt, ist die ZAHL: solange diese Reihe heute
+  // nicht mehr Funde hat als der Bestand Alt-Eintraege, kann jeder Fund von einem
+  // Alt-Eintrag stammen und die Toleranz ist plausibel. Kommt einer dazu, kann sie
+  // nicht mehr alle decken — dann faellt sie fuer diese Reihe ganz weg und ALLE ihre
+  // Funde laufen als NEU auf. Das Falsch-Rot-Risiko puffert MAX_NEU=5.
+  const alt = altIndexEintraege(bestand, x.ticker, x.reihe);
+  if (alt === 0) return false;
+  // Ohne Zaehlung (Direktaufruf mit zwei Argumenten) gilt der Einzelfund als Massstab —
+  // definierte Bedeutung: "dies ist der einzige Fund seiner Reihe". RISIKO-RICHTUNG:
+  // vergisst ein kuenftiger BULK-Aufrufer den Zaehler, faellt er auf die alte, laxe
+  // Toleranz zurueck. Beide Produktions-Aufrufer stehen in main() und uebergeben ihn;
+  // Cluster F/F2/F3 nageln beide Lesarten fest.
+  const heute = heutigeFundeJeReihe.get(`${x.ticker}|${x.reihe}`) || 1;
+  if (heute > alt) return false;
+  return bestand.has(`${x.ticker}|${x.reihe}|${x.index}`)
     || (x.index > 0 && bestand.has(`${x.ticker}|${x.reihe}|${x.index - 1}`));
 }
 
@@ -268,13 +316,14 @@ function main() {
   }
 
   const bestand = new Set(basis.faelle || []);
-  const neu = funde.filter((x) => !istBekannt(x, bestand));
+  const heuteJeReihe = fundeJeReihe(funde, bestand);
+  const neu = funde.filter((x) => !istBekannt(x, bestand, heuteJeReihe));
 
   console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   // Vom Bestand nur eine Kostprobe, aber die Zahl bleibt genannt — kein stilles Kappen.
-  const bekannt = funde.filter((x) => istBekannt(x, bestand));
+  const bekannt = funde.filter((x) => istBekannt(x, bestand, heuteJeReihe));
   for (const x of bekannt.slice(0, 15)) console.log(`  bek. ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   if (bekannt.length > 15) console.log(`  … und ${bekannt.length - 15} weitere bekannte`);
 
@@ -285,7 +334,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
