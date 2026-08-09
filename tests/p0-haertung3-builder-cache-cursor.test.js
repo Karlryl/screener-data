@@ -19,12 +19,14 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { ladeMergeBasis } = require('../scripts/build-secannual.js');
+const { ladeMergeBasis, run: secannualRun } = require('../scripts/build-secannual.js');
 const krannual = require('../scripts/build-krannual.js');
 const { liesGrundbild, rotiereGrundbild } = require('../scripts/snapshot-ticker-map.js');
 const { ladeForm4Cache } = require('../scripts/pull-insider-form4.js');
-const { _internals: f4d } = require('../scripts/pull-insider-form4-daily.js');
-const { ladeHistorie } = require('../scripts/check-pull-stats.js');
+const { _internals: f4d, main: form4DailyMain } = require('../scripts/pull-insider-form4-daily.js');
+const { ladeHistorie, runCli: pullStatsRunCli } = require('../scripts/check-pull-stats.js');
+
+const REPO = path.join(__dirname, '..');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -111,6 +113,61 @@ async function krannualTests() {
     for (let y = 2015; y < new Date().getFullYear(); y++) alleJahre.push(String(y));
     await krannual.main({ getJSON: fakeDart(alleJahre), out: p });
     assert.ok(JSON.parse(fs.readFileSync(p, 'utf8'))['000660.KS']);
+  });
+
+  // ── R609-2: OpenDART-Status-Whitelist ───────────────────────────────────────────────
+  // BEFUND (Review Tag 608): `if (j.status !== '000' || !Array.isArray(j.list)) continue;`
+  // behandelte JEDEN Nicht-000-Status als legitimen "kein Abschluss fuer dieses Jahr"-Skip.
+  // 020 (Rate-Limit/Tageskontingent), 800 (Wartung) und 010 (ungueltiger Key) liefen damit
+  // als Datenaussage durch: der Lauf zaehlte keinen Fehler, blieb gruen und ersetzte die
+  // gepflegte Historie durch den Teilstand. Nur '013' ist der echte Leerbefund.
+  // Fake-Abruf mit Status je Jahr — HTTP 200, nur die Nutzlast sagt "nein".
+  function dartMitStatus(statusProJahr) {
+    return async (u) => {
+      const jahr = (String(u).match(/bsns_year=(\d{4})/) || [])[1];
+      const st = statusProJahr[jahr] || '000';
+      if (st !== '000') return { status: st, message: 'Testfall ' + st };
+      return {
+        status: '000',
+        list: [
+          { account_id: 'ifrs-full_Revenue', thstrm_amount: '1000' + jahr },
+          { account_id: 'dart_OperatingIncomeLoss', thstrm_amount: '200' + jahr },
+        ],
+      };
+    };
+  }
+
+  await atest('R609-2 Status 020 (Rate-Limit) mitten im Lauf erhaelt den Ticker und wird rot', async () => {
+    const p = neu('kr-020.json', JSON.stringify(ALT_STORE));
+    // Ein einziges Jahr laeuft ins Tageskontingent — alle anderen liefern sauber.
+    await assert.rejects(
+      () => krannual.main({ getJSON: dartMitStatus({ 2019: '020' }), out: p }),
+      /unvollstaendig/,
+      'ein Rate-Limit ist keine Datenaussage: der Lauf muss rot werden, nicht als vollstaendig gelten');
+    const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
+    assert.equal(danach['000660.KS'].annualOpInc.length, 10,
+      'die zehnjaehrige Serie wurde durch einen Teilstand ersetzt — genau der Befund');
+    assert.ok(danach['ALT.KS'], 'ein Altname darf nicht aus dem Store fallen');
+  });
+
+  await atest('R609-2 dasselbe fuer 800 (Wartung) und 010 (ungueltiger Key)', async () => {
+    for (const st of ['800', '010']) {
+      const p = neu('kr-' + st + '.json', JSON.stringify(ALT_STORE));
+      await assert.rejects(
+        () => krannual.main({ getJSON: dartMitStatus({ 2019: st }), out: p }),
+        /unvollstaendig/, 'Status ' + st + ' ging als legitimer Jahres-Skip durch');
+      assert.equal(JSON.parse(fs.readFileSync(p, 'utf8'))['000660.KS'].annualOpInc.length, 10);
+    }
+  });
+
+  await atest('R609-2 Gegenprobe: 013 bleibt ein legitimer Skip und laeuft gruen durch', async () => {
+    // Die gueltige Form muss DURCHGEHEN, sonst ist die Whitelist nur eine Blockade:
+    // ein einzelnes Jahr ohne Abschluss ist Alltag (Neulisting, Rumpfgeschaeftsjahr).
+    const p = neu('kr-013.json', JSON.stringify(ALT_STORE));
+    await krannual.main({ getJSON: dartMitStatus({ 2019: '013' }), out: p });
+    const danach = JSON.parse(fs.readFileSync(p, 'utf8'));
+    assert.ok(danach['000660.KS'].annualOpInc.length >= 3, 'der Ticker wurde regulaer aktualisiert');
+    assert.ok(danach['ALT.KS'], 'Altname bleibt');
   });
 }
 
@@ -206,7 +263,87 @@ test('F-033 gesunde Historie kommt unveraendert zurueck', () => {
   assert.equal(ladeHistorie(p).length, 1);
 });
 
-krannualTests().then(() => {
+// ── R609-4: dieselben drei Faelle am ECHTEN Einstiegspunkt ────────────────────────────
+// Die Proben oben pruefen die LESER. Was sie nicht pruefen: ob der Wurf auch aus dem
+// Einstiegspunkt herauskommt. Genau dort ist die Bugklasse rueckfaellig — es genuegt
+// EIN spaeter eingebautes `try { ... } catch (_) {}` um den Aufruf herum, und der
+// gehaertete Leser ist wieder wirkungslos, waehrend alle Leser-Proben gruen bleiben.
+// Diese drei Faelle werden dann und nur dann rot.
+//
+// ABWEICHUNG mit Absicht: der korrupte Inhalt wird dem echten Leser am echten Repo-Pfad
+// untergeschoben (fs-Klammer), statt die echte Datei auf Platte zu beschaedigen.
+// sec-form4-cache.json ist 42 MB, pull-stats/history.json ist git-getrackt — ein
+// abgebrochener oder gekillter Testlauf haette sie korrupt zurueckgelassen, und ein
+// Mutant (Guard entfernt) haette sie echt ueberschrieben. Die Klammer laesst dieselbe
+// Datei-vorhanden-aber-unlesbar-Situation entstehen und BLOCKIERT zusaetzlich jeden
+// Schreibversuch auf den Zielpfad, statt ihn nur nachtraeglich festzustellen.
+const KORRUPT = '{"AAPL":{"cik":"000';
+
+async function mitKorrupterDatei(zielPfad, fn) {
+  const echt = {
+    readFileSync: fs.readFileSync, writeFileSync: fs.writeFileSync,
+    renameSync: fs.renameSync, openSync: fs.openSync,
+  };
+  const schreibVersuche = [];
+  // Prefix-Vergleich, nicht Gleichheit: writeFileAtomic schreibt erst nach
+  // "<ziel>.tmp.<pid>.<n>" und benennt dann um — beide Wege gehoeren geblockt.
+  const trifft = (p) => String(p).startsWith(zielPfad);
+  const blocken = (p) => { schreibVersuche.push(String(p)); throw new Error('TEST: Schreibversuch auf ' + p + ' geblockt'); };
+  fs.readFileSync = (p, ...r) => (trifft(p) ? KORRUPT : echt.readFileSync(p, ...r));
+  fs.writeFileSync = (p, ...r) => (trifft(p) ? blocken(p) : echt.writeFileSync(p, ...r));
+  fs.openSync = (p, ...r) => (trifft(p) ? blocken(p) : echt.openSync(p, ...r));
+  fs.renameSync = (a, b) => (trifft(b) ? blocken(b) : echt.renameSync(a, b));
+  let fehler = null;
+  try { await fn(); } catch (e) { fehler = e; }
+  finally { Object.assign(fs, echt); }
+  return { fehler, schreibVersuche };
+}
+
+function pruefeE2E(name, ziel, fehler, schreibVersuche) {
+  assert.deepEqual(schreibVersuche, [],
+    name + ': es wurde auf die Pflichtdatei geschrieben, obwohl sie unlesbar war — '
+    + 'genau das Ueberschreiben, gegen das der Leser gebaut ist');
+  assert.ok(fehler, name + ': der Einstiegspunkt ist NICHT gefallen — jemand faengt den Wurf ab, '
+    + 'der Lauf endet mit Exit 0 ueber einer unlesbaren Pflichtdatei');
+  assert.match(String(fehler.message), /unlesbar/,
+    name + ': gefallen, aber aus einem anderen Grund als der korrupten Datei ('
+    + fehler.message + ') — die Probe belegt dann nichts');
+  assert.ok(String(fehler.message).includes(ziel),
+    name + ': die Meldung nennt die Datei nicht — bei mehreren Pflichtdateien unbrauchbar');
+}
+
+async function e2eTests() {
+  await atest('F-020 E2E: korrupter Store faellt durch build-secannual run() durch', async () => {
+    const ziel = path.join(REPO, 'external-data', 'sec-secannual.json');
+    const { fehler, schreibVersuche } = await mitKorrupterDatei(ziel, () => secannualRun());
+    pruefeE2E('F-020', ziel, fehler, schreibVersuche);
+  });
+
+  await atest('F-029 E2E: korrupter Form-4-Cache faellt durch main() des Daily-Pulls durch', async () => {
+    const ziel = path.join(REPO, 'external-data', 'sec-form4-cache.json');
+    const { fehler, schreibVersuche } = await mitKorrupterDatei(ziel, () => form4DailyMain());
+    pruefeE2E('F-029', ziel, fehler, schreibVersuche);
+  });
+
+  await atest('F-033 E2E: korrupte Historie beendet runCli() mit Exit != 0', async () => {
+    const ziel = path.join(REPO, 'pull-stats', 'history.json');
+    const codes = [], gemeldet = [];
+    // runCli FAENGT den Wurf bewusst ab — es kommt hier also nicht auf einen
+    // durchgereichten Fehler an, sondern auf den Exit-Code, der daraus wird.
+    const { schreibVersuche } = await mitKorrupterDatei(ziel,
+      () => pullStatsRunCli(undefined, { exit: (c) => codes.push(c), error: (m) => gemeldet.push(String(m)) }));
+    assert.deepEqual(schreibVersuche, [],
+      'F-033: die Historie wurde ueberschrieben, obwohl sie unlesbar war');
+    assert.deepEqual(codes, [1],
+      'F-033: runCli endet nicht mit Exit 1 (Codes: ' + JSON.stringify(codes)
+      + ') — ein Waechter, der ueber einer unlesbaren Historie Erfolg meldet, ist keiner');
+    assert.ok(gemeldet.some((m) => /::error::/.test(m) && /unlesbar/.test(m)),
+      'F-033: kein ::error:: mit Grund — im Actions-Log ist der Ausfall dann nicht auffindbar: '
+      + JSON.stringify(gemeldet));
+  });
+}
+
+krannualTests().then(e2eTests).then(() => {
   fs.rmSync(TMP, { recursive: true, force: true });
   console.log('\n' + pass + ' ok, ' + fail + ' fail');
   process.exit(fail ? 1 : 0);

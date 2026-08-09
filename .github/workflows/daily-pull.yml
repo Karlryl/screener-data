@@ -73,6 +73,9 @@ jobs:
       refresh_universe_outcome: ${{ steps.refresh_ausgang.outputs.outcome }}
       # KV571-1: Ausgang des Earnings-Pulls fuer den Transport-Check im merge-Job.
       pull_earnings_outcome: ${{ steps.earnings_ausgang.outputs.outcome }}
+      # R609-1: Ausgang des Form-4-Pulls. Derselbe Grund wie oben — Schritt-Ergebnisse
+      # sind job-lokal, der einsammelnde Waechter-Job kaeme sonst nie an das Ergebnis.
+      pull_form4_outcome: ${{ steps.form4_ausgang.outputs.outcome }}
     steps:
       # Tag 219 (audit F-219b-01 HIGH): freeze a shared run-date at job start so
       # every downstream script (in prep, pull AND merge) agrees on TODAY's date
@@ -410,7 +413,17 @@ jobs:
 
       # Workstream A1: SEC EDGAR Form-4 daily insider pull. Once, watchlist-CIK-filtered.
       # continue-on-error: SEC outages must not block the pipeline; cache is resumable.
+      # R609-1 (Review Tag 608): der Schritt hatte KEINE id — sein Ausgang war damit
+      # nicht abfragbar und `continue-on-error` machte ihn folgenlos. Beide fail-loud-
+      # Wege des Skripts verpufften in einem gruenen Lauf: der Wurf ueber einen
+      # korrupten 42-MB-Form-4-Cache (Tag 608) und der aeltere TOTAL-FAILURE-Exit(1)
+      # bei einem systemischen 403/IP-Block. KEINE Ausnahme fuer SEC-Netz-Flakes:
+      # das Skript unterscheidet bereits selbst — ein einzelner 404/Netzfehler zaehlt
+      # nur grandErrors hoch und laeuft weiter (siehe `cursorContiguous = false`);
+      # einen Ausgang != 0 erreichen nur Korrupt-Cache, TOTAL FAILURE und fehlende
+      # Pflichteingaben. Jedes failure-Outcome darf also rot faerben.
       - name: Pull Insider Form-4 (daily)
+        id: pull_form4
         env:
           DAYS: '5'
         run: node scripts/pull-insider-form4-daily.js
@@ -488,6 +501,12 @@ jobs:
         if: always()
         run: echo "outcome=${{ steps.pull_earnings.outcome }}" >> "$GITHUB_OUTPUT"
 
+      # R609-1: dieselbe Bauform fuer den Form-4-Pull.
+      - name: Insider-Ausgang festhalten
+        id: form4_ausgang
+        if: always()
+        run: echo "outcome=${{ steps.pull_form4.outcome }}" >> "$GITHUB_OUTPUT"
+
       # 29.07.: Discord-Benachrichtigung bei Fehlschlag entfernt (Karl-Freigabe) —
       # DISCORD_WEBHOOK war nie gesetzt, der Schritt also immer ein No-Op. Ein
       # fehlgeschlagener prep-Job ist ohnehin ein rotes X in Actions.
@@ -526,6 +545,30 @@ jobs:
               ;;
             *)
               echo "Entdeckungs-Kanaele still (Ausgang: ${AUSGANG:-<leer, prep uebersprungen>})."
+              ;;
+          esac
+
+      # R609-1 (Review Tag 608): Sammel-Alarm fuer den Form-4-Pull. Er sitzt in DIESEM
+      # Job und nicht im Sammel-Schritt des merge-Jobs, weil `steps.<id>.outcome`
+      # job-lokal ist: `id: pull_form4` liegt im prep-Job, der Sammler bei den vier
+      # Daten-Waechtern im merge-Job kann ihn nicht sehen. Und kein dritter 5-Minuten-
+      # Waechter-Job, weil dieser hier exakt die noetige Bauform schon hat: `needs: prep`,
+      # `if: always()`, es haengt nichts an ihm. Die Meldung nennt den Schritt, also ist
+      # ein rotes X hier eindeutig zuzuordnen.
+      - name: Insider-Kanal einsammeln (rotes X)
+        if: always()
+        run: |
+          AUSGANG="${{ needs.prep.outputs.pull_form4_outcome }}"
+          case "$AUSGANG" in
+            failure)
+              echo "::error::INSIDER-PULL GEFALLEN: der Schritt 'Pull Insider Form-4 (daily)' im prep-Job ist mit Exit != 0 geendet. Das Skript bricht NICHT bei einzelnen 404/Netzfehlern ab (die zaehlt es nur und laeuft weiter) — Exit != 0 heisst: external-data/sec-form4-cache.json ist unlesbar (korrupt geschrieben), ODER der Lauf hat NULL Filings bei lauter Fehlern geholt (systemischer SEC-403/IP-Block), ODER watchlist.json / sec-ticker-cik-map.json fehlen, ODER der Schritt lief in sein 30-Minuten-Timeout. In allen Faellen ist der Insider-Cache heute NICHT fortgeschrieben und der Cursor nicht vorgerueckt. Der Tagesdatenlauf haengt nicht daran und ist weitergelaufen. NAECHSTER SCHRITT: Actions -> prep-Job -> Schritt 'Pull Insider Form-4 (daily)'."
+              exit 1
+              ;;
+            cancelled|skipped)
+              echo "::warning::Der Form-4-Pull wurde weder gruen noch rot beendet (Ausgang: $AUSGANG) — der Insider-Cache traegt moeglicherweise den Stand des Vortags. Kein rotes X, weil das keine Aussage ueber den SEC-Kanal ist."
+              ;;
+            *)
+              echo "Insider-Kanal still (Ausgang: ${AUSGANG:-<leer, prep uebersprungen>})."
               ;;
           esac
 

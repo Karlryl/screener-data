@@ -114,7 +114,21 @@ async function main(opts = {}) {
       const u = `https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?crtfc_key=${KEY}`
         + `&corp_code=${corp}&bsns_year=${yr}&reprt_code=11011&fs_div=CFS`;
       let j; try { j = await holen(u); } catch (e) { jahresFehler++; console.warn(`${tk} ${yr}: Abruf fehlgeschlagen (${e.message})`); continue; }
-      if (j.status !== '000' || !Array.isArray(j.list)) continue; // 013=keine Daten fuer das Jahr -> skip
+      // R609-2: NUR '013' (keine Daten fuer dieses Geschaeftsjahr) ist ein legitimer Skip.
+      // Vorher galt JEDER Nicht-000-Status als Skip — 020 (Rate-Limit/Tageskontingent),
+      // 800 (Wartung) und 010 (ungueltiger Key) liefen damit als "der Ticker hat dieses
+      // Jahr eben nicht" durch. Folge: der Lauf zaehlte sich als vollstaendig, blieb
+      // gruen und ersetzte die gepflegte Historie durch einen Teilstand. Jeder andere
+      // Nicht-000-Status (und ein 000 ohne .list) ist jetzt ein Jahresfehler — dann
+      // bleibt der Altbestand unangetastet (siehe jahresFehler-Zweig unten) und der
+      // Lauf wird rot, nachdem der erhaltende Write durch ist.
+      if (j.status === '013') continue;
+      if (j.status !== '000' || !Array.isArray(j.list)) {
+        jahresFehler++;
+        console.warn(`${tk} ${yr}: OpenDART-Status ${j.status || '<keiner>'}`
+          + (j.message ? ` (${j.message})` : '') + ' — kein legitimer Jahres-Skip');
+        continue;
+      }
       const rev = pick(j.list, 'ifrs-full_Revenue', /^매출액$/);
       const op = pick(j.list, 'dart_OperatingIncomeLoss', /^영업이익/);
       const rv = numOf(rev), ov = numOf(op);

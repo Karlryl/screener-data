@@ -496,7 +496,12 @@ async function main() {
       // F-CGPT-030: nur ein Index, der nicht mehr kommt (Feiertag), gilt als erledigt.
       if (cursorDarfVor({ contiguous: cursorContiguous, notFound: true, date, jetzt: Date.now() })) {
         lastIndexedDate = date;
-        console.log('[' + date + '] kein Tagesindex und aelter als ' + INDEX_KARENZ_TAGE +
+        // R609-3: als ::warning:: statt console.log. Dieser Zweig rueckt den Cursor ueber
+        // einen Tag vor, von dem NIE ein Index kam — richtig fuer einen Boersenfeiertag,
+        // aber genauso die Form, die ein dauerhaft geaenderter SEC-Index-Pfad annehmen
+        // wuerde. Als Run-Annotation faellt eine Haeufung auf; im Log verschwand sie
+        // zwischen hunderten Zeilen.
+        console.warn('::warning::[' + date + '] kein Tagesindex und aelter als ' + INDEX_KARENZ_TAGE +
           ' Tage (Boersenfeiertag) — Cursor rueckt vor');
       } else {
         cursorContiguous = false;
@@ -660,6 +665,10 @@ if (require.main === module) {
 }
 
 module.exports = {
+  // R609-4: `main` exportiert als Test-Seam (Bauform wie build-krannual.js). Der
+  // require.main-Guard darueber sorgt dafuer, dass ein require() weiterhin keinen
+  // Lauf ausloest.
+  main,
   parseDailyForm4Rows, targetDates, buildMaps, mergeTransactions,
   _internals: {
     httpGet, quarterOf, ymd, parseYmd, withinLookback, txnKey,

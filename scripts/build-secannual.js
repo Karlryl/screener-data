@@ -120,6 +120,18 @@ function chooseCacheSource(repoExists, tmpExists, repoMtimeMs, tmpMtimeMs) {
 }
 
 async function run() {
+  // Overwrite->Merge (Court-Vorbedingung der Expansion): bestehenden Store als Basis laden -> ein Teil-/Abbruch-Lauf
+  // oder ein geaendertes Kandidatenset LOESCHT keine schon abgedeckten Namen (Coverage akkumuliert non-ephemer).
+  // Namen-Granularitaet: jedes out[tk] stammt aus EINEM extractSecSeries-Call (ein _fys) -> feld-kohaerent, nie gesplittet.
+  // R609-4: ganz nach vorn gezogen (stand hinter fetchSecTickers()). ladeMergeBasis()
+  // wirft bei unlesbarem Store (F-CGPT-020) — dieser Wurf gehoert VOR die erste
+  // Netzrunde und vor jede Rechnung: ein Lauf, der ohnehin nichts schreiben darf,
+  // soll SEC nicht erst befragen. Nebeneffekt: der Wurf ist damit netzfrei
+  // nachweisbar (tests/p0-haertung3-builder-cache-cursor.test.js, E2E-Fall F-020).
+  const out = ladeMergeBasis();
+  const preCount = Object.keys(out).length;
+  console.log('Merge-Basis:', preCount, 'bestehende Namen geladen');
+
   if (!fs.existsSync(CACHE)) fs.mkdirSync(CACHE, { recursive: true });
   const uni = loadUniverse();
   // BH-004 fix: loadUniverse() returns [] when snapshots/*.json isn't present (e.g. the CI
@@ -147,12 +159,6 @@ async function run() {
   }
   console.log('US-routed>=3y:', routedUS.length, '| p75=' + p75.toFixed(4), '| Kandidaten:', cands.length);
   const tmap = await fetchSecTickers();
-  // Overwrite->Merge (Court-Vorbedingung der Expansion): bestehenden Store als Basis laden -> ein Teil-/Abbruch-Lauf
-  // oder ein geaendertes Kandidatenset LOESCHT keine schon abgedeckten Namen (Coverage akkumuliert non-ephemer).
-  // Namen-Granularitaet: jedes out[tk] stammt aus EINEM extractSecSeries-Call (ein _fys) -> feld-kohaerent, nie gesplittet.
-  const out = ladeMergeBasis();
-  const preCount = Object.keys(out).length;
-  console.log('Merge-Basis:', preCount, 'bestehende Namen geladen');
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {

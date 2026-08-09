@@ -87,6 +87,52 @@ check('kein Waechter behaelt continue-on-error OHNE eingesammelt zu werden', () 
   }
 });
 
+check('der Form-4-Pull wird eingesammelt — die ganze Kette, nicht nur die id (R609-1)', () => {
+  // BEFUND (Review Tag 608): der Schritt trug `continue-on-error: true` und KEINE id.
+  // Beide fail-loud-Wege des Skripts (Wurf ueber den korrupten 42-MB-Cache aus Tag 608,
+  // TOTAL-FAILURE-Exit(1) bei systemischem 403) endeten damit als gruener Lauf.
+  //
+  // Geprueft wird die SACHE, also die ganze Kette bis zum roten X — und zwar an den
+  // vier benannten Objekten, nicht an einem Textmuster irgendwo in der Datei:
+  //   Schritt -> id -> Ausgangs-Schritt -> Job-Ausgang -> einsammelnder Waechter-Schritt.
+  // Faellt irgendein Glied weg, ist der Alarm wieder stumm; jede einzelne Probe hier
+  // wird dann rot. (Beleg: mit `id: pull_form4` entfernt -> Probe 1 rot; mit dem
+  // Waechter-Schritt entfernt -> Probe 4 rot.)
+  const schritt = block('Pull Insider Form-4 (daily)');
+  assert.ok(/continue-on-error:\s*true/.test(schritt),
+    'ohne continue-on-error braucht es diese Kette nicht mehr — dann bitte diese Probe streichen');
+  assert.ok(schritt.includes('id: pull_form4'),
+    'ohne id ist steps.pull_form4.outcome nicht abfragbar — der Ausfall bleibt job-lokal und unsichtbar');
+
+  assert.ok(block('Insider-Ausgang festhalten').includes('steps.pull_form4.outcome'),
+    'der Ausgang wird nicht festgehalten — Schritt-Ergebnisse sind job-lokal, der Waechter-Job kaeme nie daran');
+
+  assert.ok(/pull_form4_outcome:\s*\$\{\{\s*steps\.form4_ausgang\.outputs\.outcome\s*\}\}/.test(WF),
+    'der prep-Job reicht den Ausgang nicht als Job-Ausgang weiter — die Kette reisst zwischen den Jobs');
+
+  const sammler = block('Insider-Kanal einsammeln (rotes X)');
+  assert.ok(sammler.includes('needs.prep.outputs.pull_form4_outcome'),
+    'niemand liest den Job-Ausgang — id vergeben, Alarm trotzdem stumm (genau der Befund)');
+  assert.ok(/failure\)/.test(sammler), 'der failure-Zweig fehlt');
+  assert.ok(/::error::/.test(sammler), 'muss ::error:: schreiben, nicht ::warning::');
+  assert.ok(/exit 1/.test(sammler), 'ohne exit 1 bleibt der Lauf gruen — Karls einziger Alarmkanal ist das rote X');
+  assert.ok(/if: always\(\)/.test(sammler),
+    'ohne always() wird der Sammler uebersprungen, sobald ein frueherer Schritt scheitert');
+});
+
+check('gueltige Form gepinnt: der Form-4-Sammler haengt an prep, nicht an merge (R609-1)', () => {
+  // Gegenprobe zur Probe darueber: die dort geforderte Form muss auch DURCHGEHEN,
+  // und zwar in dem Job, der sie tragen kann. `needs.prep.outputs.*` ist nur in einem
+  // Job lesbar, der prep in `needs` hat — steht der Sammler im falschen Job, ist der
+  // Ausdruck leer und der Waechter meldet stumm "still".
+  const i = WF.indexOf('  entdeckungs-waechter:');
+  assert.ok(i > 0, 'Job entdeckungs-waechter nicht gefunden — traegt den Sammler');
+  const job = WF.slice(i, WF.indexOf('\n  pull:', i));
+  assert.ok(/needs:\s*prep/.test(job), 'der Job holt prep nicht in needs — needs.prep.outputs.* waere leer');
+  assert.ok(job.includes('- name: Insider-Kanal einsammeln (rotes X)'),
+    'der Sammler sitzt nicht in diesem Job — dort, wo er sitzt, ist needs.prep.outputs.pull_form4_outcome moeglicherweise gar nicht aufloesbar');
+});
+
 check('der Schrumpf-Waechter meldet Drift jetzt als Fehler, nicht als Notiz', () => {
   // ⚠ Diese Probe pruefte zuerst, ob der Satz "never fail workflow; alert is enough"
   // im Quelltext FEHLT — und wurde sofort rot, weil der neue Kommentar den alten Satz
