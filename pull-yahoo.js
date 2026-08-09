@@ -141,8 +141,20 @@ let _unparseableTimeAnchors = 0;
 let _unparseableTimeAnchorsDue = 0;
 let _ftsPartialTickers = 0;
 let _ftsFailedSeries = 0;
+// Nachzug Tag 622 (Review-Fund MITTEL): der Fall "alle vier Serien kamen erfolgreich,
+// aber LEER" wirft nicht und hat failedSeries === 0 — er loeste das
+// fundamentalsIncomplete-Verhalten aus, wurde aber nirgends gezaehlt oder gemeldet.
+let _ftsAllEmptyTickers = 0;
 
+// Nachzug Tag 622 (Review-Fund HOCH): meta.fundamentalsIncomplete schlaegt die
+// ganze Anker-Kette. Ein Vollabruf, dessen vier FTS-Serien alle LEER kamen, hat
+// keine frischen Fundamentaldaten geschrieben — aber er hat meta.fetchedAt/asOf
+// gerade frisch gestempelt. Tag 621 loeschte nur meta.fundamentalsAsOf, worauf
+// beide Verbraucher auf genau diesen frischen fetchedAt zurueckfielen: der
+// luecken hafte Snapshot galt 30 Tage als voll-frisch, der Fix neutralisierte
+// sich selbst. Deshalb das explizite Flag VOR den Zeitankern.
 function fundamentalsStaleness(meta, now = Date.now()) {
+  if (meta && meta.fundamentalsIncomplete === true) return { stale: true, unparseable: false };
   const candidates = meta ? [meta.fundamentalsAsOf, meta.fetchedAt] : [];
   for (const candidate of candidates) {
     if (!candidate) continue;
@@ -2275,6 +2287,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _unparseableTimeAnchorsDue = 0;
   _ftsPartialTickers = 0;
   _ftsFailedSeries = 0;
+  _ftsAllEmptyTickers = 0;
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
   // processOne and the staleness sort. Format { ticker: { date, pulledAt } }.
   // READ ONLY — never written here. A failure remains non-fatal, but must be visible.
@@ -2282,7 +2295,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   try {
     _earningsCalendar = JSON.parse(fs.readFileSync(path.join(__dirname, 'earnings-calendar.json'), 'utf8')) || {};
   } catch (e) {
-    _log('WARN', `::warning::earnings-calendar.json nicht geladen (${e.message}) — earnings-forced fulls deaktiviert fuer diesen Lauf`);
+    // Nachzug Tag 622 (Review-Fund HOCH): rohes console.warn, KEIN _log — GitHub
+    // erkennt Workflow-Commands nur am Zeilenanfang, und _log stellt '[ts] [WARN] '
+    // davor. Stil wie in pull-earnings-dates.js.
+    console.warn(`::warning::earnings-calendar.json nicht geladen (${e.message}) — earnings-forced fulls deaktiviert fuer diesen Lauf`);
   }
   const _today = new Date();
   const results = [];
@@ -3022,6 +3038,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           _ftsPartialTickers++;
           _ftsFailedSeries += ftsFailure.failedSeries;
         }
+        if (ftsFailure.allEmpty) _ftsAllEmptyTickers++;
         ftsAnnual = mapFTSToAnnual(fts.annualFin, fts.annualCash);
         ftsQuarterly = mapFTSToQuarterly(fts.quarterlyFin);
         ftsBalance = mapFTSToBalance(fts.annualBs);
@@ -3498,9 +3515,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // _priceOnlyUpdate NEVER writes this field, so it records the true age of the
       // fundamentals (not the daily-reset meta.asOf), and the eligibility gate uses it
       // to force a full refresh every FUNDAMENTALS_REFRESH_DAYS.
+      // Nachzug Tag 622 (Review-Fund HOCH): fundamentalsAsOf wird IMMER gestempelt
+      // (Tag 621 loeschte es bei leeren FTS-Serien, was folgenlos blieb — beide
+      // Verbraucher fielen dann auf den ebenso frischen fetchedAt zurueck). Die
+      // Unvollstaendigkeit steht jetzt als eigenes Flag daneben: Alt-Snapshots ohne
+      // Flag verhalten sich unveraendert, und ein spaeterer Vollabruf mit echten
+      // FTS-Serien baut canonical.meta neu auf, das Flag verschwindet also von selbst.
       canonical.meta = canonical.meta || {};
-      if (!_allFtsSeriesEmpty) canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
-      else delete canonical.meta.fundamentalsAsOf;
+      canonical.meta.fundamentalsAsOf = canonical.meta.asOf || new Date().toISOString();
+      if (_allFtsSeriesEmpty) canonical.meta.fundamentalsIncomplete = true;
       writeFileAtomic(outPath, JSON.stringify(canonical));
       const revStr = canonical.metrics.revenueTTM ? '$' + (canonical.metrics.revenueTTM.value / 1e9).toFixed(1) + 'B' : 'no-rev';
       const growthStr = canonical.metrics.revenueGrowthYoY ? canonical.metrics.revenueGrowthYoY.value.toFixed(1) + '%' : '-';
@@ -3658,8 +3681,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   } else {
     _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
   }
-  if (_unparseableTimeAnchors > 0) _log('WARN', `::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
-  if (_ftsFailedSeries > 0) _log('WARN', `::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
+  // Nachzug Tag 622 (Review-Fund HOCH): rohes console.warn statt _log — siehe oben,
+  // ein '[ts] [WARN] '-Praefix macht die GitHub-Annotation wirkungslos.
+  if (_unparseableTimeAnchors > 0) console.warn(`::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
+  if (_ftsFailedSeries > 0) console.warn(`::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
+  if (_ftsAllEmptyTickers > 0) console.warn(`::warning::FTS leer ohne Fehler: ${_ftsAllEmptyTickers} Ticker (als fundamentalsIncomplete markiert, naechster Lauf zieht sie erneut voll)`);
 
   // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
   // writeManifestIncremental() — final manifest must agree with the snapshot
@@ -3922,6 +3948,15 @@ async function main() {
 // fundamentalsAsOf is a full ISO timestamp, earnings date a YYYY-MM-DD day.
 function needsFullPull(snapshotMeta, earningsEntry, today) {
   try {
+    // Nachzug Tag 622 (Review-Fund HOCH): gleiche Selbst-Neutralisierung wie in
+    // fundamentalsStaleness — ein als unvollstaendig markierter Snapshot ist
+    // faellig, UNABHAENGIG von Anker-Kette und Earnings-Datum. Sonst gewinnt der
+    // beim leeren Vollabruf frisch gestempelte fetchedAt.
+    // ponytail: das ist der UNBUDGETIERTE Pfad (staleEarnings-Freifahrt) — Ticker
+    // mit dauerhaft leerer FTS-Antwort ziehen damit jeden Lauf einen Voll-Pull.
+    // Der neue Zaehler '::warning::FTS leer ohne Fehler' misst, wie viele das sind;
+    // wird die Zahl gross, gehoert das Flag in den budgetierten Zweig.
+    if (snapshotMeta && snapshotMeta.fundamentalsIncomplete === true) return 'full';
     const earnDate = earningsEntry && earningsEntry.date;
     if (!earnDate) return 'price-only';
     const earnT = new Date(earnDate).getTime();

@@ -20,11 +20,14 @@ async function test(name, fn) {
 (async () => {
   await test('Befund 1: korrupter Kalender ist fatal, ENOENT bleibt Erstlauf', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'p1w6-'));
-    const corrupt = path.join(tmp, 'calendar.json');
-    fs.writeFileSync(corrupt, '{kaputt');
-    assert.throws(() => earnings.loadPreviousCalendar(corrupt), /unlesbar/);
-    assert.deepEqual(earnings.loadPreviousCalendar(path.join(tmp, 'fehlt.json')), {});
-    fs.rmSync(tmp, { recursive: true, force: true });
+    try {
+      const corrupt = path.join(tmp, 'calendar.json');
+      fs.writeFileSync(corrupt, '{kaputt');
+      assert.throws(() => earnings.loadPreviousCalendar(corrupt), /unlesbar/);
+      assert.deepEqual(earnings.loadPreviousCalendar(path.join(tmp, 'fehlt.json')), {});
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   await test('Befund 3: erster parsbarer Anker gewinnt; beide kaputt sind faellig', () => {
@@ -47,6 +50,35 @@ async function test(name, fn) {
   await test('Befund 6: FTS-Teilausfall und komplett leere Serien sind messbar', () => {
     assert.deepEqual(yahoo.ftsFailureSummary({ annualFin: [], quarterlyFin: [], annualCash: [], annualBs: [], _failedSeries: 4 }), { failedSeries: 4, allEmpty: true });
     assert.deepEqual(yahoo.ftsFailureSummary({ annualFin: [{}], quarterlyFin: [], annualCash: [], annualBs: [], _failedSeries: 3 }), { failedSeries: 3, allEmpty: false });
+  });
+
+  // Nachzug Tag 622 (Review-Fund HOCH): der Tag-621-Fix loeschte bei vier leeren
+  // FTS-Serien nur meta.fundamentalsAsOf — und neutralisierte sich damit selbst.
+  // BEIDE Verbraucher fallen dann auf meta.fetchedAt zurueck, das der Vollabruf
+  // GERADE frisch gestempelt hat, also galt der luecken hafte Snapshot 30 Tage als
+  // voll-frisch. Das explizite Flag muss die Anker-Kette schlagen.
+  await test('Nachzug 622: unvollstaendiger Vollabruf schlaegt den frischen Zeitanker', () => {
+    const jetzt = Date.parse('2026-08-09T12:00:00Z');
+    const stempel = new Date(jetzt).toISOString();
+    const unvollstaendig = { asOf: stempel, fetchedAt: stempel, fundamentalsIncomplete: true };
+    assert.equal(yahoo.fundamentalsStaleness(unvollstaendig, jetzt + 1000).stale, true);
+    assert.equal(yahoo.needsFullPull(unvollstaendig, { date: '2026-08-08' }, new Date(jetzt)), 'full');
+    // Gegenprobe: ohne das Flag gewinnt der frische Anker weiterhin — sonst waere
+    // jeder Snapshot dauerhaft faellig und der Waechter bewiese nichts.
+    const vollstaendig = { asOf: stempel, fetchedAt: stempel };
+    assert.equal(yahoo.fundamentalsStaleness(vollstaendig, jetzt + 1000).stale, false);
+    assert.equal(yahoo.needsFullPull(vollstaendig, { date: '2026-08-08' }, new Date(jetzt)), 'price-only');
+  });
+
+  // Nachzug Tag 622 (Review-Fund HOCH): GitHub erkennt ::warning:: NUR am
+  // Zeilenanfang. _log stellt '[ts] [WARN] ' davor, die Annotation verpuffte also.
+  await test('Nachzug 622: Workflow-Annotationen laufen nie durch _log', () => {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+    const verpufft = src.split('\n').filter(z => z.includes('_log(') && z.includes('::warning::'));
+    assert.deepEqual(verpufft, [], 'annotation via _log bekommt einen [ts]-Praefix und wird von GitHub ignoriert');
+    // Anwesenheit: der Kanal existiert ueberhaupt noch (sonst waere die Abwesenheit
+    // oben auch durch Loeschen aller Annotationen zu erfuellen).
+    assert.ok(/console\.warn\(`::warning::/.test(src), 'rohe ::warning::-Zeilen fehlen ganz');
   });
 
   console.log(`\nP1-Welle 6: ${pass} bestanden, ${fail} fehlgeschlagen`);

@@ -72,7 +72,10 @@ function carryEntryWithoutDate(prevEntry, today, graceDays) {
   return resolveEntry(prevEntry, null, today, graceDays);
 }
 
-function isFreshEntry(entry, today, maxCarryDays = 30) {
+// Nachzug Tag 622 (Review-Fund MITTEL): Frist per env verstellbar, Muster der
+// Nachbar-Konstanten (EARNINGS_CONCURRENCY etc.) — sie haengt an
+// FUNDAMENTALS_REFRESH_DAYS in pull-yahoo.js, das ebenfalls env-uebersteuerbar ist.
+function isFreshEntry(entry, today, maxCarryDays = parseInt(process.env.EARNINGS_CARRY_FRESH_DAYS || '30', 10)) {
   if (!entry || !entry.pulledAt) return false;
   const age = (new Date(today).getTime() - new Date(entry.pulledAt).getTime()) / 86400000;
   return Number.isFinite(age) && age <= maxCarryDays;
