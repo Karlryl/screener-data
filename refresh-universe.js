@@ -770,6 +770,50 @@ function repariereAdrBestand(stocks, adrPairs) {
   return { stocks: adrDropSet.size > 0 ? stocks.filter(s => !adrDropSet.has(s)) : stocks, dropped };
 }
 
+// R1-SK-010 (P1-Welle 1, 09.08.2026): letzte Dublettenklasse neben Class-Share und ADR —
+// zwei Zeilen mit VERSCHIEDENEM ticker, aber demselben yahoo_symbol. pull-yahoo zieht je
+// Zeile ueber yahoo_symbol und legt die Snapshot-Datei unter TICKER ab: aus einer Abfrage
+// entstehen zwei byte-gleiche Snapshots, derselbe Emittent steht zweimal im Board und zaehlt
+// zweimal in jeder Kohorte/Perzentil-Basis. Live belegt: HRMS.PA und RMS.PA zeigten beide
+// auf 'RMS.PA' (Hermes) — zwei identische Snapshots (178,8 Mrd., Consumer Cyclical).
+// Es gibt keinen legitimen Fall: gleiche Quelle heisst zwangslaeufig gleiche Daten.
+//
+// Ueberleben darf die PULLBARE Identitaet (ticker === yahoo_symbol) — dieselbe Regel wie
+// beim Class-Share-Collapse ("keep the dash/Yahoo-valid ticker"). Gibt es die nicht, bleibt
+// die erste Zeile (stabil, reihenfolgetreu). Komplementaere Metadaten wandern vorher auf den
+// Ueberlebenden, damit kein Wissen verloren geht.
+function kollabiereYahooDubletten(stocks) {
+  const nachSymbol = new Map();
+  for (const s of stocks) {
+    if (!s || !s.yahoo_symbol) continue;
+    const k = String(s.yahoo_symbol).toUpperCase();
+    if (!nachSymbol.has(k)) nachSymbol.set(k, []);
+    nachSymbol.get(k).push(s);
+  }
+  const dropSet = new Set();
+  let dropped = 0;
+  for (const [sym, zeilen] of nachSymbol) {
+    if (zeilen.length < 2) continue;
+    const ueberlebt = zeilen.find((s) => String(s.ticker || '').toUpperCase() === sym) || zeilen[0];
+    // "kein Name" heisst hier auch: der Name IST nur das Symbol (Platzhalter aus einem
+    // Discovery-Kanal ohne Klarnamen). Sonst behielte der Ueberlebende den Platzhalter,
+    // waehrend der Klarname mit der verworfenen Zeile verschwindet — pull-yahoo nutzt
+    // watchlistEntry.name als Anzeige-Fallback, wenn Yahoo keinen longName liefert.
+    const platzhalter = (s) => !s.name || String(s.name).toUpperCase() === String(s.ticker || '').toUpperCase()
+      || String(s.name).toUpperCase() === sym;
+    for (const s of zeilen) {
+      if (s === ueberlebt) continue;
+      if (platzhalter(ueberlebt) && !platzhalter(s)) ueberlebt.name = s.name;
+      if (!ueberlebt.sector_hint && s.sector_hint) ueberlebt.sector_hint = s.sector_hint;
+      if (!ueberlebt.exchange_hint && s.exchange_hint) ueberlebt.exchange_hint = s.exchange_hint;
+      if (!ueberlebt.isin && s.isin) ueberlebt.isin = s.isin;
+      dropSet.add(s);
+      dropped++;
+    }
+  }
+  return { stocks: dropSet.size > 0 ? stocks.filter((s) => !dropSet.has(s)) : stocks, dropped };
+}
+
 // Tag 510: die Bedingung des Doppelausfall-Waechters als REINE Funktion, damit sie
 // einzeln pruefbar ist (der Waechter selbst sitzt mitten in main() hinter Netzaufrufen).
 // Wahr genau dann, wenn BEIDE Yahoo-Kanaele im selben Lauf nichts geliefert haben:
@@ -1727,6 +1771,14 @@ async function main() {
     if (adrDropped) console.log('  ADR-Watchlist-Repair: ' + adrDropped + ' Bestands-ADR-Zeilen entfernt (Heimat-Listing present).');
   }
 
+  // R1-SK-010: NACH Class-Share- und ADR-Collapse (beide aendern yahoo_symbol) als letztes
+  // Netz — was danach noch dieselbe Yahoo-Abfrage teilt, ist zwangslaeufig eine Dublette.
+  {
+    const r = kollabiereYahooDubletten(wlRaw.stocks);
+    wlRaw.stocks = r.stocks;
+    if (r.dropped) console.log('  Yahoo-Dubletten-Collapse: ' + r.dropped + ' Zeile(n) entfernt (gleiches yahoo_symbol, gleiche Daten).');
+  }
+
   // Task 0.12 (b): tote Bestandszeilen austragen (in-place-Repair, analog ADR-Dedup).
   // Snapshots bleiben unangetastet — der 0.8-Boersen-Waechter zaehlt Snapshots,
   // nicht Watchlist-Zeilen, und kippt dadurch nicht.
@@ -1781,6 +1833,7 @@ module.exports = {
   applyForeignPrefilterOutcome,
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
+  kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)
   _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"

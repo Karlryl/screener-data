@@ -290,6 +290,15 @@ function main() {
   let out;
   if (wrapped) {
     out = Object.assign({}, wl, { stocks: behalten });
+    // AS-SK-002 (P1-Welle 1): Object.assign kopierte _meta unveraendert mit — inklusive
+    // count, den der Builder EINMAL beim Bau gesetzt hat. Jeder Reconcile entfernte danach
+    // Namen, ohne den Zaehler nachzuziehen: live stand 775 bei 540 tatsaechlichen Zeilen.
+    // Wer die Datei liest statt sie zu zaehlen, bekam eine um 235 Namen falsche Auskunft.
+    // Die uebrigen _meta-Felder (band/source/builder/builtAt) beschreiben den BAU und
+    // bleiben deshalb unangetastet; nur der abgeleitete Zaehler wird nachgezogen.
+    if (out._meta && typeof out._meta === 'object' && 'count' in out._meta) {
+      out._meta = Object.assign({}, out._meta, { count: behalten.length });
+    }
     out.lastReconcile = new Date(now).toISOString();
     out.lastReconcileRemoved = entfernt;
   } else {
@@ -301,4 +310,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { classify, parseArgs, tickersOf };
+module.exports = { classify, parseArgs, tickersOf, main };

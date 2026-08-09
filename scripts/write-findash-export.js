@@ -279,14 +279,40 @@ function buildQualityIndex(coverage, qualityDir) {
 
 // F11: QC-Export-Entscheidung aus dem Quell-Zustand (rein, testbar). 'export' = gueltiges
 // Board-Set (quality/index.json da, QC-Pass lief durch); 'failed' = QC-Fehl-Marker (_failed,
-// von run-screener im catch) OHNE index -> QC-Pass scheiterte; 'absent' = weder noch (alter
-// Lokallauf ohne QC). index gewinnt ueber den Marker: ein spaeterer Erfolgslauf schreibt einen
-// frischen index, ein stale _failed eines Vorlaufs darf ihn nicht ueberstimmen.
-function qualityExportMode(qualityDir) {
-  if (fs.existsSync(path.join(qualityDir, 'index.json'))) return 'export';
-  if (fs.existsSync(path.join(qualityDir, '_failed'))) return 'failed';
-  return 'absent';
+// von run-screener im catch); 'absent' = weder noch (alter Lokallauf ohne QC).
+//
+// P1-Welle 1 / F-CGPT-024: liegen BEIDE da, entscheidet die FRISCHE, nicht der Dateityp.
+// Vorher gewann der index bedingungslos. Das trug, solange clearStaleQualityIndex den alten
+// index vor dem Pass sicher entfernt — der Guard ist aber ausdruecklich best-effort und
+// schluckt jeden Windows-Handle-/ACL-Fall (run-screener.js). Schlaegt er fehl, koexistieren
+// der Alt-Index und der FRISCHE _failed dieses Laufs, und der Export servierte das Board des
+// Vorlaufs, waehrend der QC-Ausfall unsichtbar blieb (still, Exit 0 — im Sweep reproduziert).
+// Die naheliegende Umkehrung (Marker zuerst) waere die naechste Ganztags-Ausfallklasse: ein
+// stehen gebliebenes _failed wuerde jeden spaeteren Erfolgslauf blenden (Tag-343-Semantik).
+// mtime beantwortet beide Richtungen mit derselben Regel: der zuletzt geschriebene Zustand
+// ist der wahre.
+//
+// GLEICHSTAND -> 'export' (STRIKT groesser noetig, damit der Marker gewinnt). Die Aenderung
+// ist damit rein additiv: sie kippt das Urteil NUR, wenn der Marker nachweislich juenger ist,
+// und verhaelt sich sonst byte-gleich zur Vorgaengerversion. Betrieblich ist der Gleichstand
+// unerreichbar — die beiden Zustaende stammen aus VERSCHIEDENEN Laeufen (Minuten bis Stunden
+// auseinander); ins selbe Millisekunden-Fenster fallen sie nur, wenn ein Test beide direkt
+// hintereinander schreibt (dort real beobachtet: Node liefert auf NTFS fuer zwei aufeinander
+// folgende Writes denselben mtimeMs). Der Gleichstand darf deshalb kein Muenzwurf sein.
+function mtimeOrNull(p) {
+  try { return fs.statSync(p).mtimeMs; } catch (_) { return null; }
 }
+
+function exportModeOf(dir) {
+  const iM = mtimeOrNull(path.join(dir, 'index.json'));
+  const fM = mtimeOrNull(path.join(dir, '_failed'));
+  if (iM === null && fM === null) return 'absent';
+  if (fM === null) return 'export';
+  if (iM === null) return 'failed';
+  return fM > iM ? 'failed' : 'export';
+}
+
+function qualityExportMode(qualityDir) { return exportModeOf(qualityDir); }
 
 // Optional-when-absent -> explizites Fehlsignal (F11). Drei Zustaende statt "Datei da/nicht da":
 //   export  -> QC-Boards spiegeln (wie bisher);
@@ -387,11 +413,9 @@ function buildSmallcapIndex(coverage, smallcapDir) {
   };
 }
 
-function smallcapExportMode(smallcapDir) {
-  if (fs.existsSync(path.join(smallcapDir, 'index.json'))) return 'export';
-  if (fs.existsSync(path.join(smallcapDir, '_failed'))) return 'failed';
-  return 'absent';
-}
+// Identische Frische-Regel wie qualityExportMode (F-CGPT-024) — der Small-Cap-Pass
+// schreibt seinen _failed-Marker ueber denselben Weg und hat dieselbe Luecke.
+function smallcapExportMode(smallcapDir) { return exportModeOf(smallcapDir); }
 
 // Optional-when-absent, identisches 3-Zustands-Muster wie buildQuality (F11).
 function buildSmallcap(coverage, opts = {}) {
@@ -831,21 +855,30 @@ function validateQualityIndex(mk, errs) {
 // Optional-when-absent: no quality/index.json on disk -> nothing to validate ([]). Once it
 // exists, every board it lists + overview become Pflicht and are fully validated. All labels
 // carry a 'quality/' prefix so the alarm channel never confuses a QC breach with an HG one.
-function validateQualityExport() {
+// P1-Welle 1 / F-CGPT-040: readJSONOrNull liefert fuer "nicht da" und "da, aber unlesbar"
+// dasselbe null — der Optional-Zweig machte daraus in BEIDEN Faellen "kein Verstoss", und
+// --check bescheinigte einem vorhandenen, korrupten Index Schema-Konformitaet. existsSync
+// trennt die Faelle (dasselbe Muster wie BH-137 in update-ath-state.js): abwesend bleibt
+// optional, vorhanden-aber-unlesbar ist ein Verstoss.
+function validateQualityExport(qoutDir = QOUT_DIR) {
   const raw = [];
-  const idx = readJSONOrNull(path.join(QOUT_DIR, 'index.json'));
-  if (!idx) return raw; // quality/ absent -> optional, no breach
+  const idxPath = path.join(qoutDir, 'index.json');
+  const idx = readJSONOrNull(idxPath);
+  if (!idx) {
+    if (fs.existsSync(idxPath)) raw.push('quality/index: present but unreadable/not JSON');
+    return raw; // quality/ absent -> optional, no breach
+  }
   validateQualityIndex(idx, raw);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^quality-/, '');
-    const mk = readJSONOrNull(path.join(QOUT_DIR, stem + '.json'));
+    const mk = readJSONOrNull(path.join(qoutDir, stem + '.json'));
     if (!mk) { raw.push(`quality/${stem}: missing/unreadable`); continue; }
     // BH-160: forceDiagnostic — this file is KNOWN to be a QC board (came off idx.boards), so
     // boardStatus is pinned to 'diagnostic' here, unlike the HG board-file call below.
     validateFile(mk, stem, raw, { forceDiagnostic: true }); // reuses board-file check: branch===stem, boardStatus enum, every BoardRow
   }
-  const ov = readJSONOrNull(path.join(QOUT_DIR, 'overview.json'));
+  const ov = readJSONOrNull(path.join(qoutDir, 'overview.json'));
   if (!ov) raw.push('quality/overview: missing/unreadable');
   else validateFile(ov, 'overview', raw); // reuses OverviewRow check
   return raw.map((e) => (e.startsWith('quality/') ? e : 'quality/' + e));
@@ -881,19 +914,24 @@ function validateSmallcapIndex(mk, errs) {
   else if (mk.coverageFloor !== null && !Number.isFinite(mk.coverageFloor)) errs.push(`${kind}: coverageFloor not finite|null`);
 }
 
-function validateSmallcapExport() {
+// F-CGPT-040, identisch zu validateQualityExport.
+function validateSmallcapExport(scoutDir = SCOUT_DIR) {
   const raw = [];
-  const idx = readJSONOrNull(path.join(SCOUT_DIR, 'index.json'));
-  if (!idx) return raw; // smallcap/ absent -> optional, no breach
+  const idxPath = path.join(scoutDir, 'index.json');
+  const idx = readJSONOrNull(idxPath);
+  if (!idx) {
+    if (fs.existsSync(idxPath)) raw.push('smallcap/index: present but unreadable/not JSON');
+    return raw; // smallcap/ absent -> optional, no breach
+  }
   validateSmallcapIndex(idx, raw);
   const boards = Array.isArray(idx.boards) ? idx.boards : [];
   for (const id of boards) {
     const stem = String(id).replace(/^smallcap-/, '');
-    const mk = readJSONOrNull(path.join(SCOUT_DIR, stem + '.json'));
+    const mk = readJSONOrNull(path.join(scoutDir, stem + '.json'));
     if (!mk) { raw.push(`smallcap/${stem}: missing/unreadable`); continue; }
     validateFile(mk, stem, raw, { forceDiagnostic: true });
   }
-  const ov = readJSONOrNull(path.join(SCOUT_DIR, 'overview.json'));
+  const ov = readJSONOrNull(path.join(scoutDir, 'overview.json'));
   if (!ov) raw.push('smallcap/overview: missing/unreadable');
   else validateFile(ov, 'overview', raw);
   return raw.map((e) => (e.startsWith('smallcap/') ? e : 'smallcap/' + e));

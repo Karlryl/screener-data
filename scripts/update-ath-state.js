@@ -92,6 +92,16 @@ function advanceEntry(entry, series) {
 function displayFor(entry) {
   if (!entry || entry.needsReseed) return null;
   if (!Number.isFinite(entry.ath) || entry.ath <= 0 || !Number.isFinite(entry.lastClose) || !entry.athDate || !entry.lastDate) return null;
+  // AT-SK-ATH-001 (P1-Welle 1): ath/athDate stammen aus dem lokalen Max-Batch (prices-max/),
+  // lastClose/lastDate aus dem rollenden 400-Tage-Store. Bleibt ein Ticker im 400d-Store
+  // stehen (Handelsaussetzung, Pull-Luecke), liegt athDate NACH dem letzten Schlusskurs.
+  // monthsBetween klemmt die negative Differenz per Math.max(0,…) auf 0 — die Zeile behauptet
+  // dann "ATH heute", und distancePct vergleicht zwei Staende, die nie gleichzeitig galten.
+  // Live: 1 von 956 Eintraegen (CSH-UN.TO, athDate 2026-07-03 > lastDate 2026-06-15).
+  // Kein Reseed-Flag (das gehoert dem Split-Waechter), sondern ehrliches "keine Anzeige",
+  // bis der Schlusskurs-Store den ATH-Tag erreicht hat — dann kommt die Zeile von selbst
+  // zurueck, ohne dass irgendwo ein Zustand nachgezogen werden muss.
+  if (entry.athDate > entry.lastDate) return null;
   return {
     distancePct: +((entry.lastClose / entry.ath - 1) * 100).toFixed(1), // <=0 unter ATH
     athDate: entry.athDate,
