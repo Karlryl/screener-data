@@ -31,11 +31,12 @@ check('earnings-entry-no-date', needsFullPull(meta, {}, today), 'price-only');
 // date in the future => 'price-only' (not yet reported)
 check('future-earnings', needsFullPull(meta, { date: '2026-08-20' }, today), 'price-only');
 
-// malformed meta => 'price-only', no throw
-check('meta-null', needsFullPull(null, { date: '2026-06-15' }, today), 'price-only');
-check('meta-undefined', needsFullPull(undefined, { date: '2026-06-15' }, today), 'price-only');
-check('meta-no-fundamentalsAsOf', needsFullPull({}, { date: '2026-06-15' }, today), 'price-only');
-check('meta-garbage-asOf', needsFullPull({ fundamentalsAsOf: 'not-a-date' }, { date: '2026-06-15' }, today), 'price-only');
+// fehlender/unparsbarer Zeitanker => faellig, no throw (fail-safe statt Dauer-Freeze)
+check('meta-null-is-due', needsFullPull(null, { date: '2026-06-15' }, today), 'full');
+check('meta-undefined-is-due', needsFullPull(undefined, { date: '2026-06-15' }, today), 'full');
+check('meta-no-time-anchor-is-due', needsFullPull({}, { date: '2026-06-15' }, today), 'full');
+check('meta-garbage-time-anchor-is-due', needsFullPull({ fundamentalsAsOf: 'not-a-date' }, { date: '2026-06-15' }, today), 'full');
+check('meta-garbage-primary-uses-fetchedAt', needsFullPull({ fundamentalsAsOf: 'not-a-date', fetchedAt: '2026-06-16' }, { date: '2026-06-15' }, today), 'price-only');
 
 // garbage earnings date => 'price-only', no throw
 check('garbage-earnings-date', needsFullPull(meta, { date: 'xyz' }, today), 'price-only');

@@ -56,14 +56,45 @@ function resolveEntry(prevEntry, newDate, today, graceDays) {
   return { date, pulledAt: today };
 }
 
+function loadPreviousCalendar(filePath = './earnings-calendar.json') {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('ungueltiges Kalenderformat');
+    return parsed;
+  }
+  catch (e) {
+    if (e && e.code === 'ENOENT') return {};
+    throw new Error(`earnings-calendar.json ist unlesbar: ${e && e.message || e}`);
+  }
+}
+
+function carryEntryWithoutDate(prevEntry, today, graceDays) {
+  return resolveEntry(prevEntry, null, today, graceDays);
+}
+
+// Nachzug Tag 622 (Review-Fund MITTEL): Frist per env verstellbar, Muster der
+// Nachbar-Konstanten (EARNINGS_CONCURRENCY etc.) — sie haengt an
+// FUNDAMENTALS_REFRESH_DAYS in pull-yahoo.js, das ebenfalls env-uebersteuerbar ist.
+function isFreshEntry(entry, today, maxCarryDays = parseInt(process.env.EARNINGS_CARRY_FRESH_DAYS || '30', 10)) {
+  if (!entry || !entry.pulledAt) return false;
+  const age = (new Date(today).getTime() - new Date(entry.pulledAt).getTime()) / 86400000;
+  return Number.isFinite(age) && age <= maxCarryDays;
+}
+
 async function main() {
   const wl = JSON.parse(fs.readFileSync('./watchlist.json', 'utf8'));
   // audit fix BH-055/BH-056: load the previous calendar once, up front — fed into
   // resolveEntry() above, and reused below for the collapse-guard count instead of a
   // second read.
-  let prevCalendar = {};
-  try { prevCalendar = JSON.parse(fs.readFileSync('./earnings-calendar.json', 'utf8')); } catch (_) {}
+  let prevCalendar;
+  try { prevCalendar = loadPreviousCalendar(); }
+  catch (e) {
+    console.error(`::error::${e.message} — Bestand bleibt unangetastet`);
+    process.exitCode = 1;
+    return;
+  }
   const result = {};
+  let noDateCount = 0;
   // Tag-86: parallel earnings pulls
   const CONCURRENCY = parseInt(process.env.EARNINGS_CONCURRENCY || '15', 10);
   const ROLLOVER_GRACE_DAYS = parseInt(process.env.EARNINGS_ROLLOVER_GRACE_DAYS || '3', 10);
@@ -89,6 +120,10 @@ async function main() {
         if (iso) {
           result[stock.ticker] = resolveEntry(prevCalendar[stock.ticker], iso.slice(0, 10), today, ROLLOVER_GRACE_DAYS);
         }
+      } else {
+        noDateCount++;
+        const entry = carryEntryWithoutDate(prevCalendar[stock.ticker], today, ROLLOVER_GRACE_DAYS);
+        if (entry) result[stock.ticker] = entry;
       }
     } catch (e) {
       // audit fix BH-056: a failed/timed-out call previously vanished the ticker from the
@@ -124,14 +159,18 @@ async function main() {
   // and (b) a fresh/missing/corrupt prior (prev=0) let a total-outage empty result through and
   // exit 0. Now prev=0 blocks only a literally-empty result (have<1) so legitimate first runs
   // still write, while any populated prior is protected against a >50% collapse.
-  const have = Object.keys(result).length;
-  const prev = Object.keys(prevCalendar).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const staleCarryCount = Object.values(result).filter(entry => !isFreshEntry(entry, today)).length;
+  const have = Object.values(result).filter(entry => isFreshEntry(entry, today)).length;
+  const prev = Object.values(prevCalendar).filter(entry => isFreshEntry(entry, today)).length;
+  if (noDateCount > 0) console.warn(`::warning::${noDateCount} erfolgreiche Yahoo-Antworten ohne earningsDate; vorhandene Eintraege wurden weitergetragen`);
+  if (staleCarryCount > 0) console.warn(`::warning::${staleCarryCount} weitergetragene Earnings-Eintraege sind aelter als 30 Tage und zaehlen nicht als frisch gedeckt`);
   if (have < Math.max(1, prev * 0.5)) {
     console.error(`::error::earnings coverage collapsed (${have} dates vs prev ${prev}) — refusing to overwrite earnings-calendar.json`);
     process.exit(1);
   }
   writeFileAtomic('./earnings-calendar.json', JSON.stringify(result, null, 2));
-  console.log(`✓ Saved earnings-calendar.json (${have} stocks with date)`);
+  console.log(`✓ Saved earnings-calendar.json (${Object.keys(result).length} stocks with date; ${have} frisch gedeckt)`);
 }
 // audit F-A-2026-06-21: guard against (1) silent failure — bare main() let a watchlist
 // parse error (or any rejection) die as an unhandled rejection that exits 0 on older Node,
@@ -142,4 +181,4 @@ if (require.main === module) {
   main().catch(e => { console.error('pull-earnings-dates failed:', e.stack || e.message); process.exit(1); });
 }
 
-module.exports = { main, resolveEntry, withTimeout };
+module.exports = { main, resolveEntry, withTimeout, loadPreviousCalendar, isFreshEntry, carryEntryWithoutDate };
