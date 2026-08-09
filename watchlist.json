@@ -9322,6 +9322,15 @@
       "added_at": "2026-08-04T05:33:59.240Z"
     },
     {
+      "ticker": "030610.KS",
+      "yahoo_symbol": "030610.KS",
+      "name": "Kyobo Securities Co.,Ltd.",
+      "sector_hint": "",
+      "exchange_hint": "KSE",
+      "added_via": "auto-universe-refresh",
+      "added_at": "2026-08-09T14:33:53.808Z"
+    },
+    {
       "ticker": "031210.KS",
       "yahoo_symbol": "031210.KS",
       "name": "Seoul Guarantee Insurance Company",
@@ -82611,15 +82620,6 @@
       "added_at": "2026-07-21T03:15:23.317Z"
     },
     {
-      "ticker": "CCTTF",
-      "yahoo_symbol": "CCTTF",
-      "name": "CITIC TELECOM INTERNATIONAL",
-      "sector_hint": "",
-      "exchange_hint": "US",
-      "added_via": "finnhub",
-      "added_at": "2026-06-21T06:58:52.854Z"
-    },
-    {
       "ticker": "CCU",
       "yahoo_symbol": "CCU",
       "name": "Compania Cervecerias Unidas, S.A. Common Stock",
@@ -83070,6 +83070,15 @@
       "exchange_hint": "BMFBOVESPA",
       "added_via": "tvbr",
       "added_at": "2026-07-21T03:15:23.311Z"
+    },
+    {
+      "ticker": "CEF",
+      "yahoo_symbol": "CEF",
+      "name": "Sprott Physical Gold and Silver Trust",
+      "sector_hint": "",
+      "exchange_hint": "NYSE American",
+      "added_via": "sec-edgar",
+      "added_at": "2026-08-09T14:33:53.808Z"
     },
     {
       "ticker": "CEF.TO",
@@ -103160,15 +103169,6 @@
       "exchange_hint": "BX",
       "added_via": "tvch",
       "added_at": "2026-07-21T03:15:23.316Z"
-    },
-    {
-      "ticker": "FPAFF",
-      "yahoo_symbol": "FPAFF",
-      "name": "FIRST PACIFIC CO",
-      "sector_hint": "",
-      "exchange_hint": "US",
-      "added_via": "finnhub",
-      "added_at": "2026-06-21T06:58:52.855Z"
     },
     {
       "ticker": "FPAR-A.ST",
@@ -166562,6 +166562,15 @@
       "added_at": "2026-07-21T03:15:23.308Z"
     },
     {
+      "ticker": "TLEVISA/CPO.MX",
+      "yahoo_symbol": "TLEVISA/CPO.MX",
+      "name": "Grupo Televisa, S.A.B.",
+      "sector_hint": "",
+      "exchange_hint": "BIVA",
+      "added_via": "tvmx",
+      "added_at": "2026-08-09T14:33:53.808Z"
+    },
+    {
       "ticker": "TLF",
       "yahoo_symbol": "TLF",
       "name": "Tandy Leather Factory, Inc. - common stock",
@@ -178085,6 +178094,15 @@
       "added_at": "2026-08-04T05:33:59.242Z"
     },
     {
+      "ticker": "YUBICO.ST",
+      "yahoo_symbol": "YUBICO.ST",
+      "name": "Yubico AB",
+      "sector_hint": "",
+      "exchange_hint": "Stockholm",
+      "added_via": "nordic",
+      "added_at": "2026-08-09T14:33:53.808Z"
+    },
+    {
       "ticker": "YUKEN.NS",
       "yahoo_symbol": "YUKEN.NS",
       "name": "Yuken India Limited",
@@ -179051,13 +179069,13 @@
       "track_hint": "A"
     }
   ],
-  "lastUniverseRefresh": "2026-08-08T03:52:40.855Z",
+  "lastUniverseRefresh": "2026-08-09T14:33:53.852Z",
   "lastManualExpansion": {
     "tag": 115,
     "at": "2026-05-09T21:57:56.511Z",
     "added": 66
   },
-  "lastAutoPrune": "2026-08-08T04:27:18.442Z",
+  "lastAutoPrune": "2026-08-09T15:05:08.131Z",
   "lastAutoPruneRemoved": [
     {
       "ticker": "AHL$D",
@@ -179104,7 +179122,7 @@
       "reason": "preferred-share-dollar-form"
     },
     {
-      "ticker": "CEF",
+      "ticker": "CCTTF",
       "reason": "no-snapshot-after-30d"
     },
     {
@@ -179152,6 +179170,10 @@
       "reason": "preferred-share-dollar-form"
     },
     {
+      "ticker": "FPAFF",
+      "reason": "no-snapshot-after-30d"
+    },
+    {
       "ticker": "GAB$H",
       "reason": "preferred-share-dollar-form"
     },
@@ -179162,10 +179184,6 @@
     {
       "ticker": "GL$D",
       "reason": "preferred-share-dollar-form"
-    },
-    {
-      "ticker": "GLIBB",
-      "reason": "no-snapshot-after-30d"
     },
     {
       "ticker": "GLOP$A",
@@ -179182,14 +179200,6 @@
     {
       "ticker": "GS$D",
       "reason": "preferred-share-dollar-form"
-    },
-    {
-      "ticker": "NSLYF",
-      "reason": "no-snapshot-after-30d"
-    },
-    {
-      "ticker": "RHCGF",
-      "reason": "no-snapshot-after-30d"
     }
   ]
 }
