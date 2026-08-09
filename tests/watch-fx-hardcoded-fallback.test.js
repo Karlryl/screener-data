@@ -185,5 +185,47 @@ test('EXIT-CODE: Befunde ergeben 1, Stille ergibt 0', () => {
   assert.equal(exitCodeFor(undefined), 1, 'kein Befund-Array = kaputter Aufrufer, nicht "gesund"');
 });
 
+// ── ZWEI BEINE, DREI FELD-GENERATIONEN (Review-Nachzug 09.08.2026, Befund B) ────────────
+// Der Marker steht ab jetzt in zwei Feldern, weil die beiden Beine zu verschiedenen
+// Zeitpunkten neu bewertet werden: fxRateSourceReporting schreibt nur der Voll-Pull,
+// fxRateSourceTrading setzt jeder price-only-Lauf frisch (und damit auch zurueck auf live).
+// ALTBESTAND: alles, was vor dem Umbau gepullt wurde, traegt nur das alte Einzelfeld
+// fxRateSource. Wuerde der Waechter es nicht mehr lesen, waere er am Umstellungs-Tag
+// schlagartig blind fuer jeden Titel ohne frischen Voll-Pull — bis zu 7 Tage.
+const hartReporting = (ccy) => ({ meta: { ticker: 'R' + ccy, fxConverted: true, reportingCurrencyOriginal: ccy, fxRateSourceReporting: 'hardcoded-fallback' }, marketCap: { value: 5e9 } });
+const hartTrading = (ccy) => ({ meta: { ticker: 'T' + ccy, fxConverted: true, reportingCurrencyOriginal: ccy, fxRateSourceReporting: 'fx-rates.json @ 2026-08-09T02:00:00.000Z', fxRateSourceTrading: 'hardcoded-fallback' }, marketCap: { value: 5e9 } });
+const liveNeu = (ccy) => ({ meta: { ticker: 'N' + ccy, fxConverted: true, reportingCurrencyOriginal: ccy, fxRateSourceReporting: 'fx-rates.json @ 2026-08-09T02:00:00.000Z', fxRateSourceTrading: 'identity' }, marketCap: { value: 5e9 } });
+
+test('GENERATIONEN: der Voll-Pull-Marker (fxRateSourceReporting) wird gezaehlt', () => {
+  const r = watcher.scanSnapshots(korpus([hartReporting('INR'), liveNeu('EUR'), usd()]));
+  assert.equal(r.n, 1);
+  assert.deepEqual(r.jeWaehrung, { INR: 1 });
+});
+
+test('GENERATIONEN: der price-only-Marker (fxRateSourceTrading) wird gezaehlt', () => {
+  const r = watcher.scanSnapshots(korpus([hartTrading('JPY'), liveNeu('EUR')]));
+  assert.equal(r.n, 1, 'ein hartkodiert gerechnetes Handels-Bein ist ein Treffer');
+  assert.deepEqual(r.jeWaehrung, { JPY: 1 });
+});
+
+test('GENERATIONEN: Altbestand (fxRateSource) zaehlt weiter mit', () => {
+  const r = watcher.scanSnapshots(korpus([hart('INR'), hartReporting('EUR'), hartTrading('JPY'), liveNeu('CHF'), usd()]));
+  assert.equal(r.n, 3, 'alle drei Generationen');
+  assert.deepEqual(r.jeWaehrung, { INR: 1, EUR: 1, JPY: 1 });
+});
+
+test('GENERATIONEN: beide neuen Felder hartkodiert = EIN betroffener Titel, nicht zwei', () => {
+  const beide = { meta: { ticker: 'BOTH', reportingCurrencyOriginal: 'INR', fxRateSourceReporting: 'hardcoded-fallback', fxRateSourceTrading: 'hardcoded-fallback' }, marketCap: { value: 5e9 } };
+  const r = watcher.scanSnapshots(korpus([beide]));
+  assert.equal(r.n, 1, 'gezaehlt werden betroffene Titel, nicht Marker-Vorkommen');
+  assert.deepEqual(r.jeWaehrung, { INR: 1 });
+});
+
+test('GENERATIONEN: live gerechnet in beiden Beinen bleibt still (kein Falsch-Rot)', () => {
+  const r = watcher.scanSnapshots(korpus([liveNeu('EUR'), liveNeu('JPY'), live('CHF'), usd()]));
+  assert.equal(r.n, 0);
+  assert.deepEqual(befunde(Object.assign(lauf(), { n: r.n, jeWaehrung: r.jeWaehrung }), basislinie), []);
+});
+
 console.log(`\nwatch-fx-hardcoded-fallback: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

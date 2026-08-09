@@ -320,15 +320,24 @@ const FX_FALLBACK = {
 function _isValidFxRate(r) {
   return typeof r === 'number' && Number.isFinite(r) && r > 0;
 }
+// Review-Nachzug (09.08.2026, Befund C): dieselbe Sache stand in ZWEI unverknuepften
+// Schreibweisen im Code — 'fallback-hardcoded' als INTERNER Herkunfts-Code und
+// 'hardcoded-fallback' als EXTERNER Snapshot-Marker, den scripts/watch-fx-sanity.js
+// zeichengenau vergleicht. Ein Dreher in einer der beiden Zeichenketten haette den
+// Betriebs-Alarm STUMM gestellt, ohne dass irgendein Test rot geworden waere. Ab jetzt
+// je Seite genau EINE Definition; der Waechter importiert den Marker aus dieser Datei
+// statt ein eigenes Literal zu fuehren.
+const FX_PROVENANCE_HARDCODED = 'fallback-hardcoded'; // intern: Herkunft EINES Kurses
+const FX_MARKER_HARDCODED = 'hardcoded-fallback';     // extern: Marker IM Snapshot
 const FX_STALE_DAYS = 14;
 let FX_TO_USD = FX_FALLBACK;
-let FX_SOURCE = 'fallback-hardcoded';
+let FX_SOURCE = FX_PROVENANCE_HARDCODED;
 // F-DQ-003 (Tag 181): track per-currency provenance so a per-stock conversion can
 // report whether its specific rate was live or 2024-hardcoded. Without this,
 // Object.assign(FX_FALLBACK, raw.rates) for a partial-refresh leaked stale 2024
 // values into snapshots whose fxRateSource reported "live".
-const FX_PROVENANCE = {};   // key uppercase currency → 'live' | 'fallback-hardcoded'
-for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded';
+const FX_PROVENANCE = {};   // key uppercase currency → 'live' | FX_PROVENANCE_HARDCODED
+for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = FX_PROVENANCE_HARDCODED;
 (function loadFx() {
   try {
     const fxPath = require('path').join(__dirname, 'fx-rates.json');
@@ -336,10 +345,11 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
       // P0-Haertung 2 (F-CGPT-001): der einzige Weg in die Hartkodierung, der bisher
       // NICHTS geloggt hat — fehlte die Datei, lief der Pull kommentarlos auf der
       // hartkodierten Tabelle weiter. Die Snapshots tragen jetzt an jedem Bein
-      // fxRateSource='hardcoded-fallback' (scripts/watch-fx-sanity.js wird ab dem
+      // den Hartkodiert-Marker (scripts/watch-fx-sanity.js wird ab dem
       // ersten Treffer rot), aber das Log soll es auch im Lauf selbst sagen.
       console.warn('[FX] fx-rates.json FEHLT — es wird mit der hartkodierten Tabelle gerechnet. ' +
-        'Betroffene Snapshots tragen fxRateSource=hardcoded-fallback; watch-fx-sanity.js wird rot.');
+        'Betroffene Snapshots tragen fxRateSourceReporting/fxRateSourceTrading=' +
+        FX_MARKER_HARDCODED + '; watch-fx-sanity.js wird rot.');
       return;
     }
     const raw = JSON.parse(require('fs').readFileSync(fxPath, 'utf8'));
@@ -397,7 +407,7 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
         } else {
           delete FX_TO_USD[up];  // no fallback at all → conversion will fail loudly
         }
-        FX_PROVENANCE[up] = 'fallback-hardcoded';
+        FX_PROVENANCE[up] = FX_PROVENANCE_HARDCODED;
         if (!rateIsValid) {
           console.warn('[FX] ' + up + ' has invalid rate (' + rawRate + ') in fx-rates.json — using fallback');
         } else {
@@ -420,7 +430,7 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
       }
     }
     const liveCount = Object.values(FX_PROVENANCE).filter(v => v === 'live').length;
-    const fallbackCount = Object.values(FX_PROVENANCE).filter(v => v === 'fallback-hardcoded').length;
+    const fallbackCount = Object.values(FX_PROVENANCE).filter(v => v === FX_PROVENANCE_HARDCODED).length;
     console.log('[FX] Loaded ' + Object.keys(raw.rates).length + ' rates from fx-rates.json (' +
       liveCount + ' live, ' + fallbackCount + ' fallback' +
       (staleCount > 0 ? ', ' + staleCount + ' reverted from stale per-currency' : '') +
@@ -434,8 +444,8 @@ for (const k of Object.keys(FX_FALLBACK)) FX_PROVENANCE[k] = 'fallback-hardcoded
 // Kurses. Vorher stand dieselbe Pence/Rate-Logik dreimal im Code (Reporting-Zweig,
 // Trading-Zweig, price-only) und NUR der Reporting-Zweig verriet, ob der Kurs live
 // oder aus der hartkodierten 2026-Q1-Tabelle stammte. Genau daran haengt der
-// Betriebs-Waechter scripts/watch-fx-sanity.js (er zaehlt meta.fxRateSource ===
-// 'hardcoded-fallback' und wird ab dem ersten Treffer rot) — die beiden anderen
+// Betriebs-Waechter scripts/watch-fx-sanity.js (er zaehlt den Hartkodiert-Marker
+// FX_MARKER_HARDCODED und wird ab dem ersten Treffer rot) — die beiden anderen
 // Wege waren fuer ihn unsichtbar.
 //   provenance 'identity' = USD→USD. Das ist keine Umrechnung, sondern die Zahl 1;
 //   sie darf NIE als "hartkodiert umgerechnet" gezaehlt werden, sonst faerbt eine
@@ -453,19 +463,57 @@ function _fxFactorFor(ccyRaw) {
   if (!_isValidFxRate(rate)) return null;   // V-SK-001: 0/negativ/NaN ist kein Kurs
   return {
     factor: isPence ? rate / 100 : rate,
-    provenance: FX_PROVENANCE[key] || 'fallback-hardcoded',
+    provenance: FX_PROVENANCE[key] || FX_PROVENANCE_HARDCODED,
     key,
   };
 }
 
-// P0-Haertung 2 (F-CGPT-001): Herkunft in den Snapshot stempeln — nur ABWAERTS.
-// Wurde IRGENDEIN Bein der Umrechnung (Reporting-Kurs ODER Handelskurs) hartkodiert
-// gerechnet, ist der Snapshot hartkodiert, auch wenn das andere Bein live war.
-// Der Live-Fall bleibt bewusst unangetastet: den schreibt der Reporting-Zweig seit
-// F-DQ-003 selbst, und der Waechter liest ausschliesslich den hartkodiert-Marker.
+// P0-Haertung 2 (F-CGPT-001) + Review-Nachzug (09.08.2026, Befund B): Herkunft in den
+// Snapshot stempeln — getrennt nach den ZWEI Beinen, die zu verschiedenen Zeitpunkten
+// neu bewertet werden. Vorher gab es nur EIN Feld (meta.fxRateSource), und es wurde nur
+// abwaerts gestempelt. Im Voll-Pull ist das richtig (der Snapshot wird ohnehin frisch
+// gebaut), im price-only-Schnellweg war es falsch: dort stempelt der Lauf auf das von
+// Platte geladene Objekt, ein einmal gesetzter Hartkodiert-Marker heilte also bis zum
+// naechsten Voll-Pull (bis zu 7 Tage) NIE — auch wenn seither taeglich mit Live-Kursen
+// gerechnet wurde. Ergebnis: bis zu 6 Tage falsch-roter watch-fx-sanity, und ein
+// falsches Rot macht einen Alarm wertlos, der als "jeder Treffer ist ein Ereignis"
+// kalibriert ist.
+//
+// Die Trennung nach dem, was das jeweilige Bein tatsaechlich aussagt:
+//   meta.fxRateSourceReporting — Herkunft der Kurse, mit denen der letzte VOLL-PULL
+//     gerechnet hat (annual/timeseries/metrics/Kursziele stehen bis heute so im
+//     Snapshot). Nur ein Voll-Pull kann diesen Stempel erneuern; er heilt bewusst
+//     NICHT durch einen price-only-Lauf, denn die betroffenen Werte aendert der nicht.
+//   meta.fxRateSourceTrading — Herkunft des Kurses, mit dem der letzte price-only-Lauf
+//     Preis und marketCap umgerechnet hat. Wird bei JEDEM Lauf FRISCH gesetzt, auch
+//     zurueck auf live/identity.
+// Beide Felder liest scripts/watch-fx-sanity.js; das alte Einzelfeld fxRateSource wird
+// nicht mehr geschrieben, vom Waechter aber weiter gelesen (Altbestand).
 function _stampFxSource(snap, provenance) {
-  if (snap && snap.meta && provenance === 'fallback-hardcoded') {
-    snap.meta.fxRateSource = 'hardcoded-fallback';
+  if (snap && snap.meta && provenance === FX_PROVENANCE_HARDCODED) {
+    snap.meta.fxRateSourceReporting = FX_MARKER_HARDCODED;
+  }
+}
+
+// Herkunfts-Code (intern) → Marker (im Snapshot lesbar). 'identity' ist USD→USD, also
+// gar keine Umrechnung — die darf nie als hartkodiert gezaehlt werden, sonst faerbt eine
+// fehlende fx-rates.json das halbe US-Universum rot.
+function _fxMarkerFor(provenance) {
+  if (provenance === 'identity') return 'identity';
+  // Zweiter Weg in die Hartkodierung: nicht die einzelne Waehrung, sondern die ganze
+  // Tabelle (fx-rates.json fehlt oder ist zu alt). Dann ist auch ein als 'live' gefuehrter
+  // Kurs hartkodiert — er kommt aus derselben 2026-Q1-Tabelle.
+  if (provenance === FX_PROVENANCE_HARDCODED || FX_SOURCE === FX_PROVENANCE_HARDCODED) {
+    return FX_MARKER_HARDCODED;
+  }
+  return FX_SOURCE;
+}
+
+// price-only: FRISCH stempeln, jeden Lauf, in beide Richtungen. Das ist der Unterschied
+// zu _stampFxSource — hier ist das Ueberschreiben der Sinn der Sache.
+function _stampTradingFxSource(snap, provenance) {
+  if (snap && snap.meta) {
+    snap.meta.fxRateSourceTrading = _fxMarkerFor(provenance);
   }
 }
 
@@ -671,14 +719,15 @@ function _convertSnapshotToUSD(snap) {
   // F-DP-024 / F-DQ-003 (Tag 181): per-currency provenance — even when FX_SOURCE
   // is fx-rates.json overall, a specific currency that wasn't in raw.rates is
   // still on the 2024 hardcoded fallback. Report that accurately per snapshot.
-  const perCurrency = FX_PROVENANCE[fxKey] || 'fallback-hardcoded';
-  if (FX_SOURCE === 'fallback-hardcoded' || perCurrency === 'fallback-hardcoded') {
-    if (FX_SOURCE === 'fallback-hardcoded') {
+  const perCurrency = FX_PROVENANCE[fxKey] || FX_PROVENANCE_HARDCODED;
+  if (FX_SOURCE === FX_PROVENANCE_HARDCODED || perCurrency === FX_PROVENANCE_HARDCODED) {
+    if (FX_SOURCE === FX_PROVENANCE_HARDCODED) {
       console.warn(`FX-FALLBACK: using hardcoded 2024 rates for ${fxKey} — may be stale. Consider running refresh-fx.js`);
     }
-    snap.meta.fxRateSource = perCurrency === 'live' ? FX_SOURCE : 'hardcoded-fallback';
+    // Befund B: Voll-Pull-Bein → fxRateSourceReporting (siehe _stampFxSource).
+    snap.meta.fxRateSourceReporting = perCurrency === 'live' ? FX_SOURCE : FX_MARKER_HARDCODED;
   } else {
-    snap.meta.fxRateSource = FX_SOURCE;
+    snap.meta.fxRateSourceReporting = FX_SOURCE;
   }
 
   // Combined factor: pence→pounds (÷100) then pounds→USD (*rate), or just *rate for normal currencies.
@@ -869,6 +918,28 @@ function _convertSnapshotToUSD(snap) {
   // F-DP-008: mark as converted to prevent double-scaling on subsequent calls
   snap.meta.fxConverted = true;
   return snap;
+}
+
+// Review-Nachzug (09.08.2026, Befund A): _convertSnapshotToUSD skaliert IN PLACE und in
+// mehreren Schritten (metrics, dann annual, dann timeseries). Wirft es MITTEN in der
+// Umrechnung, ist ein Teil des Snapshots umgerechnet und der Rest nicht — und weder
+// fxConverted noch fxConversionFailed sind gesetzt. Der Aufrufer loggte das nur als WARN
+// und schrieb den gemischt skalierten Snapshot als Erfolg weiter; sein Skip-Gate prueft
+// fxConversionFailed === true, das genau dieser Weg nie setzte. Also fail-closed
+// markieren: dann greift das vorhandene Gate und der Ticker faellt aus dem Lauf.
+// Rueckgabe: true = umgerechnet, false = fail-closed markiert.
+function _convertSnapshotToUSDGuarded(snap, onError) {
+  try {
+    _convertSnapshotToUSD(snap);
+    return true;
+  } catch (e) {
+    if (typeof onError === 'function') onError(e);
+    if (snap && snap.meta) {
+      snap.meta.fxConversionFailed = true;
+      snap.meta.fxConverted = false;
+    }
+    return false;
+  }
 }
 
 function _ts() { return new Date().toISOString(); }
@@ -2508,7 +2579,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const tradingFx = _resolveTradingFx(q, existing);
     if (!tradingFx.ok) throw new Error('price-only refused: ' + tradingFx.reason);
     const tradingFactor = tradingFx.factor;
-    _stampFxSource(existing, tradingFx.provenance);
+    // Befund B (Review-Nachzug 09.08.2026): FRISCH stempeln, nicht nur abwaerts. Dieses
+    // `existing` kommt von PLATTE — ein abwaerts-Stempel haette den Hartkodiert-Marker
+    // eines frueheren Laufs bis zum naechsten Voll-Pull konserviert, obwohl heute live
+    // gerechnet wurde. Der Voll-Pull-Stempel (fxRateSourceReporting) bleibt unangetastet:
+    // annual/metrics/Kursziele hat dieser Lauf nicht angefasst.
+    _stampTradingFxSource(existing, tradingFx.provenance);
     if (q.regularMarketPrice != null) {
       // audit fix BH-045: stamp asOf only when a price was actually written. The
       // unconditional stamp (moved) previously marked the F-CI-016 freshness gate's
@@ -3249,8 +3325,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Must run AFTER FTS overrides (FTS values are also in reporting currency) and BEFORE mcap filter
       // (which compares against $1B USD floor). Fixes the structural currency mismatch where mcap was USD
       // but annual.* was local — silently corrupting fcf-yield, ev/ebitda, ROIC and every other ratio.
-      try { _convertSnapshotToUSD(canonical); }
-      catch (e) { _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message}`); }
+      // Befund A: der Wurf-Fall markiert fail-closed (_convertSnapshotToUSDGuarded), damit
+      // das fxConversionFailed-Gate weiter unten greift statt einen halb umgerechneten
+      // Snapshot als Erfolg zu schreiben.
+      _convertSnapshotToUSDGuarded(canonical, (e) =>
+        _log('WARN', `  FX conversion failed for ${stock.ticker}: ${e.message} — Snapshot wird als fx-unknown verworfen`));
 
       // Annual-revenue currency-leak LAMP. Besides cross-currency leaks, T027 covers the
       // INFY class where reporting + trading both claim USD but annualRev remains INR-sized.
@@ -3873,5 +3952,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // brauchen dafuer weder Netz noch eine manipulierte fx-rates.json.
   _fxFactorFor, _stampFxSource, _quoteHasSubstance, _resolveTradingFx,
   _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
+  // Review-Nachzug (09.08.2026): Befund A (fail-closed bei werfender Umrechnung),
+  // Befund B (Zwei-Bein-Stempel), Befund C (EINE Marker-Konstante — der Waechter
+  // scripts/watch-fx-sanity.js importiert sie hier statt ein eigenes Literal zu fuehren).
+  _convertSnapshotToUSDGuarded, _stampTradingFxSource, _fxMarkerFor,
+  FX_MARKER_HARDCODED, FX_PROVENANCE_HARDCODED,
   // NRB-SK-001 (Hard Review 2026-07-31): fuer TDD.
   _nullOutImpossibleZeroRevenue };

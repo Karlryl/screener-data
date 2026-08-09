@@ -64,7 +64,26 @@ function loadJson(p, fallback) {
 // KEIN SCORING-WERT, reiner Betriebs-Waechter. Grundlast ausgezaehlt (nicht geschaetzt):
 // im lokalen Bestand 0 von 4.768 Snapshots, bei 2.967 tatsaechlich umgerechneten — jedes
 // Auftreten ist ein Ereignis. Deshalb Schwelle "mindestens einer", nicht "mehr als x %".
-const HARDCODED_MARKER = 'hardcoded-fallback';
+// Review-Nachzug (09.08.2026, Befund C): der Marker stand hier als eigenes Literal und in
+// pull-yahoo.js als zweites — ein Dreher in einem der beiden haette diesen Alarm STUMM
+// gestellt (exakter Zeichenvergleich, kein Test dagegen). Jetzt EINE Definition, importiert.
+const { FX_MARKER_HARDCODED: HARDCODED_MARKER } = require('../pull-yahoo.js');
+
+// Review-Nachzug (09.08.2026, Befund B): ab jetzt tragen Snapshots ZWEI Herkunfts-Felder,
+// weil die beiden Beine zu verschiedenen Zeitpunkten neu bewertet werden —
+//   fxRateSourceReporting: was der letzte VOLL-PULL gerechnet hat (annual/metrics/Kursziele
+//     stehen bis heute so im Snapshot; heilt nur durch einen neuen Voll-Pull),
+//   fxRateSourceTrading:   was der letzte PRICE-ONLY-Lauf fuer Preis/marketCap gerechnet hat
+//     (wird jeden Lauf frisch gesetzt, heilt also von selbst zurueck auf live).
+// ALTBESTAND: Snapshots von vor diesem Umbau tragen nur das alte Einzelfeld fxRateSource.
+// Das wird nicht mehr geschrieben, hier aber weiter gelesen — sonst wuerde der Waechter
+// beim Umstellungs-Tag schlagartig blind fuer alles, was noch keinen Voll-Pull hatte
+// (bis zu 7 Tage). Ein Snapshot zaehlt genau EINMAL, egal wie viele der drei Felder den
+// Marker tragen: gezaehlt werden betroffene Titel, nicht Marker-Vorkommen.
+const MARKER_FELDER = ['fxRateSourceReporting', 'fxRateSourceTrading', 'fxRateSource'];
+function istHartkodiert(meta) {
+  return MARKER_FELDER.some((f) => meta[f] === HARDCODED_MARKER);
+}
 
 // ── EIN Durchgang, alle Zaehler (03.08.2026, Review-Befund HOCH) ───────────────────────
 // Vorher liefen ZWEI getrennte Scans ueber dasselbe Verzeichnis (over-cap und
@@ -92,7 +111,7 @@ function scanSnapshots(snapDir) {
         if (mcap >= CAP_FOREIGN) foreignOver++;
       }
     }
-    if (meta.fxRateSource === HARDCODED_MARKER) {
+    if (istHartkodiert(meta)) {
       n++;
       const ccy = meta.reportingCurrencyOriginal || '?';
       jeWaehrung[ccy] = (jeWaehrung[ccy] || 0) + 1;
@@ -227,4 +246,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor };
+module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor, istHartkodiert, HARDCODED_MARKER, MARKER_FELDER };
