@@ -11,6 +11,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
   .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; text-decoration: none; color: inherit; display: block; transition: border-color .15s; }
   .card:hover { border-color: #58a6ff; }
+  .card-unpublished { opacity: .72; }
   .card-title { font-size: 1rem; font-weight: 600; color: #58a6ff; margin-bottom: 6px; }
   .card-desc { font-size: 0.82rem; color: #8b949e; line-height: 1.5; }
   .badge { display: inline-block; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; }
@@ -24,68 +25,78 @@
 </head>
 <body>
 <h1>📊 Screener — Übersicht</h1>
-<p class="updated">Aktualisiert automatisch jeden Montag (08:00 UTC). Manueller Run jederzeit via <a href="https://github.com/Karlryl/screener-data/actions/workflows/daily-pull.yml" style="color:#58a6ff;">GitHub Actions</a>.</p>
+<p class="updated">Automatischer Lauf werktags außer Montag (Di–Sa, Cron ca. 02:17 UTC; Veröffentlichung nach Abschluss). Manueller Run jederzeit via <a href="https://github.com/Karlryl/screener-data/actions/workflows/daily-pull.yml" style="color:#58a6ff;">GitHub Actions</a>.</p>
 
 <div class="section-title">Hauptreports</div>
 <div class="grid">
-  <a class="card" href="screener.html">
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">Neu</div>
     <div class="card-title">Screener — Bloomberg View</div>
     <div class="card-desc">Bloomberg-style 6-Tab-Dashboard: Hypergrowth · Quality-Compounder · Small Cap · Rule of 40 · Pre-Breakout · Watch. Globale Suche (/), Detail-Modal mit Sparklines + voller Methoden-Scorecard, Filter (State/Cap/Sektor/Land/IPO/Grade/GAAP/FCF/R40-Range/Sort), Hard-Gates (Q-Spike, Loss>50%Rev, Metric-Divergence). Tag 198–199.</div>
-  </a>
-  <a class="card" href="dashboard.html">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">Primär</div>
     <div class="card-title">Dashboard — Leaderboards</div>
     <div class="card-desc">Top-Aktien pro Modus (Hypergrowth/Quality/Turnaround) und pro Kennzahl (Rule of 40, ROIC, FCF-Yield …). Klick auf Ticker für Detail-Modal mit allen Methoden-Scores und Quartalsdaten.</div>
-  </a>
-  <a class="card" href="modes-report.html">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">Detail</div>
     <div class="card-title">Modes-Report</div>
     <div class="card-desc">Die drei Discovery-Modi mit Score-Matrix und Chip-Strip pro Methode. Story-Templates pro Pick.</div>
-  </a>
-  <a class="card" href="diff-report.html">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-warn">Änderungen</div>
     <div class="card-title">Diff-Report</div>
     <div class="card-desc">Was hat sich seit dem letzten Run verändert? Neue Einträge, Abgänge und Metrik-Drifts.</div>
-  </a>
-  <a class="card" href="outputs/pick-diff.html">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-warn">Änderungen</div>
     <div class="card-title">Pick-Diff + Jaccard</div>
     <div class="card-desc">Welche Picks sind neu, welche sind rausgefallen und warum? Mit Jaccard-Stabilitäts-Score pro Modus.</div>
-  </a>
+  </div>
 </div>
 
 <div class="section-title">Analyse & Backtest</div>
 <div class="grid">
-  <a class="card" href="outputs/methodology-report.md">
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-secondary">Backtest</div>
     <div class="card-title">Methodology-Report</div>
     <div class="card-desc">Walk-Forward-Performance + Method-Effectiveness. Alpha vs Universe-Median, Frozen Vintage und SPY.</div>
-  </a>
-  <a class="card" href="methods-report.html">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-secondary">Detail</div>
     <div class="card-title">Methods-Report</div>
     <div class="card-desc">Methoden-Detail pro Stock. Sektor-Distribution, Top-Picks-Ranking, Mobile-responsive.</div>
-  </a>
+  </div>
 </div>
 
 <div class="section-title">Elliott-Wave Export (Excel)</div>
 <div class="grid">
-  <a class="card" href="outputs/elliott-export-HYPERGROWTH.csv">
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">CSV</div>
     <div class="card-title">Hypergrowth — Elliott CSV</div>
     <div class="card-desc">22 Spalten: Ticker, Sektor, Score, MCap, Growth, FCF-Margin, Drawdown, Weeks on List etc. Direkt in Excel importierbar.</div>
-  </a>
-  <a class="card" href="outputs/elliott-export-QUALITY_COMPOUNDER.csv">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">CSV</div>
     <div class="card-title">Quality Compounder — Elliott CSV</div>
     <div class="card-desc">Gleiche Struktur, inkl. Banken/REITs/Versicherungen. Für Quality-Compounder-Modus.</div>
-  </a>
-  <a class="card" href="outputs/elliott-export-TURNAROUND.csv">
+  </div>
+  <div class="card card-unpublished">
+    <div class="badge badge-warn">Derzeit nicht veröffentlicht</div>
     <div class="badge badge-primary">CSV</div>
     <div class="card-title">Turnaround — Elliott CSV</div>
     <div class="card-desc">Turnaround-Kandidaten: Altman Z", Piotroski F-Score, Estimate-Revision-Signal. Direkt in Excel importierbar.</div>
-  </a>
+  </div>
 </div>
 
 <div class="section-title">Links</div>

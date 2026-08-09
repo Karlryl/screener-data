@@ -23,6 +23,31 @@ const dateien = [];
 })('scripts');
 
 let fehler = 0, geprueft = 0;
+
+// Liefert den vollstaendigen Callback-Block des ersten Promise-.catch(). Regex ist
+// hier absichtlich ungeeignet: `}` in Template-Ausdruecken oder verschachtelten
+// Bloecken darf den Fund nicht vorzeitig abschneiden.
+function catchBlock(text) {
+  const start = text.indexOf('.catch(');
+  if (start < 0) return null;
+  const open = text.indexOf('{', start + 7);
+  if (open < 0) return null;
+  let depth = 0, quote = null, escaped = false;
+  for (let i = open; i < text.length; i++) {
+    const ch = text[i];
+    if (escaped) { escaped = false; continue; }
+    if (quote) {
+      if (ch === '\\') escaped = true;
+      else if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue; }
+    if (ch === '{') depth++;
+    else if (ch === '}' && --depth === 0) return text.slice(start, i + 1);
+  }
+  return null;
+}
+
 for (const f of dateien) {
   // Kommentare RAUS, bevor gesucht wird. Beim ersten Anlauf schlug der Waechter auf einen
   // KOMMENTAR an, der process.exit(0) nur erwaehnt — die Zeile selbst war laengst
@@ -34,9 +59,9 @@ for (const f of dateien) {
   if (!/require\.main === module/.test(t)) continue;
   geprueft++;
   const rest = t.slice(t.indexOf('require.main === module'));
-  const mCatch = rest.match(/\.catch\((?:async\s*)?(?:\(|\w)[\s\S]{0,900}?\}\s*\)/);
+  const mCatch = catchBlock(rest);
   if (!mCatch) continue;
-  if (/process\.exit\(\s*0\s*\)/.test(mCatch[0])) {
+  if (/process\.exit\(\s*0\s*\)/.test(mCatch)) {
     console.error('FAIL   ' + f + ': meldet beim eigenen Absturz Erfolg (process.exit(0) im catch)');
     fehler++;
   }
