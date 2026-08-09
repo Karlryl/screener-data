@@ -62,15 +62,21 @@ jobs:
           # Ein beim Setzen mitgeschlepptes Zeilenende wuerde den Authorization-Kopf
           # zerlegen und als 401 erscheinen — hier abgeschnitten statt spaeter geraten.
           HCLOUD_TOKEN="$(printf '%s' "$HCLOUD_TOKEN" | tr -d '\r\n')"
+          # `|| { … }` statt blankem set -e: sonst bricht die Zuweisung bei DNS-/TLS-/
+          # Timeout-Fehlern zwar ab, aber ohne ::error::-Zeile — rot ohne Grund im Log.
           code=$(curl -sS -o /tmp/servers.json -w '%{http_code}' --max-time 30 \
-            -H "Authorization: Bearer $HCLOUD_TOKEN" https://api.hetzner.cloud/v1/servers)
+            -H "Authorization: Bearer $HCLOUD_TOKEN" https://api.hetzner.cloud/v1/servers) || {
+            echo "::error::Hetzner-API nicht erreichbar (curl-Exit) — DNS/TLS/Timeout."
+            exit 1
+          }
           if [ "$code" != "200" ]; then
             echo "::error::Hetzner-API antwortet HTTP $code — Token abgelaufen, Konto gesperrt oder API gestoert. Fail-loud."
             exit 1
           fi
 
+          # Nur die Anzahl, NICHT die Liste: dieses Repo ist public, fremde Servernamen
+          # und -typen aus Karls Hetzner-Projekt gehoeren in kein oeffentliches Log.
           echo "Server im Projekt: $(jq '.servers | length' /tmp/servers.json)"
-          jq -r '.servers[] | "  \(.name)  status=\(.status)  typ=\(.server_type.name)  locked=\(.locked)"' /tmp/servers.json
 
           lage=$(jq -r --arg n "$ERWARTETER_SERVER" \
             '.servers[] | select(.name==$n) | "\(.status) \(.locked)"' /tmp/servers.json)
@@ -80,6 +86,7 @@ jobs:
           fi
           status=${lage%% *}
           locked=${lage##* }
+          echo "Zielserver '$ERWARTETER_SERVER': status=$status locked=$locked"
           if [ "$status" != "running" ]; then
             echo "::error::Server '$ERWARTETER_SERVER' ist nicht 'running', sondern '$status' — findash ist von aussen tot."
             exit 1
@@ -92,6 +99,16 @@ jobs:
           # ponytail: nur die Server-Grundpreise am jeweiligen Standort, keine IP-/Volume-
           # Posten — die Differenz traegt die Schwelle. Feinabrechnung waere Doppelarbeit
           # zur Hetzner-Rechnung.
+          # Ein Server ohne Preis-Treffer faellt aus der Summe unten STILL heraus —
+          # select() erzeugt dann gar keinen Eintrag. Die kosten<=0-Absicherung greift
+          # erst, wenn ALLE Server rausfallen; ein einzelner Ausfall bliebe unsichtbar.
+          # Darum die Zuordnung erst zaehlen, dann summieren.
+          treffer=$(jq '[ .servers[] | . as $s | ($s.server_type.prices[] | select(.location == $s.location.name)) ] | length' /tmp/servers.json)
+          gesamt=$(jq '.servers | length' /tmp/servers.json)
+          if [ "$treffer" != "$gesamt" ]; then
+            echo "::error::Preis-Zuordnung unvollstaendig: $gesamt Server, aber $treffer Preis-Treffer — die Kostensumme waere unterzaehlt."
+            exit 1
+          fi
           kosten=$(jq '[ .servers[] | . as $s
             | ($s.server_type.prices[]
                | select(.location == $s.location.name)

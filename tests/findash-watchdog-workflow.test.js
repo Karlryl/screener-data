@@ -69,7 +69,9 @@ function maengel(yml) {
   const zeilen = step.split('\n');
   let fehlerMeldungen = 0;
   zeilen.forEach((z, i) => {
-    if (!z.includes('::error::')) return;
+    // nur echte Ausgabezeilen zaehlen — ein Kommentar, der ::error:: bloss erwaehnt,
+    // ist kein Fehlerpfad und braucht kein exit.
+    if (!/^\s*echo\b[^\n]*::error::/.test(z)) return;
     fehlerMeldungen++;
     const folge = zeilen.slice(i + 1, i + 4).join('\n');
     if (!/exit 1/.test(folge)) m.push(`::error:: in Zeile ${i + 1} des Steps bricht nicht ab (kein "exit 1") — stille Panne`);
@@ -84,6 +86,19 @@ function maengel(yml) {
   // gegen den gemessenen Wert stehen. Ein blosses echo der Zahl waere Deko.
   if (!/^\s*if\b[^\n]*MAX_MONATSKOSTEN_EUR/m.test(step)) {
     m.push('die Schwelle steht in keiner Verzweigung — sie wird nicht verglichen, nur erwaehnt');
+  }
+
+  // Preis-Zuordnung: select() erzeugt fuer einen Server ohne Preis-Treffer schlicht
+  // keinen Summanden — die Kostensumme waere dann still untererfasst und die Schwelle
+  // unerreichbar. Also muss VOR der Summe gezaehlt und bei Luecke abgebrochen werden.
+  const summeIdx = zeilen.findIndex((z) => /price_monthly/.test(z));
+  const zaehlIdx = zeilen.findIndex((z) => /prices\[\]/.test(z) && /\|\s*length/.test(z));
+  if (summeIdx === -1) {
+    m.push('keine Kostensumme aus price_monthly — die Kostenlage wird gar nicht abgeleitet');
+  } else if (zaehlIdx === -1 || zaehlIdx > summeIdx) {
+    m.push('vor der Kostensumme wird die Zahl der Preis-Treffer nicht ermittelt — Server ohne Treffer fielen still aus der Summe');
+  } else if (!/exit 1/.test(zeilen.slice(zaehlIdx, summeIdx).join('\n'))) {
+    m.push('die Preis-Treffer-Zahl entscheidet nicht (kein "exit 1" zwischen Zaehlung und Summe) — Untererfassung bliebe folgenlos');
   }
 
   // Falsch-Gruen-Ping: ein HTTP-Ping gegen die Access-geschuetzte URL beweist nichts.
@@ -118,6 +133,12 @@ const mutanten = {
   'Schwellwert-Vergleich entfernt': (s) =>
     s.replace(/if awk -v k="\$kosten" -v m="\$MAX_MONATSKOSTEN_EUR".*\n(.*\n){2}\s*fi\n/, ''),
   'set -x eingeschleust (Token-Leak)': (s) => s.replace('set -euo pipefail', 'set -euo pipefail\n          set -x'),
+  // Genau der Review-Befund vom 09.08.2026: ohne diesen Vorab-Check verschwinden
+  // Server ohne Preis-Treffer lautlos aus der Summe.
+  'Preis-Treffer-Check vor der Kostensumme entfernt': (s) =>
+    s.replace(/\s*treffer=\$\(jq[\s\S]*?\n\s*fi\n/, '\n'),
+  'Preis-Treffer-Check erhoben, aber folgenlos (exit entfernt)': (s) =>
+    s.replace(/if \[ "\$treffer" != "\$gesamt" \]; then\n[\s\S]*?\n\s*fi\n/, ''),
   'Falsch-Gruen-Ping eingebaut': (s) =>
     s.replace('set -euo pipefail', 'set -euo pipefail\n          curl -sS https://app.findash.cc/ >/dev/null'),
 };
