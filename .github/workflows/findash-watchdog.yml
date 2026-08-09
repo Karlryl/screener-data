@@ -1,0 +1,111 @@
+# Externer findash-Waechter (Masterplan 7.2.4) — laeuft AUSSERHALB von Karls Netz und
+# ausserhalb des Mietservers, damit ein Totalausfall ueberhaupt jemandem auffaellt.
+# Kanal ist bewusst nur das rote X bei GitHub (Karls blessed Kanal, NIE Mail-Alarm).
+#
+# ── Was dieser Waechter PRUEFT ────────────────────────────────────────────────
+#   1. Antwortet die Hetzner-Cloud-API mit Karls Token ueberhaupt (401/Timeout = ROT).
+#   2. Existiert der Server 'findash' noch, laeuft er (status=running) und ist er
+#      unverriegelt (locked=false)? Genau hier schlaegt ein leergelaufenes Guthaben
+#      zuerst durch: Hetzner verriegelt bei Zahlungsproblemen und loescht danach.
+#      Das ist zugleich die einzige EHRLICHE Fern-Aussage ueber die Server-Liveness,
+#      die diese Lane treffen kann (siehe Ping-Absatz unten).
+#   3. Reisst die abgeleitete Monatskostenlage die Schwelle? Ein zweiter Server oder
+#      ein groesserer Typ verbrennt das Prepaid-Guthaben schneller als geplant.
+#
+# ── Warum KEIN echter Guthaben-Stand ─────────────────────────────────────────
+# Die Hetzner-CLOUD-API hat keinen Guthaben-/Billing-Endpunkt. Empirisch geprueft
+# (08.08.2026, Karls Token): /v1/servers 200, /v1/pricing 200 — /v1/billing,
+# /v1/balance, /v1/account, /v1/invoices, /v1/credits alle 404. Ein Rest-Euro-Betrag
+# ist also nicht abfragbar; darum die WIRKUNGS-Seite (Verriegelung/Loeschung) plus
+# eine Kostendeckelung statt einer erfundenen Restlaufzeit in Monaten.
+#
+# ── Warum KEIN HTTP-Ping gegen https://app.findash.cc ────────────────────────
+# Cloudflare Access beantwortet die Anfrage SELBST, bevor sie den Origin erreicht.
+# Empirisch (08.08.2026, unauthentifiziert): '/' -> 302, '/healthz' -> 302 und ein
+# garantiert nicht existierender Pfad '/definitiv-kein-pfad-xyz-42' -> ebenfalls 302
+# (jedes Mal 143 Bytes, Location = .../cdn-cgi/access/login/app.findash.cc). Haette
+# der Origin geantwortet, waere der Phantasie-Pfad ein 404 gewesen. Der Origin sieht
+# die Anfrage also nie — das im findash-Server bewusst Access-frei gehaltene
+# /healthz (server.js) ist von aussen unerreichbar, weil die Access-Anwendung den
+# ganzen Host deckt. Ein 200/302 hier wuerde nur beweisen, dass Cloudflares Rand
+# lebt, NICHT der Server. Ein solcher Ping waere ein Falsch-Gruen-Waechter und wird
+# deshalb NICHT gebaut. Fuer eine ehrliche Origin-Messung braeuchte es ein
+# Cloudflare-Access-Service-Token (CF-Access-Client-Id/-Secret) oder eine
+# Access-Ausnahme fuer /healthz — beides gehoert in die findash-/Karl-Strecke.
+name: findash-watchdog
+on:
+  schedule:
+    - cron: '23 6 * * *'   # taeglich 06:23 UTC — ein rotes X pro Tag reicht als Warnung
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  hetzner:
+    runs-on: ubuntu-latest
+    env:
+      # Schwelle konservativ: die API meldet fuer den laufenden cpx12 aktuell
+      # 13,67 EUR/Monat brutto. 20,00 laesst Luft fuer eine kleine Zusatzposition,
+      # feuert aber bei einem zweiten Server oder einem groesseren Typ.
+      MAX_MONATSKOSTEN_EUR: '20.00'
+      ERWARTETER_SERVER: 'findash'
+    steps:
+      - name: Hetzner-Konto- und Serverlage
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HETZNER_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Kein `set -x`: der Token darf in keiner Log-Zeile auftauchen.
+          if [ -z "${HCLOUD_TOKEN:-}" ]; then
+            echo "::error::Secret HETZNER_API_TOKEN fehlt — der Waechter kann NICHTS pruefen. Rot statt still gruen."
+            exit 1
+          fi
+          # Ein beim Setzen mitgeschlepptes Zeilenende wuerde den Authorization-Kopf
+          # zerlegen und als 401 erscheinen — hier abgeschnitten statt spaeter geraten.
+          HCLOUD_TOKEN="$(printf '%s' "$HCLOUD_TOKEN" | tr -d '\r\n')"
+          code=$(curl -sS -o /tmp/servers.json -w '%{http_code}' --max-time 30 \
+            -H "Authorization: Bearer $HCLOUD_TOKEN" https://api.hetzner.cloud/v1/servers)
+          if [ "$code" != "200" ]; then
+            echo "::error::Hetzner-API antwortet HTTP $code — Token abgelaufen, Konto gesperrt oder API gestoert. Fail-loud."
+            exit 1
+          fi
+
+          echo "Server im Projekt: $(jq '.servers | length' /tmp/servers.json)"
+          jq -r '.servers[] | "  \(.name)  status=\(.status)  typ=\(.server_type.name)  locked=\(.locked)"' /tmp/servers.json
+
+          lage=$(jq -r --arg n "$ERWARTETER_SERVER" \
+            '.servers[] | select(.name==$n) | "\(.status) \(.locked)"' /tmp/servers.json)
+          if [ -z "$lage" ]; then
+            echo "::error::Server '$ERWARTETER_SERVER' existiert im Hetzner-Projekt NICHT mehr — geloescht oder Konto abgeraeumt (typische Folge eines leeren Guthabens)."
+            exit 1
+          fi
+          status=${lage%% *}
+          locked=${lage##* }
+          if [ "$status" != "running" ]; then
+            echo "::error::Server '$ERWARTETER_SERVER' ist nicht 'running', sondern '$status' — findash ist von aussen tot."
+            exit 1
+          fi
+          if [ "$locked" != "false" ]; then
+            echo "::error::Server '$ERWARTETER_SERVER' ist von Hetzner VERRIEGELT (locked=$locked) — typisch bei Zahlungs-/Guthaben-Problemen. Guthaben pruefen."
+            exit 1
+          fi
+
+          # ponytail: nur die Server-Grundpreise am jeweiligen Standort, keine IP-/Volume-
+          # Posten — die Differenz traegt die Schwelle. Feinabrechnung waere Doppelarbeit
+          # zur Hetzner-Rechnung.
+          kosten=$(jq '[ .servers[] | . as $s
+            | ($s.server_type.prices[]
+               | select(.location == $s.location.name)
+               | .price_monthly.gross | tonumber) ] | add // 0' /tmp/servers.json)
+          echo "Monatskosten (Server-Grundpreise, brutto): ${kosten} EUR — Schwelle ${MAX_MONATSKOSTEN_EUR} EUR"
+          # Ein Server im Projekt, aber 0,00 EUR abgeleitet = die Preis-Zuordnung ist kaputt
+          # (so gefunden: das Feld heisst .location, NICHT .datacenter.location). Dann waere
+          # die Schwelle unerreichbar und der Waechter dauerhaft blind-gruen.
+          if awk -v k="$kosten" 'BEGIN{exit !(k<=0)}'; then
+            echo "::error::Monatskosten wurden zu ${kosten} EUR abgeleitet, obwohl Server existieren — die Preis-Zuordnung greift nicht. Waechter waere blind."
+            exit 1
+          fi
+          if awk -v k="$kosten" -v m="$MAX_MONATSKOSTEN_EUR" 'BEGIN{exit !(k>m)}'; then
+            echo "::error::Monatskosten ${kosten} EUR ueber der Schwelle ${MAX_MONATSKOSTEN_EUR} EUR — das Prepaid-Guthaben laeuft schneller leer als geplant."
+            exit 1
+          fi
+          echo "OK: API antwortet, '$ERWARTETER_SERVER' laeuft unverriegelt, Kostenlage im Rahmen."
