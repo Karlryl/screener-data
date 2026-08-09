@@ -120,6 +120,23 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      # Python fuer das Test-Gate: tests/early-detection-*.test.js starten
+      # scripts/early-detection-*.py. Alles darin ist stdlib — AUSSER numpy
+      # (scripts/early-detection-confirmatory.py). Ohne numpy riss der Test-Gate-
+      # Schritt im prep-Job mit ModuleNotFoundError und skippte den kompletten
+      # Tageslauf (Run 31304624666, 09.08.).
+      # Version und numpy-Pin kommen NICHT frei gewaehlt, sondern aus dem
+      # versiegelten Laufzeit-Lock protocol/early-detection/1.2.0/
+      # confirmatory-runtime-lock.json (python 3.12.13 / numpy 2.3.5) — ein
+      # abweichender Runtime waere selbst ein Vertragsbruch.
+      - name: Setup Python (Laufzeit-Lock FEM-SEC-US@1.2.0)
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.13'
+
+      - name: Install Python deps (numpy laut Laufzeit-Lock)
+        run: python -m pip install --disable-pip-version-check --quiet numpy==2.3.5
+
       # Task 0.3 (Loop B): PRE-pull test-gate. Jede Testdatei ist ein selbstlaufendes
       # node-Skript, das mit process.exit(fail ? 1 : 0) endet. Der Glob laesst
       # fixtures/-Unterordner aus. Eine kaputte Engine muss den Lauf VOR dem teuren
