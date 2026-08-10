@@ -237,8 +237,12 @@ check('F-CGPT-027-Nachzug: baueKarte erkennt Muell in nasdaq/other und einen lee
   assert.deepEqual(mit({ nasdaq: ['Security Name|Symbol|Market Category|Test Issue|Financial Status|Round Lot|ETF|NextShares',
     'Apple Inc.|AAPL|Q|N|N|100|N|N'].join('\n') }), ['nasdaq'],
     'vertauschte Kopfspalten muessen auffallen, auch wenn Zeilen "parsen"');
-  assert.deepEqual(mit({ sec: '   ' }), ['sec'],
+  // Der LEERE Body ist der Fall, den `roh.sec || '{}'` verschluckte - Whitespace allein
+  // waere hier wertlos als Beleg, weil JSON.parse('   ') ohnehin wirft (Ausbau-Probe
+  // 10.08.: mit '   ' blieb dieser Test gruen, obwohl der alte Code wieder drin war).
+  assert.deepEqual(mit({ sec: '' }), ['sec'],
     'ein leerer SEC-Body ist ein Ausfall, kein "die SEC kennt heute keine einzige CIK"');
+  assert.deepEqual(mit({ sec: '   ' }), ['sec'], 'dasselbe fuer einen Body aus reinem Whitespace');
   // Gegenprobe zur Sproedigkeit: Feld 5 heisst in den echten Dateien "Round Lot Size" und
   // in aelteren Beschreibungen "Round Lot". Gelesen wird es nie - eine Umbenennung dort
   // darf keinen Tagesausfall ausloesen (sonst ist der Waechter ein Fehlalarm-Automat).
