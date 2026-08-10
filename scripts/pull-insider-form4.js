@@ -404,7 +404,10 @@ function _withinLookback(filingDateStr, lookbackDays) {
 // inside the window, pull the paginated older pages (filings.files[]) that
 // overlap the window and append their rows. Page fetches are best-effort:
 // a failed page leaves the recent rows usable.
-async function _filingsCoveringLookback(subJson, lookbackDays) {
+// F-CGPT-028 (P1-Welle 9, 10.08.2026): `stat` traegt die verschluckten Abruf-Ausfaelle
+// nach draussen. Der Zaehler sitzt HIER — in der gemeinsamen Funktion — und nicht beim
+// Aufrufer: sonst muss jeder kuenftige Aufrufer daran denken, und genau das passiert nicht.
+async function _filingsCoveringLookback(subJson, lookbackDays, stat = { fetchFailures: 0 }) {
   let rows = _normalizeSubmissions(subJson);
   const files = (subJson && subJson.filings && Array.isArray(subJson.filings.files))
     ? subJson.filings.files : [];
@@ -428,11 +431,18 @@ async function _filingsCoveringLookback(subJson, lookbackDays) {
     try {
       const pageRes = await httpGet('https://data.sec.gov/submissions/' + fmeta.name);
       await sleep(RATE_DELAY_MS);
-      if (pageRes.notFound || !pageRes.body) continue;
+      // Eine Seite, die die SEC selbst in filings.files[] nennt, MUSS es geben — fehlt
+      // sie oder kommt sie leer, ist das ein Ausfall, kein "es gab da nichts".
+      if (pageRes.notFound || !pageRes.body) { stat.fetchFailures++; continue; }
       const pageJson = JSON.parse(pageRes.body);
       // older pages carry the parallel arrays at top level (same shape as `recent`)
       rows = rows.concat(_normalizeSubmissions({ filings: { recent: pageJson } }));
-    } catch (e) { /* best-effort — recent rows still usable */ }
+    } catch (e) {
+      // best-effort bleibt best-effort (die recent-Zeilen sind weiter brauchbar) — aber
+      // der Ausfall wird gezaehlt: sonst sieht ein verkuerztes Fenster spaeter aus wie
+      // "dieser Insider hat nicht gehandelt".
+      stat.fetchFailures++;
+    }
   }
   return rows;
 }
@@ -451,7 +461,8 @@ async function pullTickerForm4(ticker, cikInfo) {
   catch (e) { return { transactions: [], error: 'submissions-parse: ' + e.message }; }
 
   // F-007: cover the FULL lookback window, following pagination when needed.
-  const allRows = await _filingsCoveringLookback(subJson, FORM4_LOOKBACK_DAYS);
+  const stat = { fetchFailures: 0 };
+  const allRows = await _filingsCoveringLookback(subJson, FORM4_LOOKBACK_DAYS, stat);
   const filings = allRows
     .filter(f => f.form === '4' && _withinLookback(f.filingDate, FORM4_LOOKBACK_DAYS));
 
@@ -475,6 +486,12 @@ async function pullTickerForm4(ticker, cikInfo) {
     let docRes;
     try { docRes = await httpGet(docUrl); }
     catch (e) {
+      // F-CGPT-028: Netzfehler/403/429/5xx beim Dokument-Abruf sind ein AUSFALL. Sie
+      // blieben hier stumm, der Ticker lief mit frischem fetchedAt in den Erfolgs-Zweig,
+      // und die 24h-TTL fror den verkuerzten Stand ein. Ein 404 auf das Dokument zaehlt
+      // bewusst NICHT (Zeile unten): der Rohpfad wird aus primaryDocument abgeleitet und
+      // kann strukturell danebenliegen — das waere kein Ausfall, sondern Normalbetrieb.
+      stat.fetchFailures++;
       await sleep(RATE_DELAY_MS);
       continue;
     }
@@ -496,7 +513,7 @@ async function pullTickerForm4(ticker, cikInfo) {
       continue;
     }
   }
-  return { transactions, filingsScanned: filings.length, parseErrors };
+  return { transactions, filingsScanned: filings.length, parseErrors, fetchFailures: stat.fetchFailures };
 }
 
 // ─── Watchlist filter ───────────────────────────────────────────────────
@@ -522,6 +539,30 @@ function selectUsTickers(watchlist, tickerCikMap) {
 // cache entry" decision is unit-testable without mocking the SEC network calls.
 function _isAllParseFailure(result) {
   return result.transactions.length === 0 && (result.parseErrors || 0) > 0;
+}
+
+// F-CGPT-028: EIN Grund fuer alle weichen Ausfaelle eines Tickers — null heisst
+// "sauber gemessen". fetchFailures zaehlt AUCH dann, wenn Transaktionen dabei sind:
+// ein Ticker, dessen aeltere Filing-Seite ausfiel, hat ein verkuerztes Fenster, und
+// genau dieses verkuerzte Fenster wuerde sonst mit frischem fetchedAt fuer 24 h als
+// vollstaendige Messung gelten ("kein Insider-Handel").
+function _softAusfallGrund(result) {
+  if (_isAllParseFailure(result)) return 'all-filings-unparsable(' + result.parseErrors + ')';
+  if ((result.fetchFailures || 0) > 0) return 'fetch-failures(' + result.fetchFailures + ')';
+  return null;
+}
+
+// Cache-Eintrag nach einem weichen Ausfall: failedAt statt fetchedAt, und der letzte
+// gute Stand (fetchedAt + transactions) bleibt unangetastet — sonst ersetzt ein Ausfall
+// echte Historie durch Leere und die 24h-TTL sperrt den Nachholversuch aus.
+function _ausfallEintrag(prev, ticker, cikInfo, grund) {
+  return Object.assign({}, prev || {}, {
+    ticker,
+    cik: cikInfo.cik,
+    name: cikInfo.name,
+    failedAt: new Date().toISOString(),
+    error: grund,
+  });
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -572,15 +613,9 @@ async function main() {
         // not clobber a prior successful pull's cached insider transactions
         // (red-team A1: asymmetric data-loss vs the catch path otherwise).
         errors++;
-        byTicker[ticker] = Object.assign({}, prev || {}, {
-          ticker,
-          cik: cikInfo.cik,
-          name: cikInfo.name,
-          failedAt: new Date().toISOString(),
-          error: result.error
-          // intentionally NOT setting fetchedAt or transactions — preserve any
-          // prior successful pull's values (mirrors the thrown-error path).
-        });
+        // _ausfallEintrag setzt bewusst KEIN fetchedAt und KEINE transactions —
+        // der letzte gute Stand bleibt stehen (mirrors the thrown-error path).
+        byTicker[ticker] = _ausfallEintrag(prev, ticker, cikInfo, result.error);
         console.warn('  [' + ticker + '] soft-error: ' + result.error);
         continue;
       }
@@ -590,17 +625,15 @@ async function main() {
       // previously-cached good transactions under a shiny new fetchedAt.
       // Preserve the prior entry (same pattern as the soft-error branch
       // above) and retry next run.
-      if (_isAllParseFailure(result)) {
+      // F-CGPT-028 (P1-Welle 9): derselbe Zweig faengt jetzt auch verschluckte
+      // Netz-/Seiten-Ausfaelle (fetchFailures) — ein nicht geholtes Filing ist kein
+      // gemessenes "kein Insider-Handel". Beide Faelle: failedAt, alter Stand bleibt,
+      // naechster Lauf holt nach (kein fetchedAt -> die 24h-TTL greift nicht).
+      const softGrund = _softAusfallGrund(result);
+      if (softGrund) {
         errors++;
-        byTicker[ticker] = Object.assign({}, prev || {}, {
-          ticker,
-          cik: cikInfo.cik,
-          name: cikInfo.name,
-          failedAt: new Date().toISOString(),
-          error: 'all-filings-unparsable(' + result.parseErrors + ')'
-        });
-        console.warn('  [' + ticker + '] soft-error: all ' + result.parseErrors +
-          ' filing(s) failed to parse');
+        byTicker[ticker] = _ausfallEintrag(prev, ticker, cikInfo, softGrund);
+        console.warn('  [' + ticker + '] soft-error: ' + softGrund);
         continue;
       }
       byTicker[ticker] = {
@@ -686,6 +719,10 @@ if (require.main === module) {
 
 module.exports = {
   parseForm4Xml, selectUsTickers, loadTickerCikMap, ladeForm4Cache,
-  _internals: { httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure },
+  _internals: {
+    httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure,
+    // F-CGPT-028: exportiert, damit der Ausfall-Pfad ohne echtes SEC-Netz fahrbar ist.
+    pullTickerForm4, _filingsCoveringLookback, _softAusfallGrund, _ausfallEintrag,
+  },
   _secRateLimit: SEC_RATE_LIMIT
 };

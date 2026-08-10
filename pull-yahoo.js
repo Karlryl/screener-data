@@ -137,6 +137,13 @@ let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catc
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
 let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
+// F-CGPT-012 (P1-Welle 9, 10.08.2026): der Checkpoint-Schreiber des inkrementellen
+// Manifests fing jeden Schreibfehler mit einer WARN-Zeile ab, ohne Zaehler. Ein dauerhaft
+// scheiterndes Checkpoint-Schreiben (OneDrive-Lock, AV-Scanner, volle Platte) blieb damit
+// unzaehlbar — ein timeout-getoeteter Lauf hinterlaesst dann ein VERALTETES Manifest, das
+// wie ein frisches aussieht. Bewusst KEIN throw: transiente Schreibfehler duerfen den Pull
+// nicht killen, und der finale Manifest-Write stirbt bei einem dauerhaften Problem laut.
+let _manifestCheckpointErrors = 0;
 let _unparseableTimeAnchors = 0;
 let _unparseableTimeAnchorsDue = 0;
 let _ftsPartialTickers = 0;
@@ -2315,6 +2322,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _ftsCacheParseErrors = 0;
+  _manifestCheckpointErrors = 0;
   _unparseableTimeAnchors = 0;
   _unparseableTimeAnchorsDue = 0;
   _ftsPartialTickers = 0;
@@ -2467,12 +2475,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // durch das volle Universum ersetzt.
         n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
-        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors },
+        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors },
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
       writeFileAtomic(mPath, JSON.stringify(slim));
     } catch (e) {
+      _manifestCheckpointErrors++;
       _log('WARN', `Incremental manifest write failed: ${e.message}`);
     } finally {
       _manifestWriting = false;
@@ -3737,7 +3746,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
-  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors };
+  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors };
   _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
@@ -4072,8 +4081,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear, _mapFTSAnnualShares, _readFTSAnnualSharesFromCache, _writeFTSCache,
-  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors }),
-  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; },
+  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors }),
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; _manifestCheckpointErrors = 0; },
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,

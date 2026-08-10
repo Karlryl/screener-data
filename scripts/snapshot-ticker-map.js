@@ -94,7 +94,7 @@ const feld = (a, i) => (a[i] || '').trim();
  * Kurze Schluessel, weil jedes Zeichen 365-mal im Jahr anfaellt:
  *   n Name · b Boerse/Marktkategorie · e ETF-Kennzeichen · t Test-Kennzeichen · c CIK
  */
-function baueKarte(roh) {
+function baueKarte(roh, probleme = []) {
   const karte = new Map();
   // nasdaqlisted: Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot|ETF|NextShares
   for (const zeile of (roh.nasdaq || '').split('\n').slice(1)) {
@@ -131,7 +131,18 @@ function baueKarte(roh) {
       if (alt) alt.c = cik;
       else karte.set(sym, { n: String(e.title || ''), b: 'SEC', e: '', t: '', c: cik });
     }
-  } catch (_) { /* kaputtes SEC-JSON darf den Rest nicht kippen */ }
+  } catch (_) {
+    // F-CGPT-027 (P1-Welle 9, 10.08.2026): kaputtes SEC-JSON kippt weiterhin nicht den
+    // Rest — aber es blieb bisher voellig still. Die SEC antwortet bei Wartung auch mal
+    // mit HTTP 200 und einer HTML-Seite (oder abgeschnittenem JSON); der Abruf-catch in
+    // run() sieht das nicht, `fehlend` blieb leer, die vorhandene Kompensationsstrecke
+    // (CIK-Uebernahme + Uebernahme reiner SEC-Symbole) sprang NICHT an, und die Tageszeile
+    // behauptete quellenFehlend:[] — "alle Quellen waren da". Ergebnis waeren tausende
+    // faelschlich "geaenderte" und ~3.3k faelschlich "weg"/delistete Symbole gewesen,
+    // dauerhaft, nicht nachholbar. Deshalb wird der Parse-Ausfall nach aussen gemeldet
+    // und in run() wie ein Quellenausfall behandelt.
+    probleme.push('sec');
+  }
   return karte;
 }
 
@@ -277,8 +288,12 @@ function rotiereGrundbild(karte, datum, dir = DIR, trocken = false) {
 
 const heute = () => new Date().toISOString().slice(0, 10);
 
-async function run(argv = process.argv.slice(2)) {
+async function run(argv = process.argv.slice(2), opts = {}) {
   const trocken = argv.includes('--dry');
+  // opts.dir nur fuer Tests: sonst liesse sich der Quellenausfall-Pfad nur gegen das
+  // echte Archiv fahren — und genau der Pfad ist der, der still war.
+  const dir = opts.dir || DIR;
+  const grundbildPfad = path.join(dir, '_grundbild.json');
   // Quellen EINZELN holen (Fund 29.07.2026): faellt eine aus, darf sie nicht den ganzen
   // Tag mitreissen. Am 29.07. lieferte www.sec.gov den GitHub-Laeufern zweimal HTTP 403,
   // waehrend derselbe Aufruf mit demselben User-Agent von aussen 200 gab — die Sperre gilt
@@ -301,20 +316,30 @@ async function run(argv = process.argv.slice(2)) {
   if (fehlend.length === Object.keys(QUELLEN).length) {
     throw new Error('ALLE Ticker-Quellen nicht erreichbar (' + fehlend.join(', ') + ') — nichts zu bauen');
   }
-  const neu = baueKarte(roh);
+  // F-CGPT-027: ein 200er mit Muell ist derselbe Schaden wie ein 403 — nur unsichtbar.
+  // Deshalb laeuft er ab hier durch dieselbe Strecke wie ein Abruf-Ausfall.
+  const parseProbleme = [];
+  const neu = baueKarte(roh, parseProbleme);
+  for (const q of parseProbleme) {
+    if (fehlend.includes(q)) continue;
+    fehlend.push(q);
+    console.log(`::warning::Ticker-Quelle "${q}" antwortete, war aber nicht lesbar (Wartungsseite oder `
+      + 'abgeschnittenes JSON mit HTTP 200) — der Tag wird wie bei einem Ausfall dieser Quelle gebaut: '
+      + 'fehlende Felder kommen aus dem Vortagesstand, die Luecke steht als quellenFehlend in der Tageszeile.');
+  }
   // Fail-loud: eine der drei Quellen liefert manchmal eine Wartungsseite mit HTTP 200.
   // Eine plausible Untergrenze ist billiger als ein stiller Verlust eines Tages.
   if (neu.size < 5000) throw new Error('nur ' + neu.size + ' Symbole erkannt — Quelle vermutlich kaputt, Tag NICHT geschrieben');
 
-  fs.mkdirSync(DIR, { recursive: true });
-  const grundbild = liesGrundbild();   // null = es gibt wirklich noch keins
+  fs.mkdirSync(dir, { recursive: true });
+  const grundbild = liesGrundbild(grundbildPfad);   // null = es gibt wirklich noch keins
 
   if (!grundbild) {
     const obj = Object.fromEntries([...neu.entries()].sort((a, b) => a[0].localeCompare(b[0])));
     console.log('Grundbild wird angelegt: ' + neu.size + ' Symbole');
     // Seit BK-SK-001 in der Wickelform mit `ab` — sonst wuesste ein spaeterer Leser
     // nach der ersten Monats-Rotation nicht, welche Tageszeilen zu welchem Bild gehoeren.
-    if (!trocken) writeFileAtomic(GRUNDBILD, JSON.stringify({
+    if (!trocken) writeFileAtomic(grundbildPfad, JSON.stringify({
       ab: heute(),
       erzeugt: new Date().toISOString(),
       hinweis: 'Erstanlage. Tageszeilen ab ' + heute() + ' gehoeren auf dieses Bild.',
@@ -324,7 +349,7 @@ async function run(argv = process.argv.slice(2)) {
   }
 
   const datum = heute();
-  const zeilen = alleZeilen();
+  const zeilen = alleZeilen(dir);
   // Ein zweiter Lauf am selben Tag ersetzt seine Zeile, statt eine zweite anzuhaengen —
   // sonst haengt der Zustand davon ab, wie oft der Job lief.
   const vorher = zustandAus(grundbild, zeilen.filter((z) => z.datum < datum));
@@ -374,7 +399,7 @@ async function run(argv = process.argv.slice(2)) {
     pruefsumme: summeVon(neu.keys()),
   };
 
-  const datei = path.join(DIR, datum.slice(0, 7) + '.jsonl');
+  const datei = path.join(dir, datum.slice(0, 7) + '.jsonl');
   const bestand = fs.existsSync(datei)
     ? fs.readFileSync(datei, 'utf8').split('\n').filter((z) => z.trim() && !z.includes('"datum":"' + datum + '"'))
     : [];
@@ -392,7 +417,7 @@ async function run(argv = process.argv.slice(2)) {
   // NACH der Tageszeile rotieren: die Zeile bleibt damit ein echter Diff gegen gestern,
   // und der neue Nullpunkt ist genau der Stand, den sie erzeugt. Ein Abspielen ab dem
   // neuen Bild ueberspringt sie korrekt (sie ist bereits darin verrechnet).
-  const rot = rotiereGrundbild(neu, datum, DIR, trocken);
+  const rot = rotiereGrundbild(neu, datum, dir, trocken);
   if (rot) {
     console.log('Grundbild rotiert (Monatswechsel): neuer Nullpunkt ab ' + rot.ab
       + ' mit ' + rot.symbole + ' Symbolen; das bisherige Bild'
@@ -404,7 +429,7 @@ async function run(argv = process.argv.slice(2)) {
 
 module.exports = {
   baueKarte, diff, zustandAus, alleZeilen, alsText, summeVon, alsGrundbild, rotiereGrundbild,
-  liesGrundbild, QUELLEN, DIR, GRUNDBILD,
+  liesGrundbild, run, QUELLEN, DIR, GRUNDBILD,
 };
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
