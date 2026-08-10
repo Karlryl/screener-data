@@ -9,16 +9,18 @@
  * Gemessen am 03.08.2026: 1.801 von 15.337 Titeln ohne eine einzige Kurszeile,
  * 38 Serien aelter als 30 Tage. _meta und SPY waren dabei frisch.
  *
- * DIESER BAU IST NUR MESSUNG UND AUSGABE. Keine Rot-Schwelle — ab welchem Anteil
- * das ein Alarm sein soll, ist Rat-pflichtig. Genau das nagelt dieser Waechter
- * mit fest: der Schritt darf NICHT rot werden koennen.
+ * DIESER BAU WAR NUR MESSUNG UND AUSGABE. Seit Tag 632 (Karl-Entscheid F-29c,
+ * 10.08.2026) traegt die KERN-Gruppe eine Schwelle von 5 %; der Auslandsteil bleibt
+ * reine Messung. Das Alarm-VERHALTEN gehoert ab dort in
+ * tests/f29-heartbeat-schwelle.test.js — diese Datei prueft weiter Messung, Ventil,
+ * Ausgabe und den Einbau in den Heartbeat.
  *
  * Standalone-Runner: node tests/s4-price-001-preis-abdeckung.test.js
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const M = require('../scripts/heartbeat-preis-abdeckung.js');
@@ -106,23 +108,45 @@ check('alle drei Watchlist-Schreibweisen werden gelesen', () => {
   assert.equal(M.watchlistZeilen({ A: { ticker: 'A' } }).length, 1);
 });
 
-// ── IMMER ausgeben (Tag-520-Lehre) und NIE rot ──────────────────────────────
-check('der Lauf am ECHTEN Bestand druckt beide Kennzahlen und endet mit 0', () => {
-  const out = execFileSync(process.execPath, [SKRIPT], { cwd: ROOT, encoding: 'utf8' });
-  if (/::warning::Preis-Abdeckung nicht messbar/.test(out)) {
+// ── IMMER ausgeben (Tag-520-Lehre) ──────────────────────────────────────────
+check('der Lauf am ECHTEN Bestand druckt beide Kennzahlen', () => {
+  // spawnSync statt execFileSync (Tag 632): seit dem Karl-Entscheid F-29c KANN der
+  // Lauf berechtigt auf 1 enden (Kern-Quote >= 5 %). execFileSync wuerde dann werfen
+  // und dieser Test waere rot, obwohl das Skript genau richtig gearbeitet hat — und
+  // der naechste Leser "repariert" den Alarm statt der Kursdaten.
+  const r = spawnSync(process.execPath, [SKRIPT], { cwd: ROOT, encoding: 'utf8' });
+  const out = (r.stdout || '') + (r.stderr || '');
+  if (/::warning::MESSAUSFALL:/.test(out)) {
     // Auch der Messausfall ist ein Ergebnis — er muss nur laut sein, nicht still.
     return;
   }
+  assert.ok(r.status === 0 || /^::error::/m.test(out),
+    'Exit 1 ist nur mit ausgesprochenem ::error:: erlaubt — ein stummer roter Lauf erklaert nichts');
   assert.match(out, /KENNZAHL 1 — ohne jede Kurszeile: \d+ von \d+/);
   assert.match(out, /KENNZAHL 2 — letzte Kurszeile aelter als \d+ Tage: \d+/);
   assert.match(out, /Neuzugangs-Ventil:\s+\d+ Titel/,
     'ohne die Zahl der ausgenommenen Titel liest man die Restquote fuer die ganze Wahrheit (Tag-520-Lehre)');
 });
 
-check('das Skript kann gar nicht rot werden (keine Rot-Schwelle mitgebaut)', () => {
+/**
+ * TAG 632: Hier stand bis zum Karl-Entscheid F-29c (10.08.2026) der Wachhund
+ * "das Skript kann gar nicht rot werden" — ein Quelltext-Grep auf `process.exit(1)`
+ * und `::error::`. Er war ausdruecklich ein Platzhalter bis zur Rat-Entscheidung
+ * ("eine Rot-Schwelle ist Rat-pflichtig"). Der Rat hat entschieden: Kern rot ab 5 %.
+ * Das VERHALTEN nagelt jetzt tests/f29-heartbeat-schwelle.test.js fest (11 CLI-Laeufe).
+ *
+ * An dieser Stelle bleibt die Sache stehen, die ein Verhaltens-Test NICHT sehen kann:
+ * die Schwelle ist eine feste Konstante — kein Config-Eintrag, kein Env-Ventil. Eine
+ * zur Laufzeit weichstellbare Schwelle ist im Ernstfall genau dann weich, wenn sie
+ * jemand weggedreht hat (Karl-Auflage zum Entscheid F-29c).
+ */
+check('die Alarmschwelle ist fest verdrahtet (kein Env-Ventil, kein Config-Schalter)', () => {
   const src = fs.readFileSync(SKRIPT, 'utf8');
-  assert.ok(!/process\.exit\(1\)/.test(src), 'eine Rot-Schwelle ist Rat-pflichtig und gehoert hier nicht hinein');
-  assert.ok(!/::error::/.test(src), 'ein ::error:: waere in CI ein Alarm — dieser Schritt ist eine Messung');
+  assert.match(src, /const KERN_ALARM_ANTEIL = 0\.05;/,
+    'die Schwelle aus Karl-Entscheid F-29c muss als benannte Konstante dastehen');
+  const zeile = src.split(/\r?\n/).find((z) => z.includes('KERN_ALARM_ANTEIL ='));
+  assert.ok(!/process\.env|config|Number\(/.test(zeile),
+    'die Schwelle darf nicht aus Umgebung oder Config kommen: ' + zeile);
 });
 
 check('GEGENPROBE zur Schreibweise: ein VERGIFTETER Store macht den Lauf trotzdem nicht rot', () => {
@@ -189,11 +213,13 @@ check('die Messung laeuft auch, wenn ein Schritt davor rot war (if: always())', 
   const s = schrittKoerper('Check price coverage');
   assert.match(s, /if: always\(\)/,
     'sonst faellt genau bei einem Substrat-Alarm die Zahl aus, die erklaert, wie schlimm es ist');
-  assert.ok(!/continue-on-error/.test(s), 'der Schritt kann ohnehin nicht rot werden — die Maskierung waere nur Nebel');
+  assert.ok(!/continue-on-error/.test(s),
+    'seit Tag 632 kann der Schritt rot werden — eine Maskierung wuerde den Kern-Alarm wirkungslos machen');
 });
 
 console.log('\nGeprueft: scripts/heartbeat-preis-abdeckung.js (messePreisAbdeckung an 6 Fixtures inkl. '
   + 'beider Ventil-Gegenrichtungen + ein echter Lauf gegen watchlist.json und den Preis-Store) '
-  + 'sowie der Einbau in .github/workflows/heartbeat.yml (Reihenfolge, if: always(), keine Rot-Schwelle).');
+  + 'sowie der Einbau in .github/workflows/heartbeat.yml (Reihenfolge, if: always(), kein continue-on-error). '
+  + 'Das Alarm-Verhalten selbst steht in tests/f29-heartbeat-schwelle.test.js.');
 console.log('s4-price-001: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

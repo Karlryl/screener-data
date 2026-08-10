@@ -168,12 +168,15 @@ jobs:
       # und 38 Serien aelter als 30 Tage waren. Genau diese Luecke ist zwischen "der Pull lebt"
       # und "die Benchmark lebt" hindurchgefallen.
       #
-      # MESSUNG, KEIN GATE: der Schritt kann nicht rot werden (das Skript kennt kein exit 1 und
-      # kein ::error::). Ab welchem Anteil das ein Alarm sein soll, ist eine Schwellen-Frage und
-      # gehoert vor den Rat — eine ausgedachte Schwelle waere entweder Dauer-Alarm oder Deko.
+      # GATE SEIT TAG 632 (Karl-Entscheid F-29c, 10.08.2026): die KERN-Gruppe (US-Boersen +
+      # Altbestand ohne Boersen-Hint) faerbt den Schritt rot ab 5 % Titeln ohne jede Kurszeile.
+      # Der Auslandsteil bleibt reine MESSUNG und loest nie Alarm aus — dort fehlen schon heute
+      # 17,8 % (bekannte Beschaffungs-Luecke), und die Gesamtquote wandert allein durch Zu- und
+      # Abgaenge um Prozentpunkte. KEIN continue-on-error hier: ein Exit in einem maskierten
+      # Schritt waere wirkungslos und der Alarm nur Deko.
       # if: always(), damit die Zahl, die erklaert WIE SCHLIMM es steht, nicht ausgerechnet dann
       # ausfaellt, wenn der Substrat-Schritt darueber angeschlagen hat.
-      - name: Check price coverage (S4-PRICE-001, Messung ohne Schwelle)
+      - name: Check price coverage (S4-PRICE-001, Kern-Gate ab 5 %)
         if: always()
         run: node scripts/heartbeat-preis-abdeckung.js
 
