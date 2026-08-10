@@ -106,8 +106,11 @@ fundamentalen GQS-Eingaberollen einschliesslich Nettoeinkommen sowie der fuer
 Quartals-FCF benoetigten kumulierten OCF-/Capex-Perioden vorhanden. Der korrigierte
 Audit prueft die exakten `qtrs`-Zustaende 0 bis 4; der fruehere Acht-Rollen-Bericht
 war unvollstaendig und wurde ersetzt. Die Semantik ist nun vor dem Oeffnen realer
-Wachstumsoutcomes als `FEM-SEC-CONCEPT-MAP@1.0.0` lokal versiegelt. Offen bleiben
-der volle Zeitraum, der Remote-Commit und eine unabhaengige semantische Pruefung.
+Wachstumsoutcomes als `FEM-SEC-CONCEPT-MAP@1.0.0` versiegelt. Map, Siegel und
+die exakte 64-Quartals-Coverage sind seit Tag 639 bytegleich an `origin/main`
+gebunden. Der technische Checkpoint ist damit bestanden. Das offizielle Gate
+bleibt bis zum run-gebundenen exakten Gesamtinput und einer wirklich
+unabhaengigen menschlichen Semantikpruefung rot.
 
 Die getrennte SIC-Bruecke prüft 17.429 letzte SEC-Meldeidentitäten. 12.167 lassen sich
 mit einem unzweideutigen SIC einer Forschungskohorte zuweisen, 2.565 werden wie vom
@@ -164,7 +167,7 @@ Quarantäne.
 | Adjusted OHLCV | mehrstufige Gratisquellen + Split/Dividend-/Exit-Ereignisse | begrenzte aktuelle-Ticker-Kohorte deckt 9.095/23.165 Kandidatenzeilen beziehungsweise 39,26182 Prozent ab; 2.028 gueltige Dateien enthalten nur Datum und adjusted close; SEC MIDAS liefert 19.149.242 Marktaktivitaetszeilen, aber kein OHLCV | reproduzierbarer Unmoeglichkeitsnachweis: kein kostenloses, survivorship-sicheres 2009-2024-Volluniversum mit permanenten IDs, Actions und Delisting-Renditen belegt; Gate bleibt rot, kostenloser Fallback ist begrenzter Technik-Anhang plus prospektiver append-only Collector |
 | Corporate Actions/Delistings | SEC Form 25/15, 8-K, Filing-Cover, Börsenmeldungen | 44.352 Ereigniskandidaten, 27.427 Accessions; Feed+Oldloads-Vereinigung 24.681 Accessions, outcome-blinde Restqueue nach 17/43 gueltigen Batches plus 285 Individual-Locator = 24.966 beziehungsweise 91,02709 Prozent; alle 285 Zusatzinhalte validiert, die Batchindizes 7, 13, 15, 19 und 20 bleiben offen | 1.754 Accessions unbefragt oder technisch offen; vollständige Acceptance-/Effective-Zeitpunkte, lokaler Inhaltsbestand und Delisting-Renditen fehlen |
 | Historischer GQS-Adapter | GQS-00@1.0.0 gegen damals bekannte SEC-Vintages | 12 Quartalspunkte 2012-2014 reproduziert | nur SEC-Schatten, Outcome- und Preisvergleich offen |
-| Konzeptkarte | SEC-Tags + Statement-Rolle + sektoraler Fallback, vor Outcomes eingefroren | `FEM-SEC-CONCEPT-MAP@1.0.0` lokal versiegelt; vorhandener 2009q1-2024q4-Audit deckt 64 Quartale, 127 Payloads und alle neun Rollen ohne ungelöste Coverage ab | Map und Siegel fehlen auf `origin/main`; unabhängiger Semantikaudit fehlt; zwei frische Vollzeit-Reproduktionen endeten nach 60/300 Sekunden am Laufzeitlimit ohne Teilreport, daher Gate weiter rot |
+| Konzeptkarte | SEC-Tags + Statement-Rolle + sektoraler Fallback, vor Outcomes eingefroren | **TECHNISCH PASS / OFFIZIELL ROT:** `FEM-SEC-CONCEPT-MAP@1.0.0`, Siegel und 64-Quartals-Coverage mit 127 Payloads und allen neun Rollen liegen bytegleich seit Tag 639 auf `origin/main`; exakte Reproduktion und mechanische Mutationstests bestanden | run-gebundener Beleg fuer den exakten Gesamtinput-/Konzeptkomponentenhash und unabhaengiger menschlicher Semantikaudit fehlen |
 | Blind Coding | zwei wirklich unabhängige, outcome-blinde menschliche Codierer | fail-closed Kit gebaut: exaktes CSV-Schema, T/E/L-Vollständigkeit, Cutoff-, Identitäts-, Kappa- und Exact-Agreement-Prüfung; Kompilierung, positiver Test und vier Negativtests bestanden | zwei echte unabhängige Menschen, Blinding-/Unabhängigkeitsatteste, echte Codierdateien und Remote-Hashbindung fehlen; Gate bleibt rot |
 | Research-Korpus | append-only Quellenpayloads, Suchprotokoll, Cutoff und Hashmanifest | Store-Grundlage gebaut | historische Themenquellen noch nicht vollständig eingesammelt |
 | Unabhängiger Audit | genaue Input-/Komponentenhashes und Gate-Artefakte gegen origin/main | später ausführbar | kann erst nach fertigem Input grün werden |
