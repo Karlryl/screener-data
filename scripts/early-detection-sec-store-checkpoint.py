@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import sqlite3
+import subprocess
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -412,7 +413,110 @@ def self_test() -> dict[str, Any]:
         observations, payloads, fsd = enumerate_snapshot(root)
         if len(observations) != 1 or len(payloads) != 1 or fsd:
             raise CheckpointError("self-test failed")
-    return {"status": "PASS", "observationManifest": True, "payloadManifest": True}
+    if normalize_checkout_line_endings(b"a\r\nb\r\n") != b"a\nb\n":
+        raise CheckpointError("line-ending normalization self-test failed")
+    return {
+        "status": "PASS",
+        "observationManifest": True,
+        "payloadManifest": True,
+        "checkoutLineEndingNormalization": True,
+    }
+
+
+def git_bytes(repository: Path, *arguments: str) -> bytes:
+    process = subprocess.run(
+        ["git", "-C", str(repository), *arguments],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if process.returncode != 0:
+        raise CheckpointError(
+            f"git {' '.join(arguments)} failed: {process.stderr.decode('utf-8', errors='replace').strip()}"
+        )
+    return process.stdout
+
+
+def normalize_checkout_line_endings(value: bytes) -> bytes:
+    """Normalize only Git's reversible CRLF checkout translation."""
+    return value.replace(b"\r\n", b"\n")
+
+
+def bind_remote(args: argparse.Namespace) -> dict[str, Any]:
+    repository = args.repository.resolve()
+    checkpoint_path = args.checkpoint.resolve()
+    output = args.output.resolve()
+    if output.exists():
+        raise CheckpointError("refusing to overwrite output")
+    checkpoint = load_signed(checkpoint_path)
+    if checkpoint.get("status") != "PASS_LOCAL_COMPLETE_READY_FOR_REMOTE_BINDING":
+        raise CheckpointError("checkpoint is not ready for remote binding")
+    try:
+        relative = checkpoint_path.relative_to(repository).as_posix()
+    except ValueError as exc:
+        raise CheckpointError("checkpoint is outside repository") from exc
+    checkpoint_commit = args.checkpoint_commit
+    remote_commit = git_bytes(repository, "rev-parse", args.remote_ref).decode("ascii").strip()
+    ancestor = subprocess.run(
+        ["git", "-C", str(repository), "merge-base", "--is-ancestor", checkpoint_commit, remote_commit],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if ancestor.returncode != 0:
+        raise CheckpointError(f"checkpoint commit is not an ancestor of {args.remote_ref}")
+    committed_bytes = git_bytes(repository, "show", f"{checkpoint_commit}:{relative}")
+    remote_bytes = git_bytes(repository, "show", f"{remote_commit}:{relative}")
+    local_bytes = checkpoint_path.read_bytes()
+    if remote_bytes != committed_bytes:
+        raise CheckpointError("remote checkpoint bytes do not match the checkpoint commit")
+    if normalize_checkout_line_endings(local_bytes) != committed_bytes:
+        raise CheckpointError("committed checkpoint does not match the signed local checkpoint")
+    unsigned = {
+        "schema": "early-detection-gate-decision/v5",
+        "generatedAt": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+        "gate": "appendOnlySecStore",
+        "status": "PASS",
+        "gatePassed": True,
+        "verdict": "The complete append-only SEC input checkpoint is locally reproduced, includes all valid FSD revisions and all required original/amended filing populations, and is byte-identically bound to authorized origin/main history.",
+        "checkpoint": {
+            "path": relative,
+            "fileSha256": hashlib.sha256(committed_bytes).hexdigest(),
+            "localCheckoutFileSha256": hashlib.sha256(local_bytes).hexdigest(),
+            "localCheckoutLineEndingsNormalized": local_bytes != committed_bytes,
+            "reportSha256": checkpoint["reportSha256"],
+            "checkpointCommit": checkpoint_commit,
+            "remoteRef": args.remote_ref,
+            "remoteCommit": remote_commit,
+            "checkpointCommitIsRemoteAncestor": True,
+            "remoteBytesMatch": True,
+        },
+        "coverage": {
+            "snapshot": {
+                "observationFiles": checkpoint["snapshot"]["observationFiles"],
+                "distinctPayloads": checkpoint["snapshot"]["distinctPayloads"],
+                "distinctPayloadBytes": checkpoint["snapshot"]["distinctPayloadBytes"],
+                "observationIndexSha256": checkpoint["snapshot"]["observationIndexSha256"],
+                "payloadIndexSha256": checkpoint["snapshot"]["payloadIndexSha256"],
+            },
+            "revisionCoverage": checkpoint["revisionCoverage"],
+            "originalFilingCaptureCheckpoint": {
+                key: checkpoint["originalFilingCaptureCheckpoint"][key]
+                for key in (
+                    "captureRows", "captureIndexSha256", "verifiedPayloadFiles",
+                    "verifiedPayloadBytes", "verifiedPayloadIndexSha256", "familyCounts",
+                )
+            },
+        },
+        "separateExecutionGatesStillRed": ["independentAuditPassed"],
+        "interpretation": "The independent human audit remains mandatory under its own preregistered execution gate; it is not evidence that the append-only SEC store itself is incomplete.",
+        "confirmatoryEligible": False,
+        "resultComputationAllowed": False,
+        "outcomesAccessed": False,
+        "productiveGqsModified": False,
+    }
+    result = {**unsigned, "reportSha256": canonical_sha256(unsigned)}
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return result
 
 
 def parser() -> argparse.ArgumentParser:
@@ -429,14 +533,35 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--capture-gate-decision", type=Path, required=True)
     run.add_argument("--truncation-audit", type=Path, required=True)
     run.add_argument("--output", type=Path, required=True)
+    bind = commands.add_parser("bind-remote")
+    bind.add_argument("--repository", type=Path, required=True)
+    bind.add_argument("--checkpoint", type=Path, required=True)
+    bind.add_argument("--checkpoint-commit", required=True)
+    bind.add_argument("--remote-ref", default="origin/main")
+    bind.add_argument("--output", type=Path, required=True)
     commands.add_parser("self-test")
     return value
 
 
 def main() -> int:
     args = parser().parse_args()
-    result = self_test() if args.command == "self-test" else build(args)
-    summary = result if args.command == "self-test" else {
+    if args.command == "self-test":
+        result = self_test()
+    elif args.command == "bind-remote":
+        result = bind_remote(args)
+    else:
+        result = build(args)
+    if args.command == "self-test":
+        summary = result
+    elif args.command == "bind-remote":
+        summary = {
+            "status": result["status"],
+            "gate": result["gate"],
+            "remoteCommit": result["checkpoint"]["remoteCommit"],
+            "reportSha256": result["reportSha256"],
+        }
+    else:
+        summary = {
         "status": result["status"],
         "observationFiles": result["snapshot"]["observationFiles"],
         "distinctPayloads": result["snapshot"]["distinctPayloads"],
@@ -445,7 +570,7 @@ def main() -> int:
         "originalFilingCaptureRows": result["originalFilingCaptureCheckpoint"]["captureRows"],
         "originalFilingPayloadFiles": result["originalFilingCaptureCheckpoint"]["verifiedPayloadFiles"],
         "reportSha256": result["reportSha256"],
-    }
+        }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0
 
