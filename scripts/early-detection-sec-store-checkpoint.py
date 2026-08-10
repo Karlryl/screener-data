@@ -471,12 +471,13 @@ def bind_remote(args: argparse.Namespace) -> dict[str, Any]:
     if normalize_checkout_line_endings(local_bytes) != committed_bytes:
         raise CheckpointError("committed checkpoint does not match the signed local checkpoint")
     unsigned = {
-        "schema": "early-detection-gate-decision/v5",
+        "schema": "early-detection-gate-decision/v6",
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
         "gate": "appendOnlySecStore",
-        "status": "PASS",
-        "gatePassed": True,
-        "verdict": "The complete append-only SEC input checkpoint is locally reproduced, includes all valid FSD revisions and all required original/amended filing populations, and is byte-identically bound to authorized origin/main history.",
+        "status": "TECHNICAL_CHECKPOINT_PASS_OFFICIAL_GATE_RED_UNTIL_EXACT_INPUT_BINDING",
+        "gatePassed": False,
+        "technicalCheckpointPassed": True,
+        "verdict": "The complete append-only SEC component checkpoint is locally reproduced, includes all valid FSD revisions and all required original/amended filing populations, and is byte-identically bound to authorized origin/main history. The official execution gate remains red because the sealed protocol additionally requires a run-bound artifact attesting the exact authorized full-input hash and gate-specific component hashes.",
         "checkpoint": {
             "path": relative,
             "fileSha256": hashlib.sha256(committed_bytes).hexdigest(),
@@ -506,8 +507,13 @@ def bind_remote(args: argparse.Namespace) -> dict[str, Any]:
                 )
             },
         },
+        "officialGateRequirementsStillMissing": [
+            "exactAuthorizedFullInputSha256",
+            "runBoundAppendOnlySecStoreComponentSha256",
+            "remoteExecutionGateArtifactOnAuthorizedHistory",
+        ],
         "separateExecutionGatesStillRed": ["independentAuditPassed"],
-        "interpretation": "The independent human audit remains mandatory under its own preregistered execution gate; it is not evidence that the append-only SEC store itself is incomplete.",
+        "interpretation": "The SEC component store is technically complete and immutable. That does not by itself satisfy the stricter run-bound gateEvidenceRule or the separate independent human audit gate.",
         "confirmatoryEligible": False,
         "resultComputationAllowed": False,
         "outcomesAccessed": False,
