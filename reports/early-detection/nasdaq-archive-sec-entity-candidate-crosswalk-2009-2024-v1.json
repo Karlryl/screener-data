@@ -1,0 +1,72 @@
+{
+  "schema": "early-detection-nasdaq-archive-sec-entity-candidate-crosswalk/v1",
+  "generatedAt": "2026-08-10T21:04:44.116Z",
+  "status": "PASS_OUTCOME_BLIND_ARCHIVE_TO_SEC_CANDIDATE_CROSSWALK_GATE_REMAINS_RED",
+  "producerScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_nasdaq_archive_entity_crosswalk_v1.py",
+  "producerScriptSha256": "b655ddcef72a8523563d1e08eb63932af1e9fcf9e02624c8975d4bcb4ab46c85",
+  "database": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1.sqlite",
+  "databaseBytes": 116752384,
+  "databaseSha256": "2da600dd7b8d4e06b7257fda81f43ced947ffff83e1ef090483cc25800bead34",
+  "coverage": {
+    "archiveSnapshots": 103,
+    "archiveObservations": 434214,
+    "secMappingSnapshots": 41,
+    "secMappingSnapshotRange": {
+      "first": "2017-08-28T20:15:25.000Z",
+      "last": "2024-12-07T10:59:01.000Z"
+    }
+  },
+  "candidateCounts": {
+    "NO_SEC_TICKER_MATCH": 111657,
+    "PIT_DIRECT_UNIQUE_CANDIDATE_NOT_IDENTITY": 186044,
+    "RETROSPECTIVE_AMBIGUOUS_CANDIDATES": 8650,
+    "RETROSPECTIVE_UNIQUE_CANDIDATE_NOT_PIT_IDENTITY": 127863
+  },
+  "pitDirectUniqueCandidateRows": 186044,
+  "pitDirectUniqueCandidateCiks": 8954,
+  "identityResolvedRows": 0,
+  "futureSnapshotsUsed": false,
+  "logicalSequenceSha256": "5b8bc625176925fa33d7ac7b53f48a63fa3103d984a9b262b59ae11057325b69",
+  "interpretation": "Exact ticker matches to the latest SEC mapping known no later than each archive capture are point-in-time identity candidates only. Retrospective matches are separately labeled and no row establishes permanent security identity, continuous listing or an outcome.",
+  "limitations": [
+    "SEC ticker snapshots start in 2017 and are sparse.",
+    "Exact ticker equality does not resolve ticker reuse, share classes or reorganizations.",
+    "Retrospective candidates are not point-in-time identity evidence.",
+    "Archive states contain no prices, returns or terminal-session proof."
+  ],
+  "inputs": {
+    "archiveReport": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+      "fileSha256": "fe23c5129d96271b482477171ae52ebc04c61324b814e6c93eac3e4354e2e8f4",
+      "reportSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23"
+    },
+    "archiveVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2-verification.json",
+      "fileSha256": "5520260e082718fd14d5716f39f6f0c8112cfaa8561ebf5f78f0ed042d65177d",
+      "reportSha256": "c56175ec2ca62fc1583e3db21023386ae6d3ebb9b4e3c20c1407e85ec2c11e5c"
+    },
+    "entityEvidenceReport": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-event-evidence-v2-full-sec-populations-v4.json",
+      "fileSha256": "ab534d97d45740f4ca84ca85bfe8719f08b6827415545654a1d00121140057ad",
+      "reportSha256": "2049eac196a6d70bd3a6f755a9cebb385fa2a1cd17b690581026b28699f024d2"
+    },
+    "entityEvidenceVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-event-evidence-v2-full-sec-populations-v4-verification.json",
+      "fileSha256": "040a99683941c4375349ff0d48cc0e2db4cff7783fc2a31c7f9f1c901435441a",
+      "reportSha256": "11d322942742457888ef712d37c339d1457323e41db18acc11a3ccf54731b3b9"
+    },
+    "archiveDatabase": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.sqlite",
+      "fileSha256": "ee8eff30112fe629699b76fc419ec9224a67a02fcbe63a5b247fb1b65f4df333"
+    },
+    "secEntityLedgerDatabase": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-evidence-ledger-v1-2009-2024.sqlite",
+      "fileSha256": "59fde83178253b9c89cef6d9dcb70138699d46ca095439055df6a96937044cbe"
+    }
+  },
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "c02bf0d8a6af47b2ce3733f861f3be8b4626a18af5c883d495131d3d66c553e4"
+}

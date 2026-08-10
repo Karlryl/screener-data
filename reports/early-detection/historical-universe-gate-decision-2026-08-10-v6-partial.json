@@ -1,0 +1,139 @@
+{
+  "schema": "early-detection-gate-decision/v6",
+  "generatedAt": "2026-08-10T21:05:29.667Z",
+  "gate": "historicalUniverse",
+  "status": "RED_SEC_FINRA_AND_ARCHIVED_NASDAQ_DIRECTORY_STATES_ADDED_SECURITY_UNIVERSE_UNPROVEN",
+  "verdict": "Complete SEC event populations, verified FINRA positive-presence evidence and archived Nasdaq Trader directory states materially improve the free historical universe evidence. Sparse archive states, ticker reuse and missing permanent identity still prevent a complete survivorship-safe 2009-2024 security universe, continuous listing intervals, terminal sessions and delisting returns.",
+  "periodRequired": {
+    "start": "2009-01-01",
+    "end": "2024-12-31",
+    "frequency": "every historical as-of date"
+  },
+  "requiredUniverseContract": [
+    "Every then-listed U.S. common-equity security, including later delisted/acquired/failed securities",
+    "Stable security-level identity across ticker, class, exchange, merger and reorganization changes",
+    "Effective first/final trading sessions and point-in-time listing state",
+    "Corporate actions, successor links and delisting/terminal-return treatment",
+    "Exact as-of availability and immutable source provenance"
+  ],
+  "verifiedBaseEvidence": {
+    "status": "RED_SEC_EVENT_POPULATIONS_COMPLETE_FINRA_ANNUAL_PRESENCE_PANEL_ADDED_SECURITY_UNIVERSE_UNPROVEN",
+    "newFinraEvidence": {
+      "tradeDateRange": [
+        "20100702",
+        "20210721"
+      ],
+      "preregisteredCaptures": 46,
+      "positivePresenceCaptures": 41,
+      "dateSymbolMarketRows": 220435,
+      "families": {
+        "adf_daily": {
+          "anchors": 7,
+          "rows": 8905,
+          "positivePresenceAnchors": 2
+        },
+        "consolidated_nms_daily": {
+          "anchors": 3,
+          "rows": 26024,
+          "positivePresenceAnchors": 3
+        },
+        "nasdaq_trf_daily": {
+          "anchors": 12,
+          "rows": 87515,
+          "positivePresenceAnchors": 12
+        },
+        "nyse_trf_daily": {
+          "anchors": 12,
+          "rows": 66839,
+          "positivePresenceAnchors": 12
+        },
+        "otc_daily": {
+          "anchors": 12,
+          "rows": 31152,
+          "positivePresenceAnchors": 12
+        }
+      },
+      "availabilityRule": "Each row is usable only at or after its resolved archive knownAt; backdating is rejected.",
+      "volumeQuarantine": "No volume value was parsed, aggregated or admitted as an outcome.",
+      "allowedInference": "Positive symbol presence at the named FINRA facility on the observed trade date only.",
+      "forbiddenInference": "No absence, continuous listing, permanent identity, total-market coverage, OHLCV or return may be inferred."
+    }
+  },
+  "newNasdaqDirectoryEvidence": {
+    "snapshots": 103,
+    "observations": 434214,
+    "distinctSymbols": 24672,
+    "distinctSymbolNamePairs": 35340,
+    "symbolsWithMultipleObservedNames": 7549,
+    "observationsWithExchangeCode": 203823,
+    "nonTestPositivePresenceObservations": 432800,
+    "coveredCaptureYears": [
+      "2009",
+      "2010",
+      "2011",
+      "2012",
+      "2013",
+      "2014",
+      "2015",
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2020",
+      "2021",
+      "2022",
+      "2023",
+      "2024"
+    ],
+    "missingCaptureYears": [],
+    "identityResolvedRows": 0
+  },
+  "allowedInference": "Positive security presence, observed symbol, security name and source exchange code at each captured directory state only.",
+  "forbiddenInference": "No absence, continuity, permanent identity, exact first/final session, OHLCV, return or delisting return may be inferred.",
+  "blockingReasons": [
+    "Issuer CIK identifies a registrant, not a permanent traded security or share class.",
+    "Direct SEC CIK-ticker-exchange snapshots start in 2017 and are states rather than effective intervals.",
+    "The four FINRA states improve 2016/2021 population evidence but cannot fill unobserved intervals or supply permanent identifiers.",
+    "MIDAS has market-presence descriptors but no CIK continuity, OHLCV, actions or terminal returns.",
+    "The current-ticker price cohort is survivorship-prone and systematically omits many delisted/acquired securities.",
+    "Form 8-A/EFFECT/Form 25/15 cannot independently establish all first/final trading sessions or successor identity.",
+    "No cost-free lawful panel satisfying the full population, identity, action, timestamp and delisting-return contract was found.",
+    "The exact final input has not passed a genuinely independent external audit.",
+    "Forty-one positive FINRA snapshots are sparse activity observations, not a complete population or interval ledger.",
+    "Five empty ADF anchors are not interpreted as security absence.",
+    "Archived Nasdaq directory states are sparse positive observations and do not prove unobserved intervals.",
+    "Symbols and symbol-name pairs are not permanent security identifiers; observed name variation demonstrates unresolved reuse or change risk.",
+    "The directories contain no adjusted OHLCV, terminal-session proof or delisting returns."
+  ],
+  "freeFallback": "Use SEC, FINRA and archived Nasdaq directory rows as source-bound nullable states; retain every unobserved interval and identity transition as unknown and restrict historical claims to explicitly observed populations.",
+  "whatWouldChangeDecision": "A lawful zero-cost security-level 2009-2024 master with stable identity, exchange-effective listing intervals, corporate actions, terminal sessions and delisting returns must pass independent audit.",
+  "artifacts": {
+    "baseUniverseDecision": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\historical-universe-gate-decision-2026-08-10-v5-partial.json",
+      "fileSha256": "9f5254ba1a6f2942e56e64696d3fe7543a9a110874cfba4f99b4778d377ff1b4",
+      "reportSha256": "93655250ee6e88c5df4273f10dd9bfcf22fafacf730d18c9690b1140a60db642"
+    },
+    "baseUniverseVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\historical-universe-gate-decision-2026-08-10-v5-partial-verification.json",
+      "fileSha256": "7a01bdc436cdc115f302275b74836e6f8ccad9cad42d08fcd77e0fef241e5f17",
+      "reportSha256": "fd8f23156208626a01d2466d1a78bfbf055ca38fc889be0264046b3b90ed4bfa"
+    },
+    "nasdaqDirectoryAddendum": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-evidence-addendum-2026-08-10-v1.json",
+      "fileSha256": "e64f06d8565a736d24716a55239ea76461a2eef0f6928648644e861a5cd91767",
+      "reportSha256": "a5fd937ad68f446282514f91fd067693111040d2a1b572a93cb37cb037a5efbf"
+    },
+    "nasdaqDirectoryVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-symbol-directory-evidence-addendum-2026-08-10-v1-verification.json",
+      "fileSha256": "68f5b4c718b920529439772597e6be2fd6660a1c4e52bad8f75b6ff38de03928",
+      "reportSha256": "c60a8c891408688b5c274457518bec3b3079b1f4dd087db32b87de1f474da38a"
+    }
+  },
+  "decisionBuilder": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_historical_universe_gate_decision_v6.py",
+  "decisionBuilderSha256": "1855070f9eda3bf04e7449ecb6019b1f7d9ce14a1ff4e03672b351bf0ab8daf1",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "1477b067011fba923f98dafa4640fe9baa7888b5687db9181280406c80c3ae58"
+}

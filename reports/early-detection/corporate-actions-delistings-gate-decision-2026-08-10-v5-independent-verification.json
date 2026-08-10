@@ -1,0 +1,39 @@
+{
+  "schema": "early-detection-sec-population-decision-verification/v1",
+  "generatedAt": "2026-08-10T20:45:34.087Z",
+  "status": "PASS",
+  "verifierScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\verify_sec_population_gate_decision_v1.py",
+  "verifierScriptSha256": "0d32c5066c47bd61c9e3ce08f6e08d24e9b9b54fe809b0297c1c3a6807b4ab59",
+  "sourceDecision": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\corporate-actions-delistings-gate-decision-2026-08-10-v5.json",
+  "sourceDecisionFileSha256": "ad42c4c92d5568d18fd6dce8c1cf493e89fba67e7b90c67a63b9b8481fc67afe",
+  "sourceDecisionReportSha256": "482d6980a8eb2297b227bb905f8f7d3e53913f89abd9a8bf9fd29e3934500e18",
+  "checks": {
+    "decisionSignature": true,
+    "decisionBuilderRehashed": true,
+    "allReferencedArtifactsRehashed": 20,
+    "allReferencedReportsResigned": 20,
+    "rangesReproduced": 5,
+    "aggregateCountsReproduced": {
+      "capturedAndParsedEvents": 44352,
+      "candidatePopulationEvents": 44352,
+      "verifiedOriginals": 44352,
+      "parsedSecurities": 43200,
+      "commonEquityEvents": 16078,
+      "manualReviewEvents": 6479
+    },
+    "completePopulation": true,
+    "decisionMutationRejected": true,
+    "confirmatoryAuthorizationAbsent": true,
+    "outcomesAccessed": false,
+    "productiveGqsModified": false
+  },
+  "evidenceClass": "SEC_CORPORATE_ACTIONS",
+  "population": 44352,
+  "adjudicated": 44352,
+  "interpretation": "PASS verifies local SEC source-population decision integrity only; it is not an external independent audit and does not authorize outcomes.",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "a4532e3fdaae203d8ac0f5665b27cecd60c66d714a786f1fc4f7605ff7a59d88"
+}

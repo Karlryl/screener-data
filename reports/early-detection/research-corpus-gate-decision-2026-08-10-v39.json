@@ -1,0 +1,51 @@
+{
+  "schema": "early-detection-gate-decision/v1",
+  "generatedAt": "2026-08-10T21:06:48.814Z",
+  "gate": "researchCorpusSealed",
+  "status": "LOCAL_EXIT_EVIDENCE_PASS_OFFICIAL_GATE_RED_UNTIL_AUTHORIZED_BINDING",
+  "verdict": "The complete registered corpus is locally frozen with conservative point-in-time cutoffs and independently rehashed; the official readiness artifact remains red until this exact seal is authorized and bound without changing the preregistered run.",
+  "coverage": {
+    "registeredSources": 237,
+    "coveredSources": 237,
+    "selectedEvidenceItems": 296,
+    "immutableHistoricalSources": 115,
+    "currentOnlySources": 122,
+    "unresolvedSources": 0,
+    "supersededUnsafeSecObservations": 2,
+    "queryAndAcquisitionArtifacts": 0,
+    "controlFiles": 169
+  },
+  "passedChecks": {
+    "archiveIndexesRehashed": 72,
+    "controlFilesRehashed": 169,
+    "immutableEvidenceItems": 119,
+    "manifestSignatureValid": true,
+    "observationsRehashedAndParsed": 296,
+    "payloadTamperDetected": true,
+    "payloadsRehashed": 296,
+    "queryAndAcquisitionArtifactsRehashed": 0,
+    "registryFileValid": true,
+    "reportTamperDetected": true,
+    "uniqueEvidenceKeys": 296
+  },
+  "historicalUseConstraint": "An item may enter an as-of record only when knownAt is not later than that record's cutoff; current-only captures retain their actual knownAt and never backdate publication metadata.",
+  "researchCutoff": "The admissible corpus is the exact registry and evidence set sealed by this manifest. Additions require a new semantic corpus version and may not affect already locked confirmatory runs.",
+  "remainingConstraint": "Only immutable historical evidence may be used at earlier as-of dates; current-only captures remain forbidden before their knownAt, and an external independent auditor has not yet authorized the official gate binding.",
+  "artifacts": {
+    "manifest": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\research-corpus-manifest-2026-08-10-v47.json",
+      "fileSha256": "c4b02b96d4ee02e4ebd0b03abeca5b91aca78f65fb4444e50050ba350fbb6ed5",
+      "reportSha256": "2ed365b12afaedae86942846055e5b43a97bcb63fe8a55d65ee6cf1c1ea8113b"
+    },
+    "verification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\research-corpus-manifest-verification-2026-08-10-v47.json",
+      "fileSha256": "f04708b7b090f09826e44cbba4f3f67e3388fb5cb8fbe6759dd326a74172a9a8",
+      "reportSha256": "bdb1c7abd24bf4b1b69d98c5b2d68b2f4b82bbfec2eb207c87da025ab3e5f9bc"
+    }
+  },
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "866ac1aca6ea5209ea2419cb5a648d632cd8da9e56796db9eb5add17e976e396"
+}
