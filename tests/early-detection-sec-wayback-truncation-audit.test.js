@@ -6,7 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const ROOT = path.resolve(__dirname, '..');
-const script = path.join(ROOT, 'scripts', 'early-detection-sec-wayback.py');
+const script = path.join(ROOT, 'scripts', 'early-detection-sec-wayback-truncation-audit.py');
 const run = spawnSync(process.env.PYTHON || 'python', [script, 'self-test'], {
   cwd: ROOT,
   encoding: 'utf8',
@@ -17,12 +17,7 @@ assert.equal(run.error, undefined, run.error?.message);
 assert.equal(run.status, 0, run.stderr || run.stdout);
 const result = JSON.parse(run.stdout);
 assert.equal(result.status, 'PASS');
-assert.deepEqual(result.selectedVariants, [
-  'legacy_earliest_archived',
-  'post_2024_reprocessed_or_current',
-]);
-assert.deepEqual(result.allRevisionDigests, ['OLD', 'NEW']);
-assert.equal(result.digestVerified, true);
-assert.equal(result.incompleteReadRetried, true);
+assert.equal(result.partialDigestVerified, true);
+assert.equal(result.completePrefixMatched, true);
 
-console.log('early-detection-sec-wayback.test.js: PASS');
+console.log('early-detection-sec-wayback-truncation-audit.test.js: PASS');
