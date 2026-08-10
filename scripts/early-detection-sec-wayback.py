@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import http.client
 import importlib.util
 import json
 import re
@@ -58,7 +59,7 @@ def fetch_bytes(url: str, user_agent: str, timeout: int, retries: int) -> tuple[
             )
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 return response.read(), {key.lower(): value for key, value in response.headers.items()}
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException) as exc:
             last_error = exc
         if attempt < retries:
             time.sleep(min(8.0, 1.0 * (2 ** attempt)))
@@ -117,6 +118,16 @@ def is_archive_path(row: dict[str, Any]) -> bool:
 
 def choose_variants(rows: list[dict[str, Any]], quarter: str, variants: set[str]) -> list[dict[str, Any]]:
     group = sorted((row for row in rows if row["quarter"] == quarter), key=lambda row: str(row["timestamp"]))
+    if variants == {"all"}:
+        by_digest: dict[str, dict[str, Any]] = {}
+        for row in group:
+            digest = str(row["digest"])
+            if digest not in by_digest:
+                by_digest[digest] = {
+                    **row,
+                    "datasetVariant": "archived_digest_revision",
+                }
+        return list(by_digest.values())
     selected: list[dict[str, Any]] = []
     if "legacy" in variants:
         historical = [row for row in group if is_current_path(row) and str(row["timestamp"]) < "20241201000000"]
@@ -138,6 +149,23 @@ def choose_variants(rows: list[dict[str, Any]], quarter: str, variants: set[str]
             seen.add(key)
             deduplicated.append(row)
     return deduplicated
+
+
+def local_archive_digests(data_root: Path) -> set[str]:
+    result: set[str] = set()
+    observation_root = data_root / "observations" / "sec-fsd"
+    if not observation_root.exists():
+        return result
+    for path in sorted(observation_root.rglob("*.json")):
+        try:
+            observation = json.loads(path.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise WaybackError(f"cannot read existing observation {path}: {exc}") from exc
+        digest = str(observation.get("archiveEvidence", {}).get("captureDigestSha1Base32", ""))
+        if not digest:
+            raise WaybackError(f"existing SEC FSD observation has no archive digest: {path}")
+        result.add(digest)
+    return result
 
 
 def wayback_timestamp(value: str) -> str:
@@ -231,12 +259,25 @@ def acquire(
             missing.append({"quarter": quarter, "variant": "legacy", "reason": "NO_CDX_CAPTURE"})
         if "reprocessed" in variants and "post_2024_reprocessed_or_current" not in present_variants:
             missing.append({"quarter": quarter, "variant": "reprocessed", "reason": "NO_CDX_CAPTURE"})
+        if variants == {"all"} and not chosen:
+            missing.append({"quarter": quarter, "variant": "all", "reason": "NO_CDX_CAPTURE"})
     completed: list[dict[str, Any]] = []
+    already_present: list[dict[str, Any]] = []
     failed: list[dict[str, str]] = []
+    existing_digests = local_archive_digests(data_root)
     for row in selected:
         quarter = str(row["quarter"])
         variant = str(row["datasetVariant"])
         url = replay_url(row)
+        if str(row["digest"]) in existing_digests:
+            already_present.append({
+                "quarter": quarter,
+                "variant": variant,
+                "captureTimestamp": str(row["timestamp"]),
+                "sourceUrl": str(row["original"]),
+                "payloadSha1Base32": str(row["digest"]),
+            })
+            continue
         try:
             payload, headers = fetch_bytes(url, user_agent, timeout, retries)
             actual_sha1 = sha1_base32(payload)
@@ -292,6 +333,7 @@ def acquire(
         "cdxResponseHeaders": cdx_headers,
         "selected": len(selected),
         "completed": completed,
+        "alreadyPresent": already_present,
         "missing": missing,
         "failed": failed,
         "status": "PASS" if not missing and not failed else "PARTIAL",
@@ -322,6 +364,7 @@ def self_test() -> dict[str, Any]:
         },
     ]
     chosen = choose_variants(rows, "2024q1", {"legacy", "reprocessed"})
+    all_rows = choose_variants(rows + [{**rows[0], "timestamp": "20240601000000"}], "2024q1", {"all"})
     fixture_cdx = json.dumps([
         ["timestamp", "original", "mimetype", "statuscode", "digest", "length"],
         ["20240525215014", FSD_PREFIX + "2024q1.zip", "application/zip", "200", "OLD", "10"],
@@ -334,8 +377,39 @@ def self_test() -> dict[str, Any]:
         cached = cached_cdx_payload(Path(directory))
         if cached is None or cached[0] != fixture_cdx or cached[1]["x-local-cache-sha256"] != digest:
             raise WaybackError("self-test content-addressed CDX cache failed")
+    original_urlopen = urllib.request.urlopen
+    attempts = 0
+
+    class FixtureResponse:
+        headers = {"content-length": "2"}
+
+        def __enter__(self) -> FixtureResponse:
+            return self
+
+        def __exit__(self, *_: Any) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b"ok"
+
+    def flaky_urlopen(*_: Any, **__: Any) -> FixtureResponse:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise http.client.IncompleteRead(b"partial", 2)
+        return FixtureResponse()
+
+    try:
+        urllib.request.urlopen = flaky_urlopen
+        retry_payload, _ = fetch_bytes("https://example.invalid/fixture", "fixture", 1, 1)
+    finally:
+        urllib.request.urlopen = original_urlopen
+    if retry_payload != b"ok" or attempts != 2:
+        raise WaybackError("incomplete HTTP reads are not retried")
     if [row["digest"] for row in chosen] != ["OLD", "NEW"]:
         raise WaybackError("variant selection failed")
+    if [row["digest"] for row in all_rows] != ["OLD", "NEW"]:
+        raise WaybackError("all-revision digest deduplication failed")
     if wayback_timestamp("20240525215014") != "2024-05-25T21:50:14.000Z":
         raise WaybackError("capture timestamp conversion failed")
     if sha1_base32(b"abc") != "VGMT4NSHA2AWVOR6EVYXQUGCNSONBWE5":
@@ -344,8 +418,10 @@ def self_test() -> dict[str, Any]:
         "schema": "early-detection-sec-wayback-self-test/v1",
         "status": "PASS",
         "selectedVariants": [row["datasetVariant"] for row in chosen],
+        "allRevisionDigests": [row["digest"] for row in all_rows],
         "contentAddressedCdxCache": True,
         "digestVerified": True,
+        "incompleteReadRetried": True,
     }
 
 
@@ -373,8 +449,8 @@ def main() -> int:
             result = self_test()
         else:
             variants = {value.strip() for value in args.variants.split(",") if value.strip()}
-            if not variants or not variants.issubset({"legacy", "reprocessed"}):
-                raise WaybackError("variants must be legacy and/or reprocessed")
+            if not variants or not (variants == {"all"} or variants.issubset({"legacy", "reprocessed"})):
+                raise WaybackError("variants must be all, or legacy and/or reprocessed")
             result = acquire(
                 args.data_root, args.from_quarter, args.to_quarter, variants,
                 args.user_agent, args.timeout, args.retries, args.sleep_ms,

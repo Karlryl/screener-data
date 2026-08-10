@@ -17,7 +17,12 @@ test('SEC concept coverage audit passes its complete fixture', () => {
   assert.match(result.reportSha256, /^[0-9a-f]{64}$/);
   const mapPath = path.join(__dirname, '..', 'research', 'early-detection-v4', 'sec-concept-map-1.0.0.json');
   const seal = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'research', 'early-detection-v4', 'sec-concept-map-1.0.0-seal.json'), 'utf8'));
-  const hash = crypto.createHash('sha256').update(fs.readFileSync(mapPath)).digest('hex');
+  const checkoutBytes = fs.readFileSync(mapPath);
+  const checkoutText = checkoutBytes.toString('utf8');
+  assert.equal(/\r(?!\n)/.test(checkoutText), false,
+    'sealed JSON may use LF or checkout-transformed CRLF, never lone CR bytes');
+  const normalizedBytes = Buffer.from(checkoutText.replace(/\r\n/g, '\n'), 'utf8');
+  const hash = crypto.createHash('sha256').update(normalizedBytes).digest('hex');
   assert.equal(hash, seal.artifact.sha256);
   assert.equal(seal.version, 'FEM-SEC-CONCEPT-MAP@1.0.0');
 });
