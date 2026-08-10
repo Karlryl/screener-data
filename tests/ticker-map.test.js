@@ -64,9 +64,16 @@ check('SEC-Namen ohne Boersen-Eintrag bekommen einen eigenen Datensatz', () => {
   assert.equal(k.get('NURSEC').c, '0000000099');
 });
 
-check('kaputtes SEC-JSON kippt nicht die ganze Karte', () => {
-  const k = T.baueKarte({ nasdaq: [NASDAQ_KOPF, 'AAPL|Apple|Q|N|N|100|N|N'].join('\n'), other: '', sec: '{ kaputt' });
+check('kaputtes SEC-JSON kippt nicht die ganze Karte — meldet den Ausfall aber nach aussen', () => {
+  // F-CGPT-027 (P1-Welle 9, 10.08.2026): der Test nagelte bis dahin NUR fest, dass die
+  // Karte nicht kippt — und zementierte damit das Stillschweigen. Genau daran haengt der
+  // Schaden: ohne Meldung bleibt `fehlend` in run() leer, die Kompensationsstrecke
+  // springt nicht an, und die Tageszeile behauptet quellenFehlend:[] ("alle Quellen da"),
+  // waehrend tausende Symbole faelschlich als geaendert/weg in die Historie gehen.
+  const probleme = [];
+  const k = T.baueKarte({ nasdaq: [NASDAQ_KOPF, 'AAPL|Apple|Q|N|N|100|N|N'].join('\n'), other: '', sec: '{ kaputt' }, probleme);
   assert.equal(k.size, 1, 'die Boersen-Eintraege muessen trotzdem ankommen');
+  assert.deepEqual(probleme, ['sec'], 'der Parse-Ausfall muss meldbar sein, sonst ist er von "SEC war da" nicht zu unterscheiden');
 });
 
 check('diff erkennt neu, weg und geaendert — und verwechselt sie nicht', () => {
