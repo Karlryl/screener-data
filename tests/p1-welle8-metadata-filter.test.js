@@ -13,10 +13,10 @@
  *   (i)  Verhalten: ein echter `_CON.json`-Snapshot wird von den umgestellten
  *        Lesern MITgezaehlt, `_manifest.json` NICHT.
  *   (ii) Quelltext am Objekt: kein Snapshot-Verzeichnis-Leser traegt mehr das
- *        Blanket-Muster. Ausnahmeliste sind die board-history-Leser (dort ist
- *        `_` ein Sidecar-Marker mit ANDERER Semantik, und Board-Dateinamen kommen
- *        nicht aus safeSnapshotFilename) — deren Anwesenheit wird MITgeprueft,
- *        damit eine stale Ausnahmeliste auffliegt statt zu decken.
+ *        Blanket-Muster. Ausnahmeliste sind die vier board-history-Leser (dort
+ *        waere die Umstellung ein No-op — Begruendung an der Liste unten) —
+ *        deren Anwesenheit wird MITgeprueft, damit eine stale Ausnahmeliste
+ *        auffliegt statt zu decken.
  */
 
 const assert = require('node:assert/strict');
@@ -102,9 +102,13 @@ t('isMetadataSnapshot: Metadaten raus, Reserved-Name-Snapshots rein', () => {
 });
 
 // --- (ii) Quelltext-Waechter am Objekt ----------------------------------------------
-// Board-history-Leser: dort ist `_` ein Sidecar-Marker (_excluded.json,
-// _gate-calibration.json), die Dateinamen kommen NICHT aus safeSnapshotFilename —
-// isMetadataSnapshot waere dort semantisch falsch. Bewusste Ausnahme.
+// Board-history-Leser: bewusste Ausnahme, weil die Umstellung ein No-op waere. Diese
+// Leser scannen board-history/<date>/ — dort existiert real keine JSON-Datei mit
+// `_`-Praefix; die Sidecars _excluded.json und _gate-calibration.json liegen eine
+// Ebene hoeher in board-history/ und werden ueber feste Pfade gelesen, nie ueber
+// diesen Scan. Der Unterstrich-Check ist dort funktionslos, bleibt aber als
+// konservative Schutzhaltung stehen. isMetadataSnapshot waere das falsche Praedikat:
+// Board-Dateinamen kommen nicht aus safeSnapshotFilename.
 const BOARD_HISTORY_LESER = [
   'lib/e1-compression.js',
   'scripts/formel-struktur-uebersicht.js',
@@ -117,45 +121,72 @@ const BOARD_HISTORY_LESER = [
 // kein Blanket-Muster und wuerde der Regel oben entgehen.
 const KONSUMENTEN_MIN = 23;
 
+// Gescannt werden alle Quellbaeume rekursiv (scripts, lib, src, tests) plus die
+// .js-Dateien der Repo-Wurzel — die Wurzel NICHT rekursiv, sonst liefe der Scan in
+// node_modules/ und data/.
 function jsDateien() {
   const out = [];
-  const scan = (rel) => {
+  const scan = (rel, rekursiv) => {
     const abs = path.join(ROOT, rel);
     if (!fs.existsSync(abs)) return;
     for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
-      if (e.isFile() && e.name.endsWith('.js')) out.push(rel ? rel + '/' + e.name : e.name);
+      const kind = rel ? rel + '/' + e.name : e.name;
+      if (e.isDirectory()) { if (rekursiv && e.name !== 'node_modules') scan(kind, true); }
+      else if (e.isFile() && e.name.endsWith('.js')) out.push(kind);
     }
   };
-  scan('scripts'); scan('lib'); scan('tests/scoring'); scan('');
+  for (const baum of ['scripts', 'lib', 'src', 'tests']) scan(baum, true);
+  scan('', false);
   return out;
 }
 
-// Eine Zeile filtert ein Verzeichnis genau dann, wenn sie im selben Ausdruck auf
-// `.json`-Endung UND auf `_`-Praefix prueft. Objektschluessel-Filter (`k.startsWith('_')`
-// ueber Exchange-/Stock-Keys) und Kommentare tragen das nicht und bleiben unberuehrt.
-const BLANKET = (zeile) => /\.startsWith\('_'\)/.test(zeile) && /endsWith\('\.json'\)/.test(zeile);
+// Ein Verzeichnis-Filter traegt das Blanket-Muster, wenn im selben Ausdruck auf
+// `.json`-Endung UND auf `_`-Praefix geprueft wird. Objektschluessel-Filter
+// (`k.startsWith('_')` ueber Exchange-/Stock-Keys), die `_manifest`-Sonderformen und
+// Kommentare tragen das nicht und bleiben unberuehrt.
+// Geprueft wird ein Fenster aus 3 Zeilen, damit auch ein ueber mehrere Zeilen
+// formatierter Filter erfasst wird.
+// ponytail: Fenster statt Ganzdatei — ganzdatei-weit gaebe es heute zwei Falsch-Rote
+// (tag228a-cleanup-phantom-vintages.js, watch-exchange-coverage.js: Objektschluessel-
+// Filter viele Zeilen entfernt von einem unabhaengigen `.json`-Filter). Fenster
+// vergroessern, falls jemand einen Filter ueber mehr als 3 Zeilen bricht.
+const FENSTER = 3;
+const BLANKET = (text) => /\.startsWith\('_'\)/.test(text) && /endsWith\('\.json'\)/.test(text);
+
+function blanketFundstellen(rel) {
+  const zeilen = fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n');
+  const treffer = [];
+  for (let i = 0; i < zeilen.length; i++) {
+    // Nur melden, wenn das Fenster ab i+1 NICHT auch schon matcht — sonst wuerde
+    // dieselbe Fundstelle bis zu FENSTER-mal gemeldet; so zeigt die Meldung die
+    // erste beteiligte Zeile.
+    if (BLANKET(zeilen.slice(i, i + FENSTER).join(' ')) && !BLANKET(zeilen.slice(i + 1, i + FENSTER).join(' '))) {
+      treffer.push(rel + ':' + (i + 1) + ': ' + zeilen.slice(i, i + FENSTER).map((z) => z.trim()).join(' ').slice(0, 200));
+    }
+  }
+  return treffer;
+}
 
 t('kein Snapshot-Leser traegt mehr das Blanket-Muster (Abwesenheit)', () => {
   const verstoesse = [];
   for (const rel of jsDateien()) {
     if (BOARD_HISTORY_LESER.includes(rel)) continue;
-    const zeilen = fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n');
-    zeilen.forEach((z, i) => { if (BLANKET(z)) verstoesse.push(rel + ':' + (i + 1) + ': ' + z.trim()); });
+    verstoesse.push(...blanketFundstellen(rel));
   }
   assert.deepEqual(verstoesse, [], 'Blanket-Filter statt isMetadataSnapshot:\n' + verstoesse.join('\n'));
 });
 
 t('Ausnahmeliste ist nicht stale — jeder board-history-Leser traegt das Muster noch (Anwesenheit)', () => {
   for (const rel of BOARD_HISTORY_LESER) {
-    const zeilen = fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n');
-    assert.ok(zeilen.some(BLANKET),
+    assert.ok(blanketFundstellen(rel).length > 0,
       rel + ' steht auf der Ausnahmeliste, traegt das Muster aber nicht mehr — Eintrag entfernen oder Datei pruefen');
   }
 });
 
 t('das zentrale Praedikat hat mindestens ' + KONSUMENTEN_MIN + ' Konsumenten (gueltige Form geht durch)', () => {
   const nutzer = jsDateien().filter((rel) => {
-    if (rel === 'lib/snapshot-fs.js') return false;
+    // Die Quelle selbst und dieser Waechter zaehlen nicht als Konsumenten.
+    if (rel === 'lib/snapshot-fs.js' || rel === path.relative(ROOT, __filename).replace(/\\/g, '/')) return false;
     const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
     return /require\([^)]*snapshot-fs\.js'\)/.test(src) && /isMetadataSnapshot\s*\(/.test(src);
   });
