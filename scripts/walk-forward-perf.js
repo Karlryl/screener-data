@@ -484,19 +484,26 @@ function computeBenchmarkReturn(priceIndex, asOfDate, horizonDays) {
   // alpha. Do NOT anchor: return entryDate/exitDate=null so the caller falls back to
   // the existing per-ticker nearestTradingDay path, flag benchmarkInsufficient, warn.
   const requiredLen = Math.ceil(horizonDays * TRADING_DAYS_PER_CALENDAR_DAY) + BENCHMARK_MIN_BUFFER_TRADING_DAYS;
+  // Tag 627 (Review-Nachzug zu AY-SCR-001): das Laengen-Gate ist eine UND-Bedingung der
+  // Kandidatenwahl, kein blosser Hinweistext. Fensterabdeckung allein reicht nicht — eine
+  // 1-Punkt-Serie loest entry und exit auf denselben Tag auf und ankerte so ein Null-Tage-
+  // Fenster (horizonActualDays 0, ret 0) voellig lautlos; zwei Punkte ergaeben das
+  // 2-3-Punkt-Alpha, das F-BT-002 gerade verhindern soll.
   let selected = null;
   for (const ticker of available) {
     const map = priceIndex[ticker];
+    if (map.size < requiredLen) continue;
     const entryDate = nearestTradingDay(asOfDate, map);
     const exitDate = nearestTradingDay(futureDate, map);
     if (entryDate && exitDate) { selected = { ticker, map, entryDate, exitDate }; break; }
   }
   if (!selected) {
-    const benchmarkTicker = available.reduce((best, ticker) =>
-      priceIndex[ticker].size > priceIndex[best].size ? ticker : best, available[0]);
-    console.warn('::warning::[walk-forward-perf] F-BT-002: no benchmark covers entry/exit window for horizon '
-      + horizonDays + 'd (longest available: ' + benchmarkTicker + ', ' + priceIndex[benchmarkTicker].size
-      + ' points; length guide ' + requiredLen + ') — NOT anchoring canonical dates; falling back to per-ticker path.');
+    // Label = erster VORHANDENER Kandidat (SPY-Prioritaet, gleiche Reihenfolge wie der
+    // rank-ic-Anker). Die laengste Serie zu melden liess das Label ohne Messgrund wandern.
+    const benchmarkTicker = available[0];
+    console.warn('::warning::[walk-forward-perf] F-BT-002: no benchmark qualifies for horizon '
+      + horizonDays + 'd (label: ' + benchmarkTicker + ', ' + priceIndex[benchmarkTicker].size
+      + ' points; required length ' + requiredLen + ' + entry/exit coverage) — NOT anchoring canonical dates; falling back to per-ticker path.');
     return { ticker: benchmarkTicker, ret: null, entryDate: null, exitDate: null, benchmarkInsufficient: true };
   }
   const { ticker: benchmarkTicker, map, entryDate, exitDate } = selected;
@@ -601,10 +608,17 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
     univResultsByHorizon[days] = computeUniverseMedianReturn(priceIndex, entryDate, days, picksFile.evaluatedTickers, canonical);
     frozenByHorizon[days] = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days, canonical);
   }
-  const benchmarkTickers = Array.from(new Set(Object.values(benchByHorizon).map((b) => b.ticker).filter(Boolean)));
+  // Tag 627 (Review-Nachzug): nur Horizonte zaehlen, die WIRKLICH geankert haben. Der
+  // insufficient-Zweig traegt bloss ein Label (kein Anker) — es mitzuzaehlen erzeugte einen
+  // Falschalarm "Ticker wechselt", obwohl gar kein zweiter Anker existiert.
+  const benchmarkTickers = Array.from(new Set(Object.values(benchByHorizon)
+    .filter((b) => b.entryDate && b.exitDate).map((b) => b.ticker)));
   if (benchmarkTickers.length > 1) {
     console.warn('::warning::[walk-forward-perf] benchmark ticker differs across horizons for vintage '
-      + asOf + ': ' + HORIZONS_DAYS.map((days) => days + 'd=' + (benchByHorizon[days].ticker || 'none')).join(', '));
+      + asOf + ': ' + HORIZONS_DAYS.map((days) => {
+        const b = benchByHorizon[days];
+        return days + 'd=' + ((b.entryDate && b.exitDate) ? b.ticker : 'none');
+      }).join(', '));
   }
 
   for (const [mode, allPicks] of Object.entries(picksFile.modes || {})) {

@@ -86,3 +86,61 @@ Der einzige Fehlschlag war wie im Brief vorweggenommen `tests/early-detection-co
 ## 5. Brief-Feedback
 
 Die präzise Trennung zwischen tolerantem Lade-/Existenzpfad und fail-loud Delivery-Konsum hat den kritischen Schnitt eindeutig testbar gemacht.
+
+---
+
+## 6. Review-Nachzug (Tag 627)
+
+Zwei Reviews haben vier Punkte am v2-Stand gefunden. Drei davon sind gebaut und
+per Wächter festgenagelt, drei sind bewusst nur dokumentiert.
+
+### 6.1 Gebaut
+
+| Punkt | Was | Beleg (rot zuerst gegen den Tag-626-Stand) |
+| --- | --- | --- |
+| **HOCH — Längen-Gate zurück** | `computeBenchmarkReturn` qualifiziert einen Kandidaten nur noch bei *Serie vorhanden* **UND** `map.size >= requiredLen` **UND** `nearestTradingDay` löst entry **und** exit auf. v2 hatte `requiredLen` zum blossen Hinweistext degradiert. | `AY-SCR-001-Nachzug: duenne Serie ankert kein Fenster` — vorher: 1-Punkt-Serie lieferte `benchmarkInsufficient: undefined`, also ein geankertes Null-Tage-Fenster (`horizonActualDays 0`, `ret 0`, keine Warnung); nachher `benchmarkInsufficient: true`, `entryDate: null`. Zweiter Fall im selben Test: 2-Punkt-Serie über ein echtes 28d-Fenster — genau das 2-3-Punkt-Alpha, das F-BT-002 verhindern soll. |
+| **Warner nur für geankerte Horizonte** | Die `::warning::`-Zeile „benchmark ticker differs across horizons" filtert jetzt auf `b.entryDate && b.exitDate` statt auf `.filter(Boolean)` über den Ticker. Der insufficient-Zweig trägt nur ein *Label*, keinen Anker. Die Zeile selbst nennt nicht-geankerte Horizonte jetzt `none`. | `AY-SCR-001-Nachzug: Ticker-Wechsel-Warner nur fuer geankerte Horizonte` — vorher `1 !== 0`: bei nur EINEM echt geankerten Horizont (7d=QQQ) feuerte der Warner wegen der SPY-Labels von 28d/84d. |
+| **Label = erster vorhandener Kandidat** | Im insufficient-Zweig ist der gemeldete Ticker wieder `available[0]` (SPY→QQQ→IWM), konsistent mit dem rank-ic-Anker — nicht mehr „längste Serie". | `AY-SCR-001: ohne Fensterabdeckung bleibt insufficient samt SPY-priorisiertem Label` — vorher `'QQQ' !== 'SPY'`, sobald die längste Serie nicht SPY war. |
+| **PIT-Marker-Lücke** | `loadVintage()` markiert jetzt auch `v.compacted && !v.archivedTo` (`_pitArchiveMissing = '<compacted ohne archivedTo>'`). Diese Form lief vorher still am Delivery-Wurf vorbei — ein gestripptes Vintage sah für den Delivery-IC aus wie ein vollständiges. | `F-CGPT-042-Nachzug: compacted ohne archivedTo wirft ebenfalls am Delivery-Konsum` — vorher `Missing expected exception`. |
+| **Positiv-Wächter** | Kompaktiertes Vintage MIT vorhandenem, cohort-tragendem Archiv läuft ohne Wurf durch den Delivery-Konsum. | `F-CGPT-042-Nachzug: vorhandenes Vollarchiv laeuft ohne Wurf durch den Delivery-Konsum` — war schon am Tag-626-Stand grün und bleibt es; er sichert, dass der Wurf nicht überschiesst. |
+| **BM-SK-002-Wächter** | `tests/scoring/qc-rho-k2.test.js` bekommt einen Lücken-Fall mit 3 gültigen FY und echter **innerer** Lücke (`NI [100,-50,100,100]`, `OCF [100,999,300,400]`). Die bestehenden vier Fälle sind unangetastet. | **Ausbau-Probe gefahren:** Tag-626-Einzeiler testweise auf `pts.push([pts.length, …])` zurückgedreht → neuer Fall rot mit `Steigung 1 auf FY-Index 0,2,3 erwartet (gestauchte Achse gaebe 1.5), war 1.5`; Einzeiler wieder vor → 5/5 grün. Der bestehende Test mit **führender** Lücke deckt den Fehler nicht auf (er verschiebt nur den Nullpunkt, nicht die Steigung) — deshalb der innere Lückenfall. |
+
+### 6.2 Nur dokumentiert, nicht gebaut
+
+**(i) Der Delivery-Wurf reisst den ganzen `evaluate()`-Lauf ab.**
+`loadVintage()` markiert board-lokal, aber der Wurf im Delivery-Zweig beendet
+`evaluateObserved()` und damit den kompletten Report — ein einziges Board mit
+verlorener PIT-Archivkopie nimmt alle anderen Boards mit. Das ist **heute
+latent**: `compact()` steht in keinem der 7 Workflows (so auch im Kopf von
+`scripts/write-board-history.js` vermerkt) und kein Vintage im Datenbestand
+trägt `compacted` — es gibt derzeit keinen Pfad, der die Marke setzt.
+**Wiedervorlage:** wird die Kompaktierung scharfgeschaltet (F-16-Umfeld), muss
+der Wurf vorher board-lokal skaliert werden (betroffenes Board auf
+`delivery: { note: … }` + `familyHealth`-Eintrag, statt Abbruch des Laufs).
+Vorher scharfschalten hiesse, einen einzelnen Archivverlust zum Totalausfall
+der Messung zu machen.
+
+**(ii) Die k2-Achse ist absteigend.**
+Index 0 ist das **jüngste** Geschäftsjahr (belegt über `newestPresent()` in
+`scripts/build-secannual.js` und `op[0]` in `src/scoring/profit-streak.js`),
+höherer Index = älter. Eine positive K2-Steigung heisst deshalb „CFO/NI war
+früher höher", in realer Zeit also **fallend**. Der Kommentar über `k2Slope()`
+in `scripts/qc-rho-k2.js` sagt das jetzt ausdrücklich. Reine
+Vorzeichen-Konvention: der präregistrierte Screen misst `|ρ|`, der Gate-Betrag
+(`GATE = 0.4`) ist unberührt — deshalb **keine** Code-Änderung an der Achse.
+
+**(iii) Die `boardsByDate`-Durchreichung ist nicht test-gepinnt.**
+Dass `evaluate()` den einmal gebauten Index an den beobachteten Lauf und alle
+Familienläufe weiterreicht (statt `(2+F)` volle Dateizugriffs-Runden), ist eine
+reine Laufzeit-Optimierung ohne Ergebniswirkung — das Ergebnis ist per
+Konstruktion identisch, weil derselbe Index entsteht. Ein Wächter dagegen wäre
+ein Performance-Test; **akzeptiert ohne Pin**. Die *fachliche* Hälfte desselben
+Befunds (R1-SC-007: nur real vorhandene Board-Tage sperren Entscheidungspunkte)
+ist sehr wohl gepinnt.
+
+### 6.3 Testlauf nach dem Nachzug
+
+```text
+Kreuzerl-Messwerk: 10 bestanden, 0 fehlgeschlagen
+tests/scoring/qc-rho-k2.test.js: tests 5, pass 5, fail 0
+```

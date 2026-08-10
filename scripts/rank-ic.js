@@ -411,13 +411,20 @@ function loadVintage(historyDir, date, board) {
   // still auf 0, wenn das Fenster scharf würde. Archiv-Kopie transparent statt der gestrippten
   // Kern-Version lesen, wenn vorhanden. Fehlt sie, bleibt loadVintage tolerant, markiert
   // aber den PIT-Verlust fuer den einzigen Verbraucher, der diese Daten wirklich braucht.
-  if (v && v.compacted && v.archivedTo) {
-    const archivePath = path.join(REPO_ROOT, v.archivedTo);
-    let archived = null;
-    try { archived = JSON.parse(fs.readFileSync(archivePath, 'utf8')); }
-    catch (_) { /* Archiv fehlt/kaputt -> bei der gestrippten Kern-Version bleiben, kein Fehler */ }
-    if (archived && archived.cohort) return archived;
-    v._pitArchiveMissing = archivePath;
+  // Tag 627 (Review-Nachzug): auch ein compacted-Vintage OHNE archivedTo ist PIT-los. Ohne
+  // diese zweite Form liefe genau sie still am Delivery-Wurf vorbei — die gestrippte Version
+  // saehe fuer den Delivery-IC aus wie ein vollstaendiges Vintage.
+  if (v && v.compacted) {
+    if (!v.archivedTo) {
+      v._pitArchiveMissing = '<compacted ohne archivedTo>';
+    } else {
+      const archivePath = path.join(REPO_ROOT, v.archivedTo);
+      let archived = null;
+      try { archived = JSON.parse(fs.readFileSync(archivePath, 'utf8')); }
+      catch (_) { /* Archiv fehlt/kaputt -> bei der gestrippten Kern-Version bleiben, kein Fehler */ }
+      if (archived && archived.cohort) return archived;
+      v._pitArchiveMissing = archivePath;
+    }
   }
   return v;
 }

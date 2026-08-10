@@ -28,6 +28,11 @@ const POWER_MIN_N = 100;
 
 // K2 = Steigung der linearen Regression von CFO/NI über den FY-Index.
 // Nur FY mit NI>0 und finitem OCF; >=2 gültige FY. Reine Slope (GG4, kein Niveau).
+// Tag 627 (Review-Nachzug BM-SK-002): die FY-Achse ist ABSTEIGEND — Index 0 ist das JÜNGSTE
+// Geschäftsjahr (vgl. newestPresent() in build-secannual.js, op[0] in profit-streak.js),
+// höherer Index = älter. Eine positive Steigung heißt deshalb "CFO/NI war früher höher",
+// also in realer Zeit fallend. Das ist reine Vorzeichen-Konvention: der präregistrierte
+// Screen misst |ρ|, der Gate-Betrag (GATE = 0.4) ist davon unberührt.
 function k2Slope(secAnnual) {
   if (!secAnnual) return null;
   const ni = secAnnual.annualNetIncome, ocf = secAnnual.annualOCF;
