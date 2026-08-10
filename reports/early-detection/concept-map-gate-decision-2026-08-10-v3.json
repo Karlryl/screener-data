@@ -1,0 +1,59 @@
+{
+  "schema": "early-detection-concept-map-gate-decision/v3",
+  "generatedAt": "2026-08-10T19:25:54.007Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "gate": "conceptMapFrozen",
+  "status": "TECHNICAL_CHECKPOINT_PASS_OFFICIAL_GATE_RED_UNTIL_EXACT_INPUT_AND_SEMANTIC_AUDIT",
+  "gatePassed": false,
+  "technicalCheckpointPassed": true,
+  "verdict": "The frozen map, seal and exact 2009q1-2024q4 coverage are byte-identical on authorized origin/main. The official gate remains red until a run-bound artifact attests the exact authorized full-input and conceptMap component hashes and a genuinely independent human semantic audit approves the frozen choices.",
+  "remoteBinding": {
+    "artifactCommit": "ffefb06a41e7b61547f334c3a4bbb2fa07a3fcd4",
+    "remoteRef": "origin/main",
+    "remoteCommit": "ab73983803c96dd7d05ea583154ba45467958aa5",
+    "artifactCommitIsRemoteAncestor": true,
+    "artifacts": {
+      "map": {
+        "path": "research/early-detection-v4/sec-concept-map-1.0.0.json",
+        "remoteBlobSha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f",
+        "localCheckoutSha256": "85fbacc05cc5df9b5a53760e13b4db6116f485d39238a2099fd04c0394f3ad27",
+        "localCheckoutLineEndingsNormalized": true,
+        "remoteBytesMatchArtifactCommit": true
+      },
+      "seal": {
+        "path": "research/early-detection-v4/sec-concept-map-1.0.0-seal.json",
+        "remoteBlobSha256": "a7134f0164207fb1068cc66da571fa7fdeb64936f08b6e252d63b2d479c3bd85",
+        "localCheckoutSha256": "f921c79f7c6f199ba46c41165cd2d43e45c1ecedcf6e8e8db3361201c93d8f21",
+        "localCheckoutLineEndingsNormalized": true,
+        "remoteBytesMatchArtifactCommit": true
+      },
+      "coverage": {
+        "path": "reports/early-detection/sec-concept-coverage-2009-2024.json",
+        "remoteBlobSha256": "065a81c76292c122f553e1a39c8ff8019b3aad9d51652417918e56f073bd8e8e",
+        "localCheckoutSha256": "065a81c76292c122f553e1a39c8ff8019b3aad9d51652417918e56f073bd8e8e",
+        "localCheckoutLineEndingsNormalized": false,
+        "remoteBytesMatchArtifactCommit": true
+      }
+    }
+  },
+  "coverage": {
+    "version": "FEM-SEC-CONCEPT-MAP@1.0.0",
+    "sealedAt": "2026-08-08T20:00:00Z",
+    "coverageReportSha256": "ab6fa92f6122e70810a4f1252d087543b71c55e294c9da0626cd1a5f29a743cc",
+    "quarters": 64,
+    "payloads": 127,
+    "rolesCovered": 9,
+    "unresolvedCoverage": 0
+  },
+  "officialGateRequirementsStillMissing": [
+    "exactAuthorizedFullInputSha256",
+    "runBoundConceptMapComponentSha256",
+    "remoteExecutionGateArtifactOnAuthorizedHistory",
+    "independentHumanSemanticAudit"
+  ],
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "66352d5229369445b24447337f9367e5f1f2824d0357c9046bcc99449d47e4cc"
+}
