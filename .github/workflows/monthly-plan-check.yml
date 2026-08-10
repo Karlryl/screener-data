@@ -75,5 +75,5 @@ jobs:
       - name: Surface red X bei Register-Luege (fehlender Detektor)
         if: ${{ steps.plancheck.outcome == 'failure' && github.event.inputs.force_alarm != 'true' }}
         run: |
-          echo "::error::Monats-Plan-Check ROT — plan-check.js meldete struktureller Register-Drift (deklarierter Detektor fehlt). Siehe reports/plan-check-*.md."
+          echo "::error::Monats-Plan-Check ROT — plan-check.js meldete entweder struktureller Register-Drift (deklarierter Detektor fehlt) ODER einen Lesefehler an vorhandener Grundlage (seit Tag 618: Manifest-/Snapshot-Lesen mit Parse-Fehler/EACCES = konnte nicht messen, obwohl Daten da waren; blosses Fehlen/ENOENT bleibt nur Warnung). Welche der beiden Ursachen: ::error::-Zeile des plan-check-Schritts oben. Siehe reports/plan-check-*.md."
           exit 1
