@@ -1497,6 +1497,11 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // Fix: fall back to financialData.financialCurrency.
   const _fc = _y(pr, 'financialCurrency') || _y(yahoo.financialData, 'financialCurrency');
   const _tc = _y(pr, 'currency');
+  const _ccyMissingCompletely = [
+    _y(pr, 'financialCurrency'),
+    _y(yahoo.financialData, 'financialCurrency'),
+    _tc,
+  ].every(v => typeof v !== 'string' || v.trim() === '');
   const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
   const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
   // Tag 206f (Bug-Hunt Agent D HIGH C2): if Yahoo returns null financialCurrency,
@@ -1524,6 +1529,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       exchangeName: exchangeName || null,                  // Tag 134: preserved for diagnostics
       reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
       tradingCurrency,                                     // Tag 204: trading-quote ccy (may differ from reporting for ADRs)
+      _ccyMissingCompletely,
       fetchedAt: asOf,
       // Tag 215j: also write `asOf` for the F-CI-016 Verify Snapshot Freshness
       // gate. The gate scans for the `"asOf"` JSON key but pull-yahoo had only
@@ -2272,6 +2278,32 @@ function countSkippedMcap(results) {
   return results.filter(r => r && r.status === 'skipped-mcap').length;
 }
 
+// F-NEU-01: Nicht-OTC-Snapshots ohne irgendeine belastbare Waehrungsangabe duerfen
+// den Altbestand weder schreiben noch loeschen. Der outputDir-Parameter ist bewusst
+// Teil dieses echten processOne-Seams: Wirkungstests pruefen damit am realen Dateipfad,
+// dass der bestehende Snapshot unangetastet bleibt. OTC/Pink bleibt im vorhandenen
+// F-NY-004-Konverter-/Loeschpfad.
+function preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results) {
+  const meta = canonical && canonical.meta;
+  if (!meta || meta._ccyMissingCompletely !== true) return false;
+  // Review-Nachzug (b), Tag 629: duenne Yahoo-Antworten ohne brauchbaren marketCap (tote
+  // Ticker; laut Manifest-Pool 3527 skipped-mcap + 1855 failed) liefen bisher in den
+  // skipped-mcap-Loeschpfad (F-DQ-016). Wuerde dieser Kanal sie konservieren, bliebe der
+  // Altbestand toter Namen liegen UND jeder Lauf faerbte rot. Also feuert er nur bei
+  // Antworten MIT belastbarem marketCap; mcap-lose Faelle bleiben im alten Pfad.
+  if (!canonical.marketCap || !Number.isFinite(canonical.marketCap.value)) return false;
+  // Review-Nachzug (c), Tag 629: die OTC-Ausnahme gilt NUR, wenn die vorhandene
+  // F-NY-004-Regel (_convertSnapshotToUSD) den Fall nachweislich faengt — die setzt
+  // ccyAmbiguous===true voraus. Bei Leerstring-Waehrungen ('' statt null) ist
+  // ccyAmbiguous false, F-NY-004 greift NICHT, und ohne diese Praezisierung bliebe
+  // es fuer OTC beim stillen USD. F-NY-004 selbst bleibt unangetastet.
+  if (meta.ccyAmbiguous === true && /otc|pnk|pink/i.test(meta.exchangeName || '')) return false;
+  const snapshotPath = path.join(outputDir, safeSnapshotFilename(stock.ticker));
+  const existedBeforeSkip = fs.existsSync(snapshotPath);
+  results.push({ ticker: stock.ticker, status: 'ccy-missing-completely', preserved: existedBeforeSkip });
+  return true;
+}
+
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
@@ -2429,6 +2461,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_full: nFull,
         n_priceonly: nPriceOnly,
         n_skipped_mcap: skippedMcap,
+        n_ccy_missing_completely: results.filter(r => r && r.status === 'ccy-missing-completely').length,
         // Tag 464: vor dem Abruf aus DIESER Scheibe entfernt (Small-Cap-Eigentumsgrenze).
         // n_total oben ist bereits ohne sie; der Merge braucht die Zahl, weil er n_total
         // durch das volle Universum ersetzt.
@@ -2855,6 +2888,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const yahoo = await quoteSummaryWithRetry(stock.yahoo_symbol, stock.ticker);
       const asOf = new Date().toISOString();
       const canonical = mapYahooToCanonical(yahoo, stock, asOf);
+      if (preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results)) {
+        _log('INFO', `  ⊘ ${stock.ticker} skipped: ccy-missing-completely (Altbestand bleibt)`);
+        return;
+      }
       let _allFtsSeriesEmpty = false;
 
       // Tag 106: IPO-Datum via separates yf.quote() — quoteSummary.price hat das Feld nicht.
@@ -3686,6 +3723,11 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (_unparseableTimeAnchors > 0) console.warn(`::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
   if (_ftsFailedSeries > 0) console.warn(`::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
   if (_ftsAllEmptyTickers > 0) console.warn(`::warning::FTS leer ohne Fehler: ${_ftsAllEmptyTickers} Ticker (als fundamentalsIncomplete markiert, naechster Lauf zieht sie erneut voll)`);
+  const _ccyMissingResults = results.filter(r => r && r.status === 'ccy-missing-completely');
+  const nCcyMissingCompletely = _ccyMissingResults.length;
+  // Review-Nachzug (h), Tag 629: das je Ticker berechnete preserved-Feld wird hier genutzt —
+  // es trennt "es lag ein Altbestand da, der jetzt geschuetzt ist" von "es gab nie einen".
+  if (nCcyMissingCompletely > 0) console.warn(`::warning::${nCcyMissingCompletely} Ticker ohne jede Waehrungsangabe — Snapshots NICHT ueberschrieben, Altbestand bleibt (davon ${_ccyMissingResults.filter(r => r.preserved === true).length} mit geschuetztem Altbestand)`);
 
   // F-DP-047 (Tag 192): same n_ok-vs-skipped-mcap fix as in the incremental
   // writeManifestIncremental() — final manifest must agree with the snapshot
@@ -3723,7 +3765,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
   const slimPath = path.join(outputDir, '_manifest.json');
   writeFileAtomic(slimPath, JSON.stringify(slim));
@@ -4010,6 +4052,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
   countSkippedMcap,
+  preserveSnapshotForMissingCurrency,
   // Tag 466: Ueberspring-Entscheidung der Small-Cap-Eigentumsgrenze — an ihr haengt, ob
   // Aufsteiger im Hauptboard sichtbar sind. Waechter: tests/smallcap-eigentumsgrenze.test.js
   ueberspringtSmallcapTicker,

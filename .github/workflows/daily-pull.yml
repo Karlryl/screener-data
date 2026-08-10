@@ -1081,6 +1081,11 @@ jobs:
           [ "${{ steps.w_fx.outcome }}"        = "failure" ] && FEHLER="$FEHLER FX-Plausibilitaet"
           [ "${{ steps.w_spikes.outcome }}"    = "failure" ] && FEHLER="$FEHLER Jahres-Ausreisser"
           [ "${{ steps.w_pullstats.outcome }}" = "failure" ] && FEHLER="$FEHLER Pull-Schrumpfung"
+          # F-NEU-01 (Tag 629): Waehrungs-Ehrlichkeit. Bewusst HIER und nicht als eigener
+          # Schritt weiter oben: ein Abbruch vor "Commit Snapshots" wuerde denselben Schaden
+          # anrichten, den der Kommentar oben beschreibt. Das Skript liest nur das gemergte
+          # Manifest und faerbt gemeinsam mit den Waechtern rot.
+          if ! node scripts/ccy-alarm-gate.js; then FEHLER="$FEHLER Waehrungs-Ehrlichkeit"; fi
           if [ -n "$FEHLER" ]; then
             echo "::error::Daten-Waechter haben angeschlagen:$FEHLER — Details im jeweiligen Schritt oben. Die Daten sind trotzdem committet (Baseline-Erhalt), aber der Stand ist verdaechtig."
             exit 1
