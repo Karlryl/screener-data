@@ -537,7 +537,10 @@ function verify() {
     const file = path.join(FREEZE_DIR, name);
     const value = JSON.parse(fs.readFileSync(file, 'utf8'));
     assert.equal(sha256Canonical(value), manifest.artifacts[name].canonicalJsonSha256, name + ' canonical hash mismatch');
-    assert.equal(fileSha256(file), manifest.artifacts[name].bytesSha256, name + ' byte hash mismatch');
+    assert(
+      sourceHashes(file).includes(manifest.artifacts[name].bytesSha256),
+      name + ' byte hash mismatch',
+    );
   }
   const preregHashView = structuredClone(prereg);
   preregHashView.integrity.canonicalSha256 = null;

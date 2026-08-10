@@ -107,7 +107,9 @@ function maengel(yml) {
   return m;
 }
 
-const yml = fs.readFileSync(WF, 'utf8');
+// Git versiegelt diese Datei mit LF; Windows kann im Arbeitsbaum CRLF liefern.
+// Mutationen und Objektpruefung muessen auf beiden Darstellungen dieselbe Sache testen.
+const yml = fs.readFileSync(WF, 'utf8').replace(/\r\n/g, '\n');
 
 check('die echte Workflow-Datei ist mangelfrei', () => {
   assert.deepEqual(maengel(yml), []);

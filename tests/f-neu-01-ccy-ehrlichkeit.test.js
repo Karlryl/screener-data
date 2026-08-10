@@ -147,7 +147,7 @@ function runGate(manifestInhalt) {
   // und Loeschpfad weiter. Dieser Waechter nagelt genau die Form fest.
   const SKIP_BLOCK = /\n {6}if \(preserveSnapshotForMissingCurrency\(canonical, stock, outputDir, results\)\) \{\n[\s\S]{0,300}?\n {8}return;\n {6}\}/;
   await test('(h) Objekt-Waechter: der Skip-Block in processOne traegt sein return; (Ausbau muss rot werden)', () => {
-    const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+    const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8').replace(/\r\n/g, '\n');
     const von = src.indexOf('const canonical = mapYahooToCanonical', src.indexOf('async function processOne(stock)'));
     const bis = src.indexOf('_convertSnapshotToUSDGuarded', von);
     assert.ok(von > 0 && bis > von, 'Block-Anker nicht gefunden');
