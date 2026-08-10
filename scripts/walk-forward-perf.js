@@ -472,31 +472,35 @@ function computeFrozenVintageMedianReturn(priceIndex, vintagePicks, asOfDate, ho
 // silently injecting up to ±2 days of price-movement noise into every alpha.
 function computeBenchmarkReturn(priceIndex, asOfDate, horizonDays) {
   const candidates = ['SPY', 'QQQ', 'IWM'];
-  let benchmarkTicker = null;
-  for (const t of candidates) {
-    if (priceIndex[t]) { benchmarkTicker = t; break; }
-  }
-  if (!benchmarkTicker) {
+  const available = candidates.filter((t) => priceIndex[t] instanceof Map && priceIndex[t].size > 0);
+  if (!available.length) {
     console.warn('[walk-forward-perf] WARNING: SPY/QQQ/IWM not in price history — alphaVsBenchmark will be null. Run pull-historical-prices.js to fix.');
     return { ticker: null, ret: null, entryDate: null, exitDate: null };
   }
-  const map = priceIndex[benchmarkTicker];
+  const futureDate = addDaysIso(asOfDate, horizonDays);
   // F-BT-002 (fail-loud benchmark length): the canonical entry/exit dates returned
   // here anchor every per-vintage return. If the benchmark series is shorter than the
   // horizon (in trading days) + buffer, anchoring to it would produce a 2-3-point
   // alpha. Do NOT anchor: return entryDate/exitDate=null so the caller falls back to
   // the existing per-ticker nearestTradingDay path, flag benchmarkInsufficient, warn.
   const requiredLen = Math.ceil(horizonDays * TRADING_DAYS_PER_CALENDAR_DAY) + BENCHMARK_MIN_BUFFER_TRADING_DAYS;
-  if (map.size < requiredLen) {
-    console.warn('::warning::[walk-forward-perf] F-BT-002: benchmark ' + benchmarkTicker
-      + ' series too short (' + map.size + ' points < required ' + requiredLen
-      + ' for horizon ' + horizonDays + 'd) — NOT anchoring canonical dates; falling back to per-ticker path.');
+  let selected = null;
+  for (const ticker of available) {
+    const map = priceIndex[ticker];
+    const entryDate = nearestTradingDay(asOfDate, map);
+    const exitDate = nearestTradingDay(futureDate, map);
+    if (entryDate && exitDate) { selected = { ticker, map, entryDate, exitDate }; break; }
+  }
+  if (!selected) {
+    const benchmarkTicker = available.reduce((best, ticker) =>
+      priceIndex[ticker].size > priceIndex[best].size ? ticker : best, available[0]);
+    console.warn('::warning::[walk-forward-perf] F-BT-002: no benchmark covers entry/exit window for horizon '
+      + horizonDays + 'd (longest available: ' + benchmarkTicker + ', ' + priceIndex[benchmarkTicker].size
+      + ' points; length guide ' + requiredLen + ') — NOT anchoring canonical dates; falling back to per-ticker path.');
     return { ticker: benchmarkTicker, ret: null, entryDate: null, exitDate: null, benchmarkInsufficient: true };
   }
+  const { ticker: benchmarkTicker, map, entryDate, exitDate } = selected;
   // F-BT-005: snap to nearest trading day (Tag 231a-1: backward-first, no look-ahead)
-  const entryDate = nearestTradingDay(asOfDate, map) || asOfDate;
-  const futureDate = addDaysIso(asOfDate, horizonDays);
-  const exitDate   = nearestTradingDay(futureDate, map) || futureDate;
   const p0 = map.get(entryDate) || null;
   const p1 = map.get(exitDate)  || null;
   // Tag 232c-27 (audit F-BT-004 HIGH): emit horizonActualDays so cross-
@@ -596,6 +600,11 @@ function evaluateVintage(picksFile, priceIndex, regimes) {
     canonicalDatesByHorizon[days] = canonical;
     univResultsByHorizon[days] = computeUniverseMedianReturn(priceIndex, entryDate, days, picksFile.evaluatedTickers, canonical);
     frozenByHorizon[days] = computeFrozenVintageMedianReturn(priceIndex, picksFile, entryDate, days, canonical);
+  }
+  const benchmarkTickers = Array.from(new Set(Object.values(benchByHorizon).map((b) => b.ticker).filter(Boolean)));
+  if (benchmarkTickers.length > 1) {
+    console.warn('::warning::[walk-forward-perf] benchmark ticker differs across horizons for vintage '
+      + asOf + ': ' + HORIZONS_DAYS.map((days) => days + 'd=' + (benchByHorizon[days].ticker || 'none')).join(', '));
   }
 
   for (const [mode, allPicks] of Object.entries(picksFile.modes || {})) {
@@ -843,7 +852,7 @@ function main() {
   }
 
   // F-BT-002: validate that at least one benchmark is present
-  const benchPresent = ['SPY', 'QQQ', 'IWM'].some(t => priceIndex[t]);
+  const benchPresent = ['SPY', 'QQQ', 'IWM'].some(t => priceIndex[t] instanceof Map && priceIndex[t].size > 0);
   if (!benchPresent) {
     console.warn('[walk-forward-perf] WARNING: No benchmark tickers (SPY/QQQ/IWM) in price history. Run pull-historical-prices.js first.');
   }

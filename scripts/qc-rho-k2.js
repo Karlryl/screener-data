@@ -36,7 +36,7 @@ function k2Slope(secAnnual) {
   const n = Math.min(ni.length, ocf.length);
   for (let i = 0; i < n; i++) {
     const niv = ni[i] && ni[i].value, ocfv = ocf[i] && ocf[i].value;
-    if (Number.isFinite(niv) && niv > 0 && Number.isFinite(ocfv)) pts.push([pts.length, ocfv / niv]);
+    if (Number.isFinite(niv) && niv > 0 && Number.isFinite(ocfv)) pts.push([i, ocfv / niv]);
   }
   if (pts.length < 2) return null;
   const m = pts.length;

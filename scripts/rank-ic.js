@@ -409,12 +409,15 @@ function loadVintage(historyDir, date, board) {
   // relativ). Der Delivery-IC (§4b) braucht t0.pit genau an dem 180d-Punkt, an dem Retention
   // und Delivery-Horizont zusammenfallen — ohne diesen Fallback fiele deliveryIC.n genau dann
   // still auf 0, wenn das Fenster scharf würde. Archiv-Kopie transparent statt der gestrippten
-  // Kern-Version lesen, wenn vorhanden; sonst bleibt die gestrippte Version (Status quo).
+  // Kern-Version lesen, wenn vorhanden. Fehlt sie, bleibt loadVintage tolerant, markiert
+  // aber den PIT-Verlust fuer den einzigen Verbraucher, der diese Daten wirklich braucht.
   if (v && v.compacted && v.archivedTo) {
+    const archivePath = path.join(REPO_ROOT, v.archivedTo);
     let archived = null;
-    try { archived = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, v.archivedTo), 'utf8')); }
+    try { archived = JSON.parse(fs.readFileSync(archivePath, 'utf8')); }
     catch (_) { /* Archiv fehlt/kaputt -> bei der gestrippten Kern-Version bleiben, kein Fehler */ }
     if (archived && archived.cohort) return archived;
+    v._pitArchiveMissing = archivePath;
   }
   return v;
 }
@@ -457,8 +460,9 @@ const addDaysIso = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUT
 // als vollwertigen 84d-Punkt — die pre-registrierte Haltedauer wäre gebrochen.
 // BH-149: der GLOBALE Max über ALLE Ticker lässt einen einzigen kaputten/zukunftsdatierten
 // Bar (irgendein Kleinst-Ticker) die GESAMTE Kohorte vorzeitig reifen. Bindet stattdessen an
-// einen kanonischen Benchmark-Ticker (dieselbe Kandidaten-Reihenfolge wie walk-forward-perf.js
-// computeBenchmarkReturn: SPY→QQQ→IWM) — dessen Serie kann nicht durch einen einzelnen
+// einen kanonischen Benchmark-Ticker (SPY→QQQ→IWM; rank-ic ankert bewusst weiter am
+// ersten vorhandenen Kandidaten, anders als die Fensterabdeckungswahl in walk-forward-perf.js)
+// — dessen Serie kann nicht durch einen einzelnen
 // Kleinst-Ticker-Ausreisser verzerrt werden. Fehlt jeder Kandidat im Index (z. B. eine
 // Test-Fixture ohne Benchmark), fällt der Anker auf den alten globalen Max zurück
 // (Rückwärtskompatibilität dort, wo kein Benchmark verfügbar ist).
@@ -675,14 +679,16 @@ function evaluateObserved(historyDir, priceIndex, opts = {}) {
   // BH-110: NUR das erste Vintage (dates[0]) nach Boards zu fragen macht ein Board, das im
   // ältesten Vintage noch fehlt (später hinzugekommen), für die GESAMTE Historie unsichtbar.
   // Union über ALLE (nicht-exkludierten) Vintages.
-  const boards = Array.from(new Set(dates.flatMap((d) => boardsOf(historyDir, d)))).sort();
+  const boardsByDate = opts.boardsByDate || new Map(dates.map((d) => [d, new Set(boardsOf(historyDir, d))]));
+  const boards = Array.from(new Set(dates.flatMap((d) => Array.from(boardsByDate.get(d) || [])))).sort();
   for (const board of boards) {
     const b = { horizons: {}, delivery: null, exitRates: {}, unusableRates: {} };
     // Board-enge Ausschlüsse VOR dem §1-Fensterplan herausnehmen — genau wie beim globalen
     // Ausschluss, damit ein als korrupt erkanntes Vintage den Entscheidungspunkt nicht
     // belegt, sondern das nächste saubere Vintage nachrückt.
-    const boardDates = dates.filter((d) => !isBoardExcluded(excluded, d, board));
-    b.datesExcluded = dates.filter((d) => isBoardExcluded(excluded, d, board));
+    const existingDates = dates.filter((d) => (boardsByDate.get(d) || new Set()).has(board));
+    const boardDates = existingDates.filter((d) => !isBoardExcluded(excluded, d, board));
+    b.datesExcluded = existingDates.filter((d) => isBoardExcluded(excluded, d, board));
     for (const horizon of HORIZONS) {
       const decisions = disjointDecisionDates(boardDates, horizon);
       const points = [], pointsResid = [], detail = [];
@@ -763,7 +769,14 @@ function evaluateObserved(historyDir, priceIndex, opts = {}) {
     const dLater = d0 && boardDates.find((d) => (new Date(d) - new Date(d0)) / 86400000 >= DELIVERY_MIN_GAP_DAYS);
     if (dLater) {
       const v0 = loadVintage(historyDir, d0, board), v1 = loadVintage(historyDir, dLater, board);
-      if (v0 && v1) b.delivery = Object.assign({ t0: d0, t1: dLater }, deliveryIC(v0, v1));
+      if (v0 && v1) {
+        const missingArchive = v0._pitArchiveMissing || v1._pitArchiveMissing;
+        if (missingArchive) {
+          throw new Error('[rank-ic] Vollarchiv ' + missingArchive
+            + ' fehlt/kaputt — Delivery-IC ohne PIT-Daten nicht messbar (F-CGPT-042)');
+        }
+        b.delivery = Object.assign({ t0: d0, t1: dLater }, deliveryIC(v0, v1));
+      }
     } else {
       b.delivery = { note: 'noch nicht scharf — braucht Vintage >= t0+' + DELIVERY_MIN_GAP_DAYS + 'd (§4b/A12)' };
     }
@@ -816,7 +829,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
   const excluded = loadExcluded(historyDir);
   const allDates = listVintageDates(historyDir);
   const boardsByDate = new Map(allDates.map((date) => [date, new Set(boardsOf(historyDir, date))]));
-  const observed = evaluateObserved(historyDir, priceIndex, opts);
+  const observed = evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { boardsByDate }));
   stripInternalFamilyFields(observed.boards);
 
   const familyHealth = { missingBoards: [], exclusions: [], renameWarnings: [], warnings: [] };
@@ -825,7 +838,7 @@ function evaluate(historyDir, priceIndex, opts = {}) {
     const output = familyReports[familyIndex];
     const eligibleAllDates = allDates.filter((date) => date >= family.firstEligibleVintage);
     const familyObserved = eligibleAllDates.length
-      ? evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { firstEligibleVintage: family.firstEligibleVintage }))
+      ? evaluateObserved(historyDir, priceIndex, Object.assign({}, opts, { firstEligibleVintage: family.firstEligibleVintage, boardsByDate }))
       : null;
 
     if (eligibleAllDates.length === 0) {
