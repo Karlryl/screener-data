@@ -1,0 +1,460 @@
+{
+  "schema": "early-detection-gate-decision/v3",
+  "generatedAt": "2026-08-10T20:45:24.320Z",
+  "gate": "corporateActionsDelistings",
+  "status": "RED_COMPLETE_FORM_POPULATION_TERMINAL_MARKET_AND_ENTITY_LINKS_MISSING",
+  "verdict": "The complete SEC Form 25/15 candidate population is immutable, parsed and independently reproduced, but terminal market dates, delisting returns, successor links and a complete listing-interval bridge remain unavailable from these forms.",
+  "coverage": {
+    "capturedAndParsedEvents": 44352,
+    "candidatePopulationEvents": 44352,
+    "fraction": 1.0,
+    "contiguousRange": {
+      "startEvent": 1,
+      "endEvent": 44352
+    },
+    "verifiedOriginals": 44352,
+    "parsedSecurities": 43200,
+    "commonEquityEvents": 16078,
+    "manualReviewEvents": 6479
+  },
+  "ranges": [
+    {
+      "range": {
+        "startEvent": 1,
+        "endEvent": 5000,
+        "selectedEvents": 5000
+      },
+      "events": 5000,
+      "verifiedOriginals": 5000,
+      "parsedSecurities": 5150,
+      "commonEquityEvents": 2240,
+      "manualReviewEvents": 1125,
+      "attemptLedgerDiagnostics": null,
+      "artifacts": {
+        "captureProgress": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-0001-5000-frozen-progress.json",
+          "fileSha256": "1e4df402497e772cb77038f8a983342d4767a611a2c7d1d6e0e00542d5b65ca1",
+          "reportSha256": "727a359b48ea889f6477a1aec5558c4a1ae099ce54787b7a689faeb2caac0850"
+        },
+        "captureVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-0001-5000-frozen-verification.json",
+          "fileSha256": "9be82ea4d9aede2c5c05d1fec97fc0691c2ec941ca1a686e33372404b026cd31",
+          "reportSha256": "91cea74ecdf43a73f849b5af2976efb35d24ee9a82fbbe804e5211f166ccfdde"
+        },
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-0001-5000-v11.json",
+          "fileSha256": "c694c640887a31d2ed03b809c88b770ca322531dc03dc0b45f4c593c8c2bd44e",
+          "reportSha256": "67a85f50314829ea95b52c22462cf3bfde1b1d87e63f828a97f8878766cecd44"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-0001-5000-v11-independent-verification-v3.json",
+          "fileSha256": "0613622d1ac0dfd9c4b27e2b49b0ce97596a469a40a5eebf53dc248599d0d855",
+          "reportSha256": "35855c43468bee731b5fce82b29b2464f65f891544bb744683d20f641fe7bd9d"
+        }
+      }
+    },
+    {
+      "range": {
+        "startEvent": 5001,
+        "endEvent": 15000,
+        "selectedEvents": 10000
+      },
+      "events": 10000,
+      "verifiedOriginals": 10000,
+      "parsedSecurities": 9686,
+      "commonEquityEvents": 4040,
+      "manualReviewEvents": 1907,
+      "attemptLedgerDiagnostics": {
+        "attemptRows": 10370,
+        "eventsWithMultipleAttemptRows": 369,
+        "extraAttemptRows": 370,
+        "captureAttemptCountMismatches": 2,
+        "eventsWithTransientNonterminalAttempts": 2,
+        "eventsWithIdenticalTerminalDuplicates": 368,
+        "captureTimestampAfterLedgerCompletion": 7472,
+        "conflictingTerminalEvents": 0,
+        "exampleMultipleAttemptEventIds": [
+          5047,
+          5048,
+          5049,
+          5050,
+          5051,
+          5052,
+          5053,
+          5054,
+          5055,
+          5056,
+          5057,
+          5058,
+          5059,
+          5060,
+          5061,
+          5062,
+          5063,
+          5064,
+          5065,
+          5066,
+          5067,
+          5068,
+          5069,
+          5070,
+          5071
+        ],
+        "exampleAttemptCountMismatchEventIds": [
+          5123,
+          5417
+        ],
+        "transientVariantEventIds": [
+          5140,
+          6261
+        ],
+        "exampleCaptureTimestampAfterLedgerEventIds": [
+          5001,
+          5002,
+          5003,
+          5008,
+          5009,
+          5010,
+          5014,
+          5015,
+          5016,
+          5018,
+          5019,
+          5020,
+          5021,
+          5023,
+          5024,
+          5025,
+          5029,
+          5031,
+          5033,
+          5034,
+          5037,
+          5038,
+          5039,
+          5041,
+          5042
+        ]
+      },
+      "artifacts": {
+        "captureProgress": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-5001-15000-frozen-v3-progress.json",
+          "fileSha256": "ea1d1a781e54adfa7716779cd60effc63ff86af16e0b3cc09e66b26fae7298bf",
+          "reportSha256": "53b2bc2ab4eeb1db37fab240c100f526a21c7caaa12aa4bff3a411bb10e6d45c"
+        },
+        "captureVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-5001-15000-frozen-v3-verification-v2.json",
+          "fileSha256": "717313a07f65a71a0cdace9ac410fc9caa52c1cee6adf2ea40b631cc1d233e5b",
+          "reportSha256": "3c6ca00a3644dbbc78268a750771958a0086649ad9c3d85c78645fc24c4a7714"
+        },
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-5001-15000-v12.json",
+          "fileSha256": "3beacd707e5f0bff92aef7953d568631ad613c3b7ae97998ed1962f319f69f2e",
+          "reportSha256": "5ff24720e5beea3dcba368efdb9fbe461528ffefae48437eb00e63554690a29a"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-5001-15000-v12-independent-verification-v3.json",
+          "fileSha256": "13f298f5712b96153fb2e85ecfd7276fa43c05bb3540e4176ef71b61a1780c1f",
+          "reportSha256": "9b7bd88d258c77c429290262f98e9e7c5c16dc55dc009ad7b9fa776cc05b5936"
+        }
+      }
+    },
+    {
+      "range": {
+        "startEvent": 15001,
+        "endEvent": 25000,
+        "selectedEvents": 10000
+      },
+      "events": 10000,
+      "verifiedOriginals": 10000,
+      "parsedSecurities": 9954,
+      "commonEquityEvents": 3847,
+      "manualReviewEvents": 1494,
+      "attemptLedgerDiagnostics": {
+        "attemptRows": 10000,
+        "eventsWithMultipleAttemptRows": 0,
+        "extraAttemptRows": 0,
+        "captureAttemptCountMismatches": 0,
+        "eventsWithTransientNonterminalAttempts": 0,
+        "eventsWithIdenticalTerminalDuplicates": 0,
+        "captureTimestampAfterLedgerCompletion": 7582,
+        "conflictingTerminalEvents": 0,
+        "exampleMultipleAttemptEventIds": [],
+        "exampleAttemptCountMismatchEventIds": [],
+        "transientVariantEventIds": [],
+        "exampleCaptureTimestampAfterLedgerEventIds": [
+          15001,
+          15002,
+          15004,
+          15006,
+          15007,
+          15008,
+          15010,
+          15011,
+          15012,
+          15013,
+          15014,
+          15015,
+          15016,
+          15018,
+          15019,
+          15020,
+          15021,
+          15022,
+          15023,
+          15024,
+          15025,
+          15026,
+          15027,
+          15028,
+          15029
+        ]
+      },
+      "artifacts": {
+        "captureProgress": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-15001-25000-frozen-v3-progress.json",
+          "fileSha256": "c8516e28f2c77da688dc44e228e63f9817b49853b3e6d83e5d11b8c03a34f309",
+          "reportSha256": "456d5bfa2894a257c14831ca15e25727f60ae0fb5ba69dd55ee0c40a7411e562"
+        },
+        "captureVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-15001-25000-frozen-v3-verification-v2.json",
+          "fileSha256": "f867e63025242a94328f575dfe6ccda82fba33121ae69b93fc164fa6ad730ba3",
+          "reportSha256": "25daa566d268fcf5599b7a8a161fbb3a00024a88703e1b96c5a1d8e06a1858ab"
+        },
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-15001-25000-v13.json",
+          "fileSha256": "850c419917354a10dfaf65d092072c23a40d184dab8a6e3524d06e04a2504a8f",
+          "reportSha256": "b1f8c4c4ae5b8ec33a09bf65fd950d06542665b620a456ad0fd0586f2dce414a"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-15001-25000-v13-independent-verification-v3.json",
+          "fileSha256": "c52d6476ec22c8e39064caeda8790d0b797422f4ea67728763db40a9e6942934",
+          "reportSha256": "54868a74f9117efe7f50b8e88ea0ebd58587b6b78aabe233fde0c9a43147b8b1"
+        }
+      }
+    },
+    {
+      "range": {
+        "startEvent": 25001,
+        "endEvent": 35000,
+        "selectedEvents": 10000
+      },
+      "events": 10000,
+      "verifiedOriginals": 10000,
+      "parsedSecurities": 9556,
+      "commonEquityEvents": 3281,
+      "manualReviewEvents": 1007,
+      "attemptLedgerDiagnostics": {
+        "attemptRows": 10066,
+        "eventsWithMultipleAttemptRows": 66,
+        "extraAttemptRows": 66,
+        "captureAttemptCountMismatches": 0,
+        "eventsWithTransientNonterminalAttempts": 0,
+        "eventsWithIdenticalTerminalDuplicates": 66,
+        "captureTimestampAfterLedgerCompletion": 7761,
+        "conflictingTerminalEvents": 0,
+        "exampleMultipleAttemptEventIds": [
+          28845,
+          28846,
+          28847,
+          28848,
+          28849,
+          28850,
+          28851,
+          28852,
+          28853,
+          28854,
+          28855,
+          28856,
+          28857,
+          28858,
+          28859,
+          28860,
+          28861,
+          28862,
+          28863,
+          28864,
+          28865,
+          28866,
+          28867,
+          28868,
+          28869
+        ],
+        "exampleAttemptCountMismatchEventIds": [],
+        "transientVariantEventIds": [],
+        "exampleCaptureTimestampAfterLedgerEventIds": [
+          25001,
+          25002,
+          25006,
+          25007,
+          25008,
+          25009,
+          25010,
+          25011,
+          25012,
+          25013,
+          25014,
+          25016,
+          25018,
+          25019,
+          25021,
+          25022,
+          25023,
+          25024,
+          25026,
+          25027,
+          25028,
+          25029,
+          25031,
+          25032,
+          25033
+        ]
+      },
+      "artifacts": {
+        "captureProgress": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-25001-35000-frozen-v4-progress.json",
+          "fileSha256": "9795674e94d8f9484e554dae2ccec42a0e2bfd20e59848b5ea9a39b103df7433",
+          "reportSha256": "f643fa12922f47a2e1c87533c69dc6a6020e5a0d17bc022c9ff3f1d34515501d"
+        },
+        "captureVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-25001-35000-frozen-v4-verification.json",
+          "fileSha256": "baf0f3eb1a6a6f6094e31295ec5d1c009d30b61afa2060bb81a3add5772085f1",
+          "reportSha256": "65bbb88e118b43155438ca4ea3a3face5c3d5aa17db36f58d5eee88853630738"
+        },
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-25001-35000-v14.json",
+          "fileSha256": "a7a5ccb441205376a36e6ddbc90bd0d694bf20908697dd91bb936a576f2cdfe6",
+          "reportSha256": "a1181031d89cca931e962d4ef955a0af7e9b4e93ff8e464005e8463d7badd8ac"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-25001-35000-v14-independent-verification-v3.json",
+          "fileSha256": "631bb28590358e09836d6986c3ae3a9bd806eeeccdc4ec680d60b432ce7b65d2",
+          "reportSha256": "128249aa51b87e9502758ccb931b3d5720a91eebc1ad860356cae5db48f296ed"
+        }
+      }
+    },
+    {
+      "range": {
+        "startEvent": 35001,
+        "endEvent": 44352,
+        "selectedEvents": 9352
+      },
+      "events": 9352,
+      "verifiedOriginals": 9352,
+      "parsedSecurities": 8854,
+      "commonEquityEvents": 2670,
+      "manualReviewEvents": 946,
+      "attemptLedgerDiagnostics": {
+        "attemptRows": 9352,
+        "eventsWithMultipleAttemptRows": 0,
+        "extraAttemptRows": 0,
+        "captureAttemptCountMismatches": 0,
+        "eventsWithTransientNonterminalAttempts": 0,
+        "eventsWithIdenticalTerminalDuplicates": 0,
+        "captureTimestampAfterLedgerCompletion": 7252,
+        "conflictingTerminalEvents": 0,
+        "exampleMultipleAttemptEventIds": [],
+        "exampleAttemptCountMismatchEventIds": [],
+        "transientVariantEventIds": [],
+        "exampleCaptureTimestampAfterLedgerEventIds": [
+          35001,
+          35002,
+          35004,
+          35006,
+          35007,
+          35008,
+          35009,
+          35010,
+          35012,
+          35013,
+          35015,
+          35016,
+          35018,
+          35019,
+          35021,
+          35022,
+          35023,
+          35024,
+          35025,
+          35026,
+          35027,
+          35028,
+          35030,
+          35032,
+          35034
+        ]
+      },
+      "artifacts": {
+        "captureProgress": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-35001-44352-frozen-v5-progress.json",
+          "fileSha256": "9145841e90df709160dfcb1ea04a0a2a677f5a041e63fd51bb12c4166b937258",
+          "reportSha256": "8eb86c3af0f1d1d8b9738707287839cec5b7a1b1afda91898fc0b352c18f1ede"
+        },
+        "captureVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-original-capture-35001-44352-frozen-v5-verification.json",
+          "fileSha256": "c02becc0639a993d3acb9c2db1a35584803a37b614f6f2f339cc2c2466541e84",
+          "reportSha256": "3ed08c17d797e0f395a81411da87a4bde093dc788e6b28e9d4f10a88dccdc9e6"
+        },
+        "parseReport": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-35001-44352-v15.json",
+          "fileSha256": "820bad2cb4e2496d09b69d96583ae8522329e67622bd331471b6724c66a92716",
+          "reportSha256": "9af645612198da83bc8d3f00b8be7873c3edfa145a52a39a2b08dab0d8df76dd"
+        },
+        "parseVerification": {
+          "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\sec-corporate-action-parse-35001-44352-v15-independent-verification-v3.json",
+          "fileSha256": "7616988a3da0816c0b581b3e464d92a87251f2d5edf073aceb96f6d86b186d1c",
+          "reportSha256": "bffa4be7aa36e124764d4e904c3f8cb43d5af4200e872d44a22d44ddaa97e522"
+        }
+      }
+    }
+  ],
+  "passedChecks": {
+    "completeCandidatePopulation": true,
+    "contiguousImmutableRangeSnapshots": true,
+    "signedProgress": true,
+    "sqliteIntegrity": true,
+    "allCapturedPayloadsRehashedAndReparsed": true,
+    "secHeadersAndPrimaryDocumentsReparsed": true,
+    "conservativeCompositeSecurityClassification": true,
+    "forbiddenOutcomeColumnsAbsent": true,
+    "outcomesAccessed": false,
+    "productiveGqsModified": false
+  },
+  "blockingReasons": [
+    "Form 25 establishes removal evidence but not the final exchange trading date or a delisting return.",
+    "Form 15 may terminate registration or suspend reporting and is not automatically a delisting.",
+    "Historical ticker/listing intervals, successor links and exchange adjudication remain incomplete.",
+    "No cost-free survivorship-safe adjusted OHLCV and delisting-return panel has been proven.",
+    "Independent final-input audit and remote gate attestation have not occurred."
+  ],
+  "freeFallback": {
+    "decision": "Use the complete SEC event population as source evidence only; do not infer terminal market dates or returns.",
+    "allowedUses": [
+      "Point-in-time registration/removal evidence in entity dossiers",
+      "Manual historical time capsules with separately cited exchange evidence",
+      "Prospective append-only tracking of future removals and observed final trading sessions",
+      "PIT fundamental studies that do not require price or delisting-return outcomes"
+    ],
+    "forbiddenUses": [
+      "Backfilled delisting returns",
+      "Synthetic final trading dates",
+      "Confirmatory universe or price-outcome computation before remaining gates pass"
+    ]
+  },
+  "exitCriteria": [
+    "Join common-equity events to an independently audited point-in-time entity/listing interval ledger.",
+    "Establish final trading dates and delisting-return treatment from separately verified sources.",
+    "Pass the exact-input independent audit and remote gate contract before outcome access."
+  ],
+  "decisionBuilder": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_corporate_action_gate_decision_v5.py",
+  "decisionBuilderSha256": "a0d8fd0e6dc78a50dd271164fe52087b91dee81ed0084c6e26701192fee98743",
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "decisionBuilderDependency": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_corporate_action_gate_decision_v4.py",
+  "decisionBuilderDependencySha256": "e47c432eec8c9398a043f1e670148ee1eed4500d597c00908447c19c396cde00",
+  "uniformParserSha256": "c1e64aefdbb0b616d596efc9ab4c0b69e1525d8e5b225da5412345631e8b52d2",
+  "uniformIndependentVerifier": true,
+  "reportSha256": "482d6980a8eb2297b227bb905f8f7d3e53913f89abd9a8bf9fd29e3934500e18"
+}

@@ -1,0 +1,26 @@
+{
+  "schema": "early-detection-nasdaq-archive-sec-entity-candidate-crosswalk-verification/v1",
+  "generatedAt": "2026-08-10T21:04:55.522Z",
+  "status": "PASS",
+  "verifierScript": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\verify_nasdaq_archive_entity_crosswalk_v1.py",
+  "verifierScriptSha256": "97f351d44cc227839b7620bcc83245e3d31ce2f0941e8d50146b0d8bae2dc14e",
+  "sourceReport": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\nasdaq-archive-sec-entity-candidate-crosswalk-2009-2024-v1.json",
+  "sourceReportFileSha256": "4a9ab5504cd5275662d3af2f9cab0798c937ff6fc9217ea8b8609ba6f93c8258",
+  "sourceReportSha256": "c02bf0d8a6af47b2ce3733f861f3be8b4626a18af5c883d495131d3d66c553e4",
+  "checks": {
+    "signedSourceReport": true,
+    "sixInputsRehashed": 6,
+    "threeDatabaseIntegrityChecks": true,
+    "rowsIndependentlyRecomputed": 434214,
+    "candidateCountsRecounted": true,
+    "logicalSequenceReproduced": true,
+    "futureSnapshotsUsed": false,
+    "identityResolvedRows": 0,
+    "mutationRejected": true
+  },
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "12b1d0ca1df25cf6707350fd9196d8da95c1481c5fbc45ff178fe48fd8142dad"
+}
