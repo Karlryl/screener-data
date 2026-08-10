@@ -19,6 +19,11 @@ function fileSha256(file) {
   return sha256Bytes(fs.readFileSync(file));
 }
 
+function windowsTextSha256(file) {
+  const normalized = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n').replace(/\n/g, '\r\n');
+  return sha256Bytes(Buffer.from(normalized, 'utf8'));
+}
+
 function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object') {
@@ -92,14 +97,14 @@ test('92,855 identity-transition rows are independently bound without resolving 
   assert.equal(verification.checks.fiveOutputTablesIndependentlyRecomputed, true);
   assert.equal(verification.checks.forbiddenOutcomeColumnsAbsent, true);
   assert.equal(verification.checks.mutationRejected, true);
-  assert.equal(verification.sourceReportFileSha256, fileSha256(path.join(reports, dossierName)));
+  assert.equal(verification.sourceReportFileSha256, windowsTextSha256(path.join(reports, dossierName)));
   assert.equal(dossier.producerScriptSha256, fileSha256(path.join(scripts, 'early-detection-identity-transition-dossiers.py')));
   assert.equal(verification.verifierScriptSha256, fileSha256(path.join(scripts, 'early-detection-identity-transition-dossiers-verify.py')));
 });
 
 test('all three data gates preserve red boundaries and exact dossier bindings', () => {
   const dossier = load('identity-transition-dossiers-2009-2024-v2.json');
-  const dossierFileSha256 = fileSha256(path.join(reports, 'identity-transition-dossiers-2009-2024-v2.json'));
+  const dossierFileSha256 = windowsTextSha256(path.join(reports, 'identity-transition-dossiers-2009-2024-v2.json'));
   for (const [gate, decisionName, verificationName] of decisions) {
     const decision = verifySigned(decisionName);
     const verification = verifySigned(verificationName);
@@ -118,7 +123,7 @@ test('all three data gates preserve red boundaries and exact dossier bindings', 
     assert.equal(verification.gate, gate);
     assert.equal(verification.checks.selectedDossierEvidenceReproduced, true);
     assert.equal(verification.checks.identityResolvedRows, 0);
-    assert.equal(verification.sourceDecisionFileSha256, fileSha256(path.join(reports, decisionName)));
+    assert.equal(verification.sourceDecisionFileSha256, windowsTextSha256(path.join(reports, decisionName)));
   }
 });
 
@@ -161,7 +166,7 @@ test('V48 corpus and V31 readiness seal the dossier evidence while outcomes rema
     const item = readiness.gates.find((candidate) => candidate.gate === gate);
     assert.ok(item, gate);
     assert.equal(path.basename(item.evidence.path), decisionName);
-    assert.equal(item.evidence.fileSha256, fileSha256(path.join(reports, decisionName)));
+    assert.equal(item.evidence.fileSha256, windowsTextSha256(path.join(reports, decisionName)));
   }
   const corpusItem = readiness.gates.find((item) => item.gate === 'researchCorpusSealed');
   assert.equal(path.basename(corpusItem.evidence.path), 'research-corpus-gate-decision-2026-08-10-v40.json');
