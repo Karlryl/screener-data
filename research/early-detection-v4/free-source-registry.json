@@ -1,0 +1,496 @@
+{
+  "schema": "early-detection-free-source-registry/v1",
+  "asOf": "2026-08-09",
+  "mandate": "free_only_no_productive_gqs_change",
+  "sources": [
+    {
+      "sourceId": "SEC_FSD",
+      "name": "SEC Financial Statement Data Sets",
+      "url": "https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets",
+      "authority": "primary_regulator",
+      "cost": "free",
+      "coverage": "2009q1-present, quarterly, as filed face-financial XBRL",
+      "eligibleFor": ["appendOnlySecStore", "asOfLeakageGate", "conceptMapFrozen"],
+      "limitations": [
+        "historic ZIPs were reprocessed in December 2024 and therefore each retrieved payload must be retained by hash",
+        "the local execution network returned HTTP 403 on 2026-08-08; acquisition needs a separately verified network path"
+      ],
+      "localVerification": {
+        "coverage": "127 digest-verified payload versions, 2009q1-2024q4",
+        "submissions": 1097249,
+        "facts": 308848369,
+        "presentations": 102628203,
+        "tagRows": 9709074,
+        "quarantinedOrphans": 1953,
+        "fullIntegrityStatus": "PASS_FULL_INTEGRITY",
+        "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de",
+        "integrityReportSha256": "9b2b660bd0d5cc65b49618a2e4a119359e33c07891d045817e2d41a000a1885f",
+        "conceptCoverageReportSha256": "ab6fa92f6122e70810a4f1252d087543b71c55e294c9da0626cd1a5f29a743cc",
+        "sicRoutingReportSha256": "90182e107603fd3e18232ac10132400a67577c0973495a02df24fd15dbabcfb0",
+        "orphanAuditReportSha256": "df02740c90fb433d2ae632f7edcd0dde446e7a355da9a9f55463f48252c25f48"
+      },
+      "decision": "PRIMARY_REQUIRED_IMPORT_AND_FULL_INTEGRITY_PASS_THROUGH_2024"
+    },
+    {
+      "sourceId": "INTERNET_ARCHIVE_SEC_FSD",
+      "name": "Internet Archive captures of SEC Financial Statement Data Set ZIPs",
+      "url": "https://web.archive.org/cdx/search/cdx",
+      "authority": "independent_archive_of_primary_regulator_payloads",
+      "cost": "free_public_archive",
+      "coverage": "247 distinct captures covering all 69 quarters from 2009q1 through 2026q1",
+      "eligibleFor": ["appendOnlySecStore", "sourceRevisionAudit", "secAccessFallback"],
+      "limitations": [
+        "archive capture time is transport provenance, not a filing acceptance time",
+        "older quarter ZIPs were first archived years after the filings; filing-level availability must come from SEC accepted metadata",
+        "every replay payload must match its CDX SHA-1 digest and pass the SEC ZIP member contract"
+      ],
+      "decision": "VERIFIED_FREE_TRANSPORT_FALLBACK"
+    },
+    {
+      "sourceId": "INTERNET_ARCHIVE_SEC_ORIGINAL_FILINGS",
+      "name": "Internet Archive captures of SEC EDGAR daily feeds, Oldloads and individual submissions",
+      "url": "https://web.archive.org/cdx/search/cdx",
+      "authority": "independent_archive_of_primary_regulator_payloads",
+      "cost": "free_public_archive",
+      "coverage": "EDGAR daily-feed, Oldloads and individual Form 25/15 transports, sampled and population-measured for 2009-2024",
+      "eligibleFor": ["appendOnlySecStore", "corporateActionsDelistings_partial", "originalFilingTransportFixtures"],
+      "limitations": [
+        "daily-feed captures locate 67.46% and Oldloads 60.42% of unique candidate accessions; their exact union locates 89.99%",
+        "the union is locator coverage, not proof that every located payload has already been downloaded and content-validated",
+        "CDX WARC length is not replay payload length; one 549,886-byte CDX record exposed a 791,328,619-byte replay payload",
+        "individual filing captures were found for only 5 of 32 deterministic year/event-class sample accessions",
+        "capture time is transport provenance and never substitutes for SEC acceptance time",
+        "2,746 accessions, population content completeness, effective dates and delisting returns remain open"
+      ],
+      "localVerification": {
+        "candidateEventRows": 44352,
+        "uniqueAccessions": 27427,
+        "feedLocatorCoveredEvents": 30552,
+        "feedLocatorCoveredAccessions": 18503,
+        "feedLocatorAccessionRate": 0.6746271921828855,
+        "selectedFeedCaptureWarcRecordBytes": 1911290820771,
+        "feedCoverageReportSha256": "fece7474332a2d55842fb4d635a244baf98a2495bebbde2ed4f748213ad855e8",
+        "headSizeProbeReportSha256": "c9f8aef2decda59f20b95044135abd5db4c78f1046dab0f432ea645c48e9b851",
+        "dailyFeedSampleDate": "2009-01-02",
+        "dailyFeedSampleAccessionsMatched": 15,
+        "dailyFeedSamplePayloadSha256": "09b943017162570ac625a1e21683136c21d824c1cc2d5922ad43fbd238bb401d",
+        "dailyFeedSampleReportSha256": "adfa4233e4aa700ccf66809b234838b6ba72722706e9f5385dec762fef3112c7",
+        "oldloadsLocatorCoveredEvents": 26231,
+        "oldloadsLocatorCoveredAccessions": 16571,
+        "oldloadsLocatorAccessionRate": 0.604185656469902,
+        "selectedOldloadsCaptureWarcRecordBytes": 1527634323406,
+        "oldloadsCoverageReportSha256": "f6c72d13d30117b7ec775f37a10a220c570d1623c16c496ddbba58cb115d12db",
+        "oldloadsCoverageReportFileSha256": "b3f3a471818543c155170097c32f6a19b2d8dbafa8ddee3185e77bbfbd83c57a",
+        "oldloadsSampleDate": "2009-05-22",
+        "oldloadsSampleAccessionsMatched": 11,
+        "oldloadsSamplePayloadSha256": "4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f",
+        "oldloadsSampleReportSha256": "ac491625b6ab687696cc850dca9a2ea5647c4e438d530e4f7b27318e37ae2278",
+        "oldloadsSampleReportFileSha256": "f2dc4f431edfbb1375523623641eebd22ce1d9053410e300183efec9a0847a68",
+        "bulkUnionCoveredEvents": 40033,
+        "bulkUnionEventRate": 0.9026199494949495,
+        "bulkUnionCoveredAccessions": 24681,
+        "bulkUnionAccessionRate": 0.8998796806067014,
+        "bulkUnionUnresolvedAccessions": 2746,
+        "combinedTransportDecisionReportSha256": "621c519e9b02a8b5b0efc711538019230c65a3b0cb96fc7a1b1456e71cd55915",
+        "combinedTransportDecisionFileSha256": "d1e060c492e421ea34edb32aed256e605b4d93ca2b1f9c47986a16080b1fed86",
+        "individualGapPlanAccessions": 2746,
+        "individualGapPlanBatches": 43,
+        "individualGapObservedBatches": 17,
+        "individualGapObservedAccessions": 1088,
+        "individualGapCapturesFound": 285,
+        "individualGapContentVerified": 285,
+        "individualGapNoCapture": 707,
+        "individualGapQueryIncomplete": 96,
+        "bulkPlusObservedIndividualLocatorAccessions": 24966,
+        "bulkPlusObservedIndividualLocatorRate": 0.9102709009370329,
+        "individualGapRemainingUnqueriedOrUnknown": 1754,
+        "individualGapPlanReportSha256": "5ef95826f3fc2060e5fc965322089309b44f2261f8a71f0511dcdb1a571aeebb",
+        "individualGapPlanFileSha256": "d22c829a345b595926f582ab417f58cda43ade485fea854070aca2fa67ad225c",
+        "individualGapAggregateReportSha256": "b3ba06ec2f55e19dd842a7286aefd5b2f9bbeac5ec8cbb1295d9372ef29c4a0c",
+        "individualGapAggregateFileSha256": "2af418ce0b585abde8171a0285364c7935af8ed5d0dcbd6d12a47ba698166c45",
+        "individualCoverageSample": 32,
+        "individualCapturesFound": 5,
+        "individualCoverageRate": 0.15625,
+        "individualCoverageReportSha256": "8e966b24f0f272cded05c24975083ab965a9966694361ee39949b6127f6ea8d6",
+        "verifiedIndividualAccession": "0001104659-11-061252",
+        "verifiedIndividualForm": "25",
+        "verifiedIndividualPayloadSha256": "b6e62f71108e14887158dd9f14a34de2786b5f3d00f9e5ac02cd52a44ffedfc4",
+        "verifiedIndividualReportSha256": "20350241240da15247069f3c515079b4dac8d5f6070e9bb914a9345038350bf3"
+      },
+      "decision": "VERIFIED_PARTIAL_MULTI_TRANSPORT_90PCT_PLUS_RESUMABLE_GAP_QUEUE_NOT_CONTENT_COMPLETE"
+    },
+    {
+      "sourceId": "COMMON_CRAWL_SEC_ORIGINAL_FILINGS",
+      "name": "Common Crawl CDXJ, URL Index and static ZipNum index for SEC filing URLs",
+      "url": "https://commoncrawl.org/cdxj-index",
+      "authority": "independent_public_web_archive",
+      "cost": "free_public_archive",
+      "coverage": "126 crawl collections listed through CC-MAIN-2026-30; deterministic SEC sample queried in nearest later and latest collection",
+      "eligibleFor": ["originalFilingTransportCrossCheck"],
+      "limitations": [
+        "the public CDX API was unreachable on the local network and naive remote Parquet scans did not complete within ten minutes",
+        "the static ZipNum fallback was reproducible and content-addressed but found zero captures in the fixed 32-accession policy",
+        "two collections per accession do not prove absence from all 126 collections",
+        "Common Crawl capture presence would still require WARC payload, SEC accession and form validation"
+      ],
+      "localVerification": {
+        "collinfoCollections": 126,
+        "collinfoSha256": "eac053eb9d810c1ca519c99e7fdcf3c24a8042809becbbf6c6854a5795c1d52a",
+        "sampleAccessions": 32,
+        "capturesFound": 0,
+        "noCapture": 32,
+        "queryIncomplete": 0,
+        "collectionPolicy": "NEAREST_LATER_AND_LATEST",
+        "staticZipnumReportSha256": "d13f7e6d3699859643ada7f1eb32f72ff610721c11941fbf551818d663eb68fb"
+      },
+      "decision": "CROSS_CHECK_IMPLEMENTED_POLICY_DID_NOT_CLOSE_GAP"
+    },
+    {
+      "sourceId": "SEC_EDGAR_API",
+      "name": "SEC EDGAR submissions and companyfacts APIs",
+      "url": "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+      "authority": "primary_regulator",
+      "cost": "free_no_api_key",
+      "coverage": "filing histories, accessions, current company facts and bulk archives",
+      "eligibleFor": ["entityListingLedger", "appendOnlySecStore", "historicalUniverse"],
+      "limitations": [
+        "current ticker arrays are not a historical listing ledger",
+        "exact historic ticker and exchange still require filing-cover or corporate-action evidence",
+        "the local execution network returned HTTP 403 on 2026-08-08"
+      ],
+      "decision": "PRIMARY_REQUIRED_ACCESS_PATH_OPEN"
+    },
+    {
+      "sourceId": "SEC_EDGAR_INDEX_AND_FILINGS",
+      "name": "SEC EDGAR daily/full indexes and original submissions",
+      "url": "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+      "authority": "primary_regulator",
+      "cost": "free",
+      "coverage": "filing index, original filing headers and Form 25/15 evidence",
+      "eligibleFor": ["entityListingLedger", "historicalUniverse", "corporateActionsDelistings"],
+      "limitations": [
+        "the master index has filing date but exact acceptance time must be read from the original submission header",
+        "Form 25 proves exchange removal but does not by itself supply a complete return series"
+      ],
+      "localVerification": {
+        "coverage": "all 64 quarterly master indexes, 2009q1-2024q4",
+        "filingLocatorRows": 16380919,
+        "distinctCiks": 660978,
+        "form25FamilyRows": 27285,
+        "form15FamilyRows": 17067,
+        "blankCompanyNameRows": 1,
+        "corporateActionCandidateRows": 44352,
+        "bridgeLinkedCorporateActionCandidates": 9570,
+        "bridgeLinkedTickers": 4263,
+        "uniqueCorporateActionAccessions": 27427,
+        "verifiedDailyFeedSampleAccessions": 15,
+        "verifiedOldloadsSampleAccessions": 11,
+        "verifiedIndividualFilingSamples": 1,
+        "bulkArchiveUnionCoveredEventRows": 40033,
+        "bulkArchiveUnionCoveredAccessions": 24681,
+        "bulkArchiveUnionUnresolvedAccessions": 2746,
+        "combinedTransportDecisionReportSha256": "621c519e9b02a8b5b0efc711538019230c65a3b0cb96fc7a1b1456e71cd55915",
+        "combinedTransportDecisionFileSha256": "d1e060c492e421ea34edb32aed256e605b4d93ca2b1f9c47986a16080b1fed86",
+        "observedIndividualGapLocatorAccessions": 285,
+        "observedIndividualGapContentVerifiedAccessions": 285,
+        "bulkPlusObservedIndividualLocatorAccessions": 24966,
+        "bulkPlusObservedIndividualLocatorRate": 0.9102709009370329,
+        "individualGapRemainingUnqueriedOrUnknown": 1754,
+        "logicalRowsSha256": "ddbfb19b780468e7bfd76ab54f13232e16bf016f777b416f98ab6d3ba84c57fb",
+        "reportSha256": "08a1e89df8daf77e2483e1ed8fc96c3c877fc5cf20ac83d739e4b4d7d025c0f8",
+        "corporateActionReportSha256": "472c8e938dfc8ffae930bb6efcb27e9042d90b11e7090bab427eeefd30bf3c63"
+      },
+      "decision": "PRIMARY_FILING_LOCATOR_PASS_ORIGINAL_TRANSPORT_90PCT_PLUS_GAP_QUEUE_CONTENT_PENDING"
+    },
+    {
+      "sourceId": "SEC_MIDAS_INDIVIDUAL_SECURITY",
+      "name": "SEC Market Structure Metrics by Individual Security",
+      "url": "https://www.sec.gov/data-research/sec-markets-data/marketstructuredata-security",
+      "authority": "primary_regulator",
+      "cost": "free",
+      "coverage": "daily ticker-level CRSP/MIDAS stock and ETP universe, 2012q1-present; locally verified without gaps through 2024q4",
+      "eligibleFor": ["historicalUniverse", "listingTickerHistory", "marketRecognitionProxy", "delistedSecurityCrossCheck"],
+      "limitations": [
+        "the files expose ticker, date, security class, price/size/turnover/volatility ranks and trade-volume metrics, but not raw OHLC prices",
+        "SEC methodology states that the stock/ETP list and closing-price inputs come from CRSP with a 3-4 week update lag",
+        "ticker-to-CIK linkage still requires filing-cover or other entity evidence",
+        "coverage starts in 2012 and therefore does not close the 2009-2011 universe gap",
+        "the local SEC endpoint is rate-blocked, but the official ZIPs can be recovered through digest-verified Wayback captures",
+        "archive capture time is provenance; retrospectively published MIDAS rows are not contemporaneous signals",
+        "the official 2014q2 distribution is a ZIP containing another ZIP and is accepted only after outer and inner CRC plus CDX digest verification"
+      ],
+      "localVerification": {
+        "payloads": 52,
+        "coverage": "2012q1-2024q4",
+        "rows": 19149242,
+        "tradingDates": 3269,
+        "securityTickerPairs": 13616,
+        "stockTickerPairs": 8119,
+        "etfTickerPairs": 5497,
+        "logicalManifestSha256": "8f7cd4974f979381f58b762bab25f482ddb97e8eae9dc9ec6b2878d78264b9df",
+        "reportSha256": "3aea235318e9c268e0020c613fc8cb62279410b62a0772df5fdf693c047e09a6"
+      },
+      "decision": "PRIMARY_FREE_UNIVERSE_AND_MARKET_PROXY_NOT_OHLCV_ARCHIVE_AND_INDEX_PASS_THROUGH_2024"
+    },
+    {
+      "sourceId": "SEC_INLINE_COVER",
+      "name": "SEC filing cover-page XBRL and visible filing cover",
+      "url": "https://www.sec.gov/files/edgar/filer-information/specifications/xbrl-guide-2026-05-15.pdf",
+      "authority": "primary_regulator",
+      "cost": "free",
+      "coverage": "TradingSymbol, SecurityExchangeName and security title in recent Inline XBRL; visible cover before broad Inline XBRL adoption",
+      "eligibleFor": ["entityListingLedger", "historicalUniverse"],
+      "limitations": [
+        "pre-Inline-XBRL filings need deterministic cover-page parsing and ambiguity quarantine",
+        "multiple securities and secondary listings require separate listing IDs"
+      ],
+      "decision": "PRIMARY_REQUIRED"
+    },
+    {
+      "sourceId": "SEC_COMPANY_TICKER_ARCHIVE",
+      "name": "SEC company_tickers and company_tickers_exchange historical snapshots via digest-verified Wayback captures",
+      "url": "https://www.sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data",
+      "authority": "primary_regulator_snapshot_via_independent_archive",
+      "cost": "free_public_archive",
+      "coverage": "30 selected quarterly company_tickers captures from 2017q3-2024q4 and 11 company_tickers_exchange captures from 2021q3-2024q4",
+      "eligibleFor": ["entityListingLedger_partial", "historicalUniverse_cross_check", "candidateIdentityAdjudication"],
+      "limitations": [
+        "the SEC states that the association files are periodically updated for search functionality and does not guarantee their accuracy or scope",
+        "a Wayback capture proves the official mapping only at its exact capture timestamp and never supplies the actual effective date of a change",
+        "direct CIK-ticker coverage begins in 2017 and exchange coverage in 2021; earlier periods still require filing-cover and event reconstruction",
+        "missing quarters are never forward-filled and MIDAS ticker presence never establishes CIK or listing continuity"
+      ],
+      "localVerification": {
+        "selectedCaptures": 41,
+        "failedCaptures": 0,
+        "sourceRows": 422146,
+        "deduplicatedRows": 422135,
+        "exactDuplicateRows": 11,
+        "candidateAuditDenominator": 32662,
+        "candidateAuditAgreements": 32613,
+        "candidateAuditDisagreements": 49,
+        "candidateAuditAccuracyPercent": 99.84997856836691,
+        "directResolvedAmbiguous": 1831,
+        "directRecoveries": 1029,
+        "snapshotReportSha256": "e869513370dd49a1ddefa0f8348c1479ed1cf972da01fa09929a0ebf42c6cd85",
+        "ledgerLogicalSequenceSha256": "6a0a0922477229276fb693f024218bd614562d218d15df9d272ecc51d866a43e",
+        "ledgerReportSha256": "e21ce774d84d5469d624d9a0f4ea46e1192102ad3e79dff2d05206e2bb5e25c5"
+      },
+      "decision": "PRIMARY_DIRECT_IDENTITY_EVIDENCE_FROM_2017_NOT_EFFECTIVE_DATED_COMPLETE_LEDGER"
+    },
+    {
+      "sourceId": "NASDAQ_SYMBOL_DIRECTORY_ARCHIVE",
+      "name": "Nasdaq Trader Nasdaq-Listed and Other-Listed symbol directories via digest-verified Wayback captures",
+      "url": "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs",
+      "authority": "primary_exchange_snapshot_via_independent_archive",
+      "cost": "free_public_archive",
+      "coverage": "54 exact snapshots recovered for 2009-2024; captures are sparse and not a complete event ledger",
+      "eligibleFor": ["historicalUniverse_cross_check", "listingTickerHistory_sparse", "tickerPresenceAtExactCapture"],
+      "limitations": [
+        "a snapshot proves presence only at its exact capture timestamp and missing quarters are never forward-filled",
+        "Wayback coverage is sparse: 12 captures were recovered for 2009-2014 and 42 selected captures for 2015-2024; 38 later quarter/dataset cells have no archived capture",
+        "the files contain ticker and security name but no CIK, permanent security ID or delisting return",
+        "the 2009 Other-Listed schema used Symbol before the later ACT Symbol field and is parsed as an explicit historical variant",
+        "exact and unique normalized issuer-name matching, including contemporaneous EDGAR master-index aliases, generated 112,476 unadjudicated CIK candidates across 227,516 rows; these candidates are deliberately not treated as listing identities"
+      ],
+      "localVerification": {
+        "candidateBridgeStatus": "CANDIDATE_BRIDGE_PASS_NOT_ADJUDICATED",
+        "snapshots": 54,
+        "rows": 227516,
+        "unadjudicatedCandidates": 112476,
+        "ambiguous": 5653,
+        "unresolved": 67398,
+        "candidateRatePercent": 49.43652314562492,
+        "candidateSequenceSha256": "8437c504d6953359d840c433ac2fa517ba29a9cbe4a13befc03fcca728f86528",
+        "reportSha256": "fc947e0f6a615895b0cbec2717a491608d0c1a910981a528c082627608175deb"
+      },
+      "decision": "SUPPLEMENTAL_EXACT_CAPTURE_EVIDENCE_NOT_COMPLETE_LEDGER"
+    },
+    {
+      "sourceId": "ALPHA_VANTAGE_LISTING_STATUS",
+      "name": "Alpha Vantage Listing & Delisting Status Utility",
+      "url": "https://www.alphavantage.co/documentation/#listing-status",
+      "authority": "secondary_vendor",
+      "cost": "free_key_required",
+      "coverage": "active/delisted US stocks and ETFs; historical date parameter after 2010-01-01",
+      "eligibleFor": ["historicalUniverse_cross_check"],
+      "limitations": [
+        "the demo key returned only the current active file and rejected historic/delisted calls on 2026-08-08",
+        "no configured user key was present and no credential may be invented or exposed",
+        "vendor output cannot replace SEC evidence for the primary ledger"
+      ],
+      "decision": "SUPPLEMENTAL_BLOCKED_BY_MISSING_FREE_CREDENTIAL"
+    },
+    {
+      "sourceId": "MASSIVE_BASIC",
+      "name": "Massive Stocks Basic",
+      "url": "https://massive.com/pricing?product=stocks",
+      "authority": "secondary_vendor",
+      "cost": "free_account_required",
+      "coverage": "all US tickers, reference data, corporate actions and two years of history",
+      "eligibleFor": ["current_cross_check", "prospective_2025_2026"],
+      "limitations": [
+        "two-year free history cannot cover the 2009-2024 confirmatory study",
+        "flat files are unadjusted and account access is required"
+      ],
+      "decision": "INSUFFICIENT_FOR_CONFIRMATORY_HISTORY"
+    },
+    {
+      "sourceId": "YAHOO_CHART",
+      "name": "Yahoo chart endpoint and existing prices-max store",
+      "url": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL",
+      "authority": "secondary_vendor",
+      "cost": "free_unauthenticated_current_access",
+      "coverage": "long adjusted-close history for many currently resolvable symbols",
+      "eligibleFor": ["exploratoryTechnical", "active_symbol_cross_check"],
+      "limitations": [
+        "known delisted symbols TWTR, ATVI, CERN, XLNX, WORK, FRC, SIVB, LEH and BBBY returned HTTP 404 on 2026-08-08",
+        "existing prices-max payloads contain adjusted close only, not full OHLCV",
+        "current resolution is survivorship biased",
+        "the bounded bridge cohort found valid current-ticker files for only 9,095 of 23,165 candidate rows (39.26 percent)",
+        "adjusted close may embed corporate-action factors that were unknown at the historical snapshot"
+      ],
+      "localVerification": {
+        "candidateRows": 23165,
+        "validPriceFileRows": 9095,
+        "coveragePercent": 39.26,
+        "rowsWithAtLeast252PriorBars": 7925,
+        "priceFileManifestSha256": "fd858b4d9d76e9bda97c948c9172ed40ca32908e6f9caa3c56178127bbf1f4ff",
+        "reportSha256": "f372de7296fcfdfb143dd996e2e2e7d85541f8b658076404e668d8c79baf2dfc"
+      },
+      "decision": "EXPLORATORY_ONLY"
+    },
+    {
+      "sourceId": "HF_DATA_LIBRARY",
+      "name": "HF Data Library",
+      "url": "https://hfdatalibrary.com/pages/data",
+      "authority": "academic_secondary",
+      "cost": "free_cc_by_4_0",
+      "coverage": "1,391 US stocks and ETFs, 2002-present minute OHLCV",
+      "eligibleFor": ["price_validation_subset"],
+      "limitations": [
+        "not a full US universe",
+        "post-2022 data are IEX-only and represent a small fraction of consolidated volume"
+      ],
+      "decision": "VALIDATION_SUBSET_ONLY"
+    },
+    {
+      "sourceId": "NASDAQ_DAILY_LIST",
+      "name": "Nasdaq Daily List",
+      "url": "https://nasdaqtrader.com/Trader.aspx?id=DailyListPD",
+      "authority": "primary_exchange",
+      "cost": "paid_3500_usd_per_month_listed_2025_2027",
+      "coverage": "new listings, delistings, symbol/name changes and corporate actions since 1999",
+      "eligibleFor": [],
+      "limitations": [
+        "paid source is outside the user's authorization",
+        "historic public Daily List distribution was removed in 2004"
+      ],
+      "decision": "PROHIBITED_PAID"
+    },
+    {
+      "sourceId": "FINRA_OTC_DAILY_LIST",
+      "name": "FINRA OTC Equities Daily List and public API",
+      "url": "https://developer.finra.org/docs",
+      "authority": "primary_sro",
+      "cost": "free_public",
+      "coverage": "OTC additions, deletions, symbol/name changes, bankruptcy and corporate actions; historical archive and public API",
+      "eligibleFor": ["otcCorporateActions", "otcTickerHistory", "delistedSecurityCrossCheck"],
+      "limitations": [
+        "the source covers OTC and historical OTCBB securities, not the complete Nasdaq/NYSE listed universe",
+        "event availability and API pagination must be independently acquired and hashed before use",
+        "corporate-action records do not themselves provide adjusted OHLCV or delisting returns"
+      ],
+      "decision": "PRIMARY_FREE_OTC_SUPPLEMENT_ACQUISITION_PENDING"
+    },
+    {
+      "sourceId": "NYSE_DELISTINGS",
+      "name": "NYSE Regulation Delistings",
+      "url": "https://www.nyse.com/regulation/delistings?market=NYSE",
+      "authority": "primary_exchange",
+      "cost": "free",
+      "coverage": "current pending exchange- and issuer-initiated delistings",
+      "eligibleFor": ["corporateActionsDelistings_prospective", "cross_check"],
+      "limitations": [
+        "the public page is a current pending list, not a complete 2009-2024 archive"
+      ],
+      "decision": "SUPPLEMENTAL_PROSPECTIVE"
+    },
+    {
+      "sourceId": "COMMON_CRAWL_WARC",
+      "name": "Common Crawl URL index and WARC corpus",
+      "url": "https://index.commoncrawl.org/",
+      "authority": "independent_web_archive",
+      "cost": "free_public_corpus",
+      "coverage": "timestamped web captures with WARC payload, crawl digest and byte-range provenance",
+      "eligibleFor": ["historicalResearchObservation", "researchSourceStore", "asOfLeakageGate"],
+      "limitations": [
+        "capture coverage is incomplete and the public index is rate limited",
+        "crawl time proves observation, not original publication",
+        "signal eligibility additionally requires an unambiguous exact publication timestamp and a mapped source class"
+      ],
+      "decision": "PRIMARY_FREE_ARCHIVE_EVIDENCE_WITH_FAIL_CLOSED_METADATA_GATE"
+    },
+    {
+      "sourceId": "STOOQ_US_BULK",
+      "name": "Stooq U.S. daily bulk archive",
+      "url": "https://static.stooq.com/db/h/d_us_txt.zip",
+      "authority": "secondary_vendor",
+      "cost": "nominally_free_key_or_captcha_required",
+      "coverage": "long-run U.S. daily OHLCV bulk archive",
+      "eligibleFor": [],
+      "limitations": [
+        "the direct bulk endpoint returned HTTP 401 on 2026-08-08",
+        "the current access path requires a key obtained through an interactive anti-bot flow",
+        "delisted-symbol completeness, adjustment policy and corporate-action provenance remain unproven"
+      ],
+      "decision": "BLOCKED_AND_UNPROVEN"
+    },
+    {
+      "sourceId": "HF_JINJING_DELISTED",
+      "name": "JinJing delisted_unified historical revision",
+      "url": "https://huggingface.co/datasets/cedwyh/jinjing-shared-data",
+      "authority": "unverified_third_party",
+      "cost": "free_public_revision",
+      "coverage": "claimed 1,207,970 delisted OHLCV rows",
+      "eligibleFor": [],
+      "limitations": [
+        "payload revision 466227b2149352d28edb6da26871a8c04e5e5894 was independently hashed and inspected",
+        "all 1,207,970 rows and all 318 symbols are Chinese-market records; no U.S. delisted symbol is present",
+        "the dataset card's generic delisted label is not U.S. coverage"
+      ],
+      "decision": "REJECTED_WRONG_MARKET"
+    },
+    {
+      "sourceId": "HF_FINNHUB_OHLCV_1M",
+      "name": "Community-republished Finnhub minute OHLCV",
+      "url": "https://huggingface.co/datasets/mito0o852/OHLCV-1m",
+      "authority": "unverified_third_party",
+      "cost": "free_public_download",
+      "coverage": "monthly U.S. minute bars claimed for 1992-2026",
+      "eligibleFor": [],
+      "limitations": [
+        "the repository declares Finnhub as the original source but provides no dataset license",
+        "approximately 87.7 GB and no listing-ID, corporate-action or adjustment provenance",
+        "ticker reuse and redistribution rights are unresolved"
+      ],
+      "decision": "REJECTED_CONFIRMATORY_PROVENANCE_AND_LICENSE"
+    },
+    {
+      "sourceId": "KAGGLE_ARANDKEI_DELISTED",
+      "name": "Arandkei Historical Delisted Assets Archive v2",
+      "url": "https://www.kaggle.com/datasets/rodas86/arandkei-historical-delisted-assets-archive",
+      "authority": "unverified_third_party",
+      "cost": "free_cc_by_4_0",
+      "coverage": "20 delisted ticker CSV files in version 2",
+      "eligibleFor": ["exploratory_delisting_fixture_subset"],
+      "limitations": [
+        "only 20 tickers and therefore nowhere near a historical U.S. universe",
+        "the README does not identify the primary market-data source",
+        "adjusted close falls back to raw close when unavailable and has no action provenance",
+        "a filename has reversed start/end dates and the first VIEW row carries literal field names in numeric summary columns"
+      ],
+      "decision": "EXPLORATORY_SMALL_SUBSET_ONLY"
+    }
+  ]
+}

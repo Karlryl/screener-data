@@ -1,0 +1,43 @@
+{
+  "schema": "early-detection-sec-midas-bootstrap-summary/v1",
+  "status": "REAL_PAYLOAD_TRANSPORT_AND_INDEX_PASS_FULL_COVERAGE_PENDING",
+  "source": {
+    "dataset": "SEC_MIDAS_INDIVIDUAL_SECURITY",
+    "quarter": "2012q2",
+    "officialDistributionUrl": "https://www.sec.gov/files/opa/data/market-structure/metrics-individual-security/individual_security_2012_q2.zip",
+    "archiveCaptureTimestamp": "2020-11-01T20:24:09.000Z",
+    "payloadSha1Base32": "SS35BPN6MWK3YZH2WJHE5CESILIJCXTS",
+    "payloadSha256": "a4612e11ac4c50ef6686e81ce63685261b667e3ca026964b24f0c5cf2a37a914",
+    "payloadBytes": 12257834,
+    "zipCrc": "PASS",
+    "catalogLicense": "US public domain"
+  },
+  "index": {
+    "schema": "early-detection-sec-midas-sqlite/v1",
+    "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-midas-individual-security.sqlite",
+    "databaseBytes": 44511232,
+    "rows": 311851,
+    "dates": 63,
+    "firstDate": 20120402,
+    "lastDate": 20120629,
+    "securityTickerPairs": 5047,
+    "stockRows": 236321,
+    "etfRows": 75530,
+    "logicalManifestSha256": "d732de97a7aac71e00d671c3dfce7394c89a83b7be97bf4eecf09fac4946c44f",
+    "quickCheck": "PASS"
+  },
+  "eligibleUse": [
+    "survivorship-aware daily security universe from 2012",
+    "ticker-presence and security-type evidence",
+    "market-cap, price, turnover and volatility rank proxies",
+    "cross-check for vanished securities"
+  ],
+  "notProven": [
+    "ticker-to-CIK identity",
+    "corporate-action continuity",
+    "2009-2011 historical universe",
+    "raw OHLCV or total returns",
+    "contemporaneous publication of retrospective MIDAS rows",
+    "complete 2012-2025 local acquisition"
+  ]
+}

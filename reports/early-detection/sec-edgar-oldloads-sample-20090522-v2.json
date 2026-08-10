@@ -1,0 +1,192 @@
+{
+  "schema": "early-detection-sec-oldloads-sample/v2",
+  "generatedAt": "2026-08-09T06:51:05.955Z",
+  "status": "SAMPLE_CONTENT_AND_FORMS_VERIFIED",
+  "sourceReport": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-oldloads-sample-20090522.json",
+  "oldloadDate": "20090522",
+  "eventRows": 12,
+  "uniqueAccessions": 11,
+  "capture": {
+    "timestamp": "20160411003953",
+    "original": "https://www.sec.gov/Archives/edgar/Oldloads/2009/QTR2/20090522.gz",
+    "replayUrl": "https://web.archive.org/web/20160411003953id_/https://www.sec.gov/Archives/edgar/Oldloads/2009/QTR2/20090522.gz",
+    "digestSha1Base32": "ASDRIDPQT73Q3VRXUU6DQR24TNTY6YQR",
+    "warcRecordBytes": 128503769
+  },
+  "payload": {
+    "sha256": "4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f",
+    "sha1Base32": "ASDRIDPQT73Q3VRXUU6DQR24TNTY6YQR",
+    "bytes": 128746816,
+    "path": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\blobs\\sha256\\4f\\4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f.gz",
+    "blobCreated": false
+  },
+  "observationPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\observations\\sec-edgar-oldloads\\20090522\\20160411003953-4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f-inspection-v2.json",
+  "inspection": {
+    "schema": "early-detection-sec-oldloads-inspection/v2",
+    "expandedBytes": 534538621,
+    "submissionBlocks": 2640,
+    "maxHeaderBytesPerBlock": 1048576,
+    "targets": 11,
+    "statusCounts": {
+      "MATCHED_ACCESSION_AND_FORM": 11
+    },
+    "accessions": [
+      {
+        "accession": "0000950134-09-011374",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [
+          "15-12G"
+        ],
+        "blockNumbers": [
+          581
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0000950157-09-000300",
+        "expectedForms": [
+          "15-12B"
+        ],
+        "observedForms": [
+          "15-12B"
+        ],
+        "blockNumbers": [
+          652
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001104659-09-034585",
+        "expectedForms": [
+          "15-15D"
+        ],
+        "observedForms": [
+          "15-15D"
+        ],
+        "blockNumbers": [
+          954
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001104659-09-034588",
+        "expectedForms": [
+          "15-12B"
+        ],
+        "observedForms": [
+          "15-12B"
+        ],
+        "blockNumbers": [
+          956
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001127855-09-000231",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [
+          "15-12G"
+        ],
+        "blockNumbers": [
+          1056
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001144204-09-029171",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [
+          "15-12G"
+        ],
+        "blockNumbers": [
+          1205
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001145549-09-000903",
+        "expectedForms": [
+          "15F-12G"
+        ],
+        "observedForms": [
+          "15F-12G",
+          "EX-10.1",
+          "GRAPHIC"
+        ],
+        "blockNumbers": [
+          1293
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001157228-09-000007",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [
+          "15-12G"
+        ],
+        "blockNumbers": [
+          1314
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001193125-09-117454",
+        "expectedForms": [
+          "15-15D"
+        ],
+        "observedForms": [
+          "15-15D"
+        ],
+        "blockNumbers": [
+          1638
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001341004-09-001053",
+        "expectedForms": [
+          "15-12G"
+        ],
+        "observedForms": [
+          "15-12G"
+        ],
+        "blockNumbers": [
+          2168
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      },
+      {
+        "accession": "0001354457-09-000139",
+        "expectedForms": [
+          "25-NSE"
+        ],
+        "observedForms": [
+          "25-NSE",
+          "EX-99.25"
+        ],
+        "blockNumbers": [
+          2175
+        ],
+        "status": "MATCHED_ACCESSION_AND_FORM"
+      }
+    ]
+  },
+  "interpretation": [
+    "The raw payload and rejected v1 inspection remain immutable.",
+    "Parser v2 recognizes the actual SUBMISSION boundaries in SEC Oldloads.",
+    "This proves byte-level transport and header matching only for one day.",
+    "No event outcome, return or confirmatory statistic was computed."
+  ],
+  "sampleOnly": true,
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "ac491625b6ab687696cc850dca9a2ea5647c4e438d530e4f7b27318e37ae2278"
+}

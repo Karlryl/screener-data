@@ -1,0 +1,45 @@
+{
+  "schema": "early-detection-pit-compact-equivalence/v1",
+  "asOf": "2026-08-08",
+  "status": "PASS",
+  "coverage": {
+    "fromQuarter": "2009q1",
+    "toQuarter": "2012q4",
+    "quarters": 16,
+    "payloadVersions": 32
+  },
+  "logicalTotals": {
+    "submissions": 111374,
+    "facts": 35174832,
+    "presentations": 13523112,
+    "tags": 1339541
+  },
+  "equivalence": {
+    "wideCompactCountsEqual": true,
+    "submissionRowHashSetsEqual": true,
+    "factRowHashSequencesEqual": true,
+    "presentationRowHashSequencesEqual": true,
+    "tagRowHashSequencesEqual": true,
+    "payloadsCompared": 32,
+    "comparisonManifestSha256": "59d84eece27a2e3aaa921dcb4883a415799782decab2e7aa195d859c8d3ca093"
+  },
+  "storage": {
+    "wideReferenceBytes": 27191382016,
+    "compactBytes": 4901367808,
+    "wideToCompactRatio": 5.55,
+    "rawStoreRemainsAuthoritative": true
+  },
+  "compactDesign": [
+    "integer payload, submission, concept, unit and definition keys",
+    "32-byte binary row hashes instead of repeated 64-character text hashes",
+    "deduplicated concepts, units and exact tag definitions",
+    "payload-level source-order hash aggregates and row counts",
+    "one committed transaction per payload"
+  ],
+  "limits": {
+    "fullSqliteIntegrityAudit": "PENDING_FINAL_GATE",
+    "queryIndexes": "NOT_YET_BUILT",
+    "confirmatoryReadiness": false
+  },
+  "productiveGqsModified": false
+}

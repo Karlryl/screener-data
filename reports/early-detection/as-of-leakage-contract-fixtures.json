@@ -1,0 +1,37 @@
+{
+  "schema": "early-detection-leakage-fixture-report/v1",
+  "status": "CONTRACT_LAYER_PASS_END_TO_END_SOURCE_INGEST_PENDING",
+  "fixtures": 100,
+  "categories": {
+    "late_amendment": 10,
+    "after_close_filing": 10,
+    "late_issuer_release": 10,
+    "ticker_change": 10,
+    "future_split": 10,
+    "merger": 10,
+    "spin_off": 10,
+    "bankruptcy": 10,
+    "delisting": 10,
+    "future_market_bar": 10
+  },
+  "assertions": {
+    "lookAheadRejected": 100,
+    "exactBoundaryAccepted": 100,
+    "missingRequiredTimestampRejected": 100,
+    "futureMutationMovedKnownAt": 100
+  },
+  "coverage": [
+    "late amendment",
+    "after-close filing",
+    "late issuer release",
+    "ticker change",
+    "future split",
+    "merger",
+    "spin-off",
+    "bankruptcy",
+    "delisting",
+    "future market bar"
+  ],
+  "decision": "The shared availability contract passes 100 deterministic negative fixtures. The readiness gate stays red until these source classes pass through their real parsers and the complete GQS/FEM input path.",
+  "reportSha256": "1f90bde228a397904fb70501299f0b70019d279487b2428210a32b86399815f0"
+}

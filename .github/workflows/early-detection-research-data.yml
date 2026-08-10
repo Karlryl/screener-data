@@ -1,0 +1,50 @@
+name: Early Detection Research Data Transfer
+run-name: SEC FSD ${{ inputs.quarter }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      quarter:
+        description: SEC Financial Statement Data Set quarter (YYYYqN)
+        required: true
+        default: 2009q1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: early-detection-sec-fsd-${{ inputs.quarter }}
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout sealed research code
+        uses: actions/checkout@v4
+
+      - name: Acquire byte-identical SEC payload
+        env:
+          SEC_USER_AGENT: Growth-Screener-Research/1.0 contact=https://github.com/Karlryl/screener-data
+          SEC_FSD_QUARTER: ${{ inputs.quarter }}
+        run: >-
+          python scripts/early-detection-foundation.py acquire-sec-fsd
+          --data-root "$RUNNER_TEMP/early-detection-store"
+          --from-quarter "$SEC_FSD_QUARTER"
+          --to-quarter "$SEC_FSD_QUARTER"
+
+      - name: Verify append-only transfer store
+        run: >-
+          python scripts/early-detection-foundation.py verify
+          --data-root "$RUNNER_TEMP/early-detection-store"
+
+      - name: Upload temporary transfer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: early-detection-sec-fsd-${{ inputs.quarter }}
+          path: ${{ runner.temp }}/early-detection-store
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
