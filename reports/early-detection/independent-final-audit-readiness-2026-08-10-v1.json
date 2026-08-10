@@ -1,0 +1,48 @@
+{
+  "schema": "early-detection-independent-final-audit-decision/v1",
+  "generatedAt": "2026-08-10T19:57:38.920Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "RED_EXACT_INPUT_REMOTE_EVIDENCE_OR_HUMAN_AUDIT_INCOMPLETE",
+  "independentAuditPassed": false,
+  "humanReviewPresent": false,
+  "kitManifestReportSha256": "73033bcdfaa2db6811cc1a869aa48e62b6a25cb552df7ab9a4bda5ecbd20ff86",
+  "checklistFileSha256": "159832198ec03ce02ba732f90e7f2d072f126e1e2c7c49097ea709d97e67430d",
+  "findingsFileSha256": "5b95f5c31174918f1910571015216a1eb6b64259d3b117c1ceaf44ec1f535885",
+  "attestationFileSha256": "414c3c121e437feeb4fa0466b8949cfe11601d0a9ba15b82da4c666d3b1314a6",
+  "runBindingFileSha256": "b723887014e7c4351e8eb3c50cf613d5657c5478c9e15b5744ee25d3548e55ec",
+  "humanChecks": {
+    "decisionsValid": true,
+    "evidenceComplete": false,
+    "linkedFindingsValid": true,
+    "findingsValid": true,
+    "allChecklistItemsPassed": false,
+    "attestationPassed": false,
+    "pendingChecklistItems": 22,
+    "findingCount": 0,
+    "unresolvedP0P1P2": 0,
+    "humanAuditPassed": false
+  },
+  "mechanicalChecks": {
+    "passed": false,
+    "checks": {
+      "runBindingComplete": false,
+      "authorizedRemoteCommitReachable": false,
+      "authorizationLedgerTailMatches": false,
+      "protocolManifestMatches": false,
+      "exactInputRehashed": false,
+      "componentManifestRecomputed": false,
+      "gateEvidenceRehashed": false,
+      "allElevenGateArtifactsRehashed": false,
+      "allRemoteEvidenceRehashed": false
+    },
+    "errors": [
+      "run binding is incomplete"
+    ]
+  },
+  "officialGatePassed": false,
+  "officialGateNote": "A PASS decision must still be committed and packaged as the run-bound independentAuditPassed execution-gate artifact before authorization.",
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "285869a04648ee06205482c93206fc9c61f04077191ce5bc563fc3c75aae7fd2"
+}
