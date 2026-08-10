@@ -5,6 +5,7 @@
   "status": "NOT_READY_TO_EXECUTE",
   "missing": [
     "entityListingLedger",
+    "appendOnlySecStore",
     "historicalUniverse",
     "asOfLeakageGate",
     "adjustedOhlcv",
@@ -20,7 +21,7 @@
     "protocolSealed": true,
     "confirmatoryAnalysisImplementationSealed": true,
     "entityListingLedger": false,
-    "appendOnlySecStore": true,
+    "appendOnlySecStore": false,
     "historicalUniverse": false,
     "asOfLeakageGate": false,
     "adjustedOhlcv": false,

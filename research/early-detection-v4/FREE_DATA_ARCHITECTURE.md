@@ -26,8 +26,12 @@ Originalfiling-Dateien wurden bytegeprueft, drei EFFECT-Ereignisse bleiben als
 explizite `NOT_FOUND`-Quellbefunde erhalten. Der signierte Checkpoint ist ueber
 Commit `4055c8a2212cc4ce691fc319826b960b58b0544c` bytegleich an den autorisierten
 `origin/main`-Stand `221503a3f6d64ba13a841e96832653f52cf39733`
-gebunden. Damit ist `appendOnlySecStore` technisch gruen; der unabhaengige
-menschliche Audit bleibt als eigenes Ausfuehrungsgate rot.
+gebunden. Damit ist der SEC-Komponentenstore technisch vollstaendig und remote
+gesichert. Das offizielle `appendOnlySecStore`-Ausfuehrungsgate bleibt dennoch
+rot: Die versiegelte `gateEvidenceRule` verlangt zusaetzlich einen
+run-gebundenen PASS-Beleg fuer den exakten autorisierten Gesamtinput und dessen
+Store-Komponentenhash. Der unabhaengige menschliche Audit bleibt ausserdem als
+eigenes Ausfuehrungsgate rot.
 
 Zusätzlich sind alle 64 SEC-EDGAR-Masterindizes von `2009q1` bis `2024q4`
 digestgeprüft archiviert und in 16.380.919 Filing-Locator-Zeilen überführt. Darin
@@ -154,7 +158,7 @@ Quarantäne.
 | Gate | Kostenfreier Primärpfad | Heutiger Status | Bestehende Lücke |
 |---|---|---|---|
 | Entity-/Listing-Ledger | CIK + Filing-Cover + Form 25/15 + effekt-datierte Security-/Listing-IDs | MIDAS 2012-2024 + 54 exakte Börsen-Snapshots + 41 direkte SEC-CIK/Ticker-Snapshots; 32.613/32.662 Matcherfaelle korrekt (99,85 Prozent), 1.831 Mehrdeutigkeiten aufgeloest, 1.029 direkte Recoveries | Direkte SEC-Zustaende beginnen 2017 und sind keine effekt-datierten Intervalle; Vor-2017-Cover und Ereignisdaten offen |
-| Append-only SEC Store | SEC FSD, Originalfilings, Companyfacts; bytegleich + SHA-256 | **PASS:** 952 Observationen, 794 Payloads, 12.930.873.291 Bytes, 178/178 gueltige FSD-Revisionen, 178.601 Originalfiling-Ereignisse und 101.881 verifizierte Originaldateien; Checkpoint-Commit `4055c8a…` bytegleich an `origin/main` `221503a…` gebunden | keine technische Store-Luecke; unabhaengiger Human-Audit bleibt separat rot |
+| Append-only SEC Store | SEC FSD, Originalfilings, Companyfacts; bytegleich + SHA-256 | **TECHNISCH PASS / OFFIZIELL ROT:** 952 Observationen, 794 Payloads, 12.930.873.291 Bytes, 178/178 gueltige FSD-Revisionen, 178.601 Originalfiling-Ereignisse und 101.881 verifizierte Originaldateien; Checkpoint-Commit `4055c8a…` bytegleich an `origin/main` gebunden | run-gebundener PASS-Beleg fuer den exakten autorisierten Gesamtinput und den Store-Komponentenhash fehlt; unabhaengiger Human-Audit bleibt separat rot |
 | Historisches Universum | damalige SEC-Emittenten + MIDAS + Listing-Cover + Exit-Ereignisse | tägliche MIDAS-Reihe 2012-2024 lückenlos; 8.119 Stock- und 5.497 ETF-Tickerpaare | 2009-2011, CIK-Link und Common-Stock-Untertypen offen |
 | As-of-Leakage | `known_at=max(required source timestamps)`; unbekannt = nicht verwendbar | 100/100 Vertragsfixtures, sieben gezielte Regressionstests und ein echter Common-Crawl-WARC-Pfad bis zur normalisierten Verfügbarkeitsfunktion des versiegelten Runners bestanden | vollständiger SEC-/Corporate-Action-, Issuer-/Public-Web-, Market-Bar- und historischer GQS-Pfad bis zum exakten autorisierten FEM-Input fehlt; Gate bleibt rot |
 | Adjusted OHLCV | mehrstufige Gratisquellen + Split/Dividend-/Exit-Ereignisse | begrenzte aktuelle-Ticker-Kohorte deckt 9.095/23.165 Kandidatenzeilen beziehungsweise 39,26182 Prozent ab; 2.028 gueltige Dateien enthalten nur Datum und adjusted close; SEC MIDAS liefert 19.149.242 Marktaktivitaetszeilen, aber kein OHLCV | reproduzierbarer Unmoeglichkeitsnachweis: kein kostenloses, survivorship-sicheres 2009-2024-Volluniversum mit permanenten IDs, Actions und Delisting-Renditen belegt; Gate bleibt rot, kostenloser Fallback ist begrenzter Technik-Anhang plus prospektiver append-only Collector |
