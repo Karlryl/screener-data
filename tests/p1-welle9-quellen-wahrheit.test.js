@@ -258,16 +258,51 @@ check('F-CGPT-028: der Ausfall-Eintrag stempelt failedAt und laesst den letzten 
   assert.equal(e.error, 'fetch-failures(2)');
 });
 
-check('F-CGPT-028: main() benutzt den Soft-Error-Zweig wirklich (Anker am Objekt)', () => {
-  const src = fs.readFileSync(require.resolve('../scripts/pull-insider-form4.js'), 'utf8');
-  const mainBlock = src.slice(src.indexOf('async function main('));
-  const i = mainBlock.indexOf('_softAusfallGrund(result)');
-  assert.ok(i > 0, 'main() muss den gemeinsamen Ausfall-Grund auswerten');
-  const block = mainBlock.slice(i, i + 900);
-  assert.ok(/_ausfallEintrag\(/.test(block),
-    'der Zweig muss den Ausfall-Eintrag benutzen (failedAt, kein fetchedAt, transactions bleiben)');
+const F4_SRC = fs.readFileSync(require.resolve('../scripts/pull-insider-form4.js'), 'utf8');
+
+// Die Verdrahtung in main() laesst sich ohne echtes SEC-Netz und ohne Schreiben in den
+// echten 42-MB-Cache nicht fahren - also Anker am Quelltext. Damit der Anker nicht bloss
+// ein Schreibmuster festnagelt (F1115), prueft er die SACHE: der Ausfall-Eintrag muss dem
+// Cache-Eintrag ZUGEWIESEN werden, der Lauf muss den Fehler zaehlen, und der Erfolgs-Zweig
+// darf danach nicht mehr laufen. Die Ausbau-Probe unten belegt, dass jede fehlende dieser
+// drei Sachen rot wird.
+function mainAusfallBlock(src) {
+  const mainAb = src.indexOf('async function main(');
+  const i = src.indexOf('const softGrund = _softAusfallGrund(result);', mainAb);
+  assert.ok(i > mainAb && mainAb > 0, 'main() muss den gemeinsamen Ausfall-Grund auswerten');
+  // Blockgrenze ist der Beginn des ERFOLGS-Zweigs: so liegt das `continue;` sicher IM
+  // Block. (Ein Schnitt beim ersten `continue;` waere selbst-heilend gewesen - faellt es
+  // weg, rutscht die Grenze einfach zum naechsten continue weiter unten.)
+  const ende = src.indexOf('byTicker[ticker] = {', i);
+  return src.slice(i, ende > 0 ? ende : i + 900);
+}
+
+function pruefeMainVerdrahtung(src) {
+  const block = mainAusfallBlock(src);
+  assert.ok(/byTicker\[ticker\] = _ausfallEintrag\(/.test(block),
+    'der Ausfall-Eintrag muss dem Cache-Eintrag ZUGEWIESEN werden (failedAt, kein fetchedAt, transactions bleiben) '
+    + '- ein blosser Aufruf ohne Zuweisung waere wirkungslos');
   assert.ok(/errors\+\+/.test(block), 'der Ausfall muss in die Fehlerzahl des Laufs eingehen');
   assert.ok(/continue;/.test(block), 'nach dem Ausfall darf der Erfolgs-Zweig nicht mehr laufen');
+}
+
+check('F-CGPT-028: main() benutzt den Soft-Error-Zweig wirklich (Anker am Objekt)', () => {
+  pruefeMainVerdrahtung(F4_SRC);
+});
+
+check('F-CGPT-028 Ausbau-Probe: jede fehlende Verdrahtung macht den Anker rot', () => {
+  const block = mainAusfallBlock(F4_SRC);
+  const ausbauten = {
+    'Zuweisung verworfen': block.replace('byTicker[ticker] = _ausfallEintrag(', '_ausfallEintrag('),
+    'Fehlerzaehlung entfernt': block.replace(/errors\+\+;\s*/, ''),
+    'continue entfernt': block.replace('continue;', ''),
+  };
+  for (const was of Object.keys(ausbauten)) {
+    assert.notEqual(ausbauten[was], block, 'Ausbau "' + was + '" hat nichts veraendert - falsche Stelle geprueft');
+    const s = F4_SRC.replace(block, ausbauten[was]);
+    assert.throws(() => pruefeMainVerdrahtung(s), undefined,
+      'der Anker bleibt gruen, obwohl "' + was + '" - er nagelt die Sache nicht fest');
+  }
 });
 
 // =========================================================================
@@ -301,11 +336,22 @@ check('F-CGPT-012: der Checkpoint-Zaehler ist deklariert, wird gezaehlt und in b
   pruefeZaehlerVerankerung(YAHOO_SRC);
 });
 
-check('F-CGPT-012 Ausbau-Probe: faellt eine der drei Stellen weg, wird der Waechter rot', () => {
+// Entfernt das Checkpoint-Feld aus dem n-ten _silentErrors-Objekt (0 = inkrementell, 1 = final).
+function manifestFeldRaus(src, n) {
+  const treffer = src.match(/_silentErrors[^\n]*lamp: _lampErrors[^\n]*/g) || [];
+  if (!treffer[n]) return src;
+  return src.replace(treffer[n], treffer[n].replace(', manifestCheckpoint: _manifestCheckpointErrors', ''));
+}
+
+check('F-CGPT-012 Ausbau-Probe: faellt eine der Stellen weg, wird der Waechter rot', () => {
   const ausbauten = {
     'Deklaration entfernt': (s) => s.replace('let _manifestCheckpointErrors = 0;', ''),
     'Hochzaehlen im catch entfernt': (s) => s.replace(/_manifestCheckpointErrors\+\+;\s*/, ''),
-    'Meldung im Manifest entfernt': (s) => s.replace(/, manifestCheckpoint: _manifestCheckpointErrors/, ''),
+    // Beide Manifest-Objekte EINZELN ausbauen: ein replace ohne g-Flag traefe nur das
+    // inkrementelle - dann bliebe "nur das FINALE Manifest verliert das Feld" ungeprueft,
+    // und genau das finale liest die Auswertung.
+    'Meldung im inkrementellen Manifest entfernt': (s) => manifestFeldRaus(s, 0),
+    'Meldung im finalen Manifest entfernt': (s) => manifestFeldRaus(s, 1),
   };
   for (const was of Object.keys(ausbauten)) {
     const s = ausbauten[was](YAHOO_SRC);
