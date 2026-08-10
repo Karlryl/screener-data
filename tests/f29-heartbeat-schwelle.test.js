@@ -14,13 +14,14 @@
  *
  * WAS DIESE DATEI FESTNAGELT (Verhalten, nicht Schreibweise — alle Faelle laufen
  * die echte CLI in einem Wegwerf-Repo gegen gebaute Fixtures):
- *   (a) Kern >= 5 % leer          -> Exit 1 + ::error:: in Spalte 0
+ *   (a) Kern >= 5 % leer          -> Exit 1 + ::error:: in Spalte 0 auf STDOUT
  *   (b) Kern gesund, Ausland 100 % leer -> Exit 0, KEIN ::error::  (Kern von Option c)
  *   (c) Messausfall (beide Wege)  -> MESSAUSFALL-Verhalten unveraendert (Exit 0 + ::warning::)
  *   (d) gesunde Daten             -> Exit 0, kein ::error::
  *   (e) Grenzfall 4 % / 5 %       -> nagelt die SCHWELLE fest, nicht nur "irgendwo rot"
  *   (f) Altbestand ohne Hint zaehlt zum Kern; das 14-Tage-Ventil gilt dort weiter
  *   (g) die Kern/Ausland-Aufteilung steht auch im GRUENEN Lauf in der Ausgabe
+ *   (h) Gruppe ohne Grundmenge    -> Exit 0 + Hinweis "ohne Pruefmenge" (+ Gegenprobe)
  *
  * ROT-ZUERST: gegen origin/main (Stand 517ce9a487) faellt (a), (e-rot) und (f) —
  * das Skript kannte dort kein exit 1. Belegt im PR.
@@ -89,12 +90,16 @@ function lauf(zeilen, kurse) {
 const ROT = /^::error::/m;
 
 // ── (a) Kern ueber der Schwelle: rot ────────────────────────────────────────
-check('(a) Kern-Leer-Anteil >= 5 % macht den Lauf rot (Exit 1 + ::error:: in Spalte 0)', () => {
+check('(a) Kern-Leer-Anteil >= 5 % macht den Lauf rot (Exit 1 + ::error:: in Spalte 0 auf STDOUT)', () => {
   const g = gruppe('K', 20, 2, 'NASDAQ');            // 2/20 = 10 %
   const r = lauf(g.zeilen, g.kurse);
   assert.equal(r.code, 1, 'ein Kern-Ausfall MUSS den Schritt rot faerben — sonst ist F-29 nicht gefixt');
-  assert.match(r.alles, ROT, 'ohne ::error:: in Spalte 0 sieht GitHub nur Text und der Lauf bleibt optisch stumm');
-  const zeile = r.alles.split(/\r?\n/).find((z) => z.startsWith('::error::'));
+  assert.match(r.out, ROT, 'ohne ::error:: in Spalte 0 sieht GitHub nur Text und der Lauf bleibt optisch stumm');
+  // STDOUT ist hier die Sache, nicht die Schreibweise: alle uebrigen ::error::-Stellen der
+  // heartbeat.yml-Checks schreiben auf stdout, und nur dort steht die Meldung garantiert in
+  // derselben Reihenfolge wie die Kennzahlen, die sie erklaeren.
+  assert.ok(!ROT.test(r.err), 'die Alarmzeile gehoert auf stdout wie bei den Nachbar-Checks, nicht in den stderr-Strom');
+  const zeile = r.out.split(/\r?\n/).find((z) => z.startsWith('::error::'));
   assert.match(zeile, /10[.,]0 %/, 'die Fehlerzeile muss die gemessene Kern-Quote nennen');
   assert.match(zeile, /\b20\b/, 'die Fehlerzeile muss die Kern-Groesse nennen (sonst ist die Quote nicht einzuordnen)');
   assert.match(zeile, /Schwelle 5 %/, 'die Fehlerzeile muss die Schwelle nennen, an der sie gemessen hat');
@@ -155,7 +160,7 @@ check('(e2) 5 von 100 Kern-Titeln leer (genau 5 %) ist rot', () => {
   const g = gruppe('K', 100, 5, 'NYSE');
   const r = lauf(g.zeilen, g.kurse);
   assert.equal(r.code, 1, 'die Schwelle ist ">= 5 %"; ein ">" liesse den entschiedenen Grenzwert selbst durch');
-  assert.match(r.alles, ROT);
+  assert.match(r.out, ROT);
 });
 
 // ── (f) Kern-Definition: Altbestand und Ventil ──────────────────────────────
@@ -229,9 +234,31 @@ check('(g) die Kern/Ausland-Aufteilung steht auch im gruenen Lauf in der Ausgabe
   assert.match(r.out, /Schwelle 5 %/, 'die geltende Schwelle gehoert in die taegliche Ausgabe, nicht nur in den Quelltext');
 });
 
+// ── (h) Gruppe ohne Grundmenge: das Gate laeuft leer und sagt es ────────────
+check('(h) Kern-Basis 0: Exit 0 und eine Hinweis-Zeile, dass nichts geprueft wurde', () => {
+  // Ohne die Zeile druckt der leer laufende Waechter "0 von 0 leer (n/a)   Status: OK" —
+  // nicht von einem bestandenen Check zu unterscheiden. Analog fuer das Ausland.
+  const gestern = new Date(Date.now() - 86400000).toISOString();
+  const g = gruppe('K', 20, 20, 'NYSE', gestern);    // alle im Ventil -> Kern-Basis 0, kein Ausland
+  const r = lauf(g.zeilen, g.kurse);
+  assert.equal(r.code, 0, 'ohne Grundmenge gibt es keine Quote und darf es keinen Alarm geben');
+  assert.ok(!ROT.test(r.alles));
+  assert.match(r.out, /HINWEIS: Kern-Gate heute ohne Pruefmenge/,
+    'ein stiller Wachhund muss sagen, dass er heute nichts bewacht hat');
+  assert.match(r.out, /HINWEIS: Ausland heute ohne Pruefmenge/);
+});
+
+check('(h2) GEGENPROBE: mit Grundmenge steht der Hinweis NICHT da', () => {
+  // sonst haengt (h) nur daran, dass die Zeile immer gedruckt wird
+  const g = gruppe('K', 20, 0, 'NYSE');
+  const r = lauf(g.zeilen, g.kurse);
+  assert.equal(r.code, 0);
+  assert.ok(!/Kern-Gate heute ohne Pruefmenge/.test(r.out), 'ein Dauer-Hinweis waere Deko, kein Signal');
+});
+
 console.log('\nGeprueft: die Alarmschwelle aus Karl-Entscheid F-29c (Kern rot ab 5 %, Ausland reine Messung) '
-  + 'an 14 CLI-Laeufen gegen gebaute Wegwerf-Repos — inkl. Grenzfall 4 %/5 %/4,95 %, Gruppierungs-'
-  + 'Gegenprobe, Nasdaq-Stockholm-Falle, kaputter Hint-Typen, beider Messausfall-Wege und des '
-  + 'Neuzugangs-Ventils.');
+  + 'an 16 CLI-Laeufen gegen gebaute Wegwerf-Repos — inkl. Grenzfall 4 %/5 %/4,95 %, Gruppierungs-'
+  + 'Gegenprobe, Nasdaq-Stockholm-Falle, kaputter Hint-Typen, beider Messausfall-Wege, des '
+  + 'Neuzugangs-Ventils und der leer laufenden Gruppe (Kern-Basis 0).');
 console.log('f29-heartbeat-schwelle: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

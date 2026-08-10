@@ -133,7 +133,7 @@ check('der Lauf am ECHTEN Bestand druckt beide Kennzahlen', () => {
  * "das Skript kann gar nicht rot werden" — ein Quelltext-Grep auf `process.exit(1)`
  * und `::error::`. Er war ausdruecklich ein Platzhalter bis zur Rat-Entscheidung
  * ("eine Rot-Schwelle ist Rat-pflichtig"). Der Rat hat entschieden: Kern rot ab 5 %.
- * Das VERHALTEN nagelt jetzt tests/f29-heartbeat-schwelle.test.js fest (11 CLI-Laeufe).
+ * Das VERHALTEN nagelt jetzt tests/f29-heartbeat-schwelle.test.js fest (16 CLI-Laeufe).
  *
  * An dieser Stelle bleibt die Sache stehen, die ein Verhaltens-Test NICHT sehen kann:
  * die Schwelle ist eine feste Konstante — kein Config-Eintrag, kein Env-Ventil. Eine

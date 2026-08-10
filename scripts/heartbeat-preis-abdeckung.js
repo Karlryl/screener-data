@@ -204,10 +204,26 @@ function main(opts = {}) {
   console.log('    Ausland (uebrige Boersen):                           ' + ausland.leer + ' von ' + ausland.basis
     + ' leer (' + quote(ausland) + ')   reine MESSUNG, loest nie Alarm aus');
 
+  // Gleiche Sorge wie beim Ventil-Hinweis zur Gesamtmenge oben, eine Ebene tiefer: eine
+  // Gruppe ohne Grundmenge druckt "0 von 0 leer (n/a)" und liest sich wie ein bestandener
+  // Check. Beim Kern ist das der stille Wachhund — leerAnteil ist dann null, kernAlarm kann
+  // gar nicht mehr true werden. Wege dorthin: alle Kern-Titel frisch im Ventil (Massen-
+  // Zugang), oder eine Hint-Schreibweise wandert aus dem Kern-Set. Kein Alarm, kein Rot —
+  // nur die Zeile, die den Unterschied zwischen "geprueft und sauber" und "nichts geprueft"
+  // ausspricht.
+  const ohneMenge = (x) => 'ohne Pruefmenge — ' + x.gesamt + ' Titel in der Gruppe, davon '
+    + x.ventil + ' im Neuzugangs-Ventil; es bleibt nichts zu messen';
+  if (kern.basis === 0) console.log('    HINWEIS: Kern-Gate heute ' + ohneMenge(kern) + ' (kein Alarm moeglich).');
+  if (ausland.basis === 0) console.log('    HINWEIS: Ausland heute ' + ohneMenge(ausland) + '.');
+
   if (kernAlarm) {
-    // Spalte 0 und console.error: ein Workflow-Command wirkt nur am Zeilenanfang,
-    // eingerueckt waere er blosser Text und der Lauf bliebe optisch stumm.
-    console.error('::error::PREIS-ABDECKUNG KERN: ' + kern.leer + ' von ' + kern.basis
+    // Spalte 0: ein Workflow-Command wirkt nur am Zeilenanfang, eingerueckt waere er
+    // blosser Text und der Lauf bliebe optisch stumm.
+    // console.log (stdout), nicht console.error: alle fuenf uebrigen ::error::-Stellen der
+    // heartbeat.yml-Checks schreiben auf stdout — dort ist der Weg bewiesen (F2964). Die
+    // Meldung steht damit ausserdem in derselben Reihenfolge wie die Kennzahlen darueber,
+    // statt in einem zweiten Strom zu landen, den GitHub separat einsortiert.
+    console.log('::error::PREIS-ABDECKUNG KERN: ' + kern.leer + ' von ' + kern.basis
       + ' Kern-Titeln (' + quote(kern) + ') haben keine einzige Kurszeile — Schwelle ' + schwelleText
       + ' (Karl-Entscheid F-29c). Kern = US-Boersen + Altbestand ohne Boersen-Hint; der Auslandsteil'
       + ' (' + quote(ausland) + ') ist hier NICHT eingerechnet. NAECHSTER SCHRITT: daily-pull Step'
