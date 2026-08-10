@@ -60,6 +60,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { norm } = require('../src/scoring/snapshot.js');
 const { einmalertrag } = require('../src/scoring/lamps.js');
 
@@ -94,7 +95,7 @@ function auswerten(reihe, lage) {
 }
 
 function lauf(lage) {
-  const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   const z = { geflaggtZurueck: 0, geflaggtGehalten: 0, sauberZurueck: 0, sauberGehalten: 0, unbewertbar: 0 };
   const beispiele = { treffer: [], fehlalarm: [] };
   for (const f of dateien) {
@@ -157,7 +158,7 @@ function main() {
   // Ohne diesen Abschnitt bliebe oben eine Zahl stehen, die wie ein Beleg aussieht.
   console.log('\n[3b] ⛔ GEGENRECHNUNG: die Zahlen oben sind ZIRKULAER');
   {
-    const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+    const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
     const G = [], S = [];
     for (const f of dateien) {
       let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); } catch (_) { continue; }
@@ -219,7 +220,7 @@ function main() {
   // die Regel: sie darf dort nicht greifen, wo es nichts zu vergleichen gibt.
   console.log('\n[4b] AUFSCHLUESSELUNG nach Groesse der laufenden Basis');
   {
-    const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+    const dateien = fs.readdirSync(SNAP_DIR).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
     const klassen = [
       { name: 'Basis < 10 Mio  (praktisch umsatzlos)', min: 0, max: 10e6, g: [0, 0], s: [0, 0] },
       { name: 'Basis 10-100 Mio', min: 10e6, max: 100e6, g: [0, 0], s: [0, 0] },

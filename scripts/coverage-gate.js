@@ -16,6 +16,7 @@
 // Signal path is red-X + this marker only (no mail/Discord).
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const SNAP_DIR = './snapshots';
 const MANIFEST = path.join(SNAP_DIR, '_manifest.json');
@@ -44,7 +45,7 @@ function watchlistSize() {
   return Object.keys(w).length;                          // legacy
 }
 function fileCount() {
-  try { return fs.readdirSync(SNAP_DIR).filter(f => f.endsWith('.json') && f !== '_manifest.json').length; }
+  try { return fs.readdirSync(SNAP_DIR).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length; }
   catch (e) { return 0; }
 }
 

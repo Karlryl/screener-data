@@ -29,6 +29,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const watcher = require('../scripts/watch-fx-sanity.js');
 const { countHardcodedFallback, countOverCap, befunde, exitCodeFor } = watcher;
 
@@ -74,9 +75,17 @@ test('der Ausfall der ganzen FX-Datei (Tag 15..30) trifft ganze Waehrungs-Kohort
 test('unlesbare/leere Dateien zaehlen nicht mit und werfen nicht', () => {
   const d = korpus([hart('INR')]);
   fs.writeFileSync(path.join(d, 'kaputt.json'), '{ das ist kein JSON');
-  fs.writeFileSync(path.join(d, '_intern.json'), JSON.stringify(hart('EUR')));  // '_'-Praefix = intern
+  // Tag 634 (R1-SK-008): frueher stand hier `_intern.json` mit der Annahme "'_'-Praefix =
+  // intern". Die Annahme war der Bug: `_`-Dateien, die NICHT _manifest*/_last_good_disk
+  // heissen, sind echte Snapshots von Windows-Reserved-Tickern (safeSnapshotFilename).
+  // Der Fall wird deshalb verschaerft: echte Metadaten raus, Reserved-Name-Snapshot rein.
+  fs.writeFileSync(path.join(d, '_manifest.json'), JSON.stringify({ n_ok: 1 }));
   const r = countHardcodedFallback(d);
   assert.equal(r.n, 1, 'nur der echte Treffer');
+
+  fs.writeFileSync(path.join(d, safeSnapshotFilename('CON')), JSON.stringify(hart('EUR')));
+  const r2 = countHardcodedFallback(d);
+  assert.equal(r2.n, 2, 'der Reserved-Name-Snapshot _CON.json muss MITzaehlen');
 });
 
 test('fehlendes Verzeichnis -> 0 statt Absturz (Waechter darf den Lauf nicht sprengen)', () => {

@@ -32,6 +32,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 // Tag 220c (audit F-219b-03 LOW): shared schema-aware watchlist loader.
@@ -144,7 +145,7 @@ function collectStats() {
   // Snapshots dir count
   const snapDir = path.join(ROOT, 'snapshots');
   if (fs.existsSync(snapDir)) {
-    stats.snapshotsCount = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && f !== '_manifest.json').length;
+    stats.snapshotsCount = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length;
   } else {
     stats.snapshotsCount = null;
   }

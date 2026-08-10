@@ -37,6 +37,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { scoreUniverse } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { norm } = require('../src/scoring/snapshot.js');
@@ -154,7 +155,7 @@ function bandherleitung(dir) {
   const abweichungen = [];
   let ground = 0, exakt = 0;
   for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith('.json') || f.startsWith('_')) continue;
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
     let s; try { s = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch (_) { continue; }
     if (!s || !s.annual) continue;
     const ocf = norm(s, 'annualOCF'), fcf = norm(s, 'annualFCF'), cap = norm(s, 'annualCapex');

@@ -17,6 +17,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { isMetadataSnapshot } = require('../../lib/snapshot-fs.js');
 const { scoreUniverse, rankBy, produceRankings } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
@@ -32,7 +33,7 @@ const universe = [];
 // ohne die Rohzahl sehen "Verzeichnis leer" und "Tausende Dateien, aber Schema unlesbar" gleich aus.
 let snapFiles = 0;
 try {
-  const files = fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !x.startsWith('_'));
+  const files = fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !isMetadataSnapshot(x));
   snapFiles = files.length;
   for (const f of files) {
     try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); } catch (_) {}

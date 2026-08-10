@@ -26,6 +26,7 @@
 //        node scripts/value-spot-check.js --selftest
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const TOL_LOG10 = 0.5;      // Faktor 3.16
 const MIN_COMPARABLE = 3;   // < so viele vergleichbare Ticker -> inconclusive
@@ -127,7 +128,7 @@ async function run(io = {}) {
   const seed = parseInt(get('--seed', String(isoWeekSeed(new Date()))), 10);
 
   let files = [];
-  try { files = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')); }
+  try { files = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)); }
   catch (e) { error(`::error::value-spot-check — Snapshot-Ordner ${snapDir} nicht lesbar (${e.message}); Pruefer blind.`); exit(1); return; }
   if (files.length < MIN_COMPARABLE) { error(`::warning::MESSAUSFALL: value-spot-check — nur ${files.length} Snapshots; keine Aussage zur Werte-Qualitaet.`); exit(0); return; }
 
