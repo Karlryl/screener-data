@@ -112,6 +112,17 @@ gebunden. Der technische Checkpoint ist damit bestanden. Das offizielle Gate
 bleibt bis zum run-gebundenen exakten Gesamtinput und einer wirklich
 unabhaengigen menschlichen Semantikpruefung rot.
 
+Der Human-Schritt ist vollstaendig vorbereitet, aber nicht vorgetaeuscht. Der
+Kit `concept-map-semantic-audit-v1` friert 50 Pruefeinheiten ein: globale
+Form-/Unit-/Availability-/Verbotsregeln sowie fuer jede der neun Rollen
+Zielfelder, Konzeptprioritaet, `qtrs`-Semantik und Ableitungen. Jede Einheit
+verlangt eine Primaerquellenangabe, Entscheidung, Findingschwere und
+Begruendung; das getrennte Attest verlangt Mensch, Unabhaengigkeit,
+Outcome-Blindheit, Primaertaxonomie-Pruefung, Konfliktoffenlegung, Zeitpunkt
+und Namenssignatur. Der fail-closed Verifier akzeptiert nur 50/50 `APPROVE`
+mit `NONE`-Findings und vollstaendigem Attest. Im ausgelieferten Blankzustand
+meldet er korrekt `semanticAuditPassed=false` und `humanReviewPresent=false`.
+
 Die getrennte SIC-Bruecke prüft 17.429 letzte SEC-Meldeidentitäten. 12.167 lassen sich
 mit einem unzweideutigen SIC einer Forschungskohorte zuweisen, 2.565 werden wie vom
 Produktionsvertrag strukturell ausgeschlossen, und 2.697 beziehungsweise 15,47 Prozent
@@ -167,7 +178,7 @@ Quarantäne.
 | Adjusted OHLCV | mehrstufige Gratisquellen + Split/Dividend-/Exit-Ereignisse | begrenzte aktuelle-Ticker-Kohorte deckt 9.095/23.165 Kandidatenzeilen beziehungsweise 39,26182 Prozent ab; 2.028 gueltige Dateien enthalten nur Datum und adjusted close; SEC MIDAS liefert 19.149.242 Marktaktivitaetszeilen, aber kein OHLCV | reproduzierbarer Unmoeglichkeitsnachweis: kein kostenloses, survivorship-sicheres 2009-2024-Volluniversum mit permanenten IDs, Actions und Delisting-Renditen belegt; Gate bleibt rot, kostenloser Fallback ist begrenzter Technik-Anhang plus prospektiver append-only Collector |
 | Corporate Actions/Delistings | SEC Form 25/15, 8-K, Filing-Cover, Börsenmeldungen | 44.352 Ereigniskandidaten, 27.427 Accessions; Feed+Oldloads-Vereinigung 24.681 Accessions, outcome-blinde Restqueue nach 17/43 gueltigen Batches plus 285 Individual-Locator = 24.966 beziehungsweise 91,02709 Prozent; alle 285 Zusatzinhalte validiert, die Batchindizes 7, 13, 15, 19 und 20 bleiben offen | 1.754 Accessions unbefragt oder technisch offen; vollständige Acceptance-/Effective-Zeitpunkte, lokaler Inhaltsbestand und Delisting-Renditen fehlen |
 | Historischer GQS-Adapter | GQS-00@1.0.0 gegen damals bekannte SEC-Vintages | 12 Quartalspunkte 2012-2014 reproduziert | nur SEC-Schatten, Outcome- und Preisvergleich offen |
-| Konzeptkarte | SEC-Tags + Statement-Rolle + sektoraler Fallback, vor Outcomes eingefroren | **TECHNISCH PASS / OFFIZIELL ROT:** `FEM-SEC-CONCEPT-MAP@1.0.0`, Siegel und 64-Quartals-Coverage mit 127 Payloads und allen neun Rollen liegen bytegleich seit Tag 639 auf `origin/main`; exakte Reproduktion und mechanische Mutationstests bestanden | run-gebundener Beleg fuer den exakten Gesamtinput-/Konzeptkomponentenhash und unabhaengiger menschlicher Semantikaudit fehlen |
+| Konzeptkarte | SEC-Tags + Statement-Rolle + sektoraler Fallback, vor Outcomes eingefroren | **TECHNISCH PASS / OFFIZIELL ROT:** `FEM-SEC-CONCEPT-MAP@1.0.0`, Siegel und 64-Quartals-Coverage mit 127 Payloads und allen neun Rollen liegen bytegleich seit Tag 639 auf `origin/main`; exakte Reproduktion und mechanische Mutationstests bestanden; 50-Item-Human-Audit-Kit und fail-closed Verifier sind fertig | ausgefuellter unabhaengiger Human-Semantikaudit sowie run-gebundener Beleg fuer den exakten Gesamtinput-/Konzeptkomponentenhash fehlen |
 | Blind Coding | zwei wirklich unabhängige, outcome-blinde menschliche Codierer | fail-closed Kit gebaut: exaktes CSV-Schema, T/E/L-Vollständigkeit, Cutoff-, Identitäts-, Kappa- und Exact-Agreement-Prüfung; Kompilierung, positiver Test und vier Negativtests bestanden | zwei echte unabhängige Menschen, Blinding-/Unabhängigkeitsatteste, echte Codierdateien und Remote-Hashbindung fehlen; Gate bleibt rot |
 | Research-Korpus | append-only Quellenpayloads, Suchprotokoll, Cutoff und Hashmanifest | Store-Grundlage gebaut | historische Themenquellen noch nicht vollständig eingesammelt |
 | Unabhängiger Audit | genaue Input-/Komponentenhashes und Gate-Artefakte gegen origin/main | später ausführbar | kann erst nach fertigem Input grün werden |

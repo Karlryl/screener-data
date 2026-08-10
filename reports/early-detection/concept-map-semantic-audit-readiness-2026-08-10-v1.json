@@ -1,0 +1,30 @@
+{
+  "schema": "early-detection-concept-map-semantic-audit-decision/v1",
+  "generatedAt": "2026-08-10T19:28:44.665Z",
+  "status": "RED_HUMAN_REVIEW_INCOMPLETE_OR_NOT_APPROVED",
+  "semanticAuditPassed": false,
+  "humanReviewPresent": false,
+  "kitManifestReportSha256": "496cc88ebd3b6ff899620fe97f6baae31b08ccdef92e784f0a0c6c08ecd8478d",
+  "reviewFileSha256": "f28a4d0983c00a5bf7c04fb52b0b40717f6e7a2f90a501733dedcaf40f63fdaf",
+  "attestationFileSha256": "7fb00efdc83e25a585853393ae2b8e9f55c4734b11102a628a31aa7a3eb5906e",
+  "checks": {
+    "decisionsValid": false,
+    "severitiesValid": false,
+    "evidenceComplete": false,
+    "allItemsApproved": false,
+    "attestationPassed": false,
+    "semanticAuditPassed": false,
+    "pendingItems": 50
+  },
+  "officialConceptMapGatePassed": false,
+  "officialGateRequirementsStillMissing": [
+    "independentHumanSemanticAudit",
+    "exactAuthorizedFullInputSha256",
+    "runBoundConceptMapComponentSha256",
+    "remoteExecutionGateArtifactOnAuthorizedHistory"
+  ],
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "34e07b273370740e4847a6fb4557b792707bc85e01c8eeff46ee92dbb4a7f638"
+}
