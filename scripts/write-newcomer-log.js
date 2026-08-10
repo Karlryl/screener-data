@@ -54,6 +54,12 @@ function mitgliederAus(raw) {
  * aktuelle — sonst waere der erste Eintrag jedes Monats faelschlich ein Neuzugangs-Feuerwerk.
  * Kaputte Zeilen werden uebersprungen statt den Lauf zu kippen (eine unlesbare Zeile ist
  * ein verlorener Tag, kein Grund, den heutigen auch noch zu verlieren).
+ *
+ * Review-Nachzug Welle 7: Statuszeilen (nicht-messbare Tage, KEIN members-Array) zaehlen
+ * hier ausdruecklich mit. Sonst kippt der naechste regulaere Lauf sie beim Rewrite der
+ * Monatsdatei stillschweigend raus — der Ausfall waere genau so unsichtbar wie vorher,
+ * nur einen Tag spaeter. Wer einen Mitglieder-VORGAENGER sucht, filtert selbst auf
+ * Array.isArray(z.members) (siehe run()).
  */
 function bisherigeZeilen(dir = LOG_DIR) {
   if (!fs.existsSync(dir)) return [];
@@ -66,7 +72,8 @@ function bisherigeZeilen(dir = LOG_DIR) {
       if (!z.trim()) continue;
       try {
         const o = JSON.parse(z);
-        if (o && typeof o.date === 'string' && Array.isArray(o.members)) raus.push(o);
+        if (o && typeof o.date === 'string'
+          && (Array.isArray(o.members) || typeof o.status === 'string')) raus.push(o);
       } catch (e) {
         // BK-SK-001: die Zeile wird weiterhin uebersprungen (ein verlorener Tag ist kein
         // Grund, den heutigen auch zu verlieren) — aber nicht mehr stumm. Faellt die
@@ -93,16 +100,45 @@ function diffMitglieder(vorher, heute) {
   };
 }
 
+/**
+ * Schreibt EINE Zeile in die Monatsdatei — Rewrite statt Append, damit ein Zweitlauf
+ * desselben Tages seinen Eintrag ERSETZT statt zu duplizieren. Gilt fuer Mitglieder-
+ * UND Statuszeilen (Review-Nachzug Welle 7: der Append im Leer-Zweig legte bei jedem
+ * Wiederholungslauf eine weitere "nicht-messbar"-Zeile fuer denselben Tag an).
+ * Rueckgabe: repo-relativer Pfad — konsistent fuer beide Zweige.
+ */
+function schreibeMonatszeile(logDir, datum, eintrag, dryRun, zeilen) {
+  const datei = path.join(logDir, datum.slice(0, 7) + '.jsonl');
+  const alle = zeilen || bisherigeZeilen(logDir);
+  const behalten = alle.filter((z) => z.date !== datum && z.date.slice(0, 7) === datum.slice(0, 7));
+  const inhalt = [...behalten, eintrag]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((o) => JSON.stringify(o))
+    .join('\n') + '\n';
+  if (!dryRun) {
+    fs.mkdirSync(logDir, { recursive: true });
+    // writeJsonAtomic erwartet ein Objekt; JSONL wird deshalb direkt geschrieben —
+    // aber ueber eine Temp-Datei plus rename, damit ein abgebrochener Lauf keine halbe
+    // Datei hinterlaesst (dasselbe Versprechen, anderes Format).
+    const tmp = datei + '.tmp';
+    fs.writeFileSync(tmp, inhalt, 'utf8');
+    fs.renameSync(tmp, datei);
+  }
+  return path.relative(REPO_ROOT, datei);
+}
+
 function run(opts = {}) {
   const dryRun = Boolean(opts.dryRun);
   const datum = opts.date || isoHeute();
+  const overview = opts.overview || OVERVIEW;
+  const logDir = opts.logDir || LOG_DIR;
 
-  if (!fs.existsSync(OVERVIEW)) {
+  if (!fs.existsSync(overview)) {
     return { status: 'keine-uebersicht', date: datum, exitCode: 0 };
   }
   let raw;
   try {
-    raw = JSON.parse(fs.readFileSync(OVERVIEW, 'utf8'));
+    raw = JSON.parse(fs.readFileSync(overview, 'utf8'));
   } catch (e) {
     // Unlesbare Uebersicht: NICHT still weitergehen. Das ist ein echter Defekt weiter
     // vorn in der Kette, und eine leere Mitgliederliste zu schreiben waere schlimmer als
@@ -111,14 +147,18 @@ function run(opts = {}) {
   }
   const members = mitgliederAus(raw);
   if (!members.length) {
-    return { status: 'uebersicht-leer', date: datum, exitCode: 0 };
+    const statuszeile = { date: datum, board: 'hypergrowth-overview', status: 'nicht-messbar', reason: 'uebersicht-leer' };
+    const datei = schreibeMonatszeile(logDir, datum, statuszeile, dryRun);
+    return { status: 'uebersicht-leer', date: datum, datei, statuszeile, dryRun, exitCode: 0 };
   }
 
-  const zeilen = bisherigeZeilen();
+  const zeilen = bisherigeZeilen(logDir);
   // Rerun DESSELBEN Tages ersetzt seinen Eintrag, statt einen zweiten anzuhaengen —
   // sonst waere der zweite Lauf eines Tages immer „null Neuzugaenge" und der erste
   // Eintrag bliebe als Karteileiche stehen.
-  const frueher = zeilen.filter((z) => z.date < datum);
+  // Vorgaenger ist die letzte Zeile MIT Mitgliederliste: ein nicht messbarer Tag
+  // (Statuszeile) darf nicht als „Board war leer" in die Zu-/Abgangsrechnung eingehen.
+  const frueher = zeilen.filter((z) => z.date < datum && Array.isArray(z.members));
   const vorgaenger = frueher.length ? frueher[frueher.length - 1] : null;
   const { newcomers, departures } = diffMitglieder(vorgaenger ? vorgaenger.members : null, members);
 
@@ -135,38 +175,27 @@ function run(opts = {}) {
     members,
   };
 
-  const datei = path.join(LOG_DIR, datum.slice(0, 7) + '.jsonl');
-  const behalten = zeilen.filter((z) => z.date !== datum && z.date.slice(0, 7) === datum.slice(0, 7));
-  const inhalt = [...behalten, eintrag]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((o) => JSON.stringify(o))
-    .join('\n') + '\n';
-
-  if (!dryRun) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
-    // writeJsonAtomic erwartet ein Objekt; JSONL wird deshalb direkt geschrieben —
-    // aber ueber eine Temp-Datei plus rename, damit ein abgebrochener Lauf keine halbe
-    // Datei hinterlaesst (dasselbe Versprechen, anderes Format).
-    const tmp = datei + '.tmp';
-    fs.writeFileSync(tmp, inhalt, 'utf8');
-    fs.renameSync(tmp, datei);
-  }
+  const datei = schreibeMonatszeile(logDir, datum, eintrag, dryRun, zeilen);
   return {
     status: 'geschrieben', date: datum, prior: eintrag.prior, n: members.length,
     erstaufnahme: eintrag.erstaufnahme,
     newcomers: eintrag.newcomers, departures: eintrag.departures,
-    datei: path.relative(REPO_ROOT, datei), dryRun, exitCode: 0,
+    datei, dryRun, exitCode: 0,
   };
 }
 
 if (require.main === module) {
-  const dryRun = process.argv.includes('--dry-run');
-  const res = run({ dryRun });
+  const argv = process.argv;
+  const flag = (name) => { const i = argv.indexOf(name); return i >= 0 && argv[i + 1] ? argv[i + 1] : null; };
+  const dryRun = argv.includes('--dry-run');
+  // --overview/--log-dir existieren, damit der CLI-Pfad (und nur der annotiert) in
+  // einem Temp-Verzeichnis verhaltensgetestet werden kann statt per Quelltext-Regex.
+  const res = run({ dryRun, overview: flag('--overview'), logDir: flag('--log-dir'), date: flag('--date') });
   const tag = res.dryRun ? '[dry-run] ' : '';
   if (res.status === 'keine-uebersicht') {
     console.log('newcomer-log: keine outputs/hypergrowth/overview.json — nichts zu tun.');
   } else if (res.status === 'uebersicht-leer') {
-    console.log('newcomer-log: Uebersicht hat null Zeilen — nichts geschrieben (waere morgen ein Scheinereignis).');
+    console.log('::warning::newcomer-log: Uebersicht hat null Zeilen — Tag als nicht messbar mitgeschrieben.');
   } else if (res.status === 'uebersicht-unlesbar') {
     console.error('newcomer-log FEHLER: Uebersicht unlesbar — ' + res.error);
   } else {
