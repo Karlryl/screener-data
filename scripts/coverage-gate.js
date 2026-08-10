@@ -197,6 +197,11 @@ function degradedMarkerBroken(status, markerErrors, markerWriteFailed) {
 
 function run() {
   const m = readJSON(MANIFEST);
+  const nCcyMissing = m && Number.isFinite(m.n_ccy_missing_completely) ? m.n_ccy_missing_completely : 0;
+  if (nCcyMissing > 0) {
+    console.error(`::error::${nCcyMissing} Ticker ohne jede Waehrungsangabe — Snapshots NICHT ueberschrieben, Altbestand bleibt`);
+    process.exit(1);
+  }
   const res = classify(m, watchlistSize(), fileCount());
   const marker = buildMarker(res, m);
   const coveragePct = marker.coverage_pct;

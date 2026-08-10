@@ -84,6 +84,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_full: sum('n_full'),
     n_priceonly: sum('n_priceonly'),
     n_skipped_mcap: sum('n_skipped_mcap'),
+    n_ccy_missing_completely: sum('n_ccy_missing_completely'),
     // Tag 464: Ticker, die der Hauptlauf vor dem Abruf uebersprungen hat, weil die
     // Small-Cap-Liste sie besitzt (Eigentumsgrenze, Karl-Entscheid A). Sie stehen weiter in
     // watchlist.json — also im Voll-Universum unten — wurden aber nie versucht und koennen
