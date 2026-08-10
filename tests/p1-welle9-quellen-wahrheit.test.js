@@ -103,6 +103,11 @@ const nasdaqDatei = () => {
   for (let i = 0; i < N_SYM; i++) zeilen.push(symbolName(i) + '|Firma ' + i + '|Q|N|N|100|N|N');
   return [kopf, ...zeilen, 'File Creation Time: 0810202614:00'].join('\n');
 };
+// Nachzug 10.08.2026: die otherlisted-Antwort war bis hierhin eine nackte Kopfzeile ohne
+// einen einzigen Datensatz — genau das, was der neue Muell-Erkenner (zu Recht) als Ausfall
+// meldet. Eine echte Zeile muss rein, sonst prueft die "gesund"-Gegenprobe einen Ausfall.
+const OTHER_KOPF = 'ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot|Test Issue|NASDAQ Symbol';
+const otherDatei = () => [OTHER_KOPF, 'OTHR1|Other AG|N|OTHR1|N|100|N|OTHR1'].join('\n');
 const secDatei = () => {
   const j = {};
   for (let i = 0; i < N_SYM; i++) j[i] = { ticker: symbolName(i), cik_str: i + 1, title: 'Firma ' + i };
@@ -117,16 +122,29 @@ function grundbildSchreiben(dir) {
     symbole[symbolName(i)] = { n: 'Firma ' + i, b: 'NASDAQ:Q', e: 'N', t: 'N', c: String(i + 1).padStart(10, '0') };
   }
   symbole.NURSEC = { n: 'Nur bei der SEC', b: 'SEC', e: '', t: '', c: '0000009999' };
+  symbole.OTHR1 = { n: 'Other AG', b: 'N', e: 'N', t: 'N' };   // aus otherlisted, ohne CIK
   fs.writeFileSync(path.join(dir, '_grundbild.json'), JSON.stringify(symbole));
 }
 const tmpDir = (p) => fs.mkdtempSync(path.join(os.tmpdir(), p));
 
-const netzMit = (secAntwort) => (url) => {
+const netzMit = (secAntwort, nasdaqAntwort) => (url) => {
   if (url.includes('company_tickers.json')) return secAntwort;
-  if (url.includes('nasdaqlisted')) return { body: nasdaqDatei() };
-  if (url.includes('otherlisted')) return { body: 'ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot|Test Issue|NASDAQ Symbol' };
+  if (url.includes('nasdaqlisted')) return nasdaqAntwort || { body: nasdaqDatei() };
+  if (url.includes('otherlisted')) return { body: otherDatei() };
   throw new Error('unerwartete URL im Test: ' + url);
 };
+
+// Einen vollen Tageslauf gegen ein frisches Verzeichnis fahren und die Tageszeile samt
+// Logzeilen zurueckgeben.
+async function tageslauf(praefix, antwortFuer) {
+  const dir = tmpDir(praefix);
+  grundbildSchreiben(dir);
+  try {
+    return await mitLog(() => mitNetz(antwortFuer, () => TM.run([], { dir })));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
 
 check('F-CGPT-027: SEC antwortet 200 mit Muell -> der Tag meldet den Ausfall UND kompensiert ihn', async () => {
   const dir = tmpDir('w9-tmap-kaputt-');
@@ -176,6 +194,59 @@ check('F-CGPT-027: baueKarte meldet den kaputten SEC-Parse nach aussen', () => {
   const ohne = [];
   TM.baueKarte({ nasdaq: '', other: '', sec: '{"0":{"ticker":"AAPL","cik_str":320193,"title":"Apple"}}' }, ohne);
   assert.deepEqual(ohne, [], 'GEGENPROBE: gesundes SEC-JSON darf nichts melden');
+});
+
+// ---- Nachzug 10.08.2026 (Review): dasselbe Loch stand bei nasdaq/other offen ----
+// Der Muell-Erkenner galt nur fuer die SEC. nasdaqlisted/otherlisted koennen genauso mit
+// HTTP 200 eine Wartungsseite liefern; kaputte Zeilen werden beim Parsen einfach
+// uebersprungen, also blieb der Ausfall vollstaendig still.
+
+check('F-CGPT-027-Nachzug: NASDAQ antwortet 200 mit Muell -> derselbe Weg wie ein Netzfehler', async () => {
+  const html = await tageslauf('w9-nasdaq-html-',
+    netzMit({ body: secDatei() }, { body: '<html><body>NASDAQ Trader | Scheduled Maintenance</body></html>' }));
+  const netz = await tageslauf('w9-nasdaq-netz-',
+    netzMit({ body: secDatei() }, { netzfehler: 'ECONNRESET' }));
+
+  assert.ok(html.wert.quellenFehlend.includes('nasdaq'),
+    'quellenFehlend muss "nasdaq" enthalten - sonst behauptet die Tageszeile dauerhaft, die Boersendatei sei da gewesen '
+    + '(bekam: ' + JSON.stringify(html.wert.quellenFehlend) + ')');
+  // Der Kern: der 200er-Muell darf nicht bloss gemeldet werden, er muss durch DIESELBE
+  // Strecke laufen wie der bereits gepruefte Netzfehler - sonst ist es eine zweite,
+  // ungetestete Sonderbehandlung.
+  const vergleich = (z) => JSON.stringify({
+    quellen: z.quellenFehlend, summe: z.summe, hinzu: Object.keys(z.hinzu).sort(),
+    weg: z.weg, geaendert: Object.keys(z.geaendert).sort(), pruefsumme: z.pruefsumme,
+  });
+  assert.equal(vergleich(html.wert), vergleich(netz.wert),
+    'Wartungsseite und Netzfehler muessen denselben Tag ergeben');
+  assert.ok(html.zeilen.some((z) => z.startsWith('::warning::') && /nasdaq/i.test(z)),
+    '::warning:: an Spalte 0 (GitHub-Annotation), sonst sieht niemand den Ausfall');
+});
+
+check('F-CGPT-027-Nachzug: baueKarte erkennt Muell in nasdaq/other und einen leeren SEC-Body', () => {
+  const gesund = { nasdaq: nasdaqDatei(), other: otherDatei(), sec: secDatei() };
+  const mit = (aenderung) => { const p = []; TM.baueKarte(Object.assign({}, gesund, aenderung), p); return p; };
+
+  assert.deepEqual(mit({}), [], 'GEGENPROBE: drei gesunde Quellen duerfen nichts melden');
+  assert.deepEqual(mit({ nasdaq: '<html><body>Maintenance</body></html>' }), ['nasdaq'],
+    'eine Wartungsseite statt nasdaqlisted muss als Ausfall gelten');
+  assert.deepEqual(mit({ other: '<html>\n<body>Maintenance</body>\n</html>' }), ['other'],
+    'dasselbe fuer otherlisted - mehrzeiliges HTML ergibt 0 Datensaetze');
+  // Formal saubere Zeilen, aber vertauschte Kopfspalten: der Datensatz-Zaehler allein
+  // wuerde das durchwinken, und die Karte traege danach Firmennamen als Symbol.
+  assert.deepEqual(mit({ nasdaq: ['Security Name|Symbol|Market Category|Test Issue|Financial Status|Round Lot|ETF|NextShares',
+    'Apple Inc.|AAPL|Q|N|N|100|N|N'].join('\n') }), ['nasdaq'],
+    'vertauschte Kopfspalten muessen auffallen, auch wenn Zeilen "parsen"');
+  assert.deepEqual(mit({ sec: '   ' }), ['sec'],
+    'ein leerer SEC-Body ist ein Ausfall, kein "die SEC kennt heute keine einzige CIK"');
+  // Gegenprobe zur Sproedigkeit: Feld 5 heisst in den echten Dateien "Round Lot Size" und
+  // in aelteren Beschreibungen "Round Lot". Gelesen wird es nie - eine Umbenennung dort
+  // darf keinen Tagesausfall ausloesen (sonst ist der Waechter ein Fehlalarm-Automat).
+  assert.deepEqual(mit({ nasdaq: nasdaqDatei().replace('Round Lot', 'Round Lot Size') }), [],
+    'eine Umbenennung einer NICHT gelesenen Spalte darf nichts ausloesen');
+  // Und die leere Quelle bleibt Sache des Abruf-catch: dort steht sie laengst in `fehlend`.
+  assert.deepEqual(mit({ nasdaq: '' }), [],
+    'ein leerer Body ist ein Abruf-Ausfall und wird nicht doppelt gemeldet');
 });
 
 // =========================================================================
@@ -258,6 +329,59 @@ check('F-CGPT-028: der Ausfall-Eintrag stempelt failedAt und laesst den letzten 
   assert.equal(e.error, 'fetch-failures(2)');
 });
 
+check('F-CGPT-028 Gegenprobe: ein 404 auf das Dokument bleibt Normalbetrieb, kein Ausfall', async () => {
+  // Der Rohpfad wird aus primaryDocument abgeleitet und kann strukturell danebenliegen.
+  // Diese Ausnahme ist gewollt - sie wird hier festgenagelt, damit sie niemand versehentlich
+  // zum Ausfall macht (dann liefe die halbe Watchlist dauerhaft im Soft-Error-Zweig).
+  const res = await mitNetz((url) => {
+    if (url.includes('/submissions/')) return { body: submissionsSchlicht() };
+    return { status: 404 };
+  }, () => F4._internals.pullTickerForm4('TST', { cik: '0000000001', name: 'Test AG' }));
+  assert.equal(res.fetchFailures || 0, 0, 'ein Dokument-404 darf NICHT als Abruf-Ausfall zaehlen');
+  assert.equal(res.transactions.length, 0);
+  assert.equal(F4._internals._softAusfallGrund(res), null, 'und damit auch nicht in den Soft-Error-Zweig fuehren');
+});
+
+check('F-CGPT-028-Nachzug: ein TEIL-Ausfall verwirft die frisch geholten Transaktionen nicht', async () => {
+  // Aufbau: die aeltere Filing-Seite faellt aus (503), die recent-Filings liefern aber eine
+  // gueltige Transaktion. Bis zum Nachzug baute der Ausfall-Eintrag ausschliesslich auf
+  // `prev` auf - die frisch geholte Transaktion war weg, und weil kein fetchedAt gesetzt
+  // wird, holte der naechste Lauf sie zwar erneut, verwarf sie aber erneut, solange die
+  // aeltere Seite ausfiel. Dauerhafter Verlust bei dauerhaftem Teil-Ausfall.
+  const res = await mitNetz((url) => {
+    if (url.includes('-submissions-')) return { status: 503 };
+    if (url.includes('/submissions/CIK')) return { body: submissionsMitAelterenSeiten() };
+    return { body: FORM4_XML };
+  }, () => F4._internals.pullTickerForm4('TST', { cik: '0000000001', name: 'Test AG' }));
+  assert.ok((res.fetchFailures || 0) > 0 && res.transactions.length === 1,
+    'Aufbau des Tests: Teil-Ausfall MIT einer frischen Transaktion (bekam fetchFailures='
+    + res.fetchFailures + ', transactions=' + res.transactions.length + ')');
+
+  const prev = { ticker: 'TST', fetchedAt: '2026-08-01T00:00:00.000Z',
+    transactions: [{ accessionNumber: '0000000000-25-000009', transactionCode: 'S' }] };
+  const e = F4._internals._ausfallEintrag(prev, 'TST', { cik: '0000000001', name: 'Test AG' },
+    F4._internals._softAusfallGrund(res), res.transactions);
+
+  assert.ok(e.transactions.some((t) => t.accessionNumber === '0000000000-26-000001'),
+    'die NEUE Transaktion muss im Cache-Eintrag stehen - sonst ist ein gueltiges Filing still verloren');
+  assert.ok(e.transactions.some((t) => t.accessionNumber === '0000000000-25-000009'),
+    'und der alte Stand darf dabei nicht verdraengt werden (das kurze Fenster ist nicht das ganze Bild)');
+  assert.ok(e.failedAt, 'failedAt muss gesetzt sein - der Stand ist verkuerzt');
+  assert.equal(e.fetchedAt, prev.fetchedAt,
+    'KEIN frisches fetchedAt: sonst sperrt die 24h-TTL den Nachholversuch der ausgefallenen Seite aus');
+});
+
+check('F-CGPT-028-Nachzug Gegenprobe: voller Ausfall (0 Transaktionen) laesst den alten Stand stehen', () => {
+  const prev = { ticker: 'TST', fetchedAt: '2026-08-01T00:00:00.000Z',
+    transactions: [{ accessionNumber: '0000000000-25-000009', transactionCode: 'S' }] };
+  const e = F4._internals._ausfallEintrag(prev, 'TST', { cik: '0000000001', name: 'Test AG' },
+    'fetch-failures(3)', []);
+  assert.deepEqual(e.transactions, prev.transactions,
+    'ohne frische Transaktionen bleibt der letzte gute Stand unangetastet');
+  assert.equal(e.fetchedAt, prev.fetchedAt);
+  assert.ok(e.failedAt);
+});
+
 const F4_SRC = fs.readFileSync(require.resolve('../scripts/pull-insider-form4.js'), 'utf8');
 
 // Die Verdrahtung in main() laesst sich ohne echtes SEC-Netz und ohne Schreiben in den
@@ -284,6 +408,9 @@ function pruefeMainVerdrahtung(src) {
     + '- ein blosser Aufruf ohne Zuweisung waere wirkungslos');
   assert.ok(/errors\+\+/.test(block), 'der Ausfall muss in die Fehlerzahl des Laufs eingehen');
   assert.ok(/continue;/.test(block), 'nach dem Ausfall darf der Erfolgs-Zweig nicht mehr laufen');
+  assert.ok(/_ausfallEintrag\([^)]*result\.transactions\)/.test(block),
+    'die frisch geholten Transaktionen muessen in den Ausfall-Eintrag durchgereicht werden - sonst verwirft '
+    + 'ein Teil-Ausfall gueltige neue Filings (Nachzug 10.08.2026)');
 }
 
 check('F-CGPT-028: main() benutzt den Soft-Error-Zweig wirklich (Anker am Objekt)', () => {
@@ -296,6 +423,7 @@ check('F-CGPT-028 Ausbau-Probe: jede fehlende Verdrahtung macht den Anker rot', 
     'Zuweisung verworfen': block.replace('byTicker[ticker] = _ausfallEintrag(', '_ausfallEintrag('),
     'Fehlerzaehlung entfernt': block.replace(/errors\+\+;\s*/, ''),
     'continue entfernt': block.replace('continue;', ''),
+    'frische Transaktionen nicht durchgereicht': block.replace(', result.transactions)', ')'),
   };
   for (const was of Object.keys(ausbauten)) {
     assert.notEqual(ausbauten[was], block, 'Ausbau "' + was + '" hat nichts veraendert - falsche Stelle geprueft');
@@ -324,6 +452,14 @@ function pruefeZaehlerVerankerung(src) {
   const catchStelle = src.slice(i - 400, i + 200);
   assert.ok(/_manifestCheckpointErrors\+\+/.test(catchStelle),
     'der catch des Checkpoint-Schreibers zaehlt den Fehler nicht hoch');
+  // Nachzug 10.08.2026: der Kommentar ueber der Tally-Zeile verspricht, der Zaehlstand sei
+  // "auch auf einem sauberen Lauf" im LOG sichtbar - "the log survives regardless of write
+  // path". Genau der neue Zaehler fehlte dort. Ein Manifest, das wegen eines Schreibfehlers
+  // nicht geschrieben wird, kann den Zaehler dieses Schreibfehlers nicht melden.
+  const tallyZeile = src.slice(src.indexOf('Silent-error tally (0.11)'),
+    src.indexOf('\n', src.indexOf('Silent-error tally (0.11)')));
+  assert.ok(/manifestCheckpoint=\$\{_manifestCheckpointErrors\}/.test(tallyZeile),
+    'die Tally-Logzeile meldet den Checkpoint-Zaehler nicht: ' + tallyZeile.slice(0, 160));
   const objekte = src.match(/_silentErrors[^\n]*lamp: _lampErrors[^\n]*/g) || [];
   assert.equal(objekte.length, 2, 'es muessen genau zwei _silentErrors-Objekte sein (inkrementell + final)');
   for (const o of objekte) {
@@ -352,6 +488,7 @@ check('F-CGPT-012 Ausbau-Probe: faellt eine der Stellen weg, wird der Waechter r
     // und genau das finale liest die Auswertung.
     'Meldung im inkrementellen Manifest entfernt': (s) => manifestFeldRaus(s, 0),
     'Meldung im finalen Manifest entfernt': (s) => manifestFeldRaus(s, 1),
+    'Meldung in der Tally-Logzeile entfernt': (s) => s.replace(' manifestCheckpoint=${_manifestCheckpointErrors}', ''),
   };
   for (const was of Object.keys(ausbauten)) {
     const s = ausbauten[was](YAHOO_SRC);

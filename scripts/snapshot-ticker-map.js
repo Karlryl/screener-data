@@ -89,6 +89,34 @@ function hole(url, uebrig = MAX_REDIRECTS) {
 
 const feld = (a, i) => (a[i] || '').trim();
 
+// F-CGPT-027-Nachzug (Review 10.08.2026): die Muell-Erkennung gab es nur fuer die SEC.
+// nasdaqlisted/otherlisted koennen genauso mit HTTP 200 eine Wartungsseite liefern — und
+// die faellt hier durch, weil kaputte Zeilen einfach uebersprungen werden. Zwei reine
+// FORMAT-Pruefungen, bewusst OHNE jede Mengen-Schwelle (eine Mindest-Zeilenzahl waere ein
+// Methodik-Parameter, kein Format):
+//   1. Die Kopfzeile muss die Spalten tragen, die unten AUSGELESEN werden — an ihrer
+//      Position. Gepinnt sind nur diese; Feld 5 heisst in den echten Dateien "Round Lot
+//      Size" und in aelteren Beschreibungen "Round Lot", liest aber niemand. Eine
+//      Umbenennung dort darf keinen Tagesausfall ausloesen, eine Umsortierung der
+//      gelesenen Spalten muss es.
+//   2. Ein nicht-leerer Body, aus dem KEIN einziger Datensatz faellt, ist ein Ausfall.
+// Ein LEERER Body ist hier ausdruecklich kein Fall: dann ist schon der Abruf gescheitert
+// und die Quelle steht laengst in `fehlend`.
+const KOPF_FELDER = {
+  nasdaq: { 0: 'Symbol', 1: 'Security Name', 2: 'Market Category', 3: 'Test Issue', 6: 'ETF' },
+  other: { 0: 'ACT Symbol', 1: 'Security Name', 2: 'Exchange', 4: 'ETF', 6: 'Test Issue' },
+};
+
+function kopfPasst(quelle, text) {
+  const kopf = String(text).split('\n')[0].replace(/^\uFEFF/, '').trim().split('|');
+  return Object.keys(KOPF_FELDER[quelle]).every((i) => feld(kopf, Number(i)) === KOPF_FELDER[quelle][i]);
+}
+
+function meldeFormatausfall(quelle, text, geparst, probleme) {
+  if (!String(text || '').trim()) return;
+  if (!kopfPasst(quelle, text) || geparst === 0) probleme.push(quelle);
+}
+
 /**
  * Baut aus den drei Rohquellen EINE Karte symbol -> kompakter Datensatz.
  * Kurze Schluessel, weil jedes Zeichen 365-mal im Jahr anfaellt:
@@ -96,6 +124,10 @@ const feld = (a, i) => (a[i] || '').trim();
  */
 function baueKarte(roh, probleme = []) {
   const karte = new Map();
+  // Je Quelle wird GEZAEHLT, nicht die Kartengroesse verglichen: otherlisted ueberschreibt
+  // Symbole, die schon aus nasdaqlisted stammen — die Karte waechst dann nicht, obwohl
+  // Datensaetze ankamen.
+  let nNasdaq = 0, nOther = 0;
   // nasdaqlisted: Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot|ETF|NextShares
   for (const zeile of (roh.nasdaq || '').split('\n').slice(1)) {
     const z = zeile.trim();
@@ -105,7 +137,9 @@ function baueKarte(roh, probleme = []) {
     const sym = feld(p, 0).toUpperCase();
     if (!sym) continue;
     karte.set(sym, { n: feld(p, 1), b: 'NASDAQ:' + feld(p, 2), e: feld(p, 6), t: feld(p, 3) });
+    nNasdaq++;
   }
+  meldeFormatausfall('nasdaq', roh.nasdaq, nNasdaq, probleme);
   // otherlisted: ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot|Test Issue|NASDAQ Symbol
   for (const zeile of (roh.other || '').split('\n').slice(1)) {
     const z = zeile.trim();
@@ -118,11 +152,17 @@ function baueKarte(roh, probleme = []) {
     // otherlisted traegt die echte Boerse (NYSE/AMEX/ARCA), die hier mehr wert ist.
     const alt = karte.get(sym) || {};
     karte.set(sym, { n: feld(p, 1) || alt.n, b: feld(p, 2), e: feld(p, 4), t: feld(p, 6) });
+    nOther++;
   }
+  meldeFormatausfall('other', roh.other, nOther, probleme);
   // SEC company_tickers.json -> CIK je Symbol (nur ergaenzend; die SEC kennt auch Namen
   // ohne NASDAQ-Eintrag, die bekommen einen eigenen Datensatz)
   try {
-    const j = JSON.parse(roh.sec || '{}');
+    // Nachzug 10.08.2026: hier stand `roh.sec || '{}'`. Ein leerer Body lief damit klaglos
+    // durch und wurde zu "die SEC kennt heute keine einzige CIK" — dieselbe Verwandlung
+    // eines Ausfalls in ein Messergebnis, gegen die diese Welle antritt. Ohne den Ersatz
+    // wirft JSON.parse und der Ausfall geht unten denselben Weg wie kaputtes JSON.
+    const j = JSON.parse(roh.sec);
     for (const e of Object.values(j)) {
       const sym = String(e.ticker || '').trim().toUpperCase();
       if (!sym) continue;

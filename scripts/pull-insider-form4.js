@@ -555,14 +555,33 @@ function _softAusfallGrund(result) {
 // Cache-Eintrag nach einem weichen Ausfall: failedAt statt fetchedAt, und der letzte
 // gute Stand (fetchedAt + transactions) bleibt unangetastet — sonst ersetzt ein Ausfall
 // echte Historie durch Leere und die 24h-TTL sperrt den Nachholversuch aus.
-function _ausfallEintrag(prev, ticker, cikInfo, grund) {
-  return Object.assign({}, prev || {}, {
+//
+// Welle-9-Nachzug (Review 10.08.2026): bei einem TEIL-Ausfall (aeltere Filing-Seite faellt
+// aus, die recent-Filings liefern aber gueltige Transaktionen) waren die frisch geholten
+// Transaktionen bisher weg — der Eintrag wurde ausschliesslich aus `prev` gebaut. Deshalb
+// nimmt `neueTransaktionen` sie mit auf. Zwei Dinge bleiben dabei bewusst so:
+//   * KEIN fetchedAt. Der Stand ist verkuerzt; mit frischem fetchedAt wuerde die 24h-TTL
+//     den Nachholversuch aussperren und aus dem Ausfall ein Messergebnis machen.
+//   * Der alte Stand wird nicht ueberschrieben, sondern ergaenzt: alles aus `prev`, dessen
+//     Filing (accessionNumber) dieser Lauf NICHT gesehen hat, bleibt stehen. Ein bloss
+//     ersetzender Schreibvorgang haette bei einem tagelang ausfallenden aelteren Seiten-
+//     Abruf die Historie Lauf fuer Lauf auf das kurze Fenster eingedampft — derselbe stille
+//     Verlust, den diese Welle abstellt.
+function _ausfallEintrag(prev, ticker, cikInfo, grund, neueTransaktionen) {
+  const eintrag = Object.assign({}, prev || {}, {
     ticker,
     cik: cikInfo.cik,
     name: cikInfo.name,
     failedAt: new Date().toISOString(),
     error: grund,
   });
+  const neu = Array.isArray(neueTransaktionen) ? neueTransaktionen : [];
+  if (neu.length) {
+    const alt = Array.isArray(prev && prev.transactions) ? prev.transactions : [];
+    const gesehen = new Set(neu.map((t) => t.accessionNumber));
+    eintrag.transactions = neu.concat(alt.filter((t) => !gesehen.has(t.accessionNumber)));
+  }
+  return eintrag;
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -629,11 +648,15 @@ async function main() {
       // Netz-/Seiten-Ausfaelle (fetchFailures) — ein nicht geholtes Filing ist kein
       // gemessenes "kein Insider-Handel". Beide Faelle: failedAt, alter Stand bleibt,
       // naechster Lauf holt nach (kein fetchedAt -> die 24h-TTL greift nicht).
+      // Die frisch geholten Transaktionen gehen MIT in den Ausfall-Eintrag (Welle-9-
+      // Nachzug): ein Teil-Ausfall darf gueltige neue Filings nicht verwerfen. failedAt
+      // bleibt, fetchedAt bleibt aus — der naechste Lauf holt das fehlende Stueck nach.
       const softGrund = _softAusfallGrund(result);
       if (softGrund) {
         errors++;
-        byTicker[ticker] = _ausfallEintrag(prev, ticker, cikInfo, softGrund);
-        console.warn('  [' + ticker + '] soft-error: ' + softGrund);
+        byTicker[ticker] = _ausfallEintrag(prev, ticker, cikInfo, softGrund, result.transactions);
+        console.warn('  [' + ticker + '] soft-error: ' + softGrund +
+          ' (neue Transaktionen: ' + (result.transactions || []).length + ')');
         continue;
       }
       byTicker[ticker] = {

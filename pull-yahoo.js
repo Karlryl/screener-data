@@ -3747,7 +3747,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
   const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors };
-  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors}`);
+  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors} manifestCheckpoint=${_manifestCheckpointErrors}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
