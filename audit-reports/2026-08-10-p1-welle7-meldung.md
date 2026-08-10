@@ -35,6 +35,32 @@
 - Wochen-/Monatsmarker mit Parsefehler erzeugen nun eine Warnannotation und bewahren die Dead-Man-Semantik als `unknown` statt das Geschwisterfeld wegzulassen; normal lesbare Marker bleiben unverändert.
 - Keine TABU-Zone und keine Daten-/Workflow-Datei wurde geändert. Der externe Masterplan war in der Linux-Sandbox nicht vorhanden und konnte daher nicht gelesen werden; der bindende Delegationsbrief enthielt den vollständigen Taskstatus.
 
-## 5. Brief-Feedback
+## 5. Review-Nachzug (Tag 631)
+
+Zwei Blocker und fünf Nachzüge aus der Zweitprüfung der Welle-7-Landung.
+
+**Blocker**
+
+- **a) Die Nicht-messbar-Statuszeile war ein Eintagsfliege.** `bisherigeZeilen()` nahm nur Zeilen mit `members`-Array, und der Normalpfad schreibt die Monatsdatei komplett neu — die Statuszeile eines nicht messbaren Tages war beim nächsten regulären Lauf spurlos weg. Zweitens hängte der Leer-Zweig per `appendFileSync` an, also legte jeder Wiederholungslauf desselben Tages eine weitere Zeile an. Beide Zweige laufen jetzt über denselben Rewrite (`schreibeMonatszeile`): Zeilen gleichen Datums werden verworfen, Statuszeilen anderer Tage bleiben erhalten, der Mitglieder-Vorgänger wird ausdrücklich nur unter Zeilen **mit** `members` gesucht (ein nicht messbarer Tag darf kein Neuzugangs-Feuerwerk auslösen). Die `datei`-Rückgabe ist in beiden Zweigen repo-relativ. Beleg (Test B4b): Sequenz Tag 1 normal → Tag 2 leer, zweimal gelaufen → Tag 3 normal ergibt **drei** Zeilen — genau **eine** Statuszeile für Tag 2 plus die zwei Normalzeilen, `prior` von Tag 3 ist Tag 1.
+- **b) Annotations-Lärm aus grünen Tests.** `::error::`/`::warning::` aus `runE1` und `writeMarker` feuerten schon beim Bibliotheksaufruf. Gemessen an drei grünen Gate-Dateien (Annotationen in Spalte 0, stdout+stderr): **vorher** `p1-welle7` 2, `p0-failloud-erstanlage` 1, `bh-w2-watchers` 1 — **nachher** 0/0/0, bei unveränderten Testergebnissen. Beide Annotationen hängen jetzt an einer Flagge, die nur der CLI-Einstieg setzt (`opts.annotate` bzw. `{ annotate: true }`); die Rückgabefelder (`measurable`, `exitCode`, `state`) sind überall gleich geblieben. Dass der CLI weiterhin annotiert, prüfen zwei `spawnSync`-Tests (B1-CLI, B6-CLI), die im selben Zug belegen, dass der Bibliothekspfad stumm bleibt.
+
+**Nachzüge**
+
+- **c)** Die eigene Konstante `RESEARCH_ACTIVE_MAX_AGE_DAYS=100` ist ersatzlos gefallen; das Frischefenster leitet sich aus `--max-age-days`/`DEFAULT_MAX_AGE_DAYS` ab. Vorher war ein Lauf mit `--max-age-days 200` unheilbar: derselbe Eintrag galt beim Pull als „fresh übersprungen" und beim Status als stale. `freshInstitutionCount` steht jetzt in beiden Artefakten (Haupt-Cache und By-Ticker-Sicht) und in der Konsolenzeile — ein Zähler, der über `active`/`stale` entscheidet, braucht einen Leser.
+- **d)** `_classifyNoBaseAmendment` hatte beim Umbau auf die Cover-Page die alte Positionszahl-Regel verloren; ein **leeres** RESTATEMENT hätte `lowPositionAmendment:false` getragen und ein Nullbuch als Vollbestand behauptet. Die beiden Gründe sind jetzt ODER-verknüpft, mit eigenem Testfall.
+- **e)** Die deps-Naht in `pullInstitution13f` bleibt — sie ist **getestet**, nicht tot: Test B3b treibt den No-Base-Zweig komplett mit Stubs (`httpGet`, `findInfoTableUrl`, `fetchAmendmentType`, `sleep`) und belegt, dass `amendmentType`/`lowPositionAmendment` genau die Felder erreichen, die `main()` nach `byInstitution[cik]` und `quarters[reportPeriod]` durchschreibt. Klemmt man den Stub ab, wird der Test rot.
+- **f)** Ein Teil-Ausfall ist sichtbar: `invalidBoards > 0` erzeugt eine eigene `lines`-Zeile (auch im messbaren Lauf) plus `::warning::` im CLI-Pfad. Die falsy-Parse-Lücke ist geschlossen — eine Datei, die zu `null` parst, war vorher weder gelesen noch als ungültig gezählt. Invariante `boardFilesSeen === boardsRead + invalidBoards.length` ist als Assertion verankert.
+- **g)** Der zweite Früh-Ausstieg des Prune (gültiges JSON unbekannter Form, `{"a":1}`) ist per `spawnSync` getestet: `::error::…shape unrecognised` und Exit 1.
+- **h)** Der B4-Wächter prüft nicht mehr den Quelltext per Regex, sondern das Verhalten: der CLI wird mit leerer Übersicht gestartet, `stdout` muss eine Zeile enthalten, die in Spalte 0 mit `::warning::` beginnt. Dafür kennt der CLI jetzt `--overview`, `--log-dir` und `--date`.
+- **klein)** Der Kadenz-Marker verlässt `state:'partially-unknown'` wieder (→ `'ok'`), sobald **beide** Kadenzfelder erneut echte Zeitstempel tragen. Ohne Rückweg wäre das Feld als Signal wertlos.
+
+**Gegenprobe:** Jeder der acht neuen Prüfer wurde einmal absichtlich abgeklemmt und rot gesehen (Statuszeilen-Filter, `annotate` in beiden Skripten, Positionszahl-Regel, falsy-Topf, Teil-Ausfall-Zeile, `maxAgeDays`-Durchreichung, deps-Naht). Nach dem Rückbau jeweils wieder grün.
+
+## 6. Bewusst nicht geändert (Grenzen)
+
+- **13F fail-open-Legacy:** ein Cache-Eintrag **ohne** `fetchedAt` zählt weiterhin als frisch. `tests/scoring/bh-w2-13f.test.js` hängt daran (die BH-033-Fälle arbeiten ohne Zeitanker) und ist Sperrzone. Das ist eine bewusste Grenze: ein Alt-Cache kann so `active` melden, obwohl niemand weiß, wie alt er ist — er heilt sich beim ersten Pull selbst, weil jeder Erfolg `fetchedAt` stempelt.
+- **`continue-on-error: true`** am Prune-Aufruf in `daily-pull.yml` bleibt stehen (`.github/**` ist Sperrzone). Die Sichtbarkeit entsteht heute allein über die `::error::`-Annotation; das Entfernen bleibt offener Punkt.
+
+## 7. Brief-Feedback
 
 - Der Brief benennt die sechs Ausfallklassen, Gegenproben und erlaubten Sichtbarkeitskanäle so präzise, dass die Regressionen hermetisch ohne Netz reproduzierbar waren.

@@ -124,10 +124,12 @@ const AMENDMENT_MIN_RATIO_FALLBACK = 0.5;
 // purpose: the curated bootstrap list has 40 institutions, so single-digit
 // live coverage is already a clear red flag on its own.
 const RESEARCH_ACTIVE_MIN_INSTITUTIONS = 10;
-// Ein 13F-Quartal wird spaetestens 45 Tage nach Quartalsende gemeldet. 100 Tage
-// decken daher einen vollen Quartalswechsel plus Meldefrist ab und entsprechen
-// zugleich dem bereits verwendeten Cache-TTL.
-const RESEARCH_ACTIVE_MAX_AGE_DAYS = 100;
+// Das Frische-Fenster des Status ist BEWUSST dasselbe wie das Freshness-Gate des Pulls
+// (DEFAULT_MAX_AGE_DAYS bzw. --max-age-days). Eine eigene Konstante daneben war ein
+// unheilbarer Widerspruch: mit `--max-age-days 200` galt ein 150 Tage alter Eintrag beim
+// Pull als "fresh uebersprungen" und beim Status gleichzeitig als stale — der Lauf konnte
+// nie gruen werden, egal wie oft man ihn startete. Ein 13F-Quartal wird spaetestens 45 Tage
+// nach Quartalsende gemeldet; die 100 Tage Default decken Quartalswechsel plus Frist ab.
 
 // ─── Bootstrap institution list ─────────────────────────────────────────
 // Hardcoded list of well-known institutional managers. CIKs are SEC-padded
@@ -465,10 +467,18 @@ function _isFullBookAmendment(amendmentType, baseCount, amendCount) {
   return baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO_FALLBACK;
 }
 
-function _classifyNoBaseAmendment(amendmentType) {
+// Klassifiziert ein 13F-HR/A OHNE vergleichbares Original desselben Quartals.
+// Zwei unabhaengige Gruende fuer "kein Vollbuch", ODER-verknuepft:
+//   1. Die Cover-Page sagt nicht RESTATEMENT (NEW HOLDINGS oder unlesbar -> nicht Vollbuch).
+//   2. Das Amendment hat GAR KEINE Positionen — dann ist es unabhaengig vom Cover-Page-Text
+//      kein Vollbuch. Diese Regel stand vorher hier (positions.length === 0) und darf beim
+//      Umbau auf die Cover-Page nicht verschwinden: ein leeres RESTATEMENT haette sonst
+//      lowPositionAmendment:false getragen und ein Nullbuch als Vollbestand behauptet.
+function _classifyNoBaseAmendment(amendmentType, positionCount) {
+  const leer = !Number.isFinite(positionCount) ? false : positionCount === 0;
   return {
     amendmentType: amendmentType || null,
-    lowPositionAmendment: amendmentType !== 'RESTATEMENT'
+    lowPositionAmendment: amendmentType !== 'RESTATEMENT' || leer
   };
 }
 
@@ -590,7 +600,7 @@ async function pullInstitution13f(cik, displayName, deps = {}) {
   // accept the /A as-is but flag it.
   if (!baseFiling || baseFiling.accessionNumber === newest.accessionNumber) {
     const amendmentType = await getAmendmentType(paddedCik, newest);
-    const classification = _classifyNoBaseAmendment(amendmentType);
+    const classification = _classifyNoBaseAmendment(amendmentType, amend.positions.length);
     return {
       positions: amend.positions,
       name,
@@ -920,7 +930,7 @@ function buildByTickerView(cache) {
 // output is stamped 'research-inactive' rather than silently looking like a
 // real cross-section — the puller is manual-only (see file header), so a
 // long-stale, single-digit-coverage store won't self-heal without a run.
-function computeResearchStatus(byInstitution, now = Date.now()) {
+function computeResearchStatus(byInstitution, now = Date.now(), maxAgeDays = DEFAULT_MAX_AGE_DAYS) {
   const entries = Object.values(byInstitution || {});
   const activeInstitutionCount = entries.filter(e =>
     e && !e.error && Array.isArray(e.positions) && e.positions.length > 0
@@ -929,7 +939,7 @@ function computeResearchStatus(byInstitution, now = Date.now()) {
     if (!e || e.error || !Array.isArray(e.positions) || e.positions.length === 0) return false;
     if (!e.fetchedAt) return true; // Legacy-Caches: unbekannt, bis ein Pull den Zeitanker nachtraegt.
     const fetchedAt = Date.parse(e.fetchedAt);
-    return Number.isFinite(fetchedAt) && now - fetchedAt <= RESEARCH_ACTIVE_MAX_AGE_DAYS * 86400000;
+    return Number.isFinite(fetchedAt) && now - fetchedAt <= maxAgeDays * 86400000;
   }).length;
   const enough = activeInstitutionCount >= RESEARCH_ACTIVE_MIN_INSTITUTIONS;
   const status = !enough ? 'research-inactive'
@@ -1126,7 +1136,7 @@ async function main() {
     }
     // BH-033: recompute coverage status each write — cheap (~40 entries) and
     // keeps the on-disk status honest even if a run is Ctrl-C'd mid-loop.
-    const runStatus = computeResearchStatus(byInstitution);
+    const runStatus = computeResearchStatus(byInstitution, Date.now(), args.maxAgeDays);
     // Re-write after every institution so a Ctrl-C leaves a valid cache.
     writeFileAtomic(args.out, JSON.stringify({
       updatedAt: new Date().toISOString(),
@@ -1136,6 +1146,9 @@ async function main() {
       // suggerierter institutioneller Vollabdeckung.
       status: runStatus.status,
       activeInstitutionCount: runStatus.activeInstitutionCount,
+      // Ein Zaehler ohne Leser ist keine Kennzeichnung: freshInstitutionCount entscheidet
+      // ueber active/stale und muss deshalb neben dem Status im Artefakt stehen.
+      freshInstitutionCount: runStatus.freshInstitutionCount,
       bootstrapInstitutionCount: BOOTSTRAP_INSTITUTIONS.length,
       byInstitution
     }, null, 2));
@@ -1144,7 +1157,7 @@ async function main() {
   // Final derived by-ticker view.
   // BH-032 fix: derive from --out instead of the hardcoded production path.
   const byTickerPath = deriveByTickerPath(args.out);
-  const finalStatus = computeResearchStatus(byInstitution);
+  const finalStatus = computeResearchStatus(byInstitution, Date.now(), args.maxAgeDays);
   const cache = { byInstitution };
   const derived = buildByTickerView(cache);
   writeFileAtomic(byTickerPath, JSON.stringify({
@@ -1153,6 +1166,7 @@ async function main() {
     // BH-033: same coverage-honesty stamp as the main cache.
     status: finalStatus.status,
     activeInstitutionCount: finalStatus.activeInstitutionCount,
+    freshInstitutionCount: finalStatus.freshInstitutionCount,
     bootstrapInstitutionCount: BOOTSTRAP_INSTITUTIONS.length,
     cusipCount: Object.keys(derived.byCusip).length,
     issuerNameCount: Object.keys(derived.byIssuerName).length,
@@ -1175,7 +1189,8 @@ async function main() {
   console.log('  uniqueCUSIPs=' + uniqueCusips + ' resolvedTickers=' + uniqueTickers +
     ' collisions=' + Object.keys(derived.collisions).length);
   console.log('  coverage status=' + finalStatus.status +
-    ' (active=' + finalStatus.activeInstitutionCount + '/' + BOOTSTRAP_INSTITUTIONS.length + ')');
+    ' (active=' + finalStatus.activeInstitutionCount + '/' + BOOTSTRAP_INSTITUTIONS.length +
+    ', fresh<=' + args.maxAgeDays + 'd=' + finalStatus.freshInstitutionCount + ')');
   console.log('Cache: ' + args.out);
   console.log('By-ticker view: ' + byTickerPath);
 

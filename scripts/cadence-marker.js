@@ -31,7 +31,15 @@ function stampMarker(existing, field, nowIso) {
 //      "existing=null" behandelt (das liess stampMarker ein Teilobjekt schreiben,
 //      das das jeweils andere Feld — z.B. last_monthly_run — verlor) — stattdessen
 //      wird die korrupte Datei gesichert und laut gewarnt.
-function writeMarker(file, field, nowIso) {
+//   3. Review-Nachzug Welle 7: die ::warning::-Annotation gehoert dem CLI-Einstieg
+//      (opts.annotate). Als Bibliothek gerufen — z. B. aus gruenen Tests — flutete
+//      writeMarker sonst jeden Gate-Lauf mit roten Zeilen ueber Vorfaelle, die der
+//      Test absichtlich herbeifuehrt. Der Rueckgabewert (state/'unknown') bleibt gleich.
+function istGestempelt(v) {
+  return typeof v === 'string' && Number.isFinite(Date.parse(v));
+}
+
+function writeMarker(file, field, nowIso, opts = {}) {
   let existing = null;
   let parseFailed = false;
   if (fs.existsSync(file)) {
@@ -39,13 +47,21 @@ function writeMarker(file, field, nowIso) {
     catch (e) {
       const backup = file + '.corrupt-' + Date.now() + '.json';
       try { fs.copyFileSync(file, backup); } catch (_) { /* best effort */ }
-      console.log(`::warning::cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}; Sibling-Feld wird explizit unbekannt`);
+      if (opts.annotate) {
+        console.log(`::warning::cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}; Sibling-Feld wird explizit unbekannt`);
+      }
       parseFailed = true;
       existing = { last_weekly_run: 'unknown', last_monthly_run: 'unknown', state: 'partially-unknown' };
     }
   }
   const updated = stampMarker(existing, field, nowIso);
   if (parseFailed) updated.state = 'partially-unknown';
+  // Der Vorfall ist vorbei, sobald BEIDE Kadenzen wieder einen echten Zeitstempel tragen —
+  // sonst bliebe 'partially-unknown' fuer immer stehen und waere als Signal wertlos.
+  else if (updated.state === 'partially-unknown'
+    && istGestempelt(updated.last_weekly_run) && istGestempelt(updated.last_monthly_run)) {
+    updated.state = 'ok';
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true });
   writeFileAtomic(file, JSON.stringify(updated, null, 2) + '\n');
   return updated;
@@ -60,7 +76,7 @@ function run() {
     console.error(`::error::cadence-marker — --field muss weekly oder monthly sein (war: "${field}")`);
     process.exit(1);
   }
-  const updated = writeMarker(file, field, new Date().toISOString());
+  const updated = writeMarker(file, field, new Date().toISOString(), { annotate: true });
   console.log(`cadence-marker: ${FIELD_MAP[field]}=${updated[FIELD_MAP[field]]} -> ${file}`);
   process.exit(0);
 }
