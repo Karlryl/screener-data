@@ -20,6 +20,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 
 const ROOT = path.join(__dirname, '..');
@@ -58,7 +59,7 @@ function activeMedian(history) {
 function countByExchange(snapDir) {
   const counts = {};
   if (!fs.existsSync(snapDir)) return counts;
-  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   for (const f of files) {
     const s = loadJson(path.join(snapDir, f), null);
     const ex = (s && s.meta && s.meta.exchangeName) ? s.meta.exchangeName : '(unknown)';

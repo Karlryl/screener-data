@@ -14,6 +14,7 @@
 //        node scripts/plan-check.js --selftest
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 // Vendor-/Quellen-Register (Masterplan Abschnitt 4). endpoint = oeffentlicher Health-Pfad (keyfrei);
 // detectors = im Repo existierende Detektor-/Adapter-Dateien, deren FEHLEN eine Register-Luege ist.
@@ -126,7 +127,7 @@ async function run() {
   // vorhandenen Daten faerbt den Lauf rot (siehe buildStatus).
   const messfehler = (was, e) => measurementErrors.push({ text: `${was}: ${e.message}`, fehlend: e.code === 'ENOENT' });
   let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) { messfehler('Manifest snapshots/_manifest.json', e); }
-  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { messfehler('Snapshot-Zahl', e); }
+  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length; } catch (e) { messfehler('Snapshot-Zahl', e); }
 
   const vendorResults = [];
   for (const v of VENDORS) vendorResults.push(await probe(v, 20000));

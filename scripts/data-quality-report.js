@@ -10,6 +10,7 @@
 'use strict';
 const fs   = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 // Tag 218: atomic output writes (audit F-218b-03)
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 
@@ -115,7 +116,7 @@ function main() {
   }
 
   const files = fs.readdirSync(args.snapshots)
-    .filter(f => f.endsWith('.json') && !f.startsWith('_'));
+    .filter(f => f.endsWith('.json') && !isMetadataSnapshot(f));
 
   console.log('  snapshot files: ' + files.length);
 

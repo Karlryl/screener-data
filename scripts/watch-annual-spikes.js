@@ -27,6 +27,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { norm, periodEnds } = require('../src/scoring/snapshot.js'); // das einzige Tor zu snapshot.annual.*
 
 const ROOT = path.join(__dirname, '..');
@@ -210,7 +211,7 @@ function scanSnapshots(snapDir) {
   const capexPositiv = [];
   let capexWerte = 0, gescannt = 0, parseFehler = 0;
   const dateien = fs.existsSync(snapDir)
-    ? fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'))
+    ? fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f))
     : [];
   for (const f of dateien) {
     gescannt++;

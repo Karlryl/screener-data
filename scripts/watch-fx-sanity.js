@@ -20,6 +20,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isUsPrimaryListing } = require('../src/scoring/router.js');
 
@@ -105,7 +106,7 @@ function scanSnapshots(snapDir) {
   const jeWaehrung = {};
   let usOver = 0, foreignOver = 0, n = 0, gescannt = 0, parseFehler = 0;
   if (!fs.existsSync(snapDir)) return { usOver, foreignOver, n, jeWaehrung, gescannt, parseFehler };
-  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  const files = fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   for (const f of files) {
     gescannt++;
     const s = loadJson(path.join(snapDir, f), null);

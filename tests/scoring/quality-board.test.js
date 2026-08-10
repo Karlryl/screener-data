@@ -12,6 +12,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { isMetadataSnapshot } = require('../../lib/snapshot-fs.js');
 const { scoreUniverse } = require('../../src/scoring/score.js');
 const { route } = require('../../src/scoring/router.js');
 const formulas = require('../../src/scoring/formulas/index.js');
@@ -39,7 +40,7 @@ const universe = [];
 let snapFiles = 0;
 try {
   for (const f of fs.readdirSync(SNAP_DIR)) {
-    if (!f.endsWith('.json') || f.startsWith('_')) continue;
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
     snapFiles++;
     try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); }
     catch (_) { /* defekt */ }

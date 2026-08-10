@@ -24,6 +24,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const { issuerKeyLoose, issuerKeyStrengOhneGattung } = require('../src/scoring/score.js');
 const { isUsPrimaryListing } = require('../src/scoring/router.js');
@@ -34,7 +35,7 @@ if (!SNAPS || !fs.existsSync(SNAPS)) {
   process.exit(1);
 }
 
-const dateien = fs.readdirSync(SNAPS).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+const dateien = fs.readdirSync(SNAPS).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
 const gruppen = {};
 let uebersprungen = 0;
 for (const f of dateien) {

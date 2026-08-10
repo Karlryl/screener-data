@@ -30,6 +30,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 // NRE-SK-001 (Hard Review 2026-07-31): siehe unten bei writeFileAtomic-Aufruf.
 const { writeFileAtomic } = require(path.join(__dirname, '..', 'lib', 'atomic-write.js'));
 
@@ -187,7 +188,7 @@ function run() {
   // bereits die Union. Wenn sie KLEINER als n_ok ist, hat ein Ticker in zwei Shards dieselbe
   // Datei ueberschrieben (Kollision) -> Warnung (n_ok waere ueberzaehlt).
   let onDisk = 0;
-  try { onDisk = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && f !== '_manifest.json' && !f.startsWith('_')).length; } catch (e) { onDisk = 0; }
+  try { onDisk = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length; } catch (e) { onDisk = 0; }
   // Reconcile summierte n_ok gegen die reale distinct on-disk-Zahl. Kleiner gap = gutartige
   // Watchlist-Dateinamen-Doppel -> ::warning:: + on-disk als autoritatives n_ok. Grosser gap =
   // systematischer Hash-Bug -> ::error:: exit 1 (siehe reconcileOnDisk-Kommentar).

@@ -31,6 +31,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const ROOT = path.join(__dirname, '..');
 const IN_DEFAULT = path.join(ROOT, 'external-data', 'sec-annual-bulk.jsonl');
 const { route } = require(path.join(ROOT, 'src/scoring/router.js'));
@@ -201,7 +202,7 @@ function run() {
   try {
     const SNAP = process.env.SEC_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
     for (const f of fs.readdirSync(SNAP)) {
-      if (!f.endsWith('.json') || f.startsWith('_')) continue;
+      if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       let s; try { s = JSON.parse(fs.readFileSync(path.join(SNAP, f), 'utf8')); } catch (_) { continue; }
       const p = (s && (s.profile || s.meta)) || {};
       if (!(s && s.meta && s.meta.ticker && p.sector)) continue;
