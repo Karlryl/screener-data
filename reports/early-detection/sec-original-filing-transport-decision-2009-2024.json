@@ -1,0 +1,721 @@
+{
+  "schema": "early-detection-filing-transport-decision/v1",
+  "generatedAt": "2026-08-09T06:55:28.821Z",
+  "status": "PARTIAL_FREE_TRANSPORT_WITH_POPULATION_LOCATOR_UNION",
+  "decision": "USABLE_FOR_EVIDENCE_ACQUISITION_NOT_POPULATION_CONTENT_COMPLETE",
+  "eventsDatabase": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-corporate-action-candidates-2009-2024.sqlite",
+  "fromYear": 2009,
+  "toYear": 2024,
+  "inputEvidence": [
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-feed-archive-coverage-2009-2024.json",
+      "schema": "early-detection-sec-filing-archive-coverage/v1",
+      "reportSha256": "fece7474332a2d55842fb4d635a244baf98a2495bebbde2ed4f748213ad855e8"
+    },
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-oldloads-coverage-2009-2024.json",
+      "schema": "early-detection-sec-oldloads-coverage/v1",
+      "reportSha256": "f6c72d13d30117b7ec775f37a10a220c570d1623c16c496ddbba58cb115d12db"
+    },
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-individual-filing-coverage-sample-2009-2024-rerun.json",
+      "schema": "early-detection-sec-filing-individual-coverage/v1",
+      "reportSha256": "8e966b24f0f272cded05c24975083ab965a9966694361ee39949b6127f6ea8d6"
+    },
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\commoncrawl-static-sec-filing-coverage-sample-2009-2024-rerun.json",
+      "schema": "early-detection-commoncrawl-static-sec-filing-coverage/v1",
+      "reportSha256": "d13f7e6d3699859643ada7f1eb32f72ff610721c11941fbf551818d663eb68fb"
+    }
+  ],
+  "population": {
+    "events": 44352,
+    "uniqueAccessions": 27427,
+    "eventLocatorStates": {
+      "both": 16750,
+      "feedOnly": 13802,
+      "oldloadsOnly": 9481,
+      "neither": 4319,
+      "union": 40033,
+      "unionRate": 0.9026199494949495
+    },
+    "accessionLocatorStates": {
+      "both": 10393,
+      "feedOnly": 8110,
+      "oldloadsOnly": 6178,
+      "neither": 2746,
+      "union": 24681,
+      "unionRate": 0.8998796806067014
+    },
+    "byYear": [
+      {
+        "year": 2009,
+        "events": 2891,
+        "feedEvents": 1140,
+        "oldloadsEvents": 2814,
+        "unionEvents": 2841,
+        "unionEventRate": 0.9827049463853338,
+        "uniqueAccessions": 2170,
+        "feedUniqueAccessions": 847,
+        "oldloadsUniqueAccessions": 2115,
+        "unionUniqueAccessions": 2133,
+        "unionAccessionRate": 0.9829493087557604
+      },
+      {
+        "year": 2010,
+        "events": 2380,
+        "feedEvents": 1148,
+        "oldloadsEvents": 2291,
+        "unionEvents": 2380,
+        "unionEventRate": 1.0,
+        "uniqueAccessions": 1660,
+        "feedUniqueAccessions": 788,
+        "oldloadsUniqueAccessions": 1600,
+        "unionUniqueAccessions": 1660,
+        "unionAccessionRate": 1.0
+      },
+      {
+        "year": 2011,
+        "events": 2318,
+        "feedEvents": 1647,
+        "oldloadsEvents": 2146,
+        "unionEvents": 2318,
+        "unionEventRate": 1.0,
+        "uniqueAccessions": 1541,
+        "feedUniqueAccessions": 1081,
+        "oldloadsUniqueAccessions": 1485,
+        "unionUniqueAccessions": 1541,
+        "unionAccessionRate": 1.0
+      },
+      {
+        "year": 2012,
+        "events": 3317,
+        "feedEvents": 2752,
+        "oldloadsEvents": 1546,
+        "unionEvents": 3163,
+        "unionEventRate": 0.9535725052758517,
+        "uniqueAccessions": 1799,
+        "feedUniqueAccessions": 1422,
+        "oldloadsUniqueAccessions": 1002,
+        "unionUniqueAccessions": 1677,
+        "unionAccessionRate": 0.9321845469705392
+      },
+      {
+        "year": 2013,
+        "events": 2651,
+        "feedEvents": 2626,
+        "oldloadsEvents": 1705,
+        "unionEvents": 2637,
+        "unionEventRate": 0.994718973972086,
+        "uniqueAccessions": 1638,
+        "feedUniqueAccessions": 1620,
+        "oldloadsUniqueAccessions": 1108,
+        "unionUniqueAccessions": 1626,
+        "unionAccessionRate": 0.9926739926739927
+      },
+      {
+        "year": 2014,
+        "events": 2161,
+        "feedEvents": 1069,
+        "oldloadsEvents": 932,
+        "unionEvents": 1543,
+        "unionEventRate": 0.7140212864414622,
+        "uniqueAccessions": 1467,
+        "feedUniqueAccessions": 720,
+        "oldloadsUniqueAccessions": 631,
+        "unionUniqueAccessions": 1041,
+        "unionAccessionRate": 0.7096114519427403
+      },
+      {
+        "year": 2015,
+        "events": 2794,
+        "feedEvents": 813,
+        "oldloadsEvents": 1282,
+        "unionEvents": 1882,
+        "unionEventRate": 0.6735862562634216,
+        "uniqueAccessions": 1560,
+        "feedUniqueAccessions": 528,
+        "oldloadsUniqueAccessions": 654,
+        "unionUniqueAccessions": 1037,
+        "unionAccessionRate": 0.6647435897435897
+      },
+      {
+        "year": 2016,
+        "events": 2965,
+        "feedEvents": 1692,
+        "oldloadsEvents": 2252,
+        "unionEvents": 2626,
+        "unionEventRate": 0.8856661045531198,
+        "uniqueAccessions": 1772,
+        "feedUniqueAccessions": 965,
+        "oldloadsUniqueAccessions": 1326,
+        "unionUniqueAccessions": 1581,
+        "unionAccessionRate": 0.8922121896162528
+      },
+      {
+        "year": 2017,
+        "events": 2692,
+        "feedEvents": 2341,
+        "oldloadsEvents": 606,
+        "unionEvents": 2459,
+        "unionEventRate": 0.913447251114413,
+        "uniqueAccessions": 1652,
+        "feedUniqueAccessions": 1422,
+        "oldloadsUniqueAccessions": 334,
+        "unionUniqueAccessions": 1494,
+        "unionAccessionRate": 0.9043583535108959
+      },
+      {
+        "year": 2018,
+        "events": 2777,
+        "feedEvents": 2221,
+        "oldloadsEvents": 809,
+        "unionEvents": 2412,
+        "unionEventRate": 0.8685631976953547,
+        "uniqueAccessions": 1723,
+        "feedUniqueAccessions": 1378,
+        "oldloadsUniqueAccessions": 498,
+        "unionUniqueAccessions": 1480,
+        "unionAccessionRate": 0.8589669181659896
+      },
+      {
+        "year": 2019,
+        "events": 2725,
+        "feedEvents": 2054,
+        "oldloadsEvents": 771,
+        "unionEvents": 2307,
+        "unionEventRate": 0.846605504587156,
+        "uniqueAccessions": 1679,
+        "feedUniqueAccessions": 1252,
+        "oldloadsUniqueAccessions": 501,
+        "unionUniqueAccessions": 1419,
+        "unionAccessionRate": 0.8451459201905897
+      },
+      {
+        "year": 2020,
+        "events": 2621,
+        "feedEvents": 1726,
+        "oldloadsEvents": 2145,
+        "unionEvents": 2354,
+        "unionEventRate": 0.8981304845478825,
+        "uniqueAccessions": 1596,
+        "feedUniqueAccessions": 1034,
+        "oldloadsUniqueAccessions": 1297,
+        "unionUniqueAccessions": 1430,
+        "unionAccessionRate": 0.8959899749373433
+      },
+      {
+        "year": 2021,
+        "events": 2908,
+        "feedEvents": 2460,
+        "oldloadsEvents": 983,
+        "unionEvents": 2717,
+        "unionEventRate": 0.9343191196698762,
+        "uniqueAccessions": 1708,
+        "feedUniqueAccessions": 1433,
+        "oldloadsUniqueAccessions": 614,
+        "unionUniqueAccessions": 1590,
+        "unionAccessionRate": 0.9309133489461359
+      },
+      {
+        "year": 2022,
+        "events": 3382,
+        "feedEvents": 2305,
+        "oldloadsEvents": 1840,
+        "unionEvents": 2810,
+        "unionEventRate": 0.830869308101715,
+        "uniqueAccessions": 1750,
+        "feedUniqueAccessions": 1078,
+        "oldloadsUniqueAccessions": 779,
+        "unionUniqueAccessions": 1393,
+        "unionAccessionRate": 0.796
+      },
+      {
+        "year": 2023,
+        "events": 3306,
+        "feedEvents": 2769,
+        "oldloadsEvents": 2215,
+        "unionEvents": 3289,
+        "unionEventRate": 0.9948578342407743,
+        "uniqueAccessions": 2105,
+        "feedUniqueAccessions": 1769,
+        "oldloadsUniqueAccessions": 1411,
+        "unionUniqueAccessions": 2092,
+        "unionAccessionRate": 0.9938242280285036
+      },
+      {
+        "year": 2024,
+        "events": 2464,
+        "feedEvents": 1789,
+        "oldloadsEvents": 1894,
+        "unionEvents": 2295,
+        "unionEventRate": 0.9314123376623377,
+        "uniqueAccessions": 1607,
+        "feedUniqueAccessions": 1166,
+        "oldloadsUniqueAccessions": 1216,
+        "unionUniqueAccessions": 1487,
+        "unionAccessionRate": 0.925326695706285
+      }
+    ],
+    "byEventClass": [
+      {
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "events": 27285,
+        "feedEvents": 18924,
+        "oldloadsEvents": 16133,
+        "unionEvents": 24641,
+        "unionEventRate": 0.9030969397104637,
+        "uniqueAccessions": 14504,
+        "feedUniqueAccessions": 10039,
+        "oldloadsUniqueAccessions": 8602,
+        "unionUniqueAccessions": 13114,
+        "unionAccessionRate": 0.9041643684500827
+      },
+      {
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "events": 17067,
+        "feedEvents": 11628,
+        "oldloadsEvents": 10098,
+        "unionEvents": 15392,
+        "unionEventRate": 0.9018573855979375,
+        "uniqueAccessions": 12923,
+        "feedUniqueAccessions": 8464,
+        "oldloadsUniqueAccessions": 7969,
+        "unionUniqueAccessions": 11567,
+        "unionAccessionRate": 0.8950708039928809
+      }
+    ]
+  },
+  "sharedDeterministicSample": {
+    "sampledAccessions": 32,
+    "bulkLocatorUnion": {
+      "successes": 28,
+      "trials": 32,
+      "rate": 0.875,
+      "low95": 0.7193169451834978,
+      "high95": 0.9502986561251991,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "individualWaybackCapture": {
+      "successes": 5,
+      "trials": 32,
+      "rate": 0.15625,
+      "low95": 0.0686442028250571,
+      "high95": 0.3175414959753039,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "individualWaybackIncrementalOverBulk": {
+      "successes": 1,
+      "trials": 32,
+      "rate": 0.03125,
+      "low95": 0.005537860164003122,
+      "high95": 0.15744263820012558,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "commonCrawlCapture": {
+      "successes": 0,
+      "trials": 32,
+      "rate": 0.0,
+      "low95": 0.0,
+      "high95": 0.1071791982550706,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "commonCrawlIncremental": {
+      "successes": 0,
+      "trials": 32,
+      "rate": 0.0,
+      "low95": 0.0,
+      "high95": 0.1071791982550706,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "allLocatorOrCaptureUnion": {
+      "successes": 29,
+      "trials": 32,
+      "rate": 0.90625,
+      "low95": 0.7578184527161212,
+      "high95": 0.9675984487016337,
+      "method": "WILSON_SCORE_95_PERCENT"
+    },
+    "accessions": [
+      {
+        "accession": "0000876661-15-000101",
+        "year": 2015,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0000876661-16-001353",
+        "year": 2016,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0000876661-18-000699",
+        "year": 2018,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0000876661-19-001107",
+        "year": 2019,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0000876661-22-000930",
+        "year": 2022,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": true,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0000903423-13-000214",
+        "year": 2013,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001010412-15-000038",
+        "year": 2015,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": false
+      },
+      {
+        "accession": "0001079973-17-000080",
+        "year": 2017,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-10-005097",
+        "year": 2010,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-11-061252",
+        "year": 2011,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": true,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-14-027864",
+        "year": 2014,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-16-157678",
+        "year": 2016,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-20-048511",
+        "year": 2020,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001104659-24-049065",
+        "year": 2024,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": true,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001143313-12-000068",
+        "year": 2012,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001143362-14-000027",
+        "year": 2014,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001143362-20-000562",
+        "year": 2020,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": false
+      },
+      {
+        "accession": "0001193125-09-117454",
+        "year": 2009,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001193125-12-149578",
+        "year": 2012,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001193125-18-338226",
+        "year": 2018,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": false
+      },
+      {
+        "accession": "0001193125-22-170225",
+        "year": 2022,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001193125-23-263467",
+        "year": 2023,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001214659-24-021150",
+        "year": 2024,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-09-000141",
+        "year": 2009,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": false,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-10-000208",
+        "year": 2010,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-13-000091",
+        "year": 2013,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-17-000079",
+        "year": 2017,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-21-000280",
+        "year": 2021,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001354457-23-000292",
+        "year": 2023,
+        "eventClass": "DELISTING_FORM25_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": true,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001437749-11-007630",
+        "year": 2011,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001493152-21-023487",
+        "year": 2021,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": false,
+        "individualWaybackCapture": true,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      },
+      {
+        "accession": "0001515971-19-000035",
+        "year": 2019,
+        "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+        "feedLocator": true,
+        "oldloadsLocator": true,
+        "individualWaybackCapture": false,
+        "commonCrawlCapture": false,
+        "combinedLocatorOrCapture": true
+      }
+    ]
+  },
+  "byteLevelContentProofs": [
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-feed-archive-sample-20090102-v2.json",
+      "schema": "early-detection-sec-filing-archive-sample/v2",
+      "status": "SAMPLE_CONTENT_AND_FORMS_VERIFIED",
+      "reportSha256": "adfa4233e4aa700ccf66809b234838b6ba72722706e9f5385dec762fef3112c7",
+      "payloadSha256": "09b943017162570ac625a1e21683136c21d824c1cc2d5922ad43fbd238bb401d",
+      "payloadBytes": 48994926,
+      "targets": 15
+    },
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-oldloads-sample-20090522-v2.json",
+      "schema": "early-detection-sec-oldloads-sample/v2",
+      "status": "SAMPLE_CONTENT_AND_FORMS_VERIFIED",
+      "reportSha256": "ac491625b6ab687696cc850dca9a2ea5647c4e438d530e4f7b27318e37ae2278",
+      "payloadSha256": "4f6234b9547bfec02da726f941a5cb7a3fa10e5e1abbb5978d2d95f1f82cf34f",
+      "payloadBytes": 128746816,
+      "targets": 11
+    },
+    {
+      "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\reports\\early-detection\\sec-edgar-individual-filing-sample-v2.json",
+      "schema": "early-detection-sec-individual-filing-sample/v2",
+      "status": "INDIVIDUAL_FILING_SAMPLE_VERIFIED",
+      "reportSha256": "20350241240da15247069f3c515079b4dac8d5f6070e9bb914a9345038350bf3",
+      "payloadSha256": "b6e62f71108e14887158dd9f14a34de2786b5f3d00f9e5ac02cd52a44ffedfc4",
+      "payloadBytes": 16734,
+      "targets": 1,
+      "accession": "0001104659-11-061252"
+    }
+  ],
+  "resourcePlanning": {
+    "feedSelectedCaptureWarcRecordBytes": 1911290820771,
+    "oldloadsSelectedCaptureWarcRecordBytes": 1527634323406,
+    "naiveBothSourcesWarcRecordBytes": 3438925144177,
+    "warning": "CDX WARC record sizes are not replay-payload guarantees and overlapping dates must not be downloaded twice in a minimal acquisition plan."
+  },
+  "remainingGap": {
+    "eventRowsWithoutBulkLocator": 4319,
+    "uniqueAccessionsWithoutBulkLocator": 2746,
+    "populationIndividualWaybackCoverageKnown": false,
+    "directOfficialSecArchiveRuntimeStatus": "HTTP_403_IN_CURRENT_RUNTIME_PROBE",
+    "directOfficialSecArchiveCanonicalAndFree": true,
+    "fallback": [
+      "Use direct official SEC accession URLs when fair-access blocking clears.",
+      "Use deterministic per-accession Wayback retrieval for high-priority unresolved cases.",
+      "Retain master-index events as candidates but never impute missing filing content or effective dates."
+    ]
+  },
+  "interpretation": [
+    "Feed and Oldloads complement each other materially; neither alone is population-complete.",
+    "The exact bulk locator union is population evidence, but locator presence is not content proof.",
+    "The shared sample estimates archive discovery only and is not used to inflate population counts.",
+    "Three byte-level samples prove transports and parsers, not all filings.",
+    "The unresolved population remains excluded from content-dependent labels until acquired.",
+    "No locked outcome, return or confirmatory statistic was accessed."
+  ],
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "621c519e9b02a8b5b0efc711538019230c65a3b0cb96fc7a1b1456e71cd55915"
+}

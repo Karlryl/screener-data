@@ -1,0 +1,4201 @@
+{
+  "schema": "early-detection-concept-audit/v2",
+  "generatedAt": "2026-08-08T20:00:52.084Z",
+  "verdict": "COVERAGE_PASS_MAP_FROZEN_PERIOD_EXTENSION_PENDING",
+  "scope": {
+    "database": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-fsd-compact.sqlite",
+    "databaseBytes": 4901367808,
+    "payloads": 32,
+    "quarters": [
+      "2009q1",
+      "2009q2",
+      "2009q3",
+      "2009q4",
+      "2010q1",
+      "2010q2",
+      "2010q3",
+      "2010q4",
+      "2011q1",
+      "2011q2",
+      "2011q3",
+      "2011q4",
+      "2012q1",
+      "2012q2",
+      "2012q3",
+      "2012q4"
+    ],
+    "payloadManifestSha256": "349a53881b797d7c245a977af372bd4cd8aaf26286d4fe545c01c23b6d0dddfe"
+  },
+  "roles": {
+    "revenue": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        1,
+        3,
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualRev",
+        "timeseries.revenueQ"
+      ],
+      "derivations": [
+        "direct_qtrs1",
+        "qtrs4_minus_qtrs3_same_concept"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+          "observed": false,
+          "coverage": []
+        },
+        {
+          "priority": 1,
+          "tag": "RevenueFromContractWithCustomerIncludingAssessedTax",
+          "observed": false,
+          "coverage": []
+        },
+        {
+          "priority": 2,
+          "tag": "Revenues",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 436,
+              "distinctAccessions": 111,
+              "distinctEntities": 106,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252099260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 342,
+              "distinctAccessions": 86,
+              "distinctEntities": 86,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1251220200
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 32,
+              "distinctAccessions": 8,
+              "distinctEntities": 8,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 12,
+              "distinctAccessions": 2,
+              "distinctEntities": 2,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1243627140,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 29,
+              "distinctAccessions": 15,
+              "distinctEntities": 8,
+              "sourcePayloads": 11,
+              "firstAcceptedEpoch": 1267216500,
+              "lastAcceptedEpoch": 1320440940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 20536,
+              "distinctAccessions": 3082,
+              "distinctEntities": 807,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6508,
+              "distinctAccessions": 1019,
+              "distinctEntities": 729,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248346140,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 5704,
+              "distinctAccessions": 950,
+              "distinctEntities": 680,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1329245520
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 9537,
+              "distinctAccessions": 914,
+              "distinctEntities": 635,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1257384120,
+              "lastAcceptedEpoch": 1335997080
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 222,
+              "distinctAccessions": 94,
+              "distinctEntities": 74,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1312227000,
+              "lastAcceptedEpoch": 1355510700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 66029,
+              "distinctAccessions": 10069,
+              "distinctEntities": 3391,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303515540,
+              "lastAcceptedEpoch": 1356122640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 21158,
+              "distinctAccessions": 3569,
+              "distinctEntities": 2970,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304704380,
+              "lastAcceptedEpoch": 1356089160
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 19862,
+              "distinctAccessions": 3419,
+              "distinctEntities": 2991,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304465640,
+              "lastAcceptedEpoch": 1356721980
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 26568,
+              "distinctAccessions": 2816,
+              "distinctEntities": 2627,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1305926280,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 149,
+              "distinctAccessions": 52,
+              "distinctEntities": 37,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334597220,
+              "lastAcceptedEpoch": 1356983700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 38164,
+              "distinctAccessions": 5144,
+              "distinctEntities": 2729,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356992400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 15769,
+              "distinctAccessions": 2141,
+              "distinctEntities": 2057,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334343780,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 17557,
+              "distinctAccessions": 2287,
+              "distinctEntities": 2241,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356986040
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4350,
+              "distinctAccessions": 603,
+              "distinctEntities": 561,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        },
+        {
+          "priority": 3,
+          "tag": "SalesRevenueNet",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 220,
+              "distinctAccessions": 54,
+              "distinctEntities": 50,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241035020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 184,
+              "distinctAccessions": 45,
+              "distinctEntities": 45,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248295980,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 16,
+              "distinctAccessions": 4,
+              "distinctEntities": 4,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248295320,
+              "lastAcceptedEpoch": 1249068240
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 2,
+              "distinctAccessions": 2,
+              "distinctEntities": 2,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1295900400,
+              "lastAcceptedEpoch": 1315860300
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 14436,
+              "distinctAccessions": 2215,
+              "distinctEntities": 626,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248368880,
+              "lastAcceptedEpoch": 1337094120
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4441,
+              "distinctAccessions": 723,
+              "distinctEntities": 558,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248368880,
+              "lastAcceptedEpoch": 1333570560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 4055,
+              "distinctAccessions": 689,
+              "distinctEntities": 522,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248448560,
+              "lastAcceptedEpoch": 1335989520
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6926,
+              "distinctAccessions": 633,
+              "distinctEntities": 473,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256674680,
+              "lastAcceptedEpoch": 1337890560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 81,
+              "distinctAccessions": 50,
+              "distinctEntities": 39,
+              "sourcePayloads": 9,
+              "firstAcceptedEpoch": 1312227000,
+              "lastAcceptedEpoch": 1347293340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 52015,
+              "distinctAccessions": 6868,
+              "distinctEntities": 2253,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303838700,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 15535,
+              "distinctAccessions": 2301,
+              "distinctEntities": 1974,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1356985500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 14880,
+              "distinctAccessions": 2232,
+              "distinctEntities": 1990,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304021400,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 24239,
+              "distinctAccessions": 1903,
+              "distinctEntities": 1760,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 97,
+              "distinctAccessions": 20,
+              "distinctEntities": 17,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1344972900,
+              "lastAcceptedEpoch": 1354828020
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 32450,
+              "distinctAccessions": 3446,
+              "distinctEntities": 1821,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 12508,
+              "distinctAccessions": 1376,
+              "distinctEntities": 1342,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 14409,
+              "distinctAccessions": 1474,
+              "distinctEntities": 1447,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334865960,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 5898,
+              "distinctAccessions": 419,
+              "distinctEntities": 393,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356990600
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "grossProfit": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualGP",
+        "metrics.grossMargin"
+      ],
+      "derivations": [
+        "direct_qtrs4"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "GrossProfit",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 184,
+              "distinctAccessions": 46,
+              "distinctEntities": 44,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1240516860,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 148,
+              "distinctAccessions": 37,
+              "distinctEntities": 37,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 20,
+              "distinctAccessions": 5,
+              "distinctEntities": 5,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250886840,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 11605,
+              "distinctAccessions": 2273,
+              "distinctEntities": 709,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248453360,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 3359,
+              "distinctAccessions": 734,
+              "distinctEntities": 573,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1248453360,
+              "lastAcceptedEpoch": 1333056660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 3006,
+              "distinctAccessions": 677,
+              "distinctEntities": 528,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1249328400,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4125,
+              "distinctAccessions": 633,
+              "distinctEntities": 497,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256674680,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 64,
+              "distinctAccessions": 39,
+              "distinctEntities": 28,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1313008740,
+              "lastAcceptedEpoch": 1351610700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 48974,
+              "distinctAccessions": 9404,
+              "distinctEntities": 3198,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 14481,
+              "distinctAccessions": 3208,
+              "distinctEntities": 2762,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304941560,
+              "lastAcceptedEpoch": 1356985500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 13959,
+              "distinctAccessions": 3132,
+              "distinctEntities": 2771,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 15460,
+              "distinctAccessions": 2558,
+              "distinctEntities": 2388,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1301519520,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 70,
+              "distinctAccessions": 27,
+              "distinctEntities": 20,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334597220,
+              "lastAcceptedEpoch": 1356983700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 27817,
+              "distinctAccessions": 4930,
+              "distinctEntities": 2544,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10327,
+              "distinctAccessions": 1943,
+              "distinctEntities": 1878,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 11011,
+              "distinctAccessions": 2028,
+              "distinctEntities": 1983,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334364780,
+              "lastAcceptedEpoch": 1356563940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4008,
+              "distinctAccessions": 617,
+              "distinctEntities": 586,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333117440,
+              "lastAcceptedEpoch": 1356990600
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "operatingIncome": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        1,
+        3,
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualOpInc",
+        "timeseries.opIncQ",
+        "secAnnual.annualOpInc"
+      ],
+      "derivations": [
+        "direct_qtrs1",
+        "qtrs4_minus_qtrs3_same_concept"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "OperatingIncomeLoss",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 536,
+              "distinctAccessions": 136,
+              "distinctEntities": 127,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 422,
+              "distinctAccessions": 106,
+              "distinctEntities": 106,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 44,
+              "distinctAccessions": 11,
+              "distinctEntities": 11,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250886840,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 14,
+              "distinctAccessions": 12,
+              "distinctEntities": 6,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1273267080,
+              "lastAcceptedEpoch": 1320440940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 28553,
+              "distinctAccessions": 4966,
+              "distinctEntities": 1404,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 9453,
+              "distinctAccessions": 1691,
+              "distinctEntities": 1260,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248367740,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 8144,
+              "distinctAccessions": 1544,
+              "distinctEntities": 1163,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 11773,
+              "distinctAccessions": 1440,
+              "distinctEntities": 1059,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256674680,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 218,
+              "distinctAccessions": 128,
+              "distinctEntities": 99,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1312405980,
+              "lastAcceptedEpoch": 1355510700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 107171,
+              "distinctAccessions": 17740,
+              "distinctEntities": 5835,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 34528,
+              "distinctAccessions": 6249,
+              "distinctEntities": 5262,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304704380,
+              "lastAcceptedEpoch": 1356985500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 33212,
+              "distinctAccessions": 6057,
+              "distinctEntities": 5295,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 39322,
+              "distinctAccessions": 4957,
+              "distinctEntities": 4607,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1301519520,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 236,
+              "distinctAccessions": 63,
+              "distinctEntities": 49,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334597220,
+              "lastAcceptedEpoch": 1356125400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 60636,
+              "distinctAccessions": 9105,
+              "distinctEntities": 4734,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333141500,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 24294,
+              "distinctAccessions": 3718,
+              "distinctEntities": 3573,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 26925,
+              "distinctAccessions": 3958,
+              "distinctEntities": 3884,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 7841,
+              "distinctAccessions": 1072,
+              "distinctEntities": 1011,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "netIncome": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualNetIncome"
+      ],
+      "derivations": [
+        "direct_qtrs4"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "ProfitLoss",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "0000950123-09-022892",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1247788200,
+              "lastAcceptedEpoch": 1247788200
+            },
+            {
+              "taxonomyVersion": "0000950123-09-022892",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1247788200,
+              "lastAcceptedEpoch": 1247788200
+            },
+            {
+              "taxonomyVersion": "0001193125-09-088639",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 2,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 1,
+              "firstAcceptedEpoch": 1240866720,
+              "lastAcceptedEpoch": 1240866720
+            },
+            {
+              "taxonomyVersion": "0001193125-09-091929",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1241035020,
+              "lastAcceptedEpoch": 1241035020
+            },
+            {
+              "taxonomyVersion": "0001193125-09-100014",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1241555940,
+              "lastAcceptedEpoch": 1241555940
+            },
+            {
+              "taxonomyVersion": "0001193125-09-101639",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1241642940,
+              "lastAcceptedEpoch": 1241642940
+            },
+            {
+              "taxonomyVersion": "0001193125-09-150935",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1247863740,
+              "lastAcceptedEpoch": 1247863740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-150935",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1247863740,
+              "lastAcceptedEpoch": 1247863740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-152905",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248280380,
+              "lastAcceptedEpoch": 1248280380
+            },
+            {
+              "taxonomyVersion": "0001193125-09-152905",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248280380,
+              "lastAcceptedEpoch": 1248280380
+            },
+            {
+              "taxonomyVersion": "0001193125-09-153752",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248364080,
+              "lastAcceptedEpoch": 1248364080
+            },
+            {
+              "taxonomyVersion": "0001193125-09-153752",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248364080,
+              "lastAcceptedEpoch": 1248364080
+            },
+            {
+              "taxonomyVersion": "0001193125-09-153889",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248372120,
+              "lastAcceptedEpoch": 1248372120
+            },
+            {
+              "taxonomyVersion": "0001193125-09-153889",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248372120,
+              "lastAcceptedEpoch": 1248372120
+            },
+            {
+              "taxonomyVersion": "0001193125-09-154110",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248383520,
+              "lastAcceptedEpoch": 1248383520
+            },
+            {
+              "taxonomyVersion": "0001193125-09-154110",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248383520,
+              "lastAcceptedEpoch": 1248383520
+            },
+            {
+              "taxonomyVersion": "0001193125-09-155628",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248717060,
+              "lastAcceptedEpoch": 1248717060
+            },
+            {
+              "taxonomyVersion": "0001193125-09-155628",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248717060,
+              "lastAcceptedEpoch": 1248717060
+            },
+            {
+              "taxonomyVersion": "0001193125-09-155929",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248729300,
+              "lastAcceptedEpoch": 1248729300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-155929",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248729300,
+              "lastAcceptedEpoch": 1248729300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-156720",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248802560,
+              "lastAcceptedEpoch": 1248802560
+            },
+            {
+              "taxonomyVersion": "0001193125-09-156720",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248802560,
+              "lastAcceptedEpoch": 1248802560
+            },
+            {
+              "taxonomyVersion": "0001193125-09-156904",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248811260,
+              "lastAcceptedEpoch": 1248811260
+            },
+            {
+              "taxonomyVersion": "0001193125-09-156904",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248811260,
+              "lastAcceptedEpoch": 1248811260
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158007",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248892620,
+              "lastAcceptedEpoch": 1248892620
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158007",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248892620,
+              "lastAcceptedEpoch": 1248892620
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158218",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248900420,
+              "lastAcceptedEpoch": 1248900420
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158218",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248900420,
+              "lastAcceptedEpoch": 1248900420
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158844",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248953460,
+              "lastAcceptedEpoch": 1248953460
+            },
+            {
+              "taxonomyVersion": "0001193125-09-158844",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248953460,
+              "lastAcceptedEpoch": 1248953460
+            },
+            {
+              "taxonomyVersion": "0001193125-09-159399",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248979800,
+              "lastAcceptedEpoch": 1248979800
+            },
+            {
+              "taxonomyVersion": "0001193125-09-159399",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248979800,
+              "lastAcceptedEpoch": 1248979800
+            },
+            {
+              "taxonomyVersion": "0001193125-09-159733",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248991200,
+              "lastAcceptedEpoch": 1248991200
+            },
+            {
+              "taxonomyVersion": "0001193125-09-159733",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248991200,
+              "lastAcceptedEpoch": 1248991200
+            },
+            {
+              "taxonomyVersion": "0001193125-09-160797",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249070580,
+              "lastAcceptedEpoch": 1249070580
+            },
+            {
+              "taxonomyVersion": "0001193125-09-160797",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249070580,
+              "lastAcceptedEpoch": 1249070580
+            },
+            {
+              "taxonomyVersion": "0001193125-09-161835",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249313220,
+              "lastAcceptedEpoch": 1249313220
+            },
+            {
+              "taxonomyVersion": "0001193125-09-161835",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249313220,
+              "lastAcceptedEpoch": 1249313220
+            },
+            {
+              "taxonomyVersion": "0001193125-09-163299",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249398300,
+              "lastAcceptedEpoch": 1249398300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-163299",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249398300,
+              "lastAcceptedEpoch": 1249398300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-163472",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249404960,
+              "lastAcceptedEpoch": 1249404960
+            },
+            {
+              "taxonomyVersion": "0001193125-09-163472",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249404960,
+              "lastAcceptedEpoch": 1249404960
+            },
+            {
+              "taxonomyVersion": "0001193125-09-163472",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 5,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249404960,
+              "lastAcceptedEpoch": 1249404960
+            },
+            {
+              "taxonomyVersion": "0001193125-09-164943",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249487040,
+              "lastAcceptedEpoch": 1249487040
+            },
+            {
+              "taxonomyVersion": "0001193125-09-164943",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249487040,
+              "lastAcceptedEpoch": 1249487040
+            },
+            {
+              "taxonomyVersion": "0001193125-09-164943",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249487040,
+              "lastAcceptedEpoch": 1249487040
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165196",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249497960,
+              "lastAcceptedEpoch": 1249497960
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165196",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249497960,
+              "lastAcceptedEpoch": 1249497960
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165368",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249502700,
+              "lastAcceptedEpoch": 1249502700
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165368",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249502700,
+              "lastAcceptedEpoch": 1249502700
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165391",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249503000,
+              "lastAcceptedEpoch": 1249503000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165391",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249503000,
+              "lastAcceptedEpoch": 1249503000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165464",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249504320,
+              "lastAcceptedEpoch": 1249504320
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165464",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249504320,
+              "lastAcceptedEpoch": 1249504320
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165464",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 5,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249504320,
+              "lastAcceptedEpoch": 1249504320
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165497",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249504980,
+              "lastAcceptedEpoch": 1249504980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-165497",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249504980,
+              "lastAcceptedEpoch": 1249504980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-166759",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249575480,
+              "lastAcceptedEpoch": 1249575480
+            },
+            {
+              "taxonomyVersion": "0001193125-09-166759",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249575480,
+              "lastAcceptedEpoch": 1249575480
+            },
+            {
+              "taxonomyVersion": "0001193125-09-166979",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249584000,
+              "lastAcceptedEpoch": 1249584000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-166979",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249584000,
+              "lastAcceptedEpoch": 1249584000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167155",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249589160,
+              "lastAcceptedEpoch": 1249589160
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167155",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249589160,
+              "lastAcceptedEpoch": 1249589160
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167264",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591140,
+              "lastAcceptedEpoch": 1249591140
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167264",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591140,
+              "lastAcceptedEpoch": 1249591140
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167271",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591320,
+              "lastAcceptedEpoch": 1249591320
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167271",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 7,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591320,
+              "lastAcceptedEpoch": 1249591320
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167276",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591380,
+              "lastAcceptedEpoch": 1249591380
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167276",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591380,
+              "lastAcceptedEpoch": 1249591380
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167290",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591560,
+              "lastAcceptedEpoch": 1249591560
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167290",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249591560,
+              "lastAcceptedEpoch": 1249591560
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167378",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249593360,
+              "lastAcceptedEpoch": 1249593360
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167378",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249593360,
+              "lastAcceptedEpoch": 1249593360
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167378",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 2,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 1,
+              "firstAcceptedEpoch": 1249593360,
+              "lastAcceptedEpoch": 1249593360
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167626",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249603920,
+              "lastAcceptedEpoch": 1249603920
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167626",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 9,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249603920,
+              "lastAcceptedEpoch": 1249603920
+            },
+            {
+              "taxonomyVersion": "0001193125-09-167626",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 5,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 1,
+              "firstAcceptedEpoch": 1249603920,
+              "lastAcceptedEpoch": 1249603920
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168490",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249657980,
+              "lastAcceptedEpoch": 1249657980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168490",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249657980,
+              "lastAcceptedEpoch": 1249657980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168553",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249659300,
+              "lastAcceptedEpoch": 1249659300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168553",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249659300,
+              "lastAcceptedEpoch": 1249659300
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168607",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249660740,
+              "lastAcceptedEpoch": 1249660740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168607",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249660740,
+              "lastAcceptedEpoch": 1249660740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168742",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249665180,
+              "lastAcceptedEpoch": 1249665180
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168917",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249670940,
+              "lastAcceptedEpoch": 1249670940
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168917",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249670940,
+              "lastAcceptedEpoch": 1249670940
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168965",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249672260,
+              "lastAcceptedEpoch": 1249672260
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168965",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249672260,
+              "lastAcceptedEpoch": 1249672260
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168969",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249672440,
+              "lastAcceptedEpoch": 1249672440
+            },
+            {
+              "taxonomyVersion": "0001193125-09-168969",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249672440,
+              "lastAcceptedEpoch": 1249672440
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169079",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675800,
+              "lastAcceptedEpoch": 1249675800
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169079",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675800,
+              "lastAcceptedEpoch": 1249675800
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169081",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675860,
+              "lastAcceptedEpoch": 1249675860
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169081",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675860,
+              "lastAcceptedEpoch": 1249675860
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169086",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675980,
+              "lastAcceptedEpoch": 1249675980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169086",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249675980,
+              "lastAcceptedEpoch": 1249675980
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169110",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249676400,
+              "lastAcceptedEpoch": 1249676400
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169110",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249676400,
+              "lastAcceptedEpoch": 1249676400
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169269",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249680000,
+              "lastAcceptedEpoch": 1249680000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169269",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249680000,
+              "lastAcceptedEpoch": 1249680000
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169343",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249683840,
+              "lastAcceptedEpoch": 1249683840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169343",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249683840,
+              "lastAcceptedEpoch": 1249683840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169473",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249694220,
+              "lastAcceptedEpoch": 1249694220
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169473",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249694220,
+              "lastAcceptedEpoch": 1249694220
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169479",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249694880,
+              "lastAcceptedEpoch": 1249694880
+            },
+            {
+              "taxonomyVersion": "0001193125-09-169479",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249694880,
+              "lastAcceptedEpoch": 1249694880
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170256",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249922280,
+              "lastAcceptedEpoch": 1249922280
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170256",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249922280,
+              "lastAcceptedEpoch": 1249922280
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170432",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249929840,
+              "lastAcceptedEpoch": 1249929840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170432",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249929840,
+              "lastAcceptedEpoch": 1249929840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170563",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249933740,
+              "lastAcceptedEpoch": 1249933740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-170563",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1249933740,
+              "lastAcceptedEpoch": 1249933740
+            },
+            {
+              "taxonomyVersion": "0001193125-09-171521",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250003820,
+              "lastAcceptedEpoch": 1250003820
+            },
+            {
+              "taxonomyVersion": "0001193125-09-171521",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250003820,
+              "lastAcceptedEpoch": 1250003820
+            },
+            {
+              "taxonomyVersion": "0001193125-09-172858",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250103840,
+              "lastAcceptedEpoch": 1250103840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-172858",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250103840,
+              "lastAcceptedEpoch": 1250103840
+            },
+            {
+              "taxonomyVersion": "0001193125-09-175285",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250255700,
+              "lastAcceptedEpoch": 1250255700
+            },
+            {
+              "taxonomyVersion": "0001193125-09-175285",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250255700,
+              "lastAcceptedEpoch": 1250255700
+            },
+            {
+              "taxonomyVersion": "0001193125-09-180950",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1251220200,
+              "lastAcceptedEpoch": 1251220200
+            },
+            {
+              "taxonomyVersion": "0001193125-09-180950",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1251220200,
+              "lastAcceptedEpoch": 1251220200
+            },
+            {
+              "taxonomyVersion": "0001193125-09-187824",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1252096260,
+              "lastAcceptedEpoch": 1252096260
+            },
+            {
+              "taxonomyVersion": "0001193125-09-187824",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1252096260,
+              "lastAcceptedEpoch": 1252096260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 26,
+              "distinctAccessions": 8,
+              "distinctEntities": 6,
+              "sourcePayloads": 7,
+              "firstAcceptedEpoch": 1267216500,
+              "lastAcceptedEpoch": 1315860300
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 22208,
+              "distinctAccessions": 3471,
+              "distinctEntities": 927,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 8881,
+              "distinctAccessions": 1204,
+              "distinctEntities": 842,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 7999,
+              "distinctAccessions": 1139,
+              "distinctEntities": 825,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1335989520
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 16110,
+              "distinctAccessions": 1207,
+              "distinctEntities": 790,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248969600,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 480,
+              "distinctAccessions": 145,
+              "distinctEntities": 91,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1305227040,
+              "lastAcceptedEpoch": 1355510700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 52539,
+              "distinctAccessions": 7878,
+              "distinctEntities": 2947,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303838700,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 22508,
+              "distinctAccessions": 3235,
+              "distinctEntities": 2671,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1356985740
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 20054,
+              "distinctAccessions": 2879,
+              "distinctEntities": 2436,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 34907,
+              "distinctAccessions": 2826,
+              "distinctEntities": 2275,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1301519520,
+              "lastAcceptedEpoch": 1356985740
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 228,
+              "distinctAccessions": 67,
+              "distinctEntities": 51,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1335886680,
+              "lastAcceptedEpoch": 1356125400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 24171,
+              "distinctAccessions": 3421,
+              "distinctEntities": 1889,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333142520,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 11830,
+              "distinctAccessions": 1537,
+              "distinctEntities": 1460,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334232060,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 14582,
+              "distinctAccessions": 1765,
+              "distinctEntities": 1716,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333621680,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6537,
+              "distinctAccessions": 714,
+              "distinctEntities": 531,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333117440,
+              "lastAcceptedEpoch": 1356990600
+            }
+          ]
+        },
+        {
+          "priority": 1,
+          "tag": "NetIncomeLoss",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 1,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 1,
+              "firstAcceptedEpoch": 1249679580,
+              "lastAcceptedEpoch": 1249679580
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 734,
+              "distinctAccessions": 185,
+              "distinctEntities": 176,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 665,
+              "distinctAccessions": 149,
+              "distinctEntities": 149,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 52,
+              "distinctAccessions": 12,
+              "distinctEntities": 12,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 20,
+              "distinctAccessions": 4,
+              "distinctEntities": 4,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1243627140,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 41,
+              "distinctAccessions": 20,
+              "distinctEntities": 11,
+              "sourcePayloads": 15,
+              "firstAcceptedEpoch": 1257545580,
+              "lastAcceptedEpoch": 1321280280
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 34318,
+              "distinctAccessions": 5916,
+              "distinctEntities": 1677,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 11514,
+              "distinctAccessions": 1996,
+              "distinctEntities": 1502,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 10012,
+              "distinctAccessions": 1832,
+              "distinctEntities": 1382,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248448560,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 18701,
+              "distinctAccessions": 1804,
+              "distinctEntities": 1279,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256250840,
+              "lastAcceptedEpoch": 1337890560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 1154,
+              "distinctAccessions": 402,
+              "distinctEntities": 237,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1310149620,
+              "lastAcceptedEpoch": 1356089400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 123228,
+              "distinctAccessions": 21560,
+              "distinctEntities": 7293,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356973500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 42820,
+              "distinctAccessions": 7843,
+              "distinctEntities": 6520,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1356122940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 41021,
+              "distinctAccessions": 7660,
+              "distinctEntities": 6572,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356721980
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 84174,
+              "distinctAccessions": 7798,
+              "distinctEntities": 6002,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 693,
+              "distinctAccessions": 221,
+              "distinctEntities": 150,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334597220,
+              "lastAcceptedEpoch": 1356983700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 68552,
+              "distinctAccessions": 11653,
+              "distinctEntities": 5918,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333045500,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 29934,
+              "distinctAccessions": 4870,
+              "distinctEntities": 4596,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333047660,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 31971,
+              "distinctAccessions": 5091,
+              "distinctEntities": 4898,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 23857,
+              "distinctAccessions": 2305,
+              "distinctEntities": 1658,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "assets": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        0
+      ],
+      "observedQtrs": [
+        0
+      ],
+      "observedPeriodKinds": [
+        "instant"
+      ],
+      "destinationFields": [
+        "annual.annualBalance.totalAssets",
+        "secAnnual.annualAssets"
+      ],
+      "derivations": [
+        "direct_instant"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "Assets",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 766,
+              "distinctAccessions": 189,
+              "distinctEntities": 178,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 49093,
+              "distinctAccessions": 8337,
+              "distinctEntities": 1873,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 179903,
+              "distinctAccessions": 30347,
+              "distinctEntities": 8049,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 93492,
+              "distinctAccessions": 13963,
+              "distinctEntities": 6667,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "currentLiabilities": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        0
+      ],
+      "observedQtrs": [
+        0
+      ],
+      "observedPeriodKinds": [
+        "instant"
+      ],
+      "destinationFields": [
+        "annual.annualBalance.currentLiabilities",
+        "secAnnual.annualCurrentLiabilities"
+      ],
+      "derivations": [
+        "direct_instant"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "LiabilitiesCurrent",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 614,
+              "distinctAccessions": 154,
+              "distinctEntities": 143,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 33646,
+              "distinctAccessions": 6709,
+              "distinctEntities": 1476,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 112862,
+              "distinctAccessions": 23351,
+              "distinctEntities": 6278,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 55377,
+              "distinctAccessions": 10686,
+              "distinctEntities": 5079,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "shareBasedCompensation": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualSBC"
+      ],
+      "derivations": [
+        "direct_qtrs4"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "ShareBasedCompensation",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 98,
+              "distinctAccessions": 26,
+              "distinctEntities": 25,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1240516860,
+              "lastAcceptedEpoch": 1251220200
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 408,
+              "distinctAccessions": 102,
+              "distinctEntities": 102,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 40,
+              "distinctAccessions": 10,
+              "distinctEntities": 10,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 19,
+              "distinctAccessions": 3,
+              "distinctEntities": 3,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1243627140,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 15,
+              "distinctAccessions": 9,
+              "distinctEntities": 5,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1267216500,
+              "lastAcceptedEpoch": 1312818840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 7873,
+              "distinctAccessions": 1834,
+              "distinctEntities": 1183,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248813900,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6836,
+              "distinctAccessions": 1611,
+              "distinctEntities": 1218,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248346140,
+              "lastAcceptedEpoch": 1333570560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 6116,
+              "distinctAccessions": 1466,
+              "distinctEntities": 1126,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 9346,
+              "distinctAccessions": 1426,
+              "distinctEntities": 1086,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256250840,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 78,
+              "distinctAccessions": 56,
+              "distinctEntities": 40,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1312227000,
+              "lastAcceptedEpoch": 1352931960
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 23912,
+              "distinctAccessions": 5400,
+              "distinctEntities": 4045,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303868400,
+              "lastAcceptedEpoch": 1356548400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 20885,
+              "distinctAccessions": 5022,
+              "distinctEntities": 4323,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304704380,
+              "lastAcceptedEpoch": 1356122940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 20534,
+              "distinctAccessions": 4984,
+              "distinctEntities": 4440,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304465640,
+              "lastAcceptedEpoch": 1356721980
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 27621,
+              "distinctAccessions": 4489,
+              "distinctEntities": 4174,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356983760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 103,
+              "distinctAccessions": 61,
+              "distinctEntities": 47,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1340907360,
+              "lastAcceptedEpoch": 1356125400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 13352,
+              "distinctAccessions": 2694,
+              "distinctEntities": 1784,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334610060,
+              "lastAcceptedEpoch": 1356990360
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 14769,
+              "distinctAccessions": 3181,
+              "distinctEntities": 3108,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356734820
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 16095,
+              "distinctAccessions": 3442,
+              "distinctEntities": 3407,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 5203,
+              "distinctAccessions": 861,
+              "distinctEntities": 794,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333035120,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "operatingCashFlow": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualOCF",
+        "annual.annualFCF",
+        "metrics.fcfMarginTTM"
+      ],
+      "derivations": [
+        "direct_qtrs1",
+        "qtrsN_minus_qtrsN-1_same_concept"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "NetCashProvidedByUsedInOperatingActivities",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 114,
+              "distinctAccessions": 31,
+              "distinctEntities": 30,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252099260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 572,
+              "distinctAccessions": 143,
+              "distinctEntities": 143,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 44,
+              "distinctAccessions": 11,
+              "distinctEntities": 11,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 16,
+              "distinctAccessions": 3,
+              "distinctEntities": 3,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1243627140,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 18,
+              "distinctAccessions": 13,
+              "distinctEntities": 6,
+              "sourcePayloads": 11,
+              "firstAcceptedEpoch": 1267216500,
+              "lastAcceptedEpoch": 1321280280
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 9647,
+              "distinctAccessions": 2095,
+              "distinctEntities": 1531,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248813900,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 10320,
+              "distinctAccessions": 2161,
+              "distinctEntities": 1603,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1339013760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 9117,
+              "distinctAccessions": 1970,
+              "distinctEntities": 1475,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 12899,
+              "distinctAccessions": 1806,
+              "distinctEntities": 1337,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256250840,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 284,
+              "distinctAccessions": 157,
+              "distinctEntities": 124,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1312227000,
+              "lastAcceptedEpoch": 1355510700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 30635,
+              "distinctAccessions": 6832,
+              "distinctEntities": 5940,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303515540,
+              "lastAcceptedEpoch": 1356548400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 36866,
+              "distinctAccessions": 8222,
+              "distinctEntities": 7019,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1356985500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 33713,
+              "distinctAccessions": 7627,
+              "distinctEntities": 6707,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1356985620
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 37945,
+              "distinctAccessions": 6199,
+              "distinctEntities": 5785,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1300999140,
+              "lastAcceptedEpoch": 1356991920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 159,
+              "distinctAccessions": 64,
+              "distinctEntities": 52,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334597220,
+              "lastAcceptedEpoch": 1356983700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 9411,
+              "distinctAccessions": 2156,
+              "distinctEntities": 1903,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333142520,
+              "lastAcceptedEpoch": 1356990360
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 22433,
+              "distinctAccessions": 4627,
+              "distinctEntities": 4470,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 24244,
+              "distinctAccessions": 4871,
+              "distinctEntities": 4771,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1333582560,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6992,
+              "distinctAccessions": 1292,
+              "distinctEntities": 1223,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356992400
+            }
+          ]
+        },
+        {
+          "priority": 1,
+          "tag": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 3,
+              "distinctEntities": 3,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1241055120,
+              "lastAcceptedEpoch": 1241642940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 72,
+              "distinctAccessions": 18,
+              "distinctEntities": 18,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248350880,
+              "lastAcceptedEpoch": 1249667160
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 12,
+              "distinctAccessions": 3,
+              "distinctEntities": 3,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248986160,
+              "lastAcceptedEpoch": 1249068240
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 2,
+              "distinctEntities": 1,
+              "sourcePayloads": 3,
+              "firstAcceptedEpoch": 1267226400,
+              "lastAcceptedEpoch": 1298946840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 1134,
+              "distinctAccessions": 226,
+              "distinctEntities": 171,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1249332540,
+              "lastAcceptedEpoch": 1337183760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 1266,
+              "distinctAccessions": 231,
+              "distinctEntities": 177,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1333570560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 1226,
+              "distinctAccessions": 237,
+              "distinctEntities": 181,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1249396800,
+              "lastAcceptedEpoch": 1329245520
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 1995,
+              "distinctAccessions": 255,
+              "distinctEntities": 189,
+              "sourcePayloads": 20,
+              "firstAcceptedEpoch": 1258413000,
+              "lastAcceptedEpoch": 1335997080
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 26,
+              "distinctAccessions": 15,
+              "distinctEntities": 12,
+              "sourcePayloads": 9,
+              "firstAcceptedEpoch": 1321298400,
+              "lastAcceptedEpoch": 1351610700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4848,
+              "distinctAccessions": 983,
+              "distinctEntities": 891,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303922220,
+              "lastAcceptedEpoch": 1356556260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4021,
+              "distinctAccessions": 765,
+              "distinctEntities": 686,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1307634600,
+              "lastAcceptedEpoch": 1355519040
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 5252,
+              "distinctAccessions": 1085,
+              "distinctEntities": 956,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1311615000,
+              "lastAcceptedEpoch": 1355519040
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 7030,
+              "distinctAccessions": 1002,
+              "distinctEntities": 948,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1308342540,
+              "lastAcceptedEpoch": 1356973500
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 27,
+              "distinctAccessions": 6,
+              "distinctEntities": 6,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1344621480,
+              "lastAcceptedEpoch": 1353450120
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 1422,
+              "distinctAccessions": 297,
+              "distinctEntities": 268,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333141500,
+              "lastAcceptedEpoch": 1356543960
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 3875,
+              "distinctAccessions": 707,
+              "distinctEntities": 685,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356709440
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 4750,
+              "distinctAccessions": 840,
+              "distinctEntities": 829,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334364780,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 1280,
+              "distinctAccessions": 190,
+              "distinctEntities": 184,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333127340,
+              "lastAcceptedEpoch": 1356980460
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    },
+    "capitalExpenditure": {
+      "status": "COVERED_UNDER_FROZEN_MAP",
+      "requiredQtrs": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedQtrs": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "observedPeriodKinds": [
+        "annual",
+        "cumulative_duration_qtrs_2",
+        "cumulative_duration_qtrs_3",
+        "instant",
+        "quarterly"
+      ],
+      "destinationFields": [
+        "annual.annualCapex",
+        "annual.annualFCF",
+        "metrics.fcfMarginTTM"
+      ],
+      "derivations": [
+        "direct_qtrs1",
+        "qtrsN_minus_qtrsN-1_same_concept",
+        "absolute_value_before_fcf_deduction"
+      ],
+      "candidates": [
+        {
+          "priority": 0,
+          "tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 92,
+              "distinctAccessions": 24,
+              "distinctEntities": 23,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1239828240,
+              "lastAcceptedEpoch": 1252099260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 464,
+              "distinctAccessions": 116,
+              "distinctEntities": 116,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1245979020,
+              "lastAcceptedEpoch": 1252521660
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 32,
+              "distinctAccessions": 8,
+              "distinctEntities": 8,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248914040,
+              "lastAcceptedEpoch": 1250012640
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 10,
+              "distinctAccessions": 2,
+              "distinctEntities": 2,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1243627140,
+              "lastAcceptedEpoch": 1248387240
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 3,
+              "distinctEntities": 3,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1281381660,
+              "lastAcceptedEpoch": 1304715960
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 6692,
+              "distinctAccessions": 1510,
+              "distinctEntities": 1094,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248813900,
+              "lastAcceptedEpoch": 1339103940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 6706,
+              "distinctAccessions": 1482,
+              "distinctEntities": 1134,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248346140,
+              "lastAcceptedEpoch": 1335557880
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 6269,
+              "distinctAccessions": 1401,
+              "distinctEntities": 1053,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248448560,
+              "lastAcceptedEpoch": 1337001540
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 9650,
+              "distinctAccessions": 1293,
+              "distinctEntities": 963,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256250840,
+              "lastAcceptedEpoch": 1337890560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 111,
+              "distinctAccessions": 65,
+              "distinctEntities": 47,
+              "sourcePayloads": 12,
+              "firstAcceptedEpoch": 1312405980,
+              "lastAcceptedEpoch": 1352837280
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 20970,
+              "distinctAccessions": 4453,
+              "distinctEntities": 3850,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303515540,
+              "lastAcceptedEpoch": 1356556260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 22613,
+              "distinctAccessions": 5018,
+              "distinctEntities": 4327,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1356122940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 22161,
+              "distinctAccessions": 4977,
+              "distinctEntities": 4442,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304021400,
+              "lastAcceptedEpoch": 1356721980
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 28766,
+              "distinctAccessions": 4210,
+              "distinctEntities": 3983,
+              "sourcePayloads": 16,
+              "firstAcceptedEpoch": 1301519520,
+              "lastAcceptedEpoch": 1356983760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 128,
+              "distinctAccessions": 47,
+              "distinctEntities": 34,
+              "sourcePayloads": 5,
+              "firstAcceptedEpoch": 1335378540,
+              "lastAcceptedEpoch": 1356632700
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 7203,
+              "distinctAccessions": 1412,
+              "distinctEntities": 1199,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334335440,
+              "lastAcceptedEpoch": 1356990360
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 15033,
+              "distinctAccessions": 3104,
+              "distinctEntities": 3037,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334012700,
+              "lastAcceptedEpoch": 1356990600
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 16721,
+              "distinctAccessions": 3375,
+              "distinctEntities": 3330,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334591160,
+              "lastAcceptedEpoch": 1356992340
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 4993,
+              "distinctAccessions": 782,
+              "distinctEntities": 750,
+              "sourcePayloads": 8,
+              "firstAcceptedEpoch": 1333027200,
+              "lastAcceptedEpoch": 1356990600
+            }
+          ]
+        },
+        {
+          "priority": 1,
+          "tag": "PaymentsForAdditionsToPropertyPlantAndEquipment",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "0000831967-10-000024",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1281043440,
+              "lastAcceptedEpoch": 1281043440
+            },
+            {
+              "taxonomyVersion": "0000831967-10-000031",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1288735500,
+              "lastAcceptedEpoch": 1288735500
+            },
+            {
+              "taxonomyVersion": "0000831967-11-000010",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1299013500,
+              "lastAcceptedEpoch": 1299013500
+            },
+            {
+              "taxonomyVersion": "0000831967-11-000021",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1304544420,
+              "lastAcceptedEpoch": 1304544420
+            }
+          ]
+        },
+        {
+          "priority": 2,
+          "tag": "PaymentsToAcquireProductiveAssets",
+          "observed": true,
+          "coverage": [
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 20,
+              "distinctAccessions": 6,
+              "distinctEntities": 6,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241055120,
+              "lastAcceptedEpoch": 1249675980
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 40,
+              "distinctAccessions": 10,
+              "distinctEntities": 10,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1248379680,
+              "lastAcceptedEpoch": 1252086300
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 16,
+              "distinctAccessions": 4,
+              "distinctEntities": 4,
+              "sourcePayloads": 4,
+              "firstAcceptedEpoch": 1241721120,
+              "lastAcceptedEpoch": 1248988560
+            },
+            {
+              "taxonomyVersion": "us-gaap/2008",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6,
+              "distinctAccessions": 1,
+              "distinctEntities": 1,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1250886840,
+              "lastAcceptedEpoch": 1250886840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 3,
+              "distinctAccessions": 2,
+              "distinctEntities": 2,
+              "sourcePayloads": 2,
+              "firstAcceptedEpoch": 1298582100,
+              "lastAcceptedEpoch": 1312818840
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 1930,
+              "distinctAccessions": 387,
+              "distinctEntities": 267,
+              "sourcePayloads": 24,
+              "firstAcceptedEpoch": 1248985080,
+              "lastAcceptedEpoch": 1337183760
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 2036,
+              "distinctAccessions": 407,
+              "distinctEntities": 290,
+              "sourcePayloads": 20,
+              "firstAcceptedEpoch": 1248304620,
+              "lastAcceptedEpoch": 1321300320
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 1675,
+              "distinctAccessions": 354,
+              "distinctEntities": 263,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1248294660,
+              "lastAcceptedEpoch": 1327699920
+            },
+            {
+              "taxonomyVersion": "us-gaap/2009",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 2794,
+              "distinctAccessions": 352,
+              "distinctEntities": 256,
+              "sourcePayloads": 22,
+              "firstAcceptedEpoch": 1256674680,
+              "lastAcceptedEpoch": 1338413400
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 43,
+              "distinctAccessions": 23,
+              "distinctEntities": 14,
+              "sourcePayloads": 9,
+              "firstAcceptedEpoch": 1312488180,
+              "lastAcceptedEpoch": 1344270720
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 4335,
+              "distinctAccessions": 837,
+              "distinctEntities": 676,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1303936200,
+              "lastAcceptedEpoch": 1355184360
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 4282,
+              "distinctAccessions": 823,
+              "distinctEntities": 680,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1304941560,
+              "lastAcceptedEpoch": 1352488680
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 4291,
+              "distinctAccessions": 820,
+              "distinctEntities": 701,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1302804060,
+              "lastAcceptedEpoch": 1355243820
+            },
+            {
+              "taxonomyVersion": "us-gaap/2011",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 6202,
+              "distinctAccessions": 719,
+              "distinctEntities": 679,
+              "sourcePayloads": 14,
+              "firstAcceptedEpoch": 1305926280,
+              "lastAcceptedEpoch": 1355523120
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 0,
+              "periodKind": "instant",
+              "physicalRowsAcrossPayloadVersions": 36,
+              "distinctAccessions": 14,
+              "distinctEntities": 11,
+              "sourcePayloads": 5,
+              "firstAcceptedEpoch": 1341002580,
+              "lastAcceptedEpoch": 1355433480
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 1,
+              "periodKind": "quarterly",
+              "physicalRowsAcrossPayloadVersions": 1305,
+              "distinctAccessions": 244,
+              "distinctEntities": 189,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1335352260,
+              "lastAcceptedEpoch": 1355773260
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 2,
+              "periodKind": "cumulative_duration_qtrs_2",
+              "physicalRowsAcrossPayloadVersions": 2571,
+              "distinctAccessions": 451,
+              "distinctEntities": 445,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1335387660,
+              "lastAcceptedEpoch": 1356725940
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 3,
+              "periodKind": "cumulative_duration_qtrs_3",
+              "physicalRowsAcrossPayloadVersions": 3190,
+              "distinctAccessions": 553,
+              "distinctEntities": 544,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1335962460,
+              "lastAcceptedEpoch": 1356041040
+            },
+            {
+              "taxonomyVersion": "us-gaap/2012",
+              "qtrs": 4,
+              "periodKind": "annual",
+              "physicalRowsAcrossPayloadVersions": 952,
+              "distinctAccessions": 121,
+              "distinctEntities": 116,
+              "sourcePayloads": 6,
+              "firstAcceptedEpoch": 1334609760,
+              "lastAcceptedEpoch": 1356715920
+            }
+          ]
+        }
+      ],
+      "contractSource": "research/early-detection-v4/sec-concept-map-1.0.0.json"
+    }
+  },
+  "unresolvedCoverage": [],
+  "conceptMap": {
+    "version": "FEM-SEC-CONCEPT-MAP@1.0.0",
+    "status": "FROZEN_BEFORE_GROWTH_OUTCOME_MATERIALIZATION",
+    "path": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\research\\early-detection-v4\\sec-concept-map-1.0.0.json",
+    "fileSha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f"
+  },
+  "excludedNonTargetDurations": {
+    "GrossProfit": {
+      "physicalRows": 2445,
+      "distinctQtrsValues": 104,
+      "maxQtrs": 343,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "NetCashProvidedByUsedInOperatingActivities": {
+      "physicalRows": 13096,
+      "distinctQtrsValues": 146,
+      "maxQtrs": 343,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations": {
+      "physicalRows": 651,
+      "distinctQtrsValues": 63,
+      "maxQtrs": 95,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "NetIncomeLoss": {
+      "physicalRows": 13518,
+      "distinctQtrsValues": 147,
+      "maxQtrs": 343,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "OperatingIncomeLoss": {
+      "physicalRows": 8420,
+      "distinctQtrsValues": 132,
+      "maxQtrs": 343,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "PaymentsToAcquireProductiveAssets": {
+      "physicalRows": 340,
+      "distinctQtrsValues": 59,
+      "maxQtrs": 114,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "PaymentsToAcquirePropertyPlantAndEquipment": {
+      "physicalRows": 4513,
+      "distinctQtrsValues": 122,
+      "maxQtrs": 235,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "ProfitLoss": {
+      "physicalRows": 3870,
+      "distinctQtrsValues": 96,
+      "maxQtrs": 343,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "Revenues": {
+      "physicalRows": 5199,
+      "distinctQtrsValues": 126,
+      "maxQtrs": 235,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "SalesRevenueNet": {
+      "physicalRows": 1640,
+      "distinctQtrsValues": 91,
+      "maxQtrs": 114,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    },
+    "ShareBasedCompensation": {
+      "physicalRows": 5091,
+      "distinctQtrsValues": 135,
+      "maxQtrs": 342,
+      "reason": "GQS input contract uses instant, one-quarter and four-quarter facts only"
+    }
+  },
+  "limitations": [
+    "Coverage proves only that every frozen role/qtrs candidate exists somewhere; entity-level completeness is measured separately.",
+    "Repeated physical rows across archived source versions are retained; accession and entity counts are de-duplicated.",
+    "The map is frozen before growth-outcome materialization; full 2009-2024 coverage and an independent semantic audit remain gates.",
+    "Historical GQS routing is a separate gate because SEC FSD carries SIC, not the production Yahoo sector/industry labels."
+  ],
+  "conceptContractSha256": "09f361f7c498f8f4baf5e9a69492b6cfba2d0c1671bfbef20ce5a24e75dbf2eb",
+  "reportSha256": "9a4cae681ee1782ad67e930d375e5eb82c27a2f16379434ba7955d4cebbe3f33"
+}

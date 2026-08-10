@@ -1,0 +1,1403 @@
+{
+  "schema": "early-detection-sec-filing-individual-coverage/v1",
+  "generatedAt": "2026-08-09T05:42:40.033Z",
+  "status": "STRATIFIED_INDIVIDUAL_FILING_ARCHIVE_COVERAGE",
+  "eventsDatabase": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\derived\\sec-corporate-action-candidates-2009-2024.sqlite",
+  "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4",
+  "fromYear": 2009,
+  "toYear": 2024,
+  "populationAccessions": 27427,
+  "sampling": {
+    "method": "SHA256_RANK_WITHIN_YEAR_AND_EVENT_CLASS",
+    "seed": "FEM-SEC-US@1.2.0-individual-archive-v1",
+    "perStratum": 1,
+    "sampledAccessions": 32
+  },
+  "urlVariants": [
+    "MASTER_INDEX_PATH",
+    "ACCESSION_DIRECTORY_PATH"
+  ],
+  "captureFound": 2,
+  "noCapture": 15,
+  "queryIncomplete": 15,
+  "captureRateAmongCompleteQueries": 0.11764705882352941,
+  "byStratum": [
+    {
+      "year": 2009,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2009,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2010,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2010,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2011,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2011,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2012,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2012,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2013,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2013,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2014,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2014,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2015,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2015,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2016,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2016,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2017,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2017,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2018,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2018,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2019,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2019,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2020,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 1,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 0.0
+    },
+    {
+      "year": 2020,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2021,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2021,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 1,
+      "noCapture": 0,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 1.0
+    },
+    {
+      "year": 2022,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 1,
+      "noCapture": 0,
+      "queryIncomplete": 0,
+      "captureRateAmongCompleteQueries": 1.0
+    },
+    {
+      "year": 2022,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2023,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2023,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2024,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    },
+    {
+      "year": 2024,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "sampled": 1,
+      "captureFound": 0,
+      "noCapture": 0,
+      "queryIncomplete": 1,
+      "captureRateAmongCompleteQueries": null
+    }
+  ],
+  "accessions": [
+    {
+      "accession": "0001354457-09-000141",
+      "year": 2009,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-09-000141.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-09-000141.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-09-000141.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445709000141/0001354457-09-000141.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445709000141%2F0001354457-09-000141.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-09-117454",
+      "year": 2009,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/1266700/0001193125-09-117454.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/0001193125-09-117454.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F0001193125-09-117454.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\6aabec378afbc3411a49c8e5975724fed29256b9d1fbb83442a5f68d1245a3b9\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1266700/000119312509117454/0001193125-09-117454.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1266700%2F000119312509117454%2F0001193125-09-117454.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\deebb3f2517f05f7e90af7987d7067f63f9ff7e6e0ed5775223f518aeb7eb460\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-10-000208",
+      "year": 2010,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-10-000208.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-10-000208.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-10-000208.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445710000208/0001354457-10-000208.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445710000208%2F0001354457-10-000208.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-10-005097",
+      "year": 2010,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/927314/0001104659-10-005097.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/0001104659-10-005097.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F0001104659-10-005097.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\75c69db27d4972b9d8ea6780fe79ef1b6dd899e2bb4c4a43fe2ed19bf9bed7cc\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/927314/000110465910005097/0001104659-10-005097.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F927314%2F000110465910005097%2F0001104659-10-005097.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\dc56e36bc4c06d73c41ccaf394090a3e01047581fd05099f63f7027cd82f1086\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-11-061252",
+      "year": 2011,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25"
+      ],
+      "primaryPath": "edgar/data/1510593/0001104659-11-061252.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/0001104659-11-061252.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F0001104659-11-061252.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1510593/000110465911061252/0001104659-11-061252.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1510593%2F000110465911061252%2F0001104659-11-061252.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001437749-11-007630",
+      "year": 2011,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/216593/0001437749-11-007630.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/0001437749-11-007630.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F0001437749-11-007630.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\04145ed5bdeb76116516d98241c21b0ff26c05fc2c28b91d73ecd69a8bd4f06a\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/216593/000143774911007630/0001437749-11-007630.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F216593%2F000143774911007630%2F0001437749-11-007630.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\9f42c7c572a47b6d7df7639dd166c109fd4baa49e6f719841b37c4a67db504e4\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143313-12-000068",
+      "year": 2012,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143313/0001143313-12-000068.txt",
+      "pathCount": 2,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/0001143313-12-000068.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F0001143313-12-000068.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\189a8892acff00098f3f4edd5d83e92dfdd1669ea8d1f9e80688799eb308be5a\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143313/000114331312000068/0001143313-12-000068.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143313%2F000114331312000068%2F0001143313-12-000068.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\be04a065b24ec488ffe2484c355c80e7a56faa10f59b045554f4e83ab4b18685\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-12-149578",
+      "year": 2012,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/948703/0001193125-12-149578.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/0001193125-12-149578.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F0001193125-12-149578.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\96baca477fb90a39aa96a440c8ff74e68363741a6ddc5e150e160a7fb0f444a7\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/948703/000119312512149578/0001193125-12-149578.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F948703%2F000119312512149578%2F0001193125-12-149578.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\72ae2b285f6b0af8b0c2c2085b93361d5acbab018e6db2c89076b686fb00b462\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-13-000091",
+      "year": 2013,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-13-000091.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-13-000091.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-13-000091.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445713000091/0001354457-13-000091.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445713000091%2F0001354457-13-000091.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000903423-13-000214",
+      "year": 2013,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B"
+      ],
+      "primaryPath": "edgar/data/1314270/0000903423-13-000214.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/0000903423-13-000214.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F0000903423-13-000214.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1314270/000090342313000214/0000903423-13-000214.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1314270%2F000090342313000214%2F0000903423-13-000214.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143362-14-000027",
+      "year": 2014,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143362/0001143362-14-000027.txt",
+      "pathCount": 2,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-14-000027.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-14-000027.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\c894e3a78420d8a67b52cde5a2cbdf9095a83fbfccd6e8fca6afe1990f985fde\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336214000027/0001143362-14-000027.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336214000027%2F0001143362-14-000027.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\f3afb236cab617d2725dd05fb9bbdf7782ba4a159362c6f8a19c73404c092d12\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-14-027864",
+      "year": 2014,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B"
+      ],
+      "primaryPath": "edgar/data/1075415/0001104659-14-027864.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/0001104659-14-027864.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F0001104659-14-027864.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\d5730d7fa29f5cf65f980be5f8eef7b4699fb7447d6bd82c0c7f43719cb3f1aa\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1075415/000110465914027864/0001104659-14-027864.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1075415%2F000110465914027864%2F0001104659-14-027864.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\e56d9467571064184420a2538fd331ce47d83de9b6c01495f62fb636326d2f97\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-15-000101",
+      "year": 2015,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-15-000101.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-15-000101.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-15-000101.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: TimeoutError: The read operation timed out",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666115000101/0000876661-15-000101.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666115000101%2F0000876661-15-000101.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\25e79f6f96edc33023af0aab990e23391c69ad54712426dfd07cb1dc77b79728\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001010412-15-000038",
+      "year": 2015,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1095146/0001010412-15-000038.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/0001010412-15-000038.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F0001010412-15-000038.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\aa18aeffc55f85922393086eded4e46a5705c6bafa47594e352a3a013e3228d7\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1095146/000101041215000038/0001010412-15-000038.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1095146%2F000101041215000038%2F0001010412-15-000038.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\781854daf85df3410059efbe444f20128d817fe1efefbb8fc4e28f6e444392e5\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-16-001353",
+      "year": 2016,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-16-001353.txt",
+      "pathCount": 2,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-16-001353.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-16-001353.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\8f8dff86c1bc84e484394db2982830eb8df08bb6adc67d660f60fba2c0030476\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666116001353/0000876661-16-001353.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666116001353%2F0000876661-16-001353.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\ccfced3e8b58745725bdaaa21259aab6a3931475ba08725386fc929c45863659\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-16-157678",
+      "year": 2016,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1019361/0001104659-16-157678.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/0001104659-16-157678.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F0001104659-16-157678.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\ce890a1dbd913bad8aa8e0b1abae656eb892895fa2ced0632e304df54a631925\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1019361/000110465916157678/0001104659-16-157678.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1019361%2F000110465916157678%2F0001104659-16-157678.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\4e4dd099c0be30819f5315de0e77b095224ba8fbb638fbc764e8082cfefe568c\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-17-000079",
+      "year": 2017,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-17-000079.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-17-000079.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-17-000079.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445717000079/0001354457-17-000079.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445717000079%2F0001354457-17-000079.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001079973-17-000080",
+      "year": 2017,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12B/A"
+      ],
+      "primaryPath": "edgar/data/1015383/0001079973-17-000080.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/0001079973-17-000080.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F0001079973-17-000080.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\eb8a0608ea9c5d86943baa0723281c1b9315caaf9425661bfaf3c771be3e8ae4\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1015383/000107997317000080/0001079973-17-000080.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1015383%2F000107997317000080%2F0001079973-17-000080.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\28ee795d9f200daf0aaab4154151c6fc15e83d5f7dc6104f24d08d364b287a8d\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-18-000699",
+      "year": 2018,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-18-000699.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-18-000699.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-18-000699.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666118000699/0000876661-18-000699.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666118000699%2F0000876661-18-000699.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\47ff9df1f7ec0e7eb2db28e82fc8a9e28972093ceb0f16a45e34ccfad64762b5\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-18-338226",
+      "year": 2018,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1103601/0001193125-18-338226.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/0001193125-18-338226.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F0001193125-18-338226.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\d51203231c34dcbee32200dc58f5698f806c69aaa6abc47daa44c32f7ab863e7\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1103601/000119312518338226/0001193125-18-338226.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1103601%2F000119312518338226%2F0001193125-18-338226.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\7d7d1c703c169361dd9ec3e01f0cca0b0ee4042e240e8fc382a5749e26363994\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-19-001107",
+      "year": 2019,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-19-001107.txt",
+      "pathCount": 2,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-19-001107.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-19-001107.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\bf3483e3bb5335f49d5d09ed20c3ed10c146e3a0e9657f853e78c55936991913\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666119001107/0000876661-19-001107.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666119001107%2F0000876661-19-001107.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\f7c1693e5ca83d4edd81df2138779dac34104bd16657a6efa207e95ff9da97fa\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001515971-19-000035",
+      "year": 2019,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G/A"
+      ],
+      "primaryPath": "edgar/data/1137855/0001515971-19-000035.txt",
+      "pathCount": 1,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/0001515971-19-000035.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F0001515971-19-000035.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\6afaca7a7315bca3b5e1df5d49f5f26f5c1ca572a6815c083173e6f184cc5961\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1137855/000151597119000035/0001515971-19-000035.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1137855%2F000151597119000035%2F0001515971-19-000035.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\645e6381f9eafe66331da3fe6ec2568a513b9d0a5cec26c08e82cf3f8de786b1\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001143362-20-000562",
+      "year": 2020,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1143362/0001143362-20-000562.txt",
+      "pathCount": 2,
+      "status": "NO_CAPTURE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/0001143362-20-000562.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F0001143362-20-000562.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\aa0ec37dac96d69f55dfb8e0f3a1a2304e3d91c5b3d1c75451f671d0e9dd0444\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1143362/000114336220000562/0001143362-20-000562.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1143362%2F000114336220000562%2F0001143362-20-000562.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\056ff123e4a745bae500962dcee13692aba65b18334240ab7d338cb662ad1723\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-20-048511",
+      "year": 2020,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1394922/0001104659-20-048511.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/0001104659-20-048511.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F0001104659-20-048511.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1394922/000110465920048511/0001104659-20-048511.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1394922%2F000110465920048511%2F0001104659-20-048511.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-21-000280",
+      "year": 2021,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-21-000280.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-21-000280.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-21-000280.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445721000280/0001354457-21-000280.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445721000280%2F0001354457-21-000280.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001493152-21-023487",
+      "year": 2021,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1634413/0001493152-21-023487.txt",
+      "pathCount": 1,
+      "status": "CAPTURE_FOUND",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/0001493152-21-023487.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F0001493152-21-023487.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1634413/000149315221023487/0001493152-21-023487.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1634413%2F000149315221023487%2F0001493152-21-023487.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "7d74af1550b274432e2cf21d9c57c23237a163884af58d6270ab6f89d3862231",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\df7767612cbbe9887763b0e1449867e2d1496bd6d7e3c6d832589aa3b3092e34\\7d74af1550b274432e2cf21d9c57c23237a163884af58d6270ab6f89d3862231.json",
+          "captureCount": 1,
+          "captures": [
+            {
+              "timestamp": "20250208122533",
+              "original": "https://www.sec.gov/Archives/edgar/data/1634413/000149315221023487/0001493152-21-023487.txt",
+              "mimetype": "text/plain",
+              "digest": "KJRMMWSI7VGX3PFUX7GFP6NMQPBVLWEF",
+              "warcRecordBytes": 3878
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "accession": "0000876661-22-000930",
+      "year": 2022,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/876661/0000876661-22-000930.txt",
+      "pathCount": 2,
+      "status": "CAPTURE_FOUND",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/0000876661-22-000930.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F0000876661-22-000930.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: TimeoutError: The read operation timed out",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/876661/000087666122000930/0000876661-22-000930.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F876661%2F000087666122000930%2F0000876661-22-000930.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "4f8a58d5dbdb523e8b9712b9c3f5cbafd697a7ab3c489f0b17e6cebcd84e0c61",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\1366487e28498afaeb0f93f91a8429c48ef2f04175882cfdbfc71f1eec76a102\\4f8a58d5dbdb523e8b9712b9c3f5cbafd697a7ab3c489f0b17e6cebcd84e0c61.json",
+          "captureCount": 1,
+          "captures": [
+            {
+              "timestamp": "20260108191904",
+              "original": "https://www.sec.gov/Archives/edgar/data/876661/000087666122000930/0000876661-22-000930.txt",
+              "mimetype": "text/plain",
+              "digest": "HMW6O5S7NYXWJC3OY6BKQCLHMA5NLZLF",
+              "warcRecordBytes": 2692
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-22-170225",
+      "year": 2022,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-15D"
+      ],
+      "primaryPath": "edgar/data/1730276/0001193125-22-170225.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/0001193125-22-170225.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F0001193125-22-170225.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1730276/000119312522170225/0001193125-22-170225.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1730276%2F000119312522170225%2F0001193125-22-170225.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001354457-23-000292",
+      "year": 2023,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25-NSE"
+      ],
+      "primaryPath": "edgar/data/1354457/0001354457-23-000292.txt",
+      "pathCount": 2,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/0001354457-23-000292.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F0001354457-23-000292.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1354457/000135445723000292/0001354457-23-000292.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1354457%2F000135445723000292%2F0001354457-23-000292.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001193125-23-263467",
+      "year": 2023,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/1844280/0001193125-23-263467.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/0001193125-23-263467.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F0001193125-23-263467.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1844280/000119312523263467/0001193125-23-263467.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1844280%2F000119312523263467%2F0001193125-23-263467.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001104659-24-049065",
+      "year": 2024,
+      "eventClass": "DELISTING_FORM25_CANDIDATE",
+      "forms": [
+        "25"
+      ],
+      "primaryPath": "edgar/data/1769116/0001104659-24-049065.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "PASS",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/0001104659-24-049065.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F0001104659-24-049065.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "retrievalMode": "LIVE_CDX_AND_CONTENT_ADDRESSED_CACHE",
+          "cdxSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+          "cdxCachePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\archive-indexes\\sec-edgar-individual-cdx\\4839625f5b3d5621b94390a54a7d0045bee6e518db9f28700e4b06eab6a82e23\\37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570.json",
+          "captureCount": 0,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/1769116/000110465924049065/0001104659-24-049065.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F1769116%2F000110465924049065%2F0001104659-24-049065.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    },
+    {
+      "accession": "0001214659-24-021150",
+      "year": 2024,
+      "eventClass": "DEREGISTRATION_FORM15_CANDIDATE",
+      "forms": [
+        "15-12G"
+      ],
+      "primaryPath": "edgar/data/65759/0001214659-24-021150.txt",
+      "pathCount": 1,
+      "status": "QUERY_INCOMPLETE",
+      "queries": [
+        {
+          "variant": "MASTER_INDEX_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/0001214659-24-021150.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F0001214659-24-021150.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        },
+        {
+          "variant": "ACCESSION_DIRECTORY_PATH",
+          "queryStatus": "FAILED",
+          "sourceUrl": "https://www.sec.gov/Archives/edgar/data/65759/000121465924021150/0001214659-24-021150.txt",
+          "queryUrl": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.sec.gov%2FArchives%2Fedgar%2Fdata%2F65759%2F000121465924021150%2F0001214659-24-021150.txt&output=json&filter=statuscode%3A200&fl=timestamp%2Coriginal%2Cmimetype%2Cstatuscode%2Cdigest%2Clength&collapse=digest&limit=100",
+          "error": "IndividualFilingError: CDX query failed after 3 attempts: URLError: <urlopen error [WinError 10061] Es konnte keine Verbindung hergestellt werden, da der Zielcomputer die Verbindung verweigerte>",
+          "captureCount": null,
+          "captures": []
+        }
+      ]
+    }
+  ],
+  "interpretation": [
+    "The sample measures archive discovery only; capture content is not accepted until digest and form validation pass.",
+    "Failed CDX queries remain unknown and are excluded from the capture-rate denominator.",
+    "A stratified sample cannot prove population completeness.",
+    "No current ticker, event outcome or return is inferred from capture presence."
+  ],
+  "confirmatoryEligible": false,
+  "productiveGqsModified": false,
+  "reportSha256": "ba6cf0c4ff370df2f6b01c0a1783aa762ab8a2fa78c020d46f09c4ad2dbf53b7"
+}
