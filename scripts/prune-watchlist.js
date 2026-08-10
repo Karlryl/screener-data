@@ -145,16 +145,16 @@ function main() {
   let wl;
   try { wl = JSON.parse(fs.readFileSync(args.watchlist, 'utf8')); }
   catch (e) {
-    console.error('watchlist parse failed: ' + e.message + ' — skipping prune.');
-    process.exit(0);
+    console.error('::error::watchlist parse failed: ' + e.message + ' — refusing to prune.');
+    process.exit(1);
   }
   let stocksArr;
   let wrapped; // true when wl is the { stocks: [...] } object shape we can mutate in place
   if (Array.isArray(wl)) { stocksArr = wl; wrapped = false; }
   else if (wl && Array.isArray(wl.stocks)) { stocksArr = wl.stocks; wrapped = true; }
   else {
-    console.error('watchlist shape unrecognised (neither array nor { stocks: [...] }) — skipping prune.');
-    process.exit(0);
+    console.error('::error::watchlist shape unrecognised (neither array nor { stocks: [...] }) — refusing to prune.');
+    process.exit(1);
   }
   const before = stocksArr.length;
   console.log('\nTotal before: ' + before);

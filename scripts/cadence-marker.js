@@ -33,15 +33,19 @@ function stampMarker(existing, field, nowIso) {
 //      wird die korrupte Datei gesichert und laut gewarnt.
 function writeMarker(file, field, nowIso) {
   let existing = null;
+  let parseFailed = false;
   if (fs.existsSync(file)) {
     try { existing = JSON.parse(fs.readFileSync(file, 'utf8')); }
     catch (e) {
       const backup = file + '.corrupt-' + Date.now() + '.json';
       try { fs.copyFileSync(file, backup); } catch (_) { /* best effort */ }
-      console.warn(`cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}, lege neu an (Sibling-Feld ggf. verloren)`);
+      console.log(`::warning::cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}; Sibling-Feld wird explizit unbekannt`);
+      parseFailed = true;
+      existing = { last_weekly_run: 'unknown', last_monthly_run: 'unknown', state: 'partially-unknown' };
     }
   }
   const updated = stampMarker(existing, field, nowIso);
+  if (parseFailed) updated.state = 'partially-unknown';
   fs.mkdirSync(path.dirname(file), { recursive: true });
   writeFileAtomic(file, JSON.stringify(updated, null, 2) + '\n');
   return updated;

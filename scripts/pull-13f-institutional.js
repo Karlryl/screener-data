@@ -124,6 +124,10 @@ const AMENDMENT_MIN_RATIO_FALLBACK = 0.5;
 // purpose: the curated bootstrap list has 40 institutions, so single-digit
 // live coverage is already a clear red flag on its own.
 const RESEARCH_ACTIVE_MIN_INSTITUTIONS = 10;
+// Ein 13F-Quartal wird spaetestens 45 Tage nach Quartalsende gemeldet. 100 Tage
+// decken daher einen vollen Quartalswechsel plus Meldefrist ab und entsprechen
+// zugleich dem bereits verwendeten Cache-TTL.
+const RESEARCH_ACTIVE_MAX_AGE_DAYS = 100;
 
 // ─── Bootstrap institution list ─────────────────────────────────────────
 // Hardcoded list of well-known institutional managers. CIKs are SEC-padded
@@ -461,6 +465,13 @@ function _isFullBookAmendment(amendmentType, baseCount, amendCount) {
   return baseCount === 0 ? true : (amendCount / baseCount) >= AMENDMENT_MIN_RATIO_FALLBACK;
 }
 
+function _classifyNoBaseAmendment(amendmentType) {
+  return {
+    amendmentType: amendmentType || null,
+    lowPositionAmendment: amendmentType !== 'RESTATEMENT'
+  };
+}
+
 // Merge the rows of a PARTIAL 13F-HR/A onto the base book. Pure/exported for
 // direct test coverage.
 //
@@ -488,10 +499,14 @@ function _mergeAmendmentOntoBase(basePositions, amendPositions) {
 }
 
 // ─── Per-institution pull ───────────────────────────────────────────────
-async function pullInstitution13f(cik, displayName) {
+async function pullInstitution13f(cik, displayName, deps = {}) {
+  const get = deps.httpGet || httpGet;
+  const getInfoTableUrl = deps.findInfoTableUrl || findInfoTableUrl;
+  const getAmendmentType = deps.fetchAmendmentType || _fetchAmendmentType;
+  const pause = deps.sleep || sleep;
   const paddedCik = padCik(cik);
-  const subRes = await httpGet(SEC_SUBMISSIONS_URL(paddedCik));
-  await sleep(RATE_DELAY_MS);
+  const subRes = await get(SEC_SUBMISSIONS_URL(paddedCik));
+  await pause(RATE_DELAY_MS);
   if (subRes.notFound) {
     return { positions: [], error: 'submissions-404' };
   }
@@ -529,12 +544,12 @@ async function pullInstitution13f(cik, displayName) {
   async function _fetchPositions(filing) {
     const acc = (filing.accessionNumber || '').replace(/-/g, '');
     if (!acc) return { error: 'no-accession-number' };
-    const url = await findInfoTableUrl(paddedCik, acc);
+    const url = await getInfoTableUrl(paddedCik, acc);
     if (!url) return { error: 'no-information-table-found' };
     let res;
-    try { res = await httpGet(url); }
-    catch (e) { await sleep(RATE_DELAY_MS); return { error: 'info-table-fetch: ' + e.message }; }
-    await sleep(RATE_DELAY_MS);
+    try { res = await get(url); }
+    catch (e) { await pause(RATE_DELAY_MS); return { error: 'info-table-fetch: ' + e.message }; }
+    await pause(RATE_DELAY_MS);
     if (res.notFound || !res.body) return { error: 'info-table-404' };
     const parsed = _parse13fXmlDetailed(res.body);
     return { positions: parsed.positions, truncated: parsed.truncated,
@@ -574,6 +589,8 @@ async function pullInstitution13f(cik, displayName) {
   // No prior original 13F-HR for this SAME period to compare against —
   // accept the /A as-is but flag it.
   if (!baseFiling || baseFiling.accessionNumber === newest.accessionNumber) {
+    const amendmentType = await getAmendmentType(paddedCik, newest);
+    const classification = _classifyNoBaseAmendment(amendmentType);
     return {
       positions: amend.positions,
       name,
@@ -583,7 +600,8 @@ async function pullInstitution13f(cik, displayName) {
       infoTableUrl: amend.infoTableUrl,
       form: newest.form,
       amendmentOf: null,
-      lowPositionAmendment: amend.positions.length === 0,
+      amendmentType: classification.amendmentType,
+      lowPositionAmendment: classification.lowPositionAmendment,
       truncated: amend.truncated || false,
       blocksSeen: amend.blocksSeen,
       positionsParsed: amend.positionsParsed
@@ -614,7 +632,7 @@ async function pullInstitution13f(cik, displayName) {
   const amendCount = amend.positions.length;
   // BH-030 fix: SEC cover-page amendment type decides first; the position-
   // count ratio is used only when the cover page can't be read.
-  const amendmentType = await _fetchAmendmentType(paddedCik, newest);
+  const amendmentType = await getAmendmentType(paddedCik, newest);
   const ratioOk = _isFullBookAmendment(amendmentType, baseCount, amendCount);
 
   if (ratioOk) {
@@ -902,13 +920,21 @@ function buildByTickerView(cache) {
 // output is stamped 'research-inactive' rather than silently looking like a
 // real cross-section — the puller is manual-only (see file header), so a
 // long-stale, single-digit-coverage store won't self-heal without a run.
-function computeResearchStatus(byInstitution) {
+function computeResearchStatus(byInstitution, now = Date.now()) {
   const entries = Object.values(byInstitution || {});
   const activeInstitutionCount = entries.filter(e =>
     e && !e.error && Array.isArray(e.positions) && e.positions.length > 0
   ).length;
-  const status = activeInstitutionCount >= RESEARCH_ACTIVE_MIN_INSTITUTIONS ? 'active' : 'research-inactive';
-  return { status, activeInstitutionCount };
+  const freshInstitutionCount = entries.filter(e => {
+    if (!e || e.error || !Array.isArray(e.positions) || e.positions.length === 0) return false;
+    if (!e.fetchedAt) return true; // Legacy-Caches: unbekannt, bis ein Pull den Zeitanker nachtraegt.
+    const fetchedAt = Date.parse(e.fetchedAt);
+    return Number.isFinite(fetchedAt) && now - fetchedAt <= RESEARCH_ACTIVE_MAX_AGE_DAYS * 86400000;
+  }).length;
+  const enough = activeInstitutionCount >= RESEARCH_ACTIVE_MIN_INSTITUTIONS;
+  const status = !enough ? 'research-inactive'
+    : freshInstitutionCount >= RESEARCH_ACTIVE_MIN_INSTITUTIONS ? 'active' : 'stale';
+  return { status, activeInstitutionCount, freshInstitutionCount };
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
@@ -1183,6 +1209,7 @@ module.exports = {
     pullInstitution13f,
     _selectPeriodFilings,   // BH-029: exposed for test coverage
     _isFullBookAmendment,   // BH-030: exposed for test coverage
+    _classifyNoBaseAmendment,
     _mergeAmendmentOntoBase, // AD-SK-001: exposed for test coverage
     _fetchAmendmentType,    // BH-030: exposed for test coverage (network; not called in hermetic tests)
     BOOTSTRAP_INSTITUTIONS,

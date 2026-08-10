@@ -96,13 +96,15 @@ function diffMitglieder(vorher, heute) {
 function run(opts = {}) {
   const dryRun = Boolean(opts.dryRun);
   const datum = opts.date || isoHeute();
+  const overview = opts.overview || OVERVIEW;
+  const logDir = opts.logDir || LOG_DIR;
 
-  if (!fs.existsSync(OVERVIEW)) {
+  if (!fs.existsSync(overview)) {
     return { status: 'keine-uebersicht', date: datum, exitCode: 0 };
   }
   let raw;
   try {
-    raw = JSON.parse(fs.readFileSync(OVERVIEW, 'utf8'));
+    raw = JSON.parse(fs.readFileSync(overview, 'utf8'));
   } catch (e) {
     // Unlesbare Uebersicht: NICHT still weitergehen. Das ist ein echter Defekt weiter
     // vorn in der Kette, und eine leere Mitgliederliste zu schreiben waere schlimmer als
@@ -111,10 +113,16 @@ function run(opts = {}) {
   }
   const members = mitgliederAus(raw);
   if (!members.length) {
-    return { status: 'uebersicht-leer', date: datum, exitCode: 0 };
+    const datei = path.join(logDir, datum.slice(0, 7) + '.jsonl');
+    const statuszeile = { date: datum, board: 'hypergrowth-overview', status: 'nicht-messbar', reason: 'uebersicht-leer' };
+    if (!dryRun) {
+      fs.mkdirSync(logDir, { recursive: true });
+      fs.appendFileSync(datei, JSON.stringify(statuszeile) + '\n', 'utf8');
+    }
+    return { status: 'uebersicht-leer', date: datum, datei, statuszeile, dryRun, exitCode: 0 };
   }
 
-  const zeilen = bisherigeZeilen();
+  const zeilen = bisherigeZeilen(logDir);
   // Rerun DESSELBEN Tages ersetzt seinen Eintrag, statt einen zweiten anzuhaengen —
   // sonst waere der zweite Lauf eines Tages immer „null Neuzugaenge" und der erste
   // Eintrag bliebe als Karteileiche stehen.
@@ -135,7 +143,7 @@ function run(opts = {}) {
     members,
   };
 
-  const datei = path.join(LOG_DIR, datum.slice(0, 7) + '.jsonl');
+  const datei = path.join(logDir, datum.slice(0, 7) + '.jsonl');
   const behalten = zeilen.filter((z) => z.date !== datum && z.date.slice(0, 7) === datum.slice(0, 7));
   const inhalt = [...behalten, eintrag]
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -143,7 +151,7 @@ function run(opts = {}) {
     .join('\n') + '\n';
 
   if (!dryRun) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
+    fs.mkdirSync(logDir, { recursive: true });
     // writeJsonAtomic erwartet ein Objekt; JSONL wird deshalb direkt geschrieben —
     // aber ueber eine Temp-Datei plus rename, damit ein abgebrochener Lauf keine halbe
     // Datei hinterlaesst (dasselbe Versprechen, anderes Format).
@@ -166,7 +174,7 @@ if (require.main === module) {
   if (res.status === 'keine-uebersicht') {
     console.log('newcomer-log: keine outputs/hypergrowth/overview.json — nichts zu tun.');
   } else if (res.status === 'uebersicht-leer') {
-    console.log('newcomer-log: Uebersicht hat null Zeilen — nichts geschrieben (waere morgen ein Scheinereignis).');
+    console.log('::warning::newcomer-log: Uebersicht hat null Zeilen — Tag als nicht messbar mitgeschrieben.');
   } else if (res.status === 'uebersicht-unlesbar') {
     console.error('newcomer-log FEHLER: Uebersicht unlesbar — ' + res.error);
   } else {
