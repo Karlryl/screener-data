@@ -1,0 +1,76 @@
+{
+  "schema": "early-detection-gate-decision/v7",
+  "generatedAt": "2026-08-10T21:26:13.109Z",
+  "gate": "entityListingLedger",
+  "status": "RED_TRANSITIONS_QUANTIFIED_PERMANENT_IDENTITY_INTERVALS_UNPROVEN",
+  "verdict": "Archived symbol transitions and SEC CIK candidates are completely quantified, including every multi-CIK symbol conflict and multi-symbol CIK. They remain candidates and do not establish a permanent security identity or exchange-effective interval.",
+  "baseStatus": "RED_SEC_FINRA_AND_ARCHIVED_NASDAQ_DIRECTORY_STATES_ADDED_PERMANENT_IDENTITY_INTERVALS_UNPROVEN",
+  "dossierStatus": "PASS_OUTCOME_BLIND_IDENTITY_TRANSITIONS_QUANTIFIED_GATES_REMAIN_RED",
+  "selectedDossierEvidence": {
+    "counts": {
+      "archiveSnapshots": 103,
+      "nonTestPositiveObservationRows": 432800,
+      "snapshotPairs": 101,
+      "observedAppearances": 18093,
+      "observedDisappearances": 15314,
+      "observedNameChanges": 8912,
+      "symbolProfiles": 25403,
+      "cikProfiles": 8954,
+      "commonEquityCorporateEvents": 16078
+    },
+    "symbolProfileStatusCounts": {
+      "MULTIPLE_PIT_DIRECT_CIKS_CONFLICT_NOT_RESOLVED": 393,
+      "NO_PIT_DIRECT_CIK_CANDIDATE": 13065,
+      "ONE_PIT_DIRECT_CIK_CANDIDATE_NOT_IDENTITY": 11945
+    },
+    "cikProfileStatusCounts": {
+      "MULTIPLE_SYMBOLS_FOR_CIK_CANDIDATE_NOT_TICKER_CHANGE": 1906,
+      "ONE_SYMBOL_FOR_CIK_CANDIDATE_NOT_IDENTITY": 7048
+    },
+    "corporateEventLinkStatusCounts": {
+      "BOTH_SIDES_SAME_SYMBOL_SET_CANDIDATE_NOT_IDENTITY": 362,
+      "BOTH_SIDES_SYMBOL_SET_CHANGED_CANDIDATE_NOT_SUCCESSOR_PROOF": 96,
+      "NO_PIT_DIRECT_DIRECTORY_CANDIDATE": 10215,
+      "POST_EVENT_ONLY_DIRECTORY_CANDIDATE": 836,
+      "PRE_EVENT_ONLY_DIRECTORY_CANDIDATE": 4569
+    },
+    "identityResolvedRows": 0
+  },
+  "blockingReasons": [
+    "393 kind-specific symbol profiles have more than one point-in-time direct CIK candidate.",
+    "1,906 CIK candidates have more than one observed symbol; ticker change versus share class is unresolved.",
+    "Sparse positive states cannot prove continuous identity or absence between captures."
+  ],
+  "autonomousNext": "Keep all 25,403 symbol profiles, 8,954 CIK profiles and 42,319 observed transitions immutable; adjudicate only with an independently verified permanent-identity source.",
+  "externalExit": "A lawful 2009-2024 security master with stable identifiers, exchange-effective intervals, share-class and ticker-reuse adjudication passes independent audit.",
+  "inputs": {
+    "baseDecision": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v6-partial.json",
+      "fileSha256": "6e3ffceae5951e96f0e89a5adb3d975e5f02bd29943ca1707c8ae2b119084cbc",
+      "reportSha256": "8b0901d27778b51d2c23604aa38e6277d06f9128e47ad4e121860287ded5b5e7"
+    },
+    "baseVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\entity-listing-ledger-gate-decision-2026-08-10-v6-partial-verification.json",
+      "fileSha256": "38cabcd1c1b0f8776db40c701315469b8ef9a4ce53f75f6be5ae9192373cbbcc",
+      "reportSha256": "a3a3eee94dd9802969e8fcdf530060b310be2225e63ee5714a2a84f56fcaee83"
+    },
+    "identityTransitionDossiers": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\identity-transition-dossiers-2009-2024-v2.json",
+      "fileSha256": "238a5c0a384cd500f3f0715469d78012d8812e2333bbbd5fca719055d8711d23",
+      "reportSha256": "ee17e4f47ed47adce1048dd9336733b6637f594470b753cbdc320539c2448a45"
+    },
+    "identityTransitionDossiersVerification": {
+      "path": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\outputs\\early-detection\\identity-transition-dossiers-2009-2024-v2-verification.json",
+      "fileSha256": "a148d191d56c42d041f619c0386c5552ee3cc3c4379e55a0fb900d008b92d29a",
+      "reportSha256": "53ad18d54054e4ea92e7fde96dc672a2cd1630ebfed298359a9d004f3d602381"
+    }
+  },
+  "decisionBuilder": "C:\\Users\\Anwender\\Documents\\Codex\\2026-08-08\\referenced-chatgpt-conversation-this-is-an\\build_identity_transition_gate_decisions_v7.py",
+  "decisionBuilderSha256": "0d02a003df14ead57b8ed813bf59d58cc1a3a912328192ea2a768c665764ea93",
+  "identityResolvedRows": 0,
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "d39860a2d4189938d4ed1970121e29e8b71135294c09db2656edd0c6a3aecb12"
+}
