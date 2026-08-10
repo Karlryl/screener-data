@@ -4,7 +4,9 @@
 
 - `pull-yahoo.js`
 - `scripts/merge-shard-manifests.js`
-- `scripts/coverage-gate.js`
+- ~~`scripts/coverage-gate.js`~~ — im Nachzug (Abschnitt 6) zurueckgenommen, unveraendert gegenueber `main`
+- `scripts/ccy-alarm-gate.js` (neu, Nachzug)
+- `.github/workflows/daily-pull.yml` (Nachzug, nur die eine Zeile im Sammel-Schritt)
 - `tests/f-neu-01-ccy-ehrlichkeit.test.js`
 - `audit-reports/2026-08-10-kreuzerl-fx-meldung.md`
 
@@ -68,3 +70,49 @@ ok 1 - bare-object shape ignores metadata keys
 - Die Forderung nach Rot-zuerst im archivierten HEAD machte den Unterschied zwischen bestehender Ambiguitaetsmarkierung und neuem harten Signalkanal auditierbar.
 - Die Benennung des harten Merge-Gate-Kandidaten war hilfreich; die Workflow-Pruefung bestaetigte `scripts/coverage-gate.js` als erlaubten Zielpunkt.
 - Die akzeptierte `early-detection-confirmatory`-Sandbox-Ausnahme war notwendig, weil der einzige erlaubte Netzaufruf am Proxy scheiterte.
+
+## 6. Review-Nachzug (Tag 629, zwei Reviews)
+
+Die Abschnitte 1–5 beschreiben den v2-Stand (Tag 628). Der Nachzug korrigiert daran vier Punkte;
+wo er einer Aussage oben widerspricht, gilt dieser Abschnitt.
+
+- **Signalweg (HOCH, beide Reviews).** Der v2-Exit in `scripts/coverage-gate.js` ist **entfernt** —
+  die Datei ist gegenueber `origin/main` wieder unveraendert. Grund: „Verify Pull Coverage" laeuft im
+  `merge`-Job VOR Pull Historical Prices, den vier Daten-Waechtern, ATH-State und „Commit Snapshots";
+  ein Exit dort wuergt den Tageslauf ab, bevor irgendetwas committet ist, und der `scoring`-Job
+  (`needs: merge`) liefe gar nicht mehr. Stattdessen: neues Skript `scripts/ccy-alarm-gate.js`, das nur
+  `snapshots/_manifest.json` liest, bei `n_ccy_missing_completely > 0` eine `::error::`-Sammelzeile
+  ausgibt und mit Exit 1 endet; fehlendes Feld, fehlende oder kaputte Datei ergeben Exit 0 (das ist
+  Sache der bestehenden Gates). Aufgerufen wird es im bestehenden Schritt „Daten-Waechter einsammeln
+  (rotes X)" — das im Workflow selbst dokumentierte Muster „erst alles schreiben und committen, DANN
+  einsammeln und rot faerben". Schwelle bleibt `> 0`, ohne Toleranz und ohne Ventil (Karl-Entscheid).
+- **mcap-Ausnahme (HOCH).** Der Kanal feuert nur noch bei Antworten mit belastbarem `marketCap`
+  (non-null, endlich). Duenne Yahoo-Antworten ohne `marketCap` — tote Ticker, im Manifest-Pool
+  3527 `skipped-mcap` + 1855 `failed` — liefen bisher in den `skipped-mcap`-Loeschpfad (F-DQ-016);
+  ohne diese Ausnahme haette der neue Skip sie konserviert **und** jeden Lauf rot gefaerbt.
+- **OTC-Leerstring-Loch (MITTEL).** Die OTC-Ausnahme im Skip-Guard greift nur noch bei
+  `meta.ccyAmbiguous === true` — nur dann faengt F-NY-004 (`_convertSnapshotToUSD`) den Fall
+  nachweislich. Bei Leerstring-Waehrungen (`''` statt `null`) ist `ccyAmbiguous` false, F-NY-004 blieb
+  untaetig und es blieb beim stillen USD; solche OTC-Faelle loesen jetzt den neuen Kanal aus.
+  F-NY-004 selbst wurde nicht angefasst.
+- **Waechter am Objekt (HOCH).** Der frueher tautologische Altbestand-Test blieb gruen, als das
+  `return;` im Skip-Block testweise entfernt wurde. Ersetzt durch einen Quelltext-Waechter, der im
+  Block zwischen `const canonical = mapYahooToCanonical` und `_convertSnapshotToUSDGuarded` die exakte
+  Form `if (preserveSnapshotForMissingCurrency(...)) { … return; }` festnagelt und sich selbst prueft
+  (gueltige Form muss durchgehen, entferntes `return;` und entfernter Block muessen auffliegen).
+  Ausbau-Probe gefahren: mit entferntem `return;` 12 bestanden / 1 fehlgeschlagen, Exit 1; nach dem
+  Zurueckbauen wieder 13/0.
+
+### Bewusst nur dokumentiert (kein Bau in diesem Chunk)
+
+1. **Shard-Timeout.** Ein Shard-Timeout wirft das Shard-Manifest ohnehin weg (vorbestehendes
+   Workflow-Verhalten). In dem Fall ist auch dieser Kanal blind — die betroffenen Ticker tauchen im
+   gemergten Zaehler nicht auf.
+2. **`smallcap-pull.yml` hat kein Gate.** Dort bleibt es bei der `::warning::`-Sammelzeile aus
+   `pullAll`; ein rotes X gibt es auf dieser Strecke nicht.
+3. **Price-only-Schnellweg.** Refresht Altbestand ohne Mapper (siehe Abschnitt 4) — ein dort still als
+   USD gefuehrter Snapshot erreicht den Kanal erst beim naechsten Voll-Pull.
+4. **Grenze des Waechters.** `processOne` ist eine Closure in `pullAll` und von aussen nicht
+   aufrufbar; ein echter Ausfuehrungstest des Skips im Lauf-Kontext ist damit nicht moeglich. Der
+   Quelltext-Waechter ist der zweitbeste Beleg, kein Ersatz — bei einem Umbau von `pullAll` muss er
+   mitgezogen werden.

@@ -228,11 +228,14 @@ function run() {
   // einzigen Coverage-Alarm. Atomic write (tmp + rename) means the file is either
   // the complete previous version or the complete new one, never a half-written one.
   writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
-  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
+  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
   // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.
   // Waechst diese Zahl, faellt irgendwo etwas still aus dem Zaehler — dann hier nachsehen.
+  // F-NEU-01 (Tag 629): die ccy-Skips sind weder n_ok noch n_failed und erhoehen damit
+  // "unerklaert" um genau ihre Anzahl. Deshalb stehen sie in der Zeile mit drin — sonst
+  // liest sich der Anker beim ersten Auftreten wie ein neuer stiller Ausfall.
   process.exit(0);
 }
 
