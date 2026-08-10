@@ -1,0 +1,43 @@
+{
+  "schema": "early-detection-concept-map-semantic-audit-kit/v1",
+  "generatedAt": "2026-08-10T19:28:44.617Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "conceptMapVersion": "FEM-SEC-CONCEPT-MAP@1.0.0",
+  "inputs": {
+    "map": {
+      "path": "research/early-detection-v4/sec-concept-map-1.0.0.json",
+      "sha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f"
+    },
+    "seal": {
+      "path": "research/early-detection-v4/sec-concept-map-1.0.0-seal.json",
+      "sha256": "a7134f0164207fb1068cc66da571fa7fdeb64936f08b6e252d63b2d479c3bd85"
+    },
+    "coverage": {
+      "path": "reports/early-detection/sec-concept-coverage-2009-2024.json",
+      "reportSha256": "ab6fa92f6122e70810a4f1252d087543b71c55e294c9da0626cd1a5f29a743cc"
+    },
+    "technicalCheckpoint": {
+      "path": "reports/early-detection/concept-map-gate-decision-2026-08-10-v3.json",
+      "reportSha256": "66352d5229369445b24447337f9367e5f1f2824d0357c9046bcc99449d47e4cc"
+    }
+  },
+  "auditItems": {
+    "path": "audit-items-template.csv",
+    "count": 50,
+    "coreRowsSha256": "7b7a0b980d6ab05a0b506372b7f21fb0810fd782d51d2ea0f4037abb6fb744cc",
+    "requiredDecisionFields": [
+      "reviewerDecision",
+      "findingSeverity",
+      "evidenceCitation",
+      "reviewerComment"
+    ]
+  },
+  "attestationTemplate": "attestation-template.json",
+  "readme": "README.md",
+  "humanReviewPresent": false,
+  "semanticAuditPassed": false,
+  "officialGatePassed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "496cc88ebd3b6ff899620fe97f6baae31b08ccdef92e784f0a0c6c08ecd8478d"
+}
