@@ -102,6 +102,39 @@ for (const rel of Object.keys(NEEDS_UNIVERSE)) {
   });
 }
 
+// ── P1-Chunk 4 Stufe 1 (Tag 623): leeres Universum muss SICHTBAR sein ────────────────────────────
+// Befunde F-CGPT-082/095/096/097/101/107/110/112/113: diese neun Scoring-Gates steigen bei leerem
+// (bzw. zu kleinem) Universum mit Exit 0 aus — im CI-Log ununterscheidbar von einem echten Pass.
+// Stufe 1 macht den Zustand sichtbar, ohne ihn rot zu faerben: jede Suite MUSS ohne Universum eine
+// GitHub-Annotation ausgeben (Zeilenanfang '::warning::', sonst parst GitHub sie nicht) UND weiter
+// mit Exit 0 enden. Beides wird geprueft — die Abwesenheit der Warnung genauso wie die Anwesenheit
+// des gruenen Exit-Codes. Das Scharfschalten (Exit 1) ist bewusst NICHT Gegenstand dieser Stufe.
+const WARN_ON_EMPTY = [
+  'tests/scoring/anchors.rank.test.js',
+  'tests/scoring/calib-parity.test.js',
+  'tests/scoring/calibration-ref.test.js',
+  'tests/scoring/calibration.test.js',
+  'tests/scoring/fairness-guards.test.js',
+  'tests/scoring/phase.test.js',
+  'tests/scoring/quality-board.test.js',
+  'tests/scoring/score-breakdown.test.js',
+  'tests/scoring/score.integration.test.js',
+];
+for (const rel of WARN_ON_EMPTY) {
+  const { out, code } = runWithoutUniverse(rel);
+  const warnLines = out.split('\n').filter((l) => l.startsWith('::warning::'));
+  check(rel + ': meldet leeres Universum als ::warning::-Annotation (nicht still)', () => {
+    // Geprueft wird die SACHE (es gibt eine Annotation zum Universums-Zustand), nicht die Anzahl:
+    // eine spaeter legitim hinzukommende zweite ::warning::-Zeile darf diesen Waechter nicht
+    // falsch-rot machen. Zeilenanfang bleibt Pflicht — nur so parst GitHub sie als Annotation.
+    assert.ok(warnLines.some((l) => /[Uu]niversum|lesbar/.test(l)),
+      `keine Zeile, die mit '::warning::' BEGINNT und den Universums-/Lesbarkeits-Zustand benennt — gefundene Warnzeilen: ${warnLines.length}\n` + out.slice(-500));
+  });
+  check(rel + ': bleibt bei leerem Universum gruen (Stufe 1 faerbt nicht rot)', () => {
+    assert.equal(code, 0, 'Exit=' + code + ' — Sichtbarkeitsstufe darf den Lauf nicht blocken');
+  });
+}
+
 fs.rmdirSync(EMPTY_DIR);
 console.log(fail ? `\nskip-honesty: ${fail} FAILED` : '\nskip-honesty: all passed');
 process.exit(fail ? 1 : 0);
