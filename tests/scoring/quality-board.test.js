@@ -333,6 +333,10 @@ test('buildQuality FIX 3: export-Zweig liest die Board-Liste aus index.json, nic
   fs.rmSync(src, { recursive: true, force: true }); fs.rmSync(out, { recursive: true, force: true });
 });
 
+// P1-Chunk 4 Stufe 1 (Tag 623): sichtbare GitHub-Annotation statt Fussnote in der Summenzeile.
+// console.log direkt auf stdout (F2964), VOR der Summenzeile (skip-honesty liest sie per pop()).
+// Exit-Code bleibt gruen.
+if (!HAS_UNIVERSE) console.log(`::warning::quality-board.test.js: leeres Universum — ${skip} reale Universumstests (HG-byte-identisch, growthBoost-Gate, QC-Pass) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
 console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

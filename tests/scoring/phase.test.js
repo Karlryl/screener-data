@@ -111,6 +111,12 @@ test('Output-Zeilen tragen phase/mcapBand/ipoRecency; CRDO=inflected, route, Sco
   assert.ok(r.survival.length && 'phase' in r.survival[0], 'survival-Zeile ohne Filter-Felder');
 });
 
+// P1-Chunk 4 Stufe 1 (Tag 623): die Skip-Zahl in der Summenzeile ist eine Fussnote — im CI-Log geht
+// sie unter. Eine ::warning::-Zeile macht daraus eine sichtbare GitHub-Annotation. console.log direkt
+// auf stdout, ohne Wrapper/Praefix (Lektion F2964), und VOR der Summenzeile, damit die letzte Zeile
+// des Outputs weiter die Summenzeile bleibt (tests/skip-honesty.test.js liest sie per pop()).
+// Exit-Code bleibt unveraendert gruen — die scharfe Stufe ist bewusst NICHT hier.
+if (skip) console.log(`::warning::phase.test.js: ${skip} Live-Universums-Anker uebersprungen (leeres snapshots/) — hier wurde nichts gemessen; die Suite meldet trotzdem gruen.`);
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "12 ok, 0 fail" wie ein voller Pass, obwohl im
 // pre-pull-CI der Live-Universums-Anker gar nicht gelaufen ist.
 console.log(`\nphase.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

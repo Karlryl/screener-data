@@ -35,6 +35,10 @@ try {
 } catch (_) {}
 
 if (universe.length < 100) {
+  // P1-Chunk 4 Stufe 1 (Sichtbarkeit, Tag 623): der Aussteig bleibt gruen (Exit 0), darf aber nicht
+  // mehr STILL sein. console.log direkt auf stdout, ohne Wrapper/Praefix — nur so parst GitHub die
+  // Zeile als Annotation (Lektion F2964). Die scharfe Stufe (Exit 1) ist bewusst NICHT hier.
+  console.log(`::warning::anchors.rank.test.js: Universum ${universe.length} < 100 — die Rang-Anker (Direktive 4) wurden NICHT gemessen. Diese Suite meldet gruen, ohne etwas geprueft zu haben.`);
   console.log('  (Universum < 100 -> Rang-Anker uebersprungen, KEIN Fail — pre-pull-Gate)');
   console.log('anchors.rank.test.js: 0 ok, 0 fail (skipped: kein Universum)');
   process.exit(0);

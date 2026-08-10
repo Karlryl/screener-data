@@ -308,6 +308,10 @@ testU('produceRankings: korrekte JSON-Form, sortiert, PLTR top software', () => 
   assert.ok(semis[0].score >= semis[1].score, 'nicht absteigend sortiert');
   assert.ok(typeof semis[0].score === 'number' && semis[0].ticker, 'Row-Form');
   assert.ok(r.overview.length > 0 && r.survival.length > 0);
+  // P1-Chunk 4 / F-CGPT-112 (Tag 623): dieses `|| true` macht die Zeile TAUTOLOGISCH — sie kann nie
+  // failen und prueft nichts. Sie bleibt hier nur stehen, weil das Scharfschalten (Klammer aufloesen)
+  // eine Verschaerfung waere und in die spaetere scharfe Stufe gehoert, nicht in die Sichtbarkeitsstufe.
+  // Der Sachgehalt ist ohnehin durch die naechste Zeile (typeof r.excluded === 'object') abgedeckt.
   assert.ok(r.excluded && typeof r.excluded.non_us !== 'undefined' || true); // excluded ist ein Objekt
   assert.equal(typeof r.excluded, 'object');
   // A3-Stufe-2 (Weltweit-Pivot): PLTR ist im GLOBALEN Topf nicht mehr literal #1 — echte Auslands-
@@ -698,6 +702,12 @@ for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'e
   }
 }
 
+// P1-Chunk 4 Stufe 1 (Tag 623): sichtbare GitHub-Annotation statt Fussnote in der Summenzeile.
+// console.log direkt auf stdout (F2964), VOR der Summenzeile (skip-honesty liest sie per pop()).
+// Bedingung ist !HAS_UNIVERSE, nicht skip>0: mit echtem Universum sind einzelne Skips (Anker-Ticker
+// fehlt) ein normaler Zustand — nur das leere Universum macht die ganze Suite aussagelos.
+// Exit-Code bleibt gruen.
+if (!HAS_UNIVERSE) console.log(`::warning::score.integration.test.js: leeres Universum — ${skip} Live-Universums-Anker (Routing, Rang, Dedup, Ausschluesse) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "N ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Live-Universums-Anker gar nicht gelaufen sind.
 console.log(`\nscore.integration.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

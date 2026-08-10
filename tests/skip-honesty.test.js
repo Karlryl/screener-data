@@ -102,6 +102,37 @@ for (const rel of Object.keys(NEEDS_UNIVERSE)) {
   });
 }
 
+// ── P1-Chunk 4 Stufe 1 (Tag 623): leeres Universum muss SICHTBAR sein ────────────────────────────
+// Befunde F-CGPT-082/095/096/097/101/107/110/112/113: diese neun Scoring-Gates steigen bei leerem
+// (bzw. zu kleinem) Universum mit Exit 0 aus — im CI-Log ununterscheidbar von einem echten Pass.
+// Stufe 1 macht den Zustand sichtbar, ohne ihn rot zu faerben: jede Suite MUSS ohne Universum eine
+// GitHub-Annotation ausgeben (Zeilenanfang '::warning::', sonst parst GitHub sie nicht) UND weiter
+// mit Exit 0 enden. Beides wird geprueft — die Abwesenheit der Warnung genauso wie die Anwesenheit
+// des gruenen Exit-Codes. Das Scharfschalten (Exit 1) ist bewusst NICHT Gegenstand dieser Stufe.
+const WARN_ON_EMPTY = [
+  'tests/scoring/anchors.rank.test.js',
+  'tests/scoring/calib-parity.test.js',
+  'tests/scoring/calibration-ref.test.js',
+  'tests/scoring/calibration.test.js',
+  'tests/scoring/fairness-guards.test.js',
+  'tests/scoring/phase.test.js',
+  'tests/scoring/quality-board.test.js',
+  'tests/scoring/score-breakdown.test.js',
+  'tests/scoring/score.integration.test.js',
+];
+for (const rel of WARN_ON_EMPTY) {
+  const { out, code } = runWithoutUniverse(rel);
+  const warnLines = out.split('\n').filter((l) => l.startsWith('::warning::'));
+  check(rel + ': meldet leeres Universum als ::warning::-Annotation (nicht still)', () => {
+    assert.equal(warnLines.length, 1,
+      `erwartet genau EINE Zeile, die mit '::warning::' BEGINNT (nur so wird sie zur GitHub-Annotation) — gefunden ${warnLines.length}:\n` + out.slice(-500));
+    assert.ok(/[Uu]niversum/.test(warnLines[0]), 'Warnung benennt das leere Universum nicht: ' + warnLines[0]);
+  });
+  check(rel + ': bleibt bei leerem Universum gruen (Stufe 1 faerbt nicht rot)', () => {
+    assert.equal(code, 0, 'Exit=' + code + ' — Sichtbarkeitsstufe darf den Lauf nicht blocken');
+  });
+}
+
 fs.rmdirSync(EMPTY_DIR);
 console.log(fail ? `\nskip-honesty: ${fail} FAILED` : '\nskip-honesty: all passed');
 process.exit(fail ? 1 : 0);

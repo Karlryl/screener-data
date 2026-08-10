@@ -23,7 +23,10 @@ const formulas = require('../../src/scoring/formulas/index.js');
 let pass = 0, fail = 0;
 function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); } }
 
-const SNAP_DIR = path.join(__dirname, '..', '..', 'snapshots');
+// SCREENER_SNAPSHOTS_DIR: nur Test-Seam (wie score.integration/anchors.rank) — laesst den
+// Leer-Universum-Waechter in tests/skip-honesty.test.js ein leeres Verzeichnis injizieren;
+// ohne die Variable unveraendert das echte snapshots/.
+const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const universe = [];
 try {
   for (const f of fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
@@ -35,6 +38,8 @@ try {
 const FID = 'semiconductors', TRACK = 'profitable';
 
 if (universe.length < 100) {
+  // P1-Chunk 4 Stufe 1 (Tag 623): sichtbar statt still — console.log direkt auf stdout (F2964).
+  console.log(`::warning::calib-parity.test.js: Universum ${universe.length} < 100 — die Paritaets-/Bounds-Anker (calibrate <-> Produktion) wurden NICHT gemessen. Diese Suite meldet gruen, ohne etwas geprueft zu haben.`);
   console.log('  (Universum < 100 -> Parität-Anker übersprungen, KEIN Fail — pre-pull-Gate)');
   console.log('calib-parity.test.js: 0 ok, 0 fail (skipped: kein Universum)');
   process.exit(0);
