@@ -1,0 +1,33 @@
+{
+  "schema": "early-detection-foundation-bootstrap-report/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "PARTIAL_PASS_NOT_AN_EXECUTION_GATE",
+  "verifiedAt": "2026-08-08T17:09:15.703Z",
+  "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4",
+  "source": {
+    "class": "sec_companyfacts",
+    "directory": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\external-data\\sec-xbrl",
+    "manifest": "external-data/sec-xbrl/_manifest.json"
+  },
+  "result": {
+    "observations": 129,
+    "accepted": 56,
+    "quarantined": 73,
+    "distinctPayloads": 129,
+    "distinctPayloadBytes": 268198314,
+    "issues": [],
+    "observationIndexSha256": "acbc4760669e1759fb4985e294eb7d543bcfe0fe923f442637de1bbdc22d65a7",
+    "payloadIndexSha256": "3623824511f6ff25c1218dbc0ae7a404b47ff021ced1645914721dec4d6bf197"
+  },
+  "qualityDecision": {
+    "acceptedRule": "The source manifest contains a timezone-qualified fetchedAt for the exact CIK payload.",
+    "quarantineRule": "No matching source-manifest retrieval timestamp exists; filesystem times are not promoted to observedAt.",
+    "confirmatoryUseAllowed": false,
+    "reason": "This is a bootstrap inventory only. It does not satisfy population completeness, exact acceptance, listing, price or blind-coding gates."
+  },
+  "verificationMethod": [
+    "python scripts/early-detection-foundation.py self-test",
+    "python scripts/early-detection-foundation.py verify --data-root C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4"
+  ],
+  "productiveGqsModified": false
+}
