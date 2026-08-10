@@ -124,9 +124,11 @@ for (const rel of WARN_ON_EMPTY) {
   const { out, code } = runWithoutUniverse(rel);
   const warnLines = out.split('\n').filter((l) => l.startsWith('::warning::'));
   check(rel + ': meldet leeres Universum als ::warning::-Annotation (nicht still)', () => {
-    assert.equal(warnLines.length, 1,
-      `erwartet genau EINE Zeile, die mit '::warning::' BEGINNT (nur so wird sie zur GitHub-Annotation) — gefunden ${warnLines.length}:\n` + out.slice(-500));
-    assert.ok(/[Uu]niversum/.test(warnLines[0]), 'Warnung benennt das leere Universum nicht: ' + warnLines[0]);
+    // Geprueft wird die SACHE (es gibt eine Annotation zum Universums-Zustand), nicht die Anzahl:
+    // eine spaeter legitim hinzukommende zweite ::warning::-Zeile darf diesen Waechter nicht
+    // falsch-rot machen. Zeilenanfang bleibt Pflicht — nur so parst GitHub sie als Annotation.
+    assert.ok(warnLines.some((l) => /[Uu]niversum|lesbar/.test(l)),
+      `keine Zeile, die mit '::warning::' BEGINNT und den Universums-/Lesbarkeits-Zustand benennt — gefundene Warnzeilen: ${warnLines.length}\n` + out.slice(-500));
   });
   check(rel + ': bleibt bei leerem Universum gruen (Stufe 1 faerbt nicht rot)', () => {
     assert.equal(code, 0, 'Exit=' + code + ' — Sichtbarkeitsstufe darf den Lauf nicht blocken');

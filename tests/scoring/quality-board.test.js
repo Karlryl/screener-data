@@ -34,9 +34,13 @@ const near = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps;
 // Universum); ohne die Variable unveraendert das echte snapshots/.
 const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const universe = [];
+// snapFiles = Rohdatei-Zahl im Verzeichnis. universe zaehlt nur die JSON.parse+meta.ticker-Ueberlebenden;
+// ohne die Rohzahl sehen "Verzeichnis leer" und "Tausende Dateien, aber Schema unlesbar" gleich aus.
+let snapFiles = 0;
 try {
   for (const f of fs.readdirSync(SNAP_DIR)) {
     if (!f.endsWith('.json') || f.startsWith('_')) continue;
+    snapFiles++;
     try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); }
     catch (_) { /* defekt */ }
   }
@@ -336,7 +340,7 @@ test('buildQuality FIX 3: export-Zweig liest die Board-Liste aus index.json, nic
 // P1-Chunk 4 Stufe 1 (Tag 623): sichtbare GitHub-Annotation statt Fussnote in der Summenzeile.
 // console.log direkt auf stdout (F2964), VOR der Summenzeile (skip-honesty liest sie per pop()).
 // Exit-Code bleibt gruen.
-if (!HAS_UNIVERSE) console.log(`::warning::quality-board.test.js: leeres Universum — ${skip} reale Universumstests (HG-byte-identisch, growthBoost-Gate, QC-Pass) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
+if (!HAS_UNIVERSE) console.log(`::warning::quality-board.test.js: ${snapFiles} Dateien im Snapshot-Verzeichnis, davon 0 lesbar — leeres Universum ODER Schema unlesbar. ${skip} reale Universumstests (HG-byte-identisch, growthBoost-Gate, QC-Pass) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "18 ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Universums-Beweise gar nicht gelaufen sind.
 console.log(`\nquality-board.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

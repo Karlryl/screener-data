@@ -707,7 +707,9 @@ for (const fid of ['semiconductors', 'software-comm-services', 'industrials', 'e
 // Bedingung ist !HAS_UNIVERSE, nicht skip>0: mit echtem Universum sind einzelne Skips (Anker-Ticker
 // fehlt) ein normaler Zustand — nur das leere Universum macht die ganze Suite aussagelos.
 // Exit-Code bleibt gruen.
-if (!HAS_UNIVERSE) console.log(`::warning::score.integration.test.js: leeres Universum — ${skip} Live-Universums-Anker (Routing, Rang, Dedup, Ausschluesse) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
+// files.length ist die Rohdatei-Zahl; universe zaehlt nur die JSON.parse+meta.ticker-Ueberlebenden.
+// Ohne die Rohzahl sehen "Verzeichnis leer" und "Tausende Dateien, aber Schema unlesbar" gleich aus.
+if (!HAS_UNIVERSE) console.log(`::warning::score.integration.test.js: ${files.length} Dateien im Snapshot-Verzeichnis, davon 0 lesbar — leeres Universum ODER Schema unlesbar. ${skip} Live-Universums-Anker (Routing, Rang, Dedup, Ausschluesse) wurden NICHT gemessen; die Suite meldet trotzdem gruen.`);
 // Skip-Zahl gehoert in die Summenzeile: sonst liest "N ok, 0 fail" wie ein voller Pass,
 // obwohl im pre-pull-CI die Live-Universums-Anker gar nicht gelaufen sind.
 console.log(`\nscore.integration.test.js: ${pass} ok, ${fail} fail` + (skip ? `, ${skip} skipped (kein Universum)` : ''));

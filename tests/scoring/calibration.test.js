@@ -23,15 +23,20 @@ function test(name, fn) { try { fn(); pass++; console.log('  ok   ' + name); } c
 // ohne die Variable unveraendert das echte snapshots/.
 const SNAP_DIR = process.env.SCREENER_SNAPSHOTS_DIR || path.join(__dirname, '..', '..', 'snapshots');
 const universe = [];
+// snapFiles = Rohdatei-Zahl im Verzeichnis. universe zaehlt nur die JSON.parse+meta.ticker-Ueberlebenden;
+// ohne die Rohzahl sehen "Verzeichnis leer" und "Tausende Dateien, aber Schema unlesbar" gleich aus.
+let snapFiles = 0;
 try {
-  for (const f of fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !x.startsWith('_'))) {
+  const files = fs.readdirSync(SNAP_DIR).filter((x) => x.endsWith('.json') && !x.startsWith('_'));
+  snapFiles = files.length;
+  for (const f of files) {
     try { const s = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, f), 'utf8')); if (s && s.meta && s.meta.ticker) universe.push(s); } catch (_) { /* defekt -> skip */ }
   }
 } catch (_) { /* snapshots/ fehlt (pre-pull-Gate) */ }
 
 if (universe.length === 0) {
   // P1-Chunk 4 Stufe 1 (Tag 623): sichtbar statt still — console.log direkt auf stdout (F2964).
-  console.log('::warning::calibration.test.js: leeres Universum — Contract/Replay/Inertness des Kalibrier-Artefakts wurden NICHT gemessen. Diese Suite meldet gruen, ohne etwas geprueft zu haben.');
+  console.log(`::warning::calibration.test.js: ${snapFiles} Dateien im Snapshot-Verzeichnis, davon 0 lesbar — leeres Universum ODER Schema unlesbar. Contract/Replay/Inertness des Kalibrier-Artefakts wurden NICHT gemessen; diese Suite meldet gruen, ohne etwas geprueft zu haben.`);
   console.log('  (Universum leer -> Kalibrier-Anker uebersprungen, KEIN Fail)');
   console.log('calibration.test.js: 0 ok, 0 fail (skipped: kein Universum)');
   process.exit(0);
