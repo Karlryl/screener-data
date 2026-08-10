@@ -1,6 +1,6 @@
 # Kostenfreie Datenarchitektur der Früherkennungsstudie V4
 
-Stand: 9. August 2026
+Stand: 10. August 2026
 
 ## Aktueller Prüfstand
 
@@ -16,6 +16,19 @@ Zeilenzahl und gespeicherte Zeilenhashfolge stimmten. Er endete mit
 Der Berichtshash lautet
 `9b2b660bd0d5cc65b49618a2e4a119359e33c07891d045817e2d41a000a1885f`.
 
+Der getrennte append-only Gesamtcheckpoint schliesst inzwischen auch die
+Revisions- und Originalfiling-Luecke. Er rehasht 952 Observationen, 794
+verschiedene Payloads mit 12.930.873.291 Bytes, alle 178 gueltigen archivierten
+SEC-FSD-Revisionen von `2009q1` bis `2024q4` sowie 178.601
+Originalfiling-Ereignisse. Die Originalpopulation umfasst 18.317 Form-8-A-,
+115.932 EFFECT- und 44.352 Form-25/15-Ereignisse; 101.881 verschiedene
+Originalfiling-Dateien wurden bytegeprueft, drei EFFECT-Ereignisse bleiben als
+explizite `NOT_FOUND`-Quellbefunde erhalten. Der signierte Checkpoint ist ueber
+Commit `4055c8a2212cc4ce691fc319826b960b58b0544c` bytegleich an den autorisierten
+`origin/main`-Stand `221503a3f6d64ba13a841e96832653f52cf39733`
+gebunden. Damit ist `appendOnlySecStore` technisch gruen; der unabhaengige
+menschliche Audit bleibt als eigenes Ausfuehrungsgate rot.
+
 Zusätzlich sind alle 64 SEC-EDGAR-Masterindizes von `2009q1` bis `2024q4`
 digestgeprüft archiviert und in 16.380.919 Filing-Locator-Zeilen überführt. Darin
 liegen 27.285 Form-25- und 17.067 Form-15-Ereigniskandidaten. Eine offizielle
@@ -24,35 +37,17 @@ Namensabgleiche gesperrt. Diese Filingdaten
 schließen den kostenlosen Locator-Pfad, aber noch nicht den Ereignisbeweis:
 Acceptance- und Effective-Zeitpunkt müssen aus den Originaleinreichungen kommen.
 
-Der kostenlose Originalfiling-Transport ist inzwischen populationsnah, aber noch
-nicht geschlossen. Fuer die 44.352 Form-25/15-Kandidaten existieren 27.427 eindeutige
-Accessions. Wayback-Tagesarchive lokalisieren 18.503 davon; die getrennt vermessenen
-SEC-`Oldloads`-Tagesdateien 16.571. Beide Quellen sind komplementaer: ihre exakt auf
-der Kandidatenpopulation rekonstruierte Vereinigung deckt 40.033 Ereigniszeilen
-(90,26 Prozent) und 24.681 Accessions (89,99 Prozent) ab. Bytegleich archivierte
-Rohproben fanden 15/15 Ziele in einem Feed-Archiv sowie 11/11 Ziele in einer
-`Oldloads`-Datei an einem vom Feed nicht gedeckten Tag; eine einzelne Form-25-
-Einreichung bestand ebenfalls CDX-SHA-1, lokalen SHA-256, Accession- und Formabgleich.
-Bei einzeln adressierten Filings fand die vorab determinierte 32er-Probe nur 5
-Captures, Common Crawl fuer dieselbe Policy null. Damit sind drei echte
-Inhaltstransporte bewiesen. 2.746 eindeutige Accessions bleiben jedoch ohne
-geprueften Archiv-Locator; Locator-Coverage ist zudem kein Nachweis, dass alle
-zugehoerigen Bytes bereits lokal und inhaltlich validiert wurden.
+Der kostenlose Originalfiling-Transport ist fuer die drei registrierten
+SEC-Ereignispopulationen geschlossen. Fruehere Feed-, `Oldloads`-, Einzel-Wayback-
+und Common-Crawl-Laeufe bleiben als append-only Transportprovenienz erhalten;
+ihre damalige Locator-Teilabdeckung ist aber nicht mehr der Gate-Stand. Massgeblich
+sind jetzt die vollstaendigen Capture-State-Datenbanken, ihre eingefrorenen
+Zeilenfolgen und der ueber `origin/main` gebundene Gesamtcheckpoint.
 
-Fuer diese Restmenge existiert jetzt eine feste, outcome-blinde SHA-256-Queue in
-43 Batches. Siebzehn gueltige Batches mit 1.088 Accessions wurden gegen den
-content-addressed Individual-Wayback-Cache ausgefuehrt; technische Unbekannte
-werden append-only wiederholt. Die Indizes 7, 13, 15, 19 und 20 bleiben wegen
-unvollstaendiger Inhaltsgates ausdruecklich offen. Der eingefrorene gemeinsame
-Stand enthaelt 285 zusaetzliche Locator, 707 vollstaendige Nulltreffer und 96
-technisch unbekannte Faelle. Alle 285 gefundenen Filinginhalte bestanden
-Archivdigest, lokalen SHA-256, Accession- und Formabgleich. Zusammen mit den
-Bulk-Locators sind damit 24.966 von 27.427 Accessions (91,02709 Prozent)
-lokalisiert; 1.754 Accessions sind noch unbefragt oder technisch offen und 26
-Batches noch nicht gueltig
-abgeschlossen. Ein
-signierter resumierbarer Runner bewahrt jeden Lauf und promoted nur
-content-validierte Verbesserungen. Das ist Fortschritt, kein Vollstaendigkeitsbeweis.
+Die fruehere feste, outcome-blinde 43-Batch-Queue dokumentiert den Aufbaupfad,
+ist aber kein aktueller Restblocker mehr. Der Abschlussnachweis kommt aus den
+vollstaendigen populationsspezifischen Capture-States; Quell-`NOT_FOUND` wird
+dort nicht als Payloadfund umetikettiert.
 
 Die erweiterte Entity-Brücke verbindet jetzt 54 exakte Börsensnapshots von 2009
 bis 2024 mit damaligen EDGAR-Namensaliasen. Sie liefert 112.476 ungeprüfte
@@ -159,7 +154,7 @@ Quarantäne.
 | Gate | Kostenfreier Primärpfad | Heutiger Status | Bestehende Lücke |
 |---|---|---|---|
 | Entity-/Listing-Ledger | CIK + Filing-Cover + Form 25/15 + effekt-datierte Security-/Listing-IDs | MIDAS 2012-2024 + 54 exakte Börsen-Snapshots + 41 direkte SEC-CIK/Ticker-Snapshots; 32.613/32.662 Matcherfaelle korrekt (99,85 Prozent), 1.831 Mehrdeutigkeiten aufgeloest, 1.029 direkte Recoveries | Direkte SEC-Zustaende beginnen 2017 und sind keine effekt-datierten Intervalle; Vor-2017-Cover und Ereignisdaten offen |
-| Append-only SEC Store | SEC FSD, Originalfilings, Companyfacts; bytegleich + SHA-256 | 127 FSD-Payloads bis 2024 + 52 MIDAS-Quartale + 64 EDGAR-Masterindizes; FSD-Vollintegrität bestanden; Feed-, Oldloads- und Einzelfiling-Rohproben hash- und inhaltsverifiziert | Archiv-Locator-Vereinigung deckt 89,99 Prozent der Accessions, aber noch keinen flächendeckend lokal validierten Inhaltsbestand; Acceptance-/Effective-Metadaten nicht vollständig extrahiert |
+| Append-only SEC Store | SEC FSD, Originalfilings, Companyfacts; bytegleich + SHA-256 | **PASS:** 952 Observationen, 794 Payloads, 12.930.873.291 Bytes, 178/178 gueltige FSD-Revisionen, 178.601 Originalfiling-Ereignisse und 101.881 verifizierte Originaldateien; Checkpoint-Commit `4055c8a…` bytegleich an `origin/main` `221503a…` gebunden | keine technische Store-Luecke; unabhaengiger Human-Audit bleibt separat rot |
 | Historisches Universum | damalige SEC-Emittenten + MIDAS + Listing-Cover + Exit-Ereignisse | tägliche MIDAS-Reihe 2012-2024 lückenlos; 8.119 Stock- und 5.497 ETF-Tickerpaare | 2009-2011, CIK-Link und Common-Stock-Untertypen offen |
 | As-of-Leakage | `known_at=max(required source timestamps)`; unbekannt = nicht verwendbar | 100/100 Vertragsfixtures, sieben gezielte Regressionstests und ein echter Common-Crawl-WARC-Pfad bis zur normalisierten Verfügbarkeitsfunktion des versiegelten Runners bestanden | vollständiger SEC-/Corporate-Action-, Issuer-/Public-Web-, Market-Bar- und historischer GQS-Pfad bis zum exakten autorisierten FEM-Input fehlt; Gate bleibt rot |
 | Adjusted OHLCV | mehrstufige Gratisquellen + Split/Dividend-/Exit-Ereignisse | begrenzte aktuelle-Ticker-Kohorte deckt 9.095/23.165 Kandidatenzeilen beziehungsweise 39,26182 Prozent ab; 2.028 gueltige Dateien enthalten nur Datum und adjusted close; SEC MIDAS liefert 19.149.242 Marktaktivitaetszeilen, aber kein OHLCV | reproduzierbarer Unmoeglichkeitsnachweis: kein kostenloses, survivorship-sicheres 2009-2024-Volluniversum mit permanenten IDs, Actions und Delisting-Renditen belegt; Gate bleibt rot, kostenloser Fallback ist begrenzter Technik-Anhang plus prospektiver append-only Collector |
