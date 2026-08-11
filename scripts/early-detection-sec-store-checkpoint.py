@@ -319,7 +319,21 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         raise CheckpointError("corporate-action population mismatch")
     if effect_events != int(coverage["effectNotices"]["populationEvents"]):
         raise CheckpointError("EFFECT population mismatch")
+    annual = coverage.get("annual10KIdentity")
+    if annual is not None and (
+        int(annual["populationEvents"]) != 20495
+        or int(annual["verifiedPayloads"]) != 20495
+        or int(annual["explicitNonPayloadOutcomes"]) != 0
+    ):
+        raise CheckpointError("annual 10-K identity population mismatch")
     original_filings = enumerate_capture_inputs(data_root, capture)
+    capture_decision = (
+        "All valid archived SEC FSD payload revisions and all original/amended Form 8-A12B, "
+        "Form 25/15 and EFFECT population outcomes"
+    )
+    if annual is not None:
+        capture_decision += " and the bounded annual 10-K identity population"
+    capture_decision += " are explicitly represented and locally hash-verified."
 
     evidence_paths = {
         "compositeVerification": args.composite_verification.resolve(),
@@ -373,13 +387,24 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 "explicitNonPayloadOutcomes": int(coverage["effectNotices"]["explicitNonPayloadOutcomes"]),
                 "nonPayloadOutcomesByStatus": coverage["effectNotices"]["nonPayloadOutcomesByStatus"],
             },
+            **({
+                "annual10KIdentity": {
+                    "populationEvents": int(annual["populationEvents"]),
+                    "verifiedPayloads": int(annual["verifiedPayloads"]),
+                    "explicitNonPayloadOutcomes": int(annual["explicitNonPayloadOutcomes"]),
+                    "distinctPayloadFiles": int(annual["distinctPayloadFiles"]),
+                    "distinctPayloadBytes": int(annual["distinctPayloadBytes"]),
+                    "distinctPayloadIndexSha256": annual["distinctPayloadIndexSha256"],
+                    "missingAcceptanceFallbacks": int(annual["missingAcceptanceFallbacks"]),
+                }
+            } if annual is not None else {}),
         },
         "originalFilingCaptureCheckpoint": original_filings,
         "evidence": {
             role: {"path": str(path), "fileSha256": file_sha256(path)}
             for role, path in evidence_paths.items()
         },
-        "decision": "All valid archived SEC FSD payload revisions and all original/amended Form 8-A12B, Form 25/15 and EFFECT population outcomes are explicitly represented and locally hash-verified.",
+        "decision": capture_decision,
         "remainingGateRequirements": [
             "This checkpoint must be committed to and fetched from the authorized origin/main history.",
             "A genuinely independent auditor must reproduce the full-input checkpoint before confirmatory input assembly.",
