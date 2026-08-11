@@ -24,6 +24,12 @@ function windowsTextSha256(file) {
   return sha256Bytes(Buffer.from(normalized, 'utf8'));
 }
 
+// separator-neutral: the manifest records Windows paths, the CI runner is Linux,
+// so path.basename would return the whole string there.
+function baseName(p) {
+  return String(p).split(/[\\/]/).pop();
+}
+
 function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
   if (value && typeof value === 'object') {
@@ -153,7 +159,7 @@ test('V48 corpus and V31 readiness seal the dossier evidence while outcomes rema
     ['verify_identity_transition_gate_decisions_v7.py', 'early-detection-identity-transition-gates-verify.py'],
   ]);
   for (const [original, published] of copiedControls) {
-    const entry = corpus.controlFiles.find((item) => path.basename(item.path) === original);
+    const entry = corpus.controlFiles.find((item) => baseName(item.path) === original);
     assert.ok(entry, original);
     assert.equal(entry.fileSha256, fileSha256(path.join(scripts, published)), published);
   }
@@ -165,11 +171,11 @@ test('V48 corpus and V31 readiness seal the dossier evidence while outcomes rema
   for (const [gate, decisionName] of decisions) {
     const item = readiness.gates.find((candidate) => candidate.gate === gate);
     assert.ok(item, gate);
-    assert.equal(path.basename(item.evidence.path), decisionName);
+    assert.equal(baseName(item.evidence.path), decisionName);
     assert.equal(item.evidence.fileSha256, windowsTextSha256(path.join(reports, decisionName)));
   }
   const corpusItem = readiness.gates.find((item) => item.gate === 'researchCorpusSealed');
-  assert.equal(path.basename(corpusItem.evidence.path), 'research-corpus-gate-decision-2026-08-10-v40.json');
+  assert.equal(baseName(corpusItem.evidence.path), 'research-corpus-gate-decision-2026-08-10-v40.json');
   assert.equal(readinessVerification.status, 'PASS');
   assert.equal(readinessVerification.checks.officialGreenGates, 2);
   assert.equal(readinessVerification.checks.officialRedGates, 11);
