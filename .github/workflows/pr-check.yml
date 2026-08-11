@@ -1,0 +1,52 @@
+name: PR Check
+
+# Tag 653: Dieselbe Pruefung wie im Tageslauf, aber beim Oeffnen eines PRs —
+# sichtbares rotes X VOR dem Merge. AUSDRUECKLICH OHNE Merge-Sperre: keine
+# Branch-Protection, kein required status check, kein Auto-Merge-Eingriff.
+# Der Job informiert, er haelt niemanden auf.
+#
+# Hier blockt BEIDES (--mode=all, also auch die Forschungs-Spur): der Zweck ist
+# Sichtbarkeit, und mangels Merge-Sperre kostet ein rotes X hier keinen Tageslauf.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  test-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # actions/checkout@v4 = Konvention der LESENDEN Workflows (weekly-guard.yml).
+      # Die SHA-Pins in daily-pull.yml existieren nur wegen contents: write.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci --no-audit --no-fund
+
+      # Python + numpy exakt aus dem versiegelten Laufzeit-Lock
+      # protocol/early-detection/1.2.0/confirmatory-runtime-lock.json —
+      # ein abweichender Runtime waere selbst ein Vertragsbruch.
+      # Gebraucht, weil tests/early-detection-*.test.js scripts/early-detection-*.py starten.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.13'
+
+      - run: python -m pip install --quiet numpy==2.3.5
+
+      - name: Test-Gate Selftest
+        run: node scripts/test-gate.js --selftest
+
+      - name: Test-Gate (beide Spuren)
+        run: node scripts/test-gate.js --mode=all

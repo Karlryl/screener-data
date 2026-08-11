@@ -140,93 +140,22 @@ jobs:
       - name: Install Python deps (numpy laut Laufzeit-Lock)
         run: python -m pip install --disable-pip-version-check --quiet numpy==2.3.5
 
-      # Task 0.3 (Loop B): PRE-pull test-gate. Jede Testdatei ist ein selbstlaufendes
-      # node-Skript, das mit process.exit(fail ? 1 : 0) endet. Der Glob laesst
-      # fixtures/-Unterordner aus. Eine kaputte Engine muss den Lauf VOR dem teuren
-      # Fan-out blocken (::error:: + exit 1). Signalweg ist ausschliesslich das rote X.
-      #
-      # R-Gate 2.R (17.07.): Das Gate globbte NUR tests/scoring/*.test.js — die 13
-      # Dateien unter tests/ liefen im CI NIE. Darunter rank-ic.test.js und
-      # board-history.test.js, also ausgerechnet die Regressionstests der drei
-      # T1-Funde vom 17.07. (Preis-Store-Pfad, unfertige Fenster, Ausschluss-Vertrag):
-      # Sie haetten eine Wiederholung nicht verhindert, weil sie niemand gefahren haette.
-      # Beide Baeume laufen jetzt im selben Gate; tests/ ist hermetisch (Temp-Fixtures)
-      # und braucht kein Universum, ist also pre-pull voll aussagekraeftig.
-      #
-      # R-Gate 2.R Runde 3 (17.07.): Der Fix oben zaehlte Verzeichnisse NAMENTLICH auf
-      # und liess damit die 5 hermetischen Tests unter lib/ weiter in KEINEM Job laufen —
-      # darunter forward-returns.test.js, die Vertragspruefung von classify(), auf der der
-      # ganze §8-Austrittspfad der rankIC-Messung steht. Symptom-Fix waere: lib/ dazu.
-      # Wurzel ist die Aufzaehlung selbst — jeder NEUE Testordner faellt wieder still raus.
-      # Darum laeuft jetzt VOR dem Gate ein Waechter, der jede getrackte *.test.js gegen
-      # den Glob haelt und laut wird, wenn eine weder gegatet noch begruendet ausgenommen ist.
-      - name: Test-Gate (pre-pull, Waechter + tests/ + tests/scoring/ + lib/)
-        env:
-          # EINE Quelle fuer Waechter UND Gate — sie koennen nicht auseinanderdriften.
-          # audit BH-035: '*.test.js' -> '*test.js' erweitert — faengt auch die
-          # '-test.js'-Schreibweise (tests/13f-test.js, sec-form4-test.js,
-          # sec-user-agent-test.js liefen sonst in KEINEM CI-Gate; weder Waechter noch
-          # Gate sahen sie ueberhaupt, weil `git ls-files '*.test.js'` sie nicht listet).
-          # Alle drei sind offline/hermetisch (kein Netz) -> gehoeren ins Gate, nicht in
-          # GATE_EXEMPT.
-          GATE_GLOB: 'tests/*test.js tests/scoring/*test.js lib/*test.js'
-          # Begruendete Ausnahmen (Praefix-Match). Jede Zeile hier braucht einen Grund:
-          # tests/discovery/ (13 Dateien) = Live-Netz-Tests gegen echte Boersen-/Regulator-
-          # Endpunkte (LSE, Xetra, EDINET, FinMind, …). Im pre-pull-Gate wuerde jeder
-          # fremde Outage Karls Tagslauf falsch-rot blocken, bevor ein Byte Yahoo-Daten
-          # gezogen ist. Sie bleiben Ad-hoc-Checks fuer die Adapter-Pflege.
-          GATE_EXEMPT: 'tests/discovery/'
-        run: |
-          # ── Waechter: keine Testdatei darf still ungegatet bleiben ──────────────
-          # Repo-Bestand = git ls-files (nicht `find`): das schliesst node_modules,
-          # lokale Worktrees und ungetrackten Scratch von sich aus aus — und eine
-          # nicht-eingecheckte Datei kann im CI ohnehin nie laufen.
-          # Jede Schleife hier endet bewusst auf `if … fi` (Status 0) und nicht auf
-          # `[ … ] && echo`: GitHub faehrt `bash -e`, und ein `x=$(…)`, dessen letzter
-          # Schleifendurchlauf 1 zurueckgibt, wuerde den Schritt WORTLOS abbrechen —
-          # ein falsch-rotes Gate, das Karls Tagslauf blockt, ohne zu sagen warum.
-          gated=$(for t in $GATE_GLOB; do if [ -e "$t" ]; then printf '%s ' "$t"; fi; done)
-          all=$(git ls-files '*test.js' | grep -v '/fixtures/' || true)
-          if [ -z "$all" ]; then
-            echo "::error::Waechter fand KEINE Testdatei im Repo — git ls-files kaputt oder Checkout unvollstaendig."
-            exit 1
-          fi
-          # KEIN Heredoc: dessen Body/Delimiter muessten in Spalte 0 stehen und wuerden
-          # den YAML-Block-Skalar hier beenden (= Workflow parst nicht mehr).
-          ungated=$(printf '%s\n' "$all" | while IFS= read -r f; do
-            case " $gated" in *" $f "*) continue ;; esac
-            exempt=0
-            for ex in $GATE_EXEMPT; do
-              case "$f" in "$ex"*) exempt=1 ;; esac
-            done
-            if [ "$exempt" -eq 0 ]; then echo "$f"; fi
-          done)
-          if [ -n "$ungated" ]; then
-            printf '%s\n' "$ungated" | while IFS= read -r f; do
-              echo "::error::Testdatei $f laeuft in KEINEM Job — weder vom Gate-Glob ('$GATE_GLOB') erfasst noch begruendet ausgenommen. Glob erweitern ODER mit Begruendung in GATE_EXEMPT eintragen."
-            done
-            echo "::error::Ungegatete Testdatei(en) gefunden — ein neuer Testordner darf nie stumm bleiben. Aborting."
-            exit 1
-          fi
-          echo "Waechter OK: jede Testdatei ist gegatet oder begruendet ausgenommen."
+      # Zwei-Spuren-Test-Gate (Tag 653). EINE Quelle fuer Waechter und beide Spuren:
+      # scripts/test-gate.js — dort stehen auch die vollstaendigen Begruendungen
+      # (Task 0.3, R-Gate 2.R Runde 1 und 3, audit BH-035, Ausnahme tests/discovery/)
+      # und die Listen. Blockierend = was falsche Zahlen ausliefern koennte;
+      # meldend = Bestandszaehler der Forschungs-Ablage. Leakage- und Zeitpunkt-
+      # Waechter (early-detection.test.js, -leakage-fixtures, -pit*) bleiben blockierend.
+      - name: Test-Gate Selftest
+        run: node scripts/test-gate.js --selftest
 
-          # ── Gate ───────────────────────────────────────────────────────────────
-          fail=0
-          for t in $GATE_GLOB; do
-            [ -e "$t" ] || continue
-            echo "--- $t ---"
-            if node "$t"; then
-              echo "PASS $t"
-            else
-              echo "::error::Test failed: $t — blocking run before Yahoo pull"
-              fail=1
-            fi
-          done
-          if [ "$fail" -ne 0 ]; then
-            echo "::error::One or more tests failed — engine/measurement is broken, aborting run."
-            exit 1
-          fi
-          echo "All tests passed."
+      - name: Test-Gate blockierend (pre-pull)
+        run: node scripts/test-gate.js --mode=blocking
+
+      # KEIN continue-on-error: das Skript liefert fuer Test-Fehlschlaege bewusst 0.
+      # continue-on-error wuerde zusaetzlich einen echten Absturz des Skripts verschlucken.
+      - name: Forschungs-Bestand (meldend, blockt nie)
+        run: node scripts/test-gate.js --mode=report
 
       # Coverage-Marker-Vertrag (coverage-status/v1) pre-pull pinnen. Der Marker
       # outputs/coverage-status.json ist Karls EINZIGER sanktionierter Alarm-Kanal

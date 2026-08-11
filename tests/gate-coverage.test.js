@@ -11,8 +11,11 @@
 // Wurzel — die Aufzaehlung selbst — offen gelassen: der naechste neue Testordner
 // waere wieder still ungegatet.)
 //
-// Dieser Test ist das lokale Gegenstueck zum Waechter-Schritt im Workflow: er faellt
-// beim naechsten neuen Testordner, BEVOR jemand ihn im CI vermisst.
+// Tag 653: Die Gate-Quelle ist von den env-Bloecken in daily-pull.yml nach
+// scripts/test-gate.js gewandert (zwei Spuren, zwei Workflows, EINE Quelle). Dieser
+// Test prueft weiter DIESELBE Sache, nur am neuen Ort: keine Testdatei darf still
+// ungegatet bleiben, die Ausnahmeliste bleibt eng, und die Leakage-/Zeitpunkt-
+// Waechter duerfen nicht in die bloss meldende Spur abrutschen.
 //
 // Run: node tests/gate-coverage.test.js   (Exit 0/1)
 const assert = require('node:assert/strict');
@@ -22,6 +25,9 @@ const { execFileSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const WF = path.join(ROOT, '.github', 'workflows', 'daily-pull.yml');
+const PR_WF = path.join(ROOT, '.github', 'workflows', 'pr-check.yml');
+const GATE_SRC = path.join(ROOT, 'scripts', 'test-gate.js');
+const gate = require(GATE_SRC);
 
 let fail = 0;
 function check(name, fn) {
@@ -30,46 +36,64 @@ function check(name, fn) {
 }
 
 const wf = fs.readFileSync(WF, 'utf8');
-
-function envValue(key) {
-  const m = wf.match(new RegExp(`^\\s*${key}:\\s*'([^']*)'`, 'm'));
-  assert.ok(m, `${key} fehlt in daily-pull.yml — Gate-Quelle nicht auffindbar`);
-  return m[1].split(/\s+/).filter(Boolean);
-}
+const prWf = fs.readFileSync(PR_WF, 'utf8');
+const gateSrc = fs.readFileSync(GATE_SRC, 'utf8');
 
 // glob -> regex; '*' matcht keinen '/' (Shell-Semantik der Gate-Schleife)
 const toRe = (g) =>
   new RegExp('^' + g.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*') + '$');
 
-check('Gate-Schleife nutzt $GATE_GLOB (keine zweite, driftende Liste)', () => {
-  assert.match(wf, /for t in \$GATE_GLOB;/, 'Gate-Schleife globbt nicht ueber $GATE_GLOB');
+check('beide Workflows fahren dieselbe Gate-Quelle (keine zweite, driftende Liste)', () => {
+  assert.match(wf, /node scripts\/test-gate\.js --mode=blocking/);
+  assert.match(wf, /node scripts\/test-gate\.js --mode=report/);
+  assert.match(wf, /node scripts\/test-gate\.js --selftest/);
+  assert.match(prWf, /node scripts\/test-gate\.js --mode=all/);
+  assert.ok(!/GATE_GLOB/.test(wf), 'alte Inline-Gate-Liste steht noch im Workflow');
 });
 
 check('Waechter-Schritt ist fail-loud (::error:: + exit 1)', () => {
-  assert.match(wf, /::error::Testdatei \$f laeuft in KEINEM Job/, 'Waechter-Fehlermeldung fehlt');
+  assert.match(gateSrc, /::error::Testdatei \$\{f\} laeuft in KEINEM Job/, 'Waechter-Fehlermeldung fehlt');
+  assert.match(gateSrc, /::error::Waechter fand KEINE Testdatei im Repo/, 'Leer-Liste-Abbruch fehlt');
 });
 
-check('jede getrackte *.test.js ist gegatet oder begruendet ausgenommen', () => {
-  const globs = envValue('GATE_GLOB').map(toRe);
-  const exempt = envValue('GATE_EXEMPT');
-  const all = execFileSync('git', ['ls-files', '*.test.js'], { cwd: ROOT, encoding: 'utf8' })
+check('jede getrackte *test.js ist gegatet oder begruendet ausgenommen', () => {
+  const globs = gate.BLOCKING_GLOBS.map(toRe);
+  const exempt = gate.EXEMPT_PREFIXES;
+  const report = gate.REPORT_FILES;
+  const all = execFileSync('git', ['ls-files', '*test.js'], { cwd: ROOT, encoding: 'utf8' })
     .split('\n').map((s) => s.trim()).filter((s) => s && !s.includes('/fixtures/'));
 
   assert.ok(all.length > 0, 'git ls-files fand keine Testdatei — Checkout/git kaputt');
 
   const ungated = all.filter(
-    (f) => !globs.some((re) => re.test(f)) && !exempt.some((ex) => f.startsWith(ex))
+    (f) => !globs.some((re) => re.test(f)) && !report.includes(f) && !exempt.some((ex) => f.startsWith(ex))
   );
   assert.deepEqual(
     ungated, [],
     'Diese Testdateien laufen in KEINEM Job:\n         ' + ungated.join('\n         ') +
-    '\n       GATE_GLOB erweitern ODER mit Begruendung in GATE_EXEMPT eintragen.'
+    '\n       BLOCKING_GLOBS erweitern ODER mit Begruendung in scripts/test-gate.js eintragen.'
   );
 });
 
 check('Ausnahmeliste bleibt eng (nur begruendete Live-Netz-Tests)', () => {
-  // Ein aufgeblaehtes GATE_EXEMPT waere die bequeme Art, den Waechter zu entwerten.
-  assert.deepEqual(envValue('GATE_EXEMPT'), ['tests/discovery/']);
+  // Ein aufgeblaehtes EXEMPT_PREFIXES waere die bequeme Art, den Waechter zu entwerten.
+  assert.deepEqual(gate.EXEMPT_PREFIXES, ['tests/discovery/']);
+});
+
+check('Leakage-/Zeitpunkt-Waechter bleiben blockierend (nicht in der Melde-Spur)', () => {
+  // Auflage der Rat-Vorlage: diese sieben duerfen nie in REPORT_FILES landen.
+  for (const f of gate.BLOCKING_ALWAYS) {
+    assert.ok(!gate.REPORT_FILES.includes(f), f + ' ist in die bloss meldende Spur abgerutscht');
+    assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' existiert nicht mehr — Liste veraltet');
+  }
+  assert.ok(gate.BLOCKING_ALWAYS.length === 7, 'BLOCKING_ALWAYS zaehlt nicht mehr sieben Waechter');
+});
+
+check('Forschungs-Spur ist eine Namensliste (neue Studien-Tests landen blockierend)', () => {
+  for (const f of gate.REPORT_FILES) {
+    assert.ok(f.startsWith('tests/early-detection-'), 'Fremde Datei in der Forschungs-Spur: ' + f);
+    assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' existiert nicht mehr — Liste veraltet');
+  }
 });
 
 console.log(fail ? `\n${fail} FAIL` : '\nAlle Gate-Coverage-Checks ok');
