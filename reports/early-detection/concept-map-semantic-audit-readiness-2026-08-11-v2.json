@@ -1,0 +1,37 @@
+{
+  "schema": "early-detection-concept-map-semantic-audit-decision/v2",
+  "generatedAt": "2026-08-11T11:38:20.254Z",
+  "status": "RED_HUMAN_REVIEW_INCOMPLETE_OR_NOT_APPROVED",
+  "semanticAuditPassed": false,
+  "humanReviewPresent": false,
+  "kitManifestReportSha256": "29b070ddf127685835a39d90dd6b47cd87e9461fba7d8d165fdd377a99ceb7e8",
+  "kitManifestFileSha256": "c5f7b9856479ab9611e729f3a84cae692ae3174a3f23b1f019b5e779b16eeab0",
+  "reviewFileSha256": "eabd66780cb63157f59b4e48bc362d72e3fcdaf7234ce3837f9a7c4f0aa56232",
+  "evidenceManifestFileSha256": "a553ca627aed9fd82a656de44325db39c35f4a739e9a748c3a3317b7a8a12c05",
+  "attestationFileSha256": "dbbeefa91c77c68fc15c57b77b6b0d302c20f72f8186a33b78b6aed7cb353182",
+  "checks": {
+    "decisionsValid": false,
+    "severitiesValid": false,
+    "evidenceComplete": false,
+    "citationsResolveToRemotePrimaryEvidence": false,
+    "evidenceCount": 0,
+    "evidenceErrors": [],
+    "allItemsApproved": false,
+    "attestationPassed": false,
+    "attestationTimestampValid": false,
+    "attestationBindsExactFiles": false,
+    "semanticAuditPassed": false,
+    "pendingItems": 50
+  },
+  "officialConceptMapGatePassed": false,
+  "officialGateRequirementsStillMissing": [
+    "independentHumanSemanticAudit",
+    "exactAuthorizedFullInputSha256",
+    "runBoundConceptMapComponentSha256",
+    "remoteExecutionGateArtifactOnAuthorizedHistory"
+  ],
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "d17e06b28c53e65a8d2f1dc59c076d0c24e6107e2f91528944417ff8f3bc87e2"
+}
