@@ -1,0 +1,73 @@
+{
+  "schema": "early-detection-independent-final-audit-kit/v2",
+  "generatedAt": "2026-08-11T11:25:43.192Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "checklist": {
+    "path": "audit-checklist-template.csv",
+    "count": 22,
+    "coreRowsSha256": "7c1da6462e00c8c9e8cfecc86a10a2a2dd3c9c3d083d03e5a54f64df15514201",
+    "decisionFields": [
+      "auditorDecision",
+      "findingIds",
+      "evidenceCitation",
+      "auditorComment"
+    ]
+  },
+  "findings": {
+    "path": "findings-template.csv",
+    "fields": [
+      "findingId",
+      "checklistItemId",
+      "severity",
+      "status",
+      "summary",
+      "evidenceCitation",
+      "resolution",
+      "resolvedAt"
+    ]
+  },
+  "attestationTemplate": "attestation-template.json",
+  "runBindingTemplate": "run-binding-template.json",
+  "readme": "README.md",
+  "requiredPrerequisiteGateArtifacts": [
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "preAuditIndependentGateState": "RED_WITHOUT_ARTIFACT",
+  "postAuditRequiredGateArtifacts": [
+    "entityListingLedger",
+    "appendOnlySecStore",
+    "historicalUniverse",
+    "asOfLeakageGate",
+    "adjustedOhlcv",
+    "corporateActionsDelistings",
+    "historicalGqsAdapter",
+    "conceptMapFrozen",
+    "independentAuditPassed",
+    "blindCodingAgreementPassed",
+    "researchCorpusSealed"
+  ],
+  "requiredInputComponents": [
+    "entityListingLedger",
+    "historicalUniverse",
+    "femSignals",
+    "femControlPool",
+    "technicalOnlySignals",
+    "technicalOnlyControlPool",
+    "hLatePopulation",
+    "conceptMap"
+  ],
+  "humanReviewPresent": false,
+  "independentAuditPassed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "a7e0ec5bb513befe7844bcd59600c2d7def1aa233a89e6ddb1dcbfbe204a9ca6"
+}

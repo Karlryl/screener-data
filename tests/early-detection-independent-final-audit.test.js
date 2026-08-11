@@ -15,4 +15,8 @@ assert.equal(value.blankRejected, true);
 assert.equal(value.syntheticPositiveFixturePassed, true);
 assert.equal(value.openP2Rejected, true);
 assert.equal(value.componentManifestRecomputed, true);
+assert.equal(value.prerequisiteGateCount, 10);
+assert.equal(value.circularIndependentGateExcluded, true);
+assert.equal(value.independentAuditRedBootstrapRequired, true);
+assert.equal(value.attestationPackageBindingEnforced, true);
 console.log('early-detection-independent-final-audit.test.js: PASS');
