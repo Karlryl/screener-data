@@ -1,0 +1,123 @@
+{
+  "schema": "early-detection-prospective-listing-snapshot/v1",
+  "observedAt": "2026-08-10T01:38:53.936Z",
+  "status": "CAPTURED_CURRENT_STATE_FOR_PROSPECTIVE_USE",
+  "captures": {
+    "secCompanyTickersExchange": {
+      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "httpStatus": 200,
+      "responseHeaders": {
+        "Content-Type": "application/json",
+        "Last-Modified": "Mon, 03 Aug 2026 21:26:07 GMT",
+        "Date": "Mon, 10 Aug 2026 01:38:53 GMT"
+      },
+      "payloadSha256": "5399edec5fd0371d31c92a906b24e5144a2df224821c3961c5adab1b4f38f7c5",
+      "payloadBytes": 521435,
+      "payloadPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\53\\5399edec5fd0371d31c92a906b24e5144a2df224821c3961c5adab1b4f38f7c5.json",
+      "payloadCreated": true
+    },
+    "nasdaqListed": {
+      "url": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+      "httpStatus": 200,
+      "responseHeaders": {
+        "Content-Type": "text/plain",
+        "Last-Modified": "Sat, 08 Aug 2026 01:31:45 GMT",
+        "ETag": "\"6babcbacd526dd1:0\"",
+        "Date": "Mon, 10 Aug 2026 01:38:52 GMT",
+        "Content-Length": "346520"
+      },
+      "payloadSha256": "2be5ef2ca035777961232008b0874764db13b84db61b4f089f5574d8574c0a88",
+      "payloadBytes": 346520,
+      "payloadPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\2b\\2be5ef2ca035777961232008b0874764db13b84db61b4f089f5574d8574c0a88.txt",
+      "payloadCreated": true
+    },
+    "otherListed": {
+      "url": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+      "httpStatus": 200,
+      "responseHeaders": {
+        "Content-Type": "text/plain",
+        "Last-Modified": "Sat, 08 Aug 2026 01:31:46 GMT",
+        "ETag": "\"bbd4dfacd526dd1:0\"",
+        "Date": "Mon, 10 Aug 2026 01:38:54 GMT",
+        "Content-Length": "534608"
+      },
+      "payloadSha256": "dba21814b836e3abbf283dae50e18de16c5000d96298fbcbfe1376bac4ed73b3",
+      "payloadBytes": 534608,
+      "payloadPath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\prospective-listing-panel\\blobs\\sha256\\db\\dba21814b836e3abbf283dae50e18de16c5000d96298fbcbfe1376bac4ed73b3.txt",
+      "payloadCreated": true
+    }
+  },
+  "parsedCounts": {
+    "secCompanyTickersExchange": {
+      "rows": 10398,
+      "uniqueCiks": 7999,
+      "uniqueTickers": 10398,
+      "duplicateTickerRows": 0,
+      "exchangeCounts": {
+        "CBOE": 27,
+        "NYSE": 3314,
+        "Nasdaq": 4339,
+        "None": 204,
+        "OTC": 2514
+      }
+    },
+    "nasdaqListed": {
+      "rows": 5584,
+      "uniqueSymbols": 5584,
+      "duplicateSymbolRows": 0,
+      "testIssueRows": 8,
+      "etfRows": 1257,
+      "footer": [
+        {
+          "Symbol": "File Creation Time: 0807202621:31",
+          "Security Name": "",
+          "Market Category": "",
+          "Test Issue": "",
+          "Financial Status": "",
+          "Round Lot Size": "",
+          "ETF": "",
+          "NextShares": ""
+        }
+      ]
+    },
+    "otherListed": {
+      "rows": 7529,
+      "uniqueSymbols": 7529,
+      "duplicateSymbolRows": 0,
+      "testIssueRows": 25,
+      "etfRows": 4325,
+      "footer": [
+        {
+          "ACT Symbol": "File Creation Time: 0807202621:31",
+          "Security Name": "",
+          "Exchange": "",
+          "CQS Symbol": "",
+          "ETF": "",
+          "Round Lot Size": "",
+          "Test Issue": "",
+          "NASDAQ Symbol": null
+        }
+      ]
+    }
+  },
+  "crossSourceDiagnostic": {
+    "secUniqueTickers": 10398,
+    "nasdaqTraderUniqueSymbols": 13113,
+    "exactTickerOverlap": 7110,
+    "secOnlyExactTicker": 3288,
+    "nasdaqTraderOnlyExactSymbol": 6003,
+    "interpretation": "Exact ticker comparison is diagnostic only: symbols can differ by class notation and the sources cover different security/entity domains. It is not a permanent-identity join."
+  },
+  "pointInTimeRule": "The payloads establish only state observed at observedAt. Repeated snapshots may bound future listing intervals; they never backfill 2009-2024 or establish an exchange-effective first/final trading session by themselves.",
+  "knownLimitations": [
+    "Issuer CIK is not a permanent security identifier.",
+    "Ticker notation and coverage differ across SEC and Nasdaq Trader files.",
+    "Daily snapshots bound changes between observations but do not prove exact intraday effective times.",
+    "This snapshot contains no OHLCV, corporate-action factor or delisting return."
+  ],
+  "confirmatoryEligible": false,
+  "resultComputationAllowed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "8c8683e09eb2745abd484a3ba430df74438cef877184e01d8803622fa030db24"
+}
