@@ -15,6 +15,14 @@ on:
 permissions:
   contents: read
 
+# Wie in daily-pull.yml (AS-SK-001): tests/sec-user-agent-test.js prueft im CI, dass
+# ein kontakttragender User-Agent gesetzt ist — SEC 403t sonst still. Ohne diese
+# Zeile war der erste PR-Check-Lauf genau daran rot (Run 31469064681).
+# Bei PRs aus einem Fork ist das Secret leer; dann meldet der Test laut statt still —
+# und blocken kann dieser Job ohnehin niemanden.
+env:
+  SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
 concurrency:
   group: pr-check-${{ github.event.pull_request.number }}
   cancel-in-progress: true
