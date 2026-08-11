@@ -1,0 +1,46 @@
+{
+  "schema": "early-detection-blind-coding-kit/v2",
+  "generatedAt": "2026-08-11T11:33:26.485Z",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "thresholds": {
+    "weightedCohenKappaMinimumPerDimension": 0.7,
+    "exactAgreementMinimum": 0.8,
+    "weightSchemeRule": "PASS_ONLY_IF_LINEAR_AND_QUADRATIC_PASS"
+  },
+  "codingRules": {
+    "path": "coding-rules.md",
+    "sha256": "bbae6892c6f0d11a26bde85dabb63c410060c7e64b86b8ff09f2ea988993d278"
+  },
+  "templates": {
+    "caseManifest": {
+      "path": "case-manifest-template.csv",
+      "sha256": "c6864c53ab84d978efdd883a29f10294186f62b851e8d3d36b7f715aaba01d07"
+    },
+    "sourceBundleManifest": {
+      "path": "source-bundle-manifest-template.csv",
+      "sha256": "ed90413dd455c926e4111706fedc6e27e3f02c7eabe2e25810511830c39f4c25"
+    },
+    "coder": {
+      "path": "coder-template.csv",
+      "sha256": "786a80481ce8e295027e6553734c397254efd0d1cf7262046faf9e0a3269af21"
+    },
+    "attestation": {
+      "path": "attestation-template.json",
+      "sha256": "f98d2324be7ce7087d7a0a436fed4aba53e57f0f4dcc24f89a03c668285da0f1"
+    },
+    "runBinding": {
+      "path": "run-binding-template.json",
+      "sha256": "b3e69fb7fd11d92e9f65b8829dbca022ef365a9eddcfff5f9beebea69ae3df80"
+    }
+  },
+  "requiredDimensions": [
+    "T",
+    "E",
+    "L"
+  ],
+  "humanReviewPresent": false,
+  "blindCodingAgreementPassed": false,
+  "outcomesAccessed": false,
+  "productiveGqsModified": false,
+  "reportSha256": "1ec03bf61e040f393b34ea6f84db4bf451d522128ce3ffa1f5c551a024e16f76"
+}
