@@ -154,7 +154,14 @@ function vergleich(a, b, schwellen) {
 function ladeSchwellen() {
   const m = new Map();
   let j;
-  try { j = JSON.parse(fs.readFileSync(GATE_CALIB, 'utf8')); } catch (_) { return m; }
+  try {
+    j = JSON.parse(fs.readFileSync(GATE_CALIB, 'utf8'));
+  } catch (e) {
+    // fail-loud: fehlende Datei ist planmaessig, kaputte/unlesbare NICHT — sonst
+    // stuende im Report ueberall "Schwelle: —" und saehe aus wie ein Ergebnis.
+    if (e.code !== 'ENOENT') console.error(`::warning::_gate-calibration.json nicht lesbar (${GATE_CALIB}): ${e.message} — Schwellen/Deckel fehlen im Report.`);
+    return m;
+  }
   for (const [board, st] of Object.entries((j && j.boards) || {})) {
     const t = frozenThresholdOf(st);
     m.set(board, Number.isFinite(t) ? t : _const.MIN_GATE_THRESHOLD);
@@ -311,10 +318,11 @@ function main() {
       trackWechsel.push({ ticker: tk, formulaId: rA.formulaId, trackA: rA.track, trackB: rB.track, scoreA: rA.score, scoreB: rB.score });
     }
   }
+  // Vereinigung beider Schluesselmengen: ein Ticker, der erst in B berechenbar
+  // wird (A: kein Eintrag), ist eine Veraenderung und darf nicht durchrutschen.
   let capEffDiff = 0;
-  for (const [tk, v] of sichA.capEff) {
-    const w = sichB.capEff.get(tk);
-    if (!Number.isFinite(w) || w !== v) capEffDiff++;
+  for (const tk of new Set([...sichA.capEff.keys(), ...sichB.capEff.keys()])) {
+    if (sichA.capEff.get(tk) !== sichB.capEff.get(tk)) capEffDiff++;
   }
 
   const zeilen = vergleich(a, b, ladeSchwellen());
