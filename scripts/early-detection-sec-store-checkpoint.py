@@ -438,12 +438,63 @@ def self_test() -> dict[str, Any]:
         observations, payloads, fsd = enumerate_snapshot(root)
         if len(observations) != 1 or len(payloads) != 1 or fsd:
             raise CheckpointError("self-test failed")
+        annual_payload = root / "blobs" / "sha256" / "annual.txt"
+        annual_payload.write_bytes(b"annual-10-k")
+        state = root / "annual.sqlite"
+        connection = sqlite3.connect(state)
+        try:
+            connection.execute(
+                """CREATE TABLE captures(
+                event_id INTEGER PRIMARY KEY,cik INTEGER,accession TEXT,status TEXT,http_status INTEGER,
+                payload_sha256 TEXT,payload_bytes INTEGER,payload_path TEXT,acceptance_at TEXT,observed_form TEXT
+                )"""
+            )
+            connection.execute(
+                "INSERT INTO captures VALUES(?,?,?,?,?,?,?,?,?,?)",
+                (
+                    1, 7, "0000000007-20-000001", "VERIFIED", 200,
+                    file_sha256(annual_payload), annual_payload.stat().st_size, str(annual_payload),
+                    "2020-01-02T12:34:56.000Z", "10-K",
+                ),
+            )
+            connection.commit()
+        finally:
+            connection.close()
+        progress_unsigned = {
+            "schema": "self-test-progress/v1",
+            "status": "RANGE_COMPLETE",
+            "stateDatabase": str(state),
+            "range": {"startEvent": 1, "endEvent": 1, "selectedEvents": 1},
+            "counts": {"VERIFIED": 1},
+        }
+        progress = {**progress_unsigned, "reportSha256": canonical_sha256(progress_unsigned)}
+        progress_path = root / "annual-progress.json"
+        progress_path.write_text(json.dumps(progress), encoding="utf-8")
+        capture = {
+            "artifacts": [{"role": "annual10KIdentity:progress:1-1", "path": str(progress_path)}],
+            "independentlyVerifiedCoverage": {
+                "annual10KIdentity": {
+                    "populationEvents": 1,
+                    "verifiedPayloads": 1,
+                    "explicitNonPayloadOutcomes": 0,
+                }
+            },
+        }
+        annual = enumerate_capture_inputs(root, capture)
+        if (
+            annual["captureRows"] != 1
+            or annual["verifiedPayloadFiles"] != 1
+            or annual["familyCounts"].get("annual10KIdentity")
+            != {"events": 1, "verified": 1, "notFound": 0}
+        ):
+            raise CheckpointError("annual capture self-test failed")
     if normalize_checkout_line_endings(b"a\r\nb\r\n") != b"a\nb\n":
         raise CheckpointError("line-ending normalization self-test failed")
     return {
         "status": "PASS",
         "observationManifest": True,
         "payloadManifest": True,
+        "annualCaptureFamily": True,
         "checkoutLineEndingNormalization": True,
     }
 
