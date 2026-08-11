@@ -24,11 +24,7 @@ function windowsTextSha256(file) {
   return sha256Bytes(Buffer.from(normalized, 'utf8'));
 }
 
-// separator-neutral: the manifest records Windows paths, the CI runner is Linux,
-// so path.basename would return the whole string there.
-function baseName(p) {
-  return String(p).split(/[\\/]/).pop();
-}
+const { baseName } = require('../lib/artifact-path');
 
 function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
