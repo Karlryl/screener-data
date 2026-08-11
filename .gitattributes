@@ -9,3 +9,9 @@
 /tests/early-detection-confirmatory.test.js text eol=lf
 /tests/early-detection.test.js text eol=lf
 /src/scoring/** text eol=lf
+
+# Immutable generated evidence: preserve the exact sealed bytes in Git.
+/reports/early-detection/prospective-listing-snapshot-verification-2026-08-10-v2.json -text
+/reports/early-detection/prospective-listing-snapshot-2026-08-11-v3.json -text
+/reports/early-detection/prospective-listing-snapshot-verification-2026-08-11-v3.json -text
+/reports/early-detection/prospective-listing-panel-2026-08-11-v3.json -text
