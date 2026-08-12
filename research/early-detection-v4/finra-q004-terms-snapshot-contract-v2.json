@@ -1,0 +1,63 @@
+{
+  "schema": "finra-q004-terms-snapshot-contract/v2",
+  "createdAt": "2026-08-12T19:20:02Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Capture the exact official FINRA API and Equity Specific Terms bytes privately before any production data acquisition.",
+  "authorization": {
+    "parentRemoteCommit": "5bf663b271ca63d1447aa237ab1d2f04b6473262",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "productionDataRequests": 0
+  },
+  "supersededAttempt": {
+    "schema": "finra-q004-terms-snapshot-contract/v1",
+    "contractRawSha256": "23772edb3e23049252f72753f65638778dbc1bfc1c0a76a4bfbe7294eef70442",
+    "disposition": "FAILED_REQUIRED_PHRASE_EXACTNESS_ZERO_CREDIT_NO_PUBLIC_OUTPUT"
+  },
+  "documents": [
+    {
+      "documentId": "FINRA_API_TERMS",
+      "url": "https://developer.finra.org/finra-api-terms-service",
+      "requiredCasefoldPhrases": ["finra api terms of service", "access credentials"]
+    },
+    {
+      "documentId": "FINRA_EQUITY_SPECIFIC_TERMS",
+      "url": "https://developer.finra.org/specific-terms-equity-data",
+      "requiredCasefoldPhrases": ["equity data", "otcmarket", "public", "credential"]
+    }
+  ],
+  "networkContract": {
+    "requests": 2,
+    "methods": ["GET"],
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "maximumBytesPerDocument": 2097152,
+    "credentialsSent": false
+  },
+  "privateCas": {
+    "root": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/terms",
+    "pathTemplate": "sha256/{sha256[0:2]}/{sha256}",
+    "outsideGitRequired": true,
+    "writeNewOnly": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-api-terms-snapshot-v2.json",
+    "rawBodiesIncluded": false,
+    "secretsCaptured": false,
+    "outcomesAccessed": false,
+    "productionRowsCaptured": 0
+  },
+  "licenseDisposition": "FREE_INTERNAL_NONCOMMERCIAL_API_USE_ALLOWED_SUBJECT_TO_CAPTURED_TERMS_NO_RAW_REDISTRIBUTION",
+  "claimLocks": {
+    "productionAcquisitionAuthorizedByThisArtifact": false,
+    "redistributionAllowed": false,
+    "commercialUseAllowed": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "76f916a7b2da0458a5f0990fec9284ad7c5cba80f74825945e20a98060bc4c97"
+}
