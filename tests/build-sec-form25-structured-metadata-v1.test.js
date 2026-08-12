@@ -26,6 +26,8 @@ for (const optimized of [false, true]) {
   assert.equal(result.conflictingXmlFieldRejected, true);
   assert.equal(result.dateAmbiguityRejected, true);
   assert.equal(result.paymentLanguageWithoutAmountRejected, true);
+  assert.equal(result.malformedTextFallbackDeterministic, true);
+  assert.equal(result.binaryGraphicEvidenceRejected, true);
   assert.equal(result.tickerOnlyJoinMutationRejected, true);
   assert.equal(result.missingSourceHashMutationRejected, true);
   assert.equal(result.candidatePromotionMutationRejected, true);

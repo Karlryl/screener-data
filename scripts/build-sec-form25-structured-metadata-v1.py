@@ -77,6 +77,13 @@ PARSE_STATUSES = {
     "STRUCTURED_XML_PRESENT", "XML_DOCUMENT_MISSING", "XML_DOCUMENT_MULTIPLE",
     "XML_MALFORMED", "SGML_MALFORMED", "SOURCE_AMBIGUOUS_INVENTORY",
 }
+BINARY_DOCUMENT_TYPES = {"GRAPHIC", "PDF", "ZIP", "EXCEL"}
+BINARY_FILENAME_SUFFIXES = {
+    ".bmp", ".gif", ".ico", ".jpeg", ".jpg", ".pdf", ".png", ".tif", ".tiff", ".xls", ".xlsx", ".zip",
+}
+SCRIPT_STYLE_RE = re.compile(r"(?is)<(?:script|style)\b[^>]*>.*?</(?:script|style)\s*>")
+COMMENT_RE = re.compile(r"(?s)<!--.*?-->")
+TAG_RE = re.compile(r"(?s)<[^<>]{0,65536}>")
 
 
 class MetadataError(RuntimeError):
@@ -234,14 +241,31 @@ class _TextSink(HTMLParser):
         self.parts.append(data)
 
 
-def normalized_document_text(raw: bytes) -> str:
+def normalized_document_text(raw: bytes) -> tuple[str, str]:
+    decoded = raw.decode("latin-1")
     sink = _TextSink()
-    sink.feed(raw.decode("latin-1"))
-    sink.close()
-    return normalize_text(" ".join(sink.parts))
+    try:
+        sink.feed(decoded)
+        sink.close()
+    except (AssertionError, ValueError):
+        # HTMLParser asserts on malformed SGML marked sections (for example <![YH ...).
+        # This fallback only removes bounded markup and script/style bodies; it never
+        # supplies replacement words, dates, amounts, or implied semantics.
+        stripped = SCRIPT_STYLE_RE.sub(" ", decoded)
+        stripped = COMMENT_RE.sub(" ", stripped)
+        stripped = TAG_RE.sub(" ", stripped)
+        return normalize_text(stripped), "CONSERVATIVE_TAG_STRIP_FALLBACK"
+    return normalize_text(" ".join(sink.parts)), "HTML_PARSER"
 
 
-def source_ref(blob_ref: dict, document: dict, locator_kind: str, locator: str, evidence: str) -> dict:
+def is_textual_document(document: dict) -> bool:
+    document_type = document["type"].upper()
+    suffix = Path(document["filename"]).suffix.lower()
+    return document_type not in BINARY_DOCUMENT_TYPES and suffix not in BINARY_FILENAME_SUFFIXES
+
+
+def source_ref(blob_ref: dict, document: dict, locator_kind: str, locator: str, evidence: str,
+               normalization_mode: str = "NOT_APPLICABLE") -> dict:
     return {
         "blobSha256": blob_ref["blobSha256"],
         "relativePath": blob_ref["relativePath"],
@@ -253,6 +277,7 @@ def source_ref(blob_ref: dict, document: dict, locator_kind: str, locator: str, 
         "rawTextSha256": sha256(document["textRaw"]),
         "locatorKind": locator_kind,
         "locator": locator,
+        "normalizationMode": normalization_mode,
         "evidenceSha256": sha256(evidence.encode("utf-8")),
     }
 
@@ -293,19 +318,21 @@ def parsed_iso_date(value: str) -> str | None:
     return None
 
 
-def sentences_for_documents(documents: list[dict]) -> list[tuple[dict, int, str]]:
-    values: list[tuple[dict, int, str]] = []
+def sentences_for_documents(documents: list[dict]) -> list[tuple[dict, int, str, str]]:
+    values: list[tuple[dict, int, str, str]] = []
     for document in documents:
-        normalized = normalized_document_text(document["textRaw"])
+        if not is_textual_document(document):
+            continue
+        normalized, normalization_mode = normalized_document_text(document["textRaw"])
         sentences = [item.strip() for item in re.split(r"(?<=[.!?])\s+", normalized) if item.strip()]
         for index, sentence in enumerate(sentences, start=1):
-            values.append((document, index, sentence))
+            values.append((document, index, sentence, normalization_mode))
     return values
 
 
-def semantic_date_field(kind: str, sentence_values: list[tuple[dict, int, str]], blob_ref: dict) -> dict:
+def semantic_date_field(kind: str, sentence_values: list[tuple[dict, int, str, str]], blob_ref: dict) -> dict:
     evidence = []
-    for document, sentence_index, sentence in sentence_values:
+    for document, sentence_index, sentence, normalization_mode in sentence_values:
         matches: list[re.Match[str]] = []
         if kind == "suspensionDate":
             matches = list(SUSPENSION_RE.finditer(sentence))
@@ -319,7 +346,7 @@ def semantic_date_field(kind: str, sentence_values: list[tuple[dict, int, str]],
                 "value": value,
                 "sourceRef": source_ref(
                     blob_ref, document, "NORMALIZED_TEXT_SENTENCE",
-                    f"sentence[{sentence_index}]/{kind}[{match_index}]", sentence,
+                    f"sentence[{sentence_index}]/{kind}[{match_index}]", sentence, normalization_mode,
                 ),
             })
     if not evidence:
@@ -330,9 +357,9 @@ def semantic_date_field(kind: str, sentence_values: list[tuple[dict, int, str]],
     return {"status": "AMBIGUOUS_CONFLICT", "value": None, "evidence": evidence}
 
 
-def candidate_snippets(sentence_values: list[tuple[dict, int, str]], blob_ref: dict) -> list[dict]:
+def candidate_snippets(sentence_values: list[tuple[dict, int, str, str]], blob_ref: dict) -> list[dict]:
     candidates = []
-    for document, sentence_index, sentence in sentence_values:
+    for document, sentence_index, sentence, normalization_mode in sentence_values:
         if not CONSIDERATION_TRIGGER_RE.search(sentence):
             continue
         if CURRENCY_AMOUNT_RE.search(sentence):
@@ -345,7 +372,7 @@ def candidate_snippets(sentence_values: list[tuple[dict, int, str]], blob_ref: d
             continue
         ref = source_ref(
             blob_ref, document, "NORMALIZED_TEXT_SENTENCE",
-            f"sentence[{sentence_index}]/considerationPaymentCandidate", sentence,
+            f"sentence[{sentence_index}]/considerationPaymentCandidate", sentence, normalization_mode,
         )
         candidate_id = sha256(canonical_bytes({"sourceRef": ref, "text": sentence, "amountSignal": signal}))
         candidates.append({
@@ -466,7 +493,8 @@ def build_row(queue_row: dict, inventory_row: dict, parsed: dict | None) -> dict
 def validate_source_ref(ref: dict) -> None:
     exact_keys(ref, {
         "blobSha256", "relativePath", "documentIndex", "documentType", "documentSequence",
-        "documentFilename", "rawDocumentSha256", "rawTextSha256", "locatorKind", "locator", "evidenceSha256",
+        "documentFilename", "rawDocumentSha256", "rawTextSha256", "locatorKind", "locator",
+        "normalizationMode", "evidenceSha256",
     }, "sourceRef")
     for name in ("blobSha256", "rawDocumentSha256", "rawTextSha256", "evidenceSha256"):
         if not isinstance(ref[name], str) or not HEX64_RE.fullmatch(ref[name]):
@@ -477,6 +505,12 @@ def validate_source_ref(ref: dict) -> None:
         fail("sourceRef document index invalid")
     if ref["locatorKind"] not in {"XML_PATH", "NORMALIZED_TEXT_SENTENCE"}:
         fail("sourceRef locator kind invalid")
+    expected_modes = {
+        "XML_PATH": {"NOT_APPLICABLE"},
+        "NORMALIZED_TEXT_SENTENCE": {"HTML_PARSER", "CONSERVATIVE_TAG_STRIP_FALLBACK"},
+    }
+    if ref["normalizationMode"] not in expected_modes[ref["locatorKind"]]:
+        fail("sourceRef normalization mode invalid")
     if not all(isinstance(ref[name], str) and ref[name] for name in (
         "documentType", "documentSequence", "documentFilename", "locator"
     )):
@@ -714,7 +748,8 @@ def atomic_write_new(path: Path, raw: bytes) -> None:
         fail("output readback mismatch")
 
 
-def fixture_blob(xml: str, exhibit_sentences: str = "") -> tuple[bytes, dict, str]:
+def fixture_blob(xml: str, exhibit_sentences: str = "", exhibit_type: str = "EX-99.25",
+                 exhibit_filename: str = "notice.htm") -> tuple[bytes, dict, str]:
     accession = "0000000001-20-000001"
     raw = (
         f"<SEC-DOCUMENT>{accession}.txt : 20200102\n"
@@ -722,7 +757,7 @@ def fixture_blob(xml: str, exhibit_sentences: str = "") -> tuple[bytes, dict, st
         f"ACCESSION NUMBER:\t\t{accession}\n</SEC-HEADER>\n"
         "<DOCUMENT>\n<TYPE>25-NSE\n<SEQUENCE>1\n<FILENAME>primary.xml\n<TEXT>\n<XML>\n"
         f"{xml}\n</XML>\n</TEXT>\n</DOCUMENT>\n"
-        "<DOCUMENT>\n<TYPE>EX-99.25\n<SEQUENCE>2\n<FILENAME>notice.htm\n<TEXT>\n"
+        f"<DOCUMENT>\n<TYPE>{exhibit_type}\n<SEQUENCE>2\n<FILENAME>{exhibit_filename}\n<TEXT>\n"
         f"{exhibit_sentences}\n</TEXT>\n</DOCUMENT>\n</SEC-DOCUMENT>\n"
     ).encode("utf-8")
     digest = sha256(raw)
@@ -789,6 +824,27 @@ def self_test() -> dict:
     payment_without_amount_rejected = not parse_blob(
         amountless_raw, amountless_ref, amountless_accession
     )["candidateSnippets"]
+    malformed_text_raw, malformed_text_ref, malformed_text_accession = fixture_blob(
+        fixture_xml(), "<![YH >Each holder has the right to receive an immediate cash payment."
+    )
+    malformed_text_parsed = parse_blob(malformed_text_raw, malformed_text_ref, malformed_text_accession)
+    malformed_text_fallback_deterministic = (
+        not malformed_text_parsed["candidateSnippets"]
+        and not malformed_text_parsed["fields"]["suspensionDate"]["evidence"]
+        and normalized_document_text(b"<![YH >Visible malformed text.")
+        == ("Visible malformed text.", "CONSERVATIVE_TAG_STRIP_FALLBACK")
+    )
+    graphic_raw, graphic_ref, graphic_accession = fixture_blob(
+        fixture_xml(),
+        "<![YH >Each share was converted into 999.0 shares on January 3, 2020.",
+        exhibit_type="GRAPHIC", exhibit_filename="image.jpg",
+    )
+    graphic_parsed = parse_blob(graphic_raw, graphic_ref, graphic_accession)
+    binary_graphic_evidence_rejected = (
+        not graphic_parsed["candidateSnippets"]
+        and graphic_parsed["fields"]["suspensionDate"]["status"] == "MISSING"
+        and graphic_parsed["fields"]["removalEffectiveDate"]["status"] == "MISSING"
+    )
     queue_row = {
         "rowId": "SEC-TW-00000001", "priorityRank": 1, "accession": accession,
         "form": "25-NSE", "filedDate": "2020-01-02",
@@ -818,6 +874,8 @@ def self_test() -> dict:
         "conflictingXmlFieldRejected": conflict_status == "AMBIGUOUS_CONFLICT",
         "dateAmbiguityRejected": date_ambiguity_rejected,
         "paymentLanguageWithoutAmountRejected": payment_without_amount_rejected,
+        "malformedTextFallbackDeterministic": malformed_text_fallback_deterministic,
+        "binaryGraphicEvidenceRejected": binary_graphic_evidence_rejected,
         "tickerOnlyJoinMutationRejected": rejected(ticker_mutation),
         "missingSourceHashMutationRejected": rejected(missing_hash_mutation),
         "candidatePromotionMutationRejected": rejected(promoted_candidate),
