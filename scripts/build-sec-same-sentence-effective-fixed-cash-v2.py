@@ -518,7 +518,8 @@ def main() -> int:
             raw = OUTPUT.read_bytes()
             report = json.loads(raw)
             implementation = implementation_bindings(report.get("implementationBindings", {}).get("buildBaseCommit"), remote_required=True)
-            if git("cat-file", "-e", f"{implementation['buildBaseCommit']}:{OUTPUT.relative_to(ROOT).as_posix()}") == "":
+            output_at_base = subprocess.run(["git", "cat-file", "-e", f"{implementation['buildBaseCommit']}:{OUTPUT.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True)
+            if output_at_base.returncode == 0:
                 fail("output existed at build base")
             introduction = subprocess.run(["git", "log", "--diff-filter=A", "--format=%H", "--", OUTPUT.relative_to(ROOT).as_posix()], cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8").stdout.strip().splitlines()
             if introduction and (len(introduction) != 1 or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [introduction[0], implementation["buildBaseCommit"]]):
