@@ -1,0 +1,58 @@
+{
+  "schema": "early-detection-public-ai-remote-authorization/v1",
+  "protocolLabel": "FEM-SEC-US-PUBLIC-AI",
+  "createdAt": "2026-08-12T01:33:55Z",
+  "authorizationCommit": "14369490adb42330f4dcde474fa64c922ae5cee0",
+  "authorizationRemote": "origin",
+  "authorizationRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+  "authorizedArtifacts": [
+    {
+      "role": "SCOPE",
+      "path": "reports/early-detection/public-data-ai-path-scope-2026-08-12-v1.md",
+      "sha256": "dfdb5b4495740f576ead55ad626b22ada2f3d5f104aed6be661e5bce5540b03d"
+    },
+    {
+      "role": "SEAL",
+      "path": "reports/early-detection/public-ai-selector-seal-v2.json",
+      "sha256": "15bb2869e39dc571bb225445d1a5bfe15b7765ecba2e88d98733fc0064c609e8"
+    },
+    {
+      "role": "SELECTOR",
+      "path": "scripts/early-detection-public-ai-cohort.py",
+      "sha256": "08a90c11ef94e7aa91f87355c0a2a570cd684da45789d94aa3f455a2a6a6fe4d"
+    },
+    {
+      "role": "INPUT_MANIFEST",
+      "path": "reports/early-detection/public-ai-row-manifest-2009-2014-v1.json",
+      "sha256": "e3e7d7f3e228fb16c9910f17395e3671abc3e80af7cfca8e06b9d05ba2eca3a8"
+    },
+    {
+      "role": "IDENTITY_EVIDENCE",
+      "path": "reports/early-detection/public-ai-identity-evidence-2009-2014-v1.json",
+      "sha256": "99551b39d4ccc8a8187135cb03bb29602030ad5e56f72cd67de666d1d2598668"
+    },
+    {
+      "role": "OUTCOME_LEDGER",
+      "path": "reports/early-detection/public-ai-outcome-ledger-v1.json",
+      "sha256": "fecd3ac918473c58a5a37b4a1aa3c3b74560966585b5088ffab2dfb4a04ae589"
+    },
+    {
+      "role": "AI_AUDIT_METHOD",
+      "path": "reports/early-detection/public-ai-audit-method-2009-2014-v3.json",
+      "sha256": "eea0348eb39eda4e2e016543db0265e65df8f3c66b8b23791df71637829c00b7"
+    },
+    {
+      "role": "AI_AUDIT_DATA",
+      "path": "reports/early-detection/public-ai-audit-data-2009-2014-v3.json",
+      "sha256": "efa7f03b1fe11bbda29b1292c3d362945a22b5285514190d6b034481e45f63d9"
+    },
+    {
+      "role": "AI_AUDIT_COUNTEREXAMPLE",
+      "path": "reports/early-detection/public-ai-audit-counterexample-2009-2014-v3.json",
+      "sha256": "2b1e6d603806b845993d37b488c9e8bdf985815702d90385d65a4906cd6f8ef2"
+    }
+  ],
+  "outcomesAccessed": false,
+  "resultComputationAllowed": false,
+  "productiveGqsModified": false
+}
