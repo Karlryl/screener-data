@@ -120,7 +120,7 @@ def implementation_bindings(base_commit: str | None = None, remote_required: boo
                 fail("implementation Git blob changed")
         builder_at_base = subprocess.run(["git", "show", f"{base_commit}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout
         current_builder_commit = git("log", "-1", "--format=%H", "--", BUILDER.relative_to(ROOT).as_posix())
-        if not builder_at_base or sha(builder_at_base) != bindings["builderRawSha256"] or current_builder_commit not in {base_commit, head} or BUILDER.read_bytes() != subprocess.run(["git", "show", f"{head}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout:
+        if not builder_at_base or sha(builder_at_base) != bindings["builderRawSha256"] or git("merge-base", "--is-ancestor", base_commit, current_builder_commit) != "" or current_builder_commit == head and head != base_commit or BUILDER.read_bytes() != subprocess.run(["git", "show", f"{head}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout:
             fail("builder lineage or working bytes changed")
     return bindings
 
