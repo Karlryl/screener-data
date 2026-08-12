@@ -26,6 +26,7 @@ for (const optimized of [false, true]) {
   assert.equal(result.malformedExtraAccessionRejected, true);
   assert.equal(result.duplicateHeaderFieldAmbiguous, true);
   assert.equal(result.hiddenHtmlContentRejected, true);
+  assert.equal(result.emptyDuplicateSgmlLabelRejected, true);
   assert.equal(result.malformedHtmlFallbackDeterministic, true);
   assert.equal(result.binaryDocumentEvidenceRejected, true);
   assert.equal(result.tickerOnlyJoinMutationRejected, true);

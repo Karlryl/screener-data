@@ -245,11 +245,14 @@ def sec_header(raw: bytes) -> tuple[bytes, str]:
 
 
 def unique_line_field(raw: bytes, label: bytes) -> str:
-    pattern = re.compile(rb"(?m)^<" + re.escape(label) + rb">([^\r\n]+)\r?$")
-    values = pattern.findall(raw)
-    if len(values) != 1:
+    pattern = re.compile(rb"(?m)^<" + re.escape(label) + rb">([^\r\n]*)\r?$")
+    fields = list(pattern.finditer(raw))
+    if len(fields) != 1:
         fail(f"SGML document must contain exactly one {label.decode('ascii')} field")
-    return values[0].decode("latin-1").strip()
+    value = fields[0].group(1).decode("latin-1").strip()
+    if not value:
+        fail(f"SGML document {label.decode('ascii')} field is empty")
+    return value
 
 
 def extract_documents(raw: bytes) -> list[dict]:
@@ -1015,6 +1018,19 @@ def self_test() -> dict:
         hidden_parsed["fields"]["securityTitleClass"]["status"] == "MISSING"
         and hidden_parsed["candidateSnippets"] == []
     )
+    duplicate_empty_type = raw.replace(
+        b"<TYPE>15-12B\n", b"<TYPE>15-12B\n<TYPE>\n", 1,
+    )
+    duplicate_empty_type_digest = sha256(duplicate_empty_type)
+    duplicate_empty_type_ref = {
+        "blobSha256": duplicate_empty_type_digest, "bytes": len(duplicate_empty_type),
+        "relativePath": f"{duplicate_empty_type_digest[:2]}/{duplicate_empty_type_digest}.txt",
+    }
+    empty_sgml_label_rejected = False
+    try:
+        parse_blob(duplicate_empty_type, duplicate_empty_type_ref, accession)
+    except MetadataError:
+        empty_sgml_label_rejected = True
     malformed_raw, malformed_ref, malformed_accession = fixture_blob("<![YH >Visible malformed text.")
     malformed_parsed = parse_blob(malformed_raw, malformed_ref, malformed_accession)
     malformed_fallback = (
@@ -1061,6 +1077,7 @@ def self_test() -> dict:
         "malformedExtraAccessionRejected": malformed_extra_accession_rejected,
         "duplicateHeaderFieldAmbiguous": duplicate_date_ambiguous,
         "hiddenHtmlContentRejected": hidden_content_rejected,
+        "emptyDuplicateSgmlLabelRejected": empty_sgml_label_rejected,
         "malformedHtmlFallbackDeterministic": malformed_fallback,
         "binaryDocumentEvidenceRejected": binary_excluded,
         "tickerOnlyJoinMutationRejected": rejected(ticker_mutation),
