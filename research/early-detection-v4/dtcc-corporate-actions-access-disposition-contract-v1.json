@@ -1,0 +1,78 @@
+{
+  "schema": "early-detection-dtcc-corporate-actions-access-disposition/v1",
+  "createdAt": "2026-08-12T20:14:00Z",
+  "taskId": "Q010-DTCC-CORPORATE-ACTIONS-ACCESS-DISPOSITION",
+  "sourceId": "DTCC_CORPORATE_ACTIONS",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze DTCC website, product-data and public-schema boundaries before any acquisition attempt.",
+  "officialEvidence": [
+    {
+      "url": "https://www.dtcc.com/data-services/corporate-actions-and-reference-data",
+      "observedAt": "2026-08-12T20:14:00Z",
+      "verifiedFact": "DTCC describes CA 20022, CA Web, Legal Notice System and Security Master as Data Services and directs users to client services."
+    },
+    {
+      "url": "https://www.dtcc.com/terms",
+      "observedAt": "2026-08-12T20:14:00Z",
+      "verifiedFact": "DTCC Terms prohibit automated mining, systematic scraping or extraction from the DTCC Site and prohibit compiling Content into a database absent written authorization."
+    },
+    {
+      "url": "https://www.dtcc.com/asset-services/corporate-actions-processing/scenarios",
+      "observedAt": "2026-08-12T20:14:00Z",
+      "verifiedFact": "DTCC publishes corporate-action processing scenarios and data dictionaries useful for schema design but not an open historical event corpus."
+    },
+    {
+      "url": "https://www.dtcc.com/asset-services/corporate-actions-processing/iso-20022-messaging-specifications",
+      "observedAt": "2026-08-12T20:14:00Z",
+      "verifiedFact": "DTCC publishes ISO 20022 messaging specifications useful for field semantics but not free production event data."
+    }
+  ],
+  "capabilityAssessment": {
+    "publicSchemaDocumentationAvailable": true,
+    "publicScenarioDocumentationAvailable": true,
+    "publicHistoricalEventCorpusAvailable": false,
+    "freeCorporateActionDataServiceConfirmed": false,
+    "automatedWebsiteExtractionAuthorized": false,
+    "databaseCompilationAuthorized": false,
+    "clientAgreementObtained": false,
+    "pricingConfirmedZero": false
+  },
+  "decision": {
+    "disposition": "SCHEMA_ONLY_AUTOMATION_PROHIBITED_DATA_SERVICE_NOT_FREE_CONFIRMED",
+    "schemaMayInformOutcomeBlindDataContract": true,
+    "websiteCrawlerMustNotRun": true,
+    "productDataMustNotBeRequestedWithoutZeroCostEntitlementAndAgreement": true,
+    "publicPagesMustNotBeTreatedAsEventDatabase": true,
+    "nextAction": "Use DTCC public specifications only for schema vocabulary; source historical events from rights-cleared SEC and FINRA inputs unless DTCC provides an explicit zero-cost entitlement with adequate internal-use rights."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "PUBLIC_SCHEMA_VOCABULARY",
+      "OFFICIAL_ACCESS_RIGHTS_DISPOSITION"
+    ],
+    "forbidden": [
+      "DTCC_EVENT_CORPUS",
+      "DTCC_DATA_SERVICE_FREE_ACCESS",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "automatedAccessAuthorized": false,
+    "historicalEventsAcquired": false,
+    "dataServiceEntitled": false,
+    "historicalIdentityResolved": false,
+    "corporateActionsComplete": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "a6cfc9e851ec54841f47ccf5e7b830259fd4c3681f289734a1f87a98a8fa15d9"
+}
