@@ -167,7 +167,9 @@ IDENTITY_ADJUDICATIONS = {"CLEAR", "CONFLICT", "UNRESOLVED"}
 CORPORATE_ACTION_STATUSES = {"NO_LATER_FACTOR", "LATER_FACTOR", "UNRESOLVED"}
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
-TICKER_RE = re.compile(r"^[A-Z0-9.^-]{1,20}$")
+TICKER_RE = re.compile(r"^[A-Z0-9.^$-]{1,20}$")
+OBSERVED_AT_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$")
+WINDOWS_RESERVED_RE = re.compile(r"^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9]|CONIN\$|CONOUT\$)$", re.I)
 IDENTITY_EVIDENCE_BASES = {
     "POINT_IN_TIME_IDENTITY_MATCH",
     "CONFLICT_EVIDENCE",
@@ -263,6 +265,8 @@ def parse_utc_timestamp(value: Any, label: str) -> datetime:
 
 
 def parse_observed_at(value: Any, label: str) -> str:
+    if not isinstance(value, str) or OBSERVED_AT_RE.fullmatch(value) is None:
+        raise PublicAiCohortError(f"{label} must use canonical calendar ISO-8601 UTC form")
     parsed = parse_utc_timestamp(value, label)
     if not (2009 <= parsed.year <= 2014):
         raise PublicAiCohortError(f"{label} is outside the frozen 2009-2014 boundary")
@@ -275,6 +279,25 @@ def expected_row_id(row: dict[str, Any]) -> str:
         "observedAt": row["observedAt"],
         "ticker": row["ticker"],
     })
+
+
+def safe_price_filename(ticker: str) -> str:
+    sanitized = re.sub(r"[^A-Z0-9.-]", "_", ticker.upper(), flags=re.I)
+    if not sanitized or set(sanitized) == {"_"}:
+        raise PublicAiCohortError("ticker is empty after filename sanitisation")
+    stem = sanitized.split(".", 1)[0].strip(".")
+    prefix = "_" if not stem or WINDOWS_RESERVED_RE.fullmatch(stem) else ""
+    return f"{prefix}{sanitized}.json"
+
+
+def validate_price_filename_mapping(rows: list[dict[str, Any]]) -> None:
+    by_filename: dict[str, str] = {}
+    for row in rows:
+        ticker = row["ticker"]
+        filename = safe_price_filename(ticker)
+        if filename in by_filename and by_filename[filename] != ticker:
+            raise PublicAiCohortError("candidate tickers collide in the canonical price filename mapping")
+        by_filename[filename] = ticker
 
 
 def expected_claim_binding(row: dict[str, Any], kind: str) -> str:
@@ -401,24 +424,33 @@ def validate_manifest(manifest: Any) -> list[dict[str, Any]]:
     return rows
 
 
-def parse_price_dates(value: Any, path: Path) -> list[str]:
+def prior_price_count(value: Any, path: Path, cutoff: str) -> tuple[bool, int]:
     if not isinstance(value, list) or not value:
-        raise PublicAiCohortError(f"empty price history: {path}")
-    dates: list[str] = []
+        return False, 0
+    previous_prior_date: str | None = None
+    prior = 0
     for index, row in enumerate(value):
-        if not isinstance(row, dict) or set(row) != {"date", "close"}:
-            raise PublicAiCohortError(f"price schema changed: {path}:{index}")
+        if not isinstance(row, dict) or "date" not in row:
+            return False, 0
         try:
             parsed = date.fromisoformat(str(row["date"]))
-            close = float(row["close"])
-        except (TypeError, ValueError) as exc:
-            raise PublicAiCohortError(f"invalid price row: {path}:{index}") from exc
-        if not math.isfinite(close) or close <= 0:
-            raise PublicAiCohortError(f"non-positive price: {path}:{index}")
-        dates.append(parsed.isoformat())
-    if dates != sorted(dates) or len(dates) != len(set(dates)):
-        raise PublicAiCohortError(f"price dates are not strictly increasing: {path}")
-    return dates
+        except (TypeError, ValueError):
+            return False, 0
+        parsed_date = parsed.isoformat()
+        if parsed_date < cutoff:
+            if previous_prior_date is not None and parsed_date <= previous_prior_date:
+                return False, 0
+            previous_prior_date = parsed_date
+            if set(row) != {"date", "close"}:
+                return False, 0
+            try:
+                close = float(row["close"])
+            except (TypeError, ValueError):
+                return False, 0
+            if not math.isfinite(close) or close <= 0:
+                return False, 0
+            prior += 1
+    return True, prior
 
 
 def validate_identity_evidence(
@@ -538,28 +570,24 @@ def verify_bound_sources(
     if any(row["archivedSnapshotObserved"] is not True for row in rows):
         raise PublicAiCohortError("bound inventory rows must be marked as archived observations")
 
+    validate_price_filename_mapping(rows)
+    price_cache: dict[Path, tuple[bytes, Any]] = {}
     for index, row in enumerate(rows):
         if not row["priceFilePresent"]:
-            if (prices_directory / f"{row['ticker']}.json").is_file() or row["priorBarCount"] != 0:
+            if (prices_directory / safe_price_filename(row["ticker"])).is_file() or row["priorBarCount"] != 0:
                 raise PublicAiCohortError(f"row {index} missing price claim contradicts the bound store")
             continue
-        path = prices_directory / f"{row['priceFileTicker']}.json"
+        path = prices_directory / safe_price_filename(row["priceFileTicker"])
         if not path.is_file():
             raise PublicAiCohortError(f"row {index} price file hash mismatch")
-        price_bytes, price_rows = read_bound_json(path)
+        if path not in price_cache:
+            price_cache[path] = read_bound_json(path)
+        price_bytes, price_rows = price_cache[path]
         if hashlib.sha256(price_bytes).hexdigest() != row["priceFileSha256"]:
             raise PublicAiCohortError(f"row {index} price file hash mismatch")
-        try:
-            dates = parse_price_dates(price_rows, path)
-        except PublicAiCohortError:
-            if row["priceFileValid"] or row["priorBarCount"] != 0:
-                raise PublicAiCohortError(f"row {index} invalid price file metadata mismatch")
-            continue
-        if not row["priceFileValid"]:
-            raise PublicAiCohortError(f"row {index} valid price file was labelled invalid")
-        prior = bisect.bisect_left(dates, row["observedAt"][:10])
-        if prior != row["priorBarCount"]:
-            raise PublicAiCohortError(f"row {index} priorBarCount mismatch")
+        valid, prior = prior_price_count(price_rows, path, row["observedAt"][:10])
+        if valid != row["priceFileValid"] or prior != row["priorBarCount"]:
+            raise PublicAiCohortError(f"row {index} point-in-time price metadata mismatch")
 
 
 def rejection_reasons(row: dict[str, Any]) -> list[str]:
@@ -953,7 +981,7 @@ def fixture_manifest() -> dict[str, Any]:
         "outcomesAccessed": False,
         "containsOutcomeFields": False,
         "rows": [
-            fixture_row("eligible"),
+            fixture_row("eligible", ticker="AGO$B", priceFileTicker="AGO$B"),
             fixture_row("ticker-reuse", identityConflictTypes=["TICKER_REUSE"], identityAdjudication="CONFLICT"),
             fixture_row("multi-cik", identityConflictTypes=["MULTI_CIK"], identityAdjudication="CONFLICT"),
             fixture_row("multi-symbol", identityConflictTypes=["MULTI_SYMBOL"], identityAdjudication="CONFLICT"),
@@ -1007,7 +1035,9 @@ def write_fixture_sources(root: Path, manifest: dict[str, Any]) -> tuple[Path, P
             {"date": (start + timedelta(days=index)).isoformat(), "close": 10 + index}
             for index in range(count)
         ]
-        path = prices / f"{row['priceFileTicker']}.json"
+        if row["ticker"] == "AGO$B":
+            price_rows.append({"date": cutoff.isoformat(), "close": 0})
+        path = prices / safe_price_filename(row["priceFileTicker"])
         path.write_text(json.dumps(price_rows), encoding="utf-8")
         row["priceFileSha256"] = sha256_file(path)
 
@@ -1234,6 +1264,59 @@ def ai_audit_self_test(root: Path, manifest: dict[str, Any]) -> None:
 
 def self_test() -> dict[str, Any]:
     manifest = fixture_manifest()
+    if safe_price_filename("AGO$B") != "AGO_B.json" or safe_price_filename("CON") != "_CON.json":
+        raise PublicAiCohortError("canonical price filename mapping changed")
+    cross_boundary_rows = [
+        {"date": "2014-06-29", "close": 10},
+        {"date": "2014-06-30", "close": 0},
+        {"date": "2014-06-28", "close": 10},
+    ]
+    if prior_price_count(cross_boundary_rows, Path("fixture.json"), "2014-06-30") != (False, 0):
+        raise PublicAiCohortError("post-boundary prior row was accepted")
+    future_reordered_rows = [
+        {"date": "2014-06-29", "close": 10},
+        {"date": "2014-07-02", "close": 0},
+        {"date": "2014-07-01", "close": 0},
+    ]
+    if prior_price_count(future_reordered_rows, Path("fixture.json"), "2014-06-30") != (True, 1):
+        raise PublicAiCohortError("future-only date order changed prior price validity")
+    try:
+        validate_price_filename_mapping([{"ticker": "AGO$B"}, {"ticker": "AGO^B"}])
+    except PublicAiCohortError:
+        pass
+    else:
+        raise PublicAiCohortError("canonical price filename collision was accepted")
+    invalid_path_ticker_row = copy.deepcopy(manifest["rows"][0])
+    invalid_path_ticker_row["ticker"] = "AGO/B"
+    invalid_path_ticker_row["rowId"] = expected_row_id(invalid_path_ticker_row)
+    invalid_path_ticker_row["identityClaimBindingSha256"] = expected_claim_binding(
+        invalid_path_ticker_row,
+        "identity",
+    )
+    invalid_path_ticker_row["corporateActionClaimBindingSha256"] = expected_claim_binding(
+        invalid_path_ticker_row,
+        "corporateAction",
+    )
+    try:
+        validate_row(invalid_path_ticker_row, 0)
+    except PublicAiCohortError:
+        pass
+    else:
+        raise PublicAiCohortError("path-separator ticker was accepted")
+    compact_timestamp_row = copy.deepcopy(manifest["rows"][0])
+    compact_timestamp_row["observedAt"] = "20140630T000000Z"
+    compact_timestamp_row["rowId"] = expected_row_id(compact_timestamp_row)
+    compact_timestamp_row["identityClaimBindingSha256"] = expected_claim_binding(compact_timestamp_row, "identity")
+    compact_timestamp_row["corporateActionClaimBindingSha256"] = expected_claim_binding(
+        compact_timestamp_row,
+        "corporateAction",
+    )
+    try:
+        validate_row(compact_timestamp_row, 0)
+    except PublicAiCohortError:
+        pass
+    else:
+        raise PublicAiCohortError("non-canonical observedAt was accepted")
     required_rejections = {
         "IDENTITY_CONFLICT_TICKER_REUSE",
         "IDENTITY_CONFLICT_MULTI_CIK",
@@ -1448,6 +1531,17 @@ def self_test() -> dict[str, Any]:
         "duplicateAiAuditRejected": True,
         "incompleteSemanticAuditRejected": True,
         "staleOutcomeLedgerRejected": True,
+        "historicalPreferredTickerAccepted": True,
+        "invalidPathTickerRejected": True,
+        "futurePriceRowsIgnored": True,
+        "postBoundaryPriorRowRejected": True,
+        "futureDateOrderIgnored": True,
+        "priceFilenameCollisionRejected": True,
+        "compactObservedAtRejected": True,
+        "priceFilenameExamples": {
+            "preferred": safe_price_filename("AGO$B"),
+            "reserved": safe_price_filename("CON"),
+        },
         "counts": first["counts"],
         "negativeRejections": sorted(required_rejections),
         "outcomeInjectionRejected": True,

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
 test('public-data AI cohort is deterministic and sealed before production use', () => {
   const script = path.join(__dirname, '..', 'scripts', 'early-detection-public-ai-cohort.py');
@@ -30,6 +31,17 @@ test('public-data AI cohort is deterministic and sealed before production use', 
   assert.equal(result.duplicateAiAuditRejected, true);
   assert.equal(result.incompleteSemanticAuditRejected, true);
   assert.equal(result.staleOutcomeLedgerRejected, true);
+  assert.equal(result.historicalPreferredTickerAccepted, true);
+  assert.equal(result.invalidPathTickerRejected, true);
+  assert.equal(result.futurePriceRowsIgnored, true);
+  assert.equal(result.postBoundaryPriorRowRejected, true);
+  assert.equal(result.futureDateOrderIgnored, true);
+  assert.equal(result.priceFilenameCollisionRejected, true);
+  assert.equal(result.compactObservedAtRejected, true);
+  assert.deepEqual(result.priceFilenameExamples, {
+    preferred: safeSnapshotFilename('AGO$B'),
+    reserved: safeSnapshotFilename('CON'),
+  });
   assert.equal(result.outcomesAccessed, false);
   assert.deepEqual(result.claimLocks, {
     protocolLabel: 'FEM-SEC-US-PUBLIC-AI',
