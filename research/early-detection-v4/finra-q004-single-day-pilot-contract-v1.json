@@ -1,0 +1,64 @@
+{
+  "schema": "finra-q004-single-day-pilot-contract/v1",
+  "createdAt": "2026-08-12T19:22:42Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Authorize one outcome-blind, four-field production query for a closed historical day to validate FINRA entitlement, partition filtering, response headers, counts and private-CAS capture before any historical crawl.",
+  "authorization": {
+    "parentRemoteCommit": "e6193347e943a36f351a15b25b438c77c16c8c41",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "monthlyUsageCapLabel": "10 GB",
+    "metadataEvidencePath": "reports/early-detection/finra-q004-otc-daily-list-metadata-v1.json",
+    "metadataEvidenceRawSha256": "dc1ce543a2c2dbc80187d7757874245e504bb3c04b1faa8ccbdaa91a8ad23955",
+    "termsEvidencePath": "reports/early-detection/finra-q004-api-terms-snapshot-v2.json",
+    "termsEvidenceRawSha256": "686b31c58169809e627edb346e6d281437185e12dbc0065896251622814c1fe7"
+  },
+  "query": {
+    "method": "POST",
+    "url": "https://api.finra.org/data/group/otcMarket/name/OTCDAILYLIST",
+    "calendarDay": "2018-12-18",
+    "fields": ["OTCDailyListID", "calendarDay", "dailyListDatetime", "dailyListEventCode"],
+    "compareFilters": [{"compareType": "EQUAL", "fieldName": "calendarDay", "fieldValue": "2018-12-18"}],
+    "limit": 1000,
+    "offset": 0,
+    "async": false
+  },
+  "networkContract": {
+    "tokenRequests": 1,
+    "dataRequests": 1,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "maximumResponseBytes": 3145728,
+    "maximumRows": 1000,
+    "requiredResponseHeaders": ["content-type", "record-limit", "record-offset", "record-total", "total-records-on-page"]
+  },
+  "privateCas": {
+    "root": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/data",
+    "pathTemplate": "sha256/{sha256[0:2]}/{sha256}",
+    "outsideGitRequired": true,
+    "writeNewOnly": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-single-day-pilot-v1.json",
+    "rowValuesIncluded": false,
+    "rawResponseIncluded": false,
+    "secretsCaptured": false,
+    "outcomesAccessed": false
+  },
+  "claimLocks": {
+    "historicalIdentityIntervalsComplete": false,
+    "terminalPaymentsComplete": false,
+    "terminalSessionsComplete": false,
+    "adjustedOhlcvComplete": false,
+    "corporateActionsComplete": false,
+    "fullMarketCoverageClaimed": false,
+    "historicalCrawlAuthorizedByThisPilot": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "100f8c0876b9e141d6de1c80a8da845ea3e1c9b8f12b44dade830887bde8069d"
+}
