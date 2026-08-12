@@ -1,0 +1,79 @@
+{
+  "schema": "early-detection-sec-terminal-primary-issuer-cik-resolution-contract/v1",
+  "createdAt": "2026-08-12T21:45:00Z",
+  "taskId": "Q003-SEC-TERMINAL-PRIMARY-ISSUER-CIK-RESOLUTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Use only source-derived SEC issuer CIK metadata to select the exact issuer queue row for each primary-document extraction candidate, while keeping security, listing, payment, terminal wealth and outcomes unresolved.",
+  "inputs": {
+    "crosswalk": {
+      "path": "reports/early-detection/sec-terminal-primary-queue-crosswalk-v1.json",
+      "rawSha256": "1620310b685058c92234a4f2598a3228eb0371a26ca852b243754e745a993d19",
+      "reportSha256": "c247f86c2c3ebb5c4a2354eae1120cb36678ec1d5e560a9f86602e8cd6d09f45",
+      "introductionCommit": "f5d6787c70e5c1aba15c876bd3c5bf34a17b3a4d",
+      "rows": 656
+    },
+    "form15Metadata": {
+      "gzipPath": "reports/early-detection/sec-form15-structured-metadata-v2.json.gz",
+      "gzipRawSha256": "ac10592573448967bf7e56fc145ff5db757ad3cebd66e825e3c24e8810b48253",
+      "decompressedRawSha256": "89356ab469ca6aecb57bc586ef05ac990469fd4e1baf939b718cacbb0d98501c",
+      "reportSha256": "099345083baf9310cf9c9610f589c23eaa4afd3d1e7dc99441a8525687a93e57",
+      "manifestPath": "reports/early-detection/sec-form15-structured-metadata-v2-gzip-manifest.json",
+      "manifestRawSha256": "4781323557a3323a6982ccba7c02f5e5076f0168654e52d50cfce81d393e5422",
+      "introductionCommit": "ec806d8112fdaa05ee2cd328da256c504e8038fe"
+    },
+    "form25Metadata": {
+      "gzipPath": "reports/early-detection/sec-form25-structured-metadata-v2.json.gz",
+      "gzipRawSha256": "942bb1ec0fbc292a53ca6b3760b2ffee13253cf60322ecb9778905118a2d370e",
+      "decompressedRawSha256": "bc7b419a8489088f6fadd55579feec05fd193d36a2b415b592b4bac4c950d774",
+      "reportSha256": "b24c12b721b2a81952b8d2b7e8fc9b4617408f69075f5f7d5a09bc98e16f1ea8",
+      "manifestPath": "reports/early-detection/sec-form25-structured-metadata-v2-gzip-manifest.json",
+      "manifestRawSha256": "a28c43ca2f9089ce5c7cb93dbd5bbc120af1b7579f4ec835fb2bc7b47cb4d9ab",
+      "introductionCommit": "2205e9080a5101babd2016f4334a00abeeb12993"
+    }
+  },
+  "resolutionContract": {
+    "candidateJoinKey": [
+      "sourceDataset",
+      "accession"
+    ],
+    "queueSelectionKey": [
+      "accession",
+      "sourceDerivedIssuerCik"
+    ],
+    "issuerCikNormalization": "LEFT_ZERO_PAD_TO_10_DIGITS",
+    "tickerJoinAllowed": false,
+    "companyNameJoinAllowed": false,
+    "oneSelectedQueueRowRequired": true,
+    "metadataRowsPreserved": true,
+    "expectedRows": 656,
+    "expectedUniqueSelectedQueueRows": 652,
+    "expectedForm15Rows": 65,
+    "expectedForm25Rows": 591,
+    "expectedAllIssuerCiksPresent": 656,
+    "expectedUniqueIssuerQueueMatches": 656,
+    "securityIdentityInferenceAllowed": false,
+    "listingIdentityInferenceAllowed": false,
+    "paymentVerificationAllowed": false,
+    "terminalWealthCompletionAllowed": false,
+    "outcomesAccessed": false
+  },
+  "output": {
+    "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+    "writeNewAtomic": true
+  },
+  "claimLocks": {
+    "issuerQueueRowResolved": true,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "primaryDocumentReconciled": false,
+    "paymentVerified": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "90cc10de1004fb7316f8b1d3b2e625f13a43a5f2f6a58d0025c140c846d859f8"
+}
