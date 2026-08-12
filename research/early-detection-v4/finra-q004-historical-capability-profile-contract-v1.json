@@ -1,0 +1,103 @@
+{
+  "schema": "finra-q004-historical-capability-profile-contract/v1",
+  "createdAt": "2026-08-12T21:18:00Z",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Profile the completed private FINRA OTC Daily List crawl with aggregate counts only, so later source reconciliation can target event classes without publishing identifiers, raw rows, comments, amounts or outcomes.",
+  "inputManifest": {
+    "path": "reports/early-detection/finra-q004-historical-crawl-manifest-v3.json",
+    "rawSha256": "2f266d063d5c05df53d635afcb922d0775d0345005869955b41fece3b9502580",
+    "reportSha256": "caff5b9863516992222f9b58690cfad31df700441eeaf2fe3c41b356e641a09f",
+    "recordCount": 145103,
+    "partitionCount": 1522,
+    "availableMinimumDate": "2016-01-18",
+    "availableMaximumDate": "2024-12-31",
+    "rowSequenceSha256": "2e2aa926ce60a632942fe87e53fada22e0373108e04d2e5e5591727dad383c4a"
+  },
+  "profileContract": {
+    "allowedDimensions": [
+      "calendarYear",
+      "dailyListEventCode",
+      "reasonClass",
+      "booleanFlag",
+      "fieldPresence"
+    ],
+    "booleanFlags": [
+      "bankruptcyFlag",
+      "changeFinancialStatusFlag",
+      "changeSecurityAttributeFlag",
+      "changeSecurityDescriptionFlag",
+      "changeSymbolFlag",
+      "dividendADRFlag",
+      "dividendNonADRFlag",
+      "securityAddFlag",
+      "securityDeleteFlag"
+    ],
+    "presenceFields": [
+      "cashAmountText",
+      "forwardSplitRate",
+      "paymentDate",
+      "reverseSplitRate",
+      "stockPercentage",
+      "subjectCorporateActionCode"
+    ],
+    "eventCodes": [
+      "<NULL>",
+      "DA",
+      "DC",
+      "DD",
+      "SA",
+      "SC",
+      "SD"
+    ],
+    "reasonClasses": [
+      {
+        "classId": "ACQUISITION_MERGER_AMALGAMATION",
+        "exactReason": "Acquisition/Merger/Amalgamation"
+      },
+      {
+        "classId": "BANKRUPTCY_PLAN_EFFECTIVE_SHARES_CANCELLED",
+        "exactReason": "Bankruptcy Plan Effective/Shares Cancelled"
+      },
+      {
+        "classId": "CASH_DIVIDEND_SPECIAL",
+        "exactReason": "Cash Dividend Special"
+      },
+      {
+        "classId": "DELISTED_FROM_NASDAQ",
+        "exactReason": "Market Center Change Delisted from NASDAQ"
+      },
+      {
+        "classId": "DELISTED_FROM_NYSE",
+        "exactReason": "Market Center Change Delisted from NYSE"
+      }
+    ],
+    "allPrivateBlobsRebuiltTwice": true,
+    "aggregateCountsOnly": true,
+    "identifiersIncluded": false,
+    "rawValuesIncluded": false,
+    "requestOrResponseBodiesIncluded": false,
+    "writeNewAtomic": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-historical-capability-profile-v1.json",
+    "pre2016CoverageStatus": "UNRESOLVED_NOT_EXPOSED_BY_PARTITIONS_ENDPOINT",
+    "reasonCountsAreDiscoveryOnly": true,
+    "fieldPresenceIsNotPaymentVerification": true,
+    "recordPresenceIsNotIdentityResolution": true
+  },
+  "claimLocks": {
+    "historicalIdentityResolved": false,
+    "corporateActionsComplete": false,
+    "terminalSessionComplete": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "41196d53535a033fd005a58e979c09199219addd8023e1c2e18c000ef88627d8"
+}
