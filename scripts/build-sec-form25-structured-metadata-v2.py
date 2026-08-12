@@ -137,6 +137,7 @@ def _require_git_blob(commit: str, path: Path, expected_sha: str, label: str) ->
 
 def bind_implementation(base_commit: str) -> dict:
     result = _base_bind_implementation(base_commit)
+    _require_git_blob(BASE_FIX_COMMIT, BASE_BUILDER_PATH, BASE_BUILDER_RAW_SHA256, "V1 base builder at fix commit")
     _require_git_blob(base_commit, BASE_BUILDER_PATH, BASE_BUILDER_RAW_SHA256, "V1 base builder")
     if core.git_text("rev-parse", f"{BASE_FIX_COMMIT}^{{commit}}") != BASE_FIX_COMMIT:
         fail("V1 parser fix commit binding changed")
