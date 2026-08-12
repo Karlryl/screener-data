@@ -1,0 +1,55 @@
+{
+  "claimLocks": {
+    "actualCashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryComplete": false,
+    "securityIdentityResolved": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "createdAt": "2026-08-12T22:22:58Z",
+  "evidenceContract": {
+    "actualCashReceiptNotInferred": true,
+    "effectiveDateRequired": true,
+    "effectiveLanguageRequired": true,
+    "expectedAccessions": [
+      "0000876661-12-000192",
+      "0000876661-13-000902",
+      "0000876661-21-001108",
+      "0001104659-19-049572"
+    ],
+    "expectedEffectiveDatesByAccession": {
+      "0000876661-12-000192": "2012-04-30",
+      "0000876661-13-000902": "2013-12-19",
+      "0000876661-21-001108": "2021-07-23",
+      "0001104659-19-049572": "2019-08-30"
+    },
+    "expectedRows": 4,
+    "fixedCashEvidenceInputRequired": true,
+    "semanticCeiling": "PRIMARY_SEC_STATEMENT_SAYS_TRANSACTION_BECAME_EFFECTIVE_AND_SOURCE_SHARE_WAS_CONVERTED_INTO_FIXED_CASH_RIGHT",
+    "sourceShareConversionRequired": true,
+    "transactionEffectivenessStated": true
+  },
+  "inputs": {
+    "fixedCashEvidence": {
+      "builderRawSha256": "14626867e2157d75b1baea37ef90cb3f02f7904d64f14bd54b5fbe032ce001f8",
+      "contractRawSha256": "a603de6fbb2a5f850cdafd232a7eeaccadc8116ff25ae7b84d4978ab78f2b928",
+      "path": "reports/early-detection/sec-explicit-fixed-cash-consideration-v1.json",
+      "rawSha256": "ea1b3cc4fce4c86bf7f0b3c6d255613e9faa71ac363bba67ac26ff0a404a48ef",
+      "reportSha256": "3f5980450f849ec0a566e29b80ca389c314ec8650fe78095bf5dca0278c729bc",
+      "testRawSha256": "e4d81639c3305be14b022935484e1e58d4aa22b396652b69d51a2062033eec19"
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-effective-fixed-cash-conversion-evidence-v1.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Promote only four primary SEC statements that jointly state a transaction effective date and conversion of source shares into a fixed cash right. The evidence does not prove receipt of cash, later recoveries, the terminal trading session, or complete terminal wealth.",
+  "schema": "early-detection-sec-effective-fixed-cash-conversion-evidence-contract/v1",
+  "taskId": "Q003-SEC-EFFECTIVE-FIXED-CASH-CONVERSION-EVIDENCE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
