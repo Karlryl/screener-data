@@ -1,0 +1,122 @@
+{
+  "schema": "early-detection-fmp-basic-free-prerequisite/v1",
+  "createdAt": "2026-08-12T20:36:00Z",
+  "taskId": "Q010-FMP-BASIC-FREE-HANDSHAKE",
+  "sourceId": "FMP_BASIC_FREE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze FMP's documented Basic free limits and recent-event cross-check boundary before account creation or data access.",
+  "officialEvidence": [
+    {
+      "url": "https://site.financialmodelingprep.com/developer/docs/pricing/",
+      "observedAt": "2026-08-12T20:36:00Z",
+      "verifiedFact": "FMP documents Basic as Free with 250 API calls per day, a five-year historical range in the plan comparison and a 500 MB trailing-30-day bandwidth limit."
+    },
+    {
+      "url": "https://site.financialmodelingprep.com/developer/docs/stable",
+      "observedAt": "2026-08-12T20:36:00Z",
+      "verifiedFact": "The stable API catalog documents delisted-company, symbol-change, dividend, split and latest-merger endpoints, each requiring an API key."
+    },
+    {
+      "url": "https://site.financialmodelingprep.com/developer/docs/stable/delisted-companies",
+      "observedAt": "2026-08-12T20:36:00Z",
+      "verifiedFact": "The delisted-companies endpoint is advertised for the Free plan, but a delisting record alone is not terminal wealth or a historical identity interval."
+    },
+    {
+      "url": "https://site.financialmodelingprep.com/developer/docs/terms-of-service",
+      "observedAt": "2026-08-12T20:36:00Z",
+      "verifiedFact": "FMP data use remains subject to provider terms, and public display or redistribution requires a separate data-display and licensing agreement."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "paymentCardRequirementConfirmedAbsent": false,
+    "trialRequirementConfirmedAbsent": false,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "requestsPerDay": 250,
+    "bandwidthBytesTrailing30Days": 500000000,
+    "historicalYears": 5,
+    "recentDelistingEndpointAdvertised": true,
+    "recentSymbolChangeEndpointAdvertised": true,
+    "recentMergerEndpointAdvertised": true,
+    "dividendEndpointAdvertised": true,
+    "splitEndpointAdvertised": true,
+    "coversOriginalV4Period2009To2015": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "licenseDisposition": "PRIVATE_RECENT_EVENT_CROSSCHECK_ONLY"
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterZeroCostNoTrialNoCardAttestationAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 9,
+    "noPremiumEndpoint": true,
+    "noBrowserScraping": true,
+    "noPriceOrReturnRequest": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noDelistingRowAsTerminalWealthProof": true,
+    "rawProviderRowsRemainPrivate": true,
+    "publicArtifactLimitedToHashesAndAggregateCapability": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_PAYMENT_AND_TRIAL_STATUS_MUST_BE_CONFIRMED_IN_SIGNUP_UI",
+    "neededAction": "Open one Basic Free signup only after higher-value work; proceed only if the UI shows USD 0, no payment card and no trial, then store the API key only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "abortIfPaymentCardRequested": true,
+    "abortIfTrialRequired": true,
+    "abortIfPaidPlanPreselected": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "DOCUMENTED_FREE_RECENT_EVENT_PILOT_PAYMENT_GATE_UNCONFIRMED",
+    "originalV4CapabilityClosed": false,
+    "fullPeriod2009To2024Closed": false,
+    "accountCreationAuthorizedNow": false,
+    "threeCasePilotEligibleAfterUserGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After higher-value autonomous work, inspect the signup UI once; abort on card, trial or paid-plan selection and otherwise seal a recent-event-only three-case pilot."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_PLAN_CAPABILITY",
+      "RECENT_EVENT_THREE_CASE_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_MARKET_COVERAGE_2009_TO_2024",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountCreationAuthorizedNow": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "paymentCardAbsentVerified": false,
+    "trialAbsentVerified": false,
+    "entitlementVerified": false,
+    "fullPeriod2009To2024Closed": false,
+    "historicalIdentityResolved": false,
+    "completeCorporateActionChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "900f8fefbfe73a7cb1b6190129e15d12f734146b5824e1a2460a3be4d545d5d2"
+}
