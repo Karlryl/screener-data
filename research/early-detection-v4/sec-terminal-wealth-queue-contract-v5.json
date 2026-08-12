@@ -1,0 +1,32 @@
+{
+  "schema": "early-detection-sec-terminal-wealth-queue-contract/v5",
+  "createdAt": "2026-08-12T00:00:00Z",
+  "taskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "input": {
+    "reportPath": "reports/early-detection/sec-corporate-action-candidates-2009-2024.json",
+    "reportRawSha256": "dd59affea6d5aa3772222ca44317b20aed3b34865984a123044072feac24461c",
+    "reportCanonicalSha256": "472c8e938dfc8ffae930bb6efcb27e9042d90b11e7090bab427eeefd30bf3c63",
+    "expectedEvents": 44352,
+    "expectedForm25Family": 27285,
+    "expectedForm15Family": 17067,
+    "databaseBytes": 19906560,
+    "databaseRawSha256": "f6662cf6429a26e55d589712543525840b687dd86ebd973425a8fe5836425ed5",
+    "eventSequenceSha256": "e656ab3af95383380c83a9de561b1f39d30b58731cfe824a8f19b72c8b03f40c",
+    "databaseSidecarPolicy": "ABSENT_BEFORE_AND_AFTER_COPY",
+    "databaseSnapshotPolicy": "PRIVATE_FULLY_HASHED_COPY",
+    "databaseOpenMode": "READ_ONLY_IMMUTABLE_PRIVATE_COPY"
+  },
+  "queueUnit": ["cik", "accession", "eventClass", "filedDate"],
+  "documentClasses": {
+    "DELISTING_FORM25_CANDIDATE": ["FORM_25", "FORM_25_NSE", "FORM_8_K", "DEFM14A", "S_4", "SC_TO", "PLAN_OF_LIQUIDATION", "BANKRUPTCY_OR_COURT_PRIMARY"],
+    "DEREGISTRATION_FORM15_CANDIDATE": ["FORM_15", "FORM_15_12B", "FORM_15_12G", "FORM_15_15D", "FORM_8_K", "DEFM14A", "S_4", "SC_TO", "PLAN_OF_LIQUIDATION", "BANKRUPTCY_OR_COURT_PRIMARY"]
+  },
+  "priorityInputs": ["eventClass", "filedDate", "hasAccession", "bridgeLinkCount"],
+  "prioritySort": ["HAS_ACCESSION_DESC", "BRIDGE_LINK_COUNT_DESC", "EVENT_CLASS_ASC", "FILED_DATE_ASC", "CIK_ASC", "ACCESSION_ASC", "EVENT_ID_ASC"],
+  "authorizedImplementation": {"builderPath": "scripts/build-sec-terminal-wealth-queue-v5.py", "testPath": "tests/build-sec-terminal-wealth-queue-v5.test.js"},
+  "forbiddenPriorityInputs": ["return", "price", "endpointValue", "result", "pValue", "eligibility"],
+  "requiredResolutionFields": ["stableSecurityId", "lastTradingSession", "otcContinuation", "cashConsideration", "stockConsideration", "liquidationDistributions", "laterRecoveries", "sourceRefs"],
+  "missingPolicy": "UNRESOLVED_NEVER_ZERO",
+  "claimLocks": {"terminalWealthComplete": false, "identityResolved": false, "originalV4GateCredit": false, "resultComputationAllowed": false, "outcomesAccessed": false}
+}
