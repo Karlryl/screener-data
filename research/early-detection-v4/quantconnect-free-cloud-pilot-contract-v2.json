@@ -1,0 +1,45 @@
+{
+  "schema": "early-detection-quantconnect-free-cloud-pilot-contract/v2",
+  "createdAt": "2026-08-12T14:30:00Z",
+  "taskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+  "sourceId": "QUANTCONNECT_FREE_CLOUD",
+  "phase": "DISCOVERY_ONLY_PRE_IDENTITY_VALIDATION",
+  "pilotCore": {
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "runParameters": {
+      "start": "2009-01-01",
+      "end": "2024-12-31",
+      "resolution": "DAILY",
+      "normalization": "RAW",
+      "minimumIndependentRuns": 2
+    },
+    "outputSchema": "early-detection-quantconnect-free-cloud-metadata-output/v2",
+    "forbiddenFields": ["open", "high", "low", "close", "volume", "price", "return", "pValue", "endpointValue", "holdings", "portfolioValue", "originalV4Result"],
+    "claimLocks": {
+      "identityResolved": false,
+      "coverageRateAllowed": false,
+      "terminalWealthComplete": false,
+      "originalV4GateCredit": false,
+      "outcomesAccessed": false
+    },
+    "parityRule": "ALL_FIELDS_IDENTICAL_EXCEPT_PROVIDER_RUN_ID_EXECUTED_AT_AND_REPORT_SHA"
+  },
+  "pilotCoreSha256": "952c509f9eac982ef6f0e6016778a58e0ab1a34bf945fbf2256634cc164dd70a",
+  "boundFiles": {
+    "casesPath": "research/early-detection-v4/quantconnect-free-cloud-pilot-cases-v1.json",
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "cloudScriptPath": "scripts/quantconnect-free-cloud-metadata-pilot-v2.py",
+    "cloudScriptRawSha256": "cefcd5827976f8c8891c8d9d42e673bcb68943c07e96ec6bb15f12921552e8d3",
+    "verifierPath": "scripts/verify-quantconnect-free-cloud-pilot-v2.py",
+    "verifierRawSha256": "f7e917c7eee98b43061f37471ba4a158b1a9f3007225b7808a64ba459a329946",
+    "testPath": "tests/quantconnect-free-cloud-pilot-v2.test.js",
+    "testRawSha256": "49b706c894b1209f07190ea49da4c32818faf08524339dbf69a32b22533c035a"
+  },
+  "executionBlockedUntil": ["FREE_ACCOUNT_ATTESTED_NO_PAYMENT_NO_TRIAL", "TERMS_AND_EXPORT_BOUND", "TWO_DISTINCT_CLOUD_RUNS_CAPTURED"],
+  "claimBoundary": {
+    "allowed": ["METADATA_DISCOVERY_AND_REPRODUCIBILITY_ONLY"],
+    "forbidden": ["IDENTITY_RESOLVED", "TERMINAL_WEALTH_COMPLETE", "COVERAGE_RATE", "FULL_MARKET", "SURVIVORSHIP_SAFE", "ORIGINAL_V4_GATE_PASS", "H_LATE", "H_FEM"]
+  },
+  "humanAttestation": false,
+  "outcomesAccessed": false
+}
