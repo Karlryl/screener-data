@@ -1,0 +1,80 @@
+{
+  "schema": "early-detection-sec-terminal-candidate-triage-contract/v1",
+  "createdAt": "2026-08-12T20:10:00Z",
+  "taskId": "Q003-SEC-TERMINAL-CANDIDATE-TRIAGE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "authorizedSnapshot": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "baseCommit": "a9c23d12dd755435e1734982c5bfe802416a5c00"
+  },
+  "input": {
+    "path": "reports/early-detection/sec-terminal-candidate-reconciliation-v1.json",
+    "rawSha256": "e38823a9701a7ea58afc1a91e5ed209837251f2e397fdf9d31bc4433831b4fa0",
+    "reportSha256": "a05ba1777da74a076698dfbb8bcbb43315f6ddcd1eb78cb5d7c3e5b64e7761ab",
+    "introductionCommit": "8ff267c0afc257ec2db3e72c512050fbcbb102f8",
+    "totalRows": 16507,
+    "eligiblePriorityTiers": [
+      1,
+      2
+    ],
+    "eligibleRows": 1101
+  },
+  "unit": "ONE_BOUND_RECONCILIATION_OCCURRENCE_WITH_OUTCOME_BLIND_LEXICAL_TRIAGE",
+  "taxonomy": [
+    {
+      "rank": 1,
+      "class": "EXPLICIT_CASH_OR_MIXED_CONSIDERATION_CANDIDATE",
+      "rule": "CURRENCY_AMOUNT_WITHIN_FROZEN_WINDOW_OF_CASH_CONSIDERATION_OR_CONVERSION_LANGUAGE"
+    },
+    {
+      "rank": 2,
+      "class": "LIQUIDATION_OR_DISTRIBUTION_CANDIDATE",
+      "rule": "LIQUIDATION_DISSOLUTION_WINDING_UP_OR_DISTRIBUTION_LANGUAGE"
+    },
+    {
+      "rank": 3,
+      "class": "STOCK_OR_SECURITY_EXCHANGE_CANDIDATE",
+      "rule": "CONVERSION_EXCHANGE_OR_RIGHT_TO_RECEIVE_LANGUAGE_WITH_SHARE_OR_STOCK_LANGUAGE"
+    },
+    {
+      "rank": 4,
+      "class": "ADMINISTRATIVE_REMOVAL_NOTICE_CANDIDATE",
+      "rule": "REMOVAL_FROM_LISTING_OR_REGISTRATION_NOTICE_LANGUAGE_WITHOUT_HIGHER_CLASS"
+    },
+    {
+      "rank": 5,
+      "class": "OTHER_PRIMARY_DOCUMENT_REVIEW_CANDIDATE",
+      "rule": "NO_HIGHER_FROZEN_RULE_MATCH"
+    }
+  ],
+  "triagePolicy": {
+    "firstMatchingRuleWins": true,
+    "caseInsensitiveUnicodeText": true,
+    "tickerJoinAllowed": false,
+    "amountParsedAsVerifiedValue": false,
+    "classificationProvesPayment": false,
+    "classificationProvesTerminalWealth": false,
+    "sourceTextRetainedForReview": true,
+    "sourceRefRetainedExactly": true,
+    "reviewStatus": "AUTOMATED_TRIAGE_ONLY_PRIMARY_DOCUMENT_REVIEW_REQUIRED"
+  },
+  "authorizedImplementation": {
+    "builderPath": "scripts/build-sec-terminal-candidate-triage-v1.py",
+    "testPath": "tests/build-sec-terminal-candidate-triage-v1.test.js",
+    "outputPath": "reports/early-detection/sec-terminal-candidate-triage-v1.json"
+  },
+  "claimLocks": {
+    "candidateStatusOnly": true,
+    "primaryDocumentReconciled": false,
+    "paymentVerified": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "identityResolved": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  }
+}
