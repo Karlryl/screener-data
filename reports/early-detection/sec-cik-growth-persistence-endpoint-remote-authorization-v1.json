@@ -1,0 +1,23 @@
+{
+  "schema": "sec-cik-growth-persistence-endpoint-remote-authorization/v1",
+  "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+  "status": "AUTHORIZED_ENDPOINT_CODE_PRE_OUTCOME",
+  "createdAt": "2026-08-12T06:18:01Z",
+  "authorizationRemote": "origin",
+  "authorizationRemoteUrl": "https://github.com/Karlryl/screener-data.git",
+  "authorizationRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+  "stageACommit": "90a3ced32ce33005d8a023cc818c4eeab9e65d2c",
+  "sealCommit": "992d525c6a5f3f09475c132a157865f639671d4b",
+  "sealPath": "reports/early-detection/sec-cik-growth-persistence-endpoint-preoutcome-seal-v1.json",
+  "sealSha256": "0d8b4a9f82355e7c54452b0dd5951ccca068ad320d1fac2b30b8bcef387ca515",
+  "priorAuthorizationPath": "reports/early-detection/sec-cik-growth-persistence-remote-authorization-v4.json",
+  "priorAuthorizationSha256": "081eda0b66bc7f01b6d6dbb9e6b035e32a772e9c4551aedb089bb79e777bd0cb",
+  "outcomeLedgerPath": "reports/early-detection/sec-cik-growth-persistence-outcome-ledger-v1.json",
+  "outcomeLedgerSha256": "02b79914b07ff3c08f05d490df701f95a2df7dcdb7702b139fb12bb0a6a090dd",
+  "outcomesAccessed": false,
+  "postAnchorFactsRead": false,
+  "postAnchorFactsMaterialized": false,
+  "analysisExecuted": false,
+  "humanAttestation": false,
+  "aiAuditOnly": true
+}
