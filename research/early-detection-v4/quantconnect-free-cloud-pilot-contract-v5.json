@@ -1,0 +1,32 @@
+{
+  "schema": "early-detection-quantconnect-free-cloud-pilot-contract/v5",
+  "createdAt": "2026-08-12T00:00:00Z",
+  "taskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+  "sourceId": "QUANTCONNECT_FREE_CLOUD",
+  "phase": "DISCOVERY_ONLY_PRE_IDENTITY_VALIDATION",
+  "pilotCore": {
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "runParameters": {"start": "2009-01-01", "end": "2024-12-31", "resolution": "DAILY", "normalization": "RAW", "minimumIndependentRuns": 2},
+    "outputSchema": "early-detection-quantconnect-free-cloud-metadata-output/v5",
+    "rowUnit": "CASE_ALIAS",
+    "forbiddenFields": ["adjustedClose", "close", "endpointValue", "high", "holdings", "low", "open", "originalV4Result", "pValue", "portfolioValue", "price", "return", "volume"],
+    "claimLocks": {"identityResolved": false, "coverageRateAllowed": false, "terminalWealthComplete": false, "originalV4GateCredit": false, "outcomesAccessed": false},
+    "parityRule": "ALL_FIELDS_IDENTICAL_EXCEPT_PROVIDER_RUN_ID_EXECUTED_AT_AND_REPORT_SHA",
+    "cloudPromotionRequiresProviderEnvelopes": true
+  },
+  "pilotCoreSha256": "6b7c61e6898215d7997584f410bd8a383c328bdcb543c3d7edb11f173888c706",
+  "boundFiles": {
+    "casesPath": "research/early-detection-v4/quantconnect-free-cloud-pilot-cases-v1.json",
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "cloudScriptPath": "scripts/quantconnect-free-cloud-metadata-pilot-v5.py",
+    "cloudScriptRawSha256": "3b30e2e9213f225589c2ea423b2f2a7f8ddc56acb4c206aa81e14a7a8d59c7ee",
+    "verifierPath": "scripts/verify-quantconnect-free-cloud-pilot-v5.py",
+    "verifierRawSha256": "1483e4207aed78607136d5eae21e465a73fc773091e960e72872c0327fececb5",
+    "testPath": "tests/quantconnect-free-cloud-pilot-v5.test.js",
+    "testRawSha256": "70eec87f53ceff1e8d98f6a30c2db0a58fc700924a0bf0af3739fa73edaca7dd"
+  },
+  "executionBlockedUntil": ["EXTERNALLY_CONFIRMED_FREE_ACCOUNT_NO_PAYMENT_NO_TRIAL", "TERMS_AND_DERIVATIVE_EXPORT_RIGHTS_REMOTE_BOUND", "TWO_PROVIDER_RUN_ENVELOPES_CAS_GIT_REMOTE_VERIFIED"],
+  "claimBoundary": {"allowed": ["METADATA_DISCOVERY_AND_REPRODUCIBILITY_ONLY"], "forbidden": ["IDENTITY_RESOLVED", "TERMINAL_WEALTH_COMPLETE", "COVERAGE_RATE", "FULL_MARKET", "SURVIVORSHIP_SAFE", "ORIGINAL_V4_GATE_PASS", "H_LATE", "H_FEM"]},
+  "humanAttestation": false,
+  "outcomesAccessed": false
+}
