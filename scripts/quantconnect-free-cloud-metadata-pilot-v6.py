@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 class FreeCloudMetadataPilotV6(QCAlgorithm):
     """Compact discovery metadata only; no values, returns, holdings, or study results."""
 
-    PILOT_CORE_SHA256 = "8c3c39108cdf1c1b43719fe5d06885aa94f39911aa1437bb9ddfb82e268a5186"
+    PILOT_CORE_SHA256 = "7198765a2a6a88ddc7831ab9e59425921a9e7da226924fd50a5cc7f3341dbd13"
     CASES_RAW_SHA256 = "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6"
     EXPECTED_LEAN_VERSION = "2.5.0.0.17996"
     DATASET_LABEL = "QUANTCONNECT_US_EQUITY_SECURITY_MASTER_PLUS_US_EQUITIES"
