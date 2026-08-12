@@ -1,0 +1,123 @@
+{
+  "schema": "early-detection-twelve-data-basic-prerequisite/v1",
+  "createdAt": "2026-08-12T20:43:00Z",
+  "taskId": "Q012-TWELVE-DATA-BASIC-HANDSHAKE",
+  "sourceId": "TWELVE_DATA_BASIC",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze Twelve Data's Basic free limits and a three-case EOD entitlement pilot before account creation or market-data access.",
+  "officialEvidence": [
+    {
+      "url": "https://twelvedata.com/pricing",
+      "observedAt": "2026-08-12T20:43:00Z",
+      "verifiedFact": "Twelve Data publishes Basic at USD 0 with 8 API credits per minute, 800 per day, three markets, internal non-display usage and global trial symbols."
+    },
+    {
+      "url": "https://support.twelvedata.com/en/articles/12682324-end-of-day-eod-pricing-market-data",
+      "observedAt": "2026-08-12T20:43:00Z",
+      "verifiedFact": "The provider describes EOD OHLCV with full historical data, while personal plans remain restricted to individual non-commercial use."
+    },
+    {
+      "url": "https://twelvedata.com/docs/introduction/quickstart",
+      "observedAt": "2026-08-12T20:43:00Z",
+      "verifiedFact": "The time-series API supports daily intervals, up to 5000 points per response and explicit price adjustment modes, but entitlement and exact symbol coverage require an account handshake."
+    },
+    {
+      "url": "https://twelvedata.com/docs/supporting-metadata/instrument-type",
+      "observedAt": "2026-08-12T20:43:00Z",
+      "verifiedFact": "Separate dividend and split endpoints are documented for Grow and above, not Basic; Basic must not be credited with an independently reproducible action-factor chain."
+    },
+    {
+      "url": "https://support.twelvedata.com/en/articles/5332349-commercial-and-personal-usage",
+      "observedAt": "2026-08-12T20:43:00Z",
+      "verifiedFact": "Individual plans permit personal or internal use and prohibit redistribution or commercial display."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "paymentCardRequirementConfirmedAbsent": false,
+    "trialRequirementForRestApiConfirmedAbsent": true,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "apiCreditsPerMinute": 8,
+    "apiCreditsPerDay": 800,
+    "marketsIncluded": 3,
+    "globalTrialSymbolsOnlyOutsideIncludedMarkets": true,
+    "eodFullHistoryAdvertised": true,
+    "dailyMaximumRowsPerResponse": 5000,
+    "dividendEndpointIncludedInBasic": false,
+    "splitEndpointIncludedInBasic": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "licenseDisposition": "PRIVATE_PERSONAL_INTERNAL_NONDISPLAY_ONLY"
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterBasicAccountAttestationAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 9,
+    "dailyEodEndpointOnly": true,
+    "noWebsocketTrial": true,
+    "noPaidEndpoint": true,
+    "noPricePublication": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noAdjustedSeriesAsIndependentActionChain": true,
+    "noLastQuoteAsTerminalPayment": true,
+    "rawProviderRowsRemainPrivate": true,
+    "publicArtifactLimitedToHashesAndAggregateCapability": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_FINALIZATION_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one Basic USD 0 account, proceed only if no payment card or paid trial is required, and store the API key only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "abortIfPaymentCardRequested": true,
+    "abortIfPaidTrialRequired": true,
+    "abortIfPaidPlanPreselected": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "CONFIRMED_FREE_EOD_ENTITLEMENT_PILOT_ACCOUNT_REQUIRED",
+    "originalV4CapabilityClosed": false,
+    "completeAdjustmentChainClosed": false,
+    "threeCasePilotEligibleAfterAccountGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After FINRA finalization or higher-value autonomous work, ask Karl once for a Basic account and seal a daily-EOD-only three-case entitlement pilot."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_BASIC_CAPABILITY",
+      "THREE_CASE_DAILY_EOD_ENTITLEMENT_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_ADJUSTMENT_OR_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME_PUBLICATION",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "entitlementVerified": false,
+    "historicalIdentityResolved": false,
+    "completeAdjustmentChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "79a1f72b3ac9d7d7255c358794a40ca3dd631beee58117f4d8d956fbaa6ed550"
+}
