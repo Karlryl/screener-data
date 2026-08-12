@@ -1,0 +1,107 @@
+{
+  "schema": "sec-cik-growth-persistence-claim-contract/v1",
+  "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+  "status": "DRAFT_PRE_OUTCOME",
+  "studySeparation": {
+    "originalV4Modified": false,
+    "originalV4GateClaim": false,
+    "publicAiCoveragePathModified": false,
+    "humanAttestation": false,
+    "aiAuditOnly": true
+  },
+  "unit": {
+    "type": "SEC_REGISTRANT_CIK_HISTORY",
+    "permanentSecurityIdentifier": false,
+    "economicEntityContinuityProven": false
+  },
+  "source": {
+    "ledgerSchema": "early-detection-pit-compact-sqlite/v1",
+    "payloadSelection": "EARLIEST_OBSERVED_PAYLOAD_PER_FSD_QUARTER",
+    "integrityReport": "reports/early-detection/sec-fsd-compact-full-integrity-2009-2024.json",
+    "integrityReportFileSha256": "b8f30958b1ea36ff80897b978cfc6d26cfe62d89c60c7e295716554c4cfbde49",
+    "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de",
+    "payloadManifestSha256": "5bb597d4d08e5ed1aa1a289c1c646ffcf5e971547f0f66ac441b3ee629057b27",
+    "conceptMap": "research/early-detection-v4/sec-concept-map-1.0.0.json",
+    "conceptMapFileSha256": "85fbacc05cc5df9b5a53760e13b4db6116f485d39238a2099fd04c0394f3ad27"
+  },
+  "factContract": {
+    "forms": ["10-Q", "10-K"],
+    "amendmentsAllowed": false,
+    "units": ["USD"],
+    "coregMustBeNull": true,
+    "segmentsAllowed": false,
+    "revenueRole": "revenue",
+    "operatingCashFlowRole": "operatingCashFlow",
+    "conceptPriorityFrozen": true,
+    "q4RevenueDerivation": "QTRS4_MINUS_QTRS3_SAME_CIK_CONCEPT_UNIT_FY",
+    "cashFlowQuarterDerivation": "QTRSN_MINUS_QTRSN_MINUS_1_SAME_CIK_CONCEPT_UNIT_FY",
+    "ambiguityPolicy": "FAIL_CLOSED"
+  },
+  "cohort": {
+    "commonObservationCutoff": "2014-06-30T23:59:59Z",
+    "selection": "LATEST_FULLY_PRECUTOFF_COMPUTABLE_FISCAL_QUARTER_PER_CIK",
+    "ordering": ["periodEnd DESC", "sourceAcceptedAt DESC", "accession DESC"],
+    "maximumAnchorPeriodLagDays": 183,
+    "requiredPreCutoffFiscalQuarters": 9,
+    "includeAllEligibleCiks": true,
+    "outcomeInformedReplacement": false,
+    "postAnchorEligibilityUse": false
+  },
+  "exposure": {
+    "positiveLabel": "TRIGGER_POSITIVE",
+    "negativeLabel": "TRIGGER_NEGATIVE",
+    "missingLabel": "PREOUTCOME_NOT_COMPUTABLE",
+    "currentRevenueYoyMinimum": 0.2,
+    "accelerationReference": "MEDIAN_OF_PREVIOUS_FOUR_QUARTERLY_REVENUE_YOY",
+    "accelerationMinimumPercentagePoints": 5.0,
+    "lastFourQuarterOperatingCashFlowMinimumExclusive": 0.0,
+    "positiveRevenueBasesRequired": true,
+    "acceptedAtRule": "EVERY_SOURCE_ACCEPTED_AT_OR_BEFORE_COMMON_OBSERVATION_CUTOFF"
+  },
+  "endpoint": {
+    "windowDaysExclusiveInclusive": 455,
+    "requiredExactFutureFiscalQuarters": 4,
+    "persistentRevenueYoyMinimum": 0.2,
+    "minimumPassingFutureQuarters": 3,
+    "lastFourQuarterOperatingCashFlowMinimumExclusive": 0.0,
+    "states": [
+      "VERIFIED_PERSISTENT",
+      "VERIFIED_NOT_PERSISTENT",
+      "NO_VERIFIABLE_4Q_SEQUENCE"
+    ],
+    "acceptedAtRule": "EVERY_ENDPOINT_SOURCE_ACCEPTED_AFTER_COMMON_OBSERVATION_CUTOFF_AND_WITHIN_455_DAYS",
+    "missingEndpointIsBusinessFailure": false
+  },
+  "primaryAnalysis": {
+    "estimand": "FULL_COHORT_VERIFIABLE_PERSISTENCE_RISK_DIFFERENCE_TRIGGER_POSITIVE_MINUS_NEGATIVE",
+    "persistentIndicator": "ONE_ONLY_FOR_VERIFIED_PERSISTENT",
+    "confidenceInterval": "TWO_SIDED_95_PERCENT_NEWCOMBE_INDEPENDENT_PROPORTIONS",
+    "supportRule": "LOWER_BOUND_GREATER_THAN_ZERO",
+    "rejectRule": "UPPER_BOUND_LESS_THAN_ZERO",
+    "otherwise": "INCONCLUSIVE",
+    "minimumTriggerPositive": 40,
+    "minimumTriggerNegative": 80,
+    "minimumFourQuarterAscertainmentRate": 0.9,
+    "sicResults": "DESCRIPTIVE_ONLY"
+  },
+  "claim": "Within the sealed coverage-bounded cohort of seasoned, standard-concept-computable SEC registrant CIK histories, the 455-day verifiable filing-persistence rate is higher for the frozen pre-anchor revenue/cash-flow trigger-positive group than for the fully observed trigger-negative group.",
+  "forbiddenClaims": [
+    "FULL_US_MARKET",
+    "SURVIVORSHIP_SAFE",
+    "INVESTABLE",
+    "STOCK_RETURN",
+    "PRE_BREAKOUT_PERFORMANCE",
+    "H_LATE",
+    "H_FEM",
+    "ORIGINAL_V4_RESULT",
+    "HUMAN_ATTESTED",
+    "CAUSAL_EFFECT",
+    "CIK_IS_PERMANENT_SECURITY_ID"
+  ],
+  "outcomeBarrier": {
+    "outcomesAccessed": false,
+    "postAnchorFactsMaterialized": false,
+    "remotePreOutcomeCheckpointRequired": true,
+    "separateExposureAndEndpointPassesRequired": true
+  }
+}
