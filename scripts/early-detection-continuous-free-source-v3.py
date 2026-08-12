@@ -23,7 +23,7 @@ BASE_PATH = ROOT / "scripts" / "early-detection-continuous-free-source.py"
 TEST_PATH = ROOT / "tests" / "early-detection-continuous-free-source-v3.test.js"
 AUTHORIZED_REMOTE = "https://github.com/Karlryl/screener-data.git"
 AUTHORIZED_BRANCH = "refs/heads/codex/early-detection-v4-gates-20260810"
-AUTHORIZED_PARENT_COMMIT = "151ddc13669f5ebf36dbf9587bd466c95de44bba"
+MIGRATION_PARENT_COMMIT = "151ddc13669f5ebf36dbf9587bd466c95de44bba"
 USER_READY_REASON = "FREE-ACCESS-ATTESTED"
 USER_READY_NOTE = "NO_PAYMENT_DETAILS;NO_TRIAL;FREE_CREDENTIAL_LOCAL_ONLY;NO_SECRET_IN_EVENT"
 FINAL_LICENSES = {"PUBLIC_DOMAIN", "FREE_INTERNAL_USE_ALLOWED"}
@@ -74,7 +74,7 @@ def git_commit_authorized(commit: str) -> str:
         if remote_ref != AUTHORIZED_BRANCH:
             fail("authorized remote branch ref changed")
         subprocess.run(
-            ["git", "merge-base", "--is-ancestor", AUTHORIZED_PARENT_COMMIT, resolved],
+            ["git", "merge-base", "--is-ancestor", MIGRATION_PARENT_COMMIT, resolved],
             cwd=ROOT, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
         subprocess.run(
@@ -140,7 +140,7 @@ def validate_contracts() -> dict[str, Any]:
     contracts = BASE_VALIDATE_CONTRACTS()
     if base.git_text("remote", "get-url", "origin") != AUTHORIZED_REMOTE:
         fail("authorized repository remote changed")
-    git_commit_authorized(AUTHORIZED_PARENT_COMMIT)
+    git_commit_authorized(MIGRATION_PARENT_COMMIT)
     validate_hypothesis_blindness(contracts["hypotheses"])
     contracts["rawBindings"]["controller"] = base.file_sha256(Path(__file__).resolve())
     contracts["rawBindings"]["controllerTest"] = base.file_sha256(TEST_PATH)
@@ -462,7 +462,7 @@ def self_test() -> dict[str, Any]:
     }}]
     account_reachable = user_access_attested(fake_events, "Q001-QUANTCONNECT-FREE-HANDSHAKE")
     pending_license_rejected = "LICENSE_REVIEW_PENDING" not in FINAL_LICENSES and "QUARANTINE_ONLY" not in FINAL_LICENSES
-    remote_anchored = base.git_text("remote","get-url","origin") == AUTHORIZED_REMOTE and git_commit_authorized(AUTHORIZED_PARENT_COMMIT) == AUTHORIZED_PARENT_COMMIT
+    remote_anchored = base.git_text("remote","get-url","origin") == AUTHORIZED_REMOTE and git_commit_authorized(MIGRATION_PARENT_COMMIT) == MIGRATION_PARENT_COMMIT
     return {
         "status":"PASS", "syntheticFixtureOnly":True, "inputBundleBound":bool(contracts["inputBundleSha256"]),
         "nestedHypothesisOutcomeRejected":hypothesis_rejected,
