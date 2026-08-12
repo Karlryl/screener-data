@@ -1,0 +1,94 @@
+{
+  "schema": "early-detection-quantconnect-free-cloud-rights-disposition/v1",
+  "createdAt": "2026-08-12T20:00:13Z",
+  "taskId": "Q002-QUANTCONNECT-FREE-CLOUD-RIGHTS-DISPOSITION",
+  "sourceId": "QUANTCONNECT_FREE_CLOUD",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the official logging, dataset-export and licensing boundary after the outcome-blind cloud feasibility pilot, without promoting any logged dataset metadata.",
+  "supersededExecutionPath": {
+    "contractPath": "research/early-detection-v4/quantconnect-free-cloud-pilot-contract-v6.json",
+    "contractRawSha256": "ca64e08fe07e9952e0cf49eac0dcd06eba474b6f488494dcaaba7d501165b494",
+    "status": "SUPERSEDED_FOR_FUTURE_EXECUTION_RIGHTS_ONLY",
+    "historicalProtocolBytesRemainAppendOnly": true
+  },
+  "officialEvidence": [
+    {
+      "url": "https://www.quantconnect.com/docs/v2/writing-algorithms/logging",
+      "observedAt": "2026-08-12T20:00:13Z",
+      "verifiedFact": "QuantConnect states that logging dataset information is not permitted."
+    },
+    {
+      "url": "https://www.quantconnect.com/docs/v2/cloud-platform/organizations/resources",
+      "observedAt": "2026-08-12T20:00:13Z",
+      "verifiedFact": "QuantConnect states that logs may not be used to export dataset information; the Free tier has one backtest node, one research node, 10KB logs per backtest and 3MB logs per day."
+    },
+    {
+      "url": "https://www.quantconnect.com/docs/v2/cloud-platform/datasets/licensing",
+      "observedAt": "2026-08-12T20:00:13Z",
+      "verifiedFact": "QuantConnect states that most datasets cannot be freely redistributed and that a Download license is for internal LEAN use only, cannot be redistributed or converted, and is priced per file or day."
+    },
+    {
+      "url": "https://www.quantconnect.com/terms/",
+      "observedAt": "2026-08-12T20:00:13Z",
+      "verifiedFact": "QuantConnect platform terms remain controlling; free cloud access is not a grant to export dataset-derived rows through logs."
+    }
+  ],
+  "operationalObservation": {
+    "freeAccountAvailable": true,
+    "paymentDetailsUsed": false,
+    "trialUsed": false,
+    "operatorDrivenCloudRunsObserved": 2,
+    "cloudExecutionTechnicallyCompleted": true,
+    "rawLogBytesPublished": false,
+    "rawLogBytesCommitted": false,
+    "localLogRetentionDisposition": "PRIVATE_QUARANTINE_DO_NOT_COMMIT_OR_PARSE_FOR_STUDY",
+    "metadataRowsPromoted": 0,
+    "studyCreditGranted": false
+  },
+  "decision": {
+    "disposition": "QUARANTINED_LOG_EXPORT_NOT_PERMITTED",
+    "futureMetadataLoggingAuthorized": false,
+    "cloudComputeFeasibilityObserved": true,
+    "cloudComputeMayContinueOnlyWithoutDatasetInformationExport": true,
+    "dataSemanticsEligibleForStudy": false,
+    "identityCapabilityClosed": false,
+    "coverageCapabilityClosed": false,
+    "corporateActionCapabilityClosed": false,
+    "terminalSessionCapabilityClosed": false,
+    "terminalPaymentCapabilityClosed": false,
+    "nextAction": "Use SEC, FINRA and other rights-cleared primary sources for durable row-level evidence; retain QuantConnect only as a non-exporting cloud-compute feasibility lane unless explicit written export rights are obtained."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "FREE_CLOUD_COMPUTE_FEASIBILITY_OBSERVED",
+      "OFFICIAL_ACCESS_AND_EXPORT_RIGHTS_DISPOSITION"
+    ],
+    "forbidden": [
+      "QUANTCONNECT_METADATA_STUDY_EVIDENCE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COVERAGE_RATE",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_SESSION_OR_PAYMENT",
+      "PRICE_RETURN_OR_OUTCOME",
+      "FULL_MARKET_OR_SURVIVORSHIP_SAFE_COVERAGE",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "futureMetadataLoggingAuthorized": false,
+    "rawLogsPublished": false,
+    "loggedMetadataPromoted": false,
+    "dataSemanticsEligibleForStudy": false,
+    "identityResolved": false,
+    "coverageClaimed": false,
+    "corporateActionsComplete": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "10c35d442ed9249fd94680a03566b5a1ce9f13a4f30b346cb4abc0db697c8283"
+}
