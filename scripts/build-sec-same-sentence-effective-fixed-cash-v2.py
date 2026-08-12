@@ -520,7 +520,7 @@ def main() -> int:
             implementation = implementation_bindings(report.get("implementationBindings", {}).get("buildBaseCommit"), remote_required=True)
             if git("cat-file", "-e", f"{implementation['buildBaseCommit']}:{OUTPUT.relative_to(ROOT).as_posix()}") == "":
                 fail("output existed at build base")
-            introduction = git("log", "--diff-filter=A", "--format=%H", "--", OUTPUT.relative_to(ROOT).as_posix()).splitlines()
+            introduction = subprocess.run(["git", "log", "--diff-filter=A", "--format=%H", "--", OUTPUT.relative_to(ROOT).as_posix()], cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8").stdout.strip().splitlines()
             if introduction and (len(introduction) != 1 or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [introduction[0], implementation["buildBaseCommit"]]):
                 fail("output introduction lineage changed")
             validate_report(report, contract, source, implementation)
