@@ -1,0 +1,71 @@
+{
+  "schema": "finra-q004-accounted-handshake-contract/v3",
+  "createdAt": "2026-08-12T19:02:37Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Repeat exactly one zero-cost FINRA Public authentication handshake under a correctly ordered pre-request contract; preserve but quarantine the V2 timeline-invalid evidence.",
+  "quarantinedPredecessor": {
+    "contractPath": "research/early-detection-v4/finra-q004-accounted-handshake-contract-v2.json",
+    "contractRawSha256": "449139e652d4b76cf570c232764f018a868f1cf7c99f27952d3ef57212d89798",
+    "contractCreatedAt": "2026-08-12T19:04:00Z",
+    "outputPath": "reports/early-detection/finra-q004-public-credential-handshake-v2.json",
+    "outputRawSha256": "b57bc675a219317642bb740f80503e0d94420972dc233cc7a5641547859df394",
+    "outputCapturedAt": "2026-08-12T18:51:51Z",
+    "disposition": "QUARANTINED_INVALID_TIMELINE_ZERO_CREDIT",
+    "reason": "The V2 contract timestamp is later than its output capture timestamp. Authentication succeeded, but the evidence cannot establish pre-authorization."
+  },
+  "preAuthorization": {
+    "parentRemoteCommit": "8c1aca6688b8d266b261d685d70a72573e041a2f",
+    "remoteName": "origin",
+    "remoteBranch": "codex/early-detection-v4-gates-20260810",
+    "repository": "https://github.com/Karlryl/screener-data.git",
+    "baseImplementationPath": "scripts/run-finra-q004-accounted-handshake-v2.py",
+    "baseImplementationRawSha256": "983d346d04365c482aeb5b5247f14a68a328c280d5451f2274f5cecaf4bca5e3"
+  },
+  "accountContract": {
+    "userType": "INDIVIDUAL",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "monthlyUsageCapLabel": "10 GB",
+    "paymentDetailsRequired": false,
+    "trialUsed": false,
+    "paidCredentialTypesAllowed": false,
+    "credentialStoreTarget": "GrowthScreener/FINRA/PublicAPI",
+    "credentialStore": "WINDOWS_CREDENTIAL_MANAGER"
+  },
+  "handshakeContract": {
+    "tokenEndpoint": "https://ews.fip.finra.org/fip/rest/ews/oauth2/access_token?grant_type=client_credentials",
+    "method": "POST",
+    "grantType": "client_credentials",
+    "maximumRequests": 1,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "productionDataRequestsAllowed": false,
+    "metadataRequestsAllowed": false,
+    "accessTokenMayBePersisted": false,
+    "accessTokenMayBePrinted": false
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-public-credential-handshake-v3.json",
+    "writeNewOnly": true,
+    "canonicalJson": true,
+    "utf8NoBom": true,
+    "lfFinalNewline": true,
+    "secretsCaptured": false,
+    "outcomesAccessed": false,
+    "productionRowsCaptured": 0
+  },
+  "claimLocks": {
+    "historicalIdentityIntervalsComplete": false,
+    "terminalPaymentsComplete": false,
+    "terminalSessionsComplete": false,
+    "adjustedOhlcvComplete": false,
+    "corporateActionsComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "e285a92612858c074b6c6d904157bae5c0cc900a7db2c33dfa7fa4b6259cb559"
+}
