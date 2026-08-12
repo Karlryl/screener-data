@@ -1,0 +1,30 @@
+{
+  "schema": "sec-cik-growth-persistence-endpoint-preoutcome-seal/v1",
+  "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+  "status": "SEALED_ENDPOINT_CODE_PRE_OUTCOME",
+  "sealedAt": "2026-08-12T06:17:14Z",
+  "stageACommit": "90a3ced32ce33005d8a023cc818c4eeab9e65d2c",
+  "artifacts": [
+    {"role": "SCOPE", "path": "reports/early-detection/sec-cik-growth-persistence-scope-v1.md", "sha256": "d8bc4bcc6ebbc5c8d1f5bbaa6af1ac8ac8b6380a1656483bdcd168b1600765fa"},
+    {"role": "CLAIM_CONTRACT", "path": "reports/early-detection/sec-cik-growth-persistence-claim-contract-v1.json", "sha256": "3212d024e9c82dfb8ea2702ca781351e5a2e5c773d97d534ba8c445a2926a388"},
+    {"role": "SELECTOR", "path": "scripts/early-detection-sec-cik-growth-persistence.py", "sha256": "e07bc9316c5c492ef13c684b9cf1d619860f9d997597606ba2807a4b26b7fd3a"},
+    {"role": "SOURCE_LINE", "path": "reports/early-detection/sec-cik-growth-persistence-source-line-v2.json", "sha256": "9898fbcf2fddb9f8716cf7a9a15a87f528ef9752d1008856cee979608ce472c9"},
+    {"role": "DATABASE_ATTESTATION", "path": "reports/early-detection/sec-cik-growth-persistence-database-attestation-v1.json", "sha256": "9a09b8b495f5cc9d2623d64ca425992b4b05801a0b57a83ef24adee434f13cdf"},
+    {"role": "EXPOSURE", "path": "reports/early-detection/sec-cik-growth-persistence-exposure-v3.json", "sha256": "9632586d332ad9a67a4c12e10f9716da9e533330e1b573506b738dd60eb75c7a"},
+    {"role": "EMPTY_LEDGER", "path": "reports/early-detection/sec-cik-growth-persistence-outcome-ledger-v1.json", "sha256": "02b79914b07ff3c08f05d490df701f95a2df7dcdb7702b139fb12bb0a6a090dd"},
+    {"role": "PRIOR_AUTHORIZATION", "path": "reports/early-detection/sec-cik-growth-persistence-remote-authorization-v4.json", "sha256": "081eda0b66bc7f01b6d6dbb9e6b035e32a772e9c4551aedb089bb79e777bd0cb"},
+    {"role": "ENDPOINT_RUNNER", "path": "scripts/early-detection-sec-cik-growth-persistence-endpoint.py", "sha256": "36eba61ad4025ffc97ac1b0f4f66b1f68dc3a7085db47c71ca4355d67691b918"},
+    {"role": "ENDPOINT_TEST", "path": "tests/early-detection-sec-cik-growth-persistence-endpoint.test.js", "sha256": "981f7f2807d1c9b9dbb3dcdc419f4e27d11cceb3ad99f1efa925413df5ead29c"},
+    {"role": "ENDPOINT_AUDIT_METHOD", "path": "reports/early-detection/sec-cik-growth-persistence-endpoint-ai-audit-method-v1.json", "sha256": "0d14e3b646c1fab925082f0673179ebb16cbf7ed5b68091854c8bb3cc94933c8"},
+    {"role": "ENDPOINT_AUDIT_DATA", "path": "reports/early-detection/sec-cik-growth-persistence-endpoint-ai-audit-data-v1.json", "sha256": "4f583505e646482e9e35135071fd3de798286e6af3adcbefb496109f7a239607"},
+    {"role": "ENDPOINT_AUDIT_COUNTEREXAMPLE", "path": "reports/early-detection/sec-cik-growth-persistence-endpoint-ai-audit-counterexample-v1.json", "sha256": "ffbd8f5a4edf0c81aabc87b135a38c4d8db2ba873326faf61d5de5f21e0244d7"}
+  ],
+  "priorAuthorizationSha256": "081eda0b66bc7f01b6d6dbb9e6b035e32a772e9c4551aedb089bb79e777bd0cb",
+  "exposureReportSha256": "5dbb2ecb17101a6e8f66eecc1d0890a4921c6d66342985db5a89c8575aab603a",
+  "outcomesAccessed": false,
+  "postAnchorFactsRead": false,
+  "postAnchorFactsMaterialized": false,
+  "analysisExecuted": false,
+  "humanAttestation": false,
+  "aiAuditOnly": true
+}
