@@ -1,0 +1,47 @@
+{
+  "schema": "early-detection-sec-terminal-wealth-original-inventory-contract/v3",
+  "createdAt": "2026-08-12T18:12:00Z",
+  "taskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "queueInput": {
+    "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+    "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+    "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+    "rows": 44352
+  },
+  "blobInput": {
+    "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+    "expectedBlobCount": 27438,
+    "expectedBlobBytes": 326221948,
+    "expectedUniqueAccessions": 27427,
+    "expectedDuplicateAccessions": 11,
+    "expectedTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f",
+    "contentAddressPolicy": "FILENAME_STEM_EQUALS_SHA256",
+    "accessionSource": "EXACTLY_ONE_ACCESSION_LINE_INSIDE_EXACTLY_ONE_BALANCED_SEC_HEADER_BLOCK"
+  },
+  "expectedInventory": {
+    "localPrimaryPresent": 44330,
+    "ambiguousMultipleLocalBlobs": 22,
+    "fetchRequired": 0,
+    "queueUniqueAccessions": 27427
+  },
+  "statusSemantics": {
+    "LOCAL_PRIMARY_PRESENT": "exactly one content-addressed local SEC original has exactly one accession field inside its sole balanced SEC-HEADER block and it equals the queue accession",
+    "AMBIGUOUS_MULTIPLE_LOCAL_BLOBS": "more than one different content-addressed local SEC original has the same exact SEC-header accession; no blob is preferred",
+    "FETCH_REQUIRED": "no structurally valid content-addressed local SEC original has the queue accession"
+  },
+  "authorizedImplementation": {
+    "builderPath": "scripts/build-sec-terminal-wealth-original-inventory-v3.py",
+    "testPath": "tests/build-sec-terminal-wealth-original-inventory-v3.test.js",
+    "outputPath": "reports/early-detection/sec-terminal-wealth-original-inventory-v3.json"
+  },
+  "claimLocks": {
+    "documentPresenceIsTerminalWealth": false,
+    "terminalWealthComplete": false,
+    "identityResolved": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false,
+    "filingContentsInterpreted": false
+  }
+}
