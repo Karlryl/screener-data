@@ -1,0 +1,126 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-resume-contract/v1",
+  "createdAt": "2026-08-12T21:50:00Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Provide a hash-bound append-only resume view over later source milestones without mutating or reinterpreting the frozen V12 state machine.",
+  "baseState": {
+    "path": "state/early-detection-free-source-state-v12.json",
+    "rawSha256": "8e652e4ebb711a7cbe065799fc74fe3587d389cc313870cfa6d4a7960a78c700",
+    "stateSha256": "4b08d22993e31ff24558b76a9739aab8b180eb177f3dd2c3bc6bfaa44cba0439",
+    "introductionCommit": "51ee7e4dffcbe543125d371faaf10cf18b9027cd",
+    "supersededOperationalPriorityOnly": true,
+    "scientificStateRemainsAppendOnly": true
+  },
+  "milestones": [
+    {
+      "milestoneId": "QUANTCONNECT-RIGHTS-DISPOSITION",
+      "sourceId": "QUANTCONNECT_FREE_CLOUD",
+      "taskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+      "path": "research/early-detection-v4/quantconnect-free-cloud-rights-disposition-contract-v1.json",
+      "rawSha256": "0676fa88d4ad76f8a4a5eb951d2a3d529e25840acf11a7cdb484adc309d39c8e",
+      "selfSha256": "10c35d442ed9249fd94680a03566b5a1ce9f13a4f30b346cb4abc0db697c8283",
+      "introductionCommit": "a9c23d12dd755435e1734982c5bfe802416a5c00",
+      "operationalState": "BLOCKED_BY_EXPORT_RIGHTS",
+      "nextActionClass": "NO_AUTONOMOUS_EXECUTION_UNTIL_WRITTEN_EXPORT_RIGHTS"
+    },
+    {
+      "milestoneId": "FINRA-HISTORICAL-CAPTURE",
+      "sourceId": "FINRA_OTC_PRIMARY",
+      "taskId": "Q004-FINRA-OTC-CATALOG",
+      "path": "reports/early-detection/finra-q004-historical-crawl-manifest-v3.json",
+      "rawSha256": "2f266d063d5c05df53d635afcb922d0775d0345005869955b41fece3b9502580",
+      "selfSha256": "caff5b9863516992222f9b58690cfad31df700441eeaf2fe3c41b356e641a09f",
+      "introductionCommit": "8ad108bc6d135e313a001364deb4a87df643af0f",
+      "operationalState": "AVAILABLE_SCOPE_CAPTURED_AND_VERIFIED",
+      "nextActionClass": "RECONCILE_2016_2024_ROWS_PRE2016_REMAINS_UNRESOLVED"
+    },
+    {
+      "milestoneId": "FINRA-CAPABILITY-PROFILE",
+      "sourceId": "FINRA_OTC_PRIMARY",
+      "taskId": "Q004-FINRA-OTC-CATALOG",
+      "path": "reports/early-detection/finra-q004-historical-capability-profile-v1.json",
+      "rawSha256": "70e47412b1711492cf462d04029e624c52730bdd1b3b8fa9acc5fe6df37d4f2b",
+      "selfSha256": "f89fa96047f25190684a904bace88b081602464fe8a395554854bd9a385a8b21",
+      "introductionCommit": "d72e0218e4959ad3103d454a5bb865888e7a18bf",
+      "operationalState": "AGGREGATE_PROFILE_VERIFIED",
+      "nextActionClass": "ROW_LEVEL_RECONCILIATION_PRIVATE_ONLY"
+    },
+    {
+      "milestoneId": "OPENFIGI-FIGI-POINT-EVIDENCE",
+      "sourceId": "OPENFIGI_FREE",
+      "taskId": "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+      "path": "reports/early-detection/openfigi-figi-only-capture-v2.json",
+      "rawSha256": "e5c45135bef6d8322213f0081fbbcb780e3682a5f38a07c2df01127043546f30",
+      "selfSha256": "b3c5fc5a33d747db63961775e0a96209282d33c9b5acb76d622da8b774d997b9",
+      "introductionCommit": "1e38a0c604a2249ca3874d4178953eb000b4957f",
+      "operationalState": "CURRENT_POINT_FIGI_EVIDENCE_ONLY",
+      "nextActionClass": "DO_NOT_INFER_HISTORICAL_INTERVALS"
+    },
+    {
+      "milestoneId": "NASDAQ-SPARSE-ARCHIVE",
+      "sourceId": "NASDAQ_SYMBOL_DIRECTORY_ARCHIVE",
+      "taskId": "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+      "path": "reports/early-detection/nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+      "rawSha256": "c653dd26a12e2c5adb149f2035c22c293b595b576d7a02bd04a6f31aa2a080fd",
+      "selfSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23",
+      "introductionCommit": "d3e540c642066b69a1618be986948c05fcbc9764",
+      "operationalState": "SPARSE_POSITIVE_ASOF_EVIDENCE_VERIFIED",
+      "nextActionClass": "GAP_MATRIX_AND_PRIMARY_EVENT_RECONCILIATION"
+    },
+    {
+      "milestoneId": "SEC-TERMINAL-CANDIDATE-EXTRACTION",
+      "sourceId": "SEC_EDGAR_PRIMARY",
+      "taskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "selfSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000",
+      "introductionCommit": "96731659935f032e6f40cd5713794f48d740da25",
+      "operationalState": "CANDIDATE_VALUES_EXTRACTED_MANUAL_REVIEW_REQUIRED",
+      "nextActionClass": "PRIMARY_DOCUMENT_RECONCILIATION_WITHOUT_PAYMENT_CREDIT"
+    }
+  ],
+  "nextQueue": [
+    {
+      "rank": 1,
+      "workId": "SEC-TERMINAL-PRIMARY-RECONCILIATION",
+      "entryCriterion": "SEC_CANDIDATE_EXTRACTION_BOUND",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 2,
+      "workId": "FINRA-SEC-EVENT-CROSSWALK-2016-2024",
+      "entryCriterion": "PRIVATE_FINRA_CAS_AND_SEC_QUEUE_BOUND",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 3,
+      "workId": "NASDAQ-SPARSE-COVERAGE-GAP-MATRIX",
+      "entryCriterion": "NASDAQ_ARCHIVE_REMOTE_BOUND",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 4,
+      "workId": "TIINGO-FREE-ENTITLEMENT",
+      "entryCriterion": "USER_CREATES_FREE_ACCOUNT_WITHOUT_CARD_OR_TRIAL",
+      "workClass": "USER_ACTION_REQUIRED"
+    },
+    {
+      "rank": 5,
+      "workId": "BUSINESS-QUANT-FREE-HANDSHAKE",
+      "entryCriterion": "USER_CREATES_FREE_ACCOUNT_WITHOUT_CARD_OR_TRIAL",
+      "workClass": "USER_ACTION_REQUIRED"
+    }
+  ],
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4ResultComputationAllowed": false,
+    "publicAiAppendOnly": true,
+    "secCikStudyAppendOnly": true,
+    "outcomesAccessed": false,
+    "humanAttestation": false,
+    "addonMilestonesGrantOriginalV4GateCredit": false
+  },
+  "resumeSha256": "2eb939eb3dee6e5318bc0fe6344e84fba1cfbc565d4ea2a7f0e88bb0b255132e"
+}
