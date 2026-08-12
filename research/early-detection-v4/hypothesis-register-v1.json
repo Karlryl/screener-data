@@ -1,0 +1,87 @@
+{
+  "schema": "early-detection-hypothesis-register/v1",
+  "createdAt": "2026-08-12T12:26:43Z",
+  "track": "ADDON_PROPOSALS_ONLY",
+  "generationBoundary": {
+    "maximumDevelopmentDate": "2020-12-31",
+    "reservedOriginalV4Period": "2021-01-01/2024-12-31",
+    "reservedPeriodMayBeUsedForIdeaGeneration": false,
+    "secCikCompletedStudyThresholdOptimizationForbidden": true,
+    "originalV4GateCredit": false,
+    "humanAttestation": false,
+    "outcomesAccessed": false
+  },
+  "statuses": ["PROPOSAL", "PREREGISTERED", "TESTED", "REJECTED"],
+  "requiredFields": [
+    "hypothesisId",
+    "familyId",
+    "mechanism",
+    "primaryClaim",
+    "requiredData",
+    "expectedSign",
+    "falsificationCriterion",
+    "developmentPeriod",
+    "validationPeriod",
+    "multiplicityFamily",
+    "status",
+    "forbiddenClaims"
+  ],
+  "hypotheses": [
+    {
+      "hypothesisId": "HYP-FILING-TIMELINESS-001",
+      "familyId": "FILING_TIMELINESS",
+      "mechanism": "Faster filing availability may identify operational reporting discipline without using market returns.",
+      "primaryClaim": "Pre-2021 SEC registrants with consistently shorter accepted-at filing lags show higher subsequent filing continuity than otherwise comparable registrants.",
+      "requiredData": ["SEC_ACCEPTED_AT", "FISCAL_PERIOD_END", "FORM_TYPE", "FILING_CONTINUITY"],
+      "expectedSign": "POSITIVE",
+      "falsificationCriterion": "The preregistered interval for the lag-stratified continuity difference includes no practically positive effect or points negative.",
+      "developmentPeriod": "2009-01-01/2016-12-31",
+      "validationPeriod": "2017-01-01/2020-12-31",
+      "multiplicityFamily": "PUBLIC_EVIDENCE_ADDONS_V1",
+      "status": "PROPOSAL",
+      "forbiddenClaims": ["STOCK_RETURN", "FULL_MARKET", "ORIGINAL_V4", "H_LATE", "H_FEM", "CAUSALITY"]
+    },
+    {
+      "hypothesisId": "HYP-AMENDMENT-FREEDOM-001",
+      "familyId": "AMENDMENT_FREEDOM",
+      "mechanism": "An amendment-free filing path may proxy reporting-process stability.",
+      "primaryClaim": "Pre-2021 registrants without later amendments in the frozen observation window show higher subsequent standard-concept ascertainment.",
+      "requiredData": ["ORIGINAL_FORMS", "AMENDMENT_FORMS", "ACCEPTED_AT", "STANDARD_CONCEPT_COVERAGE"],
+      "expectedSign": "POSITIVE",
+      "falsificationCriterion": "The preregistered ascertainment difference is not positive after frozen missingness rules.",
+      "developmentPeriod": "2009-01-01/2016-12-31",
+      "validationPeriod": "2017-01-01/2020-12-31",
+      "multiplicityFamily": "PUBLIC_EVIDENCE_ADDONS_V1",
+      "status": "PROPOSAL",
+      "forbiddenClaims": ["STOCK_RETURN", "FULL_MARKET", "ORIGINAL_V4", "H_LATE", "H_FEM", "CAUSALITY"]
+    },
+    {
+      "hypothesisId": "HYP-IDENTITY-MISSINGNESS-001",
+      "familyId": "IDENTITY_ACTION_MISSINGNESS",
+      "mechanism": "Identity and action missingness may cluster by exchange, era, size proxy and terminal event class, creating non-random survivorship exposure.",
+      "primaryClaim": "The pre-2021 probability of an unresolved identity or terminal-wealth cell differs materially across frozen source-era and event-class strata.",
+      "requiredData": ["EVIDENCE_CELL_STATUS", "SOURCE_ERA", "EVENT_CLASS", "EXCHANGE_MIC", "NON_RETURN_SIZE_PROXY"],
+      "expectedSign": "HETEROGENEOUS",
+      "falsificationCriterion": "All preregistered stratum contrasts remain below the practical heterogeneity threshold after multiplicity control.",
+      "developmentPeriod": "2009-01-01/2016-12-31",
+      "validationPeriod": "2017-01-01/2020-12-31",
+      "multiplicityFamily": "PUBLIC_EVIDENCE_ADDONS_V1",
+      "status": "PROPOSAL",
+      "forbiddenClaims": ["STOCK_RETURN", "FULL_MARKET", "ORIGINAL_V4", "H_LATE", "H_FEM", "CAUSALITY"]
+    },
+    {
+      "hypothesisId": "HYP-DELISTING-SENSITIVITY-001",
+      "familyId": "DELISTING_SURVIVORSHIP_SENSITIVITY",
+      "mechanism": "Terminal-wealth omission can distort retrospective conclusions even when last-session prices agree across vendors.",
+      "primaryClaim": "In a separately sealed pre-2021 terminal-event cohort, inference categories change when documented post-session payments and recoveries are included instead of last-session value alone.",
+      "requiredData": ["LAST_CONSOLIDATED_SESSION", "CASH_CONSIDERATION", "STOCK_CONSIDERATION", "LIQUIDATION_DISTRIBUTIONS", "RECOVERIES"],
+      "expectedSign": "NONZERO_SENSITIVITY",
+      "falsificationCriterion": "No preregistered inference category changes and the sensitivity interval stays below the practical threshold.",
+      "developmentPeriod": "2009-01-01/2016-12-31",
+      "validationPeriod": "2017-01-01/2020-12-31",
+      "multiplicityFamily": "PUBLIC_EVIDENCE_ADDONS_V1",
+      "status": "PROPOSAL",
+      "forbiddenClaims": ["ORIGINAL_V4", "H_LATE", "H_FEM", "FULL_MARKET_WITHOUT_COMPLETE_COVERAGE", "CAUSALITY"]
+    }
+  ]
+}

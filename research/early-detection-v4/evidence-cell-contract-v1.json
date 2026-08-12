@@ -1,0 +1,86 @@
+{
+  "schema": "early-detection-evidence-cell-contract/v1",
+  "studyBoundary": {
+    "originalV4GateCreditRequiresExactSealedSemantics": true,
+    "originalV4OutcomesLocked": true,
+    "publicAiAppendOnly": true,
+    "secCikStudyAppendOnly": true,
+    "humanAttestationByAgentsForbidden": true
+  },
+  "cellKey": [
+    "entityId",
+    "securityId",
+    "listingId",
+    "evaluationDate",
+    "semantic"
+  ],
+  "semantics": [
+    "HISTORICAL_VALIDITY_INTERVAL",
+    "CONSOLIDATED_ADJUSTED_OHLCV",
+    "COMPLETE_CORPORATE_ACTIONS",
+    "OBSERVED_TERMINAL_SESSION",
+    "TERMINAL_WEALTH"
+  ],
+  "requiredEvidenceFields": [
+    "sourceId",
+    "sourceRecordId",
+    "sourceUrl",
+    "retrievedAt",
+    "knownAt",
+    "validFrom",
+    "validTo",
+    "eventDates",
+    "entityId",
+    "securityId",
+    "listingId",
+    "cik",
+    "figi",
+    "permId",
+    "exchangeMic",
+    "rawSha256",
+    "termsSnapshotSha256",
+    "accountTier",
+    "licenseDisposition",
+    "conflictGroup",
+    "status"
+  ],
+  "cellStatuses": [
+    "QUARANTINE_EVIDENCE",
+    "UNRESOLVED",
+    "CONFLICT",
+    "NOT_APPLICABLE_PROVEN",
+    "RESOLVED"
+  ],
+  "sourceAuthorityOrder": [
+    "PRIMARY_EXCHANGE_REGULATOR_TRANSACTION_DOCUMENT",
+    "CONSOLIDATED_SIP_OR_SECURITY_MASTER",
+    "VENDOR_CORPORATE_ACTION",
+    "ARCHIVE_COPY",
+    "COMMUNITY_MIRROR"
+  ],
+  "forbiddenResolutionMethods": [
+    "TICKER_ONLY_JOIN",
+    "SOURCE_MAJORITY_VOTE",
+    "CHART_PIXEL_INFERENCE",
+    "NOT_FOUND_AS_COMPLETE",
+    "CURRENT_SYMBOL_BACKFILL",
+    "POST_OUTCOME_REPLACEMENT"
+  ],
+  "terminalWealthComponents": [
+    "LAST_CONSOLIDATED_SESSION_VALUE",
+    "POST_SESSION_CASH_CONSIDERATION",
+    "STOCK_CONSIDERATION",
+    "LIQUIDATION_DISTRIBUTIONS",
+    "BANKRUPTCY_RECOVERIES",
+    "OTC_CONTINUATION_VALUE"
+  ],
+  "completionRule": {
+    "unresolvedTargetCells": 0,
+    "notApplicableRequiresAuthorityEvidence": true,
+    "independentRebuildsRequired": 2,
+    "identicalRowSetsRequired": true,
+    "identicalHashesRequired": true,
+    "lawfulStorageAndInternalAnalysisRequired": true
+  },
+  "outcomesAccessed": false
+}

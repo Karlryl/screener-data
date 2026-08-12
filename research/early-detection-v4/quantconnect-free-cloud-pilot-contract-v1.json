@@ -1,0 +1,102 @@
+{
+  "schema": "early-detection-quantconnect-free-cloud-pilot-contract/v1",
+  "createdAt": "2026-08-12T13:30:00Z",
+  "taskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+  "sourceId": "QUANTCONNECT_FREE_CLOUD",
+  "track": "SHARED_OUTCOME_BLIND_INFRASTRUCTURE",
+  "purpose": "Test whether the free cloud tier can reproducibly supply row-level metadata evidence for identity history, consolidated daily availability, corporate actions and terminal sessions without exporting price values.",
+  "officialDocumentation": [
+    "https://www.quantconnect.com/docs/v2/cloud-platform/organizations/tier-features",
+    "https://www.quantconnect.com/docs/v2/cloud-platform/organizations/resources",
+    "https://www.quantconnect.com/docs/v2/cloud-platform/datasets/licensing",
+    "https://www.quantconnect.com/docs/v2/writing-algorithms/datasets/algoseek/us-equities",
+    "https://www.quantconnect.com/docs/v2/writing-algorithms/datasets/quantconnect/us-equity-security-master"
+  ],
+  "boundFiles": {
+    "casesPath": "research/early-detection-v4/quantconnect-free-cloud-pilot-cases-v1.json",
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "cloudScriptPath": "scripts/quantconnect-free-cloud-metadata-pilot-v1.py",
+    "cloudScriptRawSha256": "41b4895cbee27bd065186618311a7f0f97e470785d0a98c9dc0cb5faacc6a3c8",
+    "verifierPath": "scripts/verify-quantconnect-free-cloud-pilot-v1.py",
+    "verifierRawSha256": "d1ea57fa8772ea48b3975af353c24076790cc9f5f2c3aa34ee48bd1aef9d7c34",
+    "testPath": "tests/quantconnect-free-cloud-pilot-v1.test.js",
+    "testRawSha256": "b1f46fef84f032a9fafc1b1763e2188ead87b7ffb4b30a2d75cff6a31bda5688"
+  },
+  "executionBlockedUntil": [
+    "FREE_ACCOUNT_CONFIRMED",
+    "NO_PAYMENT_DETAILS_CONFIRMED",
+    "NO_TRIAL_CONFIRMED",
+    "TERMS_RAW_BYTES_CAPTURED",
+    "METADATA_LOG_EXPORT_ALLOWED",
+    "BOUND_FILE_HASHES_MATERIALIZED",
+    "CLOUD_SCRIPT_CASES_EMBEDDED_EXACTLY"
+  ],
+  "requiredRunParameters": {
+    "startDate": "2009-01-01",
+    "endDate": "2024-12-31",
+    "resolution": "DAILY",
+    "normalization": "RAW",
+    "extendedMarketHours": false,
+    "ordersAllowed": false,
+    "minimumIndependentRuns": 2
+  },
+  "requiredRowFields": [
+    "caseId",
+    "category",
+    "querySymbol",
+    "securityIdentifier",
+    "subscriptionAccepted",
+    "barCount",
+    "firstBarDate",
+    "lastBarDate",
+    "splitCount",
+    "dividendCount",
+    "symbolChangeCount",
+    "delistingWarningCount",
+    "delistedCount",
+    "errors"
+  ],
+  "forbiddenOutputFields": [
+    "OPEN",
+    "HIGH",
+    "LOW",
+    "CLOSE",
+    "ADJUSTED_CLOSE",
+    "VOLUME_VALUE",
+    "RETURN",
+    "PORTFOLIO_VALUE",
+    "TRADE",
+    "ORDER",
+    "ALPHA",
+    "P_VALUE",
+    "ORIGINAL_V4_RESULT"
+  ],
+  "passCriteria": [
+    "CASE_CLASSES_COVERED",
+    "CODE_AND_PARAMETERS_HASHED",
+    "ROW_LEVEL_EVIDENCE_SCHEMA_FROZEN",
+    "TWO_RUNS_IDENTICAL_EXCEPT_PROVIDER_ASSIGNED_RUN_IDS",
+    "NO_PRICE_VALUES_EXPORTED",
+    "NO_TERMINAL_PAYMENT_INFERENCE_FROM_LAST_BAR",
+    "ALL_GAPS_REPORTED_FAIL_CLOSED"
+  ],
+  "claimBoundary": {
+    "allowed": [
+      "FREE_TIER_CAPABILITY_COVERAGE",
+      "REPRODUCIBILITY",
+      "METADATA_AVAILABILITY",
+      "GAP_COUNTS"
+    ],
+    "forbidden": [
+      "ORIGINAL_V4_GATE_PASS",
+      "FULL_MARKET_COMPLETENESS",
+      "TERMINAL_WEALTH_COMPLETE",
+      "SURVIVORSHIP_SAFE_RETURN",
+      "H_LATE",
+      "H_FEM",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "humanAttestation": false,
+  "outcomesAccessed": false
+}

@@ -1,0 +1,373 @@
+{
+  "schema": "early-detection-continuous-free-source-registry/v1",
+  "createdAt": "2026-08-12T07:00:00Z",
+  "appendOnly": true,
+  "costPolicy": {
+    "mustBeFree": true,
+    "paymentDetailsAllowed": false,
+    "trialAllowed": false,
+    "multipleAccountsForLimitEvasionAllowed": false,
+    "secretsInRepositoryAllowed": false
+  },
+  "capabilityKeys": [
+    "HISTORICAL_VALIDITY_INTERVAL",
+    "CONSOLIDATED_ADJUSTED_OHLCV",
+    "COMPLETE_CORPORATE_ACTIONS",
+    "OBSERVED_TERMINAL_SESSION",
+    "TERMINAL_WEALTH"
+  ],
+  "sources": [
+    {
+      "sourceId": "QUANTCONNECT_FREE_CLOUD",
+      "name": "QuantConnect Free Cloud with US Equity Security Master",
+      "authority": "LICENSED_CONSOLIDATED_CLOUD_PLATFORM",
+      "priority": 100,
+      "officialUrls": [
+        "https://www.quantconnect.com/docs/v2/cloud-platform/organizations/tier-features",
+        "https://www.quantconnect.com/docs/v2/writing-algorithms/datasets/algoseek/us-equities",
+        "https://www.quantconnect.com/docs/v2/writing-algorithms/datasets/quantconnect/us-equity-security-master"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": true
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "POTENTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "POTENTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "POTENTIAL",
+        "OBSERVED_TERMINAL_SESSION": "POTENTIAL",
+        "TERMINAL_WEALTH": "PARTIAL"
+      },
+      "exportRisk": "Raw-data export is license constrained; reproducible row-level cloud evidence must be proven by the pilot.",
+      "licenseRisk": "Free cloud use and permissible exported evidence require an exact terms snapshot.",
+      "qualificationState": "ACCOUNT_AND_50_CASE_PILOT_PENDING"
+    },
+    {
+      "sourceId": "TIINGO_FREE",
+      "name": "Tiingo End-of-Day Free Account",
+      "authority": "SECONDARY_VENDOR",
+      "priority": 94,
+      "officialUrls": [
+        "https://www.tiingo.com/documentation/end-of-day",
+        "https://www.tiingo.com/documentation/general"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "POTENTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "Private internal use may be allowed, redistribution is not assumed.",
+      "licenseRisk": "Actual free entitlement and retention terms must be captured after login.",
+      "qualificationState": "FREE_ENTITLEMENT_HANDSHAKE_PENDING"
+    },
+    {
+      "sourceId": "OPENFIGI_FREE",
+      "name": "OpenFIGI API",
+      "authority": "IDENTIFIER_MAPPING_SERVICE",
+      "priority": 92,
+      "officialUrls": [
+        "https://www.openfigi.com/api/documentation"
+      ],
+      "access": {
+        "state": "READY",
+        "freeAccountRequired": false,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "NO",
+        "OBSERVED_TERMINAL_SESSION": "NO",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "Identifier mappings require rate-aware capture and source timestamps.",
+      "licenseRisk": "Mapping terms and attribution must be snapshotted before bulk use.",
+      "qualificationState": "THREE_CASE_NO_KEY_HANDSHAKE_READY"
+    },
+    {
+      "sourceId": "ALPHA_VANTAGE_FREE",
+      "name": "Alpha Vantage Free API",
+      "authority": "SECONDARY_VENDOR",
+      "priority": 40,
+      "officialUrls": [
+        "https://www.alphavantage.co/documentation/",
+        "https://www.alphavantage.co/support/"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "NO",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "The free daily endpoint is compact-only; full and adjusted daily history are premium and cannot serve Original-V4.",
+      "licenseRisk": "A free-key handshake is useful only as a negative entitlement control and recent-data cross-check.",
+      "qualificationState": "LOW_PRIORITY_NEGATIVE_CONTROL_FREE_FULL_HISTORY_NOT_ENTITLED"
+    },
+    {
+      "sourceId": "BUSINESS_QUANT_FREE",
+      "name": "Business Quant Free API",
+      "authority": "SECONDARY_VENDOR",
+      "priority": 88,
+      "officialUrls": [
+        "https://businessquant.com/docs/api/universe",
+        "https://businessquant.com/docs/api/stocks-profile",
+        "https://businessquant.com/docs/api/quotes",
+        "https://businessquant.com/docs/api/corporate-actions",
+        "https://businessquant.com/pricing",
+        "https://businessquant.com/terms-of-use"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "Free quota is too small for an immediate full-market backfill.",
+      "licenseRisk": "Proprietary data and retention/export restrictions require private evidence-only use.",
+      "qualificationState": "DOCUMENTATION_AUDITED_ACCOUNT_HANDSHAKE_PENDING"
+    },
+    {
+      "sourceId": "SEC_EDGAR_PRIMARY",
+      "name": "SEC EDGAR APIs, bulk archives and transaction filings",
+      "authority": "PRIMARY_EXCHANGE_REGULATOR_TRANSACTION_DOCUMENT",
+      "priority": 98,
+      "officialUrls": [
+        "https://www.sec.gov/search-filings/edgar-application-programming-interfaces",
+        "https://www.sec.gov/about/developer-resources"
+      ],
+      "access": {
+        "state": "READY",
+        "freeAccountRequired": false,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "POTENTIAL"
+      },
+      "exportRisk": "Large filing corpus requires content-addressed, rate-compliant capture.",
+      "licenseRisk": "Public primary records; fair-access and filing provenance remain mandatory.",
+      "qualificationState": "EXISTING_STORE_VERIFIED_TERMINAL_WEALTH_QUEUE_READY"
+    },
+    {
+      "sourceId": "FINRA_OTC_PRIMARY",
+      "name": "FINRA OTC Daily List",
+      "authority": "PRIMARY_EXCHANGE_REGULATOR_TRANSACTION_DOCUMENT",
+      "priority": 96,
+      "officialUrls": [
+        "https://developer.finra.org/docs",
+        "https://otce.finra.org/otce/dailyList"
+      ],
+      "access": {
+        "state": "READY",
+        "freeAccountRequired": false,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "PARTIAL"
+      },
+      "exportRisk": "OTC scope and date coverage must never be generalized to the full listed market.",
+      "licenseRisk": "Public SRO data; endpoint terms and pagination must be captured.",
+      "qualificationState": "ACQUISITION_AND_PAGINATION_PENDING"
+    },
+    {
+      "sourceId": "US_EXCHANGE_PRIMARY_FILES",
+      "name": "Nasdaq, NYSE, NYSE American and Cboe public files",
+      "authority": "PRIMARY_EXCHANGE_REGULATOR_TRANSACTION_DOCUMENT",
+      "priority": 95,
+      "officialUrls": [
+        "https://www.nasdaqtrader.com/Trader.aspx?id=SymbolDirDefs",
+        "https://www.nyse.com/regulation/delistings",
+        "https://www.cboe.com/us/equities/market_statistics/listed_symbols/"
+      ],
+      "access": {
+        "state": "READY",
+        "freeAccountRequired": false,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "NO",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "PARTIAL"
+      },
+      "exportRisk": "Public current files and sparse archives do not imply historical completeness.",
+      "licenseRisk": "Each file family needs its own terms and archive-provenance snapshot.",
+      "qualificationState": "CATALOG_AND_ARCHIVE_EXHAUSTION_PENDING"
+    },
+    {
+      "sourceId": "FMP_FREE",
+      "name": "Financial Modeling Prep Free Tier",
+      "authority": "SECONDARY_VENDOR",
+      "priority": 72,
+      "officialUrls": [
+        "https://site.financialmodelingprep.com/developer/docs/pricing/",
+        "https://site.financialmodelingprep.com/developer/docs/stable"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "PARTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "Short free history is cross-check only.",
+      "licenseRisk": "Endpoint entitlements and limits require handshake.",
+      "qualificationState": "SUPPLEMENTAL_HANDSHAKE_PENDING"
+    },
+    {
+      "sourceId": "ALPACA_FREE",
+      "name": "Alpaca Free Market Data and Corporate Actions",
+      "authority": "BROKER_VENDOR",
+      "priority": 70,
+      "officialUrls": [
+        "https://docs.alpaca.markets/docs/about-market-data-api",
+        "https://docs.alpaca.markets/reference/corporateactions-1"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "PARTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "PARTIAL"
+      },
+      "exportRisk": "Free feed and history may be IEX-limited rather than consolidated SIP.",
+      "licenseRisk": "Free-account and market-data agreements need exact capture.",
+      "qualificationState": "SUPPLEMENTAL_HANDSHAKE_PENDING"
+    },
+    {
+      "sourceId": "SHORT_HISTORY_FREE_VENDORS",
+      "name": "SimFin, Twelve Data, EODHD, Marketstack and Massive free tiers",
+      "authority": "SECONDARY_VENDOR",
+      "priority": 60,
+      "officialUrls": [
+        "https://www.simfin.com/en/prices/",
+        "https://twelvedata.com/pricing",
+        "https://eodhd.com/financial-apis/quick-start-with-our-financial-data-apis",
+        "https://marketstack.com/pricing",
+        "https://www.massive.com/stocks"
+      ],
+      "access": {
+        "state": "USER_ACTION_REQUIRED",
+        "freeAccountRequired": true,
+        "freeApiKeyRequired": true,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": false
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "PARTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "NO"
+      },
+      "exportRisk": "Free history is too short for Original-V4 and is useful only for cross-checks or younger add-ons.",
+      "licenseRisk": "Each provider requires an independent terms and entitlement handshake.",
+      "qualificationState": "LOWER_PRIORITY_SUPPLEMENTAL_HANDSHAKES_PENDING"
+    },
+    {
+      "sourceId": "RESEARCH_ARCHIVES",
+      "name": "Dataverse, Zenodo, Figshare, OSF, ICPSR, AWS, BigQuery, Hugging Face, Kaggle and GitHub",
+      "authority": "COMMUNITY_MIRROR",
+      "priority": 50,
+      "officialUrls": [
+        "https://dataverse.org/",
+        "https://zenodo.org/",
+        "https://figshare.com/",
+        "https://osf.io/",
+        "https://registry.opendata.aws/",
+        "https://cloud.google.com/bigquery/public-data",
+        "https://huggingface.co/datasets",
+        "https://www.kaggle.com/datasets",
+        "https://github.com/"
+      ],
+      "access": {
+        "state": "READY",
+        "freeAccountRequired": false,
+        "freeApiKeyRequired": false,
+        "paymentDetailsRequired": false,
+        "browserAllowed": true,
+        "cloudOnlyPilotAllowed": true
+      },
+      "capabilities": {
+        "HISTORICAL_VALIDITY_INTERVAL": "PARTIAL",
+        "CONSOLIDATED_ADJUSTED_OHLCV": "PARTIAL",
+        "COMPLETE_CORPORATE_ACTIONS": "PARTIAL",
+        "OBSERVED_TERMINAL_SESSION": "PARTIAL",
+        "TERMINAL_WEALTH": "PARTIAL"
+      },
+      "exportRisk": "Every payload begins in quarantine; duplicate upstream feeds are not independent evidence.",
+      "licenseRisk": "Promotion requires provenance, explicit license, immutable raw bytes and primary-source reconciliation.",
+      "qualificationState": "CONTINUOUS_DISCOVERY_READY"
+    }
+  ],
+  "outcomesAccessed": false
+}
