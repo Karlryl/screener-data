@@ -1,0 +1,100 @@
+{
+  "schema": "early-detection-eodhd-free-prerequisite/v1",
+  "createdAt": "2026-08-12T20:42:59Z",
+  "taskId": "Q013-EODHD-FREE-HANDSHAKE",
+  "sourceId": "EODHD_FREE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze EODHD's free entitlement and deletion obligation before any account creation or provider-data capture.",
+  "officialEvidence": [
+    {
+      "url": "https://eodhd.com/financial-apis/quick-start-with-our-financial-data-apis",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "EODHD documents free registration without a credit card, a 20-call daily limit, EOD access for any ticker limited to the past year, and an exchange ticker list."
+    },
+    {
+      "url": "https://eodhd.com/financial-apis/terms-conditions",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "The terms permit private non-commercial storage and analysis only during an active subscription, prohibit redistribution, and require deletion of all provider-data copies within one month after termination or expiration."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "paymentCardRequired": false,
+    "dailyCallLimit": 20,
+    "eodHistoryMaximumYears": 1,
+    "exchangeTickerListAdvertised": true,
+    "full2009To2024HistoryAvailableFree": false,
+    "survivorshipSafeUniverseAdvertised": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "licenseDisposition": "PRIVATE_PERSONAL_NONCOMMERCIAL_NO_REDISTRIBUTION_DELETE_WITHIN_ONE_MONTH_AFTER_EXPIRY"
+  },
+  "retentionContract": {
+    "providerRowsMayEnterDurableResearchCorpus": false,
+    "providerRowsMayEnterGit": false,
+    "providerRowsMayEnterPermanentCas": false,
+    "providerDescriptionsMayBePublished": false,
+    "futurePilotMustBeEphemeral": true,
+    "futurePilotMustTrackAccountExpiry": true,
+    "futurePilotMustDeleteProviderDataWithinOneMonthAfterExpiry": true,
+    "publicArtifactMayContainOnlyDocumentationFactsAndNoProviderRows": true
+  },
+  "handshakeContract": {
+    "status": "DOCUMENTATION_ONLY_NO_ACCOUNT_REQUEST",
+    "productionRequestsAuthorized": false,
+    "maximumUniqueSymbols": 0,
+    "maximumRequests": 0,
+    "noAccountCreationRequested": true,
+    "noSecretRequested": true,
+    "noProviderRowsCaptured": true,
+    "noPricePublication": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noLastQuoteAsTerminalPayment": true
+  },
+  "decision": {
+    "disposition": "FREE_EPHEMERAL_RECENT_EOD_PILOT_NOT_DURABLE_EVIDENCE_ELIGIBLE",
+    "askKarlForAccountNow": false,
+    "originalV4CapabilityClosed": false,
+    "durableReproducibilityClosed": false,
+    "studyCredit": false,
+    "nextAction": "Do not consume user time or create an account while higher-value durable free lanes remain. Reconsider only for an explicitly ephemeral recent-data countercheck with a deletion ledger."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_RECENT_EOD_CAPABILITY_DOCUMENTATION",
+      "RETENTION_LIMITATION_DISPOSITION"
+    ],
+    "forbidden": [
+      "FULL_2009_TO_2024_HISTORY",
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_ADJUSTMENT_OR_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME_PUBLICATION",
+      "DURABLE_REPRODUCIBLE_EVIDENCE",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "providerRowsCaptured": false,
+    "providerRowsDurablyRetained": false,
+    "historicalIdentityResolved": false,
+    "completeAdjustmentChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "0e1777da40cc38c4e8af80ca565be18bd48849e86c8d03406a3b402088b5130e"
+}
