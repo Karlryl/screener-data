@@ -1,0 +1,99 @@
+{
+  "schema": "early-detection-nasdaq-public-vs-paid-access-disposition/v1",
+  "createdAt": "2026-08-12T20:39:00Z",
+  "taskId": "Q011-NASDAQ-PUBLIC-ACCESS-DISPOSITION",
+  "sourceId": "NASDAQ_TRADER_PUBLIC_AND_DAILY_LIST",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Separate Nasdaq's lawful public point-state files from its paid historical Daily List before any acquisition is attempted.",
+  "officialEvidence": [
+    {
+      "url": "https://nasdaqtrader.com/Trader.aspx?id=DailyListPD",
+      "observedAt": "2026-08-12T20:39:00Z",
+      "verifiedFact": "Nasdaq describes the Daily List as a monthly subscription with historical corporate-action data from 1999, distributed through secured website or FTP access after agreements and approval."
+    },
+    {
+      "url": "https://www.nasdaqtrader.com/TraderNews.aspx?id=nva2004-8",
+      "observedAt": "2026-08-12T20:39:00Z",
+      "verifiedFact": "Nasdaq removed the Daily List from public web and FTP areas and made it a fee-based secured service; it must not be treated as a free historical archive."
+    },
+    {
+      "url": "https://nasdaqtrader.com/Trader.aspx?id=SymbolDirDefs",
+      "observedAt": "2026-08-12T20:39:00Z",
+      "verifiedFact": "Nasdaq publishes current-day symbol-directory files through public FTP with generation timestamps; these are point-state files, not historical validity intervals."
+    },
+    {
+      "url": "https://nasdaqtrader.com/trader.aspx?id=symbollookup",
+      "observedAt": "2026-08-12T20:39:00Z",
+      "verifiedFact": "Nasdaq states that Events Data is available without further licensing restriction, while Symbol Lookup and Nasdaq Fund Network content remains internal non-commercial unless separately licensed."
+    }
+  ],
+  "accessClasses": {
+    "historicalDailyList": {
+      "costDisposition": "PAID_SUBSCRIPTION_REQUIRED",
+      "freeAcquisitionAuthorized": false,
+      "automatedAcquisitionAuthorized": false,
+      "studyUse": "PROHIBITED_PAID"
+    },
+    "publicSymbolDirectory": {
+      "costDisposition": "PUBLIC_NO_ACCOUNT",
+      "freeAcquisitionAuthorized": true,
+      "automatedAcquisitionAuthorized": true,
+      "studyUse": "CURRENT_POINT_STATE_ONLY_INTERNAL_NONCOMMERCIAL"
+    },
+    "publicNasdaqEventsData": {
+      "costDisposition": "PUBLIC_NO_FURTHER_LICENSE",
+      "freeAcquisitionAuthorized": true,
+      "automatedAcquisitionAuthorized": true,
+      "studyUse": "CURRENT_EVENT_POINT_EVIDENCE_ONLY"
+    }
+  },
+  "acquisitionBoundary": {
+    "productionRequestsAuthorized": false,
+    "futurePublicCaptureMayUseOnlyWhitelistedPublicFiles": true,
+    "futureCaptureMustStoreObservedAtAndFileGenerationTimestamp": true,
+    "historicalBackfillFromCurrentDirectoriesForbidden": true,
+    "dailyListLoginOrSubscriptionForbidden": true,
+    "cusipAcquisitionForbidden": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noPointStateAsHistoricalInterval": true,
+    "noEventDateAsTerminalWealth": true
+  },
+  "decision": {
+    "disposition": "PUBLIC_POINT_STATE_ELIGIBLE_PAID_HISTORICAL_DAILY_LIST_PROHIBITED",
+    "userActionRequired": false,
+    "historicalDailyListEligible": false,
+    "publicPointSnapshotEligibleAfterCaptureContract": true,
+    "originalV4CapabilityClosed": false,
+    "nextAction": "Build a separate append-only public point-snapshot capture for whitelisted Symbol Directory and Nasdaq Events files; never request Daily List credentials or payment."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "CURRENT_NASDAQ_LISTING_POINT_STATE",
+      "CURRENT_NASDAQ_EVENT_POINT_EVIDENCE"
+    ],
+    "forbidden": [
+      "HISTORICAL_DAILY_LIST_ACQUIRED_FREE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "historicalDailyListEligible": false,
+    "historicalIdentityResolved": false,
+    "completeCorporateActionChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "a286b3236db89fc59af85c735a572b60e1466c110e26a2ed28573b330bd22331"
+}
