@@ -514,8 +514,10 @@ def main() -> int:
             raw = OUTPUT.read_bytes()
             report = json.loads(raw)
             implementation = implementation_bindings(report.get("implementationBindings", {}).get("buildBaseCommit"), remote_required=True)
+            if git("cat-file", "-e", f"{implementation['buildBaseCommit']}:{OUTPUT.relative_to(ROOT).as_posix()}") == "":
+                fail("output existed at build base")
             introduction = git("log", "--diff-filter=A", "--format=%H", "--", OUTPUT.relative_to(ROOT).as_posix()).splitlines()
-            if len(introduction) != 1 or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [introduction[0], implementation["buildBaseCommit"]]:
+            if introduction and (len(introduction) != 1 or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [introduction[0], implementation["buildBaseCommit"]]):
                 fail("output introduction lineage changed")
             validate_report(report, contract, source, implementation)
             result = {"schema": "early-detection-sec-same-sentence-effective-fixed-cash-verification/v2", "status": "PASS", "rawSha256": sha(raw), "reportSha256": report["reportSha256"], "sourceRebuildVerified": True, "verifiedRows": 11, "outcomesAccessed": False}
