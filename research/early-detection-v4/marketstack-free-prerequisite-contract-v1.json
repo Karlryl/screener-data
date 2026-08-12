@@ -1,0 +1,104 @@
+{
+  "schema": "early-detection-marketstack-free-prerequisite/v1",
+  "createdAt": "2026-08-12T20:42:59Z",
+  "taskId": "Q014-MARKETSTACK-FREE-HANDSHAKE",
+  "sourceId": "MARKETSTACK_FREE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze Marketstack's one-year free entitlement and its shared Tiingo origin before any account request.",
+  "officialEvidence": [
+    {
+      "url": "https://marketstack.com/pricing",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "Marketstack publishes a free-forever USD 0 plan with 100 requests per month, end-of-day data, one year of history, splits, dividends and ticker metadata."
+    },
+    {
+      "url": "https://marketstack.com/pricing",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "Marketstack states that its United States exchange data is licensed and sourced from Tiingo, so Marketstack and Tiingo are not independent confirmations for US price and action rows."
+    },
+    {
+      "url": "https://www.ideracorp.com/legal/APILayer#tabs-2",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "Marketstack links its legal terms to the APILayer agreement; exact account entitlement and storage rights still require a pre-capture terms snapshot."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "freeForeverAdvertised": true,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "monthlyRequestLimit": 100,
+    "eodHistoryMaximumYears": 1,
+    "splitsAdvertised": true,
+    "dividendsAdvertised": true,
+    "tickerMetadataAdvertised": true,
+    "full2009To2024HistoryAvailableFree": false,
+    "survivorshipSafeUniverseAdvertised": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "usDataOrigin": "TIINGO_INC",
+    "licenseDisposition": "ACCOUNT_TERMS_SNAPSHOT_REQUIRED_BEFORE_PRIVATE_CAPTURE"
+  },
+  "independenceContract": {
+    "independentFromTiingoForUsData": false,
+    "marketstackAndTiingoMayCountAsTwoConfirmations": false,
+    "sharedOriginMustBeRecordedOnEveryUsEvidenceCell": true,
+    "providerMajorityVotingForbidden": true
+  },
+  "handshakeContract": {
+    "status": "DOCUMENTATION_ONLY_NO_ACCOUNT_REQUEST",
+    "productionRequestsAuthorized": false,
+    "maximumUniqueSymbols": 0,
+    "maximumRequests": 0,
+    "noAccountCreationRequested": true,
+    "noSecretRequested": true,
+    "noProviderRowsCaptured": true,
+    "noPricePublication": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noLastQuoteAsTerminalPayment": true
+  },
+  "decision": {
+    "disposition": "FREE_ONE_YEAR_SHARED_TIINGO_ORIGIN_LOW_PRIORITY_PILOT",
+    "askKarlForAccountNow": false,
+    "originalV4CapabilityClosed": false,
+    "independentConfirmationClosed": false,
+    "studyCredit": false,
+    "nextAction": "Defer the account because it adds only one recent year and is not independent of Tiingo for US data. Reconsider after the higher-value Tiingo entitlement is known."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_ONE_YEAR_EOD_CAPABILITY_DOCUMENTATION",
+      "SHARED_TIINGO_ORIGIN_DISPOSITION"
+    ],
+    "forbidden": [
+      "FULL_2009_TO_2024_HISTORY",
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "INDEPENDENT_FROM_TIINGO_US_CONFIRMATION",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_ADJUSTMENT_OR_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME_PUBLICATION",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "providerRowsCaptured": false,
+    "independentFromTiingo": false,
+    "historicalIdentityResolved": false,
+    "completeAdjustmentChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "4c2be346ad127525842e3d8e0570ba82f6225d5a305176952cef4394d4880f54"
+}
