@@ -1,0 +1,84 @@
+{
+  "claimLocks": {
+    "continuousValidityIntervalProven": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "paymentVerified": false,
+    "securityIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "tickerJoinAllowed": false
+  },
+  "createdAt": "2026-08-12T21:52:57Z",
+  "inputs": {
+    "issuerResolution": {
+      "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+      "rawSha256": "f89767daf43c2d06ca87c0b57919b450749620026724b700ff94572117da7cfb",
+      "reportSha256": "3b450bef0120eee49fc4ab0f188578097ffd2fb53d781675b33c6db84809ead6",
+      "rows": 656
+    },
+    "tickerPointProfile": {
+      "path": "reports/early-detection/sec-company-ticker-target-asof-profile-v1.json",
+      "rawSha256": "8a1ac3af58b7536c8951a6a0ffae85433623159f0da03d388a180635fd747688",
+      "reportSha256": "faae36bcf6e907caa0c2c149f0a1ec4c51d30f92e502b6e099969a7908db137a",
+      "rows": 656
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-terminal-identity-evidence-gap-queue-v1.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Convert every still unresolved SEC terminal candidate into a deterministic, outcome-blind identity evidence work item without treating ticker point evidence as a historical identity.",
+  "queueContract": {
+    "completionRequiresAuthoritativeEvidence": true,
+    "expectedByGapClass": {
+      "GAP_NO_ARCHIVE_SNAPSHOT": 452,
+      "GAP_PRIOR_SNAPSHOT_ISSUER_ABSENT": 19,
+      "GAP_PRIOR_SNAPSHOT_MULTIPLE_TICKERS": 42,
+      "GAP_SINGLE_POINT_TICKER_NEEDS_INTERVAL_AND_CORROBORATION": 143
+    },
+    "expectedRows": 656,
+    "oneWorkItemPerTickerProfileRow": true,
+    "priorityInputs": [
+      "gapClass",
+      "queuePriorityRank",
+      "profileRank"
+    ],
+    "priorityProhibitedInputs": [
+      "price",
+      "return",
+      "endpoint",
+      "pValue",
+      "eligibility",
+      "favorableResult"
+    ],
+    "resolutionCreditFromPointTickerAlone": false,
+    "sourceRequirementsByGapClass": {
+      "GAP_NO_ARCHIVE_SNAPSHOT": [
+        "OFFICIAL_TRANSACTION_FILING_OR_EXCHANGE_RECORD",
+        "HISTORICAL_SECURITY_MASTER_OR_ARCHIVED_EXCHANGE_DIRECTORY",
+        "INDEPENDENT_EFFECTIVE_DATED_IDENTITY_EVIDENCE"
+      ],
+      "GAP_PRIOR_SNAPSHOT_ISSUER_ABSENT": [
+        "OFFICIAL_TRANSACTION_FILING_OR_EXCHANGE_RECORD",
+        "HISTORICAL_SECURITY_MASTER_OR_ARCHIVED_EXCHANGE_DIRECTORY",
+        "ISSUER_ABSENCE_RECONCILIATION"
+      ],
+      "GAP_PRIOR_SNAPSHOT_MULTIPLE_TICKERS": [
+        "SHARE_CLASS_OR_SECURITY_TITLE_DISAMBIGUATION",
+        "OFFICIAL_TRANSACTION_FILING_OR_EXCHANGE_RECORD",
+        "INDEPENDENT_EFFECTIVE_DATED_IDENTITY_EVIDENCE"
+      ],
+      "GAP_SINGLE_POINT_TICKER_NEEDS_INTERVAL_AND_CORROBORATION": [
+        "SECOND_INDEPENDENT_POINT_EVIDENCE",
+        "EFFECTIVE_DATE_OR_VALIDITY_INTERVAL_EVIDENCE",
+        "TICKER_REUSE_AND_SHARE_CLASS_CHECK"
+      ]
+    },
+    "workItemState": "UNRESOLVED_IDENTITY_EVIDENCE_REQUIRED"
+  },
+  "schema": "early-detection-sec-terminal-identity-evidence-gap-queue-contract/v1",
+  "taskId": "Q003-SEC-TERMINAL-IDENTITY-EVIDENCE-GAP-QUEUE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
