@@ -1,0 +1,41 @@
+{
+  "schema": "sec-cik-growth-persistence-endpoint-ai-audit/v1",
+  "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+  "role": "COUNTEREXAMPLE",
+  "status": "PASS",
+  "reviewerType": "CODEX_AGENT",
+  "agentId": "codex-final-integrity-counterexample",
+  "runId": "sec-cik-endpoint-counterexample-final4-20260812",
+  "completedAt": "2026-08-12T06:12:48Z",
+  "blockingFindings": [],
+  "humanAttestation": false,
+  "outcomesAccessed": false,
+  "postAnchorFactsRead": false,
+  "endpointRunnerSha256": "36eba61ad4025ffc97ac1b0f4f66b1f68dc3a7085db47c71ca4355d67691b918",
+  "endpointTestSha256": "981f7f2807d1c9b9dbb3dcdc419f4e27d11cceb3ad99f1efa925413df5ead29c",
+  "selectorSha256": "e07bc9316c5c492ef13c684b9cf1d619860f9d997597606ba2807a4b26b7fd3a",
+  "scopeSha256": "d8bc4bcc6ebbc5c8d1f5bbaa6af1ac8ac8b6380a1656483bdcd168b1600765fa",
+  "claimContractSha256": "3212d024e9c82dfb8ea2702ca781351e5a2e5c773d97d534ba8c445a2926a388",
+  "sourceLineSha256": "9898fbcf2fddb9f8716cf7a9a15a87f528ef9752d1008856cee979608ce472c9",
+  "databaseAttestationSha256": "9a09b8b495f5cc9d2623d64ca425992b4b05801a0b57a83ef24adee434f13cdf",
+  "exposureFileSha256": "9632586d332ad9a67a4c12e10f9716da9e533330e1b573506b738dd60eb75c7a",
+  "exposureReportSha256": "5dbb2ecb17101a6e8f66eecc1d0890a4921c6d66342985db5a89c8575aab603a",
+  "emptyLedgerSha256": "02b79914b07ff3c08f05d490df701f95a2df7dcdb7702b139fb12bb0a6a090dd",
+  "priorAuthorizationSha256": "081eda0b66bc7f01b6d6dbb9e6b035e32a772e9c4551aedb089bb79e777bd0cb",
+  "counts": {
+    "candidateCiks": 9431,
+    "eligibleCiks": 770,
+    "triggerPositive": 72,
+    "triggerNegative": 698,
+    "sourceRefs": 13954
+  },
+  "checks": [
+    "CHECKPOINT_BYPASS_REJECTED",
+    "COHORT_MUTATION_REJECTED",
+    "ENDPOINT_OMISSION_REJECTED",
+    "MISSING_QUARTER_COMPRESSION_REJECTED",
+    "COMPLETE_CASE_DENOMINATOR_REJECTED",
+    "ANALYSIS_TAMPER_REJECTED"
+  ],
+  "auditSha256": "6ace69ab436b7ba28db13fd00064c1f58e847ea7d656e6493cf7c1d4e00e60fd"
+}
