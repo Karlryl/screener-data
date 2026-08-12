@@ -33,7 +33,7 @@ OUTCOME_LEDGER_SCHEMA = "early-detection-public-ai-outcome-ledger/v1"
 AUTHORIZATION_SCHEMA = "early-detection-public-ai-remote-authorization/v1"
 AI_AUDIT_SCHEMA = "early-detection-public-ai-adversarial-audit/v1"
 PROTOCOL_LABEL = "FEM-SEC-US-PUBLIC-AI"
-SCOPE_SHA256 = "6b3a0dad926be833eae050354fb08a887362395cfe20e158f6e1e2d51f86520d"
+SCOPE_SHA256 = "dfdb5b4495740f576ead55ad626b22ada2f3d5f104aed6be661e5bce5540b03d"
 IDENTITY_EVIDENCE_SCHEMA = "early-detection-public-ai-identity-evidence/v1"
 V94_CORPUS_SHA256 = "7a6aa70f539ef7d9b5ce714bb09ff0acf81bdf5beb4de3b222d784902de28792"
 AUTHORIZATION_REMOTE_URL = "https://github.com/Karlryl/screener-data.git"
@@ -809,7 +809,7 @@ def validate_ai_audits(
 
 
 def verify_remote_authorization(
-    authorization: Any,
+    authorization_bytes: bytes,
     authorization_path: Path,
     repository: Path,
     local_artifact_sha256: dict[str, str],
@@ -818,7 +818,11 @@ def verify_remote_authorization(
     expected_ref: str = AUTHORIZATION_REF,
     selector_path: Path | None = None,
     expected_loaded_selector_sha256: str | None = None,
-) -> None:
+) -> dict[str, Any]:
+    try:
+        authorization = json.loads(authorization_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PublicAiCohortError("invalid remote authorization JSON snapshot") from exc
     if not isinstance(authorization, dict):
         raise PublicAiCohortError("remote authorization must be an object")
     require_exact_keys(authorization, AUTHORIZATION_KEYS, "remote authorization")
@@ -902,9 +906,8 @@ def verify_remote_authorization(
             or expected_loaded_selector_sha256 != selector_hash
         ):
             raise PublicAiCohortError("running selector bytes differ from the authorized loaded selector")
-    checkpoint_bytes = authorization_path.read_bytes()
     checkpoint_blob = run_git(repository, ["show", f"{remote_head}:{checkpoint_relative}"], binary=True)
-    if checkpoint_blob != checkpoint_bytes:
+    if checkpoint_blob != authorization_bytes:
         raise PublicAiCohortError("remote ref does not bind the exact authorization checkpoint")
     run_git(repository, ["cat-file", "-e", f"{commit}^{{commit}}"])
     run_git(repository, ["merge-base", "--is-ancestor", commit, remote_head])
@@ -927,6 +930,7 @@ def verify_remote_authorization(
     if remote_ledger != outcome_ledger_bytes:
         raise PublicAiCohortError("remote head records a different outcome ledger state")
     validate_outcome_ledger(outcome_ledger)
+    return authorization
 
 
 def fixture_row(fixture_name: str, **changes: Any) -> dict[str, Any]:
@@ -1134,7 +1138,7 @@ def remote_authorization_self_test(root: Path) -> None:
     run_git(repository, ["remote", "add", "origin", str(remote)])
     run_git(repository, ["push", "-u", "origin", "main"])
     verify_remote_authorization(
-        authorization,
+        authorization_path.read_bytes(),
         authorization_path,
         repository,
         local_hashes,
@@ -1143,11 +1147,29 @@ def remote_authorization_self_test(root: Path) -> None:
         expected_ref="refs/heads/main",
     )
 
+    byte_distinct_snapshot = (json.dumps(authorization, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    if byte_distinct_snapshot == authorization_path.read_bytes():
+        raise PublicAiCohortError("authorization snapshot fixture is not byte-distinct")
+    try:
+        verify_remote_authorization(
+            byte_distinct_snapshot,
+            authorization_path,
+            repository,
+            local_hashes,
+            outcome_ledger_path,
+            expected_remote_url=str(remote),
+            expected_ref="refs/heads/main",
+        )
+    except PublicAiCohortError:
+        pass
+    else:
+        raise PublicAiCohortError("semantically valid but byte-detached authorization snapshot was accepted")
+
     detached = copy.deepcopy(authorization)
     detached["authorizedArtifacts"][0]["sha256"] = "0" * 64
     try:
         verify_remote_authorization(
-            detached,
+            json.dumps(detached, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             authorization_path,
             repository,
             local_hashes,
@@ -1173,7 +1195,7 @@ def remote_authorization_self_test(root: Path) -> None:
     )
     try:
         verify_remote_authorization(
-            authorization,
+            authorization_path.read_bytes(),
             authorization_path,
             repository,
             local_hashes,
@@ -1523,6 +1545,7 @@ def self_test() -> dict[str, Any]:
         "unboundCorpusReferenceRejected": True,
         "sameDayCloseRejected": True,
         "remoteAuthorizationVerified": True,
+        "authorizationSnapshotBound": True,
         "detachedRemoteArtifactRejected": True,
         "sqliteSidecarRejected": True,
         "archivedObservationRecomputed": True,
@@ -1621,7 +1644,7 @@ def main() -> int:
             seal = json.loads(seal_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise PublicAiCohortError(f"invalid JSON: {seal_path}") from exc
-        authorization_bytes, authorization = read_bound_json(authorization_path)
+        authorization_bytes = authorization_path.read_bytes()
         rows = validate_manifest(manifest)
         verify_bound_sources(
             manifest,
@@ -1660,8 +1683,8 @@ def main() -> int:
             },
             rows,
         )
-        verify_remote_authorization(
-            authorization,
+        authorization = verify_remote_authorization(
+            authorization_bytes,
             authorization_path,
             repository,
             {

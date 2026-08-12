@@ -23,6 +23,7 @@ test('public-data AI cohort is deterministic and sealed before production use', 
   assert.equal(result.unboundCorpusReferenceRejected, true);
   assert.equal(result.sameDayCloseRejected, true);
   assert.equal(result.remoteAuthorizationVerified, true);
+  assert.equal(result.authorizationSnapshotBound, true);
   assert.equal(result.detachedRemoteArtifactRejected, true);
   assert.equal(result.sqliteSidecarRejected, true);
   assert.equal(result.archivedObservationRecomputed, true);
