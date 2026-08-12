@@ -1,0 +1,116 @@
+{
+  "claimLocks": {
+    "actualCashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryComplete": false,
+    "securityIdentityResolved": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "createdAt": "2026-08-12T23:26:09Z",
+  "evidenceContract": {
+    "actualCashReceiptNotInferred": true,
+    "currencyDisposition": "DOLLAR_MARKER_PRESENT_CURRENCY_UNRESOLVED",
+    "exactFrozenSentenceSetRequired": true,
+    "expectedAccessions": [
+      "0000876661-09-000090",
+      "0000876661-10-000067",
+      "0000876661-10-000193",
+      "0000876661-10-000309",
+      "0000876661-14-000477",
+      "0000876661-15-000196",
+      "0000876661-16-001022",
+      "0000876661-17-000392",
+      "0000876661-19-000707",
+      "0000876661-22-000511",
+      "0001143313-16-000072"
+    ],
+    "expectedAmountsByAccession": {
+      "0000876661-09-000090": "31",
+      "0000876661-10-000067": "22",
+      "0000876661-10-000193": "38.25",
+      "0000876661-10-000309": "11",
+      "0000876661-14-000477": "63",
+      "0000876661-15-000196": "8",
+      "0000876661-16-001022": "26",
+      "0000876661-17-000392": "17.3",
+      "0000876661-19-000707": "13.05",
+      "0000876661-22-000511": "9.81",
+      "0001143313-16-000072": "19.61"
+    },
+    "expectedEffectiveDatesByAccession": {
+      "0000876661-09-000090": "2009-01-23",
+      "0000876661-10-000067": "2010-02-26",
+      "0000876661-10-000193": "2010-05-28",
+      "0000876661-10-000309": "2010-08-30",
+      "0000876661-14-000477": "2014-08-28",
+      "0000876661-15-000196": "2015-05-05",
+      "0000876661-16-001022": "2016-06-10",
+      "0000876661-17-000392": "2017-07-10",
+      "0000876661-19-000707": "2019-07-02",
+      "0000876661-22-000511": "2022-06-27",
+      "0001143313-16-000072": "2016-01-04"
+    },
+    "expectedRows": 11,
+    "expectedStatementSha256ByAccession": {
+      "0000876661-09-000090": "a00c99ef389d3874eda59bf10b4c0c3f43f0924ed930fe947541882c06ae1fd6",
+      "0000876661-10-000067": "457cbd7ed755ea13d1e5a28548fdd4df006903a1695da3ccf01707601a5737a6",
+      "0000876661-10-000193": "4d7535e916f5bdede09193484e56bcacc53a799470b2dac2bda06a9fef660340",
+      "0000876661-10-000309": "e3a23624e211b6ddd5491c48dc80ce2f1c1a745e8b8e1f54d8d3b128a9de0403",
+      "0000876661-14-000477": "a52847a8e4fbdc0b9f521e523ac86a40845d9626a906b989082707d35398249e",
+      "0000876661-15-000196": "e0996c81273af7bd112b77ff533d2af32a90492c8a73f2ce58dc46c23ac99a48",
+      "0000876661-16-001022": "2151a8422ac9d78522638cad8cc178449fcdc16cf08d98dda41f36218e2add01",
+      "0000876661-17-000392": "3408fd89dccf796f00e902f3053def34d748f05124f1d3e217a5b0d778b217e1",
+      "0000876661-19-000707": "65fffbd56985f430b591d1c672c29dd4902591afb250fa351367b06d55754795",
+      "0000876661-22-000511": "9f7dd8e8850b0e19b8cb36651f80c485c0c727100ffdba126aa717139e928d48",
+      "0001143313-16-000072": "265e9fbf5f03e34c4d133f3819eb6d3366826a675e98c20886ec25068f26db85"
+    },
+    "futureRowsRequireNewProtocol": true,
+    "oneConsiderationAmountRequired": true,
+    "primarySecBlobRebuildRequired": true,
+    "scopeLimit": "NO_GENERAL_PARSER_OR_UNSEEN_SENTENCE_CLAIM",
+    "semanticCeiling": "EXACT_ELEVEN_FROZEN_PRIMARY_SEC_SENTENCES_STATE_EFFECTIVE_TRANSACTION_DATE_AND_FIXED_CASH_CONVERSION",
+    "sourceAmountOffsetAndTextRequired": true,
+    "sourceSentenceHashRequired": true
+  },
+  "implementationContract": {
+    "builderPath": "scripts/build-sec-same-sentence-effective-fixed-cash-v5.py",
+    "outputAbsentAtBuildBase": true,
+    "outputIntroductionDirectChildOfBuildBase": true,
+    "preImplementationParentCommit": "6085ce3d5b12fa2fb777054b5f7ff3348082d9aa",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "singleParentBuildBase": true,
+    "testPath": "tests/build-sec-same-sentence-effective-fixed-cash-v5.test.js"
+  },
+  "inputs": {
+    "documentExtraction": {
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "reportSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000"
+    },
+    "sourceRebuildImplementation": {
+      "builderPath": "scripts/build-sec-same-sentence-effective-fixed-cash-v2.py",
+      "builderRawSha256": "3edea67db65e2923adb1d816c81c2201a80fa87dd246b6af2418ef5c32d38095"
+    },
+    "supersededV4": {
+      "builderRawSha256": "cb57eeb9555c9feec24db5a7e0034a5df6a24ec80efb5034451afd52fa40f123",
+      "contractRawSha256": "3e391d70c08c62b66fd48383af05efcb99bbbc6bec088686d514e67341a43747",
+      "outputRawSha256": "cf633409e00c865cb35c01734a906f8b6fcf8d8a98e9a8cf25182cf9a19a238e",
+      "outputReportSha256": "6d354aed8f1dff883d5ae9cc73900e47198bd9c4eefc1cf4a0fd1c86749eef7a",
+      "status": "SUPERSEDED_P1_GENERAL_SELECTOR_SCOPE"
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-same-sentence-effective-fixed-cash-v5.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Supersede V4 by making the truthful evidentiary unit the exact immutable set of eleven independently reviewed primary-SEC sentences. V5 makes no general parser or unseen-sentence claim; every future row requires a new protocol.",
+  "schema": "early-detection-sec-same-sentence-effective-fixed-cash-contract/v5",
+  "taskId": "Q003-SEC-SAME-SENTENCE-EFFECTIVE-FIXED-CASH-V5",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
