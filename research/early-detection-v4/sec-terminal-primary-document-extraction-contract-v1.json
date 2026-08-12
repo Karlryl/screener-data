@@ -1,0 +1,65 @@
+{
+  "schema": "early-detection-sec-terminal-primary-document-extraction-contract/v1",
+  "createdAt": "2026-08-12T21:35:00Z",
+  "taskId": "Q003-SEC-TERMINAL-PRIMARY-DOCUMENT-EXTRACTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Extract machine-reviewable candidate values only from the frozen high-priority SEC terminal-event triage, while preserving every source row and refusing payment, terminal-wealth, identity or result claims.",
+  "input": {
+    "path": "reports/early-detection/sec-terminal-candidate-triage-v1.json",
+    "rawSha256": "ca879151eebd487609be39a4aa76faf83a1294c86736e00865a2759b5c7a860b",
+    "reportSha256": "82d40ebc9238ec2c41c07ee92b8ab9ddd96edae87c08624d3763ce36e2716618",
+    "introductionCommit": "93525c4a53c236264772ef7b1fb2c3c0059dfd65",
+    "totalRows": 1101,
+    "eligibleClassifications": [
+      "EXPLICIT_CASH_OR_MIXED_CONSIDERATION_CANDIDATE",
+      "LIQUIDATION_OR_DISTRIBUTION_CANDIDATE"
+    ],
+    "eligibleRows": 656,
+    "eligibleUniqueAccessions": 652
+  },
+  "extractionPolicy": {
+    "sourceTextPreservedExactly": true,
+    "sourceRefPreservedExactly": true,
+    "oneOutputRowPerEligibleInputRow": true,
+    "tickerJoinAllowed": false,
+    "currencyMarkers": [
+      "$",
+      "US$",
+      "USD"
+    ],
+    "candidateAmountPatterns": [
+      "EXPLICIT_CURRENCY_PREFIX",
+      "NUMBER_WITH_CASH_OR_PER_SECURITY_SUFFIX"
+    ],
+    "candidateRatioPattern": "NUMBER_FOLLOWED_BY_SHARE_STOCK_ADS_OR_SECURITY_UNIT",
+    "lexicalExclusionContexts": [
+      "PAR_VALUE",
+      "EXERCISE_PRICE",
+      "DEPOSITARY_FEE",
+      "WITHHOLDING_TAX"
+    ],
+    "multipleCandidateValuesRemainAmbiguous": true,
+    "allValuesRemainCandidateOnly": true,
+    "manualPrimaryDocumentReviewRequired": true
+  },
+  "output": {
+    "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+    "writeNewAtomic": true,
+    "expectedRows": 656,
+    "outcomesAccessed": false
+  },
+  "claimLocks": {
+    "candidateStatusOnly": true,
+    "primaryDocumentReconciled": false,
+    "paymentVerified": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "identityResolved": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "3cb72db47482e354a5a75b5ead54dccf7c4922a055a944aad965a1866659393d"
+}
