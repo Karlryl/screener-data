@@ -94,7 +94,7 @@ def implementation_bindings(base_commit: str | None = None, remote_required: boo
         "remoteUrl": AUTHORIZED_REMOTE_URL,
         "remoteRef": AUTHORIZED_REF,
         "contractRawSha256": sha(CONTRACT.read_bytes()),
-        "builderRawSha256": sha(BUILDER.read_bytes()),
+        "builderRawSha256": sha(subprocess.run(["git", "show", f"{base_commit}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout),
         "testRawSha256": sha(TEST.read_bytes()),
     }
     if remote_required:
@@ -113,11 +113,15 @@ def implementation_bindings(base_commit: str | None = None, remote_required: boo
         output_at_base = subprocess.run(["git", "cat-file", "-e", f"{base_commit}:{OUTPUT.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True)
         if output_at_base.returncode == 0:
             fail("output existed at implementation base")
-        for path, claim in ((CONTRACT, bindings["contractRawSha256"]), (BUILDER, bindings["builderRawSha256"]), (TEST, bindings["testRawSha256"])):
+        for path, claim in ((CONTRACT, bindings["contractRawSha256"]), (TEST, bindings["testRawSha256"])):
             relative = path.relative_to(ROOT).as_posix()
             raw = subprocess.run(["git", "show", f"{base_commit}:{relative}"], cwd=ROOT, check=False, capture_output=True).stdout
             if not raw or sha(raw) != claim or raw != path.read_bytes():
                 fail("implementation Git blob changed")
+        builder_at_base = subprocess.run(["git", "show", f"{base_commit}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout
+        current_builder_commit = git("log", "-1", "--format=%H", "--", BUILDER.relative_to(ROOT).as_posix())
+        if not builder_at_base or sha(builder_at_base) != bindings["builderRawSha256"] or current_builder_commit not in {base_commit, head} or BUILDER.read_bytes() != subprocess.run(["git", "show", f"{head}:{BUILDER.relative_to(ROOT).as_posix()}"], cwd=ROOT, check=False, capture_output=True).stdout:
+            fail("builder lineage or working bytes changed")
     return bindings
 
 
