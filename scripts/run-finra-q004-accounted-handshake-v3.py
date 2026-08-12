@@ -140,18 +140,54 @@ def verify_remote() -> dict:
         fail("local/upstream/remote drift")
     if git("rev-parse",f"{head}^") != PARENT:
         fail("implementation commit is not the direct child of pre-authorization parent")
+    implementation_commit = head
     contract = load(CONTRACT)
     commit_time = datetime.fromtimestamp(int(git("show","-s","--format=%ct",head)), tz=timezone.utc)
-    if parse_utc(contract["createdAt"]) > commit_time:
+    implementation_time = datetime.fromtimestamp(int(git("show","-s","--format=%ct",implementation_commit)), tz=timezone.utc)
+    if parse_utc(contract["createdAt"]) > implementation_time:
         fail("contract was not created before its implementation commit")
     paths = [CONTRACT,Path(__file__).resolve(),TEST,BASE,V2_CONTRACT,V2_OUTPUT]
     files=[]
     for path in paths:
-        rel=path.relative_to(ROOT).as_posix(); local=path.read_bytes(); committed=git("show",f"{head}:{rel}",binary=True)
+        rel=path.relative_to(ROOT).as_posix(); local=path.read_bytes(); committed=git("show",f"{implementation_commit}:{rel}",binary=True)
         if committed != local:
-            fail(f"remote Git blob mismatch: {rel}")
-        files.append({"path":rel,"rawSha256":sha_bytes(local),"gitCommit":head})
-    return {"remoteName":REMOTE_NAME,"remoteBranch":REMOTE_BRANCH,"remoteHead":head,"files":files}
+            fail(f"implementation Git blob mismatch: {rel}")
+        files.append({"path":rel,"rawSha256":sha_bytes(local),"gitCommit":implementation_commit})
+    return {"remoteName":REMOTE_NAME,"remoteBranch":REMOTE_BRANCH,"remoteHead":implementation_commit,"files":files}
+
+def verify_output_remote(report: dict) -> None:
+    head=git("rev-parse","HEAD"); upstream=git("rev-parse","@{upstream}")
+    remote_line=git("ls-remote",REMOTE_NAME,f"refs/heads/{REMOTE_BRANCH}"); remote=remote_line.split()[0] if remote_line else ""
+    if git("remote","get-url",REMOTE_NAME)!=REMOTE_URL or head!=upstream or head!=remote:
+        fail("local/upstream/remote drift during output verification")
+    parent=git("rev-parse",f"{head}^")
+    grandparent=git("rev-parse",f"{parent}^")
+    if grandparent==PARENT:
+        output_commit=head; implementation_commit=parent
+    else:
+        great_grandparent=git("rev-parse",f"{grandparent}^")
+        if great_grandparent!=PARENT:
+            fail("remote output lineage is not implementation -> output -> optional verifier fix")
+        output_commit=parent; implementation_commit=grandparent
+    bindings=report["implementationBindings"]
+    if bindings.get("remoteHead")!=implementation_commit or bindings.get("remoteName")!=REMOTE_NAME or bindings.get("remoteBranch")!=REMOTE_BRANCH:
+        fail("recorded implementation commit differs from remote lineage")
+    files=bindings.get("files")
+    if not isinstance(files,list) or not files:
+        fail("recorded implementation files missing")
+    for item in files:
+        if not isinstance(item,dict) or set(item)!={"path","rawSha256","gitCommit"} or item["gitCommit"]!=implementation_commit or not HEX64.fullmatch(item["rawSha256"]):
+            fail("recorded implementation binding malformed")
+        blob=git("show",f"{implementation_commit}:{item['path']}",binary=True)
+        if sha_bytes(blob)!=item["rawSha256"]:
+            fail("recorded implementation Git blob mismatch")
+    output_rel=OUTPUT.relative_to(ROOT).as_posix(); output_raw=OUTPUT.read_bytes()
+    if git("show",f"{output_commit}:{output_rel}",binary=True)!=output_raw or git("show",f"{head}:{output_rel}",binary=True)!=output_raw:
+        fail("output bytes differ across output and verification heads")
+    for current_path in (Path(__file__).resolve(),TEST,CONTRACT):
+        rel=current_path.relative_to(ROOT).as_posix()
+        if git("show",f"{head}:{rel}",binary=True)!=current_path.read_bytes():
+            fail("current verifier bytes are not remote-bound")
 
 def load_base():
     if sha_file(BASE) != BASE_SHA:
@@ -235,8 +271,7 @@ def main() -> int:
             report=load(OUTPUT); validate_report(report,contract); raw=canonical(report)+b"\n"
             if OUTPUT.read_bytes()!=raw: fail("output canonical bytes changed")
             if args.remote:
-                current=verify_remote(); rel=OUTPUT.relative_to(ROOT).as_posix(); blob=git("show",f"{current['remoteHead']}:{rel}",binary=True)
-                if blob!=raw: fail("output is not byte-bound at remote HEAD")
+                verify_output_remote(report)
             print(json.dumps({"schema":"finra-q004-accounted-handshake-output-verification/v3","status":"PASS","rawSha256":sha_bytes(raw),"reportSha256":report["reportSha256"],"remoteVerified":args.remote,"predecessorCredit":"ZERO","outcomesAccessed":False,"secretsCaptured":False},sort_keys=True))
         return 0
     except (StudyError, getattr(load_base() if False else type("X",(),{}),"StudyError",StudyError)) as exc:
