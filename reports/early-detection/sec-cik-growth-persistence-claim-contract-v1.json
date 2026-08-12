@@ -1,7 +1,7 @@
 {
   "schema": "sec-cik-growth-persistence-claim-contract/v1",
   "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
-  "status": "DRAFT_PRE_OUTCOME",
+  "status": "FINAL_PRE_OUTCOME_CLAIM",
   "studySeparation": {
     "originalV4Modified": false,
     "originalV4GateClaim": false,
@@ -16,13 +16,17 @@
   },
   "source": {
     "ledgerSchema": "early-detection-pit-compact-sqlite/v1",
+    "databaseBytes": 41141956608,
+    "databaseSha256": "aacd729b4dccc4924f0223cc24b549742180e01156717de2f888d5913b2b2df7",
     "payloadSelection": "EARLIEST_OBSERVED_PAYLOAD_PER_FSD_QUARTER",
     "integrityReport": "reports/early-detection/sec-fsd-compact-full-integrity-2009-2024.json",
-    "integrityReportFileSha256": "b8f30958b1ea36ff80897b978cfc6d26cfe62d89c60c7e295716554c4cfbde49",
+    "integrityReportCanonicalSha256": "9b2b660bd0d5cc65b49618a2e4a119359e33c07891d045817e2d41a000a1885f",
     "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de",
-    "payloadManifestSha256": "5bb597d4d08e5ed1aa1a289c1c646ffcf5e971547f0f66ac441b3ee629057b27",
+    "conceptCoverageReport": "reports/early-detection/sec-concept-coverage-2009-2024.json",
+    "conceptCoveragePayloadManifestSha256": "5bb597d4d08e5ed1aa1a289c1c646ffcf5e971547f0f66ac441b3ee629057b27",
     "conceptMap": "research/early-detection-v4/sec-concept-map-1.0.0.json",
-    "conceptMapFileSha256": "85fbacc05cc5df9b5a53760e13b4db6116f485d39238a2099fd04c0394f3ad27"
+    "conceptMapCanonicalSha256": "af80351e46f1716628460bd275ae9144716f5e655d44b741639a2e8c993d7f87",
+    "sourceLinePayloadsCanonicalSha256": "77fa257774fe94e4f4902cec0487153ae1418ee58197c3c566e873ba20b28cf9"
   },
   "factContract": {
     "forms": ["10-Q", "10-K"],
@@ -35,6 +39,7 @@
     "conceptPriorityFrozen": true,
     "q4RevenueDerivation": "QTRS4_MINUS_QTRS3_SAME_CIK_CONCEPT_UNIT_FY",
     "cashFlowQuarterDerivation": "QTRSN_MINUS_QTRSN_MINUS_1_SAME_CIK_CONCEPT_UNIT_FY",
+    "comparativeRestatementPolicy": "FACT_PERIOD_MUST_EQUAL_FILING_PERIOD_END",
     "ambiguityPolicy": "FAIL_CLOSED"
   },
   "cohort": {
@@ -63,7 +68,6 @@
     "requiredExactFutureFiscalQuarters": 4,
     "persistentRevenueYoyMinimum": 0.2,
     "minimumPassingFutureQuarters": 3,
-    "lastFourQuarterOperatingCashFlowMinimumExclusive": 0.0,
     "states": [
       "VERIFIED_PERSISTENT",
       "VERIFIED_NOT_PERSISTENT",
@@ -81,10 +85,11 @@
     "otherwise": "INCONCLUSIVE",
     "minimumTriggerPositive": 40,
     "minimumTriggerNegative": 80,
-    "minimumFourQuarterAscertainmentRate": 0.9,
+    "minimumFourQuarterAscertainmentRateEachExposureGroup": 0.9,
+    "maximumAscertainmentRateDifferencePercentagePoints": 10.0,
     "sicResults": "DESCRIPTIVE_ONLY"
   },
-  "claim": "Within the sealed coverage-bounded cohort of seasoned, standard-concept-computable SEC registrant CIK histories, the 455-day verifiable filing-persistence rate is higher for the frozen pre-anchor revenue/cash-flow trigger-positive group than for the fully observed trigger-negative group.",
+  "claim": "Within the sealed coverage-bounded cohort of seasoned, standard-concept-computable SEC registrant CIK histories, the 455-day verifiable filing-persistence rate is higher for the frozen pre-cutoff revenue/cash-flow trigger-positive group than for the fully observed trigger-negative group.",
   "forbiddenClaims": [
     "FULL_US_MARKET",
     "SURVIVORSHIP_SAFE",
