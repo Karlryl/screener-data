@@ -54,7 +54,8 @@ test('contract and adversarial self-test pass in normal and optimized Python', (
 });
 
 test('sidepath and missing output are rejected without creating production output', () => {
-  assert.equal(fs.existsSync(OUTPUT), false, 'V2 production output must not exist during contract tests');
+  const outputExistedBefore = fs.existsSync(OUTPUT);
+  const outputBytesBefore = outputExistedBefore ? fs.readFileSync(OUTPUT) : null;
   let result = runPython([SCRIPT, 'build', '--output', 'reports/early-detection/openfigi-v2-sidepath.json']);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /sidepath output rejected/);
@@ -63,7 +64,15 @@ test('sidepath and missing output are rejected without creating production outpu
   result = runPython([SCRIPT, 'build']);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /requires --output/);
-  assert.equal(fs.existsSync(OUTPUT), false);
+  assert.equal(fs.existsSync(OUTPUT), outputExistedBefore);
+  if (outputExistedBefore) {
+    assert.deepEqual(fs.readFileSync(OUTPUT), outputBytesBefore, 'existing production output changed');
+    const output = JSON.parse(outputBytesBefore.toString('utf8'));
+    assert.equal(output.schema, 'openfigi-figi-only-capture/v2');
+    assert.equal(output.v1Disposition.status, 'QUARANTINED_DESCRIPTIVE_FIELDS_RIGHTS_UNCLEARED');
+    assert.equal(output.v1Disposition.studyCredit, 'ZERO');
+    assert.deepEqual(new Set(Object.values(output.locks)), new Set([false]));
+  }
 });
 
 test('builder exposes no alternate output path or provider-network call', () => {
