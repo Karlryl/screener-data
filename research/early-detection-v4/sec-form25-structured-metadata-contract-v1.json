@@ -1,0 +1,83 @@
+{
+  "schema": "early-detection-sec-form25-structured-metadata-contract/v1",
+  "createdAt": "2026-08-12T17:55:00Z",
+  "taskId": "Q003-SEC-FORM25-STRUCTURED-METADATA",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "queueInput": {
+    "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+    "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+    "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+    "rows": 44352,
+    "form25Rows": 27285,
+    "form25UniqueAccessions": 14504,
+    "allowedForms": [
+      "25",
+      "25-NSE",
+      "25-NSE/A",
+      "25/A"
+    ]
+  },
+  "inventoryInput": {
+    "path": "reports/early-detection/sec-terminal-wealth-original-inventory-v3.json",
+    "rawSha256": "c84b72440268bc4e350a4370a5020372ccde420939961f5e82879fd0f2d54989",
+    "reportSha256": "b79c363af7dfa6cbb9fa2e9026d471d945dd496a6b8c97156455acfd56d876ac",
+    "blobTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f",
+    "localPrimaryPresentForm25Rows": 27263,
+    "ambiguousMultipleLocalBlobsForm25Rows": 22,
+    "fetchRequiredForm25Rows": 0
+  },
+  "blobInput": {
+    "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+    "contentAddressPolicy": "FILENAME_STEM_AND_INVENTORY_REF_EQUAL_RAW_SHA256",
+    "accessionPolicy": "EXACTLY_ONE_LINE_FIELD_INSIDE_SEC_HEADER_BLOCK_EQUALS_QUEUE_AND_INVENTORY_ACCESSION"
+  },
+  "population": {
+    "joinKey": "EXACT_ROW_ID_THEN_EXACT_ACCESSION",
+    "tickerJoinAllowed": false,
+    "oneOutputRowPerForm25QueueRow": true,
+    "ambiguousInventoryBlobSelectionAllowed": false
+  },
+  "parserPolicy": {
+    "sgmlDocuments": "LINE_BOUNDARY_DOCUMENT_TEXT_TYPE_SEQUENCE_FILENAME_FIELDS",
+    "structuredXml": "EXACTLY_ONE_WELL_FORMED_XML_BLOCK_WITH_NOTIFICATION_OF_REMOVAL_ROOT",
+    "xmlPaths": {
+      "issuerCik": "notificationOfRemoval/issuer/cik",
+      "issuerName": "notificationOfRemoval/issuer/entityName",
+      "exchangeCik": "notificationOfRemoval/exchange/cik",
+      "exchangeName": "notificationOfRemoval/exchange/entityName",
+      "securityDescription": "notificationOfRemoval/descriptionClassSecurity",
+      "ruleProvision": "notificationOfRemoval/ruleProvision",
+      "signatureDate": "notificationOfRemoval/signatureData/signatureDate"
+    },
+    "duplicateXmlField": "AMBIGUOUS_DUPLICATE",
+    "conflictingXmlField": "AMBIGUOUS_CONFLICT",
+    "explicitTextDates": {
+      "removalEffectiveDate": "REMOVAL_SENTENCE_WITH_EXPLICIT_OPENING_OF_BUSINESS_OR_EFFECTIVE_DATE_PHRASE",
+      "suspensionDate": "SUSPENDED_FROM_TRADING_SENTENCE_WITH_EXPLICIT_DATE"
+    },
+    "considerationPaymentText": "CANDIDATE_ONLY_WHEN_TRIGGER_AND_NUMERIC_CURRENCY_SHARE_OR_PER_SHARE_SIGNAL_OCCUR_IN_SAME_NORMALIZED_SENTENCE",
+    "paymentLanguageWithoutAmount": "NOT_A_CANDIDATE",
+    "candidateIsVerifiedTerminalPayment": false
+  },
+  "fieldStatuses": [
+    "PRESENT",
+    "MISSING",
+    "AMBIGUOUS_DUPLICATE",
+    "AMBIGUOUS_CONFLICT",
+    "UNAVAILABLE"
+  ],
+  "authorizedImplementation": {
+    "builderPath": "scripts/build-sec-form25-structured-metadata-v1.py",
+    "testPath": "tests/build-sec-form25-structured-metadata-v1.test.js",
+    "outputPath": "reports/early-detection/sec-form25-structured-metadata-v1.json"
+  },
+  "claimLocks": {
+    "originalV4GateCredit": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "terminalPaymentVerified": false,
+    "identityResolved": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  }
+}
