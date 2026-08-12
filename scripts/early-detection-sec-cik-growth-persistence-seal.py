@@ -21,12 +21,12 @@ from typing import Any
 
 PROTOCOL = "SEC-CIK-GROWTH-PERSISTENCE@1.0.0"
 AUDIT_SCHEMA = "sec-cik-growth-persistence-ai-audit/v2"
-SEAL_SCHEMA = "sec-cik-growth-persistence-preoutcome-seal/v2"
-AUTH_SCHEMA = "sec-cik-growth-persistence-remote-authorization/v2"
+SEAL_SCHEMA = "sec-cik-growth-persistence-preoutcome-seal/v3"
+AUTH_SCHEMA = "sec-cik-growth-persistence-remote-authorization/v3"
 REMOTE = "origin"
 REMOTE_URL = "https://github.com/Karlryl/screener-data.git"
 REMOTE_REF = "refs/heads/codex/early-detection-v4-gates-20260810"
-SEAL_PATH = "reports/early-detection/sec-cik-growth-persistence-preoutcome-seal-v2.json"
+SEAL_PATH = "reports/early-detection/sec-cik-growth-persistence-preoutcome-seal-v3.json"
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -247,6 +247,37 @@ def git_blob(commit: str, path: str) -> bytes:
     return run_git(["show", f"{commit}:{path}"])
 
 
+def git_commit_time(commit: str, label: str) -> datetime:
+    raw = run_git(["show", "-s", "--format=%cI", commit]).decode().strip()
+    try:
+        value = datetime.fromisoformat(raw)
+    except ValueError as exc:
+        raise CheckpointError(f"{label} Git commit time is invalid") from exc
+    return value.astimezone(timezone.utc)
+
+
+def validate_checkpoint_timeline(
+    audit_times: list[datetime],
+    stage_a_time: datetime,
+    sealed_at: datetime,
+    seal_commit_time: datetime | None = None,
+    created_at: datetime | None = None,
+    authorization_commit_time: datetime | None = None,
+) -> None:
+    if not audit_times or max(audit_times) > sealed_at:
+        raise CheckpointError("seal predates at least one required AI audit")
+    if stage_a_time > sealed_at:
+        raise CheckpointError("seal timestamp predates the Stage-A commit")
+    if seal_commit_time is None:
+        return
+    if sealed_at > seal_commit_time:
+        raise CheckpointError("seal timestamp is later than the seal commit")
+    if created_at is None or seal_commit_time > created_at:
+        raise CheckpointError("authorization timestamp predates the seal commit")
+    if authorization_commit_time is None or created_at > authorization_commit_time:
+        raise CheckpointError("authorization timestamp is later than its commit")
+
+
 def require_false_locks(value: dict[str, Any], label: str) -> None:
     for key in (
         "outcomesAccessed",
@@ -369,8 +400,11 @@ def validate_seal(path: Path) -> dict[str, Any]:
         if sha256_bytes(blob) != local_sha:
             raise CheckpointError(f"Stage-A Git blob mismatch for {role}")
     audits = validate_audits(audit_paths())
-    if any(parse_z_time(audit["completedAt"], f"{role}.completedAt") > sealed_at for role, audit in audits.items()):
-        raise CheckpointError("seal predates at least one required AI audit")
+    validate_checkpoint_timeline(
+        [parse_z_time(audit["completedAt"], f"{role}.completedAt") for role, audit in audits.items()],
+        git_commit_time(seal["stageACommit"], "Stage A"),
+        sealed_at,
+    )
     for role, expected_path in expected_paths.items():
         if sha256_file(ROOT / expected_path) != local_hashes[role]:
             raise CheckpointError(f"local artifact changed during seal validation for {role}")
@@ -407,8 +441,7 @@ def validate_authorization(path: Path) -> dict[str, Any]:
         raise CheckpointError("authorization and seal Stage-A commits differ")
     if auth["sealSha256"] != sha256_file(seal_path):
         raise CheckpointError("authorization seal SHA mismatch")
-    if auth_time < parse_z_time(seal["sealedAt"], "seal.sealedAt"):
-        raise CheckpointError("authorization predates seal")
+    sealed_at = parse_z_time(seal["sealedAt"], "seal.sealedAt")
     seal_blob = git_blob(auth["sealCommit"], auth["sealPath"])
     if seal_blob != seal_path.read_bytes():
         raise CheckpointError("seal commit does not bind exact local seal bytes")
@@ -431,6 +464,15 @@ def validate_authorization(path: Path) -> dict[str, Any]:
     ledger_blob = git_blob(head, PATHS["OUTCOME_LEDGER"])
     if sha256_bytes(ledger_blob) != FIXED_HASHES["OUTCOME_LEDGER"]:
         raise CheckpointError("remote HEAD outcome ledger is no longer the sealed empty ledger")
+    audits = validate_audits(audit_paths())
+    validate_checkpoint_timeline(
+        [parse_z_time(audit["completedAt"], f"{role}.completedAt") for role, audit in audits.items()],
+        git_commit_time(auth["stageACommit"], "Stage A"),
+        sealed_at,
+        git_commit_time(auth["sealCommit"], "seal"),
+        auth_time,
+        git_commit_time(head, "authorization"),
+    )
     return auth
 
 
@@ -504,6 +546,32 @@ def self_test() -> dict[str, Any]:
         except CheckpointError:
             duplicate_agent_rejected = True
 
+        base_time = datetime(2026, 8, 12, 5, 0, tzinfo=timezone.utc)
+        try:
+            validate_checkpoint_timeline(
+                [base_time], base_time, base_time, base_time, base_time, base_time
+            )
+            valid_timeline_accepted = True
+        except CheckpointError:
+            valid_timeline_accepted = False
+        try:
+            validate_checkpoint_timeline(
+                [base_time], base_time, base_time.replace(second=2),
+                base_time.replace(second=1), base_time.replace(second=3),
+                base_time.replace(second=4),
+            )
+            future_seal_rejected = False
+        except CheckpointError:
+            future_seal_rejected = True
+        try:
+            validate_checkpoint_timeline(
+                [base_time], base_time, base_time, base_time.replace(second=1),
+                base_time.replace(second=3), base_time.replace(second=2),
+            )
+            future_authorization_rejected = False
+        except CheckpointError:
+            future_authorization_rejected = True
+
     result = {
         "status": "PASS",
         "validAuditSetAccepted": True,
@@ -513,6 +581,9 @@ def self_test() -> dict[str, Any]:
         "outcomeUnlockRejected": outcome_rejected,
         "selfHashMutationRejected": self_hash_rejected,
         "duplicateAgentRejected": duplicate_agent_rejected,
+        "validTimelineAccepted": valid_timeline_accepted,
+        "futureSealTimestampRejected": future_seal_rejected,
+        "futureAuthorizationTimestampRejected": future_authorization_rejected,
         "outcomesAccessed": False,
     }
     if not all(value is True for key, value in result.items() if key not in {"status", "outcomesAccessed"}):

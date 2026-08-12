@@ -18,12 +18,15 @@ test('SEC CIK checkpoint validator rejects schema drift and outcome unlocks', ()
   assert.deepEqual(result, {
     bindingMutationRejected: true,
     duplicateAgentRejected: true,
+    futureAuthorizationTimestampRejected: true,
+    futureSealTimestampRejected: true,
     outcomeUnlockRejected: true,
     outcomesAccessed: false,
     schemaDriftRejected: true,
     selfHashMutationRejected: true,
     status: 'PASS',
     statusMutationRejected: true,
+    validTimelineAccepted: true,
     validAuditSetAccepted: true,
   });
 });
