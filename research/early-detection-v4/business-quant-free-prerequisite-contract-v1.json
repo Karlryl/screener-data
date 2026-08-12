@@ -1,0 +1,120 @@
+{
+  "schema": "early-detection-business-quant-free-prerequisite/v1",
+  "createdAt": "2026-08-12T20:29:00Z",
+  "taskId": "Q008-BUSINESS-QUANT-FREE-HANDSHAKE",
+  "sourceId": "BUSINESS_QUANT_FREE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the zero-cost Business Quant entitlement, authorized API boundary and three-case pilot before any account or vendor-data request.",
+  "officialEvidence": [
+    {
+      "url": "https://businessquant.com/pricing",
+      "observedAt": "2026-08-12T20:29:00Z",
+      "verifiedFact": "Business Quant publishes a Free plan at USD 0, requires no credit card, and limits it to 30 API calls per day and 0.1 GB data transfer per month."
+    },
+    {
+      "url": "https://businessquant.com/docs/api/corporate-actions",
+      "observedAt": "2026-08-12T20:29:00Z",
+      "verifiedFact": "The documented authenticated API exposes structured splits, dividends, mergers, acquisitions, spin-offs, bankruptcies and delistings sourced from SEC filings and exchange announcements."
+    },
+    {
+      "url": "https://businessquant.com/docs/api/",
+      "observedAt": "2026-08-12T20:29:00Z",
+      "verifiedFact": "The documented automated access path uses an API key; browser scraping is not substituted for the API."
+    },
+    {
+      "url": "https://businessquant.com/terms-of-use",
+      "observedAt": "2026-08-12T20:29:00Z",
+      "verifiedFact": "Provider data is proprietary; the pilot must remain private and may not be treated as redistribution or a bulk-replication authorization."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "paymentCardRequired": false,
+    "trialRequired": false,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "requestsPerDay": 30,
+    "bandwidthBytesPerMonth": 100000000,
+    "corporateActionsEndpointAdvertisedFree": true,
+    "corporateActionFamiliesAdvertised": [
+      "ACQUISITION",
+      "BANKRUPTCY",
+      "DELISTING",
+      "DIVIDEND",
+      "MERGER",
+      "SPINOFF",
+      "SPLIT"
+    ],
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "survivorshipSafeUniverseAdvertised": false,
+    "licenseDisposition": "PRIVATE_SUPPLEMENTAL_PILOT_ONLY"
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterAccountAttestationAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 9,
+    "noPremiumEndpoint": true,
+    "noBrowserScraping": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noNullPaymentAsZero": true,
+    "noLastQuoteAsTerminalPayment": true,
+    "rawProviderRowsRemainPrivate": true,
+    "publicArtifactLimitedToHashesAndAggregateCapability": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_FINALIZATION_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one Free account at USD 0 without payment card or trial, verify email, and store the API key only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "paymentMustRemainZero": true,
+    "trialMustRemainAbsent": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "CONFIRMED_FREE_SUPPLEMENTAL_EVENT_PILOT_ACCOUNT_REQUIRED",
+    "originalV4CapabilityClosed": false,
+    "fullMarketBulkAcquisitionAuthorized": false,
+    "threeCasePilotEligibleAfterAccountGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After FINRA finalization or higher-value autonomous work, ask Karl once for a Free account and seal a private three-case pilot before any vendor-data request."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_TIER_CAPABILITY",
+      "THREE_CASE_SUPPLEMENTAL_EVENT_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "entitlementVerified": false,
+    "historicalIdentityResolved": false,
+    "completeCorporateActionChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "bf7cf70fde2b616fc23bc904dc2cece82a57483170f58799f3205afb1262a3fd"
+}
