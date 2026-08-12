@@ -21,12 +21,12 @@ from typing import Any
 
 PROTOCOL = "SEC-CIK-GROWTH-PERSISTENCE@1.0.0"
 AUDIT_SCHEMA = "sec-cik-growth-persistence-ai-audit/v2"
-SEAL_SCHEMA = "sec-cik-growth-persistence-preoutcome-seal/v3"
-AUTH_SCHEMA = "sec-cik-growth-persistence-remote-authorization/v3"
+SEAL_SCHEMA = "sec-cik-growth-persistence-preoutcome-seal/v4"
+AUTH_SCHEMA = "sec-cik-growth-persistence-remote-authorization/v4"
 REMOTE = "origin"
 REMOTE_URL = "https://github.com/Karlryl/screener-data.git"
 REMOTE_REF = "refs/heads/codex/early-detection-v4-gates-20260810"
-SEAL_PATH = "reports/early-detection/sec-cik-growth-persistence-preoutcome-seal-v3.json"
+SEAL_PATH = "reports/early-detection/sec-cik-growth-persistence-preoutcome-seal-v4.json"
 HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 HEX40_RE = re.compile(r"^[0-9a-f]{40}$")
 
@@ -264,8 +264,8 @@ def validate_checkpoint_timeline(
     created_at: datetime | None = None,
     authorization_commit_time: datetime | None = None,
 ) -> None:
-    if not audit_times or max(audit_times) > sealed_at:
-        raise CheckpointError("seal predates at least one required AI audit")
+    if not audit_times or max(audit_times) > stage_a_time:
+        raise CheckpointError("Stage-A commit predates at least one required AI audit")
     if stage_a_time > sealed_at:
         raise CheckpointError("seal timestamp predates the Stage-A commit")
     if seal_commit_time is None:
@@ -556,6 +556,15 @@ def self_test() -> dict[str, Any]:
             valid_timeline_accepted = False
         try:
             validate_checkpoint_timeline(
+                [base_time.replace(second=2)], base_time, base_time.replace(second=3),
+                base_time.replace(second=4), base_time.replace(second=5),
+                base_time.replace(second=6),
+            )
+            post_stage_a_audit_rejected = False
+        except CheckpointError:
+            post_stage_a_audit_rejected = True
+        try:
+            validate_checkpoint_timeline(
                 [base_time], base_time, base_time.replace(second=2),
                 base_time.replace(second=1), base_time.replace(second=3),
                 base_time.replace(second=4),
@@ -582,6 +591,7 @@ def self_test() -> dict[str, Any]:
         "selfHashMutationRejected": self_hash_rejected,
         "duplicateAgentRejected": duplicate_agent_rejected,
         "validTimelineAccepted": valid_timeline_accepted,
+        "postStageAAuditRejected": post_stage_a_audit_rejected,
         "futureSealTimestampRejected": future_seal_rejected,
         "futureAuthorizationTimestampRejected": future_authorization_rejected,
         "outcomesAccessed": False,

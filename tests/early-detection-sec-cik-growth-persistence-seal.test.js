@@ -22,6 +22,7 @@ test('SEC CIK checkpoint validator rejects schema drift and outcome unlocks', ()
     futureSealTimestampRejected: true,
     outcomeUnlockRejected: true,
     outcomesAccessed: false,
+    postStageAAuditRejected: true,
     schemaDriftRejected: true,
     selfHashMutationRejected: true,
     status: 'PASS',
