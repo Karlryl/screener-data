@@ -13,5 +13,17 @@ for (const optimized of [false, true]) {
   assert.equal(result.status, 'PASS');
   assert.equal(result.outcomesAccessed, false);
   assert.deepEqual(result.mutationKills, { candidate: true, claim: true, rowOrder: true });
+
+  const verifyArgs = [];
+  if (optimized) verifyArgs.push('-O');
+  verifyArgs.push('-B', 'scripts/verify-sec-form25-structured-metadata-v2-gzip.py', 'verify');
+  const verifyRun = spawnSync('python', verifyArgs, { cwd: root, encoding: 'utf8' });
+  assert.equal(verifyRun.status, 0, verifyRun.stderr);
+  const verified = JSON.parse(verifyRun.stdout.trim());
+  assert.equal(verified.status, 'PASS');
+  assert.equal(verified.rows, 27285);
+  assert.equal(verified.candidateOnlySnippets, 1993);
+  assert.equal(verified.sourceRebuild, false);
+  assert.equal(verified.outcomesAccessed, false);
 }
 console.log('verify-sec-form25-structured-metadata-v2-gzip.test.js: PASS');

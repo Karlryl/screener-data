@@ -130,6 +130,29 @@ def normalized_checkout_matches(path: Path, expected_blob: bytes, label: str) ->
         fail(f"{label} local checkout differs from bound Git blob")
 
 
+def verify_promotion_history(manifest: dict) -> None:
+    if git("remote", "get-url", "origin").decode().strip() != manifest["remote"]:
+        fail("origin URL changed")
+    head = git("rev-parse", "HEAD").decode().strip()
+    parent = manifest["parentRemoteCommit"]
+    if subprocess.run(["git", "merge-base", "--is-ancestor", parent, head], cwd=ROOT, check=False).returncode != 0:
+        fail("promotion parent is not an ancestor of HEAD")
+    commits = git("rev-list", "--reverse", f"{parent}..{head}").decode().splitlines()
+    expected_parent = parent
+    for commit in commits:
+        fields = git("rev-list", "--parents", "-n", "1", commit).decode().split()
+        if fields != [commit, expected_parent]:
+            fail("promotion history is not a linear one-parent chain")
+        expected_parent = commit
+    object_lines = git("rev-list", "--objects", f"{parent}..{head}").decode().splitlines()
+    for line in object_lines:
+        object_id = line.split(" ", 1)[0]
+        if git("cat-file", "-t", object_id).decode().strip() == "blob":
+            size = int(git("cat-file", "-s", object_id).decode().strip())
+            if size >= 100_000_000:
+                fail("promotion contains a Git blob at or above 100 MB")
+
+
 def source_rebuild(manifest: dict, expected_raw: bytes, payload: dict, blob_root: Path) -> None:
     if not blob_root.is_dir():
         fail("source blob root missing")
@@ -148,6 +171,7 @@ def source_rebuild(manifest: dict, expected_raw: bytes, payload: dict, blob_root
 
 def verify(remote: bool = False, blob_root: Path | None = None) -> dict:
     manifest, _ = load_manifest()
+    verify_promotion_history(manifest)
     gz = GZIP_PATH.read_bytes()
     if len(gz) != manifest["gzip"]["bytes"] or sha(gz) != manifest["gzip"]["rawSha256"]:
         fail("gzip bytes changed")
