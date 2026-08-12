@@ -1,0 +1,47 @@
+{
+  "schema": "early-detection-sec-form25-structured-metadata-gzip-manifest/v1",
+  "createdAt": "2026-08-12T17:46:00Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q003-SEC-FORM25-STRUCTURED-METADATA",
+  "parentRemoteCommit": "7dbd7f17cd4dcca1d092b16db1f71c56697687d8",
+  "remote": "https://github.com/Karlryl/screener-data.git",
+  "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+  "gzip": {
+    "path": "reports/early-detection/sec-form25-structured-metadata-v2.json.gz",
+    "bytes": 13197732,
+    "rawSha256": "942bb1ec0fbc292a53ca6b3760b2ffee13253cf60322ecb9778905118a2d370e",
+    "method": "GZIP_LEVEL_9_MTIME_0_EMPTY_FILENAME"
+  },
+  "decompressed": {
+    "logicalPath": "reports/early-detection/sec-form25-structured-metadata-v2.json",
+    "bytes": 257997067,
+    "rawSha256": "bc7b419a8489088f6fadd55579feec05fd193d36a2b415b592b4bac4c950d774",
+    "reportSha256": "b24c12b721b2a81952b8d2b7e8fc9b4617408f69075f5f7d5a09bc98e16f1ea8"
+  },
+  "bindings": {
+    "contractRawSha256": "93c1cb7bf933fa17a3fd50c1659da83517f6ac10771096b19f46aef99ce14e4b",
+    "builderRawSha256": "98100d31bff38159493229db1a77111b6f660266fa4d6318e2178a11c0c1d036",
+    "testRawSha256": "4f64c3b49299b1d80e25ab58f43848ba6f04f493ef740b76068d4468d00c8fc6",
+    "queueRawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+    "inventoryRawSha256": "7a2947b66b9cdc26e829d19a4342b7effbbcea1c8296ca0bc46d4e05217c9711",
+    "inventoryReportSha256": "b52b25d27e826872c83d920c3976a6aa9185c337ac48620e85ffbf323d550ab2"
+  },
+  "counts": {
+    "rows": 27285,
+    "uniqueAccessions": 14504,
+    "localPrimaryPresent": 27263,
+    "ambiguousMultipleLocalBlobs": 22,
+    "fetchRequired": 0,
+    "candidateOnlySnippets": 1993
+  },
+  "claimLocks": {
+    "originalV4GateCredit": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "terminalPaymentVerified": false,
+    "identityResolved": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "manifestSha256": "cdf536c73a96b506e93ee08d7f8568ceb07590ce95f947d990b2da53ec540361"
+}
