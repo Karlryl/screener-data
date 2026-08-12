@@ -1,0 +1,91 @@
+{
+  "schema": "sec-13f-official-list-private-pilot-contract/v1",
+  "createdAt": "2026-08-13T02:05:00Z",
+  "taskId": "Q005-SEC-13F-OFFICIAL-LIST-PRIVATE-PILOT",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Test whether quarterly SEC Official Lists of Section 13(f) Securities add useful point-in-time security evidence for the frozen terminal-identity gap population without redistributing licensed CUSIP data or granting identity credit.",
+  "officialSource": {
+    "indexUrl": "https://www.sec.gov/rules-regulations/staff-guidance/official-list-section-13f-securities",
+    "archiveCoverage": "QUARTERLY_FROM_1996_CURRENT",
+    "pilotUrl": "https://www.sec.gov/divisions/investment/13f/13flist2009q4.pdf",
+    "pilotQuarter": "2009Q4",
+    "pilotCurrentAsOf": "2009-12-15",
+    "facts": [
+      "The SEC publishes the official list quarterly.",
+      "The list contains CUSIP number, issuer name, issuer description and quarterly ADDED or DELETED status.",
+      "The 2009Q4 PDF states that CUSIP numbers and descriptions are used with permission and must not be redistributed without permission."
+    ]
+  },
+  "inputs": {
+    "gapQueue": {
+      "path": "reports/early-detection/sec-terminal-identity-evidence-gap-queue-v1.json",
+      "rawSha256": "4c5bff255368bb0d9f498a8f367c65964c0de80d577cca70c695afe50ce0c650",
+      "rows": 656,
+      "uniqueIssuerCiks": 607,
+      "outcomesAccessed": false
+    },
+    "secExtraction": {
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "rows": 656,
+      "outcomesAccessed": false
+    }
+  },
+  "pilotPolicy": {
+    "networkRequests": 1,
+    "quarter": "2009Q4",
+    "privateRawStorageRequired": true,
+    "publicRawCusipStorageAllowed": false,
+    "publicIssuerDescriptionStorageAllowed": false,
+    "publicOutputAllowed": "AGGREGATE_COUNTS_HASHES_AND_NON_CUSIP_ROW_IDS_ONLY",
+    "matchPolicy": "EXACT_CUSIP_ONLY_WHEN_A_PRIMARY_SEC_SOURCE_ROW_ALREADY_CONTAINS_THE_SAME_CUSIP",
+    "issuerNameOnlyMatchAllowed": false,
+    "tickerOnlyJoinAllowed": false,
+    "pointEvidenceMayResolveIdentity": false,
+    "futureFullArchiveRequiresNewContract": true
+  },
+  "successCriteria": {
+    "officialPdfCapturedAndHashed": true,
+    "rightsNoticeDetected": true,
+    "strictCusipRowsParsed": true,
+    "eligiblePrimarySecRowsWithCusipRecomputed": true,
+    "exactCusipMatchesCountedPrivately": true,
+    "identityCreditGranted": false
+  },
+  "abortCriteria": [
+    "SEC_HTTP_NOT_200_OR_PDF_SIGNATURE_MISSING",
+    "RIGHTS_NOTICE_MISSING",
+    "PDF_PARSE_AMBIGUITY",
+    "PUBLIC_CUSIP_OR_DESCRIPTION_OUTPUT_ATTEMPTED",
+    "NAME_ONLY_OR_TICKER_ONLY_JOIN_ATTEMPTED",
+    "IDENTITY_OR_ORIGINAL_V4_CREDIT_ATTEMPTED"
+  ],
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_QUARTERLY_SECURITY_POINT_EVIDENCE_EXISTS",
+      "PRIVATE_EXACT_CUSIP_CROSSCHECK_COUNT",
+      "SOURCE_CAPABILITY_AND_RIGHTS_DISPOSITION"
+    ],
+    "forbidden": [
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "CIK_SECURITY_OR_LISTING_IDENTITY_RESOLVED",
+      "TERMINAL_SESSION_PAYMENT_OR_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "PUBLIC_CUSIP_REDISTRIBUTION",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "historicalIdentityIntervalsComplete": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "7f7c4f3ed03dbd3c631a950eb5192eaa613cff01c0025c70cb096334ab2051a9"
+}
