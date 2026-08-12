@@ -1,0 +1,93 @@
+{
+  "schema": "sec-13f-official-list-disposition-contract/v2",
+  "createdAt": "2026-08-12T23:57:28Z",
+  "taskId": "Q005-SEC-13F-OFFICIAL-LIST-DISPOSITION-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Quarantine the superseded 13F pilot after a rights-bound identifier was found in a public test fixture, and freeze the source's narrow future-use boundary without performing a data request.",
+  "supersededV1": {
+    "contractPath": "research/early-detection-v4/sec-13f-official-list-private-pilot-contract-v1.json",
+    "contractRawSha256": "a432e808953f3208cb9f723c5e9778b7257dbbd0df4a7c25f5e359a2ab0e2018",
+    "introductionCommit": "a4a06368149efe67e8418e489510fd6e88d277a4",
+    "introductionTag": 828,
+    "historicalBytesRemainAppendOnly": true,
+    "futureExecutionAuthorized": false,
+    "studyCredit": "ZERO"
+  },
+  "incidentDisposition": {
+    "classification": "PUBLIC_TEST_FIXTURE_CONTAINED_ONE_RIGHTS_BOUND_IDENTIFIER",
+    "exactIdentifierRepeatedInDisposition": false,
+    "identifierRemovedFromCurrentTree": true,
+    "historyRewritePerformed": false,
+    "historyRewriteForbiddenWithoutUserApproval": true,
+    "providerPdfCaptured": false,
+    "providerDatasetCaptured": false,
+    "publicProviderRowsProduced": 0,
+    "privateProviderRowsProduced": 0
+  },
+  "remediationBindings": {
+    "runnerPath": "scripts/run-sec-13f-official-list-private-pilot-v1.py",
+    "runnerRawSha256": "f74425b7915b6e38a0f2e537f3337373be575ca6f587283df794566592f4aa0c",
+    "testPath": "tests/run-sec-13f-official-list-private-pilot-v1.test.js",
+    "testRawSha256": "a05989fbfd56fb24a38a1e88dbde7194c909907767989058d390cc68c7ef6072",
+    "futureDataRequestFailsClosed": true
+  },
+  "sourceDisposition": {
+    "status": "QUARANTINED_RESTRICTED_INTERNAL_EVALUATION_ONLY",
+    "officialIndexUrl": "https://www.sec.gov/rules-regulations/staff-guidance/official-list-section-13f-securities",
+    "rightsNoticeUrl": "https://www.sec.gov/divisions/investment/13f/13flist2009q4.pdf",
+    "archiveCoverageClaim": "AVAILABLE_QUARTERLY_ARCHIVES_ONLY_WITH_EXPLICIT_GAPS",
+    "rawCusipPublicationAllowed": false,
+    "issuerDescriptionPublicationAllowed": false,
+    "automatedArchiveExecutionAuthorized": false,
+    "identityCapabilityClosed": false,
+    "terminalCapabilityClosed": false
+  },
+  "eligibilityCensus": {
+    "frozenGapRows": 656,
+    "rowsWithLabelBoundCusipEvidence": 1,
+    "rowsWithoutLabelBoundCusipEvidence": 655,
+    "maximumEligibleRowShareBasisPoints": 15,
+    "fullArchivePilotWorthExecutingNow": false,
+    "reason": "The current exact-match design cannot add evidence to 655 of 656 frozen rows, while the source carries redistribution restrictions."
+  },
+  "futureReconsiderationRequires": [
+    "NEW_APPEND_ONLY_PROTOCOL",
+    "EXPLICIT_PRIVATE_ROOT_OUTSIDE_ALL_GIT_AND_SYNC_TREES",
+    "REAL_SEC_CONTACT_ENVIRONMENT_VALUE",
+    "RAW_CAPTURE_SEALED_BEFORE_PARSER_DESIGN",
+    "INDEPENDENT_SECOND_PARSER_AND_REBUILD",
+    "NO_PUBLIC_CUSIP_OR_DESCRIPTION_BYTES",
+    "PREDECLARED_MINIMUM_USEFULNESS_ABOVE_CURRENT_ELIGIBILITY_CENSUS"
+  ],
+  "claimCeiling": {
+    "allowed": [
+      "SOURCE_CAPABILITY_AND_RIGHTS_DISPOSITION",
+      "AGGREGATE_PRE_REQUEST_ELIGIBILITY_CENSUS",
+      "HISTORICAL_INCIDENT_DISCLOSURE_WITHOUT_IDENTIFIER_REPETITION"
+    ],
+    "forbidden": [
+      "PUBLIC_CUSIP_OR_DESCRIPTION",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "CIK_SECURITY_OR_LISTING_IDENTITY_RESOLVED",
+      "TERMINAL_SESSION_PAYMENT_OR_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "futureExecutionAuthorized": false,
+    "dataRowsPromoted": false,
+    "publicIdentifiersPublishedByV2": false,
+    "historicalIdentityIntervalsComplete": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "1c19567c10402c228a2444bd5ac41d1dcdf8a8c719fe1849463381ed2d4f073b"
+}

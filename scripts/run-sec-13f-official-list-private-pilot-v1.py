@@ -193,12 +193,9 @@ def fetch() -> bytes:
 
 
 def self_test() -> dict[str, Any]:
-    sentence = "Common Stock (Cusip 191219 10 4) was converted into cash."
-    parsed = {"".join(match.groups()) for match in CUSIP_TEXT.finditer(sentence)}
-    no_label = {"".join(match.groups()) for match in CUSIP_TEXT.finditer("191219 10 4")}
     return {
-        "cusipWithPrimarySecLabelParsed": parsed == {"191219104"},
-        "unlabelledCusipRejected": not no_label,
+        "historicalRealIdentifierFixtureRemoved": True,
+        "futureExecutionSuperseded": True,
         "publicCusipExportForbidden": validate_contract()["pilotPolicy"]["publicRawCusipStorageAllowed"] is False,
         "identityCreditForbidden": validate_contract()["pilotPolicy"]["pointEvidenceMayResolveIdentity"] is False,
     }
@@ -221,6 +218,7 @@ def main() -> int:
             fail("self-test failed")
         print(json.dumps({"status": "PASS", **result}, sort_keys=True))
         return 0
+    fail("V1 execution superseded by zero-credit V2 disposition")
     pdf_raw = fetch()
     report = build_private_report(pdf_raw)
     atomic_create(PRIVATE_PDF, pdf_raw)
