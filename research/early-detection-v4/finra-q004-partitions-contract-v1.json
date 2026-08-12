@@ -1,0 +1,58 @@
+{
+  "schema": "finra-q004-partitions-contract/v1",
+  "createdAt": "2026-08-12T19:31:09Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Authorize one official FINRA partitions request and freeze only the available calendarDay queue for 2009-01-01 through 2024-12-31 before the historical crawl.",
+  "authorization": {
+    "parentRemoteCommit": "43626dd3e3f3ab9d60da44065c7345f653d1c492",
+    "singleDayPilotPath": "reports/early-detection/finra-q004-single-day-pilot-v2.json",
+    "singleDayPilotRawSha256": "1c51bd9e8776d73863bc9be9d9a16aae953724b1c12fbcf5a61696e3eeb264fe",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0
+  },
+  "requestContract": {
+    "method": "GET",
+    "url": "https://api.finra.org/partitions/group/otcMarket/name/otcDailyList",
+    "requests": 1,
+    "credentialsSent": false,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "maximumResponseBytes": 2097152
+  },
+  "queueContract": {
+    "partitionField": "calendarDay",
+    "minimumDate": "2009-01-01",
+    "maximumDate": "2024-12-31",
+    "datesSortedAscending": true,
+    "datesUnique": true,
+    "liveOrPost2024DatesIncluded": false,
+    "emptyCalendarDaysQueried": false
+  },
+  "privateCas": {
+    "root": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/partitions",
+    "pathTemplate": "sha256/{sha256[0:2]}/{sha256}",
+    "outsideGitRequired": true,
+    "writeNewOnly": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-partitions-2009-2024-v1.json",
+    "rawResponseIncluded": false,
+    "partitionDatesIncluded": true,
+    "recordValuesIncluded": false,
+    "outcomesAccessed": false
+  },
+  "claimLocks": {
+    "historicalCrawlComplete": false,
+    "corporateActionsComplete": false,
+    "terminalPaymentsComplete": false,
+    "terminalSessionsComplete": false,
+    "identityResolved": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "6a63cdf1ae33d3696e9f167b9926ee2f7f4c3993efa9b64228eeac41a621ba3c"
+}
