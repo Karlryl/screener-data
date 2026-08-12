@@ -1,0 +1,60 @@
+{
+  "schema": "finra-q004-historical-finalization-contract/v3",
+  "createdAt": "2026-08-12T20:20:00Z",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Authorize deterministic finalization of the completed V2 crawl checkpoint without rewriting its immutable Tag-766 acquisition binding after unrelated append-only research commits.",
+  "v2Bindings": {
+    "acquisitionCommit": "d51f05feb03460c2c8e7660570815084d576d976",
+    "parentCommit": "102bb345568721e950fa9ee3420ef7bbce7414a6",
+    "contractPath": "research/early-detection-v4/finra-q004-historical-crawl-contract-v2.json",
+    "contractRawSha256": "0bfba1438672513c02402047fd3e9801b254c3cfd7494ee10e9e10cccc4e93ab",
+    "runnerPath": "scripts/run-finra-q004-historical-crawl-v2.py",
+    "runnerRawSha256": "582ac6d5dd4b432d90ce231c4eb21b32bc9e6f7dfb36f241a99e2f3f248bed4b",
+    "testPath": "tests/run-finra-q004-historical-crawl-v2.test.js",
+    "testRawSha256": "d84f83ecbc10664c7805435fb7dfc810cdd40669160a4b27fe79d20e668aadbb"
+  },
+  "checkpointContract": {
+    "privatePath": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/historical/checkpoint-v2.json",
+    "requiredPartitionCount": 1522,
+    "requiredAvailableMinimumDate": "2016-01-18",
+    "requiredAvailableMaximumDate": "2024-12-31",
+    "requiredDatesSha256": "4b6b991889079d3fbcf92de1a4853988d3eb78ad650ddee50cdbeba8f9381b37",
+    "requiredFieldsSha256": "16f599619d5666efa0be18ca4e3e209d5646cc1e4e114dc042eb39156ef4d6d1",
+    "requiredImplementationRemoteHead": "d51f05feb03460c2c8e7660570815084d576d976",
+    "allRawPagesRemainPrivate": true,
+    "fullBlobRebuildsRequired": 2
+  },
+  "remoteContract": {
+    "remoteName": "origin",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "remoteBranch": "codex/early-detection-v4-gates-20260810",
+    "acquisitionCommitMustRemainAncestor": true,
+    "v2ImplementationBlobsMustRemainExactAtAcquisitionCommit": true,
+    "finalizerImplementationMustBeRemoteBoundBeforeUse": true,
+    "outputIntroducedInLaterDirectCommit": true
+  },
+  "outputContract": {
+    "outputPath": "reports/early-detection/finra-q004-historical-crawl-manifest-v3.json",
+    "rawRowsIncluded": false,
+    "requestOrResponseBodiesIncluded": false,
+    "identifiersIncluded": false,
+    "aggregateCountsOnly": true,
+    "pre2016CoverageStatus": "UNRESOLVED_NOT_EXPOSED_BY_PARTITIONS_ENDPOINT",
+    "writeNewAtomic": true,
+    "twoIndependentFullPrivateRebuildsRequired": true
+  },
+  "claimLocks": {
+    "historicalIdentityResolved": false,
+    "corporateActionsComplete": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "d9496f6a949a91a9a889c85f79160542ca5966b3f54ee717240ad3d2d2b87bb3"
+}
