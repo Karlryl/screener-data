@@ -1,0 +1,94 @@
+{
+  "schema": "early-detection-courtlistener-recap-free-api-prerequisite/v1",
+  "createdAt": "2026-08-12T20:16:00Z",
+  "taskId": "Q011-COURTLISTENER-RECAP-FREE-API-PREREQUISITE",
+  "sourceId": "COURTLISTENER_RECAP",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the zero-cost CourtListener API capability and the exact user-action boundary before requesting an account or token.",
+  "officialEvidence": [
+    {
+      "url": "https://wiki.free.law/c/courtlistener/help/api/rest/v4/overview",
+      "observedAt": "2026-08-12T20:16:00Z",
+      "verifiedFact": "CourtListener recommends token authentication; authenticated free-tier users receive 5 requests per minute, 50 per hour and 125 per day, and multiple accounts are forbidden."
+    },
+    {
+      "url": "https://free.law/membership/",
+      "observedAt": "2026-08-12T20:16:00Z",
+      "verifiedFact": "The published Free Tier Non-Members API allowance is 5 per minute, 50 per hour and 125 per day; paid memberships are optional and not required for this lane."
+    },
+    {
+      "url": "https://wiki.free.law/c/courtlistener/help/api/rest/v4/recap",
+      "observedAt": "2026-08-12T20:16:00Z",
+      "verifiedFact": "Existing RECAP Archive data can be queried via PACER-data APIs, while recap-fetch may buy missing PACER content and therefore is excluded."
+    },
+    {
+      "url": "https://www.courtlistener.com/profile/api-token/",
+      "observedAt": "2026-08-12T20:16:00Z",
+      "verifiedFact": "The API token is provided through the authenticated CourtListener profile."
+    }
+  ],
+  "freeCapability": {
+    "freeNonMemberTierPublished": true,
+    "paymentDetailsRequired": false,
+    "trialRequired": false,
+    "accountRequiredForProduction": true,
+    "tokenRequiredForProduction": true,
+    "requestsPerMinute": 5,
+    "requestsPerHour": 50,
+    "requestsPerDay": 125,
+    "multipleAccountsAllowed": false,
+    "existingArchiveReadCandidate": true,
+    "pacerPurchasesAllowed": false,
+    "recapFetchAllowed": false,
+    "paidMembershipAllowed": false
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_CRAWL_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one free CourtListener account, accept applicable terms, open the profile API-token page, and store the token only in the local Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "paymentMustRemainZero": true,
+    "trialMustRemainAbsent": true,
+    "noPacerCredentials": true,
+    "noPacerPurchase": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "FREE_ACCOUNT_REQUIRED_EXISTING_RECAP_READ_PILOT_CANDIDATE",
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterAccountAttestationAndSecretStoreBinding": true,
+    "pilotScope": "QUERY_ONLY_EXISTING_RECAP_ARCHIVE_FOR_PRESELECTED_TERMINAL_EVENT_CASES",
+    "nextAction": "After current autonomous lanes are exhausted, ask Karl once for the free-account login; then seal an accounted acquisition contract before any production request."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "FREE_API_CAPABILITY_AND_PREREQUISITE",
+      "EXISTING_RECAP_ARCHIVE_QUERY_FEASIBILITY"
+    ],
+    "forbidden": [
+      "PACER_PURCHASE",
+      "RECAP_ARCHIVE_COMPLETENESS",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "tokenStored": false,
+    "pacerCredentialsUsed": false,
+    "pacerPurchaseMade": false,
+    "archiveCompletenessClaimed": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "f8342511f58f4ceedd849472130bf512eb117cfd974282fe5efacc6254888f2b"
+}
