@@ -1,0 +1,79 @@
+{
+  "schema": "early-detection-sec-company-ticker-target-asof-profile-contract/v1",
+  "createdAt": "2026-08-12T22:05:00Z",
+  "taskId": "Q003-SEC-COMPANY-TICKER-TARGET-ASOF-PROFILE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Measure which issuer-resolved SEC terminal candidates have exact point-in-time SEC company-ticker evidence at or before the filing date, without inferring intervals, security identity, terminal events or outcomes.",
+  "inputs": {
+    "issuerResolution": {
+      "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+      "rawSha256": "f89767daf43c2d06ca87c0b57919b450749620026724b700ff94572117da7cfb",
+      "reportSha256": "3b450bef0120eee49fc4ab0f188578097ffd2fb53d781675b33c6db84809ead6",
+      "introductionCommit": "167592d0e7bae4a03d3589844d8430c1ded83e67",
+      "rows": 656,
+      "uniqueIssuerCiks": 607
+    },
+    "secCompanyTickerArchive": {
+      "path": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/early-detection-v4/sec-company-ticker-archive-v1/sec-company-tickers-2017-2024-v2.sqlite",
+      "rawSha256": "0ed47251122fdd83d1910ff37e0e18d623492a0de253c0dda77976c4fb9f4aae",
+      "bytes": 584245248,
+      "schema": "early-detection-sec-company-ticker-archive/v2",
+      "snapshots": 544,
+      "uniqueSnapshotTimestamps": 544,
+      "states": 385,
+      "identityRows": 4258096,
+      "uniqueCiks": 18546,
+      "uniqueTickers": 29181,
+      "minimumTimestamp": "20170828201525",
+      "maximumTimestamp": "20241207105854",
+      "snapshotStateSequenceSha256": "0d63bcb39a96ac3d8e2fba9828ffd3c02fb3d5348aef1aa56ff0dbf1139d156d",
+      "identitySequenceSha256": "acf3ca718914c9199ea57a7b0b38b098b28e27eda5eea7f9620d94d378be781b"
+    }
+  },
+  "profileContract": {
+    "oneOutputRowPerIssuerResolutionRow": true,
+    "asOfCutoff": "LATEST_ARCHIVE_SNAPSHOT_TIMESTAMP_NOT_AFTER_QUEUE_FILED_DATE_END_OF_DAY",
+    "joinKey": [
+      "sourceDerivedIssuerCik"
+    ],
+    "tickerJoinAllowed": false,
+    "companyNameJoinAllowed": false,
+    "securityIdentityInferenceAllowed": false,
+    "continuousIntervalInferenceAllowed": false,
+    "latestFutureSnapshotFallbackAllowed": false,
+    "expectedRows": 656,
+    "expectedNoPriorSnapshotRows": 452,
+    "expectedPriorSnapshotNoIssuerRows": 19,
+    "expectedOnePointTickerRows": 143,
+    "expectedMultiplePointTickerRows": 42,
+    "expectedByPointState": {
+      "NO_ARCHIVE_SNAPSHOT_AT_OR_BEFORE_FILING": 452,
+      "PRIOR_SNAPSHOT_ISSUER_ABSENT": 19,
+      "PRIOR_SNAPSHOT_MULTIPLE_TICKERS_CANDIDATE_ONLY": 42,
+      "PRIOR_SNAPSHOT_ONE_TICKER_CANDIDATE_ONLY": 143
+    },
+    "rawProviderRowsRemainPrivate": true,
+    "outcomesAccessed": false
+  },
+  "output": {
+    "path": "reports/early-detection/sec-company-ticker-target-asof-profile-v1.json",
+    "writeNewAtomic": true
+  },
+  "claimLocks": {
+    "pointInTimeTickerCandidateAvailable": true,
+    "historicalIdentityResolved": false,
+    "continuousValidityIntervalProven": false,
+    "tickerReuseResolved": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "terminalSessionProven": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "d73ad651146771aae34931583489cd76d3f398e29cc269a73a7a632069653580"
+}
