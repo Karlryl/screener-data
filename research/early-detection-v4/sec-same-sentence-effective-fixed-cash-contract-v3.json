@@ -1,0 +1,97 @@
+{
+  "claimLocks": {
+    "actualCashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryComplete": false,
+    "securityIdentityResolved": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "createdAt": "2026-08-12T23:07:38Z",
+  "evidenceContract": {
+    "actualCashReceiptNotInferred": true,
+    "currencyDisposition": "DOLLAR_MARKER_PRESENT_CURRENCY_UNRESOLVED",
+    "expectedAccessions": [
+      "0000876661-09-000090",
+      "0000876661-10-000067",
+      "0000876661-10-000193",
+      "0000876661-10-000309",
+      "0000876661-14-000477",
+      "0000876661-15-000196",
+      "0000876661-16-001022",
+      "0000876661-17-000392",
+      "0000876661-19-000707",
+      "0000876661-22-000511",
+      "0001143313-16-000072"
+    ],
+    "expectedAmountsByAccession": {
+      "0000876661-09-000090": "31",
+      "0000876661-10-000067": "22",
+      "0000876661-10-000193": "38.25",
+      "0000876661-10-000309": "11",
+      "0000876661-14-000477": "63",
+      "0000876661-15-000196": "8",
+      "0000876661-16-001022": "26",
+      "0000876661-17-000392": "17.3",
+      "0000876661-19-000707": "13.05",
+      "0000876661-22-000511": "9.81",
+      "0001143313-16-000072": "19.61"
+    },
+    "expectedEffectiveDatesByAccession": {
+      "0000876661-09-000090": "2009-01-23",
+      "0000876661-10-000067": "2010-02-26",
+      "0000876661-10-000193": "2010-05-28",
+      "0000876661-10-000309": "2010-08-30",
+      "0000876661-14-000477": "2014-08-28",
+      "0000876661-15-000196": "2015-05-05",
+      "0000876661-16-001022": "2016-06-10",
+      "0000876661-17-000392": "2017-07-10",
+      "0000876661-19-000707": "2019-07-02",
+      "0000876661-22-000511": "2022-06-27",
+      "0001143313-16-000072": "2016-01-04"
+    },
+    "expectedRows": 11,
+    "mixedSecurityConsiderationForbidden": true,
+    "oneConsiderationAmountRequired": true,
+    "primarySecBlobRebuildRequired": true,
+    "sameSentenceEffectiveDateCashConversionRequired": true,
+    "semanticCeiling": "PRIMARY_SEC_SENTENCE_STATES_EFFECTIVE_TRANSACTION_DATE_AND_FIXED_CASH_CONVERSION",
+    "sourceSentenceHashRequired": true
+  },
+  "implementationContract": {
+    "builderPath": "scripts/build-sec-same-sentence-effective-fixed-cash-v3.py",
+    "outputAbsentAtBuildBase": true,
+    "outputIntroductionDirectChildOfBuildBase": true,
+    "preImplementationParentCommit": "cb4674715c4d1d8c0e39f0c3caf12682184921d7",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "singleParentBuildBase": true,
+    "testPath": "tests/build-sec-same-sentence-effective-fixed-cash-v3.test.js"
+  },
+  "inputs": {
+    "documentExtraction": {
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "reportSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000"
+    },
+    "supersededV2": {
+      "builderRawSha256": "3edea67db65e2923adb1d816c81c2201a80fa87dd246b6af2418ef5c32d38095",
+      "contractRawSha256": "4fdfd79ffe4f50eebb6634852c26ff5051f734d2e09b86773963afe3b9c32e42",
+      "outputRawSha256": "7f81f89f80f5d96b01687a51cf6ce95eac356308af92635e0cdfe5c480754622",
+      "outputReportSha256": "19273be01cb9517f802326ae4afd9c40ff2ab1a0db0cad86acb5f5243a625814",
+      "status": "SUPERSEDED_P1_LINEAGE_AND_MIXED_SECURITY_HARNESS"
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-same-sentence-effective-fixed-cash-v3.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Supersede V2 with an honest direct-child output checkpoint and a selector-level prohibition of numeric, fractional and spelled-out security consideration while retaining the dollar sign only as an unresolved currency marker.",
+  "schema": "early-detection-sec-same-sentence-effective-fixed-cash-contract/v3",
+  "taskId": "Q003-SEC-SAME-SENTENCE-EFFECTIVE-FIXED-CASH-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
