@@ -1,0 +1,146 @@
+{
+  "schema": "early-detection-quantconnect-free-cloud-pilot-contract/v6",
+  "createdAt": "2026-08-12T17:45:00Z",
+  "taskId": "Q002-QUANTCONNECT-50-CASE-COMPACT-CONTRACT",
+  "sourceId": "QUANTCONNECT_FREE_CLOUD",
+  "phase": "DISCOVERY_ONLY_PRE_IDENTITY_VALIDATION",
+  "predecessorObservation": {
+    "status": "OPERATOR_REPORTED_UNSEALED_NOT_PROMOTED",
+    "schema": "early-detection-quantconnect-free-cloud-metadata-output/v5",
+    "leanVersionObserved": "2.5.0.0.17996",
+    "caseCount": 50,
+    "dataPoints": 217358,
+    "completionMarker": "Algorithm completed",
+    "observedLogCharacters": 8172,
+    "truncationObservedAfterCaseId": "QC-006",
+    "evidenceArtifactBound": false
+  },
+  "pilotCore": {
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "runParameters": {
+      "start": "2009-01-01",
+      "end": "2024-12-31",
+      "resolution": "DAILY",
+      "normalization": "RAW",
+      "minimumIndependentRuns": 2
+    },
+    "expectedLeanVersion": "2.5.0.0.17996",
+    "datasetPolicy": {
+      "label": "QUANTCONNECT_US_EQUITY_SECURITY_MASTER_PLUS_US_EQUITIES",
+      "versionStatus": "PROVIDER_DATASET_UNVERSIONED",
+      "retrievalDateSource": "UTC_WALL_CLOCK_AT_RUN",
+      "officialVersionClaimed": false
+    },
+    "outputSchema": "early-detection-quantconnect-free-cloud-metadata-output/v6",
+    "rowUnit": "FROZEN_CASE_WITH_POSITIONALLY_BOUND_PRIMARY_AND_ALTERNATE_ALIASES",
+    "caseAndAliasBinding": {
+      "caseOrder": "QC_001_THROUGH_QC_050_EXACT",
+      "aliasOrder": "QUERY_SYMBOL_THEN_FROZEN_ALTERNATE_SYMBOLS",
+      "referenceWindow": "EXACT_PER_CASE_START_AND_END",
+      "tickerOnlyIdentityJoinAllowed": false,
+      "equalSecurityIdentifiersResolveIdentity": false,
+      "identityAssessment": "DISCOVERY_ONLY_UNRESOLVED"
+    },
+    "aliasTupleFields": [
+      "subscriptionAccepted",
+      "securityIdentifierOrNull",
+      "observationCount",
+      "firstObservationDateOrNull",
+      "lastObservationDateOrNull",
+      "eventCountsInFrozenOrder",
+      "errorCodes"
+    ],
+    "securityIdentifierPolicy": {
+      "exportWhenSubscriptionAccepted": true,
+      "providerIdentifierIsCandidateMetadataOnly": true,
+      "identityResolutionAllowed": false
+    },
+    "compactPayload": {
+      "encoding": "ZLIB9_BASE64URL_CANONICAL_JSON",
+      "decodedSchema": "ONE_KEY_CASE_ROWS_WITH_FIXED_POSITIONAL_TUPLES",
+      "decodedMaximumBytes": 32768,
+      "dateArraysAllowed": false,
+      "numericMarketValuesAllowed": false
+    },
+    "eventSequence": {
+      "eventTypeOrder": [
+        "SPLIT",
+        "DIVIDEND",
+        "SYMBOL_CHANGE",
+        "DELISTING"
+      ],
+      "digest": "LENGTH_PREFIXED_CANONICAL_JSON_SEQUENCE_SHA256_TRUNC192",
+      "stream": "SHA256_TRUNC192_RAW_CONCAT_BASE64URL_ORDERED_V1",
+      "zeroCountHashOmitted": true
+    },
+    "maxLogBytesExclusive": 7000,
+    "logPrefix": "QC_METADATA_V6=",
+    "reportSelfHash": "SHA256_CANONICAL_JSON_EXCLUDING_REPORT_SHA256",
+    "payloadSelfHash": "SHA256_DECOMPRESSED_CANONICAL_JSON",
+    "providerRunRule": {
+      "providerRunIds": "TWO_DISTINCT_NONEMPTY_IDS",
+      "leanLabel": "EXACT_IDENTICAL_EXPECTED_VALUE",
+      "datasetLabelAndRetrievalDate": "EXACT_IDENTICAL_UNVERSIONED_LABEL_AND_DATE",
+      "parity": "ALL_FIELDS_IDENTICAL_EXCEPT_PROVIDER_RUN_ID_EXECUTED_AT_AND_REPORT_SHA256"
+    },
+    "forbiddenFieldsRecursive": [
+      "ADJUSTED",
+      "CLOSE",
+      "ENDPOINT_VALUE",
+      "HIGH",
+      "HOLDINGS",
+      "LOW",
+      "OPEN",
+      "ORIGINAL_V4_RESULT",
+      "OUTCOME",
+      "P_VALUE",
+      "PORTFOLIO",
+      "PRICE",
+      "RETURN",
+      "TERMINAL",
+      "VOLUME"
+    ],
+    "claimLocks": {
+      "identityResolved": false,
+      "terminalWealthComplete": false,
+      "originalV4GateCredit": false,
+      "outcomesAccessed": false,
+      "priceValuesExported": false,
+      "returnsComputed": false,
+      "ordersSubmitted": false
+    }
+  },
+  "pilotCoreSha256": "8c3c39108cdf1c1b43719fe5d06885aa94f39911aa1437bb9ddfb82e268a5186",
+  "boundFiles": {
+    "casesPath": "research/early-detection-v4/quantconnect-free-cloud-pilot-cases-v1.json",
+    "casesRawSha256": "78be68ce710dedf9e7165c340b733e1ec2ebe6637548d35e704aa20961fbfcd6",
+    "cloudScriptPath": "scripts/quantconnect-free-cloud-metadata-pilot-v6.py",
+    "cloudScriptRawSha256": "380609b6b78b06f8d7e2f70c032e574659d261f1749f4cd971e1f4d28be77285",
+    "verifierPath": "scripts/verify-quantconnect-free-cloud-pilot-v6.py",
+    "verifierRawSha256": "20b980f0a734f41e43f9c994f85dbe0ebef176463f964448ed40336bf5cf9b06",
+    "testPath": "tests/verify-quantconnect-free-cloud-pilot-v6.test.js",
+    "testRawSha256": "0feae8c91d8901d25a8fd29ec1e1967ec077a628b8c870b1817f0f9ee38558a6"
+  },
+  "executionBlockedUntil": [
+    "TWO_COMPLETE_NONTRUNCATED_PROVIDER_RUNS",
+    "TWO_PROVIDER_RUN_ENVELOPES_CAS_GIT_REMOTE_VERIFIED",
+    "TERMS_AND_DERIVATIVE_EXPORT_RIGHTS_REMOTE_BOUND"
+  ],
+  "claimBoundary": {
+    "allowed": [
+      "METADATA_DISCOVERY_AND_REPRODUCIBILITY_ONLY"
+    ],
+    "forbidden": [
+      "IDENTITY_RESOLVED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "COVERAGE_RATE",
+      "FULL_MARKET",
+      "SURVIVORSHIP_SAFE",
+      "ORIGINAL_V4_GATE_PASS",
+      "H_LATE",
+      "H_FEM"
+    ]
+  },
+  "humanAttestation": false,
+  "outcomesAccessed": false
+}
