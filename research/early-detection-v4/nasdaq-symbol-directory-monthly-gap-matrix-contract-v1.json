@@ -1,0 +1,55 @@
+{
+  "schema": "early-detection-nasdaq-symbol-directory-monthly-gap-matrix-contract/v1",
+  "createdAt": "2026-08-12T22:05:00Z",
+  "taskId": "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+  "sourceId": "NASDAQ_SYMBOL_DIRECTORY_ARCHIVE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the exact monthly source-kind coverage matrix of the sparse 2009-2024 Nasdaq symbol-directory archive, so missing months remain explicit and cannot be inferred as continuous listing intervals.",
+  "input": {
+    "path": "reports/early-detection/nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+    "rawSha256": "c653dd26a12e2c5adb149f2035c22c293b595b576d7a02bd04a6f31aa2a080fd",
+    "reportSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23",
+    "introductionCommit": "d3e540c642066b69a1618be986948c05fcbc9764",
+    "periodStart": "2009-01",
+    "periodEnd": "2024-12",
+    "snapshotKinds": [
+      "NASDAQ",
+      "OTHER_LISTED"
+    ],
+    "snapshots": 103,
+    "observations": 434214
+  },
+  "matrixContract": {
+    "monthCount": 192,
+    "cellCount": 384,
+    "oneCellPerMonthAndKind": true,
+    "cellStates": [
+      "MISSING_ARCHIVE_SNAPSHOT",
+      "ONE_ARCHIVE_SNAPSHOT",
+      "MULTIPLE_ARCHIVE_SNAPSHOTS"
+    ],
+    "positivePresenceOnly": true,
+    "continuousIntervalInferenceAllowed": false,
+    "firstOrLastTradingDateInferenceAllowed": false,
+    "permanentSecurityIdentityInferenceAllowed": false,
+    "outcomesAccessed": false
+  },
+  "output": {
+    "path": "reports/early-detection/nasdaq-symbol-directory-monthly-gap-matrix-v1.json",
+    "writeNewAtomic": true
+  },
+  "claimLocks": {
+    "historicalUniverseComplete": false,
+    "historicalIdentityResolved": false,
+    "continuousPresenceProven": false,
+    "firstTradingDateProven": false,
+    "lastTradingDateProven": false,
+    "terminalPaymentVerified": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "70d1c5b7c2c8f8343241f22a4722863538187fdf0ff2e5290947846a967d3a69"
+}
