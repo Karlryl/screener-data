@@ -1,12 +1,12 @@
 {
   "schema": "openfigi-anonymous-handshake-contract/v1",
-  "createdAt": "2026-08-12T16:45:00Z",
+  "createdAt": "2026-08-12T16:33:00Z",
   "track": "SHARED_OUTCOME_BLIND_INFRASTRUCTURE",
   "taskId": "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
   "sourceId": "OPENFIGI_FREE",
   "purpose": "Anonymous OpenFIGI V3 point-in-time identifier-mapping qualification for three fixed control cases.",
   "documentation": {
-    "checkedAt": "2026-08-12T16:45:00Z",
+    "checkedAt": "2026-08-12T16:32:12Z",
     "officialDocumentationUrl": "https://www.openfigi.com/api/documentation",
     "officialOpenApiSchemaUrl": "https://api.openfigi.com/schema",
     "officialTermsUrl": "https://www.openfigi.com/docs/terms-of-service",
@@ -19,6 +19,15 @@
       "Rate-limit-limit, ratelimit-remaining and ratelimit-reset response headers are documented.",
       "OpenFIGI exposes identifier and descriptive metadata, not historical validity intervals, corporate-action effective dates, terminal sessions or terminal payments."
     ]
+  },
+  "termsSnapshot": {
+    "path": "research/early-detection-v4/openfigi-terms-snapshot-v1.json",
+    "rawSha256": "423d084fd0ff7ebb20fc0d055901a0aa9b915a40218c911653462234a8b80ae7",
+    "snapshotSha256": "8c882530c0cd7f918f0101373421d7238689ec584d74d8f77306421e13b33c95",
+    "sourceBodyPath": "research/early-detection-v4/openfigi-terms-of-service-2026-08-12.html",
+    "sourceBodyRawSha256": "dc1f321786c6e29cc4758bfd86137d49e95ae7a0b1c2abf68d44f2f53a67420e",
+    "figiIdentifiersDisposition": "PUBLIC_DOMAIN_FREE_REPRODUCTION_DISTRIBUTION_AND_USE",
+    "relatedDescriptionsDisposition": "INTERNAL_HANDSHAKE_EVIDENCE_ONLY_NO_REDISTRIBUTION_RIGHT_ASSERTED"
   },
   "entitlement": {
     "accountRequired": false,
@@ -154,6 +163,17 @@
     "requestBodySha256Required": true,
     "rateLimitHeadersMustBeCaptured": true
   },
+  "implementationPolicy": {
+    "runnerPath": "scripts/run-openfigi-anonymous-handshake-v1.py",
+    "testPath": "tests/run-openfigi-anonymous-handshake-v1.test.js",
+    "termsSourcePath": "research/early-detection-v4/openfigi-terms-of-service-2026-08-12.html",
+    "remoteName": "origin",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "localHeadEqualsUpstreamAndRemoteRequired": true,
+    "localBytesEqualHeadGitBlobsRequired": true,
+    "preAndPostNetworkSnapshotEqualityRequired": true
+  },
   "claimCeiling": {
     "allowed": [
       "CURRENT_POINT_IDENTIFIER_EVIDENCE",
@@ -181,5 +201,5 @@
     "terminalPaymentClaimed": false,
     "humanAttestation": false
   },
-  "contractSha256": "b760a32a20f9afcb106935e9631b49bb864d3fb97a12fdf8e75fd6930082b7c8"
+  "contractSha256": "1f7b4672e254d18c0ea63a6ecbe0046f28d7cb45f937b08af93a08216d54232c"
 }

@@ -9,6 +9,8 @@ const test = require('node:test');
 const ROOT = path.resolve(__dirname, '..');
 const SCRIPT = path.join(ROOT, 'scripts', 'run-openfigi-anonymous-handshake-v1.py');
 const CONTRACT = path.join(ROOT, 'research', 'early-detection-v4', 'openfigi-anonymous-handshake-contract-v1.json');
+const TERMS = path.join(ROOT, 'research', 'early-detection-v4', 'openfigi-terms-snapshot-v1.json');
+const TERMS_SOURCE = path.join(ROOT, 'research', 'early-detection-v4', 'openfigi-terms-of-service-2026-08-12.html');
 
 function runPython(args, input = undefined) {
   return spawnSync('python', args, {
@@ -65,7 +67,24 @@ test('contract is exact, anonymous, outcome-blind, V3 and point-evidence-only', 
   assert.ok(contract.claimCeiling.forbidden.includes('HISTORICAL_VALIDITY_INTERVAL'));
   assert.ok(contract.claimCeiling.forbidden.includes('TERMINAL_PAYMENT'));
   assert.ok(contract.claimCeiling.forbidden.includes('PRICE_OR_RETURN_OUTCOME'));
+  assert.equal(contract.networkPolicy.proxyOrRateLimitBypassAllowed, false);
+  assert.equal(contract.termsSnapshot.path, 'research/early-detection-v4/openfigi-terms-snapshot-v1.json');
+  assert.equal(contract.termsSnapshot.figiIdentifiersDisposition, 'PUBLIC_DOMAIN_FREE_REPRODUCTION_DISTRIBUTION_AND_USE');
+  assert.equal(contract.termsSnapshot.relatedDescriptionsDisposition, 'INTERNAL_HANDSHAKE_EVIDENCE_ONLY_NO_REDISTRIBUTION_RIGHT_ASSERTED');
   assert.deepEqual(new Set(Object.values(contract.locks)), new Set([false]));
+
+  const terms = JSON.parse(fs.readFileSync(TERMS, 'utf8'));
+  assert.equal(terms.semanticFacts.figiIdentifiers, 'PUBLIC_DOMAIN_FREE_REPRODUCTION_DISTRIBUTION_AND_USE');
+  assert.equal(terms.semanticFacts.relatedSecurityDescriptions, 'AS_IS_NO_ACCURACY_GUARANTEE_NO_PUBLIC_DOMAIN_CLAIM_IN_THIS_STUDY');
+  assert.equal(terms.studyDisposition.terminalOrHistoricalClaim, false);
+  assert.equal(terms.studyDisposition.humanLegalAttestation, false);
+  const termsSource = fs.readFileSync(TERMS_SOURCE);
+  assert.equal(terms.observedHttpBody.rawBodyStoredInRepository, true);
+  assert.equal(terms.observedHttpBody.bytes, termsSource.length);
+  assert.equal(contract.termsSnapshot.sourceBodyPath, 'research/early-detection-v4/openfigi-terms-of-service-2026-08-12.html');
+  assert.equal(contract.implementationPolicy.localHeadEqualsUpstreamAndRemoteRequired, true);
+  assert.equal(contract.implementationPolicy.localBytesEqualHeadGitBlobsRequired, true);
+  assert.equal(contract.implementationPolicy.preAndPostNetworkSnapshotEqualityRequired, true);
 });
 
 test('contract verifier passes in normal and optimized Python', () => {
@@ -82,7 +101,7 @@ test('offline adversarial self-test passes in normal and optimized Python', () =
     assert.equal(result.status, 0, result.stderr || result.stdout);
     const output = JSON.parse(result.stdout);
     assert.equal(output.status, 'PASS');
-    assert.equal(output.tests, 15);
+    assert.equal(output.tests, 16);
   }
 });
 
@@ -117,4 +136,10 @@ test('runner has no account/key lookup and no file-output surface', () => {
   assert.doesNotMatch(source, /open\([^\n]*['\"]w|write_text|write_bytes/);
   assert.match(source, /automaticRetryAllowed/);
   assert.match(source, /NoRedirect/);
+  assert.match(source, /ProxyHandler\(\{\}\)/);
+  assert.match(source, /EXPECTED_CONTRACT_RAW_SHA256/);
+  assert.match(source, /EXPECTED_TERMS_RAW_SHA256/);
+  assert.match(source, /EXPECTED_TERMS_SOURCE_RAW_SHA256/);
+  assert.match(source, /implementation_snapshot\(True\)/);
+  assert.match(source, /validate_capture_bundle/);
 });

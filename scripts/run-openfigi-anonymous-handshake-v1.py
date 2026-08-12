@@ -13,6 +13,7 @@ import copy
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -23,7 +24,17 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = ROOT / "research" / "early-detection-v4" / "openfigi-anonymous-handshake-contract-v1.json"
-EXPECTED_CONTRACT_SHA256 = "b760a32a20f9afcb106935e9631b49bb864d3fb97a12fdf8e75fd6930082b7c8"
+TERMS_SNAPSHOT_PATH = ROOT / "research" / "early-detection-v4" / "openfigi-terms-snapshot-v1.json"
+TERMS_SOURCE_PATH = ROOT / "research" / "early-detection-v4" / "openfigi-terms-of-service-2026-08-12.html"
+TEST_PATH = ROOT / "tests" / "run-openfigi-anonymous-handshake-v1.test.js"
+RUNNER_PATH = Path(__file__).resolve()
+EXPECTED_CONTRACT_RAW_SHA256 = "5f96f607036d34b364ef53fa673596d89232d7de8ce944ac0689a4308fde3676"
+EXPECTED_CONTRACT_SHA256 = "1f7b4672e254d18c0ea63a6ecbe0046f28d7cb45f937b08af93a08216d54232c"
+EXPECTED_TERMS_RAW_SHA256 = "423d084fd0ff7ebb20fc0d055901a0aa9b915a40218c911653462234a8b80ae7"
+EXPECTED_TERMS_SHA256 = "8c882530c0cd7f918f0101373421d7238689ec584d74d8f77306421e13b33c95"
+EXPECTED_TERMS_SOURCE_RAW_SHA256 = "dc1f321786c6e29cc4758bfd86137d49e95ae7a0b1c2abf68d44f2f53a67420e"
+EXPECTED_REMOTE_URL = "https://github.com/Karlryl/screener-data.git"
+EXPECTED_REMOTE_REF = "refs/heads/codex/early-detection-v4-gates-20260810"
 EXPECTED_SCHEMA = "openfigi-anonymous-handshake-contract/v1"
 EXPECTED_ENDPOINT = "https://api.openfigi.com/v3/mapping"
 EXPECTED_JOB_IDS = (
@@ -97,6 +108,8 @@ def compute_self_hash(value: dict[str, Any], field: str) -> str:
 
 def load_contract() -> dict[str, Any]:
     raw = CONTRACT_PATH.read_bytes()
+    if sha256_bytes(raw) != EXPECTED_CONTRACT_RAW_SHA256:
+        raise HandshakeError("contract raw-byte hash mismatch")
     try:
         contract = json.loads(raw)
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -108,11 +121,52 @@ def load_contract() -> dict[str, Any]:
     observed = compute_self_hash(contract, "contractSha256")
     if observed != contract.get("contractSha256") or observed != EXPECTED_CONTRACT_SHA256:
         raise HandshakeError("contract self-hash mismatch")
-    verify_contract_semantics(contract)
+    terms = load_terms_snapshot()
+    verify_contract_semantics(contract, terms)
     return contract
 
 
-def verify_contract_semantics(contract: dict[str, Any]) -> None:
+def load_terms_snapshot() -> dict[str, Any]:
+    raw = TERMS_SNAPSHOT_PATH.read_bytes()
+    if sha256_bytes(raw) != EXPECTED_TERMS_RAW_SHA256:
+        raise HandshakeError("terms snapshot raw-byte hash mismatch")
+    try:
+        snapshot = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HandshakeError(f"terms snapshot is not valid UTF-8 JSON: {exc}") from exc
+    if not isinstance(snapshot, dict):
+        raise HandshakeError("terms snapshot must be an object")
+    observed = compute_self_hash(snapshot, "snapshotSha256")
+    if observed != snapshot.get("snapshotSha256") or observed != EXPECTED_TERMS_SHA256:
+        raise HandshakeError("terms snapshot self-hash mismatch")
+    expected_semantics = {
+        "figiIdentifiers": "PUBLIC_DOMAIN_FREE_REPRODUCTION_DISTRIBUTION_AND_USE",
+        "relatedSecurityDescriptions": "AS_IS_NO_ACCURACY_GUARANTEE_NO_PUBLIC_DOMAIN_CLAIM_IN_THIS_STUDY",
+        "trademark": "FAIR_REFERENCE_ONLY_NO_ENDORSEMENT_OR_SPONSORSHIP_IMPLICATION",
+        "termsMayChange": True,
+    }
+    expected_disposition = {
+        "figiIdentifierUse": "FREE_INTERNAL_AND_REPRODUCIBLE_EVIDENCE_ALLOWED",
+        "descriptiveFieldUse": "INTERNAL_HANDSHAKE_EVIDENCE_ONLY_NO_REDISTRIBUTION_RIGHT_ASSERTED",
+        "terminalOrHistoricalClaim": False,
+        "humanLegalAttestation": False,
+    }
+    if snapshot.get("semanticFacts") != expected_semantics or snapshot.get("studyDisposition") != expected_disposition:
+        raise HandshakeError("terms snapshot semantic disposition drift")
+    source_raw = TERMS_SOURCE_PATH.read_bytes()
+    source = snapshot.get("observedHttpBody")
+    expected_source = {
+        "path": TERMS_SOURCE_PATH.relative_to(ROOT).as_posix(),
+        "bytes": len(source_raw),
+        "sha256": EXPECTED_TERMS_SOURCE_RAW_SHA256,
+        "rawBodyStoredInRepository": True,
+    }
+    if sha256_bytes(source_raw) != EXPECTED_TERMS_SOURCE_RAW_SHA256 or source != expected_source:
+        raise HandshakeError("terms source-body binding drift")
+    return snapshot
+
+
+def verify_contract_semantics(contract: dict[str, Any], terms: dict[str, Any]) -> None:
     if contract.get("endpoint", {}).get("url") != EXPECTED_ENDPOINT:
         raise HandshakeError("endpoint drift")
     entitlement = contract.get("entitlement")
@@ -150,12 +204,90 @@ def verify_contract_semantics(contract: dict[str, Any]) -> None:
         raise HandshakeError("fixed request drift")
     if contract.get("locks") != LOCKS:
         raise HandshakeError("outcome locks drift")
-    if contract.get("networkPolicy", {}).get("singleRequestOnly") is not True:
+    expected_terms_binding = {
+        "path": TERMS_SNAPSHOT_PATH.relative_to(ROOT).as_posix(),
+        "rawSha256": EXPECTED_TERMS_RAW_SHA256,
+        "snapshotSha256": EXPECTED_TERMS_SHA256,
+        "sourceBodyPath": TERMS_SOURCE_PATH.relative_to(ROOT).as_posix(),
+        "sourceBodyRawSha256": EXPECTED_TERMS_SOURCE_RAW_SHA256,
+        "figiIdentifiersDisposition": "PUBLIC_DOMAIN_FREE_REPRODUCTION_DISTRIBUTION_AND_USE",
+        "relatedDescriptionsDisposition": "INTERNAL_HANDSHAKE_EVIDENCE_ONLY_NO_REDISTRIBUTION_RIGHT_ASSERTED",
+    }
+    if contract.get("termsSnapshot") != expected_terms_binding:
+        raise HandshakeError("terms snapshot binding drift")
+    if terms.get("snapshotSha256") != contract["termsSnapshot"]["snapshotSha256"]:
+        raise HandshakeError("terms snapshot cross-binding drift")
+    policy = contract.get("networkPolicy", {})
+    if policy.get("singleRequestOnly") is not True:
         raise HandshakeError("single request lock drift")
-    if contract.get("networkPolicy", {}).get("automaticRetryAllowed") is not False:
+    if policy.get("automaticRetryAllowed") is not False:
         raise HandshakeError("retry lock drift")
-    if contract.get("networkPolicy", {}).get("writeProductionOutputAllowed") is not False:
+    if policy.get("redirectAllowed") is not False:
+        raise HandshakeError("redirect lock drift")
+    if policy.get("proxyOrRateLimitBypassAllowed") is not False:
+        raise HandshakeError("proxy/rate-limit bypass lock drift")
+    if policy.get("accountOrKeyUseAllowed") is not False:
+        raise HandshakeError("account/key lock drift")
+    if policy.get("writeProductionOutputAllowed") is not False:
         raise HandshakeError("production-write lock drift")
+    expected_implementation_policy = {
+        "runnerPath": RUNNER_PATH.relative_to(ROOT).as_posix(),
+        "testPath": TEST_PATH.relative_to(ROOT).as_posix(),
+        "termsSourcePath": TERMS_SOURCE_PATH.relative_to(ROOT).as_posix(),
+        "remoteName": "origin",
+        "remoteUrl": EXPECTED_REMOTE_URL,
+        "remoteRef": EXPECTED_REMOTE_REF,
+        "localHeadEqualsUpstreamAndRemoteRequired": True,
+        "localBytesEqualHeadGitBlobsRequired": True,
+        "preAndPostNetworkSnapshotEqualityRequired": True,
+    }
+    if contract.get("implementationPolicy") != expected_implementation_policy:
+        raise HandshakeError("implementation policy drift")
+
+
+def git_text(*args: str) -> str:
+    result = subprocess.run(
+        ["git", *args], cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8"
+    )
+    if result.returncode != 0:
+        raise HandshakeError(f"git {' '.join(args)} failed: {result.stderr.strip()}")
+    return result.stdout.strip()
+
+
+def implementation_snapshot(require_remote: bool) -> dict[str, Any]:
+    paths = (CONTRACT_PATH, TERMS_SNAPSHOT_PATH, TERMS_SOURCE_PATH, RUNNER_PATH, TEST_PATH)
+    local: dict[str, dict[str, Any]] = {}
+    raw_by_path: dict[Path, bytes] = {}
+    for path in paths:
+        raw = path.read_bytes()
+        raw_by_path[path] = raw
+        local[path.relative_to(ROOT).as_posix()] = {"bytes": len(raw), "sha256": sha256_bytes(raw)}
+    snapshot: dict[str, Any] = {
+        "remoteVerified": False,
+        "headCommit": None,
+        "remoteRef": EXPECTED_REMOTE_REF,
+        "remoteUrl": None,
+        "files": local,
+    }
+    if not require_remote:
+        return snapshot
+    head = git_text("rev-parse", "HEAD")
+    upstream = git_text("rev-parse", "@{upstream}")
+    remote_url = git_text("remote", "get-url", "origin")
+    if remote_url != EXPECTED_REMOTE_URL:
+        raise HandshakeError("origin URL drift")
+    remote_lines = git_text("ls-remote", "origin", EXPECTED_REMOTE_REF).splitlines()
+    if len(remote_lines) != 1 or remote_lines[0].split()[0] != head or upstream != head:
+        raise HandshakeError("local/upstream/remote commit drift")
+    for path in paths:
+        relative = path.relative_to(ROOT).as_posix()
+        blob = subprocess.run(
+            ["git", "show", f"{head}:{relative}"], cwd=ROOT, check=False, capture_output=True
+        )
+        if blob.returncode != 0 or blob.stdout != raw_by_path[path]:
+            raise HandshakeError(f"local/Git blob drift: {relative}")
+    snapshot.update({"remoteVerified": True, "headCommit": head, "remoteUrl": remote_url})
+    return snapshot
 
 
 def validate_figi(value: Any, label: str, nullable: bool) -> None:
@@ -263,8 +395,8 @@ def validate_rate_headers(headers: dict[str, str]) -> dict[str, str]:
         if value is None or not re.fullmatch(r"\d+", value):
             raise HandshakeError(f"missing or invalid rate-limit header: {key}")
         selected[key] = value
-    if int(selected["ratelimit-limit"]) < 1:
-        raise HandshakeError("rate-limit ceiling is invalid")
+    if int(selected["ratelimit-limit"]) != 25:
+        raise HandshakeError("anonymous rate-limit ceiling drift")
     if int(selected["ratelimit-remaining"]) > int(selected["ratelimit-limit"]):
         raise HandshakeError("rate-limit remaining exceeds limit")
     selected["content-type"] = lowered.get("content-type", "")
@@ -279,6 +411,106 @@ def finalise_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def parse_utc(value: Any, label: str) -> datetime:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise HandshakeError(f"{label} must be RFC3339 UTC")
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as exc:
+        raise HandshakeError(f"{label} is invalid") from exc
+    return parsed
+
+
+def validate_capture_bundle(bundle: Any, contract: dict[str, Any]) -> dict[str, Any]:
+    expected_keys = {
+        "schema", "capturedAt", "track", "taskId", "sourceId", "contractPath",
+        "contractRawSha256", "contractSha256", "termsSnapshotPath",
+        "termsSnapshotRawSha256", "termsSnapshotSha256", "termsSourceRawSha256",
+        "implementation", "endpoint", "networkStatus", "request", "response",
+        "parsed", "diagnostic", "locks", "bundleSha256",
+    }
+    exact_keys(bundle, expected_keys, "capture bundle")
+    if bundle["schema"] != "openfigi-anonymous-handshake-capture/v1":
+        raise HandshakeError("capture schema drift")
+    parse_utc(bundle["capturedAt"], "capturedAt")
+    if bundle["bundleSha256"] != compute_self_hash(bundle, "bundleSha256"):
+        raise HandshakeError("capture self-hash mismatch")
+    expected_scalar = {
+        "track": contract["track"],
+        "taskId": contract["taskId"],
+        "sourceId": contract["sourceId"],
+        "contractPath": CONTRACT_PATH.relative_to(ROOT).as_posix(),
+        "contractRawSha256": EXPECTED_CONTRACT_RAW_SHA256,
+        "contractSha256": EXPECTED_CONTRACT_SHA256,
+        "termsSnapshotPath": TERMS_SNAPSHOT_PATH.relative_to(ROOT).as_posix(),
+        "termsSnapshotRawSha256": EXPECTED_TERMS_RAW_SHA256,
+        "termsSnapshotSha256": EXPECTED_TERMS_SHA256,
+        "termsSourceRawSha256": EXPECTED_TERMS_SOURCE_RAW_SHA256,
+        "endpoint": EXPECTED_ENDPOINT,
+        "networkStatus": "QUALIFIED",
+        "diagnostic": None,
+    }
+    for key, expected in expected_scalar.items():
+        if bundle[key] != expected:
+            raise HandshakeError(f"capture binding drift: {key}")
+    if bundle["locks"] != LOCKS:
+        raise HandshakeError("capture outcome locks drift")
+
+    exact_keys(bundle["request"], {"bodyBase64", "byteLength", "sha256"}, "capture request")
+    try:
+        request_raw = base64.b64decode(bundle["request"]["bodyBase64"], validate=True)
+    except (ValueError, TypeError) as exc:
+        raise HandshakeError("capture request base64 invalid") from exc
+    expected_request = request_body(contract)
+    if request_raw != expected_request or bundle["request"]["byteLength"] != len(request_raw) or bundle["request"]["sha256"] != sha256_bytes(request_raw):
+        raise HandshakeError("capture request bytes drift")
+
+    exact_keys(bundle["response"], {"httpStatus", "bodyBase64", "byteLength", "sha256", "selectedHeaders", "selectedHeadersSha256"}, "capture response")
+    try:
+        response_raw = base64.b64decode(bundle["response"]["bodyBase64"], validate=True)
+    except (ValueError, TypeError) as exc:
+        raise HandshakeError("capture response base64 invalid") from exc
+    if bundle["response"]["httpStatus"] != 200 or bundle["response"]["byteLength"] != len(response_raw) or bundle["response"]["sha256"] != sha256_bytes(response_raw):
+        raise HandshakeError("capture response bytes drift")
+    headers = validate_rate_headers(bundle["response"]["selectedHeaders"])
+    if headers != bundle["response"]["selectedHeaders"] or bundle["response"]["selectedHeadersSha256"] != sha256_bytes(canonical_bytes(headers)):
+        raise HandshakeError("capture response-header binding drift")
+    try:
+        reparsed = parse_mapping_response(json.loads(response_raw))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise HandshakeError("capture response JSON invalid") from exc
+    if reparsed != bundle["parsed"]:
+        raise HandshakeError("capture parsed payload is not source-derived")
+
+    implementation = bundle["implementation"]
+    exact_keys(implementation, {"remoteVerified", "headCommit", "remoteRef", "remoteUrl", "files"}, "capture implementation")
+    if implementation["remoteVerified"] is not True or implementation["remoteRef"] != EXPECTED_REMOTE_REF or implementation["remoteUrl"] != EXPECTED_REMOTE_URL:
+        raise HandshakeError("capture implementation is not remote verified")
+    commit = implementation["headCommit"]
+    if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise HandshakeError("capture implementation commit invalid")
+    remote_head = git_text("ls-remote", "origin", EXPECTED_REMOTE_REF).splitlines()
+    if len(remote_head) != 1:
+        raise HandshakeError("capture remote ref unavailable")
+    current_remote = remote_head[0].split()[0]
+    ancestry = subprocess.run(["git", "merge-base", "--is-ancestor", commit, current_remote], cwd=ROOT, check=False)
+    if ancestry.returncode != 0:
+        raise HandshakeError("capture implementation commit is not on the remote lineage")
+    expected_paths = {
+        CONTRACT_PATH.relative_to(ROOT).as_posix(), TERMS_SNAPSHOT_PATH.relative_to(ROOT).as_posix(),
+        TERMS_SOURCE_PATH.relative_to(ROOT).as_posix(), RUNNER_PATH.relative_to(ROOT).as_posix(),
+        TEST_PATH.relative_to(ROOT).as_posix(),
+    }
+    if not isinstance(implementation["files"], dict) or set(implementation["files"]) != expected_paths:
+        raise HandshakeError("capture implementation file set drift")
+    for relative, metadata in implementation["files"].items():
+        exact_keys(metadata, {"bytes", "sha256"}, f"capture implementation {relative}")
+        blob = subprocess.run(["git", "show", f"{commit}:{relative}"], cwd=ROOT, check=False, capture_output=True)
+        if blob.returncode != 0 or metadata != {"bytes": len(blob.stdout), "sha256": sha256_bytes(blob.stdout)}:
+            raise HandshakeError(f"capture implementation Git binding drift: {relative}")
+    return bundle
+
+
 def build_bundle(
     contract: dict[str, Any],
     request_raw: bytes,
@@ -288,6 +520,7 @@ def build_bundle(
     parsed: dict[str, Any] | None,
     network_status: str,
     diagnostic: str | None,
+    implementation: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     selected_headers = {key.lower(): value.strip() for key, value in headers.items() if key.lower() in set(RATE_HEADERS) | {"content-type"}}
     bundle = {
@@ -297,7 +530,13 @@ def build_bundle(
         "taskId": contract["taskId"],
         "sourceId": contract["sourceId"],
         "contractPath": CONTRACT_PATH.relative_to(ROOT).as_posix(),
+        "contractRawSha256": EXPECTED_CONTRACT_RAW_SHA256,
         "contractSha256": contract["contractSha256"],
+        "termsSnapshotPath": TERMS_SNAPSHOT_PATH.relative_to(ROOT).as_posix(),
+        "termsSnapshotRawSha256": EXPECTED_TERMS_RAW_SHA256,
+        "termsSnapshotSha256": EXPECTED_TERMS_SHA256,
+        "termsSourceRawSha256": EXPECTED_TERMS_SOURCE_RAW_SHA256,
+        "implementation": copy.deepcopy(implementation or implementation_snapshot(False)),
         "endpoint": EXPECTED_ENDPOINT,
         "networkStatus": network_status,
         "request": {
@@ -331,9 +570,10 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def run_live(contract: dict[str, Any]) -> int:
+    before = implementation_snapshot(True)
     raw_request = request_body(contract)
     request = urllib.request.Request(EXPECTED_ENDPOINT, data=raw_request, headers=SAFE_REQUEST_HEADERS, method="POST")
-    opener = urllib.request.build_opener(NoRedirect)
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect)
     status = 0
     response_raw = b""
     headers: dict[str, str] = {}
@@ -347,20 +587,32 @@ def run_live(contract: dict[str, Any]) -> int:
         headers = dict(exc.headers.items()) if exc.headers else {}
         response_raw = exc.read(contract["endpoint"]["maximumResponseBytes"] + 1)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        bundle = build_bundle(contract, raw_request, 0, {}, b"", None, "NETWORK_FAILED", str(exc))
+        after = implementation_snapshot(True)
+        if after != before:
+            raise HandshakeError("implementation snapshot drift during network call")
+        bundle = build_bundle(contract, raw_request, 0, {}, b"", None, "NETWORK_FAILED", str(exc), before)
         print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 2
 
     if len(response_raw) > contract["endpoint"]["maximumResponseBytes"]:
-        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "RESPONSE_TOO_LARGE", "maximum response bytes exceeded")
+        after = implementation_snapshot(True)
+        if after != before:
+            raise HandshakeError("implementation snapshot drift during network call")
+        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "RESPONSE_TOO_LARGE", "maximum response bytes exceeded", before)
         print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 2
     if status == 429:
-        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "RATE_DEFERRED", "HTTP 429; no retry attempted")
+        after = implementation_snapshot(True)
+        if after != before:
+            raise HandshakeError("implementation snapshot drift during network call")
+        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "RATE_DEFERRED", "HTTP 429; no retry attempted", before)
         print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 75
     if status != 200:
-        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "HTTP_REJECTED", f"HTTP {status}")
+        after = implementation_snapshot(True)
+        if after != before:
+            raise HandshakeError("implementation snapshot drift during network call")
+        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "HTTP_REJECTED", f"HTTP {status}", before)
         print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 2
 
@@ -369,10 +621,16 @@ def run_live(contract: dict[str, Any]) -> int:
         payload = json.loads(response_raw)
         parsed = parse_mapping_response(payload)
     except (UnicodeDecodeError, json.JSONDecodeError, HandshakeError) as exc:
-        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "FAIL_CLOSED", str(exc))
+        after = implementation_snapshot(True)
+        if after != before:
+            raise HandshakeError("implementation snapshot drift during network call")
+        bundle = build_bundle(contract, raw_request, status, headers, response_raw, None, "FAIL_CLOSED", str(exc), before)
         print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
         return 2
-    bundle = build_bundle(contract, raw_request, status, headers, response_raw, parsed, "QUALIFIED", None)
+    after = implementation_snapshot(True)
+    if after != before:
+        raise HandshakeError("implementation snapshot drift during network call")
+    bundle = build_bundle(contract, raw_request, status, headers, response_raw, parsed, "QUALIFIED", None, before)
     print(json.dumps(bundle, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
     return 0
 
@@ -454,6 +712,13 @@ def self_test(contract: dict[str, Any]) -> None:
     headers = validate_rate_headers({"Content-Type": "application/json; charset=utf-8", "RateLimit-Limit": "25", "RateLimit-Remaining": "24", "RateLimit-Reset": "59"})
     if headers["ratelimit-limit"] != "25":
         raise HandshakeError("rate header canonicalization failed")
+    try:
+        validate_rate_headers({"Content-Type": "application/json", "RateLimit-Limit": "100", "RateLimit-Remaining": "99", "RateLimit-Reset": "59"})
+    except HandshakeError as exc:
+        if "ceiling drift" not in str(exc):
+            raise
+    else:
+        raise HandshakeError("inflated anonymous rate limit accepted")
 
     request_raw = request_body(contract)
     response_raw = canonical_bytes(fixture)
@@ -464,11 +729,15 @@ def self_test(contract: dict[str, Any]) -> None:
         raise HandshakeError("response base64 round-trip failed")
     if bundle["response"]["sha256"] != sha256_bytes(response_raw):
         raise HandshakeError("response content hash failed")
+    if bundle["contractRawSha256"] != EXPECTED_CONTRACT_RAW_SHA256:
+        raise HandshakeError("bundle contract raw binding failed")
+    if bundle["termsSnapshotRawSha256"] != EXPECTED_TERMS_RAW_SHA256:
+        raise HandshakeError("bundle terms raw binding failed")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("verify-contract", "self-test", "parse-fixture", "network-handshake"))
+    parser.add_argument("command", choices=("verify-contract", "self-test", "parse-fixture", "verify-capture", "network-handshake"))
     args = parser.parse_args()
     try:
         contract = load_contract()
@@ -477,12 +746,17 @@ def main() -> int:
             return 0
         if args.command == "self-test":
             self_test(contract)
-            print(json.dumps({"status": "PASS", "tests": 15, "contractSha256": contract["contractSha256"], "locks": LOCKS}, sort_keys=True))
+            print(json.dumps({"status": "PASS", "tests": 16, "contractRawSha256": EXPECTED_CONTRACT_RAW_SHA256, "contractSha256": contract["contractSha256"], "termsSnapshotRawSha256": EXPECTED_TERMS_RAW_SHA256, "locks": LOCKS}, sort_keys=True))
             return 0
         if args.command == "parse-fixture":
             payload = json.load(sys.stdin)
             result = parse_mapping_response(payload)
             print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")))
+            return 0
+        if args.command == "verify-capture":
+            capture = json.load(sys.stdin)
+            result = validate_capture_bundle(capture, contract)
+            print(json.dumps({"status": "PASS", "bundleSha256": result["bundleSha256"], "implementationCommit": result["implementation"]["headCommit"], "locks": LOCKS}, sort_keys=True))
             return 0
         return run_live(contract)
     except (HandshakeError, json.JSONDecodeError, UnicodeDecodeError) as exc:
