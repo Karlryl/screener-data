@@ -1,0 +1,411 @@
+{
+  "schema": "finra-q004-public-catalog-contract/v1",
+  "createdAt": "2026-08-12T15:15:00Z",
+  "studyTrack": "PUBLIC_DATA_AI_OUTCOME_BLIND_DISCOVERY_ONLY",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Freeze a no-account, zero-cost discovery and validation contract for official FINRA OTC Daily List documentation and catalog boundaries without acquiring production event data.",
+  "bindings": {
+    "repository": "https://github.com/Karlryl/screener-data.git",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "baselineHead": "56eebdda0fe727d0b1f0714146ee0c28cf30301d",
+    "baselineUpstreamHead": "56eebdda0fe727d0b1f0714146ee0c28cf30301d",
+    "baselineRemoteHead": "56eebdda0fe727d0b1f0714146ee0c28cf30301d",
+    "inputs": [
+      {
+        "path": "research/early-detection-v4/free-source-registry.json",
+        "rawSha256": "1e22e9e8746cd00b8478fdc9e9d6f57ee15d8505ff4e564f3a92c607a619b8bc",
+        "requiredSelector": "sources[sourceId=FINRA_OTC_DAILY_LIST]"
+      },
+      {
+        "path": "research/early-detection-v4/continuous-free-source-registry-v1.json",
+        "rawSha256": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+        "requiredSelector": "sources[sourceId=FINRA_OTC_PRIMARY]"
+      },
+      {
+        "path": "research/early-detection-v4/continuous-free-source-queue-seed-v1.json",
+        "rawSha256": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+        "requiredSelector": "tasks[taskId=Q004-FINRA-OTC-CATALOG]"
+      },
+      {
+        "path": "research/early-detection-v4/FREE_DATA_ARCHITECTURE.md",
+        "rawSha256": "c1662e1bcf26f5473a7c78a5b95509a280762e2e786f1f7ef957bb863b878107",
+        "requiredSelector": "NO_SOURCE_SPECIFIC_SELECTOR_POLICY_BINDING_ONLY"
+      }
+    ],
+    "productionPromotionRequirements": {
+      "contractRunnerAndTestCommitted": true,
+      "localHeadEqualsUpstreamAndRemote": true,
+      "localBytesEqualHeadGitBlobs": true,
+      "preAndPostNetworkSnapshotsEqual": true,
+      "remoteAuthorizationCommitRequired": true,
+      "currentContractIsRemoteAuthorized": false
+    }
+  },
+  "officialEvidence": [
+    {
+      "sourceRef": "FINRA_DOCS_OTC_DAILY_LIST",
+      "url": "https://developer.finra.org/docs",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "OTC Daily List is dataset otcMarket/otcDailyList with test dataset otcDailyListMock.",
+        "The documentation labels Public, Firm and Organization as credential types.",
+        "The documented data endpoint is https://api.finra.org/data/group/otcMarket/name/OTCDAILYLIST.",
+        "Authorization is documented as a required Bearer access token for data requests."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_DATASET_CATALOG",
+      "url": "https://developer.finra.org/catalog",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The official catalog lists OTC Daily List under Query API Equity."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_OTC_METADATA",
+      "url": "https://api.finra.org/metadata/group/otcMarket/name/otcdailylist",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The metadata identifies dataset OTCMARKET/OTCDAILYLIST.",
+        "The partition field is calendarDay.",
+        "Metadata includes event flags and dates for additions, deletions, symbol changes, name or description changes, bankruptcy, financial status and dividends or distributions."
+      ],
+      "rawSnapshotDisposition": "ANONYMOUS_POINT_OBSERVATION_ONLY_NOT_AN_AUTHORIZATION_TO_ACQUIRE_DATA"
+    },
+    {
+      "sourceRef": "FINRA_API_FEES_PUBLIC",
+      "url": "https://developer.finra.org/fees/public",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "Public Credential is listed at 0 USD per month and provides public Equity and Fixed Income data."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_API_SUPPORT_FEES",
+      "url": "https://developer.finra.org/support",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "Public Credential is described as no cost and capped at 10 GB per month.",
+        "Firm and Organization credentials are described as 1650 USD per month plus possible overage fees."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_API_TERMS",
+      "url": "https://developer.finra.org/finra-api-terms-service",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "API use requires acceptance of FINRA API Terms and valid access credentials.",
+        "API bulk monitoring or copying by a process other than the licensed APIs is restricted.",
+        "The page states the terms were last updated March 19, 2026."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_EQUITY_SPECIFIC_TERMS",
+      "url": "https://developer.finra.org/specific-terms-equity-data",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "All otcMarket datasets are Equity Data.",
+        "Equity Data requires a valid Public, Firm or Organization Query API credential.",
+        "Internal use is limited to non-commercial personal or professional use.",
+        "Derivative data is permitted subject to the terms."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_WEBSITE_TERMS",
+      "url": "https://www.finra.org/terms-of-use",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The terms define their covered website as the FINRA.ORG site.",
+        "For FINRA.ORG content, use is limited to non-commercial personal or professional use.",
+        "For FINRA.ORG content, the terms prohibit building a database absent express permission, bulk scraping, rate-limit bypass and use with predictive analytics or other artificial intelligence software.",
+        "These terms alone do not establish the legal disposition of the separate otce.finra.org subdomain; no express automated database permission for that subdomain was located in the reviewed official documentation."
+      ],
+      "rawSnapshotDisposition": "NOT_STORED_DISCOVERY_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_OTC_DAILY_LIST_UI",
+      "url": "https://otce.finra.org/otce/dailyList",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The no-login page visibly exposes additions, deletions, symbol or name changes, security attribute changes, bankruptcy and dividends, distributions or splits.",
+        "Public visibility does not override the website terms or create automated acquisition rights."
+      ],
+      "rawSnapshotDisposition": "PUBLIC_VIEW_POINT_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_OTC_DAILY_LIST_ARCHIVES",
+      "url": "https://otce.finra.org/otce/DailyList/archives",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The page advertises Daily List archive files in ASCII pipe-delimited format.",
+        "The page does not by itself grant permission for automated bulk database construction."
+      ],
+      "rawSnapshotDisposition": "PUBLIC_VIEW_POINT_OBSERVATION_ONLY"
+    },
+    {
+      "sourceRef": "FINRA_OTC_SYMBOL_DIRECTORY",
+      "url": "https://otce.finra.org/otce/directories",
+      "observedAt": "2026-08-12T14:50:00Z",
+      "facts": [
+        "The no-login symbol directory supports current or historical OTC issue lookup by symbol or issue name.",
+        "The page directs users to Daily List Search for symbol or name changes."
+      ],
+      "rawSnapshotDisposition": "PUBLIC_VIEW_POINT_OBSERVATION_ONLY"
+    }
+  ],
+  "accessLanes": [
+    {
+      "laneId": "PUBLIC_CREDENTIAL_QUERY_API",
+      "classification": "REGISTRATION_REQUIRED_ZERO_COST",
+      "monthlyPriceUsd": 0,
+      "accountRequired": true,
+      "credentialRequired": true,
+      "termsAcceptanceRequired": true,
+      "paymentDetailsRequired": false,
+      "monthlyDataCapGb": 10,
+      "permittedInThisNoAccountContract": false,
+      "disposition": "BLOCKED_UNTIL_SEPARATE_ACCOUNTED_CONTRACT_AND_USER_CREDENTIAL"
+    },
+    {
+      "laneId": "OTCE_WEBSITE_AND_ARCHIVES",
+      "classification": "PUBLIC_VIEW_ONLY_AUTOMATED_CRAWL_LICENSE_UNRESOLVED",
+      "monthlyPriceUsd": 0,
+      "accountRequired": false,
+      "credentialRequired": false,
+      "termsAcceptanceRequired": "UNRESOLVED_FOR_OTCE_SUBDOMAIN",
+      "paymentDetailsRequired": false,
+      "monthlyDataCapGb": null,
+      "permittedInThisNoAccountContract": false,
+      "disposition": "BLOCKED_NO_EXPRESS_AUTOMATED_DATABASE_AND_AI_RIGHT_CONFIRMED"
+    },
+    {
+      "laneId": "FIRM_OR_ORGANIZATION_QUERY_API",
+      "classification": "PAID_OR_LICENSED",
+      "monthlyPriceUsd": 1650,
+      "accountRequired": true,
+      "credentialRequired": true,
+      "termsAcceptanceRequired": true,
+      "paymentDetailsRequired": true,
+      "monthlyDataCapGb": 10,
+      "permittedInThisNoAccountContract": false,
+      "disposition": "PROHIBITED_PAID"
+    }
+  ],
+  "dataset": {
+    "group": "otcMarket",
+    "name": "otcDailyList",
+    "mockName": "otcDailyListMock",
+    "metadataUrl": "https://api.finra.org/metadata/group/otcMarket/name/otcdailylist",
+    "partitionsUrl": "https://api.finra.org/partitions/group/otcMarket/name/otcDailyList",
+    "dataUrl": "https://api.finra.org/data/group/otcMarket/name/OTCDAILYLIST",
+    "partitionFields": [
+      "calendarDay"
+    ],
+    "catalogOnlyFields": [
+      "OTCDailyListID",
+      "calendarDay",
+      "dailyListDatetime",
+      "dailyListEventCode",
+      "securityAddFlag",
+      "securityDeleteFlag",
+      "changeSymbolFlag",
+      "changeSecurityDescriptionFlag",
+      "changeSecurityAttributeFlag",
+      "changeFinancialStatusFlag",
+      "bankruptcyFlag",
+      "dividendNonADRFlag",
+      "dividendADRFlag"
+    ],
+    "excludedFieldClasses": [
+      "SYMBOL_OR_NAME_AS_IDENTITY",
+      "PRICE_OR_QUOTE",
+      "PAYMENT_OR_CASH_AMOUNT",
+      "RETURN_OR_WEALTH",
+      "TERMINAL_SESSION_OR_STATUS_INFERENCE"
+    ]
+  },
+  "eventScope": [
+    {
+      "semantic": "OTC_SECURITY_ADDITION",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY"
+    },
+    {
+      "semantic": "OTC_SECURITY_DELETION",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY"
+    },
+    {
+      "semantic": "OTC_SYMBOL_OR_NAME_CHANGE",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY"
+    },
+    {
+      "semantic": "OTC_SECURITY_ATTRIBUTE_OR_FINANCIAL_STATUS_CHANGE",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY"
+    },
+    {
+      "semantic": "OTC_BANKRUPTCY_FLAG",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY"
+    },
+    {
+      "semantic": "OTC_DIVIDEND_DISTRIBUTION_OR_SPLIT",
+      "disposition": "EVENT_CATALOG_CANDIDATE_ONLY_NO_PAYMENT_INFERENCE"
+    }
+  ],
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_SOURCE_EXISTS",
+      "DATASET_AND_FIELD_CATALOG_POINT_EVIDENCE",
+      "ACCESS_AND_LICENSE_DISPOSITION",
+      "EVENT_CLASS_CANDIDATE_COVERAGE"
+    ],
+    "forbidden": [
+      "TICKER_ONLY_IDENTITY",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "LAST_QUOTE_OR_LAST_SESSION",
+      "TERMINAL_PAYMENT_OR_TERMINAL_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "FULL_MARKET_OR_SURVIVORSHIP_SAFE_COVERAGE",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "networkPolicy": {
+    "networkExecutionAuthorized": false,
+    "reason": "No-account Query API access is not documented as permitted, and no express automated database and AI-use right for the OTCE public archive was verified. Restrictive FINRA.ORG terms cannot be silently generalized to, or ignored for, the OTCE subdomain.",
+    "allowedMethodsAfterSeparateAuthorization": [
+      "GET",
+      "POST"
+    ],
+    "exactHostsAfterSeparateAuthorization": [
+      "api.finra.org"
+    ],
+    "exactPathPrefixesAfterSeparateAuthorization": [
+      "/metadata/group/otcMarket/name/otcdailylist",
+      "/partitions/group/otcMarket/name/otcDailyList",
+      "/data/group/otcMarket/name/OTCDAILYLIST"
+    ],
+    "redirectsAllowed": false,
+    "proxyUseAllowed": false,
+    "proxyBypassAllowed": false,
+    "automaticRetriesAllowed": false,
+    "retryStormAllowed": false,
+    "requestsPerRunMaximum": 0,
+    "responseBytesPerRequestMaximum": 3145728,
+    "responseBytesPerRunMaximum": 0,
+    "documentedSyncRequestsPerMinute": 1200,
+    "contractCeilingRequestsPerMinuteAfterSeparateAuthorization": 30,
+    "documentedAsyncRequestsPerMinutePerDatasetPerAccount": 20,
+    "responsibleUse": [
+      "FILTER_TO_NEEDED_CLOSED_CALENDAR_DAYS",
+      "DO_NOT_REDOWNLOAD_STATIC_HISTORY",
+      "NO_CONTINUOUS_24_7_REPEATED_ACCESS",
+      "ONE_ATTEMPT_PER_REQUEST",
+      "RATE_DEFER_INSTEAD_OF_RETRY"
+    ]
+  },
+  "pagination": {
+    "status": "FROZEN_VALIDATION_RULE_NOT_EXECUTION_AUTHORIZATION",
+    "mode": "CLOSED_CALENDAR_DAY_PARTITION_THEN_OFFSET",
+    "partitionField": "calendarDay",
+    "offsetInitial": 0,
+    "offsetMaximumDocumented": 500000,
+    "synchronousRecordLimitMaximumDocumented": 5000,
+    "contractPageLimitAfterSeparateAuthorization": 1000,
+    "requiredHeaders": [
+      "content-type",
+      "record-total",
+      "record-offset",
+      "record-limit",
+      "total-records-on-page"
+    ],
+    "exhaustionRule": "For each closed calendarDay, page offsets must be contiguous; Record-Total must remain identical across all pages and a second metadata-only count pass; the union of unique OTCDailyListID values must equal Record-Total; the final page count must be less than or equal to Record-Limit; any duplicate, gap, count drift or partition drift kills the run.",
+    "orderingRule": "Catalog summaries are sorted locally by calendarDay, dailyListDatetime and integer OTCDailyListID; source row order is never evidence and any repeated ID with differing raw row bytes is a conflict.",
+    "knownAtRule": "knownAt is the source dailyListDatetime when valid and not after observedAt; otherwise the row remains unresolved. observedAt is the UTC response receipt timestamp and can never precede dailyListDatetime.",
+    "dateInversionKills": true,
+    "liveOrOpenCalendarDayAllowed": false
+  },
+  "capturePolicy": {
+    "rawResponseBytesRequired": true,
+    "rawResponseSha256Required": true,
+    "requestCanonicalSha256Required": true,
+    "responseHeaderCanonicalSha256Required": true,
+    "observedAtRequired": true,
+    "knownAtRequiredPerRecord": true,
+    "sourceRefRequired": true,
+    "contentAddressedPathTemplate": "evidence/finra-q004/blobs/sha256/{sha256[0:2]}/{sha256}",
+    "manifestPathTemplate": "evidence/finra-q004/manifests/{runId}.json",
+    "gitPolicy": "Raw CAS may remain outside Git, but every promoted manifest must bind raw hashes, exact request, response headers, contract hash, runner hash, Git HEAD, upstream and remote HEAD.",
+    "writePolicy": "WRITE_NEW_ATOMIC_NO_REPLACE",
+    "termsSnapshotBeforeEventAcquisitionRequired": true,
+    "termsSnapshotRawBytesAndSha256Required": true,
+    "schemaSnapshotRawBytesAndSha256Required": true
+  },
+  "catalogSchema": {
+    "schema": "finra-q004-public-catalog/v1",
+    "exactTopLevelKeys": [
+      "schema",
+      "contractRawSha256",
+      "runId",
+      "observedAt",
+      "accessDisposition",
+      "dataset",
+      "pages",
+      "partitions",
+      "eventClassCounts",
+      "sourceRefs",
+      "claimCeiling",
+      "claimLocks",
+      "catalogSha256"
+    ],
+    "rowPayloadAllowed": false,
+    "symbolsOrNamesAllowed": false,
+    "pricesReturnsOrPaymentsAllowed": false,
+    "selfHashField": "catalogSha256"
+  },
+  "killConditions": [
+    "LOGIN_ACCOUNT_KEY_OR_CREDENTIAL_REQUIRED_IN_NO_ACCOUNT_RUN",
+    "PAYWALL_PAYMENT_DETAILS_TRIAL_OR_FEE",
+    "HTTP_200_ERROR_OR_LOGIN_BODY",
+    "CONTENT_TYPE_OR_SCHEMA_DRIFT",
+    "REDIRECT_OR_PROXY_USE_OR_PROXY_BYPASS",
+    "RATE_LIMIT_BYPASS_OR_RETRY_STORM",
+    "REQUEST_OR_BYTE_CEILING_EXCEEDED",
+    "PAGINATION_GAP_DUPLICATE_LOSS_OR_COUNT_DRIFT",
+    "PARTITION_OR_DATE_INVERSION",
+    "RAW_BYTE_HASH_OR_SELF_HASH_MISMATCH",
+    "TERMS_LICENSE_OR_REMOTE_TIMELINE_DRIFT",
+    "TICKER_ONLY_IDENTITY_PROMOTION",
+    "LAST_QUOTE_PAYMENT_TERMINAL_SESSION_RETURN_OR_OUTCOME_INFERENCE",
+    "ORIGINAL_V4_GATE_CREDIT_OR_HUMAN_ATTESTATION"
+  ],
+  "claimLocks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "tickerOnlyIdentityAccepted": false,
+    "historicalIntervalClaimed": false,
+    "completeCorporateActionsClaimed": false,
+    "terminalSessionClaimed": false,
+    "terminalPaymentClaimed": false,
+    "terminalWealthClaimed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false,
+    "networkProductionExecuted": false
+  },
+  "authorization": {
+    "todayAccessStatus": "ZERO_COST_PUBLIC_CREDENTIAL_EXISTS_BUT_ACCOUNT_AND_TERMS_ACCEPTANCE_REQUIRED",
+    "noAccountStatus": "PUBLIC_WEBSITE_VIEW_ONLY_AUTOMATED_CATALOG_RIGHTS_UNRESOLVED_AND_NOT_AUTHORIZED",
+    "nextPermissibleStep": "Retain this discovery contract; if Karl later completes a free FINRA Individual API account and accepts the terms, create and remotely seal a separate accounted acquisition contract before any production data request.",
+    "catalogBuildAuthorized": false,
+    "networkRunAuthorized": false,
+    "outcomeAccessAuthorized": false
+  },
+  "contractSha256": "756c7c815a2608ba663053df9252a4a2dd8eb507d5c1eef793d895a839c27b58"
+}
