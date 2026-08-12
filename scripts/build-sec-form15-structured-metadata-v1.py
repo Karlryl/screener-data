@@ -51,7 +51,8 @@ CANDIDATE_KINDS = {
 
 SEC_HEADER_START_RE = re.compile(rb"(?m)^<SEC-HEADER>[^\r\n]*\r?$")
 SEC_HEADER_END_RE = re.compile(rb"(?m)^</SEC-HEADER>\r?$")
-ACCESSION_FIELD_RE = re.compile(rb"(?m)^ACCESSION NUMBER:[ \t]*([0-9]{10}-[0-9]{2}-[0-9]{6})[ \t]*\r?$")
+ACCESSION_LABEL_RE = re.compile(rb"(?m)^ACCESSION NUMBER:[ \t]*(.*?)[ \t]*\r?$")
+ACCESSION_VALUE_RE = re.compile(rb"[0-9]{10}-[0-9]{2}-[0-9]{6}")
 DOCUMENT_START_RE = re.compile(rb"(?m)^<DOCUMENT>[ \t]*\r?$")
 DOCUMENT_END_RE = re.compile(rb"(?m)^</DOCUMENT>[ \t]*\r?$")
 DOCUMENT_BLOCK_RE = re.compile(rb"(?ms)^<DOCUMENT>[ \t]*\r?$.*?^</DOCUMENT>[ \t]*\r?$")
@@ -234,10 +235,13 @@ def sec_header(raw: bytes) -> tuple[bytes, str]:
     if len(starts) != 1 or len(ends) != 1 or starts[0].end() >= ends[0].start():
         fail("SEC original must have exactly one ordered SEC-HEADER block")
     header = raw[starts[0].start():ends[0].end()]
-    accessions = list(ACCESSION_FIELD_RE.finditer(header))
-    if len(accessions) != 1:
+    accession_fields = list(ACCESSION_LABEL_RE.finditer(header))
+    if len(accession_fields) != 1:
         fail("SEC-HEADER must contain exactly one accession field")
-    return header, accessions[0].group(1).decode("ascii")
+    accession = accession_fields[0].group(1)
+    if ACCESSION_VALUE_RE.fullmatch(accession) is None:
+        fail("SEC-HEADER accession field is malformed")
+    return header, accession.decode("ascii")
 
 
 def unique_line_field(raw: bytes, label: bytes) -> str:
@@ -281,9 +285,19 @@ class _TextSink(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
+        self.hidden_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() in {"script", "style"}:
+            self.hidden_depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"script", "style"} and self.hidden_depth:
+            self.hidden_depth -= 1
 
     def handle_data(self, data: str) -> None:
-        self.parts.append(data)
+        if self.hidden_depth == 0:
+            self.parts.append(data)
 
 
 class _LineSink(HTMLParser):
@@ -292,17 +306,29 @@ class _LineSink(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
+        self.hidden_depth = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag.lower() in {"script", "style"}:
+            self.hidden_depth += 1
+            return
+        if self.hidden_depth:
+            return
         if tag.lower() in self.BLOCKS:
             self.parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
+        if tag.lower() in {"script", "style"} and self.hidden_depth:
+            self.hidden_depth -= 1
+            return
+        if self.hidden_depth:
+            return
         if tag.lower() in self.BLOCKS:
             self.parts.append("\n")
 
     def handle_data(self, data: str) -> None:
-        self.parts.append(data)
+        if self.hidden_depth == 0:
+            self.parts.append(data)
 
 
 def _fallback_text(decoded: str, line_mode: bool) -> str:
@@ -377,18 +403,29 @@ def field_from_evidence(evidence: list[dict]) -> dict:
 
 def header_field(header: bytes, blob_ref: dict, header_doc: dict, label: str, transform=None) -> dict:
     pattern = re.compile(rb"(?m)^[ \t]*" + re.escape(label.encode("ascii")) + rb":[ \t]*(.*?)[ \t]*\r?$")
+    matches = list(pattern.finditer(header))
+    if not matches:
+        return empty_field("MISSING")
     evidence = []
-    for index, match in enumerate(pattern.finditer(header), start=1):
+    for index, match in enumerate(matches, start=1):
         value = normalize_text(match.group(1).decode("latin-1"))
+        if not value:
+            fail(f"SEC header field {label} is empty")
         if transform is not None:
             value = transform(value)
-        if value:
-            evidence.append({
-                "value": value,
-                "sourceRef": source_ref(
-                    blob_ref, header_doc, "SEC_HEADER_LINE", f"{label}[{index}]", value,
-                ),
-            })
+        evidence.append({
+            "value": value,
+            "sourceRef": source_ref(
+                blob_ref, header_doc, "SEC_HEADER_LINE", f"{label}[{index}]", value,
+            ),
+        })
+    if len(evidence) > 1:
+        values = {item["value"] for item in evidence}
+        return {
+            "status": "AMBIGUOUS_DUPLICATE" if len(values) == 1 else "AMBIGUOUS_CONFLICT",
+            "value": None,
+            "evidence": evidence,
+        }
     return field_from_evidence(evidence)
 
 
@@ -479,6 +516,8 @@ def security_title_field(documents: list[dict], blob_ref: dict) -> dict:
 
 def form_subtype_field(header: bytes, blob_ref: dict, header_doc: dict, documents: list[dict]) -> dict:
     field = header_field(header, blob_ref, header_doc, "CONFORMED SUBMISSION TYPE", str.upper)
+    if field["status"] in {"AMBIGUOUS_DUPLICATE", "AMBIGUOUS_CONFLICT"}:
+        return field
     evidence = list(field["evidence"])
     for document in documents:
         value = document["type"].upper()
@@ -943,6 +982,39 @@ def self_test() -> dict:
         sec_header(duplicate_header)
     except MetadataError:
         strict_header_rejected = True
+    malformed_extra_accession = raw.replace(
+        f"ACCESSION NUMBER:\t\t{accession}\n".encode(),
+        f"ACCESSION NUMBER:\t\t{accession}\nACCESSION NUMBER: NOT-AN-ACCESSION\n".encode(),
+    )
+    malformed_extra_accession_rejected = False
+    try:
+        sec_header(malformed_extra_accession)
+    except MetadataError:
+        malformed_extra_accession_rejected = True
+    duplicate_filing_date = raw.replace(
+        b"FILED AS OF DATE:\t\t20200102\n",
+        b"FILED AS OF DATE:\t\t20200102\nFILED AS OF DATE:\t\t20200102\n",
+    )
+    duplicate_date_digest = sha256(duplicate_filing_date)
+    duplicate_date_ref = {
+        "blobSha256": duplicate_date_digest, "bytes": len(duplicate_filing_date),
+        "relativePath": f"{duplicate_date_digest[:2]}/{duplicate_date_digest}.txt",
+    }
+    duplicate_date_ambiguous = (
+        parse_blob(duplicate_filing_date, duplicate_date_ref, accession)["fields"]["filingDate"]["status"]
+        == "AMBIGUOUS_DUPLICATE"
+    )
+    hidden_body = (
+        "<html><body><script>FAKE SCRIPT STOCK\n(Title of each class of securities covered by this Form)"
+        " The registrant terminates the duty to file reports.</script>"
+        "<style>Each holder receives $999.00 as a final distribution.</style>Visible filing text.</body></html>"
+    )
+    hidden_raw, hidden_ref, hidden_accession = fixture_blob(hidden_body)
+    hidden_parsed = parse_blob(hidden_raw, hidden_ref, hidden_accession)
+    hidden_content_rejected = (
+        hidden_parsed["fields"]["securityTitleClass"]["status"] == "MISSING"
+        and hidden_parsed["candidateSnippets"] == []
+    )
     malformed_raw, malformed_ref, malformed_accession = fixture_blob("<![YH >Visible malformed text.")
     malformed_parsed = parse_blob(malformed_raw, malformed_ref, malformed_accession)
     malformed_fallback = (
@@ -986,6 +1058,9 @@ def self_test() -> dict:
         "validExactExtractionAccepted": valid_exact,
         "formSubtypeConflictRejected": form_conflict == "AMBIGUOUS_CONFLICT",
         "strictSecHeaderRejected": strict_header_rejected,
+        "malformedExtraAccessionRejected": malformed_extra_accession_rejected,
+        "duplicateHeaderFieldAmbiguous": duplicate_date_ambiguous,
+        "hiddenHtmlContentRejected": hidden_content_rejected,
         "malformedHtmlFallbackDeterministic": malformed_fallback,
         "binaryDocumentEvidenceRejected": binary_excluded,
         "tickerOnlyJoinMutationRejected": rejected(ticker_mutation),
