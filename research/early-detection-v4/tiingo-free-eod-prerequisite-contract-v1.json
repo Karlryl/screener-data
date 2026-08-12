@@ -1,0 +1,110 @@
+{
+  "schema": "early-detection-tiingo-free-eod-prerequisite/v1",
+  "createdAt": "2026-08-12T20:23:00Z",
+  "taskId": "Q006-TIINGO-FREE-EOD-HANDSHAKE",
+  "sourceId": "TIINGO_FREE_EOD",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the current zero-cost Tiingo EOD entitlement and the user-action boundary before any account or data request.",
+  "officialEvidence": [
+    {
+      "url": "https://www.tiingo.com/about/pricing",
+      "observedAt": "2026-08-12T20:23:00Z",
+      "verifiedFact": "Tiingo publishes a $0 Starter tier with 500 unique symbols per month, 50 requests per hour, 1000 per day, 1 GB per month and internal-use-only licensing."
+    },
+    {
+      "url": "https://www.tiingo.com/products/end-of-day-stock-price-data",
+      "observedAt": "2026-08-12T20:23:00Z",
+      "verifiedFact": "Tiingo describes EOD coverage from 1962 with raw and adjusted OHLCV, dividends and splits across listed and OTC instruments."
+    },
+    {
+      "url": "https://www.tiingo.com/documentation/end-of-day",
+      "observedAt": "2026-08-12T20:23:00Z",
+      "verifiedFact": "The EOD API exposes raw and adjusted fields, divCash and splitFactor, and requires an API token."
+    },
+    {
+      "url": "https://www.tiingo.com/documentation/general",
+      "observedAt": "2026-08-12T20:23:00Z",
+      "verifiedFact": "Tiingo states that accounts are free and receive an authentication token; higher limits and commercial use require upgrades."
+    }
+  ],
+  "freeCapability": {
+    "starterMonthlyFeeUsd": 0,
+    "paymentDetailsRequired": false,
+    "trialRequired": false,
+    "accountRequired": true,
+    "tokenRequired": true,
+    "uniqueSymbolsPerMonth": 500,
+    "requestsPerHour": 50,
+    "requestsPerDay": 1000,
+    "bandwidthBytesPerMonth": 1000000000,
+    "licenseDisposition": "INTERNAL_USE_ONLY",
+    "rawOhlcvAdvertised": true,
+    "adjustedOhlcvAdvertised": true,
+    "dividendFieldAdvertised": true,
+    "splitFieldAdvertised": true,
+    "terminalPaymentsAdvertised": false,
+    "historicalIdentityIntervalsAdvertised": false
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterAccountAttestationAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 12,
+    "noPremiumEndpoint": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noLastQuoteAsTerminalPayment": true,
+    "rawProviderRowsRemainPrivate": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_CRAWL_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one Starter account at $0 without payment details or trial, verify email, and store the API token only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "paymentMustRemainZero": true,
+    "trialMustRemainAbsent": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "CONFIRMED_FREE_INTERNAL_USE_PILOT_CANDIDATE_ACCOUNT_REQUIRED",
+    "fullMarketAcquisitionFeasibleInOneMonth": false,
+    "threeCaseEntitlementPilotEligibleAfterAccountGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After higher-value autonomous work completes, ask Karl once for a free Starter-account login and seal an accounted three-case pilot before any API call."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_TIER_CAPABILITY",
+      "THREE_CASE_ENTITLEMENT_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "tokenStored": false,
+    "entitlementVerified": false,
+    "historicalIdentityResolved": false,
+    "survivorshipSafeUniverseComplete": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "b65918c52c3effe3be3cd84fe586c2f896aed4fa502400e7fbc3f46fcb7dc0cf"
+}
