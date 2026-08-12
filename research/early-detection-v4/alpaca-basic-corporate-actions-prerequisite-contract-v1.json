@@ -1,0 +1,133 @@
+{
+  "schema": "early-detection-alpaca-basic-corporate-actions-prerequisite/v1",
+  "createdAt": "2026-08-12T20:33:00Z",
+  "taskId": "Q009-ALPACA-BASIC-CORPORATE-ACTIONS-HANDSHAKE",
+  "sourceId": "ALPACA_BASIC_MARKET_DATA",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze Alpaca's zero-cost Basic corporate-actions capability and a narrow private pilot boundary without opening brokerage, price, return or study outcomes.",
+  "officialEvidence": [
+    {
+      "url": "https://docs.alpaca.markets/us/docs/about-market-data-api",
+      "observedAt": "2026-08-12T20:33:00Z",
+      "verifiedFact": "Alpaca documents Basic as the default USD 0 market-data plan for Paper and Live accounts, with 200 historical API calls per minute and equity history since 2016; current real-time equity coverage is limited to IEX."
+    },
+    {
+      "url": "https://docs.alpaca.markets/us/v1.1/reference/corporateactions-1",
+      "observedAt": "2026-08-12T20:33:00Z",
+      "verifiedFact": "The authenticated corporate-actions endpoint supports splits, cash and stock dividends, spin-offs, cash and stock mergers, redemptions, name changes, worthless removals and rights distributions."
+    },
+    {
+      "url": "https://docs.alpaca.markets/us/v1.1/changelog/2026-05-22-corporate-actions-5c87d2b",
+      "observedAt": "2026-08-12T20:33:00Z",
+      "verifiedFact": "The 2026 corporate-actions schema adds reorganizations and partial calls, but schema breadth does not prove complete historical event coverage or terminal wealth."
+    },
+    {
+      "url": "https://files.alpaca.markets/disclosures/library/TermsAndConditions.pdf",
+      "observedAt": "2026-08-12T20:33:00Z",
+      "verifiedFact": "Basic is described as a no-cost plan for personal non-commercial use; provider content must not be redistributed or commercially exploited without authorization."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "paidSubscriptionRequired": false,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "paperAccountEligible": true,
+    "fundedBrokerageAccountRequiredForPilot": false,
+    "historicalCallsPerMinute": 200,
+    "historicalStartYear": 2016,
+    "currentRealtimeEquityFeed": "IEX_ONLY",
+    "corporateActionFamiliesAdvertised": [
+      "CASH_DIVIDEND",
+      "CASH_MERGER",
+      "FORWARD_SPLIT",
+      "NAME_CHANGE",
+      "PARTIAL_CALL",
+      "REDEMPTION",
+      "REORGANIZATION",
+      "REVERSE_SPLIT",
+      "RIGHTS_DISTRIBUTION",
+      "SPIN_OFF",
+      "STOCK_AND_CASH_MERGER",
+      "STOCK_DIVIDEND",
+      "STOCK_MERGER",
+      "UNIT_SPLIT",
+      "WORTHLESS_REMOVAL"
+    ],
+    "coversOriginalV4Period2009To2015": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "licenseDisposition": "PRIVATE_PERSONAL_NONCOMMERCIAL_PILOT_ONLY"
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterBasicAccountAttestationAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 9,
+    "corporateActionsEndpointOnly": true,
+    "noTradingOrder": true,
+    "noAccountFunding": true,
+    "noPaidSubscription": true,
+    "noPriceOrReturnRequest": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noWorthlessRemovalAsTerminalWealthProof": true,
+    "rawProviderRowsRemainPrivate": true,
+    "publicArtifactLimitedToHashesAndAggregateCapability": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_FINALIZATION_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one USD 0 Basic Paper account without paid subscription or account funding and store its API credentials only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "paymentMustRemainZero": true,
+    "paidSubscriptionMustRemainAbsent": true,
+    "brokerageFundingMustRemainAbsent": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "CONFIRMED_FREE_POST2015_CORPORATE_ACTION_PILOT_ACCOUNT_REQUIRED",
+    "originalV4CapabilityClosed": false,
+    "fullPeriod2009To2024Closed": false,
+    "threeCasePilotEligibleAfterAccountGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After FINRA finalization or higher-value autonomous work, ask Karl once for a USD 0 Basic Paper account and seal a corporate-actions-only three-case pilot."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_BASIC_CAPABILITY",
+      "POST2015_THREE_CASE_CORPORATE_ACTION_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_MARKET_COVERAGE_2009_TO_2024",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "entitlementVerified": false,
+    "fullPeriod2009To2024Closed": false,
+    "historicalIdentityResolved": false,
+    "completeCorporateActionChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "b8c728e49a7c3fbc2763a81a4168378c94afbf587fe53837cadfc9b371496d4e"
+}
