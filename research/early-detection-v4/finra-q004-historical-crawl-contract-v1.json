@@ -1,0 +1,78 @@
+{
+  "schema": "finra-q004-historical-crawl-contract/v1",
+  "createdAt": "2026-08-12T19:33:59Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Resumably capture every official OTC Daily List partition exposed by FINRA from 2009-01-01 through 2024-12-31 into a private CAS; publish hashes and counts only.",
+  "authorization": {
+    "parentRemoteCommit": "f44ea412b9df000b4eba1f3284c58f4b6e584b43",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "monthlyUsageCapBytes": 10000000000,
+    "termsEvidenceRawSha256": "686b31c58169809e627edb346e6d281437185e12dbc0065896251622814c1fe7",
+    "metadataEvidenceRawSha256": "dc1ce543a2c2dbc80187d7757874245e504bb3c04b1faa8ccbdaa91a8ad23955",
+    "partitionsEvidenceRawSha256": "2772239277ff93be4e3034b0c80c13b41a080b6c1d606a7b7a3f158fb6c06b1c"
+  },
+  "coverageContract": {
+    "requestedMinimumDate": "2009-01-01",
+    "requestedMaximumDate": "2024-12-31",
+    "availableMinimumDate": "2016-01-18",
+    "availableMaximumDate": "2024-12-31",
+    "availablePartitionCount": 1522,
+    "availableDatesSha256": "4b6b991889079d3fbcf92de1a4853988d3eb78ad650ddee50cdbeba8f9381b37",
+    "pre2016CoverageStatus": "UNRESOLVED_NOT_EXPOSED_BY_PARTITIONS_ENDPOINT",
+    "emptyCalendarDaysQueried": false
+  },
+  "requestContract": {
+    "tokenRequestsPerInvocation": 1,
+    "dataUrl": "https://api.finra.org/data/group/otcMarket/name/OTCDAILYLIST",
+    "method": "POST",
+    "partitionField": "calendarDay",
+    "compareType": "EQUAL",
+    "fields": "ALL_60_METADATA_FIELDS",
+    "limit": 5000,
+    "offsetPagination": true,
+    "async": false,
+    "minimumSecondsBetweenDataRequests": 2,
+    "maximumDataRequestsPerMinute": 30,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "automaticRetriesAllowed": false,
+    "rateLimitDisposition": "RATE_DEFERRED",
+    "maximumResponseBytesPerPage": 3145728
+  },
+  "storageContract": {
+    "privateRoot": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/historical",
+    "rawPagePathTemplate": "blobs/sha256/{sha256[0:2]}/{sha256}",
+    "checkpointPath": "checkpoint-v1.json",
+    "checkpointWrite": "ATOMIC_REPLACE_LOCAL_ONLY",
+    "rawDataPublicGitAllowed": false,
+    "resumeVerifiesEveryPriorBlob": true,
+    "writeNewRawBlobs": true
+  },
+  "completionContract": {
+    "outputPath": "reports/early-detection/finra-q004-historical-crawl-manifest-v1.json",
+    "all1522PartitionsRequired": true,
+    "recordTotalStableWithinPartition": true,
+    "pageOffsetsContiguous": true,
+    "allRowsMatchPartition": true,
+    "all60FieldsExact": true,
+    "idsUniqueWithinAndAcrossPartitions": true,
+    "twoPrivateRebuildsRequiredBeforePromotion": true,
+    "rawRowsIncludedInPublicManifest": false
+  },
+  "claimLocks": {
+    "pre2016CoverageComplete": false,
+    "historicalIdentityIntervalsComplete": false,
+    "corporateActionsComplete": false,
+    "terminalPaymentsComplete": false,
+    "terminalSessionsComplete": false,
+    "adjustedOhlcvComplete": false,
+    "fullMarketCoverageClaimed": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "3c3b97490138d552979550ab80e3943bb2c29061b180a6d23057d4a9b8b1bd3d"
+}
