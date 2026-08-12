@@ -1,0 +1,70 @@
+{
+  "claimLocks": {
+    "corporateActionChainComplete": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "paymentCompletionVerified": false,
+    "postClosingRecoveryComplete": false,
+    "securityIdentityResolved": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "createdAt": "2026-08-12T22:06:29Z",
+  "evidenceContract": {
+    "amountCandidateContext": "CONSIDERATION_CONTEXT",
+    "candidateAmountMustBeUnique": true,
+    "candidateOnly": false,
+    "cashLanguageRequired": true,
+    "considerationPerSourceShareVerified": true,
+    "convertedIntoRightToReceiveRequired": true,
+    "expectedAccessions": [
+      "0000876661-12-000192",
+      "0000876661-13-000902",
+      "0000876661-21-001108",
+      "0001104659-19-049572"
+    ],
+    "expectedAmountsByAccession": {
+      "0000876661-12-000192": "11.5",
+      "0000876661-13-000902": "23.75",
+      "0000876661-21-001108": "37",
+      "0001104659-19-049572": "51.35"
+    },
+    "expectedRows": 4,
+    "excludedLanguage": [
+      "ADDITIONAL",
+      "CONTINGENT",
+      "SUBJECT TO",
+      "PLUS ACCRUED",
+      "ELECTION",
+      "EITHER"
+    ],
+    "noOtherCashOrRatioCandidate": true,
+    "semanticCeiling": "FIXED_CASH_CONSIDERATION_PER_SOURCE_SHARE_STATED_IN_PRIMARY_SEC_DOCUMENT",
+    "sourceDocumentBindingRequired": true
+  },
+  "inputs": {
+    "documentExtraction": {
+      "builderRawSha256": "cce6177c17b3b6fa1ac5258b2432a6f263ef788182dc077514beb212b3baa903",
+      "contractRawSha256": "cc18c2d7ac4d984b5511830eae714a0131096e384c77d63817c4b59afa2cf797",
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "reportSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000",
+      "testRawSha256": "7e8023fe544a4c824c5032b92a9522b01b88c035446a78c8945c03a5d8716e14"
+    },
+    "issuerResolution": {
+      "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+      "rawSha256": "f89767daf43c2d06ca87c0b57919b450749620026724b700ff94572117da7cfb",
+      "reportSha256": "3b450bef0120eee49fc4ab0f188578097ffd2fb53d781675b33c6db84809ead6"
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-explicit-fixed-cash-consideration-v1.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Promote only the smallest deterministic subset of primary SEC sentences that unambiguously states a fixed cash consideration per source share. This does not establish complete terminal wealth or payment completion.",
+  "schema": "early-detection-sec-explicit-fixed-cash-consideration-contract/v1",
+  "taskId": "Q003-SEC-EXPLICIT-FIXED-CASH-CONSIDERATION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
