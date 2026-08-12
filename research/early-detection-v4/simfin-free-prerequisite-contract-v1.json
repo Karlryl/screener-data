@@ -1,0 +1,109 @@
+{
+  "schema": "early-detection-simfin-free-prerequisite/v1",
+  "createdAt": "2026-08-12T20:42:59Z",
+  "taskId": "Q016-SIMFIN-FREE-HANDSHAKE",
+  "sourceId": "SIMFIN_FREE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze SimFin's free five-year entitlement and deletion obligation before any account request or download.",
+  "officialEvidence": [
+    {
+      "url": "https://www.simfin.com/en/prices/",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "SimFin publishes a USD 0 free account with no billing or credit card, approximately 5,000 US stocks, API and bulk download, and five years of delayed price and fundamental history."
+    },
+    {
+      "url": "https://www.simfin.com/en/prices/",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "SimFin states that downloaded data must be deleted from devices and backups after cancellation; the data may be used only while a valid subscription remains active."
+    },
+    {
+      "url": "https://www.simfin.com/en/commercial-license/",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "The FREE and BASIC license is for personal research and prohibits sharing, sale, copying, distribution, transfer or access by other parties."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "noBillingAdvertised": true,
+    "creditCardRequired": false,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "approximatelyUsStocks": 5000,
+    "priceHistoryMaximumYears": 5,
+    "fundamentalHistoryMaximumYears": 5,
+    "dataApiAdvertised": true,
+    "bulkDownloadAdvertised": true,
+    "full2009To2024HistoryAvailableFree": false,
+    "survivorshipSafeUniverseAdvertised": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "licenseDisposition": "PRIVATE_PERSONAL_RESEARCH_NO_SHARING_DELETE_AFTER_CANCELLATION"
+  },
+  "retentionContract": {
+    "providerRowsMayEnterDurableResearchCorpus": false,
+    "providerRowsMayEnterGit": false,
+    "providerRowsMayEnterPermanentCas": false,
+    "providerDescriptionsMayBePublished": false,
+    "futurePilotMustBeEphemeral": true,
+    "futurePilotMustTrackSubscriptionValidity": true,
+    "futurePilotMustDeleteProviderDataAfterCancellation": true,
+    "futurePilotMustCleanBackups": true,
+    "publicArtifactMayContainOnlyDocumentationFactsAndNoProviderRows": true
+  },
+  "handshakeContract": {
+    "status": "DOCUMENTATION_ONLY_NO_ACCOUNT_REQUEST",
+    "productionRequestsAuthorized": false,
+    "maximumUniqueSymbols": 0,
+    "maximumRequests": 0,
+    "noAccountCreationRequested": true,
+    "noSecretRequested": true,
+    "noProviderRowsCaptured": true,
+    "noPricePublication": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noLastQuoteAsTerminalPayment": true
+  },
+  "decision": {
+    "disposition": "FREE_FIVE_YEAR_EPHEMERAL_PILOT_NOT_DURABLE_EVIDENCE_ELIGIBLE",
+    "askKarlForAccountNow": false,
+    "originalV4CapabilityClosed": false,
+    "durableReproducibilityClosed": false,
+    "studyCredit": false,
+    "nextAction": "Do not consume user time or download provider rows while durable primary-source and SIP lanes remain. Reconsider only for a bounded ephemeral countercheck with an explicit deletion ledger."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_FIVE_YEAR_CAPABILITY_DOCUMENTATION",
+      "RETENTION_LIMITATION_DISPOSITION"
+    ],
+    "forbidden": [
+      "FULL_2009_TO_2024_HISTORY",
+      "FULL_MARKET_COVERAGE",
+      "SURVIVORSHIP_SAFE_UNIVERSE",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_ADJUSTMENT_OR_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME_PUBLICATION",
+      "DURABLE_REPRODUCIBLE_EVIDENCE",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "providerRowsCaptured": false,
+    "providerRowsDurablyRetained": false,
+    "historicalIdentityResolved": false,
+    "completeAdjustmentChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "7f2652eafbda5d35fc36a87a1a9618b7559760f4cabafd4be8036ef76ba3ed6a"
+}
