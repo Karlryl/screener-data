@@ -1,0 +1,185 @@
+{
+  "schema": "openfigi-anonymous-handshake-contract/v1",
+  "createdAt": "2026-08-12T16:45:00Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRASTRUCTURE",
+  "taskId": "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+  "sourceId": "OPENFIGI_FREE",
+  "purpose": "Anonymous OpenFIGI V3 point-in-time identifier-mapping qualification for three fixed control cases.",
+  "documentation": {
+    "checkedAt": "2026-08-12T16:45:00Z",
+    "officialDocumentationUrl": "https://www.openfigi.com/api/documentation",
+    "officialOpenApiSchemaUrl": "https://api.openfigi.com/schema",
+    "officialTermsUrl": "https://www.openfigi.com/docs/terms-of-service",
+    "observedFacts": [
+      "The API documentation describes the API as free and open to the public, with a lower unauthenticated rate limit.",
+      "POST https://api.openfigi.com/v3/mapping accepts an ordered array and returns one ordered result per mapping job.",
+      "The V3 endpoint documents warning, not error, for no identifier found.",
+      "The V3-specific limits table says five anonymous mapping jobs per request; the general rate-limit table says ten. This contract uses the stricter value of five.",
+      "Anonymous mapping is documented at 25 requests per minute and HTTP 429 is the rate-limit response.",
+      "Rate-limit-limit, ratelimit-remaining and ratelimit-reset response headers are documented.",
+      "OpenFIGI exposes identifier and descriptive metadata, not historical validity intervals, corporate-action effective dates, terminal sessions or terminal payments."
+    ]
+  },
+  "entitlement": {
+    "accountRequired": false,
+    "apiKeyRequired": false,
+    "paymentDetailsRequired": false,
+    "trialAllowed": false,
+    "authenticatedHeaderForbidden": "X-OPENFIGI-APIKEY",
+    "anonymousRequestsPerMinuteCeiling": 25,
+    "jobsPerRequestFailClosedCeiling": 5,
+    "requestsInHandshake": 1,
+    "jobsInHandshake": 5
+  },
+  "endpoint": {
+    "method": "POST",
+    "url": "https://api.openfigi.com/v3/mapping",
+    "contentType": "application/json",
+    "timeoutSeconds": 30,
+    "maximumResponseBytes": 2097152
+  },
+  "fixedJobs": [
+    {
+      "requestIndex": 0,
+      "caseId": "ACTIVE_STABLE",
+      "jobId": "AAPL_ACTIVE",
+      "requestBody": {
+        "idType": "TICKER",
+        "idValue": "AAPL",
+        "exchCode": "US",
+        "marketSecDes": "Equity"
+      }
+    },
+    {
+      "requestIndex": 1,
+      "caseId": "SAME_SECURITY_SYMBOL_CHANGE",
+      "jobId": "FB_INCLUDE_UNLISTED",
+      "requestBody": {
+        "idType": "TICKER",
+        "idValue": "FB",
+        "exchCode": "US",
+        "marketSecDes": "Equity",
+        "includeUnlistedEquities": true
+      }
+    },
+    {
+      "requestIndex": 2,
+      "caseId": "SAME_SECURITY_SYMBOL_CHANGE",
+      "jobId": "META_INCLUDE_UNLISTED",
+      "requestBody": {
+        "idType": "TICKER",
+        "idValue": "META",
+        "exchCode": "US",
+        "marketSecDes": "Equity",
+        "includeUnlistedEquities": true
+      }
+    },
+    {
+      "requestIndex": 3,
+      "caseId": "TERMINAL_CASH_MERGER_OR_DELISTING",
+      "jobId": "ATVI_DEFAULT",
+      "requestBody": {
+        "idType": "TICKER",
+        "idValue": "ATVI",
+        "exchCode": "US",
+        "marketSecDes": "Equity"
+      }
+    },
+    {
+      "requestIndex": 4,
+      "caseId": "TERMINAL_CASH_MERGER_OR_DELISTING",
+      "jobId": "ATVI_INCLUDE_UNLISTED",
+      "requestBody": {
+        "idType": "TICKER",
+        "idValue": "ATVI",
+        "exchCode": "US",
+        "marketSecDes": "Equity",
+        "includeUnlistedEquities": true
+      }
+    }
+  ],
+  "responseContract": {
+    "requiredHttpStatus": 200,
+    "requiredContentTypePrefix": "application/json",
+    "requiredRateLimitHeaders": [
+      "ratelimit-limit",
+      "ratelimit-remaining",
+      "ratelimit-reset"
+    ],
+    "topLevelType": "array",
+    "topLevelLength": 5,
+    "resultShape": "EXACTLY_ONE_OF_DATA_WARNING_ERROR",
+    "noMappingWarningExact": "No identifier found.",
+    "dataObjectExactKeys": [
+      "figi",
+      "securityType",
+      "marketSector",
+      "ticker",
+      "name",
+      "exchCode",
+      "shareClassFIGI",
+      "compositeFIGI",
+      "securityType2",
+      "securityDescription"
+    ],
+    "ambiguousDefinition": "Any job returning zero or more than one data row cannot establish an unambiguous mapping; more than one row is a hard fail-closed ambiguity.",
+    "schemaDriftPolicy": "Any undocumented top-level, job-result or data-object key is a hard failure.",
+    "errorPolicy": "Any job-level error or non-200 HTTP response is a hard failure. HTTP 429 is RATE_DEFERRED and must not be retried in the same run."
+  },
+  "caseAssertions": {
+    "ACTIVE_STABLE": [
+      "AAPL must return exactly one Equity row with non-null FIGI, compositeFIGI and shareClassFIGI.",
+      "This is current point evidence only."
+    ],
+    "SAME_SECURITY_SYMBOL_CHANGE": [
+      "FB and META are evaluated as two independent current mapping jobs.",
+      "Matching non-null shareClassFIGI values are labeled SAME_SHARE_CLASS_FIGI_POINT_EVIDENCE only.",
+      "No effective ticker-change date or historical identity interval is inferred."
+    ],
+    "TERMINAL_CASH_MERGER_OR_DELISTING": [
+      "ATVI is compared with the default request and includeUnlistedEquities=true.",
+      "Any difference is labeled request-behavior point evidence only.",
+      "No delisting date, last session, merger consideration, terminal payment or terminal wealth is inferred."
+    ]
+  },
+  "networkPolicy": {
+    "singleRequestOnly": true,
+    "automaticRetryAllowed": false,
+    "redirectAllowed": false,
+    "proxyOrRateLimitBypassAllowed": false,
+    "accountOrKeyUseAllowed": false,
+    "writeProductionOutputAllowed": false,
+    "rawResponseBodyMustBeBase64Captured": true,
+    "rawResponseSha256Required": true,
+    "requestBodySha256Required": true,
+    "rateLimitHeadersMustBeCaptured": true
+  },
+  "claimCeiling": {
+    "allowed": [
+      "CURRENT_POINT_IDENTIFIER_EVIDENCE",
+      "CURRENT_POINT_SHARE_CLASS_COMPARISON",
+      "INCLUDE_UNLISTED_REQUEST_BEHAVIOR",
+      "ANONYMOUS_ENTITLEMENT_AND_RATE_LIMIT_OBSERVATION"
+    ],
+    "forbidden": [
+      "HISTORICAL_VALIDITY_INTERVAL",
+      "EFFECTIVE_TICKER_CHANGE_DATE",
+      "ACTIVE_OR_DELISTED_STATUS_INFERENCE",
+      "CORPORATE_ACTION_COMPLETENESS",
+      "LAST_TRADING_SESSION",
+      "TERMINAL_PAYMENT",
+      "TERMINAL_WEALTH",
+      "PRICE_OR_RETURN_OUTCOME"
+    ]
+  },
+  "locks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "historicalIntervalClaimed": false,
+    "terminalStatusClaimed": false,
+    "terminalPaymentClaimed": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "b760a32a20f9afcb106935e9631b49bb864d3fb97a12fdf8e75fd6930082b7c8"
+}
