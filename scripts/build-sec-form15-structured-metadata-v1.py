@@ -1026,11 +1026,10 @@ def self_test() -> dict:
         "blobSha256": duplicate_empty_type_digest, "bytes": len(duplicate_empty_type),
         "relativePath": f"{duplicate_empty_type_digest[:2]}/{duplicate_empty_type_digest}.txt",
     }
-    empty_sgml_label_rejected = False
-    try:
-        parse_blob(duplicate_empty_type, duplicate_empty_type_ref, accession)
-    except MetadataError:
-        empty_sgml_label_rejected = True
+    empty_sgml_label_rejected = (
+        parse_blob(duplicate_empty_type, duplicate_empty_type_ref, accession)["parseStatus"]
+        == "SGML_MALFORMED"
+    )
     malformed_raw, malformed_ref, malformed_accession = fixture_blob("<![YH >Visible malformed text.")
     malformed_parsed = parse_blob(malformed_raw, malformed_ref, malformed_accession)
     malformed_fallback = (
