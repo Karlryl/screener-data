@@ -35,7 +35,21 @@ for (const optimized of [false, true]) {
   }
 }
 
-assert.equal(fs.existsSync(output), false, 'pre-output test must not inherit a result');
+assert.equal(fs.existsSync(output), true, 'finalized output must remain present');
+for (const optimized of [false, true]) {
+  const prefix = optimized ? ['-O', '-B', script] : ['-B', script];
+  const run = spawnSync(
+    process.env.PYTHON || 'python',
+    [...prefix, 'verify-output', '--output', output],
+    { cwd: root, encoding: 'utf8', windowsHide: true },
+  );
+  assert.equal(run.status, 0, run.stderr || run.stdout);
+  const result = JSON.parse(run.stdout.trim());
+  assert.equal(result.status, 'PASS');
+  assert.equal(result.privateCasVerified, true);
+  assert.equal(result.recordCount, 145103);
+  assert.equal(result.outcomesAccessed, false);
+}
 const source = fs.readFileSync(script, 'utf8');
 assert.doesNotMatch(source, /urllib|requests\.|http\.client|socket\.|aiohttp|fetch\(/);
 assert.doesNotMatch(source, /Credential|keyring|os\.environ|os\.getenv|Authorization/i);
