@@ -1,0 +1,146 @@
+{
+  "schema": "openfigi-figi-only-disposition-contract/v2",
+  "createdAt": "2026-08-12T17:35:00Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRASTRUCTURE",
+  "taskId": "Q007-OPENFIGI-FIGI-ONLY-SANITIZATION-V2",
+  "sourceId": "OPENFIGI_FREE",
+  "purpose": "Derive a public-domain FIGI-identifier-only point-evidence artifact while quarantining every OpenFIGI descriptive field from V1.",
+  "v1Disposition": {
+    "status": "QUARANTINED_DESCRIPTIVE_FIELDS_RIGHTS_UNCLEARED",
+    "studyCredit": "ZERO",
+    "eligibleForAnyStudyGate": false,
+    "eligibleForOriginalV4": false,
+    "publicationAllowed": false,
+    "reason": "V1 contains Related Security Descriptions for which this study asserts no redistribution right."
+  },
+  "v2Disposition": {
+    "status": "PUBLIC_FIGI_ONLY_POINT_EVIDENCE",
+    "identifierDisposition": "FIGI_IDENTIFIERS_PUBLIC_DOMAIN",
+    "pointEvidenceCredit": "CURRENT_MAPPING_AND_NEGATIVE_TICKER_REUSE_ONLY",
+    "originalV4GateCredit": "ZERO",
+    "descriptiveFieldsIncluded": false,
+    "rawProviderBodyIncluded": false
+  },
+  "termsBinding": {
+    "sourcePath": "research/early-detection-v4/openfigi-terms-of-service-2026-08-12.html",
+    "sourceRawSha256": "dc1f321786c6e29cc4758bfd86137d49e95ae7a0b1c2abf68d44f2f53a67420e",
+    "snapshotPath": "research/early-detection-v4/openfigi-terms-snapshot-v1.json",
+    "snapshotRawSha256": "423d084fd0ff7ebb20fc0d055901a0aa9b915a40218c911653462234a8b80ae7",
+    "snapshotSha256": "8c882530c0cd7f918f0101373421d7238689ec584d74d8f77306421e13b33c95",
+    "publicDomainScope": "FIGI_IDENTIFIERS_ONLY",
+    "relatedDescriptionsDisposition": "EXCLUDED_FROM_V2"
+  },
+  "v1Binding": {
+    "path": "reports/early-detection/openfigi-anonymous-handshake-capture-v1.json",
+    "rawSha256": "99144a7a85520efe7e127f32bbd438f07efa8578007f1f7333dd6bc58c683c48",
+    "bundleSha256": "846050a4d5fd84900e01e7c387c4ad96086c49696e092d6817fd29b9f96c9e2c",
+    "requestRawSha256": "9a90c3d2135fede385dd5277a27ced5441c49826af6a5e2bf9f8e21e60b3d698",
+    "responseRawSha256": "0eeea739a2df7a64c4dc63a5e5572b97eb07b8717a7c2e762ab089c34a1d747a",
+    "introductionTag": 742,
+    "introductionCommit": "9ecf9a8b67bc103812174eb347a8547b52144d93",
+    "introductionGitBlob": "fdcae77fcb09e98f57628209efbe5d548b92a30f"
+  },
+  "remoteBinding": {
+    "name": "origin",
+    "url": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumRemoteBaseCommit": "ec806d8112fdaa05ee2cd328da256c504e8038fe",
+    "v1IntroductionMustBeAncestor": true,
+    "headMustEqualUpstreamAndLiveRemote": true,
+    "localFilesMustEqualHeadGitBlobs": true,
+    "preAndPostBuildSnapshotsMustMatch": true
+  },
+  "derivation": {
+    "expectedJobOrder": [
+      "AAPL_ACTIVE",
+      "FB_INCLUDE_UNLISTED",
+      "META_INCLUDE_UNLISTED",
+      "ATVI_DEFAULT",
+      "ATVI_INCLUDE_UNLISTED"
+    ],
+    "expectedStates": {
+      "AAPL_ACTIVE": "UNIQUE_POINT_MAPPING",
+      "FB_INCLUDE_UNLISTED": "UNIQUE_POINT_MAPPING",
+      "META_INCLUDE_UNLISTED": "UNIQUE_POINT_MAPPING",
+      "ATVI_DEFAULT": "NO_MAPPING_WARNING",
+      "ATVI_INCLUDE_UNLISTED": "UNIQUE_POINT_MAPPING"
+    },
+    "rowExactKeys": [
+      "jobId",
+      "state",
+      "figi",
+      "compositeFIGI",
+      "shareClassFIGI"
+    ],
+    "mappedIdentifierKeys": [
+      "figi",
+      "compositeFIGI",
+      "shareClassFIGI"
+    ],
+    "noMapIdentifierValue": null,
+    "sourceFieldsAllowedToDerive": [
+      "jobId",
+      "state",
+      "figi",
+      "compositeFIGI",
+      "shareClassFIGI"
+    ]
+  },
+  "output": {
+    "path": "reports/early-detection/openfigi-figi-only-capture-v2.json",
+    "schema": "openfigi-figi-only-capture/v2",
+    "serialization": "UTF8_CANONICAL_JSON_SORTED_KEYS_COMPACT_PLUS_LF",
+    "writeMode": "ATOMIC_CREATE_NEW_NO_OVERWRITE",
+    "payloadSelfHashField": "payloadSha256",
+    "rawSha256Policy": "COMPUTE_OVER_FINAL_WRITTEN_BYTES_AND_REPORT_TO_PROMOTION_CONTROLLER",
+    "embeddedRawSha256ForbiddenBecauseSelfReferential": true
+  },
+  "forbiddenOutputKeys": [
+    "name",
+    "ticker",
+    "securityDescription",
+    "marketSector",
+    "exchCode",
+    "securityType",
+    "securityType2",
+    "bodyBase64",
+    "rawBody",
+    "responseBody",
+    "price",
+    "return",
+    "terminalPayment",
+    "terminalWealth",
+    "delistingDate",
+    "lastTradingSession"
+  ],
+  "claimCeiling": {
+    "allowed": [
+      "CURRENT_POINT_FIGI_MAPPING",
+      "NEGATIVE_TICKER_REUSE_EVIDENCE"
+    ],
+    "forbidden": [
+      "HISTORICAL_VALIDITY_INTERVAL",
+      "SAME_SECURITY_HISTORICAL_BRIDGE",
+      "EFFECTIVE_TICKER_CHANGE_DATE",
+      "ACTIVE_OR_DELISTED_STATUS",
+      "LAST_TRADING_SESSION",
+      "TERMINAL_PAYMENT",
+      "TERMINAL_WEALTH",
+      "PRICE",
+      "RETURN",
+      "ORIGINAL_V4_GATE_CREDIT"
+    ]
+  },
+  "locks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "historicalIntervalClaimed": false,
+    "historicalBridgeClaimed": false,
+    "terminalStatusClaimed": false,
+    "terminalPaymentClaimed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "7378bf2992c0bc1cb640f7ea1cfa7ff9a09a7055ddb830c9d57b88febc7a7eb7"
+}
