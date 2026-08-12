@@ -1,0 +1,80 @@
+{
+  "schema": "early-detection-occ-information-memos-access-disposition/v1",
+  "createdAt": "2026-08-12T20:12:00Z",
+  "taskId": "Q006-OCC-INFORMATION-MEMOS-ACCESS-DISPOSITION",
+  "sourceId": "OCC_INFORMATION_MEMOS",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the official-access boundary for OCC Information Memos before any automated acquisition while retaining their value for manual primary-document counterchecks.",
+  "officialEvidence": [
+    {
+      "url": "https://infomemo.theocc.com/infomemo/search",
+      "observedAt": "2026-08-12T20:12:00Z",
+      "verifiedFact": "OCC provides a public Information Memos search interface, historical memo results and a CSV export control."
+    },
+    {
+      "url": "https://www.theocc.com/specialpages/whats-changed",
+      "observedAt": "2026-08-12T20:12:00Z",
+      "verifiedFact": "OCC states that Information Memos remain available on the site for all years."
+    },
+    {
+      "url": "https://www.theocc.com/specialpages/legal/terms-and-conditions",
+      "observedAt": "2026-08-12T20:12:00Z",
+      "verifiedFact": "OCC Website Terms prohibit using or launching automated systems, including robots, spiders or offline readers, to access the Services."
+    },
+    {
+      "url": "https://infomemo.theocc.com/infomemos?number=50515",
+      "observedAt": "2026-08-12T20:12:00Z",
+      "verifiedFact": "An OCC memo can contain terminal-event evidence such as a final adjustment, cash and trust-unit deliverables, and a stated last exchange trading day."
+    }
+  ],
+  "capabilityAssessment": {
+    "historicalMemoAvailabilityObserved": true,
+    "manualPublicSearchAvailable": true,
+    "manualCsvControlObserved": true,
+    "terminalEventEvidencePotential": true,
+    "automatedAccessAuthorized": false,
+    "systematicExtractionAuthorized": false,
+    "databaseCompilationAuthorized": false,
+    "freeMachineAcquisitionEligible": false,
+    "writtenPermissionObtained": false
+  },
+  "decision": {
+    "disposition": "MANUAL_PRIMARY_DOCUMENT_COUNTERCHECK_ONLY_AUTOMATION_PROHIBITED",
+    "automatedCrawlerMustNotRun": true,
+    "manualMemoReviewMayBeUsedCaseByCase": true,
+    "manualEvidenceRequiresMemoUrlNumberAndRetrievalTimestamp": true,
+    "manualEvidenceRequiresIndependentPrimaryDocumentReconciliation": true,
+    "bulkOrCsvExportMustNotBeAutomated": true,
+    "nextAction": "Keep OCC out of the automated free-source queue; use individual memos only as manually retrieved counterchecks unless OCC supplies explicit written automation rights."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_ACCESS_RIGHTS_DISPOSITION",
+      "MANUAL_MEMO_PRIMARY_DOCUMENT_COUNTERCHECK"
+    ],
+    "forbidden": [
+      "AUTOMATED_OCC_CORPUS",
+      "OCC_DATABASE_COMPLETENESS",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "automatedAccessAuthorized": false,
+    "systematicExtractionAuthorized": false,
+    "databaseCompiled": false,
+    "historicalIdentityResolved": false,
+    "corporateActionsComplete": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "5b346887b7b167eb35bb9af27bc86678a0e9a7e551d349356c88af24bc6a90e2"
+}
