@@ -1,0 +1,100 @@
+{
+  "schema": "early-detection-sec-form15-structured-metadata-contract/v1",
+  "createdAt": "2026-08-12T20:15:00Z",
+  "taskId": "Q003-SEC-FORM15-STRUCTURED-METADATA",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "authorizedSnapshot": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "commit": "ea03e44d8ce805a08c4dc627caafc7080357b40f"
+  },
+  "queueInput": {
+    "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+    "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+    "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+    "rows": 44352,
+    "form15Rows": 17067,
+    "form15UniqueAccessions": 12923,
+    "allowedForms": [
+      "15-12B",
+      "15-12B/A",
+      "15-12G",
+      "15-12G/A",
+      "15-15D",
+      "15-15D/A",
+      "15F-12B",
+      "15F-12B/A",
+      "15F-12G",
+      "15F-12G/A",
+      "15F-15D",
+      "15F-15D/A"
+    ]
+  },
+  "inventoryInput": {
+    "path": "reports/early-detection/sec-terminal-wealth-original-inventory-v4.json",
+    "rawSha256": "7a2947b66b9cdc26e829d19a4342b7effbbcea1c8296ca0bc46d4e05217c9711",
+    "reportSha256": "b52b25d27e826872c83d920c3976a6aa9185c337ac48620e85ffbf323d550ab2",
+    "blobTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f",
+    "localPrimaryPresentForm15Rows": 17067,
+    "ambiguousMultipleLocalBlobsForm15Rows": 0,
+    "fetchRequiredForm15Rows": 0
+  },
+  "blobInput": {
+    "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+    "contentAddressPolicy": "FILENAME_STEM_AND_INVENTORY_REF_EQUAL_RAW_SHA256",
+    "accessionPolicy": "EXACTLY_ONE_LINE_FIELD_INSIDE_EXACTLY_ONE_SEC_HEADER_BLOCK_EQUALS_QUEUE_AND_INVENTORY_ACCESSION"
+  },
+  "population": {
+    "selector": "EVENT_CLASS_EQUALS_DEREGISTRATION_FORM15_CANDIDATE_AND_FORM_IN_ALLOWED_FORMS",
+    "joinKey": "EXACT_ROW_ID_THEN_EXACT_ACCESSION",
+    "tickerJoinAllowed": false,
+    "oneOutputRowPerForm15QueueRow": true,
+    "ambiguousInventoryBlobSelectionAllowed": false
+  },
+  "parserPolicy": {
+    "sgmlDocuments": "LINE_BOUNDARY_DOCUMENT_TEXT_TYPE_SEQUENCE_FILENAME_FIELDS",
+    "secHeader": "EXACTLY_ONE_ORDERED_BLOCK_WITH_EXACT_LINE_FIELDS",
+    "documentFields": [
+      "issuerCik",
+      "issuerName",
+      "securityTitleClass",
+      "formSubtype",
+      "filingDate"
+    ],
+    "securityTitleClass": "TEXT_IMMEDIATELY_PRECEDING_AN_EXACT_FORM_LABEL_WITHIN_THE_SAME_TEXTUAL_DOCUMENT",
+    "candidateKinds": [
+      "TERMINATION_LANGUAGE",
+      "WITHDRAWAL_LANGUAGE",
+      "EFFECTIVE_LANGUAGE",
+      "PAYMENT_OR_TERMINAL_LANGUAGE"
+    ],
+    "candidatePromotion": "ALL_LANGUAGE_SNIPPETS_REMAIN_CANDIDATE_ONLY",
+    "binaryDocumentEvidence": "EXCLUDED_BY_DOCUMENT_TYPE_OR_FILENAME_SUFFIX",
+    "malformedHtmlFallback": "CONSERVATIVE_BOUNDED_TAG_STRIP_WITH_NORMALIZATION_MODE_PROVENANCE",
+    "tickerExtractionAllowed": false,
+    "priceReturnOrOutcomeExtractionAllowed": false
+  },
+  "fieldStatuses": [
+    "PRESENT",
+    "MISSING",
+    "AMBIGUOUS_DUPLICATE",
+    "AMBIGUOUS_CONFLICT",
+    "UNAVAILABLE"
+  ],
+  "authorizedImplementation": {
+    "contractPath": "research/early-detection-v4/sec-form15-structured-metadata-contract-v1.json",
+    "builderPath": "scripts/build-sec-form15-structured-metadata-v1.py",
+    "testPath": "tests/build-sec-form15-structured-metadata-v1.test.js",
+    "outputPath": "reports/early-detection/sec-form15-structured-metadata-v1.json"
+  },
+  "claimLocks": {
+    "originalV4GateCredit": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "terminalPaymentVerified": false,
+    "identityResolved": false,
+    "form15LegalEffectVerified": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  }
+}
