@@ -1,0 +1,114 @@
+{
+  "schema": "early-detection-massive-stocks-basic-prerequisite/v1",
+  "createdAt": "2026-08-12T20:42:59Z",
+  "taskId": "Q015-MASSIVE-STOCKS-BASIC-HANDSHAKE",
+  "sourceId": "MASSIVE_STOCKS_BASIC",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze Massive Stocks Basic as a recent independent SIP/reference/corporate-action pilot before account creation.",
+  "officialEvidence": [
+    {
+      "url": "https://massive.com/pricing?product=stocks",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "Massive publishes Stocks Basic at USD 0 per month for individual use with all US stock tickers, five API calls per minute, two years of history, end-of-day data, reference data and corporate actions."
+    },
+    {
+      "url": "https://massive.com/stocks",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "Massive states that its US stock data is sourced from the SIPs, direct exchange connections, FINRA trading facilities, the OTC Reporting Facility, ATSs and other sources."
+    },
+    {
+      "url": "https://massive.com/legal/terms",
+      "observedAt": "2026-08-12T20:42:59Z",
+      "verifiedFact": "The provider publishes separate legal terms; exact account-tier storage and redistribution rights require a byte-bound terms snapshot before any capture."
+    }
+  ],
+  "freeCapability": {
+    "monthlyFeeUsd": 0,
+    "individualUseOnly": true,
+    "accountRequired": true,
+    "apiKeyRequired": true,
+    "apiCallsPerMinute": 5,
+    "historyMaximumYears": 2,
+    "allUsStockTickersAdvertised": true,
+    "oneHundredPercentMarketCoverageAdvertised": true,
+    "endOfDayDataAdvertised": true,
+    "referenceDataAdvertised": true,
+    "corporateActionsAdvertised": true,
+    "minuteAggregatesAdvertised": true,
+    "full2009To2024HistoryAvailableFree": false,
+    "terminalPaymentsAdvertisedComplete": false,
+    "historicalIdentityIntervalsAdvertised": false,
+    "sourceFeedDisposition": "SIP_DIRECT_EXCHANGE_FINRA_OTRF_ATS_MULTI_SOURCE",
+    "licenseDisposition": "ACCOUNT_TERMS_SNAPSHOT_REQUIRED_BEFORE_PRIVATE_CAPTURE"
+  },
+  "handshakeContract": {
+    "caseIds": [
+      "ACTIVE_STABLE_AAPL",
+      "SYMBOL_CHANGE_FB_META",
+      "TERMINAL_ATVI"
+    ],
+    "productionRequestsAuthorized": false,
+    "pilotMayStartOnlyAfterFreeAccountTermsAndSecretStoreBinding": true,
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 15,
+    "referenceAndCorporateActionEndpointsOnly": true,
+    "noMinuteAggregateOrPriceEndpoint": true,
+    "noPaidEndpoint": true,
+    "noPricePublication": true,
+    "noTickerOnlyIdentityPromotion": true,
+    "noLastQuoteAsTerminalPayment": true,
+    "rawProviderRowsRemainPrivate": true,
+    "publicArtifactLimitedToHashesAndAggregateCapability": true
+  },
+  "userActionGate": {
+    "status": "DEFERRED_UNTIL_FINRA_FINALIZATION_OR_HIGHER_VALUE_AUTONOMOUS_WORK_COMPLETES",
+    "neededAction": "Create one Stocks Basic USD 0 individual account, proceed only if no payment card or paid trial is required, and store the API key only in Windows Credential Manager.",
+    "secretsMustNotEnterChat": true,
+    "abortIfPaymentCardRequested": true,
+    "abortIfPaidTrialRequired": true,
+    "abortIfPaidPlanPreselected": true,
+    "noSecondAccount": true
+  },
+  "decision": {
+    "disposition": "CONFIRMED_FREE_RECENT_SIP_REFERENCE_ACTION_PILOT_ACCOUNT_REQUIRED",
+    "originalV4CapabilityClosed": false,
+    "complete2009To2024HistoryClosed": false,
+    "threeCasePilotEligibleAfterAccountGate": true,
+    "studyCreditBeforePilot": false,
+    "nextAction": "After FINRA finalization or higher-value autonomous work, ask Karl once for a Stocks Basic account and seal a reference-and-corporate-action-only three-case pilot."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "OFFICIAL_FREE_RECENT_SIP_REFERENCE_ACTION_CAPABILITY",
+      "THREE_CASE_REFERENCE_AND_CORPORATE_ACTION_ENTITLEMENT_PILOT_FEASIBILITY"
+    ],
+    "forbidden": [
+      "FULL_2009_TO_2024_HISTORY",
+      "FULL_MARKET_COMPLETENESS_PROVEN",
+      "SURVIVORSHIP_SAFE_UNIVERSE_PROVEN",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_ADJUSTMENT_OR_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_PAYMENT_VERIFIED",
+      "TERMINAL_WEALTH_COMPLETE",
+      "PRICE_RETURN_OR_OUTCOME_PUBLICATION",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "productionRequestsAuthorized": false,
+    "accountAttested": false,
+    "apiKeyStored": false,
+    "entitlementVerified": false,
+    "historicalIdentityResolved": false,
+    "completeAdjustmentChain": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "22533ad7143d27a493c41e524687449bd9744db5962aea029c692e11bc1d587d"
+}
