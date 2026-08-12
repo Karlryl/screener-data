@@ -28,6 +28,8 @@ TEST = ROOT / "tests" / "build-sec-same-sentence-effective-fixed-cash-v2.test.js
 CORPUS_ROOT = Path(r"C:\Users\Anwender\Documents\GrowthScreenerResearchData\early-detection-v4\corporate-action-originals\blobs\sha256")
 AUTHORIZED_REMOTE_URL = "https://github.com/Karlryl/screener-data.git"
 AUTHORIZED_REF = "refs/heads/codex/early-detection-v4-gates-20260810"
+EXPECTED_OUTPUT_INTRODUCTION_COMMIT = "98697d5a5d465f1394230bb16923c45a3961165b"
+EXPECTED_OUTPUT_INTRODUCTION_PARENT = "c454e7cdfa477b4911d5adab29723723bc6681ba"
 EXPECTED_CONTRACT_RAW = "4fdfd79ffe4f50eebb6634852c26ff5051f734d2e09b86773963afe3b9c32e42"
 EXPECTED_INPUT_RAW = "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464"
 EXPECTED_INPUT_REPORT = "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000"
@@ -522,7 +524,7 @@ def main() -> int:
             if output_at_base.returncode == 0:
                 fail("output existed at build base")
             introduction = subprocess.run(["git", "log", "--diff-filter=A", "--format=%H", "--", OUTPUT.relative_to(ROOT).as_posix()], cwd=ROOT, check=False, capture_output=True, text=True, encoding="utf-8").stdout.strip().splitlines()
-            if introduction and (len(introduction) != 1 or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [introduction[0], implementation["buildBaseCommit"]]):
+            if introduction != [EXPECTED_OUTPUT_INTRODUCTION_COMMIT] or git("rev-list", "--parents", "-n", "1", introduction[0]).split() != [EXPECTED_OUTPUT_INTRODUCTION_COMMIT, EXPECTED_OUTPUT_INTRODUCTION_PARENT] or git("merge-base", "--is-ancestor", implementation["buildBaseCommit"], EXPECTED_OUTPUT_INTRODUCTION_PARENT) != "":
                 fail("output introduction lineage changed")
             validate_report(report, contract, source, implementation)
             result = {"schema": "early-detection-sec-same-sentence-effective-fixed-cash-verification/v2", "status": "PASS", "rawSha256": sha(raw), "reportSha256": report["reportSha256"], "sourceRebuildVerified": True, "verifiedRows": 11, "outcomesAccessed": False}
