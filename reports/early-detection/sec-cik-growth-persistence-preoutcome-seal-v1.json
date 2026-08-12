@@ -1,0 +1,27 @@
+{
+  "schema": "sec-cik-growth-persistence-preoutcome-seal/v1",
+  "protocol": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+  "status": "SEALED_PRE_OUTCOME",
+  "sealedAt": "2026-08-12T04:52:03Z",
+  "stageACommit": "713ad4df38d1bf6c842349679ac464e27fccf35f",
+  "artifacts": [
+    {"role":"SCOPE","path":"reports/early-detection/sec-cik-growth-persistence-scope-v1.md","sha256":"d8bc4bcc6ebbc5c8d1f5bbaa6af1ac8ac8b6380a1656483bdcd168b1600765fa"},
+    {"role":"CLAIM_CONTRACT","path":"reports/early-detection/sec-cik-growth-persistence-claim-contract-v1.json","sha256":"3212d024e9c82dfb8ea2702ca781351e5a2e5c773d97d534ba8c445a2926a388"},
+    {"role":"SELECTOR","path":"scripts/early-detection-sec-cik-growth-persistence.py","sha256":"e07bc9316c5c492ef13c684b9cf1d619860f9d997597606ba2807a4b26b7fd3a"},
+    {"role":"TEST","path":"tests/early-detection-sec-cik-growth-persistence.test.js","sha256":"30a3c79a51711cb0e65a1f4e3818200167b11097c5b02a253621fabffde07398"},
+    {"role":"SOURCE_LINE","path":"reports/early-detection/sec-cik-growth-persistence-source-line-v2.json","sha256":"9898fbcf2fddb9f8716cf7a9a15a87f528ef9752d1008856cee979608ce472c9"},
+    {"role":"DATABASE_ATTESTATION","path":"reports/early-detection/sec-cik-growth-persistence-database-attestation-v1.json","sha256":"9a09b8b495f5cc9d2623d64ca425992b4b05801a0b57a83ef24adee434f13cdf"},
+    {"role":"EXPOSURE","path":"reports/early-detection/sec-cik-growth-persistence-exposure-v3.json","sha256":"9632586d332ad9a67a4c12e10f9716da9e533330e1b573506b738dd60eb75c7a"},
+    {"role":"OUTCOME_LEDGER","path":"reports/early-detection/sec-cik-growth-persistence-outcome-ledger-v1.json","sha256":"02b79914b07ff3c08f05d490df701f95a2df7dcdb7702b139fb12bb0a6a090dd"},
+    {"role":"AI_AUDIT_METHOD","path":"reports/early-detection/sec-cik-growth-persistence-ai-audit-method-v1.json","sha256":"0a943b4b782d598a94b406883bf4bc7096d9bd623076e07b16ba5c34b1ae3cd9"},
+    {"role":"AI_AUDIT_DATA","path":"reports/early-detection/sec-cik-growth-persistence-ai-audit-data-v1.json","sha256":"564604ea3782f42d8aa2f78909f6f89afaf421eba83017b78b7646ade1c88960"},
+    {"role":"AI_AUDIT_COUNTEREXAMPLE","path":"reports/early-detection/sec-cik-growth-persistence-ai-audit-counterexample-v1.json","sha256":"31f835aa9dcd81ccb8052857d10087f3ff77ff07a11ed9de114b7e1d1340c7a1"}
+  ],
+  "exposureReportSha256": "5dbb2ecb17101a6e8f66eecc1d0890a4921c6d66342985db5a89c8575aab603a",
+  "outcomesAccessed": false,
+  "postAnchorFactsRead": false,
+  "postAnchorFactsMaterialized": false,
+  "analysisExecuted": false,
+  "humanAttestation": false,
+  "aiAuditOnly": true
+}
