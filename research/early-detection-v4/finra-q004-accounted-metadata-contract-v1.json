@@ -1,0 +1,87 @@
+{
+  "schema": "finra-q004-accounted-metadata-contract/v1",
+  "createdAt": "2026-08-12T19:07:38Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Authorize one authenticated read of the official OTC Daily List dataset metadata; retain raw response bytes only in a private local CAS and publish only a sanitized structural manifest.",
+  "authorization": {
+    "parentRemoteCommit": "3e67349ef9243b68e0ee4c75f87d5e3b4e90b564",
+    "handshakeContractPath": "research/early-detection-v4/finra-q004-accounted-handshake-contract-v3.json",
+    "handshakeContractRawSha256": "22ee205d9a9ba30f8de0ad7e3b8f5833a72a778f77b6bea0dae406d24d6b42b5",
+    "handshakeOutputPath": "reports/early-detection/finra-q004-public-credential-handshake-v3.json",
+    "handshakeOutputRawSha256": "aa1dbac9a9441800c6ef0a1b263e061bcbd205fdd221cbd69706e442da6e3062",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "monthlyUsageCapLabel": "10 GB"
+  },
+  "requestContract": {
+    "tokenEndpoint": "https://ews.fip.finra.org/fip/rest/ews/oauth2/access_token?grant_type=client_credentials",
+    "metadataEndpoint": "https://api.finra.org/metadata/group/otcMarket/name/otcdailylist",
+    "tokenRequests": 1,
+    "metadataRequests": 1,
+    "productionDataRequests": 0,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "maximumMetadataResponseBytes": 262144,
+    "rawResponsePublicGitAllowed": false,
+    "rawResponsePrivateCasRequired": true,
+    "accessTokenPersisted": false
+  },
+  "metadataContract": {
+    "datasetGroup": "OTCMARKET",
+    "datasetName": "OTCDAILYLIST",
+    "partitionFields": ["calendarDay"],
+    "requiredFieldNames": [
+      "OTCDailyListID",
+      "bankruptcyFlag",
+      "calendarDay",
+      "cashAmountText",
+      "changeFinancialStatusFlag",
+      "changeSecurityAttributeFlag",
+      "changeSecurityDescriptionFlag",
+      "changeSymbolFlag",
+      "dailyListDatetime",
+      "dailyListEventCode",
+      "dividendADRFlag",
+      "dividendNonADRFlag",
+      "forwardSplitRate",
+      "paymentDate",
+      "reverseSplitRate",
+      "securityAddFlag",
+      "securityDeleteFlag",
+      "stockPercentage"
+    ],
+    "publishedValuesAllowed": false,
+    "publishedFieldNamesAndTypesAllowed": true,
+    "schemaPointEvidenceOnly": true
+  },
+  "privateCas": {
+    "root": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004",
+    "pathTemplate": "sha256/{sha256[0:2]}/{sha256}",
+    "outsideGitRequired": true,
+    "writeNewOnly": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-otc-daily-list-metadata-v1.json",
+    "writeNewOnly": true,
+    "rawResponseIncluded": false,
+    "recordValuesIncluded": false,
+    "secretsCaptured": false,
+    "outcomesAccessed": false,
+    "productionRowsCaptured": 0
+  },
+  "claimLocks": {
+    "historicalIdentityIntervalsComplete": false,
+    "terminalPaymentsComplete": false,
+    "terminalSessionsComplete": false,
+    "adjustedOhlcvComplete": false,
+    "corporateActionsComplete": false,
+    "fullMarketCoverageClaimed": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "023d3f89482da98aff0e0ded50f51b6101e18c8245fc3ad991388c871fd37cbf"
+}
