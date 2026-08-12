@@ -1,0 +1,58 @@
+{
+  "schema": "finra-q004-terms-snapshot-contract/v1",
+  "createdAt": "2026-08-12T19:19:00Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "taskId": "Q004-FINRA-OTC-CATALOG",
+  "sourceId": "FINRA_OTC_PRIMARY",
+  "purpose": "Capture the exact official FINRA API and Equity Specific Terms bytes privately before any production data acquisition.",
+  "authorization": {
+    "parentRemoteCommit": "a9d66d6ec578f9ab9454bb92a6a167b692a7897c",
+    "credentialType": "PUBLIC",
+    "monthlyFeeUsd": 0,
+    "productionDataRequests": 0
+  },
+  "documents": [
+    {
+      "documentId": "FINRA_API_TERMS",
+      "url": "https://developer.finra.org/finra-api-terms-service",
+      "requiredCasefoldPhrases": ["finra api terms of service", "access credentials"]
+    },
+    {
+      "documentId": "FINRA_EQUITY_SPECIFIC_TERMS",
+      "url": "https://developer.finra.org/specific-terms-equity-data",
+      "requiredCasefoldPhrases": ["equity data", "otcmarket", "public credential"]
+    }
+  ],
+  "networkContract": {
+    "requests": 2,
+    "methods": ["GET"],
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "maximumBytesPerDocument": 2097152,
+    "credentialsSent": false
+  },
+  "privateCas": {
+    "root": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/terms",
+    "pathTemplate": "sha256/{sha256[0:2]}/{sha256}",
+    "outsideGitRequired": true,
+    "writeNewOnly": true
+  },
+  "outputContract": {
+    "path": "reports/early-detection/finra-q004-api-terms-snapshot-v1.json",
+    "rawBodiesIncluded": false,
+    "secretsCaptured": false,
+    "outcomesAccessed": false,
+    "productionRowsCaptured": 0
+  },
+  "licenseDisposition": "FREE_INTERNAL_NONCOMMERCIAL_API_USE_ALLOWED_SUBJECT_TO_CAPTURED_TERMS_NO_RAW_REDISTRIBUTION",
+  "claimLocks": {
+    "productionAcquisitionAuthorizedByThisArtifact": false,
+    "redistributionAllowed": false,
+    "commercialUseAllowed": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "5a29dee017c0184893823f54de4e7170e2ec817b41b0a3467d89004856043d11"
+}
