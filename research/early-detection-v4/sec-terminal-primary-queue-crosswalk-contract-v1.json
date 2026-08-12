@@ -1,0 +1,63 @@
+{
+  "schema": "early-detection-sec-terminal-primary-queue-crosswalk-contract/v1",
+  "createdAt": "2026-08-12T21:30:00Z",
+  "taskId": "Q003-SEC-TERMINAL-PRIMARY-QUEUE-CROSSWALK",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Bind every conservative SEC primary-document extraction row to every exact-accession row in the frozen terminal-wealth queue, while preserving queue multiplicity and refusing issuer, security, payment, terminal-wealth or result resolution.",
+  "inputs": {
+    "queue": {
+      "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+      "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+      "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+      "introductionCommit": "0148a3e14d7aa3cdfd493de2ca399fa876357a1e",
+      "rows": 44352
+    },
+    "extraction": {
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "reportSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000",
+      "introductionCommit": "96731659935f032e6f40cd5713794f48d740da25",
+      "rows": 656,
+      "uniqueAccessions": 652
+    }
+  },
+  "crosswalkContract": {
+    "joinKey": [
+      "accession"
+    ],
+    "tickerJoinAllowed": false,
+    "companyNameJoinAllowed": false,
+    "cikInferenceAllowed": false,
+    "oneOutputRowPerExtractionRow": true,
+    "allExactAccessionQueueRowsPreserved": true,
+    "queueMultiplicityCollapsed": false,
+    "expectedOutputRows": 656,
+    "expectedUniqueAccessions": 652,
+    "expectedSingleQueueRowMatches": 65,
+    "expectedMultipleQueueRowMatches": 591,
+    "expectedQueueRowReferences": 1247,
+    "expectedUniqueQueueRowsReferenced": 1239,
+    "missingMatchAllowed": false,
+    "candidateOnly": true,
+    "outcomesAccessed": false
+  },
+  "output": {
+    "path": "reports/early-detection/sec-terminal-primary-queue-crosswalk-v1.json",
+    "writeNewAtomic": true
+  },
+  "claimLocks": {
+    "issuerIdentityResolved": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "primaryDocumentReconciled": false,
+    "paymentVerified": false,
+    "terminalWealthComplete": false,
+    "lastTradingSessionProven": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "95fd9ddecc0bea77729555243523204cc55cdfb951030384da2030fea0e1f6cf"
+}
