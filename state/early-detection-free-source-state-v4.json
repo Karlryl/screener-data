@@ -1,6 +1,6 @@
 {
-  "eventCount": 1,
-  "eventLogRawSha256": "26bd474267d1594ff96236f8ad91261e31eeb0e2893fb6e3f9914d9ba380192f",
+  "eventCount": 2,
+  "eventLogRawSha256": "c794b8f062459d2929356953fa0cf26e735e1cebb49d669c0176dd7a9372a8dc",
   "inputBundleSha256": "426ba596d963af600f6cd33457e14a85af82c362211a3592c674c56867d13e90",
   "inputRawSha256": {
     "controller": "2d5a92fe6a4d9b34e2abda9e210190884f6b7d3b15fb8d25dd1e73ab626860af",
@@ -11,7 +11,7 @@
     "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
     "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927"
   },
-  "lastEventSha256": "2c1c61d54b4e6587a01a0365769d6da8e03d63dbfb662c52b8538dda42538f0b",
+  "lastEventSha256": "a3473f062207e8b49e2d9b396337473efdce462f05412a2ea5731fd97e8e7f87",
   "lockedStudies": [
     {
       "appendOnly": true,
@@ -26,7 +26,7 @@
       "studyId": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0"
     }
   ],
-  "materializedAt": "2026-08-12T13:40:49Z",
+  "materializedAt": "2026-08-12T13:43:04Z",
   "originalV4": {
     "complete": false,
     "gates": {
@@ -413,16 +413,16 @@
       "sourceId": "US_EXCHANGE_PRIMARY_FILES"
     }
   ],
-  "stateSha256": "c82f3fe3017d22dd81035ca9f2c8202bf9b7663b9077e6f811992863f4889c81",
+  "stateSha256": "a0fc4fdff9997324fb6f9a647c6e27b42c678dfb263ae18242c4cc1994eecd65",
   "taskCounts": {
     "AMBIGUOUS": 0,
-    "CLAIMED": 0,
+    "CLAIMED": 1,
     "CONFLICT": 0,
     "LICENSE_BLOCKED": 0,
     "NOT_ENTITLED": 0,
     "NOT_FOUND": 0,
     "RATE_DEFERRED": 0,
-    "READY": 6,
+    "READY": 5,
     "REJECTED": 0,
     "RESOLVED": 0,
     "USER_ACTION_REQUIRED": 4
@@ -489,8 +489,8 @@
       ],
       "action": "Derive an outcome-blind queue of unresolved terminal-wealth cases from the bound corporate-action and identity inventories.",
       "artifacts": [],
-      "claimedByAgentId": null,
-      "claimedByRunId": null,
+      "claimedByAgentId": "ROOT-SEC-QUEUE",
+      "claimedByRunId": "Q003-CONTRACT-20260812",
       "entryCriteria": [
         "BOUND_EXISTING_EVENT_INVENTORY"
       ],
@@ -499,12 +499,12 @@
         "TRANSACTION_DOCUMENT_CLASSES_ASSIGNED",
         "NO_RESULT_DATA_READ"
       ],
-      "fencingToken": 0,
-      "lastEventId": null,
-      "leaseExpiresAt": null,
+      "fencingToken": 1,
+      "lastEventId": "EVT-00000002",
+      "leaseExpiresAt": "2026-08-12T15:43:04Z",
       "priority": 98,
       "sourceId": "SEC_EDGAR_PRIMARY",
-      "state": "READY",
+      "state": "CLAIMED",
       "taskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE"
     },
     {
