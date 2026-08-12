@@ -1,0 +1,118 @@
+{
+  "schema": "us-exchange-q005-access-disposition-contract/v1",
+  "createdAt": "2026-08-12T19:55:00Z",
+  "taskId": "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the official free, paid and rights-blocked boundaries of Nasdaq, NYSE and Cboe corporate-action and listing sources before any automated acquisition.",
+  "officialEvidence": [
+    {
+      "sourceId": "CBOE_BZX_DAILY_REPORTS",
+      "urls": [
+        "https://www.cboe.com/us/equities/listings/list_on_cboe/document_library/",
+        "https://www.cboe.com/terms",
+        "https://www.cboe.com/use-of-content",
+        "https://datashop.cboe.com/listings-distributions-and-corporate-actions"
+      ],
+      "observedAt": "2026-08-12T19:50:00Z",
+      "verifiedFacts": [
+        "Cboe advertises three approximately 7pm ET BZX daily reports for listed securities, distributions and other corporate actions through its website and anonymous FTP.",
+        "Cboe website terms allow viewing, printing and downloading one copy for personal non-commercial use but otherwise restrict copying, storage, derivative use and use to verify or correct data without prior written consent.",
+        "Cboe's use-of-content page requires advance approval and a signed license agreement for use of Cboe content.",
+        "The DataShop historical product begins 2012-05-01, requires purchase or subscription selection and states that raw and derived redistribution is subject to additional licensing fees and terms."
+      ],
+      "freePointAccess": true,
+      "automatedStudyDatabaseAuthorized": false,
+      "historical2009To2024Free": false,
+      "disposition": "LICENSE_BLOCKED_FOR_AUTOMATED_DATABASE_WITHOUT_WRITTEN_PERMISSION"
+    },
+    {
+      "sourceId": "NASDAQ_DAILY_LIST",
+      "urls": [
+        "https://www.nasdaqtrader.com/Trader.aspx?id=DailyListPD",
+        "https://www.nasdaqtrader.com/TraderNews.aspx?id=nva2004-8",
+        "https://www.nasdaqtrader.com/TraderNews.aspx?id=DN2024-2"
+      ],
+      "observedAt": "2026-08-12T19:50:00Z",
+      "verifiedFacts": [
+        "Nasdaq describes Daily List as a monthly subscription with corporate-action history from 1999.",
+        "Nasdaq removed Daily List from the public website and public FTP in 2004 and made it a secured fee-based service.",
+        "Nasdaq published a further Daily List pricing change effective in 2024."
+      ],
+      "freePointAccess": false,
+      "automatedStudyDatabaseAuthorized": false,
+      "historical2009To2024Free": false,
+      "disposition": "PROHIBITED_PAID"
+    },
+    {
+      "sourceId": "NASDAQ_SYMBOL_DIRECTORIES",
+      "urls": [
+        "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs",
+        "https://ftp.nasdaqtrader.com/symboldirectory/"
+      ],
+      "observedAt": "2026-08-12T19:50:00Z",
+      "verifiedFacts": [
+        "Nasdaq publishes current Nasdaq-listed and other-listed symbol-directory point files.",
+        "A current point file is not a complete historical validity interval or corporate-action ledger."
+      ],
+      "freePointAccess": true,
+      "automatedStudyDatabaseAuthorized": false,
+      "historical2009To2024Free": false,
+      "disposition": "CURRENT_POINT_CROSSCHECK_ONLY_NO_NEW_CRAWL_AUTHORIZED"
+    },
+    {
+      "sourceId": "NYSE_CORPORATE_ACTIONS",
+      "urls": [
+        "https://www.nyse.com/regulation/corporate-actions-market-watch-proxy-compliance",
+        "https://www.nyse.com/market-data/corporate-actions",
+        "https://www.nyse.com/market-data/corporate-actions/market-event-feed",
+        "https://www.nyse.com/data-products/catalog/corporate-actions-for-nyse-group-listings"
+      ],
+      "observedAt": "2026-08-12T19:50:00Z",
+      "verifiedFacts": [
+        "NYSE publishes an upcoming corporate-action ticker list as a current public view.",
+        "NYSE states that detailed information notices are available through a Market Data subscription.",
+        "The historical Market Event Feed and the Corporate Actions package are purchase products."
+      ],
+      "freePointAccess": true,
+      "automatedStudyDatabaseAuthorized": false,
+      "historical2009To2024Free": false,
+      "disposition": "PUBLIC_CURRENT_VIEW_ONLY_HISTORICAL_AND_DETAIL_PAID"
+    }
+  ],
+  "decision": {
+    "freeHistoricalCoreSourceFound": false,
+    "newAutomatedNetworkAcquisitionAuthorized": false,
+    "currentPointEvidenceMayCloseHistoricalIntervals": false,
+    "paidFamiliesExcluded": true,
+    "nextAction": "Continue SEC and FINRA primary-source reconstruction; retain exchange pages only as current point or manual primary-document cross-checks until explicit written rights or a zero-cost licensed historical lane exists."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "SOURCE_CATALOG_EXISTS",
+      "ACCESS_AND_LICENSE_DISPOSITION",
+      "CURRENT_POINT_CROSSCHECK_AVAILABILITY",
+      "PAID_ONLY_FAMILY_EXCLUSION"
+    ],
+    "forbidden": [
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_SESSION_OR_PAYMENT",
+      "PRICE_RETURN_OR_OUTCOME",
+      "FULL_MARKET_OR_SURVIVORSHIP_SAFE_COVERAGE",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "automatedNetworkAcquisitionExecuted": false,
+    "historicalIntervalsClaimed": false,
+    "corporateActionsComplete": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "d64c997b208120b71a5b9c60da600fa7e06b8195151f331fbc4b1b8be7d4c0d2"
+}
