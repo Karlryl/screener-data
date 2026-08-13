@@ -1,0 +1,99 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-resume-harness-contract/v3",
+  "createdAt": "2026-08-13T02:22:48Z",
+  "taskId": "CONTINUOUS-FREE-SOURCE-OPERATIONAL-RESUME-HARNESS-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only post-introduction harness over the immutable V2 operational resume, accepting its legitimate POST_INTRODUCTION provider phase without changing any V2 byte or scientific claim.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBase": "2d0b8ee0e1cf3d9fea6489d529b8bf85774bcfb9",
+    "buildBaseTag": 853,
+    "buildBaseParent": "f530362a17a693e744e31d9eb4cdb6b61564f41a",
+    "futureIntroductionDirectSingleParentChildRequired": true,
+    "futureIntroductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-resume-harness-contract-v3.json",
+      "scripts/verify-continuous-free-source-operational-resume-harness-v3.py",
+      "tests/verify-continuous-free-source-operational-resume-harness-v3.test.js"
+    ]
+  },
+  "v2Lineage": {
+    "v2BuildBase": "f530362a17a693e744e31d9eb4cdb6b61564f41a",
+    "v2BuildBaseTag": 852,
+    "v2IntroductionCommit": "2d0b8ee0e1cf3d9fea6489d529b8bf85774bcfb9",
+    "v2IntroductionTag": 853,
+    "v2IntroductionParent": "f530362a17a693e744e31d9eb4cdb6b61564f41a",
+    "v2IntroductionDirectSingleParentChild": true,
+    "v2IntroductionAddedExactlyOwnThreePaths": true,
+    "v2AppendOnly": true
+  },
+  "v2Bindings": {
+    "contract": {
+      "path": "research/early-detection-v4/continuous-free-source-operational-resume-contract-v2.json",
+      "bytes": 13760,
+      "rawSha256": "084bbfc27e10bbb444c369bb488ddf60d6ed4c1547a2a5c807f700862a70eb5d",
+      "gitBlob": "ab077a35d5612f2693efbb78885073b60469a695",
+      "selfField": "resumeSha256",
+      "selfSha256": "9a24cea57cbc5340e88836399fee297ad186de5fd00c058a3ea206626d8eaa1b"
+    },
+    "verifier": {
+      "path": "scripts/verify-continuous-free-source-operational-resume-v2.py",
+      "bytes": 22574,
+      "rawSha256": "eea350e039fd5f24bdc89e8e744738fa19a11da22a2ef01b40f9ae429794de54",
+      "gitBlob": "3e61d0dba5e3df77df966a3d5f0cff4cd6e6d6e9",
+      "normalizedRawSha256": "1afcdb9ab3f9dd0809108e55abbba80298722ff340aa1c383d3854b40b69fea9"
+    },
+    "test": {
+      "path": "tests/verify-continuous-free-source-operational-resume-v2.test.js",
+      "bytes": 3561,
+      "rawSha256": "faf9a41667888a380cfd25ae0a023789f037f676d0e1ffed1b4bc9903969a6b8",
+      "gitBlob": "00631d5e3fd8bd6f05b9849c908b7e9b0b856529",
+      "normalizedRawSha256": "c31fa49c1a3139a0302ab9696bc856c4a2bbdbb67e2bb164015def46bf8e464a"
+    }
+  },
+  "providerPolicy": {
+    "providerPath": "scripts/verify-continuous-free-source-operational-resume-v2.py",
+    "commands": [
+      [
+        "python",
+        "-B",
+        "scripts/verify-continuous-free-source-operational-resume-v2.py",
+        "verify",
+        "--remote"
+      ],
+      [
+        "python",
+        "-O",
+        "-B",
+        "scripts/verify-continuous-free-source-operational-resume-v2.py",
+        "verify",
+        "--remote"
+      ]
+    ],
+    "requiredProviderPhase": "POST_INTRODUCTION",
+    "requiredStatus": "PASS",
+    "requiredMilestones": 9,
+    "requiredInheritedV1Milestones": 6,
+    "requiredNewMilestones": 3,
+    "requiredAutonomousNextActions": 4,
+    "requiredBlockedByRights": 1,
+    "requiredUserActionRequired": 3,
+    "requiredOriginalV4GreenOfficialGates": 2,
+    "requiredOriginalV4OfficialGateCount": 13,
+    "requiredOutcomesAccessed": false
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4ResultComputationAllowed": false,
+    "v2ProviderGrantsOriginalV4GateCredit": false,
+    "v3HarnessGrantsOriginalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "humanAttestation": false,
+    "publicAiAppendOnly": true,
+    "secCikStudyAppendOnly": true
+  },
+  "contractSha256": "751fff7a32bede74696c011380e8f56b0525d14f778b7df37b7b4835b88a06c8"
+}
