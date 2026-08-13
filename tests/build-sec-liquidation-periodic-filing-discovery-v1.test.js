@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+'use strict'; const assert=require('assert'),path=require('path'),{spawnSync}=require('child_process');
+const root=path.resolve(__dirname,'..'),builder=path.join(root,'scripts','build-sec-liquidation-periodic-filing-discovery-v1.py');
+function run(cmd,opt=false,code=0){const a=[...(opt?['-O']:[]),'-B',builder,cmd,'--remote'],r=spawnSync('python',a,{cwd:root,encoding:'utf8'});assert.strictEqual(r.status,code,`${a.join(' ')}\n${r.stdout}\n${r.stderr}`);return code?null:JSON.parse(r.stdout)}
+for(const o of [false,true]){const r=run('dry-run',o);assert.strictEqual(r.candidateFilings,24);assert.strictEqual(r.caseCandidateLinks,102);assert.deepStrictEqual(r.formCounts,{'N-CSR':4,'N-CSRS':4,'N-Q':8,'NSAR-A':4,'NSAR-B':4});assert.strictEqual(r.networkRequests,0);assert.strictEqual(r.writes,0);assert.strictEqual(r.outcomesAccessed,false);const s=run('self-test',o);assert.strictEqual(Object.keys(s.mutationKills).length,13);assert.ok(Object.values(s.mutationKills).every(Boolean));const n=spawnSync('python',[...(o?['-O']:[]),'-B',builder,'dry-run'],{cwd:root,encoding:'utf8'});assert.strictEqual(n.status,2)}
+console.log(JSON.stringify({status:'PASS',candidateFilings:24,caseCandidateLinks:102,outcomesAccessed:false}));
