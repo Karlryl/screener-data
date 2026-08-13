@@ -1,0 +1,126 @@
+{
+  "schema": "sec-form345-issuer-symbol-point-contract/v3",
+  "createdAt": "2026-08-13T01:27:00Z",
+  "taskId": "Q005-SEC-FORM345-ISSUER-SYMBOL-POINT-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only execution successor to immutable V2, changing only the remote direct-child authorization and V3 artifact names while preserving the exact issuer-name-only missingness semantics and every outcome lock.",
+  "remoteBinding": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "parentRemoteCommit": "c07279bdabf4e4b7f70b0aae7c32ab5da2c1c1f5",
+    "parentTag": 839,
+    "productionExecutionRequiresRemoteDirectChild": true,
+    "introductionCommitMustAddExactlyOwnThreePaths": true,
+    "precommitCommandsAllowedAtExactParent": ["verify-contract", "dry-run", "self-test"]
+  },
+  "authorizedImplementation": {
+    "contractPath": "research/early-detection-v4/sec-form345-issuer-symbol-point-contract-v3.json",
+    "builderPath": "scripts/build-sec-form345-issuer-symbol-point-v3.py",
+    "testPath": "tests/build-sec-form345-issuer-symbol-point-v3.test.js",
+    "futureOutputPath": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json"
+  },
+  "immutableV2Base": {
+    "introductionCommit": "6d69e42eb377b6345f7392e57e693d924b366cc3",
+    "introductionParent": "c172b73a36e7b3001797520514c790925f258784",
+    "contract": {
+      "path": "research/early-detection-v4/sec-form345-issuer-symbol-point-contract-v2.json",
+      "rawSha256": "b3d7a6ab30999cac316e7e92b159a2ecf1b6339531c6c8a11dbe93a2003e26c4",
+      "selfSha256": "5c721cca043ea68366a67fa4ffd44c81ce6f3f7d6e582373d7c9e3c918a61e5a",
+      "gitBlob": "322621a4aa338606581bdbef56bad542645988ba"
+    },
+    "builder": {
+      "path": "scripts/build-sec-form345-issuer-symbol-point-v2.py",
+      "rawSha256": "ebe692a2532a1aab62bffd4a5b17631bf99c9467828c18585899dfbe551521e7",
+      "gitBlob": "fe707a931b9d0cb2ed6c0922d113346835bebc4c"
+    },
+    "test": {
+      "path": "tests/build-sec-form345-issuer-symbol-point-v2.test.js",
+      "rawSha256": "72881db9ebe7da649a5a9c489739855a0fe2d4f06895d7663d1073abbf5e9ab1",
+      "gitBlob": "25bf1c44e394c684c540ef6c18b70c9130e2505f"
+    },
+    "v2RemainsUnmodified": true,
+    "v2SemanticsFullyInherited": true,
+    "v2ProductionTopologyExpired": true,
+    "v2OutputMayNotBePromotedAsV3": true
+  },
+  "semanticInheritance": {
+    "byteExactV2Sections": [
+      "immutableV1Base",
+      "privateCapture",
+      "gapQueue",
+      "sourceScope",
+      "v1FailureObservation",
+      "missingnessPolicy",
+      "claimCeiling",
+      "claimLocks"
+    ],
+    "onlyAuthorizedChanges": [
+      "REMOTE_DIRECT_CHILD_FROM_TAG839",
+      "V3_CONTRACT_BUILDER_TEST_AND_OUTPUT_PATHS",
+      "V3_SCHEMA_TASK_AND_PROVENANCE_BINDINGS"
+    ],
+    "sourceFile": "SUBMISSION.tsv",
+    "nullableSourceField": "ISSUERNAME",
+    "issuerNameImputationAllowed": false,
+    "blankCoreFieldDisposition": "FAIL_CLOSED",
+    "tickerOnlyJoinAllowed": false,
+    "expectedCounts": {
+      "allRows": 3352003,
+      "targetRows": 164675,
+      "blankIssuerNameAllRows": 1188,
+      "blankIssuerNameTargetRows": 23
+    },
+    "futureOutputSchema": "sec-form345-issuer-symbol-point/v3",
+    "pointEvidenceMayResolveHistoricalInterval": false,
+    "pointEvidenceMayResolvePermanentIdentity": false
+  },
+  "claimCeiling": {
+    "allowed": [
+      "SEC_FORM345_FILING_LEVEL_ISSUER_SYMBOL_POINT",
+      "EXACT_CIK_POINT_CROSSCHECK",
+      "OBSERVED_ISSUER_NAME_SOURCE_MISSINGNESS_COUNTS",
+      "POINT_CONFLICT_AND_MISSINGNESS_COUNTS",
+      "SOURCE_CAPABILITY_AND_PROVENANCE"
+    ],
+    "forbidden": [
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "PERMANENT_SECURITY_OR_LISTING_IDENTITY",
+      "TICKER_REUSE_RESOLVED",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_SESSION_PAYMENT_OR_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "historicalIdentityIntervalsComplete": false,
+    "permanentSecurityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "tickerReuseResolved": false,
+    "terminalSessionProven": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "abortCriteria": [
+    "V2_ARTIFACT_OR_INTRODUCTION_DRIFT",
+    "V1_CAPTURE_MANIFEST_OR_RAW_BLOB_DRIFT",
+    "V3_CONTRACT_GIT_OR_REMOTE_DRIFT",
+    "UNKNOWN_OR_ADDITIONAL_QUARTER",
+    "NON_SUBMISSION_MEMBER_ACCESS",
+    "BLANK_CORE_SOURCE_FIELD",
+    "UNKNOWN_DOCUMENT_TYPE_OR_SCHEMA_DRIFT",
+    "INVENTED_IMPUTED_OR_BACKFILLED_ISSUER_NAME",
+    "OBSERVED_CAPTURE_COUNTS_DRIFT",
+    "NON_CIK_JOIN_OR_INTERVAL_PROMOTION",
+    "PRICE_RETURN_OUTCOME_OR_OTHER_TABLE_ACCESS",
+    "EXISTING_OUTPUT_OR_SIDEPATH"
+  ],
+  "contractSha256": "f4f14ca6c91a06d989e0681d070224d0cb33a2bf929065ce3c37367ce5c1f38f"
+}
