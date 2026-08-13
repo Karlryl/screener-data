@@ -1,0 +1,107 @@
+{
+  "schema": "sec-13f-official-list-disposition-contract/v6",
+  "createdAt": "2026-08-13T00:34:35Z",
+  "taskId": "Q005-SEC-13F-OFFICIAL-LIST-DISPOSITION-V6",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Supersede the internally inconsistent V5 own-hash binding with a fixpoint-independent canonical contract self-hash, final local verifier/test byte commitments, and authoritative normal and optimized repository verification while retaining zero study credit.",
+  "supersedesV5": {
+    "contractPath": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v5.json",
+    "contractRawSha256": "5fc8439f86ade708d85b3ebfb055b9aebddc4f7fe4bf7b9295fdc33088e19f6b",
+    "verifierPath": "scripts/verify-sec-13f-official-list-disposition-v5.py",
+    "verifierRawSha256": "a23724b413c541b393dcd4687cf1c973961d356fe2b1bb8cf4b2a7cf8812bf5e",
+    "testPath": "tests/verify-sec-13f-official-list-disposition-v5.test.js",
+    "testRawSha256": "6e495995b9af2fedb578e460e0bc72a92e1fa37c1121e3a209d00eeeb624d889",
+    "introductionCommit": "c172b73a36e7b3001797520514c790925f258784",
+    "introductionParent": "a37df2107ae9837939e036a33c6ef152934c6cfc",
+    "knownOwnHashMismatch": true,
+    "repositoryVerificationPassed": false,
+    "studyCredit": "ZERO"
+  },
+  "v4TrustAnchor": {
+    "introductionCommit": "95b10fe726557c75dc1bcc828f595214fb77c8e2",
+    "introductionParent": "890c0afbf68fde0bbe4d871dcad1b9d48b51149a",
+    "files": [
+      {"path": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v4.json", "rawSha256": "ba17efd23a14731bf38dea3a4b6c4e6f9bbee5f588a61a6067afecdc3fde72b6"},
+      {"path": "scripts/verify-sec-13f-official-list-disposition-v4.py", "rawSha256": "843853c481410f5389b79c5bf5b9490d43ebdf7523f831bbf30171d9e02a77e3"},
+      {"path": "tests/verify-sec-13f-official-list-disposition-v4.test.js", "rawSha256": "e3c1056017d858069ef9eac76e65914cc0891eba91fe5295508fa3c2cdf9e802"}
+    ],
+    "studyCredit": "ZERO"
+  },
+  "dependencyGitBindings": [
+    {"path": "research/early-detection-v4/sec-13f-official-list-private-pilot-contract-v1.json", "rawSha256": "a432e808953f3208cb9f723c5e9778b7257dbbd0df4a7c25f5e359a2ab0e2018", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "scripts/run-sec-13f-official-list-private-pilot-v1.py", "rawSha256": "3c4a0f575891dc002bd19e0e68b5a714a25fbed3b11cab0435a9be1b1c10497a", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "tests/run-sec-13f-official-list-private-pilot-v1.test.js", "rawSha256": "6085403f55b158ff8428f7ee8ad2fbdfb6436d90cbc9080ba67aa9ed1a78cbff", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v2.json", "rawSha256": "0f17d30808233fad2e76c64dd29b8e2bd56c99503848f72c42a9ccff0a1c41bf", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "scripts/verify-sec-13f-official-list-disposition-v2.py", "rawSha256": "d17158ba30fe8fb63d84c7b073026016d2c142fc786304148b1277a0f8a3c1d5", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "tests/verify-sec-13f-official-list-disposition-v2.test.js", "rawSha256": "450aa617c4f89c5b4351c18dcb3109d0485d6310e167b945a504386ba4ead96b", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v3.json", "rawSha256": "1e0c91f29e3ceaa8da98b3c8029518a9a9b14c2a1566ff2a6209def46e22ce94", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "scripts/verify-sec-13f-official-list-disposition-v3.py", "rawSha256": "43363cfa831b2ec2e2d6ae25c8d90a46c1e2b60fe1b00b8761777048db6dfc78", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "tests/verify-sec-13f-official-list-disposition-v3.test.js", "rawSha256": "2c6fb24ff3274299c8cc4d986433462f806547f82074f677603f7450ffae990b", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "reports/early-detection/sec-terminal-candidate-reconciliation-v1.json", "rawSha256": "e38823a9701a7ea58afc1a91e5ed209837251f2e397fdf9d31bc4433831b4fa0", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "reports/early-detection/sec-terminal-candidate-triage-v1.json", "rawSha256": "ca879151eebd487609be39a4aa76faf83a1294c86736e00865a2759b5c7a860b", "requiredAtV4AndV6IntroductionCommits": true},
+    {"path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json", "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464", "requiredAtV4AndV6IntroductionCommits": true}
+  ],
+  "implementationContract": {
+    "buildBaseCommit": "6d69e42eb377b6345f7392e57e693d924b366cc3",
+    "contractPath": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v6.json",
+    "verifierPath": "scripts/verify-sec-13f-official-list-disposition-v6.py",
+    "verifierRawSha256": "cacbece87148931f9ec18c59e35495dca4c98ebff11103aca04ec689d8e86b66",
+    "testPath": "tests/verify-sec-13f-official-list-disposition-v6.test.js",
+    "testRawSha256": "563f871c0766abba39aada9c069bfd180d26fc17f8893ef5acc437278a5d62ce",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "introductionDirectChildOfBuildBase": true,
+    "singleIntroductionCommitRequired": true,
+    "allOwnPathsAbsentAtBuildBase": true,
+    "contractUsesCanonicalSelfHashNotRawSelfReference": true
+  },
+  "testContract": {
+    "authoritativeNodeRunsVerifyNormal": true,
+    "authoritativeNodeRunsVerifyOptimized": true,
+    "preIntroductionOwnLocalBytesBound": 3,
+    "expectedDependenciesGitBound": 12,
+    "expectedV4FilesGitBound": 3,
+    "expectedV5FilesGitBound": 3,
+    "expectedV6OwnFilesGitBound": 3,
+    "expectedV5IntroductionCommit": "c172b73a36e7b3001797520514c790925f258784",
+    "expectedBuildBaseCommit": "6d69e42eb377b6345f7392e57e693d924b366cc3",
+    "wholeTreeAbsenceClaimed": false,
+    "studyCredit": "ZERO"
+  },
+  "sourceDisposition": {
+    "status": "QUARANTINED_RESTRICTED_INTERNAL_EVALUATION_ONLY",
+    "studyCredit": "ZERO",
+    "futureExecutionAuthorized": false,
+    "automatedArchiveExecutionAuthorized": false,
+    "identityCapabilityClosed": false,
+    "terminalCapabilityClosed": false
+  },
+  "incidentDisposition": {
+    "exactIdentifierRepeatedInV6": false,
+    "removedFromPilotRunnerAndTestCurrentBytes": true,
+    "identifierAbsentFromWholeCurrentTree": false,
+    "knownPreexistingArtifactCount": 3,
+    "historyRewritePerformed": false,
+    "providerPdfOrDatasetCapturedByThisPilot": false,
+    "providerCaptureNegativeScope": "THIS_PILOT_AND_REPO_DEFAULT_PATHS_ONLY_NOT_MACHINE_WIDE"
+  },
+  "claimCeiling": {
+    "allowed": ["SOURCE_CAPABILITY_AND_RIGHTS_DISPOSITION", "AGGREGATE_PRE_REQUEST_ELIGIBILITY_CENSUS", "HISTORICAL_INCIDENT_DISCLOSURE_WITHOUT_IDENTIFIER_REPETITION"],
+    "forbidden": ["PUBLIC_CUSIP_OR_DESCRIPTION", "HISTORICAL_IDENTITY_INTERVAL", "CIK_SECURITY_OR_LISTING_IDENTITY_RESOLVED", "TERMINAL_SESSION_PAYMENT_OR_WEALTH", "PRICE_RETURN_OR_OUTCOME", "ORIGINAL_V4_GATE_CREDIT", "HUMAN_ATTESTATION"]
+  },
+  "claimLocks": {
+    "futureExecutionAuthorized": false,
+    "dataRowsPromoted": false,
+    "publicIdentifiersPublishedByV6": false,
+    "historicalIdentityIntervalsComplete": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "68f9183bf2ca23bba6a4fad08c2681850079d086133f493be8c2f1c01899cdef"
+}
