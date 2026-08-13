@@ -1,0 +1,113 @@
+{
+  "schema": "sec-liquidation-downstream-filing-capture-contract/v2",
+  "createdAt": "2026-08-13T13:31:06Z",
+  "taskId": "Q003-SEC-LIQUIDATION-DOWNSTREAM-FILING-CAPTURE-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Resume the exact V1 private SEC capture from its immutable 72-receipt and one-deferred checkpoint, preserve all V1 bytes, write each later V2 manifest as a new content-addressed snapshot plus an append-only snapshot index, and retain every V1 network, privacy, no-interpretation and no-credit restriction.",
+  "supersededV1": {
+    "contract": {
+      "path": "research/early-detection-v4/sec-liquidation-downstream-filing-capture-contract-v1.json",
+      "rawSha256": "bca2d0b60584f42d949c892f7103b2992a1b648ed6e910c2ef2610272d6ae8a6"
+    },
+    "runner": {
+      "path": "scripts/capture-sec-liquidation-downstream-filings-v1.py",
+      "rawSha256": "4e36f022144f31defc129ec059b717a9c4a219cc49c15905ab584f5c5e9ce7d7"
+    },
+    "test": {
+      "path": "tests/capture-sec-liquidation-downstream-filings-v1.test.js",
+      "rawSha256": "6d55fe65ad562547e3c3d10cbd50fd518e332a7729002c08dce12ebf00f3a4c3"
+    },
+    "introductionCommit": "7b434e1a17e4c1f29dc385004beb8afa705cbdd9",
+    "privateRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-downstream-sec-originals-v1",
+    "checkpointManifest": {
+      "path": "manifest.json",
+      "rawSha256": "68d0c28537762321028aa638b5b2e83b071bae656d2bb82726f8f8e1cd8981dd",
+      "manifestSha256": "2fa0247b293f9c222ef947701c73d145938d74a518e8834905603a5d06e09bf5",
+      "capturedCandidates": 72,
+      "deferredCandidates": 1,
+      "complete": false,
+      "receiptSequenceSha256": "e5e470a9722aae9f1b145f095d2b454fabf165aab468993f39ebb21974a9a4fe",
+      "rawBlobSequenceSha256": "4a26071e66c0ef753ec4ebd887f67d32695e5f75a550566ea37934f7222872bc",
+      "capturedRawBytes": 14669514,
+      "requestSequenceMinimum": 1,
+      "requestSequenceMaximum": 72,
+      "deferredRawSha256": "1f0afd49b7cf420666e69fb4c0836a123b1237958172bcbea9907921abf20ddc"
+    }
+  },
+  "resumeContract": {
+    "candidateFilings": 115,
+    "candidateCanonicalSha256": "ee57eec9b5e6f4bdddb0613f98e84e61b9c17eb300fff6252baebf68ce5042b2",
+    "caseCandidateLinks": 469,
+    "linkCanonicalSha256": "95f39579447d40a87075c1bb4ae9717c935222c6b6f236ac270847d514cc1b73",
+    "capturedReceiptsAreSkippedAfterFullValidation": true,
+    "deferredReceiptDoesNotSkipCandidate": true,
+    "requestSequenceContinuesFromMaximumExistingReceipt": true,
+    "oneRequestPerRemainingCandidatePerRun": true,
+    "retryCount": 0,
+    "minimumIntervalMilliseconds": 250,
+    "rateDeferredStopsRun": true,
+    "manifestSnapshotLayout": "manifests/sha256/<first2>/<manifestSha256>.json",
+    "manifestIndexLayout": "manifest-index/<capturedCandidates>-<manifestSha256>.json",
+    "manifestSchema": [
+      "schema",
+      "contractRawSha256",
+      "v1CheckpointManifestRawSha256",
+      "candidateCanonicalSha256",
+      "expectedCandidates",
+      "capturedCandidates",
+      "remainingCandidates",
+      "historicalDeferredEvents",
+      "complete",
+      "maximumRequestSequence",
+      "requestEventSequenceSha256",
+      "receiptSequenceSha256",
+      "rawBlobSequenceSha256",
+      "outcomesAccessed",
+      "manifestSha256"
+    ],
+    "requestEventsMustBeUniqueAndContiguous": true,
+    "v1DeferredRequestSequence": 73,
+    "existingV1ManifestIsNeverModified": true,
+    "allSnapshotsAtomicWriteNew": true,
+    "privateOnly": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "v1BytesModified": false,
+    "contentInterpretationPerformed": false,
+    "sameSecurityReferenced": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "cashReceiptVerified": false,
+    "finalDistributionVerified": false,
+    "noFurtherDistributionsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "laterOtcTradingExcluded": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "7b434e1a17e4c1f29dc385004beb8afa705cbdd9",
+    "baseTag": 894,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-downstream-filing-capture-contract-v2.json",
+    "runnerPath": "scripts/capture-sec-liquidation-downstream-filings-v2.py",
+    "testPath": "tests/capture-sec-liquidation-downstream-filings-v2.test.js",
+    "runnerNormalizedSha256": "57d702963b8d2fd8f6a3fc913012cf3a2371fa1bc0ede8c58bd8c5db468b65fb",
+    "testRawSha256": "14438da42373fabcdbf0fa940556d03f6544adc12bc598d145084fa6adcf8a4c",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "productionResumeRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "4b6eb6d378970edaffc1e42c72dd5df05765327cc9819b92b8711060192f7911"
+}
