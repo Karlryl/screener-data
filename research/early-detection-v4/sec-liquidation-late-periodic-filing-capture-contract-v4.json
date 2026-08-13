@@ -1,0 +1,89 @@
+{
+  "schema": "sec-liquidation-late-periodic-filing-capture-contract/v4",
+  "createdAt": "2026-08-13T16:10:30Z",
+  "taskId": "Q003-SEC-LIQUIDATION-LATE-PERIODIC-FILING-CAPTURE-REPEATABLE-JOURNALED-RESUME",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Continue the exact private late-periodic capture through any number of explicit invocations, deriving the next request sequence from the complete append-only receipt and incident journal while accepting no partial transport bytes and granting no scientific credit.",
+  "inputs": {
+    "v1CaptureRunner": {
+      "path": "scripts/capture-sec-liquidation-late-periodic-filings-v1.py",
+      "rawSha256": "e74ddc95a579b00a294c29dc96c76dde27e5e83b73cd9d116cfafe89454ea558"
+    },
+    "v3JournalContract": {
+      "path": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v3.json",
+      "rawSha256": "e50cfdc212304a0fc1b2542fe8b006542f24fb1e6a5ca2197c7e1eb1091c034b",
+      "introductionCommit": "8a223c237b8a7f8ddfe518a3e8b33b8364473b4e"
+    },
+    "v3JournalRunner": {
+      "path": "scripts/capture-sec-liquidation-late-periodic-filings-v3.py",
+      "rawSha256": "52ee3d33c32de97663dc95737dc8a4aeee0055342f30c298bc61dc737ab363b4"
+    },
+    "v3JournalTest": {
+      "path": "tests/capture-sec-liquidation-late-periodic-filings-v3.test.js",
+      "rawSha256": "ef06cee233d1558b760a8dcf8bc0f2e8df480368cbaa6927205d543054c719f7"
+    }
+  },
+  "sealedJournalPrefix": {
+    "candidateFilings": 122,
+    "acceptedReceipts": 78,
+    "remainingCandidates": 44,
+    "receiptSequenceSha256": "24543ffbb5448d5a54e41ad1f9ca2b64b7498fbb0e898a2f1d0ed98318d23330",
+    "incidentCount": 3,
+    "incidentSequences": [26, 65, 81],
+    "incidentSequenceSha256": "fb2d1729d29c67eaccc9f34e40f181fadfafeb566423b88edc4071e9ad15fb43",
+    "requestEventCount": 81,
+    "requestEventSequenceSha256": "0473b38606e363ec1d8d623d249f3233a5614522edb62bd56be0295e019e7a8e",
+    "lastAcceptedRequestSequence": 80,
+    "lastAcceptedReceiptSha256": "9fc578103445eab72f5bc7c18c5e689a3e07a01d50be3fe9f3f4b78794242986",
+    "lastIncidentRequestSequence": 81,
+    "lastIncidentSha256": "b02d743888bd5c6218bdc356d523743c890f3874889c1eab154e61fcc3d425c6",
+    "nextRequestSequenceAtSeal": 82
+  },
+  "resumeContract": {
+    "privateRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-late-periodic-sec-originals-v1",
+    "explicitInvocationMayRetryPreviouslyFailedCandidate": true,
+    "automaticRetryWithinInvocation": false,
+    "nextSequenceDerivedFromAllReceiptsAndIncidents": true,
+    "requestSequencesMustRemainUniqueAndContiguous": true,
+    "sealedJournalPrefixMustRemainByteExact": true,
+    "everyTransportFailureMustPersistIncident": true,
+    "rateDeferredStopsInvocation": true,
+    "transportIncidentStopsInvocation": true,
+    "partialTransportBytesAccepted": false,
+    "partialTransportBytesPersisted": false,
+    "existingBytesMustMatch": true,
+    "atomicWriteNew": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "8a223c237b8a7f8ddfe518a3e8b33b8364473b4e",
+    "baseTag": 904,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v4.json",
+    "runnerPath": "scripts/capture-sec-liquidation-late-periodic-filings-v4.py",
+    "testPath": "tests/capture-sec-liquidation-late-periodic-filings-v4.test.js",
+    "runnerNormalizedSha256": "a925c94caecb55d8411e77b3821187d477e1f2fcd666b1d958fa27be4a6fddff",
+    "testRawSha256": "24393ff37b21bd30751e3e4115680911a4fa238f92b3c4753730851f2f8de1c3",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "productionResumeRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "73054b81142ef0bedc235784f759933eb3431418918fe572363a76c15c1934ca"
+}
