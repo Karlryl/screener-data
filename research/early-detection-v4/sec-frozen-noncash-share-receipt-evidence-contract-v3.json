@@ -1,0 +1,376 @@
+{
+  "schema": "early-detection-sec-frozen-noncash-share-receipt-evidence-contract/v3",
+  "createdAt": "2026-08-13T06:30:00Z",
+  "taskId": "Q003-SEC-FROZEN-NONCASH-SHARE-RECEIPT-EVIDENCE-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only semantic correction of the exact six frozen SEC noncash share-receipt rows: the old surrendered fields become neutral denominator fields, and only the exact Aptiv row carries source-proven surrender-or-cancellation credit.",
+  "supersession": {
+    "supersededSchemas": [
+      "early-detection-sec-frozen-noncash-share-receipt-evidence-contract/v1",
+      "early-detection-sec-frozen-noncash-share-receipt-evidence/v1",
+      "early-detection-sec-frozen-noncash-share-receipt-evidence-output-seal-contract/v2"
+    ],
+    "oldBytesRemainAppendOnly": true,
+    "oldSurrenderedFieldsGrantNoSurrenderOrCancellationCredit": true,
+    "authoritativeDenominatorFields": [
+      "denominatorSecurityText",
+      "denominatorUnits"
+    ],
+    "authoritativeRowQualificationField": "denominatorSurrenderOrCancellationVerified"
+  },
+  "sourceBase": {
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumAncestor": "5622b794b0a435c5389707a6777161a33f8a79f7",
+    "minimumAncestorTag": 861,
+    "linearIntermediateCommitsAllowed": true,
+    "introductionMustBeSingleParent": true,
+    "introductionMustAddExactlyAuthorizedPaths": true,
+    "introducedBytesMustRemainUnchanged": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v3.json",
+      "scripts/verify-sec-frozen-noncash-share-receipt-evidence-v3.py",
+      "tests/verify-sec-frozen-noncash-share-receipt-evidence-v3.test.js"
+    ]
+  },
+  "materialization": {
+    "mode": "CONTRACT_EMBEDDED_EXACT_DERIVED_VIEW",
+    "newOutputRequired": false,
+    "newOutputPath": null
+  },
+  "sourceBindings": {
+    "repoFiles": {
+      "v1Contract": {
+        "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v1.json",
+        "bytes": 18894,
+        "rawSha256": "9451a82d6a7e51d7d531b6a035fdc9afb1d3794fd117e677c1021d6a68fa83b2",
+        "gitBlob": "842875090aba2582c408afd60436da2038b806f9",
+        "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+        "selfField": "contractSha256",
+        "selfSha256": "5dc2eb5bb282203c03cafa5cef44e4329c5082d850b0faf57c1512aefff96131"
+      },
+      "v1Builder": {
+        "path": "scripts/build-sec-frozen-noncash-share-receipt-evidence-v1.py",
+        "bytes": 31779,
+        "rawSha256": "de7c05e430af3ad50b51e13232e1fe81bf6c29cb962b55de10f94147e883d4e1",
+        "gitBlob": "e1d56bb405f170d6cd1a9ac4f3e0ec2b59914cb7",
+        "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019"
+      },
+      "v1Test": {
+        "path": "tests/build-sec-frozen-noncash-share-receipt-evidence-v1.test.js",
+        "bytes": 8988,
+        "rawSha256": "89aa207c536f7cf09f6c8b9fb9801a51e14e83f62f8069d3c2026700428470f2",
+        "gitBlob": "bde16d59edbcd0d763c7077335e41c63676b8dad",
+        "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019"
+      },
+      "v1Output": {
+        "path": "reports/early-detection/sec-frozen-noncash-share-receipt-evidence-v1.json",
+        "bytes": 20735,
+        "rawSha256": "d02cb40ca4c38212af29c00d8c08a54fee120df615e44418cc120ed8a0575f07",
+        "gitBlob": "6586da12adfd1466893f74851a9237f70bb43b4a",
+        "introductionCommit": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+        "selfField": "reportSha256",
+        "selfSha256": "8c892de667133e43d287ca20970f12da5cdce2a4ef71b5d684657a6446f8b1a2"
+      },
+      "v2SealContract": {
+        "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-output-seal-contract-v2.json",
+        "bytes": 3880,
+        "rawSha256": "eaa6a4f00cf4e2b5f803ea819ab76aace9dbd83849014a08451f20fdb9c650dd",
+        "gitBlob": "9f981a57402d46a07405f179ebbbb3c22f26065b",
+        "introductionCommit": "86e0e0c399d780d775b6a3142f4f4958d1560a18",
+        "selfField": "contractSha256",
+        "selfSha256": "5fd01ef7b50992a7207cec256e782658f9b28df281e633a11f12a59a1e3e87cb"
+      },
+      "v2SealVerifier": {
+        "path": "scripts/verify-sec-frozen-noncash-share-receipt-evidence-output-v2.py",
+        "bytes": 9463,
+        "rawSha256": "93892f9a3d3fbda5e20db28aa8c9ba9ee965ebc2006f763afabba841fa61100a",
+        "gitBlob": "35c661656083c9c62249eaad98eb2a9601d04f9f",
+        "introductionCommit": "86e0e0c399d780d775b6a3142f4f4958d1560a18"
+      },
+      "v2SealTest": {
+        "path": "tests/verify-sec-frozen-noncash-share-receipt-evidence-output-v2.test.js",
+        "bytes": 1208,
+        "rawSha256": "e2727361b747c28441867e0f2b019a4bd7b67fd2b702dbf74852702e164cdc2d",
+        "gitBlob": "4d69fea565e576bc2cf808b4e8a65a6dbb9848e3",
+        "introductionCommit": "86e0e0c399d780d775b6a3142f4f4958d1560a18"
+      }
+    },
+    "secBlobLogicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+    "secBlobs": [
+      {
+        "caseId": "NONCASH-RECEIPT-001",
+        "accession": "0000950103-18-000919",
+        "relativePath": "5f/5f156da56338d41827e47f8bbf67818cc61c2ad2505dc5bfdadafd9d087bee01.txt",
+        "bytes": 16224,
+        "rawSha256": "5f156da56338d41827e47f8bbf67818cc61c2ad2505dc5bfdadafd9d087bee01"
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-002",
+        "accession": "0000950103-18-003297",
+        "relativePath": "be/be25cf5f92394d3f7d417632cdf99962ac8f3a69c9f491c5df78f4bfa905cd38.txt",
+        "bytes": 15551,
+        "rawSha256": "be25cf5f92394d3f7d417632cdf99962ac8f3a69c9f491c5df78f4bfa905cd38"
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-003",
+        "accession": "0000950103-20-021106",
+        "relativePath": "03/03f4bbcb4db8ddfb9abae0ea9c5d396396615395d385bce81252ecb645a9711d.txt",
+        "bytes": 11638,
+        "rawSha256": "03f4bbcb4db8ddfb9abae0ea9c5d396396615395d385bce81252ecb645a9711d"
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-004",
+        "accession": "0001193125-24-286219",
+        "relativePath": "ce/cee15eaafbf98c2aa132588c0307fbfa0f77e57bd8dd5d2b4f1cdaabd1b5874b.txt",
+        "bytes": 13612,
+        "rawSha256": "cee15eaafbf98c2aa132588c0307fbfa0f77e57bd8dd5d2b4f1cdaabd1b5874b"
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-005",
+        "accession": "0001213900-23-091028",
+        "relativePath": "e6/e676323d38931162270b387d12ffddca05619cc19cc032122a0caced535b95d7.txt",
+        "bytes": 17960,
+        "rawSha256": "e676323d38931162270b387d12ffddca05619cc19cc032122a0caced535b95d7"
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-006",
+        "accession": "0001213900-24-111979",
+        "relativePath": "be/be98222c27d6edcb82ea804970acc9e25b21dbd52927a006fc6a12388c5ed6aa.txt",
+        "bytes": 19295,
+        "rawSha256": "be98222c27d6edcb82ea804970acc9e25b21dbd52927a006fc6a12388c5ed6aa"
+      }
+    ]
+  },
+  "expectedPopulation": {
+    "correctedRows": 6,
+    "ratioRows": 8,
+    "dualRatioRows": 2,
+    "uniqueAccessions": 6,
+    "denominatorSurrenderOrCancellationVerifiedRows": 1,
+    "denominatorSurrenderOrCancellationNotVerifiedRows": 5
+  },
+  "semanticPolicy": {
+    "scopeLimit": "EXACT_SIX_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR",
+    "semanticCeiling": "EXACT_SIX_COMPLETED_NONCASH_SHARE_RECEIPTS_WITH_EXPLICIT_RECEIVED_PER_DENOMINATOR_RATIOS_ONLY_APTIV_DENOMINATOR_CANCELLATION_VERIFIED",
+    "legacySurrenderedFieldsForbiddenInDerivedView": true,
+    "denominatorDoesNotImplySurrenderOrCancellation": true,
+    "verifiedSurrenderOrCancellationCaseIds": [
+      "NONCASH-RECEIPT-004"
+    ],
+    "allOtherRowsMustBeFalse": true,
+    "outcomesAccessed": false
+  },
+  "claimLocks": {
+    "cashConsiderationVerified": false,
+    "cashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "denominatorSurrenderOrCancellationBeyondExactAptivRowVerified": false,
+    "feesOrTaxesVerified": false,
+    "fractionalShareTreatmentVerified": false,
+    "historicalIdentityResolved": false,
+    "laterDistributionsVerified": false,
+    "laterRecoveriesVerified": false,
+    "listingContinuityVerified": false,
+    "noncashReceiptBeyondExactRows": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false,
+    "universalHolderCoverageVerified": false
+  },
+  "derivedView": {
+    "schema": "early-detection-sec-frozen-noncash-share-receipt-corrected-derived-view/v3",
+    "supersedesSchemas": [
+      "early-detection-sec-frozen-noncash-share-receipt-evidence-contract/v1",
+      "early-detection-sec-frozen-noncash-share-receipt-evidence/v1",
+      "early-detection-sec-frozen-noncash-share-receipt-evidence-output-seal-contract/v2"
+    ],
+    "scopeLimit": "EXACT_SIX_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR",
+    "semanticCeiling": "EXACT_SIX_COMPLETED_NONCASH_SHARE_RECEIPTS_WITH_EXPLICIT_RECEIVED_PER_DENOMINATOR_RATIOS_ONLY_APTIV_DENOMINATOR_CANCELLATION_VERIFIED",
+    "population": {
+      "correctedRows": 6,
+      "ratioRows": 8,
+      "dualRatioRows": 2,
+      "uniqueAccessions": 6,
+      "denominatorSurrenderOrCancellationVerifiedRows": 1,
+      "denominatorSurrenderOrCancellationNotVerifiedRows": 5
+    },
+    "claimLocks": {
+      "cashConsiderationVerified": false,
+      "cashReceiptVerified": false,
+      "corporateActionChainComplete": false,
+      "denominatorSurrenderOrCancellationBeyondExactAptivRowVerified": false,
+      "feesOrTaxesVerified": false,
+      "fractionalShareTreatmentVerified": false,
+      "historicalIdentityResolved": false,
+      "laterDistributionsVerified": false,
+      "laterRecoveriesVerified": false,
+      "listingContinuityVerified": false,
+      "noncashReceiptBeyondExactRows": false,
+      "originalV4GateCredit": false,
+      "outcomesAccessed": false,
+      "pricesAccessed": false,
+      "returnsAccessed": false,
+      "terminalSessionComplete": false,
+      "terminalWealthComplete": false,
+      "universalHolderCoverageVerified": false
+    },
+    "outcomesAccessed": false,
+    "rows": [
+      {
+        "caseId": "NONCASH-RECEIPT-001",
+        "accession": "0000950103-18-000919",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "As a result of the Merger, Grupo Financiero Santander México ceased to exist; each shareholder of Grupo Financiero Santander México received one share of Banco Santander México for each share of Grupo Financiero Santander México held; and the shares underlying Grupo Financiero Santander Mexico’s ADSs were substituted for shares of Banco Santander México and the ADSs were listed on the NYSE in Banco Santander México’s name.",
+        "evidenceTextSha256": "5531945871cb6286ce4acc3773a7c7292d06aa31319dda8dd8fc1f1e6b210e17",
+        "sourceBlobSha256": "5f156da56338d41827e47f8bbf67818cc61c2ad2505dc5bfdadafd9d087bee01",
+        "denominatorSurrenderOrCancellationVerified": false,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_1",
+            "evidenceFragment": "received one share of Banco Santander México for each share of Grupo Financiero Santander México held",
+            "receivedSecurityText": "Banco Santander México share",
+            "receivedUnits": "1",
+            "recipientScope": "GRUPO_FINANCIERO_SANTANDER_MEXICO_SHAREHOLDERS",
+            "denominatorSecurityText": "Grupo Financiero Santander México share",
+            "denominatorUnits": "1"
+          }
+        ]
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-002",
+        "accession": "0000950103-18-003297",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "As a result of the Merger, Old Auris ceased to exist; each shareholder of Old Auris received one share of Auris NewCo for each ten shares of Old Auris held.",
+        "evidenceTextSha256": "17c44f7ce72044bce9581fdb605c165748099c2a4c5b1cd8087e10a2d781e366",
+        "sourceBlobSha256": "be25cf5f92394d3f7d417632cdf99962ac8f3a69c9f491c5df78f4bfa905cd38",
+        "denominatorSurrenderOrCancellationVerified": false,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_10",
+            "evidenceFragment": "received one share of Auris NewCo for each ten shares of Old Auris held",
+            "receivedSecurityText": "Auris NewCo share",
+            "receivedUnits": "1",
+            "recipientScope": "OLD_AURIS_SHAREHOLDERS",
+            "denominatorSecurityText": "Old Auris shares",
+            "denominatorUnits": "10"
+          }
+        ]
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-003",
+        "accession": "0000950103-20-021106",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "(“TIM”), a wholly owned subsidiary of TIM Participações, which resulted in the merger of TIM Participações with and into TIM, as the surviving company, pursuant to which the shareholders of TIM Participações received one (1) TIM share for every TIM Participações share they held.",
+        "evidenceTextSha256": "824345618d97ef2728dd03ba98077144f52472383c866b10c8abe4e227e85f69",
+        "sourceBlobSha256": "03f4bbcb4db8ddfb9abae0ea9c5d396396615395d385bce81252ecb645a9711d",
+        "denominatorSurrenderOrCancellationVerified": false,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_1",
+            "evidenceFragment": "received one (1) TIM share for every TIM Participações share they held",
+            "receivedSecurityText": "TIM share",
+            "receivedUnits": "1",
+            "recipientScope": "TIM_PARTICIPACOES_SHAREHOLDERS",
+            "denominatorSecurityText": "TIM Participações share",
+            "denominatorUnits": "1"
+          }
+        ]
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-004",
+        "accession": "0001193125-24-286219",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "On December 17, 2024, a scheme of arrangement under Jersey law (the “Scheme”) was completed pursuant to which the ordinary shares of the Predecessor Registrant were cancelled and the holders thereof received, on a one-for-one basis, ordinary shares of Aptiv PLC.",
+        "evidenceTextSha256": "5e34c1c29d4832bdb72579f5f4925bfd113e8b9cd35fd1b8c78321c893e36d84",
+        "sourceBlobSha256": "cee15eaafbf98c2aa132588c0307fbfa0f77e57bd8dd5d2b4f1cdaabd1b5874b",
+        "denominatorSurrenderOrCancellationVerified": true,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_1",
+            "evidenceFragment": "received, on a one-for-one basis, ordinary shares of Aptiv PLC",
+            "receivedSecurityText": "Aptiv PLC ordinary share",
+            "receivedUnits": "1",
+            "recipientScope": "PREDECESSOR_REGISTRANT_ORDINARY_SHARE_HOLDERS",
+            "denominatorSecurityText": "Predecessor Registrant ordinary share",
+            "denominatorUnits": "1"
+          }
+        ]
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-005",
+        "accession": "0001213900-23-091028",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "Pursuant to the Scheme: ● holders of ordinary shares of Incannex Australia received one share of common stock in Incannex Delaware for every 100 ordinary shares of Incannex Australia held on the Scheme record date; and ● holders of American Depositary Shares, with each ADS representing 25 ordinary shares of Incannex Australia, received one share of common stock of Incannex Delaware for every 4 ADSs held on the Scheme Record Date.",
+        "evidenceTextSha256": "a8cccba1c06f6a85fd5be073a5425b13b8e8178bd5609a2adee1c1527c4b403b",
+        "sourceBlobSha256": "e676323d38931162270b387d12ffddca05619cc19cc032122a0caced535b95d7",
+        "denominatorSurrenderOrCancellationVerified": false,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_100",
+            "evidenceFragment": "holders of ordinary shares of Incannex Australia received one share of common stock in Incannex Delaware for every 100 ordinary shares of Incannex Australia",
+            "receivedSecurityText": "Incannex Delaware common share",
+            "receivedUnits": "1",
+            "recipientScope": "INCANNEX_AUSTRALIA_ORDINARY_SHARE_HOLDERS",
+            "denominatorSecurityText": "Incannex Australia ordinary shares",
+            "denominatorUnits": "100"
+          },
+          {
+            "ratioId": "ADS_1_FOR_4",
+            "evidenceFragment": "holders of American Depositary Shares, with each ADS representing 25 ordinary shares of Incannex Australia, received one share of common stock of Incannex Delaware for every 4 ADSs",
+            "receivedSecurityText": "Incannex Delaware common share",
+            "receivedUnits": "1",
+            "recipientScope": "INCANNEX_AUSTRALIA_ADS_HOLDERS",
+            "denominatorSecurityText": "Incannex Australia ADSs",
+            "denominatorUnits": "4"
+          }
+        ]
+      },
+      {
+        "caseId": "NONCASH-RECEIPT-006",
+        "accession": "0001213900-24-111979",
+        "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+        "evidenceText": "Pursuant to the Scheme: ● holders of ordinary shares of Bionomics received one share of common stock in Neuphoria for every 2,160 ordinary shares of Bionomics held on the Scheme record date; and ● holders of American Depositary Shares, with each ADS representing 180 ordinary shares of Bionomics, received one share of common stock of Neuphoria for every 12 ADSs held on the Scheme Record Date.",
+        "evidenceTextSha256": "601ae3f98626f466435b6db4621ac7090a53c21be3abf8d3425857b5c0d15c44",
+        "sourceBlobSha256": "be98222c27d6edcb82ea804970acc9e25b21dbd52927a006fc6a12388c5ed6aa",
+        "denominatorSurrenderOrCancellationVerified": false,
+        "ratios": [
+          {
+            "ratioId": "ORDINARY_SHARE_1_FOR_2160",
+            "evidenceFragment": "holders of ordinary shares of Bionomics received one share of common stock in Neuphoria for every 2,160 ordinary shares of Bionomics",
+            "receivedSecurityText": "Neuphoria common share",
+            "receivedUnits": "1",
+            "recipientScope": "BIONOMICS_ORDINARY_SHARE_HOLDERS",
+            "denominatorSecurityText": "Bionomics ordinary shares",
+            "denominatorUnits": "2160"
+          },
+          {
+            "ratioId": "ADS_1_FOR_12",
+            "evidenceFragment": "holders of American Depositary Shares, with each ADS representing 180 ordinary shares of Bionomics, received one share of common stock of Neuphoria for every 12 ADSs",
+            "receivedSecurityText": "Neuphoria common share",
+            "receivedUnits": "1",
+            "recipientScope": "BIONOMICS_ADS_HOLDERS",
+            "denominatorSecurityText": "Bionomics ADSs",
+            "denominatorUnits": "12"
+          }
+        ]
+      }
+    ]
+  },
+  "derivedViewSha256": "a68f2e51f25f0462381dd86b9cfb429e0c98d063f4712de050ce5311878add0b",
+  "verificationContract": {
+    "contractRawSha256CheckedBeforeJsonParse": true,
+    "contractSelfSha256Checked": true,
+    "exactNestedSchemasRequired": true,
+    "allowedPathsHardcodedBeforeReads": true,
+    "remoteRequiredForVerifyPass": true,
+    "normalAndOptimizedRemoteRunsRequiredByTest": true,
+    "sourceRebuildByteExact": true,
+    "readOnly": true,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "7974876c527b1157aa6fefb98c5b643fc43841cbbc3beb3e2621702472ef12d5"
+}
