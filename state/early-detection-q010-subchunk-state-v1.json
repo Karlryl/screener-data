@@ -1,9 +1,9 @@
 {
   "schema": "early-detection-q010-subchunk-state/v1",
-  "materializedAt": "2026-08-13T20:53:30Z",
-  "contractSelfSha256": "ad403fa935add4e1b4f360f6e01e2035ad6fb684691cd1f40a6336e78b8278c3",
-  "eventCount": 1,
-  "eventHeadSha256": "ad35dff9726d27c42d755afdfac426f9900382bd8b61bacfab3e5f16e2bfbcf7",
+  "materializedAt": "2026-08-13T21:15:08Z",
+  "contractSelfSha256": "817299bf3f263ae11263cab101a8385e476d73b6e64ae0fdc3ffe65f6130ea75",
+  "eventCount": 2,
+  "eventHeadSha256": "fc26dd6267ad49900211263b4c2570903e77093ea3e16b6c91ca7d011b40c50a",
   "projection": {
     "schema": "early-detection-q010-subchunk-projection/v1",
     "subchunkId": "Q010-SC-001-CA-DMV-AV-2015-CENSUS-TEL",
@@ -18,19 +18,20 @@
     "decisionEventId": "Q010-EVT-00000001",
     "decisionEventSequence": 1,
     "preChunkTimingClaimRecorded": true,
-    "preChunkTimingVerified": false,
-    "prospectiveRemoteIntroductionVerified": false,
-    "workStarted": false,
-    "workStartedAt": null,
-    "startAuthorized": false,
+    "preChunkTimingVerified": true,
+    "prospectiveRemoteIntroductionVerified": true,
+    "workStarted": true,
+    "workStartedAt": "2026-08-13T21:15:08Z",
+    "startAuthorized": true,
     "separateAppendOnlyStartEventRequired": true,
-    "researchSourceAccessAuthorized": false,
+    "researchSourceAccessAuthorized": true,
     "pricesReturnsOutcomesAccessed": false,
     "candidateStateComputationAllowed": false,
     "scientificCredit": "NONE",
     "parentV23Commit": "ba90828892932147c93afe2040498116982bd416",
     "parentV23DecisionEventId": "EVT-00000011",
-    "v23TaskLevelAuthorizationCannotAuthorizeConcreteSubchunkStart": true
+    "v23TaskLevelAuthorizationCannotAuthorizeConcreteSubchunkStart": true,
+    "authorizationEffectiveOnlyAfterStartEventRemoteIntroduction": true
   },
-  "stateSelfSha256": "7e22aa0dfe7a8ead76f9a1a6e081c1527dd4a65bd2a94c4843391cf8d7a02358"
+  "stateSelfSha256": "9d39883fd025a5abfeae67f01fc63e77783e48fa6d0bc59cc85626438fc0c668"
 }

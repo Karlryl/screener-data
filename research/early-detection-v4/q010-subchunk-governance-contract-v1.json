@@ -2,7 +2,7 @@
   "schema": "early-detection-q010-subchunk-governance-contract/v1",
   "createdAt": "2026-08-13T20:53:30Z",
   "purpose": "Prospectively record and remotely introduce the first concrete Q010 core subchunk before any source retrieval, coding or signal work begins.",
-  "contractSelfSha256": "ad403fa935add4e1b4f360f6e01e2035ad6fb684691cd1f40a6336e78b8278c3",
+  "contractSelfSha256": "817299bf3f263ae11263cab101a8385e476d73b6e64ae0fdc3ffe65f6130ea75",
   "repository": {
     "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
     "branch": "codex/form25-v2-promotion-20260812",
@@ -158,6 +158,30 @@
     "secondaryLocatorQueriesDoNotCreateTELCredit": true,
     "scientificCredit": "NONE"
   },
+  "decisionIntroductionBinding": {
+    "commit": "3e909de17375d836b65462a60ded9aa744f9be5e",
+    "committedAt": "2026-08-13T21:14:03Z",
+    "contractRawSha256": "88505d8160ebce8c27fdcc3e1e88042753ddb420d9b065bde16adbfc8b219b86",
+    "contractSelfSha256": "ad403fa935add4e1b4f360f6e01e2035ad6fb684691cd1f40a6336e78b8278c3",
+    "controllerRawSha256": "a40b4879124ddb365dbd51ce1d95aaba74b858756fb169a9a8e7e72419df97e5",
+    "eventsRawSha256": "e5889ff53ca3a1b47d3d1de65cec1620309bb473efad6888f040cbbdb3e2ef1d",
+    "eventOneSha256": "ad35dff9726d27c42d755afdfac426f9900382bd8b61bacfab3e5f16e2bfbcf7",
+    "stateRawSha256": "c49057457b5f685e61fddf6bb334caebe38d31a14cd1a2c8369850c5f78d8f7e",
+    "testRawSha256": "48b5c2ece08e1cb643e3e4e6b2a453216ef1e43ec9aa594461ad7b6c04776bd8"
+  },
+  "startFinalization": {
+    "eventId": "Q010-EVT-00000002",
+    "eventSequence": 2,
+    "eventCreatedAt": "2026-08-13T21:15:08Z",
+    "workStartedAt": "2026-08-13T21:15:08Z",
+    "authorizationEffectiveOnlyAfterRemoteIntroduction": true,
+    "decisionIntroductionCommit": "3e909de17375d836b65462a60ded9aa744f9be5e",
+    "scientificCredit": "NONE",
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "candidateStateComputationAllowed": false
+  },
   "phasePolicy": {
     "preIntroductionVerifyIsDiagnosticOnly": true,
     "postIntroductionDecisionRecorded": true,
@@ -166,6 +190,8 @@
     "researchSourceAccessBeforeStartEventForbidden": true,
     "pricesReturnsOutcomesForbidden": true,
     "candidateStateComputationForbidden": true,
+    "postStartIntroductionStartAuthorized": true,
+    "postStartIntroductionResearchSourceAccessAuthorized": true,
     "scientificCredit": "NONE"
   },
   "outputs": {
@@ -174,9 +200,9 @@
   },
   "implementation": {
     "controllerPath": "scripts/early-detection-q010-subchunk-v1.py",
-    "controllerNormalizedSha256": "9094dcdf861b85616c37c7f8b452bed93665775e6431ff5ac9ff264c0763d33a",
+    "controllerNormalizedSha256": "113c340b86a1e7668f734be48ab1247f73a8f5ec7e9d72869c75c3103b5ba61b",
     "testPath": "tests/early-detection-q010-subchunk-v1.test.js",
-    "testRawSha256": "48b5c2ece08e1cb643e3e4e6b2a453216ef1e43ec9aa594461ad7b6c04776bd8",
+    "testRawSha256": "04c0a2088ad5711948defc2e920a4a0b5ff1a77a072a0e2b81f68e486da685e3",
     "controllerChildExecutionsRequired": 0,
     "onlyEncapsulatedGitProcessSurfaceAllowed": true,
     "eventsRawSha256PinnedByController": true,

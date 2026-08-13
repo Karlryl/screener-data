@@ -20,11 +20,11 @@ EVENTS_PATH = ROOT / "state/early-detection-q010-subchunk-events-v1.jsonl"
 STATE_PATH = ROOT / "state/early-detection-q010-subchunk-state-v1.json"
 TEST_PATH = ROOT / "tests/early-detection-q010-subchunk-v1.test.js"
 CONTROLLER_PATH = Path(__file__).resolve()
-EXPECTED_CONTRACT_RAW_SHA256 = "88505d8160ebce8c27fdcc3e1e88042753ddb420d9b065bde16adbfc8b219b86"
-EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "9094dcdf861b85616c37c7f8b452bed93665775e6431ff5ac9ff264c0763d33a"
-EXPECTED_EVENTS_RAW_SHA256 = "e5889ff53ca3a1b47d3d1de65cec1620309bb473efad6888f040cbbdb3e2ef1d"
-EXPECTED_STATE_RAW_SHA256 = "c49057457b5f685e61fddf6bb334caebe38d31a14cd1a2c8369850c5f78d8f7e"
-EXPECTED_TEST_RAW_SHA256 = "48b5c2ece08e1cb643e3e4e6b2a453216ef1e43ec9aa594461ad7b6c04776bd8"
+EXPECTED_CONTRACT_RAW_SHA256 = "bb408559fd812af02eab8dba7851e7d18ca1b16aa87795f9200801e4e6df8bc2"
+EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "113c340b86a1e7668f734be48ab1247f73a8f5ec7e9d72869c75c3103b5ba61b"
+EXPECTED_EVENTS_RAW_SHA256 = "7964cc2421d56760834b4cc9b5032d5e484f17c5b8e7ec6ee25270cb7a565078"
+EXPECTED_STATE_RAW_SHA256 = "5475e6e851fa7bf351e1d5c2c6ae5cf0edbb2921e7a5dc6e6353ba2c0ca81fb3"
+EXPECTED_TEST_RAW_SHA256 = "04c0a2088ad5711948defc2e920a4a0b5ff1a77a072a0e2b81f68e486da685e3"
 
 
 class GateError(RuntimeError):
@@ -91,8 +91,11 @@ def read_state() -> dict:
     return json.loads(STATE_PATH.read_text(encoding="utf-8"))
 
 
-def expected_projection(contract: dict, event: dict) -> dict:
+def expected_projection(contract: dict, events: list[dict]) -> dict:
     d = contract["decision"]
+    started = len(events) == 2
+    decision_event = events[0]
+    head_event = events[-1]
     return {
         "schema": "early-detection-q010-subchunk-projection/v1",
         "subchunkId": d["subchunkId"],
@@ -100,33 +103,35 @@ def expected_projection(contract: dict, event: dict) -> dict:
         "targetThemeOrThemeEraId": d["targetThemeOrThemeEraId"],
         "targetDimensions": d["targetDimensions"],
         "decisionRecorded": True,
-        "decisionEventId": event["eventId"],
-        "decisionEventSequence": event["sequence"],
+        "decisionEventId": decision_event["eventId"],
+        "decisionEventSequence": decision_event["sequence"],
         "preChunkTimingClaimRecorded": True,
-        "preChunkTimingVerified": False,
-        "prospectiveRemoteIntroductionVerified": False,
-        "workStarted": False,
-        "workStartedAt": None,
-        "startAuthorized": False,
+        "preChunkTimingVerified": started,
+        "prospectiveRemoteIntroductionVerified": started,
+        "workStarted": started,
+        "workStartedAt": head_event["createdAt"] if started else None,
+        "startAuthorized": started,
         "separateAppendOnlyStartEventRequired": True,
-        "researchSourceAccessAuthorized": False,
+        "researchSourceAccessAuthorized": started,
         "pricesReturnsOutcomesAccessed": False,
         "candidateStateComputationAllowed": False,
         "scientificCredit": "NONE",
         "parentV23Commit": contract["repository"]["baseCommit"],
         "parentV23DecisionEventId": contract["parentV23Binding"]["decisionSourceEventId"],
         "v23TaskLevelAuthorizationCannotAuthorizeConcreteSubchunkStart": True,
+        "authorizationEffectiveOnlyAfterStartEventRemoteIntroduction": True,
     }
 
 
-def expected_state(contract: dict, event: dict) -> dict:
+def expected_state(contract: dict, events: list[dict]) -> dict:
+    head_event = events[-1]
     state = {
         "schema": "early-detection-q010-subchunk-state/v1",
-        "materializedAt": event["createdAt"],
+        "materializedAt": head_event["createdAt"],
         "contractSelfSha256": contract["contractSelfSha256"],
-        "eventCount": 1,
-        "eventHeadSha256": event["eventSha256"],
-        "projection": expected_projection(contract, event),
+        "eventCount": len(events),
+        "eventHeadSha256": head_event["eventSha256"],
+        "projection": expected_projection(contract, events),
         "stateSelfSha256": None,
     }
     state["stateSelfSha256"] = state_self_sha256(state)
@@ -205,8 +210,8 @@ def validate_repository(contract: dict) -> None:
 def validate_process_surface() -> None:
     tree = ast.parse(CONTROLLER_PATH.read_text(encoding="utf-8"))
     subprocess_attrs = [node for node in ast.walk(tree) if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "subprocess"]
-    require(len(subprocess_attrs) == 2, "subprocess surface count drift")
-    require(sorted(node.attr for node in subprocess_attrs) == ["TimeoutExpired", "run"], "non-git subprocess surface introduced")
+    require(len(subprocess_attrs) == 3, "subprocess surface count drift")
+    require(sorted(node.attr for node in subprocess_attrs) == ["TimeoutExpired", "run", "run"], "non-git subprocess surface introduced")
     require(not any(isinstance(node, ast.ImportFrom) and node.module == "subprocess" for node in ast.walk(tree)), "subprocess alias import forbidden")
 
 
@@ -296,6 +301,36 @@ def validate_population_budget(contract: dict) -> None:
     require(policy["secondaryLocatorQueriesDoNotCreateTELCredit"] is True and policy["scientificCredit"] == "NONE", "secondary/credit drift")
 
 
+def validate_start_finalization(contract: dict) -> None:
+    binding = contract["decisionIntroductionBinding"]
+    require(binding == {
+        "commit": "3e909de17375d836b65462a60ded9aa744f9be5e",
+        "committedAt": "2026-08-13T21:14:03Z",
+        "contractRawSha256": "88505d8160ebce8c27fdcc3e1e88042753ddb420d9b065bde16adbfc8b219b86",
+        "contractSelfSha256": "ad403fa935add4e1b4f360f6e01e2035ad6fb684691cd1f40a6336e78b8278c3",
+        "controllerRawSha256": "a40b4879124ddb365dbd51ce1d95aaba74b858756fb169a9a8e7e72419df97e5",
+        "eventsRawSha256": "e5889ff53ca3a1b47d3d1de65cec1620309bb473efad6888f040cbbdb3e2ef1d",
+        "eventOneSha256": "ad35dff9726d27c42d755afdfac426f9900382bd8b61bacfab3e5f16e2bfbcf7",
+        "stateRawSha256": "c49057457b5f685e61fddf6bb334caebe38d31a14cd1a2c8369850c5f78d8f7e",
+        "testRawSha256": "48b5c2ece08e1cb643e3e4e6b2a453216ef1e43ec9aa594461ad7b6c04776bd8",
+    }, "Tag912 decision introduction binding drift")
+    final = contract["startFinalization"]
+    require(final == {
+        "eventId": "Q010-EVT-00000002",
+        "eventSequence": 2,
+        "eventCreatedAt": "2026-08-13T21:15:08Z",
+        "workStartedAt": "2026-08-13T21:15:08Z",
+        "authorizationEffectiveOnlyAfterRemoteIntroduction": True,
+        "decisionIntroductionCommit": "3e909de17375d836b65462a60ded9aa744f9be5e",
+        "scientificCredit": "NONE",
+        "pricesAccessed": False,
+        "returnsAccessed": False,
+        "outcomesAccessed": False,
+        "candidateStateComputationAllowed": False,
+    }, "start finalization drift")
+    require(datetime.fromisoformat(final["eventCreatedAt"].replace("Z", "+00:00")) > datetime.fromisoformat(binding["committedAt"].replace("Z", "+00:00")), "start event not after Tag912")
+
+
 def validate_bundle(contract: dict, events: list[dict], state: dict, check_files: bool = True) -> None:
     require(contract["schema"] == "early-detection-q010-subchunk-governance-contract/v1", "contract schema drift")
     require(contract_self_sha256(contract) == contract["contractSelfSha256"], "contract self hash drift")
@@ -305,6 +340,7 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
     validate_parent_v23(contract, check_files=check_files)
     validate_future_start_contract(contract)
     validate_population_budget(contract)
+    validate_start_finalization(contract)
     policy = contract["phasePolicy"]
     require(policy == {
         "preIntroductionVerifyIsDiagnosticOnly": True,
@@ -314,25 +350,36 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
         "researchSourceAccessBeforeStartEventForbidden": True,
         "pricesReturnsOutcomesForbidden": True,
         "candidateStateComputationForbidden": True,
+        "postStartIntroductionStartAuthorized": True,
+        "postStartIntroductionResearchSourceAccessAuthorized": True,
         "scientificCredit": "NONE",
     }, "phase policy drift")
-    require(len(events) == 1, "exactly one pre-start event required")
-    event = events[0]
-    require(event["sequence"] == 1 and event["eventId"] == "Q010-EVT-00000001", "event identity drift")
-    require(event["eventType"] == "SUBCHUNK_DECISION_RECORDED", "event type drift")
-    require(event["previousEventSha256"] is None, "first event predecessor must be null")
-    require(event["createdAt"] == contract["decision"]["decisionRecordedAt"], "decision timestamp drift")
-    require(event["contractSelfSha256"] == contract["contractSelfSha256"], "event contract binding drift")
-    require(event_self_sha256(event) == event["eventSha256"], "event self hash drift")
-    require(event["payload"] == {
+    require(len(events) == 2, "decision and start events required")
+    decision_event, start_event = events
+    require(decision_event["sequence"] == 1 and decision_event["eventId"] == "Q010-EVT-00000001", "decision event identity drift")
+    require(decision_event["eventType"] == "SUBCHUNK_DECISION_RECORDED", "decision event type drift")
+    require(decision_event["previousEventSha256"] is None, "first event predecessor must be null")
+    require(decision_event["createdAt"] == contract["decision"]["decisionRecordedAt"], "decision timestamp drift")
+    require(decision_event["contractSelfSha256"] == contract["decisionIntroductionBinding"]["contractSelfSha256"], "decision event contract binding drift")
+    require(event_self_sha256(decision_event) == decision_event["eventSha256"] == contract["decisionIntroductionBinding"]["eventOneSha256"], "decision event self hash drift")
+    require(decision_event["payload"] == {
         "decisionSourceEventSequence": 1,
         "preChunkTimingVerified": True,
         "scientificCredit": "NONE",
         "subchunkId": contract["decision"]["subchunkId"],
         "workStarted": False,
         "workStartedAt": None,
-    }, "event payload drift")
-    require(state == expected_state(contract, event), "event to state replay drift")
+    }, "decision event payload drift")
+    required_start_payload = copy.deepcopy(contract["startEventContract"]["requiredPayload"])
+    required_start_payload["workStartedAt"] = contract["startFinalization"]["workStartedAt"]
+    require(start_event["sequence"] == 2 and start_event["eventId"] == "Q010-EVT-00000002", "start event identity drift")
+    require(start_event["eventType"] == "SUBCHUNK_WORK_STARTED", "start event type drift")
+    require(start_event["previousEventSha256"] == decision_event["eventSha256"], "start predecessor drift")
+    require(start_event["createdAt"] == contract["startFinalization"]["eventCreatedAt"], "start timestamp drift")
+    require(start_event["contractSelfSha256"] == contract["contractSelfSha256"], "start event contract binding drift")
+    require(start_event["payload"] == required_start_payload, "start event payload drift")
+    require(event_self_sha256(start_event) == start_event["eventSha256"], "start event self hash drift")
+    require(state == expected_state(contract, events), "event to state replay drift")
     if check_files:
         validate_process_surface()
         require(sha256_path(CONTRACT_PATH) == EXPECTED_CONTRACT_RAW_SHA256, "contract raw hash drift")
@@ -355,6 +402,13 @@ def run_git(args: list[str]) -> str:
     return result.stdout.strip()
 
 
+def run_git_bytes(args: list[str]) -> bytes:
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, timeout=60)
+    if result.returncode != 0:
+        fail("git bytes failed: " + " ".join(args) + ": " + result.stderr.decode("utf-8", errors="replace").strip())
+    return result.stdout
+
+
 def remote_phase(contract: dict) -> tuple[str, str | None]:
     repo = contract["repository"]
     require(run_git(["rev-parse", "--show-toplevel"]).replace("\\", "/") == str(ROOT).replace("\\", "/"), "wrong worktree")
@@ -368,25 +422,48 @@ def remote_phase(contract: dict) -> tuple[str, str | None]:
     require(upstream == remote, "upstream/live remote mismatch")
     base_time = run_git(["show", "-s", "--format=%cI", repo["baseCommit"]])
     require(datetime.fromisoformat(base_time).astimezone().timestamp() == datetime.fromisoformat(repo["baseCommitCommittedAt"].replace("Z", "+00:00")).timestamp(), "base commit time drift")
-    paths = repo["expectedIntroductionPaths"]
-    if head == repo["baseCommit"] and remote == repo["baseCommit"]:
+    binding = contract["decisionIntroductionBinding"]
+    paths = repo["expectedStartPaths"]
+    require(run_git(["show", "-s", "--format=%P", binding["commit"]]) == repo["baseCommit"], "Tag912 parent drift")
+    require(run_git(["show", "-s", "--format=%s", binding["commit"]]) == repo["expectedIntroductionSubject"], "Tag912 subject drift")
+    binding_time = run_git(["show", "-s", "--format=%cI", binding["commit"]])
+    require(
+        datetime.fromisoformat(binding_time).timestamp()
+        == datetime.fromisoformat(binding["committedAt"].replace("Z", "+00:00")).timestamp(),
+        "Tag912 time drift",
+    )
+    for key, path in (
+        ("contractRawSha256", repo["expectedIntroductionPaths"][0]),
+        ("controllerRawSha256", repo["expectedIntroductionPaths"][1]),
+        ("eventsRawSha256", repo["expectedIntroductionPaths"][2]),
+        ("stateRawSha256", repo["expectedIntroductionPaths"][3]),
+        ("testRawSha256", repo["expectedIntroductionPaths"][4]),
+    ):
+        require(sha256_bytes(run_git_bytes(["show", f'{binding["commit"]}:{path}'])) == binding[key], f"Tag912 bound blob drift: {path}")
+    if head == binding["commit"] and remote == binding["commit"]:
         status = run_git(["status", "--porcelain", "--", *paths]).splitlines()
-        require(len(status) == len(paths), "pre-introduction owned path count drift")
-        require(all(line.startswith("?? ") for line in status), "pre-introduction paths must be untracked")
-        return "PRE_INTRODUCTION", None
+        require(len(status) == len(paths), "start pre-introduction path count drift")
+        require(all(line.startswith(" M ") or line.startswith("M ") for line in status), "start pre-introduction paths must all be modified")
+        return "START_PRE_INTRODUCTION", None
     require(head == remote, "HEAD/live remote mismatch")
-    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == repo["baseCommit"], "introduction parent drift")
-    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == repo["expectedIntroductionSubject"], "introduction subject drift")
+    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == binding["commit"], "start introduction parent drift")
+    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == repo["expectedStartSubject"], "start introduction subject drift")
+    start_commit_time = run_git(["show", "-s", "--format=%cI", "HEAD"])
+    require(
+        datetime.fromisoformat(start_commit_time).timestamp()
+        >= datetime.fromisoformat(contract["startFinalization"]["eventCreatedAt"].replace("Z", "+00:00")).timestamp(),
+        "start introduction commit predates the start event",
+    )
     delta = run_git(["diff-tree", "--no-commit-id", "--name-status", "-r", "HEAD"]).splitlines()
     actual = sorted(tuple(line.split("\t", 1)) for line in delta if line)
-    expected = sorted(("A", path) for path in paths)
-    require(actual == expected, "introduction path topology drift")
-    require(not run_git(["status", "--porcelain", "--", *paths]), "post-introduction owned paths are dirty")
+    expected = sorted(("M", path) for path in paths)
+    require(actual == expected, "start introduction path topology drift")
+    require(not run_git(["status", "--porcelain", "--", *paths]), "post-start-introduction owned paths are dirty")
     for path in paths:
         local_oid = run_git(["hash-object", "--no-filters", path])
         introduced_oid = run_git(["rev-parse", f"HEAD:{path}"])
         require(local_oid == introduced_oid, f"introduced blob differs from local validated bytes: {path}")
-    return "POST_INTRODUCTION", head
+    return "START_POST_INTRODUCTION", head
 
 
 def verify(remote: bool) -> dict:
@@ -396,21 +473,23 @@ def verify(remote: bool) -> dict:
     phase, commit = remote_phase(contract)
     return {
         "schema": "early-detection-q010-subchunk-verification/v1",
-        "status": "PRE_INTRODUCTION_DIAGNOSTIC" if phase == "PRE_INTRODUCTION" else "PASS",
+        "status": "START_PRE_INTRODUCTION_DIAGNOSTIC" if phase == "START_PRE_INTRODUCTION" else "PASS",
         "phase": phase,
         "introductionCommit": commit,
         "subchunkId": contract["decision"]["subchunkId"],
         "decisionRecorded": True,
         "preChunkTimingClaimRecorded": True,
-        "preChunkTimingVerified": phase == "POST_INTRODUCTION",
-        "prospectiveRemoteIntroductionVerified": phase == "POST_INTRODUCTION",
-        "workStarted": False,
-        "startAuthorized": False,
-        "researchSourceAccessAuthorized": False,
+        "preChunkTimingVerified": True,
+        "prospectiveRemoteIntroductionVerified": True,
+        "workStarted": phase == "START_POST_INTRODUCTION",
+        "workStartedAt": contract["startFinalization"]["workStartedAt"] if phase == "START_POST_INTRODUCTION" else None,
+        "startAuthorized": phase == "START_POST_INTRODUCTION",
+        "researchSourceAccessAuthorized": phase == "START_POST_INTRODUCTION",
         "scientificCredit": "NONE",
         "pricesReturnsOutcomesAccessed": False,
         "controllerChildExecutions": 0,
         "v23TaskLevelAuthorizationCannotAuthorizeConcreteSubchunkStart": True,
+        "startEventRemoteIntroductionVerified": phase == "START_POST_INTRODUCTION",
     }
 
 
@@ -420,18 +499,23 @@ def bootstrap(write: bool) -> dict:
     contract["implementation"]["testRawSha256"] = sha256_path(TEST_PATH)
     contract["contractSelfSha256"] = contract_self_sha256(contract)
     events = read_events()
-    event = events[0]
-    event["contractSelfSha256"] = contract["contractSelfSha256"]
-    event["eventSha256"] = event_self_sha256(event)
-    state = expected_state(contract, event)
+    require(len(events) == 2, "bootstrap requires frozen decision event plus start event")
+    decision_event, start_event = events
+    require(decision_event["eventSha256"] == contract["decisionIntroductionBinding"]["eventOneSha256"], "bootstrap decision prefix drift")
+    start_event["contractSelfSha256"] = contract["contractSelfSha256"]
+    start_event["previousEventSha256"] = decision_event["eventSha256"]
+    start_event["payload"] = copy.deepcopy(contract["startEventContract"]["requiredPayload"])
+    start_event["payload"]["workStartedAt"] = contract["startFinalization"]["workStartedAt"]
+    start_event["eventSha256"] = event_self_sha256(start_event)
+    state = expected_state(contract, events)
     contract_raw = json.dumps(contract, ensure_ascii=False, indent=2) + "\n"
-    event_raw = json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    event_raw = "".join(json.dumps(event, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n" for event in events)
     state_raw = json.dumps(state, ensure_ascii=False, indent=2) + "\n"
     result = {
         "controllerNormalizedSha256": controller_normalized_sha256(),
         "contractRawSha256": sha256_bytes(contract_raw.encode("utf-8")),
         "contractSelfSha256": contract["contractSelfSha256"],
-        "eventSha256": event["eventSha256"],
+        "eventSha256": start_event["eventSha256"],
         "eventsRawSha256": sha256_bytes(event_raw.encode("utf-8")),
         "stateRawSha256": sha256_bytes(state_raw.encode("utf-8")),
         "stateSelfSha256": state["stateSelfSha256"],
@@ -491,10 +575,13 @@ def self_test() -> dict:
     rejected("event-type", lambda c, e, s: e[0].__setitem__("eventType", "WORK_STARTED"))
     rejected("event-sequence", lambda c, e, s: e[0].__setitem__("sequence", 2))
     rejected("event-hash", lambda c, e, s: e[0].__setitem__("eventSha256", "0" * 64))
-    rejected("state-start", lambda c, e, s: s["projection"].__setitem__("startAuthorized", True))
-    rejected("state-source", lambda c, e, s: s["projection"].__setitem__("researchSourceAccessAuthorized", True))
-    rejected("state-replay", lambda c, e, s: s.__setitem__("eventCount", 2))
-    require(len(attacks) == 34, "self-test kill count drift")
+    rejected("start-event-type", lambda c, e, s: e[1].__setitem__("eventType", "SUBCHUNK_DECISION_RECORDED"))
+    rejected("start-event-predecessor", lambda c, e, s: e[1].__setitem__("previousEventSha256", "0" * 64))
+    rejected("start-event-outcome", lambda c, e, s: e[1]["payload"].__setitem__("outcomesAccessed", True))
+    rejected("state-start", lambda c, e, s: s["projection"].__setitem__("startAuthorized", False))
+    rejected("state-source", lambda c, e, s: s["projection"].__setitem__("researchSourceAccessAuthorized", False))
+    rejected("state-replay", lambda c, e, s: s.__setitem__("eventCount", 1))
+    require(len(attacks) == 37, "self-test kill count drift")
     return {"status": "PASS", "kills": len(attacks), "controllerChildExecutions": 0}
 
 
@@ -513,7 +600,7 @@ def main() -> int:
             return 0
         result = verify(args.remote)
         if args.command == "start":
-            fail("research start is not authorized; a separate remotely introduced append-only start event is required")
+            require(result["phase"] == "START_POST_INTRODUCTION", "research start is not authorized until the separate start event is remotely introduced")
         print(json.dumps(result, sort_keys=True))
         return 0
     except (GateError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
