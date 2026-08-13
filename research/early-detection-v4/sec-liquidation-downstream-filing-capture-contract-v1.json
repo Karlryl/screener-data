@@ -1,0 +1,148 @@
+{
+  "schema": "sec-liquidation-downstream-filing-capture-contract/v1",
+  "createdAt": "2026-08-13T13:18:41Z",
+  "taskId": "Q003-SEC-LIQUIDATION-DOWNSTREAM-FILING-CAPTURE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Capture exactly the 115 pre-sealed official SEC submission URLs from the downstream liquidation discovery lane once each into a private content-addressed store, with no redirects, proxies, retries, public raw bytes, content interpretation, security linkage, finality, recovery, terminal wealth, price, return, outcome or Original-V4 credit.",
+  "authoritativeInput": {
+    "discoveryContract": {
+      "path": "research/early-detection-v4/sec-liquidation-downstream-filing-discovery-contract-v1.json",
+      "rawSha256": "511accf9a3c0c44245d1e703105596ff8f25f42f81b81bf4ea486a6c08875644"
+    },
+    "discoveryBuilder": {
+      "path": "scripts/build-sec-liquidation-downstream-filing-discovery-v1.py",
+      "rawSha256": "69fcca3f46e993af4a78188a78b7726477e74f10c21968e65bfff2679ed945a9"
+    },
+    "discoveryTest": {
+      "path": "tests/build-sec-liquidation-downstream-filing-discovery-v1.test.js",
+      "rawSha256": "21ba1ea5cc393bca6c4f371dd0e8e5ceb2cb38cf27abc9196431b1bbc7eb632f"
+    },
+    "discoveryIntroductionCommit": "6573b0812e09dd12df176c7550800526481aa786",
+    "candidateFilings": 115,
+    "candidateCanonicalSha256": "ee57eec9b5e6f4bdddb0613f98e84e61b9c17eb300fff6252baebf68ce5042b2",
+    "caseCandidateLinks": 469,
+    "linkCanonicalSha256": "95f39579447d40a87075c1bb4ae9717c935222c6b6f236ac270847d514cc1b73"
+  },
+  "urlContract": {
+    "scheme": "https",
+    "host": "www.sec.gov",
+    "pathPrefix": "/Archives/",
+    "pathDerivedOnlyFromExactMasterIndexFilename": true,
+    "filenamePattern": "edgar/data/[0-9]+/[0-9]{10}-[0-9]{2}-[0-9]{6}.txt",
+    "filenameAccessionMustEqualCandidateAccession": true,
+    "queryForbidden": true,
+    "fragmentForbidden": true
+  },
+  "networkPolicy": {
+    "secContactEnvironmentVariable": "SEC_CONTACT",
+    "contactMustContainEmail": true,
+    "requestsPerCandidate": 1,
+    "maximumRequests": 115,
+    "retryCount": 0,
+    "minimumIntervalMilliseconds": 250,
+    "requestTimeoutSeconds": 120,
+    "acceptEncoding": "identity",
+    "proxyEnvironmentIgnored": true,
+    "redirectPolicy": "FORBID_ALL_REDIRECTS",
+    "allowedHttpStatus": [
+      200
+    ],
+    "rateDeferredHttpStatuses": [
+      403,
+      429,
+      503
+    ],
+    "maximumResponseBytes": 50000000,
+    "contentTypePrefixAllowlist": [
+      "text/plain",
+      "application/octet-stream",
+      "text/html"
+    ],
+    "responseHeaderAllowlist": [
+      "cache-control",
+      "content-length",
+      "content-type",
+      "date",
+      "etag",
+      "last-modified",
+      "retry-after"
+    ]
+  },
+  "privateCapture": {
+    "absoluteRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-downstream-sec-originals-v1",
+    "mustBeOutsideEveryGitWorktree": true,
+    "rawBlobLayout": "blobs/sha256/<first2>/<sha256>",
+    "receiptLayout": "receipts/<candidateId>.json",
+    "deferredLayout": "deferred/<candidateId>.json",
+    "manifestPath": "manifest.json",
+    "atomicWriteNew": true,
+    "existingBytesMustMatch": true,
+    "rawBytesPublicGitAllowed": false,
+    "receiptsPublicGitAllowed": false,
+    "stdoutRawBytesAllowed": false,
+    "stdoutCandidateRowsAllowed": false
+  },
+  "receiptSchema": [
+    "schema",
+    "candidateId",
+    "url",
+    "capturedAt",
+    "httpStatus",
+    "responseHeaders",
+    "rawSha256",
+    "rawBytes",
+    "blobRelativePath",
+    "requestSequence",
+    "receiptSha256"
+  ],
+  "manifestSchema": [
+    "schema",
+    "contractRawSha256",
+    "candidateCanonicalSha256",
+    "expectedCandidates",
+    "capturedCandidates",
+    "deferredCandidates",
+    "complete",
+    "receiptSequenceSha256",
+    "rawBlobSequenceSha256",
+    "outcomesAccessed",
+    "manifestSha256"
+  ],
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityReferenced": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "cashReceiptVerified": false,
+    "finalDistributionVerified": false,
+    "noFurtherDistributionsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "laterOtcTradingExcluded": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "6573b0812e09dd12df176c7550800526481aa786",
+    "baseTag": 893,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-downstream-filing-capture-contract-v1.json",
+    "runnerPath": "scripts/capture-sec-liquidation-downstream-filings-v1.py",
+    "testPath": "tests/capture-sec-liquidation-downstream-filings-v1.test.js",
+    "runnerNormalizedSha256": "ee515daff27587688fc0af1a34ccbc3205a65fdbaa59e4c7e13c3ec061d7a897",
+    "testRawSha256": "6d55fe65ad562547e3c3d10cbd50fd518e332a7729002c08dce12ebf00f3a4c3",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "productionCaptureRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "8c9b79d0909bd8ff9b29e2eb5897e9fba09ed4b41696614ac793864fda3a2992"
+}
