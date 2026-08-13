@@ -1,0 +1,168 @@
+{
+  "schema": "early-detection-sec-form25-suspension-boundary-contract/v1",
+  "createdAt": "2026-08-13T05:10:53Z",
+  "taskId": "Q003-SEC-FORM25-SUSPENSION-BOUNDARY",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Materialize only primary-SEC statements of an exchange-trading suspension boundary for exact Form-25 queue rows, while refusing last-price, observed-last-consolidated-session, later-OTC-absence, completed-delisting, identity, terminal-wealth and Original-V4 credit claims.",
+  "sourceInput": {
+    "gzipPath": "reports/early-detection/sec-form25-structured-metadata-v2.json.gz",
+    "gzipBytes": 13197732,
+    "gzipRawSha256": "942bb1ec0fbc292a53ca6b3760b2ffee13253cf60322ecb9778905118a2d370e",
+    "decompressedBytes": 257997067,
+    "decompressedRawSha256": "bc7b419a8489088f6fadd55579feec05fd193d36a2b415b592b4bac4c950d774",
+    "decompressedReportSha256": "b24c12b721b2a81952b8d2b7e8fc9b4617408f69075f5f7d5a09bc98e16f1ea8",
+    "manifestPath": "reports/early-detection/sec-form25-structured-metadata-v2-gzip-manifest.json",
+    "manifestRawSha256": "a28c43ca2f9089ce5c7cb93dbd5bbc120af1b7579f4ec835fb2bc7b47cb4d9ab",
+    "verifierPath": "scripts/verify-sec-form25-structured-metadata-v2-gzip.py",
+    "verifierRawSha256": "1974be471d478ce2e04857fbebfc24528ebc69f10801b334e72b17a8a316fff6",
+    "testPath": "tests/verify-sec-form25-structured-metadata-v2-gzip.test.js",
+    "testRawSha256": "63fc7ecc36449dd3c0d2430edb344eca7ba97341d26a78036aabfc17507aa84e",
+    "manifestIntroductionCommit": "2205e9080a5101babd2016f4334a00abeeb12993",
+    "gzipIntroductionCommit": "ea03e44d8ce805a08c4dc627caafc7080357b40f",
+    "verifierAndTestIntroductionCommit": "6bdbee402f9feef281a5a36660d28a3664f0fde4",
+    "sourceRows": 27285,
+    "sourceUniqueAccessions": 14504,
+    "sourceOutcomesAccessed": false
+  },
+  "parserInput": {
+    "path": "scripts/build-sec-form25-structured-metadata-v1.py",
+    "fixCommit": "9bd88bb08ce7e3b35d91bec9491f9614d61b3175",
+    "gitBlobRawSha256": "52f78812a7547df4025dd8a48351f2364beb7285cc903bcb1a0df5fbe56d0025",
+    "requiredFunctions": [
+      "extract_documents",
+      "sentences_for_documents",
+      "parsed_iso_date"
+    ],
+    "loadOnlyAfterRawHashCheck": true
+  },
+  "corpusInput": {
+    "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+    "expectedInventoryBlobCount": 27438,
+    "expectedInventoryBlobBytes": 326221948,
+    "selectedUniqueBlobs": 6366,
+    "sourceDerivedRebuildRequired": true,
+    "sourceDerivedRebuildNormalAndOptimizedRequired": true
+  },
+  "populationContract": {
+    "selection": "SOURCE_FORM25_METADATA_ROW_WITH_SUSPENSION_DATE_STATUS_PRESENT",
+    "expectedRows": 12727,
+    "expectedUniqueAccessions": 6366,
+    "expectedUniqueBlobs": 6366,
+    "expectedEvidenceOccurrences": 12739,
+    "expectedEvidenceOccurrenceCountByRow": {
+      "1": 12715,
+      "2": 12
+    },
+    "expectedForms": {
+      "25": 5,
+      "25-NSE": 12582,
+      "25-NSE/A": 140
+    },
+    "expectedSuspensionDateRange": {
+      "minimum": "2006-02-27",
+      "maximum": "2024-12-30"
+    },
+    "expectedIdentifierStates": {
+      "PRESENT": 12722,
+      "UNAVAILABLE": 5
+    },
+    "oneOutputRowPerSelectedSourceRow": true,
+    "tickerJoinAllowed": false,
+    "normalizationJoinAllowed": false,
+    "deduplicationAcrossQueueRowsAllowed": false
+  },
+  "timingQualifierContract": {
+    "allowedValues": [
+      "DATE_ONLY_TIME_UNSPECIFIED",
+      "AT_OPEN_OF_TRADING",
+      "AT_CLOSE_OF_TRADING_SESSION"
+    ],
+    "expectedCounts": {
+      "DATE_ONLY_TIME_UNSPECIFIED": 12709,
+      "AT_OPEN_OF_TRADING": 12,
+      "AT_CLOSE_OF_TRADING_SESSION": 6
+    },
+    "dateOnlyDoesNotIdentifySession": true,
+    "atOpenDoesNotIdentifyPriorSessionWithoutCalendar": true,
+    "atCloseDoesNotProveAnyTradeOccurredThatDay": true
+  },
+  "semanticContract": {
+    "evidenceKind": "PRIMARY_SEC_FORM25_EXCHANGE_TRADING_SUSPENSION_BOUNDARY_STATEMENT",
+    "claimCeiling": "EXACT_SOURCE_ROW_AND_PRIMARY_SEC_SENTENCE_STATE_EXCHANGE_TRADING_WAS_SUSPENDED_ON_OR_AT_A_QUALIFIED_BOUNDARY_OF_THE_STATED_DATE",
+    "notEvidenceOf": [
+      "LAST_TRADE_PRICE",
+      "OBSERVED_LAST_CONSOLIDATED_SESSION",
+      "NO_LATER_OTC_TRADING",
+      "COMPLETED_DELISTING_OR_REGISTRATION_TERMINATION",
+      "SECURITY_IDENTITY_CONTINUITY",
+      "TERMINAL_WEALTH"
+    ],
+    "outcomeBlind": true,
+    "pricesRead": false,
+    "returnsRead": false
+  },
+  "rowSchema": [
+    "boundaryId",
+    "sourceRowId",
+    "priorityRank",
+    "accession",
+    "filedDate",
+    "form",
+    "sourceBlob",
+    "issuerCik",
+    "issuerCikState",
+    "issuerName",
+    "issuerNameState",
+    "exchangeName",
+    "exchangeNameState",
+    "securityDescription",
+    "securityDescriptionState",
+    "suspensionBoundaryDate",
+    "suspensionTimingQualifier",
+    "evidenceOccurrences",
+    "evidenceKind",
+    "lastTradePriceObserved",
+    "lastConsolidatedSessionObserved",
+    "laterOtcTradingExcluded",
+    "delistingCompletionVerified",
+    "identityResolved",
+    "terminalWealthComplete",
+    "outcomesAccessed"
+  ],
+  "claimLocks": {
+    "lastTradePriceObserved": false,
+    "lastConsolidatedSessionObserved": false,
+    "laterOtcTradingExcluded": false,
+    "delistingCompletionVerified": false,
+    "completeCorporateActionChainVerified": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "de137118554621bbfb2556c69e226ef14ec110a8",
+    "baseTag": 872,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-form25-suspension-boundary-contract-v1.json",
+    "builderPath": "scripts/build-sec-form25-suspension-boundary-v1.py",
+    "testPath": "tests/build-sec-form25-suspension-boundary-v1.test.js",
+    "outputPath": "reports/early-detection/sec-form25-suspension-boundary-v1.json",
+    "ownedByteBindings": {
+      "builderNormalizedSha256": "37051ff3c036be1899b6a557b875b736400ee43656c3cd97e4da34cf71dedbc7",
+      "testRawSha256": "cfa8d2697f61c7cb246caa280239c31f75254d568c7404dd7b7357fb3741e75a"
+    },
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyContractBuilderTest": true,
+    "outputIntroductionMustBeDirectSingleParentChild": true,
+    "outputIntroductionAddsExactlyOutput": true,
+    "remoteVerificationRequired": true,
+    "atomicCreateNewRequired": true,
+    "sidePathAllowed": false
+  },
+  "contractSha256": "65c15407d53b2ab6f7b257868427601462cc06f935ff72e6a210c64dac12763c"
+}
