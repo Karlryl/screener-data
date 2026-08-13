@@ -1,0 +1,612 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-resume-contract/v4",
+  "createdAt": "2026-08-13T03:39:34Z",
+  "taskId": "CONTINUOUS-FREE-SOURCE-OPERATIONAL-RESUME-V4",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only recovery view over the immutable Tag854 V3 harness, the still-authoritative V12 materialized state and remote-verified Tags855-864 milestones. It conserves every V12 task, plans only lawful autonomous remainder, requires a separate hash-chained V13 state before controller resume, and opens no result, outcome, full-data or Original-V4 seal.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumAncestor": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+    "minimumAncestorTag": 854,
+    "constructionHead": "f875f0849459d696963fddd1bc3c51a91df03cf8",
+    "constructionHeadTag": 864,
+    "exactRemoteAtContractBuild": true,
+    "minimumAncestorMustRemainFirstParentAncestor": true,
+    "constructionHeadMustRemainFirstParentAncestor": true,
+    "linearIntermediateCommitsBeforeIntroductionAllowed": true,
+    "introductionPolicy": "FIRST_REMOTE_FIRST_PARENT_DESCENDANT_OF_CONSTRUCTION_HEAD_THAT_ADDS_ALL_THREE_OWNED_PATHS",
+    "introductionCommitAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-resume-contract-v4.json",
+      "scripts/verify-continuous-free-source-operational-resume-v4.py",
+      "tests/verify-continuous-free-source-operational-resume-v4.test.js"
+    ]
+  },
+  "predecessorHarness": {
+    "binding": {
+      "role": "TAG854_OPERATIONAL_RESUME_HARNESS_V3",
+      "path": "research/early-detection-v4/continuous-free-source-operational-resume-harness-contract-v3.json",
+      "bytes": 4167,
+      "rawSha256": "84fc2a7aec9603193764104742735c36fe0da77be3b477411de6a50199ae4a5e",
+      "gitBlob": "55df901b8d4f520542afe6df12cd09f920a0e62e",
+      "selfField": "contractSha256",
+      "selfSha256": "751fff7a32bede74696c011380e8f56b0525d14f778b7df37b7b4835b88a06c8",
+      "introductionCommit": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+      "introductionTag": 854
+    },
+    "v2ResumeInheritedViaHarness": true,
+    "inheritedMilestones": 9,
+    "inheritedOriginalV4GreenOfficialGates": 2,
+    "inheritedOriginalV4OfficialGateCount": 13,
+    "priorBytesRemainAppendOnly": true,
+    "grantsOriginalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "legacyMaterializedStatePointer": {
+    "binding": {
+      "role": "V12_LEGACY_MATERIALIZED_STATE",
+      "path": "state/early-detection-free-source-state-v12.json",
+      "bytes": 26073,
+      "rawSha256": "8e652e4ebb711a7cbe065799fc74fe3587d389cc313870cfa6d4a7960a78c700",
+      "gitBlob": "6146b6f58dd464d137a2af52a434b45b341ba2cc",
+      "selfField": "stateSha256",
+      "selfSha256": "4b08d22993e31ff24558b76a9739aab8b180eb177f3dd2c3bc6bfaa44cba0439",
+      "introductionCommit": "51ee7e4dffcbe543125d371faaf10cf18b9027cd",
+      "introductionTag": 712
+    },
+    "materializedAt": "2026-08-12T14:50:14Z",
+    "taskCounts": {
+      "READY": 6,
+      "RESOLVED": 0,
+      "USER_ACTION_REQUIRED": 4
+    },
+    "readyTaskIds": [
+      "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+      "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+      "Q004-FINRA-OTC-CATALOG",
+      "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+      "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+      "Q010-RESEARCH-ARCHIVE-DISCOVERY"
+    ],
+    "legacySelectorWouldChoose": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+    "operationalPointerStatus": "STALE_MATERIALIZED_STATE_PRESERVED_NOT_SUPERSEDED",
+    "resumeViewStatus": "RECOVERY_VIEW_ONLY_NOT_MATERIALIZED_STATE",
+    "scientificHistoryStatus": "PRESERVED_APPEND_ONLY_NOT_REINTERPRETED",
+    "recoveryPlanningQueueField": "nextQueue",
+    "mayReplaceControllerState": false,
+    "v13MaterializedStateRequiredBeforeLegacyControllerMayResume": true,
+    "legacyControllerBlockedUntilV13": true,
+    "v13MaterializationPolicy": {
+      "requiredPredecessorStateSha256": "4b08d22993e31ff24558b76a9739aab8b180eb177f3dd2c3bc6bfaa44cba0439",
+      "appendOnlyHashChainedEventRequired": true,
+      "materializedStateSelfHashRequired": true,
+      "controllerResumeRequiresRemoteVerifiedV13": true
+    },
+    "resolvedScienceClaimsInferredFromQueueDisposition": false,
+    "q002AutonomousSelectionAllowed": false,
+    "outcomesAccessed": false
+  },
+  "remoteMilestoneLineage": [
+    {
+      "tag": 855,
+      "commit": "e9db6cb337f46e7b0824a17f464793da47de9cf0",
+      "subject": "Tag 855: Nasdaq-Archivluecken verifizieren",
+      "disposition": "COMPLETED_ZERO_CREDIT"
+    },
+    {
+      "tag": 856,
+      "commit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+      "subject": "Tag 856: Aktiengegenleistungen einfrieren",
+      "disposition": "APPEND_ONLY_SEMANTICS_SUPERSEDED_BY_TAG864"
+    },
+    {
+      "tag": 857,
+      "commit": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+      "subject": "Tag 857: Aktiengegenleistungen materialisieren",
+      "disposition": "COMPLETED_MATERIALIZATION"
+    },
+    {
+      "tag": 858,
+      "commit": "86e0e0c399d780d775b6a3142f4f4958d1560a18",
+      "subject": "Tag 858: Aktiengegenleistungen versiegeln",
+      "disposition": "COMPLETED_OUTPUT_SEAL_SEMANTICS_CORRECTED_BY_TAG864"
+    },
+    {
+      "tag": 859,
+      "commit": "912ed611aae9081c528cb8e39f8017a290fd4258",
+      "subject": "Tag 859: Hypothesenregister outcome-blind haerten",
+      "disposition": "APPEND_ONLY_SUPERSEDED_BY_TAG863"
+    },
+    {
+      "tag": 860,
+      "commit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+      "subject": "Tag 860: SEC-Punktidentitaet abgleichen",
+      "disposition": "COMPLETED_IMPLEMENTATION_ZERO_CREDIT"
+    },
+    {
+      "tag": 861,
+      "commit": "5622b794b0a435c5389707a6777161a33f8a79f7",
+      "subject": "Tag 861: SEC-Punktidentitaet materialisieren",
+      "disposition": "COMPLETED_MATERIALIZATION_ZERO_CREDIT"
+    },
+    {
+      "tag": 862,
+      "commit": "0a87a7ff37c899db1e272910e8f395f4a145c7c2",
+      "subject": "Tag 862: SEC-Punktidentitaet versiegeln",
+      "disposition": "COMPLETED_OUTPUT_SEAL_ZERO_IDENTITY_CREDIT"
+    },
+    {
+      "tag": 863,
+      "commit": "933ab61e4fbe5f0f11a7be3e24daf1893eeb9a85",
+      "subject": "Tag 863: Hypothesenprovenienz korrigieren",
+      "disposition": "AUTHORITATIVE_PROPOSAL_ONLY_NO_CREDIT"
+    },
+    {
+      "tag": 864,
+      "commit": "f875f0849459d696963fddd1bc3c51a91df03cf8",
+      "subject": "Tag 864: Aktienquoten neutral bezeichnen",
+      "disposition": "AUTHORITATIVE_DENOMINATOR_SEMANTICS_NO_TERMINAL_WEALTH_CREDIT"
+    }
+  ],
+  "milestones": [
+    {
+      "milestoneId": "NASDAQ-MONTHLY-GAP-MATRIX-TAG855",
+      "operationalState": "COMPLETED_384_CELL_GAP_MATRIX_REMOTE_SEALED",
+      "bindings": [
+        {
+          "role": "TAG855_OUTPUT_SEAL",
+          "path": "research/early-detection-v4/nasdaq-symbol-directory-monthly-gap-matrix-output-seal-contract-v2.json",
+          "bytes": 4133,
+          "rawSha256": "8b15f9186e9e49b387a90c8bc355e31c82eeb76334fb969345924febaee26351",
+          "gitBlob": "8fde26e89b2a725fe9519db0e847ecdf55f805ec",
+          "selfField": "contractSha256",
+          "selfSha256": "2a971e62567008c099785d9fbc73aa960aa6a044ae4237ab76c640f4546d2c16",
+          "introductionCommit": "e9db6cb337f46e7b0824a17f464793da47de9cf0",
+          "introductionTag": 855
+        }
+      ],
+      "facts": {
+        "months": 192,
+        "cells": 384,
+        "monthsWithNoSnapshot": 124,
+        "monthsWithAnySnapshot": 68,
+        "missingArchiveSnapshotCells": 288,
+        "snapshots": 103,
+        "positivePresenceOnly": true,
+        "missingSnapshotIsNotAbsenceEvidence": true
+      },
+      "credit": {
+        "scientificCapability": "NONE",
+        "originalV4GateCredit": false,
+        "historicalUniverseComplete": false,
+        "historicalIdentityResolved": false
+      },
+      "completedQueueWorkIds": [
+        "NASDAQ-SPARSE-COVERAGE-GAP-MATRIX"
+      ]
+    },
+    {
+      "milestoneId": "SEC-NONCASH-SHARE-RECEIPTS-TAGS856-858-864",
+      "operationalState": "COMPLETED_EXACT_SIX_RECEIPTS_EIGHT_RATIOS_CORRECTED_DENOMINATOR_SEMANTICS",
+      "bindings": [
+        {
+          "role": "TAG856_FROZEN_CONTRACT_V1",
+          "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v1.json",
+          "bytes": 18894,
+          "rawSha256": "9451a82d6a7e51d7d531b6a035fdc9afb1d3794fd117e677c1021d6a68fa83b2",
+          "gitBlob": "842875090aba2582c408afd60436da2038b806f9",
+          "selfField": "contractSha256",
+          "selfSha256": "5dc2eb5bb282203c03cafa5cef44e4329c5082d850b0faf57c1512aefff96131",
+          "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+          "introductionTag": 856
+        },
+        {
+          "role": "TAG857_OUTPUT_V1",
+          "path": "reports/early-detection/sec-frozen-noncash-share-receipt-evidence-v1.json",
+          "bytes": 20735,
+          "rawSha256": "d02cb40ca4c38212af29c00d8c08a54fee120df615e44418cc120ed8a0575f07",
+          "gitBlob": "6586da12adfd1466893f74851a9237f70bb43b4a",
+          "selfField": "reportSha256",
+          "selfSha256": "8c892de667133e43d287ca20970f12da5cdce2a4ef71b5d684657a6446f8b1a2",
+          "introductionCommit": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+          "introductionTag": 857
+        },
+        {
+          "role": "TAG858_OUTPUT_SEAL_V2",
+          "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-output-seal-contract-v2.json",
+          "bytes": 3880,
+          "rawSha256": "eaa6a4f00cf4e2b5f803ea819ab76aace9dbd83849014a08451f20fdb9c650dd",
+          "gitBlob": "9f981a57402d46a07405f179ebbbb3c22f26065b",
+          "selfField": "contractSha256",
+          "selfSha256": "5fd01ef7b50992a7207cec256e782658f9b28df281e633a11f12a59a1e3e87cb",
+          "introductionCommit": "86e0e0c399d780d775b6a3142f4f4958d1560a18",
+          "introductionTag": 858
+        },
+        {
+          "role": "TAG864_CORRECTED_SEMANTIC_CONTRACT_V3",
+          "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v3.json",
+          "bytes": 19763,
+          "rawSha256": "d1e0ff5188332c4840a33e2218c9a54baf743d0327d229ceea363488813d271f",
+          "gitBlob": "e3b2e052a3bf14b4a77e7292c923c1b0f655792e",
+          "selfField": "contractSha256",
+          "selfSha256": "7974876c527b1157aa6fefb98c5b643fc43841cbbc3beb3e2621702472ef12d5",
+          "introductionCommit": "f875f0849459d696963fddd1bc3c51a91df03cf8",
+          "introductionTag": 864
+        }
+      ],
+      "facts": {
+        "completedNoncashShareReceiptRows": 6,
+        "ratioRows": 8,
+        "dualRatioRows": 2,
+        "uniqueAccessions": 6,
+        "denominatorSurrenderOrCancellationVerifiedRows": 1,
+        "denominatorSurrenderOrCancellationNotVerifiedRows": 5,
+        "verifiedSurrenderOrCancellationCaseIds": [
+          "NONCASH-RECEIPT-004"
+        ],
+        "denominatorDoesNotImplySurrenderOrCancellation": true
+      },
+      "credit": {
+        "scientificCapability": "EXACT_SIX_RECEIPTS_ONLY",
+        "originalV4GateCredit": false,
+        "terminalWealthComplete": false,
+        "cashReceiptVerified": false,
+        "laterDistributionsVerified": false,
+        "laterRecoveriesVerified": false
+      },
+      "completedQueueWorkIds": [
+        "SEC-NONCASH-SHARE-RECEIPT-SIX-ROW-SUBSTEP"
+      ]
+    },
+    {
+      "milestoneId": "PRE2021-HYPOTHESIS-REGISTER-TAGS859-863",
+      "operationalState": "COMPLETED_ONE_PROPOSAL_NONEXECUTABLE_NO_CREDIT",
+      "bindings": [
+        {
+          "role": "TAG859_REGISTER_V2_SUPERSEDED",
+          "path": "research/early-detection-v4/hypothesis-register-contract-v2.json",
+          "bytes": 12145,
+          "rawSha256": "6c12b139edf61757dc9c457d75a4647974bb13da8473dc1b0e4fd5d3c31e24f4",
+          "gitBlob": "2e0bb9c645c3662638841595b5fd198858255a28",
+          "selfField": "contractSha256",
+          "selfSha256": "199164de8a6251409b671c669c44acc1bf2577d95f534ff7bebb4b961006e4a2",
+          "introductionCommit": "912ed611aae9081c528cb8e39f8017a290fd4258",
+          "introductionTag": 859
+        },
+        {
+          "role": "TAG863_REGISTER_V3_AUTHORITATIVE",
+          "path": "research/early-detection-v4/hypothesis-register-contract-v3.json",
+          "bytes": 15179,
+          "rawSha256": "253cd6b42d40da895d09d36bf6448a7051a12bb6bea27f77248addb793a83a9d",
+          "gitBlob": "a425883f6b446145ee1e83862df8da1686b057a4",
+          "selfField": "contractSha256",
+          "selfSha256": "8c29ab1195246fcd30aa0044c9797a1b5b3a940c5d6f8cef93eff27b3e4c4af1",
+          "introductionCommit": "933ab61e4fbe5f0f11a7be3e24daf1893eeb9a85",
+          "introductionTag": 863
+        }
+      ],
+      "facts": {
+        "proposalCount": 1,
+        "eventCount": 1,
+        "derivedStatus": "PROPOSAL",
+        "maximumObservedDate": "2020-12-31",
+        "reserved2021To2024OpenedForGeneration": false,
+        "proposalExecutionAuthorized": false,
+        "resultComputationAllowed": false,
+        "studyCredit": "NONE"
+      },
+      "credit": {
+        "scientificCapability": "PROPOSAL_ONLY",
+        "originalV4GateCredit": false,
+        "preregistered": false,
+        "tested": false,
+        "resultCredit": false
+      },
+      "completedQueueWorkIds": [
+        "OUTCOME-BLIND-HYPOTHESIS-REGISTER-PRE2021"
+      ]
+    },
+    {
+      "milestoneId": "SEC-FORM345-DESCRIPTOR-CROSSWALK-TAGS860-862",
+      "operationalState": "COMPLETED_656_ROW_DESCRIPTOR_CROSSWALK_OUTPUT_SEALED_ZERO_IDENTITY_CREDIT",
+      "bindings": [
+        {
+          "role": "TAG860_CROSSWALK_CONTRACT_V1",
+          "path": "research/early-detection-v4/sec-form345-primary-descriptor-crosswalk-contract-v1.json",
+          "bytes": 11098,
+          "rawSha256": "2c866f99e723e8faf72750eb99f695864a38199a415bbb2c738d11fd0cf7dc33",
+          "gitBlob": "77fda35a3a6e09c24c58d1789dfb1c2d02e18a9c",
+          "selfField": "contractSha256",
+          "selfSha256": "e142799d16e7d0764792486627740c3dd224a3d46b154678e6b75941bdf80cdb",
+          "introductionCommit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+          "introductionTag": 860
+        },
+        {
+          "role": "TAG861_CROSSWALK_OUTPUT_V1",
+          "path": "reports/early-detection/sec-form345-primary-descriptor-crosswalk-v1.json",
+          "bytes": 10359039,
+          "rawSha256": "041383521506c7315078954824cabb2f11f46c4135ce83e80cf22621ae811ed5",
+          "gitBlob": "70fe57fa30600b5cd4268574361db5552432b204",
+          "selfField": "reportSha256",
+          "selfSha256": "b22597d08c176388973cfc3a9547d51344090ad8f35d0ca831b7ef06615a8dc1",
+          "introductionCommit": "5622b794b0a435c5389707a6777161a33f8a79f7",
+          "introductionTag": 861
+        },
+        {
+          "role": "TAG862_CROSSWALK_OUTPUT_SEAL_V2",
+          "path": "research/early-detection-v4/sec-form345-primary-descriptor-crosswalk-output-seal-contract-v2.json",
+          "bytes": 6382,
+          "rawSha256": "c6d02d12c07eaeeac95bb4518691773fb724deb6b73f29afa721a5ff938e8449",
+          "gitBlob": "728326aacb7b4c4184fb86e2c2d1702ca773cc4e",
+          "selfField": "contractSha256",
+          "selfSha256": "8efedf9455bca90c5716ab56c44b1db6b9b5d005b98b27703f323435f90af520",
+          "introductionCommit": "0a87a7ff37c899db1e272910e8f395f4a145c7c2",
+          "introductionTag": 862
+        }
+      ],
+      "facts": {
+        "rows": 656,
+        "uniqueAccessions": 652,
+        "uniqueIssuerCiks": 607,
+        "form15Rows": 65,
+        "form25Rows": 591,
+        "resolvedRows": 0,
+        "gapNoArchiveSnapshotRows": 452,
+        "singlePointNeedsIntervalAndCorroborationRows": 143,
+        "historicalPublicKnownAtEstablished": false
+      },
+      "credit": {
+        "scientificCapability": "RETROSPECTIVE_DESCRIPTOR_CROSSWALK_ONLY",
+        "originalV4GateCredit": false,
+        "identityResolutionCredit": false,
+        "historicalIdentityResolved": false,
+        "securityIdentityResolved": false,
+        "tickerReuseResolved": false
+      },
+      "completedQueueWorkIds": [
+        "SEC-FORM345-DESCRIPTOR-CROSSWALK-656-ROW-SUBSTEP"
+      ]
+    }
+  ],
+  "legacyQueueConservation": [
+    {
+      "legacyTaskId": "Q001-QUANTCONNECT-TERMS-ACCOUNT",
+      "legacyState": "USER_ACTION_REQUIRED",
+      "recoveryRouting": "EXTERNAL_DEFERRED",
+      "recoveryWorkId": "QUANTCONNECT-FREE-CLOUD-RIGHTS"
+    },
+    {
+      "legacyTaskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+      "legacyState": "READY",
+      "recoveryRouting": "BLOCKED_BY_RIGHTS_NOT_AUTONOMOUS",
+      "recoveryWorkId": "QUANTCONNECT-FREE-CLOUD-RIGHTS"
+    },
+    {
+      "legacyTaskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+      "legacyState": "READY",
+      "recoveryRouting": "AUTONOMOUS_REMAINDER",
+      "recoveryWorkId": "SEC-TERMINAL-REMAINING-CASH-LIQUIDATION-RECOVERY-RECONCILIATION"
+    },
+    {
+      "legacyTaskId": "Q004-FINRA-OTC-CATALOG",
+      "legacyState": "READY",
+      "recoveryRouting": "AUTONOMOUS_REMAINDER",
+      "recoveryWorkId": "FINRA-2016-2024-ROW-LEVEL-RECONCILIATION"
+    },
+    {
+      "legacyTaskId": "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+      "legacyState": "READY",
+      "recoveryRouting": "PARTIAL_NASDAQ_ONLY_AUTONOMOUS_REMAINDER",
+      "recoveryWorkId": "US-EXCHANGE-NASDAQ-GAPS-NYSE-NYSE-AMERICAN-CBOE-RECONCILIATION"
+    },
+    {
+      "legacyTaskId": "Q006-TIINGO-FREE-ENTITLEMENT",
+      "legacyState": "USER_ACTION_REQUIRED",
+      "recoveryRouting": "EXTERNAL_DEFERRED",
+      "recoveryWorkId": "TIINGO-FREE-ENTITLEMENT"
+    },
+    {
+      "legacyTaskId": "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+      "legacyState": "READY",
+      "recoveryRouting": "INHERITED_POINT_EVIDENCE_COMPLETE_NO_INTERVAL_CREDIT",
+      "recoveryWorkId": null
+    },
+    {
+      "legacyTaskId": "Q008-BUSINESS-QUANT-FREE-HANDSHAKE",
+      "legacyState": "USER_ACTION_REQUIRED",
+      "recoveryRouting": "EXTERNAL_DEFERRED",
+      "recoveryWorkId": "BUSINESS-QUANT-FREE-HANDSHAKE"
+    },
+    {
+      "legacyTaskId": "Q009-ALPHA-VANTAGE-NEGATIVE-CONTROL",
+      "legacyState": "USER_ACTION_REQUIRED",
+      "recoveryRouting": "EXTERNAL_DEFERRED",
+      "recoveryWorkId": "ALPHA-VANTAGE-NEGATIVE-CONTROL"
+    },
+    {
+      "legacyTaskId": "Q010-RESEARCH-ARCHIVE-DISCOVERY",
+      "legacyState": "READY",
+      "recoveryRouting": "AUTONOMOUS_REMAINDER",
+      "recoveryWorkId": "RESEARCH-ARCHIVE-DISCOVERY-CONTINUATION"
+    }
+  ],
+  "queueDisposition": [
+    {
+      "previousWorkId": "NASDAQ-SPARSE-COVERAGE-GAP-MATRIX",
+      "status": "COMPLETED",
+      "evidenceMilestoneId": "NASDAQ-MONTHLY-GAP-MATRIX-TAG855",
+      "remainingWorkId": "US-EXCHANGE-NASDAQ-GAPS-NYSE-NYSE-AMERICAN-CBOE-RECONCILIATION"
+    },
+    {
+      "previousWorkId": "OUTCOME-BLIND-HYPOTHESIS-REGISTER-PRE2021",
+      "status": "COMPLETED_PROPOSAL_ONLY",
+      "evidenceMilestoneId": "PRE2021-HYPOTHESIS-REGISTER-TAGS859-863",
+      "remainingWorkId": "PRE2021-SOURCE-QUALITY-SEPARATE-PROTOCOL-SEAL"
+    },
+    {
+      "previousWorkId": "SEC-TERMINAL-PRIMARY-RECONCILIATION",
+      "status": "PARTIALLY_COMPLETED",
+      "evidenceMilestoneId": "SEC-NONCASH-SHARE-RECEIPTS-TAGS856-858-864",
+      "remainingWorkId": "SEC-TERMINAL-REMAINING-CASH-LIQUIDATION-RECOVERY-RECONCILIATION"
+    },
+    {
+      "previousWorkId": "SEC-IDENTITY-CORPORATE-ACTION-PRIMARY-RECONCILIATION",
+      "status": "PARTIALLY_COMPLETED_ZERO_IDENTITY_CREDIT",
+      "evidenceMilestoneId": "SEC-FORM345-DESCRIPTOR-CROSSWALK-TAGS860-862",
+      "remainingWorkId": "SEC-IDENTITY-INTERVAL-CORPORATE-ACTION-RECONCILIATION"
+    },
+    {
+      "previousWorkId": "OPENFIGI-ANONYMOUS-HANDSHAKE",
+      "status": "COMPLETED_POINT_EVIDENCE_ONLY",
+      "evidenceMilestoneId": "INHERITED_VIA_TAG854_HARNESS",
+      "remainingWorkId": null
+    },
+    {
+      "previousWorkId": "RESEARCH-ARCHIVE-DISCOVERY",
+      "status": "OPEN_AUTONOMOUS_CONTINUATION",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": "RESEARCH-ARCHIVE-DISCOVERY-CONTINUATION"
+    },
+    {
+      "previousWorkId": "QUANTCONNECT-FREE-CLOUD-RIGHTS",
+      "status": "EXTERNAL_RIGHTS_BLOCKER",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": null
+    },
+    {
+      "previousWorkId": "TIINGO-FREE-ENTITLEMENT",
+      "status": "USER_ACTION_REQUIRED",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": null
+    },
+    {
+      "previousWorkId": "ALPHA-VANTAGE-NEGATIVE-CONTROL",
+      "status": "USER_ACTION_REQUIRED",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": null
+    },
+    {
+      "previousWorkId": "BUSINESS-QUANT-FREE-HANDSHAKE",
+      "status": "USER_ACTION_REQUIRED",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": null
+    },
+    {
+      "previousWorkId": "COURTLISTENER-RECAP-FREE-ACCOUNT",
+      "status": "USER_ACTION_REQUIRED",
+      "evidenceMilestoneId": null,
+      "remainingWorkId": null
+    }
+  ],
+  "nextQueue": [
+    {
+      "rank": 1,
+      "workId": "SEC-TERMINAL-REMAINING-CASH-LIQUIDATION-RECOVERY-RECONCILIATION",
+      "entryCriterion": "EXACT_SIX_NONCASH_RECEIPTS_BOUND_WITHOUT_TERMINAL_WEALTH_CREDIT",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 2,
+      "workId": "SEC-IDENTITY-INTERVAL-CORPORATE-ACTION-RECONCILIATION",
+      "entryCriterion": "656_DESCRIPTOR_ROWS_BOUND_WITH_ZERO_IDENTITY_CREDIT",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 3,
+      "workId": "US-EXCHANGE-NASDAQ-GAPS-NYSE-NYSE-AMERICAN-CBOE-RECONCILIATION",
+      "entryCriterion": "NASDAQ_384_CELL_MATRIX_BOUND_WITH_124_NO_SNAPSHOT_MONTHS_AND_OTHER_THREE_EXCHANGE_FAMILIES_REMAIN_OPEN",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 4,
+      "workId": "RESEARCH-ARCHIVE-DISCOVERY-CONTINUATION",
+      "entryCriterion": "LEGACY_Q010_REMAINS_OPEN_AND_ONLY_PROVENANCE_LICENSE_HASH_FIRST_DISCOVERY_IS_ALLOWED",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 5,
+      "workId": "PRE2021-SOURCE-QUALITY-SEPARATE-PROTOCOL-SEAL",
+      "entryCriterion": "ONE_NONEXECUTABLE_PROPOSAL_BOUND_AND_2021_2024_RESERVED",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    },
+    {
+      "rank": 6,
+      "workId": "FINRA-2016-2024-ROW-LEVEL-RECONCILIATION",
+      "entryCriterion": "REMOTE_VERIFIED_FINRA_CAPTURE_INHERITED_VIA_TAG854_HARNESS",
+      "workClass": "AUTONOMOUS_OUTCOME_BLIND"
+    }
+  ],
+  "externalDeferred": [
+    {
+      "workId": "QUANTCONNECT-FREE-CLOUD-RIGHTS",
+      "state": "BLOCKED_BY_WRITTEN_EXPORT_RIGHTS",
+      "autonomous": false
+    },
+    {
+      "workId": "TIINGO-FREE-ENTITLEMENT",
+      "state": "USER_ACCOUNT_ACTION_REQUIRED_NO_CARD_NO_TRIAL",
+      "autonomous": false
+    },
+    {
+      "workId": "ALPHA-VANTAGE-NEGATIVE-CONTROL",
+      "state": "USER_FREE_KEY_ACTION_REQUIRED_NO_CARD_NO_TRIAL",
+      "autonomous": false
+    },
+    {
+      "workId": "BUSINESS-QUANT-FREE-HANDSHAKE",
+      "state": "USER_ACCOUNT_ACTION_REQUIRED_NO_CARD_NO_TRIAL",
+      "autonomous": false
+    },
+    {
+      "workId": "COURTLISTENER-RECAP-FREE-ACCOUNT",
+      "state": "USER_ACCOUNT_ACTION_REQUIRED_NO_PAID_PACER_PURCHASE",
+      "autonomous": false
+    }
+  ],
+  "sealStates": {
+    "authorizationSeal": "CLOSED",
+    "endpointSeal": "CLOSED",
+    "resultSeal": "CLOSED",
+    "outcomeSeal": "CLOSED",
+    "fullDataSeal": "CLOSED",
+    "fullDataAiProtocolSeal": "CLOSED"
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4ResultComputationAllowed": false,
+    "addonMilestonesGrantOriginalV4GateCredit": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "fullDataAiProtocolSealAllowed": false,
+    "analysisAuthorized": false,
+    "resultComputationAllowed": false,
+    "resultsAccessed": false,
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "reserved2021To2024OpenedForHypothesisGeneration": false,
+    "humanAttestation": false,
+    "publicAiAppendOnly": true,
+    "secCikStudyAppendOnly": true
+  },
+  "ownedBindings": {
+    "contract": {
+      "path": "research/early-detection-v4/continuous-free-source-operational-resume-contract-v4.json",
+      "binding": "EXACT_RAW_AND_CANONICAL_SELF"
+    },
+    "verifier": {
+      "path": "scripts/verify-continuous-free-source-operational-resume-v4.py",
+      "binding": "NORMALIZED_RAW_SHA256",
+      "normalization": "ONLY_FOUR_EXPECTED_HASH_CONSTANT_VALUES_ZEROED",
+      "normalizedRawSha256": "8990d6580715f7d16dd0df591300bc0aed9f0aeb5898e9ac855861ff0c5bfc33"
+    },
+    "test": {
+      "path": "tests/verify-continuous-free-source-operational-resume-v4.test.js",
+      "binding": "EXACT_RAW_SHA256",
+      "rawSha256": "5d5d7a07dba5d552a190b3152b855dcd2a1bbd87c901a680ccc0db74b790a98a"
+    }
+  },
+  "resumeSha256": "e1ee55f0702d29fcf98ec46cc1991159068cf7f694c49d3b12485983291a75ae"
+}
