@@ -1,0 +1,92 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v20",
+  "createdAt": "2026-08-13T12:15:02Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tag891 as an exact no-credit FINRA description-bridge null milestone, preserve byte-exact V19 history, and keep Q003 open until all five semantics are actually resolved.",
+  "contractSelfSha256": "55c6b0d5b6d93ccf758d86d41500571610f98210b0726c495a27bfa4a45d159d",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "fed957d0a984f08918cabd19b6951d87a3c297a4",
+    "buildBaseTag": 891,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v20.json",
+      "scripts/early-detection-continuous-free-source-v20.py",
+      "state/early-detection-free-source-events-v20.jsonl",
+      "state/early-detection-free-source-state-v20.json",
+      "tests/early-detection-continuous-free-source-v20.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "v19Contract": "ba35f9616cac19ca4b403533439d3fdf1a88d5d22fe786d573456996e1658cd8",
+      "v19Controller": "09fa1af2cd60981a4e2a19963a1841dd9f7aae8389afd45c66d714c42800debf",
+      "v19ControllerTest": "ff69914e8daf09e623e3907dd85620691fba5ad99bdb5123fd8d8db686bd7e6d",
+      "v19EventLog": "c9851dca2c68582e0fd1a5fd9301d86e3bc18d5e968cb3b1b4d8d56f231edd1b",
+      "v19State": "a241a9e77d1f49e2741ebab3b7f21fdf0025f71730abe5c341a648b7c2caafee",
+      "descriptionContract": "7f74d85e8112fedc4181a936da09ae909f6c80564803076fb8e704e76c0c74e4",
+      "descriptionVerifier": "fa29cf7b7f7aceebc7be4e13d7991c78b05edcc09e2e8bf8159c63719ff852dc",
+      "descriptionTest": "886fa7f82aecd5df9e80b6e0571a179c235a2a3df7c03834abd5bd2e44a42236"
+    },
+    "inputBundleSha256": "57666f480cb21704b0ce9ce483e3f9b41fa34a8fae205ceaf056e85c0fce0ee4",
+    "inputBundleRecomputedFromBaseRawHashesAndMilestoneDelta": true,
+    "v19EventLogMustBeByteExactPrefix": true,
+    "v19ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "consumerArtifactMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBinding": {
+    "tag": 891,
+    "commit": "fed957d0a984f08918cabd19b6951d87a3c297a4",
+    "parent": "f5925ae8b5735f8119f3098ef5fdfe89628041b6",
+    "subject": "Tag 891: FINRA-Beschreibungsbruecke fail-closed pruefen",
+    "workstream": "Q003_FINRA_EXACT_DESCRIPTION_BRIDGE_NULL",
+    "artifactCount": 3,
+    "deltaSha256": "1d9cd3379577756157103182ffdca2fb160f2d5964e463ec2d4628ec1e5e08c0",
+    "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+  },
+  "implementation": {
+    "controllerNormalizedSha256": "7ad2ad192146411ed8d5902f0f1424b70eb659028883c5dd09b2520d6a87ac1d",
+    "testNormalizedSha256": "c158fc4649be5bd5f1b628dd6ce7a973648bd5da822095c20dd96174a660b77a",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v20.jsonl",
+    "eventLogRawSha256": "5fdcf15b333ef319bfc69c297d927a42d8a27dcb688327583d555c0a04f8650a",
+    "eventCount": 8,
+    "lastEventSha256": "c7d8412920a19d1403309a37a8829e22c175eaebc96d6b08f6f78180d9527330",
+    "statePath": "state/early-detection-free-source-state-v20.json",
+    "stateRawSha256": "44e9b09497040481b78739cb2fed6af3e6f097c559e4f962790b798317cce11e",
+    "stateSelfSha256": "96a5bc6e1635a25627c610cc0a122a802c7f421fc03ebf7523b596ee9bcda9b8",
+    "operationalProjectionSha256": "bb16321ece1bbbc3353c86f234fbbe0dedb9bc4bff8192d4464d5d5f6c3dfabf"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v19EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltaMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
