@@ -1,0 +1,136 @@
+{
+  "schema": "tiingo-starter-eod-three-case-private-pilot-contract/v2",
+  "createdAt": "2026-08-13T10:12:00Z",
+  "taskId": "Q003-TIINGO-STARTER-EOD-THREE-CASE-PRIVATE-PILOT-REPAIR",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Transparently supersede the truncated Tag-886 runner and authorize the same six-request private Tiingo Starter EOD entitlement pilot only under new V2 implementation paths, without admitting provider rows into the study or granting identity, terminal-value, return, outcome or Original-V4 credit.",
+  "inputs": {
+    "prerequisiteContract": {
+      "path": "research/early-detection-v4/tiingo-free-eod-prerequisite-contract-v1.json",
+      "rawSha256": "6ef3bbcce169fd840432c941ef83b31c6c30ee73194e955c1899d2c6530b888d",
+      "contractSha256": "b65918c52c3effe3be3cd84fe586c2f896aed4fa502400e7fbc3f46fcb7dc0cf"
+    },
+    "sourceDecisionContract": {
+      "path": "research/early-detection-v4/consolidated-adjusted-ohlcv-zero-cost-source-decision-contract-v1.json",
+      "rawSha256": "dbcbd44a5acbd5b30334f2a3047ed37515a02eb15de5a19fc3aec98629f40d1b",
+      "contractSha256": "82729a5441926ab8fcc51c7bddb38070adce35230e7f9e4f5e4388ced1c983f5"
+    }
+  },
+  "repairProvenance": {
+    "brokenIntroductionCommit": "034b279eb39ec2ac9e5b85dddf237677d0769767",
+    "brokenContractPath": "research/early-detection-v4/tiingo-starter-eod-three-case-private-pilot-contract-v1.json",
+    "brokenContractRawSha256": "6881985f0cbcb474671183ad5a6d3db989b38a50f480310fe62e5922aa06a867",
+    "brokenRunnerPath": "scripts/run-tiingo-starter-eod-three-case-private-pilot-v1.py",
+    "brokenRunnerRawSha256": "55890d11f4cd6e09de332336516dd7651e05a6609d1018c1a6f940a713b22755",
+    "brokenTestPath": "tests/run-tiingo-starter-eod-three-case-private-pilot-v1.test.js",
+    "brokenTestRawSha256": "8176bf680f09affb27a96b20e32a74b849f9f8b1646df8f9a4a4b22bc1a9ded6",
+    "failureClass": "TRUNCATED_INVALID_PYTHON_RUNNER",
+    "productionRequestsExecuted": false,
+    "privateCaptureMaterialized": false,
+    "studyCredit": "NONE"
+  },
+  "accountGate": {
+    "provider": "TIINGO",
+    "requiredTier": "STARTER",
+    "monthlyFeeUsd": 0,
+    "paymentDetailsAllowed": false,
+    "trialAllowed": false,
+    "secondAccountAllowed": false,
+    "explicitZeroCostAttestationFlag": "--attest-starter-zero-cost",
+    "credentialStore": "WINDOWS_CREDENTIAL_MANAGER",
+    "credentialTarget": "GrowthScreener/Tiingo/StarterAPI",
+    "credentialUsername": "TIINGO_STARTER",
+    "tokenInChatAllowed": false,
+    "tokenInEnvironmentAllowed": false,
+    "tokenInFilesAllowed": false,
+    "tokenInUrlAllowed": false,
+    "tokenInStdoutAllowed": false
+  },
+  "requestContract": {
+    "apiOrigin": "https://api.tiingo.com",
+    "authorizationScheme": "Token",
+    "accept": "application/json",
+    "userAgent": "GrowthScreener-Research/1.0 Tiingo-Private-Entitlement-Pilot",
+    "maximumUniqueSymbols": 3,
+    "maximumRequests": 6,
+    "maximumResponseBytesPerRequest": 8388608,
+    "redirectsAllowed": false,
+    "environmentProxyUseAllowed": false,
+    "retryAllowed": false,
+    "parallelRequestsAllowed": false,
+    "premiumEndpointAllowed": false,
+    "requests": [
+      {"requestId": "ACTIVE_STABLE_AAPL_METADATA", "caseId": "ACTIVE_STABLE_AAPL", "symbol": "AAPL", "kind": "METADATA", "pathAndQuery": "/tiingo/daily/AAPL", "allowedHttpStatuses": [200]},
+      {"requestId": "ACTIVE_STABLE_AAPL_EOD", "caseId": "ACTIVE_STABLE_AAPL", "symbol": "AAPL", "kind": "EOD", "pathAndQuery": "/tiingo/daily/AAPL/prices?startDate=2024-01-02&endDate=2024-01-05&format=json&resampleFreq=daily", "allowedHttpStatuses": [200]},
+      {"requestId": "SYMBOL_CHANGE_FB_META_METADATA", "caseId": "SYMBOL_CHANGE_FB_META", "symbol": "META", "kind": "METADATA", "pathAndQuery": "/tiingo/daily/META", "allowedHttpStatuses": [200]},
+      {"requestId": "SYMBOL_CHANGE_FB_META_EOD", "caseId": "SYMBOL_CHANGE_FB_META", "symbol": "META", "kind": "EOD", "pathAndQuery": "/tiingo/daily/META/prices?startDate=2022-06-01&endDate=2022-06-15&format=json&resampleFreq=daily", "allowedHttpStatuses": [200]},
+      {"requestId": "TERMINAL_ATVI_METADATA", "caseId": "TERMINAL_ATVI", "symbol": "ATVI", "kind": "METADATA", "pathAndQuery": "/tiingo/daily/ATVI", "allowedHttpStatuses": [200, 404]},
+      {"requestId": "TERMINAL_ATVI_EOD", "caseId": "TERMINAL_ATVI", "symbol": "ATVI", "kind": "EOD", "pathAndQuery": "/tiingo/daily/ATVI/prices?startDate=2023-10-09&endDate=2023-10-20&format=json&resampleFreq=daily", "allowedHttpStatuses": [200, 404]}
+    ]
+  },
+  "privateCaptureContract": {
+    "explicitAbsolutePrivateRootRequired": true,
+    "gitWorktreeOrRepositoryPathAllowed": false,
+    "outputFileName": "tiingo-starter-eod-three-case-private-pilot-v2.json.gz",
+    "writeNewOnly": true,
+    "deterministicGzip": true,
+    "rawResponsesStoredAsBase64": true,
+    "requestAuthorizationStored": false,
+    "tokenStored": false,
+    "publicProviderRowsAllowed": false,
+    "stdoutMayContainOnly": ["status", "captureRawSha256", "captureGzipSha256", "requestCount", "successfulResponseCount", "notFoundResponseCount", "requiredEodFieldSetsObserved", "studyCredit", "privateProviderPriceRowsAccessed", "returnsComputed", "outcomesAccessed"]
+  },
+  "qualificationContract": {
+    "requiredEodFields": ["date", "open", "high", "low", "close", "volume", "adjOpen", "adjHigh", "adjLow", "adjClose", "adjVolume", "divCash", "splitFactor"],
+    "aaplMetadataAndEodMustReturn200": true,
+    "metaMetadataAndEodMustReturn200": true,
+    "atviMayReturn200Or404": true,
+    "providerRowsRemainPrivate": true,
+    "tickerOnlyIdentityPromotionAllowed": false,
+    "lastQuoteAsTerminalPaymentAllowed": false,
+    "missingOr404AsWorthlessAllowed": false,
+    "fullUniverseExtrapolationAllowed": false,
+    "studyAdmissionRequiresSeparateFutureContract": true
+  },
+  "executionState": {
+    "accountAttested": false,
+    "credentialBound": false,
+    "productionRequestsExecuted": false,
+    "privateCaptureMaterialized": false,
+    "studyCredit": "NONE",
+    "pilotMayRunAfterAccountGate": true
+  },
+  "claimLocks": {
+    "fullUniverseCoverageVerified": false,
+    "historicalIdentityResolved": false,
+    "symbolChangeContinuityVerified": false,
+    "delistedCoverageComplete": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionVerified": false,
+    "terminalWealthComplete": false,
+    "corporateActionsComplete": false,
+    "candidateRowsAuthorizedForStudy": false,
+    "resultComputationAllowed": false,
+    "returnsComputed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false
+  },
+  "implementationContract": {
+    "repository": "Karlryl/screener-data",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "034b279eb39ec2ac9e5b85dddf237677d0769767",
+    "introductionDirectChildOfBuildBase": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "linearSingleParentDescendantsRequired": true,
+    "remoteVerificationRequired": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/tiingo-starter-eod-three-case-private-pilot-contract-v2.json",
+      "scripts/run-tiingo-starter-eod-three-case-private-pilot-v2.py",
+      "tests/run-tiingo-starter-eod-three-case-private-pilot-v2.test.js"
+    ],
+    "runnerNormalizedSha256": "7d54dc1e93341832fac6cd1dc00fb23530fed2dac54c5cd3d1679225627a6bf9",
+    "testNormalizedSha256": "5d03eb3edfaa59ea0f10368814a9d8f12a2134e509551e9002a39a15debd3776"
+  },
+  "contractSha256": "b44d3cdb3dad7c37ede96eb38c392b1461401e917b91aa2b1fb60ee2b5fd7422"
+}
