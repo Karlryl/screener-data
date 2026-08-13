@@ -2,7 +2,7 @@
   "schema": "early-detection-q010-sc002-pit-listing-ledger-governance-contract/v1",
   "createdAt": "2026-08-13T22:30:44Z",
   "purpose": "Prospectively govern one bounded, outcome-blind supporting subchunk that can close the named point-in-time entity, security, listing and control-frame bias exposed by Q010-SC-001; this decision authorizes no research-source access.",
-  "contractSelfSha256": "1a73e72dedcc6adff5dbc0a10c50cf85ad56c5e4470eaeb0adeaf5d3acba8ee8",
+  "contractSelfSha256": "7bc3d584e920567509a78f7e092aebdf0379bd4a6ea60e0f95914eca702484d5",
   "repository": {
     "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
     "branch": "codex/form25-v2-promotion-20260812",
@@ -673,15 +673,81 @@
     "q003SchedulerEligible": false
   },
   "frozenGovernanceProjectionSha256": "d03956dfbe63f2ed9a59858aa1b83253f4edc41980cb02d2ccb8df3091243def",
+  "decisionIntroductionBinding": {
+    "schema": "early-detection-q010-sc002-tag915-decision-introduction-binding/v1",
+    "tag915Commit": "1ed213b0c04c0a4eefddfec9b999bb4184286ff9",
+    "tag915Parent": "2d744159e4a001bfe1e2ff5b9d31113cbc347487",
+    "tag915Subject": "Tag 915: Q010-SC002 PIT-Ledger vor Arbeitsbeginn versiegeln",
+    "tag915CommitTimeUtc": "2026-08-13T23:24:40Z",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "tag915RemoteObservedAtUtc": "2026-08-13T23:26:21.6093382Z",
+    "prospectiveDecisionRemoteIntroductionVerified": true,
+    "exactFivePathStatuses": "EXACTLY_FIVE_A_PATHS",
+    "exactThreeEventPrefixBytes": 2722,
+    "exactThreeEventPrefixRawSha256": "c0aff65145fa7370f2e735603cbb088b3443c141224fc844de300eeb097bc272",
+    "tag915ContractSelfSha256": "1a73e72dedcc6adff5dbc0a10c50cf85ad56c5e4470eaeb0adeaf5d3acba8ee8",
+    "tag915EventThreeSha256": "20022d50704039475411a98890d2b394cdacb6c31acb385df6d66ab67188bb8a",
+    "tag915StateSelfSha256": "4c4a42b7e5e23fe9627d21829545a6da87d278d5cbc8fa4aec4e0ff18333a9f9",
+    "tag915ProjectionSha256": "c00be4eeaa5524a3bafad55dab0883c8468537bb1f20041e7033849cad032221",
+    "frozenGovernanceProjectionSha256": "d03956dfbe63f2ed9a59858aa1b83253f4edc41980cb02d2ccb8df3091243def",
+    "parentBlobs": [
+      {
+        "path": "research/early-detection-v4/q010-sc002-pit-listing-ledger-governance-contract-v1.json",
+        "gitBlobSha1": "e1c726a6b73fc99c79ac7915e497bdcb0207f285",
+        "rawSha256": "2a39622954b60cdc913b01b2f964178278f93085378f4d28ddd39f857fbea666"
+      },
+      {
+        "path": "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py",
+        "gitBlobSha1": "3caa632218e3323ca0092de643dd0c69aa828020",
+        "rawSha256": "c5d4c5f3eb606bf027dc5533e6a27b4434d595c7218ef9dd29fdead3ebc24dbe"
+      },
+      {
+        "path": "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl",
+        "gitBlobSha1": "2e776d848d5f0acec4ff2e791d0bb0a56c0de2a6",
+        "rawSha256": "c0aff65145fa7370f2e735603cbb088b3443c141224fc844de300eeb097bc272"
+      },
+      {
+        "path": "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json",
+        "gitBlobSha1": "4a2fc3576769f142e947a250c515701ac9eb2d29",
+        "rawSha256": "38f72df2d3881634c0044529ffaf38d00d6cb8d7e07616b62c13723bfad7ed0f"
+      },
+      {
+        "path": "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js",
+        "gitBlobSha1": "cf21d85e4b42e7199de61de83aa96cd5018ab928",
+        "rawSha256": "c8fdb05b4272e647a51d7a8afc3bbfdbddbf7f1f7136779dea721d80392ae116"
+      }
+    ]
+  },
+  "startFinalization": {
+    "schema": "early-detection-q010-sc002-start-finalization/v1",
+    "startEventId": "Q010-EVT-00000004",
+    "startEventSequence": 4,
+    "eventCreatedAtUtc": "2026-08-13T23:26:22.7404680Z",
+    "workStartedAtUtc": "2026-08-13T23:26:22.7404680Z",
+    "sourceAccessAuthorizationClaimRecorded": true,
+    "sourceAccessAuthorizationEffectiveOnlyAfterTag916RemoteIntroduction": true,
+    "tag916ExpectedSubject": "Tag 916: Q010-SC002 PIT-Ledger prospektiv starten",
+    "firstResearchSourceRetrievedAtUtc": null,
+    "firstRetrievalEventRecorded": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "gqsAccessed": false,
+    "outcomesAccessed": false,
+    "candidateFilesAccessed": false,
+    "controlMatchingAllowed": false,
+    "telCodingAllowed": false,
+    "candidateStateComputationAllowed": false,
+    "scientificCredit": "NONE"
+  },
   "outputs": {
     "eventsPath": "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl",
     "statePath": "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json"
   },
   "implementation": {
     "controllerPath": "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py",
-    "controllerNormalizedSha256": "187c9bc99c5c459f692d4b2f9bdec3cf044fbadb2508210add08668d2337924c",
+    "controllerNormalizedSha256": "3b7542b1b6277513fd6d176ce9052eb161b381c3d67a12f9aa0bbaf3b50e3a45",
     "testPath": "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js",
-    "testRawSha256": "c8fdb05b4272e647a51d7a8afc3bbfdbddbf7f1f7136779dea721d80392ae116",
+    "testRawSha256": "f60f95897c3e67caeb9de25eb0d8bf007344d0442a563912f05e701079649fff",
     "controllerChildExecutionsRequired": 0,
     "onlyEncapsulatedGitProcessSurfaceAllowed": true,
     "eventsRawSha256PinnedByController": true,

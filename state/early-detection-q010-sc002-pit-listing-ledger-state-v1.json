@@ -1,9 +1,9 @@
 {
   "schema": "early-detection-q010-sc002-pit-listing-ledger-state/v1",
-  "materializedAt": "2026-08-13T22:30:44Z",
-  "contractSelfSha256": "1a73e72dedcc6adff5dbc0a10c50cf85ad56c5e4470eaeb0adeaf5d3acba8ee8",
-  "eventCount": 3,
-  "eventHeadSha256": "20022d50704039475411a98890d2b394cdacb6c31acb385df6d66ab67188bb8a",
+  "materializedAt": "2026-08-13T23:26:22.7404680Z",
+  "contractSelfSha256": "7bc3d584e920567509a78f7e092aebdf0379bd4a6ea60e0f95914eca702484d5",
+  "eventCount": 4,
+  "eventHeadSha256": "b657eec243f4969731997a71d5be7da93d220098a4287d49542b361fe04b0999",
   "projection": {
     "schema": "early-detection-q010-sc002-pit-listing-ledger-projection/v1",
     "subchunkId": "Q010-SC-002-PIT-LISTING-ENTITY-LEDGER-2015",
@@ -22,8 +22,13 @@
     "decisionEventId": "Q010-EVT-00000003",
     "decisionEventSequence": 3,
     "preChunkTimingClaimRecorded": true,
-    "preChunkTimingVerified": false,
-    "prospectiveDecisionRemoteIntroductionVerified": false,
+    "preChunkTimingVerified": true,
+    "prospectiveDecisionRemoteIntroductionVerified": true,
+    "startEventRecorded": true,
+    "startEventId": "Q010-EVT-00000004",
+    "startEventSequence": 4,
+    "sourceAccessAuthorizationClaimRecorded": true,
+    "prospectiveStartRemoteIntroductionVerified": false,
     "workStarted": false,
     "workStartedAt": null,
     "startAuthorized": false,
@@ -38,6 +43,7 @@
     "outcomesAccessed": false,
     "scientificCredit": "NONE",
     "tag914Commit": "2d744159e4a001bfe1e2ff5b9d31113cbc347487",
+    "tag915Commit": "1ed213b0c04c0a4eefddfec9b999bb4184286ff9",
     "tag914NextQ010SubchunkAuthorized": false,
     "q003SchedulerEligible": false,
     "sc001BlindingIncidentRemainsEffective": true,
@@ -50,5 +56,5 @@
     "frozenGovernanceProjectionSha256": "d03956dfbe63f2ed9a59858aa1b83253f4edc41980cb02d2ccb8df3091243def",
     "noRetroactiveAuthorization": true
   },
-  "stateSelfSha256": "4c4a42b7e5e23fe9627d21829545a6da87d278d5cbc8fa4aec4e0ff18333a9f9"
+  "stateSelfSha256": "f5284c0050626170b53875822529263a67ec07b94de619627acbee4a0bf1078d"
 }

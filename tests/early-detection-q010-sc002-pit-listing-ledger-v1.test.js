@@ -20,22 +20,25 @@ function run(args, optimized = false, ok = true) {
 for (const optimized of [false, true]) {
   const self = JSON.parse(run(['self-test'], optimized).stdout);
   assert.equal(self.status, 'PASS');
-  assert.equal(self.kills, 97);
+  assert.equal(self.kills, 105);
   assert.equal(self.controllerChildExecutions, 0);
 
   run(['verify'], optimized, false);
   const verified = JSON.parse(run(['verify', '--remote'], optimized).stdout);
-  assert.ok(['DECISION_PRE_INTRODUCTION_DIAGNOSTIC', 'PASS'].includes(verified.status));
-  assert.ok(['DECISION_PRE_INTRODUCTION', 'DECISION_POST_INTRODUCTION'].includes(verified.phase));
-  const introduced = verified.phase === 'DECISION_POST_INTRODUCTION';
+  assert.ok(['START_PRE_INTRODUCTION_DIAGNOSTIC', 'PASS'].includes(verified.status));
+  assert.ok(['START_PRE_INTRODUCTION', 'START_POST_INTRODUCTION'].includes(verified.phase));
+  const introduced = verified.phase === 'START_POST_INTRODUCTION';
   assert.equal(verified.subchunkId, 'Q010-SC-002-PIT-LISTING-ENTITY-LEDGER-2015');
   assert.equal(verified.decisionRecorded, true);
   assert.equal(verified.preChunkTimingClaimRecorded, true);
-  assert.equal(verified.preChunkTimingVerified, introduced);
-  assert.equal(verified.prospectiveDecisionRemoteIntroductionVerified, introduced);
-  assert.equal(verified.workStarted, false);
-  assert.equal(verified.startAuthorized, false);
-  assert.equal(verified.researchSourceAccessAuthorized, false);
+  assert.equal(verified.preChunkTimingVerified, true);
+  assert.equal(verified.prospectiveDecisionRemoteIntroductionVerified, true);
+  assert.equal(verified.startEventRecorded, true);
+  assert.equal(verified.prospectiveStartRemoteIntroductionVerified, introduced);
+  assert.equal(verified.workStarted, introduced);
+  assert.equal(verified.startAuthorized, introduced);
+  assert.equal(verified.researchSourceAccessAuthorized, introduced);
+  assert.equal(verified.firstResearchSourceRetrievedAtUtc, null);
   assert.equal(verified.controlMatchingAllowed, false);
   assert.equal(verified.telCodingAllowed, false);
   assert.equal(verified.candidateStateComputationAllowed, false);
@@ -57,11 +60,15 @@ for (const optimized of [false, true]) {
   if (introduced) {
     assert.equal(verified.status, 'PASS');
     assert.match(verified.introductionCommit, /^[0-9a-f]{40}$/);
+    assert.match(verified.startRemoteObservedAtUtc, /^\d{4}-\d{2}-\d{2}T/);
+    const started = JSON.parse(run(['start', '--remote'], optimized).stdout);
+    assert.equal(started.researchSourceAccessAuthorized, true);
   } else {
-    assert.equal(verified.status, 'DECISION_PRE_INTRODUCTION_DIAGNOSTIC');
+    assert.equal(verified.status, 'START_PRE_INTRODUCTION_DIAGNOSTIC');
     assert.equal(verified.introductionCommit, null);
+    assert.equal(verified.startRemoteObservedAtUtc, null);
+    run(['start', '--remote'], optimized, false);
   }
-  run(['start', '--remote'], optimized, false);
 }
 
 console.log('early-detection-q010-sc002-pit-listing-ledger-v1.test.js: PASS');
