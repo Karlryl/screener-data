@@ -1,0 +1,106 @@
+{
+  "claimLocks": {
+    "actualCashReceiptForAllRows": false,
+    "allHoldersVerified": false,
+    "cashOnlyVerified": false,
+    "corporateActionChainComplete": false,
+    "finalLiquidatingDistributionVerified": false,
+    "historicalIdentityResolved": false,
+    "noFurtherDistributionsVerified": false,
+    "noLaterRecoveryVerified": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryVerified": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "contractSha256": "451338df79abdb766e3950a26aee5e4421a960bea7b62671b57ddc5b41f0b3f2",
+  "createdAt": "2026-08-13T04:20:00Z",
+  "expectedCases": [
+    {
+      "accession": "0000891377-11-000008",
+      "evidenceKind": "ACTUAL_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATED",
+      "rowCanonicalSha256": "8870b4a6a4a3a67d02dcee4d9dfa1c801987db9ee1667a18b7ec67f9a19de1ba"
+    },
+    {
+      "accession": "0000903423-11-000138",
+      "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+      "rowCanonicalSha256": "125e5ae46dae7541c901008f6c5982eead999ff97f81d2569ee3bff2d47892c5"
+    },
+    {
+      "accession": "0000903423-11-000139",
+      "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+      "rowCanonicalSha256": "4a8e3a26cd76e8ff3f799514e57ee6a193e8e3664ed74c8bf479e093e7faa54a"
+    },
+    {
+      "accession": "0000903423-11-000140",
+      "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+      "rowCanonicalSha256": "83401e83b5e06b31869174e5c5e0d2115131aae7c4f3b6bbed1036347be480e9"
+    },
+    {
+      "accession": "0000950157-22-000333",
+      "evidenceKind": "ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIVED_STATED",
+      "rowCanonicalSha256": "54f87556f51a752eecda6e58af984eb99c0c856577b4d836575122e485daacfb"
+    }
+  ],
+  "outputBinding": {
+    "bytes": 17153,
+    "gitBlob": "0089c0791bca790995c6b708a4b9ad2a3ff4f501",
+    "introductionCommit": "ee21b932abbb31c24c97fab093d8b98b62f7c3e9",
+    "introductionParent": "3460af91b083b6e4a142479a7dcb376ef37c2df6",
+    "introducedAsOnlyPath": true,
+    "path": "reports/early-detection/sec-frozen-terminal-distribution-receipt-evidence-v2.json",
+    "rawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+    "reportSha256": "7967bd2ed2634568a785a5ec4e76d209db7ae10dc9ec9b1d72681144f5200104"
+  },
+  "policy": {
+    "expectedEvidenceKindCounts": {
+      "ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIVED_STATED": 1,
+      "ACTUAL_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATED": 1,
+      "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED": 3
+    },
+    "expectedRows": 5,
+    "normalPythonSourceRebuildRequired": true,
+    "optimizedPythonSourceRebuildRequired": true,
+    "outputMustMatchV2SourceRebuildByteExactly": true,
+    "scopeLimit": "EXACT_FIVE_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR",
+    "semanticCeiling": "THREE_DATED_FINAL_DISTRIBUTION_STATEMENTS_ONE_EFFECTED_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATEMENT_AND_ONE_ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIPT_STATEMENT"
+  },
+  "preIntroduction": {
+    "authorizedPaths": [
+      "research/early-detection-v4/sec-frozen-terminal-distribution-receipt-evidence-output-seal-contract-v3.json",
+      "scripts/verify-sec-frozen-terminal-distribution-receipt-evidence-output-v3.py",
+      "tests/verify-sec-frozen-terminal-distribution-receipt-evidence-output-v3.test.js"
+    ],
+    "currentRemoteCommit": "2a5ea8234c424c8b7398c54fde8e985d73039a37",
+    "futureIntroductionAddsExactlyAuthorizedPaths": true,
+    "futureIntroductionDirectSingleParentChildRequired": true,
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git"
+  },
+  "purpose": "Read-only append-only seal for the exact five-row V2 output, its source-derived rebuild and the Tag848-Tag850 implementation/output topology without expanding any terminal-wealth claim.",
+  "schema": "early-detection-sec-frozen-terminal-distribution-receipt-evidence-output-seal-contract/v3",
+  "taskId": "Q003-SEC-FROZEN-TERMINAL-DISTRIBUTION-RECEIPT-EVIDENCE-OUTPUT-SEAL-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "v2ImplementationBinding": {
+    "builder": {
+      "gitBlob": "32a0f18c9ee4d7e8d4879c691ae447ba8e2241b7",
+      "path": "scripts/build-sec-frozen-terminal-distribution-receipt-evidence-v2.py",
+      "rawSha256": "befd0072df14728a4399c8556f3702c3d2f5f41271856010b0c52b7f646186a4"
+    },
+    "contract": {
+      "gitBlob": "22c1328df022026504d6ba523719fbeedccde218",
+      "path": "research/early-detection-v4/sec-frozen-terminal-distribution-receipt-evidence-contract-v2.json",
+      "rawSha256": "2e0027632ccc934a1a6ce997dd8fea4355a89aba71b971d856916ce86f25747c",
+      "selfSha256": "90b5a9ee9914bfb4c7badf88336267af13a532422666e022023e5136d33fb15e"
+    },
+    "introductionCommit": "3460af91b083b6e4a142479a7dcb376ef37c2df6",
+    "introductionParent": "3dafd784e3fcfe6da053c710d0b5a5d4b002939b",
+    "introducedExactlyOwnThreePaths": true,
+    "test": {
+      "gitBlob": "5d3ee6d8e1510f8f49c3e7ae8a4849a5a287716b",
+      "path": "tests/build-sec-frozen-terminal-distribution-receipt-evidence-v2.test.js",
+      "rawSha256": "a7d65bb2b9f8807c3f755fe19c2b5d1f268e2b0a6e0d386e16bb8f9b1f442015"
+    }
+  }
+}
