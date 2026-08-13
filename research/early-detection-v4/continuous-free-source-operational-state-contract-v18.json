@@ -1,0 +1,96 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v18",
+  "createdAt": "2026-08-13T10:27:22Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tags883-887 as exact no-credit evidence-coverage, zero-cost OHLCV disposition and private Tiingo pilot milestones, preserve byte-exact V17 history, and keep Q003 open until all five semantics are actually resolved.",
+  "contractSelfSha256": "4a8f779a662f6dc59bbca483f107453fe4b46242cee67865c60488a7436d371f",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "2162514ba1235c233515ff651831e0beb5fc1883",
+    "buildBaseTag": 887,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v18.json",
+      "scripts/early-detection-continuous-free-source-v18.py",
+      "state/early-detection-free-source-events-v18.jsonl",
+      "state/early-detection-free-source-state-v18.json",
+      "tests/early-detection-continuous-free-source-v18.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "v17Contract": "4b0b9e4e5ecd3d6c24ff7e3777ed9c1c688e8c2982b1881dab0ca1f1a856ed59",
+      "v17Controller": "f26c3cafaf1fb5424e0f55a6a09185477f36fd70036b12ac1e6a59b34dc3a0c0",
+      "v17ControllerTest": "1bc4096ed9e0fbbe2c0eabcdffa7f97e71426c5141700dc591b56b06ad47ce41",
+      "v17EventLog": "8652d2964a8c474c1951cf6e519a6783d410262fc3c2ef47f743f2074d6b7773",
+      "v17State": "b6bed7c9b176666039339c28cd3e842d38612e60781a81bfa4139e1a8bb1fde9",
+      "coverageContract": "3c8cf48275040568c6c8c4b5f903b3dcde10d275adfee63c548d97475a8e5cb1",
+      "coverageBuilder": "b297136fe412f6104ef3d3fb7b07e1c20e1c0ae21dad01706f10a0cad8dafcc2",
+      "coverageTest": "de5549b6dd3f6df3df5c5c036ba4cd48ab85a1a83e2ec1577306636537a025a4",
+      "coverageOutput": "bd90edb31182f3f45c3ff10f9f800e4b1e0adf137880ddcf1838537c1f01d9bb",
+      "sourceDecisionContract": "dbcbd44a5acbd5b30334f2a3047ed37515a02eb15de5a19fc3aec98629f40d1b",
+      "sourceDecisionVerifier": "b89208d77821dee1fbd588833692ef0b76ecc7c707eb60f970744d8f29cb01dd",
+      "sourceDecisionTest": "65298641fa2d8cfa95ebaf2cfefe3d93e4bd592b88ffd11ebf53197aa54a48c7",
+      "tiingoPilotContract": "5113eb8177d2b2f8aaac07067f025b8e2489277c1c5d25d9c01adb8b2c30118a",
+      "tiingoPilotRunner": "d1b339e286a13652fc5957e9e75a8a144004f1951db8f7fd8803147888424947",
+      "tiingoPilotTest": "cddbf3895824b1fba3e5190aa8a3664864d71d0e091647a2e0b71753943d9c11"
+    },
+    "inputBundleSha256": "fadebc1d817f72e773c163dc98938771dbd594ffb6222e3a744f23b8e10c9034",
+    "inputBundleRecomputedFromBaseRawHashesAndMilestoneDeltas": true,
+    "v17EventLogMustBeByteExactPrefix": true,
+    "v17ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "consumerArtifactsMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBindings": [
+    {"tag":883,"commit":"7ed38d08b706ec2ff8e55db82412ff4bf4807946","parent":"096793e785ff093773bb124df8c204d9043ab469","subject":"Tag 883: Q003-Evidenzluecken vollstaendig projizieren","workstream":"Q003_EVIDENCE_COVERAGE_LEDGER_CONTRACT","artifactCount":3,"deltaSha256":"aff407858350333866e26f3b9070049ec886cf4cb4aa35506f172dd58335a8dc","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":884,"commit":"020c54d4e02f8a754e4b5a79b845ae2a4244e7f8","parent":"7ed38d08b706ec2ff8e55db82412ff4bf4807946","subject":"Tag 884: Q003-Evidenzmatrix materialisieren","workstream":"Q003_EVIDENCE_COVERAGE_LEDGER_OUTPUT","artifactCount":1,"deltaSha256":"d9d405e7fefda413b056b6b18f5cbafb1f319a23f07fb3b9f0f5ea4672e58cff","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":885,"commit":"1b812c7e81d01895d6a0a696a9aba303bfdd79f7","parent":"020c54d4e02f8a754e4b5a79b845ae2a4244e7f8","subject":"Tag 885: Gratis-OHLCV-Quellenentscheid versiegeln","workstream":"Q003_Q006_ZERO_COST_OHLCV_SOURCE_DECISION","artifactCount":3,"deltaSha256":"419297b8566ddde47d5a574959a383a80901654d50417cb718cdf9dd0655ad8a","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":886,"commit":"034b279eb39ec2ac9e5b85dddf237677d0769767","parent":"1b812c7e81d01895d6a0a696a9aba303bfdd79f7","subject":"Tag 886: Privaten Tiingo-Dreifallpilot vorbereiten","workstream":"Q006_TIINGO_PRIVATE_PILOT_V1_TRUNCATED","artifactCount":3,"deltaSha256":"042d66e805f2fe23718e9126e93dafe80ca8c0cfe0c99719442a58f2349b7f82","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":887,"commit":"2162514ba1235c233515ff651831e0beb5fc1883","parent":"034b279eb39ec2ac9e5b85dddf237677d0769767","subject":"Tag 887: Tiingo-Pilotrunner append-only reparieren","workstream":"Q006_TIINGO_PRIVATE_PILOT_V2_REPAIR","artifactCount":3,"deltaSha256":"f5ae99d93313bcb99d5f97ef4de2b8ab21e745d7c57e23e13812eb5eef165150","status":"OPERATIONAL_MILESTONE_NO_CREDIT"}
+  ],
+  "implementation": {
+    "controllerNormalizedSha256": "d23be82907248490576b8ec357c3f8c0a3fe71e5e2d39b573c026ab7f1a56b55",
+    "testNormalizedSha256": "fcb59960459ebcd2156e9375d5cc6fd7d2ba0ffca10e7c1b1e004d869eaf7058",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v18.jsonl",
+    "eventLogRawSha256": "715514032dd5cfd7fa570dc3e47a96d2be46ead4a8a969e14cb5c05521d6c01f",
+    "eventCount": 6,
+    "lastEventSha256": "04d519a3d69da38a2d21c1709f1374368bb459dcdda5362a20ab79db402732dd",
+    "statePath": "state/early-detection-free-source-state-v18.json",
+    "stateRawSha256": "0d2b92c5b6ced877593878dba5cdd40d4690b4081ed83bb5d12f000ac2304f43",
+    "stateSelfSha256": "b2bde4af82e9012dcc807787bb72ae587ea434445428947f880df57da71d25e0",
+    "operationalProjectionSha256": "dde9fb903ea61408c7b6840699cffc02a645a6195c0837842c0b4507a761b970"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v17EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltasMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
