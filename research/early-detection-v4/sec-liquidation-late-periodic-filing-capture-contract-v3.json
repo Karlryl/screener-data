@@ -1,0 +1,80 @@
+{
+  "schema": "sec-liquidation-late-periodic-filing-capture-contract/v3",
+  "createdAt": "2026-08-13T15:58:58Z",
+  "taskId": "Q003-SEC-LIQUIDATION-LATE-PERIODIC-FILING-CAPTURE-JOURNALED-RESUME",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Resume the exact private late-periodic capture from request sequence 66 with a generic append-only incident journal for every future transport failure, preserving sixty-three accepted receipts and two failed request events while accepting zero partial bytes and granting zero scientific credit.",
+  "inputs": {
+    "v1CaptureRunner": {"path": "scripts/capture-sec-liquidation-late-periodic-filings-v1.py", "rawSha256": "e74ddc95a579b00a294c29dc96c76dde27e5e83b73cd9d116cfafe89454ea558"},
+    "v2ResumeRunner": {"path": "scripts/capture-sec-liquidation-late-periodic-filings-v2.py", "rawSha256": "f9aec46392af94d331b0e6b787def1272a0b7e1acd189f0812678d2a6292ccff", "introductionCommit": "00e55a5cc1da8c22f54932429d5c5e5101f79dbd"},
+    "networkImplementation": {"path": "scripts/capture-sec-liquidation-downstream-filings-v1.py", "rawSha256": "4e36f022144f31defc129ec059b717a9c4a219cc49c15905ab584f5c5e9ce7d7"}
+  },
+  "observedPreSealState": {
+    "acceptedReceipts": 63,
+    "remainingCandidates": 59,
+    "lastAcceptedRequestSequence": 64,
+    "lastAcceptedReceiptSha256": "0aa9251389cff1944313c9e4d57192130193d16b9f2fb13265410fa4a2b30520",
+    "recordedIncidentCount": 1,
+    "recordedIncidentSha256": "9bc024f539262297d524ee019083217b860a1353abebb2967730157b8d755119"
+  },
+  "unrecordedObservedIncident": {
+    "requestSequence": 65,
+    "candidateId": "SEC-LIQ-LATE-PERIODIC-1b1fa397ae21ce197c543c60ee1ff156353fa2e9889e4a333cd9bcea7e7534c3",
+    "accession": "0001193125-18-260754",
+    "filedDate": "2018-08-28",
+    "form": "N-CSR",
+    "exceptionKind": "TRANSPORT_EXCEPTION_CAUGHT_BY_V2",
+    "partialBytesReportedByException": null,
+    "acceptedRawBytes": 0,
+    "partialBytesPersisted": false,
+    "contentInspected": false,
+    "scientificCredit": false,
+    "outcomesAccessed": false
+  },
+  "resumeContract": {
+    "candidateFilings": 122,
+    "privateRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-late-periodic-sec-originals-v1",
+    "incidentLayout": "incidents/sha256/<first2>/<incidentRawSha256>.json",
+    "maximumNewRequestsPerRun": 59,
+    "automaticRetryCount": 0,
+    "nextRequestSequence": 66,
+    "everyAttemptMustConsumeOneSequence": true,
+    "everyTransportFailureMustPersistIncident": true,
+    "rateDeferredStopsRun": true,
+    "transportIncidentStopsRun": true,
+    "existingBytesMustMatch": true,
+    "atomicWriteNew": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "00e55a5cc1da8c22f54932429d5c5e5101f79dbd",
+    "baseTag": 903,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v3.json",
+    "runnerPath": "scripts/capture-sec-liquidation-late-periodic-filings-v3.py",
+    "testPath": "tests/capture-sec-liquidation-late-periodic-filings-v3.test.js",
+    "runnerNormalizedSha256": "d52cb16b47c540815108802947ce5f5ba264f73b0bd68f28034558ca83b5ee38",
+    "testRawSha256": "ef06cee233d1558b760a8dcf8bc0f2e8df480368cbaa6927205d543054c719f7",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "productionResumeRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "b0c02a2a3116729350370c3cb0fc6ec076bd54857614f2a691ef51f9921279ac"
+}
