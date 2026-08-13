@@ -1,0 +1,184 @@
+{
+  "schema": "sec-form345-issuer-symbol-point-contract/v2",
+  "createdAt": "2026-08-13T01:02:00Z",
+  "taskId": "Q005-SEC-FORM345-ISSUER-SYMBOL-POINT-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only V2 build over the immutable V1 SEC Form 3/4/5 capture, allowing only source-missing issuer names while preserving exact-CIK filing-point evidence and every outcome lock.",
+  "remoteBinding": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "parentRemoteCommit": "c172b73a36e7b3001797520514c790925f258784",
+    "parentTag": 837,
+    "productionExecutionRequiresRemoteDirectChild": true,
+    "precommitCommandsAllowedAtExactParent": [
+      "verify-contract",
+      "dry-run",
+      "self-test"
+    ]
+  },
+  "authorizedImplementation": {
+    "contractPath": "research/early-detection-v4/sec-form345-issuer-symbol-point-contract-v2.json",
+    "builderPath": "scripts/build-sec-form345-issuer-symbol-point-v2.py",
+    "testPath": "tests/build-sec-form345-issuer-symbol-point-v2.test.js",
+    "futureOutputPath": "reports/early-detection/sec-form345-issuer-symbol-point-v2.json"
+  },
+  "immutableV1Base": {
+    "introductionCommit": "b33ebca4a60155dd3f31e8c7e40696a293be1dd0",
+    "introductionParent": "95b10fe726557c75dc1bcc828f595214fb77c8e2",
+    "contract": {
+      "path": "research/early-detection-v4/sec-form345-issuer-symbol-point-contract-v1.json",
+      "rawSha256": "96aac6435c470ccd3c9f4b1e453951fa788f0b14d88d7f046270a65a71b1a8f8",
+      "selfSha256": "d5069e503b5107f2f6924df4c938f3339d72798b3f35c657b2007f8e51660340",
+      "gitBlob": "9087da8b3af4262b0d92fc7df8f798cee6421e8c"
+    },
+    "builder": {
+      "path": "scripts/build-sec-form345-issuer-symbol-point-v1.py",
+      "rawSha256": "016f1014b89b605ba7ebd692e50d7112fc4c6cf10a491cf8041dad8c8d6b6ca6",
+      "gitBlob": "f176abbb1d0bc91c0f31b08955e29434c36b013b"
+    },
+    "test": {
+      "path": "tests/build-sec-form345-issuer-symbol-point-v1.test.js",
+      "rawSha256": "105323ea5047502ab8d7b81fce0d6f91faaa810b1e9670bfe8067ad1cda833f3",
+      "gitBlob": "164d44781b53047c804ec11eb0e7812aa463c7ac"
+    },
+    "v1RemainsUnmodified": true,
+    "v1FailedOutputMayNotBePromoted": true
+  },
+  "privateCapture": {
+    "schema": "sec-form345-private-capture-manifest/v1",
+    "defaultRoot": "LOCALAPPDATA/GrowthScreenerResearchData/private/sec-form345-issuer-symbol-point-v1",
+    "manifestPath": "capture-manifest.json",
+    "manifestRawSha256": "0f0b52999baa558b48e83696fcbcf7e8ab8613af34d88f55a9a529d2e88586e1",
+    "manifestSelfSha256": "deb91244154b3093acda0235b0cb6ad443374c21b691cf0bf178c8a641465152",
+    "introductionCommit": "b33ebca4a60155dd3f31e8c7e40696a293be1dd0",
+    "quarterCount": 64,
+    "quarterSequenceSha256": "419fc55b178ccb83e1df0c150c9f1c893443dc94d036ae958ae2a4c8e32ca306",
+    "captureSequenceSha256": "ddb5c17f063197a4c6ddf23a133e8ea29d0ad47ca6c488e2deb51d96f58ab874",
+    "readOnly": true,
+    "redownloadAllowed": false,
+    "mutationAllowed": false,
+    "rawZipMayEnterGitOrPublicOutput": false
+  },
+  "gapQueue": {
+    "path": "reports/early-detection/sec-terminal-identity-evidence-gap-queue-v1.json",
+    "rawSha256": "4c5bff255368bb0d9f498a8f367c65964c0de80d577cca70c695afe50ce0c650",
+    "reportSha256": "cb0b6272b1c07a8091354336bd9e5e1195ba43f766d393fe46fbebf04874e954",
+    "rows": 656,
+    "uniqueIssuerCiks": 607,
+    "joinKey": "EXACT_CANONICAL_10_DIGIT_ISSUER_CIK",
+    "tickerJoinAllowed": false,
+    "issuerNameJoinAllowed": false,
+    "outcomesAccessed": false
+  },
+  "sourceScope": {
+    "sourceFile": "SUBMISSION.tsv",
+    "firstQuarter": "2009Q1",
+    "lastQuarter": "2024Q4",
+    "expectedQuarterCount": 64,
+    "selectedFields": [
+      "ACCESSION_NUMBER",
+      "FILING_DATE",
+      "DOCUMENT_TYPE",
+      "ISSUERCIK",
+      "ISSUERNAME",
+      "ISSUERTRADINGSYMBOL"
+    ],
+    "otherZipMembersMayBeOpened": false,
+    "ownerTransactionOrHoldingTablesMayBeOpened": false
+  },
+  "v1FailureObservation": {
+    "status": "V1_FAIL_CLOSED_ON_OBSERVED_SOURCE_MISSINGNESS",
+    "allRows": 3352003,
+    "targetRows": 164675,
+    "blankIssuerNameAllRows": 1188,
+    "blankIssuerNameTargetRows": 23,
+    "otherSelectedFieldBlankAllRows": 0,
+    "credit": "DIAGNOSTIC_ONLY_NO_STUDY_CREDIT"
+  },
+  "missingnessPolicy": {
+    "requiredNonblankSourceFields": [
+      "ACCESSION_NUMBER",
+      "FILING_DATE",
+      "DOCUMENT_TYPE",
+      "ISSUERCIK",
+      "ISSUERTRADINGSYMBOL"
+    ],
+    "nullableSourceField": "ISSUERNAME",
+    "presentEncoding": {
+      "issuerName": "EXACT_TRIMMED_SOURCE_TEXT",
+      "issuerNameState": "PRESENT_SOURCE_VALUE"
+    },
+    "missingEncoding": {
+      "issuerName": null,
+      "issuerNameState": "MISSING_SOURCE_VALUE"
+    },
+    "inventedImputedOrBackfilledIssuerNameAllowed": false,
+    "blankCoreFieldDisposition": "FAIL_CLOSED",
+    "unknownIssuerNameStateDisposition": "FAIL_CLOSED",
+    "requiredCounts": [
+      "issuerNamePresentAllRows",
+      "issuerNameMissingAllRows",
+      "issuerNamePresentTargetPoints",
+      "issuerNameMissingTargetPoints"
+    ]
+  },
+  "futureOutput": {
+    "schema": "sec-form345-issuer-symbol-point/v2",
+    "writeNewAtomic": true,
+    "oneOutputRowPerGapWorkItem": true,
+    "pointDate": "FILING_DATE",
+    "amendmentsRemainSeparatePoints": true,
+    "issuerNameMissingnessExplicit": true,
+    "pointEvidenceMayResolveHistoricalInterval": false,
+    "pointEvidenceMayResolvePermanentIdentity": false
+  },
+  "claimCeiling": {
+    "allowed": [
+      "SEC_FORM345_FILING_LEVEL_ISSUER_SYMBOL_POINT",
+      "EXACT_CIK_POINT_CROSSCHECK",
+      "OBSERVED_ISSUER_NAME_SOURCE_MISSINGNESS_COUNTS",
+      "POINT_CONFLICT_AND_MISSINGNESS_COUNTS",
+      "SOURCE_CAPABILITY_AND_PROVENANCE"
+    ],
+    "forbidden": [
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "PERMANENT_SECURITY_OR_LISTING_IDENTITY",
+      "TICKER_REUSE_RESOLVED",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "TERMINAL_SESSION_PAYMENT_OR_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "historicalIdentityIntervalsComplete": false,
+    "permanentSecurityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "tickerReuseResolved": false,
+    "terminalSessionProven": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "abortCriteria": [
+    "V1_ARTIFACT_OR_INTRODUCTION_DRIFT",
+    "V1_CAPTURE_MANIFEST_OR_RAW_BLOB_DRIFT",
+    "V2_CONTRACT_GIT_OR_REMOTE_DRIFT",
+    "UNKNOWN_OR_ADDITIONAL_QUARTER",
+    "NON_SUBMISSION_MEMBER_ACCESS",
+    "BLANK_CORE_SOURCE_FIELD",
+    "UNKNOWN_DOCUMENT_TYPE_OR_SCHEMA_DRIFT",
+    "INVENTED_IMPUTED_OR_BACKFILLED_ISSUER_NAME",
+    "OBSERVED_CAPTURE_COUNTS_DRIFT",
+    "NON_CIK_JOIN_OR_INTERVAL_PROMOTION",
+    "PRICE_RETURN_OUTCOME_OR_OTHER_TABLE_ACCESS",
+    "EXISTING_OUTPUT_OR_SIDEPATH"
+  ],
+  "contractSha256": "5c721cca043ea68366a67fa4ffd44c81ce6f3f7d6e582373d7c9e3c918a61e5a"
+}
