@@ -1,0 +1,124 @@
+{
+  "schema": "sec-13f-official-list-disposition-contract/v3",
+  "createdAt": "2026-08-13T00:09:50Z",
+  "taskId": "Q005-SEC-13F-OFFICIAL-LIST-DISPOSITION-V3",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Record the exact scope of the rights-bound identifier incident, disable every callable V1 network/report/write entrypoint, and keep SEC 13F at zero study credit without claiming whole-tree deletion from append-only SEC research artifacts.",
+  "supersedes": {
+    "v1": {
+      "contractPath": "research/early-detection-v4/sec-13f-official-list-private-pilot-contract-v1.json",
+      "contractRawSha256": "a432e808953f3208cb9f723c5e9778b7257dbbd0df4a7c25f5e359a2ab0e2018",
+      "introductionCommit": "a4a06368149efe67e8418e489510fd6e88d277a4",
+      "studyCredit": "ZERO"
+    },
+    "v2": {
+      "contractPath": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v2.json",
+      "contractRawSha256": "0f17d30808233fad2e76c64dd29b8e2bd56c99503848f72c42a9ccff0a1c41bf",
+      "verifierPath": "scripts/verify-sec-13f-official-list-disposition-v2.py",
+      "verifierRawSha256": "d17158ba30fe8fb63d84c7b073026016d2c142fc786304148b1277a0f8a3c1d5",
+      "testPath": "tests/verify-sec-13f-official-list-disposition-v2.test.js",
+      "testRawSha256": "450aa617c4f89c5b4351c18dcb3109d0485d6310e167b945a504386ba4ead96b",
+      "studyCredit": "ZERO"
+    }
+  },
+  "incidentDisposition": {
+    "classification": "PUBLIC_TEST_FIXTURE_CONTAINED_ONE_RIGHTS_BOUND_IDENTIFIER",
+    "exactIdentifierRepeatedInDisposition": false,
+    "removedFromPilotRunnerAndTestCurrentBytes": true,
+    "identifierAbsentFromWholeCurrentTree": false,
+    "knownPreexistingArtifactsContainingSameIdentifier": [
+      {
+        "path": "reports/early-detection/sec-terminal-candidate-reconciliation-v1.json",
+        "rawSha256": "e38823a9701a7ea58afc1a91e5ed209837251f2e397fdf9d31bc4433831b4fa0",
+        "disposition": "PREEXISTING_APPEND_ONLY_SEC_RESEARCH_ARTIFACT_NOT_A_13F_CAPTURE"
+      },
+      {
+        "path": "reports/early-detection/sec-terminal-candidate-triage-v1.json",
+        "rawSha256": "ca879151eebd487609be39a4aa76faf83a1294c86736e00865a2759b5c7a860b",
+        "disposition": "PREEXISTING_APPEND_ONLY_SEC_RESEARCH_ARTIFACT_NOT_A_13F_CAPTURE"
+      },
+      {
+        "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+        "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+        "disposition": "PREEXISTING_APPEND_ONLY_SEC_RESEARCH_ARTIFACT_NOT_A_13F_CAPTURE"
+      }
+    ],
+    "historyRewritePerformed": false,
+    "historyRewriteRequiresExplicitUserApproval": true,
+    "providerPdfOrDatasetCapturedByThisPilot": false,
+    "providerCaptureNegativeScope": "THIS_PILOT_AND_REPO_DEFAULT_PATHS_ONLY_NOT_MACHINE_WIDE"
+  },
+  "remediationBindings": {
+    "runnerPath": "scripts/run-sec-13f-official-list-private-pilot-v1.py",
+    "runnerRawSha256": "3c4a0f575891dc002bd19e0e68b5a714a25fbed3b11cab0435a9be1b1c10497a",
+    "testPath": "tests/run-sec-13f-official-list-private-pilot-v1.test.js",
+    "testRawSha256": "6085403f55b158ff8428f7ee8ad2fbdfb6436d90cbc9080ba67aa9ed1a78cbff",
+    "cliExecutionDisabled": true,
+    "networkEntrypointDisabled": true,
+    "reportEntrypointDisabled": true,
+    "writeEntrypointDisabled": true
+  },
+  "implementationContract": {
+    "buildBaseCommit": "773b17f8f4dfb063258299d7cdcc97a1ff0c0b32",
+    "contractPath": "research/early-detection-v4/sec-13f-official-list-disposition-contract-v3.json",
+    "verifierPath": "scripts/verify-sec-13f-official-list-disposition-v3.py",
+    "verifierRawSha256": "43363cfa831b2ec2e2d6ae25c8d90a46c1e2b60fe1b00b8761777048db6dfc78",
+    "testPath": "tests/verify-sec-13f-official-list-disposition-v3.test.js",
+    "testRawSha256": "2c6fb24ff3274299c8cc4d986433462f806547f82074f677603f7450ffae990b",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "introductionDirectChildOfBuildBase": true,
+    "singleIntroductionCommitRequired": true
+  },
+  "sourceDisposition": {
+    "status": "QUARANTINED_RESTRICTED_INTERNAL_EVALUATION_ONLY",
+    "officialIndexUrl": "https://www.sec.gov/rules-regulations/staff-guidance/official-list-section-13f-securities",
+    "rightsNoticeUrl": "https://www.sec.gov/divisions/investment/13f/13flist2009q4.pdf",
+    "archiveCoverageClaim": "AVAILABLE_QUARTERLY_ARCHIVES_ONLY_WITH_EXPLICIT_GAPS",
+    "rawCusipPublicationAllowed": false,
+    "issuerDescriptionPublicationAllowed": false,
+    "automatedArchiveExecutionAuthorized": false,
+    "identityCapabilityClosed": false,
+    "terminalCapabilityClosed": false,
+    "futureExecutionAuthorized": false
+  },
+  "eligibilityCensus": {
+    "frozenGapRows": 656,
+    "rowsWithLabelBoundCusipEvidence": 1,
+    "rowsWithoutLabelBoundCusipEvidence": 655,
+    "maximumEligibleRowShareBasisPoints": 15,
+    "fullArchivePilotWorthExecutingNow": false,
+    "reason": "The current exact-match design cannot add evidence to 655 of 656 frozen rows, while the source carries redistribution restrictions."
+  },
+  "claimCeiling": {
+    "allowed": [
+      "SOURCE_CAPABILITY_AND_RIGHTS_DISPOSITION",
+      "AGGREGATE_PRE_REQUEST_ELIGIBILITY_CENSUS",
+      "HISTORICAL_INCIDENT_DISCLOSURE_WITHOUT_IDENTIFIER_REPETITION"
+    ],
+    "forbidden": [
+      "PUBLIC_CUSIP_OR_DESCRIPTION",
+      "HISTORICAL_IDENTITY_INTERVAL",
+      "CIK_SECURITY_OR_LISTING_IDENTITY_RESOLVED",
+      "TERMINAL_SESSION_PAYMENT_OR_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "HUMAN_ATTESTATION"
+    ]
+  },
+  "claimLocks": {
+    "futureExecutionAuthorized": false,
+    "dataRowsPromoted": false,
+    "publicIdentifiersPublishedByV3": false,
+    "historicalIdentityIntervalsComplete": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false,
+    "humanAttestation": false
+  },
+  "contractSha256": "6a16949e5e58b18d5398c0ab7b1597ab5bb8fb1ec916b49ab4a8827abc839ce8"
+}

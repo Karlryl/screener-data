@@ -20,8 +20,9 @@ assert.strictEqual(run(['verify-contract'], true).status, 'PASS');
 const normal = run(['self-test']);
 const optimized = run(['self-test'], true);
 assert.deepStrictEqual(normal, optimized);
-assert.strictEqual(normal.historicalRealIdentifierFixtureRemoved, true);
+assert.strictEqual(normal.historicalRealIdentifierFixtureRemovedFromPilotBytes, true);
 assert.strictEqual(normal.futureExecutionSuperseded, true);
+assert.strictEqual(normal.networkReportAndWriteEntrypointsDisabled, true);
 assert.strictEqual(normal.publicCusipExportForbidden, true);
 assert.strictEqual(normal.identityCreditForbidden, true);
 
@@ -41,4 +42,4 @@ const blocked = spawnSync('python', ['-B', script, 'run'], { cwd: root, encoding
 assert.notStrictEqual(blocked.status, 0);
 assert.match(blocked.stderr, /V1 execution superseded/);
 
-console.log(JSON.stringify({ status: 'PASS', publicOutputAbsent: true, privatePilotOnly: true }));
+console.log(JSON.stringify({ status: 'PASS', publicOutputAbsent: true, V1ExecutionAndEntrypointsDisabled: true }));

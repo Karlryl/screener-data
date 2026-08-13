@@ -137,65 +137,36 @@ def source_candidates(gap: dict[str, Any], extraction: dict[str, Any]) -> list[d
 
 
 def build_private_report(pdf_raw: bytes) -> dict[str, Any]:
-    gap = load_json(GAP, EXPECTED_GAP_RAW)
-    extraction = load_json(EXTRACTION, EXPECTED_EXTRACTION_RAW)
-    pages = extract_text(pdf_raw)
-    first_text = "\n".join(pages[:2])
-    if not all(marker.casefold() in first_text.casefold() for marker in RIGHTS_MARKERS):
-        fail("rights notice missing")
-    official_cusips = parse_list_cusips(pages)
-    candidates = source_candidates(gap, extraction)
-    exact_matches = [item for item in candidates if item["cusip"] in official_cusips]
-    report: dict[str, Any] = {
-        "schema": "sec-13f-official-list-private-pilot-report/v1",
-        "sourceUrl": SOURCE_URL,
-        "quarter": "2009Q4",
-        "pdfRawSha256": sha(pdf_raw),
-        "pdfBytes": len(pdf_raw),
-        "pdfPages": len(pages),
-        "rightsNoticeDetected": True,
-        "strictOfficialCusipRows": len(official_cusips),
-        "eligiblePrimarySecCusipOccurrences": len(candidates),
-        "eligiblePrimarySecRowsWithCusip": len({item["extractionRowId"] for item in candidates}),
-        "privateExactCusipMatches": len(exact_matches),
-        "matchedExtractionRowIds": sorted({item["extractionRowId"] for item in exact_matches}),
-        "publicCusipOrDescriptionExported": False,
-        "identityCreditGranted": False,
-        "outcomesAccessed": False,
-        "pricesAccessed": False,
-    }
-    report["reportSha256"] = sha(canonical(report))
-    return report
+    del pdf_raw
+    fail("V1 report construction superseded and disabled")
 
 
 def atomic_create(path: Path, raw: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        fail(f"refusing overwrite: {path}")
-    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
-    tmp = Path(tmp_name)
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            handle.write(raw)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.link(tmp, path)
-    finally:
-        tmp.unlink(missing_ok=True)
+    del path, raw
+    fail("V1 writes superseded and disabled")
 
 
 def fetch() -> bytes:
-    request = urllib.request.Request(SOURCE_URL, headers={"User-Agent": USER_AGENT, "Accept": "application/pdf"})
-    with urllib.request.urlopen(request, timeout=120) as response:
-        if response.status != 200 or "application/pdf" not in response.headers.get("Content-Type", "").casefold():
-            fail("unexpected SEC response")
-        return response.read()
+    fail("V1 network access superseded and disabled")
 
 
 def self_test() -> dict[str, Any]:
+    disabled = []
+    for action in (
+        fetch,
+        lambda: build_private_report(b"%PDF-disabled"),
+        lambda: atomic_create(Path("disabled"), b"disabled"),
+    ):
+        try:
+            action()
+        except PilotError:
+            disabled.append(True)
+        else:
+            disabled.append(False)
     return {
-        "historicalRealIdentifierFixtureRemoved": True,
+        "historicalRealIdentifierFixtureRemovedFromPilotBytes": True,
         "futureExecutionSuperseded": True,
+        "networkReportAndWriteEntrypointsDisabled": all(disabled),
         "publicCusipExportForbidden": validate_contract()["pilotPolicy"]["publicRawCusipStorageAllowed"] is False,
         "identityCreditForbidden": validate_contract()["pilotPolicy"]["pointEvidenceMayResolveIdentity"] is False,
     }
@@ -218,15 +189,7 @@ def main() -> int:
             fail("self-test failed")
         print(json.dumps({"status": "PASS", **result}, sort_keys=True))
         return 0
-    fail("V1 execution superseded by zero-credit V2 disposition")
-    pdf_raw = fetch()
-    report = build_private_report(pdf_raw)
-    atomic_create(PRIVATE_PDF, pdf_raw)
-    atomic_create(PRIVATE_REPORT, json.dumps(report, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8") + b"\n")
-    if PRIVATE_PDF.read_bytes() != pdf_raw or json.loads(PRIVATE_REPORT.read_bytes()) != report:
-        fail("private readback mismatch")
-    print(json.dumps({"status": "PASS", **{key: value for key, value in report.items() if key not in {"matchedExtractionRowIds"}}}, sort_keys=True))
-    return 0
+    fail("V1 execution superseded by zero-credit disposition")
 
 
 if __name__ == "__main__":
