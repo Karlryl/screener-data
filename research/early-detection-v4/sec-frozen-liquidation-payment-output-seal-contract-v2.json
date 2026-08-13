@@ -1,0 +1,60 @@
+{
+  "schema": "early-detection-sec-frozen-liquidation-payment-output-seal-contract/v2",
+  "createdAt": "2026-08-13T04:52:04Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Permanently verify the exact Tag870 implementation and Tag871 output-only introduction by rebuilding all seventeen rows from the bound SEC primary-source bytes in normal and optimized execution.",
+  "contractSelfSha256": "5a679be5941b4e769e32e1b8f7e90a1c138dab58b9f97425336ab676c015fe35",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "623baf8d15f884ec791de96090da43a9c5f29ba4",
+    "buildBaseTag": 871,
+    "sealIntroductionMustBeDirectSingleParentChild": true,
+    "sealIntroductionAddsExactlyOwnThreePaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true
+  },
+  "sealedChain": {
+    "implementationCommit": "c14000778ee1b98405eb81c8b36930eb869dc3b1",
+    "implementationParent": "b7bda025a01924bab82c252ea33a399ad0cdf966",
+    "outputCommit": "623baf8d15f884ec791de96090da43a9c5f29ba4",
+    "outputParent": "c14000778ee1b98405eb81c8b36930eb869dc3b1",
+    "paths": {
+      "research/early-detection-v4/sec-frozen-liquidation-payment-output-contract-v1.json": {"rawSha256": "522606ba3da01872523220b2865110fd8684999dc38c1491eb5f0281fd92dc4e", "gitBlob": "2d77ca3fba4769b83cb78378c19c6eb5235878a0"},
+      "scripts/materialize-sec-frozen-liquidation-payment-evidence-v1.py": {"rawSha256": "40412a82bd76fab8ed375d8405d0ae7b3004e6bed5cca638bae1336e2417595d", "gitBlob": "17bf258322332c1d545a39027fc57f347dba0e2f"},
+      "tests/materialize-sec-frozen-liquidation-payment-evidence-v1.test.js": {"rawSha256": "060025af396f65b99c9106c06d9c6b9de22bd57aca382307dda5a4501b0932f3", "gitBlob": "b01b30b80abb8c372c453451fb90811b8c63d4b0"},
+      "reports/early-detection/sec-frozen-liquidation-payment-evidence-v1.json": {"rawSha256": "962b86e9ede09741c96a67fc853bffda101f9f6b5c0883b7da4ae23a7b416bc4", "gitBlob": "8a6c361b3e6867bb386a7a5f99a6784598e8b86d"}
+    }
+  },
+  "output": {
+    "rawSha256": "962b86e9ede09741c96a67fc853bffda101f9f6b5c0883b7da4ae23a7b416bc4",
+    "reportSha256": "c7b37f025ba20f1b816c69f0ac0e372df36e17dc9e2cc9136f448c13e24406d9",
+    "rows": 17,
+    "recipientExplicitRows": 4,
+    "deduplicatedAgainstRows": 11,
+    "allIntersectionCounts": 0,
+    "currencyResolvedRows": 0,
+    "outcomesAccessed": false
+  },
+  "implementation": {
+    "contractPath": "research/early-detection-v4/sec-frozen-liquidation-payment-output-seal-contract-v2.json",
+    "verifierPath": "scripts/verify-sec-frozen-liquidation-payment-evidence-output-v2.py",
+    "testPath": "tests/verify-sec-frozen-liquidation-payment-evidence-output-v2.test.js",
+    "verifierNormalizedSha256": "3eef5f90f9073f7c68d0f8f856b5751d1065934ad97a79fd254877a00ac012fe",
+    "testNormalizedSha256": "49f03e0af4173ac0e93de248b0f2276cfa7d38694c97810a5df57f5e29ddfd31"
+  },
+  "claimLocks": {
+    "cashReceiptVerified": false,
+    "finalDistributionVerified": false,
+    "firstDistributionVerified": false,
+    "laterRecoveriesVerified": false,
+    "noFurtherClaimsVerified": false,
+    "currencyResolved": false,
+    "historicalIdentityResolved": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
