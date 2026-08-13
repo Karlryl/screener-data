@@ -1,0 +1,391 @@
+{
+  "claimLocks": {
+    "cashConsiderationVerified": false,
+    "cashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "feesOrTaxesVerified": false,
+    "fractionalShareTreatmentVerified": false,
+    "historicalIdentityResolved": false,
+    "laterDistributionsVerified": false,
+    "laterRecoveriesVerified": false,
+    "listingContinuityVerified": false,
+    "noncashReceiptBeyondExactRows": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false,
+    "universalHolderCoverageVerified": false
+  },
+  "contractRawSha256": "9451a82d6a7e51d7d531b6a035fdc9afb1d3794fd117e677c1021d6a68fa83b2",
+  "deduplication": {
+    "dimensions": [
+      "ACCESSION",
+      "BLOB_SHA256",
+      "EVIDENCE_SENTENCE_SHA256",
+      "ACCESSION_BLOB_DOCUMENT_SENTENCE_PROVENANCE"
+    ],
+    "frozenFiveRawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+    "frozenFiveRows": 5,
+    "intersectionCountByDimension": {
+      "ACCESSION": 0,
+      "ACCESSION_BLOB_DOCUMENT_SENTENCE_PROVENANCE": 0,
+      "BLOB_SHA256": 0,
+      "EVIDENCE_SENTENCE_SHA256": 0
+    }
+  },
+  "implementationBindings": {
+    "baseSealCommit": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+    "builderRawSha256": "de7c05e430af3ad50b51e13232e1fe81bf6c29cb962b55de10f94147e883d4e1",
+    "contractRawSha256": "9451a82d6a7e51d7d531b6a035fdc9afb1d3794fd117e677c1021d6a68fa83b2",
+    "currentCommit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+    "implementationIntroductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+    "implementationIntroductionParent": "e9db6cb337f46e7b0824a17f464793da47de9cf0",
+    "linearIntermediateCommitsAllowed": true,
+    "phase": "IMPLEMENTED_NO_OUTPUT",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "testRawSha256": "89aa207c536f7cf09f6c8b9fb9801a51e14e83f62f8069d3c2026700428470f2"
+  },
+  "inputBindings": {
+    "candidateReconciliation": {
+      "gitBlob": "cf5d51f084f75909fe0d838f5a0a1ecc1af3f119",
+      "introductionCommit": "8ff267c0afc257ec2db3e72c512050fbcbb102f8",
+      "path": "reports/early-detection/sec-terminal-candidate-reconciliation-v1.json",
+      "rawSha256": "e38823a9701a7ea58afc1a91e5ed209837251f2e397fdf9d31bc4433831b4fa0",
+      "reportSha256": "a05ba1777da74a076698dfbb8bcbb43315f6ddcd1eb78cb5d7c3e5b64e7761ab",
+      "rows": 16507
+    },
+    "corpus": {
+      "expectedCandidateBlobBytesScanned": 233444088,
+      "expectedCandidateBlobsScanned": 13853,
+      "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+      "physicalRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\corporate-action-originals\\blobs\\sha256"
+    },
+    "frozenFive": {
+      "gitBlob": "0089c0791bca790995c6b708a4b9ad2a3ff4f501",
+      "introductionCommit": "ee21b932abbb31c24c97fab093d8b98b62f7c3e9",
+      "path": "reports/early-detection/sec-frozen-terminal-distribution-receipt-evidence-v2.json",
+      "rawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+      "reportSha256": "7967bd2ed2634568a785a5ec4e76d209db7ae10dc9ec9b1d72681144f5200104",
+      "rows": 5
+    }
+  },
+  "outcomesAccessed": false,
+  "population": {
+    "actualNoncashShareReceiptStatementRows": 6,
+    "dualRatioRows": 2,
+    "frozenEvidenceRows": 6,
+    "ratioRows": 8,
+    "uniqueAccessions": 6
+  },
+  "reportSha256": "8c892de667133e43d287ca20970f12da5cdce2a4ef71b5d684657a6446f8b1a2",
+  "rows": [
+    {
+      "accession": "0000950103-18-000919",
+      "caseId": "NONCASH-RECEIPT-001",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "As a result of the Merger, Grupo Financiero Santander México ceased to exist; each shareholder of Grupo Financiero Santander México received one share of Banco Santander México for each share of Grupo Financiero Santander México held; and the shares underlying Grupo Financiero Santander Mexico’s ADSs were substituted for shares of Banco Santander México and the ADSs were listed on the NYSE in Banco Santander México’s name.",
+      "evidenceTextSha256": "5531945871cb6286ce4acc3773a7c7292d06aa31319dda8dd8fc1f1e6b210e17",
+      "ratios": [
+        {
+          "evidenceFragment": "received one share of Banco Santander México for each share of Grupo Financiero Santander México held",
+          "ratioId": "ORDINARY_SHARE_1_FOR_1",
+          "receivedSecurityText": "Banco Santander México share",
+          "receivedUnits": "1",
+          "recipientScope": "GRUPO_FINANCIERO_SANTANDER_MEXICO_SHAREHOLDERS",
+          "surrenderedSecurityText": "Grupo Financiero Santander México share",
+          "surrenderedUnits": "1"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 1
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "a3bc71c5b20b0e1d149f78f41baf3dcaf3f3d18f96d6b20db0d9ff0da9e758db",
+        "occurrenceId": "a455e798d6430e9e1498530a13eedc50a1e92c9cd4db1d421fd40a41519b44fd",
+        "sourceRowId": "SEC-TW-00024466"
+      },
+      "sourceRef": {
+        "blobSha256": "5f156da56338d41827e47f8bbf67818cc61c2ad2505dc5bfdadafd9d087bee01",
+        "bytes": 16224,
+        "completionContextSentenceIndex": 10,
+        "completionContextSentenceSha256": "d9d4180f592ff8ccb7d0affb12466b1cd72ed84ba65e2a957873788db2c50e8f",
+        "documentFilename": "dp85634_15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSentenceIndex": 11,
+        "evidenceSentenceSha256": "5531945871cb6286ce4acc3773a7c7292d06aa31319dda8dd8fc1f1e6b210e17",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "434f4fb418e5a1ab313b9e72c2644678a24192421a8fa97c82ef5c6b7b77375d",
+        "rawTextSha256": "53ea245baf0e639fb78d4e7dd12e6a443055c3569e6971769eb962bfca810289",
+        "relativePath": "5f/5f156da56338d41827e47f8bbf67818cc61c2ad2505dc5bfdadafd9d087bee01.txt"
+      }
+    },
+    {
+      "accession": "0000950103-18-003297",
+      "caseId": "NONCASH-RECEIPT-002",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "As a result of the Merger, Old Auris ceased to exist; each shareholder of Old Auris received one share of Auris NewCo for each ten shares of Old Auris held.",
+      "evidenceTextSha256": "17c44f7ce72044bce9581fdb605c165748099c2a4c5b1cd8087e10a2d781e366",
+      "ratios": [
+        {
+          "evidenceFragment": "received one share of Auris NewCo for each ten shares of Old Auris held",
+          "ratioId": "ORDINARY_SHARE_1_FOR_10",
+          "receivedSecurityText": "Auris NewCo share",
+          "receivedUnits": "1",
+          "recipientScope": "OLD_AURIS_SHAREHOLDERS",
+          "surrenderedSecurityText": "Old Auris shares",
+          "surrenderedUnits": "10"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 1
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "5a093b3f98a7377556960f9a5edde120e9defa98e8bac7d85c8705863f5081e9",
+        "occurrenceId": "b7d37ae1316f5151e377477d3d5564e0c3ea1bc3f72480e8958a91c24e551615",
+        "sourceRowId": "SEC-TW-00024803"
+      },
+      "sourceRef": {
+        "blobSha256": "be25cf5f92394d3f7d417632cdf99962ac8f3a69c9f491c5df78f4bfa905cd38",
+        "bytes": 15551,
+        "completionContextSentenceIndex": 2,
+        "completionContextSentenceSha256": "5a093b3f98a7377556960f9a5edde120e9defa98e8bac7d85c8705863f5081e9",
+        "documentFilename": "dp88007_15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSentenceIndex": 3,
+        "evidenceSentenceSha256": "17c44f7ce72044bce9581fdb605c165748099c2a4c5b1cd8087e10a2d781e366",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "3d5bcb0fbdd0ce2255d9a66c1e95c31ed2be973bea048eb5ba756db5de0a0ab1",
+        "rawTextSha256": "ac1052473cf015b8b60430613020e63fdc0e9f0cfadab7c72b3185175c14c477",
+        "relativePath": "be/be25cf5f92394d3f7d417632cdf99962ac8f3a69c9f491c5df78f4bfa905cd38.txt"
+      }
+    },
+    {
+      "accession": "0000950103-20-021106",
+      "caseId": "NONCASH-RECEIPT-003",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "(“TIM”), a wholly owned subsidiary of TIM Participações, which resulted in the merger of TIM Participações with and into TIM, as the surviving company, pursuant to which the shareholders of TIM Participações received one (1) TIM share for every TIM Participações share they held.",
+      "evidenceTextSha256": "824345618d97ef2728dd03ba98077144f52472383c866b10c8abe4e227e85f69",
+      "ratios": [
+        {
+          "evidenceFragment": "received one (1) TIM share for every TIM Participações share they held",
+          "ratioId": "ORDINARY_SHARE_1_FOR_1",
+          "receivedSecurityText": "TIM share",
+          "receivedUnits": "1",
+          "recipientScope": "TIM_PARTICIPACOES_SHAREHOLDERS",
+          "surrenderedSecurityText": "TIM Participações share",
+          "surrenderedUnits": "1"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 1
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "ac7ef726c8a7b5df66637ffe409794786e475a2f12316a6028536c04a8b6c680",
+        "occurrenceId": "55449ef55b95aa65ae10d7e15f2d30c2d8bd72e71a47b42d383b8aa835f89ed9",
+        "sourceRowId": "SEC-TW-00031731"
+      },
+      "sourceRef": {
+        "blobSha256": "03f4bbcb4db8ddfb9abae0ea9c5d396396615395d385bce81252ecb645a9711d",
+        "bytes": 11638,
+        "completionContextSentenceIndex": 5,
+        "completionContextSentenceSha256": "2a7e866a26ef2e1bca759bae975429714d679982390a451ffa728c416a64b2bd",
+        "documentFilename": "dp139813_15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSentenceIndex": 6,
+        "evidenceSentenceSha256": "824345618d97ef2728dd03ba98077144f52472383c866b10c8abe4e227e85f69",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "8807928d47113b07f155fac9cc1b502290124f9c852d06b1caa8c35873447574",
+        "rawTextSha256": "98047f358a04415b89f78e514ef3a4fb6d2d9ee646b37cf932914edb8ff3d709",
+        "relativePath": "03/03f4bbcb4db8ddfb9abae0ea9c5d396396615395d385bce81252ecb645a9711d.txt"
+      }
+    },
+    {
+      "accession": "0001193125-24-286219",
+      "caseId": "NONCASH-RECEIPT-004",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "On December 17, 2024, a scheme of arrangement under Jersey law (the “Scheme”) was completed pursuant to which the ordinary shares of the Predecessor Registrant were cancelled and the holders thereof received, on a one-for-one basis, ordinary shares of Aptiv PLC.",
+      "evidenceTextSha256": "5e34c1c29d4832bdb72579f5f4925bfd113e8b9cd35fd1b8c78321c893e36d84",
+      "ratios": [
+        {
+          "evidenceFragment": "received, on a one-for-one basis, ordinary shares of Aptiv PLC",
+          "ratioId": "ORDINARY_SHARE_1_FOR_1",
+          "receivedSecurityText": "Aptiv PLC ordinary share",
+          "receivedUnits": "1",
+          "recipientScope": "PREDECESSOR_REGISTRANT_ORDINARY_SHARE_HOLDERS",
+          "surrenderedSecurityText": "Predecessor Registrant ordinary share",
+          "surrenderedUnits": "1"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 1
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "ac7ef726c8a7b5df66637ffe409794786e475a2f12316a6028536c04a8b6c680",
+        "occurrenceId": "2f01e0362d46ba287f6744666fb91ad474329e014706675ec309793762eb79e4",
+        "sourceRowId": "SEC-TW-00044338"
+      },
+      "sourceRef": {
+        "blobSha256": "cee15eaafbf98c2aa132588c0307fbfa0f77e57bd8dd5d2b4f1cdaabd1b5874b",
+        "bytes": 13612,
+        "completionContextSentenceIndex": 4,
+        "completionContextSentenceSha256": "5e34c1c29d4832bdb72579f5f4925bfd113e8b9cd35fd1b8c78321c893e36d84",
+        "documentFilename": "d899694d1512g.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15-12G",
+        "evidenceSentenceIndex": 4,
+        "evidenceSentenceSha256": "5e34c1c29d4832bdb72579f5f4925bfd113e8b9cd35fd1b8c78321c893e36d84",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "446d9293df7faedf850e82499e941817bc19d1198c8218922abe33f901d8fa36",
+        "rawTextSha256": "55e452659b62532f05f6e7a6807efc0973f4941c82b1c03388a7586a1389b852",
+        "relativePath": "ce/cee15eaafbf98c2aa132588c0307fbfa0f77e57bd8dd5d2b4f1cdaabd1b5874b.txt"
+      }
+    },
+    {
+      "accession": "0001213900-23-091028",
+      "caseId": "NONCASH-RECEIPT-005",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "Pursuant to the Scheme: ● holders of ordinary shares of Incannex Australia received one share of common stock in Incannex Delaware for every 100 ordinary shares of Incannex Australia held on the Scheme record date; and ● holders of American Depositary Shares, with each ADS representing 25 ordinary shares of Incannex Australia, received one share of common stock of Incannex Delaware for every 4 ADSs held on the Scheme Record Date.",
+      "evidenceTextSha256": "a8cccba1c06f6a85fd5be073a5425b13b8e8178bd5609a2adee1c1527c4b403b",
+      "ratios": [
+        {
+          "evidenceFragment": "holders of ordinary shares of Incannex Australia received one share of common stock in Incannex Delaware for every 100 ordinary shares of Incannex Australia",
+          "ratioId": "ORDINARY_SHARE_1_FOR_100",
+          "receivedSecurityText": "Incannex Delaware common share",
+          "receivedUnits": "1",
+          "recipientScope": "INCANNEX_AUSTRALIA_ORDINARY_SHARE_HOLDERS",
+          "surrenderedSecurityText": "Incannex Australia ordinary shares",
+          "surrenderedUnits": "100"
+        },
+        {
+          "evidenceFragment": "holders of American Depositary Shares, with each ADS representing 25 ordinary shares of Incannex Australia, received one share of common stock of Incannex Delaware for every 4 ADSs",
+          "ratioId": "ADS_1_FOR_4",
+          "receivedSecurityText": "Incannex Delaware common share",
+          "receivedUnits": "1",
+          "recipientScope": "INCANNEX_AUSTRALIA_ADS_HOLDERS",
+          "surrenderedSecurityText": "Incannex Australia ADSs",
+          "surrenderedUnits": "4"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 2
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "ac7ef726c8a7b5df66637ffe409794786e475a2f12316a6028536c04a8b6c680",
+        "occurrenceId": "ce3565bc7e0f946bcbc4366c4a04d8cb2505060999b27de4eb105448d7b62a60",
+        "sourceRowId": "SEC-TW-00041554"
+      },
+      "sourceRef": {
+        "blobSha256": "e676323d38931162270b387d12ffddca05619cc19cc032122a0caced535b95d7",
+        "bytes": 17960,
+        "completionContextSentenceIndex": 3,
+        "completionContextSentenceSha256": "3badcf0894bf3110132b5fa653322469a9adf50a900d98f42def2d0e11678815",
+        "documentFilename": "ea189033-1512g_incannex.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15-12G",
+        "evidenceSentenceIndex": 4,
+        "evidenceSentenceSha256": "a8cccba1c06f6a85fd5be073a5425b13b8e8178bd5609a2adee1c1527c4b403b",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "effc25e14b29c057a492afb3244983bf635b36ee5ebb91723afe8f4cb5b7b393",
+        "rawTextSha256": "54c15a6bfd90e4b8a96bbc71150680b89b0df87a63ce6823daa4e418076a8e83",
+        "relativePath": "e6/e676323d38931162270b387d12ffddca05619cc19cc032122a0caced535b95d7.txt"
+      }
+    },
+    {
+      "accession": "0001213900-24-111979",
+      "caseId": "NONCASH-RECEIPT-006",
+      "evidenceKind": "ACTUAL_NONCASH_SHARE_RECEIPT_WITH_EXPLICIT_RATIO_STATED",
+      "evidenceText": "Pursuant to the Scheme: ● holders of ordinary shares of Bionomics received one share of common stock in Neuphoria for every 2,160 ordinary shares of Bionomics held on the Scheme record date; and ● holders of American Depositary Shares, with each ADS representing 180 ordinary shares of Bionomics, received one share of common stock of Neuphoria for every 12 ADSs held on the Scheme Record Date.",
+      "evidenceTextSha256": "601ae3f98626f466435b6db4621ac7090a53c21be3abf8d3425857b5c0d15c44",
+      "ratios": [
+        {
+          "evidenceFragment": "holders of ordinary shares of Bionomics received one share of common stock in Neuphoria for every 2,160 ordinary shares of Bionomics",
+          "ratioId": "ORDINARY_SHARE_1_FOR_2160",
+          "receivedSecurityText": "Neuphoria common share",
+          "receivedUnits": "1",
+          "recipientScope": "BIONOMICS_ORDINARY_SHARE_HOLDERS",
+          "surrenderedSecurityText": "Bionomics ordinary shares",
+          "surrenderedUnits": "2160"
+        },
+        {
+          "evidenceFragment": "holders of American Depositary Shares, with each ADS representing 180 ordinary shares of Bionomics, received one share of common stock of Neuphoria for every 12 ADSs",
+          "ratioId": "ADS_1_FOR_12",
+          "receivedSecurityText": "Neuphoria common share",
+          "receivedUnits": "1",
+          "recipientScope": "BIONOMICS_ADS_HOLDERS",
+          "surrenderedSecurityText": "Bionomics ADSs",
+          "surrenderedUnits": "12"
+        }
+      ],
+      "semanticValues": {
+        "actualPastReceiptOrDistributionStated": true,
+        "cashInTargetSentence": false,
+        "completedTransactionContextBound": true,
+        "futureOrConditionalInTargetSentence": false,
+        "ratioCount": 2
+      },
+      "sourceCandidateBinding": {
+        "candidateKind": "TERMINATION_LANGUAGE",
+        "evidenceSha256": "ac7ef726c8a7b5df66637ffe409794786e475a2f12316a6028536c04a8b6c680",
+        "occurrenceId": "d5c3f320b135f8ddbac188bd9cf427cfca70782698bb629ef33903fdbc78a8c4",
+        "sourceRowId": "SEC-TW-00044301"
+      },
+      "sourceRef": {
+        "blobSha256": "be98222c27d6edcb82ea804970acc9e25b21dbd52927a006fc6a12388c5ed6aa",
+        "bytes": 19295,
+        "completionContextSentenceIndex": 3,
+        "completionContextSentenceSha256": "67218c737f746b6ea3c83cee94d73c39069bc4677c939c357e291c207a87b6d3",
+        "documentFilename": "ea0225661-1512g_bionomics.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15-12G",
+        "evidenceSentenceIndex": 4,
+        "evidenceSentenceSha256": "601ae3f98626f466435b6db4621ac7090a53c21be3abf8d3425857b5c0d15c44",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "52731a16a4519cb4afabd7c8757010e06a5f7635afc986fb753d4d467379a715",
+        "rawTextSha256": "e4d83055b8b306b2f1c81776a7238eebcdb97c035bb641785de6bd3866c04f1d",
+        "relativePath": "be/be98222c27d6edcb82ea804970acc9e25b21dbd52927a006fc6a12388c5ed6aa.txt"
+      }
+    }
+  ],
+  "schema": "early-detection-sec-frozen-noncash-share-receipt-evidence/v1",
+  "scopeLimit": "EXACT_SIX_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR",
+  "semanticCeiling": "EXACT_SIX_COMPLETED_NONCASH_SHARE_RECEIPTS_WITH_EXPLICIT_RATIOS",
+  "taskId": "Q003-SEC-FROZEN-NONCASH-SHARE-RECEIPT-EVIDENCE-V1",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
