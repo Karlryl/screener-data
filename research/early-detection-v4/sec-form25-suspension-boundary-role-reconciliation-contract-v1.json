@@ -1,0 +1,197 @@
+{
+  "schema": "sec-form25-suspension-boundary-role-reconciliation-contract/v1",
+  "createdAt": "2026-08-13T11:03:08Z",
+  "taskId": "Q003-SEC-FORM25-SUSPENSION-BOUNDARY-ROLE-RECONCILIATION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Reconcile all 12,727 Form-25 suspension-boundary role projections to exactly 6,366 unique source-derived suspension-event provenances and their exact terminal-wealth queue rows; distinguish 6,361 modern SUBJECT COMPANY plus FILED BY pairs from five legacy single-FILER submissions; preserve descriptor mismatches explicitly; and grant no security identity, listing identity, interval, last-session, terminal-wealth, price, return, outcome or Original-V4 credit.",
+  "authoritativeInputs": {
+    "suspensionBoundary": {
+      "path": "reports/early-detection/sec-form25-suspension-boundary-v2.json",
+      "rawSha256": "4e9b33086ff6120de04110deb1e6e3916d2ca5001384729bbc28b273efd8735f",
+      "reportSha256": "99199da6cf5b9c4ffc7416c5e97dc4fd9f6300ba3e7c731b123c11fa4c030345",
+      "introductionCommit": "609f37df9e9c277323c5c8e24d6accfa3d1f3ea7",
+      "rows": 12727,
+      "uniqueAccessions": 6366
+    },
+    "terminalWealthQueue": {
+      "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+      "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+      "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+      "introductionCommit": "0148a3e14d7aa3cdfd493de2ca399fa876357a1e",
+      "rows": 44352,
+      "unresolvedRows": 44352,
+      "resolvedRows": 0
+    },
+    "secOriginalCorpus": {
+      "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+      "requiredDistinctBlobReads": 6366,
+      "contentAddressedBytesMustMatchSourceBlobSha256": true
+    }
+  },
+  "joinContract": {
+    "joinKey": "EXACT_ACCESSION_AND_EXACT_SOURCE_ROW_ID_ONLY",
+    "oneEventPerExactAccession": true,
+    "boundarySourceRowIdMustEqualQueueRowId": true,
+    "allRoleProjectionsWithinAccessionMustShareEventProvenance": true,
+    "modernEventRequiresExactlyOneSubjectAndOneFiledByProjection": true,
+    "legacyEventRequiresExactlyOneSingleFilerProjection": true,
+    "tickerJoinAllowed": false,
+    "descriptionJoinAllowed": false,
+    "caseFoldedNameJoinAllowed": false,
+    "normalizedCikUsedOnlyForHeaderDescriptorComparison": true,
+    "deduplicationAcrossAccessionsAllowed": false
+  },
+  "secHeaderRoleContract": {
+    "exactlyOneBalancedSecHeaderRequired": true,
+    "exactlyOneAccessionLineRequired": true,
+    "modernHeaderMode": "EXACTLY_ONE_SUBJECT_COMPANY_AND_ONE_FILED_BY_IN_ORDER",
+    "legacyHeaderMode": "NO_SUBJECT_OR_FILED_BY_AND_EXACTLY_ONE_TOP_LEVEL_FILER_PARTY",
+    "modernQueueSubjectMustMatchHeaderCikAndNameExactly": true,
+    "modernQueueFiledByMustMatchHeaderCikAndNameExactly": true,
+    "legacyQueueFilerMustMatchHeaderCikAndNameExactly": true,
+    "boundaryIssuerCikComparison": "LEFT_ZERO_PAD_TO_TEN_ONLY_NO_IDENTITY_CREDIT",
+    "boundaryIssuerNameMismatchMustRemainExplicit": true,
+    "arbitraryThirdPartyRoleForbidden": true
+  },
+  "expectedRebuild": {
+    "boundaryRoleProjectionRows": 12727,
+    "boundaryRoleProjectionIds": 12727,
+    "queueRoleProjectionRows": 12727,
+    "queueRoleProjectionRowIds": 12727,
+    "uniqueSuspensionEvents": 6366,
+    "uniqueAccessions": 6366,
+    "modernPairedEvents": 6361,
+    "legacySingleFilerEvents": 5,
+    "modernSubjectRoleRows": 6361,
+    "modernFiledByRoleRows": 6361,
+    "legacySingleFilerRoleRows": 5,
+    "secHeadersVerified": 6366,
+    "secOriginalBlobsVerified": 6366,
+    "secOriginalBytesVerified": 25001687,
+    "queueRowsStillUnresolved": 12727,
+    "queueRowsOutcomesAccessedFalse": 12727,
+    "allQueueRowsStillUnresolved": 44352,
+    "allQueueRowsOutcomesAccessedFalse": 44352,
+    "uniqueModernSubjectParties": 3084,
+    "uniqueModernFiledByParties": 8,
+    "uniqueLegacyFilerParties": 5,
+    "boundaryIssuerCikZeroPaddedHeaderExactRows": 12722,
+    "boundaryIssuerNameHeaderExactRows": 12714,
+    "boundaryIssuerNameHeaderMismatchRows": 8,
+    "boundaryExchangeNameHeaderExactRows": 12722,
+    "descriptorPresentRoleRows": 12722,
+    "descriptorUnavailableRoleRows": 5,
+    "totalEvidenceOccurrences": 12739,
+    "distinctEvidenceOccurrenceLocators": 12739,
+    "roleProjectionRowsWithRepeatedEvidenceTextOccurrences": 12,
+    "eventsWithRepeatedEvidenceTextOccurrences": 6,
+    "eventProjectionCountDistribution": {
+      "1": 5,
+      "2": 6361
+    },
+    "roleProjectionFormCounts": {
+      "25": 5,
+      "25-NSE": 12582,
+      "25-NSE/A": 140
+    },
+    "roleProjectionTimingQualifierCounts": {
+      "AT_CLOSE_OF_TRADING_SESSION": 6,
+      "AT_OPEN_OF_TRADING": 12,
+      "DATE_ONLY_TIME_UNSPECIFIED": 12709
+    },
+    "roleProjectionDocumentIndexCounts": {
+      "2": 12727
+    },
+    "roleProjectionEvidenceKindCounts": {
+      "PRIMARY_SEC_FORM25_EXCHANGE_TRADING_SUSPENSION_BOUNDARY_STATEMENT": 12727
+    },
+    "eventRowsCanonicalSha256": "e05b9baa4da226cdde74da6b5326b362476962231beb4019918bcba5466e7cbf",
+    "eventRowSelfSequenceSha256": "b43da9140fe4d32687411e3c7e1218d88fabff32a8457b7ced51d84c9e8903cb"
+  },
+  "eventSchema": [
+    "accession",
+    "eventProvenanceSha256",
+    "sourceBlobSha256",
+    "documentIndex",
+    "evidenceContentSha256",
+    "evidenceOccurrenceSetSha256",
+    "suspensionBoundaryDate",
+    "suspensionTimingQualifier",
+    "secHeaderMode",
+    "boundaryIssuerCikComparisonState",
+    "boundaryIssuerNameComparisonState",
+    "boundaryExchangeNameComparisonState",
+    "roleLinks"
+  ],
+  "roleLinkSchema": [
+    "boundaryId",
+    "queueRowId",
+    "role",
+    "queuePartySha256"
+  ],
+  "semanticContract": {
+    "allowedClaim": "SIX_THOUSAND_THREE_HUNDRED_SIXTY_SIX_EXACT_SEC_FORM25_ACCESSIONS_HAVE_SOURCE_DERIVED_SUSPENSION_EVENT_PROVENANCE_AND_TWELVE_THOUSAND_SEVEN_HUNDRED_TWENTY_SEVEN_EXPLICIT_QUEUE_ROLE_PROJECTIONS",
+    "eventDenominatorIs6366Not12727": true,
+    "projectionDenominatorIs12727": true,
+    "modernRolePairsAre6361": true,
+    "legacySingleFilerEventsAre5": true,
+    "boundaryDescriptorMismatchIsNotIdentityResolution": true,
+    "allRowsRemainCandidateEvidenceOnly": true,
+    "notEvidenceOf": [
+      "PERMANENT_SECURITY_IDENTITY",
+      "HISTORICAL_LISTING_IDENTITY",
+      "COMPLETE_HISTORICAL_INTERVAL",
+      "LAST_CONSOLIDATED_SESSION",
+      "LAST_TRADE_PRICE",
+      "NO_LATER_OTC_TRADING",
+      "DELISTING_COMPLETION",
+      "COMPLETE_CORPORATE_ACTION_CHAIN",
+      "CASH_OR_NONCASH_RECEIPT",
+      "NO_FURTHER_DISTRIBUTION_OR_RECOVERY",
+      "TERMINAL_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT"
+    ]
+  },
+  "claimLocks": {
+    "candidateRowsPromoted": false,
+    "entityIdentityResolved": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "historicalIntervalComplete": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "laterOtcTradingExcluded": false,
+    "delistingCompletionVerified": false,
+    "completeCorporateActionChainVerified": false,
+    "cashReceiptVerified": false,
+    "noncashReceiptVerified": false,
+    "noFurtherDistributionsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "a0d61880f14b7f4abe742a9c58b21e22f16b3641",
+    "baseTag": 888,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-form25-suspension-boundary-role-reconciliation-contract-v1.json",
+    "builderPath": "scripts/build-sec-form25-suspension-boundary-role-reconciliation-v1.py",
+    "testPath": "tests/build-sec-form25-suspension-boundary-role-reconciliation-v1.test.js",
+    "builderNormalizedSha256": "df431793a33f5916ed4c328d71f60f5e87b11589def7cf953699530e5d9a43e9",
+    "testRawSha256": "9d3e1c96392e8bd3e7385c69e3e1d3acab27062cab83929fa6406759ffa10041",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "remoteVerificationRequired": true,
+    "noRemoteVerificationMustFail": true,
+    "writeCapabilityAllowed": false,
+    "publicOutputCreated": false
+  },
+  "contractSha256": "a1f49ecca0f53fe5e5343e77ed5d073b962181ee59dc4856cbdfaa2a3407f68e"
+}
