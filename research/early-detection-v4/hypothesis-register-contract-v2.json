@@ -1,0 +1,291 @@
+{
+  "schema": "early-detection-hypothesis-register-contract/v2",
+  "createdAt": "2026-08-13T02:42:04Z",
+  "taskId": "OUTCOME-BLIND-HYPOTHESIS-REGISTER-PRE2021-V2",
+  "track": "ADDON_PROPOSALS_ONLY",
+  "purpose": "Append-only proposal-only successor to the immutable V1 seed register. It binds one source-feature proposal to exact pre-2021, pre-outcome SEC concept-coverage evidence while granting no execution, protocol, study or Original-V4 credit.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBase": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+    "buildBaseTag": 854,
+    "exactRemoteAtContractBuild": true,
+    "buildBaseMustRemainFirstParentAncestor": true,
+    "interveningLinearCommitsBeforeIntroductionAllowed": true,
+    "introductionPolicy": "FIRST_REMOTE_FIRST_PARENT_DESCENDANT_THAT_ADDS_ALL_THREE_OWNED_PATHS",
+    "introductionCommitAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/hypothesis-register-contract-v2.json",
+      "scripts/verify-hypothesis-register-v2.py",
+      "tests/verify-hypothesis-register-v2.test.js"
+    ]
+  },
+  "priorRegister": {
+    "path": "research/early-detection-v4/hypothesis-register-v1.json",
+    "bytes": 4909,
+    "rawSha256": "3ffb1a62d2467faa1ae79cd1db1e220757259353003b663c45ec1b55a584ddd8",
+    "gitBlob": "5aee79ee0a44e94ba38b5ba3791aac7c17bb4906",
+    "introductionCommit": "59c715f2568a21142a2e1a0cb6d1c6f2e729ffba",
+    "proposalCount": 4,
+    "appendOnly": true,
+    "unchangedAtBuildBase": true,
+    "supersededForNewProposalGenerationOnly": true,
+    "historicalDefinitionsOrStatusesMutated": false,
+    "scientificCredit": "NONE"
+  },
+  "operationalResume": {
+    "resumeV2": {
+      "path": "research/early-detection-v4/continuous-free-source-operational-resume-contract-v2.json",
+      "bytes": 13760,
+      "rawSha256": "084bbfc27e10bbb444c369bb488ddf60d6ed4c1547a2a5c807f700862a70eb5d",
+      "gitBlob": "ab077a35d5612f2693efbb78885073b60469a695",
+      "selfField": "resumeSha256",
+      "selfSha256": "9a24cea57cbc5340e88836399fee297ad186de5fd00c058a3ea206626d8eaa1b",
+      "introductionCommit": "2d0b8ee0e1cf3d9fea6489d529b8bf85774bcfb9"
+    },
+    "harnessV3": {
+      "introductionCommit": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+      "introductionTag": 854,
+      "requiredProviderPhase": "POST_INTRODUCTION",
+      "contract": {
+        "path": "research/early-detection-v4/continuous-free-source-operational-resume-harness-contract-v3.json",
+        "bytes": 4167,
+        "rawSha256": "84fc2a7aec9603193764104742735c36fe0da77be3b477411de6a50199ae4a5e",
+        "gitBlob": "55df901b8d4f520542afe6df12cd09f920a0e62e",
+        "selfField": "contractSha256",
+        "selfSha256": "751fff7a32bede74696c011380e8f56b0525d14f778b7df37b7b4835b88a06c8"
+      },
+      "verifier": {
+        "path": "scripts/verify-continuous-free-source-operational-resume-harness-v3.py",
+        "bytes": 15888,
+        "rawSha256": "e434800b72800f400caf8d887bc8b01153e051f9ab034e8647871796d56e0069",
+        "gitBlob": "c53288becb38a04048de2c6ddf17872ed9100679"
+      },
+      "test": {
+        "path": "tests/verify-continuous-free-source-operational-resume-harness-v3.test.js",
+        "bytes": 3994,
+        "rawSha256": "88a5471cf2fabd63672023e9c2ed71628e37671ade616e8286f8810cc2d8472e",
+        "gitBlob": "ee41afb3a6ba0b2014f15e5fa74f156c21e49932"
+      }
+    }
+  },
+  "generationBoundary": {
+    "maximumObservedDate": "2020-12-31",
+    "reservedPeriod": "2021-01-01/2024-12-31",
+    "reservedPeriodOpenedForIdeaGeneration": false,
+    "onlyHashBoundPreOutcomeSourceFeaturesAllowed": true,
+    "completedSecCikStudyMayBeUsedForGeneration": false,
+    "completedSecCikThresholdReuseAllowed": false,
+    "originalV4MayBeUsedForGeneration": false,
+    "hLateMayBeUsedForGeneration": false,
+    "hFemMayBeUsedForGeneration": false,
+    "pricesOrReturnsMayBeUsedForGeneration": false,
+    "outcomesAccessed": false
+  },
+  "evidenceSources": [
+    {
+      "sourceId": "SEC_CONCEPT_COVERAGE_2009_2020_PREOUTCOME",
+      "authority": "SEC_FINANCIAL_STATEMENT_DATA_SETS_PRIMARY_DERIVED_COVERAGE",
+      "path": "reports/early-detection/sec-concept-coverage-2009-2020.json",
+      "bytes": 390685,
+      "rawSha256": "f68ac0d467e3b21d93141715b58f3edf3123c25902a0bccf7ecc2dc0c0f9ec38",
+      "gitBlob": "1914cbbcd3d2f8255afa39ed395448b3767fc89d",
+      "introductionCommit": "ffefb06a41e7b61547f334c3a4bbb2fa07a3fcd4",
+      "schema": "early-detection-concept-audit/v2",
+      "verdict": "COVERAGE_PASS_MAP_FROZEN_PERIOD_EXTENSION_PENDING",
+      "reportSelfField": "reportSha256",
+      "reportSelfSha256": "2e2e4fefb5e1949b66e6275ea7e1039e1847126ac562bbe779db798229b464d6",
+      "payloadManifestSha256": "e77144099fa209a2173f6c8765c456062ed78b16ee4a79bee80e4ba511c3a2aa",
+      "payloads": 95,
+      "quarterCount": 48,
+      "firstQuarter": "2009q1",
+      "lastQuarter": "2020q4",
+      "maximumObservedDate": "2020-12-31",
+      "preOutcomeBinding": {
+        "field": "limitations[2]",
+        "exactStatement": "The map is frozen before growth-outcome materialization; full 2009-2024 coverage and an independent semantic audit remain gates."
+      },
+      "allowedGenerationFields": [
+        "schema",
+        "verdict",
+        "scope.payloads",
+        "scope.quarters",
+        "roles.*.candidates.*.taxonomyVersion",
+        "roles.*.candidates.*.periodKind",
+        "roles.*.candidates.*.distinctAccessions",
+        "roles.*.candidates.*.distinctEntities",
+        "roles.*.candidates.*.firstAcceptedEpoch",
+        "roles.*.candidates.*.lastAcceptedEpoch",
+        "limitations"
+      ],
+      "directProposalUseAllowed": true,
+      "outcomesAccessed": false,
+      "pricesAccessed": false,
+      "returnsAccessed": false
+    }
+  ],
+  "proposalContract": {
+    "proposalExactFields": [
+      "hypothesisId",
+      "familyId",
+      "mechanism",
+      "primaryClaim",
+      "requiredDataCategories",
+      "expectedDirection",
+      "conceptualFalsification",
+      "developmentWindow",
+      "validationWindow",
+      "multiplicityFamilyId",
+      "generationProvenance",
+      "deferredToSeparateProtocol",
+      "forbiddenClaims",
+      "proposalSha256"
+    ],
+    "statusStoredInsideProposal": false,
+    "statusStorage": "APPEND_ONLY_HASH_CHAIN_EVENTS_ONLY",
+    "allowedStatuses": ["PROPOSAL", "PREREGISTERED", "TESTED", "REJECTED"],
+    "seedAllowedEventTypes": ["PROPOSAL_CREATED"],
+    "seedDerivedStatus": "PROPOSAL",
+    "laterStatusChangeRequiresNewRegisterVersion": true,
+    "preregisteredRequiresEarlierSeparateRemoteProtocolSeal": true,
+    "directProposalToTestedForbidden": true,
+    "fullProtocolFieldsDeferred": [
+      "TARGET_POPULATION",
+      "EXPOSURE_DEFINITION",
+      "ENDPOINT_DEFINITION",
+      "ESTIMAND",
+      "EXCLUSIONS",
+      "MISSINGNESS_RULE",
+      "DENOMINATOR",
+      "NUMERIC_THRESHOLDS",
+      "CONFIDENCE_INTERVALS",
+      "MULTIPLICITY_RULE",
+      "VERDICT_RULE"
+    ]
+  },
+  "proposals": [
+    {
+      "hypothesisId": "HYP-SEC-CONCEPT-MAP-MISSINGNESS-001",
+      "familyId": "SOURCE_CONCEPT_ASCERTAINMENT",
+      "mechanism": "Taxonomy migrations and duration-versus-instant fact structures can create non-random differences in whether a frozen reporting role is represented in SEC filing metadata.",
+      "primaryClaim": "Within a separately sealed pre-2021 SEC source-quality study, concept-role ascertainment is heterogeneous across taxonomy vintages and period kinds.",
+      "requiredDataCategories": [
+        "SEC_FSD_CONCEPT_ROLE",
+        "TAXONOMY_VERSION",
+        "PERIOD_KIND",
+        "ACCEPTED_AT"
+      ],
+      "expectedDirection": "HETEROGENEOUS",
+      "conceptualFalsification": "A later separately sealed protocol finds no practically relevant heterogeneity across its preregistered taxonomy-vintage and period-kind contrasts.",
+      "developmentWindow": "2009Q1/2016Q4",
+      "validationWindow": "2017Q1/2020Q4",
+      "multiplicityFamilyId": "PUBLIC_SOURCE_MISSINGNESS_V2",
+      "generationProvenance": {
+        "sourceIds": ["SEC_CONCEPT_COVERAGE_2009_2020_PREOUTCOME"],
+        "originClass": "THEORY_AND_SOURCE_FEATURES_ONLY",
+        "selector": "EXACT_BOUND_REPORT_ONLY_AND_SCOPE_QUARTERS_END_2020Q4",
+        "maximumObservedDate": "2020-12-31",
+        "inspectedFields": [
+          "schema",
+          "verdict",
+          "scope.payloads",
+          "scope.quarters",
+          "roles.*.candidates.*.taxonomyVersion",
+          "roles.*.candidates.*.periodKind",
+          "roles.*.candidates.*.distinctAccessions",
+          "roles.*.candidates.*.distinctEntities",
+          "roles.*.candidates.*.firstAcceptedEpoch",
+          "roles.*.candidates.*.lastAcceptedEpoch",
+          "limitations"
+        ],
+        "sourceFeatureReceipt": {
+          "sourceRawSha256": "f68ac0d467e3b21d93141715b58f3edf3123c25902a0bccf7ecc2dc0c0f9ec38",
+          "quarterCount": 48,
+          "firstQuarter": "2009q1",
+          "lastQuarter": "2020q4",
+          "maximumObservedDate": "2020-12-31",
+          "preOutcomeStatement": "The map is frozen before growth-outcome materialization; full 2009-2024 coverage and an independent semantic audit remain gates."
+        },
+        "sourceFeatureReceiptSha256": "3a4d54094ee1aadbfc56a38d94b8d0317a03642a3cca1e9c99757d4522cdcea3",
+        "outcomesAccessed": false,
+        "pricesAccessed": false,
+        "returnsAccessed": false
+      },
+      "deferredToSeparateProtocol": [
+        "TARGET_POPULATION",
+        "EXPOSURE_DEFINITION",
+        "ENDPOINT_DEFINITION",
+        "ESTIMAND",
+        "EXCLUSIONS",
+        "MISSINGNESS_RULE",
+        "DENOMINATOR",
+        "NUMERIC_THRESHOLDS",
+        "CONFIDENCE_INTERVALS",
+        "MULTIPLICITY_RULE",
+        "VERDICT_RULE"
+      ],
+      "forbiddenClaims": [
+        "STOCK_RETURN",
+        "FULL_MARKET",
+        "ORIGINAL_V4",
+        "H_LATE",
+        "H_FEM",
+        "SEC_CIK_COMPLETED_STUDY",
+        "CAUSALITY"
+      ],
+      "proposalSha256": "37880718bb520503e88b2c49fff46b6e8856f5edfbfc670a283c0d0103d96736"
+    }
+  ],
+  "events": [
+    {
+      "schema": "early-detection-hypothesis-register-event/v2",
+      "sequence": 1,
+      "eventId": "HYP-V2-EVENT-0001",
+      "createdAt": "2026-08-13T02:42:04Z",
+      "hypothesisId": "HYP-SEC-CONCEPT-MAP-MISSINGNESS-001",
+      "eventType": "PROPOSAL_CREATED",
+      "previousEventSha256": null,
+      "proposalSha256": "37880718bb520503e88b2c49fff46b6e8856f5edfbfc670a283c0d0103d96736",
+      "statusAfter": "PROPOSAL",
+      "protocolBinding": null,
+      "eventSha256": "bf9eac031d47768ee8db3dc16ec2cc54412b4c8ea349278f1beb44ec364ed20e"
+    }
+  ],
+  "scientificLocks": {
+    "proposalExecutionAuthorized": false,
+    "resultComputationAllowed": false,
+    "studyCredit": "NONE",
+    "originalV4GateCredit": false,
+    "originalV4Complete": false,
+    "publicAiAppendOnly": true,
+    "secCikStudyAppendOnly": true,
+    "completedSecCikStudyAccessedForGeneration": false,
+    "reserved2021To2024OpenedForGeneration": false,
+    "hLateAccessed": false,
+    "hFemAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "humanAttestation": false,
+    "separateProtocolRequiredBeforePreregistration": true,
+    "fullPopulationEndpointEstimandSpecified": false
+  },
+  "ownedBindings": {
+    "contract": {
+      "path": "research/early-detection-v4/hypothesis-register-contract-v2.json",
+      "binding": "EXACT_RAW_AND_CANONICAL_SELF"
+    },
+    "verifier": {
+      "path": "scripts/verify-hypothesis-register-v2.py",
+      "binding": "NORMALIZED_RAW_SHA256",
+      "normalization": "ONLY_FOUR_EXPECTED_HASH_CONSTANT_VALUES_ZEROED",
+      "normalizedRawSha256": "078af73a3778e538715ff2077bb24eaa230eca5ae22d97031121bb75b098bdd4"
+    },
+    "test": {
+      "path": "tests/verify-hypothesis-register-v2.test.js",
+      "binding": "EXACT_RAW_SHA256",
+      "rawSha256": "1ef3f62ece8de2e26b422b1e7febad20e4afbe46eb9c079fe821fc37994375b8"
+    }
+  },
+  "contractSha256": "199164de8a6251409b671c669c44acc1bf2577d95f534ff7bebb4b961006e4a2"
+}
