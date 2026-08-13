@@ -1,0 +1,94 @@
+{
+  "schema": "early-detection-nasdaq-symbol-directory-monthly-gap-matrix-output-seal-contract/v2",
+  "createdAt": "2026-08-13T03:04:00Z",
+  "taskId": "Q005-NASDAQ-SPARSE-COVERAGE-GAP-MATRIX-SEAL-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only bind the existing 2009-2024 Nasdaq monthly gap matrix, its exact source rebuild implementation and remote Git lineage without granting identity, universe, interval, price, terminal or Original-V4 credit.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumAncestor": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+    "minimumAncestorTag": 854,
+    "futureIntroductionMustDescendLinearly": true,
+    "futureIntroductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/nasdaq-symbol-directory-monthly-gap-matrix-output-seal-contract-v2.json",
+      "scripts/verify-nasdaq-symbol-directory-monthly-gap-matrix-output-seal-v2.py",
+      "tests/verify-nasdaq-symbol-directory-monthly-gap-matrix-output-seal-v2.test.js"
+    ]
+  },
+  "bindings": {
+    "contractV1": {
+      "path": "research/early-detection-v4/nasdaq-symbol-directory-monthly-gap-matrix-contract-v1.json",
+      "bytes": 2116,
+      "rawSha256": "cc499b7cbaa9b585ba4fff6510623c2a6898360e16386edcf8546023fc62103e",
+      "selfField": "contractSha256",
+      "selfSha256": "70d1c5b7c2c8f8343241f22a4722863538187fdf0ff2e5290947846a967d3a69",
+      "introductionCommit": "df5196c63ed8d2de2a518901ddb202dbcca94f06"
+    },
+    "builderV1": {
+      "path": "scripts/build-nasdaq-symbol-directory-monthly-gap-matrix-v1.py",
+      "bytes": 14486,
+      "rawSha256": "b5b6bea5823a05ef83cb7ca65fd0112bf04e88ff068837564e75101f807899ad",
+      "introductionCommit": "df5196c63ed8d2de2a518901ddb202dbcca94f06"
+    },
+    "testV1": {
+      "path": "tests/build-nasdaq-symbol-directory-monthly-gap-matrix-v1.test.js",
+      "bytes": 2138,
+      "rawSha256": "a5682db3c8e12792f19f3ed0206c6acdf918e41a91e482bde14677ad28258161",
+      "introductionCommit": "df5196c63ed8d2de2a518901ddb202dbcca94f06"
+    },
+    "outputV1": {
+      "path": "reports/early-detection/nasdaq-symbol-directory-monthly-gap-matrix-v1.json",
+      "bytes": 163368,
+      "rawSha256": "20ea9b54826e1ec2fee6ee3cdfe636b758c195e3f610190bc30ff7e21d7f0ec7",
+      "selfField": "reportSha256",
+      "selfSha256": "3703a9403a3cc4ca911318ae32d4f004323306f7fe67ae8a21a73a4192cb5f16",
+      "introductionCommit": "b5192c79f3318f3e51ae629c6f150541a6fce5a6"
+    },
+    "inputArchive": {
+      "path": "reports/early-detection/nasdaq-symbol-directory-wayback-snapshots-2009-2024-v2.json",
+      "rawSha256": "c653dd26a12e2c5adb149f2035c22c293b595b576d7a02bd04a6f31aa2a080fd",
+      "selfField": "reportSha256",
+      "selfSha256": "34584a6206d7b2035dd463692ba605dd7d6e7dd4ce8c6f44850bcf7bad2dfb23",
+      "introductionCommit": "d3e540c642066b69a1618be986948c05fcbc9764"
+    }
+  },
+  "expectedPopulation": {
+    "periodStart": "2009-01",
+    "periodEnd": "2024-12",
+    "months": 192,
+    "cells": 384,
+    "snapshots": 103,
+    "observations": 434214,
+    "monthsWithAnySnapshot": 68,
+    "monthsWithBothKinds": 28,
+    "monthsWithNoSnapshot": 124,
+    "byCellState": {
+      "MISSING_ARCHIVE_SNAPSHOT": 288,
+      "MULTIPLE_ARCHIVE_SNAPSHOTS": 7,
+      "ONE_ARCHIVE_SNAPSHOT": 89
+    }
+  },
+  "requiredClaims": {
+    "sourceRebuildNormal": true,
+    "sourceRebuildOptimized": true,
+    "remoteBytesVerified": true,
+    "missingSnapshotIsNotAbsenceEvidence": true,
+    "positivePresenceOnly": true
+  },
+  "claimLocks": {
+    "historicalUniverseComplete": false,
+    "historicalIdentityResolved": false,
+    "continuousPresenceProven": false,
+    "firstTradingDateProven": false,
+    "lastTradingDateProven": false,
+    "terminalPaymentVerified": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "resultComputationAllowed": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "2a971e62567008c099785d9fbc73aa960aa6a044ae4237ab76c640f4546d2c16"
+}
