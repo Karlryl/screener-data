@@ -1,0 +1,92 @@
+{
+  "schema": "sec-form345-issuer-symbol-point-gzip-promotion-contract/v1",
+  "createdAt": "2026-08-13T00:57:53Z",
+  "taskId": "Q005-SEC-FORM345-ISSUER-SYMBOL-POINT-V3-GZIP-PROMOTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Losslessly promote the oversized Form345 V3 public evidence payload as a deterministic gzip while retaining the raw JSON outside Git and requiring source-derived full rebuilds in normal and optimized Python modes.",
+  "remoteBinding": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "parentRemoteCommit": "34d7b2be658c95666b6f31be8bdc4cfd2f580875",
+    "parentTag": 844,
+    "promotionDirectChildRequired": true,
+    "linearSingleParentHistoryRequired": true,
+    "maximumPromotionBlobBytesExclusive": 100000000
+  },
+  "authorizedPaths": {
+    "contract": "research/early-detection-v4/sec-form345-issuer-symbol-point-v3-gzip-promotion-contract-v1.json",
+    "manifest": "reports/early-detection/sec-form345-issuer-symbol-point-v3-gzip-manifest.json",
+    "gzip": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json.gz",
+    "verifier": "scripts/verify-sec-form345-issuer-symbol-point-v3-gzip.py",
+    "test": "tests/verify-sec-form345-issuer-symbol-point-v3-gzip.test.js",
+    "rawJsonLocalOnly": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json"
+  },
+  "sourceBuildBinding": {
+    "introductionCommit": "ab6944a9d79fd3e54a7a881c0be866bcb963c81f",
+    "introductionParent": "c07279bdabf4e4b7f70b0aae7c32ab5da2c1c1f5",
+    "contract": {
+      "path": "research/early-detection-v4/sec-form345-issuer-symbol-point-contract-v3.json",
+      "rawSha256": "fe3ab39b615bd78da92acc3da64575dbb3b66103adccdd9ad9460b2a7631df50",
+      "selfSha256": "f4f14ca6c91a06d989e0681d070224d0cb33a2bf929065ce3c37367ce5c1f38f",
+      "gitBlob": "e1e30eb9d0ba1a8fcfd55743743458a48d2ff484"
+    },
+    "builder": {
+      "path": "scripts/build-sec-form345-issuer-symbol-point-v3.py",
+      "rawSha256": "12466af13e1960275deda4a9f879cdace4e41f7bc3b5a1e13726b2e477d714a7",
+      "gitBlob": "ffa0a2e15e58af7fba90c18494df135fffb810ef"
+    },
+    "test": {
+      "path": "tests/build-sec-form345-issuer-symbol-point-v3.test.js",
+      "rawSha256": "a5fa1c517bc21757ba0e2395571051939d08aeb2c184ccdb3abbf5a9023ae26b",
+      "gitBlob": "0fec91ed6734043969b7f9357b923c152bda188b"
+    }
+  },
+  "decompressed": {
+    "logicalPath": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json",
+    "bytes": 138658140,
+    "rawSha256": "81e748f609cbf8e73de2f5ea91166ce178c71c1df4fa0398ab9821f30459e0f4",
+    "reportSha256": "b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3",
+    "mustRemainOutsidePromotionCommit": true
+  },
+  "gzip": {
+    "path": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json.gz",
+    "bytes": 10805035,
+    "rawSha256": "fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7c97f484",
+    "method": "GZIP_LEVEL_9_MTIME_0_EMPTY_FILENAME"
+  },
+  "requiredCounts": {
+    "rows": 656,
+    "sourceAllRows": 3352003,
+    "sourceTargetPoints": 164675,
+    "issuerNameMissingAllRows": 1188,
+    "issuerNameMissingTargetPoints": 23,
+    "issuerNamePresentAllRows": 3350815,
+    "issuerNamePresentTargetPoints": 164652
+  },
+  "verificationPolicy": {
+    "gzipMustRebuildByteIdentically": true,
+    "decompressedRawAndSelfHashRequired": true,
+    "sourceDerivedFullRebuildNormalRequired": true,
+    "sourceDerivedFullRebuildOptimizedRequired": true,
+    "claimLocksMustRemainFalse": true,
+    "promotionCommitMustAddExactlyFiveAuthorizedPaths": true,
+    "rawJsonMayBeReadButNotCommittedOrMutated": true,
+    "outcomesMayBeAccessed": false
+  },
+  "claimLocks": {
+    "historicalIdentityIntervalsComplete": false,
+    "humanAttestation": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "permanentSecurityIdentityResolved": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionProven": false,
+    "terminalWealthComplete": false,
+    "tickerReuseResolved": false
+  },
+  "contractSha256": "b17b5f6bfe877aa312a0ad9f73b00db9609706b59b0c121e534ed8c4d8ce9e8b"
+}

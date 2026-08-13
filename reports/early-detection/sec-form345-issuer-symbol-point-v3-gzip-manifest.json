@@ -1,0 +1,58 @@
+{
+  "schema": "sec-form345-issuer-symbol-point-gzip-manifest/v1",
+  "createdAt": "2026-08-13T00:57:53Z",
+  "taskId": "Q005-SEC-FORM345-ISSUER-SYMBOL-POINT-V3-GZIP-PROMOTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "parentRemoteCommit": "34d7b2be658c95666b6f31be8bdc4cfd2f580875",
+  "remote": "https://github.com/Karlryl/screener-data.git",
+  "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+  "contract": {
+    "path": "research/early-detection-v4/sec-form345-issuer-symbol-point-v3-gzip-promotion-contract-v1.json",
+    "rawSha256": "2500eda2dd7b7245b2a75ec91146d54873b9c818eb8017b2a8dfe98364472d11",
+    "selfSha256": "b17b5f6bfe877aa312a0ad9f73b00db9609706b59b0c121e534ed8c4d8ce9e8b"
+  },
+  "gzip": {
+    "path": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json.gz",
+    "bytes": 10805035,
+    "rawSha256": "fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7c97f484",
+    "method": "GZIP_LEVEL_9_MTIME_0_EMPTY_FILENAME"
+  },
+  "decompressed": {
+    "logicalPath": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json",
+    "bytes": 138658140,
+    "rawSha256": "81e748f609cbf8e73de2f5ea91166ce178c71c1df4fa0398ab9821f30459e0f4",
+    "reportSha256": "b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3"
+  },
+  "sourceBuild": {
+    "introductionCommit": "ab6944a9d79fd3e54a7a881c0be866bcb963c81f",
+    "contractRawSha256": "fe3ab39b615bd78da92acc3da64575dbb3b66103adccdd9ad9460b2a7631df50",
+    "contractSelfSha256": "f4f14ca6c91a06d989e0681d070224d0cb33a2bf929065ce3c37367ce5c1f38f",
+    "builderRawSha256": "12466af13e1960275deda4a9f879cdace4e41f7bc3b5a1e13726b2e477d714a7",
+    "testRawSha256": "a5fa1c517bc21757ba0e2395571051939d08aeb2c184ccdb3abbf5a9023ae26b"
+  },
+  "counts": {
+    "rows": 656,
+    "sourceAllRows": 3352003,
+    "sourceTargetPoints": 164675,
+    "issuerNameMissingAllRows": 1188,
+    "issuerNameMissingTargetPoints": 23,
+    "issuerNamePresentAllRows": 3350815,
+    "issuerNamePresentTargetPoints": 164652
+  },
+  "claimLocks": {
+    "historicalIdentityIntervalsComplete": false,
+    "humanAttestation": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "permanentSecurityIdentityResolved": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionProven": false,
+    "terminalWealthComplete": false,
+    "tickerReuseResolved": false
+  },
+  "manifestSha256": "afa872b29cda54493cca8d5a0b69272a42942f3b5aa4b91bc50ceec517cc59ce"
+}
