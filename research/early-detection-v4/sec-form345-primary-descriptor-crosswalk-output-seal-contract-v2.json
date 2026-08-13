@@ -1,0 +1,153 @@
+{
+  "schema": "early-detection-sec-form345-primary-descriptor-crosswalk-output-seal-contract/v2",
+  "createdAt": "2026-08-13T03:01:16Z",
+  "taskId": "Q005-SEC-FORM345-PRIMARY-DESCRIPTOR-CROSSWALK-OUTPUT-SEAL-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only seal the exact 656-row SEC Form-345/primary-descriptor candidate crosswalk, its implementation and its complete source-derived rebuild without extending its candidate-only ceiling or granting resolution, historical identity, listing, security, ticker-reuse, terminal, outcome or Original-V4 credit.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumAncestor": "5622b794b0a435c5389707a6777161a33f8a79f7",
+    "minimumAncestorTag": 861,
+    "futureSealIntroductionMayFollowUnrelatedLinearCommits": true,
+    "futureSealIntroductionDirectChildOfMinimumAncestorRequired": false,
+    "historyFromMinimumAncestorThroughCurrentHeadMustBeLinearSingleParent": true,
+    "futureSealIntroductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/sec-form345-primary-descriptor-crosswalk-output-seal-contract-v2.json",
+      "scripts/verify-sec-form345-primary-descriptor-crosswalk-output-v2.py",
+      "tests/verify-sec-form345-primary-descriptor-crosswalk-output-v2.test.js"
+    ]
+  },
+  "lineage": {
+    "implementation": {
+      "commit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+      "parent": "912ed611aae9081c528cb8e39f8017a290fd4258",
+      "tag": 860,
+      "singleParentRequired": true,
+      "addsExactlyImplementationThreePaths": true
+    },
+    "output": {
+      "commit": "5622b794b0a435c5389707a6777161a33f8a79f7",
+      "parent": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+      "tag": 861,
+      "singleParentRequired": true,
+      "addsExactlyOutputPath": true
+    }
+  },
+  "implementation": {
+    "contract": {
+      "path": "research/early-detection-v4/sec-form345-primary-descriptor-crosswalk-contract-v1.json",
+      "bytes": 11098,
+      "rawSha256": "2c866f99e723e8faf72750eb99f695864a38199a415bbb2c738d11fd0cf7dc33",
+      "selfField": "contractSha256",
+      "selfSha256": "e142799d16e7d0764792486627740c3dd224a3d46b154678e6b75941bdf80cdb",
+      "gitBlob": "77fda35a3a6e09c24c58d1789dfb1c2d02e18a9c",
+      "introductionCommit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b"
+    },
+    "builder": {
+      "path": "scripts/build-sec-form345-primary-descriptor-crosswalk-v1.py",
+      "bytes": 44857,
+      "rawSha256": "3284504bb527ccb3fe5dbce6233daf3d609048a6019a8de27abc9ebb32ef8b49",
+      "gitBlob": "e41faed4211d9ef453b111e21577d53b1896cde0",
+      "introductionCommit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b"
+    },
+    "test": {
+      "path": "tests/build-sec-form345-primary-descriptor-crosswalk-v1.test.js",
+      "bytes": 9469,
+      "rawSha256": "1eb07379b91d7dc734352b79c8f3117174eb6790779868d82bd43b8789586172",
+      "gitBlob": "ab57cc262597e7a83d4cd3f0b39ddf3e51ce4d8d",
+      "introductionCommit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b"
+    },
+    "output": {
+      "path": "reports/early-detection/sec-form345-primary-descriptor-crosswalk-v1.json",
+      "bytes": 10359039,
+      "rawSha256": "041383521506c7315078954824cabb2f11f46c4135ce83e80cf22621ae811ed5",
+      "selfField": "reportSha256",
+      "selfSha256": "b22597d08c176388973cfc3a9547d51344090ad8f35d0ca831b7ef06615a8dc1",
+      "gitBlob": "70fe57fa30600b5cd4268574361db5552432b204",
+      "introductionCommit": "5622b794b0a435c5389707a6777161a33f8a79f7"
+    }
+  },
+  "expectedPopulation": {
+    "rows": 656,
+    "uniqueAccessions": 652,
+    "uniqueIssuerCiks": 607,
+    "sourceLaneCounts": {
+      "FORM15_V2": 65,
+      "FORM25_V2": 591
+    },
+    "pointStatusCounts": {
+      "CONFLICTING_LATEST_LITERALS": 2,
+      "NO_PRIOR_POINT": 62,
+      "ONE_LATEST_LITERAL": 592
+    },
+    "archiveComparisonCounts": {
+      "EXACT_LITERAL_MATCH": 157,
+      "EXACT_LITERAL_MISMATCH": 13,
+      "NO_COMPARABLE_CANDIDATE": 486
+    },
+    "gapClassCounts": {
+      "GAP_NO_ARCHIVE_SNAPSHOT": 452,
+      "GAP_PRIOR_SNAPSHOT_ISSUER_ABSENT": 19,
+      "GAP_PRIOR_SNAPSHOT_MULTIPLE_TICKERS": 42,
+      "GAP_SINGLE_POINT_TICKER_NEEDS_INTERVAL_AND_CORROBORATION": 143
+    },
+    "latestPointAgeDaysCounts": {
+      "EXACT_EVENT_DAY": 194,
+      "DAYS_1_TO_7": 142,
+      "DAYS_8_TO_30": 103,
+      "DAYS_31_TO_90": 74,
+      "DAYS_91_TO_365": 57,
+      "OVER_365_DAYS": 24,
+      "NO_PRIOR_POINT": 62
+    },
+    "rowsWithMultiplePreEventRawLiterals": 140,
+    "latestEvidenceRows": 4226,
+    "workItemObservationReferences": 181080,
+    "priorObservationReferences": 163764,
+    "futureObservationReferences": 17316,
+    "priorUsableObservationReferences": 163562,
+    "futureUsableObservationReferences": 17313,
+    "priorPlaceholderObservationReferences": 202,
+    "futurePlaceholderObservationReferences": 3,
+    "rawLiteralsReusedAcrossTargetCiks": 15,
+    "reusedRawLiteralsWithOverlappingObservedDateSpans": 5,
+    "resolvedRows": 0
+  },
+  "requiredClaims": {
+    "sourceDerivedFullRebuild": true,
+    "sourceRebuildNormal": true,
+    "sourceRebuildOptimized": true,
+    "sourceRebuildByteExact": true,
+    "rowSelfHashesVerified": true,
+    "rawLiteralsRemainUnsplitAndUnnormalized": true,
+    "futurePointsRemainCountOnly": true,
+    "historicalPublicKnownAtRemainsNull": true,
+    "remoteBytesVerified": true,
+    "resolutionCredit": false
+  },
+  "claimLocks": {
+    "corporateActionChainComplete": false,
+    "historicalIdentityIntervalComplete": false,
+    "historicalIdentityResolved": false,
+    "historicalPublicKnownAtEstablished": false,
+    "humanAttestation": false,
+    "independentSourceCorroborationEstablished": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "permanentSecurityIdentityResolved": false,
+    "pricesAccessed": false,
+    "resolutionCreditGranted": false,
+    "returnsAccessed": false,
+    "securityIdentityResolved": false,
+    "shareClassMappingResolved": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionProven": false,
+    "terminalWealthComplete": false,
+    "tickerReuseResolved": false
+  },
+  "contractSha256": "8efedf9455bca90c5716ab56c44b1db6b9b5d005b98b27703f323435f90af520"
+}
