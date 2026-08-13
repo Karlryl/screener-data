@@ -1,0 +1,93 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v16",
+  "createdAt": "2026-08-13T07:07:34Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tags868-877 as exact no-credit operational milestones, preserve the byte-exact V14 event history and release Q003 scheduling only after deterministic replay and exact remote introduction.",
+  "contractSelfSha256": "08b4f18b1f13cd878c2082c6aa41359bbb99d47e1f03dcfeb7a74b61867a46c7",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "c57a00e29c5bfbcd7be8496bd5bee64bdf1b676f",
+    "buildBaseTag": 877,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v16.json",
+      "scripts/early-detection-continuous-free-source-v16.py",
+      "state/early-detection-free-source-events-v16.jsonl",
+      "state/early-detection-free-source-state-v16.json",
+      "tests/early-detection-continuous-free-source-v16.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "v14Contract": "d4f5d53fb42edc192cf614b3910476b53140bf7432edb2225aa2e6584d966eff",
+      "v14Controller": "7246fbed69f43331dd35025fd63a8901ded48a228ea5eda4d074d8f14ddadcb1",
+      "v14ControllerTest": "16be93880b36089fcb27efec96afe3d65d1bc4096e5ca3f5c4ecb850a186edd0",
+      "v14EventLog": "cd3d11e0703e8a245f4571cff36f954a43fa9c21a60d0eb2bcd6340a9c7d590d",
+      "v14State": "3c85155f06a0f56fba47fb4b664ce622dd35867566353ca05ef0c88e29de9b11",
+      "v15Contract": "db39ed1fa5641b5eb57879975faa5dfff57dcfa691d9dfde1a5ce23033754372",
+      "v15Controller": "835ca27bc1db1ab7b61a8674affda918e2892259e7d9c068ab8ae81c7ae1174b",
+      "v15ControllerTest": "f39fae00328a8e082a67360902617c31dc91e2a5e1e9ab35930ce2b249a6af19"
+    },
+    "inputBundleSha256": "249312d2e0ce92022b75c449edce427173d854f9e1605c4d7691788e4cdac3c8",
+    "inputBundleRecomputedFromBaseRawHashesAndMilestoneDeltas": true,
+    "v14EventLogMustBeByteExactPrefix": true,
+    "v15ControllerMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBindings": [
+    {"tag":868,"commit":"394b3b6bd43a20306286cf766fa6f3aaf69cc6ca","parent":"eca62f4260e940eff70ab8f17ada26c1fd57ab48","subject":"Tag 868: Liquidationszahlungen eng versiegeln","workstream":"Q003_LIQUIDATION_PAYMENT_EVIDENCE_CONTRACT","artifactCount":3,"deltaSha256":"ca3c2ee1ed38155f8b7d66fc3f2ad6b7c5098cbddb19f5ba851f8ae285e89d9c","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":869,"commit":"b7bda025a01924bab82c252ea33a399ad0cdf966","parent":"394b3b6bd43a20306286cf766fa6f3aaf69cc6ca","subject":"Tag 869: Controller-Lineage ueber Folgetags erhalten","workstream":"CONTROLLER_LINEAGE_V15","artifactCount":3,"deltaSha256":"662f5daceec8accf3d4167588357a2be49066cc40cb5479a23a8348b6dfdddd8","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":870,"commit":"c14000778ee1b98405eb81c8b36930eb869dc3b1","parent":"b7bda025a01924bab82c252ea33a399ad0cdf966","subject":"Tag 870: Liquidationsbericht write-new absichern","workstream":"Q003_LIQUIDATION_PAYMENT_OUTPUT_CONTRACT","artifactCount":3,"deltaSha256":"1f356b22219b7cae75b0705fbd17a94eb8019e560817a36dd530cd8ed3450997","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":871,"commit":"623baf8d15f884ec791de96090da43a9c5f29ba4","parent":"c14000778ee1b98405eb81c8b36930eb869dc3b1","subject":"Tag 871: Liquidationszahlungsbelege materialisieren","workstream":"Q003_LIQUIDATION_PAYMENT_OUTPUT","artifactCount":1,"deltaSha256":"b8fbde546bb8f0347022a92c40ed28e1467cdd8e4a436ec04fa1eb47cf6221b3","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":872,"commit":"de137118554621bbfb2556c69e226ef14ec110a8","parent":"623baf8d15f884ec791de96090da43a9c5f29ba4","subject":"Tag 872: Liquidationsbericht dauerhaft verifizieren","workstream":"Q003_LIQUIDATION_PAYMENT_OUTPUT_SEAL","artifactCount":3,"deltaSha256":"1c36a6b11be70ab6a9971a61788e30ff0209f2dabf2219c9fec1df8fcc3a727f","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":873,"commit":"cb95704a6d989e6595908056c1b4e5d686cc519d","parent":"de137118554621bbfb2556c69e226ef14ec110a8","subject":"Tag 873: Form-25-Suspendierungsgrenzen versiegeln","workstream":"Q003_Q005_SUSPENSION_BOUNDARY_V1_SUPERSEDED","artifactCount":3,"deltaSha256":"d753c6547bef8a6eaa9b426c316dd780092d4113e950406ecabbb86614c36432","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":874,"commit":"a9c1e4b6732e693cecb1bb811e39177ee9707c46","parent":"cb95704a6d989e6595908056c1b4e5d686cc519d","subject":"Tag 874: Form-25-Aussetzungsgrenze V2 versiegeln","workstream":"Q003_Q005_SUSPENSION_BOUNDARY_V2_CONTRACT","artifactCount":3,"deltaSha256":"c04589b5ef556455d610a7b749d692fa3db522ae36332a49d3c53f74c3f4e6b9","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":875,"commit":"609f37df9e9c277323c5c8e24d6accfa3d1f3ea7","parent":"a9c1e4b6732e693cecb1bb811e39177ee9707c46","subject":"Tag 875: Form-25-Aussetzungsgrenzen materialisieren","workstream":"Q003_Q005_SUSPENSION_BOUNDARY_V2_OUTPUT","artifactCount":1,"deltaSha256":"f214aae16aea4fbadc44d58e856a6eff5b908ea22ae42cbc1f5c04b7c61b45fe","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":876,"commit":"cc99700b90290c3fd56f7a5b92cf767d281bf585","parent":"609f37df9e9c277323c5c8e24d6accfa3d1f3ea7","subject":"Tag 876: SEC-FINRA-Symbolbruecke als Nullbefund versiegeln","workstream":"Q003_Q005_SEC_FINRA_EXACT_SYMBOL_BRIDGE_NULL","artifactCount":3,"deltaSha256":"06e5ba33287e545a7f7840c4d3ad4003402091a4088798b2145aa752787e0d47","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":877,"commit":"c57a00e29c5bfbcd7be8496bd5bee64bdf1b676f","parent":"cc99700b90290c3fd56f7a5b92cf767d281bf585","subject":"Tag 877: SEC-Liquidationszahlungen mit Aussetzungsgrenzen abgleichen","workstream":"Q003_LIQUIDATION_PAYMENT_BOUNDARY_RECONCILIATION","artifactCount":3,"deltaSha256":"4d71d980aff2edc31f609a3f4b13388bfdfb1dc03871a8de395ce4526af20a06","status":"OPERATIONAL_MILESTONE_NO_CREDIT"}
+  ],
+  "implementation": {
+    "controllerNormalizedSha256": "672eacd25459f73e5a5edf25570c3404df6aa5c21651b5d7c1a0ab8c7dd27b2c",
+    "testNormalizedSha256": "02021a6d8999c72d0a8725997b1e8bbbd64910edc90139a61d738313d7876354",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v16.jsonl",
+    "eventLogRawSha256": "6a8913a5b3477291cfe7eaa71b7f868f2c96faf956b07378b12ef861cd141aae",
+    "eventCount": 4,
+    "lastEventSha256": "6d1ea122b0a7a605e18e81aca06b0767cc6c135cd49ddbfd754f26e420dd4ede",
+    "statePath": "state/early-detection-free-source-state-v16.json",
+    "stateRawSha256": "fbd2129a2e2c4aa5eb479412cb493529942d0552d5b310fccc243ffe357725f2",
+    "stateSelfSha256": "1c8c080ea5b1ec16742d195a8be464e8f47efc44f5aee52c3d7d99c316d7d326",
+    "operationalProjectionSha256": "4616098cded1347f856de4c62f49f7e37adcc87b587e546e8e0c1a2e94ca0fb1"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v14EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltasMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
