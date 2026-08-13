@@ -1,0 +1,78 @@
+{
+  "schema": "early-detection-sec-terminal-closure-exhaustion-contract/v1",
+  "createdAt": "2026-08-13T07:35:18Z",
+  "purpose": "Bind an exhaustive outcome-blind scan of the frozen SEC corpus, materialize only exact primary-SEC statements of a last trading day on a named exchange, and record narrow corpus-bounded null results for no-further-distribution and actual post-closing recovery language.",
+  "taskId": "Q003-SEC-TERMINAL-CLOSURE-EXHAUSTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "sourceBase": {
+    "commit": "cb75c5c6efdae34533c8cf004aca93f3c5387810",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "introductionRequiresDirectChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true
+  },
+  "inputs": {
+    "inventory": {
+      "path": "reports/early-detection/sec-terminal-wealth-original-inventory-v4.json",
+      "rawSha256": "7a2947b66b9cdc26e829d19a4342b7effbbcea1c8296ca0bc46d4e05217c9711",
+      "reportSha256": "b52b25d27e826872c83d920c3976a6aa9185c337ac48620e85ffbf323d550ab2",
+      "introductionCommit": "a0218f4344ffa853f83a7123f886fb289cfda2e4",
+      "expectedRows": 44352,
+      "expectedBlobCount": 27438,
+      "expectedBlobBytes": 326221948,
+      "expectedBlobTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f"
+    },
+    "existingTerminalEvidence": {
+      "path": "reports/early-detection/sec-frozen-terminal-distribution-receipt-evidence-v2.json",
+      "rawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+      "reportSha256": "7967bd2ed2634568a785a5ec4e76d209db7ae10dc9ec9b1d72681144f5200104",
+      "introductionCommit": "ee21b932abbb31c24c97fab093d8b98b62f7c3e9",
+      "expectedRows": 5
+    },
+    "corpus": {
+      "logicalRoot": "early-detection-v4/corporate-action-originals/blobs/sha256",
+      "physicalRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\corporate-action-originals\\blobs\\sha256",
+      "fileGlob": "*/*.txt"
+    }
+  },
+  "scanContract": {
+    "normalization": "HTML_PARSER_WITH_SCRIPT_STYLE_EXCLUSION_AND_CONSERVATIVE_FALLBACK",
+    "sentenceSegmentation": "REGEX_AFTER_PERIOD_EXCLAMATION_OR_QUESTION_MARK",
+    "documentsScanned": 40818,
+    "sentencesScanned": 1022061,
+    "parseErrors": 0,
+    "broadTradingEndMatches": 840,
+    "broadFinalOrNoFurtherMatches": 5,
+    "broadRecoveryMatches": 95,
+    "qualifiedLastTradingRows": 23,
+    "qualifiedNoFurtherDistributionRows": 0,
+    "qualifiedActualPostClosingRecoveryRows": 0,
+    "existingFinalDistributionRows": 3,
+    "fullCorpusScanRequired": true,
+    "twoIndependentRecoveryFiltersRequired": true,
+    "futureConditionalEstimatedLanguageRejected": true
+  },
+  "semanticCeiling": "EXACT_TWENTY_THREE_PRIMARY_SEC_SENTENCES_STATE_A_LAST_TRADING_DAY_ON_THE_NAMED_EXCHANGE_AND_THE_FROZEN_CORPUS_SCAN_FOUND_NO_QUALIFYING_NO_FURTHER_DISTRIBUTION_OR_ACTUAL_POST_CLOSING_RECOVERY_SENTENCE",
+  "claimLocks": {
+    "lastNamedExchangeTradingDayVerified": true,
+    "lastConsolidatedSessionVerified": false,
+    "laterOtcTradingExcluded": false,
+    "finalLiquidatingDistributionVerified": false,
+    "noFurtherDistributionsVerified": false,
+    "postClosingRecoveryVerified": false,
+    "noLaterRecoveryVerified": false,
+    "terminalWealthComplete": false,
+    "historicalIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "authorizedImplementation": {
+    "builderPath": "scripts/build-sec-terminal-closure-exhaustion-v1.py",
+    "testPath": "tests/build-sec-terminal-closure-exhaustion-v1.test.js",
+    "outputPath": "reports/early-detection/sec-terminal-closure-exhaustion-v1.json"
+  },
+  "contractSha256": "c797c86818e7a8e5e6f47000da1e5a2ae50404268030db6d39f6c2a671aab76b"
+}
