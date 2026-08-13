@@ -1,0 +1,682 @@
+{
+  "claimLocks": {
+    "finalLiquidatingDistributionVerified": false,
+    "historicalIdentityResolved": false,
+    "lastConsolidatedSessionVerified": false,
+    "lastNamedExchangeTradingDayVerified": true,
+    "laterOtcTradingExcluded": false,
+    "noFurtherDistributionsVerified": false,
+    "noLaterRecoveryVerified": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryVerified": false,
+    "pricesAccessed": false,
+    "resultComputationAllowed": false,
+    "returnsAccessed": false,
+    "terminalWealthComplete": false
+  },
+  "implementationBindings": {
+    "builderNormalizedSha256": "bbcef3869e9e44a4d77ea2e2b4643f4204d7f8a313ac9c98cbf86e9d47533473",
+    "contractRawSha256": "533ba2bd165e6e10898be900da4da437bf6fd361c9b3335d2028e57660d9ab8c",
+    "introductionCommit": "1adc2ecae56e56cc979ee3c7007ca6a04075600a",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "sourceBaseCommit": "cb75c5c6efdae34533c8cf004aca93f3c5387810",
+    "testRawSha256": "b8fa48084d01fbcd08bf2023c774adaceb68476eae215f71ac758a3a1b6b4dce"
+  },
+  "inputBindings": {
+    "blobTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f",
+    "existingTerminalEvidenceRawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+    "existingTerminalEvidenceReportSha256": "7967bd2ed2634568a785a5ec4e76d209db7ae10dc9ec9b1d72681144f5200104",
+    "inventoryRawSha256": "7a2947b66b9cdc26e829d19a4342b7effbbcea1c8296ca0bc46d4e05217c9711",
+    "inventoryReportSha256": "b52b25d27e826872c83d920c3976a6aa9185c337ac48620e85ffbf323d550ab2"
+  },
+  "reportSha256": "9d0f7377952821796c5c709dc9baf9bd62aab74058277c7a98780b14f23daf7a",
+  "rows": [
+    {
+      "accession": "0001193125-21-203874",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2007-10-26",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00033584"
+      ],
+      "sourceRef": {
+        "blobSha256": "8003cc1eafed9c12ce8e6183894f3e9019cf746e544624c5fe8c17b8a2d7058e",
+        "bytes": 28997,
+        "documentFilename": "d110826d15f12g.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12G",
+        "evidenceSha256": "c24c91bab2c250774435bfb189887815afec3226982b88210a36693831d4bf9c",
+        "locator": "sentence[36]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "68a9d165c449b4cb7cedf3799cfc52506d89456b9e85b5d96f3a5f4f32edbf5c",
+        "rawTextSha256": "10cc9aebae3d138734e8fd962d6bd30815c19aaab16ece4f4fb7fb04db97bc4a",
+        "relativePath": "80/8003cc1eafed9c12ce8e6183894f3e9019cf746e544624c5fe8c17b8a2d7058e.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001143362-09-000007",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2008-10-17",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00000778",
+        "SEC-TW-00000784"
+      ],
+      "sourceRef": {
+        "blobSha256": "e50dedfd5043dc4e492808f8af4738205ef221963bdc6d07c535c1445d3b6dbb",
+        "bytes": 4707,
+        "documentFilename": "focus_delist.txt",
+        "documentIndex": 2,
+        "documentSequence": "2",
+        "documentType": "EX-99.25.TEXT FILE",
+        "evidenceSha256": "70f47662ebfc91f2fd7b8f156bd7924357f86b26b342a47051dce2657bbf793e",
+        "locator": "sentence[2]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "07ae4c4003ba739ae93086a81c53468f86d6c828f2defc5074fe6ef7d3fe086d",
+        "rawTextSha256": "0023e95308977010fb853de5a375b554d0fc523ca20de1bffa0d4fb8b0354702",
+        "relativePath": "e5/e50dedfd5043dc4e492808f8af4738205ef221963bdc6d07c535c1445d3b6dbb.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001143362-09-000008",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2008-10-17",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00000792",
+        "SEC-TW-00000795"
+      ],
+      "sourceRef": {
+        "blobSha256": "035c146aa6412132e3c75a5af17aad245b5e2ae1cc98805989c2aa472019bc0b",
+        "bytes": 4764,
+        "documentFilename": "focus_delist.txt",
+        "documentIndex": 2,
+        "documentSequence": "2",
+        "documentType": "EX-99.25.TEXT FILE",
+        "evidenceSha256": "70f47662ebfc91f2fd7b8f156bd7924357f86b26b342a47051dce2657bbf793e",
+        "locator": "sentence[2]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "599d11f9ddc379f9cb7b6e00603cd09bdcd8a4c76f8bfeb0a716b523eae57c61",
+        "rawTextSha256": "39f7c7cd00bd936279161221d93462735ea7f81b807e2fc52b1c3603fd3da780",
+        "relativePath": "03/035c146aa6412132e3c75a5af17aad245b5e2ae1cc98805989c2aa472019bc0b.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0000950153-09-000302",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2009-04-24",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00001209"
+      ],
+      "sourceRef": {
+        "blobSha256": "77bc442932449553acfa7507d7aa383d313ec79b296bc2c49260fa82cb944e63",
+        "bytes": 21806,
+        "documentFilename": "p14806e15fv12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "b926d868c5bf7a51d755fa14fb2c9d79314ccd691a2bebaa792cc38a6ab6299c",
+        "locator": "sentence[36]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "c4a92484d7a07d442ce9733716e6ef033c66023b461c9de6a457c85b1b400ac6",
+        "rawTextSha256": "23313f9a5a2fa45f357abfefa0d9613a42e15f0d1854eaacc427f350c9c77507",
+        "relativePath": "77/77bc442932449553acfa7507d7aa383d313ec79b296bc2c49260fa82cb944e63.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001143362-09-000036",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2009-07-31",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00001922",
+        "SEC-TW-00001933"
+      ],
+      "sourceRef": {
+        "blobSha256": "53c951185d8bc94c864074ba9aeaf8a16d9ffd5fd32222059c9b892462aa5219",
+        "bytes": 4321,
+        "documentFilename": "airshares_delist.txt",
+        "documentIndex": 2,
+        "documentSequence": "2",
+        "documentType": "EX-99.25.TEXT FILE",
+        "evidenceSha256": "f316f9b3b5e65e35cc61c10ee0b9daabfd3bfd39fcad54d62d481b33678a56c9",
+        "locator": "sentence[2]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "c6d4b97512dd9c0365ca65690576103b37f1fce73c9d25e70ff449f26f491106",
+        "rawTextSha256": "549a141f3416782b5baf2157195b970f9dc1c1d41cb85713b3f092bdcd40438e",
+        "relativePath": "53/53c951185d8bc94c864074ba9aeaf8a16d9ffd5fd32222059c9b892462aa5219.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001143362-09-000040",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2009-09-08",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00002182",
+        "SEC-TW-00002183"
+      ],
+      "sourceRef": {
+        "blobSha256": "cf279091f87171fb621750439dd680af11c44355d29af456520b3126aafc89e8",
+        "bytes": 4112,
+        "documentFilename": "dxo_delist.txt",
+        "documentIndex": 2,
+        "documentSequence": "2",
+        "documentType": "EX-99.25.TEXT FILE",
+        "evidenceSha256": "af5cdffbcb7d8f488231236ba3c18c6b3145118cb10a38c86f7e597c2d6fb062",
+        "locator": "sentence[3]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "946575820a794ed523659f48615c1844d15e009aff5dfc4493021fdc9ee082cc",
+        "rawTextSha256": "1d4654bf7af320db80c84c915a6abe5d167dc355aabd06a97a138c89a591d56e",
+        "relativePath": "cf/cf279091f87171fb621750439dd680af11c44355d29af456520b3126aafc89e8.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-11-106886",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2011-04-21",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00005973"
+      ],
+      "sourceRef": {
+        "blobSha256": "ccc792a44b5f7cbb6758cd4a4c935a04c3a5c461264f892c40d3c25b54f4a653",
+        "bytes": 34060,
+        "documentFilename": "d15f12g.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12G",
+        "evidenceSha256": "1a892f7d92d5014d92561bf615148d23d83f77351c912c4fd9c131d60510b669",
+        "locator": "sentence[42]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "5ad60692658be60e131c9377afe77be30d8ca9819494eb799f12b628c12bacfa",
+        "rawTextSha256": "8f0fb233aafc80abb83a4fd413ddbf902b8c8698cedc35a92c65cf5e4d65ed14",
+        "relativePath": "cc/ccc792a44b5f7cbb6758cd4a4c935a04c3a5c461264f892c40d3c25b54f4a653.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-12-188106",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2012-04-26",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00008406"
+      ],
+      "sourceRef": {
+        "blobSha256": "b5c9a2deb3e4a000174840267731cab2ae872dc4c7530aff706fb7037d5ba2d1",
+        "bytes": 20781,
+        "documentFilename": "d336142d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "0b27322aa865da40f95eb1e61ecd54a95c667c8e74c62bf7fbfd6e46aa420acf",
+        "locator": "sentence[27]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "cd48bba85ed8e71a7eec844a7394a7134ff6ce96656d447db4baa3319ad52a36",
+        "rawTextSha256": "d924d0b4665065d04e2f9f8b60f6371f8f6dd2cd2e646f98d973249d838ceecb",
+        "relativePath": "b5/b5c9a2deb3e4a000174840267731cab2ae872dc4c7530aff706fb7037d5ba2d1.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-13-163833",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2013-04-19",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00011810"
+      ],
+      "sourceRef": {
+        "blobSha256": "90eb9c044579eed8b8597dfa32e709dae30d56526d081fa6918aba36fcc90884",
+        "bytes": 28253,
+        "documentFilename": "d520994d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "ed196899bae8dfd367849e43b01ff3e38e94667706b82d9c55d4e21db5d2e698",
+        "locator": "sentence[39]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "4ae790a37110980ce3bc181252cce5e500af66179d0dd46cc27e04037bafef8e",
+        "rawTextSha256": "0b37b047bcb507cc557ffd589f41a11a720894ee12e5b98a2c4efeafddca3bf4",
+        "relativePath": "90/90eb9c044579eed8b8597dfa32e709dae30d56526d081fa6918aba36fcc90884.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-16-625634",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2013-04-19",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00019729"
+      ],
+      "sourceRef": {
+        "blobSha256": "8f44ba1199e38a96d8a0620590d1eab709549e3a78f8ee19855f71f1a53b2790",
+        "bytes": 38389,
+        "documentFilename": "d203731d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "ed196899bae8dfd367849e43b01ff3e38e94667706b82d9c55d4e21db5d2e698",
+        "locator": "sentence[44]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "e04d5899f6dfbf9aae5aed54a6659d039f213146ac448471883a79c1a04223da",
+        "rawTextSha256": "3f9e0b103f2676bc2538f698f5c4cf52f47c9a98a23ffdeaa772346882837173",
+        "relativePath": "8f/8f44ba1199e38a96d8a0620590d1eab709549e3a78f8ee19855f71f1a53b2790.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-13-291209",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2013-07-15",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00012450"
+      ],
+      "sourceRef": {
+        "blobSha256": "1ea7731fcc3cb7ae38a419ceb784997926decab2dbeb11c57e24c3ee588c1ff8",
+        "bytes": 27085,
+        "documentFilename": "d569730d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "e7e84b209b183a943169248b66b305d3298c7e2d9ff5335f3d8b8537f9baca5a",
+        "locator": "sentence[40]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "52718244bfc2734edda5d1fa02d3eee57883a876c19a5a697981b60e652f9af7",
+        "rawTextSha256": "2375eb6714bde0b72c8ba2d9e8099d9a8250714907863ed027f127427fd25a45",
+        "relativePath": "1e/1ea7731fcc3cb7ae38a419ceb784997926decab2dbeb11c57e24c3ee588c1ff8.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001292814-14-000830",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2013-11-08",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00014126"
+      ],
+      "sourceRef": {
+        "blobSha256": "1424ff7a77b5d4431509aa8a89f25d710d6cdd55a8dec7761ccce1d07a59fdc8",
+        "bytes": 24835,
+        "documentFilename": "abvform_15f.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "afefda7de146d72225a077700f1b8440ffebb2577cd8b04042e861daf1c71b44",
+        "locator": "sentence[25]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "0f25002dab4f69fe83216ba2b10f5cc6b4ad216798f3bd3a8adbb687a599628c",
+        "rawTextSha256": "f97877cf48af880fdf30d4b3545924ffb476ab1959fbc0837e17209a76919799",
+        "relativePath": "14/1424ff7a77b5d4431509aa8a89f25d710d6cdd55a8dec7761ccce1d07a59fdc8.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001140361-14-036106",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2014-09-22",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00015076"
+      ],
+      "sourceRef": {
+        "blobSha256": "f95bae022cb465907980de3df7ceadac552fc23dc9d3f46c935f011b8d923143",
+        "bytes": 29183,
+        "documentFilename": "form15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "4d3c3806b71a5ecf48daf75c53b07a83eb87b97ea113e65f52ca4a51a793d6b4",
+        "locator": "sentence[26]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "52e954919aa13a23f4f85ae55a096f125fb48f09bd7ae29c46e986d39356027e",
+        "rawTextSha256": "29fd3e0cdea8c16aa7bc39eb897d39d870a3fd33ccdcb696eaf4b96e1ed61c00",
+        "relativePath": "f9/f95bae022cb465907980de3df7ceadac552fc23dc9d3f46c935f011b8d923143.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0000903423-14-000652",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2014-12-22",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00015642"
+      ],
+      "sourceRef": {
+        "blobSha256": "591c27ee64730365bd9004b6c010dd9fa2440447d08bcae2ebfe7165e8844b28",
+        "bytes": 30659,
+        "documentFilename": "veolia15f.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "bc88121d0ab72fb06e0152515addd27d1ccc98f5a73eada26b338b43350b56f1",
+        "locator": "sentence[37]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "04b0035bb07b1ace687bc38cff62b66a8f9fa1d3432c984130925dbfdadeea7c",
+        "rawTextSha256": "8fd6fb54d6ed6d2dda2cce5958db35ba8e8609daf813e46e2ad7624d8381b319",
+        "relativePath": "59/591c27ee64730365bd9004b6c010dd9fa2440447d08bcae2ebfe7165e8844b28.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001104659-16-114275",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2015-03-27",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00019427"
+      ],
+      "sourceRef": {
+        "blobSha256": "2ba681f3dc749cd43d54b60701b003fb801a394772327799b286a9d3290185a6",
+        "bytes": 35572,
+        "documentFilename": "a16-9535_215f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "3ed8d1a399fa1fa7e3e1acdd04639e7359868f8a339e4a56c56fcda7233054d0",
+        "locator": "sentence[28]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "aedadf6b1c36b7529b8636dbf9a848af44beb7f13b7b229189860da38b68eb91",
+        "rawTextSha256": "30208ab5d3239f692d9aee41aafc34cd86d3513f018cd5fbfb7a86692d5292c4",
+        "relativePath": "2b/2ba681f3dc749cd43d54b60701b003fb801a394772327799b286a9d3290185a6.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-15-145123",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2015-04-23",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00016428"
+      ],
+      "sourceRef": {
+        "blobSha256": "1d0d0ff9918b0588daaf2848a640a2a0255388d7a7c4da7a409c015e7f128c67",
+        "bytes": 19162,
+        "documentFilename": "d914114d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "5aea76c1b30c5abb929b6b454c5b351163d7859cc6f98b39c911d537088fa208",
+        "locator": "sentence[28]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "ddedd18bf506978f2f8edd979a16de7db705bf2e6b3042434324459ea182b2a6",
+        "rawTextSha256": "8072b9c40f1df546e4b67a6628cdae7d5dd7e08bf91af8727cc39738a938a78d",
+        "relativePath": "1d/1d0d0ff9918b0588daaf2848a640a2a0255388d7a7c4da7a409c015e7f128c67.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0000351483-15-000038",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2015-08-20",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00017319"
+      ],
+      "sourceRef": {
+        "blobSha256": "aa1ce7df1a713a8e45db1e30ab8a8ccf8c36d8f74be173553ed3c3dfc131f11c",
+        "bytes": 70091,
+        "documentFilename": "form15f-12g.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12G",
+        "evidenceSha256": "a32da7c2e2d10357697d141021fc5aec6d0c96ebeaaaa6357d6b87aaada6c611",
+        "locator": "sentence[36]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "2a3c382bfb328c61dc25e8be2bd1e12f44813f760fb850bdd4d6cb1f7f787234",
+        "rawTextSha256": "18388bf06fe6be677853fc9728fbbc8bea1601d988a85cdc9ca9a3f35c17eeda",
+        "relativePath": "aa/aa1ce7df1a713a8e45db1e30ab8a8ccf8c36d8f74be173553ed3c3dfc131f11c.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001158967-16-000055",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2016-04-29",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00019447"
+      ],
+      "sourceRef": {
+        "blobSha256": "6abcd5255f45b8cbafec28fa1cf892a5dc9fbf5c5d6d33959df12dc28e7be617",
+        "bytes": 16852,
+        "documentFilename": "form15f160502v8.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "fe134de30611169a3fe0a8b2f9e167baafd0474847d8a76c47e97eb48c497576",
+        "locator": "sentence[26]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "78cf8703f1f62967f0e7897ef60f1a39ba9e0b599443af492b747af70c654aa6",
+        "rawTextSha256": "d88cd6e900af64f9e168607faf29883516dccdc17f38748a20a8de744947e154",
+        "relativePath": "6a/6abcd5255f45b8cbafec28fa1cf892a5dc9fbf5c5d6d33959df12dc28e7be617.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-18-116036",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2017-03-31",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00025131"
+      ],
+      "sourceRef": {
+        "blobSha256": "70fc7e6e2f0cada57d63686c45aa95b8671f62ff277ef8364a7dcf27f753bf83",
+        "bytes": 24824,
+        "documentFilename": "d570302d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "2e668a086db2b218732bcb116d77f53234b380aec5e6815c282a8c03bfd9351d",
+        "locator": "sentence[29]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "fddd3a58024b60ac73bb08b8065d75847c4b5f5819d508d27a793e3edc1c4dff",
+        "rawTextSha256": "24db7f0521f1536a9781518b4b621217a857cbfb9c2dcbba82171f16d3ee6405",
+        "relativePath": "70/70fc7e6e2f0cada57d63686c45aa95b8671f62ff277ef8364a7dcf27f753bf83.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-18-116067",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2018-04-12",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00025133"
+      ],
+      "sourceRef": {
+        "blobSha256": "9c4de2982d6421761de9b5ef2965c2d6a0c30e98050229e73d1f6ac0202c807e",
+        "bytes": 22437,
+        "documentFilename": "d500975d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "ba15788b763d1b687fef3c052cf5ed12d55ff6fcba2be59b734f5ed1ad003705",
+        "locator": "sentence[27]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "c1f59d663ca6644b80c1ca5f3241307764d09ce194fb4e71fe0b6b5911910dff",
+        "rawTextSha256": "febff3c712ae8953ab6c1ab4c1cbe2e1c24ce6c0e893ea778318262544f98486",
+        "relativePath": "9c/9c4de2982d6421761de9b5ef2965c2d6a0c30e98050229e73d1f6ac0202c807e.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001193125-18-202984",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2018-06-25",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00025656"
+      ],
+      "sourceRef": {
+        "blobSha256": "79d04b3ae3ab7fbfd7ed644a0866bfc8290979761d108dbfcabc8fecb57f91d4",
+        "bytes": 28382,
+        "documentFilename": "d477989d15f12b.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12B",
+        "evidenceSha256": "105c5de4a2abc50379868997ceaa895716dace509538b381f8f9c3fa77594242",
+        "locator": "sentence[39]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "c4ca12c6e5c53bd532d535c3d91afc730b7bb287eb7d883602226a0aa1aad82a",
+        "rawTextSha256": "30e628d008f68fa737ad032d94c55b3646b419e7c9e43d6c977850ebb2f56470",
+        "relativePath": "79/79d04b3ae3ab7fbfd7ed644a0866bfc8290979761d108dbfcabc8fecb57f91d4.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0001171843-19-002526",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2019-04-18",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00027791"
+      ],
+      "sourceRef": {
+        "blobSha256": "e7c36935e7ee6c7c4628655ee72f59309bf50ec2b7547e08dbdee7b3a84b51f3",
+        "bytes": 26131,
+        "documentFilename": "f15f12g_042219.htm",
+        "documentIndex": 1,
+        "documentSequence": "1",
+        "documentType": "15F-12G",
+        "evidenceSha256": "f8613f130eee0b22d633f7f119f8253b4fe199b19639a3edc7f2ed248be351e5",
+        "locator": "sentence[29]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "3a6ee44c8133ea604816976dc698e5916e7e714eb4379fae967466ee91f837aa",
+        "rawTextSha256": "fc7c71d6377ae46bb6d769851c6a4cbf9272d0aca1bc3185fcd4c4e3376d879a",
+        "relativePath": "e7/e7c36935e7ee6c7c4628655ee72f59309bf50ec2b7547e08dbdee7b3a84b51f3.txt"
+      },
+      "terminalWealthComplete": false
+    },
+    {
+      "accession": "0000876661-24-000227",
+      "evidenceKind": "PRIMARY_SEC_SENTENCE_STATES_LAST_TRADING_DAY_ON_NAMED_EXCHANGE",
+      "lastConsolidatedSessionVerified": false,
+      "lastNamedExchangeTradingDate": "2024-03-25",
+      "lastNamedExchangeTradingDayVerified": true,
+      "laterOtcTradingExcluded": false,
+      "outcomesAccessed": false,
+      "queueRowIds": [
+        "SEC-TW-00042483",
+        "SEC-TW-00042489"
+      ],
+      "sourceRef": {
+        "blobSha256": "073c3c224611c73fd2b30dbfc2786b71b6f0ce3d130c876ea20a427f9827554f",
+        "bytes": 4901,
+        "documentFilename": "ruleprovisionnotice.htm",
+        "documentIndex": 2,
+        "documentSequence": "2",
+        "documentType": "EX-99.25",
+        "evidenceSha256": "a07e7732f141b44e7fbe2cc873dc833f63c7cd9236484b428d85f4a28f8a2679",
+        "locator": "sentence[6]",
+        "normalizationMode": "HTML_PARSER",
+        "rawDocumentSha256": "b098498ee45792542acdb8d60f75afcea068ff10d4a62c29cc58fbd2f4c01528",
+        "rawTextSha256": "0acaff7a6c3a04d811cb04dd650cbd63e581db8f347ea491da93be978d4d6231",
+        "relativePath": "07/073c3c224611c73fd2b30dbfc2786b71b6f0ce3d130c876ea20a427f9827554f.txt"
+      },
+      "terminalWealthComplete": false
+    }
+  ],
+  "scanSummary": {
+    "blobBytes": 326221948,
+    "blobCount": 27438,
+    "broadFinalOrNoFurtherMatches": 5,
+    "broadRecoveryMatches": 95,
+    "broadTradingEndMatches": 840,
+    "documentsScanned": 40818,
+    "existingFinalDistributionRows": 3,
+    "parseErrors": 0,
+    "qualifiedActualPostClosingRecoveryRowsFilterA": 0,
+    "qualifiedActualPostClosingRecoveryRowsFilterB": 0,
+    "qualifiedLastTradingRows": 23,
+    "qualifiedNoFurtherDistributionRows": 0,
+    "sentencesScanned": 1022061
+  },
+  "schema": "early-detection-sec-terminal-closure-exhaustion/v1",
+  "semanticCeiling": "EXACT_TWENTY_THREE_PRIMARY_SEC_SENTENCES_STATE_A_LAST_TRADING_DAY_ON_THE_NAMED_EXCHANGE_AND_THE_FROZEN_CORPUS_SCAN_FOUND_NO_QUALIFYING_NO_FURTHER_DISTRIBUTION_OR_ACTUAL_POST_CLOSING_RECOVERY_SENTENCE",
+  "taskId": "Q003-SEC-TERMINAL-CLOSURE-EXHAUSTION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
