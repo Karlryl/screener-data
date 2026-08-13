@@ -1,0 +1,91 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v17",
+  "createdAt": "2026-08-13T08:20:47Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tags879-881 as exact no-credit terminal-closure milestones, preserve the byte-exact V16 event history and release Q003 scheduling only after deterministic replay and exact remote introduction.",
+  "contractSelfSha256": "8ee48e20b0e101727f0d4810bc1fcb598faf800c09424547841593d93b4d49f6",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "33838ac85b2c931fd6fb7cfb98ac27602e06c209",
+    "buildBaseTag": 881,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v17.json",
+      "scripts/early-detection-continuous-free-source-v17.py",
+      "state/early-detection-free-source-events-v17.jsonl",
+      "state/early-detection-free-source-state-v17.json",
+      "tests/early-detection-continuous-free-source-v17.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "v16Contract": "5814a37795ac02095dc68f7ac75f0a6d43e14c6b15851f6360224980f1b07a7c",
+      "v16Controller": "8fe6dc15bb69723c12d2e58b2c63284bf9c52d0492a97ee2ed7e4d09dc0b0b6a",
+      "v16ControllerTest": "cc8c5374bd97ef78c0f3cf6ff026d84456c220d5c48912a545fb8e0937bcfee0",
+      "v16EventLog": "6a8913a5b3477291cfe7eaa71b7f868f2c96faf956b07378b12ef861cd141aae",
+      "v16State": "fbd2129a2e2c4aa5eb479412cb493529942d0552d5b310fccc243ffe357725f2",
+      "closureProducerContract": "533ba2bd165e6e10898be900da4da437bf6fd361c9b3335d2028e57660d9ab8c",
+      "closureProducerBuilder": "2acd2560e60cec6e7cd4ed37d473658ae78f480b0eecf7b4fb2ad5a3f75398df",
+      "closureProducerTest": "b8fa48084d01fbcd08bf2023c774adaceb68476eae215f71ac758a3a1b6b4dce",
+      "closureSealContract": "d306cb9000947b24c94807054fce86cdd66a8377d31e2c9f2cc8a7743d961e9f",
+      "closureVerifier": "2dc573e144e35d189dd675af123b244f2ffd154e31ecaa01eaa989d03d9ca1e3",
+      "closureSealTest": "ffcae83a66a78784e897670abf4f836ca43dbf2090491079a1a8cf4a59a74b54",
+      "closureOutput": "68d1002e6aa0836a39fc29d982bd1a91001ab626976f0472a74c69bf133d12ed"
+    },
+    "inputBundleSha256": "61ccde3723923537a33321d4ce44dbd0237450c55933f04f7f443b588ed27ece",
+    "inputBundleRecomputedFromBaseRawHashesAndMilestoneDeltas": true,
+    "v16EventLogMustBeByteExactPrefix": true,
+    "v16ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "closureOutputSealMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBindings": [
+    {"tag":879,"commit":"1adc2ecae56e56cc979ee3c7007ca6a04075600a","parent":"cb75c5c6efdae34533c8cf004aca93f3c5387810","subject":"Tag 879: SEC-Endwertluecken vollstaendig vorsortieren","workstream":"Q003_TERMINAL_CLOSURE_EXHAUSTION_CONTRACT","artifactCount":3,"deltaSha256":"bbbee4cdddc7b76ddf3a75d23b7205287799ebf8207c9af13f1230718c22b176","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":880,"commit":"f1c582f67b37300d629b8453ceb2d7b3ececf091","parent":"1adc2ecae56e56cc979ee3c7007ca6a04075600a","subject":"Tag 880: SEC-Endhandelsbericht getrennt versiegeln","workstream":"Q003_TERMINAL_CLOSURE_EXHAUSTION_OUTPUT_SEAL","artifactCount":3,"deltaSha256":"804b4d9708fa37bb4a6d0dc1c0d6cc14cb1974b28d982c0caece314baaa8ba2f","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":881,"commit":"33838ac85b2c931fd6fb7cfb98ac27602e06c209","parent":"f1c582f67b37300d629b8453ceb2d7b3ececf091","subject":"Tag 881: SEC-Endhandelsbericht materialisieren","workstream":"Q003_TERMINAL_CLOSURE_EXHAUSTION_OUTPUT","artifactCount":1,"deltaSha256":"d2dee0e1f2326ee9e2ab7b726cd34148a44ba3bf27398e7add7a2db0c895883d","status":"OPERATIONAL_MILESTONE_NO_CREDIT"}
+  ],
+  "implementation": {
+    "controllerNormalizedSha256": "f8960a5c9f8fc85f4d07855f34c03de1e996af65ef667f2016882a78cc53d069",
+    "testNormalizedSha256": "409213b1cdeff3db2155c32e335c0c3c81874399009246458843035449d8ac38",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v17.jsonl",
+    "eventLogRawSha256": "8652d2964a8c474c1951cf6e519a6783d410262fc3c2ef47f743f2074d6b7773",
+    "eventCount": 5,
+    "lastEventSha256": "93328b591e417ec070f6c5174085da9f5687319e12fe68a8e40f8907ae72aae2",
+    "statePath": "state/early-detection-free-source-state-v17.json",
+    "stateRawSha256": "b6bed7c9b176666039339c28cd3e842d38612e60781a81bfa4139e1a8bb1fde9",
+    "stateSelfSha256": "fe4855dbfbc7090bf45d94cd714926cb22f681215790f5580e40a908f5247ebe",
+    "operationalProjectionSha256": "35462c0b427c0ee1f23939eac68a65b44db7c62737f0819a3a12b2259a3302fc"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v16EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltasMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
