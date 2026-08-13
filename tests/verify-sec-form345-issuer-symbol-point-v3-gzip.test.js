@@ -14,6 +14,7 @@ const EXPECTED_RAW = '81e748f609cbf8e73de2f5ea91166ce178c71c1df4fa0398ab9821f304
 const EXPECTED_GZIP = 'fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7c97f484';
 const EXPECTED_REPORT = 'b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3';
 const PARENT = '34d7b2be658c95666b6f31be8bdc4cfd2f580875';
+const INTRODUCTION = '036ba9e53623f47fe8ab0f3b926c5033b629dc2c';
 
 function git(...args) {
   const result = spawnSync('git', args, { cwd: ROOT, encoding: 'utf8', windowsHide: true });
@@ -46,7 +47,8 @@ if (rawBefore !== null) assert.equal(rawBefore, EXPECTED_RAW, 'local raw JSON dr
 const head = git('rev-parse', 'HEAD');
 const expectedPhase = head === PARENT ? 'PRE_PROMOTION' : 'POST_PROMOTION';
 if (expectedPhase === 'POST_PROMOTION') {
-  assert.equal(git('rev-list', '--parents', '-n', '1', head), `${head} ${PARENT}`, 'promotion must be the direct child');
+  assert.equal(git('rev-list', '--parents', '-n', '1', INTRODUCTION), `${INTRODUCTION} ${PARENT}`, 'promotion must be the direct child');
+  assert.equal(spawnSync('git', ['merge-base', '--is-ancestor', INTRODUCTION, head], { cwd: ROOT, windowsHide: true }).status, 0, 'current HEAD must descend from promotion');
 }
 
 for (const optimized of [false, true]) {
@@ -68,7 +70,7 @@ for (const optimized of [false, true]) {
   const verified = parsed(execute(optimized, 'verify'), `${mode} verify`);
   assert.equal(verified.status, 'PASS');
   assert.equal(verified.phase, expectedPhase);
-  assert.equal(verified.head, head);
+  assert.equal(verified.head, expectedPhase === 'PRE_PROMOTION' ? PARENT : INTRODUCTION);
   assert.equal(verified.promotionBlobCount, 5);
   assert(verified.maximumBlobBytes < 100000000);
   assert.equal(verified.rows, 656);

@@ -30,6 +30,7 @@ EXPECTED_CONTRACT_SELF = "b17b5f6bfe877aa312a0ad9f73b00db9609706b59b0c121e534ed8
 EXPECTED_MANIFEST_RAW = "c353dc63865cd7a0f7ca4b35f5dceb99683424ad55c72f2e57b42f5830e1910b"
 EXPECTED_MANIFEST_SELF = "afa872b29cda54493cca8d5a0b69272a42942f3b5aa4b91bc50ceec517cc59ce"
 PARENT = "34d7b2be658c95666b6f31be8bdc4cfd2f580875"
+INTRODUCTION = "036ba9e53623f47fe8ab0f3b926c5033b629dc2c"
 SOURCE_INTRODUCTION = "ab6944a9d79fd3e54a7a881c0be866bcb963c81f"
 REMOTE = "https://github.com/Karlryl/screener-data.git"
 REF = "refs/heads/codex/early-detection-v4-gates-20260810"
@@ -316,30 +317,36 @@ def promotion_state(remote_required: bool) -> dict[str, Any]:
         if subprocess.run(["git", "cat-file", "-e", f"{PARENT}:{raw_relative}"], cwd=ROOT, capture_output=True).returncode == 0:
             fail("raw JSON was committed at promotion parent")
         return {"phase": "PRE_PROMOTION", "head": head, "promotionBlobCount": 5, "maximumBlobBytes": max(item.stat().st_size for item in OWNED)}
-    parents = git_text("show", "-s", "--format=%P", head).split()
-    if parents != [PARENT]:
+    parents = git_text("show", "-s", "--format=%P", INTRODUCTION).split()
+    if parents != [PARENT] or subprocess.run(
+        ["git", "merge-base", "--is-ancestor", INTRODUCTION, head], cwd=ROOT, capture_output=True
+    ).returncode != 0:
         fail("promotion is not the direct single-parent child of Tag844")
-    rows = git_text("diff-tree", "--no-commit-id", "--name-status", "-r", head).splitlines()
+    rows = git_text("diff-tree", "--no-commit-id", "--name-status", "-r", INTRODUCTION).splitlines()
     if len(rows) != 5 or any(not row.startswith("A\t") for row in rows):
         fail("promotion commit must contain exactly five additions")
     if {row.split("\t", 1)[1] for row in rows} != expected_paths:
         fail("promotion commit path set changed")
-    if subprocess.run(["git", "cat-file", "-e", f"{head}:{raw_relative}"], cwd=ROOT, capture_output=True).returncode == 0:
+    if subprocess.run(["git", "cat-file", "-e", f"{INTRODUCTION}:{raw_relative}"], cwd=ROOT, capture_output=True).returncode == 0:
         fail("raw JSON entered the promotion commit")
     maximum = 0
     for item in OWNED:
         relative = item.relative_to(ROOT).as_posix()
-        blob = git("show", f"{head}:{relative}")
-        if blob != item.read_bytes():
+        blob = git("show", f"{INTRODUCTION}:{relative}")
+        if relative in {VERIFY_TEST.relative_to(ROOT).as_posix(), Path(__file__).resolve().relative_to(ROOT).as_posix()}:
+            current_blob = git("show", f"{head}:{relative}")
+            if current_blob != item.read_bytes():
+                fail(f"current harness Git bytes changed: {relative}")
+        elif blob != item.read_bytes():
             fail(f"promotion Git bytes changed: {relative}")
         maximum = max(maximum, len(blob))
         if len(blob) >= 100_000_000:
             fail(f"promotion blob reaches GitHub limit: {relative}")
-    for line in git_text("rev-list", "--objects", f"{PARENT}..{head}").splitlines():
+    for line in git_text("rev-list", "--objects", f"{PARENT}..{INTRODUCTION}").splitlines():
         object_id = line.split(" ", 1)[0]
         if git_text("cat-file", "-t", object_id) == "blob" and int(git_text("cat-file", "-s", object_id)) >= 100_000_000:
             fail("promotion delta contains a blob at or above 100 MB")
-    return {"phase": "POST_PROMOTION", "head": head, "promotionBlobCount": 5, "maximumBlobBytes": maximum}
+    return {"phase": "POST_PROMOTION", "head": INTRODUCTION, "promotionBlobCount": 5, "maximumBlobBytes": maximum}
 
 
 def source_rebuild(expected_raw: bytes, source: tuple[Any, dict[str, Any], Any, dict[str, Any]]) -> None:
