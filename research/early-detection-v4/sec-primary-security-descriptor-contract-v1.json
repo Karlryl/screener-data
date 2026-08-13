@@ -1,0 +1,133 @@
+{
+  "authorizedImplementation": {
+    "builderPath": "scripts/build-sec-primary-security-descriptor-v1.py",
+    "outputPath": "reports/early-detection/sec-primary-security-descriptor-v1.json",
+    "testPath": "tests/build-sec-primary-security-descriptor-v1.test.js"
+  },
+  "claimLocks": {
+    "continuousValidityIntervalProven": false,
+    "cusipInvented": false,
+    "historicalIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "priceDataAccessed": false,
+    "returnComputed": false,
+    "securityIdentityResolved": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionProven": false,
+    "terminalWealthComplete": false,
+    "tickerJoinUsed": false
+  },
+  "createdAt": "2026-08-12T23:53:54Z",
+  "inputBindings": {
+    "form15Metadata": {
+      "decompressed": {
+        "bytes": 158751528,
+        "rawSha256": "89356ab469ca6aecb57bc586ef05ac990469fd4e1baf939b718cacbb0d98501c",
+        "reportSha256": "099345083baf9310cf9c9610f589c23eaa4afd3d1e7dc99441a8525687a93e57"
+      },
+      "gzip": {
+        "bytes": 10316775,
+        "path": "reports/early-detection/sec-form15-structured-metadata-v2.json.gz",
+        "rawSha256": "ac10592573448967bf7e56fc145ff5db757ad3cebd66e825e3c24e8810b48253"
+      },
+      "manifest": {
+        "manifestSha256": "c4d455f67713ef15ca176516b87732e6fc073571074a41aa68b9168000200d70",
+        "path": "reports/early-detection/sec-form15-structured-metadata-v2-gzip-manifest.json",
+        "rawSha256": "4781323557a3323a6982ccba7c02f5e5076f0168654e52d50cfce81d393e5422"
+      },
+      "schema": "early-detection-sec-form15-structured-metadata/v1"
+    },
+    "form25Metadata": {
+      "decompressed": {
+        "bytes": 257997067,
+        "rawSha256": "bc7b419a8489088f6fadd55579feec05fd193d36a2b415b592b4bac4c950d774",
+        "reportSha256": "b24c12b721b2a81952b8d2b7e8fc9b4617408f69075f5f7d5a09bc98e16f1ea8"
+      },
+      "gzip": {
+        "bytes": 13197732,
+        "path": "reports/early-detection/sec-form25-structured-metadata-v2.json.gz",
+        "rawSha256": "942bb1ec0fbc292a53ca6b3760b2ffee13253cf60322ecb9778905118a2d370e"
+      },
+      "manifest": {
+        "manifestSha256": "cdf536c73a96b506e93ee08d7f8568ceb07590ce95f947d990b2da53ec540361",
+        "path": "reports/early-detection/sec-form25-structured-metadata-v2-gzip-manifest.json",
+        "rawSha256": "a28c43ca2f9089ce5c7cb93dbd5bbc120af1b7579f4ec835fb2bc7b47cb4d9ab"
+      },
+      "schema": "early-detection-sec-form25-structured-metadata/v2"
+    },
+    "gapQueue": {
+      "path": "reports/early-detection/sec-terminal-identity-evidence-gap-queue-v1.json",
+      "rawSha256": "4c5bff255368bb0d9f498a8f367c65964c0de80d577cca70c695afe50ce0c650",
+      "reportSha256": "cb0b6272b1c07a8091354336bd9e5e1195ba43f766d393fe46fbebf04874e954",
+      "rows": 656,
+      "uniqueAccessions": 652
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-primary-security-descriptor-v1.json",
+    "writeNewAtomic": true
+  },
+  "populationContract": {
+    "crossAccessionSelectionAllowed": false,
+    "expectedRows": 656,
+    "expectedSourceLaneCounts": {
+      "FORM15_V2": 65,
+      "FORM25_V2": 591
+    },
+    "expectedUniqueAccessions": 652,
+    "issuerCikConsistencyIsGuardOnly": true,
+    "joinKey": "EXACT_ACCESSION_PLUS_EXCLUSIVE_SOURCE_LANE_WITH_QUEUE_CIK_CONSISTENCY_GUARD",
+    "oneOutputRowPerGapWorkItem": true,
+    "tickerJoinAllowed": false
+  },
+  "purpose": "Preserve document-derived SEC primary security descriptors for the 656 frozen identity-gap work items without resolving an entity, security, listing, ticker interval, terminal session, payment, return, or Original-V4 gate.",
+  "remoteBinding": {
+    "parentRemoteCommit": "a4a06368149efe67e8418e489510fd6e88d277a4",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remote": "https://github.com/Karlryl/screener-data.git"
+  },
+  "schema": "early-detection-sec-primary-security-descriptor-contract/v1",
+  "selectionContract": {
+    "allowedOutputStatuses": [
+      "AMBIGUOUS",
+      "MISSING",
+      "OBSERVED_SOURCE_DESCRIPTOR"
+    ],
+    "descriptorFields": {
+      "exchangeCik": {
+        "FORM15_V2": null,
+        "FORM25_V2": "exchangeCik"
+      },
+      "exchangeName": {
+        "FORM15_V2": null,
+        "FORM25_V2": "exchangeName"
+      },
+      "issuerCik": {
+        "FORM15_V2": "issuerCik",
+        "FORM25_V2": "issuerCik"
+      },
+      "issuerName": {
+        "FORM15_V2": "issuerName",
+        "FORM25_V2": "issuerName"
+      },
+      "securityDescription": {
+        "FORM15_V2": null,
+        "FORM25_V2": "securityDescription"
+      },
+      "securityTitleClass": {
+        "FORM15_V2": "securityTitleClass",
+        "FORM25_V2": null
+      }
+    },
+    "duplicateMetadataRows": "PRESERVE_ALL_SOURCE_ROW_IDS_AND_DEDUPLICATE_ONLY_BYTE_IDENTICAL_EVIDENCE",
+    "fieldSplittingAllowed": false,
+    "form15SecurityTitleClassIsIndivisible": true,
+    "missingOrUnavailableSourceField": "MISSING",
+    "sourceAmbiguityPromotionAllowed": false,
+    "sourceRefsPreservedVerbatim": true
+  },
+  "taskId": "Q003-SEC-PRIMARY-SECURITY-DESCRIPTOR",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
