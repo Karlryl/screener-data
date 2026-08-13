@@ -1,0 +1,92 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v19",
+  "createdAt": "2026-08-13T11:19:32Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tag889 as an exact no-credit Form-25 suspension-event/queue-role reconciliation milestone, preserve byte-exact V18 history, and keep Q003 open until all five semantics are actually resolved.",
+  "contractSelfSha256": "cee971e68cdd22e6146b0216563225650127d0d96d17d48b6c093c35aca96dc8",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "9705c9814fe8410401f5ec0d808b9424689f639e",
+    "buildBaseTag": 889,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v19.json",
+      "scripts/early-detection-continuous-free-source-v19.py",
+      "state/early-detection-free-source-events-v19.jsonl",
+      "state/early-detection-free-source-state-v19.json",
+      "tests/early-detection-continuous-free-source-v19.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "v18Contract": "37bf21c8a80c9904c1dc93a8729af8e757a934f9f6b87922389ac4a206f92492",
+      "v18Controller": "e6ef14573149c326473d925697968f40a1dbd738901c399c29a873648c8c503f",
+      "v18ControllerTest": "3491e8812c7de0adcfd30443a2bae4ccefd6ecf7395a879f43f959f8a6d39d9e",
+      "v18EventLog": "715514032dd5cfd7fa570dc3e47a96d2be46ead4a8a969e14cb5c05521d6c01f",
+      "v18State": "0d2b92c5b6ced877593878dba5cdd40d4690b4081ed83bb5d12f000ac2304f43",
+      "roleContract": "ad858bb73cc1c727916b5bb66848a164a429c814f84b24a8ea0209dd06888f98",
+      "roleBuilder": "d8189abdd7d0e0c4d767df525c9ea4c1049a77f7a2fbed0d548a11643cfed381",
+      "roleTest": "9d3e1c96392e8bd3e7385c69e3e1d3acab27062cab83929fa6406759ffa10041"
+    },
+    "inputBundleSha256": "4beac6d881549726364d4683f02e910699c3a48be26ea28e6ec0066d8ff72645",
+    "inputBundleRecomputedFromBaseRawHashesAndMilestoneDelta": true,
+    "v18EventLogMustBeByteExactPrefix": true,
+    "v18ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "consumerArtifactMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBinding": {
+    "tag": 889,
+    "commit": "9705c9814fe8410401f5ec0d808b9424689f639e",
+    "parent": "a0d61880f14b7f4abe742a9c58b21e22f16b3641",
+    "subject": "Tag 889: SEC-Aussetzungsereignisse und Rollen reconciliieren",
+    "workstream": "Q003_SEC_FORM25_SUSPENSION_EVENT_ROLE_RECONCILIATION",
+    "artifactCount": 3,
+    "deltaSha256": "4fd8492d0f45112477cbdbcb09e25c1c73cb4f94e2ef9a88150cc4ac82f065b7",
+    "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+  },
+  "implementation": {
+    "controllerNormalizedSha256": "843b8fae81fedefaa58a9f97f2c53dc1ddcc45934dbf66d03481e3685c209387",
+    "testNormalizedSha256": "bb4a9cd4d10161d0134d1fb8a02ce4ed50cf6d34804b992ecdc22b73881aec25",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v19.jsonl",
+    "eventLogRawSha256": "c9851dca2c68582e0fd1a5fd9301d86e3bc18d5e968cb3b1b4d8d56f231edd1b",
+    "eventCount": 7,
+    "lastEventSha256": "355bbcdb757cd3e5abc77fd3f5049733be05e67d151a579a4669d35ddda4812c",
+    "statePath": "state/early-detection-free-source-state-v19.json",
+    "stateRawSha256": "a241a9e77d1f49e2741ebab3b7f21fdf0025f71730abe5c341a648b7c2caafee",
+    "stateSelfSha256": "73d0f6db6d8300c07bb8a7c079bfeb9b638aa36e39d2befde1f9c8c02978c5be",
+    "operationalProjectionSha256": "35691ff8c61bfed20e6fae73647e02eca073d1bdbb23aa10311c981d9f0c0297"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v18EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltaMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
