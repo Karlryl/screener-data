@@ -1,0 +1,232 @@
+{
+  "schema": "consolidated-adjusted-ohlcv-zero-cost-source-decision-contract/v1",
+  "createdAt": "2026-08-13T09:38:03Z",
+  "taskId": "Q003-CONSOLIDATED-ADJUSTED-OHLCV-ZERO-COST-SOURCE-DECISION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Freeze the current zero-cost source decision for the completely empty consolidated-adjusted-OHLCV semantic across the sealed 44,352-row Q003 queue, distinguish a bounded private entitlement pilot from a full-universe acquisition route, and prevent venue-only, short-history, export-restricted or identity-incomplete data from being relabeled as confirmatory evidence.",
+  "consumerRequirement": {
+    "queueRows": 44352,
+    "studyWindowStart": "2009-01-01",
+    "studyWindowEnd": "2024-12-31",
+    "semantic": "CONSOLIDATED_ADJUSTED_OHLCV",
+    "requiredFields": [
+      "date",
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "adjustedOpen",
+      "adjustedHigh",
+      "adjustedLow",
+      "adjustedClose",
+      "adjustedVolume",
+      "dividend",
+      "splitFactor"
+    ],
+    "requiresPermanentSecurityOrListingKey": true,
+    "requiresThenListedPopulationCoverage": true,
+    "requiresTerminalAndDelistedTreatment": true,
+    "providerRowsMayRemainPrivate": true,
+    "publicRedistributionNotRequired": true,
+    "currentPartialEvidenceRows": 0,
+    "currentResolvedRows": 0
+  },
+  "authoritativeInputs": {
+    "coverageLedger": {
+      "path": "reports/early-detection/sec-terminal-wealth-evidence-coverage-ledger-v1.json",
+      "rawSha256": "bd90edb31182f3f45c3ff10f9f800e4b1e0adf137880ddcf1838537c1f01d9bb",
+      "reportSha256": "b089e12f1a11a45a87388df334efb6ee644460bf2f9b4f54527d39ea8adc8dd2"
+    },
+    "continuousSourceRegistry": {
+      "path": "research/early-detection-v4/continuous-free-source-registry-v1.json",
+      "rawSha256": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927"
+    },
+    "quantConnectRightsDisposition": {
+      "path": "research/early-detection-v4/quantconnect-free-cloud-rights-disposition-contract-v1.json",
+      "rawSha256": "0676fa88d4ad76f8a4a5eb951d2a3d529e25840acf11a7cdb484adc309d39c8e",
+      "contractSha256": "10c35d442ed9249fd94680a03566b5a1ce9f13a4f30b346cb4abc0db697c8283"
+    },
+    "tiingoPrerequisite": {
+      "path": "research/early-detection-v4/tiingo-free-eod-prerequisite-contract-v1.json",
+      "rawSha256": "6ef3bbcce169fd840432c941ef83b31c6c30ee73194e955c1899d2c6530b888d",
+      "contractSha256": "b65918c52c3effe3be3cd84fe586c2f896aed4fa502400e7fbc3f46fcb7dc0cf"
+    },
+    "alpacaPrerequisite": {
+      "path": "research/early-detection-v4/alpaca-basic-corporate-actions-prerequisite-contract-v1.json",
+      "rawSha256": "cd2bbeabae5fd95aee61ee938fc5746e5ad55305c7ce847aacaef58436cc3c6a"
+    },
+    "massivePrerequisite": {
+      "path": "research/early-detection-v4/massive-stocks-basic-prerequisite-contract-v1.json",
+      "rawSha256": "95f84d1a97756186d2528f04bb7a4166234f00c55dfd569978c1cf232379e0a9"
+    },
+    "simfinPrerequisite": {
+      "path": "research/early-detection-v4/simfin-free-prerequisite-contract-v1.json",
+      "rawSha256": "680e23d40679e11b5405639b24b8e8d01fd9419cc609e74854535762b47a9c77"
+    },
+    "eodhdPrerequisite": {
+      "path": "research/early-detection-v4/eodhd-free-prerequisite-contract-v1.json",
+      "rawSha256": "16fdc6d6ce6df996c4d5340b0b65830464a5f412c264caf2d7d92c7d73e692d3"
+    },
+    "marketstackPrerequisite": {
+      "path": "research/early-detection-v4/marketstack-free-prerequisite-contract-v1.json",
+      "rawSha256": "83ec8d2ed2a051c782f4130bce912f791663a8856858b9546b6752649eb69ca7"
+    },
+    "twelveDataPrerequisite": {
+      "path": "research/early-detection-v4/twelve-data-basic-prerequisite-contract-v1.json",
+      "rawSha256": "769efda94a83a112ee8945871209da7315341908a2673c3595b804fd6fd05890"
+    },
+    "legacyFreeSourceAudit": {
+      "path": "reports/early-detection/free-ohlcv-source-audit-2026-08-08.json",
+      "rawSha256": "d9ee9b263fe83350bea2bb5a8ce813bdc32f504e7fc55065cc2ceb550a24a1a5"
+    }
+  },
+  "officialRechecks": [
+    {
+      "sourceId": "QUANTCONNECT_FREE_CLOUD",
+      "url": "https://www.quantconnect.com/docs/v2/writing-algorithms/logging",
+      "observedAt": "2026-08-13T09:30:00Z",
+      "verifiedFact": "QuantConnect states that logging dataset information is not permitted."
+    },
+    {
+      "sourceId": "QUANTCONNECT_FREE_CLOUD",
+      "url": "https://www.quantconnect.com/docs/v2/cloud-platform/datasets/licensing",
+      "observedAt": "2026-08-13T09:30:00Z",
+      "verifiedFact": "Cloud access does not grant row export; local download is separately licensed, restricted to internal LEAN use and may not be redistributed or converted."
+    },
+    {
+      "sourceId": "TIINGO_FREE",
+      "url": "https://www.tiingo.com/about/pricing",
+      "observedAt": "2026-08-13T09:30:00Z",
+      "verifiedFact": "The zero-dollar Starter tier permits 500 unique symbols per month, 50 requests per hour, 1000 requests per day and 1 GB per month under an internal-use-only license."
+    },
+    {
+      "sourceId": "TIINGO_FREE",
+      "url": "https://www.tiingo.com/documentation/end-of-day",
+      "observedAt": "2026-08-13T09:30:00Z",
+      "verifiedFact": "The authenticated EOD API documents raw and adjusted OHLCV, cash dividends and split factors, but its public ticker metadata supplies ticker and exchange fields rather than a baseline permanent-security identifier."
+    },
+    {
+      "sourceId": "ALPHA_VANTAGE_FREE",
+      "url": "https://www.alphavantage.co/documentation/",
+      "observedAt": "2026-08-13T09:30:00Z",
+      "verifiedFact": "The full daily adjusted endpoint is marked Premium; the raw daily endpoint is not a substitute for adjusted consolidated OHLCV with complete actions."
+    }
+  ],
+  "sourceDispositions": [
+    {
+      "sourceGroup": "QUANTCONNECT_FREE_CLOUD",
+      "disposition": "REJECT_FULL_UNIVERSE_EXPORT_RIGHTS",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": false,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "TIINGO_FREE",
+      "disposition": "ALLOW_THREE_CASE_PRIVATE_ENTITLEMENT_PILOT_AFTER_ACCOUNT_GATE",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": true,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "ALPHA_VANTAGE_FREE",
+      "disposition": "REJECT_ADJUSTED_HISTORY_PREMIUM",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": false,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "ALPACA_AND_MASSIVE_FREE",
+      "disposition": "RECENT_SIP_OR_IEX_SENSITIVITY_ONLY",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": true,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "SIMFIN_EODHD_MARKETSTACK_TWELVEDATA_FREE",
+      "disposition": "SHORT_HISTORY_OR_EPHEMERAL_SENSITIVITY_ONLY",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": true,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "SEC_EXCHANGE_AND_REGULATORY_PRIMARY",
+      "disposition": "EVENT_AND_MARKET_ACTIVITY_EVIDENCE_NOT_OHLCV",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": false,
+      "fullUniverseConfirmatoryEligible": false
+    },
+    {
+      "sourceGroup": "RESEARCH_ARCHIVES_AND_STOOQ",
+      "disposition": "CONTINUE_DISCOVERY_QUARANTINE_UNTIL_LICENSE_PROVENANCE_AND_ACTION_RECONCILIATION_PASS",
+      "canMaterializePublicEvidenceRows": false,
+      "canRunBoundedPrivatePilot": false,
+      "fullUniverseConfirmatoryEligible": false
+    }
+  ],
+  "independentBlockerChecks": [
+    {
+      "checkId": "RIGHTS_AND_REPRODUCIBILITY",
+      "status": "BLOCKED",
+      "mechanism": "QuantConnect forbids dataset-information logging and separately licenses downloads; Tiingo permits internal use but not public provider-row redistribution.",
+      "whatWouldClear": "A zero-cost license must permit private durable storage plus independently verifiable manifests without exporting prohibited provider rows."
+    },
+    {
+      "checkId": "WINDOW_COVERAGE_AND_CAPACITY",
+      "status": "BLOCKED",
+      "mechanism": "Tiingo Starter is capped at 500 unique symbols per month, adjusted Alpha Vantage history is premium, and the remaining free vendors are recent, short-history, venue-limited or ephemeral.",
+      "whatWouldClear": "A zero-cost acquisition plan must cover the then-listed 2009-2024 population within a sealed, outcome-blind schedule and retain all required adjusted fields."
+    },
+    {
+      "checkId": "IDENTITY_ACTION_AND_TERMINAL_LINKAGE",
+      "status": "BLOCKED",
+      "mechanism": "The Q003 queue lacks resolved entity/security/listing keys; Tiingo baseline public metadata has no permanent identifier, while current free archives do not prove complete actions, final sessions and delisted treatment.",
+      "whatWouldClear": "Every price series must be joined through a verified permanent security or listing key and reconciled to complete action and terminal evidence."
+    }
+  ],
+  "decision": {
+    "status": "THREE_INDEPENDENT_BLOCKER_CHECKS_CONFIRMED_NO_CURRENTLY_QUALIFIED_FULL_UNIVERSE_ZERO_COST_SOURCE",
+    "consolidatedAdjustedOhlcvResolved": false,
+    "fullUniverseAcquisitionAuthorized": false,
+    "tiingoThreeCasePilotEligibleAfterAccountGate": true,
+    "tiingoFullUniverseEligible": false,
+    "researchArchiveDiscoveryMayContinue": true,
+    "recentOrVenueSpecificSensitivityMayContinue": true,
+    "paidFallbackAuthorized": false,
+    "nextAutonomousAction": "Continue provenance-and-license discovery in research archives and prepare, without executing, an exact three-case Tiingo entitlement pilot that cannot promote ticker-only identity, terminal payment or full-universe coverage."
+  },
+  "claimLocks": {
+    "canonicalEvidenceCellsMaterialized": false,
+    "consolidatedAdjustedOhlcvResolved": false,
+    "fullUniverseCoverageClaimed": false,
+    "survivorshipSafeCoverageClaimed": false,
+    "permanentIdentityResolved": false,
+    "completeCorporateActionsResolved": false,
+    "terminalSessionResolved": false,
+    "terminalWealthComplete": false,
+    "providerRowsPublished": false,
+    "productionRequestsAuthorized": false,
+    "paidFallbackAuthorized": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "020c54d4e02f8a754e4b5a79b845ae2a4244e7f8",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/consolidated-adjusted-ohlcv-zero-cost-source-decision-contract-v1.json",
+    "verifierPath": "scripts/verify-consolidated-adjusted-ohlcv-zero-cost-source-decision-v1.py",
+    "testPath": "tests/verify-consolidated-adjusted-ohlcv-zero-cost-source-decision-v1.test.js",
+    "verifierNormalizedSha256": "c5c71520078e30ebad46106f1b2eff0e9ab883a9eab0a628932c24dd98df05e8",
+    "testNormalizedSha256": "5eb8a964b5d3c887775582c05513562d6929da018639d79615fc831d087b2ad0",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "remoteVerificationRequired": true,
+    "noRemoteVerificationMustFail": true
+  },
+  "contractSha256": "82729a5441926ab8fcc51c7bddb38070adce35230e7f9e4f5e4388ced1c983f5"
+}
