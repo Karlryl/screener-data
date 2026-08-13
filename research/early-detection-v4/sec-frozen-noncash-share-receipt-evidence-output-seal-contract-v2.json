@@ -1,0 +1,89 @@
+{
+  "schema": "early-detection-sec-frozen-noncash-share-receipt-evidence-output-seal-contract/v2",
+  "createdAt": "2026-08-13T02:55:00Z",
+  "taskId": "Q003-SEC-FROZEN-NONCASH-SHARE-RECEIPT-EVIDENCE-OUTPUT-SEAL-V2",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append-only seal the exact six-row noncash share-receipt output and source rebuild without extending its semantic ceiling or granting terminal, identity, listing, outcome or Original-V4 credit.",
+  "sourceBase": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "minimumAncestor": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+    "minimumAncestorTag": 857,
+    "futureIntroductionMustDescendLinearly": true,
+    "futureIntroductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-output-seal-contract-v2.json",
+      "scripts/verify-sec-frozen-noncash-share-receipt-evidence-output-v2.py",
+      "tests/verify-sec-frozen-noncash-share-receipt-evidence-output-v2.test.js"
+    ]
+  },
+  "implementation": {
+    "contract": {
+      "path": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v1.json",
+      "bytes": 18894,
+      "rawSha256": "9451a82d6a7e51d7d531b6a035fdc9afb1d3794fd117e677c1021d6a68fa83b2",
+      "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019"
+    },
+    "builder": {
+      "path": "scripts/build-sec-frozen-noncash-share-receipt-evidence-v1.py",
+      "bytes": 31779,
+      "rawSha256": "de7c05e430af3ad50b51e13232e1fe81bf6c29cb962b55de10f94147e883d4e1",
+      "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019"
+    },
+    "test": {
+      "path": "tests/build-sec-frozen-noncash-share-receipt-evidence-v1.test.js",
+      "bytes": 8988,
+      "rawSha256": "89aa207c536f7cf09f6c8b9fb9801a51e14e83f62f8069d3c2026700428470f2",
+      "introductionCommit": "8ea3c8e488bd68091fc197edd5d75660406db019"
+    },
+    "output": {
+      "path": "reports/early-detection/sec-frozen-noncash-share-receipt-evidence-v1.json",
+      "bytes": 20735,
+      "rawSha256": "d02cb40ca4c38212af29c00d8c08a54fee120df615e44418cc120ed8a0575f07",
+      "selfField": "reportSha256",
+      "selfSha256": "8c892de667133e43d287ca20970f12da5cdce2a4ef71b5d684657a6446f8b1a2",
+      "introductionCommit": "cc20000a578ea99699fbb18a845b4cecfcc4d57d"
+    }
+  },
+  "expectedPopulation": {
+    "actualNoncashShareReceiptStatementRows": 6,
+    "dualRatioRows": 2,
+    "frozenEvidenceRows": 6,
+    "ratioRows": 8,
+    "uniqueAccessions": 6
+  },
+  "expectedDeduplication": {
+    "ACCESSION": 0,
+    "ACCESSION_BLOB_DOCUMENT_SENTENCE_PROVENANCE": 0,
+    "BLOB_SHA256": 0,
+    "EVIDENCE_SENTENCE_SHA256": 0
+  },
+  "requiredClaims": {
+    "sourceRebuildNormal": true,
+    "sourceRebuildOptimized": true,
+    "sourceRebuildByteExact": true,
+    "remoteBytesVerified": true,
+    "semanticCeiling": "EXACT_SIX_COMPLETED_NONCASH_SHARE_RECEIPTS_WITH_EXPLICIT_RATIOS",
+    "scopeLimit": "EXACT_SIX_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR"
+  },
+  "claimLocks": {
+    "cashConsiderationVerified": false,
+    "cashReceiptVerified": false,
+    "corporateActionChainComplete": false,
+    "feesOrTaxesVerified": false,
+    "fractionalShareTreatmentVerified": false,
+    "historicalIdentityResolved": false,
+    "laterDistributionsVerified": false,
+    "laterRecoveriesVerified": false,
+    "listingContinuityVerified": false,
+    "noncashReceiptBeyondExactRows": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false,
+    "universalHolderCoverageVerified": false
+  },
+  "contractSha256": "5fd01ef7b50992a7207cec256e782658f9b28df281e633a11f12a59a1e3e87cb"
+}
