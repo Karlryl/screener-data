@@ -785,6 +785,35 @@ def validate_report(
             raise DescriptorError("implementation source commit lacks a bound file") from exc
         if sha(raw) != implementation[key]:
             fail("implementation Git/raw binding changed")
+    output_relative = OUTPUT.relative_to(ROOT).as_posix()
+    output_tracked = subprocess.run(
+        ["git", "ls-files", "--error-unmatch", output_relative],
+        cwd=ROOT, check=False, capture_output=True,
+    ).returncode == 0
+    if output_tracked:
+        introductions = [
+            item for item in git_text(
+                "log", "--reverse", "--format=%H", "--diff-filter=A",
+                f"{implementation['sourceCommit']}..{head}", "--", output_relative,
+            ).splitlines() if item
+        ]
+        if len(introductions) != 1:
+            fail("descriptor output must have exactly one introduction commit")
+        introduction = introductions[0]
+        if git_text("show", "-s", "--format=%P", introduction).split() != [implementation["sourceCommit"]]:
+            fail("descriptor output introduction is not the direct child of the source commit")
+        if git_text("log", "--format=%H", f"{introduction}..{head}", "--", output_relative):
+            fail("descriptor output changed after its introduction")
+        try:
+            git_bytes("show", f"{implementation['sourceCommit']}:{output_relative}")
+        except subprocess.CalledProcessError:
+            pass
+        else:
+            fail("descriptor output existed at the source commit")
+        if git_bytes("show", f"{introduction}:{output_relative}") != OUTPUT.read_bytes():
+            fail("descriptor output bytes differ from the introduction commit")
+    elif head != implementation["sourceCommit"]:
+        fail("untracked descriptor output may only be built at its source commit")
     expected = build_rows(gap["rows"], lane_rows, contract["claimLocks"])
     validate_rows(value["rows"], expected, contract["claimLocks"])
     if value["population"] != population(expected) or value["fieldStatusCounts"] != field_status_counts(expected):

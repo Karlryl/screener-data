@@ -44,7 +44,14 @@ function runPython(optimized, command) {
   return JSON.parse(lines.at(-1));
 }
 
-assert.equal(fs.existsSync(output), false, 'production output must remain absent before tests');
+const outputPresent = fs.existsSync(output);
+const expectedOutputRawSha256 = '820c8cf9814d4d89542d2ddb91a784fcec4426ff091ff24e15c5fe0a348d6d3b';
+const expectedOutputSelfSha256 = '0799b8e8295875237fdd2dbd40eca43e58663aa14f7c70eac8e7d8624f8d6111';
+if (outputPresent) {
+  const outputRaw = fs.readFileSync(output);
+  assert.equal(sha256(outputRaw), expectedOutputRawSha256, 'production output raw binding changed');
+  assert.equal(JSON.parse(outputRaw).reportSha256, expectedOutputSelfSha256, 'production output self hash changed');
+}
 
 const contractRaw = fs.readFileSync(contractPath);
 assert.equal(
@@ -74,6 +81,7 @@ for (const optimized of [false, true]) {
   const verification = runPython(optimized, 'verify-contract');
   const selfTest = runPython(optimized, 'self-test');
   const rebuild = runPython(optimized, 'rebuild-digest');
+  const outputVerification = outputPresent ? runPython(optimized, 'verify-output') : null;
   assert.equal(verification.status, 'PASS');
   assert.equal(verification.outcomesAccessed, false);
   assert.equal(selfTest.status, 'PASS');
@@ -94,12 +102,18 @@ for (const optimized of [false, true]) {
   assert.deepEqual(rebuild.sourceLaneCounts, { FORM15_V2: 65, FORM25_V2: 591 });
   assert.equal(rebuild.twoRebuildsIdentical, true);
   assert.equal(rebuild.outcomesAccessed, false);
+  if (outputVerification) {
+    assert.equal(outputVerification.status, 'PASS');
+    assert.equal(outputVerification.rawSha256, expectedOutputRawSha256);
+    assert.equal(outputVerification.reportSha256, expectedOutputSelfSha256);
+    assert.equal(outputVerification.outcomesAccessed, false);
+  }
   runs.push(rebuild);
 }
 
 assert.equal(runs[0].rowsCanonicalSha256, runs[1].rowsCanonicalSha256);
 assert.deepEqual(runs[0].fieldStatusCounts, runs[1].fieldStatusCounts);
-assert.equal(fs.existsSync(output), false, 'tests must not create a production output');
+assert.equal(fs.existsSync(output), outputPresent, 'tests must not change production output presence');
 
 console.log(JSON.stringify({
   status: 'PASS',
@@ -109,6 +123,6 @@ console.log(JSON.stringify({
   sourceLaneCounts: runs[0].sourceLaneCounts,
   rowsCanonicalSha256: runs[0].rowsCanonicalSha256,
   normalAndOptimizedIdentical: true,
-  productionOutputAbsent: true,
+  productionOutputPresentAndVerified: outputPresent,
   outcomesAccessed: false,
 }));
