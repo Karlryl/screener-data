@@ -1,0 +1,185 @@
+{
+  "schema": "early-detection-q010-subchunk-governance-contract/v1",
+  "createdAt": "2026-08-13T20:53:30Z",
+  "purpose": "Prospectively record and remotely introduce the first concrete Q010 core subchunk before any source retrieval, coding or signal work begins.",
+  "contractSelfSha256": "ad403fa935add4e1b4f360f6e01e2035ad6fb684691cd1f40a6336e78b8278c3",
+  "repository": {
+    "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
+    "branch": "codex/form25-v2-promotion-20260812",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "baseCommit": "ba90828892932147c93afe2040498116982bd416",
+    "baseCommitCommittedAt": "2026-08-13T20:37:18Z",
+    "expectedIntroductionSubject": "Tag 912: Q010-Subchunk vor Arbeitsbeginn versiegeln",
+    "expectedIntroductionPaths": [
+      "research/early-detection-v4/q010-subchunk-governance-contract-v1.json",
+      "scripts/early-detection-q010-subchunk-v1.py",
+      "state/early-detection-q010-subchunk-events-v1.jsonl",
+      "state/early-detection-q010-subchunk-state-v1.json",
+      "tests/early-detection-q010-subchunk-v1.test.js"
+    ],
+    "introductionMustBeExactDirectChild": true,
+    "expectedStartSubject": "Tag 913: Q010-Subchunk prospektiv starten",
+    "expectedStartPaths": [
+      "research/early-detection-v4/q010-subchunk-governance-contract-v1.json",
+      "scripts/early-detection-q010-subchunk-v1.py",
+      "state/early-detection-q010-subchunk-events-v1.jsonl",
+      "state/early-detection-q010-subchunk-state-v1.json",
+      "tests/early-detection-q010-subchunk-v1.test.js"
+    ],
+    "startIntroductionMustBeExactDirectChildOfDecisionIntroduction": true
+  },
+  "parentV23Binding": {
+    "introductionCommit": "ba90828892932147c93afe2040498116982bd416",
+    "decisionSourceEventId": "EVT-00000011",
+    "contractPath": "research/early-detection-v4/continuous-free-source-operational-state-contract-v23.json",
+    "contractRawSha256": "91268dc731fc83e412b984ca36aae18218dd999c47f45d2e66e59f44a1e24424",
+    "controllerPath": "scripts/early-detection-continuous-free-source-v23.py",
+    "controllerRawSha256": "98794e973ad060c26dc789c8aa53e2982e6d477139a2b7fe5de246f2c73c0966",
+    "eventsPath": "state/early-detection-free-source-events-v23.jsonl",
+    "eventsRawSha256": "8aaf40ed59d6c0dbc56aa6438c662b8cdfcf5ca0e903a0c11690685f29621c1e",
+    "statePath": "state/early-detection-free-source-state-v23.json",
+    "stateRawSha256": "29d40b8d2a34c8d2377b086ea92154ddbc41a72670bff79bd9b41922a1cb5297",
+    "testPath": "tests/early-detection-continuous-free-source-v23.test.js",
+    "testRawSha256": "5f48a6e91066d3bd1bcbd297a9ef6438c3ddb54bac9594381569906f055f2a0d",
+    "requiredNextTaskId": "Q010-RESEARCH-ARCHIVE-DISCOVERY",
+    "requiredEarlyDetectionSystemBuilt": false,
+    "requiredOutcomesAccessed": false
+  },
+  "decision": {
+    "subchunkId": "Q010-SC-001-CA-DMV-AV-2015-CENSUS-TEL",
+    "targetEntityOrFrozenPopulationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
+    "targetThemeOrThemeEraId": "THEME-CA-AUTONOMOUS-VEHICLE-PUBLIC-ROAD-TESTING-2014-2016",
+    "targetDimensions": [
+      "T",
+      "E",
+      "L"
+    ],
+    "namedCoverageGate": "FIRST_FULL_PRIMARY_SOURCE_TO_TEL_EVIDENCE_PIPELINE_WITH_FROZEN_CENSUS",
+    "coherentTELAssemblyContribution": "Build the first full official-census source-to-PIT-identity-to-T/E/L pipeline with equal source budget across the frozen population, advancing one coherent entity-theme capsule or typed HOLD without company cherry-picking.",
+    "continuationCriterion": "CONTINUE_ONLY_UNTIL_THE_OFFICIAL_DMV_PERMIT_HOLDER_AND_2015_DISENGAGEMENT_PRIMARY_PAYLOAD_CENSUS_IS_FROZEN_AND_HASH_BOUND_SOURCE_AVAILABILITY_IS_MAPPED_EQUAL_BUDGET_PIT_IDENTITY_IS_ATTEMPTED_FOR_EVERY_THEN_LISTED_DOMESTIC_ISSUER_AND_THE_FIRST_ACCEPTED_T_E_L_BUNDLE_OR_TYPED_HOLD_EXISTS_WITHOUT_CANDIDATE_STATE_OR_SCIENTIFIC_CLAIM",
+    "pauseOrStopCriterion": "PAUSE_IF_EXACT_CONSERVATIVE_AVAILABILITY_CANNOT_BE_MAPPED_PRIMARY_PAYLOADS_ARE_UNAVAILABLE_CENSUS_SCOPE_IS_AMBIGUOUS_ANY_PRICE_RETURN_OR_OUTCOME_ACCESS_IS_NEEDED_ANY_SINGLE_DIMENSION_OUTGROWS_THE_OTHERS_AFTER_EQUAL_BUDGET_OR_CONTROL_BALANCE_REQUIRES_OUTCOME_KNOWLEDGE_STOP_AFTER_ONE_VERIFIED_BUNDLE_OR_TYPED_HOLD",
+    "scientificCredit": "NONE",
+    "decisionRecordedAt": "2026-08-13T20:53:30Z",
+    "preChunkTimingVerified": true,
+    "workStarted": false,
+    "workStartedAt": null,
+    "workMayStartAfter": "REMOTE_INTRODUCTION_OF_DECISION_AND_SEPARATE_APPEND_ONLY_START_EVENT",
+    "decisionSourceEventId": "Q010-EVT-00000001",
+    "decisionSourceEventSequence": 1,
+    "parentDecisionSourceEventId": "EVT-00000011",
+    "populationSelectionRule": "Use the complete official California DMV permit-holder census and complete 2015 disengagement-report submission census; never select an individual company from later fame, price, GQS, survival or outcome knowledge.",
+    "equalResearchBudgetRequired": true,
+    "secondarySourcesMayLocateButCannotSetTEL": true,
+    "sourceCutoffInclusiveUtc": "2020-12-31T23:59:59Z",
+    "developmentPilotOnly": true,
+    "frozenControlPopulationId": "POP-SEC-DOMESTIC-LISTED-SIC-3711-3674-7372-NON-DMV-2015-CONTROLS",
+    "researchBudgetPolicyId": "Q010-SC-001-EQUAL-BUDGET-V1"
+  },
+  "authorityPolicy": {
+    "singleConcreteSubchunkAuthority": "scripts/early-detection-q010-subchunk-v1.py",
+    "v23TaskLevelAuthorizationCannotAuthorizeConcreteSubchunkStart": true,
+    "v23NextMayAuthorizeGovernanceSetupOnly": true,
+    "concreteSourceWorkRequiresPostIntroductionStartEvent": "Q010-EVT-00000002",
+    "everyNextOrStartSurfaceMustReturnFalseBeforeStartEventRemoteIntroduction": true
+  },
+  "startEventContract": {
+    "schema": "early-detection-q010-subchunk-start-event-contract/v1",
+    "eventId": "Q010-EVT-00000002",
+    "sequence": 2,
+    "eventType": "SUBCHUNK_WORK_STARTED",
+    "previousEventSha256Rule": "MUST_EQUAL_COMPUTED_EVENT_1_SHA256",
+    "createdAtRule": "EXACT_TIMEZONE_QUALIFIED_AND_STRICTLY_AFTER_DECISION_RECORDED_AT",
+    "workStartedAtRule": "MUST_EQUAL_EVENT_CREATED_AT",
+    "requiredPayload": {
+      "subchunkId": "Q010-SC-001-CA-DMV-AV-2015-CENSUS-TEL",
+      "decisionEventId": "Q010-EVT-00000001",
+      "decisionEventSequence": 1,
+      "targetEntityOrFrozenPopulationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
+      "targetThemeOrThemeEraId": "THEME-CA-AUTONOMOUS-VEHICLE-PUBLIC-ROAD-TESTING-2014-2016",
+      "targetDimensions": [
+        "T",
+        "E",
+        "L"
+      ],
+      "workStarted": true,
+      "startAuthorized": true,
+      "researchSourceAccessAuthorized": true,
+      "pricesAccessed": false,
+      "returnsAccessed": false,
+      "outcomesAccessed": false,
+      "candidateStateComputationAllowed": false,
+      "scientificCredit": "NONE"
+    },
+    "remoteIntroduction": {
+      "requiredParent": "TAG912_DECISION_INTRODUCTION_COMMIT",
+      "requiredSubject": "Tag 913: Q010-Subchunk prospektiv starten",
+      "requiredPathStatuses": "EXACTLY_FIVE_M_PATHS_MATCHING_REPOSITORY_EXPECTED_START_PATHS",
+      "localBytesMustEqualIntroducedGitBlobs": true,
+      "headUpstreamAndLiveRemoteMustMatch": true
+    }
+  },
+  "populationAndBudgetPolicy": {
+    "schema": "early-detection-q010-frozen-population-equal-budget/v1",
+    "treatmentPopulationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
+    "treatmentSelectionRule": "Every entity in the complete official California DMV permit-holder census or complete 2015 disengagement submission census; no entity may be omitted based on later knowledge.",
+    "controlPopulationId": "POP-SEC-DOMESTIC-LISTED-SIC-3711-3674-7372-NON-DMV-2015-CONTROLS",
+    "controlSelectionRule": "Every domestic operating issuer with exactly one effective NYSE Nasdaq or NYSE-American common-equity listing at 2015-12-31T23:59:59Z, contemporaneous SEC SIC 3711 3674 or 7372, and no match in the frozen DMV census; unresolved identity or listing is REJECTED_HOLD.",
+    "controlMatchInputsAllowed": [
+      "CONTEMPORANEOUS_SEC_SIC",
+      "AS_FILED_TOTAL_ASSETS",
+      "AS_FILED_REVENUE"
+    ],
+    "controlMatchInputsForbidden": [
+      "PRICE",
+      "RETURN",
+      "FUTURE_GQS",
+      "SURVIVAL",
+      "DELISTING",
+      "OUTCOME_LABEL"
+    ],
+    "retainLaterDeadAcquiredBankruptOrDelistedEntitiesWithoutViewingLabels": true,
+    "winnerFailureBalanceStatus": "PENDING_SEALED_OUTCOME_STAGE_NOT_ASSERTED_OR_VIEWED_IN_Q010",
+    "candidateOrScientificCreditBlockedUntilBalanceAndHumanCodingGates": true,
+    "budgetUnit": "POPULATION_ROW_BY_DIMENSION",
+    "maxPrimaryLocatorQueriesPerPopulationRowPerDimension": 3,
+    "maxAcceptedPrimaryPayloadsPerPopulationRowPerDimension": 2,
+    "maxResearchMinutesPerPopulationRowPerDimension": 20,
+    "sharedThemeTPayloadLimit": 3,
+    "everyPopulationRowMustAttemptDimensions": [
+      "T",
+      "E",
+      "L"
+    ],
+    "sameBudgetForTreatmentAndControls": true,
+    "sameSourceClassPriorityForTreatmentAndControls": true,
+    "acceptedPrimaryPayloadCountDifferenceBetweenEAndLMaximum": 1,
+    "singleDimensionExpansionBeyondBudgetForbidden": true,
+    "secondaryLocatorQueriesDoNotCreateTELCredit": true,
+    "scientificCredit": "NONE"
+  },
+  "phasePolicy": {
+    "preIntroductionVerifyIsDiagnosticOnly": true,
+    "postIntroductionDecisionRecorded": true,
+    "postIntroductionStartAuthorized": false,
+    "separateAppendOnlyStartEventRequired": true,
+    "researchSourceAccessBeforeStartEventForbidden": true,
+    "pricesReturnsOutcomesForbidden": true,
+    "candidateStateComputationForbidden": true,
+    "scientificCredit": "NONE"
+  },
+  "outputs": {
+    "eventsPath": "state/early-detection-q010-subchunk-events-v1.jsonl",
+    "statePath": "state/early-detection-q010-subchunk-state-v1.json"
+  },
+  "implementation": {
+    "controllerPath": "scripts/early-detection-q010-subchunk-v1.py",
+    "controllerNormalizedSha256": "9094dcdf861b85616c37c7f8b452bed93665775e6431ff5ac9ff264c0763d33a",
+    "testPath": "tests/early-detection-q010-subchunk-v1.test.js",
+    "testRawSha256": "48b5c2ece08e1cb643e3e4e6b2a453216ef1e43ec9aa594461ad7b6c04776bd8",
+    "controllerChildExecutionsRequired": 0,
+    "onlyEncapsulatedGitProcessSurfaceAllowed": true,
+    "eventsRawSha256PinnedByController": true,
+    "stateRawSha256PinnedByController": true
+  }
+}
