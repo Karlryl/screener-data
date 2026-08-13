@@ -1,0 +1,77 @@
+{
+  "schema": "sec-liquidation-late-periodic-filing-capture-contract/v2",
+  "createdAt": "2026-08-13T15:50:05Z",
+  "taskId": "Q003-SEC-LIQUIDATION-LATE-PERIODIC-FILING-CAPTURE-RESUME",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Resume the exact private capture after recording the observed incomplete HTTP transfer as request event 26, while preserving the twenty-five accepted receipts, accepting zero partial bytes and allowing no automatic retry, public raw bytes, content interpretation, recovery, terminal wealth, price, return, outcome or Original-V4 credit.",
+  "inputs": {
+    "v1Runner": {"path": "scripts/capture-sec-liquidation-late-periodic-filings-v1.py", "rawSha256": "e74ddc95a579b00a294c29dc96c76dde27e5e83b73cd9d116cfafe89454ea558", "introductionCommit": "698cb1633510aaf8a3473dc6689a390fdb566949"},
+    "networkImplementation": {"path": "scripts/capture-sec-liquidation-downstream-filings-v1.py", "rawSha256": "4e36f022144f31defc129ec059b717a9c4a219cc49c15905ab584f5c5e9ce7d7"}
+  },
+  "observedPreSealState": {
+    "acceptedReceipts": 25,
+    "remainingCandidatesBeforeIncidentRecording": 97,
+    "lastAcceptedRequestSequence": 25,
+    "lastAcceptedReceiptSha256": "3c891fdc286eea4cb644c0023d2c35b1a42414ee64b627c07d1d01c39fe39085",
+    "lastAcceptedCapturedAt": "2026-08-13T15:48:12Z",
+    "v1ManifestSha256": "962f84e72a65dcfc9223a6eb8e2985fb817242ae8e7e1b1165c00fbf4850a2fe"
+  },
+  "transportIncident": {
+    "requestSequence": 26,
+    "candidateId": "SEC-LIQ-LATE-PERIODIC-344485f07ab0d19bd6c9337d7d6ed6bb08c9a0c68942611ca217507b29eb94bc",
+    "accession": "0001104659-17-000187",
+    "filedDate": "2017-01-03",
+    "form": "N-CSR",
+    "exceptionKind": "HTTP_CLIENT_INCOMPLETE_READ",
+    "partialBytesReportedByException": 22415822,
+    "acceptedRawBytes": 0,
+    "partialBytesPersisted": false,
+    "contentInspected": false,
+    "scientificCredit": false,
+    "outcomesAccessed": false
+  },
+  "resumeContract": {
+    "candidateFilings": 122,
+    "privateRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-late-periodic-sec-originals-v1",
+    "incidentLayout": "incidents/sha256/<first2>/<incidentRawSha256>.json",
+    "maximumNewRequestsPerRun": 97,
+    "automaticRetryCount": 0,
+    "nextRequestSequence": 27,
+    "rateDeferredStopsRun": true,
+    "transportIncidentStopsRun": true,
+    "existingBytesMustMatch": true,
+    "atomicWriteNew": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "698cb1633510aaf8a3473dc6689a390fdb566949",
+    "baseTag": 902,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v2.json",
+    "runnerPath": "scripts/capture-sec-liquidation-late-periodic-filings-v2.py",
+    "testPath": "tests/capture-sec-liquidation-late-periodic-filings-v2.test.js",
+    "runnerNormalizedSha256": "6a46bec732abe090a4f77c74bbc221f02cd438f12dae84e7e093a67d3a885a87",
+    "testRawSha256": "5d04d4bd0ba54b0b88073ede5b98b7db1b0ab11a352ad318c99c1a0ecca5bfc0",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "productionResumeRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "ccd286a386eb019e26f2e1748d719f87d4ddb042eaa8915eebc324cff7ec5c7e"
+}
