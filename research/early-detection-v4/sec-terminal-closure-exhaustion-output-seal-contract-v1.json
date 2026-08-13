@@ -1,0 +1,73 @@
+{
+  "schema": "early-detection-sec-terminal-closure-exhaustion-output-seal-contract/v1",
+  "createdAt": "2026-08-13T07:49:00Z",
+  "purpose": "Seal the exact 23-row terminal-closure output separately from its Tag-879 producer and require a full source-derived SEC corpus rebuild before accepting it.",
+  "taskId": "Q003-SEC-TERMINAL-CLOSURE-EXHAUSTION-OUTPUT-SEAL",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "source": {
+    "buildIntroductionCommit": "1adc2ecae56e56cc979ee3c7007ca6a04075600a",
+    "contractPath": "research/early-detection-v4/sec-terminal-closure-exhaustion-contract-v1.json",
+    "contractRawSha256": "533ba2bd165e6e10898be900da4da437bf6fd361c9b3335d2028e57660d9ab8c",
+    "contractSelfSha256": "c797c86818e7a8e5e6f47000da1e5a2ae50404268030db6d39f6c2a671aab76b",
+    "builderPath": "scripts/build-sec-terminal-closure-exhaustion-v1.py",
+    "builderRawSha256": "2acd2560e60cec6e7cd4ed37d473658ae78f480b0eecf7b4fb2ad5a3f75398df",
+    "testPath": "tests/build-sec-terminal-closure-exhaustion-v1.test.js",
+    "testRawSha256": "b8fa48084d01fbcd08bf2023c774adaceb68476eae215f71ac758a3a1b6b4dce"
+  },
+  "output": {
+    "path": "reports/early-detection/sec-terminal-closure-exhaustion-v1.json",
+    "rawSha256": "68d1002e6aa0836a39fc29d982bd1a91001ab626976f0472a74c69bf133d12ed",
+    "reportSha256": "9d0f7377952821796c5c709dc9baf9bd62aab74058277c7a98780b14f23daf7a",
+    "bytes": 30771,
+    "rows": 23,
+    "sourceDerivedFullRebuildRequired": true
+  },
+  "topology": {
+    "preSealParent": "1adc2ecae56e56cc979ee3c7007ca6a04075600a",
+    "sealIntroductionAddsExactlyThreeAuthorizedPaths": true,
+    "outputIntroductionDirectChildOfSeal": true,
+    "outputIntroductionAddsOnlyOutput": true,
+    "futureHistoryLinearSingleParent": true,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810"
+  },
+  "authorizedImplementation": {
+    "contractPath": "research/early-detection-v4/sec-terminal-closure-exhaustion-output-seal-contract-v1.json",
+    "verifierPath": "scripts/verify-sec-terminal-closure-exhaustion-output-v1.py",
+    "testPath": "tests/verify-sec-terminal-closure-exhaustion-output-v1.test.js",
+    "verifierNormalizedSha256": "645b53fb5c01251a3c07b99f54212658b2ff1cd6ae181a387746017e0c0113b8",
+    "testNormalizedSha256": "a35100fac7d75b86e75af7f9a676d89c5eea621d0023585f9c9d27fee794260d"
+  },
+  "expectedScanSummary": {
+    "blobCount": 27438,
+    "blobBytes": 326221948,
+    "documentsScanned": 40818,
+    "sentencesScanned": 1022061,
+    "parseErrors": 0,
+    "broadTradingEndMatches": 840,
+    "broadFinalOrNoFurtherMatches": 5,
+    "broadRecoveryMatches": 95,
+    "qualifiedLastTradingRows": 23,
+    "qualifiedNoFurtherDistributionRows": 0,
+    "qualifiedActualPostClosingRecoveryRowsFilterA": 0,
+    "qualifiedActualPostClosingRecoveryRowsFilterB": 0,
+    "existingFinalDistributionRows": 3
+  },
+  "claimLocks": {
+    "lastNamedExchangeTradingDayVerified": true,
+    "lastConsolidatedSessionVerified": false,
+    "laterOtcTradingExcluded": false,
+    "finalLiquidatingDistributionVerified": false,
+    "noFurtherDistributionsVerified": false,
+    "postClosingRecoveryVerified": false,
+    "noLaterRecoveryVerified": false,
+    "terminalWealthComplete": false,
+    "historicalIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "contractSha256": "a2d1dee502ec5d4c5a55a542b37bd5d87d6e1e35308ac3f07c33b64c63c7bd79"
+}
