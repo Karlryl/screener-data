@@ -1,0 +1,163 @@
+{
+  "consumerVerification": {
+    "downstreamCandidateFilings": 115,
+    "downstreamCorroborationRows": 4,
+    "outcomesAccessed": false,
+    "periodicCandidateFilings": 24,
+    "periodicCorroborationRows": 7,
+    "terminalWealthComplete": false,
+    "uniqueCorroboratedCases": 7
+  },
+  "contractSelfSha256": "f1277a9463cc6ff98a08cf1227c75cdeab7c87d995a0a284f3fa956aa7b60565",
+  "createdAt": "2026-08-13T14:50:18Z",
+  "implementation": {
+    "controllerNormalizedSha256": "19d6a707572945ba37ae988afc30e61bf2f6711e6cc16b5bcf437f34dce9643f",
+    "selfBindingsNormalizedBeforeHash": true,
+    "testNormalizedSha256": "15e4a2b53a88cd447bf6630cd5ecf761abf98388c21264a73bfe8bc87f46c26f"
+  },
+  "inputs": {
+    "consumerArtifactsMustVerifyRemoteBeforeImportCredit": true,
+    "inputBundleRecomputedFromRawHashesAndSevenMilestoneDeltas": true,
+    "inputBundleSha256": "b89a48b38156b27bdd761699d2e5131c74c32d531ba3eade7307d69e97e4db5e",
+    "rawSha256": {
+      "downstreamContract": "a9100217bc53e13a9391a2c0971154e28c0f027243de35df886c9328ba9ace7e",
+      "downstreamTest": "ce63b8d0e7b80eb96b845096daf6a174016e334325b6ac9ba38bde209e7a4248",
+      "downstreamVerifier": "4260ad89a5eb83aabedd85f1c5288ae43869f82bbbe9256ce37e7b570adf5d68",
+      "periodicContract": "95cf24fe0df195d3b0df31dc56c4e913527acdf353fd0f2b5b2973bdcd4dc422",
+      "periodicTest": "b07718142e20731f66d341b591b73bd88f57451bb23034d8fba49f66eb4c8d9e",
+      "periodicVerifier": "28e1e4c35d3bdcc4ed1d3838286bad5dc0c268201ea0af2f870b53346c297f14",
+      "v20Contract": "4d3003d800fcc008d09c8c5580864f3c785f25cc7d053ba2d8f51754f29e6a48",
+      "v20Controller": "e13960617934c10468ab8f92522e745b97580cb7304e85588c14b0787bb72c32",
+      "v20EventLog": "5fdcf15b333ef319bfc69c297d927a42d8a27dcb688327583d555c0a04f8650a",
+      "v20State": "44e9b09497040481b78739cb2fed6af3e6f097c559e4f962790b798317cce11e",
+      "v20Test": "89f7d5df945ba4643f2e8a3edba93c86a8af78b8a3261934f4a3fab8328c6598"
+    },
+    "v20ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "v20EventLogMustBeByteExactPrefix": true
+  },
+  "milestoneBindings": [
+    {
+      "artifactCount": 3,
+      "commit": "6573b0812e09dd12df176c7550800526481aa786",
+      "deltaSha256": "04c5cca3a05f949652607185f3ced4808f48305269acf6dbe68661a00e1cfa07",
+      "parent": "f5f5b9aa1af361481488c54cfcfee5fcb9914d69",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 893: Spaetere SEC-Emittentenfilings versiegelt entdecken",
+      "tag": 893,
+      "workstream": "Q003_DOWNSTREAM_SEC_DISCOVERY"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "7b434e1a17e4c1f29dc385004beb8afa705cbdd9",
+      "deltaSha256": "a56f6014c4bcf7ac60ca08ac2f0029cf5f9a00fa5a3837fcb244e439e7e6854b",
+      "parent": "6573b0812e09dd12df176c7550800526481aa786",
+      "status": "SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT",
+      "subject": "Tag 894: SEC-Folgefilings privat und fail-closed erfassen",
+      "tag": 894,
+      "workstream": "Q003_DOWNSTREAM_SEC_CAPTURE_V1"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "d29d9cf382bbf7d06f7666c01c93f3357ec6122a",
+      "deltaSha256": "b6dfb468bbf5d5fad8df779ff59d11da7c2aa4500cc25fae27899cf0fff65f75",
+      "parent": "7b434e1a17e4c1f29dc385004beb8afa705cbdd9",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 895: SEC-Folgeerfassung verlustfrei fortsetzbar machen",
+      "tag": 895,
+      "workstream": "Q003_DOWNSTREAM_SEC_CAPTURE_V2"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "aa8b85831e3ce62c0cee5dfebae13111c48c073d",
+      "deltaSha256": "13137252280a84fdbd29cc61cacb7867549b10add4473c14fe6dca2bedcd9788",
+      "parent": "d29d9cf382bbf7d06f7666c01c93f3357ec6122a",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 896: SEC-Folgefilings inhaltlich eng abgrenzen",
+      "tag": 896,
+      "workstream": "Q003_DOWNSTREAM_SEC_CONTENT_DISPOSITION"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "c6129c49d262e2072d98d8f0bbc1587fddfa8260",
+      "deltaSha256": "4cf6a882996d2ef542aba42c1f39ead5f67f931177a96ff57fc05ad3d2191c9c",
+      "parent": "aa8b85831e3ce62c0cee5dfebae13111c48c073d",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 897: Periodische SEC-Folgeberichte vorab versiegeln",
+      "tag": 897,
+      "workstream": "Q003_PERIODIC_SEC_DISCOVERY"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "4f8492a51690045ea30ce7e6c6b671a4ebb990ef",
+      "deltaSha256": "6ca5423b4b3c73e9b00ee0eea8dc3159a71502a529d0ff5cb9a1aeafd9e4e2b9",
+      "parent": "c6129c49d262e2072d98d8f0bbc1587fddfa8260",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 898: Periodische SEC-Folgefilings privat erfassen",
+      "tag": 898,
+      "workstream": "Q003_PERIODIC_SEC_CAPTURE"
+    },
+    {
+      "artifactCount": 3,
+      "commit": "c2a4e08893aad034392b880287641643bb3a8c47",
+      "deltaSha256": "e893d8b3a08b8cfe3243e78de25466b81bd9879731b026821a94626df8d1af81",
+      "parent": "4f8492a51690045ea30ce7e6c6b671a4ebb990ef",
+      "status": "OPERATIONAL_MILESTONE_NO_CREDIT",
+      "subject": "Tag 899: Periodische SEC-Berichte eng qualifizieren",
+      "tag": 899,
+      "workstream": "Q003_PERIODIC_SEC_CONTENT_DISPOSITION"
+    }
+  ],
+  "outputs": {
+    "eventCount": 9,
+    "eventLogPath": "state/early-detection-free-source-events-v21.jsonl",
+    "eventLogRawSha256": "c6345b05771715dbca28f67862e036bf9b03df6b007a6d9c380d069facd2fca0",
+    "lastEventSha256": "b0b21762bd15732e5ebe9785b89adc7eb29897aa6530756953106889384c529f",
+    "operationalProjectionSha256": "587c0b2b46e2f4d477123593f8953c2b0ca9ca1a9b4f0e2d2f6248d24c46bb26",
+    "statePath": "state/early-detection-free-source-state-v21.json",
+    "stateRawSha256": "106e1af72379c061f6b1389649ecca155fd36e60b235ebc952efef3b3d92ec6a",
+    "stateSelfSha256": "f9cabe5422ac48aed3197d17ae58f02b651b7d3d47d027e90b0e62cd619e999a"
+  },
+  "purpose": "Append Tags893-899 as exact no-credit SEC downstream and periodic-filing milestones, preserve byte-exact V20 history, and keep Q003 open until all five semantics are actually resolved.",
+  "replayContract": {
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "milestoneDeltasMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "v20EventLogMustBeByteExactPrefix": true,
+    "verifyWithoutRemoteMustFail": true
+  },
+  "repository": {
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v21.json",
+      "scripts/early-detection-continuous-free-source-v21.py",
+      "state/early-detection-free-source-events-v21.jsonl",
+      "state/early-detection-free-source-state-v21.json",
+      "tests/early-detection-continuous-free-source-v21.test.js"
+    ],
+    "buildBaseCommit": "c2a4e08893aad034392b880287641643bb3a8c47",
+    "buildBaseTag": 899,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "introductionMustBeDirectSingleParentChild": true,
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remote": "https://github.com/Karlryl/screener-data.git"
+  },
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v21",
+  "scientificLocks": {
+    "fiveRequiredDataSemanticsComplete": false,
+    "identityResolved": false,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "outcomesAccessed": false,
+    "pricesAccessed": false,
+    "resultComputationAllowed": false,
+    "returnsAccessed": false,
+    "terminalWealthComplete": false
+  },
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
