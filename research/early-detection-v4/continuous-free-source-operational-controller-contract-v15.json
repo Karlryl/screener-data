@@ -1,0 +1,77 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-controller-contract/v15",
+  "createdAt": "2026-08-13T04:39:29Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Supersede only the V14 controller lineage check so the exact Tag867 introduction remains verifiable beneath later linear append-only commits; retain the byte-exact V14 event log, state, scheduler and scientific locks.",
+  "contractSelfSha256": "5c55be8423c5c1e3bdb6990a56abb749f0e5ce8f1981389e25c037cb124c16bc",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "394b3b6bd43a20306286cf766fa6f3aaf69cc6ca",
+    "buildBaseTag": 868,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-controller-contract-v15.json",
+      "scripts/early-detection-continuous-free-source-v15.py",
+      "tests/early-detection-continuous-free-source-v15.test.js"
+    ]
+  },
+  "v14Bindings": {
+    "introductionCommit": "eca62f4260e940eff70ab8f17ada26c1fd57ab48",
+    "introductionParent": "9d1dbad209c14c8fca0073a371f743d94f731283",
+    "authorizedPaths": {
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v14.json": {
+        "rawSha256": "d4f5d53fb42edc192cf614b3910476b53140bf7432edb2225aa2e6584d966eff",
+        "gitBlob": "5a36088037ed7fc5837e8dc37e7dc91b5769c10a"
+      },
+      "scripts/early-detection-continuous-free-source-v14.py": {
+        "rawSha256": "7246fbed69f43331dd35025fd63a8901ded48a228ea5eda4d074d8f14ddadcb1",
+        "gitBlob": "940a083bbba293a716d2ffa685219b1660ddaaad"
+      },
+      "state/early-detection-free-source-events-v14.jsonl": {
+        "rawSha256": "cd3d11e0703e8a245f4571cff36f954a43fa9c21a60d0eb2bcd6340a9c7d590d",
+        "gitBlob": "a3dceebef56bda1013eda60be7c70ea67d4f0fb0"
+      },
+      "state/early-detection-free-source-state-v14.json": {
+        "rawSha256": "3c85155f06a0f56fba47fb4b664ce622dd35867566353ca05ef0c88e29de9b11",
+        "gitBlob": "92ee9d6a3d7783460c9205be52148813896f9633"
+      },
+      "tests/early-detection-continuous-free-source-v14.test.js": {
+        "rawSha256": "16be93880b36089fcb27efec96afe3d65d1bc4096e5ca3f5c4ecb850a186edd0",
+        "gitBlob": "bb8b624576221647ba131a5d266ae1b9152458cc"
+      }
+    },
+    "stateSelfSha256": "11805da98c1939180af93e6e6e8215667cb56919428dc7b729509254b9ef76c4",
+    "operationalProjectionSha256": "08b1ce5850dacde5f37a08081e9273760a69cd03818b4762a9751ce3050f3b13",
+    "nextTaskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE"
+  },
+  "implementation": {
+    "controllerNormalizedSha256": "7c02fb5cf902029b21764c842427dc226c9674973489f8e258fc0c16f42314df",
+    "testNormalizedSha256": "d87154d26faaf8ce2a90ce7a52d7fd9e10aef66b74d7a091b69a7a645bc012fc",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "replayContract": {
+    "v14EventLogAndStateRemainByteExact": true,
+    "v14StateMustBeRebuiltFromEventLog": true,
+    "v14ProjectionMustBeRevalidated": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true,
+    "v14IntroductionLocatedByGitHistoryNotCurrentHead": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
