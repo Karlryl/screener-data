@@ -1,0 +1,68 @@
+{
+  "schema": "sec-liquidation-periodic-filing-capture-contract/v1",
+  "createdAt": "2026-08-13T14:16:12Z",
+  "taskId": "Q003-SEC-LIQUIDATION-PERIODIC-FILING-CAPTURE",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Capture exactly the twenty-four pre-sealed periodic SEC accounting filings once each into a private content-addressed store, without redirects, proxies, retries, public raw bytes, content interpretation, security linkage, finality, recovery, terminal wealth, price, return, outcome or Original-V4 credit.",
+  "inputs": {
+    "discovery": {
+      "path": "scripts/build-sec-liquidation-periodic-filing-discovery-v1.py",
+      "rawSha256": "9ba8e83b0705ad81e2907e6e72210160c18bfcb37b5a0dd669efc2609a5e6034",
+      "introductionCommit": "c6129c49d262e2072d98d8f0bbc1587fddfa8260"
+    },
+    "networkImplementation": {
+      "path": "scripts/capture-sec-liquidation-downstream-filings-v1.py",
+      "rawSha256": "4e36f022144f31defc129ec059b717a9c4a219cc49c15905ab584f5c5e9ce7d7"
+    }
+  },
+  "captureContract": {
+    "candidateFilings": 24,
+    "candidateCanonicalSha256": "1d98ca8643652a2958fdcf5e4ce37fdc98e20c8d2fd83b854523b3fb2cdbb043",
+    "caseCandidateLinks": 102,
+    "linkCanonicalSha256": "8080fb406e07fe435865effdeb6022b21b69934ab95913ad6214936cfa9ad62e",
+    "privateRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-periodic-sec-originals-v1",
+    "rawBlobLayout": "blobs/sha256/<first2>/<sha256>",
+    "receiptLayout": "receipts/<candidateId>.json",
+    "deferredLayout": "deferred/sha256/<first2>/<deferredRawSha256>.json",
+    "manifestLayout": "manifests/sha256/<first2>/<manifestSha256>.json",
+    "maximumRequestsPerRun": 24,
+    "retryCount": 0,
+    "minimumIntervalMilliseconds": 250,
+    "rateDeferredStopsRun": true,
+    "existingBytesMustMatch": true,
+    "atomicWriteNew": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "c6129c49d262e2072d98d8f0bbc1587fddfa8260",
+    "baseTag": 897,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-periodic-filing-capture-contract-v1.json",
+    "runnerPath": "scripts/capture-sec-liquidation-periodic-filings-v1.py",
+    "testPath": "tests/capture-sec-liquidation-periodic-filings-v1.test.js",
+    "runnerNormalizedSha256": "7f981e301964182b8316fdf127970a73c21ae1c040e7983b2ed29d4dcea8e137",
+    "testRawSha256": "81f7f1312d4fa2ddb25eab65966d43fb84baa8d3d7d59d52d29972f008ffeac0",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "productionCaptureRequiresPostIntroductionRemoteVerification": true,
+    "dryRunMustUseZeroNetworkAndZeroWrites": true
+  },
+  "contractSha256": "a0d008c94b4dcd902bfc934e0e8b1d2bf3426f83259f8ef430d29cb471a14122"
+}
