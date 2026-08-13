@@ -1,0 +1,174 @@
+{
+  "schema": "sec-form25-finra-exact-description-bridge-disposition-contract/v1",
+  "createdAt": "2026-08-13T12:03:17Z",
+  "taskId": "Q003-SEC-FORM25-FINRA-EXACT-DESCRIPTION-BRIDGE-DISPOSITION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Determine reproducibly whether an exact normalized concatenation of the primary SEC Form-25 issuer name plus security description matches a private FINRA OTC Daily List old or new security description during the first 120 calendar days after the suspension boundary; require a unique FINRA event per SEC suspension event before any bridge candidate could exist; preserve all ambiguous exact matches; and grant no entity, security, listing, interval, later-OTC, terminal-wealth, price, return, outcome or Original-V4 credit.",
+  "authoritativeInputs": {
+    "suspensionBoundary": {
+      "path": "reports/early-detection/sec-form25-suspension-boundary-v2.json",
+      "rawSha256": "4e9b33086ff6120de04110deb1e6e3916d2ca5001384729bbc28b273efd8735f",
+      "reportSha256": "99199da6cf5b9c4ffc7416c5e97dc4fd9f6300ba3e7c731b123c11fa4c030345",
+      "introductionCommit": "609f37df9e9c277323c5c8e24d6accfa3d1f3ea7",
+      "roleProjectionRows": 12727,
+      "uniqueSuspensionEvents": 6366
+    },
+    "roleReconciliation": {
+      "contractPath": "research/early-detection-v4/sec-form25-suspension-boundary-role-reconciliation-contract-v1.json",
+      "contractRawSha256": "ad858bb73cc1c727916b5bb66848a164a429c814f84b24a8ea0209dd06888f98",
+      "contractSha256": "a1f49ecca0f53fe5e5343e77ed5d073b962181ee59dc4856cbdfaa2a3407f68e",
+      "builderPath": "scripts/build-sec-form25-suspension-boundary-role-reconciliation-v1.py",
+      "builderRawSha256": "d8189abdd7d0e0c4d767df525c9ea4c1049a77f7a2fbed0d548a11643cfed381",
+      "testPath": "tests/build-sec-form25-suspension-boundary-role-reconciliation-v1.test.js",
+      "testRawSha256": "9d3e1c96392e8bd3e7385c69e3e1d3acab27062cab83929fa6406759ffa10041",
+      "introductionCommit": "9705c9814fe8410401f5ec0d808b9424689f639e"
+    },
+    "finraManifest": {
+      "path": "reports/early-detection/finra-q004-historical-crawl-manifest-v3.json",
+      "rawSha256": "2f266d063d5c05df53d635afcb922d0775d0345005869955b41fece3b9502580",
+      "reportSha256": "caff5b9863516992222f9b58690cfad31df700441eeaf2fe3c41b356e641a09f",
+      "introductionCommit": "8ad108bc6d135e313a001364deb4a87df643af0f"
+    },
+    "privateFinraCheckpoint": {
+      "logicalPath": "finra-q004/historical/checkpoint-v2.json",
+      "rawSha256": "7dd6a000e72b5219d00f25d98540fca3c6ab4f0a0b9527498656d4d2e9a2cc9c",
+      "checkpointSha256": "37b68644f955d046bc97885d6dde4014acbcc04fa8acc3945712b204ee58e5ad",
+      "rowSequenceSha256": "2e2aa926ce60a632942fe87e53fada22e0373108e04d2e5e5591727dad383c4a",
+      "partitions": 1522,
+      "pages": 1556,
+      "rows": 145103,
+      "responseBytes": 257639538
+    }
+  },
+  "matchContract": {
+    "secEventUnit": "EXACT_ACCESSION_WITH_ONE_SOURCE_DERIVED_SUSPENSION_EVENT_PROVENANCE",
+    "secDescription": "NORMALIZED_ISSUER_NAME_SINGLE_SPACE_NORMALIZED_SECURITY_DESCRIPTION",
+    "finraDescriptionFields": [
+      "oldSecurityDescription",
+      "newSecurityDescription"
+    ],
+    "normalization": "UNICODE_NFKD_ASCII_UPPERCASE_AMPERSAND_TO_AND_ALNUM_TOKENS_SINGLE_SPACES",
+    "comparison": "EXACT_FULL_CANONICAL_STRING_EQUALITY",
+    "primaryWindow": "ZERO_TO_ONE_HUNDRED_TWENTY_CALENDAR_DAYS_AFTER_SUSPENSION_INCLUSIVE",
+    "sameFinraEventMatchedOnBothSidesCountsOnce": true,
+    "uniqueBridgeCandidateRequiresExactlyOneFinraEventForSecEvent": true,
+    "issuerNameOnlyMatchingAllowed": false,
+    "tokenIntersectionMatchingAllowed": false,
+    "prefixMatchingAllowed": false,
+    "substringMatchingAllowed": false,
+    "fuzzyMatchingAllowed": false,
+    "symbolMatchingAllowed": false,
+    "caseOnlyRawEqualityClaimed": false
+  },
+  "expectedRebuild": {
+    "boundaryRoleProjectionRows": 12727,
+    "uniqueSuspensionEvents": 6366,
+    "modernDescriptorEvents": 6361,
+    "legacyDescriptorUnavailableEventsExcluded": 5,
+    "finraPartitions": 1522,
+    "finraPages": 1556,
+    "finraRows": 145103,
+    "finraResponseBytes": 257639538,
+    "finraCanonicalDescriptions": 39492,
+    "primaryPost120": {
+      "candidatePairs": 2,
+      "candidateSecEvents": 1,
+      "candidateFinraEvents": 2,
+      "secEventsWithExactlyOneFinraEvent": 0,
+      "minimumCalendarDayDelta": 0,
+      "maximumCalendarDayDelta": 0,
+      "finraDescriptionSideCounts": {
+        "OLD": 2
+      },
+      "eventCodeCounts": {
+        "SA": 1,
+        "SD": 1
+      }
+    },
+    "absolute120Diagnostic": {
+      "candidatePairs": 5,
+      "candidateSecEvents": 2,
+      "candidateFinraEvents": 5,
+      "secEventsWithExactlyOneFinraEvent": 0,
+      "minimumCalendarDayDelta": -64,
+      "maximumCalendarDayDelta": 0,
+      "finraDescriptionSideCounts": {
+        "OLD": 5
+      },
+      "eventCodeCounts": {
+        "SA": 2,
+        "SD": 3
+      }
+    },
+    "allHistoryPositiveControl": {
+      "candidatePairs": 34,
+      "candidateSecEvents": 11,
+      "candidateFinraEvents": 34,
+      "secEventsWithExactlyOneFinraEvent": 1,
+      "minimumCalendarDayDelta": -2080,
+      "maximumCalendarDayDelta": 3761,
+      "finraDescriptionSideCounts": {
+        "NEW": 2,
+        "NEW+OLD": 13,
+        "OLD": 19
+      },
+      "eventCodeCounts": {
+        "DA": 4,
+        "NONE": 2,
+        "SA": 7,
+        "SC": 9,
+        "SD": 12
+      }
+    }
+  },
+  "disposition": {
+    "status": "NO_GO_CURRENT_BOUND_SOURCES_FOR_UNIQUE_POST_SUSPENSION_EXACT_DESCRIPTION_BRIDGE",
+    "studyCredit": "ZERO",
+    "reason": "The primary exact full-description rule produces two distinct FINRA events for the same SEC suspension event and therefore zero uniquely linked SEC events. Weaker name, token, prefix, substring, fuzzy or symbol rules are outside this contract and cannot receive credit.",
+    "futureRelaxationRequiresNewProtocol": true
+  },
+  "claimCeiling": "AGGREGATE_ONLY_EXACT_NORMALIZED_DESCRIPTION_MATCH_DISPOSITION_WITH_ZERO_UNIQUE_POST_SUSPENSION_BRIDGE_CANDIDATES",
+  "claimLocks": {
+    "candidateRowsPromoted": false,
+    "entityIdentityResolved": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "historicalIntervalComplete": false,
+    "laterOtcTradingExcluded": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "privacyContract": {
+    "privateFinraRowsMayBeReadForSourceRebuild": true,
+    "privateRowsPrinted": false,
+    "privateRowsWritten": false,
+    "privateDescriptionsPrinted": false,
+    "publicOutputCreated": false,
+    "aggregateCountsOnly": true
+  },
+  "implementationContract": {
+    "baseCommit": "f5925ae8b5735f8119f3098ef5fdfe89628041b6",
+    "baseTag": 890,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-form25-finra-exact-description-bridge-disposition-contract-v1.json",
+    "verifierPath": "scripts/verify-sec-form25-finra-exact-description-bridge-disposition-v1.py",
+    "testPath": "tests/verify-sec-form25-finra-exact-description-bridge-disposition-v1.test.js",
+    "verifierNormalizedSha256": "802323cd372b3513466a5e1d3722b520a327c3b8801164d661347ba29ce135dd",
+    "testRawSha256": "886fa7f82aecd5df9e80b6e0571a179c235a2a3df7c03834abd5bd2e44a42236",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "remoteVerificationRequired": true,
+    "noRemoteVerificationMustFail": true,
+    "writeCapabilityAllowed": false
+  },
+  "contractSha256": "5580ec21655c0e3ac5b61aa70635d919771f95f02c95f8de5c8e1629368ecaa9"
+}
