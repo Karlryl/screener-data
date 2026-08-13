@@ -1,0 +1,250 @@
+{
+  "schema": "early-detection-sec-form345-primary-descriptor-crosswalk-contract/v1",
+  "createdAt": "2026-08-13T02:42:14Z",
+  "taskId": "Q005-SEC-FORM345-PRIMARY-DESCRIPTOR-CROSSWALK-V1",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Build one deterministic candidate-only row for each of the 656 frozen SEC identity-gap work items by joining exact work-item, accession, filed-date and canonical issuer-CIK keys across the sealed SEC queue, issuer-resolution, point-profile, primary-descriptor and Form-345 point artifacts without resolving an identity, security, listing, interval, ticker reuse, terminal state or study gate.",
+  "implementationTopology": {
+    "sealedBaseCommit": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+    "sealedBaseTag": 854,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "sealedBaseMustRemainAncestor": true,
+    "historyFromSealedBaseThroughCurrentHeadMustBeLinearSingleParent": true,
+    "implementationIntroductionMayFollowUnrelatedLinearCommits": true,
+    "implementationIntroductionDirectChildOfSealedBaseRequired": false,
+    "implementationIntroductionAddsExactlyOwnThreePaths": true,
+    "ownPaths": [
+      "research/early-detection-v4/sec-form345-primary-descriptor-crosswalk-contract-v1.json",
+      "scripts/build-sec-form345-primary-descriptor-crosswalk-v1.py",
+      "tests/build-sec-form345-primary-descriptor-crosswalk-v1.test.js"
+    ],
+    "futureOutputPath": "reports/early-detection/sec-form345-primary-descriptor-crosswalk-v1.json",
+    "futureOutputMustRemainAbsentDuringImplementationValidation": true,
+    "preOutputCommands": [
+      "verify-contract",
+      "self-test",
+      "dry-run"
+    ]
+  },
+  "inputs": {
+    "terminalWealthQueueV5": {
+      "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+      "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+      "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+      "gitBlob": "77b82fa692ac6642f03441ce9d983bf7677123be",
+      "introductionCommit": "0148a3e14d7aa3cdfd493de2ca399fa876357a1e",
+      "rows": 44352
+    },
+    "primaryQueueCrosswalk": {
+      "path": "reports/early-detection/sec-terminal-primary-queue-crosswalk-v1.json",
+      "rawSha256": "1620310b685058c92234a4f2598a3228eb0371a26ca852b243754e745a993d19",
+      "reportSha256": "c247f86c2c3ebb5c4a2354eae1120cb36678ec1d5e560a9f86602e8cd6d09f45",
+      "gitBlob": "3bc0b5904790595fafe65cc28e458daec950b5d6",
+      "introductionCommit": "f5d6787c70e5c1aba15c876bd3c5bf34a17b3a4d",
+      "rows": 656
+    },
+    "issuerCikResolution": {
+      "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+      "rawSha256": "f89767daf43c2d06ca87c0b57919b450749620026724b700ff94572117da7cfb",
+      "reportSha256": "3b450bef0120eee49fc4ab0f188578097ffd2fb53d781675b33c6db84809ead6",
+      "gitBlob": "45ec7d12add6d42e5b795861cce8256fdb7e697e",
+      "introductionCommit": "167592d0e7bae4a03d3589844d8430c1ded83e67",
+      "rows": 656
+    },
+    "identityGapQueue": {
+      "path": "reports/early-detection/sec-terminal-identity-evidence-gap-queue-v1.json",
+      "rawSha256": "4c5bff255368bb0d9f498a8f367c65964c0de80d577cca70c695afe50ce0c650",
+      "reportSha256": "cb0b6272b1c07a8091354336bd9e5e1195ba43f766d393fe46fbebf04874e954",
+      "gitBlob": "bd2c308bc758543cd21976ad82f2a7808f520123",
+      "introductionCommit": "ddcac35be338e894423b72625c394d072dc334cd",
+      "rows": 656
+    },
+    "companyTickerPointProfile": {
+      "path": "reports/early-detection/sec-company-ticker-target-asof-profile-v1.json",
+      "rawSha256": "8a1ac3af58b7536c8951a6a0ffae85433623159f0da03d388a180635fd747688",
+      "reportSha256": "faae36bcf6e907caa0c2c149f0a1ec4c51d30f92e502b6e099969a7908db137a",
+      "gitBlob": "3a08afa5e1960ffad8b316a748fcf55f7a209d67",
+      "introductionCommit": "ca6314fee0766c0b978d193c14930c962044025a",
+      "rows": 656
+    },
+    "primarySecurityDescriptor": {
+      "path": "reports/early-detection/sec-primary-security-descriptor-v1.json",
+      "rawSha256": "820c8cf9814d4d89542d2ddb91a784fcec4426ff091ff24e15c5fe0a348d6d3b",
+      "reportSha256": "0799b8e8295875237fdd2dbd40eca43e58663aa14f7c70eac8e7d8624f8d6111",
+      "gitBlob": "2cc159da70f306824d9f2a6c1b3d2dd6107e8771",
+      "introductionCommit": "890c0afbf68fde0bbe4d871dcad1b9d48b51149a",
+      "rows": 656
+    },
+    "form345GzipManifest": {
+      "path": "reports/early-detection/sec-form345-issuer-symbol-point-v3-gzip-manifest.json",
+      "rawSha256": "c353dc63865cd7a0f7ca4b35f5dceb99683424ad55c72f2e57b42f5830e1910b",
+      "manifestSha256": "afa872b29cda54493cca8d5a0b69272a42942f3b5aa4b91bc50ceec517cc59ce",
+      "gitBlob": "2bee3c7be0c35cbc1fb420a3896cd485a23c4308",
+      "introductionCommit": "036ba9e53623f47fe8ab0f3b926c5033b629dc2c"
+    },
+    "form345PointSource": {
+      "gzipPath": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json.gz",
+      "gzipBytes": 10805035,
+      "gzipRawSha256": "fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7c97f484",
+      "gzipGitBlob": "dc646db0846f5d6318a05b316067ceaf4251f685",
+      "introductionCommit": "036ba9e53623f47fe8ab0f3b926c5033b629dc2c",
+      "decompressedBytes": 138658140,
+      "decompressedRawSha256": "81e748f609cbf8e73de2f5ea91166ce178c71c1df4fa0398ab9821f30459e0f4",
+      "reportSha256": "b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3",
+      "rows": 656,
+      "sourceAllRows": 3352003,
+      "sourceTargetPoints": 164675
+    },
+    "privateCaptureReceipts": {
+      "root": "LOCALAPPDATA/GrowthScreenerResearchData/private/sec-form345-issuer-symbol-point-v1",
+      "manifestPath": "capture-manifest.json",
+      "manifestRawSha256": "0f0b52999baa558b48e83696fcbcf7e8ab8613af34d88f55a9a529d2e88586e1",
+      "manifestSha256": "deb91244154b3093acda0235b0cb6ad443374c21b691cf0bf178c8a641465152",
+      "quarterCount": 64,
+      "quarterSequenceSha256": "419fc55b178ccb83e1df0c150c9f1c893443dc94d036ae958ae2a4c8e32ca306",
+      "captureSequenceSha256": "ddb5c17f063197a4c6ddf23a133e8ea29d0ad47ca6c488e2deb51d96f58ab874",
+      "fetchedAtUtcMinimum": "2026-08-13T00:22:23Z",
+      "fetchedAtUtcMaximum": "2026-08-13T00:23:27Z",
+      "rawZipOrPrivatePathMayEnterOutput": false
+    }
+  },
+  "joinContract": {
+    "oneOutputRowPerWorkItem": true,
+    "expectedRows": 656,
+    "expectedUniqueAccessions": 652,
+    "requiredExactKeys": [
+      "workItemId",
+      "canonicalTenDigitIssuerCik",
+      "eventAccession",
+      "eventFiledDate"
+    ],
+    "profileJoinKey": "sourceProfileRowId",
+    "resolutionJoinKey": "sourceResolutionRowId",
+    "primaryCrosswalkJoinKey": "sourceCrosswalkRowId",
+    "terminalQueueJoinKey": "selectedQueueRow.rowId",
+    "tickerJoinAllowed": false,
+    "issuerNameJoinAllowed": false,
+    "securityTitleFuzzyJoinAllowed": false,
+    "crossWorkItemAccessionDeduplicationAllowed": false,
+    "rawIssuerTradingSymbolMustRemainUnsplitAndUnnormalized": true,
+    "sameDateConflictsMustRemainMultiple": true,
+    "automaticLiteralChoiceAllowed": false,
+    "placeholderLiterals": [
+      "-",
+      "N/A",
+      "NA",
+      "NONE",
+      "NOT APPLICABLE",
+      "NO SYMBOL",
+      "NULL"
+    ],
+    "placeholderDisposition": "QUARANTINE_PRESERVE_EVIDENCE_NEVER_MATCH",
+    "futurePointDisposition": "COUNT_ONLY_NEVER_SELECT_OR_COPY_LITERAL",
+    "allowedPointStatuses": [
+      "NO_PRIOR_POINT",
+      "ONE_LATEST_LITERAL",
+      "CONFLICTING_LATEST_LITERALS"
+    ],
+    "allowedArchiveComparisonStatuses": [
+      "EXACT_LITERAL_MATCH",
+      "EXACT_LITERAL_MISMATCH",
+      "NO_COMPARABLE_CANDIDATE"
+    ],
+    "exactArchiveComparisonMeans": "BYTE_EXACT_SOURCE_LITERAL_EQUALS_BYTE_EXACT_ARCHIVE_TICKER",
+    "resolutionCredit": false
+  },
+  "knownAtPolicy": {
+    "evidenceDate": "FORM345_FILING_DATE",
+    "selectionCutoffInclusive": "EVENT_FILED_DATE",
+    "localKnownAtUtc": "BOUND_CAPTURE_RECEIPT_FETCHED_AT_UTC",
+    "historicalPublicKnownAtUtc": null,
+    "historicalPublicKnownAtRequires": "BOUND_ORIGINAL_EDGAR_ACCEPTED_TIMESTAMP",
+    "httpLastModifiedMayEstablishHistoricalPublicKnownAt": false,
+    "retrospectiveIdentityEvidenceOnly": true,
+    "historicalStudyFeatureAuthorization": false
+  },
+  "expectedPopulation": {
+    "rows": 656,
+    "uniqueAccessions": 652,
+    "uniqueIssuerCiks": 607,
+    "sourceLaneCounts": {
+      "FORM15_V2": 65,
+      "FORM25_V2": 591
+    },
+    "pointStatusCounts": {
+      "CONFLICTING_LATEST_LITERALS": 2,
+      "NO_PRIOR_POINT": 62,
+      "ONE_LATEST_LITERAL": 592
+    },
+    "archiveComparisonCounts": {
+      "EXACT_LITERAL_MATCH": 157,
+      "EXACT_LITERAL_MISMATCH": 13,
+      "NO_COMPARABLE_CANDIDATE": 486
+    },
+    "gapClassCounts": {
+      "GAP_NO_ARCHIVE_SNAPSHOT": 452,
+      "GAP_PRIOR_SNAPSHOT_ISSUER_ABSENT": 19,
+      "GAP_PRIOR_SNAPSHOT_MULTIPLE_TICKERS": 42,
+      "GAP_SINGLE_POINT_TICKER_NEEDS_INTERVAL_AND_CORROBORATION": 143
+    },
+    "latestPointAgeDaysCounts": {
+      "EXACT_EVENT_DAY": 194,
+      "DAYS_1_TO_7": 142,
+      "DAYS_8_TO_30": 103,
+      "DAYS_31_TO_90": 74,
+      "DAYS_91_TO_365": 57,
+      "OVER_365_DAYS": 24,
+      "NO_PRIOR_POINT": 62
+    },
+    "rowsWithMultiplePreEventRawLiterals": 140,
+    "latestEvidenceRows": 4226,
+    "workItemObservationReferences": 181080,
+    "priorObservationReferences": 163764,
+    "futureObservationReferences": 17316,
+    "priorUsableObservationReferences": 163562,
+    "futureUsableObservationReferences": 17313,
+    "priorPlaceholderObservationReferences": 202,
+    "futurePlaceholderObservationReferences": 3,
+    "rawLiteralsReusedAcrossTargetCiks": 15,
+    "reusedRawLiteralsWithOverlappingObservedDateSpans": 5,
+    "resolvedRows": 0
+  },
+  "noGoClaims": [
+    "HISTORICAL_PUBLIC_KNOWN_AT",
+    "HISTORICAL_IDENTITY_INTERVAL",
+    "PERMANENT_SECURITY_IDENTITY",
+    "LISTING_IDENTITY",
+    "SHARE_CLASS_MAPPING",
+    "TICKER_REUSE_RESOLVED",
+    "INDEPENDENT_SOURCE_CORROBORATION",
+    "COMPLETE_CORPORATE_ACTION_CHAIN",
+    "TERMINAL_SESSION_OR_PAYMENT_OR_WEALTH",
+    "PRICE_RETURN_OR_OUTCOME",
+    "ORIGINAL_V4_GATE_CREDIT",
+    "HUMAN_ATTESTATION"
+  ],
+  "claimLocks": {
+    "corporateActionChainComplete": false,
+    "historicalIdentityIntervalComplete": false,
+    "historicalIdentityResolved": false,
+    "historicalPublicKnownAtEstablished": false,
+    "humanAttestation": false,
+    "independentSourceCorroborationEstablished": false,
+    "listingIdentityResolved": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "ownerTransactionOrHoldingTablesAccessed": false,
+    "permanentSecurityIdentityResolved": false,
+    "pricesAccessed": false,
+    "resolutionCreditGranted": false,
+    "returnsAccessed": false,
+    "securityIdentityResolved": false,
+    "shareClassMappingResolved": false,
+    "terminalPaymentVerified": false,
+    "terminalSessionProven": false,
+    "terminalWealthComplete": false,
+    "tickerReuseResolved": false
+  },
+  "contractSha256": "e142799d16e7d0764792486627740c3dd224a3d46b154678e6b75941bdf80cdb"
+}
