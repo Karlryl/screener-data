@@ -7,6 +7,7 @@ import argparse
 import copy
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -109,9 +110,11 @@ def load() -> dict[str, Any]:
         fail("remediated V1 bytes changed")
     value = json.loads(raw)
     validate(value)
-    forbidden_fixture = bytes.fromhex("3139313231392031302034")
-    if forbidden_fixture in V1_RUNNER.read_bytes() or forbidden_fixture in V1_TEST.read_bytes():
-        fail("historical rights-bound fixture remains in current tree")
+    fixture_shape = re.compile(
+        rb"(?<![0-9A-Z*@#])[0-9A-Z*@#]{6}\s+[0-9A-Z*@#]{2}\s+[0-9](?![0-9A-Z*@#])"
+    )
+    if fixture_shape.search(V1_RUNNER.read_bytes()) or fixture_shape.search(V1_TEST.read_bytes()):
+        fail("CUSIP-shaped fixture remains in current tree")
     return value
 
 
