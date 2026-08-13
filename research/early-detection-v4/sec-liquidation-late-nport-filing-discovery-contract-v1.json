@@ -1,0 +1,93 @@
+{
+  "schema": "sec-liquidation-late-nport-filing-discovery-contract/v1",
+  "createdAt": "2026-08-13T18:06:05Z",
+  "taskId": "Q003-SEC-LIQUIDATION-LATE-NPORT-FILING-DISCOVERY",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Pre-seal every official NPORT-P and NPORT-P/A filing indexed under the four exact SEC-header-verified issuer CIKs from calendar day 456 after seventeen frozen liquidation-payment dates through the complete bound SEC master-index cutoff of 2024-12-31, before fetching or inspecting any candidate content.",
+  "contractSelfSha256": "4272ae9d541e430cb4c08f16b1151412cd52619b66ce083d27e43c63389c1ee9",
+  "authoritativeInput": {
+    "baseDiscoveryBuilder": {
+      "path": "scripts/build-sec-liquidation-downstream-filing-discovery-v1.py",
+      "rawSha256": "69fcca3f46e993af4a78188a78b7726477e74f10c21968e65bfff2679ed945a9"
+    },
+    "classicLaneContract": {
+      "path": "research/early-detection-v4/sec-liquidation-late-periodic-filing-discovery-contract-v1.json",
+      "rawSha256": "259ea5895a7f87f2c93124f347d92295a2e92d73aed1f601cccfe673262ea2f2"
+    },
+    "baseCommit": "c3187d1b1c3d376fd0906192bfac7c5a07910148",
+    "databaseRawSha256": "3055d37b34033fd4bf0b4ee3c9fb3abb7bc2d88cd0e303795c764b0b4d39c159",
+    "databaseBytes": 3344818176
+  },
+  "selectionContract": {
+    "joinKey": "EXACT_SEC_HEADER_VERIFIED_ISSUER_CIK",
+    "calendarDayOffsetMinimumInclusive": 456,
+    "databaseFiledDateMaximumInclusive": "2024-12-31",
+    "allowedForms": ["NPORT-P", "NPORT-P/A"],
+    "noticeFormsExcluded": ["NT NPORT-P"],
+    "classicPeriodicFormsExcluded": ["N-CSR", "N-CSRS", "N-Q", "NSAR-A", "NSAR-B"],
+    "accessionMustBeNonNull": true,
+    "allOtherFormsExcluded": true,
+    "candidateContentFetched": false,
+    "candidateContentInspected": false,
+    "sameIssuerCikDoesNotProveSameSecurity": true,
+    "structuredHoldingsDoNotProveTerminalDistributionOrRecovery": true
+  },
+  "expectedRebuild": {
+    "seedCases": 17,
+    "issuerCiks": 4,
+    "windowStartDayInclusive": 456,
+    "databaseFiledDateMaximumInclusive": "2024-12-31",
+    "allowedForms": ["NPORT-P", "NPORT-P/A"],
+    "candidateFilings": 2433,
+    "candidateAccessions": 2433,
+    "caseCandidateLinks": 11386,
+    "uniqueCaseCandidateLinks": 11386,
+    "minimumDayOffset": 1877,
+    "maximumDayOffset": 3745,
+    "filedDateMinimum": "2019-11-26",
+    "filedDateMaximum": "2024-12-30",
+    "candidateSourceQuarterMinimum": "2019q4",
+    "candidateSourceQuarterMaximum": "2024q4",
+    "candidateCanonicalSha256": "894de4cbfdb9d574e65291f0556d5207c39b6f3d9debd6d9314bb6a54e420924",
+    "linkCanonicalSha256": "564bb64abd293600f7c9df5528bb3c50acc679dad8bee2a740d76e34b9abc99d",
+    "candidateSequenceSha256": "85b307ec5023c7077970bb565ba2e7a6a8d6b14321ca25f9ceff7d34c3740af9",
+    "linkSequenceSha256": "98e90b89c0b20a349fd5a6e7573d799bd7440174cae5474198a4b085d927744c",
+    "formCounts": {"NPORT-P": 2420, "NPORT-P/A": 13},
+    "issuerCandidateCounts": {"0001414040": 401, "0001424958": 1654, "0001450011": 315, "0001450501": 63},
+    "caseLinkCounts": {"LIQUIDATION-PAYMENT-001": 401, "LIQUIDATION-PAYMENT-002": 401, "LIQUIDATION-PAYMENT-003": 401, "LIQUIDATION-PAYMENT-004": 401, "LIQUIDATION-PAYMENT-005": 1654, "LIQUIDATION-PAYMENT-006": 1654, "LIQUIDATION-PAYMENT-007": 1654, "LIQUIDATION-PAYMENT-008": 1654, "LIQUIDATION-PAYMENT-009": 1654, "LIQUIDATION-PAYMENT-010": 63, "LIQUIDATION-PAYMENT-011": 63, "LIQUIDATION-PAYMENT-012": 63, "LIQUIDATION-PAYMENT-013": 63, "LIQUIDATION-PAYMENT-014": 315, "LIQUIDATION-PAYMENT-015": 315, "LIQUIDATION-PAYMENT-016": 315, "LIQUIDATION-PAYMENT-017": 315}
+  },
+  "claimLocks": {
+    "candidateContentFetched": false,
+    "candidateContentInspected": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "holdingPresenceInterpreted": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "c3187d1b1c3d376fd0906192bfac7c5a07910148",
+    "baseTag": 908,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-late-nport-filing-discovery-contract-v1.json",
+    "builderPath": "scripts/build-sec-liquidation-late-nport-filing-discovery-v1.py",
+    "testPath": "tests/build-sec-liquidation-late-nport-filing-discovery-v1.test.js",
+    "builderNormalizedSha256": "12b53d1c3f248cfdc9d73df571dc7ca6b6f18c4c280b9c350bfe1c90dc654c3f",
+    "testRawSha256": "bf4bb61c433b42da6aff743a1ddb20c5de409f1e34caaf235b9428439969f418",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "verificationRequiresLiveRemote": true,
+    "networkCapabilityAllowed": false,
+    "writeCapabilityAllowed": false
+  }
+}
