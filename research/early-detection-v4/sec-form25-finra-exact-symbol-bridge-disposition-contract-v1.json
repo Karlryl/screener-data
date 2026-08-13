@@ -1,0 +1,182 @@
+{
+  "schema": "sec-form25-finra-exact-symbol-bridge-disposition-contract/v1",
+  "createdAt": "2026-08-13T06:06:14Z",
+  "taskId": "Q003-SEC-FORM25-FINRA-EXACT-SYMBOL-BRIDGE-DISPOSITION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Determine reproducibly whether exact same-CIK, pre-boundary SEC Form-3/4/5 symbol points can bridge primary SEC Form-25 suspension boundaries to private FINRA OTC Daily List events without description matching, symbol splitting, suffix inference, identity promotion, price access, return access, outcome access or Original-V4 credit.",
+  "authoritativeInputs": {
+    "suspensionBoundary": {
+      "path": "reports/early-detection/sec-form25-suspension-boundary-v2.json",
+      "rawBytes": 31957128,
+      "rawSha256": "4e9b33086ff6120de04110deb1e6e3916d2ca5001384729bbc28b273efd8735f",
+      "reportSha256": "99199da6cf5b9c4ffc7416c5e97dc4fd9f6300ba3e7c731b123c11fa4c030345",
+      "introductionCommit": "609f37df9e9c277323c5c8e24d6accfa3d1f3ea7",
+      "rows": 12727,
+      "uniqueAccessions": 6366
+    },
+    "form345SymbolPoints": {
+      "path": "reports/early-detection/sec-form345-issuer-symbol-point-v3.json.gz",
+      "gzipBytes": 10805035,
+      "gzipRawSha256": "fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7c97f484",
+      "decompressedBytes": 138658140,
+      "decompressedRawSha256": "81e748f609cbf8e73de2f5ea91166ce178c71c1df4fa0398ab9821f30459e0f4",
+      "reportSha256": "b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3",
+      "introductionCommit": "036ba9e53623f47fe8ab0f3b926c5033b629dc2c",
+      "gapRows": 656,
+      "sourceTargetPoints": 164675,
+      "outputObservationOccurrences": 181080,
+      "placeholderObservationOccurrencesExcluded": 205,
+      "uniqueIssuerCiks": 607
+    },
+    "finraPublicManifest": {
+      "path": "reports/early-detection/finra-q004-historical-crawl-manifest-v3.json",
+      "rawSha256": "2f266d063d5c05df53d635afcb922d0775d0345005869955b41fece3b9502580",
+      "reportSha256": "caff5b9863516992222f9b58690cfad31df700441eeaf2fe3c41b356e641a09f",
+      "introductionCommit": "8ad108bc6d135e313a001364deb4a87df643af0f",
+      "rawRowsIncluded": false,
+      "allRowsPrivate": true
+    },
+    "finraPrivateCheckpoint": {
+      "path": "C:/Users/Anwender/Documents/GrowthScreenerResearchData/private-evidence/finra-q004/historical/checkpoint-v2.json",
+      "rawBytes": 589706,
+      "rawSha256": "7dd6a000e72b5219d00f25d98540fca3c6ab4f0a0b9527498656d4d2e9a2cc9c",
+      "checkpointSha256": "37b68644f955d046bc97885d6dde4014acbcc04fa8acc3945712b204ee58e5ad",
+      "rowSequenceSha256": "2e2aa926ce60a632942fe87e53fada22e0373108e04d2e5e5591727dad383c4a",
+      "partitionCount": 1522,
+      "pageCount": 1556,
+      "recordCount": 145103,
+      "rawResponseBytes": 257639538,
+      "availableMinimumDate": "2016-01-18",
+      "availableMaximumDate": "2024-12-31",
+      "rawRowsRemainPrivate": true
+    }
+  },
+  "matchContract": {
+    "cikRule": "ASCII_DIGITS_STRIP_THEN_LEFT_PAD_TO_TEN_NO_OTHER_NORMALIZATION",
+    "symbolRule": "ASCII_STRIP_UPPER_WHOLE_LITERAL_NO_SPLIT_NO_SUFFIX_NO_FUZZY_DESCRIPTION",
+    "pointDirection": "SEC_POINT_FILING_DATE_ON_OR_BEFORE_SUSPENSION_BOUNDARY_DATE",
+    "symbolUniqueness": "SYMBOL_MUST_MAP_TO_EXACTLY_ONE_CIK_ACROSS_BOUND_FORM345_POINTS",
+    "eventRule": "EXACT_WHOLE_LITERAL_EQUALS_FINRA_OLD_OR_NEW_SYMBOL",
+    "eventWindow": "ABSOLUTE_CALENDAR_DAYS_FROM_SUSPENSION_BOUNDARY_LE_365",
+    "primaryPointRule": "LATEST_ELIGIBLE_PRE_BOUNDARY_POINT_DATE_ONLY",
+    "recentDiagnosticPointRule": "ANY_ELIGIBLE_PRE_BOUNDARY_POINT_NOT_OLDER_THAN_365_DAYS",
+    "allHistoryPositiveControl": "ANY_ELIGIBLE_PRE_BOUNDARY_POINT_WITHOUT_POINT_AGE_LIMIT",
+    "descriptionMatchingAllowed": false,
+    "commaSeparatedSymbolSplittingAllowed": false,
+    "otcSuffixInferenceAllowed": false,
+    "tickerOnlyIdentityResolutionAllowed": false
+  },
+  "expectedRebuild": {
+    "boundaryRows": 12727,
+    "boundaryRowsInFinraCoverage": 8246,
+    "boundaryUniqueCiksInFinraCoverage": 1847,
+    "boundaryRowsWithPriorForm345Point": 572,
+    "primaryLatestPoint": {
+      "cells": 560,
+      "boundaries": 560,
+      "symbols": 226,
+      "finraUniverseSymbolOverlap": 1,
+      "candidatePairs": 0,
+      "candidateBoundaries": 0,
+      "candidateEvents": 0
+    },
+    "recentPointDiagnostic": {
+      "cells": 7472,
+      "boundaries": 526,
+      "symbols": 226,
+      "finraUniverseSymbolOverlap": 2,
+      "candidatePairs": 0,
+      "candidateBoundaries": 0,
+      "candidateEvents": 0
+    },
+    "allHistoryPositiveControl": {
+      "cells": 73608,
+      "boundaries": 560,
+      "symbols": 293,
+      "finraUniverseSymbolOverlap": 8,
+      "candidatePairs": 48,
+      "candidateBoundaries": 2,
+      "candidateEvents": 2,
+      "minimumPointAgeDays": 3908,
+      "maximumPointAgeDays": 5670,
+      "eventCodePairCounts": {
+        "SA": 24,
+        "SC": 24
+      }
+    },
+    "finraRows": 145103,
+    "finraUniqueSymbols": 36145,
+    "form345PlaceholderObservationOccurrencesExcluded": 205
+  },
+  "disposition": {
+    "status": "NO_GO_CURRENT_BOUND_SOURCES_FOR_TIMELY_EXACT_SYMBOL_BRIDGE",
+    "studyCredit": "ZERO",
+    "identityCapabilityClosed": false,
+    "terminalCapabilityClosed": false,
+    "laterOtcTradingExcluded": false,
+    "reason": "BOTH_PRIMARY_LATEST_AND_RECENT_POINT_RULES_YIELD_ZERO_CANDIDATES_WHILE_THE_ALL_HISTORY_POSITIVE_CONTROL_ONLY_MATCHES_POINTS_3908_TO_5670_DAYS_OLD",
+    "futureRelaxationRequiresNewProtocol": true,
+    "forbiddenRelaxations": [
+      "DESCRIPTION_FUZZY_MATCH",
+      "COMMA_SPLIT_WITHOUT_SOURCE_CONTRACT",
+      "OTC_SUFFIX_GUESS",
+      "STALE_TICKER_IDENTITY_PROMOTION",
+      "ZERO_MATCH_INTERPRETED_AS_NO_LATER_OTC_TRADING"
+    ]
+  },
+  "claimCeiling": {
+    "allowed": [
+      "BOUND_SOURCE_DENOMINATORS",
+      "EXACT_RULE_ZERO_CANDIDATE_DISPOSITION",
+      "TEMPORALLY_STALE_ALL_HISTORY_POSITIVE_CONTROL_COUNTS"
+    ],
+    "forbidden": [
+      "SECURITY_IDENTITY_RESOLVED",
+      "LISTING_IDENTITY_RESOLVED",
+      "NO_LATER_OTC_TRADING",
+      "LAST_CONSOLIDATED_SESSION",
+      "LAST_TRADE_PRICE",
+      "TERMINAL_PAYMENT",
+      "TERMINAL_WEALTH",
+      "PRICE_RETURN_OR_OUTCOME",
+      "ORIGINAL_V4_GATE_CREDIT"
+    ]
+  },
+  "claimLocks": {
+    "candidateRowsPromoted": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "laterOtcTradingExcluded": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "terminalPaymentVerified": false,
+    "terminalWealthComplete": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false,
+    "originalV4GateCredit": false
+  },
+  "privacyContract": {
+    "privateRowsPrinted": false,
+    "privateRowsWritten": false,
+    "publicOutputCreated": false,
+    "aggregateCountsOnly": true
+  },
+  "implementationContract": {
+    "baseCommit": "609f37df9e9c277323c5c8e24d6accfa3d1f3ea7",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-form25-finra-exact-symbol-bridge-disposition-contract-v1.json",
+    "verifierPath": "scripts/verify-sec-form25-finra-exact-symbol-bridge-disposition-v1.py",
+    "testPath": "tests/verify-sec-form25-finra-exact-symbol-bridge-disposition-v1.test.js",
+    "verifierNormalizedSha256": "7183cfb37f3125802ebef03f6bc8403f66a21aa5c296a99cb43629be22941018",
+    "testRawSha256": "c6d1dc026edf9908b10de43da01a4042affccf5049c73faebf152492849f32db",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "linearSingleParentDescendantsAllowed": true,
+    "remoteVerificationRequired": true,
+    "noRemoteVerificationMustFail": true,
+    "writeCapabilityAllowed": false
+  },
+  "contractSha256": "467d82f52c0afbe81bc458d689d5e8d2e7cae31d003dc6d8f8c0eced217c4bb1"
+}
