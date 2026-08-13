@@ -1,0 +1,244 @@
+{
+  "schema": "sec-terminal-wealth-evidence-coverage-ledger-contract/v1",
+  "createdAt": "2026-08-13T09:02:00Z",
+  "taskId": "Q003-SEC-TERMINAL-WEALTH-EVIDENCE-COVERAGE-LEDGER",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Project every one of the 44,352 sealed terminal-wealth queue rows across all five required evidence semantics, attach only exact row-level partial-evidence references from already sealed primary-source lanes, preserve every semantic as UNRESOLVED, and expose the remaining evidence gaps without materializing identity-keyed evidence cells or opening prices, returns, outcomes or Original-V4 credit.",
+  "authoritativeCellContract": {
+    "path": "research/early-detection-v4/evidence-cell-contract-v1.json",
+    "rawSha256": "8bd9f5edd8100fbf855587272e892bd48d1e904fe7ad1ccc778851888fd09d73",
+    "semantics": [
+      "HISTORICAL_VALIDITY_INTERVAL",
+      "CONSOLIDATED_ADJUSTED_OHLCV",
+      "COMPLETE_CORPORATE_ACTIONS",
+      "OBSERVED_TERMINAL_SESSION",
+      "TERMINAL_WEALTH"
+    ],
+    "projectionIsCanonicalEvidenceCell": false,
+    "reason": "The queue does not yet contain resolved entityId, securityId and listingId keys required by the authoritative evidence-cell contract."
+  },
+  "authoritativeInputs": {
+    "terminalWealthQueue": {
+      "path": "reports/early-detection/sec-terminal-wealth-queue-v5.json",
+      "rawSha256": "cfc6b1c98e159e0d086bdad72a495ebe1c34b208975f145a8f96f903ada8798e",
+      "reportSha256": "a840de2297de3a04afc1f1bcb76139fb36297369b6765f73683db9bc2a92e825",
+      "rows": 44352
+    },
+    "suspensionBoundary": {
+      "path": "reports/early-detection/sec-form25-suspension-boundary-v2.json",
+      "rawSha256": "4e9b33086ff6120de04110deb1e6e3916d2ca5001384729bbc28b273efd8735f",
+      "reportSha256": "99199da6cf5b9c4ffc7416c5e97dc4fd9f6300ba3e7c731b123c11fa4c030345"
+    },
+    "terminalClosure": {
+      "path": "reports/early-detection/sec-terminal-closure-exhaustion-v1.json",
+      "rawSha256": "68d1002e6aa0836a39fc29d982bd1a91001ab626976f0472a74c69bf133d12ed",
+      "reportSha256": "9d0f7377952821796c5c709dc9baf9bd62aab74058277c7a98780b14f23daf7a"
+    },
+    "effectiveFixedCash": {
+      "path": "reports/early-detection/sec-effective-fixed-cash-conversion-evidence-v2.json",
+      "rawSha256": "7516ef1e4eb7c0bbaf59175a6f79b775471a5a79c40ad5d754746ddea50434ed",
+      "reportSha256": "b58693161a9b50142633dffd59e5d7187644f4326f1ef8a86fc3383960e87b25"
+    },
+    "sameSentenceFixedCash": {
+      "path": "reports/early-detection/sec-same-sentence-effective-fixed-cash-v5.json",
+      "rawSha256": "f48ac224fdf889fc8b03b8494b93048501c0cd53179656cd01f77468f97a1167",
+      "reportSha256": "e8fb04deef3914733f612b327ec1cd022ed621690846520b1b2d6c3010974aea"
+    },
+    "terminalDistributionReceipt": {
+      "path": "reports/early-detection/sec-frozen-terminal-distribution-receipt-evidence-v2.json",
+      "rawSha256": "bfd0b4e4582e1267a311e5d79a63a19339e3a9967980f542148c9173c97d13dc",
+      "reportSha256": "7967bd2ed2634568a785a5ec4e76d209db7ae10dc9ec9b1d72681144f5200104"
+    },
+    "noncashShareReceipt": {
+      "path": "reports/early-detection/sec-frozen-noncash-share-receipt-evidence-v1.json",
+      "rawSha256": "d02cb40ca4c38212af29c00d8c08a54fee120df615e44418cc120ed8a0575f07",
+      "reportSha256": "8c892de667133e43d287ca20970f12da5cdce2a4ef71b5d684657a6446f8b1a2"
+    },
+    "noncashSemanticCorrection": {
+      "contractPath": "research/early-detection-v4/sec-frozen-noncash-share-receipt-evidence-contract-v3.json",
+      "contractRawSha256": "d1e0ff5188332c4840a33e2218c9a54baf743d0327d229ceea363488813d271f",
+      "verifierPath": "scripts/verify-sec-frozen-noncash-share-receipt-evidence-v3.py",
+      "verifierRawSha256": "4d70c0bfe412a45bb676a0fc8dce9ef1ce40f3a72100423cbb6366f23a84140b",
+      "testPath": "tests/verify-sec-frozen-noncash-share-receipt-evidence-v3.test.js",
+      "testRawSha256": "e7f512a555c1f9f7dfdbe9426610cfb29579b08fa9d031d42ecf62a63f05181a",
+      "derivedViewSha256": "a68f2e51f25f0462381dd86b9cfb429e0c98d063f4712de050ce5311878add0b"
+    },
+    "liquidationPayment": {
+      "path": "reports/early-detection/sec-frozen-liquidation-payment-evidence-v1.json",
+      "rawSha256": "962b86e9ede09741c96a67fc853bffda101f9f6b5c0883b7da4ae23a7b416bc4",
+      "reportSha256": "c7b37f025ba20f1b816c69f0ac0e372df36e17dc9e2cc9136f448c13e24406d9"
+    },
+    "primaryDocumentExtraction": {
+      "path": "reports/early-detection/sec-terminal-primary-document-extraction-v1.json",
+      "rawSha256": "987560ca38931cfa818f6c9fb315be7875ec98fd872518ef51d45f5af3589464",
+      "reportSha256": "9fd402508ff75ab0d3265cc15c7f77a6e6fa2f659749a43f5719db207d094000"
+    },
+    "primaryIssuerResolution": {
+      "path": "reports/early-detection/sec-terminal-primary-issuer-cik-resolution-v1.json",
+      "rawSha256": "f89767daf43c2d06ca87c0b57919b450749620026724b700ff94572117da7cfb",
+      "reportSha256": "3b450bef0120eee49fc4ab0f188578097ffd2fb53d781675b33c6db84809ead6"
+    },
+    "liquidationReconciliation": {
+      "contractPath": "research/early-detection-v4/sec-form25-liquidation-payment-reconciliation-contract-v1.json",
+      "contractRawSha256": "0db44a1a16a7a838f4e48a76c774aa8dff3b98bc365073ccca9f11bdf96564ca",
+      "contractSha256": "495ed141bb43aa963e16e0b21b0a89dc37f92c7a9f05e5eafb2ab91a504f604c",
+      "builderPath": "scripts/build-sec-form25-liquidation-payment-reconciliation-v1.py",
+      "builderRawSha256": "c1dedb5300485395a75f0861e3cc858ff4b6acf61245fceb40e9c34f7e8a36f2",
+      "testPath": "tests/build-sec-form25-liquidation-payment-reconciliation-v1.test.js",
+      "testRawSha256": "28c24db10164bb00335b395a2415e81e96d7424dac0e67e90905072a9663aeb7"
+    }
+  },
+  "evidenceLaneContract": {
+    "laneOrder": [
+      "FORM25_SUSPENSION_BOUNDARY",
+      "LAST_NAMED_EXCHANGE_TRADING_DAY",
+      "EFFECTIVE_FIXED_CASH_CONVERSION",
+      "SAME_SENTENCE_FIXED_CASH_CONVERSION",
+      "FROZEN_TERMINAL_DISTRIBUTION_OR_RECEIPT",
+      "CORRECTED_NONCASH_SHARE_RECEIPT",
+      "LIQUIDATION_PAYMENT_DISTRIBUTION"
+    ],
+    "lanes": {
+      "FORM25_SUSPENSION_BOUNDARY": {
+        "semantics": ["HISTORICAL_VALIDITY_INTERVAL"],
+        "queueRows": 12727,
+        "uniqueAccessions": 6366,
+        "queueRowIdSequenceSha256": "bbda73e6df1c9d3cf270592d3c9822548e4989ae8e7814198d53940cfd828c5b",
+        "claimLimit": "DATED_NAMED_EXCHANGE_SUSPENSION_BOUNDARY_ONLY"
+      },
+      "LAST_NAMED_EXCHANGE_TRADING_DAY": {
+        "semantics": ["OBSERVED_TERMINAL_SESSION"],
+        "queueRows": 28,
+        "uniqueAccessions": 23,
+        "queueRowIdSequenceSha256": "62c15cde48640180d721f30a562910992439520cdc3e2cbfe5d39b96e1e5842c",
+        "claimLimit": "LAST_TRADING_DAY_ON_NAMED_EXCHANGE_ONLY_NOT_CONSOLIDATED_OR_OTC_EXHAUSTIVE"
+      },
+      "EFFECTIVE_FIXED_CASH_CONVERSION": {
+        "semantics": ["COMPLETE_CORPORATE_ACTIONS", "TERMINAL_WEALTH"],
+        "queueRows": 4,
+        "uniqueAccessions": 4,
+        "queueRowIdSequenceSha256": "740c17b2d64d5f255cda68d847305b5b1f1dc51a7bce92d38a8c2c828b834298",
+        "claimLimit": "EFFECTIVE_TRANSACTION_AND_FIXED_CASH_CONVERSION_RIGHT_ONLY"
+      },
+      "SAME_SENTENCE_FIXED_CASH_CONVERSION": {
+        "semantics": ["COMPLETE_CORPORATE_ACTIONS", "TERMINAL_WEALTH"],
+        "queueRows": 11,
+        "uniqueAccessions": 11,
+        "queueRowIdSequenceSha256": "38fb4765c361f6edc1747043a091621b7a36a23f2397bd9ab23f53fea6926a93",
+        "claimLimit": "EXACT_ELEVEN_FROZEN_EFFECTIVE_DATE_AND_FIXED_CASH_CONVERSION_SENTENCES_ONLY"
+      },
+      "FROZEN_TERMINAL_DISTRIBUTION_OR_RECEIPT": {
+        "semantics": ["COMPLETE_CORPORATE_ACTIONS", "TERMINAL_WEALTH"],
+        "queueRows": 5,
+        "uniqueAccessions": 5,
+        "queueRowIdSequenceSha256": "3ed70f20ea667dbe123ac03d58ffc95f9dd212f87b3a6b3357028860e15a0d5a",
+        "claimLimit": "EXACT_FIVE_FROZEN_DISTRIBUTION_OR_RESTRICTED_RECEIPT_STATEMENTS_ONLY"
+      },
+      "CORRECTED_NONCASH_SHARE_RECEIPT": {
+        "semantics": ["COMPLETE_CORPORATE_ACTIONS", "TERMINAL_WEALTH"],
+        "queueRows": 6,
+        "uniqueAccessions": 6,
+        "queueRowIdSequenceSha256": "7b274805e8b7349fbfffbb8f494795e28218fe52f0a51ed04bc0bcedf0b3dcaa",
+        "claimLimit": "EXACT_SIX_FROZEN_NONCASH_RECEIPT_STATEMENTS_WITH_CORRECTED_DENOMINATOR_TERMINOLOGY_ONLY"
+      },
+      "LIQUIDATION_PAYMENT_DISTRIBUTION": {
+        "semantics": ["COMPLETE_CORPORATE_ACTIONS", "TERMINAL_WEALTH"],
+        "queueRows": 34,
+        "uniqueAccessions": 17,
+        "queueRowIdSequenceSha256": "0d87ec0ef0fd2f993a18028b54bb618974b1019365a1f50affc04d690f34189d",
+        "claimLimit": "SEVENTEEN_UNIQUE_EVENTS_PROJECTED_TO_THIRTY_FOUR_ISSUER_AND_EXCHANGE_ROLE_ROWS_ONLY"
+      }
+    },
+    "frozenDistributionQueueMappings": {
+      "0000891377-11-000008": {"queueRowId": "SEC-TW-00005967", "queueCik": "0000891377", "queueCompanyName": "BERKELEY TECHNOLOGY LTD", "titleClassText": "Ordinary Shares"},
+      "0000903423-11-000138": {"queueRowId": "SEC-TW-00005705", "queueCik": "0001167888", "queueCompanyName": "MS STRUCTURED SATURNS SERIES 2002-3", "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-3 Class A Callable Units"},
+      "0000903423-11-000139": {"queueRowId": "SEC-TW-00005706", "queueCik": "0001175209", "queueCompanyName": "MS STRUCTURED SATURNS SERIES 2002-7", "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-7 Class A Callable Units"},
+      "0000903423-11-000140": {"queueRowId": "SEC-TW-00005704", "queueCik": "0001166802", "queueCompanyName": "MS STRUCTURED SATURNS SERIES 2002-4", "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-4 Class A Callable Units"},
+      "0000950157-22-000333": {"queueRowId": "SEC-TW-00035761", "queueCik": "0000899611", "queueCompanyName": "NEWCREST MINING LTD", "titleClassText": "Ordinary shares"}
+    }
+  },
+  "projectionContract": {
+    "rowSchema": [
+      "queueRowId",
+      "accession",
+      "priorityRank",
+      "canonicalEvidenceCellMaterialized",
+      "identityKeyState",
+      "semanticStates",
+      "partialEvidenceRefs",
+      "rowSha256",
+      "outcomesAccessed"
+    ],
+    "evidenceRefSchema": ["semantic", "laneId", "sourceRecordId"],
+    "semanticStateForEveryRow": "UNRESOLVED",
+    "canonicalEvidenceCellMaterializedForEveryRow": false,
+    "identityKeyStateForEveryRow": "UNMATERIALIZED_ENTITY_SECURITY_LISTING_KEY",
+    "partialEvidenceDoesNotChangeSemanticState": true,
+    "notFoundDoesNotMeanComplete": true,
+    "rowOrder": "QUEUE_PRIORITY_RANK_ASCENDING",
+    "rowSelfHashRequired": true,
+    "rowSelfSequenceSha256": "6ee7c2384c6d8285a4782bc8604584aa6fdfc9ff9af38720d950986150989ed8",
+    "rowsCanonicalSha256": "b98fe17a5dca02e09e9ccbc63305538a2fa0dca928b59699492c716b59a7e342"
+  },
+  "expectedCoverage": {
+    "queueRows": 44352,
+    "targetSemanticCells": 221760,
+    "resolvedSemanticCells": 0,
+    "unresolvedSemanticCells": 221760,
+    "canonicalEvidenceCellsMaterialized": 0,
+    "rowsWithAnyPartialEvidence": 12770,
+    "rowsWithoutPartialEvidence": 31582,
+    "partialEvidenceSemanticCells": 12875,
+    "semanticCoverage": {
+      "HISTORICAL_VALIDITY_INTERVAL": {"partialEvidenceRows": 12727, "resolvedRows": 0, "unresolvedRows": 44352, "queueRowIdSequenceSha256": "bbda73e6df1c9d3cf270592d3c9822548e4989ae8e7814198d53940cfd828c5b"},
+      "CONSOLIDATED_ADJUSTED_OHLCV": {"partialEvidenceRows": 0, "resolvedRows": 0, "unresolvedRows": 44352, "queueRowIdSequenceSha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"},
+      "COMPLETE_CORPORATE_ACTIONS": {"partialEvidenceRows": 60, "resolvedRows": 0, "unresolvedRows": 44352, "queueRowIdSequenceSha256": "68124f0ccf334c3003dca937868e972752337d2ebc41d5efc45f3b6501a8812c"},
+      "OBSERVED_TERMINAL_SESSION": {"partialEvidenceRows": 28, "resolvedRows": 0, "unresolvedRows": 44352, "queueRowIdSequenceSha256": "62c15cde48640180d721f30a562910992439520cdc3e2cbfe5d39b96e1e5842c"},
+      "TERMINAL_WEALTH": {"partialEvidenceRows": 60, "resolvedRows": 0, "unresolvedRows": 44352, "queueRowIdSequenceSha256": "68124f0ccf334c3003dca937868e972752337d2ebc41d5efc45f3b6501a8812c"}
+    },
+    "coveragePatternCounts": {
+      "00000": 31582,
+      "00010": 28,
+      "00101": 15,
+      "10000": 12682,
+      "10101": 45
+    }
+  },
+  "claimLocks": {
+    "canonicalEvidenceCellsMaterialized": false,
+    "historicalValidityIntervalResolved": false,
+    "consolidatedAdjustedOhlcvResolved": false,
+    "completeCorporateActionsResolved": false,
+    "observedTerminalSessionResolved": false,
+    "terminalWealthComplete": false,
+    "identityResolved": false,
+    "listingIdentityResolved": false,
+    "notFoundPromotedToComplete": false,
+    "candidateEvidencePromotedToResolved": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "096793e785ff093773bb124df8c204d9043ab469",
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-terminal-wealth-evidence-coverage-ledger-contract-v1.json",
+    "builderPath": "scripts/build-sec-terminal-wealth-evidence-coverage-ledger-v1.py",
+    "testPath": "tests/build-sec-terminal-wealth-evidence-coverage-ledger-v1.test.js",
+    "outputPath": "reports/early-detection/sec-terminal-wealth-evidence-coverage-ledger-v1.json",
+    "builderNormalizedSha256": "08221ec0d64ac51754e20f00550b53939684d86d2f029d7304905f17a1fd791d",
+    "testNormalizedSha256": "3c9e62b8456514ee323bbb456214275f4fa531cb759f77d8f44187bebc2e20b0",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "outputIntroductionMustBeDirectSingleParentChildOfImplementationIntroduction": true,
+    "outputIntroductionAddsExactlyOutputPath": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "remoteVerificationRequired": true,
+    "noRemoteVerificationMustFail": true,
+    "writeNewOnly": true
+  },
+  "contractSha256": "4ebd158438e4e0126999f1b3d11bd2a98216f7b5aaea6c5488a85ba51fb341b1"
+}
