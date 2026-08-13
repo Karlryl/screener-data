@@ -1,0 +1,365 @@
+{
+  "schema": "early-detection-free-source-operational-state/v14",
+  "materializedAt": "2026-08-13T03:59:32Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Deterministically replay the complete outcome-blind operational projection from the append-only event log and release scheduling only after exact remote introduction.",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "9d1dbad209c14c8fca0073a371f743d94f731283",
+    "buildBaseTag": 866
+  },
+  "inputBundleSha256": "9347190e54f16c5730e0a01822c9ef5be2e9214b228642e217f813881db109ce",
+  "inputRawSha256": {
+    "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+    "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+    "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+    "resumeV4Contract": "a8df69dabe3d09cef5bcd735d09d3eebd5a02860598583af5c146e8b43533fee",
+    "v12EventLog": "4fd5e9a1dc7773c34cac82c136f938b2bb7850853415d9f8167abb5b10c9cd7e",
+    "v13Contract": "98726beca167d57c4fe0e8715e8cb5740f804799c5b4322a00ac4c4eb4900f2d",
+    "v13Controller": "dd493548d58badc23a51988ddc8d0ff0223e613fa02c9843b7f37ba7d67470a5",
+    "v13ControllerTest": "d53b952a5731de7824edfa5d7975f1c50b1f1e231d1253c745bf91bd0cdf274d",
+    "v13EventLog": "16308a46df4c39760a6070e0fce68846381d101e86566747574da0d278e82a96",
+    "v13State": "411e6227d6ae147882db5f19dede6572e271f1d5639cd4947322c9bbdd217b16"
+  },
+  "predecessor": {
+    "version": 13,
+    "contractPath": "research/early-detection-v4/continuous-free-source-operational-state-contract-v13.json",
+    "contractRawSha256": "98726beca167d57c4fe0e8715e8cb5740f804799c5b4322a00ac4c4eb4900f2d",
+    "controllerPath": "scripts/early-detection-continuous-free-source-v13.py",
+    "controllerRawSha256": "dd493548d58badc23a51988ddc8d0ff0223e613fa02c9843b7f37ba7d67470a5",
+    "eventLogPath": "state/early-detection-free-source-events-v13.jsonl",
+    "eventLogRawSha256": "16308a46df4c39760a6070e0fce68846381d101e86566747574da0d278e82a96",
+    "statePath": "state/early-detection-free-source-state-v13.json",
+    "stateRawSha256": "411e6227d6ae147882db5f19dede6572e271f1d5639cd4947322c9bbdd217b16",
+    "stateSelfSha256": "4a457a0cf92ecf9b3b2b9f87b4ed90d85e4196b220af3a78b4e53ca61271b610",
+    "lastEventSha256": "81b875b21ff4142ca3c220e3c65f1b0a52599bbbae5a8eeb3aa73e9961b59b8d",
+    "appendOnly": true,
+    "semanticStatus": "SUPERSEDED_BY_REPLAY_HARDENED_V14"
+  },
+  "eventLog": {
+    "path": "state/early-detection-free-source-events-v14.jsonl",
+    "eventCount": 3,
+    "rawSha256": "cd3d11e0703e8a245f4571cff36f954a43fa9c21a60d0eb2bcd6340a9c7d590d",
+    "lastEventSha256": "70850ad0de0ad300057fd917ef64b1e2c35af43f6f2af9985a05282d5dd2fda7",
+    "v12GenesisByteExactPrefix": true,
+    "v13ByteExactPrefix": true,
+    "hashChainVerified": true,
+    "fullProjectionCarriedByLastEvent": true
+  },
+  "operationalProjection": {
+    "taskCounts": {
+      "ACCOUNT_DEFERRED": 2,
+      "AUTONOMOUS_OPEN": 4,
+      "EXTERNAL_DEFERRED": 1,
+      "MILESTONE_COMPLETE_NO_INTERVAL_CREDIT": 1,
+      "RESOLVED": 0,
+      "RIGHTS_BLOCKED_EXPORT": 2
+    },
+    "tasks": [
+      {
+        "taskId": "Q001-QUANTCONNECT-TERMS-ACCOUNT",
+        "sourceId": "QUANTCONNECT_FREE_CLOUD",
+        "legacyV12State": "USER_ACTION_REQUIRED",
+        "operationalState": "RIGHTS_BLOCKED_EXPORT",
+        "schedulerEligible": false,
+        "priority": 100,
+        "milestoneRefs": [],
+        "nextAction": "NO_AUTONOMOUS_DATASET_INFORMATION_EXPORT_UNLESS_EXPLICIT_WRITTEN_RIGHTS"
+      },
+      {
+        "taskId": "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+        "sourceId": "QUANTCONNECT_FREE_CLOUD",
+        "legacyV12State": "READY",
+        "operationalState": "RIGHTS_BLOCKED_EXPORT",
+        "schedulerEligible": false,
+        "priority": 99,
+        "milestoneRefs": [],
+        "nextAction": "NO_AUTO_NEXT_RETAIN_CLOUD_COMPUTE_FEASIBILITY_ONLY"
+      },
+      {
+        "taskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+        "sourceId": "SEC_EDGAR_PRIMARY",
+        "legacyV12State": "READY",
+        "operationalState": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "priority": 98,
+        "milestoneRefs": [
+          856,
+          857,
+          858,
+          860,
+          861,
+          862,
+          864
+        ],
+        "nextAction": "CONTINUE_PRIMARY_DOCUMENT_IDENTITY_CORPORATE_ACTION_AND_TERMINAL_RECONCILIATION_WITHOUT_CREDIT"
+      },
+      {
+        "taskId": "Q004-FINRA-OTC-CATALOG",
+        "sourceId": "FINRA_OTC_PRIMARY",
+        "legacyV12State": "READY",
+        "operationalState": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "priority": 96,
+        "milestoneRefs": [],
+        "nextAction": "CONTINUE_RIGHTS_COMPLIANT_ROW_LEVEL_RECONCILIATION"
+      },
+      {
+        "taskId": "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+        "sourceId": "US_EXCHANGE_PRIMARY_FILES",
+        "legacyV12State": "READY",
+        "operationalState": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "priority": 95,
+        "milestoneRefs": [
+          855,
+          860,
+          861,
+          862
+        ],
+        "nextAction": "RECONCILE_NASDAQ_GAPS_AND_NYSE_NYSE_AMERICAN_CBOE_RIGHTS_CLEARED_PRIMARY_EVIDENCE"
+      },
+      {
+        "taskId": "Q006-TIINGO-FREE-ENTITLEMENT",
+        "sourceId": "TIINGO_FREE",
+        "legacyV12State": "USER_ACTION_REQUIRED",
+        "operationalState": "ACCOUNT_DEFERRED",
+        "schedulerEligible": false,
+        "priority": 94,
+        "milestoneRefs": [],
+        "nextAction": "WAIT_FOR_FREE_ACCOUNT_WITHOUT_PAYMENT_OR_TRIAL"
+      },
+      {
+        "taskId": "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+        "sourceId": "OPENFIGI_FREE",
+        "legacyV12State": "READY",
+        "operationalState": "MILESTONE_COMPLETE_NO_INTERVAL_CREDIT",
+        "schedulerEligible": false,
+        "priority": 92,
+        "milestoneRefs": [],
+        "nextAction": "DO_NOT_REPEAT_SEED_HANDSHAKE_OR_INFER_HISTORICAL_INTERVALS"
+      },
+      {
+        "taskId": "Q008-BUSINESS-QUANT-FREE-HANDSHAKE",
+        "sourceId": "BUSINESS_QUANT_FREE",
+        "legacyV12State": "USER_ACTION_REQUIRED",
+        "operationalState": "ACCOUNT_DEFERRED",
+        "schedulerEligible": false,
+        "priority": 88,
+        "milestoneRefs": [],
+        "nextAction": "WAIT_FOR_FREE_ACCOUNT_WITHOUT_PAYMENT_OR_TRIAL"
+      },
+      {
+        "taskId": "Q009-ALPHA-VANTAGE-NEGATIVE-CONTROL",
+        "sourceId": "ALPHA_VANTAGE_FREE",
+        "legacyV12State": "USER_ACTION_REQUIRED",
+        "operationalState": "EXTERNAL_DEFERRED",
+        "schedulerEligible": false,
+        "priority": 40,
+        "milestoneRefs": [],
+        "nextAction": "DEFER_EXTERNAL_FREE_KEY_NEGATIVE_CONTROL_NO_HISTORY_CREDIT"
+      },
+      {
+        "taskId": "Q010-RESEARCH-ARCHIVE-DISCOVERY",
+        "sourceId": "RESEARCH_ARCHIVES",
+        "legacyV12State": "READY",
+        "operationalState": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "priority": 50,
+        "milestoneRefs": [
+          859,
+          863
+        ],
+        "nextAction": "CONTINUE_LICENSE_AND_PROVENANCE_FIRST_DISCOVERY_WITHOUT_OUTCOMES"
+      }
+    ],
+    "q005Sublanes": [
+      {
+        "laneId": "NASDAQ",
+        "state": "PARTIAL_MILESTONE_OPEN_GAPS",
+        "schedulerEligible": true,
+        "boundary": "384_MONTHLY_CELLS_124_MONTHS_WITH_NO_SNAPSHOT_POSITIVE_PRESENCE_ONLY"
+      },
+      {
+        "laneId": "NYSE",
+        "state": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "boundary": "RIGHTS_CLEARED_PUBLIC_AND_SEC_FINRA_PRIMARY_RECONCILIATION_ONLY"
+      },
+      {
+        "laneId": "NYSE_AMERICAN",
+        "state": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "boundary": "RIGHTS_CLEARED_PUBLIC_AND_SEC_FINRA_PRIMARY_RECONCILIATION_ONLY"
+      },
+      {
+        "laneId": "CBOE",
+        "state": "AUTONOMOUS_OPEN",
+        "schedulerEligible": true,
+        "boundary": "NO_AUTOMATED_DATABASE_WITHOUT_WRITTEN_PERMISSION_PRIMARY_RECONCILIATION_ONLY"
+      }
+    ],
+    "scheduler": {
+      "strategy": "HIGHEST_PRIORITY_AUTONOMOUS_OPEN_ONLY",
+      "eligibleTaskIds": [
+        "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+        "Q004-FINRA-OTC-CATALOG",
+        "Q005-US-EXCHANGE-PUBLIC-CATALOGS",
+        "Q010-RESEARCH-ARCHIVE-DISCOVERY"
+      ],
+      "blockedTaskIds": [
+        "Q001-QUANTCONNECT-TERMS-ACCOUNT",
+        "Q002-QUANTCONNECT-50-CASE-CONTRACT",
+        "Q006-TIINGO-FREE-ENTITLEMENT",
+        "Q007-OPENFIGI-ANONYMOUS-HANDSHAKE",
+        "Q008-BUSINESS-QUANT-FREE-HANDSHAKE",
+        "Q009-ALPHA-VANTAGE-NEGATIVE-CONTROL"
+      ],
+      "nextTaskId": "Q003-SEC-TERMINAL-WEALTH-QUEUE",
+      "q002AutoNextForbidden": true
+    },
+    "operationalMilestones": [
+      {
+        "tag": 855,
+        "commit": "e9db6cb337f46e7b0824a17f464793da47de9cf0",
+        "parent": "996fd2eeb7f2193cfc6352ca15ab544d3f09ae4c",
+        "subject": "Tag 855: Nasdaq-Archivluecken verifizieren",
+        "workstream": "Q005_NASDAQ_GAP_MATRIX_SEAL",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 856,
+        "commit": "8ea3c8e488bd68091fc197edd5d75660406db019",
+        "parent": "e9db6cb337f46e7b0824a17f464793da47de9cf0",
+        "subject": "Tag 856: Aktiengegenleistungen einfrieren",
+        "workstream": "Q003_NONCASH_SHARE_RECEIPT_CONTRACT",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 857,
+        "commit": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+        "parent": "8ea3c8e488bd68091fc197edd5d75660406db019",
+        "subject": "Tag 857: Aktiengegenleistungen materialisieren",
+        "workstream": "Q003_NONCASH_SHARE_RECEIPT_OUTPUT",
+        "artifactCount": 1,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 858,
+        "commit": "86e0e0c399d780d775b6a3142f4f4958d1560a18",
+        "parent": "cc20000a578ea99699fbb18a845b4cecfcc4d57d",
+        "subject": "Tag 858: Aktiengegenleistungen versiegeln",
+        "workstream": "Q003_NONCASH_SHARE_RECEIPT_OUTPUT_SEAL",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 859,
+        "commit": "912ed611aae9081c528cb8e39f8017a290fd4258",
+        "parent": "86e0e0c399d780d775b6a3142f4f4958d1560a18",
+        "subject": "Tag 859: Hypothesenregister outcome-blind haerten",
+        "workstream": "Q010_HYPOTHESIS_PROPOSAL_INFRA",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 860,
+        "commit": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+        "parent": "912ed611aae9081c528cb8e39f8017a290fd4258",
+        "subject": "Tag 860: SEC-Punktidentitaet abgleichen",
+        "workstream": "Q003_Q005_FORM345_DESCRIPTOR_CROSSWALK",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 861,
+        "commit": "5622b794b0a435c5389707a6777161a33f8a79f7",
+        "parent": "cd2cb2ec8c43df97c9803a6549eaef813b10a82b",
+        "subject": "Tag 861: SEC-Punktidentitaet materialisieren",
+        "workstream": "Q003_Q005_FORM345_DESCRIPTOR_CROSSWALK_OUTPUT",
+        "artifactCount": 1,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 862,
+        "commit": "0a87a7ff37c899db1e272910e8f395f4a145c7c2",
+        "parent": "5622b794b0a435c5389707a6777161a33f8a79f7",
+        "subject": "Tag 862: SEC-Punktidentitaet versiegeln",
+        "workstream": "Q003_Q005_FORM345_DESCRIPTOR_CROSSWALK_OUTPUT_SEAL",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 863,
+        "commit": "933ab61e4fbe5f0f11a7be3e24daf1893eeb9a85",
+        "parent": "0a87a7ff37c899db1e272910e8f395f4a145c7c2",
+        "subject": "Tag 863: Hypothesenprovenienz korrigieren",
+        "workstream": "Q010_HYPOTHESIS_PROVENANCE_V3",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      },
+      {
+        "tag": 864,
+        "commit": "f875f0849459d696963fddd1bc3c51a91df03cf8",
+        "parent": "933ab61e4fbe5f0f11a7be3e24daf1893eeb9a85",
+        "subject": "Tag 864: Aktienquoten neutral bezeichnen",
+        "workstream": "Q003_NONCASH_SHARE_RECEIPT_NEUTRAL_V3",
+        "artifactCount": 3,
+        "status": "OPERATIONAL_MILESTONE_NO_CREDIT"
+      }
+    ],
+    "milestoneClaimLocks": {
+      "resolvedTaskCredit": false,
+      "historicalIdentityResolved": false,
+      "listingIdentityResolved": false,
+      "securityIdentityResolved": false,
+      "tickerReuseResolved": false,
+      "corporateActionChainComplete": false,
+      "terminalPaymentVerified": false,
+      "terminalSessionProven": false,
+      "terminalWealthComplete": false,
+      "originalV4GateCredit": false,
+      "resultComputationAllowed": false,
+      "outcomesAccessed": false
+    },
+    "lockedStudies": [
+      {
+        "studyId": "PUBLIC-AI-COVERAGE-2009-2014",
+        "status": "LOCKED_APPEND_ONLY",
+        "appendOnly": true,
+        "originalV4GateCredit": false
+      },
+      {
+        "studyId": "SEC-CIK-GROWTH-PERSISTENCE@1.0.0",
+        "status": "LOCKED_APPEND_ONLY",
+        "appendOnly": true,
+        "originalV4GateCredit": false
+      }
+    ],
+    "originalV4": {
+      "protocol": "FEM-SEC-US@1.2.0",
+      "greenOfficialGates": 2,
+      "officialGateCount": 13,
+      "complete": false,
+      "resultComputationAllowed": false,
+      "outcomesAccessed": false
+    },
+    "scientificLocks": {
+      "proposalExecutionAuthorized": false,
+      "resultComputationAllowed": false,
+      "studyCredit": "NONE",
+      "originalV4GateCredit": false,
+      "fiveRequiredDataSemanticsComplete": false,
+      "fullDataAiProtocolSealAllowed": false,
+      "reserved2021To2024OpenedForHypothesisGeneration": false,
+      "humanAttestation": false,
+      "pricesAccessed": false,
+      "returnsAccessed": false,
+      "outcomesAccessed": false
+    }
+  },
+  "stateSha256": "11805da98c1939180af93e6e6e8215667cb56919428dc7b729509254b9ef76c4"
+}

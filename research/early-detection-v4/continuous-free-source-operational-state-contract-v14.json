@@ -1,0 +1,77 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v14",
+  "createdAt": "2026-08-13T03:59:32Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Supersede V13 append-only by making the event log replay-complete, recomputing queue priority and requiring exact remote introduction before next may run.",
+  "contractSelfSha256": "1787afa07631d94e8a8aa1b6576ad6992115308fe9ea90c94148548e71379949",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "9d1dbad209c14c8fca0073a371f743d94f731283",
+    "buildBaseTag": 866,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v14.json",
+      "scripts/early-detection-continuous-free-source-v14.py",
+      "state/early-detection-free-source-events-v14.jsonl",
+      "state/early-detection-free-source-state-v14.json",
+      "tests/early-detection-continuous-free-source-v14.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "policy": "dd2acf4d50e324060ef2d8938a6f340e9f3ddabd9312be0d6e316ad0bf046b89",
+      "queueSeed": "9d192851b4be9ee965a522dd67e2818ac807e220d1a982694dc61e141e9f7f3b",
+      "registry": "d07ba18a969aced361fb638d52226f373ec64052dba30ddf36789a2a130a8927",
+      "resumeV4Contract": "a8df69dabe3d09cef5bcd735d09d3eebd5a02860598583af5c146e8b43533fee",
+      "v12EventLog": "4fd5e9a1dc7773c34cac82c136f938b2bb7850853415d9f8167abb5b10c9cd7e",
+      "v13Contract": "98726beca167d57c4fe0e8715e8cb5740f804799c5b4322a00ac4c4eb4900f2d",
+      "v13Controller": "dd493548d58badc23a51988ddc8d0ff0223e613fa02c9843b7f37ba7d67470a5",
+      "v13ControllerTest": "d53b952a5731de7824edfa5d7975f1c50b1f1e231d1253c745bf91bd0cdf274d",
+      "v13EventLog": "16308a46df4c39760a6070e0fce68846381d101e86566747574da0d278e82a96",
+      "v13State": "411e6227d6ae147882db5f19dede6572e271f1d5639cd4947322c9bbdd217b16"
+    },
+    "inputBundleSha256": "9347190e54f16c5730e0a01822c9ef5be2e9214b228642e217f813881db109ce",
+    "inputBundleRecomputedFromBaseAndRawHashes": true,
+    "v12AndV13EventLogsMustBeByteExactPrefixes": true
+  },
+  "implementation": {
+    "controllerNormalizedSha256": "b457b13b95d3b5c198d3f87c528f5b9b777d8856b5c75f7553fc99160207eb08",
+    "testNormalizedSha256": "b93ea3c7e8f61f0e92e566f159904a9f48f562a7ed48f3dec9c7ec7c84da8878",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v14.jsonl",
+    "eventLogRawSha256": "cd3d11e0703e8a245f4571cff36f954a43fa9c21a60d0eb2bcd6340a9c7d590d",
+    "eventCount": 3,
+    "lastEventSha256": "70850ad0de0ad300057fd917ef64b1e2c35af43f6f2af9985a05282d5dd2fda7",
+    "statePath": "state/early-detection-free-source-state-v14.json",
+    "stateRawSha256": "3c85155f06a0f56fba47fb4b664ce622dd35867566353ca05ef0c88e29de9b11",
+    "stateSelfSha256": "11805da98c1939180af93e6e6e8215667cb56919428dc7b729509254b9ef76c4",
+    "operationalProjectionSha256": "08b1ce5850dacde5f37a08081e9273760a69cd03818b4762a9751ce3050f3b13"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
