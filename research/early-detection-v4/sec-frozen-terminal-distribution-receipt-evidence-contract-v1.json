@@ -1,0 +1,325 @@
+{
+  "claimLocks": {
+    "actualCashReceiptForAllRows": false,
+    "allHoldersVerified": false,
+    "cashOnlyVerified": false,
+    "corporateActionChainComplete": false,
+    "finalLiquidatingDistributionVerified": false,
+    "historicalIdentityResolved": false,
+    "noFurtherDistributionsVerified": false,
+    "noLaterRecoveryVerified": false,
+    "originalV4GateCredit": false,
+    "outcomesAccessed": false,
+    "postClosingRecoveryVerified": false,
+    "terminalSessionComplete": false,
+    "terminalWealthComplete": false
+  },
+  "createdAt": "2026-08-13T00:00:00Z",
+  "evidenceContract": {
+    "exactFrozenSentenceSetRequired": true,
+    "excludedSemanticClasses": [
+      "CONDITIONAL_OR_IF_ANY_PAYMENT",
+      "CURRENTLY_ESTIMATED_OR_UP_TO_AMOUNT",
+      "CVR_OR_OTHER_RIGHT_WITHOUT_PAYMENT",
+      "FIRST_OR_INITIAL_DISTRIBUTION_AS_FINAL",
+      "FUTURE_PAYMENT_OR_RELEASE",
+      "GENERIC_SENTENCE_WITHOUT_ACCESSION_AND_TITLE_CLASS_BINDING",
+      "PERMITS_DISTRIBUTION_WITHOUT_PAYMENT_OR_RECEIPT",
+      "PRE_CLOSING_PROCEEDS_AS_POST_CLOSING_RECOVERY",
+      "RIGHT_TO_RECEIVE_AS_ACTUAL_RECEIPT",
+      "TENDER_PAYMENT_AS_NON_TENDERED_HOLDER_RECEIPT"
+    ],
+    "expectedEvidenceKindCounts": {
+      "ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIVED_STATED": 1,
+      "ACTUAL_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATED": 1,
+      "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED": 3
+    },
+    "expectedRows": 5,
+    "frozenRows": [
+      {
+        "accession": "0000891377-11-000008",
+        "evidenceKind": "ACTUAL_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATED",
+        "evidenceText": "The Company is in summary wind up and liquidation under the laws of its jurisdiction, and has effected its first liquidating distribution to confirmed shareholders of record as of January 5, 2011, by mailing checks to such shareholders on or about March 7, 2011.",
+        "inventoryAccessionRowCount": 1,
+        "reconciliationWitness": {
+          "accessionOccurrenceCount": 7,
+          "occurrenceId": "97e1a6f4c2a536e60af9f2c505d2701ebf1e22390bbceb14ba344d5c385c70a1",
+          "sourceRowId": "SEC-TW-00005967"
+        },
+        "semanticValues": {
+          "actualCashReceiptVerified": false,
+          "cashAmount": null,
+          "currencyMarker": null,
+          "distributionDate": "2011-03-07",
+          "distributionDateQualifier": "ON_OR_ABOUT",
+          "distributionEffectedStated": true,
+          "finalDistributionStated": false,
+          "firstDistributionStated": true,
+          "liquidatingDistributionStated": true,
+          "mixedConsiderationStated": false,
+          "recipientScope": "CONFIRMED_SHAREHOLDERS_OF_RECORD_AS_OF_2011-01-05",
+          "stockRatio": null,
+          "stockSecurityText": null
+        },
+        "sourceRef": {
+          "blobSha256": "c82d540dbfbc7a9ce673cff667633991bad6c545e6046928fd2cfe9725471155",
+          "bytes": 13254,
+          "documentFilename": "btl15f214.txt",
+          "documentIndex": 1,
+          "documentSequence": "1",
+          "documentType": "15F-12B",
+          "evidenceSentenceIndex": 26,
+          "evidenceSentenceSha256": "c02293372804e61454971831fcbe28cd1c76617854dff1dc096c8cd84e18f3d7",
+          "normalizationMode": "HTML_PARSER",
+          "rawDocumentSha256": "0e824baf9cc7f2ce073c2508604f71447ebfc6ec89c07339135d093ce46a6a7b",
+          "rawTextSha256": "17213975e84db4b099cd0efa28499bcb215e53a2dbb329f11af4bbb76bb53311",
+          "relativePath": "c8/c82d540dbfbc7a9ce673cff667633991bad6c545e6046928fd2cfe9725471155.txt",
+          "titleClassEnd": 620,
+          "titleClassSentenceIndex": 2,
+          "titleClassSentenceSha256": "0cb583c5690bd30a079d900aef552c958622783158dfab13454d5174b4dbc19d",
+          "titleClassStart": 605,
+          "titleClassText": "Ordinary Shares"
+        }
+      },
+      {
+        "accession": "0000903423-11-000138",
+        "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+        "evidenceText": "Such filing preceded the February 22, 2011 final distribution to the holders, which was the subject of a Form 8-K filed on February 23, 2011.",
+        "inventoryAccessionRowCount": 2,
+        "reconciliationWitness": {
+          "accessionOccurrenceCount": 1,
+          "occurrenceId": "0e2e0cb0c5787841f050ce39b919587d9165f07090c7f3c228127ff856b20368",
+          "sourceRowId": "SEC-TW-00005699"
+        },
+        "semanticValues": {
+          "actualCashReceiptVerified": false,
+          "cashAmount": null,
+          "currencyMarker": null,
+          "distributionDate": "2011-02-22",
+          "distributionDateQualifier": "EXACT_DATE_STATED",
+          "distributionEffectedStated": false,
+          "finalDistributionStated": true,
+          "firstDistributionStated": false,
+          "liquidatingDistributionStated": false,
+          "mixedConsiderationStated": false,
+          "recipientScope": "HOLDERS_OF_BOUND_TITLE_CLASS",
+          "stockRatio": null,
+          "stockSecurityText": null
+        },
+        "sourceRef": {
+          "blobSha256": "a3f7f68dffed6c103efcdebf99b915045c52ed725acef4fc12ce45dd1156f677",
+          "bytes": 31705,
+          "documentFilename": "sat-form15a_20023.htm",
+          "documentIndex": 1,
+          "documentSequence": "1",
+          "documentType": "15-15D/A",
+          "evidenceSentenceIndex": 15,
+          "evidenceSentenceSha256": "4747129415b52ce48fadf5d9d83614654b1cc12ac4211c9bf4b040f0276c0f3b",
+          "normalizationMode": "HTML_PARSER",
+          "rawDocumentSha256": "d9d8a6cd5a6f9e9fe19e268743703cb1df3526b5955c0e1c2cef40622fd959d1",
+          "rawTextSha256": "efa54ba145928f2ee2899963cc143352cda9228f1ac22665828f46af5c7ba336",
+          "relativePath": "a3/a3f7f68dffed6c103efcdebf99b915045c52ed725acef4fc12ce45dd1156f677.txt",
+          "titleClassEnd": 301,
+          "titleClassSentenceIndex": 9,
+          "titleClassSentenceSha256": "01e14916186438a4313943b150c1cd4ec186c580422e8a3b64024a6479fa0ba3",
+          "titleClassStart": 229,
+          "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-3 Class A Callable Units"
+        }
+      },
+      {
+        "accession": "0000903423-11-000139",
+        "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+        "evidenceText": "Such filing preceded the February 22, 2011 final distribution to the holders, which was the subject of a Form 8-K filed on February 23, 2011.",
+        "inventoryAccessionRowCount": 2,
+        "reconciliationWitness": {
+          "accessionOccurrenceCount": 1,
+          "occurrenceId": "e9adeba2243e3666b35333956bc2877839c3bbd22b40a337d81b40d7e13ef60c",
+          "sourceRowId": "SEC-TW-00005700"
+        },
+        "semanticValues": {
+          "actualCashReceiptVerified": false,
+          "cashAmount": null,
+          "currencyMarker": null,
+          "distributionDate": "2011-02-22",
+          "distributionDateQualifier": "EXACT_DATE_STATED",
+          "distributionEffectedStated": false,
+          "finalDistributionStated": true,
+          "firstDistributionStated": false,
+          "liquidatingDistributionStated": false,
+          "mixedConsiderationStated": false,
+          "recipientScope": "HOLDERS_OF_BOUND_TITLE_CLASS",
+          "stockRatio": null,
+          "stockSecurityText": null
+        },
+        "sourceRef": {
+          "blobSha256": "a5ec72f3bad4d6444da1b0add6077500138e9a5dc8e8119d5b27649df6335902",
+          "bytes": 30300,
+          "documentFilename": "sat-form15a_20027.htm",
+          "documentIndex": 1,
+          "documentSequence": "1",
+          "documentType": "15-15D/A",
+          "evidenceSentenceIndex": 15,
+          "evidenceSentenceSha256": "4747129415b52ce48fadf5d9d83614654b1cc12ac4211c9bf4b040f0276c0f3b",
+          "normalizationMode": "HTML_PARSER",
+          "rawDocumentSha256": "d648d56c34f3f19fa05621999aef49e442d61b270c669eb3d8de0a27da58271d",
+          "rawTextSha256": "bc2af3b71c41dd12c8aef50b1e61e2ea92c3e64d0ee77e91ab1f751caca827cb",
+          "relativePath": "a5/a5ec72f3bad4d6444da1b0add6077500138e9a5dc8e8119d5b27649df6335902.txt",
+          "titleClassEnd": 301,
+          "titleClassSentenceIndex": 9,
+          "titleClassSentenceSha256": "8c550f92ed7a36c8e4cf4859ff7bdb445ee5f1328e1d8e34e8fa4890b3b01353",
+          "titleClassStart": 229,
+          "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-7 Class A Callable Units"
+        }
+      },
+      {
+        "accession": "0000903423-11-000140",
+        "evidenceKind": "DATED_FINAL_DISTRIBUTION_TO_HOLDERS_STATED",
+        "evidenceText": "Such filing preceded the February 22, 2011 final distribution to the holders, which was the subject of a Form 8-K filed on February 23, 2011.",
+        "inventoryAccessionRowCount": 2,
+        "reconciliationWitness": {
+          "accessionOccurrenceCount": 1,
+          "occurrenceId": "dc3df434f06017d5133751582c9e472835700d5dbbd87a87c3a98c564fd37aca",
+          "sourceRowId": "SEC-TW-00005701"
+        },
+        "semanticValues": {
+          "actualCashReceiptVerified": false,
+          "cashAmount": null,
+          "currencyMarker": null,
+          "distributionDate": "2011-02-22",
+          "distributionDateQualifier": "EXACT_DATE_STATED",
+          "distributionEffectedStated": false,
+          "finalDistributionStated": true,
+          "firstDistributionStated": false,
+          "liquidatingDistributionStated": false,
+          "mixedConsiderationStated": false,
+          "recipientScope": "HOLDERS_OF_BOUND_TITLE_CLASS",
+          "stockRatio": null,
+          "stockSecurityText": null
+        },
+        "sourceRef": {
+          "blobSha256": "c1699cdb11a02af66fb3bc074cd312e229a58923d4e99762a7996234984c49af",
+          "bytes": 30890,
+          "documentFilename": "sat-form15a_20024.htm",
+          "documentIndex": 1,
+          "documentSequence": "1",
+          "documentType": "15-15D/A",
+          "evidenceSentenceIndex": 15,
+          "evidenceSentenceSha256": "4747129415b52ce48fadf5d9d83614654b1cc12ac4211c9bf4b040f0276c0f3b",
+          "normalizationMode": "HTML_PARSER",
+          "rawDocumentSha256": "ac3182554f1e3ff7af0eed2f7b982a4b9ecebcf9564c0160d9b0d11ad172e61c",
+          "rawTextSha256": "e0472c60c64246072e4ccf3196dd408930e6863ecf52d82c89eb2f226e89e0f8",
+          "relativePath": "c1/c1699cdb11a02af66fb3bc074cd312e229a58923d4e99762a7996234984c49af.txt",
+          "titleClassEnd": 301,
+          "titleClassSentenceIndex": 9,
+          "titleClassSentenceSha256": "93703caab3993d6184ffe901889ffa2d3db47c3b205786555778fcfdcdf22151",
+          "titleClassStart": 229,
+          "titleClassText": "SATURNS DPL Capital Security Backed Series 2002-4 Class A Callable Units"
+        }
+      },
+      {
+        "accession": "0000950157-22-000333",
+        "evidenceKind": "ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIVED_STATED",
+        "evidenceText": "Pretivm shareholders who did not elect cash or Newcrest Shares received default consideration of C$9.25 per Pretivm Share in cash and 0.4042 Newcrest Shares per Pretivm Share.",
+        "inventoryAccessionRowCount": 1,
+        "reconciliationWitness": {
+          "accessionOccurrenceCount": 8,
+          "occurrenceId": "59fbca0e17db784d3fe46a33ffd6836c339eb64998631674e00a015d73b2017d",
+          "sourceRowId": "SEC-TW-00035761"
+        },
+        "semanticValues": {
+          "actualCashReceiptVerified": true,
+          "cashAmount": "9.25",
+          "currencyMarker": "C$",
+          "distributionDate": null,
+          "distributionDateQualifier": null,
+          "distributionEffectedStated": false,
+          "finalDistributionStated": false,
+          "firstDistributionStated": false,
+          "liquidatingDistributionStated": false,
+          "mixedConsiderationStated": true,
+          "recipientScope": "PRETIVM_SHAREHOLDERS_WHO_DID_NOT_ELECT_CASH_OR_NEWCREST_SHARES",
+          "stockRatio": "0.4042",
+          "stockSecurityText": "Newcrest Shares"
+        },
+        "sourceRef": {
+          "blobSha256": "e2ddda59958c21ff67ee1dc39600b86a0b25ceddcc179989cbe766cf22e33a82",
+          "bytes": 55744,
+          "documentFilename": "form15f-12g.htm",
+          "documentIndex": 1,
+          "documentSequence": "1",
+          "documentType": "15F-12G",
+          "evidenceSentenceIndex": 10,
+          "evidenceSentenceSha256": "734446f9505114dbbd082ce163064582a7a6bf88a4a209e89349c71eab9616ad",
+          "normalizationMode": "HTML_PARSER",
+          "rawDocumentSha256": "68d856a7f4344f19b362913f1fd9e2da3d0c43a3f74321b9e5aca0891c03f5d0",
+          "rawTextSha256": "2738240f770a4a5f8d023f99cdf27fbf54188556aceb728daaaff82db3a36aa8",
+          "relativePath": "e2/e2ddda59958c21ff67ee1dc39600b86a0b25ceddcc179989cbe766cf22e33a82.txt",
+          "titleClassEnd": 200,
+          "titleClassSentenceIndex": 3,
+          "titleClassSentenceSha256": "6aaedbfbcc1dea5679e92cfa1914fa6ada81350d57db7bc9f9f1ea0782ace799",
+          "titleClassStart": 185,
+          "titleClassText": "Ordinary shares"
+        }
+      }
+    ],
+    "futureRowsRequireNewProtocol": true,
+    "noGoClaims": [
+      "ALL_HOLDERS_RECEIVED",
+      "CASH_ONLY_CONSIDERATION",
+      "FINAL_LIQUIDATING_DISTRIBUTION",
+      "FULL_CORPORATE_ACTION_CHAIN",
+      "NO_FURTHER_DISTRIBUTIONS",
+      "ORIGINAL_V4_GATE_CREDIT",
+      "POST_CLOSING_RECOVERY",
+      "TERMINAL_SESSION_COMPLETE",
+      "TERMINAL_WEALTH_COMPLETE"
+    ],
+    "scopeLimit": "EXACT_FIVE_FROZEN_PRIMARY_SEC_SENTENCES_ONLY_NO_GENERAL_SELECTOR",
+    "semanticCeiling": "THREE_DATED_FINAL_DISTRIBUTION_STATEMENTS_ONE_EFFECTED_FIRST_LIQUIDATING_DISTRIBUTION_BY_CHECKS_STATEMENT_AND_ONE_ACTUAL_DEFAULT_MIXED_CONSIDERATION_RECEIPT_STATEMENT"
+  },
+  "implementationContract": {
+    "builderPath": "scripts/build-sec-frozen-terminal-distribution-receipt-evidence-v1.py",
+    "outputAbsentAtBuildBase": true,
+    "outputIntroductionDirectChildOfBuildBase": true,
+    "preImplementationParentCommit": "9695c0f7fdc04d145c52afba8a242baed3fdb7b3",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+    "singleParentBuildBase": true,
+    "testPath": "tests/build-sec-frozen-terminal-distribution-receipt-evidence-v1.test.js"
+  },
+  "inputs": {
+    "candidateReconciliation": {
+      "builderRawSha256": "d2b4c9ec91ed5f54971edb6dbe8c581ae9d4644f657f66397e662ca2e6ab6bb7",
+      "contractRawSha256": "eb079123cd3f7aadae577ef811dd4b8f729f53b5fc29c403af9dee99b35225cf",
+      "introductionCommit": "8ff267c0afc257ec2db3e72c512050fbcbb102f8",
+      "path": "reports/early-detection/sec-terminal-candidate-reconciliation-v1.json",
+      "rawSha256": "e38823a9701a7ea58afc1a91e5ed209837251f2e397fdf9d31bc4433831b4fa0",
+      "reportSha256": "a05ba1777da74a076698dfbb8bcbb43315f6ddcd1eb78cb5d7c3e5b64e7761ab",
+      "rows": 16507,
+      "testRawSha256": "3d91c52cf2c4de38329773a3abbbabd75b0137f0221cce52aa4e1ae09d947445"
+    },
+    "originalInventory": {
+      "blobTreeSequenceSha256": "47b24e7e3fefe343656eaee8b256cf0a4978c3b9e39d3d1932a4265ad976ed4f",
+      "builderRawSha256": "cb46d6d97d7da4433f9436ca20c18cf02ddfdeee1a7851618c3d719377ae2178",
+      "contractRawSha256": "a59a7fc9d1f2c6e1e19b9469d32fc7852f4d899374672480b8cbc690cfdf0d76",
+      "introductionCommit": "a0218f4344ffa853f83a7123f886fb289cfda2e4",
+      "path": "reports/early-detection/sec-terminal-wealth-original-inventory-v4.json",
+      "rawSha256": "7a2947b66b9cdc26e829d19a4342b7effbbcea1c8296ca0bc46d4e05217c9711",
+      "reportSha256": "b52b25d27e826872c83d920c3976a6aa9185c337ac48620e85ffbf323d550ab2",
+      "rows": 44352,
+      "testRawSha256": "28d799c9961bcd4f0f33d6833d8d73aa52b75c9bd8ad621de826630fb8bcf080"
+    },
+    "sourceRebuildImplementation": {
+      "builderPath": "scripts/build-sec-same-sentence-effective-fixed-cash-v2.py",
+      "builderRawSha256": "3edea67db65e2923adb1d816c81c2201a80fa87dd246b6af2418ef5c32d38095"
+    }
+  },
+  "output": {
+    "path": "reports/early-detection/sec-frozen-terminal-distribution-receipt-evidence-v1.json",
+    "writeNewAtomic": true
+  },
+  "purpose": "Freeze exactly five accession-, blob-, document-, sentence- and title-class-bound primary SEC statements without inferring terminal wealth, no-further-distribution status or post-closing recovery.",
+  "schema": "early-detection-sec-frozen-terminal-distribution-receipt-evidence-contract/v1",
+  "taskId": "Q003-SEC-FROZEN-TERMINAL-DISTRIBUTION-RECEIPT-EVIDENCE-V1",
+  "track": "SHARED_OUTCOME_BLIND_INFRA"
+}
