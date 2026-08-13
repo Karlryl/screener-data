@@ -1,0 +1,103 @@
+{
+  "schema": "early-detection-continuous-free-source-operational-state-contract/v22",
+  "createdAt": "2026-08-13T17:06:43Z",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Append Tags900-907 as exact no-credit SEC late-periodic discovery, private-capture and content-disposition milestones, preserve byte-exact V21 history, and keep Q003 open because this bounded lane found no source-qualified later payment or no-further-payment statement.",
+  "contractSelfSha256": "5a132a74ed9460d11020b8791bcd40e0de97bc1b5bb7f72cee7443f5c3fc09ec",
+  "repository": {
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "buildBaseCommit": "b39a0b269a0562ec746a286a95df2f59a9f18588",
+    "buildBaseTag": 907,
+    "introductionMustBeDirectSingleParentChild": true,
+    "introductionAddsExactlyAuthorizedPaths": true,
+    "authorizedPaths": [
+      "research/early-detection-v4/continuous-free-source-operational-state-contract-v22.json",
+      "scripts/early-detection-continuous-free-source-v22.py",
+      "state/early-detection-free-source-events-v22.jsonl",
+      "state/early-detection-free-source-state-v22.json",
+      "tests/early-detection-continuous-free-source-v22.test.js"
+    ]
+  },
+  "inputs": {
+    "rawSha256": {
+      "v21Contract": "a02d4a432b4cbc55fc13ae0142ed399e60fc76e8dc54be4d3c7b126d4c99d689",
+      "v21Controller": "56a5e7afcf71df7550ca42990b857f4c2596f6a3575b939b89b3230733967e5b",
+      "v21Test": "15e4a2b53a88cd447bf6630cd5ecf761abf98388c21264a73bfe8bc87f46c26f",
+      "v21EventLog": "c6345b05771715dbca28f67862e036bf9b03df6b007a6d9c380d069facd2fca0",
+      "v21State": "106e1af72379c061f6b1389649ecca155fd36e60b235ebc952efef3b3d92ec6a",
+      "latePeriodicContract": "a51ff3c626bf3aed49b66017d8e181ae25af68a9fb557e1d801d4531c0d2996e",
+      "latePeriodicVerifier": "c2b085d27ed12489d9e9451792c62d0bfea69708e598f7a0c31288047c4369ab",
+      "latePeriodicTest": "d8ce022eaa0fdfce932ea2e0b6b6be8c3790ac991bfd29931c668064f4921560"
+    },
+    "inputBundleSha256": "a2928290894e7b2b6f58d01aa1aaf441276506acc52de9f59d0b5482654188b4",
+    "inputBundleRecomputedFromRawHashesAndEightMilestoneDeltas": true,
+    "v21EventLogMustBeByteExactPrefix": true,
+    "v21ControllerMustVerifyRemoteBeforeImportCredit": true,
+    "consumerArtifactMustVerifyRemoteBeforeImportCredit": true
+  },
+  "milestoneBindings": [
+    {"tag":900,"commit":"f8ec39ac8b11802050108d43b0ee9bf8dc7eb4e8","parent":"c2a4e08893aad034392b880287641643bb3a8c47","subject":"Tag 900: SEC-Folgebelege operativ fortschreiben","workstream":"CONTROLLER_LINEAGE_V21","artifactCount":5,"deltaSha256":"662b711163c8cc750d361b157013bd16a06c2d38255fd41807b11b7722c9cfa5","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":901,"commit":"1131def14d7d9cc2380e70c8f2c2d2a12f20a60a","parent":"f8ec39ac8b11802050108d43b0ee9bf8dc7eb4e8","subject":"Tag 901: Spaete SEC-Periodik vollstaendig vorsortieren","workstream":"Q003_LATE_PERIODIC_DISCOVERY","artifactCount":3,"deltaSha256":"f67c9d1e1864ca50d2aaef6d8a0278215d55bbbbed5ea9053fcc16eda4c60c50","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":902,"commit":"698cb1633510aaf8a3473dc6689a390fdb566949","parent":"1131def14d7d9cc2380e70c8f2c2d2a12f20a60a","subject":"Tag 902: Spaete SEC-Periodik privat erfassen","workstream":"Q003_LATE_PERIODIC_CAPTURE_V1","artifactCount":3,"deltaSha256":"46776739bf7a0dcf092a1aa83682dcefbb4a35ae4706017d18d29ecee7a1d0be","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":903,"commit":"00e55a5cc1da8c22f54932429d5c5e5101f79dbd","parent":"698cb1633510aaf8a3473dc6689a390fdb566949","subject":"Tag 903: Abgebrochenen SEC-Transfer revisionssicher fortsetzen","workstream":"Q003_LATE_PERIODIC_CAPTURE_V2","artifactCount":3,"deltaSha256":"b24e02bd6d06b0f385c1965867cfed981a7405ccd30a28d033786755350be005","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":904,"commit":"8a223c237b8a7f8ddfe518a3e8b33b8364473b4e","parent":"00e55a5cc1da8c22f54932429d5c5e5101f79dbd","subject":"Tag 904: SEC-Transferabbrueche lueckenlos journalisieren","workstream":"Q003_LATE_PERIODIC_CAPTURE_V3","artifactCount":3,"deltaSha256":"00c6867eb7a76c148f7896cb2ba541547300bdc062665294741d13b7d1e8b7d7","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":905,"commit":"e6d19f41126c73007f2ff58e3a062dd202edf42b","parent":"8a223c237b8a7f8ddfe518a3e8b33b8364473b4e","subject":"Tag 905: SEC-Fortsetzung wiederanlaufbar versiegeln","workstream":"Q003_LATE_PERIODIC_CAPTURE_V4","artifactCount":3,"deltaSha256":"bd63462fa75e143ced1986c67d6cbdd36c39450d30e7899adf0c31d8c1d07dc0","status":"SUPERSEDED_OPERATIONAL_ATTEMPT_NO_CREDIT"},
+    {"tag":906,"commit":"7cc5f2e7acdf568f1bd2d660b0e5bfe38145bac0","parent":"e6d19f41126c73007f2ff58e3a062dd202edf42b","subject":"Tag 906: Grosse SEC-Originale sicher zulassen","workstream":"Q003_LATE_PERIODIC_CAPTURE_V5_COMPLETE","artifactCount":3,"deltaSha256":"b700af02cdf7a1bc3f9fa56976e1da52b594e04aa74bc50d1ee6d40d410508c7","status":"OPERATIONAL_MILESTONE_NO_CREDIT"},
+    {"tag":907,"commit":"b39a0b269a0562ec746a286a95df2f59a9f18588","parent":"7cc5f2e7acdf568f1bd2d660b0e5bfe38145bac0","subject":"Tag 907: Spaete SEC-Periodik inhaltlich ausschliessen","workstream":"Q003_LATE_PERIODIC_CONTENT_DISPOSITION","artifactCount":3,"deltaSha256":"54abde2faa8f3c00185756c0ff80439a4e95c0fab4e1ee1716a8e1f1f57f2fab","status":"OPERATIONAL_MILESTONE_NO_CREDIT"}
+  ],
+  "consumerVerification": {
+    "candidateFilings": 122,
+    "acceptedReceipts": 122,
+    "incidentCount": 7,
+    "requestEventCount": 129,
+    "totalRawBytes": 1153819931,
+    "normalizedSentences": 328801,
+    "broadSentenceCandidateRows": 3710,
+    "sourceQualifiedOriginalAmountRepeatedSentenceMatches": 0,
+    "sourceQualifiedPastAdditionalDistributionSentenceMatches": 0,
+    "sourceQualifiedNoFurtherPaymentSentenceMatches": 0,
+    "terminalWealthComplete": false,
+    "outcomesAccessed": false
+  },
+  "implementation": {
+    "controllerNormalizedSha256": "213def62362b60057c04233f14332b7b4e5c22f536b3cc8d0b2b13852c9d5cca",
+    "testNormalizedSha256": "15e470bded0a8afca5720d430bad995e5ce2d8890dbb5569a804ad7c8818baf0",
+    "selfBindingsNormalizedBeforeHash": true
+  },
+  "outputs": {
+    "eventLogPath": "state/early-detection-free-source-events-v22.jsonl",
+    "eventLogRawSha256": "3b78c6604578417e629b121a7829073dbd4c870e2fc111521e6eaa561c8b5ecc",
+    "eventCount": 10,
+    "lastEventSha256": "8b23415609ed50c1619683fb775b84d3c5f1ccb14849279ffb0efe9f3cfeed19",
+    "statePath": "state/early-detection-free-source-state-v22.json",
+    "stateRawSha256": "9439271eec9c95eb52ae270264b6607e65037a779f58bdcf95eece52c48ab298",
+    "stateSelfSha256": "f41b3981fb2fabddb75a50d4ab105f1172a96aa0c880bdbc5bb9e978816cb4c4",
+    "operationalProjectionSha256": "b986114a4a4994103cbd9bf30d3b976c59295c31278710d616557fd4bba6b5ef"
+  },
+  "replayContract": {
+    "lastEventCarriesCompleteOperationalProjection": true,
+    "stateMustBeDeterministicallyMaterializedFromEvents": true,
+    "v21EventLogMustBeByteExactPrefix": true,
+    "taskCountsMustBeRecomputedFromTasks": true,
+    "eligibleQueueMustBeRecomputedFromTasks": true,
+    "nextTaskMustBeHighestPriorityEligibleTask": true,
+    "milestoneDeltasMustBeRecomputedFromGitObjects": true,
+    "nextRequiresRemotePostIntroduction": true,
+    "verifyWithoutRemoteMustFail": true,
+    "preIntroductionVerifyIsDiagnosticOnly": true
+  },
+  "scientificLocks": {
+    "originalV4GreenOfficialGates": 2,
+    "originalV4OfficialGateCount": 13,
+    "originalV4Complete": false,
+    "originalV4GateCredit": false,
+    "identityResolved": false,
+    "terminalWealthComplete": false,
+    "fiveRequiredDataSemanticsComplete": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  }
+}
