@@ -1,0 +1,357 @@
+{
+  "schema": "early-detection-q010-sc001-tel-report/v1",
+  "materializedAt": "2026-08-13T21:50:30Z",
+  "sourceEventId": "Q010-SC001-EVT-00000001",
+  "sourceEventSha256": "4d9b4362d33a9ef98c8785d5662860be56ba06637296f651112d17604a4bfe2c",
+  "contractSelfSha256": "a1830247bb4aee1088312f2172da0c2f273e6fab9466f1f6e40ba797765d7e5b",
+  "subchunkId": "Q010-SC-001-CA-DMV-AV-2015-CENSUS-TEL",
+  "chunkStatus": "TYPED_HOLD_COMPLETED",
+  "sourceManifestSha256": "7628a9299d2053bb48b727b184901beb7ecd4563b31622e2fc0139cbad8806bc",
+  "sourceCount": 12,
+  "sourceManifest": [
+    {
+      "sourceId": "SRC-CA-DMV-2015-DISENGAGEMENT-INDEX",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-03-04T05:51:40Z",
+      "payloadSha256": "8b7bbb7c51f6c346b385364898007c8058653f98e694f866a687cfa870b1f349",
+      "payloadBytes": 52893,
+      "signalUse": "SHARED_THEME_AND_REGULATOR_CENSUS"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-BOSCH-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-05-18T10:14:33Z",
+      "payloadSha256": "dcdeac8e98788256fb9642967eb5fe64bff28be8b67a9af7bc58bfaddb4dff54",
+      "payloadBytes": 92579,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-DELPHI-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2017-04-20T20:48:52Z",
+      "payloadSha256": "25d937581b1b994076cab8d10bd08c508b6fe2a5f47929c8ed35e4dce31d9a58",
+      "payloadBytes": 375265,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-GOOGLE-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-04-05T07:57:37Z",
+      "payloadSha256": "701a6472abb52da5a8798208694dba531c419d79b9897ba510d1a4ba963fc904",
+      "payloadBytes": 9803786,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-NISSAN-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-05-18T15:01:54Z",
+      "payloadSha256": "5a4378d9e85a825b8f24bd3142ea1754cbebbbe2576a8215a617bee17d43b448",
+      "payloadBytes": 527234,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-MERCEDES-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-05-18T08:50:42Z",
+      "payloadSha256": "8f8bfec22f8bdfae384ae358bca94585e089ceb9b98f08189df97501be339f26",
+      "payloadBytes": 1916746,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-TESLA-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2016-05-18T15:02:12Z",
+      "payloadSha256": "239dd8db3e8a82315c2a176def980bd0b4766bf3f51c8ba47d631d19c3f73607",
+      "payloadBytes": 105027,
+      "signalUse": "PROVISIONAL_TEL_MANAGEMENT_AUTHORED_REGULATORY_FILING"
+    },
+    {
+      "sourceId": "SRC-CA-DMV-VOLKSWAGEN-2015",
+      "primaryPublisher": "CALIFORNIA_DMV",
+      "availabilityKnownAtUtc": "2018-12-02T01:59:33Z",
+      "payloadSha256": "187f354d5a7064e46c0144bc1050ce9cc375136b9c1334d2ec9852e0182b07bc",
+      "payloadBytes": 340513,
+      "signalUse": "ENTITY_REPORT_IDENTITY_UNRESOLVED"
+    },
+    {
+      "sourceId": "SRC-SEC-TESLA-2015Q3-INDEX",
+      "primaryPublisher": "US_SEC",
+      "availabilityKnownAtUtc": "2015-11-16T05:20:44Z",
+      "payloadSha256": "8798ff07146138bfc2e87b12acbd9c29cd8f26184a39ff5fb8def5fafb8796b1",
+      "payloadBytes": 10067,
+      "signalUse": "IDENTITY_AND_AVAILABILITY_ONLY"
+    },
+    {
+      "sourceId": "SRC-SEC-TESLA-2015Q3-10Q",
+      "primaryPublisher": "US_SEC",
+      "availabilityKnownAtUtc": "2015-11-16T05:20:50Z",
+      "payloadSha256": "a3f67e41d84bea45b32a4b2c461e360f3e2aa939a73134c51d4310f30ff6b541",
+      "payloadBytes": 1530754,
+      "signalUse": "PROVISIONAL_BENEFICIARY_AND_OPERATIONAL_EVIDENCE"
+    },
+    {
+      "sourceId": "SRC-SEC-TESLA-2014-10K-INDEX",
+      "primaryPublisher": "US_SEC",
+      "availabilityKnownAtUtc": "2015-03-23T03:47:35Z",
+      "payloadSha256": "dda2043fee9a93ab6c51fcdce2d87118481528b8751c8194d2c4b70e516073dc",
+      "payloadBytes": 10850,
+      "signalUse": "IDENTITY_AND_AVAILABILITY_ONLY"
+    },
+    {
+      "sourceId": "SRC-SEC-TESLA-2014-10K",
+      "primaryPublisher": "US_SEC",
+      "availabilityKnownAtUtc": "2015-03-03T19:20:51Z",
+      "payloadSha256": "0760784e2efc94e1d89ce35e3f12a6dd48ab0168a39b96683744420da0273d85",
+      "payloadBytes": 3660944,
+      "signalUse": "PIT_LISTING_IDENTITY_ONLY"
+    }
+  ],
+  "frozenTreatmentPopulation": {
+    "populationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
+    "freezeBasis": "Every manufacturer in the archived California DMV Autonomous Vehicle Disengagement Reports alphabetical list captured 2016-03-04, with every linked 2015 report payload captured.",
+    "populationFrozen": true,
+    "populationCount": 7,
+    "selectionUsedLaterOutcomeKnowledge": false,
+    "rows": [
+      {
+        "populationRowId": "DMV2015-BOSCH",
+        "reportedLegalName": "Bosch, LLC",
+        "reportSourceId": "SRC-CA-DMV-BOSCH-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-DELPHI",
+        "reportedLegalName": "Delphi Automotive Systems, LLC",
+        "reportSourceId": "SRC-CA-DMV-DELPHI-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-GOOGLE",
+        "reportedLegalName": "Google Auto, LLC",
+        "reportSourceId": "SRC-CA-DMV-GOOGLE-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-NISSAN",
+        "reportedLegalName": "Nissan North America, Inc",
+        "reportSourceId": "SRC-CA-DMV-NISSAN-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-MERCEDES",
+        "reportedLegalName": "Mercedes-Benz Research & Development North America, Inc",
+        "reportSourceId": "SRC-CA-DMV-MERCEDES-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-TESLA",
+        "reportedLegalName": "Tesla Motors, Inc.",
+        "reportSourceId": "SRC-CA-DMV-TESLA-2015",
+        "identityStatus": "PIT_EXACT_SINGLE_LISTING_RESOLVED",
+        "identityEvidenceSourceIds": [
+          "SRC-SEC-TESLA-2014-10K-INDEX",
+          "SRC-SEC-TESLA-2014-10K"
+        ],
+        "identityKnownAtUtc": "2015-03-23T03:47:35Z",
+        "entityId": "CIK0001318605",
+        "cik": "0001318605",
+        "listingId": "CIK0001318605-XNAS-TSLA-2015",
+        "securityId": "CIK0001318605-COMMON",
+        "effectiveTicker": "TSLA",
+        "exchangeMic": "XNAS",
+        "effectiveFrom": "2010-06-29T00:00:00Z",
+        "effectiveTo": null,
+        "signalEligible": true,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      },
+      {
+        "populationRowId": "DMV2015-VOLKSWAGEN",
+        "reportedLegalName": "Volkswagen Group of America, Inc.",
+        "reportSourceId": "SRC-CA-DMV-VOLKSWAGEN-2015",
+        "identityStatus": "REJECTED_HOLD",
+        "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+        "entityId": null,
+        "listingId": null,
+        "signalEligible": false,
+        "dimensionsAttempted": [
+          "T",
+          "E",
+          "L"
+        ]
+      }
+    ]
+  },
+  "researchBudgetExecution": {
+    "policyId": "Q010-SC-001-EQUAL-BUDGET-V1",
+    "sameDimensionSetAppliedToEveryTreatmentRow": true,
+    "samePrimarySourceClassPriorityApplied": true,
+    "sharedThemeSourceCount": 1,
+    "eachTreatmentRowReportPayloadCount": 1,
+    "issuerSpecificExtraSourcesUsedOnlyAfterExactIdentityResolution": true,
+    "singleDimensionExpansionBeyondBudget": false,
+    "secondaryCarrierSignalCredit": false,
+    "wallClockMinutesUsedForScientificClaim": false,
+    "controlPopulationBudgetExecutionStatus": "NOT_STARTED_CONTROL_POPULATION_NOT_FROZEN",
+    "scientificCredit": "NONE"
+  },
+  "provisionalEvidenceAssembly": {
+    "assemblyId": "TEL-ASSEMBLY-DMV2015-TESLA-V1",
+    "status": "TYPED_HOLD",
+    "codingStatus": "NONBLINDED_LLM_METHODS_PILOT_NOT_INDEPENDENT_CODING",
+    "entityId": "CIK0001318605",
+    "listingId": "CIK0001318605-XNAS-TSLA-2015",
+    "themeId": "THEME-CA-AUTONOMOUS-VEHICLE-PUBLIC-ROAD-TESTING-2014-2016",
+    "evaluationAtUtc": "2016-05-18T15:02:12Z",
+    "signalKnownAtUtc": "2016-05-18T15:02:12Z",
+    "dimensions": {
+      "T": {
+        "proposedLevel": 2,
+        "definition": "observable investment, orders, regulation or commercial introduction",
+        "sourceIds": [
+          "SRC-CA-DMV-2015-DISENGAGEMENT-INDEX",
+          "SRC-CA-DMV-TESLA-2015"
+        ],
+        "knownAtUtc": "2016-05-18T15:02:12Z",
+        "rationale": "A regulator-hosted full reporting census and issuer filing show real public-road autonomous-mode testing under a California testing permit.",
+        "counterevidence": "The archived index proves the reporting census, not broad commercial adoption."
+      },
+      "E": {
+        "proposedLevel": 2,
+        "definition": "documented product, customer, order or necessary infrastructure",
+        "sourceIds": [
+          "SRC-SEC-TESLA-2015Q3-10Q"
+        ],
+        "knownAtUtc": "2015-11-16T05:20:50Z",
+        "rationale": "The exact issuer filing documents Autopilot as shipped vehicle functionality and a released vehicle-software update.",
+        "counterevidence": "The filing does not establish durable material value capture from autonomous driving."
+      },
+      "L": {
+        "proposedLevel": 1,
+        "definition": "one weak signal",
+        "sourceIds": [
+          "SRC-SEC-TESLA-2015Q3-10Q",
+          "SRC-CA-DMV-TESLA-2015"
+        ],
+        "knownAtUtc": "2016-05-18T15:02:12Z",
+        "rationale": "A released software update and a regulator-filed testing report are contemporaneous operational traces.",
+        "counterevidence": "Both substantive statements originate with management; the preregistered management-only ceiling therefore blocks L above 1.",
+        "managementStatementsAloneMaximum": 1,
+        "upgradeBlockedUntilIndependentExternalOperationalEvidence": true
+      }
+    },
+    "sameEntityAndThemeCoherencePassed": true,
+    "signalKnownAtDerivedAsMaximumDimensionKnownAt": true,
+    "candidateState": null,
+    "candidateStateComputationAllowed": false,
+    "growthVisibilityStatus": "NOT_COMPUTED",
+    "gqsStatus": "NOT_ACCESSED",
+    "marketStatus": "NOT_ACCESSED",
+    "scientificCredit": "NONE"
+  },
+  "controlPopulation": {
+    "populationId": "POP-SEC-DOMESTIC-LISTED-SIC-3711-3674-7372-NON-DMV-2015-CONTROLS",
+    "status": "REJECTED_HOLD",
+    "populationFrozen": false,
+    "rows": [],
+    "holdReason": "POINT_IN_TIME_PRIMARY_LISTING_LEDGER_NOT_AVAILABLE_IN_THIS_AUTHORIZED_CHUNK",
+    "requiredNamedGate": "PIT_EFFECTIVE_DATED_LISTING_AND_ENTITY_LEDGER_WITHOUT_OUTCOME_ACCESS",
+    "controlOrBalanceClaimAllowed": false,
+    "scientificCredit": "NONE"
+  },
+  "blindingIncident": {
+    "incidentId": "Q010-SC001-INCIDENT-0001",
+    "occurred": true,
+    "detectedAt": "2026-08-13T21:48:30Z",
+    "type": "OPERATOR_BLINDING_BREACH",
+    "scope": "IRRELEVANT_HISTORICAL_PRICE_FIELDS_RENDERED_DURING_SEC_LISTING_LOCATOR_SEARCH",
+    "priceValuesPersistedInCorpus": false,
+    "priceValuesUsedForPopulationSelection": false,
+    "priceValuesUsedForTELCoding": false,
+    "returnsAccessed": false,
+    "outcomeSeriesAccessed": false,
+    "gqsAccessed": false,
+    "candidateOrScientificClaimBlocked": true,
+    "requiredRemediation": "FRESH_BLINDED_HUMAN_DOUBLE_CODING_FROM_WHITELISTED_NON_PRICE_SNIPPETS_BEFORE_ANY_CANDIDATE_OR_SCIENTIFIC_CREDIT",
+    "incidentReceivesNoScientificCredit": true
+  },
+  "completionDecision": {
+    "chunkStatus": "TYPED_HOLD_COMPLETED",
+    "continuationCriterionSatisfiedBy": "FULL_DMV_REPORT_CENSUS_FROZEN_AND_HASH_BOUND_PLUS_ONE_COHERENT_TEL_METHODS_ASSEMBLY_RECORDED_AS_TYPED_HOLD",
+    "stopCriterionTriggeredBy": [
+      "OPERATOR_BLINDING_BREACH",
+      "CONTROL_POPULATION_PIT_LISTING_LEDGER_MISSING",
+      "INDEPENDENT_DOUBLE_CODING_NOT_RUN"
+    ],
+    "nextQ010SubchunkAuthorized": false,
+    "newAppendOnlyPreChunkDecisionRequired": true,
+    "supportingSideProjectAutomaticallyAuthorized": false,
+    "q003SchedulerEligible": false,
+    "earlyDetectionSystemBuilt": false,
+    "historicalTimeCapsuleBuilt": false,
+    "researchWatchCandidateBuilt": false,
+    "preGrowthCandidateBuilt": false,
+    "outcomeFilesOpened": false,
+    "scientificCredit": "NONE"
+  },
+  "locks": {
+    "candidateStateComputationAllowed": false,
+    "growthVisibilityComputationAllowed": false,
+    "outcomeFilesOpened": false,
+    "returnsAccessed": false,
+    "gqsAccessed": false,
+    "scientificCredit": "NONE",
+    "nextQ010SubchunkAuthorized": false,
+    "q003SchedulerEligible": false
+  },
+  "projectionSha256": "d027627742867d0d0ddf04a2675990936711fea7c60b22fc57dcf462203b766a",
+  "reportSelfSha256": "21ad19897f0cffc54606ceb02ebfcd824c14c681b0ba6a2b1b9d75d7cbbe5651"
+}
