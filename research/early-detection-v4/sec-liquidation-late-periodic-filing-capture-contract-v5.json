@@ -1,0 +1,82 @@
+{
+  "schema": "sec-liquidation-late-periodic-filing-capture-contract/v5",
+  "createdAt": "2026-08-13T16:22:07Z",
+  "taskId": "Q003-SEC-LIQUIDATION-LATE-PERIODIC-FILING-CAPTURE-LARGE-OFFICIAL-SUBMISSIONS",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Resume the final three pre-sealed official SEC periodic submissions with an explicit 500,000,000-byte ceiling, journaling the prior 50,000,000-byte validation rejection and every later failure while granting no scientific credit.",
+  "inputs": {
+    "v4Contract": {"path": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v4.json", "rawSha256": "b8c95443a3bcc38a1e3b34b0b44b9e41cf978a8fd151fb1628f3c43a2cb02e19", "introductionCommit": "e6d19f41126c73007f2ff58e3a062dd202edf42b"},
+    "v4Runner": {"path": "scripts/capture-sec-liquidation-late-periodic-filings-v4.py", "rawSha256": "b14468bbabb7139c51f0fb44554ae2529cd67d6103f3ec769457fb9fb5e906db"},
+    "v4Test": {"path": "tests/capture-sec-liquidation-late-periodic-filings-v4.test.js", "rawSha256": "24393ff37b21bd30751e3e4115680911a4fa238f92b3c4753730851f2f8de1c3"},
+    "networkImplementation": {"path": "scripts/capture-sec-liquidation-downstream-filings-v1.py", "rawSha256": "4e36f022144f31defc129ec059b717a9c4a219cc49c15905ab584f5c5e9ce7d7"}
+  },
+  "sealedJournalPrefix": {
+    "acceptedReceipts": 119,
+    "remainingCandidates": 3,
+    "receiptSequenceSha256": "9995675a9183a71e8ee78c9d1112bf67b80263cf42ccd508dcc374bd6c2fdac2",
+    "incidentCount": 6,
+    "incidentSequences": [26, 65, 81, 93, 99, 122],
+    "incidentSequenceSha256": "8dee25961b54c4f392bc70cae1df2063a32f60b560579d6f2033b18cbfac0d26",
+    "requestEventCount": 125,
+    "requestEventSequenceSha256": "08af18aeaf6858797520da6438a5f3a9bed844cfb8f27fc8eadc45b5f0cc0764",
+    "lastAcceptedRequestSequence": 125,
+    "lastAcceptedReceiptSha256": "8dd0b2fa389e71374dff9a557fb90cbb6cfbb1f90078e46ceae073ad79bc75cc"
+  },
+  "unrecordedObservedIncident": {
+    "requestSequence": 126,
+    "candidateId": "SEC-LIQ-LATE-PERIODIC-4e6fb98b894cdfde67d9d51cfdcab539db58fa89c988316bf433c513c43fe0fd",
+    "accession": "0001193125-24-213058",
+    "filedDate": "2024-09-04",
+    "form": "N-CSR",
+    "exceptionKind": "SOURCE_VALIDATION_REJECTED_RESPONSE_SIZE_OVER_50000000",
+    "partialBytesReportedByException": 50000001,
+    "acceptedRawBytes": 0,
+    "partialBytesPersisted": false,
+    "contentInspected": false,
+    "scientificCredit": false,
+    "outcomesAccessed": false
+  },
+  "captureContract": {
+    "maximumResponseBytes": 500000000,
+    "minimumResponseBytes": 1,
+    "maximumNewRequestsPerInvocation": 3,
+    "automaticRetryWithinInvocation": false,
+    "redirectsAllowed": false,
+    "proxiesAllowed": false,
+    "acceptedContentTypePrefixes": ["text/plain", "application/octet-stream", "text/html"],
+    "everyFailureMustPersistIncident": true,
+    "existingBytesMustMatch": true,
+    "atomicWriteNew": true,
+    "publicRawBytesAllowed": false
+  },
+  "claimLocks": {
+    "contentInterpretationPerformed": false,
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "e6d19f41126c73007f2ff58e3a062dd202edf42b",
+    "baseTag": 905,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-late-periodic-filing-capture-contract-v5.json",
+    "runnerPath": "scripts/capture-sec-liquidation-late-periodic-filings-v5.py",
+    "testPath": "tests/capture-sec-liquidation-late-periodic-filings-v5.test.js",
+    "runnerNormalizedSha256": "646b56c162fb3f7d2f6a7eefa5ce855854311e9d4eb2605425c75e3ad7864965",
+    "testRawSha256": "58ea8e398c90dc4e3c21c87b0330e78a492a07a423267e0aa9adcd8ea53c0198",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "productionResumeRequiresPostIntroductionRemoteVerification": true
+  },
+  "contractSha256": "8d25530f6e3489d11dbc3b79ec27e3d41d5c86d9fa9d61ecea36d7926dfadcdd"
+}
