@@ -15,6 +15,12 @@ const EXPECTED_GZIP = 'fe75233db21467dbec453cd8f20e5b25a8a4d4db16317d6b2fc78eaa7
 const EXPECTED_REPORT = 'b27c9a9197088cbf29d0532a0d73c15a35e41c5300bacb12a7fb7f81076c7ef3';
 const PARENT = '34d7b2be658c95666b6f31be8bdc4cfd2f580875';
 
+function git(...args) {
+  const result = spawnSync('git', args, { cwd: ROOT, encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  return result.stdout.trim();
+}
+
 function sha256(raw) {
   return crypto.createHash('sha256').update(raw).digest('hex');
 }
@@ -37,6 +43,11 @@ function parsed(result, label) {
 
 const rawBefore = fs.existsSync(RAW) ? sha256(fs.readFileSync(RAW)) : null;
 if (rawBefore !== null) assert.equal(rawBefore, EXPECTED_RAW, 'local raw JSON drift');
+const head = git('rev-parse', 'HEAD');
+const expectedPhase = head === PARENT ? 'PRE_PROMOTION' : 'POST_PROMOTION';
+if (expectedPhase === 'POST_PROMOTION') {
+  assert.equal(git('rev-list', '--parents', '-n', '1', head), `${head} ${PARENT}`, 'promotion must be the direct child');
+}
 
 for (const optimized of [false, true]) {
   const mode = optimized ? 'optimized' : 'normal';
@@ -56,8 +67,8 @@ for (const optimized of [false, true]) {
 
   const verified = parsed(execute(optimized, 'verify'), `${mode} verify`);
   assert.equal(verified.status, 'PASS');
-  assert.equal(verified.phase, 'PRE_PROMOTION');
-  assert.equal(verified.head, PARENT);
+  assert.equal(verified.phase, expectedPhase);
+  assert.equal(verified.head, head);
   assert.equal(verified.promotionBlobCount, 5);
   assert(verified.maximumBlobBytes < 100000000);
   assert.equal(verified.rows, 656);
