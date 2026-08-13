@@ -1,0 +1,95 @@
+{
+  "schema": "sec-liquidation-downstream-content-disposition-contract/v1",
+  "createdAt": "2026-08-13T13:58:19Z",
+  "taskId": "Q003-SEC-LIQUIDATION-DOWNSTREAM-CONTENT-DISPOSITION",
+  "track": "SHARED_OUTCOME_BLIND_INFRA",
+  "purpose": "Verify all 115 privately captured official SEC submissions in the exact pre-sealed 90-day same-issuer-CIK stage, freeze four exact later SEC liquidation-date corroborations, and record zero same-descriptor original-amount, past-additional-distribution or no-further-payment sentences without claiming absence outside that bounded stage.",
+  "inputs": {
+    "discoveryBuilder": {
+      "path": "scripts/build-sec-liquidation-downstream-filing-discovery-v1.py",
+      "rawSha256": "69fcca3f46e993af4a78188a78b7726477e74f10c21968e65bfff2679ed945a9"
+    },
+    "captureRunner": {
+      "path": "scripts/capture-sec-liquidation-downstream-filings-v2.py",
+      "rawSha256": "792ee4784fc668159b0034685937a1b5b273dfd2bcd40b70770b4dcb68e9e8e9"
+    },
+    "documentParser": {
+      "path": "scripts/build-sec-form25-structured-metadata-v1.py",
+      "rawSha256": "52f78812a7547df4025dd8a48351f2364beb7285cc903bcb1a0df5fbe56d0025"
+    },
+    "frozenLiquidationContract": {
+      "path": "research/early-detection-v4/sec-frozen-liquidation-payment-evidence-contract-v1.json",
+      "rawSha256": "a282583efe18ae14dfcc2b17db0822c92be75fade962aa53b53d28b05e99ff10"
+    },
+    "privateManifest": {
+      "absolutePath": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4\\liquidation-downstream-sec-originals-v1\\manifests\\sha256\\a9\\a9663c757d2e115ec7cd453ae401ce0069308221e7f72aa53a73157023d97e78.json",
+      "rawSha256": "564d6657ef48b3cba602e694afb558095d5d84543b7b6bba5b4822f4ab8fd760",
+      "manifestSha256": "a9663c757d2e115ec7cd453ae401ce0069308221e7f72aa53a73157023d97e78",
+      "capturedCandidates": 115,
+      "remainingCandidates": 0,
+      "complete": true
+    }
+  },
+  "scanContract": {
+    "windowDaysAfterEachSeedEffectiveDate": [1, 90],
+    "candidateFilings": 115,
+    "caseCandidateLinks": 469,
+    "parsedDocuments": 399,
+    "normalizedSentences": 43949,
+    "exactDescriptorLinks": 38,
+    "exactDescriptorCandidates": 20,
+    "exactDescriptorCases": 12,
+    "laterLiquidationCorroborationRows": 4,
+    "laterLiquidationCorroborationCases": [
+      "LIQUIDATION-PAYMENT-014",
+      "LIQUIDATION-PAYMENT-015",
+      "LIQUIDATION-PAYMENT-016",
+      "LIQUIDATION-PAYMENT-017"
+    ],
+    "uniqueCorroborationSentences": 1,
+    "corroborationSentenceSha256": "6eaf2e270330a16657bebfc6cfd6d584ae32a3e3e3dd6de4ce184f6b2062943e",
+    "corroborationForm": "N-Q",
+    "corroborationFiledDate": "2014-11-26",
+    "corroborationDayOffset": 56,
+    "sameDescriptorOriginalAmountSentenceMatches": 0,
+    "pastAdditionalDistributionSentenceMatches": 0,
+    "noFurtherPaymentSentenceMatches": 0,
+    "claimScope": "EXACT_CAPTURED_115_DOCUMENT_90_DAY_STAGE_ONLY"
+  },
+  "claimLocks": {
+    "sameSecurityVerified": false,
+    "securityIdentityResolved": false,
+    "listingIdentityResolved": false,
+    "originalAmountRepeatedInDownstreamSentence": false,
+    "additionalDistributionVerified": false,
+    "noFurtherPaymentsVerified": false,
+    "laterRecoveriesExcluded": false,
+    "completeCorporateActionChainVerified": false,
+    "lastConsolidatedSessionObserved": false,
+    "lastTradePriceObserved": false,
+    "laterOtcTradingExcluded": false,
+    "terminalWealthComplete": false,
+    "originalV4GateCredit": false,
+    "resultComputationAllowed": false,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "outcomesAccessed": false
+  },
+  "implementationContract": {
+    "baseCommit": "d29d9cf382bbf7d06f7666c01c93f3357ec6122a",
+    "baseTag": 895,
+    "remote": "https://github.com/Karlryl/screener-data.git",
+    "ref": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "contractPath": "research/early-detection-v4/sec-liquidation-downstream-content-disposition-contract-v1.json",
+    "verifierPath": "scripts/verify-sec-liquidation-downstream-content-disposition-v1.py",
+    "testPath": "tests/verify-sec-liquidation-downstream-content-disposition-v1.test.js",
+    "verifierNormalizedSha256": "a97f7ae9420d9e986f961ecb6dcaf0a2992098c0313b2399bdb18f9c6e7d880c",
+    "testRawSha256": "ce63b8d0e7b80eb96b845096daf6a174016e334325b6ac9ba38bde209e7a4248",
+    "introductionMustBeDirectSingleParentChildOfBase": true,
+    "introductionAddsExactlyThreeOwnedPaths": true,
+    "laterLinearSingleParentDescendantsAllowed": true,
+    "verificationRequiresLiveRemote": true,
+    "writesAllowed": false
+  },
+  "contractSha256": "567cb0581a0ecbacc227a56fa61852b033a412673222dd3bbe1d581f5bedb25c"
+}
