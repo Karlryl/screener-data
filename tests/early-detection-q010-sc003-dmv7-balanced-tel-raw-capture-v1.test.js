@@ -21,10 +21,11 @@ for (const requiredSurface of [
   'responseBlobReferenceMultiset', 'responseBlobReferenceIntegrity',
   'early-detection-q010-sc003-material-join-binding/v3',
   'early-detection-q010-sc003-pre-completion-event-binding/v2',
-  'TAG919_EVENT_PREFIX_SHA256', 'TAG920_SUBJECT', 'expected_completion_event',
+  'TAG920_EVENT_PREFIX_SHA256', 'TAG920_SUBJECT', 'TAG921_SUBJECT', 'expected_verification_repair_event',
+  'git_commit_subject_utf8', 'decode_git_stdout_utf8', 'i18n.logOutputEncoding=ISO-8859-1',
   'derive_public_completion_aggregate_from_private', 'public_projection_self_sha256',
   'validate_strict_private_completion_replay', 'privateCompletionReplaySnapshotSha256',
-  'SC003 is publicly completed; source runtime is permanently closed',
+  'SC003 is publicly completed; start/run/source runtime is permanently closed',
 ]) assert.ok(controllerText.includes(requiredSurface), `missing P0 surface ${requiredSurface}`);
 
 function run(args, optimized = false, ok = true) {
@@ -46,7 +47,9 @@ for (const optimized of [false, true]) {
   assert.equal(self.resumeCrashCases, 11);
   assert.equal(self.p0RuntimeFixtures, 45);
   assert.equal(self.strictCompletionReplayFixtures, 2);
-  assert.equal(self.completionPostPhaseFixture, true);
+  assert.equal(self.verificationRepairPrePhaseFixture, true);
+  assert.equal(self.verificationRepairPostPhaseFixture, true);
+  assert.equal(self.gitUtf8LocaleFixtures, 5);
 
   const bootstrapOne = JSON.parse(run(['bootstrap'], optimized).stdout);
   const bootstrapTwo = JSON.parse(run(['bootstrap'], optimized).stdout);
@@ -56,9 +59,9 @@ for (const optimized of [false, true]) {
 
   run(['verify'], optimized, false);
   const verified = JSON.parse(run(['verify', '--remote'], optimized).stdout);
-  assert.ok(['COMPLETION_PRE_INTRODUCTION', 'COMPLETION_POST_INTRODUCTION'].includes(verified.phase));
-  const introduced = verified.phase === 'COMPLETION_POST_INTRODUCTION';
-  assert.equal(verified.status, introduced ? 'PASS' : 'COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC');
+  assert.ok(['VERIFICATION_REPAIR_PRE_INTRODUCTION', 'VERIFICATION_REPAIR_POST_INTRODUCTION'].includes(verified.phase));
+  const introduced = verified.phase === 'VERIFICATION_REPAIR_POST_INTRODUCTION';
+  assert.equal(verified.status, introduced ? 'PASS' : 'VERIFICATION_REPAIR_PRE_INTRODUCTION_DIAGNOSTIC');
   assert.equal(verified.subchunkId, 'Q010-SC-003-DMV7-BALANCED-TEL-RAW-CAPTURE');
   assert.equal(verified.workClass, 'CORE_SOURCE_CORPUS_CAPTURE');
   assert.equal(verified.populationCount, 7);
@@ -72,7 +75,10 @@ for (const optimized of [false, true]) {
   assert.equal(verified.workCompleted, true);
   assert.equal(verified.completionStatus, 'HOLD');
   assert.equal(verified.privateCompletionStatus, 'TYPED_GLOBAL_HOLD_COMPLETED');
-  assert.equal(verified.completionRemoteIntroductionVerified, introduced);
+  assert.equal(verified.completionRemoteIntroductionVerified, true);
+  assert.equal(verified.verificationRepairRecorded, true);
+  assert.equal(verified.verificationRepairRemoteIntroductionVerified, introduced);
+  assert.equal(verified.verificationRepairNamedGate, 'TAG920_POST_INTRODUCTION_GIT_SUBJECT_UTF8_DECODING_GATE');
   assert.equal(verified.acceptedPrimaryPayloadCount, 0);
   assert.equal(verified.researchSourceAccessAuthorized, false);
   assert.equal(verified.runtimeResearchSourceAccessAuthorized, false);
@@ -94,7 +100,7 @@ for (const optimized of [false, true]) {
 }
 
 const state = JSON.parse(readFileSync(statePath, 'utf8'));
-assert.equal(state.eventCount, 3);
+assert.equal(state.eventCount, 4);
 assert.equal(state.projection.decisionRemoteIntroductionVerified, true);
 assert.equal(state.projection.startRemoteIntroductionVerified, true);
 assert.equal(state.projection.workStarted, true);
@@ -102,7 +108,11 @@ assert.equal(state.projection.workStartedAtUtc, '2026-08-14T01:34:34.454637Z');
 assert.equal(state.projection.workCompleted, true);
 assert.equal(state.projection.completionStatus, 'HOLD');
 assert.equal(state.projection.privateCompletionStatus, 'TYPED_GLOBAL_HOLD_COMPLETED');
-assert.equal(state.projection.completionRemoteIntroductionVerified, false);
+assert.equal(state.projection.completionRemoteIntroductionVerified, true);
+assert.equal(state.projection.verificationRepairRecorded, true);
+assert.equal(state.projection.verificationRepairApplied, false);
+assert.equal(state.projection.verificationRepairRemoteIntroductionVerified, false);
+assert.equal(state.projection.verificationRepairNamedGate, 'TAG920_POST_INTRODUCTION_GIT_SUBJECT_UTF8_DECODING_GATE');
 assert.equal(state.projection.acceptedPrimaryPayloadCount, 0);
 assert.equal(state.projection.publicAggregateProjection.completionMetrics.incidentFree, true);
 assert.equal(state.projection.publicAggregateProjection.completionMetrics.everyUnitAtLeastOneNewPayload, false);

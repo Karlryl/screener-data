@@ -31,11 +31,11 @@ STATE_PATH = ROOT / "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capt
 TEST_PATH = ROOT / "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js"
 CONTROLLER_PATH = Path(__file__).resolve()
 
-EXPECTED_CONTRACT_RAW_SHA256 = "e2b7a61deee94f90e83379dc3fac3ba57bb1a7bc5e949ab9d76c0633f885c247"
-EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "28ce8d99856c5e5f2aafc8ddd045f429212bd06803ff19d6da958ba19a1ab307"
-EXPECTED_EVENTS_RAW_SHA256 = "813f3ec470be3d3e8eeda7e79d257465849dab6d3232362e16d6d64c30eb2439"
-EXPECTED_STATE_RAW_SHA256 = "4d10c48bdc2491e7d5d79435b544f163dff6768ca84f8831be36553f9dc4a2d7"
-EXPECTED_TEST_RAW_SHA256 = "14e11e5df179f3c1cfa747445c8681aa892f2c2ceb32f77dd8d3517024286ddb"
+EXPECTED_CONTRACT_RAW_SHA256 = "339cf43b6295b6798079e75d8978cb1056775b762252bafdc4662654d29802d6"
+EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "e73d3f3dbf25932b34c4b284552a61c07890b93824098a1b446f6f822860bbc4"
+EXPECTED_EVENTS_RAW_SHA256 = "cd52579f0525587e37df4177d029c40af90ce70381b060a36550c5db5ddcf846"
+EXPECTED_STATE_RAW_SHA256 = "88ab45d4eb99393f5018839bf2aa68d0b190a7d820436dab3e9a6558d1d1a14e"
+EXPECTED_TEST_RAW_SHA256 = "84ea19e1cb4f40207b3779c23d45dd65ecfc8413c7cb3acbdf46554029245807"
 EXPECTED_POLICY_PROJECTION_SHA256 = "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
 EXPECTED_DECISION_EVENT_SHA256 = "693d1c86049acc4b373c86171d17773b3c8f242e8a94cdd05207f40358f24ee2"
 EXPECTED_POPULATION_POLICY_SHA256 = "a99ba3ffe63aea0e8447a7cb8bb8364af7f00361ec4710031ae18e3cd9651495"
@@ -44,18 +44,24 @@ EXPECTED_SOURCE_POLICY_SHA256 = "57bfe2a7bf0234f99f8e3656587eeb065219d28c37d624a
 EXPECTED_QUERY_PROTOCOL_SHA256 = "4eb71546b9f4ba68bb8f7469ab269ca8f67e19cb66ddd432044e6d6ce7a634cf"
 EXPECTED_START_TRANSITION_SHA256 = "ed6c32b9f5ab21b5c2e733c21f824f1734716c8def08ef0d173f69c27382e899"
 EXPECTED_COMPLETION_POLICY_SHA256 = "dd5a03d2e985fc67d82b0936c01fe38e96cee3b3ad83dbadea382a0e4749f423"
+EXPECTED_REPAIR_EVENT_SHA256 = "524b7a0145077aa7a588381b16b297629d6ac570e3d546929e199d5cad2e2b33"
 
 TAG918 = "bdaf8dc911f1ca796f9370627901fd1003083ba3"
 TAG918_PARENT = "f606124109b71d20f3ecd555f501afb84d95446c"
 TAG918_SUBJECT = "Tag 918: Q010-SC003 Rohquellenkapsel vor Arbeitsbeginn versiegeln"
 TAG919 = "6586dc246e842ac3dda6eea67094afd16e38bb46"
 TAG919_SUBJECT = "Tag 919: Q010-SC003 Rohquellenkapsel prospektiv starten"
+TAG920 = "8cca973274361b14dc0749f34b852d5c4423785a"
 TAG920_SUBJECT = "Tag 920: Q010-SC003 Rohquellenkapsel fail-closed abschließen"
+TAG921_SUBJECT = "Tag 921: Q010-SC003 Abschlussverifikation UTF-8 haerten"
+VERIFICATION_REPAIR_RECORDED_AT = "2026-08-14T04:53:31.231103Z"
 START_REMOTE_OBSERVED_AT = "2026-08-14T01:34:33.454637Z"
 WORK_STARTED_AT = "2026-08-14T01:34:34.454637Z"
 TAG918_EVENT_PREFIX_SHA256 = "f6b3408acd50409485595b33ae0ca9cbcdc060d91c509f7ab74853341f7b1158"
 TAG919_EVENT_PREFIX_SHA256 = "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"
 TAG919_EVENT_HEAD_SHA256 = "690b5e13c1c51b7de9a62d63833f6afb2f5c120844ab9c1f375abf8fd34b5009"
+TAG920_EVENT_PREFIX_SHA256 = "813f3ec470be3d3e8eeda7e79d257465849dab6d3232362e16d6d64c30eb2439"
+TAG920_EVENT_HEAD_SHA256 = "a0cd64fea95af5acf76178dfd02ce5f64e9316e2d745e5e3cd21e5b23df7d57a"
 TAG918_BLOBS = [
     {"path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json", "gitBlobSha1": "69690f462310ddbecc213e650de3d439c1d05eaf", "rawSha256": "87e1fe77ae1507fe0d6acd6b79b035bb920a2580cea65670f7c44b49ca174218"},
     {"path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py", "gitBlobSha1": "a69cce278a11a66528ebefb2cc0907f7bf6ae70b", "rawSha256": "004f4c0ab36815ffdca1df8f0b7f865010be12c0e75abf9fdf5b93d90774ce7f"},
@@ -69,6 +75,13 @@ TAG919_BLOBS = [
     {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl", "gitBlobSha1": "28450e54038fce5182d1b25e3759ad270713d357", "rawSha256": "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"},
     {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json", "gitBlobSha1": "e71dfa3eb2219d8bf49b4ab26fa1255742d34151", "rawSha256": "7f67e141bda7b679a7c454e2074e5b732fad42763db29bddc12df5a4069a4c23"},
     {"path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js", "gitBlobSha1": "6eeb3b8b4f0033871d92598b525019a5a5f74f9f", "rawSha256": "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78"},
+]
+TAG920_BLOBS = [
+    {"path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json", "gitBlobSha1": "452fad558b61e4f0d8d41c72094656b63d6ef3b4", "rawSha256": "e2b7a61deee94f90e83379dc3fac3ba57bb1a7bc5e949ab9d76c0633f885c247"},
+    {"path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py", "gitBlobSha1": "c47f94bbf9a50a9ad7d77bf06a72970aba676228", "rawSha256": "3c7a479a5a033b130ebd3aa5681e9938d5142757a8b14550a3c3fbd004f991bd"},
+    {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl", "gitBlobSha1": "e64a3ef712fdfd07a7fe1cc9977b4167ef99192e", "rawSha256": "813f3ec470be3d3e8eeda7e79d257465849dab6d3232362e16d6d64c30eb2439"},
+    {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json", "gitBlobSha1": "7ef382d15084e63311d5c43987ec9fee9819179b", "rawSha256": "4d10c48bdc2491e7d5d79435b544f163dff6768ca84f8831be36553f9dc4a2d7"},
+    {"path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js", "gitBlobSha1": "d910b39955bc65441cbe89cdd34805f1ad6f368b", "rawSha256": "14e11e5df179f3c1cfa747445c8681aa892f2c2ceb32f77dd8d3517024286ddb"},
 ]
 REQUEST_HEADERS = (
     ("Host", "web.archive.org"),
@@ -92,7 +105,8 @@ PRE_TOP_LEVEL_KEYS = [
     "frozenPolicyProjectionSha256", "outputs", "implementation",
 ]
 START_TOP_LEVEL_KEYS = [*PRE_TOP_LEVEL_KEYS, "startIntroductionBinding", "startFinalization"]
-POST_TOP_LEVEL_KEYS = [*START_TOP_LEVEL_KEYS, "completionTransitionContract", "completionIntroductionBinding", "completionFinalization"]
+COMPLETION_TOP_LEVEL_KEYS = [*START_TOP_LEVEL_KEYS, "completionTransitionContract", "completionIntroductionBinding", "completionFinalization"]
+POST_TOP_LEVEL_KEYS = [*COMPLETION_TOP_LEVEL_KEYS, "verificationRepairTransitionContract", "verificationRepairIntroductionBinding", "verificationRepairFinalization"]
 
 PRIVATE_STORE_ROOT = Path(r"C:\Users\Anwender\Documents\GrowthScreenerResearchData\early-detection-v4\q010-sc003-dmv7-balanced-tel-raw-capture-v1")
 RUNTIME_MUTEX_NAME = r"Global\GrowthScreener-Q010-SC003-DMV7-RawCapture-v1"
@@ -188,7 +202,7 @@ def controller_normalized_sha256() -> str:
     for name in (
         "EXPECTED_CONTRACT_RAW_SHA256", "EXPECTED_CONTROLLER_NORMALIZED_SHA256",
         "EXPECTED_EVENTS_RAW_SHA256", "EXPECTED_STATE_RAW_SHA256", "EXPECTED_TEST_RAW_SHA256",
-        "EXPECTED_DECISION_EVENT_SHA256",
+        "EXPECTED_DECISION_EVENT_SHA256", "EXPECTED_REPAIR_EVENT_SHA256",
     ):
         text = re.sub(rf'{name} = "[^\"]+"', f'{name} = "' + ("0" * 64) + '"', text)
     return sha256_bytes(text.encode("utf-8"))
@@ -283,6 +297,14 @@ def tag919_event_prefix() -> tuple[bytes, list[dict]]:
     return raw, rows
 
 
+def tag920_event_prefix() -> tuple[bytes, list[dict]]:
+    raw = run_git_bytes(["show", f"{TAG920}:{EVENTS_PATH.relative_to(ROOT).as_posix()}"])
+    require(sha256_bytes(raw) == TAG920_EVENT_PREFIX_SHA256, "Tag920 event prefix drift")
+    rows = [json.loads(line) for line in raw.decode("utf-8", errors="strict").splitlines() if line]
+    require(len(rows) == 3 and rows[-1]["eventSha256"] == TAG920_EVENT_HEAD_SHA256, "Tag920 event head drift")
+    return raw, rows
+
+
 def public_projection_self_sha256(projection: dict) -> str:
     body = copy.deepcopy(projection)
     body["projectionSelfSha256"] = None
@@ -307,6 +329,7 @@ def expected_completion_event(contract: dict, start_event: dict) -> dict:
             "startCommit": TAG919,
             "workCompleted": True,
             "completionStatus": "HOLD",
+            "completionRemoteIntroductionVerified": finalization["completionRemoteIntroductionVerified"],
             "privateCompletionStatus": finalization["completionStatus"],
             "parentPrivateTag920FinalBindingSha256": finalization["privateTag920BindingSha256"],
             "publicAggregateProjection": copy.deepcopy(aggregate),
@@ -332,15 +355,69 @@ def expected_completion_event(contract: dict, start_event: dict) -> dict:
     return event
 
 
+def expected_verification_repair_event(contract: dict, completion_event: dict) -> dict:
+    transition = contract["verificationRepairTransitionContract"]
+    intro = contract["verificationRepairIntroductionBinding"]
+    finalization = contract["verificationRepairFinalization"]
+    event = {
+        "schema": "early-detection-q010-sc003-governance-event/v1",
+        "eventId": "Q010-SC003-EVT-00000004",
+        "sequence": 4,
+        "eventType": "VERIFICATION_REPAIR_DECISION_RECORDED",
+        "previousEventSha256": completion_event["eventSha256"],
+        "createdAt": finalization["decisionRecordedAtUtc"],
+        "contractSelfSha256": contract["contractSelfSha256"],
+        "payload": {
+            "subchunkId": contract["decision"]["subchunkId"],
+            "completionEventId": completion_event["eventId"],
+            "completionEventSequence": completion_event["sequence"],
+            "evidenceId": finalization["evidenceId"],
+            "evidenceObservedAtPrecision": finalization["evidenceObservedAtPrecision"],
+            "evidenceObservedNoLaterThanUtc": finalization["evidenceObservedNoLaterThanUtc"],
+            "failureFingerprint": copy.deepcopy(finalization["failureFingerprint"]),
+            "failureFingerprintSha256": finalization["failureFingerprintSha256"],
+            "namedGate": finalization["namedGate"],
+            "namedBiasPrevented": finalization["namedBiasPrevented"],
+            "contribution": finalization["contribution"],
+            "preChunkTimingVerified": finalization["preChunkTimingVerified"],
+            "repairWorkStarted": False,
+            "parentCompletionCommit": intro["completionCommit"],
+            "parentCompletionBlobs": copy.deepcopy(intro["completionParentBlobs"]),
+            "parentCompletionSubjectUtf8Sha256": intro["completionSubjectUtf8Sha256"],
+            "requiredRepairSubject": transition["requiredRepairSubject"],
+            "tag920CoreWorkCompleted": True,
+            "verificationRepairApplied": False,
+            "completionStatus": "HOLD",
+            "researchSourceAccessAuthorized": False,
+            "runtimeResearchSourceAccessAuthorized": False,
+            "codingAllowed": False,
+            "dimensionLevel": None,
+            "candidateState": None,
+            "timeCapsuleState": None,
+            "sourceRecordCount": 0,
+            "controlMatchingAllowed": False,
+            "scientificCredit": "NONE",
+            "nextQ010SubchunkAuthorized": False,
+            "q003SchedulerEligible": False,
+            "earlyDetectionSystemBuilt": False,
+            "scienceStateChanged": False,
+        },
+        "eventSha256": None,
+    }
+    event["eventSha256"] = event_self_sha256(event)
+    return event
+
+
 def expected_events(contract: dict) -> list[dict]:
-    _, prefix = tag919_event_prefix()
-    return [*prefix, expected_completion_event(contract, prefix[-1])]
+    _, prefix = tag920_event_prefix()
+    return [*prefix, expected_verification_repair_event(contract, prefix[-1])]
 
 
 def expected_projection(contract: dict, events: list[dict]) -> dict:
     event = events[0]
     start_event = events[1]
     completion_event = events[2]
+    repair_event = events[3]
     aggregate = contract["completionFinalization"]["publicAggregateProjection"]
     return {
         "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-projection/v1",
@@ -362,7 +439,13 @@ def expected_projection(contract: dict, events: list[dict]) -> dict:
         "workCompleted": True,
         "completionStatus": "HOLD",
         "privateCompletionStatus": contract["completionFinalization"]["completionStatus"],
-        "completionRemoteIntroductionVerified": False,
+        "completionRemoteIntroductionVerified": True,
+        "verificationRepairEventId": repair_event["eventId"],
+        "verificationRepairEventSequence": repair_event["sequence"],
+        "verificationRepairRecorded": True,
+        "verificationRepairApplied": False,
+        "verificationRepairRemoteIntroductionVerified": False,
+        "verificationRepairNamedGate": contract["verificationRepairFinalization"]["namedGate"],
         "publicAggregateProjection": copy.deepcopy(aggregate),
         "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
         "publicConclusion": aggregate["publicConclusion"],
@@ -408,10 +491,10 @@ def expected_state(contract: dict, events: list[dict]) -> dict:
 
 
 def run_git(args: list[str]) -> str:
-    result = subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, timeout=60)
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, timeout=60)
     if result.returncode != 0:
-        fail("git failed: " + " ".join(args) + ": " + result.stderr.strip())
-    return result.stdout.strip()
+        fail("git failed: " + " ".join(args) + ": " + result.stderr.decode("utf-8", errors="replace").strip())
+    return decode_git_stdout_utf8(result.stdout).strip()
 
 
 def run_git_bytes(args: list[str]) -> bytes:
@@ -419,6 +502,22 @@ def run_git_bytes(args: list[str]) -> bytes:
     if result.returncode != 0:
         fail("git bytes failed: " + " ".join(args) + ": " + result.stderr.decode("utf-8", errors="replace").strip())
     return result.stdout
+
+
+def decode_git_stdout_utf8(raw: bytes) -> str:
+    try:
+        return raw.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        fail("git stdout is not strict UTF-8: " + str(exc))
+
+
+def git_commit_subject_utf8(commit: str) -> str:
+    raw = run_git_bytes(["cat-file", "commit", commit])
+    header, separator, message = raw.partition(b"\n\n")
+    require(bool(header) and separator == b"\n\n" and bool(message), "raw commit object has no message")
+    subject_bytes = message.split(b"\n", 1)[0]
+    require(b"\r" not in subject_bytes and b"\x00" not in subject_bytes, "raw commit subject framing drift")
+    return decode_git_stdout_utf8(subject_bytes)
 
 
 def validate_repository(contract: dict) -> None:
@@ -916,7 +1015,7 @@ def validate_completion_binding(contract: dict, check_files: bool) -> None:
     require(transition["tag920MustBeExactFiveModifyDirectChildOfLiveRemoteTag919"] is True, "Tag920 topology relaxed")
     require(transition["tag920MustBindAllFiveTag919ParentGitBlobSha1AndRawSha256Values"] is True, "Tag919 blob binding relaxed")
     require(transition["tag919EventPrefixMustRemainByteExact"] is True, "Tag919 event prefix relaxed")
-    require(transition["tag919ContractTopLevelKeysExact"] == START_TOP_LEVEL_KEYS and transition["postCompletionContractTopLevelKeysExact"] == POST_TOP_LEVEL_KEYS, "completion contract key surface drift")
+    require(transition["tag919ContractTopLevelKeysExact"] == START_TOP_LEVEL_KEYS and transition["postCompletionContractTopLevelKeysExact"] == COMPLETION_TOP_LEVEL_KEYS, "completion contract key surface drift")
     require(transition["allowedTag920ContractMutationJsonPointers"] == [
         "/contractSelfSha256", "/implementation/controllerNormalizedSha256", "/implementation/testRawSha256",
         "/completionTransitionContract", "/completionIntroductionBinding", "/completionFinalization",
@@ -1028,6 +1127,109 @@ def validate_completion_binding(contract: dict, check_files: bool) -> None:
         require(derive_public_completion_aggregate_from_private(contract, finalization) == aggregate, "public aggregate is not exact strict private runtime replay")
 
 
+def validate_verification_repair_binding(contract: dict, check_files: bool) -> None:
+    transition = contract["verificationRepairTransitionContract"]
+    intro = contract["verificationRepairIntroductionBinding"]
+    finalization = contract["verificationRepairFinalization"]
+    require(transition == {
+        "schema": "early-detection-q010-sc003-verification-repair-transition/v1",
+        "requiredRepairSubject": TAG921_SUBJECT,
+        "tag921MustBeExactFiveModifyDirectChildOfLiveRemoteTag920": True,
+        "tag921MustBindAllFiveTag920ParentGitBlobSha1AndRawSha256Values": True,
+        "tag920EventPrefixMustRemainByteExact": True,
+        "tag920ContractTopLevelKeysExact": COMPLETION_TOP_LEVEL_KEYS,
+        "postRepairContractTopLevelKeysExact": POST_TOP_LEVEL_KEYS,
+        "allowedTag921ContractMutationJsonPointers": [
+            "/contractSelfSha256", "/implementation/controllerNormalizedSha256", "/implementation/testRawSha256",
+            "/verificationRepairTransitionContract", "/verificationRepairIntroductionBinding", "/verificationRepairFinalization",
+        ],
+        "frozenTag920ContractKeysMustRemainCanonicallyEquivalent": [
+            "schema", "createdAt", "purpose", "repository", "parentTag917Binding", "parentTag914CorpusBinding",
+            "decision", "populationPolicy", "capturePlan", "sourcePolicy", "queryProtocol", "startTransitionContract",
+            "controlAndCodingPolicy", "completionPolicy", "carriedIncidents", "frozenPolicyProjectionSha256",
+            "outputs", "startIntroductionBinding", "startFinalization", "completionTransitionContract",
+            "completionIntroductionBinding", "completionFinalization",
+        ],
+        "requiredRepairEvent": {
+            "schema": "early-detection-q010-sc003-governance-event/v1", "eventId": "Q010-SC003-EVT-00000004",
+            "sequence": 4, "eventType": "VERIFICATION_REPAIR_DECISION_RECORDED",
+            "previousEventMustEqualCommittedTag920EventHead": True, "createdAtMustEqualDecisionRecordedAtUtc": True,
+            "createdAtMustNotExceedTag921CommitTime": True,
+        },
+        "gitSubjectUtf8Policy": {
+            "historicalTag920SubjectMustComeFromRawCommitObjectBytes": True,
+            "subjectBytesMustDecodeAsUtf8Strict": True, "localeDependentTextDecodingForbidden": True,
+            "gitTextStdoutMustDecodeAsUtf8Strict": True, "gitDiagnosticStderrMayDecodeWithReplacement": True,
+            "tag920SharpSReplacementOrByteMutationForbidden": True, "tag921SubjectMustBeAscii": True,
+        },
+        "postRepairRuntimePolicy": {
+            "researchSourceAccessAuthorized": False, "runCommandAuthorized": False,
+            "sourceCommandAuthorized": False, "startCommandAuthorized": False, "completionStatus": "HOLD",
+            "candidateState": None, "scientificCredit": "NONE", "nextQ010SubchunkAuthorized": False,
+            "q003SchedulerEligible": False,
+        },
+        "verificationPhases": {
+            "liveTag920WithExactFiveWorkingTreeModifications": "VERIFICATION_REPAIR_PRE_INTRODUCTION_DIAGNOSTIC",
+            "liveExactTag921DirectChild": "VERIFICATION_REPAIR_POST_INTRODUCTION_PASS",
+            "anyOtherTopologyOrPathSet": "FAIL_CLOSED",
+        },
+    }, "verification repair transition drift")
+    require(intro == {
+        "schema": "early-detection-q010-sc003-verification-repair-introduction-binding/v1",
+        "completionCommit": TAG920, "completionParentCommit": TAG919, "completionSubject": TAG920_SUBJECT,
+        "completionSubjectUtf8Sha256": sha256_bytes(TAG920_SUBJECT.encode("utf-8")),
+        "completionCommitTimeUtc": "2026-08-14T04:51:02Z", "completionParentBlobs": TAG920_BLOBS,
+        "completionParentBlobBindingsSha256": canonical_sha(TAG920_BLOBS),
+        "completionEventPrefixRawSha256": TAG920_EVENT_PREFIX_SHA256,
+        "completionEventHeadSha256": TAG920_EVENT_HEAD_SHA256,
+        "completionRemoteRef": contract["repository"]["remoteRef"],
+    }, "Tag920 repair parent binding drift")
+    require(finalization == {
+        "schema": "early-detection-q010-sc003-verification-repair-finalization/v1",
+        "decisionRecordedAtUtc": VERIFICATION_REPAIR_RECORDED_AT, "evidenceId": "F3987",
+        "evidenceObservedAtPrecision": "BEFORE_DECISION_ONLY",
+        "evidenceObservedNoLaterThanUtc": VERIFICATION_REPAIR_RECORDED_AT,
+        "failureFingerprint": {
+            "schema": "early-detection-q010-sc003-verification-failure-fingerprint/v1",
+            "evidenceId": "F3987", "tag920Commit": TAG920,
+            "failedGate": "TAG920_POST_INTRODUCTION_GIT_SUBJECT_UTF8_DECODING_GATE",
+            "gitCommand": "git show -s --format=%s " + TAG920,
+            "faultyDecodeMode": "WINDOWS_LOCALE_DEFAULT_TEXT_MODE",
+            "expectedSubjectUtf8Sha256": sha256_bytes(TAG920_SUBJECT.encode("utf-8")),
+            "observedFailureClass": "VALID_UTF8_SUBJECT_DECODED_WITH_NON_UTF8_WINDOWS_LOCALE",
+            "observedMangledStringOrBytesSha256": None,
+            "reproducedCp1252MangledStringUtf8Sha256": "cba3789ddeb390b4a71e5f2a4d4319cfcda81dca5296866127683952e474e409",
+        },
+        "failureFingerprintSha256": "e302b8a9a35265fa57eb09f742c41786488dc1e199b7b90be3ede60d4f242221",
+        "contribution": "restore exact Tag920 POST gate without changing science",
+        "namedGate": "TAG920_POST_INTRODUCTION_GIT_SUBJECT_UTF8_DECODING_GATE",
+        "namedBiasPrevented": "WINDOWS_LOCALE_DEPENDENT_GIT_OUTPUT_DECODING_FALSE_RED",
+        "continuationCriterion": "UNTIL_UTF8_BYTES_AND_SUBJECT_NORMAL_OPTIMIZED_NODE_PRE_AND_POST_GATES_ALL_PASS",
+        "pauseOrStopCriterion": "STOP_AFTER_EXACT_TAG921_REMOTE_POST_GATES",
+        "preChunkTimingVerified": True, "verificationRepairWorkStarted": False,
+        "storedResearchSourceAccessAuthorized": False, "runtimeResearchSourceAccessAuthorized": False,
+        "completionStatus": "HOLD", "completionRemoteIntroductionVerified": True,
+        "scienceStateChanged": False, "sourceRecordCount": 0,
+        "dimensionLevel": None, "candidateState": None, "scientificCredit": "NONE",
+        "nextQ010SubchunkAuthorized": False, "q003SchedulerEligible": False, "earlyDetectionSystemBuilt": False,
+    }, "verification repair finalization drift")
+    require(all(ord(character) < 128 for character in TAG921_SUBJECT), "Tag921 subject is not ASCII")
+    require(canonical_sha(finalization["failureFingerprint"]) == finalization["failureFingerprintSha256"], "F3987 failure fingerprint drift")
+    require(finalization["evidenceObservedAtPrecision"] == "BEFORE_DECISION_ONLY" and finalization["evidenceObservedNoLaterThanUtc"] == finalization["decisionRecordedAtUtc"], "F3987 evidence time precision overclaimed")
+    require(datetime.fromisoformat(VERIFICATION_REPAIR_RECORDED_AT.replace("Z", "+00:00")).timestamp() >= datetime.fromisoformat(intro["completionCommitTimeUtc"].replace("Z", "+00:00")).timestamp(), "repair decision predates Tag920 completion")
+    if check_files:
+        require(run_git(["show", "-s", "--format=%P", TAG920]) == TAG919, "Tag920 parent drift")
+        require(git_commit_subject_utf8(TAG920) == TAG920_SUBJECT, "Tag920 raw commit subject UTF-8 drift")
+        for blob in TAG920_BLOBS:
+            require(run_git(["rev-parse", f'{TAG920}:{blob["path"]}']) == blob["gitBlobSha1"], "Tag920 blob id drift")
+            require(sha256_bytes(run_git_bytes(["show", f'{TAG920}:{blob["path"]}'])) == blob["rawSha256"], "Tag920 raw blob drift")
+        parent_contract = json.loads(run_git_bytes(["show", f'{TAG920}:{CONTRACT_PATH.relative_to(ROOT).as_posix()}']).decode("utf-8", errors="strict"))
+        require(list(parent_contract) == COMPLETION_TOP_LEVEL_KEYS, "Tag920 contract key surface drift")
+        for key in transition["frozenTag920ContractKeysMustRemainCanonicallyEquivalent"]:
+            require(contract[key] == parent_contract[key], "frozen Tag920 contract drift: " + key)
+        require({k: contract["implementation"][k] for k in contract["implementation"] if k not in {"controllerNormalizedSha256", "testRawSha256"}} == {k: parent_contract["implementation"][k] for k in parent_contract["implementation"] if k not in {"controllerNormalizedSha256", "testRawSha256"}}, "Tag920 implementation policy drift")
+
+
 def validate_bundle(contract: dict, events: list[dict], state: dict, check_files: bool = True, allow_private_store: bool = False) -> None:
     require(list(contract) == POST_TOP_LEVEL_KEYS, "POST contract top-level key surface drift")
     require(contract["purpose"] == PURPOSE, "contract purpose drift")
@@ -1041,15 +1243,17 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
     validate_policy(contract)
     validate_start_binding(contract, check_files)
     validate_completion_binding(contract, check_files)
+    validate_verification_repair_binding(contract, check_files)
     expected = expected_events(contract)
-    require(len(events) == 3 and events == expected, "completion event/replay drift")
+    require(len(events) == 4 and events == expected, "verification repair event/replay drift")
     require(events[0]["eventSha256"] == EXPECTED_DECISION_EVENT_SHA256, "controller-bound decision event head drift")
     require(events[1]["previousEventSha256"] == EXPECTED_DECISION_EVENT_SHA256 and events[1]["createdAt"] == WORK_STARTED_AT, "start event causal binding drift")
     require(events[2]["previousEventSha256"] == TAG919_EVENT_HEAD_SHA256 and events[2]["createdAt"] == contract["completionFinalization"]["completionRecordedAtUtc"], "completion event causal binding drift")
+    require(events[3]["previousEventSha256"] == TAG920_EVENT_HEAD_SHA256 and events[3]["createdAt"] == VERIFICATION_REPAIR_RECORDED_AT and events[3]["eventSha256"] == EXPECTED_REPAIR_EVENT_SHA256, "verification repair event causal binding drift")
     require(state == expected_state(contract, events), "event-to-state replay drift")
     if check_files:
-        prefix, _ = tag919_event_prefix()
-        require(EVENTS_PATH.read_bytes().startswith(prefix) and sha256_bytes(prefix) == TAG919_EVENT_PREFIX_SHA256, "Tag919 Event1+Event2 byte-prefix drift")
+        prefix, _ = tag920_event_prefix()
+        require(EVENTS_PATH.read_bytes().startswith(prefix) and sha256_bytes(prefix) == TAG920_EVENT_PREFIX_SHA256, "Tag920 Event1+Event2+Event3 byte-prefix drift")
         validate_process_surface()
         require(sha256_path(CONTRACT_PATH) == EXPECTED_CONTRACT_RAW_SHA256, "contract raw hash drift")
         require(controller_normalized_sha256() == EXPECTED_CONTROLLER_NORMALIZED_SHA256, "controller normalized hash drift")
@@ -1062,13 +1266,13 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
         require(impl["controllerChildExecutionsRequired"] == 0 and impl["sourceAccessImplementationPresentAtDecision"] is False and impl["networkImportsForbiddenAtDecision"] is True, "decision-only implementation drift")
 
 
-def classify_completion_snapshot(head: str, remote: str, parent: str, subject: str, changes: list[tuple[str, str]], dirty: bool, owned_paths: list[str]) -> str:
+def classify_verification_repair_snapshot(head: str, remote: str, parent: str, subject: str, changes: list[tuple[str, str]], dirty: bool, owned_paths: list[str]) -> str:
     exact_changes = sorted(changes) == sorted(("M", path) for path in owned_paths)
-    if head == remote == TAG919 and parent == TAG918 and subject == TAG919_SUBJECT and exact_changes:
-        return "COMPLETION_PRE_INTRODUCTION"
-    if head == remote and head != TAG919 and parent == TAG919 and subject == TAG920_SUBJECT and exact_changes and not dirty:
-        return "COMPLETION_POST_INTRODUCTION"
-    fail("completion topology/path snapshot is not an authorized PRE or POST phase")
+    if head == remote == TAG920 and parent == TAG919 and subject == TAG920_SUBJECT and exact_changes:
+        return "VERIFICATION_REPAIR_PRE_INTRODUCTION"
+    if head == remote and head != TAG920 and parent == TAG920 and subject == TAG921_SUBJECT and exact_changes and not dirty:
+        return "VERIFICATION_REPAIR_POST_INTRODUCTION"
+    fail("verification repair topology/path snapshot is not an authorized PRE or POST phase")
 
 
 def remote_phase(contract: dict) -> tuple[str, str | None, str | None]:
@@ -1083,25 +1287,25 @@ def remote_phase(contract: dict) -> tuple[str, str | None, str | None]:
     remote = remote_line.split()[0] if remote_line else ""
     require(remote and upstream == remote, "upstream/live remote mismatch")
     paths = repo["ownedPaths"]
-    require(run_git(["show", "-s", "--format=%P", TAG919]) == TAG918, "Tag919 parent drift")
-    require(run_git(["show", "-s", "--format=%s", TAG919]) == TAG919_SUBJECT, "Tag919 subject drift")
-    if head == TAG919 and remote == TAG919:
-        delta = run_git(["diff", "--name-status", TAG919]).splitlines()
+    require(run_git(["show", "-s", "--format=%P", TAG920]) == TAG919, "Tag920 parent drift")
+    require(git_commit_subject_utf8(TAG920) == TAG920_SUBJECT, "Tag920 raw commit subject UTF-8 drift")
+    if head == TAG920 and remote == TAG920:
+        delta = run_git(["diff", "--name-status", TAG920]).splitlines()
         changes = [tuple(line.split("\t", 1)) for line in delta if line]
-        phase = classify_completion_snapshot(head, remote, TAG918, TAG919_SUBJECT, changes, False, paths)
+        phase = classify_verification_repair_snapshot(head, remote, TAG919, TAG920_SUBJECT, changes, False, paths)
         return phase, None, observed_at
     require(head == remote, "HEAD/live remote mismatch")
-    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == TAG919, "completion introduction parent drift")
-    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == TAG920_SUBJECT, "completion introduction subject drift")
+    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == TAG920, "verification repair introduction parent drift")
+    require(git_commit_subject_utf8("HEAD") == TAG921_SUBJECT, "verification repair introduction subject drift")
     commit_time = run_git(["show", "-s", "--format=%cI", "HEAD"])
-    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(contract["completionFinalization"]["completionRecordedAtUtc"].replace("Z", "+00:00")).timestamp(), "Tag920 commit predates completion event")
+    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(VERIFICATION_REPAIR_RECORDED_AT.replace("Z", "+00:00")).timestamp(), "Tag921 commit predates verification repair event")
     require(datetime.fromisoformat(observed_at.replace("Z", "+00:00")).timestamp() >= datetime.fromisoformat(commit_time).timestamp(), "remote observation predates commit")
     delta = run_git(["diff-tree", "--no-commit-id", "--name-status", "-r", "HEAD"]).splitlines()
     changes = [tuple(line.split("\t", 1)) for line in delta if line]
     dirty = bool(run_git(["status", "--porcelain", "--", *paths]))
-    phase = classify_completion_snapshot(head, remote, TAG919, TAG920_SUBJECT, changes, dirty, paths)
+    phase = classify_verification_repair_snapshot(head, remote, TAG920, TAG921_SUBJECT, changes, dirty, paths)
     for path in paths:
-        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), "introduced completion blob differs: " + path)
+        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), "introduced verification repair blob differs: " + path)
     return phase, head, observed_at
 
 
@@ -1110,11 +1314,11 @@ def verify(remote: bool, private_store_allowed: bool = False) -> dict:
     contract, events, state = read_contract(), read_events(), read_state()
     validate_bundle(contract, events, state, check_files=True, allow_private_store=private_store_allowed)
     phase, commit, observed = remote_phase(contract)
-    post = phase == "COMPLETION_POST_INTRODUCTION"
+    post = phase == "VERIFICATION_REPAIR_POST_INTRODUCTION"
     aggregate = contract["completionFinalization"]["publicAggregateProjection"]
     return {
         "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-verification/v2",
-        "status": "PASS" if post else "COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC",
+        "status": "PASS" if post else "VERIFICATION_REPAIR_PRE_INTRODUCTION_DIAGNOSTIC",
         "phase": phase,
         "introductionCommit": commit,
         "remoteObservedAtUtc": observed,
@@ -1131,7 +1335,10 @@ def verify(remote: bool, private_store_allowed: bool = False) -> dict:
         "workCompleted": True,
         "completionStatus": "HOLD",
         "privateCompletionStatus": contract["completionFinalization"]["completionStatus"],
-        "completionRemoteIntroductionVerified": post,
+        "completionRemoteIntroductionVerified": True,
+        "verificationRepairRecorded": True,
+        "verificationRepairRemoteIntroductionVerified": post,
+        "verificationRepairNamedGate": contract["verificationRepairFinalization"]["namedGate"],
         "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
         "publicConclusion": aggregate["publicConclusion"],
         "acceptedPrimaryPayloadCount": 0,
@@ -1169,8 +1376,8 @@ def bootstrap(write: bool) -> dict:
     events = expected_events(contract)
     state = expected_state(contract, events)
     contract_raw = json.dumps(contract, ensure_ascii=False, indent=2) + "\n"
-    prefix, _ = tag919_event_prefix()
-    events_raw = prefix.decode("utf-8") + json.dumps(events[2], ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    prefix, _ = tag920_event_prefix()
+    events_raw = prefix.decode("utf-8", errors="strict") + json.dumps(events[3], ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
     state_raw = json.dumps(state, ensure_ascii=False, indent=2) + "\n"
     result = {
         "contractRawSha256": sha256_bytes(contract_raw.encode("utf-8")),
@@ -1190,6 +1397,7 @@ def bootstrap(write: bool) -> dict:
         "startTransitionSha256": canonical_sha(contract["startTransitionContract"]),
         "completionPolicySha256": canonical_sha(contract["completionPolicy"]),
         "completionTransitionSha256": canonical_sha(contract["completionTransitionContract"]),
+        "verificationRepairTransitionSha256": canonical_sha(contract["verificationRepairTransitionContract"]),
         "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
         "privateCompletionReplaySnapshotSha256": canonical_sha({
             "privateLedgerRawSha256": contract["completionFinalization"]["privateLedgerRawSha256"],
@@ -2683,6 +2891,11 @@ def self_test() -> dict:
         mutate(aggregate)
         aggregate["projectionSelfSha256"] = public_projection_self_sha256(aggregate)
 
+    def fingerprint_mutation(c: dict, mutate) -> None:
+        fingerprint = c["verificationRepairFinalization"]["failureFingerprint"]
+        mutate(fingerprint)
+        c["verificationRepairFinalization"]["failureFingerprintSha256"] = canonical_sha(fingerprint)
+
     rejected("base-commit", lambda c: c["repository"].__setitem__("baseCommit", "0" * 40))
     rejected("top-level-source-access", lambda c: c.__setitem__("researchSourceAccessAuthorized", True))
     rejected("premature-start-finalization", lambda c: c.__setitem__("startFinalization", {"storedResearchSourceAccessAuthorized": True}))
@@ -2819,6 +3032,24 @@ def self_test() -> dict:
     rejected("aggregate-negative-evidence-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["semanticLocks"].__setitem__("derivedNullNetworkTerminalizationsAreNotNegativeEvidence", False)))
     rejected("aggregate-locator-as-primary-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["semanticLocks"].__setitem__("storedBlobCountsAreNotAcceptedPrimarySourceCounts", False)))
     rejected("aggregate-reason-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["eventTypeReasonCrossTable"][0].__setitem__("count", 11)))
+    rejected("repair-subject", lambda c: c["verificationRepairTransitionContract"].__setitem__("requiredRepairSubject", "Tag 921: drift"))
+    rejected("repair-topology-relaxed", lambda c: c["verificationRepairTransitionContract"].__setitem__("tag921MustBeExactFiveModifyDirectChildOfLiveRemoteTag920", False))
+    rejected("repair-parent-blob-binding-relaxed", lambda c: c["verificationRepairTransitionContract"].__setitem__("tag921MustBindAllFiveTag920ParentGitBlobSha1AndRawSha256Values", False))
+    rejected("repair-event-prefix-relaxed", lambda c: c["verificationRepairTransitionContract"].__setitem__("tag920EventPrefixMustRemainByteExact", False))
+    rejected("repair-mutation-surface-expanded", lambda c: c["verificationRepairTransitionContract"]["allowedTag921ContractMutationJsonPointers"].append("/sourcePolicy"))
+    rejected("repair-event-type", lambda c: c["verificationRepairTransitionContract"]["requiredRepairEvent"].__setitem__("eventType", "SCIENCE_UPDATED"))
+    rejected("repair-locale-decoding", lambda c: c["verificationRepairTransitionContract"]["gitSubjectUtf8Policy"].__setitem__("localeDependentTextDecodingForbidden", False))
+    rejected("repair-parent-commit", lambda c: c["verificationRepairIntroductionBinding"].__setitem__("completionCommit", "0" * 40))
+    rejected("repair-parent-blob", lambda c: c["verificationRepairIntroductionBinding"]["completionParentBlobs"][0].__setitem__("rawSha256", "0" * 64))
+    rejected("repair-sharp-s-to-ss", lambda c: c["verificationRepairIntroductionBinding"].__setitem__("completionSubject", c["verificationRepairIntroductionBinding"]["completionSubject"].replace("ß", "ss")))
+    rejected("repair-backdate", lambda c: c["verificationRepairFinalization"].__setitem__("decisionRecordedAtUtc", "2026-08-14T04:50:00Z"))
+    rejected("repair-science-credit", lambda c: c["verificationRepairFinalization"].__setitem__("scientificCredit", "FULL"))
+    rejected("repair-evidence-exact-time-overclaim", lambda c: c["verificationRepairFinalization"].__setitem__("evidenceObservedAtPrecision", "EXACT_MICROSECOND"))
+    rejected("repair-evidence-observed-after-decision", lambda c: c["verificationRepairFinalization"].__setitem__("evidenceObservedNoLaterThanUtc", "2026-08-14T04:53:32Z"))
+    rejected("repair-fingerprint-parent-coherent-rehash", lambda c: fingerprint_mutation(c, lambda f: f.__setitem__("tag920Commit", "0" * 40)))
+    rejected("repair-fingerprint-observed-bytes-invented", lambda c: fingerprint_mutation(c, lambda f: f.__setitem__("observedMangledStringOrBytesSha256", "0" * 64)))
+    rejected("repair-work-started", lambda c: c["verificationRepairFinalization"].__setitem__("verificationRepairWorkStarted", True))
+    rejected("repair-event-prematurely-applied", lambda c: c["verificationRepairTransitionContract"]["requiredRepairEvent"].__setitem__("eventType", "VERIFICATION_REPAIR_APPLIED"))
 
     runtime_contract_fixture = tag919_runtime_contract(contract)
     strict_materials = read_private_materials(runtime_contract_fixture, TAG919)
@@ -3583,12 +3814,29 @@ def self_test() -> dict:
     else:
         fail("coherently rehashed unbound response-blob multiset survived successful completion replay")
     paths = contract["repository"]["ownedPaths"]
-    completion_post_fixture = classify_completion_snapshot(
-        "9" * 40, "9" * 40, TAG919, TAG920_SUBJECT, [("M", path) for path in paths], False, paths
-    ) == "COMPLETION_POST_INTRODUCTION"
-    require(completion_post_fixture, "completion POST topology fixture failed")
-    require(len(attacks) == 138, "self-test kill count drift")
-    return {"status": "PASS", "kills": len(attacks), "resumeCrashCases": 11, "p0RuntimeFixtures": 45, "strictCompletionReplayFixtures": 2, "completionPostPhaseFixture": completion_post_fixture, "controllerChildExecutions": 0, "sourceRequests": source_requests}
+    repair_pre_fixture = classify_verification_repair_snapshot(
+        TAG920, TAG920, TAG919, TAG920_SUBJECT, [("M", path) for path in paths], False, paths
+    ) == "VERIFICATION_REPAIR_PRE_INTRODUCTION"
+    repair_post_fixture = classify_verification_repair_snapshot(
+        "9" * 40, "9" * 40, TAG920, TAG921_SUBJECT, [("M", path) for path in paths], False, paths
+    ) == "VERIFICATION_REPAIR_POST_INTRODUCTION"
+    require(repair_pre_fixture and repair_post_fixture, "verification repair PRE/POST topology fixtures failed")
+    utf8_subject_bytes = TAG920_SUBJECT.encode("utf-8")
+    require(decode_git_stdout_utf8(utf8_subject_bytes) == TAG920_SUBJECT, "strict UTF-8 subject fixture failed")
+    require(utf8_subject_bytes.decode("cp1252") != TAG920_SUBJECT, "non-UTF8 locale fixture did not reproduce historical false red")
+    raw_commit_default = run_git_bytes(["cat-file", "commit", TAG920])
+    raw_commit_non_utf8_log_config = run_git_bytes(["-c", "i18n.logOutputEncoding=ISO-8859-1", "cat-file", "commit", TAG920])
+    require(raw_commit_default == raw_commit_non_utf8_log_config and git_commit_subject_utf8(TAG920) == TAG920_SUBJECT, "raw commit subject changed under non-UTF8 Git log configuration")
+    for invalid in (b"\xff", utf8_subject_bytes[:-1] + b"\xff"):
+        try:
+            decode_git_stdout_utf8(invalid)
+        except GateError:
+            pass
+        else:
+            fail("invalid UTF-8 Git output survived")
+    require(TAG920_SUBJECT.replace("ß", "ss").encode("utf-8") != utf8_subject_bytes, "sharp-s byte mutation fixture failed")
+    require(len(attacks) == 156, "self-test kill count drift")
+    return {"status": "PASS", "kills": len(attacks), "resumeCrashCases": 11, "p0RuntimeFixtures": 45, "strictCompletionReplayFixtures": 2, "verificationRepairPrePhaseFixture": repair_pre_fixture, "verificationRepairPostPhaseFixture": repair_post_fixture, "gitUtf8LocaleFixtures": 5, "controllerChildExecutions": 0, "sourceRequests": source_requests}
 
 
 def main() -> int:
@@ -3604,13 +3852,9 @@ def main() -> int:
         if args.command == "self-test":
             print(json.dumps(self_test(), sort_keys=True))
             return 0
-        if args.command in {"run", "source"}:
-            result = run_capture(args.remote)
-            print(json.dumps(result, sort_keys=True))
-            return 0
+        if args.command in {"start", "run", "source"}:
+            fail("SC003 is publicly completed; start/run/source runtime is permanently closed")
         result = verify(args.remote)
-        if args.command == "start":
-            fail("SC003 is publicly completed; start/source runtime is permanently closed")
         print(json.dumps(result, sort_keys=True))
         return 0
     except (GateError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:

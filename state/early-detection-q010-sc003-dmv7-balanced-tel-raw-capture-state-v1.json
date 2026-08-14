@@ -1,9 +1,9 @@
 {
   "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state/v1",
-  "materializedAt": "2026-08-14T03:58:59.630311Z",
-  "contractSelfSha256": "d901b50d3bce1cdd1312a22dbdc97db97a4b9bda7df43df47bbfcc1fe88453ab",
-  "eventCount": 3,
-  "eventHeadSha256": "a0cd64fea95af5acf76178dfd02ce5f64e9316e2d745e5e3cd21e5b23df7d57a",
+  "materializedAt": "2026-08-14T04:53:31.231103Z",
+  "contractSelfSha256": "fe7cef96cabdc50056b43e83ae8f2b241ef90e8deade54b68fa912c921075dfe",
+  "eventCount": 4,
+  "eventHeadSha256": "524b7a0145077aa7a588381b16b297629d6ac570e3d546929e199d5cad2e2b33",
   "projection": {
     "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-projection/v1",
     "subchunkId": "Q010-SC-003-DMV7-BALANCED-TEL-RAW-CAPTURE",
@@ -24,7 +24,13 @@
     "workCompleted": true,
     "completionStatus": "HOLD",
     "privateCompletionStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
-    "completionRemoteIntroductionVerified": false,
+    "completionRemoteIntroductionVerified": true,
+    "verificationRepairEventId": "Q010-SC003-EVT-00000004",
+    "verificationRepairEventSequence": 4,
+    "verificationRepairRecorded": true,
+    "verificationRepairApplied": false,
+    "verificationRepairRemoteIntroductionVerified": false,
+    "verificationRepairNamedGate": "TAG920_POST_INTRODUCTION_GIT_SUBJECT_UTF8_DECODING_GATE",
     "publicAggregateProjection": {
       "schema": "early-detection-q010-sc003-public-completion-aggregate-projection/v1",
       "parentPrivateTag920FinalBindingSha256": "c9f223cf64146b473555e8b7618e4bc6dd840bc0c8781592869c4057bcb518a4",
@@ -181,5 +187,5 @@
     "earlyDetectionSystemBuilt": false,
     "frozenPolicyProjectionSha256": "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
   },
-  "stateSelfSha256": "86aec18389cbec370d4b66701aafebe18e381a0ba3adeeb1862dd87bdd28a7b3"
+  "stateSelfSha256": "8ddc5925dcb09780506cafd6ffc47aba49f09ad3af61a13b5053cbe2cd1ed565"
 }
