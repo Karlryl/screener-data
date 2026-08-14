@@ -8,6 +8,7 @@
  */
 'use strict';
 const https = require('https');
+const { isWhenIssuedSecurity } = require('./when-issued.js');
 
 // Finnhub exchange code → Yahoo Finance suffix
 // Only Common Stock type is fetched; ETFs/warrants filtered out.
@@ -120,6 +121,7 @@ async function fetchFinnhubUniverse() {
       for (const s of data) {
         if (!s || !s.symbol) continue;
         if (s.type !== 'Common Stock') continue;
+        if (isWhenIssuedSecurity(s.description || '')) continue;
         const sym = toYahooSymbol(s.displaySymbol || s.symbol, suffix);
         if (!sym) continue;
         if (!result.has(sym)) {

@@ -48,6 +48,7 @@ const { fetchFinnhubUniverse }  = require('./discovery/finnhub.js');
 const { fetchWikipediaIndices } = require('./discovery/wikipedia-indices.js');
 // Tag 135: NASDAQ Trader exchange files — all US common stocks, no auth required
 const { fetchNasdaqAll }        = require('./discovery/nasdaq-all.js');
+const { isWhenIssuedSecurity }  = require('./discovery/when-issued.js');
 // Tag 165: OTC Markets (OTCQX/OTCQB/Expert) + NASDAQ Screener API — ~5k additional US tickers
 const { fetchOTCMarkets }       = require('./discovery/otc-markets.js');
 const { fetchNasdaqApiList }    = require('./discovery/nasdaq-api.js');
@@ -307,6 +308,7 @@ function _isNonEquityQuote(q) {
 function _vorGateVerworfen(q) {
   if (!q || !q.symbol) return true;
   const sym = String(q.symbol).toUpperCase();
+  if (isWhenIssuedSecurity(q.longName || q.shortName || '')) return true;
   if (/[$]/.test(sym)) return true;        // preferred-stock variants
   if (/[/\\\s]/.test(sym)) return true;    // path-separators or whitespace = corrupt
   if (sym.length > 12) return true;        // longer than any real ticker — likely a name
@@ -814,6 +816,17 @@ function kollabiereYahooDubletten(stocks) {
   return { stocks: dropSet.size > 0 ? stocks.filter((s) => !dropSet.has(s)) : stocks, dropped };
 }
 
+function entferneWhenIssuedBestand(stocks) {
+  const rows = Array.isArray(stocks) ? stocks : [];
+  const kept = rows.filter((s) => !(s && isWhenIssuedSecurity(s.name || '')));
+  return { stocks: kept, dropped: rows.length - kept.length };
+}
+
+function sollUniverseSchreiben(delta) {
+  return ['newTickers', 'repaired', 'collapsed', 'adrDropped', 'yahooDropped', 'deadDropped', 'whenIssuedDropped']
+    .some((key) => Number(delta && delta[key]) > 0);
+}
+
 // Tag 510: die Bedingung des Doppelausfall-Waechters als REINE Funktion, damit sie
 // einzeln pruefbar ist (der Waechter selbst sitzt mitten in main() hinter Netzaufrufen).
 // Wahr genau dann, wenn BEIDE Yahoo-Kanaele im selben Lauf nichts geliefert haben:
@@ -1004,6 +1017,12 @@ async function main() {
   }
 
   const wlRaw = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
+  const whenIssuedRepair = entferneWhenIssuedBestand(wlRaw.stocks);
+  wlRaw.stocks = whenIssuedRepair.stocks;
+  const whenIssuedDropped = whenIssuedRepair.dropped;
+  if (whenIssuedDropped) {
+    console.log('  When-issued repair: ' + whenIssuedDropped + ' temporary row(s) removed from the existing watchlist.');
+  }
   // audit F-A-2026-06-21: a single watchlist row with a null/undefined ticker
   // would throw TypeError on .toUpperCase() and abort the entire universe
   // refresh (one bad row -> frozen universe). Drop ticker-less rows from the
@@ -1773,10 +1792,12 @@ async function main() {
 
   // R1-SK-010: NACH Class-Share- und ADR-Collapse (beide aendern yahoo_symbol) als letztes
   // Netz — was danach noch dieselbe Yahoo-Abfrage teilt, ist zwangslaeufig eine Dublette.
+  let yahooDropped = 0;
   {
     const r = kollabiereYahooDubletten(wlRaw.stocks);
     wlRaw.stocks = r.stocks;
-    if (r.dropped) console.log('  Yahoo-Dubletten-Collapse: ' + r.dropped + ' Zeile(n) entfernt (gleiches yahoo_symbol, gleiche Daten).');
+    yahooDropped = r.dropped;
+    if (yahooDropped) console.log('  Yahoo-Dubletten-Collapse: ' + yahooDropped + ' Zeile(n) entfernt (gleiches yahoo_symbol, gleiche Daten).');
   }
 
   // Task 0.12 (b): tote Bestandszeilen austragen (in-place-Repair, analog ADR-Dedup).
@@ -1793,7 +1814,7 @@ async function main() {
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
   // universe untouched (no needless rewrite / timestamp churn).
-  if (newTickers.length === 0 && repaired === 0 && collapsed === 0 && adrDropped === 0 && deadDropped === 0) {
+  if (!sollUniverseSchreiben({ newTickers: newTickers.length, repaired, collapsed, adrDropped, yahooDropped, deadDropped, whenIssuedDropped })) {
     console.log('Nothing to add, nothing to repair. Universe unchanged.');
     return;
   }
@@ -1834,6 +1855,7 @@ module.exports = {
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)
+  entferneWhenIssuedBestand, sollUniverseSchreiben,
   _vorGateVerworfen,      // T567-W3: EIN gezaehlter Vor-Gate-Pfad fuer beide Ingest-Schleifen
   beideYahooKanaeleLeer,  // Tag 510: Doppelausfall-Waechter, einzeln pruefbar
   predefinedKanalEingebrochen, MIN_PREDEFINED_NONEMPTY_ANTEIL,  // T566-H2: Anteil statt "== 0"

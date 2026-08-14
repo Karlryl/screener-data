@@ -7,6 +7,7 @@
  */
 'use strict';
 const https = require('https');
+const { isWhenIssuedSecurity } = require('./when-issued.js');
 
 const SEC_URL = 'https://www.sec.gov/files/company_tickers.json';
 
@@ -84,6 +85,7 @@ async function fetchSecTickers() {
     for (const entry of Object.values(data)) {
       const ticker = (entry.ticker || '').toUpperCase().trim();
       const name = entry.title || '';
+      if (isWhenIssuedSecurity(name)) continue;
       // Tag 229c-2: don't synthesize fake CIKs for entries missing both
       // cik_str and cik. Previously `String(undefined || '').padStart(10, '0')`
       // returned '0000000000' — a syntactically valid CIK that downstream code
