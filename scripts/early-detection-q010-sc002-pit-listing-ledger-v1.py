@@ -20,11 +20,11 @@ EVENTS_PATH = ROOT / "state/early-detection-q010-sc002-pit-listing-ledger-events
 STATE_PATH = ROOT / "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json"
 TEST_PATH = ROOT / "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js"
 CONTROLLER_PATH = Path(__file__).resolve()
-EXPECTED_CONTRACT_RAW_SHA256 = "69cce63da4965a8c90c1ef6d21ae87e16159f53d7cca1b6e7be15c9950a2c211"
-EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "3b7542b1b6277513fd6d176ce9052eb161b381c3d67a12f9aa0bbaf3b50e3a45"
-EXPECTED_EVENTS_RAW_SHA256 = "3550c5bbb1d386b74cd5a158c452cc82d529f6692b3161eeee6b70431ed16da9"
-EXPECTED_STATE_RAW_SHA256 = "3c0827673da0519e970561f5364782d438afd4d863ffce202ad388417606956e"
-EXPECTED_TEST_RAW_SHA256 = "f60f95897c3e67caeb9de25eb0d8bf007344d0442a563912f05e701079649fff"
+EXPECTED_CONTRACT_RAW_SHA256 = "fa57cd80f1512a801dad5dddad2291c10370d09d0a4954b8d129565006cb8051"
+EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "d71be7de69e1d964f37ac0ee56ee1078e30da96142283a647a1a9eaaa6cb0de2"
+EXPECTED_EVENTS_RAW_SHA256 = "a4fcef9d6e1e55f767c911d70e70b499e81110a67fb27b8f49dcd1873fbefb2c"
+EXPECTED_STATE_RAW_SHA256 = "86d5661844243171fba8d452a0883c62a934a523a7db1f12e8891db15272251f"
+EXPECTED_TEST_RAW_SHA256 = "7192b7c86f7b9a0e4e892dc02d580bb7f54c794d566c308f31ec07a84ddadb91"
 EXPECTED_GOVERNANCE_PROJECTION_SHA256 = "d03956dfbe63f2ed9a59858aa1b83253f4edc41980cb02d2ccb8df3091243def"
 
 GOVERNANCE_SECTION_KEYS = (
@@ -168,11 +168,58 @@ def start_payload(contract: dict) -> dict:
     return payload
 
 
+def completion_payload(contract: dict) -> dict:
+    c = contract["locatorAuditAndCompletion"]
+    return {
+        "subchunkId": contract["decision"]["subchunkId"],
+        "retrievalStep": c["retrievalStep"],
+        "locatorQueryBudget": c["locatorQueryBudget"],
+        "locatorQueriesConsumed": c["locatorQueriesConsumed"],
+        "directEndpointProbes": c["directEndpointProbes"],
+        "queryGranularTimestampsRecorded": False,
+        "prospectiveLocatorTimingMachineVerified": False,
+        "locatorQueriesClaimedPostRemote": False,
+        "noRetroactiveLocatorTimingAuthorization": True,
+        "locatorTimingIncidentOccurred": True,
+        "locatorTimingIncidentId": "Q010-SC002-INCIDENT-0001",
+        "locatorTimingIncidentType": "LOCATOR_QUERY_AND_PROBE_TIMESTAMPS_NOT_RECORDED",
+        "locatorFindingsEpistemicUse": "OPERATIONAL_STOP_ONLY_NO_LEDGER_SIGNAL_CANDIDATE_OR_SCIENTIFIC_CREDIT",
+        "eventCreatedAtMeaning": "COMPLETION_RECORD_TIME_NOT_QUERY_PROBE_OR_RETRIEVAL_TIME",
+        "locatorFindingsAreNotAcceptedResearchPayloads": True,
+        "acceptedPrimaryPayloadCount": 0,
+        "acceptedPrimaryPayloadBytes": 0,
+        "firstResearchSourceRetrievedAtUtc": None,
+        "controlFrameStatus": "GLOBAL_TYPED_HOLD",
+        "globalHoldReason": "HOLD_OFFICIAL_LISTING_UNIVERSE_INCOMPLETE",
+        "controlFrameUsable": False,
+        "partialControlPopulationUseAllowed": False,
+        "chunkStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+        "namedCoreBiasMateriallyReduced": False,
+        "sideProjectStopCriterionTriggered": True,
+        "nextQ010SubchunkAuthorized": False,
+        "researchSourceAccessAuthorized": False,
+        "candidateState": None,
+        "pricesAccessed": False,
+        "returnsAccessed": False,
+        "gqsAccessed": False,
+        "outcomesAccessed": False,
+        "telCodingAllowed": False,
+        "controlMatchingAllowed": False,
+        "candidateStateComputationAllowed": False,
+        "scientificCredit": "NONE",
+        "tag916Commit": contract["startIntroductionBinding"]["tag916Commit"],
+        "tag916RemoteObservedAtUtc": contract["startIntroductionBinding"]["tag916RemoteObservedAtUtc"],
+        "frozenGovernanceProjectionSha256": contract["frozenGovernanceProjectionSha256"],
+    }
+
+
 def expected_projection(contract: dict, events: list[dict]) -> dict:
     d = contract["decision"]
     decision_event = events[2]
-    start_recorded = len(events) == 4
+    start_recorded = len(events) >= 4
+    completion_recorded = len(events) == 5
     start_event = events[3] if start_recorded else None
+    completion_event = events[4] if completion_recorded else None
     return {
         "schema": "early-detection-q010-sc002-pit-listing-ledger-projection/v1",
         "subchunkId": d["subchunkId"],
@@ -193,9 +240,9 @@ def expected_projection(contract: dict, events: list[dict]) -> dict:
         "startEventId": start_event["eventId"] if start_recorded else None,
         "startEventSequence": start_event["sequence"] if start_recorded else None,
         "sourceAccessAuthorizationClaimRecorded": start_recorded,
-        "prospectiveStartRemoteIntroductionVerified": False,
-        "workStarted": False,
-        "workStartedAt": None,
+        "prospectiveStartRemoteIntroductionVerified": completion_recorded,
+        "workStarted": completion_recorded,
+        "workStartedAt": contract["startFinalization"]["workStartedAtUtc"] if completion_recorded else None,
         "startAuthorized": False,
         "researchSourceAccessAuthorized": False,
         "separateAppendOnlyStartEventRequired": True,
@@ -209,6 +256,22 @@ def expected_projection(contract: dict, events: list[dict]) -> dict:
         "scientificCredit": "NONE",
         "tag914Commit": contract["repository"]["baseCommit"],
         "tag915Commit": contract.get("decisionIntroductionBinding", {}).get("tag915Commit"),
+        "tag916Commit": contract.get("startIntroductionBinding", {}).get("tag916Commit"),
+        "completionEventRecorded": completion_recorded,
+        "completionEventId": completion_event["eventId"] if completion_recorded else None,
+        "completionEventSequence": completion_event["sequence"] if completion_recorded else None,
+        "chunkStatus": contract.get("locatorAuditAndCompletion", {}).get("chunkStatus"),
+        "globalHoldReason": contract.get("locatorAuditAndCompletion", {}).get("globalHoldReason"),
+        "controlFrameUsable": False,
+        "acceptedPrimaryPayloadCount": 0,
+        "firstResearchSourceRetrievedAtUtc": None,
+        "queryGranularTimestampsRecorded": False,
+        "prospectiveLocatorTimingMachineVerified": False,
+        "locatorTimingIncidentOccurred": True,
+        "locatorTimingIncidentId": "Q010-SC002-INCIDENT-0001",
+        "locatorFindingsEpistemicUse": "OPERATIONAL_STOP_ONLY_NO_LEDGER_SIGNAL_CANDIDATE_OR_SCIENTIFIC_CREDIT",
+        "sideProjectStopCriterionTriggered": completion_recorded,
+        "nextQ010SubchunkAuthorized": False,
         "tag914NextQ010SubchunkAuthorized": False,
         "q003SchedulerEligible": False,
         "sc001BlindingIncidentRemainsEffective": True,
@@ -260,6 +323,9 @@ def validate_repository(contract: dict) -> None:
         "expectedStartSubject": "Tag 916: Q010-SC002 PIT-Ledger prospektiv starten",
         "expectedStartPaths": expected_paths,
         "startIntroductionMustBeExactDirectChildOfDecisionIntroduction": True,
+        "expectedCompletionSubject": "Tag 917: Q010-SC002 Quellenrahmen fail-closed halten",
+        "expectedCompletionPaths": expected_paths,
+        "completionIntroductionMustBeExactDirectChildOfStartIntroduction": True,
     }, "repository binding drift")
     require(datetime.fromisoformat(contract["decision"]["decisionRecordedAt"].replace("Z", "+00:00")) > datetime.fromisoformat(repo["baseCommitCommittedAt"].replace("Z", "+00:00")), "decision not after Tag914")
 
@@ -354,7 +420,7 @@ def validate_parent_prefix(contract: dict, events: list[dict], check_files: bool
         "sc002DecisionSequence": 3,
         "sc002StartSequence": 4,
     }, "parent governance prefix binding drift")
-    require(len(events) == 4, "SC002 start log must contain exact V1 prefix plus decision and start events")
+    require(len(events) == 5, "SC002 completion log must contain exact V1 prefix plus decision start and completion events")
     require(events[0]["eventSha256"] == prefix["eventOneSha256"], "prefix event one drift")
     require(events[1]["eventSha256"] == prefix["eventTwoSha256"], "prefix event two drift")
     if check_files:
@@ -645,9 +711,99 @@ def validate_tag915_binding_and_start_finalization(contract: dict, check_files: 
     require(EVENTS_PATH.read_bytes().startswith(prefix_raw), "Tag916 event log does not retain exact Tag915 prefix")
     tag915_contract = json.loads(run_git_bytes(["show", f'{tag915}:{contract["repository"]["expectedDecisionPaths"][0]}']).decode("utf-8"))
     for key, value in tag915_contract.items():
-        if key not in {"implementation", "contractSelfSha256"}:
+        if key not in {"repository", "implementation", "contractSelfSha256"}:
             require(contract[key] == value, "Tag916 rewrote Tag915 contract section: " + key)
-    require(set(contract) - set(tag915_contract) == {"decisionIntroductionBinding", "startFinalization"}, "Tag916 added unauthorized contract section")
+    require(set(contract) - set(tag915_contract) == {"decisionIntroductionBinding", "startFinalization", "startIntroductionBinding", "locatorAuditAndCompletion"}, "post-Tag915 added unauthorized contract section")
+
+
+def validate_tag916_binding_and_completion(contract: dict, check_files: bool = True) -> None:
+    binding = contract["startIntroductionBinding"]
+    require(binding["schema"] == "early-detection-q010-sc002-tag916-start-introduction-binding/v1", "Tag916 binding schema drift")
+    require(binding["tag916Commit"] == "9ba44d160cddeba728cbca5dfdb46bd09511e2be", "Tag916 commit drift")
+    require(binding["tag916Parent"] == contract["decisionIntroductionBinding"]["tag915Commit"], "Tag916 parent drift")
+    require(binding["tag916Subject"] == contract["repository"]["expectedStartSubject"], "Tag916 subject drift")
+    require(binding["tag916CommitTimeUtc"] == "2026-08-13T23:39:00Z", "Tag916 commit time drift")
+    require(binding["tag916RemoteObservedAtUtc"] == "2026-08-13T23:39:43.356884Z", "Tag916 remote observation drift")
+    receipt = binding["earliestStoredPostRemoteEvidence"]
+    expected_receipt_payload = {
+        "schema": "early-detection-q010-sc002-tag916-post-verify-minimal-receipt/v1",
+        "source": "SESSION_TOOL_OUTPUT_CAPTURED_DURING_TAG916_POST_INTRODUCTION_GATE",
+        "command": "python -B scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py verify --remote",
+        "status": "PASS",
+        "phase": "START_POST_INTRODUCTION",
+        "introductionCommit": "9ba44d160cddeba728cbca5dfdb46bd09511e2be",
+        "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+        "remoteObservedAtUtc": "2026-08-13T23:39:43.356884Z",
+        "captureCompleteness": "MINIMAL_FIELDS_CARRIED_FORWARD_FROM_TOOL_OUTPUT",
+        "externallySignedOsAttestation": False,
+        "provesIndividualLocatorQueryOrProbeTiming": False,
+    }
+    require(receipt["receiptPayload"] == expected_receipt_payload, "Tag916 stored receipt payload drift")
+    require(receipt["receiptPayloadCanonicalSha256"] == canonical_sha(expected_receipt_payload) == "c0184d47f4fe9d930b6ef297908c2b42a94f26ab4652c4529ca4b89851b03fd7", "Tag916 stored receipt hash drift")
+    require(binding["prospectiveStartRemoteIntroductionVerified"] is True and binding["exactFivePathStatuses"] == "EXACTLY_FIVE_M_PATHS", "Tag916 introduction proof drift")
+    require(binding["exactFourEventPrefixBytes"] == 4033 and binding["exactFourEventPrefixRawSha256"] == "3550c5bbb1d386b74cd5a158c452cc82d529f6692b3161eeee6b70431ed16da9", "Tag916 prefix binding drift")
+    require(binding["tag916ContractSelfSha256"] == "7bc3d584e920567509a78f7e092aebdf0379bd4a6ea60e0f95914eca702484d5", "Tag916 contract self drift")
+    require(binding["tag916EventFourSha256"] == "b657eec243f4969731997a71d5be7da93d220098a4287d49542b361fe04b0999", "Tag916 event4 drift")
+    require(binding["tag916StateSelfSha256"] == "f5284c0050626170b53875822529263a67ec07b94de619627acbee4a0bf1078d", "Tag916 state self drift")
+    require(binding["tag916ProjectionSha256"] == "c74bfeca816de0803a10214a347ea2fbab503754e896b073ea4b48ab8f8a1b4f", "Tag916 projection drift")
+    require(binding["frozenGovernanceProjectionSha256"] == EXPECTED_GOVERNANCE_PROJECTION_SHA256, "Tag916 governance drift")
+    expected_blobs = [
+        {"path": "research/early-detection-v4/q010-sc002-pit-listing-ledger-governance-contract-v1.json", "gitBlobSha1": "eeb0dea2ea0458c6c5efbb08e00fba72699907c8", "rawSha256": "69cce63da4965a8c90c1ef6d21ae87e16159f53d7cca1b6e7be15c9950a2c211"},
+        {"path": "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py", "gitBlobSha1": "445bd4a2b9d2ac0c586dff35a7d9c391886675c6", "rawSha256": "41913c338314abd4e3822ee8fa72595a4475536a8231c56ee635937d01e19962"},
+        {"path": "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl", "gitBlobSha1": "b8b6c36f6a6c0dce91a76109f6ab8a314e9be1b6", "rawSha256": "3550c5bbb1d386b74cd5a158c452cc82d529f6692b3161eeee6b70431ed16da9"},
+        {"path": "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json", "gitBlobSha1": "b9c52b4522ba36dbcb0dfc88888371beeea45a0a", "rawSha256": "3c0827673da0519e970561f5364782d438afd4d863ffce202ad388417606956e"},
+        {"path": "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js", "gitBlobSha1": "13648a5ca203028dd100b05929260f83d46ed39d", "rawSha256": "f60f95897c3e67caeb9de25eb0d8bf007344d0442a563912f05e701079649fff"},
+    ]
+    require(binding["parentBlobs"] == expected_blobs, "Tag916 parent blob set drift")
+    comp = contract["locatorAuditAndCompletion"]
+    require(comp["schema"] == "early-detection-q010-sc002-locator-audit-completion/v1", "completion schema drift")
+    require(comp["eventId"] == "Q010-EVT-00000005" and comp["sequence"] == 5 and comp["eventType"] == "LOCATOR_BUDGET_EXHAUSTED_GLOBAL_HOLD_RECORDED", "completion event identity drift")
+    require(comp["createdAtUtc"] == "2026-08-13T23:42:34.7220389Z", "completion time drift")
+    require(comp["eventCreatedAtMeaning"] == "COMPLETION_RECORD_TIME_NOT_QUERY_PROBE_OR_RETRIEVAL_TIME", "completion time meaning drift")
+    require(comp["retrievalStep"] == "OFFICIAL_EXCHANGE_UNIVERSE_SNAPSHOT_AND_CHANGE_STREAM", "retrieval step drift")
+    require(comp["locatorQueryBudget"] == comp["locatorQueriesConsumed"] == 12 and comp["directEndpointProbes"] == 3, "locator budget drift")
+    require(comp["queryGranularTimestampsRecorded"] is False and comp["prospectiveLocatorTimingMachineVerified"] is False and comp["locatorQueriesClaimedPostRemote"] is False, "unproven prospective locator timing claim")
+    require(comp["noRetroactiveLocatorTimingAuthorization"] is True, "retroactive locator timing authorization drift")
+    require(comp["locatorTimingIncidentOccurred"] is True and comp["locatorTimingIncidentId"] == "Q010-SC002-INCIDENT-0001" and comp["locatorTimingIncidentType"] == "LOCATOR_QUERY_AND_PROBE_TIMESTAMPS_NOT_RECORDED", "locator timing incident drift")
+    require(comp["locatorFindingsEpistemicUse"] == "OPERATIONAL_STOP_ONLY_NO_LEDGER_SIGNAL_CANDIDATE_OR_SCIENTIFIC_CREDIT", "locator epistemic-use drift")
+    require(comp["locatorFindingsAreNotAcceptedResearchPayloads"] is True, "locator payload-status drift")
+    require(comp["acceptedPrimaryPayloadCount"] == 0 and comp["acceptedPrimaryPayloadBytes"] == 0 and comp["firstResearchSourceRetrievedAtUtc"] is None, "unproven primary payload claim")
+    require(comp["locatorOnlyAccessHasNoLedgerOrSignalCredit"] is True, "locator scientific-credit drift")
+    require(comp["officialLocatorFindings"] == [
+        {"authority": "NASDAQ", "locator": "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs", "status": "REJECTED_CURRENT_DAY_ONLY_NOT_PIT_2015"},
+        {"authority": "NASDAQ", "locator": "https://nasdaqtrader.com/Trader.aspx?id=DailyListPD", "status": "REJECTED_PAID_SUBSCRIPTION"},
+        {"authority": "NYSE", "locator": "ftp2.nyxdata.com", "status": "REJECTED_ENDPOINT_DNS_UNRESOLVED"},
+        {"authority": "NYSE", "locator": "https://ftp.nyse.com/cta_symbol_files/CTA.Symbol.File.20151231.csv", "status": "REJECTED_HTTP_404"},
+        {"authority": "NYSE", "locator": "https://ftp.nyse.com/cta_symbol_files/CTA.Symbol.File.20151230.csv", "status": "REJECTED_HTTP_404"},
+        {"authority": "SEC", "locator": "https://www.sec.gov/file/individualsecurityexchange2015q4", "status": "REJECTED_PROHIBITED_PRICE_VOLUME_AND_NOT_LISTING_COMPLETENESS"},
+        {"authority": "NASDAQ", "locator": "https://www.nasdaqtrader.com/trader.aspx?ID=marketsharedaily", "status": "REJECTED_MARKET_ACTIVITY_VOLUME_NOT_LISTING_COMPLETENESS"},
+    ], "locator finding set drift")
+    require(comp["currentIdentifierPayloadsOpened"] is False and comp["priceOrVolumePayloadsOpened"] is False and comp["paidSourceUsed"] is False and comp["secondarySourceLedgerOrSignalCredit"] is False, "forbidden locator access/credit drift")
+    require(comp["controlFrameStatus"] == "GLOBAL_TYPED_HOLD" and comp["globalHoldReason"] == "HOLD_OFFICIAL_LISTING_UNIVERSE_INCOMPLETE" and comp["controlFrameUsable"] is False and comp["partialControlPopulationUseAllowed"] is False, "global HOLD drift")
+    require(comp["chunkStatus"] == "TYPED_GLOBAL_HOLD_COMPLETED" and comp["namedCoreBiasMateriallyReduced"] is False and comp["sideProjectStopCriterionTriggered"] is True and comp["nextQ010SubchunkAuthorized"] is False, "completion/stop drift")
+    require(comp["researchSourceAccessAuthorizedAfterCompletion"] is False and comp["candidateState"] is None and comp["scientificCredit"] == "NONE", "completion authorization/credit drift")
+    for key in ("pricesAccessed", "returnsAccessed", "gqsAccessed", "outcomesAccessed", "telCodingAllowed", "controlMatchingAllowed", "candidateStateComputationAllowed"):
+        require(comp[key] is False, "completion prohibited flag drift: " + key)
+    tag916_commit_time = datetime.fromisoformat(binding["tag916CommitTimeUtc"].replace("Z", "+00:00"))
+    tag916_observed = datetime.fromisoformat(binding["tag916RemoteObservedAtUtc"].replace("Z", "+00:00"))
+    completion_time = datetime.fromisoformat(comp["createdAtUtc"].replace("Z", "+00:00"))
+    require(tag916_commit_time <= tag916_observed < completion_time, "Tag916/completion causal order drift")
+    if not check_files:
+        return
+    tag916 = binding["tag916Commit"]
+    require(run_git(["show", "-s", "--format=%P", tag916]) == binding["tag916Parent"], "Tag916 Git parent drift")
+    require(run_git(["show", "-s", "--format=%s", tag916]) == binding["tag916Subject"], "Tag916 Git subject drift")
+    for blob in expected_blobs:
+        require(run_git(["rev-parse", f'{tag916}:{blob["path"]}']) == blob["gitBlobSha1"], "Tag916 Git blob id drift: " + blob["path"])
+        require(sha256_bytes(run_git_bytes(["show", f'{tag916}:{blob["path"]}'])) == blob["rawSha256"], "Tag916 raw blob drift: " + blob["path"])
+    prefix_raw = run_git_bytes(["show", f'{tag916}:{contract["outputs"]["eventsPath"]}'])
+    require(len(prefix_raw) == binding["exactFourEventPrefixBytes"] and sha256_bytes(prefix_raw) == binding["exactFourEventPrefixRawSha256"], "Tag916 prefix bytes drift")
+    require(EVENTS_PATH.read_bytes().startswith(prefix_raw), "Tag917 event log does not retain exact Tag916 prefix")
+    tag916_contract = json.loads(run_git_bytes(["show", f'{tag916}:{contract["repository"]["expectedStartPaths"][0]}']).decode("utf-8"))
+    for key, value in tag916_contract.items():
+        if key not in {"repository", "implementation", "contractSelfSha256"}:
+            require(contract[key] == value, "Tag917 rewrote Tag916 contract section: " + key)
+    require(set(contract) - set(tag916_contract) == {"startIntroductionBinding", "locatorAuditAndCompletion"}, "Tag917 added unauthorized contract section")
 
 
 def validate_process_surface() -> None:
@@ -669,6 +825,7 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
     validate_sc002_governance_v2(contract)
     validate_future_start_v2(contract)
     validate_tag915_binding_and_start_finalization(contract, check_files=check_files)
+    validate_tag916_binding_and_completion(contract, check_files=check_files)
     decision_event = events[2]
     require(decision_event["schema"] == "early-detection-q010-sc002-governance-event/v1", "decision event schema drift")
     require(decision_event["eventId"] == "Q010-EVT-00000003" and decision_event["sequence"] == 3, "decision event identity drift")
@@ -683,9 +840,17 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
     require(start_event["eventId"] == "Q010-EVT-00000004" and start_event["sequence"] == 4 and start_event["eventType"] == "SUBCHUNK_WORK_STARTED", "start event identity drift")
     require(start_event["previousEventSha256"] == decision_event["eventSha256"], "start event predecessor drift")
     require(start_event["createdAt"] == contract["startFinalization"]["eventCreatedAtUtc"], "start event time drift")
-    require(start_event["contractSelfSha256"] == contract["contractSelfSha256"], "start event contract drift")
+    require(start_event["contractSelfSha256"] == contract["startIntroductionBinding"]["tag916ContractSelfSha256"], "historical start event contract drift")
     require(start_event["payload"] == start_payload(contract), "start event payload drift")
-    require(event_self_sha256(start_event) == start_event["eventSha256"], "start event self hash drift")
+    require(event_self_sha256(start_event) == start_event["eventSha256"] == contract["startIntroductionBinding"]["tag916EventFourSha256"], "start event self hash drift")
+    completion_event = events[4]
+    require(completion_event["schema"] == "early-detection-q010-sc002-governance-event/v1", "completion event schema drift")
+    require(completion_event["eventId"] == "Q010-EVT-00000005" and completion_event["sequence"] == 5 and completion_event["eventType"] == "LOCATOR_BUDGET_EXHAUSTED_GLOBAL_HOLD_RECORDED", "completion event identity drift")
+    require(completion_event["previousEventSha256"] == start_event["eventSha256"], "completion event predecessor drift")
+    require(completion_event["createdAt"] == contract["locatorAuditAndCompletion"]["createdAtUtc"], "completion event time drift")
+    require(completion_event["contractSelfSha256"] == contract["contractSelfSha256"], "completion event contract drift")
+    require(completion_event["payload"] == completion_payload(contract), "completion event payload drift")
+    require(event_self_sha256(completion_event) == completion_event["eventSha256"], "completion event self hash drift")
     require(state == expected_state(contract, events), "event-to-state replay drift")
     if check_files:
         validate_process_surface()
@@ -752,27 +917,33 @@ def remote_phase(contract: dict) -> tuple[str, str | None, str | None]:
     require(sorted(tuple(line.split("\t", 1)) for line in decision_delta if line) == sorted(("A", path) for path in repo["expectedDecisionPaths"]), "Tag915 decision topology drift")
     require(run_git(["show", "-s", "--format=%P", tag915]) == repo["baseCommit"], "Tag915 decision parent drift")
     require(run_git(["show", "-s", "--format=%s", tag915]) == repo["expectedDecisionSubject"], "Tag915 decision subject drift")
-    paths = repo["expectedStartPaths"]
-    if head == tag915 and remote == tag915:
+    start_binding = contract["startIntroductionBinding"]
+    tag916 = start_binding["tag916Commit"]
+    start_delta = run_git(["diff-tree", "--no-commit-id", "--name-status", "-r", tag916]).splitlines()
+    require(sorted(tuple(line.split("\t", 1)) for line in start_delta if line) == sorted(("M", path) for path in repo["expectedStartPaths"]), "Tag916 start topology drift")
+    require(run_git(["show", "-s", "--format=%P", tag916]) == tag915, "Tag916 start parent drift")
+    require(run_git(["show", "-s", "--format=%s", tag916]) == repo["expectedStartSubject"], "Tag916 start subject drift")
+    paths = repo["expectedCompletionPaths"]
+    if head == tag916 and remote == tag916:
         status = run_git(["status", "--porcelain", "--", *paths]).splitlines()
-        require(len(status) == len(paths), "start pre-introduction path count drift")
-        require(all(line.lstrip().startswith("M ") for line in status), "start paths must be exactly five modifications before introduction")
-        require(not run_git(["diff", "--cached", "--name-only", "--", *paths]), "start paths must remain unstaged during PRE diagnostic")
-        require(sorted(run_git(["diff", "--name-only", "--", *paths]).splitlines()) == sorted(paths), "start unstaged path set drift")
-        return "START_PRE_INTRODUCTION", None, None
+        require(len(status) == len(paths), "completion pre-introduction path count drift")
+        require(all(line.lstrip().startswith("M ") for line in status), "completion paths must be exactly five modifications before introduction")
+        require(not run_git(["diff", "--cached", "--name-only", "--", *paths]), "completion paths must remain unstaged during PRE diagnostic")
+        require(sorted(run_git(["diff", "--name-only", "--", *paths]).splitlines()) == sorted(paths), "completion unstaged path set drift")
+        return "COMPLETION_PRE_INTRODUCTION", None, None
     require(head == remote, "HEAD/live remote mismatch")
-    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == tag915, "start introduction parent drift")
-    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == repo["expectedStartSubject"], "start introduction subject drift")
+    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == tag916, "completion introduction parent drift")
+    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == repo["expectedCompletionSubject"], "completion introduction subject drift")
     commit_time = run_git(["show", "-s", "--format=%cI", "HEAD"])
-    event_time = contract["startFinalization"]["eventCreatedAtUtc"]
-    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(event_time.replace("Z", "+00:00")).timestamp(), "start introduction predates event4")
+    event_time = contract["locatorAuditAndCompletion"]["createdAtUtc"]
+    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(event_time.replace("Z", "+00:00")).timestamp(), "completion introduction predates event5")
     require(datetime.fromisoformat(remote_observed_at.replace("Z", "+00:00")).timestamp() >= datetime.fromisoformat(commit_time).timestamp(), "remote observation predates start commit")
     delta = run_git(["diff-tree", "--no-commit-id", "--name-status", "-r", "HEAD"]).splitlines()
-    require(sorted(tuple(line.split("\t", 1)) for line in delta if line) == sorted(("M", path) for path in paths), "start introduction topology drift")
-    require(not run_git(["status", "--porcelain", "--", *paths]), "post-start owned paths are dirty")
+    require(sorted(tuple(line.split("\t", 1)) for line in delta if line) == sorted(("M", path) for path in paths), "completion introduction topology drift")
+    require(not run_git(["status", "--porcelain", "--", *paths]), "post-completion owned paths are dirty")
     for path in paths:
-        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), f"introduced start blob differs from local bytes: {path}")
-    return "START_POST_INTRODUCTION", head, remote_observed_at
+        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), f"introduced completion blob differs from local bytes: {path}")
+    return "COMPLETION_POST_INTRODUCTION", head, remote_observed_at
 
 
 def verify(remote: bool) -> dict:
@@ -780,10 +951,11 @@ def verify(remote: bool) -> dict:
     contract, events, state = read_contract(), read_events(), read_state()
     validate_bundle(contract, events, state, check_files=True)
     phase, commit, remote_observed_at = remote_phase(contract)
-    post = phase == "START_POST_INTRODUCTION"
+    post = phase == "COMPLETION_POST_INTRODUCTION"
+    comp = contract["locatorAuditAndCompletion"]
     return {
         "schema": "early-detection-q010-sc002-pit-listing-ledger-verification/v1",
-        "status": "PASS" if post else "START_PRE_INTRODUCTION_DIAGNOSTIC",
+        "status": "PASS" if post else "COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC",
         "phase": phase,
         "introductionCommit": commit,
         "subchunkId": contract["decision"]["subchunkId"],
@@ -792,13 +964,30 @@ def verify(remote: bool) -> dict:
         "preChunkTimingVerified": True,
         "prospectiveDecisionRemoteIntroductionVerified": True,
         "startEventRecorded": True,
-        "prospectiveStartRemoteIntroductionVerified": post,
-        "startRemoteObservedAtUtc": remote_observed_at,
-        "workStarted": post,
-        "workStartedAt": contract["startFinalization"]["workStartedAtUtc"] if post else None,
-        "startAuthorized": post,
-        "researchSourceAccessAuthorized": post,
+        "prospectiveStartRemoteIntroductionVerified": True,
+        "completionEventRecorded": True,
+        "completionRemoteIntroductionVerified": post,
+        "completionRemoteObservedAtUtc": remote_observed_at,
+        "workStarted": True,
+        "workStartedAt": contract["startFinalization"]["workStartedAtUtc"],
+        "startAuthorized": False,
+        "researchSourceAccessAuthorized": False,
         "firstResearchSourceRetrievedAtUtc": None,
+        "chunkStatus": comp["chunkStatus"],
+        "controlFrameStatus": comp["controlFrameStatus"],
+        "globalHoldReason": comp["globalHoldReason"],
+        "controlFrameUsable": False,
+        "acceptedPrimaryPayloadCount": 0,
+        "locatorQueriesConsumed": comp["locatorQueriesConsumed"],
+        "queryGranularTimestampsRecorded": False,
+        "prospectiveLocatorTimingMachineVerified": False,
+        "locatorTimingIncidentOccurred": True,
+        "locatorTimingIncidentId": comp["locatorTimingIncidentId"],
+        "locatorFindingsEpistemicUse": comp["locatorFindingsEpistemicUse"],
+        "completionEventCreatedAtMeaning": comp["eventCreatedAtMeaning"],
+        "locatorFindingsAreNotAcceptedResearchPayloads": True,
+        "sideProjectStopCriterionTriggered": True,
+        "nextQ010SubchunkAuthorized": False,
         "controlMatchingAllowed": False,
         "telCodingAllowed": False,
         "candidateStateComputationAllowed": False,
@@ -829,23 +1018,26 @@ def bootstrap(write: bool) -> dict:
     contract["implementation"]["testRawSha256"] = sha256_path(TEST_PATH)
     contract["contractSelfSha256"] = contract_self_sha256(contract)
     events = read_events()
-    require(len(events) in (3, 4), "bootstrap requires exact Tag915 prefix with optional SC002 start skeleton")
+    require(len(events) in (4, 5), "bootstrap requires exact Tag916 prefix with optional SC002 completion skeleton")
     decision_event = events[2]
     require(decision_event["eventId"] == "Q010-EVT-00000003" and decision_event["sequence"] == 3, "bootstrap decision identity drift")
     require(decision_event["eventSha256"] == contract["decisionIntroductionBinding"]["tag915EventThreeSha256"], "bootstrap Tag915 decision prefix drift")
-    if len(events) == 3:
+    start_event = events[3]
+    require(start_event["eventId"] == "Q010-EVT-00000004" and start_event["sequence"] == 4, "bootstrap start identity drift")
+    require(start_event["eventSha256"] == contract["startIntroductionBinding"]["tag916EventFourSha256"], "bootstrap Tag916 start prefix drift")
+    if len(events) == 4:
         events.append({})
-    event = events[3]
+    event = events[4]
     event.clear()
     event.update({
         "schema": "early-detection-q010-sc002-governance-event/v1",
-        "eventId": "Q010-EVT-00000004",
-        "sequence": 4,
-        "eventType": "SUBCHUNK_WORK_STARTED",
-        "previousEventSha256": decision_event["eventSha256"],
-        "createdAt": contract["startFinalization"]["eventCreatedAtUtc"],
+        "eventId": "Q010-EVT-00000005",
+        "sequence": 5,
+        "eventType": "LOCATOR_BUDGET_EXHAUSTED_GLOBAL_HOLD_RECORDED",
+        "previousEventSha256": start_event["eventSha256"],
+        "createdAt": contract["locatorAuditAndCompletion"]["createdAtUtc"],
         "contractSelfSha256": contract["contractSelfSha256"],
-        "payload": start_payload(contract),
+        "payload": completion_payload(contract),
         "eventSha256": None,
     })
     event["eventSha256"] = event_self_sha256(event)
@@ -858,7 +1050,8 @@ def bootstrap(write: bool) -> dict:
         "contractRawSha256": sha256_bytes(contract_raw.encode("utf-8")),
         "contractSelfSha256": contract["contractSelfSha256"],
         "decisionEventSha256": decision_event["eventSha256"],
-        "startEventSha256": event["eventSha256"],
+        "startEventSha256": start_event["eventSha256"],
+        "completionEventSha256": event["eventSha256"],
         "eventsRawSha256": sha256_bytes(event_raw.encode("utf-8")),
         "stateRawSha256": sha256_bytes(state_raw.encode("utf-8")),
         "stateSelfSha256": state["stateSelfSha256"],
@@ -880,10 +1073,10 @@ def self_test() -> dict:
 
     def rebind(c: dict, e: list[dict]) -> dict:
         c["contractSelfSha256"] = contract_self_sha256(c)
-        e[3]["contractSelfSha256"] = c["contractSelfSha256"]
-        e[3]["createdAt"] = c["startFinalization"]["eventCreatedAtUtc"]
-        e[3]["payload"] = start_payload(c)
-        e[3]["eventSha256"] = event_self_sha256(e[3])
+        e[4]["contractSelfSha256"] = c["contractSelfSha256"]
+        e[4]["createdAt"] = c["locatorAuditAndCompletion"]["createdAtUtc"]
+        e[4]["payload"] = completion_payload(c)
+        e[4]["eventSha256"] = event_self_sha256(e[4])
         return expected_state(c, e)
 
     def rejected(name: str, mutate) -> None:
@@ -995,6 +1188,36 @@ def self_test() -> dict:
     rejected("start-authorization-effective-local", lambda c, e: c["startFinalization"].__setitem__("sourceAccessAuthorizationEffectiveOnlyAfterTag916RemoteIntroduction", False))
     rejected("event4-predecessor", lambda c, e: e[3].__setitem__("previousEventSha256", "0" * 64))
     rejected("premature-first-retrieval", lambda c, e: c["startFinalization"].__setitem__("firstResearchSourceRetrievedAtUtc", "2026-08-13T23:26:23Z"))
+    rejected("tag916-binding-commit", lambda c, e: c["startIntroductionBinding"].__setitem__("tag916Commit", "0" * 40))
+    rejected("tag916-binding-blob", lambda c, e: c["startIntroductionBinding"]["parentBlobs"][0].__setitem__("rawSha256", "0" * 64))
+    rejected("tag916-binding-prefix", lambda c, e: c["startIntroductionBinding"].__setitem__("exactFourEventPrefixBytes", 1))
+    rejected("tag916-receipt-hash", lambda c, e: c["startIntroductionBinding"]["earliestStoredPostRemoteEvidence"].__setitem__("receiptPayloadCanonicalSha256", "0" * 64))
+    rejected("tag916-receipt-timing-claim", lambda c, e: c["startIntroductionBinding"]["earliestStoredPostRemoteEvidence"]["receiptPayload"].__setitem__("provesIndividualLocatorQueryOrProbeTiming", True))
+    rejected("completion-budget", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorQueriesConsumed", 11))
+    rejected("completion-time", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("createdAtUtc", "2026-08-13T23:42:33Z"))
+    rejected("completion-time-meaning", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("eventCreatedAtMeaning", "RETRIEVAL_TIME"))
+    rejected("completion-timestamps-invented", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("queryGranularTimestampsRecorded", True))
+    rejected("completion-timing-verified", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("prospectiveLocatorTimingMachineVerified", True))
+    rejected("completion-post-remote-claim", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorQueriesClaimedPostRemote", True))
+    rejected("completion-retroactive-timing", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("noRetroactiveLocatorTimingAuthorization", False))
+    rejected("completion-timing-incident-drop", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorTimingIncidentOccurred", False))
+    rejected("completion-timing-incident-id", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorTimingIncidentId", None))
+    rejected("completion-epistemic-upgrade", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorFindingsEpistemicUse", "LEDGER_AND_SIGNAL_EVIDENCE"))
+    rejected("completion-locator-payload", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorFindingsAreNotAcceptedResearchPayloads", False))
+    rejected("completion-accepted-payload", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("acceptedPrimaryPayloadCount", 1))
+    rejected("completion-locator-credit", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("locatorOnlyAccessHasNoLedgerOrSignalCredit", False))
+    rejected("completion-locator-drift", lambda c, e: c["locatorAuditAndCompletion"]["officialLocatorFindings"][0].__setitem__("locator", "https://example.invalid"))
+    rejected("completion-finding-drift", lambda c, e: c["locatorAuditAndCompletion"]["officialLocatorFindings"][0].__setitem__("status", "REJECTED_UNSPECIFIED"))
+    rejected("completion-current-identifier", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("currentIdentifierPayloadsOpened", True))
+    rejected("completion-price-volume", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("priceOrVolumePayloadsOpened", True))
+    rejected("completion-paid-source", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("paidSourceUsed", True))
+    rejected("completion-global-hold", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("globalHoldReason", "NONE"))
+    rejected("completion-partial-use", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("partialControlPopulationUseAllowed", True))
+    rejected("completion-core-bias-claim", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("namedCoreBiasMateriallyReduced", True))
+    rejected("completion-next-authorized", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("nextQ010SubchunkAuthorized", True))
+    rejected("completion-source-authorized", lambda c, e: c["locatorAuditAndCompletion"].__setitem__("researchSourceAccessAuthorizedAfterCompletion", True))
+    rejected("event5-predecessor", lambda c, e: e[4].__setitem__("previousEventSha256", "0" * 64))
+    rejected("event5-type", lambda c, e: e[4].__setitem__("eventType", "SUBCHUNK_PASSED"))
     rejected("event-type", lambda c, e: e[2].__setitem__("eventType", "SUBCHUNK_WORK_STARTED"))
     rejected("event-predecessor", lambda c, e: e[2].__setitem__("previousEventSha256", "0" * 64))
     rejected("event-source-access", lambda c, e: e[2]["payload"].__setitem__("researchSourceAccessAuthorized", True))
@@ -1002,7 +1225,7 @@ def self_test() -> dict:
     rejected("sc001-incident", lambda c, e: c["sc001CarryForwardPolicy"].__setitem__("sc001IncidentId", None))
     rejected("sc001-credit", lambda c, e: c["sc001CarryForwardPolicy"].__setitem__("sc001ScientificCredit", "FULL"))
     rejected("system-built", lambda c, e: c["sc001CarryForwardPolicy"].__setitem__("earlyDetectionSystemBuilt", True))
-    require(len(attacks) == 105, "self-test kill count drift")
+    require(len(attacks) == 135, "self-test kill count drift")
     return {"status": "PASS", "kills": len(attacks), "controllerChildExecutions": 0}
 
 
@@ -1021,7 +1244,7 @@ def main() -> int:
             return 0
         result = verify(args.remote)
         if args.command == "start" and not result["researchSourceAccessAuthorized"]:
-            fail("SC002 source access is not authorized until the separate start event is remotely introduced")
+            fail("SC002 source access is not authorized in the verified phase or terminal HOLD status")
         print(json.dumps(result, sort_keys=True))
         return 0
     except (GateError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:

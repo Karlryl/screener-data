@@ -2,7 +2,7 @@
   "schema": "early-detection-q010-sc002-pit-listing-ledger-governance-contract/v1",
   "createdAt": "2026-08-13T22:30:44Z",
   "purpose": "Prospectively govern one bounded, outcome-blind supporting subchunk that can close the named point-in-time entity, security, listing and control-frame bias exposed by Q010-SC-001; this decision authorizes no research-source access.",
-  "contractSelfSha256": "7bc3d584e920567509a78f7e092aebdf0379bd4a6ea60e0f95914eca702484d5",
+  "contractSelfSha256": "dd00a752c169f5bd5e39b7b8c54690f074689d7af1f44df70957880755ae3e90",
   "repository": {
     "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
     "branch": "codex/form25-v2-promotion-20260812",
@@ -27,7 +27,16 @@
       "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json",
       "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js"
     ],
-    "startIntroductionMustBeExactDirectChildOfDecisionIntroduction": true
+    "startIntroductionMustBeExactDirectChildOfDecisionIntroduction": true,
+    "expectedCompletionSubject": "Tag 917: Q010-SC002 Quellenrahmen fail-closed halten",
+    "expectedCompletionPaths": [
+      "research/early-detection-v4/q010-sc002-pit-listing-ledger-governance-contract-v1.json",
+      "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py",
+      "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl",
+      "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json",
+      "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js"
+    ],
+    "completionIntroductionMustBeExactDirectChildOfStartIntroduction": true
   },
   "parentTag914Binding": {
     "commit": "2d744159e4a001bfe1e2ff5b9d31113cbc347487",
@@ -739,15 +748,160 @@
     "candidateStateComputationAllowed": false,
     "scientificCredit": "NONE"
   },
+  "startIntroductionBinding": {
+    "schema": "early-detection-q010-sc002-tag916-start-introduction-binding/v1",
+    "tag916Commit": "9ba44d160cddeba728cbca5dfdb46bd09511e2be",
+    "tag916Parent": "1ed213b0c04c0a4eefddfec9b999bb4184286ff9",
+    "tag916Subject": "Tag 916: Q010-SC002 PIT-Ledger prospektiv starten",
+    "tag916CommitTimeUtc": "2026-08-13T23:39:00Z",
+    "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "tag916RemoteObservedAtUtc": "2026-08-13T23:39:43.356884Z",
+    "earliestStoredPostRemoteEvidence": {
+      "receiptPayload": {
+        "schema": "early-detection-q010-sc002-tag916-post-verify-minimal-receipt/v1",
+        "source": "SESSION_TOOL_OUTPUT_CAPTURED_DURING_TAG916_POST_INTRODUCTION_GATE",
+        "command": "python -B scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py verify --remote",
+        "status": "PASS",
+        "phase": "START_POST_INTRODUCTION",
+        "introductionCommit": "9ba44d160cddeba728cbca5dfdb46bd09511e2be",
+        "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+        "remoteObservedAtUtc": "2026-08-13T23:39:43.356884Z",
+        "captureCompleteness": "MINIMAL_FIELDS_CARRIED_FORWARD_FROM_TOOL_OUTPUT",
+        "externallySignedOsAttestation": false,
+        "provesIndividualLocatorQueryOrProbeTiming": false
+      },
+      "receiptPayloadCanonicalSha256": "c0184d47f4fe9d930b6ef297908c2b42a94f26ab4652c4529ca4b89851b03fd7"
+    },
+    "prospectiveStartRemoteIntroductionVerified": true,
+    "exactFivePathStatuses": "EXACTLY_FIVE_M_PATHS",
+    "exactFourEventPrefixBytes": 4033,
+    "exactFourEventPrefixRawSha256": "3550c5bbb1d386b74cd5a158c452cc82d529f6692b3161eeee6b70431ed16da9",
+    "tag916ContractSelfSha256": "7bc3d584e920567509a78f7e092aebdf0379bd4a6ea60e0f95914eca702484d5",
+    "tag916EventFourSha256": "b657eec243f4969731997a71d5be7da93d220098a4287d49542b361fe04b0999",
+    "tag916StateSelfSha256": "f5284c0050626170b53875822529263a67ec07b94de619627acbee4a0bf1078d",
+    "tag916ProjectionSha256": "c74bfeca816de0803a10214a347ea2fbab503754e896b073ea4b48ab8f8a1b4f",
+    "frozenGovernanceProjectionSha256": "d03956dfbe63f2ed9a59858aa1b83253f4edc41980cb02d2ccb8df3091243def",
+    "parentBlobs": [
+      {
+        "path": "research/early-detection-v4/q010-sc002-pit-listing-ledger-governance-contract-v1.json",
+        "gitBlobSha1": "eeb0dea2ea0458c6c5efbb08e00fba72699907c8",
+        "rawSha256": "69cce63da4965a8c90c1ef6d21ae87e16159f53d7cca1b6e7be15c9950a2c211"
+      },
+      {
+        "path": "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py",
+        "gitBlobSha1": "445bd4a2b9d2ac0c586dff35a7d9c391886675c6",
+        "rawSha256": "41913c338314abd4e3822ee8fa72595a4475536a8231c56ee635937d01e19962"
+      },
+      {
+        "path": "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl",
+        "gitBlobSha1": "b8b6c36f6a6c0dce91a76109f6ab8a314e9be1b6",
+        "rawSha256": "3550c5bbb1d386b74cd5a158c452cc82d529f6692b3161eeee6b70431ed16da9"
+      },
+      {
+        "path": "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json",
+        "gitBlobSha1": "b9c52b4522ba36dbcb0dfc88888371beeea45a0a",
+        "rawSha256": "3c0827673da0519e970561f5364782d438afd4d863ffce202ad388417606956e"
+      },
+      {
+        "path": "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js",
+        "gitBlobSha1": "13648a5ca203028dd100b05929260f83d46ed39d",
+        "rawSha256": "f60f95897c3e67caeb9de25eb0d8bf007344d0442a563912f05e701079649fff"
+      }
+    ]
+  },
+  "locatorAuditAndCompletion": {
+    "schema": "early-detection-q010-sc002-locator-audit-completion/v1",
+    "eventId": "Q010-EVT-00000005",
+    "sequence": 5,
+    "eventType": "LOCATOR_BUDGET_EXHAUSTED_GLOBAL_HOLD_RECORDED",
+    "createdAtUtc": "2026-08-13T23:42:34.7220389Z",
+    "eventCreatedAtMeaning": "COMPLETION_RECORD_TIME_NOT_QUERY_PROBE_OR_RETRIEVAL_TIME",
+    "retrievalStep": "OFFICIAL_EXCHANGE_UNIVERSE_SNAPSHOT_AND_CHANGE_STREAM",
+    "locatorQueryBudget": 12,
+    "locatorQueriesConsumed": 12,
+    "directEndpointProbes": 3,
+    "queryGranularTimestampsRecorded": false,
+    "prospectiveLocatorTimingMachineVerified": false,
+    "locatorQueriesClaimedPostRemote": false,
+    "noRetroactiveLocatorTimingAuthorization": true,
+    "locatorTimingIncidentOccurred": true,
+    "locatorTimingIncidentId": "Q010-SC002-INCIDENT-0001",
+    "locatorTimingIncidentType": "LOCATOR_QUERY_AND_PROBE_TIMESTAMPS_NOT_RECORDED",
+    "locatorFindingsEpistemicUse": "OPERATIONAL_STOP_ONLY_NO_LEDGER_SIGNAL_CANDIDATE_OR_SCIENTIFIC_CREDIT",
+    "locatorFindingsAreNotAcceptedResearchPayloads": true,
+    "acceptedPrimaryPayloadCount": 0,
+    "acceptedPrimaryPayloadBytes": 0,
+    "firstResearchSourceRetrievedAtUtc": null,
+    "locatorOnlyAccessHasNoLedgerOrSignalCredit": true,
+    "officialLocatorFindings": [
+      {
+        "authority": "NASDAQ",
+        "locator": "https://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs",
+        "status": "REJECTED_CURRENT_DAY_ONLY_NOT_PIT_2015"
+      },
+      {
+        "authority": "NASDAQ",
+        "locator": "https://nasdaqtrader.com/Trader.aspx?id=DailyListPD",
+        "status": "REJECTED_PAID_SUBSCRIPTION"
+      },
+      {
+        "authority": "NYSE",
+        "locator": "ftp2.nyxdata.com",
+        "status": "REJECTED_ENDPOINT_DNS_UNRESOLVED"
+      },
+      {
+        "authority": "NYSE",
+        "locator": "https://ftp.nyse.com/cta_symbol_files/CTA.Symbol.File.20151231.csv",
+        "status": "REJECTED_HTTP_404"
+      },
+      {
+        "authority": "NYSE",
+        "locator": "https://ftp.nyse.com/cta_symbol_files/CTA.Symbol.File.20151230.csv",
+        "status": "REJECTED_HTTP_404"
+      },
+      {
+        "authority": "SEC",
+        "locator": "https://www.sec.gov/file/individualsecurityexchange2015q4",
+        "status": "REJECTED_PROHIBITED_PRICE_VOLUME_AND_NOT_LISTING_COMPLETENESS"
+      },
+      {
+        "authority": "NASDAQ",
+        "locator": "https://www.nasdaqtrader.com/trader.aspx?ID=marketsharedaily",
+        "status": "REJECTED_MARKET_ACTIVITY_VOLUME_NOT_LISTING_COMPLETENESS"
+      }
+    ],
+    "currentIdentifierPayloadsOpened": false,
+    "priceOrVolumePayloadsOpened": false,
+    "paidSourceUsed": false,
+    "secondarySourceLedgerOrSignalCredit": false,
+    "controlFrameStatus": "GLOBAL_TYPED_HOLD",
+    "globalHoldReason": "HOLD_OFFICIAL_LISTING_UNIVERSE_INCOMPLETE",
+    "controlFrameUsable": false,
+    "partialControlPopulationUseAllowed": false,
+    "chunkStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+    "namedCoreBiasMateriallyReduced": false,
+    "sideProjectStopCriterionTriggered": true,
+    "nextQ010SubchunkAuthorized": false,
+    "researchSourceAccessAuthorizedAfterCompletion": false,
+    "candidateState": null,
+    "pricesAccessed": false,
+    "returnsAccessed": false,
+    "gqsAccessed": false,
+    "outcomesAccessed": false,
+    "telCodingAllowed": false,
+    "controlMatchingAllowed": false,
+    "candidateStateComputationAllowed": false,
+    "scientificCredit": "NONE"
+  },
   "outputs": {
     "eventsPath": "state/early-detection-q010-sc002-pit-listing-ledger-events-v1.jsonl",
     "statePath": "state/early-detection-q010-sc002-pit-listing-ledger-state-v1.json"
   },
   "implementation": {
     "controllerPath": "scripts/early-detection-q010-sc002-pit-listing-ledger-v1.py",
-    "controllerNormalizedSha256": "3b7542b1b6277513fd6d176ce9052eb161b381c3d67a12f9aa0bbaf3b50e3a45",
+    "controllerNormalizedSha256": "d71be7de69e1d964f37ac0ee56ee1078e30da96142283a647a1a9eaaa6cb0de2",
     "testPath": "tests/early-detection-q010-sc002-pit-listing-ledger-v1.test.js",
-    "testRawSha256": "f60f95897c3e67caeb9de25eb0d8bf007344d0442a563912f05e701079649fff",
+    "testRawSha256": "7192b7c86f7b9a0e4e892dc02d580bb7f54c794d566c308f31ec07a84ddadb91",
     "controllerChildExecutionsRequired": 0,
     "onlyEncapsulatedGitProcessSurfaceAllowed": true,
     "eventsRawSha256PinnedByController": true,
