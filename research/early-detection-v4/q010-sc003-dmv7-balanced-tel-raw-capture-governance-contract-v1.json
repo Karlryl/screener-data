@@ -2,7 +2,7 @@
   "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract/v1",
   "createdAt": "2026-08-14T00:16:11.3761192Z",
   "purpose": "Prospectively authorize one bounded CORE raw-primary-source capture across the complete frozen Tag914 DMV7 census; this decision authorizes no source access, coding, level, candidate, control or scientific claim.",
-  "contractSelfSha256": "23dde302d13af12537213a20de5d7b7e59eb18035f25c2e014248eaf2e57345d",
+  "contractSelfSha256": "ffbc59e57c0e85be1866572cfdcffeaa59cb8c38b4225aa805653119d1e1dbdb",
   "repository": {
     "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
     "branch": "codex/form25-v2-promotion-20260812",
@@ -2284,11 +2284,65 @@
   },
   "implementation": {
     "controllerPath": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py",
-    "controllerNormalizedSha256": "1ced35bb3287c11d537a30b23da31f056add0daeaa21df69930a5d0e3d009ba0",
+    "controllerNormalizedSha256": "db57f31ee8a443c5fdee2c86bc7dc9f8158e664f45467279c2735544920c31cd",
     "testPath": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js",
-    "testRawSha256": "b1d012b7d158fda7d186a837fc553d76b728ebef44dc9b22360f99e7df721a0f",
+    "testRawSha256": "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78",
     "controllerChildExecutionsRequired": 0,
     "sourceAccessImplementationPresentAtDecision": false,
     "networkImportsForbiddenAtDecision": true
+  },
+  "startIntroductionBinding": {
+    "schema": "early-detection-q010-sc003-start-introduction-binding/v1",
+    "decisionCommit": "bdaf8dc911f1ca796f9370627901fd1003083ba3",
+    "decisionParentBlobs": [
+      {
+        "path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json",
+        "gitBlobSha1": "69690f462310ddbecc213e650de3d439c1d05eaf",
+        "rawSha256": "87e1fe77ae1507fe0d6acd6b79b035bb920a2580cea65670f7c44b49ca174218"
+      },
+      {
+        "path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py",
+        "gitBlobSha1": "a69cce278a11a66528ebefb2cc0907f7bf6ae70b",
+        "rawSha256": "004f4c0ab36815ffdca1df8f0b7f865010be12c0e75abf9fdf5b93d90774ce7f"
+      },
+      {
+        "path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl",
+        "gitBlobSha1": "f1b522933d42cd22040eca942ee78bf0a9f78699",
+        "rawSha256": "f6b3408acd50409485595b33ae0ca9cbcdc060d91c509f7ab74853341f7b1158"
+      },
+      {
+        "path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json",
+        "gitBlobSha1": "dbf6458f9c4d8b28bac9f1f3ad410d8b5190c57f",
+        "rawSha256": "0c7732d26c648a6a313820f0b26547899acb0255af90392f5cd188ccf725fa36"
+      },
+      {
+        "path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js",
+        "gitBlobSha1": "2ca985c387cbd6da6232180d50d545ac79c0b755",
+        "rawSha256": "b1d012b7d158fda7d186a837fc553d76b728ebef44dc9b22360f99e7df721a0f"
+      }
+    ],
+    "decisionRemoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "decisionRemoteReceipt": {
+      "schema": "early-detection-q010-sc003-decision-remote-receipt/v1",
+      "observedHead": "bdaf8dc911f1ca796f9370627901fd1003083ba3",
+      "observedUpstream": "bdaf8dc911f1ca796f9370627901fd1003083ba3",
+      "observedRemoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+      "observedRemoteOid": "bdaf8dc911f1ca796f9370627901fd1003083ba3",
+      "gitLsRemoteRawSha256": "e20a90b617801f386063c35f9ce8198014ac9143dcf4f7dcb4ec82a1bd489308",
+      "decisionParentBlobBindingsSha256": "337ea7f86e006cb69a9b92cf5fc02c25415ace1487df23dd31506f0491ab10e7",
+      "observedAtUtc": "2026-08-14T01:34:33.454637Z",
+      "externallySigned": false,
+      "receiptSha256": "19fbb781b54cd2b8c0eedea1b0ee364ef03a4345c43cfd10e700aa5593b2053f"
+    },
+    "decisionFrozenPolicyProjectionSha256": "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
+  },
+  "startFinalization": {
+    "schema": "early-detection-q010-sc003-start-finalization/v1",
+    "decisionRemoteObservedAtUtc": "2026-08-14T01:34:33.454637Z",
+    "decisionRemoteReceiptSha256": "19fbb781b54cd2b8c0eedea1b0ee364ef03a4345c43cfd10e700aa5593b2053f",
+    "workStartedAtUtc": "2026-08-14T01:34:34.454637Z",
+    "privateStoreAbsentAtWorkStart": true,
+    "storedResearchSourceAccessAuthorized": false,
+    "runtimeResearchSourceAccessRequiresTag919PostGate": true
   }
 }

@@ -1,9 +1,9 @@
 {
   "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state/v1",
-  "materializedAt": "2026-08-14T00:16:11.3761192Z",
-  "contractSelfSha256": "23dde302d13af12537213a20de5d7b7e59eb18035f25c2e014248eaf2e57345d",
-  "eventCount": 1,
-  "eventHeadSha256": "693d1c86049acc4b373c86171d17773b3c8f242e8a94cdd05207f40358f24ee2",
+  "materializedAt": "2026-08-14T01:34:34.454637Z",
+  "contractSelfSha256": "ffbc59e57c0e85be1866572cfdcffeaa59cb8c38b4225aa805653119d1e1dbdb",
+  "eventCount": 2,
+  "eventHeadSha256": "690b5e13c1c51b7de9a62d63833f6afb2f5c120844ab9c1f375abf8fd34b5009",
   "projection": {
     "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-projection/v1",
     "subchunkId": "Q010-SC-003-DMV7-BALANCED-TEL-RAW-CAPTURE",
@@ -11,11 +11,14 @@
     "decisionRecorded": true,
     "decisionEventId": "Q010-SC003-EVT-00000001",
     "decisionEventSequence": 1,
-    "decisionTimingStatus": "PENDING_REMOTE_INTRODUCTION",
-    "decisionRemoteIntroductionVerified": false,
-    "separateRemoteStartRequired": true,
-    "workStarted": false,
-    "workStartedAtUtc": null,
+    "decisionTimingStatus": "REMOTE_INTRODUCED_BEFORE_SEPARATE_START_EVENT",
+    "decisionRemoteIntroductionVerified": true,
+    "separateRemoteStartRequired": false,
+    "startEventId": "Q010-SC003-EVT-00000002",
+    "startEventSequence": 2,
+    "startRemoteIntroductionVerified": false,
+    "workStarted": true,
+    "workStartedAtUtc": "2026-08-14T01:34:34.454637Z",
     "researchSourceAccessAuthorized": false,
     "populationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
     "populationCount": 7,
@@ -44,5 +47,5 @@
     "earlyDetectionSystemBuilt": false,
     "frozenPolicyProjectionSha256": "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
   },
-  "stateSelfSha256": "7df6c8c4203350b768efd592080823efc077730c1c458ba2bef278be80acfc96"
+  "stateSelfSha256": "ae7bfb8bf1122bffdeb1e42184db3c2939ec396e6ac4b07d29ec873d6e3fb3bd"
 }
