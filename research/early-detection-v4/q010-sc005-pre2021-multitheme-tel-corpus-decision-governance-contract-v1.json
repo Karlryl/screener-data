@@ -1,0 +1,721 @@
+{
+  "schema": "q010-sc005-pre2021-all15-decision-governance-contract/v1",
+  "finalPolicyMaterializedAtUtc": "2026-08-14T19:10:12.3291443Z",
+  "purpose": "DECISION_ONLY_ALL15_PRE2021_OFFICIAL_REGISTER_FRAME_NO_START_NO_ACCESS_NO_CREDIT",
+  "frozenStaticPolicySha256": "707aec4f285534cd5510d9114f901c7b1bac980f1c3eb911ca106d0e9f750654",
+  "contractCoreSha256": "476dbb7f6b2f88c0c61683ca43d21df1a2a6a3b2b9b6d4f04583fcae9c28caa8",
+  "contractSelfSha256": "4a082694961bcaac5d25077ddb06de85a50539af93b259107b1a5e71cbf4f6f3",
+  "staticPolicy": {
+    "repository": {
+      "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
+      "gitCommonDir": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\.git",
+      "gitExecutable": "C:\\Program Files\\Git\\cmd\\git.exe",
+      "branch": "codex/form25-v2-promotion-20260812",
+      "upstreamName": "origin/codex/early-detection-v4-gates-20260810",
+      "remoteUrl": "https://github.com/Karlryl/screener-data.git",
+      "remoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+      "baseCommit": "c40c879070ac05b1aac11ab7c8f52b1dcc8cc375",
+      "expectedIntroductionSubject": "Tag 923: Q010-SC005 Pre-2021-Multithemen-TEL-Korpus vorab entscheiden",
+      "expectedCommitMessageUtf8": "Tag 923: Q010-SC005 Pre-2021-Multithemen-TEL-Korpus vorab entscheiden\n",
+      "expectedIntroductionPaths": [
+        "research/early-detection-v4/q010-sc005-pre2021-multitheme-tel-corpus-decision-governance-contract-v1.json",
+        "scripts/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-v1.py",
+        "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-events-v1.jsonl",
+        "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-state-v1.json",
+        "tests/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-v1.test.js"
+      ],
+      "introductionMustBeExactFiveAdditionsDirectChildOfBase": true,
+      "gitEnvironmentPolicy": "REMOVE_ALL_INHERITED_GIT_STAR_CASE_INSENSITIVE_THEN_SET_CONTROLLED_NOSYSTEM_AND_EMPTY_GLOBAL",
+      "gitReplaceObjectsPolicy": "ALL_GIT_CALLS_USE_NO_REPLACE_OBJECTS_AND_REFS_REPLACE_MUST_BE_EMPTY",
+      "gitConfigPolicy": "EFFECTIVE_SHOW_ORIGIN_SHOW_SCOPE_SYSTEM_GLOBAL_DISABLED_LOCAL_AND_WORKTREE_EXACT_ALLOWLIST_COMMAND_OVERRIDES_EXACT_NO_PROCESS_TLS_URL_OR_HELPER_SURFACE",
+      "foreignUntrackedPathsIgnoredButNeverIntroduced": true,
+      "gitWorktreeDir": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\.git\\worktrees\\form25-v2-promotion-20260812",
+      "gitLocalConfigFile": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\.git\\config",
+      "gitWorktreeConfigFile": "C:\\Users\\Anwender\\OneDrive\\Dokumente\\GitHub\\screener-data\\.git\\worktrees\\form25-v2-promotion-20260812\\config.worktree"
+    },
+    "parentTag922Binding": {
+      "commit": "c40c879070ac05b1aac11ab7c8f52b1dcc8cc375",
+      "parentCommit": "d1768fe86422287b39fdf7b13531a8336cfe5f9b",
+      "subject": "Tag 922: Q010-SC004 AI-Methodenpfad pausieren",
+      "committedAtUtc": "2026-08-14T11:23:07Z",
+      "introducedBlobBindings": [
+        {
+          "path": "research/early-detection-v4/q010-sc004-methods-path-deferred-governance-contract-v1.json",
+          "gitBlobSha1": "32d274435e2d4df096ea007844bb9fe934b93a02",
+          "rawSha256": "99104f1615ba2d5e4f4adfc1a8353ab6cbd01c981be8eeece36dd1c9ad5bbe56",
+          "rawBytes": 10251
+        },
+        {
+          "path": "scripts/early-detection-q010-sc004-methods-path-deferred-v1.py",
+          "gitBlobSha1": "820f0ded36452fa99df1418e251c482518b7f639",
+          "rawSha256": "19795c63e0db1fd2ec785aaf3f3fa0975f4ef0017861b2c19c1a6713ac3fac03",
+          "rawBytes": 45688
+        },
+        {
+          "path": "state/early-detection-q010-sc004-methods-path-deferred-events-v1.jsonl",
+          "gitBlobSha1": "46dbc4307583419fcbb28eb4d66ead12b6edd080",
+          "rawSha256": "a8152fab07f21908e15f90de435ae3eb99c30c1b0965e5bc36d159c10d782371",
+          "rawBytes": 2141
+        },
+        {
+          "path": "state/early-detection-q010-sc004-methods-path-deferred-state-v1.json",
+          "gitBlobSha1": "aeaf28f713d2e3343962cc95159be45d000a7d93",
+          "rawSha256": "893628622b5cd010918e4b6e8668f892b5d3c63f8854a63b6b80b3fe0a2ddb56",
+          "rawBytes": 2930
+        },
+        {
+          "path": "tests/early-detection-q010-sc004-methods-path-deferred-v1.test.js",
+          "gitBlobSha1": "013cce78cea710a9e5bd0f4282627f68b0fa1c66",
+          "rawSha256": "be056767376e4feb912fd78c883e17eca52e264c7831b3f8d543d86fc495ed15",
+          "rawBytes": 9377
+        }
+      ]
+    },
+    "tag911PriorGovernanceBinding": {
+      "commit": "ba90828892932147c93afe2040498116982bd416",
+      "parentCommit": "d6567c86e5ccba9f0a4d904113b2e2a9d06ef2ff",
+      "subject": "Tag 911: Früherkennungskern operativ priorisieren",
+      "committedAtUtc": "2026-08-13T20:37:18Z",
+      "path": "state/early-detection-free-source-state-v23.json",
+      "gitBlobSha1": "167566f732f4e2519909f72905cc8cfe36b453ce",
+      "rawSha256": "29d40b8d2a34c8d2377b086ea92154ddbc41a72670bff79bd9b41922a1cb5297",
+      "rawBytes": 52300,
+      "sourceJsonPointer": "operationalProjection.originalV4",
+      "originalV4Protocol": "FEM-SEC-US@1.2.0",
+      "originalV4GreenOfficialGates": 2,
+      "originalV4OfficialGateCount": 13,
+      "originalV4Complete": false,
+      "originalV4ResultComputationAllowed": false,
+      "originalV4OutcomesAccessed": false
+    },
+    "tag914CarriedFrameBinding": {
+      "binding": {
+        "commit": "2d744159e4a001bfe1e2ff5b9d31113cbc347487",
+        "parentCommit": "504018d8bfd0fe5589c37be42e8c8b8c464fec9b",
+        "subject": "Tag 914: Q010-DMV-Korpus point-in-time einfrieren",
+        "committedAtUtc": "2026-08-13T22:12:39Z",
+        "introducedBlobBindings": [
+          {
+            "path": "reports/early-detection/q010-sc001-ca-dmv-av-2015-tel-v1.json",
+            "gitBlobSha1": "2139337fc9a061e1aa0c9e85f4e4ff938d9815ef",
+            "rawSha256": "fecbcf29d38176e6218fe4e1cd7de33690889feedd6930f2a7ec4501fd1aee3d",
+            "rawBytes": 14382
+          },
+          {
+            "path": "research/early-detection-v4/q010-sc001-ca-dmv-av-2015-corpus-contract-v1.json",
+            "gitBlobSha1": "747795d620f5a5d8e10b008550f0df424ca0fc34",
+            "rawSha256": "2cedda656f45d00f20d3b47b738a21ece418be44f9cbaefb1c7cf8f56fa62305",
+            "rawBytes": 30753
+          },
+          {
+            "path": "scripts/early-detection-q010-sc001-corpus-v1.py",
+            "gitBlobSha1": "037c91773d19b9e137f2a2aa3be6ba1241b71dda",
+            "rawSha256": "ba927192e6eb651c4df4b650f0163af1001e256503ffc1a85358aae2a1ed75d3",
+            "rawBytes": 37222
+          },
+          {
+            "path": "state/early-detection-q010-sc001-source-events-v1.jsonl",
+            "gitBlobSha1": "36c18e1e3b543b667eb0357982c39d9e32b5f056",
+            "rawSha256": "4bc5010eb446f53c8efd3a8114f462f5ec87b768dffc83348ce437070aeeffa2",
+            "rawBytes": 995
+          },
+          {
+            "path": "tests/early-detection-q010-sc001-corpus-v1.test.js",
+            "gitBlobSha1": "74b3a1f7f7b4dadcb48e5f51e4ab64e743cce875",
+            "rawSha256": "a89a02544837347200d9d41b8574eb5a1518d105b8628f0e8a7dd7ae4cd262cc",
+            "rawBytes": 2812
+          }
+        ],
+        "contractSelfSha256": "a1830247bb4aee1088312f2172da0c2f273e6fab9466f1f6e40ba797765d7e5b",
+        "reportSelfSha256": "21ad19897f0cffc54606ceb02ebfcd824c14c681b0ba6a2b1b9d75d7cbbe5651",
+        "sourceManifest12CanonicalSha256": "27667a68c102d7cb3918465e1c0e519e583603000c9c656db66b65841e9730cf",
+        "dmvSourceManifest8CanonicalSha256": "5aff46f698d8510f764e0a3517d518d3c6dd8fff945bddc02d92709b02279e85",
+        "frozenTreatmentPopulationCanonicalSha256": "4717b3847f11a5e3e05e9290890c6ceab493d3197b2ef5b9dfd75cb0ee0ceffd",
+        "frozenPopulationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
+        "frozenPopulationCount": 7
+      },
+      "sourceRows": [
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-BOSCH",
+          "reportSourceId": "SRC-CA-DMV-BOSCH-2015",
+          "reportedLegalName": "Bosch, LLC",
+          "signalEligible": false
+        },
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-DELPHI",
+          "reportSourceId": "SRC-CA-DMV-DELPHI-2015",
+          "reportedLegalName": "Delphi Automotive Systems, LLC",
+          "signalEligible": false
+        },
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-GOOGLE",
+          "reportSourceId": "SRC-CA-DMV-GOOGLE-2015",
+          "reportedLegalName": "Google Auto, LLC",
+          "signalEligible": false
+        },
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-NISSAN",
+          "reportSourceId": "SRC-CA-DMV-NISSAN-2015",
+          "reportedLegalName": "Nissan North America, Inc",
+          "signalEligible": false
+        },
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-MERCEDES",
+          "reportSourceId": "SRC-CA-DMV-MERCEDES-2015",
+          "reportedLegalName": "Mercedes-Benz Research & Development North America, Inc",
+          "signalEligible": false
+        },
+        {
+          "cik": "0001318605",
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "effectiveFrom": "2010-06-29T00:00:00Z",
+          "effectiveTicker": "TSLA",
+          "effectiveTo": null,
+          "entityId": "CIK0001318605",
+          "exchangeMic": "XNAS",
+          "identityEvidenceSourceIds": [
+            "SRC-SEC-TESLA-2014-10K-INDEX",
+            "SRC-SEC-TESLA-2014-10K"
+          ],
+          "identityKnownAtUtc": "2015-03-23T03:47:35Z",
+          "identityStatus": "PIT_EXACT_SINGLE_LISTING_RESOLVED",
+          "listingId": "CIK0001318605-XNAS-TSLA-2015",
+          "populationRowId": "DMV2015-TESLA",
+          "reportSourceId": "SRC-CA-DMV-TESLA-2015",
+          "reportedLegalName": "Tesla Motors, Inc.",
+          "securityId": "CIK0001318605-COMMON",
+          "signalEligible": true
+        },
+        {
+          "dimensionsAttempted": [
+            "T",
+            "E",
+            "L"
+          ],
+          "entityId": null,
+          "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+          "identityStatus": "REJECTED_HOLD",
+          "listingId": null,
+          "populationRowId": "DMV2015-VOLKSWAGEN",
+          "reportSourceId": "SRC-CA-DMV-VOLKSWAGEN-2015",
+          "reportedLegalName": "Volkswagen Group of America, Inc.",
+          "signalEligible": false
+        }
+      ],
+      "sourceRowsCanonicalBytes": 2592,
+      "sourceRowsCanonicalSha256": "86cbf51e9181c92c91dbca66f06eb86f11bccd49dfb041f556c2b67510759b2e",
+      "rowOrderExact": [
+        "DMV2015-BOSCH",
+        "DMV2015-DELPHI",
+        "DMV2015-GOOGLE",
+        "DMV2015-NISSAN",
+        "DMV2015-MERCEDES",
+        "DMV2015-TESLA",
+        "DMV2015-VOLKSWAGEN"
+      ],
+      "carriedThemeOrdinal": 13,
+      "carriedThemeLabel": "autonomous driving",
+      "carriedDisposition": "COMPLETE_OFFICIAL_REGISTER_MANIFEST",
+      "populationCount": 7,
+      "eligibleRowCountN": 1,
+      "eligiblePopulationRowId": "DMV2015-TESLA",
+      "eligibleIdentityStatus": "PIT_EXACT_SINGLE_LISTING_RESOLVED",
+      "identityHoldRowCount": 6,
+      "identityHoldStatus": "REJECTED_HOLD",
+      "identityHoldReason": "EXACT_PIT_LISTED_PARENT_OR_PRIMARY_LISTING_UNRESOLVED",
+      "newDiscoveryRequestCount": 0,
+      "newSourceRequestCount": 0,
+      "adapterRule": "ORDERED_DEEP_COPY_OF_TAG914_FROZEN_TREATMENT_POPULATION_ROWS_NO_RENAME_NO_LOOKUP",
+      "historicalDiscoveryBudgetComparableToNewFrames": false,
+      "carriedTag914FrameReopenForbidden": true
+    },
+    "protocolBinding": {
+      "preregistrationPath": "protocol/early-detection/1.2.0/preregistration.json",
+      "preregistrationGitBlobSha1": "807a4044e4f3797dd5f1ce10829cee2a58b3b897",
+      "preregistrationRawSha256": "894caf1c5ba0a65a17d1f252c62514dcf169168de14d78834e38811712d1e18f",
+      "preregistrationRawBytes": 46985,
+      "readmePath": "protocol/early-detection/1.2.0/README.md",
+      "readmeGitBlobSha1": "ed0d9fcb5d9780a31ad5bed393b80887ae3afd69",
+      "readmeRawSha256": "4f829f6cc854d86f9cc49b6779ba85707d2a910a9c5507376a05cd9bb7c07de1",
+      "readmeRawBytes": 4812,
+      "v23Path": "state/early-detection-free-source-state-v23.json",
+      "v23GitBlobSha1": "167566f732f4e2519909f72905cc8cfe36b453ce",
+      "v23RawSha256": "29d40b8d2a34c8d2377b086ea92154ddbc41a72670bff79bd9b41922a1cb5297",
+      "v23RawBytes": 52300
+    },
+    "decision": {
+      "subchunkId": "Q010-SC005-PRE2021-MULTITHEME-TEL-CORPUS-DECISION",
+      "decisionStatus": "DECISION_RECORDED_NO_START",
+      "workDisposition": "DEFERRED_TO_SEPARATE_PROSPECTIVE_DECISIONS",
+      "finalPolicyMaterializedAtUtc": "2026-08-14T19:10:12.3291443Z",
+      "decisionEffectiveOnlyAfterRemoteIntroduction": true,
+      "scope": "BOUNDED_ALL_15_PREREGISTERED_THEME_DISCOVERY_FRAME_NOT_WORLD_OR_THEME_CENSUS",
+      "nextDecisionId": "Q010-SC005-FREE-OFFICIAL-ROUTE-DISCOVERY-DECISION",
+      "nextTag": 924,
+      "nextDecisionConstructionScope": "CONSTRUCT_SEPARATE_SYMMETRIC_FREE_OFFICIAL_ROUTE_DISCOVERY_DECISION_ONLY",
+      "nextDecisionConstructionAuthorizedPreIntroduction": false,
+      "nextDecisionConstructionAuthorizedPostIntroduction": true,
+      "startAuthorized": false,
+      "workStarted": false,
+      "sourceAccessAuthorized": false,
+      "routeDiscoveryAuthorized": false,
+      "censusDiscoveryAuthorized": false,
+      "censusManifestFreezeAuthorized": false,
+      "captureAuthorized": false,
+      "codingAuthorized": false,
+      "aggregationAuthorized": false,
+      "packetAccessAuthorized": false,
+      "aiRunAuthorized": false,
+      "sourceRequests": 0,
+      "routeDiscoveryRequests": 0,
+      "censusRequests": 0,
+      "captureRequests": 0,
+      "aiRuns": 0,
+      "assessedAiRunPathSlotCount": 56,
+      "humanAgreementGate": "OPEN",
+      "currentKnowledgeContaminationEliminated": false,
+      "outcomeBlindClaimed": false,
+      "outcomeInputPolicy": "NO_NEW_OUTCOME_ARTIFACTS_OPENED_EXISTING_PREREG_OUTCOME_CATEGORIES_AUDIT_ONLY_NOT_OPERATIONAL",
+      "preexistingPreregisteredOutcomeCategoryLabelsPresent": true,
+      "operationalUseOfPreregisteredOutcomeCategories": false,
+      "epistemicStatus": "PSEUDO_PROSPECTIVE_HISTORICAL_RECONSTRUCTION_NEVER_FULLY_BLIND",
+      "prospectivePitVerified": false,
+      "newPriceReturnGqsOrOutcomeArtifactsAccessed": false,
+      "currentIdentifiersAccessed": false,
+      "candidateState": null,
+      "signalState": null,
+      "telFinalState": null,
+      "timeCapsuleState": null,
+      "levelsAssigned": false,
+      "sourceRecordCount": 0,
+      "systemEstablished": false,
+      "scientificCredit": "NONE",
+      "originalV4Protocol": "FEM-SEC-US@1.2.0",
+      "originalV4GreenOfficialGates": 2,
+      "originalV4OfficialGateCount": 13,
+      "originalV4Complete": false,
+      "originalV4ResultComputationAllowed": false,
+      "originalV4OutcomesAccessed": false
+    },
+    "framePolicy": {
+      "availableOfficialRegisterCorpusTargetDefined": true,
+      "availableOfficialRegisterCorpusMaterialized": false,
+      "frameClaim": "BOUNDED_AVAILABLE_OFFICIAL_REGISTER_CORPUS_TARGET_ONLY",
+      "worldCensusClaimed": false,
+      "themeCensusClaimed": false,
+      "availabilityBiasAcknowledged": true,
+      "generalizabilityClaimed": false,
+      "themeCount": 15,
+      "roster": [
+        {
+          "ordinal": 1,
+          "themeLabel": "cloud computing",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 2,
+          "themeLabel": "smartphones and mobile ecosystems",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 3,
+          "themeLabel": "semiconductors and AI infrastructure",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 4,
+          "themeLabel": "solar and batteries",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 5,
+          "themeLabel": "shale gas and LNG",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 6,
+          "themeLabel": "cybersecurity",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 7,
+          "themeLabel": "GLP-1",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 8,
+          "themeLabel": "industrial automation",
+          "preregCategoryAuditOnly": "successAndMixed"
+        },
+        {
+          "ordinal": 9,
+          "themeLabel": "3D printing",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 10,
+          "themeLabel": "metaverse",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 11,
+          "themeLabel": "hydrogen mobility",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 12,
+          "themeLabel": "cannabis",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 13,
+          "themeLabel": "autonomous driving",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 14,
+          "themeLabel": "earlier cleantech waves",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        },
+        {
+          "ordinal": 15,
+          "themeLabel": "selected genomics and biotechnology hype",
+          "preregCategoryAuditOnly": "failuresOrLongDelays"
+        }
+      ],
+      "rosterCanonicalBytes": 1437,
+      "rosterCanonicalSha256": "5acb2252c2a35787ae6902b01a8fe8e7c10a52a60c6f7c5609487f1e153f96b5",
+      "preregCategoryCountsAuditOnly": {
+        "successAndMixed": 8,
+        "failuresOrLongDelays": 7
+      },
+      "preregCategoriesAuditOnly": true,
+      "preregCategoriesOperationallyIgnored": true,
+      "carriedTag914ThemeOrdinal": 13,
+      "unresolvedThemeOrdinals": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15
+      ],
+      "unresolvedThemeCount": 14,
+      "unresolvedThemeAuthorityStatus": "UNASSIGNED_PENDING_FUTURE_DECISION",
+      "commonEraStartUtc": "2009-01-01T00:00:00Z",
+      "commonEraEndUtc": "2020-12-31T23:59:59Z",
+      "knownAtPolicy": "EXACT_SOURCE_CLASS_REQUIRED_AVAILABILITY_KNOWN_AT_WITH_TIMEZONE_AND_NOT_AFTER_CUTOFF",
+      "retrievedAtAndCapturedAtSeparateFromKnownAt": true,
+      "missingTimezoneDisposition": "HOLD_EXACT_PUBLICATION_TIME_UNPROVEN",
+      "knownAtAfterCutoffDisposition": "HOLD_KNOWN_AT_AFTER_CUTOFF",
+      "routeDiscoveryCaps": "SAME_POSITIVE_NUMERIC_CAP_FOR_EACH_UNRESOLVED_THEME_NO_TRANSFER_NO_RETRY_NO_EARLY_STOP",
+      "carriedFrameNewDiscoveryRequests": 0,
+      "unresolved14DiscoveryAsymmetryForbidden": true,
+      "carriedHistoricalDiscoveryAsymmetryAcknowledgedAndExemptOnlyFromDiscoveryBudgetComparison": true,
+      "allCompleteFrameCaptureAsymmetryForbidden": true,
+      "directOfficialTransportOnly": true,
+      "officialFreePrimaryPayloadRequiredForAcceptedCaptureOrFutureSourceRecordEligibility": true,
+      "archiveCdxSecondaryUse": "LOCATOR_ONLY_NO_ACCEPTANCE_NO_TEL_NO_CREDIT",
+      "all15TerminalBeforeCaptureDecision": true,
+      "minimumEligibleCompleteThemesK": 3,
+      "eligibleCompleteThemeRule": "COMPLETE_OFFICIAL_REGISTER_MANIFEST_AND_ELIGIBLE_ROW_COUNT_N_AT_LEAST_1",
+      "allCompleteFramesIncludedWithoutSelectionOrReplacement": true,
+      "zeroRowCompleteFramesRemainVisibleAndContribute_ONE_SHARED_T_ONLY_BUT_NOT_K": true,
+      "unitTopology": "FOR_EACH_COMPLETE_THEME_ONE_SHARED_T_PLUS_ONE_E_AND_ONE_L_PER_ELIGIBLE_CENSUS_ROW",
+      "unitCountFormula": "U=SUM_OVER_ALL_COMPLETE_THEMES(1+2*N_i)",
+      "captureScheduledSlotCapFormula": "3*U",
+      "captureNetworkRequestCapFormula": "NETWORK_REQUESTS<=3*U",
+      "captureAcceptedPayloadCapFormula": "ACCEPTED_PAYLOAD_CAP=2*U",
+      "perUnitBudget": "THREE_FIXED_ORDERED_REQUEST_SLOTS_ACCEPT_FIRST_TWO_VALID_PRIMARY_PAYLOADS_THIRD_VALID_IS_CAP_EXHAUSTED_NO_RETRY_TRANSFER_OR_EARLY_STOP",
+      "tPseudoreplicationForbidden": true,
+      "controlsStatus": "HOLD_CONTROL_FRAME_NOT_FROZEN",
+      "controlsRemainVisibleNonHealing": true,
+      "controlsBlockCandidateSignalTelTimeCapsuleScienceAndFinalSymmetricStudyCorpus": true,
+      "controlsDoNotBlockOperationalAvailableManifestStage": true,
+      "operationalManifestStageTarget": "K_ELIGIBLE_COMPLETE_THEME_COUNT_GTE3",
+      "operationalManifestStageStatusIfMet": "ALL_15_DISCOVERY_TERMINAL_AVAILABLE_OFFICIAL_REGISTER_MANIFEST_STAGE_COMPLETE_UNCODED_NO_CREDIT_WITH_TYPED_HOLDS_VISIBLE",
+      "terminalHoldRuleForInsufficientEligibleCompleteThemes": "HOLD_FEWER_THAN_THREE_ELIGIBLE_COMPLETE_OFFICIAL_FRAMES_IFF_COUNT(THEME_DISPOSITION_EQ_COMPLETE_OFFICIAL_REGISTER_MANIFEST_AND_ELIGIBLE_ROW_COUNT_N_GTE_1)_LT_3"
+    },
+    "terminalHoldCodes": [
+      "HOLD_NO_PREAUTHORIZED_OFFICIAL_ROUTE",
+      "HOLD_NO_COMPLETE_OFFICIAL_FRAME",
+      "HOLD_FRAME_SCOPE_AMBIGUOUS",
+      "HOLD_OFFICIAL_FRAME_CONFLICT",
+      "HOLD_EXACT_PUBLICATION_TIME_UNPROVEN",
+      "HOLD_KNOWN_AT_AFTER_CUTOFF",
+      "HOLD_SOURCE_CLASS_OR_AUTHORITY_MISMATCH",
+      "HOLD_IDENTITY_UNRESOLVED",
+      "HOLD_BUDGET_EXHAUSTED",
+      "HOLD_CONTROL_FRAME_NOT_FROZEN",
+      "HOLD_FORBIDDEN_TERM_OR_CURRENT_IDENTIFIER_EXPOSURE",
+      "HOLD_NOT_REQUESTED_GLOBAL_SAFETY_STOP",
+      "HOLD_FEWER_THAN_THREE_ELIGIBLE_COMPLETE_OFFICIAL_FRAMES",
+      "HOLD_NO_ACCEPTED_PRIMARY_T",
+      "HOLD_NO_ACCEPTED_PRIMARY_E",
+      "HOLD_NO_ACCEPTED_PRIMARY_L"
+    ],
+    "futureGovernance": {
+      "tag923AuthorizesOnly": "CONSTRUCTION_OF_TAG924_ROUTE_DISCOVERY_DECISION_AFTER_TAG923_REMOTE_POST",
+      "tag923AuthorizesNoSourcePacketCensusCaptureCodingAggregationOrAiRun": true,
+      "tag923FirstLinkBootstrap": {
+        "prospectivePriorRemoteReceiptAvailable": false,
+        "priorRemoteReceiptArtifact": null,
+        "bootstrapAuthority": "EXACT_TAG922_COMMIT_PARENT_SUBJECT_TIME_AND_FIVE_GIT_BLOB_BINDINGS",
+        "inventedRetroactiveTag922RemoteReceiptForbidden": true
+      },
+      "rolePhaseCount": 10,
+      "rolePhases": [
+        {
+          "ordinal": 1,
+          "role": "ROUTE_DISCOVERY_DECISION",
+          "priorRemoteRole": "TAG923_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ALL_FALSE_ZERO_NULL_NONE"
+        },
+        {
+          "ordinal": 2,
+          "role": "ROUTE_DISCOVERY_START",
+          "priorRemoteRole": "ROUTE_DISCOVERY_DECISION_REMOTE",
+          "mayAuthorize": [
+            "FREE_OFFICIAL_ROUTE_DISCOVERY_FOR_UNRESOLVED_14_ONLY"
+          ],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ONLY_ROUTE_SOURCE_ACCESS_MAY_TRANSITION_TRUE"
+        },
+        {
+          "ordinal": 3,
+          "role": "ROUTE_DISCOVERY_TERMINAL",
+          "priorRemoteRole": "ROUTE_DISCOVERY_START_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "NO_TEL_NO_CANDIDATE_NO_CREDIT"
+        },
+        {
+          "ordinal": 4,
+          "role": "CENSUS_DISCOVERY_DECISION",
+          "priorRemoteRole": "ROUTE_DISCOVERY_TERMINAL_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ALL_FALSE_ZERO_NULL_NONE"
+        },
+        {
+          "ordinal": 5,
+          "role": "CENSUS_DISCOVERY_START",
+          "priorRemoteRole": "CENSUS_DISCOVERY_DECISION_REMOTE",
+          "mayAuthorize": [
+            "OFFICIAL_FRAME_CENSUS_ONLY"
+          ],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ONLY_CENSUS_SOURCE_ACCESS_MAY_TRANSITION_TRUE"
+        },
+        {
+          "ordinal": 6,
+          "role": "CENSUS_DISCOVERY_TERMINAL",
+          "priorRemoteRole": "CENSUS_DISCOVERY_START_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "NO_TEL_NO_CANDIDATE_NO_CREDIT"
+        },
+        {
+          "ordinal": 7,
+          "role": "CONTEMPORANEOUS_TERM_FREEZE",
+          "priorRemoteRole": "CENSUS_DISCOVERY_TERMINAL_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "NO_NEW_SOURCE_NO_TEL_NO_CANDIDATE_NO_CREDIT"
+        },
+        {
+          "ordinal": 8,
+          "role": "CAPTURE_DECISION",
+          "priorRemoteRole": "CONTEMPORANEOUS_TERM_FREEZE_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ALL_FALSE_ZERO_NULL_NONE"
+        },
+        {
+          "ordinal": 9,
+          "role": "CAPTURE_START",
+          "priorRemoteRole": "CAPTURE_DECISION_REMOTE",
+          "mayAuthorize": [
+            "EQUAL_BUDGET_CAPTURE_ONLY"
+          ],
+          "mustBeRemoteBeforeNext": true,
+          "scienceAndAccessLocks": "ONLY_CAPTURE_SOURCE_ACCESS_MAY_TRANSITION_TRUE"
+        },
+        {
+          "ordinal": 10,
+          "role": "CAPTURE_TERMINAL",
+          "priorRemoteRole": "CAPTURE_START_REMOTE",
+          "mayAuthorize": [],
+          "mustBeRemoteBeforeNext": false,
+          "scienceAndAccessLocks": "NO_CODING_NO_TEL_NO_CANDIDATE_NO_CREDIT"
+        }
+      ],
+      "decisionToStartImmutableBytesRule": "START_MUST_EMBED_BYTE_IDENTICAL_FULL_CANONICAL_DECISION_AND_REMOTE_RECEIPT_ARTIFACT_WITH_NO_DECISION_FIELD_MUTATION_AUTHORIZATION_EXISTS_ONLY_IN_SEPARATE_START_ENVELOPE",
+      "runtimeSchemaCountInTag923": 0,
+      "runtimeMechanicsClaimedImplementedByTag923": false,
+      "crossPhaseObligationCount": 9,
+      "crossPhaseObligationsExact": [
+        "EXACT_ROLE_PHASE_APPEND_ONLY_REMOTE_TOPOLOGY_WITH_PHASE_SPECIFIC_TERMINAL_BRANCHES",
+        "EACH_DECISION_REMOTE_BEFORE_SEPARATE_START_REMOTE_BEFORE_ANY_AUTHORIZED_ACCESS",
+        "EACH_START_EMBEDS_BYTE_IDENTICAL_CANONICAL_DECISION_AND_PRIOR_REMOTE_RECEIPT_WITH_AUTHORIZATION_ONLY_IN_SEPARATE_START_ENVELOPE",
+        "EXACT_PUBLIC_CONTENT_ADDRESSED_PRIOR_REMOTE_RECEIPT_ARTIFACTS_FROM_TAG923_FORWARD_AND_ACYCLIC_NO_NEXT_RECEIPT_SEAL_RULE",
+        "EXACT_FIVE_PATH_DIRECT_CHILD_GIT_INTRODUCTIONS_WITH_FULL_PARENT_BLOB_EQUALITY_RAW_COMMIT_TIME_AND_SUBJECT_PLUS_LF_ONLY",
+        "STRICT_DUPLICATE_KEY_FREE_EXACT_KEY_VALUE_SCHEMAS_WITH_ALIAS_FREE_GENERATION_AND_REACHABILITY_GATES",
+        "PUBLIC_GOVERNANCE_STATE_DERIVED_ONLY_BY_EXACT_EVENT_PREFIX_REPLAY_WITH_ALL_NO_CREDIT_LOCKS",
+        "CONTENT_ADDRESSED_IMPLEMENTATION_ARTIFACTS_BIND_ACTIVE_CALLABLE_BYTES_NO_DYNAMIC_IMPORT_EVAL_OR_DECLARED_HASH_ONLY",
+        "CANDIDATE_SIGNAL_TEL_TIMECAPSULE_PIT_SYSTEM_AND_SCIENTIFIC_CREDIT_REMAIN_FALSE_NULL_OR_NONE_AT_EVERY_DISCOVERY_AND_CAPTURE_PHASE"
+      ],
+      "tag924RouteOnlyObligationCount": 10,
+      "tag924RouteOnlyObligationsExact": [
+        "UNRESOLVED_14_EXACT_ORDINAL_LABEL_ROSTER_WITH_CATEGORIES_AUDIT_ONLY",
+        "SAME_POSITIVE_ROUTE_DISCOVERY_SLOT_CAP_NO_TRANSFER_RETRY_SUBSTITUTION_OR_EARLY_STOP",
+        "COMPLETE_ROUTE_DISCOVERY_SLOT_PLAN_WITH_EXACT_METHOD_HEADERS_REQUEST_BYTES_TRANSPORT_AND_ANONYMOUS_OFFICIAL_FREE_RULES",
+        "ROUTE_ONLY_REQUEST_RESPONSE_RAW_PROJECTION_JOIN_MATERIAL_MANIFEST_AND_CATALOG_AGGREGATION_SCHEMAS",
+        "ROUTE_ONLY_DURABILITY_ADMISSION_MUTEX_CRASH_RESUME_TRUSTED_UNTRUSTED_INCIDENT_AND_TERMINAL_SCHEMAS",
+        "ROUTE_DISCOVERY_EXACT_EQUAL_CAP_PLANS_MATERIAL_JOINS_CATALOG_AGGREGATION_AND_CONFLICT_PRECEDENCE",
+        "ROUTE_IMPLEMENTATION_ARTIFACTS_AND_EXECUTABLE_HASHES_FROZEN_AND_MUTATION_TESTED",
+        "EXACT_TAG925_ROUTE_START_INTRODUCTION_AND_REMOTE_RECEIPT_POLICY",
+        "NO_SOURCE_ACCESS_BEFORE_TAG925_ROUTE_START_REMOTE",
+        "SOURCE_FREE_MATERIALIZATION_FAILURE_REQUIRES_HOLD_NO_START_NO_SOURCE_ACCESS"
+      ],
+      "censusDecisionAfterRouteTerminalObligationCount": 5,
+      "censusDecisionAfterRouteTerminalObligationsExact": [
+        "MAY_BE_FROZEN_ONLY_AFTER_ROUTE_DISCOVERY_TERMINAL_REMOTE_AND_BEFORE_SEPARATE_CENSUS_START_REMOTE",
+        "CENSUS_EXACT_REQUEST_PLAN_CONTINUATION_TEMPLATE_MATERIALIZER_PROJECTION_ROWS_DEDUP_CONFLICT_EXHAUSTION_AND_MANIFEST_JOINS",
+        "CENSUS_RUNTIME_DURABILITY_ADMISSION_INCIDENT_TERMINAL_AND_IMPLEMENTATION_ARTIFACTS_FROZEN_IN_CENSUS_DECISION_NOT_TAG924",
+        "ALL_15_TERMINAL_LEDGER_WITH_CARRIED_TAG914_AND_COMPLETE_OR_TYPED_HOLD_FOR_EVERY_THEME",
+        "NO_CENSUS_SOURCE_ACCESS_BEFORE_CENSUS_START_REMOTE"
+      ],
+      "captureDecisionAfterCensusTerminalAndTermFreezeObligationCount": 8,
+      "captureDecisionAfterCensusTerminalAndTermFreezeObligationsExact": [
+        "MAY_BE_FROZEN_ONLY_AFTER_CENSUS_TERMINAL_REMOTE_AND_CONTEMPORANEOUS_TERM_FREEZE_REMOTE",
+        "TERM_DERIVATION_ONLY_FROM_CUTOFF_ELIGIBLE_OFFICIAL_FRAME_METADATA_NO_MANUAL_LLM_CURRENT_OR_OUTCOME_ADDITION",
+        "CAPTURE_EXACT_ALL_COMPLETE_FRAME_UNIT_AND_THREE_SLOT_BIJECTION_RAW_EVIDENCE_FIRST_TWO_VALID_ACCEPTANCE_AND_TERMINAL_EQUATIONS",
+        "PIT_TIME_FIELDS_SEPARATE_PUBLICATION_AVAILABILITY_EFFECTIVE_RETRIEVAL_WITH_KNOWN_AT_MAX_VERIFIED_PUBLIC_AVAILABILITY",
+        "ANONYMOUS_OFFICIAL_FREE_TRANSPORT_SAFE_HEADER_URI_HOST_SCHEME_PORT_PATH_AND_NO_CREDENTIAL_SURFACE",
+        "SOURCE_AGNOSTIC_PREACCESS_SELECTION_REDACTION_IDENTITY_DENYLIST_HIDING_COMMITMENTS_AND_NO_SMALL_SPACE_PUBLIC_ORACLE",
+        "CAPTURE_RUNTIME_DURABILITY_ADMISSION_INCIDENT_TERMINAL_AND_IMPLEMENTATION_ARTIFACTS_FROZEN_IN_CAPTURE_DECISION_NOT_TAG924",
+        "CAPTURE_DECISION_CAPTURE_START_AND_CAPTURE_TERMINAL_ARE_THREE_SEPARATE_REMOTE_ROLES"
+      ],
+      "tag924MustNotFreezeCensusOrCaptureRuntimeSchemas": true,
+      "allTag924RouteObligationsMustBeMaterializedAndMutationTestedBeforeTag925StartRemote": true,
+      "failureToMaterializeAnyCurrentPhaseObligationDisposition": "HOLD_NO_START_NO_SOURCE_ACCESS",
+      "runtimeSchemasMayBeFrozenOnlyProspectivelyBeforeTheirPhase": true
+    },
+    "incumbentLocks": {
+      "sc001Tag914Commit": "2d744159e4a001bfe1e2ff5b9d31113cbc347487",
+      "sc001HoldEffective": true,
+      "sc002Tag917Commit": "f606124109b71d20f3ecd555f501afb84d95446c",
+      "sc002HoldEffective": true,
+      "sc003Tag920Commit": "8cca973274361b14dc0749f34b852d5c4423785a",
+      "sc003Tag921Commit": "d1768fe86422287b39fdf7b13531a8336cfe5f9b",
+      "sc003TypedGlobalHoldCompletedEffective": true,
+      "sc004Tag922Commit": "c40c879070ac05b1aac11ab7c8f52b1dcc8cc375",
+      "sc004DecisionDeferredNoStartEffective": true,
+      "humanAgreementGate": "OPEN",
+      "ai56RunAuthorized": false,
+      "ai56Runs": 0,
+      "q003State": "PAUSED_NONELIGIBLE",
+      "q004State": "PAUSED_NONELIGIBLE",
+      "q005State": "PAUSED_NONELIGIBLE"
+    }
+  },
+  "eventContract": {
+    "path": "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-events-v1.jsonl",
+    "eventCount": 1,
+    "eventId": "Q010-SC005-EVT-00000001",
+    "eventType": "PRE2021_ALL15_DECISION_RECORDED",
+    "eventRawSha256": "d558c988b280cf8294e6ac6ada7286f38f6f559c578d6a520529ea0ef71879ae",
+    "eventRawBytes": 897,
+    "eventSha256": "987d863e28419dc2c4e51488dc2157800e4427b489b052b947e22d4abd12cc66"
+  },
+  "stateContract": {
+    "path": "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-state-v1.json",
+    "stateRawSha256": "073d530a2fd07c6b7ca9240cc71fb702ed24ebdfa17cba69d0135b4084b02388",
+    "stateRawBytes": 1773,
+    "stateSelfSha256": "f440b41f7fb4e6775189e39b3604f842934589b0dd56792d04f19707eec3d53f"
+  },
+  "hashPolicy": {
+    "canonicalJson": "UTF8_SORT_KEYS_NO_WHITESPACE_SEPARATORS_COMMA_COLON_ENSURE_ASCII_FALSE",
+    "contractCoreNormalization": "SET_CORE_SELF_NULL_AND_EVENT_STATE_CONTENT_HASH_FIELDS_NULL",
+    "selfHashNormalization": "SET_OWN_SELF_FIELD_NULL",
+    "duplicateJsonKeysForbidden": true,
+    "nonFiniteJsonNumbersForbidden": true,
+    "eventLineRule": "ONE_CANONICAL_JSON_OBJECT_PLUS_LF"
+  },
+  "implementation": {
+    "controllerPath": "scripts/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-v1.py",
+    "controllerRawSha256": "8fa420d12439184fe6f27466326fd88a5ea4737002f00eef4305e615274908a3",
+    "eventsPath": "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-events-v1.jsonl",
+    "eventsRawSha256": "d558c988b280cf8294e6ac6ada7286f38f6f559c578d6a520529ea0ef71879ae",
+    "statePath": "state/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-state-v1.json",
+    "stateRawSha256": "073d530a2fd07c6b7ca9240cc71fb702ed24ebdfa17cba69d0135b4084b02388",
+    "testPath": "tests/early-detection-q010-sc005-pre2021-multitheme-tel-corpus-decision-v1.test.js",
+    "testRawSha256": "140c585a330ad7db570c4e06ab5c43205752fdcea68b88dde0bc9f04ca67c653",
+    "controllerExecutesPredecessorControllers": false,
+    "sourceRequestsDuringBootstrapVerifySelfTest": 0,
+    "routeDiscoveryRequestsDuringBootstrapVerifySelfTest": 0,
+    "censusRequestsDuringBootstrapVerifySelfTest": 0,
+    "captureRequestsDuringBootstrapVerifySelfTest": 0,
+    "aiRunsDuringBootstrapVerifySelfTest": 0
+  }
+}
