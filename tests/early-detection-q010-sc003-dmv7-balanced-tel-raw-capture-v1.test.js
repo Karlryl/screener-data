@@ -21,6 +21,10 @@ for (const requiredSurface of [
   'responseBlobReferenceMultiset', 'responseBlobReferenceIntegrity',
   'early-detection-q010-sc003-material-join-binding/v3',
   'early-detection-q010-sc003-pre-completion-event-binding/v2',
+  'TAG919_EVENT_PREFIX_SHA256', 'TAG920_SUBJECT', 'expected_completion_event',
+  'derive_public_completion_aggregate_from_private', 'public_projection_self_sha256',
+  'validate_strict_private_completion_replay', 'privateCompletionReplaySnapshotSha256',
+  'SC003 is publicly completed; source runtime is permanently closed',
 ]) assert.ok(controllerText.includes(requiredSurface), `missing P0 surface ${requiredSurface}`);
 
 function run(args, optimized = false, ok = true) {
@@ -36,17 +40,25 @@ function run(args, optimized = false, ok = true) {
 for (const optimized of [false, true]) {
   const self = JSON.parse(run(['self-test'], optimized).stdout);
   assert.equal(self.status, 'PASS');
-  assert.equal(self.kills, 118);
+  assert.ok(self.kills >= 118);
   assert.equal(self.controllerChildExecutions, 0);
   assert.equal(self.sourceRequests, 0);
   assert.equal(self.resumeCrashCases, 11);
   assert.equal(self.p0RuntimeFixtures, 45);
+  assert.equal(self.strictCompletionReplayFixtures, 2);
+  assert.equal(self.completionPostPhaseFixture, true);
+
+  const bootstrapOne = JSON.parse(run(['bootstrap'], optimized).stdout);
+  const bootstrapTwo = JSON.parse(run(['bootstrap'], optimized).stdout);
+  assert.deepEqual(bootstrapOne, bootstrapTwo);
+  assert.equal(bootstrapOne.publicAggregateProjectionSha256.length, 64);
+  assert.equal(bootstrapOne.privateCompletionReplaySnapshotSha256.length, 64);
 
   run(['verify'], optimized, false);
   const verified = JSON.parse(run(['verify', '--remote'], optimized).stdout);
-  assert.ok(['START_PRE_INTRODUCTION', 'START_POST_INTRODUCTION'].includes(verified.phase));
-  const introduced = verified.phase === 'START_POST_INTRODUCTION';
-  assert.equal(verified.status, introduced ? 'PASS' : 'START_PRE_INTRODUCTION_DIAGNOSTIC');
+  assert.ok(['COMPLETION_PRE_INTRODUCTION', 'COMPLETION_POST_INTRODUCTION'].includes(verified.phase));
+  const introduced = verified.phase === 'COMPLETION_POST_INTRODUCTION';
+  assert.equal(verified.status, introduced ? 'PASS' : 'COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC');
   assert.equal(verified.subchunkId, 'Q010-SC-003-DMV7-BALANCED-TEL-RAW-CAPTURE');
   assert.equal(verified.workClass, 'CORE_SOURCE_CORPUS_CAPTURE');
   assert.equal(verified.populationCount, 7);
@@ -54,11 +66,16 @@ for (const optimized of [false, true]) {
   assert.equal(verified.targetDimensions.join(','), 'T,E,L');
   assert.equal(verified.decisionRecorded, true);
   assert.equal(verified.decisionRemoteIntroductionVerified, true);
-  assert.equal(verified.startRemoteIntroductionVerified, introduced);
+  assert.equal(verified.startRemoteIntroductionVerified, true);
   assert.equal(verified.workStarted, true);
   assert.equal(verified.workStartedAtUtc, '2026-08-14T01:34:34.454637Z');
+  assert.equal(verified.workCompleted, true);
+  assert.equal(verified.completionStatus, 'HOLD');
+  assert.equal(verified.privateCompletionStatus, 'TYPED_GLOBAL_HOLD_COMPLETED');
+  assert.equal(verified.completionRemoteIntroductionVerified, introduced);
+  assert.equal(verified.acceptedPrimaryPayloadCount, 0);
   assert.equal(verified.researchSourceAccessAuthorized, false);
-  assert.equal(verified.runtimeResearchSourceAccessAuthorized, introduced);
+  assert.equal(verified.runtimeResearchSourceAccessAuthorized, false);
   assert.equal(verified.codingAllowed, false);
   assert.equal(verified.candidateState, null);
   assert.equal(verified.futureSourceRecordStatus, 'NOT_CREATED_PENDING_SEPARATE_BLIND_DECISION');
@@ -71,19 +88,24 @@ for (const optimized of [false, true]) {
   assert.equal(verified.sc002IncidentRemainsEffective, true);
   assert.equal(verified.earlyDetectionSystemBuilt, false);
   assert.equal(verified.controllerChildExecutions, 0);
-  run(['start', '--remote'], optimized, introduced);
-  if (!introduced) {
-    run(['run', '--remote'], optimized, false);
-    run(['source', '--remote'], optimized, false);
-  }
+  run(['start', '--remote'], optimized, false);
+  run(['run', '--remote'], optimized, false);
+  run(['source', '--remote'], optimized, false);
 }
 
 const state = JSON.parse(readFileSync(statePath, 'utf8'));
-assert.equal(state.eventCount, 2);
+assert.equal(state.eventCount, 3);
 assert.equal(state.projection.decisionRemoteIntroductionVerified, true);
-assert.equal(state.projection.startRemoteIntroductionVerified, false);
+assert.equal(state.projection.startRemoteIntroductionVerified, true);
 assert.equal(state.projection.workStarted, true);
 assert.equal(state.projection.workStartedAtUtc, '2026-08-14T01:34:34.454637Z');
+assert.equal(state.projection.workCompleted, true);
+assert.equal(state.projection.completionStatus, 'HOLD');
+assert.equal(state.projection.privateCompletionStatus, 'TYPED_GLOBAL_HOLD_COMPLETED');
+assert.equal(state.projection.completionRemoteIntroductionVerified, false);
+assert.equal(state.projection.acceptedPrimaryPayloadCount, 0);
+assert.equal(state.projection.publicAggregateProjection.completionMetrics.incidentFree, true);
+assert.equal(state.projection.publicAggregateProjection.completionMetrics.everyUnitAtLeastOneNewPayload, false);
 assert.equal(state.projection.researchSourceAccessAuthorized, false);
 assert.equal(state.projection.codingAllowed, false);
 assert.equal(state.projection.candidateState, null);

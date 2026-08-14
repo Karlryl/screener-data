@@ -2,7 +2,7 @@
   "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract/v1",
   "createdAt": "2026-08-14T00:16:11.3761192Z",
   "purpose": "Prospectively authorize one bounded CORE raw-primary-source capture across the complete frozen Tag914 DMV7 census; this decision authorizes no source access, coding, level, candidate, control or scientific claim.",
-  "contractSelfSha256": "ffbc59e57c0e85be1866572cfdcffeaa59cb8c38b4225aa805653119d1e1dbdb",
+  "contractSelfSha256": "d901b50d3bce1cdd1312a22dbdc97db97a4b9bda7df43df47bbfcc1fe88453ab",
   "repository": {
     "worktree": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\worktrees\\form25-v2-promotion-20260812",
     "branch": "codex/form25-v2-promotion-20260812",
@@ -2284,9 +2284,9 @@
   },
   "implementation": {
     "controllerPath": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py",
-    "controllerNormalizedSha256": "db57f31ee8a443c5fdee2c86bc7dc9f8158e664f45467279c2735544920c31cd",
+    "controllerNormalizedSha256": "28ce8d99856c5e5f2aafc8ddd045f429212bd06803ff19d6da958ba19a1ab307",
     "testPath": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js",
-    "testRawSha256": "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78",
+    "testRawSha256": "14e11e5df179f3c1cfa747445c8681aa892f2c2ceb32f77dd8d3517024286ddb",
     "controllerChildExecutionsRequired": 0,
     "sourceAccessImplementationPresentAtDecision": false,
     "networkImportsForbiddenAtDecision": true
@@ -2344,5 +2344,353 @@
     "privateStoreAbsentAtWorkStart": true,
     "storedResearchSourceAccessAuthorized": false,
     "runtimeResearchSourceAccessRequiresTag919PostGate": true
+  },
+  "completionTransitionContract": {
+    "schema": "early-detection-q010-sc003-fail-closed-completion-transition/v1",
+    "requiredCompletionSubject": "Tag 920: Q010-SC003 Rohquellenkapsel fail-closed abschließen",
+    "tag920MustBeExactFiveModifyDirectChildOfLiveRemoteTag919": true,
+    "tag920MustBindAllFiveTag919ParentGitBlobSha1AndRawSha256Values": true,
+    "tag919EventPrefixMustRemainByteExact": true,
+    "tag919ContractTopLevelKeysExact": [
+      "schema",
+      "createdAt",
+      "purpose",
+      "contractSelfSha256",
+      "repository",
+      "parentTag917Binding",
+      "parentTag914CorpusBinding",
+      "decision",
+      "populationPolicy",
+      "capturePlan",
+      "sourcePolicy",
+      "queryProtocol",
+      "startTransitionContract",
+      "controlAndCodingPolicy",
+      "completionPolicy",
+      "carriedIncidents",
+      "frozenPolicyProjectionSha256",
+      "outputs",
+      "implementation",
+      "startIntroductionBinding",
+      "startFinalization"
+    ],
+    "postCompletionContractTopLevelKeysExact": [
+      "schema",
+      "createdAt",
+      "purpose",
+      "contractSelfSha256",
+      "repository",
+      "parentTag917Binding",
+      "parentTag914CorpusBinding",
+      "decision",
+      "populationPolicy",
+      "capturePlan",
+      "sourcePolicy",
+      "queryProtocol",
+      "startTransitionContract",
+      "controlAndCodingPolicy",
+      "completionPolicy",
+      "carriedIncidents",
+      "frozenPolicyProjectionSha256",
+      "outputs",
+      "implementation",
+      "startIntroductionBinding",
+      "startFinalization",
+      "completionTransitionContract",
+      "completionIntroductionBinding",
+      "completionFinalization"
+    ],
+    "allowedTag920ContractMutationJsonPointers": [
+      "/contractSelfSha256",
+      "/implementation/controllerNormalizedSha256",
+      "/implementation/testRawSha256",
+      "/completionTransitionContract",
+      "/completionIntroductionBinding",
+      "/completionFinalization"
+    ],
+    "frozenTag919ContractKeysMustRemainCanonicallyEquivalent": [
+      "schema",
+      "createdAt",
+      "purpose",
+      "repository",
+      "parentTag917Binding",
+      "parentTag914CorpusBinding",
+      "decision",
+      "populationPolicy",
+      "capturePlan",
+      "sourcePolicy",
+      "queryProtocol",
+      "startTransitionContract",
+      "controlAndCodingPolicy",
+      "completionPolicy",
+      "carriedIncidents",
+      "frozenPolicyProjectionSha256",
+      "outputs",
+      "startIntroductionBinding",
+      "startFinalization"
+    ],
+    "requiredCompletionEvent": {
+      "schema": "early-detection-q010-sc003-governance-event/v1",
+      "eventId": "Q010-SC003-EVT-00000003",
+      "sequence": 3,
+      "eventType": "SUBCHUNK_WORK_COMPLETED",
+      "previousEventMustEqualCommittedTag919EventHead": true,
+      "createdAtMustEqualCompletionRecordedAtUtc": true,
+      "createdAtMustNotExceedTag920CommitTime": true
+    },
+    "requiredPrivateAggregatePolicy": {
+      "privateTag920JsonRawSha256MustBeBound": true,
+      "privateTag920BindingSha256MustBeBound": true,
+      "ledgerRawAndHeadHashesMustBeBound": true,
+      "runStateAndPreCompletionHashesMustBeBound": true,
+      "receiptProjectionAndRawManifestHashesCountsAndRawByteCountMustBeBound": true,
+      "materialJoinMustBeExactAndBound": true,
+      "privateContentBytesMustNeverEnterPublicContractEventStateOrTest": true,
+      "publicSurfaceMayContainAggregateCountsStatusesAndHashesOnly": true
+    },
+    "postCompletionRuntimePolicy": {
+      "researchSourceAccessAuthorized": false,
+      "runCommandAuthorized": false,
+      "sourceCommandAuthorized": false,
+      "startCommandAuthorized": false,
+      "nextQ010SubchunkAuthorized": false,
+      "q003SchedulerEligible": false,
+      "candidateState": null,
+      "scientificCredit": "NONE"
+    },
+    "verificationPhases": {
+      "liveTag919WithExactFiveWorkingTreeModifications": "COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC",
+      "liveExactTag920DirectChild": "COMPLETION_POST_INTRODUCTION_PASS",
+      "anyOtherTopologyOrPathSet": "FAIL_CLOSED"
+    }
+  },
+  "completionIntroductionBinding": {
+    "schema": "early-detection-q010-sc003-completion-introduction-binding/v1",
+    "startCommit": "6586dc246e842ac3dda6eea67094afd16e38bb46",
+    "startParentBlobs": [
+      {
+        "path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json",
+        "gitBlobSha1": "12a85a8e2d6a086cfe2af302faa3966f0f8b3b60",
+        "rawSha256": "20d76833f55d9ded09a87c033eecd8c53a952dc1e07098ad620d01d08e006f56"
+      },
+      {
+        "path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py",
+        "gitBlobSha1": "c6c767dad991973307ff2fa07a86c07087e0beac",
+        "rawSha256": "1a7e2f81ead948c1d12d2278ac817d816e9db5d76da882da855600db1cba6446"
+      },
+      {
+        "path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl",
+        "gitBlobSha1": "28450e54038fce5182d1b25e3759ad270713d357",
+        "rawSha256": "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"
+      },
+      {
+        "path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json",
+        "gitBlobSha1": "e71dfa3eb2219d8bf49b4ab26fa1255742d34151",
+        "rawSha256": "7f67e141bda7b679a7c454e2074e5b732fad42763db29bddc12df5a4069a4c23"
+      },
+      {
+        "path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js",
+        "gitBlobSha1": "6eeb3b8b4f0033871d92598b525019a5a5f74f9f",
+        "rawSha256": "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78"
+      }
+    ],
+    "startParentBlobBindingsSha256": "2a93915190772946eb3629161b8a4518bba59b2b6a393a6e708f4635969b43e1",
+    "startRemoteRef": "refs/heads/codex/early-detection-v4-gates-20260810",
+    "startRemoteObservedAtUtc": "2026-08-14T03:58:58.630311Z"
+  },
+  "completionFinalization": {
+    "schema": "early-detection-q010-sc003-completion-finalization/v1",
+    "completionRecordedAtUtc": "2026-08-14T03:58:59.630311Z",
+    "completionStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+    "workCompleted": true,
+    "allFifteenUnitsTerminal": true,
+    "allFortyFiveSlotsTerminal": true,
+    "everyUnitAtLeastOneNewPayload": false,
+    "unitsWithAcceptedPayloadCount": 0,
+    "acceptedPayloads": 0,
+    "networkRequestCount": 15,
+    "derivedNullNetworkTerminalizationCount": 30,
+    "eventTypeReasonCrossTable": [
+      {
+        "eventType": "QUERY_RESPONSE_SEALED",
+        "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+        "count": 12
+      },
+      {
+        "eventType": "QUERY_RESPONSE_SEALED",
+        "singleReason": "TYPED_ERROR_TIMEOUTERROR",
+        "count": 3
+      },
+      {
+        "eventType": "DERIVED_SLOT_TYPED_HOLD",
+        "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+        "count": 24
+      },
+      {
+        "eventType": "DERIVED_SLOT_TYPED_HOLD",
+        "singleReason": "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT",
+        "count": 6
+      }
+    ],
+    "privateLedgerEventCount": 61,
+    "privateLedgerRawSha256": "086e6236e1e4acc24f7e3eaaf2c7ae5b1d3f28fcf901e8d48fd2e6919bb8c813",
+    "privateLedgerEventHeadSha256": "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074",
+    "privateTag920JsonRawSha256": "c73c14fbb9a974350d450e3c64f926d4f06c055c9c1649a250e3418a21342bae",
+    "privateTag920BindingSha256": "c9f223cf64146b473555e8b7618e4bc6dd840bc0c8781592869c4057bcb518a4",
+    "preCompletionEventBindingSha256": "38847effee7b2338c7e8614a769b4b7c4c14b17f0b3e99e1ee7fee9a9145096d",
+    "runStateSelfSha256": "fe6f93b670da9f1e57bec111d6c9fff57e0261f63299638e12a31fe61ad0e29e",
+    "materialJoinStatus": "EXACT",
+    "materialJoinBindingSha256": "0146729bbafb758fadd080a27a46d38a1628211bc02c53fa165ce4db1e322dc8",
+    "receiptCount": 15,
+    "receiptManifestSha256": "d916700751309250744322644554d394a967981b0b534e4a849757fadcaeaa50",
+    "projectionCount": 12,
+    "projectionManifestSha256": "1bd53eec4c508536ef7692289660a296e46e261b62cfdce2911a09b96e971d4e",
+    "projectionHeadSha256": "245d49859e3ade6cecd40dd0ae293cbbdca8c31b41079f54e100cd91d062885b",
+    "rawBlobCount": 7,
+    "rawBlobManifestSha256": "b46da4417a8509f69b3558f9557e2f1dc9ecedc01ac28fc049e866ac54ca33fd",
+    "rawByteCount": 473787,
+    "publicAggregateProjection": {
+      "schema": "early-detection-q010-sc003-public-completion-aggregate-projection/v1",
+      "parentPrivateTag920FinalBindingSha256": "c9f223cf64146b473555e8b7618e4bc6dd840bc0c8781592869c4057bcb518a4",
+      "privateTag920JsonRawSha256": "c73c14fbb9a974350d450e3c64f926d4f06c055c9c1649a250e3418a21342bae",
+      "privateLedger": {
+        "rawSha256": "086e6236e1e4acc24f7e3eaaf2c7ae5b1d3f28fcf901e8d48fd2e6919bb8c813",
+        "eventCount": 61,
+        "eventHeadSha256": "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074"
+      },
+      "privateRunState": {
+        "schema": "early-detection-q010-sc003-private-run-state/v1",
+        "selfSha256": "fe6f93b670da9f1e57bec111d6c9fff57e0261f63299638e12a31fe61ad0e29e",
+        "completed": true,
+        "completionStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+        "lastDurableEventSequence": 61,
+        "lastDurableEventSha256": "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074",
+        "requestsUsed": 15,
+        "acceptedPrimaryPayloads": 0,
+        "incident": null
+      },
+      "materialJoin": {
+        "status": "EXACT",
+        "bindingSha256": "0146729bbafb758fadd080a27a46d38a1628211bc02c53fa165ce4db1e322dc8",
+        "receiptCount": 15,
+        "receiptManifestSha256": "d916700751309250744322644554d394a967981b0b534e4a849757fadcaeaa50",
+        "projectionCount": 12,
+        "projectionManifestSha256": "1bd53eec4c508536ef7692289660a296e46e261b62cfdce2911a09b96e971d4e",
+        "projectionHeadSha256": "245d49859e3ade6cecd40dd0ae293cbbdca8c31b41079f54e100cd91d062885b",
+        "uniquePhysicalRawBlobCount": 7,
+        "rawBlobManifestSha256": "b46da4417a8509f69b3558f9557e2f1dc9ecedc01ac28fc049e866ac54ca33fd",
+        "rawByteCount": 473787,
+        "responseBlobReferenceCount": 12,
+        "responseBlobReferenceUniqueCount": 7,
+        "nullRequiredResponseCount": 3,
+        "responseBlobReferenceIntegrityStatus": "EXACT"
+      },
+      "terminalization": {
+        "frozenCaptureUnitCount": 15,
+        "terminalUnitCount": 15,
+        "terminalSlotCount": 45,
+        "terminalSlotUniqueCount": 45,
+        "unitsWithAcceptedPrimaryPayloadCount": 0,
+        "allFifteenUnitsTerminal": true,
+        "allFortyFiveSlotsTerminal": true,
+        "unitTerminalReasonHistogram": [
+          {
+            "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+            "count": 12
+          },
+          {
+            "singleReason": "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT",
+            "count": 3
+          }
+        ]
+      },
+      "eventHistogram": [
+        {
+          "eventType": "QUERY_PREPARED",
+          "count": 15
+        },
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "count": 15
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "count": 30
+        },
+        {
+          "eventType": "GLOBAL_INCIDENT",
+          "count": 0
+        },
+        {
+          "eventType": "RUN_COMPLETED",
+          "count": 1
+        }
+      ],
+      "eventTypeReasonCrossTable": [
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+          "count": 12
+        },
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "singleReason": "TYPED_ERROR_TIMEOUTERROR",
+          "count": 3
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+          "count": 24
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "singleReason": "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT",
+          "count": 6
+        }
+      ],
+      "networkAccounting": {
+        "networkRequestCount": 15,
+        "queryResponseCount": 15,
+        "derivedNullNetworkTerminalizationCount": 30,
+        "acceptedPrimaryPayloadCount": 0,
+        "storedLocatorResponseReferenceCount": 12,
+        "uniquePhysicalLocatorBlobCount": 7,
+        "nullRequiredResponseCount": 3
+      },
+      "completionMetrics": {
+        "allFortyFiveSlotsTerminal": true,
+        "allFifteenUnitsTerminal": true,
+        "everyUnitAtLeastOneNewPayload": false,
+        "perRowEDifferenceFromLAtMostOne": true,
+        "incidentFree": true
+      },
+      "completionStatus": "HOLD",
+      "publicConclusion": "full frozen census capture matrix terminal / no accepted payload under frozen routes",
+      "semanticLocks": {
+        "storedBlobsAreOperativeLocatorResponsesOnly": true,
+        "storedBlobCountsAreNotAcceptedPrimarySourceCounts": true,
+        "derivedNullNetworkTerminalizationsAreNotNegativeEvidence": true,
+        "noEvidenceTelAbsenceClaim": true
+      },
+      "projectionSelfSha256": "ae98ee6a642f6173e4eb4e588e9873e8b5fb8798f8e6bd51b353ecd8b5d0c8a8"
+    },
+    "idempotentSecondRun": {
+      "ledgerEventCountUnchanged": true,
+      "ledgerRawSha256Unchanged": true,
+      "ledgerHeadSha256Unchanged": true,
+      "privateTag920BindingSha256Unchanged": true,
+      "ownedFileCountUnchanged": true,
+      "requestCountUnchanged": true,
+      "additionalRequests": 0
+    },
+    "researchSourceAccessAuthorized": false,
+    "sourceRecordCount": 0,
+    "dimensionLevel": null,
+    "candidateState": null,
+    "scientificCredit": "NONE",
+    "nextQ010SubchunkAuthorized": false,
+    "q003SchedulerEligible": false,
+    "earlyDetectionSystemBuilt": false,
+    "privateContentPublished": false
   }
 }

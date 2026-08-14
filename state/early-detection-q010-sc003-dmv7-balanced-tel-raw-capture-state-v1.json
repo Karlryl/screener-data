@@ -1,9 +1,9 @@
 {
   "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state/v1",
-  "materializedAt": "2026-08-14T01:34:34.454637Z",
-  "contractSelfSha256": "ffbc59e57c0e85be1866572cfdcffeaa59cb8c38b4225aa805653119d1e1dbdb",
-  "eventCount": 2,
-  "eventHeadSha256": "690b5e13c1c51b7de9a62d63833f6afb2f5c120844ab9c1f375abf8fd34b5009",
+  "materializedAt": "2026-08-14T03:58:59.630311Z",
+  "contractSelfSha256": "d901b50d3bce1cdd1312a22dbdc97db97a4b9bda7df43df47bbfcc1fe88453ab",
+  "eventCount": 3,
+  "eventHeadSha256": "a0cd64fea95af5acf76178dfd02ce5f64e9316e2d745e5e3cd21e5b23df7d57a",
   "projection": {
     "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-projection/v1",
     "subchunkId": "Q010-SC-003-DMV7-BALANCED-TEL-RAW-CAPTURE",
@@ -16,9 +16,143 @@
     "separateRemoteStartRequired": false,
     "startEventId": "Q010-SC003-EVT-00000002",
     "startEventSequence": 2,
-    "startRemoteIntroductionVerified": false,
+    "startRemoteIntroductionVerified": true,
     "workStarted": true,
     "workStartedAtUtc": "2026-08-14T01:34:34.454637Z",
+    "completionEventId": "Q010-SC003-EVT-00000003",
+    "completionEventSequence": 3,
+    "workCompleted": true,
+    "completionStatus": "HOLD",
+    "privateCompletionStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+    "completionRemoteIntroductionVerified": false,
+    "publicAggregateProjection": {
+      "schema": "early-detection-q010-sc003-public-completion-aggregate-projection/v1",
+      "parentPrivateTag920FinalBindingSha256": "c9f223cf64146b473555e8b7618e4bc6dd840bc0c8781592869c4057bcb518a4",
+      "privateTag920JsonRawSha256": "c73c14fbb9a974350d450e3c64f926d4f06c055c9c1649a250e3418a21342bae",
+      "privateLedger": {
+        "rawSha256": "086e6236e1e4acc24f7e3eaaf2c7ae5b1d3f28fcf901e8d48fd2e6919bb8c813",
+        "eventCount": 61,
+        "eventHeadSha256": "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074"
+      },
+      "privateRunState": {
+        "schema": "early-detection-q010-sc003-private-run-state/v1",
+        "selfSha256": "fe6f93b670da9f1e57bec111d6c9fff57e0261f63299638e12a31fe61ad0e29e",
+        "completed": true,
+        "completionStatus": "TYPED_GLOBAL_HOLD_COMPLETED",
+        "lastDurableEventSequence": 61,
+        "lastDurableEventSha256": "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074",
+        "requestsUsed": 15,
+        "acceptedPrimaryPayloads": 0,
+        "incident": null
+      },
+      "materialJoin": {
+        "status": "EXACT",
+        "bindingSha256": "0146729bbafb758fadd080a27a46d38a1628211bc02c53fa165ce4db1e322dc8",
+        "receiptCount": 15,
+        "receiptManifestSha256": "d916700751309250744322644554d394a967981b0b534e4a849757fadcaeaa50",
+        "projectionCount": 12,
+        "projectionManifestSha256": "1bd53eec4c508536ef7692289660a296e46e261b62cfdce2911a09b96e971d4e",
+        "projectionHeadSha256": "245d49859e3ade6cecd40dd0ae293cbbdca8c31b41079f54e100cd91d062885b",
+        "uniquePhysicalRawBlobCount": 7,
+        "rawBlobManifestSha256": "b46da4417a8509f69b3558f9557e2f1dc9ecedc01ac28fc049e866ac54ca33fd",
+        "rawByteCount": 473787,
+        "responseBlobReferenceCount": 12,
+        "responseBlobReferenceUniqueCount": 7,
+        "nullRequiredResponseCount": 3,
+        "responseBlobReferenceIntegrityStatus": "EXACT"
+      },
+      "terminalization": {
+        "frozenCaptureUnitCount": 15,
+        "terminalUnitCount": 15,
+        "terminalSlotCount": 45,
+        "terminalSlotUniqueCount": 45,
+        "unitsWithAcceptedPrimaryPayloadCount": 0,
+        "allFifteenUnitsTerminal": true,
+        "allFortyFiveSlotsTerminal": true,
+        "unitTerminalReasonHistogram": [
+          {
+            "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+            "count": 12
+          },
+          {
+            "singleReason": "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT",
+            "count": 3
+          }
+        ]
+      },
+      "eventHistogram": [
+        {
+          "eventType": "QUERY_PREPARED",
+          "count": 15
+        },
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "count": 15
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "count": 30
+        },
+        {
+          "eventType": "GLOBAL_INCIDENT",
+          "count": 0
+        },
+        {
+          "eventType": "RUN_COMPLETED",
+          "count": 1
+        }
+      ],
+      "eventTypeReasonCrossTable": [
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+          "count": 12
+        },
+        {
+          "eventType": "QUERY_RESPONSE_SEALED",
+          "singleReason": "TYPED_ERROR_TIMEOUTERROR",
+          "count": 3
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "singleReason": "HOLD_CDX_COMPLETENESS_UNPROVEN",
+          "count": 24
+        },
+        {
+          "eventType": "DERIVED_SLOT_TYPED_HOLD",
+          "singleReason": "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT",
+          "count": 6
+        }
+      ],
+      "networkAccounting": {
+        "networkRequestCount": 15,
+        "queryResponseCount": 15,
+        "derivedNullNetworkTerminalizationCount": 30,
+        "acceptedPrimaryPayloadCount": 0,
+        "storedLocatorResponseReferenceCount": 12,
+        "uniquePhysicalLocatorBlobCount": 7,
+        "nullRequiredResponseCount": 3
+      },
+      "completionMetrics": {
+        "allFortyFiveSlotsTerminal": true,
+        "allFifteenUnitsTerminal": true,
+        "everyUnitAtLeastOneNewPayload": false,
+        "perRowEDifferenceFromLAtMostOne": true,
+        "incidentFree": true
+      },
+      "completionStatus": "HOLD",
+      "publicConclusion": "full frozen census capture matrix terminal / no accepted payload under frozen routes",
+      "semanticLocks": {
+        "storedBlobsAreOperativeLocatorResponsesOnly": true,
+        "storedBlobCountsAreNotAcceptedPrimarySourceCounts": true,
+        "derivedNullNetworkTerminalizationsAreNotNegativeEvidence": true,
+        "noEvidenceTelAbsenceClaim": true
+      },
+      "projectionSelfSha256": "ae98ee6a642f6173e4eb4e588e9873e8b5fb8798f8e6bd51b353ecd8b5d0c8a8"
+    },
+    "publicAggregateProjectionSha256": "ae98ee6a642f6173e4eb4e588e9873e8b5fb8798f8e6bd51b353ecd8b5d0c8a8",
+    "publicConclusion": "full frozen census capture matrix terminal / no accepted payload under frozen routes",
+    "acceptedPrimaryPayloadCount": 0,
     "researchSourceAccessAuthorized": false,
     "populationId": "POP-CA-DMV-AV-PERMIT-HOLDERS-2015-FULL-CENSUS",
     "populationCount": 7,
@@ -47,5 +181,5 @@
     "earlyDetectionSystemBuilt": false,
     "frozenPolicyProjectionSha256": "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
   },
-  "stateSelfSha256": "ae7bfb8bf1122bffdeb1e42184db3c2939ec396e6ac4b07d29ec873d6e3fb3bd"
+  "stateSelfSha256": "86aec18389cbec370d4b66701aafebe18e381a0ba3adeeb1862dd87bdd28a7b3"
 }

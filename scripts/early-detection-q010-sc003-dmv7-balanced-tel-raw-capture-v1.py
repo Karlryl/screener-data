@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import base64
+from collections import Counter
 import copy
 import ctypes
 from ctypes import wintypes
@@ -30,11 +31,11 @@ STATE_PATH = ROOT / "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capt
 TEST_PATH = ROOT / "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js"
 CONTROLLER_PATH = Path(__file__).resolve()
 
-EXPECTED_CONTRACT_RAW_SHA256 = "20d76833f55d9ded09a87c033eecd8c53a952dc1e07098ad620d01d08e006f56"
-EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "db57f31ee8a443c5fdee2c86bc7dc9f8158e664f45467279c2735544920c31cd"
-EXPECTED_EVENTS_RAW_SHA256 = "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"
-EXPECTED_STATE_RAW_SHA256 = "7f67e141bda7b679a7c454e2074e5b732fad42763db29bddc12df5a4069a4c23"
-EXPECTED_TEST_RAW_SHA256 = "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78"
+EXPECTED_CONTRACT_RAW_SHA256 = "e2b7a61deee94f90e83379dc3fac3ba57bb1a7bc5e949ab9d76c0633f885c247"
+EXPECTED_CONTROLLER_NORMALIZED_SHA256 = "28ce8d99856c5e5f2aafc8ddd045f429212bd06803ff19d6da958ba19a1ab307"
+EXPECTED_EVENTS_RAW_SHA256 = "813f3ec470be3d3e8eeda7e79d257465849dab6d3232362e16d6d64c30eb2439"
+EXPECTED_STATE_RAW_SHA256 = "4d10c48bdc2491e7d5d79435b544f163dff6768ca84f8831be36553f9dc4a2d7"
+EXPECTED_TEST_RAW_SHA256 = "14e11e5df179f3c1cfa747445c8681aa892f2c2ceb32f77dd8d3517024286ddb"
 EXPECTED_POLICY_PROJECTION_SHA256 = "292ac581b242097b523d593edf177ef12e716dbb06a876ba8f0d873edf39cd0c"
 EXPECTED_DECISION_EVENT_SHA256 = "693d1c86049acc4b373c86171d17773b3c8f242e8a94cdd05207f40358f24ee2"
 EXPECTED_POPULATION_POLICY_SHA256 = "a99ba3ffe63aea0e8447a7cb8bb8364af7f00361ec4710031ae18e3cd9651495"
@@ -47,16 +48,27 @@ EXPECTED_COMPLETION_POLICY_SHA256 = "dd5a03d2e985fc67d82b0936c01fe38e96cee3b3ad8
 TAG918 = "bdaf8dc911f1ca796f9370627901fd1003083ba3"
 TAG918_PARENT = "f606124109b71d20f3ecd555f501afb84d95446c"
 TAG918_SUBJECT = "Tag 918: Q010-SC003 Rohquellenkapsel vor Arbeitsbeginn versiegeln"
+TAG919 = "6586dc246e842ac3dda6eea67094afd16e38bb46"
 TAG919_SUBJECT = "Tag 919: Q010-SC003 Rohquellenkapsel prospektiv starten"
+TAG920_SUBJECT = "Tag 920: Q010-SC003 Rohquellenkapsel fail-closed abschließen"
 START_REMOTE_OBSERVED_AT = "2026-08-14T01:34:33.454637Z"
 WORK_STARTED_AT = "2026-08-14T01:34:34.454637Z"
 TAG918_EVENT_PREFIX_SHA256 = "f6b3408acd50409485595b33ae0ca9cbcdc060d91c509f7ab74853341f7b1158"
+TAG919_EVENT_PREFIX_SHA256 = "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"
+TAG919_EVENT_HEAD_SHA256 = "690b5e13c1c51b7de9a62d63833f6afb2f5c120844ab9c1f375abf8fd34b5009"
 TAG918_BLOBS = [
     {"path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json", "gitBlobSha1": "69690f462310ddbecc213e650de3d439c1d05eaf", "rawSha256": "87e1fe77ae1507fe0d6acd6b79b035bb920a2580cea65670f7c44b49ca174218"},
     {"path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py", "gitBlobSha1": "a69cce278a11a66528ebefb2cc0907f7bf6ae70b", "rawSha256": "004f4c0ab36815ffdca1df8f0b7f865010be12c0e75abf9fdf5b93d90774ce7f"},
     {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl", "gitBlobSha1": "f1b522933d42cd22040eca942ee78bf0a9f78699", "rawSha256": "f6b3408acd50409485595b33ae0ca9cbcdc060d91c509f7ab74853341f7b1158"},
     {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json", "gitBlobSha1": "dbf6458f9c4d8b28bac9f1f3ad410d8b5190c57f", "rawSha256": "0c7732d26c648a6a313820f0b26547899acb0255af90392f5cd188ccf725fa36"},
     {"path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js", "gitBlobSha1": "2ca985c387cbd6da6232180d50d545ac79c0b755", "rawSha256": "b1d012b7d158fda7d186a837fc553d76b728ebef44dc9b22360f99e7df721a0f"},
+]
+TAG919_BLOBS = [
+    {"path": "research/early-detection-v4/q010-sc003-dmv7-balanced-tel-raw-capture-governance-contract-v1.json", "gitBlobSha1": "12a85a8e2d6a086cfe2af302faa3966f0f8b3b60", "rawSha256": "20d76833f55d9ded09a87c033eecd8c53a952dc1e07098ad620d01d08e006f56"},
+    {"path": "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py", "gitBlobSha1": "c6c767dad991973307ff2fa07a86c07087e0beac", "rawSha256": "1a7e2f81ead948c1d12d2278ac817d816e9db5d76da882da855600db1cba6446"},
+    {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-events-v1.jsonl", "gitBlobSha1": "28450e54038fce5182d1b25e3759ad270713d357", "rawSha256": "1cf279bfab4104a718f085d22b1842187085f489e3f2cc90dc17c8d48b205b71"},
+    {"path": "state/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-state-v1.json", "gitBlobSha1": "e71dfa3eb2219d8bf49b4ab26fa1255742d34151", "rawSha256": "7f67e141bda7b679a7c454e2074e5b732fad42763db29bddc12df5a4069a4c23"},
+    {"path": "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js", "gitBlobSha1": "6eeb3b8b4f0033871d92598b525019a5a5f74f9f", "rawSha256": "8daaf787e1e2f980acb12ccf0109c707085065649f99a63f6a16e11359ecdb78"},
 ]
 REQUEST_HEADERS = (
     ("Host", "web.archive.org"),
@@ -79,7 +91,8 @@ PRE_TOP_LEVEL_KEYS = [
     "controlAndCodingPolicy", "completionPolicy", "carriedIncidents",
     "frozenPolicyProjectionSha256", "outputs", "implementation",
 ]
-POST_TOP_LEVEL_KEYS = [*PRE_TOP_LEVEL_KEYS, "startIntroductionBinding", "startFinalization"]
+START_TOP_LEVEL_KEYS = [*PRE_TOP_LEVEL_KEYS, "startIntroductionBinding", "startFinalization"]
+POST_TOP_LEVEL_KEYS = [*START_TOP_LEVEL_KEYS, "completionTransitionContract", "completionIntroductionBinding", "completionFinalization"]
 
 PRIVATE_STORE_ROOT = Path(r"C:\Users\Anwender\Documents\GrowthScreenerResearchData\early-detection-v4\q010-sc003-dmv7-balanced-tel-raw-capture-v1")
 RUNTIME_MUTEX_NAME = r"Global\GrowthScreener-Q010-SC003-DMV7-RawCapture-v1"
@@ -262,14 +275,73 @@ def expected_start_event(contract: dict, decision_event: dict) -> dict:
     return event
 
 
+def tag919_event_prefix() -> tuple[bytes, list[dict]]:
+    raw = run_git_bytes(["show", f"{TAG919}:{EVENTS_PATH.relative_to(ROOT).as_posix()}"])
+    require(sha256_bytes(raw) == TAG919_EVENT_PREFIX_SHA256, "Tag919 event prefix drift")
+    rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line]
+    require(len(rows) == 2 and rows[-1]["eventSha256"] == TAG919_EVENT_HEAD_SHA256, "Tag919 event head drift")
+    return raw, rows
+
+
+def public_projection_self_sha256(projection: dict) -> str:
+    body = copy.deepcopy(projection)
+    body["projectionSelfSha256"] = None
+    return canonical_sha(body)
+
+
+def expected_completion_event(contract: dict, start_event: dict) -> dict:
+    finalization = contract["completionFinalization"]
+    aggregate = finalization["publicAggregateProjection"]
+    event = {
+        "schema": "early-detection-q010-sc003-governance-event/v1",
+        "eventId": "Q010-SC003-EVT-00000003",
+        "sequence": 3,
+        "eventType": "SUBCHUNK_WORK_COMPLETED",
+        "previousEventSha256": start_event["eventSha256"],
+        "createdAt": finalization["completionRecordedAtUtc"],
+        "contractSelfSha256": contract["contractSelfSha256"],
+        "payload": {
+            "subchunkId": contract["decision"]["subchunkId"],
+            "startEventId": start_event["eventId"],
+            "startEventSequence": start_event["sequence"],
+            "startCommit": TAG919,
+            "workCompleted": True,
+            "completionStatus": "HOLD",
+            "privateCompletionStatus": finalization["completionStatus"],
+            "parentPrivateTag920FinalBindingSha256": finalization["privateTag920BindingSha256"],
+            "publicAggregateProjection": copy.deepcopy(aggregate),
+            "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
+            "researchSourceAccessAuthorized": False,
+            "runtimeResearchSourceAccessAuthorized": False,
+            "codingAllowed": False,
+            "dimensionLevel": None,
+            "candidateState": None,
+            "timeCapsuleState": None,
+            "futureSourceRecordStatus": "NOT_CREATED_PENDING_SEPARATE_BLIND_DECISION",
+            "sourceRecordCount": 0,
+            "controlMatchingAllowed": False,
+            "scientificCredit": "NONE",
+            "nextQ010SubchunkAuthorized": False,
+            "q003SchedulerEligible": False,
+            "earlyDetectionSystemBuilt": False,
+            "privateContentPublished": False,
+        },
+        "eventSha256": None,
+    }
+    event["eventSha256"] = event_self_sha256(event)
+    return event
+
+
 def expected_events(contract: dict) -> list[dict]:
-    decision = expected_decision_event()
-    return [decision, expected_start_event(contract, decision)]
+    _, prefix = tag919_event_prefix()
+    return [*prefix, expected_completion_event(contract, prefix[-1])]
 
 
 def expected_projection(contract: dict, events: list[dict]) -> dict:
     event = events[0]
-    started = len(events) == 2
+    start_event = events[1]
+    completion_event = events[2]
+    aggregate = contract["completionFinalization"]["publicAggregateProjection"]
     return {
         "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-projection/v1",
         "subchunkId": contract["decision"]["subchunkId"],
@@ -277,14 +349,24 @@ def expected_projection(contract: dict, events: list[dict]) -> dict:
         "decisionRecorded": True,
         "decisionEventId": event["eventId"],
         "decisionEventSequence": event["sequence"],
-        "decisionTimingStatus": "REMOTE_INTRODUCED_BEFORE_SEPARATE_START_EVENT" if started else "PENDING_REMOTE_INTRODUCTION",
-        "decisionRemoteIntroductionVerified": started,
-        "separateRemoteStartRequired": not started,
-        "startEventId": events[1]["eventId"] if started else None,
-        "startEventSequence": events[1]["sequence"] if started else None,
-        "startRemoteIntroductionVerified": False,
-        "workStarted": started,
-        "workStartedAtUtc": events[1]["createdAt"] if started else None,
+        "decisionTimingStatus": "REMOTE_INTRODUCED_BEFORE_SEPARATE_START_EVENT",
+        "decisionRemoteIntroductionVerified": True,
+        "separateRemoteStartRequired": False,
+        "startEventId": start_event["eventId"],
+        "startEventSequence": start_event["sequence"],
+        "startRemoteIntroductionVerified": True,
+        "workStarted": True,
+        "workStartedAtUtc": start_event["createdAt"],
+        "completionEventId": completion_event["eventId"],
+        "completionEventSequence": completion_event["sequence"],
+        "workCompleted": True,
+        "completionStatus": "HOLD",
+        "privateCompletionStatus": contract["completionFinalization"]["completionStatus"],
+        "completionRemoteIntroductionVerified": False,
+        "publicAggregateProjection": copy.deepcopy(aggregate),
+        "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
+        "publicConclusion": aggregate["publicConclusion"],
+        "acceptedPrimaryPayloadCount": 0,
         "researchSourceAccessAuthorized": False,
         "populationId": contract["decision"]["targetPopulationId"],
         "populationCount": 7,
@@ -632,7 +714,7 @@ def validate_policy(contract: dict) -> None:
     start = contract["startTransitionContract"]
     require(start["schema"] == "early-detection-q010-sc003-prospective-start-transition/v1" and start["tag919MustBeExactFiveModifyDirectChildOfLiveRemoteTag918"] is True and start["tag919MustBindAllFiveTag918ParentGitBlobSha1AndRawSha256Values"] is True, "start transition topology drift")
     require(start["frozenPolicyKeysMustRemainCanonicallyByteEquivalentToTag918"] == list(POLICY_KEYS) and start["frozenPolicyProjectionSha256MustEqualCommittedTag918Value"] is True, "start frozen-policy carry drift")
-    require(start["preDecisionContractTopLevelKeysExact"] == PRE_TOP_LEVEL_KEYS and start["postStartContractTopLevelKeysExact"] == POST_TOP_LEVEL_KEYS, "start top-level schema drift")
+    require(start["preDecisionContractTopLevelKeysExact"] == PRE_TOP_LEVEL_KEYS and start["postStartContractTopLevelKeysExact"] == START_TOP_LEVEL_KEYS, "start top-level schema drift")
     require(start["allowedTag919ContractMutationJsonPointers"] == ["/contractSelfSha256", "/implementation/controllerNormalizedSha256", "/implementation/testRawSha256", "/startIntroductionBinding", "/startFinalization"], "start mutation allowlist drift")
     require(start["requiredStartEvent"]["eventId"] == "Q010-SC003-EVT-00000002" and start["requiredStartEvent"]["sequence"] == 2 and start["requiredStartEvent"]["eventType"] == "SUBCHUNK_WORK_STARTED", "start event identity drift")
     require(start["causalOrderRequired"] == "TAG918_COMMIT_LE_DECISION_REMOTE_OBSERVED_LT_START_EVENT_CREATED_AT_LE_TAG919_COMMIT_LE_TAG919_REMOTE_OBSERVED_LT_FIRST_QUERY_PREPARED_LE_REQUEST_STARTED_LE_RESPONSE_OBSERVED_LE_RESPONSE_SEAL_PREPARED_LE_LEDGER_FSYNC_CONFIRMED_LT_NEXT_QUERY_PREPARED", "start/query causal order drift")
@@ -706,6 +788,246 @@ def validate_start_binding(contract: dict, check_files: bool) -> None:
         require({key: contract[key] for key in POLICY_KEYS} == {key: parent_contract[key] for key in POLICY_KEYS}, "Tag918 frozen policy mutation")
 
 
+def tag919_runtime_contract(contract: dict) -> dict:
+    raw = run_git_bytes(["show", f"{TAG919}:{CONTRACT_PATH.relative_to(ROOT).as_posix()}"])
+    expected_raw = next(blob["rawSha256"] for blob in TAG919_BLOBS if blob["path"] == CONTRACT_PATH.relative_to(ROOT).as_posix())
+    require(sha256_bytes(raw) == expected_raw, "Tag919 runtime contract raw drift")
+    runtime_contract = json.loads(raw.decode("utf-8"))
+    require(list(runtime_contract) == START_TOP_LEVEL_KEYS, "Tag919 runtime contract key surface drift")
+    require({key: runtime_contract[key] for key in POLICY_KEYS} == {key: contract[key] for key in POLICY_KEYS}, "Tag919 runtime policy differs from completion contract")
+    require(runtime_contract["contractSelfSha256"] == "ffbc59e57c0e85be1866572cfdcffeaa59cb8c38b4225aa805653119d1e1dbdb", "Tag919 runtime contract self drift")
+    return runtime_contract
+
+
+def validate_strict_private_completion_replay(runtime_contract: dict, finalization: dict, materials: dict, stored_state: dict, stored_binding_raw: bytes, stored_binding: dict) -> tuple[dict, dict]:
+    replay_state, issues, pending = replay_private_ledger(runtime_contract, TAG919, materials)
+    validated_state = validate_run_state_against_replay(runtime_contract, TAG919, stored_state, replay_state, issues, pending)
+    require(validated_state["completed"] and validated_state["completionStatus"] == "TYPED_GLOBAL_HOLD_COMPLETED", "private strict replay is not completed HOLD")
+    recomputed_binding = completion_binding(runtime_contract, validated_state, materials)
+    expected_binding_raw = json.dumps(recomputed_binding, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    require(stored_binding == recomputed_binding, "stored Tag920 binding object differs from strict replay")
+    require(stored_binding_raw == expected_binding_raw, "stored Tag920 binding bytes differ from strict replay")
+    require(sha256_bytes(stored_binding_raw) == finalization["privateTag920JsonRawSha256"], "stored Tag920 binding raw hash differs from public finalization")
+    require(recomputed_binding["bindingSha256"] == finalization["privateTag920BindingSha256"], "recomputed Tag920 binding differs from public finalization")
+    return validated_state, recomputed_binding
+
+
+def derive_public_completion_aggregate_from_private(contract: dict, finalization: dict) -> dict:
+    runtime_contract = tag919_runtime_contract(contract)
+    binding_path = PRIVATE_STORE_ROOT / "tag920-completion-binding-v1.json"
+    require(binding_path.is_file(), "private Tag920 completion binding missing")
+    materials = read_private_materials(runtime_contract, TAG919)
+    stored_state = load_run_state(runtime_contract, TAG919)
+    binding_raw = binding_path.read_bytes()
+    stored_binding = json.loads(binding_raw.decode("utf-8"))
+    state, binding = validate_strict_private_completion_replay(runtime_contract, finalization, materials, stored_state, binding_raw, stored_binding)
+    rows = materials["rows"]
+    ledger_raw = materials["ledgerRaw"]
+    require(rows[-1]["eventSha256"] == finalization["privateLedgerEventHeadSha256"], "private completion ledger head drift")
+    require(rows[-1]["eventType"] == "RUN_COMPLETED", "private completion ledger does not end in RUN_COMPLETED")
+    require(parse_utc(rows[-1]["createdAtUtc"]) <= parse_utc(finalization["completionRecordedAtUtc"]), "public completion event predates private RUN_COMPLETED")
+    state_claim = state["runStateSelfSha256"]
+    binding_claim = binding["bindingSha256"]
+    material = binding["materialJoinBinding"]
+    hist = Counter(row["eventType"] for row in rows)
+    cross = Counter((row["eventType"], row.get("payload", {}).get("singleReason")) for row in rows if row.get("payload", {}).get("singleReason") is not None)
+    units = list(state["units"].values())
+    unit_reasons = Counter(unit["holdReason"] for unit in units if unit["holdReason"] is not None)
+    units_with_accepted = sum(1 for unit in units if unit["acceptedPayloads"] > 0)
+    projection = {
+        "schema": "early-detection-q010-sc003-public-completion-aggregate-projection/v1",
+        "parentPrivateTag920FinalBindingSha256": binding_claim,
+        "privateTag920JsonRawSha256": sha256_bytes(binding_raw),
+        "privateLedger": {"rawSha256": sha256_bytes(ledger_raw), "eventCount": len(rows), "eventHeadSha256": rows[-1]["eventSha256"]},
+        "privateRunState": {
+            "schema": state["schema"], "selfSha256": state_claim, "completed": state["completed"],
+            "completionStatus": state["completionStatus"], "lastDurableEventSequence": state["lastDurableEventSequence"],
+            "lastDurableEventSha256": state["lastDurableEventSha256"], "requestsUsed": state["requestsUsed"],
+            "acceptedPrimaryPayloads": state["acceptedPayloads"], "incident": state["incident"],
+        },
+        "materialJoin": {
+            "status": material["joinStatus"], "bindingSha256": material["bindingSha256"],
+            "receiptCount": binding["receiptCount"], "receiptManifestSha256": binding["receiptManifestSha256"],
+            "projectionCount": binding["projectionCount"], "projectionManifestSha256": binding["projectionManifestSha256"],
+            "projectionHeadSha256": binding["projectionHeadSha256"], "uniquePhysicalRawBlobCount": binding["rawBlobCount"],
+            "rawBlobManifestSha256": binding["rawBlobManifestSha256"], "rawByteCount": binding["rawByteCount"],
+            "responseBlobReferenceCount": material["responseBlobReferenceMultiset"]["count"],
+            "responseBlobReferenceUniqueCount": material["responseBlobReferenceMultiset"]["uniqueCount"],
+            "nullRequiredResponseCount": material["responseBlobReferenceIntegrity"]["nullRequiredQueryIds"]["count"],
+            "responseBlobReferenceIntegrityStatus": "EXACT" if material["responseBlobReferenceIntegrity"]["exact"] else "MISMATCH",
+        },
+        "terminalization": {
+            "frozenCaptureUnitCount": len(units), "terminalUnitCount": sum(1 for unit in units if unit["terminal"]),
+            "terminalSlotCount": len(state["terminalSlotIds"]), "terminalSlotUniqueCount": len(set(state["terminalSlotIds"])),
+            "unitsWithAcceptedPrimaryPayloadCount": units_with_accepted,
+            "allFifteenUnitsTerminal": all(unit["terminal"] for unit in units),
+            "allFortyFiveSlotsTerminal": len(state["terminalSlotIds"]) == len(set(state["terminalSlotIds"])) == 45,
+            "unitTerminalReasonHistogram": [
+                {"singleReason": reason, "count": unit_reasons[reason]} for reason in (
+                    "HOLD_CDX_COMPLETENESS_UNPROVEN", "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT"
+                )
+            ],
+        },
+        "eventHistogram": [{"eventType": kind, "count": hist[kind]} for kind in (
+            "QUERY_PREPARED", "QUERY_RESPONSE_SEALED", "DERIVED_SLOT_TYPED_HOLD", "GLOBAL_INCIDENT", "RUN_COMPLETED"
+        )],
+        "eventTypeReasonCrossTable": [
+            {"eventType": kind, "singleReason": reason, "count": cross[(kind, reason)]} for kind, reason in (
+                ("QUERY_RESPONSE_SEALED", "HOLD_CDX_COMPLETENESS_UNPROVEN"),
+                ("QUERY_RESPONSE_SEALED", "TYPED_ERROR_TIMEOUTERROR"),
+                ("DERIVED_SLOT_TYPED_HOLD", "HOLD_CDX_COMPLETENESS_UNPROVEN"),
+                ("DERIVED_SLOT_TYPED_HOLD", "HOLD_NO_COMPLETE_SELECTED_CDX_ROW_FOR_DERIVED_SLOT"),
+            )
+        ],
+        "networkAccounting": {
+            "networkRequestCount": state["requestsUsed"], "queryResponseCount": hist["QUERY_RESPONSE_SEALED"],
+            "derivedNullNetworkTerminalizationCount": hist["DERIVED_SLOT_TYPED_HOLD"],
+            "acceptedPrimaryPayloadCount": state["acceptedPayloads"],
+            "storedLocatorResponseReferenceCount": material["responseBlobReferenceMultiset"]["count"],
+            "uniquePhysicalLocatorBlobCount": material["responseBlobReferenceMultiset"]["uniqueCount"],
+            "nullRequiredResponseCount": material["responseBlobReferenceIntegrity"]["nullRequiredQueryIds"]["count"],
+        },
+        "completionMetrics": {
+            "allFortyFiveSlotsTerminal": rows[-1]["payload"]["allFortyFiveSlotsTerminal"],
+            "allFifteenUnitsTerminal": rows[-1]["payload"]["allFifteenUnitsTerminal"],
+            "everyUnitAtLeastOneNewPayload": rows[-1]["payload"]["everyUnitAtLeastOneNewPayload"],
+            "perRowEDifferenceFromLAtMostOne": rows[-1]["payload"]["perRowEDifferenceFromLAtMostOne"],
+            "incidentFree": rows[-1]["payload"]["incidentFree"],
+        },
+        "completionStatus": "HOLD",
+        "publicConclusion": "full frozen census capture matrix terminal / no accepted payload under frozen routes",
+        "semanticLocks": {
+            "storedBlobsAreOperativeLocatorResponsesOnly": True,
+            "storedBlobCountsAreNotAcceptedPrimarySourceCounts": True,
+            "derivedNullNetworkTerminalizationsAreNotNegativeEvidence": True,
+            "noEvidenceTelAbsenceClaim": True,
+        },
+        "projectionSelfSha256": None,
+    }
+    projection["projectionSelfSha256"] = public_projection_self_sha256(projection)
+    return projection
+
+
+def validate_completion_binding(contract: dict, check_files: bool) -> None:
+    transition = contract["completionTransitionContract"]
+    intro = contract["completionIntroductionBinding"]
+    finalization = contract["completionFinalization"]
+    require(transition["requiredCompletionSubject"] == TAG920_SUBJECT, "Tag920 subject drift")
+    require(transition["tag920MustBeExactFiveModifyDirectChildOfLiveRemoteTag919"] is True, "Tag920 topology relaxed")
+    require(transition["tag920MustBindAllFiveTag919ParentGitBlobSha1AndRawSha256Values"] is True, "Tag919 blob binding relaxed")
+    require(transition["tag919EventPrefixMustRemainByteExact"] is True, "Tag919 event prefix relaxed")
+    require(transition["tag919ContractTopLevelKeysExact"] == START_TOP_LEVEL_KEYS and transition["postCompletionContractTopLevelKeysExact"] == POST_TOP_LEVEL_KEYS, "completion contract key surface drift")
+    require(transition["allowedTag920ContractMutationJsonPointers"] == [
+        "/contractSelfSha256", "/implementation/controllerNormalizedSha256", "/implementation/testRawSha256",
+        "/completionTransitionContract", "/completionIntroductionBinding", "/completionFinalization",
+    ], "Tag920 allowed mutation surface drift")
+    require(transition["frozenTag919ContractKeysMustRemainCanonicallyEquivalent"] == [
+        "schema", "createdAt", "purpose", "repository", "parentTag917Binding", "parentTag914CorpusBinding",
+        "decision", "populationPolicy", "capturePlan", "sourcePolicy", "queryProtocol", "startTransitionContract",
+        "controlAndCodingPolicy", "completionPolicy", "carriedIncidents", "frozenPolicyProjectionSha256",
+        "outputs", "startIntroductionBinding", "startFinalization",
+    ], "Tag919 frozen key surface drift")
+    require(transition["requiredCompletionEvent"] == {
+        "schema": "early-detection-q010-sc003-governance-event/v1", "eventId": "Q010-SC003-EVT-00000003",
+        "sequence": 3, "eventType": "SUBCHUNK_WORK_COMPLETED",
+        "previousEventMustEqualCommittedTag919EventHead": True, "createdAtMustEqualCompletionRecordedAtUtc": True,
+        "createdAtMustNotExceedTag920CommitTime": True,
+    }, "completion event transition drift")
+    require(transition["postCompletionRuntimePolicy"] == {
+        "researchSourceAccessAuthorized": False, "runCommandAuthorized": False, "sourceCommandAuthorized": False,
+        "startCommandAuthorized": False, "nextQ010SubchunkAuthorized": False, "q003SchedulerEligible": False,
+        "candidateState": None, "scientificCredit": "NONE",
+    }, "post-completion runtime policy drift")
+    require(intro == {
+        "schema": "early-detection-q010-sc003-completion-introduction-binding/v1",
+        "startCommit": TAG919, "startParentBlobs": TAG919_BLOBS,
+        "startParentBlobBindingsSha256": canonical_sha(TAG919_BLOBS),
+        "startRemoteRef": contract["repository"]["remoteRef"],
+        "startRemoteObservedAtUtc": "2026-08-14T03:58:58.630311Z",
+    }, "Tag919 completion parent binding drift")
+    require(list(finalization) == [
+        "schema", "completionRecordedAtUtc", "completionStatus", "workCompleted", "allFifteenUnitsTerminal",
+        "allFortyFiveSlotsTerminal", "everyUnitAtLeastOneNewPayload", "unitsWithAcceptedPayloadCount",
+        "acceptedPayloads", "networkRequestCount", "derivedNullNetworkTerminalizationCount",
+        "eventTypeReasonCrossTable", "privateLedgerEventCount", "privateLedgerRawSha256",
+        "privateLedgerEventHeadSha256", "privateTag920JsonRawSha256", "privateTag920BindingSha256",
+        "preCompletionEventBindingSha256", "runStateSelfSha256", "materialJoinStatus",
+        "materialJoinBindingSha256", "receiptCount", "receiptManifestSha256", "projectionCount",
+        "projectionManifestSha256", "projectionHeadSha256", "rawBlobCount", "rawBlobManifestSha256",
+        "rawByteCount", "publicAggregateProjection", "idempotentSecondRun", "researchSourceAccessAuthorized",
+        "sourceRecordCount", "dimensionLevel", "candidateState", "scientificCredit",
+        "nextQ010SubchunkAuthorized", "q003SchedulerEligible", "earlyDetectionSystemBuilt", "privateContentPublished",
+    ], "completion finalization exact key surface drift")
+    require(finalization["schema"] == "early-detection-q010-sc003-completion-finalization/v1" and finalization["completionRecordedAtUtc"] == "2026-08-14T03:58:59.630311Z", "completion schema/time drift")
+    require(finalization["completionStatus"] == "TYPED_GLOBAL_HOLD_COMPLETED" and finalization["workCompleted"] is True, "completion outcome drift")
+    require(finalization["allFifteenUnitsTerminal"] is True and finalization["allFortyFiveSlotsTerminal"] is True, "terminal matrix drift")
+    require(finalization["everyUnitAtLeastOneNewPayload"] is False and finalization["acceptedPayloads"] == finalization["unitsWithAcceptedPayloadCount"] == 0, "accepted payload drift")
+    require(finalization["networkRequestCount"] == 15 and finalization["derivedNullNetworkTerminalizationCount"] == 30, "completion request accounting drift")
+    require((finalization["privateLedgerEventCount"], finalization["receiptCount"], finalization["projectionCount"], finalization["rawBlobCount"], finalization["rawByteCount"]) == (61, 15, 12, 7, 473787), "completion private aggregate count drift")
+    require((
+        finalization["privateLedgerRawSha256"], finalization["privateLedgerEventHeadSha256"],
+        finalization["privateTag920JsonRawSha256"], finalization["privateTag920BindingSha256"],
+        finalization["preCompletionEventBindingSha256"], finalization["runStateSelfSha256"],
+        finalization["materialJoinBindingSha256"], finalization["receiptManifestSha256"],
+        finalization["projectionManifestSha256"], finalization["projectionHeadSha256"],
+        finalization["rawBlobManifestSha256"],
+    ) == (
+        "086e6236e1e4acc24f7e3eaaf2c7ae5b1d3f28fcf901e8d48fd2e6919bb8c813",
+        "888b1b7db897029ee6fbccc702ce360f310dd2c5d166b7ad09848d2358e08074",
+        "c73c14fbb9a974350d450e3c64f926d4f06c055c9c1649a250e3418a21342bae",
+        "c9f223cf64146b473555e8b7618e4bc6dd840bc0c8781592869c4057bcb518a4",
+        "38847effee7b2338c7e8614a769b4b7c4c14b17f0b3e99e1ee7fee9a9145096d",
+        "fe6f93b670da9f1e57bec111d6c9fff57e0261f63299638e12a31fe61ad0e29e",
+        "0146729bbafb758fadd080a27a46d38a1628211bc02c53fa165ce4db1e322dc8",
+        "d916700751309250744322644554d394a967981b0b534e4a849757fadcaeaa50",
+        "1bd53eec4c508536ef7692289660a296e46e261b62cfdce2911a09b96e971d4e",
+        "245d49859e3ade6cecd40dd0ae293cbbdca8c31b41079f54e100cd91d062885b",
+        "b46da4417a8509f69b3558f9557e2f1dc9ecedc01ac28fc049e866ac54ca33fd",
+    ), "completion private hash binding drift")
+    require(finalization["eventTypeReasonCrossTable"] == finalization["publicAggregateProjection"]["eventTypeReasonCrossTable"], "completion reason projection drift")
+    require(finalization["materialJoinStatus"] == "EXACT" and finalization["privateTag920BindingSha256"] == finalization["publicAggregateProjection"]["parentPrivateTag920FinalBindingSha256"], "completion join/binding drift")
+    aggregate = finalization["publicAggregateProjection"]
+    require(list(aggregate) == [
+        "schema", "parentPrivateTag920FinalBindingSha256", "privateTag920JsonRawSha256", "privateLedger",
+        "privateRunState", "materialJoin", "terminalization", "eventHistogram", "eventTypeReasonCrossTable",
+        "networkAccounting", "completionMetrics", "completionStatus", "publicConclusion", "semanticLocks",
+        "projectionSelfSha256",
+    ], "public aggregate exact key surface drift")
+    require(public_projection_self_sha256(aggregate) == aggregate["projectionSelfSha256"], "public aggregate self hash drift")
+    require(aggregate["completionStatus"] == "HOLD" and aggregate["completionMetrics"] == {
+        "allFortyFiveSlotsTerminal": True, "allFifteenUnitsTerminal": True,
+        "everyUnitAtLeastOneNewPayload": False, "perRowEDifferenceFromLAtMostOne": True, "incidentFree": True,
+    }, "public completion metrics drift")
+    require(aggregate["networkAccounting"]["acceptedPrimaryPayloadCount"] == 0 and aggregate["terminalization"]["unitsWithAcceptedPrimaryPayloadCount"] == 0, "public accepted-primary count drift")
+    require(aggregate["eventHistogram"] == [
+        {"eventType": "QUERY_PREPARED", "count": 15}, {"eventType": "QUERY_RESPONSE_SEALED", "count": 15},
+        {"eventType": "DERIVED_SLOT_TYPED_HOLD", "count": 30}, {"eventType": "GLOBAL_INCIDENT", "count": 0},
+        {"eventType": "RUN_COMPLETED", "count": 1},
+    ], "public event histogram drift")
+    require(aggregate["terminalization"]["terminalSlotCount"] == aggregate["terminalization"]["terminalSlotUniqueCount"] == 45 and aggregate["terminalization"]["terminalUnitCount"] == 15, "public terminal uniqueness drift")
+    require(finalization["idempotentSecondRun"] == {
+        "ledgerEventCountUnchanged": True, "ledgerRawSha256Unchanged": True, "ledgerHeadSha256Unchanged": True,
+        "privateTag920BindingSha256Unchanged": True, "ownedFileCountUnchanged": True,
+        "requestCountUnchanged": True, "additionalRequests": 0,
+    }, "idempotent completion receipt drift")
+    require(all(aggregate["semanticLocks"].values()), "public semantic lock drift")
+    require(finalization["researchSourceAccessAuthorized"] is False and finalization["sourceRecordCount"] == 0 and finalization["dimensionLevel"] is None and finalization["candidateState"] is None and finalization["scientificCredit"] == "NONE", "completion science lock drift")
+    require(finalization["nextQ010SubchunkAuthorized"] is False and finalization["q003SchedulerEligible"] is False and finalization["earlyDetectionSystemBuilt"] is False and finalization["privateContentPublished"] is False, "completion downstream lock drift")
+    if check_files:
+        require(run_git(["show", "-s", "--format=%P", TAG919]) == TAG918, "Tag919 parent drift")
+        require(run_git(["show", "-s", "--format=%s", TAG919]) == TAG919_SUBJECT, "Tag919 subject drift")
+        for blob in TAG919_BLOBS:
+            require(run_git(["rev-parse", f'{TAG919}:{blob["path"]}']) == blob["gitBlobSha1"], "Tag919 blob id drift")
+            require(sha256_bytes(run_git_bytes(["show", f'{TAG919}:{blob["path"]}'])) == blob["rawSha256"], "Tag919 raw blob drift")
+        parent_contract = json.loads(run_git_bytes(["show", f'{TAG919}:{CONTRACT_PATH.relative_to(ROOT).as_posix()}']).decode("utf-8"))
+        require(list(parent_contract) == START_TOP_LEVEL_KEYS, "Tag919 parent contract key surface drift")
+        for key in START_TOP_LEVEL_KEYS:
+            if key not in {"contractSelfSha256", "implementation"}:
+                require(contract[key] == parent_contract[key], "frozen Tag919 contract drift: " + key)
+        require({k: contract["implementation"][k] for k in contract["implementation"] if k not in {"controllerNormalizedSha256", "testRawSha256"}} == {k: parent_contract["implementation"][k] for k in parent_contract["implementation"] if k not in {"controllerNormalizedSha256", "testRawSha256"}}, "Tag919 implementation policy drift")
+        require(derive_public_completion_aggregate_from_private(contract, finalization) == aggregate, "public aggregate is not exact strict private runtime replay")
+
+
 def validate_bundle(contract: dict, events: list[dict], state: dict, check_files: bool = True, allow_private_store: bool = False) -> None:
     require(list(contract) == POST_TOP_LEVEL_KEYS, "POST contract top-level key surface drift")
     require(contract["purpose"] == PURPOSE, "contract purpose drift")
@@ -718,16 +1040,16 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
     validate_parent_bindings(contract, check_files)
     validate_policy(contract)
     validate_start_binding(contract, check_files)
+    validate_completion_binding(contract, check_files)
     expected = expected_events(contract)
-    require(len(events) == 2 and events == expected, "start event/replay drift")
+    require(len(events) == 3 and events == expected, "completion event/replay drift")
     require(events[0]["eventSha256"] == EXPECTED_DECISION_EVENT_SHA256, "controller-bound decision event head drift")
     require(events[1]["previousEventSha256"] == EXPECTED_DECISION_EVENT_SHA256 and events[1]["createdAt"] == WORK_STARTED_AT, "start event causal binding drift")
+    require(events[2]["previousEventSha256"] == TAG919_EVENT_HEAD_SHA256 and events[2]["createdAt"] == contract["completionFinalization"]["completionRecordedAtUtc"], "completion event causal binding drift")
     require(state == expected_state(contract, events), "event-to-state replay drift")
     if check_files:
-        if not allow_private_store:
-            require(not PRIVATE_STORE_ROOT.exists(), "private SC003 store must not exist before Tag919 POST start gate")
-        prefix = run_git_bytes(["show", f"{TAG918}:{EVENTS_PATH.relative_to(ROOT).as_posix()}"])
-        require(EVENTS_PATH.read_bytes().startswith(prefix) and sha256_bytes(prefix) == TAG918_EVENT_PREFIX_SHA256, "Event1 byte-prefix drift")
+        prefix, _ = tag919_event_prefix()
+        require(EVENTS_PATH.read_bytes().startswith(prefix) and sha256_bytes(prefix) == TAG919_EVENT_PREFIX_SHA256, "Tag919 Event1+Event2 byte-prefix drift")
         validate_process_surface()
         require(sha256_path(CONTRACT_PATH) == EXPECTED_CONTRACT_RAW_SHA256, "contract raw hash drift")
         require(controller_normalized_sha256() == EXPECTED_CONTROLLER_NORMALIZED_SHA256, "controller normalized hash drift")
@@ -738,6 +1060,15 @@ def validate_bundle(contract: dict, events: list[dict], state: dict, check_files
         require(impl["controllerPath"] == "scripts/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.py" and impl["controllerNormalizedSha256"] == EXPECTED_CONTROLLER_NORMALIZED_SHA256, "controller implementation binding drift")
         require(impl["testPath"] == "tests/early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-v1.test.js" and impl["testRawSha256"] == EXPECTED_TEST_RAW_SHA256, "test implementation binding drift")
         require(impl["controllerChildExecutionsRequired"] == 0 and impl["sourceAccessImplementationPresentAtDecision"] is False and impl["networkImportsForbiddenAtDecision"] is True, "decision-only implementation drift")
+
+
+def classify_completion_snapshot(head: str, remote: str, parent: str, subject: str, changes: list[tuple[str, str]], dirty: bool, owned_paths: list[str]) -> str:
+    exact_changes = sorted(changes) == sorted(("M", path) for path in owned_paths)
+    if head == remote == TAG919 and parent == TAG918 and subject == TAG919_SUBJECT and exact_changes:
+        return "COMPLETION_PRE_INTRODUCTION"
+    if head == remote and head != TAG919 and parent == TAG919 and subject == TAG920_SUBJECT and exact_changes and not dirty:
+        return "COMPLETION_POST_INTRODUCTION"
+    fail("completion topology/path snapshot is not an authorized PRE or POST phase")
 
 
 def remote_phase(contract: dict) -> tuple[str, str | None, str | None]:
@@ -752,24 +1083,26 @@ def remote_phase(contract: dict) -> tuple[str, str | None, str | None]:
     remote = remote_line.split()[0] if remote_line else ""
     require(remote and upstream == remote, "upstream/live remote mismatch")
     paths = repo["ownedPaths"]
-    require(run_git(["show", "-s", "--format=%P", TAG918]) == TAG918_PARENT, "Tag918 parent drift")
-    require(run_git(["show", "-s", "--format=%s", TAG918]) == TAG918_SUBJECT, "Tag918 subject drift")
-    if head == TAG918 and remote == TAG918:
-        delta = run_git(["diff", "--name-status", TAG918, "--", *paths]).splitlines()
-        require(sorted(delta) == sorted(f"M\t{path}" for path in paths), "Tag919 PRE requires exact five modified paths")
-        return "START_PRE_INTRODUCTION", None, observed_at
+    require(run_git(["show", "-s", "--format=%P", TAG919]) == TAG918, "Tag919 parent drift")
+    require(run_git(["show", "-s", "--format=%s", TAG919]) == TAG919_SUBJECT, "Tag919 subject drift")
+    if head == TAG919 and remote == TAG919:
+        delta = run_git(["diff", "--name-status", TAG919]).splitlines()
+        changes = [tuple(line.split("\t", 1)) for line in delta if line]
+        phase = classify_completion_snapshot(head, remote, TAG918, TAG919_SUBJECT, changes, False, paths)
+        return phase, None, observed_at
     require(head == remote, "HEAD/live remote mismatch")
-    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == TAG918, "start introduction parent drift")
-    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == TAG919_SUBJECT, "start introduction subject drift")
+    require(run_git(["show", "-s", "--format=%P", "HEAD"]) == TAG919, "completion introduction parent drift")
+    require(run_git(["show", "-s", "--format=%s", "HEAD"]) == TAG920_SUBJECT, "completion introduction subject drift")
     commit_time = run_git(["show", "-s", "--format=%cI", "HEAD"])
-    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(WORK_STARTED_AT.replace("Z", "+00:00")).timestamp(), "start commit predates start event")
+    require(datetime.fromisoformat(commit_time).timestamp() >= datetime.fromisoformat(contract["completionFinalization"]["completionRecordedAtUtc"].replace("Z", "+00:00")).timestamp(), "Tag920 commit predates completion event")
     require(datetime.fromisoformat(observed_at.replace("Z", "+00:00")).timestamp() >= datetime.fromisoformat(commit_time).timestamp(), "remote observation predates commit")
     delta = run_git(["diff-tree", "--no-commit-id", "--name-status", "-r", "HEAD"]).splitlines()
-    require(sorted(tuple(line.split("\t", 1)) for line in delta if line) == sorted(("M", path) for path in paths), "start introduction must be exact five modifications")
-    require(not run_git(["status", "--porcelain", "--", *paths]), "post-start owned paths dirty")
+    changes = [tuple(line.split("\t", 1)) for line in delta if line]
+    dirty = bool(run_git(["status", "--porcelain", "--", *paths]))
+    phase = classify_completion_snapshot(head, remote, TAG919, TAG920_SUBJECT, changes, dirty, paths)
     for path in paths:
-        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), "introduced start blob differs: " + path)
-    return "START_POST_INTRODUCTION", head, observed_at
+        require(run_git(["hash-object", "--no-filters", path]) == run_git(["rev-parse", f"HEAD:{path}"]), "introduced completion blob differs: " + path)
+    return phase, head, observed_at
 
 
 def verify(remote: bool, private_store_allowed: bool = False) -> dict:
@@ -777,10 +1110,11 @@ def verify(remote: bool, private_store_allowed: bool = False) -> dict:
     contract, events, state = read_contract(), read_events(), read_state()
     validate_bundle(contract, events, state, check_files=True, allow_private_store=private_store_allowed)
     phase, commit, observed = remote_phase(contract)
-    post = phase == "START_POST_INTRODUCTION"
+    post = phase == "COMPLETION_POST_INTRODUCTION"
+    aggregate = contract["completionFinalization"]["publicAggregateProjection"]
     return {
-        "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-verification/v1",
-        "status": "PASS" if post else "START_PRE_INTRODUCTION_DIAGNOSTIC",
+        "schema": "early-detection-q010-sc003-dmv7-balanced-tel-raw-capture-verification/v2",
+        "status": "PASS" if post else "COMPLETION_PRE_INTRODUCTION_DIAGNOSTIC",
         "phase": phase,
         "introductionCommit": commit,
         "remoteObservedAtUtc": observed,
@@ -791,11 +1125,18 @@ def verify(remote: bool, private_store_allowed: bool = False) -> dict:
         "targetDimensions": ["T", "E", "L"],
         "decisionRecorded": True,
         "decisionRemoteIntroductionVerified": True,
-        "startRemoteIntroductionVerified": post,
+        "startRemoteIntroductionVerified": True,
         "workStarted": True,
         "workStartedAtUtc": WORK_STARTED_AT,
+        "workCompleted": True,
+        "completionStatus": "HOLD",
+        "privateCompletionStatus": contract["completionFinalization"]["completionStatus"],
+        "completionRemoteIntroductionVerified": post,
+        "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
+        "publicConclusion": aggregate["publicConclusion"],
+        "acceptedPrimaryPayloadCount": 0,
         "researchSourceAccessAuthorized": False,
-        "runtimeResearchSourceAccessAuthorized": post,
+        "runtimeResearchSourceAccessAuthorized": False,
         "codingAllowed": False,
         "candidateState": None,
         "futureSourceRecordStatus": "NOT_CREATED_PENDING_SEPARATE_BLIND_DECISION",
@@ -819,14 +1160,17 @@ def bootstrap(write: bool) -> dict:
     contract["sourcePolicy"]["frozenQueryTemplatesSha256"] = frozen_query_templates_sha256(contract)
     contract["capturePlan"]["slotScheduleSha256"] = slot_schedule_sha256(contract)
     contract["frozenPolicyProjectionSha256"] = policy_projection_sha256(contract)
+    aggregate = derive_public_completion_aggregate_from_private(contract, contract["completionFinalization"])
+    contract["completionFinalization"]["publicAggregateProjection"] = aggregate
+    contract["completionFinalization"]["eventTypeReasonCrossTable"] = copy.deepcopy(aggregate["eventTypeReasonCrossTable"])
     contract["implementation"]["controllerNormalizedSha256"] = controller_normalized_sha256()
     contract["implementation"]["testRawSha256"] = sha256_path(TEST_PATH)
     contract["contractSelfSha256"] = contract_self_sha256(contract)
     events = expected_events(contract)
     state = expected_state(contract, events)
     contract_raw = json.dumps(contract, ensure_ascii=False, indent=2) + "\n"
-    prefix = run_git_bytes(["show", f"{TAG918}:{EVENTS_PATH.relative_to(ROOT).as_posix()}"])
-    events_raw = prefix.decode("utf-8") + json.dumps(events[1], ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    prefix, _ = tag919_event_prefix()
+    events_raw = prefix.decode("utf-8") + json.dumps(events[2], ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
     state_raw = json.dumps(state, ensure_ascii=False, indent=2) + "\n"
     result = {
         "contractRawSha256": sha256_bytes(contract_raw.encode("utf-8")),
@@ -845,6 +1189,17 @@ def bootstrap(write: bool) -> dict:
         "queryProtocolSha256": canonical_sha(contract["queryProtocol"]),
         "startTransitionSha256": canonical_sha(contract["startTransitionContract"]),
         "completionPolicySha256": canonical_sha(contract["completionPolicy"]),
+        "completionTransitionSha256": canonical_sha(contract["completionTransitionContract"]),
+        "publicAggregateProjectionSha256": aggregate["projectionSelfSha256"],
+        "privateCompletionReplaySnapshotSha256": canonical_sha({
+            "privateLedgerRawSha256": contract["completionFinalization"]["privateLedgerRawSha256"],
+            "runStateSelfSha256": contract["completionFinalization"]["runStateSelfSha256"],
+            "privateTag920JsonRawSha256": contract["completionFinalization"]["privateTag920JsonRawSha256"],
+            "privateTag920BindingSha256": contract["completionFinalization"]["privateTag920BindingSha256"],
+            "receiptManifestSha256": contract["completionFinalization"]["receiptManifestSha256"],
+            "projectionManifestSha256": contract["completionFinalization"]["projectionManifestSha256"],
+            "rawBlobManifestSha256": contract["completionFinalization"]["rawBlobManifestSha256"],
+        }),
     }
     if write:
         CONTRACT_PATH.write_text(contract_raw, encoding="utf-8", newline="\n")
@@ -1296,11 +1651,11 @@ def runtime_binding(contract: dict, tag919: str) -> dict:
         "tag919Commit": tag919,
         "ownedPathBlobs": blobs,
         "ownedPathBlobBindingsSha256": canonical_sha(blobs),
-        "contractRawSha256": sha256_path(CONTRACT_PATH),
+        "contractRawSha256": next(blob["rawSha256"] for blob in TAG919_BLOBS if blob["path"] == CONTRACT_PATH.relative_to(ROOT).as_posix()) if tag919 == TAG919 else sha256_path(CONTRACT_PATH),
         "contractSelfSha256": contract["contractSelfSha256"],
         "frozenPolicyProjectionSha256": contract["frozenPolicyProjectionSha256"],
         "slotScheduleSha256": contract["capturePlan"]["slotScheduleSha256"],
-        "controllerNormalizedSha256": controller_normalized_sha256(),
+        "controllerNormalizedSha256": contract["implementation"]["controllerNormalizedSha256"] if tag919 == TAG919 else controller_normalized_sha256(),
         "bindingSha256": None,
     }
     binding["bindingSha256"] = canonical_sha(binding)
@@ -2262,6 +2617,7 @@ def idempotent_completion(contract: dict, state: dict, tag919: str) -> dict:
 
 
 def run_capture(remote: bool) -> dict:
+    fail("SC003 is publicly completed; source runtime is permanently closed")
     require(remote, "--remote is mandatory for source runtime")
     gate = verify(True, private_store_allowed=True)
     require(gate["phase"] == "START_POST_INTRODUCTION" and gate["runtimeResearchSourceAccessAuthorized"] is True, "source runtime forbidden before live Tag919 POST gate")
@@ -2321,6 +2677,11 @@ def self_test() -> dict:
             attacks.append(name)
             return
         fail("mutation survived: " + name)
+
+    def aggregate_mutation(c: dict, mutate) -> None:
+        aggregate = c["completionFinalization"]["publicAggregateProjection"]
+        mutate(aggregate)
+        aggregate["projectionSelfSha256"] = public_projection_self_sha256(aggregate)
 
     rejected("base-commit", lambda c: c["repository"].__setitem__("baseCommit", "0" * 40))
     rejected("top-level-source-access", lambda c: c.__setitem__("researchSourceAccessAuthorized", True))
@@ -2440,6 +2801,123 @@ def self_test() -> dict:
     rejected("sc001-drop", lambda c: c["carriedIncidents"]["sc001"].__setitem__("remainsEffective", False))
     rejected("sc002-drop", lambda c: c["carriedIncidents"]["sc002"].__setitem__("remainsEffective", False))
     rejected("system-built", lambda c: c["completionPolicy"].__setitem__("earlyDetectionSystemBuilt", True))
+    rejected("tag920-subject", lambda c: c["completionTransitionContract"].__setitem__("requiredCompletionSubject", "Tag 920: drift"))
+    rejected("tag920-topology-relaxed", lambda c: c["completionTransitionContract"].__setitem__("tag920MustBeExactFiveModifyDirectChildOfLiveRemoteTag919", False))
+    rejected("tag920-mutation-surface-expanded", lambda c: c["completionTransitionContract"]["allowedTag920ContractMutationJsonPointers"].append("/sourcePolicy"))
+    rejected("post-completion-run-authorized", lambda c: c["completionTransitionContract"]["postCompletionRuntimePolicy"].__setitem__("runCommandAuthorized", True))
+    rejected("tag919-completion-parent", lambda c: c["completionIntroductionBinding"].__setitem__("startCommit", "0" * 40))
+    rejected("tag919-completion-parent-blob", lambda c: c["completionIntroductionBinding"]["startParentBlobs"][0].__setitem__("rawSha256", "0" * 64))
+    rejected("completion-backdate", lambda c: c["completionFinalization"].__setitem__("completionRecordedAtUtc", "2026-08-14T01:00:00Z"))
+    rejected("completion-success-forge", lambda c: c["completionFinalization"].__setitem__("completionStatus", "RAW_CAPTURE_MATRIX_COMPLETE_UNCODED_NO_CREDIT"))
+    rejected("completion-accepted-forge", lambda c: c["completionFinalization"].__setitem__("acceptedPayloads", 1))
+    rejected("completion-request-forge", lambda c: c["completionFinalization"].__setitem__("networkRequestCount", 16))
+    rejected("completion-private-binding-forge", lambda c: c["completionFinalization"].__setitem__("privateTag920BindingSha256", "0" * 64))
+    rejected("aggregate-accepted-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["networkAccounting"].__setitem__("acceptedPrimaryPayloadCount", 1)))
+    rejected("aggregate-terminal-unique-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["terminalization"].__setitem__("terminalSlotUniqueCount", 44)))
+    rejected("aggregate-incident-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["completionMetrics"].__setitem__("incidentFree", False)))
+    rejected("aggregate-every-unit-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["completionMetrics"].__setitem__("everyUnitAtLeastOneNewPayload", True)))
+    rejected("aggregate-negative-evidence-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["semanticLocks"].__setitem__("derivedNullNetworkTerminalizationsAreNotNegativeEvidence", False)))
+    rejected("aggregate-locator-as-primary-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["semanticLocks"].__setitem__("storedBlobCountsAreNotAcceptedPrimarySourceCounts", False)))
+    rejected("aggregate-reason-coherent-rehash", lambda c: aggregate_mutation(c, lambda a: a["eventTypeReasonCrossTable"][0].__setitem__("count", 11)))
+
+    runtime_contract_fixture = tag919_runtime_contract(contract)
+    strict_materials = read_private_materials(runtime_contract_fixture, TAG919)
+    strict_stored_state = load_run_state(runtime_contract_fixture, TAG919)
+    strict_binding_path = PRIVATE_STORE_ROOT / "tag920-completion-binding-v1.json"
+    strict_binding_raw = strict_binding_path.read_bytes()
+    strict_stored_binding = json.loads(strict_binding_raw.decode("utf-8"))
+    validate_strict_private_completion_replay(
+        runtime_contract_fixture, contract["completionFinalization"], strict_materials,
+        strict_stored_state, strict_binding_raw, strict_stored_binding,
+    )
+
+    coherent_materials = copy.deepcopy(strict_materials)
+    forged_response = next(row for row in coherent_materials["rows"] if row["eventType"] == "QUERY_RESPONSE_SEALED")
+    forged_response["payload"]["singleReason"] = "HOLD_CDX_RETURNED_STATUSCODE_NOT_EXACT_200"
+    forged_response["payload"]["responseHeaderProjectionSha256"] = canonical_sha(sealed_response_header_projection(
+        forged_response["payload"]["httpStatusOrTypedError"], forged_response["payload"]["mimeType"],
+        forged_response["payload"]["singleReason"], forged_response["payload"]["redirectChain"],
+    ))
+    previous = None
+    event_hashes: dict[int, str] = {}
+    for row in coherent_materials["rows"]:
+        row["previousEventSha256"] = previous
+        if "previousEventSha256" in row["payload"]:
+            row["payload"]["previousEventSha256"] = previous
+        row["eventSha256"] = event_self_sha256(row)
+        previous = row["eventSha256"]
+        event_hashes[row["sequence"]] = previous
+    coherent_materials["ledgerRaw"] = b"".join(canonical(row) + b"\n" for row in coherent_materials["rows"])
+    previous_projection = None
+    for row in coherent_materials["projectionRows"]:
+        row["previousProjectionRecordSha256"] = previous_projection
+        row["responseEventSha256"] = event_hashes[row["responseEventSequence"]]
+        row["projectionRecordSha256"] = None
+        row["projectionRecordSha256"] = canonical_sha(row)
+        previous_projection = row["projectionRecordSha256"]
+    coherent_materials["projectionRaw"] = b"".join(canonical(row) + b"\n" for row in coherent_materials["projectionRows"])
+    coherent_materials["summary"] = material_summary(
+        coherent_materials["projectionRows"], coherent_materials["projectionRaw"],
+        coherent_materials["receiptManifest"], coherent_materials["rawManifest"],
+    )
+    coherent_state = copy.deepcopy(strict_stored_state)
+    coherent_state["lastDurableEventSha256"] = coherent_materials["rows"][-1]["eventSha256"]
+    coherent_state["lastDurableLedgerRawSha256"] = sha256_bytes(coherent_materials["ledgerRaw"])
+    last_response_sequence = coherent_state["lastResponseEventSequence"]
+    coherent_state["lastResponseEventSha256"] = event_hashes[last_response_sequence]
+    coherent_state["lastResponseLedgerRawSha256"] = sha256_bytes(b"".join(
+        canonical(row) + b"\n" for row in coherent_materials["rows"][:last_response_sequence]
+    ))
+    coherent_state["runStateSelfSha256"] = None
+    coherent_state["runStateSelfSha256"] = canonical_sha(coherent_state)
+    coherent_binding = copy.deepcopy(strict_stored_binding)
+    coherent_binding["privateLedgerRawSha256"] = sha256_bytes(coherent_materials["ledgerRaw"])
+    coherent_binding["privateLedgerEventHeadSha256"] = coherent_materials["rows"][-1]["eventSha256"]
+    coherent_binding["runStateSha256"] = coherent_state["runStateSelfSha256"]
+    coherent_binding["projectionManifestSha256"] = coherent_materials["summary"]["projectionManifestSha256"]
+    coherent_binding["projectionHeadSha256"] = coherent_materials["summary"]["projectionHeadSha256"]
+    coherent_binding["bindingSha256"] = None
+    coherent_binding["bindingSha256"] = canonical_sha(coherent_binding)
+    coherent_binding_raw = json.dumps(coherent_binding, ensure_ascii=False, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    coherent_contract = copy.deepcopy(contract)
+    coherent_finalization = coherent_contract["completionFinalization"]
+    coherent_finalization["privateLedgerRawSha256"] = coherent_binding["privateLedgerRawSha256"]
+    coherent_finalization["privateLedgerEventHeadSha256"] = coherent_binding["privateLedgerEventHeadSha256"]
+    coherent_finalization["runStateSelfSha256"] = coherent_state["runStateSelfSha256"]
+    coherent_finalization["privateTag920BindingSha256"] = coherent_binding["bindingSha256"]
+    coherent_finalization["privateTag920JsonRawSha256"] = sha256_bytes(coherent_binding_raw)
+    coherent_aggregate = coherent_finalization["publicAggregateProjection"]
+    coherent_aggregate["parentPrivateTag920FinalBindingSha256"] = coherent_binding["bindingSha256"]
+    coherent_aggregate["privateTag920JsonRawSha256"] = sha256_bytes(coherent_binding_raw)
+    coherent_aggregate["privateLedger"]["rawSha256"] = coherent_binding["privateLedgerRawSha256"]
+    coherent_aggregate["privateLedger"]["eventHeadSha256"] = coherent_binding["privateLedgerEventHeadSha256"]
+    coherent_aggregate["privateRunState"]["selfSha256"] = coherent_state["runStateSelfSha256"]
+    coherent_aggregate["projectionSelfSha256"] = public_projection_self_sha256(coherent_aggregate)
+    coherent_contract["contractSelfSha256"] = contract_self_sha256(coherent_contract)
+    coherent_events = expected_events(coherent_contract)
+    coherent_public_state = expected_state(coherent_contract, coherent_events)
+    require(coherent_public_state["stateSelfSha256"] == state_self_sha256(coherent_public_state), "coherent public-five forge fixture did not rehash")
+    try:
+        validate_strict_private_completion_replay(
+            runtime_contract_fixture, coherent_finalization, coherent_materials, coherent_state,
+            coherent_binding_raw, coherent_binding,
+        )
+    except GateError:
+        attacks.append("strict-coherent-ledger-state-binding-public-five-forge")
+    else:
+        fail("coherently rehashed private/public completion forge survived strict runtime replay")
+
+    forged_exact_join_materials = copy.deepcopy(strict_materials)
+    forged_exact_join_materials["blobs"].pop(next(iter(forged_exact_join_materials["blobs"])))
+    try:
+        validate_strict_private_completion_replay(
+            runtime_contract_fixture, contract["completionFinalization"], forged_exact_join_materials,
+            strict_stored_state, strict_binding_raw, strict_stored_binding,
+        )
+    except GateError:
+        attacks.append("strict-forged-exact-material-join")
+    else:
+        fail("forged EXACT material join survived strict runtime replay")
     sample_slot = contract["capturePlan"]["slotSchedule"][0]
     sample_rows = [
         ["timestamp", "original", "statuscode", "mimetype", "digest"],
@@ -3104,8 +3582,13 @@ def self_test() -> dict:
         pass
     else:
         fail("coherently rehashed unbound response-blob multiset survived successful completion replay")
-    require(len(attacks) == 118, "self-test kill count drift")
-    return {"status": "PASS", "kills": len(attacks), "resumeCrashCases": 11, "p0RuntimeFixtures": 45, "controllerChildExecutions": 0, "sourceRequests": source_requests}
+    paths = contract["repository"]["ownedPaths"]
+    completion_post_fixture = classify_completion_snapshot(
+        "9" * 40, "9" * 40, TAG919, TAG920_SUBJECT, [("M", path) for path in paths], False, paths
+    ) == "COMPLETION_POST_INTRODUCTION"
+    require(completion_post_fixture, "completion POST topology fixture failed")
+    require(len(attacks) == 138, "self-test kill count drift")
+    return {"status": "PASS", "kills": len(attacks), "resumeCrashCases": 11, "p0RuntimeFixtures": 45, "strictCompletionReplayFixtures": 2, "completionPostPhaseFixture": completion_post_fixture, "controllerChildExecutions": 0, "sourceRequests": source_requests}
 
 
 def main() -> int:
@@ -3126,8 +3609,8 @@ def main() -> int:
             print(json.dumps(result, sort_keys=True))
             return 0
         result = verify(args.remote)
-        if args.command == "start" and result["phase"] != "START_POST_INTRODUCTION":
-            fail("SC003 source access requires live remote Tag919 start introduction")
+        if args.command == "start":
+            fail("SC003 is publicly completed; start/source runtime is permanently closed")
         print(json.dumps(result, sort_keys=True))
         return 0
     except (GateError, OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
