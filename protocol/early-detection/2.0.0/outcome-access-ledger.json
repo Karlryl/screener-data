@@ -7,7 +7,7 @@
  "confirmatoryWindows": [
   "2021-01-01/2023-12-31"
  ],
- "initialStatus": "R15B_COUNT_ONLY_PROBE_REGISTERED",
+ "initialStatus": "R15B_COUNT_ONLY_PROBE_REGISTERED_PARAM_MIN4",
  "events": [
   {
    "runId": "e1b-abnahme-2026-08-16",
@@ -38,6 +38,51 @@
    "endtestSiegel": "unberuehrt - die Zaehlung laeuft auf dem Panel, nicht auf der verschluesselten Fenster-Datei.",
    "previousHash": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
    "eventHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b"
+  },
+  {
+   "runId": "e1b-abnahme-neulauf-2026-08-16",
+   "typ": "PARAMETER_REGISTRIERUNG_UND_R15b_NUR_ZAEHLEN",
+   "registeredAt": "2026-08-16T18:02:59.538Z",
+   "accessedAt": null,
+   "registrierterParameter": {
+    "name": "minTraegerFuerDefinitionsmenge",
+    "wert": 4,
+    "technischeBedeutung": "Anzahl EINREICHUNGEN (Filings) einer Firma im Fenster, die einen Umsatzwert nach Landkarte 1.1.0 tragen. Zeitachsen-Groesse, NICHT Umsatz-Tags je Einreichung.",
+    "codestelle": "scripts/early-detection-e1.py, cmd_abnahme: 'having sum(rev>0) >= ?' — der Boolean-Kollaps rev>0 je submission_key macht aus der Tag-Zaehlung eine Einreichungs-Zaehlung.",
+    "verifikation": "Empirisch an allen 10.699 Firmen des Entdeckungsfensters: sum(rev>0) stimmt zu 100,0 % mit der Anzahl Einreichungen mit Umsatzwert ueberein und nur zu 20,8 % mit der Summe der Tag-Zeilen. Die Kippstelle beider Blindurteile ist damit auf der richtigen Seite.",
+    "offengelegteEinschraenkung": "Einreichungen sind nicht durchgaengig verschiedene Perioden: 10-K und 10-Q koennen dasselbe period_end tragen, Amendments wiederholen es. Stichprobe: 6 Einreichungen mit Umsatz -> 3 verschiedene period_end. Die Bedingung nannte ausdruecklich 'Quartal BZW. Einreichung', die Groesse ist also zulaessig — aber sie ist die groszuegigere der beiden zulaessigen Lesarten."
+   },
+   "herkunftDerEntscheidung": {
+    "verfahren": "Zwei Fable-Instanzen, unabhaengig voneinander, OHNE Kenntnis des Laufergebnisses und OHNE Kenntnis der jeweils anderen. Messen der Quote, Lesen des E1-Berichts, des Arbeitsverzeichnisses und des Datenordners waren beiden ausdruecklich verboten. Vorab vereinbart: bei Widerspruch bleibt es bei INCONCLUSIVE_DATA.",
+    "ergebnis": "Beide unabhaengig: >=4.",
+    "begruendungen": [
+     "Normativer Wortlaut: Wo der Beschluss ANORDNET (Abschnitt 3), definiert er die Population als 'Firmen mit Umsatzreihe' und den Pflichtsatz als 'operative SEC-Filer mit Umsatzhistorie'; die Verfassung (R9) spricht von 'Faellen' in 'beiden Gruppen'. Reihe, Historie, Faelle sind Mehrzahl-Semantik. Die lockere Formulierung steht ausschliesslich im Beleg-Teil — an genau der Stelle, deren Zweideutigkeit den Defekt ausmacht; sie kann nicht zugleich seine Aufloesung sein.",
+     "Mathematik des Indikators: Die Hauptfrage misst Beschleunigung. Wachstum braucht zwei Punkte, Beschleunigung drei, ein Quartals-YoY fuenf. Auf einer Firma mit einem einzigen Umsatzwert ist nicht einmal eine Wachstumsrate definiert; 'Nachverfolgbarkeit' ist dort semantisch leer.",
+     "Binnenkonsistenz: Derselbe Beschluss nimmt 20-F-Halbjahresfiler aus dem Nenner, WEIL sie 'strukturell kein Quartals-Signal tragen koennen'. Eine Ein-Punkt-Firma kann noch weniger tragen. >=1 erzeugte einen Widerspruch zur eigenen 20-F-Begruendung.",
+     "Konservativitaet, ausdruecklich geprueft: Gate-haerter ist >=1 (die >=4-Population ist Teilmenge). Das spricht NICHT fuer >=1. Diese Haerte besteht vollstaendig aus Faellen ausserhalb des Definitionsbereichs — dieselbe Fehlklasse wie die Banken im Nenner, mit der der Beschluss das rote Gate ueberhaupt erst diagnostiziert hat. Falsche Haerte ist keine Vorsicht, sondern Fehlspezifikation.",
+     "Kandidaten unberuehrt: Universum und Eintrittskriterium (>=8 Quartale) aendern sich nicht. Es aendert sich nur der Nenner einer DATENQUALITAETS-Messung. Die LQDA-Klasse bleibt erhalten."
+    ],
+    "restExposition": "Der Beleg-Teil des Beschlusses enthaelt eine Ex-ante-Prognose vom ALTEN Werkzeug, in der BEIDE Lesarten ueber 90 % liegen — sie diskriminiert also nicht zwischen ihnen und konnte die Blindurteile nicht in eine Richtung ziehen."
+   },
+   "offengelegterVerstoss": {
+    "regel": "Kriterium 1 der fuenf Unterscheidungsmerkmale ('die Korrektur passiert, bevor irgendein Ergebnis existiert')",
+    "status": "DEM BUCHSTABEN NACH VERLETZT — ein Ergebnis existierte, als der Parameter bestimmt wurde.",
+    "surrogat": "Zwei unabhaengige Blindurteile, beide rein textlich-semantisch begruendet, beide mit vollstaendiger Offenlegung ihrer Rest-Exposition.",
+    "pruefbarkeit": "Der gesamte Vorgang ist an den zitierten Textstellen nachpruefbar und verwerfbar. Diese Offenheit ist der Preis dafuer, dass der Lauf ueberhaupt noch etwas wert ist."
+   },
+   "ersterLaufBleibtInDerAkte": {
+    "runId": "e1b-abnahme-2026-08-16",
+    "lesart": ">=1 (unregistrierte Skript-Vorgabe)",
+    "verdikt": "INCONCLUSIVE_DATA",
+    "verfehlt": "K1: Entdeckung 89,7 % gegen 90 % (0,3 Punkte)",
+    "k2": "2,2 Punkte, erfuellt",
+    "k3": "2,4 Punkte, erfuellt",
+    "vermerk": "Wird NICHT ersetzt und NICHT kleingeschrieben. Zahlen je Fenster und je Jahr stehen in reports/studie/E1b-abnahme-2026-08-16.md und reports/early-detection/abnahme-e1b.json."
+   },
+   "erlaubt": "Anzahl Einreichungen je Fenster/Jahr und Existenz eines Umsatztraegers in Pruef- und Endtestfenster. Keine Kennzahl-Werte, keine Signalrechnung, keine Ergebnisdaten.",
+   "grenze": "Das ist der EINZIGE Neulauf. Verfehlt er das Gate, endet Strang B als INCONCLUSIVE_DATA, endgueltig. Keine dritte Lesart, keine weitere Revision, kein Nachjustieren.",
+   "previousHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b",
+   "eventHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
