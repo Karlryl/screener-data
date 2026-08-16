@@ -9,9 +9,16 @@
 // eigenen Quartale durch und wirft bei allen fremden.
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const test = require('node:test');
 
-const { pruefeFenster, ladeRegelwerk, quartalsSchluessel, VerfassungsBruch } = require('../lib/studie-verfassung');
+const {
+  pruefeFenster,
+  ladeRegelwerk,
+  quartalsSchluessel,
+  VerfassungsBruch,
+  REGELWERK_PFAD,
+} = require('../lib/studie-verfassung');
 
 const regelwerk = ladeRegelwerk();
 
@@ -59,6 +66,33 @@ test('R2/R4: das Endtest-Fenster oeffnet nur mit der Oeffnungsprotokoll-Marke', 
     pruefeFenster('endtest', '2022q1', { regelwerk, oeffnungsprotokoll: regelwerk.oeffnungsprotokollMarke }),
     true,
   );
+});
+
+test('R2: die Versiegelung ist heute ein Aufrufmuster — und die Registry sagt das auch', () => {
+  // Gegenrede-Befund 16.08.: pruefeFenster vergleicht nur gegen eine Marke, die als
+  // Klartext in der eingecheckten rules.json steht. Wer sie absichtlich lesen will,
+  // liest sie — das ist kein Zugriffsschutz. Die Verfassung verspricht fuer R2 aber
+  // "eine verschluesselte Datei ist eine Eigenschaft der Bytes". Solange diese Bytes
+  // nicht existieren (die Fenster-Dateien entstehen erst in E1), darf die Luecke nicht
+  // wegformuliert werden. Dieser Waechter wird rot, wenn jemand den offen-Vermerk
+  // streicht, ohne die Marke aus dem Repo zu holen — also wenn R2 stillschweigend zu
+  // "versiegelt" befoerdert wird.
+  const roh = fs.readFileSync(REGELWERK_PFAD, 'utf8');
+  const r2 = regelwerk.regeln.find((regel) => regel.id === 'R2');
+  const offen = String(r2.waechter.offen || '');
+  const markeImKlartext = roh.includes(regelwerk.oeffnungsprotokollMarke);
+  assert.equal(markeImKlartext, true, 'Annahme dieses Waechters: die Marke steht in der Registry selbst');
+  assert.match(
+    offen,
+    /Klartext/,
+    'Die Oeffnungsmarke liegt im Klartext im Repo — dann muss der offen-Vermerk zu R2 genau das sagen',
+  );
+  assert.match(
+    offen,
+    /KEIN Zugriffsschutz|kein Zugriffsschutz/,
+    'R2 darf nicht als Zugriffsschutz gelesen werden, solange die Marke im Repo steht',
+  );
+  assert.match(offen, /VERSCHLUESSELUNG|Verschluesselung/, 'Es muss dastehen, was stattdessen noch fehlt');
 });
 
 test('R2: die Fenster ueberlappen sich nicht und liegen in der richtigen Reihenfolge', () => {

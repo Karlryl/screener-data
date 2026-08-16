@@ -43,7 +43,7 @@
 
 ## Woran verifiziert
 
-**47 Wachtest-Fälle in 9 Dateien, alle grün** (`node --test tests/studie-*test.js`).
+**52 Wachtest-Fälle in 9 Dateien, alle grün** (47 beim Bau, 5 aus der Gegenrede-Runde) (`node --test tests/studie-*test.js`).
 Jeder Wächter prüft in beide Richtungen: die gültige Form muss durchgehen, die kaputte
 auffliegen.
 
@@ -60,6 +60,25 @@ werden** — wörtliche Ausgabe:
 
 Nach jeder Probe wurde der Ausbau zurückgenommen; der Arbeitsbaum ist wieder grün.
 
+**Nachtrag 16.08. — externe Gegenrede (7 Befunde, alle reproduziert vor dem Fix).**
+Ein Review von außen hat einen KRITISCHEN und sechs mittlere Befunde gebracht. Sechs
+davon sind behoben (Tags 935/936/937), einer bestritten. Die fünf neuen Wächter wurden
+nach demselben Muster einmal absichtlich ausgebaut:
+
+| Probe | Ausgebaut | Ergebnis |
+|---|---|---|
+| A | `main()` ohne try/catch | `✖ Ein Schreibfehler stuerzt nicht unbehandelt ab, sondern schreit` (1 von 10 rot) |
+| B | `JSON.parse` ohne Schutz | `✖ Eine abgebrochene JSONL-Zeile toetet nicht jeden kuenftigen Lauf` (1 von 10 rot) |
+| C | Monatsbericht undifferenziert | `✖ Der Monatsbericht unterscheidet Ausfall von Normalbetrieb` (1 von 10 rot) |
+| D | LF-Pinnung aus `.gitattributes` entfernt | `✖ R12b: jedes Studien-Artefakt ist in .gitattributes auf LF gepinnt` (1 von 5 rot) |
+| E | die zwei neuen Pfad-Muster entfernt | `✖ R12a: der Waechter wuerde einen echten absoluten Pfad auch finden` (1 von 5 rot) |
+| F | R2-`offen`-Vermerk auf den alten Stand | `✖ R2: die Versiegelung ist heute ein Aufrufmuster — und die Registry sagt das auch` (1 von 7 rot) |
+
+Bestritten wurde der Befund, ein frischer Windows-Checkout zeige die beiden Evidenz-
+Dateien als geändert: die Ursache lag im **Index-Stat-Eintrag dieses Bau-Klons** (Größe
+vor der eol-Normalisierung), nicht in den Bytes. Ein Zweit-Klon aus `origin/main` zeigt
+den Befund nicht. Byte-versiegelt (`-text`) sind beide trotzdem jetzt.
+
 ## Der Befund, der nicht geglättet wird
 
 Der Neubau-Probelauf hat beim allerersten Lauf etwas gefunden, das nicht im Auftrag
@@ -75,7 +94,7 @@ Vorbehalt, und der fehlende Payload-Filter ist als E1-Aufgabe benannt statt wegg
 
 ## Zähler für Karl (R14b, reine Berichtsgröße)
 
-5 Commits, davon **5 mit Inhalt**, 0 reine Verwaltungs-Commits. Größtes neues Artefakt:
+8 Commits, davon **8 mit Inhalt**, 0 reine Verwaltungs-Commits (5 Bau + 3 Gegenrede). Größtes neues Artefakt:
 Herkunfts-Schließung mit 116 KB (Deckel 200 KB). Werkzeuge: Python-Standardbibliothek +
 sqlite3, node-Standardbibliothek. Keine neue Abhängigkeit, kein bezahlter Dienst,
 kein Eingriff in `src/scoring`.
@@ -84,7 +103,10 @@ kein Eingriff in `src/scoring`.
 
 - **Verschlüsselung der Endtest-Datei (R2).** Die drei Fenster-Dateien entstehen erst in
   E1; vorher gibt es nichts zu verschlüsseln. Die Fenster-Mauer selbst ist heute schon
-  Code, und das Endtest-Fenster öffnet nur mit der Öffnungsprotokoll-Marke.
+  Code, und das Endtest-Fenster öffnet nur mit der Öffnungsprotokoll-Marke. **Diese Marke
+  steht im Klartext in der eingecheckten Registry** — R2 ist damit heute ein Aufrufmuster
+  mit Wachtest, kein Zugriffsschutz gegen absichtliches Vorab-Lesen. Ein eigener Wächter
+  hält genau diesen Satz fest, damit R2 nicht stillschweigend als versiegelt gilt.
 - **Server-Push-Zeit gegen ersten Datenzugriff (R1).** Braucht einen echten Push *und*
   einen echten Zugriff. Beides existiert vor E3 nicht; die Hash-Kette und die
   Reihenfolge-Prüfung sind heute schon scharf.
