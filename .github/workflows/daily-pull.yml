@@ -1329,10 +1329,21 @@ jobs:
       # "kein Universum"-Skip ist hier also kein legitimer Pre-Pull-Zustand mehr,
       # sondern selbst ein Befund und wird als Fehler behandelt. Das synthetische
       # Pre-Pull-Gate bleibt unveraendert bestehen.
-      - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown)
+      #
+      # Tag 952 (Endproben-Befund): anchors.rank.test.js — der DURABLE Direktive-4-Waechter
+      # (CRDO/ALAB/BE stehen oben in IHREM Board, kein Compounder ueber ALAB) — fehlte in
+      # dieser Liste. snapshots/ ist gitignored (.gitignore:55), also lief er im pre-pull-Gate,
+      # im PR-Check und in jedem frischen Klon in den Rumpf-Skip (Z.43 "Universum < 100") und
+      # meldete "0 ok, 0 fail" — als PASS gezaehlt, ohne je etwas gemessen zu haben. Direktive 4
+      # war damit NIRGENDS belegt, auch nicht im Tageslauf. Hier ist das Universum real, und die
+      # 'pre-pull-Gate'-Sentinel-Pruefung unten faerbt einen Skip an dieser Stelle hart rot —
+      # damit misst der Anker taeglich echt, ohne pre-pull/PR-Check falsch-rot zu machen.
+      # Gemessen am Universum vom 08.08. (4769 Snapshots): CRDO 1,1 % · ALAB 11,0 % ·
+      # PLTR 0,0 % · BE 4,6 % — alle innerhalb ihrer Schwellen, 9 ok / 0 fail.
+      - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
         run: |
           fail=0
-          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js; do
+          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js tests/scoring/anchors.rank.test.js; do
             echo "--- $t ---"
             set +e
             out=$(node "$t" 2>&1)

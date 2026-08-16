@@ -171,9 +171,16 @@ test('BH-003: Reihenfolge Download-Snapshots -> Live-Universum-Gate -> Run Hyper
   const iRun = yml.indexOf('name: Run Hypergrowth Screener');
   assert.ok(iDl > 0 && iGate > iDl && iRun > iGate, 'Schritt-Reihenfolge im scoring-Job verletzt');
 });
-test('BH-003: alle vier Live-Universum-Suiten werden im Gate-Step aufgerufen', () => {
+// Tag 952: die Liste stand auf vier Namen, waehrend der Step laengst fuenf fuhr —
+// acceleration-invariance.test.js war ungepinnt und haette still herausfallen koennen.
+// anchors.rank.test.js kommt neu dazu: er ist der DURABLE Direktive-4-Waechter
+// (CRDO/ALAB/BE oben in IHREM Board) und lief bis Tag 952 in KEINEM Job mit echtem
+// Universum — snapshots/ ist gitignored, also skippte er ueberall und zaehlte trotzdem
+// als PASS. Faellt er aus dieser Liste, ist Direktive 4 wieder unbelegt.
+test('BH-003: alle sechs Live-Universum-Suiten werden im Gate-Step aufgerufen', () => {
   const s = section('name: Live-Universum-Gate', 'name: Download merge');
-  for (const t of ['score.integration.test.js', 'quality-board.test.js', 'phase.test.js', 'score-breakdown.test.js']) {
+  for (const t of ['score.integration.test.js', 'quality-board.test.js', 'phase.test.js',
+    'score-breakdown.test.js', 'acceleration-invariance.test.js', 'anchors.rank.test.js']) {
     assert.ok(s.includes('tests/scoring/' + t), t + ' fehlt im Live-Universum-Gate-Step');
   }
 });
