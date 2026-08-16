@@ -113,6 +113,87 @@ test('Die Mitschrift haengt wirklich am Tageslauf — und VOR dem Commit-Schritt
   assert.match(block[aufruf + 1] || '', /continue-on-error:\s*true/, 'Die Mitschrift darf Karls Datenlauf nie blocken');
 });
 
+// ── Absturzpfade (Gegenrede-Befunde 16.08.) ───────────────────────────────────
+// Die SACHE ist dieselbe wie oben, eine Ebene tiefer: nicht nur der Ausfall EINES
+// Tages muss dastehen, sondern auch der Ausfall der Mitschrift selbst. Geprueft wird
+// deshalb, was passiert, wenn das Lesen bzw. das Schreiben der Monatsdatei scheitert.
+
+function wegwerfVerzeichnis(name) {
+  return fs.mkdtempSync(path.join(os.tmpdir(), `studie-mitschrift-${name}-`));
+}
+
+function laufe(dir, argumente) {
+  return spawnSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'studie-mitschrift.js'), ...argumente], {
+    encoding: 'utf8',
+    env: { ...process.env, STUDIE_MITSCHRIFT_DIR: dir },
+  });
+}
+
+test('Eine abgebrochene JSONL-Zeile toetet nicht jeden kuenftigen Lauf', () => {
+  // Ein gekillter CI-Runner hinterlaesst eine halbe Zeile (appendFileSync ist nicht
+  // atomar). Frueher warf JSON.parse dabei VOR dem try/catch — der Lauf starb ohne
+  // Eintrag, und zwar an jedem Folgetag wieder, lautlos hinter continue-on-error.
+  const dir = wegwerfVerzeichnis('korrupt');
+  fs.writeFileSync(
+    path.join(dir, '2026-08.jsonl'),
+    '{"schema":"early-detection-forward-log/v1","laufDatum":"2026-08-01","status":"VOLLSTAENDIG"}\n{"schema":"abgebro',
+  );
+  const lauf = laufe(dir, ['erfassen', '2026-08-16']);
+  assert.equal(lauf.status, 0, `Der Lauf darf an einer kaputten Zeile nicht sterben:\n${lauf.stderr}`);
+
+  const zeilen = fs.readFileSync(path.join(dir, '2026-08.jsonl'), 'utf8').split(SPLIT_ZEILEN).filter((z) => z.trim());
+  const neu = JSON.parse(zeilen[zeilen.length - 1]);
+  const befund = (neu.luecken || []).find((luecke) => luecke.art === 'zeile-unlesbar');
+  assert.ok(befund, 'Die unlesbare Zeile muss als Luecke im Eintrag stehen — stilles Ueberspringen waere schlimmer');
+  assert.equal(befund.zeile, 2, 'Die Luecke muss sagen WELCHE Zeile unlesbar ist');
+  assert.equal(neu.status, 'MIT_LUECKEN');
+
+  // Und der Folgetag laeuft auch noch — die Blockade war frueher dauerhaft.
+  assert.equal(laufe(dir, ['erfassen', '2026-08-17']).status, 0);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('Ein Schreibfehler stuerzt nicht unbehandelt ab, sondern schreit', () => {
+  // Zielverzeichnis ist eine Datei -> mkdirSync/appendFileSync scheitern. Frueher lag
+  // dieser Aufruf ausserhalb jedes try/catch: unbehandelte Exception, kein Eintrag,
+  // keine Meldung, die nach Mitschrift aussieht.
+  const eltern = wegwerfVerzeichnis('schreibfehler');
+  const blockiert = path.join(eltern, 'keinVerzeichnis');
+  fs.writeFileSync(blockiert, 'Datei statt Verzeichnis');
+  const lauf = laufe(blockiert, ['erfassen', '2026-08-16']);
+  assert.equal(lauf.status, 1, 'Ein Schreibfehler muss ein Fehlschlag sein');
+  assert.doesNotMatch(lauf.stderr, /throw er;|Uncaught|UnhandledPromiseRejection/, 'Kein roher Node-Stacktrace');
+  assert.match(lauf.stderr, /^::error::Vorwaerts-Mitschrift 2026-08-16/m, 'Der Ausfall muss als ::error:: dastehen');
+  assert.match(lauf.stderr, /GAR KEINE Zeile/, 'Es muss dastehen, dass dieser Tag ueberhaupt keine Zeile bekam');
+  fs.rmSync(eltern, { recursive: true, force: true });
+});
+
+test('Der Monatsbericht unterscheidet Ausfall von Normalbetrieb', () => {
+  // Der Einzeiler ist das Einzige, was regelmaessig gelesen wird. Waeren drei
+  // Abstuerze von einem ruhigen SEC-Monat nicht zu unterscheiden, koennte die
+  // Mitschrift monatelang tot sein, ohne dass es auffaellt.
+  function berichtFuer(eintraege) {
+    const dir = wegwerfVerzeichnis('bericht');
+    fs.writeFileSync(path.join(dir, '2026-07.jsonl'), `${eintraege.map((e) => JSON.stringify(e)).join('\n')}\n`);
+    const text = laufe(dir, ['monatsbericht', '2026-07']).stdout.trim();
+    fs.rmSync(dir, { recursive: true, force: true });
+    return text;
+  }
+  const ruhig = berichtFuer([
+    { laufDatum: '2026-07-01', status: 'MIT_LUECKEN', luecken: [{ art: 'kanal-unveraendert' }] },
+    { laufDatum: '2026-07-02', status: 'MIT_LUECKEN', luecken: [{ art: 'kanal-unveraendert' }] },
+  ]);
+  const kaputt = berichtFuer([
+    { laufDatum: '2026-07-01', status: 'FEHLER', luecken: [{ art: 'erfassung-gescheitert' }] },
+    { laufDatum: '2026-07-02', status: 'FEHLER', luecken: [{ art: 'erfassung-gescheitert' }] },
+  ]);
+  assert.notEqual(ruhig, kaputt, 'Ausfall-Monat und Ruhe-Monat duerfen nicht denselben Einzeiler ergeben');
+  assert.doesNotMatch(ruhig, /ALARM/, 'Byte-gleiche SEC-Kanaele sind Normalbetrieb, kein Alarm');
+  assert.match(kaputt, /^ALARM/, 'Ein Monat mit FEHLER-Tagen muss vorn als Alarm erkennbar sein');
+  assert.match(kaputt, /2 mit Status FEHLER/, 'Die Zahl der Ausfalltage gehoert in den Einzeiler');
+  assert.match(ruhig, /kanal-unveraendert 2/, 'Die Luecken-Arten muessen aufgeschluesselt sein, nicht summiert');
+});
+
 test('Aufraeumen', () => {
   fs.rmSync(TEMP, { recursive: true, force: true });
   assert.equal(fs.existsSync(TEMP), false);
