@@ -1377,7 +1377,18 @@ jobs:
       # damit misst der Anker taeglich echt, ohne pre-pull/PR-Check falsch-rot zu machen.
       # Gemessen am Universum vom 08.08. (4769 Snapshots): CRDO 1,1 % · ALAB 11,0 % ·
       # PLTR 0,0 % · BE 4,6 % — alle innerhalb ihrer Schwellen, 9 ok / 0 fail.
+      #
+      # Tag 979 (Bruell-Kanal, Beschluss 16.08.): anchors.rank.test.js kennt jetzt ZWEI
+      # Fehlerklassen. exit 1 = Datenschaden -> blockiert wie bisher. exit 2 = Rangfolge-Riss
+      # -> die Daten sind korrekt, nur die Reihung gefaellt Karl nicht; dann laeuft dieser
+      # Job WEITER, die Boards gehen raus, und der terminale laufstatus-Job faerbt den Lauf
+      # danach rot (dort, weil ein Rot HIER den Statusmarker auf 'failure' drehen und den
+      # Merge-Zaehler nullen wuerde — Nachtrag 16.08.). Nur diese eine Suite hat den
+      # exit-2-Vertrag; bei jeder anderen bleibt jeder Nonzero-Code ein harter Fehler.
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
+        id: live_gate
+        env:
+          ANCHOR_STATUS_OUT: outputs/anchor-status.json
         run: |
           fail=0
           for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js tests/scoring/anchors.rank.test.js; do
@@ -1387,7 +1398,9 @@ jobs:
             rc=$?
             set -e
             echo "$out"
-            if [ "$rc" -ne 0 ]; then
+            if [ "$rc" -eq 2 ] && [ "$t" = "tests/scoring/anchors.rank.test.js" ]; then
+              echo "::warning::Direktive-4-Rangfolge gerissen (exit 2). Die Daten sind korrekt — der Tageslauf laeuft WEITER und liefert die Boards aus. Der Job 'laufstatus' faerbt den Lauf danach rot und das Dashboard zeigt ein Banner."
+            elif [ "$rc" -ne 0 ]; then
               echo "::error::Live-Universum-Test failed: $t (exit $rc)"
               fail=1
             fi
@@ -1794,6 +1807,22 @@ jobs:
           echo "::error::board-history publish failed after 3 attempts — findash sieht die Bewegungs-Anzeige nicht."
           exit 1
 
+      # Bruell-Kanal (Tag 979): den Anker-Status an den terminalen laufstatus-Job reichen.
+      # Er ist ein EIGENER Job mit eigenem Checkout und sieht das Arbeitsverzeichnis dieses
+      # Jobs nicht; ohne diesen Transport waere sein Bruell-Schritt blind.
+      # `if: always()` + `if-no-files-found: warn`: bricht der scoring-Job vor dem Gate ab,
+      # gibt es den Marker gar nicht — dann ist der Lauf ohnehin rot und der Bruell-Schritt
+      # drueben steigt am `needs.scoring.result`-Gate sauber aus, statt hier ein zweites,
+      # ursachenfremdes rotes X zu erzeugen.
+      - name: Upload Anker-Status (Bruell-Kanal-Handoff an laufstatus)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: anchor-status
+          path: outputs/anchor-status.json
+          if-no-files-found: warn
+          retention-days: 1
+
   # ============================================================================
   # LAUFSTATUS (Tag 971) — der Marker, der einen ROTEN Lauf sichtbar macht.
   #
@@ -2000,3 +2029,68 @@ jobs:
           done
           echo "::error::Statusmarker nach 3 Versuchen NICHT publiziert — findash zeigt fuer diesen Lauf weiter die alten Raenge, ohne es zu sagen."
           exit 1
+
+      # ── BRUELL-KANAL (Tag 979, Beschluss 16.08.) ────────────────────────────────────────
+      # Der Anker-Status aus dem scoring-Job. Nur wenn scoring GRUEN war: sonst sind die
+      # Boards gar nicht deployt worden, es gibt nichts zu bruellen, und ein fehlendes
+      # Artefakt duerfte kein zweites, ursachenfremdes rotes X erzeugen.
+      # KEIN continue-on-error (pipeline-status-marker.test.js verbietet es fuer diesen Job,
+      # und zu Recht): war scoring gruen, MUSS das Artefakt existieren — fehlt es, ist der
+      # Bruell-Kanal blind und das gehoert laut gemeldet, nicht entschaerft.
+      - name: Anker-Status vom scoring-Job holen
+        if: always() && needs.scoring.result == 'success'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: anchor-status
+          path: outputs
+
+      # DIE STELLE, AN DER DER LAUF ROT WIRD, OBWOHL DIE BOARDS RAUS SIND.
+      #
+      # WARUM IN DIESEM JOB und nicht im scoring-Job: der Statusmarker rechnet sein
+      # `status`-Feld aus den SECHS Datenjobs (JOB_REIHENFOLGE in scripts/pipeline-status.js);
+      # `laufstatus` steht nicht in seiner eigenen Bilanz. Ein Bruell-Rot im scoring-Job
+      # wuerde den Marker auf 'failure' drehen und damit den Merge-Zaehler nullen — der
+      # Beschluss haette sich selbst sabotiert (Nachtrag 16.08., "Der Selbstwiderspruch, der
+      # die Frage entscheidet"). Hier faerbt es den Workflow rot, ohne die Datenkette zu
+      # beschuldigen: Rot aus der Melde-Ebene = kein Zaehler-Reset, aber Merge-Stopp.
+      #
+      # ZULETZT IM JOB: der Statusmarker ist zu diesem Zeitpunkt bereits auf gh-pages. Diese
+      # Reihenfolge ist die ganze Zusicherung "liefern UND bruellen" — erst alles raus,
+      # dann rot.
+      - name: Anker-Bruellen (Direktive-4-Rangfolge — Boards sind raus, Lauf wird trotzdem rot)
+        if: always()
+        env:
+          SCORING_RESULT: ${{ needs.scoring.result }}
+        run: |
+          f=outputs/anchor-status.json
+          if [ "$SCORING_RESULT" != "success" ]; then
+            echo "scoring endete mit '$SCORING_RESULT' — die Boards von heute sind gar nicht erst deployt worden. Der Lauf ist bereits rot und der Statusmarker nennt die Ursache; hier gibt es nichts zu bruellen."
+            exit 0
+          fi
+          if [ ! -f "$f" ]; then
+            echo "::error::scoring war GRUEN, aber $f fehlt. Damit hat der Direktive-4-Waechter fuer diesen Lauf nichts gemeldet und das Dashboard-Banner bleibt stumm — ein Rangfolge-Riss waere heute unsichtbar. NAECHSTER SCHRITT: Actions -> Job 'scoring' -> Schritt 'Live-Universum-Gate' (schreibt er outputs/anchor-status.json?) und Schritt 'Upload Anker-Status'."
+            exit 1
+          fi
+          if ! status=$(node -e 'process.stdout.write(String(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).status))' "$f"); then
+            echo "::error::$f ist nicht lesbar oder kein gueltiges JSON — der Bruell-Kanal ist fuer diesen Lauf blind."
+            exit 1
+          fi
+          case "$status" in
+            ok)
+              echo "Anker-Status ok — alle fuenf Direktive-4-Anker stehen in ihrem Board oben. Kein Bruellen."
+              exit 0
+              ;;
+            rangfolge)
+              node -e 'const m=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));for(const v of (m.verletzungen||[]))console.log("  · "+v);' "$f"
+              echo "::error::DIREKTIVE 4 GERISSEN — mindestens ein Anker steht nicht mehr oben in seinem Board (Zeilen oben). Die Daten sind KORREKT und die heutigen Boards SIND ausgeliefert; rot ist dieser Lauf allein wegen der Reihung. Das Dashboard zeigt dazu ein Banner. NAECHSTER SCHRITT: Ranking ansehen und entscheiden — legitime Verschiebung (dann Schwelle in die Karl-Entscheid-Queue) oder Formel-Regression (dann Revert). Bis dahin gilt Merge-Stopp, aber KEIN Zaehler-Reset (Nachtrag 16.08.)."
+              exit 1
+              ;;
+            blockiert)
+              echo "::error::Widerspruch: der Anker-Marker meldet 'blockiert' (Datenschaden), aber der scoring-Job ist gruen durchgelaufen und hat deployt. Genau das darf nicht passieren — bei exit 1 muss das Live-Universum-Gate den Job stoppen. NAECHSTER SCHRITT: den Gate-Step im scoring-Job pruefen, dann die ausgelieferten Boards gegen den Marker halten."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unbekannter Anker-Status '$status' in $f — der Bruell-Kanal kann nicht entscheiden und meldet lieber laut, als still gruen durchzugehen."
+              exit 1
+              ;;
+          esac
