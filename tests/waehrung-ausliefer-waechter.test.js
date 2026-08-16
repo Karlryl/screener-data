@@ -15,14 +15,15 @@
  *   Die REGEL wird an Fixtures gepruefte (deterministisch, inkl. Ausbau-Probe). Der
  *   LIVE-Durchgang misst den vorhandenen Snapshot-Bestand.
  *
- *   Warum der Live-Durchgang nur die GESTEMPELTEN Beine hart prueft: der Altbestand
- *   stammt teils aus Code-Staenden von vor dem 13.06. und traegt keinen
- *   Handelskurs-Stempel. Am eingefrorenen lokalen Bestand (17.05.-08.06., 4 768
- *   Snapshots) liefert die Regel 23 Verstoesse in 27 Kreuznotiz-Gruppen — durchweg
- *   systematisch (alle .TO-Paare exakt +39,5 %, also der CAD-Kurs). Ein Gate, das an
- *   Altbestand permanent rot ist, waere kein Alarm, sondern Rauschen. Hart ist deshalb
- *   nur, was der heutige Code erzeugt hat (meta.tradingFxRateApplied gesetzt); der Rest
- *   wird vollstaendig AUFGELISTET, damit er nicht unsichtbar bleibt.
+ *   Der Live-Durchgang prueft HART, was ausgeliefert wird — also alle Beine, die die
+ *   Beleg-Regel oben durchlaesst (Review-Fix 16.08.). Frueher war er auf die
+ *   GESTEMPELTEN Beine verengt, weil der Altbestand (Code-Staende vor dem 13.06.) an
+ *   der alten, zu weichen Beleg-Regel vorbeikam und 23 Verstoesse in 27
+ *   Kreuznotiz-Gruppen produzierte (alle .TO-Paare exakt +39,5 %, also der CAD-Kurs).
+ *   Diese Zeilen nullt der Waechter jetzt selbst, statt sie auszuliefern — sie sind
+ *   damit gar nicht mehr in der Pruefmenge, und der Zuschnitt ist ueberfluessig
+ *   geworden. Am eingefrorenen lokalen Bestand (17.05.-08.06.): 1 668 belegte Beine,
+ *   0 Verstoesse. Ein Verstoss ist ab jetzt ein rotes X — Karls einziger Alarmkanal.
  *
  * Usage:  node tests/waehrung-ausliefer-waechter.test.js   (Exit 0/1)
  */
@@ -55,9 +56,30 @@ check('BELEGT: Handelskurs gestempelt (HK-Fall CNY/HKD nach dem Voll-Pull)', () 
   assert.equal(u.rate, 0.1274421);
 });
 
-check('BELEGT: Handel = Bericht, der Berichtskurs IST der Handelskurs', () => {
-  const u = B({ reportingCurrencyOriginal: 'HKD', tradingCurrency: 'HKD', fxConverted: true, fxRateApplied: 0.1274421 });
+check('BELEGT: Handel = Bericht, vom heutigen Mapper BESTAETIGT', () => {
+  const u = B({ reportingCurrencyOriginal: 'HKD', tradingCurrency: 'HKD', tradingCurrencyAssumed: false,
+    fxConverted: true, fxRateApplied: 0.1274421 });
   assert.equal(u.ok, true); assert.equal(u.grund, 'identitaet');
+});
+
+check('UNBELEGT: Altbestand-Identitaet ohne Herkunfts-Feld (Review-Fix, KRITISCH)', () => {
+  // DER Fall aus dem Bestand: vor Tag 938 setzte der Mapper die Handelswaehrung still gleich
+  // der Berichtswaehrung, das Feld tradingCurrencyAssumed gab es noch nicht (undefined, NICHT
+  // true). tc === rc ist hier kein Beleg fuer eine Inlandsnotierung, sondern das Symptom des
+  // Wurzelfehlers — genau das Meta-Profil der 124 .HK-Zeilen vom 08.06. mit +16,6 % Groesse.
+  const u = B({ reportingCurrencyOriginal: 'CNY', reportingCurrency: 'USD', tradingCurrency: 'CNY',
+    fxConverted: true, fxRateApplied: 0.14853986 });
+  assert.equal(u.ok, false, 'ein fehlendes Herkunfts-Feld ist eine Datenluecke, kein Beleg');
+  assert.equal(u.grund, 'herkunft-unbekannt');
+});
+
+check('Ausbau-Probe: die Haertung trifft NUR die Identitaet, nicht die anderen Wege', () => {
+  // Ohne Herkunfts-Feld, aber in USD gehandelt -> es gibt nichts umzurechnen (weiter belegt).
+  assert.equal(B({ reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD', fxConverted: true, fxRateApplied: 1 }).ok, true);
+  // Ohne Herkunfts-Feld, aber mit Handelskurs-Stempel: der Stempel entsteht nur bei SICHTBARER
+  // Divergenz — den Wurzelfehler (stille Gleichsetzung) kann er nicht erzeugen.
+  assert.equal(B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'HKD', tradingCurrencyOriginal: 'HKD',
+    tradingFxRateApplied: 0.1274421, fxConverted: true, fxRateApplied: 0.14853986 }).ok, true);
 });
 
 check('UNBELEGT: Handelswaehrung geraten (Yahoos price.currency fehlte)', () => {
@@ -80,7 +102,8 @@ check('UNBELEGT: keine Handelswaehrung im Snapshot / kein Snapshot', () => {
 
 check('UNBELEGT: Identitaet ohne vollzogene Umrechnung reicht NICHT', () => {
   // fxConverted fehlt -> der Snapshot behauptet gar keine Umrechnung. Nicht durchwinken.
-  assert.equal(B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'CNY', fxRateApplied: 0.148 }).ok, false);
+  assert.equal(B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'CNY', tradingCurrencyAssumed: false,
+    fxRateApplied: 0.148 }).ok, false);
 });
 
 // ---------------------------------------------------------------------------
@@ -244,21 +267,19 @@ if (!beine || beine.length === 0) {
     'der LIVE-Kreuznotiz-Durchgang wurde NICHT gemessen. Die Regel selbst ist oben an ' +
     'Fixtures geprueft; dieser Lauf sagt nichts ueber den echten Bestand aus.');
 } else {
-  const alle = kreuznotizVerstoesse(beine);
-  if (alle.length) {
-    console.warn('::warning::Kreuznotiz: ' + alle.length + ' Emittenten mit >3 % Abweichung ' +
-      'zwischen ihren Waehrungsnotizen (' + beine.length + ' belegte Beine geprueft):');
-    for (const v of alle.slice(0, 30)) {
-      console.warn('   ' + (v.abweichung * 100).toFixed(1) + '%  ' + v.emittent + '  ' +
-        v.beine.map((b) => b.ticker + '/' + b.tradingCurrency + '=' + (b.marketCap / 1e9).toFixed(2) + ' Mrd').join('  '));
-    }
-  }
-  check('LIVE: unter den vom heutigen Code gestempelten Beinen kein Kreuznotiz-Verstoss', () => {
-    const nurNeu = beine.filter((b) => b.gestempelt);
-    const v = kreuznotizVerstoesse(nurNeu);
-    console.log('       (' + nurNeu.length + ' gestempelte von ' + beine.length + ' belegten Beinen)');
+  // Review-Fix 16.08. (MITTEL): HART ueber ALLE belegten Beine, nicht nur die gestempelten.
+  // Der alte Zuschnitt (nur `gestempelt`) liess genau die Zeilen aus der Pruefung fallen, die
+  // die gehaertete Beleg-Regel jetzt gar nicht mehr durchlaesst — sie landeten bestenfalls in
+  // einem ::warning::, und Karls einziger Alarmkanal ist das rote X, nicht ein Log-Hinweis.
+  // Nach der Haertung ist "belegt" = "wird ausgeliefert": die Pruefmenge ist damit exakt die
+  // Menge, die Karl zu sehen bekommt. Am eingefrorenen Bestand (17.05.-08.06.) sind das
+  // 1 668 Beine mit 0 Verstoessen — das Gate ist an echten Daten gruen, nicht per Zuschnitt.
+  check('LIVE: unter ALLEN ausgelieferten (belegten) Beinen kein Kreuznotiz-Verstoss', () => {
+    const v = kreuznotizVerstoesse(beine);
+    console.log('       (' + beine.length + ' belegte Beine, davon ' +
+      beine.filter((b) => b.gestempelt).length + ' mit Handelskurs-Stempel)');
     assert.equal(v.length, 0, v.map((x) => x.emittent + ' ' + (x.abweichung * 100).toFixed(1) + '% [' +
-      x.beine.map((b) => b.ticker + '/' + b.tradingCurrency).join(',') + ']').join(' | '));
+      x.beine.map((b) => b.ticker + '/' + b.tradingCurrency + '=' + (b.marketCap / 1e9).toFixed(2) + ' Mrd').join(',') + ']').join(' | '));
   });
 }
 

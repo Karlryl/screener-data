@@ -623,6 +623,22 @@ function _resolveTradingFx(q, existing) {
 // echten Netz-Pull erreichbar.
 function _stampeHandelskurs(meta, tradingFx) {
   if (!meta || !tradingFx || tradingFx.ok !== true) return meta;
+  // Review-Fix 16.08. (KRITISCH): der Stempel ist ein BEWEIS-Feld — der Ausliefer-Waechter
+  // liest ihn als "Handelskurs nachweislich angewandt". Er darf deshalb nur entstehen, wo die
+  // Handelswaehrung selbst belegt ist. Drei Wege zaehlen:
+  //   quote            — die heutige Quote nennt sie (belegt sie damit auch fuer morgen)
+  //   assumed === false — ein frueherer Lauf hat sie bereits per Quote belegt
+  //   vorhandener Stempel — ein frueherer Lauf hat eine SICHTBARE Divergenz umgerechnet;
+  //                        hier wird nur der Kurs des heutigen Laufs nachgefuehrt
+  // Fehlt alles drei, ist die Waehrung aus dem Snapshot geerbt und kann dieselbe stille
+  // Gleichsetzung mitschleppen, die Tag 938 als Wurzelfehler beschreibt (Yahoo-Quote ohne
+  // currency-Feld, meta.tradingCurrency vom alten Mapper = Berichtswaehrung). Ein Stempel
+  // darauf wuerde die Verwechslung nicht nur durchlassen, sondern sie als geprueft
+  // ZERTIFIZIEREN und bis zum naechsten Voll-Pull verstetigen. Fail-closed: nicht stempeln.
+  const herkunftBelegt = tradingFx.quelle === 'quote'
+    || meta.tradingCurrencyAssumed === false
+    || Number.isFinite(meta.tradingFxRateApplied);
+  if (!herkunftBelegt) return meta;
   meta.tradingCurrencyOriginal = tradingFx.currency;
   meta.tradingFxRateApplied = tradingFx.factor;
   // Nur die heutige Quote BELEGT die Handelswaehrung. Kommt sie aus dem Snapshot, bleibt eine
@@ -709,14 +725,33 @@ const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice', 'enterpriseVal
 //   BREN.JK  Yahoo 746 762,8 x 0,000056082103 = 41,88 = mcap_USD/Umsatz_USD (nachgerechnet)
 //   0020.HK  Yahoo 11,351923 x 0,1274421/0,14853986 = 9,74 = mcap_USD/Umsatz_USD
 // Bei uebereinstimmenden Waehrungen ist der Faktor exakt 1 (kein Eingriff).
-const MISCH_VERHAELTNIS_METRIKEN = ['priceSales'];
+// Review-Fix 16.08. (Chunk-3-Nachzug): enterpriseToRevenue gehoert in dieselbe Liste — und
+// ist das Feld, an dem Karl den Schaden ueberhaupt gesehen hat. Chunk 3 nannte als Konsument
+// "pit.evSales im Board", hat aber nur enterpriseValue und priceSales korrigiert.
+// scripts/write-board-history.js liest pit.evSales aus metrics.enterpriseToRevenue — einem
+// RAW-Verhaeltnis von Yahoo (key statistics), das Chunk 3 nicht angefasst hat. Damit war der
+// gemeldete Symptomfall (BREN.JK evSales 766 149) nach Chunk 3 weiterhin falsch.
+// Nachgerechnet am eingefrorenen Bestand, 0020.HK: Yahoo enterpriseToRevenue 11,899 =
+// EV_HKD / Umsatz_CNY (59,67 Mrd / 5,014 Mrd) — Zaehler in Handels-, Nenner in
+// Berichtswaehrung, also exakt dasselbe Misch-Verhaeltnis wie priceSales. Ehrlich sind
+// 11,899 x 0,1274421/0,14853986 = 10,25. enterpriseToEbitda ist dieselbe Bauart (EV am
+// Handel, EBITDA am Bericht) und kommt mit, damit die Liste nicht wieder auseinanderlaeuft;
+// einen Konsumenten hat es derzeit nicht.
+const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
 function _skaliereHandelsMetriken(snap, scaleTrading, mischFaktor) {
   if (!snap || !snap.metrics) return;
   for (const k of HANDELS_METRIKEN) {
     if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
   }
-  if (!Number.isFinite(mischFaktor) || mischFaktor === 1) return;
+  if (!Number.isFinite(mischFaktor)) return;
+  // Spur der Korrektur (Review-Fix 16.08.): der price-only-Schnellweg fasst metrics NIE an,
+  // ein Voll-Pull steht erst nach FUNDAMENTALS_REFRESH_DAYS (30) wieder an. Ohne Vermerk kann
+  // der Board-Writer einem Misch-Verhaeltnis nicht ansehen, ob es korrigiert wurde — und
+  // schriebe bis zu 30 Tage lang verzerrte Werte in die DAUERHAFTE Vintage-Historie.
+  // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
+  if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
+  if (mischFaktor === 1) return;
   for (const k of MISCH_VERHAELTNIS_METRIKEN) {
     const m = snap.metrics[k];
     if (m == null) continue;
@@ -4173,6 +4208,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // Waehrungs-Chunk 1 (16.08.2026): Handelskurs-Stempel als Seam fuer
   // tests/waehrung-handelskurs.test.js.
   _stampeHandelskurs,
+  // Review-Fix 16.08.: die Misch-Verhaeltnis-Liste als Seam — tests/waehrung-handelskurs.test.js
+  // baut sie fuer die Ausbau-Probe wirklich aus und sieht den Waechter rot werden, statt sich
+  // auf ein Schreibmuster im Quelltext zu verlassen.
+  MISCH_VERHAELTNIS_METRIKEN,
   _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
   // Review-Nachzug (09.08.2026): Befund A (fail-closed bei werfender Umrechnung),
   // Befund B (Zwei-Bein-Stempel), Befund C (EINE Marker-Konstante — der Waechter

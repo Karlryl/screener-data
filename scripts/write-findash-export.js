@@ -179,10 +179,24 @@ function beurteileWaehrungsbeleg(meta) {
   // In USD gehandelt: es gibt nichts umzurechnen, die Zahl IST USD.
   if (String(tc).toUpperCase() === 'USD') return { ok: true, grund: 'usd-gehandelt', rate };
   // Handelskurs nachweislich angewandt (Voll-Pull-Divergenz-Zweig oder price-only-Lauf).
+  // Ein Stempel entsteht nur, wo Handel und Bericht SICHTBAR auseinanderfielen — genau der
+  // Fall, den der Wurzelfehler nicht erzeugen kann (er setzt sie gleich).
   if (rate !== null) return { ok: true, grund: 'handelskurs-gestempelt', rate };
   // Handels- und Berichtswaehrung sind dieselbe -> der Berichtskurs IST der Handelskurs.
-  if (rc && String(tc).toUpperCase() === String(rc).toUpperCase()
-      && meta.fxConverted === true && Number.isFinite(meta.fxRateApplied)) {
+  // ABER (Review-Fix 16.08., KRITISCH): tc === rc ist genau das SYMPTOM des Wurzelfehlers.
+  // Vor Tag 938 setzte der Mapper bei fehlendem Yahoo-price.currency die Handelswaehrung
+  // still gleich der Berichtswaehrung — ohne das Feld tradingCurrencyAssumed, das es damals
+  // noch nicht gab. Auf diesen Alt-Snapshots ist die Gleichheit kein Beleg fuer eine
+  // Inlandsnotierung, sondern die Spur der Verwechslung: die 124 .HK-Zeilen vom 08.06. mit
+  // +16,6 % zu grosser Marktkapitalisierung tragen exakt dieses Meta-Profil. Der Beweis
+  // zaehlt deshalb nur, wenn der heutige Mapper die Gleichheit ausdruecklich BESTAETIGT
+  // hat (Feld vorhanden und false). Ein fehlendes Feld ist eine Datenluecke, kein Beleg —
+  // fail-closed.
+  const identisch = !!rc && String(tc).toUpperCase() === String(rc).toUpperCase();
+  if (identisch && meta.tradingCurrencyAssumed === undefined) {
+    return { ok: false, grund: 'herkunft-unbekannt', rate };
+  }
+  if (identisch && meta.fxConverted === true && Number.isFinite(meta.fxRateApplied)) {
     return { ok: true, grund: 'identitaet', rate: meta.fxRateApplied };
   }
   return { ok: false, grund: 'kein-handelskurs-nachweis', rate };

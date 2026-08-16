@@ -128,9 +128,46 @@ check('Stempel: Kurs + Waehrung landen im meta, Annahme faellt NUR bei Quote-Bel
 
   const metaGeerbt = { tradingCurrency: 'CNY', tradingCurrencyAssumed: true };
   py._stampeHandelskurs(metaGeerbt, py._resolveTradingFx({}, { meta: metaGeerbt }));
-  assert.equal(metaGeerbt.tradingFxRateApplied, CNY);
+  assert.equal(metaGeerbt.tradingFxRateApplied, undefined,
+    'eine geratene Waehrung darf ueberhaupt keinen Kurs-STEMPEL bekommen — er ist ein Beweis-Feld');
   assert.equal(metaGeerbt.tradingCurrencyAssumed, true,
     'eine aus dem Snapshot geerbte Waehrung darf die Annahme NICHT in einen Beleg verwandeln');
+});
+
+// Review-Fix 16.08. (KRITISCH): der Stempel ist das Beweis-Feld des Ausliefer-Waechters.
+// Vorher wurde er UNBEDINGT gesetzt, sobald irgendein Kurs herauskam — auch wenn die
+// Handelswaehrung nur aus dem Alt-Snapshot geerbt war. Bei einem Altbestand-Snapshot (Feld
+// tradingCurrencyAssumed fehlt, weil es vor Tag 938 nicht existierte) hat der Schnellweg die
+// stille CNY/HKD-Gleichsetzung damit als geprueft ZERTIFIZIERT und bis zum naechsten
+// Voll-Pull verstetigt.
+const wx = require('../scripts/write-findash-export.js');
+
+check('Altbestand ohne Herkunfts-Feld: kein Stempel, und der Waechter nullt die Zeile', () => {
+  const meta = { tradingCurrency: 'CNY', reportingCurrencyOriginal: 'CNY', reportingCurrency: 'USD',
+    fxConverted: true, fxRateApplied: CNY };
+  const fx = py._resolveTradingFx({ regularMarketPrice: 12.3, marketCap: 1e9 }, { meta });
+  assert.equal(fx.ok, true); assert.equal(fx.quelle, 'meta');
+  py._stampeHandelskurs(meta, fx);
+  assert.equal(meta.tradingFxRateApplied, undefined,
+    'eine geerbte Waehrung ohne Herkunfts-Beleg darf nicht gestempelt werden');
+  const u = wx.beurteileWaehrungsbeleg(meta);
+  assert.equal(u.ok, false, 'sonst laeuft die Zeile als "handelskurs-gestempelt" durch');
+  assert.equal(u.grund, 'herkunft-unbekannt');
+});
+
+check('Gegenprobe: belegte Herkunft wird weiter frisch gestempelt', () => {
+  // (a) heutige Quote belegt sie
+  const ausQuote = { tradingCurrency: 'CNY' };
+  py._stampeHandelskurs(ausQuote, py._resolveTradingFx({ currency: 'HKD' }, { meta: ausQuote }));
+  assert.equal(ausQuote.tradingFxRateApplied, HKD);
+  // (b) ein frueherer Lauf hat sie belegt
+  const vorherBelegt = { tradingCurrency: 'HKD', tradingCurrencyAssumed: false };
+  py._stampeHandelskurs(vorherBelegt, py._resolveTradingFx({}, { meta: vorherBelegt }));
+  assert.equal(vorherBelegt.tradingFxRateApplied, HKD, 'der Kurs des heutigen Laufs muss nachgefuehrt werden');
+  // (c) ein frueherer Voll-Pull hat eine SICHTBARE Divergenz umgerechnet (Altbestand mit Stempel)
+  const altMitStempel = { tradingCurrency: 'HKD', reportingCurrencyOriginal: 'CNY', tradingFxRateApplied: 0.1 };
+  py._stampeHandelskurs(altMitStempel, py._resolveTradingFx({}, { meta: altMitStempel }));
+  assert.equal(altMitStempel.tradingFxRateApplied, HKD, 'ein bestehender Stempel darf nicht veralten');
 });
 
 check('Stempel schweigt, wenn kein Kurs ermittelt werden konnte', () => {
@@ -216,6 +253,91 @@ check('US-Inland (kein FX): nichts wird angefasst', () => {
   assert.equal(snap.marketCap.value, 3e12);
   assert.equal(snap.metrics.enterpriseValue.value, 3.1e12);
   assert.equal(snap.metrics.priceSales.value, 7.5);
+});
+
+// ---------------------------------------------------------------------------
+// 5) Review-Fix 16.08.: enterpriseToRevenue ist dasselbe Misch-Verhaeltnis wie priceSales —
+//    und es ist das Feld, das als pit.evSales im Board landet. Chunk 3 hat den Konsumenten
+//    genannt, aber das falsche Feld korrigiert.
+// ---------------------------------------------------------------------------
+check('enterpriseToRevenue wird wie priceSales korrigiert (0020.HK, echte Zahlen)', () => {
+  const snap = {
+    meta: { ticker: '0020.HK', reportingCurrency: 'CNY', tradingCurrency: 'HKD' },
+    marketCap: { value: 56925810688 },                     // HKD
+    metrics: {
+      revenueTTM: { value: 5014640128 },                   // CNY
+      enterpriseValue: { value: 49358987264 },             // HKD
+      enterpriseToRevenue: { value: 11.899 },              // EV_HKD / Umsatz_CNY (Yahoo roh)
+      priceSales: { value: 11.351923 },
+    },
+  };
+  py._convertSnapshotToUSD(snap);
+  // Yahoos 11,899 = EV_HKD/Umsatz_CNY (59,67 Mrd / 5,014 Mrd, am Bestand nachgerechnet).
+  // Ehrlich ist derselbe Wert mal Handels-/Berichtsfaktor.
+  assert.ok(Math.abs(snap.metrics.enterpriseToRevenue.value - 11.899 * HKD / CNY) < 1e-9,
+    'evSales muss um Handels-/Berichtsfaktor korrigiert sein, ist ' + snap.metrics.enterpriseToRevenue.value);
+  assert.ok(11.899 / snap.metrics.enterpriseToRevenue.value > 1.16,
+    'unkorrigiert lag evSales >16 % zu hoch');
+});
+
+function brenSnap() {
+  return {
+    meta: { ticker: 'BREN.JK', reportingCurrency: 'USD', tradingCurrency: 'IDR' },
+    marketCap: { value: 477592880676864 },
+    metrics: {
+      revenueTTM: { value: 639550976 },
+      enterpriseValue: { value: 477595028160512 },
+      enterpriseToRevenue: { value: 766149 },
+      priceSales: { value: 746762.8 },
+    },
+  };
+}
+
+check('JK-Fall: der gemeldete Symptomwert faellt von 766 149 auf ~43 (BREN.JK)', () => {
+  // Bei .JK ist der Berichtsfaktor 1 und der Handelsfaktor winzig — genau dort war der
+  // Schaden, den Karl im Board vom 07.08. gesehen hat.
+  const snap = brenSnap();
+  py._convertSnapshotToUSD(snap);
+  const evs = snap.metrics.enterpriseToRevenue.value;
+  assert.ok(evs < 100, 'evSales muss in eine plausible Groessenordnung fallen, ist ' + evs);
+  // Gegenprobe an einer UNABHAENGIGEN Groesse: EV_USD/Umsatz_USD aus demselben Snapshot.
+  // 766 149 ist der gerundete Board-Anzeigewert, deshalb 3 % Toleranz statt Bit-Gleichheit.
+  const ehrlich = snap.metrics.enterpriseValue.value / snap.metrics.revenueTTM.value;
+  assert.ok(Math.abs(evs - ehrlich) / ehrlich < 0.03,
+    'und EV_USD/Umsatz_USD treffen: ' + evs + ' vs ' + ehrlich);
+});
+
+check('AUSBAU-PROBE: Liste wirklich ausgebaut -> der Waechter wird rot', () => {
+  // Kein Schreibmuster-Test: die Liste wird zur Laufzeit geleert, der Umrechner erneut
+  // gefahren. Faellt der Schaden dann NICHT auf, prueft der Waechter oben nichts.
+  const gesichert = py.MISCH_VERHAELTNIS_METRIKEN.slice();
+  py.MISCH_VERHAELTNIS_METRIKEN.length = 0;
+  let ohneListe;
+  try {
+    const snap = brenSnap();
+    py._convertSnapshotToUSD(snap);
+    ohneListe = snap.metrics.enterpriseToRevenue.value;
+  } finally {
+    py.MISCH_VERHAELTNIS_METRIKEN.push(...gesichert);
+  }
+  assert.equal(ohneListe, 766149, 'ohne die Liste bleibt der verzerrte Rohwert stehen');
+  // und mit Liste ist er wieder geheilt (die Wiederherstellung selbst gegengeprueft)
+  const wieder = brenSnap();
+  py._convertSnapshotToUSD(wieder);
+  assert.ok(wieder.metrics.enterpriseToRevenue.value < 100, 'Liste wiederhergestellt');
+});
+
+check('Spur der Korrektur: mischVerhaeltnisFaktor steht im Snapshot, auch bei Faktor 1', () => {
+  const div = { meta: { reportingCurrency: 'CNY', tradingCurrency: 'HKD' },
+    marketCap: { value: 1e10 }, metrics: { priceSales: { value: 10 } } };
+  py._convertSnapshotToUSD(div);
+  assert.ok(Math.abs(div.meta.mischVerhaeltnisFaktor - HKD / CNY) < 1e-12,
+    'der angewandte Korrekturfaktor muss im Snapshot stehen');
+  const inland = { meta: { reportingCurrency: 'HKD', tradingCurrency: 'HKD' },
+    marketCap: { value: 1e10 }, metrics: { priceSales: { value: 10 } } };
+  py._convertSnapshotToUSD(inland);
+  assert.equal(inland.meta.mischVerhaeltnisFaktor, 1,
+    'Faktor 1 ist ein vollwertiger Beleg — sonst nullt der Board-Writer jede Inlandsnotierung');
 });
 
 console.log('\nwaehrung-handelskurs: ' + pass + ' ok, ' + fail + ' fail');
