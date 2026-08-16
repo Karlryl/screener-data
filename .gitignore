@@ -135,6 +135,10 @@ board-history-archive/
 # sonst mit ins Repo nehmen (gleiche Klasse wie snapshots-eingang/ oben).
 _public/
 _ghp/
+# Tag 971: Runner-Scratch des Statusmarker-Jobs (laufstatus). _ghp_status/ ist sein
+# eigener gh-pages-Klon, _vorgaenger.json der geholte Vorlauf-Marker.
+_ghp_status/
+_vorgaenger.json
 
 # 2.2: Max-Preis-Historie lebt AUSSERHALB des CI-Checkouts (GG7c) — nur der kleine
 # committete Vertrag external-data/ath-state.json fliesst in CI/Export.

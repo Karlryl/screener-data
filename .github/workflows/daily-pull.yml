@@ -66,6 +66,12 @@ jobs:
     timeout-minutes: 45
     outputs:
       run_date: ${{ steps.freeze.outputs.run_date }}
+      # Tag 971: Startzeitpunkt des Laufs fuer den Statusmarker (started_at im Vertrag
+      # screener-pipeline-status/v1). Kommt aus prep statt aus der GitHub-API: die API
+      # braeuchte `actions: read` in der permissions-Liste dieses schreibberechtigten
+      # Cron-Workflows — eine Rechte-Ausweitung fuer einen Zeitstempel. Hier ist es eine
+      # Zeile in einem Schritt, der ohnehin schon die Lauf-Uhr einfriert.
+      started_at: ${{ steps.freeze.outputs.started_at }}
       shard_count: ${{ steps.shards.outputs.count }}
       shard_matrix: ${{ steps.shards.outputs.matrix }}
       # T566-H2: Ausgang des Entdeckungs-Laufs. Schritt-Ergebnisse sind job-lokal — ohne
@@ -88,6 +94,10 @@ jobs:
           RUN_DATE_UTC=$(date -u +%Y-%m-%d)
           echo "run_date=$RUN_DATE_UTC" >> "$GITHUB_OUTPUT"
           echo "Frozen run date: $RUN_DATE_UTC"
+          # Tag 971: MIT Zeitzone (das abschliessende Z). Eine Zeitangabe ohne Zone parst
+          # in findash als Ortszeit und legte Banner und Kopfzeile schon einmal einen
+          # ganzen Kalendertag auseinander (R2-FE-018 drueben).
+          echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
       # 0.2/0.9 Sharding: N and the matrix list come from ONE place. N=17 ≈
       # 23700/1384 (cold-start full coverage of the ~23.7k universe in ~1 run) and
@@ -170,6 +180,16 @@ jobs:
       # Rein/synthetisch (assert-basiert, kein Netz, <1s).
       - name: Merge-Helper Selftest
         run: node scripts/merge-shard-manifests.js --selftest
+
+      # Tag 975: derselbe Grund wie beim Coverage-Marker zwei Schritte darueber. Der
+      # Statusmarker-Vertrag (screener-pipeline-status/v1) traegt Karls ZWEITEN Alarm-Kanal:
+      # die rote Warnleiste im Dashboard. Ein stiller Schema-Bruch laesst findash den Marker
+      # verwerfen — dann steht dort dauerhaft "verletzt den Statusvertrag" statt der Warnung,
+      # dass der Lauf rot war. Der Selftest pinnt jede Einzelregel des Vertrags plus die
+      # Fortschreibung von last_success_at; er lief bis Tag 975 in KEINEM Job und war damit
+      # nur bei manuellem Aufruf wirksam. Rein/synthetisch (kein Netz, <1s).
+      - name: Statusmarker Contract Selftest
+        run: node scripts/pipeline-status.js --selftest
 
       # Tag 132/133/165/227a: Auto-Universe-Refresh -> DIE EINE watchlist.json, die
       # alle Shards laden (jeder sliced sie intern via --shard). MUSS einmal laufen —
@@ -1772,4 +1792,211 @@ jobs:
             sleep $((5 * i))
           done
           echo "::error::board-history publish failed after 3 attempts — findash sieht die Bewegungs-Anzeige nicht."
+          exit 1
+
+  # ============================================================================
+  # LAUFSTATUS (Tag 971) — der Marker, der einen ROTEN Lauf sichtbar macht.
+  #
+  # BEFUND. Vom 12. bis 15.08.2026 fielen vier Nachtlaeufe rot. Karls Boards standen vier
+  # Tage auf dem Stand vom 09.08., und NICHTS hat es ihm gesagt: das Cockpit zeigte die
+  # alten Raenge stillschweigend weiter. Er hat das als den schlimmsten Zustand des
+  # Projekts beschrieben. findash hat seit dem 16.08. die rote Warnleiste dafuer, aber sie
+  # war blind — outputs/pipeline-status/v1/latest.json gab es auf gh-pages nicht (404),
+  # niemand hat den Marker je publiziert. Dieser Job ist die fehlende Datenquelle.
+  #
+  # WARUM EIN EIGENER JOB MIT if: always(). Die beiden bestehenden gh-pages-Deploys sitzen
+  # IN merge bzw. scoring und tragen `if: success()` — sie laufen also genau dann NICHT,
+  # wenn es etwas zu melden gaebe. Ein Marker, der nur bei gruenem Lauf hochgeladen wird,
+  # ist so nutzlos wie keiner; der rote Fall ist der einzige, der zaehlt. Dieser Job haengt
+  # deshalb an ALLEN sechs Jobs (er braucht ihre Ergebnisse), traegt `if: always()`, und es
+  # haengt NICHTS an ihm — er kann keinen Datenschritt blockieren.
+  #
+  # REIHENFOLGE. Er laeuft nach scoring und damit nach beiden gh-pages-Force-Pushes des
+  # eigenen Laufs; die drei Pushes racen nicht.
+  #
+  # EHRLICHE GRENZE. Faellt DIESER Job selbst, geht kein Marker raus und findash ist fuer
+  # diesen Lauf wieder blind. Das bleibt ein rotes X in Actions (Karls anderer Kanal) und
+  # ist die eine Stelle, die ein zweiter Publisher decken muesste — bewusst nicht gebaut.
+  #
+  # KEIN board-history-Vintage: dieser Job schreibt ausschliesslich nach
+  # outputs/pipeline-status/v1/ und fasst weder board-history/ noch main an.
+  # ============================================================================
+  laufstatus:
+    needs: [prep, entdeckungs-waechter, pull, merge, earnings-transport-waechter, scoring]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      # Der Vorgaenger-Marker traegt den letzten ERFOLGS-Zeitpunkt. Bei rotem Lauf wird er
+      # unveraendert weitergereicht — nur ein gruener Lauf setzt ihn neu. Ohne diesen Abruf
+      # gaebe es kein "seit wann stehen die Raenge" im Banner.
+      # Muster: derselbe rohe raw.githubusercontent-Abruf wie "Restore last-good
+      # macro-regime.json from gh-pages" oben (Repo ist public, kein Token noetig).
+      # Drei UNTERSCHEIDBARE Faelle statt einer beruhigenden Meldung:
+      #   200 + parsebar = fortschreiben · 404 = wirklich erster Lauf · Rest = ::warning::,
+      # weil dann ein bekanntes Erfolgsdatum verloren geht, ohne dass es ein erster Lauf ist.
+      # Der Schritt endet IMMER mit 0: ein Netzfehler beim Vorgaenger darf den Marker nicht
+      # verhindern — das Banner ohne Datum ist unendlich viel besser als kein Banner.
+      - name: Vorgaenger-Marker von gh-pages holen
+        run: |
+          url="https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/pipeline-status/v1/latest.json"
+          code=$(curl -sSL --retry 3 --max-time 30 -w '%{http_code}' -o _vorgaenger.json "$url" || echo 000)
+          if [ "$code" = "200" ] && node -e "JSON.parse(require('fs').readFileSync('_vorgaenger.json','utf8'))" 2>/dev/null; then
+            echo "Vorgaenger-Marker geholt (letzter Erfolg: $(node -p "require('./_vorgaenger.json').last_success_at || '<keiner>'"))."
+          elif [ "$code" = "404" ]; then
+            rm -f _vorgaenger.json
+            echo "Noch kein Statusmarker auf gh-pages (allererster Lauf) — last_success_at bleibt leer."
+          else
+            rm -f _vorgaenger.json
+            echo "::warning::Vorgaenger-Marker NICHT holbar (HTTP $code, kein 404) — der letzte Erfolgszeitpunkt geht fuer diesen Lauf verloren; das Banner erscheint dann ohne Datum. Der naechste gruene Lauf setzt ihn neu."
+          fi
+
+      # NEEDS_JSON statt sechs einzelner `needs.<job>.result`-Ausdruecke: der ganze
+      # needs-Kontext in EINEM Ausdruck. Das Skript ordnet ihn nach seiner eigenen
+      # JOB_REIHENFOLGE (die bestimmt `failed_job` = erster nicht-gruener Job) und meldet
+      # Drift in beide Richtungen — ein neu gebauter Job, den der Marker nicht kennt,
+      # bricht den Schritt, statt still aus der Statusmeldung zu fallen.
+      # STARTED_AT: faellt der prep-Ausgang leer aus (prep abgebrochen, bevor sein erster
+      # Schritt lief), wird die Zeit NICHT erfunden, sondern der Abschlusszeitpunkt
+      # eingesetzt. findash rendert started_at nicht; der Vertrag verlangt nur eine
+      # gueltige Zeitangabe mit Zone.
+      - name: Statusmarker schreiben
+        if: always()
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          COMPLETED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          STARTED_AT="${{ needs.prep.outputs.started_at }}"
+          if [ -z "$STARTED_AT" ]; then
+            echo "::warning::prep hat keinen Startzeitpunkt geliefert (Job abgebrochen?) — started_at wird auf den Abschlusszeitpunkt gesetzt statt geraten."
+            STARTED_AT="$COMPLETED_AT"
+          fi
+          export STARTED_AT COMPLETED_AT
+          # Bewusst `if` statt `[ -f … ] && VORG=…`: GitHub faehrt run-Bloecke als `bash -e`,
+          # und ein test-und-zuweisen-Einzeiler traegt dort den Exit-Code der TEST-Haelfte.
+          # Heute steht eine Zeile dahinter, also folgenlos — als letzte Zeile eines Blocks
+          # waere derselbe Einzeiler ein exit 1 und der Marker fiele beim allerersten Lauf aus.
+          VORG=""
+          if [ -f _vorgaenger.json ]; then VORG="_vorgaenger.json"; fi
+          node scripts/pipeline-status.js \
+            --out outputs/pipeline-status/v1/latest.json \
+            --vorgaenger "$VORG"
+
+      # DER EIGENTLICHE KERN: der Marker geht AUCH BEI ROTEM LAUF raus. `if: always()` am
+      # Schritt, `if: always()` am Job, und ein eigener Klon statt eines Mitfahrens auf den
+      # success()-gegateten Deploys in merge/scoring.
+      #
+      # MARKER_PFADE ist die Veroeffentlichungs-Liste — heute EIN Eintrag. Der beschlossene
+      # Anker-Marker (outputs/anchor-status.json, _BESCHLUSS-ANKER-UND-BLOCKVERHALTEN-
+      # 2026-08-16.md) braucht exakt dasselbe und dockt spaeter als zweiter Eintrag in
+      # dieser Zeile an — keine Abstraktion auf Vorrat, keine Konfigurationsschicht.
+      # ponytail: Wortzerlegung an Leerzeichen ist Absicht; Marker-Pfade enthalten keine.
+      #
+      # Ein FEHLENDER deklarierter Marker ist ein Fehler, kein stiller Ueberspringer: er
+      # heisst, der Schreib-Schritt ist nicht durchgekommen.
+      # Der cmp-Vergleich nach dem Kopieren ist die Haertung aus T568-F4: eine blosse
+      # Existenzpruefung findet im gh-pages-Klon den Marker von GESTERN und liesse einen
+      # nicht angekommenen Kopiervorgang gruen durchgehen.
+      - name: Statusmarker nach gh-pages veroeffentlichen (auch bei rotem Lauf)
+        if: always()
+        env:
+          MARKER_PFADE: outputs/pipeline-status/v1/latest.json
+        run: |
+          GHP_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          for rel in $MARKER_PFADE; do
+            if [ ! -f "$rel" ]; then
+              echo "::error::Deklarierter Statusmarker $rel wurde gar nicht erzeugt — der Schritt 'Statusmarker schreiben' ist nicht durchgekommen. findash bleibt fuer diesen Lauf blind und zeigt weiter die alten Raenge, ohne es zu sagen. NAECHSTER SCHRITT: Actions -> Job 'laufstatus' -> Schritt 'Statusmarker schreiben'."
+              exit 1
+            fi
+          done
+          rm -rf _ghp_status
+          # AE-CI-001: exit 2 heisst "Ref fehlt wirklich"; jeder andere Nonzero-Code ist
+          # transient und muss hart abbrechen statt einen frischen Branch zu initialisieren
+          # (sonst loescht der Force-Push unten den gesamten bestehenden gh-pages-Baum).
+          set +e
+          git ls-remote --exit-code "$GHP_URL" gh-pages >/dev/null 2>&1
+          ls_remote_rc=$?
+          set -e
+          if [ "$ls_remote_rc" -eq 0 ]; then
+            if ! git clone --depth 1 --branch gh-pages "$GHP_URL" _ghp_status; then
+              echo "::error::gh-pages existiert, aber der Klon ist gescheitert (transient?) — Abbruch statt Force-Push eines gestrippten Baums."
+              exit 1
+            fi
+          elif [ "$ls_remote_rc" -eq 2 ]; then
+            mkdir -p _ghp_status
+            cd _ghp_status
+            git init -b gh-pages
+            cd ..
+          else
+            echo "::error::git ls-remote endete mit Exit $ls_remote_rc (Netz/Auth/Transport?) — Abbruch statt der Annahme, gh-pages fehle."
+            exit 1
+          fi
+          cd _ghp_status
+          git config user.name "yahoo-pull-bot"
+          git config user.email "yahoo-pull-bot@users.noreply.github.com"
+          git remote get-url origin >/dev/null 2>&1 || git remote add origin "$GHP_URL"
+          for i in 1 2 3; do
+            # T564-B2/T568-F5: Fetch+Reset als ERSTER Befehl jedes Versuchs, ohne Guard.
+            # Dieser Job laeuft als letzter im Lauf; ein parallel laufender Lauf (manuell +
+            # geplant sind laut concurrency-Gruppe oben ausdruecklich gleichzeitig moeglich)
+            # kann zwischen Klon und Push deployt haben.
+            # WAS DAS NICHT LEISTET (Review 16.08., der Kommentar behauptete hier mehr):
+            # Fetch+Reset VERKLEINERT das Fenster, es schliesst es nicht. `git push --force`
+            # scheitert bei Divergenz nicht — das ist sein Zweck. Ueberlappen zwei
+            # laufstatus-Jobs so, dass der andere zwischen unserem Fetch und unserem Push
+            # landet, gewinnt wer zuletzt pusht, und BEIDE melden "✓ publiziert". Der Verlust
+            # ist hier begrenzt (der spaetere Marker ist der aktuellere Lauf, und der naechste
+            # Lauf schreibt ohnehin neu), aber er ist real und niemand sieht ihn.
+            # BEWUSST NICHT HIER GELOEST: dasselbe Force-Push-Muster ist Bestand in den beiden
+            # Deploys in merge und scoring. Ein Nicht-Force-Retry fuer gh-pages gehoert als
+            # eigener Chunk ueber alle drei Stellen, nicht als Sonderweg in diesen einen.
+            if git fetch origin gh-pages; then
+              if git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+                git reset --hard origin/gh-pages
+              fi
+            elif git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
+              echo "::warning::git fetch origin gh-pages fehlgeschlagen (Versuch $i), origin/gh-pages existiert aber — kein Force-Push vom alten Klon, naechster Versuch."
+              sleep $((5 * i))
+              continue
+            fi
+            for rel in $MARKER_PFADE; do
+              mkdir -p "$(dirname "$rel")"
+              cp "../$rel" "$rel"
+              if ! cmp -s "../$rel" "$rel"; then
+                echo "::error::$rel ist im gh-pages-Baum nicht die frisch geschriebene Datei (fehlt oder weicht ab) — der Marker von gestern ginge sonst still als heutiger Stand raus."
+                exit 1
+              fi
+            done
+            # L17: gezielt adden, nie -A — dieser Schritt veroeffentlicht ausschliesslich
+            # die deklarierten Marker und darf nichts anderes im Baum mitnehmen.
+            git add $MARKER_PFADE
+            # KEIN gruener Ausstieg bei "kein Diff", anders als in den drei Deploys oben:
+            # completed_at wird bei jedem Lauf neu gestempelt, ein Marker OHNE Diff kann es
+            # also gar nicht geben. Hier hiesse "kein Diff" ausschliesslich, dass die Kopie
+            # nicht angekommen ist — der stille gruene Haken auf einen nicht publizierten
+            # Alarm, also genau der Ausgang, gegen den dieser Job gebaut ist.
+            if git diff --staged --quiet; then
+              echo "::error::Der Statusmarker erzeugt keinen Diff gegen gh-pages. completed_at wird bei jedem Lauf neu gestempelt, ein unveraenderter Marker kann es also nicht geben. Zwei Ursachen kommen in Frage: die Kopie ist nicht angekommen (der Regelfall), ODER ein frueherer Versuch dieser Schleife hat serverseitig doch gepusht und nur die Rueckmeldung ging verloren — dann liegt der Marker bereits richtig auf gh-pages und dieses rote X ist ein Fehlalarm. BEWUSST trotzdem rot: ein zu oft feuernder Alarm ist reparierbar, ein stiller gruener Haken auf einen nicht publizierten Alarm ist genau der Schaden vom 12.-15.08. PRUEFEN: outputs/pipeline-status/v1/latest.json auf gh-pages gegen die Lauf-Nummer dieses Laufs."
+              exit 1
+            fi
+            git commit -m "deploy: pipeline status $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            if git push --force origin gh-pages; then
+              echo "✓ Statusmarker publiziert (Versuch $i): $MARKER_PFADE"
+              exit 0
+            fi
+            echo "Statusmarker-Push Versuch $i fehlgeschlagen, neuer Versuch..."
+            sleep $((5 * i))
+          done
+          echo "::error::Statusmarker nach 3 Versuchen NICHT publiziert — findash zeigt fuer diesen Lauf weiter die alten Raenge, ohne es zu sagen."
           exit 1
