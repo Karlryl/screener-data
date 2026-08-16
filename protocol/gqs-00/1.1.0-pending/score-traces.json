@@ -12,9 +12,7 @@
     "freezeDate": "2026-08-08"
   },
   "geaenderteFaelle": [
-    "BMI",
     "CHENNPETRO.NS",
-    "LQDA",
     "AUGO",
     "2548.TW",
     "688256.SS",
@@ -5942,8 +5940,8 @@
         "parentFallback": false
       },
       "periodSelection": {
-        "revGrowthLevel": "annual_fallback",
-        "quarterlyYoYRaw": null,
+        "revGrowthLevel": "quarterly_yoy",
+        "quarterlyYoYRaw": -0.08970753023027667,
         "annualYoYRaw": 0.10901231371543196
       },
       "axes": [
@@ -8249,7 +8247,7 @@
         },
         {
           "key": "ruleOfX",
-          "rawValue": 40.79356430740984,
+          "rawValue": -4.911999800103148,
           "unit": "percentage_points",
           "periodRule": "Uses the same period selection as revGrowthLevel and current TTM FCF margin.",
           "inputPointers": [
@@ -8822,12 +8820,12 @@
           ],
           "comparisonDistributionSha256": "11d2387436534a2b30a649c26d7ae7df97430f428c27f109d094c3f2fbcf57ec",
           "comparisonNFinite": 556,
-          "percentile": 49.10071942446043,
+          "percentile": 11.241007194244604,
           "weight": 1.2
         },
         {
           "key": "revGrowthLevel",
-          "rawValue": 10.901231371543197,
+          "rawValue": -8.970753023027667,
           "unit": "percentage_points",
           "periodRule": "Quarterly YoY uses a period-end match around 365 days (+/-15 days); position 4 only when period ends are absent. Annual fallback requires adjacent current/prior fiscal years.",
           "inputPointers": [
@@ -9397,7 +9395,7 @@
           ],
           "comparisonDistributionSha256": "61e74c07397046edfea875c10c3ad4163623923a6a11aff6992b48d5a77eb9c2",
           "comparisonNFinite": 556,
-          "percentile": 39.38848920863309,
+          "percentile": 6.924460431654676,
           "weight": 0.9
         },
         {
@@ -10550,19 +10548,19 @@
         }
       ],
       "score": {
-        "weightedBase": 54.43896472121115,
-        "empiricalBayes": 54.423111275778254,
+        "weightedBase": 48.46702227516799,
+        "empiricalBayes": 48.47249719561382,
         "empiricalBayesTarget": 50,
         "coverageWeight": 1,
         "coverageTargetMedian": 50.37531077510936,
-        "afterCoverage": 54.423111275778254,
+        "afterCoverage": 48.47249719561382,
         "factors": {
           "burn": 1,
           "growth": 1,
           "cycle": 1
         },
-        "unroundedFinal": 54.423111275778254,
-        "uiRounded": 54.4,
+        "unroundedFinal": 48.47249719561382,
+        "uiRounded": 48.5,
         "finalCap": null
       },
       "provenance": {
@@ -31877,8 +31875,8 @@
         "parentFallback": false
       },
       "periodSelection": {
-        "revGrowthLevel": "annual_fallback",
-        "quarterlyYoYRaw": null,
+        "revGrowthLevel": "quarterly_yoy",
+        "quarterlyYoYRaw": 41.5849358974359,
         "annualYoYRaw": 10.311803372392111
       },
       "axes": [

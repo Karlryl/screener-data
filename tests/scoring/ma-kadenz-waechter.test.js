@@ -68,12 +68,13 @@ check('A2 BLOCKIEREN — Halbjahres-Eimer als juengste Periode bildet kein Quart
   assert.strictEqual(axes.revQuartalsYoY(s), null, 'ein 184-Tage-Eimer ist kein Quartal');
 });
 
-check('A3 BLOCKIEREN — nicht MESSBARE juengste Periode zaehlt strikt als nicht erfuellt', () => {
-  // Reihe ganz OHNE Enden: F-4 laesst sie durch (Positionsregel i+4, "nichts, worueber zu
-  // urteilen waere"), die strikte M-A-Lesart nicht. Im Vintage 2026-08-16 sind das 3 von
-  // 8.490 Zeilen mit Werte-Reihe (2 verlieren ihr Quartals-Bein) — nachgezaehlt, nicht geschaetzt.
-  const s = snapQ(steigend(5), null);
-  assert.strictEqual(snap.periodeIstQuartal(s, 'revenueQ', 0), null, 'ohne Enden ist die Laenge unbestimmt');
+check('A3 BLOCKIEREN — datierte Reihe, aber Periode 0 nicht messbar', () => {
+  // Enden vorhanden, aber nur zwei Stueck und der Partner sitzt jenseits davon: Periode 0
+  // laesst sich nicht bestaetigen. Das ist der Regelfall des "nicht messbar" — und er wird
+  // strikt behandelt, weil eine datierte Reihe sehr wohl etwas vorliegen hat, worueber zu
+  // urteilen waere (im Unterschied zur F-4-Klausel, Waechter E1).
+  const s = snapQ(steigend(5), ['2026-03-31', null, null, null, null]);
+  assert.strictEqual(snap.periodeIstQuartal(s, 'revenueQ', 0), null, 'Vorgaenger-Ende fehlt');
   assert.ok(altePfadeOffen(s, 0), 'Vorbedingung: der alte Code haette hier ueber die Positionsregel gerechnet');
   assert.strictEqual(axes.revQuartalsYoY(s), null, 'strikte Lesart: nicht bestaetigt = nicht erfuellt');
 });
@@ -168,6 +169,30 @@ check('C2 SACHE-Pin: einmalertrag-Lampe und Rang-Gate kippen bei DERSELBEN Tages
     // Lampe: null heisst "wegen ungleicher Kadenz nicht bewertbar".
     assert.strictEqual(lamps.einmalertrag(s) !== null, drin, 'Lampen-Seite bei ' + tage + ' Tagen');
   }
+});
+
+// ── E. Die F-4-Klausel: eng, benannt, und an BEIDEN Enden festgenagelt ───────
+
+check('E1 F-4-KLAUSEL — Reihe ganz ohne Enden bleibt bei der Positionsregel', () => {
+  // Der aeltere, registrierte Vertrag (Karl-Mandat 03.08.2026): "fehlendes Datum ist KEIN
+  // Beweis". Ohne Enden greift M-A nicht — an beiden Rechenorten.
+  const s = snapQ(steigend(6), null);
+  assert.deepStrictEqual(snap.jahresVergleichIdx(s, 'revenueQ', 0), { idx: 4, quelle: 'position' });
+  assert.notStrictEqual(axes.revQuartalsYoY(s), null, 'Rechenort 1 darf hier nicht greifen');
+  assert.notStrictEqual(axes.revAcceleration(s, null), null, 'Rechenort 2 darf hier nicht greifen');
+});
+
+check('E2 F-4-KLAUSEL ist ENG — ein einziges vorhandenes Ende macht die Reihe strikt', () => {
+  // Sonst waere die Klausel ein Freibrief fuer jedes Unmessbare, und das Gate praktisch aus
+  // (gemessen: 1.660 statt 6 Zweig-Nutzer). Dieselben Werte wie E1, nur EIN Datum gesetzt.
+  const s = snapQ(steigend(6), ['2026-03-31', null, null, null, null, null]);
+  assert.strictEqual(axes.revQuartalsYoY(s), null, 'mit Enden-Reihe gilt strikt');
+  assert.strictEqual(axes.revAcceleration(s, null), null, 'mit Enden-Reihe gilt strikt');
+});
+
+check('E3 die Klausel rettet KEINE datierte Reihe mit verletzter Kadenz', () => {
+  const s = snapQ(steigend(5), endenAus('2026-06-30', [184, 91, 90, 92]));
+  assert.strictEqual(axes.revQuartalsYoY(s), null, 'der 184-Tage-Eimer bleibt geblockt');
 });
 
 // ── D. periodeIstQuartal: drei Ausgaenge, nicht zwei ─────────────────────────

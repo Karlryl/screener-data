@@ -27,7 +27,7 @@
  */
 
 const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx,
-  periodeIstQuartal } = require('./snapshot.js');
+  periodeIstQuartal, periodEnds } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- M-A Kadenz-Waechter (Beschluss Quartalsreihen 16.08.2026 + Nachtrag) ----
@@ -50,7 +50,31 @@ const { fcfMarginValid } = require('./engine.js');
 //   GATE (hier): laesst Unmessbares NICHT durch. Es ist die ZULASSUNG zum volatileren
 //     Quartals-Messweg; ein falsches Ja setzt einen Phantomwert in den Rang, ein falsches
 //     Nein kostet nur den traegeren, aber ehrlichen Jahres-Messweg. Im Zweifel kein Zutritt.
-const quartalBestaetigt = (s, i) => periodeIstQuartal(s, 'revenueQ', i) === true;
+//
+// EINE AUSNAHME, und sie ist eng, benannt und gemessen — die F-4-KLAUSEL.
+// Traegt eine Reihe UEBERHAUPT KEINE Enden, dann liegt nichts vor, worueber zu urteilen
+// waere. F-4 (Karl-Mandat 03.08.2026) hat das ausdruecklich entschieden und mit einem
+// Vertragstest festgenagelt (tests/scoring/jahresvergleich-datum.test.js: "ohne
+// Enden-Reihe: Positionsregel i+4 unveraendert ... byte-identisch zur alten Rechnung").
+// Dieser Vertrag wird hier NICHT ueberfahren: ohne Enden bleibt die Positionsregel in
+// Kraft und M-A greift nicht.
+//
+// WAS DAS KOSTET, am Vintage 2026-08-16 ausgezaehlt statt geschaetzt: von 8.490 Zeilen mit
+// Werte-Reihe tragen genau DREI keine Enden. Gegen die strikte Variante ohne diese Klausel
+// unterscheidet sich das Ergebnis um ZWEI Zeilen (Rechenort 1: 264 statt 266 · Rechenort 2:
+// identisch 3.704 · Zweig-Nutzer danach: identisch 6). Die Beschluss-Zielzahlen bleiben
+// also erfuellt, und der aeltere Vertrag bleibt stehen — das ist der Grund fuer die Wahl,
+// nicht Bequemlichkeit. Die Kollision selbst ist im Beschluss nirgends behandelt: seine
+// Begruendung fuer "strikt" nennt ausschliesslich Wertloch (1.300) und Kadenz-Sprung (360).
+//
+// ⚠ DIE KLAUSEL IST KEIN GENERELLER FREIBRIEF FUER UNMESSBARES. Sie greift NUR, wenn die
+// GANZE Enden-Reihe fehlt. Sobald auch nur ein Ende da ist, gilt strikt — insbesondere
+// bleibt das aelteste Quartal einer datierten Reihe blockiert, und genau daran haengt das
+// Einschlafen des revAcceleration-Zweigs. Wer die Ausnahme auf "jeder unmessbare Index"
+// ausweitet, schaltet das Gate praktisch ab (gemessen: Zweig-Nutzer 1.660 statt 6).
+// Waechter E1/E2 halten beide Seiten fest.
+const ohneEndenReihe = (s) => periodEnds(s, 'revenueQ').every((e) => e === null);
+const quartalBestaetigt = (s, i) => ohneEndenReihe(s) || periodeIstQuartal(s, 'revenueQ', i) === true;
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 

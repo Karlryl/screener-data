@@ -17,10 +17,8 @@
     "casesGeprueft": 25,
     "syntheticCases": 1,
     "mitLampeEinmalertrag": 0,
-    "bemerkung": "Die Einmalertrag-Aenderung beruehrte keine versiegelte Golden-Fixture (13x false, 12x null) und riss nur die Source-Hash-Schaerfe. Der M-A-Kadenz-Waechter beruehrt zehn der 25 Faelle, und zwar bestimmungsgemaess: die Reihen mit einem Halbjahres-Eimer (Perioden 90/184/91/90 bzw. 91/90/184/91), die zwei Reihen ohne Perioden-Enden (BMI, LQDA) und die zwei sauberen 6-Quartals-Reihen, deren aeltestes Quartal nicht bestaetigbar ist. Kein Fall aendert Routing, Track oder Kohorte — nur die Periodenwahl und damit Score und coverageWeight. LQDA ist bewusst mit aufgefuehrt, obwohl sein SCORE gleich bleibt: seine Periodenwahl wechselt (quarterly_yoy -> annual_fallback), und der Trace ist der Nachweis, nicht nur die Endzahl.",
+    "bemerkung": "Die Einmalertrag-Aenderung beruehrte keine versiegelte Golden-Fixture (13x false, 12x null) und riss nur die Source-Hash-Schaerfe. Der M-A-Kadenz-Waechter beruehrt acht der 25 Faelle, und zwar bestimmungsgemaess: die Reihen mit einem Halbjahres-Eimer (Perioden 90/184/91/90 bzw. 91/90/184/91) und die zwei sauberen 6-Quartals-Reihen, deren aeltestes Quartal nicht bestaetigbar ist. Kein Fall aendert Routing, Track oder Kohorte — nur die Periodenwahl und damit Score und coverageWeight. Die beiden Fixtures OHNE Perioden-Enden (BMI, LQDA) bleiben ausdruecklich unveraendert: dort gilt die F-4-Klausel (Positionsregel bleibt in Kraft), siehe axes.js.",
     "geaenderteFaelle": [
-      { "ticker": "BMI", "grund": "keine revenueQEnds -> Periodenlaenge nicht bestaetigbar", "unroundedFinalAlt": 48.472, "unroundedFinalNeu": 54.423 },
-      { "ticker": "LQDA", "grund": "keine revenueQEnds -> Periodenwahl wechselt auf annual_fallback; Score unveraendert", "unroundedFinalAlt": null, "unroundedFinalNeu": null },
       { "ticker": "CHENNPETRO.NS", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 96.104, "unroundedFinalNeu": 90.003 },
       { "ticker": "AUGO", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 94.744, "unroundedFinalNeu": 88.327 },
       { "ticker": "2548.TW", "grund": "juengste Periode 184 Tage -> kein Quartals-Bein", "unroundedFinalAlt": 97.198, "unroundedFinalNeu": 96.457 },
@@ -36,7 +34,7 @@
     "src/scoring/lamps.js": "994dd6d31346aa59ef4be8f1e8b703123bbbb0adae4052988e27df7a70d63dab",
     "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
     "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69",
-    "src/scoring/axes.js": "1d9303d2b3c2bc0eb0c8c34ff272860819f322b7ca97288841b14ee0ea635db6",
+    "src/scoring/axes.js": "6943658e6e763a68007b90606b7312cdc93c5ff2db7d7abf01da53f8e255033f",
     "src/scoring/snapshot.js": "47dfbefba155e0e3a59d1dcd94ea6d8a88d16e4e1d8e50bf34cb1351be86e20c"
   }
 }
