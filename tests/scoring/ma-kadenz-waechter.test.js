@@ -195,6 +195,39 @@ check('E3 die Klausel rettet KEINE datierte Reihe mit verletzter Kadenz', () => 
   assert.strictEqual(axes.revQuartalsYoY(s), null, 'der 184-Tage-Eimer bleibt geblockt');
 });
 
+// E4 prueft das Praedikat DIREKT, nicht ueber die Achsen. Grund (Review 16.08.): dass die
+// leere Serie heute harmlos ist, liegt an den Bounds-Checks der beiden Aufrufer — an
+// fremden Waechtern also, nicht an der Klausel. Ein dritter Aufrufer haette diesen Schutz
+// nicht. Beide Richtungen, damit der Test nicht bloss "irgendwas ist false" behauptet.
+check('E4 F-4-KLAUSEL ohne Werte-Reihe: keine Ausnahme (Vacuous-Truth-Falle)', () => {
+  // (a) LEERE bzw. fehlende Werte-Reihe -> nichts zu datieren -> KEINE Ausnahme.
+  assert.strictEqual(axes.ohneEndenReihe(snapQ([], null)), false, 'leere Werte-Reihe darf die Ausnahme nicht ausloesen');
+  assert.strictEqual(axes.ohneEndenReihe({ timeseries: {} }), false, 'fehlende Werte-Reihe darf die Ausnahme nicht ausloesen');
+  assert.strictEqual(axes.ohneEndenReihe({}), false, 'Snapshot ohne timeseries darf die Ausnahme nicht ausloesen');
+  // Werte-Reihe da, aber durchgaengig null: ebenfalls nichts zu datieren.
+  assert.strictEqual(axes.ohneEndenReihe(snapQ([null, null], null)), false, 'all-null-Werte duerfen die Ausnahme nicht ausloesen');
+
+  // (b) GEGENPROBE — die gueltige Form muss weiterhin DURCHGEHEN, sonst prueft (a) nur,
+  // dass die Klausel kaputt ist. Das ist derselbe Fall wie E1, hier am Praedikat.
+  assert.strictEqual(axes.ohneEndenReihe(snapQ(steigend(6), null)), true, 'Werte ohne Enden: Ausnahme MUSS greifen');
+  assert.strictEqual(
+    axes.ohneEndenReihe(snapQ(steigend(3), [null, null, null])), true,
+    'Werte mit reiner null-Enden-Reihe: Ausnahme MUSS greifen',
+  );
+  // (c) Laengen-Mismatch faellt ebenfalls unter die Klausel (periodEnds liefert dann
+  // durchgaengig null). Das stand bis 16.08. nicht im Kommentar und ist der eigentliche
+  // Grund, warum "die GANZE Enden-Reihe fehlt" die Klausel zu eng beschrieb.
+  assert.strictEqual(
+    axes.ohneEndenReihe(snapQ(steigend(5), ['2026-03-31', '2025-12-31'])), true,
+    'Laengen-Mismatch: keine Zuordnung Wert->Datum herstellbar, Ausnahme greift',
+  );
+  // (d) und ein EINZIGES zuordenbares Ende beendet die Ausnahme (Enge, wie E2).
+  assert.strictEqual(
+    axes.ohneEndenReihe(snapQ(steigend(3), ['2026-03-31', null, null])), false,
+    'ein zuordenbares Ende macht die Reihe strikt',
+  );
+});
+
 // ── D. periodeIstQuartal: drei Ausgaenge, nicht zwei ─────────────────────────
 
 check('D1 true / false / null werden auseinandergehalten', () => {

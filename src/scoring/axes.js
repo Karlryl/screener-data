@@ -67,13 +67,32 @@ const { fcfMarginValid } = require('./engine.js');
 // nicht Bequemlichkeit. Die Kollision selbst ist im Beschluss nirgends behandelt: seine
 // Begruendung fuer "strikt" nennt ausschliesslich Wertloch (1.300) und Kadenz-Sprung (360).
 //
-// ⚠ DIE KLAUSEL IST KEIN GENERELLER FREIBRIEF FUER UNMESSBARES. Sie greift NUR, wenn die
-// GANZE Enden-Reihe fehlt. Sobald auch nur ein Ende da ist, gilt strikt — insbesondere
-// bleibt das aelteste Quartal einer datierten Reihe blockiert, und genau daran haengt das
-// Einschlafen des revAcceleration-Zweigs. Wer die Ausnahme auf "jeder unmessbare Index"
-// ausweitet, schaltet das Gate praktisch ab (gemessen: Zweig-Nutzer 1.660 statt 6).
+// ⚠ DIE KLAUSEL IST KEIN GENERELLER FREIBRIEF FUER UNMESSBARES. Sie greift NUR, wenn KEIN
+// EINZIGES verwertbares Perioden-Ende vorliegt. Das ist der Fall in genau zwei Lagen, und
+// beide kommen aus periodEnds(): (a) die Enden-Reihe fehlt ganz bzw. traegt nur null, und
+// (b) sie ist DA, hat aber eine andere Laenge als die Werte-Reihe — dann ist die Zuordnung
+// Wert->Datum nicht herstellbar und periodEnds() liefert bewusst durchgaengig null. Fall (b)
+// war hier frueher nicht benannt (Review 16.08.); er ist an der Quelle doppelt abgesichert
+// und namentlich getestet (tests/scoring/jahresvergleich-datum.test.js).
+// Sobald auch nur EIN zuordenbares Ende da ist, gilt strikt — insbesondere bleibt das
+// aelteste Quartal einer datierten Reihe blockiert, und genau daran haengt das Einschlafen
+// des revAcceleration-Zweigs. Wer die Ausnahme auf "jeder unmessbare Index" ausweitet,
+// schaltet das Gate praktisch ab (gemessen: Zweig-Nutzer 1.660 statt 6).
 // Waechter E1/E2 halten beide Seiten fest.
-const ohneEndenReihe = (s) => periodEnds(s, 'revenueQ').every((e) => e === null);
+//
+// hasPresent(Werte) davor ist KEIN Schmuck: ohne dieses Gate ist die Klausel bei einer
+// LEEREN Werte-Reihe wahr — die Vacuous-Truth-Falle, vor der snapshot.js#hasPresent
+// ausdruecklich warnt. Zu beachten (Review-Nachzug 16.08., nachgerechnet): das naheliegende
+// `!hasPresent(periodEnds(...))` heilt das NICHT, es ist zu `.every(e => e === null)`
+// wertgleich fuer JEDE Eingabe — die Negation stellt genau die Falle wieder her, die der
+// Helfer verhindern soll. Nur die Bedingung an der WERTE-Reihe schliesst sie. Ohne Werte
+// gibt es nichts zu datieren, also auch keine Ausnahme zu gewaehren; strikt ist hier die
+// konservative Lesart. Heute folgenlos, weil beide Aufrufer (revGrowthLevel und der
+// Quartals-Zweig von revAcceleration, ueber quartalBestaetigt) eigene Bounds-Checks auf
+// die Werte-Reihe tragen — aber das ist der Zufall zweier fremder Waechter und keine
+// Eigenschaft dieser Klausel. Waechter E4 prueft sie direkt statt ueber die Aufrufer.
+const ohneEndenReihe = (s) => hasPresent(norm(s, 'revenueQ'))
+  && periodEnds(s, 'revenueQ').every((e) => e === null);
 const quartalBestaetigt = (s, i) => ohneEndenReihe(s) || periodeIstQuartal(s, 'revenueQ', i) === true;
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -614,6 +633,11 @@ function roicStability(s) {
 module.exports = {
   revGrowthLevel, revAcceleration, gpGrowth, ruleOfX, revYoYComponents,
   revAnnualYoY, revQuartalsYoY, // F-4: die beiden Beine einzeln (Tests/Messung)
+  // Die F-4-Klausel als Praedikat. Export, damit (a) Waechter E4 sie direkt statt ueber die
+  // Aufrufer prueft und (b) die Zaehlung ihrer Population in write-board-history.js
+  // dieselbe Definition benutzt statt einer nachgebauten — eine nachgebaute Zaehlung waere
+  // genau der Wert, der bei der naechsten Aenderung still auseinanderlaeuft.
+  ohneEndenReihe,
   marginTrajectory, capitalEfficiency, revisionsMomentum, dilution, marginLevel, roicStability,
   // U-SC-003: die EINE Quellenwahl fuer OpInc/Assets/CurrLiab — auch die Anzeige-Lampe lowRoic
   // (lamps.js) liest sie, damit Lampe und Achse nie zwei verschiedene ROIC-Quellen benutzen.
