@@ -1513,7 +1513,10 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings,
+  // Einmalertrag-Konsequenz: EINE Liste fuer scoreUniverse UND buildCalibMatrix (calibrate.js
+  // spiegelt PASS 1; eine zweite Kopie wuerde genau die Drift erzeugen, die die Datei bewacht).
+  EINMALERTRAG_BLIND, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // Tag 584 (VSXY/VSCO): fuer scripts/probe-issuer-strict-key-punct.js — der STRENGE Schluessel
