@@ -8,7 +8,12 @@
  *
  * Strategy: bundle methods-history entries older than 60 days into a single
  * monthly NDJSON file under external-data/methods-history-archive/ (git-ignored).
- * Same for picks-history.
+ *
+ * ACHTUNG (Karl-Entscheid 2026-08-16): methods-history/ und picks-history/ stehen auf der
+ * Schutzliste und werden NUR mit ausdruecklichem --methods-keep-days / --picks-keep-days
+ * angefasst — sie erben den generischen --keep-days-Default NICHT. picks-history/ ist
+ * zusaetzlich dauerhaft eingefroren (picks-history/_FROZEN.md): jeder Flag-Wert, der dort
+ * Vintages entfernen wuerde, bricht den Lauf laut ab.
  * snapshots/ are kept fresh (latest pull is the source of truth) but a monthly
  * archive of the past universe-state is also bundled.
  *
@@ -179,29 +184,56 @@ function archiveDirByDate(srcDir, archiveDir, keepDays, dryRun) {
   return { archived, kept };
 }
 
+// Karl-Entscheid 2026-08-16: Schutzliste fail-closed. `keepDays` ist NICHT der Default
+// fuer geschuetzte Verzeichnisse — ohne ausdrueckliches Flag passiert dort nichts.
+// `frozen` (picks-history) blockt zusaetzlich JEDEN Flag-Wert, der Vintages entfernen
+// wuerde: die Datei ist der unbestechliche Beleg der historischen Vorschlaege, eine
+// laute Meldung nach dem Loeschen waere wertlos (der CI-Schritt laeuft continue-on-error).
+// Gezaehlt wird mit dem echten archiveDirByDate im dry-run — so kann die Warnschwelle
+// nie von der tatsaechlichen Cutoff-Rechnung abdriften.
+function archiveProtectedDir(dirName, keepDays, dryRun, frozen) {
+  const srcDir = path.join(ROOT, dirName);
+  const archiveDir = path.join(ARCHIVE_BASE, dirName + '-archive');
+  const flag = '--' + (dirName === 'picks-history' ? 'picks' : 'methods') + '-keep-days';
+
+  if (keepDays == null) {
+    console.log('\n' + dirName + '/ — SCHUTZLISTE, kein ' + flag +
+      ' gesetzt → fail-closed: nichts archiviert, nichts geloescht.');
+    return { archived: 0, kept: 0 };
+  }
+
+  console.log('\n' + dirName + '/ (keep=' + keepDays + 'd)');
+  if (frozen) {
+    const probe = archiveDirByDate(srcDir, archiveDir, keepDays, true);
+    if (probe.archived > 0) {
+      console.error('::error::archive-old-snapshots: ' + flag + ' ' + keepDays + ' wuerde ' +
+        probe.archived + ' Vintages aus ' + dirName + '/ entfernen. ' + dirName +
+        '/ ist seit 2026-07-02 EINGEFROREN und bleibt es dauerhaft (Karl-Entscheid 2026-08-16, ' +
+        'siehe picks-history/_FROZEN.md) — abgebrochen, es wurde nichts geloescht.');
+      throw new Error(dirName + ' ist eingefroren — ' + flag + ' ' + keepDays + ' abgelehnt');
+    }
+  }
+  const res = archiveDirByDate(srcDir, archiveDir, keepDays, dryRun);
+  console.log('  total: ' + res.archived + ' archived, ' + res.kept + ' kept');
+  return res;
+}
+
 function main() {
   const args = parseArgs(process.argv);
   console.log('Archive Rotation — keepDays=' + args.keepDays + (args.dryRun ? ' (dry-run)' : ''));
   ensureDir(ARCHIVE_BASE);
 
-  const methodsKeepDays = args.methodsKeepDays != null ? args.methodsKeepDays : args.keepDays;
-  const picksKeepDays = args.picksKeepDays != null ? args.picksKeepDays : args.keepDays;
-
-  console.log('\nmethods-history/ (keep=' + methodsKeepDays + 'd)');
-  const mh = archiveDirByDate(
-    path.join(ROOT, 'methods-history'),
-    path.join(ARCHIVE_BASE, 'methods-history-archive'),
-    methodsKeepDays, args.dryRun
-  );
-  console.log('  total: ' + mh.archived + ' archived, ' + mh.kept + ' kept');
-
-  console.log('\npicks-history/ (keep=' + picksKeepDays + 'd)');
-  const ph = archiveDirByDate(
-    path.join(ROOT, 'picks-history'),
-    path.join(ARCHIVE_BASE, 'picks-history-archive'),
-    picksKeepDays, args.dryRun
-  );
-  console.log('  total: ' + ph.archived + ' archived, ' + ph.kept + ' kept');
+  // Karl-Entscheid 2026-08-16 (dauerhaft): picks-history/ und methods-history/ stehen
+  // auf der Schutzliste (CLAUDE.md/AGENTS.md), picks-history/ ist zusaetzlich inhaltlich
+  // EINGEFROREN (picks-history/_FROZEN.md). Frueher erbten beide den generischen
+  // `keepDays`-Default (14) — ein Hand-Aufruf `node scripts/archive-old-snapshots.js`
+  // OHNE Flags hat damit saemtliche Vintages aelter als 14 Tage aus dem Repo in das
+  // git-ignorierte external-data/-Archiv verschoben und die Originale geloescht. Die CI
+  // ruft zwar korrekt mit 100000 auf, aber der Default darf den Verlust nicht ermoeglichen.
+  // Jetzt fail-closed: ohne ausdrueckliches Flag wird an den geschuetzten Verzeichnissen
+  // NICHTS archiviert. Nur `prices/` erbt weiter (nicht geschuetzt, echte Rotation).
+  const mh = archiveProtectedDir('methods-history', args.methodsKeepDays, args.dryRun, false);
+  const ph = archiveProtectedDir('picks-history', args.picksKeepDays, args.dryRun, true);
 
   console.log('\nprices/ (daily snapshots, not history.json)');
   // For prices/YYYY-MM-DD.json files (one-day snapshots, not the kumulative history.json)

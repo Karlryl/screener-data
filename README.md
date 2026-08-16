@@ -66,10 +66,10 @@ This is a discovery / screener tool. There is no portfolio tracking, no buy/sell
         ┌──────────────────────────────────────────┼──────────────────┐
         ▼                                          ▼                  ▼
 ┌──────────────────┐   ┌────────────────────┐   ┌───────────────────────────┐
-│ generate-        │   │ generate-modes-    │   │ snapshot-picks.js +       │
-│ screener.js      │   │ report.js          │   │ snapshot-methods-history. │
-│ → screener.html  │   │ → modes-report.html│   │ js → picks-history/,      │
-│ (6-tab dashboard)│   │                    │   │   methods-history/        │
+│ generate-        │   │ generate-modes-    │   │ picks-history/ +          │
+│ screener.js      │   │ report.js          │   │ methods-history/          │
+│ → screener.html  │   │ → modes-report.html│   │ EINGEFROREN — Writer sind │
+│ (6-tab dashboard)│   │                    │   │ weg, s. _FROZEN.md        │
 └──────────────────┘   └────────────────────┘   └───────────────────────────┘
                                                    │
                                                    ▼
@@ -201,7 +201,9 @@ Run with `AUDIT_SCORE_MULTIPLIERS=1` to enable q-spike-penalty + listing-age mul
 │   ├── compute-method-drift.js            # sparkline data
 │   └── macro-regime.js                    # SPY 200d-MA → BULL/BEAR/SIDEWAYS
 ├── snapshots/                             # per-ticker JSON + _manifest.json
-├── picks-history/                         # daily picks freeze (90d retention)
+├── picks-history/                         # EINGEFROREN seit 2026-07-02, KEINE Retention
+│                                          #   (dauerhaft, Karl 2026-08-16 — s. picks-history/_FROZEN.md;
+│                                          #    Nachfolger: board-history/)
 ├── methods-history/                       # per-method pass-rates (7d retention)
 ├── prices/                                # OHLCV history (14d retention)
 ├── score-history/                         # 30-entry rolling per-ticker score

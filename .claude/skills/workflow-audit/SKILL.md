@@ -61,7 +61,9 @@ Review the "Deploy to GitHub Pages" step:
 
 Estimate daily growth from committed artifacts:
 - `methods-history/` files per day × size
-- `picks-history/` files per day × size
+- `picks-history/` files per day × size — **wächst nicht mehr (0/Tag): eingefroren seit
+  2026-07-02, dauerhaft (Karl 2026-08-16, `picks-history/_FROZEN.md`). Nie als Aufräum-
+  oder Retention-Kandidat vorschlagen, auch nicht bei Repo-Größen-Druck.**
 - `alert-state.json` post-strip size
 - `snapshots/` directory
 
