@@ -13,6 +13,7 @@
  *   outputs/hypergrowth/survival.json  (flat pre-revenue, runway-desc)
  *   outputs/hypergrowth/index.json     (meta: counts/branches/excluded)
  *   outputs/coverage-status.json       (degradation banner marker, optional)
+ *   outputs/anchor-status.json         (Direktive-4-Bruell-Marker, optional; nur index.json)
  * NEVER touches picks-history/ or earnings-calendar.json (Retention Grundgesetz 7a).
  *
  * WRITES (atomic tmp+rename, assertFinite -> fail-loud on NaN/Inf, never silent-null):
@@ -47,6 +48,12 @@ const HG_DIR = path.join(ROOT, 'outputs', 'hypergrowth');
 const QUALITY_DIR = path.join(ROOT, 'outputs', 'quality'); // 3.2: QC-Board source (runQualityPass)
 const SMALLCAP_DIR = path.join(ROOT, 'outputs', 'smallcap'); // 5.2: Small-Cap-Board source (runSmallcapPass)
 const COVERAGE = path.join(ROOT, 'outputs', 'coverage-status.json');
+// Bruell-Kanal (Beschluss 16.08.): der Anker-Marker aus dem Live-Universum-Gate. Reist als
+// index.json-Feld `anchor` mit, exakt nach dem Muster von coverage — nur EINE Datei statt
+// aller 16, weil das Banner global ist und nicht je Board. Fehlt die Datei: `anchor` faellt
+// weg (ECHT optional, kein --check-Fund) — Praezedenz revGrowthYoYPct/coverageAxes: Karls
+// Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden.
+const ANCHOR = path.join(ROOT, 'outputs', 'anchor-status.json');
 // Court-Auflage 27.07.2026 (Antrag 1 DENIED, rettende Auflage): Die Groessenklasse allein
 // ('mega') ist eine Aussage ueber die LISTE, nicht ueber die Firma — sie sagt nur 'oberstes
 // Fuenftel dieses Universums'. Das Gericht hat den Umbau der Klassifikation und den
@@ -331,12 +338,15 @@ function buildSurvival(coverage) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: s.map(mapSurvivalRow) };
 }
 
-function buildIndex(coverage) {
+function buildIndex(coverage, anchor) {
   const idx = readJSON(path.join(HG_DIR, 'index.json'));
   return {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
     coverage,                                        // banner marker for the dashboard
+    // Bruell-Kanal: nur setzen, wenn der Marker da ist. `anchor: null` waere die Aussage
+    // "gemessen, alles gut" — die darf nur der Marker selbst treffen.
+    ...(anchor ? { anchor } : {}),
     generatedFromSnapshots: idx.generatedFromSnapshots,
     branches: idx.branches,
     boardStatus: Object.fromEntries(BRANCHES.map((id) => [id, boardStatusOf(id)])), // 2.1: core|diagnostic je Board
@@ -569,8 +579,23 @@ function loadCoverage() {
   return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct };
 }
 
+// Bruell-Kanal-Marker, gleiche Bauform wie loadCoverage(): nur die Felder durchreichen, die
+// das Dashboard bindet — nicht die ganze Datei (die `anker`-Messreihe bleibt Rohdatei-Nachschau).
+// Fehlt/kaputt -> undefined, und das Feld entfaellt im Export.
+function loadAnchor() {
+  const m = readJSONOrNull(ANCHOR);
+  if (!m || m.schema !== 'anchor-status/v1') return undefined;
+  return {
+    status: m.status,
+    breached: m.breached,
+    blocked: m.blocked,
+    verletzungen: Array.isArray(m.verletzungen) ? m.verletzungen.slice(0, 10) : [],
+  };
+}
+
 function build() {
   const coverage = loadCoverage();
+  const anchor = loadAnchor();
   fs.mkdirSync(OUT_DIR, { recursive: true }); // writeJsonAtomic does NOT create the dir
   const opts = { assertFinite: true };         // fail loud on a NaN/Inf, never silent-null (A-lib-08)
   for (const id of BRANCHES) {
@@ -578,7 +603,7 @@ function build() {
   }
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
-  writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
+  writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage, anchor), opts);
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
   const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
   // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
@@ -870,6 +895,28 @@ function validateCoverage(mk, kind, errs) {
   if (!Number.isFinite(c.coverage_pct)) errs.push(`${kind}: coverage.coverage_pct not finite`);
 }
 
+// Bruell-Kanal (Beschluss 16.08.), nur index.json. ECHT OPTIONAL — Abwesenheit ist der
+// legitime Normalfall (lokaler Lauf, alter Marker) und wird NICHT beanstandet. Ist das Feld
+// aber da, wird es VOLL geprueft: ein kaputter Status schaltet drueben genau das Banner ab,
+// um das es geht, und das waere schlimmer als kein Feld. Praezedenz: revGrowthYoYPct.
+const VALID_ANCHOR_STATUS = ['ok', 'rangfolge', 'blockiert'];
+function validateAnchor(mk, kind, errs) {
+  if (!('anchor' in mk)) return;
+  const a = mk.anchor;
+  if (!a || typeof a !== 'object' || Array.isArray(a)) { errs.push(`${kind}: anchor not object`); return; }
+  if (!VALID_ANCHOR_STATUS.includes(a.status)) errs.push(`${kind}: anchor.status=${JSON.stringify(a.status)}`);
+  if (typeof a.breached !== 'boolean') errs.push(`${kind}: anchor.breached not boolean`);
+  if (typeof a.blocked !== 'boolean') errs.push(`${kind}: anchor.blocked not boolean`);
+  // Der Selbstwiderspruch ist der gefaehrliche Fund, nicht der Typfehler: ein 'rangfolge'
+  // mit breached=false zeigt drueben KEIN Banner, obwohl gerissen ist — stiller Alarmausfall.
+  if (typeof a.breached === 'boolean' && VALID_ANCHOR_STATUS.includes(a.status)
+      && a.breached !== (a.status !== 'ok')) errs.push(`${kind}: anchor.breached inconsistent with status`);
+  if (typeof a.blocked === 'boolean' && VALID_ANCHOR_STATUS.includes(a.status)
+      && a.blocked !== (a.status === 'blockiert')) errs.push(`${kind}: anchor.blocked inconsistent with status`);
+  if (!Array.isArray(a.verletzungen)) errs.push(`${kind}: anchor.verletzungen not array`);
+  else if (a.verletzungen.some((v) => typeof v !== 'string')) errs.push(`${kind}: anchor.verletzungen not all strings`);
+}
+
 // R2.18: rank is Number.isInteger(>=1)-checked above but that alone is tautological — rank
 // is derived as i+1 from array position (mapBoardRow/mapOverviewRow/mapSurvivalRow), so a
 // type check can never contradict a broken sort. Two INDEPENDENT value checks close that gap:
@@ -904,6 +951,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   if (typeof mk.generated_at !== 'string') errs.push(`${kind}: generated_at`);
   validateCoverage(mk, kind, errs);
   if (kind === 'index') {
+    validateAnchor(mk, kind, errs);
     if (!Number.isFinite(mk.generatedFromSnapshots)) errs.push('index: generatedFromSnapshots');
     if (!Array.isArray(mk.branches) || mk.branches.length !== BRANCHES.length) errs.push('index: branches');
     if (!mk.boardStatus || typeof mk.boardStatus !== 'object') errs.push('index: boardStatus map missing');
@@ -1217,6 +1265,22 @@ function selftest() {
   assert.ok(e.some(x => /boardStatus=/.test(x)), 'board boardStatus bad enum must trip');
   // index boardStatus map: clean passes, missing map / bad value trip.
   e = []; validateFile(mkIdx(), 'index', e); assert.strictEqual(e.length, 0, 'clean index must validate');
+  // Bruell-Kanal `anchor` (Tag 978): ECHT optional — Abwesenheit gruen (die Zeile darueber
+  // beweist es, mkIdx traegt kein anchor) —, aber vorhanden voll geprueft. Beide Richtungen:
+  const ankerOk = { status: 'rangfolge', breached: true, blocked: false, verletzungen: ['ALAB 35.9% > 15%'] };
+  e = []; validateFile(mkIdx({ anchor: ankerOk }), 'index', e);
+  assert.strictEqual(e.length, 0, 'gueltiger anchor-Block muss DURCHGEHEN, sonst blockt der Gate den Normalfall: ' + e.join(';'));
+  e = []; validateFile(mkIdx({ anchor: { ...ankerOk, status: 'bogus' } }), 'index', e);
+  assert.ok(e.some(x => /anchor\.status/.test(x)), 'kaputter anchor.status muss auffliegen');
+  e = []; validateFile(mkIdx({ anchor: { ...ankerOk, breached: false } }), 'index', e);
+  assert.ok(e.some(x => /anchor\.breached inconsistent/.test(x)),
+    'status=rangfolge mit breached=false muss auffliegen — drueben bliebe das Banner sonst stumm');
+  e = []; validateFile(mkIdx({ anchor: { status: 'blockiert', breached: true, blocked: false, verletzungen: [] } }), 'index', e);
+  assert.ok(e.some(x => /anchor\.blocked inconsistent/.test(x)), 'status=blockiert mit blocked=false muss auffliegen');
+  e = []; validateFile(mkIdx({ anchor: { ...ankerOk, verletzungen: 'kaputt' } }), 'index', e);
+  assert.ok(e.some(x => /anchor\.verletzungen/.test(x)), 'anchor.verletzungen als String muss auffliegen');
+  e = []; validateFile(mkIdx({ anchor: null }), 'index', e);
+  assert.ok(e.some(x => /anchor not object/.test(x)), 'anchor:null muss auffliegen (Feld weglassen statt nullen)');
   e = []; validateFile(mkIdx({ boardStatus: { energy: 'bogus' } }), 'index', e);
   assert.ok(e.some(x => /boardStatus\.energy/.test(x)), 'index boardStatus bad enum must trip');
   m = mkIdx(); delete m.boardStatus; e = []; validateFile(m, 'index', e);
@@ -1308,4 +1372,7 @@ module.exports = {
   // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
   beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,
   waehrungsWaechterBilanz, NULL_ANTEIL_STOPP,
+  // Bruell-Kanal (Tag 978): derselbe Seam-Gedanke — der Waechter FUEHRT das Lesen und den
+  // Einbau in index.json aus, statt den Quelltext nach `anchor` abzusuchen.
+  loadAnchor, buildIndex, ANCHOR_FILE: ANCHOR,
 };

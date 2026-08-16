@@ -164,6 +164,7 @@ Huelle (§2) +:
 | `counts` | `{[branche]: {profitable:int, unprofitable:int}}` | Pflicht | ja (Objekt-Praesenz) | **ECHTE Kohorten-Counts** (ganze Population), NICHT die topN-Anzeigeliste. |
 | `survivalCount` | number (finite) | Pflicht | ja | z.B. `73`. |
 | `excluded` | `{[grund]: count}` | Pflicht | ja (Objekt-Praesenz) | Ausschluss-Gruende, z.B. `{"non-us":326,"balance-sheet-bank":305,...}`. Gruende: `balance-sheet-bank, data-suspect, dup-issuer, insurer, lender-gp0, mortgage-reit, no-axes, no-sector, non-operating-rev, non-us, telecom`. |
+| `anchor` | `{status,breached,blocked,verletzungen[]}` | **OPTIONAL (additiv)** | ja, **wenn vorhanden** (Enum + Typen + Status/Flag-Konsistenz) | **Bruell-Kanal, Beschluss 16.08.** Durchgereicht aus `outputs/anchor-status.json` (geschrieben vom Live-Universum-Gate). `status`: `'ok'` \| `'rangfolge'` (Direktive-4-Prozentil gerissen, **Boards sind trotzdem raus**) \| `'blockiert'` (Datenschaden — dann kommt gar kein Export). `breached` ⇔ `status!=='ok'`, `blocked` ⇔ `status==='blockiert'`; ein Widerspruch blockt den Deploy, weil er drueben das Banner abschaltete. `verletzungen` sind fertige Klartext-Zeilen fuer das Dashboard (max. 10). **Feld weglassen statt `null`** — `anchor:null` hiesse „gemessen, alles gut" und ist deshalb ein `--check`-Fund. Fehlt es ganz (lokaler Lauf, kein Marker), ist das der legitime Normalfall und wird NICHT beanstandet. |
 
 ### Achsen-Perzentile — seit 2.7/2.13 IM Board-Vertrag; calib ist nur noch die Roh-Matrix
 

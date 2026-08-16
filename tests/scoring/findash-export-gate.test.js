@@ -125,5 +125,60 @@ test('board unprofitable-Track: eigene rank-Sequenz, Bruch dort isoliert erkannt
   assert.ok(!e.some((x) => /energy\.profitable\[.*score-Ordnung/.test(x)), 'profitable-Track ist sauber, darf nicht mit-trippen');
 });
 
+// ── Bruell-Kanal, Waechter 2 (Tag 978): der Anker-Marker wandert WIRKLICH in index.json ──
+// Nicht Quelltext-Grep, sondern der echte Pfad: Datei auf Platte -> loadAnchor() ->
+// buildIndex() -> Feld im Ergebnis. Beide Richtungen: da/nicht da, gueltig/kaputt.
+// outputs/ ist gitignored (.gitignore:50); ein evtl. vorhandener echter Marker und ein
+// echter HG-Index werden gesichert und byte-gleich zurueckgelegt.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const HG_INDEX = path.join(__dirname, '..', '..', 'outputs', 'hypergrowth', 'index.json');
+  const sichern = (p) => (fs.existsSync(p) ? fs.readFileSync(p) : null);
+  const zurueck = (p, buf) => { if (buf === null) { if (fs.existsSync(p)) fs.unlinkSync(p); } else fs.writeFileSync(p, buf); };
+  const altAnchor = sichern(wfe.ANCHOR_FILE);
+  const altIndex = sichern(HG_INDEX);
+  const marker = {
+    schema: 'anchor-status/v1', generated_at: '2026-08-16T02:40:00.000Z',
+    status: 'rangfolge', breached: true, blocked: false,
+    verletzungen: ['ALAB Rang 38/103 = 35.9% > 15% in semiconductors|profitable'],
+    anker: [{ ticker: 'ALAB', pct: 35.92, max: 15, ok: false }],
+  };
+  try {
+    fs.mkdirSync(path.dirname(HG_INDEX), { recursive: true });
+    fs.writeFileSync(HG_INDEX, JSON.stringify({
+      generatedFromSnapshots: 1, branches: wfe.BRANCHES, counts: {}, survivalCount: 0, excluded: {},
+    }));
+
+    test('Bruell: ohne outputs/anchor-status.json traegt index.json KEIN anchor-Feld', () => {
+      zurueck(wfe.ANCHOR_FILE, null);
+      assert.equal(wfe.loadAnchor(), undefined, 'loadAnchor() liefert etwas, obwohl kein Marker da ist');
+      const idx = wfe.buildIndex(null, wfe.loadAnchor());
+      assert.ok(!('anchor' in idx), 'index.json traegt anchor, obwohl kein Marker existiert — "gemessen, alles gut" waere gelogen');
+    });
+
+    test('Bruell: mit Marker steht status/breached/blocked/verletzungen in index.json', () => {
+      fs.writeFileSync(wfe.ANCHOR_FILE, JSON.stringify(marker));
+      const idx = wfe.buildIndex(null, wfe.loadAnchor());
+      assert.ok(idx.anchor, 'anchor fehlt in index.json, obwohl der Marker auf Platte liegt — das Banner bliebe stumm');
+      assert.equal(idx.anchor.status, 'rangfolge');
+      assert.equal(idx.anchor.breached, true);
+      assert.equal(idx.anchor.blocked, false);
+      assert.deepEqual(idx.anchor.verletzungen, marker.verletzungen);
+      assert.ok(!('anker' in idx.anchor), 'die Roh-Messreihe gehoert nicht in den Export (nur die Banner-Felder)');
+      const e = []; wfe.validateFile({ ...idx, schema: wfe.SCHEMA, boardStatus: Object.fromEntries(wfe.BRANCHES.map((b) => [b, 'core'])) }, 'index', e);
+      assert.deepEqual(e, [], 'der frisch gebaute Index faellt durch den eigenen --check: ' + e.join(';'));
+    });
+
+    test('Bruell: ein Marker mit fremdem Schema wird verworfen (kein halb gelesenes Feld)', () => {
+      fs.writeFileSync(wfe.ANCHOR_FILE, JSON.stringify({ ...marker, schema: 'anchor-status/v2' }));
+      assert.equal(wfe.loadAnchor(), undefined, 'fremdes Schema wurde trotzdem durchgereicht');
+    });
+  } finally {
+    zurueck(wfe.ANCHOR_FILE, altAnchor);
+    zurueck(HG_INDEX, altIndex);
+  }
+}
+
 console.log(`\nfindash-export-gate.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);
