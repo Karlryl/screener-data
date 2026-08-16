@@ -1,0 +1,55 @@
+{
+  "schema": "early-detection-supersede-record/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "supersedes": "FEM-SEC-US@1.2.0",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "decidedAt": "2026-08-16",
+  "decisionSource": "Neue Verfassung der Early-Detection-Studie, 2026-08-16, Teil 3 (Karl-Freigabe 16.08.)",
+  "altApparatus": {
+    "branch": "codex/early-detection-v4-gates-20260810",
+    "commit": "2f8a20d97eaa6b9879a6d7f6a27f50b0d3e7c9d0",
+    "commitDate": "2026-08-16T09:44:01+02:00",
+    "lastCompletedTag": 925,
+    "neverStarted": "Tag 926 (Windows-Netzwerkstack)",
+    "protection": ["kein Loeschen", "kein Force-Push", "keine rueckwirkende Aenderung"],
+    "statusAfterSupersede": "unreferenziert liegen lassen, byte-genau erhalten"
+  },
+  "validOnlyWith": [
+    "protocol/early-detection/2.0.0/provenance-closure.json",
+    "protocol/early-detection/2.0.0/data-contract.json"
+  ],
+  "validityRule": "Teil 3 Ablauf (2): Die Stilllegung ist erst wirksam, wenn Herkunfts-Schliessung und Daten-Vertrag existieren, verifizieren und ihr Neubau-Probelauf einmal absichtlich rot war.",
+  "decommissioned": [
+    {"item": "Vertrags-/Controller-Kette v2-v23", "reason": "Verwaltung ohne Beweiswert (26-MB-Vertraege, 43-MB-Skripte)", "evidenceLoss": "keiner"},
+    {"item": "Geplanter Windows-Netzwerkstack (Tag 926)", "reason": "entbehrlich: SEC-Abruf laeuft bereits ueber gewoehnliches node-HTTPS, Linux-CI byte-identisch", "evidenceLoss": "keiner"},
+    {"item": "Konto-Pfade des Altapparats (QuantConnect & Co. fuer Strang B)", "reason": "nie Beweisquelle der Hauptfrage; Rueckkehr nur fuer Strang-C-Kursseite unter neuen Bedingungen", "evidenceLoss": "keiner"},
+    {"item": "Zaehl- und Zeremonieschichten", "reason": "Auto-Stop durch Commit-Zaehlung faellt (R14b), Zaehler bleibt reine Berichtsgroesse", "evidenceLoss": "keiner"}
+  ],
+  "notDecommissioned": [
+    {"item": "Ergebnis-Zugriffs-Ledger (Vorab-Anmeldung auf dem geschuetzten Server)", "carriedInto": "R1", "reason": "war nie Teil des Verwaltungsproblems"}
+  ],
+  "preservedEvidence": [
+    {"id": "praereg-1.0.0", "path": "protocol/early-detection/1.0.0/preregistration.json", "sha256": "69a25d4652d876e3a5a56ab35bb9ea2bb2dacb0c799a725c6f590df0140f74d7", "bytes": 18380, "onMain": true},
+    {"id": "praereg-1.1.0", "path": "protocol/early-detection/1.1.0/preregistration.json", "sha256": "ffd85352a9aebad21a6d5f1bc54d5b8111765f00cd9385e63e59b02ae5112615", "bytes": 24072, "onMain": true},
+    {"id": "praereg-1.2.0", "path": "protocol/early-detection/1.2.0/preregistration.json", "sha256": "894caf1c5ba0a65a17d1f252c62514dcf169168de14d78834e38811712d1e18f", "bytes": 46985, "onMain": true, "note": "Pruef-Eltern der 2.0.0; jede Abweichung wird dort mit Grund dokumentiert"},
+    {"id": "praereg-1.2.0-hash-manifest", "path": "protocol/early-detection/1.2.0/hash-manifest.json", "sha256": "f35a282dad2f11b646c79e5cc660e7459d59f51317aea2d9e6b6475510ea4654", "bytes": 2196, "onMain": true},
+    {"id": "outcome-access-ledger-1.2.0", "path": "protocol/early-detection/1.2.0/outcome-access-ledger.json", "sha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498", "bytes": 1093, "onMain": true, "note": "wird nach R1 fortgefuehrt, nicht stillgelegt"},
+    {"id": "outcome-access-checkpoint-1.2.0", "path": "protocol/early-detection/1.2.0/outcome-access-checkpoint.json", "sha256": "0e00e26358d1da5f154234acdade4a86fbe835bccb5ba547882e304ede580e18", "bytes": 608, "onMain": true},
+    {"id": "preseal-outcome-access-declaration-1.2.0", "path": "protocol/early-detection/1.2.0/preseal-outcome-access-declaration.json", "sha256": "bb383dd97ddc25de8f46ed3928b2b3e1db5a23283a8363598372fb30c4ad5240", "bytes": 1188, "onMain": true},
+    {"id": "confirmatory-runtime-lock-1.2.0", "path": "protocol/early-detection/1.2.0/confirmatory-runtime-lock.json", "sha256": "e35a4c341de81d0b662a9265b1adc4f5a06f3fa2a8fbed520af72af4d4bb8871", "bytes": 517, "onMain": true, "note": "python 3.12.13 / numpy 2.3.5"},
+    {"id": "vorstudie-persistenz-verdikt", "path": "reports/early-detection/sec-cik-growth-persistence-analysis-v1.json", "sha256": "2142f72b35c95e67b338b374cbc34dfe90bdd2111570cb15c46b142c88975b63", "bytes": 2087, "onMain": false, "note": "woertliches Verdikt INCONCLUSIVE; ab 2.0.0 nur als nicht bestaetigter Anlass zitierbar, nie als Beleg"},
+    {"id": "vorstudie-persistenz-endpunkt", "path": "reports/early-detection/sec-cik-growth-persistence-endpoint-v1.json", "sha256": "e84a7e6e1005eadafd23adf8b6ab31989e92d21937da51fe533d56fd19ce599c", "bytes": 2292023, "onMain": false, "note": "endpointFileSha256 der Verdikt-Datei zeigt auf genau diesen Hash"},
+    {"id": "sec-fsd-integritaetsbericht", "path": "reports/early-detection/sec-fsd-compact-full-integrity-2009-2024.json", "sha256": "b8f30958b1ea36ff80897b978cfc6d26cfe62d89c60c7e295716554c4cfbde49", "bytes": 125353, "onMain": true, "note": "PASS_FULL_INTEGRITY mit 1953 Waisen-Zeilen; Grundlage der Herkunfts-Schliessung"},
+    {"id": "freie-quellen-registry", "path": "research/early-detection-v4/free-source-registry.json", "sha256": "1e22e9e8746cd00b8478fdc9e9d6f57ee15d8505ff4e564f3a92c607a619b8bc", "bytes": 28546, "onMain": true},
+    {"id": "sec-konzept-landkarte-1.0.0", "path": "research/early-detection-v4/sec-concept-map-1.0.0.json", "sha256": "192919af3d6e494b93a27c6cb889a198b65ad473913669689bd37eecec20872f", "bytes": 3962, "onMain": true},
+    {"id": "sec-konzept-landkarte-1.0.0-siegel", "path": "research/early-detection-v4/sec-concept-map-1.0.0-seal.json", "sha256": "a7134f0164207fb1068cc66da571fa7fdeb64936f08b6e252d63b2d479c3bd85", "bytes": 1156, "onMain": true}
+  ],
+  "preservedEvidenceSetSha256": "a1947ada0f46b13fb1fe137353238451ea333102c66dbaff24a2fc730068c095",
+  "minimumVerifiable": 12,
+  "minimumVerifiableRule": "Zahl der Eintraege mit onMain=true. Der Waechter muss mindestens so viele Eintraege hart nachhashen; alt-branch-only-Eintraege werden zusaetzlich geprueft, sobald das Commit-Objekt im Checkout liegt, und andernfalls namentlich als UNGEPRUEFT ausgegeben.",
+  "offStoreEvidence": {
+    "note": "Der 41-GB-Komponentenspeicher wird nicht kopiert, sondern per Hash-Manifest gefuehrt.",
+    "manifest": "protocol/early-detection/2.0.0/provenance-closure.json",
+    "rebuildContract": "protocol/early-detection/2.0.0/data-contract.json"
+  }
+}

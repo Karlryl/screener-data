@@ -1,0 +1,261 @@
+{
+  "schema": "early-detection-rules-registry/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "version": "2.0.0",
+  "quelle": "Neue Verfassung der Early-Detection-Studie, 2026-08-16, Teil 2 (17 Regeln)",
+  "scharfGeschaltetAm": "2026-08-16",
+  "fenster": {
+    "entdeckung": {"von": "2009q1", "bis": "2015q4", "versiegelt": false},
+    "validierung": {"von": "2017q1", "bis": "2019q4", "versiegelt": false},
+    "endtest": {"von": "2021q1", "bis": "2023q4", "versiegelt": true}
+  },
+  "pufferjahre": [2016, 2020],
+  "pufferGrund": "Reifebereinigung: jedes Ereignis braucht 4 Folgequartale, der Speicher endet 2024q4 — kein Folgequartal darf ueber eine Fenstergrenze reichen.",
+  "oeffnungsprotokollMarke": "OEFFNUNG-2021-2023-NACH-PROTOKOLL-TEIL-4",
+  "evidenztragendeWaechter": ["R1", "R2", "R4", "R6", "R13"],
+  "waechterArten": {
+    "laufzeit": "im Code durchgesetzt (lib/studie-verfassung.js) und von einem Wachtest festgenagelt",
+    "skript": "von einem eigenen Pruefskript durchgesetzt und von einem Wachtest festgenagelt",
+    "vorlage": "Vorlagen-Validator; wird an dem benannten Artefakt scharf, sobald es die Etappe erzeugt"
+  },
+  "regeln": [
+    {
+      "id": "R1",
+      "titel": "Erst festschreiben, dann messen",
+      "marke": "GESCHAERFT",
+      "nagelt": "Kein Ergebnis-Zugriff ohne vorherigen, verketteten Eintrag im Zugriffs-Register; ein nachtraeglich veraenderter oder umgehaengter Eintrag bricht die Kette.",
+      "waechter": {
+        "art": "laufzeit",
+        "funktionen": ["pruefeZugriffsRegister", "haengeEintragAn"],
+        "test": "tests/studie-r1-register.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
+        "scharfAb": "E0",
+        "ausbauProbe": true,
+        "rotGezeigtAm": "2026-08-16",
+        "offen": "Der Vergleich der SERVER-Push-Zeit gegen den ersten Datenzugriff wird in E3 ergaenzt (braucht einen realen Push und einen realen Zugriff, beides existiert vor E3 nicht)."
+      }
+    },
+    {
+      "id": "R2",
+      "titel": "Drei Zeitfenster, physisch getrennt",
+      "marke": "GESCHAERFT",
+      "nagelt": "Eine Testfenster-Anfrage im Entdeckungs-Modus wirft einen Fehler; das Endtest-Fenster oeffnet nur mit der Oeffnungsprotokoll-Marke.",
+      "waechter": {
+        "art": "laufzeit",
+        "funktionen": ["pruefeFenster"],
+        "test": "tests/studie-r2-fenster.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/rules.json",
+        "scharfAb": "E0",
+        "ausbauProbe": true,
+        "rotGezeigtAm": "2026-08-16",
+        "offen": "Die VERSCHLUESSELUNG der Endtest-Datei wird in E1 scharf, wenn die drei Fenster-Dateien gebaut werden — vorher gibt es keine Datei, die man verschluesseln koennte. Bis dahin ist die Oeffnungsmarke Klartext in dieser eingecheckten Registry: R2 ist heute ein Aufrufmuster mit Wachtest, KEIN Zugriffsschutz gegen absichtliches Vorab-Lesen. Der Waechter tests/studie-r2-fenster.test.js nagelt genau diese Aussage fest, damit R2 nicht stillschweigend als versiegelt gilt."
+      }
+    },
+    {
+      "id": "R3",
+      "titel": "Firmen-Trennung zusaetzlich zur Zeit-Trennung",
+      "marke": "ALT",
+      "nagelt": "Auswerteskript verweigert die Ausgabe, wenn eine Firma doppelt gezaehlt ist oder die firmen-disjunkte Replikation fehlt.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E1-Panel (Firmen-Index) und E4-Auswerteskript",
+        "scharfAb": "E1",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R4",
+      "titel": "Ergebnis-Sperre und Einmal-Oeffnung",
+      "marke": "ALT",
+      "nagelt": "Ein Lauf, der Ergebnisdaten liest, ohne unter seiner laufId im Register angemeldet zu sein, bricht ab; jeder Lauf fuehrt das Flag ergebnisdatenBeruehrt mit.",
+      "waechter": {
+        "art": "laufzeit",
+        "funktionen": ["starteLauf"],
+        "test": "tests/studie-r4-sperre.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
+        "scharfAb": "E0",
+        "ausbauProbe": true,
+        "rotGezeigtAm": "2026-08-16"
+      }
+    },
+    {
+      "id": "R5",
+      "titel": "Fail-closed und Rechen-Gleichbehandlung",
+      "marke": "GESCHAERFT",
+      "nagelt": "Dieselbe Zeile mit fehlendem Pflichtfeld muss als Signal- und als Kontroll-Zeile identisch behandelt werden; fehlender Pflichtwert heisst NICHT BERECHENBAR, nie Null.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E1-Panelbau (Fixture mit fehlendem Feld, einmal Signal-, einmal Kontroll-Zeile)",
+        "scharfAb": "E1",
+        "ausbauProbe": false,
+        "grund": "Die Fehlklasse, an der die Vorstudie gescheitert ist — der Wachtest kommt mit dem ersten Code, der Zeilen ueberhaupt klassifiziert."
+      }
+    },
+    {
+      "id": "R6",
+      "titel": "Zeitpunkt-Ehrlichkeit (PIT) mit Vintage-Regel",
+      "marke": "GESCHAERFT",
+      "nagelt": "Es gilt der Beobachtungs-Stand, der zum Signal-Zeitpunkt schon existierte; existiert keiner, ist das Ergebnis NICHT BERECHENBAR; jede Zeile traegt die Stand-Kennung.",
+      "waechter": {
+        "art": "laufzeit",
+        "funktionen": ["waehleStand", "stempleZeile"],
+        "test": "tests/studie-r6-vintage.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/provenance-closure.json",
+        "scharfAb": "E0",
+        "ausbauProbe": true,
+        "rotGezeigtAm": "2026-08-16",
+        "offen": "Die Dedupe-Regel fuer doppelte Einreichungen und der Pflicht-Sensitivitaetslauf 2018 gegen 2025 gehoeren in E1."
+      }
+    },
+    {
+      "id": "R7",
+      "titel": "Rohbytes versiegelt, Quellen frei und legal",
+      "marke": "ALT",
+      "nagelt": "Jede Rohantwort liegt byte-genau mit Pruefsumme vor; eine unbekannte Quell-Domain macht rot.",
+      "waechter": {
+        "art": "skript",
+        "test": "tests/studie-herkunft.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/provenance-closure.json",
+        "scharfAb": "E0",
+        "ausbauProbe": false,
+        "hinweis": "Fuer die 127 Alt-Payloads hart geprueft (sha256 nachgerechnet, Domain sec.gov erzwungen). Fuer kuenftige Abrufe traegt die Vorwaerts-Mitschrift dieselbe Domain-Pruefung."
+      }
+    },
+    {
+      "id": "R8",
+      "titel": "Vier Vergleichsmassstaebe, darunter die Niveau-Falle",
+      "marke": "GESCHAERFT",
+      "nagelt": "Der Report-Generator faellt aus, wenn eine der vier Vergleichs-Spalten fehlt (gematchte Kontrollen, Nur-Technik, Karls Ist-System, Niveau-Null).",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E4-Validierungsreport",
+        "scharfAb": "E4",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R9",
+      "titel": "Statistik-Ehrlichkeit mit Auffindbarkeits-Gates",
+      "marke": "GESCHAERFT",
+      "nagelt": "Keine p-Werte, wenn die Testfamilie unvollstaendig ist oder die Auffindbarkeit unter 90 Prozent bzw. die Differenz ueber 10 Punkte liegt.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E3-Praeregistrierung (Testfamilie) und E4-Auswerteskript",
+        "scharfAb": "E3",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R10",
+      "titel": "Endpunkt-Waechter gegen Schein-Wachstum",
+      "marke": "ALT",
+      "nagelt": "Ohne die Pflicht-Nebenrechnung Umsatz je Aktie ist der Validierungs- und Endreport ungueltig.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E1-Konzept-Landkarte (verwaesserte Aktienzahl) und E4-Report",
+        "scharfAb": "E1",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R11",
+      "titel": "Absolute Ehrlichkeit im Bericht",
+      "marke": "GESCHAERFT",
+      "nagelt": "Pflichtfelder je Signal (Trefferquote absolut, Basisrate, Fehlalarme je Monat, Kalibrierung, Vorlauf in Tagen, Live-Berechenbarkeit, Unsicherheits-Schranken); ein Punktwert ohne Schranken darf nicht in den Bericht.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E4/E6-Report-Vorlage",
+        "scharfAb": "E4",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R12",
+      "titel": "Motor- und Maschinen-Unabhaengigkeit, ehrlich zweigeteilt",
+      "marke": "NEU",
+      "nagelt": "(a) Kein neues 2.0.0-Artefakt enthaelt einen absoluten Pfad oder eine Nutzer-Identitaet; der Speicherort kommt aus EARLY_DETECTION_DATA_ROOT. (b) Der Daten-Vertrag haelt Pruefsumme, Zeilenzahlen und Neubau-Rezept.",
+      "waechter": {
+        "art": "skript",
+        "test": "tests/studie-deckel.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/data-contract.json",
+        "scharfAb": "E0",
+        "ausbauProbe": false,
+        "hinweis": "Die Pfad-Suche laeuft NUR ueber die neuen 2.0.0-Artefakte — auf der versiegelten Alt-Evidenz waere sie am Tag 1 falsch-rot."
+      }
+    },
+    {
+      "id": "R13",
+      "titel": "Friedhof, Nur-Anhaengen, Herkunfts-Schliessung",
+      "marke": "GESCHAERFT",
+      "nagelt": "Jeder Roh-Payload hat Inhalts-Hash UND Abruf-URL, die Bau-Skripte sind gehasht, und ein Quartal wurde aus seinem Roh-Payload nachweislich neu gebaut — der gebrochene Probelauf war rot.",
+      "waechter": {
+        "art": "skript",
+        "test": "tests/studie-herkunft.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/provenance-closure.json",
+        "scharfAb": "E0",
+        "ausbauProbe": true,
+        "rotGezeigtAm": "2026-08-16",
+        "offen": "Der Friedhof (verworfene Hypothesen mit Grund) fuellt sich ab E2; seine Vorlagen-Pruefung wird dort scharf."
+      }
+    },
+    {
+      "id": "R14",
+      "titel": "Apparat-Deckel und Werkzeug-Deckel",
+      "marke": "NEU",
+      "nagelt": "Jede Datei im neuen Studienpfad, die weder Rohdaten noch Datenpanel ist, bleibt unter 200 KB — typfrei, also auch Skripte und Reports.",
+      "waechter": {
+        "art": "skript",
+        "test": "tests/studie-deckel.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/",
+        "scharfAb": "E0",
+        "ausbauProbe": false,
+        "hinweis": "Das Kalenderbudget je Etappe (R14b) fuehrt der Orchestrator; der Evidenz-/Verwaltungs-Zaehler ist reine Berichtsgroesse, kein Auto-Stop."
+      }
+    },
+    {
+      "id": "R15",
+      "titel": "Abbruch, Fallzahl-Vorpruefung und Wiederaufnahme",
+      "marke": "NEU",
+      "nagelt": "Fallzahl unter den Praereg-Minima endet als INCONCLUSIVE_DATA VOR der Oeffnung; jeder Langlauf ist nach Absturz exakt wiederaufnehmbar (Kill-Test mit identischer Ergebnis-Pruefsumme).",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "E1-Haeppchenlauf (Kill-Test) und E3-Nur-Zaehlen-Probe",
+        "scharfAb": "E1",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R16",
+      "titel": "Forschungs-Schleife statt Abarbeitungsplan",
+      "marke": "NEU",
+      "nagelt": "Ein Etappen-Report ohne Block 'Neue Fragen und Hypothesen' ist unvollstaendig; vorgeschlagene neue Etappen ohne Zeitschaetzung werden nicht angenommen.",
+      "waechter": {
+        "art": "skript",
+        "test": "tests/studie-regelwerk.test.js",
+        "artefakt": "reports/studie/",
+        "scharfAb": "E0",
+        "ausbauProbe": false
+      }
+    },
+    {
+      "id": "R17",
+      "titel": "Gratis-Findungspflicht vor jeder Geldfrage",
+      "marke": "NEU",
+      "nagelt": "Eine Geldfrage an Karl ohne dokumentierten Gratis-Suchvermerk ('geprueft: X, Y, Z — nicht tragfaehig, weil ...') wird zurueckgewiesen, nicht gestellt.",
+      "waechter": {
+        "art": "vorlage",
+        "test": null,
+        "artefakt": "erste Karl-Geldfrage der Studie (bis dahin existiert kein Objekt zum Festnageln)",
+        "scharfAb": "bei erster Geldfrage",
+        "ausbauProbe": false
+      }
+    }
+  ]
+}

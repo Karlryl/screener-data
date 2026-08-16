@@ -964,6 +964,17 @@ jobs:
         run: node scripts/update-ath-state.js
         continue-on-error: true
 
+      # Vorwaerts-Mitschrift der Early-Detection-Studie (Verfassung 2.0.0, E0).
+      # Ereignisgetrieben an den bestehenden Lauf gehaengt: sie fasst NUR an, was der
+      # Lauf ohnehin schon geholt hat (external-data/sec-*), rechnet nichts, liest keine
+      # Ergebnisdaten und beruehrt src/scoring nicht. Der Eintrag faehrt im git add -A
+      # unten mit. continue-on-error: eine Mitschrift darf Karls Datenlauf nie blocken —
+      # ihr Ausfall bleibt trotzdem sichtbar, weil der naechste Eintrag die Kalender-
+      # Luecke selbst protokolliert (Waechter tests/studie-mitschrift.test.js).
+      - name: Vorwaerts-Mitschrift (Studie 2.0.0)
+        run: node scripts/studie-mitschrift.js erfassen
+        continue-on-error: true
+
       # F-CI-001 v2 (Tag 179/232c-7): DER EINZIGE Commit-to-main, retry-rebase.
       # Nur der merge-Job pusht auf main -> kein 17-Shard-Race.
       # Schutzliste (picks-history/, methods-history/, earnings-calendar.json) wird

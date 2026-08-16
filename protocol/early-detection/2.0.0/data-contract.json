@@ -1,0 +1,51 @@
+{
+  "schema": "early-detection-data-contract/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "purpose": "R12b Daten-Vertrag: Pruefsumme, Zeilenzahlen und Neubau-Rezept des SEC-Komponentenspeichers.",
+  "dataRootEnv": "EARLY_DETECTION_DATA_ROOT",
+  "payloadCount": 127,
+  "payloadSetSha256": "c861d25548a5e8b30e7b03ff17474c2618387f4c445e571056dcf7655401e889",
+  "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de",
+  "rowCounts": {
+    "source_payloads": 127,
+    "submissions": 1097249,
+    "facts": 308848369,
+    "presentations": 102628203,
+    "payload_tags": 9709074,
+    "orphan_rows": 1953,
+    "databaseBytes": 41141956608
+  },
+  "buildScripts": [
+    {
+      "path": "scripts/early-detection-sec-wayback.py",
+      "sha256": "b4dc3c924c7b0e4fbab8962cac019e16a7447f59b78393a000e89591fe64ff9c",
+      "bytes": 19359
+    },
+    {
+      "path": "scripts/early-detection-pit-compact.py",
+      "sha256": "48fb6661756c3c75b6815c14d261f58438f95ded80880bd4e801096f547b94ce",
+      "bytes": 28917
+    },
+    {
+      "path": "scripts/early-detection-pit-integrity.py",
+      "sha256": "a8e1d81a0741ee947b5d00715c07180b22173e94c04a0b3057b6fd9f8e2c4c4a",
+      "bytes": 14669
+    }
+  ],
+  "rebuildRecipe": [
+    "1. Speicherort setzen: EARLY_DETECTION_DATA_ROOT=<Wurzel mit observations/ und blobs/>",
+    "2. Neubau: python scripts/early-detection-pit-compact.py import-fsd-store --data-root $EARLY_DETECTION_DATA_ROOT --database <ziel.sqlite>",
+    "3. Nachweis: python scripts/early-detection-pit-integrity.py audit --data-root $EARLY_DETECTION_DATA_ROOT --database <ziel.sqlite> --output <bericht.json>",
+    "4. Abgleich: logicalEvidenceSha256 des neuen Berichts muss dem Wert in diesem Vertrag entsprechen.",
+    "Haeppchen-Bauweise (R15c): --from-quarter/--to-quarter je Quartal, jedes Haeppchen ist wiederaufnehmbar."
+  ],
+  "rebuildProbe": {
+    "quarter": "2009q1",
+    "status": "PASS",
+    "brokenProbeStatus": "FAIL"
+  },
+  "supersetObservationCount": 51,
+  "rebuildCaveat": "Ohne Payload-Filter erzeugt Schritt 2 eine Obermenge (der Speicher enthaelt inzwischen mehr akzeptierte Beobachtungen als die versiegelte Datenbank). Die Liste der zusaetzlichen payloadSha256 steht in der Herkunfts-Schliessung; der Filter selbst ist eine benannte E1-Aufgabe.",
+  "notCopied": "Die 41-GB-Datenbank wird nie kopiert. Wer sie braucht, baut sie aus den gepinnten Roh-Payloads neu.",
+  "contractSha256": "aebe2093e1e1726413cc6062c2901c99d2ad57bbde9ca0fa338c5717f9446ef6"
+}
