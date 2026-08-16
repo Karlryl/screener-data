@@ -586,10 +586,17 @@ function _resolveTradingFx(q, existing) {
   const meta = (existing && existing.meta) || {};
   // Reihenfolge = Verlaesslichkeit: heutige Quote > im Snapshot festgehaltene
   // Quote-Waehrung > meta.tradingCurrency (Mapper, Tag 204 — auf jedem Voll-Pull gesetzt).
+  // Waehrungs-Chunk 1: die Herkunft mitgeben. Nur die HEUTIGE Quote belegt die
+  // Handelswaehrung; die beiden Rueckfallebenen erben sie aus dem Snapshot und koennen
+  // deshalb dieselbe Gleichsetzung mitschleppen, die der Mapper als
+  // tradingCurrencyAssumed markiert. Der Aufrufer darf die Annahme nur dann loeschen,
+  // wenn quelle === 'quote'.
   const ccy = (q && q.currency)
     || (existing && existing.price && existing.price.currency)
     || meta.tradingCurrency
     || null;
+  const quelle = (q && q.currency) ? 'quote'
+    : ((existing && existing.price && existing.price.currency) ? 'snapshot-price' : 'meta');
   if (!ccy) {
     // F-CGPT-002: Bisher wurde hier auf meta.fxRateApplied bzw. auf den Faktor 1
     // zurueckgefallen — ein Yen-Kurs landete damit unveraendert als Dollar-Kurs im
@@ -602,7 +609,43 @@ function _resolveTradingFx(q, existing) {
   if (!fx) {
     return { ok: false, reason: 'kein brauchbarer USD-Kurs fuer Handelswaehrung ' + ccy };
   }
-  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy) };
+  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy), quelle };
+}
+
+// Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
+// Der price-only-Schnellweg rechnet Preis UND marketCap mit dem Handelskurs um, hat das aber
+// nie im Snapshot vermerkt — ein price-only-aufgefrischter Snapshot sah deshalb aus wie einer
+// ganz OHNE Handelskurs-Umrechnung. Zwei Folgen: score.js fxSuspect hielt jede taeglich
+// korrekt umgerechnete Auslandsnotiz fuer verdaechtig, und der Ausliefer-Waechter in
+// scripts/write-findash-export.js haette ~14 400 von 14 900 Zeilen die Groesse genullt.
+// Eigene Funktion statt inline, damit tests/waehrung-handelskurs.test.js die Entscheidung
+// AUSFUEHREN kann — _priceOnlyUpdate steckt im Closure von pullAll und ist nur ueber einen
+// echten Netz-Pull erreichbar.
+function _stampeHandelskurs(meta, tradingFx) {
+  if (!meta || !tradingFx || tradingFx.ok !== true) return meta;
+  // Review-Fix 16.08. (KRITISCH): der Stempel ist ein BEWEIS-Feld — der Ausliefer-Waechter
+  // liest ihn als "Handelskurs nachweislich angewandt". Er darf deshalb nur entstehen, wo die
+  // Handelswaehrung selbst belegt ist. Drei Wege zaehlen:
+  //   quote            — die heutige Quote nennt sie (belegt sie damit auch fuer morgen)
+  //   assumed === false — ein frueherer Lauf hat sie bereits per Quote belegt
+  //   vorhandener Stempel — ein frueherer Lauf hat eine SICHTBARE Divergenz umgerechnet;
+  //                        hier wird nur der Kurs des heutigen Laufs nachgefuehrt
+  // Fehlt alles drei, ist die Waehrung aus dem Snapshot geerbt und kann dieselbe stille
+  // Gleichsetzung mitschleppen, die Tag 938 als Wurzelfehler beschreibt (Yahoo-Quote ohne
+  // currency-Feld, meta.tradingCurrency vom alten Mapper = Berichtswaehrung). Ein Stempel
+  // darauf wuerde die Verwechslung nicht nur durchlassen, sondern sie als geprueft
+  // ZERTIFIZIEREN und bis zum naechsten Voll-Pull verstetigen. Fail-closed: nicht stempeln.
+  const herkunftBelegt = tradingFx.quelle === 'quote'
+    || meta.tradingCurrencyAssumed === false
+    || Number.isFinite(meta.tradingFxRateApplied);
+  if (!herkunftBelegt) return meta;
+  meta.tradingCurrencyOriginal = tradingFx.currency;
+  meta.tradingFxRateApplied = tradingFx.factor;
+  // Nur die heutige Quote BELEGT die Handelswaehrung. Kommt sie aus dem Snapshot, bleibt eine
+  // dort vermerkte Annahme bestehen — sonst verwandelte der Schnellweg eine geratene Waehrung
+  // in einen Beleg, indem er sie einmal im Kreis reicht.
+  if (tradingFx.quelle === 'quote') meta.tradingCurrencyAssumed = false;
+  return meta;
 }
 
 // Tag 134: stable region enum derived from currency + exchangeName.
@@ -659,6 +702,67 @@ function normalizeRegion(currency, exchangeName) {
 //                                trading ccy == reporting ccy, factor unchanged)
 //   { ok: false }              → fail-closed: trading ccy differs but FX_TO_USD
 //                                has no finite rate; caller must flag+return.
+// Waehrungs-Chunk 3 (16.08.2026, Karl-Freigabe): Yahoo liefert DREI markt-abgeleitete
+// Felder in der HANDELS-Waehrung, nicht in der Bilanzierungswaehrung — marketCap,
+// enterpriseValue und die Kurs-Ziele. Nur marketCap und die Kurs-Ziele liefen bisher ueber
+// den Handelsfaktor; enterpriseValue lief ueber den Berichtsfaktor.
+//
+// LIVE BELEGT am 16.08.2026 an echten Yahoo-Antworten:
+//   BREN.JK  mcap 477 592 880 676 864 IDR, EV 477 595 028 160 512 -> EV/mcap = 1,000
+//            rc=USD (financialCurrency), tc=IDR. Berichtsfaktor 1 -> EV blieb in IDR,
+//            also 17 831x zu gross. Genau der Grund fuer die 26 .JK-Zeilen mit
+//            evSales 13 000 bis 325 000 im Board vom 07.08.
+//   9992.HK  mcap 202,10 Mrd HKD, EV 191,26 Mrd -> Nettokasse 10,84 Mrd HKD = 9,3 Mrd CNY.
+//            Pop Mart weist rund 9 bis 10 Mrd CNY Nettokasse aus: EV ist in HKD (Handel),
+//            NICHT in CNY (Bericht). Damit ist auch die Gegenrichtung belegt, fuer die der
+//            alte Kommentar hier noch den Beleg vermisste (nicht-USD Bericht UND nicht-USD
+//            Handel) — enterpriseValue gehoert IMMER an den Handelsfaktor.
+const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice', 'enterpriseValue'];
+// Yahoos priceToSalesTrailing12Months ist ein MISCH-Verhaeltnis: Zaehler in Handels-,
+// Nenner in Berichtswaehrung. Es ist deshalb NICHT einheitenlos, sondern um genau
+// Handelsfaktor/Berichtsfaktor verzerrt — und lief bisher voellig unskaliert durch, weil
+// die Metrik-Listen Verhaeltnisse pauschal ausnehmen.
+//   BREN.JK  Yahoo 746 762,8 x 0,000056082103 = 41,88 = mcap_USD/Umsatz_USD (nachgerechnet)
+//   0020.HK  Yahoo 11,351923 x 0,1274421/0,14853986 = 9,74 = mcap_USD/Umsatz_USD
+// Bei uebereinstimmenden Waehrungen ist der Faktor exakt 1 (kein Eingriff).
+// Review-Fix 16.08. (Chunk-3-Nachzug): enterpriseToRevenue gehoert in dieselbe Liste — und
+// ist das Feld, an dem Karl den Schaden ueberhaupt gesehen hat. Chunk 3 nannte als Konsument
+// "pit.evSales im Board", hat aber nur enterpriseValue und priceSales korrigiert.
+// scripts/write-board-history.js liest pit.evSales aus metrics.enterpriseToRevenue — einem
+// RAW-Verhaeltnis von Yahoo (key statistics), das Chunk 3 nicht angefasst hat. Damit war der
+// gemeldete Symptomfall (BREN.JK evSales 766 149) nach Chunk 3 weiterhin falsch.
+// Nachgerechnet am eingefrorenen Bestand, 0020.HK: Yahoo enterpriseToRevenue 11,899 =
+// EV_HKD / Umsatz_CNY (59,67 Mrd / 5,014 Mrd) — Zaehler in Handels-, Nenner in
+// Berichtswaehrung, also exakt dasselbe Misch-Verhaeltnis wie priceSales. Ehrlich sind
+// 11,899 x 0,1274421/0,14853986 = 10,25. enterpriseToEbitda ist dieselbe Bauart (EV am
+// Handel, EBITDA am Bericht) und kommt mit, damit die Liste nicht wieder auseinanderlaeuft;
+// einen Konsumenten hat es derzeit nicht.
+const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
+// EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
+function _skaliereHandelsMetriken(snap, scaleTrading, mischFaktor) {
+  if (!snap || !snap.metrics) return;
+  for (const k of HANDELS_METRIKEN) {
+    if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
+  }
+  if (!Number.isFinite(mischFaktor)) return;
+  // Spur der Korrektur (Review-Fix 16.08.): der price-only-Schnellweg fasst metrics NIE an,
+  // ein Voll-Pull steht erst nach FUNDAMENTALS_REFRESH_DAYS (30) wieder an. Ohne Vermerk kann
+  // der Board-Writer einem Misch-Verhaeltnis nicht ansehen, ob es korrigiert wurde — und
+  // schriebe bis zu 30 Tage lang verzerrte Werte in die DAUERHAFTE Vintage-Historie.
+  // Faktor 1 ist ein vollwertiger Beleg (Handel = Bericht, nichts zu korrigieren).
+  if (snap.meta) snap.meta.mischVerhaeltnisFaktor = mischFaktor;
+  if (mischFaktor === 1) return;
+  for (const k of MISCH_VERHAELTNIS_METRIKEN) {
+    const m = snap.metrics[k];
+    if (m == null) continue;
+    if (typeof m === 'number') {
+      if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
+    } else if (typeof m === 'object' && 'value' in m && Number.isFinite(m.value)) {
+      snap.metrics[k] = Object.assign({}, m, { value: m.value * mischFaktor });
+    }
+  }
+}
+
 function _applyTradingScale(snap, financialFactor) {
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   const tradingCcyRaw = (snap.price && snap.price.currency)
@@ -703,11 +807,10 @@ function _applyTradingScale(snap, financialFactor) {
     return out;
   };
   if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
-  if (snap.metrics) {
-    for (const k of ['targetMeanPrice', 'targetMedianPrice']) {
-      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
-    }
-  }
+  // Waehrungs-Chunk 3: enterpriseValue + Kurs-Ziele an den Handelsfaktor, priceSales um das
+  // Misch-Verhaeltnis korrigieren. Das ist der .JK-Fall (Bericht USD, Handel IDR): hier ist
+  // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
+  _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / financialFactor);
   return { ok: true };
 }
 
@@ -892,36 +995,21 @@ function _convertSnapshotToUSD(snap) {
   // currency-denominated metrics field (e.g. fcfTTM, ebitda, enterpriseValue,
   // bookValuePerShare) would silently bypass FX conversion and stay in local ccy.
   // We enumerate explicitly here so additions are reviewed at this single site.
-  // RATIOS (margin/growth/pe/priceSales/sbcRatio/insidersOwnership) and counts
-  // (cashRunway in months) are NOT included — they are unit-less or cancel out.
+  // RATIOS (margin/growth/pe/sbcRatio/insidersOwnership) and counts (cashRunway in months)
+  // are NOT included — they are unit-less or cancel out. AUSNAHME seit Waehrungs-Chunk 3:
+  // priceSales ist KEIN einheitenloses Verhaeltnis (s. MISCH_VERHAELTNIS_METRIKEN oben).
   const CCY_DENOMINATED_METRICS = [
     'revenueTTM',
     'fcfTTM',            // currently absent from metrics.* but reserved
     'ebitda',            // POPULATED (Tag 219, financialData.ebitda) — reporting ccy, scaled by `factor` here. Correct: EBITDA is an income-statement quantity in the reporting currency.
-    // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here.
-    // F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD /
-    // reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING
-    // currency like marketCap (which uses scaleTrading/tradingFactor). The comment asked for
-    // NEEDS-LIVE-CONFIRMATION before moving EV to the trading-factor list.
-    //
-    // >>> LIVE-CONFIRMATION LIEGT VOR (2026-07-27, gemessen am snapshots-Artefakt des CI-Laufs
-    // 30213797442, 12 321 Snapshots). F2 ist BESTAETIGT, aber nur fuer eine klar umrissene
-    // Teilmenge: Namen mit reportingCurrency === 'USD' UND tradingCurrency !== 'USD'. Dort ist der
-    // reporting `factor` = 1, EV wird also unveraendert durchgereicht — Yahoo liefert es aber in der
-    // TRADING-Waehrung. Das Verhaeltnis EV/marketCap ist dann exakt der Wechselkurs:
-    //   .JK (IDR): 26 Namen, Faktor 17 968-17 970  (IDR/USD)
-    //   .SN (CLP): 12 Namen, Faktor  949-  954     (CLP/USD)
-    //   .NS (INR),  .IS (TRY),  .T (JPY): einzelne Namen mit dem jeweiligen Kurs
-    // Beispiel MEDC.JK: tc=IDR, rc=USD, mcap 1,82 Mrd, EV 32 705 Mrd.
-    //
-    // NICHT geaendert, bewusst: der Umbau auf den trading-Faktor betraefe JEDEN nicht-USD-Namen,
-    // und fuer die Gegenrichtung (reporting non-USD, trading non-USD) fehlt der Beleg weiterhin —
-    // eine pauschale Umstellung koennte dort korrekte Werte kaputt machen. WIRKUNG heute begrenzt:
-    // enterpriseValue fliesst in KEINE Score-Achse (src/scoring/axes.js kennt das Feld nicht);
-    // Konsument ist lib/e1-compression.js (EV/Sales), das noch nicht scharf verdrahtet ist.
-    // Naechster Schritt waere ein gezielter Fix genau fuer die Teilmenge oben plus ein Test, der
-    // das Verhaeltnis EV/marketCap gegen fx-rates.json prueft. Karl-Frage dazu im Nachtlauf-Protokoll.
-    'enterpriseValue',
+    // ⚠ 'enterpriseValue' stand HIER und ist am 16.08.2026 (Waehrungs-Chunk 3) in
+    // HANDELS_METRIKEN umgezogen — Yahoo liefert es in der HANDELS-Waehrung. Der alte
+    // Kommentar an dieser Stelle hatte den .JK-Fall (Bericht USD / Handel IDR) bereits am
+    // 27.07. gemessen, den Umbau aber vertagt, weil fuer die Gegenrichtung (Bericht und
+    // Handel beide nicht USD) der Beleg fehlte. Der Beleg liegt jetzt vor: 9992.HK, EV
+    // 191,26 Mrd gegen mcap 202,10 Mrd HKD ergibt 10,84 Mrd HKD Nettokasse = 9,3 Mrd CNY,
+    // was Pop Marts ausgewiesener Nettokasse entspricht — EV ist in HKD, nicht in CNY.
+    // Begruendung und Rechnung stehen an HANDELS_METRIKEN.
     'bookValuePerShare', // currently absent — reserved
     'cashPerShare'       // currently absent — reserved
   ];
@@ -935,10 +1023,9 @@ function _convertSnapshotToUSD(snap) {
     // handled — scale()'s reporting `factor` mis-prices targets for ADR-class
     // tickers where tradingFactor !== factor. (Non-ADR: tradingFactor === factor,
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
-    const CCY_DENOMINATED_TRADING_METRICS = ['targetMeanPrice', 'targetMedianPrice'];
-    for (const k of CCY_DENOMINATED_TRADING_METRICS) {
-      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
-    }
+    // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
+    // priceSales wird um das Misch-Verhaeltnis korrigiert).
+    _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
@@ -1511,6 +1598,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   ].every(v => typeof v !== 'string' || v.trim() === '');
   const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
   const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
+  // Waehrungs-Chunk 1 (16.08.2026): der Fallback `_tc || rcOriginal` ist die stille
+  // Wurzel des "falscher Kurs auf marketCap"-Falls. Fehlt Yahoos price.currency, BEHAUPTET
+  // der Snapshot danach, Handels- und Bilanzierungswaehrung seien identisch — und
+  // _convertSnapshotToUSD ueberspringt daraufhin die Handelskurs-Umrechnung und skaliert
+  // die (in Wahrheit in HKD notierte) marketCap mit dem CNY-Kurs. Wirkung am HK-Bestand
+  // gerechnet: CNY 0,14854 statt HKD 0,12744 = +16,6 % zu hohe Marktkapitalisierung, ohne
+  // jede Spur im Snapshot. Auch score.js fxSuspect (Dedup-Tie-Break) kann den Fall NICHT
+  // sehen, weil der genau auf tradingCurrency !== reportingCurrency prueft — die
+  // Gleichsetzung macht ihn blind.
+  // Geraten wird trotzdem weiter (eine fail-closed-Ablehnung wuerde den Ticker ganz
+  // verlieren, obwohl bei echten Inlandsnotierungen die Annahme meist stimmt), aber die
+  // Annahme wird jetzt MARKIERT. Konsument: scripts/write-findash-export.js, das eine
+  // Zeile ohne nachgewiesene Handelskurs-Umrechnung mit marketCap=null ausliefert —
+  // fehlende Groesse ist harmlos, falsche nicht.
+  const _tradingCurrencyAssumed = (typeof _tc !== 'string' || _tc.trim() === '');
   // Tag 206f (Bug-Hunt Agent D HIGH C2): if Yahoo returns null financialCurrency,
   // we fall back to trading-currency — which is correct for native listings
   // (USD/USD) but WRONG for OTC pink-sheets where annual.* may be in a third
@@ -1536,6 +1638,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       exchangeName: exchangeName || null,                  // Tag 134: preserved for diagnostics
       reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
       tradingCurrency,                                     // Tag 204: trading-quote ccy (may differ from reporting for ADRs)
+      // Waehrungs-Chunk 1: true = tradingCurrency ist NICHT von Yahoo, sondern aus
+      // reportingCurrency uebernommen (price.currency fehlte). Jeder Handelskurs-Bezug
+      // auf dieser Zeile ist damit unbelegt.
+      tradingCurrencyAssumed: _tradingCurrencyAssumed,
       _ccyMissingCompletely,
       fetchedAt: asOf,
       // Tag 215j: also write `asOf` for the F-CI-016 Verify Snapshot Freshness
@@ -2681,6 +2787,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // gerechnet wurde. Der Voll-Pull-Stempel (fxRateSourceReporting) bleibt unangetastet:
     // annual/metrics/Kursziele hat dieser Lauf nicht angefasst.
     _stampTradingFxSource(existing, tradingFx.provenance);
+    existing.meta = existing.meta || {};
+    _stampeHandelskurs(existing.meta, tradingFx);
     if (q.regularMarketPrice != null) {
       // audit fix BH-045: stamp asOf only when a price was actually written. The
       // unconditional stamp (moved) previously marked the F-CI-016 freshness gate's
@@ -4097,6 +4205,13 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // sind die LEBENDEN Tabellen: Tests spielen darueber eine Kunst-Waehrung ein und
   // brauchen dafuer weder Netz noch eine manipulierte fx-rates.json.
   _fxFactorFor, _stampFxSource, _quoteHasSubstance, _resolveTradingFx,
+  // Waehrungs-Chunk 1 (16.08.2026): Handelskurs-Stempel als Seam fuer
+  // tests/waehrung-handelskurs.test.js.
+  _stampeHandelskurs,
+  // Review-Fix 16.08.: die Misch-Verhaeltnis-Liste als Seam — tests/waehrung-handelskurs.test.js
+  // baut sie fuer die Ausbau-Probe wirklich aus und sieht den Waechter rot werden, statt sich
+  // auf ein Schreibmuster im Quelltext zu verlassen.
+  MISCH_VERHAELTNIS_METRIKEN,
   _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
   // Review-Nachzug (09.08.2026): Befund A (fail-closed bei werfender Umrechnung),
   // Befund B (Zwei-Bein-Stempel), Befund C (EINE Marker-Konstante — der Waechter

@@ -556,5 +556,44 @@ check('(g) unlesbare Board-Datei in FULL_DIR wirft (kein stiller exit 0)', () =>
     'muss werfen statt still zu überspringen');
 });
 
+// ── (h) Währungs-Wächter für die Misch-Verhältnisse (Review-Fix 16.08.) ───────
+// evSales (metrics.enterpriseToRevenue) und priceSales sind Yahoo-Verhältnisse mit dem
+// Zähler in der HANDELS- und dem Nenner in der BERICHTS-Währung. Fallen die auseinander
+// und hat pull-yahoo die Korrektur nicht vermerkt, ist der Wert um Handels-/Berichtsfaktor
+// verzerrt (BREN.JK: evSales 766 149 statt ~43). board-history ist die DAUERHAFTE
+// Vintage-Historie — ein falscher Wert bleibt dort für immer.
+function snapMitWaehrung(ticker, meta) {
+  const s = snapFull(ticker, { withEnds: true });
+  Object.assign(s.meta, meta);
+  return s;
+}
+check('(h) verzerrtes Misch-Verhältnis wird genullt, korrigiertes bleibt stehen', () => {
+  const base = mkBase();
+  // A: Divergenz OHNE Korrektur-Vermerk → genullt.
+  writeJson(path.join(base, 'snapshots', 'ABC.json'),
+    snapMitWaehrung('ABC', { reportingCurrencyOriginal: 'CNY', tradingCurrencyOriginal: 'HKD' }));
+  // B: dieselbe Divergenz MIT Vermerk → unverändert.
+  writeJson(path.join(base, 'snapshots', 'DEF.json'),
+    snapMitWaehrung('DEF', { reportingCurrencyOriginal: 'CNY', tradingCurrencyOriginal: 'HKD',
+      mischVerhaeltnisFaktor: 0.857566 }));
+  // C: Inlandsnotierung (keine Divergenz) → unverändert, auch ohne Vermerk.
+  writeJson(path.join(base, 'snapshots', 'GHI.json'),
+    snapMitWaehrung('GHI', { reportingCurrencyOriginal: 'HKD', tradingCurrencyOriginal: 'HKD' }));
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90), row('DEF', 80), row('GHI', 70)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const v = readVintage(base, '2026-07-13', 'semiconductors');
+  const c = v.cohort.profitable;
+
+  assert.strictEqual(c[0].pit.evSales, null, 'unkorrigierte Divergenz: evSales muss fallen');
+  assert.strictEqual(c[0].pit.priceSales, null, 'dito priceSales');
+  assert.strictEqual(c[0].pit.beta, 1.5, 'nur die Misch-Verhältnisse fallen, sonst nichts');
+  assert.strictEqual(c[1].pit.evSales, 8.2, 'mit Korrektur-Vermerk bleibt der Wert');
+  assert.strictEqual(c[1].pit.priceSales, 10.0);
+  assert.strictEqual(c[2].pit.evSales, 8.2, 'ohne Divergenz ist nichts verzerrt');
+  assert.strictEqual(c[2].pit.priceSales, 10.0);
+  assert.ok(v.pitGaps.includes('mischverhaeltnis-unkorrigiert'), 'die Nullung muss in pitGaps stehen');
+});
+
 console.log(fail ? ('\nFAIL: ' + fail + ' Test(s)') : '\nAlle board-history-Tests grün');
 process.exit(fail ? 1 : 0);

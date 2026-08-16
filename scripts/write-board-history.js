@@ -363,13 +363,32 @@ function buildPit(snap, pitGaps) {
   // Coverage-Verlust). Normalisierung an EINER Stelle heilt pitGaps UND pitCoverageBlock
   // gleichzeitig, da beide von revEnds/gpEnds lesen.
   const validEnds = (a) => (Array.isArray(a) && a.some((x) => x != null)) ? a : null;
+  // Waehrungs-Waechter fuer die MISCH-Verhaeltnisse (Review-Fix 16.08.).
+  // evSales (metrics.enterpriseToRevenue) und priceSales sind Yahoo-Verhaeltnisse mit dem
+  // Zaehler in der HANDELS- und dem Nenner in der BERICHTS-Waehrung. Fallen die beiden
+  // auseinander, ist der Wert um genau Handelsfaktor/Berichtsfaktor verzerrt — bei BREN.JK
+  // war das der Faktor 17 831 (evSales 766 149 statt ~43). pull-yahoo korrigiert das seit
+  // Waehrungs-Chunk 3 und vermerkt es als meta.mischVerhaeltnisFaktor; ein Snapshot OHNE
+  // diesen Vermerk hat die Korrektur nachweislich nicht gesehen. Anders als beim Board ist
+  // das hier nicht nur Anzeige: board-history ist die DAUERHAFTE Vintage-Historie, aus der
+  // rank-ic.js und lib/e1-compression.js rechnen — ein falscher Wert bleibt dort fuer immer.
+  // Genullt wird nur bei SICHTBARER Divergenz ohne Vermerk (am eingefrorenen Bestand 501 von
+  // 2 800 Zeilen mit evSales); wo Handel und Bericht uebereinstimmen oder die Waehrungen
+  // unbekannt sind, bleibt alles wie bisher — der Wert ist dann nicht verzerrt.
+  const rcPit = meta.reportingCurrencyOriginal || meta.reportingCurrency;
+  const tcPit = meta.tradingCurrencyOriginal || meta.tradingCurrency;
+  const mischVerzerrt = !!rcPit && !!tcPit
+    && String(rcPit).toUpperCase() !== String(tcPit).toUpperCase()
+    && !Number.isFinite(meta.mischVerhaeltnisFaktor);
+  if (mischVerzerrt) pitGaps.add('mischverhaeltnis-unkorrigiert');
+  const mischVal = (o) => (mischVerzerrt ? null : val(o));
   const revEnds = validEnds(ts.revenueQEnds);
   const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
   if (gpEnds == null) pitGaps.add('grossProfitQEnds-missing');
   return {
     beta: val(m.beta),                       // Markt-Beta (Kontroll-Feld §7)
-    evSales: val(m.enterpriseToRevenue),     // EV/Sales (§7)
+    evSales: mischVal(m.enterpriseToRevenue), // EV/Sales (§7) — Misch-Verhaeltnis, s. Waechter oben
     priceGrossProfit: priceGrossProfit(m),   // Preis/Bruttogewinn (§7)
     fetchedAt: meta.fetchedAt || meta.asOf || null,
     revenueQ: seriesValues(ts.revenueQ),
@@ -393,7 +412,7 @@ function buildPit(snap, pitGaps) {
     // (evSales …) byte-identisch bleiben. priceSalesAsOf ist der WAHRE Bewertungs-Zeitstempel
     // (kann Wochen VOR meta.fetchedAt liegen — genau der KILL-4-Widerspruch); E1s Freshness-Gate
     // keyed hierauf, NIE auf fetchedAt.
-    priceSales: val(m.priceSales),
+    priceSales: mischVal(m.priceSales),
     priceSalesAsOf: (m.priceSales && m.priceSales.asOf) || null,
     // audit/fix (Hard-Review R4-SCR-02): screener-formel-ledger.md §4a fixiert die Regressor-Liste
     // 'Size (log-MarketCap), Markt-Beta, 1-2 Bewertungs-Proxys' -- buildPit() lieferte beta/evSales/

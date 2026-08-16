@@ -138,6 +138,114 @@ function athFor(ticker) {
 function readJSON(p) { return JSON.parse(fs.readFileSync(p, 'utf8')); }
 function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null; } }
 
+// ---- Waehrungs-Waechter (Waehrungs-Chunk 4a, 16.08.2026, Karl-Freigabe) -----------
+// WARUM HIER: das ist die Engstelle, durch die JEDE Zeile muss, bevor Karl sie sieht.
+// Die Groesse einer Firma ist im Board eine USD-Aussage — sie steuert Groessenklassen,
+// Reiter und Karls Bauchgefuehl. Yahoo liefert marketCap aber in der HANDELS-Waehrung;
+// ob die Umrechnung stattgefunden hat, stand bisher nirgends in der Auslieferung.
+// Belegt am 08.06.-Bestand: 124 .HK-Zeilen trugen eine mit dem CNY-Berichtskurs statt
+// dem HKD-Handelskurs skalierte Groesse, +16,6 %, ohne jede Spur.
+// REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
+// gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
+const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const SNAP_DIR = path.join(ROOT, 'snapshots');
+// Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
+// Grund: bei einem Schema-Bruch (z. B. der Snapshot-Bestand ist aelter als der Stempel)
+// wuerde der Waechter der halben Rangliste die Groesse nehmen und das Board damit
+// stumm entwerten. Ein rotes X ist Karls einziger Alarmkanal — ein halbblindes Board
+// waere die stille Variante desselben Schadens.
+const NULL_ANTEIL_STOPP = 0.25;
+let _mcapGenullt = 0, _mcapGeprueft = 0;
+const _belegCache = new Map();
+
+// Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
+// nach USD gebracht? Vier Wege zaehlen als Beleg, alles andere ist unbelegt.
+function waehrungsbelegFuer(ticker) {
+  if (_belegCache.has(ticker)) return _belegCache.get(ticker);
+  let meta = null;
+  try { meta = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')).meta; }
+  catch (_) { meta = null; }
+  const beleg = beurteileWaehrungsbeleg(meta);
+  _belegCache.set(ticker, beleg);
+  return beleg;
+}
+
+// Reine Entscheidung, exportiert — der Waechter tests/waehrung-ausliefer-waechter.test.js
+// FUEHRT sie aus, statt den Quelltext nach Schreibmustern abzusuchen.
+function beurteileWaehrungsbeleg(meta) {
+  if (!meta || typeof meta !== 'object') return { ok: false, grund: 'kein-snapshot', rate: null };
+  const rc = meta.reportingCurrencyOriginal || meta.reportingCurrency;
+  const tc = meta.tradingCurrencyOriginal || meta.tradingCurrency;
+  const rate = Number.isFinite(meta.tradingFxRateApplied) ? meta.tradingFxRateApplied : null;
+  // Die Handelswaehrung ist geraten (pull-yahoo Mapper: Yahoos price.currency fehlte und
+  // wurde still durch die Berichtswaehrung ersetzt). Damit ist JEDER Handelskurs-Bezug
+  // auf dieser Zeile unbelegt — auch wenn danach sauber gerechnet wurde.
+  if (meta.tradingCurrencyAssumed === true) return { ok: false, grund: 'handelswaehrung-geraten', rate };
+  if (!tc) return { ok: false, grund: 'handelswaehrung-unbekannt', rate };
+  // In USD gehandelt: es gibt nichts umzurechnen, die Zahl IST USD.
+  if (String(tc).toUpperCase() === 'USD') return { ok: true, grund: 'usd-gehandelt', rate };
+  // Handelskurs nachweislich angewandt (Voll-Pull-Divergenz-Zweig oder price-only-Lauf).
+  // Ein Stempel entsteht nur, wo Handel und Bericht SICHTBAR auseinanderfielen — genau der
+  // Fall, den der Wurzelfehler nicht erzeugen kann (er setzt sie gleich).
+  if (rate !== null) return { ok: true, grund: 'handelskurs-gestempelt', rate };
+  // Handels- und Berichtswaehrung sind dieselbe -> der Berichtskurs IST der Handelskurs.
+  // ABER (Review-Fix 16.08., KRITISCH): tc === rc ist genau das SYMPTOM des Wurzelfehlers.
+  // Vor Tag 938 setzte der Mapper bei fehlendem Yahoo-price.currency die Handelswaehrung
+  // still gleich der Berichtswaehrung — ohne das Feld tradingCurrencyAssumed, das es damals
+  // noch nicht gab. Auf diesen Alt-Snapshots ist die Gleichheit kein Beleg fuer eine
+  // Inlandsnotierung, sondern die Spur der Verwechslung: die 124 .HK-Zeilen vom 08.06. mit
+  // +16,6 % zu grosser Marktkapitalisierung tragen exakt dieses Meta-Profil. Der Beweis
+  // zaehlt deshalb nur, wenn der heutige Mapper die Gleichheit ausdruecklich BESTAETIGT
+  // hat (Feld vorhanden und false). Ein fehlendes Feld ist eine Datenluecke, kein Beleg —
+  // fail-closed.
+  const identisch = !!rc && String(tc).toUpperCase() === String(rc).toUpperCase();
+  if (identisch && meta.tradingCurrencyAssumed === undefined) {
+    return { ok: false, grund: 'herkunft-unbekannt', rate };
+  }
+  if (identisch && meta.fxConverted === true && Number.isFinite(meta.fxRateApplied)) {
+    return { ok: true, grund: 'identitaet', rate: meta.fxRateApplied };
+  }
+  return { ok: false, grund: 'kein-handelskurs-nachweis', rate };
+}
+
+// Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
+function ergaenzeWaehrungsbeleg(out) {
+  const beleg = waehrungsbelegFuer(out.ticker);
+  // Die Einheit des Feldes, nicht die Einheit des Werts: marketCap ist im v1-Vertrag
+  // IMMER USD. Bisher stand das nur in der Doku und war fuer den Konsumenten nicht lesbar.
+  out.marketCapCurrency = 'USD';
+  out.tradingFxRateApplied = beleg.rate;
+  if (out.marketCap !== null && out.marketCap !== undefined) {
+    _mcapGeprueft++;
+    if (!beleg.ok) {
+      _mcapGenullt++;
+      out.marketCap = null;
+    }
+  }
+  return out;
+}
+
+function waehrungsWaechterBilanz() {
+  return { geprueft: _mcapGeprueft, genullt: _mcapGenullt };
+}
+// Nach dem Bau: melden und bei Massen-Nullung abbrechen statt ein halbblindes Board
+// auszuliefern.
+// Reine Schwellen-Entscheidung (exportiert, damit der Waechter sie AUSFUEHREN kann).
+function waehrungsWaechterUrteil(geprueft, genullt, stopp = NULL_ANTEIL_STOPP) {
+  if (!geprueft) return { anteil: 0, abbruch: false };
+  const anteil = genullt / geprueft;
+  return { anteil, abbruch: anteil > stopp };
+}
+function waehrungsWaechterAbschluss(log = console.warn, stopp = NULL_ANTEIL_STOPP) {
+  const u = waehrungsWaechterUrteil(_mcapGeprueft, _mcapGenullt, stopp);
+  if (_mcapGenullt > 0) {
+    log('::warning::Waehrungs-Waechter: ' + _mcapGenullt + ' von ' + _mcapGeprueft +
+      ' Zeilen ohne nachgewiesene Handelskurs-Umrechnung — marketCap auf null gesetzt (' +
+      (u.anteil * 100).toFixed(1) + ' %)');
+  }
+  return u;
+}
+
 function normalizeName(value) {
   if (typeof value !== 'string') return null;
   const normalized = value.replace(/\s+/g, ' ').trim();
@@ -164,7 +272,7 @@ function mapBoardRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
-  return out;
+  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a: Groesse nur mit Handelskurs-Nachweis
 }
 
 function mapOverviewRow(r, i) {
@@ -181,7 +289,7 @@ function mapOverviewRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return out;
+  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a
 }
 
 function mapSurvivalRow(r, i) {
@@ -195,7 +303,7 @@ function mapSurvivalRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
-  return out;
+  return ergaenzeWaehrungsbeleg(out);  // Chunk 4a
 }
 
 // ---- build ---------------------------------------------------------------
@@ -473,7 +581,19 @@ function build() {
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
   const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
-  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards, smallcapBoards: sc.boards };
+  // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
+  // gewollte Betrieb; nullt er ueber einem Viertel, stimmt nicht die Datenlage, sondern
+  // die Annahme des Waechters — dann ist Abbruch (rotes X) richtiger als ein Board, dem
+  // stumm die halbe Groessenspalte fehlt.
+  const bilanz = waehrungsWaechterAbschluss();
+  if (bilanz.abbruch) {
+    throw new Error('Waehrungs-Waechter: ' + (bilanz.anteil * 100).toFixed(1) +
+      ' % der Zeilen ohne Handelskurs-Nachweis (Grenze ' + (NULL_ANTEIL_STOPP * 100) +
+      ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
+      'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
+  }
+  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards, smallcapBoards: sc.boards,
+    mcapGenullt: bilanz };
 }
 
 // ---- validate (schema-check gate) ---------------------------------------
@@ -515,6 +635,11 @@ function checkNumOrNull(r, key, where, errs) {
 function checkOptionalNumOrNull(r, key, where, errs) {
   if (!(key in r)) return;
   if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
+}
+// Chunk 4a: dasselbe additiv-optionale Muster fuer ein Enum (marketCapCurrency).
+function checkOptionalEnumOrNull(r, key, allowed, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !allowed.includes(r[key])) errs.push(`${where}: ${key}=${JSON.stringify(r[key])}`);
 }
 // 4.5: profitStreak additiv OPTIONAL — Abwesenheit/null legitim; WENN present, muss die
 // Form stimmen. Wie bei revGrowthYoYPct bewusst nicht Pflicht: Karls einziger Alarmkanal
@@ -653,6 +778,12 @@ function validateGeo(r, where, errs) {
   checkStrOrNull(r, 'region', where, errs);
   checkStrOrNull(r, 'sector', where, errs);
   checkNumOrNull(r, 'marketCap', where, errs);
+  // Chunk 4a (16.08.): die Einheit der Groesse und der Nachweis ihrer Umrechnung.
+  // Additiv OPTIONAL wie revGrowthYoYPct — bereits gespeicherte v1-Dateien tragen die
+  // Felder nicht und duerfen Karls rotes X nicht ausloesen. Sind sie da, werden sie voll
+  // geprueft: marketCap ist im v1-Vertrag IMMER USD, ein anderer Wert waere ein Bruch.
+  checkOptionalEnumOrNull(r, 'marketCapCurrency', ['USD'], where, errs);
+  checkOptionalNumOrNull(r, 'tradingFxRateApplied', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
@@ -1173,4 +1304,8 @@ module.exports = {
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
+  // Chunk 4a (16.08.): der Waehrungs-Waechter als Seam — tests/waehrung-ausliefer-waechter.js
+  // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,
+  waehrungsWaechterBilanz, NULL_ANTEIL_STOPP,
 };
