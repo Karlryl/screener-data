@@ -18,7 +18,7 @@
     "mitLampeEinmalertrag": 0,
     "bemerkung": "Keine versiegelte Golden-Fixture traegt die Lampe (13x false, 12x null) -> kein erwarteter Score aendert sich. Es reisst ausschliesslich die Source-Hash-Schaerfe."
   },
-  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Mi 19.08.) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt.",
+  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Di 18.08., ~02:17 UTC) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt. KORRIGIERT Tag 953: hier stand 'Mi 19.08.' — ein Rest aus dem Plan VOR Karls Entscheid vom 16.08., heute statt nach Dienstag zu mergen. Der Cron ist '17 2 * * 2-6' (Di-Sa) und der 18.08.2026 ist ein Dienstag, also ist der Dienstag-Lauf bereits der erste mit neuem Code — so steht es auch in board-history/_excluded.json (_bindung_doc). Mechanisch folgenlos (die Gate-Ausnahme bindet an den exakten Vorgaenger-Vintage 2026-08-16, nicht an einen Wochentag; gqs00-freeze.js liest aus dieser Datei nur status + sourceFiles), aber dieses Feld steuert den Zeitpunkt der Vollversiegelung und muss vorher stimmen.",
   "sourceFiles": {
     "src/scoring/lamps.js": "7b0e479958131e69f4de1bd4cfafd2160bf611c8ef5f84340e8caad27a06df34",
     "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
