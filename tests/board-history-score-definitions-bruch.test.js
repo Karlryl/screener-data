@@ -37,7 +37,7 @@ const BODEN = W._const.MIN_GATE_THRESHOLD;
 const GATE_BODEN = { dailyP99Samples: [], sampleDates: [], threshold: BODEN, frozen: true };
 const BOARD = 'health-care';
 // Eintrag wie im Register: Board namentlich + erklaerende Lampe, KEINE Zahl.
-const BRUCH = { tag: 'Tag 938', letztesAltesVintage: '2026-08-18', boards: new Set([BOARD]), erklaerendeLampe: 'einmalertrag' };
+const BRUCH = { tag: 'Tag 938', letztesAltesVintage: '2026-08-16', boards: new Set([BOARD]), erklaerendeLampe: 'einmalertrag' };
 // Alt-Eintrag vom Schrumpfungs-Typ: dieselbe Form, aber ohne Lampe.
 const BRUCH_OHNE_LAMPE = { ...BRUCH, erklaerendeLampe: null };
 
@@ -130,17 +130,63 @@ check('Register: der Eintrag ist gepflegt und traegt Lampe + Boards, aber KEINE 
   const e = reg.find((x) => x && x.typ === 'score-definitions-bruch');
   assert.ok(e, 'kein Eintrag vom Typ score-definitions-bruch im Register');
   assert.strictEqual(e.erklaerende_lampe, 'einmalertrag');
-  assert.strictEqual(e.letztes_altes_vintage, '2026-08-18', 'Bindung an den exakten Vorgaenger');
+  assert.strictEqual(e.letztes_altes_vintage, '2026-08-16', 'Bindung an den exakten Vorgaenger');
   assert.ok(Array.isArray(e.boards) && e.boards.includes('health-care'), 'health-care fehlt (reisst als einziges den Boden)');
   // Keine Groessenangabe: die Hoehe darf nirgends aus dem Register kommen.
   for (const k of ['allowance', 'tagesschwelle', 'schwelle', 'grenze', 'hoehe']) {
     assert.ok(!(k in e), 'Register traegt eine Zahl (' + k + ') — die Hoehe muss gemessen werden');
   }
   // Und die Verdrahtung: massstabBruchFuer muss die Lampe wirklich durchreichen.
-  const b = W.massstabBruchFuer('2026-08-18');
+  const b = W.massstabBruchFuer('2026-08-16');
   assert.ok(b, 'massstabBruchFuer findet den Eintrag nicht');
   assert.strictEqual(b.erklaerendeLampe, 'einmalertrag', 'Lampe kommt nicht am Gate an');
   assert.ok(b.boards.has('health-care'));
+});
+
+// ── Tag 951: der Lautmacher an der Bindung ───────────────────────────────────
+// Die Bindung ist fail-closed — und genau das war bis Tag 951 ihr Problem: ein Eintrag,
+// der auf das falsche Vintage zeigt, lieferte STILL null. Gate suspect, Tagesverzeichnis
+// weg, kein Wort im Protokoll. Festgenagelt werden beide Richtungen: dass die passende
+// Bindung greift OHNE Fehlalarm, und dass die unpassende null bleibt und dabei laut wird.
+function mitProtokoll(fn) {
+  const zeilen = [];
+  const orig = console.log;
+  console.log = (...a) => zeilen.push(a.join(' '));
+  try { return { wert: fn(), zeilen }; } finally { console.log = orig; }
+}
+const laute = (zeilen) => zeilen.filter((z) => z.includes('GATE-BINDUNG VERFEHLT'));
+// Aus dem Register gelesen, nicht wiederholt: sonst prüft der Test seine eigene Kopie.
+const GEBUNDEN = require('../board-history/_excluded.json')._massstab_brueche
+  .find((x) => x && x.typ === 'score-definitions-bruch').letztes_altes_vintage;
+
+check('BINDUNG PASST: Ausnahme greift, und das Protokoll bleibt still', () => {
+  const r = mitProtokoll(() => W.massstabBruchFuer(GEBUNDEN));
+  assert.ok(r.wert, 'die Ausnahme muss beim gebundenen Vorgaenger greifen');
+  assert.strictEqual(r.wert.erklaerendeLampe, 'einmalertrag');
+  assert.strictEqual(laute(r.zeilen).length, 0, 'Fehlalarm bei passender Bindung: ' + laute(r.zeilen).join(' | '));
+});
+
+check('BINDUNG VERFEHLT: null wie bisher UND die Warnung nennt beide Daten', () => {
+  // Ein Tag VOR dem gebundenen Vintage — genau die Lage, die am Di 18.08. entstanden
+  // waere, haette niemand die Bindung von 2026-08-18 auf 2026-08-16 nachgezogen.
+  const tatsaechlich = '2026-08-15';
+  const r = mitProtokoll(() => W.massstabBruchFuer(tatsaechlich));
+  assert.strictEqual(r.wert, null, 'Verhalten muss unveraendert fail-closed bleiben (null)');
+  const l = laute(r.zeilen);
+  assert.strictEqual(l.length, 1, 'genau eine Warnung erwartet, bekam ' + l.length);
+  assert.ok(l[0].startsWith('::warning::'), 'falscher Kanal — muss der ::warning::-Kanal des Tageslaufs sein');
+  assert.ok(l[0].includes(GEBUNDEN), 'das gebundene Vintage ' + GEBUNDEN + ' fehlt im Warntext');
+  assert.ok(l[0].includes(tatsaechlich), 'der tatsaechliche Vorgaenger ' + tatsaechlich + ' fehlt im Warntext');
+  assert.ok(/Tag 938|score-definitions-bruch/.test(l[0]), 'der Eintrag wird nicht benannt');
+  assert.ok(/greift.{0,20}NICHT/.test(l[0]), 'der Satz "Ausnahme greift NICHT" fehlt');
+});
+
+check('KEIN Dauerlaerm: verbrauchte Eintraege hinter der Vergleichsfront schweigen', () => {
+  // Nach dem Uebergang liegt der Vorgaenger hinter JEDEM Eintrag. Ein Lautmacher, der
+  // dann taeglich schreit, waere in Karls einzigem Alarmkanal schlechter als keiner.
+  const r = mitProtokoll(() => W.massstabBruchFuer('2026-09-30'));
+  assert.strictEqual(r.wert, null);
+  assert.strictEqual(laute(r.zeilen).length, 0, 'verbrauchte Eintraege duerfen nicht dauerhaft warnen: ' + laute(r.zeilen).join(' | '));
 });
 
 console.log(fail ? `\nFAIL: ${fail}` : '\nOK: score-definitions-bruch');

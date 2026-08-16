@@ -842,7 +842,34 @@ function massstabBruchFuer(priorDate) {
     throw new Error('write-board-history: ' + treffer.length + ' Massstab-Brueche nennen dasselbe '
       + 'letztes_altes_vintage ' + priorDate + ' — mehrdeutig. Register bereinigen (kein stiller Merge).');
   }
-  if (treffer.length === 0) return null;
+  if (treffer.length === 0) {
+    // Tag 951: Das VERFEHLEN der Bindung war der stillste Pfad im ganzen Gate. Zeigt ein
+    // Eintrag auf ein anderes Vintage als das tatsächlich verglichene, liefert diese
+    // Funktion null, die Ausnahme greift nicht, das Board wird SUSPECT — und der
+    // Commit-Schritt nimmt das ganze TAGESVERZEICHNIS raus, ohne dass im Protokoll ein
+    // Wort dazu stünde. Genau diese Bugklasse hat Karls Boards vom 12.–15.08. stillgelegt.
+    // Das Verhalten bleibt unverändert fail-closed (null); ergänzt wird nur Sichtbarkeit.
+    //
+    // Gemeldet wird ausschließlich der WARTENDE Eintrag — einer, dessen gebundenes Vintage
+    // NACH dem verglichenen Vorgänger liegt, der sein Vintage also noch nicht gesehen hat.
+    // Ein Eintrag HINTER der Vergleichsfront ist verbraucht und von einem sauber erledigten
+    // Übergang nicht zu unterscheiden; würde er mitmelden, schrien die drei Alt-Einträge
+    // (2026-07-27/-07-28/-08-03) ab sofort jeden Tag für immer, und ein Alarm, der immer
+    // feuert, ist in Karls einzigem Alarmkanal schlechter als keiner.
+    // Kanal ist derselbe wie bei GATE BLIND / Maßstab-Bruch / GATE ABSTAND.
+    for (const w of raw._massstab_brueche) {
+      if (!w || typeof w.letztes_altes_vintage !== 'string') continue;
+      if (w.letztes_altes_vintage <= priorDate) continue;
+      console.log('::warning::GATE-BINDUNG VERFEHLT: Register-Eintrag '
+        + (w.tag || w.typ || '(ohne tag)') + ' ist an den Vorgaenger '
+        + w.letztes_altes_vintage + ' gebunden, verglichen wird aber gegen ' + priorDate
+        + '. Die registrierte Ausnahme greift deshalb NICHT (fail-closed) — der Uebergang '
+        + 'wird gegen die normale Schwelle gemessen und faellt voraussichtlich als SUSPECT '
+        + 'aus dem Tagesverzeichnis. letztes_altes_vintage im Register auf ' + priorDate
+        + ' nachziehen oder den Fall neu bewerten.');
+    }
+    return null;
+  }
   const b = treffer[0];
   const boards = Array.isArray(b.boards) ? b.boards.filter((s) => typeof s === 'string' && s) : [];
   if (boards.length === 0) return null;
