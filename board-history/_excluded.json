@@ -107,6 +107,33 @@
    "letztes_altes_vintage": "2026-08-03",
    "boards": null,
    "entscheid": "Court-Urteil PASSED 8/10 (Karl-Zuruf 'gate court'), Akte _COURT-GATE-NEUANKER-2026-08-05.md: Bruch rein dokumentarisch fuehren, boards:null (massstabBruchFuer liefert dadurch null, keine Schwelle wird angehoben). Vintages 2026-07-29 und 2026-08-03 zusaetzlich global in excluded[] ausgeschlossen; der erste Post-Transitions-Lauf (2026-08-05) laeuft mit priorDate=null als neuer Gate-Anker (GATE BLIND)."
+  },
+  {
+   "ab_commit": "PR #45 (fix/einmalertrag-konsequenz)",
+   "tag": "Tag 938",
+   "datum": "2026-08-16",
+   "typ": "score-definitions-bruch",
+   "was": "Die Lampe 'einmalertrag' wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND in src/scoring/score.js); renorm-on-drop + C4-Coverage-Shrinkage ziehen den Score Richtung Kohorten-Median.",
+   "wirkung": "KEINE Zeile geht verloren — die Kohortengroessen bleiben gleich, nur Scores aendern sich. Der bestehende Massstabbruch-Zweig greift deshalb NICHT: er verlangt eine geschrumpfte Kohorte (nowMap.size < priorMap.size). Gemessen am Vorher/Nachher-Lauf ueber 4.769 Snapshots gegen das eingefrorene Lineal: 3.393 von 3.428 Zeilen score-identisch, veraendert sind ausschliesslich die 35 Zeilen mit der Lampe.",
+   "letztes_altes_vintage": "2026-08-18",
+   "erklaerende_lampe": "einmalertrag",
+   "boards": [
+    "real-estate",
+    "tech-hardware",
+    "industrials",
+    "semiconductors",
+    "utilities",
+    "consumer-discretionary",
+    "health-care",
+    "materials",
+    "financials",
+    "software-comm-services"
+   ],
+   "_mechanik_doc": "Anders als beim Schrumpfungs-Bruch wird hier KEINE Tagesgrenze angehoben. Der Eintrag benennt die LAMPE; write-board-history.js laesst fuer diesen einen registrierten Vergleich genau die Zeilen aus dem p99 heraus, die sie vorher oder nachher tragen. Alles andere wird unveraendert streng gemessen — eine unabhaengige Drift in derselben Nacht faellt weiterhin auf. Ein Zuschlag waere hier gefaehrlich: er muesste ~28-37 Punkte abdecken (2548.TW 78->50, 8926.TW/LKFT ueber 36) und liesse in derselben Nacht jeden echten Wertfehler mit durch. Es steht deshalb wie beim Schrumpfungs-Bruch KEINE Zahl im Register.",
+   "_boards_doc": "GEMESSEN, nicht gesetzt: aufgenommen ist jedes Board, das im Uebergang mindestens eine Zeile mit der Lampe traegt. Gemessene p99-Tagesdeltas des reinen Code-Effekts (alle Boards in Kalibrierphase -> Boden MIN_GATE_THRESHOLD 11,5): health-care 25,78 (18 Lampen-Zeilen) REISST den Boden; tech-hardware 0,29; alle uebrigen 0,00. OHNE die Lampen-Zeilen liegt das p99 in JEDEM Board bei 0,00 — der Code-Effekt bewegt nachweislich nichts ausser den markierten Zeilen. Die neun Boards unter der Reissgrenze stehen mit drin, weil sie einzelne Lampen-Zeilen mit 28-37 Punkten Bewegung tragen (real-estate 27,9 / utilities 32,3 / industrials 36,3 / software-comm-services 36,7), die bei der Zusammensetzung am Mittwoch das p99 erreichen koennen. Das ist gefahrlos, weil die Ausnahme zeilenweise an der Lampe haengt und keine Schwelle anhebt — ein nicht betroffenes Board verliert dadurch nichts an Strenge.",
+   "_bindung_doc": "Gebunden an den EXAKTEN Vorgaenger 2026-08-18, nicht an einen Kalendertag. Der Cron laeuft Di-Sa (17 2 * * 2-6): Di 18.08. ~02:17 UTC laeuft ALTER Code (Beweis-Lauf fuer die Reparatur, Vintage 2026-08-18 = letzter Stand im alten Massstab), gemergt wird danach, Mi 19.08. laeuft erstmals der NEUE Code und vergleicht gegen 2026-08-18. Landet der Dienstag-Lauf nicht, ist der Vorgaenger ein anderer und die Ausnahme greift NICHT (fail-closed) — dann ist der Fall neu zu bewerten statt still durchzuwinken.",
+   "nebenwirkung_kalibrierung": "Erwuenscht: alle 13 Boards sind seit der Neukalibrierung vom 03.08. in der Kalibrierphase (threshold null, 3 von 20 Samples). Ohne diese Ausnahme ginge das health-care-p99 von 25,78 als Kalibrier-Sample in die Messreihe ein und verzerrte die kuenftige Schwelle dauerhaft nach oben. Da die erklaerten Zeilen gar nicht erst ins p99 gelangen, bleibt die Messreihe sauber.",
+   "entscheid": "Gerichtsurteil Einmalertrag-Konsequenz 16.08.2026 (F-16-Einzelfreigabe) + Karl-Freigabe 16.08. ('Ja, so machen'). Waechter: tests/board-history-score-definitions-bruch.test.js (mit Ausbau-Probe)."
   }
  ]
 }
