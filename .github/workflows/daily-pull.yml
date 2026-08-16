@@ -1967,7 +1967,7 @@ jobs:
             # nicht angekommen ist — der stille gruene Haken auf einen nicht publizierten
             # Alarm, also genau der Ausgang, gegen den dieser Job gebaut ist.
             if git diff --staged --quiet; then
-              echo "::error::Der Statusmarker erzeugt keinen Diff gegen gh-pages. Da completed_at bei jedem Lauf neu gestempelt wird, heisst das: die Kopie ist nicht angekommen. Kein stiller gruener Haken auf einen nicht publizierten Alarm."
+              echo "::error::Der Statusmarker erzeugt keinen Diff gegen gh-pages. completed_at wird bei jedem Lauf neu gestempelt, ein unveraenderter Marker kann es also nicht geben. Zwei Ursachen kommen in Frage: die Kopie ist nicht angekommen (der Regelfall), ODER ein frueherer Versuch dieser Schleife hat serverseitig doch gepusht und nur die Rueckmeldung ging verloren — dann liegt der Marker bereits richtig auf gh-pages und dieses rote X ist ein Fehlalarm. BEWUSST trotzdem rot: ein zu oft feuernder Alarm ist reparierbar, ein stiller gruener Haken auf einen nicht publizierten Alarm ist genau der Schaden vom 12.-15.08. PRUEFEN: outputs/pipeline-status/v1/latest.json auf gh-pages gegen die Lauf-Nummer dieses Laufs."
               exit 1
             fi
             git commit -m "deploy: pipeline status $(date -u +%Y-%m-%dT%H:%M:%SZ)"
