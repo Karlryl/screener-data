@@ -144,11 +144,16 @@ test('BH-121: echter Workflow-Einzeiler meldet fehlenden/kaputten Stempel und fe
 });
 
 // ── BH-035: Waechter/Gate-Glob faengt jetzt auch die '-test.js'-Schreibweise ─
-test('BH-035: GATE_GLOB nutzt *test.js (faengt .test.js UND -test.js)', () => {
-  assert.match(yml, /GATE_GLOB: 'tests\/\*test\.js tests\/scoring\/\*test\.js lib\/\*test\.js'/);
+// Tag 653: Gate-Quelle ist von den env-Bloecken im Workflow nach scripts/test-gate.js
+// gewandert (zwei Spuren, zwei Workflows, EINE Quelle). Dieselbe Sache, neuer Ort.
+const gateModule = require(path.join(ROOT, 'scripts', 'test-gate.js'));
+const gateSrc = fs.readFileSync(path.join(ROOT, 'scripts', 'test-gate.js'), 'utf8');
+test('BH-035: blockierende Globs nutzen *test.js (faengt .test.js UND -test.js)', () => {
+  assert.deepEqual(gateModule.BLOCKING_GLOBS, ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js']);
 });
 test('BH-035: Waechter-Enumeration nutzt dasselbe erweiterte Pattern', () => {
-  assert.match(yml, /git ls-files '\*test\.js' \| grep -v '\/fixtures\/'/);
+  assert.match(gateSrc, /'ls-files', '\*test\.js'/);
+  assert.match(gateSrc, /includes\('\/fixtures\/'\)/);
 });
 test('BH-035: git ls-files \'*test.js\' faengt die drei SEC-Smokes, das alte \'*.test.js\' nicht (Regressionsbeweis)', () => {
   const newOut = execFileSync('git', ['ls-files', '*test.js'], { cwd: ROOT, encoding: 'utf8' }).split('\n');
