@@ -270,6 +270,22 @@ test('MARKER_PFADE deklariert den Pfad, den findash abruft', () => {
     + '(data-layer/screener-sync.js) — jeder andere Ort ist fuer die Warnleiste unsichtbar.');
 });
 
+// Review 16.08.: der Selftest (schaerfste Pruefbatterie — jede Einzelregel des Vertrags,
+// die Fortschreibung von last_success_at, Drift in beide Richtungen) lief in KEINEM Job und
+// war damit nur bei manuellem Aufruf wirksam. Eine punktuelle Schwaechung einer
+// Validator-Regel haette kein CI-Lauf gefangen. Am Objekt gepinnt: der Schritt liegt im
+// prep-Job (dort, wo die beiden Nachbar-Selftests schon stehen) und ist nicht entschaerft.
+test('der Statusmarker-Selftest laeuft im prep-Job (nicht nur von Hand)', () => {
+  const prep = job(daily, 'prep');
+  assert.match(prep, /run:\s*node scripts\/pipeline-status\.js --selftest/,
+    'der Vertrags-Selftest steht in keinem CI-Schritt des prep-Jobs — eine geschwaechte '
+    + 'Validator-Regel faellt dann nirgends auf, und der Marker kann vertragswidrig rausgehen, '
+    + 'ohne dass ein Lauf rot wird.');
+  const s = schritt(daily, 'name: Statusmarker Contract Selftest');
+  assert.ok(!/continue-on-error/.test(s),
+    'continue-on-error am Selftest macht ihn wirkungslos.');
+});
+
 test('Runner-Scratch des Jobs steht in .gitignore (T564-B4, gleiche Hygiene)', () => {
   const zeilen = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8')
     .replace(/\r\n/g, '\n').split('\n').map((z) => z.trim());
