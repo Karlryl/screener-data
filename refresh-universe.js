@@ -817,13 +817,22 @@ function kollabiereYahooDubletten(stocks) {
 }
 
 function entferneWhenIssuedBestand(stocks) {
-  const rows = Array.isArray(stocks) ? stocks : [];
-  const kept = rows.filter((s) => !(s && isWhenIssuedSecurity(s.name || '')));
-  return { stocks: kept, dropped: rows.length - kept.length };
+  // Review-Fix (PR #43): fail-closed statt stillem []-Fallback. Ein wlRaw ohne
+  // .stocks-Array (korrupte watchlist.json, falscher --watchlist-Pfad) lief sonst
+  // als "leere Watchlist" weiter, Discovery fuellte tausende "neue" Ticker nach
+  // und ueberschrieb den kuratierten Bestand — genau die BH-041-Bugklasse.
+  if (!Array.isArray(stocks)) {
+    throw new TypeError('watchlist.stocks ist kein Array — Abbruch statt stillem Weiterlauf mit leerer Watchlist (BH-041 fail-closed)');
+  }
+  const kept = stocks.filter((s) => !(s && isWhenIssuedSecurity(s.name || '')));
+  return { stocks: kept, dropped: stocks.length - kept.length };
 }
 
 function sollUniverseSchreiben(delta) {
-  return ['newTickers', 'repaired', 'collapsed', 'adrDropped', 'yahooDropped', 'deadDropped', 'whenIssuedDropped']
+  // Review-Fix (PR #43): yahooDropped bewusst NICHT im Gate — vor diesem PR schrieb
+  // ein reiner Yahoo-Dubletten-Lauf die Watchlist nicht ("Nothing to add..."), und
+  // dieser PR aendert das Verhalten normaler Instrumente nicht (Invariante).
+  return ['newTickers', 'repaired', 'collapsed', 'adrDropped', 'deadDropped', 'whenIssuedDropped']
     .some((key) => Number(delta && delta[key]) > 0);
 }
 
@@ -1792,12 +1801,10 @@ async function main() {
 
   // R1-SK-010: NACH Class-Share- und ADR-Collapse (beide aendern yahoo_symbol) als letztes
   // Netz — was danach noch dieselbe Yahoo-Abfrage teilt, ist zwangslaeufig eine Dublette.
-  let yahooDropped = 0;
   {
     const r = kollabiereYahooDubletten(wlRaw.stocks);
     wlRaw.stocks = r.stocks;
-    yahooDropped = r.dropped;
-    if (yahooDropped) console.log('  Yahoo-Dubletten-Collapse: ' + yahooDropped + ' Zeile(n) entfernt (gleiches yahoo_symbol, gleiche Daten).');
+    if (r.dropped) console.log('  Yahoo-Dubletten-Collapse: ' + r.dropped + ' Zeile(n) entfernt (gleiches yahoo_symbol, gleiche Daten).');
   }
 
   // Task 0.12 (b): tote Bestandszeilen austragen (in-place-Repair, analog ADR-Dedup).
@@ -1814,7 +1821,7 @@ async function main() {
   // audit/fix (A2 2026-06-26): gate the write on an actual change. With the early-return
   // removed above, a run that discovered nothing new AND repaired nothing must still leave the
   // universe untouched (no needless rewrite / timestamp churn).
-  if (!sollUniverseSchreiben({ newTickers: newTickers.length, repaired, collapsed, adrDropped, yahooDropped, deadDropped, whenIssuedDropped })) {
+  if (!sollUniverseSchreiben({ newTickers: newTickers.length, repaired, collapsed, adrDropped, deadDropped, whenIssuedDropped })) {
     console.log('Nothing to add, nothing to repair. Universe unchanged.');
     return;
   }

@@ -28,10 +28,17 @@ test('when-issued: existing temporary row is removed from the watchlist', () => 
   assert.deepEqual(result, { stocks: [mfp], dropped: 1 });
 });
 
-test('persistence gate writes for a pure Yahoo or when-issued removal', () => {
-  assert.equal(sollUniverseSchreiben({ yahooDropped: 1 }), true);
+test('persistence gate writes for a when-issued removal, ignores pure Yahoo collapse (pre-PR behavior)', () => {
   assert.equal(sollUniverseSchreiben({ whenIssuedDropped: 1 }), true);
+  // Review-Fix PR #43: yahooDropped stand vor diesem PR nicht im Schreib-Gate;
+  // die Invariante "keine Verhaltensaenderung fuer normale Instrumente" gilt.
+  assert.equal(sollUniverseSchreiben({ yahooDropped: 1 }), false);
   assert.equal(sollUniverseSchreiben({}), false);
+});
+
+test('entferneWhenIssuedBestand fails loud on a non-array watchlist (BH-041)', () => {
+  assert.throws(() => entferneWhenIssuedBestand(undefined), TypeError);
+  assert.throws(() => entferneWhenIssuedBestand({ not: 'an array' }), TypeError);
 });
 
 test('all US discovery adapters call the shared when-issued filter', () => {
