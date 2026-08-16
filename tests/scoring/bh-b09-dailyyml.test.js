@@ -353,13 +353,29 @@ test('R5-SK-001: ein Restore-Schritt fuer macro-regime.json aus gh-pages laeuft 
   assert.ok(iRestore > 0, 'Restore-Schritt fehlt');
   assert.ok(iCompute > iRestore, 'Compute Macro Regime muss NACH dem Restore laufen, sonst bleibt outputs/macro-regime.json leer');
 });
-test('R5-SK-001: der Restore-Schritt holt outputs/macro-regime.json vom gh-pages-Branch und scheitert nicht hart, wenn er fehlt', () => {
+// Tag 955: dieser Waechter war GRUEN, waehrend der Schritt vollstaendig wirkungslos war.
+// Er pinnte das Schreibmuster des Klon-Rezepts (`--branch gh-pages`, der Dateiname, die
+// Floskel "proceeding without") — alles drei blieb wahr, obwohl `git sparse-checkout set`
+// im Cone-Modus (Default seit Git 2.37) einen DATEIpfad ablehnt, das `2>/dev/null || true`
+// den fatal verschluckte und der Schritt "first run?" meldete, obwohl die Datei auf
+// gh-pages lag. Jetzt wird die SACHE gepinnt statt der Schreibweise:
+//   (a) die bewiesen kaputte Form darf NICHT wiederkommen (Abwesenheit),
+//   (b) der Schritt muss den letzten guten Stand tatsaechlich nach outputs/macro-regime.json
+//       legen (Anwesenheit),
+//   (c) ein Transportfehler darf NICHT mit "erster Deploy" verschmelzen — genau diese
+//       Verschmelzung war der Schaden: sie las sich beruhigend und war es nicht.
+test('R5-SK-001: der Restore-Schritt legt den letzten guten Stand wirklich ab (kein Cone-Modus-Blindgaenger)', () => {
   const s = section('name: Restore last-good macro-regime.json from gh-pages', 'name: Compute Macro Regime');
-  assert.match(s, /--branch gh-pages/);
-  assert.match(s, /outputs\/macro-regime\.json/);
-  // Ein fehlender Branch/fehlende Datei (erster Deploy ueberhaupt) darf den Job
-  // nicht rot machen — macro-regime.js's eigener Leerplatzhalter ist dort korrekt.
-  assert.match(s, /proceeding without/);
+  // (a) Abwesenheit der kaputten Form: sparse-checkout auf einem DATEIpfad.
+  assert.ok(!/sparse-checkout\s+set\s+\S*macro-regime\.json/.test(s),
+    'sparse-checkout auf den Dateipfad ist zurueck — im Cone-Modus checkt das NICHTS aus und der Restore ist wieder ein Blindgaenger');
+  // (b) Anwesenheit des Ergebnisses: der Stand landet am Leseort von macro-regime.js.
+  assert.match(s, /(mv|cp)\s+\S+\s+outputs\/macro-regime\.json/,
+    'der Schritt legt nichts nach outputs/macro-regime.json ab — BH-138 haette wieder nichts zu bewahren');
+  // (c) drei unterscheidbare Ausgaenge: erster Deploy (404) vs. Transportfehler (laut).
+  assert.match(s, /404/, 'der "wirklich erster Deploy"-Fall ist nicht mehr eigens erkannt');
+  assert.match(s, /::warning::/,
+    'ein Transportfehler meldet nichts — er verschmilzt wieder mit dem harmlosen Erst-Deploy-Fall');
 });
 
 // ── Review-Nachzug P0-Haertung (2026-08-09): das Staging des Shard-Manifests darf
