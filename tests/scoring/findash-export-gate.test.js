@@ -174,6 +174,27 @@ test('board unprofitable-Track: eigene rank-Sequenz, Bruch dort isoliert erkannt
       fs.writeFileSync(wfe.ANCHOR_FILE, JSON.stringify({ ...marker, schema: 'anchor-status/v2' }));
       assert.equal(wfe.loadAnchor(), undefined, 'fremdes Schema wurde trotzdem durchgereicht');
     });
+
+    // Review 16.08.: "fehlt" und "da, aber kaputt" duerfen nicht denselben stillen Ausgang haben.
+    const mitLog = (fn) => {
+      const echt = console.log; const zeilen = [];
+      console.log = (...a) => zeilen.push(a.join(' '));
+      try { fn(); } finally { console.log = echt; }
+      return zeilen.join('\n');
+    };
+    test('Bruell: FEHLENDER Marker ist still (lokaler Normalfall, kein Rauschen)', () => {
+      zurueck(wfe.ANCHOR_FILE, null);
+      const log = mitLog(() => assert.equal(wfe.loadAnchor(), undefined));
+      assert.ok(!/::warning::/.test(log), 'ein fehlender Marker warnt — das waere taegliches Rauschen lokal: ' + log);
+    });
+    test('Bruell: VORHANDENER, kaputter Marker warnt laut (nicht stillschweigend "kein Banner")', () => {
+      fs.writeFileSync(wfe.ANCHOR_FILE, '{ kein json');
+      const log = mitLog(() => assert.equal(wfe.loadAnchor(), undefined));
+      assert.match(log, /::warning::/,
+        'ein vorhandener, unlesbarer Marker faellt still aus dem Export — dann steht "Banner aus" fuer '
+        + '"alles gut", und genau diese Verwechslung ist die Bugklasse, gegen die dieser Kanal gebaut ist');
+      assert.match(log, /anchor-status\.json/, 'die Warnung nennt die Datei nicht');
+    });
   } finally {
     zurueck(wfe.ANCHOR_FILE, altAnchor);
     zurueck(HG_INDEX, altIndex);

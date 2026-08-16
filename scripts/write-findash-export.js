@@ -582,9 +582,21 @@ function loadCoverage() {
 // Bruell-Kanal-Marker, gleiche Bauform wie loadCoverage(): nur die Felder durchreichen, die
 // das Dashboard bindet — nicht die ganze Datei (die `anker`-Messreihe bleibt Rohdatei-Nachschau).
 // Fehlt/kaputt -> undefined, und das Feld entfaellt im Export.
+// Review 16.08. (silent-failure-hunter, MEDIUM): "Datei fehlt" und "Datei da, aber kaputt"
+// duerfen NICHT denselben stillen Ausgang haben. Der erste Fall ist der Normalzustand jedes
+// lokalen Laufs, der zweite heisst, dass der Bruell-Kanal fuer diesen Tag blind ist — und
+// genau diese Verwechslung ist die Bugklasse, gegen die dieser ganze Chunk gebaut wird.
+// Kein Abbruch (der Marker bleibt ein diagnostischer Mitfahrer wie coverage), aber laut.
 function loadAnchor() {
+  if (!fs.existsSync(ANCHOR)) return undefined;             // legitimer Normalfall, still
   const m = readJSONOrNull(ANCHOR);
-  if (!m || m.schema !== 'anchor-status/v1') return undefined;
+  if (!m || m.schema !== 'anchor-status/v1') {
+    console.log(`::warning::${ANCHOR} ist vorhanden, aber unlesbar oder traegt ein fremdes Schema `
+      + `(${m && m.schema ? m.schema : 'nicht parsebar'}) — der Direktive-4-Status faellt aus dem `
+      + 'Export und das Dashboard-Banner bleibt fuer diesen Lauf stumm. Das rote X ist davon '
+      + 'unberuehrt: der Bruell-Schritt im laufstatus-Job liest dieselbe Datei roh und faellt hart.');
+    return undefined;
+  }
   return {
     status: m.status,
     breached: m.breached,

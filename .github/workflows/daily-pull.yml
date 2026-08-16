@@ -1386,7 +1386,6 @@ jobs:
       # Merge-Zaehler nullen wuerde — Nachtrag 16.08.). Nur diese eine Suite hat den
       # exit-2-Vertrag; bei jeder anderen bleibt jeder Nonzero-Code ein harter Fehler.
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
-        id: live_gate
         env:
           ANCHOR_STATUS_OUT: outputs/anchor-status.json
         run: |
