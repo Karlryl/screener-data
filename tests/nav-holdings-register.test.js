@@ -152,9 +152,32 @@ test('Produktionsregister ist vollstaendig belegt und enthaelt nie BLK/BX', () =
   for (const e of register) {
     assert.deepEqual(Object.keys(e).sort(), ['aufgenommen', 'beleg', 'grund', 'ticker']);
     for (const feld of ['ticker', 'grund', 'beleg', 'aufgenommen']) assert.ok(String(e[feld]).trim(), `${e.ticker}: ${feld} fehlt`);
-    assert.equal(e.aufgenommen, '2026-08-09');
+    // Tag 954: hier stand `assert.equal(e.aufgenommen, '2026-08-09')` — das pinnte den
+    // Anlege-Tag der Erstbefuellung auf JEDEN kuenftigen Eintrag und machte das Register
+    // unerweiterbar (ein Nachtrag faerbte den Waechter rot, obwohl er formal korrekt war).
+    // Gemeint ist die SACHE "jeder Eintrag traegt ein nachvollziehbares, echtes Aufnahmedatum",
+    // nicht der Literalwert. Geprueft wird jetzt genau das: ISO-Form UND Kalender-Gueltigkeit
+    // (die Form allein liesse '2026-13-45' durch).
+    assert.match(e.aufgenommen, /^\d{4}-\d{2}-\d{2}$/, `${e.ticker}: aufgenommen ist kein ISO-Datum (${e.aufgenommen})`);
+    const d = new Date(e.aufgenommen + 'T00:00:00Z');
+    assert.ok(Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === e.aufgenommen,
+      `${e.ticker}: aufgenommen ist kein gueltiger Kalendertag (${e.aufgenommen})`);
   }
   assert.equal(register.some((e) => ['BLK', 'BX'].includes(e.ticker)), false);
+});
+
+// Tag 954: Geschwister-Gattungen und Zweitnotizen desselben Emittenten muessen GEMEINSAM
+// im Register stehen. Befund der Quartalsreihen-Diagnose 2026-08-16 (N-1): INDU-A.ST war
+// gefuehrt, INDU-C.ST (C-Gattung) und 1INDU.MI (Mailaender Zweitnotiz) fehlten — beide
+// standen deshalb auf financials|profitable Platz 8 und 9, zwei Board-Zeilen fuer eine Firma.
+// Der Namenstext-Dedup (issuerKeyLoose) faengt das nicht: die Zweitnotiz laeuft unter dem
+// abweichenden Namen "Industrivarden AB Class C".
+test('Industrivaerden: alle drei Notierungen (A-Gattung, C-Gattung, Mailand) sind gefuehrt', () => {
+  const register = JSON.parse(fs.readFileSync(path.join(REPO, 'data-health', 'nav-holdings.json'), 'utf8'));
+  const gefuehrt = new Set(register.map((e) => e.ticker));
+  for (const t of ['INDU-A.ST', 'INDU-C.ST', '1INDU.MI']) {
+    assert.ok(gefuehrt.has(t), `${t} fehlt im NAV-Register — dieselbe Firma wuerde wieder eine eigene Board-Zeile bekommen`);
+  }
 });
 
 fs.rmSync(TMP, { recursive: true, force: true });
