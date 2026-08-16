@@ -838,7 +838,11 @@ jobs:
       - name: Restore last-good macro-regime.json from gh-pages
         run: |
           mkdir -p outputs
-          url="${{ github.server_url }}/${{ github.repository }}/raw/gh-pages/outputs/macro-regime.json"
+          # Tag 957: woertlich dieselbe Domain wie heartbeat.yml und weekly-guard.yml
+          # (raw.githubusercontent.com direkt). Vorher stand hier die github.com/<repo>/raw/-
+          # Kurzform: funktional gleich, aber ein 302-Hop mehr — und der Kommentar oben
+          # behauptete eine Muster-Gleichheit, die woertlich nicht stimmte.
+          url="https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/macro-regime.json"
           code=$(curl -sSL --max-time 30 -w '%{http_code}' -o _macro_restore.json "$url" || echo 000)
           if [ "$code" = "200" ] && node -e "JSON.parse(require('fs').readFileSync('_macro_restore.json','utf8'))" 2>/dev/null; then
             mv _macro_restore.json outputs/macro-regime.json
