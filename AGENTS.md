@@ -10,7 +10,11 @@ oben in der Datei) — keine bindende Engine-Wahrheit, nicht mehr referenzieren.
 1. **NUR Qualität, nie Bewertung:** kein preisnormiertes Signal (Yield, P/E, PEG,
    EV/EBITDA, DCF, Target-Upside, Preis-Momentum) in `SCORE_WEIGHTS` — Mandats-Verstoß.
 2. **Schutzliste — nie löschen/überschreiben:** `picks-history/`, `methods-history/`,
-   `earnings-calendar.json`, Branch `loop/formel-haertung`.
+   `earnings-calendar.json`, Branch `loop/formel-haertung`. `picks-history/` ist zusätzlich
+   **inhaltlich eingefroren** (Stichtag 2026-07-02, Karl 2026-08-16, dauerhaft): keine
+   Korrektur, kein Backfill, kein Aufräum-Commit, keine „Reparatur" einer Prüfskript-Meldung
+   (z. B. `coverageWarning` aus `walk-forward-perf.js`). Begründung: `picks-history/_FROZEN.md`.
+   Nachfolger ist `board-history/`.
 3. **Commit-Konvention:** `Tag <n>: <Betreff>` (n = höchste Tag-Nummer aus
    `git log --oneline` + 1). Vor Commit `git status --short`, dann gezielt
    `git commit -- <pfade>` — nie pauschal alles stagen.

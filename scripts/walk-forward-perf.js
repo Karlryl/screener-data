@@ -308,6 +308,13 @@ function businessDaysBetween(startIso, endIso) {
 // and warn when more than COVERAGE_MISSING_THRESHOLD of expected vintages are
 // missing — a silent gap (failed crons, partial backfills) otherwise just
 // shrinks the backtest corpus without any signal.
+//
+// ⚠ KEIN DEFEKT, KEIN ARBEITSAUFTRAG (Karl-Entscheid 2026-08-16, dauerhaft).
+// picks-history/ ist seit 2026-07-02 EINGEFROREN (siehe picks-history/_FROZEN.md).
+// Die Lücke ist gewollt und wächst mit jedem Tag weiter — der `coverageWarning`
+// unten beschreibt nur, wie alt der eingefrorene Korpus inzwischen ist. Er darf
+// NICHT "repariert" werden: kein Backfill, kein Auffüllen fehlender Tage, kein
+// Nachschreiben neuer Vintages, kein Aufräumen. Nachfolger ist board-history/.
 // `vintageFilenames` are the raw picks-history filenames (YYYY-MM-DD.json),
 // sorted ascending, as returned by listVintages().
 // BH-141: extracted from main() (a) so the counter-consistency fix below is
@@ -340,6 +347,8 @@ function computeCoverageDiagnostic(vintageFilenames) {
     missingVintages,
     missingPct,
     missingThreshold: COVERAGE_MISSING_THRESHOLD,
+    // Informativ, nicht alarmierend: picks-history ist eingefroren (s. Block-Kommentar
+    // oben + picks-history/_FROZEN.md). Diese Meldung nie als Defekt behandeln.
     coverageWarning: belowThreshold
       ? ('picks-history coverage gap: ' + missingVintages + ' of ' + expectedBusinessDays
          + ' expected business-day vintages missing (' + Math.round(missingPct * 100)

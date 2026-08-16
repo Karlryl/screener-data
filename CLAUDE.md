@@ -12,7 +12,7 @@ Growth-/Qualitäts-**Screener** für Aktien. Repo `Karlryl/screener-data` (Branc
 - **Update-Ritual (G2):** nach jedem erledigten Task im Masterplan Kästchen abhaken, „Wo stehen wir"-Block aktualisieren, WORKLOG-Eintrag mit den **4 Pflichtteilen** (Was+Commit / Warum so entschieden / Fehler & Schwierigkeiten / Lektion). Verallgemeinerbare Lektionen zusätzlich als 1 Zeile ins **Lektionen-Register (Masterplan Abschnitt 6.0)** — das Register ist Pflicht-Lektüre vor Arbeitsbeginn.
 - **Commit-Konvention (H2):** `Tag <n>: <Betreff>` — `n` = höchste `Tag`-Nummer aus `git log --oneline` + 1, ein Tag pro logischem Chunk.
 - **Push & Melde-Pflicht (H3):** Push auf `main` erlaubt bei grünen Gates; **Force-Push / History-Rewrite / Löschen nie ohne Karl**. Was nicht gepusht werden konnte, am Session-Ende explizit an Karl melden.
-- **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`.
+- **Schutzliste (nie löschen/überschreiben):** `picks-history/`, `methods-history/`, `earnings-calendar.json`, Branch `loop/formel-haertung`. `picks-history/` ist darüber hinaus **inhaltlich eingefroren** (Stichtag 2026-07-02, Karl 2026-08-16, dauerhaft) — auch keine Korrektur, kein Backfill, kein Aufräum-Commit und keine „Reparatur" von Prüfskript-Meldungen; Details und Begründung in [`picks-history/_FROZEN.md`](./picks-history/_FROZEN.md). Nachfolger: `board-history/`.
 
 ## Kern-Designprinzip: NUR Qualität, nie Bewertung
 Der Screener misst **bewusst ausschließlich fundamentale Qualität** — nie ob eine Aktie günstig/teuer ist. Bewertung sowie Entry/Exit-Timing macht Karl **extern über Elliott-Wellen-Analyse** (getrennter, menschlicher Schritt nach dem Screen).
