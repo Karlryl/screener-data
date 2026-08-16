@@ -1,0 +1,2653 @@
+{
+  "schema": "early-detection-provenance-closure/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "purpose": "R13 Herkunfts-Schliessung: der 41-GB-Speicher bleibt nachbaubar, nicht nur pruefbar.",
+  "integrityReport": {
+    "path": "reports/early-detection/sec-fsd-compact-full-integrity-2009-2024.json",
+    "fileSha256": "b8f30958b1ea36ff80897b978cfc6d26cfe62d89c60c7e295716554c4cfbde49",
+    "reportSha256": "9b2b660bd0d5cc65b49618a2e4a119359e33c07891d045817e2d41a000a1885f",
+    "logicalEvidenceSha256": "69bc58ee84bf936e25a5d0d56699dff6d588b34500a5d51ef68aba2bf9c937de"
+  },
+  "storeTotals": {
+    "source_payloads": 127,
+    "submissions": 1097249,
+    "facts": 308848369,
+    "presentations": 102628203,
+    "payload_tags": 9709074,
+    "orphan_rows": 1953,
+    "databaseBytes": 41141956608
+  },
+  "orphanRowsDisclosed": 1953,
+  "orphanRowsNote": "Der Bericht sagt PASS und fuehrt trotzdem Waisen-Zeilen. Sie werden im Datenbasis-Report benannt, nicht verschwiegen.",
+  "buildScripts": [
+    {
+      "path": "scripts/early-detection-sec-wayback.py",
+      "sha256": "b4dc3c924c7b0e4fbab8962cac019e16a7447f59b78393a000e89591fe64ff9c",
+      "bytes": 19359
+    },
+    {
+      "path": "scripts/early-detection-pit-compact.py",
+      "sha256": "48fb6661756c3c75b6815c14d261f58438f95ded80880bd4e801096f547b94ce",
+      "bytes": 28917
+    },
+    {
+      "path": "scripts/early-detection-pit-integrity.py",
+      "sha256": "a8e1d81a0741ee947b5d00715c07180b22173e94c04a0b3057b6fd9f8e2c4c4a",
+      "bytes": 14669
+    }
+  ],
+  "payloadCount": 127,
+  "payloads": [
+    {
+      "quarter": "2009q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:26.000Z",
+      "payloadSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+      "payloadBytes": 13655,
+      "observationSha256": "437bd1392cfca0715f0c438bc7429d0f6774c1a44b61434550579e04ff490f15",
+      "sourceUrl": "https://web.archive.org/web/20180328074126id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 0,
+        "facts": 0,
+        "presentations": 0,
+        "tags": 0,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:11:05.000Z",
+      "payloadSha256": "181327faaa37c2a3b47cb6727004960b762954d908697b252d12bea245b9d26e",
+      "payloadBytes": 13540,
+      "observationSha256": "d5df1bba208e114d1ccb99e2e97a4e25daf48103fcfa6d413eae38af3e51d441",
+      "sourceUrl": "https://web.archive.org/web/20250201041105id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 0,
+        "facts": 0,
+        "presentations": 0,
+        "tags": 0,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:25.000Z",
+      "payloadSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+      "payloadBytes": 166277,
+      "observationSha256": "942f9d76717ad44c6cb6d1dcc5674263eb2b5bf68ccd7027b77e104f630490c0",
+      "sourceUrl": "https://web.archive.org/web/20180328074125id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 26,
+        "facts": 4930,
+        "presentations": 3178,
+        "tags": 919,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-01-31T23:15:59.000Z",
+      "payloadSha256": "09d38a3fdea044be2728488ecb000fef8b5220fda805c601d2337afd1da333a8",
+      "payloadBytes": 144894,
+      "observationSha256": "2649c9a5b41977c3233418bad3917b93c4ffb420c8e9b901a60e666904d6101c",
+      "sourceUrl": "https://web.archive.org/web/20250131231559id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 22,
+        "facts": 3999,
+        "presentations": 1928,
+        "tags": 649,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:21.000Z",
+      "payloadSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+      "payloadBytes": 2595267,
+      "observationSha256": "95f901aefc62967bdfdc9b60fd209a572176ac6e0cbbf333cee5a072c566df1a",
+      "sourceUrl": "https://web.archive.org/web/20180328074121id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 439,
+        "facts": 116671,
+        "presentations": 71726,
+        "tags": 9709,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-01-31T23:35:14.000Z",
+      "payloadSha256": "dca07de82a7c40d28108cd3ba4fbce4225a9c5bd2bd9deea7167ff4992c8ddfa",
+      "payloadBytes": 3544077,
+      "observationSha256": "d5d5b4642ee2751a02b6c591248a1462342605f7cd6ab20c68bd170796609146",
+      "sourceUrl": "https://web.archive.org/web/20250131233514id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 435,
+        "facts": 126650,
+        "presentations": 47958,
+        "tags": 8820,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:17.000Z",
+      "payloadSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+      "payloadBytes": 2869843,
+      "observationSha256": "f1db4d4c6b7ba88344b10e1fed715bea651cd5a2a58bc03ebbdb68df3b9ea10f",
+      "sourceUrl": "https://web.archive.org/web/20180328074117id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 486,
+        "facts": 131984,
+        "presentations": 77739,
+        "tags": 9519,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2009q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T19:01:48.000Z",
+      "payloadSha256": "ad23b114ecb430c3a05ee2f2be799e966a67591ef098c44311b2f1f632d3ea82",
+      "payloadBytes": 4050938,
+      "observationSha256": "13024492a0d19a4685f5af9f42aaeb9575b9b3538f8c1977e250ac7c1356371d",
+      "sourceUrl": "https://web.archive.org/web/20250201190148id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 484,
+        "facts": 146335,
+        "presentations": 53673,
+        "tags": 7944,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:10.000Z",
+      "payloadSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+      "payloadBytes": 3314621,
+      "observationSha256": "36d62c435c6f7be0a7ac5a24d4b5f3f6494826ac975d40bed58e652c6c9c7e64",
+      "sourceUrl": "https://web.archive.org/web/20180328074110id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 495,
+        "facts": 151692,
+        "presentations": 88378,
+        "tags": 11153,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:16:04.000Z",
+      "payloadSha256": "2a4db2340ab1662d5135d7e17be1a58352c5959017350f0ef2174135f9996125",
+      "payloadBytes": 5311282,
+      "observationSha256": "94879dc8769add8f71422dfaf2377ac325167f31fd08187fd0bacefa0f9a778f",
+      "sourceUrl": "https://web.archive.org/web/20250201021604id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 495,
+        "facts": 194741,
+        "presentations": 64151,
+        "tags": 9699,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:41:06.000Z",
+      "payloadSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+      "payloadBytes": 2875882,
+      "observationSha256": "d05ea2efd9e1fed53cfaac9bab9360be6fab1555c9ed58a88621a0b85f994f76",
+      "sourceUrl": "https://web.archive.org/web/20180328074106id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 522,
+        "facts": 118947,
+        "presentations": 81340,
+        "tags": 9961,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:22:44.000Z",
+      "payloadSha256": "25f416b020fd3e62a67dbf8c6522c9f239e716099b61cf5d05a59a91ffdef1f1",
+      "payloadBytes": 3994236,
+      "observationSha256": "c023ccc4247c1f20cf4d8ee388a32928026caa3a4d188a1e8a80408d819be27d",
+      "sourceUrl": "https://web.archive.org/web/20250201012244id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 522,
+        "facts": 136044,
+        "presentations": 57596,
+        "tags": 8477,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:40:57.000Z",
+      "payloadSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+      "payloadBytes": 8806748,
+      "observationSha256": "2950112b153c8c372bdef152a9381e39b328c35a4c74ebd4dc42e1dccae818e1",
+      "sourceUrl": "https://web.archive.org/web/20180328074057id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1413,
+        "facts": 476310,
+        "presentations": 217867,
+        "tags": 20896,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T05:26:28.000Z",
+      "payloadSha256": "52014faf614ca0d7b8040e364f5b3e99f28d5e96b711aa922b490056e2c1d7b5",
+      "payloadBytes": 13745950,
+      "observationSha256": "f11cb3240a89fd791de738f75807e828d95945379b930d6b60896433bfe06f9b",
+      "sourceUrl": "https://web.archive.org/web/20250201052628id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1412,
+        "facts": 480612,
+        "presentations": 155604,
+        "tags": 18988,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:40:47.000Z",
+      "payloadSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+      "payloadBytes": 9357932,
+      "observationSha256": "87ecc9e22b418b3166ba9a0282794519bdf82c5e779f88aaa7360dfb996f7595",
+      "sourceUrl": "https://web.archive.org/web/20180328074047id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1474,
+        "facts": 505411,
+        "presentations": 224196,
+        "tags": 21658,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2010q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-03T04:09:22.000Z",
+      "payloadSha256": "3dc43a8559cba9e1a9bb5a283a99e1fdfd2b0eaa7a9460887d5b4c70d69cef63",
+      "payloadBytes": 14679781,
+      "observationSha256": "c4b745c3965cb0b1a715c5593a4aafe93e9889a2e673c9844ba72740b458fade",
+      "sourceUrl": "https://web.archive.org/web/20250203040922id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2010q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1474,
+        "facts": 511508,
+        "presentations": 164326,
+        "tags": 19806,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:40:37.000Z",
+      "payloadSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+      "payloadBytes": 11796366,
+      "observationSha256": "4c19f401657fe3658d81795732070c1de6e8c6aaaef61e3afecea926e76bf2e0",
+      "sourceUrl": "https://web.archive.org/web/20180328074037id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1500,
+        "facts": 663971,
+        "presentations": 261988,
+        "tags": 27712,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:21:02.000Z",
+      "payloadSha256": "e63b781a5e57e55d68e110a06d3f697e942a60e17f093bbdc1a16ac7152a7df5",
+      "payloadBytes": 19615544,
+      "observationSha256": "d8b6a8f65f956fcb95741a03bc4451be19e642ae0ccbee993aa457fb15211da3",
+      "sourceUrl": "https://web.archive.org/web/20250201012102id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1499,
+        "facts": 690483,
+        "presentations": 189098,
+        "tags": 24300,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:40:27.000Z",
+      "payloadSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+      "payloadBytes": 9738877,
+      "observationSha256": "f6514c7c3d7b1c2d1f038f7414749034768f89a1c5a53a1fcbe3ab9961577ec9",
+      "sourceUrl": "https://web.archive.org/web/20180328074027id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1705,
+        "facts": 483670,
+        "presentations": 252074,
+        "tags": 25796,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T00:45:41.000Z",
+      "payloadSha256": "10a6f98f14d2a341e938a379ea32beb4857b01d59facf04e6e7b3c68558a95d1",
+      "payloadBytes": 15001310,
+      "observationSha256": "b9b7695276ffda0d5d6a05204251bdd9e5d171672e6c88c018624eb484097d50",
+      "sourceUrl": "https://web.archive.org/web/20250201004541id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 1705,
+        "facts": 498885,
+        "presentations": 182980,
+        "tags": 22299,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:40:07.000Z",
+      "payloadSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+      "payloadBytes": 32852470,
+      "observationSha256": "6f4583d42a6b539a576bcb3cddffd6cc22a6d5ccd081bce5a1f7a0a32b4f21ed",
+      "sourceUrl": "https://web.archive.org/web/20180328074007id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7104,
+        "facts": 1903993,
+        "presentations": 952057,
+        "tags": 79398,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:28:01.000Z",
+      "payloadSha256": "43b9beb243c6686a29df5cf817ed2cb3a7c86a7398bbc56e2fb4d0cf4784ac28",
+      "payloadBytes": 57941919,
+      "observationSha256": "48668885a79e11c04e9bd394e6ad1f550a9d41a43b3e2662d25ebb20ec88de2e",
+      "sourceUrl": "https://web.archive.org/web/20250201012801id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7102,
+        "facts": 2025154,
+        "presentations": 668542,
+        "tags": 64597,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:39:45.000Z",
+      "payloadSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+      "payloadBytes": 37472659,
+      "observationSha256": "df60e1a255ccd889e7bbf348f578dcbde605072742899f97aec393f73c399237",
+      "sourceUrl": "https://web.archive.org/web/20180328073945id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8015,
+        "facts": 2150890,
+        "presentations": 1089746,
+        "tags": 93126,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2011q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:50:59.000Z",
+      "payloadSha256": "0f674f68094cc65c83da3c142775dcfd091250e293783c3e8211ee4e97bc083f",
+      "payloadBytes": 64306658,
+      "observationSha256": "ccedc50d987847f41b3e95742d35c87cef9126cda83968e74369be88f40973cc",
+      "sourceUrl": "https://web.archive.org/web/20250201015059id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2011q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7585,
+        "facts": 2227859,
+        "presentations": 729250,
+        "tags": 72262,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:39:21.000Z",
+      "payloadSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+      "payloadBytes": 42174490,
+      "observationSha256": "11ce465dfe006275c9fac4e18741b54494c243055ce7d23dd9ca97ff2e899991",
+      "sourceUrl": "https://web.archive.org/web/20180328073921id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7417,
+        "facts": 2439119,
+        "presentations": 1139348,
+        "tags": 108958,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:04:03.000Z",
+      "payloadSha256": "42ed1a5ecac978d4338bd51cd4bc15bf60cc821291eea492f8172fc4e803d5f6",
+      "payloadBytes": 85474601,
+      "observationSha256": "5be8ef30c01988c62cef45ba1e3252cc2ad5a0b404876f1209b1e2cb033d7017",
+      "sourceUrl": "https://web.archive.org/web/20250201020403id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7418,
+        "facts": 2699630,
+        "presentations": 792720,
+        "tags": 88829,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:38:58.000Z",
+      "payloadSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+      "payloadBytes": 40089136,
+      "observationSha256": "e20b1c199dfc06f3f2bbb70f3602fe562aa98db336ee7924c86c76506fcc2ed1",
+      "sourceUrl": "https://web.archive.org/web/20180328073858id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 9193,
+        "facts": 2122165,
+        "presentations": 1254946,
+        "tags": 115549,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:01:18.000Z",
+      "payloadSha256": "0dbb10aa316c674f07849a28e67a25a0a59bd6ef2bc214cd1800c8a2d2a05df6",
+      "payloadBytes": 80075771,
+      "observationSha256": "f8ccffc58d1b0a4e163273a59b16d2f79f3979f41d4b0af591402c520458a460",
+      "sourceUrl": "https://web.archive.org/web/20250201010118id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 9193,
+        "facts": 2407915,
+        "presentations": 875259,
+        "tags": 93938,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:38:09.000Z",
+      "payloadSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+      "payloadBytes": 45918533,
+      "observationSha256": "6462e01f1caa5d5397be564b2be0f93ed240b2e3a3d4ccc944311a232c66a152",
+      "sourceUrl": "https://web.archive.org/web/20180328073809id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8005,
+        "facts": 2881650,
+        "presentations": 1106813,
+        "tags": 97107,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:51:54.000Z",
+      "payloadSha256": "a5b705fab7948837fc890d820c2b809d4afdb0ff1836129ad5a16127275f0ebf",
+      "payloadBytes": 89608234,
+      "observationSha256": "9273fdf2b142f607a9949a9bedf0d8a0b49f4c4018bb65fc44e3230b95a8f3c9",
+      "sourceUrl": "https://web.archive.org/web/20250201015154id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8002,
+        "facts": 2816079,
+        "presentations": 768770,
+        "tags": 77881,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:36:46.000Z",
+      "payloadSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+      "payloadBytes": 48815717,
+      "observationSha256": "5c83f10c219b96673467988d94c955db96d7fc20bd72ffb68c2167368d12565a",
+      "sourceUrl": "https://web.archive.org/web/20180328073646id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8117,
+        "facts": 3057717,
+        "presentations": 1150366,
+        "tags": 105601,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2012q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:55:25.000Z",
+      "payloadSha256": "af6629de7547f5d75c85abf170550b9466768071fcd419d5fdf1a1d026436e98",
+      "payloadBytes": 95805256,
+      "observationSha256": "43d9e0c7570b0dfd9d47dd45c8ccd7a0c4076e2923fb8a5b8f6d4745e28c0b01",
+      "sourceUrl": "https://web.archive.org/web/20250201015525id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2012q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8115,
+        "facts": 2999818,
+        "presentations": 799495,
+        "tags": 83990,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:34:27.000Z",
+      "payloadSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+      "payloadBytes": 51769634,
+      "observationSha256": "792d9d0cf70c0b0647c8a549bccf20306e99b6c0ce87ee4632477f64cf0a6ef6",
+      "sourceUrl": "https://web.archive.org/web/20180328073427id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6794,
+        "facts": 3415076,
+        "presentations": 972229,
+        "tags": 100324,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:28:55.000Z",
+      "payloadSha256": "329f4e3e40c0351001037ad1dea3fd28c07100f6f6d6d64d5998ea01b060a790",
+      "payloadBytes": 99173442,
+      "observationSha256": "d9cbd93a375e38e238253010f7ba2162ff882cb9c6d787d35bcca31368b923cb",
+      "sourceUrl": "https://web.archive.org/web/20250201042855id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6788,
+        "facts": 3154213,
+        "presentations": 741403,
+        "tags": 80116,
+        "orphans": 1953
+      }
+    },
+    {
+      "quarter": "2013q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:33:57.000Z",
+      "payloadSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+      "payloadBytes": 51392320,
+      "observationSha256": "8d1b3bc43ac8210c82944fa8203a49ae361c502e0a1fcd91a6843af9c849fb2e",
+      "sourceUrl": "https://web.archive.org/web/20180328073357id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 9114,
+        "facts": 3061520,
+        "presentations": 1281173,
+        "tags": 120254,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:01:25.000Z",
+      "payloadSha256": "7cc764386ea9cb01d62e1a9f4fac38dc9c741e96886a953ddaad2def4eb489c7",
+      "payloadBytes": 96917655,
+      "observationSha256": "10f18e5a9d5ed523c9362b0610a80ddf7e3ba748a377c1065122455d01506e7e",
+      "sourceUrl": "https://web.archive.org/web/20250201010125id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8954,
+        "facts": 2943353,
+        "presentations": 878874,
+        "tags": 95265,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:33:30.000Z",
+      "payloadSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+      "payloadBytes": 48787736,
+      "observationSha256": "319f054efbcef218aa753e8ba224b7bce6ec02ecf4450b18f9b514b4069eb7da",
+      "sourceUrl": "https://web.archive.org/web/20180328073330id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8043,
+        "facts": 3105541,
+        "presentations": 1120707,
+        "tags": 96685,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T03:47:28.000Z",
+      "payloadSha256": "c9134387b650a9194f14b3f832f16aa1a72255c20a0e0b954001a643933cc849",
+      "payloadBytes": 98355005,
+      "observationSha256": "589f8855dd9f726860013234750de98c1765205958a11a70def8bd7cc45cf270",
+      "sourceUrl": "https://web.archive.org/web/20250201034728id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8038,
+        "facts": 3081119,
+        "presentations": 787177,
+        "tags": 80291,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:33:04.000Z",
+      "payloadSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+      "payloadBytes": 48746269,
+      "observationSha256": "9db1352a4159287f24a7b4c9328f701243c98f52d88269fdf1df892450c7d833",
+      "sourceUrl": "https://web.archive.org/web/20180328073304id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7844,
+        "facts": 3059380,
+        "presentations": 1118839,
+        "tags": 100532,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2013q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T05:23:25.000Z",
+      "payloadSha256": "7781ac25ddbd4f6eb8eb85e838656181fb06e8bc16b1dd5efccb9e21f8f5baa7",
+      "payloadBytes": 92335773,
+      "observationSha256": "f4c914ed313c69085a5aff5c9dc81d1c705783ba503161c3976d695ef9765c21",
+      "sourceUrl": "https://web.archive.org/web/20250201052325id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2013q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7846,
+        "facts": 3097400,
+        "presentations": 787103,
+        "tags": 80058,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:32:19.000Z",
+      "payloadSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+      "payloadBytes": 54719572,
+      "observationSha256": "afd72a2ec050cbf2fbb0ffc3fcf1e6ee2e6c61531b3137eb27c92f34075ae68c",
+      "sourceUrl": "https://web.archive.org/web/20180328073219id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7161,
+        "facts": 3591652,
+        "presentations": 1107114,
+        "tags": 107588,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:22:11.000Z",
+      "payloadSha256": "bf55481c6e0088fb45e8efeb2d8de6912a9c3533da918376a24ca5f84144680f",
+      "payloadBytes": 102843522,
+      "observationSha256": "138f167746614dad64709650a0b1d6f350653db3fb76891ee9bc624cc74854fd",
+      "sourceUrl": "https://web.archive.org/web/20250201022211id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7158,
+        "facts": 3483361,
+        "presentations": 792750,
+        "tags": 85090,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:31:57.000Z",
+      "payloadSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+      "payloadBytes": 47810422,
+      "observationSha256": "6c3cbba24fbc661b9774e97de23b17d27da416ccd2e168e5982a0484c0805518",
+      "sourceUrl": "https://web.archive.org/web/20180328073157id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8553,
+        "facts": 2804902,
+        "presentations": 1202828,
+        "tags": 109517,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:33:39.000Z",
+      "payloadSha256": "ab03600231a08369a980a31dde8bb78b6cd49f56d39ab7b90ca5bc0cfd52aa7f",
+      "payloadBytes": 85032839,
+      "observationSha256": "3f55d84fe4b6efce4f92894612de39404e5f64790bc9228a229851786991d097",
+      "sourceUrl": "https://web.archive.org/web/20250201013339id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8550,
+        "facts": 2814446,
+        "presentations": 840870,
+        "tags": 87743,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:31:35.000Z",
+      "payloadSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+      "payloadBytes": 46502775,
+      "observationSha256": "e74df4496f06963d527260b8ccfea65002e3c44d53f312dbf4ac31582f65c29e",
+      "sourceUrl": "https://web.archive.org/web/20180328073135id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7790,
+        "facts": 2906042,
+        "presentations": 1090684,
+        "tags": 91423,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:23:34.000Z",
+      "payloadSha256": "4d10510a2f17a6da8012d83f66bed7fbb434bca2529f7b2a92043c522d2c52b1",
+      "payloadBytes": 87408142,
+      "observationSha256": "f6e17dce77948ac545c930d8ce886793d0fa50863bb470813659419f414bf660",
+      "sourceUrl": "https://web.archive.org/web/20250201012334id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7790,
+        "facts": 2936590,
+        "presentations": 765062,
+        "tags": 71828,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:31:13.000Z",
+      "payloadSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+      "payloadBytes": 46145074,
+      "observationSha256": "0c0994cd2a116050667a2440e5f4e64662dc16111a74c293acaeb02ed25ba580",
+      "sourceUrl": "https://web.archive.org/web/20180328073113id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7715,
+        "facts": 2877905,
+        "presentations": 1053929,
+        "tags": 85673,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2014q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:34:24.000Z",
+      "payloadSha256": "c82395b7df380a95b30d652784372a5439dea9ed750d89784822bb643cbc4930",
+      "payloadBytes": 87639973,
+      "observationSha256": "c85369e6a89eb818a9bd0d6f168284b69dac62177015f886928be9e2542423e2",
+      "sourceUrl": "https://web.archive.org/web/20250201013424id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2014q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7713,
+        "facts": 2940236,
+        "presentations": 764687,
+        "tags": 68464,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:30:49.000Z",
+      "payloadSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+      "payloadBytes": 52551202,
+      "observationSha256": "f79171c4739eb9db37d5eabc6e00d086a5e7516f368f597bcbebebcaf8446374",
+      "sourceUrl": "https://web.archive.org/web/20180328073049id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6996,
+        "facts": 3449733,
+        "presentations": 1115451,
+        "tags": 94503,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T00:14:38.000Z",
+      "payloadSha256": "baa9e434480b8299593b781e8156f855e0c4548677329f166f495cbae287e52e",
+      "payloadBytes": 98944359,
+      "observationSha256": "dbc0bb93e833568d0e2de1b27e8b34e9cee60c84f5dd55048fa78dbbc86551f6",
+      "sourceUrl": "https://web.archive.org/web/20250201001438id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6995,
+        "facts": 3322479,
+        "presentations": 773246,
+        "tags": 75372,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:30:28.000Z",
+      "payloadSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+      "payloadBytes": 44539126,
+      "observationSha256": "93ce4442488bdeab48ca5753ecd2ee8022b2630534f2471ef454dffd1dd094c6",
+      "sourceUrl": "https://web.archive.org/web/20180328073028id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8213,
+        "facts": 2602230,
+        "presentations": 1047211,
+        "tags": 87641,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:09:51.000Z",
+      "payloadSha256": "d3cac325930af6ef145d26fb7e035d7933e900ce174a11adaabb33abd87fbfa1",
+      "payloadBytes": 78908272,
+      "observationSha256": "913ee04bc9e595d5c4e7d1b0f6dde79a450fc179e0e00001d6ba52560e7aa566",
+      "sourceUrl": "https://web.archive.org/web/20250201010951id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8212,
+        "facts": 2588598,
+        "presentations": 791305,
+        "tags": 70490,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:30:07.000Z",
+      "payloadSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+      "payloadBytes": 43066583,
+      "observationSha256": "7d842f496ca6cf549840636ced1ca82ca49173ac145d5191a8326750f218c4df",
+      "sourceUrl": "https://web.archive.org/web/20180328073007id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7456,
+        "facts": 2763374,
+        "presentations": 1033091,
+        "tags": 76104,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T19:03:17.000Z",
+      "payloadSha256": "9301fa2e346aa6b3a48a36cafab80d1aab5d7970e60bfd168d53ba852a4deca9",
+      "payloadBytes": 82751989,
+      "observationSha256": "3aad24375ce2d141bdcdc6ebc0ad253ff3e3fac4c65cffe0428ef8478a93fa82",
+      "sourceUrl": "https://web.archive.org/web/20250201190317id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7455,
+        "facts": 2780346,
+        "presentations": 727470,
+        "tags": 61559,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2015q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:29:45.000Z",
+      "payloadSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+      "payloadBytes": 42899659,
+      "observationSha256": "c74b7c7768bf63bd0fc8d69923459f7ffded5a40a3c9caecaf722c925e07777d",
+      "sourceUrl": "https://web.archive.org/web/20180328072945id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2015q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7234,
+        "facts": 2738754,
+        "presentations": 1022465,
+        "tags": 75567,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:29:22.000Z",
+      "payloadSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+      "payloadBytes": 51405855,
+      "observationSha256": "e3046baf1049d636fb574769d56039705db45542eab2b0477e2783a5d3c4883d",
+      "sourceUrl": "https://web.archive.org/web/20180328072922id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6535,
+        "facts": 3485997,
+        "presentations": 1051814,
+        "tags": 85458,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:48:42.000Z",
+      "payloadSha256": "5c89a6badede1b47ab540913c7484795c7fc4c2a4672ac601b34b8c0afe5a698",
+      "payloadBytes": 95470843,
+      "observationSha256": "494d7c8b79caf396f217fc3378f68674031f40d2eb8e16b5cd9c5c51f1c16e3f",
+      "sourceUrl": "https://web.archive.org/web/20250201014842id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6532,
+        "facts": 3174261,
+        "presentations": 729483,
+        "tags": 69297,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:29:03.000Z",
+      "payloadSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+      "payloadBytes": 40776109,
+      "observationSha256": "0bcd8eb9c5ca3a97ab68fa9d057b2c81dfa50021c454eb85a411dbc2c0596f34",
+      "sourceUrl": "https://web.archive.org/web/20180328072903id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7523,
+        "facts": 2384035,
+        "presentations": 979624,
+        "tags": 77436,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:53:27.000Z",
+      "payloadSha256": "e91daef1f83ab3a6a7a25425f1f09ac6c100be8e42ac7a54e539e1b0c303449c",
+      "payloadBytes": 73848835,
+      "observationSha256": "fab251adbd7a2fe7deb5e43383ad13ce9fa6d11b60f660b587a7eea9b0b72a72",
+      "sourceUrl": "https://web.archive.org/web/20250201045327id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7518,
+        "facts": 2394508,
+        "presentations": 727031,
+        "tags": 63956,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:28:44.000Z",
+      "payloadSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+      "payloadBytes": 39833077,
+      "observationSha256": "1f63c7287bae38bd8d7a033346e282aa6aaa1aecc5e0500353c709209573a1b6",
+      "sourceUrl": "https://web.archive.org/web/20180328072844id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6865,
+        "facts": 2489104,
+        "presentations": 956206,
+        "tags": 66947,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T07:14:38.000Z",
+      "payloadSha256": "4d014b8ee4476887aba067c59bfef967d4b12c905d4b1b3f89e8ff7ff7310156",
+      "payloadBytes": 71116399,
+      "observationSha256": "a56201f39efdfb586d53448a6d70c8ef91ebd5bc0a2311607c842f8d7cffe501",
+      "sourceUrl": "https://web.archive.org/web/20250201071438id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6139,
+        "facts": 2370332,
+        "presentations": 605143,
+        "tags": 50277,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:28:24.000Z",
+      "payloadSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+      "payloadBytes": 40239885,
+      "observationSha256": "9e4fce985bdc49e0847c1d93af0bbf32f985931e10838a9e1b413a5e8d8a25ff",
+      "sourceUrl": "https://web.archive.org/web/20180328072824id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6754,
+        "facts": 2502865,
+        "presentations": 953277,
+        "tags": 68530,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2016q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-02T18:07:07.000Z",
+      "payloadSha256": "b8a9550c386ea95eefcc95fc3b3c19f2b1428c0a7f46d5d547a671c3f9284e26",
+      "payloadBytes": 79400707,
+      "observationSha256": "22fa6d4660f9fc29015e726b3197c0323682d63565708753c01017505d64e63a",
+      "sourceUrl": "https://web.archive.org/web/20250202180707id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2016q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6752,
+        "facts": 2627253,
+        "presentations": 673588,
+        "tags": 56690,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:28:00.000Z",
+      "payloadSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+      "payloadBytes": 49383264,
+      "observationSha256": "1750bb930dd6b174a1846a1ccecf22a83080613901a8e03a84f1f6c1084e92fc",
+      "sourceUrl": "https://web.archive.org/web/20180328072800id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6272,
+        "facts": 3313595,
+        "presentations": 1009876,
+        "tags": 81580,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T18:45:19.000Z",
+      "payloadSha256": "ffb6989983c4c9f87e2f39166b20e4a21f024f0fe1adccc199e08da5fc94a915",
+      "payloadBytes": 92433981,
+      "observationSha256": "3be7d0c8da93d239f905aa884d36bdcf8ef10795c00766d1b77459577a6ba658",
+      "sourceUrl": "https://web.archive.org/web/20250201184519id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6270,
+        "facts": 3095513,
+        "presentations": 701916,
+        "tags": 66761,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:27:41.000Z",
+      "payloadSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+      "payloadBytes": 38562434,
+      "observationSha256": "162a508bf3c0191711b8719ba4c0bac9598a9f882baa636078ae41badf26eff2",
+      "sourceUrl": "https://web.archive.org/web/20180328072741id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7228,
+        "facts": 2235130,
+        "presentations": 998354,
+        "tags": 73537,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:55:00.000Z",
+      "payloadSha256": "63a590d7deaac8f82d22f08cb2ada46f199341ecc7e7a8a0a7d6a181cec1d53b",
+      "payloadBytes": 71429748,
+      "observationSha256": "198245ed37f753c42eb5d53ccbb65166be4c98b5784021b7cbbb44d0a1ab6a86",
+      "sourceUrl": "https://web.archive.org/web/20250201045500id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7226,
+        "facts": 2321869,
+        "presentations": 697887,
+        "tags": 60851,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:27:20.000Z",
+      "payloadSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+      "payloadBytes": 37209786,
+      "observationSha256": "605b9d214c4587e9430855c4a5e20fc99b458632d3d89f6cc9c755df8c9c7898",
+      "sourceUrl": "https://web.archive.org/web/20180328072720id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6506,
+        "facts": 2255775,
+        "presentations": 909035,
+        "tags": 65079,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:22:36.000Z",
+      "payloadSha256": "5aa58d799c4fb3f5f98974eb713696d1aebe747a01a794e7ac58517631b5735d",
+      "payloadBytes": 74356472,
+      "observationSha256": "e36150606762aa81ea3610c6316b273985dc7612091c9afd34da09fcdeacdfd7",
+      "sourceUrl": "https://web.archive.org/web/20250201012236id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6508,
+        "facts": 2475254,
+        "presentations": 639840,
+        "tags": 53250,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-03-28T07:27:09.000Z",
+      "payloadSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+      "payloadBytes": 41119222,
+      "observationSha256": "2edf3c46277a6fac61ae3d08c34525564b624e170e2f450f45698e9643b951f2",
+      "sourceUrl": "https://web.archive.org/web/20180328072709id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6550,
+        "facts": 2281152,
+        "presentations": 927058,
+        "tags": 67190,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2017q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T00:38:41.000Z",
+      "payloadSha256": "be03bfd71f356a7f53d82a40ee907bb51aec4f61d6ce97f059f2df785bc37658",
+      "payloadBytes": 76051784,
+      "observationSha256": "23a3594afca054abde49e71d8bd2d53268853d69a14fdbaebc24f3a43908ab38",
+      "sourceUrl": "https://web.archive.org/web/20250201003841id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2017q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6549,
+        "facts": 2518948,
+        "presentations": 654255,
+        "tags": 54860,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-09-19T11:28:32.000Z",
+      "payloadSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+      "payloadBytes": 46207283,
+      "observationSha256": "0e2ecc41da91287a8124492484461a84add93cc8b161d67ae3c7b5763238446e",
+      "sourceUrl": "https://web.archive.org/web/20180919112832id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 5992,
+        "facts": 3030131,
+        "presentations": 966065,
+        "tags": 80291,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:53:58.000Z",
+      "payloadSha256": "f7f0083d28779ff373cd097ded88d5408eae9cc178f89014ca3ed8b24dc84185",
+      "payloadBytes": 93176693,
+      "observationSha256": "eb6a239eb456c6a0c7e31fd267c2014e05573971ba2fb0da769994f787274d47",
+      "sourceUrl": "https://web.archive.org/web/20250201045358id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 5984,
+        "facts": 3033024,
+        "presentations": 671539,
+        "tags": 65339,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2018-09-19T11:28:23.000Z",
+      "payloadSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+      "payloadBytes": 41249036,
+      "observationSha256": "871a84dc7238f0f12ca070f135a6efda935b5f254603d8e713dbbd9c5c41b579",
+      "sourceUrl": "https://web.archive.org/web/20180919112823id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7490,
+        "facts": 2345136,
+        "presentations": 1058168,
+        "tags": 84605,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:00:30.000Z",
+      "payloadSha256": "99daaf8af1fb1ba94b100613536d9dbee5e9a356f0736190963a3a68af623d54",
+      "payloadBytes": 91972487,
+      "observationSha256": "ab5283ef67653d2b2ed02af166614c3546b3c09ffe290c19c74bb18ffd56e075",
+      "sourceUrl": "https://web.archive.org/web/20250201040030id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7484,
+        "facts": 2663988,
+        "presentations": 739060,
+        "tags": 69307,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2019-03-27T02:32:32.000Z",
+      "payloadSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+      "payloadBytes": 37243604,
+      "observationSha256": "fde0748087ae4f4f516d07b40e7dc54e284b3b298aced3f3920bf64768b64fc0",
+      "sourceUrl": "https://web.archive.org/web/20190327023232id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6492,
+        "facts": 2229050,
+        "presentations": 921248,
+        "tags": 71116,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:48:09.000Z",
+      "payloadSha256": "30030056223c456d5cb7a42722ffa990345fda12deb5cfff723b1ae47dc9bf8d",
+      "payloadBytes": 87202498,
+      "observationSha256": "ebab7e5affaf1fb5aa24abf9e3a92f70384664e32deaef265f4ed590358258c8",
+      "sourceUrl": "https://web.archive.org/web/20250201014809id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6493,
+        "facts": 2629893,
+        "presentations": 643844,
+        "tags": 57615,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2019-03-27T02:32:21.000Z",
+      "payloadSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+      "payloadBytes": 37661326,
+      "observationSha256": "5d339388b6cb12b77fe3f437fae9828da55d4cdcd464dbd8658932e3a9790149",
+      "sourceUrl": "https://web.archive.org/web/20190327023221id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6421,
+        "facts": 2247296,
+        "presentations": 939174,
+        "tags": 73636,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2018q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:24:51.000Z",
+      "payloadSha256": "ecc103d0979dacdf6cfcc7f0b2273f7b6046c41a3aa7f2e2aacfb8ccd45bc122",
+      "payloadBytes": 62895777,
+      "observationSha256": "0f918697ec85aab7d3ce27774fbb75c2d358eace6662191053daf1d16ad9500a",
+      "sourceUrl": "https://web.archive.org/web/20250201022451id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2018q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6418,
+        "facts": 2681097,
+        "presentations": 647003,
+        "tags": 59120,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2019-09-12T02:26:56.000Z",
+      "payloadSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+      "payloadBytes": 44918911,
+      "observationSha256": "01bf93765bcfe0c0d3d5c3e2e57b8d227c6b7ae666a54e152fdce15dbdde2555",
+      "sourceUrl": "https://web.archive.org/web/20190912022656id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 5724,
+        "facts": 2890146,
+        "presentations": 962200,
+        "tags": 83522,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-03-26T18:42:30.000Z",
+      "payloadSha256": "49f6f0a00b6f1792d22893a3e261f7a329377048eb826079f1a16c7895b76d9d",
+      "payloadBytes": 95895180,
+      "observationSha256": "a3ce3005d4fc1469578cddf7edb3036408e627142e6998df87f2de7dc7c2f121",
+      "sourceUrl": "https://web.archive.org/web/20250326184230id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 5708,
+        "facts": 3072555,
+        "presentations": 649728,
+        "tags": 66441,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2019-09-12T02:26:46.000Z",
+      "payloadSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+      "payloadBytes": 42243142,
+      "observationSha256": "1c2bb4bf81216b055ec190c037ea28917e2e3ba32b61fbc4eb512c035288ab68",
+      "sourceUrl": "https://web.archive.org/web/20190912022646id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7300,
+        "facts": 2368057,
+        "presentations": 1118423,
+        "tags": 95324,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:44:31.000Z",
+      "payloadSha256": "765e42efd43687b4ac4ea59c83213857a52dca0a4bd5c490034bd5bea2b6fac3",
+      "payloadBytes": 90155728,
+      "observationSha256": "7d94b6b3880da35fd03566eb9af2411f48c4c46e26e6f838140ce6fd14f5e0cf",
+      "sourceUrl": "https://web.archive.org/web/20250201044431id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7232,
+        "facts": 2816279,
+        "presentations": 753522,
+        "tags": 76812,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2020-10-17T01:47:56.000Z",
+      "payloadSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+      "payloadBytes": 39306600,
+      "observationSha256": "b749ea52b7120cf5bf689249ca9ea6e0ac61133ac532e776f5b7571ee47e4846",
+      "sourceUrl": "https://web.archive.org/web/20201017014756id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 9353,
+        "facts": 2325267,
+        "presentations": 987725,
+        "tags": 80773,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:05:50.000Z",
+      "payloadSha256": "4c57e36f04b54a2b9917537e12974cba68353f765affbf168bd506478780e13e",
+      "payloadBytes": 89829588,
+      "observationSha256": "c14e2f8ded016af32808d971a3ec585477bdfd5d6b9305553de9554f82c530ea",
+      "sourceUrl": "https://web.archive.org/web/20250201010550id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6274,
+        "facts": 2957329,
+        "presentations": 664035,
+        "tags": 64951,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2020-10-17T01:02:41.000Z",
+      "payloadSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+      "payloadBytes": 40686794,
+      "observationSha256": "2ff5641bb37473869ba7da38572695fecc6ebc8bbd20b0ef7de45db948164881",
+      "sourceUrl": "https://web.archive.org/web/20201017010241id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 12664,
+        "facts": 2402955,
+        "presentations": 1042999,
+        "tags": 85619,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2019q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:49:04.000Z",
+      "payloadSha256": "1f997c123b6d2fe892eeca0a5f12687e718ab5ae031f148b4a5d82f2689daec3",
+      "payloadBytes": 98753299,
+      "observationSha256": "e9f8f7cefeebfaf547c5e8d17ee63a6a624cb4951b5f24baaed797bf244452cc",
+      "sourceUrl": "https://web.archive.org/web/20250201014904id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2019q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6211,
+        "facts": 3094866,
+        "presentations": 676021,
+        "tags": 69127,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2021-03-20T01:36:02.000Z",
+      "payloadSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+      "payloadBytes": 47769589,
+      "observationSha256": "88232dd8b6127b943dd4e95b654c49338c7db7847db461be7eaa86bd313f25c8",
+      "sourceUrl": "https://web.archive.org/web/20210320013602id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 13561,
+        "facts": 3005393,
+        "presentations": 1054473,
+        "tags": 92751,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T03:48:38.000Z",
+      "payloadSha256": "48ed9834c66d565c21130d087eae941b25770e2d7cc8351d17652612289fcd67",
+      "payloadBytes": 96584608,
+      "observationSha256": "924ebca8135342372138014b7c9d210d5ce4cf7532f19473f7cc00ccbda163ca",
+      "sourceUrl": "https://web.archive.org/web/20250201034838id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 5816,
+        "facts": 3099352,
+        "presentations": 675166,
+        "tags": 75203,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2020-10-17T03:03:34.000Z",
+      "payloadSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+      "payloadBytes": 40883740,
+      "observationSha256": "4edf806ae3372b589a02e2a3fd23ee77086f350bc9008d7e2cf493a3b7535557",
+      "sourceUrl": "https://web.archive.org/web/20201017030334id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 16411,
+        "facts": 2197732,
+        "presentations": 1096604,
+        "tags": 93539,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T00:10:07.000Z",
+      "payloadSha256": "bd796ea10c88e21205da013f9c3f6a20b2b14d3de94f0075e9f529e0ef9a3543",
+      "payloadBytes": 82008710,
+      "observationSha256": "8444903dbbbadd86e13f41791b745258f5787fd4350513b11a353149ab4914d7",
+      "sourceUrl": "https://web.archive.org/web/20250201001007id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6561,
+        "facts": 2562710,
+        "presentations": 702372,
+        "tags": 75421,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2021-03-20T17:01:48.000Z",
+      "payloadSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+      "payloadBytes": 41569023,
+      "observationSha256": "bc26f27c0c9c165582651cb4079f9827f08782df281aae758b8f6784420e3883",
+      "sourceUrl": "https://web.archive.org/web/20210320170148id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 14832,
+        "facts": 2351640,
+        "presentations": 1067883,
+        "tags": 88783,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-01-31T23:55:28.000Z",
+      "payloadSha256": "6a402070d4b1f12db0d2256533b38705735684ecb58bc12ce53a61dd12abe26e",
+      "payloadBytes": 87582976,
+      "observationSha256": "13308c26021810c473713016fd63df1851d3913f61373892e962187888a1c9d2",
+      "sourceUrl": "https://web.archive.org/web/20250131235528id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6302,
+        "facts": 2868109,
+        "presentations": 680436,
+        "tags": 71580,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2021-03-20T17:01:40.000Z",
+      "payloadSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+      "payloadBytes": 42197929,
+      "observationSha256": "01b3ee31adcc536eb4fcbae73eae589fb96bec17b9a70e2a3d54fa94b57acefd",
+      "sourceUrl": "https://web.archive.org/web/20210320170140id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 16113,
+        "facts": 2373224,
+        "presentations": 1082048,
+        "tags": 92610,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2020q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:51:55.000Z",
+      "payloadSha256": "7cabec2c9b90511983623e6db3869b24c7a894466bd409f060a8da32790ae68e",
+      "payloadBytes": 89811373,
+      "observationSha256": "b60d6f8b0bf2f9c592fea60984e63563e933ef072a3f5aa3f31bfbb1f50d02bd",
+      "sourceUrl": "https://web.archive.org/web/20250201015155id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2020q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6260,
+        "facts": 2963091,
+        "presentations": 688335,
+        "tags": 76598,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2021-07-24T12:30:22.000Z",
+      "payloadSha256": "877c6b0019d5476c79b08e870fbcafe94bcab887cf845ba80b87fac77e4acde8",
+      "payloadBytes": 51269988,
+      "observationSha256": "1e9ba0514917d9e06b592fe772d84e6c8360e874368bc01f8412206c8ed4957f",
+      "sourceUrl": "https://web.archive.org/web/20210724123022id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 17292,
+        "facts": 3070341,
+        "presentations": 1165493,
+        "tags": 107961,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T19:26:53.000Z",
+      "payloadSha256": "6a776a9fa3d974476101efa9a4bfc531b7cdc2763abd45a6f70dd240a223843b",
+      "payloadBytes": 97900752,
+      "observationSha256": "d62ab9debb47306f279d491959d35c4df8810da9b41353ac02589470abfc3368",
+      "sourceUrl": "https://web.archive.org/web/20250201192653id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6316,
+        "facts": 3072093,
+        "presentations": 731431,
+        "tags": 88054,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2021-07-24T12:30:03.000Z",
+      "payloadSha256": "78ad598ef8d820585d27659307b7ff6057cc4cb27c570fa964508262adea3ae4",
+      "payloadBytes": 47243247,
+      "observationSha256": "66f545464fd7eef2c38fab5cb43fc518e6e1812e41c5cb39d7e876827c8d5f56",
+      "sourceUrl": "https://web.archive.org/web/20210724123003id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 20694,
+        "facts": 2441790,
+        "presentations": 1311077,
+        "tags": 118128,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:30:51.000Z",
+      "payloadSha256": "528b91432896eba74661c20481edb327809f3a0bf00e01d81821fe8e6078bc33",
+      "payloadBytes": 90864175,
+      "observationSha256": "c086edb186f604b1cc99024d4c5d5e62ca5285d00ff72128239992a166d6dd55",
+      "sourceUrl": "https://web.archive.org/web/20250201023051id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7810,
+        "facts": 2833915,
+        "presentations": 815048,
+        "tags": 97000,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2022-02-27T05:19:41.000Z",
+      "payloadSha256": "d65db22bd5b9f546bb7dc86de8918d7f7dcc011a1b5a0f6234665c107f2b3a2b",
+      "payloadBytes": 47321383,
+      "observationSha256": "b89805337121cec1e67d576f4f8169242e702b1b82582a45c365446dbe4bbdb5",
+      "sourceUrl": "https://web.archive.org/web/20220227051941id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 20652,
+        "facts": 2603323,
+        "presentations": 1282189,
+        "tags": 111617,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T19:28:22.000Z",
+      "payloadSha256": "0fae2ceb149c0fe7e83b35b19157f910c864dee7e25d5ecf8b93dc42ee261b99",
+      "payloadBytes": 97252395,
+      "observationSha256": "197038f86855b71231c27d63366569334fcad1bdeac30091351995cdc54c5ef5",
+      "sourceUrl": "https://web.archive.org/web/20250201192822id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7499,
+        "facts": 3172372,
+        "presentations": 790997,
+        "tags": 92636,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2022-02-27T05:19:21.000Z",
+      "payloadSha256": "f0df629157513a6ef515aa4e0cf11400b5cd617410777b26948196049ffeeaaf",
+      "payloadBytes": 48706721,
+      "observationSha256": "10a7175099585871762e948d2b3ddd758cf1f59637afdeffce348cb6e5e692ea",
+      "sourceUrl": "https://web.archive.org/web/20220227051921id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 24092,
+        "facts": 2698033,
+        "presentations": 1331187,
+        "tags": 120421,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2021q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-03-20T08:31:37.000Z",
+      "payloadSha256": "30d21449c0488e71dfb88ba8f85644a0e72194864e95111b3c1c120b3514c594",
+      "payloadBytes": 102642081,
+      "observationSha256": "94ccb476447dab22699618300c0634bf2f5bb46cedf70e5ccf05034f4dbf5cd9",
+      "sourceUrl": "https://web.archive.org/web/20250320083137id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2021q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7556,
+        "facts": 3389370,
+        "presentations": 815303,
+        "tags": 99012,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2022-04-09T19:55:34.000Z",
+      "payloadSha256": "8653f6e4198872c98b0e09adc4f2facf90bd178ea69a89525b1c17c6db4ef0e3",
+      "payloadBytes": 55264583,
+      "observationSha256": "e81fb29737dc4af57972f6ee0e7b4ca172439571927e9c3945112d82d52590e2",
+      "sourceUrl": "https://web.archive.org/web/20220409195534id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 23656,
+        "facts": 3277028,
+        "presentations": 1372819,
+        "tags": 128806,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-01-31T20:48:29.000Z",
+      "payloadSha256": "2ebeef77727a383f878bc28ff22498fd292a8dbab04216877b4b130ca00c1520",
+      "payloadBytes": 103669919,
+      "observationSha256": "bf8275cc4157924ce318c82a3b3dd7a3ca82df89db336ae31fb8c9d87751abb6",
+      "sourceUrl": "https://web.archive.org/web/20250131204829id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7237,
+        "facts": 3264632,
+        "presentations": 832867,
+        "tags": 105253,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2022-07-22T23:11:27.000Z",
+      "payloadSha256": "f42188c48188669ede9e9156f17f96f179eaccbf1bc6557ab515b6befa8fcef4",
+      "payloadBytes": 51156907,
+      "observationSha256": "a02f00d86ab99f406a2c06f9b0774b8ea3c3937ef8353f6bf3b7c65195e32394",
+      "sourceUrl": "https://web.archive.org/web/20220722231127id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 27262,
+        "facts": 2705510,
+        "presentations": 1472613,
+        "tags": 132901,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T13:49:34.000Z",
+      "payloadSha256": "8939a4cafeabf7c94bde48be0e8c444f6332e4a9663698a89242eddd1036d27e",
+      "payloadBytes": 97089251,
+      "observationSha256": "e7b2ff6f8d6eee40e2c337fa87f3ea07b1bf3c9a7aa1de7c978abb34f41910a6",
+      "sourceUrl": "https://web.archive.org/web/20250201134934id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8509,
+        "facts": 3047158,
+        "presentations": 893960,
+        "tags": 109154,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2023-06-14T09:44:37.000Z",
+      "payloadSha256": "d421b324acdaa1b4091ba62f5152e9a52b5502102471075fbcfbcaf2451355fb",
+      "payloadBytes": 47352425,
+      "observationSha256": "4dea9ba18da212ba216e6b6f68a6fec585ce2f6bd27a0622cc3f51a1e3a33ceb",
+      "sourceUrl": "https://web.archive.org/web/20230614094437id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 22951,
+        "facts": 2691248,
+        "presentations": 1309072,
+        "tags": 114599,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T10:00:28.000Z",
+      "payloadSha256": "4bbfdc953177acf1a430a9f0a624dd8244bc81292d42872107d0446d06167c26",
+      "payloadBytes": 97589396,
+      "observationSha256": "3282679481b0df86e9142120907821e2c74a5cd69100fb4df5c60231f3db19c4",
+      "sourceUrl": "https://web.archive.org/web/20250201100028id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7474,
+        "facts": 3229151,
+        "presentations": 807465,
+        "tags": 93528,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2023-06-14T09:43:54.000Z",
+      "payloadSha256": "2b67ec9f4c0800eae1344f062e65b395b616819737d159e5562cc074dd80d64b",
+      "payloadBytes": 48137152,
+      "observationSha256": "713e2c7802e0f4d2751649f25ad02d28c2ffad397a170a2f8a9ad80674d2a747",
+      "sourceUrl": "https://web.archive.org/web/20230614094354id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 23943,
+        "facts": 2701629,
+        "presentations": 1315392,
+        "tags": 125270,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2022q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:56:58.000Z",
+      "payloadSha256": "83bdc7a9545479eb64d118688c888ba8e7554ebc774f3ab8a8b0cc1decb87f28",
+      "payloadBytes": 111091525,
+      "observationSha256": "1a0290572bb095ddd5af684505a6a7a1758c8574ce7e09534542783c0bf9af2b",
+      "sourceUrl": "https://web.archive.org/web/20250201045658id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2022q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7280,
+        "facts": 3543392,
+        "presentations": 806371,
+        "tags": 95778,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2023-06-14T09:43:08.000Z",
+      "payloadSha256": "5e1f00b79f50a72ef4fe07c28202c61ad5010c846040f86e4becb09555b7a627",
+      "payloadBytes": 55689246,
+      "observationSha256": "543b6f647cf13f20491e2d851329b1484f04bb15993a4c8f36d574d15298423d",
+      "sourceUrl": "https://web.archive.org/web/20230614094308id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 25942,
+        "facts": 3293693,
+        "presentations": 1323127,
+        "tags": 136548,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:45:45.000Z",
+      "payloadSha256": "479638c1be4088fa2ae42d2947468913eaff5ad0f093c412ba4340af8a8f791e",
+      "payloadBytes": 113974946,
+      "observationSha256": "5b909fbb8af95679c36401129626376ea44a7d799e6ea607a597b1a373c7cbbd",
+      "sourceUrl": "https://web.archive.org/web/20250201014545id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6754,
+        "facts": 3428670,
+        "presentations": 804536,
+        "tags": 103115,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2023-09-25T18:15:54.000Z",
+      "payloadSha256": "d81320fc0360448ce4d2d14935e554cbe5840fafbbb5054340675ebe6c5cfc65",
+      "payloadBytes": 51895784,
+      "observationSha256": "bb919bb2359ae1493b5f3ee20ab0659d3a15047011d9eaa09ac69cbb5a861b33",
+      "sourceUrl": "https://web.archive.org/web/20230925181554id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 30209,
+        "facts": 2719392,
+        "presentations": 1431392,
+        "tags": 138196,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-03-14T17:30:26.000Z",
+      "payloadSha256": "f028f1e8d24313e7619aa87c7c683a459452e7e81a8e5ba72d7ce39ddf62bda9",
+      "payloadBytes": 116914392,
+      "observationSha256": "9b51c0b3e0db412d58ecb83ddd544fe059b1504d9c974ebf00082d94560efbf5",
+      "sourceUrl": "https://web.archive.org/web/20250314173026id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 8039,
+        "facts": 3393990,
+        "presentations": 867701,
+        "tags": 106511,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2023-11-24T10:36:07.000Z",
+      "payloadSha256": "3fb0d7a2d334ed2274806eac138bad87819387f8961780816e640b3ccdf80c34",
+      "payloadBytes": 46984682,
+      "observationSha256": "41e26f41cb1c373f25bb6e566c999f8af55546be95470a6e0f1097f22b226fe4",
+      "sourceUrl": "https://web.archive.org/web/20231124103607id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 23751,
+        "facts": 2648179,
+        "presentations": 1262640,
+        "tags": 118153,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T03:59:07.000Z",
+      "payloadSha256": "f075d721dde4393dabd49c1746578294ada4665ec29c85c2b3184f44f6f09187",
+      "payloadBytes": 117776944,
+      "observationSha256": "e602b1703d38d75d2b4a4e82f02a88cd3209b00a733736b6925376bba92ef919",
+      "sourceUrl": "https://web.archive.org/web/20250201035907id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7067,
+        "facts": 3572434,
+        "presentations": 774797,
+        "tags": 89580,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2024-09-27T06:45:42.000Z",
+      "payloadSha256": "49df6a086e435a99cd2096db92a2442cf2b70d0bdee64cf31bcb963f348854eb",
+      "payloadBytes": 51901666,
+      "observationSha256": "706771fe9889f848814372bfc740ffe566f5cc5bdbe1b6ff0bccba422225b60e",
+      "sourceUrl": "https://web.archive.org/web/20240927064542id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 24097,
+        "facts": 2639066,
+        "presentations": 1253590,
+        "tags": 115523,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2023q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-01-31T13:28:31.000Z",
+      "payloadSha256": "ad23c5505e59b7305e16bfebb8bb839476689330b85a3e1ce216f809b18d1521",
+      "payloadBytes": 120272357,
+      "observationSha256": "98204b142310a68c859b873a554091aa3347366da93e8de39da001c1cd8bdfa1",
+      "sourceUrl": "https://web.archive.org/web/20250131132831id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2023q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6882,
+        "facts": 3699124,
+        "presentations": 769208,
+        "tags": 88228,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q1",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2024-05-25T21:50:14.000Z",
+      "payloadSha256": "8b0a6d1603967bfc6e96928e759de9796508351aef6f5442248a61d95ff5952b",
+      "payloadBytes": 56204702,
+      "observationSha256": "db1d680b916a1ff8ae232671f489aac395ce1b59c7db5b93e1127363b9032b88",
+      "sourceUrl": "https://web.archive.org/web/20240525215014id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 24336,
+        "facts": 3054006,
+        "presentations": 1197745,
+        "tags": 116782,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q1",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T04:51:46.000Z",
+      "payloadSha256": "94c7894b00903f8ff7186c4250ba1c1daa1bde8b3a0b26fae68f72608b2ffc9b",
+      "payloadBytes": 124336804,
+      "observationSha256": "3b41c3f01e283221653d556af74a90820c9aebd0a28c002dcf7512c6d3380026",
+      "sourceUrl": "https://web.archive.org/web/20250201045146id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q1.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q1.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6028,
+        "facts": 3428694,
+        "presentations": 726155,
+        "tags": 86529,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q2",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2025-01-15T20:58:24.000Z",
+      "payloadSha256": "4d96a8c441edbfe6907ea4338e1fc2266b11688e1a9df5baf10e93befc5e02b3",
+      "payloadBytes": 53821685,
+      "observationSha256": "d06ebaf14807e0e7241971fafa96d55aa425ea9bcaa76fff656b933d4bf5396d",
+      "sourceUrl": "https://web.archive.org/web/20250115205824id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q2-archive.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q2-archive.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 29399,
+        "facts": 2655470,
+        "presentations": 1391887,
+        "tags": 128561,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q2",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:47:16.000Z",
+      "payloadSha256": "698796e9f0946501d3dc74e7696a6c8c71cf32b66026e053722a784236b37761",
+      "payloadBytes": 119119954,
+      "observationSha256": "421b7960266189b6d82bc5e8a2071512949785a5b14287a76d3fc2b823d6f787",
+      "sourceUrl": "https://web.archive.org/web/20250201014716id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q2.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q2.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 7675,
+        "facts": 3426170,
+        "presentations": 838475,
+        "tags": 97771,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q3",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2025-01-12T20:26:33.000Z",
+      "payloadSha256": "e1d2bca0f656bef924848cacd44b4704ba2d84ff6411e220d44851985de21b5e",
+      "payloadBytes": 47755547,
+      "observationSha256": "b2e8701b01045f5ed98ad7fcd8fa356be1bd31fe85b48796fbdf8a514fc9076a",
+      "sourceUrl": "https://web.archive.org/web/20250112202633id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q3-archive.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q3-archive.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 23952,
+        "facts": 2532517,
+        "presentations": 1212941,
+        "tags": 110711,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q3",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T03:59:17.000Z",
+      "payloadSha256": "b1823f2d65189f0d5ecbb1968d683c59df762129ae1b23bda0394093a69e0da9",
+      "payloadBytes": 118280418,
+      "observationSha256": "c327e3b2eaa0be513d2b1d7e1f57f2e3986817b77e01de93e82341eb2dd85ad1",
+      "sourceUrl": "https://web.archive.org/web/20250201035917id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q3.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q3.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6699,
+        "facts": 3521878,
+        "presentations": 741760,
+        "tags": 83106,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q4",
+      "vintage": "legacy_earliest_archived",
+      "observedAt": "2025-02-01T00:14:50.000Z",
+      "payloadSha256": "7b3718c9edff3f678dbdebb65e904801d7909ca0ffa3b6fdddd6932e2787fc38",
+      "payloadBytes": 45810323,
+      "observationSha256": "591c8af9fc986abc284a0f0d871c1580355e2e248205200b34043ae1ba0ed8c7",
+      "sourceUrl": "https://web.archive.org/web/20250201001450id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q4-archive.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets-archive/2024q4-archive.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 23096,
+        "facts": 2562030,
+        "presentations": 1200223,
+        "tags": 111867,
+        "orphans": 0
+      }
+    },
+    {
+      "quarter": "2024q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T02:01:51.000Z",
+      "payloadSha256": "9a2cbbaf39c94aa642b33d512f4def92b198d3bfd12d2267bcd27abe55b9902d",
+      "payloadBytes": 122932548,
+      "observationSha256": "c3cf406d3eb4790c0479ebba7b4bd9d2fc0328b11bc47145f9b9eb4b0520d46e",
+      "sourceUrl": "https://web.archive.org/web/20250201020151id_/https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q4.zip",
+      "originalSourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2024q4.zip",
+      "blobState": "sha256_verified",
+      "counts": {
+        "submissions": 6491,
+        "facts": 3705078,
+        "presentations": 737504,
+        "tags": 84365,
+        "orphans": 0
+      }
+    }
+  ],
+  "payloadSetSha256": "c861d25548a5e8b30e7b03ff17474c2618387f4c445e571056dcf7655401e889",
+  "supersetObservationCount": 51,
+  "supersetObservations": [
+    {
+      "quarter": "2009q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:10:21.000Z",
+      "payloadSha256": "b523831003d78e8463cf38c486661408f50e70f24187903d1fdf5ad1e5f11141"
+    },
+    {
+      "quarter": "2009q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:35:19.000Z",
+      "payloadSha256": "b63d5523f94b6753c079e2638f67234460de67b84c7964ba6c1d095052c3b265"
+    },
+    {
+      "quarter": "2009q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:34:00.000Z",
+      "payloadSha256": "24e3f797ea742a037779a0cc8a4f32ec22ba986dee1fe91bd23587ee528c3cd5"
+    },
+    {
+      "quarter": "2009q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T12:31:54.000Z",
+      "payloadSha256": "4012108bd145d2558c9a4b8f531cd8ca911848678220596b40017eba7d7be1a8"
+    },
+    {
+      "quarter": "2010q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-19T20:34:38.000Z",
+      "payloadSha256": "39c07ccfd83ff1672f01feaf4ebd010f98715a5073ad071150269469e7434ad5"
+    },
+    {
+      "quarter": "2010q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:10:10.000Z",
+      "payloadSha256": "0de6d4722e1982770a163aec5d3f4b47111ef105b3351bf978ea1e54017a2842"
+    },
+    {
+      "quarter": "2010q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:35:25.000Z",
+      "payloadSha256": "c3690a52c6f7022869900d01061bdc74a49b6dbe083bc5ae7bffac56e5a947da"
+    },
+    {
+      "quarter": "2010q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T05:42:11.000Z",
+      "payloadSha256": "968e7b9af73eccc87c8c3a8c20efc41c04e1c108103dcbf98d0a868aeb9e1898"
+    },
+    {
+      "quarter": "2011q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:19:37.000Z",
+      "payloadSha256": "3affc95e3effa1eb0dfbfa71bc91fd189864660cef98eaf54cd6f416710ce705"
+    },
+    {
+      "quarter": "2011q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:09:53.000Z",
+      "payloadSha256": "e0df199de27425283f48ee2f211eacf433505c61561a08a29acc466fe1a8b4ef"
+    },
+    {
+      "quarter": "2011q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:09:44.000Z",
+      "payloadSha256": "0ff98428ad8db9ef7c67f61881be5c5cd7b83fa9a51d9268c333561b60e10145"
+    },
+    {
+      "quarter": "2011q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:09:32.000Z",
+      "payloadSha256": "727c1a337a5073380d49138d2bd08749d8745ed79bcb355d3dedd308457cacd1"
+    },
+    {
+      "quarter": "2012q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T11:48:33.000Z",
+      "payloadSha256": "95df2344b5d29f36c32e57aa5b0a948845a551ceb765a899360156d9e415b0aa"
+    },
+    {
+      "quarter": "2012q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:39:43.000Z",
+      "payloadSha256": "2c07e3c37d2ad2b3b4026f4470403105a22e95f4eef0d73cae2e27d3da72aa33"
+    },
+    {
+      "quarter": "2012q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-19T20:24:18.000Z",
+      "payloadSha256": "9b823b6b746b4954a97b26c76a99d239cf5ea6540a39ca0057fb7c0c308c427f"
+    },
+    {
+      "quarter": "2012q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:39:01.000Z",
+      "payloadSha256": "6c41addcb34823622d4cb15386d7507caed1f6c62d8982e2ca770a0cf2ae30b6"
+    },
+    {
+      "quarter": "2013q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:08:33.000Z",
+      "payloadSha256": "a74c39ff2546252652dbbeb1806db28a3645f8420e70a64cd28f43129078d088"
+    },
+    {
+      "quarter": "2013q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:35:11.000Z",
+      "payloadSha256": "83e15788b62bbd30e60fa2a2deeafb8c0eec4232d8dd4ae3c4d1f38933c5ff14"
+    },
+    {
+      "quarter": "2013q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:36:02.000Z",
+      "payloadSha256": "f13588a900d27c502a91f4dddb08456c07ae358d08d2a52dc00346107838b4b8"
+    },
+    {
+      "quarter": "2013q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:32:47.000Z",
+      "payloadSha256": "4920f084132202137e613bd8d4200aa50aebe55b8a865c6e1053346aca4422bb"
+    },
+    {
+      "quarter": "2014q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2018-09-19T11:33:01.000Z",
+      "payloadSha256": "ba7fd06dbb1d2679068c529593d930b3180ba563cbb955b61bd926cf9bc7810b"
+    },
+    {
+      "quarter": "2014q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:36:39.000Z",
+      "payloadSha256": "413d34b4894f3c34bb7b317f572e80aa6efcec3f7d2508034abcefb3ebcd1b7f"
+    },
+    {
+      "quarter": "2014q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T12:28:39.000Z",
+      "payloadSha256": "b05b00f074a9db3976b5f7f3adee89b3ebc9bb118090310cbe61da4f4c39441d"
+    },
+    {
+      "quarter": "2014q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:37:55.000Z",
+      "payloadSha256": "8c03e63290a5dd4df8f59e68382ab0e4e3f645eb5dbe5699b875f4fcbcecc177"
+    },
+    {
+      "quarter": "2014q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:11:14.000Z",
+      "payloadSha256": "769d56a2b325e0bab226c339a8cd0f48a8e8e919837b8e443217f701744a793f"
+    },
+    {
+      "quarter": "2015q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2018-09-19T11:31:44.000Z",
+      "payloadSha256": "01bded812785d528f2ad03cc2234aeb0e44bac994dcf82ec85a789301c4bc195"
+    },
+    {
+      "quarter": "2015q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:06:19.000Z",
+      "payloadSha256": "3d450bc8b5ee52a5e5ec9c981c8fd09027d4db8f7a8169c687ab338ba8ebddc4"
+    },
+    {
+      "quarter": "2015q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:06:03.000Z",
+      "payloadSha256": "54bcefff7484842387f5864d41d6da264aa8f330525b1e148d2c7d4f9ca3ded4"
+    },
+    {
+      "quarter": "2015q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-19T20:33:51.000Z",
+      "payloadSha256": "28e8c3e389926326387bc1932cd36d0c5ce9fc689cad4020ed94e71b8a73493c"
+    },
+    {
+      "quarter": "2015q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:43:56.000Z",
+      "payloadSha256": "fcccd63a9fa483bfe7df63cc45c7e9d5516c95d7703b485a33eb53d66fdc65c2"
+    },
+    {
+      "quarter": "2015q4",
+      "vintage": "post_2024_reprocessed_or_current",
+      "observedAt": "2025-02-01T01:39:19.000Z",
+      "payloadSha256": "1723b41ef2a1d3ea6595f6052ef229a80e03cd183391ca9e297a894f9e589d83"
+    },
+    {
+      "quarter": "2016q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:42:04.000Z",
+      "payloadSha256": "66f60611be3e685f65b3f6d570833a590ecf2bb301730871ef3d114ad6ca7204"
+    },
+    {
+      "quarter": "2016q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T11:49:29.000Z",
+      "payloadSha256": "7a8cccbee8ebb27f409e67be624730f56f7a32268a0953e795f3f71a938540a7"
+    },
+    {
+      "quarter": "2016q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:40:37.000Z",
+      "payloadSha256": "1729b7b355c7da4bf27baf9a15b65f32a9bff896cae0c83f6b5f79eda0b09e48"
+    },
+    {
+      "quarter": "2016q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:37:38.000Z",
+      "payloadSha256": "c6d7e3a572a16ca726c1c757c1028ce795a871df3e0461bb7d30ad7c52de9873"
+    },
+    {
+      "quarter": "2017q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:18:51.000Z",
+      "payloadSha256": "568ad4f09830eadaf5613b6ec5cb4dffb6ecbab9cb8dcdb2913842fe9ce78086"
+    },
+    {
+      "quarter": "2017q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:48:28.000Z",
+      "payloadSha256": "1dded8456ac2438dd329afb54ee13706c07c6ac888aa419b8249aa5bb0ad19f0"
+    },
+    {
+      "quarter": "2017q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T12:31:21.000Z",
+      "payloadSha256": "a9bca48cb4f6b47d206fb4c962293b2dc5226375d0d393691d4d2c3554a28e10"
+    },
+    {
+      "quarter": "2017q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:17:59.000Z",
+      "payloadSha256": "5e1f0b2aa24f6921613b541398b1979e45b4ec9f5cd6bffe99efdf49055c5878"
+    },
+    {
+      "quarter": "2018q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T05:39:55.000Z",
+      "payloadSha256": "2314928072291027bf9c5b05fb92d70bcbca83a2c569cd4f081cbb3cf2fc7102"
+    },
+    {
+      "quarter": "2018q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:03:31.000Z",
+      "payloadSha256": "431caebc7c463cb4bb6111d1dc9eddb7c21d862fabd48fd872256d167c8949ae"
+    },
+    {
+      "quarter": "2018q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:03:17.000Z",
+      "payloadSha256": "8635140c771b27c0055ea034fc79a35859fdce73a8ade38ba37742a27b799b58"
+    },
+    {
+      "quarter": "2018q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T07:36:58.000Z",
+      "payloadSha256": "0b6a773c9012a3f7f480f3e97b931470c8f4a2ccc69bdc2699b785402b2a18b8"
+    },
+    {
+      "quarter": "2019q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:02:47.000Z",
+      "payloadSha256": "6f2ca605373dff2aa02b1004cb37ace4af8fc5d02d38b657803cb7028bf62b71"
+    },
+    {
+      "quarter": "2019q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2025-01-15T08:32:30.000Z",
+      "payloadSha256": "3eef9360bf31e03bb40c96a6b0de7294900de980965472ff8835a556fdfded2a"
+    },
+    {
+      "quarter": "2019q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:02:40.000Z",
+      "payloadSha256": "57d73ca1c80a184aee9febc7e6c46916e96c0b4d90391608af06b8f6a0beb9a9"
+    },
+    {
+      "quarter": "2019q3",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:54:01.000Z",
+      "payloadSha256": "6932eb85fab48562aa9d866167df3e979543842976926be01198c358013980e5"
+    },
+    {
+      "quarter": "2019q4",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T01:34:29.000Z",
+      "payloadSha256": "b195f6ef04b8bee304718b66c917c7ff55d817556352e57bcd4e3ddc3252a6ea"
+    },
+    {
+      "quarter": "2020q2",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2021-03-20T17:02:01.000Z",
+      "payloadSha256": "b980fd47b9fb53898f7e7f1a929884ea9612295d93bd36f0e1f33890b1372581"
+    },
+    {
+      "quarter": "2021q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2022-02-27T05:20:20.000Z",
+      "payloadSha256": "7b124911b545771a5b3dda0f4d71cd8f0cbe39c7bc488b9c1153450d8d21bb0f"
+    },
+    {
+      "quarter": "2022q1",
+      "vintage": "archived_digest_revision",
+      "observedAt": "2022-04-19T06:43:33.000Z",
+      "payloadSha256": "08f909741ef80c3570587900719a69584cd2a78dbcda33a17909887377c5ff7c"
+    }
+  ],
+  "supersetNote": "Diese akzeptierten Beobachtungen liegen im Speicher, aber NICHT in der versiegelten Datenbank. Ein byte-gleicher Neubau braucht deshalb einen Payload-Filter auf die oben gelisteten payloadSha256 — ohne ihn entsteht eine echte Obermenge.",
+  "rebuildProbe": {
+    "schema": "early-detection-rebuild-probe/v1",
+    "quarter": "2009q1",
+    "corrupted": null,
+    "payloadsRebuilt": 3,
+    "sealedPayloads": 2,
+    "supersetPayloads": [
+      "b523831003d78e8463cf38c486661408f50e70f24187903d1fdf5ad1e5f11141"
+    ],
+    "status": "PASS",
+    "differences": [],
+    "brokenProbeStatus": "FAIL"
+  },
+  "closureSha256": "7fbdce891d07f33aceddfdc2aa58763880d373e0a6beda69981189bfa78c4ff1"
+}
