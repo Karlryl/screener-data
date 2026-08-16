@@ -28,5 +28,17 @@
     "grund": "Industrivaerden ist eine NAV-basierte Investment-Holding, deren Anlageergebnis keine operative Umsatzbasis bildet.",
     "beleg": "tests/scoring/score.integration.test.js:516-557; historischer Commit 53f1aeddec vom 2026-06-27",
     "aufgenommen": "2026-08-09"
+  },
+  {
+    "ticker": "INDU-C.ST",
+    "grund": "Industrivaerden ist eine NAV-basierte Investment-Holding, deren Anlageergebnis keine operative Umsatzbasis bildet. INDU-C.ST ist die C-Gattung DERSELBEN Firma wie das bereits gefuehrte INDU-A.ST — derselbe Ausschlussgrund, nur eine andere Anteilsklasse.",
+    "beleg": "Quartalsreihen-Diagnose 2026-08-16 (Nebenbefund N-1). Live-Beleg: findash-export/v1/financials.json vom 16.08. fuehrt INDU-C.ST auf Platz 8 in financials|profitable mit Score 76,5, waehrend INDU-A.ST korrekt ausgeschlossen ist.",
+    "aufgenommen": "2026-08-16"
+  },
+  {
+    "ticker": "1INDU.MI",
+    "grund": "Industrivaerden ist eine NAV-basierte Investment-Holding, deren Anlageergebnis keine operative Umsatzbasis bildet. 1INDU.MI ist die Mailaender Zweitnotiz der C-Gattung (Yahoo-Name 'Industrivarden AB Class C') — dieselbe Firma, derselbe Ausschlussgrund.",
+    "beleg": "Quartalsreihen-Diagnose 2026-08-16 (Nebenbefund N-1). Live-Beleg: findash-export/v1/financials.json vom 16.08. fuehrt 1INDU.MI auf Platz 9 in financials|profitable mit demselben Score 76,5 wie INDU-C.ST auf Platz 8 — zwei Zeilen, eine Firma. Der Namenstext-Dedup greift hier nicht, weil die Zweitnotiz unter einem anderen Namen laeuft.",
+    "aufgenommen": "2026-08-16"
   }
 ]
