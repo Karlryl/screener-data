@@ -181,6 +181,16 @@ jobs:
       - name: Merge-Helper Selftest
         run: node scripts/merge-shard-manifests.js --selftest
 
+      # Tag 975: derselbe Grund wie beim Coverage-Marker zwei Schritte darueber. Der
+      # Statusmarker-Vertrag (screener-pipeline-status/v1) traegt Karls ZWEITEN Alarm-Kanal:
+      # die rote Warnleiste im Dashboard. Ein stiller Schema-Bruch laesst findash den Marker
+      # verwerfen — dann steht dort dauerhaft "verletzt den Statusvertrag" statt der Warnung,
+      # dass der Lauf rot war. Der Selftest pinnt jede Einzelregel des Vertrags plus die
+      # Fortschreibung von last_success_at; er lief bis Tag 975 in KEINEM Job und war damit
+      # nur bei manuellem Aufruf wirksam. Rein/synthetisch (kein Netz, <1s).
+      - name: Statusmarker Contract Selftest
+        run: node scripts/pipeline-status.js --selftest
+
       # Tag 132/133/165/227a: Auto-Universe-Refresh -> DIE EINE watchlist.json, die
       # alle Shards laden (jeder sliced sie intern via --shard). MUSS einmal laufen —
       # 17x parallel waere ein Race auf dieselbe Datei. MAX_UNIVERSE 25000 (Tag 227a
@@ -1939,8 +1949,18 @@ jobs:
           for i in 1 2 3; do
             # T564-B2/T568-F5: Fetch+Reset als ERSTER Befehl jedes Versuchs, ohne Guard.
             # Dieser Job laeuft als letzter im Lauf; ein parallel laufender Lauf (manuell +
-            # geplant) kann zwischen Klon und Push deployt haben, und der --force-Push
-            # wuerde dessen Stand sonst zurueckrollen.
+            # geplant sind laut concurrency-Gruppe oben ausdruecklich gleichzeitig moeglich)
+            # kann zwischen Klon und Push deployt haben.
+            # WAS DAS NICHT LEISTET (Review 16.08., der Kommentar behauptete hier mehr):
+            # Fetch+Reset VERKLEINERT das Fenster, es schliesst es nicht. `git push --force`
+            # scheitert bei Divergenz nicht — das ist sein Zweck. Ueberlappen zwei
+            # laufstatus-Jobs so, dass der andere zwischen unserem Fetch und unserem Push
+            # landet, gewinnt wer zuletzt pusht, und BEIDE melden "✓ publiziert". Der Verlust
+            # ist hier begrenzt (der spaetere Marker ist der aktuellere Lauf, und der naechste
+            # Lauf schreibt ohnehin neu), aber er ist real und niemand sieht ihn.
+            # BEWUSST NICHT HIER GELOEST: dasselbe Force-Push-Muster ist Bestand in den beiden
+            # Deploys in merge und scoring. Ein Nicht-Force-Retry fuer gh-pages gehoert als
+            # eigener Chunk ueber alle drei Stellen, nicht als Sonderweg in diesen einen.
             if git fetch origin gh-pages; then
               if git rev-parse --verify -q origin/gh-pages >/dev/null 2>&1; then
                 git reset --hard origin/gh-pages

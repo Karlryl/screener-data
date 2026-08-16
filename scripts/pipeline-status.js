@@ -68,21 +68,37 @@ const path = require('node:path');
 
 const SCHEMA = 'screener-pipeline-status/v1';
 
-// Die Jobs des Tageslaufs in Abhaengigkeits-Reihenfolge. Sie ist die Quelle fuer
-// `failed_job`: gemeldet wird der ERSTE nicht-gruene Job, denn alles dahinter ist
-// Folgeschaden (faellt prep, werden pull/merge/scoring nur noch uebersprungen).
-// Die Namen sind die Job-IDs aus daily-pull.yml — findash uebersetzt genau diese in
-// Klartext ("scoring" -> "Scoring"); ein unbekannter Name wird drueben roh angezeigt,
-// verschwindet also nicht. tests/pipeline-status-marker.test.js haelt diese Liste
-// gegen die Job-Liste der Workflow-Datei gegen, damit ein neu dazugekommener Job nicht
-// still aus der Statusmeldung faellt.
+// Die Jobs des Tageslaufs als PRIORITAETS-Liste. Gemeldet wird als `failed_job` der ERSTE
+// nicht-gruene Eintrag.
+//
+// WARUM PRIORITAET UND NICHT "ABHAENGIGKEITS-REIHENFOLGE" (Review 16.08.): der Tageslauf ist
+// keine einzelne Kette. prep -> pull -> merge -> scoring IST eine (jeder haengt am
+// Vorgaenger, faellt prep, werden die anderen nur noch uebersprungen). Die beiden Waechter
+// sind aber GESCHWISTER, keine Kettenglieder: `entdeckungs-waechter` haengt allein an prep
+// (wie pull), `earnings-transport-waechter` an [prep, merge]. Beide sind nicht-blockierende
+// Diagnose-Jobs — es haengt nichts an ihnen.
+// Fallen ein Waechter und ein Datenschritt UNABHAENGIG gleichzeitig, waere "der erste in der
+// Datei" die falsche Ursache: der Marker meldete den Diagnose-Job, waehrend der Datenschritt
+// der Grund fuer die uebersprungenen Folgejobs ist. Darum stehen die vier Kettenglieder
+// zuerst und die zwei Waechter dahinter — ein echter Datenausfall schlaegt eine Diagnose.
+// Das vollstaendige Bild steht ohnehin in `reason` (alle sechs Ergebnisse), fuer den, der
+// die Rohdatei liest; findash zeigt bewusst nur den einen Bereich.
+//
+// Die Namen sind die Job-IDs aus daily-pull.yml — findash uebersetzt genau diese in Klartext
+// ("scoring" -> "Scoring"). Ein unbekannter Name wird drueben ROH angezeigt statt zu
+// verschwinden (nachgemessen am echten pipelineWarnung(): failed_job 'voellig-neuer-job'
+// rendert als "im Bereich voellig-neuer-job ab"; findash screener-rows.ts nutzt
+// `LABELS[job] ?? job` und hat den frueheren Sammelbegriff "Pipeline" bewusst abgeschafft).
+// tests/pipeline-status-marker.test.js pinnt SOWOHL die Menge (gegen die Workflow-Datei,
+// damit kein neuer Job still herausfaellt) ALS AUCH diese Reihenfolge (weil sie bestimmt,
+// welcher Job als Ursache genannt wird).
 const JOB_REIHENFOLGE = [
   'prep',
-  'entdeckungs-waechter',
   'pull',
   'merge',
-  'earnings-transport-waechter',
   'scoring',
+  'entdeckungs-waechter',
+  'earnings-transport-waechter',
 ];
 
 /**
@@ -260,10 +276,20 @@ function selftest() {
     assert.deepEqual(validateMarker(m), []);
   });
 
-  t('roter Lauf: ERSTER nicht-gruener Job wird gemeldet (nicht der letzte)', () => {
+  // Am NAMEN gesetzt, nie am Index: die Liste ist eine Prioritaets-Reihenfolge und darf sich
+  // aendern, ohne dass ein Test still etwas anderes misst als er behauptet.
+  const mit = (...paare) => {
     const jobs = alleGruen.map((j) => ({ ...j }));
-    jobs[3].result = 'failure';   // merge
-    jobs[5].result = 'skipped';   // scoring (Folgeschaden)
+    for (const [name, result] of paare) {
+      const j = jobs.find((x) => x.name === name);
+      assert.ok(j, 'unbekannter Job im Test: ' + name);
+      j.result = result;
+    }
+    return jobs;
+  };
+
+  t('roter Lauf: ERSTER nicht-gruener Job wird gemeldet (nicht der letzte)', () => {
+    const jobs = mit(['merge', 'failure'], ['scoring', 'skipped']);
     const m = baueMarker({ ...basis, jobErgebnisse: jobs });
     assert.equal(m.status, 'failure');
     assert.equal(m.failed_job, 'merge');
@@ -272,19 +298,27 @@ function selftest() {
     assert.deepEqual(validateMarker(m), []);
   });
 
+  t('ein echter Datenausfall schlaegt einen gleichzeitig roten Diagnose-Waechter', () => {
+    const jobs = mit(['pull', 'failure'], ['entdeckungs-waechter', 'failure']);
+    const m = baueMarker({ ...basis, jobErgebnisse: jobs });
+    assert.equal(m.failed_job, 'pull',
+      'gemeldet wird der Diagnose-Waechter statt des Datenschritts. Beide haengen unabhaengig an '
+      + 'prep — der Datenausfall ist der Grund fuer die uebersprungenen Folgejobs, der Waechter '
+      + 'nur eine Nebenmeldung. Karl suchte am falschen Job.');
+    assert.match(m.reason, /entdeckungs-waechter=failure/,
+      'der zweite Ausfall verschwindet ganz — reason muss das volle Bild tragen.');
+  });
+
   t('fail-closed: skipped/cancelled/leer sind KEIN gruener Lauf', () => {
     for (const ausgang of ['skipped', 'cancelled', '']) {
-      const jobs = alleGruen.map((j) => ({ ...j }));
-      jobs[5].result = ausgang;
-      const m = baueMarker({ ...basis, jobErgebnisse: jobs });
+      const m = baueMarker({ ...basis, jobErgebnisse: mit(['scoring', ausgang]) });
       assert.equal(m.status, 'failure', `Ausgang "${ausgang}" gilt faelschlich als gruen`);
       assert.equal(m.failed_job, 'scoring');
     }
   });
 
   t('roter Lauf ERBT last_success_at vom Vorgaenger (wird NIE ueberschrieben)', () => {
-    const jobs = alleGruen.map((j) => ({ ...j }));
-    jobs[0].result = 'failure';
+    const jobs = mit(['prep', 'failure']);
     const m = baueMarker({
       ...basis,
       jobErgebnisse: jobs,
@@ -297,8 +331,7 @@ function selftest() {
   });
 
   t('roter Lauf OHNE Vorgaenger: last_success_at bleibt ehrlich leer (null)', () => {
-    const jobs = alleGruen.map((j) => ({ ...j }));
-    jobs[0].result = 'failure';
+    const jobs = mit(['prep', 'failure']);
     for (const v of [null, {}, { last_success_at: null }]) {
       const m = baueMarker({ ...basis, jobErgebnisse: jobs, vorgaenger: v });
       assert.equal(m.last_success_at, null);
@@ -350,7 +383,7 @@ function selftest() {
   t('needs-Kontext wird in die feste Reihenfolge gebracht', () => {
     const jobs = leseJobErgebnisse(needsKontext({ merge: { result: 'failure' } }));
     assert.deepEqual(jobs.map((j) => j.name), JOB_REIHENFOLGE);
-    assert.equal(jobs[3].result, 'failure');
+    assert.equal(jobs.find((j) => j.name === 'merge').result, 'failure');
   });
 
   t('Drift-Alarm: ein NEUER Job im Lauf, den der Marker nicht kennt, faellt auf', () => {

@@ -104,20 +104,32 @@ function runBlock(section) {
   return section.slice(i + 'run: |'.length).split('\n').map((z) => z.replace(/^ {10}/, '')).join('\n');
 }
 
-/** Eine ausfuehrbare `sh` finden (Linux/CI: auf PATH; Windows: die von Git). */
-function shBinaer() {
-  const kandidaten = ['sh', 'C:/Program Files/Git/usr/bin/sh.exe', 'C:/Program Files (x86)/Git/usr/bin/sh.exe'];
+/** Eine ausfuehrbare `bash` finden (Linux/CI: auf PATH; Windows: die von Git). */
+function bashBinaer() {
+  const kandidaten = ['bash', 'C:/Program Files/Git/bin/bash.exe', 'C:/Program Files/Git/usr/bin/bash.exe',
+    'C:/Program Files (x86)/Git/bin/bash.exe'];
   for (const k of kandidaten) {
     try { execFileSync(k, ['-c', 'exit 0'], { stdio: 'ignore' }); return k; } catch (e) { /* naechster */ }
   }
-  return assert.fail('keine ausfuehrbare sh gefunden — dieser Waechter kann das Verhalten der '
+  return assert.fail('keine ausfuehrbare bash gefunden — dieser Waechter kann das Verhalten der '
     + 'Publikations-Schritte dann nicht messen. Ein stiller Skip waere hier der schlimmste '
     + 'Ausgang: die Wache saehe aus wie bestanden.');
 }
 
+// WARUM `bash -eo pipefail` UND NICHT `sh -c` (Review 16.08., der wichtigere der beiden Funde).
+// Der Runner faehrt `run:`-Bloecke mit errexit — diese Datei setzt weder `defaults:` noch
+// `shell:`, also gilt GitHubs Vorgabe `bash -e {0}`. Der Harness lief bis hierher als `sh -c`
+// GANZ OHNE errexit und war damit strukturell blind fuer jede Regression, deren Sichtbarkeit
+// an errexit haengt — also fuer genau die Klasse, die der Tag-972-Fix betraf.
+// Gemessen, nicht abgeleitet: ein ungeschuetztes `false` mitten im Block endet unter `sh` mit
+// 0 und unter `bash -e` mit 1.
+// `pipefail` ist zusaetzlich und heute ein No-Op (die Bloecke enthalten keine Pipes). Es bleibt
+// bewusst drin: sollte jemand spaeter `shell: bash` setzen (dann gilt drueben `-eo pipefail`)
+// oder eine Pipe einbauen, ist der Harness eher zu streng als zu lasch. Falsch-rot faellt auf,
+// falsch-gruen nicht.
 function sh(block, { cwd, env }) {
   try {
-    const out = execFileSync(shBinaer(), ['-c', block],
+    const out = execFileSync(bashBinaer(), ['-eo', 'pipefail', '-c', block],
       { cwd, encoding: 'utf8', env: Object.assign({}, process.env, env || {}), stdio: ['ignore', 'pipe', 'pipe'] });
     return { code: 0, out };
   } catch (e) {
@@ -268,12 +280,27 @@ test('Runner-Scratch des Jobs steht in .gitignore (T564-B4, gleiche Hygiene)', (
 });
 
 // ── Drift: die Job-Liste des Skripts muss die des Workflows sein ─────────────────────
-test('JOB_REIHENFOLGE deckt genau die Jobs des Tageslaufs ab (ohne laufstatus selbst)', () => {
+test('JOB_REIHENFOLGE deckt genau die Jobs des Tageslaufs ab (Mengen-Pin gegen die Datei)', () => {
   const erwartet = alleJobs(daily).filter((j) => j !== 'laufstatus');
   assert.deepEqual(JOB_REIHENFOLGE.slice().sort(), erwartet.slice().sort(),
     'die Job-Liste in scripts/pipeline-status.js weicht von der Workflow-Datei ab — ein Job faellt '
     + 'still aus der Statusmeldung oder das Skript bricht zur Laufzeit. Ist: ' + JOB_REIHENFOLGE.join(',')
     + ' | Workflow: ' + erwartet.join(','));
+});
+
+// Review 16.08.: der Mengen-Pin darueber sortiert VOR dem Vergleich — er sieht eine
+// Vertauschung nicht, obwohl genau die Reihenfolge bestimmt, WELCHER Job als Ursache
+// gemeldet wird. Sie kann nicht gegen die Datei-Reihenfolge geprueft werden, weil sie
+// bewusst davon abweicht (Kettenglieder zuerst, nicht-blockierende Waechter dahinter).
+// Also hier ausgeschrieben: wer sie aendert, aendert die Ursachen-Meldung und muss diese
+// Zeile mitaendern.
+test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () => {
+  assert.deepEqual(JOB_REIHENFOLGE,
+    ['prep', 'pull', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter'],
+    'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
+    + 'Ursache steht: die vier Kettenglieder zuerst, die zwei nicht-blockierenden Diagnose-'
+    + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '
+    + 'Diagnose-Job statt des Datenschritts — Karl sucht am falschen Job.');
 });
 
 // ── Der Vorgaenger-Abruf darf den Marker nie verhindern ──────────────────────────────
@@ -431,6 +458,45 @@ test('E2E ALLERERSTER LAUF (kein gh-pages, kein Vorgaenger): Marker geht raus, D
     + 'statt "vom unbekannt" zu schreiben.');
   assert.deepEqual(validateMarker(r.publiziert), [], 'ein leeres last_success_at ist vertragsgemaess');
   assert.equal(r.publiziert.failed_job, 'scoring');
+});
+
+// ── (2b) Der VIERTE Fehlerpfad: alle drei Push-Versuche erschoepft ───────────────────
+// Review 16.08.: fuer die drei anderen Fehlerpfade war je ::error:: + exit 1 gepinnt, fuer
+// diesen nicht — nachgewiesen, indem das schliessende `exit 1` entfernt wurde: 20 von 20
+// Tests blieben gruen. Ein spaeterer Aufraeum-Commit, der die Zeile fuer redundant haelt
+// (die Meldung steht ja schon da), reproduziert damit exakt das Schadensbild vom 12.-15.08.:
+// Job gruen, kein Marker, Banner schweigt.
+// Geprueft wird das VERHALTEN, nicht der Text: das Ersatz-gh-pages bekommt einen
+// pre-receive-Hook, der JEDEN Push ablehnt. Damit laeuft die Retry-Schleife wirklich leer.
+test('(2b) alle drei Push-Versuche erschoepft -> ROT (nicht still gruen)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-push-'));
+  const cwd = path.join(tmp, 'runner'); fs.mkdirSync(cwd, { recursive: true });
+  const remote = path.join(tmp, 'ghpages.git').replace(/\\/g, '/');
+  git(['init', '--bare', '-b', 'gh-pages', remote]);
+  const seed = path.join(tmp, 'seed'); fs.mkdirSync(seed, { recursive: true });
+  fs.writeFileSync(path.join(seed, 'platzhalter.txt'), 'x');
+  git(['init', '-b', 'gh-pages'], seed); git(['add', '-A'], seed);
+  git(['commit', '-m', 'seed'], seed); git(['push', remote, 'gh-pages'], seed);
+  // Ab jetzt lehnt das Remote jeden Push ab.
+  fs.writeFileSync(path.join(remote, 'hooks', 'pre-receive'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+
+  fs.mkdirSync(path.join(cwd, path.dirname(MARKER_REL)), { recursive: true });
+  fs.writeFileSync(path.join(cwd, MARKER_REL), JSON.stringify({ schema: 'screener-pipeline-status/v1' }));
+
+  const publish = runBlock(publishSchritt).replace(/^GHP_URL=".*"$/m, 'GHP_URL=' + JSON.stringify(remote));
+  assert.ok(!publish.includes('${{'), 'unersetzter GitHub-Ausdruck im Publish-Block');
+  const r = sh(publish, { cwd, env: { MARKER_PFADE: MARKER_REL } });
+
+  // Gegenprobe zuerst: kam ueberhaupt nichts an? Sonst misst dieser Test den falschen Fall.
+  let angekommen = true;
+  try { git(['show', 'gh-pages:' + MARKER_REL], remote); } catch (e) { angekommen = false; }
+  assert.equal(angekommen, false, 'der Push ist trotz ablehnendem pre-receive-Hook durchgegangen — '
+    + 'dann bildet dieser Test den Fall "alle Versuche erschoepft" gar nicht ab und beweist nichts.');
+
+  assert.notEqual(r.code, 0, 'ALLE DREI PUSH-VERSUCHE SIND GESCHEITERT UND DER SCHRITT ENDET GRUEN '
+    + '(exit 0). Das ist der Schadensfall in Reinform: gruener Job, kein Marker auf gh-pages, '
+    + 'Banner schweigt — genau der Zustand vom 12.-15.08. Ausgabe: ' + r.out.trim().slice(-400));
+  assert.match(r.out, /::error::/, 'der erschoepfte Retry meldet sich nicht in Karls Kanal (rotes X).');
 });
 
 test('E2E (3): ein vertragswidriger Marker wird gar nicht erst publiziert', () => {
