@@ -21,11 +21,23 @@ const DECKEL_BYTES = 200 * 1024;
 
 // Absolute Pfade und Nutzerverzeichnisse — bewusst pfadFOERMIG gesucht, damit ein
 // blosses Wort in einem Fliesstext keinen Fehlalarm ausloest.
+//
+// Gegenrede-Befund 16.08.: die ersten vier Muster fanden nur NUTZERVERZEICHNISSE.
+// R12a verbietet aber jeden absoluten Pfad — D:\sec-store\panel.sqlite oder
+// /opt/sec-data/store waeren genauso maschinengebunden und rutschten glatt durch.
+// Die letzten beiden Muster schliessen das: Laufwerksbuchstabe mit beliebigem Ziel und
+// die Unix-Systemwurzeln. Beide verlangen einen Trenner davor, damit eine URL
+// (https://…/files/…) und ein relativer Repo-Pfad weiter durchgehen.
 const PFAD_MUSTER = [
   { name: 'Windows-Laufwerkspfad', regex: /\b[A-Za-z]:[\\/]{1,2}Users\b/ },
   { name: 'Windows-Nutzerverzeichnis', regex: /[\\/]Users[\\/][A-Za-z]/ },
   { name: 'Unix-Heimverzeichnis', regex: /(^|[\s"'(=])\/home\/[a-z]/m },
   { name: 'Umgebungs-Nutzerpfad', regex: /%USERPROFILE%|\$HOME\b/ },
+  { name: 'Windows-Laufwerkspfad, beliebiges Ziel', regex: /(^|[\s"'(=[,])[A-Za-z]:[\\/]{1,2}[A-Za-z0-9_.-]/m },
+  {
+    name: 'Unix-Systempfad',
+    regex: /(^|[\s"'(=[,])\/(opt|srv|mnt|media|var|usr|etc|data|tmp|root|Volumes)\/[A-Za-z0-9_.-]/m,
+  },
 ];
 
 function studienArtefakte() {
@@ -88,6 +100,51 @@ test('R12a: kein absoluter Pfad und kein Nutzerverzeichnis in einem 2.0.0-Artefa
   }
 });
 
+// Uebersetzt ein .gitattributes-Muster in einen Regex. Bewusst ohne git-Aufruf: der
+// Waechter soll auch dann urteilen, wenn er ausserhalb eines Checkouts laeuft.
+function musterAlsRegex(muster) {
+  const roh = muster.startsWith('/') ? muster.slice(1) : muster;
+  const teile = roh.split('**').map((teil) =>
+    teil.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*').replace(/\?/g, '[^/]'),
+  );
+  const kern = teile.join('.*');
+  return new RegExp(`^${muster.startsWith('/') ? '' : '(.*/)?'}${kern}$`);
+}
+
+test('R12b: jedes Studien-Artefakt ist in .gitattributes auf LF gepinnt', () => {
+  // Gegenrede-Befund 16.08.: die neuen studie-Pfade trugen KEINE eol-Regel, obwohl
+  // jedes early-detection-Pfadmuster sie traegt. Folgenlos, solange kein Waechter ihre
+  // Rohbytes hasht — und genau das baut E1. Eine ungepinnte Datei kann auf einer
+  // Windows-Maschine mit anderen Bytes im Baum liegen als im CI, und dann ist ein
+  // Hash-Beweis kein Beweis mehr.
+  const zeilen = fs
+    .readFileSync(path.join(REPO, '.gitattributes'), 'utf8')
+    .split(/\r?\n/)
+    .map((zeile) => zeile.trim())
+    .filter((zeile) => zeile.length > 0 && !zeile.startsWith('#'));
+  const regeln = zeilen.map((zeile) => {
+    const [muster, ...attribute] = zeile.split(/\s+/);
+    return { muster, regex: musterAlsRegex(muster), attribute };
+  });
+  // Gegenprobe am Uebersetzer selbst: er muss treffen UND danebenliegen koennen.
+  assert.ok(musterAlsRegex('/reports/studie/**').test('reports/studie/tief/x.md'));
+  assert.ok(!musterAlsRegex('/reports/studie/**').test('reports/andere/x.md'));
+  assert.ok(musterAlsRegex('/tests/studie-*.test.js').test('tests/studie-deckel.test.js'));
+  assert.ok(!musterAlsRegex('/tests/studie-*.test.js').test('tests/studie/tief.test.js'));
+
+  for (const datei of studienArtefakte().concat([__filename])) {
+    const relativ = path.relative(REPO, datei).split(path.sep).join('/');
+    const passend = regeln.filter((regel) => regel.regex.test(relativ));
+    const gepinnt = passend.some(
+      (regel) => regel.attribute.includes('-text') || (regel.attribute.includes('text') && regel.attribute.includes('eol=lf')),
+    );
+    assert.ok(
+      gepinnt,
+      `${relativ}: keine LF-Pinnung in .gitattributes (passende Regeln: ${passend.map((r) => r.muster).join(', ') || 'keine'})`,
+    );
+  }
+});
+
 test('R12a: der Waechter wuerde einen echten absoluten Pfad auch finden', () => {
   // Gegenprobe am Muster selbst: eine gueltige Form muss durchgehen, eine kaputte
   // auffliegen. Sonst wuesste niemand, ob die Suche oben ueberhaupt etwas kann.
@@ -96,6 +153,12 @@ test('R12a: der Waechter wuerde einen echten absoluten Pfad auch finden', () => 
     '"dataRoot": "/Users/jemand/store"',
     'export ROOT=/home/jemand/store',
     'set ROOT=%USERPROFILE%\\store',
+    // Kein Nutzerverzeichnis und trotzdem maschinengebunden — genau das Loch, das der
+    // Waechter bis zum 16.08. hatte.
+    'D:\\sec-store\\panel.sqlite',
+    'E:/studie/panel.parquet',
+    '"dataRoot": "/opt/sec-data/store"',
+    'STORE=/var/lib/studie/panel.sqlite',
   ];
   for (const zeile of boese) {
     assert.ok(
@@ -107,6 +170,8 @@ test('R12a: der Waechter wuerde einen echten absoluten Pfad auch finden', () => 
     '"sourceUrl": "https://www.sec.gov/files/dera/data/financial-statement-data-sets/2009q1.zip"',
     'const wurzel = process.env.EARLY_DETECTION_DATA_ROOT;',
     'protocol/early-detection/2.0.0/data-contract.json',
+    '"erfasstAm": "2026-08-16T11:23:39.184Z"',
+    'run: node scripts/studie-mitschrift.js erfassen',
   ];
   for (const zeile of harmlos) {
     assert.ok(
