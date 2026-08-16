@@ -10,7 +10,7 @@
  */
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
-  jahresVergleichIdx, jahresFensterAusgerichtet } = require('./snapshot.js');
+  jahresVergleichIdx, jahresFensterAusgerichtet, istQuartalsAbstand } = require('./snapshot.js');
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
@@ -643,6 +643,12 @@ function einmalertrag(s) {
   // norm() ist auf Zahlenserien gebaut (toFinite -> null). Defensiv: fehlen die Enden
   // (Snapshots vor der A10-Erweiterung tragen sie nicht), wird NICHT geraten — dann laeuft
   // die Lampe wie bisher, statt eine ganze Alt-Population stumm zu schalten.
+  //
+  // 16.08.: das BAND (75..105 Tage) steht seit M-A in snapshot.js, weil es ab jetzt auch am
+  // Rang-Gate haengt (axes.js) — eine Zahl, ein Ort. Das LESEN der Enden bleibt genau wie
+  // bisher (Roh-Slice statt periodEnds()): periodEnds() nullt bei Laengen-Mismatch die ganze
+  // Serie, das waere eine stille Verhaltensaenderung an einer Lampe, die seit dem 16.08.
+  // folgenreich ist. Geteilt wird die Regel, nicht die Datenbeschaffung.
   const enden = (s && s.timeseries && Array.isArray(s.timeseries.revenueQEnds))
     ? s.timeseries.revenueQEnds.slice(0, 4) : null;
   if (enden && enden.length === 4 && enden.every((d) => typeof d === 'string' && d)) {
@@ -651,8 +657,7 @@ function einmalertrag(s) {
       const a = Date.parse(enden[i] + 'T00:00:00Z');
       const b = Date.parse(enden[i + 1] + 'T00:00:00Z');
       if (!Number.isFinite(a) || !Number.isFinite(b)) return null;   // unlesbares Datum: nicht raten
-      const tage = (a - b) / TAG;
-      if (!(tage >= 75 && tage <= 105)) return null;                 // kein Quartalsabstand
+      if (!istQuartalsAbstand((a - b) / TAG)) return null;           // kein Quartalsabstand
     }
   }
   const summe = letzte4.reduce((a, b) => a + b, 0);

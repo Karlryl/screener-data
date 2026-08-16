@@ -268,6 +268,42 @@ function jahresVergleichIdx(snapshot, field, i) {
   return (bestAbw <= JAHRESVERGLEICH_TOLERANZ_TAGE) ? { idx: best, quelle: 'datum' } : null;
 }
 
+// --- Kadenz: ist eine Periode wirklich ein QUARTAL? (M-A, 16.08.2026) ----------
+// EINE Quelle fuer das Band 75..105 Tage, weil es ab heute an ZWEI Orten gilt.
+// KEIN neuer Schwellwert: die einmalertrag-Lampe (lamps.js) benutzt genau dieses Band
+// seit dem 29.07. und hat es dort an 19 gemessenen Faellen begruendet ("eine Reihe mit
+// ungleicher Kadenz ist schlicht nicht bewertbar"). Bis heute stand die Zahl nur an der
+// ANZEIGE; der Beschluss vom 16.08. stellt sie zusaetzlich an die RECHNUNG (axes.js).
+// Sie liegt deshalb hier, in Schicht 0, die Lampe und Achsen beide lesen — damit es
+// keine zweite Wahrheit gibt, die man einzeln verstellen kann.
+const QUARTAL_TAGE_MIN = 75;
+const QUARTAL_TAGE_MAX = 105;
+const istQuartalsAbstand = (tage) => Number.isFinite(tage)
+  && tage >= QUARTAL_TAGE_MIN && tage <= QUARTAL_TAGE_MAX;
+
+/**
+ * periodeIstQuartal(snapshot, field, i) -> true | false | null
+ *   true   Periode i ist BESTAETIGT ein Quartal (Ende_i minus Ende_{i+1} im Band).
+ *   false  Periode i ist bestaetigt KEIN Quartal (Halbjahres-/Jahres-Eimer).
+ *   null   NICHT MESSBAR: es gibt kein Vorgaenger-Ende (das aelteste Quartal einer Reihe
+ *          hat per Konstruktion keines) oder eines der beiden Daten ist unlesbar.
+ * Der dritte Ausgang ist der eigentliche Zweck dieser Funktion: er haelt "geprueft und
+ * durchgefallen" von "nie geprueft" getrennt. Wer beides zu einem Boolean verschmilzt,
+ * hat die Entscheidung, was mit dem Unmessbaren geschieht, schon getroffen — der
+ * Aufrufer soll sie treffen, sichtbar, und die Fehlerkosten seiner Stelle abwaegen
+ * (Lampe: durchlassen · Rang-Gate: nicht durchlassen; Begruendung in axes.js).
+ * Die Enden kommen ueber periodEnds(), also mit derselben Datums-Disziplin
+ * (Round-Trip-Pruefung, Laengen-Abgleich), die die gegatete Paar-Bildung selbst benutzt.
+ */
+function periodeIstQuartal(snapshot, field, i) {
+  const enden = periodEnds(snapshot, field);
+  if (!(i >= 0) || i + 1 >= enden.length) return null;
+  const a = _tagesnummer(enden[i]);
+  const b = _tagesnummer(enden[i + 1]);
+  if (a === null || b === null) return null;
+  return istQuartalsAbstand(a - b);
+}
+
 /**
  * jahresFensterAusgerichtet(snapshot, field, n) -> boolean
  * Fuer BLOCK-Vergleiche (TTM gegen TTM, 4 Quartale gegen 4 Quartale): liegt zu JEDER der
@@ -295,4 +331,6 @@ module.exports = {
   // F-4: datumsbewusste Auswahl des Jahres-Vergleichsquartals
   periodEnds, jahresVergleichIdx, jahresFensterAusgerichtet,
   JAHR_TAGE, JAHRESVERGLEICH_TOLERANZ_TAGE,
+  // M-A: EINE Quelle fuer das Quartals-Band (Lampe + Rang-Gate lesen dieselbe Zahl)
+  periodeIstQuartal, istQuartalsAbstand, QUARTAL_TAGE_MIN, QUARTAL_TAGE_MAX,
 };

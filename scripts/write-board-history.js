@@ -437,6 +437,65 @@ function latestEndMs(ends) {
   return latest;
 }
 
+// ── M-B Stufe 1: Frische der Quartalsreihe — Lampe + Zählung, NULL RANG-WIRKUNG ──
+// (Beschluss Quartalsreihen 16.08.2026, Punkt 3: Stufe 1 fährt im M-A-Merge mit,
+//  Stufe 2 — das scharfe Gate — erst nachdem N-5 beantwortet ist.)
+//
+// WARUM HIER UND NICHT ALS LAMPE IN src/scoring/lamps.js: eine Frische-Aussage braucht
+// ein Bezugsdatum. Die Lampen sind reine Snapshot-Funktionen, und score.js hält
+// ausdrücklich fest "Snapshot-Daten, KEIN Date.now() -> reproduzierbar/CI-stabil"
+// (score.js ~Z. 746). Eine Lampe in lamps.js hätte also entweder geraten oder die
+// Reproduzierbarkeit gebrochen. Hier liegt das Vintage-Datum bereits vor — dieselbe
+// Bezugsgröße, die pitCoverage.revenueQEndsFresh seit BH-109 benutzt.
+//
+// NULL RANG-WIRKUNG IST HIER STRUKTURELL, nicht nur beabsichtigt: dieser Schreiber läuft
+// NACH dem Scoring auf fertigen Zeilen. Score, Perzentile, Achsen und Reihenfolge sind
+// bereits festgelegt und werden hier nur noch abgeschrieben; es gibt keinen Rückweg ins
+// Scoring. Bewiesen (nicht behauptet) in tests/board-history-mb-frische.test.js (d):
+// zwei Läufe, die sich AUSSCHLIESSLICH im Alter der Perioden-Enden unterscheiden, liefern
+// byte-identische Rang-, Score-, Achsen- und Lampen-Felder.
+//
+// KEIN NEUER SCHWELLWERT: RETENTION_DAYS (180, Z. 216) — dieselbe Konstante, die schon
+// die Vintage-Aufbewahrung und revenueQEndsFresh steuert.
+//
+// ZWECK (der Grund, warum das mitfährt statt zu warten): die ~411 Zeilen mit veralteter
+// Reihe sind zwei verschiedene Dinge, und heute kann man sie nicht auseinanderhalten —
+// eine echte Leiche (Firma meldet nichts mehr) und ein still gescheiterter Abruf. Der
+// Verdacht aus der Diagnose lautet: auffällig viele .TW/.T, also Märkte MIT
+// Quartalsberichtspflicht, wo eine fehlende Quartalsreihe kein Firmen-, sondern ein
+// Beschaffungsproblem ist. Die Aufteilung unten misst genau das — sie beweist nichts,
+// sie liefert ab Mittwoch die Zahl, an der man es entscheiden kann.
+const MB_QUARTALSPFLICHT_SUFFIX = /\.(TW|TWO|T|SS|SZ|KS|KQ|NS|BO|TO|V|NE)$/i;
+
+// true = Reihe älter als RETENTION_DAYS · false = frisch · null = keine datierte Reihe.
+// null ist ausdrücklich NICHT "veraltet": eine Firma ohne Quartalsreihe (Halbjahres-
+// berichter) darf hier nicht als Leiche gezählt werden.
+function quartalsreiheVeraltetOf(pit, vintageMs) {
+  if (!Number.isFinite(vintageMs)) return null;
+  const latest = latestEndMs(pit && pit.revenueQEnds);
+  if (latest == null) return null;
+  return (vintageMs - latest) > RETENTION_DAYS * MS_PER_DAY;
+}
+
+function quartalsreiheFrischeBlock(rows) {
+  const z = {
+    grenzeTage: RETENTION_DAYS,
+    veraltet: 0,
+    frisch: 0,
+    ohneDatierteReihe: 0,
+    veraltetQuartalspflichtMarkt: 0,   // Verdacht: still gescheiterter Abruf
+    veraltetSonstigeMaerkte: 0,        // Verdacht: echte Leiche
+  };
+  for (const r of rows) {
+    if (r.quartalsreiheVeraltet === null || r.quartalsreiheVeraltet === undefined) { z.ohneDatierteReihe++; continue; }
+    if (!r.quartalsreiheVeraltet) { z.frisch++; continue; }
+    z.veraltet++;
+    if (MB_QUARTALSPFLICHT_SUFFIX.test(String(r.ticker || ''))) z.veraltetQuartalspflichtMarkt++;
+    else z.veraltetSonstigeMaerkte++;
+  }
+  return z;
+}
+
 // pitCoverage: Anteil present je Kontroll-Feld über die Kohorte (A9-Attenuations-Ausweis).
 function pitCoverageBlock(rows, date) {
   const fields = ['beta', 'evSales', 'priceGrossProfit', 'revenueQEnds', 'grossProfitQEnds'];
@@ -473,19 +532,26 @@ function pitCoverageBlock(rows, date) {
 // ── Vintage-Aufbau für EIN Board ─────────────────────────────────────────────
 function buildBoardVintage(board, boardData, date, calibMeta) {
   const pitGaps = new Set();
-  const buildTrack = (arr, track) => (Array.isArray(arr) ? arr : []).map((row, i) => ({
-    rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
-    ticker: row.ticker,
-    track,
-    score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
-    runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
-    scoreBase: row.scoreBase != null ? row.scoreBase : null,
-    scoreShrunk: row.scoreShrunk != null ? row.scoreShrunk : null,
-    coverageAxes: row.coverageAxes != null ? row.coverageAxes : null,
-    axisBreakdown: Array.isArray(row.axisBreakdown) ? row.axisBreakdown : null,
-    lamps: Array.isArray(row.lamps) ? row.lamps : null,
-    pit: buildPit(readSnapshot(row.ticker), pitGaps),  // §7-PIT-Freeze (A9-Join)
-  }));
+  const vintageMs = Date.parse(date + 'T00:00:00Z');   // M-B Stufe 1, Bezugsdatum
+  const buildTrack = (arr, track) => (Array.isArray(arr) ? arr : []).map((row, i) => {
+    const pit = buildPit(readSnapshot(row.ticker), pitGaps);  // §7-PIT-Freeze (A9-Join)
+    return {
+      rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
+      ticker: row.ticker,
+      track,
+      score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
+      runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
+      scoreBase: row.scoreBase != null ? row.scoreBase : null,
+      scoreShrunk: row.scoreShrunk != null ? row.scoreShrunk : null,
+      coverageAxes: row.coverageAxes != null ? row.coverageAxes : null,
+      axisBreakdown: Array.isArray(row.axisBreakdown) ? row.axisBreakdown : null,
+      lamps: Array.isArray(row.lamps) ? row.lamps : null,
+      pit,
+      // M-B Stufe 1: additiv am ENDE, reine Anzeige. Wird aus `pit` abgeleitet, nicht
+      // aus dem Score — es gibt keinen Pfad zurueck ins Ranking.
+      quartalsreiheVeraltet: quartalsreiheVeraltetOf(pit, vintageMs),
+    };
+  });
   // audit/fix: survival.json ist eine FLACHE Liste (nie gescort, keine Tracks) — als
   // Single-Track 'flat' einfrieren statt still leere profitable/unprofitable zu schreiben.
   const isFlat = Array.isArray(boardData);
@@ -510,6 +576,9 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     calibrationGeneratedAt: calibMeta.generatedAt,
     cohortCount: { profitable: profitable.length, unprofitable: unprofitable.length },
     pitCoverage: pitCoverageBlock(allRows, date),
+    // M-B Stufe 1: die Zaehlung, die ab Mittwoch "still gescheiterter Abruf" von
+    // "echte Leiche" trennt. Rein deskriptiv, kein Gate (das waere Stufe 2, nach N-5).
+    quartalsreiheFrische: quartalsreiheFrischeBlock(allRows),
     pitGaps: Array.from(pitGaps).sort(),
     // gate wird nach der Gate-Auswertung befüllt (calibrating/threshold/suspect/...)
     gate: null,

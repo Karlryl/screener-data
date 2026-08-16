@@ -165,11 +165,52 @@ function sourceHashes(file) {
 // es unlesbar, gibt es KEINE Lockerung — dann gilt allein das 1.0.0-Siegel. Ein kaputtes
 // transition.json faellt laut auf (JSON.parse wirft), statt still das Fenster zu schliessen
 // oder zu oeffnen.
-const TRANSITION_FILE = path.join(REPO, 'protocol', 'gqs-00', '1.1.0-pending', 'transition.json');
-function pendingTransitionHashes() {
-  if (!fs.existsSync(TRANSITION_FILE)) return {};
+const TRANSITION_DIR = path.join(REPO, 'protocol', 'gqs-00', '1.1.0-pending');
+const TRANSITION_FILE = path.join(TRANSITION_DIR, 'transition.json');
+function pendingTransition() {
+  if (!fs.existsSync(TRANSITION_FILE)) return null;
   const doc = JSON.parse(fs.readFileSync(TRANSITION_FILE, 'utf8'));
-  return (doc && doc.status === 'pending' && doc.sourceFiles) ? doc.sourceFiles : {};
+  return (doc && doc.status === 'pending') ? doc : null;
+}
+function pendingTransitionHashes() {
+  const doc = pendingTransition();
+  return (doc && doc.sourceFiles) ? doc.sourceFiles : {};
+}
+
+// M-A (16.08.2026): der Uebergang traegt ab jetzt auch geaenderte ERWARTUNGEN, nicht nur
+// geaenderte Quelltexte. Grund: die Einmalertrag-Aenderung beruehrte keine einzige
+// Golden-Fixture, der Kadenz-Waechter beruehrt neun von 25 — eine Reihe mit
+// Halbjahres-Eimer bekommt jetzt das Jahres-Bein, und genau das SOLL sie.
+//
+// ⚠ DAS IST KEINE LOCKERUNG, und darauf kommt es an: jeder Fall hat weiterhin GENAU EINE
+// erlaubte Erwartung. Fuer die im transition.json NAMENTLICH gelisteten Faelle ist es die
+// des pending-Artefakts, fuer alle uebrigen unveraendert die des Siegels. Damit das
+// pending-Artefakt kein Hintereingang wird, wird es zuerst gegen das Siegel gehalten: es
+// darf sich AUSSCHLIESSLICH an den gelisteten Faellen unterscheiden — bewegt es einen
+// nicht genannten Fall, ist der Pruefer rot, obwohl der Code stimmt.
+//
+// protocol/gqs-00/1.0.0/ bleibt byte-identisch. Beim Vollversiegeln von 1.1.0 (nach dem
+// ersten gruenen Automatik-Lauf) entfaellt dieses Verzeichnis und mit ihm dieser Zweig.
+const PENDING_TRACES_FILE = path.join(TRANSITION_DIR, 'score-traces.json');
+function pendingTraceErwartung(doc, sealedTraces) {
+  const genannt = (doc && doc.goldenFixtureImpact && Array.isArray(doc.goldenFixtureImpact.geaenderteFaelle))
+    ? doc.goldenFixtureImpact.geaenderteFaelle.map((f) => f.ticker) : [];
+  if (!genannt.length) return null;
+  assert(fs.existsSync(PENDING_TRACES_FILE),
+    'transition.json nennt geaenderte Golden-Fixtures, aber 1.1.0-pending/score-traces.json fehlt');
+  const pending = JSON.parse(fs.readFileSync(PENDING_TRACES_FILE, 'utf8')).traces;
+  assert.equal(pending.length, sealedTraces.length, 'pending-Traces haben eine andere Fall-Anzahl als das Siegel');
+  const namen = new Set(genannt);
+  for (let i = 0; i < sealedTraces.length; i++) {
+    if (namen.has(sealedTraces[i].ticker)) {
+      assert.notDeepEqual(pending[i], sealedTraces[i],
+        'transition.json listet ' + sealedTraces[i].ticker + ' als geaendert, das pending-Artefakt aendert dort aber nichts');
+    } else {
+      assert.deepEqual(pending[i], sealedTraces[i],
+        'pending-Artefakt bewegt den NICHT gelisteten Fall ' + sealedTraces[i].ticker);
+    }
+  }
+  return pending;
 }
 
 function walkFiles(dir) {
@@ -573,9 +614,13 @@ function verify() {
   assert.equal(sha256Canonical(preregHashView), prereg.integrity.canonicalSha256, 'preregistration scoped hash mismatch');
 
   const rebuiltTraces = fixtures.cases.map((fixture) => traceForCase(fixture, calibration, registry, manifest.formulaRegistrySha256));
-  assert.deepEqual(rebuiltTraces, committedTraces.traces, 'score traces are not deterministic');
+  // Erwartete Traces: das Siegel — ausser fuer die im offenen Uebergang namentlich
+  // gelisteten Faelle, fuer die das (gegen das Siegel gepruefte) pending-Artefakt gilt.
+  const sollTraces = pendingTraceErwartung(pendingTransition(), committedTraces.traces) || committedTraces.traces;
+  assert.deepEqual(rebuiltTraces, sollTraces, 'score traces are not deterministic');
   for (let i = 0; i < fixtures.cases.length; i++) {
-    assert.deepEqual(expectedFromTrace(rebuiltTraces[i]), fixtures.cases[i].expected, 'golden fixture mismatch for ' + fixtures.cases[i].ticker);
+    const soll = (sollTraces === committedTraces.traces) ? fixtures.cases[i].expected : expectedFromTrace(sollTraces[i]);
+    assert.deepEqual(expectedFromTrace(rebuiltTraces[i]), soll, 'golden fixture mismatch for ' + fixtures.cases[i].ticker);
   }
   const tie = fixtures.syntheticCases.find((entry) => entry.kind === 'percentile_midrank_tie');
   assert.equal(q(tie.rawInput, tie.comparisonDistribution), tie.expectedPercentile, 'midrank tie fixture mismatch');

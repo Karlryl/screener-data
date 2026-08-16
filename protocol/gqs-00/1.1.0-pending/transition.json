@@ -4,24 +4,39 @@
   "from": "GQS-00@1.0.0",
   "to": "GQS-00@1.1.0",
   "opened": "2026-08-16",
-  "reason": "Einmalertrag-Lampe wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND), renorm-on-drop + C4-Shrinkage ziehen den Score zum Kohorten-Median.",
+  "reason": "Zwei Aenderungen im selben offenen Fenster. (1) Einmalertrag-Lampe wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND), renorm-on-drop + C4-Shrinkage ziehen den Score zum Kohorten-Median. (2) M-A Kadenz-Waechter: die 75-105-Tage-Anforderung der einmalertrag-Lampe gilt jetzt auch an der RECHNUNG, an beiden Rechenorten (revQuartalsYoY und der eigenen Paar-Bildung des revAcceleration-Quartals-Zweigs), in strikter Lesart — eine nicht bestaetigbare Periodenlaenge bildet kein Paar.",
   "authority": {
     "gerichtsurteil": "Einmalertrag-Konsequenz, 16.08.2026 — GO mit Auflagen (F-16-Einzelfreigabe)",
-    "formelsperre": "F-16 punktuell geoeffnet, nur dieser Fall",
-    "karlFreigabe": "2026-08-16, woertlich \"Ja, so machen\"",
-    "pullRequest": "Karlryl/screener-data#45"
+    "beschluss": "_BESCHLUSS-QUARTALSREIHEN-2026-08-16.md + Nachtrag 16.08. abends (Lesart STRIKT), gegatet durch die Vorabmessung agent-reports/vorabmessung-ma-vollstaendig-2026-08-16.md",
+    "formelsperre": "F-16 punktuell geoeffnet, nur diese beiden Faelle",
+    "karlFreigabe": "2026-08-16, woertlich \"Ja, so machen\" (Einmalertrag) · Merge-Tempo \"schneller ist in diesem fall besser\"",
+    "pullRequest": "Karlryl/screener-data#45 (Einmalertrag) · M-A: eigener Zweig, Merge Mi 19.08. nach gruenem Di-Lauf"
   },
-  "scope": "NUR die hier gelisteten Quelldateien duerfen zusaetzlich zum 1.0.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. protocol/gqs-00/1.0.0/ bleibt unangetastet — der 07.08.-Nachweis ist byte-identisch erhalten.",
+  "scope": "NUR die hier gelisteten Quelldateien duerfen zusaetzlich zum 1.0.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. Fuer die unter goldenFixtureImpact.geaenderteFaelle NAMENTLICH gelisteten Golden-Fixtures gilt statt der 1.0.0-Erwartung die des Artefakts 1.1.0-pending/score-traces.json — genau eine Erwartung je Fall, keine Zwei-Wege-Akzeptanz; ein pending-Artefakt, das einen nicht gelisteten Fall bewegt, ist rot. protocol/gqs-00/1.0.0/ bleibt unangetastet — der 07.08.-Nachweis ist byte-identisch erhalten.",
   "goldenFixtureImpact": {
     "casesGeprueft": 25,
     "syntheticCases": 1,
     "mitLampeEinmalertrag": 0,
-    "bemerkung": "Keine versiegelte Golden-Fixture traegt die Lampe (13x false, 12x null) -> kein erwarteter Score aendert sich. Es reisst ausschliesslich die Source-Hash-Schaerfe."
+    "bemerkung": "Die Einmalertrag-Aenderung beruehrte keine versiegelte Golden-Fixture (13x false, 12x null) und riss nur die Source-Hash-Schaerfe. Der M-A-Kadenz-Waechter beruehrt zehn der 25 Faelle, und zwar bestimmungsgemaess: die Reihen mit einem Halbjahres-Eimer (Perioden 90/184/91/90 bzw. 91/90/184/91), die zwei Reihen ohne Perioden-Enden (BMI, LQDA) und die zwei sauberen 6-Quartals-Reihen, deren aeltestes Quartal nicht bestaetigbar ist. Kein Fall aendert Routing, Track oder Kohorte — nur die Periodenwahl und damit Score und coverageWeight. LQDA ist bewusst mit aufgefuehrt, obwohl sein SCORE gleich bleibt: seine Periodenwahl wechselt (quarterly_yoy -> annual_fallback), und der Trace ist der Nachweis, nicht nur die Endzahl.",
+    "geaenderteFaelle": [
+      { "ticker": "BMI", "grund": "keine revenueQEnds -> Periodenlaenge nicht bestaetigbar", "unroundedFinalAlt": 48.472, "unroundedFinalNeu": 54.423 },
+      { "ticker": "LQDA", "grund": "keine revenueQEnds -> Periodenwahl wechselt auf annual_fallback; Score unveraendert", "unroundedFinalAlt": null, "unroundedFinalNeu": null },
+      { "ticker": "CHENNPETRO.NS", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 96.104, "unroundedFinalNeu": 90.003 },
+      { "ticker": "AUGO", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 94.744, "unroundedFinalNeu": 88.327 },
+      { "ticker": "2548.TW", "grund": "juengste Periode 184 Tage -> kein Quartals-Bein", "unroundedFinalAlt": 97.198, "unroundedFinalNeu": 96.457 },
+      { "ticker": "688256.SS", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 96.819, "unroundedFinalNeu": 97.562 },
+      { "ticker": "688110.SS", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 93.756, "unroundedFinalNeu": 89.494 },
+      { "ticker": "002151.SZ", "grund": "Halbjahres-Eimer in der Reihe -> zweites YoY-Paar faellt", "unroundedFinalAlt": 79.738, "unroundedFinalNeu": 83.490 },
+      { "ticker": "000002.SZ", "grund": "6 saubere Quartale, aeltestes nicht bestaetigbar -> Zweig schlaeft", "unroundedFinalAlt": 28.475, "unroundedFinalNeu": 24.340 },
+      { "ticker": "000006.SZ", "grund": "6 saubere Quartale, aeltestes nicht bestaetigbar -> Zweig schlaeft", "unroundedFinalAlt": 14.175, "unroundedFinalNeu": 12.154 }
+    ]
   },
-  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Mi 19.08.) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt.",
+  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Mi 19.08.) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt — samt score-traces.json und dem zugehoerigen Zweig in scripts/gqs00-freeze.js.",
   "sourceFiles": {
-    "src/scoring/lamps.js": "7b0e479958131e69f4de1bd4cfafd2160bf611c8ef5f84340e8caad27a06df34",
+    "src/scoring/lamps.js": "994dd6d31346aa59ef4be8f1e8b703123bbbb0adae4052988e27df7a70d63dab",
     "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
-    "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69"
+    "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69",
+    "src/scoring/axes.js": "1d9303d2b3c2bc0eb0c8c34ff272860819f322b7ca97288841b14ee0ea635db6",
+    "src/scoring/snapshot.js": "47dfbefba155e0e3a59d1dcd94ea6d8a88d16e4e1d8e50bf34cb1351be86e20c"
   }
 }

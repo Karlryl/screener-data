@@ -26,8 +26,31 @@
  *  9 marginLevel           Bruttomarge-NIVEAU (Franchise-vs-commodity-Diskriminator, 2.12b)
  */
 
-const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx,
+  periodeIstQuartal } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
+
+// --- M-A Kadenz-Waechter (Beschluss Quartalsreihen 16.08.2026 + Nachtrag) ----
+// Eine Quartals-Rechnung darf nur auf Perioden laufen, die BESTAETIGT Quartale sind.
+// Band und Messung kommen aus snapshot.js (periodeIstQuartal), also aus derselben Quelle
+// wie die einmalertrag-Lampe — kein zweiter Schwellwert, keine zweite Wahrheit.
+//
+// STRIKTE LESART, und sie ist der Kern des Beschlusses: `=== true`. Eine Periode, deren
+// Laenge sich NICHT bestaetigen laesst (kein Vorgaenger-Ende, also nicht messbar), zaehlt
+// als nicht erfuellt. Nicht erschliessen, nicht aus der Nachbarschaft ableiten.
+//
+// GLEICHES BAND WIE DIE LAMPE, ENTGEGENGESETZTE FEHLERKOSTEN — Absicht, kein Widerspruch.
+// Wer das hier "zur Konsistenz" auf das Lampen-Verhalten zurueckdreht, macht den Fund
+// rueckgaengig, wegen dessen M-A ueberhaupt gebaut wurde (gemessen am Vintage 2026-08-16:
+// defensiv blieben 1.660 Zweig-Nutzer statt 6, und KEINE einzige intakte Reihe erreichte
+// den Zweig — die Asymmetrie "nur kaputte Daten schalten den volatileren Messweg frei"
+// bestuende dann weiter):
+//   LAMPE (lamps.js einmalertrag): laesst Unmessbares DURCH. Sie ist eine ANKLAGE gegen
+//     eine Firma; ein Fehlalarm daempft zu Unrecht. Im Zweifel wird nicht geraten.
+//   GATE (hier): laesst Unmessbares NICHT durch. Es ist die ZULASSUNG zum volatileren
+//     Quartals-Messweg; ein falsches Ja setzt einen Phantomwert in den Rang, ein falsches
+//     Nein kostet nur den traegeren, aber ehrlichen Jahres-Messweg. Im Zweifel kein Zutritt.
+const quartalBestaetigt = (s, i) => periodeIstQuartal(s, 'revenueQ', i) === true;
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
 
@@ -91,9 +114,17 @@ function revAnnualYoY(s) {
 // Reproduziert an CRD-A (Werte-Loch an Position 2, Enden luecken-los): die Achse lieferte
 // dadurch neu -0,994 % statt wie vorher ehrlich auf die Jahresreihe zurueckzufallen
 // (-2,073 %). F-4 aendert ausschliesslich, WELCHES Quartal verglichen wird.
+// M-A RECHENORT 1 (16.08.2026): das juengste "Quartal" muss auch eines sein.
+// NUR Index 0 wird gegated, und das ist keine Nachlaessigkeit, sondern die Bedingung
+// dafuer, dass der Waechter nicht die Anker erschlaegt: der Jahres-PARTNER ist durch die
+// 365-Tage-Datumspaarung (jahresVergleichIdx) bereits belegt, und er ist in einer sauberen
+// 5-Quartals-Reihe regelmaessig der AELTESTE Index — dessen Periodenlaenge ist per
+// Konstruktion nicht messbar. Ihn strikt mitzugaten wuerde jeder intakten 5-Quartals-Reihe
+// das Quartals-Bein nehmen, CRDO/NVDA/ALAB/BE/PLTR eingeschlossen (Waechter A4/A5).
 function revQuartalsYoY(s) {
   const v = jahresVergleichIdx(s, 'revenueQ', 0);
   if (v === null) return null;
+  if (!quartalBestaetigt(s, 0)) return null;
   const rq = norm(s, 'revenueQ');
   if (v.idx >= rq.length) return null;
   if (!rq.slice(0, v.idx + 1).every(Number.isFinite)) return null;
@@ -180,20 +211,38 @@ function quarterQoQRates(s, bounds) {
 // Reihen (tests/scoring/acceleration-invariance.test.js). Dass sich Raenge echter Firmen
 // dadurch verschieben, ist Folge, nicht Ziel.
 //
-// DATENBEDARF — und die unbequeme Messung dazu (26.07.2026, ueber 4768 lokale Snapshots):
-// Quartalsweise braucht die Achse >=2 YoY-Paare, also >=6 present Quartale. Yahoo liefert
-// aber HOECHSTENS 5 (Verteilung ueber 1500 Snapshots: 964x fuenf, 372x vier, nichts
-// darueber) — mit 5 Quartalen gibt es genau EIN YoY-Paar und damit keine Aenderungsrate.
-// Folge, ehrlich benannt: der Quartals-Zweig greift heute bei 1 von 4768 Namen, 4472
-// laufen ueber den JAHRES-Fallback (93,8 % Abdeckung), 295 droppen auf null
-// (renorm-on-drop). Die Achse misst damit faktisch JAHRES-Beschleunigung.
+// DATENBEDARF — Stand 16.08.2026, am Vintage 2026-08-16 (9.090 Zeilen) nachgezaehlt.
+// Quartalsweise braucht die Achse >=2 YoY-Paare. Yahoo liefert hoechstens 5 Quartale, eine
+// saubere 5er-Reihe ergibt genau EIN Paar — sie faellt also auf den Jahres-Zweig.
 //
-// Das ist keine Schwaeche der Rechnung, sondern die Grenze der Datenquelle: eine
-// saisonsaubere QUARTALS-Beschleunigung ist aus 5 Quartalen nicht konstruierbar. Wer sie
-// zurueckwill, braucht tiefere Quartalshistorie (>=8 Quartale) — Kandidat ist die bereits
-// vorhandene SEC-XBRL-Schicht, nicht ein Rueckbau auf die kaputte QoQ-Konstruktion.
-// Jahresdaten sind saisonfrei, die Groesse ist dieselbe, nur eine Ebene grober und
-// traeger (reagiert ein Jahr spaeter).
+// ⚠ WAS HIER BIS HEUTE STAND UND FALSCH WAR: "der Quartals-Zweig greift bei 1 von 4768
+// Namen ... die Achse misst faktisch JAHRES-Beschleunigung". Das war am 26.07. richtig
+// gemessen und beschrieb den praeregistrierten Zustand. F-4 (03.08.) hat die Paarung von
+// der starren Position i+4 auf das Enddatum umgestellt — seither liefert eine Reihe MIT
+// Loch oder Kadenz-Sprung zwei datierte Paare (z. B. 0 gegen 3 UND 1 gegen 4) und laeuft
+// in diesen Zweig hinein. Ausgezaehlt: 3.710 von 9.090 Zeilen, und zwar AUSNAHMSLOS Zeilen
+// mit Loch oder Kadenz-Sprung — keine einzige lueckenlose Reihe. Kaputte Daten schalteten
+// also den volatileren Messweg frei, intakte nicht. Zwoelf Tage lang hat es niemand
+// bemerkt, weil dieser Kommentar weiter das Gegenteil behauptete.
+//
+// SEIT M-A (16.08.) GILT: jede Paar-Seite muss ein BESTAETIGTES Quartal sein (unten,
+// quartalBestaetigt). Zwei Paare brauchen damit vier bestaetigte Positionen, und bestaetigt
+// werden kann nur eine Position mit Vorgaenger-Ende — praktisch >=7 Quartale Tiefe.
+//
+// ⛔ DAS IST EINE STILLLEGUNG, UND SIE WIRD SO GENANNT, nicht als Kadenz-Waechter getarnt:
+// bei <=6 bestaetigten Quartalen ist dieser Zweig TOT. Am selben Vintage gemessen bleiben
+// ~6 von 9.090 Zeilen uebrig (0,07 %); alles andere laeuft ueber den Jahres-Fallback. Das
+// ist die Wiederherstellung des am 26.07. praeregistrierten Zustands, kein Formel-Umbau —
+// aber eben auch keine Feinjustierung: die Achse misst wieder JAHRES-Beschleunigung.
+//
+// ER WACHT VON SELBST WIEDER AUF. Ab 7 bestaetigten Quartalen greift der Zweig ohne jede
+// Code-Aenderung — mit wachsender SEC-XBRL-Tiefe passiert das absehbar und ungeplant.
+// ⚠ SICHTBARES WIEDERAUFLEBEN LOEST EINEN COURT-TERMIN AUS (Beschluss 16.08.): dann laufen
+// zwei Populationen mit VERSCHIEDENEM Messbegriff in einem Perzentil-Topf, und ob das
+// zulaessig ist, ist neu zu bewerten — nicht stillschweigend hinnehmen, weil "es lief ja
+// schon immer so". Waechter B1 haelt den Aufweck-Pfad fest, damit er nicht unbemerkt
+// zubetoniert wird.
+//
 // F-4: der Jahrespartner je Position kommt aus dem Enddatum (jahresVergleichIdx), nicht
 // mehr aus i+4. Ohne Enden liefert die Auswahl i+4 zurueck -> byte-identisch zu vorher.
 function revAcceleration(s, bounds) {
@@ -202,6 +251,14 @@ function revAcceleration(s, bounds) {
   for (let i = 0; i < rq.length; i++) {
     const v = jahresVergleichIdx(s, 'revenueQ', i);
     if (v === null || v.idx >= rq.length) continue; // kein Jahrespartner -> kein Paar
+    // M-A RECHENORT 2: dieser Zweig bildet seine Paare SELBST und konsumiert
+    // revQuartalsYoY NICHT — die Kadenz-Anforderung muss deshalb hier ein zweites Mal
+    // stehen, sonst greift sie fuer die in 7 von 13 Formeln SCHWERSTE Achse ueberhaupt
+    // nicht (deshalb bewegte die halbe M-A-Fassung nur 264 statt 3.900 Zeilen).
+    // Hier BEIDE Seiten: eine Beschleunigung ist die Differenz zweier YoY-Raten — jede
+    // davon muss quartalsrein sein, sonst subtrahiert man Groessen verschiedener
+    // Periodenlaenge voneinander.
+    if (!quartalBestaetigt(s, i) || !quartalBestaetigt(s, v.idx)) continue;
     const a = rq[i], b = rq[v.idx];
     if (a === null || a === undefined || b === null || b === undefined) continue; // Luecke ueberspringen
     if (a > 0 && b > 0) yoy.push(clampWinsor(a / b - 1, bounds));
