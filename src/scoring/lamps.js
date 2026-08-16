@@ -601,9 +601,13 @@ function shareCountDilution(s, ctx) {
 // Quartale vor und ist DASSELBE Quartal auch im Vorjahr das groesste, ist es Saison und die
 // Lampe schweigt. Nur bei einem Ausreisser OHNE Vorjahres-Entsprechung feuert sie.
 //
-// VERRECHNET NICHTS: nicht in DATA_SUSPECT_LAMPS (score.js) -> kein Score-, kein
-// Exclude-Effekt. Ob ein Einmalertrag den Score druecken soll, ist eine eigene Frage mit
-// Gauntlet-Pflicht — diese Lampe macht ihn zuerst SICHTBAR.
+// SEIT DEM URTEIL VOM 16.08.2026 IST DIE LAMPE FOLGENREICH (F-16-Einzelfreigabe Karl).
+// Bis dahin stand hier "VERRECHNET NICHTS". Das stimmt nicht mehr: brennt sie, droppt
+// score.js die fuenf vom Sprung getragenen Achsen dieser Zeile (EINMALERTRAG_BLIND), und
+// renorm-on-drop + C4-Coverage-Shrinkage ziehen den Score Richtung Kohorten-Median.
+// WAS UNVERAENDERT GILT: nicht in DATA_SUSPECT_LAMPS -> KEIN Exclude, die Zeile bleibt
+// sichtbar und geroutet. Kein Abzug, kein gesetzter Wert — nur "diese Achsen sind fuer
+// diese Zeile nicht bewertbar". Die Begruendung steht bei EINMALERTRAG_BLIND in score.js.
 const EINMALERTRAG_ANTEIL = 0.50;
 function einmalertrag(s) {
   // ⚠ Bewusst die ROHE Reihe (mit Luecken), NICHT presentValues: der Saison-Vergleich unten
@@ -750,6 +754,31 @@ function einmalertragPrognose(s, lampeAktiv) {
   return null; // vollstaendig und vergleichbar -> Urteil erst mit der Schwelle aus Stufe 2
 }
 
+// ── Bewertbarkeits-Zustand zur Einmalertrags-Lampe (Urteil 16.08.2026, Sichtbarkeits-Stufe) ──
+// DAS PROBLEM: einmalertrag(s) hat drei Ausgaenge, aber findash sah nur zwei. true = Lampe an,
+// false = geprueft und sauber, null = NICHT BEWERTBAR — und null kam bisher stumm an, ununter-
+// scheidbar von "sauber". Drei verschiedene Lagen lieferten dasselbe Schweigen. Genau daran
+// haengt die Schein-Sauberkeit von 2548.TW (real-estate Rang 1) und 298380.KQ (Rang 5): sie
+// stehen ungepruefft oben und sehen aus wie geprueft.
+//
+// ⚠ REINE ANZEIGE, wie einmalertragPrognose: der Rueckgabe-Vertrag von einmalertrag() bleibt
+// unveraendert, LAMPS bleibt unveraendert, evaluateLamps bleibt byte-identisch. Kein
+// Score-Input — die Verdrahtung in score.js haengt an der brennenden LAMPE, nicht hieran.
+//
+// DIE GRUENDE kommen aus denselben Daten wie die null-Ausgaenge der Lampe, nicht aus einer
+// zweiten Regel:
+//   'zuWenigQuartale'  — keine vier verwertbaren Quartale im Fenster (Luecke, 0, negativ).
+//   'ungleicheKadenz'  — vier Quartale da, aber die Enden liegen nicht im Quartalsabstand
+//                        (Halbjahres-Eimer bei CN-A-Aktien u. a.) oder ein Datum ist unlesbar.
+// Die Reihenfolge spiegelt die Reihenfolge der Pruefungen in einmalertrag(): erst Vollstaendig-
+// keit, dann Kadenz. Bewertbar (true ODER false) -> null, es gibt nichts anzuzeigen.
+function einmalertragBewertbarkeit(s) {
+  if (einmalertrag(s) !== null) return null;             // bewertbar: Lampe hat geurteilt
+  const letzte4 = norm(s, 'revenueQ').slice(0, 4);
+  if (letzte4.length < 4 || !letzte4.every((v) => Number.isFinite(v) && v > 0)) return 'zuWenigQuartale';
+  return 'ungleicheKadenz';
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -780,4 +809,5 @@ module.exports = {
   evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS,
   shareGrowthRate, buildShareGrowthPctlFn, shareDilutionDetail,
   einmalertragPrognose, EINMALERTRAG_PROGNOSE_PERIODE,
+  einmalertragBewertbarkeit,
 };

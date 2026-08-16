@@ -189,14 +189,49 @@ test('die Lampe ist registriert und laeuft im normalen Durchlauf mit', () => {
   assert.ok(r.active.includes('einmalertrag'), 'Lampe steht nicht in der aktiven Liste');
 });
 
-test('die Lampe druckt den Score NICHT - sie ist keine data-suspect-Lampe', () => {
-  // Der entscheidende Punkt fuer diesen Schritt: sichtbar machen, nichts verrechnen.
-  // Sonst waeren morgen frueh alle Scores verschoben und das Wert-Gate schluege an.
+test('die Lampe excludiert NICHT - sie ist keine data-suspect-Lampe (aber sie ist folgenreich)', () => {
+  // ⚠ INTENT INVERTIERT AM 16.08.2026 (Gerichtsurteil, F-16-Einzelfreigabe Karl).
+  // Dieser Test hiess bis heute "die Lampe druckt den Score NICHT" und begruendete das mit
+  // "sichtbar machen, nichts verrechnen". Das ist seit dem Urteil FALSCH: brennt die Lampe,
+  // droppt score.js die fuenf vom Sprung getragenen Achsen dieser Zeile (EINMALERTRAG_BLIND),
+  // und renorm-on-drop + C4-Shrinkage ziehen den Score Richtung Kohorten-Median. Der Test
+  // wird hier ausdruecklich umgeschrieben statt still angepasst - er verankerte woertlich das
+  // Gegenteil des jetzigen Verhaltens, und ein Waechter, der eine ueberholte Zusage haelt,
+  // ist schlimmer als keiner.
+  //
+  // WAS UNVERAENDERT WAHR BLEIBT und deshalb hier stehen bleibt: einmalertrag ist KEINE
+  // data-suspect-Lampe. Ein Lizenzertrag ist echter, korrekt gemeldeter Umsatz, kein
+  // fabriziertes Quartal - die Zeile bleibt sichtbar und geroutet. Stuende die Lampe in
+  // DATA_SUSPECT_LAMPS, verschwaenden BNTX/ASTS/LUNR ganz aus dem Ranking.
   const { einmalertrag: _, ...rest } = require('../../src/scoring/lamps.js').LAMPS;
   assert.ok(rest, 'LAMPS lesbar');
   const score = require('../../src/scoring/score.js');
   assert.ok(!String(score.DATA_SUSPECT_LAMPS || '').includes('einmalertrag'),
-    'einmalertrag darf NICHT in DATA_SUSPECT_LAMPS stehen');
+    'einmalertrag darf NICHT in DATA_SUSPECT_LAMPS stehen - sichtbar bleiben, nicht ausschliessen');
+  // Die Score-Wirkung selbst nagelt tests/scoring/einmalertrag-konsequenz.test.js fest
+  // (W-A Achsen + Ergebnis-Klammer, W-B Anlauf-Schutz, W-C Anker am echten Board).
+});
+
+test('der dritte Zustand ist sichtbar: nicht bewertbar mit Grund', () => {
+  // Sichtbarkeits-Stufe des Urteils: einmalertrag() hatte immer drei Ausgaenge, findash sah
+  // nur zwei. Reine Anzeige - der Rueckgabe-Vertrag der Lampe ist unangetastet.
+  const { einmalertragBewertbarkeit } = require('../../src/scoring/lamps.js');
+  const mitEnden = (q, ends) => ({ timeseries: {
+    revenueQ: q.map((v) => (v === null ? null : { value: v })), revenueQEnds: ends,
+  } });
+  assert.equal(einmalertragBewertbarkeit(snap([5, 10, 8, 1382])), null, 'Lampe an -> bewertbar, nichts anzuzeigen');
+  assert.equal(einmalertragBewertbarkeit(snap([100, 90, 80, 70])), null, 'Lampe aus -> geprueft und sauber');
+  assert.equal(einmalertragBewertbarkeit(snap([100, null, 100, 100])), 'zuWenigQuartale');
+  assert.equal(einmalertragBewertbarkeit(snap([100, 0, 100, 100])), 'zuWenigQuartale', 'Nullquartal ist kein Umsatz');
+  assert.equal(einmalertragBewertbarkeit(snap([])), 'zuWenigQuartale', 'leere Reihe');
+  // 3/6/3-Monatsraster (Halbjahres-Eimer) - der Fall 2548.TW / 298380.KQ
+  assert.equal(einmalertragBewertbarkeit(mitEnden([100, 550, 150, 200],
+    ['2026-03-31', '2025-12-31', '2025-06-30', '2025-03-31'])), 'ungleicheKadenz');
+  assert.equal(einmalertragBewertbarkeit(mitEnden([100, 550, 150, 200],
+    ['kaputt', '2025-12-31', '2025-09-30', '2025-06-30'])), 'ungleicheKadenz', 'unlesbares Datum');
+  // Gegenprobe: saubere Kadenz darf NICHT als nicht-bewertbar durchgehen
+  assert.equal(einmalertragBewertbarkeit(mitEnden([100, 550, 150, 200],
+    ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'])), null, 'saubere Kadenz ist bewertbar');
 });
 
 
