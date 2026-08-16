@@ -33,6 +33,7 @@ function studienArtefakte() {
   const wurzeln = [
     path.join(REPO, 'protocol', 'early-detection', '2.0.0'),
     path.join(REPO, 'reports', 'studie'),
+    path.join(REPO, 'research', 'studie'),
   ];
   for (const wurzel of wurzeln) {
     if (!fs.existsSync(wurzel)) continue;
