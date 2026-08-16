@@ -1,12 +1,45 @@
 {
-  "schema": "early-detection-outcome-access-ledger/v2",
-  "protocol": "FEM-SEC-US@2.0.0",
-  "lastSealedAncestor": "FEM-SEC-US@1.2.0",
-  "genesisSha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
-  "genesisHerkunft": "sha256 der Datei protocol/early-detection/1.2.0/outcome-access-ledger.json — die neue Kette haengt am letzten Glied der alten, statt bei null anzufangen.",
-  "confirmatoryWindows": ["2021-01-01/2023-12-31"],
-  "initialStatus": "NO_CONFIRMATORY_OUTCOME_ACCESS",
-  "events": [],
-  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
-  "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4)."
+ "schema": "early-detection-outcome-access-ledger/v2",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "lastSealedAncestor": "FEM-SEC-US@1.2.0",
+ "genesisSha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
+ "genesisHerkunft": "sha256 der Datei protocol/early-detection/1.2.0/outcome-access-ledger.json — die neue Kette haengt am letzten Glied der alten, statt bei null anzufangen.",
+ "confirmatoryWindows": [
+  "2021-01-01/2023-12-31"
+ ],
+ "initialStatus": "R15B_COUNT_ONLY_PROBE_REGISTERED",
+ "events": [
+  {
+   "runId": "e1b-abnahme-2026-08-16",
+   "typ": "R15b_NUR_ZAEHLEN",
+   "registeredAt": "2026-08-16T17:24:03.674Z",
+   "accessedAt": null,
+   "fenster": [
+    "pruefung 2017-2019",
+    "endtest 2021-2023"
+   ],
+   "erlaubt": "Anzahl Einreichungen je Fenster/Jahr und EXISTENZ eines Umsatztraegers. Keine Kennzahl-Werte, keine Signalrechnung, keine Ergebnis-/Kursdaten.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn- oder Kurswertes aus Pruef- oder Endtestfenster.",
+   "regelVorher": {
+    "conceptMap": "FEM-SEC-CONCEPT-MAP@1.1.0",
+    "mapSha256": "933934db813b5fedfa1a56bc9050ca9c2906d31810774c14940f0da343bc697f",
+    "frozenAt": "2026-08-16T17:14:21.655Z",
+    "universum": "SIC 6000-6799 ausgeschlossen",
+    "gate": {
+     "population": "Firmen im Universum mit mindestens einem Umsatztraeger nach dieser Landkarte.",
+     "schwelle": 0.9,
+     "maxFensterDifferenzPunkte": 10,
+     "maxRestSprung2017_2018Punkte": 5,
+     "pflichtfeldDeckungsgrad": "Je Fenster ausweisen, wie viele Firmen und Einreichungen ausserhalb des Definitionsbereichs bleiben und warum: Finanzsektor, Vor-Umsatz, 20-F.",
+     "unveraendert": "Schwelle und Differenz sind gegenueber R9 NICHT gesenkt."
+    }
+   },
+   "begruendung": "E1b-Abnahmelauf nach _BESCHLUSS-AUFFINDBARKEIT-2026-08-16.md.",
+   "endtestSiegel": "unberuehrt - die Zaehlung laeuft auf dem Panel, nicht auf der verschluesselten Fenster-Datei.",
+   "previousHash": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
+   "eventHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b"
+  }
+ ],
+ "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
+ "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4)."
 }
