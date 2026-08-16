@@ -48,6 +48,11 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
+// DIESELBE Klausel, die das Kadenz-Gate benutzt — nicht nachgebaut. Eine nachgebaute
+// Zaehlung waere genau der Wert, der bei der naechsten Aenderung an axes.js still
+// auseinanderlaeuft und dann eine Population meldet, die es so nicht mehr gibt.
+const { ohneEndenReihe } = require('../src/scoring/axes.js');
+const { norm, hasPresent } = require('../src/scoring/snapshot.js');
 
 // ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -200,6 +205,19 @@ const P99 = 0.99;
 // Viertel der Kohorte verliert ein Kontroll-Feld über Nacht = unplausibel.
 // ponytail: fixe Decke; datengetrieben nachziehen, falls Coverage real ruckelt.
 const COVERAGE_COLLAPSE_DROP = 0.25;
+// F-4-Ausnahme-Population (Zeilen mit Werten, aber ohne zuordenbares Perioden-Ende):
+// ABSOLUT gezaehlt, weil eine Quote hier nichts taugt — gemessene Baseline am Vintage
+// 2026-08-16 sind DREI Zeilen von 8.490 (0,04 %), da schlaegt COVERAGE_COLLAPSE_DROP erst
+// bei >2.100 neuen Zeilen an. Herleitung der Zahlen: 50 liegt rund Faktor 17 ueber der
+// Baseline und damit weit ausserhalb jedes Ticker-Zugangs-Rauschens, aber weit unter dem
+// Schadensbereich (300–900 Zeilen), den ein Yahoo-Teilausfall erzeugen wuerde. Faktor 5 ab
+// 20 Zeilen greift den Sprung, der die 50 noch nicht reisst. Heuristik-Decken wie oben,
+// nach dem ersten Quartal Messreihe datengetrieben nachziehen.
+// ponytail: zwei feste Decken statt rollender Baseline; rollend nachruesten, falls die
+// Population real atmet (dann liegt die Messreihe dafuer schon vor).
+const F4_OHNE_ENDEN_MAX = 50;
+const F4_OHNE_ENDEN_FAKTOR = 5;
+const F4_OHNE_ENDEN_SPRUNG_AB = 20;
 // BH-111: Überlappungs-Boden gegen den Vortag. NaN/Coverage/P99-Delta wurden vorher
 // NUR auf der Schnittmenge nowMap∩priorMap gebildet — verschwinden 50–90 % der
 // Boardzeilen (Audit-Beleg), sieht die verbleibende Schnittmenge trotzdem "sauber"
@@ -498,6 +516,28 @@ function quartalsreiheFrischeBlock(rows) {
   return z;
 }
 
+// F-4-Population: Zeilen, die eine Werte-Reihe haben, aber KEIN zuordenbares Perioden-Ende.
+// Genau die Zeilen, an denen der Kadenz-Waechter M-A nicht greift und die alte Positionsregel
+// weiterlaeuft (F-4-Klausel, src/scoring/axes.js#ohneEndenReihe — von dort importiert, damit
+// Zaehlung und Gate nie zwei verschiedene Definitionen benutzen).
+//
+// WARUM UEBERHAUPT GEZAEHLT WIRD: liefert Yahoo fuer mehr Ticker kein Enddatum mehr
+// (Schema-Aenderung, Teilausfall), waechst diese Ausnahme lautlos — _isoDay in pull-yahoo
+// gibt in dem Fall still null zurueck. Das Feld ist deshalb NICHT deskriptiv wie der
+// Frische-Block, sondern gegatet (s. evaluateGate).
+function f4OhneEndenBlock(rows) {
+  const z = { anzahl: 0, mitWertereihe: 0 };
+  for (const r of rows) {
+    const pit = r && r.pit;
+    if (!pit) continue;
+    const s = { timeseries: { revenueQ: pit.revenueQ, revenueQEnds: pit.revenueQEnds } };
+    if (!hasPresent(norm(s, 'revenueQ'))) continue;   // ohne Werte gibt es nichts zu datieren
+    z.mitWertereihe++;
+    if (ohneEndenReihe(s)) z.anzahl++;
+  }
+  return z;
+}
+
 // pitCoverage: Anteil present je Kontroll-Feld über die Kohorte (A9-Attenuations-Ausweis).
 function pitCoverageBlock(rows, date) {
   const fields = ['beta', 'evSales', 'priceGrossProfit', 'revenueQEnds', 'grossProfitQEnds'];
@@ -581,6 +621,8 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     // M-B Stufe 1: die Zaehlung, die ab Mittwoch "still gescheiterter Abruf" von
     // "echte Leiche" trennt. Rein deskriptiv, kein Gate (das waere Stufe 2, nach N-5).
     quartalsreiheFrische: quartalsreiheFrischeBlock(allRows),
+    // F-4-Ausnahme-Population, absolut gezaehlt — GEGATET, anders als der Block darueber.
+    f4OhneEnden: f4OhneEndenBlock(allRows),
     pitGaps: Array.from(pitGaps).sort(),
     // gate wird nach der Gate-Auswertung befüllt (calibrating/threshold/suspect/...)
     gate: null,
@@ -630,6 +672,28 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
     for (const f of Object.keys(vintage.pitCoverage)) {
       const drop = (priorVintage.pitCoverage[f] || 0) - vintage.pitCoverage[f];
       if (drop > COVERAGE_COLLAPSE_DROP) { reasons.push('coverage-collapse:' + f); }
+    }
+  }
+
+  // Wachstum der F-4-Ausnahme-Population (immer suspect).
+  //
+  // Der Coverage-Absturz-Alarm direkt darueber taugt dafuer NICHT, und das ist der ganze
+  // Grund fuer dieses eigene Gate: er misst Praesenz-QUOTEN gegen 25 Prozentpunkte. Bei
+  // einer Baseline von DREI Zeilen aus 8.490 (0,04 %) muessten an einem einzigen Tag ueber
+  // 2.100 Zeilen dazukommen, bevor er ueberhaupt feuert — ein Wachstum von 3 auf 900 bliebe
+  // unsichtbar. pitGaps hilft ebenfalls nicht: reines Ja/Nein ohne Zaehler, durch die
+  // heutigen drei Zeilen schon dauerhaft auf "wahr". Also absolut gezaehlt statt anteilig:
+  // die Obergrenze fasst das schleichende Wachstum, die Vervielfachung den Sprung darunter.
+  // Gleiche Mechanik wie die uebrigen Gates (reasons -> suspect -> exit 2 -> rotes X).
+  const f4 = vintage.f4OhneEnden;
+  if (f4 && Number.isFinite(f4.anzahl)) {
+    if (f4.anzahl > F4_OHNE_ENDEN_MAX) reasons.push('f4-ohne-enden-population:' + f4.anzahl);
+    const vorher = priorVintage && priorVintage.f4OhneEnden && priorVintage.f4OhneEnden.anzahl;
+    // Der Boden verhindert, dass 1 -> 6 schon schreit; ohne ihn waere jeder Vortag mit 0
+    // oder 1 Zeile ein Dauer-Alarm. Ueber dem Boden ist Faktor 5 ein echter Sprung.
+    if (Number.isFinite(vorher) && f4.anzahl >= F4_OHNE_ENDEN_SPRUNG_AB
+      && f4.anzahl > vorher * F4_OHNE_ENDEN_FAKTOR) {
+      reasons.push('f4-ohne-enden-sprung:' + vorher + '->' + f4.anzahl);
     }
   }
 
@@ -1334,5 +1398,6 @@ module.exports = {
   frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE },
+  f4OhneEndenBlock,
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, F4_OHNE_ENDEN_MAX, F4_OHNE_ENDEN_FAKTOR, F4_OHNE_ENDEN_SPRUNG_AB },
 };
