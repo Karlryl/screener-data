@@ -36,54 +36,16 @@ function check(name, fn) {
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
 
-const FIX = path.join(__dirname, 'fixtures');
-const loadFix = (t) => JSON.parse(fs.readFileSync(path.join(FIX, t + '.json'), 'utf8'));
+// Tag 977: der Fixture-Bauer lag hier als 70-Zeilen-Block und wurde von der zweiten
+// hermetischen Anker-Suite (anchors.rank.exitcode.test.js) gebraucht — jetzt gemeinsam in
+// fixtures/anker-universum.js. Verhalten unveraendert: dieselben Fueller, dieselben
+// Kohortengroessen; `weglassen: ['CRDO']` ist genau das frueher hier stehende "KEIN CRDO".
+const { schreibeUniversum } = require('./fixtures/anker-universum.js');
 
-// Degradierter Klon eines eingefrorenen Anker-Snapshots: gleiche Branche/Track/Waehrung (routet
-// identisch), aber NIEDRIGES, per Klon variiertes Wachstum (aeltere Jahre nahe am neuesten) ->
-// Wachstums-Achsen-Perzentile unter dem Anker -> der Anker rankt oben, die Klone fuellen die Kohorte.
-// gm<0.55 + konstante opMargin -> kein newestQtrSuspect; USD/USD -> kein annualCurrencyLeak;
-// distinct meta.name -> kein issuer-dedup; newest annualOpInc>0 -> profitable-Track.
-function fillerFrom(anchor, prefix, i, g) {
-  const s = JSON.parse(JSON.stringify(anchor));
-  const tk = prefix + String(i).padStart(3, '0');
-  s.meta.ticker = tk;
-  s.meta.name = anchor.meta.name + ' Filler ' + prefix + i;
-  if (s.identifier) s.identifier.value = 'FILL:' + tk;
-  const R = anchor.annual.annualRev[0].value;
-  const gm = 0.45, opm = 0.12, nim = 0.10, fcfm = 0.15, ocfm = 0.18;
-  const yr = [R, R / g, R / (g * g), R / (g * g * g)];
-  const V = (arr) => arr.map((v) => ({ value: Math.round(v) }));
-  s.annual.annualRev = V(yr);
-  s.annual.annualGP = V(yr.map((v) => v * gm));
-  s.annual.annualOpInc = V(yr.map((v) => v * opm));
-  s.annual.annualNetIncome = V(yr.map((v) => v * nim));
-  s.annual.annualFCF = V(yr.map((v) => v * fcfm));
-  s.annual.annualOCF = V(yr.map((v) => v * ocfm));
-  const qg = Math.pow(g, 0.25), Q0 = R / 4;
-  const q = [0, 1, 2, 3, 4].map((k) => Q0 / Math.pow(qg, k));
-  s.timeseries.revenueQ = V(q);
-  s.timeseries.opIncQ = V(q.map((v) => v * opm));
-  s.timeseries.grossProfitQ = V(q.map((v) => v * gm));
-  s.timeseries.netIncomeQ = V(q.map((v) => v * nim));
-  s.metrics.revenueTTM = { value: Math.round(q[0] + q[1] + q[2] + q[3]), source: 'x', confidence: 0.9 };
-  s.metrics.revenueGrowthYoY = { value: (g - 1) * 100, source: 'x', confidence: 0.9 };
-  return s;
-}
-
-// --- Fixture-Universum bauen (CRDO fehlt; ALAB/PLTR/BE + fette Kohorten) ---
-const ALAB = loadFix('ALAB'), PLTR = loadFix('PLTR'), BE = loadFix('BE');
+// --- Fixture-Universum bauen (CRDO fehlt; die uebrigen Anker + fette Kohorten) ---
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'anchors-rumpf-'));
-const write = (s) => fs.writeFileSync(path.join(dir, s.meta.ticker + '.json'), JSON.stringify(s));
-const gAt = (i, n) => 1.02 + 0.18 * (i / n);
-const NSEMI = 60, NSOFT = 20, NIND = 20; // 3 Anker + 100 Filler = 103 (>=100 Datei-Gate); semi-Kohorte 61 (>topN)
 try {
-  for (const a of [ALAB, PLTR, BE]) write(a);                     // KEIN CRDO
-  for (let i = 1; i <= NSEMI; i++) write(fillerFrom(ALAB, 'ZSEMI', i, gAt(i, NSEMI)));
-  for (let i = 1; i <= NSOFT; i++) write(fillerFrom(PLTR, 'ZSOFT', i, gAt(i, NSOFT)));
-  for (let i = 1; i <= NIND; i++) write(fillerFrom(BE, 'ZIND', i, gAt(i, NIND)));
-
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.json'));
+  const files = schreibeUniversum(dir, { weglassen: ['CRDO'] }).dateien;
   // Fixture-Selbstpruefung: >=100 Eintraege, CRDO wirklich abwesend (sonst prueft der Test nichts).
   check('Fixture ist honest: >=100 Eintraege und CRDO fehlt', () => {
     assert.ok(files.length >= 100, `Fixture nur ${files.length} Dateien (<100) — Datei-Gate wuerde skippen`);
