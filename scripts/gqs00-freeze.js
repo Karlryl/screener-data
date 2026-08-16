@@ -179,7 +179,8 @@ function pendingTransitionHashes() {
 
 // M-A (16.08.2026): der Uebergang traegt ab jetzt auch geaenderte ERWARTUNGEN, nicht nur
 // geaenderte Quelltexte. Grund: die Einmalertrag-Aenderung beruehrte keine einzige
-// Golden-Fixture, der Kadenz-Waechter beruehrt neun von 25 — eine Reihe mit
+// Golden-Fixture, der Kadenz-Waechter beruehrt ACHT von 25 (hier stand "neun" — nachgezaehlt
+// am Artefakt, es sind acht, so wie in transition.json und im Beschluss) — eine Reihe mit
 // Halbjahres-Eimer bekommt jetzt das Jahres-Bein, und genau das SOLL sie.
 //
 // ⚠ DAS IST KEINE LOCKERUNG, und darauf kommt es an: jeder Fall hat weiterhin GENAU EINE
@@ -187,14 +188,25 @@ function pendingTransitionHashes() {
 // des pending-Artefakts, fuer alle uebrigen unveraendert die des Siegels. Damit das
 // pending-Artefakt kein Hintereingang wird, wird es zuerst gegen das Siegel gehalten: es
 // darf sich AUSSCHLIESSLICH an den gelisteten Faellen unterscheiden — bewegt es einen
-// nicht genannten Fall, ist der Pruefer rot, obwohl der Code stimmt.
+// nicht genannten Fall, ist der Pruefer rot, obwohl der Code stimmt. Anders als beim
+// Quelldatei-Fenster daneben gibt es hier KEINE Zwei-Wege-Akzeptanz: fuer einen gelisteten
+// Fall ist der alte Siegel-Wert nicht mehr gueltig (nachgemessen — der alte Code, der bis
+// gestern gruen war, faellt jetzt durch).
+//
+// WAS DIESER ZWEIG NICHT LEISTET, damit es niemand annimmt: er begrenzt die Zahl der
+// gelisteten Faelle nicht. Wer 22 Faelle listet und das Artefakt dazu regeneriert, kommt
+// durch — die Staerke des Fensters ist und bleibt die Durchsicht von geaenderteFaelle.
+// Genau deshalb muss jeder Eintrag seine Zielzahl mitbringen (s. unten): die Liste ist
+// dann nicht "diese Ticker duerfen sich bewegen", sondern "auf exakt diese Werte".
 //
 // protocol/gqs-00/1.0.0/ bleibt byte-identisch. Beim Vollversiegeln von 1.1.0 (nach dem
 // ersten gruenen Automatik-Lauf) entfaellt dieses Verzeichnis und mit ihm dieser Zweig.
 const PENDING_TRACES_FILE = path.join(TRANSITION_DIR, 'score-traces.json');
+const rund3 = (x) => Math.round(x * 1000) / 1000;
 function pendingTraceErwartung(doc, sealedTraces) {
-  const genannt = (doc && doc.goldenFixtureImpact && Array.isArray(doc.goldenFixtureImpact.geaenderteFaelle))
-    ? doc.goldenFixtureImpact.geaenderteFaelle.map((f) => f.ticker) : [];
+  const faelle = (doc && doc.goldenFixtureImpact && Array.isArray(doc.goldenFixtureImpact.geaenderteFaelle))
+    ? doc.goldenFixtureImpact.geaenderteFaelle : [];
+  const genannt = faelle.map((f) => f.ticker);
   if (!genannt.length) return null;
   assert(fs.existsSync(PENDING_TRACES_FILE),
     'transition.json nennt geaenderte Golden-Fixtures, aber 1.1.0-pending/score-traces.json fehlt');
@@ -222,7 +234,24 @@ function pendingTraceErwartung(doc, sealedTraces) {
         'pending-Artefakt bewegt den NICHT gelisteten Fall ' + sealedTraces[i].ticker);
     }
   }
-  return pending;
+  // Review-Nachzug (unabhaengige Pruefung 16.08., Bruchprobe P9): bis hier war die
+  // Genehmigung nur "dieser Ticker DARF sich bewegen" — WOHIN, stand ausschliesslich in der
+  // Prosa. unroundedFinalAlt/Neu wurden von niemandem gelesen. Gemessen: die Liste durfte
+  // "CHENNPETRO.NS: 1.0 -> 42.0" behaupten, waehrend das Artefakt 96.104 -> 90.003 trug, und
+  // der Pruefer blieb gruen. Damit war genau die Zahl ungedeckt, die Karl und das Gericht
+  // lesen. Jetzt IST die dokumentierte Zahl die Genehmigung: sie wird gegen beide Artefakte
+  // gerechnet, und eine Bewegung ohne genannte Zielzahl gibt es nicht mehr.
+  for (const f of faelle) {
+    const i = sealedTraces.findIndex((x) => x.ticker === f.ticker);
+    for (const [feld, quelle, wo] of [['unroundedFinalAlt', sealedTraces[i], 'Siegel'], ['unroundedFinalNeu', pending[i], 'pending-Artefakt']]) {
+      assert.equal(typeof f[feld], 'number',
+        'transition.json listet ' + f.ticker + ' ohne ' + feld + ' — eine Bewegung ohne genannte Zielzahl ist keine Genehmigung');
+      assert.equal(rund3(quelle.score.unroundedFinal), rund3(f[feld]),
+        'transition.json behauptet fuer ' + f.ticker + ' ' + feld + '=' + f[feld]
+        + ', das ' + wo + ' traegt aber ' + rund3(quelle.score.unroundedFinal));
+    }
+  }
+  return { traces: pending, namen };
 }
 
 function walkFiles(dir) {
@@ -628,10 +657,21 @@ function verify() {
   const rebuiltTraces = fixtures.cases.map((fixture) => traceForCase(fixture, calibration, registry, manifest.formulaRegistrySha256));
   // Erwartete Traces: das Siegel — ausser fuer die im offenen Uebergang namentlich
   // gelisteten Faelle, fuer die das (gegen das Siegel gepruefte) pending-Artefakt gilt.
-  const sollTraces = pendingTraceErwartung(pendingTransition(), committedTraces.traces) || committedTraces.traces;
+  const uebergang = pendingTraceErwartung(pendingTransition(), committedTraces.traces);
+  const sollTraces = uebergang ? uebergang.traces : committedTraces.traces;
   assert.deepEqual(rebuiltTraces, sollTraces, 'score traces are not deterministic');
   for (let i = 0; i < fixtures.cases.length; i++) {
-    const soll = (sollTraces === committedTraces.traces) ? fixtures.cases[i].expected : expectedFromTrace(sollTraces[i]);
+    // Review-Nachzug (unabhaengige Pruefung 16.08., Bruchprobe P10): hier stand vorher
+    // "Fenster offen -> fuer ALLE Faelle gilt das pending-Artefakt". Fuer die 17 NICHT
+    // gelisteten Faelle war die Zeile damit eine Tautologie — sollTraces[i] ist dort per
+    // deepEqual oben mit rebuiltTraces[i] identisch, die Pruefung konnte nicht mehr
+    // fehlschlagen. Folge: solange das Fenster offen ist, wurde der expected-Block von
+    // golden-fixtures.json ueberhaupt nicht mehr gelesen — auf origin/main faellt derselbe
+    // Eingriff (ALNY.expected verbogen, Manifest nachgezogen) rot auf, auf dem Zweig blieb
+    // er gruen. Die zweite, unabhaengige Kopie der Zahlen gilt jetzt wieder fuer jeden Fall,
+    // den der Uebergang nicht namentlich freigegeben hat.
+    const gelistet = !!uebergang && uebergang.namen.has(fixtures.cases[i].ticker);
+    const soll = gelistet ? expectedFromTrace(sollTraces[i]) : fixtures.cases[i].expected;
     assert.deepEqual(expectedFromTrace(rebuiltTraces[i]), soll, 'golden fixture mismatch for ' + fixtures.cases[i].ticker);
   }
   const tie = fixtures.syntheticCases.find((entry) => entry.kind === 'percentile_midrank_tie');
@@ -694,4 +734,7 @@ if (require.main === module) {
 module.exports = {
   FREEZE_DIR, buildRegistry, canonicalStringify, sha256Canonical, sourceHashes,
   traceForCase, initialize, seal, verify,
+  // Export nur fuer den Wachposten: der Uebergangs-Zweig wird direkt geprueft, nicht ueber
+  // verify() — sonst muesste der Test protocol/gqs-00/1.0.0/ anfassen, um ihn zu brechen.
+  pendingTraceErwartung,
 };
