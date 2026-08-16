@@ -200,8 +200,20 @@ function pendingTraceErwartung(doc, sealedTraces) {
     'transition.json nennt geaenderte Golden-Fixtures, aber 1.1.0-pending/score-traces.json fehlt');
   const pending = JSON.parse(fs.readFileSync(PENDING_TRACES_FILE, 'utf8')).traces;
   assert.equal(pending.length, sealedTraces.length, 'pending-Traces haben eine andere Fall-Anzahl als das Siegel');
+  // Review-Nachzug (silent-failure-hunter, 16.08.): ein VERTIPPTER Ticker in der Liste lief
+  // vorher stumm mit — die Liste ist aber die Genehmigung selbst, also muss jeder Eintrag
+  // auf einen echten Fall zeigen. Sonst steht in der Akte eine Genehmigung fuer nichts.
+  for (const t of genannt) {
+    assert(sealedTraces.some((x) => x.ticker === t),
+      'transition.json listet einen Ticker, den es unter den Golden-Fixtures nicht gibt: ' + t);
+  }
   const namen = new Set(genannt);
   for (let i = 0; i < sealedTraces.length; i++) {
+    // Review-Nachzug: der Positionsabgleich unten setzt gleiche Reihenfolge voraus. Das wird
+    // jetzt behauptet UND geprueft — sonst faellt eine umsortierte Datei erst spaeter und
+    // mit unspezifischer Meldung auf.
+    assert.equal(pending[i].ticker, sealedTraces[i].ticker,
+      'pending-Artefakt ist anders sortiert als das Siegel (Position ' + i + ')');
     if (namen.has(sealedTraces[i].ticker)) {
       assert.notDeepEqual(pending[i], sealedTraces[i],
         'transition.json listet ' + sealedTraces[i].ticker + ' als geaendert, das pending-Artefakt aendert dort aber nichts');
