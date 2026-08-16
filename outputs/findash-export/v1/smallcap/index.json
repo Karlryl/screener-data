@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-09T17:27:00.732Z",
+  "generated_at": "2026-08-16T13:27:13.192Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 71.5
+    "coverage_pct": 71.4
   },
-  "generatedFromSnapshots": 534,
+  "generatedFromSnapshots": 517,
   "boards": [
     "smallcap-consumer-discretionary",
     "smallcap-consumer-staples",
@@ -38,8 +38,8 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 26,
-      "unprofitable": 18
+      "profitable": 24,
+      "unprofitable": 17
     },
     "smallcap-consumer-staples": {
       "profitable": 21,
@@ -50,8 +50,8 @@
       "unprofitable": 7
     },
     "smallcap-financials": {
-      "profitable": 6,
-      "unprofitable": 9
+      "profitable": 5,
+      "unprofitable": 8
     },
     "smallcap-health-care": {
       "profitable": 23,
@@ -59,14 +59,14 @@
     },
     "smallcap-industrials": {
       "profitable": 33,
-      "unprofitable": 24
+      "unprofitable": 23
     },
     "smallcap-it-services": {
       "profitable": 4,
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 15,
+      "profitable": 13,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
@@ -78,7 +78,7 @@
       "unprofitable": 3
     },
     "smallcap-software-comm-services": {
-      "profitable": 38,
+      "profitable": 36,
       "unprofitable": 18
     },
     "smallcap-utilities": {
@@ -88,16 +88,16 @@
   },
   "excluded": {
     "balance-sheet-bank": 63,
-    "data-suspect": 11,
+    "data-suspect": 8,
     "dup-issuer": 1,
     "insurer": 8,
     "lender-gp0": 7,
     "mortgage-reit": 5,
-    "no-revenue": 38,
+    "no-revenue": 37,
     "no-sector": 2,
-    "smallcap-thin-coverage": 38,
+    "smallcap-thin-coverage": 37,
     "telecom": 5,
-    "unrouted": 12
+    "unrouted": 10
   },
-  "coverageFloor": 0.68
+  "coverageFloor": 0.67
 }
