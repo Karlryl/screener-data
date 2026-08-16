@@ -258,6 +258,15 @@ test('MARKER_PFADE deklariert den Pfad, den findash abruft', () => {
     + '(data-layer/screener-sync.js) — jeder andere Ort ist fuer die Warnleiste unsichtbar.');
 });
 
+test('Runner-Scratch des Jobs steht in .gitignore (T564-B4, gleiche Hygiene)', () => {
+  const zeilen = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8')
+    .replace(/\r\n/g, '\n').split('\n').map((z) => z.trim());
+  for (const eintrag of ['_ghp_status/', '_vorgaenger.json']) {
+    assert.ok(zeilen.includes(eintrag),
+      eintrag + ' fehlt in .gitignore — Runner-Scratch des laufstatus-Jobs gehoert nie ins Repo.');
+  }
+});
+
 // ── Drift: die Job-Liste des Skripts muss die des Workflows sein ─────────────────────
 test('JOB_REIHENFOLGE deckt genau die Jobs des Tageslaufs ab (ohne laufstatus selbst)', () => {
   const erwartet = alleJobs(daily).filter((j) => j !== 'laufstatus');

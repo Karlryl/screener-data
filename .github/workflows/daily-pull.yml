@@ -1873,8 +1873,12 @@ jobs:
             STARTED_AT="$COMPLETED_AT"
           fi
           export STARTED_AT COMPLETED_AT
+          # Bewusst `if` statt `[ -f … ] && VORG=…`: GitHub faehrt run-Bloecke als `bash -e`,
+          # und ein test-und-zuweisen-Einzeiler traegt dort den Exit-Code der TEST-Haelfte.
+          # Heute steht eine Zeile dahinter, also folgenlos — als letzte Zeile eines Blocks
+          # waere derselbe Einzeiler ein exit 1 und der Marker fiele beim allerersten Lauf aus.
           VORG=""
-          [ -f _vorgaenger.json ] && VORG="_vorgaenger.json"
+          if [ -f _vorgaenger.json ]; then VORG="_vorgaenger.json"; fi
           node scripts/pipeline-status.js \
             --out outputs/pipeline-status/v1/latest.json \
             --vorgaenger "$VORG"

@@ -496,18 +496,61 @@ test('T573-R1: es gibt einen eigenen Waechter-Job mit if: always() und needs [pr
     'der Check-Schritt liegt nicht in diesem Job.');
 });
 
-test('T573-R1: KEIN Job haengt am Waechter (er darf nichts blockieren)', () => {
-  // Positiv-Pin am Objekt: jede needs-Zeile der Datei wird gelesen, nicht nur nach dem
-  // Namen gesucht — ein `needs: earnings-transport-waechter` in irgendeinem Folge-Job
-  // wuerde genau den Befund wieder einbauen (Ausfall reisst andere Jobs mit).
-  const needsZeilen = daily.split('\n').filter((z) => /^ {4}needs:/.test(z));
-  assert.ok(needsZeilen.length >= 4, 'zu wenige needs-Zeilen gefunden (' + needsZeilen.length
+/** Alle Job-IDs der Datei (Zeilen der Form `  <name>:` unterhalb von `jobs:`). */
+function jobNamen(text) {
+  const ab = text.indexOf('\njobs:\n');
+  assert.ok(ab >= 0, 'kein jobs:-Block gefunden');
+  return text.slice(ab).split('\n')
+    .filter((z) => /^ {2}[a-z0-9][a-z0-9-]*:$/.test(z))
+    .map((z) => z.trim().replace(/:$/, ''));
+}
+
+// T573-R1, nachgeschaerft Tag 971. Die geschuetzte SACHE ist: der Ausfall des Waechters
+// darf keinen anderen Job am Laufen hindern. Bis Tag 971 stand hier ein pauschales Verbot
+// des NAMENS in jeder needs-Zeile — das ist breiter als die Sache und hat einen legitimen
+// Abnehmer blockiert: der Statusmarker-Job `laufstatus` MUSS die Ergebnisse aller Jobs
+// sehen (auch dieses Waechters, findash hat dafuer die Uebersetzung "Quartalstermine"),
+// und er wird von einem roten Waechter nicht gehindert, weil er `if: always()` traegt.
+// Ein Job ohne `if: always()` wird bei gefallenem `needs` dagegen UEBERSPRUNGEN — genau
+// der Befund. Gepinnt wird darum die Bedingung, nicht der Name.
+test('T573-R1: wer am Waechter haengt, traegt if: always() (er darf nichts blockieren)', () => {
+  const namen = jobNamen(daily);
+  assert.ok(namen.length >= 5, 'zu wenige Jobs gefunden (' + namen.length
     + ') — der Sucher greift nicht mehr, die Zusicherung waere leer.');
-  for (const z of needsZeilen) {
-    assert.ok(!z.includes('earnings-transport-waechter'),
-      'ein Job haengt am Transport-Waechter ("' + z.trim() + '") — dann reisst dessen rotes X '
-      + 'wieder fremde Jobs mit, und T573-R1 ist rueckgaengig gemacht.');
+  let geprueft = 0;
+  for (const name of namen) {
+    const j = job(daily, name);
+    const m = /^ {4}needs:\s*(.+)$/m.exec(j);
+    if (!m || !m[1].includes('earnings-transport-waechter')) continue;
+    geprueft++;
+    assert.match(j, /^ {4}if:\s*always\(\)\s*$/m,
+      'der Job "' + name + '" haengt am Transport-Waechter, traegt aber kein `if: always()` — '
+      + 'ein rotes X des Waechters ueberspringt ihn dann komplett, und T573-R1 ist rueckgaengig '
+      + 'gemacht (ein ausgefallener Earnings-Pull kostet wieder fremde Jobs).');
   }
+  assert.ok(geprueft > 0, 'kein einziger Job haengt am Transport-Waechter — dann prueft diese '
+    + 'Zusicherung nichts mehr. Entweder ist der Sucher kaputt oder der Statusmarker-Job '
+    + '(laufstatus) hat den Waechter aus seinem needs: verloren; dann faellt dessen Ausfall '
+    + 'still aus dem Marker und Karls Banner schweigt bei einem roten Termin-Kanal.');
+});
+
+test('T573-R1 Ausbau-Probe: ein Abnehmer OHNE if: always() faellt auf', () => {
+  // Der Pruefer oben wird einmal absichtlich entwaffnet: dem Abnehmer wird sein
+  // `if: always()` genommen. Bleibt er dann gruen, misst er nichts.
+  const kaputt = daily.replace(
+    /(  laufstatus:\n    needs: \[[^\]]+\]\n)    if: always\(\)\n/, '$1');
+  assert.notEqual(kaputt, daily, 'der Rueckbau hat nichts getroffen — der laufstatus-Job sieht '
+    + 'anders aus als erwartet, damit ist diese Ausbau-Probe blind.');
+  const namen = jobNamen(kaputt);
+  let gefangen = false;
+  for (const name of namen) {
+    const j = job(kaputt, name);
+    const m = /^ {4}needs:\s*(.+)$/m.exec(j);
+    if (!m || !m[1].includes('earnings-transport-waechter')) continue;
+    if (!/^ {4}if:\s*always\(\)\s*$/m.test(j)) gefangen = true;
+  }
+  assert.ok(gefangen, 'ein Abnehmer ohne `if: always()` wird NICHT erkannt — die Zusicherung '
+    + 'darueber ist dann gruen-tot.');
 });
 
 /** Den VOLLEN run-Block des Transport-Checks fahren (inkl. MERGE-Vorlauf, T573-R1). */
