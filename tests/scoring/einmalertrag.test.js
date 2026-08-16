@@ -264,5 +264,102 @@ test('ungleiche Quartalslaengen sind nicht bewertbar - der Halbjahres-Eimer', ()
 });
 
 
+// ── Die zwei Schutzschichten, die eine Einzelzeilen-Pruefung NICHT leisten kann ─────────
+// einmalertragBewertbarkeit reist ueber drei Stationen: lamps.js (Erzeuger) -> score.js
+// rowMeta (Mapping) -> write-findash-export.js ROW_FIELDS (Writer). Faellt EINE davon aus,
+// steht das Feld auf JEDER Zeile null — und checkEinmalertragBewertbarkeit bleibt gruen,
+// weil null der legitime Normalfall ist (~90 % aller Zeilen). Genau so war mcapKlasse in
+// JEDEM ausgelieferten Export null, ohne dass etwas rot wurde (score.js rowMeta-Kommentar).
+// Deshalb pruefen die beiden Tests unten WERTE am Ende der Kette und Homogenitaet ueber die
+// Datei — gespiegelt von tests/einmalertrag-prognose.test.js, wo dasselbe Feldmuster haengt.
+const { scoreUniverse, produceRankings } = require('../../src/scoring/score.js');
+const formulas = require('../../src/scoring/formulas/index.js');
+const { mapBoardRow, validateFile } = require('../../scripts/write-findash-export.js');
+
+const V = (arr) => arr.map((v) => (v === null ? null : { value: v }));
+function kettenSnap(ticker, revQ, ends) {
+  const s = {
+    meta: { name: ticker + ' Inc.', sector: 'Technology', industry: 'Semiconductors', region: 'US', ticker },
+    marketCap: { value: 5e9 },
+    metrics: { revenueTTM: { value: 1670 } },
+    annual: { annualRev: V([1670, 900]), annualGP: V([900, 500]), annualOpInc: V([300, 150]) },
+    timeseries: { revenueQ: V(revQ), opIncQ: V([60, 50, 40, 30, 20]), grossProfitQ: V([100, 90, 80, 70, 60]) },
+  };
+  if (ends) s.timeseries.revenueQEnds = ends;
+  return s;
+}
+const QUARTALSRASTER = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
+const HALBJAHRESEIMER = ['2026-03-31', '2025-12-31', '2025-06-30', '2025-03-31', '2024-12-31'];
+
+test('KETTE: der Bewertbarkeits-Grund ueberlebt scoreUniverse -> produceRankings -> mapBoardRow', () => {
+  const universum = [
+    // Luecke in den letzten vier -> nicht bewertbar, Grund zuWenigQuartale
+    kettenSnap('FAKELUECKE', [1400, null, 100, 90, 70], QUARTALSRASTER),
+    // vier verwertbare Quartale, aber 3/6/3-Monatsraster -> Grund ungleicheKadenz
+    kettenSnap('FAKEKADENZ', [200, 180, 160, 140, 120], HALBJAHRESEIMER),
+    // saubere Reihe, Lampe aus -> bewertbar -> null
+    kettenSnap('FAKEGLATT', [200, 180, 160, 140, 120], QUARTALSRASTER),
+    // Lampe AN -> die Lampe hat geurteilt -> ebenfalls null (und nie ein Grund)
+    kettenSnap('FAKESPITZE', [1400, 80, 100, 90, 70], QUARTALSRASTER),
+  ];
+  // Vorbedingungen sichtbar machen, sonst prueft der Test nach einer Routing-Aenderung nichts mehr.
+  assert.equal(einmalertrag(universum[3]), true, 'FAKESPITZE: Lampen-Vorbedingung');
+  assert.equal(einmalertrag(universum[2]), false, 'FAKEGLATT: muss geprueft und sauber sein');
+
+  const results = scoreUniverse(universum, formulas);
+  assert.equal(results.filter((r) => r.action === 'route').length, 4,
+    'alle vier Testzeilen muessen geroutet sein, sonst misst die Kette nichts');
+  const rk = produceRankings(results, { topN: 50 });
+  const alleZeilen = [].concat(...Object.values(rk.branches).map((b) => [].concat(b.profitable || [], b.unprofitable || [])));
+
+  const erwartet = { FAKELUECKE: 'zuWenigQuartale', FAKEKADENZ: 'ungleicheKadenz', FAKEGLATT: null, FAKESPITZE: null };
+  for (const [ticker, soll] of Object.entries(erwartet)) {
+    const zeile = alleZeilen.find((r) => r.ticker === ticker);
+    assert.ok(zeile, ticker + ' fehlt in den Board-Zeilen');
+    // Station 2: score.js rowMeta
+    assert.equal(zeile.einmalertragBewertbarkeit, soll, ticker + ': Wert nach dem score.js-Mapping');
+    // Station 3: der Writer muss das Feld FUEHREN, nicht nur die Zeile durchreichen.
+    const exportiert = mapBoardRow(zeile, 0);
+    assert.ok('einmalertragBewertbarkeit' in exportiert, ticker + ': Feld faellt im Export-Writer heraus');
+    assert.equal(exportiert.einmalertragBewertbarkeit, soll, ticker + ': Wert am Ende der Kette');
+    // Gegenrichtung: ein Grund darf nie neben der Lampe stehen.
+    if (soll !== null) assert.ok(!exportiert.lamps.includes('einmalertrag'), ticker + ': Grund UND Lampe');
+  }
+});
+
+test('DATEI-WAECHTER: das Bewertbarkeits-Feld ist auf allen Zeilen da oder auf keiner', () => {
+  // checkEinmalertragBewertbarkeit kehrt bei fehlendem Feld um ("Abwesenheit legitim") — fuer
+  // eine EINZELNE Zeile richtig (Altbestand), ueber die ganze Datei aber unmoeglich: der
+  // Writer fuehrt das Feld in ROW_FIELDS und setzt es auf JEDER Zeile. Halb da = halb kaputter
+  // Erzeuger, und genau das sieht keine Einzelzeilen-Pruefung.
+  const basisZeile = {
+    ticker: 'NVDA', name: 'NVIDIA Corporation', score: 88.2, track: 'profitable', lamps: [],
+    overview: { kind: 'gp', value: 0.2, companion: 89.1 },
+    country: 'United States', region: 'North America', sector: 'Technology',
+    marketCap: 5e12, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
+    profitTier: 'langfristig-profitabel', ipoYear: 1999, cohortN: 90, cohortFallback: false,
+  };
+  const datei = (rows) => ({ schema: 'findash-export/v1', branch: 'semiconductors', boardStatus: 'core',
+    profitable: rows, unprofitable: [] });
+  const mitFeld = mapBoardRow({ ...basisZeile, einmalertragBewertbarkeit: 'ungleicheKadenz' }, 0);
+  const ohneFeld = mapBoardRow(basisZeile, 1); delete ohneFeld.einmalertragBewertbarkeit;
+
+  const gemischt = [];
+  validateFile(datei([mitFeld, ohneFeld]), 'semiconductors', gemischt);
+  assert.ok(gemischt.some((x) => /einmalertragBewertbarkeit/.test(x)),
+    'halb verdrahtete Datei blieb unbemerkt: ' + JSON.stringify(gemischt));
+
+  // Kein Falsch-Rot: neue Datei (Feld ueberall) und Altbestand (Feld nirgends) gehen durch.
+  const alleMit = [];
+  validateFile(datei([mitFeld, mapBoardRow({ ...basisZeile, einmalertragBewertbarkeit: null }, 1)]), 'semiconductors', alleMit);
+  assert.ok(!alleMit.some((x) => /einmalertragBewertbarkeit/.test(x)), 'neue Datei falsch-rot: ' + JSON.stringify(alleMit));
+
+  const alleOhne = [];
+  const ohne2 = mapBoardRow(basisZeile, 1); delete ohne2.einmalertragBewertbarkeit;
+  validateFile(datei([ohneFeld, ohne2]), 'semiconductors', alleOhne);
+  assert.ok(!alleOhne.some((x) => /einmalertragBewertbarkeit/.test(x)), 'Altbestand falsch-rot: ' + JSON.stringify(alleOhne));
+});
+
+
 console.log(`\neinmalertrag: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

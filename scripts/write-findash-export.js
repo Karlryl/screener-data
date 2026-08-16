@@ -817,6 +817,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
   const alleZeilen = [].concat(mk.profitable || [], mk.unprofitable || []);
   checkFeldHomogen(alleZeilen, 'einmalertragPrognose', kind, errs);
+  checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.
