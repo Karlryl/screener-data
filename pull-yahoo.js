@@ -586,10 +586,17 @@ function _resolveTradingFx(q, existing) {
   const meta = (existing && existing.meta) || {};
   // Reihenfolge = Verlaesslichkeit: heutige Quote > im Snapshot festgehaltene
   // Quote-Waehrung > meta.tradingCurrency (Mapper, Tag 204 — auf jedem Voll-Pull gesetzt).
+  // Waehrungs-Chunk 1: die Herkunft mitgeben. Nur die HEUTIGE Quote belegt die
+  // Handelswaehrung; die beiden Rueckfallebenen erben sie aus dem Snapshot und koennen
+  // deshalb dieselbe Gleichsetzung mitschleppen, die der Mapper als
+  // tradingCurrencyAssumed markiert. Der Aufrufer darf die Annahme nur dann loeschen,
+  // wenn quelle === 'quote'.
   const ccy = (q && q.currency)
     || (existing && existing.price && existing.price.currency)
     || meta.tradingCurrency
     || null;
+  const quelle = (q && q.currency) ? 'quote'
+    : ((existing && existing.price && existing.price.currency) ? 'snapshot-price' : 'meta');
   if (!ccy) {
     // F-CGPT-002: Bisher wurde hier auf meta.fxRateApplied bzw. auf den Faktor 1
     // zurueckgefallen — ein Yen-Kurs landete damit unveraendert als Dollar-Kurs im
@@ -602,7 +609,27 @@ function _resolveTradingFx(q, existing) {
   if (!fx) {
     return { ok: false, reason: 'kein brauchbarer USD-Kurs fuer Handelswaehrung ' + ccy };
   }
-  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy) };
+  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy), quelle };
+}
+
+// Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
+// Der price-only-Schnellweg rechnet Preis UND marketCap mit dem Handelskurs um, hat das aber
+// nie im Snapshot vermerkt — ein price-only-aufgefrischter Snapshot sah deshalb aus wie einer
+// ganz OHNE Handelskurs-Umrechnung. Zwei Folgen: score.js fxSuspect hielt jede taeglich
+// korrekt umgerechnete Auslandsnotiz fuer verdaechtig, und der Ausliefer-Waechter in
+// scripts/write-findash-export.js haette ~14 400 von 14 900 Zeilen die Groesse genullt.
+// Eigene Funktion statt inline, damit tests/waehrung-handelskurs.test.js die Entscheidung
+// AUSFUEHREN kann — _priceOnlyUpdate steckt im Closure von pullAll und ist nur ueber einen
+// echten Netz-Pull erreichbar.
+function _stampeHandelskurs(meta, tradingFx) {
+  if (!meta || !tradingFx || tradingFx.ok !== true) return meta;
+  meta.tradingCurrencyOriginal = tradingFx.currency;
+  meta.tradingFxRateApplied = tradingFx.factor;
+  // Nur die heutige Quote BELEGT die Handelswaehrung. Kommt sie aus dem Snapshot, bleibt eine
+  // dort vermerkte Annahme bestehen — sonst verwandelte der Schnellweg eine geratene Waehrung
+  // in einen Beleg, indem er sie einmal im Kreis reicht.
+  if (tradingFx.quelle === 'quote') meta.tradingCurrencyAssumed = false;
+  return meta;
 }
 
 // Tag 134: stable region enum derived from currency + exchangeName.
@@ -1511,6 +1538,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   ].every(v => typeof v !== 'string' || v.trim() === '');
   const rcOriginal = (_fc && _fc !== _tc) ? _fc : (_tc || 'USD');
   const tradingCurrency = _tc || rcOriginal; // NEW: trading-quote ccy for downstream visibility
+  // Waehrungs-Chunk 1 (16.08.2026): der Fallback `_tc || rcOriginal` ist die stille
+  // Wurzel des "falscher Kurs auf marketCap"-Falls. Fehlt Yahoos price.currency, BEHAUPTET
+  // der Snapshot danach, Handels- und Bilanzierungswaehrung seien identisch — und
+  // _convertSnapshotToUSD ueberspringt daraufhin die Handelskurs-Umrechnung und skaliert
+  // die (in Wahrheit in HKD notierte) marketCap mit dem CNY-Kurs. Wirkung am HK-Bestand
+  // gerechnet: CNY 0,14854 statt HKD 0,12744 = +16,6 % zu hohe Marktkapitalisierung, ohne
+  // jede Spur im Snapshot. Auch score.js fxSuspect (Dedup-Tie-Break) kann den Fall NICHT
+  // sehen, weil der genau auf tradingCurrency !== reportingCurrency prueft — die
+  // Gleichsetzung macht ihn blind.
+  // Geraten wird trotzdem weiter (eine fail-closed-Ablehnung wuerde den Ticker ganz
+  // verlieren, obwohl bei echten Inlandsnotierungen die Annahme meist stimmt), aber die
+  // Annahme wird jetzt MARKIERT. Konsument: scripts/write-findash-export.js, das eine
+  // Zeile ohne nachgewiesene Handelskurs-Umrechnung mit marketCap=null ausliefert —
+  // fehlende Groesse ist harmlos, falsche nicht.
+  const _tradingCurrencyAssumed = (typeof _tc !== 'string' || _tc.trim() === '');
   // Tag 206f (Bug-Hunt Agent D HIGH C2): if Yahoo returns null financialCurrency,
   // we fall back to trading-currency — which is correct for native listings
   // (USD/USD) but WRONG for OTC pink-sheets where annual.* may be in a third
@@ -1536,6 +1578,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       exchangeName: exchangeName || null,                  // Tag 134: preserved for diagnostics
       reportingCurrency: rcOriginal,                       // overwritten to 'USD' by _convertSnapshotToUSD
       tradingCurrency,                                     // Tag 204: trading-quote ccy (may differ from reporting for ADRs)
+      // Waehrungs-Chunk 1: true = tradingCurrency ist NICHT von Yahoo, sondern aus
+      // reportingCurrency uebernommen (price.currency fehlte). Jeder Handelskurs-Bezug
+      // auf dieser Zeile ist damit unbelegt.
+      tradingCurrencyAssumed: _tradingCurrencyAssumed,
       _ccyMissingCompletely,
       fetchedAt: asOf,
       // Tag 215j: also write `asOf` for the F-CI-016 Verify Snapshot Freshness
@@ -2681,6 +2727,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // gerechnet wurde. Der Voll-Pull-Stempel (fxRateSourceReporting) bleibt unangetastet:
     // annual/metrics/Kursziele hat dieser Lauf nicht angefasst.
     _stampTradingFxSource(existing, tradingFx.provenance);
+    existing.meta = existing.meta || {};
+    _stampeHandelskurs(existing.meta, tradingFx);
     if (q.regularMarketPrice != null) {
       // audit fix BH-045: stamp asOf only when a price was actually written. The
       // unconditional stamp (moved) previously marked the F-CI-016 freshness gate's
@@ -4097,6 +4145,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // sind die LEBENDEN Tabellen: Tests spielen darueber eine Kunst-Waehrung ein und
   // brauchen dafuer weder Netz noch eine manipulierte fx-rates.json.
   _fxFactorFor, _stampFxSource, _quoteHasSubstance, _resolveTradingFx,
+  // Waehrungs-Chunk 1 (16.08.2026): Handelskurs-Stempel als Seam fuer
+  // tests/waehrung-handelskurs.test.js.
+  _stampeHandelskurs,
   _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
   // Review-Nachzug (09.08.2026): Befund A (fail-closed bei werfender Umrechnung),
   // Befund B (Zwei-Bein-Stempel), Befund C (EINE Marker-Konstante — der Waechter

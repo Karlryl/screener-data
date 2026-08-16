@@ -1,0 +1,143 @@
+'use strict';
+/**
+ * Waechter fuer die Handelswaehrung — Waehrungs-Chunk 1 (16.08.2026).
+ *
+ * BEFUND-LAGE, an echten Yahoo-Antworten vom 16.08.2026 nachgerechnet:
+ *
+ *   Yahoo liefert marketCap in der HANDELS-Waehrung (price.currency), die Bilanzzahlen in
+ *   der BERICHTS-Waehrung (financialData.financialCurrency). Bei 169 der 269 .HK-Zeilen des
+ *   Boards vom 07.08. fallen die beiden auseinander: gehandelt in HKD, bilanziert in CNY.
+ *   Kurse an dem Tag: HKD 0,1274421 / CNY 0,14853986 — wer die Marktkapitalisierung mit dem
+ *   Berichtskurs skaliert, liefert sie um 16,6 % zu hoch aus.
+ *
+ *   Der Umrechner selbst macht das RICHTIG, sobald er die Handelswaehrung kennt (erster
+ *   Block unten, live gegengerechnet an 0020.HK/1585.HK/9992.HK). Die verbleibende Wurzel
+ *   ist der Fallback im Mapper: fehlt Yahoos price.currency, wird die Handelswaehrung
+ *   STILL mit der Berichtswaehrung gleichgesetzt — danach sieht der Fall wie eine
+ *   Inlandsnotierung aus, die Umrechnung unterbleibt, und niemand kann es dem Snapshot
+ *   ansehen. Auch score.js fxSuspect ist dagegen blind (es prueft tradingCurrency !==
+ *   reportingCurrency, und die Gleichsetzung macht die Bedingung falsch).
+ *
+ * Usage:  node tests/waehrung-handelskurs.test.js   (Exit 0/1)
+ */
+const assert = require('node:assert/strict');
+const py = require('../pull-yahoo.js');
+
+let pass = 0, fail = 0;
+function check(name, fn) {
+  try { fn(); pass++; console.log('  ok   ' + name); }
+  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+
+// Kunst-Kurse ueber die LEBENDEN Tabellen: der Test darf nicht davon abhaengen, was heute
+// zufaellig in fx-rates.json steht (Praezedenz: tests/p0-haertung2-fx-ehrlichkeit.test.js).
+const HKD = 0.1274421;   // echter Kurs 16.08.2026
+const CNY = 0.14853986;  // echter Kurs 16.08.2026
+py._FX_TO_USD.HKD = HKD;
+py._FX_TO_USD.CNY = CNY;
+py._FX_PROVENANCE.HKD = 'live';
+py._FX_PROVENANCE.CNY = 'live';
+
+// ---------------------------------------------------------------------------
+// 1) Der Umrechner nimmt fuer marketCap den HANDELS-, fuer die Bilanz den BERICHTS-Kurs.
+//    Zahlen aus der echten Yahoo-Antwort fuer 0020.HK (SenseTime) vom 16.08.2026.
+// ---------------------------------------------------------------------------
+check('HK-Doppelwaehrung: marketCap mit HKD, Umsatz mit CNY (0020.HK, echte Zahlen)', () => {
+  const snap = {
+    meta: { ticker: '0020.HK', reportingCurrency: 'CNY', tradingCurrency: 'HKD' },
+    marketCap: { value: 56925810688 },      // HKD, Yahoo price.marketCap
+    metrics: { revenueTTM: { value: 5014640128 } }, // CNY, Yahoo financialData.totalRevenue
+  };
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.marketCap.value, 56925810688 * HKD,
+    'marketCap muss mit dem HKD-Handelskurs skaliert sein');
+  assert.equal(snap.metrics.revenueTTM.value, 5014640128 * CNY,
+    'Umsatz muss mit dem CNY-Berichtskurs skaliert sein');
+  // Der Schaden, den das verhindert: mit dem CNY-Kurs waere die Groesse um 16,6 % zu hoch.
+  const falsch = 56925810688 * CNY;
+  assert.ok(falsch / snap.marketCap.value > 1.16,
+    'Kontrollrechnung: der Berichtskurs waere >16 % zu hoch (' + (falsch / snap.marketCap.value).toFixed(4) + ')');
+});
+
+// ---------------------------------------------------------------------------
+// 2) Die Wurzel: fehlt price.currency, ist die Handelswaehrung GERATEN — und das muss im
+//    Snapshot stehen. Ohne die Markierung ist der Fall von einer echten Inlandsnotierung
+//    nicht zu unterscheiden.
+// ---------------------------------------------------------------------------
+function mapMit(priceModul) {
+  return py.mapYahooToCanonical(
+    { price: priceModul, financialData: { financialCurrency: 'CNY' } },
+    { ticker: '0020.HK', name: 'SenseTime Group Inc.' },
+    '2026-08-16T00:00:00.000Z'
+  );
+}
+
+check('price.currency vorhanden -> Handelswaehrung belegt (tradingCurrencyAssumed=false)', () => {
+  const snap = mapMit({ currency: 'HKD', marketCap: 56925810688, exchangeName: 'HKSE' });
+  assert.equal(snap.meta.tradingCurrency, 'HKD');
+  assert.equal(snap.meta.reportingCurrency, 'CNY');
+  assert.equal(snap.meta.tradingCurrencyAssumed, false);
+});
+
+check('price.currency fehlt -> Annahme markiert (tradingCurrencyAssumed=true)', () => {
+  const snap = mapMit({ marketCap: 56925810688, exchangeName: 'HKSE' });
+  assert.equal(snap.meta.tradingCurrency, 'CNY',
+    'Verhalten unveraendert: es wird weiter die Berichtswaehrung angenommen');
+  assert.equal(snap.meta.tradingCurrencyAssumed, true,
+    'die Annahme MUSS markiert sein — sonst ist sie von einem Beleg nicht zu unterscheiden');
+});
+
+check('leerer String zaehlt als fehlend (Yahoo liefert gelegentlich "")', () => {
+  const snap = mapMit({ currency: '   ', marketCap: 1, exchangeName: 'HKSE' });
+  assert.equal(snap.meta.tradingCurrencyAssumed, true);
+});
+
+check('Schadensmechanismus: unter der Annahme unterbleibt die Handelskurs-Umrechnung', () => {
+  const snap = mapMit({ marketCap: 56925810688, exchangeName: 'HKSE' });
+  py._convertSnapshotToUSD(snap);
+  // Genau das ist der Fall, den der Ausliefer-Waechter nullt: die Groesse ist um den
+  // Faktor CNY/HKD zu hoch, und OHNE die Markierung saehe sie unauffaellig aus.
+  assert.equal(snap.marketCap.value, 56925810688 * CNY);
+  assert.equal(snap.meta.tradingFxRateApplied, undefined,
+    'kein Handelskurs-Stempel — genau daran erkennt der Ausliefer-Waechter den Fall');
+  assert.equal(snap.meta.tradingCurrencyAssumed, true);
+});
+
+// ---------------------------------------------------------------------------
+// 3) Der price-only-Schnellweg (80 % der taeglichen Laeufe) rechnet mit dem Handelskurs —
+//    und muss das jetzt auch stempeln, sonst sieht jede korrekt umgerechnete Zeile aus wie
+//    eine unumgerechnete.
+// ---------------------------------------------------------------------------
+check('_resolveTradingFx meldet die Herkunft der Handelswaehrung', () => {
+  const ausQuote = py._resolveTradingFx({ currency: 'HKD' }, { meta: { tradingCurrency: 'CNY' } });
+  assert.equal(ausQuote.ok, true);
+  assert.equal(ausQuote.quelle, 'quote');
+  assert.equal(ausQuote.currency, 'HKD');
+  const ausMeta = py._resolveTradingFx({}, { meta: { tradingCurrency: 'HKD' } });
+  assert.equal(ausMeta.quelle, 'meta');
+  const ausSnapPreis = py._resolveTradingFx({}, { price: { currency: 'HKD' }, meta: {} });
+  assert.equal(ausSnapPreis.quelle, 'snapshot-price');
+});
+
+check('Stempel: Kurs + Waehrung landen im meta, Annahme faellt NUR bei Quote-Beleg', () => {
+  const metaQuote = { tradingCurrency: 'CNY', tradingCurrencyAssumed: true };
+  py._stampeHandelskurs(metaQuote, py._resolveTradingFx({ currency: 'HKD' }, { meta: metaQuote }));
+  assert.equal(metaQuote.tradingFxRateApplied, HKD, 'der angewandte Kurs muss im Snapshot stehen');
+  assert.equal(metaQuote.tradingCurrencyOriginal, 'HKD');
+  assert.equal(metaQuote.tradingCurrencyAssumed, false, 'die heutige Quote belegt die Waehrung');
+
+  const metaGeerbt = { tradingCurrency: 'CNY', tradingCurrencyAssumed: true };
+  py._stampeHandelskurs(metaGeerbt, py._resolveTradingFx({}, { meta: metaGeerbt }));
+  assert.equal(metaGeerbt.tradingFxRateApplied, CNY);
+  assert.equal(metaGeerbt.tradingCurrencyAssumed, true,
+    'eine aus dem Snapshot geerbte Waehrung darf die Annahme NICHT in einen Beleg verwandeln');
+});
+
+check('Stempel schweigt, wenn kein Kurs ermittelt werden konnte', () => {
+  const meta = {};
+  py._stampeHandelskurs(meta, { ok: false, reason: 'x' });
+  assert.deepEqual(meta, {}, 'fail-closed: kein Kurs -> kein Stempel');
+});
+
+console.log('\nwaehrung-handelskurs: ' + pass + ' ok, ' + fail + ' fail');
+process.exit(fail ? 1 : 0);
