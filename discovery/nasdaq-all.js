@@ -15,6 +15,7 @@
  */
 'use strict';
 const https = require('https');
+const { isWhenIssuedSecurity } = require('./when-issued.js');
 
 const NASDAQ_LISTED = 'https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt';
 const OTHER_LISTED  = 'https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt';
@@ -47,6 +48,7 @@ const JUNK_NAME_RE = /\b(?:warrant|right)s?\b|\bpreferred\b/i;
 // neither path reintroduces the bare-letter-suffix bug.
 function isJunkSecurity(symbol, name) {
   if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (isWhenIssuedSecurity(name)) return true;
   if (name && JUNK_NAME_RE.test(name)) return true;
   return false;
 }

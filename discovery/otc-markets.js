@@ -13,6 +13,7 @@
  */
 'use strict';
 const https = require('https');
+const { isWhenIssuedSecurity } = require('./when-issued.js');
 // DT-1: Gesamt-Zeitbudget statt Retry-Leiter je Anfrage (Herleitung dort).
 const { zeitbudget, budgetRissMelden, mitBudget } = require('./zeitbudget.js');
 
@@ -33,6 +34,7 @@ const JUNK_SUFFIX_RE = /\.WS$|\.WT$|\.WI$|\.RT$|\.UN$|\.U$/i;
 const JUNK_NAME_RE = /\b(?:warrant|right)s?\b/i;
 function isJunkSecurity(symbol, name) {
   if (JUNK_SUFFIX_RE.test(symbol)) return true;
+  if (isWhenIssuedSecurity(name)) return true;
   if (name && JUNK_NAME_RE.test(name)) return true;
   return false;
 }
