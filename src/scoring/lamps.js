@@ -609,14 +609,18 @@ function shareCountDilution(s, ctx) {
 // sichtbar und geroutet. Kein Abzug, kein gesetzter Wert — nur "diese Achsen sind fuer
 // diese Zeile nicht bewertbar". Die Begruendung steht bei EINMALERTRAG_BLIND in score.js.
 const EINMALERTRAG_ANTEIL = 0.50;
+// Ein Quartal ist verwertbar, wenn eine positive Zahl drinsteht. EINE Definition fuer
+// einmalertrag() UND einmalertragBewertbarkeit(): die zweite Funktion beschriftet die
+// null-Ausgaenge der ersten, und beschriftet falsch, sobald beide verschieden zaehlen
+// (dann meldet sie 'ungleicheKadenz', wo 'zuWenigQuartale' richtig waere, oder umgekehrt).
+const quartalBrauchbar = (v) => Number.isFinite(v) && v > 0;
 function einmalertrag(s) {
   // ⚠ Bewusst die ROHE Reihe (mit Luecken), NICHT presentValues: der Saison-Vergleich unten
   // stellt Quartal gegen Quartal, und presentValues wuerfe Luecken heraus und damit die
   // Positionen durcheinander — Q4 laege dann gegen Q3 des Vorjahres.
   const roh = norm(s, 'revenueQ');
   const letzte4 = roh.slice(0, 4);
-  const brauchbar = (v) => Number.isFinite(v) && v > 0;
-  if (letzte4.length < 4 || !letzte4.every(brauchbar)) return null;   // nicht bewertbar, nicht "sauber"
+  if (letzte4.length < 4 || !letzte4.every(quartalBrauchbar)) return null;   // nicht bewertbar, nicht "sauber"
   // 29.07.: UNGLEICHE PERIODENLAENGEN sind nicht vergleichbar.
   // Bei chinesischen A-Aktien und weiteren Boersen fehlt in der Quartalsreihe das
   // September-Quartal; die Enden lauten dann z. B. 2026-03-31 / 2025-12-31 / 2025-06-30 /
@@ -690,7 +694,7 @@ function einmalertrag(s) {
   const spitzeIdx = letzte4.indexOf(groesster);
   const vjIdx = jahresVergleichIdx(s, 'revenueQ', spitzeIdx);
   const vorjahresQuartal = vjIdx ? roh[vjIdx.idx] : null;
-  if (brauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
+  if (quartalBrauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
 
   // Saison-Schutz Teil 2: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison
   // und kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
@@ -698,7 +702,7 @@ function einmalertrag(s) {
   // wenn zu jedem der vier juengsten Quartale der Jahrespartner wirklich vier Plaetze weiter
   // hinten steht. Ohne Enden ist die Pruefung true (unveraendert).
   const vorjahr = roh.slice(4, 8);
-  if (vorjahr.length === 4 && vorjahr.every(brauchbar) && jahresFensterAusgerichtet(s, 'revenueQ', 4)) {
+  if (vorjahr.length === 4 && vorjahr.every(quartalBrauchbar) && jahresFensterAusgerichtet(s, 'revenueQ', 4)) {
     const groessterVorjahr = Math.max(...vorjahr);
     const anteilVorjahr = groessterVorjahr / vorjahr.reduce((a, b) => a + b, 0);
     if (letzte4.indexOf(groesster) === vorjahr.indexOf(groessterVorjahr)
@@ -775,7 +779,7 @@ function einmalertragPrognose(s, lampeAktiv) {
 function einmalertragBewertbarkeit(s) {
   if (einmalertrag(s) !== null) return null;             // bewertbar: Lampe hat geurteilt
   const letzte4 = norm(s, 'revenueQ').slice(0, 4);
-  if (letzte4.length < 4 || !letzte4.every((v) => Number.isFinite(v) && v > 0)) return 'zuWenigQuartale';
+  if (letzte4.length < 4 || !letzte4.every(quartalBrauchbar)) return 'zuWenigQuartale';
   return 'ungleicheKadenz';
 }
 
