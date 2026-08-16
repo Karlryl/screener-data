@@ -185,15 +185,41 @@ function guard({ blocking, report, exempt, repoFiles, blockingAlways }, log) {
   return true;
 }
 
+// Tag 956: eine Testdatei, die NULL Pruefungen ausgefuehrt hat, darf nicht als PASS zaehlen.
+// BEFUND (Endprobe): anchors.rank.test.js — der Direktive-4-Waechter — meldet ohne Universum
+// "0 ok, 0 fail (skipped: kein Universum)" und endet mit Exit 0. Das Gate sah nur den
+// Exit-Code und schrieb "PASS": eine Pruefung, die nichts geprueft hat, stand in derselben
+// Spalte wie 250 echte. Genau diese Verwechslung ist die Bugklasse, die hier vermieden
+// werden soll. Es sind nicht nur die Anker: ohne Universum melden SECHS Suiten "0 ok"
+// (anchors.rank, calib-parity, calibration-ref, calibration, fairness-guards,
+// score-breakdown); drei weitere (phase, quality-board, score.integration) fuehren einen
+// Teil aus und bleiben deshalb zu Recht PASS.
+//
+// Regel: Exit 0 UND selbstgemeldete "0 ok" + "0 fail" => SKIP statt PASS, namentlich
+// ausgewiesen und in der Summenzeile gezaehlt. BEWUSST NICHT rot: leeres snapshots/ ist im
+// pre-pull-Gate und im PR-Check der legitime Normalzustand (dort gibt es das Universum noch
+// gar nicht) — rot faerben hiesse, Karls Tageslauf taeglich vor dem Datenabruf zu blocken.
+// Die SCHARFE Stufe fuer den Rang-Anker sitzt an der Stelle, wo das Universum real existiert:
+// im Live-Universum-Gate des scoring-Jobs (daily-pull.yml), das einen Skip dort hart rot faerbt.
+// Dateien, die das "N ok"-Format gar nicht verwenden, bleiben unberuehrt.
+const NICHTS_GEPRUEFT = (out) => /(^|[^\d])0 ok\b/.test(out) && /(^|[^\d])0 fail\b/.test(out);
+
 function runFiles(files, cwd, log) {
   const failed = [];
+  const skipped = [];
   for (const t of files) {
     log(`--- ${t} ---`);
-    const r = spawnSync(process.execPath, [t], { cwd, stdio: 'inherit' });
-    if (r.status === 0) log(`PASS ${t}`);
-    else failed.push(t);
+    const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
+    process.stdout.write((r.stdout || '') + (r.stderr || ''));
+    if (r.status !== 0) { failed.push(t); continue; }
+    if (NICHTS_GEPRUEFT((r.stdout || '') + (r.stderr || ''))) {
+      skipped.push(t);
+      log(`SKIP ${t} — 0 Pruefungen ausgefuehrt (Voraussetzung fehlt), zaehlt NICHT als PASS`);
+      continue;
+    }
+    log(`PASS ${t}`);
   }
-  return failed;
+  return { failed, skipped };
 }
 
 /**
@@ -211,14 +237,18 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   const blocking = expandGlobs(blockingGlobs, cwd).filter(f => !report.includes(f));
 
   if (!guard({ blocking, report, exempt: exemptPrefixes, repoFiles, blockingAlways: blockingAlways || [] }, log)) {
-    return { code: 1, lines };
+    // skipped auch hier mitgeben: ein Aufrufer, der r.skipped.length liest, soll beim
+    // Waechter-Abbruch keinen TypeError bekommen (Vertrag der Rueckgabe bleibt gleich).
+    return { code: 1, lines, skipped: [] };
   }
 
   let code = 0;
   let anyFailed = false;
+  const alleUebersprungen = [];
 
   if (mode === 'blocking' || mode === 'all') {
-    const failed = runFiles(blocking, cwd, log);
+    const { failed, skipped } = runFiles(blocking, cwd, log);
+    alleUebersprungen.push(...skipped);
     for (const t of failed) log(`::error::Test failed: ${t} — blocking run before Yahoo pull`);
     if (failed.length) {
       anyFailed = true;
@@ -228,7 +258,8 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   }
 
   if (mode === 'report' || mode === 'all') {
-    const failed = runFiles(report, cwd, log);
+    const { failed, skipped } = runFiles(report, cwd, log);
+    alleUebersprungen.push(...skipped);
     if (failed.length) anyFailed = true;
     if (mode === 'all') {
       // Im PR-Check blockt BEIDES: Zweck ist Sichtbarkeit vor dem Merge, und
@@ -247,8 +278,17 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
     }
   }
 
-  if (!anyFailed) log('All tests passed.');
-  return { code, lines };
+  // Die Uebersprungenen NAMENTLICH und mit Zahl ausweisen — sonst liest sich ein Lauf, in dem
+  // ein Waechter nichts geprueft hat, genauso wie einer, in dem alles geprueft wurde.
+  if (alleUebersprungen.length) {
+    log(`UEBERSPRUNGEN (0 Pruefungen ausgefuehrt, zaehlen NICHT als PASS): ${alleUebersprungen.length} — ${alleUebersprungen.join(', ')}`);
+  }
+  if (!anyFailed) {
+    log(alleUebersprungen.length
+      ? `All tests passed — ABER ${alleUebersprungen.length} Datei(en) haben nichts geprueft (siehe UEBERSPRUNGEN).`
+      : 'All tests passed.');
+  }
+  return { code, lines, skipped: alleUebersprungen };
 }
 
 // ── Selftest (Waechter-Hausregel: der Pruefer wird selbst geprueft) ───────────
@@ -259,9 +299,14 @@ function selftest() {
   const green = 'tests/green.test.js';
   const red = 'tests/red.test.js';
   const orphan = 'tests/orphan.test.js';
-  fs.writeFileSync(path.join(dir, green), 'process.exit(0);\n');
+  // Tag 956: Datei, die sauber endet, aber selbst meldet NICHTS geprueft zu haben —
+  // exakt die Ausgabeform von anchors.rank.test.js bei leerem snapshots/.
+  const leer = 'tests/leer.test.js';
+  fs.writeFileSync(path.join(dir, green), 'console.log("3 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, red), 'process.exit(1);\n');
-  fs.writeFileSync(path.join(dir, orphan), 'process.exit(0);\n');
+  fs.writeFileSync(path.join(dir, orphan), 'console.log("1 ok, 0 fail");process.exit(0);\n');
+  fs.writeFileSync(path.join(dir, leer),
+    'console.log("leer.test.js: 0 ok, 0 fail (skipped: kein Universum)");process.exit(0);\n');
 
   const summaryFile = path.join(dir, 'summary.txt');
   const base = { cwd: dir, exemptPrefixes: [], summaryFile };
@@ -334,12 +379,39 @@ function selftest() {
   });
   check('Abrutsch-Gegenprobe (Pflicht-Blocker blockierend geht durch)', r.code === 0, `code=${r.code}`);
 
+  // 6. Leer-Probe (Tag 956): eine Datei, die 0 Pruefungen ausgefuehrt hat, MUSS als SKIP
+  //    erscheinen, NICHT als PASS — und in der Summenzeile gezaehlt werden. Sie darf den
+  //    Lauf aber nicht rot faerben (leeres Universum ist pre-pull der Normalzustand).
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/leer*test.js'], reportFiles: [], repoFiles: [leer],
+  });
+  check('Leer-Probe (0 Pruefungen zaehlt als SKIP, nicht als PASS)',
+    r.code === 0
+    && r.skipped.length === 1
+    && !r.lines.some(l => l.startsWith(`PASS ${leer}`))
+    && r.lines.some(l => l.startsWith(`SKIP ${leer}`))
+    && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(leer)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6b. Gegenprobe dazu: eine Datei MIT ausgefuehrten Pruefungen muss weiter PASS sein und
+  //     darf NICHT in der Uebersprungen-Liste landen (sonst pruefte 6. nur, dass alles skippt).
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/green*test.js'], reportFiles: [], repoFiles: [green],
+  });
+  check('Leer-Gegenprobe (Datei mit echten Pruefungen bleibt PASS)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${green}`))
+    && !r.lines.some(l => l.startsWith('UEBERSPRUNGEN')),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (6 Proben).');
+  console.log('test-gate Selftest OK (8 Proben).');
   return 0;
 }
 
