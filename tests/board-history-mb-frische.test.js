@@ -89,6 +89,29 @@ check('(b) keine datierte Reihe ist NICHT "veraltet", sondern null', () => {
   assert.strictEqual(v.quartalsreiheFrische.veraltet, 0);
 });
 
+check('(b2) Enden vorhanden, aber Laenge passt nicht -> zaehlt als "ohne datierte Reihe"', () => {
+  // Genau die Bruchform, die den F-4-Bypass in axes.js ausloest (periodEnds() nullt die
+  // Serie bei Laengen-Mismatch). Wuerde sie hier als frisch/veraltet gezaehlt, haette der
+  // Zaehler einen blinden Fleck fuer die einzige Population, die er beobachten soll.
+  const base = mkBase();
+  fs.writeFileSync(path.join(base, 'snapshots', 'MISMATCH.json'), JSON.stringify({
+    meta: { ticker: 'MISMATCH' },
+    metrics: { beta: { value: 1 }, enterpriseToRevenue: { value: 5 }, priceSales: { value: 4 }, grossMargin: { value: 40 } },
+    // drei Werte, aber nur zwei Enden — und die Enden sind frisch
+    timeseries: { revenueQ: [{ value: 120 }, { value: 110 }, { value: 100 }], revenueQEnds: [minusTage(10), minusTage(101)] },
+  }));
+  W._setPaths(base);
+  let v;
+  try {
+    v = W.buildBoardVintage('semiconductors', { profitable: [boardRow('MISMATCH', 90)], unprofitable: [] },
+      VINTAGE, { formulaVersion: 'calibration/v4', generatedAt: VINTAGE });
+  } finally { W._setPaths(null); }
+  assert.strictEqual(zeile(v, 'MISMATCH').quartalsreiheVeraltet, null,
+    'Laengen-Mismatch ist fuer die Achsen "keine Enden" — der Zaehler muss dasselbe sagen');
+  assert.strictEqual(v.quartalsreiheFrische.ohneDatierteReihe, 1);
+  assert.strictEqual(v.quartalsreiheFrische.frisch, 0, 'darf NICHT als frisch durchgehen');
+});
+
 // ── (c) die Trennung, wegen der M-B Stufe 1 ueberhaupt mitfaehrt ─────────────
 
 check('(c) Zaehlung trennt Quartalspflicht-Maerkte von den uebrigen', () => {
