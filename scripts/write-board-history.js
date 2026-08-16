@@ -472,7 +472,9 @@ const MB_QUARTALSPFLICHT_SUFFIX = /\.(TW|TWO|T|SS|SZ|KS|KQ|NS|BO|TO|V|NE)$/i;
 // berichter) darf hier nicht als Leiche gezählt werden.
 function quartalsreiheVeraltetOf(pit, vintageMs) {
   if (!Number.isFinite(vintageMs)) return null;
-  const latest = latestEndMs(pit && pit.revenueQEnds);
+  const werte = pit && pit.revenueQ, enden = pit && pit.revenueQEnds;
+  if (!Array.isArray(werte) || !Array.isArray(enden) || enden.length !== werte.length) return null;
+  const latest = latestEndMs(enden);
   if (latest == null) return null;
   return (vintageMs - latest) > RETENTION_DAYS * MS_PER_DAY;
 }
