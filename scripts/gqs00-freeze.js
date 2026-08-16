@@ -161,6 +161,17 @@ function sourceHashes(file) {
   return [lf, crlf].map((bytes) => crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex'));
 }
 
+// Die genehmigten Zweit-Hashes des offenen 1.1.0-Uebergangs. Fehlt das Verzeichnis oder ist
+// es unlesbar, gibt es KEINE Lockerung — dann gilt allein das 1.0.0-Siegel. Ein kaputtes
+// transition.json faellt laut auf (JSON.parse wirft), statt still das Fenster zu schliessen
+// oder zu oeffnen.
+const TRANSITION_FILE = path.join(REPO, 'protocol', 'gqs-00', '1.1.0-pending', 'transition.json');
+function pendingTransitionHashes() {
+  if (!fs.existsSync(TRANSITION_FILE)) return {};
+  const doc = JSON.parse(fs.readFileSync(TRANSITION_FILE, 'utf8'));
+  return (doc && doc.status === 'pending' && doc.sourceFiles) ? doc.sourceFiles : {};
+}
+
 function walkFiles(dir) {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -524,8 +535,23 @@ function verify() {
   const sealedKeys = Object.keys(sealedSourceFiles).sort();
   const rebuiltKeys = Object.keys(rebuiltSourceFiles).sort();
   assert.deepEqual(sealedKeys, rebuiltKeys, 'sealed scoring source file set changed');
+  // Uebergangs-Fenster GQS-00@1.0.0 -> 1.1.0 (Gerichtsurteil 16.08.2026, Karl-freigegeben).
+  // Fuer die dort NAMENTLICH gelisteten Dateien ist der pending-Hash eine ZWEITE erlaubte
+  // Variante — nicht mehr. Jeder dritte Stand bleibt rot, jede nicht gelistete Datei bleibt
+  // auf 1.0.0 festgenagelt, und protocol/gqs-00/1.0.0/ wird nicht angefasst (der Nachweis
+  // des 07.08.-Laufs bleibt byte-identisch). Fehlt die Datei, gilt ausschliesslich 1.0.0.
+  // Alle uebrigen Schaerfen dieses Pruefers (Registry-Semantik, Trace-Rebuild, Manifest-
+  // Byte-Hashes, Negativ-Mutations-Probe) laufen unveraendert weiter.
+  const pendingSource = pendingTransitionHashes();
+  for (const rel of Object.keys(pendingSource)) {
+    assert(rel in sealedSourceFiles, 'transition.json listet eine nicht versiegelte Datei: ' + rel);
+  }
   for (const rel of Object.keys(sealedSourceFiles)) {
-    assert(sourceHashes(path.join(REPO, rel)).includes(sealedSourceFiles[rel]), rel + ' differs from its sealed source hash');
+    const erlaubt = [sealedSourceFiles[rel]];
+    if (pendingSource[rel]) erlaubt.push(pendingSource[rel]);
+    assert(sourceHashes(path.join(REPO, rel)).some((h) => erlaubt.includes(h)),
+      rel + ' differs from its sealed source hash'
+      + (pendingSource[rel] ? ' AND from its approved 1.1.0-pending hash' : ''));
   }
   const registryWithoutSourceHashes = structuredClone(registry);
   const rebuiltWithoutSourceHashes = structuredClone(rebuiltRegistry);

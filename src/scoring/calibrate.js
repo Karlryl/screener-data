@@ -15,7 +15,7 @@ const { route } = require('./router.js');
 const { q, signTrack } = require('./engine.js');
 const { norm } = require('./snapshot.js');
 const { evaluateLamps } = require('./lamps.js');
-const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerDedupGroups, scoreUniverse, rankBy, MIN_COHORT_N } = require('./score.js');
+const { trackOf, rawAxisValue, learnWinsorBounds, winsorTailBounds, growthYoYComponents, isDataSuspect, issuerDedupComparator, issuerDedupGroups, scoreUniverse, rankBy, MIN_COHORT_N, EINMALERTRAG_BLIND } = require('./score.js');
 
 // Baut pro (formulaId|track) die Perzentil-Matrix: rows[{ticker, pct:{axis:0-100}, lamps}].
 // audit/fix (BH-076): opts.classify erlaubt einen QC-Lauf (classify:qualityRoute) gegen dieselbe Matrix-
@@ -86,7 +86,15 @@ function buildCalibMatrix(universe, formulas, opts = {}) {
       : null;
     const rawByAxis = {};
     for (const ax of formula.axes) {
-      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.s, ax.key, formula, track, winsorBounds, growthBounds));
+      // Einmalertrag-Konsequenz (Urteil 16.08.): score.js droppt diese Achsen bei brennender
+      // Lampe VOR der Perzentilierung — hier an DERSELBEN Stelle spiegeln, sonst lernt die
+      // Matrix Vergleichsverteilungen, die die Produktion nicht mehr erzeugt (gemessen vor
+      // dem Fix: 34 Lampen-Zeilen, 148 Achsen-Divergenzen). Die Liste kommt aus score.js,
+      // sie wird NICHT kopiert.
+      const blind = EINMALERTRAG_BLIND.includes(ax.key);
+      rawByAxis[ax.key] = entries.map((e) => ((blind && Array.isArray(e.lamps) && e.lamps.includes('einmalertrag'))
+        ? null
+        : rawAxisValue(e.s, ax.key, formula, track, winsorBounds, growthBounds)));
     }
     cohortRaw[cohortKey] = { formula, track, formulaId, entries, rawByAxis, profitSign };
   }

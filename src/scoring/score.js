@@ -15,7 +15,7 @@
 const { norm, metricVal, firstPresent, presentValues, firstTwoPresent } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS, isUsPrimaryListing } = require('./router.js');
-const { evaluateLamps, burnPressFactor, einmalertragPrognose } = require('./lamps.js');
+const { evaluateLamps, burnPressFactor, einmalertragPrognose, einmalertragBewertbarkeit } = require('./lamps.js');
 const { overviewMetric } = require('./overview.js');
 const { normalizeCountry } = require('./country.js');
 const axesFns = require('./axes.js');
@@ -343,6 +343,29 @@ function issuerDedupComparator(a, b) {
 // koennte ein Auslandsname auf fabriziertem Wachstum #1 werden. Die uebrigen 10 Lampen sind reine
 // Timing-Warnungen und excludieren NICHT (BE/PLTR ranken trotz Lampe oben).
 const DATA_SUSPECT_LAMPS = ['newestQtrSuspect', 'annualCurrencyLeak'];
+
+// Einmalertrag-Konsequenz (Gerichtsurteil 16.08.2026, F-16-Einzelfreigabe Karl).
+// ⚠ KEINE data-suspect-Lampe und ausdruecklich NICHT in DATA_SUSPECT_LAMPS: ein Lizenz- oder
+// Meilensteinertrag ist ECHTER, korrekt gemeldeter Umsatz — kein fabriziertes Quartal. Die
+// Zeile bleibt sichtbar und geroutet; ein Exclude wuerde BNTX/ASTS/LUNR unsichtbar machen.
+//
+// WAS STATTDESSEN PASSIERT: brennt die Lampe, misst der Sprung fuer DIESE Zeile nicht mehr,
+// was die Achse messen soll — ein Quartal traegt >= 50 % des Fensters, also sagt die
+// Wachstumsachse nichts ueber wiederholbares Wachstum. Solche Achsen sind fuer diese Zeile
+// NICHT BEWERTBAR und werden gedroppt. renorm-on-drop und die bestehende C4-Coverage-
+// Shrinkage (Z. ~1075) erledigen den Rest: der Score wandert Richtung KOHORTEN-MEDIAN, nicht
+// nach unten und nicht auf einen gesetzten Wert. Kein Abzug, kein Ausschluss, keine
+// Asymmetrie — dieselben vier Aufsteiger (BXBL/QUBT/MGTX/475150.KS) sind die ehrliche
+// Kehrseite von Unsicherheit-zieht-zum-Median.
+//
+// DIE LISTE IST KEINE GEGRIFFENE ZAHL, sondern das am Anlassfall gemessene Uebertragungs-
+// profil: genau diese fuenf Achsen tragen den Sprung. marginTrajectory (Zealand-Perzentil
+// 34,9) und dilution bleiben drin, weil der Sprung sie nachweislich nicht bewegt.
+// KEINE NEUE KONSTANTE ausser dieser Liste — insbesondere bleibt EINMALERTRAG_ANTEIL 0,50.
+// Waechter: tests/scoring/einmalertrag-konsequenz.test.js (W-A Achsen + Ergebnis-Klammer,
+// W-B Anlauf-Schutz, W-C Anker am echten Board).
+const EINMALERTRAG_BLIND = ['revGrowthLevel', 'revAcceleration', 'gpGrowth', 'ruleOfX', 'capitalEfficiency'];
+
 function isDataSuspect(s, lampsActive, action) {
   // Fabrikations-Lampen (erfundenes Quartal / annual-currency-Leak) gelten fuer ALLE Tracks.
   if (lampsActive.some((l) => DATA_SUSPECT_LAMPS.includes(l))) return true;
@@ -990,7 +1013,13 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
       : null;
     const rawByAxis = {};
     for (const ax of formula.axes) {
-      rawByAxis[ax.key] = entries.map((e) => rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds, growthBounds));
+      // Einmalertrag-Konsequenz: die fuenf vom Sprung getragenen Achsen sind fuer eine Zeile
+      // mit brennender Lampe nicht bewertbar -> null statt Rohwert. e.lamps steht seit dem
+      // Routing an jedem Entry (Z. ~871, evaluateLamps().active) — nachgesehen, nicht geraten.
+      const blind = EINMALERTRAG_BLIND.includes(ax.key);
+      rawByAxis[ax.key] = entries.map((e) => ((blind && Array.isArray(e.lamps) && e.lamps.includes('einmalertrag'))
+        ? null
+        : rawAxisValue(e.snapshot, ax.key, formula, track, winsorBounds, growthBounds)));
     }
     cohortRaw[cohortKey] = { formula, track, formulaId, entries, rawByAxis, profitSign };
     // 2.10: n je Kohorte MITfrieren (ref-Modus liest die eingefrorene n fuer die Shrinkage -> ein
@@ -1296,6 +1325,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Muss hier stehen, SOLANGE der Snapshot lebt (external.revenueEstimates) — eine
     // Zeile spaeter waere e.snapshot geloescht und das Feld auf allen Zeilen null.
     e.einmalertragPrognose = einmalertragPrognose(e.snapshot, Array.isArray(e.lamps) && e.lamps.includes('einmalertrag'));
+    // Sichtbarkeits-Stufe (Urteil 16.08.): reines Anzeigefeld, kein Score-Input. null =
+    // die Lampe konnte urteilen; sonst der Grund, warum nicht (lamps.js).
+    e.einmalertragBewertbarkeit = einmalertragBewertbarkeit(e.snapshot);
     delete e.snapshot;
     delete e.formula;
   }
@@ -1373,7 +1405,7 @@ function produceRankings(results, opts = {}) {
   // fuehrt sie in ROW_FIELDS und schrieb deshalb pflichtgemaess null; in JEDEM ausgelieferten
   // Export war sie auf allen 200 Zeilen null (Staende 21.07. und 29.07. nachgesehen). Sie ist
   // die Grundlage der fuenf Kohorten-Reiter (Karl-Entscheid 02.08.) und muss die Zeile erreichen.
-  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, mcapKlasse: e.mcapKlasse ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null, einmalertragPrognose: e.einmalertragPrognose ?? null, shareDilution: e.shareDilution ?? null });
+  const rowMeta = (e) => ({ name: e.name ?? null, country: e.country ?? null, region: e.region ?? null, sector: e.sector ?? null, marketCap: e.marketCap ?? null, phase: e.phase ?? null, mcapBand: e.mcapBand ?? null, mcapKlasse: e.mcapKlasse ?? null, ipoRecency: e.ipoRecency ?? null, profitTier: e.profitTier ?? null, ipoYear: e.ipoYear ?? null, coverageAxes: e.coverageAxes ?? null, coverageWeight: e.coverageWeight ?? null, cohortN: e.cohortN ?? null, cohortFallback: e.cohortFallback ?? null, revGrowthYoYPct: e.revGrowthYoYPct ?? null, profitStreak: e.profitStreak ?? null, einmalertragPrognose: e.einmalertragPrognose ?? null, einmalertragBewertbarkeit: e.einmalertragBewertbarkeit ?? null, shareDilution: e.shareDilution ?? null });
   for (const e of (Array.isArray(results) ? results : [])) {
     if (e.action === 'survival') {
       survival.push({ ticker: e.ticker, runwayQuarters: e.overview ? e.overview.value : null, lamps: e.lamps, ...rowMeta(e) });
@@ -1481,7 +1513,10 @@ function calibrationDrift(liveCal, refCal, ksThreshold = 0.15) {
   return { maxKs, ksThreshold, drifted, ok: maxKs <= ksThreshold };
 }
 
-module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
+module.exports = { scoreUniverse, rankBy, trackOf, rawAxisValue, produceRankings,
+  // Einmalertrag-Konsequenz: EINE Liste fuer scoreUniverse UND buildCalibMatrix (calibrate.js
+  // spiegelt PASS 1; eine zweite Kopie wuerde genau die Drift erzeugen, die die Datei bewacht).
+  EINMALERTRAG_BLIND, phaseOf, mcapBandOf, mcapKlasseOf, MCAP_KLASSEN_USD, ipoRecencyOf, ipoRecencyVonJahr, ipoYearOf, ipoYearEffektiv, calibrationDrift,
   // audit/fix (Bug 0/9/7): fuer calibrate.js — Kohorten-Gates + Winsor-Schranken exakt spiegeln
   learnWinsorBounds, winsorTailBounds, isDataSuspect, issuerDedupComparator, issuerKey, issuerKeyLoose, issuerDedupGroups,
   // Tag 584 (VSXY/VSCO): fuer scripts/probe-issuer-strict-key-punct.js — der STRENGE Schluessel

@@ -1,0 +1,27 @@
+{
+  "schema": "gqs-00-transition/v1",
+  "status": "pending",
+  "from": "GQS-00@1.0.0",
+  "to": "GQS-00@1.1.0",
+  "opened": "2026-08-16",
+  "reason": "Einmalertrag-Lampe wird folgenreich: bei brennender Lampe droppen fuenf Wachstums-Achsen der Zeile (EINMALERTRAG_BLIND), renorm-on-drop + C4-Shrinkage ziehen den Score zum Kohorten-Median.",
+  "authority": {
+    "gerichtsurteil": "Einmalertrag-Konsequenz, 16.08.2026 — GO mit Auflagen (F-16-Einzelfreigabe)",
+    "formelsperre": "F-16 punktuell geoeffnet, nur dieser Fall",
+    "karlFreigabe": "2026-08-16, woertlich \"Ja, so machen\"",
+    "pullRequest": "Karlryl/screener-data#45"
+  },
+  "scope": "NUR die hier gelisteten Quelldateien duerfen zusaetzlich zum 1.0.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. protocol/gqs-00/1.0.0/ bleibt unangetastet — der 07.08.-Nachweis ist byte-identisch erhalten.",
+  "goldenFixtureImpact": {
+    "casesGeprueft": 25,
+    "syntheticCases": 1,
+    "mitLampeEinmalertrag": 0,
+    "bemerkung": "Keine versiegelte Golden-Fixture traegt die Lampe (13x false, 12x null) -> kein erwarteter Score aendert sich. Es reisst ausschliesslich die Source-Hash-Schaerfe."
+  },
+  "aufloesung": "Nach dem ersten gruenen Automatik-Lauf mit neuem Code (Mi 19.08.) wird GQS-00@1.1.0 mit eigener Baseline vollversiegelt und dieses Verzeichnis entfaellt.",
+  "sourceFiles": {
+    "src/scoring/lamps.js": "7b0e479958131e69f4de1bd4cfafd2160bf611c8ef5f84340e8caad27a06df34",
+    "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
+    "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69"
+  }
+}

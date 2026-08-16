@@ -100,13 +100,19 @@ const BRANCHES = [
 // 'einmalertrag' (string|null), erzeugt in src/scoring/lamps.js einmalertragPrognose().
 // Additiv OPTIONAL wie revGrowthYoYPct. NUR Zeilen, die die Lampe tragen, duerfen einen
 // Zustand fuehren — das prueft checkEinmalertragPrognose in BEIDE Richtungen.
+// Urteil 16.08. (Sichtbarkeits-Stufe): einmalertragBewertbarkeit = 'zuWenigQuartale' |
+// 'ungleicheKadenz' | null. null heisst "die Lampe konnte urteilen" (an ODER sauber); ein
+// Grund heisst "nicht bewertbar" — der dritte Zustand, der bisher als stummes null ankam und
+// von "sauber" ununterscheidbar war. Additiv OPTIONAL wie einmalertragPrognose. NUR Zeilen
+// OHNE die Lampe duerfen einen Grund fuehren (traegt die Zeile die Lampe, WAR sie bewertbar)
+// — checkEinmalertragBewertbarkeit prueft Wertemenge und diese Richtung.
 // 03.08.: shareDilution = {ratePct, pctl} | null — der BETRAG zur Lampe 'shareCountDilution'
 // (Jahres-Verwaesserungsrate in Prozent + Kohorten-Perzentil), erzeugt in
 // src/scoring/run-screener.js lampeBNachruesten(). Additiv OPTIONAL wie revGrowthYoYPct.
 // Die Lampe sagte nur an/aus: ein Kohorten-Spitzenreiter mit +1 % Aktienzahl im Jahr sah aus
 // wie einer mit +66 %. NUR Zeilen mit der Lampe duerfen einen Betrag fuehren — und sie
 // MUESSEN einen fuehren; checkShareDilution prueft beide Richtungen.
-const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak', 'einmalertragPrognose', 'shareDilution'];
+const ROW_FIELDS = ['name', 'country', 'region', 'sector', 'marketCap', 'phase', 'mcapBand', 'mcapKlasse', 'ipoRecency', 'profitTier', 'ipoYear', 'coverageAxes', 'coverageWeight', 'cohortN', 'cohortFallback', 'scoreBase', 'scoreShrunk', 'factors', 'axisBreakdown', 'revGrowthYoYPct', 'profitStreak', 'einmalertragPrognose', 'einmalertragBewertbarkeit', 'shareDilution'];
 // Task 4.5: profitStreak = {jahre, basis, tiefe, mindestens, letzterVerlust} | null.
 // Additiv OPTIONAL wie revGrowthYoYPct. Belegte Laenge der ununterbrochenen Gewinnserie
 // aus der SEC-Langhistorie — NEBEN profitTier, nicht statt dessen. Grund: profitTier sieht
@@ -561,6 +567,22 @@ function checkEinmalertragPrognose(r, where, errs) {
     errs.push(`${where}: einmalertragPrognose=${JSON.stringify(v)} auf Zeile OHNE Lampe '${EINMALERTRAG_LAMPE}'`);
   }
 }
+const VALID_EINMALERTRAG_BEWERTBARKEIT = ['zuWenigQuartale', 'ungleicheKadenz'];
+function checkEinmalertragBewertbarkeit(r, where, errs) {
+  if (!('einmalertragBewertbarkeit' in r)) return;   // Abwesenheit legitim (Altbestand)
+  const v = r.einmalertragBewertbarkeit;
+  if (v === null) return;
+  if (typeof v !== 'string' || !VALID_EINMALERTRAG_BEWERTBARKEIT.includes(v)) {
+    errs.push(`${where}: einmalertragBewertbarkeit=${JSON.stringify(v)} unbekannter Grund`);
+    return;
+  }
+  // Die Gegenrichtung: brennt die Lampe, hat sie geurteilt — dann KANN die Zeile nicht
+  // gleichzeitig "nicht bewertbar" sein. Beides zusammen heisst: Erzeuger und Lampe sind
+  // auseinandergelaufen, und findash zeigte grau UND markiert.
+  if (Array.isArray(r.lamps) && r.lamps.includes(EINMALERTRAG_LAMPE)) {
+    errs.push(`${where}: einmalertragBewertbarkeit=${JSON.stringify(v)} auf Zeile MIT Lampe '${EINMALERTRAG_LAMPE}'`);
+  }
+}
 // 03.08.: shareDilution = {ratePct, pctl} | null — der Betrag zur Lampe 'shareCountDilution'.
 // BEIDE Richtungen, und anders als bei einmalertragPrognose ist hier AUCH "Lampe ⟹ Betrag"
 // wahr: die Lampe feuert ausschliesslich, wenn Rate UND Kohorten-Perzentil vorliegen
@@ -634,6 +656,7 @@ function validateGeo(r, where, errs) {
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
+  checkEinmalertragBewertbarkeit(r, where, errs);                   // Urteil 16.08. additiv OPTIONAL
   checkShareDilution(r, where, errs);                              // 03.08. Betrag zur Verwaesserungs-Lampe
   checkEnumOrNull(r, 'phase', VALID_PHASE, where, errs);
   checkEnumOrNull(r, 'mcapBand', VALID_MCAP, where, errs);
@@ -794,6 +817,7 @@ function validateFile(mk, kind, errs, opts = {}) {
   (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
   const alleZeilen = [].concat(mk.profitable || [], mk.unprofitable || []);
   checkFeldHomogen(alleZeilen, 'einmalertragPrognose', kind, errs);
+  checkFeldHomogen(alleZeilen, 'einmalertragBewertbarkeit', kind, errs);
   checkFeldHomogen(alleZeilen, 'shareDilution', kind, errs);
   // R2.18: each track is its OWN score-desc list (score.js rankBy/byScore sorts profitable and
   // unprofitable separately), so rank(a)+score(b) are checked per track, not across both.

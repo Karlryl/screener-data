@@ -544,10 +544,24 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   }
 
   // Tages-Delta der Scores (nur wo Ticker in beiden Vintages vorhanden).
+  // SCORE-DEFINITIONS-BRUCH (16.08.2026): ist dieses Board im Register namentlich genannt UND
+  // benennt der Eintrag eine erklaerende Lampe, bleiben die Zeilen MIT dieser Lampe aus dem
+  // p99 heraus — ihre Bewegung IST die registrierte Definitionsaenderung, nicht der Messfehler,
+  // den das Gate sucht. Bewusst kein Zuschlag auf die Schwelle: ein Deckel, der eine Bewegung
+  // von ~28 Punkten (2548.TW 78->50) abdeckt, wuerde in derselben Nacht jeden beliebigen echten
+  // Wertfehler mit durchlassen. So bleibt die Schwelle fuer ALLE anderen Zeilen unveraendert
+  // streng, und was herausgerechnet wird, ist an der Lampe abzaehlbar statt gesetzt.
+  const erklaerendeLampe = (bruch && board && bruch.boards.has(board)) ? bruch.erklaerendeLampe : null;
+  const traegtLampe = (row) => !!row && Array.isArray(row.lamps) && row.lamps.includes(erklaerendeLampe);
   const deltas = [];
+  let erklaerteZeilen = 0;
   for (const [tk, r] of nowMap) {
     const p = priorMap.get(tk);
-    if (p && Number.isFinite(p.score) && Number.isFinite(r.score)) deltas.push(Math.abs(r.score - p.score));
+    if (!(p && Number.isFinite(p.score) && Number.isFinite(r.score))) continue;
+    // Vorher ODER nachher: eine Zeile, die die Lampe gerade VERLIERT, bewegt sich aus
+    // demselben Grund wie eine, die sie bekommt.
+    if (erklaerendeLampe && (traegtLampe(r) || traegtLampe(p))) { erklaerteZeilen++; continue; }
+    deltas.push(Math.abs(r.score - p.score));
   }
   const p99Delta = deltas.length ? quantile(deltas, P99) : null;
 
@@ -639,6 +653,9 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   return {
     calibrating, p99Delta, threshold, bruchGrenze,
     gapDays, abstandZuGross, wirksameSchwelle,
+    // Sichtbar machen, was herausgerechnet wurde — eine stille Ausnahme waere schlimmer
+    // als keine. Ohne registrierten Definitions-Bruch: null / 0.
+    erklaerendeLampe: erklaerendeLampe || null, erklaerteZeilen,
     suspect: reasons.length > 0, reasons,
   };
 }
@@ -825,11 +842,48 @@ function massstabBruchFuer(priorDate) {
     throw new Error('write-board-history: ' + treffer.length + ' Massstab-Brueche nennen dasselbe '
       + 'letztes_altes_vintage ' + priorDate + ' — mehrdeutig. Register bereinigen (kein stiller Merge).');
   }
-  if (treffer.length === 0) return null;
+  if (treffer.length === 0) {
+    // Tag 951: Das VERFEHLEN der Bindung war der stillste Pfad im ganzen Gate. Zeigt ein
+    // Eintrag auf ein anderes Vintage als das tatsächlich verglichene, liefert diese
+    // Funktion null, die Ausnahme greift nicht, das Board wird SUSPECT — und der
+    // Commit-Schritt nimmt das ganze TAGESVERZEICHNIS raus, ohne dass im Protokoll ein
+    // Wort dazu stünde. Genau diese Bugklasse hat Karls Boards vom 12.–15.08. stillgelegt.
+    // Das Verhalten bleibt unverändert fail-closed (null); ergänzt wird nur Sichtbarkeit.
+    //
+    // Gemeldet wird ausschließlich der WARTENDE Eintrag — einer, dessen gebundenes Vintage
+    // NACH dem verglichenen Vorgänger liegt, der sein Vintage also noch nicht gesehen hat.
+    // Ein Eintrag HINTER der Vergleichsfront ist verbraucht und von einem sauber erledigten
+    // Übergang nicht zu unterscheiden; würde er mitmelden, schrien die drei Alt-Einträge
+    // (2026-07-27/-07-28/-08-03) ab sofort jeden Tag für immer, und ein Alarm, der immer
+    // feuert, ist in Karls einzigem Alarmkanal schlechter als keiner.
+    // Kanal ist derselbe wie bei GATE BLIND / Maßstab-Bruch / GATE ABSTAND.
+    for (const w of raw._massstab_brueche) {
+      if (!w || typeof w.letztes_altes_vintage !== 'string') continue;
+      if (w.letztes_altes_vintage <= priorDate) continue;
+      console.log('::warning::GATE-BINDUNG VERFEHLT: Register-Eintrag '
+        + (w.tag || w.typ || '(ohne tag)') + ' ist an den Vorgaenger '
+        + w.letztes_altes_vintage + ' gebunden, verglichen wird aber gegen ' + priorDate
+        + '. Die registrierte Ausnahme greift deshalb NICHT (fail-closed) — der Uebergang '
+        + 'wird gegen die normale Schwelle gemessen und faellt voraussichtlich als SUSPECT '
+        + 'aus dem Tagesverzeichnis. letztes_altes_vintage im Register auf ' + priorDate
+        + ' nachziehen oder den Fall neu bewerten.');
+    }
+    return null;
+  }
   const b = treffer[0];
   const boards = Array.isArray(b.boards) ? b.boards.filter((s) => typeof s === 'string' && s) : [];
   if (boards.length === 0) return null;
-  return { tag: b.tag || null, letztesAltesVintage: priorDate, boards: new Set(boards) };
+  // Typ 2 (16.08.2026): SCORE-DEFINITIONS-BRUCH. Der Schrumpfungs-Zweig oben deckt nur
+  // Brueche ab, bei denen die Kohorte kleiner wird. Aendert sich die Score-DEFINITION ohne
+  // eine einzige Zeile zu verlieren (Einmalertrag-Verdrahtung: gleiche Zeilenzahl, andere
+  // Scores), greift er nicht — und der erste Neu-gegen-Alt-Lauf misst die volle Bewegung
+  // gegen eine Schwelle, die auf dem alten Massstab kalibriert ist.
+  // Statt eine HOEHE zu gewaehren, benennt der Eintrag die LAMPE, welche die betroffenen
+  // Zeilen traegt: genau diese Zeilen zaehlen fuer den einen registrierten Vergleich nicht
+  // in das p99. Alles andere wird unveraendert streng gemessen — eine unabhaengige Drift
+  // in derselben Nacht faellt weiterhin auf. Auch hier steht keine Zahl im Register.
+  const erklaerendeLampe = (typeof b.erklaerende_lampe === 'string' && b.erklaerende_lampe) ? b.erklaerende_lampe : null;
+  return { tag: b.tag || null, letztesAltesVintage: priorDate, boards: new Set(boards), erklaerendeLampe };
 }
 
 // ── Retention/Kompaktierung (A12) ────────────────────────────────────────────

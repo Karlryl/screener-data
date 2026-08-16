@@ -601,18 +601,26 @@ function shareCountDilution(s, ctx) {
 // Quartale vor und ist DASSELBE Quartal auch im Vorjahr das groesste, ist es Saison und die
 // Lampe schweigt. Nur bei einem Ausreisser OHNE Vorjahres-Entsprechung feuert sie.
 //
-// VERRECHNET NICHTS: nicht in DATA_SUSPECT_LAMPS (score.js) -> kein Score-, kein
-// Exclude-Effekt. Ob ein Einmalertrag den Score druecken soll, ist eine eigene Frage mit
-// Gauntlet-Pflicht — diese Lampe macht ihn zuerst SICHTBAR.
+// SEIT DEM URTEIL VOM 16.08.2026 IST DIE LAMPE FOLGENREICH (F-16-Einzelfreigabe Karl).
+// Bis dahin stand hier "VERRECHNET NICHTS". Das stimmt nicht mehr: brennt sie, droppt
+// score.js die fuenf vom Sprung getragenen Achsen dieser Zeile (EINMALERTRAG_BLIND), und
+// renorm-on-drop + C4-Coverage-Shrinkage ziehen den Score Richtung Kohorten-Median.
+// WAS UNVERAENDERT GILT: nicht in DATA_SUSPECT_LAMPS -> KEIN Exclude, die Zeile bleibt
+// sichtbar und geroutet. Kein Abzug, kein gesetzter Wert — nur "diese Achsen sind fuer
+// diese Zeile nicht bewertbar". Die Begruendung steht bei EINMALERTRAG_BLIND in score.js.
 const EINMALERTRAG_ANTEIL = 0.50;
+// Ein Quartal ist verwertbar, wenn eine positive Zahl drinsteht. EINE Definition fuer
+// einmalertrag() UND einmalertragBewertbarkeit(): die zweite Funktion beschriftet die
+// null-Ausgaenge der ersten, und beschriftet falsch, sobald beide verschieden zaehlen
+// (dann meldet sie 'ungleicheKadenz', wo 'zuWenigQuartale' richtig waere, oder umgekehrt).
+const quartalBrauchbar = (v) => Number.isFinite(v) && v > 0;
 function einmalertrag(s) {
   // ⚠ Bewusst die ROHE Reihe (mit Luecken), NICHT presentValues: der Saison-Vergleich unten
   // stellt Quartal gegen Quartal, und presentValues wuerfe Luecken heraus und damit die
   // Positionen durcheinander — Q4 laege dann gegen Q3 des Vorjahres.
   const roh = norm(s, 'revenueQ');
   const letzte4 = roh.slice(0, 4);
-  const brauchbar = (v) => Number.isFinite(v) && v > 0;
-  if (letzte4.length < 4 || !letzte4.every(brauchbar)) return null;   // nicht bewertbar, nicht "sauber"
+  if (letzte4.length < 4 || !letzte4.every(quartalBrauchbar)) return null;   // nicht bewertbar, nicht "sauber"
   // 29.07.: UNGLEICHE PERIODENLAENGEN sind nicht vergleichbar.
   // Bei chinesischen A-Aktien und weiteren Boersen fehlt in der Quartalsreihe das
   // September-Quartal; die Enden lauten dann z. B. 2026-03-31 / 2025-12-31 / 2025-06-30 /
@@ -686,7 +694,7 @@ function einmalertrag(s) {
   const spitzeIdx = letzte4.indexOf(groesster);
   const vjIdx = jahresVergleichIdx(s, 'revenueQ', spitzeIdx);
   const vorjahresQuartal = vjIdx ? roh[vjIdx.idx] : null;
-  if (brauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
+  if (quartalBrauchbar(vorjahresQuartal) && vorjahresQuartal >= EINMALERTRAG_ANTEIL * groesster) return false;
 
   // Saison-Schutz Teil 2: dominiert im Vorjahr DASSELBE Quartal ebenso stark, ist es Saison
   // und kein Einmaleffekt. Fehlt das Vorjahr, wird nicht geraten — dann bleibt es beim Verdacht.
@@ -694,7 +702,7 @@ function einmalertrag(s) {
   // wenn zu jedem der vier juengsten Quartale der Jahrespartner wirklich vier Plaetze weiter
   // hinten steht. Ohne Enden ist die Pruefung true (unveraendert).
   const vorjahr = roh.slice(4, 8);
-  if (vorjahr.length === 4 && vorjahr.every(brauchbar) && jahresFensterAusgerichtet(s, 'revenueQ', 4)) {
+  if (vorjahr.length === 4 && vorjahr.every(quartalBrauchbar) && jahresFensterAusgerichtet(s, 'revenueQ', 4)) {
     const groessterVorjahr = Math.max(...vorjahr);
     const anteilVorjahr = groessterVorjahr / vorjahr.reduce((a, b) => a + b, 0);
     if (letzte4.indexOf(groesster) === vorjahr.indexOf(groessterVorjahr)
@@ -750,6 +758,31 @@ function einmalertragPrognose(s, lampeAktiv) {
   return null; // vollstaendig und vergleichbar -> Urteil erst mit der Schwelle aus Stufe 2
 }
 
+// ── Bewertbarkeits-Zustand zur Einmalertrags-Lampe (Urteil 16.08.2026, Sichtbarkeits-Stufe) ──
+// DAS PROBLEM: einmalertrag(s) hat drei Ausgaenge, aber findash sah nur zwei. true = Lampe an,
+// false = geprueft und sauber, null = NICHT BEWERTBAR — und null kam bisher stumm an, ununter-
+// scheidbar von "sauber". Drei verschiedene Lagen lieferten dasselbe Schweigen. Genau daran
+// haengt die Schein-Sauberkeit von 2548.TW (real-estate Rang 1) und 298380.KQ (Rang 5): sie
+// stehen ungepruefft oben und sehen aus wie geprueft.
+//
+// ⚠ REINE ANZEIGE, wie einmalertragPrognose: der Rueckgabe-Vertrag von einmalertrag() bleibt
+// unveraendert, LAMPS bleibt unveraendert, evaluateLamps bleibt byte-identisch. Kein
+// Score-Input — die Verdrahtung in score.js haengt an der brennenden LAMPE, nicht hieran.
+//
+// DIE GRUENDE kommen aus denselben Daten wie die null-Ausgaenge der Lampe, nicht aus einer
+// zweiten Regel:
+//   'zuWenigQuartale'  — keine vier verwertbaren Quartale im Fenster (Luecke, 0, negativ).
+//   'ungleicheKadenz'  — vier Quartale da, aber die Enden liegen nicht im Quartalsabstand
+//                        (Halbjahres-Eimer bei CN-A-Aktien u. a.) oder ein Datum ist unlesbar.
+// Die Reihenfolge spiegelt die Reihenfolge der Pruefungen in einmalertrag(): erst Vollstaendig-
+// keit, dann Kadenz. Bewertbar (true ODER false) -> null, es gibt nichts anzuzeigen.
+function einmalertragBewertbarkeit(s) {
+  if (einmalertrag(s) !== null) return null;             // bewertbar: Lampe hat geurteilt
+  const letzte4 = norm(s, 'revenueQ').slice(0, 4);
+  if (letzte4.length < 4 || !letzte4.every(quartalBrauchbar)) return 'zuWenigQuartale';
+  return 'ungleicheKadenz';
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -780,4 +813,5 @@ module.exports = {
   evaluateLamps, burnPressFactor, LAMPS, TH, ...LAMPS,
   shareGrowthRate, buildShareGrowthPctlFn, shareDilutionDetail,
   einmalertragPrognose, EINMALERTRAG_PROGNOSE_PERIODE,
+  einmalertragBewertbarkeit,
 };
