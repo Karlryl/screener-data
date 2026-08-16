@@ -139,5 +139,84 @@ check('Stempel schweigt, wenn kein Kurs ermittelt werden konnte', () => {
   assert.deepEqual(meta, {}, 'fail-closed: kein Kurs -> kein Stempel');
 });
 
+// ---------------------------------------------------------------------------
+// 4) Waehrungs-Chunk 3: enterpriseValue und priceSales kommen von Yahoo in der HANDELS-
+//    Waehrung bzw. als Misch-Verhaeltnis. Alle Zahlen unten sind echte Yahoo-Antworten
+//    vom 16.08.2026.
+// ---------------------------------------------------------------------------
+const IDR = 0.000056082103; // echter Kurs 16.08.2026
+py._FX_TO_USD.IDR = IDR;
+py._FX_PROVENANCE.IDR = 'live';
+
+check('JK-Fall (Bericht USD / Handel IDR): EV und priceSales werden geheilt (BREN.JK)', () => {
+  const snap = {
+    meta: { ticker: 'BREN.JK', reportingCurrency: 'USD', tradingCurrency: 'IDR' },
+    marketCap: { value: 477592880676864 },                 // IDR
+    metrics: {
+      revenueTTM: { value: 639550976 },                    // USD (Yahoo financialCurrency=USD)
+      enterpriseValue: { value: 477595028160512 },         // IDR
+      priceSales: { value: 746762.8 },                     // mcap_IDR / Umsatz_USD
+    },
+  };
+  py._convertSnapshotToUSD(snap);
+  const mcap = snap.marketCap.value, rev = snap.metrics.revenueTTM.value;
+  assert.equal(rev, 639550976, 'Berichtsfaktor ist 1 — der Umsatz bleibt unveraendert');
+  assert.ok(Math.abs(mcap / 1e9 - 26.78) < 0.05, 'marketCap ~26,8 Mrd USD, ist ' + (mcap / 1e9));
+  // EV: vorher blieb es unveraendert in IDR stehen (Verhaeltnis EV/mcap = 17 831).
+  assert.ok(snap.metrics.enterpriseValue.value / mcap < 1.01,
+    'EV/mcap muss ~1 sein, ist ' + (snap.metrics.enterpriseValue.value / mcap).toFixed(1));
+  // priceSales: vorher 746 762,8 ausgeliefert, ehrlich sind 41,9.
+  assert.ok(Math.abs(snap.metrics.priceSales.value - mcap / rev) < 0.01,
+    'priceSales muss mcap/Umsatz treffen: ' + snap.metrics.priceSales.value + ' vs ' + (mcap / rev));
+});
+
+check('HK-Fall (Bericht CNY / Handel HKD): EV am Handels-, Umsatz am Berichtskurs (0020.HK)', () => {
+  const snap = {
+    meta: { ticker: '0020.HK', reportingCurrency: 'CNY', tradingCurrency: 'HKD' },
+    marketCap: { value: 56925810688 },                     // HKD
+    metrics: {
+      revenueTTM: { value: 5014640128 },                   // CNY
+      ebitda: { value: 1000000000 },                       // CNY (Ertragsrechnung)
+      enterpriseValue: { value: 49358987264 },             // HKD
+      priceSales: { value: 11.351923 },                    // mcap_HKD / Umsatz_CNY
+    },
+  };
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.metrics.enterpriseValue.value, 49358987264 * HKD,
+    'EV gehoert an den HKD-Handelskurs, nicht an den CNY-Berichtskurs');
+  assert.equal(snap.metrics.ebitda.value, 1000000000 * CNY,
+    'EBITDA bleibt am Berichtskurs — es ist eine Ertragsrechnungs-Groesse');
+  const ehrlich = snap.marketCap.value / snap.metrics.revenueTTM.value;
+  assert.ok(Math.abs(snap.metrics.priceSales.value - ehrlich) < 1e-6,
+    'priceSales muss mcap/Umsatz treffen: ' + snap.metrics.priceSales.value + ' vs ' + ehrlich);
+  // Kontrolle des Schadens: unkorrigiert waeren es 16,6 % zu viel.
+  assert.ok(11.351923 / snap.metrics.priceSales.value > 1.16,
+    'unkorrigiert lag priceSales >16 % zu hoch');
+});
+
+check('Inlandsnotierung (Handel = Bericht): priceSales bleibt exakt unveraendert', () => {
+  const snap = {
+    meta: { ticker: 'X.HK', reportingCurrency: 'HKD', tradingCurrency: 'HKD' },
+    marketCap: { value: 1e10 },
+    metrics: { revenueTTM: { value: 1e9 }, enterpriseValue: { value: 9e9 }, priceSales: { value: 10 } },
+  };
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.metrics.priceSales.value, 10,
+    'ohne Waehrungs-Divergenz ist der Korrekturfaktor exakt 1 — kein Eingriff');
+  assert.equal(snap.metrics.enterpriseValue.value, 9e9 * HKD);
+});
+
+check('US-Inland (kein FX): nichts wird angefasst', () => {
+  const snap = {
+    meta: { ticker: 'AAPL', reportingCurrency: 'USD', tradingCurrency: 'USD' },
+    marketCap: { value: 3e12 },
+    metrics: { revenueTTM: { value: 4e11 }, enterpriseValue: { value: 3.1e12 }, priceSales: { value: 7.5 } },
+  };
+  py._convertSnapshotToUSD(snap);
+  assert.equal(snap.marketCap.value, 3e12);
+  assert.equal(snap.metrics.enterpriseValue.value, 3.1e12);
+  assert.equal(snap.metrics.priceSales.value, 7.5);
+});
+
 console.log('\nwaehrung-handelskurs: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -686,6 +686,48 @@ function normalizeRegion(currency, exchangeName) {
 //                                trading ccy == reporting ccy, factor unchanged)
 //   { ok: false }              → fail-closed: trading ccy differs but FX_TO_USD
 //                                has no finite rate; caller must flag+return.
+// Waehrungs-Chunk 3 (16.08.2026, Karl-Freigabe): Yahoo liefert DREI markt-abgeleitete
+// Felder in der HANDELS-Waehrung, nicht in der Bilanzierungswaehrung — marketCap,
+// enterpriseValue und die Kurs-Ziele. Nur marketCap und die Kurs-Ziele liefen bisher ueber
+// den Handelsfaktor; enterpriseValue lief ueber den Berichtsfaktor.
+//
+// LIVE BELEGT am 16.08.2026 an echten Yahoo-Antworten:
+//   BREN.JK  mcap 477 592 880 676 864 IDR, EV 477 595 028 160 512 -> EV/mcap = 1,000
+//            rc=USD (financialCurrency), tc=IDR. Berichtsfaktor 1 -> EV blieb in IDR,
+//            also 17 831x zu gross. Genau der Grund fuer die 26 .JK-Zeilen mit
+//            evSales 13 000 bis 325 000 im Board vom 07.08.
+//   9992.HK  mcap 202,10 Mrd HKD, EV 191,26 Mrd -> Nettokasse 10,84 Mrd HKD = 9,3 Mrd CNY.
+//            Pop Mart weist rund 9 bis 10 Mrd CNY Nettokasse aus: EV ist in HKD (Handel),
+//            NICHT in CNY (Bericht). Damit ist auch die Gegenrichtung belegt, fuer die der
+//            alte Kommentar hier noch den Beleg vermisste (nicht-USD Bericht UND nicht-USD
+//            Handel) — enterpriseValue gehoert IMMER an den Handelsfaktor.
+const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice', 'enterpriseValue'];
+// Yahoos priceToSalesTrailing12Months ist ein MISCH-Verhaeltnis: Zaehler in Handels-,
+// Nenner in Berichtswaehrung. Es ist deshalb NICHT einheitenlos, sondern um genau
+// Handelsfaktor/Berichtsfaktor verzerrt — und lief bisher voellig unskaliert durch, weil
+// die Metrik-Listen Verhaeltnisse pauschal ausnehmen.
+//   BREN.JK  Yahoo 746 762,8 x 0,000056082103 = 41,88 = mcap_USD/Umsatz_USD (nachgerechnet)
+//   0020.HK  Yahoo 11,351923 x 0,1274421/0,14853986 = 9,74 = mcap_USD/Umsatz_USD
+// Bei uebereinstimmenden Waehrungen ist der Faktor exakt 1 (kein Eingriff).
+const MISCH_VERHAELTNIS_METRIKEN = ['priceSales'];
+// EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
+function _skaliereHandelsMetriken(snap, scaleTrading, mischFaktor) {
+  if (!snap || !snap.metrics) return;
+  for (const k of HANDELS_METRIKEN) {
+    if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
+  }
+  if (!Number.isFinite(mischFaktor) || mischFaktor === 1) return;
+  for (const k of MISCH_VERHAELTNIS_METRIKEN) {
+    const m = snap.metrics[k];
+    if (m == null) continue;
+    if (typeof m === 'number') {
+      if (Number.isFinite(m)) snap.metrics[k] = m * mischFaktor;
+    } else if (typeof m === 'object' && 'value' in m && Number.isFinite(m.value)) {
+      snap.metrics[k] = Object.assign({}, m, { value: m.value * mischFaktor });
+    }
+  }
+}
+
 function _applyTradingScale(snap, financialFactor) {
   const origCurrency = snap.meta.reportingCurrency || 'USD';
   const tradingCcyRaw = (snap.price && snap.price.currency)
@@ -730,11 +772,10 @@ function _applyTradingScale(snap, financialFactor) {
     return out;
   };
   if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
-  if (snap.metrics) {
-    for (const k of ['targetMeanPrice', 'targetMedianPrice']) {
-      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
-    }
-  }
+  // Waehrungs-Chunk 3: enterpriseValue + Kurs-Ziele an den Handelsfaktor, priceSales um das
+  // Misch-Verhaeltnis korrigieren. Das ist der .JK-Fall (Bericht USD, Handel IDR): hier ist
+  // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
+  _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / financialFactor);
   return { ok: true };
 }
 
@@ -919,36 +960,21 @@ function _convertSnapshotToUSD(snap) {
   // currency-denominated metrics field (e.g. fcfTTM, ebitda, enterpriseValue,
   // bookValuePerShare) would silently bypass FX conversion and stay in local ccy.
   // We enumerate explicitly here so additions are reviewed at this single site.
-  // RATIOS (margin/growth/pe/priceSales/sbcRatio/insidersOwnership) and counts
-  // (cashRunway in months) are NOT included — they are unit-less or cancel out.
+  // RATIOS (margin/growth/pe/sbcRatio/insidersOwnership) and counts (cashRunway in months)
+  // are NOT included — they are unit-less or cancel out. AUSNAHME seit Waehrungs-Chunk 3:
+  // priceSales ist KEIN einheitenloses Verhaeltnis (s. MISCH_VERHAELTNIS_METRIKEN oben).
   const CCY_DENOMINATED_METRICS = [
     'revenueTTM',
     'fcfTTM',            // currently absent from metrics.* but reserved
     'ebitda',            // POPULATED (Tag 219, financialData.ebitda) — reporting ccy, scaled by `factor` here. Correct: EBITDA is an income-statement quantity in the reporting currency.
-    // POPULATED (Tag 219, defaultKeyStatistics.enterpriseValue) — scaled by reporting `factor` here.
-    // F2 (audit 2026-06-25) flagged a SUSPECTED mis-scale for dual-non-USD ADRs (trading HKD /
-    // reporting CNY): EV is market-derived (mcap + net debt) and Yahoo MAY report it in the TRADING
-    // currency like marketCap (which uses scaleTrading/tradingFactor). The comment asked for
-    // NEEDS-LIVE-CONFIRMATION before moving EV to the trading-factor list.
-    //
-    // >>> LIVE-CONFIRMATION LIEGT VOR (2026-07-27, gemessen am snapshots-Artefakt des CI-Laufs
-    // 30213797442, 12 321 Snapshots). F2 ist BESTAETIGT, aber nur fuer eine klar umrissene
-    // Teilmenge: Namen mit reportingCurrency === 'USD' UND tradingCurrency !== 'USD'. Dort ist der
-    // reporting `factor` = 1, EV wird also unveraendert durchgereicht — Yahoo liefert es aber in der
-    // TRADING-Waehrung. Das Verhaeltnis EV/marketCap ist dann exakt der Wechselkurs:
-    //   .JK (IDR): 26 Namen, Faktor 17 968-17 970  (IDR/USD)
-    //   .SN (CLP): 12 Namen, Faktor  949-  954     (CLP/USD)
-    //   .NS (INR),  .IS (TRY),  .T (JPY): einzelne Namen mit dem jeweiligen Kurs
-    // Beispiel MEDC.JK: tc=IDR, rc=USD, mcap 1,82 Mrd, EV 32 705 Mrd.
-    //
-    // NICHT geaendert, bewusst: der Umbau auf den trading-Faktor betraefe JEDEN nicht-USD-Namen,
-    // und fuer die Gegenrichtung (reporting non-USD, trading non-USD) fehlt der Beleg weiterhin —
-    // eine pauschale Umstellung koennte dort korrekte Werte kaputt machen. WIRKUNG heute begrenzt:
-    // enterpriseValue fliesst in KEINE Score-Achse (src/scoring/axes.js kennt das Feld nicht);
-    // Konsument ist lib/e1-compression.js (EV/Sales), das noch nicht scharf verdrahtet ist.
-    // Naechster Schritt waere ein gezielter Fix genau fuer die Teilmenge oben plus ein Test, der
-    // das Verhaeltnis EV/marketCap gegen fx-rates.json prueft. Karl-Frage dazu im Nachtlauf-Protokoll.
-    'enterpriseValue',
+    // ⚠ 'enterpriseValue' stand HIER und ist am 16.08.2026 (Waehrungs-Chunk 3) in
+    // HANDELS_METRIKEN umgezogen — Yahoo liefert es in der HANDELS-Waehrung. Der alte
+    // Kommentar an dieser Stelle hatte den .JK-Fall (Bericht USD / Handel IDR) bereits am
+    // 27.07. gemessen, den Umbau aber vertagt, weil fuer die Gegenrichtung (Bericht und
+    // Handel beide nicht USD) der Beleg fehlte. Der Beleg liegt jetzt vor: 9992.HK, EV
+    // 191,26 Mrd gegen mcap 202,10 Mrd HKD ergibt 10,84 Mrd HKD Nettokasse = 9,3 Mrd CNY,
+    // was Pop Marts ausgewiesener Nettokasse entspricht — EV ist in HKD, nicht in CNY.
+    // Begruendung und Rechnung stehen an HANDELS_METRIKEN.
     'bookValuePerShare', // currently absent — reserved
     'cashPerShare'       // currently absent — reserved
   ];
@@ -962,10 +988,9 @@ function _convertSnapshotToUSD(snap) {
     // handled — scale()'s reporting `factor` mis-prices targets for ADR-class
     // tickers where tradingFactor !== factor. (Non-ADR: tradingFactor === factor,
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
-    const CCY_DENOMINATED_TRADING_METRICS = ['targetMeanPrice', 'targetMedianPrice'];
-    for (const k of CCY_DENOMINATED_TRADING_METRICS) {
-      if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
-    }
+    // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
+    // priceSales wird um das Misch-Verhaeltnis korrigiert).
+    _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
