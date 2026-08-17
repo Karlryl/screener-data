@@ -83,6 +83,41 @@ der Kasten gebaut wurde.
 - (d) Abdeckungs-Report — **gemessen**, mit einem schweren Befund gegen R6 (eigener Bericht).
 - (e) Fallzahl-Vorschau nach R15a — offen; die Firmenzahlen je Jahr liegen jetzt vor.
 
+## Nachtrag 17.08. — der Abdeckungs-Report hat R6 widerlegt
+
+Die Verfassung behauptete „+11 % bis +30 % Fakten je periodischem Bericht" im neuen Stand.
+Ueber alle 62 vergleichbaren Quartale gemessen: **−9,5 % bis +46,9 %, Median +7,1 %**;
+16 Quartale verlieren Fakten, darunter 2013q1 (−8,8 %) — das Quartal, das die Verfassung
+selbst als Gegenprobe nannte.
+
+**Dreifach unabhaengig bestaetigt** (numpy-Zaehler · direkte SQL-Aggregation · dritter,
+formulargetrennter Rechenweg): 2013q1 517,2 → 471,8 · 2020q2 329,5 → 385,3, auf die
+Nachkommastelle identisch. Die Ausweich-Erklaerung „Berichte ohne Fakten verzerren den
+Nenner" ist ausgeschlossen (nur Berichte mit Fakten: 530,3 → 471,8 = −11,0 %).
+
+**Herkunft des Fehlers, dokumentarisch belegt:** Der E1-Report vom 16.08. enthaelt eine
+Fenster-Tabelle mit Fakten-Verhaeltnissen Neu/Alt — Entdeckung 2009–2015 **0,95**,
+Puffer 2016 **0,97**, Pruefung 1,11, Puffer 2020 1,16, Endtest 1,18, Reife 2024 1,30.
+In die Verfassung uebernommen wurden die Endpunkte **+11 und +30** (also die Fenster ab
+2017); die beiden Fenster **unter 1** fielen beim Formulieren weg. Zusaetzlich wurde aus
+einem Gesamt-Fakten-Verhaeltnis je Fenster ein „je periodischem Bericht" — eine andere
+Kennzahl. Der Gegenbeleg stand also bereits im eigenen Beleg-Dokument.
+
+**Formulargetrennt an 2020q2** (widerlegt zugleich die naheliegende Vermutung, die Spanne
+stamme aus den Formulararten): 10-K +0,7 % · 10-Q +18,2 % · 20-F +26,2 % · 40-F −5,9 %.
+
+**Was daraus folgt:** Die Verfassung ist an zwei Stellen korrigiert. Der Pflicht-Sensitivitaets-
+lauf berichtet kuenftig **je Quartal** statt als Fenster-Aggregat und ist **richtungs-offen** —
+fuer 2009–2016 ist „neuer Stand flacher" der Normalfall, kein Alarm. Der Universums-Teil
+von R6 (8-K-Wegfall, periodische Berichte zeilenstabil, kein Datenbruch) **steht unveraendert**
+und wurde durch diese Messung sogar bestaetigt.
+
+**Offen, als neue R16-Frage:** Warum trifft der Fakten-Schwund bevorzugt die ersten Quartale
+eines Kalenderjahres (2013q1, 2014q1, 2015q1, 2016q1, 2017q1 alle negativ) und die dichten
+Formulararten 20-F/40-F? Der Schwund korreliert mit der Berichtsdichte — Indiz, dass die
+Reprozessierung eine Zeilenklasse entfernt hat, die in Jahresabschluessen konzentriert ist.
+Mechanismus nicht identifiziert; kein Blocker.
+
 ## Folgefragen (R16)
 
 1. Wann wird der Sichtkasten neu gebaut? Er ist ein abgeleitetes Verzeichnis; waechst der
