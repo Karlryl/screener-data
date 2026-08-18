@@ -51,11 +51,42 @@ function _ts() { return new Date().toISOString(); }
 function _log(level, msg) { console.log(`[${_ts()}] [${level}] ${msg}`); }
 
 function parseArgs(argv) {
-  const args = { watchlist: './watchlist.json', out: './prices', rateLimit: 1500 };
+  const args = { watchlist: './watchlist.json', out: './prices', rateLimit: 1500, shard: null };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--watchlist' && argv[i+1]) args.watchlist = argv[++i];
     else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
     else if (argv[i] === '--rate-limit' && argv[i+1]) args.rateLimit = parseInt(argv[++i], 10);
+    // 18.08.: --shard i/N teilt das Universum auf mehrere parallele CI-Laeufe auf.
+    // OHNE dieses Flag verhaelt sich das Skript wie vorher — die Backfill-/Migrate-
+    // Aufrufer bleiben unberuehrt.
+    //
+    // WARUM: der Schritt lief mit EINEM Runner ueber ~20.900 Ticker bei Nebenlaeufigkeit 8
+    // und 1500 ms Stapelpause. Das sind allein an SCHLAFZEIT ~65 min gegen ein 25-min-
+    // Timeout — selbst bei Netzzeit null waeren nur ~38 % der Ticker geschafft. Das
+    // Timeout schlug JEDEN Tag zu und wurde von continue-on-error:true still geschluckt.
+    // Beleg: der Tages-Snapshot prices/<datum>.json wird erst NACH der Schleife
+    // geschrieben und ist deshalb nie in git angekommen (git ls-files prices/ zeigt nur
+    // history/), und das failRatio-Gate am Skriptende hat nie gelaufen.
+    //
+    // WARUM NICHT einfach die Nebenlaeufigkeit hoch: Yahoos Cloudflare-Kante drosselt PRO
+    // IP ab ~20 gleichzeitigen Anfragen — deshalb wurde die Nebenlaeufigkeit an Tag 215f
+    // von 20 auf 8 gesenkt. Und selbst bei 20 blieben 1.044 Stapel x 1,5 s = 26,1 min
+    // > 25 min: es loeste das Problem nicht einmal, wenn Yahoo mitspielte. Mehrere Runner
+    // heissen mehrere IPs, jede unter der Drossel.
+    else if (argv[i] === '--shard' && argv[i+1]) {
+      const wert = argv[++i];
+      const m = /^(\d+)\/(\d+)$/.exec(wert);
+      // Fail-loud statt still ignorieren: ein vertipptes --shard wuerde sonst das GANZE
+      // Universum auf JEDEM Runner ziehen — vierfache Yahoo-Last, und niemand merkt es,
+      // weil das Ergebnis "vollstaendig" aussieht.
+      if (!m) throw new Error(`--shard erwartet die Form i/N (z.B. 0/4), bekam: ${wert}`);
+      const idx = parseInt(m[1], 10);
+      const anzahl = parseInt(m[2], 10);
+      if (!(anzahl >= 1) || !(idx >= 0) || idx >= anzahl) {
+        throw new Error(`--shard ${wert} ist unmoeglich: erwartet 0 <= i < N und N >= 1`);
+      }
+      args.shard = { idx, anzahl };
+    }
   }
   return args;
 }
@@ -200,6 +231,21 @@ async function main() {
   for (const b of BENCHMARKS) {
     if (!wl.stocks.some(s => (s.ticker || '').toUpperCase() === b.ticker)) wl.stocks.unshift(b);
   }
+  // 18.08.: Shard-Filter. Geteilt wird entlang der STORE-Shards (shardOf, djb2%32), NICHT
+  // entlang der Listenposition — damit besitzt jeder CI-Shard eine disjunkte Menge von
+  // Store-Dateien (bei N=4 genau 8 der 32) und zwei Runner koennen dieselbe history-NN.json
+  // nie gegenseitig ueberschreiben. Die Benchmarks laufen durch denselben Filter: SPY/QQQ/IWM
+  // landen so bei genau einem Runner statt bei allen vieren.
+  if (args.shard) {
+    const { idx, anzahl } = args.shard;
+    const vorherN = wl.stocks.length;
+    wl.stocks = wl.stocks.filter(s => priceStore.shardOf(s.ticker) % anzahl === idx);
+    _log('INFO', `Shard ${idx}/${anzahl}: ${wl.stocks.length} von ${vorherN} Tickern`);
+    // Ein leerer Shard ist kein legitimer Zustand: bei ~20.900 Tickern und N <= 32 muesste
+    // jeder Shard hunderte tragen. Leer heisst Filter oder Watchlist kaputt — laut abbrechen,
+    // statt einen "erfolgreichen" Lauf ohne einen einzigen Kurs zu melden.
+    if (wl.stocks.length === 0) throw new Error(`Shard ${idx}/${anzahl} ist leer — Filter oder Watchlist defekt`);
+  }
   // audit/fix: honor the workflow's frozen RUN_DATE_UTC for the per-day snapshot
   // filename + pulledOn provenance, instead of a self-computed wall-clock UTC date.
   // The daily-pull workflow freezes RUN_DATE_UTC at job start so all date-stamped
@@ -327,7 +373,12 @@ async function main() {
   // per-ticker back-fill fix above — accumulated a 1-point series. alpha-vs-QQQ/IWM in
   // walk-forward was therefore computed against a single-day benchmark. Generalize the
   // guarantee loop over the whole BENCHMARKS array so every benchmark gets a full series.
-  for (const bench of BENCHMARKS) {
+  // 18.08.: im Shard-Modus nur die Benchmarks nachziehen, die diesem Runner gehoeren —
+  // sonst zoegen alle Runner SPY/QQQ/IWM und schrieben in fremde Store-Shards.
+  const eigeneBenchmarks = args.shard
+    ? BENCHMARKS.filter(b => priceStore.shardOf(b.ticker) % args.shard.anzahl === args.shard.idx)
+    : BENCHMARKS;
+  for (const bench of eigeneBenchmarks) {
     const sym = bench.yahoo_symbol;
     const key = bench.ticker;
     if (history[key] && todaysSnapshot[key]) continue;
@@ -351,15 +402,40 @@ async function main() {
     }
   }
 
-  writeFileAtomic(path.join(args.out, `${today}.json`), JSON.stringify(todaysSnapshot, null, 2));
+  // 18.08.: im Shard-Modus schreibt jeder Runner seinen EIGENEN Tages-Ausschnitt;
+  // scripts/merge-price-shards.js fuegt sie im merge-Job zu prices/<datum>.json zusammen.
+  // Ohne --shard unveraendert.
+  const snapshotDatei = args.shard ? `${today}.shard-${args.shard.idx}.json` : `${today}.json`;
+  writeFileAtomic(path.join(args.out, snapshotDatei), JSON.stringify(todaysSnapshot, null, 2));
   // Tag 294: final write = saveAll (all 32 shards). Guarantees completeness even
   // for the migration/first run (every shard exists afterwards, so loadAll never
   // falls back to legacy again) — replaces the single writeFileAtomic(histPath)
   // that produced the >100 MB monolith. saveAll partitions in memory and writes
   // each shard atomically + compact; per-shard JSON.stringify stays far under the
   // V8 512 MB single-string limit that the old monolith flirted with.
-  priceStore.saveAll(args.out, history);
+  // 18.08.: im Shard-Modus NUR die eigenen Store-Dateien schreiben (saveDirty). saveAll
+  // wuerde alle 32 schreiben — inklusive der 24, die diesem Runner nicht gehoeren und die
+  // er nur im Ladezustand vom letzten Commit kennt. Beim Artefakt-Merge wuerde der letzte
+  // Schreiber die frischen Daten der anderen Runner mit seinem Altstand ueberschreiben.
+  // Genau deshalb darf hier NICHT einfach saveAll stehenbleiben.
+  if (args.shard) {
+    const geschrieben = priceStore.saveDirty(args.out, history, dirty);
+    _log('INFO', `Shard ${args.shard.idx}: ${geschrieben.length} eigene Store-Dateien geschrieben`);
+  } else {
+    priceStore.saveAll(args.out, history);
+  }
   _log('INFO', `Done: ${ok}/${wl.stocks.length} ok, ${failed} failed`);
+
+  // 18.08.: Nachweis-Datei je Shard. Sie ist der WAECHTER-ANKER — fehlt sie im merge-Job,
+  // ist dieser Runner in sein Timeout gelaufen oder abgestuerzt. Genau der Fall, der bisher
+  // still blieb. Der Wert steht bewusst NICHT nur im Log: ein Log liest niemand, und
+  // continue-on-error haette ihn ohnehin verschluckt.
+  if (args.shard) {
+    writeFileAtomic(
+      path.join(args.out, `prices-shard-report-${args.shard.idx}.json`),
+      JSON.stringify({ shard: args.shard.idx, anzahl: args.shard.anzahl, attempted: wl.stocks.length, ok, failed, datum: today }, null, 2),
+    );
+  }
 
   // BH-053 fix: previously only ok===0 failed the run — 1 success among
   // thousands of failures still exited 0, and saveAll's freshly-stamped

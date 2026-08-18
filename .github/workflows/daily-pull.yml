@@ -687,8 +687,134 @@ jobs:
   # shard artifacts (coverage-gate catches partial coverage), but NOT if prep hard-
   # failed (no universe = merge is meaningless, and prep-state would be missing).
   # ============================================================================
-  merge:
+  # ===========================================================================
+  # 18.08.2026 — KURSABRUF ALS EIGENE MATRIX
+  #
+  # WAS VORHER WAR: der Schritt "Pull Historical Prices" lief im merge-Job auf
+  # EINEM Runner ueber ~20.900 Ticker, Nebenlaeufigkeit 8, 1500 ms Stapelpause.
+  # Allein die Schlafzeit betraegt dabei ~65 min gegen ein 25-min-Timeout — der
+  # Schritt lief JEDEN Tag in sein Timeout und `continue-on-error: true` hat es
+  # still geschluckt. Belegt daran, dass prices/<datum>.json (wird erst NACH der
+  # Abrufschleife geschrieben) nie in git angekommen ist: `git ls-files prices/`
+  # zeigt ausschliesslich history/. Auch das 75-%-Fehlerquoten-Gate am Skriptende
+  # hat deshalb nie gelaufen. Gemessen hatte rund die Haelfte der Ticker
+  # veraltete Kurse, das Universum rotierte in 3-4 Tagen durch.
+  #
+  # WARUM NICHT einfach die Nebenlaeufigkeit hoch: Yahoos Cloudflare-Kante
+  # drosselt PRO IP ab ~20 gleichzeitigen Anfragen (deshalb wurde
+  # PULL_CONCURRENCY an Tag 215f von 20 auf 8 gesenkt; ein Ein-IP-Lauf ueber nur
+  # 775 Namen endete mit 86,9 % Fehlern und 23x HTTP 429). Und selbst bei 20
+  # blieben 1.044 Stapel x 1,5 s = 26,1 min > 25 min — es loeste das Problem
+  # nicht einmal, wenn Yahoo mitspielte. Mehrere Runner heissen mehrere IPs,
+  # jede unter der Drossel. Genau das Muster, mit dem die Snapshot-Matrix
+  # darueber seit Tag 280 gruen faehrt.
+  #
+  # WARUM NACH der Snapshot-Matrix und nicht parallel: 17 + 4 gleichzeitige
+  # Runner ueberschreiten das 20-Runner-Limit, und Yahoo-Last soll sich nicht
+  # stapeln. Gemessene Schlafzeit je Preis-Shard: 16,7 min (5.337 Ticker im
+  # groessten von vier). timeout-minutes 45 laesst reichlich Luft fuer Netzzeit
+  # und traegt das Universum bis ~25.000 Ticker.
+  #
+  # WARUM DIE AUFTEILUNG SICHER IST: geteilt wird entlang der STORE-Shards
+  # (shardOf, djb2%32), nicht entlang der Listenposition. Nachgerechnet am
+  # echten Universum: 5140/5337/5216/5235 Ticker je Runner, je genau 8 der 32
+  # Store-Dateien, NULL Ueberschneidung — kein Runner kann die frischen Daten
+  # eines anderen ueberschreiben.
+  prices:
     needs: [prep, pull]
+    if: ${{ always() && needs.prep.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      # Unveraendert gegenueber dem alten Ein-Runner-Schritt: die Drossel sitzt
+      # pro IP, und jeder Runner hat seine eigene. Hier NICHT hochdrehen.
+      PRICE_CONCURRENCY: '8'
+      PRICE_SHARDS: '4'
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Dieselbe watchlist.json wie die Snapshot-Matrix -> identische Partition.
+      # Ohne sie zoege jeder Runner gegen den Checkout-Stand und die Aufteilung
+      # koennte zwischen den Runnern auseinanderlaufen.
+      - name: Download prep state
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: prep-state
+          path: .
+
+      # Defence-in-depth, analog zum Snapshot-Job: ein ungueltiges --shard wuerde
+      # das GANZE Universum auf diesem Runner ziehen. Das Skript wirft dann zwar
+      # selbst, aber lieber hier abbrechen als eine vierfache Yahoo-Last starten.
+      - name: Assert shard index in range
+        run: |
+          if [ "${{ matrix.shard }}" -ge "$PRICE_SHARDS" ] || [ "${{ matrix.shard }}" -lt 0 ]; then
+            echo "::error::Preis-Shard ${{ matrix.shard }} ausserhalb des Bereichs fuer N=$PRICE_SHARDS. Abbruch."
+            exit 1
+          fi
+          echo "Preis-Shard ${{ matrix.shard }}/$PRICE_SHARDS in range."
+
+      # KEIN continue-on-error mehr. Faellt dieser Schritt aus, fehlt sein
+      # Nachweis-Report — und der Waechter im merge-Job macht das laut. Genau der
+      # Fall, der bisher still blieb.
+      - name: Pull Historical Prices (shard)
+        run: node pull-historical-prices.js --out prices --rate-limit 1500 --shard ${{ matrix.shard }}/$PRICE_SHARDS
+
+      # Nur die EIGENEN Store-Dateien hochladen. Wer alle 32 hochlaedt, schiebt
+      # 24 Dateien mit, die er nur im Ladezustand vom letzten Commit kennt — beim
+      # Zusammenfuehren wuerde der letzte Schreiber die frischen Daten der anderen
+      # Runner mit seinem Altstand ueberschreiben. Die Zugehoerigkeit wird
+      # GERECHNET (shardOf % N), nicht als starre Dateiliste gepflegt: so bleibt
+      # der Schritt richtig, wenn sich PRICE_SHARDS oder SHARD_COUNT aendert.
+      - name: Eigene Store-Dateien einsammeln
+        run: |
+          mkdir -p price-shard-out/history
+          node -e "
+            const fs=require('fs'), path=require('path');
+            const store=require('./lib/price-history-store.js');
+            const i=parseInt(process.env.SHARD_IDX,10), n=parseInt(process.env.PRICE_SHARDS,10);
+            let kopiert=0;
+            for (let s=0; s<store.SHARD_COUNT; s++) {
+              if (s % n !== i) continue;
+              const name=store.shardFilename(s);
+              const von=path.join('prices','history',name);
+              if (!fs.existsSync(von)) continue;
+              fs.copyFileSync(von, path.join('price-shard-out','history',name));
+              kopiert++;
+            }
+            console.log('Store-Dateien fuer Shard '+i+': '+kopiert);
+            if (kopiert===0) { console.log('::error::Shard '+i+' hat KEINE Store-Datei geschrieben — der Abruf hat nichts persistiert.'); process.exit(1); }
+          "
+          cp prices/${{ needs.prep.outputs.run_date }}.shard-${{ matrix.shard }}.json price-shard-out/ 2>/dev/null || true
+          cp prices/prices-shard-report-${{ matrix.shard }}.json price-shard-out/ 2>/dev/null || true
+        env:
+          SHARD_IDX: ${{ matrix.shard }}
+          PRICE_SHARDS: '4'
+
+      - name: Upload price shard
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: prices-shard-${{ matrix.shard }}
+          path: price-shard-out/
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: [prep, pull, prices]
     if: ${{ always() && needs.prep.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -821,14 +947,31 @@ jobs:
       - name: Verify Pull Coverage (two-stage)
         run: node scripts/coverage-gate.js
 
-      # Tag-39: Historical-Price-Pull ueber das zusammengefuehrte Universum. Einmalige
-      # Yahoo-Last (NICHT je Shard). Tag 232c-25: PRICE_CONCURRENCY 20->8.
-      - name: Pull Historical Prices
-        env:
-          PRICE_CONCURRENCY: '8'
-        run: node pull-historical-prices.js --out prices --rate-limit 1500
-        timeout-minutes: 25
-        continue-on-error: true
+      # 18.08.2026: der Abruf selbst ist in den prices-Job gewandert (Begruendung
+      # dort). Hier werden nur noch die vier Ausschnitte eingesammelt und vereint.
+      # Der alte Schritt stand hier mit timeout-minutes:25 + continue-on-error:true
+      # und ist JEDEN Tag in dieses Timeout gelaufen, ohne dass es jemand sah.
+      - name: Download price shards
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: prices-shard-*
+          merge-multiple: true
+          path: price-shards-in
+
+      # Overlay statt Ersetzen: der Checkout bringt alle 32 Store-Dateien vom
+      # letzten Commit mit; die vier Runner liefern die 32 frischen. Ein Ticker,
+      # dessen Abruf heute fehlschlug, behaelt so seine Historie.
+      - name: Preis-Ausschnitte einlegen
+        run: |
+          mkdir -p prices/history
+          cp -f price-shards-in/history/*.json prices/history/ 2>/dev/null || true
+          # Nur die Tages-Ausschnitte, NICHT die Nachweis-Reports: die sind
+          # Betriebsspur des Laufs und haben im Datenbestand nichts verloren.
+          cp -f price-shards-in/*.shard-*.json prices/ 2>/dev/null || true
+          ls -1 prices/*.shard-*.json 2>/dev/null | wc -l | xargs -I{} echo "Tages-Ausschnitte eingelegt: {}"
+
+      - name: Preis-Shards zusammenfuehren
+        run: node scripts/merge-price-shards.js --prices prices --date "$RUN_DATE_UTC" --expected-shards 4
 
       # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
       # args.out untouched on failure" fallback (BH-138) can only protect a
@@ -990,6 +1133,61 @@ jobs:
 
       # Task 0.3: upload the final merged snapshots/ so the scoring job scores them on
       # a fresh runner. Runs after Commit so it captures the complete post-pull set.
+      # 18.08.2026: WAECHTER GEGEN DEN STILLEN AUSFALL.
+      # Das alte Muster war "timeout-minutes: 25" + "continue-on-error: true" am
+      # Abruf selbst: lief er in sein Timeout, blieb der Lauf gruen und der halbe
+      # Kursbestand veraltete unbemerkt. Das ist ersatzlos entfallen; stattdessen
+      # steht hier ein eigener Pruefschritt.
+      #
+      # WARUM ER NACH DEM COMMIT SITZT: die Daten des Tages sind dann bereits
+      # gesichert. Stuende er davor, wuerde sein Alarm auch das wegwerfen, was
+      # heute funktioniert hat — der Waechter darf melden, nicht schaden.
+      #
+      # WARUM DREI GRUENDE UND NICHT EINER: (a) fehlender Report = der Runner ist
+      # in sein Timeout gelaufen oder abgestuerzt, ohne sein Skriptende zu
+      # erreichen — genau der Fall, der bisher schwieg. (b) Fehlerquote > 75 %
+      # ist die bereits geweihte Schwelle aus pull-yahoo.js (Tag 147), kein neu
+      # erfundener Wert. (c) ein zu duenner Tages-Snapshot faengt den Fall ab,
+      # dass alle vier Runner formal durchliefen, aber Yahoo flaechendeckend
+      # gedrosselt hat.
+      # EINZELNE Yahoo-Aussetzer bleiben ausdruecklich gruen: sie erhoehen nur
+      # failed und reissen keine der drei Schwellen. Rot wird ausschliesslich
+      # Timeout, Absturz oder Massen-Drossel.
+      - name: Preis-Transport pruefen
+        run: |
+          node -e "
+            const fs=require('fs'), path=require('path');
+            const N=4, datum=process.env.RUN_DATE_UTC;
+            let rot=false;
+            for (let i=0;i<N;i++){
+              const p=path.join('price-shards-in','prices-shard-report-'+i+'.json');
+              if(!fs.existsSync(p)){
+                console.log('::error::Preis-Shard '+i+' hat keinen Nachweis-Report hinterlassen — er ist vor seinem Skriptende gestorben (Timeout oder Absturz). Die Kurse dieses Viertels sind heute NICHT erneuert worden.');
+                rot=true; continue;
+              }
+              const r=JSON.parse(fs.readFileSync(p,'utf8'));
+              const quote = r.attempted>0 ? r.failed/r.attempted : 1;
+              console.log('Shard '+i+': '+r.ok+' ok, '+r.failed+' fehlgeschlagen von '+r.attempted+' ('+(quote*100).toFixed(1)+'% Fehlerquote)');
+              if(quote>0.75){
+                console.log('::error::Preis-Shard '+i+' hat '+(quote*100).toFixed(1)+'% Fehlerquote (Grenze 75%, dieselbe wie beim Snapshot-Pull seit Tag 147) — das ist keine Einzelstoerung, sondern eine flaechige Drossel oder ein kaputter Abruf.');
+                rot=true;
+              }
+            }
+            const tages=path.join('prices',datum+'.json');
+            if(!fs.existsSync(tages)){
+              console.log('::error::Der Tages-Kursstand '+tages+' fehlt — genau die Datei, die es vor dem 18.08. nie in den Bestand geschafft hat.');
+              rot=true;
+            } else {
+              const n=Object.keys(JSON.parse(fs.readFileSync(tages,'utf8'))).length;
+              console.log('Tages-Kursstand: '+n+' Ticker');
+              if(n<15000){
+                console.log('::error::Tages-Kursstand traegt nur '+n+' Ticker (erwartet >=15.000 bei ~20.900 im Universum). Formal liefen alle Runner, aber es sind zu wenige Kurse angekommen.');
+                rot=true;
+              }
+            }
+            process.exit(rot?1:0);
+          "
+
       - name: Upload Snapshots Artifact
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
