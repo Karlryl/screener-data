@@ -18,9 +18,23 @@
  * durchwinken und MUSS mit Exit 1 hart failen.
  *   - VOR dem C2-Fix (stiller return): CRDO erscheint als '  ok ...', Exit 0  -> dieser Test ROT.
  *   - NACH dem C2-Fix (assert/throw): FAIL-Zeile fuer CRDO mit Ticker+Grund, Exit 1 -> dieser Test GRUEN.
- * Geprueft wird auf 'ok'-ABWESENHEIT + Exit 1 (NICHT auf 'skip' — Option A skippt bewusst nicht,
- * sondern failt; daher steht anchors.rank.test.js auch NICHT in der NEEDS_UNIVERSE-Tabelle von
- * skip-honesty.test.js).
+ * ⚠ VERTRAG GEAENDERT 18.08.2026 — KARL-ENTSCHEID "KEINE ANKER".
+ * Karl woertlich: "ich wollte in diesem gesamten screener keine anker ... Theoretisch sollte Credo
+ * auf Platz 230 fallen, weil es einfach 230 bessere Unternehmen gibt dort im Screener. Ist das
+ * voellig in Ordnung. ... Ich brauche das, was der Screener sagt." Ein fehlender oder abgerutschter
+ * Anker ist damit ein ERGEBNIS des Screeners, kein Fehler — "Exit 1 bei fehlendem CRDO" ist als
+ * Zusicherung tot.
+ *
+ * DER ZWECK DIESES TESTS BLEIBT ABER GUELTIG, und zwar unveraendert: ein fehlender Anker darf nicht
+ * STUMM durchgehen. Genau das war der C2-Befund. Aus "muss rot faerben" wird deshalb "muss
+ * NAMENTLICH BENANNT werden": der Lauf endet mit Exit 0, aber die Beobachtungs-Ausgabe sagt, dass
+ * CRDO nicht im Ranking ist — und die Suite fuehrt weiterhin echte Pruefungen aus (kein "0 ok").
+ *
+ * WARUM DIE ALTE FASSUNG NICHT EINFACH GELOESCHT WURDE: ohne sie koennte anchors.rank.test.js
+ * kuenftig wieder still aussteigen, ohne dass es jemand merkt — der vakuose Pass waere zurueck,
+ * nur ohne roten Ankerteil. Der Waechter bewacht ab jetzt die EHRLICHKEIT der Ausgabe statt eines
+ * Rangs. (Als das Anker-Gate am 18.08. fiel, blieb genau dieser Test unbeachtet zurueck und haette
+ * den naechsten Tageslauf VOR dem Kursabruf abgebrochen — er steht in der blockierenden Spur.)
  *
  * Run: node tests/scoring/anchors.rank.rumpf-skip.test.js   (Exit 0/1)
  */
@@ -96,22 +110,32 @@ try {
     env: { ...process.env, SCREENER_SNAPSHOTS_DIR: dir },
   });
   const out = (r.stdout || '') + (r.stderr || '');
-  // Zeile, die anchors.rank.test.js bei erfolgreichem CRDO-Test druckt ('|' ist Regex-Metazeichen).
-  const crdoOk = /^\s*ok\s+Direktive 4: CRDO oben in semiconductors\|profitable/m;
+  // 18.08.: Das alte Muster suchte die Zeile "ok Direktive 4: CRDO oben in ..." — diesen Test gibt
+  // es nicht mehr, das Muster koennte also NIE mehr greifen und der Check waere stumm gruen
+  // geworden: ein Waechter, der nichts mehr prueft. Jetzt wird gegen die AKTUELLE Ausgabe geprueft:
+  // CRDO darf nicht mit einem Rang protokolliert werden, denn im Fixture existiert es nicht.
+  const crdoMitRang = /^\s*CRDO Rang \d+/m;
   const tail = out.split('\n').slice(-25).join('\n');
 
-  // DER KERN (C2): CRDO darf NICHT als 'ok' erscheinen und der Lauf MUSS Exit 1 liefern.
-  check('anchors.rank.test.js winkt fehlenden CRDO NICHT als "ok" durch (kein vakuoser Pass)', () => {
-    assert.ok(!crdoOk.test(out),
-      'CRDO als "ok" gemeldet, obwohl im Fixture-Universum abwesend — stiller Rumpf-Skip (C2 nicht gefixt):\n' + tail);
+  // DER KERN, unveraendert: CRDO darf nicht als vorhanden erscheinen, obwohl es fehlt.
+  check('anchors.rank.test.js erfindet keinen Rang fuer den abwesenden CRDO', () => {
+    assert.ok(!crdoMitRang.test(out),
+      'CRDO mit Rang protokolliert, obwohl im Fixture-Universum abwesend:\n' + tail);
   });
-  check('anchors.rank.test.js failt hart (Exit 1) bei fehlendem Anker', () => {
-    assert.equal(r.status, 1, `Exit-Code ${r.status} (erwartet 1: fehlender Anker MUSS rot faerben, kein Exit 0):\n` + tail);
+  // GEAENDERT 18.08. (Karl-Entscheid): ein fehlender Anker faerbt NICHT mehr rot.
+  check('fehlender Anker faerbt den Lauf NICHT mehr rot (Exit 0) — Karl-Entscheid 18.08.', () => {
+    assert.equal(r.status, 0, `Exit-Code ${r.status} (erwartet 0: ein fehlender Anker ist ein Ergebnis des Screeners, kein Fehler):\n` + tail);
   });
-  // Auflage 3: die Fehlermeldung MUSS Ticker + Grund (fehlend vs. action!=route) benennen.
-  check('Fail-Meldung benennt Ticker CRDO + Grund (fehlend) — lesbar als Anker-Verschiebung vs. Regression', () => {
-    assert.match(out, /CRDO[^\n]*fehlt|fehlt[^\n]*CRDO/,
-      'Fehlermeldung nennt CRDO/Grund nicht — ein kuenftiger Fail waere nicht als Anker-Verschiebung lesbar:\n' + tail);
+  // ...ABER er muss NAMENTLICH auftauchen. Das ist der Kern, der bleibt: still ist verboten.
+  check('CRDO wird namentlich als fehlend benannt (still waere der vakuose Pass zurueck)', () => {
+    assert.match(out, /CRDO:\s*nicht im/,
+      'CRDO taucht in der Beobachtungs-Ausgabe gar nicht auf — der fehlende Anker verschwindet stumm:\n' + tail);
+  });
+  // Und die Suite muss ueberhaupt etwas geprueft haben. "0 ok, 0 fail" waere ein Test, der gruen
+  // meldet, ohne zu laufen — das test-gate zaehlt das zu Recht als SKIP und nicht als PASS.
+  check('die Suite fuehrt echte Pruefungen aus (kein "0 ok")', () => {
+    assert.ok(!/\b0 ok\b/.test(out),
+      'anchors.rank.test.js meldet "0 ok" — Suite ist leer gelaufen statt zu pruefen:\n' + tail);
   });
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
