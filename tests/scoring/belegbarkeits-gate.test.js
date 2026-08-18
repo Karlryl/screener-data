@@ -143,5 +143,38 @@ test('eine Liste ohne angewandtes Gate faellt im --check auf (rank trotz zu duen
   assert.ok(e.some((x) => /Belegbarkeits-Gate nicht angewandt/.test(x)), 'ungegatete Liste muss auffliegen: ' + JSON.stringify(e));
 });
 
+// --- 7. Unsinnige Abdeckungsangaben bekommen KEINEN Rang -------------------------------
+// Reviewer-Befund 18.08. (MITTEL): die Regex /^(\d+)\/(\d+)$/ allein laesst inhaltlichen
+// Unsinn durch. "0/0" lief in rangGrund() auf den QC-Zweig (Nenner < RANK_GATE_MIN_NENNER)
+// und "9/7" auf "n >= RANK_MIN_AXES" — beide Male auf null, also auf "Rang steht ihr zu".
+// Eine Zeile mit kaputter Abdeckungsangabe haette still einen Rang bekommen, statt als
+// 'coverageUnbekannt' gefuehrt zu werden.
+//
+// Der Wert ueberquert eine Serialisierungsgrenze zwischen dem versiegelten src/scoring/ und
+// dem Export. Was hier geprueft wird, ist deshalb die SACHE: eine Abdeckungsangabe, die
+// keinen Sinn ergibt, ist keine Abdeckungsangabe — sie ist Unwissen, und Unwissen bekommt
+// keinen Rang. Das gilt unabhaengig davon, welche Zahlen kuenftige Formeln liefern.
+//
+// GEGENPROBE (durchgefuehrt): Haertung in belegteAchsen() zurueckgedreht -> dieser Test rot.
+test('unsinnige coverageAxes ("0/0", "9/7") bekommen keinen Rang, sondern coverageUnbekannt', () => {
+  // NICHT dabei: '0/7'. Das ist eine GUELTIGE Angabe (keine von sieben Achsen belegt) und
+  // gehoert korrekt zu 'zuWenigBelegteAchsen' — steht unten bei den Gegenproben. Der erste
+  // Entwurf dieses Waechters hatte sie faelschlich als Unsinn gefuehrt und wurde dadurch rot;
+  // richtig war der Code, nicht der Test.
+  for (const kaputt of ['0/0', '9/7']) {
+    const g = wfe.rangGrund({ coverageAxes: kaputt });
+    assert.equal(g, 'coverageUnbekannt',
+      `coverageAxes="${kaputt}" muss als unbekannt gelten, ergab aber ${JSON.stringify(g)} — ` +
+      'eine kaputte Angabe darf nie zu "Rang steht ihr zu" fuehren');
+  }
+  // Gegenprobe in derselben Pruefung: gueltige Formen muessen weiterhin DURCHGEHEN,
+  // sonst waere die Haertung ein Rundumschlag statt einer Praezisierung.
+  assert.equal(wfe.rangGrund({ coverageAxes: '7/7' }), null, '7/7 muss einen Rang bekommen');
+  assert.equal(wfe.rangGrund({ coverageAxes: '4/7' }), null, '4/7 muss einen Rang bekommen (Schwelle)');
+  assert.equal(wfe.rangGrund({ coverageAxes: '3/7' }), 'zuWenigBelegteAchsen', '3/7 bleibt entrangt');
+  assert.equal(wfe.rangGrund({ coverageAxes: '0/7' }), 'zuWenigBelegteAchsen', '0/7 ist gueltig und entrangt, NICHT unbekannt');
+  assert.equal(wfe.rangGrund({ coverageAxes: '2/5' }), null, 'QC-Nenner 5 bleibt ungegated');
+});
+
 console.log(`\nbelegbarkeits-gate.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

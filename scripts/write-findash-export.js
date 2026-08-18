@@ -298,7 +298,26 @@ const RANK_GATE_WARN_ANTEIL = 0.4;
 // entsteht in src/scoring/score.js (versiegelt, GQS-00/F-16) und wird hier gelesen.
 function belegteAchsen(coverageAxes) {
   const m = typeof coverageAxes === 'string' && coverageAxes.match(/^(\d+)\/(\d+)$/);
-  return m ? { n: Number(m[1]), m: Number(m[2]) } : null;
+  if (!m) return null;
+  const n = Number(m[1]);
+  const nenner = Number(m[2]);
+  // HAERTUNG (Reviewer-Befund 18.08., MITTEL): die Regex allein laesst inhaltlichen Unsinn
+  // durch. "0/0" und "9/7" sind regex-gueltig, ergaben aber { n:0, m:0 } bzw. { n:9, m:7 } —
+  // und liefen damit in rangGrund() auf den QC-Zweig (m < RANK_GATE_MIN_NENNER) bzw. auf
+  // "n >= RANK_MIN_AXES", also beide Male auf **null = 'Rang steht ihr zu'**. Eine Zeile mit
+  // kaputter Abdeckungsangabe haette so still einen Rang bekommen statt 'coverageUnbekannt'.
+  //
+  // Heute kann das nicht entstehen: der Nenner ist die feste Achsenzahl der Formel (7, bei
+  // tech-hardware 8, bei QC 5) — nachgesehen in allen 14 Branchen-Formeln plus quality/ und
+  // smallcap/. Der Pfad ist tot, NICHT ausnutzbar.
+  //
+  // Gehaertet wird er trotzdem, und zwar aus einem Grund, der nichts mit heute zu tun hat:
+  // coverageAxes ueberquert eine Serialisierungsgrenze (JSON) zwischen dem VERSIEGELTEN
+  // src/scoring/ und diesem Skript. Ein kuenftiger Fehler dort, ein Hand-Edit oder eine
+  // Migration wuerde hier ueber Rang-Vergabe entscheiden, ohne dass irgendetwas auffaellt.
+  // Genau diese Klasse — stille Fehlklassifikation an einer Wertgrenze statt sichtbarem
+  // Fehlschlag — ist die teuerste in diesem Projekt.
+  return (nenner > 0 && n <= nenner) ? { n, m: nenner } : null;
 }
 // Grund, warum eine GESCORTE Zeile keinen Rang traegt — null heisst "Rang steht ihr zu".
 // FEHLENDES/unlesbares coverageAxes ist bewusst KEIN Freifahrtschein: ohne Beleg kein Rang
