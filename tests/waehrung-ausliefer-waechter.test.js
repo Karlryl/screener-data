@@ -130,7 +130,8 @@ check('mapOverviewRow und mapSurvivalRow tragen dieselbe Regel', () => {
 check('--check akzeptiert die neuen Felder und faengt einen falschen Wert', () => {
   const basis = { ticker: 'X', score: 1, rank: 1, track: 'profitable', lamps: [], overview: null,
     name: 'X', country: null, region: null, sector: null, marketCap: null, phase: null,
-    mcapBand: null, ipoRecency: null, profitTier: null, ipoYear: null, cohortN: 1, cohortFallback: false };
+    mcapBand: null, ipoRecency: null, profitTier: null, ipoYear: null, cohortN: 1, cohortFallback: false,
+    coverageAxes: '7/7' }; // 18.08.: Belegbarkeits-Gate — nur belegte Zeilen tragen einen Rang
   let e = [];
   wx.validateBoardRow({ ...basis, marketCapCurrency: 'USD', tradingFxRateApplied: 0.127 }, 'w', e);
   assert.equal(e.length, 0, 'saubere Zeile muss durchgehen: ' + e.join('; '));

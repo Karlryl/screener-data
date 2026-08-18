@@ -252,6 +252,88 @@ function normalizeName(value) {
   return normalized || null;
 }
 
+// ---- Belegbarkeits-Gate (18.08.2026) -------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): 21 von ~40 Top-20-Zeilen
+// des Finanzwerte-Boards ruhen auf 3-4 von 7 Messachsen — darunter geschlossene Fonds (GGN
+// Rang 6; NXP = Nuveen Rang 7, Kuerzel-Kollision mit NXP Semiconductors), ein Hedgefonds
+// (BHMU.L Rang 14) und Holdings. Fehlt eine Achse, wird ueber die verbleibenden renormiert;
+// auf 3 Achsen genuegt zufaelliges Gutaussehen fuer Rohwerte um 97-99. Die halbe Rangliste
+// ist dann keine Firmenrangliste mehr.
+//
+// KEIN Typ-Filter (Entscheid 18.08.): jedes Fonds-Erkennungsmerkmal hat GEMESSENE
+// Kollateralschaeden — quoteType ist blind (Yahoo fuehrt CEFs als EQUITY), Branche
+// "Asset Management" traefe BlackRock/Blackstone/KKR, Mitarbeiterzahl killt MCX.BO (Rang 1)
+// und Rasan/8313.SR (Rang 2).
+//
+// STATTDESSEN das Belegbarkeits-Gate: wer weniger als RANK_MIN_AXES belegte Achsen hat,
+// bekommt KEINEN Rang — bleibt aber sichtbar, mit Score und mit dem Grund (Feld rankGrund).
+// Es wird nichts geloescht und nichts umsortiert; nur die Rangnummer entfaellt.
+//
+// WARUM 4 UND NICHT 5: gemessen an board-history/2026-08-16 (8.989 gescorte Zeilen) trifft
+// die 4er-Schwelle 253 Zeilen (2,8 %) — alle acht Problemfaelle und die komplette Fonds-
+// Schicht, waehrend die Schutznamen QXO 7/7, LQDA 7/7, ONDS 8/8, NBIS 7/7 sowie MCX.BO 5/7
+// und Rasan 7/7 ihren Rang behalten. Eine 5er-Schwelle wuerde zusaetzlich Schwab, Nomura
+// (NMR), FRVO (Rang 3), IDYA (Rang 13) und 127 weitere ECHTE Firmen den Rang kosten;
+// financials verloere 53 % seiner gerankten Zeilen. Die 4 ist der Punkt, an dem das Gate
+// noch fast nur Nicht-Firmen trifft.
+//
+// DEKLARIERTES, BEKANNTES LOCH: CBDG.PA (Compagnie du Cambodge, Holding) hat exakt 4 Achsen
+// und behaelt seinen Rang. Das ist GEWOLLT, kein Versehen. Wer das spaeter "repariert",
+// zahlt dafuer die 127 Fehlschuesse der 5er-Schwelle — die Entscheidung ist gemessen, nicht
+// vergessen.
+const RANK_MIN_AXES = 4;
+// Das Gate wurde auf den BRANCHEN-Formeln gemessen (7 bzw. 8 gewichtete Achsen). QC-Boards
+// (src/scoring/formulas/quality) fuehren nur 5 gewichtete Achsen — dieselbe ABSOLUTE Schwelle
+// waere dort eine andere, nie gemessene Regel (4 von 5 = 80 % statt 4 von 7 = 57 %). Deshalb
+// greift das Gate erst ab dieser Achsenzahl im NENNER. QC bleibt unberuehrt, bis jemand die
+// Wirkung dort misst; waechst eine QC-Formel je auf 7 Achsen, greift es automatisch mit.
+const RANK_GATE_MIN_NENNER = 7;
+// Anteil entrangter Zeilen je Liste, ab dem der Bau laut meldet — das vorab deklarierte
+// Scheiternskriterium ("ein Board ueber 40 % heisst: zu scharf") als laufender Waechter.
+// Gemessenes Maximum am 16.08.: financials/profitable 36,4 %. Ohne diese Meldung waere ein
+// flaechiger Coverage-Einbruch ein STILLER Total-Entrangungs-Unfall.
+const RANK_GATE_WARN_ANTEIL = 0.4;
+
+// "n/m" -> {n, m}; alles andere -> null. Konsumiert nur, rechnet nichts nach: coverageAxes
+// entsteht in src/scoring/score.js (versiegelt, GQS-00/F-16) und wird hier gelesen.
+function belegteAchsen(coverageAxes) {
+  const m = typeof coverageAxes === 'string' && coverageAxes.match(/^(\d+)\/(\d+)$/);
+  return m ? { n: Number(m[1]), m: Number(m[2]) } : null;
+}
+// Grund, warum eine GESCORTE Zeile keinen Rang traegt — null heisst "Rang steht ihr zu".
+// FEHLENDES/unlesbares coverageAxes ist bewusst KEIN Freifahrtschein: ohne Beleg kein Rang
+// ('coverageUnbekannt'). Durchwinken hiesse, genau die Zeilen zu ranken, ueber deren
+// Datenlage nichts bekannt ist — das Gegenteil des Zwecks. Still verworfen wird sie ebenso
+// wenig: sie bleibt mit Score in der Liste, traegt ihren eigenen, von 'zuWenigBelegteAchsen'
+// UNTERSCHEIDBAREN Grund und zaehlt in die Melde-Quote (RANK_GATE_WARN_ANTEIL).
+// Survival-Zeilen sind nie gescort und tragen coverageAxes nie — sie laufen NICHT durch
+// dieses Gate (s. buildSurvival/validateSurvivalRow), sonst haetten sie geschlossen alle 101
+// ihren Runway-Rang verloren.
+function rangGrund(row) {
+  const a = belegteAchsen(row && row.coverageAxes);
+  if (!a) return 'coverageUnbekannt';
+  if (a.m < RANK_GATE_MIN_NENNER) return null;   // QC-Formel: nie gemessen, nie gegated
+  return a.n < RANK_MIN_AXES ? 'zuWenigBelegteAchsen' : null;
+}
+// Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
+// und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
+// 1..k. Sie behaelt ihre Array-Position (Score-Ordnung bleibt lesbar) und ihren Score.
+function vergebeRaenge(rows, wo) {
+  let rang = 0, entrangt = 0;
+  for (const row of rows) {
+    const grund = rangGrund(row);
+    if (grund) { row.rank = null; row.rankGrund = grund; entrangt++; }
+    else { row.rank = ++rang; row.rankGrund = null; }
+  }
+  if (rows.length && entrangt / rows.length > RANK_GATE_WARN_ANTEIL) {
+    console.warn('::warning::Belegbarkeits-Gate: ' + wo + ' verliert ' + entrangt + ' von ' +
+      rows.length + ' Raengen (' + (100 * entrangt / rows.length).toFixed(1) + ' %) — ueber ' +
+      (RANK_GATE_WARN_ANTEIL * 100) + ' %. Entweder ist die Datenlage eingebrochen oder die ' +
+      'Schwelle (' + RANK_MIN_AXES + ' Achsen) ist fuer dieses Board zu scharf.');
+  }
+  return rows;
+}
+
 // ---- row mappers ---------------------------------------------------------
 // Copy ONLY real engine fields. `rank` is derived = 1-based array index (score-desc;
 // survival runway-desc). currency/profitTier/ipoYear are RESERVED (1.2) — NOT
@@ -259,7 +341,8 @@ function normalizeName(value) {
 
 function mapBoardRow(r, i) {
   const out = {
-    rank: i + 1,           // derived: list is score-desc, rank = index+1
+    rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
+    rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
     ticker: r.ticker,
     score: r.score,        // round1 display score (sort determinism was internal _raw)
     track: r.track,        // 'profitable' | 'unprofitable'
@@ -278,6 +361,7 @@ function mapBoardRow(r, i) {
 function mapOverviewRow(r, i) {
   const out = {
     rank: i + 1,
+    rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
     ticker: r.ticker,
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,
@@ -297,6 +381,7 @@ function mapSurvivalRow(r, i) {
   // (9999 sentinel = quasi-infinite runway) is the sort key, runway-desc nulls-last.
   const out = {
     rank: i + 1,
+    rankGrund: null,   // survival laeuft NIE durch das Belegbarkeits-Gate (nie gescort)
     ticker: r.ticker,
     runwayQuarters: r.runwayQuarters,  // number|null, 9999 = inf-runway sentinel
     lamps: r.lamps || [],
@@ -316,14 +401,14 @@ function buildBoard(id, coverage) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable'),
   };
 }
 
 function buildOverview(coverage) {
   const o = readJSON(path.join(HG_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow), 'overview') };
 }
 
 function buildSurvival(coverage) {
@@ -367,14 +452,14 @@ function buildQualityBoard(file, coverage, qualityDir) {
     branch: stem,                                   // = filename stem (prefix dropped)
     boardStatus: boardStatusOf('quality-' + stem),  // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.unprofitable'),
   };
 }
 
 function buildQualityOverview(coverage, qualityDir) {
   const o = readJSON(path.join(qualityDir || QUALITY_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'quality/overview') };
 }
 
 function buildQualityIndex(coverage, qualityDir) {
@@ -502,14 +587,14 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
 function buildSmallcapOverview(coverage, smallcapDir) {
   const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'smallcap/overview') };
 }
 
 function buildSmallcapIndex(coverage, smallcapDir) {
@@ -805,11 +890,31 @@ function validateGeo(r, where, errs) {
   }
 }
 
+// Belegbarkeits-Gate, BEIDE Richtungen — der eigentliche Waechter der Regel:
+//   (a) eine gegatete Zeile darf KEINEN Rang tragen und MUSS ihren Grund tragen;
+//   (b) eine belegte Zeile MUSS einen Rang tragen und darf KEINEN Grund tragen.
+// Ohne (a) koennte eine Liste, die vergebeRaenge() nie gesehen hat, mit rank=i+1 stumm
+// durchrutschen; ohne (b) koennte ein zu scharfes Gate stumm halbe Boards entrangen.
+// Die Zeile bleibt in beiden Faellen sichtbar — score/ticker/Felder werden hier NICHT
+// gelockert, nur die Rangnummer haengt am Gate.
+function checkRangGate(r, where, errs) {
+  const grund = rangGrund(r);
+  if (grund) {
+    if (r.rank !== null) errs.push(`${where}: rank=${JSON.stringify(r.rank)} trotz ${grund} — Belegbarkeits-Gate nicht angewandt`);
+  } else if (!Number.isInteger(r.rank) || r.rank < 1) {
+    errs.push(`${where}: rank`);
+  }
+  // Abwesend == null (additiv-optionales Feld, Praezedenz coverageAxes/B1): eine GERANKTE
+  // Zeile darf das Feld weglassen. Eine ENTRANGTE nicht — ohne Grund waere sie stumm
+  // verschwunden, und genau das soll nie wieder passieren.
+  if ((r.rankGrund ?? null) !== grund) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)}, erwartet ${JSON.stringify(grund)}`);
+}
+
 function validateBoardRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!Number.isFinite(r.score)) errs.push(`${where}: score not finite`);
-  if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  checkRangGate(r, where, errs); // 18.08.: rank ist gate-abhaengig (int>=1 ODER null+Grund)
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   // overview: Pflicht (nullable). Key must be present. If object, kind/value/companion checked.
@@ -830,7 +935,7 @@ function validateBoardRow(r, where, errs) {
 
 function validateOverviewRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
-  if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  checkRangGate(r, where, errs); // 18.08.: Belegbarkeits-Gate, s. checkRangGate
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (typeof r.formulaId !== 'string' || !r.formulaId) errs.push(`${where}: formulaId`);
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
@@ -846,7 +951,11 @@ function validateOverviewRow(r, where, errs) {
 
 function validateSurvivalRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
+  // Survival ist von Belegbarkeits-Gate AUSGENOMMEN (nie gescort, traegt coverageAxes nie):
+  // rank bleibt Pflicht-Integer, rankGrund muss null sein. Die Ausnahme steht hier als
+  // Waechter, nicht nur als Kommentar — ein versehentlich gegatetes survival.json faellt auf.
   if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  if ((r.rankGrund ?? null) !== null) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)} auf survival-Zeile (dort greift kein Gate)`);
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!('runwayQuarters' in r)) errs.push(`${where}: runwayQuarters missing`);
   else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
@@ -881,8 +990,19 @@ function validateCoverage(mk, kind, errs) {
 //                         that actually catches a broken sort. Only wired where score.js
 //                         GUARANTEES score-desc order (board tracks + overview.json) — survival
 //                         is runway-desc and its rows carry no .score field at all.
+// 18.08.: nicht mehr "rank === index+1" — eine vom Belegbarkeits-Gate entrangte Zeile bleibt
+// an ihrer Array-Position stehen (rank:null) und verbraucht KEINE Rangnummer. Geprueft wird
+// deshalb: die Raenge der uebrigen Zeilen sind in Array-Reihenfolge lueckenlos 1,2,3,… —
+// genau die Zusage "kein Loch, wo eine Zeile herausfiel". Ohne Gate ist das identisch zum
+// alten Check (jede Zeile gerankt -> Sollrang == index+1).
 function checkRankSequence(rows, where, errs) {
-  (rows || []).forEach((r, i) => { if (r && r.rank !== i + 1) errs.push(`${where}[${i}]: rank!=index+1 (rank=${JSON.stringify(r.rank)})`); });
+  let soll = 0;
+  (rows || []).forEach((r, i) => {
+    if (!r) return;
+    if (r.rank === null) return;   // entrangt: haelt keinen Platz in der Rangfolge
+    soll++;
+    if (r.rank !== soll) errs.push(`${where}[${i}]: rank!=Sollrang (rank=${JSON.stringify(r.rank)}, erwartet ${soll})`);
+  });
 }
 function checkScoreDescending(rows, where, errs) {
   for (let i = 1; i < (rows || []).length; i++) {
@@ -1104,6 +1224,7 @@ function selftest() {
     marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
     profitTier: 'langfristig-profitabel', ipoYear: 1999,
     cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: eine gerankte Zeile MUSS ihre Belegbarkeit ausweisen (Gate)
   };
   const cleanOv = {
     ticker: 'NVDA', name: 'NVIDIA Corporation', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
@@ -1111,6 +1232,7 @@ function selftest() {
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 33018304599.802, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
     cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: s. cleanBoard
   };
   const cleanSv = {
     ticker: 'PAH3.DE', name: 'Porsche Automobil Holding SE', runwayQuarters: 9999, lamps: ['burning'],
@@ -1304,6 +1426,9 @@ module.exports = {
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
+  // Belegbarkeits-Gate (18.08.) als Seam: tests/scoring/belegbarkeits-gate.test.js FUEHRT die
+  // Rangvergabe aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  vergebeRaenge, rangGrund, RANK_MIN_AXES,
   // Chunk 4a (16.08.): der Waehrungs-Waechter als Seam — tests/waehrung-ausliefer-waechter.js
   // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
   beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,

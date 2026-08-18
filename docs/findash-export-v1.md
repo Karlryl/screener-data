@@ -73,7 +73,8 @@ Zusaetzlich zur Huelle (§2):
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung / Herkunft |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | **Abgeleitet** = Array-Index+1. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber score-desc-Sortierung. Der Export macht ihn explizit. |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | **Abgeleitet** aus der score-desc-Reihenfolge. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber die Sortierung. Der Export macht ihn explizit. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"NVDA"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
 | `score` | number (round1, finite) | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. |
@@ -119,7 +120,8 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1). |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | Abgeleitet aus der score-desc-Reihenfolge. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
 | `ticker` | string (nichtleer) | Pflicht | ja | |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `formulaId` | string (nichtleer) | Pflicht | ja | Branchen-ID (nur hier als Feld; in Boards implizit ueber Datei). |
@@ -143,7 +145,7 @@ Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1), = Runway-Rang. |
+| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1), = Runway-Rang. **Vom Belegbarkeits-Gate ausgenommen:** pre-revenue-Zeilen werden nie gescort und tragen `coverageAxes` nie — der Runway-Rang bleibt immer ein Integer, `rankGrund` ist hier immer `null` (geprueft). |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"PAH3.DE"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `runwayQuarters` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Runway in Quartalen. **`9999` = Sentinel fuer quasi-unendlichen Runway** (pre-revenue mit Cash-Ueberdeckung). Sortierschluessel. **Real nullable** (3 von 73 Rows null). |

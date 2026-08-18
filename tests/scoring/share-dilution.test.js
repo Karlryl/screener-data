@@ -191,6 +191,7 @@ const basisZeile = {
   country: 'United States', region: 'North America', sector: 'Technology',
   marketCap: 4e8, phase: 'established', mcapBand: 'micro', ipoRecency: 'mature',
   profitTier: 'langfristig-profitabel', ipoYear: 2019, cohortN: 90, cohortFallback: false,
+  coverageAxes: '7/7', // 18.08.: Belegbarkeits-Gate — nur belegte Zeilen tragen einen Rang
   shareDilution: { ratePct: 66.0, pctl: 0.997 },
 };
 const errsOf = (row) => {
