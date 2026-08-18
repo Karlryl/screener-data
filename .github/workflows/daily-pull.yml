@@ -2020,7 +2020,7 @@ jobs:
   # outputs/pipeline-status/v1/ und fasst weder board-history/ noch main an.
   # ============================================================================
   laufstatus:
-    needs: [prep, entdeckungs-waechter, pull, merge, earnings-transport-waechter, scoring]
+    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10

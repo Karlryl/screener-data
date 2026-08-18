@@ -95,6 +95,12 @@ const SCHEMA = 'screener-pipeline-status/v1';
 const JOB_REIHENFOLGE = [
   'prep',
   'pull',
+  // 18.08.: der Kursabruf ist ein eigener Job geworden (vorher ein Schritt im merge-Job,
+  // der taeglich in sein Timeout lief und dabei schwieg). Er steht hier zwischen pull und
+  // merge, weil er ein DATEN-Kettenglied ist: faellt er zusammen mit einem Diagnose-
+  // Waechter aus, soll im Banner der Datenschritt stehen, nicht die Diagnose — sonst sucht
+  // Karl am falschen Job.
+  'prices',
   'merge',
   'scoring',
   'entdeckungs-waechter',
