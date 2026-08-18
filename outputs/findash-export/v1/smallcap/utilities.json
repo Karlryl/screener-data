@@ -1,19 +1,19 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-16T13:27:13.186Z",
+  "generated_at": "2026-08-18T07:24:54.344Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 71.4
+    "coverage_pct": 71.2
   },
   "profitable": [
     {
       "rank": 1,
       "ticker": "YORW",
-      "score": 66.5,
+      "score": 72.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -29,7 +29,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 540574080,
+      "marketCap": null,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "small",
@@ -40,8 +40,8 @@
       "coverageWeight": 1,
       "cohortN": 5,
       "cohortFallback": true,
-      "scoreBase": 73.2,
-      "scoreShrunk": 66.5,
+      "scoreBase": 81.9,
+      "scoreShrunk": 72.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -50,22 +50,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 78.6,
+          "pct": 91.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 35.7,
+          "pct": 41.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 8.3,
+          "pct": 10,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 78.6,
+          "pct": 91.7,
           "weight": 2.2
         },
         {
@@ -75,7 +75,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 92.9,
+          "pct": 91.7,
           "weight": 0.5
         },
         {
@@ -87,13 +87,16 @@
       "revGrowthYoYPct": 22.48033751757903,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     },
     {
       "rank": 2,
       "ticker": "ARTNA",
-      "score": 57.2,
+      "score": 62.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -103,15 +106,15 @@
       "overview": {
         "kind": "gp",
         "value": 0.045,
-        "companion": 10.6
+        "companion": -5.2
       },
       "name": "Artesian Resources Corporation",
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 369408384,
+      "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -120,8 +123,8 @@
       "coverageWeight": 0.91,
       "cohortN": 5,
       "cohortFallback": true,
-      "scoreBase": 60.7,
-      "scoreShrunk": 57.2,
+      "scoreBase": 68.5,
+      "scoreShrunk": 62.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -130,22 +133,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 64.3,
+          "pct": 75,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 21.4,
+          "pct": 25,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 25,
+          "pct": 30,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 64.3,
+          "pct": 75,
           "weight": 2.2
         },
         {
@@ -155,7 +158,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.6,
+          "pct": 75,
           "weight": 0.5
         },
         {
@@ -167,13 +170,16 @@
       "revGrowthYoYPct": 4.6214984437527695,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     },
     {
       "rank": 3,
       "ticker": "CWCO",
-      "score": 52.3,
+      "score": 56.7,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -187,7 +193,7 @@
       "country": "Cayman Islands",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 500081760,
+      "marketCap": null,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -198,8 +204,8 @@
       "coverageWeight": 1,
       "cohortN": 5,
       "cohortFallback": true,
-      "scoreBase": 53.3,
-      "scoreShrunk": 52.3,
+      "scoreBase": 59.4,
+      "scoreShrunk": 56.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -208,22 +214,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 58.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 64.3,
+          "pct": 75,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 58.3,
+          "pct": 70,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 58.3,
           "weight": 2.2
         },
         {
@@ -233,7 +239,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 41.7,
           "weight": 0.5
         },
         {
@@ -245,13 +251,16 @@
       "revGrowthYoYPct": -11.097856364386761,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     },
     {
       "rank": 4,
       "ticker": "HNRG",
-      "score": 43.7,
+      "score": 47.2,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -265,7 +274,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 761836608,
+      "marketCap": null,
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
@@ -276,8 +285,8 @@
       "coverageWeight": 1,
       "cohortN": 5,
       "cohortFallback": true,
-      "scoreBase": 41.2,
-      "scoreShrunk": 43.7,
+      "scoreBase": 46,
+      "scoreShrunk": 47.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -286,22 +295,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 35.7,
+          "pct": 41.7,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 78.6,
+          "pct": 91.7,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 75,
+          "pct": 90,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 35.7,
+          "pct": 41.7,
           "weight": 2.2
         },
         {
@@ -311,7 +320,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 35.7,
+          "pct": 25,
           "weight": 0.5
         },
         {
@@ -323,13 +332,16 @@
       "revGrowthYoYPct": -13.520607522680173,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     },
     {
       "rank": 5,
       "ticker": "OPAL",
-      "score": 36.1,
+      "score": 38.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -346,7 +358,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 375726656,
+      "marketCap": null,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -357,8 +369,8 @@
       "coverageWeight": 1,
       "cohortN": 5,
       "cohortFallback": true,
-      "scoreBase": 30.6,
-      "scoreShrunk": 36.1,
+      "scoreBase": 33.5,
+      "scoreShrunk": 38.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -367,22 +379,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 21.4,
+          "pct": 25,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 50,
+          "pct": 58.3,
           "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 41.7,
+          "pct": 50,
           "weight": 0.4
         },
         {
           "key": "ruleOfX",
-          "pct": 21.4,
+          "pct": 25,
           "weight": 2.2
         },
         {
@@ -392,7 +404,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 64.3,
+          "pct": 58.3,
           "weight": 0.5
         },
         {
@@ -404,103 +416,18 @@
       "revGrowthYoYPct": -14.087838233400074,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     }
   ],
   "unprofitable": [
     {
       "rank": 1,
-      "ticker": "NRGV",
-      "score": 67.2,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "einmalertrag"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 6.757,
-        "companion": 359.7
-      },
-      "name": "Energy Vault Holdings, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Utilities",
-      "marketCap": 686896832,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 2,
-      "cohortFallback": true,
-      "scoreBase": 84.5,
-      "scoreShrunk": 67.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 92.9,
-          "weight": 2.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 92.9,
-          "weight": 1
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 91.7,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 92.9,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 91.7,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 21.4,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": 21.4,
-          "weight": 0.4
-        }
-      ],
-      "revGrowthYoYPct": 156.37450199203187,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -82.5,
-        "athDate": "2022-04-05",
-        "monthsAgo": 52,
-        "lastDate": "2026-08-14"
-      }
-    },
-    {
-      "rank": 2,
       "ticker": "DGXX",
-      "score": 26.3,
+      "score": 26.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -521,7 +448,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Utilities",
-      "marketCap": 391230368,
+      "marketCap": null,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -532,8 +459,8 @@
       "coverageWeight": 0.83,
       "cohortN": 2,
       "cohortFallback": true,
-      "scoreBase": 7.3,
-      "scoreShrunk": 32,
+      "scoreBase": 8.3,
+      "scoreShrunk": 31.8,
       "factors": {
         "burn": 0.822,
         "growth": 1,
@@ -542,12 +469,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 7.1,
+          "pct": 8.3,
           "weight": 2.2
         },
         {
           "key": "revAcceleration",
-          "pct": 7.1,
+          "pct": 8.3,
           "weight": 1
         },
         {
@@ -557,7 +484,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 7.1,
+          "pct": 8.3,
           "weight": 1.6
         },
         {
@@ -567,7 +494,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 7.1,
+          "pct": 8.3,
           "weight": 0.5
         },
         {
@@ -579,8 +506,11 @@
       "revGrowthYoYPct": -26.790467226793645,
       "profitStreak": null,
       "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
     }
   ]
 }

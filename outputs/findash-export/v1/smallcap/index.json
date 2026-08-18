@@ -1,11 +1,11 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-16T13:27:13.192Z",
+  "generated_at": "2026-08-18T07:24:54.352Z",
   "coverage": {
     "status": "degradiert",
     "degraded": true,
     "blocked": false,
-    "coverage_pct": 71.4
+    "coverage_pct": 71.2
   },
   "generatedFromSnapshots": 517,
   "boards": [
@@ -50,27 +50,27 @@
       "unprofitable": 7
     },
     "smallcap-financials": {
-      "profitable": 5,
-      "unprofitable": 8
+      "profitable": 14,
+      "unprofitable": 9
     },
     "smallcap-health-care": {
       "profitable": 23,
-      "unprofitable": 60
+      "unprofitable": 53
     },
     "smallcap-industrials": {
-      "profitable": 33,
-      "unprofitable": 23
+      "profitable": 31,
+      "unprofitable": 28
     },
     "smallcap-it-services": {
       "profitable": 4,
       "unprofitable": 0
     },
     "smallcap-materials": {
-      "profitable": 13,
+      "profitable": 12,
       "unprofitable": 0
     },
     "smallcap-real-estate": {
-      "profitable": 19,
+      "profitable": 18,
       "unprofitable": 0
     },
     "smallcap-semiconductors": {
@@ -79,11 +79,11 @@
     },
     "smallcap-software-comm-services": {
       "profitable": 36,
-      "unprofitable": 18
+      "unprofitable": 17
     },
     "smallcap-utilities": {
       "profitable": 5,
-      "unprofitable": 2
+      "unprofitable": 1
     }
   },
   "excluded": {
@@ -95,9 +95,10 @@
     "mortgage-reit": 5,
     "no-revenue": 37,
     "no-sector": 2,
-    "smallcap-thin-coverage": 37,
+    "smallcap-mcap-out-of-band": 4,
+    "smallcap-thin-coverage": 31,
     "telecom": 5,
     "unrouted": 10
   },
-  "coverageFloor": 0.67
+  "coverageFloor": 0.48
 }
