@@ -265,3 +265,22 @@ test('W9: die echten E4a-Anmeldungen decken genau die Diagnose-Allowlist', () =>
       `Die Anmeldung ${eintrag.runId} meldet etwas anderes an, als die Diagnose ausgibt`);
   }
 });
+
+test('Der Kontrollpool trifft E3 bit-fuer-bit — nicht nur der Signal-Arm', () => {
+  // W8 im Skript nagelt den Signal-Arm fest. Der Kontrollpool ist die zweite
+  // Haelfte desselben Laufs und muss E3 genauso treffen; sonst laufen die beiden
+  // Arme eben doch nicht durch denselben Code. Geprueft wird gegen die
+  // ausgelieferten Artefakte, nicht gegen abgeschriebene Zahlen.
+  const e3 = JSON.parse(fs.readFileSync(path.join(REPO, 'reports', 'studie',
+    'E3-zaehlprobe-pruefung-2026-08-19.json'), 'utf8')).varianten;
+  const e4 = JSON.parse(fs.readFileSync(BERICHT_PRUEFUNG, 'utf8'))
+    .baender['2017-2019'].varianten;
+  for (const v of ['S-U', 'S-G']) {
+    assert.equal(e4[v].kontrolle.firmen_mit_erst_ereignis, e3[v].kontrollpool_firmen,
+      `Kontrollpool-Firmen ${v} weichen von E3 ab`);
+    assert.equal(e4[v].kontrolle.auffindbarkeit, e3[v].kontrollpool_auffindbarkeit,
+      `Kontrollpool-Auffindbarkeit ${v} weicht von E3 ab`);
+    assert.equal(e4[v].signal.fallzahl, e3[v].fallzahl);
+    assert.equal(e4[v].signal.auffindbarkeit, e3[v].auffindbarkeit);
+  }
+});

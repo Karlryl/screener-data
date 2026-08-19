@@ -285,11 +285,13 @@ Der Lauf bricht ab, wenn er die bekannten Zahlen nicht reproduziert:
 | Entdeckung S-U, Band 2012–2016 | E2-Basisraten | 731 / 512 / 219 unreif | **identisch** |
 | Entdeckung S-G, Band 2012–2016 | E2-Basisraten | 811 / 546 / 265 unreif | **identisch** |
 
-Zusätzlich, ohne Wächter, aber nachgesehen: der Kontrollpool des Prüffensters
-trifft E3 ebenfalls exakt (4.163 Firmen / 74,11 % bei S-U, 4.733 / 90,53 % bei
-S-G).
+Der **Kontrollpool** ist ebenfalls festgenagelt, nur an anderer Stelle: ein Test
+hält die ausgelieferten Artefakte gegeneinander und verlangt, dass E4a und E3
+bit-für-bit dieselben Kontrollpool-Zahlen tragen (4.163 Firmen / 74,11 % bei
+S-U, 4.733 / 90,53 % bei S-G). Das ist der zweite Arm desselben Laufs — träfe er
+E3 nicht, liefen die beiden Arme eben eher nicht durch denselben Code.
 
-**Sechs Sabotagen, jede einmal absichtlich gemacht und rot gesehen.** Das
+**Sieben Sabotagen, jede einmal absichtlich gemacht und rot gesehen.** Das
 Fixture trägt den Unterschied wirklich: je eine Firma der Klassen (a), (b1),
 (b2) und (c), eine reife Firma, und dieselben fünf Firmen ein zweites Mal unter
 der Ein-Kennungs-Variante. Ohne diese Firmen könnte die Sabotage einer einzelnen
@@ -303,6 +305,7 @@ Klasse gar nicht auffliegen.
 | S4 | hypothetische Rechnung greift schon ab 1 Folgequartal | rot: (b), (b1) und (c) gleichzeitig |
 | S5 | Anker-Prüfung meldet Erfolg ohne zu vergleichen | rot: „eine um EINS verschobene Fallzahl fliegt auf" (beide Fenster) |
 | S6 | Fensterkanten-Regel gibt wieder eine Zahl über 1 aus | rot: „eine Quote über 1 heißt NICHT BERECHENBAR statt Zahl" |
+| S7 | eine Kontrollpool-Zahl im ausgelieferten Artefakt um eins verschoben | rot: „Der Kontrollpool trifft E3 bit-für-bit" |
 
 Nach jeder Sabotage wurde der Stand zurückgenommen; das Arbeitsverzeichnis war
 danach sauber und die Prüfungen wieder grün.
@@ -325,7 +328,7 @@ enthält keinen Entschlüsselungs-Aufruf — beides ist im Test nachgesehen. Das
 Endtest-Siegel wurde vor jedem Lauf voll nachgerechnet (5.025.230.848 Bytes,
 SHA-256 unverändert), und **der Schlüssel wurde nicht angefasst**.
 
-**Prüfungszahl:** vorher **100 Tests, alle grün, EXIT=0** — nachher **112 Tests,
+**Prüfungszahl:** vorher **100 Tests, alle grün, EXIT=0** — nachher **113 Tests,
 alle grün, EXIT=0**. Der Selbsttest der Diagnose ist von 0 auf **42 benannte
 Prüfungen** gewachsen; der Node-Test wertet sie **namentlich** aus, nicht am
 Exit-Code: Fällt eine Zeile weg, ist der Test rot.
