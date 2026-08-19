@@ -162,6 +162,19 @@ test('C0: kein verbotenes Merkmal im Ableitungs-Code', () => {
     'Der Waechter haelt das Verbot fuer den Verstoss');
 });
 
+test('C0: FREEZE 1 versiegelt das Skript selbst, nicht nur die Prosa', () => {
+  // Die Regel-Parameter (Schwelle, Faktor, Zielband, Leiter) sind Konstanten IM SKRIPT.
+  // Waere nur die Regeldatei gehasht, koennte jemand nach Sichtung der Zaehlungen die
+  // Schwelle senken und neu ableiten, ohne dass ein Waechter anschlaegt.
+  const eins = lies(FREEZE1);
+  const zeile = eins.buendel.find((z) => z.startsWith('scripts/studie-c0.py'));
+  assert.ok(zeile, 'FREEZE 1 fuehrt das Skript nicht - die Regel waere nachtraeglich aenderbar');
+  const gehasht = zeile.split('  ').pop();
+  const jetzt = require('node:crypto').createHash('sha256')
+    .update(fs.readFileSync(SKRIPT)).digest('hex');
+  assert.equal(gehasht, jetzt, 'Das Skript weicht vom FREEZE-1-Stand ab');
+});
+
 test('C0: die beiden Freezes haengen aneinander', () => {
   assert.ok(vorhanden(FREEZE1) && vorhanden(FREEZE2), 'Freeze-Dateien fehlen');
   const zwei = lies(FREEZE2);

@@ -538,8 +538,14 @@ def befehl_register(argv):
             _, zeitstempel, original = liste[0]
             rohbytes = None
             gruende = []
-            for weg, url, holer in (("live", live_adresse(original), hole_gartner),
-                                    ("archiv", WAYBACK % (zeitstempel, original), hole_archiv)):
+            # Fuer Quelle B ist das ARCHIV die richtige Quelle, nicht die lebende Seite -
+            # umgekehrt als bei Quelle A. Grund: Gegenstand ist hier die GRAFIK eines
+            # bestimmten Jahres. Gartner hat die alten Mitteilungen seither neu gerendert;
+            # die heutige Seite traegt die Grafik von damals nicht mehr, der zeitgenoessische
+            # Schnappschuss schon. Live-zuerst hat in einem Zwischenlauf genau deshalb die
+            # 2015er Grafik verloren, die vorher da war.
+            for weg, url, holer in (("archiv", WAYBACK % (zeitstempel, original), hole_archiv),
+                                    ("live", live_adresse(original), hole_gartner)):
                 try:
                     rohbytes, status = holer(url)
                 except Bruch as fehler:
@@ -557,10 +563,15 @@ def befehl_register(argv):
             bild_fehler = []
             adressen = b_bilder(rohbytes)[:4]
             for bild_url in adressen:
-                try:
-                    bild_bytes, bild_status = hole_gartner(bild_url)
-                except Bruch as fehler:
-                    bild_bytes, bild_status = None, str(fehler)[:120]
+                bild_bytes, bild_status = None, "nicht versucht"
+                for holer, ziel in ((hole_gartner, bild_url),
+                                    (hole_archiv, WAYBACK % (zeitstempel, bild_url))):
+                    try:
+                        bild_bytes, bild_status = holer(ziel)
+                    except Bruch as fehler:
+                        bild_bytes, bild_status = None, str(fehler)[:120]
+                    if bild_bytes is not None:
+                        break
                 if bild_bytes is None:
                     # "Keine Grafik im Snapshot" und "Grafik da, Abruf gescheitert" sind
                     # zwei verschiedene Befunde. Der erste Lauf hat beides zu ersterem
