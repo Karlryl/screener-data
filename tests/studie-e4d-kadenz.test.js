@@ -371,12 +371,30 @@ test('W10: eine Anmeldung OHNE den Fingerabdruck der Regel traegt keinen Lauf', 
 });
 
 test('W10: die ECHTE Anmeldung traegt den Fingerabdruck - Gegenrichtung', () => {
+  // Wie viele Laeufe es je Fenster gab, ist eine Frage der Akte, nicht des
+  // Waechters: Vorlaeufe bleiben im Register stehen (siehe E3/E4a). Geprueft wird
+  // die SACHE - jede E4d-Anmeldung meldet die Ausgabe-Allowlist an und traegt
+  // einen Siegel-Fingerabdruck, und die Anmeldungen zum HEUTIGEN Siegel decken
+  // beide Fenster.
   const siegelSha = crypto.createHash('sha256').update(fs.readFileSync(FREEZE)).digest('hex');
   const eintraege = REGISTER.events.filter((e) => e.runId.startsWith('e4d-kadenz-'));
-  assert.equal(eintraege.length, 2, 'Beide Fenster muessen angemeldet sein');
+  assert.ok(eintraege.length >= 2, 'Es fehlen E4d-Anmeldungen im Register');
   for (const e of eintraege) {
-    assert.ok(JSON.stringify(e).includes(siegelSha),
-      `Die Anmeldung ${e.runId} traegt den Siegel-Fingerabdruck nicht`);
-    assert.deepEqual([...e.allowedOutputs].sort(), [...SIEGEL.ausgabeAllowlist].sort());
+    assert.deepEqual([...e.allowedOutputs].sort(), [...SIEGEL.ausgabeAllowlist].sort(),
+      `Die Anmeldung ${e.runId} meldet etwas anderes an, als E4d ausgibt`);
+    assert.match(e.begruendung, /SHA-256 [0-9a-f]{64}/,
+      `Die Anmeldung ${e.runId} traegt gar keinen Siegel-Fingerabdruck`);
+  }
+  const zumHeutigenSiegel = eintraege.filter((e) => JSON.stringify(e).includes(siegelSha));
+  assert.deepEqual([...new Set(zumHeutigenSiegel.map((e) => (e.fenster || [])[0]))].sort(),
+    ['entdeckung', 'pruefung'],
+    'Zum heutigen Siegel muessen beide Fenster angemeldet sein');
+  // Und die ausgelieferten Artefakte muessen aus GENAU diesen Laeufen stammen.
+  for (const p of [BERICHT_PRUEFUNG, BERICHT_ENTDECKUNG]) {
+    const bericht = JSON.parse(fs.readFileSync(p, 'utf8'));
+    assert.equal(bericht.freezeGeprueft.sha256, siegelSha,
+      `${p} stammt aus einem Lauf unter einem ANDEREN Siegel`);
+    assert.ok(zumHeutigenSiegel.some((e) => e.runId === bericht.runId),
+      `${p} nennt eine runId, die nicht zum heutigen Siegel angemeldet ist`);
   }
 });
