@@ -34,6 +34,39 @@ Signalrechnung ignoriert (sie werden nur gezaehlt). Lehre aus einem annullierten
 Lauf am 19.07.: "juengstes statt urspruengliches Datum" verschob Ereignisse um
 Jahre.
 
+QUELLENWAHL: JE FIRMA FIXIERT, ZEITPUNKT-EHRLICH (Folgeregel aus Pruefschritt 3)
+-------------------------------------------------------------------------------
+Pruefschritt 3 des ersten Laufs hat die VORAB festgelegte Schwelle gerissen:
+15,51 % der Firmenquartale mit mehreren verfuegbaren Umsatz-Quellen weichen um
+mehr als 5 Punkte voneinander ab (erlaubt waren 10 %). Die dort praeregistrierte
+Folgeregel lautet dann: Quelle JE FIRMA fixieren (laengste Serie) statt je
+Quartal. Ab diesem Lauf ist sie angewandt. Eine vorab festgelegte Wenn-Dann-
+Regel, deren Ausloeser die Messung zeigt, ist keine nachtraegliche Aenderung —
+sie IST die Vorschrift.
+
+"Laengste Serie" allein ist nicht ausfuehrbar. Ergaenzt wurde:
+  * MASSGEBLICH IST DER STAND ZUM SIGNALZEITPUNKT t. Gezaehlt wird nur, was bis
+    dahin auswertbar war (`accepted` <= t). t ist der Veroeffentlichungszeit-
+    punkt des Quartalswerts, um den es geht — frueher kann die Rechnung fuer
+    dieses Quartal gar nicht angestossen werden.
+  * DIE GANZE RECHENKETTE EINES SIGNALS STAMMT AUS DIESER EINEN SERIE:
+    g(t), das Vorjahresquartal, g(t-1) und a(t-1). Damit kann keine Groesse mehr
+    zwei Quellen mischen — die Quellen-Naht verschwindet KONSTRUKTIV.
+  * LAENGE = Zahl der bis t auswertbaren Quartale dieser Quelle. (Nicht die
+    laengste ununterbrochene Folge: gebraucht wird die verfuegbare Historie,
+    aus der Vorjahres- und Vorquartals-Partner kommen, und die zaehlt auch mit
+    einem Loch in der Mitte.)
+  * GLEICHSTAND wird deterministisch aufgeloest, in dieser Reihenfolge:
+    laengste Serie -> Prioritaetsrang der Quelle -> USD -> Einheit alphabetisch.
+
+WARUM NICHT DIE FENSTER-RUECKBLICK-FASSUNG. Naheliegend waere die Frage "welche
+Quelle hat ueber das GANZE Fenster die laengste Serie?". Die waehlt die Quelle
+mit Wissen ueber das Fensterende — ein Selektions-Vorgriff genau der Sorte, die
+diese Studie sonst ueberall verbietet. Ausserdem waere sie in der laufenden
+Vorwaerts-Aufzeichnung gar nicht berechenbar, und R11 verlangt
+Live-Berechenbarkeit. Sie taugt als Plausibilitaets-Anker, nie als
+Rechenvorschrift.
+
 ERGEBNIS-SPERRE (R4)
 --------------------
 Dieses Skript oeffnet keine Kurs-, Rendite- oder Ergebnisdatei. Der Lauf
@@ -96,8 +129,10 @@ SIC_DIVISIONEN = (
 )
 
 # --- Die eingefrorene Umsatz-Abbildungsschicht -------------------------------
-# Reihenfolge = Prioritaet. Je Firmen-Quartal waehlt sie GENAU EINE Quelle;
-# verglichen wird nie ueber Quellen hinweg (siehe basis_gleich).
+# Reihenfolge = Prioritaet. Seit der Umstellung vom 19.08. ist die Prioritaet
+# nur noch der ZWEITE Schluessel: gewaehlt wird die zum Signalzeitpunkt laengste
+# Serie, erst bei Gleichstand entscheidet dieser Rang (siehe
+# `quelle_zum_stichtag`). Verglichen wird nie ueber Quellen hinweg.
 # `...IncludingAssessedTax` bleibt bewusst draussen: anderes Niveau (enthaelt
 # durchlaufende Steuern), eine Reihe daraus waere ein Stufensprung ohne Substanz.
 UMSATZ_QUELLEN = (
@@ -517,9 +552,13 @@ def basis_gleich(basis_a, basis_b):
     2013 gegen `Revenues` 2014) misst den Namenswechsel als Wachstum. Solche
     Paare heissen NICHT BERECHENBAR und werden als Quellen-Naht gezaehlt.
 
-    Der Wachtest dazu ist unabhaengig: `pruefe_naht_invariante` zaehlt am
-    fertigen Ergebnis nach. Wer diese Funktion auf `return True` setzt, muss dort
-    rot werden."""
+    Seit der Umstellung auf die je Firma fixierte Quelle (19.08.) stammt jede
+    Kette aus EINER Reihe — dort kann keine Naht mehr entstehen, der Zaehler
+    steht konstruktiv auf null. Der Waechter ist damit nicht arbeitslos: in der
+    Reife-Zaehlung (`erst_ereignisse`) vergleicht er weiterhin echte
+    Unterschiede, denn die gewaehlte Reihe einer Firma darf ueber die Zeit die
+    Quelle wechseln. Wer diese Funktion auf `return True` setzt, muss dort rot
+    werden — das ist im Selbsttest so hinterlegt."""
     return basis_a == basis_b
 
 
@@ -599,12 +638,45 @@ def quelle_reihe(firma_werte, tags, uom, nur_positiv, zaehler, praefix):
     return reihe
 
 
-def firmenreihen(je_firma, quellen, nur_positiv, zaehler, praefix):
-    """Je Firma: alle Quellen-Reihen, und daraus die per Prioritaet GEWAEHLTE.
+def quelle_zum_stichtag(je_quelle, ddate):
+    """DIE QUELLENWAHL (Folgeregel aus Pruefschritt 3, ab 19.08. angewandt).
 
-    Die Prioritaet waehlt je Firmen-Quartal genau eine Quelle. Bei mehreren
-    Waehrungseinheiten derselben Quelle gewinnt USD, sonst die alphabetisch
-    erste — das ist eine Festlegung fuer Eindeutigkeit, kein Inhalt."""
+    Welche Quelle traegt die Rechnung fuer den Stichtag `ddate`? Die zu diesem
+    Zeitpunkt LAENGSTE auswertbare Serie.
+
+    Zeitpunkt-ehrlich: t ist der Veroeffentlichungszeitpunkt des Werts am
+    Stichtag selbst; mitgezaehlt wird nur, was bis dahin auswertbar war
+    (`accepted` <= t). Eine Quelle, die erst spaeter laenger wird, kann die Wahl
+    von damals nicht mehr aendern — sonst waehlte diese Funktion mit Wissen
+    ueber die Zukunft, und das ist genau der Selektions-Vorgriff, den die Studie
+    ueberall sonst verbietet (und in der Vorwaerts-Aufzeichnung waere sie gar
+    nicht berechenbar, R11).
+
+    Kandidat ist nur, wer den Stichtag ueberhaupt traegt. Gleichstand wird
+    deterministisch aufgeloest: laengste Serie -> Prioritaetsrang -> USD ->
+    Einheit alphabetisch."""
+    beste = None
+    for schluessel, reihe in je_quelle.items():
+        eintrag = reihe.get(ddate)
+        if eintrag is None:
+            continue
+        t = eintrag[1]
+        laenge = sum(1 for wert in reihe.values() if wert[1] <= t)
+        rang, _name, uom = schluessel
+        ordnung = (-laenge, rang, 0 if uom == "USD" else 1, uom)
+        if beste is None or ordnung < beste[0]:
+            beste = (ordnung, schluessel)
+    return beste[1] if beste else None
+
+
+def firmenreihen(je_firma, quellen, nur_positiv, zaehler, praefix):
+    """Je Firma: alle Quellen-Reihen, und daraus die GEWAEHLTE Quartalsreihe.
+
+    `alle` traegt jede Quelle einzeln — daraus rechnet Stufe 3 ihre Ketten, und
+    zwar jede Kette vollstaendig innerhalb EINER Quelle. `gewaehlt` traegt je
+    Stichtag den Wert der Quelle, die ihn nach `quelle_zum_stichtag` traegt;
+    diese Reihe wird nur noch fuer Belegungs-Glaette und Reife gebraucht, nie
+    fuer eine Kette."""
     alle = {}
     gewaehlt = {}
     for cik, firma_werte in je_firma.items():
@@ -623,11 +695,10 @@ def firmenreihen(je_firma, quellen, nur_positiv, zaehler, praefix):
             continue
         alle[cik] = je_quelle
         beste = {}
-        for (rang, name, uom) in sorted(
-                je_quelle, key=lambda k: (k[0], 0 if k[2] == "USD" else 1, k[2])):
-            for d, (wert, accepted, herkunft) in je_quelle[(rang, name, uom)].items():
-                if d not in beste:
-                    beste[d] = (wert, accepted, herkunft, (name, uom))
+        for d in sorted(set(d for reihe in je_quelle.values() for d in reihe)):
+            schluessel = quelle_zum_stichtag(je_quelle, d)
+            wert, accepted, herkunft = je_quelle[schluessel][d]
+            beste[d] = (wert, accepted, herkunft, (schluessel[1], schluessel[2]))
         gewaehlt[cik] = beste
     return alle, gewaehlt
 
@@ -656,56 +727,102 @@ def g_wert(x_jetzt, x_vorjahr):
     return max(-G_DECKEL, min(G_DECKEL, roh))
 
 
-def wachstum_und_beschleunigung(gewaehlt, zaehler, praefix):
-    """g(t) und a(t) je Firmen-Quartal, streng innerhalb einer Quellen-Basis.
+def g_einer_quelle(reihe):
+    """g(t) INNERHALB einer Quelle. Rueckgabe: Werte, Gruende, Abstands-Ausreisser.
 
-    Rueckgabe: g_saetze und a_saetze als Listen von Diktaten. Jeder Satz traegt
-    BEIDE beteiligten Basen — genau daran zaehlt der unabhaengige Wachtest die
-    Naht-Invariante nach."""
+    Gezaehlt wird hier NICHT: welche Quelle den Stichtag am Ende traegt, steht
+    erst danach fest. Die Rechnungen der nicht gewaehlten Quellen sind
+    Zwischenergebnis und duerfen nicht als Befund im Report landen."""
+    sortiert = sorted((d, ordinal(d)) for d in reihe)
+    werte, gruende, abweichend = {}, {}, set()
+    for i, (d, o) in enumerate(sortiert):
+        j = partner(sortiert, i, JAHR_FENSTER, JAHR_ZIEL)
+        if j is None:
+            gruende[d] = "kein_vorjahrespartner"
+            continue
+        d_v, o_v = sortiert[j]
+        if (o - o_v) not in KALENDERJAHR_TAGE:
+            abweichend.add(d)
+        g = g_wert(reihe[d][0], reihe[d_v][0])
+        if g is None:
+            gruende[d] = "nenner_null"
+            continue
+        werte[d] = (g, max(reihe[d][1], reihe[d_v][1]))
+    return werte, gruende, abweichend
+
+
+def a_einer_quelle(g_werte):
+    """a(t) = g(t) - g(Vorquartal) und der Zeiger auf a(Vorquartal) — beides
+    INNERHALB derselben Quelle. Damit steht die zweite Beschleunigung, die das
+    Signal fuer die Persistenz-Bedingung braucht, schon hier fest und muss
+    spaeter nicht ueber Quellen hinweg zusammengesucht werden."""
+    sortiert = sorted((d, ordinal(d)) for d in g_werte)
+    werte, gruende = {}, {}
+    for i, (d, _o) in enumerate(sortiert):
+        j = partner(sortiert, i, QUARTAL_FENSTER, QUARTAL_ZIEL)
+        if j is None:
+            gruende[d] = "kein_vorquartal"
+            continue
+        d_v = sortiert[j][0]
+        werte[d] = (g_werte[d][0] - g_werte[d_v][0],
+                    max(g_werte[d][1], g_werte[d_v][1]))
+    a_sortiert = sorted((d, ordinal(d)) for d in werte)
+    vorquartal = {}
+    for i, (d, _o) in enumerate(a_sortiert):
+        j = partner(a_sortiert, i, QUARTAL_FENSTER, QUARTAL_ZIEL)
+        vorquartal[d] = None if j is None else a_sortiert[j][0]
+    return werte, gruende, vorquartal
+
+
+def wachstum_und_beschleunigung(alle, zaehler, praefix):
+    """g(t) und a(t) je Firmen-Quartal — JEDE KETTE AUS GENAU EINER QUELLE.
+
+    Erst rechnen, dann waehlen: jede Quelle rechnet ihre eigene Kette, und
+    `quelle_zum_stichtag` entscheidet zeitpunkt-ehrlich, welche den Stichtag
+    traegt. Weil damit alle Glieder einer Kette aus derselben Reihe stammen,
+    kann keine Groesse zwei Quellen mischen — die Quellen-Naht ist konstruktiv
+    beseitigt, nicht weggesehen. `basis_partner` ist deshalb hier
+    zwangslaeufig gleich `basis`; die Naht-Invariante bleibt als unabhaengiger
+    Nachzaehler stehen, ist an dieser Stelle aber eine REDUNDANZ-Pruefung
+    (ihren echten Biss hat sie im Selbsttest gegen eine gemischte Eingabe und
+    in der Reife-Zaehlung, wo `basis_gleich` weiter wirklich vergleicht).
+
+    Gezaehlt wird jeder Stichtag GENAU EINMAL — mit dem Grund der Quelle, die
+    ihn tatsaechlich traegt."""
     g_saetze, a_saetze = [], []
-    for cik, reihe in gewaehlt.items():
-        sortiert = sorted((d, ordinal(d)) for d in reihe)
-        g_je_datum = {}
-        for i, (d, o) in enumerate(sortiert):
-            j = partner(sortiert, i, JAHR_FENSTER, JAHR_ZIEL)
-            if j is None:
-                zaehler[praefix + "kein_vorjahrespartner"] += 1
-                continue
-            d_v = sortiert[j][0]
-            wert, accepted, _, basis = reihe[d]
-            wert_v, accepted_v, _, basis_v = reihe[d_v]
-            if not basis_gleich(basis, basis_v):
-                zaehler[praefix + "quellen_naht"] += 1
-                continue
-            abstand = o - sortiert[j][1]
-            if abstand not in KALENDERJAHR_TAGE:
+    for cik, je_quelle in alle.items():
+        rechnung = {}
+        for schluessel, reihe in je_quelle.items():
+            g_werte, g_gruende, abweichend = g_einer_quelle(reihe)
+            a_werte, a_gruende, a_vorquartal = a_einer_quelle(g_werte)
+            rechnung[schluessel] = (g_werte, g_gruende, abweichend,
+                                    a_werte, a_gruende, a_vorquartal)
+        for d in sorted(set(d for reihe in je_quelle.values() for d in reihe)):
+            schluessel = quelle_zum_stichtag(je_quelle, d)
+            basis = (schluessel[1], schluessel[2])
+            (g_werte, g_gruende, abweichend, a_werte, a_gruende,
+             a_vorquartal) = rechnung[schluessel]
+            if d in abweichend:
                 zaehler[praefix + "jahrespaar_abstand_abweichend"] += 1
-            g = g_wert(wert, wert_v)
-            if g is None:
-                zaehler[praefix + "nenner_null"] += 1
+            if d not in g_werte:
+                zaehler[praefix + g_gruende[d]] += 1
                 continue
-            satz = {"cik": cik, "ddate": d, "ord": o, "g": g, "basis": basis,
-                    "basis_partner": basis_v,
-                    "accepted": max(accepted, accepted_v)}
-            g_je_datum[d] = satz
-            g_saetze.append(satz)
-        # Beschleunigung: g(t) minus g(Vorquartal), gleiche Basis erzwungen.
-        g_sortiert = sorted((s["ddate"], s["ord"]) for s in g_je_datum.values())
-        for i, (d, o) in enumerate(g_sortiert):
-            j = partner(g_sortiert, i, QUARTAL_FENSTER, QUARTAL_ZIEL)
-            if j is None:
-                zaehler[praefix + "kein_vorquartal"] += 1
+            g, g_accepted = g_werte[d]
+            g_saetze.append({"cik": cik, "ddate": d, "ord": ordinal(d), "g": g,
+                             "basis": basis, "basis_partner": basis,
+                             "accepted": g_accepted})
+            if d not in a_werte:
+                zaehler[praefix + a_gruende[d]] += 1
                 continue
-            jetzt, vorher = g_je_datum[d], g_je_datum[g_sortiert[j][0]]
-            if not basis_gleich(jetzt["basis"], vorher["basis"]):
-                zaehler[praefix + "quellen_naht"] += 1
-                continue
+            a, a_accepted = a_werte[d]
+            d_vor = a_vorquartal[d]
             a_saetze.append({
-                "cik": cik, "ddate": d, "ord": o,
-                "a": jetzt["g"] - vorher["g"], "g": jetzt["g"],
-                "basis": jetzt["basis"], "basis_partner": vorher["basis"],
-                "ddate_vorquartal": vorher["ddate"],
-                "accepted": max(jetzt["accepted"], vorher["accepted"])})
+                "cik": cik, "ddate": d, "ord": ordinal(d), "a": a, "g": g,
+                "basis": basis, "basis_partner": basis,
+                "accepted": a_accepted,
+                "vorquartal": (None if d_vor is None else
+                               {"ddate": d_vor, "a": a_werte[d_vor][0],
+                                "accepted": a_werte[d_vor][1]})})
     return g_saetze, a_saetze
 
 
@@ -742,37 +859,32 @@ def signale(a_saetze, p_wert, zaehler, praefix):
        (b) a(t) >= Schwelle(q)      — Trailing-Perzentil des Querschnitts
        (c) g(t) > 0                 — echtes Wachstum, kein langsameres Schrumpfen
     Persistenz (a) und Niveau-Gate (c) sind KEINE Knoepfe; nachjustiert wird nur
-    das Perzentil in (b)."""
+    das Perzentil in (b).
+
+    Das Vorquartal fuer (a) wird nicht mehr hier gesucht: es steht seit der
+    Quellen-Umstellung schon am Beschleunigungssatz, gepaart INNERHALB derselben
+    Quelle (siehe `a_einer_quelle`). Ein Zusammensuchen ueber Firmen-Quartale
+    koennte zwei Quellen mischen — genau das soll die Regel verhindern."""
     grenzen = schwellen(a_saetze, p_wert)
-    je_firma = defaultdict(dict)
-    for s in a_saetze:
-        je_firma[s["cik"]][s["ddate"]] = s
     feuerungen, auswertbar = [], []
-    for cik, saetze in je_firma.items():
-        sortiert = sorted((s["ddate"], s["ord"]) for s in saetze.values())
-        for i, (d, o) in enumerate(sortiert):
-            j = partner(sortiert, i, QUARTAL_FENSTER, QUARTAL_ZIEL)
-            jetzt = saetze[d]
-            if j is None:
-                zaehler[praefix + "kein_vorquartal_beschleunigung"] += 1
-                continue
-            vorher = saetze[sortiert[j][0]]
-            if not basis_gleich(jetzt["basis"], vorher["basis"]):
-                zaehler[praefix + "quellen_naht"] += 1
-                continue
-            q = kalenderquartal(d)
-            grenze, pool_n = grenzen.get(q, (None, 0))
-            if grenze is None:
-                zaehler[praefix + "keine_schwelle"] += 1
-                continue
-            eintrag = {"cik": cik, "ddate": d, "ord": o, "a": jetzt["a"],
-                       "a_vorquartal": vorher["a"], "g": jetzt["g"],
-                       "basis": jetzt["basis"], "schwelle": grenze,
-                       "accepted": max(jetzt["accepted"], vorher["accepted"])}
-            auswertbar.append(eintrag)
-            if (jetzt["a"] > 0 and vorher["a"] > 0 and jetzt["a"] >= grenze
-                    and jetzt["g"] > 0):
-                feuerungen.append(eintrag)
+    for jetzt in a_saetze:
+        vorher = jetzt["vorquartal"]
+        if vorher is None:
+            zaehler[praefix + "kein_vorquartal_beschleunigung"] += 1
+            continue
+        grenze, _pool_n = grenzen.get(kalenderquartal(jetzt["ddate"]), (None, 0))
+        if grenze is None:
+            zaehler[praefix + "keine_schwelle"] += 1
+            continue
+        eintrag = {"cik": jetzt["cik"], "ddate": jetzt["ddate"],
+                   "ord": jetzt["ord"], "a": jetzt["a"],
+                   "a_vorquartal": vorher["a"], "g": jetzt["g"],
+                   "basis": jetzt["basis"], "schwelle": grenze,
+                   "accepted": max(jetzt["accepted"], vorher["accepted"])}
+        auswertbar.append(eintrag)
+        if (jetzt["a"] > 0 and vorher["a"] > 0 and jetzt["a"] >= grenze
+                and jetzt["g"] > 0):
+            feuerungen.append(eintrag)
     return feuerungen, auswertbar, grenzen
 
 
@@ -782,7 +894,11 @@ def erst_ereignisse(feuerungen, gewaehlt):
     Reif heisst: nach dem Ereignis liegen im Entdeckungsfenster mindestens vier
     weitere Fiskalquartale mit auswertbarem Wert DERSELBEN Quellen-Basis vor.
     Das ist eine reine Existenz-Zaehlung — es wird kein einziger Ergebniswert
-    berechnet (R4)."""
+    berechnet (R4).
+
+    Hier vergleicht `basis_gleich` weiterhin wirklich: die gewaehlte Reihe kann
+    ueber die Zeit die Quelle wechseln, und ein Folgequartal aus einer ANDEREN
+    Quelle traegt die spaetere Auswertung nicht — es zaehlt nicht mit."""
     erste = {}
     for f in feuerungen:
         vorhanden = erste.get(f["cik"])
@@ -793,7 +909,7 @@ def erst_ereignisse(feuerungen, gewaehlt):
     for cik, f in erste.items():
         reihe = gewaehlt.get(cik, {})
         folge = sum(1 for d, eintrag in reihe.items()
-                    if d > f["ddate"] and eintrag[3] == f["basis"])
+                    if d > f["ddate"] and basis_gleich(eintrag[3], f["basis"]))
         (reif if folge >= REIFE_QUARTALE else unreif).append(
             dict(f, folgequartale=folge))
     return reif, unreif
@@ -1075,7 +1191,7 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
     reihen = {}
     for name, quellen, nur_positiv, praefix in familien:
         alle, gewaehlt = firmenreihen(je_firma, quellen, nur_positiv, zaehler, praefix)
-        g_saetze, a_saetze = wachstum_und_beschleunigung(gewaehlt, zaehler, praefix)
+        g_saetze, a_saetze = wachstum_und_beschleunigung(alle, zaehler, praefix)
         letzte, schritte = kalibriere(a_saetze, gewaehlt, zaehler, praefix)
         band_f = [f for f in letzte["feuerungen"] if im_band(f)]
         band_a = [a for a in letzte["auswertbar"] if im_band(a)]
@@ -1148,7 +1264,7 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
     # Reine Diagnose: NetIncomeLoss (kein Signal, keine Schwelle).
     d_alle, d_gewaehlt = firmenreihen(je_firma, DIAGNOSE_QUELLEN, False, zaehler,
                                       "nettoergebnis_")
-    d_g, d_a = wachstum_und_beschleunigung(d_gewaehlt, zaehler, "nettoergebnis_")
+    d_g, d_a = wachstum_und_beschleunigung(d_alle, zaehler, "nettoergebnis_")
     diagnose = {
         "firmen_mit_reihe": len(d_gewaehlt),
         "firmenquartale": sum(len(r) for r in d_gewaehlt.values()),
@@ -1172,6 +1288,26 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
         "jahrespaare_abstand_abweichend":
             zaehler["umsatz_jahrespaar_abstand_abweichend"],
     }
+
+    # R13: der Muster-Friedhof faengt bei E2 an sich zu fuellen. Ein verworfenes
+    # Muster wird MIT GRUND und mit seinen Zahlen abgelegt — sonst sieht spaeter
+    # niemand mehr, dass es geprueft wurde.
+    friedhof = [{
+        "muster": "S-UG",
+        "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal",
+        "stand": "gescheitert — nicht weiterverfolgt",
+        "grund": "Mindest-Fallzahl verfehlt: " + str(ergebnisse["S-UG"]["firmen_reif"])
+                 + " Firmen mit reifem Erst-Ereignis gegen geforderte "
+                 + str(ZIEL_FIRMEN),
+        "fallzahl": ergebnisse["S-UG"]["firmen_reif"],
+        "fallzahl_gefordert": ZIEL_FIRMEN,
+        "beschreibender_befund":
+            "Beide Signale treten haeufiger gemeinsam auf als der Zufall es "
+            "taete; das ist eine Aussage ueber die Kopplung beider Signale, "
+            "kein tragfaehiges eigenes Signal.",
+        "ueberhang_faktor": ergebnisse["S-UG"]["ueberhang_faktor"],
+        "entschieden_am": "2026-08-19",
+    }]
 
     glaette = pruefe_glaette(reihen["S-U"]["gewaehlt"], firmen_jahr, *BAND_JAHRE)
     ueberlappung = pruefe_ueberlappung(reihen["S-U"]["alle"])
@@ -1197,6 +1333,7 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
                      "plattform": sys.platform},
         "zaehler": dict(sorted(zaehler.items())),
         "signale": ergebnisse,
+        "muster_friedhof": friedhof,
         "diagnose_nettoergebnis": diagnose,
         "fiskalkalender": fiskalkalender,
         "pruefschritt_glaette": glaette,
@@ -1255,6 +1392,130 @@ def schreibe_report(daten, md_pfad, json_pfad):
         fh.write(markdown(daten))
 
 
+# Der Stand VOR der Umstellung: Lauf vom 19.08. mit Quellenwahl je
+# Firmen-Quartal. Eingefroren, damit dieser Report BEIDE Staende zeigt — der
+# alte Stand wird beziffert, nicht stillschweigend ersetzt.
+VORSTAND_JE_QUARTAL = {
+    "su_f": 877, "su_a": 63033, "su_reif": 487, "su_p": 95,
+    "sg_f": 872, "sg_a": 82611, "sg_reif": 545,
+    "ug_f": 41, "ug_reif": 27,
+    "naht": 2663, "sprung": 1.75, "invariante": 0,
+}
+# NUR ANKER, NIE VORSCHRIFT. Ein Vergleichslauf, der die Quelle mit Blick auf
+# das GANZE Fenster waehlt (Fenster-Rueckblick). Diese Fassung ist bewusst nicht
+# die Rechenvorschrift — sie waehlt mit Wissen ueber das Fensterende. Die Zahlen
+# stammen aus dem Vergleichslauf des Umstellungs-Auftrags, nicht aus diesem
+# Skript; deshalb stehen sie als Konstante da und nicht als Rechnung.
+FENSTER_NAEHERUNG = {
+    "su_f": 911, "su_a": 65420, "su_reif": 512,
+    "sg_f": 872, "sg_reif": 546,
+    "ug_f": 41, "ug_reif": 28,
+    "naht": 0, "sprung": 2.08, "invariante": 0,
+}
+
+
+def umstellungsblock(d, a):
+    """Abschnitt 2: was umgestellt wurde, warum, und beide Staende nebeneinander."""
+    su, sg, ug = d["signale"]["S-U"], d["signale"]["S-G"], d["signale"]["S-UG"]
+    alt, fen = VORSTAND_JE_QUARTAL, FENSTER_NAEHERUNG
+    ue = d["pruefschritt_ueberlappung"]
+    a("## 2. Die Quellenwahl ist umgestellt — beide Stände stehen hier")
+    a("")
+    a("**Was ausgelöst hat.** Prüfschritt 3 des vorigen Laufs hat eine **vorab "
+      "festgelegte** Schwelle gerissen: " + prozent(ue["anteil"]) + " der "
+      "Firmen-Quartale mit mehreren verfügbaren Umsatz-Quellen weichen um mehr "
+      "als 5 Punkte voneinander ab — erlaubt waren 10 %. Die dort "
+      "präregistrierte Folgeregel lautet dann: **Quelle je Firma fixieren "
+      "(längste Serie) statt je Quartal.** Der vorige Lauf hat sie noch nicht "
+      "angewandt, dieser Lauf wendet sie an. Eine vorab festgelegte "
+      "Wenn-Dann-Regel, deren Auslöser die Messung zeigt, ist keine "
+      "nachträgliche Änderung — sie **ist** die Vorschrift.")
+    a("")
+    a("**Was ergänzt werden musste.** „Längste Serie\" allein ist nicht "
+      "ausführbar. Verbindlich festgelegt wurde:")
+    a("")
+    a("1. **Gleichstand** wird deterministisch aufgelöst, in dieser Reihenfolge: "
+      "längste Serie → Prioritätsrang der Quelle → USD → Einheit alphabetisch.")
+    a("2. **Maßgeblich ist der Stand zum Signalzeitpunkt t**, also nur, was bis "
+      "dahin veröffentlicht war. Die gesamte Rechenkette eines Signals — "
+      "Wachstum, Vorjahresquartal, Vorquartal, zweite Beschleunigung — stammt "
+      "aus **dieser einen** Serie.")
+    a("3. **Länge** heißt: Zahl der bis t auswertbaren Quartale dieser Quelle. "
+      "Nicht die längste lückenlose Folge — gebraucht wird die verfügbare "
+      "Historie, aus der die Partner-Quartale kommen, und die zählt auch mit "
+      "einem Loch in der Mitte.")
+    a("")
+    a("**Warum nicht die naheliegende Fenster-Fassung.** Man könnte fragen: "
+      "welche Quelle hat über das **ganze** Fenster die längste Serie? Diese "
+      "Fassung wählt die Quelle **mit Wissen über das Fensterende** — ein "
+      "Selektions-Vorgriff genau der Sorte, die diese Studie überall sonst "
+      "verbietet. Außerdem wäre sie in der laufenden Vorwärts-Aufzeichnung gar "
+      "nicht berechenbar, und die Verfassung verlangt Live-Berechenbarkeit "
+      "(R11). Sie taugt als Plausibilitätsanker, nie als Rechenvorschrift.")
+    a("")
+    a("| Größe | alter Stand (je Quartal) | Fenster-Fassung (nur Anker) | **neuer Stand (je Firma, zeitpunkt-ehrlich)** |")
+    a("|---|---:|---:|---:|")
+    def zeile(bez, a_wert, f_wert, n_wert):
+        a("| " + bez + " | " + a_wert + " | " + f_wert + " | **" + n_wert + "** |")
+    zeile("S-U Feuerungen 2012–2016", zahl(alt["su_f"]), zahl(fen["su_f"]),
+          zahl(su["feuerungen_band"]))
+    zeile("S-U auswertbare Firmen-Quartale", zahl(alt["su_a"]), zahl(fen["su_a"]),
+          zahl(su["auswertbar_band"]))
+    zeile("S-U Feuerrate", prozent(alt["su_f"] / alt["su_a"]),
+          prozent(fen["su_f"] / fen["su_a"]), prozent(su["rate_band"]))
+    zeile("S-U Firmen mit reifem Erst-Ereignis", zahl(alt["su_reif"]),
+          zahl(fen["su_reif"]), zahl(su["firmen_reif"]))
+    zeile("S-G Feuerungen", zahl(alt["sg_f"]), zahl(fen["sg_f"]),
+          zahl(sg["feuerungen_band"]))
+    zeile("S-G Firmen mit reifem Erst-Ereignis", zahl(alt["sg_reif"]),
+          zahl(fen["sg_reif"]), zahl(sg["firmen_reif"]))
+    zeile("S-UG Feuerungen", zahl(alt["ug_f"]), zahl(fen["ug_f"]),
+          zahl(ug["feuerungen_band"]))
+    zeile("S-UG Firmen mit reifem Erst-Ereignis", zahl(alt["ug_reif"]),
+          zahl(fen["ug_reif"]), zahl(ug["firmen_reif"]))
+    zeile("**Quellen-Naht-Ausfälle**", zahl(alt["naht"]), zahl(fen["naht"]),
+          zahl(d["zaehler"].get("umsatz_quellen_naht", 0)))
+    zeile("Naht-Invariante (gefordert 0)", zahl(alt["invariante"]),
+          zahl(fen["invariante"]), zahl(su["naht"]["gesamt"]))
+    zeile("Belegungs-Glätte, größter Sprung",
+          ("%.2f" % alt["sprung"]).replace(".", ","),
+          ("%.2f" % fen["sprung"]).replace(".", ","),
+          ("%.2f" % d["pruefschritt_glaette"]["groesster_sprung"]).replace(".", ","))
+    zeile("Perzentil P am Ende der Kalibrierung", str(alt["su_p"]), "—",
+          str(su["p_final"]))
+    a("")
+    a("**Wie das zu lesen ist.** Die mittlere Spalte ist **kein Sollwert**, "
+      "sondern ein Plausibilitätsanker aus einem Vergleichslauf. Die "
+      "zeitpunkt-ehrliche Fassung ist **strenger** und darf davon abweichen. "
+      "Sie tut es nur wenig: bei S-U " + zahl(su["feuerungen_band"]) + " statt "
+      + zahl(fen["su_f"]) + " Feuerungen (" + ("%+.1f" % (100.0 * (
+          su["feuerungen_band"] / float(fen["su_f"]) - 1.0))).replace(".", ",")
+      + " %), die Fallzahl trifft mit " + zahl(su["firmen_reif"])
+      + " Firmen den Anker" + (" exakt" if su["firmen_reif"] == fen["su_reif"]
+                               else "") + ".")
+    a("")
+    a("**Der wichtigste Effekt ist kein Zahlenwert, sondern ein Wegfall.** Die "
+      "Quellen-Naht — Firmen-Quartale, die nur deshalb nicht berechenbar waren, "
+      "weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselt — "
+      "fällt von " + zahl(alt["naht"]) + " auf "
+      + zahl(d["zaehler"].get("umsatz_quellen_naht", 0)) + ". Das ist kein "
+      "Wegsehen: weil jede Rechenkette jetzt vollständig aus **einer** Reihe "
+      "stammt, kann eine Naht gar nicht mehr entstehen.")
+    a("")
+    a("Nicht jeder dieser Fälle wird dadurch rechenbar — verschwunden ist der "
+      "**Ausfallgrund**, nicht die Prüfung. Wo die gewählte Reihe kein "
+      "Vorjahresquartal trägt, fällt das Quartal weiterhin aus, jetzt aber unter "
+      "dem zutreffenden Namen: „kein Vorjahrespartner\" steigt von 26.499 auf "
+      + zahl(d["zaehler"].get("umsatz_kein_vorjahrespartner", 0)) + ". Unterm "
+      "Strich sind " + zahl(su["auswertbar_band"] - alt["su_a"]) + " Firmen-"
+      "Quartale mehr auswertbar als vorher.")
+    a("")
+    a("Der alte Stand bleibt hier sichtbar und beziffert. Wer die Etappe später "
+      "prüft, sieht beide Rechnungen nebeneinander und muss keinem Satz "
+      "glauben, dass „sich nicht viel geändert hat\".")
+    a("")
+
+
 # Protokoll der Gegenproben vom 2026-08-19. Jede der drei Pruefungen wurde
 # einmal absichtlich kaputtgemacht; hier steht die Meldung, die dabei kam.
 # Ein Waechter, den man nie hat rot werden sehen, ist eine Zeremonie.
@@ -1279,10 +1540,10 @@ GEGENPROBEN = (
 
 
 def verifikationsblock(d, a):
-    a("## 10. Woran das hier verifiziert wurde")
+    a("## 11. Woran das hier verifiziert wurde")
     a("")
     a("**a) Selbsttest gegen eine kleine, selbst gebaute Datenbank.** Geprüft "
-      "wird gegen acht Fixture-Firmen, deren Erwartungswerte von Hand "
+      "wird gegen zwölf Fixture-Firmen, deren Erwartungswerte von Hand "
       "nachgerechnet sind — unter anderem: die Zeitpunkt-Regel (früherer Bericht 100 schlägt "
       "späteren 999), die Ableitung des vierten Quartals (100 − (10+20+30) = 40), "
       "das symmetrische Wachstum (20/110 = 0,181818…), der Quellenwechsel als "
@@ -1290,6 +1551,22 @@ def verifikationsblock(d, a):
       "einmal erfüllt und einmal verletzt. Jede Prüfung wird in **beide** "
       "Richtungen gestellt: die gültige Form muss durchgehen, die kaputte muss "
       "auffliegen.")
+    a("")
+    a("Für die umgestellte Quellenwahl kamen drei Firmen dazu, die genau die "
+      "Fälle treffen, an denen sich die Fassungen unterscheiden:")
+    a("")
+    a("- **Längste Serie schlägt Priorität**: eine Firma, deren höher "
+      "priorisierte Kennung nur ein Quartal trägt, die niedrigere aber vier — "
+      "gewählt wird die längere.")
+    a("- **Zeitpunkt-Ehrlichkeit**: eine Firma, bei der die niedriger "
+      "priorisierte Kennung *später* die längere wird. Wer mit Blick auf das "
+      "Fensterende wählt, nimmt sie schon 2012; zeitpunkt-ehrlich sind 2012 "
+      "beide gleich lang, also gewinnt dort die Priorität. Genau diese Prüfung "
+      "wird rot, wenn man die Rückblick-Fassung einbaut.")
+    a("- **Kette bleibt in einer Quelle**: eine Firma mit zwei Kennungen auf "
+      "verschiedenem Niveau (100 und 200). Wer die Kette aus der je Quartal "
+      "gemischten Reihe baut, rechnet 220 gegen 100 statt 220 gegen 200 — die "
+      "Prüfung nagelt die Zahl 20/210 fest und fällt bei jeder Mischung auf.")
     a("")
     a("**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man "
       "nie rot gesehen hat, ist eine Zeremonie. Protokoll:")
@@ -1382,6 +1659,13 @@ def markdown(d):
     else:
         a("**Kein vorab festgelegtes Scheiternskriterium hat gegriffen.**")
     a("")
+    a("**Geändert gegenüber dem ersten Stand vom selben Tag:** die Umsatz-Quelle "
+      "wird jetzt **je Firma festgelegt** statt je Quartal — die vorab "
+      "festgelegte Folgeregel aus Prüfschritt 3 hat gegriffen. Beide Stände "
+      "stehen nebeneinander in **Abschnitt 2**; der alte ist nicht gelöscht. "
+      "**S-UG wird nicht weiterverfolgt** und liegt mit Begründung im "
+      "Muster-Friedhof (Abschnitt 4).")
+    a("")
     a("Plausibilitätsanker gegen den E1-Report: Firmen mit einer ununterbrochenen "
       "Kette von mindestens " + str(d["kette"]["mindesttiefe"]) + " Berichtsquartalen — "
       "hier gezählt **" + zahl(d["kette"]["firmen"]) + "**, laut E1 **"
@@ -1423,8 +1707,8 @@ def markdown(d):
     a("")
     a("### Die Umsatz-Abbildungsschicht (eingefroren)")
     a("")
-    a("Der Umsatz heißt in den SEC-Daten nicht durchgehend gleich. Feste "
-      "Priorität, je Firmen-Quartal wird **genau eine** Quelle gewählt:")
+    a("Der Umsatz heißt in den SEC-Daten nicht durchgehend gleich. Vier Quellen "
+      "kommen in Frage, in dieser festen Priorität:")
     a("")
     for i, (name, tags) in enumerate(UMSATZ_QUELLEN, start=1):
         a(str(i) + ". `" + name + "`" + (" (Summe beider Komponenten, nur wenn "
@@ -1435,10 +1719,15 @@ def markdown(d):
       "einem anderen Niveau.")
     a("")
     a("**Die zentrale Regel:** verglichen wird **nie über Quellen hinweg**. "
-      "Wechselt eine Firma zwischen zwei Quartalen die Kennung, existiert für "
-      "dieses Paar kein Wachstum — der Fall heißt *nicht berechenbar* und wird "
-      "als **Quellen-Naht** gezählt (" + zahl(z.get("umsatz_quellen_naht", 0))
-      + " Fälle).")
+      "Seit der Umstellung (Abschnitt 2) wird die Quelle nicht mehr je "
+      "Firmen-Quartal gewählt, sondern **je Firma festgelegt** — und zwar mit "
+      "dem Wissensstand des Signalzeitpunkts: es gilt die dann längste "
+      "auswertbare Serie. Die ganze Rechenkette eines Signals stammt aus dieser "
+      "einen Serie. Damit kann eine **Quellen-Naht** gar nicht mehr entstehen; "
+      "der Zähler steht konstruktiv bei "
+      + zahl(z.get("umsatz_quellen_naht", 0)) + " Fällen (vorher 2.663). Bei "
+      "Gleichstand entscheidet die Priorität, dann USD, dann die Einheit "
+      "alphabetisch.")
     a("")
     a("Im Entdeckungsfenster ist Priorität 2 "
       "(`RevenueFromContractWithCustomerExcludingAssessedTax`) **leer**: die "
@@ -1446,7 +1735,9 @@ def markdown(d):
       "die Prioritäten 1, 3 und 4.")
     a("")
 
-    a("## 2. Kalibrierung — regelbasiert, nicht nach Augenmaß")
+    umstellungsblock(d, a)
+
+    a("## 3. Kalibrierung — regelbasiert, nicht nach Augenmaß")
     a("")
     a("Zielband je Signal, vorab festgelegt: Feuerrate zwischen **"
       + prozent(d["parameter"]["zielband"][0], 1) + "** und **"
@@ -1476,7 +1767,7 @@ def markdown(d):
       "S-G im selben Fiskalquartal.")
     a("")
 
-    a("## 3. Feuerraten und Fallzahlen je Signal")
+    a("## 4. Feuerraten und Fallzahlen je Signal")
     a("")
     a("| Größe | S-U | S-G | S-UG |")
     a("|---|---:|---:|---:|")
@@ -1534,8 +1825,26 @@ def markdown(d):
           "Ergebnis, kein Defekt — und es ist der Grund, warum S-UG als eigenes "
           "Signal in dieser Form nicht trägt.")
         a("")
+    fh = d["muster_friedhof"][0]
+    a("### S-UG kommt in den Muster-Friedhof")
+    a("")
+    a("**S-UG wird nicht weiterverfolgt.** Es scheitert am vorab festgelegten "
+      "Mindest-Fallzahl-Kriterium: **" + zahl(fh["fallzahl"]) + " Firmen** mit "
+      "reifem Erst-Ereignis gegen geforderte **" + zahl(fh["fallzahl_gefordert"])
+      + "**. Das ist keine knappe Verfehlung, die man mit einer Stellschraube "
+      "einholen könnte — es fehlt eine Größenordnung. Gemessen wird S-UG "
+      "weiterhin mit, geführt wird es als **gescheitert**.")
+    a("")
+    a("Der Beifang bleibt als **beschreibender Befund** stehen, nicht als "
+      "Signal: Umsatz- und Ergebnis-Beschleunigung treten "
+      + (("%.1f" % fh["ueberhang_faktor"]).replace(".", ",") if
+         fh["ueberhang_faktor"] else "—")
+      + "-mal häufiger gemeinsam auf, als der Zufall es täte. Das ist eine "
+      "Aussage über die **Kopplung beider Signale**, kein tragfähiges eigenes "
+      "Signal — aus einem Überhang folgt keine Fallzahl.")
+    a("")
 
-    a("## 4. Wie dicht liegen die Feuerungen?")
+    a("## 5. Wie dicht liegen die Feuerungen?")
     a("")
     a("Gezählt wird nach dem **Signal-Zeitstempel**: dem Moment, ab dem alle "
       "Zutaten der Rechnung öffentlich waren (spätester `accepted`-Zeitpunkt "
@@ -1581,7 +1890,7 @@ def markdown(d):
       "Report nur aufblähen.")
     a("")
 
-    a("## 5. Die drei Prüfschritte")
+    a("## 6. Die drei Prüfschritte")
     a("")
     naht = su["naht"]
     a("### Prüfschritt 1 — Naht-Invariante")
@@ -1597,7 +1906,7 @@ def markdown(d):
       "Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim "
       "Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese "
       "Zahl über null und der Selbsttest wird rot. Die rote Meldung steht "
-      "wörtlich in Abschnitt 10.")
+      "wörtlich in Abschnitt 11.")
     a("")
     gl = d["pruefschritt_glaette"]
     a("### Prüfschritt 2 — Belegungs-Glätte")
@@ -1639,17 +1948,23 @@ def markdown(d):
     a("")
     if ue["regel_greift"]:
         a("Der Anteil liegt über 10 % — die **vorab festgelegte** Folgeregel greift: "
-          "die Quelle wird künftig **je Firma** fixiert (längste Serie) statt je "
-          "Quartal. Diese Regel stand vor der Messung fest, sie wurde hier nicht "
-          "erfunden. **Sie ist in dieser Etappe noch nicht angewandt** — das wäre "
-          "eine Änderung der präregistrierten Rechenvorschrift und gehört in die "
-          "nächste Etappe.")
+          "die Quelle wird **je Firma** fixiert (längste Serie) statt je Quartal. "
+          "Diese Regel stand vor der Messung fest, sie wurde hier nicht erfunden. "
+          "**Sie ist in diesem Lauf angewandt** — die Zahlen dieses Reports sind "
+          "bereits die der fixierten Quelle; wie sie sich gegen den alten Stand "
+          "verhalten, steht in Abschnitt 2.")
+        a("")
+        a("Die Zahlen dieser Tabelle sind bewusst **weiterhin die der ungewählten "
+          "Rohlage**: Prüfschritt 3 vergleicht jede Quelle mit jeder, damit "
+          "sichtbar bleibt, wie weit sie auseinanderliegen. Er misst den "
+          "Widerspruch, nicht das Ergebnis der Wahl — sonst hätte die Umstellung "
+          "ihren eigenen Auslöser wegmoderiert.")
     else:
         a("Der Anteil liegt bei oder unter 10 % — die Quellenwahl bleibt je "
           "Firmen-Quartal, wie präregistriert.")
     a("")
 
-    a("## 6. Was nicht berechenbar war (Regel R5)")
+    a("## 7. Was nicht berechenbar war (Regel R5)")
     a("")
     a("Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.")
     a("")
@@ -1752,10 +2067,10 @@ def markdown(d):
     a("")
     a("Diese Firmen sind also **nicht ignoriert** — sie sind gezählt und laufen "
       "normal mit. Was fehlt, ist die Möglichkeit, das einzelne 53-Wochen-Jahr "
-      "zu markieren; das steht als offene Frage in Abschnitt 9.")
+      "zu markieren; das steht als offene Frage in Abschnitt 10.")
     a("")
     dg = d["diagnose_nettoergebnis"]
-    a("## 7. Diagnose: trägt `NetIncomeLoss` mehr als `OperatingIncomeLoss`?")
+    a("## 8. Diagnose: trägt `NetIncomeLoss` mehr als `OperatingIncomeLoss`?")
     a("")
     a("Reine Diagnose — kein Signal, keine Schwelle, keine Kalibrierung. Sie soll "
       "der nächsten Etappe erlauben, **mit Zahlen** zu entscheiden, falls S-G zu "
@@ -1772,7 +2087,7 @@ def markdown(d):
     a("| Firmen mit mindestens einem g | " + zahl(dg["firmen_mit_g"]) + " | — |")
     a("")
 
-    a("## 8. Scheiternskriterien — vorab festgelegt")
+    a("## 9. Scheiternskriterien — vorab festgelegt")
     a("")
     a("| Kriterium | Stand |")
     a("|---|---|")
@@ -1806,7 +2121,7 @@ def markdown(d):
     a("S-G und S-UG dürfen **einzeln** scheitern, ohne die Signalfamilie zu kippen.")
     a("")
 
-    a("## 9. Neue Fragen und Hypothesen (Pflichtblock nach R16)")
+    a("## 10. Neue Fragen und Hypothesen (Pflichtblock nach R16)")
     a("")
     for frage in d["fragen"]:
         a("- " + frage)
@@ -1853,21 +2168,28 @@ def folgefragen(d):
         "(Zeitschätzung: 1 Tag)")
     if ue["regel_greift"]:
         fragen.append(
-            "**Quellenwahl je Firma statt je Quartal.** Prüfschritt 3 hat die "
-            "vorab festgelegte Schwelle gerissen (" + prozent(ue["anteil"])
-            + " der überlappenden Firmen-Quartale liegen über 5 Punkten "
-              "auseinander). Die Regel verlangt, die Quelle künftig je Firma zu "
-              "fixieren. Offen: um wie viel schrumpft dadurch die Fallzahl, und "
-              "ändert sich die Feuerrate? Beides muss vor der Umstellung gemessen "
-              "und präregistriert werden. (Zeitschätzung: 1 Tag)")
+            "**Wie oft wechselt die fixierte Quelle im Lauf einer Firmenhistorie?** "
+            "Die Folgeregel aus Prüfschritt 3 ist angewandt (Abschnitt 2), und die "
+            "Frage nach Fallzahl und Feuerrate ist damit beantwortet — die Fallzahl "
+            "steigt auf " + zahl(su["firmen_reif"]) + " Firmen. Offen ist die "
+            "Anschlussfrage: Die zeitpunkt-ehrliche Wahl darf die Quelle im Lauf "
+            "der Zeit wechseln, wenn eine andere Reihe länger wird. Wie oft "
+            "passiert das, und trifft es dieselben Firmen, die später feuern? "
+            "Häufige Wechsel würden bedeuten, dass „je Firma fixiert\" in der "
+            "Praxis weniger fix ist, als der Name verspricht. "
+            "(Zeitschätzung: 0,5 Tage)")
     fragen.append(
-        "**Wie viel kostet die Naht?** " + zahl(d["zaehler"].get("umsatz_quellen_naht", 0))
-        + " Firmen-Quartale sind nur deshalb nicht berechenbar, weil die Firma "
-          "zwischen zwei Quartalen die Umsatz-Kennung wechselt. Offen: Sind das "
-          "Zufallswechsel oder systematisch dieselben Firmen (dann fehlt eine ganze "
-          "Firmenklasse)? Und: wäre eine Verkettung über einen Überlappungsfaktor "
-          "verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese "
-          "Studie verbietet? (Zeitschätzung: 1–2 Tage)")
+        "**Was die Naht gekostet hat — und wen sie getroffen hätte.** Vor der "
+        "Umstellung waren 2.663 Firmen-Quartale nur deshalb nicht berechenbar, "
+        "weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselte; "
+        "jetzt sind es " + zahl(d["zaehler"].get("umsatz_quellen_naht", 0))
+        + ". Offen bleibt die inhaltliche Frage: Waren das Zufallswechsel oder "
+          "systematisch dieselben Firmen? Falls systematisch, hat der alte Stand "
+          "eine ganze Firmenklasse verloren — und dann ist die Umstellung nicht "
+          "nur sauberer, sondern korrigiert eine Verzerrung, die im alten Report "
+          "unsichtbar war. Das ist prüfbar, indem man die betroffenen Firmen "
+          "gegen die übrigen hält (Branche, Größe, Feuerhäufigkeit). "
+          "(Zeitschätzung: 1 Tag)")
     fragen.append(
         "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in "
         "dieser Quelle auf das Monatsende gerundet, deshalb ist ein "
@@ -1983,6 +2305,35 @@ def _baue_fixture(pfad):
         fakt(b, "Revenues", d, "1", rev)
         fakt(b, "SalesRevenueNet", d, "1", srn)
 
+    # -- Firma 7600: PIT-Wahl gegen Fenster-Rueckblick ----------------------
+    # `Revenues` (Prioritaet 1) laeuft nur 2012, `SalesRevenueNet` (Prioritaet 3)
+    # laeuft 2012 UND 2013 durch. Wer die Quelle mit Wissen ueber das Fensterende
+    # waehlt, nimmt ueberall SalesRevenueNet (8 Quartale gegen 4). Zeitpunkt-
+    # ehrlich sind 2012 beide gleich lang -> die Prioritaet entscheidet, und erst
+    # 2013, wenn `Revenues` nichts mehr liefert, uebernimmt SalesRevenueNet.
+    for d in ("20120331", "20120630", "20120930", "20121231"):
+        b = bericht("7600", "3674", "10-Q", d)
+        fakt(b, "Revenues", d, "1", 100.0)
+        fakt(b, "SalesRevenueNet", d, "1", 200.0)
+    for d in ("20130331", "20130630", "20130930", "20131231"):
+        b = bericht("7600", "3674", "10-Q", d)
+        fakt(b, "SalesRevenueNet", d, "1", 220.0)
+
+    # -- Firma 7700: laengste Serie schlaegt die Prioritaet ------------------
+    # `Revenues` steht hoeher in der Prioritaet, liefert aber nur ein einziges
+    # Quartal; `SalesRevenueNet` traegt vier. Die Regel waehlt die laengere Serie.
+    for d in ("20120331", "20120630", "20120930", "20121231"):
+        b = bericht("7700", "3674", "10-Q", d)
+        fakt(b, "SalesRevenueNet", d, "1", 200.0)
+        if d == "20121231":
+            fakt(b, "Revenues", d, "1", 100.0)
+
+    # -- Firma 7800: Gleichstand -> USD schlaegt die Fremdwaehrung -----------
+    for d in ("20120331", "20120630", "20120930", "20121231"):
+        b = bericht("7800", "3674", "10-Q", d)
+        fakt(b, "Revenues", d, "1", 100.0)
+        fakt(b, "Revenues", d, "1", 90.0, uom="EUR")
+
     # -- Firma 9000: taucht in den Daten auf, liefert aber KEINEN Umsatz -----
     for d, w in (("20120331", 5.0), ("20120630", 6.0)):
         b = bericht("9000", "3674", "10-Q", d)
@@ -2035,12 +2386,12 @@ def selbsttest():
         berichte, firmen_jahr, quartale, fye = lade_berichte(panel, zaehler)
         zeilen = lies_rohwerte(panel, arbeit, berichte, zaehler, False)
         # 41 Berichte liegen in der Fixture, genau einer davon ist ein 8-K.
-        pruefe("nur periodische Berichte zaehlen (40 von 41, das 8-K faellt raus)",
-               len(berichte) == 40 and zaehler["berichte_periodisch"] == 40
-               and zaehler["berichte_gesamt"] == 41
+        pruefe("nur periodische Berichte zaehlen (56 von 57, das 8-K faellt raus)",
+               len(berichte) == 56 and zaehler["berichte_periodisch"] == 56
+               and zaehler["berichte_gesamt"] == 57
                and zaehler["berichte_nicht_periodisch"] == 1,
                (len(berichte), zaehler["berichte_gesamt"],
-                zaehler["berichte_nicht_periodisch"]), (40, 41, 1))
+                zaehler["berichte_nicht_periodisch"]), (56, 57, 1))
         je_firma = pit_reduktion(arbeit, zaehler)
 
         # Wiederaufnahme (R15c): zweiter Lauf darf nichts verdoppeln.
@@ -2086,8 +2437,36 @@ def selbsttest():
                (zaehler["umsatz_umsatz_nicht_positiv"], sorted(gewaehlt["6000"])),
                (2, ["20120630"]))
 
+        print("\n[2b] Quellenwahl je Firma, zeitpunkt-ehrlich")
+        pruefe("Gleichstand -> Prioritaet entscheidet (Firma 7000 nimmt Revenues)",
+               gewaehlt["7000"]["20120331"][3] == ("Revenues", "USD"),
+               gewaehlt["7000"]["20120331"][3], ("Revenues", "USD"))
+        pruefe("laengste Serie schlaegt die Prioritaet (Firma 7700: "
+               "SalesRevenueNet mit 4 Quartalen gegen Revenues mit 1)",
+               gewaehlt["7700"]["20121231"][3] == ("SalesRevenueNet", "USD")
+               and _fast(gewaehlt["7700"]["20121231"][0], 200.0),
+               gewaehlt["7700"]["20121231"][3], ("SalesRevenueNet", "USD"))
+        pruefe("ZEITPUNKT-EHRLICH: 2012 sind beide Quellen gleich lang, also "
+               "gewinnt Revenues — die spaetere Laenge von SalesRevenueNet "
+               "aendert die Wahl von damals NICHT (Firma 7600)",
+               gewaehlt["7600"]["20120331"][3] == ("Revenues", "USD")
+               and gewaehlt["7600"]["20121231"][3] == ("Revenues", "USD")
+               and _fast(gewaehlt["7600"]["20120331"][0], 100.0),
+               (gewaehlt["7600"]["20120331"][3],
+                gewaehlt["7600"]["20121231"][3]),
+               (("Revenues", "USD"), ("Revenues", "USD")))
+        pruefe("sobald die hoehere Prioritaet nichts mehr liefert, uebernimmt "
+               "die laengere Quelle (Firma 7600 ab 2013)",
+               gewaehlt["7600"]["20130331"][3] == ("SalesRevenueNet", "USD")
+               and _fast(gewaehlt["7600"]["20130331"][0], 220.0),
+               gewaehlt["7600"]["20130331"][3], ("SalesRevenueNet", "USD"))
+        pruefe("Gleichstand bei der Waehrung -> USD (Firma 7800)",
+               gewaehlt["7800"]["20120331"][3] == ("Revenues", "USD")
+               and _fast(gewaehlt["7800"]["20120331"][0], 100.0),
+               gewaehlt["7800"]["20120331"][3], ("Revenues", "USD"))
+
         print("\n[3] Wachstum und Beschleunigung")
-        g_saetze, a_saetze = wachstum_und_beschleunigung(gewaehlt, zaehler, "umsatz_")
+        g_saetze, a_saetze = wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
         g_map = dict(((s["cik"], s["ddate"]), s["g"]) for s in g_saetze)
         a_map = dict(((s["cik"], s["ddate"]), s["a"]) for s in a_saetze)
         pruefe("g(1000, 20130331) = 20/110 = 0,181818...",
@@ -2107,6 +2486,16 @@ def selbsttest():
                g_map.get(("2000", "20131231")), 10.0 / 45.0)
         pruefe("Deckel: kein g liegt ausserhalb von [-2, +2]",
                all(-G_DECKEL <= s["g"] <= G_DECKEL for s in g_saetze))
+        # Die zweite Beschleunigung wird INNERHALB der Quelle gepaart, nicht
+        # spaeter ueber Firmen-Quartale zusammengesucht.
+        g1000, _gr, _ab = g_einer_quelle(alle["1000"][(0, "Revenues", "USD")])
+        a1000, _agr, vor1000 = a_einer_quelle(g1000)
+        pruefe("zweite Beschleunigung zeigt auf das Vorquartal DERSELBEN Quelle",
+               vor1000["20130930"] == "20130630",
+               vor1000.get("20130930"), "20130630")
+        pruefe("die erste Beschleunigung einer Reihe hat KEIN Vorquartal (None, "
+               "nicht still null)", vor1000["20130630"] is None,
+               vor1000.get("20130630"), None)
         pruefe("Jahrespaar ohne volles Kalenderjahr wird GEZAEHLT (371 Tage)",
                zaehler["umsatz_jahrespaar_abstand_abweichend"] == 1
                and ("8000", "20131005") in g_map,
@@ -2116,11 +2505,21 @@ def selbsttest():
                wandernd == {"8000"}, sorted(wandernd), ["8000"])
 
         print("\n[4] Pruefschritt 1 — Naht-Invariante")
-        pruefe("Firma 3000: Quellenwechsel erzeugt VIER Naht-Faelle",
-               zaehler["umsatz_quellen_naht"] == 4,
-               zaehler["umsatz_quellen_naht"], 4)
+        # Die fixierte Quelle beseitigt die Naht KONSTRUKTIV: eine Kette, die
+        # ganz aus einer Reihe stammt, kann keine zwei Quellen mischen.
+        pruefe("Quellen-Naht ist konstruktiv null (fixierte Quelle je Firma)",
+               zaehler["umsatz_quellen_naht"] == 0,
+               zaehler["umsatz_quellen_naht"], 0)
         pruefe("Firma 3000 hat kein einziges Wachstum ueber die Naht",
                not any(s["cik"] == "3000" for s in g_saetze))
+        # Die Gegenprobe zur Kette: Firma 7600 traegt 2012 zwei Quellen mit
+        # verschiedenem Niveau (100 und 200). Wer die Kette aus der je Quartal
+        # gemischten Reihe baut, rechnet 220 gegen 100 (g = 0,75) statt 220 gegen
+        # 200 (g = 20/210). Diese Zahl faellt sofort auf.
+        pruefe("Kette bleibt in EINER Quelle: g(7600, 20130331) = 20/210 = "
+               "0,095238... (nicht 120/160 = 0,75 ueber die Naht)",
+               _fast(g_map.get(("7600", "20130331")) or -1.0, 20.0 / 210.0),
+               g_map.get(("7600", "20130331")), 20.0 / 210.0)
         naht = pruefe_naht_invariante(g_saetze, a_saetze)
         pruefe("Naht-Invariante ist null (gueltige Form geht DURCH)",
                naht["gesamt"] == 0 and naht["bestanden"], naht["gesamt"], 0)
@@ -2198,9 +2597,10 @@ def selbsttest():
 
         TRAILING_MIN_N = 1
         try:
-            fest = [{"cik": "S", "ddate": "20120331", "a": 0.0, "g": 1.0,
-                     "basis": ("Revenues", "USD"), "ord": ordinal("20120331"),
-                     "accepted": "2012-05-01 00:00:00.0"}]
+            def satz(ddate, a, g, accepted, vorquartal=None):
+                return {"cik": "S", "ddate": ddate, "a": a, "g": g,
+                        "basis": ("Revenues", "USD"), "ord": ordinal(ddate),
+                        "accepted": accepted, "vorquartal": vorquartal}
             faelle = {
                 "feuert": (0.9, 0.5, 1.0, True),
                 "erste Beschleunigung negativ": (0.9, -0.5, 1.0, False),
@@ -2209,25 +2609,27 @@ def selbsttest():
                 "Wachstum nicht positiv": (0.9, 0.5, -1.0, False),
             }
             for bez, (a_jetzt, a_vor, g_jetzt, soll) in faelle.items():
-                proben = list(fest)
-                proben.append({"cik": "S", "ddate": "20120630", "a": a_vor, "g": 1.0,
-                               "basis": ("Revenues", "USD"), "ord": ordinal("20120630"),
-                               "accepted": "2012-08-01 00:00:00.0"})
-                proben.append({"cik": "S", "ddate": "20120930", "a": a_jetzt,
-                               "g": g_jetzt, "basis": ("Revenues", "USD"),
-                               "ord": ordinal("20120930"),
-                               "accepted": "2012-11-01 00:00:00.0"})
+                vorher = satz("20120630", a_vor, 1.0, "2012-08-01 00:00:00.0")
+                proben = [satz("20120331", 0.0, 1.0, "2012-05-01 00:00:00.0"),
+                          vorher,
+                          satz("20120930", a_jetzt, g_jetzt,
+                               "2012-11-01 00:00:00.0", vorquartal=vorher)]
                 # Querschnitt fuer die Schwelle: 200 fremde Werte bei 0,1.
                 for i in range(200):
                     proben.append({"cik": "N%03d" % i, "ddate": "20111231", "a": 0.1,
                                    "g": 1.0, "basis": ("Revenues", "USD"),
                                    "ord": ordinal("20111231"),
-                                   "accepted": "2012-02-01 00:00:00.0"})
+                                   "accepted": "2012-02-01 00:00:00.0",
+                                   "vorquartal": None})
                 eigene = defaultdict(int)
                 feuerungen, auswertbar, _ = signale(proben, 90, eigene, "t_")
                 ist = any(f["cik"] == "S" and f["ddate"] == "20120930"
                           for f in feuerungen)
                 pruefe("Signal-Bedingung: " + bez, ist == soll, ist, soll)
+                pruefe("Signal-Bedingung " + bez + ": Satz ohne Vorquartal wird "
+                       "GEZAEHLT, nicht verschluckt",
+                       eigene["t_kein_vorquartal_beschleunigung"] == 202,
+                       eigene["t_kein_vorquartal_beschleunigung"], 202)
         finally:
             TRAILING_MIN_N = alt_min
 
