@@ -199,3 +199,69 @@ test('Die ausgegebene Allowlist ist genau die, die die Diagnose durchlaesst', ()
       `Der Allowlist-Eintrag ${feld} klingt nach einem Messwert, nicht nach einem Zaehler`);
   }
 });
+
+// Wird nach dem Lauf an tests/studie-e4a-diagnose.test.js angehaengt.
+// Prueft W8 (Anker) und W9 (Anmeldung deckt Ausgabe) gegen die ECHTEN Artefakte.
+
+// ── W8: der Anker gegen E2/E3 ────────────────────────────────────────────────
+
+const BERICHT_PRUEFUNG = path.join(REPO, 'reports', 'studie',
+  'E4a-diagnose-pruefung-2026-08-19.json');
+const BERICHT_ENTDECKUNG = path.join(REPO, 'reports', 'studie',
+  'E4a-diagnose-entdeckung-2026-08-19.json');
+
+function ankerLauf(berichtPfad, aenderung = null) {
+  // Ruft pruefe_anker() des Diagnose-Skripts mit dem ECHTEN Laufergebnis auf —
+  // einmal unveraendert (muss durchgehen) und einmal mit einer gekippten Zahl
+  // (muss abbrechen). Ein Anker, der eine falsche Zahl durchlaesst, ist Deko.
+  const skript = [
+    'import importlib.util, json, sys',
+    'sp = importlib.util.spec_from_file_location("d", sys.argv[1])',
+    'm = importlib.util.module_from_spec(sp); sp.loader.exec_module(m)',
+    'd = json.load(open(sys.argv[2], encoding="utf-8"))',
+    'aend = json.loads(sys.argv[4]) if sys.argv[4] else None',
+    'if aend:',
+    '    d["baender"][aend[0]]["varianten"][aend[1]]["signal"][aend[2]] += 1',
+    'print(m.pruefe_anker(d["baender"], sys.argv[3]))',
+  ].join('\n');
+  return spawnSync(process.env.PYTHON || 'python',
+    ['-c', skript, SKRIPT, berichtPfad, JSON.parse(fs.readFileSync(berichtPfad, 'utf8')).fenster,
+      aenderung ? JSON.stringify(aenderung) : ''],
+    { encoding: 'utf8', cwd: REPO });
+}
+
+test('W8: der veroeffentlichte E3-Anker geht DURCH', () => {
+  const lauf = ankerLauf(BERICHT_PRUEFUNG);
+  assert.equal(lauf.status, 0, `${lauf.stdout}${lauf.stderr}`);
+  assert.match(lauf.stdout, /registry\/S-U/);
+});
+
+test('W8: eine um EINS verschobene Fallzahl fliegt auf', () => {
+  const lauf = ankerLauf(BERICHT_PRUEFUNG, ['2017-2019', 'S-U', 'fallzahl']);
+  assert.notEqual(lauf.status, 0, 'Der Anker haette abbrechen muessen');
+  assert.match(`${lauf.stdout}${lauf.stderr}`, /W8-ABBRUCH/);
+});
+
+test('W8: der E2-Anker des Entdeckungsfensters geht DURCH und faellt bei Abweichung', () => {
+  const gut = ankerLauf(BERICHT_ENTDECKUNG);
+  assert.equal(gut.status, 0, `${gut.stdout}${gut.stderr}`);
+  assert.match(gut.stdout, /e2_anker\/S-U/);
+  const kaputt = ankerLauf(BERICHT_ENTDECKUNG, ['2012-2016', 'S-G', 'firmen_mit_erst_ereignis']);
+  assert.notEqual(kaputt.status, 0);
+  assert.match(`${kaputt.stdout}${kaputt.stderr}`, /W8-ABBRUCH/);
+});
+
+// ── W9: die Gegenrichtung — eine ECHTE E4a-Anmeldung geht durch ──────────────
+
+test('W9: die echten E4a-Anmeldungen decken genau die Diagnose-Allowlist', () => {
+  const felder = JSON.parse(diagnose(['--allowlist-ausgeben']).stdout);
+  const e4a = REGISTER.events.filter((e) => e.runId.startsWith('e4a-diagnose-'));
+  // Beide Fenster muessen angemeldet sein; wie viele Laeufe es je Fenster gab, ist
+  // eine Frage der Akte, nicht des Waechters (Erstlauf bleibt drin, siehe E3).
+  const fenster = new Set(e4a.map((e) => (e.fenster || [])[0]));
+  assert.deepEqual([...fenster].sort(), ['entdeckung', 'pruefung']);
+  for (const eintrag of e4a) {
+    assert.deepEqual([...eintrag.allowedOutputs].sort(), [...felder].sort(),
+      `Die Anmeldung ${eintrag.runId} meldet etwas anderes an, als die Diagnose ausgibt`);
+  }
+});
