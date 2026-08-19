@@ -2,10 +2,20 @@
 /**
  * SEC XBRL -> Snapshot Merge (Folge-PR zu pull-sec-xbrl.js)
  * =========================================================
- * pull-sec-xbrl.js cached companyfacts/CIK<cik>.json fuer US-Filer. DIESES Modul
+ * pull-sec-xbrl.js cached companyfacts/CIK<cik>.json fuer SEC-Filer. DIESES Modul
  * extrahiert daraus die TIEFEN ANNUAL-Serien (SEC liefert ~15 Jahre statt Yahoos
  * ~4) und merged sie in die Snapshots. REINE Funktionen, kein Netzwerk, kein I/O
  * (der Aufrufer liest die Cache-Datei).
+ *
+ * ZWEI BILANZIERUNGSSTANDARDS (19.08.2026): companyfacts liefert Kennzahlen unter
+ * 'us-gaap' UND unter 'ifrs-full'. Bis dahin las dieses Modul nur us-gaap und nur
+ * 10-K — auslaendische Emittenten mit US-Notierung (20-F/40-F, meist IFRS) fielen
+ * damit lautlos heraus, obwohl ihre Zahlen bei der SEC liegen. Sichtbar war das an
+ * 45 der 214 Namen in external-data/sec-secannual.json, die als HOHLE Datensaetze
+ * ohne eine einzige Zahl im Store standen (BNTX, STLA, LI, YPF, FNV, WFG …).
+ * Es wird GENAU EINE Taxonomie je Firma benutzt, nie eine Mischung, und welche es
+ * war, steht am Ergebnis (extractSecSeries().taxonomie) — Begruendung an
+ * waehleTaxonomie().
  *
  * Ausgabe-Format IDENTISCH zu den Yahoo-Snapshot-Feldern (snapshot.js FIELD_REGISTRY):
  *   annual.*  -> [{value:N|null}] newest-first, INDEX-ALIGNED nach Fiskaljahr
@@ -26,6 +36,24 @@
  *   - mode='replace' (Handoff-literal, SCORE-AENDERND): ersetzt die annual-Standard-
  *     felder durch die tiefe SEC-Serie. NUR nach Court+Audit einsetzen.
  */
+
+// --- Jahresbericht-Formen ----------------------------------------------------
+// Bis 19.08.2026 stand in annualConcept() hart `form === '10-K'`. Das ist die Form der
+// INLAENDISCHEN Filer. Ein auslaendischer Emittent mit US-Notierung reicht 20-F ein,
+// ein kanadischer 40-F — beide sind derselbe Jahresbericht. Mit '10-K' allein liefert
+// annualConcept() fuer diese Firmen NICHTS, egal welche Taxonomie gelesen wird; das
+// Taxonomie-Problem unten waere ohne diese Zeile gar nicht sichtbar geworden.
+// Gemessen 19.08.2026 an live geholten companyfacts (Formen je Taxonomie):
+//   ARGX 20-F:4238 · GFI 20-F:3384 · DLO 20-F:2127 · BNTX 20-F:2814 · STLA 20-F:6499
+//   FNV 40-F:2497 · WFG 40-F:1599   (kein einziger 10-K-Eintrag bei allen sieben)
+// BEWUSST OHNE die Berichtigungsformen '10-K/A' / '20-F/A' / '40-F/A': dass Berichtigungen
+// unsichtbar bleiben, ist ein EIGENER offener Befund, der ALLE Filer gleich trifft
+// (audit-reports/ChatGPT Bug hunt.md, Fundstelle merge-sec-xbrl.js). Hier wird die
+// Auslands-Luecke geschlossen, nicht nebenbei die Berichtigungs-Politik geaendert.
+// Der Preis ist gemessen, nicht geschaetzt: GFI verliert damit sein aeltestes Jahr
+// (FY2017 ist nur im 20-F/A getaggt) — 7 statt 8 Jahre. Ein fehlendes Altjahr ist der
+// billigere Fehler als eine still geaenderte Regel fuer 5.000 US-Namen.
+const ANNUAL_FORMS = ['10-K', '20-F', '40-F'];
 
 // --- SEC-Konzept-Namen (us-gaap) --------------------------------------------
 // Umsatz wechselt das Konzept ueber die Jahre -> Prioritaets-Union (aktuelles zuerst).
@@ -59,17 +87,90 @@ const SHARE_CONCEPTS = [
   ['us-gaap', 'WeightedAverageNumberOfSharesOutstandingBasic', true],
 ];
 
-function usdUnits(gaap, concept) {
-  const node = gaap && gaap[concept];
+// --- Taxonomien (us-gaap + ifrs-full) ---------------------------------------
+// companyfacts liefert Kennzahlen nach BILANZIERUNGS-STANDARD getrennt. Bis 19.08.2026 las
+// extractSecSeries() ausschliesslich facts['us-gaap'] — Firmen, die nach IFRS bilanzieren,
+// fielen lautlos heraus. Live gemessen 19.08.2026: ARGX 250 ifrs-full-Kennungen (us-gaap: 2),
+// DLO 236 (us-gaap: 0, gar keine us-gaap-Sektion), GFI 279.
+//
+// Die Zuordnung ist NICHT geraten, sondern je Rolle an den drei Testfaellen abgelesen
+// (20-F, fp=FY, Einheit USD; Werte in Mio. USD, neuestes Jahr zuerst). ALLE ACHT Zeilen sind
+// seit 19.08.2026 in tests/sec-ifrs-taxonomie.test.js als Assertion festgenagelt — vorher
+// standen nur vier davon (OpInc/NetInc/Rev/GP) im Test, die vier anderen konnten sich
+// lautlos verschieben:
+//   Umsatz    ifrs-full:Revenue                     GFI 7J 2024=5202/2023=4501 · DLO 5J 2025=1094/2024=746
+//   OpInc     ProfitLossFromOperatingActivities     ARGX 6J 2025=1054/2024=-22 · DLO 5J 2025=220
+//   NetInc    ProfitLoss                            ARGX 6J 2025=1292 · GFI 7J 2024=1291 · DLO 5J 2025=197
+//   OCF       CashFlowsFromUsedInOperatingActivities ARGX 5J 2025=685 · GFI 7J 2024=1607 · DLO 5J 2025=416
+//   Capex     PurchaseOfPropertyPlantAndEquipment-   ARGX 5J 2025=6,2 · GFI 7J 2024=1183 · DLO 5J 2025=2,3
+//             ClassifiedAsInvestingActivities        (positiver Abfluss, gleiche Konvention wie us-gaap)
+//   GP        GrossProfit (gleicher Name wie us-gaap) DLO 5J 2025=403 · ARGX/GFI fuehren keins
+//   Assets    Assets      (gleicher Name)            ARGX 5J 2025=8683 · GFI 7J 2024=10143 · DLO 5J 2025=1541
+//   CurrLiab  CurrentLiabilities                     ARGX 5J 2025=1320 · GFI 7J 2024=1710 · DLO 5J 2025=966
+//                                                    (us-gaap heisst es LiabilitiesCurrent)
+//
+// Korrektur 19.08.2026: GFI stand bei NetInc/OCF/Capex mit '8J' hier, geliefert werden aber
+// 7 Jahre (FY2018-2024). Die 8 war vor dem Formfilter gezaehlt: GFIs achtes Jahr (FY2017)
+// steht NUR im 20-F/A, und Berichtigungsformen sind bewusst draussen (ANNUAL_FORMS). Die
+// Zahl war also nicht falsch gemessen, sondern an der falschen Stelle abgelesen — hier zaehlt,
+// was ankommt. Alle WERTE stimmten; der Test haelt jetzt Werte und Jahreszahl fest.
+//
+// ACHTUNG CAPEX-VORZEICHEN: fcfCell() unten rechnet OCF - Capex und setzt damit voraus, dass
+// die SEC den Abfluss POSITIV meldet (an allen drei Fixtures ueber alle Jahre so). Kaeme er
+// je negativ, waere der freie Cashflow um den doppelten Investitionsbetrag zu hoch. Der Test
+// rechnet Capex aus OCF-FCF zurueck und wird bei gedrehtem Vorzeichen rot.
+//
+// ⚠ UMSATZ: die Liste enthaelt BEWUSST NUR 'Revenue' — dieselbe Regel wie bei den us-gaap-
+// Bestandteilen oben, hier an ARGX belegt. argenx fuehrt kein 'Revenue' in USD, dafuer
+// 'RevenueFromContractsWithCustomers' — das aber als BESTANDTEIL: FY2023 stehen dort 35,5 Mio.
+// neben 'RevenueFromSaleOfGoods' 1.190,8 Mio. (Gesamtzeile des Abschlusses: 1.268,6 Mio.).
+// Wer RevenueFromContractsWithCustomers als Gesamtumsatz nimmt, meldet fuer argenx 35,5 statt
+// 1.226 Mio. — Faktor 35 zu niedrig, lautlos, in jede Wachstums- und Margenachse hinein.
+// Ebenso NICHT drin: 'RevenueAndOperatingIncome' (ARGX 6J). Das ist Umsatz PLUS sonstige
+// betriebliche Ertraege (FY2023 1.268,6 = 1.190,8 + 35,5 + 42,3) — eine andere Groesse. Sie
+// neben 'Revenue' zu stellen hiesse, GFI und ARGX mit zwei verschiedenen Definitionen in
+// DERSELBEN Spalte zu vergleichen. Folge, so gewollt: argenx bekommt KEINE Umsatzjahre aus
+// SEC (annualRev bleibt null -> Yahoo-Fallback), seine sieben uebrigen Reihen kommen an.
+// Ein fehlendes Jahr ist ehrlich, ein Bestandteil in der Rolle der Gesamtgroesse ist falsch.
+const TAXONOMIEN = {
+  // Reihenfolge ist Teil der Regel: bei Gleichstand im juengsten Geschaeftsjahr gewinnt
+  // us-gaap (siehe waehleTaxonomie) -> reine US-Filer verhalten sich exakt wie vorher.
+  'us-gaap': {
+    rev: REV_CONCEPTS,
+    opinc: C_OPINC, netinc: C_NETINC, ocf: C_OCF, capex: C_CAPEX,
+    gp: C_GP, assets: C_ASSETS, curliab: C_CURLIAB,
+  },
+  'ifrs-full': {
+    rev: ['Revenue'],
+    opinc: 'ProfitLossFromOperatingActivities',
+    netinc: 'ProfitLoss',
+    ocf: 'CashFlowsFromUsedInOperatingActivities',
+    capex: 'PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities',
+    gp: 'GrossProfit',
+    assets: 'Assets',
+    curliab: 'CurrentLiabilities',
+  },
+};
+
+// NUR die USD-Einheit — und das ist bei IFRS-Filern kein Versehen, sondern der Schutz vor
+// dem Waehrungs-Mix. companyfacts fuehrt dieselbe Kennzahl teils in mehreren Waehrungen:
+// argenx z. B. 2.959 USD- neben 1.900 EUR-Eintraegen (bis FY2020 wurde in EUR berichtet,
+// ab FY2021 in USD). Wer die Erstbeste naehme, saehe eine Umsatzreihe, in der 2019 EUR und
+// 2022 USD steht — ein erfundenes Wachstum. Weil dieser Filter fuer JEDE Kennzahl gleich
+// greift, ist jeder gelieferte Wert USD; ein Jahr ohne USD-Fassung faellt heraus (null),
+// statt in fremder Waehrung mitzulaufen. Sichtbare Folge: ARGX' 'Revenue' steht nur in EUR
+// (FY2015-2017) und wird korrekt verworfen.
+function usdUnits(tax, concept) {
+  const node = tax && tax[concept];
   return (node && node.units && Array.isArray(node.units.USD)) ? node.units.USD : [];
 }
 
-// Annual (Volljahr): form '10-K' & fp 'FY', dedupe je fy (neueste 'end' gewinnt).
-// -> Map fy -> {val, end}
-function annualConcept(gaap, concept) {
+// Annual (Volljahr): Jahresbericht-Form (ANNUAL_FORMS) & fp 'FY', dedupe je fy
+// (neueste 'end' gewinnt). -> Map fy -> {val, end}
+function annualConcept(tax, concept) {
   const out = new Map();
-  for (const x of usdUnits(gaap, concept)) {
-    if (x.form === '10-K' && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val)) {
+  for (const x of usdUnits(tax, concept)) {
+    if (ANNUAL_FORMS.includes(x.form) && x.fp === 'FY' && x.fy != null && Number.isFinite(x.val)) {
       const prev = out.get(x.fy);
       // BH-007: keep accn (filing identity) alongside the value so callers can
       // verify two concepts for the same fy actually came from the same 10-K.
@@ -92,8 +193,10 @@ function annualConcept(gaap, concept) {
 // 805,7 Mio. im selben Geschaeftsjahr). Fail closed statt raten: das fy wird verworfen (nicht
 // in die Union aufgenommen) und fail-loud geloggt (Ticker + beide Konzepte + Werte), statt
 // einen falschen Umsatz lautlos in jede Wachstumsachse zu speisen.
-function annualRevUnion(gaap, ticker) {
-  const maps = REV_CONCEPTS.map((c) => annualConcept(gaap, c));
+// revConcepts: Prioritaets-Liste der GESAMTUMSATZ-Konzepte der gewaehlten Taxonomie
+// (Default us-gaap — die bestehenden Aufrufer/Tests bleiben unveraendert).
+function annualRevUnion(gaap, ticker, revConcepts = REV_CONCEPTS) {
+  const maps = revConcepts.map((c) => annualConcept(gaap, c));
   const fySet = new Set();
   for (const m of maps) for (const fy of m.keys()) fySet.add(fy);
   const out = new Map();
@@ -119,8 +222,8 @@ function annualRevUnion(gaap, ticker) {
     if (conflictIdx >= 0) {
       const loser = maps[conflictIdx].get(fy);
       console.warn(
-        `[merge-sec-xbrl] Umsatz-Konflikt ${ticker || 'unknown'} FY${fy}: ${REV_CONCEPTS[winnerIdx]}=${winner.val} ` +
-        `vs. ${REV_CONCEPTS[conflictIdx]}=${loser.val} (Null-gegen-Wert, Vorzeichen oder Faktor>2) — Jahr verworfen statt geraten`
+        `[merge-sec-xbrl] Umsatz-Konflikt ${ticker || 'unknown'} FY${fy}: ${revConcepts[winnerIdx]}=${winner.val} ` +
+        `vs. ${revConcepts[conflictIdx]}=${loser.val} (Null-gegen-Wert, Vorzeichen oder Faktor>2) — Jahr verworfen statt geraten`
       );
       continue;
     }
@@ -138,14 +241,21 @@ function shareFacts(taxonomy, concept) {
   return Array.isArray(first) ? first : [];
 }
 
-function sharesAtFyEnd(gaap, dei, fyEnd) {
+// gewaehlt = die fuer diese Firma gewaehlte Taxonomie-Sektion (us-gaap ODER ifrs-full).
+// Der dei-Eintrag traegt die Last: dei ist standard-unabhaengig und im 20-F/40-F genauso
+// getaggt wie im 10-K (gemessen: ARGX 9, GFI 16, DLO 5 Eintraege). Die beiden us-gaap-
+// Kennungen darunter existieren in ifrs-full schlicht nicht -> IFRS-Filer ohne dei-Eintrag
+// bekommen null (kein Wert), nie einen fremden. IFRS-eigene Aktien-Kennungen
+// (NumberOfSharesOutstanding/-Issued) sind bewusst nicht ergaenzt: dei deckt alle drei
+// Testfaelle ab, ergaenzen wenn ein Filer ohne dei-Eintrag auftaucht.
+function sharesAtFyEnd(gewaehlt, dei, fyEnd) {
   if (!fyEnd) return null;
   for (const [taxonomy, concept, annualOnly] of SHARE_CONCEPTS) {
-    const tax = taxonomy === 'dei' ? dei : gaap;
+    const tax = taxonomy === 'dei' ? dei : gewaehlt;
     let best = null;
     for (const x of shareFacts(tax, concept)) {
       if (!x || !Number.isFinite(x.val) || !x.end || x.end > fyEnd) continue;
-      if (annualOnly && (x.form !== '10-K' || x.fp !== 'FY')) continue;
+      if (annualOnly && (!ANNUAL_FORMS.includes(x.form) || x.fp !== 'FY')) continue;
       if (!best || x.end >= best.end) best = x;
     }
     if (best) return best.val;
@@ -154,15 +264,19 @@ function sharesAtFyEnd(gaap, dei, fyEnd) {
 }
 
 // Tiefe annual-Serien, alle auf EINER fy-Achse (Union der fy) index-aligned, newest-first.
-function buildAnnual(gaap, dei = {}, ticker) {
-  const rev = annualRevUnion(gaap, ticker);
-  const opinc = annualConcept(gaap, C_OPINC);
-  const ni = annualConcept(gaap, C_NETINC);
-  const ocf = annualConcept(gaap, C_OCF);
-  const capex = annualConcept(gaap, C_CAPEX);
-  const gp = annualConcept(gaap, C_GP);
-  const assets = annualConcept(gaap, C_ASSETS);
-  const curliab = annualConcept(gaap, C_CURLIAB);
+// `tax` ist EINE Taxonomie-Sektion, `konzepte` die dazu passende Zeile aus TAXONOMIEN —
+// beide gehoeren zusammen und werden nie ueber Kreuz gemischt (siehe waehleTaxonomie).
+// Default us-gaap: die bestehenden Aufrufer buildAnnual(gaap) / buildAnnual(gaap, {})
+// verhalten sich unveraendert.
+function buildAnnual(tax, dei = {}, ticker, konzepte = TAXONOMIEN['us-gaap']) {
+  const rev = annualRevUnion(tax, ticker, konzepte.rev);
+  const opinc = annualConcept(tax, konzepte.opinc);
+  const ni = annualConcept(tax, konzepte.netinc);
+  const ocf = annualConcept(tax, konzepte.ocf);
+  const capex = annualConcept(tax, konzepte.capex);
+  const gp = annualConcept(tax, konzepte.gp);
+  const assets = annualConcept(tax, konzepte.assets);
+  const curliab = annualConcept(tax, konzepte.curliab);
 
   // gemeinsame fy-Achse = Union ueber die Serien; numerisch absteigend (newest-first).
   const fySet = new Set();
@@ -202,7 +316,7 @@ function buildAnnual(gaap, dei = {}, ticker) {
     // stammen aus DEMSELBEN 10-K (accn-geprueft via balCell) -> invested = Assets - CurrLiab FY-kohaerent.
     annualAssets: fys.map((fy) => balCell(assets, fy)),
     annualCurrentLiabilities: fys.map((fy) => balCell(curliab, fy)),
-    annualShares: fys.map((fy) => ({ value: sharesAtFyEnd(gaap, dei, fyEnds.get(fy)) })),
+    annualShares: fys.map((fy) => ({ value: sharesAtFyEnd(tax, dei, fyEnds.get(fy)) })),
     // Je Geschaeftsjahr das SPAETESTE Einreichungsdatum unter den Konzepten, die diese
     // Zeile gefuellt haben — bewusst das spaeteste: erst ab diesem Tag war die ganze
     // Zeile oeffentlich. Ein frueheres Datum wuerde eine Rueckrechnung Wissen unterstellen,
@@ -219,15 +333,64 @@ function buildAnnual(gaap, dei = {}, ticker) {
   };
 }
 
+// Juengstes Geschaeftsjahr, das diese Taxonomie ueberhaupt hergibt — gemessen mit
+// annualConcept(), also mit EXAKT denselben Form-/fp-/USD-Regeln, nach denen nachher
+// gebaut wird. Bewusst keine zweite, schnellere Zaehl-Logik: eine zweite Regel waere die
+// naechste Drift-Stelle. `null` = diese Taxonomie liefert kein einziges Jahr.
+function neuestesJahr(tax, konzepte) {
+  let max = null;
+  for (const c of [...konzepte.rev, konzepte.opinc, konzepte.netinc, konzepte.ocf, konzepte.assets]) {
+    for (const fy of annualConcept(tax, c).keys()) if (max === null || fy > max) max = fy;
+  }
+  return max;
+}
+
 /**
- * extractSecSeries(companyfacts, ticker) -> { annual:{...} }
+ * Waehlt GENAU EINE Taxonomie je Firma — nie eine Mischung.
+ *
+ * WARUM NICHT MISCHEN: dieselbe Firma kann unter zwei Standards unterschiedliche Werte
+ * melden (die Doppelnotierungen im Universum zeigen Abweichungen von 1,2 % beim Rohertrag
+ * bis 14 % beim Umsatz). Eine Reihe, in der 2019 aus us-gaap und 2023 aus ifrs-full kommt,
+ * erfindet an der Nahtstelle einen Sprung, den es nie gab. Deshalb: eine Firma, eine
+ * Taxonomie, und welche es war, steht am Datensatz (extractSecSeries().taxonomie).
+ *
+ * WARUM NACH DEM JUENGSTEN JAHR und nicht "us-gaap zuerst, sonst ifrs": weil "us-gaap hat
+ * irgendwas" nicht heisst "us-gaap ist der aktuelle Standard". Gold Fields (GFI) ist der
+ * Beleg — 350 us-gaap-Kennungen, aber alle aus den Ueberleitungs-Jahren bis FY2015 und
+ * OHNE Umsatz; ifrs-full traegt FY2018-2024 samt Umsatz. Blosser us-gaap-Vorrang haette
+ * GFI eine zehn Jahre alte, umsatzlose Reihe angehaengt und das als Erfolg gezaehlt.
+ * Gleichstand -> us-gaap (Schluesselreihenfolge in TAXONOMIEN, strikter Vergleich unten):
+ * reine US-Filer haben ohnehin nur eine Taxonomie mit Jahren und bleiben unveraendert.
+ */
+function waehleTaxonomie(facts) {
+  let best = null;
+  for (const name of Object.keys(TAXONOMIEN)) {
+    const tax = (facts && facts[name]) || {};
+    const fy = neuestesJahr(tax, TAXONOMIEN[name]);
+    if (fy === null) continue;
+    if (best === null || fy > best.fy) best = { name, tax, konzepte: TAXONOMIEN[name], fy };
+  }
+  // Keine Taxonomie liefert ein Jahr -> 'nicht verfuegbar'. Es wird NICHT auf us-gaap
+  // "zurueckgefallen" und keine Null erfunden; der Aufrufer sieht taxonomie === null und
+  // zaehlt den Fall (build-secannual.js: ohneReihe).
+  return best || { name: null, tax: {}, konzepte: TAXONOMIEN['us-gaap'] };
+}
+
+/**
+ * extractSecSeries(companyfacts, ticker) -> { annual:{...}, taxonomie:'us-gaap'|'ifrs-full'|null }
  * Reine Funktion. companyfacts = geparste CIK<cik>.json. ticker ist OPTIONAL — nur fuer die
  * S4-SEC-001-Konflikt-Logzeile in annualRevUnion (Aufrufer, die ihn nicht kennen, bekommen 'unknown').
+ *
+ * `taxonomie` ist die HERKUNFT der Reihen und gehoert an jeden Datensatz, der daraus
+ * entsteht (build-secannual.js / build-secannual-smallcap.js schreiben sie neben `cik`,
+ * fetch-secbulk.js in jede jsonl-Zeile). null = weder us-gaap noch ifrs-full liefert ein
+ * Jahr -> nicht verfuegbar, gezaehlt, nie eine 0 und nie ein geschaetzter Wert.
  */
 function extractSecSeries(companyfacts, ticker) {
-  const gaap = (companyfacts && companyfacts.facts && companyfacts.facts['us-gaap']) || {};
-  const dei = (companyfacts && companyfacts.facts && companyfacts.facts.dei) || {};
-  return { annual: buildAnnual(gaap, dei, ticker) };
+  const facts = (companyfacts && companyfacts.facts) || {};
+  const dei = facts.dei || {};
+  const w = waehleTaxonomie(facts);
+  return { annual: buildAnnual(w.tax, dei, ticker, w.konzepte), taxonomie: w.name };
 }
 
 // --- Overlap-Validierung (SEC vs Yahoo fuer die gemeinsamen Fuehrungsjahre) ---
@@ -314,4 +477,5 @@ module.exports = {
   extractSecSeries, mergeSecIntoSnapshot,
   // fuer Tests / gezielte Wiederverwendung
   buildAnnual, annualConcept, annualRevUnion, overlapDivergence,
+  waehleTaxonomie, ANNUAL_FORMS, TAXONOMIEN,
 };
