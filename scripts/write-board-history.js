@@ -104,11 +104,13 @@ function resolvePaths(base) {
     // Pathspec ":(exclude)board-history/$VINTAGE_DATE" im Commit-Schritt sie NICHT
     // beruehrt — die Sidecar-Reihe muss gerade an Suspect-Tagen mitfahren.
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
+    // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
+    EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
     base,
   };
 }
 let P = resolvePaths(REPO_ROOT);
-function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); return P; }
+function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); _earningsCache = null; return P; }
 
 // 2.3-Gate-Kalibrierung: Anzahl messbarer Tages-Deltas, bevor eine board-eigene Schwelle
 // eingefroren wird. Ein Vintage ist erst messbar, wenn es einen Vorgänger hat (Vintage #1
@@ -333,6 +335,21 @@ function readSnapshot(ticker) {
   return readJsonOrNull(fp);
 }
 
+// 6.2-E2 (Earnings-Blowout): Report-Datum je Ticker aus earnings-calendar.json. Einmal je
+// Lauf gelesen (585 KB Datei, ~9 000 Board-Zeilen — je Zeile neu parsen waere der Lauf-Killer);
+// _setPaths setzt den Cache zurueck, damit Tests mit eigenem baseDir nie den Repo-Kalender
+// sehen. Fehlt die Datei, bleibt der Cache ein leeres Objekt: das ist eine Datenluecke
+// (pitGaps), kein Grund, den Tageslauf anzuhalten.
+let _earningsCache = null;
+function earningsEntryFor(ticker) {
+  if (_earningsCache === null) {
+    const raw = readJsonOrNull(P.EARNINGS_CAL_FILE);
+    _earningsCache = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  }
+  const e = ticker ? _earningsCache[ticker] : null;
+  return (e && typeof e === 'object' && typeof e.date === 'string') ? e : null;
+}
+
 // Preis/Bruttogewinn = MarketCap/GrossProfit = priceSales / grossMargin.
 // (grossMargin ist in %.) Nenner ≤0/undefiniert → null (LOSS-/GM0-Firmen, §4a-NaN-Linie).
 function priceGrossProfit(metrics) {
@@ -350,7 +367,7 @@ function seriesValues(arr) {
 
 // Baut den §7-PIT-Block je Board-Zeile. Fehlende Kontroll-Felder EXPLIZIT null
 // (Missing-Beta-Regel), fehlende Perioden-Enden → null + pitGaps-Vermerk.
-function buildPit(snap, pitGaps) {
+function buildPit(snap, pitGaps, ticker) {
   if (!snap) { pitGaps.add('snapshot-missing'); return null; }
   const m = snap.metrics || {};
   const ts = snap.timeseries || {};
@@ -385,6 +402,7 @@ function buildPit(snap, pitGaps) {
   const revEnds = validEnds(ts.revenueQEnds);
   const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
+  if (earningsEntryFor(ticker) == null) pitGaps.add('earningsDate-missing');   // 6.2-E2
   if (gpEnds == null) pitGaps.add('grossProfitQEnds-missing');
   return {
     beta: val(m.beta),                       // Markt-Beta (Kontroll-Feld §7)
@@ -421,6 +439,15 @@ function buildPit(snap, pitGaps) {
     // (snap.marketCap liegt bereits am Snapshot, wie score.js mcapOf() es liest), Bestandsfelder
     // bleiben byte-identisch positioniert.
     marketCap: val(snap.marketCap),
+    // 6.2-E2 (Earnings-Blowout), analog E1 Option B: das Report-Datum PIT einfrieren.
+    // WARUM HIER UND NICHT ERST IM MELDEWEG: earnings-calendar.json ist eine LEBENDE Datei —
+    // sie kennt nur den heutigen Stand. Wer sie beim Auswerten eines alten Vintages liest,
+    // datiert einen Report mit Wissen von spaeter (derselbe Anachronismus, den E1s
+    // priceSalesAsOf verhindert). Rein additiv, kein neuer Abruf: die Datei liegt committet
+    // im Repo. earningsDateAsOf = wann WIR das Datum gezogen haben (pulledAt), nicht der
+    // Report selbst — dieselbe Trennung wie priceSales/priceSalesAsOf.
+    earningsDate: (earningsEntryFor(ticker) || {}).date || null,
+    earningsDateAsOf: (earningsEntryFor(ticker) || {}).pulledAt || null,
   };
 }
 
@@ -484,7 +511,7 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     coverageAxes: row.coverageAxes != null ? row.coverageAxes : null,
     axisBreakdown: Array.isArray(row.axisBreakdown) ? row.axisBreakdown : null,
     lamps: Array.isArray(row.lamps) ? row.lamps : null,
-    pit: buildPit(readSnapshot(row.ticker), pitGaps),  // §7-PIT-Freeze (A9-Join)
+    pit: buildPit(readSnapshot(row.ticker), pitGaps, row.ticker),  // §7-PIT-Freeze (A9-Join)
   }));
   // audit/fix: survival.json ist eine FLACHE Liste (nie gescort, keine Tracks) — als
   // Single-Track 'flat' einfrieren statt still leere profitable/unprofitable zu schreiben.

@@ -133,10 +133,14 @@ check('(a2) E1 Option B: buildPit trägt priceSales/priceSalesAsOf additiv, evSa
   // audit/fix (Hard-Review R4-SCR-02): marketCap ist seitdem additiv NACH priceSalesAsOf angehängt
   // (screener-formel-ledger.md §4a Size-Regressor) -- priceSales/priceSalesAsOf ruecken um 1 nach vorn,
   // bleiben aber selbst weiterhin ein zusammenhaengendes additives Paar, evSales unveraendert an Index 1.
+  // 6.2-E2: earningsDate/earningsDateAsOf haengen seitdem additiv NACH marketCap — alles davor
+  // ruecht wieder um 2 nach vorn, bleibt aber in derselben Reihenfolge.
   const keys = Object.keys(abc.pit);
-  assert.strictEqual(keys[keys.length - 3], 'priceSales', 'priceSales angehängt');
-  assert.strictEqual(keys[keys.length - 2], 'priceSalesAsOf', 'priceSalesAsOf danach');
-  assert.strictEqual(keys[keys.length - 1], 'marketCap', 'marketCap zuletzt (R4-SCR-02)');
+  assert.strictEqual(keys[keys.length - 5], 'priceSales', 'priceSales angehängt');
+  assert.strictEqual(keys[keys.length - 4], 'priceSalesAsOf', 'priceSalesAsOf danach');
+  assert.strictEqual(keys[keys.length - 3], 'marketCap', 'marketCap danach (R4-SCR-02)');
+  assert.strictEqual(keys[keys.length - 2], 'earningsDate', 'earningsDate danach (6.2-E2)');
+  assert.strictEqual(keys[keys.length - 1], 'earningsDateAsOf', 'earningsDateAsOf zuletzt (6.2-E2)');
   assert.strictEqual(keys.indexOf('evSales'), 1, 'evSales behält seine Position (byte-additiv)');
 
   // Fehlendes priceSales → beide Felder null (kein Crash, LOSS-/GM0-robust):
@@ -170,6 +174,43 @@ check('(a2b) R4-SCR-02: buildPit trägt marketCap additiv (Size-Regressor), fehl
   const nomc = readVintage(base, '2026-07-14', 'semiconductors').cohort.profitable[0];
   assert.strictEqual(nomc.pit.marketCap, null, 'kein snap.marketCap → null');
 });
+// ── (a2c) 6.2-E2: buildPit friert das Report-Datum PIT ein ─────────────────────
+// Der Einhaengepunkt von E2, gebaut wie E1s Option B: earnings-calendar.json ist eine LEBENDE
+// Datei und kennt nur den heutigen Stand. Wer sie erst beim Auswerten eines alten Vintages
+// liest, datiert einen Report mit Wissen von spaeter. Darum wandert das Datum beim Schreiben
+// des Vintages ins pit — rein additiv, ohne neuen Abruf.
+check('(a2c) 6.2-E2: buildPit trägt earningsDate/earningsDateAsOf additiv, fehlend → null + pitGaps', () => {
+  const base = mkBase();
+  writeJson(path.join(base, 'earnings-calendar.json'), { ABC: { date: '2026-07-05', pulledAt: '2026-07-12' } });
+  writeJson(path.join(base, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
+  writeJson(path.join(base, 'snapshots', 'NOCAL.json'), snapFull('NOCAL', { withEnds: true }));
+  writeJson(path.join(base, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base, 'semiconductors', [row('ABC', 90), row('NOCAL', 80)]);
+  W.run({ baseDir: base, date: '2026-07-13' });
+  const v = readVintage(base, '2026-07-13', 'semiconductors');
+  const abc = v.cohort.profitable.find((r) => r.ticker === 'ABC');
+  const nocal = v.cohort.profitable.find((r) => r.ticker === 'NOCAL');
+
+  assert.strictEqual(abc.pit.earningsDate, '2026-07-05', 'Report-Datum aus dem Kalender eingefroren');
+  assert.strictEqual(abc.pit.earningsDateAsOf, '2026-07-12', 'asOf = wann WIR es gezogen haben (pulledAt)');
+  // Ohne Kalendereintrag: null statt geraten, und die Luecke steht sichtbar im Vintage.
+  assert.strictEqual(nocal.pit.earningsDate, null, 'kein Eintrag → null, nichts geraten');
+  assert.strictEqual(nocal.pit.earningsDateAsOf, null, 'kein asOf → null');
+  assert.ok(v.pitGaps.includes('earningsDate-missing'), 'pitGaps notiert das fehlende Report-Datum');
+  // Bestandsfeld unberührt:
+  assert.strictEqual(abc.pit.evSales, 8.2, 'evSales unverändert');
+
+  // Kein Kalender im Repo → kein Absturz, nur Lücken (der Tageslauf darf daran nicht sterben).
+  const base2 = mkBase();
+  writeJson(path.join(base2, 'snapshots', 'ABC.json'), snapFull('ABC', { withEnds: true }));
+  writeJson(path.join(base2, 'outputs', 'calibration.json'), { schema: 'calibration/v4', generated_at: 'x' });
+  writeBoard(base2, 'semiconductors', [row('ABC', 90)]);
+  W.run({ baseDir: base2, date: '2026-07-13' });
+  const v2 = readVintage(base2, '2026-07-13', 'semiconductors');
+  assert.strictEqual(v2.cohort.profitable[0].pit.earningsDate, null, 'ohne Kalenderdatei → null, kein Wurf');
+  assert.ok(v2.pitGaps.includes('earningsDate-missing'), 'und die Lücke ist vermerkt');
+});
+
 // ── (a3) bh-null-ends (T2): leere/all-null Perioden-Enden gelten als ABSENT ──
 // Vorher: ts.revenueQEnds/grossProfitQEnds wurde nur gegen != null geprüft. Ein
 // FTS-Cache-Treffer vor A10 liefert [] (leer) oder [null,null,null] (Serie ohne
