@@ -6,15 +6,52 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const REPO = path.resolve(__dirname, '..');
-const FREEZE_DIR = path.join(REPO, 'protocol', 'gqs-00', '1.0.0');
-const FORMULA_COMMIT = '4cae8dcdbe445abf9bc03dadc3f852e6b0fd864b';
-const SCORING_TREE = '2728be605cc614cec2863c937c423afd8a249efe';
-const BOARD_COMMIT = '734025a1915d4bda5947a75ab71d9ba4bd9f8ded';
-const DATA_COMMIT = 'b26e1c0b4a0f5fc00f04a7b5229941186d3fad38';
-const WORKFLOW_RUN = 31147698301;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DER EINZIGE VERSIONSGEBUNDENE BLOCK. Beim Uebergang auf die naechste Version wird
+// AUSSCHLIESSLICH hier geaendert — und zwar JEDER Wert. Wer einen stehen laesst,
+// versiegelt die neue Version mit der Provenienz der alten: stille Datenkorruption
+// im Siegel selbst, also genau der Fehler, gegen den dieses Werkzeug existiert.
+// Es gibt nie zwei gleichzeitig lebende Versionen (nach dem Uebergang kann --verify
+// gegen die Vorgaengerversion prinzipiell nicht mehr gruen sein), deshalb wird hier
+// UMGESTELLT statt kopiert oder parametrisiert. Die Historie lebt in git und im
+// eingefrorenen Verzeichnis der Vorgaengerversion.
+//
+// Aktueller Stand: GQS-00@1.1.0 (Einmalertrag-Lampe folgenreich, F-16-Einzelfreigabe
+// Karl 16.08.2026; Uebergangsprotokoll protocol/gqs-00/1.1.0/transition.json).
+// ═══════════════════════════════════════════════════════════════════════════════
 const MODULE_ID = 'GQS-00';
-const SEMVER = '1.0.0';
+const SEMVER = '1.1.0';
 const CANONICAL_ID = MODULE_ID + '@' + SEMVER;
+const FREEZE_DIR = path.join(REPO, 'protocol', 'gqs-00', SEMVER);
+
+// Der belegende Produktionslauf: erster GRUENER PLANMAESSIGER daily-pull mit dem neuen
+// Code (19.08.2026, event=schedule, conclusion=success). Der geplante Lauf vom 18.08.
+// (Lauf 32094300602) ist ROT gelaufen, und der gruene 18.08.-Lauf war ein manueller
+// workflow_dispatch — deshalb ist erst der 19.08. der Lauf, der die Praeregistrierungs-
+// Bedingung "erster gruener Automatik-Lauf mit neuem Code" erfuellt.
+const WORKFLOW_RUN = 32211143015;
+const FORMULA_COMMIT = '9e2d183178a93d010e977e6c8e4b7aea42c0fef2'; // headSha des Laufs
+const SCORING_TREE = 'c20d5ddade35d9f2204f1bcefe18bda24512ebae';   // git-Tree src/scoring dort
+const DATA_COMMIT = '1f67c81b226a3fae0eced422b5379889a70dc33c';    // yahoo-pull desselben Laufs
+const BOARD_COMMIT = 'd24a5a53303d26231d9f362dde92fa0dd54c27e1';   // Commit des Board-Vintage
+const BOARD_VINTAGE = '2026-08-19';                                // board-history/<vintage>/
+const CALIBRATION_FILE = path.join(REPO, 'board-history', BOARD_VINTAGE, 'calibration.json');
+const FREEZE_DATE = '2026-08-19';
+const ACTIVATION_DATE = '2026-08-19';
+const COMPARISON_DATE = '2026-08-19';
+const SEALED_AT = '2026-08-19T08:31:56+02:00';
+
+// Am GELADENEN Artefakt gemessen (scripts/gqs00-equivalence.js), nie aus der
+// Vorgaengerversion uebernommen: Zip-Bytes des snapshots-Artefakts von WORKFLOW_RUN
+// (deckungsgleich mit dem von der Actions-API gemeldeten Digest), Bytes von
+// snapshots/_manifest.json, Zahl der Snapshot-Dateien ohne Manifest, und die Zahl
+// der vom Scoring-Lader tatsaechlich geladenen Zeilen.
+const SNAPSHOT_ARTIFACT_DIGEST_SHA256 = 'c0324753dee9b238d9c727f33c4c0a26675c1a06f5948003aad89c61377ab5bb';
+const SNAPSHOT_MANIFEST_SHA256 = '401743e7469ac955354f51f1087dd1ceabb857eee986cc257f8f296d8df67820';
+const SNAPSHOT_FILES = 14815;
+const LOADED_UNIVERSE = 14801;
+// ═══════════════════════════ Ende versionsgebundener Block ═══════════════════════
 
 const formulas = require(path.join(REPO, 'src', 'scoring', 'formulas'));
 const axesFns = require(path.join(REPO, 'src', 'scoring', 'axes.js'));
@@ -161,15 +198,31 @@ function sourceHashes(file) {
   return [lf, crlf].map((bytes) => crypto.createHash('sha256').update(Buffer.from(bytes)).digest('hex'));
 }
 
-// Die genehmigten Zweit-Hashes des offenen 1.1.0-Uebergangs. Fehlt das Verzeichnis oder ist
-// es unlesbar, gibt es KEINE Lockerung — dann gilt allein das 1.0.0-Siegel. Ein kaputtes
-// transition.json faellt laut auf (JSON.parse wirft), statt still das Fenster zu schliessen
-// oder zu oeffnen.
-const TRANSITION_FILE = path.join(REPO, 'protocol', 'gqs-00', '1.1.0-pending', 'transition.json');
+// Die genehmigten Zweit-Hashes eines OFFENEN Uebergangs aus der gerade versiegelten
+// Version heraus. Er liegt in protocol/gqs-00/<zielversion>-pending/transition.json.
+// Welche Zielversion das ist, steht BEWUSST nicht hier: das waere der naechste
+// versteckte versionsgebundene Wert (nach dem Siegel 1.1.0 zeigte ein hartkodiertes
+// '1.1.0-pending' auf eine Vergangenheit und der naechste Uebergang liefe ins Leere).
+// Massgeblich ist stattdessen der Inhalt: noch "pending", und "from" ist die hier
+// versiegelte Version. Fehlt ein solches Verzeichnis, gibt es KEINE Lockerung — dann
+// gilt allein das Siegel. Ein kaputtes transition.json faellt laut auf (JSON.parse
+// wirft), statt still das Fenster zu schliessen oder zu oeffnen. Zwei offene
+// Uebergaenge sind ein Befund, kein Zustand.
+const PROTOCOL_DIR = path.join(REPO, 'protocol', 'gqs-00');
 function pendingTransitionHashes() {
-  if (!fs.existsSync(TRANSITION_FILE)) return {};
-  const doc = JSON.parse(fs.readFileSync(TRANSITION_FILE, 'utf8'));
-  return (doc && doc.status === 'pending' && doc.sourceFiles) ? doc.sourceFiles : {};
+  const dirs = (fs.existsSync(PROTOCOL_DIR) ? fs.readdirSync(PROTOCOL_DIR, { withFileTypes: true }) : [])
+    .filter((e) => e.isDirectory() && e.name.endsWith('-pending')).map((e) => e.name)
+    // Ein Verzeichnis OHNE transition.json ist keine Genehmigung, sondern ein leerer Rest
+    // (git fuehrt keine Verzeichnisse — nach dem Abschluss-Move bleibt der Ordner lokal
+    // liegen). Ohne Dokument gibt es keinen zweiten erlaubten Hash: strengster Fall.
+    .filter((name) => fs.existsSync(path.join(PROTOCOL_DIR, name, 'transition.json'))).sort();
+  assert(dirs.length <= 1, 'mehr als ein offener Uebergang unter protocol/gqs-00: ' + dirs.join(', '));
+  if (dirs.length === 0) return {};
+  const doc = JSON.parse(fs.readFileSync(path.join(PROTOCOL_DIR, dirs[0], 'transition.json'), 'utf8'));
+  if (!doc || doc.status !== 'pending' || !doc.sourceFiles) return {};
+  assert(doc.from === CANONICAL_ID, 'offener Uebergang ' + dirs[0] + ' fuehrt aus ' + doc.from
+    + ' heraus, versiegelt ist aber ' + CANONICAL_ID);
+  return doc.sourceFiles;
 }
 
 function walkFiles(dir) {
@@ -211,9 +264,9 @@ function buildRegistry() {
       formulaId: MODULE_ID,
       formulaSemver: SEMVER,
       canonicalId: CANONICAL_ID,
-      freezeDate: '2026-08-08',
-      activationDate: '2026-08-08',
-      firstVerifiedProductionVintage: '2026-08-07',
+      freezeDate: FREEZE_DATE,
+      activationDate: ACTIVATION_DATE,
+      firstVerifiedProductionVintage: BOARD_VINTAGE,
       status: 'frozen_baseline',
     },
     provenance: {
@@ -415,15 +468,15 @@ function compactEquivalence(evidence) {
   return {
     schema: 'gqs-production-equivalence/v1',
     canonicalId: CANONICAL_ID,
-    comparisonDate: '2026-08-08',
+    comparisonDate: COMPARISON_DATE,
     input: {
       workflowRun: WORKFLOW_RUN,
       formulaCommit: FORMULA_COMMIT,
-      snapshotArtifactDigestSha256: '7134ad55484e1d607868cf0f04570b5b210a2d8d3ccdd7dee0c45acecfc9c664',
-      snapshotManifestSha256: 'c514b6678eb9b9ecc7c551496812f2ff83adf62f7c793033515d37ac18dc8d90',
-      snapshotFiles: 14695,
-      loadedUniverse: 14654,
-      boardVintage: '2026-08-07',
+      snapshotArtifactDigestSha256: SNAPSHOT_ARTIFACT_DIGEST_SHA256,
+      snapshotManifestSha256: SNAPSHOT_MANIFEST_SHA256,
+      snapshotFiles: SNAPSHOT_FILES,
+      loadedUniverse: LOADED_UNIVERSE,
+      boardVintage: BOARD_VINTAGE,
       productionBoardCommit: BOARD_COMMIT,
     },
     unroundedOldVsFrozen: evidence.frozenCodeComparison,
@@ -439,7 +492,7 @@ function initialize(snapshotDir, evidenceFile) {
   fs.mkdirSync(FREEZE_DIR, { recursive: true });
   const registry = buildRegistry();
   const registryHash = sha256Canonical(registry);
-  const calibration = JSON.parse(fs.readFileSync(path.join(REPO, 'board-history', '2026-08-07', 'calibration.json'), 'utf8'));
+  const calibration = JSON.parse(fs.readFileSync(CALIBRATION_FILE, 'utf8'));
   writeJson(path.join(FREEZE_DIR, 'formula-registry.json'), registry);
   writeJson(path.join(FREEZE_DIR, 'frozen-calibration.json'), calibration);
 
@@ -458,7 +511,7 @@ function initialize(snapshotDir, evidenceFile) {
   const fixtureShell = {
     schema: 'gqs-golden-fixtures/v1',
     provenance: baseProvenance(registry, registryHash),
-    sourcePolicy: 'Real snapshots from the verified 2026-08-07 workflow artifact; no outcomes are present.',
+    sourcePolicy: 'Real snapshots from the verified ' + BOARD_VINTAGE + ' workflow artifact; no outcomes are present.',
     syntheticCases: [{
       caseId: 'GQS00-SYN-001', kind: 'percentile_midrank_tie',
       rawInput: 1, comparisonDistribution: [0, 1, 1, 2], expectedPercentile: 50,
@@ -509,7 +562,7 @@ function seal() {
   const manifest = {
     schema: 'gqs-hash-manifest/v1',
     canonicalId: CANONICAL_ID,
-    sealedAt: '2026-08-08T00:00:00+02:00',
+    sealedAt: SEALED_AT,
     canonicalization: 'Recursively sort object keys; preserve array order; JSON.stringify without whitespace; UTF-8; SHA-256 lowercase hex.',
     formulaRegistrySha256: artifacts['formula-registry.json'].canonicalJsonSha256,
     artifacts,
@@ -535,11 +588,12 @@ function verify() {
   const sealedKeys = Object.keys(sealedSourceFiles).sort();
   const rebuiltKeys = Object.keys(rebuiltSourceFiles).sort();
   assert.deepEqual(sealedKeys, rebuiltKeys, 'sealed scoring source file set changed');
-  // Uebergangs-Fenster GQS-00@1.0.0 -> 1.1.0 (Gerichtsurteil 16.08.2026, Karl-freigegeben).
-  // Fuer die dort NAMENTLICH gelisteten Dateien ist der pending-Hash eine ZWEITE erlaubte
-  // Variante — nicht mehr. Jeder dritte Stand bleibt rot, jede nicht gelistete Datei bleibt
-  // auf 1.0.0 festgenagelt, und protocol/gqs-00/1.0.0/ wird nicht angefasst (der Nachweis
-  // des 07.08.-Laufs bleibt byte-identisch). Fehlt die Datei, gilt ausschliesslich 1.0.0.
+  // Uebergangs-Fenster aus der versiegelten Version heraus (nur mit Gerichtsurteil und
+  // Karl-Freigabe zu oeffnen, s. pendingTransitionHashes oben). Fuer die dort NAMENTLICH
+  // gelisteten Dateien ist der pending-Hash eine ZWEITE erlaubte Variante — nicht mehr.
+  // Jeder dritte Stand bleibt rot, jede nicht gelistete Datei bleibt auf dem Siegel
+  // festgenagelt, und das Verzeichnis der versiegelten Version wird nicht angefasst.
+  // Fehlt ein offener Uebergang, gilt ausschliesslich das Siegel.
   // Alle uebrigen Schaerfen dieses Pruefers (Registry-Semantik, Trace-Rebuild, Manifest-
   // Byte-Hashes, Negativ-Mutations-Probe) laufen unveraendert weiter.
   const pendingSource = pendingTransitionHashes();
@@ -551,7 +605,7 @@ function verify() {
     if (pendingSource[rel]) erlaubt.push(pendingSource[rel]);
     assert(sourceHashes(path.join(REPO, rel)).some((h) => erlaubt.includes(h)),
       rel + ' differs from its sealed source hash'
-      + (pendingSource[rel] ? ' AND from its approved 1.1.0-pending hash' : ''));
+      + (pendingSource[rel] ? ' AND from its approved pending-transition hash' : ''));
   }
   const registryWithoutSourceHashes = structuredClone(registry);
   const rebuiltWithoutSourceHashes = structuredClone(rebuiltRegistry);
