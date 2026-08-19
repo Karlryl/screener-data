@@ -137,12 +137,21 @@ def finde_sichtkasten(wurzel):
 
 def panel_verzeichnis(wurzel, vorgabe=None):
     pfad = vorgabe or os.path.join(wurzel, "panel")
-    # Der versiegelte Sichtkasten wird NUR gelesen. Ein Panel-Verzeichnis darin waere
-    # eine Veraenderung am Siegel — das ist ein Abbruch, keine Warnung.
-    if os.path.exists(os.path.join(os.path.dirname(os.path.abspath(pfad)), "VIEW.json")):
-        raise BauFehler(
-            "Panel-Ziel liegt im versiegelten Sichtkasten (" + pfad + ") — der wird nur "
-            "gelesen. Datenwurzel eine Ebene hoeher setzen oder --panel angeben.")
+    # Der versiegelte Sichtkasten wird NUR gelesen. Ein Panel-Verzeichnis IRGENDWO
+    # darunter waere eine Veraenderung am Siegel — das ist ein Abbruch, keine Warnung.
+    # Geprueft wird die ganze Ahnenkette, nicht nur das Elternverzeichnis: ein
+    # --panel <sichtkasten>/unterordner/panel waere sonst durchgerutscht.
+    ahne = os.path.abspath(pfad)
+    while True:
+        eltern = os.path.dirname(ahne)
+        if eltern == ahne:
+            break
+        ahne = eltern
+        if os.path.exists(os.path.join(ahne, "VIEW.json")):
+            raise BauFehler(
+                "Panel-Ziel liegt im versiegelten Sichtkasten (" + pfad + ", Siegel in "
+                + ahne + ") — der wird nur gelesen. Datenwurzel eine Ebene hoeher setzen "
+                "oder --panel woanders hin zeigen lassen.")
     return pfad
 
 
@@ -189,6 +198,7 @@ BAU_STAND_SPALTEN = [
     "payload_sha256", "quartal", "zeilen_gelesen", "zeilen_geschrieben", "dubletten",
     "waisen", "berichte_gelesen", "berichte_geschrieben", "berichte_dubletten",
     "zeilen_defekt", "wert_leer", "wert_unparsebar", "ohne_accepted", "accepted_ausserhalb",
+    "zeilen_ersatzzeichen", "schluessel_ersatzzeichen",
 ]
 # Payload-Eigenschaften (in allen drei Dateien identisch) gegenueber datei-lokalen
 # Zahlen. Der Report braucht die Unterscheidung, sonst summiert er dreifach.
@@ -238,6 +248,28 @@ def _kopf(fh, erwartet, name):
     return kopf
 
 
+ERSATZ = "�"   # das Zeichen, das eine misslungene Dekodierung hinterlaesst
+
+
+def _zeile(roh, zaehler):
+    """Strikt dekodieren; ungueltige Bytes werden ersetzt UND gezaehlt, nie still.
+
+    Gemessen am echten Bestand: 1206 von 148,6 Mio Zeilen tragen Bytes, die kein
+    gueltiges UTF-8 sind (864 im Freitext `footnote`, 1 in `coreg`, keine einzige in
+    sub.txt). Die Zeile wegzuwerfen hiesse, eine gueltige Kennzahl wegen eines
+    Waehrungszeichens in einer Fussnote zu verlieren; das Byte zu raten (latin-1?
+    cp1252? mac-roman?) waere die von R5 verbotene Schaetzung. Also: Ersatzzeichen
+    setzen, Zeile behalten, und BEIDES zaehlen — jede betroffene Zeile und getrennt
+    davon die Faelle, in denen das Ersatzzeichen ein Schluessel- oder Wertfeld trifft.
+    Nur letztere koennen Verknuepfung oder Dedupe verfaelschen.
+    """
+    try:
+        return roh.decode("utf-8"), False
+    except UnicodeDecodeError:
+        zaehler["zeilen_ersatzzeichen"] += 1
+        return roh.decode("utf-8", "replace"), True
+
+
 def _spuele(conn, stapel, fenster_zaehler, zaehler):
     if not stapel:
         return
@@ -255,9 +287,11 @@ def baue_payload(zip_pfad, meta, conns, offen):
     je_fenster = dict((name, {"berichte": 0, "berichte_dubletten": 0, "fakten": 0})
                       for name, _, _ in FENSTER)
 
-    for name in offen:
-        conns[name].execute("BEGIN")
     try:
+        # BEGIN gehoert INS try: scheitert die zweite oder dritte Verbindung, muss
+        # dieselbe ROLLBACK-Schleife greifen wie bei jedem anderen Fehler.
+        for name in offen:
+            conns[name].execute("BEGIN")
         with zipfile.ZipFile(zip_pfad) as archiv:
             vorhanden = set(i.filename for i in archiv.infolist())
             for pflicht in ("sub.txt", "num.txt"):
@@ -271,11 +305,14 @@ def baue_payload(zip_pfad, meta, conns, offen):
             with archiv.open("sub.txt") as fh:
                 _kopf(fh, SUB_SPALTEN, "sub.txt")
                 for roh in fh:
-                    f = roh.decode("utf-8", "replace").rstrip("\r\n").split("\t")
+                    text, ersetzt = _zeile(roh, zaehler)
+                    f = text.rstrip("\r\n").split("\t")
                     zaehler["berichte_gelesen"] += 1
                     if len(f) != len(SUB_SPALTEN):
                         zaehler["zeilen_defekt"] += 1
                         continue
+                    if ersetzt and (ERSATZ in f[0] or ERSATZ in f[i_acc]):
+                        zaehler["schluessel_ersatzzeichen"] += 1
                     datum = lies_accepted(f[i_acc])
                     fenster = fenster_fuer_datum(datum) if datum else None
                     if fenster is None:
@@ -320,11 +357,14 @@ def baue_payload(zip_pfad, meta, conns, offen):
             with archiv.open("num.txt") as fh:
                 _kopf(fh, NUM_SPALTEN, "num.txt")
                 for roh in fh:
-                    f = roh.decode("utf-8", "replace").rstrip("\r\n").split("\t")
+                    text, ersetzt = _zeile(roh, zaehler)
+                    f = text.rstrip("\r\n").split("\t")
                     zaehler["zeilen_gelesen"] += 1
                     if len(f) != len(NUM_SPALTEN):
                         zaehler["zeilen_defekt"] += 1
                         continue
+                    if ersetzt and any(ERSATZ in f[i] for i in schluessel_idx + [i_wert]):
+                        zaehler["schluessel_ersatzzeichen"] += 1
                     fenster = adsh_fenster.get(f[0])
                     if fenster is None:
                         # Waise: Fakt ohne Bericht. Ohne accepted-Zeitstempel ist jedes
@@ -540,15 +580,23 @@ def selftest():
         f = [""] * len(SUB_SPALTEN)
         f[0], f[1] = adsh, "42"
         f[SUB_SPALTEN.index("accepted")] = accepted
-        return "\t".join(f) + "\n"
+        return ("\t".join(f) + "\n").encode("utf-8")
 
-    def num(adsh, tag, wert, ddate="20130331", coreg=""):
-        return "\t".join([adsh, tag, "us-gaap/2013", coreg, ddate, "1", "USD", wert, ""]) + "\n"
+    def num(adsh, tag, wert, ddate="20130331", coreg="", footnote=""):
+        return ("\t".join([adsh, tag, "us-gaap/2013", coreg, ddate, "1", "USD", wert,
+                           footnote]) + "\n").encode("utf-8")
+
+    def num_roh(adsh, tag, wert, coreg=b"", footnote=b""):
+        """Wie num(), aber mit rohen Bytes in coreg/footnote — fuer die Kodierungsprobe."""
+        return (b"\t".join([adsh.encode(), tag.encode(), b"us-gaap/2013", coreg,
+                            b"20130331", b"1", b"USD", wert.encode(), footnote]) + b"\n")
 
     def kunst_payload(pfad, sub_zeilen, num_zeilen):
         with zipfile.ZipFile(pfad, "w") as z:
-            z.writestr("sub.txt", "\t".join(SUB_SPALTEN) + "\n" + "".join(sub_zeilen))
-            z.writestr("num.txt", "\t".join(NUM_SPALTEN) + "\n" + "".join(num_zeilen))
+            z.writestr("sub.txt", ("\t".join(SUB_SPALTEN) + "\n").encode("utf-8")
+                       + b"".join(sub_zeilen))
+            z.writestr("num.txt", ("\t".join(NUM_SPALTEN) + "\n").encode("utf-8")
+                       + b"".join(num_zeilen))
             z.writestr("pre.txt", "adsh\n")
             z.writestr("tag.txt", "tag\n")
 
@@ -566,6 +614,10 @@ def selftest():
                 num("A1", "Leer", ""),                     # leer -> NULL
                 num("A2", "Rev", "7"),
                 num("GEIST", "Rev", "9"),                  # Waise
+                # Kodierung: ungueltiges Byte im Freitext (harmlos) und eines im
+                # Schluesselfeld coreg (gefaehrlich) — beide muessen getrennt zaehlen.
+                num_roh("A1", "Fussnote", "11", footnote=b"rund \xac10.000"),
+                num_roh("A1", "Mitreg", "12", coreg=b"Tochter\xac"),
             ]),
             ("2016q4", "bb" + "0" * 62, [
                 sub("B1", "2016-12-31 23:59:00.0"),        # exakt auf der Fenstergrenze
@@ -689,8 +741,19 @@ def selftest():
             pruefe("jeder Payload steht in allen drei Dateien im bau_stand",
                    all(eins(n, "SELECT COUNT(*) FROM bau_stand") == 3 for n, _, _ in FENSTER))
             pruefe("gelesene Zeilen stimmen mit dem Kunst-Bestand ueberein",
-                   erg["summe"]["zeilen_gelesen"] == 10
+                   erg["summe"]["zeilen_gelesen"] == 12
                    and erg["summe"]["berichte_gelesen"] == 6)
+
+            # Kodierung: ungueltige Bytes werden ersetzt, aber NIE still.
+            pruefe("Zeilen mit ungueltigen Bytes werden gezaehlt",
+                   erg["summe"]["zeilen_ersatzzeichen"] == 2)
+            pruefe("nur der Treffer im SCHLUESSELFELD zaehlt zusaetzlich",
+                   erg["summe"]["schluessel_ersatzzeichen"] == 1)
+            pruefe("die Zeile ueberlebt und traegt das Ersatzzeichen sichtbar",
+                   ERSATZ in feld("entdeckung",
+                                  "SELECT footnote FROM fakt WHERE tag='Fussnote'")
+                   and feld("entdeckung",
+                            "SELECT value FROM fakt WHERE tag='Fussnote'") == 11.0)
         finally:
             for c in conns.values():
                 c.close()
@@ -711,6 +774,29 @@ def selftest():
                 a.close()
                 b.close()
         pruefe("Wiederaufnahme liefert dieselbe Ergebnis-Pruefsumme (R15)", gleich)
+
+        # Der eigentliche Ernstfall der Drei-Dateien-Bauweise: ein Abbruch MITTEN in
+        # einem Payload, nachdem Datei A committed hat und bevor Datei B es tut. Der
+        # Payload 2016q4 schreibt in zwei Dateien (B1 in die Entdeckung, B2 in die
+        # Validierung) — genau dort ist das Fenster. Nachgestellt wird der Zustand,
+        # den ein Absturz hinterlaesst: Datei B hat von diesem Lauf gar nichts, Datei A
+        # alles. Die Wiederaufnahme muss B allein nachziehen und dieselbe Pruefsumme
+        # liefern wie der ungestoerte Lauf.
+        panel_c = os.path.join(tmp, "kill_mitten")
+        bau(kasten, panel_c, schema)
+        os.remove(os.path.join(panel_c, DATEINAME["validierung"]))
+        bau(kasten, panel_c, schema)
+        mitten = True
+        for name, _, _ in FENSTER:
+            a = sqlite3.connect(os.path.join(panel_c, DATEINAME[name]))
+            b = sqlite3.connect(os.path.join(panel_b, DATEINAME[name]))
+            try:
+                mitten = mitten and pruefsumme(a) == pruefsumme(b)
+            finally:
+                a.close()
+                b.close()
+        pruefe("Abbruch zwischen zwei Datei-Transaktionen desselben Payloads heilt "
+               "vollstaendig (R15)", mitten)
 
         # Gegenprobe an der Pruefsumme selbst: sie MUSS unterscheiden koennen.
         c = sqlite3.connect(os.path.join(panel_b, DATEINAME["entdeckung"]))
@@ -764,6 +850,13 @@ def selftest():
             pruefe("Panel im versiegelten Sichtkasten wird verweigert", False)
         except BauFehler as e:
             pruefe("Panel im versiegelten Sichtkasten wird verweigert",
+                   "versiegelten Sichtkasten" in str(e))
+        try:
+            # Nicht nur eine Ebene tief: der Waechter muss die ganze Ahnenkette sehen.
+            panel_verzeichnis(wurzel, os.path.join(kasten, "tief", "tiefer", "panel"))
+            pruefe("auch drei Ebenen tief im Siegel wird verweigert", False)
+        except BauFehler as e:
+            pruefe("auch drei Ebenen tief im Siegel wird verweigert",
                    "versiegelten Sichtkasten" in str(e))
         pruefe("ausserhalb des Sichtkastens ist das Panel erlaubt",
                panel_verzeichnis(wurzel).endswith("panel"))
@@ -831,6 +924,8 @@ def main():
           % (s["waisen"], s["dubletten"], s["berichte_dubletten"], s["zeilen_defekt"]))
     print("  value leer %d - value unparsebar %d - ohne accepted %d - accepted ausserhalb %d"
           % (s["wert_leer"], s["wert_unparsebar"], s["ohne_accepted"], s["accepted_ausserhalb"]))
+    print("  Zeilen mit Ersatzzeichen %d, davon im Schluessel- oder Wertfeld %d"
+          % (s["zeilen_ersatzzeichen"], s["schluessel_ersatzzeichen"]))
     print("\n" + erg["waisenSatz"])
 
     if a.out:
