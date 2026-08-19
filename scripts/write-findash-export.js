@@ -358,12 +358,36 @@ function vergebeRaenge(rows, wo) {
 // survival runway-desc). currency/profitTier/ipoYear are RESERVED (1.2) — NOT
 // fabricated; consumers treat absent as "not available".
 
+// ---- Skalen-Deckel (19.08.2026) --------------------------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): drei Zeilen tragen einen
+// Score ueber 100 (278470.KS 101,0 · CUPID.NS 100,6 · ZEAL.CO 100,1). Der Score ist als
+// 0-100-Skala gemeint; der Wachstums-Bonus in src/scoring/score.js hebt strukturell bis
+// Faktor 1,05 (96,2 x 1,05 = 101,0). Karl liest '101' auf Platz 1 und 2 seines Boards.
+//
+// WARUM DER DECKEL HIER STEHT UND NICHT IN score.js — das ist die eigentliche Entscheidung:
+// Math.min(100, ...) VOR der Sortierung macht aus 101,0 und 100,6 zwei exakte Gleichstaende.
+// Dann entschiede der Ticker-Tie-Break ueber Platz 1 und 2 — der Deckel wuerde Raenge
+// verschieben. Hier ist der Rang bereits vergeben und POSITIONAL (rank: i + 1), also kann er
+// per Konstruktion keinen Rang aendern. Der versiegelte Ort waere auch der schlechtere.
+//
+// Deshalb ist das KEIN F-16-Fall: src/scoring/ bleibt unberuehrt, gedeckelt wird die AUSGABE.
+// Nach dem Fall der Formel-Sperre ausdruecklich NICHT nachziehen: kein zweiter Deckel in
+// score.js. Der Bonus ist gerichtlich bestaetigt, der Skalenbruch ist ein Ausgabe-Problem.
+//
+// SCHEITERNSKRITERIUM (vorab deklariert): liegen mehr als 10 Zeilen (0,1 %) eines Vintages
+// exakt auf 100,0, maskiert der Deckel echte Skaleninflation — dann geht der Fall mit Zahlen
+// in den Gauntlet. Stand 19.08.: 2 Zeilen = 0,02 %.
+const SCORE_MAX = 100;
+function gedeckelt(score) {
+  return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
+}
+
 function mapBoardRow(r, i) {
   const out = {
     rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
     rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
     ticker: r.ticker,
-    score: r.score,        // round1 display score (sort determinism was internal _raw)
+    score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
     track: r.track,        // 'profitable' | 'unprofitable'
     lamps: r.lamps || [],
     overview: r.overview == null ? null : {
@@ -384,7 +408,7 @@ function mapOverviewRow(r, i) {
     ticker: r.ticker,
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,
-    score: r.score,
+    score: gedeckelt(r.score),
     overviewKind: r.overviewKind,           // FLAT here, NOT nested (mirrors engine)
     overviewValue: r.overviewValue,         // number|null, CAN be negative
     overviewCompanion: r.overviewCompanion, // number|null
@@ -1448,6 +1472,9 @@ module.exports = {
   // Belegbarkeits-Gate (18.08.) als Seam: tests/scoring/belegbarkeits-gate.test.js FUEHRT die
   // Rangvergabe aus, statt den Quelltext nach Schreibmustern abzusuchen.
   vergebeRaenge, rangGrund, RANK_MIN_AXES,
+  // Skalen-Deckel (19.08.) als Seam: tests/scoring/score-deckel.test.js FUEHRT die
+  // Deckelung aus, statt den Quelltext nach Math.min abzusuchen.
+  gedeckelt, SCORE_MAX,
   // Chunk 4a (16.08.): der Waehrungs-Waechter als Seam — tests/waehrung-ausliefer-waechter.js
   // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
   beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,

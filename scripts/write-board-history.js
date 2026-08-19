@@ -477,6 +477,17 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
     ticker: row.ticker,
     track,
+    // KEIN Skalen-Deckel hier — und das ist die wichtigste Zeile dieser Datei (19.08.2026).
+    //
+    // Der erste Entwurf deckelte hier ebenfalls auf 100. Der Waechter (f3) in
+    // tests/board-history.test.js wurde daraufhin ROT und legte den Grund offen: er stellt
+    // einen echten Wertbruch nach (Score springt 92 -> 132) und erwartet, dass das Wert-Gate
+    // anschlaegt. Gedeckelt wurde aus dem Sprung von +40 ein Sprung von +8 — unter der
+    // Alarmschwelle. Der Deckel haette das Sicherheitsnetz stillgelegt.
+    //
+    // board-history ist die MESSREIHE, auf der das Wert-Gate rechnet: hier steht der echte
+    // Wert. Gedeckelt wird ausschliesslich die ANZEIGE (scripts/write-findash-export.js) —
+    // Karl sieht 100, gemessen wird 101. Wer das je zusammenlegt, blendet das Gate.
     score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
     runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
     scoreBase: row.scoreBase != null ? row.scoreBase : null,
