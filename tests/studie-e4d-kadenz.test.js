@@ -69,6 +69,9 @@ const PFLICHT_PRUEFUNGEN = [
   'ein Histogramm, das nicht auf Klasse (c) aufgeht, bricht ab',
   'ein Nenner, der nicht aufgeht, bricht ab',
   'mehr reif-und-zensiert als zensiert bricht ab',
+  'ein Zaehler ueber dem Nenner bricht auch in den Blockinvarianten ab',
+  'und zwar an dieser Stelle, nicht an einer frueheren',
+  'ein negativer Abstand zum Panelrand bricht ab, statt still im ersten Fach zu landen',
   'die Faecher beginnen bei 0 und sind 91 Tage breit',
   'die Faecher decken das ganze Band ab (1460 Tage)',
   'ein Abstand faellt in das Fach, das zu ihm gehoert',
@@ -183,6 +186,26 @@ test('Das Endtest-Fenster ist auf der Kommandozeile gar nicht erreichbar', () =>
   const lauf = kadenz(['--fenster', 'endtest']);
   assert.notEqual(lauf.status, 0, 'Der Endtest haette abgewiesen werden muessen');
   assert.match(`${lauf.stdout}${lauf.stderr}`, /invalid choice|ungueltige|SPERRZONE/i);
+});
+
+test('Die Siegelwache laesst sich nicht abschwaechen', () => {
+  // Der Schalter --ohne-siegel-hash der Zaehlprobe verkuerzt die Pruefung des
+  // Endtest-Siegels auf die Byte-Zahl. Da das Endtest-Fenster hier ohnehin
+  // unerreichbar ist, haette er nur eines koennen: die Wache in den ENTSCHEIDENDEN
+  // Laeufen schwaechen. Er ist deshalb nicht durchgereicht - und das wird geprueft,
+  // nicht behauptet. (Code-Review 19.08.)
+  const lauf = kadenz(['--fenster', 'pruefung', '--ohne-siegel-hash']);
+  assert.notEqual(lauf.status, 0);
+  assert.match(`${lauf.stdout}${lauf.stderr}`, /unrecognized arguments|unknown option/i);
+});
+
+test('Beide ausgelieferten Laeufe haben das Endtest-Siegel VOLL nachgerechnet', () => {
+  for (const p of [BERICHT_PRUEFUNG, BERICHT_ENTDECKUNG]) {
+    const w = JSON.parse(fs.readFileSync(p, 'utf8')).siegelWache;
+    assert.equal(w.sha256Geprueft, true, `${p}: Siegel nur nach Byte-Zahl geprueft`);
+    assert.equal(w.klartextKopie, false);
+    assert.equal(w.schluesselAngefasst, false);
+  }
 });
 
 test('E4d fasst weder Schluessel noch verschluesselte Datei an', () => {

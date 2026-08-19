@@ -378,9 +378,11 @@ def melde_kadenz(f, gewaehlt, e2):
         o = e2.ordinal(d)
         if o is None:
             raise KadenzFehler(
-                "R5-ABBRUCH: unlesbarer Bilanzstichtag " + repr(d) + " in der "
-                "gewaehlten Reihe. Die Kadenz ist damit NICHT BERECHENBAR und "
-                "wird nicht geraten.")
+                "R5-ABBRUCH: unlesbarer Bilanzstichtag in der gewaehlten Reihe "
+                "einer Erst-Ereignis-Firma. Die Kadenz ist damit NICHT "
+                "BERECHENBAR und wird nicht geraten. (Der Wert selbst steht "
+                "bewusst nicht in dieser Meldung - ein Tagesdatum einer "
+                "einzelnen Firma gehoert nicht in ein Protokoll.)")
         ordinale.append(o)
     if len(ordinale) < 2:
         raise KadenzFehler(
@@ -410,9 +412,9 @@ def kadenz_zensiert(f, gewaehlt, e2, rand_ordinal):
     o = e2.ordinal(tag)
     if o is None:
         raise KadenzFehler(
-            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Zeitstempel ("
-            + repr(f.get("accepted")) + ") - die Zensur ist damit NICHT "
-            "BERECHENBAR und wird nicht geraten.")
+            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Melde-Zeitstempel - die "
+            "Zensur ist damit NICHT BERECHENBAR und wird nicht geraten. (Der "
+            "Wert selbst steht bewusst nicht in dieser Meldung.)")
     kadenz, gegriffen = melde_kadenz(f, gewaehlt, e2)
     return (o + e2.REIFE_QUARTALE * kadenz > rand_ordinal), gegriffen
 
@@ -423,8 +425,7 @@ def abstand_zum_rand(f, e2, rand_ordinal):
     o = e2.ordinal(str(f["accepted"])[:10].replace("-", ""))
     if o is None:
         raise KadenzFehler(
-            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Zeitstempel ("
-            + repr(f.get("accepted")) + ").")
+            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Melde-Zeitstempel.")
     return rand_ordinal - o
 
 
@@ -442,7 +443,16 @@ def histogramm_bins(von_jahr, rand_ordinal):
 
 
 def bin_fuer(abstand):
-    i = max(0, int(abstand)) // HISTOGRAMM_BIN_TAGE
+    # Ein negativer Abstand hiesse: ein Bericht liegt HINTER dem Panelrand, den das
+    # Panel per Bauart gar nicht tragen kann. Die erste Fassung klemmte ihn still
+    # auf das Fach "0-90" - damit waere ein Datenintegritaets-Bruch als
+    # Kanten-Schatten getarnt in den Report gewandert. (Code-Review 19.08.)
+    if abstand < 0:
+        raise KadenzFehler(
+            "R5-ABBRUCH: negativer Abstand zum Panelrand. Ein Bericht hinter dem "
+            "Rand ist konstruktiv unmoeglich; kommt er vor, ist die Panel-Datei "
+            "kaputt und nicht das Histogramm zu eng.")
+    i = int(abstand) // HISTOGRAMM_BIN_TAGE
     return "%d-%d" % (i * HISTOGRAMM_BIN_TAGE, (i + 1) * HISTOGRAMM_BIN_TAGE - 1)
 
 
@@ -841,8 +851,7 @@ def pruefe_block(block, ort):
 # ── Lauf ─────────────────────────────────────────────────────────────────────
 
 def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
-         siegel_voll=True, panel_pfad=None, register_pfad=None,
-         freeze_pfad=FREEZE):
+         panel_pfad=None, register_pfad=None, freeze_pfad=FREEZE):
     fenster = zp.FENSTER.get(fenster_name)
     if fenster is None:
         raise KadenzFehler("Unbekanntes Fenster: " + str(fenster_name))
@@ -870,7 +879,13 @@ def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
 
     erster_zugriff = zp.zeitstempel()
     zp.pruefe_serverzeit(freigabe, erster_zugriff)
-    wache = zp.siegel_wache(wurzel, voll=siegel_voll)
+    # IMMER voll: Groesse UND SHA-256. Die Zaehlprobe kennt einen Schalter, der die
+    # Siegelpruefung auf die Byte-Zahl verkuerzt - der ist hier bewusst NICHT
+    # durchgereicht. Das Endtest-Fenster ist ueber die Kommandozeile ohnehin
+    # unerreichbar, also haette dieser Schalter nur eines koennen: die Siegelwache
+    # ausgerechnet in den ENTSCHEIDENDEN Laeufen schwaechen. Eine gleich lange,
+    # veraenderte Siegeldatei waere dann durchgegangen. (Code-Review 19.08.)
+    wache = zp.siegel_wache(wurzel, voll=True)
 
     if panel_pfad is None:
         panel_pfad = os.path.join(wurzel, "panel", fenster["datei"])
@@ -886,11 +901,27 @@ def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
 
     ampel_entscheidung = None
     if fenster_name == ENTSCHEIDUNGS_FENSTER:
-        for band in baender.values():
+        # AUSDRUECKLICH das Registry-Band, nicht "das letzte in der Schleife".
+        # Heute traegt das Prueffenster genau ein Band; kaeme je ein zweites dazu,
+        # entschiede sonst die Iterationsreihenfolge ueber das Urteil.
+        # (Code-Review 19.08.)
+        entscheidend = [b for b in baender.values() if b["rolle"] == "registry"]
+        if len(entscheidend) != 1:
+            raise KadenzFehler(
+                "ENTSCHEID-ABBRUCH: " + str(len(entscheidend)) + " Baender mit "
+                "der Rolle 'registry' im Entscheidungsfenster - genau eines ist "
+                "richtig. Welches Band das Urteil traegt, darf nicht von der "
+                "Reihenfolge abhaengen.")
+        for band in entscheidend:
             variante = band["varianten"][ENTSCHEIDUNGS_VARIANTE]
-            pruefe_fallzahl_deckt_regel(
-                variante["signal"], siegel,
-                ENTSCHEIDUNGS_FENSTER + "/" + ENTSCHEIDUNGS_VARIANTE)
+            # BEIDE Arme. Die Regel entscheidet an beiden Quoten, also muss die
+            # Mindestfallzahl auch an beiden haengen - sonst faellt ein Urteil auf
+            # einem unterbesetzten Kontrollpool, ohne dass es jemand merkt.
+            # (Code-Review 19.08.)
+            for arm in ARME:
+                pruefe_fallzahl_deckt_regel(
+                    variante[arm], siegel,
+                    ENTSCHEIDUNGS_FENSTER + "/" + ENTSCHEIDUNGS_VARIANTE + "/" + arm)
             ampel_entscheidung = variante["ampel"]
 
     ausgabe = {
@@ -1299,6 +1330,22 @@ def selbsttest():
                _bricht(pruefe_blockinvarianten,
                        dict(_fertig(10, 8, 0, 1, 1, klasse_c=1),
                             zensiert_kadenz_und_reif=2)))
+        # Diese Invariante war bisher unerreichbar: quote_konsistent bricht schon
+        # frueher ab. Ein ungeprueftes Netz reisst irgendwann unbemerkt.
+        # (Code-Review 19.08.)
+        # Von Hand gesetzt statt ueber _fertig: dort bricht schon quote_konsistent
+        # ab, und der Block entstuende gar nicht erst. Alle FRUEHEREN Invarianten
+        # gehen durch, nur die gemeinte bricht.
+        ueberhang = dict(_fertig(10, 8, 0, 2, 1, klasse_c=1), zensiert_kadenz=9,
+                         nenner_kadenz=1, zaehler_kadenz=8,
+                         zensiert_kadenz_und_reif=0)
+        pruefe("ein Zaehler ueber dem Nenner bricht auch in den Blockinvarianten ab",
+               _bricht(pruefe_blockinvarianten, ueberhang))
+        pruefe("und zwar an dieser Stelle, nicht an einer frueheren",
+               "Teilmenge" in _bruchgrund(ueberhang),
+               _bruchgrund(ueberhang)[:50], "... Teilmenge ...")
+        pruefe("ein negativer Abstand zum Panelrand bricht ab, statt still im "
+               "ersten Fach zu landen", _bricht(bin_fuer, -1))
 
         print("\n[5] Die Bin-Kanten des Histogramms")
         bins = histogramm_bins(2017, e2.ordinal("20201231"))
@@ -1538,8 +1585,6 @@ def haupt(argv=None):
     p.add_argument("--data-root")
     p.add_argument("--arbeit")
     p.add_argument("--ziel")
-    p.add_argument("--ohne-siegel-hash", action="store_true",
-                   help="Endtest-Siegel nur ueber die Byte-Zahl pruefen")
     p.add_argument("--allowlist-ausgeben", action="store_true",
                    help="die Ausgabe-Allowlist als JSON - Eingabe fuer die Anmeldung")
     p.add_argument("--siegeln", action="store_true",
@@ -1557,7 +1602,7 @@ def haupt(argv=None):
     if not a.fenster:
         p.error("--fenster wird gebraucht (oder --selbsttest)")
     ausgabe = lauf(a.fenster, a.freigabe, data_root=a.data_root, arbeit=a.arbeit,
-                   ziel=a.ziel, siegel_voll=not a.ohne_siegel_hash)
+                   ziel=a.ziel)
     print(json.dumps(ausgabe["baender"], ensure_ascii=False, indent=1,
                      sort_keys=True))
     return 0
