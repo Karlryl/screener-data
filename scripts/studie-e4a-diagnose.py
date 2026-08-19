@@ -257,7 +257,13 @@ def zerlege_arm(eintraege, gewaehlt, e2, rand_ordinal):
     je_accepted = defaultdict(leerer_block)
     je_ddate = defaultdict(leerer_block)
 
-    for e in alle_erste:
+    # Reif/unreif kommt aus der LISTENZUGEHOERIGKEIT, nicht aus einer zweiten
+    # Rechnung. Die erste Fassung fragte `e["folgequartale"] >= zp.REIFE_QUARTALE`
+    # nach — und mischte damit zwei unabhaengig gepflegte Konstanten aus zwei
+    # versiegelten Dateien (studie-basisraten.py entscheidet mit ihrer eigenen).
+    # Solange beide 4 sind, faellt das nicht auf; genau solche stillen Doppelungen
+    # laufen irgendwann auseinander. (Code-Review 19.08.)
+    for e, ist_reif in [(x, True) for x in reif] + [(x, False) for x in unreif]:
         jahr_a = e2.jahr_aus_accepted(e["accepted"])
         if jahr_a is None:
             raise DiagnoseFehler(
@@ -276,7 +282,7 @@ def zerlege_arm(eintraege, gewaehlt, e2, rand_ordinal):
                 b["zensierte_erst_ereignisse"] += 1
             else:
                 b["nenner_auffindbarkeit"] += 1
-        if e["folgequartale"] >= zp.REIFE_QUARTALE:
+        if ist_reif:
             for b in bloecke:
                 b["fallzahl"] += 1
                 b["hypothetische_fallzahl_anschlussfaehig"] += 1
@@ -315,6 +321,12 @@ def pruefe_blockinvarianten(b):
             "ZERLEGUNGS-ABBRUCH: die Klassen (a)+(b)+(c)+(d) summieren sich auf "
             + str(summe) + ", unreif sind " + str(b["unreif_gesamt"])
             + ". Eine Zerlegung, die nicht aufgeht, erklaert nichts.")
+    if b[KLASSE_D] > 0:
+        raise DiagnoseFehler(
+            "ZERLEGUNGS-ABBRUCH: " + str(b[KLASSE_D]) + " Erst-Ereignis-Firmen "
+            "ohne gewaehlte Reihe. Wer feuert, MUSS in der gewaehlten Reihe "
+            "stehen - diese Klasse ist konstruktiv unmoeglich. Kommt sie doch "
+            "vor, ist die Datenstrecke kaputt und nicht der Zaehler zu klein.")
     if b[KLASSE_B1] + b[KLASSE_B2] != b[KLASSE_B]:
         raise DiagnoseFehler(
             "ZERLEGUNGS-ABBRUCH: die Unterklassen b1+b2 ("
@@ -349,6 +361,15 @@ def diagnose_fenster(panel, arbeit_pfad, e2, fenster_name):
     gelesen, nicht geraten. Nur der letzte Schritt ist ein anderer: statt der
     Ampel-Zaehler entsteht die Klassen-Zerlegung."""
     fenster = zp.FENSTER[fenster_name]
+    # Zwei versiegelte Dateien fuehren dieselbe Reifeschwelle. Diese Diagnose
+    # verlaesst sich auf die Reifeentscheidung von studie-basisraten.py; laufen
+    # die beiden Werte je auseinander, ist die eingefrorene Frage in sich
+    # widerspruechlich und es wird nicht weitergerechnet.
+    if zp.REIFE_QUARTALE != e2.REIFE_QUARTALE:
+        raise DiagnoseFehler(
+            "REIFE-ABBRUCH: die Zaehlprobe verlangt " + str(zp.REIFE_QUARTALE)
+            + " Folgequartale, studie-basisraten.py " + str(e2.REIFE_QUARTALE)
+            + ". Zwei Schwellen fuer dieselbe Sache heisst: keine.")
     zaehler = defaultdict(int)
     berichte, _fj, _q, _fye = e2.lade_berichte(panel, zaehler)
     arbeit = e2.oeffne_zwischenstand(arbeit_pfad, True)
@@ -693,10 +714,6 @@ def baue_klassen_fixture(pfad, hintergrund=260):
         os.remove(pfad)
     os.makedirs(os.path.dirname(os.path.abspath(pfad)), exist_ok=True)
     conn = sqlite3.connect(pfad, isolation_level=None)
-    conn.execute("CREATE TABLE bericht (adsh TEXT PRIMARY KEY, cik TEXT, name TEXT,"
-                 " sic TEXT, fye TEXT, form TEXT, period TEXT, accepted TEXT)")
-    conn.execute("CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT, coreg TEXT,"
-                 " ddate TEXT, qtrs TEXT, uom TEXT, value REAL, footnote TEXT)")
     zaehlwerk = [0]
 
     def schreibe(cik, index, wert, tag, uom):
@@ -746,9 +763,19 @@ def baue_klassen_fixture(pfad, hintergrund=260):
             wert = MARKER_WERT if i == marker_bei else round(werte[i], 4)
             schreibe(cik, i, wert, tag, uom)
 
-    conn.execute("PRAGMA synchronous=OFF")
-    conn.execute("BEGIN")
+    # ALLES ab hier im geschuetzten Block: scheitert schon das CREATE TABLE,
+    # bliebe die Verbindung sonst offen und haelt die Datei unter Windows fest -
+    # der naechste Fixture-Aufbau scheitert dann mit einer PermissionError statt
+    # mit dem echten Fehler. (Code-Review 19.08.)
     try:
+        conn.execute("CREATE TABLE bericht (adsh TEXT PRIMARY KEY, cik TEXT,"
+                     " name TEXT, sic TEXT, fye TEXT, form TEXT, period TEXT,"
+                     " accepted TEXT)")
+        conn.execute("CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT,"
+                     " coreg TEXT, ddate TEXT, qtrs TEXT, uom TEXT, value REAL,"
+                     " footnote TEXT)")
+        conn.execute("PRAGMA synchronous=OFF")
+        conn.execute("BEGIN")
         for n in range(hintergrund):
             reihe("9%05d" % n)
         # Sprung bei 11 -> Feuerung im Quartalsindex 12 (Bilanzstichtag
@@ -813,6 +840,33 @@ def selbsttest():
                su[KLASSE_C] == 1, su[KLASSE_C], 1)
         pruefe("Klasse (d) bleibt leer - jede Feuerung steht in der Reihe",
                su[KLASSE_D] == 0, su[KLASSE_D], 0)
+
+        # DIE ZUORDNUNG DIREKT, nicht nur die Summe. Der Gesamtlauf zaehlt b1 und
+        # b2 je einmal - bei vertauschtem Ternary bliebe 1 == 1 und die Sabotage
+        # unsichtbar. Das ist die im Dateikopf benannte Falle, hier fuer die
+        # Unterklassen geschlossen (Code-Review 19.08.). Und Klasse (d) bekommt
+        # damit ihren einzigen positiven Test.
+        pruefe("Zuordnung direkt: vier Folgequartale unter anderem NAMEN -> (b1)",
+               _kl([("SalesRevenueNet", "USD")] * 4)
+               == (KLASSE_B, KLASSE_B1, True))
+        pruefe("Zuordnung direkt: vier Folgequartale in anderer WAEHRUNG -> (b2)",
+               _kl([("Revenues", "EUR")] * 4) == (KLASSE_B, KLASSE_B2, True))
+        pruefe("Zuordnung direkt: ein Wechsel reicht fuer (b2), nicht alle vier",
+               _kl([("Revenues", "USD"), ("Revenues", "USD"),
+                    ("Revenues", "USD"), ("Revenues", "EUR")])
+               == (KLASSE_B, KLASSE_B2, True))
+        pruefe("Zuordnung direkt: gar keine Folgequartale -> (a)",
+               _kl([]) == (KLASSE_A, None, False))
+        pruefe("Zuordnung direkt: drei Folgequartale -> (c), auch bei Wechsel",
+               _kl([("SalesRevenueNet", "USD")] * 3) == (KLASSE_C, None, False))
+        pruefe("Zuordnung direkt: Firma ohne gewaehlte Reihe -> (d)",
+               klassifiziere({"cik": "X", "ddate": "20180331",
+                              "basis": ("Revenues", "USD")}, {})
+               == (KLASSE_D, None, False))
+        pruefe("und eine Firma OHNE gewaehlte Reihe bricht die Zerlegung ab",
+               _invariante_bricht(dict(leerer_block(), firmen_mit_erst_ereignis=1,
+                                       nenner_auffindbarkeit=1, unreif_gesamt=1,
+                                       **{KLASSE_D: 1})))
         pruefe("die Klassen summieren sich auf die unreifen Firmen",
                su[KLASSE_A] + su[KLASSE_B] + su[KLASSE_C] + su[KLASSE_D]
                == su["unreif_gesamt"])
@@ -995,6 +1049,19 @@ def _fliegt_ohne(umschlag, pfad, feld):
     ziel, knoten = _tief(umschlag, pfad)
     del knoten[feld]
     return _fliegt(ziel)
+
+
+def _kl(nach_basen, eigene=("Revenues", "USD"), ddate="20180331"):
+    """Ruft klassifiziere() mit einer von Hand gebauten Reihe auf.
+
+    `nach_basen` sind die Quellen-Basen der Folgequartale, in Reihenfolge. Die
+    Stichtage liegen alle nach `ddate` (Zeichenketten-Vergleich auf YYYYMMDD,
+    wie im echten Code)."""
+    reihe = {ddate: (1.0, "x", "direkt", eigene)}
+    for i, basis in enumerate(nach_basen):
+        reihe["2018%02d01" % (4 + i)] = (1.0, "x", "direkt", basis)
+    return klassifiziere({"cik": "X", "ddate": ddate, "basis": eigene},
+                         {"X": reihe})
 
 
 def _bruchgrund(block):

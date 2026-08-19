@@ -85,18 +85,23 @@ test('Jede Pflichtpruefung stand wirklich da — und war gruen', () => {
 // dort auf. Genommen wird deshalb der zuletzt angemeldete Zaehlproben-Eintrag; nur
 // die Serverzeit wird variiert. Das prueft W2 an dem Fall, der wirklich vorkommt.
 //
-// GESUCHT WIRD DAS FENSTER MIT, nicht nur die Eintragsart (E4a, 19.08.): Die
-// Zaehlprobe ist ausschliesslich fuer das Prueffenster freigegeben, und dieser
-// Test braucht genau so einen Eintrag. Die erste Fassung nahm den JUENGSTEN
-// Zaehlproben-Eintrag und wurde rot, sobald ein Lauf ein anderes Fenster anmeldete
-// — sie testete dann die Fenster-Ungleichheit statt der Serverzeit. Ein Waechter,
-// der bei bestimmungsgemaessem Gebrauch rot wird, entwertet sich selbst.
+// GESUCHT WIRD DIE SACHE, nicht die Eintragsart (E4a, 19.08.): Andere Laeufe
+// melden sich unter DEMSELBEN Typ und fuer DASSELBE Fenster an — die Diagnose
+// E4a tut es bereits. Zwei Fassungen sind daran vorbeigelaufen: die erste nahm
+// den juengsten Eintrag der Art und wurde rot, die zweite nahm Art + Fenster und
+// blieb zufaellig gruen, zeigte aber auf den falschen Eintrag. Woran ein
+// ZAEHLPROBEN-Eintrag wirklich haengt, ist seine Ausgabe-Allowlist: sie ist die
+// der versiegelten Praeregistrierung. Genau daran wird hier verankert.
 const REGISTER = JSON.parse(fs.readFileSync(
   path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'outcome-access-ledger.json'), 'utf8'));
+const PRAEREG_ALLOWLIST = [...JSON.parse(fs.readFileSync(
+  path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'preregistration.json'), 'utf8',
+)).zaehlprobe.ausgabeAllowlist].sort().join('|');
 const ZAEHLPROBE_EINTRAG = [...REGISTER.events]
   .reverse()
   .find((e) => (e.typ || e.type) === 'count_only_probe_authorized'
-    && (e.fenster || [])[0] === 'pruefung');
+    && (e.fenster || [])[0] === 'pruefung'
+    && [...(e.allowedOutputs || [])].sort().join('|') === PRAEREG_ALLOWLIST);
 
 function freigabeDatei(verzeichnis, serverConfirmedAt, aenderung = {}) {
   const pfad = path.join(verzeichnis, 'freigabe.json');
@@ -114,6 +119,11 @@ function freigabeDatei(verzeichnis, serverConfirmedAt, aenderung = {}) {
 test('Es gibt ueberhaupt einen Zaehlproben-Eintrag im Register (sonst prueft W2 nichts)', () => {
   assert.ok(ZAEHLPROBE_EINTRAG, 'Kein count_only_probe_authorized-Eintrag im Zugriffs-Register');
   assert.equal((ZAEHLPROBE_EINTRAG.fenster || [])[0], 'pruefung');
+  // Und es ist wirklich der Zaehlproben-Eintrag, nicht irgendein spaeterer Lauf
+  // derselben Art: seine Allowlist ist die der versiegelten Praeregistrierung.
+  assert.equal([...ZAEHLPROBE_EINTRAG.allowedOutputs].sort().join('|'), PRAEREG_ALLOWLIST);
+  assert.ok(ZAEHLPROBE_EINTRAG.runId.startsWith('e3-zaehlprobe-'),
+    `Der gewaehlte Eintrag ist ${ZAEHLPROBE_EINTRAG.runId} — das ist kein Zaehlproben-Lauf`);
 });
 
 test('W2: ein Erstzugriff VOR der Server-Bestaetigung bricht den echten Lauf ab', () => {

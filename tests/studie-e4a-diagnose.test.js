@@ -81,6 +81,13 @@ const PFLICHT_PRUEFUNGEN = [
   'die Fensterkanten-Ausnahme haelt die uebrigen Invarianten ein',
   'mehr reife Firmen als Nenner OHNE Zensur bricht ab',
   'und zwar an DIESER Invariante, nicht an einer frueheren',
+  'Zuordnung direkt: vier Folgequartale unter anderem NAMEN -> (b1)',
+  'Zuordnung direkt: vier Folgequartale in anderer WAEHRUNG -> (b2)',
+  'Zuordnung direkt: ein Wechsel reicht fuer (b2), nicht alle vier',
+  'Zuordnung direkt: gar keine Folgequartale -> (a)',
+  'Zuordnung direkt: drei Folgequartale -> (c), auch bei Wechsel',
+  'Zuordnung direkt: Firma ohne gewaehlte Reihe -> (d)',
+  'und eine Firma OHNE gewaehlte Reihe bricht die Zerlegung ab',
   'das Endtest-Fenster wird nicht geoeffnet',
   'diese Datei enthaelt keinen Entschluesselungs-Aufruf',
 ];
