@@ -134,15 +134,22 @@ const gateDefinition = (yml) => {
 };
 
 /** Schneidet die Wache aus EINEM Schritt heraus (fuer die Sabotage-Gegenproben).
- *  Sucht die `if [ "$VEROEFFENTLICHEN" != "true" ]`-Zeile im Schritt und entfernt
- *  alles bis zum `fi` auf derselben Einrueckung — funktioniert damit auch fuer den
- *  laengeren Wache-Block des Vintage-Schritts (dessen inneres `fi` tiefer steht). */
+ *  BEIDE gueltigen Bauformen werden bedient — sonst waere diese Gegenprobe selbst ein
+ *  Schreibmuster-Pruefer und wuerde falsch-rot, sobald ein Workflow legitim auf die
+ *  andere Form wechselt (an echter Sabotage am 19.08. aufgefallen):
+ *    run-Block-Wache -> alles vom `if [ "$VEROEFFENTLICHEN" ... ]` bis zum `fi` auf
+ *      derselben Einrueckung (haelt damit auch den laengeren Wache-Block des
+ *      Vintage-Schritts, dessen inneres `fi` tiefer steht),
+ *    `if:` am Schritt -> genau diese eine Zeile. */
 function wacheRaus(yml, schrittName) {
   const z = yml.split('\n');
   const start = z.findIndex((l) => l.trim() === '- name: ' + schrittName);
   assert.ok(start > 0, 'Opfer-Schritt nicht gefunden: ' + schrittName);
-  const w = z.findIndex((l, i) => i > start && l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  const w = z.findIndex((l, i) => i > start && !istKommentar(l) && WACHE_RE.test(l));
   assert.ok(w > start, 'Wache des Opfer-Schritts nicht gefunden: ' + schrittName);
+  if (!z[w].includes('"$VEROEFFENTLICHEN" != "true"')) {
+    return [...z.slice(0, w), ...z.slice(w + 1)].join('\n');   // `if:`-Form: eine Zeile
+  }
   const einr = z[w].match(/^\s*/)[0];
   const ende = z.findIndex((l, i) => i > w && l === einr + 'fi');
   assert.ok(ende > w, 'Ende des Wache-Blocks nicht gefunden: ' + schrittName);
