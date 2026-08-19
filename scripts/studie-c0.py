@@ -849,10 +849,33 @@ def edgar_hole(phrase, jahr, ab=None, protokoll=None):
 
 
 def treffer_gesamt(antwort):
+    """Die Dokument-Trefferzahl der Antwort.
+
+    EDGAR zaehlt oberhalb einer internen Grenze nicht mehr exakt aus und meldet dann
+    eine UNTERE SCHRANKE (relation "gte", Wert 10.000). Das ist kein Fehler, sondern
+    genau der Fall, den die Regel schon kennt: mehr als 5.000 Dokument-Treffer. Der
+    Wert wird uebernommen und liegt zwangslaeufig ueber AUTO_PASS_TREFFER, das Jahr
+    gilt also als gedeckelt - und ein gedeckeltes Jahr kann nach Abschnitt 3 der Regel
+    kein Aufnahmejahr sein.
+
+    Warum das hier steht und nicht als Abbruch: die erste Fassung hielt bei "gte" an
+    und blockierte damit den ganzen Lauf an Allerweltswoertern wie "things". Ein
+    Abbruch waere hier kein Schutz, sondern ein Loch im Ableiten - die Regel deckt den
+    Fall ab, nur der Leser konnte ihn nicht lesen. Jede ANDERE Relation bleibt ein
+    Abbruch (fail-closed).
+    """
     gesamt = antwort["hits"]["total"]
-    if gesamt.get("relation") != "eq":
-        raise Bruch("EDGAR liefert keine exakte Trefferzahl (relation=%s)" % gesamt.get("relation"))
-    return int(gesamt["value"])
+    art = gesamt.get("relation")
+    if art == "eq":
+        return int(gesamt["value"])
+    if art == "gte":
+        wert = int(gesamt["value"])
+        if wert <= AUTO_PASS_TREFFER:
+            raise Bruch(
+                "EDGAR meldet eine untere Schranke von nur %d Treffern - unterhalb der "
+                "Deckelgrenze %d waere das nicht berechenbar" % (wert, AUTO_PASS_TREFFER))
+        return wert
+    raise Bruch("EDGAR liefert keine exakte Trefferzahl (relation=%s)" % art)
 
 
 def filer_aus(antwort):
