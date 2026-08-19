@@ -311,10 +311,13 @@ test('JOB_REIHENFOLGE deckt genau die Jobs des Tageslaufs ab (Mengen-Pin gegen d
 // Also hier ausgeschrieben: wer sie aendert, aendert die Ursachen-Meldung und muss diese
 // Zeile mitaendern.
 test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () => {
+  // 18.08.: 'prices' dazu. Die SACHE hat sich geaendert, nicht nur der Code — der Kursabruf
+  // ist vom Schritt zum eigenen Job geworden. Er steht zwischen pull und merge, weil er ein
+  // Daten-Kettenglied ist; die Regel "Kettenglieder vor Diagnose-Waechtern" bleibt unberuehrt.
   assert.deepEqual(JOB_REIHENFOLGE,
-    ['prep', 'pull', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter'],
+    ['prep', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter'],
     'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
-    + 'Ursache steht: die vier Kettenglieder zuerst, die zwei nicht-blockierenden Diagnose-'
+    + 'Ursache steht: die fuenf Kettenglieder zuerst, die zwei nicht-blockierenden Diagnose-'
     + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '
     + 'Diagnose-Job statt des Datenschritts — Karl sucht am falschen Job.');
 });
