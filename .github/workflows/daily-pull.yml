@@ -21,20 +21,64 @@ on:
         description: 'Jahres-Ausreisser-Bestand auf der CI-Population neu aufnehmen (nur bewusst!)'
         type: boolean
         default: false
+      # ZWEIG-WACHE (19.08.2026). BEFUND: dieser Workflow laesst sich per
+      # workflow_dispatch auf JEDEM Zweig starten, seine sechs veroeffentlichenden
+      # Schritte pushten aber unbedingt — einer nach main, vier per --force nach
+      # gh-pages. Ein Handlauf von einem Feature-Zweig haette Karls live
+      # veroeffentlichte Daten mit Zahlen ueberschrieben, die ungepruefter
+      # Zweig-Code gerechnet hat. Nicht zurueckrollbar. Ausgeloest hat es nie
+      # jemand (16./18.08. liefen beide auf main), die Luecke war trotzdem offen.
+      # Seitdem entscheidet EINE Stelle (env VEROEFFENTLICHEN unten), ob ein Lauf
+      # publizieren darf: auf einem Zweig nie.
+      # DIESES VENTIL setzt dieselbe Sperre BEWUSST auch auf main — damit sich eine
+      # Aenderung dort einmal komplett durchrechnen laesst (Universum, Kurse,
+      # Bewertung, Zahlen im Protokoll), ohne dass irgendetwas rausgeht. Wer es
+      # setzt, weiss was er tut, und es steht in der Lauf-Historie.
+      nur_rechnen:
+        description: 'Nur rechnen, NICHTS veroeffentlichen (kein Push nach main, kein gh-pages-Deploy)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
-# AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
-# ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
-# puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
-# contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
-# but was never wired into this workflow's env, so every job here always sent an
-# empty User-Agent regardless. Top-level env applies to every job/step below —
-# fixing it once here instead of per-step matches how every SEC caller shares the
-# same lib/sec-user-agent.js.
+  # AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
+  # ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
+  # puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
+  # contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
+  # but was never wired into this workflow's env, so every job here always sent an
+  # empty User-Agent regardless. Top-level env applies to every job/step below —
+  # fixing it once here instead of per-step matches how every SEC caller shares the
+  # same lib/sec-user-agent.js.
 env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
+  # ZWEIG-WACHE — die EINZIGE Stelle, an der "darf dieser Lauf veroeffentlichen?"
+  # entschieden wird. Die sechs gefaehrlichen Schritte lesen nur noch diese Variable.
+  #
+  # WARUM KEIN `if:` AN DEN SCHRITTEN (die naheliegende Loesung, bewusst verworfen):
+  # ein UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+  # schreibt keine Zeile ins Protokoll — genau die stille Bugklasse, gegen die dieses
+  # File an einem Dutzend Stellen gebaut ist. Die Schritte laufen darum weiter und
+  # steigen ganz vorn mit ::warning:: aus. Die Nicht-Veroeffentlichung ist damit ein
+  # LESBARER Vorgang, kein grauer Kasten.
+  #
+  # WARUM AUCH KEIN HARTER STOPP GANZ VORN: `laufstatus` traegt `if: always()` auf
+  # JOB-Ebene und sein Publish-Schritt ebenfalls. Ein `exit 1` im prep-Job haelt ihn
+  # nicht auf — der Statusmarker-Force-Push nach gh-pages liefe trotzdem. Ein
+  # Frueh-Stopp allein schliesst die Luecke also nicht.
+  #
+  # `github.event.inputs.*` ist bei schedule-Laeufen null; null != 'true' -> der
+  # Cron-Lauf auf main veroeffentlicht wie bisher. Boolean-Eingaben kommen ueber
+  # github.event.inputs als STRING an, darum der Vergleich gegen 'true'.
+  # Waechter: tests/zweig-wache.test.js
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' && github.event.inputs.nur_rechnen != 'true' }}
+  # Nur fuer die Begruendung in der Warnung. Bewusst als env und NICHT als ${{ }}
+  # im run-Block: tests/pipeline-status-marker.test.js faehrt den Publish-Block ECHT
+  # in einer bash gegen ein Fixture-Remote und besteht darauf, dass darin kein
+  # unersetzter Workflow-Ausdruck steht — sonst prueft er etwas anderes als die CI
+  # faehrt. $GITHUB_REF ist in jedem Actions-Schritt ohnehin gesetzt.
+  NUR_RECHNEN: ${{ github.event.inputs.nur_rechnen }}
 
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
@@ -1092,6 +1136,10 @@ jobs:
       # durchgereichte earnings-calendar.json + fx-rates.json + insider-cache.
       - name: Commit Snapshots
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit der Snapshots nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
           git add -A
@@ -1317,6 +1365,10 @@ jobs:
       - name: Deploy to GitHub Pages
         if: success()
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein gh-pages-Deploy von index.html/outputs. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _site
           # audit BH-114 (gleiche Haertung wie im scoring-Deploy unten): Branch-Existenz
           # separat pruefen. Existiert er und der Clone scheitert trotzdem (transientes
@@ -1715,6 +1767,10 @@ jobs:
       - name: Deploy Scoring Output to GitHub Pages
         if: success()
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein gh-pages-Deploy von hypergrowth/findash-export. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _ghp
           # AE-CI-001 (Hard Review 2026-07-31): siehe merge-Deploy oben — exit 2 heisst
           # "Ref fehlt wirklich", jeder andere Nonzero-Code ist ein transienter Fehler
@@ -1852,6 +1908,24 @@ jobs:
           # hier. Vorher stand in beiden Texten unbedingt "board-history vintage <heute>",
           # auch wenn genau dieses Vintage ausgeschlossen wurde.
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          # ZWEIG-WACHE. Sie sitzt BEWUSST hier unten und nicht ganz oben im Schritt: sie
+          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm am Schrittende.
+          # BEFUND zweier unabhaengiger Reviews (19.08.): stand die Wache davor, verschluckte
+          # sie den EINZIGEN Alarm dieses Schritts. Das Wert-Gate ist keine Publikations-Frage —
+          # es sagt, ob die heute gerechneten Zahlen strittig sind, und genau das will ein
+          # Trockenlauf wissen. Ein Zweiglauf zum Pruefen einer Schwellen-Aenderung waere sonst
+          # gruen geblieben, obwohl das Gate angeschlagen hat: derselbe stille gruene Haken,
+          # gegen den dieses File an einem Dutzend Stellen gebaut ist.
+          # Dasselbe $VINTAGE_RC, dasselbe exit 2 wie unten; nur der Grund im Text ist ein
+          # anderer. Waechter: tests/zweig-wache.test.js (ZW-6).
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein board-history-Vintage-Commit nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            if [ "$VINTAGE_RC" = "2" ]; then
+              echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, weil dieser Lauf nicht veroeffentlicht. Der Wert ist trotzdem strittig: bitte pruefen, bevor die Aenderung nach main geht."
+              exit 2
+            fi
+            exit 0
+          fi
           if [ "$VINTAGE_RC" = "2" ]; then
             echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
             git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"
@@ -1944,6 +2018,10 @@ jobs:
         if: success()
         run: |
           node scripts/stage-public-data.js --ziel _public --board-history board-history --vintages 2
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — board-history NICHT in den oeffentlichen Datenkanal publiziert. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           if [ ! -d _ghp/.git ]; then
             echo "::error::_ghp fehlt (gh-pages-Klon des Deploy-Schritts) — board-history NICHT publiziert; findash zeigt sonst still keine Bewegung."
             exit 1
@@ -2134,6 +2212,10 @@ jobs:
               exit 1
             fi
           done
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — Statusmarker NICHT nach gh-pages publiziert. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _ghp_status
           # AE-CI-001: exit 2 heisst "Ref fehlt wirklich"; jeder andere Nonzero-Code ist
           # transient und muss hart abbrechen statt einen frischen Branch zu initialisieren
