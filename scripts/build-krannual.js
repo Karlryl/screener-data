@@ -51,6 +51,15 @@ const KR = {
   '207940.KS': '00877059', // 삼성바이오로직스 Samsung Biologics
   '023590.KS': '00176914', // 다우기술 Daou Tech
 };
+// Bekannt ohne die gesuchten Standardkonten — Branchenrealitaet, kein Abrufproblem.
+// Finanzunternehmen melden nach dem Branchenschema der FSS: keinen Umsatz/Rohertrag im Sinne
+// von ifrs-full_Revenue, sondern Zins- und Provisionsertraege unter eigenen Konten. Sie stehen
+// NAMENTLICH hier, damit der Lauf gruen bleiben kann, ohne dass ein echter Zuordnungsfehler
+// (kaputter corp_code, umbenannte account_id) mit durchrutscht — jeder NICHT gelistete Ticker
+// ohne Zuordnung faerbt den Lauf rot. Waechter: tests/kr-stiller-leerlauf.test.js.
+const KR_OHNE_STANDARDKONTEN = {
+  '071050.KS': 'Finanzholding (한국금융지주) — meldet nach FSS-Branchenschema, kein ifrs-full_Revenue',
+};
 // BH-013 fix: was a static [2015..2024] literal -> from 2025 on the build could never reach the
 // completed FY2025+ without a manual edit here. Dynamic upper bound = last completed calendar FY;
 // a not-yet-filed year just gets skipped below (status!=='000'), so overshooting costs nothing.
@@ -163,7 +172,8 @@ async function main(opts = {}) {
   const vorher = readJsonExistingOrThrow(outPfad);
   const out = vorher === FEHLT ? {} : vorher;
   const unvollstaendig = [];
-  for (const [tk, corp] of Object.entries(KR)) {
+  // opts.kr = Test-Seam fuer die Ticker-Karte (Bauform wie opts.tickers in build-twannual).
+  for (const [tk, corp] of Object.entries(opts.kr || KR)) {
     // je Kennzahl ein {jahr: wert}-Behaelter; annualShares kommt aus einem ZWEITEN Endpunkt.
     const proFeld = {};
     for (const f of Object.keys(KR_FELDER)) proFeld[f] = {};
@@ -240,8 +250,19 @@ async function main(opts = {}) {
       const n = (f) => Object.keys(proFeld[f]).length;
       console.log(`${tk}: ${fys.length} Jahre — rev=${n('annualRev')} gp=${n('annualGrossProfit')} op=${n('annualOpInc')} `
         + `ni=${n('annualNetIncome')} assets=${n('annualAssets')} eq=${n('annualEquity')} ocf=${n('annualOCF')} shares=${n('annualShares')}`);
+    } else if (KR_OHNE_STANDARDKONTEN[tk]) {
+      // Bekannt und begruendet -> kein Fehlalarm, der Lauf bleibt gruen.
+      console.warn(`${tk}: keine Standardkonten (op=${opCount}, rev=${revCount}) — bekannt: ${KR_OHNE_STANDARDKONTEN[tk]}`);
     } else {
-      console.warn(`${tk}: zu wenig Daten (op=${opCount}, rev=${revCount}) -> uebersprungen`);
+      // Befund Silent-Failure-Review 19.08.2026: dieser Zweig war die einzige Ausfahrt fuer
+      // "alle Jahresabrufe kamen sauber zurueck, aber es wurde nichts zugeordnet" — und er
+      // faerbte den Lauf NICHT rot. Genau so saehe ein kaputter corp_code, eine umbenannte
+      // account_id oder ein pick()-Regress aus: Transport gruen, Zuordnung leer, CI gruen,
+      // Altbestand veraltet still. Bei EINEM Ticker fiel das nie auf; mit zehn Tickern ist es
+      // eine reale Blindstelle. Unbekannte Faelle sind jetzt ein Fehler.
+      unvollstaendig.push(`${tk}: nur ${opCount}/${revCount} Jahre zugeordnet, obwohl alle Abrufe sauber waren`);
+      console.warn(`${tk}: zu wenig Daten (op=${opCount}, rev=${revCount}) trotz fehlerfreier Abrufe `
+        + '-> Verdacht auf Zuordnungsfehler (corp_code/account_id), nicht auf fehlende Meldung');
     }
   }
   writeFileAtomic(outPfad, JSON.stringify(out, null, 1));
@@ -255,4 +276,4 @@ async function main(opts = {}) {
 }
 if (require.main === module) main().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
 
-module.exports = { numOf, buildSeries, buildSeriesN, yearsFor, main, pick, KR, KR_FELDER };
+module.exports = { numOf, buildSeries, buildSeriesN, yearsFor, main, pick, KR, KR_FELDER, KR_OHNE_STANDARDKONTEN };

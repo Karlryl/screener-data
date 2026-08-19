@@ -136,7 +136,17 @@ function nachDatum(rows) {
     if (!r || typeof r.date !== 'string' || typeof r.type !== 'string') continue;
     if (!m.has(r.date)) m.set(r.date, {});
     const v = zahl(r.value);
-    if (v != null) m.get(r.date)[r.type] = v;
+    if (v == null) continue;
+    // Zwei Zeilen fuer dieselbe Periode UND dieselbe Kennzahl darf es nicht geben — heute gibt
+    // es sie auch nicht (ueber 17 echte Antworten und 34.732 Zeilen nachgezaehlt: null Dubletten).
+    // Faengt die Quelle damit an, waere "die letzte gewinnt" eine stille Wertaenderung. Eine
+    // Dublette mit IDENTISCHEM Wert ist harmlos und geht durch.
+    const vorher = m.get(r.date)[r.type];
+    if (vorher !== undefined && vorher !== v) {
+      throw new Error('FinMind liefert fuer ' + r.date + '/' + r.type + ' zwei verschiedene Werte ('
+        + vorher + ' und ' + v + '). Welcher gilt, ist nicht entscheidbar — Abbruch statt stiller Auswahl.');
+    }
+    m.get(r.date)[r.type] = v;
   }
   return m;
 }
@@ -232,6 +242,30 @@ function bauJahre(guRows, bsRows, cfRows, tk) {
   const out = {};
   for (const f of [...Object.keys(GU_FELDER), ...Object.keys(BS_FELDER), ...Object.keys(CF_FELDER), 'annualShares']) out[f] = [];
 
+  // EIN Begriff fuer die GANZE Reihe, nicht je Quartal und nicht je Jahr neu gewaehlt.
+  // Die Vorrangliste fuer annualNetIncome enthaelt zwei VERSCHIEDENE Konsolidierungskreise:
+  // 'EquityAttributableToOwnersOfParent' ist das Ergebnis der Mutter, 'IncomeAfterTaxes' das
+  // Konzernergebnis einschliesslich Minderheiten. Live belegt an 5269.TW FY2025: Q1 traegt NUR
+  // IncomeAfterTaxes, Q2-Q4 tragen beide. Eine quartalsweise Auswahl addierte Q1 aus dem einen
+  // und Q2-Q4 aus dem anderen Kreis zu 6.648.607.000 TWD — 18,4 % ueber dem sauberen Wert von
+  // 5.425.836.000. Kein Fehler, keine Warnung, einfach eine falsche Zahl.
+  // Auch je JAHR zu waehlen genuegt nicht: wechselt der Begriff zwischen zwei Jahren, entsteht
+  // ein Sprung, den der Zyklus-Daempfer als echte Bewegung liest. Darum je Feld EIN Name fuer
+  // die ganze Reihe — der erste aus der Vorrangliste, der die meisten vollstaendigen Jahre
+  // liefert. Jahre ohne diesen Namen in allen vier Quartalen bleiben null, nie aufgefuellt.
+  const gewaehlt = {};
+  for (const feld of Object.keys(GU_FELDER)) {
+    let bester = null, besteZahl = -1;
+    for (const n of GU_FELDER[feld]) {
+      const voll = fys.filter((fy) => QUARTALE.every((sfx) => {
+        const z = gu.get(fy + '-' + sfx);
+        return z && Number.isFinite(z[n]);
+      })).length;
+      if (voll > besteZahl) { besteZahl = voll; bester = n; }
+    }
+    gewaehlt[feld] = bester;
+  }
+
   for (const fy of fys) {
     const q = QUARTALE.map((s) => gu.get(fy + '-' + s) || null);
     const ende = fy + '-12-31';
@@ -240,10 +274,9 @@ function bauJahre(guRows, bsRows, cfRows, tk) {
 
     // Flussgroessen GuV: Summe der VIER diskreten Quartale. Fehlt eines -> null.
     for (const feld of Object.keys(GU_FELDER)) {
-      const namen = GU_FELDER[feld];
-      const werte = q.map((z) => (z ? ersterTreffer(z, namen) : null));
-      const vollstaendig = werte.every((v) => Number.isFinite(v));
-      out[feld].push({ value: vollstaendig ? werte.reduce((a, b) => a + b, 0) : null });
+      const name = gewaehlt[feld];
+      const vollstaendig = name && q.every((z) => z && Number.isFinite(z[name]));
+      out[feld].push({ value: vollstaendig ? q.reduce((sum, z) => sum + z[name], 0) : null });
     }
     // Bestandsgroessen Bilanz: Stichtag 31.12.
     for (const feld of Object.keys(BS_FELDER)) {
@@ -273,7 +306,7 @@ function bauJahre(guRows, bsRows, cfRows, tk) {
   const fysGetrimmt = fys.filter((_, i) => behalten[i]);
   const outGetrimmt = {};
   for (const f of felderListe) outGetrimmt[f] = out[f].filter((_, i) => behalten[i]);
-  return Object.assign({ fys: fysGetrimmt, _waechter: waechter }, outGetrimmt);
+  return Object.assign({ fys: fysGetrimmt, _waechter: waechter, _feldwahl: gewaehlt }, outGetrimmt);
 }
 
 const zaehle = (arr) => arr.filter((e) => Number.isFinite(e && e.value)).length;
@@ -319,7 +352,7 @@ async function main(opts = {}) {
     }
     const fys = j.fys;
     const serien = {};
-    for (const k of Object.keys(j)) if (k !== 'fys' && k !== '_waechter') serien[k] = j[k];
+    for (const k of Object.keys(j)) if (k !== 'fys' && k !== '_waechter' && k !== '_feldwahl') serien[k] = j[k];
     if (zaehle(serien.annualRev) < 3) {
       gescheitert.push(tk + ': nur ' + zaehle(serien.annualRev) + ' Jahre Umsatz (mind. 3 noetig)');
       console.warn(tk + ': zu wenig Jahre (Umsatz=' + zaehle(serien.annualRev) + ') -> uebersprungen');
@@ -332,6 +365,10 @@ async function main(opts = {}) {
       consolidation: 'CFS',             // Konzernabschluss, nie Einzelabschluss
       reportingCurrencyOriginal: 'TWD', // roh, keine Umrechnung
       derived: { annualShares: 'CapitalStock / ' + NENNWERT_TWD + ' (NT$' + NENNWERT_TWD + ' Nennwert) — Herleitung, kein Ausweis' },
+      // Welcher FinMind-Begriff je GuV-Feld die Reihe traegt. Steht in der Datei, damit sichtbar
+      // ist, WELCHER Konsolidierungskreis gemeint ist: 'IncomeAfterTaxes' = Konzernergebnis inkl.
+      // Minderheiten, 'EquityAttributableToOwnersOfParent' = Ergebnis der Mutter.
+      feldwahl: j._feldwahl,
       nfy: fys[0],
       generatedAt: new Date().toISOString(),
       fys,
