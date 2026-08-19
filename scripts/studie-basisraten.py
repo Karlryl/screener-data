@@ -2209,13 +2209,16 @@ def folgefragen(d):
         "eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach "
         "Ergebnis auswählbar. (Zeitschätzung: 1 Tag)")
     fragen.append(
-        "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der "
-        "Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". "
-        "Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen "
-        "Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche "
-        "Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die "
-        "nächste Pflichtmessung, bevor R10 präregistriert wird. "
-        "(Zeitschätzung: 1 Tag)")
+        "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10) — auf der NEUEN "
+        "Kohorte nachzumessen.** Der Endpunkt-Wächter verlangt eine "
+        "Pflicht-Nebenrechnung „Umsatz je Aktie\". Diese Messung ist am selben "
+        "Tag erfolgt (`E2-aktienzahl-2026-08-19`) und kam auf 83,6 % Abdeckung "
+        "— aber auf den **487** Firmen des alten Stands. Mit der umgestellten "
+        "Quellenwahl sind es " + zahl(su["firmen_reif"]) + " Firmen, also eine "
+        "andere Grundgesamtheit; der dortige Anker hält den Lauf dafür "
+        "richtigerweise an. Die Abdeckung muss auf der neuen Kohorte neu "
+        "gemessen werden, bevor R10 präregistriert wird — übertragen werden "
+        "darf sie nicht. (Zeitschätzung: 0,5 Tage)")
     if ue["regel_greift"]:
         fragen.append(
             "**Wie oft wechselt die fixierte Quelle im Lauf einer Firmenhistorie?** "

@@ -27,19 +27,19 @@
  "fragen": [
   "**Banken-Sonderfamilie ja/nein?** Der Bereich „Finanzen, Versicherung, Immobilien\" stellt laut E1 die zweitgrößte Firmengruppe, hat aber ein anderes Umsatzverständnis (Zinsertrag statt Warenverkauf). Hier trägt er 13,74 % der S-U-Feuerungen. Zu klären: eigene Signalfamilie, Ausschluss oder unverändert mitlaufen lassen — mit Vorab-Kriterium, nicht nach Ergebnislage. (Zeitschätzung: 1–2 Tage)",
   "**`NetIncomeLoss` als Alternative für S-G?** Das Ergebnis nach Steuern liefert 118.534 Beschleunigungswerte gegen 97.398 beim Betriebsergebnis. Ob die zusätzliche Tiefe die schlechtere Aussagekraft (Einmaleffekte, Steuerquote) aufwiegt, ist eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach Ergebnis auswählbar. (Zeitschätzung: 1 Tag)",
-  "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die nächste Pflichtmessung, bevor R10 präregistriert wird. (Zeitschätzung: 1 Tag)",
+  "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10) — auf der NEUEN Kohorte nachzumessen.** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". Diese Messung ist am selben Tag erfolgt (`E2-aktienzahl-2026-08-19`) und kam auf 83,6 % Abdeckung — aber auf den **487** Firmen des alten Stands. Mit der umgestellten Quellenwahl sind es 512 Firmen, also eine andere Grundgesamtheit; der dortige Anker hält den Lauf dafür richtigerweise an. Die Abdeckung muss auf der neuen Kohorte neu gemessen werden, bevor R10 präregistriert wird — übertragen werden darf sie nicht. (Zeitschätzung: 0,5 Tage)",
   "**Wie oft wechselt die fixierte Quelle im Lauf einer Firmenhistorie?** Die Folgeregel aus Prüfschritt 3 ist angewandt (Abschnitt 2), und die Frage nach Fallzahl und Feuerrate ist damit beantwortet — die Fallzahl steigt auf 512 Firmen. Offen ist die Anschlussfrage: Die zeitpunkt-ehrliche Wahl darf die Quelle im Lauf der Zeit wechseln, wenn eine andere Reihe länger wird. Wie oft passiert das, und trifft es dieselben Firmen, die später feuern? Häufige Wechsel würden bedeuten, dass „je Firma fixiert\" in der Praxis weniger fix ist, als der Name verspricht. (Zeitschätzung: 0,5 Tage)",
   "**Was die Naht gekostet hat — und wen sie getroffen hätte.** Vor der Umstellung waren 2.663 Firmen-Quartale nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselte; jetzt sind es 0. Offen bleibt die inhaltliche Frage: Waren das Zufallswechsel oder systematisch dieselben Firmen? Falls systematisch, hat der alte Stand eine ganze Firmenklasse verloren — und dann ist die Umstellung nicht nur sauberer, sondern korrigiert eine Verzerrung, die im alten Report unsichtbar war. Das ist prüfbar, indem man die betroffenen Firmen gegen die übrigen hält (Branche, Größe, Feuerhäufigkeit). (Zeitschätzung: 1 Tag)",
   "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in dieser Quelle auf das Monatsende gerundet, deshalb ist ein 53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es über das Geschäftsjahresende `fye` im Berichtskopf (639 Firmen mit wanderndem Ende, davon 425 mit Umsatzreihe) oder über das echte Periodenende in den Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)",
   "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
  ],
  "gelesene_pfade": [
-  "e2-selbsttest-ycu3mj14/panel-entdeckung.sqlite",
+  "e2-selbsttest-pd5d9p5a/panel-entdeckung.sqlite",
   "leer/panel-entdeckung.sqlite",
   "panel/panel-entdeckung.sqlite"
  ],
  "geschriebene_pfade": [
-  "e2-selbsttest-ycu3mj14/zwischen.sqlite",
+  "e2-selbsttest-pd5d9p5a/zwischen.sqlite",
   "leer/zwischen.sqlite",
   "arbeit/E2-zwischenstand.sqlite"
  ],
@@ -4647,5 +4647,5 @@
   "verworfen_stichtag_unlesbar": 0,
   "verworfen_wert_leer": 20422
  },
- "zeitstempel": "2026-08-19T09:58:22+00:00"
+ "zeitstempel": "2026-08-19T10:00:33+00:00"
 }
