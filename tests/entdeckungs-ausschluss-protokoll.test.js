@@ -20,7 +20,7 @@
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
-const { serverFloor } = require('../discovery/tv-scanner.js');
+const { serverFloor, verarbeiteZeilen } = require('../discovery/tv-scanner.js');
 const { applyForeignPrefilterOutcome, baueAusschlussProtokoll } = require('../refresh-universe.js');
 
 let fail = 0;
@@ -42,6 +42,9 @@ function serverFloorMitEnv(wert, ccy, rate) {
   return parseFloat(String(r.stdout).trim());
 }
 
+// Hinweis: dass serverFloor() TV_PRECUT_USD ueberhaupt LIEST, prueft schon
+// tests/scoring/bh-b14-discovery.test.js (BH-065). Hier geht es um die Folge davon —
+// die Reihenschaltung mit Tor 2 und die Umrechnung in die Listing-Waehrung.
 // ── Tor 1: die Schwelle ist per Umgebungsvariable steuerbar ──────────────────────
 check('TV_PRECUT_USD steuert die Server-Schwelle wirklich (1,5 Mrd vs 800 Mio)', () => {
   const hoch = serverFloorMitEnv('1.5e9', 'USD', 1);
@@ -73,6 +76,52 @@ check('Reihenschaltung: erst mit gesenktem Tor 1 kommt der 1,2-Mrd-Titel ueberha
   const tor1Neu = serverFloorMitEnv('8e8', 'USD', 1);
   assert.ok(1.2e9 >= tor1Neu, '1,2 Mrd muss die 800-Mio-Schwelle passieren');
   assert.ok(0.6e9 < tor1Neu, '600 Mio muss AUCH bei 800 Mio draussen bleiben (Karls Boden)');
+});
+
+// ── Tor 1, Client-Nachcut: die Zeilen-Bewertung ohne Netz ─────────────────────
+// d = [code, mcap(Listing-Waehrung), ccy, name, type, subtype, exchange, country]
+const zeile = (code, mcap, extra) => ({ d: Object.assign(
+  [code, mcap, 'EUR', code + ' SpA', 'stock', 'common', 'MIL', 'Italy'], extra || {}) });
+const CFG_IT = { endpoint: 'italy', suffix: '.MI', ccy: 'EUR', canon: 'tvit', country: 'IT' };
+const RATEN = { EUR: 1, USD: 1 };
+
+check('Client-Nachcut: 1,2-Mrd-Titel faellt bei 1,5-Mrd-Schwelle und steht im Protokoll', () => {
+  const m = verarbeiteZeilen('tv-milan', CFG_IT,
+    [zeile('GROSS', 3.0e9), zeile('BAND', 1.2e9), zeile('KLEIN', 0.6e9)], RATEN, 3, 1.5e9);
+  // Die Vorgabe TV_PRECUT_USD ist 1,5 Mrd (Modulebene) — BAND und KLEIN liegen darunter.
+  assert.deepEqual([...m.keys()], ['GROSS.MI']);
+  assert.deepEqual(m.tor.unterSchwelle.map((r) => r.ticker).sort(), ['BAND.MI', 'KLEIN.MI']);
+  const band = m.tor.unterSchwelle.find((r) => r.ticker === 'BAND.MI');
+  assert.equal(band.mcapUsd, 1.2e9, 'der gemessene Marktwert ist die Begruendung');
+  assert.equal(m.tor.geliefert, 3);
+  assert.equal(m.tor.aufgenommen, 1);
+});
+
+check('Client-Nachcut protokolliert NUR Groessen-Ausschluesse, nicht ETF/Vorzuege/Fremddomizil', () => {
+  const etf = zeile('FONDS', 0.1e9); etf.d[4] = 'fund';
+  const vz  = zeile('VORZUG', 0.1e9); vz.d[5] = 'preferred';
+  const m = verarbeiteZeilen('tv-milan', CFG_IT, [etf, vz], RATEN, 2, 1.5e9);
+  assert.equal(m.size, 0);
+  assert.equal(m.tor.unterSchwelle.length, 0,
+    'ein Fonds oder eine Vorzugsaktie ist kein zu klein befundenes Unternehmen');
+});
+
+check('abgeschnittener Markt wird als truncated gemeldet (stiller Verlust sichtbar)', () => {
+  const m = verarbeiteZeilen('tv-japan', CFG_IT, [zeile('A', 3e9)], RATEN, 3100, 1.5e9);
+  assert.equal(m.tor.truncated, true);
+  assert.equal(m.tor.totalCount, 3100);
+});
+
+check('vollstaendiger Markt ist NICHT truncated (Gegenprobe)', () => {
+  const m = verarbeiteZeilen('tv-milan', CFG_IT, [zeile('A', 3e9)], RATEN, 1, 1.5e9);
+  assert.equal(m.tor.truncated, false);
+});
+
+check('die wirksame Server-Schwelle steht im Protokoll (die Namen darunter kann niemand kennen)', () => {
+  const m = verarbeiteZeilen('tv-milan', CFG_IT, [], RATEN, 0, 1234567890);
+  assert.equal(m.tor.schwelleLokal, 1234567890);
+  assert.equal(m.tor.schwelleUsd, 1.5e9, 'Vorgabe TV_PRECUT_USD');
+  assert.equal(m.tor.markt, 'tv-milan');
 });
 
 // ── Tor 2: der Ausschluss wird protokolliert statt verschluckt ───────────────────
