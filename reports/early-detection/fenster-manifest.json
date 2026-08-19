@@ -1,0 +1,44 @@
+{
+ "schema": "early-detection-window-files/v1",
+ "erzeugtAm": "2026-08-16T16:26:50.893Z",
+ "fenster": {
+  "entdeckung": {
+   "zeilen": 332657,
+   "firmen": 11132,
+   "signalZeilen": 279773,
+   "reifeZeilen": 52884,
+   "klartextSha256": "c2e4e62b4b22becd147b480e768d705b656fdbc3cb6b4bfbcee1e5ad5215c2b8",
+   "datei": "fenster-entdeckung.json",
+   "verschluesselt": false,
+   "bytes": 146865711
+  },
+  "pruefung": {
+   "zeilen": 198456,
+   "firmen": 8650,
+   "signalZeilen": 150752,
+   "reifeZeilen": 47704,
+   "klartextSha256": "762758c0fc4ee37b30064abe5139943d4b8f89b296a5ffe3ba2bede304159397",
+   "datei": "fenster-pruefung.json",
+   "verschluesselt": false,
+   "bytes": 87159316
+  },
+  "endtest": {
+   "zeilen": 215123,
+   "firmen": 9129,
+   "signalZeilen": 164976,
+   "reifeZeilen": 50147,
+   "klartextSha256": "076b5de8bab236a4e0962af3703c77d2cfdf479711acc2abf4cd793d8898dd1f",
+   "datei": "fenster-endtest.sealed",
+   "verschluesselt": true,
+   "bytes": 94510308,
+   "siegelSha256": "e01a43b655ba8e00a5149d2dea95b0004d9974ceaa6eed7315818684fced36d4",
+   "schluesselAblage": "fenster-endtest.KEY-NICHT-COMMITTEN (nur lokal; Veroeffentlichung erst bei der Einmal-Oeffnung)"
+  }
+ },
+ "firmenUeberlappung": {
+  "entdeckung~pruefung": 6595,
+  "entdeckung~endtest": 4766,
+  "pruefung~endtest": 6411
+ },
+ "hinweisR3": "Zeit-Trennung allein reicht nicht. Die firmen-disjunkte Replikation wird in der Praeregistrierung 2.0.0 ueber den Pruefsummen-Rest der CIK festgelegt."
+}
