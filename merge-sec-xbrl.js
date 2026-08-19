@@ -109,9 +109,11 @@ const SHARE_CONCEPTS = [
 //   CurrLiab  CurrentLiabilities                     ARGX 5J 2025=1320 · GFI 7J 2024=1710 · DLO 5J 2025=966
 //                                                    (us-gaap heisst es LiabilitiesCurrent)
 //
-// Korrektur 19.08.2026: GFI stand bei NetInc/OCF/Capex mit '8J' hier, tatsaechlich sind es
-// 7 Jahre (FY2018-2024) — dieselben 7 wie beim Umsatz. Die WERTE stimmten alle, nur die
-// Jahreszahl war abgeschrieben; der Test haelt jetzt beides fest.
+// Korrektur 19.08.2026: GFI stand bei NetInc/OCF/Capex mit '8J' hier, geliefert werden aber
+// 7 Jahre (FY2018-2024). Die 8 war vor dem Formfilter gezaehlt: GFIs achtes Jahr (FY2017)
+// steht NUR im 20-F/A, und Berichtigungsformen sind bewusst draussen (ANNUAL_FORMS). Die
+// Zahl war also nicht falsch gemessen, sondern an der falschen Stelle abgelesen — hier zaehlt,
+// was ankommt. Alle WERTE stimmten; der Test haelt jetzt Werte und Jahreszahl fest.
 //
 // ACHTUNG CAPEX-VORZEICHEN: fcfCell() unten rechnet OCF - Capex und setzt damit voraus, dass
 // die SEC den Abfluss POSITIV meldet (an allen drei Fixtures ueber alle Jahre so). Kaeme er
