@@ -1194,10 +1194,28 @@ def selbsttest():
                _bricht(_kadenz, ["20190930"]))
         pruefe("eine Firma ohne gewaehlte Reihe bricht ab",
                _bricht(melde_kadenz, {"cik": "X", "ddate": "20190930"}, {}, e2))
-        # Der Anker ist accepted, nicht ddate: dieselbe Reihe, spaeter gemeldet.
-        spaet = _kadenz(quartale[:-1], accepted="2019-12-20 12:00:00.0")
+        # Der Anker ist accepted, nicht ddate: DIESELBE Stichtagsreihe, nur
+        # spaeter gemeldet - und die Zensur kippt. Waere der Anker der
+        # Bilanzstichtag, aendere sich hier nichts.
+        spaet = _kadenz(quartale[:-1], accepted="2020-06-01 12:00:00.0")
         pruefe("der Anker ist der Melde-Eingang, nicht der Bilanzstichtag",
-               spaet[0] != quartalsweise[0] or spaet[0] is False)
+               (quartalsweise[0], spaet[0]) == (False, True),
+               (quartalsweise[0], spaet[0]), (False, True))
+        # DIE STATISTIK DIREKT. Ohne diese Pruefung stuende im Siegel 'median',
+        # waehrend der Code heimlich Mittelwert oder Maximum rechnete - und der
+        # Siegel-Waechter W12 haette es nicht gemerkt, weil er nur Zeichenketten
+        # vergleicht. Abstaende 100/120/400: Median 120, Mittel rund 207,
+        # Maximum 400. Nur einer dieser drei Werte kommt hier heraus.
+        basis = date(2016, 1, 4).toordinal()
+        drei = [date.fromordinal(basis + o).strftime("%Y%m%d")
+                for o in (0, 100, 220, 620)]
+        gemessen, _g = melde_kadenz(
+            {"cik": "X", "ddate": drei[-1]},
+            {"X": dict((d, (1.0, _accepted(d), "direkt", ("Revenues", "USD")))
+                       for d in drei)}, e2)
+        pruefe("die Kadenz ist der MEDIAN der Abstaende (120), nicht der "
+               "Mittelwert (rund 207) und nicht das Maximum (400)",
+               gemessen == 120.0, gemessen, 120.0)
 
         print("\n[2] Die konsistente Formel gegen die geerbte (E4e)")
         pruefe("ohne zensierte Faelle sind beide Formeln GLEICH",

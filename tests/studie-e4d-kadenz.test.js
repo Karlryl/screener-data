@@ -50,6 +50,7 @@ const PFLICHT_PRUEFUNGEN = [
   'eine Firma mit nur einem Quartal vor dem Signal bricht ab',
   'eine Firma ohne gewaehlte Reihe bricht ab',
   'der Anker ist der Melde-Eingang, nicht der Bilanzstichtag',
+  'die Kadenz ist der MEDIAN der Abstaende (120), nicht der Mittelwert (rund 207) und nicht das Maximum (400)',
   'ohne zensierte Faelle sind beide Formeln GLEICH',
   'die geerbte Formel liefert an der Kante NICHT BERECHENBAR',
   'die konsistente Formel liefert dort eine echte Quote',
