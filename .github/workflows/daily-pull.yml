@@ -1893,10 +1893,6 @@ jobs:
 
       - name: Commit board-history vintage to main
         run: |
-          if [ "$VEROEFFENTLICHEN" != "true" ]; then
-            echo "::warning::NICHT VEROEFFENTLICHT — kein board-history-Vintage-Commit nach main (Wert-Gate rc=${{ steps.vintage.outputs.rc }}, Datum ${{ steps.vintage.outputs.date }}). Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
-            exit 0
-          fi
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
           # audit BH-156: SUSPECT (rc=2) darf laut Masterplan-Akzeptanz "geflaggt/nicht
@@ -1912,6 +1908,24 @@ jobs:
           # hier. Vorher stand in beiden Texten unbedingt "board-history vintage <heute>",
           # auch wenn genau dieses Vintage ausgeschlossen wurde.
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          # ZWEIG-WACHE. Sie sitzt BEWUSST hier unten und nicht ganz oben im Schritt: sie
+          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm am Schrittende.
+          # BEFUND zweier unabhaengiger Reviews (19.08.): stand die Wache davor, verschluckte
+          # sie den EINZIGEN Alarm dieses Schritts. Das Wert-Gate ist keine Publikations-Frage —
+          # es sagt, ob die heute gerechneten Zahlen strittig sind, und genau das will ein
+          # Trockenlauf wissen. Ein Zweiglauf zum Pruefen einer Schwellen-Aenderung waere sonst
+          # gruen geblieben, obwohl das Gate angeschlagen hat: derselbe stille gruene Haken,
+          # gegen den dieses File an einem Dutzend Stellen gebaut ist.
+          # Dasselbe $VINTAGE_RC, dasselbe exit 2 wie unten; nur der Grund im Text ist ein
+          # anderer. Waechter: tests/zweig-wache.test.js (ZW-6).
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein board-history-Vintage-Commit nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            if [ "$VINTAGE_RC" = "2" ]; then
+              echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, weil dieser Lauf nicht veroeffentlicht. Der Wert ist trotzdem strittig: bitte pruefen, bevor die Aenderung nach main geht."
+              exit 2
+            fi
+            exit 0
+          fi
           if [ "$VINTAGE_RC" = "2" ]; then
             echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
             git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"

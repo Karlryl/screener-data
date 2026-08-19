@@ -58,8 +58,15 @@ const istKommentar = (z) => /^\s*#/.test(z);
 // git-push (auch --force, auch `origin HEAD:main`) und die gaengigen Pages-Deploy-
 // Actions. Kein `git fetch`, kein `git commit` ohne Push: ein lokaler Commit auf
 // einem Runner, der danach weggeworfen wird, veroeffentlicht nichts.
+// Review 19.08.: `git -C _ghp push` rutschte durch — und genau dieses Muster liegt nahe,
+// weil die Deploy-Schritte in _ghp/_site-Klonen arbeiten. Globale git-Optionen zwischen
+// `git` und `push` werden darum mitgelesen.
+// ponytail: Textmuster, kein Parser. Bekannte Decke: ein Publizierer, der ueber ein
+// Helfer-Skript (`node scripts/publish-x.js`) oder die Contents-API (`gh api -X PUT`)
+// schreibt, faellt nicht auf. Heute ruft kein Skript unter scripts/ `git push` (geprueft).
+// Aufruestpfad, wenn das je vorkommt: die Skript-Aufrufe des Blocks mitverfolgen.
 const GEFAHR_RE = new RegExp(
-  '(?:^|[\\s;&|(])git\\s+push\\b' +
+  '(?:^|[\\s;&|(])git(?:\\s+-\\S+(?:\\s+\\S+)?)*\\s+push\\b' +
   '|uses:\\s*(?:actions/deploy-pages' +
   '|peaceiris/actions-gh-pages' +
   '|JamesIves/github-pages-deploy-action' +
@@ -153,6 +160,36 @@ test('ZW-5: das Ventil ist da und steht auf "veroeffentlichen" (sonst publiziert
     'Cron-Lauf still zum Trockenlauf machen: gruen, aber Karls Boards frieren ein.');
 });
 
+test('ZW-6: die Wache verschluckt den Wert-Gate-Alarm des Vintage-Schritts nicht', () => {
+  // BEFUND zweier unabhaengiger Reviews (19.08.). "Write board-history vintage" setzt bei
+  // einem strittigen Tages-Delta rc=2; der Commit-Schritt macht daraus am Ende ein
+  // ::error:: + exit 2 — laut scripts/write-board-history.js ausdruecklich "nie still".
+  // Die erste Fassung der Zweig-Wache stand VOR dieser Pruefung und stieg mit exit 0 aus:
+  // auf jedem Zweig- und jedem nur_rechnen-Lauf wurde aus dem roten X eine Warnung in
+  // einem gruenen Job. Ausgerechnet im Trockenlauf, der zum Pruefen einer Aenderung da ist.
+  const s = schritte(YML).find((x) => x.name === 'Commit board-history vintage to main');
+  assert.ok(s, 'Schritt "Commit board-history vintage to main" nicht gefunden');
+  const gStart = s.zeilen.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  assert.ok(gStart > 0, 'keine Zweig-Wache in diesem Schritt');
+  const gEnde = s.zeilen.findIndex((l, i) => i > gStart && /^ {10}fi$/.test(l));
+  assert.ok(gEnde > gStart, 'Ende des Wache-Blocks nicht gefunden');
+  const zweig = s.zeilen.slice(gStart, gEnde).join('\n');
+
+  assert.match(zweig, /\$VINTAGE_RC" = "2"/,
+    'der Wache-Zweig prueft das Wert-Gate nicht — ein SUSPECT-Vintage bliebe auf jedem '
+    + 'Zweig- und Trockenlauf unsichtbar, obwohl genau dort danach gefragt wird.');
+  assert.match(zweig, /::error::/, 'der Wert-Gate-Alarm im Wache-Zweig ist keine Fehlermeldung — '
+    + 'eine Warnung in einem gruenen Job erreicht Karls Alarmkanal (das rote X) nicht.');
+  assert.match(zweig, /exit 2/, 'der Wache-Zweig endet nicht mit exit 2 — der Job bliebe gruen.');
+
+  // Und die Voraussetzung dafuer: dieselbe Variable wie der Alarm am Schrittende, also
+  // MUSS sie vor der Wache gesetzt sein. Sonst prueft der Zweig eine leere Variable und
+  // waere dauerhaft still — gruen, und niemand merkt es.
+  assert.ok(s.zeilen.slice(0, gStart).some((l) => /^\s*VINTAGE_RC=/.test(l)),
+    'VINTAGE_RC wird erst NACH der Wache gesetzt — im Wache-Zweig waere sie leer und der '
+    + 'Alarm koennte nie feuern.');
+});
+
 // ── Gegenproben: der Pruefer muss rot werden koennen ──────────────────────────
 test('ZW-S1 Sabotage: Wache an EINEM Schritt entfernt -> rot, und der Schritt wird namentlich genannt', () => {
   const opfer = 'Deploy Scoring Output to GitHub Pages';
@@ -185,6 +222,22 @@ test('ZW-S3 Sabotage: Schutz vollstaendig entfernt -> rot an allen sechs', () =>
   assert.equal(gateDefinition(mutiert), null, 'Definition muss durch die Mutation weg sein');
   assert.equal(ungeschuetzteSchritte(mutiert).length, gefaehrlicheSchritte(YML).length,
     'nach vollstaendigem Ausbau muss JEDER veroeffentlichende Schritt als ungeschuetzt gelten');
+});
+
+test('ZW-S5 Sabotage: Wert-Gate-Alarm aus dem Wache-Zweig entfernt -> ZW-6 wird rot', () => {
+  // Ohne diese Gegenprobe waere ZW-6 nur eine Behauptung. Hier wird der Alarm wirklich
+  // herausgeschnitten und geprueft, dass die Zusicherung faellt.
+  const zeilen = YML.split('\n');
+  const i = zeilen.findIndex((l) => l.includes('SUSPECT geflaggt (Wert-Gate)') && l.includes('nicht veroeffentlicht'));
+  assert.ok(i > 0, 'der Alarm im Wache-Zweig ist nicht auffindbar — dann prueft diese Gegenprobe nichts');
+  // Zeile davor ist das `if`, danach `exit 2` und `fi` -> die vier Zeilen raus.
+  const mutiert = [...zeilen.slice(0, i - 1), ...zeilen.slice(i + 3)].join('\n');
+  assert.notEqual(mutiert, YML, 'Mutation griff nicht');
+  const s = schritte(mutiert).find((x) => x.name === 'Commit board-history vintage to main');
+  const gStart = s.zeilen.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  const gEnde = s.zeilen.findIndex((l, k) => k > gStart && /^ {10}fi$/.test(l));
+  assert.doesNotMatch(s.zeilen.slice(gStart, gEnde).join('\n'), /::error::/,
+    'der Alarm steht nach der Mutation immer noch im Wache-Zweig — dann belegt ZW-6 nichts.');
 });
 
 test('ZW-S4 Sabotage: Wache HINTER dem Push zaehlt nicht als Schutz', () => {
@@ -229,6 +282,8 @@ test('ZW-G2 Gegenrichtung: harmlose Schritte gelten nicht als Publizierer', () =
     '          git push',
     '          git push --force origin gh-pages',
     '          if git push origin HEAD:main; then ok=1; fi',
+    '          git -C _ghp push --force origin gh-pages',
+    '          git --git-dir=_ghp/.git push --force origin gh-pages',
     '        uses: peaceiris/actions-gh-pages@v3',
   ]) {
     assert.equal(ersteGefahrZeile([gefahr]), 0, 'muss als Publizierer gelten: ' + gefahr.trim());
