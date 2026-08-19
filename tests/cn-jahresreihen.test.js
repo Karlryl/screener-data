@@ -223,8 +223,23 @@ function fakeQuelle(fixture) {
     else if (rn === 'RPT_HKF10_FN_BALANCE') quelle = Object.values(fixture.hk).flatMap((x) => x.bal);
     else throw new Error('Fake kennt ' + rn + ' nicht');
     let data = quelle;
+    const items = werteAus('STD_ITEM_CODE');
     if (secs) data = data.filter((z) => secs.includes(z.SECUCODE));
     if (orgs) data = data.filter((z) => orgs.includes(z.ORG_CODE));
+    // Der Posten-Filter wird MITGEPRUEFT — und zwar als PFLICHT fuer die beiden HK-Rechenwerks-
+    // Berichte. Nur zu filtern, WENN ein Posten-Filter erkannt wurde, genuegt nicht: bei einem
+    // Tippfehler im Feldnamen ('STD_ITEM_KAPUTT') findet die Fake-Quelle einfach keinen Filter
+    // und gibt alles zurueck — der Test bliebe gruen, waehrend die echte Quelle den Abruf
+    // ablehnt. Gemessen: genau so ging die erste Fassung dieser Pruefung durch.
+    // (Befund typescript-reviewer 19.08.2026.)
+    if (rn === 'RPT_HKF10_FN_INCOME' || rn === 'RPT_HKF10_FN_BALANCE') {
+      if (!items) throw new Error(rn + ': der Aufruf traegt keinen erkennbaren STD_ITEM_CODE-Filter — '
+        + 'so wuerde die echte Quelle den ganzen Bericht liefern oder ablehnen. Filter war: ' + filter);
+      data = data.filter((z) => items.includes(z.STD_ITEM_CODE));
+    }
+    if (!/\(DATE_TYPE_CODE="001"\)/.test(filter) && (rn === 'RPT_HKF10_FN_INCOME' || rn === 'RPT_HKF10_FN_BALANCE')) {
+      throw new Error(rn + ': der Aufruf holt alle Periodenarten statt nur die Jahresabschluesse');
+    }
     if (/\(REPORT_TYPE="年报"\)/.test(filter)) data = data.filter((z) => z.REPORT_TYPE === '年报');
     data = data.map((z) => Object.fromEntries(cols.map((c) => [c, c in z ? z[c] : null])));
     return { success: true, code: 0, message: 'ok', result: { pages: 1, count: data.length, data } };
@@ -407,6 +422,12 @@ test('holeBericht: Quellenfehler, unvollstaendige Blaetterung und Doppel-Zeilen 
   // sie darf nicht den ganzen Batch kosten, sondern wird firmenweise behandelt (Test unten).
   assert.equal((await B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
     antwort({ success: true, result: { count: 2, data: [{ SECUCODE: 'A' }, { SECUCODE: 'A' }] } }))).length, 2);
+  // Ohne Trefferzahl ist Vollstaendigkeit nicht pruefbar — dann darf nicht still Seite 1
+  // geglaubt werden (Befund Silent-Failure-Review 19.08.2026). Beide Formen: fehlend und Text.
+  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'HSF10', null,
+    antwort({ success: true, result: { data: [{ SECUCODE: 'A' }] } })), /keine Trefferzahl/);
+  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'HSF10', null,
+    antwort({ success: true, result: { count: '552', data: [{ SECUCODE: 'A' }] } })), /keine Trefferzahl/);
   // Leerer Treffer ist KEIN Fehler.
   assert.deepEqual(await B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
     antwort({ success: false, code: 9201, message: '返回数据为空' })), []);
@@ -562,6 +583,19 @@ test('VORAUSSETZUNG: 1208.HK meldet Rohertrag == Umsatz (Platzhalter, keine 100-
   const rev = jahr.find((z) => z.STD_ITEM_CODE === B.HK_INC_ITEMS.annualRev).AMOUNT;
   const gp = jahr.find((z) => z.STD_ITEM_CODE === B.HK_INC_ITEMS.annualGrossProfit).AMOUNT;
   assert.equal(rev, gp, 'Fixture-Kontrolle: beide 6.218.000.000');
+});
+
+test('A-Seite: Umsatzkosten von exakt 0 sind eine fehlende Angabe, keine 100-%-Rohmarge', () => {
+  const roh = a('688256.SH');
+  const jahr = roh.inc.find((z) => z.REPORT_TYPE === '年报' && z.REPORT_DATE.startsWith('2025-12-31'));
+  assert.ok(jahr.OPERATE_COST > 0, 'VORAUSSETZUNG: echte Kosten vorhanden (' + jahr.OPERATE_COST + ')');
+  assert.ok(Number.isFinite(wert(B.bauAJahre(roh, '688256.SS'), 'annualGrossProfit', 2025)),
+    'mit echten Kosten wird der Rohertrag geschrieben');
+  jahr.OPERATE_COST = 0;
+  const j = B.bauAJahre(roh, '688256.SS');
+  assert.equal(wert(j, 'annualGrossProfit', 2025), null,
+    'Kosten von 0 wuerden 100 % Rohmarge ergeben und direkt in gpGrowth/marginTrajectory laufen');
+  assert.equal(wert(j, 'annualRev', 2025), 6497196198.68, 'der Umsatz bleibt unberuehrt');
 });
 
 test('der Platzhalter wird verworfen — und ein echter Rohertrag bleibt stehen', () => {

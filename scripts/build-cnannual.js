@@ -454,7 +454,19 @@ async function holeBericht(reportName, spalten, filter, source, sortColumn, hole
     }
     const r = j.result;
     if (!r || !Array.isArray(r.data)) throw new Error(reportName + ': result.data fehlt oder ist kein Array');
-    if (erwartet == null && Number.isFinite(r.count)) erwartet = r.count;
+    // Ohne eine Trefferzahl ist Vollstaendigkeit nicht pruefbar. Frueher wurde in diesem Fall
+    // still Seite 1 geglaubt — bei 10 Tickern x bis zu 64 Perioden ist eine Seite aber der
+    // Normalfall zu klein, und es waeren lautlos die AELTESTEN Jahre des ganzen Batches
+    // verschwunden (Befund Silent-Failure-Review 19.08.2026). Ein fehlendes oder als Text
+    // geliefertes `count` ist damit derselbe Fall wie eine verschwundene Spalte: laut abbrechen.
+    if (erwartet == null) {
+      if (!Number.isFinite(r.count)) {
+        throw new Error(reportName + ': die Antwort nennt keine Trefferzahl (result.count='
+          + JSON.stringify(r.count) + ') — dann ist nicht pruefbar, ob die Seite vollstaendig ist. '
+          + 'Abbruch statt "Seite 1 wird schon alles sein".');
+      }
+      erwartet = r.count;
+    }
     pruefeSchema(r.data, spalten, reportName + ' Seite ' + seite);
     gesammelt.push(...r.data);
     if (erwartet == null || gesammelt.length >= erwartet || !r.data.length) break;
@@ -685,7 +697,15 @@ function bauAJahre(roh, tk) {
     serien.annualRev.push({ value: rev });
     // Rohertrag ist im CAS-Werk nicht ausgewiesen, sondern Umsatz minus Umsatzkosten.
     // Fehlt eines von beiden, bleibt er null — nie eine Haelfte der Rechnung.
-    serien.annualGrossProfit.push({ value: rohertrag(rev, (Number.isFinite(rev) && Number.isFinite(kosten)) ? rev - kosten : null) });
+    // NICHT ueber rohertrag(): dessen Platzhalter-Regel gilt fuer einen ROH gelieferten
+    // Rohertrag (HK). Hier wird selbst gerechnet, da kann Umsatz == Rohertrag nur entstehen,
+    // wenn die Umsatzkosten exakt 0 sind — und eine Jahres-Kostenzeile von exakt 0 neben
+    // laufendem Umsatz ist keine gemessene Null, sondern eine fehlende Angabe. Sie ergaebe
+    // 100 % Rohmarge und liefe direkt in gpGrowth/marginTrajectory. Also ebenfalls null, aber
+    // aus einem anderen, hier ausgeschriebenen Grund. (Befund typescript-reviewer 19.08.2026:
+    // vorher lief der A-Wert durch die HK-Platzhalter-Regel und war damit falsch begruendet.)
+    const kostenBrauchbar = Number.isFinite(kosten) && kosten !== 0;
+    serien.annualGrossProfit.push({ value: (Number.isFinite(rev) && kostenBrauchbar) ? rev - kosten : null });
     serien.annualOpInc.push({ value: zahl(inc.OPERATE_PROFIT) });
     serien.annualNetIncome.push({ value: zahl(inc.PARENT_NETPROFIT) });
     serien.annualAssets.push({ value: bal ? zahl(bal.TOTAL_ASSETS) : null });
