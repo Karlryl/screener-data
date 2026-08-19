@@ -17,7 +17,7 @@
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { normalizeYahooSymbol } = require('../pull-yahoo.js');
+const { normalizeYahooSymbol, _silentErrorCounts, _resetSilentErrorCounts } = require('../pull-yahoo.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -61,6 +61,27 @@ test('normale US-Dash-Form (BRK-B) und andere Boersen-Suffixe (.KS/.T/.L) laufen
 
 test('.MX-Kennung ohne Schraegstrich (die ueberwiegende Mehrheit) bleibt unveraendert', () => {
   assert.equal(normalizeYahooSymbol('WALMEX.MX'), 'WALMEX.MX');
+});
+
+// ── Review-Fund (silent-failure-hunter, Tag 645): NIE raten bei mehrdeutiger Form.
+// Der belegte Fall hat immer GENAU EINEN Schraegstrich. Ein globaler Strip haette
+// eine unbekannte Mehrfach-Schraegstrich-Form still auf einen GERATENEN Namen
+// zusammengefaltet -- im schlimmsten Fall die Kennung einer ANDEREN Firma. Bei
+// Mehrdeutigkeit lieber unveraendert durchreichen (bleibt 404, wie vor dem Fix)
+// statt einen unbelegten Fall zu erraten.
+test('zwei Schraegstriche (unbekannte/unbelegte Form) bleiben unangetastet -- kein Raten', () => {
+  assert.equal(normalizeYahooSymbol('AB/CD/EF.MX'), 'AB/CD/EF.MX');
+});
+
+// ── Fail-loud-Zaehler (review-fund: eine WARN-Zeile allein geht in ~21k INFO-Zeilen
+// pro Lauf unter). symbolsNormalized folgt exakt dem TASK-0.11-Muster der anderen
+// Zaehler (z.B. manifestCheckpoint) -- ueber _silentErrorCounts()/_resetSilentErrorCounts()
+// von aussen pruefbar, ohne dass processOne() (kein Netz-Mock in diesem Test) laufen muss.
+test('symbolsNormalized-Zaehler ist im Laufzaehler-Objekt verankert und resetbar', () => {
+  assert.ok('symbolsNormalized' in _silentErrorCounts(),
+    'der Zaehler muss im Laufzaehler-Objekt stehen, sonst ist er von aussen nicht pruefbar');
+  _resetSilentErrorCounts();
+  assert.equal(_silentErrorCounts().symbolsNormalized, 0);
 });
 
 // ── Defensiv: kein Crash auf Nicht-Strings ─────────────────────────────────────
