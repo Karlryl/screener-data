@@ -9,6 +9,7 @@
  *
  * READS  (read-only inputs, never a write target):
  *   outputs/hypergrowth/<branch>.json  (13 boards, {profitable[],unprofitable[]})
+ *   outputs/hypergrowth/full/<branch>.json  (19.08.: dieselben 13 Boards UNGEKAPPT)
  *   outputs/hypergrowth/overview.json  (flat cross-branch top-200)
  *   outputs/hypergrowth/survival.json  (flat pre-revenue, runway-desc)
  *   outputs/hypergrowth/index.json     (meta: counts/branches/excluded)
@@ -17,6 +18,7 @@
  *
  * WRITES (atomic tmp+rename, assertFinite -> fail-loud on NaN/Inf, never silent-null):
  *   outputs/findash-export/v1/<branch>.json
+ *   outputs/findash-export/v1/full/<branch>.json  (19.08.: die VOLLE Kohorte, on-demand)
  *   outputs/findash-export/v1/overview.json
  *   outputs/findash-export/v1/survival.json
  *   outputs/findash-export/v1/index.json
@@ -70,6 +72,20 @@ function readMcapBounds() {
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
+// ---- Vollboards (19.08.2026) ----------------------------------------------------------
+// BEFUND: run-screener.js ruft produceRankings(results, {topN: topN || 100}) und die CI ruft
+// ohne --topN. Von 8.908 bewerteten Firmen erreichten damit 1.940 die Oberflaeche — 6.968
+// waren weder abrufbar noch erwaehnt. Das bricht die Direktive "nichts verschwindet":
+// Rang 101 existierte fuer Karl schlicht nicht.
+// Die vollen Kohorten liegen seit 2.3-A8 in outputs/hypergrowth/full/, wurden aber nie
+// publiziert (der gh-pages-Deploy kopiert hypergrowth flach: `cp ../outputs/hypergrowth/*.json`).
+// WEG: derselbe Schreiber, dieselben Mapper, dieselbe Rangvergabe -> v1/full/<branch>.json,
+// von findash on demand nachgeladen. KEIN --topN-Flag (jedes N unter dem Kohortenmaximum
+// verletzt die Direktive weiter und flutete den Newcomer-Log), KEIN zweites Format (dem
+// rohen hypergrowth/full/ fehlen rank/rankGrund, ath, Waehrungsbeleg, Namens-Normalisierung
+// und die Schema-Huelle), KEINE zweite Detailtiefe im Erstload (+1,3 MB in JEDEM Aufruf).
+const HG_FULL_DIR = path.join(HG_DIR, 'full');
+const FULL_OUT_DIR = path.join(OUT_DIR, 'full');
 
 const SCHEMA = 'findash-export/v1';
 const BRANCHES = [
@@ -228,6 +244,14 @@ function ergaenzeWaehrungsbeleg(out) {
 function waehrungsWaechterBilanz() {
   return { geprueft: _mcapGeprueft, genullt: _mcapGenullt };
 }
+// 19.08.: einziger Aufrufer ist buildFullBoards — die Vollkohorten-Zeilen werden normal
+// geprueft und genullt, zaehlen aber NICHT in die 25-%-Abbruchquote (die auf den gekappten
+// Listen gemessen wurde). Kein allgemeiner Setter-Missbrauch: wer die Bilanz sonst
+// zuruecksetzt, blendet den Waechter.
+function setzeWaehrungsWaechterBilanz(b) {
+  _mcapGeprueft = b.geprueft;
+  _mcapGenullt = b.genullt;
+}
 // Nach dem Bau: melden und bei Massen-Nullung abbrechen statt ein halbblindes Board
 // auszuliefern.
 // Reine Schwellen-Entscheidung (exportiert, damit der Waechter sie AUSFUEHREN kann).
@@ -337,14 +361,21 @@ function rangGrund(row) {
 // Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
 // und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
 // 1..k. Sie behaelt ihre Array-Position (Score-Ordnung bleibt lesbar) und ihren Score.
-function vergebeRaenge(rows, wo) {
+// opts.warn === false schaltet NUR die Melde-Quote ab, nie die Rangvergabe. Gebraucht von
+// den Vollboards (19.08.): die 40-%-Schwelle wurde auf den GEKAPPTEN Listen gemessen
+// (Maximum 16.08.: financials/profitable 36,4 %). Im Tail einer Vollkohorte ist duenne
+// Abdeckung der Normalfall, nicht der Alarm — dort gerechnet, feuerte die Warnung ab der
+// ersten Nacht auf fast jedem Board und niemand laese sie mehr. Alarm-Ermuedung ist ein
+// echter Schaden, und eine Schwelle auf einer nie gemessenen Grundgesamtheit ist keine
+// Schwelle. Die gekappten Listen behalten sie unveraendert (Pruefung 7b im Waechter).
+function vergebeRaenge(rows, wo, opts = {}) {
   let rang = 0, entrangt = 0;
   for (const row of rows) {
     const grund = rangGrund(row);
     if (grund) { row.rank = null; row.rankGrund = grund; entrangt++; }
     else { row.rank = ++rang; row.rankGrund = null; }
   }
-  if (rows.length && entrangt / rows.length > RANK_GATE_WARN_ANTEIL) {
+  if (opts.warn !== false && rows.length && entrangt / rows.length > RANK_GATE_WARN_ANTEIL) {
     console.warn('::warning::Belegbarkeits-Gate: ' + wo + ' verliert ' + entrangt + ' von ' +
       rows.length + ' Raengen (' + (100 * entrangt / rows.length).toFixed(1) + ' %) — ueber ' +
       (RANK_GATE_WARN_ANTEIL * 100) + ' %. Entweder ist die Datenlage eingebrochen oder die ' +
@@ -435,8 +466,14 @@ function mapSurvivalRow(r, i) {
 }
 
 // ---- build ---------------------------------------------------------------
-function buildBoard(id, coverage) {
-  const b = readJSON(path.join(HG_DIR, id + '.json'));
+// opts.srcDir  — Quellverzeichnis (Default outputs/hypergrowth/; die Vollboards reichen
+//                outputs/hypergrowth/full/ herein). Sonst ist alles identisch: dieselben
+//                Mapper, dieselbe Rangvergabe, dieselbe Schema-Huelle.
+// opts.rangOpts — an vergebeRaenge durchgereicht ({warn:false} fuer die Vollboards).
+function buildBoard(id, coverage, opts = {}) {
+  const srcDir = opts.srcDir || HG_DIR;
+  const rangOpts = opts.rangOpts;
+  const b = readJSON(path.join(srcDir, id + '.json'));
   return {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
@@ -444,9 +481,54 @@ function buildBoard(id, coverage) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable'),
-    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable'),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable', rangOpts),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable', rangOpts),
   };
+}
+
+// ---- Vollboards (19.08.2026) ---------------------------------------------------------
+// Schreibt je Branche die UNGEKAPPTE Kohorte nach <OUT_DIR>/full/<id>.json, indent 0
+// (maschinell nachgeladen, ~5x groesser als das gekappte Board — genau wie die Quelle in
+// outputs/hypergrowth/full/, die run-screener.js ebenfalls kompakt schreibt).
+//
+// Rang-Paritaet ist KONSTRUKTIV garantiert, nicht gehofft: das gekappte Board ist das
+// byte-gleiche topN-Praefix der full-Liste (bewiesen in tests/scoring/anchors.rank.test.js
+// A8), und vergebeRaenge laeuft je Zeile sequenziell-deterministisch. Die ersten topN
+// Zeilen beider Dateien sind deshalb tief gleich, inklusive rank — festgenagelt in
+// tests/scoring/export-vollboard.test.js (Pruefung 3), nicht bloss angenommen.
+//
+// FEHLENDES full/-QUELLVERZEICHNIS IST EIN ABBRUCH, kein Optional-Zweig: der versiegelte
+// run-screener.js legt es bei JEDEM Lauf an (mkdirSync + 13 writeJsonAtomic). Ist es weg,
+// ist die Engine anomal gelaufen — und ein still leeres Vollboard sieht in findash exakt
+// aus wie ein Board ohne Nachruecker. Das ist der teuerste Fehlerfall dieses Feeds.
+//
+// survival braucht kein full/: die Liste wird nie gekappt (flach, runway-desc).
+function buildFullBoards(coverage, opts = {}) {
+  const hgFullDir = opts.hgFullDir || HG_FULL_DIR;
+  const outFullDir = opts.outFullDir || FULL_OUT_DIR;
+  if (!fs.existsSync(hgFullDir)) {
+    throw new Error('[findash-export] Vollkohorten-Quelle fehlt: ' + hgFullDir +
+      ' — run-screener.js schreibt sie bei jedem Lauf (2.3-A8). Fehlt sie, ist der Scoring-Lauf ' +
+      'anomal gelaufen; ein stumm leeres Vollboard waere von einem Board ohne Nachruecker nicht zu unterscheiden.');
+  }
+  fs.mkdirSync(outFullDir, { recursive: true });
+  const woptsRang = { warn: false }; // s. vergebeRaenge: Schwelle gilt fuer die gekappten Listen
+  // Die Bilanz des Waehrungs-Waechters (Abbruch ab 25 % genullter Groessen) wurde ebenfalls
+  // auf den gekappten Listen gemessen. Die ~7.000 zusaetzlichen Tail-Zeilen gehoeren NICHT
+  // in denselben Nenner — sonst entschiede ein Zusatz-Feed ueber eine gemessene Abbruch-
+  // grenze und koennte den ganzen Export kippen. GENULLT wird auf den Vollzeilen trotzdem
+  // (ergaenzeWaehrungsbeleg laeuft normal), sonst waere die Zeilen-Paritaet gebrochen.
+  const bilanzVorher = waehrungsWaechterBilanz();
+  try {
+    for (const id of BRANCHES) {
+      writeJsonAtomic(path.join(outFullDir, id + '.json'),
+        buildBoard(id, coverage, { srcDir: hgFullDir, rangOpts: woptsRang }),
+        { assertFinite: true, indent: 0 });
+    }
+  } finally {
+    setzeWaehrungsWaechterBilanz(bilanzVorher);
+  }
+  return { out: outFullDir, boards: BRANCHES.length };
 }
 
 function buildOverview(coverage) {
@@ -707,6 +789,7 @@ function build() {
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
+  const voll = buildFullBoards(coverage); // 19.08.: v1/full/ — die Kohorte hinter Rang 100
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
   const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
   // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
@@ -720,7 +803,7 @@ function build() {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
-  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards, smallcapBoards: sc.boards,
+  return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
 
@@ -1122,20 +1205,39 @@ function validateFile(mk, kind, errs, opts = {}) {
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
-function validateExport() {
+function validateExport(outDir = OUT_DIR) {
   const errs = [];
   for (const id of BRANCHES) {
-    const mk = readJSONOrNull(path.join(OUT_DIR, id + '.json'));
+    const mk = readJSONOrNull(path.join(outDir, id + '.json'));
     if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
     validateFile(mk, id, errs);
   }
   for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival'], ['index.json', 'index']]) {
-    const mk = readJSONOrNull(path.join(OUT_DIR, name));
+    const mk = readJSONOrNull(path.join(outDir, name));
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateQualityExport())  // 3.2: QC-Board (empty when quality/ absent)
-             .concat(validateSmallcapExport()); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
+  return errs.concat(validateFullExport(path.join(outDir, 'full')))     // 19.08.: Vollboards, PFLICHT
+             .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
+             .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
+}
+
+// ---- Vollboard-Validierung (19.08.2026) ---------------------------------------------
+// ANDERS ALS quality/ und smallcap/ ist full/ NICHT optional: run-screener.js schreibt die
+// Quelle bei jedem Lauf, also gehoert zu jedem der 13 Branchen-Boards ein Vollboard. Fehlt
+// eines, hat Karl fuer diese Branche wieder nur die ersten 100 Zeilen — und zwar OHNE dass
+// irgendetwas es sagt. Genau diese Klasse (stumm halber Feed statt sichtbarem Ausfall) ist
+// die teuerste in diesem Projekt, deshalb ein harter Verstoss statt eines Optional-Zweigs.
+// Labels tragen ein 'full/'-Praefix, damit der Alarmkanal ein Vollboard-Problem von einem
+// Board-Problem unterscheiden kann (dasselbe Muster wie quality/ und smallcap/).
+function validateFullExport(fullDir = FULL_OUT_DIR) {
+  const raw = [];
+  for (const id of BRANCHES) {
+    const mk = readJSONOrNull(path.join(fullDir, id + '.json'));
+    if (!mk) { raw.push(`${id}: missing/unreadable`); continue; }
+    validateFile(mk, id, raw); // dieselbe Board-Datei-Pruefung: branch===id, boardStatus, jede Zeile, Rang- und Score-Folge
+  }
+  return raw.map((e) => (e.startsWith('full/') ? e : 'full/' + e));
 }
 
 // ---- QC-Board validation (3.2) ------------------------------------------
@@ -1461,11 +1563,14 @@ if (require.main === module) {
     process.exit(0);
   }
   const r = build();
-  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
+  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }
 
 module.exports = {
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
+  // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
+  // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  buildFullBoards, validateFullExport, buildBoard,
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
