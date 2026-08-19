@@ -73,6 +73,10 @@ def jetzt():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def zeitpunkt(text):
+    return datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+
+
 def datenwurzel():
     wert = os.environ.get(DATENWURZEL_ENV)
     if not wert:
@@ -98,11 +102,22 @@ def lies_json(pfad):
         return json.load(f)
 
 
+def schreib_atomar(pfad, text):
+    """Erst daneben schreiben, dann umbenennen. Ein Absturz mitten im Schreiben darf
+    keine halbe Datei hinterlassen - beim Zugriffs-Register waere das die zerstoerte
+    Hash-Kette der gesamten Studie, nicht nur ein verlorener Lauf."""
+    os.makedirs(os.path.dirname(os.path.abspath(pfad)), exist_ok=True)
+    vorlaeufig = pfad + ".teil"
+    with open(vorlaeufig, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(vorlaeufig, pfad)
+
+
 def schreib_json(pfad, obj, einrueckung=1):
-    os.makedirs(os.path.dirname(pfad), exist_ok=True)
-    text = json.dumps(obj, ensure_ascii=False, indent=einrueckung, sort_keys=False)
-    with open(pfad, "w", encoding="utf-8", newline="\n") as f:
-        f.write(text + "\n")
+    schreib_atomar(pfad, json.dumps(obj, ensure_ascii=False, indent=einrueckung,
+                                    sort_keys=False) + "\n")
 
 
 # ── Netz: holen und versiegeln (R7) ───────────────────────────────────────────
@@ -131,12 +146,16 @@ def hole(url, mindestabstand=0.11, versuche=3, wartezeit=1.5):
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=KOPF), timeout=120) as antwort:
                 rohbytes = antwort.read()
-            if STOERUNGS_MARKER in rohbytes[:4000]:
+            if STOERUNGS_MARKER in rohbytes:
                 letzter = "Stoerungsseite des Internet Archive (Statuscode %s)" % antwort.status
             else:
                 return rohbytes, antwort.status
         except urllib.error.HTTPError as fehler:
-            if fehler.code in (404, 403):
+            # 404 heisst "gibt es nicht" - das ist ein Ergebnis. 403 dagegen kam bei
+            # gartner.com erst NACH vielen schnellen Abrufen und verschwand nach einer
+            # Pause: das ist eine Drossel, keine Sperre. Also langsamer werden und
+            # erneut fragen - nicht mit anderer Kennung wiederkommen.
+            if fehler.code == 404:
                 return None, fehler.code
             letzter = fehler
         except Exception as fehler:  # Netzfehler, Timeouts
@@ -145,11 +164,17 @@ def hole(url, mindestabstand=0.11, versuche=3, wartezeit=1.5):
     raise Bruch("Abruf endgueltig gescheitert: %s (%s)" % (url, letzter))
 
 
+def hole_gartner(url):
+    """gartner.com drosselt. Drei Sekunden Abstand und geduldige Wiederholung sind die
+    hoefliche Antwort darauf; eine andere Kennung waere Umgehung und ist verboten (R7)."""
+    return hole(url, mindestabstand=3.0, versuche=2, wartezeit=12.0)
+
+
 def hole_archiv(url):
     """Wayback-Abrufe brauchen einen laengeren Atem als der lebende EDGAR-Dienst:
     das Archiv ist zeitweise komplett offline. Lieber lange warten als eine Luecke
     erfinden."""
-    return hole(url, mindestabstand=1.0, versuche=8, wartezeit=20.0)
+    return hole(url, mindestabstand=1.0, versuche=3, wartezeit=8.0)
 
 
 def versiegle(unter, rohbytes):
@@ -182,13 +207,20 @@ CDX_SEITEN = ("http://web.archive.org/cdx/search/cdx?url=%s&collapse=urlkey"
               "&pageSize=5&showNumPages=true")
 
 
-def cdx_alle(praefix):
+def cdx_alle(praefix, siegel=None):
     """Holt den Wayback-Index VOLLSTAENDIG, seitenweise.
 
     Der erste Anlauf zog den Index in einem Rutsch - und Wayback lieferte gelegentlich
     eine abgeschnittene Antwort. Abgeschnitten heisst hier: Jahrgaenge fehlen still.
     Genau deshalb wird geblaettert und JEDE Seite streng geparst; eine unlesbare Seite
     haelt an, statt eine stille Luecke zu erzeugen (fail-closed)."""
+    if siegel:
+        # Ausdruecklich benannter Rueckgriff auf eine FRUEHER gezogene, versiegelte
+        # Index-Antwort. Kein stiller Fallback: der Hash steht im Aufruf und landet im
+        # Manifest, damit sichtbar bleibt, dass der Index nicht von heute stammt.
+        rohbytes = entsiegle("roh", siegel)
+        teil = json.loads(rohbytes.decode("utf-8", "replace"))
+        return [siegel], (teil[1:] if teil and teil[0][0] == "timestamp" else teil)
     ziel = urllib.parse.quote(praefix, safe="*")
     kopf, _ = hole_archiv(CDX_SEITEN % ziel)
     seiten = int(kopf.decode("ascii", "replace").strip())
@@ -223,10 +255,10 @@ A_MUSTER = re.compile(
     r"/(\d{4})-\d{2}-\d{2}-gartner-?(?:identifies|says)-+the-?top-10-strategic-technology-trends-+for-(\d{4})/?$")
 
 
-def quelle_a_urls():
+def quelle_a_urls(siegel=None):
     """Findet die Pressemitteilungen mechanisch im Wayback-Index. Keine Merkliste,
     keine Motor-Erinnerung: was das Muster trifft, kommt rein."""
-    hashes, zeilen = cdx_alle("gartner.com/en/newsroom/press-releases/*")
+    hashes, zeilen = cdx_alle("gartner.com/en/newsroom/press-releases/*", siegel)
     return hashes, kandidaten(zeilen, A_MUSTER, 2)
 
 
@@ -262,22 +294,21 @@ def quelle_a_titel(roh_html):
     if len(nummeriert) == 10:
         return [t for _, t in sorted(nummeriert, key=lambda p: p[0])]
 
-    start = None
-    for i, (tag, klartext) in enumerate(stuecke):
-        if tag == "h3" and "top 10 strategic technology trends" in klartext.lower():
-            start = i + 1
+    # A1: alle fett gesetzten Stuecke bis zum ersten "About ..." - so setzt Gartner die
+    # Liste. Der erste Anlauf verankerte sie an einer h3-Ueberschrift mit dem
+    # Mitteilungstitel; die Jahrgaenge 2023 und 2024 tragen diesen Titel gar nicht in
+    # einer Ueberschrift, und der Anker liess sie durchfallen. Der Abschluss-Marker
+    # "About " ist die stabilere Sache: er steht in jeder Gartner-Mitteilung.
+    fett = []
+    for tag, klartext in stuecke:
+        if tag not in ("strong", "b"):
+            continue
+        if klartext.lower().startswith("about "):
             break
-    if start is not None:
-        fett = []
-        for tag, klartext in stuecke[start:]:
-            if tag not in ("strong", "b"):
-                continue
-            if klartext.lower().startswith("about "):
-                break
-            if klartext and klartext not in fett:
-                fett.append(klartext)
-        if len(fett) == 10:
-            return fett
+        if klartext and klartext not in fett:
+            fett.append(klartext)
+    if len(fett) == 10:
+        return fett
     return []
 
 
@@ -381,11 +412,17 @@ def quelle_c_urls():
 
 # ── Quelle B: Gartner Hype Cycle for Emerging Technologies ────────────────────
 
-B_MUSTER = re.compile(r"/(\d{4})-\d{2}-\d{2}-[^/]*hype-cycle[^/]*emerging[^/]*/?$", re.I)
+# Gartner veroeffentlicht viele Hype Cycles. Gesucht ist AUSSCHLIESSLICH der fuer
+# Emerging Technologies. Das lose Muster "hype-cycle...emerging" fing auch
+# "Hype Cycle for Emerging Technologies IN FINANCE" und die Laender-Ausgaben ein.
+# Die Form, die nur der jaehrliche Hauptbericht traegt, ist "Gartners <Jahr> Hype
+# Cycle for Emerging Technologies" - und der Jahrgang steht darin, nicht im
+# Datumspraefix.
+B_MUSTER = re.compile(r"gartners?-(\d{4})-hype-cycle-for-emerging-technologies", re.I)
 
 
-def quelle_b_urls():
-    hashes, zeilen = cdx_alle("gartner.com/en/newsroom/press-releases/*")
+def quelle_b_urls(siegel=None):
+    hashes, zeilen = cdx_alle("gartner.com/en/newsroom/press-releases/*", siegel)
     return hashes, kandidaten(zeilen, B_MUSTER, 1)
 
 
@@ -408,23 +445,44 @@ def b_bilder(roh_html):
 WAYBACK = "http://web.archive.org/web/%sid_/%s"
 
 
-def _erster_treffer(kandidatenliste, extraktor, quelle, jahrgang, luecken, hoechstens=4):
-    """Probiert die Snapshot-Kandidaten in der festgelegten Reihenfolge. Der erste,
-    der zehn Titel hergibt, gewinnt. Gibt keiner zehn her, ist der Jahrgang eine
-    Luecke - mit Begruendung je Kandidat, damit sichtbar bleibt, WORAN es lag."""
+def live_adresse(original):
+    """Die Adresse aus dem Wayback-Index als heutige Live-Adresse."""
+    return original.replace("http://", "https://", 1).replace(":80/", "/", 1)
+
+
+def _erster_treffer(kandidatenliste, extraktor, quelle, jahrgang, luecken, hoechstens=8):
+    """Probiert die Kandidaten in der festgelegten Reihenfolge. Je Kandidat zuerst die
+    LEBENDE Seite, dann der Archiv-Snapshot.
+
+    Warum live zuerst: die Regel nennt gartner.com und den Wayback-Snapshot als zwei
+    Wege zur selben Mitteilung. Der Planer hatte notiert, der direkte Abruf antworte
+    403 - auf dieser Maschine antwortet er 200 (nachgemessen 19.08.2026 an den
+    Jahrgaengen 2018 und 2024). Der Live-Weg ist damit der bessere: er haengt nicht am
+    Archiv, das an diesem Abend komplett ausfiel. Die DATIERUNG bleibt in beiden
+    Faellen die Datumsangabe in der Adresse der Mitteilung.
+
+    Der erste Weg, der zehn Titel hergibt, gewinnt. Gibt keiner zehn her, ist der
+    Jahrgang eine Luecke - mit Begruendung je Versuch, damit sichtbar bleibt, WORAN es
+    lag."""
     gruende = []
     for _, zeitstempel, original in kandidatenliste[:hoechstens]:
-        rohbytes, status = hole_archiv(WAYBACK % (zeitstempel, original))
-        if rohbytes is None:
-            gruende.append("%s -> HTTP %s" % (zeitstempel, status))
-            continue
-        titel = extraktor(rohbytes)
-        if len(titel) == 10:
-            return {"url": original, "waybackZeitstempel": zeitstempel,
-                    "sha256": versiegle("roh", rohbytes), "bytes": len(rohbytes),
-                    "titel": titel}, None
-        gruende.append("%s -> %d statt 10 Titel" % (zeitstempel, len(titel)))
-    return None, "; ".join(gruende) or "kein Snapshot im Index"
+        for weg, url, holer in (("live", live_adresse(original), hole_gartner),
+                                ("archiv", WAYBACK % (zeitstempel, original), hole_archiv)):
+            try:
+                rohbytes, status = holer(url)
+            except Bruch as fehler:
+                gruende.append("%s/%s -> %s" % (zeitstempel, weg, fehler))
+                continue
+            if rohbytes is None:
+                gruende.append("%s/%s -> HTTP %s" % (zeitstempel, weg, status))
+                continue
+            titel = extraktor(rohbytes)
+            if len(titel) == 10:
+                return {"url": url, "indexZeitstempel": zeitstempel, "weg": weg,
+                        "sha256": versiegle("roh", rohbytes), "bytes": len(rohbytes),
+                        "titel": titel}, None
+            gruende.append("%s/%s -> %d statt 10 Titel" % (zeitstempel, weg, len(titel)))
+    return None, "; ".join(gruende) or "kein Eintrag im Index"
 
 
 def befehl_register(argv):
@@ -436,6 +494,11 @@ def befehl_register(argv):
     Luecke buchen". Die Zusammenfuehrung ersetzt IMMER den vollstaendigen Bestand
     einer Quelle - nie einzelne Jahrgaenge, sonst koennte ein zweiter Lauf sich die
     besseren Jahrgaenge zusammensuchen."""
+    siegel = None
+    if "--siegel" in argv:
+        i = argv.index("--siegel")
+        siegel = argv[i + 1]
+        argv = argv[:i] + argv[i + 2:]
     quellen = "".join(argv).upper() or "ABC"
     for zeichen in quellen:
         if zeichen not in "ABC":
@@ -445,9 +508,9 @@ def befehl_register(argv):
 
     # Quelle A - Gartner Top 10 Strategic Technology Trends
     if "A" in quellen:
-        a_hashes, a_urls = quelle_a_urls()
+        a_hashes, a_urls = quelle_a_urls(siegel)
         eintraege.append({"quelle": "A", "rolle": "index", "url": "wayback-cdx: gartner press-releases",
-                          "sha256": a_hashes, "geholtAm": jetzt()})
+                          "sha256": a_hashes, "ausSiegel": bool(siegel), "geholtAm": jetzt()})
         for jahrgang in range(2008, 2025):
             treffer, grund = _erster_treffer(a_urls.get(jahrgang, []), quelle_a_titel,
                                              "A", jahrgang, luecken)
@@ -462,9 +525,9 @@ def befehl_register(argv):
 
     # Quelle B - Hype Cycle for Emerging Technologies. Ohne abrufbare Grafik: Luecke.
     if "B" in quellen:
-        b_hashes, b_urls = quelle_b_urls()
+        b_hashes, b_urls = quelle_b_urls(siegel)
         eintraege.append({"quelle": "B", "rolle": "index", "url": "wayback-cdx: gartner press-releases",
-                          "sha256": b_hashes, "geholtAm": jetzt()})
+                          "sha256": b_hashes, "ausSiegel": bool(siegel), "geholtAm": jetzt()})
         for jahrgang in range(2005, 2025):
             liste = b_urls.get(jahrgang, [])
             if not liste:
@@ -473,26 +536,51 @@ def befehl_register(argv):
                                          "unter dem heutigen URL-Muster im Wayback-Index."})
                 continue
             _, zeitstempel, original = liste[0]
-            rohbytes, status = hole_archiv(WAYBACK % (zeitstempel, original))
+            rohbytes = None
+            gruende = []
+            for weg, url, holer in (("live", live_adresse(original), hole_gartner),
+                                    ("archiv", WAYBACK % (zeitstempel, original), hole_archiv)):
+                try:
+                    rohbytes, status = holer(url)
+                except Bruch as fehler:
+                    rohbytes, status = None, str(fehler)[:140]
+                if rohbytes is not None:
+                    break
+                gruende.append("%s -> %s" % (weg, status))
             if rohbytes is None:
-                luecken.append({"quelle": "B", "jahrgang": jahrgang, "grund": "Snapshot HTTP %s" % status})
+                # Der genaue Grund je Weg, nicht eine Sammelmeldung: "gibt es nicht" und
+                # "gerade nicht erreichbar" sind zwei verschiedene Befunde.
+                luecken.append({"quelle": "B", "jahrgang": jahrgang, "grund": "; ".join(gruende)})
                 continue
             seite_hash = versiegle("roh", rohbytes)
             bild_hashes = []
-            for bild_url in b_bilder(rohbytes)[:4]:
-                bild_bytes, _ = hole_archiv(bild_url)
+            bild_fehler = []
+            adressen = b_bilder(rohbytes)[:4]
+            for bild_url in adressen:
+                try:
+                    bild_bytes, bild_status = hole_gartner(bild_url)
+                except Bruch as fehler:
+                    bild_bytes, bild_status = None, str(fehler)[:120]
                 if bild_bytes is None:
+                    # "Keine Grafik im Snapshot" und "Grafik da, Abruf gescheitert" sind
+                    # zwei verschiedene Befunde. Der erste Lauf hat beides zu ersterem
+                    # verschmolzen und damit die Jahrgaenge 2015/2016 falsch als
+                    # grafiklos gebucht, obwohl die Grafik existiert.
+                    bild_fehler.append({"url": bild_url, "grund": str(bild_status)})
                     continue
                 bild_hashes.append({"url": bild_url, "sha256": versiegle("bilder", bild_bytes),
                                     "bytes": len(bild_bytes)})
-            eintraege.append({"quelle": "B", "jahrgang": jahrgang, "url": original,
-                              "waybackZeitstempel": zeitstempel, "sha256": seite_hash,
+            eintraege.append({"quelle": "B", "jahrgang": jahrgang, "url": url,
+                              "indexZeitstempel": zeitstempel, "weg": weg, "sha256": seite_hash,
                               "bytes": len(rohbytes), "grafiken": bild_hashes,
+                              "grafikFehler": bild_fehler,
                               "transkription": [], "geholtAm": jetzt()})
             if not bild_hashes:
                 luecken.append({"quelle": "B", "jahrgang": jahrgang,
-                                "grund": "Pressemitteilung archiviert, aber keine Grafik im Snapshot - "
-                                         "ohne Grafik keine Transkription (Prosa-Extraktion ist verboten)."})
+                                "grund": ("Mitteilung da, aber keine Grafik gewonnen. Adressen im Snapshot: %d, "
+                                          "davon gescheitert: %s. Ohne Grafik keine Transkription "
+                                          "(Prosa-Extraktion ist verboten).")
+                                         % (len(adressen), json.dumps(bild_fehler, ensure_ascii=False)[:300])})
 
     # Quelle C - MIT Technology Review
     if "C" in quellen:
@@ -596,8 +684,20 @@ def befehl_vokabular(_argv):
             spur = {"quelle": quelle, "jahrgang": jahrgang, "titel": titel}
             if spur not in eintrag["herkunft"]:
                 eintrag["herkunft"].append(spur)
+    je_quelle = {}
+    for quelle, _, _ in roh:
+        je_quelle[quelle] = je_quelle.get(quelle, 0) + 1
+    offen = [e["jahrgang"] for e in manifest["eintraege"]
+             if e.get("quelle") == "B" and e.get("grafiken") and not e.get("transkription")]
+    if offen:
+        raise Bruch(
+            "Quelle B: die Jahrgaenge %s haben eine versiegelte Grafik, aber keine "
+            "Transkription. Ohne den Befehl 'transkript' traegt die Quelle still NICHTS "
+            "zum Vokabular bei - eine unsichtbare Luecke statt einer dokumentierten."
+            % offen)
     vokabular = {
         "schema": "strang-c-vokabular/v1",
+        "titelJeQuelle": je_quelle,
         "erzeugtAm": jetzt(),
         "regelAbschnitt": "C0-regel.md Abschnitt 2",
         "titelGesamt": len(roh),
@@ -638,8 +738,7 @@ def haenge_an_register(eintrag):
     voll["previousHash"] = vorher
     voll["eventHash"] = eintragshash(voll, vorher)
     register["events"] = events + [voll]
-    with open(LEDGER, "w", encoding="utf-8", newline="\n") as f:
-        f.write(json.dumps(register, ensure_ascii=False, indent=1) + "\n")
+    schreib_atomar(LEDGER, json.dumps(register, ensure_ascii=False, indent=1) + "\n")
     return voll
 
 
@@ -654,10 +753,26 @@ def befehl_freeze1(argv):
     zugriff_ab = argv[0] if argv else None
     if not zugriff_ab:
         raise Bruch("freeze1 braucht --zugriff-ab als erstes Argument (ISO-Zeit, spaeter als jetzt)")
+    # Die Fehlermeldung darf keine Pruefung versprechen, die nicht stattfindet: ein
+    # vergangener Zeitpunkt in accessedAt macht aus der Vorab-Anmeldung ein
+    # Nachher-Protokoll - genau das, was R1 ausschliesst.
+    try:
+        geplant = zeitpunkt(zugriff_ab)
+    except ValueError:
+        raise Bruch("--zugriff-ab ist keine lesbare ISO-Zeit: %s" % zugriff_ab)
+    if geplant <= datetime.now(timezone.utc):
+        raise Bruch("--zugriff-ab (%s) liegt nicht in der Zukunft" % zugriff_ab)
+    # Das Skript selbst gehoert ins Siegel. Die eigentlichen Regel-Parameter (Schwelle,
+    # Faktor, Zielband, Leiter) sind Python-Konstanten in dieser Datei - die Regeldatei
+    # daneben ist Prosa und wird von keinem Rechenschritt gelesen. Ohne diesen Hash
+    # koennte jemand nach Sichtung der Zaehlungen die Schwelle von 20 auf 18 setzen und
+    # neu ableiten, ohne dass irgendein Waechter anschlaegt. Genau das ist der Fall, den
+    # C0 ausschliessen soll.
     paare = [
         ("protocol/strang-c/C0-regel.md", dateihash(REGEL)),
         ("protocol/strang-c/C0-register-manifest.json", dateihash(MANIFEST)),
         ("protocol/strang-c/C0-vokabular.json", dateihash(VOKABULAR)),
+        ("scripts/studie-c0.py", dateihash(os.path.abspath(__file__))),
     ]
     gesamt, zeilen = buendelhash(paare)
     freeze = {
@@ -671,7 +786,7 @@ def befehl_freeze1(argv):
     }
     schreib_json(FREEZE1, freeze)
     eintrag = haenge_an_register({
-        "runId": "c0-freeze1-2026-08-19",
+        "runId": "c0-freeze1-" + jetzt()[:10],
         "typ": "C0_REGELFREEZE",
         "registeredAt": jetzt(),
         "accessedAt": zugriff_ab,
@@ -734,9 +849,14 @@ def filer_aus(antwort):
     tragen (Mit-Registranten); alle zaehlen, weil die Regel 'eindeutige CIKs mit
     mindestens einem Filing' sagt."""
     aus = []
+    verworfen = 0
     for treffer in antwort["hits"]["hits"]:
         quelle = treffer["_source"]
         if "10-K" not in (quelle.get("root_forms") or []):
+            # Mitzaehlen, nicht nur ueberspringen: faellt das Feld root_forms weg oder
+            # aendert EDGAR seinen Inhalt, verwirft diese Zeile ALLE Treffer - und D
+            # waere ueberall 0, ohne dass irgendwo ein Fehler auftaucht.
+            verworfen += 1
             continue
         namen = quelle.get("display_names") or []
         for i, cik in enumerate(quelle.get("ciks") or []):
@@ -747,7 +867,7 @@ def filer_aus(antwort):
                 "datum": quelle.get("file_date"),
                 "form": quelle.get("form"),
             })
-    return aus
+    return aus, verworfen
 
 
 # ── Befehl: screen ────────────────────────────────────────────────────────────
@@ -761,26 +881,92 @@ def query_log_pfad():
 
 
 def gelesen(pfad, schluessel):
+    """Liest einen JSONL-Stand fuer die Wiederaufnahme.
+
+    Ein harter Abbruch kann eine halbe Schlusszeile hinterlassen. Wer sie blind an den
+    naechsten Lauf anhaengt, erzeugt eine Zeile, die nie wieder parst - und der Lauf
+    stirbt beim UEBERNAECHSTEN Start an einer Stelle, die nichts mit der Ursache zu tun
+    hat. Deshalb: nur die LETZTE Zeile darf unvollstaendig sein, sie wird abgeschnitten
+    und protokolliert; eine kaputte Zeile mittendrin ist ein echter Schaden und haelt an."""
     fertig = {}
-    if os.path.exists(pfad):
-        with open(pfad, "r", encoding="utf-8") as f:
-            for zeile in f:
-                zeile = zeile.strip()
-                if not zeile:
-                    continue
-                satz = json.loads(zeile)
-                fertig[schluessel(satz)] = satz
+    if not os.path.exists(pfad):
+        return fertig
+    with open(pfad, "r", encoding="utf-8") as f:
+        zeilen = f.read().split("\n")
+    rest = zeilen.pop() if zeilen else ""
+    abgeschnitten = None
+    if rest.strip():
+        abgeschnitten = rest
+    for nummer, zeile in enumerate(zeilen):
+        zeile = zeile.strip()
+        if not zeile:
+            continue
+        try:
+            satz = json.loads(zeile)
+        except ValueError as fehler:
+            raise Bruch("%s Zeile %d ist beschaedigt: %s" % (pfad, nummer + 1, fehler))
+        fertig[schluessel(satz)] = satz
+    if abgeschnitten is not None:
+        schreib_atomar(pfad, "\n".join(zeilen[:-1] if zeilen and zeilen[-1] == "" else zeilen) + "\n")
+        sys.stderr.write("Wiederaufnahme: halbe Schlusszeile in %s verworfen (%d Bytes)\n"
+                         % (pfad, len(abgeschnitten)))
     return fertig
 
 
-def befehl_screen(_argv):
-    vokabular = lies_json(VOKABULAR)
+def pruefe_regelstand(was):
+    """Verweigert jeden Rechenschritt, dessen Regelstand vom FREEZE-1-Siegel abweicht.
+    Geprueft werden Vokabular UND Skript - die Regel lebt in beidem."""
     freeze = lies_json(FREEZE1)
-    # Fail-closed: der Screen laeuft nur auf dem eingefrorenen Vokabular.
-    ist = dateihash(VOKABULAR)
-    soll = dict(z.rsplit("  ", 1) for z in freeze["buendel"])["protocol/strang-c/C0-vokabular.json"]
-    if ist != soll:
-        raise Bruch("Das Vokabular weicht vom FREEZE-1-Stand ab (%s statt %s)" % (ist, soll))
+    soll = dict(z.rsplit("  ", 1) for z in freeze["buendel"])
+    for name, pfad in (("protocol/strang-c/C0-vokabular.json", VOKABULAR),
+                       ("scripts/studie-c0.py", os.path.abspath(__file__))):
+        if name not in soll:
+            raise Bruch("FREEZE 1 fuehrt %s nicht - das Siegel ist unvollstaendig" % name)
+        ist = dateihash(pfad)
+        if ist != soll[name]:
+            raise Bruch("%s: %s weicht vom FREEZE-1-Stand ab (%s statt %s). Der einzige "
+                        "zulaessige Anpassungsweg ist die eingefrorene Leiter."
+                        % (was, name, ist[:16], soll[name][:16]))
+    return freeze
+
+
+def befehl_screen(argv):
+    """Der Zaehllauf. Er startet NUR, wenn die Vorab-Anmeldung nachweislich auf dem
+    Server liegt und der angemeldete Zugriffszeitpunkt erreicht ist.
+
+    Die Reihenfolge Einfrieren -> Push -> Server-Bestaetigung -> Zugriff IST die
+    Methodik. Ein Skript, das sie nur im Kommentar fuehrt, sichert sie nicht - deshalb
+    steht sie hier als Abbruchbedingung."""
+    if "--freigabe" not in argv:
+        raise Bruch(
+            "screen braucht --freigabe <datei>: die Server-Bestaetigung der Vorab-Anmeldung. "
+            "Ohne sie ist der Zaehllauf blockiert (R1).")
+    freigabe = lies_json(argv[argv.index("--freigabe") + 1])
+    vokabular = lies_json(VOKABULAR)
+    freeze = pruefe_regelstand("screen")
+
+    register = lies_json(LEDGER)
+    eintrag = None
+    for e in register.get("events", []):
+        if e.get("runId") == freigabe["runId"]:
+            eintrag = e
+    if eintrag is None:
+        raise Bruch("Die Freigabe nennt einen Lauf (%s), der nicht im Zugriffs-Register steht"
+                    % freigabe["runId"])
+    if eintrag["eventHash"] != freigabe["registerEventHash"]:
+        raise Bruch("Die Freigabe gehoert zu einem anderen Register-Eintrag als dem heutigen")
+    if freeze["buendelSha256"] not in (eintrag.get("begruendung") or ""):
+        raise Bruch("Die Anmeldung nennt einen anderen FREEZE-1-Buendelhash - das Vokabular waere "
+                    "nach der Anmeldung ausgetauscht worden")
+    # Zeitvergleich als Zeitpunkt, NICHT als Zeichenkette: die eigenen Stempel tragen
+    # Mikrosekunden, die des Servers Millisekunden, und ".123456Z" sortiert vor
+    # ".123Z". Ein Zeichenketten-Vergleich waere hier still falsch herum.
+    jetzt_iso = jetzt()
+    if zeitpunkt(jetzt_iso) <= zeitpunkt(freigabe["serverConfirmedAt"]):
+        raise Bruch("Der Zaehllauf liegt nicht nach der Server-Bestaetigung")
+    if zeitpunkt(jetzt_iso) < zeitpunkt(eintrag["accessedAt"]):
+        raise Bruch("Der angemeldete Zugriffszeitpunkt (%s) ist noch nicht erreicht (%s)"
+                    % (eintrag["accessedAt"], jetzt_iso))
 
     pfad = screen_pfad()
     fertig = gelesen(pfad, lambda s: (s["phrase"], s["jahr"]))
@@ -805,7 +991,9 @@ def befehl_screen(_argv):
     finally:
         ausgabe.close()
         protokoll.close()
-    print(json.dumps({"screenZeilen": sum(1 for _ in open(pfad, encoding="utf-8"))}, ensure_ascii=False))
+    with open(pfad, encoding="utf-8") as f:
+        zeilen = sum(1 for _ in f)
+    print(json.dumps({"screenZeilen": zeilen}, ensure_ascii=False))
     return 0
 
 
@@ -822,39 +1010,56 @@ def exakt_zaehlen(phrase, jahr, protokoll):
     unvollstaendig (Kennzeichnung 'gedeckelt')."""
     antwort, h = edgar_hole(phrase, jahr, ab=None, protokoll=protokoll)
     gesamt = treffer_gesamt(antwort)
-    filer = filer_aus(antwort)
+    seite = len(antwort["hits"]["hits"])
+    filer, verworfen = filer_aus(antwort)
+    behalten = len(antwort["hits"]["hits"]) - verworfen
     hashes = [h]
     gedeckelt = False
     if gesamt > AUTO_PASS_TREFFER:
         gedeckelt = True
-    else:
-        ab = 100
+    elif gesamt > seite:
+        # Die Seitengroesse wird aus der ERSTEN Antwort abgelesen, nicht angenommen.
+        # Eine hartkodierte 100 laesst bei kleinerer Seitengroesse ganze Bloecke aus -
+        # und D faellt lautlos zu niedrig aus. Das waere ein stiller Fehler in genau
+        # der Zahl, auf der die ganze Auswahl steht.
+        if seite <= 0:
+            raise Bruch("EDGAR meldet %d Treffer, liefert aber keine Zeile (%s/%d)"
+                        % (gesamt, phrase, jahr))
+        ab = seite
         while ab < gesamt:
             weiter, wh = edgar_hole(phrase, jahr, ab=ab, protokoll=protokoll)
             hashes.append(wh)
-            filer.extend(filer_aus(weiter))
-            ab += 100
+            neue = len(weiter["hits"]["hits"])
+            if neue == 0:
+                raise Bruch("EDGAR liefert ab Position %d nichts mehr, obwohl %d Treffer "
+                            "gemeldet sind (%s/%d)" % (ab, gesamt, phrase, jahr))
+            teil, verworfen_teil = filer_aus(weiter)
+            filer.extend(teil)
+            verworfen += verworfen_teil
+            behalten += neue - verworfen_teil
+            ab += neue
     ciks = sorted({f["cik"] for f in filer})
+    # Die Sicherheitsreserve des Dokument-Screens wird an den echten Antworten
+    # NACHGEMESSEN, nicht angenommen: der Screen sortiert ein Jahr nur dann aus, wenn
+    # selbst bei dieser hoechsten beobachteten Zahl CIKs je Treffer die Schwelle nicht
+    # erreichbar waere. Steht hier eine hoehere Zahl als SCHIRM_RESERVE, war der
+    # Screen zu scharf und der Lauf muss es melden.
     max_ciks = 0
-    for treffer in antwort["hits"]["hits"]:
-        max_ciks = max(max_ciks, len(treffer["_source"].get("ciks") or []))
+    for adsh in {f["adsh"] for f in filer}:
+        max_ciks = max(max_ciks, len({f["cik"] for f in filer if f["adsh"] == adsh}))
     return {"phrase": phrase, "jahr": jahr, "treffer": gesamt, "D": len(ciks),
             "gedeckelt": gedeckelt, "ciks": ciks, "filer": filer,
-            "maxCiksJeTreffer": max_ciks, "antworten": hashes}
+            "maxCiksJeTreffer": max_ciks, "antworten": hashes,
+            "seitengroesse": seite, "verworfeneTreffer": verworfen, "behalteneTreffer": behalten}
 
 
 def befehl_zaehlen(_argv):
+    pruefe_regelstand("zaehlen")
     screen = gelesen(screen_pfad(), lambda s: (s["phrase"], s["jahr"]))
     if not screen:
         raise Bruch("Kein Screen-Stand vorhanden - erst 'screen' laufen lassen")
-    schwelle = BASIS_SCHWELLE
-    mindest = max(1, -(-schwelle // SCREEN_RESERVE))
     # Kandidaten: Spike-Jahre, die den Dokument-Screen passieren - plus ihre Basisjahre.
-    noetig = set()
-    for (phrase, jahr), satz in screen.items():
-        if jahr in SPIKE_JAHRE and satz["treffer"] >= mindest:
-            noetig.add((phrase, jahr))
-            noetig.add((phrase, jahr - BASIS_ABSTAND))
+    noetig, mindest = noetige_paare(screen)
     pfad = zaehl_pfad()
     fertig = gelesen(pfad, lambda s: (s["phrase"], s["jahr"]))
     offen = sorted(k for k in noetig if k not in fertig)
@@ -878,25 +1083,48 @@ def befehl_zaehlen(_argv):
 
 # ── Befehl: ableiten ──────────────────────────────────────────────────────────
 
-def spike_jahre(zaehlung, schwelle, faktor):
+def spike_jahre(zaehlung, schwelle, faktor, gedeckelt=None, ohne_basis=None):
     """Fuer jede Phrase das frueheste Jahr, das beide Bedingungen erfuellt."""
     treffer = {}
+    if gedeckelt is None:
+        gedeckelt = []
+    if ohne_basis is None:
+        ohne_basis = []
     for phrase in sorted({s["phrase"] for s in zaehlung.values()}):
         for jahr in SPIKE_JAHRE:
             hier = zaehlung.get((phrase, jahr))
             if hier is None:
                 continue
-            d_t = schwelle if hier["gedeckelt"] else hier["D"]
+            if hier["gedeckelt"]:
+                # Ueber 5.000 Dokument-Treffern gibt EDGAR keine vollstaendige Liste
+                # heraus. Die Regel erklaert damit die SCHWELLE als erfuellt - ueber die
+                # Wachstumsbedingung sagt sie nichts, und raten waere hier genau die
+                # Stelle, an der die Auswahl den Daten folgen wuerde. Also: NICHT
+                # BERECHENBAR, Jahr faellt aus, Befund wird gemeldet (R5).
+                gedeckelt.append({"phrase": phrase, "jahr": jahr, "treffer": hier["treffer"]})
+                continue
+            d_t = hier["D"]
             if d_t < schwelle:
                 continue
             basis = zaehlung.get((phrase, jahr - BASIS_ABSTAND))
             if basis is None:
                 # Fail-closed: ohne Basisjahr ist die zweite Bedingung NICHT BERECHENBAR.
+                # Protokolliert, nicht verschwiegen - sonst sieht hinterher niemand, dass
+                # ein Kandidatenjahr aus Datenmangel und nicht aus Regelgruenden fiel.
+                ohne_basis.append({"phrase": phrase, "jahr": jahr, "D": hier["D"],
+                                   "grund": "Basisjahr nicht ausgezaehlt"})
+                continue
+            if basis.get("gedeckelt"):
+                # Ein gedeckeltes Basisjahr traegt nur die CIKs der ersten Trefferseite -
+                # sein D ist zu klein. Ein zu kleines d_b macht die Wachstumsbedingung
+                # LEICHTER und erzeugt einen falschen Spike. Also: nicht berechenbar.
+                ohne_basis.append({"phrase": phrase, "jahr": jahr, "D": hier["D"],
+                                   "grund": "Basisjahr gedeckelt, D untererfasst"})
                 continue
             d_b = basis["D"]
             if d_t >= faktor * (d_b + 1):
                 treffer[phrase] = {"jahr": jahr, "D": d_t, "D_basis": d_b,
-                                   "gedeckelt": hier["gedeckelt"]}
+                                   "gedeckelt": False}
                 break
     return treffer
 
@@ -959,7 +1187,28 @@ LEITER_PLAN = [
 ]
 
 
+def noetige_paare(screen):
+    """Welche (Begriff, Jahr)-Paare exakt ausgezaehlt sein MUESSEN.
+
+    Eine Stelle, zwei Benutzer: `zaehlen` holt danach, `ableiten` prueft danach. Zwei
+    getrennte Formeln waeren die Einladung, mit einer halben Zaehlung abzuleiten.
+
+    Gerechnet wird gegen die NIEDRIGSTE Schwelle, die die eingefrorene Leiter erreichen
+    kann - nicht gegen die Startschwelle. Sonst wirft der Screen genau die Kandidaten
+    weg, die die Leiterstufe "zu wenige -> Schwelle senken" finden soll, und das
+    Ergebnis waere ein falsches "Registerklasse zu schmal"."""
+    niedrigste = min([BASIS_SCHWELLE] + [stufe[2] for stufe in LEITER_PLAN])
+    mindest = max(1, -(-niedrigste // SCREEN_RESERVE))
+    noetig = set()
+    for (phrase, jahr), satz in screen.items():
+        if jahr in SPIKE_JAHRE and satz["treffer"] >= mindest:
+            noetig.add((phrase, jahr))
+            noetig.add((phrase, jahr - BASIS_ABSTAND))
+    return noetig, mindest
+
+
 def befehl_ableiten(_argv):
+    pruefe_regelstand("ableiten")
     zaehlung = {}
     with open(zaehl_pfad(), "r", encoding="utf-8") as f:
         for zeile in f:
@@ -967,10 +1216,21 @@ def befehl_ableiten(_argv):
             if zeile:
                 satz = json.loads(zeile)
                 zaehlung[(satz["phrase"], satz["jahr"])] = satz
+    # Fail-closed gegen die halbe Zaehlung: eine abgebrochene oder veraltete Zaehl-Datei
+    # ergaebe stillschweigend eine ANDERE Themenliste - dieselbe Regel, anderes Ergebnis,
+    # und niemand saehe es.
+    noetig, _ = noetige_paare(gelesen(screen_pfad(), lambda x: (x["phrase"], x["jahr"])))
+    fehlend = sorted(k for k in noetig if k not in zaehlung)
+    if fehlend:
+        raise Bruch("Die Zaehlung ist unvollstaendig: %d von %d noetigen Paaren fehlen "
+                    "(z. B. %s). Erst 'zaehlen' zu Ende laufen lassen."
+                    % (len(fehlend), len(noetig), fehlend[:5]))
 
     schritte = []
+    gedeckelt = []
+    ohne_basis = []
     schwelle, faktor = BASIS_SCHWELLE, BASIS_FAKTOR
-    spikes = spike_jahre(zaehlung, schwelle, faktor)
+    spikes = spike_jahre(zaehlung, schwelle, faktor, gedeckelt, ohne_basis)
     themen, paare = zusammenlegen(spikes, zaehlung)
     schritte.append({"schritt": 0, "beschreibung": "Basisregel", "schwelle": schwelle,
                      "faktor": faktor, "themen": len(themen)})
@@ -982,7 +1242,9 @@ def befehl_ableiten(_argv):
         if gebraucht != art:
             continue
         schwelle, faktor = neue_schwelle, neuer_faktor
-        spikes = spike_jahre(zaehlung, schwelle, faktor)
+        gedeckelt = []
+        ohne_basis = []
+        spikes = spike_jahre(zaehlung, schwelle, faktor, gedeckelt, ohne_basis)
         themen, paare = zusammenlegen(spikes, zaehlung)
         schritte.append({"schritt": len(schritte), "beschreibung": text, "schwelle": schwelle,
                          "faktor": faktor, "themenVorher": anzahl, "themen": len(themen),
@@ -999,14 +1261,14 @@ def befehl_ableiten(_argv):
         "endstand": {"schwelle": schwelle, "faktor": faktor, "themen": len(themen)},
         "bandVerfehlt": not (HANDLUNGSBAND[0] <= len(themen) <= HANDLUNGSBAND[1]),
         "befundWennVerfehlt": "Registerklasse zu schmal - die Regel wird berichtet, nicht gebogen.",
+        "nichtBerechenbarWeilGedeckelt": gedeckelt,
+        "nichtBerechenbarOhneBasisjahr": ohne_basis,
+        "maxCiksJeEinreichung": max([s.get("maxCiksJeTreffer", 0) for s in zaehlung.values()] or [0]),
+        "screenReserve": SCREEN_RESERVE,
     }
     schreib_json(LEITER, leiter)
 
     # Mandats-Ergaenzung: die Pflicht-Verwechsler, die die Regel nicht selbst erzeugt hat.
-    selbst = set()
-    for thema in themen:
-        for begriff in thema["begriffe"]:
-            selbst.add(begriff)
     mandate = []
     for name in PFLICHT_VERWECHSLER:
         erzeugt = [t for t in themen
@@ -1036,7 +1298,16 @@ def befehl_ableiten(_argv):
     for alt in os.listdir(FILER_DIR):
         if alt.endswith(".json"):
             os.remove(os.path.join(FILER_DIR, alt))
+    dateinamen = {}
     for thema in themen:
+        name = _dateiname(thema["thema"])
+        if name in dateinamen:
+            # Zwei Themen auf denselben Dateinamen abzubilden hiesse, eine Filer-Liste
+            # still zu ueberschreiben - und die Filer-Listen sind das, woraus eine
+            # spaetere Etappe die Koerbe baut. Lieber anhalten als leise verlieren.
+            raise Bruch("Dateiname-Kollision: '%s' und '%s' ergeben beide %s.json"
+                        % (dateinamen[name], thema["thema"], name))
+        dateinamen[name] = thema["thema"]
         zeilen = []
         gesehen = set()
         for begriff in thema["begriffe"]:
@@ -1050,7 +1321,7 @@ def befehl_ableiten(_argv):
                 gesehen.add(schluessel)
                 zeilen.append(f)
         zeilen.sort(key=lambda f: (f["cik"], f["adsh"] or ""))
-        schreib_json(os.path.join(FILER_DIR, _dateiname(thema["thema"]) + ".json"), {
+        schreib_json(os.path.join(FILER_DIR, name + ".json"), {
             "schema": "strang-c-filer/v1",
             "thema": thema["thema"],
             "spikeJahr": thema["spikeJahr"],
@@ -1112,7 +1383,7 @@ def befehl_freeze2(_argv):
     }
     schreib_json(FREEZE2, freeze)
     eintrag = haenge_an_register({
-        "runId": "c0-freeze2-2026-08-19",
+        "runId": "c0-freeze2-" + jetzt()[:10],
         "typ": "C0_REGELFREEZE",
         "registeredAt": jetzt(),
         "accessedAt": jetzt(),
@@ -1179,12 +1450,23 @@ def befehl_reproduzieren(_argv):
     abweichungen = []
     for (phrase, jahr), satz in sorted(zaehlung_alt.items()):
         filer = []
+        gezogen = 0
         for h in satz["antworten"]:
             antwort = json.loads(entsiegle("edgar", h).decode("utf-8", "replace"))
-            filer.extend(filer_aus(antwort))
+            teil, _ = filer_aus(antwort)
+            filer.extend(teil)
+            gezogen += len(antwort["hits"]["hits"])
         d = len({f["cik"] for f in filer})
         if not satz["gedeckelt"] and d != satz["D"]:
             abweichungen.append({"phrase": phrase, "jahr": jahr, "D_datei": satz["D"], "D_siegel": d})
+        # VOLLSTAENDIGKEIT, nicht nur Gleichheit. Die erste Fassung las dieselben Bytes
+        # noch einmal und kam deshalb zwangslaeufig auf dasselbe D - auch dann, wenn beim
+        # Ziehen ganze Trefferseiten gefehlt hatten. Eine Gegenprobe, die den Fehler des
+        # Originals wiederholt, ist keine.
+        if not satz["gedeckelt"] and gezogen != satz["treffer"]:
+            abweichungen.append({"phrase": phrase, "jahr": jahr, "treffer_gemeldet": satz["treffer"],
+                                 "treffer_versiegelt": gezogen,
+                                 "befund": "unvollstaendig gezogen"})
     print(json.dumps({"vokabularIdentisch": gleich_vok,
                       "zaehlungGeprueft": len(zaehlung_alt),
                       "zaehlungAbweichungen": abweichungen[:20],
@@ -1193,8 +1475,164 @@ def befehl_reproduzieren(_argv):
     return 0 if gleich_vok and not abweichungen else 1
 
 
+def _lies_zeilen(pfad):
+    with open(pfad, "r", encoding="utf-8") as f:
+        return [z.strip() for z in f if z.strip()]
+
+
+def befehl_transkript(argv):
+    """Quelle B: die Grafik-Eintraege eines Jahrgangs, im DOPPEL-VERFAHREN.
+
+    Zwei unabhaengig erstellte Transkriptionen derselben versiegelten Grafik werden
+    verglichen. Der Diff MUSS leer sein - Reihenfolge und Schreibweise inbegriffen.
+    Weicht auch nur ein Eintrag ab, wird nichts uebernommen und der Jahrgang bleibt
+    eine Luecke. Das ist der Sinn des Verfahrens: eine einzelne Lesung eines Bildes
+    ist eine Behauptung, zwei uebereinstimmende sind ein Beleg."""
+    def wert(name):
+        i = argv.index("--" + name)
+        return argv[i + 1]
+
+    jahrgang = int(wert("jahrgang"))
+    a = _lies_zeilen(wert("a"))
+    b = _lies_zeilen(wert("b"))
+    if a != b:
+        nur_a = [z for z in a if z not in b]
+        nur_b = [z for z in b if z not in a]
+        stellung = [i for i, (x, y) in enumerate(zip(a, b)) if x != y][:5]
+        raise Bruch(
+            "Doppel-Transkription Jahrgang %d weicht ab: %d gegen %d Eintraege; nur in A: %s; "
+            "nur in B: %s; erste abweichende Stellen: %s" % (jahrgang, len(a), len(b), nur_a[:5],
+                                                             nur_b[:5], stellung))
+    if not a:
+        raise Bruch("Leere Transkription ist kein Beleg")
+
+    manifest = lies_json(MANIFEST)
+    ziel = None
+    for eintrag in manifest["eintraege"]:
+        if eintrag.get("quelle") == "B" and eintrag.get("jahrgang") == jahrgang:
+            ziel = eintrag
+    if ziel is None:
+        raise Bruch("Kein Register-Eintrag fuer Quelle B, Jahrgang %d" % jahrgang)
+    if not ziel.get("grafiken"):
+        raise Bruch("Jahrgang %d hat keine versiegelte Grafik - ohne Grafik keine Transkription" % jahrgang)
+    ziel["transkription"] = a
+    ziel["transkriptionSha256"] = sha256(chr(10).join(a).encode("utf-8"))
+    ziel["transkriptionAus"] = [g["sha256"] for g in ziel["grafiken"]]
+    ziel["transkriptionVerfahren"] = "zwei unabhaengige Lesungen, Diff leer"
+    manifest["luecken"] = [l for l in manifest["luecken"]
+                           if not (l["quelle"] == "B" and l["jahrgang"] == jahrgang)]
+    schreib_json(MANIFEST, manifest)
+    print(json.dumps({"jahrgang": jahrgang, "eintraege": len(a),
+                      "transkriptionSha256": ziel["transkriptionSha256"]}, ensure_ascii=False))
+    return 0
+
+
+def befehl_selbsttest(_argv):
+    """Ein Lauf ohne Netz, der die vier Rechenstellen festnagelt, an denen ein stiller
+    Fehler die Auswahl verfaelschen wuerde. Jede Behauptung wird in BEIDE Richtungen
+    geprueft: die gueltige Form muss durchgehen, die kaputte auffliegen."""
+    # 1. Phrasen-Zerlegung
+    assert phrasen("Advanced Analytics With Self-Service Delivery") == [
+        "advanced analytics with self-service delivery"]
+    assert phrasen("Commercial UAVs (Drones)") == ["commercial uavs"]
+    assert phrasen("AI for Everybody") == ["ai for everybody"]
+    assert phrasen("AI") == [], "rein alphabetisch und <= 3 Zeichen muss fallen"
+    assert phrasen("5G") == ["5g"], "nicht rein alphabetisch bleibt"
+    assert phrasen("Enterprise Taxonomy and Ontology Management") == [
+        "enterprise taxonomy", "ontology management"]
+    assert phrasen("Zero-Carbon Natural Gas, Wind") == ["zero-carbon natural gas", "wind"]
+    assert phrasen("Software-Defined Anything (SDx)") == ["software-defined anything"]
+
+    # 2. Spike-Erkennung: Schwelle UND Wachstum, frueheste Jahr gewinnt
+    def satz(phrase, jahr, d, ciks=None, gedeckelt=False, treffer=0):
+        return {"phrase": phrase, "jahr": jahr, "D": d, "gedeckelt": gedeckelt,
+                "treffer": treffer or d, "ciks": ciks or ["%010d" % i for i in range(d)],
+                "filer": [], "maxCiksJeTreffer": 1}
+
+    z = {}
+    for jahr, d in ((2001, 2), (2004, 25), (2005, 30), (2002, 3), (2007, 40)):
+        z[("x", jahr)] = satz("x", jahr, d)
+    gedeckelt = []
+    treffer = spike_jahre(z, 20, 3.0, gedeckelt)
+    assert treffer["x"]["jahr"] == 2004, treffer
+    # Schwelle knapp verfehlt -> kein Spike
+    z2 = {("y", 2001): satz("y", 2001, 2), ("y", 2004): satz("y", 2004, 19)}
+    assert "y" not in spike_jahre(z2, 20, 3.0, [])
+    # Wachstum knapp verfehlt -> kein Spike (25 < 3*(8+1))
+    z3 = {("w", 2001): satz("w", 2001, 8), ("w", 2004): satz("w", 2004, 25)}
+    assert "w" not in spike_jahre(z3, 20, 3.0, [])
+    # Ohne Basisjahr: NICHT BERECHENBAR, nicht "gewachsen"
+    z4 = {("v", 2004): satz("v", 2004, 99)}
+    assert "v" not in spike_jahre(z4, 20, 3.0, [])
+    # Gedeckeltes Jahr faellt aus und wird gemeldet
+    z5 = {("u", 2001): satz("u", 2001, 1),
+          ("u", 2004): satz("u", 2004, 0, gedeckelt=True, treffer=9000)}
+    gedeckelt = []
+    assert "u" not in spike_jahre(z5, 20, 3.0, gedeckelt)
+    assert gedeckelt and gedeckelt[0]["jahr"] == 2004
+
+    # 2b. Ein GEDECKELTES Basisjahr darf keinen Spike erzeugen: sein D ist untererfasst,
+    #     ein zu kleines d_b macht die Wachstumsbedingung faelschlich leicht.
+    z5b = {("t", 2001): satz("t", 2001, 3, gedeckelt=True, treffer=9000),
+           ("t", 2004): satz("t", 2004, 60)}
+    ohne = []
+    assert "t" not in spike_jahre(z5b, 20, 3.0, [], ohne)
+    assert ohne and "gedeckelt" in ohne[0]["grund"]
+    # Gegenprobe: dasselbe Basisjahr ungedeckelt ergibt sehr wohl einen Spike.
+    z5c = {("t", 2001): satz("t", 2001, 3), ("t", 2004): satz("t", 2004, 60)}
+    assert spike_jahre(z5c, 20, 3.0, [], [])["t"]["jahr"] == 2004
+
+    # 2c. Der Screen rechnet gegen die NIEDRIGSTE Leiter-Schwelle, nicht gegen die
+    #     Startschwelle - sonst verliert die Stufe "zu wenige -> Schwelle senken" genau
+    #     die Kandidaten, die sie finden soll.
+    niedrigste = min([BASIS_SCHWELLE] + [stufe[2] for stufe in LEITER_PLAN])
+    _, mindest = noetige_paare({("q", 2010): {"phrase": "q", "jahr": 2010, "treffer": 0}})
+    assert mindest == max(1, -(-niedrigste // SCREEN_RESERVE)), mindest
+    assert mindest < max(1, -(-BASIS_SCHWELLE // SCREEN_RESERVE)), \
+        "Die Leiter kann die Schwelle senken - der Screen muss das vorwegnehmen"
+    noetig, _ = noetige_paare({("q", 2010): {"phrase": "q", "jahr": 2010, "treffer": mindest}})
+    assert ("q", 2010) in noetig and ("q", 2007) in noetig, noetig
+    noetig2, _ = noetige_paare({("q", 2010): {"phrase": "q", "jahr": 2010, "treffer": mindest - 1}})
+    assert not noetig2, noetig2
+
+    # 3. Zusammenlegung: Abstand UND Jaccard, Name = frueher spikender Begriff
+    gemeinsam = ["%010d" % i for i in range(10)]
+    z6 = {("beta", 2010): satz("beta", 2010, 10, gemeinsam),
+          ("alpha", 2009): satz("alpha", 2009, 10, gemeinsam),
+          ("fremd", 2009): satz("fremd", 2009, 10, ["%010d" % i for i in range(100, 110)])}
+    spikes = {"beta": {"jahr": 2010, "D": 10, "D_basis": 0, "gedeckelt": False},
+              "alpha": {"jahr": 2009, "D": 10, "D_basis": 0, "gedeckelt": False},
+              "fremd": {"jahr": 2009, "D": 10, "D_basis": 0, "gedeckelt": False}}
+    themen, paare = zusammenlegen(spikes, z6)
+    namen = sorted(t["thema"] for t in themen)
+    assert namen == ["alpha", "fremd"], namen
+    zusammen = [t for t in themen if t["thema"] == "alpha"][0]
+    assert sorted(zusammen["begriffe"]) == ["alpha", "beta"], zusammen
+    assert len(paare) == 1 and paare[0]["jaccard"] == 1.0
+    # Zu grosser Abstand trennt trotz identischer Firmen
+    spikes2 = dict(spikes)
+    spikes2["beta"] = {"jahr": 2013, "D": 10, "D_basis": 0, "gedeckelt": False}
+    z7 = dict(z6)
+    z7[("beta", 2013)] = satz("beta", 2013, 10, gemeinsam)
+    themen2, _ = zusammenlegen(spikes2, z7)
+    assert len(themen2) == 3, themen2
+
+    # 4. Buendelhash haengt am NAMEN, nicht nur an den Pruefsummen
+    eins, _ = buendelhash([("a", "1" * 64), ("b", "2" * 64)])
+    zwei, _ = buendelhash([("a", "2" * 64), ("b", "1" * 64)])
+    assert eins != zwei, "Vertauschte Dateien muessen einen anderen Buendelhash geben"
+
+    # 5. Kanonisierung deckungsgleich mit lib/studie-verfassung.js
+    assert kanonisch({"b": 1, "a": [1, "x"]}) == '{"a": [1, "x"], "b": 1}'
+
+    print(json.dumps({"selbsttest": "GRUEN", "pruefungen": 30}, ensure_ascii=False))
+    return 0
+
+
 BEFEHLE = {
+    "selbsttest": befehl_selbsttest,
     "register": befehl_register,
+    "transkript": befehl_transkript,
     "vokabular": befehl_vokabular,
     "freeze1": befehl_freeze1,
     "screen": befehl_screen,

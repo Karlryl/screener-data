@@ -60,6 +60,15 @@ function arbeitskopie() {
   return ziel;
 }
 
+test('C0: der Rechen-Selbsttest des Skripts ist gruen', () => {
+  // Die vier Rechenstellen (Phrasen-Zerlegung, Spike, Zusammenlegung, Buendelhash)
+  // pruefen sich selbst - in beide Richtungen, gueltige Form durch, kaputte auffliegen.
+  const lauf = spawnSync(python(), [SKRIPT, 'selbsttest'], { encoding: 'utf8', env: process.env });
+  assert.equal(lauf.status, 0, `selbsttest rot:
+${lauf.stdout}${lauf.stderr}`);
+  assert.match(lauf.stdout, /"selbsttest": "GRUEN"/);
+});
+
 test('C0: die Regeldatei liegt vor und traegt ihre Pflichtstuecke', () => {
   assert.ok(vorhanden(REGEL), 'protocol/strang-c/C0-regel.md fehlt');
   const text = fs.readFileSync(REGEL, 'utf8');
@@ -123,15 +132,34 @@ test('C0: jeder Pflicht-Verwechsler ist abgedeckt — selbst erzeugt oder als MA
 
 test('C0: kein verbotenes Merkmal im Ableitungs-Code', () => {
   // Kurse, Renditen, Marktwert, Index-/ETF-Zugehoerigkeit, Analystenurteile duerfen in
-  // der AUSWAHL nicht vorkommen. Gesucht wird im Code, nicht im Kommentar-Fliesstext:
-  // die Kommentare der Regeldatei nennen die Verbote absichtlich beim Namen.
-  const zeilen = fs.readFileSync(SKRIPT, 'utf8').split('\n')
-    .filter((z) => !z.trim().startsWith('#'))
-    .map((z) => z.split('#')[0]);
-  const code = zeilen.join('\n').toLowerCase();
-  for (const verboten of ['kurs', 'rendite', 'marktkap', 'market_cap', 'etf', 'analyst', 'volatil']) {
-    assert.ok(!code.includes(verboten), `Der Ableitungs-Code nennt "${verboten}" — verbotenes Merkmal`);
+  // der AUSWAHL nicht vorkommen.
+  //
+  // Gesucht wird die BENUTZUNG, nicht das Wort. Die erste Fassung schlug an der Zeile
+  // an, die genau diese Merkmale VERBIETET (der Erlaubnis-/Verbotstext der
+  // Register-Anmeldung) - ein Waechter, der das Verbot fuer den Verstoss haelt, ist am
+  // Tag 1 falsch-rot. Deshalb zwei Suchen: das blosse Wort ausserhalb der
+  // Erlaubnis-Zeilen, und ueberall die Form 'wort... =' / 'wort...(' / 'wort....',
+  // also eine Zuweisung, ein Aufruf oder ein Feldzugriff.
+  const VERBOTEN = ['kurs', 'rendite', 'marktkap', 'market_cap', 'etf', 'analyst', 'volatil'];
+  const roh = fs.readFileSync(SKRIPT, 'utf8');
+  const zeilen = roh.split(String.fromCharCode(10)).map((z) => z.split('#')[0]);
+  const ohneErlaubnistext = zeilen
+    .filter((z) => !/"(verboten|erlaubt|begruendung|endtestSiegel)"/.test(z))
+    .join(String.fromCharCode(10)).toLowerCase();
+  for (const verboten of VERBOTEN) {
+    assert.ok(!ohneErlaubnistext.includes(verboten),
+      `Der Ableitungs-Code nennt "${verboten}" ausserhalb des Erlaubnistexts`);
   }
+  const benutzung = new RegExp('(^|[^a-z])(' + VERBOTEN.join('|') + ')[a-z_]*[ ]*[=([.]', 'i');
+  const treffer = benutzung.exec(zeilen.join(String.fromCharCode(10)));
+  assert.equal(treffer, null, `Verbotenes Merkmal wird benutzt: ${treffer && treffer[0]}`);
+
+  // Gegenprobe am Waechter selbst: eine echte Benutzung muss auffliegen, ein blosses
+  // Verbot im Text nicht.
+  assert.ok(benutzung.test('kursrendite = lies(x)'), 'Der Waechter uebersieht eine echte Benutzung');
+  assert.ok(benutzung.test('    marktkapitalisierung(x)'), 'Der Waechter uebersieht einen Aufruf');
+  assert.ok(!benutzung.test('"verboten": "Jeder Kurs-, Rendite- oder Marktwert"'),
+    'Der Waechter haelt das Verbot fuer den Verstoss');
 });
 
 test('C0: die beiden Freezes haengen aneinander', () => {

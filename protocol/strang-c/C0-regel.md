@@ -26,6 +26,13 @@ der Grafik**, transkribiert im **Doppel-Verfahren**: zwei unabhängige Transkrip
 desselben versiegelten Bildes, der Diff muss leer sein. Jahrgänge ohne abrufbare
 Grafik sind eine **dokumentierte Lücke**, keine Prosa-Extraktion.
 
+*Form der Transkription:* die Beschriftungen wörtlich, eine je Zeile, **alphabetisch
+sortiert**. Die Sortierung ist eine reine Form-Normierung — sie nimmt der Prüfung die
+Abhängigkeit davon, in welcher Reihenfolge ein Leser die Kurve abgeht, und lässt die
+inhaltliche Prüfung (welche Beschriftungen stehen auf der Grafik) unberührt.
+Ein nichtleerer Diff heißt: **Jahrgang bleibt Lücke**, nicht „eine der beiden Lesungen
+auswählen".
+
 **Quelle C — MIT Technology Review „10 Breakthrough Technologies"**
 Jahrgänge 2001–2024. Genommen werden die zehn Listen-Titel je Jahresseite, wörtlich.
 Live und gratis unter `technologyreview.com/10-breakthrough-technologies/JJJJ/`.
@@ -72,6 +79,10 @@ werden **eindeutige CIKs**, niemals rohe Trefferzahlen. (Live gemessen: „block
 
 Bei **mehr als 5.000 Dokument-Treffern** gilt `D ≥ Schwelle` automatisch (die
 Volltextsuche gibt oberhalb dieses Fensters keine vollständige Trefferliste heraus).
+**Die Wachstumsbedingung ist für ein solches Jahr NICHT BERECHENBAR** — `D(t)` selbst
+ist unbekannt, und ein geschätzter Wert wäre genau die Stelle, an der die Auswahl den
+Daten folgen würde statt der Regel. Ein gedeckeltes Jahr **fällt deshalb als
+Aufnahmejahr aus** und wird im Lauf-Report namentlich ausgewiesen.
 
 **Zweistufig, aus Höflichkeit gegenüber der SEC:** erst ein Dokument-Treffer-Screen
 (eine Abfrage je Begriff und Jahr), dann die CIK-Auszählung nur für Screen-Passierer
