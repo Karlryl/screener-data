@@ -94,16 +94,22 @@ test('alle acht Kennzahlen kommen fuer das neueste Jahr an (7685.T)', () => {
   }
 });
 
-test('die Aktienzahl kommt aus dem EMITTENTEN-Kontext und ist die ausgewiesene Zahl (7685.T)', () => {
-  const j = bau(7685);
-  // Eine Aktienzahl ist eine Eigenschaft des Emittenten; im Konzern-Kontext gibt es sie nicht.
-  assert.equal(j.annualShares[0].value, 30877880);
-  assert.equal(j._feldwahl.annualShares,
-    'jpcrp_cor:TotalNumberOfIssuedSharesSummaryOfBusinessResults [EMITTENT]');
-  const imKonzern = werteJeVersatz(FALL[7685].zeilen,
-    'jpcrp_cor:TotalNumberOfIssuedSharesSummaryOfBusinessResults', 'KONZERN', '7685.T');
-  assert.equal(imKonzern.size, 0, 'im Konzern-Kontext duerfte es die Aktienzahl gar nicht geben');
-});
+// BEIDE Standards einzeln pruefen. Die Elementtabelle hat je einen Eintrag fuer IFRS und
+// fuer JGAAP — ein Test an nur einer Firma laesst den anderen Zweig ungeschuetzt. Genau das
+// ist beim Sabotage-Durchlauf aufgefallen: der IFRS-Eintrag liess sich auf KONZERN umstellen,
+// ohne dass ein Test rot wurde (7685.T ist JGAAP und konnte den Bruch gar nicht zeigen).
+for (const [sec, erwartet] of [[7685, 30877880], [4373, 237045100]]) {
+  test(`die Aktienzahl kommt aus dem EMITTENTEN-Kontext (${sec}.T, ${FALL[sec].standard})`, () => {
+    const j = bau(sec);
+    // Eine Aktienzahl ist eine Eigenschaft des Emittenten; im Konzern-Kontext gibt es sie nicht.
+    assert.equal(j.annualShares[0].value, erwartet);
+    assert.equal(j._feldwahl.annualShares,
+      'jpcrp_cor:TotalNumberOfIssuedSharesSummaryOfBusinessResults [EMITTENT]');
+    const imKonzern = werteJeVersatz(FALL[sec].zeilen,
+      'jpcrp_cor:TotalNumberOfIssuedSharesSummaryOfBusinessResults', 'KONZERN', `${sec}.T`);
+    assert.equal(imKonzern.size, 0, 'im Konzern-Kontext duerfte es die Aktienzahl gar nicht geben');
+  });
+}
 
 test('fehlende Jahre bleiben null — nie 0, nie aus einem Nachbarjahr (7685.T Rohertrag)', () => {
   const j = bau(7685);
