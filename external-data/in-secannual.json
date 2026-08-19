@@ -1,0 +1,9622 @@
+{
+ "ACUTAAS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:27:39.598Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022
+  ],
+  "annualRev": [
+   {
+    "value": 13393668000
+   },
+   {
+    "value": 10068755000
+   },
+   {
+    "value": 7174745000
+   },
+   {
+    "value": 6167345000
+   },
+   {
+    "value": 5201350000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 7734107000
+   },
+   {
+    "value": 4546938000
+   },
+   {
+    "value": 3057863000
+   },
+   {
+    "value": 2858392000
+   },
+   {
+    "value": 2472987000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 4444086000
+   },
+   {
+    "value": 2054520000
+   },
+   {
+    "value": 1124346000
+   },
+   {
+    "value": 1102643000
+   },
+   {
+    "value": 950954000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 3563693000
+   },
+   {
+    "value": 1604177000
+   },
+   {
+    "value": 487080000
+   },
+   {
+    "value": 832897000
+   },
+   {
+    "value": 719461000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 19839643000
+   },
+   {
+    "value": 15492611000
+   },
+   {
+    "value": 10959033000
+   },
+   {
+    "value": 7669384000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 16535610000
+   },
+   {
+    "value": 13096287000
+   },
+   {
+    "value": 6739974000
+   },
+   {
+    "value": 5939592000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2921736000
+   },
+   {
+    "value": 1183427000
+   },
+   {
+    "value": 1251697000
+   },
+   {
+    "value": 655300000
+   },
+   {
+    "value": -86601000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 81871200
+   },
+   {
+    "value": 81869000
+   },
+   {
+    "value": 36880600
+   },
+   {
+    "value": 36437100
+   },
+   {
+    "value": 36437100
+   }
+  ]
+ },
+ "ADANIPOWER.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:27:53.733Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 542405200000
+   },
+   {
+    "value": 562030900000
+   },
+   {
+    "value": 503512500000
+   },
+   {
+    "value": 387733000000
+   },
+   {
+    "value": 277111800000
+   },
+   {
+    "value": 262214800000
+   },
+   {
+    "value": 264677200000
+   },
+   {
+    "value": 238841800000
+   },
+   {
+    "value": 206110400000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 248628400000
+   },
+   {
+    "value": 255728500000
+   },
+   {
+    "value": 216763500000
+   },
+   {
+    "value": 130783100000
+   },
+   {
+    "value": 124034100000
+   },
+   {
+    "value": 110750300000
+   },
+   {
+    "value": 84202300000
+   },
+   {
+    "value": 71249900000
+   },
+   {
+    "value": 77534200000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 152415800000
+   },
+   {
+    "value": 169965600000
+   },
+   {
+    "value": 142493700000
+   },
+   {
+    "value": 67409800000
+   },
+   {
+    "value": 66966200000
+   },
+   {
+    "value": 54668700000
+   },
+   {
+    "value": 26788000000
+   },
+   {
+    "value": 22032100000
+   },
+   {
+    "value": 29925100000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 129710800000
+   },
+   {
+    "value": 127496100000
+   },
+   {
+    "value": 208287900000
+   },
+   {
+    "value": 107266400000
+   },
+   {
+    "value": 49115800000
+   },
+   {
+    "value": 12699800000
+   },
+   {
+    "value": -22747700000
+   },
+   {
+    "value": -9844000000
+   },
+   {
+    "value": -21193600000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 1422799200000
+   },
+   {
+    "value": 1129175700000
+   },
+   {
+    "value": 923247700000
+   },
+   {
+    "value": 858212700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 649368800000
+   },
+   {
+    "value": 563470900000
+   },
+   {
+    "value": 431450300000
+   },
+   {
+    "value": 298756600000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 205136500000
+   },
+   {
+    "value": 215011100000
+   },
+   {
+    "value": 141701500000
+   },
+   {
+    "value": 84305300000
+   },
+   {
+    "value": 102327300000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 19284700000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   },
+   {
+    "value": 3856940000
+   }
+  ]
+ },
+ "AEGISLOG.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:28:08.631Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 83332100000
+   },
+   {
+    "value": 67637900000
+   },
+   {
+    "value": 70459200000
+   },
+   {
+    "value": 86272100000
+   },
+   {
+    "value": 46309800000
+   },
+   {
+    "value": 38434600000
+   },
+   {
+    "value": 71832500000
+   },
+   {
+    "value": 56158200000
+   },
+   {
+    "value": 47909600000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 19192900000
+   },
+   {
+    "value": 14668100000
+   },
+   {
+    "value": 12768100000
+   },
+   {
+    "value": 10459300000
+   },
+   {
+    "value": 7489600000
+   },
+   {
+    "value": 6771200000
+   },
+   {
+    "value": 7113400000
+   },
+   {
+    "value": 5778500000
+   },
+   {
+    "value": 4364400000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 12525300000
+   },
+   {
+    "value": 9457300000
+   },
+   {
+    "value": 7874900000
+   },
+   {
+    "value": 5459900000
+   },
+   {
+    "value": 4550000000
+   },
+   {
+    "value": 3160400000
+   },
+   {
+    "value": 2078400000
+   },
+   {
+    "value": 3203300000
+   },
+   {
+    "value": 2317000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 11066300000
+   },
+   {
+    "value": 7874100000
+   },
+   {
+    "value": 6722100000
+   },
+   {
+    "value": 5107000000
+   },
+   {
+    "value": 3849400000
+   },
+   {
+    "value": 2492200000
+   },
+   {
+    "value": 1339700000
+   },
+   {
+    "value": 2521100000
+   },
+   {
+    "value": 2138100000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 144905400000
+   },
+   {
+    "value": 112327500000
+   },
+   {
+    "value": 80728600000
+   },
+   {
+    "value": 71626900000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 60550200000
+   },
+   {
+    "value": 46308200000
+   },
+   {
+    "value": 38943500000
+   },
+   {
+    "value": 35323400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 20277000000
+   },
+   {
+    "value": 5581900000
+   },
+   {
+    "value": 6555300000
+   },
+   {
+    "value": 3584100000
+   },
+   {
+    "value": 2628700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 351000000
+   },
+   {
+    "value": 351000000
+   },
+   {
+    "value": 351000000
+   },
+   {
+    "value": 351000000
+   },
+   {
+    "value": 351000000
+   },
+   {
+    "value": 351000000
+   },
+   {
+    "value": 339700000
+   },
+   {
+    "value": 334000000
+   },
+   {
+    "value": 334000000
+   }
+  ]
+ },
+ "ATGL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:28:21.280Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019
+  ],
+  "annualRev": [
+   {
+    "value": 64085300000
+   },
+   {
+    "value": 54116800000
+   },
+   {
+    "value": 48164900000
+   },
+   {
+    "value": 46833900000
+   },
+   {
+    "value": 32063600000
+   },
+   {
+    "value": 17844700000
+   },
+   {
+    "value": 19909000000
+   },
+   {
+    "value": 18234900000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 23819100000
+   },
+   {
+    "value": 21384000000
+   },
+   {
+    "value": 19687100000
+   },
+   {
+    "value": 15970200000
+   },
+   {
+    "value": 12767000000
+   },
+   {
+    "value": 10148500000
+   },
+   {
+    "value": 9309300000
+   },
+   {
+    "value": 7308400000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 9514600000
+   },
+   {
+    "value": 9296500000
+   },
+   {
+    "value": 9458400000
+   },
+   {
+    "value": 7567700000
+   },
+   {
+    "value": 6902700000
+   },
+   {
+    "value": 6418000000
+   },
+   {
+    "value": 5440600000
+   },
+   {
+    "value": 3873300000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 6557200000
+   },
+   {
+    "value": 6544100000
+   },
+   {
+    "value": 6675000000
+   },
+   {
+    "value": 5464900000
+   },
+   {
+    "value": 5094000000
+   },
+   {
+    "value": 4628200000
+   },
+   {
+    "value": 4363200000
+   },
+   {
+    "value": 2287000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 95486200000
+   },
+   {
+    "value": 76647100000
+   },
+   {
+    "value": 65918600000
+   },
+   {
+    "value": 56453000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 48648100000
+   },
+   {
+    "value": 42070500000
+   },
+   {
+    "value": 35803200000
+   },
+   {
+    "value": 29409600000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 11486600000
+   },
+   {
+    "value": 9638700000
+   },
+   {
+    "value": 9551270000
+   },
+   {
+    "value": 8528500000
+   },
+   {
+    "value": 7357200000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   },
+   {
+    "value": 1099800000
+   }
+  ]
+ },
+ "BAJAJHLDNG.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2018-03-31: BAJAJHLDNG.NS: kein Jahres-Kontext (Ende=2018-03-31, 330-400 Tage) gefunden. Verworfen: nichts. Ein Quartals- oder Rumpfjahres-Kontext darf nie als Jahreswert durchgehen (OFSS GJ2025: Q4 17.163 gegen Jahr 68.468 Mio., Faktor 4). Abbruch statt Auswahl.",
+   "2024-03-31: annualEquity kaeme aus \"Equity\" statt \"EquityAttributableToOwnersOfParent\" — anderer Begriff, deshalb kein Wert statt eines erfundenen Sprungs",
+   "2023-03-31: annualEquity kaeme aus \"Equity\" statt \"EquityAttributableToOwnersOfParent\" — anderer Begriff, deshalb kein Wert statt eines erfundenen Sprungs"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:28:33.959Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 10695800000
+   },
+   {
+    "value": 6844200000
+   },
+   {
+    "value": 16486900000
+   },
+   {
+    "value": 4640900000
+   },
+   {
+    "value": 4296900000
+   },
+   {
+    "value": 3991100000
+   },
+   {
+    "value": 3933800000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": 6812600000
+   },
+   {
+    "value": 16432200000
+   },
+   {
+    "value": 4545100000
+   },
+   {
+    "value": 4221700000
+   },
+   {
+    "value": 3909900000
+   },
+   {
+    "value": 3857200000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 8754200000
+   },
+   {
+    "value": 4707500000
+   },
+   {
+    "value": 14746000000
+   },
+   {
+    "value": 2881800000
+   },
+   {
+    "value": 2785600000
+   },
+   {
+    "value": 2599900000
+   },
+   {
+    "value": 2260900000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 97889200000
+   },
+   {
+    "value": 66257000000
+   },
+   {
+    "value": 73649100000
+   },
+   {
+    "value": 49462100000
+   },
+   {
+    "value": 41256100000
+   },
+   {
+    "value": 36541500000
+   },
+   {
+    "value": 30801900000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 851874100000
+   },
+   {
+    "value": 752655900000
+   },
+   {
+    "value": 651610800000
+   },
+   {
+    "value": 531881000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 731505800000
+   },
+   {
+    "value": 626875500000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 25641000000
+   },
+   {
+    "value": -19567600000
+   },
+   {
+    "value": 4363800000
+   },
+   {
+    "value": 17276500000
+   },
+   {
+    "value": 16096500000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   },
+   {
+    "value": 111290000
+   }
+  ]
+ },
+ "BIKAJI.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": null
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:28:40.440Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023
+  ],
+  "annualRev": [
+   {
+    "value": 29938634000
+   },
+   {
+    "value": 26218542000
+   },
+   {
+    "value": 23293366000
+   },
+   {
+    "value": 19660722000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 10493624000
+   },
+   {
+    "value": 8472445000
+   },
+   {
+    "value": 8208725000
+   },
+   {
+    "value": 5708587000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 3155381000
+   },
+   {
+    "value": 2467021000
+   },
+   {
+    "value": 3312572000
+   },
+   {
+    "value": 2029948000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 2544098000
+   },
+   {
+    "value": 1943446000
+   },
+   {
+    "value": 2634626000
+   },
+   {
+    "value": 1266036000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 22395423000
+   },
+   {
+    "value": 19367231000
+   },
+   {
+    "value": 15335038000
+   },
+   {
+    "value": 12716266000
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 16069926000
+   },
+   {
+    "value": 13831891000
+   },
+   {
+    "value": 12183537000
+   },
+   {
+    "value": 9536363000
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 3040978000
+   },
+   {
+    "value": 1934550000
+   },
+   {
+    "value": 2446826000
+   },
+   {
+    "value": 1761505000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": null
+   },
+   {
+    "value": 250593000
+   },
+   {
+    "value": 250382000
+   },
+   {
+    "value": 249510000
+   }
+  ]
+ },
+ "CCL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2019-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_44160_101936_15052019122502_WEB_2.xml -> HTTP 404 (nicht wiederholbar)"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:28:54.780Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 44573734000
+   },
+   {
+    "value": 31057499000
+   },
+   {
+    "value": 26537008000
+   },
+   {
+    "value": 20712160000
+   },
+   {
+    "value": 14620289000
+   },
+   {
+    "value": 12424804000
+   },
+   {
+    "value": 11391527000
+   },
+   {
+    "value": 11380005000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 15534424000
+   },
+   {
+    "value": 12631634000
+   },
+   {
+    "value": 11016633000
+   },
+   {
+    "value": 9416359000
+   },
+   {
+    "value": 7391063000
+   },
+   {
+    "value": 6522610000
+   },
+   {
+    "value": 5797389000
+   },
+   {
+    "value": 4474282000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 5810169000
+   },
+   {
+    "value": 4566310000
+   },
+   {
+    "value": 3476351000
+   },
+   {
+    "value": 3361477000
+   },
+   {
+    "value": 2735993000
+   },
+   {
+    "value": 2483459000
+   },
+   {
+    "value": 2387806000
+   },
+   {
+    "value": 2048058000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 3880987000
+   },
+   {
+    "value": 3103365000
+   },
+   {
+    "value": 2500777000
+   },
+   {
+    "value": 2688783000
+   },
+   {
+    "value": 2043504000
+   },
+   {
+    "value": 1822615000
+   },
+   {
+    "value": 1659359000
+   },
+   {
+    "value": 1481314000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 43262909000
+   },
+   {
+    "value": 42409770000
+   },
+   {
+    "value": 35359120000
+   },
+   {
+    "value": 25969330000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 23445548000
+   },
+   {
+    "value": 19672277000
+   },
+   {
+    "value": 16738124000
+   },
+   {
+    "value": 14822090000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 8582854000
+   },
+   {
+    "value": 2896907000
+   },
+   {
+    "value": 553780000
+   },
+   {
+    "value": 1983007000
+   },
+   {
+    "value": 1007428000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 133528000
+   },
+   {
+    "value": 133528000
+   },
+   {
+    "value": 133028000
+   },
+   {
+    "value": 133028000
+   },
+   {
+    "value": 133028000
+   },
+   {
+    "value": 133028000
+   },
+   {
+    "value": 133028000
+   },
+   {
+    "value": 133028000
+   }
+  ]
+ },
+ "CHENNPETRO.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:29:08.777Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 786107900000
+   },
+   {
+    "value": 710499500000
+   },
+   {
+    "value": 792725400000
+   },
+   {
+    "value": 909082700000
+   },
+   {
+    "value": 604742900000
+   },
+   {
+    "value": 418990700000
+   },
+   {
+    "value": 486502200000
+   },
+   {
+    "value": 522012200000
+   },
+   {
+    "value": 441891800000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 223217600000
+   },
+   {
+    "value": 146396500000
+   },
+   {
+    "value": 192198400000
+   },
+   {
+    "value": 223649500000
+   },
+   {
+    "value": 216086700000
+   },
+   {
+    "value": 228865600000
+   },
+   {
+    "value": 109700000000
+   },
+   {
+    "value": 130034900000
+   },
+   {
+    "value": 150817800000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 41471700000
+   },
+   {
+    "value": 4091100000
+   },
+   {
+    "value": 38699700000
+   },
+   {
+    "value": 51237500000
+   },
+   {
+    "value": 22203600000
+   },
+   {
+    "value": 15447500000
+   },
+   {
+    "value": -26815800000
+   },
+   {
+    "value": 629800000
+   },
+   {
+    "value": 17410100000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 31027000000
+   },
+   {
+    "value": 2140900000
+   },
+   {
+    "value": 27450700000
+   },
+   {
+    "value": 35315300000
+   },
+   {
+    "value": 13520300000
+   },
+   {
+    "value": 2572600000
+   },
+   {
+    "value": -20564000000
+   },
+   {
+    "value": -2053500000
+   },
+   {
+    "value": 9272200000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 200346200000
+   },
+   {
+    "value": 170649900000
+   },
+   {
+    "value": 183312700000
+   },
+   {
+    "value": 160361100000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 111092100000
+   },
+   {
+    "value": 82066500000
+   },
+   {
+    "value": 88209200000
+   },
+   {
+    "value": 64750800000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 29449600000
+   },
+   {
+    "value": 13523700000
+   },
+   {
+    "value": 26942500000
+   },
+   {
+    "value": 67859900000
+   },
+   {
+    "value": 10258700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148911000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 148910000
+   },
+   {
+    "value": 149000000
+   }
+  ]
+ },
+ "COFORGE.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:29:23.017Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 164027000000
+   },
+   {
+    "value": 120507000000
+   },
+   {
+    "value": 91790000000
+   },
+   {
+    "value": 80146000000
+   },
+   {
+    "value": 64320000000
+   },
+   {
+    "value": 46628000000
+   },
+   {
+    "value": 41839000000
+   },
+   {
+    "value": 36762000000
+   },
+   {
+    "value": 29914000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 163962000000
+   },
+   {
+    "value": 120406000000
+   },
+   {
+    "value": 91696000000
+   },
+   {
+    "value": 79595000000
+   },
+   {
+    "value": 62596000000
+   },
+   {
+    "value": 44693000000
+   },
+   {
+    "value": 40995000000
+   },
+   {
+    "value": 36471000000
+   },
+   {
+    "value": 29597000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 22542000000
+   },
+   {
+    "value": 12661000000
+   },
+   {
+    "value": 11091000000
+   },
+   {
+    "value": 10222000000
+   },
+   {
+    "value": 8747000000
+   },
+   {
+    "value": 5959000000
+   },
+   {
+    "value": 5503000000
+   },
+   {
+    "value": 5237000000
+   },
+   {
+    "value": 3739000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 17447000000
+   },
+   {
+    "value": 9361000000
+   },
+   {
+    "value": 8356000000
+   },
+   {
+    "value": 7451000000
+   },
+   {
+    "value": 7147000000
+   },
+   {
+    "value": 4660000000
+   },
+   {
+    "value": 4676000000
+   },
+   {
+    "value": 4221000000
+   },
+   {
+    "value": 3087000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 148814000000
+   },
+   {
+    "value": 124907000000
+   },
+   {
+    "value": 61077000000
+   },
+   {
+    "value": 56834000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 95376000000
+   },
+   {
+    "value": 63792000000
+   },
+   {
+    "value": 36266000000
+   },
+   {
+    "value": 30825000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 17917000000
+   },
+   {
+    "value": 12371000000
+   },
+   {
+    "value": 9034000000
+   },
+   {
+    "value": 9505000000
+   },
+   {
+    "value": 7656000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 336000000
+   },
+   {
+    "value": 66900000
+   },
+   {
+    "value": 61800000
+   },
+   {
+    "value": 61100000
+   },
+   {
+    "value": 60900000
+   },
+   {
+    "value": 60600000
+   },
+   {
+    "value": 62500000
+   },
+   {
+    "value": 61800000
+   },
+   {
+    "value": 61500000
+   }
+  ]
+ },
+ "CRAFTSMAN.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:29:32.945Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021
+  ],
+  "annualRev": [
+   {
+    "value": 80692700000
+   },
+   {
+    "value": 56904800000
+   },
+   {
+    "value": 44517300000
+   },
+   {
+    "value": 31826000000
+   },
+   {
+    "value": 22170200000
+   },
+   {
+    "value": 15599500000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 36673100000
+   },
+   {
+    "value": 25884100000
+   },
+   {
+    "value": 20804200000
+   },
+   {
+    "value": 15531700000
+   },
+   {
+    "value": 11829700000
+   },
+   {
+    "value": 8934200000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 7937400000
+   },
+   {
+    "value": 4856900000
+   },
+   {
+    "value": 6011400000
+   },
+   {
+    "value": 4620000000
+   },
+   {
+    "value": 3281700000
+   },
+   {
+    "value": 2457900000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 3839900000
+   },
+   {
+    "value": 2008700000
+   },
+   {
+    "value": 3373300000
+   },
+   {
+    "value": 2509600000
+   },
+   {
+    "value": 1630900000
+   },
+   {
+    "value": 973600000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 89783000000
+   },
+   {
+    "value": 71164400000
+   },
+   {
+    "value": 47057400000
+   },
+   {
+    "value": 38067200000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 32640600000
+   },
+   {
+    "value": 28567400000
+   },
+   {
+    "value": 16579800000
+   },
+   {
+    "value": 13769000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 5216800000
+   },
+   {
+    "value": 2833300000
+   },
+   {
+    "value": 5133100000
+   },
+   {
+    "value": 6076600000
+   },
+   {
+    "value": 3272100000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 23860000
+   },
+   {
+    "value": 23860000
+   },
+   {
+    "value": 21120000
+   },
+   {
+    "value": 21120000
+   },
+   {
+    "value": 21120000
+   },
+   {
+    "value": 21120000
+   }
+  ]
+ },
+ "ECLERX.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:29:47.002Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 41170260000
+   },
+   {
+    "value": 33658650000
+   },
+   {
+    "value": 29255430000
+   },
+   {
+    "value": 26478970000
+   },
+   {
+    "value": 21603450000
+   },
+   {
+    "value": 15644910000
+   },
+   {
+    "value": 14375710000
+   },
+   {
+    "value": 14305930000
+   },
+   {
+    "value": 13650620000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 8760760000
+   },
+   {
+    "value": 6668940000
+   },
+   {
+    "value": 6490200000
+   },
+   {
+    "value": 6082010000
+   },
+   {
+    "value": 5573890000
+   },
+   {
+    "value": 3664410000
+   },
+   {
+    "value": 2526240000
+   },
+   {
+    "value": 2629210000
+   },
+   {
+    "value": 3180720000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 7064690000
+   },
+   {
+    "value": 5412590000
+   },
+   {
+    "value": 5117310000
+   },
+   {
+    "value": 4891810000
+   },
+   {
+    "value": 4177580000
+   },
+   {
+    "value": 2828210000
+   },
+   {
+    "value": 2089720000
+   },
+   {
+    "value": 2283010000
+   },
+   {
+    "value": 2899420000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 36970160000
+   },
+   {
+    "value": 31456730000
+   },
+   {
+    "value": 29289650000
+   },
+   {
+    "value": 22877440000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 25613980000
+   },
+   {
+    "value": 23057620000
+   },
+   {
+    "value": 22475010000
+   },
+   {
+    "value": 17148710000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 8734660000
+   },
+   {
+    "value": 6546170000
+   },
+   {
+    "value": 5258920000
+   },
+   {
+    "value": 4925740000
+   },
+   {
+    "value": 4481710000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 92030000
+   },
+   {
+    "value": 46960000
+   },
+   {
+    "value": 48232000
+   },
+   {
+    "value": 48034000
+   },
+   {
+    "value": 33098000
+   },
+   {
+    "value": 34006000
+   },
+   {
+    "value": 36100000
+   },
+   {
+    "value": 37790000
+   },
+   {
+    "value": 38629000
+   }
+  ]
+ },
+ "ENDURANCE.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:30:01.104Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 145958800000
+   },
+   {
+    "value": 115608100000
+   },
+   {
+    "value": 102408710000
+   },
+   {
+    "value": 88040460000
+   },
+   {
+    "value": 75491400000
+   },
+   {
+    "value": 65470180000
+   },
+   {
+    "value": 69177070000
+   },
+   {
+    "value": 75104990000
+   },
+   {
+    "value": 66660470000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 61781800000
+   },
+   {
+    "value": 49576930000
+   },
+   {
+    "value": 41902980000
+   },
+   {
+    "value": 34745230000
+   },
+   {
+    "value": 31289960000
+   },
+   {
+    "value": 29764600000
+   },
+   {
+    "value": 31824990000
+   },
+   {
+    "value": 31610450000
+   },
+   {
+    "value": 28214540000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 12314200000
+   },
+   {
+    "value": 10123710000
+   },
+   {
+    "value": 8539910000
+   },
+   {
+    "value": 6146860000
+   },
+   {
+    "value": 5829120000
+   },
+   {
+    "value": 6410730000
+   },
+   {
+    "value": 7164880000
+   },
+   {
+    "value": 7525660000
+   },
+   {
+    "value": 6061990000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 9517100000
+   },
+   {
+    "value": 8363530000
+   },
+   {
+    "value": 6804880000
+   },
+   {
+    "value": 4795750000
+   },
+   {
+    "value": 4607090000
+   },
+   {
+    "value": 5195690000
+   },
+   {
+    "value": 5655340000
+   },
+   {
+    "value": 4950060000
+   },
+   {
+    "value": 3907570000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 116273900000
+   },
+   {
+    "value": 91392810000
+   },
+   {
+    "value": 78856940000
+   },
+   {
+    "value": 68024530000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 68408200000
+   },
+   {
+    "value": 57174160000
+   },
+   {
+    "value": 49774410000
+   },
+   {
+    "value": 44121290000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 18507200000
+   },
+   {
+    "value": 15316870000
+   },
+   {
+    "value": 10570870000
+   },
+   {
+    "value": 8619900000
+   },
+   {
+    "value": 7415540000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 140660000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   },
+   {
+    "value": 140663000
+   }
+  ]
+ },
+ "ETERNAL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:30:09.078Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022
+  ],
+  "annualRev": [
+   {
+    "value": 543640000000
+   },
+   {
+    "value": 202430000000
+   },
+   {
+    "value": 121140000000
+   },
+   {
+    "value": 70794000000
+   },
+   {
+    "value": 41924000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 241970000000
+   },
+   {
+    "value": 146780000000
+   },
+   {
+    "value": 92320000000
+   },
+   {
+    "value": 56842000000
+   },
+   {
+    "value": 36678000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": -3890000000
+   },
+   {
+    "value": -2260000000
+   },
+   {
+    "value": -4840000000
+   },
+   {
+    "value": -16472000000
+   },
+   {
+    "value": -20011000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 3660000000
+   },
+   {
+    "value": 5270000000
+   },
+   {
+    "value": 3510000000
+   },
+   {
+    "value": -9710000000
+   },
+   {
+    "value": -12225000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 407360000000
+   },
+   {
+    "value": 356230000000
+   },
+   {
+    "value": 233560000000
+   },
+   {
+    "value": 215987000000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 309800000000
+   },
+   {
+    "value": 303170000000
+   },
+   {
+    "value": 204130000000
+   },
+   {
+    "value": 194598000000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 6320000000
+   },
+   {
+    "value": 3080000000
+   },
+   {
+    "value": 6460000000
+   },
+   {
+    "value": -8440000000
+   },
+   {
+    "value": -6930000000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 9190000000
+   },
+   {
+    "value": 9070000000
+   },
+   {
+    "value": 8680000000
+   },
+   {
+    "value": 8364000000
+   },
+   {
+    "value": 7642940000
+   }
+  ]
+ },
+ "FSL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:30:23.158Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 95563940000
+   },
+   {
+    "value": 79803140000
+   },
+   {
+    "value": 63362450000
+   },
+   {
+    "value": 60223180000
+   },
+   {
+    "value": 59211530000
+   },
+   {
+    "value": 50779800000
+   },
+   {
+    "value": 40986140000
+   },
+   {
+    "value": 38262770000
+   },
+   {
+    "value": 34314970000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 11220900000
+   },
+   {
+    "value": 8805850000
+   },
+   {
+    "value": 6962160000
+   },
+   {
+    "value": 5633350000
+   },
+   {
+    "value": 7104850000
+   },
+   {
+    "value": 5978530000
+   },
+   {
+    "value": 4436880000
+   },
+   {
+    "value": 4610320000
+   },
+   {
+    "value": 2892320000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 6744120000
+   },
+   {
+    "value": 5944510000
+   },
+   {
+    "value": 5147250000
+   },
+   {
+    "value": 5137120000
+   },
+   {
+    "value": 5365300000
+   },
+   {
+    "value": 3616770000
+   },
+   {
+    "value": 3396850000
+   },
+   {
+    "value": 3777770000
+   },
+   {
+    "value": 3265780000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 93200390000
+   },
+   {
+    "value": 79222330000
+   },
+   {
+    "value": 60830370000
+   },
+   {
+    "value": 56643690000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 43845300000
+   },
+   {
+    "value": 40976300000
+   },
+   {
+    "value": 37004030000
+   },
+   {
+    "value": 33668450000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 12139760000
+   },
+   {
+    "value": 7010960000
+   },
+   {
+    "value": 6447910000
+   },
+   {
+    "value": 7950230000
+   },
+   {
+    "value": 7035580000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 696991000
+   },
+   {
+    "value": 696991000
+   },
+   {
+    "value": 696991000
+   },
+   {
+    "value": 696991000
+   },
+   {
+    "value": 696991000
+   },
+   {
+    "value": 696099000
+   },
+   {
+    "value": 693827000
+   },
+   {
+    "value": 691065000
+   },
+   {
+    "value": 686523000
+   }
+  ]
+ },
+ "GODREJPROP.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2022-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_83899_650753_04052022113358_WEB.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET",
+   "2021-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_69638_445651_04052021123459_WEB.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET",
+   "2020-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_55071_252393_11052020090226_WEB.xml -> nach 4 Versuchen aufgegeben: timeout nach 45000ms",
+   "2019-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_43693_100749_07052019074610_WEB.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET",
+   "2018-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_34838_8305_04052018043219_WEB_2.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:35:57.486Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023
+  ],
+  "annualRev": [
+   {
+    "value": 51314300000
+   },
+   {
+    "value": 49228400000
+   },
+   {
+    "value": 30356200000
+   },
+   {
+    "value": 22522600000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 21825000000
+   },
+   {
+    "value": 19982900000
+   },
+   {
+    "value": 12275900000
+   },
+   {
+    "value": 10103800000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": -5321500000
+   },
+   {
+    "value": -293000000
+   },
+   {
+    "value": -1742400000
+   },
+   {
+    "value": 2234900000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 18406600000
+   },
+   {
+    "value": 13892300000
+   },
+   {
+    "value": 7470600000
+   },
+   {
+    "value": 6206000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 818944300000
+   },
+   {
+    "value": 554655200000
+   },
+   {
+    "value": 357348600000
+   },
+   {
+    "value": 231053000000
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 191555400000
+   },
+   {
+    "value": 173124600000
+   },
+   {
+    "value": 99925100000
+   },
+   {
+    "value": 92642000000
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": -19614600000
+   },
+   {
+    "value": -22423800000
+   },
+   {
+    "value": -6925700000
+   },
+   {
+    "value": -28606400000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 301200000
+   },
+   {
+    "value": 301180000
+   },
+   {
+    "value": 278040000
+   },
+   {
+    "value": 278020000
+   }
+  ]
+ },
+ "GRANULES.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:45:14.616Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 53656420000
+   },
+   {
+    "value": 44816080000
+   },
+   {
+    "value": 45063670000
+   },
+   {
+    "value": 45119170000
+   },
+   {
+    "value": 37649210000
+   },
+   {
+    "value": 32375428000
+   },
+   {
+    "value": 25986465000
+   },
+   {
+    "value": 22791977000
+   },
+   {
+    "value": 16918483000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 34899420000
+   },
+   {
+    "value": 27559090000
+   },
+   {
+    "value": 24851170000
+   },
+   {
+    "value": 22046290000
+   },
+   {
+    "value": 18812801000
+   },
+   {
+    "value": 18462694000
+   },
+   {
+    "value": 13177152000
+   },
+   {
+    "value": 10236355000
+   },
+   {
+    "value": 7955269000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 8890020000
+   },
+   {
+    "value": 7197350000
+   },
+   {
+    "value": 6486480000
+   },
+   {
+    "value": 7293260000
+   },
+   {
+    "value": 5636010000
+   },
+   {
+    "value": 7037666000
+   },
+   {
+    "value": 3883648000
+   },
+   {
+    "value": 2785543000
+   },
+   {
+    "value": 2022187000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 5950210000
+   },
+   {
+    "value": 5015160000
+   },
+   {
+    "value": 4053100000
+   },
+   {
+    "value": 5165970000
+   },
+   {
+    "value": 4127581000
+   },
+   {
+    "value": 5494590000
+   },
+   {
+    "value": 3353983000
+   },
+   {
+    "value": 2364085000
+   },
+   {
+    "value": 1325912000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 77199500000
+   },
+   {
+    "value": 62525610000
+   },
+   {
+    "value": 55209820000
+   },
+   {
+    "value": 49045640000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 50849950000
+   },
+   {
+    "value": 37155780000
+   },
+   {
+    "value": 32255440000
+   },
+   {
+    "value": 28349090000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 7932500000
+   },
+   {
+    "value": 8665660000
+   },
+   {
+    "value": 4394140000
+   },
+   {
+    "value": 7387490000
+   },
+   {
+    "value": 3320541000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 247800000
+   },
+   {
+    "value": 242540000
+   },
+   {
+    "value": 242370000
+   },
+   {
+    "value": 242040000
+   },
+   {
+    "value": 248006000
+   },
+   {
+    "value": 247675000
+   },
+   {
+    "value": 254248000
+   },
+   {
+    "value": 254248000
+   },
+   {
+    "value": 253838000
+   }
+  ]
+ },
+ "HCLTECH.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2019-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_43975_101166_10052019010546_WEB_2.xml -> HTTP 404 (nicht wiederholbar)"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:45:28.674Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 1301440000000
+   },
+   {
+    "value": 1170550000000
+   },
+   {
+    "value": 1099130000000
+   },
+   {
+    "value": 1014560000000
+   },
+   {
+    "value": 856510000000
+   },
+   {
+    "value": 753790000000
+   },
+   {
+    "value": 706760000000
+   },
+   {
+    "value": 505690000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 1275350000000
+   },
+   {
+    "value": 1150270000000
+   },
+   {
+    "value": 1081160000000
+   },
+   {
+    "value": 994510000000
+   },
+   {
+    "value": 842450000000
+   },
+   {
+    "value": 736840000000
+   },
+   {
+    "value": 691400000000
+   },
+   {
+    "value": 492140000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 223970000000
+   },
+   {
+    "value": 214200000000
+   },
+   {
+    "value": 200250000000
+   },
+   {
+    "value": 184830000000
+   },
+   {
+    "value": 162040000000
+   },
+   {
+    "value": 154370000000
+   },
+   {
+    "value": 138960000000
+   },
+   {
+    "value": 98630000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 166520000000
+   },
+   {
+    "value": 173990000000
+   },
+   {
+    "value": 157100000000
+   },
+   {
+    "value": 148450000000
+   },
+   {
+    "value": 135230000000
+   },
+   {
+    "value": 111690000000
+   },
+   {
+    "value": 110570000000
+   },
+   {
+    "value": 87220000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 1162580000000
+   },
+   {
+    "value": 1055440000000
+   },
+   {
+    "value": 997770000000
+   },
+   {
+    "value": 934110000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 751650000000
+   },
+   {
+    "value": 696550000000
+   },
+   {
+    "value": 682630000000
+   },
+   {
+    "value": 654050000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 199750000000
+   },
+   {
+    "value": 222610000000
+   },
+   {
+    "value": 224480000000
+   },
+   {
+    "value": 180090000000
+   },
+   {
+    "value": 169000000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 2715000000
+   },
+   {
+    "value": 2715000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": 2715000000
+   },
+   {
+    "value": 2715000000
+   },
+   {
+    "value": 2715000000
+   },
+   {
+    "value": 2715000000
+   },
+   {
+    "value": 1392250000
+   }
+  ]
+ },
+ "HEROMOTOCO.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:45:42.823Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 474112400000
+   },
+   {
+    "value": 409234200000
+   },
+   {
+    "value": 377886200000
+   },
+   {
+    "value": 341583800000
+   },
+   {
+    "value": 295512800000
+   },
+   {
+    "value": 309591900000
+   },
+   {
+    "value": 292553200000
+   },
+   {
+    "value": 339722300000
+   },
+   {
+    "value": 331009400000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 157318700000
+   },
+   {
+    "value": 140127800000
+   },
+   {
+    "value": 122791800000
+   },
+   {
+    "value": 102143500000
+   },
+   {
+    "value": 86309200000
+   },
+   {
+    "value": 92155800000
+   },
+   {
+    "value": 94243700000
+   },
+   {
+    "value": 105278100000
+   },
+   {
+    "value": 112151200000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 61901400000
+   },
+   {
+    "value": 51212500000
+   },
+   {
+    "value": 45922700000
+   },
+   {
+    "value": 33963800000
+   },
+   {
+    "value": 27552500000
+   },
+   {
+    "value": 33843900000
+   },
+   {
+    "value": 32151600000
+   },
+   {
+    "value": 43939900000
+   },
+   {
+    "value": 47500700000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 57757000000
+   },
+   {
+    "value": 43758100000
+   },
+   {
+    "value": 37421600000
+   },
+   {
+    "value": 27999000000
+   },
+   {
+    "value": 23290500000
+   },
+   {
+    "value": 29360500000
+   },
+   {
+    "value": 36594100000
+   },
+   {
+    "value": 34663500000
+   },
+   {
+    "value": 37221700000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 334525900000
+   },
+   {
+    "value": 283903200000
+   },
+   {
+    "value": 261527900000
+   },
+   {
+    "value": 239170300000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 216111900000
+   },
+   {
+    "value": 192720400000
+   },
+   {
+    "value": 176989200000
+   },
+   {
+    "value": 166555700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 83146200000
+   },
+   {
+    "value": 42973900000
+   },
+   {
+    "value": 49230700000
+   },
+   {
+    "value": 26138400000
+   },
+   {
+    "value": 21037000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 200100000
+   },
+   {
+    "value": 200000000
+   },
+   {
+    "value": 199900000
+   },
+   {
+    "value": 199850000
+   },
+   {
+    "value": 199800000
+   },
+   {
+    "value": 199800000
+   },
+   {
+    "value": 199750000
+   },
+   {
+    "value": 199750000
+   },
+   {
+    "value": 199700000
+   }
+  ]
+ },
+ "HINDCOPPER.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:45:54.135Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 30779200000
+   },
+   {
+    "value": 20709600000
+   },
+   {
+    "value": 17170000000
+   },
+   {
+    "value": 16773300000
+   },
+   {
+    "value": 18219300000
+   },
+   {
+    "value": 17867600000
+   },
+   {
+    "value": 8318500000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 30687400000
+   },
+   {
+    "value": 20483300000
+   },
+   {
+    "value": 17820700000
+   },
+   {
+    "value": 16700200000
+   },
+   {
+    "value": 16264800000
+   },
+   {
+    "value": 14440100000
+   },
+   {
+    "value": 8767100000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 12616300000
+   },
+   {
+    "value": 5620600000
+   },
+   {
+    "value": 3721300000
+   },
+   {
+    "value": 3157300000
+   },
+   {
+    "value": 3608000000
+   },
+   {
+    "value": 1152100000
+   },
+   {
+    "value": -5341100000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 9185400000
+   },
+   {
+    "value": 4651100000
+   },
+   {
+    "value": 2953100000
+   },
+   {
+    "value": 2954200000
+   },
+   {
+    "value": 3738000000
+   },
+   {
+    "value": 1101800000
+   },
+   {
+    "value": -5694900000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 44156800000
+   },
+   {
+    "value": 35008000000
+   },
+   {
+    "value": 32700700000
+   },
+   {
+    "value": 29852700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 33421900000
+   },
+   {
+    "value": 26609100000
+   },
+   {
+    "value": 22851100000
+   },
+   {
+    "value": 20821700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 14735600000
+   },
+   {
+    "value": 5442300000
+   },
+   {
+    "value": 2920600000
+   },
+   {
+    "value": 6735800000
+   },
+   {
+    "value": 10522400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 967020000
+   },
+   {
+    "value": 967020000
+   },
+   {
+    "value": 967020000
+   },
+   {
+    "value": 967020000
+   },
+   {
+    "value": 967020000
+   },
+   {
+    "value": 925220000
+   },
+   {
+    "value": 925220000
+   }
+  ]
+ },
+ "HINDPETRO.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2019-03-31: HINDPETRO.NS: kein Jahres-Kontext (Ende=2019-03-31, 330-400 Tage) gefunden. Verworfen: OneD:2019-01-01..2019-03-31(90d) · FourD:2018-01-01..2018-03-31(90d). Ein Quartals- oder Rumpfjahres-Kontext darf nie als Jahreswert durchgehen (OFSS GJ2025: Q4 17.163 gegen Jahr 68.468 Mio., Faktor 4). Abbruch statt Auswahl."
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:46:06.605Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 4788660000000
+   },
+   {
+    "value": 4667236800000
+   },
+   {
+    "value": 4619691420000
+   },
+   {
+    "value": 4664986100000
+   },
+   {
+    "value": 3741269900000
+   },
+   {
+    "value": 2705779600000
+   },
+   {
+    "value": 2877420500000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 934687000000
+   },
+   {
+    "value": 718248200000
+   },
+   {
+    "value": 743863320000
+   },
+   {
+    "value": 392893500000
+   },
+   {
+    "value": 519960200000
+   },
+   {
+    "value": 700229600000
+   },
+   {
+    "value": 409559400000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 232851600000
+   },
+   {
+    "value": 103971000000
+   },
+   {
+    "value": 193313520000
+   },
+   {
+    "value": -117672300000
+   },
+   {
+    "value": 62439700000
+   },
+   {
+    "value": 123778900000
+   },
+   {
+    "value": 22926200000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 180468900000
+   },
+   {
+    "value": 67357000000
+   },
+   {
+    "value": 160146120000
+   },
+   {
+    "value": -69802300000
+   },
+   {
+    "value": 72942300000
+   },
+   {
+    "value": 106628900000
+   },
+   {
+    "value": 26387300000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 2030392400000
+   },
+   {
+    "value": 1947446400000
+   },
+   {
+    "value": 1827846800000
+   },
+   {
+    "value": 1613395100000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 655561200000
+   },
+   {
+    "value": 511442900000
+   },
+   {
+    "value": 469213500000
+   },
+   {
+    "value": 322632700000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 361106800000
+   },
+   {
+    "value": 142277400000
+   },
+   {
+    "value": 238518720000
+   },
+   {
+    "value": -34663100000
+   },
+   {
+    "value": 158102300000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 2127820000
+   },
+   {
+    "value": 2127820000
+   },
+   {
+    "value": 1418550000
+   },
+   {
+    "value": 1418550000
+   },
+   {
+    "value": 1418550000
+   },
+   {
+    "value": 1452020000
+   },
+   {
+    "value": 1523820000
+   }
+  ]
+ },
+ "KALYANKJIL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:46:16.092Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021
+  ],
+  "annualRev": [
+   {
+    "value": 357428600000
+   },
+   {
+    "value": 250450660000
+   },
+   {
+    "value": 185482860000
+   },
+   {
+    "value": 140714470000
+   },
+   {
+    "value": 108179340000
+   },
+   {
+    "value": 85733050000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 47043300000
+   },
+   {
+    "value": 32842550000
+   },
+   {
+    "value": 27136930000
+   },
+   {
+    "value": 21992230000
+   },
+   {
+    "value": 16916460000
+   },
+   {
+    "value": 14591940000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 20683370000
+   },
+   {
+    "value": 11744590000
+   },
+   {
+    "value": 10383590000
+   },
+   {
+    "value": 8694470000
+   },
+   {
+    "value": 5829260000
+   },
+   {
+    "value": 3694040000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 13503950000
+   },
+   {
+    "value": 7141730000
+   },
+   {
+    "value": 5962850000
+   },
+   {
+    "value": 4319320000
+   },
+   {
+    "value": 2240300000
+   },
+   {
+    "value": -60730000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 207166360000
+   },
+   {
+    "value": 151259450000
+   },
+   {
+    "value": 128177350000
+   },
+   {
+    "value": 107129370000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 63087130000
+   },
+   {
+    "value": 48035780000
+   },
+   {
+    "value": 41890570000
+   },
+   {
+    "value": 36347110000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 13175160000
+   },
+   {
+    "value": 12094040000
+   },
+   {
+    "value": 13227500000
+   },
+   {
+    "value": 10133710000
+   },
+   {
+    "value": 2449970000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 1032740000
+   },
+   {
+    "value": 1031435000
+   },
+   {
+    "value": 1030053000
+   },
+   {
+    "value": 1030053000
+   },
+   {
+    "value": 1030053000
+   },
+   {
+    "value": 1030053000
+   }
+  ]
+ },
+ "LAURUSLABS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:46:30.126Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 68129000000
+   },
+   {
+    "value": 55539600000
+   },
+   {
+    "value": 50408300000
+   },
+   {
+    "value": 60405500000
+   },
+   {
+    "value": 49355700000
+   },
+   {
+    "value": 48135100000
+   },
+   {
+    "value": 28317230000
+   },
+   {
+    "value": 22919160000
+   },
+   {
+    "value": 20690030000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 41174400000
+   },
+   {
+    "value": 30759800000
+   },
+   {
+    "value": 26084100000
+   },
+   {
+    "value": 32662300000
+   },
+   {
+    "value": 27418000000
+   },
+   {
+    "value": 26553200000
+   },
+   {
+    "value": 14183150000
+   },
+   {
+    "value": 10562760000
+   },
+   {
+    "value": 10052980000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 12976600000
+   },
+   {
+    "value": 6251900000
+   },
+   {
+    "value": 3929200000
+   },
+   {
+    "value": 12681100000
+   },
+   {
+    "value": 11709400000
+   },
+   {
+    "value": 13456100000
+   },
+   {
+    "value": 3772780000
+   },
+   {
+    "value": 1917900000
+   },
+   {
+    "value": 2878670000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 8901400000
+   },
+   {
+    "value": 3583400000
+   },
+   {
+    "value": 1622700000
+   },
+   {
+    "value": 7934300000
+   },
+   {
+    "value": 8322260000
+   },
+   {
+    "value": 9838200000
+   },
+   {
+    "value": 2552730000
+   },
+   {
+    "value": 937640000
+   },
+   {
+    "value": 1676100000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 105111900000
+   },
+   {
+    "value": 93355700000
+   },
+   {
+    "value": 83870300000
+   },
+   {
+    "value": 76604000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 53000600000
+   },
+   {
+    "value": 44725600000
+   },
+   {
+    "value": 41109500000
+   },
+   {
+    "value": 40375300000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 16235000000
+   },
+   {
+    "value": 6016500000
+   },
+   {
+    "value": 6656900000
+   },
+   {
+    "value": 9939000000
+   },
+   {
+    "value": 9111000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 539850000
+   },
+   {
+    "value": 539250000
+   },
+   {
+    "value": 538950000
+   },
+   {
+    "value": 538650000
+   },
+   {
+    "value": 537350000
+   },
+   {
+    "value": 536600000
+   },
+   {
+    "value": 106914000
+   },
+   {
+    "value": 106437000
+   },
+   {
+    "value": 106030000
+   }
+  ]
+ },
+ "LTM.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:46:46.172Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 423076000000
+   },
+   {
+    "value": 380081000000
+   },
+   {
+    "value": 355170000000
+   },
+   {
+    "value": 331830000000
+   },
+   {
+    "value": 156687000000
+   },
+   {
+    "value": 108786000000
+   },
+   {
+    "value": 94458000000
+   },
+   {
+    "value": 73065000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 65011000000
+   },
+   {
+    "value": 55034000000
+   },
+   {
+    "value": 55685000000
+   },
+   {
+    "value": 53850000000
+   },
+   {
+    "value": 27035000000
+   },
+   {
+    "value": 17563000000
+   },
+   {
+    "value": 17361000000
+   },
+   {
+    "value": 10311000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 49827000000
+   },
+   {
+    "value": 46020000000
+   },
+   {
+    "value": 45846000000
+   },
+   {
+    "value": 44103000000
+   },
+   {
+    "value": 22985000000
+   },
+   {
+    "value": 15205000000
+   },
+   {
+    "value": 15155000000
+   },
+   {
+    "value": 11124000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 371960000000
+   },
+   {
+    "value": 306300000000
+   },
+   {
+    "value": 275630000000
+   },
+   {
+    "value": 234961000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 240250000000
+   },
+   {
+    "value": 226983000000
+   },
+   {
+    "value": 200172000000
+   },
+   {
+    "value": 165921000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 47988000000
+   },
+   {
+    "value": 45458000000
+   },
+   {
+    "value": 56695000000
+   },
+   {
+    "value": 30958000000
+   },
+   {
+    "value": 16520000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 296000000
+   },
+   {
+    "value": 296000000
+   },
+   {
+    "value": 296000000
+   },
+   {
+    "value": 296000000
+   },
+   {
+    "value": 175000000
+   },
+   {
+    "value": 174000000
+   },
+   {
+    "value": 174000000
+   },
+   {
+    "value": 172000000
+   }
+  ]
+ },
+ "LTTS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:47:00.822Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 109959000000
+   },
+   {
+    "value": 106701000000
+   },
+   {
+    "value": 96473000000
+   },
+   {
+    "value": 80136000000
+   },
+   {
+    "value": 65697000000
+   },
+   {
+    "value": 54497000000
+   },
+   {
+    "value": 56191000000
+   },
+   {
+    "value": 50783000000
+   },
+   {
+    "value": 37471000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 15898000000
+   },
+   {
+    "value": 15872000000
+   },
+   {
+    "value": 16474000000
+   },
+   {
+    "value": 14792000000
+   },
+   {
+    "value": 12005000000
+   },
+   {
+    "value": 7891000000
+   },
+   {
+    "value": 9276000000
+   },
+   {
+    "value": 8105000000
+   },
+   {
+    "value": 4868000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 12811000000
+   },
+   {
+    "value": 12635000000
+   },
+   {
+    "value": 13063000000
+   },
+   {
+    "value": 11741000000
+   },
+   {
+    "value": 9606000000
+   },
+   {
+    "value": 6665000000
+   },
+   {
+    "value": 8224000000
+   },
+   {
+    "value": 7684000000
+   },
+   {
+    "value": 5066000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 104889000000
+   },
+   {
+    "value": 96435000000
+   },
+   {
+    "value": 84885000000
+   },
+   {
+    "value": 69173000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 64727000000
+   },
+   {
+    "value": 60800000000
+   },
+   {
+    "value": 53271000000
+   },
+   {
+    "value": 49509000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 14551000000
+   },
+   {
+    "value": 14811000000
+   },
+   {
+    "value": 14928000000
+   },
+   {
+    "value": 13050721000
+   },
+   {
+    "value": 10062000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 106000000
+   },
+   {
+    "value": 106000000
+   },
+   {
+    "value": 106000000
+   },
+   {
+    "value": 105500000
+   },
+   {
+    "value": 105500000
+   },
+   {
+    "value": 105000000
+   },
+   {
+    "value": 104500000
+   },
+   {
+    "value": 104000000
+   },
+   {
+    "value": 102500000
+   }
+  ]
+ },
+ "MINDACORP.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2018-03-31: MINDACORP.NS: kein Jahres-Kontext (Ende=2018-03-31, 330-400 Tage) gefunden. Verworfen: OneD:2018-01-01..2018-03-31(90d) · FourD:2017-01-01..2017-03-31(90d). Ein Quartals- oder Rumpfjahres-Kontext darf nie als Jahreswert durchgehen (OFSS GJ2025: Q4 17.163 gegen Jahr 68.468 Mio., Faktor 4). Abbruch statt Auswahl.",
+   "2017-03-31: MINDACORP.NS: kein Jahres-Kontext (Ende=2018-03-31, 330-400 Tage) gefunden. Verworfen: OneD:2018-01-01..2018-03-31(90d) · FourD:2017-01-01..2017-03-31(90d). Ein Quartals- oder Rumpfjahres-Kontext darf nie als Jahreswert durchgehen (OFSS GJ2025: Q4 17.163 gegen Jahr 68.468 Mio., Faktor 4). Abbruch statt Auswahl."
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:47:21.439Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 61853400000
+   },
+   {
+    "value": 50562200000
+   },
+   {
+    "value": 46511400000
+   },
+   {
+    "value": 43001400000
+   },
+   {
+    "value": 29759400000
+   },
+   {
+    "value": 23679400000
+   },
+   {
+    "value": 28130800000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 22857800000
+   },
+   {
+    "value": 19097500000
+   },
+   {
+    "value": 17273100000
+   },
+   {
+    "value": 15227700000
+   },
+   {
+    "value": 11001500000
+   },
+   {
+    "value": 8753900000
+   },
+   {
+    "value": 11140000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 4915500000
+   },
+   {
+    "value": 3704900000
+   },
+   {
+    "value": 3486000000
+   },
+   {
+    "value": 3234300000
+   },
+   {
+    "value": 1825200000
+   },
+   {
+    "value": 1233700000
+   },
+   {
+    "value": 1320500000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 3582200000
+   },
+   {
+    "value": 2553700000
+   },
+   {
+    "value": 2272200000
+   },
+   {
+    "value": 2845000000
+   },
+   {
+    "value": 1918800000
+   },
+   {
+    "value": 528000000
+   },
+   {
+    "value": -1998100000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 54954200000
+   },
+   {
+    "value": 48831000000
+   },
+   {
+    "value": 34390300000
+   },
+   {
+    "value": 32243000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 26435100000
+   },
+   {
+    "value": 22021800000
+   },
+   {
+    "value": 19806600000
+   },
+   {
+    "value": 15907400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 6756200000
+   },
+   {
+    "value": 5443400000
+   },
+   {
+    "value": 2868500000
+   },
+   {
+    "value": 5982700000
+   },
+   {
+    "value": 1668660000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 239100000
+   },
+   {
+    "value": 239100000
+   },
+   {
+    "value": 239100000
+   },
+   {
+    "value": 239100000
+   },
+   {
+    "value": 239100000
+   },
+   {
+    "value": 239100000
+   },
+   {
+    "value": 226500000
+   }
+  ]
+ },
+ "MRPL.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:47:32.426Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 1051554900000
+   },
+   {
+    "value": 1092774900000
+   },
+   {
+    "value": 1052232800000
+   },
+   {
+    "value": 1247360300000
+   },
+   {
+    "value": 860636800000
+   },
+   {
+    "value": 508952300000
+   },
+   {
+    "value": 599800100000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 270974500000
+   },
+   {
+    "value": 200550600000
+   },
+   {
+    "value": 255034100000
+   },
+   {
+    "value": 260669100000
+   },
+   {
+    "value": 238376400000
+   },
+   {
+    "value": 217962900000
+   },
+   {
+    "value": 92016800000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 47155800000
+   },
+   {
+    "value": 9458000000
+   },
+   {
+    "value": 64384600000
+   },
+   {
+    "value": 53099200000
+   },
+   {
+    "value": 38428700000
+   },
+   {
+    "value": -4612800000
+   },
+   {
+    "value": -42404200000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 19245800000
+   },
+   {
+    "value": 562100000
+   },
+   {
+    "value": 35970500000
+   },
+   {
+    "value": 26554000000
+   },
+   {
+    "value": 29582500000
+   },
+   {
+    "value": -7649700000
+   },
+   {
+    "value": -40391300000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 444812300000
+   },
+   {
+    "value": 344348800000
+   },
+   {
+    "value": 354300300000
+   },
+   {
+    "value": 351454400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 141968700000
+   },
+   {
+    "value": 129696500000
+   },
+   {
+    "value": 132825100000
+   },
+   {
+    "value": 98645200000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 25311900000
+   },
+   {
+    "value": 18779000000
+   },
+   {
+    "value": 70450400000
+   },
+   {
+    "value": 63643900000
+   },
+   {
+    "value": 46928400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 1752600000
+   },
+   {
+    "value": 1752600000
+   },
+   {
+    "value": 1752660000
+   },
+   {
+    "value": 1752600000
+   },
+   {
+    "value": 1752600000
+   },
+   {
+    "value": 1752600000
+   },
+   {
+    "value": 1752600000
+   }
+  ]
+ },
+ "OBEROIRLTY.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:47:44.968Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019
+  ],
+  "annualRev": [
+   {
+    "value": 60090600000
+   },
+   {
+    "value": 52862700000
+   },
+   {
+    "value": 44957900000
+   },
+   {
+    "value": 41925800000
+   },
+   {
+    "value": 26939700000
+   },
+   {
+    "value": 20525800000
+   },
+   {
+    "value": 22376300000
+   },
+   {
+    "value": 25825000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 37440800000
+   },
+   {
+    "value": 34412900000
+   },
+   {
+    "value": 25997500000
+   },
+   {
+    "value": 23257000000
+   },
+   {
+    "value": 13443300000
+   },
+   {
+    "value": 11617500000
+   },
+   {
+    "value": 12019500000
+   },
+   {
+    "value": 13353000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 32273200000
+   },
+   {
+    "value": 30145900000
+   },
+   {
+    "value": 21914200000
+   },
+   {
+    "value": 20719000000
+   },
+   {
+    "value": 11415600000
+   },
+   {
+    "value": 9592000000
+   },
+   {
+    "value": 10031000000
+   },
+   {
+    "value": 11113300000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 25074300000
+   },
+   {
+    "value": 22255100000
+   },
+   {
+    "value": 19266000000
+   },
+   {
+    "value": 19045400000
+   },
+   {
+    "value": 10471000000
+   },
+   {
+    "value": 7392900000
+   },
+   {
+    "value": 6893300000
+   },
+   {
+    "value": 8169300000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 253284800000
+   },
+   {
+    "value": 227420700000
+   },
+   {
+    "value": 196334100000
+   },
+   {
+    "value": 186410000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 179216300000
+   },
+   {
+    "value": 157048700000
+   },
+   {
+    "value": 138444100000
+   },
+   {
+    "value": 122101200000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 13798500000
+   },
+   {
+    "value": 21625700000
+   },
+   {
+    "value": 28098600000
+   },
+   {
+    "value": -23830400000
+   },
+   {
+    "value": 10687300000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   },
+   {
+    "value": 363600000
+   }
+  ]
+ },
+ "OFSS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2019-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_43969_101152_10052019123412_WEB.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET",
+   "2018-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_35112_9297_12052018095434_WEB_2.xml -> nach 4 Versuchen aufgegeben: read ECONNRESET"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T16:49:54.289Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 76721000000
+   },
+   {
+    "value": 68468000000
+   },
+   {
+    "value": 63729610000
+   },
+   {
+    "value": 56983090000
+   },
+   {
+    "value": 52214550000
+   },
+   {
+    "value": 49839370000
+   },
+   {
+    "value": 48612760000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 34120000000
+   },
+   {
+    "value": 30072000000
+   },
+   {
+    "value": 27082520000
+   },
+   {
+    "value": 23907160000
+   },
+   {
+    "value": 24061360000
+   },
+   {
+    "value": 23644950000
+   },
+   {
+    "value": 21223070000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 26393000000
+   },
+   {
+    "value": 23796000000
+   },
+   {
+    "value": 22193620000
+   },
+   {
+    "value": 18061410000
+   },
+   {
+    "value": 18888260000
+   },
+   {
+    "value": 17618550000
+   },
+   {
+    "value": 14622170000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 99339000000
+   },
+   {
+    "value": 101350000000
+   },
+   {
+    "value": 99357410000
+   },
+   {
+    "value": 92755400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 78265000000
+   },
+   {
+    "value": 83624000000
+   },
+   {
+    "value": 78588410000
+   },
+   {
+    "value": 74589070000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 26383000000
+   },
+   {
+    "value": 21989000000
+   },
+   {
+    "value": 17906690000
+   },
+   {
+    "value": 17584150000
+   },
+   {
+    "value": 18561530000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 87000000
+   },
+   {
+    "value": 86800000
+   },
+   {
+    "value": 86672000
+   },
+   {
+    "value": 86398000
+   },
+   {
+    "value": 86246000
+   },
+   {
+    "value": 86062000
+   },
+   {
+    "value": 85880000
+   }
+  ]
+ },
+ "PAYTM.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:24:49.777Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022
+  ],
+  "annualRev": [
+   {
+    "value": 84370000000
+   },
+   {
+    "value": 69004000000
+   },
+   {
+    "value": 99778000000
+   },
+   {
+    "value": 79903000000
+   },
+   {
+    "value": 49742000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": -660000000
+   },
+   {
+    "value": -21791000000
+   },
+   {
+    "value": -16425000000
+   },
+   {
+    "value": -21168000000
+   },
+   {
+    "value": -25875000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 5520000000
+   },
+   {
+    "value": -6632000000
+   },
+   {
+    "value": -14224000000
+   },
+   {
+    "value": -17765000000
+   },
+   {
+    "value": -23964000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 239150000000
+   },
+   {
+    "value": 214477000000
+   },
+   {
+    "value": 171391000000
+   },
+   {
+    "value": 179658000000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 160260000000
+   },
+   {
+    "value": 150267000000
+   },
+   {
+    "value": 133266000000
+   },
+   {
+    "value": 130156000000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": -7430000000
+   },
+   {
+    "value": -1213000000
+   },
+   {
+    "value": 6508000000
+   },
+   {
+    "value": 4156000000
+   },
+   {
+    "value": -12363000000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 640000000
+   },
+   {
+    "value": 638000000
+   },
+   {
+    "value": 636000000
+   },
+   {
+    "value": 634000000
+   },
+   {
+    "value": 649000000
+   }
+  ]
+ },
+ "PERSISTENT.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:25:02.353Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019
+  ],
+  "annualRev": [
+   {
+    "value": 147484490000
+   },
+   {
+    "value": 119387170000
+   },
+   {
+    "value": 98215870000
+   },
+   {
+    "value": 83505920000
+   },
+   {
+    "value": 57107460000
+   },
+   {
+    "value": 41878880000
+   },
+   {
+    "value": 35658080000
+   },
+   {
+    "value": 33659410000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 23924930000
+   },
+   {
+    "value": 17512830000
+   },
+   {
+    "value": 13663130000
+   },
+   {
+    "value": 12472300000
+   },
+   {
+    "value": 7921590000
+   },
+   {
+    "value": 5074650000
+   },
+   {
+    "value": 3262970000
+   },
+   {
+    "value": 3989890000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 18651200000
+   },
+   {
+    "value": 14001610000
+   },
+   {
+    "value": 10934910000
+   },
+   {
+    "value": 9210930000
+   },
+   {
+    "value": 6903860000
+   },
+   {
+    "value": 4506770000
+   },
+   {
+    "value": 3402890000
+   },
+   {
+    "value": 3516790000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 113765440000
+   },
+   {
+    "value": 87366020000
+   },
+   {
+    "value": 73736180000
+   },
+   {
+    "value": 66191450000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 78378550000
+   },
+   {
+    "value": 63190650000
+   },
+   {
+    "value": 49577070000
+   },
+   {
+    "value": 39650780000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 17671300000
+   },
+   {
+    "value": 11569160000
+   },
+   {
+    "value": 12213070000
+   },
+   {
+    "value": 9557620000
+   },
+   {
+    "value": 8449860000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 157750000
+   },
+   {
+    "value": 155850000
+   },
+   {
+    "value": 154050000
+   },
+   {
+    "value": 76425000
+   },
+   {
+    "value": 76425000
+   },
+   {
+    "value": 76425000
+   },
+   {
+    "value": 76425000
+   },
+   {
+    "value": 39559500
+   }
+  ]
+ },
+ "PHOENIXLTD.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:25:16.687Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 44228043000
+   },
+   {
+    "value": 38135729000
+   },
+   {
+    "value": 39776875000
+   },
+   {
+    "value": 26383451000
+   },
+   {
+    "value": 14834764000
+   },
+   {
+    "value": 10732928000
+   },
+   {
+    "value": 19411371000
+   },
+   {
+    "value": 19815605000
+   },
+   {
+    "value": 16197514000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 41315898000
+   },
+   {
+    "value": 35952910000
+   },
+   {
+    "value": 34564986000
+   },
+   {
+    "value": 24894870000
+   },
+   {
+    "value": 13804893000
+   },
+   {
+    "value": 9963853000
+   },
+   {
+    "value": 17452692000
+   },
+   {
+    "value": 17626654000
+   },
+   {
+    "value": 14878473000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 22767898000
+   },
+   {
+    "value": 18346586000
+   },
+   {
+    "value": 19066117000
+   },
+   {
+    "value": 12911237000
+   },
+   {
+    "value": 5480659000
+   },
+   {
+    "value": 2847533000
+   },
+   {
+    "value": 7595237000
+   },
+   {
+    "value": 7889079000
+   },
+   {
+    "value": 5791016000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 15565065000
+   },
+   {
+    "value": 13073394000
+   },
+   {
+    "value": 13327467000
+   },
+   {
+    "value": 14775671000
+   },
+   {
+    "value": 2682042000
+   },
+   {
+    "value": 477433000
+   },
+   {
+    "value": 3884980000
+   },
+   {
+    "value": 4969954000
+   },
+   {
+    "value": 2555517000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 228526637000
+   },
+   {
+    "value": 215312291000
+   },
+   {
+    "value": 192833436000
+   },
+   {
+    "value": 175892006000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 109885424000
+   },
+   {
+    "value": 104481460000
+   },
+   {
+    "value": 94577110000
+   },
+   {
+    "value": 83797656000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 24256861000
+   },
+   {
+    "value": 20835595000
+   },
+   {
+    "value": 21617287000
+   },
+   {
+    "value": 13560521000
+   },
+   {
+    "value": 7806073000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 357634500
+   },
+   {
+    "value": 357523500
+   },
+   {
+    "value": 178697000
+   },
+   {
+    "value": 178609000
+   },
+   {
+    "value": 178519500
+   },
+   {
+    "value": 171871000
+   },
+   {
+    "value": 153462500
+   },
+   {
+    "value": 153290000
+   },
+   {
+    "value": 153141500
+   }
+  ]
+ },
+ "RATEGAIN.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:25:31.402Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022
+  ],
+  "annualRev": [
+   {
+    "value": 18235540000
+   },
+   {
+    "value": 10766700000
+   },
+   {
+    "value": 9570310000
+   },
+   {
+    "value": 5651280000
+   },
+   {
+    "value": 3665910000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 2567410000
+   },
+   {
+    "value": 1971270000
+   },
+   {
+    "value": 1486830000
+   },
+   {
+    "value": 488370000
+   },
+   {
+    "value": 4910000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 1943870000
+   },
+   {
+    "value": 2089290000
+   },
+   {
+    "value": 1453930000
+   },
+   {
+    "value": 684010000
+   },
+   {
+    "value": 84190000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 35597960000
+   },
+   {
+    "value": 19041090000
+   },
+   {
+    "value": 17310070000
+   },
+   {
+    "value": 9452820000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 20058550000
+   },
+   {
+    "value": 16826600000
+   },
+   {
+    "value": 14504710000
+   },
+   {
+    "value": 7097440000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2337090000
+   },
+   {
+    "value": 1199740000
+   },
+   {
+    "value": 1518100000
+   },
+   {
+    "value": 519180000
+   },
+   {
+    "value": 201434000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 118100000
+   },
+   {
+    "value": 117990000
+   },
+   {
+    "value": 117780000
+   },
+   {
+    "value": 108320000
+   },
+   {
+    "value": 107310000
+   }
+  ]
+ },
+ "REDINGTON.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:25:45.397Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 1191623600000
+   },
+   {
+    "value": 993336500000
+   },
+   {
+    "value": 893457100000
+   },
+   {
+    "value": 793767800000
+   },
+   {
+    "value": 626440100000
+   },
+   {
+    "value": 569458600000
+   },
+   {
+    "value": 514651700000
+   },
+   {
+    "value": 465361500000
+   },
+   {
+    "value": 434594100000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 58568400000
+   },
+   {
+    "value": 52198500000
+   },
+   {
+    "value": 50651800000
+   },
+   {
+    "value": 47439500000
+   },
+   {
+    "value": 37890100000
+   },
+   {
+    "value": 31448900000
+   },
+   {
+    "value": 28168900000
+   },
+   {
+    "value": 27233100000
+   },
+   {
+    "value": 24027800000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 20229900000
+   },
+   {
+    "value": 18112000000
+   },
+   {
+    "value": 16961200000
+   },
+   {
+    "value": 19634000000
+   },
+   {
+    "value": 16503900000
+   },
+   {
+    "value": 11951800000
+   },
+   {
+    "value": 8674100000
+   },
+   {
+    "value": 8353200000
+   },
+   {
+    "value": 7595100000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 12841500000
+   },
+   {
+    "value": 18206200000
+   },
+   {
+    "value": 12386100000
+   },
+   {
+    "value": 14393900000
+   },
+   {
+    "value": 13148700000
+   },
+   {
+    "value": 7866100000
+   },
+   {
+    "value": 5339200000
+   },
+   {
+    "value": 4844700000
+   },
+   {
+    "value": 4844200000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 338389400000
+   },
+   {
+    "value": 275841700000
+   },
+   {
+    "value": 243936900000
+   },
+   {
+    "value": 232832100000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 101607300000
+   },
+   {
+    "value": 87210400000
+   },
+   {
+    "value": 75487200000
+   },
+   {
+    "value": 69273500000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2313500000
+   },
+   {
+    "value": 2926200000
+   },
+   {
+    "value": 10794000000
+   },
+   {
+    "value": -32335200000
+   },
+   {
+    "value": 9892000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 781750000
+   },
+   {
+    "value": 781750000
+   },
+   {
+    "value": 781750000
+   },
+   {
+    "value": 781550000
+   },
+   {
+    "value": 781450000
+   },
+   {
+    "value": 389200000
+   },
+   {
+    "value": 389100000
+   },
+   {
+    "value": 389100000
+   },
+   {
+    "value": 400150000
+   }
+  ]
+ },
+ "SAREGAMA.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:25:59.521Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 9846200000
+   },
+   {
+    "value": 11713600000
+   },
+   {
+    "value": 8030000000
+   },
+   {
+    "value": 7366200000
+   },
+   {
+    "value": 5806300000
+   },
+   {
+    "value": 4419600000
+   },
+   {
+    "value": 5214700000
+   },
+   {
+    "value": 5447200000
+   },
+   {
+    "value": 3565900000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": 3963800000
+   },
+   {
+    "value": 4118800000
+   },
+   {
+    "value": 3701400000
+   },
+   {
+    "value": 2873500000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 2552000000
+   },
+   {
+    "value": 2187800000
+   },
+   {
+    "value": 2103700000
+   },
+   {
+    "value": 2001600000
+   },
+   {
+    "value": 1740200000
+   },
+   {
+    "value": 1244900000
+   },
+   {
+    "value": 558300000
+   },
+   {
+    "value": 348300000
+   },
+   {
+    "value": 321000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 2062200000
+   },
+   {
+    "value": 2042400000
+   },
+   {
+    "value": 1975600000
+   },
+   {
+    "value": 1850500000
+   },
+   {
+    "value": 1526500000
+   },
+   {
+    "value": 1134600000
+   },
+   {
+    "value": 435000000
+   },
+   {
+    "value": 543300000
+   },
+   {
+    "value": 283000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 23219600000
+   },
+   {
+    "value": 20951600000
+   },
+   {
+    "value": 20337800000
+   },
+   {
+    "value": 17041100000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 16926800000
+   },
+   {
+    "value": 15833800000
+   },
+   {
+    "value": 14691200000
+   },
+   {
+    "value": 13421100000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 1000200000
+   },
+   {
+    "value": 3312000000
+   },
+   {
+    "value": 932500000
+   },
+   {
+    "value": 934300000
+   },
+   {
+    "value": 944400000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 192800000
+   },
+   {
+    "value": 192800000
+   },
+   {
+    "value": 192800000
+   },
+   {
+    "value": 192800000
+   },
+   {
+    "value": 192800000
+   },
+   {
+    "value": 17430000
+   },
+   {
+    "value": 17430000
+   },
+   {
+    "value": 17410000
+   },
+   {
+    "value": 17410000
+   }
+  ]
+ },
+ "TCS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:26:12.356Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019
+  ],
+  "annualRev": [
+   {
+    "value": 2670210000000
+   },
+   {
+    "value": 2553240000000
+   },
+   {
+    "value": 2408930000000
+   },
+   {
+    "value": 2254580000000
+   },
+   {
+    "value": 1917540000000
+   },
+   {
+    "value": 1641770000000
+   },
+   {
+    "value": 1569490000000
+   },
+   {
+    "value": 1464630000000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": 1441930000000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 668380000000
+   },
+   {
+    "value": 621650000000
+   },
+   {
+    "value": 593110000000
+   },
+   {
+    "value": 542370000000
+   },
+   {
+    "value": 484530000000
+   },
+   {
+    "value": 424810000000
+   },
+   {
+    "value": 385800000000
+   },
+   {
+    "value": 374500000000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 494540000000
+   },
+   {
+    "value": 487970000000
+   },
+   {
+    "value": 460990000000
+   },
+   {
+    "value": 423030000000
+   },
+   {
+    "value": 384490000000
+   },
+   {
+    "value": 325620000000
+   },
+   {
+    "value": 324470000000
+   },
+   {
+    "value": 315620000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 1823720000000
+   },
+   {
+    "value": 1596290000000
+   },
+   {
+    "value": 1464490000000
+   },
+   {
+    "value": 1436510000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 1072400000000
+   },
+   {
+    "value": 947560000000
+   },
+   {
+    "value": 904890000000
+   },
+   {
+    "value": 904240000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 520940000000
+   },
+   {
+    "value": 489080000000
+   },
+   {
+    "value": 443380000000
+   },
+   {
+    "value": 419650000000
+   },
+   {
+    "value": 399490000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 3620000000
+   },
+   {
+    "value": 3620000000
+   },
+   {
+    "value": 3620000000
+   },
+   {
+    "value": 3660000000
+   },
+   {
+    "value": 3660000000
+   },
+   {
+    "value": 3700000000
+   },
+   {
+    "value": 3750000000
+   },
+   {
+    "value": 3750000000
+   }
+  ]
+ },
+ "TDPOWERSYS.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:26:26.434Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 18562338000
+   },
+   {
+    "value": 12787617000
+   },
+   {
+    "value": 10005199000
+   },
+   {
+    "value": 8722970000
+   },
+   {
+    "value": 7974246000
+   },
+   {
+    "value": 5935843000
+   },
+   {
+    "value": 5148934000
+   },
+   {
+    "value": 4590220000
+   },
+   {
+    "value": 4377692000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 6152260000
+   },
+   {
+    "value": 4479171000
+   },
+   {
+    "value": 3453329000
+   },
+   {
+    "value": 2819297000
+   },
+   {
+    "value": 2275417000
+   },
+   {
+    "value": 1976927000
+   },
+   {
+    "value": 1555200000
+   },
+   {
+    "value": 1394279000
+   },
+   {
+    "value": 1275838000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 3067221000
+   },
+   {
+    "value": 2110624000
+   },
+   {
+    "value": 1463055000
+   },
+   {
+    "value": 1095113000
+   },
+   {
+    "value": 698407000
+   },
+   {
+    "value": 444511000
+   },
+   {
+    "value": 109805000
+   },
+   {
+    "value": 11728000
+   },
+   {
+    "value": -187484000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 2387749000
+   },
+   {
+    "value": 1745751000
+   },
+   {
+    "value": 1183492000
+   },
+   {
+    "value": 968123000
+   },
+   {
+    "value": 706491000
+   },
+   {
+    "value": 452044000
+   },
+   {
+    "value": 299375000
+   },
+   {
+    "value": 31985000
+   },
+   {
+    "value": -144244000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 18765991000
+   },
+   {
+    "value": 13637973000
+   },
+   {
+    "value": 10378109000
+   },
+   {
+    "value": 9032124000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 10717643000
+   },
+   {
+    "value": 8603044000
+   },
+   {
+    "value": 7051335000
+   },
+   {
+    "value": 6045197000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 1290676000
+   },
+   {
+    "value": 395227000
+   },
+   {
+    "value": 840013000
+   },
+   {
+    "value": 885625000
+   },
+   {
+    "value": 109073000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 156215000
+   },
+   {
+    "value": 156183500
+   },
+   {
+    "value": 156170000
+   },
+   {
+    "value": 156042500
+   },
+   {
+    "value": 31103500
+   },
+   {
+    "value": 30933400
+   },
+   {
+    "value": 30933400
+   },
+   {
+    "value": 31009200
+   },
+   {
+    "value": 33237600
+   }
+  ]
+ },
+ "TECHM.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Millions",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": null,
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:26:38.974Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 568154000000
+   },
+   {
+    "value": 529883000000
+   },
+   {
+    "value": 519954583000
+   },
+   {
+    "value": 532901910000
+   },
+   {
+    "value": 446459761000
+   },
+   {
+    "value": 368676792000
+   },
+   {
+    "value": 347421346000
+   },
+   {
+    "value": 307729300000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 71525000000
+   },
+   {
+    "value": 51109000000
+   },
+   {
+    "value": 26891712000
+   },
+   {
+    "value": 58350644000
+   },
+   {
+    "value": 64995761000
+   },
+   {
+    "value": 40627792000
+   },
+   {
+    "value": 52077346000
+   },
+   {
+    "value": 36246400000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 48055000000
+   },
+   {
+    "value": 42530000000
+   },
+   {
+    "value": 23967712000
+   },
+   {
+    "value": 48569644000
+   },
+   {
+    "value": 56300761000
+   },
+   {
+    "value": 38973792000
+   },
+   {
+    "value": 42888346000
+   },
+   {
+    "value": 37862000000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 493694000000
+   },
+   {
+    "value": 444945000000
+   },
+   {
+    "value": 434235978000
+   },
+   {
+    "value": 461533000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 296154000000
+   },
+   {
+    "value": 273615000000
+   },
+   {
+    "value": 266694023000
+   },
+   {
+    "value": 279245000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 61720000000
+   },
+   {
+    "value": 57856510000
+   },
+   {
+    "value": 63763696000
+   },
+   {
+    "value": 55719641000
+   },
+   {
+    "value": 52853742000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 885600000
+   },
+   {
+    "value": 884800000
+   },
+   {
+    "value": 882604600
+   },
+   {
+    "value": 880000000
+   },
+   {
+    "value": 877612800
+   },
+   {
+    "value": 871747800
+   },
+   {
+    "value": 887469200
+   },
+   {
+    "value": 979380000
+   }
+  ]
+ },
+ "THYROCARE.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Crores",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:26:51.489Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019
+  ],
+  "annualRev": [
+   {
+    "value": 8290400000
+   },
+   {
+    "value": 6873500000
+   },
+   {
+    "value": 5718800000
+   },
+   {
+    "value": 5266700000
+   },
+   {
+    "value": 5888600000
+   },
+   {
+    "value": 4946200000
+   },
+   {
+    "value": 4332000000
+   },
+   {
+    "value": 4029100000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 6094700000
+   },
+   {
+    "value": 4962700000
+   },
+   {
+    "value": 4051800000
+   },
+   {
+    "value": 3634400000
+   },
+   {
+    "value": 4191700000
+   },
+   {
+    "value": 3307200000
+   },
+   {
+    "value": 3161100000
+   },
+   {
+    "value": 2923800000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 2034600000
+   },
+   {
+    "value": 1351000000
+   },
+   {
+    "value": 904200000
+   },
+   {
+    "value": 813400000
+   },
+   {
+    "value": 2010200000
+   },
+   {
+    "value": 1409700000
+   },
+   {
+    "value": 1406100000
+   },
+   {
+    "value": 1280600000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 1628500000
+   },
+   {
+    "value": 907500000
+   },
+   {
+    "value": 694900000
+   },
+   {
+    "value": 643600000
+   },
+   {
+    "value": 1761400000
+   },
+   {
+    "value": 1131400000
+   },
+   {
+    "value": 884100000
+   },
+   {
+    "value": 851400000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 7472200000
+   },
+   {
+    "value": 6927500000
+   },
+   {
+    "value": 6438800000
+   },
+   {
+    "value": 6327200000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 5855000000
+   },
+   {
+    "value": 5467500000
+   },
+   {
+    "value": 5267700000
+   },
+   {
+    "value": 5343000000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2132400000
+   },
+   {
+    "value": 1913200000
+   },
+   {
+    "value": 1676400000
+   },
+   {
+    "value": 1293100000
+   },
+   {
+    "value": 2669900000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 159170000
+   },
+   {
+    "value": 52990000
+   },
+   {
+    "value": 52950000
+   },
+   {
+    "value": 52930000
+   },
+   {
+    "value": 52900000
+   },
+   {
+    "value": 52840000
+   },
+   {
+    "value": 52840000
+   },
+   {
+    "value": 52800000
+   }
+  ]
+ },
+ "TI.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:27:05.526Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020,
+   2019,
+   2018
+  ],
+  "annualRev": [
+   {
+    "value": 52475761000
+   },
+   {
+    "value": 31746149000
+   },
+   {
+    "value": 29582604000
+   },
+   {
+    "value": 24692785000
+   },
+   {
+    "value": 17920587000
+   },
+   {
+    "value": 14183642000
+   },
+   {
+    "value": 14834579000
+   },
+   {
+    "value": 15254935000
+   },
+   {
+    "value": 12950087000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 39927603000
+   },
+   {
+    "value": 24473929000
+   },
+   {
+    "value": 22494499000
+   },
+   {
+    "value": 18529708000
+   },
+   {
+    "value": 14096461000
+   },
+   {
+    "value": 11409809000
+   },
+   {
+    "value": 11312549000
+   },
+   {
+    "value": 12058248000
+   },
+   {
+    "value": 10106829000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 3395211000
+   },
+   {
+    "value": 2243764000
+   },
+   {
+    "value": 1535548000
+   },
+   {
+    "value": 1048376000
+   },
+   {
+    "value": 793778000
+   },
+   {
+    "value": 209667000
+   },
+   {
+    "value": -849235000
+   },
+   {
+    "value": 193853000
+   },
+   {
+    "value": -341829000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 208702000
+   },
+   {
+    "value": 2295929000
+   },
+   {
+    "value": 1380110000
+   },
+   {
+    "value": 1498989000
+   },
+   {
+    "value": 451872000
+   },
+   {
+    "value": -384030000
+   },
+   {
+    "value": 2697276000
+   },
+   {
+    "value": -1595133000
+   },
+   {
+    "value": -1511301000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 61600749000
+   },
+   {
+    "value": 12128260000
+   },
+   {
+    "value": 10334403000
+   },
+   {
+    "value": 10115364000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 29817118000
+   },
+   {
+    "value": 8822464000
+   },
+   {
+    "value": 6538876000
+   },
+   {
+    "value": 4829164000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": -4445883000
+   },
+   {
+    "value": 1784239000
+   },
+   {
+    "value": 1207471000
+   },
+   {
+    "value": 712893000
+   },
+   {
+    "value": 651059000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 247170800
+   },
+   {
+    "value": 193634000
+   },
+   {
+    "value": 192730400
+   },
+   {
+    "value": 185340000
+   },
+   {
+    "value": 158621800
+   },
+   {
+    "value": 125434600
+   },
+   {
+    "value": 125133800
+   },
+   {
+    "value": 125133800
+   },
+   {
+    "value": 124756100
+   }
+  ]
+ },
+ "TSFINV.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [
+   "2019-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_44343_102686_17052019064818_WEB_2.xml -> HTTP 404 (nicht wiederholbar)",
+   "2018-03-31: Abruf https://nsearchives.nseindia.com/corporate/xbrl/INDAS_44343_102686_17052019064818_WEB_2.xml -> HTTP 404 (nicht wiederholbar)"
+  ],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:27:19.526Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022,
+   2021,
+   2020
+  ],
+  "annualRev": [
+   {
+    "value": 9848903000
+   },
+   {
+    "value": 1545896000
+   },
+   {
+    "value": 2913221000
+   },
+   {
+    "value": 904426000
+   },
+   {
+    "value": 839044000
+   },
+   {
+    "value": 594109000
+   },
+   {
+    "value": 925561000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 5048556000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": 801970000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 1871263000
+   },
+   {
+    "value": 1127745000
+   },
+   {
+    "value": 2399829000
+   },
+   {
+    "value": 436035000
+   },
+   {
+    "value": 185754000
+   },
+   {
+    "value": 94981000
+   },
+   {
+    "value": 291371000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 5302077000
+   },
+   {
+    "value": 4120868000
+   },
+   {
+    "value": 5331443000
+   },
+   {
+    "value": 2375561000
+   },
+   {
+    "value": 1606982000
+   },
+   {
+    "value": 738788000
+   },
+   {
+    "value": 781349000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 67478836000
+   },
+   {
+    "value": 58367523000
+   },
+   {
+    "value": 49478254000
+   },
+   {
+    "value": 36345481000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 60330190000
+   },
+   {
+    "value": 56066691000
+   },
+   {
+    "value": 47929271000
+   },
+   {
+    "value": 35700419000
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2662518000
+   },
+   {
+    "value": 1882831000
+   },
+   {
+    "value": 1322331000
+   },
+   {
+    "value": 1002461000
+   },
+   {
+    "value": 298569000
+   },
+   {
+    "value": 189262000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 222103800
+   },
+   {
+    "value": 222103800
+   },
+   {
+    "value": 222103800
+   },
+   {
+    "value": 222103800
+   },
+   {
+    "value": 222103800
+   },
+   {
+    "value": 151103800
+   },
+   {
+    "value": 151103800
+   }
+  ]
+ },
+ "VIJAYA.NS": {
+  "source": "NSE India (SEBI-XBRL-Jahresergebnisse, amtliche Einreichung)",
+  "accountingStandard": "IND-AS",
+  "consolidation": "CFS",
+  "reportingCurrencyOriginal": "INR",
+  "fiscalYearEnd": "2026-03-31",
+  "levelOfRounding": "Lakhs",
+  "derived": {
+   "annualGrossProfit": "Umsatz - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventories) — Herleitung, kein Ausweis; bei Dienstleistern (alle Posten 0) bewusst KEIN Wert statt 100 % Marge",
+   "annualOpInc": "Umsatz - (Expenses - FinanceCosts) — Ind AS kennt keine Zeile \"Betriebsergebnis\"; sonstige Ertraege bleiben aussen vor",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital — Herleitung, kein Ausweis; auf die Rundungsstufe des eingezahlten Kapitals genau (KALYANKJIL GJ2025: 1.031.435.000 gegen amtlich 1.031.435.375, 3,6e-7 Abweichung)"
+  },
+  "feldwahl": {
+   "annualRev": "RevenueFromOperations [FourD]",
+   "annualNetIncome": "ProfitLossForPeriod [FourD]",
+   "annualOCF": "CashFlowsFromUsedInOperatingActivities [FourD]",
+   "annualAssets": "Assets [OneI]",
+   "annualEquity": "EquityAttributableToOwnersOfParent [OneI]",
+   "annualGrossProfit": "RevenueFromOperations - (CostOfMaterialsConsumed + PurchasesOfStockInTrade + ChangesInInventoriesOfFinishedGoodsWorkInProgressAndStockInTrade) [FourD]",
+   "annualOpInc": "RevenueFromOperations - (Expenses - FinanceCosts) [FourD]",
+   "annualShares": "PaidUpValueOfEquityShareCapital / FaceValueOfEquityShareCapital [FourD]"
+  },
+  "luecken": [],
+  "taxonomie": "in-capmkt+in-bse-fin",
+  "nfy": 2026,
+  "generatedAt": "2026-08-19T17:27:27.867Z",
+  "fys": [
+   2026,
+   2025,
+   2024,
+   2023,
+   2022
+  ],
+  "annualRev": [
+   {
+    "value": 8142019000
+   },
+   {
+    "value": 6813901000
+   },
+   {
+    "value": 5478053000
+   },
+   {
+    "value": 4592227000
+   },
+   {
+    "value": 4623699000
+   }
+  ],
+  "annualGrossProfit": [
+   {
+    "value": 7195175000
+   },
+   {
+    "value": 5966266000
+   },
+   {
+    "value": 4823669000
+   },
+   {
+    "value": 4003411000
+   },
+   {
+    "value": 3908708000
+   }
+  ],
+  "annualOpInc": [
+   {
+    "value": 2451106000
+   },
+   {
+    "value": 2026185000
+   },
+   {
+    "value": 1639027000
+   },
+   {
+    "value": 1203072000
+   },
+   {
+    "value": 1510040000
+   }
+  ],
+  "annualNetIncome": [
+   {
+    "value": 1729766000
+   },
+   {
+    "value": 1437935000
+   },
+   {
+    "value": 1196371000
+   },
+   {
+    "value": 852070000
+   },
+   {
+    "value": 1106676000
+   }
+  ],
+  "annualAssets": [
+   {
+    "value": 15070483000
+   },
+   {
+    "value": 12736164000
+   },
+   {
+    "value": 9827527000
+   },
+   {
+    "value": 8534069000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualEquity": [
+   {
+    "value": 9571518000
+   },
+   {
+    "value": 7957140000
+   },
+   {
+    "value": 6571934000
+   },
+   {
+    "value": 5447294000
+   },
+   {
+    "value": null
+   }
+  ],
+  "annualOCF": [
+   {
+    "value": 2705904000
+   },
+   {
+    "value": 2244725000
+   },
+   {
+    "value": 1833009000
+   },
+   {
+    "value": 1646117000
+   },
+   {
+    "value": 1579987000
+   }
+  ],
+  "annualShares": [
+   {
+    "value": 102897000
+   },
+   {
+    "value": 102637000
+   },
+   {
+    "value": 102346000
+   },
+   {
+    "value": 102071000
+   },
+   {
+    "value": 101966000
+   }
+  ]
+ }
+}
