@@ -216,7 +216,8 @@ GRUENDE_GLOBAL = (
     "berichte_gesamt", "berichte_nicht_periodisch",
     "berichte_periodisch", "bericht_ohne_cik", "bericht_ohne_accepted",
     "bericht_ohne_branche", "bericht_ohne_periode",
-    "bericht_ohne_geschaeftsjahresende", "fakt_kandidaten", "verworfen_coreg",
+    "bericht_ohne_geschaeftsjahresende", "bericht_zeitstempel_formatfremd",
+    "fakt_kandidaten", "verworfen_coreg",
     "verworfen_firmeneigene_taxonomie", "verworfen_nicht_periodisch",
     "verworfen_periodenlaenge", "verworfen_stichtag_unlesbar",
     "verworfen_wert_leer", "roh_zeilen", "pit_werte", "pit_schluessel_mehrfach",
@@ -333,6 +334,17 @@ def kalenderquartal(ddate):
     return jahr * 4 + (monat - 1) // 3
 
 
+# Der SEC-Zeitstempel ist fixbreit ("2013-05-08 17:02:00.0"). Diese Datei
+# VERGLEICHT `accepted` als String — und seit der Quellen-Umstellung entscheidet
+# genau dieser Vergleich, WELCHE Umsatzquelle eine Firma bekommt. Ein String-
+# Vergleich ist nur dann dasselbe wie ein Zeitvergleich, wenn das Format wirklich
+# fixbreit ist. Also wird das geprueft statt angenommen: gemessen ueber alle
+# 176.502 Berichte des Entdeckungsfensters am 19.08. — 0 Abweichungen, alle
+# Zeitstempel genau 21 Zeichen. Ein einziger krummer Zeitstempel wuerde die
+# Serienlaengen lautlos falsch sortieren, deshalb haelt der Lauf dann an.
+ACCEPTED_MUSTER = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d$")
+
+
 def formstamm(form):
     """'10-K/A' -> '10-K'."""
     return (form or "").split("/")[0].strip().upper()
@@ -407,6 +419,19 @@ def lade_berichte(conn, zaehler):
         if jahr is None:
             zaehler["bericht_ohne_accepted"] += 1
             continue
+        if not ACCEPTED_MUSTER.match(accepted or ""):
+            # Fail loud statt still falsch sortieren: ein krummes Format macht
+            # den String-Vergleich unbrauchbar, und der entscheidet die
+            # Quellenwahl. Gezaehlt wird trotzdem (R5), damit im Report steht,
+            # dass geprueft wurde — nicht nur, dass nichts gefunden wurde.
+            zaehler["bericht_zeitstempel_formatfremd"] += 1
+            raise BasisratenFehler(
+                "Zeitstempel in fremdem Format: " + repr(accepted) + " (Bericht "
+                + str(adsh) + "). Diese Datei vergleicht `accepted` als String, "
+                "und seit der Quellen-Umstellung entscheidet dieser Vergleich, "
+                "welche Umsatzquelle eine Firma bekommt. Bei krummem Format "
+                "sortiert er lautlos falsch — der Lauf haelt hier an, statt "
+                "eine falsche Reihenfolge durchzurechnen.")
         berichte[adsh] = (str(cik).strip(), accepted, sic_division(sic))
         if sic_division(sic) is None:
             zaehler["bericht_ohne_branche"] += 1
@@ -1135,6 +1160,44 @@ def dichte(feuerungen, auswertbar, branche):
             "auswertbare_ohne_branche": nenner_ohne_branche}
 
 
+def muster_friedhof(ergebnis_ug):
+    """R13: der Friedhof faengt bei E2 an sich zu fuellen. Ein verworfenes Muster
+    wird MIT GRUND und mit seinen Zahlen abgelegt — sonst sieht spaeter niemand
+    mehr, dass es ueberhaupt geprueft wurde.
+
+    DER TEXT IST FEST, DIE ZAHL DANEBEN IST GERECHNET — und genau deshalb haelt
+    der Lauf an, wenn die beiden auseinanderlaufen. Erfuellt eine spaetere
+    Datenlage das Mindest-Fallzahl-Kriterium wieder, stuende im Report sonst
+    eine BESTANDENE Zahl neben einem Todesurteil. Ein solcher Widerspruch sieht
+    aus wie ein fertig geschriebener Befund und faellt niemandem auf; das ist
+    die teuerste Sorte stiller Fehler in einer Falsifikations-Pipeline."""
+    reif = ergebnis_ug["firmen_reif"]
+    if reif >= ZIEL_FIRMEN:
+        raise BasisratenFehler(
+            "S-UG traegt jetzt " + str(reif) + " Firmen mit reifem Erst-Ereignis "
+            "und erfuellt damit das Mindest-Fallzahl-Kriterium (" + str(ZIEL_FIRMEN)
+            + "), an dem es am 19.08. gescheitert ist. Der Friedhofs-Eintrag "
+            "stimmt dann nicht mehr. Er wird NICHT automatisch fortgeschrieben: "
+            "ein Muster, das aus dem Friedhof zurueckkommt, ist eine Entscheidung "
+            "und keine Formatierung. Der Lauf haelt hier an.")
+    return [{
+        "muster": "S-UG",
+        "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal",
+        "stand": "gescheitert — nicht weiterverfolgt",
+        "grund": "Mindest-Fallzahl verfehlt: " + str(reif)
+                 + " Firmen mit reifem Erst-Ereignis gegen geforderte "
+                 + str(ZIEL_FIRMEN),
+        "fallzahl": reif,
+        "fallzahl_gefordert": ZIEL_FIRMEN,
+        "beschreibender_befund":
+            "Beide Signale treten haeufiger gemeinsam auf als der Zufall es "
+            "taete; das ist eine Aussage ueber die Kopplung beider Signale, "
+            "kein tragfaehiges eigenes Signal.",
+        "ueberhang_faktor": ergebnis_ug["ueberhang_faktor"],
+        "entschieden_am": "2026-08-19",
+    }]
+
+
 def scheiternskriterien(name, ergebnis, kette_anteil):
     """Vorab festgelegt. Greifen sie, wird das gemeldet — nicht wegdefiniert."""
     treffer = []
@@ -1289,25 +1352,7 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
             zaehler["umsatz_jahrespaar_abstand_abweichend"],
     }
 
-    # R13: der Muster-Friedhof faengt bei E2 an sich zu fuellen. Ein verworfenes
-    # Muster wird MIT GRUND und mit seinen Zahlen abgelegt — sonst sieht spaeter
-    # niemand mehr, dass es geprueft wurde.
-    friedhof = [{
-        "muster": "S-UG",
-        "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal",
-        "stand": "gescheitert — nicht weiterverfolgt",
-        "grund": "Mindest-Fallzahl verfehlt: " + str(ergebnisse["S-UG"]["firmen_reif"])
-                 + " Firmen mit reifem Erst-Ereignis gegen geforderte "
-                 + str(ZIEL_FIRMEN),
-        "fallzahl": ergebnisse["S-UG"]["firmen_reif"],
-        "fallzahl_gefordert": ZIEL_FIRMEN,
-        "beschreibender_befund":
-            "Beide Signale treten haeufiger gemeinsam auf als der Zufall es "
-            "taete; das ist eine Aussage ueber die Kopplung beider Signale, "
-            "kein tragfaehiges eigenes Signal.",
-        "ueberhang_faktor": ergebnisse["S-UG"]["ueberhang_faktor"],
-        "entschieden_am": "2026-08-19",
-    }]
+    friedhof = muster_friedhof(ergebnisse["S-UG"])
 
     glaette = pruefe_glaette(reihen["S-U"]["gewaehlt"], firmen_jahr, *BAND_JAHRE)
     ueberlappung = pruefe_ueberlappung(reihen["S-U"]["alle"])
@@ -1887,8 +1932,10 @@ def markdown(d):
     a("")
     a("Der Beifang bleibt als **beschreibender Befund** stehen, nicht als "
       "Signal: Umsatz- und Ergebnis-Beschleunigung treten "
+      # 0.0 waere ein ECHTES Ergebnis ("nie gemeinsam"), kein fehlender
+      # Wert — ein Wahrheitswert-Test wuerde beides gleich aussehen lassen.
       + (("%.1f" % fh["ueberhang_faktor"]).replace(".", ",") if
-         fh["ueberhang_faktor"] else "—")
+         fh["ueberhang_faktor"] is not None else "nicht berechenbar")
       + "-mal häufiger gemeinsam auf, als der Zufall es täte. Das ist eine "
       "Aussage über die **Kopplung beider Signale**, kein tragfähiges eigenes "
       "Signal — aus einem Überhang folgt keine Fallzahl.")
@@ -1952,11 +1999,22 @@ def markdown(d):
       + " Beschleunigungswerte. Ergebnis: **"
       + ("bestanden" if naht["bestanden"] else "DURCHGEFALLEN") + "**.")
     a("")
-    a("Der Nachzähler ist **unabhängig vom Wächter**: er prüft nicht, ob der "
-      "Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim "
-      "Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese "
-      "Zahl über null und der Selbsttest wird rot. Die rote Meldung steht "
-      "wörtlich in Abschnitt 11.")
+    a("**Diese Null ist seit der Umstellung eine andere Null als vorher — das "
+      "gehört dazugesagt.** Vorher war sie das Ergebnis eines Filters: der "
+      "Wächter hat gemischte Paare aussortiert und als Naht gezählt (2.663 "
+      "Fälle). Jetzt stammt jede Kette von vornherein aus einer einzigen "
+      "Reihe, also kann hier gar nichts mehr gemischt sein. Der Nachzähler "
+      "steht damit **strukturell** auf null und ist an dieser Stelle eine "
+      "Rückversicherung, kein bestandener unabhängiger Test — wer ihn für "
+      "mehr hält, überschätzt ihn.")
+    a("")
+    a("Sein echter Biss sitzt jetzt zwei Stellen weiter: bei der **Reife**. "
+      "Dort vergleicht derselbe Wächter, ob die Folgequartale einer Firma "
+      "wirklich dieselbe Quelle tragen wie ihr Erst-Ereignis — die gewählte "
+      "Reihe einer Firma darf über die Jahre die Quelle wechseln, und ein "
+      "Folgequartal aus einer anderen Quelle trägt die spätere Auswertung "
+      "nicht. Baut man den Wächter dort aus, wird der Selbsttest rot; die "
+      "Meldung steht wörtlich in Abschnitt 11.")
     a("")
     gl = d["pruefschritt_glaette"]
     a("### Prüfschritt 2 — Belegungs-Glätte")
@@ -2035,6 +2093,7 @@ def markdown(d):
         "nettoergebnis_keine_schwelle": "Nettoergebnis (Diagnose): keine Schwelle (Diagnose hat keine)",
         "nettoergebnis_kein_vorquartal_beschleunigung": "Nettoergebnis (Diagnose): kein Vorquartal für die zweite Beschleunigung",
         "bericht_ohne_geschaeftsjahresende": "Bericht ohne Geschäftsjahresende",
+        "bericht_zeitstempel_formatfremd": "Bericht mit Zeitstempel in fremdem Format (bricht den Lauf ab)",
         "berichte_gesamt": "Berichte in der Panel-Datei gesamt (nachrichtlich)",
         "berichte_nicht_periodisch": "Bericht ohne Berichtsperiode (8-K, S-1 und Verwandte) — verworfen",
         "umsatz_firma_ohne_quelle": "Umsatz: Firma liefert in KEINER Quelle einen auswertbaren Wert",
@@ -2713,6 +2772,55 @@ def selbsttest():
         pruefe("Folgequartal anderer Quelle zaehlt fuer die Reife NICHT mit",
                len(reif3) == 1 and reif3[0]["folgequartale"] == 5,
                reif3[0]["folgequartale"] if reif3 else None, 5)
+
+        print("\n[8b] Muster-Friedhof und Zeitstempel-Format")
+        tot = muster_friedhof({"firmen_reif": 29, "ueberhang_faktor": 6.1})
+        pruefe("Friedhof: verfehlte Fallzahl ergibt einen Eintrag mit Grund",
+               len(tot) == 1 and tot[0]["fallzahl"] == 29
+               and "Mindest-Fallzahl verfehlt" in tot[0]["grund"],
+               tot[0]["grund"] if tot else None, "Mindest-Fallzahl verfehlt: 29 ...")
+        pruefe("Friedhof: ein Ueberhang von exakt 0 ist ein ERGEBNIS und wird "
+               "durchgereicht, nicht zu None verschluckt",
+               muster_friedhof({"firmen_reif": 29,
+                                "ueberhang_faktor": 0.0})[0]["ueberhang_faktor"] == 0.0,
+               muster_friedhof({"firmen_reif": 29,
+                                "ueberhang_faktor": 0.0})[0]["ueberhang_faktor"], 0.0)
+        try:
+            muster_friedhof({"firmen_reif": ZIEL_FIRMEN, "ueberhang_faktor": 6.1})
+            pruefe("Friedhof: erfuellte Fallzahl HAELT DEN LAUF AN (ein Muster, das "
+                   "zurueckkommt, ist eine Entscheidung)", False, "kein Abbruch",
+                   "BasisratenFehler")
+        except BasisratenFehler:
+            pruefe("Friedhof: erfuellte Fallzahl HAELT DEN LAUF AN (ein Muster, das "
+                   "zurueckkommt, ist eine Entscheidung)", True)
+        pruefe("Zeitstempel: das echte SEC-Format geht DURCH",
+               bool(ACCEPTED_MUSTER.match("2013-05-08 17:02:00.0")))
+        for krumm in ("2013-05-08 17:02:00", "2013-05-08", "2013-5-8 17:02:00.0",
+                      " 2013-05-08 17:02:00.0"):
+            pruefe("Zeitstempel: krummes Format faellt auf (" + repr(krumm) + ")",
+                   not ACCEPTED_MUSTER.match(krumm))
+        krumm_pfad = os.path.join(verzeichnis, "krumm", FENSTER_DATEI)
+        os.makedirs(os.path.dirname(krumm_pfad), exist_ok=True)
+        kr = sqlite3.connect(krumm_pfad)
+        kr.execute("CREATE TABLE bericht (adsh TEXT, cik TEXT, name TEXT,"
+                   " sic TEXT, fye TEXT, form TEXT, period TEXT, accepted TEXT)")
+        kr.execute("CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT,"
+                   " coreg TEXT, ddate TEXT, qtrs TEXT, uom TEXT, value REAL,"
+                   " footnote TEXT)")
+        kr.execute("INSERT INTO bericht VALUES ('K1','1','F','3674','1231','10-Q',"
+                   "'20120331','2012-05-15 12:00:00')")
+        kr.commit()
+        kr.close()
+        krumm_panel = oeffne_nur_lesend(krumm_pfad)
+        try:
+            lade_berichte(krumm_panel, defaultdict(int))
+            pruefe("krummer Zeitstempel bricht den Lauf ab, statt lautlos falsch "
+                   "zu sortieren", False, "kein Abbruch", "BasisratenFehler")
+        except BasisratenFehler:
+            pruefe("krummer Zeitstempel bricht den Lauf ab, statt lautlos falsch "
+                   "zu sortieren", True)
+        finally:
+            krumm_panel.close()
 
         print("\n[9] Haertungen aus dem Code-Review")
         pruefe("Firma ohne jede Umsatz-Quelle wird GEZAEHLT, nicht verschluckt",
