@@ -2492,10 +2492,15 @@ def selbsttest():
     try:
         # --- Die Fenster-Mauer: beide Richtungen --------------------------------
         print("\n[1] Fenster-Mauer (R2)")
-        for boese in (r"C:\daten\panel\panel-endtest.sqlite.enc",
-                      r"C:\daten\schluessel\endtest.key",
-                      r"C:\daten\panel\panel-validierung.sqlite",
-                      r"C:\daten\endtest\panel-entdeckung.sqlite"):
+        # Die Sperr-Beispiele werden AUS dem Testverzeichnis gebaut, nicht als
+        # Laufwerkspfad hingeschrieben: ein literaler Laufwerkspfad in einem
+        # Studien-Artefakt verstoesst gegen R12a (Maschinen-Unabhaengigkeit) und
+        # machte den Deckel-Waechter zu Recht rot. Gesperrt ist der NAME, nicht
+        # das Laufwerk — deshalb prueft das hier dieselbe Sache wie vorher.
+        for boese in (os.path.join(verzeichnis, "panel", "panel-endtest.sqlite.enc"),
+                      os.path.join(verzeichnis, "schluessel", "endtest.key"),
+                      os.path.join(verzeichnis, "panel", "panel-validierung.sqlite"),
+                      os.path.join(verzeichnis, "endtest", FENSTER_DATEI)):
             try:
                 pruefe_mauer(boese)
                 pruefe("gesperrter Pfad wird abgewiesen: " + boese, False)

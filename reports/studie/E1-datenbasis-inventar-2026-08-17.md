@@ -105,7 +105,7 @@ absichtlich fehlender versiegelter Payload muss auffallen, drei Verfaelschungen 
 muessen abbrechen. Zusaetzlich wurde die Siegel-Pruefung im laufenden Modul einmal durch
 eine wirkungslose ersetzt: der Selbsttest wird rot und benennt den Fall.
 
-## Folgefragen (R16)
+## Neue Fragen und Hypothesen (R16 — Folgefragen)
 
 1. Darf der Sensitivitaetslauf fuer 2015q4 den Obermengen-Payload lesen? (Methodik, gehoert
    vor die entscheidende Instanz — Aufwand danach: unter einem Tag.)

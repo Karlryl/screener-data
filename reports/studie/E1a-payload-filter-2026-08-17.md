@@ -118,7 +118,7 @@ Formulararten 20-F/40-F? Der Schwund korreliert mit der Berichtsdichte — Indiz
 Reprozessierung eine Zeilenklasse entfernt hat, die in Jahresabschluessen konzentriert ist.
 Mechanismus nicht identifiziert; kein Blocker.
 
-## Folgefragen (R16)
+## Neue Fragen und Hypothesen (R16 — Folgefragen)
 
 1. Wann wird der Sichtkasten neu gebaut? Er ist ein abgeleitetes Verzeichnis; waechst der
    Speicher, bleibt er gueltig (Erlaubnisliste), aber `verify` sollte vor jedem Import laufen.
