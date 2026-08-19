@@ -6,6 +6,7 @@ Stand 2026-08-19. Gelesen wurde **ausschließlich** das Entdeckungsfenster (2009
 
 **Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Tatsächlich geöffnete Dateien:
 - `panel-entdeckung.sqlite`
+- `panel-entdeckung.sqlite`
 
 ## Kurz gefasst
 
@@ -84,6 +85,8 @@ S-UG hat **keine eigenen Parameter** — es ist die Schnittmenge von S-U und S-G
 Feuerungen in den **Rumpfjahren 2009–2011** — nur nachrichtlich, sie sind von Kalibrierung und Zielband ausgeschlossen (2009 trägt laut E1 nur 6 %, 2010 nur 19 % der Firmen des Fensters): S-U **47**, S-G **30**.
 
 S-UG ist 4,68 % von S-U und 4,70 % von S-G.
+
+**Warum S-UG so dünn ist.** Hätten die beiden Signale nichts miteinander zu tun, wären auf dem gemeinsamen Nenner rein rechnerisch **6,6** Doppel-Feuerungen zu erwarten. Beobachtet sind **41** — das 6,2-fache. Umsatz- und Ergebnis-Beschleunigung treten also **häufiger gemeinsam auf als der Zufall es täte, aber bei weitem nicht deckungsgleich**. S-UG scheitert an der Fallzahl nicht, weil die Daten fehlen, sondern weil beide Bedingungen zugleich schlicht selten sind. Das ist ein Ergebnis, kein Defekt — und es ist der Grund, warum S-UG als eigenes Signal in dieser Form nicht trägt.
 
 ## 4. Wie dicht liegen die Feuerungen?
 
@@ -367,4 +370,4 @@ Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der Selbstte
 
 ---
 
-*Erzeugt 2026-08-19T09:04:24+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
+*Erzeugt 2026-08-19T09:05:51+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*

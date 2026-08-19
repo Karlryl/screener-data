@@ -1073,12 +1073,24 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
     ug_auswertbar = [a for a in reihen["S-U"]["band_a"]
                      if (a["cik"], a["ddate"]) in ug_nenner_ids]
     ug_reif, ug_unreif = erst_ereignisse(ug_feuerungen, reihen["S-U"]["gewaehlt"])
+    # Wieviele Doppel-Feuerungen waeren zu erwarten, wenn die beiden Signale
+    # nichts miteinander zu tun haetten? Der Vergleich sagt, ob S-UG duenn ist,
+    # weil die Daten duenn sind — oder weil die beiden Signale verschiedene
+    # Dinge sehen. Gerechnet wird auf dem GEMEINSAMEN Nenner, sonst vergleicht
+    # man zwei verschieden grosse Grundgesamtheiten.
+    n_gemeinsam = len(ug_nenner_ids)
+    ug_erwartet = ((len(su & ug_nenner_ids) / n_gemeinsam)
+                   * (len(sg & ug_nenner_ids) / n_gemeinsam)
+                   * n_gemeinsam) if n_gemeinsam else None
     ergebnisse["S-UG"] = {
         "feuerungen_band": len(ug_feuerungen),
         "firmen_reif": len(ug_reif), "firmen_unreif": len(ug_unreif),
         "firmen_mit_feuerung_band": len(set(f["cik"] for f in ug_feuerungen)),
         "auswertbar_band": len(ug_auswertbar),
         "rate_band": (len(ug_feuerungen) / len(ug_auswertbar)) if ug_auswertbar else None,
+        "erwartet_bei_unabhaengigkeit": ug_erwartet,
+        "ueberhang_faktor": ((len(ug_feuerungen) / ug_erwartet)
+                             if ug_erwartet else None),
         "anteil_an_su": (len(ug_feuerungen) / len(su)) if su else None,
         "anteil_an_sg": (len(ug_feuerungen) / len(sg)) if sg else None,
         "dichte": dichte(ug_feuerungen, ug_auswertbar, branche),
@@ -1432,6 +1444,20 @@ def markdown(d):
     if ug["anteil_an_su"] is not None:
         a("S-UG ist " + prozent(ug["anteil_an_su"]) + " von S-U und "
           + prozent(ug["anteil_an_sg"]) + " von S-G.")
+        a("")
+    if ug.get("erwartet_bei_unabhaengigkeit"):
+        a("**Warum S-UG so dünn ist.** Hätten die beiden Signale nichts "
+          "miteinander zu tun, wären auf dem gemeinsamen Nenner rein rechnerisch "
+          "**" + ("%.1f" % ug["erwartet_bei_unabhaengigkeit"]).replace(".", ",")
+          + "** Doppel-Feuerungen zu erwarten. Beobachtet sind **"
+          + zahl(ug["feuerungen_band"]) + "** — das "
+          + ("%.1f" % ug["ueberhang_faktor"]).replace(".", ",") + "-fache. "
+          "Umsatz- und Ergebnis-Beschleunigung treten also **häufiger gemeinsam "
+          "auf als der Zufall es täte, aber bei weitem nicht deckungsgleich**. "
+          "S-UG scheitert an der Fallzahl nicht, weil die Daten fehlen, sondern "
+          "weil beide Bedingungen zugleich schlicht selten sind. Das ist ein "
+          "Ergebnis, kein Defekt — und es ist der Grund, warum S-UG als eigenes "
+          "Signal in dieser Form nicht trägt.")
         a("")
 
     a("## 4. Wie dicht liegen die Feuerungen?")
