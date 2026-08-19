@@ -291,7 +291,7 @@ bit-für-bit dieselben Kontrollpool-Zahlen tragen (4.163 Firmen / 74,11 % bei
 S-U, 4.733 / 90,53 % bei S-G). Das ist der zweite Arm desselben Laufs — träfe er
 E3 nicht, liefen die beiden Arme eben eher nicht durch denselben Code.
 
-**Sieben Sabotagen, jede einmal absichtlich gemacht und rot gesehen.** Das
+**Elf Sabotagen, jede einmal absichtlich gemacht und rot gesehen.** Das
 Fixture trägt den Unterschied wirklich: je eine Firma der Klassen (a), (b1),
 (b2) und (c), eine reife Firma, und dieselben fünf Firmen ein zweites Mal unter
 der Ein-Kennungs-Variante. Ohne diese Firmen könnte die Sabotage einer einzelnen
@@ -306,6 +306,10 @@ Klasse gar nicht auffliegen.
 | S5 | Anker-Prüfung meldet Erfolg ohne zu vergleichen | rot: „eine um EINS verschobene Fallzahl fliegt auf" (beide Fenster) |
 | S6 | Fensterkanten-Regel gibt wieder eine Zahl über 1 aus | rot: „eine Quote über 1 heißt NICHT BERECHENBAR statt Zahl" |
 | S7 | eine Kontrollpool-Zahl im ausgelieferten Artefakt um eins verschoben | rot: „Der Kontrollpool trifft E3 bit-für-bit" |
+| S8 | (b1) und (b2) im Code vertauscht | rot, dreifach: alle drei „Zuordnung direkt"-Prüfungen |
+| S9 | harte Sperre gegen Klasse (d) ausgebaut | rot: „eine Firma OHNE gewählte Reihe bricht die Zerlegung ab" |
+| S10 | Reifeschwellen-Vergleich umgedreht | rot: „REIFE-ABBRUCH: … Zwei Schwellen für dieselbe Sache heißt: keine" |
+| S11 | Register-Auswahl der Zählprobe wieder auf Typ + Fenster verkürzt | rot: „Der gewählte Eintrag ist e4a-… — das ist kein Zählproben-Lauf" |
 
 Nach jeder Sabotage wurde der Stand zurückgenommen; das Arbeitsverzeichnis war
 danach sauber und die Prüfungen wieder grün.
@@ -328,8 +332,31 @@ enthält keinen Entschlüsselungs-Aufruf — beides ist im Test nachgesehen. Das
 Endtest-Siegel wurde vor jedem Lauf voll nachgerechnet (5.025.230.848 Bytes,
 SHA-256 unverändert), und **der Schlüssel wurde nicht angefasst**.
 
+**Code-Review vor „fertig": vier Befunde, alle gefixt — drei davon Wächter, die
+nicht hielten.** Zwei Reviewer haben den Diff unabhängig geprüft:
+
+- **Der schwerste Befund war ein Wächter, der nicht wehtat.** Vertauscht man im
+  Code (b1) und (b2), blieb der Selbsttest grün: beide Fixture-Firmen liefern
+  genau eine Zählung, und 1 = 1 bleibt nach dem Tausch wahr. Genau die Falle, vor
+  der der Dateikopf selbst warnt. Die Zuordnung wird jetzt in **sechs Fällen
+  einzeln** direkt geprüft, nicht mehr nur über Summen (Sabotage S8).
+- **Reif/unreif wurde zweimal entschieden.** Die Diagnose fragte die
+  Reifeschwelle der Zählprobe ab, während `studie-basisraten.py` mit ihrer
+  **eigenen** entscheidet — zwei getrennt gepflegte Konstanten für dieselbe
+  Sache. Heute stehen beide auf 4; jetzt zählt die Listenzugehörigkeit, und ein
+  Auseinanderlaufen bricht ab (S10).
+- **Die Register-Auswahl der Zählprobe zeigte auf den falschen Eintrag.** Meine
+  erste Reparatur band sie an Eintragsart + Fenster — beides teilt die
+  E4a-Anmeldung. Die Tests blieben zufällig grün, prüften aber den falschen Lauf.
+  Sie hängt jetzt an der **Sache**: an der Ausgabe-Allowlist der versiegelten
+  Präregistrierung (S11).
+- **Klasse (d) wurde gezählt, aber nie durchgesetzt.** Ein Datenintegritätsbefund
+  wäre stumm durchgelaufen. Sie bricht jetzt ab und hat einen positiven Test (S9).
+  Dazu eine kleine Härtung am Fixture-Aufbau (offene SQLite-Verbindung bei
+  Fehlschlag).
+
 **Prüfungszahl:** vorher **100 Tests, alle grün, EXIT=0** — nachher **113 Tests,
-alle grün, EXIT=0**. Der Selbsttest der Diagnose ist von 0 auf **42 benannte
+alle grün, EXIT=0**. Der Selbsttest der Diagnose ist von 0 auf **49 benannte
 Prüfungen** gewachsen; der Node-Test wertet sie **namentlich** aus, nicht am
 Exit-Code: Fällt eine Zeile weg, ist der Test rot.
 
