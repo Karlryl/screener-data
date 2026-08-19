@@ -619,6 +619,30 @@ testAsync('ein zweiter Lauf ergaenzt den Bestand, statt ihn zu ersetzen (Wiedera
   assert.ok(j['OFSS.NS'], 'der neue Name muss dazukommen');
 });
 
+testAsync('der zweite Lauf nimmt sich die FEHLENDEN Namen zuerst vor', async () => {
+  // Ohne diese Reihenfolge ist die Wiederaufnahme wertlos: der zweite Lauf verbraucht sein
+  // Zeitfenster mit den Namen, die schon dastehen, und wird gedrosselt, bevor er bei den
+  // fehlenden ankommt (live gemessen: Lauf 2 war nach 12 Minuten bei Name 23 von 53).
+  const gefragt = [];
+  const merkend = (url) => {
+    const m = /integrated-filing-results.*symbol=([^&]+)/.exec(url);
+    if (m) gefragt.push(decodeURIComponent(m[1]));
+    return fakeFetch(url);
+  };
+  const tmp = path.join(os.tmpdir(), `in-secannual-reihenfolge-${process.pid}.json`);
+  // ZWEI Namen stehen schon da, einer fehlt — der fehlende muss zuerst drankommen.
+  fs.writeFileSync(tmp, JSON.stringify({ 'KALYANKJIL.NS': { fys: [2025] }, 'CHENNPETRO.NS': { fys: [2026] } }));
+  try {
+    await M.main({ fetchBuffer: merkend, out: tmp, tickers: ['KALYANKJIL.NS', 'CHENNPETRO.NS', 'OFSS.NS'] });
+  } catch (_) { /* die beiden Fixture-losen Namen scheitern — hier zaehlt nur die Reihenfolge */ }
+  fs.unlinkSync(tmp);
+  assert.equal(gefragt[0], 'OFSS', `zuerst gefragt wurde ${gefragt[0]}, nicht der fehlende Name`);
+  // Die beiden vorhandenen kommen danach (mehrfach, weil ein Fehlschlag einen Versuch mit
+  // frischem Cookie ausloest) — entscheidend ist allein, dass keiner von ihnen VOR OFSS steht.
+  assert.ok(!gefragt.slice(1).includes('OFSS'), 'der fehlende Name darf nur einmal ganz vorn stehen');
+  assert.deepEqual([...new Set(gefragt.slice(1))].sort(), ['CHENNPETRO', 'KALYANKJIL']);
+});
+
 testAsync('main() bricht laut ab, wenn der Cookie-Bootstrap nichts liefert', async () => {
   const ohneCookie = (url) => (/^https:\/\/www\.nseindia\.com\/(?:$|companies-listing)/.test(url)
     ? Promise.resolve({ code: 200, body: Buffer.from('<html/>'), headers: {} })

@@ -141,7 +141,8 @@
  * auf API UND Startseite, also auch auf jede Cookie-Auffrischung). Ein Vollbau ueber 53 Namen
  * dauert laenger. Der Adapter ist deshalb WIEDERAUFNEHMBAR gebaut: er liest den vorhandenen
  * Bestand ein, ergaenzt ihn und schreibt IMMER, bevor er rot wird. Denselben Befehl spaeter
- * erneut starten holt die fehlenden Namen nach. Eine Notbremse (MAX_FOLGE_AUSFAELLE) beendet
+ * erneut starten holt die fehlenden Namen nach — und zwar ZUERST, sonst verbraucht der
+ * zweite Lauf sein Zeitfenster wieder mit den Namen, die schon dastehen. Eine Notbremse (MAX_FOLGE_AUSFAELLE) beendet
  * den Lauf, sobald drei Namen in Folge keine Antwort bekommen — gegen einen Host, der schon
  * Nein gesagt hat, weiterzuklopfen bringt nichts und ist unhoeflich.
  *
@@ -840,12 +841,19 @@ async function main(opts = {}) {
   const vorher = readJsonExistingOrThrow(outPfad);
   const out = vorher === FEHLT ? {} : vorher;
   const gescheitert = [];
+  // FEHLENDE ZUERST. Ohne das ist die Wiederaufnahme wertlos: der zweite Lauf arbeitet die
+  // Namen in derselben Reihenfolge ab, verbringt seine 35 Minuten mit genau denen, die schon
+  // dastehen, und laeuft in dieselbe Drosselung, BEVOR er bei den fehlenden ankommt.
+  // Live gemessen am Probelauf 19.08.2026: Lauf 2 war nach 12 Minuten bei Name 23 von 53 —
+  // die fehlenden beginnen bei 38. Innerhalb beider Gruppen bleibt die uebergebene
+  // Reihenfolge erhalten (stabile Sortierung), damit der Lauf deterministisch bleibt.
+  const reihenfolge = [...tickers].sort((a, b) => (out[a] ? 1 : 0) - (out[b] ? 1 : 0));
   const jar = neuerJar();
   await aufwaermen(jar, holen);
   let folgeAusfaelle = 0;
   let gedrosselt = null;
 
-  for (const tk of tickers) {
+  for (const tk of reihenfolge) {
     if (folgeAusfaelle >= MAX_FOLGE_AUSFAELLE) {
       gedrosselt = `nach ${folgeAusfaelle} Namen ohne Antwort abgebrochen (ab ${tk})`;
       break;
