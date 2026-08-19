@@ -1,0 +1,399 @@
+{
+ "schema": "strang-c-leiter-log/v1",
+ "erzeugtAm": "2026-08-19T23:47:00.128680Z",
+ "zielband": [
+  15,
+  25
+ ],
+ "handlungsband": [
+  12,
+  30
+ ],
+ "regel": "Ausgeloest wird ausschliesslich von der ANZAHL der Themen, nie von der Frage, welche Themen drin oder draussen sind.",
+ "schritte": [
+  {
+   "schritt": 0,
+   "beschreibung": "Basisregel",
+   "schwelle": 20,
+   "faktor": 3.0,
+   "themen": 24
+  }
+ ],
+ "endstand": {
+  "schwelle": 20,
+  "faktor": 3.0,
+  "themen": 24
+ },
+ "bandVerfehlt": false,
+ "befundWennVerfehlt": "Registerklasse zu schmal - die Regel wird berichtet, nicht gebogen.",
+ "nichtBerechenbarWeilGedeckelt": [
+  {
+   "phrase": "advanced",
+   "jahr": 2004,
+   "treffer": 6601
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2005,
+   "treffer": 6669
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2006,
+   "treffer": 6191
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2007,
+   "treffer": 5302
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2008,
+   "treffer": 5938
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2009,
+   "treffer": 7623
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2010,
+   "treffer": 7125
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2011,
+   "treffer": 7081
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2012,
+   "treffer": 6310
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2013,
+   "treffer": 6294
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2014,
+   "treffer": 6158
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2015,
+   "treffer": 5884
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2016,
+   "treffer": 5564
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2017,
+   "treffer": 5216
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2018,
+   "treffer": 5271
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2019,
+   "treffer": 5059
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2020,
+   "treffer": 5163
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2021,
+   "treffer": 5508
+  },
+  {
+   "phrase": "advanced",
+   "jahr": 2022,
+   "treffer": 6058
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2009,
+   "treffer": 5826
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2010,
+   "treffer": 5848
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2011,
+   "treffer": 5876
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2012,
+   "treffer": 5463
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2013,
+   "treffer": 5544
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2014,
+   "treffer": 5551
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2015,
+   "treffer": 5598
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2016,
+   "treffer": 5399
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2017,
+   "treffer": 5134
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2018,
+   "treffer": 5184
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2019,
+   "treffer": 5135
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2020,
+   "treffer": 5070
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2021,
+   "treffer": 5756
+  },
+  {
+   "phrase": "infrastructure",
+   "jahr": 2022,
+   "treffer": 6446
+  },
+  {
+   "phrase": "privacy",
+   "jahr": 2021,
+   "treffer": 5080
+  },
+  {
+   "phrase": "privacy",
+   "jahr": 2022,
+   "treffer": 5744
+  },
+  {
+   "phrase": "things",
+   "jahr": 2004,
+   "treffer": 10000
+  },
+  {
+   "phrase": "things",
+   "jahr": 2005,
+   "treffer": 9680
+  },
+  {
+   "phrase": "things",
+   "jahr": 2006,
+   "treffer": 9012
+  },
+  {
+   "phrase": "things",
+   "jahr": 2007,
+   "treffer": 8946
+  },
+  {
+   "phrase": "things",
+   "jahr": 2008,
+   "treffer": 9542
+  },
+  {
+   "phrase": "things",
+   "jahr": 2009,
+   "treffer": 10000
+  },
+  {
+   "phrase": "things",
+   "jahr": 2010,
+   "treffer": 10000
+  },
+  {
+   "phrase": "things",
+   "jahr": 2011,
+   "treffer": 10000
+  },
+  {
+   "phrase": "things",
+   "jahr": 2012,
+   "treffer": 9723
+  },
+  {
+   "phrase": "things",
+   "jahr": 2013,
+   "treffer": 9591
+  },
+  {
+   "phrase": "things",
+   "jahr": 2014,
+   "treffer": 9484
+  },
+  {
+   "phrase": "things",
+   "jahr": 2015,
+   "treffer": 9167
+  },
+  {
+   "phrase": "things",
+   "jahr": 2016,
+   "treffer": 8790
+  },
+  {
+   "phrase": "things",
+   "jahr": 2017,
+   "treffer": 8171
+  },
+  {
+   "phrase": "things",
+   "jahr": 2018,
+   "treffer": 8388
+  },
+  {
+   "phrase": "things",
+   "jahr": 2019,
+   "treffer": 8409
+  },
+  {
+   "phrase": "things",
+   "jahr": 2020,
+   "treffer": 9289
+  },
+  {
+   "phrase": "things",
+   "jahr": 2021,
+   "treffer": 9811
+  },
+  {
+   "phrase": "things",
+   "jahr": 2022,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2004,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2005,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2006,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2007,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2008,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2009,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2010,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2011,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2012,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2013,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2014,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2015,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2016,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2017,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2018,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2019,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2020,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2021,
+   "treffer": 10000
+  },
+  {
+   "phrase": "trust",
+   "jahr": 2022,
+   "treffer": 10000
+  }
+ ],
+ "nichtBerechenbarOhneBasisjahr": [],
+ "maxCiksJeEinreichung": 67,
+ "screenReserve": 4
+}

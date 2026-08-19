@@ -435,6 +435,27 @@
    "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an.",
    "previousHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb",
    "eventHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81"
+  },
+  {
+   "runId": "c0-freeze2-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T23:48:18.080987Z",
+   "accessedAt": "2026-08-19T23:54:17.953Z",
+   "fenster": [
+    "kein Studienfenster - abgeleitetes Ergebnis"
+   ],
+   "allowedOutputs": [
+    "themenliste",
+    "filer_liste",
+    "leiter_log",
+    "query_log"
+   ],
+   "erlaubt": "Veroeffentlichung der abgeleiteten Themenliste und der Filer-Listen.",
+   "verboten": "Jede nachtraegliche Aenderung an Themenliste, Filer-Listen oder Leiter-Log.",
+   "begruendung": "C0 FREEZE 2 - Buendel-SHA-256 502d52a5da82c51d62495b886072572d21e31abd9c8f615a8d67118a087cffdb ueber Themenliste, Filer-Listen, Query-Log und Leiter-Log. Baut auf c0-freeze1b-2026-08-19 auf.",
+   "endtestSiegel": "unberuehrt",
+   "previousHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
+   "eventHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",

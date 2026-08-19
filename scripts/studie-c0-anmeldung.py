@@ -35,6 +35,40 @@ def lade_c0():
     return modul
 
 
+def freeze2(c0, runid, zugriff_ab, ersetzt):
+    """Meldet den FREEZE-2-Stand an.
+
+    Warum das hier und nicht in `studie-c0.py freeze2`: dessen Eintrag setzte
+    Anmelde- und Zugriffszeit auf denselben Augenblick. Die Kettenpruefung weist das
+    zu Recht ab - eine Anmeldung, die den Zugriff schon erlaubt, ist ein
+    Nachher-Protokoll. Der fehlerhafte Eintrag war nur lokal und wurde verworfen,
+    bevor er den Rechner verliess; hier steht die korrekte Fassung. Das Skript selbst
+    bleibt unangetastet, weil seine Pruefsumme im Siegel steht.
+    """
+    gesamt, zeilen = c0.buendel2()
+    freeze = c0.lies_json(c0.FREEZE2)
+    if gesamt != freeze["buendelSha256"] or zeilen != freeze["buendel"]:
+        raise SystemExit("Die Freeze-2-Datei beschreibt nicht den Stand im Arbeitsbaum")
+    eintrag = c0.haenge_an_register({
+        "runId": runid,
+        "typ": "C0_REGELFREEZE",
+        "registeredAt": c0.jetzt(),
+        "accessedAt": zugriff_ab,
+        "fenster": ["kein Studienfenster - abgeleitetes Ergebnis"],
+        "allowedOutputs": ["themenliste", "filer_liste", "leiter_log", "query_log"],
+        "erlaubt": "Veroeffentlichung der abgeleiteten Themenliste und der Filer-Listen.",
+        "verboten": "Jede nachtraegliche Aenderung an Themenliste, Filer-Listen oder Leiter-Log.",
+        "begruendung": "C0 FREEZE 2 - Buendel-SHA-256 %s ueber Themenliste, Filer-Listen, "
+                       "Query-Log und Leiter-Log. Baut auf %s auf." % (gesamt, ersetzt),
+        "endtestSiegel": "unberuehrt",
+    })
+    print(json.dumps({"runId": runid, "buendelSha256": gesamt,
+                      "eventHash": eintrag["eventHash"],
+                      "registeredAt": eintrag["registeredAt"],
+                      "accessedAt": zugriff_ab}, ensure_ascii=False, indent=1))
+    return 0
+
+
 def haupt(argv):
     def wert(name):
         if "--" + name not in argv:
@@ -48,6 +82,11 @@ def haupt(argv):
     if c0.zeitpunkt(zugriff_ab) <= datetime.now(timezone.utc):
         raise SystemExit("--zugriff-ab liegt nicht in der Zukunft")
 
+    stufe = wert("stufe") if "--stufe" in argv else "FREEZE_1"
+    if stufe not in ("FREEZE_1", "FREEZE_2"):
+        raise SystemExit("--stufe kennt nur FREEZE_1 und FREEZE_2")
+    if stufe == "FREEZE_2":
+        return freeze2(c0, runid, zugriff_ab, ersetzt)
     freeze = c0.lies_json(c0.FREEZE1)
     # Der angemeldete Hash muss der Hash der Dateien SEIN, die jetzt im Baum liegen -
     # nicht der, der zufaellig in der Freeze-Datei steht. Sonst meldete man einen
