@@ -1147,6 +1147,17 @@ def _bricht(fn, *args):
     return False
 
 
+def _bruchgrund(block):
+    """Der WORTLAUT des Abbruchs. Ohne ihn ist nicht entscheidbar, ob eine
+    Sabotage an der gemeinten Invariante auffliegt oder zufaellig an einer
+    frueheren - und dann prueft die Sabotage etwas anderes, als sie behauptet."""
+    try:
+        pruefe_blockinvarianten(block)
+    except KadenzFehler as fehler:
+        return str(fehler)
+    return ""
+
+
 def _kadenz(ddates, signal_ddate=None, accepted=None, rand="20201231"):
     """Ruft kadenz_zensiert() mit einer von Hand gebauten Reihe auf - ohne
     Datenstrecke, damit die Regel selbst geprueft wird und nicht ihre Umgebung."""
@@ -1267,9 +1278,16 @@ def selbsttest():
         print("\n[4] Die Zaehl-Invarianten")
         pruefe("ein gueltiger Block geht DURCH",
                pruefe_blockinvarianten(_fertig(10, 8, 0, 2, 1, klasse_c=1)) is True)
+        # SAUBER GEBAUT: der Block ist in JEDER anderen Hinsicht stimmig, nur die
+        # Richtung ist gedreht. Sonst wuerde die Pruefung an einer FRUEHEREN
+        # Invariante gruen - genau die Falle, in der am 19.08. drei Sabotagen
+        # unsichtbar blieben.
+        gedreht = _fertig(10, 8, 2, 1, 0)
         pruefe("weniger Kadenz- als E3-Zensuren bricht ab (Richtungs-Invariante)",
-               _bricht(pruefe_blockinvarianten,
-                       dict(_fertig(10, 8, 2, 2, 0), zensiert_kadenz=1)))
+               _bricht(pruefe_blockinvarianten, gedreht))
+        pruefe("und zwar an DIESER Invariante, nicht an einer frueheren",
+               "RICHTUNGS-ABBRUCH" in _bruchgrund(gedreht),
+               _bruchgrund(gedreht)[:40], "RICHTUNGS-ABBRUCH ...")
         pruefe("ein Histogramm, das nicht auf Klasse (c) aufgeht, bricht ab",
                _bricht(pruefe_blockinvarianten,
                        dict(_fertig(10, 8, 0, 0, 0, klasse_c=2),

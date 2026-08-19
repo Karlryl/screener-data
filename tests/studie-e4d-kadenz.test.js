@@ -65,6 +65,7 @@ const PFLICHT_PRUEFUNGEN = [
   'eine zu kleine Fallzahl bricht ab, statt sinngemaess zu entscheiden',
   'ein gueltiger Block geht DURCH',
   'weniger Kadenz- als E3-Zensuren bricht ab (Richtungs-Invariante)',
+  'und zwar an DIESER Invariante, nicht an einer frueheren',
   'ein Histogramm, das nicht auf Klasse (c) aufgeht, bricht ab',
   'ein Nenner, der nicht aufgeht, bricht ab',
   'mehr reif-und-zensiert als zensiert bricht ab',
