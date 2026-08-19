@@ -1,15 +1,15 @@
 {
  "diagnose_nettoergebnis": {
-  "a_werte": 118491,
-  "firmen_mit_a": 9333,
-  "firmen_mit_g": 9959,
+  "a_werte": 118534,
+  "firmen_mit_a": 9336,
+  "firmen_mit_g": 9962,
   "firmen_mit_reihe": 10128,
   "firmenquartale": 175159,
-  "g_werte": 136156,
+  "g_werte": 136201,
   "vergleich_betriebsergebnis": {
-   "a_werte": 97365,
+   "a_werte": 97398,
    "firmen_mit_reihe": 8191,
-   "g_werte": 111495
+   "g_werte": 111532
   }
  },
  "ergebnisdaten_beruehrt": false,
@@ -22,35 +22,48 @@
   "davon_mit_umsatzreihe": 425,
   "firmen_mit_geschaeftsjahresende": 11156,
   "firmen_mit_wanderndem_ende": 639,
-  "jahrespaare_abstand_abweichend": 136
+  "jahrespaare_abstand_abweichend": 138
  },
  "fragen": [
-  "**Banken-Sonderfamilie ja/nein?** Der Bereich „Finanzen, Versicherung, Immobilien\" stellt laut E1 die zweitgrößte Firmengruppe, hat aber ein anderes Umsatzverständnis (Zinsertrag statt Warenverkauf). Hier trägt er 14,38 % der S-U-Feuerungen. Zu klären: eigene Signalfamilie, Ausschluss oder unverändert mitlaufen lassen — mit Vorab-Kriterium, nicht nach Ergebnislage. (Zeitschätzung: 1–2 Tage)",
-  "**`NetIncomeLoss` als Alternative für S-G?** Das Ergebnis nach Steuern liefert 118.491 Beschleunigungswerte gegen 97.365 beim Betriebsergebnis. Ob die zusätzliche Tiefe die schlechtere Aussagekraft (Einmaleffekte, Steuerquote) aufwiegt, ist eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach Ergebnis auswählbar. (Zeitschätzung: 1 Tag)",
+  "**Banken-Sonderfamilie ja/nein?** Der Bereich „Finanzen, Versicherung, Immobilien\" stellt laut E1 die zweitgrößte Firmengruppe, hat aber ein anderes Umsatzverständnis (Zinsertrag statt Warenverkauf). Hier trägt er 13,74 % der S-U-Feuerungen. Zu klären: eigene Signalfamilie, Ausschluss oder unverändert mitlaufen lassen — mit Vorab-Kriterium, nicht nach Ergebnislage. (Zeitschätzung: 1–2 Tage)",
+  "**`NetIncomeLoss` als Alternative für S-G?** Das Ergebnis nach Steuern liefert 118.534 Beschleunigungswerte gegen 97.398 beim Betriebsergebnis. Ob die zusätzliche Tiefe die schlechtere Aussagekraft (Einmaleffekte, Steuerquote) aufwiegt, ist eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach Ergebnis auswählbar. (Zeitschätzung: 1 Tag)",
   "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die nächste Pflichtmessung, bevor R10 präregistriert wird. (Zeitschätzung: 1 Tag)",
-  "**Quellenwahl je Firma statt je Quartal.** Prüfschritt 3 hat die vorab festgelegte Schwelle gerissen (15,51 % der überlappenden Firmen-Quartale liegen über 5 Punkten auseinander). Die Regel verlangt, die Quelle künftig je Firma zu fixieren. Offen: um wie viel schrumpft dadurch die Fallzahl, und ändert sich die Feuerrate? Beides muss vor der Umstellung gemessen und präregistriert werden. (Zeitschätzung: 1 Tag)",
-  "**Wie viel kostet die Naht?** 2.663 Firmen-Quartale sind nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselt. Offen: Sind das Zufallswechsel oder systematisch dieselben Firmen (dann fehlt eine ganze Firmenklasse)? Und: wäre eine Verkettung über einen Überlappungsfaktor verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese Studie verbietet? (Zeitschätzung: 1–2 Tage)",
+  "**Wie oft wechselt die fixierte Quelle im Lauf einer Firmenhistorie?** Die Folgeregel aus Prüfschritt 3 ist angewandt (Abschnitt 2), und die Frage nach Fallzahl und Feuerrate ist damit beantwortet — die Fallzahl steigt auf 512 Firmen. Offen ist die Anschlussfrage: Die zeitpunkt-ehrliche Wahl darf die Quelle im Lauf der Zeit wechseln, wenn eine andere Reihe länger wird. Wie oft passiert das, und trifft es dieselben Firmen, die später feuern? Häufige Wechsel würden bedeuten, dass „je Firma fixiert\" in der Praxis weniger fix ist, als der Name verspricht. (Zeitschätzung: 0,5 Tage)",
+  "**Was die Naht gekostet hat — und wen sie getroffen hätte.** Vor der Umstellung waren 2.663 Firmen-Quartale nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselte; jetzt sind es 0. Offen bleibt die inhaltliche Frage: Waren das Zufallswechsel oder systematisch dieselben Firmen? Falls systematisch, hat der alte Stand eine ganze Firmenklasse verloren — und dann ist die Umstellung nicht nur sauberer, sondern korrigiert eine Verzerrung, die im alten Report unsichtbar war. Das ist prüfbar, indem man die betroffenen Firmen gegen die übrigen hält (Branche, Größe, Feuerhäufigkeit). (Zeitschätzung: 1 Tag)",
   "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in dieser Quelle auf das Monatsende gerundet, deshalb ist ein 53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es über das Geschäftsjahresende `fye` im Berichtskopf (639 Firmen mit wanderndem Ende, davon 425 mit Umsatzreihe) oder über das echte Periodenende in den Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)",
   "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
  ],
  "gelesene_pfade": [
-  "e2-selbsttest-sxhblett/panel-entdeckung.sqlite",
+  "e2-selbsttest-ycu3mj14/panel-entdeckung.sqlite",
   "leer/panel-entdeckung.sqlite",
   "panel/panel-entdeckung.sqlite"
  ],
  "geschriebene_pfade": [
-  "e2-selbsttest-sxhblett/zwischen.sqlite",
+  "e2-selbsttest-ycu3mj14/zwischen.sqlite",
   "leer/zwischen.sqlite",
-  "work/E2-zwischenstand.sqlite"
+  "arbeit/E2-zwischenstand.sqlite"
  ],
  "kette": {
   "anker_stimmt": true,
-  "anteil": 0.6693841715790794,
-  "davon_mit_umsatzwachstum": 5337,
+  "anteil": 0.6701367114009783,
+  "davon_mit_umsatzwachstum": 5343,
   "erwartet_laut_e1": 7973,
   "firmen": 7973,
   "mindesttiefe": 8
  },
+ "muster_friedhof": [
+  {
+   "beschreibender_befund": "Beide Signale treten haeufiger gemeinsam auf als der Zufall es taete; das ist eine Aussage ueber die Kopplung beider Signale, kein tragfaehiges eigenes Signal.",
+   "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal",
+   "entschieden_am": "2026-08-19",
+   "fallzahl": 29,
+   "fallzahl_gefordert": 300,
+   "grund": "Mindest-Fallzahl verfehlt: 29 Firmen mit reifem Erst-Ereignis gegen geforderte 300",
+   "muster": "S-UG",
+   "stand": "gescheitert — nicht weiterverfolgt",
+   "ueberhang_faktor": 6.110683296470311
+  }
+ ],
  "parameter": {
   "band_jahre": [
    2012,
@@ -91,58 +104,58 @@
  },
  "pruefschritt_glaette": {
   "bestanden": true,
-  "groesster_sprung": 1.748128020652274,
+  "groesster_sprung": 1.7959104513855735,
   "jahre": [
    {
-    "anteil_prozent": 55.948438978240304,
+    "anteil_prozent": 55.91296121097446,
     "firmen_gesamt": 8456,
-    "firmen_mit_umsatzquartal": 4731,
+    "firmen_mit_umsatzquartal": 4728,
     "jahr": 2012
    },
    {
-    "anteil_prozent": 57.69656699889258,
+    "anteil_prozent": 57.70887166236003,
     "firmen_gesamt": 8127,
-    "firmen_mit_umsatzquartal": 4689,
+    "firmen_mit_umsatzquartal": 4690,
     "jahr": 2013
    },
    {
-    "anteil_prozent": 59.069182389937104,
+    "anteil_prozent": 59.132075471698116,
     "firmen_gesamt": 7950,
-    "firmen_mit_umsatzquartal": 4696,
+    "firmen_mit_umsatzquartal": 4701,
     "jahr": 2014
    },
    {
-    "anteil_prozent": 60.34661148473875,
+    "anteil_prozent": 60.30781169167098,
     "firmen_gesamt": 7732,
-    "firmen_mit_umsatzquartal": 4666,
+    "firmen_mit_umsatzquartal": 4663,
     "jahr": 2015
    },
    {
-    "anteil_prozent": 61.26789934658696,
+    "anteil_prozent": 61.24009453635479,
     "firmen_gesamt": 7193,
-    "firmen_mit_umsatzquartal": 4407,
+    "firmen_mit_umsatzquartal": 4405,
     "jahr": 2016
    }
   ],
   "spruenge": [
    {
     "nach": 2013,
-    "punkte": 1.748128020652274,
+    "punkte": 1.7959104513855735,
     "von": 2012
    },
    {
     "nach": 2014,
-    "punkte": 1.3726153910445262,
+    "punkte": 1.4232038093380837,
     "von": 2013
    },
    {
     "nach": 2015,
-    "punkte": 1.2774290948016471,
+    "punkte": 1.1757362199728618,
     "von": 2014
    },
    {
     "nach": 2016,
-    "punkte": 0.9212878618482065,
+    "punkte": 0.9322828446838116,
     "von": 2015
    }
   ]
@@ -159,9 +172,9 @@
  },
  "signale": {
   "S-G": {
-   "a_werte": 97365,
-   "auswertbar_band": 82611,
-   "auswertbar_gesamt": 85361,
+   "a_werte": 97398,
+   "auswertbar_band": 82642,
+   "auswertbar_gesamt": 85392,
    "dichte": {
     "auswertbare_ohne_branche": 0,
     "feuerungen_ohne_branche": 0,
@@ -172,7 +185,7 @@
      ],
      [
       2013,
-      232
+      233
      ],
      [
       2014,
@@ -486,7 +499,7 @@
      [
       "2013-03",
       "Finanzen, Versicherung, Immobilien",
-      9
+      10
      ],
      [
       "2013-03",
@@ -1628,12 +1641,12 @@
      [
       "2012-10",
       8,
-      708
+      709
      ],
      [
       "2012-11",
       37,
-      3478
+      3480
      ],
      [
       "2012-12",
@@ -1648,12 +1661,12 @@
      [
       "2013-02",
       25,
-      1833
+      1834
      ],
      [
       "2013-03",
-      34,
-      1830
+      35,
+      1831
      ],
      [
       "2013-04",
@@ -1663,12 +1676,12 @@
      [
       "2013-05",
       52,
-      3317
+      3319
      ],
      [
       "2013-06",
       7,
-      493
+      495
      ],
      [
       "2013-07",
@@ -1678,22 +1691,22 @@
      [
       "2013-08",
       37,
-      3116
+      3119
      ],
      [
       "2013-09",
       5,
-      490
+      491
      ],
      [
       "2013-10",
       4,
-      874
+      875
      ],
      [
       "2013-11",
       30,
-      3362
+      3366
      ],
      [
       "2013-12",
@@ -1713,7 +1726,7 @@
      [
       "2014-03",
       31,
-      2122
+      2124
      ],
      [
       "2014-04",
@@ -1723,7 +1736,7 @@
      [
       "2014-05",
       29,
-      3254
+      3257
      ],
      [
       "2014-06",
@@ -1738,7 +1751,7 @@
      [
       "2014-08",
       27,
-      3008
+      3010
      ],
      [
       "2014-09",
@@ -1753,7 +1766,7 @@
      [
       "2014-11",
       16,
-      3206
+      3209
      ],
      [
       "2014-12",
@@ -1773,7 +1786,7 @@
      [
       "2015-03",
       22,
-      2192
+      2193
      ],
      [
       "2015-04",
@@ -1783,7 +1796,7 @@
      [
       "2015-05",
       33,
-      3155
+      3156
      ],
      [
       "2015-06",
@@ -1798,7 +1811,7 @@
      [
       "2015-08",
       27,
-      2886
+      2887
      ],
      [
       "2015-09",
@@ -1890,12 +1903,12 @@
      [
       "Bergbau und Rohstoffgewinnung",
       87,
-      6699
+      6708
      ],
      [
       "Dienstleistungen",
       185,
-      16739
+      16740
      ],
      [
       "Einzelhandel",
@@ -1904,8 +1917,8 @@
      ],
      [
       "Finanzen, Versicherung, Immobilien",
-      93,
-      8215
+      94,
+      8227
      ],
      [
       "Grosshandel",
@@ -1930,36 +1943,36 @@
      [
       "Verarbeitendes Gewerbe",
       353,
-      33878
+      33887
      ]
     ]
    },
-   "feuerungen_band": 872,
-   "feuerungen_gesamt": 902,
+   "feuerungen_band": 873,
+   "feuerungen_gesamt": 903,
    "feuerungen_rumpfjahre": 30,
-   "firmen_mit_feuerung_band": 810,
-   "firmen_mit_g": 8097,
+   "firmen_mit_feuerung_band": 811,
+   "firmen_mit_g": 8099,
    "firmen_mit_reihe": 8191,
-   "firmen_reif": 545,
+   "firmen_reif": 546,
    "firmen_unreif": 265,
-   "g_werte": 111495,
+   "g_werte": 111532,
    "kalibrierung": [
     {
-     "auswertbar_band": 82611,
+     "auswertbar_band": 82642,
      "entscheid": "Rate ueber dem Band -> P 90 -> 95",
-     "feuerungen_band": 2137,
-     "firmen_reif": 1311,
+     "feuerungen_band": 2135,
+     "firmen_reif": 1309,
      "p": 90,
-     "rate": 0.025868225781070318,
+     "rate": 0.0258343215314247,
      "schritt": 0
     },
     {
-     "auswertbar_band": 82611,
+     "auswertbar_band": 82642,
      "entscheid": "im Zielband — keine Nachjustierung",
-     "feuerungen_band": 872,
-     "firmen_reif": 545,
+     "feuerungen_band": 873,
+     "firmen_reif": 546,
      "p": 95,
-     "rate": 0.010555495030928085,
+     "rate": 0.010563635923622371,
      "schritt": 1
     }
    ],
@@ -1971,7 +1984,7 @@
     "gesamt": 0
    },
    "p_final": 95,
-   "rate_band": 0.010555495030928085,
+   "rate_band": 0.010563635923622371,
    "scheitern": [],
    "schwellen": [
     [
@@ -2037,92 +2050,92 @@
     [
      8048,
      1.729833626785822,
-     6426
+     6429
     ],
     [
      8049,
      1.7818704485930232,
-     7978
+     7982
     ],
     [
      8050,
-     1.862318866730538,
-     9681
+     1.863145784254643,
+     9685
     ],
     [
      8051,
      1.9431805146637098,
-     13338
+     13345
     ],
     [
      8052,
-     1.9728361897180657,
-     14203
+     1.9730429027017269,
+     14208
     ],
     [
      8053,
-     2.0650877757935926,
-     16906
+     2.065512978986403,
+     16912
     ],
     [
      8054,
      2.1162826186479475,
-     19358
+     19368
     ],
     [
      8055,
-     2.1380208333333335,
-     19438
+     2.1406180026869683,
+     19450
     ],
     [
      8056,
-     2.1406180026869683,
-     19356
+     2.143525741029641,
+     19371
     ],
     [
      8057,
-     2.1273821020587733,
-     19299
+     2.1280483815732025,
+     19314
     ],
     [
      8058,
-     2.1107491856677525,
-     19235
+     2.1136885741471807,
+     19248
     ],
     [
      8059,
-     2.0930780151242416,
-     19162
+     2.095890008248083,
+     19173
     ],
     [
      8060,
      2.10447340277039,
-     19128
+     19136
     ],
     [
      8061,
      2.0717875160911317,
-     19091
+     19098
     ],
     [
      8062,
      2.072583373788193,
-     19043
+     19049
     ],
     [
      8063,
      2.0618472250665576,
-     18950
+     18953
     ],
     [
      8064,
-     2.019456599934104,
-     18783
+     2.0210462977524632,
+     18785
     ],
     [
      8065,
      2.0416456930261764,
-     18574
+     18575
     ],
     [
      8066,
@@ -2137,32 +2150,32 @@
    ]
   },
   "S-U": {
-   "a_werte": 76109,
-   "auswertbar_band": 63033,
-   "auswertbar_gesamt": 65721,
+   "a_werte": 78579,
+   "auswertbar_band": 65809,
+   "auswertbar_gesamt": 68598,
    "dichte": {
     "auswertbare_ohne_branche": 27,
     "feuerungen_ohne_branche": 1,
     "jahr": [
      [
       2012,
-      125
+      133
      ],
      [
       2013,
-      204
+      223
      ],
      [
       2014,
-      182
+      191
      ],
      [
       2015,
-      175
+      184
      ],
      [
       2016,
-      191
+      194
      ]
     ],
     "kreuz_monat_sektor": [
@@ -2174,7 +2187,7 @@
      [
       "2012-02",
       "Bergbau und Rohstoffgewinnung",
-      2
+      3
      ],
      [
       "2012-02",
@@ -2194,7 +2207,7 @@
      [
       "2012-02",
       "Verarbeitendes Gewerbe",
-      12
+      13
      ],
      [
       "2012-03",
@@ -2219,7 +2232,7 @@
      [
       "2012-05",
       "Bergbau und Rohstoffgewinnung",
-      1
+      2
      ],
      [
       "2012-05",
@@ -2269,7 +2282,7 @@
      [
       "2012-08",
       "Bergbau und Rohstoffgewinnung",
-      2
+      3
      ],
      [
       "2012-08",
@@ -2308,6 +2321,11 @@
      ],
      [
       "2012-10",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-10",
       "Finanzen, Versicherung, Immobilien",
       1
      ],
@@ -2329,7 +2347,7 @@
      [
       "2012-11",
       "Dienstleistungen",
-      8
+      9
      ],
      [
       "2012-11",
@@ -2359,7 +2377,7 @@
      [
       "2012-11",
       "Verarbeitendes Gewerbe",
-      28
+      29
      ],
      [
       "2012-12",
@@ -2374,7 +2392,7 @@
      [
       "2012-12",
       "Verarbeitendes Gewerbe",
-      4
+      5
      ],
      [
       "2013-01",
@@ -2394,7 +2412,7 @@
      [
       "2013-01",
       "Verarbeitendes Gewerbe",
-      2
+      3
      ],
      [
       "2013-02",
@@ -2418,13 +2436,18 @@
      ],
      [
       "2013-02",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2013-02",
       "Verarbeitendes Gewerbe",
-      3
+      5
      ],
      [
       "2013-03",
       "Bergbau und Rohstoffgewinnung",
-      2
+      3
      ],
      [
       "2013-03",
@@ -2434,7 +2457,7 @@
      [
       "2013-03",
       "Einzelhandel",
-      1
+      2
      ],
      [
       "2013-03",
@@ -2464,7 +2487,7 @@
      [
       "2013-04",
       "Dienstleistungen",
-      4
+      5
      ],
      [
       "2013-04",
@@ -2514,7 +2537,7 @@
      [
       "2013-05",
       "Verarbeitendes Gewerbe",
-      11
+      14
      ],
      [
       "2013-06",
@@ -2529,6 +2552,11 @@
      [
       "2013-06",
       "Grosshandel",
+      1
+     ],
+     [
+      "2013-07",
+      "Bergbau und Rohstoffgewinnung",
       1
      ],
      [
@@ -2563,13 +2591,13 @@
      ],
      [
       "2013-08",
-      "Grosshandel",
+      "Land- und Forstwirtschaft, Fischerei",
       1
      ],
      [
       "2013-08",
       "Verarbeitendes Gewerbe",
-      22
+      24
      ],
      [
       "2013-09",
@@ -2609,7 +2637,7 @@
      [
       "2013-10",
       "Verarbeitendes Gewerbe",
-      1
+      2
      ],
      [
       "2013-11",
@@ -2624,7 +2652,7 @@
      [
       "2013-11",
       "Dienstleistungen",
-      4
+      5
      ],
      [
       "2013-11",
@@ -2634,7 +2662,7 @@
      [
       "2013-11",
       "Finanzen, Versicherung, Immobilien",
-      8
+      10
      ],
      [
       "2013-11",
@@ -2654,7 +2682,7 @@
      [
       "2013-11",
       "Verarbeitendes Gewerbe",
-      23
+      25
      ],
      [
       "2013-12",
@@ -2664,6 +2692,11 @@
      [
       "2014-01",
       "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2014-02",
+      "Dienstleistungen",
       1
      ],
      [
@@ -2689,7 +2722,7 @@
      [
       "2014-02",
       "Verarbeitendes Gewerbe",
-      4
+      6
      ],
      [
       "2014-03",
@@ -2744,7 +2777,7 @@
      [
       "2014-04",
       "Verarbeitendes Gewerbe",
-      5
+      6
      ],
      [
       "2014-05",
@@ -2783,8 +2816,13 @@
      ],
      [
       "2014-06",
-      "Dienstleistungen",
+      "Bergbau und Rohstoffgewinnung",
       1
+     ],
+     [
+      "2014-06",
+      "Dienstleistungen",
+      3
      ],
      [
       "2014-06",
@@ -2819,7 +2857,7 @@
      [
       "2014-08",
       "Finanzen, Versicherung, Immobilien",
-      7
+      6
      ],
      [
       "2014-08",
@@ -2858,11 +2896,6 @@
      ],
      [
       "2014-10",
-      "Dienstleistungen",
-      1
-     ],
-     [
-      "2014-10",
       "Verarbeitendes Gewerbe",
       4
      ],
@@ -2874,7 +2907,7 @@
      [
       "2014-11",
       "Dienstleistungen",
-      10
+      12
      ],
      [
       "2014-11",
@@ -2894,11 +2927,16 @@
      [
       "2014-11",
       "Verarbeitendes Gewerbe",
-      21
+      22
      ],
      [
       "2014-12",
       "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-12",
+      "Verarbeitendes Gewerbe",
       1
      ],
      [
@@ -2924,7 +2962,7 @@
      [
       "2015-02",
       "Dienstleistungen",
-      4
+      6
      ],
      [
       "2015-02",
@@ -2949,7 +2987,7 @@
      [
       "2015-03",
       "Dienstleistungen",
-      8
+      9
      ],
      [
       "2015-03",
@@ -2964,7 +3002,7 @@
      [
       "2015-03",
       "Verarbeitendes Gewerbe",
-      12
+      13
      ],
      [
       "2015-04",
@@ -2994,7 +3032,7 @@
      [
       "2015-04",
       "Verarbeitendes Gewerbe",
-      2
+      3
      ],
      [
       "2015-05",
@@ -3044,7 +3082,7 @@
      [
       "2015-05",
       "Verarbeitendes Gewerbe",
-      10
+      11
      ],
      [
       "2015-06",
@@ -3059,7 +3097,7 @@
      [
       "2015-07",
       "Dienstleistungen",
-      2
+      3
      ],
      [
       "2015-07",
@@ -3079,7 +3117,7 @@
      [
       "2015-08",
       "Dienstleistungen",
-      4
+      5
      ],
      [
       "2015-08",
@@ -3104,7 +3142,7 @@
      [
       "2015-08",
       "Verarbeitendes Gewerbe",
-      12
+      13
      ],
      [
       "2015-09",
@@ -3188,11 +3226,6 @@
      ],
      [
       "2016-02",
-      "Dienstleistungen",
-      1
-     ],
-     [
-      "2016-02",
       "Finanzen, Versicherung, Immobilien",
       4
      ],
@@ -3289,7 +3322,7 @@
      [
       "2016-05",
       "Verarbeitendes Gewerbe",
-      17
+      18
      ],
      [
       "2016-06",
@@ -3304,7 +3337,7 @@
      [
       "2016-06",
       "Verarbeitendes Gewerbe",
-      5
+      4
      ],
      [
       "2016-07",
@@ -3394,7 +3427,7 @@
      [
       "2016-11",
       "Dienstleistungen",
-      6
+      9
      ],
      [
       "2016-11",
@@ -3414,7 +3447,7 @@
      [
       "2016-11",
       "Verarbeitendes Gewerbe",
-      21
+      22
      ],
      [
       "2016-12",
@@ -3426,339 +3459,339 @@
      [
       "2012-01",
       1,
-      58
+      66
      ],
      [
       "2012-02",
-      26,
-      1207
+      28,
+      1260
      ],
      [
       "2012-03",
       5,
-      222
+      224
      ],
      [
       "2012-04",
       0,
-      269
+      282
      ],
      [
       "2012-05",
-      8,
-      940
+      9,
+      975
      ],
      [
       "2012-06",
       3,
-      164
+      171
      ],
      [
       "2012-07",
       2,
-      329
+      354
      ],
      [
       "2012-08",
-      10,
-      923
+      11,
+      967
      ],
      [
       "2012-09",
       5,
-      223
+      236
      ],
      [
       "2012-10",
-      2,
-      525
+      3,
+      560
      ],
      [
       "2012-11",
-      57,
-      2535
+      59,
+      2666
      ],
      [
       "2012-12",
-      6,
-      278
+      7,
+      311
      ],
      [
       "2013-01",
-      5,
-      213
+      6,
+      239
      ],
      [
       "2013-02",
-      11,
-      1484
+      14,
+      1595
      ],
      [
       "2013-03",
-      24,
-      1522
+      26,
+      1585
      ],
      [
       "2013-04",
-      21,
-      883
+      22,
+      927
      ],
      [
       "2013-05",
-      32,
-      2418
+      35,
+      2548
      ],
      [
       "2013-06",
       3,
-      389
+      408
      ],
      [
       "2013-07",
-      3,
-      625
+      4,
+      664
      ],
      [
       "2013-08",
-      42,
-      2309
+      44,
+      2434
      ],
      [
       "2013-09",
       9,
-      317
+      330
      ],
      [
       "2013-10",
-      5,
-      676
+      6,
+      716
      ],
      [
       "2013-11",
-      47,
-      2466
+      52,
+      2590
      ],
      [
       "2013-12",
       2,
-      292
+      311
      ],
      [
       "2014-01",
       1,
-      242
+      259
      ],
      [
       "2014-02",
-      14,
-      1629
+      17,
+      1736
      ],
      [
       "2014-03",
       35,
-      1688
+      1769
      ],
      [
       "2014-04",
-      12,
-      729
+      13,
+      778
      ],
      [
       "2014-05",
       27,
-      2366
+      2470
      ],
      [
       "2014-06",
-      3,
-      305
+      6,
+      330
      ],
      [
       "2014-07",
       2,
-      641
+      687
      ],
      [
       "2014-08",
-      37,
-      2188
+      36,
+      2279
      ],
      [
       "2014-09",
       6,
-      354
+      375
      ],
      [
       "2014-10",
-      5,
-      803
+      4,
+      838
      ],
      [
       "2014-11",
-      39,
-      2479
+      42,
+      2569
      ],
      [
       "2014-12",
-      1,
-      332
+      2,
+      344
      ],
      [
       "2015-01",
       5,
-      250
+      263
      ],
      [
       "2015-02",
-      15,
-      1648
+      17,
+      1731
      ],
      [
       "2015-03",
-      32,
-      1814
+      34,
+      1892
      ],
      [
       "2015-04",
-      11,
-      765
+      12,
+      784
      ],
      [
       "2015-05",
-      31,
-      2383
+      32,
+      2456
      ],
      [
       "2015-06",
       5,
-      305
+      322
      ],
      [
       "2015-07",
-      5,
-      721
+      6,
+      744
      ],
      [
       "2015-08",
-      27,
-      2180
+      29,
+      2240
      ],
      [
       "2015-09",
       2,
-      296
+      313
      ],
      [
       "2015-10",
       10,
-      719
+      734
      ],
      [
       "2015-11",
       29,
-      2498
+      2561
      ],
      [
       "2015-12",
       3,
-      300
+      311
      ],
      [
       "2016-01",
       0,
-      205
+      220
      ],
      [
       "2016-02",
-      16,
-      2125
+      15,
+      2225
      ],
      [
       "2016-03",
       28,
-      1588
+      1639
      ],
      [
       "2016-04",
       6,
-      725
+      746
      ],
      [
       "2016-05",
-      33,
-      2488
+      34,
+      2561
      ],
      [
       "2016-06",
-      8,
-      316
+      7,
+      328
      ],
      [
       "2016-07",
       2,
-      584
+      604
      ],
      [
       "2016-08",
       37,
-      2395
+      2462
      ],
      [
       "2016-09",
       4,
-      278
+      287
      ],
      [
       "2016-10",
       9,
-      596
+      614
      ],
      [
       "2016-11",
-      47,
-      2525
+      51,
+      2600
      ],
      [
       "2016-12",
       1,
-      306
+      319
      ]
     ],
     "sektor": [
      [
       "Bau",
       14,
-      808
+      843
      ],
      [
       "Bergbau und Rohstoffgewinnung",
-      63,
-      3527
+      70,
+      3646
      ],
      [
       "Dienstleistungen",
-      160,
-      12458
+      174,
+      12974
      ],
      [
       "Einzelhandel",
-      23,
-      3968
+      24,
+      4074
      ],
      [
       "Finanzen, Versicherung, Immobilien",
-      126,
-      9670
+      127,
+      9722
      ],
      [
       "Grosshandel",
-      20,
-      2008
+      19,
+      2104
      ],
      [
       "Land- und Forstwirtschaft, Fischerei",
-      11,
-      320
+      12,
+      334
      ],
      [
       "Nicht klassifiziert (SEC-Sammelcode)",
@@ -3767,42 +3800,42 @@
      ],
      [
       "Transport, Kommunikation, Versorger",
-      64,
-      5951
+      65,
+      6148
      ],
      [
       "Verarbeitendes Gewerbe",
-      393,
-      24266
+      417,
+      25907
      ]
     ]
    },
-   "feuerungen_band": 877,
-   "feuerungen_gesamt": 924,
-   "feuerungen_rumpfjahre": 47,
-   "firmen_mit_feuerung_band": 698,
-   "firmen_mit_g": 6598,
+   "feuerungen_band": 925,
+   "feuerungen_gesamt": 974,
+   "feuerungen_rumpfjahre": 49,
+   "firmen_mit_feuerung_band": 731,
+   "firmen_mit_g": 6607,
    "firmen_mit_reihe": 7065,
-   "firmen_reif": 487,
-   "firmen_unreif": 211,
-   "g_werte": 88832,
+   "firmen_reif": 512,
+   "firmen_unreif": 219,
+   "g_werte": 90396,
    "kalibrierung": [
     {
-     "auswertbar_band": 63033,
+     "auswertbar_band": 65809,
      "entscheid": "Rate ueber dem Band -> P 90 -> 95",
-     "feuerungen_band": 1979,
-     "firmen_reif": 1025,
+     "feuerungen_band": 2072,
+     "firmen_reif": 1066,
      "p": 90,
-     "rate": 0.03139625275649263,
+     "rate": 0.031485055235606074,
      "schritt": 0
     },
     {
-     "auswertbar_band": 63033,
+     "auswertbar_band": 65809,
      "entscheid": "im Zielband — keine Nachjustierung",
-     "feuerungen_band": 877,
-     "firmen_reif": 487,
+     "feuerungen_band": 925,
+     "firmen_reif": 512,
      "p": 95,
-     "rate": 0.013913346976980313,
+     "rate": 0.014055828230181281,
      "schritt": 1
     }
    ],
@@ -3814,7 +3847,7 @@
     "gesamt": 0
    },
    "p_final": 95,
-   "rate_band": 0.013913346976980313,
+   "rate_band": 0.014055828230181281,
    "scheitern": [],
    "schwellen": [
     [
@@ -3845,149 +3878,149 @@
     [
      8040,
      0.21179421035311513,
-     309
+     304
     ],
     [
      8041,
-     0.26357443860628826,
-     378
+     0.26269604360690074,
+     371
     ],
     [
      8042,
-     0.28082673697558386,
-     455
+     0.27923479126468165,
+     446
     ],
     [
      8043,
      0.27695670875303396,
-     812
+     809
     ],
     [
      8044,
-     0.24226617363579311,
-     1401
+     0.24135616779838764,
+     1408
     ],
     [
      8045,
-     0.2134535440663347,
-     1835
+     0.21535252396906623,
+     1853
     ],
     [
      8046,
      0.19463815990597427,
-     2284
+     2317
     ],
     [
      8047,
      0.21817064737347058,
-     3121
+     3202
     ],
     [
      8048,
-     0.3839375789818389,
-     5557
+     0.3790890345928109,
+     5661
     ],
     [
      8049,
-     0.3902218281999357,
-     6715
+     0.386170156864447,
+     6874
     ],
     [
      8050,
-     0.4046563466700829,
-     7930
+     0.3987608634746017,
+     8139
     ],
     [
      8051,
-     0.46583731089855057,
-     10395
+     0.4609640665697722,
+     10720
     ],
     [
      8052,
-     0.48008621431175036,
-     10877
+     0.47431084072574003,
+     11340
     ],
     [
      8053,
-     0.580927908689519,
-     12715
+     0.5780887638385009,
+     13273
     ],
     [
      8054,
-     0.5909091820098267,
-     14430
+     0.5822758513923215,
+     15082
     ],
     [
      8055,
-     0.6138482251924007,
-     14558
+     0.6095625744546272,
+     15201
     ],
     [
      8056,
-     0.617101475906839,
-     14588
+     0.6159485877040645,
+     15206
     ],
     [
      8057,
-     0.5669746459851683,
-     14595
+     0.566123438467986,
+     15204
     ],
     [
      8058,
-     0.579048673392341,
-     14588
+     0.576312636893138,
+     15190
     ],
     [
      8059,
-     0.5710539726371755,
-     14605
+     0.5616439177398453,
+     15181
     ],
     [
      8060,
-     0.5909797336422835,
-     14652
+     0.5841704304469499,
+     15202
     ],
     [
      8061,
-     0.596292414137756,
-     14763
+     0.5924852263689744,
+     15274
     ],
     [
      8062,
-     0.5887623778217537,
-     14849
+     0.5819295570272293,
+     15315
     ],
     [
      8063,
      0.5679085570715,
-     14833
+     15259
     ],
     [
      8064,
-     0.5295506434439302,
-     14736
+     0.5241213182730635,
+     15127
     ],
     [
      8065,
-     0.5260739942591667,
-     14605
+     0.51758657481484,
+     14970
     ],
     [
      8066,
-     0.5348671679367676,
-     14439
+     0.5242171999675306,
+     14776
     ],
     [
      8067,
-     0.5427483662410467,
-     14110
+     0.5292613761364295,
+     14443
     ]
    ]
   },
   "S-UG": {
-   "anteil_an_sg": 0.047018348623853214,
-   "anteil_an_su": 0.046750285062713795,
-   "auswertbar_band": 51794,
+   "anteil_an_sg": 0.049255441008018326,
+   "anteil_an_su": 0.046486486486486484,
+   "auswertbar_band": 54292,
    "dichte": {
     "auswertbare_ohne_branche": 0,
     "feuerungen_ohne_branche": 0,
@@ -3998,7 +4031,7 @@
      ],
      [
       2013,
-      7
+      9
      ],
      [
       2014,
@@ -4067,7 +4100,7 @@
      [
       "2013-08",
       "Verarbeitendes Gewerbe",
-      1
+      3
      ],
      [
       "2013-11",
@@ -4184,339 +4217,339 @@
      [
       "2012-01",
       0,
-      44
+      52
      ],
      [
       "2012-02",
       2,
-      855
+      892
      ],
      [
       "2012-03",
       0,
-      167
+      170
      ],
      [
       "2012-04",
       0,
-      209
+      218
      ],
      [
       "2012-05",
       0,
-      743
+      775
      ],
      [
       "2012-06",
       0,
-      134
+      139
      ],
      [
       "2012-07",
       0,
-      252
+      275
      ],
      [
       "2012-08",
       1,
-      743
+      784
      ],
      [
       "2012-09",
       0,
-      190
+      203
      ],
      [
       "2012-10",
       1,
-      444
+      474
      ],
      [
       "2012-11",
       3,
-      2080
+      2201
      ],
      [
       "2012-12",
       1,
-      237
+      264
      ],
      [
       "2013-01",
       0,
-      178
+      203
      ],
      [
       "2013-02",
       1,
-      1189
+      1281
      ],
      [
       "2013-03",
       1,
-      1212
+      1268
      ],
      [
       "2013-04",
       0,
-      711
+      750
      ],
      [
       "2013-05",
       3,
-      2006
+      2119
      ],
      [
       "2013-06",
       0,
-      328
+      346
      ],
      [
       "2013-07",
       0,
-      526
+      561
      ],
      [
       "2013-08",
-      1,
-      1906
+      3,
+      2015
      ],
      [
       "2013-09",
       0,
-      269
+      281
      ],
      [
       "2013-10",
       0,
-      571
+      609
      ],
      [
       "2013-11",
       1,
-      2059
+      2174
      ],
      [
       "2013-12",
       0,
-      258
+      276
      ],
      [
       "2014-01",
       0,
-      209
+      226
      ],
      [
       "2014-02",
       0,
-      1326
+      1420
      ],
      [
       "2014-03",
       3,
-      1378
+      1452
      ],
      [
       "2014-04",
       1,
-      608
+      656
      ],
      [
       "2014-05",
       1,
-      1945
+      2040
      ],
      [
       "2014-06",
       0,
-      257
+      280
      ],
      [
       "2014-07",
       0,
-      547
+      591
      ],
      [
       "2014-08",
       5,
-      1791
+      1876
      ],
      [
       "2014-09",
       0,
-      310
+      331
      ],
      [
       "2014-10",
       2,
-      688
+      722
      ],
      [
       "2014-11",
       0,
-      2044
+      2130
      ],
      [
       "2014-12",
       0,
-      293
+      304
      ],
      [
       "2015-01",
       0,
-      212
+      225
      ],
      [
       "2015-02",
       0,
-      1357
+      1431
      ],
      [
       "2015-03",
       0,
-      1445
+      1518
      ],
      [
       "2015-04",
       1,
-      645
+      662
      ],
      [
       "2015-05",
       1,
-      1964
+      2028
      ],
      [
       "2015-06",
       0,
-      247
+      265
      ],
      [
       "2015-07",
       0,
-      598
+      620
      ],
      [
       "2015-08",
       3,
-      1787
+      1840
      ],
      [
       "2015-09",
       1,
-      254
+      265
      ],
      [
       "2015-10",
       0,
-      619
+      633
      ],
      [
       "2015-11",
       1,
-      2076
+      2134
      ],
      [
       "2015-12",
       0,
-      260
+      268
      ],
      [
       "2016-01",
       0,
-      181
+      194
      ],
      [
       "2016-02",
       0,
-      1669
+      1760
      ],
      [
       "2016-03",
       0,
-      1290
+      1331
      ],
      [
       "2016-04",
       0,
-      616
+      636
      ],
      [
       "2016-05",
       2,
-      2026
+      2092
      ],
      [
       "2016-06",
       0,
-      266
+      279
      ],
      [
       "2016-07",
       0,
-      482
+      501
      ],
      [
       "2016-08",
       2,
-      1961
+      2019
      ],
      [
       "2016-09",
       1,
-      244
+      252
      ],
      [
       "2016-10",
       0,
-      516
+      532
      ],
      [
       "2016-11",
       2,
-      2095
+      2163
      ],
      [
       "2016-12",
       0,
-      277
+      286
      ]
     ],
     "sektor": [
      [
       "Bau",
       1,
-      555
+      589
      ],
      [
       "Bergbau und Rohstoffgewinnung",
       2,
-      2836
+      2936
      ],
      [
       "Dienstleistungen",
       8,
-      10984
+      11467
      ],
      [
       "Einzelhandel",
       0,
-      3415
+      3495
      ],
      [
       "Finanzen, Versicherung, Immobilien",
       7,
-      4376
+      4425
      ],
      [
       "Grosshandel",
       1,
-      1856
+      1935
      ],
      [
       "Land- und Forstwirtschaft, Fischerei",
       1,
-      306
+      316
      ],
      [
       "Nicht klassifiziert (SEC-Sammelcode)",
@@ -4526,27 +4559,28 @@
      [
       "Transport, Kommunikation, Versorger",
       1,
-      5641
+      5823
      ],
      [
       "Verarbeitendes Gewerbe",
-      20,
-      21796
+      22,
+      23277
      ]
     ]
    },
-   "erwartet_bei_unabhaengigkeit": 6.6463296906977645,
-   "feuerungen_band": 41,
-   "firmen_mit_feuerung_band": 39,
-   "firmen_reif": 27,
+   "erwartet_bei_unabhaengigkeit": 7.036856258748987,
+   "feuerungen_band": 43,
+   "firmen_mit_feuerung_band": 41,
+   "firmen_reif": 29,
    "firmen_unreif": 12,
    "kalibrierung": [],
    "p_final": null,
-   "rate_band": 0.0007915974823338611,
+   "rate_band": 0.0007920135563250571,
    "scheitern": [
-    "K1: nur 27 Firmen mit reifem Erst-Ereignis (gefordert 300)"
+    "K1: nur 29 Firmen mit reifem Erst-Ereignis (gefordert 300)",
+    "K3a: 51.2 % aller Feuerungen im Bereich Verarbeitendes Gewerbe"
    ],
-   "ueberhang_faktor": 6.168818266325819
+   "ueberhang_faktor": 6.110683296470311
   }
  },
  "umgebung": {
@@ -4565,21 +4599,21 @@
   "berichte_periodisch": 170610,
   "betriebsergebnis_firma_ohne_quelle": 2833,
   "betriebsergebnis_jahrespaar_abstand_abweichend": 213,
-  "betriebsergebnis_kein_vorjahrespartner": 30739,
-  "betriebsergebnis_kein_vorquartal": 14126,
-  "betriebsergebnis_kein_vorquartal_beschleunigung": 11962,
+  "betriebsergebnis_kein_vorjahrespartner": 30745,
+  "betriebsergebnis_kein_vorquartal": 14134,
+  "betriebsergebnis_kein_vorquartal_beschleunigung": 11964,
   "betriebsergebnis_keine_schwelle": 42,
   "betriebsergebnis_komponente_fehlt_quartal": 0,
   "betriebsergebnis_nenner_null": 10,
   "betriebsergebnis_q4_abgeleitet": 18769,
   "betriebsergebnis_q4_komponente_fehlt": 12497,
   "betriebsergebnis_q4_stichtag_unlesbar": 0,
-  "betriebsergebnis_quellen_naht": 47,
+  "betriebsergebnis_quellen_naht": 0,
   "fakt_kandidaten": 2158042,
   "nettoergebnis_firma_ohne_quelle": 896,
   "nettoergebnis_jahrespaar_abstand_abweichend": 322,
-  "nettoergebnis_kein_vorjahrespartner": 38762,
-  "nettoergebnis_kein_vorquartal": 17658,
+  "nettoergebnis_kein_vorjahrespartner": 38775,
+  "nettoergebnis_kein_vorquartal": 17667,
   "nettoergebnis_kein_vorquartal_beschleunigung": 0,
   "nettoergebnis_keine_schwelle": 0,
   "nettoergebnis_komponente_fehlt_quartal": 0,
@@ -4587,24 +4621,24 @@
   "nettoergebnis_q4_abgeleitet": 18127,
   "nettoergebnis_q4_komponente_fehlt": 18893,
   "nettoergebnis_q4_stichtag_unlesbar": 0,
-  "nettoergebnis_quellen_naht": 65,
+  "nettoergebnis_quellen_naht": 0,
   "pit_schluessel_mehrfach": 363442,
   "pit_schluessel_wertkonflikt": 55290,
   "pit_werte": 594429,
   "roh_zeilen": 1194307,
   "umsatz_firma_ohne_quelle": 3959,
-  "umsatz_jahrespaar_abstand_abweichend": 136,
-  "umsatz_kein_vorjahrespartner": 26499,
-  "umsatz_kein_vorquartal": 12348,
-  "umsatz_kein_vorquartal_beschleunigung": 10332,
-  "umsatz_keine_schwelle": 56,
+  "umsatz_jahrespaar_abstand_abweichend": 138,
+  "umsatz_kein_vorjahrespartner": 27223,
+  "umsatz_kein_vorquartal": 11817,
+  "umsatz_kein_vorquartal_beschleunigung": 9927,
+  "umsatz_keine_schwelle": 54,
   "umsatz_komponente_fehlt_quartal": 26140,
   "umsatz_nenner_null": 0,
   "umsatz_q4_abgeleitet": 12271,
   "umsatz_q4_komponente_fehlt": 15371,
   "umsatz_q4_komponente_nicht_positiv": 1795,
   "umsatz_q4_stichtag_unlesbar": 0,
-  "umsatz_quellen_naht": 2663,
+  "umsatz_quellen_naht": 0,
   "umsatz_umsatz_nicht_positiv": 11295,
   "verworfen_coreg": 363624,
   "verworfen_firmeneigene_taxonomie": 0,
@@ -4613,5 +4647,5 @@
   "verworfen_stichtag_unlesbar": 0,
   "verworfen_wert_leer": 20422
  },
- "zeitstempel": "2026-08-19T09:11:41+00:00"
+ "zeitstempel": "2026-08-19T09:58:22+00:00"
 }

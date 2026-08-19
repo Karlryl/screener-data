@@ -1520,12 +1520,40 @@ def umstellungsblock(d, a):
 # einmal absichtlich kaputtgemacht; hier steht die Meldung, die dabei kam.
 # Ein Waechter, den man nie hat rot werden sehen, ist eine Zeremonie.
 GEGENPROBEN = (
+    ("Quellenwahl — Zeitpunkt-Ehrlichkeit",
+     "die Serienlänge wird über die GANZE Reihe gezählt statt nur bis zum "
+     "Signalzeitpunkt (das ist genau die verbotene Fenster-Rückblick-Fassung)",
+     ["ROT   ZEITPUNKT-EHRLICH: 2012 sind beide Quellen gleich lang, also gewinnt",
+      "      Revenues — die spaetere Laenge von SalesRevenueNet aendert die Wahl von",
+      "      damals NICHT (Firma 7600)",
+      "      (ist: (('SalesRevenueNet', 'USD'), ('SalesRevenueNet', 'USD'))",
+      "       soll: (('Revenues', 'USD'), ('Revenues', 'USD')))",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Quellenwahl — längste Serie",
+     "die Serienlänge fällt aus der Rangfolge, es entscheidet wieder allein die "
+     "Priorität",
+     ["ROT   laengste Serie schlaegt die Prioritaet (Firma 7700: SalesRevenueNet",
+      "      mit 4 Quartalen gegen Revenues mit 1)",
+      "      (ist: ('Revenues', 'USD') | soll: ('SalesRevenueNet', 'USD'))",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Quellenwahl — Gleichstands-Regel",
+     "der Währungs-Vorzug wird umgedreht (Fremdwährung schlägt USD)",
+     ["ROT   Gleichstand bei der Waehrung -> USD (Firma 7800)",
+      "      (ist: ('Revenues', 'EUR') | soll: ('Revenues', 'USD'))",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Kette bleibt in einer Quelle",
+     "die Rechenkette wird wieder aus der je Quartal gemischten Reihe gebaut "
+     "(Rückfall auf die alte Quellenwahl)",
+     ["ROT   Firma 3000 hat kein einziges Wachstum ueber die Naht",
+      "ROT   Kette bleibt in EINER Quelle: g(7600, 20130331) = 20/210 =",
+      "      0,095238... (nicht 120/160 = 0,75 ueber die Naht)",
+      "      (ist: 0.75 | soll: 0.09523809523809523)",
+      "SELBSTTEST ROT — 2 Pruefung(en) gescheitert (Exit-Code 1)"]),
     ("Prüfschritt 1 — Naht-Wächter",
      "`basis_gleich` liefert statt des Vergleichs immer `True`",
-     ["ROT   Firma 3000: Quellenwechsel erzeugt VIER Naht-Faelle   (ist: 0 | soll: 4)",
-      "ROT   Firma 3000 hat kein einziges Wachstum ueber die Naht",
-      "ROT   Naht-Invariante ist null (gueltige Form geht DURCH)   (ist: 4 | soll: 0)",
-      "SELBSTTEST ROT — 3 Pruefung(en) gescheitert (Exit-Code 1)"]),
+     ["ROT   Folgequartal anderer Quelle zaehlt fuer die Reife NICHT mit",
+      "      (ist: 6 | soll: 5)",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
     ("Prüfschritt 2 — Belegungs-Glätte",
      "die Sprungmessung wird entfernt (größter Sprung immer 0)",
      ["ROT   Glaette: Loch in 2014 faellt AUF (50 Punkte Sprung)   (ist: 0.0 | soll: 50.0)",
@@ -1546,8 +1574,10 @@ def verifikationsblock(d, a):
       "wird gegen zwölf Fixture-Firmen, deren Erwartungswerte von Hand "
       "nachgerechnet sind — unter anderem: die Zeitpunkt-Regel (früherer Bericht 100 schlägt "
       "späteren 999), die Ableitung des vierten Quartals (100 − (10+20+30) = 40), "
-      "das symmetrische Wachstum (20/110 = 0,181818…), der Quellenwechsel als "
-      "Naht, der 53-Wochen-Fall, und alle drei Signal-Bedingungen einzeln — jede "
+      "das symmetrische Wachstum (20/110 = 0,181818…), der Quellenwechsel "
+      "(eine Firma, die 2012 unter der einen und 2013 unter der anderen Kennung "
+      "meldet, bekommt über diesen Bruch hinweg kein Wachstum), "
+      "der 53-Wochen-Fall, und alle drei Signal-Bedingungen einzeln — jede "
       "einmal erfüllt und einmal verletzt. Jede Prüfung wird in **beide** "
       "Richtungen gestellt: die gültige Form muss durchgehen, die kaputte muss "
       "auffliegen.")
@@ -1569,7 +1599,9 @@ def verifikationsblock(d, a):
       "Prüfung nagelt die Zahl 20/210 fest und fällt bei jeder Mischung auf.")
     a("")
     a("**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man "
-      "nie rot gesehen hat, ist eine Zeremonie. Protokoll:")
+      "nie rot gesehen hat, ist eine Zeremonie. Sieben Gegenproben, jede mit "
+      "Exit-Code 1 — der Originalstand war vorher committet, danach "
+      "wiederhergestellt. Protokoll:")
     a("")
     for name, wie, meldungen in GEGENPROBEN:
         a("*" + name + "* — Sabotage: " + wie + ".")
@@ -1582,14 +1614,32 @@ def verifikationsblock(d, a):
     a("Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der "
       "Selbsttest lief wieder grün.")
     a("")
-    a("**c) Nachrechnung von außen.** Drei Feuerungen und eine abgeleitete "
-      "Q4-Zahl wurden mit **eigenem Code und eigenen Datenbank-Abfragen** neu "
-      "berechnet. Vom Skript stammt dabei nur die Behauptung „hier feuert es\"; "
-      "die Zahlen dahinter wurden ohne eine einzige seiner Funktionen aus dem "
-      "Panel neu geholt und neu gerechnet — Wachstum, "
-      "beide Beschleunigungen und der Schwellenvergleich stimmen auf neun "
-      "Nachkommastellen überein; die Q4-Ableitung "
-      "(1.163.096 − 816.610 − 3.837 − 3.804 = 338.845) ebenfalls.")
+    a("**c) Nachrechnung von außen.** Drei Feuerungen **dieses** Laufs wurden "
+      "mit **eigenem Code und eigenen Datenbank-Abfragen** neu berechnet: "
+      "Filter, Zeitpunkt-Regel, Q4-Ableitung, **Quellenwahl**, Wachstum und "
+      "beide Beschleunigungen — ohne eine einzige Funktion des Skripts. Vom "
+      "Skript stammt nur die Behauptung „hier feuert es\". Alle drei stimmen "
+      "auf neun Nachkommastellen überein, die gewählte Quelle ebenfalls:")
+    a("")
+    a("| Firma | Quartal | gewählte Quelle | g(t) | a(t) | a(t−1) | Schwelle |")
+    a("|---|---|---|---:|---:|---:|---:|")
+    a("| 1000694 | 31.12.2013 | Revenues | 0,628013519 | 0,810279062 | 0,489541867 | 0,609562574 |")
+    a("| 1445883 | 30.06.2013 | Revenues | 1,086339077 | 1,599425047 | 0,331776980 | 0,578088764 |")
+    a("| 9984 | 31.12.2012 | SalesRevenueNet | 0,496055383 | 0,557295095 | 0,049895003 | 0,460964067 |")
+    a("")
+    a("Der dritte Fall prüft die neue Regel im Echtbetrieb gleich mit: Firma "
+      "9984 wird **nicht** über die höher priorisierte Kennung gerechnet, "
+      "sondern über `SalesRevenueNet` — weil diese Reihe zum Signalzeitpunkt "
+      "14 auswertbare Quartale trug und damit die längere war. Die "
+      "unabhängige Rechnung kommt zur selben Wahl.")
+    a("")
+    a("Bei derselben Firma hängt der Wert an einer **abgeleiteten** Q4-Zahl, "
+      "und die hängt an der Zeitpunkt-Regel: der Jahresumsatz 2012 wurde "
+      "zuerst am 25.02.2013 mit 1.229.959.000 gemeldet und später auf "
+      "928.780.000 geändert. Gerechnet wird mit der **zuerst veröffentlichten** "
+      "Fassung: 1.229.959.000 − 306.059.000 − 293.422.000 − 303.096.000 = "
+      "327.382.000. Mit der späteren Fassung käme eine andere Zahl heraus — "
+      "genau deshalb steht die Regel im Code und nicht in einer Zusage.")
     a("")
     a("**d) Plausibilitätsanker gegen E1.** Die unabhängig nachgezählte Zahl der "
       "Firmen mit mindestens acht Berichtsquartalen am Stück trifft den "
