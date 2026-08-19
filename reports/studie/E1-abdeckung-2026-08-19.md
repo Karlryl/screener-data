@@ -8,8 +8,8 @@ es bleibt bis zum Ende der Studie verschlossen.
 
 ## Kurz gefasst
 
-- **Entdeckung** (2009-01-01 bis 2016-12-31, **32 Quartale breit**): 11.156 Firmen, 176.502 Berichte, 64.487.278 Kennzahl-Zeilen. Die typische Firma trägt **16 Berichtsquartale**.
-- **Validierung** (2017-01-01 bis 2020-12-31, **16 Quartale breit**): 8.781 Firmen, 148.912 Berichte, 39.858.607 Kennzahl-Zeilen. Die typische Firma trägt **15 Berichtsquartale**.
+- **Entdeckungsfenster** (2009-01-01 bis 2016-12-31, **32 Quartale breit**): 11.156 Firmen mit periodischer Berichterstattung, 176.502 Berichte jeder Art, 64.487.278 Kennzahl-Zeilen. Die typische Firma trägt **16 Berichtsquartale**.
+- **Prüffenster** (2017-01-01 bis 2020-12-31, **16 Quartale breit**): 8.781 Firmen mit periodischer Berichterstattung, 148.912 Berichte jeder Art, 39.858.607 Kennzahl-Zeilen. Die typische Firma trägt **15 Berichtsquartale**.
 
 Die beiden Fenster sind **unterschiedlich breit** — das Entdeckungsfenster deckt
 acht Jahre ab, das Prüffenster vier. Tiefen- und Fallzahlen sind zwischen den
@@ -127,6 +127,8 @@ erfindet jede Firma ihre eigenen Namen.
 | Kennzahl-Zeilen gesamt | 64.487.278 | 39.858.607 |
 | davon amtliche Taxonomie | 55.277.463 | 34.459.835 |
 | davon firmeneigene Erweiterung | 9.209.815 | 5.398.772 |
+| davon ohne Kennung (Datenfehler) | 0 | 0 |
+| Zeilen ohne zugehörigen Bericht | 0 | 0 |
 | verschiedene amtliche Kennungen | 9.175 | 10.474 |
 | verschiedene firmeneigene Kennungen | 1.115.270 | 586.969 |
 | Nenner: periodische Berichte | 170.610 | 99.819 |

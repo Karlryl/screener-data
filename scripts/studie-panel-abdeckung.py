@@ -68,7 +68,7 @@ ERLAUBTE_FENSTER = (
     ("validierung", "panel-validierung.sqlite", "2017-01-01", "2020-12-31"),
 )
 # Alles, was nach dem versiegelten Fenster oder nach Schluesselmaterial aussieht.
-VERBOTEN_RE = re.compile(r"endtest|\.enc$|schluessel|\.key$", re.IGNORECASE)
+VERBOTEN_RE = re.compile(r"endtest|\.enc$|schl(?:ue|ü)ssel|\.key$", re.IGNORECASE)
 
 # Periodische Berichte. 8-K, S-1 und Freunde stehen im Panel, tragen aber keine
 # Berichtsperiode im Sinne dieser Studie — wer sie mitzaehlt, misst Ad-hoc-Meldungen
@@ -146,17 +146,33 @@ def datenwurzel(vorgabe=None):
     return wert
 
 
-def oeffne_nur_lesend(pfad):
-    """R2: Erst die Mauer, dann die Datei — und nur schreibgeschuetzt.
+def pruefe_mauer(pfad):
+    """R2: Darf dieser Pfad ueberhaupt angefasst werden? Sonst Abbruch.
 
-    Die Pruefung laeuft ueber den GANZEN Pfad, nicht nur den Dateinamen: ein
-    Verzeichnis `.../endtest/panel-entdeckung.sqlite` waere sonst durchgerutscht."""
-    voll = os.path.abspath(pfad)
-    if VERBOTEN_RE.search(voll.replace(os.sep, "/")):
-        raise AbdeckungsFehler(
-            "R2-ABBRUCH: '" + voll + "' fuehrt zum versiegelten Endtest oder zu "
-            "Schluesselmaterial. Dieses Skript oeffnet das Endtest-Fenster nie — "
-            "wer vorher hineinsieht, macht das Studienergebnis wertlos.")
+    Geprueft wird der GANZE Pfad, nicht nur der Dateiname (ein Verzeichnis
+    `.../endtest/panel-entdeckung.sqlite` waere sonst durchgerutscht) — und
+    zwar in der AUFGELOESTEN Form: `realpath` folgt Symlinks und
+    NTFS-Junctions. Mit `abspath` allein pruefte die Mauer nur die Zeichen des
+    Pfades, waehrend das Betriebssystem eine ganz andere Datei oeffnet; eine
+    Junction namens `panel-entdeckung.sqlite` haette so auf den Endtest zeigen
+    koennen. Geprueft werden BEIDE Formen: der aufgeloeste Pfad faengt die
+    Umleitung, der geschriebene faengt den Fall, dass das Ziel (noch) nicht
+    existiert und `realpath` deshalb nichts aufloest."""
+    geschrieben = os.path.abspath(pfad)
+    aufgeloest = os.path.realpath(geschrieben)
+    for form in (geschrieben, aufgeloest):
+        if VERBOTEN_RE.search(form.replace(os.sep, "/")):
+            raise AbdeckungsFehler(
+                "R2-ABBRUCH: '" + pfad + "' fuehrt (aufgeloest: '" + aufgeloest
+                + "') zum versiegelten Endtest oder zu Schluesselmaterial. Dieses "
+                "Skript oeffnet das Endtest-Fenster nie — wer vorher hineinsieht, "
+                "macht das Studienergebnis wertlos.")
+    return aufgeloest
+
+
+def oeffne_nur_lesend(pfad):
+    """R2: Erst die Mauer, dann die Datei — und nur schreibgeschuetzt."""
+    voll = pruefe_mauer(pfad)
     if not os.path.isfile(voll):
         raise AbdeckungsFehler("Panel-Datei nicht gefunden: " + voll)
     uri = "file:" + voll.replace("\\", "/") + "?mode=ro"
@@ -277,6 +293,16 @@ def lies_berichte(con):
         if not block:
             break
         for adsh, cik, sic, form, period, accepted in block:
+            # `adsh` ist im Panel PRIMARY KEY. Waere er es nicht, bekaeme der
+            # zweite Treffer dieselbe laufende Nummer nicht neu vergeben — die
+            # Bitfelder in Durchlauf 2 zaehlten dann still an der falschen
+            # Stelle. Eine falsche Zahl ohne Fehlermeldung ist der schlimmste
+            # Ausgang, also wird die Voraussetzung geprueft statt geglaubt.
+            if adsh in adsh_index:
+                raise AbdeckungsFehler(
+                    "Berichtsnummer " + str(adsh) + " kommt zweimal vor. Das Panel "
+                    "fuehrt sie als Primaerschluessel; ohne diese Eindeutigkeit "
+                    "waeren alle Belegungszahlen falsch.")
             nummer = len(adsh_index)
             adsh_index[adsh] = nummer
             ergebnis["berichte_gesamt"] += 1
@@ -295,16 +321,20 @@ def lies_berichte(con):
                     ergebnis["berichte_je_jahr_veroeffentlichung"].get(jahr_v, 0) + 1
                 je_jahr = ergebnis["formen_je_jahr"].setdefault(stamm, {})
                 je_jahr[jahr_v] = je_jahr.get(jahr_v, 0) + 1
+            # Jedes Pflichtfeld wird UNABHAENGIG geprueft und gezaehlt. Ein
+            # frueher Abbruch beim ersten fehlenden Feld haette die spaeteren
+            # Zaehler zu Unterzaehlungen gemacht: eine Zeile ohne Firmennummer
+            # UND ohne Branche waere nur als "ohne Firmennummer" erschienen,
+            # und der Report haette weniger Luecken gemeldet als vorhanden sind.
             if not cik:
                 ergebnis["nicht_berechenbar"]["cik_fehlt"] += 1
-                continue
-            if jahr_v:
+            elif jahr_v:
                 firmen_jahr_v.setdefault(jahr_v, set()).add(cik)
 
             division = sic_division(sic)
             if division is None:
                 ergebnis["nicht_berechenbar"]["sic_fehlt_oder_unlesbar"] += 1
-            else:
+            elif cik:
                 firmen_div.setdefault(division, set()).add(cik)
                 firmen_sic2.setdefault(str(sic).strip()[:2], set()).add(cik)
 
@@ -315,6 +345,8 @@ def lies_berichte(con):
             quartal = quartal_aus_period(period)
             if quartal is None:
                 ergebnis["nicht_berechenbar"]["period_unlesbar"] += 1
+                continue
+            if not cik:
                 continue
             je_firma.setdefault(cik, set()).add(quartal)
             firmen_jahr_p.setdefault(str(quartal // 4), set()).add(cik)
@@ -390,12 +422,19 @@ def tiefe_und_fallzahl(je_firma, fensterbreite=None):
 # -- Ebene 2: die Faktentabelle (zwei Durchlaeufe, nie am Stueck) --------------
 
 def zaehle_kennzahlen(con, fortschritt=lambda _s: None):
-    """Durchlauf 1: Zeilen je Standard-Kennzahl. Firmeneigene Erweiterungen werden
-    nur summiert, nicht namentlich gefuehrt — es sind Millionen Einzelnamen, und
-    keiner davon ist zwischen zwei Firmen vergleichbar."""
+    """Durchlauf 1: Zeilen je Standard-Kennzahl.
+
+    Firmeneigene Erweiterungen bekommen KEINEN eigenen Zaehler je Name — keiner
+    von ihnen ist zwischen zwei Firmen vergleichbar. Ihre Namen laufen aber
+    durch eine Menge, um sie zaehlen zu koennen, und die ist die groesste
+    Speicherposition des Laufs: im Entdeckungsfenster rund 1,1 Millionen
+    verschiedene Namen, also gut 100 MB. Das ist bewusst in Kauf genommen — die
+    Zahl belegt, warum die Studie diese Kennungen ignorieren muss, und der
+    Umweg ueber SQL waere eine Sortierung ueber 64 Millionen Zeilen."""
     zeilen_je_tag = {}
     eigen_zeilen = 0
     eigen_namen = set()
+    leere_tags = 0
     gesamt = 0
     cur = con.execute("SELECT tag, version FROM fakt")
     while True:
@@ -404,7 +443,12 @@ def zaehle_kennzahlen(con, fortschritt=lambda _s: None):
             break
         gesamt += len(block)
         for tag, version in block:
-            if version and STANDARD_VERSION_RE.match(version):
+            if not tag:
+                # Eine Zeile ohne Kennung ist ein Datenfehler, keine firmeneigene
+                # Groesse. Wer sie unter "eigene Kennungen" verbucht, meldet
+                # kaputte Daten als Datenvielfalt (R5).
+                leere_tags += 1
+            elif version and STANDARD_VERSION_RE.match(version):
                 zeilen_je_tag[tag] = zeilen_je_tag.get(tag, 0) + 1
             else:
                 eigen_zeilen += 1
@@ -412,8 +456,9 @@ def zaehle_kennzahlen(con, fortschritt=lambda _s: None):
         fortschritt("  Durchlauf 1: %d Faktenzeilen" % gesamt)
     return {
         "faktenzeilen": gesamt,
-        "zeilenStandard": gesamt - eigen_zeilen,
+        "zeilenStandard": gesamt - eigen_zeilen - leere_tags,
         "zeilenFirmeneigen": eigen_zeilen,
+        "zeilenOhneKennung": leere_tags,
         "kennzahlenStandard": len(zeilen_je_tag),
         "kennzahlenFirmeneigen": len(eigen_namen),
         "zeilen_je_tag": zeilen_je_tag,
@@ -483,8 +528,14 @@ def werte_fenster_aus(con, name, fensterbreite=None, fortschritt=lambda _s: None
     def quote(tag):
         feld = felder.get(tag)
         if feld is None:
-            return {"berichte": 0, "anteilProzent": 0.0,
-                    "berichtePeriodisch": 0, "anteilPeriodischProzent": 0.0}
+            # Darf nicht vorkommen: `felder` wird genau aus `gesucht` gebaut, und
+            # jeder Aufruf kommt aus derselben Menge. Ein Null-Ergebnis waere hier
+            # nicht "kommt nicht vor", sondern "wurde nicht gezaehlt" — und saehe
+            # in der Tabelle identisch aus. Deshalb Abbruch statt Nullen.
+            raise AbdeckungsFehler(
+                "Kennzahl '" + str(tag) + "' wurde nie gezaehlt, soll aber "
+                "ausgewiesen werden. Eine 0 waere hier nicht messbar von einer "
+                "echten Fehlanzeige zu unterscheiden.")
         alle = bits_gesetzt(feld)
         per = bits_gesetzt(feld, periodisch_maske)
         return {
@@ -500,10 +551,14 @@ def werte_fenster_aus(con, name, fensterbreite=None, fortschritt=lambda _s: None
 
     # Verteilung der Belegung ueber die haeufigsten Kennzahlen — die Antwort auf
     # "flaechendeckend oder nur ein Bruchteil?" in einer Zahl statt in 150.
-    anteile = sorted(e["anteilPeriodischProzent"] for e in top)
+    # Ohne periodische Berichte gibt es keine Quote — dann steht hier
+    # NICHT BERECHENBAR und kein Absturz (R5).
+    anteile = sorted(e["anteilPeriodischProzent"] for e in top
+                     if e["anteilPeriodischProzent"] is not None)
     verteilung = {
         "nenner": "periodische Berichte (10-K, 10-Q, 20-F, 40-F)",
         "kennzahlenBetrachtet": len(top),
+        "kennzahlenOhneQuote": len(top) - len(anteile),
         "ueber90Prozent": sum(1 for a in anteile if a >= 90),
         "ueber50Prozent": sum(1 for a in anteile if a >= 50),
         "unter10Prozent": sum(1 for a in anteile if a < 10),
@@ -615,6 +670,21 @@ def finde_loecher(je_fenster):
                         % (fenstername(name), breite,
                            " und ".join("%d" % k for k in gedeckelt))})
 
+    # Zeilen, die der Bau mit 0 meldet. Taucht hier eine auf, ist das ein Befund
+    # ueber das Panel selbst und gehoert vor Karls Augen, nicht nur ins JSON.
+    for name, f in je_fenster.items():
+        for schluessel, was in (
+                ("waisenZeilenOhneBericht", "Kennzahl-Zeilen ohne zugehoerigen Bericht"),
+                ("zeilenOhneKennung", "Kennzahl-Zeilen ohne Kennung")):
+            anzahl = f["kennzahlen"].get(schluessel, 0)
+            if anzahl:
+                loecher.append({
+                    "art": "Zeilen, die es nicht geben duerfte", "fenster": name,
+                    "stelle": schluessel, "zahl": anzahl, "vergleich": 0,
+                    "text": "Im %s stehen %d %s. Der Bau-Report meldet dafuer 0 — "
+                            "die Abweichung ist ein Befund ueber das Panel."
+                            % (fenstername(name), anzahl, was)})
+
     # Sektoren, die zu duenn fuer eine eigene Auswertung sind.
     for name, f in je_fenster.items():
         for bereich, anzahl in f["berichte"]["firmen_je_division"].items():
@@ -632,6 +702,10 @@ def finde_loecher(je_fenster):
 def pruefe_anker(je_fenster, bau_report_pfad):
     """Die Zahlen dieses Laufs gegen den Bau-Report. Eine Abweichung ist ein
     BEFUND und wird berichtet — sie wird nie durch Anpassen der Rechnung geheilt."""
+    # Auch diese Datei laeuft durch die Fenster-Mauer. Sonst waere R2 nur fuer
+    # die zwei fest verdrahteten Panel-Pfade eine Eigenschaft des Programms und
+    # fuer jeden per Schalter uebergebenen Pfad blosse Disziplin.
+    bau_report_pfad = pruefe_mauer(bau_report_pfad)
     if not os.path.isfile(bau_report_pfad):
         return {"status": "NICHT BERECHENBAR",
                 "grund": "Bau-Report nicht gefunden: " + bau_report_pfad}
@@ -647,8 +721,17 @@ def pruefe_anker(je_fenster, bau_report_pfad):
             alle_gleich = False
             continue
         for feld, ist, sollwert in (
-                ("berichte", f["berichte"]["berichte_gesamt"], soll["berichte"]),
-                ("fakten", f["kennzahlen"]["faktenzeilen"], soll["fakten"])):
+                ("berichte", f["berichte"]["berichte_gesamt"], soll.get("berichte")),
+                ("fakten", f["kennzahlen"]["faktenzeilen"], soll.get("fakten"))):
+            if sollwert is None:
+                # Ohne Soll-Zahl gibt es kein Urteil — und ein fehlender Anker
+                # darf nicht als bestandener durchgehen (R5).
+                alle_gleich = False
+                zeilen.append({"fenster": name, "groesse": feld, "ist": ist,
+                               "sollLautBauReport": None,
+                               "status": "NICHT BERECHENBAR", "differenz": None,
+                               "grund": "Der Bau-Report fuehrt diese Groesse nicht."})
+                continue
             passt = ist == sollwert
             alle_gleich = alle_gleich and passt
             zeilen.append({"fenster": name, "groesse": feld, "ist": ist,
@@ -689,9 +772,10 @@ def markdown(daten):
     for name, f in fenster.items():
         b = f["berichte"]
         t = f["abdeckungstiefe"]["quartaleJeFirma"]
-        A("- **%s** (%s bis %s, **%s Quartale breit**): %s Firmen, %s Berichte, "
-          "%s Kennzahl-Zeilen. Die typische Firma trägt **%s Berichtsquartale**." % (
-              name.capitalize(), f["von"], f["bis"],
+        A("- **%s** (%s bis %s, **%s Quartale breit**): %s Firmen mit periodischer "
+          "Berichterstattung, %s Berichte jeder Art, %s Kennzahl-Zeilen. Die "
+          "typische Firma trägt **%s Berichtsquartale**." % (
+              fenstername(name), f["von"], f["bis"],
               zahl(f["abdeckungstiefe"].get("fensterbreiteQuartale")),
               zahl(b["firmen_gesamt"]), zahl(b["berichte_gesamt"]),
               zahl(f["kennzahlen"]["faktenzeilen"]), zahl(t["median"])))
@@ -801,6 +885,8 @@ def markdown(daten):
             ("faktenzeilen", "Kennzahl-Zeilen gesamt"),
             ("zeilenStandard", "davon amtliche Taxonomie"),
             ("zeilenFirmeneigen", "davon firmeneigene Erweiterung"),
+            ("zeilenOhneKennung", "davon ohne Kennung (Datenfehler)"),
+            ("waisenZeilenOhneBericht", "Zeilen ohne zugehörigen Bericht"),
             ("kennzahlenStandard", "verschiedene amtliche Kennungen"),
             ("kennzahlenFirmeneigen", "verschiedene firmeneigene Kennungen"),
             ("nennerPeriodischeBerichte", "Nenner: periodische Berichte")):
@@ -833,7 +919,8 @@ def markdown(daten):
         for n in spalten:
             treffer = next(e for e in fenster[n]["kennzahlen"]["pflichtKennzahlen"]
                            if e["tag"] == eintrag["tag"])
-            werte.append("%.1f" % treffer["anteilPeriodischProzent"])
+            wert = treffer["anteilPeriodischProzent"]
+            werte.append("NICHT BERECHENBAR" if wert is None else "%.1f" % wert)
         A("| %s | `%s` | %s |" % (eintrag["bezeichnung"], eintrag["tag"], " | ".join(werte)))
     A("")
 
@@ -985,12 +1072,34 @@ def _behaupte(bedingung, text):
 
 
 def selbsttest():
+    import shutil
     import tempfile
     verzeichnis = tempfile.mkdtemp(prefix="e1d-selbsttest-")
+    try:
+        _selbsttest(verzeichnis)
+    finally:
+        # Ohne dieses finally bleibt bei JEDER roten Pruefung ein Verzeichnis mit
+        # einer Testdatenbank liegen — und rot ist der Normalfall, solange
+        # entwickelt wird. Scheitert das Aufraeumen trotzdem (Windows sperrt eine
+        # Datei, die noch offen ist), wird das GESAGT und nicht geschluckt: sonst
+        # waechst ein Muellberg, den niemand sieht.
+        shutil.rmtree(verzeichnis, ignore_errors=True)
+        if os.path.exists(verzeichnis):
+            print("  Hinweis: %s liess sich nicht aufraeumen (Datei noch offen?)."
+                  % verzeichnis)
+
+
+def _selbsttest(verzeichnis):
     pfad = os.path.join(verzeichnis, "panel-entdeckung.sqlite")
     n_berichte, n_fakten = _mini_panel(pfad)
     con = oeffne_nur_lesend(pfad)
-    f = werte_fenster_aus(con, "entdeckung")
+    try:
+        f = werte_fenster_aus(con, "entdeckung")
+    finally:
+        # Sofort schliessen: alles Weitere rechnet auf `f`. Eine offene Verbindung
+        # bis zum Ende haette auf Windows das Aufraeumen des Temp-Verzeichnisses
+        # blockiert — nachgewiesen, es blieben Reste liegen.
+        con.close()
     b = f["berichte"]
     t = f["abdeckungstiefe"]
 
@@ -1164,6 +1273,7 @@ def selbsttest():
                 "firmen_je_jahr_veroeffentlichung": {}, "firmen_je_division": {},
             },
             "abdeckungstiefe": {"fensterbreiteQuartale": 16, "fallzahlVorschau": []},
+            "kennzahlen": {"waisenZeilenOhneBericht": 0, "zeilenOhneKennung": 0},
         }
     }
     brueche = [l for l in finde_loecher(gebaut) if l["art"] == "Formularmix bricht in einem Jahr"]
@@ -1180,11 +1290,112 @@ def selbsttest():
     print("  [9] Formularmix: der 8-K-Sprung 2020 (200 -> 35.000, Faktor 175) wird "
           "gemeldet, die gleichmaessige 10-Q-Reihe nicht.")
 
-    con.close()
-    for datei in os.listdir(verzeichnis):
-        os.remove(os.path.join(verzeichnis, datei))
-    os.rmdir(verzeichnis)
-    print("Selbsttest gruen (9 Pruefungen).")
+    # --- Pruefung 10: die Mauer haelt auch um die Ecke -----------------------
+    # Zwei Wege fuehren an einer reinen Dateinamen-Pruefung vorbei: ein Pfad,
+    # der ueber einen Schalter hereinkommt statt ueber die feste Liste, und ein
+    # Verweis (Symlink/Junction), der harmlos heisst und woanders hinzeigt.
+    endtest_koeder = os.path.join(verzeichnis, "panel-endtest.sqlite.enc")
+    with open(endtest_koeder, "w", encoding="utf-8") as fh:
+        json.dump({"jeFenster": {"entdeckung": {"berichte": 1, "fakten": 1}}}, fh)
+    try:
+        pruefe_anker({"entdeckung": f}, endtest_koeder)
+    except AbdeckungsFehler as fehler:
+        _behaupte("R2-ABBRUCH" in str(fehler),
+                  "Der Bau-Report-Pfad bricht ab, aber nicht an der Fenster-Mauer.")
+    else:
+        raise SystemExit(
+            "SELBSTTEST ROT: pruefe_anker liest eine Endtest-Datei — der "
+            "Schalter --bau-report umgeht die Fenster-Mauer.")
+    # Gegenprobe: ein harmloser Bau-Report muss weiterhin durchgehen.
+    _behaupte(pruefe_anker({"entdeckung": f}, anker_pfad)["status"].startswith("ABWEICHUNG"),
+              "Der harmlose Bau-Report kommt nicht mehr durch die Mauer.")
+
+    verweis = os.path.join(verzeichnis, "harmlos-aussehend.sqlite")
+    try:
+        os.symlink(endtest_koeder, verweis)
+    except (OSError, NotImplementedError, AttributeError):
+        print("  [10] Mauer: der Schalter --bau-report wird abgewiesen. "
+              "Verweis-Probe NICHT BERECHENBAR — dieses System laesst keine "
+              "Symlinks anlegen (auf Windows braucht das erhoehte Rechte).")
+    else:
+        try:
+            pruefe_mauer(verweis)
+        except AbdeckungsFehler as fehler:
+            _behaupte("R2-ABBRUCH" in str(fehler),
+                      "Der Verweis bricht ab, aber nicht an der Fenster-Mauer.")
+        else:
+            raise SystemExit(
+                "SELBSTTEST ROT: ein Verweis mit harmlosem Namen zeigt auf den "
+                "Endtest und wird durchgelassen — die Mauer prueft nur Zeichen, "
+                "nicht das Ziel.")
+        os.remove(verweis)
+        print("  [10] Mauer: der Schalter --bau-report wird abgewiesen, und ein "
+              "harmlos benannter Verweis auf den Endtest ebenfalls.")
+    os.remove(endtest_koeder)
+
+    # --- Pruefung 11: doppelte Berichtsnummer und Zeilen ohne Kennung --------
+    # Beides wuerde sonst still falsche Zahlen erzeugen statt eines Fehlers.
+    zweit_pfad = os.path.join(verzeichnis, "panel-entdeckung-zweit.sqlite")
+    zweit = sqlite3.connect(zweit_pfad)
+    zweit.executescript(
+        "CREATE TABLE bericht (adsh TEXT, cik TEXT, name TEXT, sic TEXT,"
+        " form TEXT, period TEXT, accepted TEXT);"
+        "CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT, coreg TEXT,"
+        " ddate TEXT, qtrs TEXT, uom TEXT, value REAL, footnote TEXT);")
+    zweit.executemany("INSERT INTO bericht VALUES(?,?,?,?,?,?,?)", [
+        ("x1", "10", "Alpha", "3674", "10-K", "20131231", "2014-03-01 10:00:00.0"),
+        ("x1", "11", "Doppelt", "3674", "10-K", "20131231", "2014-03-02 10:00:00.0"),
+    ])
+    zweit.commit()
+    zweit.close()
+    con2 = oeffne_nur_lesend(zweit_pfad)
+    try:
+        lies_berichte(con2)
+    except AbdeckungsFehler as fehler:
+        _behaupte("zweimal" in str(fehler),
+                  "Die Dublette bricht ab, aber nicht mit der Dubletten-Meldung: %s" % fehler)
+    else:
+        raise SystemExit(
+            "SELBSTTEST ROT: dieselbe Berichtsnummer kommt zweimal vor und geht "
+            "still durch — alle Belegungszahlen waeren falsch.")
+    con2.close()
+
+    # Zeilen ohne Kennung zaehlen getrennt, nicht als firmeneigene Groesse.
+    dritt_pfad = os.path.join(verzeichnis, "panel-entdeckung-dritt.sqlite")
+    dritt = sqlite3.connect(dritt_pfad)
+    dritt.executescript(
+        "CREATE TABLE bericht (adsh TEXT PRIMARY KEY, cik TEXT, name TEXT, sic TEXT,"
+        " form TEXT, period TEXT, accepted TEXT);"
+        "CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT, coreg TEXT,"
+        " ddate TEXT, qtrs TEXT, uom TEXT, value REAL, footnote TEXT);")
+    dritt.execute("INSERT INTO bericht VALUES('y1','10','A','3674','10-K',"
+                  "'20131231','2014-03-01 10:00:00.0')")
+    dritt.executemany("INSERT INTO fakt VALUES(?,?,?,?,?,?,?,?,?)", [
+        ("y1", "Assets", "us-gaap/2013", "", "20131231", "0", "USD", 1.0, ""),
+        ("y1", "Eigene", "y1", "", "20131231", "0", "USD", 2.0, ""),
+        ("y1", "", "us-gaap/2013", "", "20131231", "0", "USD", 3.0, ""),
+        ("y1", None, "y1", "", "20131231", "0", "USD", 4.0, ""),
+    ])
+    dritt.commit()
+    dritt.close()
+    con3 = oeffne_nur_lesend(dritt_pfad)
+    k3 = zaehle_kennzahlen(con3)
+    con3.close()
+    _behaupte(k3["zeilenOhneKennung"] == 2,
+              "Zeilen ohne Kennung: %s statt 2" % k3["zeilenOhneKennung"])
+    _behaupte(k3["zeilenFirmeneigen"] == 1 and k3["kennzahlenFirmeneigen"] == 1,
+              "Die kennungslosen Zeilen werden als firmeneigene Groessen verbucht: "
+              "%s Zeilen / %s Namen statt 1 / 1"
+              % (k3["zeilenFirmeneigen"], k3["kennzahlenFirmeneigen"]))
+    _behaupte(k3["zeilenStandard"] == 1,
+              "Amtliche Zeilen: %s statt 1" % k3["zeilenStandard"])
+    _behaupte(k3["zeilenStandard"] + k3["zeilenFirmeneigen"] + k3["zeilenOhneKennung"]
+              == k3["faktenzeilen"],
+              "Die drei Sorten summieren sich nicht auf die Gesamtzahl.")
+    print("  [11] Dublette in der Berichtsnummer bricht ab; von 4 Faktenzeilen "
+          "sind 1 amtlich, 1 firmeneigen, 2 ohne Kennung — die Summe stimmt.")
+
+    print("Selbsttest gruen (11 Pruefungen).")
 
 
 # -- Hauptlauf ----------------------------------------------------------------
