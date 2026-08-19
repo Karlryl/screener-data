@@ -173,7 +173,27 @@ test('unsinnige coverageAxes ("0/0", "9/7") bekommen keinen Rang, sondern covera
   assert.equal(wfe.rangGrund({ coverageAxes: '4/7' }), null, '4/7 muss einen Rang bekommen (Schwelle)');
   assert.equal(wfe.rangGrund({ coverageAxes: '3/7' }), 'zuWenigBelegteAchsen', '3/7 bleibt entrangt');
   assert.equal(wfe.rangGrund({ coverageAxes: '0/7' }), 'zuWenigBelegteAchsen', '0/7 ist gueltig und entrangt, NICHT unbekannt');
-  assert.equal(wfe.rangGrund({ coverageAxes: '2/5' }), null, 'QC-Nenner 5 bleibt ungegated');
+});
+
+// --- 8. QC-Boards (5 Achsen) bleiben vom Gate unberuehrt ------------------------------
+// Die 4er-Schwelle wurde auf den BRANCHEN-Formeln gemessen (7 bzw. 8 Achsen). Bei QC waeren
+// 4 von 5 = 80 % statt 4 von 7 = 57 % — eine andere, nie gemessene Regel. Deshalb greift das
+// Gate erst ab RANK_GATE_MIN_NENNER im Nenner.
+//
+// Dieser assert stand bisher als letzte Zeile in Pruefung 7. Er FEUERTE zwar, meldete aber
+// unter dem Namen "unsinnige coverageAxes" — wer das rote X sah, suchte am falschen Ort.
+// Ein Waechter muss die SACHE benennen, die er festnagelt.
+//
+// GEGENPROBE (durchgefuehrt): RANK_GATE_MIN_NENNER 7 -> 0 gesetzt -> dieser Test rot.
+test('QC-Boards mit 5 Achsen bleiben ungegated (die 4er-Schwelle gilt nur ab 7 im Nenner)', () => {
+  assert.equal(wfe.rangGrund({ coverageAxes: '2/5' }), null,
+    'QC-Nenner 5: 2/5 muss einen Rang behalten — die Schwelle wurde dort nie gemessen');
+  assert.equal(wfe.rangGrund({ coverageAxes: '1/5' }), null,
+    'QC-Nenner 5: auch 1/5 bleibt ungegated, sonst wirkt dort eine ungemessene Regel');
+  // Gegenprobe in derselben Pruefung: ab 7 im Nenner greift das Gate weiterhin — sonst waere
+  // der QC-Zweig ein Loch, durch das sich das ganze Gate abschalten liesse.
+  assert.equal(wfe.rangGrund({ coverageAxes: '2/7' }), 'zuWenigBelegteAchsen',
+    '2/7 muss entrangt bleiben — der QC-Schutz darf das Gate nicht global abschalten');
 });
 
 console.log(`\nbelegbarkeits-gate.test.js: ${pass} ok, ${fail} fail`);
