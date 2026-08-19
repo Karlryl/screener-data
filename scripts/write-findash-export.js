@@ -511,6 +511,14 @@ function buildFullBoards(coverage, opts = {}) {
       ' — run-screener.js schreibt sie bei jedem Lauf (2.3-A8). Fehlt sie, ist der Scoring-Lauf ' +
       'anomal gelaufen; ein stumm leeres Vollboard waere von einem Board ohne Nachruecker nicht zu unterscheiden.');
   }
+  // Reviewer-Befund 19.08. (MITTEL, reproduziert: 12 von 13 Dateien lagen nach einem Abbruch
+  // im 13. Branch auf der Platte): Ziel-Verzeichnis VOR dem Schreiben leeren — dasselbe Muster,
+  // das buildQuality/buildSmallcap seit Tag 348 fahren. Ohne das mischt ein abgebrochener Lauf
+  // frische und stehen gebliebene Vollboards des Vorlaufs, und der naechste Blick sieht 13
+  // Dateien, von denen einige aus einem anderen Vintage stammen. Ein Teil-Export nach einem
+  // Wurf bleibt moeglich — er ist aber immer NUR aus diesem Lauf, und der Wurf macht die CI rot,
+  // bevor irgendetwas deployt wird.
+  fs.rmSync(outFullDir, { recursive: true, force: true });
   fs.mkdirSync(outFullDir, { recursive: true });
   const woptsRang = { warn: false }; // s. vergebeRaenge: Schwelle gilt fuer die gekappten Listen
   // Die Bilanz des Waehrungs-Waechters (Abbruch ab 25 % genullter Groessen) wurde ebenfalls
@@ -519,6 +527,7 @@ function buildFullBoards(coverage, opts = {}) {
   // grenze und koennte den ganzen Export kippen. GENULLT wird auf den Vollzeilen trotzdem
   // (ergaenzeWaehrungsbeleg laeuft normal), sonst waere die Zeilen-Paritaet gebrochen.
   const bilanzVorher = waehrungsWaechterBilanz();
+  let eigen = { geprueft: 0, genullt: 0 };
   try {
     for (const id of BRANCHES) {
       writeJsonAtomic(path.join(outFullDir, id + '.json'),
@@ -526,9 +535,24 @@ function buildFullBoards(coverage, opts = {}) {
         { assertFinite: true, indent: 0 });
     }
   } finally {
+    const nachher = waehrungsWaechterBilanz();
+    eigen = { geprueft: nachher.geprueft - bilanzVorher.geprueft, genullt: nachher.genullt - bilanzVorher.genullt };
     setzeWaehrungsWaechterBilanz(bilanzVorher);
   }
-  return { out: outFullDir, boards: BRANCHES.length };
+  // Reviewer-Befund 19.08. (HOCH): die Zaehler herausrechnen und dann NICHTS melden hiesse,
+  // dass ein Ausfall des Waehrungsbelegs, der nur den Tail trifft, voellig unhoerbar bliebe —
+  // und der Tail ist nachweislich duenner belegt (gemessen 19.08.: gekappt 61,9 %, voll 66,7 %).
+  // Gemeldet wird deshalb eine EIGENE Bilanz. KEINE eigene Abbruchgrenze: jede Zahl waere auf
+  // dieser nie gemessenen Grundgesamtheit geraten, und ein geratener Abbruch kippte den ganzen
+  // Export. Erst wird gemessen, dann darf jemand eine Schwelle setzen — die Zahl steht ab jetzt
+  // im Lauf. Der Kopf der Liste bleibt unabhaengig davon geschuetzt: die ersten topN Zeilen sind
+  // tief gleich mit der gekappten Datei, die ihre gemessene 25-%-Grenze weiter traegt.
+  if (eigen.genullt > 0) {
+    console.warn('::warning::Waehrungs-Waechter (Vollboards, EIGENE Bilanz, nicht in der 25-%-Grenze): ' +
+      eigen.genullt + ' von ' + eigen.geprueft + ' Zeilen ohne nachgewiesene Handelskurs-Umrechnung (' +
+      (100 * eigen.genullt / Math.max(1, eigen.geprueft)).toFixed(1) + ' %)');
+  }
+  return { out: outFullDir, boards: BRANCHES.length, mcapGenullt: eigen };
 }
 
 function buildOverview(coverage) {

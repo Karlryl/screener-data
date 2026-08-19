@@ -229,11 +229,29 @@ test('6 fail-loud: fehlendes full/-Quellverzeichnis bricht ab statt still leer z
     'der versiegelte run-screener schreibt full/ immer — Abwesenheit ist eine Engine-Anomalie und muss laut sein');
 });
 
-test('6b fail-loud: fehlt EINE Quelldatei, bricht der Bau ab (kein Teil-Export)', () => {
+test('6b fail-loud: fehlt EINE Quelldatei, bricht der Bau ab', () => {
   const q = quellen(null);
   fs.unlinkSync(path.join(q.hgFullDir, 'utilities.json'));
   assert.throws(() => wfe.buildFullBoards(null, { hgFullDir: q.hgFullDir, outFullDir: tmpdir('out-teil-') }),
-    'ein Teil-Export waere ein stumm halbes Vollboard');
+    'ein halb geschriebenes Vollboard-Verzeichnis darf nicht als Erfolg durchgehen');
+});
+
+// Reviewer-Befund 19.08. (MITTEL, reproduziert): der Bau schreibt sequenziell; ein Wurf im
+// 13. Branch liess 12 frische Dateien liegen. Frueher benannte dieser Test das als "kein
+// Teil-Export" — das war schlicht falsch. Garantiert ist etwas anderes und Wichtigeres: was
+// nach einem Abbruch dort liegt, stammt IMMER aus diesem Lauf. Ein stehen gebliebenes
+// Vollboard des Vorlaufs wuerde sonst neben den frischen liegen, und niemand saehe den
+// Vintage-Bruch (dieselbe Klasse wie F11 bei quality/).
+test('6c Frische: ein abgebrochener Lauf laesst KEINE Datei des Vorlaufs stehen', () => {
+  const out = tmpdir('out-stale-');
+  wfe.buildFullBoards(null, { hgFullDir: sauber.hgFullDir, outFullDir: out }); // Vorlauf: 13 Dateien
+  assert.equal(fs.readdirSync(out).length, wfe.BRANCHES.length, 'Vorlauf hat nicht vollstaendig geschrieben');
+  const kaputt = quellen(null);
+  fs.unlinkSync(path.join(kaputt.hgFullDir, 'consumer-discretionary.json')); // erster Branch -> Wurf sofort
+  assert.throws(() => wfe.buildFullBoards(null, { hgFullDir: kaputt.hgFullDir, outFullDir: out }));
+  assert.deepEqual(fs.readdirSync(out), [],
+    'Dateien des Vorlaufs haben den Abbruch ueberlebt und wuerden als frisch weiter-serviert: '
+    + JSON.stringify(fs.readdirSync(out)));
 });
 
 // ── 7. Gemessene Schwellen bleiben auf den gekappten Listen ─────────────────────────
@@ -274,6 +292,22 @@ test('7c Alarm: die Vollboards zaehlen NICHT in die Bilanz des Waehrungs-Waechte
     + 'verschoeben eine gemessene Grenze und koennten den ganzen Export kippen');
 });
 
+// Reviewer-Befund 19.08. (HOCH): die Zaehler herausrechnen UND nichts melden hiesse, dass ein
+// Beleg-Ausfall, der nur den Tail trifft, voellig unhoerbar bliebe. Der Bau meldet deshalb eine
+// EIGENE Bilanz (ohne eigene Abbruchgrenze — die waere auf dieser Grundgesamtheit geraten).
+test('7e Alarm: die Vollboards melden ihre EIGENE Waehrungs-Bilanz (Tail bleibt messbar)', () => {
+  const w = mitWarnungen(() => {
+    const r = wfe.buildFullBoards(null, { hgFullDir: sauber.hgFullDir, outFullDir: tmpdir('out-bilanz-') });
+    // Ohne Snapshots ist kein Beleg fuehrbar: jede der 13x(150+60) Zeilen wird genullt.
+    assert.equal(r.mcapGenullt.geprueft, wfe.BRANCHES.length * (VOLL + UNPROF),
+      'die gemeldete Bilanz zaehlt nicht die Vollboard-Zeilen');
+    assert.equal(r.mcapGenullt.genullt, r.mcapGenullt.geprueft);
+  });
+  assert.ok(w.some((x) => /Waehrungs-Waechter \(Vollboards/.test(x)),
+    'der Tail-Ausfall wird still verschluckt — genau der Befund, der das hier ausgeloest hat: '
+    + JSON.stringify(w));
+});
+
 test('7d Alarm: die Vollboard-Zeilen tragen den Waehrungsbeleg trotzdem (nur die BILANZ ist getrennt)', () => {
   // Ohne Snapshots ist kein Beleg fuehrbar -> marketCap wird genullt. Genau wie in der
   // gekappten Datei; sonst waere Pruefung 3 gar nicht erfuellbar.
@@ -294,7 +328,10 @@ test('7d Alarm: die Vollboard-Zeilen tragen den Waehrungsbeleg trotzdem (nur die
 // (c) die Belegbarkeits-Warnung global statt nur auf den Vollboards abgeschaltet
 //     -> 17 ok / 1 fail: 7b rot. Der Waechter haengt an der SACHE (feuert die Warnung
 //     dort weiter, wo sie gemessen wurde), nicht an einem Schreibmuster.
-// Alle drei zurueckgebaut, danach 18 ok / 0 fail.
+// (d) das Leeren des Zielverzeichnisses (fs.rmSync) ausgebaut -> 19 ok / 1 fail: 6c rot
+//     (Dateien des Vorlaufs ueberleben einen Abbruch). Reviewer-Befund, nachgebaut.
+// (e) die eigene Waehrungs-Bilanz der Vollboards stummgeschaltet -> 19 ok / 1 fail: 7e rot.
+// Alle fuenf zurueckgebaut, danach 20 ok / 0 fail.
 
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(`\nexport-vollboard.test.js: ${pass} ok, ${fail} fail`);
