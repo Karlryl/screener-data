@@ -32,6 +32,7 @@ const cleanBoard = {
   marketCap: 1e12, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
   profitTier: 'langfristig-profitabel', ipoYear: 1999,
   cohortN: 90, cohortFallback: false,
+  coverageAxes: '7/7', // 18.08.: Belegbarkeits-Gate — nur belegte Zeilen tragen einen Rang
 };
 const cleanOv = {
   ticker: 'NVDA', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
@@ -39,6 +40,7 @@ const cleanOv = {
   country: 'United States', region: 'North America', sector: 'Technology',
   marketCap: 1e12, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
   cohortN: 90, cohortFallback: false,
+  coverageAxes: '7/7', // 18.08.: s. cleanBoard
 };
 const cleanSv = {
   ticker: 'PAH3.DE', runwayQuarters: 9999, lamps: [],
@@ -79,19 +81,19 @@ test('board rank vertauscht (score bleibt korrekt sortiert) muss trippen', () =>
   const rows = board3([90, 80, 70]);
   const tmp = rows[0].rank; rows[0].rank = rows[1].rank; rows[1].rank = tmp; // 1<->2 getauscht
   const e = []; wfe.validateFile(mkHull(rows), 'energy', e);
-  assert.ok(e.some((x) => /rank!=index\+1/.test(x)), 'rank-Vertauschung muss trippen: ' + JSON.stringify(e));
+  assert.ok(e.some((x) => /rank!=Sollrang/.test(x)), 'rank-Vertauschung muss trippen: ' + JSON.stringify(e));
 });
 test('overview rank vertauscht muss trippen', () => {
   const rows = overview3([90, 80, 70]);
   const tmp = rows[0].rank; rows[0].rank = rows[1].rank; rows[1].rank = tmp;
   const e = []; wfe.validateFile(mkOverviewFile(rows), 'overview', e);
-  assert.ok(e.some((x) => /rank!=index\+1/.test(x)), 'overview rank-Vertauschung muss trippen: ' + JSON.stringify(e));
+  assert.ok(e.some((x) => /rank!=Sollrang/.test(x)), 'overview rank-Vertauschung muss trippen: ' + JSON.stringify(e));
 });
 test('survival rank vertauscht muss trippen', () => {
   const rows = survival3([9999, 12, 4]);
   const tmp = rows[0].rank; rows[0].rank = rows[1].rank; rows[1].rank = tmp;
   const e = []; wfe.validateFile(mkSurvivalFile(rows), 'survival', e);
-  assert.ok(e.some((x) => /rank!=index\+1/.test(x)), 'survival rank-Vertauschung muss trippen: ' + JSON.stringify(e));
+  assert.ok(e.some((x) => /rank!=Sollrang/.test(x)), 'survival rank-Vertauschung muss trippen: ' + JSON.stringify(e));
 });
 
 // --- (b) score nicht monoton: Zeilen bleiben in der (falschen) Reihenfolge, rank wird -------
@@ -101,7 +103,7 @@ test('board score-Ordnung gebrochen (rank bleibt i+1-konsistent) muss trippen', 
   const rows = board3([70, 90, 80]); // score steigt bei i=1 -> gebrochener Sort
   const e = []; wfe.validateFile(mkHull(rows), 'energy', e);
   assert.ok(e.some((x) => /score-Ordnung gebrochen/.test(x)), 'gebrochener Score-Sort muss trippen: ' + JSON.stringify(e));
-  assert.ok(!e.some((x) => /rank!=index\+1/.test(x)), 'rank selbst ist hier i+1-konsistent, darf NICHT trippen');
+  assert.ok(!e.some((x) => /rank!=Sollrang/.test(x)), 'rank selbst ist hier i+1-konsistent, darf NICHT trippen');
 });
 test('overview score-Ordnung gebrochen muss trippen', () => {
   const rows = overview3([70, 90, 80]);

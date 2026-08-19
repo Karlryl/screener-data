@@ -155,6 +155,7 @@ const basisZeile = {
   country: 'United States', region: 'North America', sector: 'Technology',
   marketCap: 5e12, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
   profitTier: 'langfristig-profitabel', ipoYear: 1999, cohortN: 90, cohortFallback: false,
+  coverageAxes: '7/7', // 18.08.: Belegbarkeits-Gate — nur belegte Zeilen tragen einen Rang
 };
 const errsOf = (row) => { const e = []; validateBoardRow(row, 'r', e); return e; };
 
@@ -186,6 +187,7 @@ test('WAECHTER: ein Zustand auf einer Zeile OHNE die Lampe fliegt auf', () => {
     overviewKind: 'gp', overviewValue: 1.1, overviewCompanion: 195.3, lamps: [],
     country: 'United States', region: 'North America', sector: 'Technology', marketCap: 5e12,
     phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth', cohortN: 90, cohortFallback: false,
+    coverageAxes: '7/7', // 18.08.: s. basisZeile
     einmalertragPrognose: 'nichtPruefbar' };
   const e = []; validateOverviewRow(mapOverviewRow(ov, 0), 'o', e);
   assert.ok(e.some((x) => /einmalertragPrognose/.test(x)), 'Uebersichts-Zeile ohne Lampe blieb unbemerkt');
