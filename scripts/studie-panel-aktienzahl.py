@@ -645,9 +645,14 @@ def hole_e2_reif(e2, panel_pfad, arbeit_pfad):
     finally:
         panel.close()
         arbeit.close()
-    _, gewaehlt = e2.firmenreihen(je_firma, e2.UMSATZ_QUELLEN, True, zaehler,
-                                 "umsatz_")
-    _, a_saetze = e2.wachstum_und_beschleunigung(gewaehlt, zaehler, "umsatz_")
+    # Seit dem 19.08. waehlt E2 die Umsatzquelle je FIRMA (zum Signalzeitpunkt
+    # laengste Serie) statt je Quartal; die Ketten werden deshalb aus den
+    # Reihen JE QUELLE gebaut, nicht aus der gewaehlten Mischreihe. Der Anker
+    # unten faengt ab, dass daraus stillschweigend eine andere Grundgesamtheit
+    # wird — er MUSS reissen, solange er auf dem alten Stand steht.
+    alle, gewaehlt = e2.firmenreihen(je_firma, e2.UMSATZ_QUELLEN, True, zaehler,
+                                    "umsatz_")
+    _, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
     letzte, schritte = e2.kalibriere(a_saetze, gewaehlt, zaehler, "umsatz_")
 
     ist = tuple((s["p"], s["feuerungen_band"], s["firmen_reif"]) for s in schritte)
