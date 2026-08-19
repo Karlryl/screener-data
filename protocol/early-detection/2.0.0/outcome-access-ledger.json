@@ -139,6 +139,68 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b",
    "eventHash": "e2bf486231669d1df24257f14a9807faaeed4cc822efb349378f17ce69be3249"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:50:45.504Z",
+   "accessedAt": "2026-08-19T17:02:45.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose (R15b, nur zaehlen): Klassen-Zerlegung der unreifen Erst-Ereignisse, hypothetische Anschlussquote als Rechnung, Auffindbarkeit je Kalenderjahr. Erklaert den E3-Befund, aendert keine Schwelle und keine Reifedefinition.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "e2bf486231669d1df24257f14a9807faaeed4cc822efb349378f17ce69be3249",
+   "eventHash": "aa02084fbf767d4a8af833b0ecdc52c4b9ca1092c4eb695988047e9103d40fc1"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:50:45.553Z",
+   "accessedAt": "2026-08-19T17:02:45.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose (R15b, nur zaehlen) auf dem Entdeckungsfenster: dieselbe Klassen-Zerlegung, zusaetzlich Gegenprobe gegen die veroeffentlichten E2-Anker (Band 2012-2016).",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "aa02084fbf767d4a8af833b0ecdc52c4b9ca1092c4eb695988047e9103d40fc1",
+   "eventHash": "878a2e0111eff8eb012639a0462963a1a6bd6e472abd9c61e15bc24574403221"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
