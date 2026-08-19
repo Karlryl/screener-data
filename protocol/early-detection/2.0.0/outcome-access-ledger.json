@@ -201,6 +201,68 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "aa02084fbf767d4a8af833b0ecdc52c4b9ca1092c4eb695988047e9103d40fc1",
    "eventHash": "878a2e0111eff8eb012639a0462963a1a6bd6e472abd9c61e15bc24574403221"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:09:31.332Z",
+   "accessedAt": "2026-08-19T17:12:31.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, Neulauf nach dem Fensterkanten-Befund: die geerbte Auffindbarkeits-Formel liefert an der Fensterkante keine Quote und heisst dort jetzt NICHT BERECHENBAR. Zaehl-Logik unveraendert, aber geaenderte Skript-Bytes - Lauf 1 bleibt in der Akte.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "878a2e0111eff8eb012639a0462963a1a6bd6e472abd9c61e15bc24574403221",
+   "eventHash": "fbe8cb64df9e62de3762ecab1b9cba70ad1d5d38f15ef2f23eb786a54483a47b"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:09:31.569Z",
+   "accessedAt": "2026-08-19T17:12:31.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, Neulauf nach dem Fensterkanten-Befund: die geerbte Auffindbarkeits-Formel liefert an der Fensterkante keine Quote und heisst dort jetzt NICHT BERECHENBAR. Zaehl-Logik unveraendert, aber geaenderte Skript-Bytes - Lauf 1 bleibt in der Akte.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "fbe8cb64df9e62de3762ecab1b9cba70ad1d5d38f15ef2f23eb786a54483a47b",
+   "eventHash": "967f61536c4af1837a6d82aa89f9820d67d46dad785d158766e10f5af038e5e5"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
