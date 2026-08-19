@@ -413,6 +413,28 @@
    "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an und braucht ihn nicht. Gezaehlt wird ausschliesslich im lebenden EDGAR-Volltextdienst.",
    "previousHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
    "eventHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb"
+  },
+  {
+   "runId": "c0-freeze1b-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T22:36:27.777994Z",
+   "accessedAt": "2026-08-19T22:44:27.668Z",
+   "fenster": [
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
+   ],
+   "allowedOutputs": [
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
+   ],
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - zweiter Regelstand. Buendel-SHA-256 1c13f5e1341508b0b632dc26057b47aa9e57686dcab23bc96c48180c73266f6d. Ersetzt die Anmeldung c0-freeze1-2026-08-19: an dem Stand war ausschliesslich das SKRIPT geaendert (Lesen von EDGARs unterer Trefferschranke), Regeltext, Register-Manifest und Vokabular tragen unveraenderte Pruefsummen.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an.",
+   "previousHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb",
+   "eventHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
