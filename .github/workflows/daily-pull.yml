@@ -1668,6 +1668,14 @@ jobs:
             echo "::error::findash-export produced $count files (expected 15) — writer failed."
             exit 1
           fi
+          # Tag 650: Vollboards (v1/full/) sind PFLICHT, eines je Branche. Fehlt eines, sieht
+          # das Board in findash aus wie eines ohne Nachruecker — stumm halb statt sichtbar rot.
+          vgot=$(ls outputs/findash-export/v1/full/*.json 2>/dev/null | wc -l)
+          echo "findash-export full/ wrote $vgot Vollboards (expected 13)"
+          if [ "$vgot" -ne 13 ]; then
+            echo "::error::findash-export full/ produced $vgot Vollboards (expected 13) — die Kohorte hinter Rang 100 fehlt."
+            exit 1
+          fi
           # 3.2 QC-Board (quality/): expected = #QC boards + overview + index. Dynamic, no
           # hardcode-drift — derive from the source quality-*.json count (0 = no QC pass this run).
           # F11: ein QC-Fehl-Lauf schreibt outputs/quality/_failed (run-screener catch) und
