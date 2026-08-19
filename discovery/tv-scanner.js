@@ -122,24 +122,28 @@ function serverFloor(ccy, rate) {
   return (ccy && Number.isFinite(rate) && rate > 0) ? Math.round(MIN_USD_PRECUT / rate) : 2000000000;
 }
 
-// EIN Markt -> Map<yahooTicker,{ticker,name,exchange,source,country}>. Fail-silent (leere Map).
-async function scanMarket(key, cfg, rates) {
+// Tag 642: die ZEILEN-BEWERTUNG eines Marktes als reine Funktion (Antwort rein, Map raus).
+// WARUM HERAUSGEZOGEN: sie sass im Rumpf von scanMarket hinter einem https-POST und war
+// damit ohne Netz nicht pruefbar — genau der Grund, aus dem serverFloor() und runPooled()
+// in dieser Datei schon herausgezogen sind. Der Groessen-Nachcut (MIN_USD_PRECUT) und sein
+// Protokoll haengen hier dran; ein Waechter muss beide anfassen koennen.
+// rows = j.data, totalCount = j.totalCount (fuer die Abschneide-Erkennung), right = die
+// wirksame Server-Schwelle in Listing-Waehrung.
+function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
   const out = new Map();
-  const rate = rates[cfg.ccy];
-  const right = serverFloor(cfg.ccy, rate);
-  let j;
-  try { j = await postScan(cfg.endpoint, right); } catch (_) { return out; }
-  if (!j || !Array.isArray(j.data)) return out;
   // audit/fix BH-060: range:[0,RANGE] was never checked against the endpoint's
   // own j.totalCount, so a market with more matches than RANGE truncated
   // silently (the mcap-desc sort means the truncated tail is the SMALLER —
   // but still potentially >=$2B — names). Stamp partial on the returned Map.
-  if (Number.isFinite(j.totalCount) && j.totalCount > j.data.length) {
+  if (Number.isFinite(totalCount) && totalCount > rows.length) {
     out.partial = true;
-    out.totalCount = j.totalCount;
+    out.totalCount = totalCount;
   }
   const seen = new Set();
-  for (const row of j.data) {
+  // Tag 642 (Ausschluss-Protokoll, Tor 1): wer hier an der Groessenschwelle stirbt, verschwand
+  // bisher spurlos — es gab weder eine Zeile je Ticker noch eine Zahl je Markt.
+  const unterSchwelle = [];
+  for (const row of rows) {
     const d = row && row.d;
     if (!Array.isArray(d)) continue;
     if (d[I.type] !== 'stock') continue;                          // ETF/Fund/Bond/Index raus
@@ -147,14 +151,39 @@ async function scanMarket(key, cfg, rates) {
     if (cfg.exch && !cfg.exch.includes(d[I.exch])) continue;      // Boersen-Routing (JP=TSE, CN=SZSE), killt zugleich NAG/FSE-Dubletten
     if (cfg.domicile && d[I.country] !== cfg.domicile) continue;  // BR/MX: auslands-domizilierte BDR/SIC raus
     const usd = toUsd(d[I.mcap], d[I.ccy], rates);                // grober USD-Vorcut; null (unbekannte ccy) -> durchlassen
-    if (usd != null && usd < MIN_USD_PRECUT) continue;
+    if (usd != null && usd < MIN_USD_PRECUT) {
+      unterSchwelle.push({ ticker: (d[I.code] || '?') + cfg.suffix, name: d[I.name] || null, mcapUsd: Math.round(usd) });
+      continue;
+    }
     const code = d[I.code];
     if (!code || seen.has(code)) continue;                        // Intra-Markt-Dedup pro Code
     seen.add(code);
     const yt = code + cfg.suffix;
     out.set(yt, { ticker: yt, name: d[I.name] || code, exchange: d[I.exch] || cfg.endpoint, source: key, country: cfg.country || cfg.endpoint });
   }
+  // Der ehrliche Teil dieses Protokolls: der SERVER hat schon nach `right` gefiltert (siehe
+  // serverFloor), also kann diese Datei die Namen UNTERHALB dieser Grenze gar nicht kennen —
+  // sie kamen nie ueber die Leitung. Darum wird die wirksame Grenze selbst mitgeschrieben
+  // (schwelleUsd + schwelleLokal), und `truncated` sagt, ob der Deckel RANGE zusaetzlich
+  // etwas abgeschnitten hat. Was hier als `unterSchwelle` steht, ist nur der Client-Nachcut.
+  out.tor = {
+    markt: key, land: cfg.country || cfg.endpoint, waehrung: cfg.ccy,
+    schwelleUsd: MIN_USD_PRECUT, schwelleLokal: right,
+    geliefert: rows.length, aufgenommen: out.size,
+    truncated: out.partial === true, totalCount: Number.isFinite(totalCount) ? totalCount : null,
+    unterSchwelle,
+  };
   return out;
+}
+
+// EIN Markt -> Map<yahooTicker,{ticker,name,exchange,source,country}>. Fail-silent (leere Map).
+async function scanMarket(key, cfg, rates) {
+  const rate = rates[cfg.ccy];
+  const right = serverFloor(cfg.ccy, rate);
+  let j;
+  try { j = await postScan(cfg.endpoint, right); } catch (_) { return new Map(); }
+  if (!j || !Array.isArray(j.data)) return new Map();
+  return verarbeiteZeilen(key, cfg, j.data, rates, j.totalCount, right);
 }
 
 // audit/fix BH-060: all ~34 markets used to fire via a single Promise.all — a
@@ -192,13 +221,16 @@ async function discoverTvScanner(opts = {}) {
   const merged = new Map();
   const summary = [];
   const partialMarkets = [];
+  const protokoll = [];   // Tag 642: je Markt EIN Tor-Eintrag (Schwelle, Ertrag, Verworfene)
   for (let i = 0; i < keys.length; i++) {
     const m = results[i];
     for (const [k, v] of m) if (!merged.has(k)) merged.set(k, v);
     const label = keys[i].replace('tv-', '');
     summary.push(`${label}:${m.size}${m.partial ? '!' : ''}`);
     if (m.partial) partialMarkets.push(label);
+    if (m.tor) protokoll.push(m.tor);
   }
+  merged.protokoll = protokoll;
   console.log(`[tv-scanner] ${merged.size} Kandidaten aus ${keys.length} Maerkten (${summary.join(' ')})`);
   if (partialMarkets.length > 0) {
     console.warn(`[tv-scanner] WARNING: truncated (rows < totalCount) in ${partialMarkets.length} market(s): ${partialMarkets.join(', ')} — some >=2B names may be missing.`);
@@ -210,4 +242,5 @@ async function discoverTvScanner(opts = {}) {
 // Foreign-Canon-Beitrag: {source-string: canon-token} fuer FOREIGN_SOURCE_CANON in refresh-universe.js.
 const TV_FOREIGN_CANON = Object.fromEntries(Object.entries(MARKETS).map(([k, c]) => [k, c.canon]));
 
-module.exports = { discoverTvScanner, scanMarket, serverFloor, runPooled, MARKETS, TV_FOREIGN_CANON };
+module.exports = { discoverTvScanner, scanMarket, verarbeiteZeilen, serverFloor, runPooled,
+  MARKETS, TV_FOREIGN_CANON };
