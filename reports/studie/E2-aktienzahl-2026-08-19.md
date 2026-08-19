@@ -135,12 +135,12 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 ## 6. Verwaessert oder unverwaessert?
 
-*Unverwaessert* zaehlt die Aktien, die es gibt. *Verwaessert* zaehlt zusaetzlich die Aktien, die es geben wird, wenn alle Optionen, Wandelanleihen und Bezugsrechte eingeloest werden. Fuer die Frage „kommt das Wachstum beim Anleger an?“ ist die verwaesserte Zahl die haertere und damit richtige.
+*Unverwaessert* zaehlt die Aktien, die es gibt. *Verwaessert* zaehlt zusaetzlich die Aktien, die es geben wird, wenn alle Optionen, Wandelanleihen und Bezugsrechte eingeloest werden. Fuer die Frage „kommt das Wachstum beim Anleger an?“ ist die verwaesserte Zahl die haertere — lehrbuchmaessig also die richtige. Die Messung dreht diese Rangfolge um; der zweite Punkt sagt, warum.
 
 - **Belegung, unverwaessert gegen verwaessert:** unverwaessert 96.757 Firmen-Quartale (48.2 %), verwaessert 89.455 (44.6 %). Die unverwaesserte Zahl ist also um 7.5 % besser belegt — ein kleiner Vorsprung. Dazu kommen 41.150 Firmen-Quartale in der gemeinsamen Kennung `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`, die Firmen benutzen, wenn beide Zahlen gleich sind — typisch bei Verlustfirmen, wo Optionen nicht eingerechnet werden duerfen. Wer diese dritte Kennung vergisst, verliert ausgerechnet die verlustschreibenden Wachstumsfirmen.
 - **Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf das es ankommt (Ereignisquartal plus vier Folgequartale bei den 487 Firmen), liefert der verwaesserte Durchschnitt 6.6 % Abdeckung, der unverwaesserte 6.0 %, alle Durchschnitts-Kennungen zusammen 11.3 %. Die Stichtagszahlen kommen im selben Fenster auf 83.6 %. Der rechnerisch sauberere Nenner ist hier also der, den es fast nie gibt.
 - **Der Grund ist Bauart, nicht Datenqualitaet:** E2 leitet den Umsatz des vierten Quartals aus dem Geschaeftsjahr minus den drei Vorquartalen ab. Bei einem *Durchschnitt* geht diese Subtraktion nicht (ein Durchschnitt ist nicht addierbar). Fuer jedes so abgeleitete Quartal existiert deshalb gar kein Durchschnitts-Nenner — und Firmen, die ohnehin nur Jahreswerte melden, haben nie einen.
-- **Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Der Unterschied zwischen beiden sind die zurueckgekauften eigenen Aktien: 'issued' ist immer groesser oder gleich 'outstanding', der Fehler geht also **in eine bekannte Richtung** (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig).
+- **Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Dass dieser Rueckfall traegt, ist nachgezaehlt und nicht geglaubt: an 117.871 Stichtagen liegen beide Kennungen vor, an 99.43 % davon ist 'ausgegeben' groesser oder gleich 'im Umlauf' — der Fehler geht also in eine bekannte Richtung (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig) — und an 77.2 % sind beide Zahlen identisch, dort kostet der Rueckfall gar nichts. Die restlichen 0.57 % (667 Stichtage) verletzen die Regel und sind damit ein eigener, gezaehlter Vorbehalt statt einer Ausnahme, die unter den Tisch faellt.
 - **Empfehlung — verwaessert als Zweitrechnung:** die verwaesserte Zahl ist die haertere Pruefung (sie zaehlt die Ansprueche mit, die dem Altaktionaer noch bevorstehen) und bleibt deshalb im Vertrag — aber als **Sensitivitaets-Rechnung auf der Teilmenge, wo sie existiert**, nicht als Hauptnenner. Innerhalb der Durchschnitts-Familie ist verwaessert der Vorzug, zusammen mit der gemeinsamen Kennung fuer die Verlustfirmen.
 - **Ausdruecklich nicht verwenden:** `EntityCommonStockSharesOutstanding`. Sie ist die am besten belegte Kennung ueberhaupt und trotzdem falsch fuer diesen Zweck — ihr Stichtag ist der Einreichungstag, nicht das Quartalsende. Wer nach Belegungsquote auswaehlt, greift genau daneben.
 
@@ -177,7 +177,7 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 ## Woran das geprueft ist
 
-- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit von Hand nachgerechneten Erwartungswerten, 10 Pruefungen: `python scripts/studie-panel-aktienzahl.py --selbsttest`
+- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit von Hand nachgerechneten Erwartungswerten, 11 Pruefungen: `python scripts/studie-panel-aktienzahl.py --selbsttest`
 - **Gegenprobe**: jede dieser Pruefungen wird einmal absichtlich kaputtgemacht — kaputtgemacht wird die *Sache*, die sie schuetzt, nicht die Pruefung selbst — und muss rot werden. Bleibt eine gruen, ist sie wirkungslos und der Lauf meldet das: `python scripts/studie-panel-aktienzahl.py --gegenprobe`
 - **Fenster-Mauer**: geoeffnet wird ausschliesslich `panel-entdeckung.sqlite`, schreibgeschuetzt. Geprueft wird der *aufgeloeste* Pfad, nicht der geschriebene — eine harmlos benannte Verzeichnis-Verknuepfung in Richtung Endtest wird abgewiesen. Der Endtest wurde nie geoeffnet, nie entschluesselt, nie gezaehlt.
 - **Plausibilitaetsanker** gegen die Vor-Etappen (unten). Ein Anker, der Abweichungen schluckt, waere keiner: eine Abweichung von einer einzigen Firma haelt den Lauf an.
@@ -196,4 +196,4 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 ---
 
-Lauf: 2026-08-19T09:57:07Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**
+Lauf: 2026-08-19T10:01:14Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**

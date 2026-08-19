@@ -518,6 +518,46 @@ def naht_je_familie(je_firma):
     return ergebnis
 
 
+def issued_gegen_outstanding(je_firma):
+    """Traegt der Rueckfall von 'im Umlauf' auf 'ausgegeben' wirklich?
+
+    Buchhalterisch gilt: ausgegebene Aktien = umlaufende + zurueckgekaufte
+    eigene. Daraus folgt 'ausgegeben >= im Umlauf', und daraus wiederum, dass
+    der Rueckfall den Fehler in eine BEKANNTE Richtung schiebt (die
+    Je-Aktie-Groesse wird zu klein, also zu vorsichtig).
+
+    Das ist eine Behauptung ueber die Buchhaltung, keine ueber diese Daten —
+    also wird sie an diesen Daten nachgezaehlt statt geglaubt. Gemessen wird
+    an jedem Stichtag, an dem BEIDE Kennungen vorliegen."""
+    paare = gleich = verletzt = 0
+    for cik, werte in je_firma.items():
+        je_stichtag = defaultdict(dict)
+        for (tag, ddate, qtrs), (_, value) in werte.items():
+            if qtrs != "0" or tag not in ("CommonStockSharesIssued",
+                                          "CommonStockSharesOutstanding"):
+                continue
+            je_stichtag[ddate][tag] = value
+        for ddate, beide in je_stichtag.items():
+            if len(beide) != 2:
+                continue
+            paare += 1
+            ausgegeben = beide["CommonStockSharesIssued"]
+            umlaufend = beide["CommonStockSharesOutstanding"]
+            if ausgegeben < umlaufend:
+                verletzt += 1
+            elif ausgegeben == umlaufend:
+                gleich += 1
+    return {
+        "stichtage_mit_beiden": paare,
+        "regel_haelt": paare - verletzt,
+        "regel_haelt_prozent": anteil(paare - verletzt, paare),
+        "identisch": gleich,
+        "identisch_prozent": anteil(gleich, paare),
+        "verletzt": verletzt,
+        "verletzt_prozent": anteil(verletzt, paare),
+    }
+
+
 # -- Stufe 4: Verwaesserung ---------------------------------------------------
 
 def verwaesserung(je_firma, tag):
@@ -1017,7 +1057,8 @@ def markdown(daten):
                   "wird, wenn alle Optionen, Wandelanleihen und Bezugsrechte "
                   "eingeloest werden. Fuer die Frage „kommt das Wachstum "
                   "beim Anleger an?“ ist die verwaesserte Zahl die "
-                  "haertere und damit richtige.")
+                  "haertere — lehrbuchmaessig also die richtige. Die Messung "
+                  "dreht diese Rangfolge um; der zweite Punkt sagt, warum.")
     zeilen.append("")
     for satz in daten["empfehlung"]:
         zeilen.append("- " + satz)
@@ -1122,6 +1163,7 @@ def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
     a = abdeckung_je_kennung(je_firma, len(firmen), len(berichts_fq))
     naht = naht_je_familie(je_firma)
     verw = dict((t, verwaesserung(je_firma, t)) for t, _, _ in KANDIDATEN)
+    rueckfall = issued_gegen_outstanding(je_firma)
 
     anker = [{"name": "Firmen im Entdeckungsfenster (E1)",
               "soll": ANKER_FIRMEN_E1, "ist": len(firmen),
@@ -1179,6 +1221,7 @@ def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
         "abdeckung": a,
         "naht": naht,
         "verwaesserung": verw,
+        "rueckfall_issued_outstanding": rueckfall,
         "e2_abdeckung": e2_abdeckung,
         "e2_herkunft": e2_herkunft,
         "anker": anker,
@@ -1271,6 +1314,7 @@ def empfehlung(daten):
     b = a["WeightedAverageNumberOfSharesOutstandingBasic"]
     k = a["WeightedAverageNumberOfShareOutstandingBasicAndDiluted"]
     o = a["CommonStockSharesOutstanding"]
+    r = daten["rueckfall_issued_outstanding"]
     saetze = []
     saetze.append(
         "**Belegung, unverwaessert gegen verwaessert:** unverwaessert "
@@ -1318,11 +1362,18 @@ def empfehlung(daten):
         "(" + zahl(o["firmenquartale"]) + " Firmen-Quartale, "
         + proz(o["stichtag_auf_quartalsende_prozent"]) + " % passende Stichtage), "
         "und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter "
-        "Herkunft je Wert**, nicht als stille Mischung. Der Unterschied "
-        "zwischen beiden sind die zurueckgekauften eigenen Aktien: 'issued' "
-        "ist immer groesser oder gleich 'outstanding', der Fehler geht also "
-        "**in eine bekannte Richtung** (die Je-Aktie-Groesse wird zu klein, "
-        "also zu vorsichtig).")
+        "Herkunft je Wert**, nicht als stille Mischung. Dass dieser Rueckfall "
+        "traegt, ist nachgezaehlt und nicht geglaubt: an "
+        + zahl(r["stichtage_mit_beiden"]) + " Stichtagen liegen beide "
+        "Kennungen vor, an " + proz(r["regel_haelt_prozent"], 2) + " % davon "
+        "ist 'ausgegeben' groesser oder gleich 'im Umlauf' — der Fehler geht "
+        "also in eine bekannte Richtung (die Je-Aktie-Groesse wird zu klein, "
+        "also zu vorsichtig) — und an " + proz(r["identisch_prozent"])
+        + " % sind beide Zahlen identisch, dort kostet der Rueckfall gar "
+        "nichts. Die restlichen " + proz(r["verletzt_prozent"], 2) + " % ("
+        + zahl(r["verletzt"]) + " Stichtage) verletzen die Regel und sind "
+        "damit ein eigener, gezaehlter Vorbehalt statt einer Ausnahme, die "
+        "unter den Tisch faellt.")
     saetze.append(
         "**Empfehlung — verwaessert als Zweitrechnung:** die verwaesserte "
         "Zahl ist die haertere Pruefung (sie zaehlt die Ansprueche mit, die dem "
@@ -1712,7 +1763,40 @@ def selbsttest(verzeichnis):
     print("  [10] Plausibilitaetsanker: exakt passend -> gruen, eine Firma "
           "daneben -> Abweichung; die Sollwerte sind die aus E1 und E2.")
 
-    print("Selbsttest gruen (10 Pruefungen).")
+    # --- Pruefung 11: traegt der Rueckfall 'ausgegeben' statt 'im Umlauf'? ---
+    # Von Hand gebaut, nicht aus dem Testpanel: vier Firmen, drei davon mit
+    # beiden Kennungen am selben Stichtag.
+    #   A: 100 ausgegeben / 90 umlaufend  -> Regel haelt, nicht identisch
+    #   B:  50 /  50                      -> Regel haelt, identisch
+    #   C:  10 /  20                      -> VERLETZT
+    #   D: nur umlaufend                  -> zaehlt gar nicht
+    ausgegeben = "CommonStockSharesIssued"
+    umlaufend = "CommonStockSharesOutstanding"
+    handgebaut = {
+        "A": {(ausgegeben, "20131231", "0"): ("t", 100.0),
+              (umlaufend, "20131231", "0"): ("t", 90.0)},
+        "B": {(ausgegeben, "20131231", "0"): ("t", 50.0),
+              (umlaufend, "20131231", "0"): ("t", 50.0)},
+        "C": {(ausgegeben, "20131231", "0"): ("t", 10.0),
+              (umlaufend, "20131231", "0"): ("t", 20.0)},
+        "D": {(umlaufend, "20131231", "0"): ("t", 77.0)},
+    }
+    r = issued_gegen_outstanding(handgebaut)
+    _behaupte(r["stichtage_mit_beiden"] == 3,
+              "Stichtage mit beiden Kennungen: %s statt 3 (Firma D hat nur eine)"
+              % r["stichtage_mit_beiden"])
+    _behaupte(r["verletzt"] == 1,
+              "Verletzungen: %s statt 1 (Firma C meldet 10 ausgegeben bei 20 "
+              "umlaufend)" % r["verletzt"])
+    _behaupte(r["identisch"] == 1,
+              "Identische Paare: %s statt 1 (nur Firma B)" % r["identisch"])
+    _behaupte(abs(r["regel_haelt_prozent"] - (200.0 / 3.0)) < 1e-9,
+              "Regel haelt: %s %% statt 66.667 (2 von 3)"
+              % r["regel_haelt_prozent"])
+    print("  [11] Rueckfall-Regel: von 3 Stichtagen mit beiden Kennungen "
+          "halten 2 (66,7 %), 1 verletzt sie, 1 ist identisch.")
+
+    print("Selbsttest gruen (11 Pruefungen).")
     return 0
 
 
@@ -1759,6 +1843,10 @@ SABOTAGEN = (
     ("10 Plausibilitaetsanker", "der Ankerwert wird um eine Firma verstellt",
      "ANKER_E2_REIF = ",
      "ANKER_E2_REIF = 486"),
+    ("11 Rueckfall-Regel",
+     "die Stichtagswerte werden an der falschen Periodenlaenge gesucht",
+     '            if qtrs != "0" or tag not in ("CommonStockSharesIssued",',
+     '            if qtrs != "1" or tag not in ("CommonStockSharesIssued",'),
 )
 
 

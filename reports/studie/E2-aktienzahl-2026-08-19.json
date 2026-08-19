@@ -245,7 +245,7 @@
   "**Belegung, unverwaessert gegen verwaessert:** unverwaessert 96.757 Firmen-Quartale (48.2 %), verwaessert 89.455 (44.6 %). Die unverwaesserte Zahl ist also um 7.5 % besser belegt — ein kleiner Vorsprung. Dazu kommen 41.150 Firmen-Quartale in der gemeinsamen Kennung `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`, die Firmen benutzen, wenn beide Zahlen gleich sind — typisch bei Verlustfirmen, wo Optionen nicht eingerechnet werden duerfen. Wer diese dritte Kennung vergisst, verliert ausgerechnet die verlustschreibenden Wachstumsfirmen.",
   "**Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf das es ankommt (Ereignisquartal plus vier Folgequartale bei den 487 Firmen), liefert der verwaesserte Durchschnitt 6.6 % Abdeckung, der unverwaesserte 6.0 %, alle Durchschnitts-Kennungen zusammen 11.3 %. Die Stichtagszahlen kommen im selben Fenster auf 83.6 %. Der rechnerisch sauberere Nenner ist hier also der, den es fast nie gibt.",
   "**Der Grund ist Bauart, nicht Datenqualitaet:** E2 leitet den Umsatz des vierten Quartals aus dem Geschaeftsjahr minus den drei Vorquartalen ab. Bei einem *Durchschnitt* geht diese Subtraktion nicht (ein Durchschnitt ist nicht addierbar). Fuer jedes so abgeleitete Quartal existiert deshalb gar kein Durchschnitts-Nenner — und Firmen, die ohnehin nur Jahreswerte melden, haben nie einen.",
-  "**Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Der Unterschied zwischen beiden sind die zurueckgekauften eigenen Aktien: 'issued' ist immer groesser oder gleich 'outstanding', der Fehler geht also **in eine bekannte Richtung** (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig).",
+  "**Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Dass dieser Rueckfall traegt, ist nachgezaehlt und nicht geglaubt: an 117.871 Stichtagen liegen beide Kennungen vor, an 99.43 % davon ist 'ausgegeben' groesser oder gleich 'im Umlauf' — der Fehler geht also in eine bekannte Richtung (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig) — und an 77.2 % sind beide Zahlen identisch, dort kostet der Rueckfall gar nichts. Die restlichen 0.57 % (667 Stichtage) verletzen die Regel und sind damit ein eigener, gezaehlter Vorbehalt statt einer Ausnahme, die unter den Tisch faellt.",
   "**Empfehlung — verwaessert als Zweitrechnung:** die verwaesserte Zahl ist die haertere Pruefung (sie zaehlt die Ansprueche mit, die dem Altaktionaer noch bevorstehen) und bleibt deshalb im Vertrag — aber als **Sensitivitaets-Rechnung auf der Teilmenge, wo sie existiert**, nicht als Hauptnenner. Innerhalb der Durchschnitts-Familie ist verwaessert der Vorzug, zusammen mit der gemeinsamen Kennung fuer die Verlustfirmen.",
   "**Ausdruecklich nicht verwenden:** `EntityCommonStockSharesOutstanding`. Sie ist die am besten belegte Kennung ueberhaupt und trotzdem falsch fuer diesen Zweck — ihr Stichtag ist der Einreichungstag, nicht das Quartalsende. Wer nach Belegungsquote auswaehlt, greift genau daneben."
  ],
@@ -456,6 +456,15 @@
   ],
   "quote": 83.5728952772074,
   "urteil": "JA, MIT AUFLAGEN — praeregistrierbar, aber die Abdeckungsquote gehoert als Pflichtangabe in jeden Report, und die fehlenden Firmen brauchen Unsicherheits-Schranken nach R11."
+ },
+ "rueckfall_issued_outstanding": {
+  "identisch": 91009,
+  "identisch_prozent": 77.21067947162577,
+  "regel_haelt": 117204,
+  "regel_haelt_prozent": 99.43412713899093,
+  "stichtage_mit_beiden": 117871,
+  "verletzt": 667,
+  "verletzt_prozent": 0.5658728610090692
  },
  "umgebung": {
   "plattform": "win32",
@@ -675,5 +684,5 @@
   "werte_pit": 877504,
   "werte_spaetere_fassung": 568123
  },
- "zeitstempel": "2026-08-19T09:57:07Z"
+ "zeitstempel": "2026-08-19T10:01:14Z"
 }
