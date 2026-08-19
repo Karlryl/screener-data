@@ -609,11 +609,18 @@ def selftest():
                    "fenster" not in [z[1] for z in conns["entdeckung"].execute(
                        "PRAGMA table_info(bericht)")])
 
-            # Fenstergrenze auf den Tag genau.
-            pruefe("accepted 2016-12-31 landet in der Entdeckung",
-                   eins("entdeckung", "SELECT COUNT(*) FROM bericht WHERE adsh='B1'") == 1)
-            pruefe("accepted 2017-01-01 landet in der Validierung",
-                   eins("validierung", "SELECT COUNT(*) FROM bericht WHERE adsh='B2'") == 1)
+            # Fenstergrenze auf den Tag genau. Die Zuordnungs-Kennung MUSS mitgeprueft
+            # werden: sonst deckt der Quartals-Rueckfall eine verschobene Grenze zu und
+            # der Waechter bleibt gruen, obwohl er falsch schneidet.
+            pruefe("accepted 2016-12-31 landet in der Entdeckung, und zwar am Datum",
+                   eins("entdeckung", "SELECT COUNT(*) FROM bericht WHERE adsh='B1'") == 1
+                   and feld("entdeckung", "SELECT zuordnung FROM bericht WHERE adsh='B1'")
+                   == "accepted"
+                   and erg["summe"]["accepted_ausserhalb"] == 0)
+            pruefe("accepted 2017-01-01 landet in der Validierung, und zwar am Datum",
+                   eins("validierung", "SELECT COUNT(*) FROM bericht WHERE adsh='B2'") == 1
+                   and feld("validierung", "SELECT zuordnung FROM bericht WHERE adsh='B2'")
+                   == "accepted")
             pruefe("und B2 liegt NICHT auch in der Entdeckung",
                    eins("entdeckung", "SELECT COUNT(*) FROM bericht WHERE adsh='B2'") == 0)
             pruefe("der Fakt zu B2 wandert mit in die Validierung",
