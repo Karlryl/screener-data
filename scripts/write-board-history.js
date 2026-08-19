@@ -477,7 +477,14 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
     ticker: row.ticker,
     track,
-    score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
+    // Skalen-Deckel (19.08.2026, s. write-findash-export.js): der Score ist als 0-100-Skala
+    // gemeint, der Wachstums-Bonus hebt strukturell bis 1,05. Gedeckelt wird NACH der
+    // Sortierung — der Rang oben ist positional (rank: i + 1) und bleibt unberuehrt.
+    // scoreUncapped haelt den echten Wert fest, WENN er ueber 100 lag: die Messreihe darf
+    // keine Information verlieren, nur weil die Anzeige eine Skala einhaelt (betrifft 2-3
+    // Zeilen; wer den Deckel je pruefen will, braucht genau diesen Wert).
+    score: row.score != null ? Math.min(100, row.score) : null,
+    scoreUncapped: (typeof row.score === 'number' && row.score > 100) ? row.score : undefined,
     runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
     scoreBase: row.scoreBase != null ? row.scoreBase : null,
     scoreShrunk: row.scoreShrunk != null ? row.scoreShrunk : null,
