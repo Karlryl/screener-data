@@ -243,7 +243,11 @@ test('C0: die Anmeldung im Zugriffs-Register liegt VOR dem ersten EDGAR-Zugriff'
   pruefeZugriffsRegister(register);
   const c0 = register.events.filter((e) => (e.typ || e.type) === ART_C0_REGELFREEZE);
   assert.ok(c0.length >= 1, 'Keine C0-Anmeldung im Zugriffs-Register');
-  const freeze1 = c0.find((e) => e.runId.includes('freeze1'));
+  // Der GUELTIGE Regelstand ist der JUENGSTE freeze1-Eintrag. Der Lauf vom 19.08.
+  // hat einen zweiten angemeldet (Skript-Lesefehler korrigiert); wer den ersten
+  // prueft, prueft einen ersetzten Stand und wird zu Unrecht rot.
+  const alleF1 = c0.filter((e) => e.runId.includes('freeze1'));
+  const freeze1 = alleF1[alleF1.length - 1];
   assert.ok(freeze1, 'Keine FREEZE-1-Anmeldung');
   assert.ok(
     Date.parse(freeze1.registeredAt) < Date.parse(freeze1.accessedAt),
