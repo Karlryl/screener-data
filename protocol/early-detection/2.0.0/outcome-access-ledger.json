@@ -391,6 +391,28 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "6fd263a869c2d0d995f776f03c4e70989364d28a505e1661463a343973e54569",
    "eventHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd"
+  },
+  {
+   "runId": "c0-freeze1-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T20:51:28.480311Z",
+   "accessedAt": "2026-08-19T21:16:22.000Z",
+   "fenster": [
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
+   ],
+   "allowedOutputs": [
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
+   ],
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen. Die Filer-Listen sind ausdruecklich erlaubt - eine spaetere Etappe leitet daraus Korb-Mitgliedschaften jaehrlich neu ab.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher oder auf Schluesselmaterial; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - Themenliste per Vorab-Regel. Eingefroren: Regeltext + Register-Manifest + Vokabular, Buendel-SHA-256 193081aa124a52c1e05e127985c8e69ee41b211514d9983dba6784bf906652ff. Die EDGAR-Zaehlung darf erst nach der Server-Bestaetigung dieses Eintrags starten.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an und braucht ihn nicht. Gezaehlt wird ausschliesslich im lebenden EDGAR-Volltextdienst.",
+   "previousHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
+   "eventHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
