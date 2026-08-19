@@ -34,9 +34,13 @@
   "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
  ],
  "gelesene_pfade": [
+  "e2-selbsttest-sxhblett/panel-entdeckung.sqlite",
+  "leer/panel-entdeckung.sqlite",
   "panel/panel-entdeckung.sqlite"
  ],
  "geschriebene_pfade": [
+  "e2-selbsttest-sxhblett/zwischen.sqlite",
+  "leer/zwischen.sqlite",
   "work/E2-zwischenstand.sqlite"
  ],
  "kette": {
@@ -159,6 +163,7 @@
    "auswertbar_band": 82611,
    "auswertbar_gesamt": 85361,
    "dichte": {
+    "auswertbare_ohne_branche": 0,
     "feuerungen_ohne_branche": 0,
     "jahr": [
      [
@@ -2136,6 +2141,7 @@
    "auswertbar_band": 63033,
    "auswertbar_gesamt": 65721,
    "dichte": {
+    "auswertbare_ohne_branche": 27,
     "feuerungen_ohne_branche": 1,
     "jahr": [
      [
@@ -3983,6 +3989,7 @@
    "anteil_an_su": 0.046750285062713795,
    "auswertbar_band": 51794,
    "dichte": {
+    "auswertbare_ohne_branche": 0,
     "feuerungen_ohne_branche": 0,
     "jahr": [
      [
@@ -4553,7 +4560,10 @@
   "bericht_ohne_cik": 0,
   "bericht_ohne_geschaeftsjahresende": 0,
   "bericht_ohne_periode": 0,
+  "berichte_gesamt": 176502,
+  "berichte_nicht_periodisch": 5892,
   "berichte_periodisch": 170610,
+  "betriebsergebnis_firma_ohne_quelle": 2833,
   "betriebsergebnis_jahrespaar_abstand_abweichend": 213,
   "betriebsergebnis_kein_vorjahrespartner": 30739,
   "betriebsergebnis_kein_vorquartal": 14126,
@@ -4563,8 +4573,10 @@
   "betriebsergebnis_nenner_null": 10,
   "betriebsergebnis_q4_abgeleitet": 18769,
   "betriebsergebnis_q4_komponente_fehlt": 12497,
+  "betriebsergebnis_q4_stichtag_unlesbar": 0,
   "betriebsergebnis_quellen_naht": 47,
   "fakt_kandidaten": 2158042,
+  "nettoergebnis_firma_ohne_quelle": 896,
   "nettoergebnis_jahrespaar_abstand_abweichend": 322,
   "nettoergebnis_kein_vorjahrespartner": 38762,
   "nettoergebnis_kein_vorquartal": 17658,
@@ -4574,21 +4586,24 @@
   "nettoergebnis_nenner_null": 183,
   "nettoergebnis_q4_abgeleitet": 18127,
   "nettoergebnis_q4_komponente_fehlt": 18893,
+  "nettoergebnis_q4_stichtag_unlesbar": 0,
   "nettoergebnis_quellen_naht": 65,
   "pit_schluessel_mehrfach": 363442,
   "pit_schluessel_wertkonflikt": 55290,
   "pit_werte": 594429,
   "roh_zeilen": 1194307,
+  "umsatz_firma_ohne_quelle": 3959,
   "umsatz_jahrespaar_abstand_abweichend": 136,
   "umsatz_kein_vorjahrespartner": 26499,
   "umsatz_kein_vorquartal": 12348,
   "umsatz_kein_vorquartal_beschleunigung": 10332,
   "umsatz_keine_schwelle": 56,
-  "umsatz_komponente_fehlt_quartal": 1438,
+  "umsatz_komponente_fehlt_quartal": 26140,
   "umsatz_nenner_null": 0,
   "umsatz_q4_abgeleitet": 12271,
   "umsatz_q4_komponente_fehlt": 15371,
   "umsatz_q4_komponente_nicht_positiv": 1795,
+  "umsatz_q4_stichtag_unlesbar": 0,
   "umsatz_quellen_naht": 2663,
   "umsatz_umsatz_nicht_positiv": 11295,
   "verworfen_coreg": 363624,
@@ -4598,5 +4613,5 @@
   "verworfen_stichtag_unlesbar": 0,
   "verworfen_wert_leer": 20422
  },
- "zeitstempel": "2026-08-19T09:07:06+00:00"
+ "zeitstempel": "2026-08-19T09:11:41+00:00"
 }

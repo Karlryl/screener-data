@@ -174,10 +174,11 @@ GRUENDE_JE_GROESSE = (
     "quellen_naht", "kein_vorjahrespartner", "kein_vorquartal",
     "kein_vorquartal_beschleunigung", "keine_schwelle", "q4_komponente_fehlt",
     "q4_abgeleitet", "komponente_fehlt_quartal", "nenner_null",
-    "jahrespaar_abstand_abweichend",
+    "jahrespaar_abstand_abweichend", "firma_ohne_quelle", "q4_stichtag_unlesbar",
 )
 GRUENDE_NUR_UMSATZ = ("umsatz_nicht_positiv", "q4_komponente_nicht_positiv")
 GRUENDE_GLOBAL = (
+    "berichte_gesamt", "berichte_nicht_periodisch",
     "berichte_periodisch", "bericht_ohne_cik", "bericht_ohne_accepted",
     "bericht_ohne_branche", "bericht_ohne_periode",
     "bericht_ohne_geschaeftsjahresende", "fakt_kandidaten", "verworfen_coreg",
@@ -359,7 +360,9 @@ def lade_berichte(conn, zaehler):
     fye_je_firma = defaultdict(set)
     for adsh, cik, sic, form, period, accepted, fye in conn.execute(
             "SELECT adsh, cik, sic, form, period, accepted, fye FROM bericht"):
+        zaehler["berichte_gesamt"] += 1
         if formstamm(form) not in PERIODISCHE_FORMEN:
+            zaehler["berichte_nicht_periodisch"] += 1
             continue
         zaehler["berichte_periodisch"] += 1
         if not cik or not str(cik).strip():
@@ -412,6 +415,15 @@ def lies_rohwerte(panel, arbeit, berichte, zaehler, fortsetzen):
     geladen (R14d). Jedes Haeppchen wird atomar geschrieben und im `lauf_stand`
     vermerkt — ein Absturz kostet hoechstens ein Haeppchen."""
     hoechste = panel.execute("SELECT MAX(rowid) FROM fakt").fetchone()[0] or 0
+    # Fail loud: eine leere oder falsche Panel-Datei wuerde sonst einen
+    # vollstaendig aussehenden Report mit lauter Nullen erzeugen — von einem
+    # echten Negativergebnis nicht zu unterscheiden.
+    if hoechste == 0 or not berichte:
+        raise BasisratenFehler(
+            "Panel traegt keine auswertbaren Daten (Faktenzeilen: " + str(hoechste)
+            + ", periodische Berichte: " + str(len(berichte)) + "). Das ist fast "
+            "immer eine falsche Datenwurzel oder eine kaputte Panel-Datei — der "
+            "Lauf haelt hier an, statt einen Report voller Nullen zu schreiben.")
     erledigt = set(r[0] for r in arbeit.execute("SELECT block FROM lauf_stand"))
     if not fortsetzen and erledigt:
         raise BasisratenFehler(
@@ -520,6 +532,15 @@ def quelle_reihe(firma_werte, tags, uom, nur_positiv, zaehler, praefix):
     Quartal NICHT BERECHENBAR und wird gezaehlt."""
     teile = [firma_werte.get((t, uom)) for t in tags]
     if any(t is None for t in teile):
+        # Summen-Quelle, bei der eine Komponente in der GANZEN Firmenhistorie
+        # fehlt. Vorher brach die Funktion hier kommentarlos ab — dann fehlte
+        # genau dieser Fall im Zaehler, waehrend der einzeln fehlende Fall
+        # gezaehlt wurde. Ungleiche Behandlung derselben Luecke (R5).
+        vorhanden = set()
+        for teil in teile:
+            if teil:
+                vorhanden |= set(d for (d, q) in teil if q == "1")
+        zaehler[praefix + "komponente_fehlt_quartal"] += len(vorhanden)
         return {}
     q1_mengen = [set(d for (d, q) in teil if q == "1") for teil in teile]
     gemeinsam_q1 = set.intersection(*q1_mengen) if q1_mengen else set()
@@ -551,6 +572,7 @@ def quelle_reihe(firma_werte, tags, uom, nur_positiv, zaehler, praefix):
             continue                      # direkt gemeldetes Q4 schlaegt Ableitung
         ziel = ordinal(d)
         if ziel is None:
+            zaehler[praefix + "q4_stichtag_unlesbar"] += 1
             continue
         gefunden = []
         for von, bis, ideal in Q4_FENSTER:
@@ -595,6 +617,9 @@ def firmenreihen(je_firma, quellen, nur_positiv, zaehler, praefix):
                 if reihe:
                     je_quelle[(rang, name, uom)] = reihe
         if not je_quelle:
+            # R5: Diese Firma faellt komplett aus der Auswertung. Ohne Zaehler
+            # saehe das im Report aus wie "gibt es nicht" statt "nicht messbar".
+            zaehler[praefix + "firma_ohne_quelle"] += 1
             continue
         alle[cik] = je_quelle
         beste = {}
@@ -962,6 +987,7 @@ def dichte(feuerungen, auswertbar, branche):
     kreuz = defaultdict(int)
     jahr_z = defaultdict(int)
     ohne_branche = 0
+    nenner_ohne_branche = 0
     for eintrag in auswertbar:
         m = monat_aus_accepted(eintrag["accepted"])
         b = branche.get(eintrag["cik"])
@@ -969,6 +995,8 @@ def dichte(feuerungen, auswertbar, branche):
             monat_n[m] += 1
         if b:
             sektor_n[b] += 1
+        else:
+            nenner_ohne_branche += 1
     for eintrag in feuerungen:
         m = monat_aus_accepted(eintrag["accepted"])
         b = branche.get(eintrag["cik"])
@@ -987,7 +1015,8 @@ def dichte(feuerungen, auswertbar, branche):
             "sektor": sorted((b, sektor_z.get(b, 0), sektor_n[b]) for b in sektor_n),
             "jahr": sorted(jahr_z.items()),
             "kreuz_monat_sektor": sorted((m, b, n) for (m, b), n in kreuz.items()),
-            "feuerungen_ohne_branche": ohne_branche}
+            "feuerungen_ohne_branche": ohne_branche,
+            "auswertbare_ohne_branche": nenner_ohne_branche}
 
 
 def scheiternskriterien(name, ergebnis, kette_anteil):
@@ -997,7 +1026,11 @@ def scheiternskriterien(name, ergebnis, kette_anteil):
         treffer.append("K1: nur " + str(ergebnis["firmen_reif"]) + " Firmen mit reifem "
                        "Erst-Ereignis (gefordert " + str(ZIEL_FIRMEN) + ")")
     sektor = ergebnis["dichte"]["sektor"]
-    gesamt = sum(z for _, z, _ in sektor) or 0
+    # Nenner ist die Zahl ALLER Feuerungen, nicht nur der branchen-zuordenbaren.
+    # Sonst behauptet der Report "X % aller Feuerungen" und rechnet gegen einen
+    # stillschweigend verkleinerten Nenner — bei einem vorab festgelegten
+    # Scheiternskriterium kann das GEGRIFFEN/nicht-gegriffen kippen.
+    gesamt = ergebnis["feuerungen_band"]
     if gesamt:
         groesster = max(sektor, key=lambda r: r[1])
         if groesster[1] / gesamt > SCHEITERN_KONZENTRATION_SEKTOR:
@@ -1214,7 +1247,10 @@ def schreibe_report(daten, md_pfad, json_pfad):
     pruefe_mauer(json_pfad)
     os.makedirs(os.path.dirname(os.path.abspath(md_pfad)), exist_ok=True)
     with open(json_pfad, "w", encoding="utf-8") as fh:
-        json.dump(daten, fh, ensure_ascii=False, indent=1, sort_keys=True, default=str)
+        # Kein `default=str`: ein Typ, der hier nicht serialisierbar ist, soll
+        # den Lauf abbrechen und nicht als str-Repraesentation in den Report
+        # rutschen, wo ihn spaeter niemand mehr als Fehler erkennt.
+        json.dump(daten, fh, ensure_ascii=False, indent=1, sort_keys=True)
     with open(md_pfad, "w", encoding="utf-8") as fh:
         fh.write(markdown(daten))
 
@@ -1460,6 +1496,20 @@ def markdown(d):
     zeile("**Firmen mit reifem Erst-Ereignis**", "firmen_reif")
     zeile("Firmen mit unreifem Erst-Ereignis", "firmen_unreif")
     a("")
+    ohne = z.get("umsatz_firma_ohne_quelle", 0)
+    mit = su["firmen_mit_reihe"]
+    a("**Wie viele Firmen tragen überhaupt eine Umsatzreihe?** " + zahl(mit)
+      + " Firmen liefern mindestens einen auswertbaren Quartalsumsatz; **"
+      + zahl(ohne) + " Firmen liefern in KEINER der vier Quellen auch nur einen "
+      "einzigen** — das sind " + prozent(ohne / (mit + ohne) if (mit + ohne) else None)
+      + " aller Firmen des Fensters. Das sind keine Datenfehler, sondern "
+      "überwiegend Firmen, die ihren Umsatz unter einer anderen Kennung melden "
+      "(Banken, Versicherer, Beteiligungsgesellschaften) oder gar keinen "
+      "ausweisen. Für die spätere Auswertung heißt das: die Grundgesamtheit "
+      "dieser Studie ist **nicht** der ganze US-Markt, sondern der Teil davon, "
+      "der einen vergleichbaren Umsatz meldet. Dieser Satz gehört in jeden "
+      "Folgereport.")
+    a("")
     a("Feuerungen in den **Rumpfjahren 2009–2011** — nur nachrichtlich, sie sind "
       "von Kalibrierung und Zielband ausgeschlossen (2009 trägt laut E1 nur 6 %, "
       "2010 nur 19 % der Firmen des Fensters): S-U **"
@@ -1620,6 +1670,14 @@ def markdown(d):
         "nettoergebnis_keine_schwelle": "Nettoergebnis (Diagnose): keine Schwelle (Diagnose hat keine)",
         "nettoergebnis_kein_vorquartal_beschleunigung": "Nettoergebnis (Diagnose): kein Vorquartal für die zweite Beschleunigung",
         "bericht_ohne_geschaeftsjahresende": "Bericht ohne Geschäftsjahresende",
+        "berichte_gesamt": "Berichte in der Panel-Datei gesamt (nachrichtlich)",
+        "berichte_nicht_periodisch": "Bericht ohne Berichtsperiode (8-K, S-1 und Verwandte) — verworfen",
+        "umsatz_firma_ohne_quelle": "Umsatz: Firma liefert in KEINER Quelle einen auswertbaren Wert",
+        "betriebsergebnis_firma_ohne_quelle": "Betriebsergebnis: Firma liefert keinen auswertbaren Wert",
+        "nettoergebnis_firma_ohne_quelle": "Nettoergebnis (Diagnose): Firma liefert keinen auswertbaren Wert",
+        "umsatz_q4_stichtag_unlesbar": "Umsatz: Jahresstichtag unlesbar (viertes Quartal nicht ableitbar)",
+        "betriebsergebnis_q4_stichtag_unlesbar": "Betriebsergebnis: Jahresstichtag unlesbar",
+        "nettoergebnis_q4_stichtag_unlesbar": "Nettoergebnis (Diagnose): Jahresstichtag unlesbar",
         "umsatz_q4_komponente_fehlt": "Umsatz: viertes Quartal nicht ableitbar (Komponente fehlt)",
         "umsatz_q4_komponente_nicht_positiv": "Umsatz: viertes Quartal abgeleitet, aber ein Vorquartal war <= 0 (nachrichtlich)",
         "umsatz_q4_abgeleitet": "Umsatz: viertes Quartal erfolgreich abgeleitet (nachrichtlich)",
@@ -1728,7 +1786,7 @@ def markdown(d):
       + ("**GEGRIFFEN**" if (k["anteil"] or 0) < SCHEITERN_KETTENANTEIL
          else "nicht gegriffen") + " |")
     sekt = su["dichte"]["sektor"]
-    ges = sum(x for _, x, _ in sekt) or 1
+    ges = su["feuerungen_band"] or 1
     top_s = max(sekt, key=lambda r: r[1]) if sekt else ("—", 0, 0)
     top_j = max(su["dichte"]["jahr"], key=lambda r: r[1]) if su["dichte"]["jahr"] else (0, 0)
     a("| K3a — über 50 % der S-U-Feuerungen in einem SIC-Bereich | "
@@ -1925,6 +1983,11 @@ def _baue_fixture(pfad):
         fakt(b, "Revenues", d, "1", rev)
         fakt(b, "SalesRevenueNet", d, "1", srn)
 
+    # -- Firma 9000: taucht in den Daten auf, liefert aber KEINEN Umsatz -----
+    for d, w in (("20120331", 5.0), ("20120630", 6.0)):
+        b = bericht("9000", "3674", "10-Q", d)
+        fakt(b, "OperatingIncomeLoss", d, "1", w)
+
     # -- Firma 8000: 53-Wochen-Fiskaljahr (371 Tage Abstand) -----------------
     for d, w in (("20120929", 100.0), ("20131005", 110.0)):
         b = bericht("8000", "2020", "10-Q", d)
@@ -1971,10 +2034,13 @@ def selbsttest():
         zaehler = defaultdict(int)
         berichte, firmen_jahr, quartale, fye = lade_berichte(panel, zaehler)
         zeilen = lies_rohwerte(panel, arbeit, berichte, zaehler, False)
-        # 39 Berichte liegen in der Fixture, genau einer davon ist ein 8-K.
-        pruefe("nur periodische Berichte zaehlen (38 von 39, das 8-K faellt raus)",
-               len(berichte) == 38 and zaehler["berichte_periodisch"] == 38,
-               (len(berichte), zaehler["berichte_periodisch"]), (38, 38))
+        # 41 Berichte liegen in der Fixture, genau einer davon ist ein 8-K.
+        pruefe("nur periodische Berichte zaehlen (40 von 41, das 8-K faellt raus)",
+               len(berichte) == 40 and zaehler["berichte_periodisch"] == 40
+               and zaehler["berichte_gesamt"] == 41
+               and zaehler["berichte_nicht_periodisch"] == 1,
+               (len(berichte), zaehler["berichte_gesamt"],
+                zaehler["berichte_nicht_periodisch"]), (40, 41, 1))
         je_firma = pit_reduktion(arbeit, zaehler)
 
         # Wiederaufnahme (R15c): zweiter Lauf darf nichts verdoppeln.
@@ -2192,6 +2258,50 @@ def selbsttest():
         pruefe("Folgequartal anderer Quelle zaehlt fuer die Reife NICHT mit",
                len(reif3) == 1 and reif3[0]["folgequartale"] == 5,
                reif3[0]["folgequartale"] if reif3 else None, 5)
+
+        print("\n[9] Haertungen aus dem Code-Review")
+        pruefe("Firma ohne jede Umsatz-Quelle wird GEZAEHLT, nicht verschluckt",
+               zaehler["umsatz_firma_ohne_quelle"] == 1
+               and "9000" not in gewaehlt,
+               zaehler["umsatz_firma_ohne_quelle"], 1)
+        # Konzentrations-Kriterium: der Nenner muss ALLE Feuerungen sein, auch
+        # die ohne Branche. Sonst kippt das Urteil an einer stillen Luecke.
+        schmal = {"firmen_reif": ZIEL_FIRMEN, "feuerungen_band": 100,
+                  "dichte": {"sektor": [("A", 30, 1), ("B", 20, 1)],
+                             "jahr": [(2013, 30), (2014, 20)]}}
+        pruefe("Konzentration rechnet gegen ALLE Feuerungen (30 von 100, nicht 30 von 50)",
+               not scheiternskriterien("S-U", schmal, None),
+               scheiternskriterien("S-U", schmal, None), [])
+        breit = dict(schmal, dichte={"sektor": [("A", 60, 1), ("B", 20, 1)],
+                                     "jahr": [(2013, 60), (2014, 20)]})
+        treffer = scheiternskriterien("S-U", breit, None)
+        pruefe("echte Konzentration faellt AUF (60 von 100 in einem Bereich)",
+               any(t.startswith("K3a") for t in treffer), treffer, "K3a")
+        leer_pfad = os.path.join(verzeichnis, "leer", FENSTER_DATEI)
+        os.makedirs(os.path.dirname(leer_pfad), exist_ok=True)
+        leer = sqlite3.connect(leer_pfad)
+        leer.execute("CREATE TABLE bericht (adsh TEXT, cik TEXT, name TEXT,"
+                     " sic TEXT, fye TEXT, form TEXT, period TEXT, accepted TEXT)")
+        leer.execute("CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT,"
+                     " coreg TEXT, ddate TEXT, qtrs TEXT, uom TEXT, value REAL,"
+                     " footnote TEXT)")
+        leer.commit()
+        leer.close()
+        leer_panel = oeffne_nur_lesend(leer_pfad)
+        leer_arbeit = oeffne_zwischenstand(
+            os.path.join(verzeichnis, "leer", "zwischen.sqlite"), True)
+        try:
+            lz = defaultdict(int)
+            lb, _, _, _ = lade_berichte(leer_panel, lz)
+            lies_rohwerte(leer_panel, leer_arbeit, lb, lz, False)
+            pruefe("leeres Panel bricht ab, statt einen Report voller Nullen zu "
+                   "schreiben", False, "kein Abbruch", "BasisratenFehler")
+        except BasisratenFehler:
+            pruefe("leeres Panel bricht ab, statt einen Report voller Nullen zu "
+                   "schreiben", True)
+        finally:
+            leer_panel.close()
+            leer_arbeit.close()
 
         panel.close()
         arbeit.close()

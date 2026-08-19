@@ -6,7 +6,11 @@ Stand 2026-08-19. Gelesen wurde **ausschließlich** das Entdeckungsfenster (2009
 
 **Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Was dieser Lauf wirklich angefasst hat (Verzeichnis und Dateiname):
 
+- gelesen: `e2-selbsttest-sxhblett/panel-entdeckung.sqlite`
+- gelesen: `leer/panel-entdeckung.sqlite`
 - gelesen: `panel/panel-entdeckung.sqlite`
+- geschrieben: `e2-selbsttest-sxhblett/zwischen.sqlite` (Arbeitsdatei für die Wiederaufnahme)
+- geschrieben: `leer/zwischen.sqlite` (Arbeitsdatei für die Wiederaufnahme)
 - geschrieben: `work/E2-zwischenstand.sqlite` (Arbeitsdatei für die Wiederaufnahme)
 
 Läuft im selben Aufruf zuerst der Selbsttest, taucht hier zusätzlich dessen Fixture-Datenbank auf — sie heißt absichtlich genauso wie das Panel und liegt in einem Temp-Verzeichnis. Am Verzeichnisnamen ist sie eindeutig zu unterscheiden.
@@ -84,6 +88,8 @@ S-UG hat **keine eigenen Parameter** — es ist die Schnittmenge von S-U und S-G
 | Firmen mit mindestens einer Feuerung | 698 | 810 | 39 |
 | **Firmen mit reifem Erst-Ereignis** | 487 | 545 | 27 |
 | Firmen mit unreifem Erst-Ereignis | 211 | 265 | 12 |
+
+**Wie viele Firmen tragen überhaupt eine Umsatzreihe?** 7.065 Firmen liefern mindestens einen auswertbaren Quartalsumsatz; **3.959 Firmen liefern in KEINER der vier Quellen auch nur einen einzigen** — das sind 35,91 % aller Firmen des Fensters. Das sind keine Datenfehler, sondern überwiegend Firmen, die ihren Umsatz unter einer anderen Kennung melden (Banken, Versicherer, Beteiligungsgesellschaften) oder gar keinen ausweisen. Für die spätere Auswertung heißt das: die Grundgesamtheit dieser Studie ist **nicht** der ganze US-Markt, sondern der Teil davon, der einen vergleichbaren Umsatz meldet. Dieser Satz gehört in jeden Folgereport.
 
 Feuerungen in den **Rumpfjahren 2009–2011** — nur nachrichtlich, sie sind von Kalibrierung und Zielband ausgeschlossen (2009 trägt laut E1 nur 6 %, 2010 nur 19 % der Firmen des Fensters): S-U **47**, S-G **30**.
 
@@ -237,7 +243,10 @@ Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.
 | Bericht ohne Firmennummer | 0 |
 | Bericht ohne Geschäftsjahresende | 0 |
 | Bericht ohne lesbaren Berichtszeitraum | 0 |
+| Berichte in der Panel-Datei gesamt (nachrichtlich) | 176.502 |
+| Bericht ohne Berichtsperiode (8-K, S-1 und Verwandte) — verworfen | 5.892 |
 | periodische Berichte gesamt (nachrichtlich) | 170.610 |
+| Betriebsergebnis: Firma liefert keinen auswertbaren Wert | 2.833 |
 | Betriebsergebnis: Jahrespaar kein volles Kalenderjahr (nachrichtlich) | 213 |
 | Betriebsergebnis: kein Vorjahresquartal | 30.739 |
 | Betriebsergebnis: kein Vorquartal | 14.126 |
@@ -247,8 +256,10 @@ Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.
 | Betriebsergebnis: symmetrischer Nenner ist null | 10 |
 | Betriebsergebnis: viertes Quartal abgeleitet (nachrichtlich) | 18.769 |
 | Betriebsergebnis: viertes Quartal nicht ableitbar | 12.497 |
+| Betriebsergebnis: Jahresstichtag unlesbar | 0 |
 | Betriebsergebnis: Quellen-Naht | 47 |
 | geprüfte Datenzeilen der Zielkennungen (nachrichtlich) | 2.158.042 |
+| Nettoergebnis (Diagnose): Firma liefert keinen auswertbaren Wert | 896 |
 | Nettoergebnis (Diagnose): Jahrespaar kein volles Kalenderjahr | 322 |
 | Nettoergebnis (Diagnose): kein Vorjahresquartal | 38.762 |
 | Nettoergebnis (Diagnose): kein Vorquartal | 17.658 |
@@ -258,21 +269,24 @@ Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.
 | Nettoergebnis (Diagnose): symmetrischer Nenner ist null | 183 |
 | Nettoergebnis (Diagnose): viertes Quartal abgeleitet | 18.127 |
 | Nettoergebnis (Diagnose): viertes Quartal nicht ableitbar | 18.893 |
+| Nettoergebnis (Diagnose): Jahresstichtag unlesbar | 0 |
 | Nettoergebnis (Diagnose): Quellen-Naht | 65 |
 | Größe steht in mehreren Berichtsfassungen (frühester gewinnt) | 363.442 |
 | Größe wurde später mit ANDEREM Wert erneut gemeldet | 55.290 |
 | Größen nach der Zeitpunkt-Bereinigung (nachrichtlich) | 594.429 |
 | Datenzeilen nach allen Filtern (nachrichtlich) | 1.194.307 |
+| Umsatz: Firma liefert in KEINER Quelle einen auswertbaren Wert | 3.959 |
 | Umsatz: Jahrespaar kein volles Kalenderjahr (nachrichtlich) | 136 |
 | Umsatz: kein Vorjahresquartal im Fenster 330–380 Tage | 26.499 |
 | Umsatz: kein Vorquartal im Fenster 80–110 Tage | 12.348 |
 | Umsatz: kein Vorquartal für die zweite Beschleunigung | 10.332 |
 | Umsatz: Trailing-Fenster trägt weniger als 200 Werte | 56 |
-| Umsatz: Summen-Quelle unvollständig (nur eine Komponente) | 1.438 |
+| Umsatz: Summen-Quelle unvollständig (nur eine Komponente) | 26.140 |
 | Umsatz: symmetrischer Nenner ist null | 0 |
 | Umsatz: viertes Quartal erfolgreich abgeleitet (nachrichtlich) | 12.271 |
 | Umsatz: viertes Quartal nicht ableitbar (Komponente fehlt) | 15.371 |
 | Umsatz: viertes Quartal abgeleitet, aber ein Vorquartal war <= 0 (nachrichtlich) | 1.795 |
+| Umsatz: Jahresstichtag unlesbar (viertes Quartal nicht ableitbar) | 0 |
 | Umsatz: Partnerquartal trägt eine andere Quelle (Quellen-Naht) | 2.663 |
 | Umsatz: Wert kleiner oder gleich null | 11.295 |
 | Datenzeile eines Mit-Registranten (nicht Konzern) — verworfen | 363.624 |
@@ -316,8 +330,8 @@ Reine Diagnose — kein Signal, keine Schwelle, keine Kalibrierung. Sie soll der
 |---|---|
 | K1 — S-U unter 300 Firmen mit reifem Erst-Ereignis | 487 → nicht gegriffen |
 | K2 — unter 50 % der Firmen mit 8-Quartals-Kette haben ein Umsatz-Wachstumsquartal | 66,94 % von 7.973 → nicht gegriffen |
-| K3a — über 50 % der S-U-Feuerungen in einem SIC-Bereich | 44,86 % (Verarbeitendes Gewerbe) → nicht gegriffen |
-| K3b — über 40 % der S-U-Feuerungen in einem Kalenderjahr | 23,29 % (2013) → nicht gegriffen |
+| K3a — über 50 % der S-U-Feuerungen in einem SIC-Bereich | 44,81 % (Verarbeitendes Gewerbe) → nicht gegriffen |
+| K3b — über 40 % der S-U-Feuerungen in einem Kalenderjahr | 23,26 % (2013) → nicht gegriffen |
 | K4 — Naht-Invariante ungleich 0 oder Belegungssprung über 5 Punkte | Naht 0, Sprung 1,75 → nicht gegriffen |
 
 S-G und S-UG dürfen **einzeln** scheitern, ohne die Signalfamilie zu kippen.
@@ -373,4 +387,4 @@ Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der Selbstte
 
 ---
 
-*Erzeugt 2026-08-19T09:07:06+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
+*Erzeugt 2026-08-19T09:11:41+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
