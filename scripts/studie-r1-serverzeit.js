@@ -197,11 +197,13 @@ function bestaetigen(argv) {
       `R1: die Anmeldung (${eintrag.registeredAt}) liegt nicht vor der Server-Bestaetigung (${serverConfirmedAt}).`,
     );
   }
-  pruefeServerzeit({
-    serverConfirmedAt,
-    ersterZugriffAm: new Date(Date.parse(serverConfirmedAt) + 1000).toISOString(),
-    accessedAt: null,
-  });
+  // Der Vergleich, der hier wirklich etwas beweist: die im Register angemeldete
+  // FRUEHESTE Zugriffszeit muss nach der Server-Bestaetigung liegen. Sonst hat der
+  // Push laenger gedauert als das Zeitfenster der Anmeldung, und der Lauf muss neu
+  // angemeldet werden. (Die erste Fassung reichte hier einen selbst konstruierten
+  // Zeitpunkt hinein und konnte deshalb per Konstruktion nie fehlschlagen —
+  // Code-Review 19.08.)
+  pruefeServerzeit({ serverConfirmedAt, ersterZugriffAm: eintrag.accessedAt });
   fs.mkdirSync(path.dirname(path.resolve(ziel)), { recursive: true });
   fs.writeFileSync(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
   process.stdout.write(`${JSON.stringify(freigabe, null, 1)}\n`);

@@ -75,6 +75,9 @@ PROTOKOLL_DIR = os.path.join(WURZEL, "protocol", "early-detection", "2.0.0")
 PRAEREG = os.path.join(PROTOKOLL_DIR, "preregistration.json")
 MANIFEST = os.path.join(PROTOKOLL_DIR, "hash-manifest.json")
 VERSIEGELUNG = os.path.join(PROTOKOLL_DIR, "endtest-versiegelung.json")
+REGISTER = os.path.join(PROTOKOLL_DIR, "outcome-access-ledger.json")
+# Muss mit lib/studie-verfassung.js::ART_ZAEHLPROBE uebereinstimmen.
+ART_ZAEHLPROBE = "count_only_probe_authorized"
 E2_SKRIPT = os.path.join(WURZEL, "scripts", "studie-basisraten.py")
 AZ_SKRIPT = os.path.join(WURZEL, "scripts", "studie-panel-aktienzahl.py")
 
@@ -109,6 +112,22 @@ PERZENTIL = 95
 # niedrig wie moeglich. Konservativ in der Richtung, die R9 verlangt.
 REIFE_QUARTALE = 4
 ZENSUR_TAGE_JE_QUARTAL = 80
+
+# Die Zaehler, die die Aktienzahl-Bibliothek setzen KANN. Namentlich aufgezaehlt,
+# nicht per Praefix durchgewunken: eine Ausgabe-Sperre, die einen ganzen Namensraum
+# ungeprueft laesst, ist keine. Wer dort einen Zaehler ergaenzt, muss ihn hier
+# nachtragen — und merkt dabei, ob er einen GRUND zaehlt und nicht einen Messwert.
+# (Code-Review 19.08., zwei Reviewer unabhaengig.)
+AKTIENZAHL_ZAEHLER = (
+    "bericht_ohne_accepted", "bericht_ohne_cik", "bericht_ohne_periode",
+    "berichte_gesamt", "berichte_nicht_periodisch", "berichte_periodisch",
+    "kandidaten_zeilen", "shares_kennungen_firmeneigen", "shares_kennungen_standard",
+    "shares_zeilen", "shares_zeilen_firmeneigen", "shares_zeilen_ohne_kennung",
+    "shares_zeilen_standard", "verworfen_coreg", "verworfen_firmeneigene_taxonomie",
+    "verworfen_kein_gueltiger_bericht", "verworfen_stichtag_unlesbar",
+    "verworfen_wert_leer", "verworfen_wert_nicht_positiv", "werte_fassungskonflikt",
+    "werte_pit", "werte_spaetere_fassung",
+)
 
 AUFFINDBARKEIT_MIN = 0.90
 AUFFINDBARKEIT_MAX_DIFFERENZ = 0.10
@@ -158,7 +177,14 @@ def pruefe_mauer(pfad, freigegeben):
     Geprueft werden BEIDE Formen: der aufgeloeste Pfad (`realpath` folgt
     Symlinks und NTFS-Junctions) faengt die Umleitung, der geschriebene faengt
     den Fall, dass das Ziel noch nicht existiert. Ein Treffer ist ein ABBRUCH,
-    kein Filter — ein Filter waere ein Versprechen."""
+    kein Filter — ein Filter waere ein Versprechen.
+
+    GRENZE, hier benannt statt versteckt (Code-Review 19.08.): `realpath` loest
+    KEINE Hardlinks auf. Ein hartverknuepfter Klon der versiegelten Datei unter
+    neutralem Namen liefe an dieser Mauer vorbei. Die eigentliche Byte-Schranke ist
+    deshalb `siegel_wache` (Groesse + SHA-256), nicht diese Namenspruefung. Und die
+    Wortsuche ist eine Teilstring-Suche: ein Ordner "entdeckungsteam" loest den
+    Abbruch mit aus. Das ist die fail-closed-Richtung und bleibt so."""
     geschrieben = os.path.abspath(pfad)
     aufgeloest = os.path.realpath(geschrieben)
     verboten = []
@@ -195,8 +221,11 @@ def oeffne_nur_lesend(pfad, freigegeben):
 
 
 def zeitstempel():
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.") \
-        + "%03dZ" % (datetime.now(timezone.utc).microsecond // 1000)
+    # EIN Aufruf, nicht zwei: zwischen zwei `now()` kann eine Sekundengrenze liegen,
+    # und dann traegt der Zeitstempel die Sekunde des einen und die Millisekunde des
+    # anderen Moments. Genau diese Funktion erzeugt `ersterZugriffAm`.
+    jetzt = datetime.now(timezone.utc)
+    return jetzt.strftime("%Y-%m-%dT%H:%M:%S.") + "%03dZ" % (jetzt.microsecond // 1000)
 
 
 def sha256_datei(pfad, block=1 << 22):
@@ -253,7 +282,8 @@ def lies_praeregistrierung(pfad=PRAEREG):
     with open(pfad, encoding="utf-8") as f:
         praereg = json.load(f)
     zp = praereg.get("zaehlprobe") or {}
-    if not zp.get("ausgabeAllowlist") or not zp.get("umschlagAllowlist"):
+    if (not zp.get("ausgabeAllowlist") or not zp.get("umschlagAllowlist")
+            or not zp.get("ampelWerte")):
         raise ProbeFehler(
             "W3-ABBRUCH: die Praeregistrierung fuehrt keine Ausgabe-Allowlist. "
             "Ohne sie ist jede Ausgabe unbegrenzt — fail-closed.")
@@ -282,7 +312,49 @@ def lies_freigabe(pfad, fenster):
         raise ProbeFehler(
             "W2-ABBRUCH: angemeldet ist Fenster '" + str(freigabe["fenster"])
             + "', gestartet wurde '" + str(fenster) + "'.")
+    pruefe_freigabe_gegen_register(freigabe)
     return freigabe
+
+
+def pruefe_freigabe_gegen_register(freigabe, register_pfad=REGISTER):
+    """Die Freigabe-Datei ist eine LOKALE Datei — sie beweist fuer sich genommen
+    nichts (Code-Review 19.08.). Also wird sie gegen das Zugriffs-Register gehalten:
+    runId, Eintragsart, Fenster, Zugriffszeit und Eintrags-Hash muessen passen.
+
+    Was das NICHT leistet: den Beweis, dass der Eintrag auf origin liegt. Den fuehrt
+    scripts/studie-r1-serverzeit.js gegen die GitHub-API. Was es leistet: eine frei
+    erfundene oder veraltete Freigabe-Datei faellt auf."""
+    if not os.path.isfile(register_pfad):
+        raise ProbeFehler("W2-ABBRUCH: Zugriffs-Register nicht gefunden: "
+                          + kurzpfad(register_pfad))
+    with open(register_pfad, encoding="utf-8") as f:
+        register = json.load(f)
+    treffer = [e for e in (register.get("events") or [])
+               if e.get("runId") == freigabe["runId"]]
+    if len(treffer) != 1:
+        raise ProbeFehler(
+            "W2-ABBRUCH: runId " + repr(freigabe["runId"]) + " steht "
+            + str(len(treffer)) + "-mal im Zugriffs-Register. Genau einmal ist "
+            "richtig — alles andere heisst, die Freigabe gehoert nicht zu diesem "
+            "Register.")
+    eintrag = treffer[0]
+    if (eintrag.get("typ") or eintrag.get("type")) != ART_ZAEHLPROBE:
+        raise ProbeFehler(
+            "W2-ABBRUCH: Eintrag " + repr(freigabe["runId"]) + " ist keine "
+            "Zaehlproben-Anmeldung (" + str(eintrag.get("typ")) + ").")
+    if eintrag.get("eventHash") != freigabe["registerEventHash"]:
+        raise ProbeFehler(
+            "W2-ABBRUCH: der Eintrags-Hash der Freigabe passt nicht zum Register — "
+            "die Freigabe-Datei gehoert zu einem anderen Registerstand.")
+    if freigabe["accessedAt"] != eintrag.get("accessedAt"):
+        raise ProbeFehler(
+            "W2-ABBRUCH: die angemeldete Zugriffszeit der Freigabe ("
+            + str(freigabe["accessedAt"]) + ") weicht vom Register ab ("
+            + str(eintrag.get("accessedAt")) + ").")
+    if (eintrag.get("fenster") or [None])[0] != freigabe["fenster"]:
+        raise ProbeFehler(
+            "W2-ABBRUCH: das Fenster der Freigabe passt nicht zum Register-Eintrag.")
+    return True
 
 
 def _parse_zeit(text, feld):
@@ -346,24 +418,21 @@ def siegel_wache(wurzel, versiegelung_pfad=VERSIEGELUNG, voll=True):
     klartext_name = siegel["klartextDatei"]
     siegel_name = siegel["siegelDatei"]
     gefunden = []
+    siegel_datei = None
+    # EIN Durchlauf fuer beide Fragen. Zwei getrennte os.walk kosteten den Baum
+    # zweimal, ohne mehr zu pruefen. Arbeits- und Worktree-Verzeichnisse sind keine
+    # Datenablage; ein Lauf ueber ein Git-Verzeichnis kostet Minuten und findet nichts.
     for ordner, unterordner, dateien in os.walk(wurzel):
-        # Arbeits- und Worktree-Verzeichnisse sind keine Datenablage; ein
-        # vollstaendiger Lauf ueber ein Git-Verzeichnis kostet Minuten und
-        # findet nichts.
         unterordner[:] = [u for u in unterordner if u not in (".git", "worktrees")]
         if klartext_name in dateien:
             gefunden.append(os.path.join(ordner, klartext_name))
+        if siegel_datei is None and siegel_name in dateien:
+            siegel_datei = os.path.join(ordner, siegel_name)
     if gefunden:
         raise ProbeFehler(
             "W4-ABBRUCH: es liegt eine KLARTEXT-Kopie des Endtest-Panels auf der "
             "Platte (" + kurzpfad(gefunden[0]) + "). Die Versiegelung ist damit "
             "wirkungslos; der Lauf haelt an, bis das geklaert ist.")
-    siegel_datei = None
-    for ordner, unterordner, dateien in os.walk(wurzel):
-        unterordner[:] = [u for u in unterordner if u not in (".git", "worktrees")]
-        if siegel_name in dateien:
-            siegel_datei = os.path.join(ordner, siegel_name)
-            break
     if siegel_datei is None:
         raise ProbeFehler(
             "W4-ABBRUCH: die Siegeldatei " + siegel_name + " ist nicht auffindbar. "
@@ -409,24 +478,15 @@ def ist_zensiert(eintrag, e2, rand_ordinal):
     tag = str(eintrag["accepted"])[:10].replace("-", "")
     o = e2.ordinal(tag)
     if o is None:
-        # R5: kein Zeitstempel heisst NICHT BERECHENBAR. Nicht-berechenbar wird
-        # NICHT als "zensiert" gebucht — das wuerde den Nenner schoenen.
-        return False
+        # R5: kein Zeitstempel heisst NICHT BERECHENBAR — und das heisst ANHALTEN,
+        # nicht "gilt als nicht zensiert". Der Pfad ist mit heutigem Code tot
+        # (studie-basisraten.py::lade_berichte bricht schon bei krummem Format ab),
+        # aber eine Funktion, die still weiterrechnet, ist nicht fail-closed.
+        raise ProbeFehler(
+            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Zeitstempel ("
+            + repr(eintrag.get("accepted")) + ") — die Zensur ist damit NICHT "
+            "BERECHENBAR und wird nicht geraten.")
     return o + REIFE_QUARTALE * ZENSUR_TAGE_JE_QUARTAL > rand_ordinal
-
-
-def erste_je_firma(eintraege):
-    """R3: eine Firma zaehlt nur mit ihrem fruehesten Fall.
-
-    Dieselbe Reduktion wie in studie-basisraten.py::erst_ereignisse — hier
-    zusaetzlich sichtbar, weil `fallzahl` genau an ihr haengt."""
-    erste = {}
-    for e in eintraege:
-        vorhanden = erste.get(e["cik"])
-        if vorhanden is None or (e["accepted"], e["ddate"]) < (vorhanden["accepted"],
-                                                              vorhanden["ddate"]):
-            erste[e["cik"]] = e
-    return list(erste.values())
 
 
 def arm_zaehlen(eintraege, gewaehlt, e2, rand_ordinal):
@@ -565,13 +625,24 @@ def pruefe_ausgabe(ausgabe, praereg, e2):
             "W3-ABBRUCH: dem Umschlag fehlen Pflichtfelder: " + ", ".join(fehlend))
 
     erlaubte_zaehler = set(e2.alle_zaehlernamen())
+    erlaubte_zaehler |= set("aktienzahl_" + n for n in AKTIENZAHL_ZAEHLER)
     for schluessel in ausgabe.get("zaehler", {}):
-        if schluessel not in erlaubte_zaehler and not schluessel.startswith("aktienzahl_"):
+        if schluessel not in erlaubte_zaehler:
             raise ProbeFehler(
                 "W3-ABBRUCH: unbekannter Zaehler '" + schluessel + "'. Die "
                 "Zaehler sind Gruende, keine Messwerte — ein unbekannter Name "
                 "koennte ein durchgereichter Wert sein.")
 
+    # Ein leerer Variantenblock haette die Pruefung bestanden — eine Ausgabe ohne
+    # Ergebnis-Kern waere durchgegangen. Erwartet werden genau die konfirmatorischen
+    # Varianten der Praeregistrierung.
+    erwartet = sorted(v["name"] for v in praereg["signalFamily"]["varianten"]
+                      if v.get("status") == "konfirmatorisch")
+    vorhanden = sorted((ausgabe.get("varianten") or {}))
+    if vorhanden != erwartet:
+        raise ProbeFehler(
+            "W3-ABBRUCH: die Ausgabe fuehrt die Varianten " + str(vorhanden)
+            + ", praeregistriert sind " + str(erwartet) + ".")
     for name, block in (ausgabe.get("varianten") or {}).items():
         fremd = sorted(set(block) - felder)
         if fremd:
@@ -602,6 +673,12 @@ def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
         raise ProbeFehler("Unbekanntes Fenster: " + str(fenster_name)
                           + " (erlaubt: " + ", ".join(sorted(FENSTER)) + ")")
     if fenster["sperrzone"]:
+        # BEWUSSTE AUSNAHME von der Reihenfolge R1 (Code-Review 19.08. hat sie zu
+        # Recht angesprochen): Fuer ein Sperrzonen-Fenster wird WEDER Manifest noch
+        # Freigabe noch Serverzeit geprueft — die Weigerung haengt an Karls Wort und
+        # darf nicht davon abhaengen, ob jemand eine Anmeldung vorlegt. Angefasst
+        # werden dabei ausschliesslich Dateinamen sowie Groesse und SHA-256 der
+        # bereits VERSCHLUESSELTEN Datei; kein Klartext, kein Schluessel.
         # Die Siegel-Wache laeuft trotzdem — sie beweist, dass das Fenster
         # unberuehrt ist. Danach ist Schluss. Es gibt in dieser Datei keinen
         # Entschluesselungs-Aufruf, und es soll auch keiner hinein.
@@ -615,6 +692,13 @@ def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
             "unberuehrt). Die Freigabe eines Endtest-Zaehllaufs ist keine "
             "Methodik-Frage, sondern eine Sperrzonen-Freigabe — und die trifft "
             "Karl, nicht dieses Skript.")
+
+    # Die Beobachtungs-Listen gehoeren DIESEM Lauf. Als Prozess-Globals sammelten sie
+    # ueber mehrere Laeufe hinweg — und `gelesenePfade` ist genau das Feld, das
+    # beweisen soll, was DIESER Lauf angefasst hat (R4). Ein Audit-Feld, das den
+    # Vorgaenger mitschleppt, ist schlimmer als keines.
+    del GEOEFFNETE_PFADE[:]
+    del GESCHRIEBENE_PFADE[:]
 
     manifest = pruefe_manifest(manifest_pfad)
     praereg = lies_praeregistrierung(praereg_pfad)
@@ -772,6 +856,19 @@ def baue_probe_fixture(pfad, signal_firmen, hintergrund=260, doppel=False,
                      aktienzahl=1000.0 + i if mit_aktien else None)
 
     conn.execute("PRAGMA synchronous=OFF")
+    try:
+        _fuelle_fixture(conn, reihe, signal_firmen, hintergrund, doppel, marker,
+                        aktien, DOPPEL_REIHE)
+    finally:
+        conn.close()
+
+
+def _fuelle_fixture(conn, reihe, signal_firmen, hintergrund, doppel, marker,
+                    aktien, doppel_reihe):
+    """Der Schreibteil, getrennt, damit die Verbindung im `finally` des Aufrufers
+    zugeht — auch wenn der Aufbau mittendrin scheitert. Sonst haelt sie unter
+    Windows die Datei fest und der naechste Fixture-Aufbau scheitert mit einer
+    PermissionError statt mit dem echten Fehler."""
     conn.execute("BEGIN")
     for n in range(hintergrund):
         reihe("9%05d" % n, mit_aktien=aktien)
@@ -780,9 +877,8 @@ def baue_probe_fixture(pfad, signal_firmen, hintergrund=260, doppel=False,
         reihe("1%05d" % n, sprung_bei=(11,), mit_marker=(marker and letzte),
               mit_aktien=aktien)
     if doppel:
-        reihe("200001", werte=DOPPEL_REIHE, mit_aktien=aktien)
+        reihe("200001", werte=doppel_reihe, mit_aktien=aktien)
     conn.execute("COMMIT")
-    conn.close()
 
 
 def _fixture_lauf(verzeichnis, e2, az, signal_firmen, doppel=False, marker=False):
@@ -854,7 +950,10 @@ def selbsttest():
             "beendetAm": "2026-08-19T12:30:00.000Z", "gelesenePfade": [],
             "geschriebenePfade": [], "ergebnisdatenBeruehrt": False, "siegelWache": {},
             "manifestGeprueft": [], "umgebung": {}, "zaehler": {},
-            "varianten": {"S-U": dict(v200["S-U"])},
+            # BEIDE konfirmatorischen Varianten: seit dem Code-Review verlangt
+            # `pruefe_ausgabe`, dass genau die praeregistrierten Varianten da sind —
+            # eine Ausgabe ohne Ergebnis-Kern ging vorher glatt durch.
+            "varianten": {"S-U": dict(v200["S-U"]), "S-G": dict(v200["S-G"])},
         }
         try:
             pruefe_ausgabe(gueltig, praereg, e2)
