@@ -58,35 +58,54 @@ function baueUniversum() {
   return u;
 }
 
-/** Messbarer Abzug eines Laufs: ungerundeter Score je Ticker + volle Kohorten-Reihenfolge. */
+/**
+ * Messbarer Abzug eines Laufs. Bewusst ALLE vier Listen, die produceRankings baut, nicht nur
+ * die volle Kohorte: overview wird eigenstaendig aufgebaut und eigenstaendig sortiert,
+ * survival sortiert sogar nach einem anderen Schluessel (Runway). Ein Reihenfolge-Fehler nur
+ * in einem dieser Pfade waere sonst unsichtbar (Review-Befund 2, 19.08.2026).
+ */
 function abzug(universe) {
   const results = scoreUniverse(structuredClone(universe), formulas, {});
   const ranked = produceRankings(results, { topN: 100 });
   const zeilen = [];
   for (const e of results.slice().sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0))) {
-    zeilen.push(['R', e.ticker, e.action, e.formulaId ?? '', e.track ?? '',
+    // reason gehoert dazu: derselbe Ticker kann in beiden Laeufen 'exclude' sein und trotzdem
+    // aus verschiedenen Gruenden (dup-issuer vs. data-suspect) — das ist eine Abweichung.
+    zeilen.push(['R', e.ticker, e.action, e.reason ?? '', e.formulaId ?? '', e.track ?? '',
+      e.cohortN ?? '', e.cohortFallback ?? '',
       e.score === null || e.score === undefined ? 'null' : e.score.toPrecision(21)].join('|'));
   }
   for (const id of Object.keys(ranked.full).sort()) {
     for (const track of ['profitable', 'unprofitable']) {
       ((ranked.full[id] || {})[track] || []).forEach((r, i) => zeilen.push(['F', id, track, i + 1, r.ticker].join('|')));
+      // die AUSGELIEFERTE, topN-gekappte Board-Liste getrennt mitfuehren — dass sie heute ein
+      // Slice derselben Sortierung ist, ist Implementierungsdetail, kein Vertrag.
+      (((ranked.branches || {})[id] || {})[track] || []).forEach((r, i) => zeilen.push(['B', id, track, i + 1, r.ticker].join('|')));
     }
   }
+  (ranked.overview || []).forEach((r, i) => zeilen.push(['O', 'overview', r.formulaId ?? '', i + 1, r.ticker].join('|')));
+  (ranked.survival || []).forEach((r, i) => zeilen.push(['S', 'survival', String(r.runwayQuarters ?? 'null'), i + 1, r.ticker].join('|')));
   return zeilen;
 }
 
-/** Abweichungen zwischen zwei Abzuegen. 0 = identisch. Zaehlt Score UND Position getrennt. */
+/**
+ * Abweichungen zwischen zwei Abzuegen. 0 = identisch. Zaehlt Score UND Position getrennt.
+ * Ein doppelt vergebener Schluessel INNERHALB eines Abzugs zaehlt selbst als Abweichung —
+ * sonst wuerde eine Map die zweite Zeile still ueberschreiben und ein Duplikat-Bug (z.B.
+ * Gross-/Kleinschreibungs-Kollision Linux/Windows) bliebe unsichtbar (Review-Befund 1).
+ */
 function vergleiche(a, b) {
   const sA = new Map(), sB = new Map(), pA = new Map(), pB = new Map();
+  let doppelt = 0;
   const fuellen = (zeilen, s, p) => {
     for (const z of zeilen) {
       const t = z.split('|');
-      if (t[0] === 'R') s.set(t[1], z);
-      else p.set(t[1] + '|' + t[2] + '|' + t[4], Number(t[3]));
+      if (t[0] === 'R') { if (s.has(t[1])) doppelt++; s.set(t[1], z); }
+      else { const k = t[0] + '|' + t[1] + '|' + t[2] + '|' + t[4]; if (p.has(k)) doppelt++; p.set(k, Number(t[3])); }
     }
   };
   fuellen(a, sA, pA); fuellen(b, sB, pB);
-  let score = 0, rang = 0, maxRang = 0;
+  let score = doppelt, rang = 0, maxRang = 0;
   for (const [k, v] of sA) if (sB.get(k) !== v) score++;
   for (const k of sB.keys()) if (!sA.has(k)) score++;
   for (const [k, v] of pA) {
@@ -95,15 +114,18 @@ function vergleiche(a, b) {
     if (w !== v) { rang++; maxRang = Math.max(maxRang, Math.abs(w - v)); }
   }
   for (const k of pB.keys()) if (!pA.has(k)) rang++;
-  return { score, rang, maxRang };
+  return { score, rang, maxRang, doppelt };
 }
 
 const universum = baueUniversum();
 const referenz = abzug(universum);
 
-test('Setup: der Abzug ist nicht leer und enthaelt geroutete Zeilen', () => {
+test('Setup: der Abzug deckt volle Kohorte, Board-Liste UND Uebersicht ab', () => {
   assert.ok(referenz.length > 40, 'Abzug zu duenn: ' + referenz.length);
-  assert.ok(referenz.some((z) => z.startsWith('F|semiconductors|profitable|')), 'keine Semiconductor-Kohorte gebaut');
+  for (const [praefix, was] of [['F|semiconductors|profitable|', 'volle Kohorte'],
+    ['B|semiconductors|profitable|', 'ausgelieferte Board-Liste'], ['O|overview|', 'Uebersicht']]) {
+    assert.ok(referenz.some((z) => z.startsWith(praefix)), was + ' fehlt im Abzug');
+  }
 });
 
 test('zweiter Lauf ueber dieselben Daten: 0 Score- und 0 Rangabweichungen', () => {
@@ -127,15 +149,15 @@ test('rotierte Eingabereihenfolge: 0 Abweichungen', () => {
 
 test('Gleichstand: die Zwillinge stehen ticker-alphabetisch, in BEIDEN Eingabereihenfolgen', () => {
   const posVon = (zeilen, ticker) => {
-    const treffer = zeilen.find((z) => z.startsWith('F|') && z.endsWith('|' + ticker));
-    assert.ok(treffer, ticker + ' steht in keiner Kohorte');
-    return Number(treffer.split('|')[3]);
+    const treffer = zeilen.filter((z) => z.startsWith('F|') && z.endsWith('|' + ticker));
+    assert.equal(treffer.length, 1, `${ticker} steht ${treffer.length}x in den vollen Kohorten (erwartet: genau 1x)`);
+    return Number(treffer[0].split('|')[3]);
   };
   const vorwaerts = referenz, rueckwaerts = abzug(universum.slice().reverse());
   const aV = posVon(vorwaerts, 'ZWILLING_A'), bV = posVon(vorwaerts, 'ZWILLING_B');
   const aR = posVon(rueckwaerts, 'ZWILLING_A'), bR = posVon(rueckwaerts, 'ZWILLING_B');
   // Der Gleichstand muss echt sein, sonst prueft der Test nichts.
-  const score = (zeilen, t) => zeilen.find((z) => z.startsWith('R|' + t + '|')).split('|')[5];
+  const score = (zeilen, t) => zeilen.find((z) => z.startsWith('R|' + t + '|')).split('|').pop();
   assert.equal(score(vorwaerts, 'ZWILLING_A'), score(vorwaerts, 'ZWILLING_B'),
     'Zwillinge haben keinen identischen Score — der Gleichstands-Fall wird nicht geprueft');
   assert.ok(aV < bV, `A muss vor B stehen (vorwaerts: A=${aV}, B=${bV})`);
@@ -143,13 +165,35 @@ test('Gleichstand: die Zwillinge stehen ticker-alphabetisch, in BEIDEN Eingabere
   assert.equal(bV, bR, `B wandert bei umgedrehter Eingabe (${bV} -> ${bR})`);
 });
 
-test('Selbstpruefung: eine ECHTE Datenaenderung wird vom Vergleicher gesehen', () => {
+test('Selbstpruefung 1: eine ECHTE Datenaenderung wird vom Vergleicher gesehen', () => {
   const kaputt = structuredClone(universum);
   const ziel = kaputt.find((s) => s.meta.ticker === 'PF10');
   ziel.timeseries.revenueQ[0].value *= 2;   // ein einziger veraenderter Quartalsumsatz
   const d = vergleiche(referenz, abzug(kaputt));
   assert.ok(d.score > 0, 'Vergleicher ist blind: veraenderte Daten -> 0 Score-Abweichungen');
   assert.ok(d.rang > 0, 'Vergleicher ist blind: veraenderte Daten -> 0 Rangabweichungen');
+});
+
+test('Selbstpruefung 2: zwei Firmen, die die Plaetze tauschen, werden in JEDER Liste gesehen', () => {
+  // Die Rangnummer steht als Feld in der Abzug-Zeile (nicht als Array-Position) — der reale
+  // Fehlerfall ist deshalb "zwei Zeilen tragen die Rangnummer der jeweils anderen".
+  for (const praefix of ['F|', 'B|', 'O|', 'S|']) {
+    const idx = referenz.map((z, i) => i).filter((i) => referenz[i].startsWith(praefix));
+    if (idx.length < 2) continue;   // Liste in diesem Fixture leer (z.B. survival) -> nichts zu tauschen
+    const kopie = referenz.slice();
+    const [i1, i2] = idx;
+    const t1 = kopie[i1].split('|'), t2 = kopie[i2].split('|');
+    const merk = t1[3]; t1[3] = t2[3]; t2[3] = merk;
+    kopie[i1] = t1.join('|'); kopie[i2] = t2.join('|');
+    const d = vergleiche(referenz, kopie);
+    assert.ok(d.rang > 0, `Vergleicher ist blind fuer getauschte Raenge in der Liste '${praefix}'`);
+  }
+});
+
+test('Selbstpruefung 3: ein doppelt vorkommender Ticker wird nicht stillschweigend geschluckt', () => {
+  const dubletten = referenz.concat([referenz.find((z) => z.startsWith('R|'))]);
+  const d = vergleiche(referenz, dubletten);
+  assert.ok(d.doppelt > 0 && d.score > 0, 'Vergleicher ueberschreibt Duplikate still statt sie zu melden');
 });
 
 console.log(`\ndeterminismus: ${pass} ok, ${fail} fail`);
