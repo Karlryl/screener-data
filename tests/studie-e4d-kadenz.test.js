@@ -241,3 +241,119 @@ test('Die ausgegebene Allowlist ist genau die, die E4d durchlaesst', () => {
       `Der Allowlist-Eintrag ${feld} klingt nach einem Messwert, nicht nach einem Zaehler`);
   }
 });
+
+// Wird nach dem Lauf angehaengt: W8 (Anker) und W10 (Siegel im Register) gegen die
+// ECHTEN Artefakte, nicht gegen abgeschriebene Zahlen.
+
+const BERICHT_PRUEFUNG = path.join(REPO, 'reports', 'studie', 'E4d-kadenz-pruefung-2026-08-19.json');
+const BERICHT_ENTDECKUNG = path.join(REPO, 'reports', 'studie', 'E4d-kadenz-entdeckung-2026-08-19.json');
+
+function ankerLauf(berichtPfad, aenderung = null) {
+  // Ruft pruefe_anker() mit dem ECHTEN Laufergebnis auf - einmal unveraendert (muss
+  // durchgehen) und einmal mit einer gekippten Zahl (muss abbrechen). Ein Anker, der
+  // eine falsche Zahl durchlaesst, ist Deko.
+  const skript = [
+    'import importlib.util, json, sys',
+    'sp = importlib.util.spec_from_file_location("d", sys.argv[1])',
+    'm = importlib.util.module_from_spec(sp); sp.loader.exec_module(m)',
+    'd = json.load(open(sys.argv[2], encoding="utf-8"))',
+    'aend = json.loads(sys.argv[4]) if sys.argv[4] else None',
+    'if aend:',
+    '    d["baender"][aend[0]]["varianten"][aend[1]][aend[2]][aend[3]] += 1',
+    'print(m.pruefe_anker(d["baender"], sys.argv[3]))',
+  ].join('\n');
+  return spawnSync(process.env.PYTHON || 'python',
+    ['-c', skript, SKRIPT, berichtPfad, JSON.parse(fs.readFileSync(berichtPfad, 'utf8')).fenster,
+      aenderung ? JSON.stringify(aenderung) : ''],
+    { encoding: 'utf8', cwd: REPO });
+}
+
+test('W8: der veroeffentlichte E3-Anker geht DURCH', () => {
+  const lauf = ankerLauf(BERICHT_PRUEFUNG);
+  assert.equal(lauf.status, 0, `${lauf.stdout}${lauf.stderr}`);
+  assert.match(lauf.stdout, /registry\/S-G\/signal/);
+});
+
+test('W8: eine um EINS verschobene Fallzahl fliegt auf - im Signal UND im Pool', () => {
+  for (const ziel of [['2017-2019', 'S-G', 'signal', 'fallzahl'],
+    ['2017-2019', 'S-U', 'kontrolle', 'firmen_mit_erst_ereignis']]) {
+    const lauf = ankerLauf(BERICHT_PRUEFUNG, ziel);
+    assert.notEqual(lauf.status, 0, `Der Anker haette bei ${ziel.join('/')} abbrechen muessen`);
+    assert.match(`${lauf.stdout}${lauf.stderr}`, /W8-ABBRUCH/);
+  }
+});
+
+test('W8: der E4a-Anker des Entdeckungsfensters geht DURCH und faellt bei Abweichung', () => {
+  const gut = ankerLauf(BERICHT_ENTDECKUNG);
+  assert.equal(gut.status, 0, `${gut.stdout}${gut.stderr}`);
+  const kaputt = ankerLauf(BERICHT_ENTDECKUNG, ['2009-2015', 'S-G', 'signal', 'fallzahl']);
+  assert.notEqual(kaputt.status, 0);
+  assert.match(`${kaputt.stdout}${kaputt.stderr}`, /W8-ABBRUCH/);
+});
+
+test('Der E3-Block trifft E3 bit-fuer-bit - Signal UND Kontrollpool', () => {
+  // Geprueft wird gegen die ausgelieferten Artefakte, nicht gegen abgeschriebene
+  // Zahlen: die alte Formel auf dem alten Kriterium MUSS exakt E3s Quote liefern,
+  // sonst misst E4d eine andere Strecke.
+  const e3 = JSON.parse(fs.readFileSync(path.join(REPO, 'reports', 'studie',
+    'E3-zaehlprobe-pruefung-2026-08-19.json'), 'utf8')).varianten;
+  const e4 = JSON.parse(fs.readFileSync(BERICHT_PRUEFUNG, 'utf8')).baender['2017-2019'].varianten;
+  for (const v of ['S-U', 'S-G']) {
+    assert.equal(e4[v].signal.auffindbarkeit_e3, e3[v].auffindbarkeit, `Signal-Quote ${v}`);
+    assert.equal(e4[v].signal.firmen_mit_erst_ereignis, e3[v].firmen_mit_erst_ereignis);
+    assert.equal(e4[v].signal.fallzahl, e3[v].fallzahl);
+    assert.equal(e4[v].kontrolle.auffindbarkeit_e3, e3[v].kontrollpool_auffindbarkeit, `Pool-Quote ${v}`);
+    assert.equal(e4[v].kontrolle.firmen_mit_erst_ereignis, e3[v].kontrollpool_firmen);
+  }
+});
+
+test('Die Klasse (c) trifft die von E4a veroeffentlichten Zahlen', () => {
+  // Die Menge des Histogramms haengt an E4as Zerlegung. Weicht sie ab, zeigt das
+  // Histogramm eine andere Menge, als der Report behauptet.
+  const e4a = JSON.parse(fs.readFileSync(path.join(REPO, 'reports', 'studie',
+    'E4a-diagnose-pruefung-2026-08-19.json'), 'utf8')).baender['2017-2019'].varianten;
+  const e4d = JSON.parse(fs.readFileSync(BERICHT_PRUEFUNG, 'utf8')).baender['2017-2019'].varianten;
+  for (const v of ['S-U', 'S-G']) {
+    for (const arm of ['signal', 'kontrolle']) {
+      assert.equal(e4d[v][arm].klasse_c_firmen, e4a[v][arm].klasse_c_zu_wenige_folgequartale,
+        `Klasse (c) ${v}/${arm} weicht von E4a ab`);
+      const summe = Object.values(e4d[v][arm].abstand_histogramm_klasse_c)
+        .reduce((a, b) => a + b, 0);
+      assert.equal(summe, e4d[v][arm].klasse_c_firmen, `Histogramm-Summe ${v}/${arm}`);
+    }
+  }
+});
+
+test('W10: eine Anmeldung OHNE den Fingerabdruck der Regel traegt keinen Lauf', () => {
+  // Der Waechter, der die Vorab-Verriegelung ueberhaupt erst beweisbar macht.
+  const skript = [
+    'import importlib.util, json, sys',
+    'sp = importlib.util.spec_from_file_location("d", sys.argv[1])',
+    'm = importlib.util.module_from_spec(sp); sp.loader.exec_module(m)',
+    'reg = json.load(open(sys.argv[2], encoding="utf-8"))',
+    'e = [x for x in reg["events"] if x["runId"] == sys.argv[3]][0]',
+    'e["begruendung"] = "ohne Fingerabdruck"',
+    'ziel = sys.argv[4]',
+    'json.dump({"events": [e]}, open(ziel, "w", encoding="utf-8"))',
+    'm.pruefe_siegel_im_register({"runId": sys.argv[3]}, sys.argv[5], ziel)',
+  ].join('\n');
+  const verzeichnis = fs.mkdtempSync(path.join(os.tmpdir(), 'e4d-w10-'));
+  const siegelSha = crypto.createHash('sha256').update(fs.readFileSync(FREEZE)).digest('hex');
+  const lauf = spawnSync(process.env.PYTHON || 'python',
+    ['-c', skript, SKRIPT, LEDGER, 'e4d-kadenz-pruefung-2026-08-19',
+      path.join(verzeichnis, 'reg.json'), siegelSha],
+    { encoding: 'utf8', cwd: REPO });
+  assert.notEqual(lauf.status, 0, 'Ohne Fingerabdruck haette der Waechter abbrechen muessen');
+  assert.match(`${lauf.stdout}${lauf.stderr}`, /W10-ABBRUCH/);
+});
+
+test('W10: die ECHTE Anmeldung traegt den Fingerabdruck - Gegenrichtung', () => {
+  const siegelSha = crypto.createHash('sha256').update(fs.readFileSync(FREEZE)).digest('hex');
+  const eintraege = REGISTER.events.filter((e) => e.runId.startsWith('e4d-kadenz-'));
+  assert.equal(eintraege.length, 2, 'Beide Fenster muessen angemeldet sein');
+  for (const e of eintraege) {
+    assert.ok(JSON.stringify(e).includes(siegelSha),
+      `Die Anmeldung ${e.runId} traegt den Siegel-Fingerabdruck nicht`);
+    assert.deepEqual([...e.allowedOutputs].sort(), [...SIEGEL.ausgabeAllowlist].sort());
+  }
+});
