@@ -19,7 +19,7 @@
 const fs = require('fs');
 const path = require('path');
 // Tag 189: F-SM-021 / F-DP-046 — atomic watchlist write.
-const { writeFileAtomic } = require('./lib/atomic-write.js');
+const { writeFileAtomic, writeJsonAtomic } = require('./lib/atomic-write.js');
 let yf;
 try {
   const YF = require('yahoo-finance2').default;
@@ -700,8 +700,20 @@ function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
   return deadCandidatesBlocked;
 }
 
-function applyForeignPrefilterOutcome(allTickers, foreignNull, result) {
-  const { kept: keptUsd, answered, renamed, unpriceable } = result;
+// Tag 642: gibt jetzt die Liste der WEGEN DER SCHWELLE geloeschten Zeilen zurueck.
+// WARUM: `allTickers.delete(eff)` war der stillste Pfad der ganzen Entdeckung — eine
+// Auslandszeile verschwand ohne Grund, ohne Marktwert, ohne Ticker-Spur; die einzige
+// Zahl war die Aggregat-Logzeile in mcap-prefilter.js. Karls Direktive "nichts
+// verschwindet" ist auf Datenebene nur haltbar, wenn jeder Ausschluss seinen Beleg
+// mitbringt. Rueckgabe statt Seiteneffekt, damit die Funktion pruefbar bleibt.
+// Review-Befund zu Tag 642 (nicht atomar): die Loeschung passierte in der Schleife, die
+// Rueckgabe erst am Ende. Wirft die Schleife in der Mitte, faengt der aeussere try/catch das
+// ab — und das Protokoll behauptet "0 Ausschluesse", obwohl schon Ticker weg sind. Deshalb
+// nimmt die Funktion das Protokoll-Array jetzt ENTGEGEN und fuellt es fortlaufend: was
+// geloescht wurde, steht bereits drin, egal wo abgebrochen wird.
+function applyForeignPrefilterOutcome(allTickers, foreignNull, result, verworfen) {
+  const { kept: keptUsd, answered, renamed, unpriceable, belowUsd, nichtAktie } = result;
+  if (!Array.isArray(verworfen)) verworfen = [];
   for (const [key, v] of foreignNull) {
     const eff = (renamed && renamed.get(key)) || key;
     if (eff !== key) {
@@ -711,8 +723,75 @@ function applyForeignPrefilterOutcome(allTickers, foreignNull, result) {
     }
     const usd = keptUsd.get(eff);
     if (Number.isFinite(usd)) v.marketCap = usd;
-    else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) allTickers.delete(eff);
+    else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) {
+      allTickers.delete(eff);
+      const gemessen = belowUsd && belowUsd.get(eff);
+      const istKeineAktie = !!(nichtAktie && nichtAktie.has(eff));
+      verworfen.push({
+        ticker: eff,
+        quelle: (v && v.source) || null,
+        land: (v && v.country) || null,
+        // null heisst hier ehrlich "unbekannt" — nicht "0 Dollar".
+        mcapUsd: Number.isFinite(gemessen) ? Math.round(gemessen) : null,
+        // Drei verschiedene Gruende, die man nicht verwechseln darf:
+        //   unter-schwelle  = Marktwert gemessen, liegt unter der Grenze (Groessen-Befund)
+        //   kein-aktien-typ = Yahoo sagt Fonds/Vorzug/Warrant — kein Groessen-Befund
+        //   ohne-marktwert  = beantwortet, aber kein brauchbarer Marktwert
+        grund: Number.isFinite(gemessen) ? 'unter-schwelle'
+          : (istKeineAktie ? 'kein-aktien-typ' : 'ohne-marktwert'),
+      });
+    }
   }
+  return verworfen;
+}
+
+// Tag 642: das Ausschluss-Protokoll der Entdeckungs-Schicht als REINE Funktion (Zahlen
+// rein, Objekt raus) — damit es ohne Netz und ohne main() pruefbar ist.
+// Zwei Tore, beide sichtbar:
+//   Tor 1 = discovery/tv-scanner.js  (Vorschnitt TV_PRECUT_USD, ~31 Maerkte)
+//   Tor 2 = discovery/mcap-prefilter.js (MCAP_PREFILTER_MIN_USD, alle Auslandsquellen)
+// Die Tore sind IN REIHE geschaltet: fuer die TV-Laender entscheidet Tor 1 zuerst, und
+// was dort faellt, sieht Tor 2 nie. Wer nur eine der beiden Schwellen senkt, aendert
+// fuer diese Laender nichts — genau darum stehen beide Schwellen in dieser Datei.
+function baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, schwellen) {
+  const tv = Array.isArray(tvProtokoll) ? tvProtokoll : [];
+  const pf = Array.isArray(prefilterVerworfen) ? prefilterVerworfen : [];
+  const jeQuelle = {};
+  for (const r of pf) {
+    const k = (r && r.quelle) || '(ohne Quelle)';
+    const e = jeQuelle[k] || (jeQuelle[k] = {
+      land: (r && r.land) || null, verworfen: 0, abAchthundertMio: 0,
+      unterSchwelle: 0, keinAktienTyp: 0, ohneMarktwert: 0 });
+    e.verworfen++;
+    if (Number.isFinite(r && r.mcapUsd) && r.mcapUsd >= 800e6) e.abAchthundertMio++;
+    const g = (r && r.grund) || 'ohne-marktwert';
+    if (g === 'unter-schwelle') e.unterSchwelle++;
+    else if (g === 'kein-aktien-typ') e.keinAktienTyp++;
+    else e.ohneMarktwert++;
+  }
+  return {
+    _doc: 'Ausschluss-Protokoll der Entdeckungs-Schicht (Tag 642). Wer wurde von welchem Tor ' +
+      'mit welchem Marktwert verworfen. NICHT die Scoring-Ausschluesse aus outputs/<board>/index.json ' +
+      '(die entstehen erst nach der Aufnahme, in src/scoring/router.js). Wird bei jedem Refresh ' +
+      'ueberschrieben. abAchthundertMio = Zeilen, die bei einer 800-Mio-Untergrenze geblieben waeren.',
+    erzeugtAm: new Date().toISOString(),
+    schwellen: schwellen || {},
+    tor1_tvScannerVorschnitt: {
+      _doc: 'Der SERVER filtert bereits nach schwelleLokal — Namen darunter kommen nie ueber die ' +
+        'Leitung und koennen hier nicht namentlich stehen. Beleg ist deshalb die wirksame Schwelle ' +
+        'je Markt; unterSchwelle traegt nur den Client-Nachcut. truncated=true heisst: der ' +
+        'Zeilendeckel TV_SCAN_RANGE hat zusaetzlich abgeschnitten (weiterer stiller Verlust).',
+      maerkte: tv,
+      summeUnterSchwelleClient: tv.reduce((n, m) => n + ((m && m.unterSchwelle && m.unterSchwelle.length) || 0), 0),
+      truncierteMaerkte: tv.filter((m) => m && m.truncated).map((m) => m.markt),
+    },
+    tor2_mcapPrefilter: {
+      _doc: 'Hier steht jede verworfene Zeile namentlich, weil ihr Marktwert gemessen vorlag.',
+      jeQuelle,
+      verworfen: pf,
+      summe: pf.length,
+    },
+  };
 }
 
 // BH-040: applyDeadRegistryAndCap() only caps the raw discovery candidate map; existing
@@ -1461,6 +1540,7 @@ async function main() {
   // einer gesunden nicht zu unterscheiden. KEINE Rot-Schwelle: ab welchem Anteil das
   // den Lauf kippen soll, ist eine Schwellen-Frage und gehoert vor den Rat.
   const degradedSources = [];
+  let tvProtokoll = [];        // Tag 642: Tor 1 (tv-scanner) — je Markt Schwelle + Ertrag
   let nonEmptySources = 0;
   let totalDiscoveryCandidates = 0;
   for (let i = 0; i < discoverySources.length; i++) {
@@ -1485,6 +1565,9 @@ async function main() {
     }
     discoveryYield[srcName] = srcMap.size;
     if (srcMap.partial) degradedSources.push(srcName);   // S4-DISC-001
+    // Tag 642: das Tor-1-Protokoll des TV-Scanners hierher durchreichen (der Adapter
+    // stempelt es auf die zurueckgegebene Map, genau wie `partial` daneben).
+    if (Array.isArray(srcMap.protokoll)) tvProtokoll = srcMap.protokoll;
     totalDiscoveryCandidates += srcMap.size;
     if (srcMap.size > 0) nonEmptySources++;
     for (const [sym, info] of srcMap) {
@@ -1626,14 +1709,45 @@ async function main() {
   // ihre USD-mcap gesetzt (-> withMcap-Zweig unten, korrekt nach Groesse einsortiert); der Rest wird
   // verworfen. Fail-safe: bei Ausfall bleibt eine Zeile null-mcap und faellt in die bestehende Slot-Logik
   // zurueck (kein Regress). Ergebnis: Universum bleibt $2B+-schlank -> KEIN Pull-Sharding noetig.
+  // Vorinitialisiert und HINEINGEREICHT (nicht als Rueckgabe eingesammelt): bricht die
+  // Zuordnung in der Mitte ab, steht trotzdem drin, was bis dahin geloescht wurde.
+  const prefilterVerworfen = [];
   try {
     const foreignNull = [...allTickers.entries()].filter(([, v]) =>
       v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
     if (foreignNull.length) {
       const prefilterResult = await prefilterByMcap(foreignNull.map(([k]) => k));
-      applyForeignPrefilterOutcome(allTickers, foreignNull, prefilterResult);
+      applyForeignPrefilterOutcome(allTickers, foreignNull, prefilterResult, prefilterVerworfen);
     }
   } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }
+
+  // Tag 642: BEIDE Tore der Entdeckungs-Schicht schreiben ihr Ausschluss-Protokoll.
+  // Bewusst NACH dem Prefilter und VOR dem Cap: hier ist die Schwellen-Entscheidung
+  // gefallen, spaetere Loeschungen (Cap, Dead-Registry, ADR-Dedup) haben andere Gruende
+  // und gehoeren nicht in dieselbe Akte. Fail-soft — ein Protokoll darf Karls Lauf nie
+  // faellen, aber sein Ausfall wird laut (::warning::), nicht still.
+  try {
+    const protokoll = baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, {
+      tor1_TV_PRECUT_USD: parseFloat(process.env.TV_PRECUT_USD || '1.5e9'),
+      tor2_MCAP_PREFILTER_MIN_USD: parseFloat(process.env.MCAP_PREFILTER_MIN_USD || '2e9'),
+      usKanaele_MIN_MCAP_DISCOVERY: MIN_MCAP_DISCOVERY,
+      // Die ABRUF-Schwelle (pull-yahoo.js) wird in einem ANDEREN Workflow-Schritt gesetzt und
+      // ist in diesem Prozess normalerweise gar nicht sichtbar. Hier den Vorgabewert 1e9
+      // hinzuschreiben waere eine Falschaussage — der Tageslauf faehrt mit 800 Mio. Also:
+      // nur melden, wenn wirklich gesetzt, sonst ehrlich null.
+      abruf_MIN_MCAP_USD: process.env.MIN_MCAP_USD ? parseFloat(process.env.MIN_MCAP_USD) : null,
+    });
+    const ziel = path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json');
+    fs.mkdirSync(path.dirname(ziel), { recursive: true });
+    writeJsonAtomic(ziel, protokoll);
+    console.log('[entdeckungs-ausschluss] Tor 1 (tv-scanner): ' + protokoll.tor1_tvScannerVorschnitt.maerkte.length +
+      ' Maerkte, Schwelle $' + (protokoll.schwellen.tor1_TV_PRECUT_USD / 1e9).toFixed(2) + 'B; ' +
+      'Tor 2 (mcap-prefilter): ' + protokoll.tor2_mcapPrefilter.summe + ' Zeilen verworfen, Schwelle $' +
+      (protokoll.schwellen.tor2_MCAP_PREFILTER_MIN_USD / 1e9).toFixed(2) + 'B -> ' + ziel);
+  } catch (e) {
+    console.warn('::warning::[entdeckungs-ausschluss] Protokoll nicht geschrieben (' + e.message +
+      ') — die Schwellen-Ausschluesse dieses Laufs sind damit unbelegt.');
+  }
 
   // MAX_UNIVERSE: mit der Vorpruefung bleibt das Universum $2B+-schlank (US ~15,7k + Ausland-$2B ~4k +
   // Wachstum); 30000 gibt reichlich Headroom. Env-tunbar. Die Foreign-First-Slot-Quote unten schuetzt
@@ -1859,6 +1973,7 @@ async function main() {
 module.exports = {
   toYahooClassShare, _looksUS, dedupKey, applyDeadRegistryAndCap,
   applyForeignPrefilterOutcome,
+  baueAusschlussProtokoll,   // Tag 642: Ausschluss-Protokoll beider Entdeckungs-Tore
   numEnv, capNewTickerAdmission, _isNonEquityQuote, EXCHANGE_SCREENER_SCHEMA_ERROR_RE,
   repariereAdrBestand,    // R1-SK-012: ADR-Drop nur gegen echte Watchlist-Zeilen, einzeln pruefbar
   kollabiereYahooDubletten, // R1-SK-010: ein yahoo_symbol = eine Zeile (sonst Board-Dublette)
