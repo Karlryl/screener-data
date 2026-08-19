@@ -1,0 +1,92 @@
+{
+ "_hinweis": "KEINE Finanzdaten — nur der Fundort je Firma. Ergebnis des EDINET-Tagesliste-Scans vom 19.08.2026.",
+ "_zweck": "Die Recherche schaetzte den Index-Aufbau auf ~2.500 Listen-Abrufe (10 Jahre x 245 Handelstage). Gemessen sind es 210: je Firma wird nur der NEUESTE Jahresbericht gebraucht, weil eine type=5-CSV fuenf Jahre traegt. Diese Datei spart dem Japan-Adapter genau diese 210 Abrufe.",
+ "_stand": "2026-08-19",
+ "_abrufweg": "https://api.edinet-fsa.go.jp/api/v2/documents/<docID>?type=5&Subscription-Key=<EDINET_KEY>  -> ZIP mit UTF-16LE-TSV",
+ "_gescannt": "2025-08-19 bis 2026-07-15, documents.json?type=2, gefiltert auf docTypeCode=120 (有価証券報告書) und secCode",
+ "_status": "VORARBEIT — der Japan-Adapter ist NICHT gebaut. Diese Datei haelt fest, was gemessen ist, damit der Bau nicht bei null anfaengt.",
+ "_geloest": {
+  "index": "Alle 11 Board-Ticker haben ihren neuesten Jahresbericht (docTypeCode=120, csvFlag=1). 210 Tagesabrufe statt der geschaetzten ~2.500 — weil eine type=5-CSV fuenf Jahre traegt und je Firma EIN Dokument reicht.",
+  "konsolidierung": "Der Konzern-/Einzelabschluss-Unterschied steht in der KONTEXT-ID (Spalte 3), NICHT in der Spalte 連結・個別 (die meldet fuer beide Bloecke その他). Konzern = Kontext OHNE Suffix _NonConsolidatedMember; Einzelabschluss = MIT. Gemessen an 7685.T: NetSalesSummaryOfBusinessResults 当期 = 100.614.584.000 (Konzern) gegen 41.094.087.000 (Einzel) — 145 % Unterschied, also weit gefaehrlicher als die 14 %, die die Recherche an Advantest gemessen hat.",
+  "relativjahr": "Kontext-ID traegt das Jahr: CurrentYearDuration / Prior1YearDuration … Prior4YearDuration (Zeitraeume) bzw. …Instant (Stichtage). Das Geschaeftsjahres-Ende steht je Firma unten in periodEnd.",
+  "standard": "IFRS-Melder tragen den Standard im Elementnamen (…IFRSSummaryOfBusinessResults, jpigp_cor:*). JGAAP-Melder nicht (NetSalesSummaryOfBusinessResults, jppfs_cor:*). In Karls 11 sind beide vertreten — Advantest-Bauart IFRS, 7685.T und 2127.T JGAAP.",
+  "format": "ZIP -> XBRL_TO_CSV/jpcrp030000-asr-*.csv, UTF-16LE, TAB-getrennt, 9 Spalten: 要素ID | 項目名 | コンテキストID | 相対年度 | 連結・個別 | 期間・時点 | ユニットID | 単位 | 値"
+ },
+ "_offen": {
+  "aktienzahl": "Fuer die beiden geprueften JGAAP-Melder (7685.T, 2127.T) liefert TotalNumberOfIssuedShares* NULL Zeilen — bei Advantest (IFRS) war das Element vorhanden. Das passende Element fuer JGAAP-Melder ist NICHT ermittelt. Japan liefert damit vorerst 7 von 8 Kennzahlen.",
+  "rohertrag_betrieb": "Rohertrag und Betriebsergebnis stehen NICHT im Fuenf-Jahres-Block, sondern nur im Rechenwerk (jppfs_cor:GrossProfit / jppfs_cor:OperatingIncome) mit je 2 Jahren. Ob die dortigen Kontexte denselben Konzern-/Einzel-Schluessel benutzen wie der Fuenf-Jahres-Block, ist NICHT geprueft — genau hier sitzt die 145-Prozent-Falle.",
+  "splits": "Die Aktienzahl ist laut Recherche NICHT split-bereinigt (Advantest 191.542.000 -> 766.141.000 = 4:1). Jede Pro-Aktie-Groesse ueber die Jahre braucht eine eigene Bereinigung.",
+  "loeschung": "Die 10-Jahres-Loeschung bei EDINET ist weiterhin unbestaetigt."
+ },
+ "firmen": {
+  "2127": {
+   "docID": "S100YGWF",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-22",
+   "csvFlag": 1
+  },
+  "2317": {
+   "docID": "S100YFPF",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-23",
+   "csvFlag": 1
+  },
+  "2737": {
+   "docID": "S100YJQ2",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-25",
+   "csvFlag": 1
+  },
+  "3923": {
+   "docID": "S100YL65",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-25",
+   "csvFlag": 1
+  },
+  "4373": {
+   "docID": "S100YARY",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-11",
+   "csvFlag": 1
+  },
+  "4768": {
+   "docID": "S100XU0X",
+   "edinetCode": "E05099",
+   "periodEnd": "2025-12-31",
+   "gefundenAm": "2026-03-26",
+   "csvFlag": 1
+  },
+  "6777": {
+   "docID": "S100YH8U",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-23",
+   "csvFlag": 1
+  },
+  "6834": {
+   "docID": "S100YB9C",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-18",
+   "csvFlag": 1
+  },
+  "7685": {
+   "docID": "S100XTBY",
+   "edinetCode": "E35116",
+   "periodEnd": "2025-12-31",
+   "gefundenAm": "2026-03-25",
+   "csvFlag": 1
+  },
+  "7806": {
+   "docID": "S100XBX1",
+   "edinetCode": "E34054",
+   "periodEnd": "2025-09-30",
+   "gefundenAm": "2025-12-19",
+   "csvFlag": 1
+  },
+  "8919": {
+   "docID": "S100YGXU",
+   "periodEnd": "2026-03-31",
+   "gefundenAm": "2026-06-22",
+   "csvFlag": 1
+  }
+ }
+}
