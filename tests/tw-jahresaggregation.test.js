@@ -114,45 +114,78 @@ test('GEGENPROBE: wird die GuV kumuliert, wirft der Waechter', () => {
 });
 
 // ── Konsolidierungskreis: EIN Begriff fuer die ganze Reihe ────────────────────────────
-// Live belegt an 5269.TW FY2025: Q1 traegt nur 'IncomeAfterTaxes' (Konzernergebnis inkl.
+// LIVE BELEGT an 5269.TW FY2025: Q1 traegt nur 'IncomeAfterTaxes' (Konzernergebnis inkl.
 // Minderheiten), Q2-Q4 tragen zusaetzlich 'EquityAttributableToOwnersOfParent' (Ergebnis der
-// Mutter). Quartalsweise Auswahl addierte beide Kreise zu 6.648.607.000 TWD statt 5.425.836.000
-// — 18,4 % zu hoch, ohne Fehler und ohne Warnung. Hier an der 8996-Fixture nachgestellt.
-function fixtureMitLuecke(jahr) {
-  // 8996 traegt in allen Quartalen beide Namen; wir nehmen Q1 des Jahres den Mutter-Namen weg.
-  return FIX.gu.filter((r) => !(r.date === `${jahr}-03-31` && r.type === 'EquityAttributableToOwnersOfParent'));
+// Mutter). Die quartalsweise Auswahl addierte beide Kreise zu 6.648.607.000 TWD statt
+// 5.425.836.000 — 18,4 % zu hoch, ohne Fehler und ohne Warnung.
+//
+// WARUM HIER EINE SYNTHETISCHE VORLAGE STATT DER 8996-FIXTURE: bei 8996 sind beide Begriffe
+// betragsgleich (keine Minderheiten, nachgemessen: 2024-06-30 traegt fuer beide 165.720.000).
+// Ein Mischen faellt dort rechnerisch gar nicht auf — ein Waechter darauf gebaut ist blind.
+// Erst als die Gegenprobe die Begriffswahl absichtlich zurueckdrehte und der Test GRUEN blieb,
+// kam das heraus. Die Vorlage unten ist darum bewusst KONSTRUIERT und als solche gekennzeichnet;
+// sie bildet die 5269-Form nach (Q1 nur der eine Begriff, beide Begriffe verschieden gross).
+const Q_TEST = ['03-31', '06-30', '09-30', '12-31'];
+
+function synthetisch() {
+  const gu = [], bs = [], cf = [];
+  // Zwei Jahre -> 6 aufeinanderfolgende Quartalspaare, also unter der Schwelle von 8, ab der
+  // der GuV-Kumulierungs-Waechter greift. Der prueft hier bewusst nicht mit.
+  for (const jahr of [2023, 2024]) {
+    Q_TEST.forEach((sfx, i) => {
+      const d = jahr + '-' + sfx;
+      gu.push({ date: d, type: 'Revenue', value: 1000 * (i + 1) });
+      gu.push({ date: d, type: 'GrossProfit', value: 400 * (i + 1) });
+      gu.push({ date: d, type: 'OperatingIncome', value: 200 * (i + 1) });
+      // Konzernergebnis inkl. Minderheiten: in ALLEN vier Quartalen vorhanden.
+      gu.push({ date: d, type: 'IncomeAfterTaxes', value: 100 * (i + 1) });
+      // Ergebnis der Mutter: im ersten Quartal von 2024 NICHT vorhanden (die 5269-Form),
+      // und durchgaengig ein anderer Betrag als das Konzernergebnis.
+      if (!(jahr === 2024 && sfx === '03-31')) {
+        gu.push({ date: d, type: 'EquityAttributableToOwnersOfParent', value: 130 * (i + 1) });
+      }
+      // Kassen-Anker: Anfangsbestand im Jahr konstant (= YTD), Endbestand wandert.
+      cf.push({ date: d, type: 'CashBalancesBeginningOfPeriod', value: jahr * 10 });
+      cf.push({ date: d, type: 'CashBalancesEndOfPeriod', value: jahr * 10 + 5 * (i + 1) });
+      cf.push({ date: d, type: 'NetCashInflowFromOperatingActivities', value: 700 * (i + 1) });
+    });
+    bs.push({ date: jahr + '-12-31', type: 'TotalAssets', value: 50000 });
+    bs.push({ date: jahr + '-12-31', type: 'EquityAttributableToOwnersOfParent', value: 30000 });
+    bs.push({ date: jahr + '-12-31', type: 'CapitalStock', value: 10000 });
+  }
+  return { gu, bs, cf };
 }
 
-test('fehlt der bevorzugte Begriff in EINEM Quartal, wird die Reihe nicht gemischt', () => {
-  const jahr = 2024;
-  const j = bauJahre(fixtureMitLuecke(jahr), FIX.bs, FIX.cf, TK);
-  const name = j._feldwahl.annualNetIncome;
-  // Der gewaehlte Name muss in ALLEN vier Quartalen des Jahres stehen …
-  const proQ = QUARTALE_TEST.map((s) => FIX.gu.filter((r) => r.date === `${jahr}-${s}` && r.type === name));
-  assert.ok(proQ.every((rows) => rows.length === 1),
-    `der gewaehlte Begriff ${name} muss in allen vier Quartalen von FY${jahr} vorliegen`);
-  // … und der Jahreswert muss GENAU die Summe dieses einen Begriffs sein.
-  const summe = proQ.reduce((s, rows) => s + rows[0].value, 0);
-  assert.equal(wert(j, 'annualNetIncome', jahr), summe);
+// Die beiden Zahlen, um die es geht (FY2024 der Vorlage):
+const KONZERN_SUMME = 100 + 200 + 300 + 400;          // 1000 — EIN Begriff, alle vier Quartale
+const GEMISCHT      = 100 + 260 + 380 + 520;          // 1260 — Q1 Konzern, Q2-Q4 Mutter
+
+test('VORAUSSETZUNG: die beiden Begriffe sind in der Vorlage verschieden gross', () => {
+  const { gu } = synthetisch();
+  const q2 = gu.filter((r) => r.date === '2024-06-30');
+  const konzern = q2.find((r) => r.type === 'IncomeAfterTaxes').value;
+  const mutter = q2.find((r) => r.type === 'EquityAttributableToOwnersOfParent').value;
+  assert.notEqual(konzern, mutter,
+    'sind beide gleich gross, kann kein Test der Welt ein Mischen bemerken (genau das Problem der 8996-Fixture)');
+  assert.notEqual(KONZERN_SUMME, GEMISCHT, 'Kontrolle: die beiden Ergebnisse muessen sich unterscheiden');
 });
 
-test('GEGENPROBE: der gemischte Wert darf NICHT herauskommen', () => {
-  const jahr = 2024;
-  const j = bauJahre(fixtureMitLuecke(jahr), FIX.bs, FIX.cf, TK);
-  // So haette die alte, quartalsweise Auswahl gerechnet: Q1 aus dem Ersatzbegriff,
-  // Q2-Q4 aus dem bevorzugten. Genau diese Zahl darf nicht mehr entstehen.
-  const namen = ['EquityAttributableToOwnersOfParent', 'IncomeAfterTaxes', 'IncomeAfterTax'];
-  const gemischt = QUARTALE_TEST.reduce((s, sfx) => {
-    const rows = fixtureMitLuecke(jahr).filter((r) => r.date === `${jahr}-${sfx}`);
-    const treffer = namen.map((n) => rows.find((r) => r.type === n)).find(Boolean);
-    return s + (treffer ? treffer.value : 0);
-  }, 0);
-  const echt = wert(j, 'annualNetIncome', jahr);
-  if (gemischt !== echt) {
-    assert.notEqual(echt, gemischt, 'die quartalsweise gemischte Summe darf nicht das Ergebnis sein');
-  }
-  // Der Begriff muss ueber ALLE Jahre derselbe sein — sonst entstuende ein Scheinsprung.
-  assert.equal(typeof j._feldwahl.annualNetIncome, 'string');
+test('fehlt der bevorzugte Begriff in EINEM Quartal, traegt EIN Begriff die ganze Reihe', () => {
+  const { gu, bs, cf } = synthetisch();
+  const j = bauJahre(gu, bs, cf, TK);
+  assert.equal(j._feldwahl.annualNetIncome, 'IncomeAfterTaxes',
+    'gewaehlt werden muss der Begriff, der die meisten VOLLSTAENDIGEN Jahre traegt');
+  assert.equal(wert(j, 'annualNetIncome', 2024), KONZERN_SUMME);
+  // und im Vorjahr, wo beide vollstaendig sind, darf NICHT auf den anderen gewechselt werden
+  assert.equal(wert(j, 'annualNetIncome', 2023), KONZERN_SUMME,
+    'derselbe Begriff ueber alle Jahre — ein Wechsel erzeugte einen Scheinsprung');
+});
+
+test('GEGENPROBE: die quartalsweise gemischte Summe darf NICHT herauskommen', () => {
+  const { gu, bs, cf } = synthetisch();
+  const j = bauJahre(gu, bs, cf, TK);
+  assert.notEqual(wert(j, 'annualNetIncome', 2024), GEMISCHT,
+    `${GEMISCHT} waere Q1 aus dem Konzern- und Q2-Q4 aus dem Mutter-Kreis — genau der 5269-Fehler`);
 });
 
 test('das angebrochene Jahr faellt raus — Index 0 ist NIE komplett leer', () => {
