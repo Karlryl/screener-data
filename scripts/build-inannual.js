@@ -134,6 +134,17 @@
  * Der Kanal wird von vorzeichen- und verhaeltnisbasierten Signalen gelesen (cycleSeriesPair,
  * roicStability) — die sind waehrungs-invariant.
  *
+ * =========================================================================================
+ *  WIEDERAUFNAHME — ein Vollbau braucht mehr als einen Lauf
+ * =========================================================================================
+ * Zweimal live gemessen: nach rund 35 Minuten Dauerabruf hoert NSE auf zu antworten (ECONNRESET
+ * auf API UND Startseite, also auch auf jede Cookie-Auffrischung). Ein Vollbau ueber 53 Namen
+ * dauert laenger. Der Adapter ist deshalb WIEDERAUFNEHMBAR gebaut: er liest den vorhandenen
+ * Bestand ein, ergaenzt ihn und schreibt IMMER, bevor er rot wird. Denselben Befehl spaeter
+ * erneut starten holt die fehlenden Namen nach. Eine Notbremse (MAX_FOLGE_AUSFAELLE) beendet
+ * den Lauf, sobald drei Namen in Folge keine Antwort bekommen — gegen einen Host, der schon
+ * Nein gesagt hat, weiterzuklopfen bringt nichts und ist unhoeflich.
+ *
  * DETERMINISMUS wie die Geschwister: Netz NUR hier (offline). Die committete
  * in-secannual.json ist die deterministische Quelle; run-screener.js liest sie ohne Netz.
  */
@@ -160,6 +171,14 @@ const NSE_PAUSE_MS = 1500;      // ueber dem Default (1200) — Gratis-Quelle oh
 // EINEN sofortigen Erneuerungsversuch aus. Ohne das ist der Adapter nur fuer kurze Laeufe
 // brauchbar und faellt in einem Nachtlauf still auf halber Strecke aus.
 const JAR_MAX_ALTER_MS = 8 * 60 * 1000;
+// NOTBREMSE. Zweimal live gemessen (Probelauf 19.08.2026, beide Male nach rund 35 Minuten):
+// NSE hoert irgendwann auf zu antworten und wirft ECONNRESET — auf die API UND auf die blanke
+// Startseite, also auch auf jeden Auffrischungsversuch. Es ist keine abgelaufene Sitzung,
+// sondern eine Drosselung. Weiterzumachen bringt dann nichts, kostet aber je Ticker ein
+// Dutzend Wiederholungen gegen einen Host, der schon Nein gesagt hat. Nach drei Namen in
+// Folge ohne Antwort wird abgebrochen — geschrieben wird trotzdem, und der naechste Lauf
+// setzt fort: `main` liest den Altbestand ein und ergaenzt ihn nur (WIEDERAUFNAHME unten).
+const MAX_FOLGE_AUSFAELLE = 3;
 
 // Ein Jahres-Kontext muss zwischen 330 und 400 Tagen spannen. 366 ist der Normalfall;
 // die Spanne laesst Schaltjahre und ein paar Tage Schlamperei zu, aber kein Rumpfjahr
@@ -823,8 +842,14 @@ async function main(opts = {}) {
   const gescheitert = [];
   const jar = neuerJar();
   await aufwaermen(jar, holen);
+  let folgeAusfaelle = 0;
+  let gedrosselt = null;
 
   for (const tk of tickers) {
+    if (folgeAusfaelle >= MAX_FOLGE_AUSFAELLE) {
+      gedrosselt = `nach ${folgeAusfaelle} Namen ohne Antwort abgebrochen (ab ${tk})`;
+      break;
+    }
     const sym = symbolVon(tk);
     const holeListen = async () => [
       await holeJson(`${BASIS}/api/integrated-filing-results?index=equities&symbol=${encodeURIComponent(sym)}&size=200`, jar, holen),
@@ -847,11 +872,14 @@ async function main(opts = {}) {
         console.warn(`${tk}: Listen-Abruf erst nach Cookie-Auffrischung erfolgreich (${ersterFehler.message})`);
       } catch (zweiterFehler) {
         gescheitert.push(`${tk}: ${zweiterFehler.message}`);
+        folgeAusfaelle += 1;
         console.warn(`${tk}: Listen-Abruf fehlgeschlagen, auch nach Cookie-Auffrischung `
           + `(${zweiterFehler.message}) -> Altbestand bleibt unveraendert`);
         continue;
       }
     }
+
+    folgeAusfaelle = 0;   // eine beantwortete Anfrage setzt die Notbremse zurueck
 
     const meldungen = [...waehleMeldungen(integrated, jahresliste).values()]
       .sort((a, b) => (a.fyEnde < b.fyEnde ? 1 : -1))       // neuestes Jahr zuerst
@@ -947,6 +975,12 @@ async function main(opts = {}) {
   writeFileAtomic(outPfad, JSON.stringify(out, null, 1));
   console.log(`geschrieben: ${outPfad} (${Object.keys(out).length} Namen)`);
   // Erst schreiben (Merge erhaelt den Altbestand), dann rot werden.
+  if (gedrosselt) {
+    throw new Error(`build-inannual abgebrochen — die Quelle antwortet nicht mehr, ${gedrosselt}. `
+      + `${Object.keys(out).length} Namen stehen in der Datei. Denselben Befehl spaeter erneut `
+      + 'laufen lassen: bereits geholte Namen bleiben erhalten, der Lauf ergaenzt nur. '
+      + `Bis dahin gescheitert: ${gescheitert.join('; ')}`);
+  }
   if (gescheitert.length) {
     throw new Error(`build-inannual unvollstaendig — ${gescheitert.join('; ')}`
       + ' (Altbestand erhalten, aber der Lauf hat NICHT vollstaendig aktualisiert)');
@@ -961,4 +995,5 @@ module.exports = {
   neuerJar, aufwaermen, main, JAR_MAX_ALTER_MS,
   IN, FELD_NAMEN, WARENEINSATZ, DAUER_FELDER, STICHTAG_FELDER, RUNDUNGSSTUFEN,
   MIN_JAHRE, MAX_JAHRE, JAHR_MIN_TAGE, JAHR_MAX_TAGE, AKTIEN_MIN, AKTIEN_MAX, KONFLIKT,
+  MAX_FOLGE_AUSFAELLE,
 };

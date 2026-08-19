@@ -585,6 +585,40 @@ testAsync('ein abgelaufener Cookie wird einmal aufgefrischt statt den Ticker zu 
   assert.equal(j['OFSS.NS'].annualRev[0].value, OFSS_KONZERN_REV);
 });
 
+testAsync('die Notbremse haelt an, wenn die Quelle drei Namen in Folge nicht antwortet', async () => {
+  // Zweimal live gemessen: NSE hoert nach rund 35 Minuten auf zu antworten — auch auf die
+  // blanke Startseite, also auch auf jede Cookie-Auffrischung. Weiterzuklopfen bringt nichts,
+  // kostet aber je Ticker ein Dutzend Wiederholungen gegen einen Host, der Nein gesagt hat.
+  let apiAufrufe = 0;
+  const totalAus = (url) => {
+    if (/^https:\/\/www\.nseindia\.com\/(?:$|companies-listing)/.test(url)) {
+      return apiAufrufe === 0 ? fakeFetch(url) : Promise.reject(new Error('read ECONNRESET'));
+    }
+    if (/\/api\//.test(url)) { apiAufrufe += 1; return Promise.reject(new Error('read ECONNRESET')); }
+    return fakeFetch(url);
+  };
+  const tmp = path.join(os.tmpdir(), `in-secannual-bremse-${process.pid}.json`);
+  const zehn = ['A.NS', 'B.NS', 'C.NS', 'D.NS', 'E.NS', 'F.NS', 'G.NS', 'H.NS', 'I.NS', 'J.NS'];
+  await assert.rejects(() => M.main({ fetchBuffer: totalAus, out: tmp, tickers: zehn }),
+    /die Quelle antwortet nicht mehr/);
+  fs.unlinkSync(tmp);
+  // GENAU drei Namen versucht, nicht zehn. Ohne die Bremse waeren es zehn.
+  assert.equal(apiAufrufe, M.MAX_FOLGE_AUSFAELLE, `${apiAufrufe} Namen versucht`);
+});
+
+testAsync('ein zweiter Lauf ergaenzt den Bestand, statt ihn zu ersetzen (Wiederaufnahme)', async () => {
+  // Ein Vollbau braucht mehr als einen Lauf. Das haelt nur, wenn der zweite Lauf den ersten
+  // nicht ueberschreibt.
+  const tmp = path.join(os.tmpdir(), `in-secannual-fortsetz-${process.pid}.json`);
+  fs.writeFileSync(tmp, JSON.stringify({ 'FRUEHER.NS': { nfy: 2024, fys: [2024] } }));
+  await M.main({ fetchBuffer: fakeFetch, out: tmp, tickers: ['OFSS.NS'] });
+  const j = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+  fs.unlinkSync(tmp);
+  assert.ok(j['FRUEHER.NS'], 'der Altbestand darf nicht verschwinden');
+  assert.equal(j['FRUEHER.NS'].nfy, 2024);
+  assert.ok(j['OFSS.NS'], 'der neue Name muss dazukommen');
+});
+
 testAsync('main() bricht laut ab, wenn der Cookie-Bootstrap nichts liefert', async () => {
   const ohneCookie = (url) => (/^https:\/\/www\.nseindia\.com\/(?:$|companies-listing)/.test(url)
     ? Promise.resolve({ code: 200, body: Buffer.from('<html/>'), headers: {} })
