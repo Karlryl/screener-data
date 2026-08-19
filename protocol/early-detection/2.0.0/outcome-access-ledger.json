@@ -83,6 +83,34 @@
    "grenze": "Das ist der EINZIGE Neulauf. Verfehlt er das Gate, endet Strang B als INCONCLUSIVE_DATA, endgueltig. Keine dritte Lesart, keine weitere Revision, kein Nachjustieren.",
    "previousHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b",
    "eventHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa"
+  },
+  {
+   "runId": "e3-zaehlprobe-pruefung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:08:50.974Z",
+   "accessedAt": "2026-08-19T16:12:50.914Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "feuerungen",
+    "auswertbare_firmen_quartale",
+    "feuerrate",
+    "firmen_mit_erst_ereignis",
+    "zensierte_erst_ereignisse",
+    "fallzahl",
+    "auffindbarkeit",
+    "fallzahl_mit_aktienzahl_nenner",
+    "kontrollpool_firmen",
+    "kontrollpool_auffindbarkeit",
+    "ampel"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, Abschnitt zaehlprobe.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa",
+   "eventHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
