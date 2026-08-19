@@ -27,7 +27,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { scoreUniverse, produceRankings } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
-const { buildExcludedList, pruefeSummen, beineGesamt } = require('../../scripts/write-excluded-list.js');
+const { buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter } = require('../../scripts/write-excluded-list.js');
+
+const os = require('node:os');
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'ausschluss-'));
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -71,6 +74,17 @@ const universe = [
   // als dup-issuer — die Zeile muss auf das Bein zeigen, das es ins Board geschafft hat.
   klon({ ticker: 'TDUP', name: 'Test Doppelnotiz Inc.', ...US }),
   klon({ ticker: 'TDUP.L', name: 'Test Doppelnotiz Inc.', country: 'United Kingdom', exchangeName: 'LSE', region: 'GB' }),
+  // ZWEI VERSCHIEDENE Firmen, deren Name sich nur in der Zeichensetzung unterscheidet, beide
+  // US-primaer gelistet: genau der Fall, fuer den score.js splitFalseIssuerMerges() gebaut hat.
+  // Sie duerfen NICHT verschmelzen — sonst zeigte die ausgeschlossene Bank auf das Board-Bein
+  // einer FREMDEN Firma.
+  klon({ ticker: 'TKOLL', name: 'Test Kollision Inc.', ...US }),
+  klon({ ticker: 'TKOLL2', name: 'Test Kollision, Inc.', sector: 'Financial Services', industry: 'Banks - Diversified', ...US }),
+  // Eine Firma mit ZWEI Beinen und ZWEI VERSCHIEDENEN Gruenden (Heimatboerse + Grey-Market-
+  // Schatten). Im Messlauf betraf das 25 von 980 Firmen — die Uebersichtszeile darf den
+  // zweiten Grund nicht verschweigen.
+  klon({ ticker: 'TMIX.SW', name: 'Test Mischgrund AG', sector: 'Communication Services', industry: 'Telecom Services', country: 'Switzerland', exchangeName: 'Swiss', region: 'CH' }),
+  klon({ ticker: 'TMIXF', name: 'Test Mischgrund AG', sector: 'Technology', industry: 'Software - Infrastructure', country: 'Switzerland', exchangeName: 'Other OTC', region: 'CH' }),
 ];
 
 const results = scoreUniverse(universe, formulas);
@@ -184,6 +198,53 @@ test('pruefeSummen: ein Grund, den nur EINE Seite kennt -> Bruch', () => {
 });
 test('pruefeSummen: fehlender Zaehler ist ein Bruch, kein stilles OK', () => {
   assert.ok(pruefeSummen({ insurer: 3 }, null).length > 0, 'ohne Zaehler darf nichts als sauber gelten');
+});
+
+// --- Zuordnung: die richtige Firma, nicht die naechstbeste --------------------------
+test('zwei verschiedene Firmen mit gleich normalisiertem Namen zeigen nicht aufeinander', () => {
+  // TKOLL (geroutet) und TKOLL2 (Bank, ausgeschlossen) tragen denselben lockeren
+  // Emittenten-Schluessel, sind aber zwei Firmen. Eine handgebaute Schluessel->Board-Karte
+  // wuerde hier "TKOLL2 steht im Board als TKOLL" behaupten — eine fremde Firma.
+  const zeile = liste.rows.find((r) => r.beine.some((b) => b.ticker === 'TKOLL2'));
+  assert.ok(zeile, 'die ausgeschlossene Kollisions-Firma fehlt in der Liste');
+  assert.equal(zeile.beine.length, 1, 'die beiden Firmen wurden faelschlich zu einer verschmolzen');
+  assert.equal(zeile.imBoardAls, null,
+    `zeigt auf ${zeile.imBoardAls} — das ist eine ANDERE Firma, nicht das Board-Bein dieser hier`);
+});
+
+test('eine Firma mit zwei verschiedenen Gruenden fuehrt beide', () => {
+  const zeile = liste.rows.find((r) => r.beine.some((b) => b.ticker === 'TMIX.SW'));
+  assert.ok(zeile, 'die Firma mit gemischten Gruenden fehlt');
+  assert.equal(zeile.beine.length, 2, 'Vorbedingung: beide Beine muessen an derselben Firma haengen');
+  const erwartet = [...new Set(zeile.beine.map((b) => b.reason))].sort();
+  assert.ok(erwartet.length > 1, 'Vorbedingung: das Fixture erzeugt gar keine gemischten Gruende');
+  assert.deepEqual(zeile.gruende, erwartet,
+    'die Uebersichtszeile verschweigt einen der Gruende: ' + JSON.stringify(zeile.gruende));
+});
+
+test('gruende deckt sich bei einbeinigen Firmen mit reason (kein zweiter, driftender Wert)', () => {
+  for (const r of liste.rows.filter((x) => x.beine.length === 1)) {
+    assert.deepEqual(r.gruende, [r.reason], `${r.ticker}: gruende und reason laufen auseinander`);
+  }
+});
+
+// --- Die Zaehler-Quelle: fehlt sie, MUSS es knallen ----------------------------------
+test('readExcludedCounter: fehlende Datei wirft, statt "keine Abweichung" zu melden', () => {
+  assert.throws(() => readExcludedCounter(path.join(TMP, 'gibt-es-nicht.json')), /fehlt\/unlesbar/);
+});
+test('readExcludedCounter: vorhandene, unlesbare Datei wirft', () => {
+  const p = path.join(TMP, 'kaputt.json'); fs.writeFileSync(p, '{"excluded":{');
+  assert.throws(() => readExcludedCounter(p), /fehlt\/unlesbar/);
+});
+test('readExcludedCounter: Datei ohne excluded-Objekt wirft', () => {
+  const p = path.join(TMP, 'ohne.json'); fs.writeFileSync(p, '{"schema":"findash-export/v1"}');
+  assert.throws(() => readExcludedCounter(p), /kein excluded-Objekt/);
+  const q = path.join(TMP, 'array.json'); fs.writeFileSync(q, '{"excluded":[]}');
+  assert.throws(() => readExcludedCounter(q), /kein excluded-Objekt/, 'ein Array ist kein Zaehler-Objekt');
+});
+test('readExcludedCounter: gueltige Datei geht durch (sonst faerbt die Wache jeden Lauf rot)', () => {
+  const p = path.join(TMP, 'gut.json'); fs.writeFileSync(p, '{"excluded":{"insurer":3}}');
+  assert.deepEqual(readExcludedCounter(p), { insurer: 3 });
 });
 
 console.log(`\nausschlussliste.test.js: ${pass} ok, ${fail} fail`);

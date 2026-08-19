@@ -32,7 +32,7 @@
  * lender-gp0, no-sector). Die drei uebrigen entstehen erst in scoreUniverse():
  * data-suspect (Qualitaets-Gate vor dem Scoren), dup-issuer (Emittenten-Dedup) und
  * no-axes (alle Roh-Achsen null). Ein Skript, das nur route() befragt, verloere
- * 2.896 der 5.792 Zeilen — die Haelfte der Liste, still. Deshalb der volle Pass.
+ * 2.796 der 5.792 Zeilen — die Haelfte der Liste, still. Deshalb der volle Pass.
  *
  * DIE SUMMEN-WACHE IST DER PRODUKT-KERN
  * -------------------------------------
@@ -55,7 +55,7 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { loadUniverse } = require('../src/scoring/run-screener.js');
 const {
-  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator, tickerOf,
+  scoreUniverse, issuerKeyLoose, issuerDedupGroups, issuerDedupComparator,
 } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 
@@ -94,53 +94,67 @@ function nachWachstum(a, b) {
   return String(a.ticker) < String(b.ticker) ? -1 : (String(a.ticker) > String(b.ticker) ? 1 : 0);
 }
 
+// Dieselbe Bedingung, unter der produceRankings eine Zeile wegzaehlt (score.js:1414).
+const istRaus = (e) => e.action === 'exclude' || e.action === 'unrouted';
+
 /**
  * results (aus scoreUniverse) + universe -> { rows, legs, byReason }.
  * Reine Funktion, kein I/O — der Waechter fuettert sie mit Fixtures.
  */
 function buildExcludedList(results, universe) {
-  const snapshotVon = new Map((universe || []).map((s) => [tickerOf(s), s]));
-  // scoreUniverse LOESCHT e.snapshot am Ende (score.js:1334, belegt in run-screener
-  // lampeBNachruesten). Der Snapshot kommt deshalb ueber tickerOf zurueck — denselben
-  // Schluessel, den scoreUniverse an die Zeile schreibt. Ohne ihn gaebe es weder
-  // industry noch einen Emittenten-Schluessel, und beides waere still leer.
-  const mitSnapshot = (e) => ({ ...e, snapshot: snapshotVon.get(e.ticker) || null });
+  // scoreUniverse LOESCHT e.snapshot am Ende jedes Laufs (score.js, "SOLANGE der Snapshot
+  // lebt"). Ohne ihn gaebe es weder industry noch einen Emittenten-Schluessel, und beides
+  // waere still leer. Er kommt ueber die POSITION zurueck, nicht ueber den Ticker: die
+  // Ergebnis-Schleife in scoreUniverse laeuft `for (const s of snapshots)` und pusht in
+  // JEDEM Zweig genau einmal, ohne Filter, Splice oder Sortierung — results[i] gehoert also
+  // zu universe[i]. Nachgezaehlt am echten Universum: 4.494/4.494, 0 Abweichungen. Ein Join
+  // ueber den Ticker haette dagegen eine stille Fehlklasse: zwei Snapshots mit demselben
+  // Ticker (nirgends erzwungen) haetten einer Zeile den Snapshot der FALSCHEN Firma
+  // angehaengt — falsche Branche, falsche Gruppe, und die Summen-Wache sieht es nicht,
+  // weil die Zeilenzahl stimmt.
+  const alle = (Array.isArray(results) ? results : [])
+    .map((e, i) => ({ ...e, snapshot: (universe || [])[i] || null }));
 
-  const raus = (Array.isArray(results) ? results : [])
-    .filter((e) => e.action === 'exclude' || e.action === 'unrouted').map(mitSnapshot);
-  const drin = (Array.isArray(results) ? results : [])
-    .filter((e) => e.action === 'route' || e.action === 'survival').map(mitSnapshot);
-
-  // dup-issuer stellt fast die Haelfte der Liste. Ohne diesen Hinweis liest sich die
-  // Zeile, als sei die Firma weg — dabei steht ihr Hauptlisting auf dem Board.
-  const imBoard = new Map();
-  for (const e of drin) {
-    const k = issuerKeyLoose(e.snapshot);
-    if (k && !imBoard.has(k)) imBoard.set(k, e.ticker);
-  }
-
+  // EINE Gruppierung ueber ALLE Zeilen, mit derselben Funktion, die die Produktion fuer den
+  // Dedup nutzt (inkl. splitFalseIssuerMerges: zwei verschiedene Firmen mit gleich
+  // normalisiertem Namen werden bewusst NICHT verschmolzen). Ausgeschlossene und bewertete
+  // Beine derselben Firma landen dadurch garantiert in derselben Gruppe. Eine zweite,
+  // handgebaute Zuordnung koennte davon abweichen und "steht im Board als X" auf eine
+  // FREMDE Firma zeigen lassen — lautlos, weil keine Zahl dabei kaputtgeht.
+  //
   // issuerDedupGroups() laesst Eintraege OHNE Emittenten-Schluessel (kein meta.name)
-  // ersatzlos fallen — in der Produktion harmlos (sie koennen nicht Dublette sein),
-  // hier waere es exakt der stille Verlust, gegen den diese Datei gebaut ist. Sie
-  // werden darum als eigene Ein-Bein-Gruppen nachgereicht.
-  const ohneSchluessel = raus.filter((e) => !issuerKeyLoose(e.snapshot));
-  const gruppen = issuerDedupGroups(raus).concat(ohneSchluessel.map((e) => [e]));
+  // ersatzlos fallen — in der Produktion harmlos (sie koennen nicht Dublette sein), hier
+  // waere es exakt der stille Verlust, gegen den diese Datei gebaut ist. Sie werden darum
+  // als eigene Ein-Bein-Gruppen nachgereicht.
+  const ohneSchluessel = alle.filter((e) => istRaus(e) && !issuerKeyLoose(e.snapshot));
+  const gruppen = issuerDedupGroups(alle).concat(ohneSchluessel.map((e) => [e]));
 
-  const rows = gruppen.map((g) => {
+  const rows = [];
+  for (const g of gruppen) {
     // Derselbe Comparator, den die Produktion fuer die Bein-Wahl nutzt (score.js) —
     // das fuehrende Bein ist damit dasselbe, das der Dedup bevorzugt haette.
-    const beine = g.slice().sort(issuerDedupComparator);
-    const kopf = zeile(beine[0]);
-    const key = issuerKeyLoose(beine[0].snapshot) || null;
-    return {
-      ...kopf,
-      issuerKey: key,
-      // Ticker eines Beins DERSELBEN Firma, das bewertet wurde (sonst null).
-      imBoardAls: key ? (imBoard.get(key) || null) : null,
+    const beine = g.filter(istRaus).sort(issuerDedupComparator);
+    if (!beine.length) continue; // Firma vollstaendig bewertet -> gehoert nicht in die Liste
+    // dup-issuer stellt fast die Haelfte der Liste. Ohne diesen Hinweis liest sich die
+    // Zeile, als sei die Firma weg — dabei steht ihr Hauptlisting im Board.
+    const imBoard = g.filter((e) => !istRaus(e)).sort(issuerDedupComparator)[0] || null;
+    rows.push({
+      ...zeile(beine[0]),
+      // ACHTUNG beim Lesen: die ZEILE ist die Firma, nicht der Schluessel. Nach
+      // splitFalseIssuerMerges koennen zwei verschiedene Firmen denselben lockeren
+      // Schluessel tragen und stehen dann bewusst als zwei Zeilen da.
+      issuerKey: issuerKeyLoose(beine[0].snapshot) || null,
+      // Tragen die Beine verschiedene Gruende (25 von 980 im Messlauf, meist Heimatboerse
+      // + Grey-Market-Schatten), zeigt `reason` nur den des fuehrenden Beins — hier stehen
+      // sie alle, damit die Uebersichtszeile nicht die Haelfte verschweigt.
+      gruende: [...new Set(beine.map(grundVon))].sort(),
+      imBoardAls: imBoard ? imBoard.ticker : null,
       beine: beine.map(zeile),
-    };
-  }).sort(nachWachstum);
+    });
+  }
+  rows.sort(nachWachstum);
 
+  const raus = alle.filter(istRaus);
   const byReason = {};
   for (const e of raus) { const k = grundVon(e); byReason[k] = (byReason[k] || 0) + 1; }
 
@@ -167,6 +181,25 @@ function pruefeSummen(byReason, indexExcluded) {
 // Gruppierung selbst etwas verschluckt.
 const beineGesamt = (rows) => rows.reduce((n, r) => n + r.beine.length, 0);
 
+/**
+ * Liest die Zaehler, gegen die geprueft wird. Eigene Funktion, damit der Waechter sie
+ * ausfuehren kann: "nicht da", "da aber kaputt" und "da, aber ohne excluded-Objekt"
+ * duerfen NIEMALS zu "keine Abweichung" degradieren — genau die Degradierung waere der
+ * stille Verlust, gegen den diese Datei gebaut ist. Wirft immer, gibt nie null zurueck.
+ */
+function readExcludedCounter(indexFile) {
+  let idx;
+  try { idx = JSON.parse(fs.readFileSync(indexFile, 'utf8')); }
+  catch (e) {
+    throw new Error(`[excluded-list] ${indexFile} fehlt/unlesbar (${e.message}) — ohne die Zaehler ist die `
+      + 'Liste unpruefbar. Zuerst run-screener.js und write-findash-export.js laufen lassen.');
+  }
+  if (!idx || !idx.excluded || typeof idx.excluded !== 'object' || Array.isArray(idx.excluded)) {
+    throw new Error(`[excluded-list] ${indexFile} traegt kein excluded-Objekt — Liste unpruefbar.`);
+  }
+  return idx.excluded;
+}
+
 function main() {
   const universe = loadUniverse();
   // Gleicher Referenz-Modus wie run-screener.js: ist ein Lineal gesetzt, muss dieser
@@ -181,19 +214,7 @@ function main() {
   const results = scoreUniverse(universe, formulas, refCalibration ? { refCalibration } : {});
   const { rows, legs, byReason } = buildExcludedList(results, universe);
 
-  // Der Zaehler, gegen den geprueft wird, MUSS da sein. "Nicht da" darf nicht
-  // stillschweigend zu "keine Abweichung" werden.
-  let idx;
-  try { idx = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8')); }
-  catch (e) {
-    throw new Error(`[excluded-list] ${path.relative(ROOT, INDEX_FILE)} fehlt/unlesbar (${e.message}) — `
-      + 'ohne die Zaehler ist die Liste unpruefbar. Zuerst run-screener.js und write-findash-export.js laufen lassen.');
-  }
-  if (!idx.excluded || typeof idx.excluded !== 'object') {
-    throw new Error('[excluded-list] index.json traegt kein excluded-Objekt — Liste unpruefbar.');
-  }
-
-  const fehler = pruefeSummen(byReason, idx.excluded);
+  const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
   if (fehler.length) {
     throw new Error('[excluded-list] Summen-Wache gebrochen — die Liste deckt sich nicht mit den Zaehlern:\n  '
       + fehler.join('\n  '));
@@ -216,6 +237,6 @@ function main() {
     + Object.keys(byReason).sort().map((k) => `${k}=${byReason[k]}`).join(' · '));
 }
 
-module.exports = { buildExcludedList, pruefeSummen, beineGesamt, grundVon, zeile, SCHEMA, OUT_FILE, INDEX_FILE };
+module.exports = { buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, SCHEMA, OUT_FILE, INDEX_FILE };
 
 if (require.main === module) main();
