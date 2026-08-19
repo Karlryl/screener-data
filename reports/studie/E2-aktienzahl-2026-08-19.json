@@ -1,0 +1,679 @@
+{
+ "abdeckung": {
+  "CommonStockSharesIssued": {
+   "familie": "sofort",
+   "firmen": 9617,
+   "firmen_anteil_prozent": 86.20473287916816,
+   "firmen_je_jahr": {
+    "2012": 7439,
+    "2013": 7196,
+    "2014": 6979,
+    "2015": 6555,
+    "2016": 5301
+   },
+   "firmen_mit_quartalswert": 9617,
+   "firmenquartale": 140333,
+   "firmenquartale_anteil_prozent": 69.88869244752111,
+   "quartals_qtrs": "0",
+   "stichtag_auf_quartalsende_prozent": 86.50817761136034,
+   "werte_jahresperiode": null,
+   "werte_quartal": 141545,
+   "zweck": "ausgegebene Stammaktien zum Bilanzstichtag (inkl. zurueckgekaufter)"
+  },
+  "CommonStockSharesOutstanding": {
+   "familie": "sofort",
+   "firmen": 9069,
+   "firmen_anteil_prozent": 81.29257798494083,
+   "firmen_je_jahr": {
+    "2012": 6887,
+    "2013": 6656,
+    "2014": 6521,
+    "2015": 6132,
+    "2016": 4916
+   },
+   "firmen_mit_quartalswert": 9069,
+   "firmenquartale": 126098,
+   "firmenquartale_anteil_prozent": 62.79937249433502,
+   "quartals_qtrs": "0",
+   "stichtag_auf_quartalsende_prozent": 87.26278495395759,
+   "werte_jahresperiode": null,
+   "werte_quartal": 126731,
+   "zweck": "Stammaktien im Umlauf zum Bilanzstichtag"
+  },
+  "EntityCommonStockSharesOutstanding": {
+   "familie": "sofort",
+   "firmen": 10460,
+   "firmen_anteil_prozent": 93.76120473287916,
+   "firmen_je_jahr": {
+    "2012": 7863,
+    "2013": 7466,
+    "2014": 7295,
+    "2015": 7047,
+    "2016": 6283
+   },
+   "firmen_mit_quartalswert": 10460,
+   "firmenquartale": 142284,
+   "firmenquartale_anteil_prozent": 70.86033018750467,
+   "quartals_qtrs": "0",
+   "stichtag_auf_quartalsende_prozent": 19.757725121036437,
+   "werte_jahresperiode": null,
+   "werte_quartal": 148509,
+   "zweck": "Deckblatt-Angabe der Einreichung (dei), Stichtag nahe am Einreichungstag"
+  },
+  "WeightedAverageNumberOfDilutedSharesOutstanding": {
+   "familie": "zeitraum",
+   "firmen": 6824,
+   "firmen_anteil_prozent": 57.0096808892076,
+   "firmen_je_jahr": {
+    "2012": 4891,
+    "2013": 4729,
+    "2014": 4576,
+    "2015": 4388,
+    "2016": 3823
+   },
+   "firmen_mit_quartalswert": 6360,
+   "firmenquartale": 89455,
+   "firmenquartale_anteil_prozent": 44.55041211185537,
+   "quartals_qtrs": "1",
+   "stichtag_auf_quartalsende_prozent": 89.45763961006331,
+   "werte_jahresperiode": 31338,
+   "werte_quartal": 89553,
+   "zweck": "verwaesserter Periodendurchschnitt (inkl. Optionen, Wandelanleihen, Warrants)"
+  },
+  "WeightedAverageNumberOfShareOutstandingBasicAndDiluted": {
+   "familie": "zeitraum",
+   "firmen": 4662,
+   "firmen_anteil_prozent": 39.126927214055215,
+   "firmen_je_jahr": {
+    "2012": 2772,
+    "2013": 3127,
+    "2014": 3213,
+    "2015": 3038,
+    "2016": 2429
+   },
+   "firmen_mit_quartalswert": 4365,
+   "firmenquartale": 41150,
+   "firmenquartale_anteil_prozent": 20.493538185711795,
+   "quartals_qtrs": "1",
+   "stichtag_auf_quartalsende_prozent": 85.42523839488842,
+   "werte_jahresperiode": 13329,
+   "werte_quartal": 41318,
+   "zweck": "Periodendurchschnitt, wenn unverwaessert und verwaessert identisch sind"
+  },
+  "WeightedAverageNumberOfSharesOutstandingBasic": {
+   "familie": "zeitraum",
+   "firmen": 7592,
+   "firmen_anteil_prozent": 63.86697741125852,
+   "firmen_je_jahr": {
+    "2012": 5404,
+    "2013": 5195,
+    "2014": 4981,
+    "2015": 4708,
+    "2016": 4039
+   },
+   "firmen_mit_quartalswert": 7125,
+   "firmenquartale": 96757,
+   "firmenquartale_anteil_prozent": 48.186956846535026,
+   "quartals_qtrs": "1",
+   "stichtag_auf_quartalsende_prozent": 88.59378387026848,
+   "werte_jahresperiode": 33418,
+   "werte_quartal": 96877,
+   "zweck": "unverwaesserter Periodendurchschnitt (Nenner des einfachen Ergebnisses je Aktie)"
+  }
+ },
+ "anker": [
+  {
+   "ist": 11156,
+   "name": "Firmen im Entdeckungsfenster (E1)",
+   "soll": 11156,
+   "status": "stimmt"
+  },
+  {
+   "ist": 487,
+   "name": "reife Erst-Ereignisse S-U (E2)",
+   "soll": 487,
+   "status": "stimmt"
+  }
+ ],
+ "berichts_firmenquartale": 200795,
+ "e2_abdeckung": {
+  "CommonStockSharesIssued": {
+   "familie": "sofort",
+   "firmen_ereignisfenster_gedeckt": 378,
+   "firmen_ereignisfenster_gedeckt_prozent": 77.61806981519507,
+   "firmen_mit_irgendeinem_wert": 443,
+   "firmen_mit_irgendeinem_wert_prozent": 90.96509240246407,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 27,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 5.544147843942505,
+   "quartalsabdeckung_median_prozent": 86.95652173913044,
+   "quartalsabdeckung_p10_prozent": 6.451612903225806,
+   "quartalsabdeckung_p90_prozent": 90.9090909090909
+  },
+  "CommonStockSharesOutstanding": {
+   "familie": "sofort",
+   "firmen_ereignisfenster_gedeckt": 358,
+   "firmen_ereignisfenster_gedeckt_prozent": 73.51129363449692,
+   "firmen_mit_irgendeinem_wert": 425,
+   "firmen_mit_irgendeinem_wert_prozent": 87.26899383983573,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 25,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 5.13347022587269,
+   "quartalsabdeckung_median_prozent": 85.71428571428571,
+   "quartalsabdeckung_p10_prozent": 0.0,
+   "quartalsabdeckung_p90_prozent": 90.0
+  },
+  "EntityCommonStockSharesOutstanding": {
+   "familie": "sofort",
+   "firmen_ereignisfenster_gedeckt": 9,
+   "firmen_ereignisfenster_gedeckt_prozent": 1.8480492813141685,
+   "firmen_mit_irgendeinem_wert": 466,
+   "firmen_mit_irgendeinem_wert_prozent": 95.68788501026694,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 0.0,
+   "quartalsabdeckung_median_prozent": 8.0,
+   "quartalsabdeckung_p10_prozent": 0.0,
+   "quartalsabdeckung_p90_prozent": 31.25
+  },
+  "UNION-sofort": {
+   "familie": "sofort",
+   "firmen_ereignisfenster_gedeckt": 407,
+   "firmen_ereignisfenster_gedeckt_prozent": 83.5728952772074,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 29,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 5.95482546201232,
+   "kennungen": [
+    "CommonStockSharesIssued",
+    "CommonStockSharesOutstanding",
+    "EntityCommonStockSharesOutstanding"
+   ]
+  },
+  "UNION-zeitraum": {
+   "familie": "zeitraum",
+   "firmen_ereignisfenster_gedeckt": 55,
+   "firmen_ereignisfenster_gedeckt_prozent": 11.293634496919918,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 24,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 4.9281314168377826,
+   "kennungen": [
+    "WeightedAverageNumberOfDilutedSharesOutstanding",
+    "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+    "WeightedAverageNumberOfSharesOutstandingBasic"
+   ]
+  },
+  "WeightedAverageNumberOfDilutedSharesOutstanding": {
+   "familie": "zeitraum",
+   "firmen_ereignisfenster_gedeckt": 32,
+   "firmen_ereignisfenster_gedeckt_prozent": 6.570841889117043,
+   "firmen_mit_irgendeinem_wert": 335,
+   "firmen_mit_irgendeinem_wert_prozent": 68.78850102669405,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 11,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 2.2587268993839835,
+   "quartalsabdeckung_median_prozent": 34.61538461538461,
+   "quartalsabdeckung_p10_prozent": 0.0,
+   "quartalsabdeckung_p90_prozent": 80.0
+  },
+  "WeightedAverageNumberOfShareOutstandingBasicAndDiluted": {
+   "familie": "zeitraum",
+   "firmen_ereignisfenster_gedeckt": 20,
+   "firmen_ereignisfenster_gedeckt_prozent": 4.1067761806981515,
+   "firmen_mit_irgendeinem_wert": 312,
+   "firmen_mit_irgendeinem_wert_prozent": 64.06570841889118,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 1,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 0.2053388090349076,
+   "quartalsabdeckung_median_prozent": 35.714285714285715,
+   "quartalsabdeckung_p10_prozent": 0.0,
+   "quartalsabdeckung_p90_prozent": 73.91304347826086
+  },
+  "WeightedAverageNumberOfSharesOutstandingBasic": {
+   "familie": "zeitraum",
+   "firmen_ereignisfenster_gedeckt": 29,
+   "firmen_ereignisfenster_gedeckt_prozent": 5.95482546201232,
+   "firmen_mit_irgendeinem_wert": 363,
+   "firmen_mit_irgendeinem_wert_prozent": 74.53798767967146,
+   "firmen_ohne_vier_folgequartale": 0,
+   "firmen_umsatzreihe_vollstaendig_gedeckt": 12,
+   "firmen_umsatzreihe_vollstaendig_gedeckt_prozent": 2.4640657084188913,
+   "quartalsabdeckung_median_prozent": 42.857142857142854,
+   "quartalsabdeckung_p10_prozent": 0.0,
+   "quartalsabdeckung_p90_prozent": 80.0
+  }
+ },
+ "e2_herkunft": "Die Firmenliste steht **nicht** im E2-Report — dort steht nur die Zahl 487. Sie wurde deshalb rekonstruiert, indem der **Originalcode** von E2 (`scripts/studie-basisraten.py`) als Bibliothek gerufen wurde, Schritt fuer Schritt in derselben Reihenfolge. Dass es dieselben Firmen sind, ist an vier Zahlen geankert: der Kalibrierungsweg liefert bei P 90 exakt 1.979 Feuerungen und 1.025 reife Firmen, bei P 95 exakt 877 und 487 — identisch mit dem veroeffentlichten E2-Report. Weicht eine dieser Zahlen ab, **haelt der Lauf an**, statt eine andere Grundgesamtheit als „die 487“ auszugeben.",
+ "empfehlung": [
+  "**Belegung, unverwaessert gegen verwaessert:** unverwaessert 96.757 Firmen-Quartale (48.2 %), verwaessert 89.455 (44.6 %). Die unverwaesserte Zahl ist also um 7.5 % besser belegt — ein kleiner Vorsprung. Dazu kommen 41.150 Firmen-Quartale in der gemeinsamen Kennung `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`, die Firmen benutzen, wenn beide Zahlen gleich sind — typisch bei Verlustfirmen, wo Optionen nicht eingerechnet werden duerfen. Wer diese dritte Kennung vergisst, verliert ausgerechnet die verlustschreibenden Wachstumsfirmen.",
+  "**Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf das es ankommt (Ereignisquartal plus vier Folgequartale bei den 487 Firmen), liefert der verwaesserte Durchschnitt 6.6 % Abdeckung, der unverwaesserte 6.0 %, alle Durchschnitts-Kennungen zusammen 11.3 %. Die Stichtagszahlen kommen im selben Fenster auf 83.6 %. Der rechnerisch sauberere Nenner ist hier also der, den es fast nie gibt.",
+  "**Der Grund ist Bauart, nicht Datenqualitaet:** E2 leitet den Umsatz des vierten Quartals aus dem Geschaeftsjahr minus den drei Vorquartalen ab. Bei einem *Durchschnitt* geht diese Subtraktion nicht (ein Durchschnitt ist nicht addierbar). Fuer jedes so abgeleitete Quartal existiert deshalb gar kein Durchschnitts-Nenner — und Firmen, die ohnehin nur Jahreswerte melden, haben nie einen.",
+  "**Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Der Unterschied zwischen beiden sind die zurueckgekauften eigenen Aktien: 'issued' ist immer groesser oder gleich 'outstanding', der Fehler geht also **in eine bekannte Richtung** (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig).",
+  "**Empfehlung — verwaessert als Zweitrechnung:** die verwaesserte Zahl ist die haertere Pruefung (sie zaehlt die Ansprueche mit, die dem Altaktionaer noch bevorstehen) und bleibt deshalb im Vertrag — aber als **Sensitivitaets-Rechnung auf der Teilmenge, wo sie existiert**, nicht als Hauptnenner. Innerhalb der Durchschnitts-Familie ist verwaessert der Vorzug, zusammen mit der gemeinsamen Kennung fuer die Verlustfirmen.",
+  "**Ausdruecklich nicht verwenden:** `EntityCommonStockSharesOutstanding`. Sie ist die am besten belegte Kennung ueberhaupt und trotzdem falsch fuer diesen Zweck — ihr Stichtag ist der Einreichungstag, nicht das Quartalsende. Wer nach Belegungsquote auswaehlt, greift genau daneben."
+ ],
+ "entdeckung_top": [
+  {
+   "tag": "WeightedAverageNumberOfSharesOutstandingBasic",
+   "urteil": "**ja**",
+   "zeilen": 350227
+  },
+  {
+   "tag": "WeightedAverageNumberOfDilutedSharesOutstanding",
+   "urteil": "**ja**",
+   "zeilen": 328876
+  },
+  {
+   "tag": "CommonStockSharesAuthorized",
+   "urteil": "nein — genehmigtes Kapital — Obergrenze aus der Satzung, keine existierende Aktie",
+   "zeilen": 296986
+  },
+  {
+   "tag": "CommonStockSharesIssued",
+   "urteil": "**ja**",
+   "zeilen": 290853
+  },
+  {
+   "tag": "CommonStockSharesOutstanding",
+   "urteil": "**ja**",
+   "zeilen": 260920
+  },
+  {
+   "tag": "PreferredStockSharesAuthorized",
+   "urteil": "nein — Vorzugsaktien — anderer Aktientyp, nicht der Nenner von 'Umsatz je Aktie'",
+   "zeilen": 182398
+  },
+  {
+   "tag": "EntityCommonStockSharesOutstanding",
+   "urteil": "**ja**",
+   "zeilen": 163492
+  },
+  {
+   "tag": "PreferredStockSharesIssued",
+   "urteil": "nein — Vorzugsaktien — anderer Aktientyp, nicht der Nenner von 'Umsatz je Aktie'",
+   "zeilen": 148734
+  },
+  {
+   "tag": "AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount",
+   "urteil": "nein — ausdruecklich NICHT eingerechnete Rechte — das Gegenteil einer Aktienzahl",
+   "zeilen": 142717
+  },
+  {
+   "tag": "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+   "urteil": "**ja**",
+   "zeilen": 135473
+  },
+  {
+   "tag": "PreferredStockSharesOutstanding",
+   "urteil": "nein — Vorzugsaktien — anderer Aktientyp, nicht der Nenner von 'Umsatz je Aktie'",
+   "zeilen": 128086
+  },
+  {
+   "tag": "IncrementalCommonSharesAttributableToShareBasedPaymentArrangements",
+   "urteil": "nein — Verwaesserungs-Zuschlag — Bestandteil der verwaesserten Zahl, nicht sie selbst",
+   "zeilen": 96688
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 92566
+  },
+  {
+   "tag": "TreasuryStockShares",
+   "urteil": "nein — eigene Aktien — Abzugsposten, keine umlaufende Aktie",
+   "zeilen": 91014
+  },
+  {
+   "tag": "WeightedAverageNumberDilutedSharesOutstandingAdjustment",
+   "urteil": "nein — Ueberleitungsposten von unverwaessert nach verwaessert, kein Bestand",
+   "zeilen": 69329
+  },
+  {
+   "tag": "StockIssuedDuringPeriodSharesStockOptionsExercised",
+   "urteil": "nein — Bewegung innerhalb der Periode, kein Bestand",
+   "zeilen": 53586
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsGrantsInPeriodGross",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 38640
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsExercisableNumber",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 36873
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsForfeituresInPeriod",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 28270
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsNonvestedNumber",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 25332
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsGrantsInPeriod",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 23611
+  },
+  {
+   "tag": "StockIssuedDuringPeriodSharesNewIssues",
+   "urteil": "nein — Bewegung innerhalb der Periode, kein Bestand",
+   "zeilen": 23259
+  },
+  {
+   "tag": "TreasuryStockSharesAcquired",
+   "urteil": "nein — eigene Aktien — Abzugsposten, keine umlaufende Aktie",
+   "zeilen": 20842
+  },
+  {
+   "tag": "IncrementalCommonSharesAttributableToCallOptionsAndWarrants",
+   "urteil": "nein — Verwaesserungs-Zuschlag — Bestandteil der verwaesserten Zahl, nicht sie selbst",
+   "zeilen": 19210
+  },
+  {
+   "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardEquityInstrumentsOtherThanOptionsGrantsInPeriod",
+   "urteil": "nein — Optionsprogramme — Bestand an Rechten, keine Aktien",
+   "zeilen": 17253
+  }
+ ],
+ "ergebnisdaten_beruehrt": false,
+ "fenster": {
+  "bis": "2016-12-31",
+  "name": "entdeckung",
+  "von": "2009-01-01"
+ },
+ "firmen_gesamt": 11156,
+ "firmen_je_berichtsjahr": {
+  "2012": 8461,
+  "2013": 8090,
+  "2014": 7932,
+  "2015": 7637,
+  "2016": 6691
+ },
+ "fragen": [
+  "Aktiensplits sind aus den SEC-Daten allein nicht von Verwaesserung zu trennen. Gibt es eine gratis verfuegbare Split-Historie (R17: erst gratis suchen, dann Geldfrage), oder wird der Vorbehalt offen praeregistriert? (Zeitschaetzung: 0,5 Tage Suche)",
+  "Der Periodendurchschnitt fehlt genau dort, wo E2 das vierte Quartal ableitet. Soll die Je-Aktie-Rechnung durchgehend auf Stichtagszahlen laufen (einheitlich, aber rechnerisch unsauber) oder gemischt mit protokollierter Herkunft je Wert? Das beruehrt die Rechenvorschrift und gehoert vor die Praeregistrierung. (Zeitschaetzung: 0,5 Tage)",
+  "Zwischen `CommonStockSharesIssued` und `CommonStockSharesOutstanding` liegen genau die zurueckgekauften eigenen Aktien, und `TreasuryStockShares` steht mit 91.014 Zeilen im Panel. Laesst sich die Luecke damit schliessen, statt sie als Herkunfts-Vermerk mitzuschleppen? (Zeitschaetzung: 0,5 Tage)",
+  "R10 nennt den Zukauf-Waechter ausdruecklich als nicht berechenbar. Traegt das Panel eine Kennung fuer den Akquisitions-Umsatzbeitrag (z. B. `BusinessAcquisitionsProFormaRevenue`), und wie duenn ist sie? Dieselbe Messung, anderer Nenner. (Zeitschaetzung: 0,5 Tage)"
+ ],
+ "gelesene_pfade": [
+  "panel/panel-entdeckung.sqlite"
+ ],
+ "kurzfassung": [
+  "Am haeufigsten vorhanden ist `EntityCommonStockSharesOutstanding` (10.460 Firmen, 93.8 %) — aber nur 19.8 % dieser Werte haben einen Stichtag, der auf ein Quartalsende faellt. Fuer eine quartalsgenaue Rechnung ist die haeufigste Kennung damit die schlechteste.",
+  "Brauchbar sind die Bilanz-Stichtagszahlen: `CommonStockSharesOutstanding` steht bei 9.069 Firmen (81.3 %) und deckt 62.8 % der Firmen-Quartale, mit 87.3 % passenden Stichtagen.",
+  "Verwaessert (89.455 Firmen-Quartale) ist knapp duenner belegt als unverwaessert (96.757), Unterschied 7.5 % — beide aber deutlich duenner als die Stichtagszahlen.",
+  "Die entscheidende Zahl: von den 487 Firmen mit reifem Erst-Ereignis haben 407 (83.6 %) eine Stichtags-Aktienzahl im Ereignisquartal UND in allen vier Folgequartalen. Mit Periodendurchschnitten waeren es nur 55 (11.3 %).",
+  "Die Aktienzahl bewegt sich, und zwar deutlich: in 39.7 % aller gemessenen Firmenjahre aendert sie sich um mehr als 5 %, in 23.7 % um mehr als 20 % (Median je Firmenjahr: 2.5 %). Ueber das ganze Fenster trifft es 55.9 % der Firmen mindestens einmal. R10 ist also keine Division durch eine Konstante.",
+  "Ein Namenswechsel wie beim Umsatz liegt **nicht** vor — keine Kennung verschwindet oder taucht neu auf. Wohl aber lohnt die Familie: alle drei Stichtags-Kennungen zusammen decken 20.8 % mehr Firmen-Quartale als die beste einzelne."
+ ],
+ "naht": {
+  "sofort": {
+   "beste_einzelkennung": "EntityCommonStockSharesOutstanding",
+   "firmen_mit_mehr_als_einer_kennung": 9884,
+   "firmen_mit_mehr_als_einer_kennung_prozent": 93.33333333333333,
+   "firmen_union": 10590,
+   "firmenquartale_beste_einzelkennung": 142284,
+   "firmenquartale_je_kennung": {
+    "CommonStockSharesIssued": 140333,
+    "CommonStockSharesOutstanding": 126098,
+    "EntityCommonStockSharesOutstanding": 142284
+   },
+   "firmenquartale_union": 171817,
+   "kennungen": [
+    "CommonStockSharesOutstanding",
+    "CommonStockSharesIssued",
+    "EntityCommonStockSharesOutstanding"
+   ],
+   "zugewinn_durch_union_prozent": 20.756374574794073
+  },
+  "zeitraum": {
+   "beste_einzelkennung": "WeightedAverageNumberOfSharesOutstandingBasic",
+   "firmen_mit_mehr_als_einer_kennung": 6714,
+   "firmen_mit_mehr_als_einer_kennung_prozent": 72.69380684278909,
+   "firmen_union": 9236,
+   "firmenquartale_beste_einzelkennung": 96757,
+   "firmenquartale_je_kennung": {
+    "WeightedAverageNumberOfDilutedSharesOutstanding": 89455,
+    "WeightedAverageNumberOfShareOutstandingBasicAndDiluted": 41150,
+    "WeightedAverageNumberOfSharesOutstandingBasic": 96757
+   },
+   "firmenquartale_union": 132584,
+   "kennungen": [
+    "WeightedAverageNumberOfSharesOutstandingBasic",
+    "WeightedAverageNumberOfDilutedSharesOutstanding",
+    "WeightedAverageNumberOfShareOutstandingBasicAndDiluted"
+   ],
+   "zugewinn_durch_union_prozent": 37.027811941254896
+  }
+ },
+ "r10_verdikt": {
+  "begruendung": [
+   "Der Nenner ist da, wo er gebraucht wird: 407 von 487 Firmen (83.6 %) tragen eine Stichtags-Aktienzahl im Ereignisquartal und in allen vier Folgequartalen.",
+   "Mit Periodendurchschnitten waeren es nur 55 (11.3 %). Der rechnerisch sauberere Nenner ist also der, den es fast nie gibt — die Praeregistrierung muss den Stichtags-Nenner benennen und den Durchschnitt als Sensitivitaets-Rechnung fuehren, nicht umgekehrt.",
+   "Die Rechnung ist nicht wirkungslos: in 39.7 % aller gemessenen Firmenjahre aendert sich die Aktienzahl um mehr als 5 %.",
+   "Offene Auflage: Aktiensplits sind aus dieser Quelle nicht von echter Verwaesserung zu trennen (9.7 % der Firmen mit Split-Verdacht). Das gehoert als Vorbehalt in die Praeregistrierung — genauso wie R10 den Zukauf-Waechter offen als nicht berechenbar fuehrt."
+  ],
+  "quote": 83.5728952772074,
+  "urteil": "JA, MIT AUFLAGEN — praeregistrierbar, aber die Abdeckungsquote gehoert als Pflichtangabe in jeden Report, und die fehlenden Firmen brauchen Unsicherheits-Schranken nach R11."
+ },
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "verwaesserung": {
+  "CommonStockSharesIssued": {
+   "firmen_messbar": 8631,
+   "firmen_mit_rueckgang": 1262,
+   "firmen_mit_splitverdacht": 840,
+   "firmen_mit_splitverdacht_prozent": 9.732360097323602,
+   "jahrespaare": 104942,
+   "kennung": "CommonStockSharesIssued",
+   "median_betrag_prozent": 32.47233788710959,
+   "median_jahrespaar_prozent": 1.7685461133698843,
+   "p90_betrag_prozent": 6304.293245317669,
+   "p90_jahrespaar_prozent": 91.58945871535238,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 56.285482562854824,
+     "firmen": 4858,
+     "jahrespaare": 23939,
+     "jahrespaare_anteil_prozent": 22.81164833908254
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 45.09326845093268,
+     "firmen": 3892,
+     "jahrespaare": 15783,
+     "jahrespaare_anteil_prozent": 15.03973623525376
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 71.11574556830031,
+     "firmen": 6138,
+     "jahrespaare": 38436,
+     "jahrespaare_anteil_prozent": 36.625945760515336
+    }
+   }
+  },
+  "CommonStockSharesOutstanding": {
+   "firmen_messbar": 8082,
+   "firmen_mit_rueckgang": 1552,
+   "firmen_mit_splitverdacht": 786,
+   "firmen_mit_splitverdacht_prozent": 9.725315515961396,
+   "jahrespaare": 92794,
+   "kennung": "CommonStockSharesOutstanding",
+   "median_betrag_prozent": 31.015130948489556,
+   "median_jahrespaar_prozent": 2.507296760377087,
+   "p90_betrag_prozent": 3282.8014527065116,
+   "p90_jahrespaar_prozent": 92.02557769733058,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 55.902004454342986,
+     "firmen": 4518,
+     "jahrespaare": 22015,
+     "jahrespaare_anteil_prozent": 23.72459426256008
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 43.999010146003464,
+     "firmen": 3556,
+     "jahrespaare": 14248,
+     "jahrespaare_anteil_prozent": 15.354441019893528
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 73.58327146745854,
+     "firmen": 5947,
+     "jahrespaare": 36811,
+     "jahrespaare_anteil_prozent": 39.669590706295665
+    }
+   }
+  },
+  "EntityCommonStockSharesOutstanding": {
+   "firmen_messbar": 8777,
+   "firmen_mit_rueckgang": 2122,
+   "firmen_mit_splitverdacht": 792,
+   "firmen_mit_splitverdacht_prozent": 9.02358436823516,
+   "jahrespaare": 105374,
+   "kennung": "EntityCommonStockSharesOutstanding",
+   "median_betrag_prozent": 16.525748940519634,
+   "median_jahrespaar_prozent": 2.058174059254214,
+   "p90_betrag_prozent": 563.3791065188899,
+   "p90_jahrespaar_prozent": 63.25536062378168,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 47.0775891534693,
+     "firmen": 4132,
+     "jahrespaare": 19971,
+     "jahrespaare_anteil_prozent": 18.952493024844838
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 34.100489916828074,
+     "firmen": 2993,
+     "jahrespaare": 12020,
+     "jahrespaare_anteil_prozent": 11.406988441171446
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 68.71368349094223,
+     "firmen": 6031,
+     "jahrespaare": 37288,
+     "jahrespaare_anteil_prozent": 35.38633818589026
+    }
+   }
+  },
+  "WeightedAverageNumberOfDilutedSharesOutstanding": {
+   "firmen_messbar": 6280,
+   "firmen_mit_rueckgang": 1488,
+   "firmen_mit_splitverdacht": 430,
+   "firmen_mit_splitverdacht_prozent": 6.8471337579617835,
+   "jahrespaare": 70942,
+   "kennung": "WeightedAverageNumberOfDilutedSharesOutstanding",
+   "median_betrag_prozent": 20.787543972965494,
+   "median_jahrespaar_prozent": 2.3171918576421535,
+   "p90_betrag_prozent": 45910.594831738876,
+   "p90_jahrespaar_prozent": 44.006850713650515,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 50.939490445859875,
+     "firmen": 3199,
+     "jahrespaare": 10926,
+     "jahrespaare_anteil_prozent": 15.401313749259959
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 36.06687898089172,
+     "firmen": 2265,
+     "jahrespaare": 6596,
+     "jahrespaare_anteil_prozent": 9.297736178850329
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 76.79936305732484,
+     "firmen": 4823,
+     "jahrespaare": 24115,
+     "jahrespaare_anteil_prozent": 33.99255730032985
+    }
+   }
+  },
+  "WeightedAverageNumberOfShareOutstandingBasicAndDiluted": {
+   "firmen_messbar": 4241,
+   "firmen_mit_rueckgang": 489,
+   "firmen_mit_splitverdacht": 415,
+   "firmen_mit_splitverdacht_prozent": 9.78542796510257,
+   "jahrespaare": 29111,
+   "kennung": "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+   "median_betrag_prozent": 50.55317978260094,
+   "median_jahrespaar_prozent": 9.028691680247668,
+   "p90_betrag_prozent": 2944.775069150415,
+   "p90_jahrespaar_prozent": 214.91139737023235,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 62.980429144069795,
+     "firmen": 2671,
+     "jahrespaare": 11450,
+     "jahrespaare_anteil_prozent": 39.33221119164577
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 50.08252770572978,
+     "firmen": 2124,
+     "jahrespaare": 7462,
+     "jahrespaare_anteil_prozent": 25.632922263062074
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 76.06696533836359,
+     "firmen": 3226,
+     "jahrespaare": 16503,
+     "jahrespaare_anteil_prozent": 56.68991103019477
+    }
+   }
+  },
+  "WeightedAverageNumberOfSharesOutstandingBasic": {
+   "firmen_messbar": 7020,
+   "firmen_mit_rueckgang": 1464,
+   "firmen_mit_splitverdacht": 458,
+   "firmen_mit_splitverdacht_prozent": 6.524216524216524,
+   "jahrespaare": 76040,
+   "kennung": "WeightedAverageNumberOfSharesOutstandingBasic",
+   "median_betrag_prozent": 19.81566820276498,
+   "median_jahrespaar_prozent": 2.0731157409041856,
+   "p90_betrag_prozent": 9744.403549994087,
+   "p90_jahrespaar_prozent": 49.4336086330232,
+   "schwellen": {
+    "ueber_20_prozent": {
+     "anteil_prozent": 49.81481481481482,
+     "firmen": 3497,
+     "jahrespaare": 12144,
+     "jahrespaare_anteil_prozent": 15.970541820094686
+    },
+    "ueber_50_prozent": {
+     "anteil_prozent": 36.58119658119658,
+     "firmen": 2568,
+     "jahrespaare": 7540,
+     "jahrespaare_anteil_prozent": 9.915833771699106
+    },
+    "ueber_5_prozent": {
+     "anteil_prozent": 73.07692307692308,
+     "firmen": 5130,
+     "jahrespaare": 25193,
+     "jahrespaare_anteil_prozent": 33.131246712256704
+    }
+   }
+  }
+ },
+ "zaehler": {
+  "berichte_gesamt": 176502,
+  "berichte_nicht_periodisch": 5892,
+  "berichte_periodisch": 170610,
+  "kandidaten_zeilen": 1532109,
+  "shares_kennungen_firmeneigen": 78878,
+  "shares_kennungen_standard": 358,
+  "shares_zeilen": 3984536,
+  "shares_zeilen_firmeneigen": 444935,
+  "shares_zeilen_standard": 3539601,
+  "verworfen_coreg": 21158,
+  "verworfen_firmeneigene_taxonomie": 2265,
+  "verworfen_nicht_periodisch": 53909,
+  "verworfen_wert_leer": 2558,
+  "verworfen_wert_nicht_positiv": 6592,
+  "werte_fassungskonflikt": 65135,
+  "werte_pit": 877504,
+  "werte_spaetere_fassung": 568123
+ },
+ "zeitstempel": "2026-08-19T09:48:51Z"
+}
