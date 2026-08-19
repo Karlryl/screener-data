@@ -97,13 +97,9 @@ test('OCF/FCF/Assets/CurrLiab stehen mit den abgelesenen Werten fest (ARGX/GFI/D
   assert.deepEqual(werte(dlo.annual.annualCurrentLiabilities),
     [965910000, 677621000, 625229000, 422272000, 298398000]);
 
-  // Index-Treue: jede der vier Reihen liegt auf DERSELBEN fy-Achse. Eine um eins verschobene
-  // Reihe wuerde sonst Bilanzsumme und Betriebsergebnis verschiedener Jahre paaren.
-  for (const [name, s] of [['ARGX', argx], ['GFI', gfi], ['DLO', dlo]]) {
-    for (const k of ['annualOCF', 'annualFCF', 'annualAssets', 'annualCurrentLiabilities']) {
-      assert.equal(s.annual[k].length, s.annual._fys.length, name + '/' + k + ' muss auf der fy-Achse liegen');
-    }
-  }
+  // Kein zusaetzlicher Laengen-Check: die deepEqual-Reihen oben plus die _fys-Zusage aus
+  // Pruefung 1 nageln Laenge, Reihenfolge und Werte schon fest. Ein Laengen-assert daneben
+  // koennte nie allein rot werden — ein Pruefer, der nicht scheitern kann, schuetzt nichts.
 });
 
 // --- 1c) Das Capex-VORZEICHEN, ausdruecklich ---------------------------------
