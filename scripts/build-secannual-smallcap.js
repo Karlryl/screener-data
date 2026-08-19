@@ -97,11 +97,15 @@ async function run() {
       if (!body) { no404++; await sleep(125); continue; }
       writeFileAtomic(tmpFile, body); pulled++; await sleep(130);
     }
-    let sec; try { sec = extractSecSeries(JSON.parse(body)); } catch (_) { continue; }
-    if (!sec || !sec.annual || !(sec.annual.annualOpInc || []).length) { noSeries++; continue; }
+    let sec; try { sec = extractSecSeries(JSON.parse(body), tk); } catch (_) { continue; }
+    // taxonomie===null: weder us-gaap noch ifrs-full liefert ein Jahresdatum (haeufigster
+    // Grund: der Filer berichtet nicht in USD). Zaehlt als 'nicht verfuegbar' im selben
+    // Zaehler wie die leere Serie — nie eine 0, nie ein geschaetzter Wert.
+    if (!sec || !sec.taxonomie || !sec.annual || !(sec.annual.annualOpInc || []).length) { noSeries++; continue; }
     const snap = uni.find((x) => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
-    out[tk] = { cik, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
+    // taxonomie = HERKUNFT der Reihen (us-gaap|ifrs-full), gleiche Ebene wie cik/nfy.
+    out[tk] = { cik, taxonomie: sec.taxonomie, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF,
       annualShares: sec.annual.annualShares };
     if (bilanzGuardOk(newestPresent(sec.annual.annualAssets), newestPresent(sec.annual.annualCurrentLiabilities))) {
