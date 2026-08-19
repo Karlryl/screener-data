@@ -68,13 +68,20 @@ function kosdaqTarget(symbol, quote) {
  *                               answered: Set<yahooSymbol> die Yahoo ueberhaupt beantwortet hat,
  *                               unpriceable: Set<yahooSymbol> beantwortet MIT positivem marketCap,
  *                                 aber fx-rates.json kennt die Handelswaehrung nicht (Artefakt-
- *                                 Luecke, nicht "unter Schwelle") }.
+ *                                 Luecke, nicht "unter Schwelle"),
+ *                               belowUsd: Map<yahooSymbol, marketCapUsd> sauber bepreist, aber
+ *                                 UNTER der Schwelle — die Begruendung des Ausschlusses. }
  * symbols: Array yahoo-suffigierter Ticker (die null-mcap-Auslandszeilen).
+ * opts.minUsd: Schwelle abweichend von MIN_USD (Messungen: minUsd 0 = alles bepreisen).
+ * opts.quote:  Ersatz fuer yf.quote(batch) — nur fuer Tests, damit dieses Tor OHNE Netz
+ *              pruefbar ist (es gab bis Tag 642 keine einzige Testdatei fuer diese Datei).
  */
 async function prefilterByMcap(symbols, opts = {}) {
   const minUsd = opts.minUsd != null ? opts.minUsd : MIN_USD;
-  const rates = loadRates();
-  const yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
+  const rates = opts.rates || loadRates();
+  let yf = null; // erst bei Bedarf bauen — ein injizierter quote() darf ohne Yahoo-Client laufen
+  const quoteFn = opts.quote ||
+    ((batch) => (yf || (yf = new YahooFinance({ suppressNotices: ['yahooSurvey'] }))).quote(batch));
   const kept = new Map();
   // Bug 16: der Caller muss 'geprueft und < $2B' von 'Batch gescheitert / keine Antwort'
   // unterscheiden koennen. Ohne das loescht ein einzelner 429/Netzfehler bis zu 200
@@ -87,6 +94,12 @@ async function prefilterByMcap(symbols, opts = {}) {
   // bewertbar", nicht "geprueft und < Schwelle". unpriceable markiert genau diesen Fall, damit
   // der Caller ihn NICHT wie einen Unter-Cap-Befund loescht.
   const unpriceable = new Set();
+  // Tag 642 (Ausschluss-Protokoll): bis hierher wusste NIEMAND, WER an dieser Schwelle
+  // gestorben ist — kept enthielt nur die Ueberlebenden, der Aufrufer loeschte den Rest
+  // ohne Begruendung je Ticker (refresh-universe.js applyForeignPrefilterOutcome), und die
+  // einzige Spur war die Aggregat-Logzeile ganz unten. belowUsd traegt jetzt den gemessenen
+  // Marktwert JEDER verworfenen Zeile, damit der Ausschluss belegbar statt still ist.
+  const belowUsd = new Map();
   // Bug 5: .KS-Symbole, fuer die Yahoo KOSDAQ meldet -> auf .KQ requoten. renamed traegt die
   // Zuordnung .KS -> .KQ zum Caller (er ersetzt die Watchlist-Zeile), requoteTargets sammelt
   // die neu zu quotenden .KQ-Symbole.
@@ -100,6 +113,7 @@ async function prefilterByMcap(symbols, opts = {}) {
     const usd = toUsd(q.marketCap, q.currency, rates);
     if (usd != null) {
       if (usd >= minUsd) kept.set(q.symbol, usd);
+      else belowUsd.set(q.symbol, usd);
       return;
     }
     if (isUnpriceable(q.marketCap, q.currency, rates)) unpriceable.add(q.symbol);
@@ -107,7 +121,7 @@ async function prefilterByMcap(symbols, opts = {}) {
   for (let i = 0; i < symbols.length; i += BATCH) {
     const batch = symbols.slice(i, i + BATCH);
     let quotes;
-    try { quotes = await yf.quote(batch); }
+    try { quotes = await quoteFn(batch); }
     catch (_) { errors++; continue; } // fail-silent: dieser Batch bleibt null-mcap (unanswered)
     for (const q of (Array.isArray(quotes) ? quotes : [quotes])) {
       if (!q || !q.symbol) continue;
@@ -127,7 +141,7 @@ async function prefilterByMcap(symbols, opts = {}) {
   for (let i = 0; i < requoteTargets.length; i += BATCH) {
     const batch = requoteTargets.slice(i, i + BATCH);
     let quotes;
-    try { quotes = await yf.quote(batch); }
+    try { quotes = await quoteFn(batch); }
     catch (_) { errors++; continue; }
     for (const q of (Array.isArray(quotes) ? quotes : [quotes])) {
       if (!q || !q.symbol) continue;
@@ -136,7 +150,7 @@ async function prefilterByMcap(symbols, opts = {}) {
     }
   }
   console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ, ${unpriceable.size} unbewertbar/FX-Luecke) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B`);
-  return { kept, answered, renamed, unpriceable };
+  return { kept, answered, renamed, unpriceable, belowUsd };
 }
 
 module.exports = { prefilterByMcap, toUsd, kosdaqTarget, isUnpriceable };
