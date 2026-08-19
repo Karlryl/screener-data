@@ -205,9 +205,27 @@ def leerer_block():
 
 
 def quote(zaehler, nenner):
-    """Dieselbe Regel wie in der Zaehlprobe: Nenner 0 heisst NICHT BERECHENBAR,
-    nie 0,0. Eine stille Null saehe im Report aus wie ein gemessener Ausfall."""
-    return (zaehler / nenner) if nenner > 0 else None
+    """E3s Auffindbarkeits-Formel, unveraendert uebernommen: reife Firmen geteilt
+    durch nicht zensierte Erst-Ereignis-Firmen. Nenner 0 heisst NICHT
+    BERECHENBAR, nie 0,0 - eine stille Null saehe im Report aus wie ein
+    gemessener Ausfall.
+
+    DER BEFUND, den diese Funktion sichtbar macht (E4a, 19.08.): Die geerbte
+    Formel ist AN DER FENSTERKANTE NICHT WOHLDEFINIERT. Der Zaehler zaehlt ALLE
+    reifen Firmen, der Nenner laesst die zensierten weg - und eine zensierte
+    Firma KANN reif sein, denn die Zensur ist eine konservative Warnung ("die
+    vier Folgequartale koennten fehlen"), kein Nachweis. Wo beides zusammenkommt,
+    liefert die Formel eine "Quote" ueber 1. Im Prueffenster ist zensiert = 0,
+    dort faellt es nicht auf; im Entdeckungsfenster mit Pufferjahr im Band faellt
+    es sofort auf.
+
+    Die Formel wird hier NICHT umdefiniert - das waere eine Protokollaenderung
+    mit eigener Praeregistrierung. Wo sie definiert ist, liefert sie exakt E3s
+    Zahl. Wo sie es nicht ist, heisst das NICHT BERECHENBAR (R5) statt einer
+    Zahl, die keine Quote ist."""
+    if nenner <= 0 or zaehler > nenner:
+        return None
+    return zaehler / nenner
 
 
 def fuelle_quoten(block):
@@ -309,6 +327,13 @@ def pruefe_blockinvarianten(b):
             "die Fallzahl plus Klasse (b) (" + str(b["fallzahl"] + b[KLASSE_B])
             + "). Genau diese Gleichung IST der Gegentest - stimmt sie nicht, "
             "misst die Rechnung etwas anderes als die Hypothese behauptet.")
+    if (b["fallzahl"] > b["nenner_auffindbarkeit"]
+            and b["zensierte_erst_ereignisse"] == 0):
+        raise DiagnoseFehler(
+            "ZERLEGUNGS-ABBRUCH: " + str(b["fallzahl"]) + " reife Firmen gegen "
+            + str(b["nenner_auffindbarkeit"]) + " im Nenner, obwohl keine einzige "
+            "zensiert ist. Ohne Zensur ist das kein Formel-Artefakt der "
+            "Fensterkante, sondern ein Zaehlfehler.")
     if (b["zensierte_erst_ereignisse"] + b["nenner_auffindbarkeit"]
             != b["firmen_mit_erst_ereignis"]):
         raise DiagnoseFehler(
@@ -882,6 +907,28 @@ def selbsttest():
         pruefe("eine hypothetische Fallzahl neben Klasse (b) bricht ab",
                _invariante_bricht(dict(
                    su, hypothetische_fallzahl_anschlussfaehig=su["fallzahl"])))
+        # Die Fensterkante: eine zensierte Firma kann reif sein, dann steht der
+        # Zaehler ueber dem Nenner. Das ist ein Artefakt der GEERBTEN Formel und
+        # heisst NICHT BERECHENBAR - aber nur, solange ueberhaupt zensiert wurde.
+        kante = fuelle_quoten(dict(leerer_block(), firmen_mit_erst_ereignis=10,
+                                   zensierte_erst_ereignisse=5,
+                                   nenner_auffindbarkeit=5, fallzahl=7,
+                                   unreif_gesamt=3, hypothetische_fallzahl_anschlussfaehig=7,
+                                   **{KLASSE_C: 3}))
+        pruefe("eine Quote ueber 1 heisst NICHT BERECHENBAR statt Zahl",
+               kante["auffindbarkeit"] is None, kante["auffindbarkeit"], None)
+        pruefe("die Fensterkanten-Ausnahme haelt die uebrigen Invarianten ein",
+               pruefe_blockinvarianten(kante) is True)
+        # Sauber gebaut: alle FRUEHEREN Invarianten gehen durch, nur die neue
+        # bricht. Sonst wuerde der Test aus dem falschen Grund gruen.
+        ohne_zensur = dict(leerer_block(), firmen_mit_erst_ereignis=7,
+                           nenner_auffindbarkeit=5, fallzahl=7, unreif_gesamt=0,
+                           hypothetische_fallzahl_anschlussfaehig=7)
+        pruefe("mehr reife Firmen als Nenner OHNE Zensur bricht ab",
+               _invariante_bricht(ohne_zensur))
+        grund = " ".join(_bruchgrund(ohne_zensur).split())
+        pruefe("und zwar an DIESER Invariante, nicht an einer frueheren",
+               "Zaehlfehler" in grund, grund[-60:], "... sondern ein Zaehlfehler.")
 
         # Die Sperrzone bleibt zu - auch mit gueltiger Freigabe.
         pruefe("das Endtest-Fenster wird nicht geoeffnet",
@@ -948,6 +995,14 @@ def _fliegt_ohne(umschlag, pfad, feld):
     ziel, knoten = _tief(umschlag, pfad)
     del knoten[feld]
     return _fliegt(ziel)
+
+
+def _bruchgrund(block):
+    try:
+        pruefe_blockinvarianten(block)
+    except DiagnoseFehler as fehler:
+        return str(fehler)
+    return ""
 
 
 def _invariante_bricht(block):

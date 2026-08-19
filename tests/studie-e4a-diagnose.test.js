@@ -77,6 +77,10 @@ const PFLICHT_PRUEFUNGEN = [
   'kein Umsatz-Kennungsname im Output',
   'eine Zerlegung, die nicht aufgeht, bricht ab',
   'eine hypothetische Fallzahl neben Klasse (b) bricht ab',
+  'eine Quote ueber 1 heisst NICHT BERECHENBAR statt Zahl',
+  'die Fensterkanten-Ausnahme haelt die uebrigen Invarianten ein',
+  'mehr reife Firmen als Nenner OHNE Zensur bricht ab',
+  'und zwar an DIESER Invariante, nicht an einer frueheren',
   'das Endtest-Fenster wird nicht geoeffnet',
   'diese Datei enthaelt keinen Entschluesselungs-Aufruf',
 ];

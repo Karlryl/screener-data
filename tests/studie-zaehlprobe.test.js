@@ -84,11 +84,19 @@ test('Jede Pflichtpruefung stand wirklich da — und war gruen', () => {
 // Die Freigabe muss zum echten Zugriffs-Register passen, sonst faellt sie schon
 // dort auf. Genommen wird deshalb der zuletzt angemeldete Zaehlproben-Eintrag; nur
 // die Serverzeit wird variiert. Das prueft W2 an dem Fall, der wirklich vorkommt.
+//
+// GESUCHT WIRD DAS FENSTER MIT, nicht nur die Eintragsart (E4a, 19.08.): Die
+// Zaehlprobe ist ausschliesslich fuer das Prueffenster freigegeben, und dieser
+// Test braucht genau so einen Eintrag. Die erste Fassung nahm den JUENGSTEN
+// Zaehlproben-Eintrag und wurde rot, sobald ein Lauf ein anderes Fenster anmeldete
+// — sie testete dann die Fenster-Ungleichheit statt der Serverzeit. Ein Waechter,
+// der bei bestimmungsgemaessem Gebrauch rot wird, entwertet sich selbst.
 const REGISTER = JSON.parse(fs.readFileSync(
   path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'outcome-access-ledger.json'), 'utf8'));
 const ZAEHLPROBE_EINTRAG = [...REGISTER.events]
   .reverse()
-  .find((e) => (e.typ || e.type) === 'count_only_probe_authorized');
+  .find((e) => (e.typ || e.type) === 'count_only_probe_authorized'
+    && (e.fenster || [])[0] === 'pruefung');
 
 function freigabeDatei(verzeichnis, serverConfirmedAt, aenderung = {}) {
   const pfad = path.join(verzeichnis, 'freigabe.json');
