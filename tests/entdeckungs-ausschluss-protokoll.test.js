@@ -106,6 +106,27 @@ check('Client-Nachcut protokolliert NUR Groessen-Ausschluesse, nicht ETF/Vorzueg
     'ein Fonds oder eine Vorzugsaktie ist kein zu klein befundenes Unternehmen');
 });
 
+// Review-Befund zum Erstwurf: alle Faelle oben rechnen mit Kurs 1. Dann ist die USD-Schwelle
+// (MIN_USD_PRECUT) zahlengleich mit der lokalen Server-Schwelle (`right`) — beide heissen im
+// selben Rumpf "die Schwelle", und ein Vertauschen blieb gruen. Real haette das jeden Markt
+// mit Kurs != 1 (JP/KR/CN) fast vollstaendig geloescht: `right` liegt in Yen im Bereich 2e11,
+// der verglichene Wert in USD im Bereich 2e9 -> alles faellt durch. Dieser Fall trennt beide.
+const CFG_JP = { endpoint: 'japan', suffix: '.T', ccy: 'JPY', canon: 'tvjp', country: 'JP' };
+const RATEN_JP = { JPY: 0.0067, USD: 1 };
+const zeileJp = (code, mcapJpy) => ({ d: [code, mcapJpy, 'JPY', code + ' KK', 'stock', 'common', 'TSE', 'Japan'] });
+
+check('Fremdwaehrung: verglichen wird der USD-Wert, NICHT die lokale Server-Schwelle', () => {
+  // 300 Mrd JPY = 2,01 Mrd USD (drueber), 250 Mrd = 1,675 Mrd (drueber), 200 Mrd = 1,34 Mrd (drunter).
+  // Die lokale Schwelle waere ~224 Mrd JPY — wer gegen SIE vergleicht, wirft alle drei weg.
+  const m = verarbeiteZeilen('tv-japan', CFG_JP,
+    [zeileJp('7203', 300e9), zeileJp('6758', 250e9), zeileJp('9999', 200e9)],
+    RATEN_JP, 3, 223880597015);
+  assert.deepEqual([...m.keys()].sort(), ['6758.T', '7203.T'],
+    'beide USD-Werte ueber 1,5 Mrd muessen bleiben — sie liegen aber WEIT unter der lokalen Schwelle');
+  assert.deepEqual(m.tor.unterSchwelle.map((r) => r.ticker), ['9999.T']);
+  assert.equal(m.tor.unterSchwelle[0].mcapUsd, Math.round(200e9 * 0.0067));
+});
+
 check('abgeschnittener Markt wird als truncated gemeldet (stiller Verlust sichtbar)', () => {
   const m = verarbeiteZeilen('tv-japan', CFG_IT, [zeile('A', 3e9)], RATEN, 3100, 1.5e9);
   assert.equal(m.tor.truncated, true);
@@ -139,8 +160,9 @@ function laufTor2(minUsd) {
   for (const [t, v] of Object.entries(mcap)) (v >= minUsd ? kept : belowUsd).set(t, v);
   // STUMM.MI: beantwortet, aber ohne brauchbaren Marktwert -> muss als "unbekannt" landen.
   const answered = new Set([...Object.keys(mcap), 'STUMM.MI']);
-  const verworfen = applyForeignPrefilterOutcome(allTickers, foreignNull,
-    { kept, answered, renamed: new Map(), unpriceable: new Set(), belowUsd });
+  const verworfen = [];
+  applyForeignPrefilterOutcome(allTickers, foreignNull,
+    { kept, answered, renamed: new Map(), unpriceable: new Set(), belowUsd }, verworfen);
   return { allTickers, verworfen };
 }
 
@@ -168,8 +190,9 @@ check('ohne Marktwert steht "unbekannt" (null), nicht "0 Dollar"', () => {
 
 check('fehlendes belowUsd (alte Aufrufform) kippt nicht in eine Falschzahl', () => {
   const allTickers = new Map([['X.PA', { ticker: 'X.PA', source: 'tvfr', country: 'FR' }]]);
-  const verworfen = applyForeignPrefilterOutcome(allTickers, [...allTickers.entries()],
-    { kept: new Map(), answered: new Set(['X.PA']), renamed: new Map(), unpriceable: new Set() });
+  const verworfen = [];
+  applyForeignPrefilterOutcome(allTickers, [...allTickers.entries()],
+    { kept: new Map(), answered: new Set(['X.PA']), renamed: new Map(), unpriceable: new Set() }, verworfen);
   assert.equal(verworfen[0].mcapUsd, null);
 });
 
@@ -205,6 +228,48 @@ check('jeQuelle zaehlt, wie viele Verworfene eine 800-Mio-Grenze gehalten haette
   assert.equal(p.tor2_mcapPrefilter.jeQuelle.tvit.verworfen, 2);
   assert.equal(p.tor2_mcapPrefilter.jeQuelle.tvit.abAchthundertMio, 0,
     '600 Mio und "unbekannt" duerfen die 800-Mio-Ausbeute NICHT aufblasen');
+});
+
+// ── Review-Befunde zum Erstwurf ──────────────────────────────────────────────────
+check('drei Ausschlussgruende werden getrennt gefuehrt (nicht alles "unbekannt")', () => {
+  const allTickers = new Map([
+    ['KLEIN.MI', { ticker: 'KLEIN.MI', source: 'tvit', country: 'IT' }],
+    ['FONDS.MI', { ticker: 'FONDS.MI', source: 'tvit', country: 'IT' }],
+    ['STUMM.MI', { ticker: 'STUMM.MI', source: 'tvit', country: 'IT' }],
+  ]);
+  const verworfen = [];
+  applyForeignPrefilterOutcome(allTickers, [...allTickers.entries()], {
+    kept: new Map(),
+    answered: new Set(['KLEIN.MI', 'FONDS.MI', 'STUMM.MI']),
+    renamed: new Map(), unpriceable: new Set(),
+    belowUsd: new Map([['KLEIN.MI', 0.6e9]]),
+    nichtAktie: new Set(['FONDS.MI']),
+  }, verworfen);
+  const g = Object.fromEntries(verworfen.map((r) => [r.ticker, r.grund]));
+  assert.equal(g['KLEIN.MI'], 'unter-schwelle');
+  assert.equal(g['FONDS.MI'], 'kein-aktien-typ', 'ein Fonds ist kein zu klein befundenes Unternehmen');
+  assert.equal(g['STUMM.MI'], 'ohne-marktwert');
+  const p = baueAusschlussProtokoll([], verworfen, {});
+  assert.equal(p.tor2_mcapPrefilter.jeQuelle.tvit.unterSchwelle, 1);
+  assert.equal(p.tor2_mcapPrefilter.jeQuelle.tvit.keinAktienTyp, 1);
+  assert.equal(p.tor2_mcapPrefilter.jeQuelle.tvit.ohneMarktwert, 1);
+});
+
+check('bricht die Zuordnung mitten ab, steht das bis dahin Geloeschte trotzdem im Protokoll', () => {
+  // Das Protokoll wird HINEINGEREICHT, nicht zurueckgegeben. Sonst behauptet der aeussere
+  // try/catch in main() "0 Ausschluesse", obwohl bereits Ticker aus allTickers weg sind.
+  const allTickers = new Map([
+    ['A.MI', { ticker: 'A.MI', source: 'tvit', country: 'IT' }],
+    ['B.MI', { ticker: 'B.MI', source: 'tvit', country: 'IT' }],
+  ]);
+  const kaputt = { get(t) { if (t === 'B.MI') throw new Error('Zuordnung kaputt'); return undefined; } };
+  const verworfen = [];
+  assert.throws(() => applyForeignPrefilterOutcome(allTickers, [...allTickers.entries()],
+    { kept: kaputt, answered: new Set(['A.MI', 'B.MI']), renamed: new Map(), unpriceable: new Set(), belowUsd: new Map() },
+    verworfen));
+  assert.equal(allTickers.has('A.MI'), false, 'A.MI wurde geloescht');
+  assert.deepEqual(verworfen.map((r) => r.ticker), ['A.MI'],
+    'die bereits erfolgte Loeschung MUSS im Protokoll stehen, auch wenn danach abgebrochen wird');
 });
 
 check('leere Eingaben ergeben ein leeres, aber vollstaendiges Protokoll (kein Absturz)', () => {

@@ -100,6 +100,26 @@ check('Nicht-Equity (ETF) wird gar nicht bewertet — weder kept noch belowUsd',
   assert.ok(!r.belowUsd.has('FONDS.PA'), 'ein ETF ist kein zu klein befundenes Unternehmen');
 });
 
+// Review-Befund zum Erstwurf: der Nicht-Aktie-Pfad war der DRITTE stille Weg. Die Zeile
+// verschwand aus dem Universum und stand im Protokoll unter "Marktwert unbekannt" — falsche
+// Begruendung, und genau die Sorte Halbwahrheit, gegen die Tag 642 gebaut wurde.
+check('Nicht-Equity landet im eigenen Register nichtAktie (nicht unter "unbekannt")', async () => {
+  const q = async (b) => b.map((s) => ({ symbol: s, marketCap: 1e8, currency: 'EUR',
+    quoteType: s === 'FONDS.PA' ? 'ETF' : 'EQUITY' }));
+  const r = await prefilterByMcap(['FONDS.PA', 'ECHT.PA'], { minUsd: 2e9, quote: q, rates: RATES });
+  assert.ok(r.nichtAktie.has('FONDS.PA'), 'der ETF muss als "keine Aktie" gefuehrt sein');
+  assert.ok(!r.nichtAktie.has('ECHT.PA'), 'eine echte Aktie gehoert NICHT in dieses Register');
+  assert.ok(r.belowUsd.has('ECHT.PA'), 'die echte Aktie ist ein Groessen-Befund');
+  assert.ok(!r.unpriceable.has('FONDS.PA'));
+});
+
+check('fehlender quoteType bleibt fail-open (wird bewertet, nicht als Nicht-Aktie verbucht)', async () => {
+  const q = async (b) => b.map((s) => ({ symbol: s, marketCap: 3e9, currency: 'EUR' }));
+  const r = await prefilterByMcap(['OHNETYP.PA'], { minUsd: 2e9, quote: q, rates: RATES });
+  assert.ok(r.kept.has('OHNETYP.PA'));
+  assert.equal(r.nichtAktie.size, 0);
+});
+
 check('Batch-Fehler bleibt unbeantwortet (kein stiller Ausschluss)', async () => {
   const q = async () => { throw new Error('429'); };
   const r = await prefilterByMcap(ALLE, { minUsd: 2e9, quote: q, rates: RATES });

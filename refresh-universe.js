@@ -706,9 +706,14 @@ function applyDeadRegistryAndCap(allTickers, deadRegistry, MAX_UNIVERSE) {
 // Zahl war die Aggregat-Logzeile in mcap-prefilter.js. Karls Direktive "nichts
 // verschwindet" ist auf Datenebene nur haltbar, wenn jeder Ausschluss seinen Beleg
 // mitbringt. Rueckgabe statt Seiteneffekt, damit die Funktion pruefbar bleibt.
-function applyForeignPrefilterOutcome(allTickers, foreignNull, result) {
-  const { kept: keptUsd, answered, renamed, unpriceable, belowUsd } = result;
-  const verworfen = [];
+// Review-Befund zu Tag 642 (nicht atomar): die Loeschung passierte in der Schleife, die
+// Rueckgabe erst am Ende. Wirft die Schleife in der Mitte, faengt der aeussere try/catch das
+// ab — und das Protokoll behauptet "0 Ausschluesse", obwohl schon Ticker weg sind. Deshalb
+// nimmt die Funktion das Protokoll-Array jetzt ENTGEGEN und fuellt es fortlaufend: was
+// geloescht wurde, steht bereits drin, egal wo abgebrochen wird.
+function applyForeignPrefilterOutcome(allTickers, foreignNull, result, verworfen) {
+  const { kept: keptUsd, answered, renamed, unpriceable, belowUsd, nichtAktie } = result;
+  if (!Array.isArray(verworfen)) verworfen = [];
   for (const [key, v] of foreignNull) {
     const eff = (renamed && renamed.get(key)) || key;
     if (eff !== key) {
@@ -721,13 +726,19 @@ function applyForeignPrefilterOutcome(allTickers, foreignNull, result) {
     else if (answered.has(eff) && !(unpriceable && unpriceable.has(eff))) {
       allTickers.delete(eff);
       const gemessen = belowUsd && belowUsd.get(eff);
+      const istKeineAktie = !!(nichtAktie && nichtAktie.has(eff));
       verworfen.push({
         ticker: eff,
         quelle: (v && v.source) || null,
         land: (v && v.country) || null,
-        // null heisst hier ehrlich "unbekannt": Yahoo hat geantwortet, aber ohne
-        // brauchbaren Marktwert (kein/kein positives marketCap) — nicht "0 Dollar".
+        // null heisst hier ehrlich "unbekannt" — nicht "0 Dollar".
         mcapUsd: Number.isFinite(gemessen) ? Math.round(gemessen) : null,
+        // Drei verschiedene Gruende, die man nicht verwechseln darf:
+        //   unter-schwelle  = Marktwert gemessen, liegt unter der Grenze (Groessen-Befund)
+        //   kein-aktien-typ = Yahoo sagt Fonds/Vorzug/Warrant — kein Groessen-Befund
+        //   ohne-marktwert  = beantwortet, aber kein brauchbarer Marktwert
+        grund: Number.isFinite(gemessen) ? 'unter-schwelle'
+          : (istKeineAktie ? 'kein-aktien-typ' : 'ohne-marktwert'),
       });
     }
   }
@@ -748,9 +759,15 @@ function baueAusschlussProtokoll(tvProtokoll, prefilterVerworfen, schwellen) {
   const jeQuelle = {};
   for (const r of pf) {
     const k = (r && r.quelle) || '(ohne Quelle)';
-    const e = jeQuelle[k] || (jeQuelle[k] = { land: (r && r.land) || null, verworfen: 0, abAchthundertMio: 0 });
+    const e = jeQuelle[k] || (jeQuelle[k] = {
+      land: (r && r.land) || null, verworfen: 0, abAchthundertMio: 0,
+      unterSchwelle: 0, keinAktienTyp: 0, ohneMarktwert: 0 });
     e.verworfen++;
     if (Number.isFinite(r && r.mcapUsd) && r.mcapUsd >= 800e6) e.abAchthundertMio++;
+    const g = (r && r.grund) || 'ohne-marktwert';
+    if (g === 'unter-schwelle') e.unterSchwelle++;
+    else if (g === 'kein-aktien-typ') e.keinAktienTyp++;
+    else e.ohneMarktwert++;
   }
   return {
     _doc: 'Ausschluss-Protokoll der Entdeckungs-Schicht (Tag 642). Wer wurde von welchem Tor ' +
@@ -1692,13 +1709,15 @@ async function main() {
   // ihre USD-mcap gesetzt (-> withMcap-Zweig unten, korrekt nach Groesse einsortiert); der Rest wird
   // verworfen. Fail-safe: bei Ausfall bleibt eine Zeile null-mcap und faellt in die bestehende Slot-Logik
   // zurueck (kein Regress). Ergebnis: Universum bleibt $2B+-schlank -> KEIN Pull-Sharding noetig.
-  let prefilterVerworfen = [];
+  // Vorinitialisiert und HINEINGEREICHT (nicht als Rueckgabe eingesammelt): bricht die
+  // Zuordnung in der Mitte ab, steht trotzdem drin, was bis dahin geloescht wurde.
+  const prefilterVerworfen = [];
   try {
     const foreignNull = [...allTickers.entries()].filter(([, v]) =>
       v && !v.marketCap && v.source && String(v.source).split(',').some((s) => FOREIGN_CANON_SET.has(s.trim())));
     if (foreignNull.length) {
       const prefilterResult = await prefilterByMcap(foreignNull.map(([k]) => k));
-      prefilterVerworfen = applyForeignPrefilterOutcome(allTickers, foreignNull, prefilterResult);
+      applyForeignPrefilterOutcome(allTickers, foreignNull, prefilterResult, prefilterVerworfen);
     }
   } catch (e) { console.warn('[refresh-universe] mcap-prefilter uebersprungen:', e.message); }
 

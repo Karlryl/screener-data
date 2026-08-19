@@ -70,7 +70,10 @@ function kosdaqTarget(symbol, quote) {
  *                                 aber fx-rates.json kennt die Handelswaehrung nicht (Artefakt-
  *                                 Luecke, nicht "unter Schwelle"),
  *                               belowUsd: Map<yahooSymbol, marketCapUsd> sauber bepreist, aber
- *                                 UNTER der Schwelle — die Begruendung des Ausschlusses. }
+ *                                 UNTER der Schwelle — die Begruendung des Ausschlusses,
+ *                               nichtAktie: Set<yahooSymbol> Yahoo meldet quoteType != EQUITY
+ *                                 (Fonds/Vorzug/Warrant) — gar nicht bewertet, also weder
+ *                                 "zu klein" noch "Marktwert unbekannt". }
  * symbols: Array yahoo-suffigierter Ticker (die null-mcap-Auslandszeilen).
  * opts.minUsd: Schwelle abweichend von MIN_USD (Messungen: minUsd 0 = alles bepreisen).
  * opts.quote:  Ersatz fuer yf.quote(batch) — nur fuer Tests, damit dieses Tor OHNE Netz
@@ -100,6 +103,12 @@ async function prefilterByMcap(symbols, opts = {}) {
   // einzige Spur war die Aggregat-Logzeile ganz unten. belowUsd traegt jetzt den gemessenen
   // Marktwert JEDER verworfenen Zeile, damit der Ausschluss belegbar statt still ist.
   const belowUsd = new Map();
+  // Review-Befund zu Tag 642: es gibt einen DRITTEN Pfad, der bisher unbenannt blieb —
+  // Yahoo antwortet mit quoteType != EQUITY (Fonds, Vorzugsaktie, Warrant). Die Zeile wird
+  // dann gar nicht bewertet, faellt beim Aufrufer trotzdem aus dem Universum und stand im
+  // Protokoll unter "Marktwert unbekannt". Das ist die falsche Begruendung: der Grund ist
+  // "keine Aktie", nicht "zu klein oder unbekannt gross". nichtAktie trennt beides.
+  const nichtAktie = new Set();
   // Bug 5: .KS-Symbole, fuer die Yahoo KOSDAQ meldet -> auf .KQ requoten. renamed traegt die
   // Zuordnung .KS -> .KQ zum Caller (er ersetzt die Watchlist-Zeile), requoteTargets sammelt
   // die neu zu quotenden .KQ-Symbole.
@@ -108,7 +117,7 @@ async function prefilterByMcap(symbols, opts = {}) {
   let checked = 0, errors = 0;
   const gradeQuote = (q) => {
     // gemeinsame Bewertung einer Quote-Antwort (Haupt- und Requote-Pass).
-    if (q.quoteType && q.quoteType !== 'EQUITY') return; // fail-open bei fehlendem quoteType
+    if (q.quoteType && q.quoteType !== 'EQUITY') { nichtAktie.add(q.symbol); return; } // fail-open bei fehlendem quoteType
     checked++;
     const usd = toUsd(q.marketCap, q.currency, rates);
     if (usd != null) {
@@ -150,7 +159,7 @@ async function prefilterByMcap(symbols, opts = {}) {
     }
   }
   console.log(`[mcap-prefilter] ${symbols.length} geprueft (${checked} beantwortet, ${errors} Batch-Fehler, ${renamed.size} KOSDAQ .KS->.KQ, ${unpriceable.size} unbewertbar/FX-Luecke) -> ${kept.size} >= $${(minUsd / 1e9).toFixed(1)}B`);
-  return { kept, answered, renamed, unpriceable, belowUsd };
+  return { kept, answered, renamed, unpriceable, belowUsd, nichtAktie };
 }
 
 module.exports = { prefilterByMcap, toUsd, kosdaqTarget, isUnpriceable };
