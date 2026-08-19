@@ -33,9 +33,11 @@
   "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in dieser Quelle auf das Monatsende gerundet, deshalb ist ein 53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es über das Geschäftsjahresende `fye` im Berichtskopf (639 Firmen mit wanderndem Ende, davon 425 mit Umsatzreihe) oder über das echte Periodenende in den Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)",
   "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
  ],
- "geoeffnete_pfade": [
-  "C:\\Users\\Anwender\\AppData\\Local\\Temp\\e2-selbsttest-zfrkz0u3\\panel-entdeckung.sqlite",
-  "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\panel\\panel-entdeckung.sqlite"
+ "gelesene_pfade": [
+  "panel/panel-entdeckung.sqlite"
+ ],
+ "geschriebene_pfade": [
+  "work/E2-zwischenstand.sqlite"
  ],
  "kette": {
   "anker_stimmt": true,
@@ -4596,5 +4598,5 @@
   "verworfen_stichtag_unlesbar": 0,
   "verworfen_wert_leer": 20422
  },
- "zeitstempel": "2026-08-19T09:05:51+00:00"
+ "zeitstempel": "2026-08-19T09:07:06+00:00"
 }

@@ -4,9 +4,12 @@ Stand 2026-08-19. Gelesen wurde **ausschließlich** das Entdeckungsfenster (2009
 
 *Fachwörter werden bei der ersten Verwendung in einem Halbsatz übersetzt.*
 
-**Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Tatsächlich geöffnete Dateien:
-- `panel-entdeckung.sqlite`
-- `panel-entdeckung.sqlite`
+**Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Was dieser Lauf wirklich angefasst hat (Verzeichnis und Dateiname):
+
+- gelesen: `panel/panel-entdeckung.sqlite`
+- geschrieben: `work/E2-zwischenstand.sqlite` (Arbeitsdatei für die Wiederaufnahme)
+
+Läuft im selben Aufruf zuerst der Selbsttest, taucht hier zusätzlich dessen Fixture-Datenbank auf — sie heißt absichtlich genauso wie das Panel und liegt in einem Temp-Verzeichnis. Am Verzeichnisnamen ist sie eindeutig zu unterscheiden.
 
 ## Kurz gefasst
 
@@ -370,4 +373,4 @@ Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der Selbstte
 
 ---
 
-*Erzeugt 2026-08-19T09:05:51+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
+*Erzeugt 2026-08-19T09:07:06+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*

@@ -203,7 +203,19 @@ class BasisratenFehler(Exception):
 
 # -- Pfade und die Fenster-Mauer ---------------------------------------------
 
+# Beobachtungsfelder fuer das Lauf-Flag (R4): was hat dieser Lauf wirklich
+# angefasst? Gefuehrt wird der Pfad mit seinem Elternverzeichnis, nicht nur der
+# Dateiname — sonst sieht die Selbsttest-Fixture, die absichtlich genauso heisst
+# wie das Panel, im Report aus wie ein zweiter Panel-Zugriff.
 GEOEFFNETE_PFADE = []
+GESCHRIEBENE_PFADE = []
+
+
+def kurzpfad(voll):
+    """Elternverzeichnis + Dateiname. Genug zum Unterscheiden, ohne die
+    Benutzerkennung des Rechners in den Report zu schreiben (R12a)."""
+    return (os.path.basename(os.path.dirname(voll)) + "/"
+            + os.path.basename(voll))
 
 
 def datenwurzel(vorgabe=None):
@@ -240,7 +252,8 @@ def oeffne_nur_lesend(pfad):
     voll = pruefe_mauer(pfad)
     if not os.path.isfile(voll):
         raise BasisratenFehler("Panel-Datei nicht gefunden: " + voll)
-    GEOEFFNETE_PFADE.append(voll)
+    if kurzpfad(voll) not in GEOEFFNETE_PFADE:
+        GEOEFFNETE_PFADE.append(kurzpfad(voll))
     conn = sqlite3.connect("file:" + voll.replace("\\", "/") + "?mode=ro", uri=True)
     conn.execute("PRAGMA cache_size=-200000")
     return conn
@@ -378,6 +391,8 @@ def oeffne_zwischenstand(pfad, neu):
     if neu and os.path.isfile(pfad):
         os.remove(pfad)
     os.makedirs(os.path.dirname(os.path.abspath(pfad)), exist_ok=True)
+    if kurzpfad(os.path.abspath(pfad)) not in GESCHRIEBENE_PFADE:
+        GESCHRIEBENE_PFADE.append(kurzpfad(os.path.abspath(pfad)))
     conn = sqlite3.connect(pfad, isolation_level=None)
     conn.execute("PRAGMA synchronous=OFF")
     conn.execute("PRAGMA cache_size=-200000")
@@ -1141,7 +1156,8 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
     return {
         "zeitstempel": zeitstempel(),
         "fenster": {"name": FENSTER_NAME, "von": FENSTER_VON, "bis": FENSTER_BIS},
-        "geoeffnete_pfade": list(GEOEFFNETE_PFADE),
+        "gelesene_pfade": list(GEOEFFNETE_PFADE),
+        "geschriebene_pfade": list(GESCHRIEBENE_PFADE),
         "ergebnisdaten_beruehrt": False,
         "umgebung": {"python": sys.version.split()[0],
                      "sqlite": sqlite3.sqlite_version,
@@ -1287,9 +1303,18 @@ def markdown(d):
     a("")
     a("**Lauf-Flag (R4): Ergebnisdaten berührt = " +
       ("JA" if d["ergebnisdaten_beruehrt"] else "NEIN") + ".** Es wurde keine Kurs-, "
-      "Rendite- oder Ergebnisdatei geöffnet. Tatsächlich geöffnete Dateien:")
-    for p in d["geoeffnete_pfade"]:
-        a("- `" + os.path.basename(p) + "`")
+      "Rendite- oder Ergebnisdatei geöffnet. Was dieser Lauf wirklich angefasst "
+      "hat (Verzeichnis und Dateiname):")
+    a("")
+    for p in d["gelesene_pfade"]:
+        a("- gelesen: `" + p + "`")
+    for p in d["geschriebene_pfade"]:
+        a("- geschrieben: `" + p + "` (Arbeitsdatei für die Wiederaufnahme)")
+    a("")
+    a("Läuft im selben Aufruf zuerst der Selbsttest, taucht hier zusätzlich "
+      "dessen Fixture-Datenbank auf — sie heißt absichtlich genauso wie das "
+      "Panel und liegt in einem Temp-Verzeichnis. Am Verzeichnisnamen ist sie "
+      "eindeutig zu unterscheiden.")
     a("")
 
     a("## Kurz gefasst")
