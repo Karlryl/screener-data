@@ -61,6 +61,7 @@ das Perzentil laeuft ueber den naechsten Rang und ist von Hand nachrechenbar.
 
 Aufruf:
   python scripts/studie-panel-aktienzahl.py --selbsttest
+  python scripts/studie-panel-aktienzahl.py --gegenprobe
   python scripts/studie-panel-aktienzahl.py --bericht
 """
 
@@ -1033,6 +1034,28 @@ def markdown(daten):
         zeilen.append("| `" + name + "` | " + zahl(z[name]) + " |")
     zeilen.append("")
 
+    zeilen.append("## Woran das geprueft ist")
+    zeilen.append("")
+    zeilen.append("- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit "
+                  "von Hand nachgerechneten Erwartungswerten, "
+                  + str(len(SABOTAGEN)) + " Pruefungen: "
+                  "`python scripts/studie-panel-aktienzahl.py --selbsttest`")
+    zeilen.append("- **Gegenprobe**: jede dieser Pruefungen wird einmal "
+                  "absichtlich kaputtgemacht — kaputtgemacht wird die *Sache*, "
+                  "die sie schuetzt, nicht die Pruefung selbst — und muss rot "
+                  "werden. Bleibt eine gruen, ist sie wirkungslos und der Lauf "
+                  "meldet das: "
+                  "`python scripts/studie-panel-aktienzahl.py --gegenprobe`")
+    zeilen.append("- **Fenster-Mauer**: geoeffnet wird ausschliesslich "
+                  "`panel-entdeckung.sqlite`, schreibgeschuetzt. Geprueft wird "
+                  "der *aufgeloeste* Pfad, nicht der geschriebene — eine "
+                  "harmlos benannte Verzeichnis-Verknuepfung in Richtung "
+                  "Endtest wird abgewiesen. Der Endtest wurde nie geoeffnet, "
+                  "nie entschluesselt, nie gezaehlt.")
+    zeilen.append("- **Plausibilitaetsanker** gegen die Vor-Etappen (unten). "
+                  "Ein Anker, der Abweichungen schluckt, waere keiner: eine "
+                  "Abweichung von einer einzigen Firma haelt den Lauf an.")
+    zeilen.append("")
     zeilen.append("## Plausibilitaetsanker")
     zeilen.append("")
     for eintrag in daten["anker"]:
@@ -1688,11 +1711,116 @@ def selbsttest(verzeichnis):
     return 0
 
 
+# -- Gegenprobe: jede Pruefung einmal absichtlich kaputtmachen ----------------
+
+# (Pruefung, was kaputtgemacht wird, Zeilen-Praefix, Ersatzzeile)
+# Kaputtgemacht wird jeweils die SACHE, die die Pruefung schuetzt — nie die
+# Pruefung selbst. Eine Pruefung, die nur rot wird, wenn man sie umschreibt,
+# prueft nichts. Genau diese Sorte Schein-Waechter war in diesem Projekt schon
+# zweimal unbemerkt kaputt: einmal pinnte ein Test eine Zeichenkette statt der
+# Sache, einmal hielt ein zweites Vorkommen den Test gruen, waehrend genau die
+# geschuetzte Stelle sich aenderte.
+SABOTAGEN = (
+    ("1 Formfilter", "auch 8-K-Meldungen gelten als periodischer Bericht",
+     "PERIODISCHE_FORMEN = (",
+     'PERIODISCHE_FORMEN = ("10-K", "10-Q", "20-F", "40-F", "8-K")'),
+    ("2 Taxonomie-Filter", "firmeneigene Kennungen zaehlen mit",
+     '            if not STANDARD_VERSION_RE.match((version or "").strip()):',
+     "            if False:"),
+    ("3 Zeitpunkt-Ehrlichkeit R6",
+     "die spaeteste Fassung gewinnt statt der fruehesten",
+     "                if accepted < vorhanden[0]:",
+     "                if accepted > vorhanden[0]:"),
+    ("4 Abdeckung je Familie",
+     "der Periodendurchschnitt wird am Stichtags-Quartal gesucht",
+     "QTRS_QUARTAL = {",
+     'QTRS_QUARTAL = {"sofort": "0", "zeitraum": "0"}'),
+    ("5 Verwaesserung", "Zaehler und Nenner vertauscht",
+     "                verhaeltnis = v_spaet / v_frueh",
+     "                verhaeltnis = v_frueh / v_spaet"),
+    ("6 Fenster-Mauer", "die Verbotsliste trifft nichts mehr",
+     "VERBOTEN_RE = re.compile(",
+     'VERBOTEN_RE = re.compile(r"^(?!)$", re.IGNORECASE)'),
+    ("7 Mauer um die Ecke",
+     "nur der geschriebene Pfad wird geprueft, nicht der aufgeloeste",
+     "    for form in (geschrieben, aufgeloest):",
+     "    for form in (geschrieben,):"),
+    ("8 Schreibschutz", "das Panel wird schreibbar geoeffnet",
+     '    uri = "file:" + voll.replace(',
+     '    uri = "file:" + voll.replace(chr(92), "/") + "?mode=rw"'),
+    ("9 Dubletten-Abbruch", "eine doppelte Berichtsnummer geht still durch",
+     "        if adsh in gesehen:",
+     "        if False:"),
+    ("10 Plausibilitaetsanker", "der Ankerwert wird um eine Firma verstellt",
+     "ANKER_E2_REIF = ",
+     "ANKER_E2_REIF = 486"),
+)
+
+
+def gegenprobe(verzeichnis):
+    """Laeuft den Selbsttest zehnmal gegen eine je einmal sabotierte Kopie.
+
+    Gruen heisst hier: JEDE Sabotage wurde rot gemeldet. Eine Sabotage, die
+    durchgeht, ist der eigentliche Befund — dann schuetzt die zugehoerige
+    Pruefung nichts, und das faellt sonst erst auf, wenn die Zahlen still
+    falsch sind."""
+    import subprocess
+    os.makedirs(verzeichnis, exist_ok=True)
+    eigen = os.path.abspath(__file__)
+    with open(eigen, encoding="utf-8") as fh:
+        zeilen = fh.read().split(chr(10))
+    kopie = os.path.join(verzeichnis, "sabotierte-kopie.py")
+    durchgerutscht = []
+    print("Gegenprobe: " + str(len(SABOTAGEN))
+          + " Sabotagen gegen den eigenen Selbsttest.")
+    for name, was, praefix, ersatz in SABOTAGEN:
+        treffer = [i for i, z in enumerate(zeilen) if z.startswith(praefix)]
+        if len(treffer) != 1:
+            # Kein Treffer heisst NICHT "in Ordnung": die Sabotage greift dann
+            # ins Leere und die Pruefung bleibt ungeprueft (R5).
+            print("  " + name + ": NICHT ANWENDBAR (" + str(len(treffer))
+                  + " Treffer) - die Sabotage greift ins Leere, die Pruefung "
+                    "bleibt damit UNGEPRUEFT.")
+            durchgerutscht.append(name)
+            continue
+        gebaut = list(zeilen)
+        gebaut[treffer[0]] = ersatz
+        with open(kopie, "w", encoding="utf-8", newline=chr(10)) as fh:
+            fh.write(chr(10).join(gebaut))
+        lauf = subprocess.run([sys.executable, kopie, "--selbsttest"],
+                              capture_output=True, text=True, encoding="utf-8",
+                              errors="replace")
+        text = (lauf.stdout or "") + (lauf.stderr or "")
+        # Die Meldung kommt aus einem fremden Prozess mit eigener
+        # Konsolen-Kodierung. Sie wird auf ASCII heruntergebrochen, sonst
+        # stirbt ausgerechnet die Gegenprobe an einem Umlaut.
+        rot = [z.encode("ascii", "replace").decode("ascii")
+               for z in text.splitlines()
+               if "SELBSTTEST ROT" in z or "Error" in z]
+        if lauf.returncode == 0:
+            print("  " + name + ": GRUEN GEBLIEBEN - " + was
+                  + " faellt niemandem auf.")
+            durchgerutscht.append(name)
+        else:
+            print("  " + name + ": rot (" + was + ")")
+            print("      " + (rot[0].strip()[:200] if rot else "(ohne Meldung)"))
+    if durchgerutscht:
+        print("GEGENPROBE ROT: wirkungslose Pruefungen: "
+              + ", ".join(durchgerutscht))
+        return 1
+    print("Gegenprobe gruen: alle " + str(len(SABOTAGEN))
+          + " Pruefungen sind einmal rot gewesen.")
+    return 0
+
+
 # -- Hauptlauf ----------------------------------------------------------------
 
 def haupt():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--selbsttest", action="store_true")
+    ap.add_argument("--gegenprobe", action="store_true",
+                    help="macht jede Pruefung des Selbsttests einmal "
+                         "absichtlich kaputt und verlangt, dass sie rot wird")
     ap.add_argument("--bericht", action="store_true")
     ap.add_argument("--ohne-e2", action="store_true",
                     help="ueberspringt die teure E2-Rekonstruktion (Frage 4 "
@@ -1702,10 +1830,13 @@ def haupt():
         "reports", "studie", "E2-aktienzahl-2026-08-19.md"))
     args = ap.parse_args()
 
-    if args.selbsttest:
+    if args.selbsttest or args.gegenprobe:
         import tempfile
-        return selbsttest(os.path.join(tempfile.gettempdir(),
-                                       "studie-aktienzahl-selbsttest"))
+        basis = os.path.join(tempfile.gettempdir(),
+                             "studie-aktienzahl-selbsttest")
+        if args.gegenprobe:
+            return gegenprobe(os.path.join(basis, "gegenprobe"))
+        return selbsttest(basis)
     if not args.bericht:
         ap.print_help()
         return 1

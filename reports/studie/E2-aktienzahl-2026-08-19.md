@@ -175,6 +175,13 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 | `werte_pit` | 877.504 |
 | `werte_spaetere_fassung` | 568.123 |
 
+## Woran das geprueft ist
+
+- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit von Hand nachgerechneten Erwartungswerten, 10 Pruefungen: `python scripts/studie-panel-aktienzahl.py --selbsttest`
+- **Gegenprobe**: jede dieser Pruefungen wird einmal absichtlich kaputtgemacht — kaputtgemacht wird die *Sache*, die sie schuetzt, nicht die Pruefung selbst — und muss rot werden. Bleibt eine gruen, ist sie wirkungslos und der Lauf meldet das: `python scripts/studie-panel-aktienzahl.py --gegenprobe`
+- **Fenster-Mauer**: geoeffnet wird ausschliesslich `panel-entdeckung.sqlite`, schreibgeschuetzt. Geprueft wird der *aufgeloeste* Pfad, nicht der geschriebene — eine harmlos benannte Verzeichnis-Verknuepfung in Richtung Endtest wird abgewiesen. Der Endtest wurde nie geoeffnet, nie entschluesselt, nie gezaehlt.
+- **Plausibilitaetsanker** gegen die Vor-Etappen (unten). Ein Anker, der Abweichungen schluckt, waere keiner: eine Abweichung von einer einzigen Firma haelt den Lauf an.
+
 ## Plausibilitaetsanker
 
 - Firmen im Entdeckungsfenster (E1): erwartet 11.156, gemessen 11.156 — **stimmt**
@@ -189,4 +196,4 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 ---
 
-Lauf: 2026-08-19T09:48:51Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**
+Lauf: 2026-08-19T09:57:07Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**
