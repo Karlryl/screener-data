@@ -1662,6 +1662,13 @@ jobs:
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js
+          # Ausschluss-Liste NACH dem Export: sie liest v1/index.json als Zaehler-Quelle und
+          # bricht laut ab, wenn ihre Summen davon abweichen. Vor dem gh-pages-Deploy, der
+          # v1/ komplett kopiert — excluded.json faehrt dadurch automatisch mit.
+          # Karl-Entscheid 02.08.: "Eine Grenze, die Namen wegnimmt, wird ersetzt —
+          # niemand verschwindet." Bis heute wurde je Ausschluss nur ein Zaehler erhoeht
+          # und die Zeile verworfen; kein Kuerzel, kein Name ueberlebte.
+          node scripts/write-excluded-list.js
           count=$(ls outputs/findash-export/v1/*.json 2>/dev/null | wc -l)
           echo "findash-export wrote $count JSON files to outputs/findash-export/v1/"
           if [ "$count" -lt 15 ]; then
