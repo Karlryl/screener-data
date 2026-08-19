@@ -281,13 +281,20 @@ test('7d Alarm: die Vollboard-Zeilen tragen den Waehrungsbeleg trotzdem (nur die
   assert.equal(vollSauber.profitable[0].marketCap, gekapptSauber.profitable[0].marketCap);
 });
 
-// ── Sabotage-Protokoll (19.08.2026, vor "fertig" ausgefuehrt) ───────────────────────
-// (a) slice(0, DECKEL) in den full-Pfad eingebaut -> Pruefungen 2, 4, 4b, 4c und 5b rot
-//     (Vollboard 100 statt 150, Rang 101 fehlt). Pruefung 3 blieb GRUEN — sie prueft die
-//     Gleichheit des PRAEFIX, und die haelt ein gekapptes Vollboard trivial ein. Genau
-//     deshalb steht Pruefung 2 daneben: Paritaet allein kann den Deckel nicht sehen.
-// (b) den full-Zweig aus validateExport() ausgebaut -> Pruefungen 5, 5c, 5d rot.
-// Beide zurueckgebaut, danach alles gruen (Zahlen im Bericht).
+// ── Sabotage-Protokoll (19.08.2026, vor "fertig" ausgefuehrt, gemessen) ────────────
+// (a) slice(0, DECKEL) in den full-Pfad eingebaut  -> 14 ok / 4 fail: 2, 4, 4b, 4c rot.
+//     Pruefung 3 blieb GRUEN — sie prueft die Gleichheit des PRAEFIX, und die haelt ein
+//     gekapptes Vollboard trivial ein. Genau deshalb steht Pruefung 2 daneben: Paritaet
+//     allein kann den Deckel nicht sehen. 5b/5d blieben ebenfalls gruen — ein gekapptes
+//     Vollboard ist schema-konform; der Gate prueft Form, nicht Vollstaendigkeit der
+//     Kohorte. Das ist die Arbeitsteilung, nicht ein Loch.
+// (b) den full-Zweig aus validateExport() ausgebaut -> 15 ok / 3 fail: 5, 5c, 5d rot.
+//     5b blieb gruen, richtig so: es ist die Positiv-Kontrolle (KEIN full/-Alarm), kein
+//     Melder.
+// (c) die Belegbarkeits-Warnung global statt nur auf den Vollboards abgeschaltet
+//     -> 17 ok / 1 fail: 7b rot. Der Waechter haengt an der SACHE (feuert die Warnung
+//     dort weiter, wo sie gemessen wurde), nicht an einem Schreibmuster.
+// Alle drei zurueckgebaut, danach 18 ok / 0 fail.
 
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(`\nexport-vollboard.test.js: ${pass} ok, ${fail} fail`);
