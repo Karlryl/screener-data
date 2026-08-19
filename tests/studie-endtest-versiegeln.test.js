@@ -46,6 +46,11 @@ function buehne(inhalt) {
   };
 }
 
+// Aufraeumen NUR bei Gruen: die Zeile steht am Ende jedes Tests, eine geworfene
+// Assertion kommt also nie hier an. Ein roter Lauf laesst seine Buehne stehen, damit
+// man hineinsehen kann; ein gruener hinterlaesst nichts im Temp-Verzeichnis.
+const raeumeAuf = (b) => fs.rmSync(b.wurzel, { recursive: true, force: true });
+
 // Eine Datei, die nicht zufaellig aussieht: so faellt beim Suchen nach Klartext-Resten
 // jede Kopie auf, auch eine halbe.
 function testInhalt(bytes = 300 * 1024) {
@@ -93,6 +98,7 @@ test('Versiegeln: Rueckentschluesselung ergibt byte-genau den Klartext', async (
 
   // Und die Nachpruefung ist gruen.
   await siegel.pruefe(b);
+  raeumeAuf(b);
 });
 
 test('Keine zweite Klartext-Kopie auf der Platte', async () => {
@@ -114,6 +120,7 @@ test('Keine zweite Klartext-Kopie auf der Platte', async () => {
   fs.writeFileSync(koeder, inhalt);
   assert.ok(alleDateien(b.wurzel).some((d) => fs.readFileSync(d).includes(anfang)));
   fs.unlinkSync(koeder);
+  raeumeAuf(b);
 });
 
 test('Bruchprobe 1: ein gekipptes Byte macht die Pruefung rot, die intakte Kopie wieder gruen', async () => {
@@ -137,6 +144,7 @@ test('Bruchprobe 1: ein gekipptes Byte macht die Pruefung rot, die intakte Kopie
 
   fs.writeFileSync(b.siegelPfad, intakt);
   await siegel.pruefe(b);                     // wieder gruen
+  raeumeAuf(b);
 });
 
 test('Bruchprobe 2: der falsche Schluessel scheitert verstaendlich, nicht mit Stacktrace', async () => {
@@ -172,6 +180,7 @@ test('Bruchprobe 2: der falsche Schluessel scheitert verstaendlich, nicht mit St
       return true;
     },
   );
+  raeumeAuf(b);
 });
 
 test('Rote Verifikation loescht den Klartext NICHT', async () => {
@@ -193,6 +202,7 @@ test('Rote Verifikation loescht den Klartext NICHT', async () => {
   }
   assert.ok(fs.existsSync(b.klartextPfad), 'Bei roter Verifikation muss der Klartext liegen bleiben');
   assert.equal(fs.existsSync(b.sidecarPfad), false, 'Ohne Verifikation entsteht kein Siegel-Protokoll');
+  raeumeAuf(b);
 });
 
 test('Ein zweiter Lauf ueberschreibt weder Schluessel noch Siegel', async () => {
@@ -209,4 +219,5 @@ test('Ein zweiter Lauf ueberschreibt weder Schluessel noch Siegel', async () => 
     },
   );
   assert.equal(fs.readFileSync(b.schluesselPfad, 'utf8'), schluesselVorher);
+  raeumeAuf(b);
 });
