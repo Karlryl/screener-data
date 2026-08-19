@@ -48,7 +48,7 @@
         "scharfAb": "E0",
         "ausbauProbe": true,
         "rotGezeigtAm": "2026-08-16",
-        "offen": "Die VERSCHLUESSELUNG der Endtest-Datei wird in E1 scharf, wenn die drei Fenster-Dateien gebaut werden — vorher gibt es keine Datei, die man verschluesseln koennte. Bis dahin ist die Oeffnungsmarke Klartext in dieser eingecheckten Registry: R2 ist heute ein Aufrufmuster mit Wachtest, KEIN Zugriffsschutz gegen absichtliches Vorab-Lesen. Der Waechter tests/studie-r2-fenster.test.js nagelt genau diese Aussage fest, damit R2 nicht stillschweigend als versiegelt gilt."
+        "offen": "Die VERSCHLUESSELUNG der Endtest-Datei ist am 19.08.2026 scharf geworden: panel-endtest.sqlite.enc (aes-256-gcm), die offene Fassung geloescht, Nachweis in endtest-versiegelung.json. Ohne den Schluessel — der ausserhalb des Repos unter <EARLY_DETECTION_DATA_ROOT>/schluessel/ liegt — ist die Datei Rauschen. WAS BLEIBT: die Oeffnungsmarke steht weiterhin als Klartext in dieser eingecheckten Registry, und pruefeFenster() vergleicht nur gegen sie. Dieser Aufruf-Wachtest ist fuer sich genommen KEIN Zugriffsschutz gegen absichtliches Vorab-Lesen — er war es nie und ist es auch jetzt nicht. Den Schutz tragen seit dem 19.08. die Bytes, nicht die Marke. Der Waechter tests/studie-r2-fenster.test.js nagelt genau diese Unterscheidung fest, damit die Marke nicht stillschweigend fuer den Schluessel gehalten wird."
       }
     },
     {

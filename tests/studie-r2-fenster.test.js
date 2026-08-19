@@ -72,11 +72,19 @@ test('R2: die Versiegelung ist heute ein Aufrufmuster — und die Registry sagt 
   // Gegenrede-Befund 16.08.: pruefeFenster vergleicht nur gegen eine Marke, die als
   // Klartext in der eingecheckten rules.json steht. Wer sie absichtlich lesen will,
   // liest sie — das ist kein Zugriffsschutz. Die Verfassung verspricht fuer R2 aber
-  // "eine verschluesselte Datei ist eine Eigenschaft der Bytes". Solange diese Bytes
-  // nicht existieren (die Fenster-Dateien entstehen erst in E1), darf die Luecke nicht
-  // wegformuliert werden. Dieser Waechter wird rot, wenn jemand den offen-Vermerk
-  // streicht, ohne die Marke aus dem Repo zu holen — also wenn R2 stillschweigend zu
-  // "versiegelt" befoerdert wird.
+  // "eine verschluesselte Datei ist eine Eigenschaft der Bytes".
+  //
+  // STAND 19.08.2026: Diese Bytes existieren jetzt — panel-endtest.sqlite.enc, aes-256-gcm,
+  // die offene Fassung geloescht. Der Schutz ist also da. Was dieser Waechter festnagelt,
+  // aendert sich dadurch NICHT: die Marke steht weiterhin im Klartext im Repo, und
+  // pruefeFenster() prueft weiterhin nur gegen sie. Wer die Marke liest, kommt an der
+  // Fenster-Regel vorbei — er kommt nur nicht mehr an die Daten, weil ihm der Schluessel
+  // fehlt. Genau diese Unterscheidung darf nicht verwischen.
+  //
+  // Der Waechter wird rot, wenn jemand den offen-Vermerk streicht oder zu "ist versiegelt"
+  // verkuerzt, ohne die Marke aus dem Repo zu holen — also wenn die Marke stillschweigend
+  // fuer den Schluessel gehalten wird. Gegenprobe am 19.08. durchgefuehrt: genau so
+  // verkuerzt -> dieser Test rot.
   const roh = fs.readFileSync(REGELWERK_PFAD, 'utf8');
   const r2 = regelwerk.regeln.find((regel) => regel.id === 'R2');
   const offen = String(r2.waechter.offen || '');
