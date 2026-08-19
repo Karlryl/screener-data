@@ -1,0 +1,13 @@
+{
+ "schema": "early-detection-zaehlprobe-freigabe/v1",
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "e4d-kadenz-entdeckung-2026-08-19",
+ "fenster": "entdeckung",
+ "registerEventHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
+ "registerZweig": "studie/e3-praereg",
+ "registeredAt": "2026-08-19T18:26:45.948Z",
+ "accessedAt": "2026-08-19T18:32:45.000Z",
+ "serverConfirmedAt": "2026-08-19T18:26:59.000Z",
+ "quelle": "gh api -i repos/Karlryl/screener-data/contents/protocol/early-detection/2.0.0/outcome-access-ledger.json?ref=studie/e3-praereg — Date-Kopf der Antwort",
+ "bedeutung": "Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab."
+}
