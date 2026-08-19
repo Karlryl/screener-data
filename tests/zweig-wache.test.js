@@ -49,13 +49,18 @@ const lies = (datei) => fs.readFileSync(path.join(WF_DIR, datei), 'utf8');
  *  envSchluessel — was im workflow-weiten env-Block stehen MUSS. Ein zweiter env-Block
  *    auf Spaltenebene 0 ist gueltiges YAML und loescht den ersten still; genau so waere
  *    beim Bau SEC_CONTACT verschwunden und jeder SEC-Abruf haette lautlos 403 kassiert.
+ *  vorDerWache — Arbeit, die im Zweig-Lauf trotzdem laufen MUSS. Die Wache darf nur das
+ *    VEROEFFENTLICHEN abschneiden, nicht das Rechnen: ein Zweig-Lauf ist jetzt der
+ *    Trockenlauf, und die Warnung sagt woertlich "gerechnet wurde alles, gepusht nichts".
+ *    Steht ein Skript-Aufruf hinter der Wache, ist dieser Satz eine Luege und ein
+ *    kaputtes Skript faellt im Trockenlauf nicht mehr auf — gruen, obwohl ungeprueft.
  */
 const REGISTRY = [
   { datei: 'daily-pull.yml',         mindestPublizierer: 6, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN', 'NUR_RECHNEN'] },
-  { datei: 'monthly-plan-check.yml', mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'] },
+  { datei: 'monthly-plan-check.yml', mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'], vorDerWache: ['scripts/cadence-marker.js'] },
   { datei: 'monthly-sec-xbrl.yml',   mindestPublizierer: 1, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN'] },
   { datei: 'smallcap-pull.yml',      mindestPublizierer: 1, envSchluessel: ['SHARD_COUNT', 'VEROEFFENTLICHEN'] },
-  { datei: 'weekly-guard.yml',       mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'] },
+  { datei: 'weekly-guard.yml',       mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'], vorDerWache: ['scripts/cadence-marker.js'] },
 ];
 
 let pass = 0, fail = 0;
@@ -206,6 +211,22 @@ for (const wf of REGISTRY) {
       assert.match(YML, new RegExp('^ {2}' + k + ':', 'm'), k + ' nicht mehr im workflow-weiten env');
     }
   });
+
+  for (const ruf of wf.vorDerWache || []) {
+    test('ZW-7 [' + wf.datei + ']: ' + ruf + ' laeuft auch im Zweig-Lauf (steht VOR der Wache)', () => {
+      const s = schritte(YML).find((x) => x.zeilen.some((l) => l.includes(ruf)));
+      assert.ok(s, 'kein Schritt ruft ' + ruf + ' — dann prueft dieser Test nichts mehr');
+      const g = s.zeilen.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
+      const r = s.zeilen.findIndex((l) => !istKommentar(l) && l.includes(ruf));
+      assert.ok(g >= 0, 'Schritt "' + s.name + '" hat keine Wache im run-Block');
+      assert.ok(r < g,
+        ruf + ' steht HINTER der Wache in Schritt "' + s.name + '" (Zeile ' + r + ' vs. Wache ' + g +
+        '). Damit laeuft es auf keinem Zweig-Lauf mehr: der Trockenlauf, der zum Pruefen einer ' +
+        'Aenderung da ist, meldet gruen ohne das Skript je ausgefuehrt zu haben — und die Warnung ' +
+        '"gerechnet wurde alles, gepusht nichts" waere falsch. Die Wache gehoert hinter diesen ' +
+        'Aufruf und vor die erste git-Zeile.');
+    });
+  }
 
   // ── Gegenproben je Workflow: der Pruefer muss hier rot werden koennen ───────
   test('ZW-S1 [' + wf.datei + '] Sabotage: Wache an EINEM Schritt entfernt -> rot, Schritt namentlich', () => {

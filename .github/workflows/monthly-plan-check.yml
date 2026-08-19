@@ -72,11 +72,11 @@ jobs:
       - name: Commit Report + Marker + push (Dead-Man)
         if: ${{ always() && github.event.inputs.force_alarm != 'true' }}
         run: |
+          node scripts/cadence-marker.js --field monthly
           if [ "$VEROEFFENTLICHEN" != "true" ]; then
             echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von Plan-Check-Report und Kadenz-Marker nach main. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
             exit 0
           fi
-          node scripts/cadence-marker.js --field monthly
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add reports/ state/cadence-heartbeat.json
