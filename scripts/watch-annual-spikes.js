@@ -68,8 +68,21 @@ function positiveCapexJahre(s) {
   return treffer;
 }
 
-function loadJson(p, fallback) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return fallback; }
+// Ein KAPUTTER Bestand ist nicht dasselbe wie ein FEHLENDER (Review-Befund 19.08.2026).
+// Bis hierher lieferten beide Faelle {} — und {} laeuft durch basisGueltig() als "Erstlauf"
+// glatt durch. Danach ist der Bestand leer, jeder laengst bekannte Fall gilt als neu, und
+// der Waechter meldet "163 neue Ausreisser" statt "die Bestandsdatei ist kaputt": die
+// falsche Diagnose schickt den Leser in die Funde statt in die Basis. Bei wenigen Funden
+// (<= MAX_NEU) rutscht es sogar still durch. Die Schwester-Waechter watch-exchange-coverage
+// und watch-fx-sanity wurden am 09.08. (P1-Welle 3) genau dafuer gehaertet; dieser hier
+// wurde damals nicht nachgezogen. Exportiert, damit die Sache pruefbar ist statt geglaubt
+// (tests/p1-welle3-waechter-wahrheit.test.js, Cluster A).
+function loadBaseline(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code === 'ENOENT') return {};
+    throw new Error(`Ausreisser-Bestand nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
+  }
 }
 
 /**
@@ -245,7 +258,7 @@ function main() {
   const { funde, capexPositiv, capexWerte } = scan;
   const gelesen = scan.gescannt - scan.parseFehler;
   const schluessel = stabilerSchluessel;
-  const basis = loadJson(BASELINE_PATH, {});
+  const basis = loadBaseline(BASELINE_PATH);
   const mio = (v) => (v / 1e6).toFixed(0);
 
   // LESE-UMFANG ZUERST, aus demselben Grund wie die Capex-Pruefung darunter: er haengt nicht am
@@ -335,7 +348,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
