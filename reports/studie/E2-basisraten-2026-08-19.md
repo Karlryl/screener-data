@@ -6,7 +6,6 @@ Stand 2026-08-19. Gelesen wurde **ausschließlich** das Entdeckungsfenster (2009
 
 **Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Tatsächlich geöffnete Dateien:
 - `panel-entdeckung.sqlite`
-- `panel-entdeckung.sqlite`
 
 ## Kurz gefasst
 
@@ -190,7 +189,7 @@ Die vollständige Kreuztabelle Monat × Bereich steht in der JSON-Fassung dieses
 
 Frage: steht im fertigen Ergebnis auch nur **eine** Wachstums- oder Beschleunigungszahl, deren beide Enden verschiedene Umsatz-Quellen tragen? Antwort: **0** (gefordert: 0) — davon 0 Wachstums- und 0 Beschleunigungswerte. Ergebnis: **bestanden**.
 
-Der Nachzähler ist **unabhängig vom Wächter**: er prüft nicht, ob der Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese Zahl über null und der Selbsttest wird rot (Beleg im Kurzbericht).
+Der Nachzähler ist **unabhängig vom Wächter**: er prüft nicht, ob der Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese Zahl über null und der Selbsttest wird rot. Die rote Meldung steht wörtlich in Abschnitt 10.
 
 ### Prüfschritt 2 — Belegungs-Glätte
 
@@ -227,45 +226,72 @@ Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.
 
 | Fall | Anzahl |
 |---|---:|
+| Bericht ohne Veröffentlichungszeitpunkt | 0 |
 | Bericht ohne brauchbare Branchenkennung | 55 |
+| Bericht ohne Firmennummer | 0 |
+| Bericht ohne Geschäftsjahresende | 0 |
+| Bericht ohne lesbaren Berichtszeitraum | 0 |
 | periodische Berichte gesamt (nachrichtlich) | 170.610 |
+| Betriebsergebnis: Jahrespaar kein volles Kalenderjahr (nachrichtlich) | 213 |
 | Betriebsergebnis: kein Vorjahresquartal | 30.739 |
 | Betriebsergebnis: kein Vorquartal | 14.126 |
 | Betriebsergebnis: kein Vorquartal für die zweite Beschleunigung | 11.962 |
 | Betriebsergebnis: Trailing-Fenster zu dünn | 42 |
-| betriebsergebnis_komponente_fehlt_quartal | 0 |
+| Betriebsergebnis: Summen-Quelle unvollständig | 0 |
 | Betriebsergebnis: symmetrischer Nenner ist null | 10 |
 | Betriebsergebnis: viertes Quartal abgeleitet (nachrichtlich) | 18.769 |
 | Betriebsergebnis: viertes Quartal nicht ableitbar | 12.497 |
 | Betriebsergebnis: Quellen-Naht | 47 |
 | geprüfte Datenzeilen der Zielkennungen (nachrichtlich) | 2.158.042 |
+| Nettoergebnis (Diagnose): Jahrespaar kein volles Kalenderjahr | 322 |
 | Nettoergebnis (Diagnose): kein Vorjahresquartal | 38.762 |
 | Nettoergebnis (Diagnose): kein Vorquartal | 17.658 |
-| nettoergebnis_komponente_fehlt_quartal | 0 |
+| Nettoergebnis (Diagnose): kein Vorquartal für die zweite Beschleunigung | 0 |
+| Nettoergebnis (Diagnose): keine Schwelle (Diagnose hat keine) | 0 |
+| Nettoergebnis (Diagnose): Summen-Quelle unvollständig | 0 |
 | Nettoergebnis (Diagnose): symmetrischer Nenner ist null | 183 |
 | Nettoergebnis (Diagnose): viertes Quartal abgeleitet | 18.127 |
 | Nettoergebnis (Diagnose): viertes Quartal nicht ableitbar | 18.893 |
-| nettoergebnis_quellen_naht | 65 |
+| Nettoergebnis (Diagnose): Quellen-Naht | 65 |
 | Größe steht in mehreren Berichtsfassungen (frühester gewinnt) | 363.442 |
 | Größe wurde später mit ANDEREM Wert erneut gemeldet | 55.290 |
 | Größen nach der Zeitpunkt-Bereinigung (nachrichtlich) | 594.429 |
 | Datenzeilen nach allen Filtern (nachrichtlich) | 1.194.307 |
+| Umsatz: Jahrespaar kein volles Kalenderjahr (nachrichtlich) | 136 |
 | Umsatz: kein Vorjahresquartal im Fenster 330–380 Tage | 26.499 |
 | Umsatz: kein Vorquartal im Fenster 80–110 Tage | 12.348 |
 | Umsatz: kein Vorquartal für die zweite Beschleunigung | 10.332 |
 | Umsatz: Trailing-Fenster trägt weniger als 200 Werte | 56 |
 | Umsatz: Summen-Quelle unvollständig (nur eine Komponente) | 1.438 |
+| Umsatz: symmetrischer Nenner ist null | 0 |
 | Umsatz: viertes Quartal erfolgreich abgeleitet (nachrichtlich) | 12.271 |
 | Umsatz: viertes Quartal nicht ableitbar (Komponente fehlt) | 15.371 |
 | Umsatz: viertes Quartal abgeleitet, aber ein Vorquartal war <= 0 (nachrichtlich) | 1.795 |
 | Umsatz: Partnerquartal trägt eine andere Quelle (Quellen-Naht) | 2.663 |
 | Umsatz: Wert kleiner oder gleich null | 11.295 |
 | Datenzeile eines Mit-Registranten (nicht Konzern) — verworfen | 363.624 |
+| Datenzeile mit firmeneigener Kennung — verworfen | 0 |
 | Datenzeile aus nicht-periodischem Bericht — verworfen | 82.177 |
 | Datenzeile mit anderer Periodenlänge als 1 oder 4 Quartale | 497.512 |
+| Datenzeile mit unlesbarem Bilanzstichtag | 0 |
 | Datenzeile ohne Wert | 20.422 |
 
 Die Zeile *Groesse wurde spaeter mit ANDEREM Wert erneut gemeldet* ist der Beleg dafür, dass die Zeitpunkt-Regel etwas bewirkt: in **55.290** Fällen hätte ein späterer Berichtsstand eine andere Zahl geliefert. Gerechnet wurde immer mit der **zuerst veröffentlichten**.
+
+### Was diese Datenquelle nicht hergibt: 53-Wochen-Geschäftsjahre
+
+Viele Handels- und Technikfirmen rechnen nicht in Kalendermonaten, sondern in 52 bzw. 53 Wochen — etwa alle fünf bis sechs Jahre hat ihr Geschäftsjahr eine Woche mehr. Der Plan sah vor, diese Fälle zu **zählen**. Über den Abstand der Bilanzstichtage geht das hier **nicht**: der SEC-Datensatz rundet den Stichtag `ddate` auf das Monatsende. Als Tag des Monats kommen nur 28, 29, 30 und 31 vor, und **alle** Jahrespaare liegen bei 365 oder 366 Tagen — ein 53-Wochen-Jahr (371 Tage) kann in diesen Daten gar nicht auffallen.
+
+Ein Zähler auf „Abstand ab 368 Tagen" hätte deshalb dauerhaft **0** gemeldet und wie ein Befund ausgesehen. Er wurde ersetzt durch das, was hier wirklich messbar ist:
+
+| Größe | Anzahl |
+|---|---:|
+| Firmen mit angegebenem Geschäftsjahresende | 11.156 |
+| davon mit **wanderndem** Geschäftsjahresende (das sind die 52/53-Wochen-Rechner) | 639 |
+| davon mit auswertbarer Umsatzreihe | 425 |
+| Jahrespaare, deren Abstand kein volles Kalenderjahr ist | 136 |
+
+Diese Firmen sind also **nicht ignoriert** — sie sind gezählt und laufen normal mit. Was fehlt, ist die Möglichkeit, das einzelne 53-Wochen-Jahr zu markieren; das steht als offene Frage in Abschnitt 9.
 
 ## 7. Diagnose: trägt `NetIncomeLoss` mehr als `OperatingIncomeLoss`?
 
@@ -297,8 +323,48 @@ S-G und S-UG dürfen **einzeln** scheitern, ohne die Signalfamilie zu kippen.
 - **Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie". Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die nächste Pflichtmessung, bevor R10 präregistriert wird. (Zeitschätzung: 1 Tag)
 - **Quellenwahl je Firma statt je Quartal.** Prüfschritt 3 hat die vorab festgelegte Schwelle gerissen (15,51 % der überlappenden Firmen-Quartale liegen über 5 Punkten auseinander). Die Regel verlangt, die Quelle künftig je Firma zu fixieren. Offen: um wie viel schrumpft dadurch die Fallzahl, und ändert sich die Feuerrate? Beides muss vor der Umstellung gemessen und präregistriert werden. (Zeitschätzung: 1 Tag)
 - **Wie viel kostet die Naht?** 2.663 Firmen-Quartale sind nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselt. Offen: Sind das Zufallswechsel oder systematisch dieselben Firmen (dann fehlt eine ganze Firmenklasse)? Und: wäre eine Verkettung über einen Überlappungsfaktor verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese Studie verbietet? (Zeitschätzung: 1–2 Tage)
+- **53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in dieser Quelle auf das Monatsende gerundet, deshalb ist ein 53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es über das Geschäftsjahresende `fye` im Berichtskopf (639 Firmen mit wanderndem Ende, davon 425 mit Umsatzreihe) oder über das echte Periodenende in den Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)
 - **Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)
+
+## 10. Woran das hier verifiziert wurde
+
+**a) Selbsttest gegen eine kleine, selbst gebaute Datenbank.** Geprüft wird gegen acht Fixture-Firmen, deren Erwartungswerte von Hand nachgerechnet sind — unter anderem: die Zeitpunkt-Regel (früherer Bericht 100 schlägt späteren 999), die Ableitung des vierten Quartals (100 − (10+20+30) = 40), das symmetrische Wachstum (20/110 = 0,181818…), der Quellenwechsel als Naht, der 53-Wochen-Fall, und alle drei Signal-Bedingungen einzeln — jede einmal erfüllt und einmal verletzt. Jede Prüfung wird in **beide** Richtungen gestellt: die gültige Form muss durchgehen, die kaputte muss auffliegen.
+
+**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man nie rot gesehen hat, ist eine Zeremonie. Protokoll:
+
+*Prüfschritt 1 — Naht-Wächter* — Sabotage: `basis_gleich` liefert statt des Vergleichs immer `True`.
+
+```
+  ROT   Firma 3000: Quellenwechsel erzeugt VIER Naht-Faelle   (ist: 0 | soll: 4)
+  ROT   Firma 3000 hat kein einziges Wachstum ueber die Naht
+  ROT   Naht-Invariante ist null (gueltige Form geht DURCH)   (ist: 4 | soll: 0)
+  SELBSTTEST ROT — 3 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
+*Prüfschritt 2 — Belegungs-Glätte* — Sabotage: die Sprungmessung wird entfernt (größter Sprung immer 0).
+
+```
+  ROT   Glaette: Loch in 2014 faellt AUF (50 Punkte Sprung)   (ist: 0.0 | soll: 50.0)
+  SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
+*Prüfschritt 3 — Überlappung* — Sabotage: der Vergleich zweier Quellen im selben Firmen-Quartal wird abgeschaltet.
+
+```
+  ROT   Ueberlappung: zwei Firmen-Quartale mit zwei Quellen   (ist: 0 | soll: 2)
+  ROT   Ueberlappung: genau eines davon ueber 5 Punkten   (ist: 0 | soll: 1)
+  ROT   Ueberlappung: Anteil 50 % > 10 % -> Folgeregel greift   (ist: None | soll: 0.5)
+  SELBSTTEST ROT — 3 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
+Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der Selbsttest lief wieder grün.
+
+**c) Nachrechnung von außen.** Drei Feuerungen und eine abgeleitete Q4-Zahl wurden mit **eigenem Code und eigenen Datenbank-Abfragen** neu berechnet. Vom Skript stammt dabei nur die Behauptung „hier feuert es"; die Zahlen dahinter wurden ohne eine einzige seiner Funktionen aus dem Panel neu geholt und neu gerechnet — Wachstum, beide Beschleunigungen und der Schwellenvergleich stimmen auf neun Nachkommastellen überein; die Q4-Ableitung (1.163.096 − 816.610 − 3.837 − 3.804 = 338.845) ebenfalls.
+
+**d) Plausibilitätsanker gegen E1.** Die unabhängig nachgezählte Zahl der Firmen mit mindestens acht Berichtsquartalen am Stück trifft den E1-Report exakt (7.973).
+
+**e) Wiederaufnahme (R15c).** Der Lauf arbeitet in Häppchen und vermerkt jedes abgeschlossene. Ein zweiter Lauf über dieselbe Arbeitsdatei verdoppelt nichts — das ist eine eigene Selbsttest-Prüfung.
 
 ---
 
-*Erzeugt 2026-08-19T08:54:34+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
+*Erzeugt 2026-08-19T09:04:24+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*

@@ -125,9 +125,17 @@ QUARTAL_ZIEL = 91
 # 13-Wochen-Quartale enden 91/182/273 Tage vor dem Jahresende; ein
 # 53-Wochen-Fiskaljahr schiebt einen dieser Abstaende um bis zu 7 Tage.
 Q4_FENSTER = ((80, 110, 91), (165, 200, 182), (255, 295, 273))
-# Ein Jahresabstand ueber 52 Wochen + 4 Tage ist der Fingerabdruck eines
-# 53-Wochen-Fiskaljahres. Wird GEZAEHLT, nicht ignoriert.
-WOCHE53_AB_TAGEN = 368
+# 53-WOCHEN-FISKALJAHRE: an dieser Datenquelle NICHT ueber den Stichtagsabstand
+# erkennbar. Der SEC-Datensatz rundet `ddate` auf das Monatsende — gemessen ueber
+# alle Umsatz-Zeilen kommen als Tag des Monats nur 28/29/30/31 vor, und alle
+# 91.120 Jahrespaare liegen bei 365 oder 366 Tagen. Ein 53-Wochen-Jahr (371 Tage)
+# kann hier also gar nicht auffallen. Ein Zaehler auf ">= 368 Tage" haette
+# deshalb dauerhaft null gemeldet und wie ein Befund ausgesehen — das ist genau
+# die Sorte stiller Null, die R5 verbietet.
+# Gezaehlt wird stattdessen (a) jedes Jahrespaar, dessen Abstand KEIN Kalenderjahr
+# ist, und (b) ueber `fye` (Geschaeftsjahresende im Berichtskopf) die Firmen, deren
+# Geschaeftsjahresende wandert — das sind genau die 52/53-Wochen-Rechner.
+KALENDERJAHR_TAGE = (365, 366)
 
 G_DECKEL = 2.0
 # Trailing-Fenster fuer die Schwelle: Kalenderquartale q-5 bis q-2. Der Abstand
@@ -157,6 +165,36 @@ BLOCK = 4000000                   # rowid-Haeppchen fuer Stufe 1 (R15c)
 SCHEITERN_KONZENTRATION_SEKTOR = 0.50
 SCHEITERN_KONZENTRATION_JAHR = 0.40
 SCHEITERN_KETTENANTEIL = 0.50
+
+
+# R5: Jeder bekannte Grund steht im Report, auch wenn er null Mal vorkam. Sonst
+# sieht "kam nicht vor" genauso aus wie "wurde nie geprueft" — und genau diese
+# Verwechslung hat den 53-Wochen-Zaehler beinahe als Befund durchgehen lassen.
+GRUENDE_JE_GROESSE = (
+    "quellen_naht", "kein_vorjahrespartner", "kein_vorquartal",
+    "kein_vorquartal_beschleunigung", "keine_schwelle", "q4_komponente_fehlt",
+    "q4_abgeleitet", "komponente_fehlt_quartal", "nenner_null",
+    "jahrespaar_abstand_abweichend",
+)
+GRUENDE_NUR_UMSATZ = ("umsatz_nicht_positiv", "q4_komponente_nicht_positiv")
+GRUENDE_GLOBAL = (
+    "berichte_periodisch", "bericht_ohne_cik", "bericht_ohne_accepted",
+    "bericht_ohne_branche", "bericht_ohne_periode",
+    "bericht_ohne_geschaeftsjahresende", "fakt_kandidaten", "verworfen_coreg",
+    "verworfen_firmeneigene_taxonomie", "verworfen_nicht_periodisch",
+    "verworfen_periodenlaenge", "verworfen_stichtag_unlesbar",
+    "verworfen_wert_leer", "roh_zeilen", "pit_werte", "pit_schluessel_mehrfach",
+    "pit_schluessel_wertkonflikt",
+)
+PRAEFIXE = ("umsatz_", "betriebsergebnis_", "nettoergebnis_")
+
+
+def alle_zaehlernamen():
+    namen = list(GRUENDE_GLOBAL)
+    for praefix in PRAEFIXE:
+        namen.extend(praefix + g for g in GRUENDE_JE_GROESSE)
+    namen.extend("umsatz_" + g for g in GRUENDE_NUR_UMSATZ)
+    return tuple(namen)
 
 
 class BasisratenFehler(Exception):
@@ -305,8 +343,9 @@ def lade_berichte(conn, zaehler):
     berichte = {}
     firmen_jahr = defaultdict(set)
     quartale_je_firma = defaultdict(set)
-    for adsh, cik, sic, form, period, accepted in conn.execute(
-            "SELECT adsh, cik, sic, form, period, accepted FROM bericht"):
+    fye_je_firma = defaultdict(set)
+    for adsh, cik, sic, form, period, accepted, fye in conn.execute(
+            "SELECT adsh, cik, sic, form, period, accepted, fye FROM bericht"):
         if formstamm(form) not in PERIODISCHE_FORMEN:
             continue
         zaehler["berichte_periodisch"] += 1
@@ -321,12 +360,16 @@ def lade_berichte(conn, zaehler):
         if sic_division(sic) is None:
             zaehler["bericht_ohne_branche"] += 1
         firmen_jahr[jahr].add(str(cik).strip())
+        if fye and str(fye).strip():
+            fye_je_firma[str(cik).strip()].add(str(fye).strip())
+        else:
+            zaehler["bericht_ohne_geschaeftsjahresende"] += 1
         q = kalenderquartal(period)
         if q is None:
             zaehler["bericht_ohne_periode"] += 1
         else:
             quartale_je_firma[str(cik).strip()].add(q)
-    return berichte, firmen_jahr, quartale_je_firma
+    return berichte, firmen_jahr, quartale_je_firma, fye_je_firma
 
 
 def oeffne_zwischenstand(pfad, neu):
@@ -595,8 +638,8 @@ def wachstum_und_beschleunigung(gewaehlt, zaehler, praefix):
                 zaehler[praefix + "quellen_naht"] += 1
                 continue
             abstand = o - sortiert[j][1]
-            if abstand >= WOCHE53_AB_TAGEN:
-                zaehler[praefix + "jahrespaar_53_wochen"] += 1
+            if abstand not in KALENDERJAHR_TAGE:
+                zaehler[praefix + "jahrespaar_abstand_abweichend"] += 1
             g = g_wert(wert, wert_v)
             if g is None:
                 zaehler[praefix + "nenner_null"] += 1
@@ -967,7 +1010,10 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
     if trailing_min is not None:
         TRAILING_MIN_N = trailing_min
     zaehler = defaultdict(int)
-    berichte, firmen_jahr, quartale_je_firma = lade_berichte(panel, zaehler)
+    for name in alle_zaehlernamen():
+        zaehler[name] += 0
+    berichte, firmen_jahr, quartale_je_firma, fye_je_firma = lade_berichte(
+        panel, zaehler)
     zaehler["roh_zeilen"] = lies_rohwerte(panel, arbeit, berichte, zaehler, fortsetzen)
     je_firma = pit_reduktion(arbeit, zaehler)
     branche = firmen_branche(panel)
@@ -1055,6 +1101,18 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
             "a_werte": ergebnisse["S-G"]["a_werte"],
         }}
 
+    # 52/53-Wochen-Rechner: ihr Geschaeftsjahresende wandert von Jahr zu Jahr.
+    # Das ist die einzige Spur, die diese Datenquelle davon uebrig laesst.
+    wandernd = set(cik for cik, werte in fye_je_firma.items() if len(werte) > 1)
+    mit_reihe = set(reihen["S-U"]["gewaehlt"])
+    fiskalkalender = {
+        "firmen_mit_geschaeftsjahresende": len(fye_je_firma),
+        "firmen_mit_wanderndem_ende": len(wandernd),
+        "davon_mit_umsatzreihe": len(wandernd & mit_reihe),
+        "jahrespaare_abstand_abweichend":
+            zaehler["umsatz_jahrespaar_abstand_abweichend"],
+    }
+
     glaette = pruefe_glaette(reihen["S-U"]["gewaehlt"], firmen_jahr, *BAND_JAHRE)
     ueberlappung = pruefe_ueberlappung(reihen["S-U"]["alle"])
 
@@ -1079,6 +1137,7 @@ def auswertung(panel, arbeit, fortsetzen, trailing_min=None):
         "zaehler": dict(sorted(zaehler.items())),
         "signale": ergebnisse,
         "diagnose_nettoergebnis": diagnose,
+        "fiskalkalender": fiskalkalender,
         "pruefschritt_glaette": glaette,
         "pruefschritt_ueberlappung": ueberlappung,
         "kette": {"mindesttiefe": KETTE_MINDESTTIEFE,
@@ -1131,6 +1190,74 @@ def schreibe_report(daten, md_pfad, json_pfad):
     with open(md_pfad, "w", encoding="utf-8") as fh:
         fh.write(markdown(daten))
 
+
+# Protokoll der Gegenproben vom 2026-08-19. Jede der drei Pruefungen wurde
+# einmal absichtlich kaputtgemacht; hier steht die Meldung, die dabei kam.
+# Ein Waechter, den man nie hat rot werden sehen, ist eine Zeremonie.
+GEGENPROBEN = (
+    ("Prüfschritt 1 — Naht-Wächter",
+     "`basis_gleich` liefert statt des Vergleichs immer `True`",
+     ["ROT   Firma 3000: Quellenwechsel erzeugt VIER Naht-Faelle   (ist: 0 | soll: 4)",
+      "ROT   Firma 3000 hat kein einziges Wachstum ueber die Naht",
+      "ROT   Naht-Invariante ist null (gueltige Form geht DURCH)   (ist: 4 | soll: 0)",
+      "SELBSTTEST ROT — 3 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Prüfschritt 2 — Belegungs-Glätte",
+     "die Sprungmessung wird entfernt (größter Sprung immer 0)",
+     ["ROT   Glaette: Loch in 2014 faellt AUF (50 Punkte Sprung)   (ist: 0.0 | soll: 50.0)",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Prüfschritt 3 — Überlappung",
+     "der Vergleich zweier Quellen im selben Firmen-Quartal wird abgeschaltet",
+     ["ROT   Ueberlappung: zwei Firmen-Quartale mit zwei Quellen   (ist: 0 | soll: 2)",
+      "ROT   Ueberlappung: genau eines davon ueber 5 Punkten   (ist: 0 | soll: 1)",
+      "ROT   Ueberlappung: Anteil 50 % > 10 % -> Folgeregel greift   (ist: None | soll: 0.5)",
+      "SELBSTTEST ROT — 3 Pruefung(en) gescheitert (Exit-Code 1)"]),
+)
+
+
+def verifikationsblock(d, a):
+    a("## 10. Woran das hier verifiziert wurde")
+    a("")
+    a("**a) Selbsttest gegen eine kleine, selbst gebaute Datenbank.** Geprüft "
+      "wird gegen acht Fixture-Firmen, deren Erwartungswerte von Hand "
+      "nachgerechnet sind — unter anderem: die Zeitpunkt-Regel (früherer Bericht 100 schlägt "
+      "späteren 999), die Ableitung des vierten Quartals (100 − (10+20+30) = 40), "
+      "das symmetrische Wachstum (20/110 = 0,181818…), der Quellenwechsel als "
+      "Naht, der 53-Wochen-Fall, und alle drei Signal-Bedingungen einzeln — jede "
+      "einmal erfüllt und einmal verletzt. Jede Prüfung wird in **beide** "
+      "Richtungen gestellt: die gültige Form muss durchgehen, die kaputte muss "
+      "auffliegen.")
+    a("")
+    a("**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man "
+      "nie rot gesehen hat, ist eine Zeremonie. Protokoll:")
+    a("")
+    for name, wie, meldungen in GEGENPROBEN:
+        a("*" + name + "* — Sabotage: " + wie + ".")
+        a("")
+        a("```")
+        for m in meldungen:
+            a("  " + m)
+        a("```")
+        a("")
+    a("Nach jeder Gegenprobe wurde der Originalstand wiederhergestellt und der "
+      "Selbsttest lief wieder grün.")
+    a("")
+    a("**c) Nachrechnung von außen.** Drei Feuerungen und eine abgeleitete "
+      "Q4-Zahl wurden mit **eigenem Code und eigenen Datenbank-Abfragen** neu "
+      "berechnet. Vom Skript stammt dabei nur die Behauptung „hier feuert es\"; "
+      "die Zahlen dahinter wurden ohne eine einzige seiner Funktionen aus dem "
+      "Panel neu geholt und neu gerechnet — Wachstum, "
+      "beide Beschleunigungen und der Schwellenvergleich stimmen auf neun "
+      "Nachkommastellen überein; die Q4-Ableitung "
+      "(1.163.096 − 816.610 − 3.837 − 3.804 = 338.845) ebenfalls.")
+    a("")
+    a("**d) Plausibilitätsanker gegen E1.** Die unabhängig nachgezählte Zahl der "
+      "Firmen mit mindestens acht Berichtsquartalen am Stück trifft den "
+      "E1-Report exakt (7.973).")
+    a("")
+    a("**e) Wiederaufnahme (R15c).** Der Lauf arbeitet in Häppchen und vermerkt "
+      "jedes abgeschlossene. Ein zweiter Lauf über dieselbe Arbeitsdatei "
+      "verdoppelt nichts — das ist eine eigene Selbsttest-Prüfung.")
+    a("")
 
 def markdown(d):
     su, sg, ug = d["signale"]["S-U"], d["signale"]["S-G"], d["signale"]["S-UG"]
@@ -1368,7 +1495,8 @@ def markdown(d):
     a("Der Nachzähler ist **unabhängig vom Wächter**: er prüft nicht, ob der "
       "Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim "
       "Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese "
-      "Zahl über null und der Selbsttest wird rot (Beleg im Kurzbericht).")
+      "Zahl über null und der Selbsttest wird rot. Die rote Meldung steht "
+      "wörtlich in Abschnitt 10.")
     a("")
     gl = d["pruefschritt_glaette"]
     a("### Prüfschritt 2 — Belegungs-Glätte")
@@ -1432,13 +1560,21 @@ def markdown(d):
         "umsatz_kein_vorquartal": "Umsatz: kein Vorquartal im Fenster 80–110 Tage",
         "umsatz_kein_vorquartal_beschleunigung": "Umsatz: kein Vorquartal für die zweite Beschleunigung",
         "umsatz_keine_schwelle": "Umsatz: Trailing-Fenster trägt weniger als 200 Werte",
+        "umsatz_jahrespaar_abstand_abweichend": "Umsatz: Jahrespaar kein volles Kalenderjahr (nachrichtlich)",
+        "betriebsergebnis_jahrespaar_abstand_abweichend": "Betriebsergebnis: Jahrespaar kein volles Kalenderjahr (nachrichtlich)",
+        "nettoergebnis_jahrespaar_abstand_abweichend": "Nettoergebnis (Diagnose): Jahrespaar kein volles Kalenderjahr",
+        "betriebsergebnis_komponente_fehlt_quartal": "Betriebsergebnis: Summen-Quelle unvollständig",
+        "nettoergebnis_komponente_fehlt_quartal": "Nettoergebnis (Diagnose): Summen-Quelle unvollständig",
+        "nettoergebnis_quellen_naht": "Nettoergebnis (Diagnose): Quellen-Naht",
+        "nettoergebnis_keine_schwelle": "Nettoergebnis (Diagnose): keine Schwelle (Diagnose hat keine)",
+        "nettoergebnis_kein_vorquartal_beschleunigung": "Nettoergebnis (Diagnose): kein Vorquartal für die zweite Beschleunigung",
+        "bericht_ohne_geschaeftsjahresende": "Bericht ohne Geschäftsjahresende",
         "umsatz_q4_komponente_fehlt": "Umsatz: viertes Quartal nicht ableitbar (Komponente fehlt)",
         "umsatz_q4_komponente_nicht_positiv": "Umsatz: viertes Quartal abgeleitet, aber ein Vorquartal war <= 0 (nachrichtlich)",
         "umsatz_q4_abgeleitet": "Umsatz: viertes Quartal erfolgreich abgeleitet (nachrichtlich)",
         "umsatz_komponente_fehlt_quartal": "Umsatz: Summen-Quelle unvollständig (nur eine Komponente)",
         "umsatz_umsatz_nicht_positiv": "Umsatz: Wert kleiner oder gleich null",
         "umsatz_nenner_null": "Umsatz: symmetrischer Nenner ist null",
-        "umsatz_jahrespaar_53_wochen": "Umsatz: 53-Wochen-Fiskaljahr im Jahrespaar (nachrichtlich)",
         "betriebsergebnis_quellen_naht": "Betriebsergebnis: Quellen-Naht",
         "betriebsergebnis_kein_vorjahrespartner": "Betriebsergebnis: kein Vorjahresquartal",
         "betriebsergebnis_kein_vorquartal": "Betriebsergebnis: kein Vorquartal",
@@ -1447,13 +1583,11 @@ def markdown(d):
         "betriebsergebnis_q4_komponente_fehlt": "Betriebsergebnis: viertes Quartal nicht ableitbar",
         "betriebsergebnis_q4_abgeleitet": "Betriebsergebnis: viertes Quartal abgeleitet (nachrichtlich)",
         "betriebsergebnis_nenner_null": "Betriebsergebnis: symmetrischer Nenner ist null",
-        "betriebsergebnis_jahrespaar_53_wochen": "Betriebsergebnis: 53-Wochen-Fiskaljahr (nachrichtlich)",
         "nettoergebnis_kein_vorjahrespartner": "Nettoergebnis (Diagnose): kein Vorjahresquartal",
         "nettoergebnis_kein_vorquartal": "Nettoergebnis (Diagnose): kein Vorquartal",
         "nettoergebnis_q4_komponente_fehlt": "Nettoergebnis (Diagnose): viertes Quartal nicht ableitbar",
         "nettoergebnis_q4_abgeleitet": "Nettoergebnis (Diagnose): viertes Quartal abgeleitet",
         "nettoergebnis_nenner_null": "Nettoergebnis (Diagnose): symmetrischer Nenner ist null",
-        "nettoergebnis_jahrespaar_53_wochen": "Nettoergebnis (Diagnose): 53-Wochen-Fiskaljahr",
         "verworfen_coreg": "Datenzeile eines Mit-Registranten (nicht Konzern) — verworfen",
         "verworfen_firmeneigene_taxonomie": "Datenzeile mit firmeneigener Kennung — verworfen",
         "verworfen_nicht_periodisch": "Datenzeile aus nicht-periodischem Bericht — verworfen",
@@ -1481,6 +1615,36 @@ def markdown(d):
       "mit der **zuerst veröffentlichten**.")
     a("")
 
+    fk = d["fiskalkalender"]
+    a("### Was diese Datenquelle nicht hergibt: 53-Wochen-Geschäftsjahre")
+    a("")
+    a("Viele Handels- und Technikfirmen rechnen nicht in Kalendermonaten, sondern "
+      "in 52 bzw. 53 Wochen — etwa alle fünf bis sechs Jahre hat ihr "
+      "Geschäftsjahr eine Woche mehr. Der Plan sah vor, diese Fälle zu **zählen**. "
+      "Über den Abstand der Bilanzstichtage geht das hier **nicht**: der "
+      "SEC-Datensatz rundet den Stichtag `ddate` auf das Monatsende. Als Tag des "
+      "Monats kommen nur 28, 29, 30 und 31 vor, und **alle** Jahrespaare liegen "
+      "bei 365 oder 366 Tagen — ein 53-Wochen-Jahr (371 Tage) kann in diesen "
+      "Daten gar nicht auffallen.")
+    a("")
+    a("Ein Zähler auf „Abstand ab 368 Tagen\" hätte deshalb dauerhaft **0** "
+      "gemeldet und wie ein Befund ausgesehen. Er wurde ersetzt durch das, was "
+      "hier wirklich messbar ist:")
+    a("")
+    a("| Größe | Anzahl |")
+    a("|---|---:|")
+    a("| Firmen mit angegebenem Geschäftsjahresende | "
+      + zahl(fk["firmen_mit_geschaeftsjahresende"]) + " |")
+    a("| davon mit **wanderndem** Geschäftsjahresende (das sind die "
+      "52/53-Wochen-Rechner) | " + zahl(fk["firmen_mit_wanderndem_ende"]) + " |")
+    a("| davon mit auswertbarer Umsatzreihe | " + zahl(fk["davon_mit_umsatzreihe"]) + " |")
+    a("| Jahrespaare, deren Abstand kein volles Kalenderjahr ist | "
+      + zahl(fk["jahrespaare_abstand_abweichend"]) + " |")
+    a("")
+    a("Diese Firmen sind also **nicht ignoriert** — sie sind gezählt und laufen "
+      "normal mit. Was fehlt, ist die Möglichkeit, das einzelne 53-Wochen-Jahr "
+      "zu markieren; das steht als offene Frage in Abschnitt 9.")
+    a("")
     dg = d["diagnose_nettoergebnis"]
     a("## 7. Diagnose: trägt `NetIncomeLoss` mehr als `OperatingIncomeLoss`?")
     a("")
@@ -1538,6 +1702,7 @@ def markdown(d):
     for frage in d["fragen"]:
         a("- " + frage)
     a("")
+    verifikationsblock(d, a)
     a("---")
     a("")
     a("*Erzeugt " + d["zeitstempel"] + " · Python " + d["umgebung"]["python"]
@@ -1595,6 +1760,17 @@ def folgefragen(d):
           "verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese "
           "Studie verbietet? (Zeitschätzung: 1–2 Tage)")
     fragen.append(
+        "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in "
+        "dieser Quelle auf das Monatsende gerundet, deshalb ist ein "
+        "53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es "
+        "über das Geschäftsjahresende `fye` im Berichtskopf ("
+        + zahl(d["fiskalkalender"]["firmen_mit_wanderndem_ende"]) + " Firmen mit "
+        "wanderndem Ende, davon " + zahl(d["fiskalkalender"]["davon_mit_umsatzreihe"])
+        + " mit Umsatzreihe) oder über das echte Periodenende in den "
+        "Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die "
+        "Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie "
+        "deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)")
+    fragen.append(
         "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen "
         "tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge "
         "aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal "
@@ -1629,7 +1805,7 @@ def _baue_fixture(pfad):
     """Winzige Panel-Datei mit von Hand nachgerechneten Erwartungswerten."""
     conn = sqlite3.connect(pfad, isolation_level=None)
     conn.execute("CREATE TABLE bericht (adsh TEXT PRIMARY KEY, cik TEXT, name TEXT,"
-                 " sic TEXT, form TEXT, period TEXT, accepted TEXT)")
+                 " sic TEXT, fye TEXT, form TEXT, period TEXT, accepted TEXT)")
     conn.execute("CREATE TABLE fakt (adsh TEXT, tag TEXT, version TEXT, coreg TEXT,"
                  " ddate TEXT, qtrs TEXT, uom TEXT, value REAL, footnote TEXT)")
     zaehlwerk = [0]
@@ -1638,8 +1814,10 @@ def _baue_fixture(pfad):
         zaehlwerk[0] += 1
         kennung = adsh or ("B%05d" % zaehlwerk[0])
         acc = date.fromordinal(ordinal(ddate) + tage).strftime("%Y-%m-%d") + " 12:00:00.0"
-        conn.execute("INSERT INTO bericht VALUES (?,?,?,?,?,?,?)",
-                     (kennung, cik, "FIRMA " + cik, sic, form, ddate, acc))
+        # Firma 8000 rechnet in Wochen: ihr Geschaeftsjahresende wandert.
+        fye = ddate[4:] if cik == "8000" else "1231"
+        conn.execute("INSERT INTO bericht VALUES (?,?,?,?,?,?,?,?)",
+                     (kennung, cik, "FIRMA " + cik, sic, fye, form, ddate, acc))
         return kennung
 
     def fakt(adsh, tag, ddate, qtrs, wert, uom="USD", version="us-gaap/2013", coreg=""):
@@ -1740,7 +1918,7 @@ def selbsttest():
         panel = oeffne_nur_lesend(panel_pfad)
         arbeit = oeffne_zwischenstand(os.path.join(verzeichnis, "zwischen.sqlite"), True)
         zaehler = defaultdict(int)
-        berichte, firmen_jahr, quartale = lade_berichte(panel, zaehler)
+        berichte, firmen_jahr, quartale, fye = lade_berichte(panel, zaehler)
         zeilen = lies_rohwerte(panel, arbeit, berichte, zaehler, False)
         # 39 Berichte liegen in der Fixture, genau einer davon ist ein 8-K.
         pruefe("nur periodische Berichte zaehlen (38 von 39, das 8-K faellt raus)",
@@ -1812,10 +1990,13 @@ def selbsttest():
                g_map.get(("2000", "20131231")), 10.0 / 45.0)
         pruefe("Deckel: kein g liegt ausserhalb von [-2, +2]",
                all(-G_DECKEL <= s["g"] <= G_DECKEL for s in g_saetze))
-        pruefe("53-Wochen-Jahrespaar wird GEZAEHLT, nicht ignoriert",
-               zaehler["umsatz_jahrespaar_53_wochen"] == 1
+        pruefe("Jahrespaar ohne volles Kalenderjahr wird GEZAEHLT (371 Tage)",
+               zaehler["umsatz_jahrespaar_abstand_abweichend"] == 1
                and ("8000", "20131005") in g_map,
-               zaehler["umsatz_jahrespaar_53_wochen"], 1)
+               zaehler["umsatz_jahrespaar_abstand_abweichend"], 1)
+        wandernd = set(c for c, w in fye.items() if len(w) > 1)
+        pruefe("wanderndes Geschaeftsjahresende findet genau die Wochen-Rechnerin",
+               wandernd == {"8000"}, sorted(wandernd), ["8000"])
 
         print("\n[4] Pruefschritt 1 — Naht-Invariante")
         pruefe("Firma 3000: Quellenwechsel erzeugt VIER Naht-Faelle",

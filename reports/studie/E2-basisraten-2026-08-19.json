@@ -18,16 +18,22 @@
   "name": "entdeckung",
   "von": "2009-01-01"
  },
+ "fiskalkalender": {
+  "davon_mit_umsatzreihe": 425,
+  "firmen_mit_geschaeftsjahresende": 11156,
+  "firmen_mit_wanderndem_ende": 639,
+  "jahrespaare_abstand_abweichend": 136
+ },
  "fragen": [
   "**Banken-Sonderfamilie ja/nein?** Der Bereich „Finanzen, Versicherung, Immobilien\" stellt laut E1 die zweitgrößte Firmengruppe, hat aber ein anderes Umsatzverständnis (Zinsertrag statt Warenverkauf). Hier trägt er 14,38 % der S-U-Feuerungen. Zu klären: eigene Signalfamilie, Ausschluss oder unverändert mitlaufen lassen — mit Vorab-Kriterium, nicht nach Ergebnislage. (Zeitschätzung: 1–2 Tage)",
   "**`NetIncomeLoss` als Alternative für S-G?** Das Ergebnis nach Steuern liefert 118.491 Beschleunigungswerte gegen 97.365 beim Betriebsergebnis. Ob die zusätzliche Tiefe die schlechtere Aussagekraft (Einmaleffekte, Steuerquote) aufwiegt, ist eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach Ergebnis auswählbar. (Zeitschätzung: 1 Tag)",
   "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die nächste Pflichtmessung, bevor R10 präregistriert wird. (Zeitschätzung: 1 Tag)",
   "**Quellenwahl je Firma statt je Quartal.** Prüfschritt 3 hat die vorab festgelegte Schwelle gerissen (15,51 % der überlappenden Firmen-Quartale liegen über 5 Punkten auseinander). Die Regel verlangt, die Quelle künftig je Firma zu fixieren. Offen: um wie viel schrumpft dadurch die Fallzahl, und ändert sich die Feuerrate? Beides muss vor der Umstellung gemessen und präregistriert werden. (Zeitschätzung: 1 Tag)",
   "**Wie viel kostet die Naht?** 2.663 Firmen-Quartale sind nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselt. Offen: Sind das Zufallswechsel oder systematisch dieselben Firmen (dann fehlt eine ganze Firmenklasse)? Und: wäre eine Verkettung über einen Überlappungsfaktor verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese Studie verbietet? (Zeitschätzung: 1–2 Tage)",
+  "**53-Wochen-Geschäftsjahre sichtbar machen.** Der Stichtag `ddate` ist in dieser Quelle auf das Monatsende gerundet, deshalb ist ein 53-Wochen-Jahr über den Stichtagsabstand unsichtbar. Messbar wäre es über das Geschäftsjahresende `fye` im Berichtskopf (639 Firmen mit wanderndem Ende, davon 425 mit Umsatzreihe) oder über das echte Periodenende in den Original-Einreichungen. Offen: Verzerrt das zusätzliche Quartal die Wachstumsrate dieser Firmen systematisch nach oben — und liegen sie deshalb häufiger unter den Feuerungen? (Zeitschätzung: 1 Tag)",
   "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
  ],
  "geoeffnete_pfade": [
-  "C:\\Users\\Anwender\\AppData\\Local\\Temp\\e2-selbsttest-0mdkxc9b\\panel-entdeckung.sqlite",
   "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\panel\\panel-entdeckung.sqlite"
  ],
  "kette": {
@@ -4537,8 +4543,13 @@
   "sqlite": "3.49.1"
  },
  "zaehler": {
+  "bericht_ohne_accepted": 0,
   "bericht_ohne_branche": 55,
+  "bericht_ohne_cik": 0,
+  "bericht_ohne_geschaeftsjahresende": 0,
+  "bericht_ohne_periode": 0,
   "berichte_periodisch": 170610,
+  "betriebsergebnis_jahrespaar_abstand_abweichend": 213,
   "betriebsergebnis_kein_vorjahrespartner": 30739,
   "betriebsergebnis_kein_vorquartal": 14126,
   "betriebsergebnis_kein_vorquartal_beschleunigung": 11962,
@@ -4549,8 +4560,11 @@
   "betriebsergebnis_q4_komponente_fehlt": 12497,
   "betriebsergebnis_quellen_naht": 47,
   "fakt_kandidaten": 2158042,
+  "nettoergebnis_jahrespaar_abstand_abweichend": 322,
   "nettoergebnis_kein_vorjahrespartner": 38762,
   "nettoergebnis_kein_vorquartal": 17658,
+  "nettoergebnis_kein_vorquartal_beschleunigung": 0,
+  "nettoergebnis_keine_schwelle": 0,
   "nettoergebnis_komponente_fehlt_quartal": 0,
   "nettoergebnis_nenner_null": 183,
   "nettoergebnis_q4_abgeleitet": 18127,
@@ -4560,20 +4574,24 @@
   "pit_schluessel_wertkonflikt": 55290,
   "pit_werte": 594429,
   "roh_zeilen": 1194307,
+  "umsatz_jahrespaar_abstand_abweichend": 136,
   "umsatz_kein_vorjahrespartner": 26499,
   "umsatz_kein_vorquartal": 12348,
   "umsatz_kein_vorquartal_beschleunigung": 10332,
   "umsatz_keine_schwelle": 56,
   "umsatz_komponente_fehlt_quartal": 1438,
+  "umsatz_nenner_null": 0,
   "umsatz_q4_abgeleitet": 12271,
   "umsatz_q4_komponente_fehlt": 15371,
   "umsatz_q4_komponente_nicht_positiv": 1795,
   "umsatz_quellen_naht": 2663,
   "umsatz_umsatz_nicht_positiv": 11295,
   "verworfen_coreg": 363624,
+  "verworfen_firmeneigene_taxonomie": 0,
   "verworfen_nicht_periodisch": 82177,
   "verworfen_periodenlaenge": 497512,
+  "verworfen_stichtag_unlesbar": 0,
   "verworfen_wert_leer": 20422
  },
- "zeitstempel": "2026-08-19T08:54:34+00:00"
+ "zeitstempel": "2026-08-19T09:04:24+00:00"
 }
