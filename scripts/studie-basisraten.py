@@ -1603,6 +1603,25 @@ GEGENPROBEN = (
      "die Sprungmessung wird entfernt (größter Sprung immer 0)",
      ["ROT   Glaette: Loch in 2014 faellt AUF (50 Punkte Sprung)   (ist: 0.0 | soll: 50.0)",
       "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Muster-Friedhof — hält an, wenn er nicht mehr stimmt",
+     "der Wächter wird entfernt, der Friedhofs-Eintrag also auch dann "
+     "geschrieben, wenn S-UG die geforderte Fallzahl erreicht",
+     ["ROT   Friedhof: erfuellte Fallzahl HAELT DEN LAUF AN (ein Muster, das",
+      "      zurueckkommt, ist eine Entscheidung)",
+      "      (ist: 'kein Abbruch' | soll: 'BasisratenFehler')",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Muster-Friedhof — null ist ein Ergebnis",
+     "der Überhang-Faktor wird wieder über den Wahrheitswert gefiltert, eine "
+     "gemessene 0 sähe dann aus wie „nicht berechenbar\"",
+     ["ROT   Friedhof: ein Ueberhang von exakt 0 ist ein ERGEBNIS und wird",
+      "      durchgereicht, nicht zu None verschluckt   (ist: None | soll: 0.0)",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
+    ("Zeitstempel-Format",
+     "die Formatprüfung wird entfernt — ein krummer Zeitstempel würde die "
+     "Serienlängen und damit die Quellenwahl lautlos falsch sortieren",
+     ["ROT   krummer Zeitstempel bricht den Lauf ab, statt lautlos falsch zu",
+      "      sortieren   (ist: 'kein Abbruch' | soll: 'BasisratenFehler')",
+      "SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)"]),
     ("Prüfschritt 3 — Überlappung",
      "der Vergleich zweier Quellen im selben Firmen-Quartal wird abgeschaltet",
      ["ROT   Ueberlappung: zwei Firmen-Quartale mit zwei Quellen   (ist: 0 | soll: 2)",
@@ -1644,7 +1663,7 @@ def verifikationsblock(d, a):
       "Prüfung nagelt die Zahl 20/210 fest und fällt bei jeder Mischung auf.")
     a("")
     a("**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man "
-      "nie rot gesehen hat, ist eine Zeremonie. Sieben Gegenproben, jede mit "
+      "nie rot gesehen hat, ist eine Zeremonie. Zehn Gegenproben, jede mit "
       "Exit-Code 1 — der Originalstand war vorher committet, danach "
       "wiederhergestellt. Protokoll:")
     a("")

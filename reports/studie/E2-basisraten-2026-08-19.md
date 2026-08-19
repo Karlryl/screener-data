@@ -6,10 +6,11 @@ Stand 2026-08-19. Gelesen wurde **ausschließlich** das Entdeckungsfenster (2009
 
 **Lauf-Flag (R4): Ergebnisdaten berührt = NEIN.** Es wurde keine Kurs-, Rendite- oder Ergebnisdatei geöffnet. Was dieser Lauf wirklich angefasst hat (Verzeichnis und Dateiname):
 
-- gelesen: `e2-selbsttest-pd5d9p5a/panel-entdeckung.sqlite`
+- gelesen: `e2-selbsttest-eyw4r8qo/panel-entdeckung.sqlite`
+- gelesen: `krumm/panel-entdeckung.sqlite`
 - gelesen: `leer/panel-entdeckung.sqlite`
 - gelesen: `panel/panel-entdeckung.sqlite`
-- geschrieben: `e2-selbsttest-pd5d9p5a/zwischen.sqlite` (Arbeitsdatei für die Wiederaufnahme)
+- geschrieben: `e2-selbsttest-eyw4r8qo/zwischen.sqlite` (Arbeitsdatei für die Wiederaufnahme)
 - geschrieben: `leer/zwischen.sqlite` (Arbeitsdatei für die Wiederaufnahme)
 - geschrieben: `arbeit/E2-zwischenstand.sqlite` (Arbeitsdatei für die Wiederaufnahme)
 
@@ -245,7 +246,9 @@ Die vollständige Kreuztabelle Monat × Bereich steht in der JSON-Fassung dieses
 
 Frage: steht im fertigen Ergebnis auch nur **eine** Wachstums- oder Beschleunigungszahl, deren beide Enden verschiedene Umsatz-Quellen tragen? Antwort: **0** (gefordert: 0) — davon 0 Wachstums- und 0 Beschleunigungswerte. Ergebnis: **bestanden**.
 
-Der Nachzähler ist **unabhängig vom Wächter**: er prüft nicht, ob der Wächter aufgerufen wurde, sondern zählt am Ergebnis nach. Beim Gegenprobe-Lauf wurde der Wächter absichtlich ausgebaut — dann geht diese Zahl über null und der Selbsttest wird rot. Die rote Meldung steht wörtlich in Abschnitt 11.
+**Diese Null ist seit der Umstellung eine andere Null als vorher — das gehört dazugesagt.** Vorher war sie das Ergebnis eines Filters: der Wächter hat gemischte Paare aussortiert und als Naht gezählt (2.663 Fälle). Jetzt stammt jede Kette von vornherein aus einer einzigen Reihe, also kann hier gar nichts mehr gemischt sein. Der Nachzähler steht damit **strukturell** auf null und ist an dieser Stelle eine Rückversicherung, kein bestandener unabhängiger Test — wer ihn für mehr hält, überschätzt ihn.
+
+Sein echter Biss sitzt jetzt zwei Stellen weiter: bei der **Reife**. Dort vergleicht derselbe Wächter, ob die Folgequartale einer Firma wirklich dieselbe Quelle tragen wie ihr Erst-Ereignis — die gewählte Reihe einer Firma darf über die Jahre die Quelle wechseln, und ein Folgequartal aus einer anderen Quelle trägt die spätere Auswertung nicht. Baut man den Wächter dort aus, wird der Selbsttest rot; die Meldung steht wörtlich in Abschnitt 11.
 
 ### Prüfschritt 2 — Belegungs-Glätte
 
@@ -289,6 +292,7 @@ Nie geschätzt, nie auf null gesetzt — jeder Fall mit Grund gezählt.
 | Bericht ohne Firmennummer | 0 |
 | Bericht ohne Geschäftsjahresende | 0 |
 | Bericht ohne lesbaren Berichtszeitraum | 0 |
+| Bericht mit Zeitstempel in fremdem Format (bricht den Lauf ab) | 0 |
 | Berichte in der Panel-Datei gesamt (nachrichtlich) | 176.502 |
 | Bericht ohne Berichtsperiode (8-K, S-1 und Verwandte) — verworfen | 5.892 |
 | periodische Berichte gesamt (nachrichtlich) | 170.610 |
@@ -402,7 +406,7 @@ Für die umgestellte Quellenwahl kamen drei Firmen dazu, die genau die Fälle tr
 - **Zeitpunkt-Ehrlichkeit**: eine Firma, bei der die niedriger priorisierte Kennung *später* die längere wird. Wer mit Blick auf das Fensterende wählt, nimmt sie schon 2012; zeitpunkt-ehrlich sind 2012 beide gleich lang, also gewinnt dort die Priorität. Genau diese Prüfung wird rot, wenn man die Rückblick-Fassung einbaut.
 - **Kette bleibt in einer Quelle**: eine Firma mit zwei Kennungen auf verschiedenem Niveau (100 und 200). Wer die Kette aus der je Quartal gemischten Reihe baut, rechnet 220 gegen 100 statt 220 gegen 200 — die Prüfung nagelt die Zahl 20/210 fest und fällt bei jeder Mischung auf.
 
-**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man nie rot gesehen hat, ist eine Zeremonie. Sieben Gegenproben, jede mit Exit-Code 1 — der Originalstand war vorher committet, danach wiederhergestellt. Protokoll:
+**b) Jede Prüfung einmal absichtlich kaputtgemacht.** Ein Wächter, den man nie rot gesehen hat, ist eine Zeremonie. Zehn Gegenproben, jede mit Exit-Code 1 — der Originalstand war vorher committet, danach wiederhergestellt. Protokoll:
 
 *Quellenwahl — Zeitpunkt-Ehrlichkeit* — Sabotage: die Serienlänge wird über die GANZE Reihe gezählt statt nur bis zum Signalzeitpunkt (das ist genau die verbotene Fenster-Rückblick-Fassung).
 
@@ -457,6 +461,31 @@ Für die umgestellte Quellenwahl kamen drei Firmen dazu, die genau die Fälle tr
   SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)
 ```
 
+*Muster-Friedhof — hält an, wenn er nicht mehr stimmt* — Sabotage: der Wächter wird entfernt, der Friedhofs-Eintrag also auch dann geschrieben, wenn S-UG die geforderte Fallzahl erreicht.
+
+```
+  ROT   Friedhof: erfuellte Fallzahl HAELT DEN LAUF AN (ein Muster, das
+        zurueckkommt, ist eine Entscheidung)
+        (ist: 'kein Abbruch' | soll: 'BasisratenFehler')
+  SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
+*Muster-Friedhof — null ist ein Ergebnis* — Sabotage: der Überhang-Faktor wird wieder über den Wahrheitswert gefiltert, eine gemessene 0 sähe dann aus wie „nicht berechenbar".
+
+```
+  ROT   Friedhof: ein Ueberhang von exakt 0 ist ein ERGEBNIS und wird
+        durchgereicht, nicht zu None verschluckt   (ist: None | soll: 0.0)
+  SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
+*Zeitstempel-Format* — Sabotage: die Formatprüfung wird entfernt — ein krummer Zeitstempel würde die Serienlängen und damit die Quellenwahl lautlos falsch sortieren.
+
+```
+  ROT   krummer Zeitstempel bricht den Lauf ab, statt lautlos falsch zu
+        sortieren   (ist: 'kein Abbruch' | soll: 'BasisratenFehler')
+  SELBSTTEST ROT — 1 Pruefung(en) gescheitert (Exit-Code 1)
+```
+
 *Prüfschritt 3 — Überlappung* — Sabotage: der Vergleich zweier Quellen im selben Firmen-Quartal wird abgeschaltet.
 
 ```
@@ -486,4 +515,4 @@ Bei derselben Firma hängt der Wert an einer **abgeleiteten** Q4-Zahl, und die h
 
 ---
 
-*Erzeugt 2026-08-19T10:00:33+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
+*Erzeugt 2026-08-19T10:08:27+00:00 · Python 3.12.10 · SQLite 3.49.1 · nur Standardbibliothek und sqlite3 (R14c).*
