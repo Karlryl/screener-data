@@ -32,7 +32,12 @@ const {
   pruefeZugriffsRegister,
   pruefeServerzeit,
   ART_ZAEHLPROBE,
+  ART_C0_REGELFREEZE,
 } = require('../lib/studie-verfassung');
+
+// Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
+// geschlossen: eine unbekannte Art bekommt keine Server-Bestaetigung.
+const BESTAETIGBAR = new Set([ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
 
 const WURZEL = path.join(__dirname, '..');
 const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
@@ -175,8 +180,11 @@ function bestaetigen(argv) {
   pruefeZugriffsRegister(register);
   const eintrag = (register.events || []).find((e) => e.runId === runId);
   if (!eintrag) throw new VerfassungsBruch(`R1: runId ${runId} steht nicht im lokalen Register`);
-  if ((eintrag.typ || eintrag.type) !== ART_ZAEHLPROBE) {
-    throw new VerfassungsBruch(`R1: Eintrag ${runId} ist keine Zaehlproben-Anmeldung`);
+  if (!BESTAETIGBAR.has(eintrag.typ || eintrag.type)) {
+    throw new VerfassungsBruch(
+      `R1: Eintrag ${runId} traegt die Art ${eintrag.typ || eintrag.type} — bestaetigbar sind nur `
+      + `${[...BESTAETIGBAR].join(', ')}`,
+    );
   }
 
   const nwo = execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], {
