@@ -391,6 +391,72 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "6fd263a869c2d0d995f776f03c4e70989364d28a505e1661463a343973e54569",
    "eventHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd"
+  },
+  {
+   "runId": "e4d-kadenz-pruefung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T18:54:48.047Z",
+   "accessedAt": "2026-08-19T18:58:47.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "abstand_histogramm_klasse_c",
+    "ampel",
+    "auffindbarkeit_e3",
+    "auffindbarkeit_kadenz",
+    "auffindbarkeit_kadenz_e3formel",
+    "differenz_auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "kadenz_untergrenze_gebunden",
+    "klasse_c_firmen",
+    "nenner_e3",
+    "nenner_kadenz",
+    "zaehler_kadenz",
+    "zensiert_e3",
+    "zensiert_kadenz",
+    "zensiert_kadenz_und_reif"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4d/E4e Neulauf nach dem Code-Review (fuenf Befunde geheilt, u. a. der abschwaechbare Siegel-Schalter). Entscheidungsregel unveraendert und vorab verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2. Rein zaehlend (R15b/R4).",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
+   "eventHash": "9401cc738663adf250cd284e1abf1cd496d522d998acfadd8267d3e90fc8deb1"
+  },
+  {
+   "runId": "e4d-kadenz-entdeckung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T18:54:48.110Z",
+   "accessedAt": "2026-08-19T18:58:47.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "abstand_histogramm_klasse_c",
+    "ampel",
+    "auffindbarkeit_e3",
+    "auffindbarkeit_kadenz",
+    "auffindbarkeit_kadenz_e3formel",
+    "differenz_auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "kadenz_untergrenze_gebunden",
+    "klasse_c_firmen",
+    "nenner_e3",
+    "nenner_kadenz",
+    "zaehler_kadenz",
+    "zensiert_e3",
+    "zensiert_kadenz",
+    "zensiert_kadenz_und_reif"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4d/E4e Neulauf nach dem Code-Review (fuenf Befunde geheilt, u. a. der abschwaechbare Siegel-Schalter). Entscheidungsregel unveraendert und vorab verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2. Rein zaehlend (R15b/R4).",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "9401cc738663adf250cd284e1abf1cd496d522d998acfadd8267d3e90fc8deb1",
+   "eventHash": "6ebfded712863641239e83b435a3a02eec7adf783f86e416439e56d4b74cc956"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
