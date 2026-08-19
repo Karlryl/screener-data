@@ -5,6 +5,7 @@
 //
 // Test-Landkarte:
 //   (1)  Trigger          — Blowout im Sektor-Spitzendezil + frischer Report feuert; Trend-Laeufer nicht.
+//   (1b) Trend-Median  — ein Ausreisser-Quartal hebt die Messlatte NICHT (Median statt Mittel).
 //   (2)  SEKTOR-RELATIV   — DERSELBE absolute Sprung feuert in der schwachen Kohorte und NICHT in der starken.
 //   (3)  Boden            — bester unter lauter Schrumpfern (ueber Dezil, unter Boden) feuert NICHT.
 //   (4)  Zuordnungs-Gate  — Report 130 Tage nach Quartalsende → Datenluecke, NICHT Alarm.
@@ -117,6 +118,20 @@ check('(1) Blowout im Spitzendezil + frischer Report feuert; Trend-Laeufer feuer
   const a = r.alerts.find((x) => x.ticker === 'BOOM');
   assert.strictEqual(a.surprise, 0.55, 'surprise = 60 % - Trend 5 % = 55 pp');
   assert.strictEqual(a.quarterEnd, Q_END, 'gemeldetes Quartal am Alarm');
+});
+
+// ── (1b) Der Trend ist der MEDIAN der drei Vorquartale, nicht ihr Mittel ─────
+// Gegenprobe zum Kommentar an surpriseVsOwnTrend: ein einzelnes Ausreisser-Quartal darf die
+// Messlatte nicht hochziehen. QoQ-Reihe 60 % (juengste) gegen 10 / 10 / 100 % —
+// Median 10 % → 50 pp Abweichung; mit dem Mittel (40 %) waeren es nur 20 pp, und der Name
+// fiele unter den Boden. (Ohne diese Pruefung war die Median-Wahl NICHT gedeckt: in allen
+// anderen Fixtures sind die drei Trendraten gleich, da ist Median == Mittel.)
+check('(1b) Trend = MEDIAN der drei Vorquartale — ein Ausreisser hebt die Latte nicht', () => {
+  const rev = [387.2, 242, 220, 200, 100];   // QoQ: 60 % · 10 % · 10 % · 100 %
+  const ends = ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'];
+  const s = E.surpriseVsOwnTrend(rev, ends, E.withDefaults({}));
+  assert.ok(Math.abs(s.trendQoq - 0.10) < 1e-9, 'Trend ist der Median (10 %), nicht das Mittel (40 %)');
+  assert.ok(Math.abs(s.surprise - 0.50) < 1e-9, 'Abweichung 50 pp, nicht 20 pp');
 });
 
 // ── (2) SEKTOR-RELATIVIERUNG — der Kern des Auftrags ─────────────────────────
