@@ -145,7 +145,25 @@ Entdeckung. `OPENDART_KEY` ist weder lokal noch im Workflow gesetzt, der Adapter
 sich still, und es gibt keinen TradingView-Markt fuer Korea. Das ist kein Schwellen-, sondern
 ein Zugangsproblem und gehoert in eine eigene Runde.
 
-## 8. Was diese Messung NICHT hergibt
+## 8. Gegenprobe von aussen
+
+Die Messung oben rechnet aus TradingView- und Register-Abzuegen. Das **Ausschluss-Protokoll**
+(Tag 642, hier erstmals scharf gelaufen) rechnet voellig unabhaengig davon — es zaehlt, was der
+echte Entdeckungslauf an Tor 2 wegwirft:
+
+| Quelle | Zahl |
+|---|---:|
+| Ausschluss-Protokoll, echter Lauf 19.08.: verworfene Zeilen, die eine 800-Mio-Grenze gehalten haetten | **708** |
+| Messung, Szenario (a) — dieselbe Groesse, aber **ohne** die Zeilen, die schon im Bestand stehen | **592** |
+| Differenz = Kandidaten, die ohnehin schon in `watchlist.json` stehen | 116 |
+
+Zwei getrennt gebaute Wege, dieselbe Groessenordnung, und die Abweichung ist vollstaendig
+erklaert. Das Protokoll des Laufs: `data-health/entdeckungs-ausschluss.json` — 18.292
+verworfene Zeilen, jede mit Ticker, Quelle, Marktwert und einem von drei Gruenden
+(`unter-schwelle` / `kein-aktien-typ` / `ohne-marktwert`), plus je Markt die wirksame
+TradingView-Schwelle.
+
+## 9. Was diese Messung NICHT hergibt
 
 - **Shenzhen ist eine Untergrenze.** Der Zeilendeckel hat bei 800 Mio abgeschnitten; die echte
   Zahl fuer CN liegt hoeher als die ausgewiesenen 7.

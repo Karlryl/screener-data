@@ -1731,7 +1731,11 @@ async function main() {
       tor1_TV_PRECUT_USD: parseFloat(process.env.TV_PRECUT_USD || '1.5e9'),
       tor2_MCAP_PREFILTER_MIN_USD: parseFloat(process.env.MCAP_PREFILTER_MIN_USD || '2e9'),
       usKanaele_MIN_MCAP_DISCOVERY: MIN_MCAP_DISCOVERY,
-      abruf_MIN_MCAP_USD: parseFloat(process.env.MIN_MCAP_USD || '1e9'),
+      // Die ABRUF-Schwelle (pull-yahoo.js) wird in einem ANDEREN Workflow-Schritt gesetzt und
+      // ist in diesem Prozess normalerweise gar nicht sichtbar. Hier den Vorgabewert 1e9
+      // hinzuschreiben waere eine Falschaussage — der Tageslauf faehrt mit 800 Mio. Also:
+      // nur melden, wenn wirklich gesetzt, sonst ehrlich null.
+      abruf_MIN_MCAP_USD: process.env.MIN_MCAP_USD ? parseFloat(process.env.MIN_MCAP_USD) : null,
     });
     const ziel = path.join(__dirname, 'data-health', 'entdeckungs-ausschluss.json');
     fs.mkdirSync(path.dirname(ziel), { recursive: true });

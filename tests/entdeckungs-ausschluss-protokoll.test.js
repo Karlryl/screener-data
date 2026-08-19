@@ -272,6 +272,18 @@ check('bricht die Zuordnung mitten ab, steht das bis dahin Geloeschte trotzdem i
     'die bereits erfolgte Loeschung MUSS im Protokoll stehen, auch wenn danach abgebrochen wird');
 });
 
+check('Protokoll behauptet keine Abruf-Schwelle, die dieser Prozess nicht kennt', () => {
+  // Die Abruf-Schwelle (MIN_MCAP_USD) wird in einem anderen Workflow-Schritt gesetzt. Wer hier
+  // den Vorgabewert 1 Mrd hinschreibt, dokumentiert eine Zahl, mit der der Tageslauf nicht
+  // faehrt (er faehrt mit 800 Mio) — genau die Sorte Beleg, die spaeter falsch zitiert wird.
+  const quelle = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'refresh-universe.js'), 'utf8');
+  const zeile = quelle.match(/abruf_MIN_MCAP_USD:.*/);
+  assert.ok(zeile, 'das Feld muss es geben');
+  assert.ok(!/\|\|\s*'1e9'/.test(zeile[0]) && !/\|\|\s*'8e8'/.test(zeile[0]),
+    'kein hartkodierter Ersatzwert — nicht gesetzt heisst null: ' + zeile[0]);
+  assert.match(zeile[0], /:\s*null/, 'der Nicht-gesetzt-Fall muss null ergeben');
+});
+
 check('leere Eingaben ergeben ein leeres, aber vollstaendiges Protokoll (kein Absturz)', () => {
   const p = baueAusschlussProtokoll(undefined, undefined, undefined);
   assert.equal(p.tor1_tvScannerVorschnitt.maerkte.length, 0);
