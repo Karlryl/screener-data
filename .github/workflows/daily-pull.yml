@@ -446,6 +446,7 @@ jobs:
             fx-rates.json
             earnings-calendar.json
             external-data/sec-form4-cache.json
+            data-health/entdeckungs-ausschluss.json
           if-no-files-found: warn
           retention-days: 1
 
@@ -1675,10 +1676,25 @@ jobs:
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js
+          # Ausschluss-Liste NACH dem Export: sie liest v1/index.json als Zaehler-Quelle und
+          # bricht laut ab, wenn ihre Summen davon abweichen. Vor dem gh-pages-Deploy, der
+          # v1/ komplett kopiert — excluded.json faehrt dadurch automatisch mit.
+          # Karl-Entscheid 02.08.: "Eine Grenze, die Namen wegnimmt, wird ersetzt —
+          # niemand verschwindet." Bis heute wurde je Ausschluss nur ein Zaehler erhoeht
+          # und die Zeile verworfen; kein Kuerzel, kein Name ueberlebte.
+          node scripts/write-excluded-list.js
           count=$(ls outputs/findash-export/v1/*.json 2>/dev/null | wc -l)
           echo "findash-export wrote $count JSON files to outputs/findash-export/v1/"
           if [ "$count" -lt 15 ]; then
             echo "::error::findash-export produced $count files (expected 15) — writer failed."
+            exit 1
+          fi
+          # Tag 650: Vollboards (v1/full/) sind PFLICHT, eines je Branche. Fehlt eines, sieht
+          # das Board in findash aus wie eines ohne Nachruecker — stumm halb statt sichtbar rot.
+          vgot=$(ls outputs/findash-export/v1/full/*.json 2>/dev/null | wc -l)
+          echo "findash-export full/ wrote $vgot Vollboards (expected 13)"
+          if [ "$vgot" -ne 13 ]; then
+            echo "::error::findash-export full/ produced $vgot Vollboards (expected 13) — die Kohorte hinter Rang 100 fehlt."
             exit 1
           fi
           # 3.2 QC-Board (quality/): expected = #QC boards + overview + index. Dynamic, no
