@@ -1310,28 +1310,57 @@ def _selbsttest(verzeichnis):
     _behaupte(pruefe_anker({"entdeckung": f}, anker_pfad)["status"].startswith("ABWEICHUNG"),
               "Der harmlose Bau-Report kommt nicht mehr durch die Mauer.")
 
-    verweis = os.path.join(verzeichnis, "harmlos-aussehend.sqlite")
+    os.remove(endtest_koeder)
+
+    # Der zweite Weg an einer Namenspruefung vorbei: ein Verzeichnis-Verweis, der
+    # harmlos heisst und in den Endtest zeigt. Datei-Symlinks brauchen auf Windows
+    # erhoehte Rechte, VERZEICHNIS-Verbindungen (Junctions) nicht — der Angriff ist
+    # also fuer jeden Nutzer verfuegbar und muss geprueft werden, nicht angenommen.
+    echtes_verzeichnis = os.path.join(verzeichnis, "endtest")
+    os.makedirs(echtes_verzeichnis, exist_ok=True)
+    koeder = os.path.join(echtes_verzeichnis, "bau.json")
+    with open(koeder, "w", encoding="utf-8") as fh:
+        json.dump({"jeFenster": {}}, fh)
+    getarnt = os.path.join(verzeichnis, "harmlos")
+    gelegt = False
     try:
-        os.symlink(endtest_koeder, verweis)
+        os.symlink(echtes_verzeichnis, getarnt, target_is_directory=True)
+        gelegt = True
     except (OSError, NotImplementedError, AttributeError):
+        if os.name == "nt":
+            import subprocess
+            gelegt = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", getarnt, echtes_verzeichnis],
+                capture_output=True).returncode == 0
+    if not gelegt:
         print("  [10] Mauer: der Schalter --bau-report wird abgewiesen. "
-              "Verweis-Probe NICHT BERECHENBAR — dieses System laesst keine "
-              "Symlinks anlegen (auf Windows braucht das erhoehte Rechte).")
+              "Verweis-Probe NICHT BERECHENBAR — dieses System laesst weder "
+              "Symlinks noch Verzeichnis-Verbindungen anlegen (R5: nicht "
+              "behaupten, was nicht gemessen wurde).")
     else:
+        getarnter_pfad = os.path.join(getarnt, "bau.json")
+        # Gegenprobe zur Gegenprobe: der geschriebene Pfad darf das Wort NICHT
+        # enthalten, sonst wuerde schon die alte Namenspruefung greifen und der
+        # Test wuerde gar nicht das pruefen, was er zu pruefen behauptet.
+        _behaupte("endtest" not in os.path.abspath(getarnter_pfad).lower(),
+                  "Der getarnte Pfad enthaelt schon im Namen 'endtest' — die Probe "
+                  "prueft dann nicht die Aufloesung des Verweises.")
+        _behaupte("endtest" in os.path.realpath(getarnter_pfad).lower(),
+                  "Der Verweis loest nicht in das Endtest-Verzeichnis auf — die "
+                  "Probe ist wirkungslos aufgebaut.")
         try:
-            pruefe_mauer(verweis)
+            pruefe_mauer(getarnter_pfad)
         except AbdeckungsFehler as fehler:
             _behaupte("R2-ABBRUCH" in str(fehler),
                       "Der Verweis bricht ab, aber nicht an der Fenster-Mauer.")
         else:
             raise SystemExit(
-                "SELBSTTEST ROT: ein Verweis mit harmlosem Namen zeigt auf den "
-                "Endtest und wird durchgelassen — die Mauer prueft nur Zeichen, "
-                "nicht das Ziel.")
-        os.remove(verweis)
+                "SELBSTTEST ROT: ein harmlos benannter Verweis zeigt in den "
+                "Endtest und wird durchgelassen — die Mauer prueft nur die "
+                "Zeichen des Pfades, nicht sein Ziel.")
         print("  [10] Mauer: der Schalter --bau-report wird abgewiesen, und ein "
-              "harmlos benannter Verweis auf den Endtest ebenfalls.")
-    os.remove(endtest_koeder)
+              "harmlos benannter Verzeichnis-Verweis in den Endtest ebenfalls "
+              "(im geschriebenen Pfad steht 'endtest' nicht, nur im aufgeloesten).")
 
     # --- Pruefung 11: doppelte Berichtsnummer und Zeilen ohne Kennung --------
     # Beides wuerde sonst still falsche Zahlen erzeugen statt eines Fehlers.
