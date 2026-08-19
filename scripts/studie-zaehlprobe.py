@@ -669,7 +669,7 @@ def lauf(fenster_name, freigabe_pfad, data_root=None, arbeit=None, ziel=None,
     pruefe_ausgabe(ausgabe, praereg, e2)
     if ziel:
         os.makedirs(os.path.dirname(os.path.abspath(ziel)), exist_ok=True)
-        with open(ziel, "w", encoding="utf-8") as f:
+        with open(ziel, "w", encoding="utf-8", newline="\n") as f:
             json.dump(ausgabe, f, ensure_ascii=False, indent=1, sort_keys=True)
             f.write("\n")
     return ausgabe
@@ -1028,7 +1028,11 @@ def siegeln(ziel=MANIFEST):
                    "drei nach dem Siegeln aendert, macht jeden Zaehllauf rot."),
         "files": dict(sorted(eintraege.items())),
     }
-    with open(ziel, "w", encoding="utf-8") as f:
+    # newline="\n" ist NICHT Kosmetik: Windows schriebe sonst CRLF, git normalisiert
+    # beim Committen auf LF (.gitattributes), und der gesiegelte Hash gaelte fuer
+    # Bytes, die im Repo gar nicht liegen. Der Waechter waere dann bei jedem frischen
+    # Checkout rot — und niemand haette gewusst, warum.
+    with open(ziel, "w", encoding="utf-8", newline="\n") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
         f.write("\n")
     return manifest
