@@ -455,7 +455,7 @@ function loadSmallcapUniverse(snapDir = SMALLCAP_SNAP_DIR, watchlistPath = SMALL
 // Alle Dateien speisen DENSELBEN snapshot.secAnnual-Kanal -> derselbe Zyklus-Daempfer, kein zweiter
 // Mechanismus. Ticker-Raeume disjunkt (US vs 000660.KS) -> Object.assign kollidiert nie. Fehlende Datei
 // -> skip (byte-identisch). Alle offline via scripts/build-*annual.js erzeugt; hier KEIN Netz (CI==lokal).
-const SECANNUAL_FILES = ['sec-secannual.json', 'sec-secannual-smallcap.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json']
+const SECANNUAL_FILES = ['sec-secannual.json', 'sec-secannual-smallcap.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json', 'cn-secannual.json']
   .map((f) => path.join(ROOT, 'external-data', f));
 // BH-011: Coverage anhand finiter Serien ausweisen statt blosser Key-Praesenz. Reine Funktion.
 // Review-Befund 03.08.2026: die SEC-Dateien speichern {value:N}-OBJEKTE, nicht plain numbers —
