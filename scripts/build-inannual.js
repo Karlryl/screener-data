@@ -153,6 +153,13 @@ const AUFWAERMEN = [
 const MIN_JAHRE = 3;            // wie TW/KR/JP: weniger ist keine Reihe
 const MAX_JAHRE = 9;            // GJ2018-GJ2026; aeltere Eintraege tragen xbrl = "-"
 const NSE_PAUSE_MS = 1500;      // ueber dem Default (1200) — Gratis-Quelle ohne Vertrag
+// Akamai-Sitzungen leben nicht ewig. LIVE GEMESSEN am Probelauf 19.08.2026: die ersten 37
+// Ticker liefen sauber durch, danach beantwortete NSE jeden Abruf mit ECONNRESET bzw. lief in
+// den Timeout — nach rund 35 Minuten. Ein Vollbau ueber 53 Namen dauert laenger als das.
+// Darum wird der Cookie-Jar vorsorglich erneuert, und ein gescheiterter Listen-Abruf loest
+// EINEN sofortigen Erneuerungsversuch aus. Ohne das ist der Adapter nur fuer kurze Laeufe
+// brauchbar und faellt in einem Nachtlauf still auf halber Strecke aus.
+const JAR_MAX_ALTER_MS = 8 * 60 * 1000;
 
 // Ein Jahres-Kontext muss zwischen 330 und 400 Tagen spannen. 366 ist der Normalfall;
 // die Spanne laesst Schaltjahre und ein paar Tage Schlamperei zu, aber kein Rumpfjahr
@@ -228,7 +235,9 @@ function parseXbrl(text) {
       instant: (/<xbrli:instant>([^<]+)</.exec(rumpf) || [])[1] || null,
       // Ein Kontext MIT Dimension ist eine Aufgliederung (Segment, Aufwandsposten,
       // Aktiengattung), nie der Gesamtwert — dieselbe Regel wie beim Japan-Adapter.
-      dims: (rumpf.match(/xbrldi:explicitMember/g) || []).length,
+      // BEIDE Dimensionsformen. Ein typedMember ist genauso eine Aufgliederung wie ein
+      // explicitMember; nur den einen zu zaehlen liesse die andere Form als Gesamtwert durch.
+      dims: (rumpf.match(/xbrldi:(?:explicit|typed)Member/g) || []).length,
     });
   }
 
@@ -269,12 +278,32 @@ function fakt(p, name, ctx, tk) {
   return v;
 }
 
-/** Erster Rohwert eines Fakts in IRGENDEINEM Kontext (fuer Dokument-Angaben wie Waehrung). */
-function faktIrgendwo(p, name) {
+/**
+ * Dokumentweite Pflichtangabe (Geschaeftsjahresende, Waehrung, Rundungsstufe). Diese Fakten
+ * stehen in mehreren Kontexten derselben Datei und muessen ueberall DASSELBE sagen.
+ *
+ * ⚠ Nicht "erster Treffer gewinnt" (Review-Befund 19.08.2026): das Geschaeftsjahresende ist
+ * die Achse, auf der alles andere sitzt. Traegt eine Datei zwei verschiedene, entscheidet
+ * sonst die Map-Reihenfolge, welches Jahr gilt — eine stille Auswahl genau an der
+ * empfindlichsten Stelle. Widerspruch = Wurf, wie bei allen Zahlenfeldern auch.
+ */
+function faktDokument(p, name, tk) {
   const je = p.fakten.get(name);
   if (!je) return null;
-  for (const v of je.values()) if (v !== KONFLIKT) return v;
-  return null;
+  let gefunden = null;
+  for (const v of je.values()) {
+    if (v === KONFLIKT) {
+      throw new Error(`${tk}: ${name} traegt in einem Kontext zwei verschiedene Werte — `
+        + 'nicht entscheidbar, Abbruch statt stiller Auswahl.');
+    }
+    if (gefunden != null && gefunden !== v) {
+      throw new Error(`${tk}: ${name} sagt an zwei Stellen der Datei Verschiedenes `
+        + `(${JSON.stringify(gefunden)} und ${JSON.stringify(v)}). Eine dokumentweite `
+        + 'Pflichtangabe darf nicht mehrdeutig sein — Abbruch statt stiller Auswahl.');
+    }
+    gefunden = v;
+  }
+  return gefunden;
 }
 
 const zahl = (v) => {
@@ -320,7 +349,11 @@ function jahresKontexte(p, fyEnde, tk) {
     const ende = fakt(p, 'DateOfEndOfReportingPeriod', id, tk);
     if (!start || !ende) continue;              // Kontext ohne Selbstauskunft -> nicht wertbar
     const tage = spanneTage(start, ende);
-    if (ende !== fyEnde || tage < JAHR_MIN_TAGE || tage > JAHR_MAX_TAGE) {
+    // ⚠ `!Number.isFinite(tage)` ist nicht optional. Ist eines der beiden Daten unlesbar,
+    // liefert Date.parse NaN — und `NaN < 330` ist false UND `NaN > 400` ist false. Die
+    // ganze Spannenpruefung fiele damit lautlos aus, und ein beliebiger Kontext ginge als
+    // Jahres-Kontext durch. (Review-Befund 19.08.2026.)
+    if (ende !== fyEnde || !Number.isFinite(tage) || tage < JAHR_MIN_TAGE || tage > JAHR_MAX_TAGE) {
       verworfen.push(`${id}:${start}..${ende}(${tage}d)`);
       continue;
     }
@@ -410,7 +443,7 @@ function bauJahr(xml, tk, listeSagt) {
   const p = parseXbrl(xml);
 
   // ── Geschaeftsjahresende: die Achse, auf der alles andere sitzt (Falle 4) ──────────────
-  const fyEnde = faktIrgendwo(p, 'DateOfEndOfFinancialYear');
+  const fyEnde = faktDokument(p, 'DateOfEndOfFinancialYear', tk);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(fyEnde))) {
     throw new Error(`${tk}: DateOfEndOfFinancialYear fehlt oder ist unbrauchbar `
       + `(${JSON.stringify(fyEnde)}). Ohne Geschaeftsjahresende laesst sich der Jahres-Kontext `
@@ -423,8 +456,21 @@ function bauJahr(xml, tk, listeSagt) {
   const jkLabel = jkIds.join('+');
 
   // ── Riegel 1+2 der Konsolidierungs-Falle (Falle 1) ────────────────────────────────────
-  const dateiSagt = jkIds.map((id) => fakt(p, 'NatureOfReportStandaloneConsolidated', id, tk))
-    .find((v) => v != null) || null;
+  // ⚠ Konsens ueber ALLE Jahres-Kontexte, nicht "erster Treffer" (Review-Befund 19.08.2026).
+  // Fuer jedes ZAHLEN-Feld verlangt `ueberKontexte` Uebereinstimmung; ausgerechnet beim
+  // teuersten Feld — dem Konsolidierungskreis — waere ein Widerspruch sonst von der
+  // alphabetischen Kontext-Reihenfolge entschieden worden.
+  let dateiSagt = null;
+  for (const id of jkIds) {
+    const v = fakt(p, 'NatureOfReportStandaloneConsolidated', id, tk);
+    if (v == null) continue;
+    if (dateiSagt != null && dateiSagt !== v) {
+      throw new Error(`${tk}: zwei Jahres-Kontexte melden verschiedene Konsolidierungskreise `
+        + `(${JSON.stringify(dateiSagt)} und ${JSON.stringify(v)}). Dann ist nicht entscheidbar, `
+        + 'welche Zahl der Konzern ist — kein Wert statt geratenem Wert.');
+    }
+    dateiSagt = v;
+  }
   if (dateiSagt !== 'Consolidated') {
     throw new Error(`${tk}: die Datei meldet Konsolidierungskreis ${JSON.stringify(dateiSagt)} `
       + 'statt "Consolidated". Der Einzelabschluss darf nie als Konzernzahl ins Board — bei OFSS '
@@ -437,7 +483,7 @@ function bauJahr(xml, tk, listeSagt) {
   }
 
   // ── Waehrung: nie mischen ─────────────────────────────────────────────────────────────
-  const waehrung = faktIrgendwo(p, 'DescriptionOfPresentationCurrency');
+  const waehrung = faktDokument(p, 'DescriptionOfPresentationCurrency', tk);
   if (waehrung !== 'INR') {
     throw new Error(`${tk}: Berichtswaehrung ${JSON.stringify(waehrung)} statt INR. Waehrungen `
       + 'werden nie gemischt (Befund 03.07.: KRW-Zaehler gegen USD-Nenner verfaelschte '
@@ -445,8 +491,8 @@ function bauJahr(xml, tk, listeSagt) {
   }
 
   // ── Rundungsstufe: gelesen, mitgefuehrt, NIE gerechnet (Falle 3) ──────────────────────
-  const rundung = faktIrgendwo(p, 'LevelOfRounding')
-    || faktIrgendwo(p, 'LevelOfRoundingUsedInFinancialStatements');
+  const rundung = faktDokument(p, 'LevelOfRounding', tk)
+    || faktDokument(p, 'LevelOfRoundingUsedInFinancialStatements', tk);
   if (!RUNDUNGSSTUFEN.has(String(rundung))) {
     throw new Error(`${tk}: unbekannte Rundungsstufe ${JSON.stringify(rundung)}. Sie wird nicht `
       + 'gerechnet (die XBRL-Werte stehen immer in vollen Rupien), aber eine unbekannte Stufe '
@@ -478,8 +524,12 @@ function bauJahr(xml, tk, listeSagt) {
   }
 
   // ── Rohertrag: Herleitung mit Dienstleister-Riegel (Falle 5) ──────────────────────────
-  const posten = WARENEINSATZ.map((n) => ({ n, v: dauerZahl(n) })).filter((x) => x.v != null);
-  if (werte.annualRev != null && posten.length && posten.some((x) => x.v !== 0)) {
+  // ⚠ ALLE drei Posten muessen getaggt sein (0 ist ein Wert, "fehlt" ist keiner). Wer einen
+  // fehlenden Posten wie 0 behandelt, unterzeichnet den Wareneinsatz und ueberzeichnet den
+  // Rohertrag — genau die Fehlerklasse, die Falle 5 verhindern soll. (Review-Befund 19.08.2026.)
+  const posten = WARENEINSATZ.map((n) => ({ n, v: dauerZahl(n) }));
+  const vollstaendig = posten.every((x) => x.v != null);
+  if (werte.annualRev != null && vollstaendig && posten.some((x) => x.v !== 0)) {
     werte.annualGrossProfit = werte.annualRev - posten.reduce((s, x) => s + x.v, 0);
     feldwahl.annualGrossProfit = `RevenueFromOperations - (${posten.map((x) => x.n).join(' + ')}) [${jkLabel}]`;
   } else {
@@ -620,12 +670,50 @@ function waehleMeldungen(integrated, jahres) {
     const alt = je.get(k.fyEnde);
     if (!alt) { je.set(k.fyEnde, k); continue; }
     if (k.zeit !== alt.zeit) { if (k.zeit > alt.zeit) je.set(k.fyEnde, k); continue; }
-    if (k.nr !== alt.nr) { if (k.nr > alt.nr) je.set(k.fyEnde, k); continue; }
+    // ⚠ Die laufenden Nummern der beiden Listen sind NICHT vergleichbar: `seqNumber` der
+    // alten Liste laeuft siebenstellig (~1,1 Mio.), `seq_Id` der Integrated Filings
+    // fuenf-/sechsstellig (~87k-177k). Wer sie quer vergleicht, laesst bei Zeitgleichstand
+    // strukturell immer die ALTE Liste gewinnen und macht den Stich darunter zu totem Code.
+    // (Review-Befund 19.08.2026.)
+    if (k.quelle === alt.quelle && k.nr !== alt.nr) { if (k.nr > alt.nr) je.set(k.fyEnde, k); continue; }
     // Letzter Stich: die neuere Liste (Integrated Filing) — damit bleibt die Wahl auch bei
     // voellig gleichen Zeitstempeln deterministisch statt reihenfolgeabhaengig.
     if (alt.quelle !== 'integrated-filing' && k.quelle === 'integrated-filing') je.set(k.fyEnde, k);
   }
   return je;
+}
+
+/**
+ * WAECHTER DER BEGRIFFS-EINHEITLICHKEIT (Review-Befund 19.08.2026, TW-Muster uebernommen).
+ *
+ * `annualEquity` hat eine Vorrangliste: `EquityAttributableToOwnersOfParent`, sonst `Equity`.
+ * Das sind ZWEI VERSCHIEDENE BEGRIFFE — der zweite schliesst Minderheitsanteile ein
+ * (KALYANKJIL GJ2024: 41.890,57 gegen 41.877,67 Mio.). Faellt ein einzelnes Jahr auf den
+ * Zweitbegriff zurueck, entsteht mitten in der Reihe ein Sprung, den jeder Zyklus-Daempfer
+ * als echte Bewegung liest. Dasselbe gilt fuer den Rohertrag, dessen Herleitung sich aendert,
+ * wenn eine Firma einen Wareneinsatz-Posten nicht mehr taggt.
+ *
+ * Deshalb: EIN Begriff je Feld fuer die ganze Reihe — der des NEUESTEN Jahres. Jahre, die
+ * einen anderen benutzen, verlieren genau dieses Feld (null) und werden gemeldet. Das ist
+ * derselbe Grundsatz wie bei build-twannual: lieber eine Luecke als ein erfundener Sprung.
+ * Aendert die Ausgabe direkt, deshalb kein blosser Kommentar.
+ */
+function vereinheitlicheBegriffe(jahre) {
+  const nurName = (w) => (w == null ? null : String(w).replace(/\s*\[[^\]]*\]\s*$/, ''));
+  const meldungen = [];
+  const leitend = {};
+  for (const feld of FELD_NAMEN) leitend[feld] = nurName(jahre[0].feldwahl[feld]);
+  for (const j of jahre.slice(1)) {
+    for (const feld of FELD_NAMEN) {
+      const hier = nurName(j.feldwahl[feld]);
+      if (hier == null || leitend[feld] == null || hier === leitend[feld]) continue;
+      meldungen.push(`${j.fiscalYearEnd}: ${feld} kaeme aus "${hier}" statt "${leitend[feld]}" `
+        + '— anderer Begriff, deshalb kein Wert statt eines erfundenen Sprungs');
+      j.werte[feld] = null;
+      j.feldwahl[feld] = null;
+    }
+  }
+  return meldungen;
 }
 
 /**
@@ -665,7 +753,10 @@ const BROWSER = {
 /** Cookie-Jar. NSE/Akamai gibt ohne bm_sz/_abck/ak_bmsc 403 auf jeden API-Abruf. */
 function neuerJar() {
   const jar = new Map();
+  let gesetztAm = 0;
   return {
+    frischGesetzt() { gesetztAm = Date.now(); },
+    alterMs() { return gesetztAm ? Date.now() - gesetztAm : Infinity; },
     schlucke(headers) {
       for (const sc of (headers && headers['set-cookie']) || []) {
         const m = /^([^=]+)=([^;]*)/.exec(sc);
@@ -692,6 +783,7 @@ async function holeNse(url, jar, holen, art) {
 
 async function aufwaermen(jar, holen) {
   for (const u of AUFWAERMEN) await holeNse(u, jar, holen, 'html');
+  jar.frischGesetzt();
   if (!jar.groesse()) {
     throw new Error('NSE-Bootstrap ohne Cookie — ohne bm_sz/_abck/ak_bmsc antwortet die API mit '
       + '403. Abbruch statt einer Runde leerer Abrufe.');
@@ -706,7 +798,16 @@ async function holeJson(url, jar, holen) {
     throw new Error(`${url} -> Antwort ist kein JSON (${a.body.length} Bytes, beginnt mit `
       + `${JSON.stringify(text.slice(0, 80))}). Bei NSE heisst das fast immer: Cookie abgelaufen.`);
   }
-  return Array.isArray(j) ? j : (j.data || []);
+  if (Array.isArray(j)) return j;
+  // ⚠ Kein `j.data || []`. Eine Fehler-/Drosselungs-Antwort ohne `data` saehe sonst aus wie
+  // "diese Firma hat keine Meldungen" — bei abgelaufenem Cookie waeren das 53 scheinbar
+  // unabhaengige Datenluecken statt eines Alarms. (Review-Befund 19.08.2026.)
+  if (!j || typeof j !== 'object' || !Array.isArray(j.data)) {
+    throw new Error(`${url} -> Antwort ohne verwertbare data-Liste `
+      + `(Schluessel: ${j && typeof j === 'object' ? Object.keys(j).join(',') : typeof j}). `
+      + 'Bei NSE heisst das fast immer: Cookie abgelaufen oder Drosselung.');
+  }
+  return j.data;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -725,14 +826,31 @@ async function main(opts = {}) {
 
   for (const tk of tickers) {
     const sym = symbolVon(tk);
+    const holeListen = async () => [
+      await holeJson(`${BASIS}/api/integrated-filing-results?index=equities&symbol=${encodeURIComponent(sym)}&size=200`, jar, holen),
+      await holeJson(`${BASIS}/api/corporates-financial-results?index=equities&symbol=${encodeURIComponent(sym)}&period=Annual`, jar, holen),
+    ];
+    if (jar.alterMs() > JAR_MAX_ALTER_MS) {
+      try { await aufwaermen(jar, holen); } catch (e) {
+        console.warn(`Cookie-Auffrischung fehlgeschlagen (${e.message}) — es wird mit dem alten versucht`);
+      }
+    }
     let integrated, jahresliste;
     try {
-      integrated = await holeJson(`${BASIS}/api/integrated-filing-results?index=equities&symbol=${encodeURIComponent(sym)}&size=200`, jar, holen);
-      jahresliste = await holeJson(`${BASIS}/api/corporates-financial-results?index=equities&symbol=${encodeURIComponent(sym)}&period=Annual`, jar, holen);
-    } catch (e) {
-      gescheitert.push(`${tk}: ${e.message}`);
-      console.warn(`${tk}: Listen-Abruf fehlgeschlagen (${e.message}) -> Altbestand bleibt unveraendert`);
-      continue;
+      [integrated, jahresliste] = await holeListen();
+    } catch (ersterFehler) {
+      // Ein einzelner Fehlschlag ist fast immer die abgelaufene Akamai-Sitzung. EIN Versuch
+      // mit frischem Cookie — schlaegt auch der fehl, ist es ein echter Ausfall und wird laut.
+      try {
+        await aufwaermen(jar, holen);
+        [integrated, jahresliste] = await holeListen();
+        console.warn(`${tk}: Listen-Abruf erst nach Cookie-Auffrischung erfolgreich (${ersterFehler.message})`);
+      } catch (zweiterFehler) {
+        gescheitert.push(`${tk}: ${zweiterFehler.message}`);
+        console.warn(`${tk}: Listen-Abruf fehlgeschlagen, auch nach Cookie-Auffrischung `
+          + `(${zweiterFehler.message}) -> Altbestand bleibt unveraendert`);
+        continue;
+      }
     }
 
     const meldungen = [...waehleMeldungen(integrated, jahresliste).values()]
@@ -765,6 +883,8 @@ async function main(opts = {}) {
       console.warn(`${tk}: zu wenig Jahre (${jahre.length}) -> uebersprungen`);
       continue;
     }
+
+    luecken.push(...vereinheitlicheBegriffe(jahre));
 
     let achse;
     try { achse = pruefeJahresachse(tk, jahre); } catch (e) {
@@ -836,8 +956,9 @@ async function main(opts = {}) {
 if (require.main === module) main().catch((e) => { console.error(`::error::${e.message}`); process.exit(1); });
 
 module.exports = {
-  parseXbrl, fakt, faktIrgendwo, zahl, spanneTage, jahresKontexte, stichtagsKontexte, ueberKontexte,
-  bauJahr, waehleMeldungen, pruefeJahresachse, nseDatum, nseZeit, neuerJar, main,
+  parseXbrl, fakt, faktDokument, zahl, spanneTage, jahresKontexte, stichtagsKontexte, ueberKontexte,
+  bauJahr, waehleMeldungen, pruefeJahresachse, vereinheitlicheBegriffe, nseDatum, nseZeit,
+  neuerJar, aufwaermen, main, JAR_MAX_ALTER_MS,
   IN, FELD_NAMEN, WARENEINSATZ, DAUER_FELDER, STICHTAG_FELDER, RUNDUNGSSTUFEN,
   MIN_JAHRE, MAX_JAHRE, JAHR_MIN_TAGE, JAHR_MAX_TAGE, AKTIEN_MIN, AKTIEN_MAX, KONFLIKT,
 };

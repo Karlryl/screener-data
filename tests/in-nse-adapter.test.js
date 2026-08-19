@@ -157,14 +157,26 @@ test('SABOTAGE: zwei Kontexte mit verschiedenen Jahreswerten sind nicht entschei
   const kaputt = lies('OFSS-fy2025-cons.xml')
     .replace('<in-capmkt:DateOfStartOfReportingPeriod contextRef="OneD">2025-01-01<',
       '<in-capmkt:DateOfStartOfReportingPeriod contextRef="OneD">2024-04-01<');
-  assert.throws(() => M.bauJahr(kaputt, 'OFSS.NS', 'Consolidated'), /verschiedene\s+Werte/);
+  // Scharf auf DIESEN Wurf: "verschiedene Werte" steht auch in der Konflikt-Meldung
+  // INNERHALB eines Kontexts — die Regex muss die beiden Faelle unterscheiden koennen.
+  assert.throws(() => M.bauJahr(kaputt, 'OFSS.NS', 'Consolidated'),
+    /in zwei Kontexten derselben Periode verschiedene Werte/);
 });
 
-test('CHENNPETRO: 24 Stichtags-Kontexte, trotzdem eindeutige Bilanzzahlen', () => {
-  // Die Sammelposten-Kontexte (I_OtherCurrentAssets3 …) tragen KEINE xbrldi-Dimension. Wer
-  // "es muss genau ein Stichtags-Kontext sein" verlangt, verliert hier die ganze Bilanz.
-  const j = M.bauJahr(lies('CHENNPETRO-fy2026-cons.xml'), 'CHENNPETRO.NS', 'Consolidated');
-  assert.ok(j.kontexte.stichtagKandidaten > 5, `nur ${j.kontexte.stichtagKandidaten} Kandidaten`);
+test('CHENNPETRO: die Sammelposten-Kontexte sind TYPED-Dimensionen und fallen raus', () => {
+  // Die 24 Kontexte I_OtherCurrentAssets1… gliedern die Sammelposten auf. Sie benutzen
+  // xbrldi:typedMember statt xbrldi:explicitMember — wer nur die explizite Form als
+  // Dimension zaehlt, haelt sie faelschlich fuer Gesamtwert-Kontexte und hat 24 Kandidaten
+  // fuer dieselbe Bilanz.
+  const xml = lies('CHENNPETRO-fy2026-cons.xml');
+  assert.equal((xml.match(/xbrldi:typedMember/g) || []).length, 56,
+    'Fixture-Kontrolle: die Datei benutzt wirklich typed-Dimensionen');
+  const p = M.parseXbrl(xml);
+  const stichtageOhneDim = [...p.kontexte.values()]
+    .filter((k) => !k.dims && k.instant === '2026-03-31').length;
+  assert.equal(stichtageOhneDim, 1, 'nach Abzug der Aufgliederungen bleibt genau OneI uebrig');
+  const j = M.bauJahr(xml, 'CHENNPETRO.NS', 'Consolidated');
+  assert.equal(j.kontexte.stichtagKandidaten, 1);
   assert.equal(j.werte.annualAssets, 200346200000);
   assert.equal(j.werte.annualEquity, 111092100000);
 });
@@ -371,6 +383,98 @@ test('nseDatum/nseZeit lesen das NSE-Format und nicht irgendetwas', () => {
 });
 
 // ══════════════════════════════════════════════════════════════════════════════════════
+//  6b. REVIEW-BEFUNDE 19.08.2026 — jeder Fix mit dem Test, der ohne ihn rot waere
+// ══════════════════════════════════════════════════════════════════════════════════════
+test('ein unlesbares Startdatum darf die Tage-Spanne nicht umgehen (NaN-Falle)', () => {
+  // NaN < 330 ist false UND NaN > 400 ist false — ohne Number.isFinite faellt die ganze
+  // Spannenpruefung lautlos aus und ein beliebiger Kontext geht als Jahres-Kontext durch.
+  assert.ok(!Number.isFinite(M.spanneTage('kein-datum', '2025-03-31')),
+    'Kontrolle: die Spanne ist wirklich NaN');
+  const kaputt = lies('OFSS-fy2025-cons.xml')
+    .replace('<in-capmkt:DateOfStartOfReportingPeriod contextRef="FourD">2024-04-01<',
+      '<in-capmkt:DateOfStartOfReportingPeriod contextRef="FourD">kein-datum<');
+  assert.throws(() => M.bauJahr(kaputt, 'OFSS.NS', 'Consolidated'), /kein Jahres-Kontext/);
+});
+
+test('widersprechen sich zwei Jahres-Kontexte im Konsolidierungskreis, gibt es keinen Wert', () => {
+  // OneD wird durch die gefaelschte Periode zum zweiten Jahres-Kandidaten und behauptet
+  // gleichzeitig den anderen Kreis. "Erster Treffer gewinnt" haette hier still entschieden.
+  const kaputt = lies('OFSS-fy2025-cons.xml')
+    .replace('<in-capmkt:DateOfStartOfReportingPeriod contextRef="OneD">2025-01-01<',
+      '<in-capmkt:DateOfStartOfReportingPeriod contextRef="OneD">2024-04-01<')
+    .replace('<in-capmkt:NatureOfReportStandaloneConsolidated contextRef="OneD">Consolidated<',
+      '<in-capmkt:NatureOfReportStandaloneConsolidated contextRef="OneD">Standalone<');
+  assert.throws(() => M.bauJahr(kaputt, 'OFSS.NS', 'Consolidated'),
+    /verschiedene Konsolidierungskreise/);
+});
+
+test('eine dokumentweite Pflichtangabe darf nicht zweierlei sagen', () => {
+  const kaputt = lies('OFSS-fy2025-cons.xml').replace(
+    '<in-capmkt:DateOfEndOfFinancialYear contextRef="OneD">2025-03-31<',
+    '<in-capmkt:DateOfEndOfFinancialYear contextRef="FourD">2024-03-31</in-capmkt:DateOfEndOfFinancialYear>'
+    + '<in-capmkt:DateOfEndOfFinancialYear contextRef="OneD">2025-03-31<');
+  assert.throws(() => M.bauJahr(kaputt, 'OFSS.NS', 'Consolidated'),
+    /sagt an zwei Stellen der Datei Verschiedenes/);
+});
+
+test('fehlt ein Wareneinsatz-Posten ganz, gibt es keinen Rohertrag (nicht "als 0 gerechnet")', () => {
+  // Ein fehlendes Tag wie 0 zu behandeln unterzeichnet den Wareneinsatz. Bei KALYANKJIL
+  // waere der Rohertrag dann um 2.542,71 Mio. zu hoch — genau die Zahl, die der
+  // Auftrags-Anker nennt. Lieber kein Wert.
+  const ohneZukauf = lies('KALYANKJIL-fy2025-cons.xml')
+    .replace(/<in-capmkt:PurchasesOfStockInTrade[\s\S]*?<\/in-capmkt:PurchasesOfStockInTrade>/g, '');
+  const j = M.bauJahr(ohneZukauf, 'KALYANKJIL.NS', 'Consolidated');
+  assert.equal(j.werte.annualGrossProfit, null);
+  assert.notEqual(j.werte.annualGrossProfit, 35385260000);
+  // Gegenprobe: mit allen drei Posten kommt der Wert wie gehabt an.
+  assert.equal(M.bauJahr(lies('KALYANKJIL-fy2025-cons.xml'), 'KALYANKJIL.NS', 'Consolidated')
+    .werte.annualGrossProfit, 32842550000);
+});
+
+test('die laufenden Nummern der beiden Listen werden nicht quer verglichen', () => {
+  // seqNumber der alten Liste laeuft siebenstellig, seq_Id der Integrated Filings
+  // fuenf-/sechsstellig. Quer verglichen gewinnt bei Zeitgleichstand strukturell IMMER die
+  // alte Liste — und der eigentlich vorgesehene Stich zugunsten der neueren waere tot.
+  const zeit = '25-Apr-2025 08:39:47';
+  const gewaehlt = M.waehleMeldungen(
+    [{ type: 'Integrated Filing- Financials', consolidated: 'Consolidated', qe_Date: '31-MAR-2025',
+      xbrl: 'https://x/corporate/xbrl/NEU.xml', creation_Date: zeit, broadcast_Date: zeit, seq_Id: '87033' }],
+    [{ consolidated: 'Consolidated', cumulative: 'Cumulative', financialYear: '01-Apr-2024 To 31-Mar-2025',
+      xbrl: 'https://x/corporate/xbrl/ALT.xml', exchdisstime: zeit, broadCastDate: zeit, seqNumber: '9999999' }],
+  );
+  assert.equal(gewaehlt.get('2025-03-31').url, 'https://x/corporate/xbrl/NEU.xml');
+});
+
+test('ein Feld, das in einem aelteren Jahr aus einem ANDEREN Begriff kaeme, wird geleert', () => {
+  // EquityAttributableToOwnersOfParent (Mutter) gegen Equity (inkl. Minderheiten) sind zwei
+  // Begriffe. Ein Wechsel mitten in der Reihe erzeugt einen Sprung, den der Zyklus-Daempfer
+  // als echte Bewegung liest — deshalb Luecke statt Sprung.
+  const bau = (fyEnde, wert, name) => {
+    const j = { fiscalYearEnd: fyEnde, werte: {}, feldwahl: {} };
+    for (const f of M.FELD_NAMEN) { j.werte[f] = null; j.feldwahl[f] = null; }
+    j.werte.annualEquity = wert;
+    j.feldwahl.annualEquity = name + ' [OneI]';
+    return j;
+  };
+  const jahre = [
+    bau('2025-03-31', 48035780000, 'EquityAttributableToOwnersOfParent'),
+    bau('2024-03-31', 41877670000, 'Equity'),
+  ];
+  const meldungen = M.vereinheitlicheBegriffe(jahre);
+  assert.equal(jahre[1].werte.annualEquity, null);
+  assert.equal(jahre[0].werte.annualEquity, 48035780000, 'das fuehrende Jahr bleibt unberuehrt');
+  assert.equal(meldungen.length, 1);
+  assert.match(meldungen[0], /annualEquity kaeme aus "Equity"/);
+  // Gegenprobe: derselbe Begriff in beiden Jahren muss DURCHGEHEN.
+  const gleich = [
+    bau('2025-03-31', 48035780000, 'EquityAttributableToOwnersOfParent'),
+    bau('2024-03-31', 41890570000, 'EquityAttributableToOwnersOfParent'),
+  ];
+  assert.equal(M.vereinheitlicheBegriffe(gleich).length, 0);
+  assert.equal(gleich[1].werte.annualEquity, 41890570000);
+});
+
+// ══════════════════════════════════════════════════════════════════════════════════════
 //  7. SCHEMA-WAECHTER — Ende-zu-Ende ohne Netz
 // ══════════════════════════════════════════════════════════════════════════════════════
 // Die Fixture-Dateien decken drei OFSS-Jahre ab; alle uebrigen Abrufe scheitern absichtlich,
@@ -443,8 +547,42 @@ testAsync('main() wird laut, wenn ein Ticker unter die Mindesttiefe faellt', asy
     ? Promise.reject(new Error('HTTP 404 (nicht wiederholbar)')) : fakeFetch(url));
   const tmp = path.join(os.tmpdir(), `in-secannual-leer-${process.pid}.json`);
   await assert.rejects(() => M.main({ fetchBuffer: nurListen, out: tmp, tickers: ['OFSS.NS'] }),
-    /unvollstaendig[\s\S]*Mindesttiefe|unvollstaendig[\s\S]*Jahre verwertbar/);
+    /unvollstaendig[\s\S]*Jahre verwertbar/);
   fs.unlinkSync(tmp);
+});
+
+testAsync('eine Antwort ohne data-Liste wird laut, nicht zu einer leeren Firma', async () => {
+  // Eine Drosselungs-/Fehlerantwort saehe sonst aus wie "diese Firma hat keine Meldungen".
+  const kaputt = (url) => (/\/api\//.test(url)
+    ? Promise.resolve({ code: 200, body: Buffer.from('{"status":"error"}'), headers: {} })
+    : fakeFetch(url));
+  const tmp = path.join(os.tmpdir(), `in-secannual-nodata-${process.pid}.json`);
+  await assert.rejects(() => M.main({ fetchBuffer: kaputt, out: tmp, tickers: ['OFSS.NS'] }),
+    /Antwort ohne verwertbare data-Liste/);
+  fs.unlinkSync(tmp);
+});
+
+testAsync('ein abgelaufener Cookie wird einmal aufgefrischt statt den Ticker zu verlieren', async () => {
+  // LIVE GEMESSEN am Probelauf 19.08.2026: nach rund 35 Minuten beantwortete NSE jeden Abruf
+  // mit ECONNRESET — 16 von 53 Namen fielen aus. Ohne Auffrischung ist der Adapter nur fuer
+  // kurze Laeufe brauchbar.
+  let bootstraps = 0, abgelaufen = true;
+  const mitAblauf = (url) => {
+    if (/^https:\/\/www\.nseindia\.com\/(?:$|companies-listing)/.test(url)) {
+      bootstraps += 1;
+      if (bootstraps >= 3) abgelaufen = false;   // der zweite Bootstrap (2 Seiten) heilt sie
+      return fakeFetch(url);
+    }
+    if (abgelaufen && /\/api\//.test(url)) return Promise.reject(new Error('read ECONNRESET'));
+    return fakeFetch(url);
+  };
+  const tmp = path.join(os.tmpdir(), `in-secannual-cookie-${process.pid}.json`);
+  await M.main({ fetchBuffer: mitAblauf, out: tmp, tickers: ['OFSS.NS'] });
+  const j = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+  fs.unlinkSync(tmp);
+  assert.equal(bootstraps, 4, 'genau eine Auffrischung (je zwei Aufwaerm-Seiten)');
+  assert.ok(j['OFSS.NS'], 'der Ticker muss nach der Auffrischung ankommen');
+  assert.equal(j['OFSS.NS'].annualRev[0].value, OFSS_KONZERN_REV);
 });
 
 testAsync('main() bricht laut ab, wenn der Cookie-Bootstrap nichts liefert', async () => {
