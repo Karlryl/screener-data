@@ -14,6 +14,13 @@
  * entschiede dann ueber Platz 1 und 2. Ein Waechter, der nur das Deckeln prueft, wuerde einen
  * spaeteren Umzug an genau diesen falschen Ort NICHT bemerken. Deshalb prueft Test 2 die Raenge.
  *
+ * WO DER DECKEL NICHT STEHEN DARF: in scripts/write-board-history.js. Das ist die MESSREIHE,
+ * auf der das Wert-Gate rechnet. Der erste Entwurf deckelte dort mit — (f3) in
+ * tests/board-history.test.js wurde rot und zeigte warum: der Test stellt einen echten
+ * Wertbruch nach (Score springt 92 -> 132); gedeckelt schrumpft der Sprung auf +8 und liegt
+ * unter der Alarmschwelle. Der Deckel haette das Sicherheitsnetz stillgelegt. Diesen Schutz
+ * haelt (f3) — wer ihn dort je entfernt, muss diesen Absatz gelesen haben.
+ *
  * Usage:  node tests/scoring/score-deckel.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
