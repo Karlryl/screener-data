@@ -474,6 +474,42 @@ test('ein Feld, das in einem aelteren Jahr aus einem ANDEREN Begriff kaeme, wird
   assert.equal(gleich[1].werte.annualEquity, 41890570000);
 });
 
+test('der leitende Begriff kommt aus dem ersten Jahr MIT Wert, nicht aus dem ersten Jahr', () => {
+  // Traegt das neueste Jahr fuer ein Feld keinen Wert (bei den Bilanzfeldern der Regelfall,
+  // sobald die juengste Meldung keine Bilanz enthaelt), waere ein an jahre[0] festgemachter
+  // Referenzbegriff null — und der Vergleich fuer die GANZE restliche Reihe abgeschaltet.
+  const bau = (fyEnde, wert, name) => {
+    const j = { fiscalYearEnd: fyEnde, werte: {}, feldwahl: {} };
+    for (const f of M.FELD_NAMEN) { j.werte[f] = null; j.feldwahl[f] = null; }
+    j.werte.annualEquity = wert;
+    j.feldwahl.annualEquity = name ? `${name} [OneI]` : null;
+    return j;
+  };
+  const jahre = [
+    bau('2026-03-31', null, null),                                        // neueste Meldung ohne Bilanz
+    bau('2025-03-31', 48035780000, 'EquityAttributableToOwnersOfParent'),
+    bau('2024-03-31', 41877670000, 'Equity'),                             // anderer Begriff
+  ];
+  const meldungen = M.vereinheitlicheBegriffe(jahre);
+  assert.equal(jahre[1].werte.annualEquity, 48035780000, 'das erste Jahr MIT Wert fuehrt');
+  assert.equal(jahre[2].werte.annualEquity, null, 'der Begriffswechsel muss auffliegen');
+  assert.equal(meldungen.length, 1);
+  assert.match(meldungen[0], /annualEquity kaeme aus "Equity"/);
+});
+
+test('nur ein echter Quellen-Ausfall fuettert die Notbremse', () => {
+  // Abbruch/Zeitablauf/Drosselung sprechen fuer den Host …
+  for (const m of ['read ECONNRESET', 'timeout nach 45000ms', 'nach 4 Versuchen aufgegeben: read ECONNRESET',
+    'https://x -> HTTP 503 (nicht wiederholbar)', 'https://x -> Antwort ist kein JSON (12 Bytes, beginnt mit "<html>")']) {
+    assert.equal(M.istQuellenausfall(m), true, m);
+  }
+  // … eine saubere Antwort mit unbrauchbarem Inhalt oder ein 4xx betrifft EIN Symbol.
+  for (const m of ['https://x -> HTTP 404 (nicht wiederholbar)', 'https://x -> HTTP 403 (nicht wiederholbar)',
+    'https://x -> Antwort ohne verwertbare data-Liste (Schluessel: status,msg)']) {
+    assert.equal(M.istQuellenausfall(m), false, m);
+  }
+});
+
 // ══════════════════════════════════════════════════════════════════════════════════════
 //  7. SCHEMA-WAECHTER — Ende-zu-Ende ohne Netz
 // ══════════════════════════════════════════════════════════════════════════════════════
@@ -631,6 +667,8 @@ testAsync('der zweite Lauf nimmt sich die FEHLENDEN Namen zuerst vor', async () 
   };
   const tmp = path.join(os.tmpdir(), `in-secannual-reihenfolge-${process.pid}.json`);
   // ZWEI Namen stehen schon da, einer fehlt — der fehlende muss zuerst drankommen.
+  // Bewusst OHNE generatedAt: auch ein Eintrag ohne lesbaren Zeitstempel darf den ganz
+  // fehlenden Namen nicht ueberholen.
   fs.writeFileSync(tmp, JSON.stringify({ 'KALYANKJIL.NS': { fys: [2025] }, 'CHENNPETRO.NS': { fys: [2026] } }));
   try {
     await M.main({ fetchBuffer: merkend, out: tmp, tickers: ['KALYANKJIL.NS', 'CHENNPETRO.NS', 'OFSS.NS'] });
@@ -641,6 +679,79 @@ testAsync('der zweite Lauf nimmt sich die FEHLENDEN Namen zuerst vor', async () 
   // frischem Cookie ausloest) — entscheidend ist allein, dass keiner von ihnen VOR OFSS steht.
   assert.ok(!gefragt.slice(1).includes('OFSS'), 'der fehlende Name darf nur einmal ganz vorn stehen');
   assert.deepEqual([...new Set(gefragt.slice(1))].sort(), ['CHENNPETRO', 'KALYANKJIL']);
+});
+
+testAsync('drei Symbol-Probleme in Folge beenden den Lauf NICHT (kein Fehlalarm)', async () => {
+  // Eine saubere HTTP-200-Antwort ohne data-Liste ist ein Problem DIESES Symbols, nicht des
+  // Hosts. Wer sie in die Notbremse zaehlt, beendet den ganzen Lauf mit der sachlich falschen
+  // Meldung "die Quelle antwortet nicht mehr" — und die gesunden Namen dahinter bleiben leer.
+  const kaputteSymbole = new Set(['A', 'B', 'C']);
+  const gemischt = (url) => {
+    const m = /symbol=([^&]+)/.exec(url);
+    if (m && kaputteSymbole.has(decodeURIComponent(m[1]))) {
+      return Promise.resolve({ code: 200, body: Buffer.from('{"status":"error"}'), headers: {} });
+    }
+    return fakeFetch(url);
+  };
+  const tmp = path.join(os.tmpdir(), `in-secannual-kein-fehlalarm-${process.pid}.json`);
+  await assert.rejects(() => M.main({ fetchBuffer: gemischt, out: tmp,
+    tickers: ['A.NS', 'B.NS', 'C.NS', 'OFSS.NS'] }), /unvollstaendig/);
+  const j = JSON.parse(fs.readFileSync(tmp, 'utf8'));
+  fs.unlinkSync(tmp);
+  // Der gesunde Name DAHINTER muss trotzdem angekommen sein.
+  assert.ok(j['OFSS.NS'], 'OFSS.NS wurde nie versucht — die Notbremse hat falsch ausgeloest');
+});
+
+testAsync('unter den vorhandenen Namen kommt der aelteste Stand zuerst', async () => {
+  // Waere der Schluessel nur "vorhanden ja/nein", lieferte die stabile Sortierung im
+  // Normalbetrieb jeden Lauf dieselbe Reihenfolge — und weil die Drosselung reproduzierbar an
+  // derselben Stelle zuschlaegt, staenden IMMER dieselben Namen am Ende und wuerden nie wieder
+  // aktualisiert. Eine Firma koennte jahrelang mit alten Zahlen im Board stehen.
+  const gefragt = [];
+  const merkend = (url) => {
+    const m = /integrated-filing-results.*symbol=([^&]+)/.exec(url);
+    if (m) gefragt.push(decodeURIComponent(m[1]));
+    return fakeFetch(url);
+  };
+  const tmp = path.join(os.tmpdir(), `in-secannual-alter-${process.pid}.json`);
+  fs.writeFileSync(tmp, JSON.stringify({
+    'KALYANKJIL.NS': { fys: [2025], generatedAt: '2026-08-19T10:00:00.000Z' },  // frisch
+    'CHENNPETRO.NS': { fys: [2026], generatedAt: '2026-01-02T10:00:00.000Z' },  // alt
+  }));
+  try {
+    await M.main({ fetchBuffer: merkend, out: tmp,
+      tickers: ['KALYANKJIL.NS', 'CHENNPETRO.NS', 'OFSS.NS'] });
+  } catch (_) { /* die beiden Fixture-losen Namen scheitern — hier zaehlt die Reihenfolge */ }
+  fs.unlinkSync(tmp);
+  assert.equal(gefragt[0], 'OFSS', 'der fehlende Name zuerst');
+  assert.equal(gefragt[1], 'CHENNPETRO', 'danach der aelteste Stand, nicht die Listenreihenfolge');
+});
+
+testAsync('ein Aufwaerm-Umlauf ohne neue Cookies gilt NICHT als aufgefrischt', async () => {
+  // Sonst misst der Alters-Zaehler "ein Versuch lief durch" statt "die Sitzung ist neu" — und
+  // JAR_MAX_ALTER_MS wuerde nie mehr ausloesen, obwohl der Cookie steinalt ist.
+  // Der Test MUSS den Unterschied zeigen koennen: dazu vergeht echte Zeit zwischen den beiden
+  // Umlaeufen. Wuerde der leere Umlauf den Zaehler zuruecksetzen, faellt das Alter auf ~0.
+  const jar = M.neuerJar();
+  const mitCookie = (wert) => () => Promise.resolve({ code: 200, body: Buffer.from('<html/>'),
+    headers: { 'set-cookie': [`bm_sz=${wert}; Path=/`] } });
+  const ohneCookie = () => Promise.resolve({ code: 200, body: Buffer.from('<html/>'), headers: {} });
+
+  await M.aufwaermen(jar, mitCookie('erste-sitzung'));
+  await new Promise((r) => setTimeout(r, 80));
+  const alterVorher = jar.alterMs();
+  assert.ok(alterVorher >= 60, `Kontrolle: es sind wirklich ${alterVorher} ms vergangen`);
+
+  const kopfVorher = jar.kopf();
+  await M.aufwaermen(jar, ohneCookie);
+  assert.equal(jar.kopf(), kopfVorher, 'Kontrolle: der leere Umlauf hat wirklich nichts gebracht');
+  assert.ok(jar.alterMs() >= alterVorher,
+    `der leere Umlauf hat den Alters-Zaehler auf ${jar.alterMs()} ms zurueckgesetzt`);
+
+  // Gegenprobe: ein Umlauf MIT neuen Cookies muss den Zaehler sehr wohl zuruecksetzen.
+  await M.aufwaermen(jar, mitCookie('zweite-sitzung'));
+  assert.ok(jar.alterMs() < 60, `nach echter Auffrischung noch ${jar.alterMs()} ms alt`);
+  assert.notEqual(jar.kopf(), kopfVorher);
 });
 
 testAsync('main() bricht laut ab, wenn der Cookie-Bootstrap nichts liefert', async () => {

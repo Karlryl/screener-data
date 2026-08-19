@@ -180,6 +180,19 @@ const JAR_MAX_ALTER_MS = 8 * 60 * 1000;
 // Folge ohne Antwort wird abgebrochen — geschrieben wird trotzdem, und der naechste Lauf
 // setzt fort: `main` liest den Altbestand ein und ergaenzt ihn nur (WIEDERAUFNAHME unten).
 const MAX_FOLGE_AUSFAELLE = 3;
+/**
+ * Zaehlt DIESER Fehlschlag als "die Quelle antwortet nicht mehr"?
+ *
+ * ⚠ Nicht jeder Fehlschlag ist einer (Nachreview-Befund 19.08.2026). Eine saubere Antwort mit
+ * unbrauchbarem Inhalt (kein `data`) oder ein 4xx betrifft EIN Symbol, nicht den Host — die
+ * Notbremse daraufhin zu ziehen beendet den ganzen Lauf mit der sachlich falschen Meldung
+ * "die Quelle antwortet nicht mehr" und laesst gesunde Namen ungeholt. Nur Abbruch, Zeitablauf,
+ * Drosselung und 5xx sprechen fuer den Host.
+ */
+function istQuellenausfall(nachricht) {
+  return /ECONNRESET|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|socket hang up|timeout|aufgegeben|HTTP 5\d\d|HTTP 429|kein JSON/i
+    .test(String(nachricht || ''));
+}
 
 // Ein Jahres-Kontext muss zwischen 330 und 400 Tagen spannen. 366 ist der Normalfall;
 // die Spanne laesst Schaltjahre und ein paar Tage Schlamperei zu, aber kein Rumpfjahr
@@ -722,11 +735,20 @@ function vereinheitlicheBegriffe(jahre) {
   const nurName = (w) => (w == null ? null : String(w).replace(/\s*\[[^\]]*\]\s*$/, ''));
   const meldungen = [];
   const leitend = {};
-  for (const feld of FELD_NAMEN) leitend[feld] = nurName(jahre[0].feldwahl[feld]);
-  for (const j of jahre.slice(1)) {
+  // ⚠ NICHT `jahre[0]` als Referenz nehmen (Nachreview-Befund 19.08.2026). Traegt das neueste
+  // Jahr fuer ein Feld keinen Wert — bei den Bilanzfeldern der Regelfall, sobald die juengste
+  // Meldung keine Bilanz enthaelt —, waere `leitend` null und der Vergleich fuer die GANZE
+  // restliche Reihe abgeschaltet. Genau der Fall, den der Waechter abfangen soll (Eigenkapital
+  // der Mutter gegen Eigenkapital inklusive Minderheiten), rutschte dann durch.
+  // Referenz ist deshalb das ERSTE Jahr mit Wert, nicht das erste Jahr.
+  for (const feld of FELD_NAMEN) {
+    leitend[feld] = jahre.map((j) => nurName(j.feldwahl[feld])).find((v) => v != null) || null;
+  }
+  for (const j of jahre) {
     for (const feld of FELD_NAMEN) {
       const hier = nurName(j.feldwahl[feld]);
       if (hier == null || leitend[feld] == null || hier === leitend[feld]) continue;
+      // (Das fuehrende Jahr kann hier nie hereinlaufen: sein Name IST der leitende.)
       meldungen.push(`${j.fiscalYearEnd}: ${feld} kaeme aus "${hier}" statt "${leitend[feld]}" `
         + '— anderer Begriff, deshalb kein Wert statt eines erfundenen Sprungs');
       j.werte[feld] = null;
@@ -802,8 +824,14 @@ async function holeNse(url, jar, holen, art) {
 }
 
 async function aufwaermen(jar, holen) {
+  // ⚠ Der Alters-Zaehler darf nur laufen, wenn der Umlauf WIRKLICH neue Cookies gebracht hat
+  // (Nachreview-Befund 19.08.2026). `schlucke` ueberschreibt nur und loescht nie — bleibt der
+  // alte Satz stehen, sagt `groesse()` "es sind Cookies da" und ein bedingungsloses
+  // `frischGesetzt()` behauptete danach "frisch", obwohl nichts aufgefrischt wurde. Der Timer
+  // maesse dann "ein Versuch lief durch" statt "die Sitzung ist neu" — das Gegenteil seines Zwecks.
+  const vorher = jar.kopf();
   for (const u of AUFWAERMEN) await holeNse(u, jar, holen, 'html');
-  jar.frischGesetzt();
+  if (jar.kopf() !== vorher) jar.frischGesetzt();
   if (!jar.groesse()) {
     throw new Error('NSE-Bootstrap ohne Cookie — ohne bm_sz/_abck/ak_bmsc antwortet die API mit '
       + '403. Abbruch statt einer Runde leerer Abrufe.');
@@ -841,13 +869,27 @@ async function main(opts = {}) {
   const vorher = readJsonExistingOrThrow(outPfad);
   const out = vorher === FEHLT ? {} : vorher;
   const gescheitert = [];
-  // FEHLENDE ZUERST. Ohne das ist die Wiederaufnahme wertlos: der zweite Lauf arbeitet die
-  // Namen in derselben Reihenfolge ab, verbringt seine 35 Minuten mit genau denen, die schon
-  // dastehen, und laeuft in dieselbe Drosselung, BEVOR er bei den fehlenden ankommt.
-  // Live gemessen am Probelauf 19.08.2026: Lauf 2 war nach 12 Minuten bei Name 23 von 53 —
-  // die fehlenden beginnen bei 38. Innerhalb beider Gruppen bleibt die uebergebene
-  // Reihenfolge erhalten (stabile Sortierung), damit der Lauf deterministisch bleibt.
-  const reihenfolge = [...tickers].sort((a, b) => (out[a] ? 1 : 0) - (out[b] ? 1 : 0));
+  // FEHLENDE ZUERST, DANN DIE AELTESTEN. Ohne die erste Haelfte ist die Wiederaufnahme wertlos:
+  // der zweite Lauf arbeitet die Namen in derselben Reihenfolge ab, verbringt seine 35 Minuten
+  // mit genau denen, die schon dastehen, und laeuft in dieselbe Drosselung, BEVOR er bei den
+  // fehlenden ankommt (live gemessen: Lauf 2 war nach 12 Minuten bei Name 23 von 53, die
+  // fehlenden beginnen bei 38).
+  // ⚠ Die zweite Haelfte ist genauso wichtig (Nachreview-Befund 19.08.2026): waere der
+  // Schluessel nur "vorhanden ja/nein", stuenden im Normalbetrieb ALLE Namen da, alle
+  // Vergleiche waeren gleich, und die stabile Sortierung lieferte jeden Lauf exakt dieselbe
+  // Reihenfolge. Weil die Drosselung reproduzierbar an derselben Stelle zuschlaegt, waeren es
+  // dann IMMER dieselben Namen am Ende der Liste, die nie wieder aktualisiert werden — eine
+  // Firma koennte jahrelang mit alten Zahlen im Board stehen, ohne dass etwas rot wird.
+  // Darum entscheidet unter den vorhandenen der Zeitstempel: der aelteste Stand zuerst.
+  // Drei Stufen, streng geordnet: fehlt ganz < da, aber ohne lesbaren Zeitstempel < nach Alter.
+  // Ein Name, der GAR NICHT dasteht, liefert nichts und geht deshalb immer vor.
+  const stand = (tk) => {
+    const e = out[tk];
+    if (!e) return -Infinity;
+    const t = Date.parse(e.generatedAt);
+    return Number.isFinite(t) ? t : Number.MIN_SAFE_INTEGER;
+  };
+  const reihenfolge = [...tickers].sort((a, b) => stand(a) - stand(b));
   const jar = neuerJar();
   await aufwaermen(jar, holen);
   let folgeAusfaelle = 0;
@@ -880,7 +922,8 @@ async function main(opts = {}) {
         console.warn(`${tk}: Listen-Abruf erst nach Cookie-Auffrischung erfolgreich (${ersterFehler.message})`);
       } catch (zweiterFehler) {
         gescheitert.push(`${tk}: ${zweiterFehler.message}`);
-        folgeAusfaelle += 1;
+        if (istQuellenausfall(zweiterFehler.message)) folgeAusfaelle += 1;
+        else folgeAusfaelle = 0;   // Symbol-Problem, kein Host-Problem -> weitermachen
         console.warn(`${tk}: Listen-Abruf fehlgeschlagen, auch nach Cookie-Auffrischung `
           + `(${zweiterFehler.message}) -> Altbestand bleibt unveraendert`);
         continue;
@@ -1000,7 +1043,7 @@ if (require.main === module) main().catch((e) => { console.error(`::error::${e.m
 module.exports = {
   parseXbrl, fakt, faktDokument, zahl, spanneTage, jahresKontexte, stichtagsKontexte, ueberKontexte,
   bauJahr, waehleMeldungen, pruefeJahresachse, vereinheitlicheBegriffe, nseDatum, nseZeit,
-  neuerJar, aufwaermen, main, JAR_MAX_ALTER_MS,
+  neuerJar, aufwaermen, istQuellenausfall, main, JAR_MAX_ALTER_MS,
   IN, FELD_NAMEN, WARENEINSATZ, DAUER_FELDER, STICHTAG_FELDER, RUNDUNGSSTUFEN,
   MIN_JAHRE, MAX_JAHRE, JAHR_MIN_TAGE, JAHR_MAX_TAGE, AKTIEN_MIN, AKTIEN_MAX, KONFLIKT,
   MAX_FOLGE_AUSFAELLE,
