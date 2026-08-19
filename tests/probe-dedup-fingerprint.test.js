@@ -13,11 +13,17 @@
 // Umsatzquartale ungleich null" verhindert das — und dieser Test verhindert, dass die
 // Auflage jemals still herausfaellt.
 //
-// GEGENPROBE (durchgefuehrt, jede Pruefung einzeln): Auflage von 4 auf 0 gesetzt ->
-// Leerreihen-Test rot (1 Gruppe statt 0). Bruttogewinn aus dem Fingerabdruck entfernt ->
-// Nicht-Paar-Test rot. TOP_N auf 25 gehoben -> Rand-Test rot. Marktwert-Naehe als Filter
-// eingebaut -> Diagnose-Test rot. JSON-Fehler abgefangen statt geworfen -> Lautstaerke-
-// Test rot. Ohne diese Gegenproben waere nicht pruefbar, ob die Tests ueberhaupt beissen.
+// GEGENPROBE (durchgefuehrt, acht Sabotagen, jede der elf Pruefungen mindestens einmal
+// rot gesehen):
+//   1. Auflage von 4 auf 0 gesetzt      -> beide Leerreihen-Tests + Vier-Quartale-Test rot
+//   2. Bruttogewinn aus dem Abdruck raus -> Nicht-Paar-Test rot
+//   3. TOP_N auf 25 gehoben              -> Rand-Test rot (Platz 21 zaehlte ploetzlich mit)
+//   4. Marktwert-Naehe als Filter        -> Diagnose-Test + Vintage-Test rot
+//   5. JSON-Fehler abgefangen st. geworfen -> Lautstaerke-Test rot
+//   6. Gruppe erst ab drei Beinen        -> Echtes-Paar-Test rot (und fuenf weitere)
+//   7. Top-Schluessel ohne Board/Track   -> Board-Listen-Test rot
+//   8. Marktwert-Naehe durch min geteilt -> Rechen-Test rot
+// Ohne diese Gegenproben waere nicht pruefbar, ob die Tests ueberhaupt beissen.
 'use strict';
 const assert = require('assert');
 const fs = require('fs');
