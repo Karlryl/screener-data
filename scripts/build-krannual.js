@@ -18,7 +18,6 @@
  */
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'external-data', 'kr-secannual.json');
@@ -34,7 +33,33 @@ function loadKey() {
 
 // meta.ticker (Snapshot-Schluessel) -> OpenDART corp_code. Erweiterbar; Start: SK Hynix (die eine
 // vom EDGAR-Chat offen gelassene non-US-Zyklus-Luecke). Weitere KR-Zykliker hier ergaenzen.
-const KR = { '000660.KS': '00164779' }; // SK hynix Inc.
+// corp_code je Ticker. Aufgeloest 19.08.2026 aus der amtlichen OpenDART-Codeliste
+// (api/corpCode.xml, 118.714 Firmen) — der Download war am 19.08. vormittags noch
+// unvollstaendig (2.981.888 Bytes, ZIP ohne End-of-Central-Directory) und lief beim
+// Neuversuch sauber durch (3.596.991 Bytes, EOCD vorhanden). Die Sperre war voruebergehend.
+// SK Hynix bestaetigt die Aufloesung: der aus der Liste gelesene Code 00164779 ist derselbe,
+// der hier vorher hartkodiert stand.
+const KR = {
+  '000660.KS': '00164779', // SK hynix Inc.        (Bestand, Zyklus-Luecke des EDGAR-Chats)
+  '278470.KS': '01190568', // 에이피알 APR
+  '257720.KQ': '00982023', // 실리콘투 Silicon2
+  '241710.KQ': '00763473', // 코스메카코리아 Cosmecca Korea
+  '003230.KS': '00126955', // 삼양식품 Samyang Foods
+  '071050.KS': '00432102', // 한국금융지주 Korea Investment Holdings
+  '003540.KS': '00110893', // 대신증권 Daishin Securities
+  '214450.KQ': '00970453', // 파마리서치 Pharma Research
+  '207940.KS': '00877059', // 삼성바이오로직스 Samsung Biologics
+  '023590.KS': '00176914', // 다우기술 Daou Tech
+};
+// Bekannt ohne die gesuchten Standardkonten — Branchenrealitaet, kein Abrufproblem.
+// Finanzunternehmen melden nach dem Branchenschema der FSS: keinen Umsatz/Rohertrag im Sinne
+// von ifrs-full_Revenue, sondern Zins- und Provisionsertraege unter eigenen Konten. Sie stehen
+// NAMENTLICH hier, damit der Lauf gruen bleiben kann, ohne dass ein echter Zuordnungsfehler
+// (kaputter corp_code, umbenannte account_id) mit durchrutscht — jeder NICHT gelistete Ticker
+// ohne Zuordnung faerbt den Lauf rot. Waechter: tests/kr-stiller-leerlauf.test.js.
+const KR_OHNE_STANDARDKONTEN = {
+  '071050.KS': 'Finanzholding (한국금융지주) — meldet nach FSS-Branchenschema, kein ifrs-full_Revenue',
+};
 // BH-013 fix: was a static [2015..2024] literal -> from 2025 on the build could never reach the
 // completed FY2025+ without a manual edit here. Dynamic upper bound = last completed calendar FY;
 // a not-yet-filed year just gets skipped below (status!=='000'), so overshooting costs nothing.
@@ -43,15 +68,14 @@ function yearsFor(currentYear) {
 }
 const YEARS = yearsFor(new Date().getFullYear());
 
+// 19.08.2026: der Abruf lief vorher ohne jede Pause und ohne Wiederholung — bei EINEM
+// Ticker unauffaellig, bei zehn Tickern x elf Jahren x zwei Endpunkten (~220 Abrufe) ist
+// das ein Sturmlauf gegen eine Amtsquelle. Pause und Wiederholung stehen jetzt zentral in
+// lib/fetch-retry.js (dieselbe Bremse nutzen auch build-twannual/build-jpannual).
+// OpenDART verlangt weiterhin einen User-Agent (sonst 302).
+const { fetchJson } = require(path.join(ROOT, 'lib/fetch-retry.js'));
 function getJSON(u) {
-  return new Promise((res, rej) => {
-    const r = https.get(u, { headers: { 'User-Agent': 'Mozilla/5.0 screener-krannual' } }, (x) => {
-      let b = ''; x.on('data', (c) => b += c);
-      x.on('end', () => { try { res(JSON.parse(b)); } catch (e) { rej(new Error('parse')); } });
-    });
-    r.on('error', rej);
-    r.setTimeout(20000, () => { r.destroy(); rej(new Error('timeout')); });
-  });
+  return fetchJson(u, { headers: { 'User-Agent': 'Mozilla/5.0 screener-krannual' } });
 }
 // T2: absent/blank thstrm_amount must stay null, not become a real $0. '' || ''
 // coerced straight into Number() gave 0 (Number('')===0, isFinite(0)===true) for
@@ -66,8 +90,36 @@ const numOf = (x) => {
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : null;
 };
-// Konto-Pick: primaer stabile IFRS/DART-account_id, sonst koreanischer Name (Fallback).
-const pick = (list, id, re) => list.find((x) => x.account_id === id) || list.find((x) => re.test(x.account_nm || ''));
+// ⚠ HAERTUNG (19.08.2026): account_id ist NICHT eindeutig — der Abschluss-Teil muss mit.
+// Live gemessen an SK Hynix FY2025 (230 Zeilen): 'ifrs-full_Equity' kommt 9x vor,
+// 'ifrs-full_ProfitLoss' ebenfalls 9x. Je eine Zeile stammt aus der Bilanz (sj_div=BS)
+// bzw. der GuV (CIS) — die anderen acht aus dem EIGENKAPITALSPIEGEL (sj_div=SCE) mit
+// voellig anderen Werten (Equity: 120.666.751 Mio. KRW in BS gegen u. a. 150.573 und
+// 895.371.400 in SCE). Das bisherige list.find(account_id) traf HEUTE das Richtige,
+// weil BS und CIS in der Antwort vor SCE stehen — diese Reihenfolge ist nirgends
+// zugesichert. Ohne sj_div-Filter waere die Ausweitung auf Bilanzsumme/Eigenkapital/
+// Nettoergebnis genau die stille Datenkorruption, die kein Test faengt.
+// Waechter: tests/kr-sjdiv-eindeutigkeit.test.js (echte OpenDART-Fixture).
+//
+// sj_div-Werte: BS=Bilanz · CIS=Gesamtergebnisrechnung · CF=Kapitalflussrechnung · SCE=Eigenkapitalspiegel.
+// Zeilen OHNE sj_div werden durchgelassen: die echte OpenDART-Antwort traegt das Feld
+// immer, aber der bestehende Test-Seam (tests/p0-haertung3, fakeDart) stubbt nur
+// account_id/thstrm_amount. Gegen die echte Quelle wirkt der Filter also strikt.
+const pick = (list, id, sjDiv, re) => list.find((x) => x.account_id === id && (x.sj_div === undefined || x.sj_div === sjDiv))
+  || list.find((x) => re.test(x.account_nm || '') && (x.sj_div === undefined || x.sj_div === sjDiv));
+
+// Die acht Kennzahlen. sj_div bindet jede an IHREN Abschluss-Teil (siehe pick oben).
+// annualOpInc/annualRev standen schon vorher drin und behalten Feldnamen und Bedeutung —
+// der Zyklus-Daempfer (score.js cycleSeriesPair) liest sie unveraendert weiter.
+const KR_FELDER = {
+  annualRev:         { id: 'ifrs-full_Revenue',                                  sj: 'CIS', re: /^매출액$/ },
+  annualGrossProfit: { id: 'ifrs-full_GrossProfit',                              sj: 'CIS', re: /^매출총이익/ },
+  annualOpInc:       { id: 'dart_OperatingIncomeLoss',                           sj: 'CIS', re: /^영업이익/ },
+  annualNetIncome:   { id: 'ifrs-full_ProfitLoss',                               sj: 'CIS', re: /^당기순이익/ },
+  annualAssets:      { id: 'ifrs-full_Assets',                                   sj: 'BS',  re: /^자산총계$/ },
+  annualEquity:      { id: 'ifrs-full_Equity',                                   sj: 'BS',  re: /^자본총계$/ },
+  annualOCF:         { id: 'ifrs-full_CashFlowsFromUsedInOperatingActivities',   sj: 'CF',  re: /^영업활동/ },
+};
 
 // BH-012 fix: shared fy-axis (union of years present in EITHER field), null-padded, instead of
 // each series independently .filter()-compacting its own years. An asymmetric year-gap (op
@@ -79,9 +131,22 @@ const pick = (list, id, re) => list.find((x) => x.account_id === id) || list.fin
 // index-pairing consumer or a field-only gap year. Mirrors merge-sec-xbrl.js buildAnnual's
 // fy-union pattern. Exported for the hermetic regression check.
 function buildSeries(opByYear, revByYear, years) {
-  const fys = years.filter((y) => y in opByYear || y in revByYear).sort((a, b) => b - a); // newest-first
-  const cell = (m, y) => ({ value: y in m ? m[y] : null });
-  return { fys, annualOpInc: fys.map((y) => cell(opByYear, y)), annualRev: fys.map((y) => cell(revByYear, y)) };
+  const r = buildSeriesN({ annualOpInc: opByYear, annualRev: revByYear }, years);
+  return { fys: r.fys, annualOpInc: r.annualOpInc, annualRev: r.annualRev };
+}
+
+// Verallgemeinerung derselben BH-012-Achse auf beliebig viele Felder (19.08.2026, Ausweitung
+// auf alle acht Kennzahlen). buildSeries() oben bleibt als 2-Feld-Fassade bestehen, weil
+// tests/scoring/bh-w2-krannual.test.js genau diese Signatur festnagelt — die Achse ist
+// dieselbe, nur die Feldzahl waechst. fys = Vereinigung der Jahre, in denen IRGENDEIN Feld
+// einen Wert hat; jedes Feld wird auf dieser gemeinsamen Achse null-gepolstert, damit die
+// Indizes ueber alle acht Serien fiskaljahr-gleich bleiben.
+function buildSeriesN(byField, years) {
+  const felder = Object.keys(byField);
+  const fys = years.filter((y) => felder.some((f) => y in byField[f])).sort((a, b) => b - a); // newest-first
+  const out = { fys };
+  for (const f of felder) out[f] = fys.map((y) => ({ value: y in byField[f] ? byField[f][y] : null }));
+  return out;
 }
 
 // F-CGPT-021 (P0-Haertung 09.08.2026): der Writer startete mit `const out = {}` und schrieb
@@ -107,8 +172,12 @@ async function main(opts = {}) {
   const vorher = readJsonExistingOrThrow(outPfad);
   const out = vorher === FEHLT ? {} : vorher;
   const unvollstaendig = [];
-  for (const [tk, corp] of Object.entries(KR)) {
-    const opByYear = {}, revByYear = {};
+  // opts.kr = Test-Seam fuer die Ticker-Karte (Bauform wie opts.tickers in build-twannual).
+  for (const [tk, corp] of Object.entries(opts.kr || KR)) {
+    // je Kennzahl ein {jahr: wert}-Behaelter; annualShares kommt aus einem ZWEITEN Endpunkt.
+    const proFeld = {};
+    for (const f of Object.keys(KR_FELDER)) proFeld[f] = {};
+    proFeld.annualShares = {};
     let jahresFehler = 0;
     for (const yr of YEARS) {
       const u = `https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json?crtfc_key=${KEY}`
@@ -129,16 +198,35 @@ async function main(opts = {}) {
           + (j.message ? ` (${j.message})` : '') + ' — kein legitimer Jahres-Skip');
         continue;
       }
-      const rev = pick(j.list, 'ifrs-full_Revenue', /^매출액$/);
-      const op = pick(j.list, 'dart_OperatingIncomeLoss', /^영업이익/);
-      const rv = numOf(rev), ov = numOf(op);
-      if (Number.isFinite(rv)) revByYear[yr] = rv;
-      if (Number.isFinite(ov)) opByYear[yr] = ov;
+      for (const [feld, def] of Object.entries(KR_FELDER)) {
+        const v = numOf(pick(j.list, def.id, def.sj, def.re));
+        if (Number.isFinite(v)) proFeld[feld][yr] = v;
+      }
+
+      // Aktienzahl: NICHT in fnlttSinglAcntAll enthalten (nachgeprueft — dort steht nur
+      // das Ergebnis je Aktie). Sie kommt aus stockTotqySttus, am 19.08.2026 erstmals
+      // live bestaetigt (die Recherche hatte diesen Endpunkt offen gelassen):
+      // SK Hynix FY2025 -> se='합계' (Summe aller Gattungen), istc_totqy=728.002.365.
+      // Das ist ein AUSGEWIESENER Wert, keine Herleitung.
+      const uAk = `https://opendart.fss.or.kr/api/stockTotqySttus.json?crtfc_key=${KEY}`
+        + `&corp_code=${corp}&bsns_year=${yr}&reprt_code=11011`;
+      let ja; try { ja = await holen(uAk); } catch (e) { jahresFehler++; console.warn(`${tk} ${yr}: Aktienzahl-Abruf fehlgeschlagen (${e.message})`); continue; }
+      if (ja.status === '000' && Array.isArray(ja.list)) {
+        // '합계' = Summe ueber alle Aktiengattungen; faellt sie aus, '보통주' (Stammaktien).
+        const z = ja.list.find((x) => x.se === '합계') || ja.list.find((x) => x.se === '보통주');
+        const n = numOf(z && { thstrm_amount: z.istc_totqy });
+        if (Number.isFinite(n)) proFeld.annualShares[yr] = n;
+      } else if (ja.status !== '013') {
+        jahresFehler++;
+        console.warn(`${tk} ${yr}: stockTotqySttus-Status ${ja.status || '<keiner>'}`
+          + (ja.message ? ` (${ja.message})` : '') + ' — kein legitimer Jahres-Skip');
+      }
     }
-    const { fys, annualOpInc, annualRev } = buildSeries(opByYear, revByYear, YEARS);
+    const serien = buildSeriesN(proFeld, YEARS);
+    const fys = serien.fys;
     // Gate on finite-value counts, not array length -- the shared axis (BH-012) can now be
     // longer than either field's own coverage.
-    const opCount = Object.keys(opByYear).length, revCount = Object.keys(revByYear).length;
+    const opCount = Object.keys(proFeld.annualOpInc).length, revCount = Object.keys(proFeld.annualRev).length;
     if (jahresFehler > 0) {
       unvollstaendig.push(`${tk}: ${jahresFehler} Jahresabruf(e) fehlgeschlagen`);
       console.warn(`${tk}: ${jahresFehler} Jahresabruf(e) fehlgeschlagen (nur ${opCount}/${revCount} Jahre erreicht) `
@@ -148,10 +236,33 @@ async function main(opts = {}) {
     if (opCount >= 3 && revCount >= 3) {
       // BH-013 fix: generatedAt/nfy freshness metadata, mirrors sec-secannual.json's `nfy` field
       // (build-secannual.js) so a future CI check can flag a stale/incomplete pull.
-      out[tk] = { corpCode: corp, nfy: fys[0], generatedAt: new Date().toISOString(), annualOpInc, annualRev };
-      console.log(`${tk}: OpInc-Jahre=${opCount}, Rev-Jahre=${revCount}`);
+      const { fys: _weg, ...felder } = serien;
+      out[tk] = Object.assign({
+        corpCode: corp,
+        source: 'OpenDART (FSS, amtlich)',
+        accountingStandard: 'K-IFRS',
+        consolidation: 'CFS',             // fs_div=CFS im Abruf — Konzern, nie Einzelabschluss (OFS)
+        reportingCurrencyOriginal: 'KRW', // roh, keine Umrechnung
+        nfy: fys[0],
+        generatedAt: new Date().toISOString(),
+        fys,
+      }, felder);
+      const n = (f) => Object.keys(proFeld[f]).length;
+      console.log(`${tk}: ${fys.length} Jahre — rev=${n('annualRev')} gp=${n('annualGrossProfit')} op=${n('annualOpInc')} `
+        + `ni=${n('annualNetIncome')} assets=${n('annualAssets')} eq=${n('annualEquity')} ocf=${n('annualOCF')} shares=${n('annualShares')}`);
+    } else if (KR_OHNE_STANDARDKONTEN[tk]) {
+      // Bekannt und begruendet -> kein Fehlalarm, der Lauf bleibt gruen.
+      console.warn(`${tk}: keine Standardkonten (op=${opCount}, rev=${revCount}) — bekannt: ${KR_OHNE_STANDARDKONTEN[tk]}`);
     } else {
-      console.warn(`${tk}: zu wenig Daten (op=${opCount}, rev=${revCount}) -> uebersprungen`);
+      // Befund Silent-Failure-Review 19.08.2026: dieser Zweig war die einzige Ausfahrt fuer
+      // "alle Jahresabrufe kamen sauber zurueck, aber es wurde nichts zugeordnet" — und er
+      // faerbte den Lauf NICHT rot. Genau so saehe ein kaputter corp_code, eine umbenannte
+      // account_id oder ein pick()-Regress aus: Transport gruen, Zuordnung leer, CI gruen,
+      // Altbestand veraltet still. Bei EINEM Ticker fiel das nie auf; mit zehn Tickern ist es
+      // eine reale Blindstelle. Unbekannte Faelle sind jetzt ein Fehler.
+      unvollstaendig.push(`${tk}: nur ${opCount}/${revCount} Jahre zugeordnet, obwohl alle Abrufe sauber waren`);
+      console.warn(`${tk}: zu wenig Daten (op=${opCount}, rev=${revCount}) trotz fehlerfreier Abrufe `
+        + '-> Verdacht auf Zuordnungsfehler (corp_code/account_id), nicht auf fehlende Meldung');
     }
   }
   writeFileAtomic(outPfad, JSON.stringify(out, null, 1));
@@ -165,4 +276,4 @@ async function main(opts = {}) {
 }
 if (require.main === module) main().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
 
-module.exports = { numOf, buildSeries, yearsFor, main };
+module.exports = { numOf, buildSeries, buildSeriesN, yearsFor, main, pick, KR, KR_FELDER, KR_OHNE_STANDARDKONTEN };
