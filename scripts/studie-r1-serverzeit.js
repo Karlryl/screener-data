@@ -59,12 +59,36 @@ function schreibeRegister(register) {
   fs.writeFileSync(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
+// Die Ausgabe-Allowlist des Laufs. Ohne `--allowlist` ist es die der versiegelten
+// Zaehlprobe — das ist der Normalfall und bleibt unveraendert. MIT `--allowlist`
+// meldet ein Lauf seine EIGENEN Ausgabefelder an; gebraucht wird das ab E4a, wo die
+// Diagnose mehr zaehlt als die Zaehlprobe und die versiegelte Praeregistrierung dafuer
+// NICHT angefasst werden darf. Fail-closed: die Datei muss eine nicht leere Liste
+// eindeutiger Zeichenketten enthalten, sonst waere eine kaputte Datei stillschweigend
+// eine unbegrenzte Ausgabe.
+function allowlistAus(pfad, praereg) {
+  if (!pfad) return praereg.zaehlprobe.ausgabeAllowlist;
+  const roh = JSON.parse(fs.readFileSync(pfad, 'utf8'));
+  if (!Array.isArray(roh) || roh.length === 0
+      || roh.some((n) => typeof n !== 'string' || n.trim() === '')) {
+    throw new VerfassungsBruch(
+      `R1: --allowlist ${pfad} enthaelt keine nicht leere Liste von Feldnamen. Eine Anmeldung `
+      + 'ohne benannte Ausgabefelder waere eine Blankovollmacht.',
+    );
+  }
+  if (new Set(roh).size !== roh.length) {
+    throw new VerfassungsBruch(`R1: --allowlist ${pfad} fuehrt einen Feldnamen doppelt`);
+  }
+  return roh;
+}
+
 function anmelden(argv) {
   const runId = argument(argv, 'runid');
   const fenster = argument(argv, 'fenster');
   const zugriffAb = argument(argv, 'zugriff-ab');
   const praereg = lies(PRAEREG);
-  const erlaubt = praereg.zaehlprobe.ausgabeAllowlist;
+  const erlaubt = allowlistAus(argument(argv, 'allowlist', false), praereg);
+  const begruendung = argument(argv, 'begruendung', false);
 
   const register = lies(LEDGER);
   if ((register.events || []).some((e) => e.runId === runId)) {
@@ -94,8 +118,8 @@ function anmelden(argv) {
     verboten:
       'Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes '
       + 'Fenster; jeder Zugriff auf Schluesselmaterial.',
-    begruendung:
-      'R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, '
+    begruendung: begruendung
+      || 'R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, '
       + 'Abschnitt zaehlprobe.',
     endtestSiegel:
       'unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das '
@@ -217,6 +241,7 @@ function haupt(argv) {
   process.stderr.write(
     'Aufruf:\n'
     + '  node scripts/studie-r1-serverzeit.js anmelden --runid <id> --fenster <name> --zugriff-ab <ISO>\n'
+    + '        [--allowlist <datei.json>] [--begruendung <text>]\n'
     + '  node scripts/studie-r1-serverzeit.js bestaetigen --runid <id> --ziel <freigabe.json> [--zweig <name>]\n',
   );
   return 2;
@@ -231,4 +256,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { anmelden, bestaetigen, serverAntwort };
+module.exports = { anmelden, bestaetigen, serverAntwort, allowlistAus };
