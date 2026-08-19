@@ -1,0 +1,4579 @@
+{
+ "diagnose_nettoergebnis": {
+  "a_werte": 118491,
+  "firmen_mit_a": 9333,
+  "firmen_mit_g": 9959,
+  "firmen_mit_reihe": 10128,
+  "firmenquartale": 175159,
+  "g_werte": 136156,
+  "vergleich_betriebsergebnis": {
+   "a_werte": 97365,
+   "firmen_mit_reihe": 8191,
+   "g_werte": 111495
+  }
+ },
+ "ergebnisdaten_beruehrt": false,
+ "fenster": {
+  "bis": "2016-12-31",
+  "name": "entdeckung",
+  "von": "2009-01-01"
+ },
+ "fragen": [
+  "**Banken-Sonderfamilie ja/nein?** Der Bereich „Finanzen, Versicherung, Immobilien\" stellt laut E1 die zweitgrößte Firmengruppe, hat aber ein anderes Umsatzverständnis (Zinsertrag statt Warenverkauf). Hier trägt er 14,38 % der S-U-Feuerungen. Zu klären: eigene Signalfamilie, Ausschluss oder unverändert mitlaufen lassen — mit Vorab-Kriterium, nicht nach Ergebnislage. (Zeitschätzung: 1–2 Tage)",
+  "**`NetIncomeLoss` als Alternative für S-G?** Das Ergebnis nach Steuern liefert 118.491 Beschleunigungswerte gegen 97.365 beim Betriebsergebnis. Ob die zusätzliche Tiefe die schlechtere Aussagekraft (Einmaleffekte, Steuerquote) aufwiegt, ist eine Vorab-Entscheidung der nächsten Etappe — nicht nachträglich nach Ergebnis auswählbar. (Zeitschätzung: 1 Tag)",
+  "**Aktienzahl-Abdeckung für die Je-Aktie-Rechnung (R10).** Der Endpunkt-Wächter verlangt eine Pflicht-Nebenrechnung „Umsatz je Aktie\". Laut E1 steht `CommonStockSharesOutstanding` in 70 % der periodischen Berichte — ob das nach denselben Filtern (Konzern-Zeilen, amtliche Taxonomie, Zeitpunkt-Regel) reicht, ist ungemessen. Das ist die nächste Pflichtmessung, bevor R10 präregistriert wird. (Zeitschätzung: 1 Tag)",
+  "**Quellenwahl je Firma statt je Quartal.** Prüfschritt 3 hat die vorab festgelegte Schwelle gerissen (15,51 % der überlappenden Firmen-Quartale liegen über 5 Punkten auseinander). Die Regel verlangt, die Quelle künftig je Firma zu fixieren. Offen: um wie viel schrumpft dadurch die Fallzahl, und ändert sich die Feuerrate? Beides muss vor der Umstellung gemessen und präregistriert werden. (Zeitschätzung: 1 Tag)",
+  "**Wie viel kostet die Naht?** 2.663 Firmen-Quartale sind nur deshalb nicht berechenbar, weil die Firma zwischen zwei Quartalen die Umsatz-Kennung wechselt. Offen: Sind das Zufallswechsel oder systematisch dieselben Firmen (dann fehlt eine ganze Firmenklasse)? Und: wäre eine Verkettung über einen Überlappungsfaktor verantwortbar, oder ist das genau die Sorte stiller Annahme, die diese Studie verbietet? (Zeitschätzung: 1–2 Tage)",
+  "**Was bedeutet der Deckel bei ±2?** Wie viele Wachstumswerte laufen tatsächlich in die Begrenzung, und sind das dieselben Firmen (Neulinge aus dem Nichts) wie die späteren Signalträger? Wenn ja, misst das Signal womöglich vor allem Basiseffekte kleiner Ausgangszahlen. (Zeitschätzung: 0,5 Tage)"
+ ],
+ "geoeffnete_pfade": [
+  "C:\\Users\\Anwender\\AppData\\Local\\Temp\\e2-selbsttest-0mdkxc9b\\panel-entdeckung.sqlite",
+  "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\panel\\panel-entdeckung.sqlite"
+ ],
+ "kette": {
+  "anker_stimmt": true,
+  "anteil": 0.6693841715790794,
+  "davon_mit_umsatzwachstum": 5337,
+  "erwartet_laut_e1": 7973,
+  "firmen": 7973,
+  "mindesttiefe": 8
+ },
+ "parameter": {
+  "band_jahre": [
+   2012,
+   2016
+  ],
+  "g_deckel": 2.0,
+  "jahr_fenster": [
+   330,
+   380
+  ],
+  "p_erlaubt": [
+   80,
+   85,
+   90,
+   95
+  ],
+  "p_start": 90,
+  "quartal_fenster": [
+   80,
+   110
+  ],
+  "reife_quartale": 4,
+  "rumpfjahre": [
+   2009,
+   2010,
+   2011
+  ],
+  "trailing_fenster": [
+   5,
+   2
+  ],
+  "trailing_min_n": 200,
+  "ziel_firmen": 300,
+  "zielband": [
+   0.005,
+   0.025
+  ]
+ },
+ "pruefschritt_glaette": {
+  "bestanden": true,
+  "groesster_sprung": 1.748128020652274,
+  "jahre": [
+   {
+    "anteil_prozent": 55.948438978240304,
+    "firmen_gesamt": 8456,
+    "firmen_mit_umsatzquartal": 4731,
+    "jahr": 2012
+   },
+   {
+    "anteil_prozent": 57.69656699889258,
+    "firmen_gesamt": 8127,
+    "firmen_mit_umsatzquartal": 4689,
+    "jahr": 2013
+   },
+   {
+    "anteil_prozent": 59.069182389937104,
+    "firmen_gesamt": 7950,
+    "firmen_mit_umsatzquartal": 4696,
+    "jahr": 2014
+   },
+   {
+    "anteil_prozent": 60.34661148473875,
+    "firmen_gesamt": 7732,
+    "firmen_mit_umsatzquartal": 4666,
+    "jahr": 2015
+   },
+   {
+    "anteil_prozent": 61.26789934658696,
+    "firmen_gesamt": 7193,
+    "firmen_mit_umsatzquartal": 4407,
+    "jahr": 2016
+   }
+  ],
+  "spruenge": [
+   {
+    "nach": 2013,
+    "punkte": 1.748128020652274,
+    "von": 2012
+   },
+   {
+    "nach": 2014,
+    "punkte": 1.3726153910445262,
+    "von": 2013
+   },
+   {
+    "nach": 2015,
+    "punkte": 1.2774290948016471,
+    "von": 2014
+   },
+   {
+    "nach": 2016,
+    "punkte": 0.9212878618482065,
+    "von": 2015
+   }
+  ]
+ },
+ "pruefschritt_ueberlappung": {
+  "anteil": 0.1551436352455416,
+  "bestanden": false,
+  "davon_abstand_ueber_schwelle": 1766,
+  "firmenquartale_mit_mehreren_quellen": 11383,
+  "median": 0.0,
+  "p90": 0.1247190161783146,
+  "p99": 1.2501053599478948,
+  "regel_greift": true
+ },
+ "signale": {
+  "S-G": {
+   "a_werte": 97365,
+   "auswertbar_band": 82611,
+   "auswertbar_gesamt": 85361,
+   "dichte": {
+    "feuerungen_ohne_branche": 0,
+    "jahr": [
+     [
+      2012,
+      114
+     ],
+     [
+      2013,
+      232
+     ],
+     [
+      2014,
+      165
+     ],
+     [
+      2015,
+      141
+     ],
+     [
+      2016,
+      220
+     ]
+    ],
+    "kreuz_monat_sektor": [
+     [
+      "2012-02",
+      "Bau",
+      1
+     ],
+     [
+      "2012-02",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-02",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2012-02",
+      "Transport, Kommunikation, Versorger",
+      3
+     ],
+     [
+      "2012-02",
+      "Verarbeitendes Gewerbe",
+      6
+     ],
+     [
+      "2012-03",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2012-03",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2012-03",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-03",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2012-03",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2012-04",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2012-04",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2012-05",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-05",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2012-05",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-05",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-06",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2012-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-06",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-06",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-06",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2012-06",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-07",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-07",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-07",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-07",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2012-08",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2012-08",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-08",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2012-08",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2012-09",
+      "Bau",
+      1
+     ],
+     [
+      "2012-09",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-09",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-09",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2012-10",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2012-10",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2012-10",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2012-11",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-11",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2012-11",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2012-11",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2012-11",
+      "Grosshandel",
+      3
+     ],
+     [
+      "2012-11",
+      "Transport, Kommunikation, Versorger",
+      5
+     ],
+     [
+      "2012-11",
+      "Verarbeitendes Gewerbe",
+      17
+     ],
+     [
+      "2012-12",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2012-12",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-12",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2013-01",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-01",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2013-02",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-02",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2013-02",
+      "Finanzen, Versicherung, Immobilien",
+      5
+     ],
+     [
+      "2013-02",
+      "Grosshandel",
+      2
+     ],
+     [
+      "2013-02",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-02",
+      "Verarbeitendes Gewerbe",
+      8
+     ],
+     [
+      "2013-03",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-03",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2013-03",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-03",
+      "Finanzen, Versicherung, Immobilien",
+      9
+     ],
+     [
+      "2013-03",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-03",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-03",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2013-03",
+      "Verarbeitendes Gewerbe",
+      14
+     ],
+     [
+      "2013-04",
+      "Bau",
+      1
+     ],
+     [
+      "2013-04",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2013-04",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2013-04",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-04",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-04",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2013-04",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2013-05",
+      "Bau",
+      3
+     ],
+     [
+      "2013-05",
+      "Bergbau und Rohstoffgewinnung",
+      7
+     ],
+     [
+      "2013-05",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2013-05",
+      "Einzelhandel",
+      3
+     ],
+     [
+      "2013-05",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2013-05",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-05",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2013-05",
+      "Verarbeitendes Gewerbe",
+      23
+     ],
+     [
+      "2013-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-06",
+      "Verarbeitendes Gewerbe",
+      6
+     ],
+     [
+      "2013-07",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2013-07",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2013-07",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2013-07",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2013-08",
+      "Bergbau und Rohstoffgewinnung",
+      5
+     ],
+     [
+      "2013-08",
+      "Dienstleistungen",
+      12
+     ],
+     [
+      "2013-08",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2013-08",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2013-08",
+      "Verarbeitendes Gewerbe",
+      16
+     ],
+     [
+      "2013-09",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-09",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-09",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2013-10",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2013-10",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-10",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2013-11",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-11",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2013-11",
+      "Finanzen, Versicherung, Immobilien",
+      9
+     ],
+     [
+      "2013-11",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-11",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2013-11",
+      "Verarbeitendes Gewerbe",
+      13
+     ],
+     [
+      "2013-12",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2013-12",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2013-12",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-12",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2014-01",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2014-01",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2014-02",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-02",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2014-02",
+      "Transport, Kommunikation, Versorger",
+      3
+     ],
+     [
+      "2014-02",
+      "Verarbeitendes Gewerbe",
+      6
+     ],
+     [
+      "2014-03",
+      "Bau",
+      1
+     ],
+     [
+      "2014-03",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2014-03",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2014-03",
+      "Einzelhandel",
+      5
+     ],
+     [
+      "2014-03",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2014-03",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2014-03",
+      "Verarbeitendes Gewerbe",
+      15
+     ],
+     [
+      "2014-04",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2014-04",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-04",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2014-04",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2014-04",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2014-05",
+      "Bau",
+      1
+     ],
+     [
+      "2014-05",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2014-05",
+      "Dienstleistungen",
+      5
+     ],
+     [
+      "2014-05",
+      "Finanzen, Versicherung, Immobilien",
+      6
+     ],
+     [
+      "2014-05",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-05",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2014-05",
+      "Verarbeitendes Gewerbe",
+      11
+     ],
+     [
+      "2014-06",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2014-06",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-06",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2014-07",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2014-07",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-07",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-07",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-07",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2014-08",
+      "Bau",
+      1
+     ],
+     [
+      "2014-08",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-08",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2014-08",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2014-08",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-08",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2014-08",
+      "Verarbeitendes Gewerbe",
+      15
+     ],
+     [
+      "2014-09",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-09",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-09",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2014-10",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-10",
+      "Verarbeitendes Gewerbe",
+      8
+     ],
+     [
+      "2014-11",
+      "Bau",
+      1
+     ],
+     [
+      "2014-11",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2014-11",
+      "Einzelhandel",
+      3
+     ],
+     [
+      "2014-11",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-11",
+      "Verarbeitendes Gewerbe",
+      8
+     ],
+     [
+      "2014-12",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2014-12",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2014-12",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-01",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-01",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-01",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-01",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-02",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2015-02",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-02",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-02",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-03",
+      "Bau",
+      1
+     ],
+     [
+      "2015-03",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2015-03",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2015-03",
+      "Finanzen, Versicherung, Immobilien",
+      5
+     ],
+     [
+      "2015-03",
+      "Grosshandel",
+      2
+     ],
+     [
+      "2015-03",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-03",
+      "Verarbeitendes Gewerbe",
+      8
+     ],
+     [
+      "2015-04",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-04",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-04",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-04",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2015-05",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2015-05",
+      "Dienstleistungen",
+      9
+     ],
+     [
+      "2015-05",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2015-05",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2015-05",
+      "Grosshandel",
+      2
+     ],
+     [
+      "2015-05",
+      "Transport, Kommunikation, Versorger",
+      3
+     ],
+     [
+      "2015-05",
+      "Verarbeitendes Gewerbe",
+      11
+     ],
+     [
+      "2015-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-06",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2015-06",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-06",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-07",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-07",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2015-07",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-08",
+      "Bau",
+      1
+     ],
+     [
+      "2015-08",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2015-08",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2015-08",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2015-08",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-08",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-08",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-08",
+      "Verarbeitendes Gewerbe",
+      11
+     ],
+     [
+      "2015-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-09",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2015-09",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-10",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-10",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-10",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-11",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2015-11",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2015-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2015-11",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2015-11",
+      "Grosshandel",
+      3
+     ],
+     [
+      "2015-11",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2015-11",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2015-12",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-12",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2015-12",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-01",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-02",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2016-02",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2016-02",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-02",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2016-02",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2016-02",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2016-02",
+      "Verarbeitendes Gewerbe",
+      9
+     ],
+     [
+      "2016-03",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2016-03",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2016-03",
+      "Einzelhandel",
+      5
+     ],
+     [
+      "2016-03",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2016-03",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2016-03",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2016-03",
+      "Verarbeitendes Gewerbe",
+      9
+     ],
+     [
+      "2016-04",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2016-04",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2016-04",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-04",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-05",
+      "Bau",
+      1
+     ],
+     [
+      "2016-05",
+      "Bergbau und Rohstoffgewinnung",
+      10
+     ],
+     [
+      "2016-05",
+      "Dienstleistungen",
+      11
+     ],
+     [
+      "2016-05",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-05",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2016-05",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2016-05",
+      "Verarbeitendes Gewerbe",
+      18
+     ],
+     [
+      "2016-06",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2016-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-06",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2016-06",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2016-06",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-07",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2016-07",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2016-07",
+      "Verarbeitendes Gewerbe",
+      6
+     ],
+     [
+      "2016-08",
+      "Bau",
+      1
+     ],
+     [
+      "2016-08",
+      "Bergbau und Rohstoffgewinnung",
+      6
+     ],
+     [
+      "2016-08",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2016-08",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2016-08",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2016-08",
+      "Grosshandel",
+      4
+     ],
+     [
+      "2016-08",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2016-08",
+      "Verarbeitendes Gewerbe",
+      11
+     ],
+     [
+      "2016-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-09",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2016-09",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2016-10",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2016-10",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2016-10",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2016-10",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2016-10",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-11",
+      "Bergbau und Rohstoffgewinnung",
+      5
+     ],
+     [
+      "2016-11",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2016-11",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2016-11",
+      "Grosshandel",
+      4
+     ],
+     [
+      "2016-11",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2016-11",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2016-11",
+      "Verarbeitendes Gewerbe",
+      16
+     ],
+     [
+      "2016-12",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2016-12",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-12",
+      "Verarbeitendes Gewerbe",
+      3
+     ]
+    ],
+    "monat": [
+     [
+      "2012-01",
+      0,
+      78
+     ],
+     [
+      "2012-02",
+      12,
+      1254
+     ],
+     [
+      "2012-03",
+      11,
+      258
+     ],
+     [
+      "2012-04",
+      2,
+      310
+     ],
+     [
+      "2012-05",
+      6,
+      1126
+     ],
+     [
+      "2012-06",
+      8,
+      260
+     ],
+     [
+      "2012-07",
+      4,
+      440
+     ],
+     [
+      "2012-08",
+      11,
+      1145
+     ],
+     [
+      "2012-09",
+      7,
+      381
+     ],
+     [
+      "2012-10",
+      8,
+      708
+     ],
+     [
+      "2012-11",
+      37,
+      3478
+     ],
+     [
+      "2012-12",
+      8,
+      451
+     ],
+     [
+      "2013-01",
+      5,
+      355
+     ],
+     [
+      "2013-02",
+      25,
+      1833
+     ],
+     [
+      "2013-03",
+      34,
+      1830
+     ],
+     [
+      "2013-04",
+      17,
+      1265
+     ],
+     [
+      "2013-05",
+      52,
+      3317
+     ],
+     [
+      "2013-06",
+      7,
+      493
+     ],
+     [
+      "2013-07",
+      9,
+      819
+     ],
+     [
+      "2013-08",
+      37,
+      3116
+     ],
+     [
+      "2013-09",
+      5,
+      490
+     ],
+     [
+      "2013-10",
+      4,
+      874
+     ],
+     [
+      "2013-11",
+      30,
+      3362
+     ],
+     [
+      "2013-12",
+      7,
+      460
+     ],
+     [
+      "2014-01",
+      4,
+      408
+     ],
+     [
+      "2014-02",
+      14,
+      1928
+     ],
+     [
+      "2014-03",
+      31,
+      2122
+     ],
+     [
+      "2014-04",
+      13,
+      1060
+     ],
+     [
+      "2014-05",
+      29,
+      3254
+     ],
+     [
+      "2014-06",
+      7,
+      491
+     ],
+     [
+      "2014-07",
+      8,
+      891
+     ],
+     [
+      "2014-08",
+      27,
+      3008
+     ],
+     [
+      "2014-09",
+      3,
+      498
+     ],
+     [
+      "2014-10",
+      9,
+      1039
+     ],
+     [
+      "2014-11",
+      16,
+      3206
+     ],
+     [
+      "2014-12",
+      4,
+      522
+     ],
+     [
+      "2015-01",
+      5,
+      359
+     ],
+     [
+      "2015-02",
+      6,
+      1968
+     ],
+     [
+      "2015-03",
+      22,
+      2192
+     ],
+     [
+      "2015-04",
+      6,
+      1041
+     ],
+     [
+      "2015-05",
+      33,
+      3155
+     ],
+     [
+      "2015-06",
+      4,
+      462
+     ],
+     [
+      "2015-07",
+      4,
+      928
+     ],
+     [
+      "2015-08",
+      27,
+      2886
+     ],
+     [
+      "2015-09",
+      3,
+      430
+     ],
+     [
+      "2015-10",
+      4,
+      890
+     ],
+     [
+      "2015-11",
+      23,
+      3248
+     ],
+     [
+      "2015-12",
+      4,
+      460
+     ],
+     [
+      "2016-01",
+      1,
+      335
+     ],
+     [
+      "2016-02",
+      24,
+      2354
+     ],
+     [
+      "2016-03",
+      29,
+      1937
+     ],
+     [
+      "2016-04",
+      8,
+      973
+     ],
+     [
+      "2016-05",
+      48,
+      3247
+     ],
+     [
+      "2016-06",
+      6,
+      436
+     ],
+     [
+      "2016-07",
+      10,
+      724
+     ],
+     [
+      "2016-08",
+      34,
+      3137
+     ],
+     [
+      "2016-09",
+      6,
+      426
+     ],
+     [
+      "2016-10",
+      11,
+      756
+     ],
+     [
+      "2016-11",
+      36,
+      3279
+     ],
+     [
+      "2016-12",
+      7,
+      458
+     ]
+    ],
+    "sektor": [
+     [
+      "Bau",
+      14,
+      848
+     ],
+     [
+      "Bergbau und Rohstoffgewinnung",
+      87,
+      6699
+     ],
+     [
+      "Dienstleistungen",
+      185,
+      16739
+     ],
+     [
+      "Einzelhandel",
+      43,
+      4836
+     ],
+     [
+      "Finanzen, Versicherung, Immobilien",
+      93,
+      8215
+     ],
+     [
+      "Grosshandel",
+      34,
+      2659
+     ],
+     [
+      "Land- und Forstwirtschaft, Fischerei",
+      6,
+      567
+     ],
+     [
+      "Nicht klassifiziert (SEC-Sammelcode)",
+      0,
+      170
+     ],
+     [
+      "Transport, Kommunikation, Versorger",
+      57,
+      8000
+     ],
+     [
+      "Verarbeitendes Gewerbe",
+      353,
+      33878
+     ]
+    ]
+   },
+   "feuerungen_band": 872,
+   "feuerungen_gesamt": 902,
+   "feuerungen_rumpfjahre": 30,
+   "firmen_mit_feuerung_band": 810,
+   "firmen_mit_g": 8097,
+   "firmen_mit_reihe": 8191,
+   "firmen_reif": 545,
+   "firmen_unreif": 265,
+   "g_werte": 111495,
+   "kalibrierung": [
+    {
+     "auswertbar_band": 82611,
+     "entscheid": "Rate ueber dem Band -> P 90 -> 95",
+     "feuerungen_band": 2137,
+     "firmen_reif": 1311,
+     "p": 90,
+     "rate": 0.025868225781070318,
+     "schritt": 0
+    },
+    {
+     "auswertbar_band": 82611,
+     "entscheid": "im Zielband — keine Nachjustierung",
+     "feuerungen_band": 872,
+     "firmen_reif": 545,
+     "p": 95,
+     "rate": 0.010555495030928085,
+     "schritt": 1
+    }
+   ],
+   "naht": {
+    "a_gemischt": 0,
+    "beispiele": [],
+    "bestanden": true,
+    "g_gemischt": 0,
+    "gesamt": 0
+   },
+   "p_final": 95,
+   "rate_band": 0.010555495030928085,
+   "scheitern": [],
+   "schwellen": [
+    [
+     8036,
+     null,
+     0
+    ],
+    [
+     8037,
+     null,
+     0
+    ],
+    [
+     8038,
+     null,
+     1
+    ],
+    [
+     8039,
+     null,
+     18
+    ],
+    [
+     8040,
+     1.3333333333333335,
+     274
+    ],
+    [
+     8041,
+     1.8171569490928308,
+     331
+    ],
+    [
+     8042,
+     1.8312236286919832,
+     393
+    ],
+    [
+     8043,
+     1.7936842105263158,
+     716
+    ],
+    [
+     8044,
+     1.4890712945590994,
+     1342
+    ],
+    [
+     8045,
+     1.4428492243684343,
+     1760
+    ],
+    [
+     8046,
+     1.3281696557128269,
+     2207
+    ],
+    [
+     8047,
+     1.3774149659863946,
+     3123
+    ],
+    [
+     8048,
+     1.729833626785822,
+     6426
+    ],
+    [
+     8049,
+     1.7818704485930232,
+     7978
+    ],
+    [
+     8050,
+     1.862318866730538,
+     9681
+    ],
+    [
+     8051,
+     1.9431805146637098,
+     13338
+    ],
+    [
+     8052,
+     1.9728361897180657,
+     14203
+    ],
+    [
+     8053,
+     2.0650877757935926,
+     16906
+    ],
+    [
+     8054,
+     2.1162826186479475,
+     19358
+    ],
+    [
+     8055,
+     2.1380208333333335,
+     19438
+    ],
+    [
+     8056,
+     2.1406180026869683,
+     19356
+    ],
+    [
+     8057,
+     2.1273821020587733,
+     19299
+    ],
+    [
+     8058,
+     2.1107491856677525,
+     19235
+    ],
+    [
+     8059,
+     2.0930780151242416,
+     19162
+    ],
+    [
+     8060,
+     2.10447340277039,
+     19128
+    ],
+    [
+     8061,
+     2.0717875160911317,
+     19091
+    ],
+    [
+     8062,
+     2.072583373788193,
+     19043
+    ],
+    [
+     8063,
+     2.0618472250665576,
+     18950
+    ],
+    [
+     8064,
+     2.019456599934104,
+     18783
+    ],
+    [
+     8065,
+     2.0416456930261764,
+     18574
+    ],
+    [
+     8066,
+     2.0608598157925697,
+     18316
+    ],
+    [
+     8067,
+     2.0956117188482333,
+     17964
+    ]
+   ]
+  },
+  "S-U": {
+   "a_werte": 76109,
+   "auswertbar_band": 63033,
+   "auswertbar_gesamt": 65721,
+   "dichte": {
+    "feuerungen_ohne_branche": 1,
+    "jahr": [
+     [
+      2012,
+      125
+     ],
+     [
+      2013,
+      204
+     ],
+     [
+      2014,
+      182
+     ],
+     [
+      2015,
+      175
+     ],
+     [
+      2016,
+      191
+     ]
+    ],
+    "kreuz_monat_sektor": [
+     [
+      "2012-01",
+      "Bau",
+      1
+     ],
+     [
+      "2012-02",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2012-02",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2012-02",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2012-02",
+      "Transport, Kommunikation, Versorger",
+      5
+     ],
+     [
+      "2012-02",
+      "Verarbeitendes Gewerbe",
+      12
+     ],
+     [
+      "2012-03",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-03",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-03",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-03",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-05",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2012-05",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-05",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2012-05",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2012-05",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-06",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-06",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2012-07",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-07",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2012-08",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2012-08",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2012-08",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-08",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2012-08",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-09",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2012-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-09",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2012-10",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-10",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2012-11",
+      "Bau",
+      1
+     ],
+     [
+      "2012-11",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2012-11",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2012-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2012-11",
+      "Finanzen, Versicherung, Immobilien",
+      8
+     ],
+     [
+      "2012-11",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2012-11",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2012-11",
+      "Transport, Kommunikation, Versorger",
+      6
+     ],
+     [
+      "2012-11",
+      "Verarbeitendes Gewerbe",
+      28
+     ],
+     [
+      "2012-12",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-12",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-12",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2013-01",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-01",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-01",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2013-01",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2013-02",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-02",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2013-02",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-02",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-02",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2013-03",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-03",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-03",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-03",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2013-03",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-03",
+      "Transport, Kommunikation, Versorger",
+      3
+     ],
+     [
+      "2013-03",
+      "Verarbeitendes Gewerbe",
+      13
+     ],
+     [
+      "2013-04",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2013-04",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2013-04",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-04",
+      "Grosshandel",
+      2
+     ],
+     [
+      "2013-04",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2013-04",
+      "Verarbeitendes Gewerbe",
+      9
+     ],
+     [
+      "2013-05",
+      "Bau",
+      2
+     ],
+     [
+      "2013-05",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-05",
+      "Dienstleistungen",
+      9
+     ],
+     [
+      "2013-05",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2013-05",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2013-05",
+      "Verarbeitendes Gewerbe",
+      11
+     ],
+     [
+      "2013-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-06",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-06",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-07",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-07",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-07",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-08",
+      "Bergbau und Rohstoffgewinnung",
+      6
+     ],
+     [
+      "2013-08",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2013-08",
+      "Finanzen, Versicherung, Immobilien",
+      5
+     ],
+     [
+      "2013-08",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-08",
+      "Verarbeitendes Gewerbe",
+      22
+     ],
+     [
+      "2013-09",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2013-09",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-09",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-09",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2013-10",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2013-10",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-10",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2013-10",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2013-11",
+      "Bau",
+      1
+     ],
+     [
+      "2013-11",
+      "Bergbau und Rohstoffgewinnung",
+      7
+     ],
+     [
+      "2013-11",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2013-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2013-11",
+      "Finanzen, Versicherung, Immobilien",
+      8
+     ],
+     [
+      "2013-11",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2013-11",
+      "Nicht klassifiziert (SEC-Sammelcode)",
+      1
+     ],
+     [
+      "2013-11",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2013-11",
+      "Verarbeitendes Gewerbe",
+      23
+     ],
+     [
+      "2013-12",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2014-01",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2014-02",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-02",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2014-02",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-02",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2014-02",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2014-03",
+      "Bau",
+      1
+     ],
+     [
+      "2014-03",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-03",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2014-03",
+      "Finanzen, Versicherung, Immobilien",
+      7
+     ],
+     [
+      "2014-03",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2014-03",
+      "Verarbeitendes Gewerbe",
+      17
+     ],
+     [
+      "2014-04",
+      "Bau",
+      1
+     ],
+     [
+      "2014-04",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2014-04",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2014-04",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-04",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2014-05",
+      "Bergbau und Rohstoffgewinnung",
+      3
+     ],
+     [
+      "2014-05",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2014-05",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2014-05",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-05",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2014-05",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2014-05",
+      "Verarbeitendes Gewerbe",
+      9
+     ],
+     [
+      "2014-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2014-06",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2014-07",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2014-08",
+      "Bau",
+      1
+     ],
+     [
+      "2014-08",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-08",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2014-08",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-08",
+      "Finanzen, Versicherung, Immobilien",
+      7
+     ],
+     [
+      "2014-08",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-08",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2014-08",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2014-08",
+      "Verarbeitendes Gewerbe",
+      18
+     ],
+     [
+      "2014-09",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2014-09",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2014-09",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2014-10",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2014-10",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2014-11",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2014-11",
+      "Dienstleistungen",
+      10
+     ],
+     [
+      "2014-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2014-11",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2014-11",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2014-11",
+      "Verarbeitendes Gewerbe",
+      21
+     ],
+     [
+      "2014-12",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-01",
+      "Dienstleistungen",
+      3
+     ],
+     [
+      "2015-01",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-01",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-02",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2015-02",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2015-02",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2015-02",
+      "Verarbeitendes Gewerbe",
+      7
+     ],
+     [
+      "2015-03",
+      "Bau",
+      1
+     ],
+     [
+      "2015-03",
+      "Bergbau und Rohstoffgewinnung",
+      5
+     ],
+     [
+      "2015-03",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2015-03",
+      "Finanzen, Versicherung, Immobilien",
+      5
+     ],
+     [
+      "2015-03",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-03",
+      "Verarbeitendes Gewerbe",
+      12
+     ],
+     [
+      "2015-04",
+      "Bau",
+      1
+     ],
+     [
+      "2015-04",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-04",
+      "Dienstleistungen",
+      5
+     ],
+     [
+      "2015-04",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-04",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-04",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-05",
+      "Bau",
+      1
+     ],
+     [
+      "2015-05",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2015-05",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2015-05",
+      "Einzelhandel",
+      3
+     ],
+     [
+      "2015-05",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2015-05",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-05",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-05",
+      "Nicht klassifiziert (SEC-Sammelcode)",
+      1
+     ],
+     [
+      "2015-05",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2015-05",
+      "Verarbeitendes Gewerbe",
+      10
+     ],
+     [
+      "2015-06",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-06",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2015-07",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2015-07",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-07",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-08",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-08",
+      "Dienstleistungen",
+      4
+     ],
+     [
+      "2015-08",
+      "Einzelhandel",
+      2
+     ],
+     [
+      "2015-08",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2015-08",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-08",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2015-08",
+      "Verarbeitendes Gewerbe",
+      12
+     ],
+     [
+      "2015-09",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-09",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2015-10",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2015-10",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2015-10",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2015-10",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2015-11",
+      "Bau",
+      1
+     ],
+     [
+      "2015-11",
+      "Dienstleistungen",
+      7
+     ],
+     [
+      "2015-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2015-11",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-11",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-11",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-11",
+      "Transport, Kommunikation, Versorger",
+      2
+     ],
+     [
+      "2015-11",
+      "Verarbeitendes Gewerbe",
+      15
+     ],
+     [
+      "2015-12",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2015-12",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-02",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-02",
+      "Finanzen, Versicherung, Immobilien",
+      4
+     ],
+     [
+      "2016-02",
+      "Transport, Kommunikation, Versorger",
+      4
+     ],
+     [
+      "2016-02",
+      "Verarbeitendes Gewerbe",
+      7
+     ],
+     [
+      "2016-03",
+      "Bau",
+      1
+     ],
+     [
+      "2016-03",
+      "Dienstleistungen",
+      8
+     ],
+     [
+      "2016-03",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-03",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2016-03",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2016-03",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2016-03",
+      "Verarbeitendes Gewerbe",
+      13
+     ],
+     [
+      "2016-04",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-04",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-04",
+      "Verarbeitendes Gewerbe",
+      4
+     ],
+     [
+      "2016-05",
+      "Bau",
+      1
+     ],
+     [
+      "2016-05",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2016-05",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2016-05",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2016-05",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2016-05",
+      "Transport, Kommunikation, Versorger",
+      3
+     ],
+     [
+      "2016-05",
+      "Verarbeitendes Gewerbe",
+      17
+     ],
+     [
+      "2016-06",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-06",
+      "Finanzen, Versicherung, Immobilien",
+      2
+     ],
+     [
+      "2016-06",
+      "Verarbeitendes Gewerbe",
+      5
+     ],
+     [
+      "2016-07",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-08",
+      "Bergbau und Rohstoffgewinnung",
+      2
+     ],
+     [
+      "2016-08",
+      "Dienstleistungen",
+      5
+     ],
+     [
+      "2016-08",
+      "Finanzen, Versicherung, Immobilien",
+      9
+     ],
+     [
+      "2016-08",
+      "Grosshandel",
+      2
+     ],
+     [
+      "2016-08",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2016-08",
+      "Verarbeitendes Gewerbe",
+      18
+     ],
+     [
+      "2016-09",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2016-09",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-09",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2016-09",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-10",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2016-10",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2016-10",
+      "Finanzen, Versicherung, Immobilien",
+      3
+     ],
+     [
+      "2016-10",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2016-10",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2016-11",
+      "Bergbau und Rohstoffgewinnung",
+      4
+     ],
+     [
+      "2016-11",
+      "Dienstleistungen",
+      6
+     ],
+     [
+      "2016-11",
+      "Einzelhandel",
+      1
+     ],
+     [
+      "2016-11",
+      "Finanzen, Versicherung, Immobilien",
+      10
+     ],
+     [
+      "2016-11",
+      "Transport, Kommunikation, Versorger",
+      5
+     ],
+     [
+      "2016-11",
+      "Verarbeitendes Gewerbe",
+      21
+     ],
+     [
+      "2016-12",
+      "Verarbeitendes Gewerbe",
+      1
+     ]
+    ],
+    "monat": [
+     [
+      "2012-01",
+      1,
+      58
+     ],
+     [
+      "2012-02",
+      26,
+      1207
+     ],
+     [
+      "2012-03",
+      5,
+      222
+     ],
+     [
+      "2012-04",
+      0,
+      269
+     ],
+     [
+      "2012-05",
+      8,
+      940
+     ],
+     [
+      "2012-06",
+      3,
+      164
+     ],
+     [
+      "2012-07",
+      2,
+      329
+     ],
+     [
+      "2012-08",
+      10,
+      923
+     ],
+     [
+      "2012-09",
+      5,
+      223
+     ],
+     [
+      "2012-10",
+      2,
+      525
+     ],
+     [
+      "2012-11",
+      57,
+      2535
+     ],
+     [
+      "2012-12",
+      6,
+      278
+     ],
+     [
+      "2013-01",
+      5,
+      213
+     ],
+     [
+      "2013-02",
+      11,
+      1484
+     ],
+     [
+      "2013-03",
+      24,
+      1522
+     ],
+     [
+      "2013-04",
+      21,
+      883
+     ],
+     [
+      "2013-05",
+      32,
+      2418
+     ],
+     [
+      "2013-06",
+      3,
+      389
+     ],
+     [
+      "2013-07",
+      3,
+      625
+     ],
+     [
+      "2013-08",
+      42,
+      2309
+     ],
+     [
+      "2013-09",
+      9,
+      317
+     ],
+     [
+      "2013-10",
+      5,
+      676
+     ],
+     [
+      "2013-11",
+      47,
+      2466
+     ],
+     [
+      "2013-12",
+      2,
+      292
+     ],
+     [
+      "2014-01",
+      1,
+      242
+     ],
+     [
+      "2014-02",
+      14,
+      1629
+     ],
+     [
+      "2014-03",
+      35,
+      1688
+     ],
+     [
+      "2014-04",
+      12,
+      729
+     ],
+     [
+      "2014-05",
+      27,
+      2366
+     ],
+     [
+      "2014-06",
+      3,
+      305
+     ],
+     [
+      "2014-07",
+      2,
+      641
+     ],
+     [
+      "2014-08",
+      37,
+      2188
+     ],
+     [
+      "2014-09",
+      6,
+      354
+     ],
+     [
+      "2014-10",
+      5,
+      803
+     ],
+     [
+      "2014-11",
+      39,
+      2479
+     ],
+     [
+      "2014-12",
+      1,
+      332
+     ],
+     [
+      "2015-01",
+      5,
+      250
+     ],
+     [
+      "2015-02",
+      15,
+      1648
+     ],
+     [
+      "2015-03",
+      32,
+      1814
+     ],
+     [
+      "2015-04",
+      11,
+      765
+     ],
+     [
+      "2015-05",
+      31,
+      2383
+     ],
+     [
+      "2015-06",
+      5,
+      305
+     ],
+     [
+      "2015-07",
+      5,
+      721
+     ],
+     [
+      "2015-08",
+      27,
+      2180
+     ],
+     [
+      "2015-09",
+      2,
+      296
+     ],
+     [
+      "2015-10",
+      10,
+      719
+     ],
+     [
+      "2015-11",
+      29,
+      2498
+     ],
+     [
+      "2015-12",
+      3,
+      300
+     ],
+     [
+      "2016-01",
+      0,
+      205
+     ],
+     [
+      "2016-02",
+      16,
+      2125
+     ],
+     [
+      "2016-03",
+      28,
+      1588
+     ],
+     [
+      "2016-04",
+      6,
+      725
+     ],
+     [
+      "2016-05",
+      33,
+      2488
+     ],
+     [
+      "2016-06",
+      8,
+      316
+     ],
+     [
+      "2016-07",
+      2,
+      584
+     ],
+     [
+      "2016-08",
+      37,
+      2395
+     ],
+     [
+      "2016-09",
+      4,
+      278
+     ],
+     [
+      "2016-10",
+      9,
+      596
+     ],
+     [
+      "2016-11",
+      47,
+      2525
+     ],
+     [
+      "2016-12",
+      1,
+      306
+     ]
+    ],
+    "sektor": [
+     [
+      "Bau",
+      14,
+      808
+     ],
+     [
+      "Bergbau und Rohstoffgewinnung",
+      63,
+      3527
+     ],
+     [
+      "Dienstleistungen",
+      160,
+      12458
+     ],
+     [
+      "Einzelhandel",
+      23,
+      3968
+     ],
+     [
+      "Finanzen, Versicherung, Immobilien",
+      126,
+      9670
+     ],
+     [
+      "Grosshandel",
+      20,
+      2008
+     ],
+     [
+      "Land- und Forstwirtschaft, Fischerei",
+      11,
+      320
+     ],
+     [
+      "Nicht klassifiziert (SEC-Sammelcode)",
+      2,
+      30
+     ],
+     [
+      "Transport, Kommunikation, Versorger",
+      64,
+      5951
+     ],
+     [
+      "Verarbeitendes Gewerbe",
+      393,
+      24266
+     ]
+    ]
+   },
+   "feuerungen_band": 877,
+   "feuerungen_gesamt": 924,
+   "feuerungen_rumpfjahre": 47,
+   "firmen_mit_feuerung_band": 698,
+   "firmen_mit_g": 6598,
+   "firmen_mit_reihe": 7065,
+   "firmen_reif": 487,
+   "firmen_unreif": 211,
+   "g_werte": 88832,
+   "kalibrierung": [
+    {
+     "auswertbar_band": 63033,
+     "entscheid": "Rate ueber dem Band -> P 90 -> 95",
+     "feuerungen_band": 1979,
+     "firmen_reif": 1025,
+     "p": 90,
+     "rate": 0.03139625275649263,
+     "schritt": 0
+    },
+    {
+     "auswertbar_band": 63033,
+     "entscheid": "im Zielband — keine Nachjustierung",
+     "feuerungen_band": 877,
+     "firmen_reif": 487,
+     "p": 95,
+     "rate": 0.013913346976980313,
+     "schritt": 1
+    }
+   ],
+   "naht": {
+    "a_gemischt": 0,
+    "beispiele": [],
+    "bestanden": true,
+    "g_gemischt": 0,
+    "gesamt": 0
+   },
+   "p_final": 95,
+   "rate_band": 0.013913346976980313,
+   "scheitern": [],
+   "schwellen": [
+    [
+     8035,
+     null,
+     0
+    ],
+    [
+     8036,
+     null,
+     0
+    ],
+    [
+     8037,
+     null,
+     1
+    ],
+    [
+     8038,
+     null,
+     3
+    ],
+    [
+     8039,
+     null,
+     23
+    ],
+    [
+     8040,
+     0.21179421035311513,
+     309
+    ],
+    [
+     8041,
+     0.26357443860628826,
+     378
+    ],
+    [
+     8042,
+     0.28082673697558386,
+     455
+    ],
+    [
+     8043,
+     0.27695670875303396,
+     812
+    ],
+    [
+     8044,
+     0.24226617363579311,
+     1401
+    ],
+    [
+     8045,
+     0.2134535440663347,
+     1835
+    ],
+    [
+     8046,
+     0.19463815990597427,
+     2284
+    ],
+    [
+     8047,
+     0.21817064737347058,
+     3121
+    ],
+    [
+     8048,
+     0.3839375789818389,
+     5557
+    ],
+    [
+     8049,
+     0.3902218281999357,
+     6715
+    ],
+    [
+     8050,
+     0.4046563466700829,
+     7930
+    ],
+    [
+     8051,
+     0.46583731089855057,
+     10395
+    ],
+    [
+     8052,
+     0.48008621431175036,
+     10877
+    ],
+    [
+     8053,
+     0.580927908689519,
+     12715
+    ],
+    [
+     8054,
+     0.5909091820098267,
+     14430
+    ],
+    [
+     8055,
+     0.6138482251924007,
+     14558
+    ],
+    [
+     8056,
+     0.617101475906839,
+     14588
+    ],
+    [
+     8057,
+     0.5669746459851683,
+     14595
+    ],
+    [
+     8058,
+     0.579048673392341,
+     14588
+    ],
+    [
+     8059,
+     0.5710539726371755,
+     14605
+    ],
+    [
+     8060,
+     0.5909797336422835,
+     14652
+    ],
+    [
+     8061,
+     0.596292414137756,
+     14763
+    ],
+    [
+     8062,
+     0.5887623778217537,
+     14849
+    ],
+    [
+     8063,
+     0.5679085570715,
+     14833
+    ],
+    [
+     8064,
+     0.5295506434439302,
+     14736
+    ],
+    [
+     8065,
+     0.5260739942591667,
+     14605
+    ],
+    [
+     8066,
+     0.5348671679367676,
+     14439
+    ],
+    [
+     8067,
+     0.5427483662410467,
+     14110
+    ]
+   ]
+  },
+  "S-UG": {
+   "anteil_an_sg": 0.047018348623853214,
+   "anteil_an_su": 0.046750285062713795,
+   "auswertbar_band": 51794,
+   "dichte": {
+    "feuerungen_ohne_branche": 0,
+    "jahr": [
+     [
+      2012,
+      8
+     ],
+     [
+      2013,
+      7
+     ],
+     [
+      2014,
+      12
+     ],
+     [
+      2015,
+      7
+     ],
+     [
+      2016,
+      7
+     ]
+    ],
+    "kreuz_monat_sektor": [
+     [
+      "2012-02",
+      "Transport, Kommunikation, Versorger",
+      1
+     ],
+     [
+      "2012-02",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2012-08",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2012-10",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2012-11",
+      "Verarbeitendes Gewerbe",
+      3
+     ],
+     [
+      "2012-12",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2013-02",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2013-03",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2013-05",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2013-05",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2013-08",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2013-11",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-03",
+      "Bau",
+      1
+     ],
+     [
+      "2014-03",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2014-03",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2014-04",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2014-05",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-08",
+      "Dienstleistungen",
+      2
+     ],
+     [
+      "2014-08",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2014-08",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2014-10",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-04",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2015-05",
+      "Bergbau und Rohstoffgewinnung",
+      1
+     ],
+     [
+      "2015-08",
+      "Land- und Forstwirtschaft, Fischerei",
+      1
+     ],
+     [
+      "2015-08",
+      "Verarbeitendes Gewerbe",
+      2
+     ],
+     [
+      "2015-09",
+      "Grosshandel",
+      1
+     ],
+     [
+      "2015-11",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-05",
+      "Dienstleistungen",
+      1
+     ],
+     [
+      "2016-05",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-08",
+      "Finanzen, Versicherung, Immobilien",
+      1
+     ],
+     [
+      "2016-08",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-09",
+      "Verarbeitendes Gewerbe",
+      1
+     ],
+     [
+      "2016-11",
+      "Verarbeitendes Gewerbe",
+      2
+     ]
+    ],
+    "monat": [
+     [
+      "2012-01",
+      0,
+      44
+     ],
+     [
+      "2012-02",
+      2,
+      855
+     ],
+     [
+      "2012-03",
+      0,
+      167
+     ],
+     [
+      "2012-04",
+      0,
+      209
+     ],
+     [
+      "2012-05",
+      0,
+      743
+     ],
+     [
+      "2012-06",
+      0,
+      134
+     ],
+     [
+      "2012-07",
+      0,
+      252
+     ],
+     [
+      "2012-08",
+      1,
+      743
+     ],
+     [
+      "2012-09",
+      0,
+      190
+     ],
+     [
+      "2012-10",
+      1,
+      444
+     ],
+     [
+      "2012-11",
+      3,
+      2080
+     ],
+     [
+      "2012-12",
+      1,
+      237
+     ],
+     [
+      "2013-01",
+      0,
+      178
+     ],
+     [
+      "2013-02",
+      1,
+      1189
+     ],
+     [
+      "2013-03",
+      1,
+      1212
+     ],
+     [
+      "2013-04",
+      0,
+      711
+     ],
+     [
+      "2013-05",
+      3,
+      2006
+     ],
+     [
+      "2013-06",
+      0,
+      328
+     ],
+     [
+      "2013-07",
+      0,
+      526
+     ],
+     [
+      "2013-08",
+      1,
+      1906
+     ],
+     [
+      "2013-09",
+      0,
+      269
+     ],
+     [
+      "2013-10",
+      0,
+      571
+     ],
+     [
+      "2013-11",
+      1,
+      2059
+     ],
+     [
+      "2013-12",
+      0,
+      258
+     ],
+     [
+      "2014-01",
+      0,
+      209
+     ],
+     [
+      "2014-02",
+      0,
+      1326
+     ],
+     [
+      "2014-03",
+      3,
+      1378
+     ],
+     [
+      "2014-04",
+      1,
+      608
+     ],
+     [
+      "2014-05",
+      1,
+      1945
+     ],
+     [
+      "2014-06",
+      0,
+      257
+     ],
+     [
+      "2014-07",
+      0,
+      547
+     ],
+     [
+      "2014-08",
+      5,
+      1791
+     ],
+     [
+      "2014-09",
+      0,
+      310
+     ],
+     [
+      "2014-10",
+      2,
+      688
+     ],
+     [
+      "2014-11",
+      0,
+      2044
+     ],
+     [
+      "2014-12",
+      0,
+      293
+     ],
+     [
+      "2015-01",
+      0,
+      212
+     ],
+     [
+      "2015-02",
+      0,
+      1357
+     ],
+     [
+      "2015-03",
+      0,
+      1445
+     ],
+     [
+      "2015-04",
+      1,
+      645
+     ],
+     [
+      "2015-05",
+      1,
+      1964
+     ],
+     [
+      "2015-06",
+      0,
+      247
+     ],
+     [
+      "2015-07",
+      0,
+      598
+     ],
+     [
+      "2015-08",
+      3,
+      1787
+     ],
+     [
+      "2015-09",
+      1,
+      254
+     ],
+     [
+      "2015-10",
+      0,
+      619
+     ],
+     [
+      "2015-11",
+      1,
+      2076
+     ],
+     [
+      "2015-12",
+      0,
+      260
+     ],
+     [
+      "2016-01",
+      0,
+      181
+     ],
+     [
+      "2016-02",
+      0,
+      1669
+     ],
+     [
+      "2016-03",
+      0,
+      1290
+     ],
+     [
+      "2016-04",
+      0,
+      616
+     ],
+     [
+      "2016-05",
+      2,
+      2026
+     ],
+     [
+      "2016-06",
+      0,
+      266
+     ],
+     [
+      "2016-07",
+      0,
+      482
+     ],
+     [
+      "2016-08",
+      2,
+      1961
+     ],
+     [
+      "2016-09",
+      1,
+      244
+     ],
+     [
+      "2016-10",
+      0,
+      516
+     ],
+     [
+      "2016-11",
+      2,
+      2095
+     ],
+     [
+      "2016-12",
+      0,
+      277
+     ]
+    ],
+    "sektor": [
+     [
+      "Bau",
+      1,
+      555
+     ],
+     [
+      "Bergbau und Rohstoffgewinnung",
+      2,
+      2836
+     ],
+     [
+      "Dienstleistungen",
+      8,
+      10984
+     ],
+     [
+      "Einzelhandel",
+      0,
+      3415
+     ],
+     [
+      "Finanzen, Versicherung, Immobilien",
+      7,
+      4376
+     ],
+     [
+      "Grosshandel",
+      1,
+      1856
+     ],
+     [
+      "Land- und Forstwirtschaft, Fischerei",
+      1,
+      306
+     ],
+     [
+      "Nicht klassifiziert (SEC-Sammelcode)",
+      0,
+      29
+     ],
+     [
+      "Transport, Kommunikation, Versorger",
+      1,
+      5641
+     ],
+     [
+      "Verarbeitendes Gewerbe",
+      20,
+      21796
+     ]
+    ]
+   },
+   "feuerungen_band": 41,
+   "firmen_mit_feuerung_band": 39,
+   "firmen_reif": 27,
+   "firmen_unreif": 12,
+   "kalibrierung": [],
+   "p_final": null,
+   "rate_band": 0.0007915974823338611,
+   "scheitern": [
+    "K1: nur 27 Firmen mit reifem Erst-Ereignis (gefordert 300)"
+   ]
+  }
+ },
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "zaehler": {
+  "bericht_ohne_branche": 55,
+  "berichte_periodisch": 170610,
+  "betriebsergebnis_kein_vorjahrespartner": 30739,
+  "betriebsergebnis_kein_vorquartal": 14126,
+  "betriebsergebnis_kein_vorquartal_beschleunigung": 11962,
+  "betriebsergebnis_keine_schwelle": 42,
+  "betriebsergebnis_komponente_fehlt_quartal": 0,
+  "betriebsergebnis_nenner_null": 10,
+  "betriebsergebnis_q4_abgeleitet": 18769,
+  "betriebsergebnis_q4_komponente_fehlt": 12497,
+  "betriebsergebnis_quellen_naht": 47,
+  "fakt_kandidaten": 2158042,
+  "nettoergebnis_kein_vorjahrespartner": 38762,
+  "nettoergebnis_kein_vorquartal": 17658,
+  "nettoergebnis_komponente_fehlt_quartal": 0,
+  "nettoergebnis_nenner_null": 183,
+  "nettoergebnis_q4_abgeleitet": 18127,
+  "nettoergebnis_q4_komponente_fehlt": 18893,
+  "nettoergebnis_quellen_naht": 65,
+  "pit_schluessel_mehrfach": 363442,
+  "pit_schluessel_wertkonflikt": 55290,
+  "pit_werte": 594429,
+  "roh_zeilen": 1194307,
+  "umsatz_kein_vorjahrespartner": 26499,
+  "umsatz_kein_vorquartal": 12348,
+  "umsatz_kein_vorquartal_beschleunigung": 10332,
+  "umsatz_keine_schwelle": 56,
+  "umsatz_komponente_fehlt_quartal": 1438,
+  "umsatz_q4_abgeleitet": 12271,
+  "umsatz_q4_komponente_fehlt": 15371,
+  "umsatz_q4_komponente_nicht_positiv": 1795,
+  "umsatz_quellen_naht": 2663,
+  "umsatz_umsatz_nicht_positiv": 11295,
+  "verworfen_coreg": 363624,
+  "verworfen_nicht_periodisch": 82177,
+  "verworfen_periodenlaenge": 497512,
+  "verworfen_wert_leer": 20422
+ },
+ "zeitstempel": "2026-08-19T08:54:34+00:00"
+}
