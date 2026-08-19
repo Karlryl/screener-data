@@ -264,12 +264,22 @@ Zugriff, für jedes Fenster einzeln, zweimal sauber durchlaufen:
 | Entdeckungsfenster, Lauf 1 | 16:50:45 UTC | 16:51:02 UTC | 17:02:45 UTC |
 | Prüffenster, Neulauf | 17:09:31 UTC | 17:09:44 UTC | 17:12:31 UTC |
 | Entdeckungsfenster, Neulauf | 17:09:31 UTC | 17:09:45 UTC | 17:12:31 UTC |
+| Prüffenster, Lauf nach Code-Review | 17:36:27 UTC | 17:36:41 UTC | 17:39:27 UTC |
+| Entdeckungsfenster, Lauf nach Code-Review | 17:36:27 UTC | 17:36:42 UTC | 17:39:27 UTC |
 
-**Warum es zwei Anmeldungen gibt:** Lauf 1 lief unter dem Code-Stand **vor** dem
-Fensterkanten-Fix. Die Zähl-Logik ändert sich dadurch nicht, die Skript-Bytes
-schon — und ein Ergebnis, das nicht zum Code seines Laufs gehört, ist wertlos.
-Also zweite Anmeldung, zweiter Push, zweite Bestätigung. Lauf 1 bleibt in der
-Akte.
+**Warum es drei Anmeldungen je Fenster gibt.** Jedes Mal, wenn sich die
+Skript-Bytes änderten, wurde neu angemeldet und neu gefahren — ein Ergebnis, das
+nicht zum Code seines Laufs gehört, ist wertlos:
+
+1. **Lauf 1**: der erste Stand. Der Entdeckungsfenster-Lauf ist am
+   Fensterkanten-Befund abgebrochen (Abschnitt 6).
+2. **Neulauf**: nach dem Fensterkanten-Fix. Liefert die Zahlen dieses Reports.
+3. **Lauf nach Code-Review**: nach den vier Review-Befunden. **Gemessen, nicht
+   behauptet:** die Zahlen sind byte-identisch mit dem Neulauf — jede Klasse,
+   jede Jahreszeile, jede Quote. Die ausgelieferten Artefakte stammen aus diesem
+   dritten Lauf und gehören damit zum endgültigen Code-Stand.
+
+Alle Vorläufe bleiben in der Akte und werden nicht ersetzt.
 
 ---
 
@@ -314,9 +324,11 @@ Klasse gar nicht auffliegen.
 Nach jeder Sabotage wurde der Stand zurückgenommen; das Arbeitsverzeichnis war
 danach sauber und die Prüfungen wieder grün.
 
-**Determinismus-Gegenprobe:** Je Fenster zwei vollständige Läufe. Die Zahlen
-sind **byte-identisch** — jede Klasse, jede Jahreszeile, jede Quote. Verschieden
-sind nur die beiden Zeitstempel, die sich unterscheiden *müssen*.
+**Determinismus-Gegenprobe:** Je Fenster **drei** vollständige Läufe, zwei davon
+unter identischem Code, der dritte nach dem Code-Review. Alle drei liefern
+**byte-identische** Zahlen — jede Klasse, jede Jahreszeile, jede Quote.
+Verschieden sind nur die Felder des Lauf-Umschlags, die sich unterscheiden
+*müssen* (Lauf-Kennung und Zeitstempel).
 
 **Die Ergebnis-Sperre hat gehalten.** Beide Läufe melden
 `ergebnisdatenBeruehrt: false`, haben genau **eine** Datei gelesen (die
@@ -439,5 +451,5 @@ Das sind **offene Prüfschritte, keine Restrisiken**:
 | `tests/studie-e4a-diagnose.test.js` | namentliche Auswertung des Selbsttests, W8 (Anker) und W9 (Anmeldung deckt Ausgabe) |
 | `reports/studie/E4a-diagnose-pruefung-2026-08-19.json` | vollständiger Lauf-Umschlag Prüffenster (Neulauf) |
 | `reports/studie/E4a-diagnose-entdeckung-2026-08-19.json` | vollständiger Lauf-Umschlag Entdeckungsfenster inkl. E2-Ankerband |
-| `protocol/early-detection/2.0.0/outcome-access-ledger.json` | +4 verkettete Einträge, alle vor dem Zugriff gepusht und serverbestätigt |
+| `protocol/early-detection/2.0.0/outcome-access-ledger.json` | +6 verkettete Einträge, alle vor dem Zugriff gepusht und serverbestätigt |
 | `scripts/studie-r1-serverzeit.js` | neuer Schalter `--allowlist`: ein Lauf meldet seine eigenen Ausgabefelder an, statt die versiegelte Präregistrierung zu erweitern |
