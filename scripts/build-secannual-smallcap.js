@@ -78,7 +78,7 @@ async function run() {
   const cands = uni.filter((s) => smallcapRoute(s).action === 'route').map((s) => s.meta.ticker);
   console.log('Small-Cap geroutet:', cands.length, 'von', uni.length, 'Snapshots');
   const tmap = await fetchSecTickers();
-  let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, noSeries = 0;
+  let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, noSeries = 0, ohneReihe = 0, parseErr = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
     const entry = tmap.get(tk); const cik = entry && entry.cik;
@@ -97,11 +97,22 @@ async function run() {
       if (!body) { no404++; await sleep(125); continue; }
       writeFileAtomic(tmpFile, body); pulled++; await sleep(130);
     }
-    let sec; try { sec = extractSecSeries(JSON.parse(body), tk); } catch (_) { continue; }
-    // taxonomie===null: weder us-gaap noch ifrs-full liefert ein Jahresdatum (haeufigster
-    // Grund: der Filer berichtet nicht in USD). Zaehlt als 'nicht verfuegbar' im selben
-    // Zaehler wie die leere Serie — nie eine 0, nie ein geschaetzter Wert.
-    if (!sec || !sec.taxonomie || !sec.annual || !(sec.annual.annualOpInc || []).length) { noSeries++; continue; }
+    // Review-Fund 19.08.2026, wie in build-secannual.js: hier stand `catch (_) { continue; }`.
+    // Seit der Taxonomie-Erweiterung laeuft in extractSecSeries() mehr, also kann mehr werfen —
+    // und ein Wurf sah bisher aus wie "nichts zu holen". Jetzt laut und gezaehlt.
+    let sec;
+    try { sec = extractSecSeries(JSON.parse(body), tk); }
+    catch (e) { console.log('  parse-fail', tk, cik, e.message); parseErr++; continue; }
+    // Review-Fund 19.08.2026: die beiden Uebersprung-Gruende liefen in EINEN Zaehler. Am Log
+    // war damit nicht mehr ablesbar, wie viele Namen an der neuen Taxonomie-/Waehrungsluecke
+    // haengen und wie viele aus anderem Grund keine Reihe haben — genau die Unterscheidung,
+    // wegen der build-secannual.js den eigenen `ohneReihe` fuehrt. Hier dieselbe Trennung:
+    //   ohneReihe = weder us-gaap noch ifrs-full liefert ein Jahresdatum (haeufigster Grund:
+    //               der Filer berichtet nicht in USD — belegt an BNTX/STLA)
+    //   noSeries  = Taxonomie steht, aber annualOpInc ist leer
+    // Beide: nicht verfuegbar heisst nicht geschrieben — nie eine 0, nie ein geschaetzter Wert.
+    if (!sec || !sec.taxonomie) { ohneReihe++; continue; }
+    if (!sec.annual || !(sec.annual.annualOpInc || []).length) { noSeries++; continue; }
     const snap = uni.find((x) => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
     // taxonomie = HERKUNFT der Reihen (us-gaap|ifrs-full), gleiche Ebene wie cik/nfy.
@@ -115,7 +126,7 @@ async function run() {
   }
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
-  console.log(`secAnnual-smallcap: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} noSeries=${noSeries}`);
+  console.log(`secAnnual-smallcap: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} noSeries=${noSeries} parseErr=${parseErr}`);
 }
 
 if (require.main === module) {

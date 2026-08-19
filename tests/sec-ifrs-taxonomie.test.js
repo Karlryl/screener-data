@@ -57,6 +57,81 @@ test('ARGX/GFI/DLO liefern ifrs-full-Jahresreihen mit den belegten Werten', () =
   assert.equal(werte(dlo.annual.annualGP)[0], 402756000);
 });
 
+// --- 1b) Die vier bisher UNGESCHUETZTEN Rollen: OCF, Capex/FCF, Assets, CurrLiab ---
+// Review-Fund 19.08.2026: der Taxonomie-Kommentar in merge-sec-xbrl.js belegt ALLE ACHT
+// Feldzuordnungen mit gemessenen Zahlen, festgenagelt waren aber nur vier (OpInc, NetInc,
+// Rev, GP). OCF/Capex/Assets/CurrLiab konnten sich lautlos verschieben: kein Test wurde rot,
+// kein Log feuerte — und Assets/CurrLiab speisen eine Scoring-Achse (roicStability).
+// Jeweils NEUESTES Jahr = die im Kommentar belegte Ablesung, die aelteren Jahre = die
+// eingefrorene Fixture. Bricht eine der vier Reihen, ist die CI rot.
+test('OCF/FCF/Assets/CurrLiab stehen mit den abgelesenen Werten fest (ARGX/GFI/DLO)', () => {
+  // ARGX: 6 fy, aber Cashflow und Bilanz erst ab FY2021 -> FY2018 bleibt null.
+  // Belegt: OCF FY2025 = 685 Mio.
+  assert.deepEqual(werte(argx.annual.annualOCF),
+    [685192000, -82747000, -420327000, -862807000, -606812000, null]);
+  assert.deepEqual(werte(argx.annual.annualFCF),
+    [679027000, -84548000, -421139000, -863644000, -610435000, null]);
+  assert.deepEqual(werte(argx.annual.annualAssets),
+    [8682698000, 6202522000, 4542458000, 3134261000, 2850274000, null]);
+  assert.deepEqual(werte(argx.annual.annualCurrentLiabilities),
+    [1320186000, 669916000, 422993000, 302277000, 301239000, null]);
+
+  // GFI: belegt OCF FY2024 = 1607 Mio.
+  assert.deepEqual(werte(gfi.annual.annualOCF),
+    [1607000000, 1192800000, 1379200000, 1230200000, 1111400000, 845000000, 557800000]);
+  assert.deepEqual(werte(gfi.annual.annualFCF),
+    [423600000, 138100000, 309900000, 141500000, 527700000, 232500000, -256400000]);
+  assert.deepEqual(werte(gfi.annual.annualAssets),
+    [10142900000, 8226300000, 7338100000, 7348800000, 7472800000, 6561300000, 6104300000]);
+  assert.deepEqual(werte(gfi.annual.annualCurrentLiabilities),
+    [1710400000, 1505800000, 785400000, 822400000, 916500000, 1367800000, 615500000]);
+
+  // DLO: belegt OCF FY2025 = 416 Mio. FY2024 ist NEGATIV — wer irgendwo einen Betrag nimmt,
+  // faellt hier auf.
+  assert.deepEqual(werte(dlo.annual.annualOCF),
+    [415457000, -32784000, 293453000, 154451000, 108486000]);
+  assert.deepEqual(werte(dlo.annual.annualFCF),
+    [413175000, -34489000, 292488000, 153464000, 106537000]);
+  assert.deepEqual(werte(dlo.annual.annualAssets),
+    [1540964000, 1171329000, 1084453000, 826301000, 583008000]);
+  assert.deepEqual(werte(dlo.annual.annualCurrentLiabilities),
+    [965910000, 677621000, 625229000, 422272000, 298398000]);
+
+  // Index-Treue: jede der vier Reihen liegt auf DERSELBEN fy-Achse. Eine um eins verschobene
+  // Reihe wuerde sonst Bilanzsumme und Betriebsergebnis verschiedener Jahre paaren.
+  for (const [name, s] of [['ARGX', argx], ['GFI', gfi], ['DLO', dlo]]) {
+    for (const k of ['annualOCF', 'annualFCF', 'annualAssets', 'annualCurrentLiabilities']) {
+      assert.equal(s.annual[k].length, s.annual._fys.length, name + '/' + k + ' muss auf der fy-Achse liegen');
+    }
+  }
+});
+
+// --- 1c) Das Capex-VORZEICHEN, ausdruecklich ---------------------------------
+// merge-sec-xbrl.js rechnet FCF = OCF - Capex und nimmt dabei FEST AN, dass
+// PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities den Abfluss POSITIV
+// meldet. Kaeme der Wert je negativ (andere IFRS-Konvention, SEC-Aenderung, Refactoring),
+// wuerde der freie Cashflow um den doppelten Investitionsbetrag ZU HOCH herauskommen —
+// lautlos. Capex ist keine eigene Ausgabereihe, also wird er hier zurueckgerechnet.
+const capexAus = (s, i) => werte(s.annual.annualOCF)[i] - werte(s.annual.annualFCF)[i];
+test('Capex ist ein POSITIVER Abfluss — FCF liegt nie ueber OCF', () => {
+  // Belegte Ablesungen: ARGX FY2025 = 6,2 Mio. · GFI FY2024 = 1183 Mio. · DLO FY2025 = 2,3 Mio.
+  assert.equal(capexAus(argx, 0), 6165000);
+  assert.equal(capexAus(gfi, 0), 1183400000);
+  assert.equal(capexAus(dlo, 0), 2282000);
+  // und ueber ALLE Jahre der drei Fixtures: strikt positiv. Ein gedrehtes Vorzeichen macht
+  // diesen Test rot, statt den freien Cashflow ins Gegenteil zu drehen.
+  for (const [name, s] of [['ARGX', argx], ['GFI', gfi], ['DLO', dlo]]) {
+    s.annual._fys.forEach((fy, i) => {
+      // Jahr ohne OCF oder ohne Capex -> FCF ist null, es gibt nichts zurueckzurechnen.
+      // Abfrage MUSS auf FCF===null gehen: null - null ergibt in JS 0, und 0 haette die
+      // Pruefung als "Capex nicht positiv" faelschlich rot gemacht (ARGX FY2018).
+      if (werte(s.annual.annualFCF)[i] === null) return;
+      const c = capexAus(s, i);
+      assert.ok(c > 0, name + ' FY' + fy + ': Capex muss positiv sein (Abfluss), war ' + c);
+    });
+  }
+});
+
 // --- 2) 20-F/40-F sind Jahresberichte ----------------------------------------
 // Der Kern des Befunds: ohne diese Formen liefert annualConcept() fuer die drei NICHTS,
 // egal welche Taxonomie gelesen wird. Beleg: keiner der drei hat einen 10-K-Eintrag.

@@ -94,16 +94,29 @@ const SHARE_CONCEPTS = [
 // DLO 236 (us-gaap: 0, gar keine us-gaap-Sektion), GFI 279.
 //
 // Die Zuordnung ist NICHT geraten, sondern je Rolle an den drei Testfaellen abgelesen
-// (20-F, fp=FY, Einheit USD; Werte in Mio. USD, neuestes Jahr zuerst):
+// (20-F, fp=FY, Einheit USD; Werte in Mio. USD, neuestes Jahr zuerst). ALLE ACHT Zeilen sind
+// seit 19.08.2026 in tests/sec-ifrs-taxonomie.test.js als Assertion festgenagelt — vorher
+// standen nur vier davon (OpInc/NetInc/Rev/GP) im Test, die vier anderen konnten sich
+// lautlos verschieben:
 //   Umsatz    ifrs-full:Revenue                     GFI 7J 2024=5202/2023=4501 · DLO 5J 2025=1094/2024=746
 //   OpInc     ProfitLossFromOperatingActivities     ARGX 6J 2025=1054/2024=-22 · DLO 5J 2025=220
-//   NetInc    ProfitLoss                            ARGX 6J 2025=1292 · GFI 8J 2024=1291 · DLO 5J 2025=197
-//   OCF       CashFlowsFromUsedInOperatingActivities ARGX 5J 2025=685 · GFI 8J 2024=1607 · DLO 5J 2025=416
-//   Capex     PurchaseOfPropertyPlantAndEquipment-   ARGX 5J 2025=6,2 · GFI 8J 2024=1183 · DLO 5J 2025=2,3
+//   NetInc    ProfitLoss                            ARGX 6J 2025=1292 · GFI 7J 2024=1291 · DLO 5J 2025=197
+//   OCF       CashFlowsFromUsedInOperatingActivities ARGX 5J 2025=685 · GFI 7J 2024=1607 · DLO 5J 2025=416
+//   Capex     PurchaseOfPropertyPlantAndEquipment-   ARGX 5J 2025=6,2 · GFI 7J 2024=1183 · DLO 5J 2025=2,3
 //             ClassifiedAsInvestingActivities        (positiver Abfluss, gleiche Konvention wie us-gaap)
 //   GP        GrossProfit (gleicher Name wie us-gaap) DLO 5J 2025=403 · ARGX/GFI fuehren keins
-//   Assets    Assets      (gleicher Name)            alle drei
-//   CurrLiab  CurrentLiabilities                     alle drei   (us-gaap heisst es LiabilitiesCurrent)
+//   Assets    Assets      (gleicher Name)            ARGX 5J 2025=8683 · GFI 7J 2024=10143 · DLO 5J 2025=1541
+//   CurrLiab  CurrentLiabilities                     ARGX 5J 2025=1320 · GFI 7J 2024=1710 · DLO 5J 2025=966
+//                                                    (us-gaap heisst es LiabilitiesCurrent)
+//
+// Korrektur 19.08.2026: GFI stand bei NetInc/OCF/Capex mit '8J' hier, tatsaechlich sind es
+// 7 Jahre (FY2018-2024) — dieselben 7 wie beim Umsatz. Die WERTE stimmten alle, nur die
+// Jahreszahl war abgeschrieben; der Test haelt jetzt beides fest.
+//
+// ACHTUNG CAPEX-VORZEICHEN: fcfCell() unten rechnet OCF - Capex und setzt damit voraus, dass
+// die SEC den Abfluss POSITIV meldet (an allen drei Fixtures ueber alle Jahre so). Kaeme er
+// je negativ, waere der freie Cashflow um den doppelten Investitionsbetrag zu hoch. Der Test
+// rechnet Capex aus OCF-FCF zurueck und wird bei gedrehtem Vorzeichen rot.
 //
 // ⚠ UMSATZ: die Liste enthaelt BEWUSST NUR 'Revenue' — dieselbe Regel wie bei den us-gaap-
 // Bestandteilen oben, hier an ARGX belegt. argenx fuehrt kein 'Revenue' in USD, dafuer
