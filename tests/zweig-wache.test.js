@@ -2,28 +2,32 @@
 /** tests/zweig-wache.test.js — Standalone-Runner (node tests/zweig-wache.test.js, Exit 0/1).
  *
  * DIE ZUSICHERUNG, an der SACHE festgenagelt:
- *   KEIN Schritt in daily-pull.yml darf veroeffentlichen oder committen, ohne vorher
- *   die Zweig-Wache konsultiert zu haben.
+ *   KEIN Schritt in KEINEM Workflow unter .github/workflows/ darf veroeffentlichen
+ *   oder committen, ohne vorher die Zweig-Wache konsultiert zu haben.
  *
- * BEFUND (19.08.2026). daily-pull.yml traegt `on: workflow_dispatch:` ohne
- * Zweig-Einschraenkung — der Tageslauf laesst sich per Hand auf JEDEM Zweig starten.
- * Seine SECHS veroeffentlichenden Schritte trugen aber keine Zweig-Bedingung:
- *   merge      · Commit Snapshots                             -> git push (main)
- *   merge      · Deploy to GitHub Pages                       -> git push --force gh-pages
- *   scoring    · Deploy Scoring Output to GitHub Pages        -> git push --force gh-pages
- *   scoring    · Commit board-history vintage to main         -> git push origin HEAD:main
- *   scoring    · Publish board-history vintages ... (F-17a)   -> git push --force gh-pages
- *   laufstatus · Statusmarker nach gh-pages veroeffentlichen  -> git push --force gh-pages
- * Ein Handlauf von einem Feature-Zweig haette Karls live veroeffentlichte Daten mit
- * Zahlen ueberschrieben, die ungepruefter Zweig-Code gerechnet hat — per Force-Push,
- * also nicht zurueckrollbar. Ausgeloest hat es nie jemand; die Luecke war trotzdem offen.
+ * BEFUND (19.08.2026). Jeder Workflow dieses Repos ausser pr-check.yml traegt
+ * `workflow_dispatch` ohne Zweig-Einschraenkung — er laesst sich per Hand auf JEDEM
+ * Zweig starten. FUENF davon pushen. Ihre veroeffentlichenden Schritte trugen keine
+ * Zweig-Bedingung:
+ *   daily-pull.yml          6 Schritte (1x main, 4x --force gh-pages, 1x board-history)
+ *   monthly-plan-check.yml  1 Schritt  -> git push origin HEAD:main
+ *   monthly-sec-xbrl.yml    1 Schritt  -> git push (SEC-Manifest + sec-secannual)
+ *   smallcap-pull.yml       1 Schritt  -> git push origin HEAD:main
+ *   weekly-guard.yml        1 Schritt  -> git push origin HEAD:main
+ * Die drei `HEAD:main`-Schritte rebasen vorher den Zweig auf main: ein Handlauf von
+ * einem Feature-Zweig haette also nicht nur eine Datei, sondern den GANZEN ungeprueften
+ * Zweig nach main veroeffentlicht. Ausgeloest hat es nie jemand; die Luecke war offen.
  *
- * WARUM DIESER TEST NICHT DIE SECHS NAMEN PINNT. Eine Liste von heute Abend schuetzt
- * den Zustand von heute Abend. Der Pruefer zerlegt darum die Datei in SCHRITT-BLOECKE
- * und fragt je Block: enthaelt er eine gefaehrliche Aktion (git push / ein Pages-Deploy-
+ * WARUM DIESER TEST KEINE SCHRITT-NAMEN PINNT. Eine Liste von heute Abend schuetzt
+ * den Zustand von heute Abend. Der Pruefer zerlegt jede Datei in SCHRITT-BLOECKE und
+ * fragt je Block: enthaelt er eine gefaehrliche Aktion (git push / ein Pages-Deploy-
  * Action-`uses:`)? Und falls ja: wird die Wache VORHER konsultiert? Ein morgen neu
- * eingefuegter ungeschuetzter Push faellt damit genauso auf wie die sechs bekannten.
+ * eingefuegter ungeschuetzter Push faellt damit genauso auf wie die bekannten.
  * Vorbild der Blockzerlegung: tests/refresh-universe.test.js (pullSchritte()).
+ *
+ * UND ER PINNT AUCH DIE DATEILISTE NICHT (ZW-0): er liest .github/workflows/ selbst
+ * und besteht darauf, dass die Menge der pushenden Dateien exakt die Registry unten
+ * ist. Ein NEUER Workflow mit einem Push faellt auf, statt still ungeschuetzt zu leben.
  *
  * REIHENFOLGE IST TEIL DER SACHE: eine Wache HINTER dem Push schuetzt nichts. Der
  * Pruefer sucht die Wache ausschliesslich im Kopf VOR der ersten gefaehrlichen Zeile.
@@ -35,8 +39,24 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const YML_PFAD = path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml');
-const YML = fs.readFileSync(YML_PFAD, 'utf8');
+const WF_DIR = path.join(__dirname, '..', '.github', 'workflows');
+const lies = (datei) => fs.readFileSync(path.join(WF_DIR, datei), 'utf8');
+
+/** Die geschuetzten Workflows.
+ *  mindestPublizierer — Blindheits-Bremse: faellt die Zahl der erkannten Publizierer
+ *    darunter, ist entweder einer legitim entfernt worden (Zahl anpassen) oder die
+ *    Erkennung ist blind geworden (dann waere JEDER Test hier immer gruen).
+ *  envSchluessel — was im workflow-weiten env-Block stehen MUSS. Ein zweiter env-Block
+ *    auf Spaltenebene 0 ist gueltiges YAML und loescht den ersten still; genau so waere
+ *    beim Bau SEC_CONTACT verschwunden und jeder SEC-Abruf haette lautlos 403 kassiert.
+ */
+const REGISTRY = [
+  { datei: 'daily-pull.yml',         mindestPublizierer: 6, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN', 'NUR_RECHNEN'] },
+  { datei: 'monthly-plan-check.yml', mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'] },
+  { datei: 'monthly-sec-xbrl.yml',   mindestPublizierer: 1, envSchluessel: ['SEC_CONTACT', 'VEROEFFENTLICHEN'] },
+  { datei: 'smallcap-pull.yml',      mindestPublizierer: 1, envSchluessel: ['SHARD_COUNT', 'VEROEFFENTLICHEN'] },
+  { datei: 'weekly-guard.yml',       mindestPublizierer: 1, envSchluessel: ['VEROEFFENTLICHEN'] },
+];
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -63,7 +83,8 @@ const istKommentar = (z) => /^\s*#/.test(z);
 // `git` und `push` werden darum mitgelesen.
 // ponytail: Textmuster, kein Parser. Bekannte Decke: ein Publizierer, der ueber ein
 // Helfer-Skript (`node scripts/publish-x.js`) oder die Contents-API (`gh api -X PUT`)
-// schreibt, faellt nicht auf. Heute ruft kein Skript unter scripts/ `git push` (geprueft).
+// schreibt, faellt nicht auf. Heute ruft kein Skript unter scripts/ `git push` und kein
+// Workflow `gh api` oder eine Deploy-Action (beides 19.08. geprueft).
 // Aufruestpfad, wenn das je vorkommt: die Skript-Aufrufe des Blocks mitverfolgen.
 const GEFAHR_RE = new RegExp(
   '(?:^|[\\s;&|(])git(?:\\s+-\\S+(?:\\s+\\S+)?)*\\s+push\\b' +
@@ -112,47 +133,112 @@ const gateDefinition = (yml) => {
   return m ? m[1].trim() : null;
 };
 
-// ── Ist-Stand ─────────────────────────────────────────────────────────────────
-test('ZW-1: kein veroeffentlichender Schritt laeuft ohne Zweig-Wache', () => {
-  const offen = ungeschuetzteSchritte(YML);
-  assert.deepEqual(offen, [],
-    'Diese Schritte pushen/deployen, ohne vorher $VEROEFFENTLICHEN zu pruefen — ein Handlauf ' +
-    'auf einem Feature-Zweig wuerde damit Karls live veroeffentlichte Daten ueberschreiben:\n       - ' +
-    offen.join('\n       - '));
+/** Schneidet die Wache aus EINEM Schritt heraus (fuer die Sabotage-Gegenproben).
+ *  Sucht die `if [ "$VEROEFFENTLICHEN" != "true" ]`-Zeile im Schritt und entfernt
+ *  alles bis zum `fi` auf derselben Einrueckung — funktioniert damit auch fuer den
+ *  laengeren Wache-Block des Vintage-Schritts (dessen inneres `fi` tiefer steht). */
+function wacheRaus(yml, schrittName) {
+  const z = yml.split('\n');
+  const start = z.findIndex((l) => l.trim() === '- name: ' + schrittName);
+  assert.ok(start > 0, 'Opfer-Schritt nicht gefunden: ' + schrittName);
+  const w = z.findIndex((l, i) => i > start && l.includes('"$VEROEFFENTLICHEN" != "true"'));
+  assert.ok(w > start, 'Wache des Opfer-Schritts nicht gefunden: ' + schrittName);
+  const einr = z[w].match(/^\s*/)[0];
+  const ende = z.findIndex((l, i) => i > w && l === einr + 'fi');
+  assert.ok(ende > w, 'Ende des Wache-Blocks nicht gefunden: ' + schrittName);
+  return [...z.slice(0, w), ...z.slice(ende + 1)].join('\n');
+}
+
+// ── ZW-0: die Dateiliste wird gelesen, nicht geglaubt ─────────────────────────
+test('ZW-0: genau die registrierten Workflows pushen (ein neuer Publizierer faellt auf)', () => {
+  const alle = fs.readdirSync(WF_DIR).filter((f) => /\.ya?ml$/.test(f)).sort();
+  assert.ok(alle.length >= 11, 'nur ' + alle.length + ' Workflow-Dateien gefunden — Verzeichnis richtig?');
+  const pushend = alle.filter((f) =>
+    lies(f).split('\n').some((z) => !istKommentar(z) && GEFAHR_RE.test(z))).sort();
+  assert.deepEqual(pushend, REGISTRY.map((r) => r.datei).sort(),
+    'Die Menge der veroeffentlichenden Workflows weicht von der Registry ab.\n' +
+    '       gefunden:     ' + pushend.join(', ') + '\n' +
+    '       registriert:  ' + REGISTRY.map((r) => r.datei).sort().join(', ') + '\n' +
+    '       Ein NEUER Workflow mit git push muss in die Registry (und eine Wache bekommen); ' +
+    'faellt einer legitim weg, gehoert er hier raus.');
 });
 
-test('ZW-2: der Pruefer ist nicht erblindet (er findet die bekannten Publizierer noch)', () => {
-  // Ein Pruefer, der NICHTS mehr als gefaehrlich erkennt, waere immer gruen. Sechs
-  // Publizierer sind der Stand vom 19.08.2026; faellt einer legitim weg, ist diese
-  // Zahl anzupassen — das ist der gewollte, seltene Reibungspunkt.
-  const gef = gefaehrlicheSchritte(YML);
-  assert.ok(gef.length >= 6,
-    'nur ' + gef.length + ' veroeffentlichende Schritte erkannt (erwartet >= 6): ' + gef.join(', ') +
-    ' — entweder wurde ein Publizierer entfernt (dann Zahl anpassen) oder die Erkennung ist blind geworden.');
-});
+// ── Ist-Stand, je Workflow ────────────────────────────────────────────────────
+for (const wf of REGISTRY) {
+  const YML = lies(wf.datei);
 
-test('ZW-3: die Wache haengt wirklich am Zweig (nicht an irgendeiner Bedingung)', () => {
-  const def = gateDefinition(YML);
-  assert.ok(def, 'workflow-weite Definition `VEROEFFENTLICHEN:` fehlt — die Wache haette keinen Wert ' +
-    'und `[ "$VEROEFFENTLICHEN" != "true" ]` waere in JEDEM Lauf wahr (alles bliebe unveroeffentlicht).');
-  assert.match(def, /github\.ref\s*==\s*'refs\/heads\/main'/,
-    'die Definition prueft nicht mehr den Zweig: ' + def);
-});
+  test('ZW-1 [' + wf.datei + ']: kein veroeffentlichender Schritt laeuft ohne Zweig-Wache', () => {
+    const offen = ungeschuetzteSchritte(YML);
+    assert.deepEqual(offen, [],
+      'Diese Schritte pushen/deployen, ohne vorher $VEROEFFENTLICHEN zu pruefen — ein Handlauf ' +
+      'auf einem Feature-Zweig wuerde damit Karls Repo bzw. seine live veroeffentlichten Daten ' +
+      'ueberschreiben:\n       - ' + offen.join('\n       - '));
+  });
 
-test('ZW-4: genau EIN workflow-weiter env-Block (ein zweiter loescht den ersten still)', () => {
-  // Selbst gebaut und hier gepinnt: ein zweiter `env:`-Block auf Spaltenebene 0 ist
-  // gueltiges YAML — der letzte gewinnt, der erste verschwindet kommentarlos. Genau so
-  // waere SEC_CONTACT verschwunden und JEDER SEC-Abruf haette mit leerem User-Agent
-  // still 403 kassiert.
-  const n = (YML.match(/^env:$/gm) || []).length;
-  assert.equal(n, 1, n + ' workflow-weite env-Bloecke — bei mehr als einem gewinnt der letzte, ' +
-    'die Schluessel des ersten sind lautlos weg.');
-  assert.match(YML, /^ {2}SEC_CONTACT:/m, 'SEC_CONTACT nicht mehr im workflow-weiten env');
-  assert.match(YML, /^ {2}VEROEFFENTLICHEN:/m, 'VEROEFFENTLICHEN nicht mehr im workflow-weiten env');
-});
+  test('ZW-2 [' + wf.datei + ']: der Pruefer ist nicht erblindet (er findet die Publizierer noch)', () => {
+    const gef = gefaehrlicheSchritte(YML);
+    assert.ok(gef.length >= wf.mindestPublizierer,
+      'nur ' + gef.length + ' veroeffentlichende Schritte erkannt (erwartet >= ' + wf.mindestPublizierer +
+      '): ' + gef.join(', ') + ' — entweder wurde ein Publizierer entfernt (dann Zahl anpassen) ' +
+      'oder die Erkennung ist blind geworden.');
+  });
+
+  test('ZW-3 [' + wf.datei + ']: die Wache haengt wirklich am Zweig (nicht an irgendeiner Bedingung)', () => {
+    const def = gateDefinition(YML);
+    assert.ok(def, 'workflow-weite Definition `VEROEFFENTLICHEN:` fehlt — die Wache haette keinen Wert ' +
+      'und `[ "$VEROEFFENTLICHEN" != "true" ]` waere in JEDEM Lauf wahr (alles bliebe unveroeffentlicht).');
+    assert.match(def, /github\.ref\s*==\s*'refs\/heads\/main'/,
+      'die Definition prueft nicht mehr den Zweig: ' + def);
+  });
+
+  test('ZW-4 [' + wf.datei + ']: genau EIN workflow-weiter env-Block (ein zweiter loescht den ersten still)', () => {
+    const n = (YML.match(/^env:$/gm) || []).length;
+    assert.equal(n, 1, n + ' workflow-weite env-Bloecke — bei mehr als einem gewinnt der letzte, ' +
+      'die Schluessel des ersten sind lautlos weg.');
+    for (const k of wf.envSchluessel) {
+      assert.match(YML, new RegExp('^ {2}' + k + ':', 'm'), k + ' nicht mehr im workflow-weiten env');
+    }
+  });
+
+  // ── Gegenproben je Workflow: der Pruefer muss hier rot werden koennen ───────
+  test('ZW-S1 [' + wf.datei + '] Sabotage: Wache an EINEM Schritt entfernt -> rot, Schritt namentlich', () => {
+    const opfer = schritte(YML).find((s) => ersteGefahrZeile(s.zeilen) >= 0).name;
+    const mutiert = wacheRaus(YML, opfer);
+    assert.notEqual(mutiert, YML, 'Mutation griff nicht');
+    assert.deepEqual(ungeschuetzteSchritte(mutiert), [opfer],
+      'der Pruefer nennt den entwachten Schritt nicht (oder nennt zu viele)');
+  });
+
+  test('ZW-S2 [' + wf.datei + '] Sabotage: ein NEUER ungeschuetzter git-push-Schritt -> rot', () => {
+    const erster = schritte(YML)[0].name;
+    const neu =
+      '      - name: Schnellkorrektur nach main\n' +
+      '        run: |\n' +
+      '          git commit -am "hotfix"\n' +
+      '          git push origin HEAD:main\n\n';
+    const mutiert = YML.replace('      - name: ' + erster, neu + '      - name: ' + erster);
+    assert.notEqual(mutiert, YML, 'Mutation griff nicht');
+    assert.deepEqual(ungeschuetzteSchritte(mutiert), ['Schnellkorrektur nach main'],
+      'ein frisch eingefuegter ungeschuetzter Push bleibt unentdeckt — dann schuetzt dieser Test nur ' +
+      'die Schritte von heute Abend und nichts darueber hinaus.');
+  });
+
+  test('ZW-S3 [' + wf.datei + '] Sabotage: Schutz vollstaendig entfernt -> rot an ALLEN Publizierern', () => {
+    const mutiert = YML.split('\n').filter((z) => !WACHE_RE.test(z)).join('\n');
+    assert.equal(gateDefinition(mutiert), null, 'Definition muss durch die Mutation weg sein');
+    assert.equal(ungeschuetzteSchritte(mutiert).length, gefaehrlicheSchritte(YML).length,
+      'nach vollstaendigem Ausbau muss JEDER veroeffentlichende Schritt als ungeschuetzt gelten');
+  });
+}
+
+// ── Nur daily-pull.yml: Ventil und Wert-Gate ──────────────────────────────────
+const DAILY = lies('daily-pull.yml');
 
 test('ZW-5: das Ventil ist da und steht auf "veroeffentlichen" (sonst publiziert der Cron nie mehr)', () => {
-  const block = YML.split(/^ {6}nur_rechnen:$/m)[1];
+  // Nur daily-pull hat `nur_rechnen`: dort deckt es einen 4-Stunden-Lauf mit sechs
+  // Publizierern ab, den man auf main einmal komplett durchrechnen lassen will. Bei den
+  // vier anderen ist der Trockenlauf jetzt einfach der Zweig-Lauf — deshalb kein Ventil.
+  const block = DAILY.split(/^ {6}nur_rechnen:$/m)[1];
   assert.ok(block, 'workflow_dispatch-Eingabe `nur_rechnen` fehlt — es gaebe keinen dokumentierten Weg, ' +
     'einen Lauf bewusst rechnen zu lassen ohne zu publizieren.');
   assert.match(block.split('\n').slice(0, 4).join('\n'), /default:\s*false/,
@@ -167,7 +253,7 @@ test('ZW-6: die Wache verschluckt den Wert-Gate-Alarm des Vintage-Schritts nicht
   // Die erste Fassung der Zweig-Wache stand VOR dieser Pruefung und stieg mit exit 0 aus:
   // auf jedem Zweig- und jedem nur_rechnen-Lauf wurde aus dem roten X eine Warnung in
   // einem gruenen Job. Ausgerechnet im Trockenlauf, der zum Pruefen einer Aenderung da ist.
-  const s = schritte(YML).find((x) => x.name === 'Commit board-history vintage to main');
+  const s = schritte(DAILY).find((x) => x.name === 'Commit board-history vintage to main');
   assert.ok(s, 'Schritt "Commit board-history vintage to main" nicht gefunden');
   const gStart = s.zeilen.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
   assert.ok(gStart > 0, 'keine Zweig-Wache in diesem Schritt');
@@ -190,49 +276,15 @@ test('ZW-6: die Wache verschluckt den Wert-Gate-Alarm des Vintage-Schritts nicht
     + 'Alarm koennte nie feuern.');
 });
 
-// ── Gegenproben: der Pruefer muss rot werden koennen ──────────────────────────
-test('ZW-S1 Sabotage: Wache an EINEM Schritt entfernt -> rot, und der Schritt wird namentlich genannt', () => {
-  const opfer = 'Deploy Scoring Output to GitHub Pages';
-  const zeilen = YML.split('\n');
-  const start = zeilen.findIndex((z) => z.trim() === '- name: ' + opfer);
-  assert.ok(start > 0, 'Opfer-Schritt nicht gefunden — dann prueft diese Gegenprobe nichts');
-  const w = zeilen.findIndex((z, i) => i > start && z.includes('"$VEROEFFENTLICHEN" != "true"'));
-  assert.ok(w > start && w - start < 10, 'Wache des Opfer-Schritts nicht gefunden');
-  const mutiert = [...zeilen.slice(0, w), ...zeilen.slice(w + 4)].join('\n');  // if/echo/exit/fi
-  assert.notEqual(mutiert, YML, 'Mutation griff nicht');
-  assert.deepEqual(ungeschuetzteSchritte(mutiert), [opfer],
-    'der Pruefer nennt den entwachten Schritt nicht (oder nennt zu viele)');
-});
-
-test('ZW-S2 Sabotage: ein NEUER ungeschuetzter git-push-Schritt -> rot (das ist die eigentliche Zusicherung)', () => {
-  const neu =
-    '      - name: Schnellkorrektur nach main\n' +
-    '        run: |\n' +
-    '          git commit -am "hotfix"\n' +
-    '          git push origin HEAD:main\n\n';
-  const mutiert = YML.replace('      - name: Commit Snapshots', neu + '      - name: Commit Snapshots');
-  assert.notEqual(mutiert, YML, 'Mutation griff nicht');
-  assert.deepEqual(ungeschuetzteSchritte(mutiert), ['Schnellkorrektur nach main'],
-    'ein frisch eingefuegter ungeschuetzter Push bleibt unentdeckt — dann schuetzt dieser Test nur ' +
-    'die sechs Schritte von heute Abend und nichts darueber hinaus.');
-});
-
-test('ZW-S3 Sabotage: Schutz vollstaendig entfernt -> rot an allen sechs', () => {
-  const mutiert = YML.split('\n').filter((z) => !WACHE_RE.test(z)).join('\n');
-  assert.equal(gateDefinition(mutiert), null, 'Definition muss durch die Mutation weg sein');
-  assert.equal(ungeschuetzteSchritte(mutiert).length, gefaehrlicheSchritte(YML).length,
-    'nach vollstaendigem Ausbau muss JEDER veroeffentlichende Schritt als ungeschuetzt gelten');
-});
-
 test('ZW-S5 Sabotage: Wert-Gate-Alarm aus dem Wache-Zweig entfernt -> ZW-6 wird rot', () => {
   // Ohne diese Gegenprobe waere ZW-6 nur eine Behauptung. Hier wird der Alarm wirklich
   // herausgeschnitten und geprueft, dass die Zusicherung faellt.
-  const zeilen = YML.split('\n');
+  const zeilen = DAILY.split('\n');
   const i = zeilen.findIndex((l) => l.includes('SUSPECT geflaggt (Wert-Gate)') && l.includes('nicht veroeffentlicht'));
   assert.ok(i > 0, 'der Alarm im Wache-Zweig ist nicht auffindbar — dann prueft diese Gegenprobe nichts');
   // Zeile davor ist das `if`, danach `exit 2` und `fi` -> die vier Zeilen raus.
   const mutiert = [...zeilen.slice(0, i - 1), ...zeilen.slice(i + 3)].join('\n');
-  assert.notEqual(mutiert, YML, 'Mutation griff nicht');
+  assert.notEqual(mutiert, DAILY, 'Mutation griff nicht');
   const s = schritte(mutiert).find((x) => x.name === 'Commit board-history vintage to main');
   const gStart = s.zeilen.findIndex((l) => l.includes('"$VEROEFFENTLICHEN" != "true"'));
   const gEnde = s.zeilen.findIndex((l, k) => k > gStart && /^ {10}fi$/.test(l));
@@ -240,6 +292,7 @@ test('ZW-S5 Sabotage: Wert-Gate-Alarm aus dem Wache-Zweig entfernt -> ZW-6 wird 
     'der Alarm steht nach der Mutation immer noch im Wache-Zweig — dann belegt ZW-6 nichts.');
 });
 
+// ── Bauform-Gegenproben (einmal, sie pruefen den Pruefer selbst) ──────────────
 test('ZW-S4 Sabotage: Wache HINTER dem Push zaehlt nicht als Schutz', () => {
   const zeilen = [
     '        run: |',
@@ -252,7 +305,6 @@ test('ZW-S4 Sabotage: Wache HINTER dem Push zaehlt nicht als Schutz', () => {
     'eine Wache NACH dem Push gilt als Schutz — sie schuetzt nichts, der Push ist schon raus.');
 });
 
-// ── Falsch-Rot-Proben: gueltige Formen muessen DURCHGEHEN ─────────────────────
 test('ZW-G1 Gegenrichtung: eine andere, aber gueltige Schutzform bleibt gruen', () => {
   // Ein `if:` auf Schritt-Ebene ist NICHT die hier gewaehlte Bauform (ein uebersprungener
   // Schritt sieht in Actions aus wie ein erfolgreicher), er verhindert die
@@ -275,6 +327,7 @@ test('ZW-G2 Gegenrichtung: harmlose Schritte gelten nicht als Publizierer', () =
     '          git commit -m "lokal"',
     '          # git push --force origin gh-pages   (auskommentierte Erklaerung)',
     '          node scripts/write-board-history.js',
+    "  group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}",
   ]) {
     assert.equal(ersteGefahrZeile([harmlos]), -1, 'falsch-rot bei: ' + harmlos.trim());
   }
@@ -284,9 +337,10 @@ test('ZW-G2 Gegenrichtung: harmlose Schritte gelten nicht als Publizierer', () =
     '          if git push origin HEAD:main; then ok=1; fi',
     '          git -C _ghp push --force origin gh-pages',
     '          git --git-dir=_ghp/.git push --force origin gh-pages',
+    '              if git pull --rebase --autostash origin main && git push origin HEAD:main; then :; fi',
     '        uses: peaceiris/actions-gh-pages@v3',
   ]) {
-    assert.equal(ersteGefahrZeile([gefahr]), 0, 'muss als Publizierer gelten: ' + gefahr.trim());
+    assert.ok(ersteGefahrZeile([gefahr]) >= 0, 'muss als Publizierer gelten: ' + gefahr.trim());
   }
 });
 
