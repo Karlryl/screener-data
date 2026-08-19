@@ -28,6 +28,29 @@ concurrency:
 permissions:
   contents: write
 
+# ZWEIG-WACHE (19.08.2026) — die EINZIGE Stelle, an der entschieden wird, ob ein
+# Lauf veroeffentlichen darf. Gleiche Sache und gleiche Bauform wie in daily-pull.yml.
+#
+# BEFUND: dieser Workflow laesst sich per workflow_dispatch auf JEDEM Zweig starten,
+# sein Marker-Push schob aber unbedingt `HEAD:main` hoch — nach einem Rebase des
+# Zweigs auf main. Ein Handlauf von einem Feature-Zweig haette damit den GANZEN
+# ungeprueften Zweig nach main veroeffentlicht, nicht nur den Kadenz-Marker.
+#
+# WARUM KEIN `if:` AM SCHRITT (die naheliegende Loesung, bewusst verworfen): ein
+# UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+# schreibt keine Zeile ins Protokoll. Der Schritt laeuft darum weiter und steigt ganz
+# vorn mit ::warning:: aus — die Nicht-Veroeffentlichung ist ein LESBARER Vorgang.
+#
+# KEIN `nur_rechnen`-Ventil wie in daily-pull.yml: dort deckt es einen 4-Stunden-Lauf
+# mit sechs Publizierern ab, den man auf main einmal komplett durchrechnen lassen will.
+# Hier ist der Trockenlauf jetzt einfach der Zweig-Lauf — genau das macht diese Wache
+# erst gefahrlos moeglich.
+#
+# Bei schedule-Laeufen ist github.ref refs/heads/main -> der Cron veroeffentlicht wie
+# bisher. Waechter: tests/zweig-wache.test.js
+env:
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
 jobs:
   weekly-guard:
     runs-on: ubuntu-latest
@@ -69,6 +92,10 @@ jobs:
         if: ${{ always() && github.event.inputs.force_alarm != 'true' }}
         run: |
           node scripts/cadence-marker.js --field weekly
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit des Kadenz-Markers nach main. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add state/cadence-heartbeat.json

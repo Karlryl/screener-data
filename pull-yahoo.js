@@ -137,6 +137,11 @@ let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catc
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
 let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
+// Tag 645 (Review-Fund silent-failure-hunter): eine geglueckte yahoo_symbol-Reparatur
+// (Schraegstrich vor .MX entfernt) loggt zwar WARN, ging aber sonst in ~21k
+// INFO-Zeilen pro Lauf unter. Gleicher Zaehler-Mechanismus wie corruptYoung/etc.,
+// damit die Reparatur auch im Manifest/Tally sichtbar bleibt, nicht nur im Log.
+let _symbolsNormalized = 0;     // yahoo_symbol wurde vor dem Pull automatisch repariert
 // F-CGPT-012 (P1-Welle 9, 10.08.2026): der Checkpoint-Schreiber des inkrementellen
 // Manifests fing jeden Schreibfehler mit einer WARN-Zeile ab, ohne Zaehler. Ein dauerhaft
 // scheiterndes Checkpoint-Schreiben (OneDrive-Lock, AV-Scanner, volle Platte) blieb damit
@@ -265,6 +270,33 @@ function nextNotFoundState(existingMeta) {
 function shouldRetryKosdaq(stock, errClass) {
   return errClass === 'not-found' && !!(stock && stock.suffixUnsure) && !stock._kqRetried
     && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
+}
+
+// Tag 645 (belegter Datenfehler 19.08.2026): 47 mexikanische Ticker fragten Yahoo
+// mit einem Schraegstrich vor der Klassen-/Serien-Kennung an (z.B. "GFNORTE/O.MX"),
+// den Yahoo nicht kennt -> 404 bei jedem Pull. Live verifiziert: "GFNORTEO.MX" (ohne
+// Schraegstrich) trifft ("Grupo Financiero Banorte, Equity"), "GFNORTE/O.MX" trifft
+// nicht. Chirurgisch eng: NUR ein Schraegstrich unmittelbar vor der .MX-Endung wird
+// entfernt. Jede andere Boerse/Kennung (inkl. .KS/.KQ, US-Dash-Formen) laeuft
+// unveraendert durch — im ganzen aktuellen watchlist.json kommt "/" ausschliesslich
+// in .MX-Kennungen vor (grep-verifiziert, 47/47 Treffer), ein breiterer Guard waere
+// unbelegt. EIN Punkt (processOne, s.u.), durch den jeder Yahoo-Aufruf dieser Datei
+// laeuft (quoteSummary, quote, FTS) — kein Guard pro Aufrufer.
+function normalizeYahooSymbol(symbol) {
+  if (typeof symbol !== 'string') return symbol;
+  if (!/\.MX$/i.test(symbol)) return symbol;
+  // audit fix (silent-failure-hunter, Tag 645): the belegter Fall always has
+  // EXACTLY ONE slash (e.g. "GFNORTE/O.MX", "CEMEX/CPO.MX" — never adjacent to
+  // ".MX" itself, always somewhere before it). A blind global replace() would
+  // have silently collapsed an unknown MULTI-slash shape into a guessed symbol
+  // that could resolve to a DIFFERENT company — exactly the "silently pulls the
+  // wrong company's data" failure mode this project fears most. So: only touch
+  // the single-slash shape that is actually verified; anything else (0 or 2+
+  // slashes) passes through untouched and keeps failing loud as a 404, same as
+  // before this fix.
+  const slashCount = (symbol.match(/\//g) || []).length;
+  if (slashCount !== 1) return symbol;
+  return symbol.replace('/', '');
 }
 
 // Modules die wir brauchen für canonicalInput-Mapping
@@ -2429,6 +2461,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _corruptYoungSnapshots = 0;
   _ftsCacheParseErrors = 0;
   _manifestCheckpointErrors = 0;
+  _symbolsNormalized = 0;
   _unparseableTimeAnchors = 0;
   _unparseableTimeAnchorsDue = 0;
   _ftsPartialTickers = 0;
@@ -2581,7 +2614,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // durch das volle Universum ersetzt.
         n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
-        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors },
+        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
@@ -2886,6 +2919,23 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
 
   async function processOne(stock) {
+    // Tag 645: normalize stock.yahoo_symbol ONCE, before ANY of the several
+    // Yahoo call sites below (price-only quote, full quoteSummary, IPO-date
+    // quote, FTS) read it. A shallow copy — never mutate the shared watchlist
+    // row — so the fix stays local to this pull and the original identifier
+    // (used for snapshot filenames, logging, the KOSDAQ-retry suffix check)
+    // is untouched. Fail-loud: every actual rewrite is logged AND counted (TASK
+    // 0.11 pattern, review-fund Tag 645: a WARN alone drowns among ~21k per-run
+    // INFO lines) so a bad normalization can never silently pull the wrong
+    // company's data.
+    {
+      const _normYahooSymbol = normalizeYahooSymbol(stock.yahoo_symbol);
+      if (_normYahooSymbol !== stock.yahoo_symbol) {
+        _log('WARN', `  yahoo_symbol normalisiert: "${stock.yahoo_symbol}" -> "${_normYahooSymbol}" (${stock.ticker})`);
+        _symbolsNormalized++;
+        stock = Object.assign({}, stock, { yahoo_symbol: _normYahooSymbol });
+      }
+    }
 
     try {
       // Tag 166: price-only fast-path if recent snapshot exists
@@ -3854,8 +3904,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
-  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors };
-  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors} manifestCheckpoint=${_manifestCheckpointErrors}`);
+  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized };
+  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors} manifestCheckpoint=${_manifestCheckpointErrors} symbolsNormalized=${_symbolsNormalized}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
@@ -4189,11 +4239,13 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear, _mapFTSAnnualShares, _readFTSAnnualSharesFromCache, _writeFTSCache,
-  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors }),
-  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; _manifestCheckpointErrors = 0; },
+  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized }),
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; _manifestCheckpointErrors = 0; _symbolsNormalized = 0; },
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
+  // Tag 645: MX-Schraegstrich-Normalisierung fuer TDD (belegter Datenfehler 19.08.).
+  normalizeYahooSymbol,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
   acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
   YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,

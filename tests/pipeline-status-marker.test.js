@@ -351,8 +351,12 @@ const SHA = 'f'.repeat(40);
  * @param {object} o.needs        simulierter needs-Kontext
  * @param {string|null} o.vorgaenger  Inhalt von _vorgaenger.json (null = keiner)
  * @param {boolean} o.mitGhPages  hat das Ersatz-Remote schon einen gh-pages-Zweig?
+ * @param {string} [o.veroeffentlichen]  Wert der Zweig-Wache; 'true' = Lauf auf main (Vorgabe),
+ *   'false' = Lauf auf einem Feature-Zweig oder mit gesetztem nur_rechnen-Ventil.
+ *   IMMER explizit gesetzt, nie aus process.env geerbt: im CI traegt der Lauf selbst ein
+ *   VEROEFFENTLICHEN, und dieser Test soll auf JEDEM Zweig dasselbe messen.
  */
-function laufFahren({ needs, vorgaenger, mitGhPages }) {
+function laufFahren({ needs, vorgaenger, mitGhPages, veroeffentlichen = 'true' }) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'psm-e2e-'));
   const cwd = path.join(tmp, 'runner');
   const remote = path.join(tmp, 'ghpages.git').replace(/\\/g, '/');
@@ -402,7 +406,12 @@ function laufFahren({ needs, vorgaenger, mitGhPages }) {
   assert.ok(!publish.includes('${{'), 'im Publish-Block steht noch ein unersetzter GitHub-Ausdruck: '
     + JSON.stringify((publish.match(/\$\{\{[^}]*\}\}/) || [''])[0]));
 
-  const rPublish = sh(publish, { cwd, env: { MARKER_PFADE: MARKER_REL } });
+  const rPublish = sh(publish, { cwd, env: {
+    MARKER_PFADE: MARKER_REL,
+    VEROEFFENTLICHEN: veroeffentlichen,
+    GITHUB_REF: veroeffentlichen === 'true' ? 'refs/heads/main' : 'refs/heads/feature/probe',
+    NUR_RECHNEN: 'false',
+  } });
 
   // Was ist auf dem Ersatz-gh-pages ANGEKOMMEN?
   let publiziert = null;
@@ -479,6 +488,36 @@ test('E2E ALLERERSTER LAUF (kein gh-pages, kein Vorgaenger): Marker geht raus, D
   assert.equal(r.publiziert.failed_job, 'scoring');
 });
 
+// ── ZWEIG-WACHE (19.08.2026): der Publish-Schritt darf nur von main aus feuern ───────
+// BEFUND: `on: workflow_dispatch:` traegt keine Zweig-Einschraenkung — der Tageslauf laesst
+// sich per Hand auf JEDEM Zweig starten. Dieser Schritt pushte trotzdem unbedingt und mit
+// --force nach gh-pages. Ein Handlauf von einem Feature-Zweig haette Karls live
+// veroeffentlichte Daten mit Zahlen ueberschrieben, die ungepruefter Zweig-Code gerechnet
+// hat — Force-Push, also nicht zurueckrollbar. Ausgeloest hat es nie jemand.
+// Geprueft wird das VERHALTEN gegen das Ersatz-Remote (was ist ANGEKOMMEN?), nicht ein Text.
+// Struktureller Waechter ueber alle sechs Publizierer: tests/zweig-wache.test.js.
+test('E2E ZWEIGLAUF: von einem Feature-Zweig geht NICHTS nach gh-pages raus', () => {
+  const trocken = laufFahren({ needs: alleGruen, vorgaenger: null, mitGhPages: true,
+    veroeffentlichen: 'false' });
+  assert.equal(trocken.rSchreib.code, 0, 'der Schreib-Schritt faellt im Trockenlauf aus — gerechnet '
+    + 'und geschrieben werden SOLL weiterhin, nur nicht publiziert. Ausgabe: ' + trocken.rSchreib.out.trim());
+  assert.equal(trocken.rPublish.code, 0, 'der Zweiglauf endet ROT (exit ' + trocken.rPublish.code
+    + '). Nicht zu veroeffentlichen ist kein Fehler — ein rotes X hier wuerde Karls Alarmkanal mit '
+    + 'Trockenlaeufen fluten und ihn gegen echte Ausfaelle abstumpfen. Ausgabe: ' + trocken.rPublish.out.trim());
+  assert.equal(trocken.publiziert, null,
+    'AUF DEM gh-pages-ZWEIG IST ETWAS ANGEKOMMEN, obwohl der Lauf nicht auf main laeuft. Genau '
+    + 'dieser Force-Push haette Karls live veroeffentlichte Daten ueberschrieben.');
+  assert.match(trocken.rPublish.out, /::warning::NICHT VEROEFFENTLICHT/,
+    'die Nicht-Veroeffentlichung steht in KEINER Protokollzeile. Ein gruener Haken ohne Grund ist '
+    + 'genau der stille Ausgang vom 12.-15.08. — die Wache muss sich melden, nicht nur schweigen.');
+
+  // Gegenprobe aus der anderen Richtung: derselbe Lauf MIT Wache muss publizieren. Ohne sie
+  // koennte oben auch schlicht der ganze Schritt kaputt sein und der Test bewiese nichts.
+  const echt = laufFahren({ needs: alleGruen, vorgaenger: null, mitGhPages: true });
+  assert.ok(echt.publiziert, 'derselbe Lauf publiziert auch von main aus nichts — dann misst der '
+    + 'Trockenlauf-Fall oben einen kaputten Schritt statt der Zweig-Wache.');
+});
+
 // ── (2b) Der VIERTE Fehlerpfad: alle drei Push-Versuche erschoepft ───────────────────
 // Review 16.08.: fuer die drei anderen Fehlerpfade war je ::error:: + exit 1 gepinnt, fuer
 // diesen nicht — nachgewiesen, indem das schliessende `exit 1` entfernt wurde: 20 von 20
@@ -504,7 +543,8 @@ test('(2b) alle drei Push-Versuche erschoepft -> ROT (nicht still gruen)', () =>
 
   const publish = runBlock(publishSchritt).replace(/^GHP_URL=".*"$/m, 'GHP_URL=' + JSON.stringify(remote));
   assert.ok(!publish.includes('${{'), 'unersetzter GitHub-Ausdruck im Publish-Block');
-  const r = sh(publish, { cwd, env: { MARKER_PFADE: MARKER_REL } });
+  // VEROEFFENTLICHEN explizit: dieser Fall misst die Retry-Schleife, nicht die Zweig-Wache.
+  const r = sh(publish, { cwd, env: { MARKER_PFADE: MARKER_REL, VEROEFFENTLICHEN: 'true' } });
 
   // Gegenprobe zuerst: kam ueberhaupt nichts an? Sonst misst dieser Test den falschen Fall.
   let angekommen = true;
