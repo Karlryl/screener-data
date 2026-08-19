@@ -267,6 +267,24 @@ function shouldRetryKosdaq(stock, errClass) {
     && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
 }
 
+// Tag 645 (belegter Datenfehler 19.08.2026): 47 mexikanische Ticker fragten Yahoo
+// mit einem Schraegstrich vor der Klassen-/Serien-Kennung an (z.B. "GFNORTE/O.MX"),
+// den Yahoo nicht kennt -> 404 bei jedem Pull. Live verifiziert: "GFNORTEO.MX" (ohne
+// Schraegstrich) trifft ("Grupo Financiero Banorte, Equity"), "GFNORTE/O.MX" trifft
+// nicht. Chirurgisch eng: NUR ein Schraegstrich unmittelbar vor der .MX-Endung wird
+// entfernt. Jede andere Boerse/Kennung (inkl. .KS/.KQ, US-Dash-Formen) laeuft
+// unveraendert durch — im ganzen aktuellen watchlist.json kommt "/" ausschliesslich
+// in .MX-Kennungen vor (grep-verifiziert, 47/47 Treffer), ein breiterer Guard waere
+// unbelegt. EIN Punkt (processOne, s.u.), durch den jeder Yahoo-Aufruf dieser Datei
+// laeuft (quoteSummary, quote, FTS) — kein Guard pro Aufrufer.
+function normalizeYahooSymbol(symbol) {
+  if (typeof symbol !== 'string') return symbol;
+  if (symbol.includes('/') && /\.MX$/i.test(symbol)) {
+    return symbol.replace(/\//g, '');
+  }
+  return symbol;
+}
+
 // Modules die wir brauchen für canonicalInput-Mapping
 const MODULES = [
   'summaryDetail',                      // marketCap, priceToSalesTrailing12Months, forwardPE, trailingPE
@@ -2886,6 +2904,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
 
   async function processOne(stock) {
+    // Tag 645: normalize stock.yahoo_symbol ONCE, before ANY of the several
+    // Yahoo call sites below (price-only quote, full quoteSummary, IPO-date
+    // quote, FTS) read it. A shallow copy — never mutate the shared watchlist
+    // row — so the fix stays local to this pull and the original identifier
+    // (used for snapshot filenames, logging, the KOSDAQ-retry suffix check)
+    // is untouched. Fail-loud: every actual rewrite is logged with both names,
+    // so a bad normalization can never silently pull the wrong company's data.
+    {
+      const _normYahooSymbol = normalizeYahooSymbol(stock.yahoo_symbol);
+      if (_normYahooSymbol !== stock.yahoo_symbol) {
+        _log('WARN', `  yahoo_symbol normalisiert: "${stock.yahoo_symbol}" -> "${_normYahooSymbol}" (${stock.ticker})`);
+        stock = Object.assign({}, stock, { yahoo_symbol: _normYahooSymbol });
+      }
+    }
 
     try {
       // Tag 166: price-only fast-path if recent snapshot exists
@@ -4194,6 +4226,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
+  // Tag 645: MX-Schraegstrich-Normalisierung fuer TDD (belegter Datenfehler 19.08.).
+  normalizeYahooSymbol,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
   acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
   YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,
