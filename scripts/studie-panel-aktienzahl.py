@@ -138,6 +138,22 @@ VERWORFEN = (
      "Ueberleitungsposten von unverwaessert nach verwaessert, kein Bestand"),
 )
 
+# Die erste Fassung dieser Messung lief am selben Tag gegen eine ANDERE
+# E2-Kohorte. Sie steht hier, damit der Wechsel im Report benannt werden kann
+# statt still ersetzt zu werden — die 487 sind nicht "512 minus 25", sondern
+# eine andere Grundgesamtheit.
+VORFASSUNG = {
+    "kohorte": 487,
+    "ereignisfenster_sofort": 407,
+    "ereignisfenster_sofort_prozent": 83.6,
+    "ereignisfenster_zeitraum_prozent": 11.3,
+    "grund": "E2 waehlte die Umsatzquelle je Firmen-Quartal; seit dem "
+             "Neulauf vom 19.08. steht sie je FIRMA fest (laengste Serie zum "
+             "Signalzeitpunkt, Punkt-in-der-Zeit-Fassung). Damit verschwinden "
+             "die Quellen-Nahtstellen (2.663 -> 0) und die Fallzahl waechst "
+             "von 487 auf 512 Firmen.",
+}
+
 BAND_JAHRE = (2012, 2016)
 # Abstandsfenster fuer "vier Quartale spaeter", in Kalendertagen. Uebernommen
 # aus E2 (JAHR_FENSTER), damit beide Etappen dasselbe Jahr meinen.
@@ -155,9 +171,18 @@ BLOCK = 500000
 
 # Plausibilitaetsanker aus den Vor-Etappen. Weichen die eigenen Zahlen ab, ist
 # das ein BEFUND und wird gemeldet — nicht angepasst.
-ANKER_FIRMEN_E1 = 11156
-ANKER_E2_REIF = 487
-ANKER_E2_KALIBRIERUNG = ((90, 1979, 1025), (95, 877, 487))
+#
+# WARUM DIE SOLLWERTE GELESEN UND NICHT EINGETIPPT WERDEN: sie standen hier
+# zuerst als feste Zahlen (487 reife Firmen). Wenige Stunden spaeter stellte E2
+# seine Quellenwahl um — von "je Firmen-Quartal" auf "je Firma" — und die
+# Kohorte wurde 512. Der feste Anker haette den Lauf dann zwar korrekt
+# angehalten, aber aus dem falschen Grund: nicht weil die Rekonstruktion kaputt
+# war, sondern weil die eingetippte Zahl veraltet war. Ein Anker, der die
+# Wahrheit selbst mitfuehrt, kann nicht veralten — er zeigt weiterhin auf den
+# veroeffentlichten E2-Report und schlaegt nur an, wenn die Rekonstruktion
+# WIRKLICH von ihm abweicht.
+ANKER_E1_FIRMEN_FELD = ("fiskalkalender", "firmen_mit_geschaeftsjahresende")
+E2_REPORT = os.path.join("reports", "studie", "E2-basisraten-2026-08-19.json")
 
 GELESENE_PFADE = []
 
@@ -271,6 +296,16 @@ def anteil(zaehler_wert, nenner_wert):
     return 100.0 * zaehler_wert / nenner_wert
 
 
+def proz_aus(zaehler_wert, nenner_wert, stellen=1):
+    """Anteil rechnen und rendern in EINEM Schritt.
+
+    Warum zusammen: getrennt verleitet die Kombination `proz(anteil(a, b) or
+    0.0)` dazu, ein NICHT BERECHENBAR in eine gemessene Null zu verwandeln —
+    genau der Ausgang, den R5 als schlimmsten benennt. Wer keinen Zwischenwert
+    in die Hand bekommt, kann ihn auch nicht mit `or` ueberschreiben."""
+    return proz(anteil(zaehler_wert, nenner_wert), stellen)
+
+
 def zeitstempel():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -362,6 +397,12 @@ def lies_werte(con, berichte, zaehler):
     hat 64 Millionen Zeilen und keinen Index (R14d), und die Zwischenmenge
     aller Fassungen waere unnoetig gross."""
     je_firma = defaultdict(dict)
+    # Welche Schluessel schon als widerspruechlich gemeldet wurden. Ohne das
+    # zaehlt derselbe Widerspruch bei drei oder mehr Fassungen je nach
+    # Zeilenreihenfolge ein- oder zweimal — und die Reihenfolge ist ohne
+    # ORDER BY nicht festgelegt (ein Index waere nach R14d zu teuer). Eine
+    # Diagnosezahl, die vom Ausfuehrungsplan abhaengt, ist keine Messung.
+    konflikt_schluessel = set()
     platzhalter = ",".join("?" * len(KANDIDAT_TAGS))
     cur = con.execute(
         "SELECT adsh, tag, version, coreg, ddate, qtrs, value FROM fakt"
@@ -383,7 +424,13 @@ def lies_werte(con, berichte, zaehler):
                 continue
             traeger = berichte.get(adsh)
             if traeger is None:
-                zaehler["verworfen_nicht_periodisch"] += 1
+                # Bewusst neutral benannt: der Bericht fehlt in der Map, weil
+                # er nicht periodisch ist ODER keine Kennung ODER kein
+                # Annahmedatum traegt ODER gar nicht in `bericht` steht. Diese
+                # vier Gruende sind in `lies_berichte` einzeln gezaehlt; sie
+                # hier alle "nicht periodisch" zu nennen waere eine falsche
+                # Grundangabe (R5 verlangt den GRUND, nicht irgendein Etikett).
+                zaehler["verworfen_kein_gueltiger_bericht"] += 1
                 continue
             if ordinal(ddate) is None:
                 zaehler["verworfen_stichtag_unlesbar"] += 1
@@ -407,7 +454,8 @@ def lies_werte(con, berichte, zaehler):
                 zaehler["werte_spaetere_fassung"] += 1
                 if accepted < vorhanden[0]:
                     je_firma[cik][schluessel] = (accepted, value)
-                if value != vorhanden[1]:
+                if value != vorhanden[1] and (cik, schluessel) not in konflikt_schluessel:
+                    konflikt_schluessel.add((cik, schluessel))
                     zaehler["werte_fassungskonflikt"] += 1
     return je_firma
 
@@ -560,7 +608,7 @@ def issued_gegen_outstanding(je_firma):
 
 # -- Stufe 4: Verwaesserung ---------------------------------------------------
 
-def verwaesserung(je_firma, tag):
+def verwaesserung(je_firma, tag, zaehler=None):
     """Frage 5: Wie stark bewegt sich die Aktienzahl ueber vier Quartale?
 
     Verglichen werden Stichtage im Abstand von 330 bis 380 Kalendertagen —
@@ -575,6 +623,8 @@ def verwaesserung(je_firma, tag):
     ausgewiesen — als Untergrenze der Ueberschneidung, nicht als Korrektur."""
     familie = FAMILIE[tag]
     q_quartal = QTRS_QUARTAL[familie]
+    if zaehler is not None:
+        zaehler["verwaesserung_unter_zwei_werten_" + tag] += 0
     je_firma_max = {}
     split_verdacht = set()
     paare = 0
@@ -589,6 +639,11 @@ def verwaesserung(je_firma, tag):
             if o is not None:
                 reihe.append((o, value))
         if len(reihe) < 2:
+            # R5: gezaehlt, nicht stillschweigend weggelassen. Sonst ist der
+            # Unterschied zwischen "Firma hat sich nicht bewegt" und "Firma
+            # hatte nie zwei Messpunkte" aus dem Report nicht mehr ablesbar.
+            if zaehler is not None:
+                zaehler["verwaesserung_unter_zwei_werten_" + tag] += 1
             continue
         reihe.sort()
         groesste = None
@@ -650,6 +705,41 @@ def verwaesserung(je_firma, tag):
 
 # -- Stufe 5: die 487 Firmen mit reifem Erst-Ereignis --------------------------
 
+def lies_e2_sollwerte(pfad):
+    """Die veroeffentlichten E2-Zahlen aus ihrem eigenen Report holen.
+
+    Fehlt der Report oder eine Zahl darin, ist das ein Abbruch und kein
+    Rueckfall auf einen Vorgabewert: ein Anker, der sich selbst erfinden kann,
+    ankert nichts (R5)."""
+    pruefe_mauer(pfad)
+    if not os.path.isfile(pfad):
+        raise AktienzahlFehler(
+            "E2-Report nicht gefunden: " + kurzpfad(pfad) + ". Ohne ihn gibt es "
+            "keinen Sollwert — der Lauf haelt an, statt einen zu erfinden.")
+    with open(pfad, encoding="utf-8") as fh:
+        daten = json.load(fh)
+    try:
+        su = daten["signale"]["S-U"]
+        kalibrierung = tuple((s["p"], s["feuerungen_band"], s["firmen_reif"])
+                             for s in su["kalibrierung"])
+        reif = su["firmen_reif"]
+        firmen_e1 = daten[ANKER_E1_FIRMEN_FELD[0]][ANKER_E1_FIRMEN_FELD[1]]
+    except (KeyError, TypeError) as fehler:
+        raise AktienzahlFehler(
+            "E2-Report hat nicht die erwartete Form (" + str(fehler) + "). "
+            "Der Anker kann nicht gesetzt werden.")
+    return {"reif": reif, "kalibrierung": kalibrierung, "firmen_e1": firmen_e1,
+            "quelle": kurzpfad(os.path.abspath(pfad))}
+
+
+def anker_stimmt(ist, soll):
+    """Reiner Vergleich, damit er ohne den teuren E2-Lauf pruefbar ist.
+
+    Bewusst exakt: eine Abweichung von einer einzigen Firma ist eine andere
+    Grundgesamtheit und darf nicht durchrutschen."""
+    return tuple(ist) == tuple(soll)
+
+
 def lade_e2_modul(pfad):
     """Das E2-Skript als Bibliothek. Der Bindestrich im Namen verbietet den
     normalen Import — geladen wird ueber die Datei.
@@ -667,7 +757,7 @@ def lade_e2_modul(pfad):
     return modul
 
 
-def hole_e2_reif(e2, panel_pfad, arbeit_pfad):
+def hole_e2_reif(e2, panel_pfad, arbeit_pfad, soll):
     """Die S-U-Kette aus E2, Schritt fuer Schritt mit E2s eigenen Funktionen.
 
     Der Anker ist der Beweis, dass der Aufruf stimmt: kommen nicht genau die
@@ -685,31 +775,56 @@ def hole_e2_reif(e2, panel_pfad, arbeit_pfad):
     finally:
         panel.close()
         arbeit.close()
-    # Seit dem 19.08. waehlt E2 die Umsatzquelle je FIRMA (zum Signalzeitpunkt
-    # laengste Serie) statt je Quartal; die Ketten werden deshalb aus den
-    # Reihen JE QUELLE gebaut, nicht aus der gewaehlten Mischreihe. Der Anker
-    # unten faengt ab, dass daraus stillschweigend eine andere Grundgesamtheit
-    # wird — er MUSS reissen, solange er auf dem alten Stand steht.
-    alle, gewaehlt = e2.firmenreihen(je_firma, e2.UMSATZ_QUELLEN, True, zaehler,
-                                    "umsatz_")
-    _, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
-    letzte, schritte = e2.kalibriere(a_saetze, gewaehlt, zaehler, "umsatz_")
+    # Diese Reihenfolge spiegelt E2s eigenes `auswertung()` fuer die
+    # S-U-Familie. Sie wird GELESEN, nicht geraten — und sie hat sich am
+    # 19.08. geaendert: seit E2 die Umsatzquelle je FIRMA waehlt (zum
+    # Signalzeitpunkt laengste Serie) statt je Quartal, werden die Ketten aus
+    # den Reihen JE QUELLE gebaut statt aus der gewaehlten Mischreihe —
+    # `wachstum_und_beschleunigung` bekommt seither `alle` statt `gewaehlt`.
+    # Der alte Aufruf waere mitten in der Rechnung an einem Typfehler
+    # abgestuerzt. Deshalb faengt der Block Schnittstellen-Drift ab und sagt,
+    # was zu tun ist, statt einen Stapelabzug auszuspucken.
+    try:
+        alle, gewaehlt = e2.firmenreihen(je_firma, e2.UMSATZ_QUELLEN, True,
+                                         zaehler, "umsatz_")
+        _, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
+        letzte, schritte = e2.kalibriere(a_saetze, gewaehlt, zaehler, "umsatz_")
+    except (TypeError, AttributeError, ValueError, KeyError) as fehler:
+        raise AktienzahlFehler(
+            "E2-SCHNITTSTELLE GEAENDERT: die S-U-Kette laesst sich nicht mehr "
+            "in dieser Reihenfolge rufen (" + type(fehler).__name__ + ": "
+            + str(fehler) + "). Dieses Skript baut die Kette NICHT nach, es "
+            "ruft E2s Originalcode — wenn der sich aendert, muss der Aufruf "
+            "hier nachgezogen werden. Zu tun: `auswertung()` in "
+            "scripts/studie-basisraten.py lesen und die S-U-Schleife hier "
+            "spiegeln. Nicht raten: ein falsch gerufener Aufbau liefert "
+            "Zahlen, die plausibel aussehen und eine andere Kohorte meinen.")
 
     ist = tuple((s["p"], s["feuerungen_band"], s["firmen_reif"]) for s in schritte)
-    if ist != ANKER_E2_KALIBRIERUNG:
+    if not anker_stimmt(ist, soll["kalibrierung"]):
         raise AktienzahlFehler(
             "E2-ANKER GERISSEN: die Rekonstruktion der S-U-Kette liefert "
-            + str(ist) + " statt " + str(ANKER_E2_KALIBRIERUNG) + ". Damit ist "
-            "nicht sicher, dass dies dieselben Firmen sind wie im E2-Report — "
-            "jede Zahl ueber 'die 487' waere eine andere Grundgesamtheit.")
-    if letzte["firmen_reif"] != ANKER_E2_REIF:
+            + str(ist) + " statt " + str(soll["kalibrierung"]) + " (laut "
+            + soll["quelle"] + "). Damit ist nicht sicher, dass dies dieselben "
+            "Firmen sind wie im E2-Report — jede Zahl ueber 'die "
+            + str(soll["reif"]) + "' waere eine andere Grundgesamtheit.")
+    if letzte["firmen_reif"] != soll["reif"]:
         raise AktienzahlFehler(
             "E2-ANKER GERISSEN: " + str(letzte["firmen_reif"])
-            + " reife Firmen statt " + str(ANKER_E2_REIF) + ".")
+            + " reife Firmen statt " + str(soll["reif"]) + ".")
+    # Geankert wurde bisher das ZAEHLFELD, weitergereicht wird die LISTE.
+    # Fielen die beiden je auseinander, waere der Anker gruen und der Nenner
+    # trotzdem ein anderer. Also die Sache pruefen, nicht ihren Stellvertreter.
+    if len(letzte["reif"]) != letzte["firmen_reif"]:
+        raise AktienzahlFehler(
+            "E2-ANKER GERISSEN: die Liste der reifen Firmen hat "
+            + str(len(letzte["reif"])) + " Eintraege, das Zaehlfeld meldet "
+            + str(letzte["firmen_reif"]) + ". Der Anker haette das Zaehlfeld "
+            "bestaetigt, gerechnet wuerde mit der Liste.")
     return letzte["reif"], gewaehlt, schritte
 
 
-def abdeckung_der_e2_firmen(reif, gewaehlt, je_firma):
+def abdeckung_der_e2_firmen(reif, gewaehlt, je_firma, zaehler=None):
     """Frage 4, die entscheidende Zahl.
 
     Drei Stufen, absteigend streng — weil "hat eine Aktienzahl" und "hat sie
@@ -726,6 +841,8 @@ def abdeckung_der_e2_firmen(reif, gewaehlt, je_firma):
     ergebnis = {}
     for tag, familie, _ in KANDIDATEN:
         q_quartal = QTRS_QUARTAL[familie]
+        if zaehler is not None:
+            zaehler["e2_firma_ohne_umsatzreihe_" + tag] += 0
         hat_irgendwas = 0
         voll_gedeckt = 0
         ereignisfenster = 0
@@ -740,6 +857,12 @@ def abdeckung_der_e2_firmen(reif, gewaehlt, je_firma):
             reihe = gewaehlt.get(cik, {})
             umsatzquartale = set(reihe)
             if not umsatzquartale:
+                # Sollte per Konstruktion nicht vorkommen (die reifen Firmen
+                # stammen aus genau dieser Auswahl) — aber das ist eine
+                # Annahme ueber fremden Code, keine Eigenschaft dieses hier.
+                # Also gezaehlt statt geglaubt (R5).
+                if zaehler is not None:
+                    zaehler["e2_firma_ohne_umsatzreihe_" + tag] += 1
                 continue
             gedeckt = len(umsatzquartale & stichtage)
             quote = gedeckt / len(umsatzquartale)
@@ -967,11 +1090,43 @@ def markdown(daten):
                       + proz(e["zugewinn_durch_union_prozent"]) + " %.")
         zeilen.append("")
 
-    zeilen.append("## 4. Die entscheidende Zahl: die " + str(ANKER_E2_REIF)
-                  + " Firmen aus E2")
+    zeilen.append("## 4. Die entscheidende Zahl: die "
+                  + zahl(daten["e2_kohorte"]) + " Firmen aus E2")
     zeilen.append("")
     zeilen.append(daten["e2_herkunft"])
     zeilen.append("")
+    if daten["e2_kohorte"] != VORFASSUNG["kohorte"]:
+        v = VORFASSUNG
+        u = daten["e2_abdeckung"].get("UNION-sofort") if daten["e2_abdeckung"] else None
+        zeilen.append("> **Die Bezugsgroesse hat sich am selben Tag geaendert.** "
+                      "Eine erste Fassung dieser Messung lief gegen **"
+                      + zahl(v["kohorte"]) + "** Firmen. " + v["grund"] + " "
+                      "Diese Fassung rechnet gegen die **"
+                      + zahl(daten["e2_kohorte"]) + "**. Das ist kein "
+                      "Zuwachs von " + zahl(daten["e2_kohorte"] - v["kohorte"])
+                      + " Firmen auf derselben Liste, sondern eine **andere "
+                      "Grundgesamtheit** — die Zahlen der beiden Fassungen "
+                      "duerfen nicht vermischt werden.")
+        zeilen.append(">")
+        zeilen.append("> Der Befund selbst ist davon kaum beruehrt, und das "
+                      "ist die eigentliche Nachricht: die Abdeckung im "
+                      "Ereignisfenster lag mit den Stichtagszahlen bei **"
+                      + proz(v["ereignisfenster_sofort_prozent"]) + " %** ("
+                      + zahl(v["ereignisfenster_sofort"]) + " von "
+                      + zahl(v["kohorte"]) + ") und liegt jetzt bei **"
+                      + (proz(u["firmen_ereignisfenster_gedeckt_prozent"])
+                         if u else "NICHT BERECHENBAR")
+                      + " %** (" + (zahl(u["firmen_ereignisfenster_gedeckt"])
+                                    if u else "—") + " von "
+                      + zahl(daten["e2_kohorte"]) + "); mit "
+                      "Periodendurchschnitten " + proz(v["ereignisfenster_zeitraum_prozent"])
+                      + " % gegenueber jetzt "
+                      + (proz(daten["e2_abdeckung"]["UNION-zeitraum"]
+                              ["firmen_ereignisfenster_gedeckt_prozent"])
+                         if daten["e2_abdeckung"] else "NICHT BERECHENBAR")
+                      + " %. Die Empfehlung haengt also nicht an der "
+                      "Kohortenwahl.")
+        zeilen.append("")
     if not daten["e2_abdeckung"]:
         zeilen.append("**NICHT BERECHENBAR (R5)** — ohne die Rekonstruktion der "
                       "E2-Firmenliste gibt es diese Zahl nicht. Sie wird hier "
@@ -1138,7 +1293,8 @@ def schreibe_report(daten, md_pfad, json_pfad):
 
 # -- Die Gesamtauswertung -----------------------------------------------------
 
-def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
+def auswertung(panel_pfad, e2_pfad, arbeit_pfad, e2_report, ohne_e2=False):
+    soll = lies_e2_sollwerte(e2_report)
     zaehler = defaultdict(int)
     con = oeffne_nur_lesend(panel_pfad)
     try:
@@ -1162,12 +1318,13 @@ def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
 
     a = abdeckung_je_kennung(je_firma, len(firmen), len(berichts_fq))
     naht = naht_je_familie(je_firma)
-    verw = dict((t, verwaesserung(je_firma, t)) for t, _, _ in KANDIDATEN)
+    verw = dict((t, verwaesserung(je_firma, t, zaehler))
+                for t, _, _ in KANDIDATEN)
     rueckfall = issued_gegen_outstanding(je_firma)
 
     anker = [{"name": "Firmen im Entdeckungsfenster (E1)",
-              "soll": ANKER_FIRMEN_E1, "ist": len(firmen),
-              "status": ("stimmt" if len(firmen) == ANKER_FIRMEN_E1
+              "soll": soll["firmen_e1"], "ist": len(firmen),
+              "status": ("stimmt" if len(firmen) == soll["firmen_e1"]
                          else "ABWEICHUNG — BEFUND")}]
 
     e2_abdeckung = {}
@@ -1175,15 +1332,20 @@ def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
                    "`--ohne-e2` uebersprungen.")
     if not ohne_e2:
         e2 = lade_e2_modul(e2_pfad)
-        reif, gewaehlt, schritte = hole_e2_reif(e2, panel_pfad, arbeit_pfad)
-        e2_abdeckung = abdeckung_der_e2_firmen(reif, gewaehlt, je_firma)
+        reif, gewaehlt, schritte = hole_e2_reif(e2, panel_pfad, arbeit_pfad,
+                                               soll)
+        e2_abdeckung = abdeckung_der_e2_firmen(reif, gewaehlt, je_firma,
+                                              zaehler)
+        # Dieser Eintrag kann nur "stimmt" tragen: eine Abweichung hat den
+        # Lauf oben bereits abgebrochen. Er steht trotzdem im Report, damit
+        # sichtbar ist, GEGEN WAS geankert wurde — nicht als weicher Pfad.
         anker.append({"name": "reife Erst-Ereignisse S-U (E2)",
-                      "soll": ANKER_E2_REIF, "ist": len(reif),
-                      "status": "stimmt" if len(reif) == ANKER_E2_REIF
+                      "soll": soll["reif"], "ist": len(reif),
+                      "status": "stimmt" if len(reif) == soll["reif"]
                       else "ABWEICHUNG — BEFUND"})
         e2_herkunft = (
             "Die Firmenliste steht **nicht** im E2-Report — dort steht nur "
-            "die Zahl 487. Sie wurde deshalb rekonstruiert, indem der "
+            "die Zahl " + zahl(soll["reif"]) + ". Sie wurde deshalb rekonstruiert, indem der "
             "**Originalcode** von E2 (`scripts/studie-basisraten.py`) als "
             "Bibliothek gerufen wurde, Schritt fuer Schritt in derselben "
             "Reihenfolge. Dass es dieselben Firmen sind, ist an vier Zahlen "
@@ -1212,6 +1374,8 @@ def auswertung(panel_pfad, e2_pfad, arbeit_pfad, ohne_e2=False):
         "ergebnisdaten_beruehrt": False,
         "gelesene_pfade": list(GELESENE_PFADE),
         "firmen_gesamt": len(firmen),
+        "e2_kohorte": soll["reif"],
+        "e2_sollquelle": soll["quelle"],
         "firmen_je_berichtsjahr": dict(
             (str(j), n) for j, n in sorted(firmen_je_berichtsjahr.items())
             if BAND_JAHRE[0] <= j <= BAND_JAHRE[1]),
@@ -1267,14 +1431,14 @@ def kurzfassung(daten):
         "Verwaessert (" + zahl(d["firmenquartale"]) + " Firmen-Quartale) ist "
         "knapp duenner belegt als unverwaessert (" + zahl(b["firmenquartale"])
         + "), Unterschied "
-        + proz(abs(anteil(b["firmenquartale"] - d["firmenquartale"],
-                          b["firmenquartale"]) or 0.0))
+        + proz_aus(abs(b["firmenquartale"] - d["firmenquartale"]),
+                   b["firmenquartale"])
         + " % — beide aber deutlich duenner als die Stichtagszahlen.")
     if daten["e2_abdeckung"]:
         u = daten["e2_abdeckung"]["UNION-sofort"]
         z = daten["e2_abdeckung"]["UNION-zeitraum"]
         saetze.append(
-            "Die entscheidende Zahl: von den " + str(ANKER_E2_REIF) + " Firmen "
+            "Die entscheidende Zahl: von den " + zahl(daten["e2_kohorte"]) + " Firmen "
             "mit reifem Erst-Ereignis haben "
             + zahl(u["firmen_ereignisfenster_gedeckt"]) + " ("
             + proz(u["firmen_ereignisfenster_gedeckt_prozent"]) + " %) eine "
@@ -1322,8 +1486,8 @@ def empfehlung(daten):
         + proz(b["firmenquartale_anteil_prozent"]) + " %), verwaessert "
         + zahl(d["firmenquartale"]) + " (" + proz(d["firmenquartale_anteil_prozent"])
         + " %). Die unverwaesserte Zahl ist also um "
-        + proz(abs(anteil(b["firmenquartale"] - d["firmenquartale"],
-                          b["firmenquartale"]) or 0.0))
+        + proz_aus(abs(b["firmenquartale"] - d["firmenquartale"]),
+                   b["firmenquartale"])
         + " % besser belegt — ein kleiner Vorsprung. Dazu kommen "
         + zahl(k["firmenquartale"]) + " Firmen-Quartale in der gemeinsamen "
         "Kennung `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`, die "
@@ -1339,7 +1503,7 @@ def empfehlung(daten):
         saetze.append(
             "**Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf "
             "das es ankommt (Ereignisquartal plus vier Folgequartale bei den "
-            + str(ANKER_E2_REIF) + " Firmen), liefert der verwaesserte "
+            + zahl(daten["e2_kohorte"]) + " Firmen), liefert der verwaesserte "
             "Durchschnitt " + proz(ed["firmen_ereignisfenster_gedeckt_prozent"])
             + " % Abdeckung, der unverwaesserte "
             + proz(eb["firmen_ereignisfenster_gedeckt_prozent"])
@@ -1400,12 +1564,12 @@ def r10_verdikt(daten):
     u_sofort = daten["e2_abdeckung"]["UNION-sofort"]
     u_zeit = daten["e2_abdeckung"]["UNION-zeitraum"]
     v = daten["verwaesserung"]["CommonStockSharesOutstanding"]
-    bewegt = v["schwellen"]["ueber_5_prozent"]["jahrespaare_anteil_prozent"] or 0.0
-    quote = u_sofort["firmen_ereignisfenster_gedeckt_prozent"] or 0.0
+    bewegt = v["schwellen"]["ueber_5_prozent"]["jahrespaare_anteil_prozent"]
+    quote = u_sofort["firmen_ereignisfenster_gedeckt_prozent"]
     begruendung = [
         "Der Nenner ist da, wo er gebraucht wird: "
         + zahl(u_sofort["firmen_ereignisfenster_gedeckt"]) + " von "
-        + str(ANKER_E2_REIF) + " Firmen (" + proz(quote) + " %) tragen eine "
+        + zahl(daten["e2_kohorte"]) + " Firmen (" + proz(quote) + " %) tragen eine "
         "Stichtags-Aktienzahl im Ereignisquartal und in allen vier "
         "Folgequartalen.",
         "Mit Periodendurchschnitten waeren es nur "
@@ -1422,7 +1586,15 @@ def r10_verdikt(daten):
         "Praeregistrierung — genauso wie R10 den Zukauf-Waechter offen "
         "als nicht berechenbar fuehrt.",
     ]
-    if quote >= 90.0:
+    if quote is None:
+        # R5: ohne Quote gibt es kein Urteil. Frueher stand hier `or 0.0`, und
+        # eine fehlende Messung haette das Urteil "NEIN" erzeugt — eine
+        # inhaltliche Aussage aus einer Luecke. Das ist schlimmer als kein
+        # Urteil.
+        urteil = ("NICHT BERECHENBAR — die Abdeckungsquote im Ereignisfenster "
+                  "liess sich nicht bestimmen (kein Nenner). Ohne sie wird "
+                  "hier kein Urteil ueber R10 gefaellt.")
+    elif quote >= 90.0:
         urteil = ("JA — R10 ist in dieser Form praeregistrierbar, mit einer "
                   "Auflage (Split-Vorbehalt).")
     elif quote >= 70.0:
@@ -1558,12 +1730,12 @@ def selbsttest(verzeichnis):
               "muessen weg sein." % gesamt)
     _behaupte(zaehler["verworfen_coreg"] == 1 and
               zaehler["verworfen_firmeneigene_taxonomie"] == 1 and
-              zaehler["verworfen_nicht_periodisch"] == 1,
-              "Verwerfungsgruende: coreg %s / firmeneigen %s / nicht-periodisch "
-              "%s — erwartet je 1"
+              zaehler["verworfen_kein_gueltiger_bericht"] == 1,
+              "Verwerfungsgruende: coreg %s / firmeneigen %s / ohne gueltigen "
+              "Bericht %s — erwartet je 1"
               % (zaehler["verworfen_coreg"],
                  zaehler["verworfen_firmeneigene_taxonomie"],
-                 zaehler["verworfen_nicht_periodisch"]))
+                 zaehler["verworfen_kein_gueltiger_bericht"]))
     print("  [2] Entdeckung sieht 4 amtliche und 1 firmeneigene Kennung; nach "
           "der Auswahl bleiben 7 Werte, jeder Wegwurf ist einzeln gezaehlt.")
 
@@ -1749,19 +1921,29 @@ def selbsttest(verzeichnis):
     # --- Pruefung 10: der E2-Anker meldet Abweichungen -----------------------
     # Ein Anker, der Abweichungen schluckt, ist kein Anker. Geprueft wird der
     # Vergleich selbst, ohne den teuren E2-Lauf.
-    gut = ((90, 1979, 1025), (95, 877, 487))
-    schlecht = ((90, 1979, 1025), (95, 877, 486))
-    _behaupte(gut == ANKER_E2_KALIBRIERUNG,
+    soll_probe = ((90, 2072, 1066), (95, 925, 512))
+    _behaupte(anker_stimmt(((90, 2072, 1066), (95, 925, 512)), soll_probe),
               "Der Anker-Vergleich meldet bei EXAKT passenden Zahlen einen "
               "Unterschied — er wuerde jeden Lauf abbrechen.")
-    _behaupte(schlecht != ANKER_E2_KALIBRIERUNG,
+    _behaupte(not anker_stimmt(((90, 2072, 1066), (95, 925, 511)), soll_probe),
               "Eine Abweichung von einer einzigen Firma rutscht durch den "
               "E2-Anker — dann ist er kein Anker.")
-    _behaupte(ANKER_E2_REIF == 487 and ANKER_FIRMEN_E1 == 11156,
-              "Die Ankerwerte stimmen nicht mit den veroeffentlichten Reports "
-              "ueberein (E1: 11.156 Firmen, E2: 487 reife Firmen).")
-    print("  [10] Plausibilitaetsanker: exakt passend -> gruen, eine Firma "
-          "daneben -> Abweichung; die Sollwerte sind die aus E1 und E2.")
+    _behaupte(not anker_stimmt(((95, 925, 512),), soll_probe),
+              "Ein verkuerzter Kalibrierungsweg rutscht durch — der Anker "
+              "prueft dann nur noch den letzten Schritt.")
+    try:
+        lies_e2_sollwerte(os.path.join(verzeichnis, "gibtsnicht.json"))
+    except AktienzahlFehler as fehler:
+        _behaupte("nicht gefunden" in str(fehler),
+                  "Ein fehlender E2-Report bricht ab, aber mit falscher "
+                  "Meldung: %s" % fehler)
+    else:
+        raise SystemExit(
+            "SELBSTTEST ROT: ein fehlender E2-Report liefert trotzdem "
+            "Sollwerte — der Anker erfindet sich selbst.")
+    print("  [10] Plausibilitaetsanker: exakt passend -> gruen; eine Firma "
+          "daneben und ein verkuerzter Weg -> Abweichung; fehlender E2-Report "
+          "-> Abbruch statt Vorgabewert.")
 
     # --- Pruefung 11: traegt der Rueckfall 'ausgegeben' statt 'im Umlauf'? ---
     # Von Hand gebaut, nicht aus dem Testpanel: vier Firmen, drei davon mit
@@ -1796,7 +1978,55 @@ def selbsttest(verzeichnis):
     print("  [11] Rueckfall-Regel: von 3 Stichtagen mit beiden Kennungen "
           "halten 2 (66,7 %), 1 verletzt sie, 1 ist identisch.")
 
-    print("Selbsttest gruen (11 Pruefungen).")
+    # --- Pruefung 12: NICHT BERECHENBAR wird nie zu einer gemessenen Null ---
+    # Karls haeufigste Bugklasse: eine Luecke, die als 0,0 % im Report landet.
+    # Ein Review fand genau das an vier Stellen (`... or 0.0`), deshalb hat
+    # diese Pruefung jetzt einen festen Platz.
+    _behaupte(anteil(5, 0) is None,
+              "Ein Nenner von null liefert %s statt None — die Luecke wird zur "
+              "Zahl." % anteil(5, 0))
+    _behaupte(proz(None) == "NICHT BERECHENBAR",
+              "None rendert als %r statt als NICHT BERECHENBAR" % proz(None))
+    _behaupte(proz_aus(5, 0) == "NICHT BERECHENBAR",
+              "proz_aus bei Nenner null: %r statt NICHT BERECHENBAR"
+              % proz_aus(5, 0))
+    _behaupte(proz_aus(1, 4) == "25.0",
+              "proz_aus(1, 4): %r statt '25.0'" % proz_aus(1, 4))
+    _behaupte(proz_aus(0, 4) == "0.0",
+              "Eine ECHTE Null muss als 0.0 durchkommen, sonst verschweigt der "
+              "Report gemessene Nullen: %r" % proz_aus(0, 4))
+    # Und das Urteil: ohne Quote kein Urteil, statt eines falschen "NEIN".
+    leer = {"e2_abdeckung": {"UNION-sofort": {
+                "firmen_ereignisfenster_gedeckt": 0,
+                "firmen_ereignisfenster_gedeckt_prozent": None},
+            "UNION-zeitraum": {
+                "firmen_ereignisfenster_gedeckt": 0,
+                "firmen_ereignisfenster_gedeckt_prozent": None}},
+            "e2_kohorte": 0,
+            "verwaesserung": {"CommonStockSharesOutstanding": {
+                "schwellen": {"ueber_5_prozent": {
+                    "jahrespaare_anteil_prozent": None}},
+                "firmen_mit_splitverdacht_prozent": None}}}
+    urteil = r10_verdikt(leer)["urteil"]
+    _behaupte(urteil.startswith("NICHT BERECHENBAR"),
+              "Ohne Abdeckungsquote lautet das Urteil %r — aus einer Luecke "
+              "wird eine inhaltliche Aussage." % urteil[:60])
+    # Ein Grund, der nie vorkam, muss trotzdem im Report stehen (mit 0).
+    probe = defaultdict(int)
+    verwaesserung({}, "CommonStockSharesOutstanding", probe)
+    _behaupte("verwaesserung_unter_zwei_werten_CommonStockSharesOutstanding"
+              in probe,
+              "Ein Grund, der null Mal vorkam, fehlt in der Zaehlertabelle — "
+              "dann sieht 'kam nicht vor' aus wie 'wurde nie geprueft'.")
+    _behaupte(probe["verwaesserung_unter_zwei_werten_"
+                    "CommonStockSharesOutstanding"] == 0,
+              "Der vorgemerkte Grund startet nicht bei 0.")
+    print("  [12] Luecken bleiben Luecken: Nenner null -> NICHT BERECHENBAR, "
+          "eine echte Null bleibt 0,0 %, ein nie eingetretener Grund steht "
+          "trotzdem mit 0 im Report, und ohne Quote gibt es kein R10-Urteil "
+          "statt eines falschen NEIN.")
+
+    print("Selbsttest gruen (12 Pruefungen).")
     return 0
 
 
@@ -1840,9 +2070,15 @@ SABOTAGEN = (
     ("9 Dubletten-Abbruch", "eine doppelte Berichtsnummer geht still durch",
      "        if adsh in gesehen:",
      "        if False:"),
-    ("10 Plausibilitaetsanker", "der Ankerwert wird um eine Firma verstellt",
-     "ANKER_E2_REIF = ",
-     "ANKER_E2_REIF = 486"),
+    ("10 Plausibilitaetsanker",
+     "der Anker-Vergleich sieht nur noch den letzten Kalibrierungsschritt",
+     "def anker_stimmt(ist, soll):",
+     "def anker_stimmt(ist, soll): return tuple(ist)[-1:] == tuple(soll)[-1:]"),
+    ("12 Luecke bleibt Luecke",
+     "der alte Fallback kehrt zurueck: fehlender Anteil wird zu 0,0 Prozent",
+     "def proz_aus(zaehler_wert, nenner_wert, stellen=1):",
+     "def proz_aus(zaehler_wert, nenner_wert, stellen=1):\n"
+     "    return proz(anteil(zaehler_wert, nenner_wert) or 0.0, stellen)"),
     ("11 Rueckfall-Regel",
      "die Stichtagswerte werden an der falschen Periodenlaenge gesucht",
      '            if qtrs != "0" or tag not in ("CommonStockSharesIssued",',
@@ -1919,6 +2155,9 @@ def haupt():
                     help="ueberspringt die teure E2-Rekonstruktion (Frage 4 "
                          "bleibt dann NICHT BERECHENBAR)")
     ap.add_argument("--data-root", default=None)
+    ap.add_argument("--e2-report", default=E2_REPORT,
+                    help="der veroeffentlichte E2-Report, aus dem die "
+                         "Sollwerte des Plausibilitaetsankers kommen")
     ap.add_argument("--ziel", default=os.path.join(
         "reports", "studie", "E2-aktienzahl-2026-08-19.md"))
     args = ap.parse_args()
@@ -1939,7 +2178,8 @@ def haupt():
     e2_pfad = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "studie-basisraten.py")
     arbeit_pfad = os.path.join(wurzel, "work", "E2-aktienzahl-zwischenstand.sqlite")
-    daten = auswertung(panel_pfad, e2_pfad, arbeit_pfad, args.ohne_e2)
+    daten = auswertung(panel_pfad, e2_pfad, arbeit_pfad, args.e2_report,
+                       args.ohne_e2)
     json_pfad = os.path.splitext(args.ziel)[0] + ".json"
     schreibe_report(daten, args.ziel, json_pfad)
     print("Report: " + args.ziel + " ("

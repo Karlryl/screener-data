@@ -8,7 +8,7 @@ Warum das vorher feststehen muss: R10 verlangt, dass Wachstum **je Aktie** nachg
 - Am haeufigsten vorhanden ist `EntityCommonStockSharesOutstanding` (10.460 Firmen, 93.8 %) — aber nur 19.8 % dieser Werte haben einen Stichtag, der auf ein Quartalsende faellt. Fuer eine quartalsgenaue Rechnung ist die haeufigste Kennung damit die schlechteste.
 - Brauchbar sind die Bilanz-Stichtagszahlen: `CommonStockSharesOutstanding` steht bei 9.069 Firmen (81.3 %) und deckt 62.8 % der Firmen-Quartale, mit 87.3 % passenden Stichtagen.
 - Verwaessert (89.455 Firmen-Quartale) ist knapp duenner belegt als unverwaessert (96.757), Unterschied 7.5 % — beide aber deutlich duenner als die Stichtagszahlen.
-- Die entscheidende Zahl: von den 487 Firmen mit reifem Erst-Ereignis haben 407 (83.6 %) eine Stichtags-Aktienzahl im Ereignisquartal UND in allen vier Folgequartalen. Mit Periodendurchschnitten waeren es nur 55 (11.3 %).
+- Die entscheidende Zahl: von den 512 Firmen mit reifem Erst-Ereignis haben 430 (84.0 %) eine Stichtags-Aktienzahl im Ereignisquartal UND in allen vier Folgequartalen. Mit Periodendurchschnitten waeren es nur 60 (11.7 %).
 - Die Aktienzahl bewegt sich, und zwar deutlich: in 39.7 % aller gemessenen Firmenjahre aendert sie sich um mehr als 5 %, in 23.7 % um mehr als 20 % (Median je Firmenjahr: 2.5 %). Ueber das ganze Fenster trifft es 55.9 % der Firmen mindestens einmal. R10 ist also keine Division durch eine Konstante.
 - Ein Namenswechsel wie beim Umsatz liegt **nicht** vor — keine Kennung verschwindet oder taucht neu auf. Wohl aber lohnt die Familie: alle drei Stichtags-Kennungen zusammen decken 20.8 % mehr Firmen-Quartale als die beste einzelne.
 
@@ -98,22 +98,26 @@ Firmen mit mindestens einem Quartalswert, je Kalenderjahr — **als Anteil an al
 
 **Familie „Periodendurchschnitt“** (`WeightedAverageNumberOfSharesOutstandingBasic`, `WeightedAverageNumberOfDilutedSharesOutstanding`, `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`): 9.236 Firmen insgesamt, davon 6.714 (72.7 %) mit mehr als einer Kennung im Fenster. Die beste Einzelkennung (`WeightedAverageNumberOfSharesOutstandingBasic`) deckt 96.757 Firmen-Quartale, alle drei zusammen 132.584 — ein Zugewinn von 37.0 %.
 
-## 4. Die entscheidende Zahl: die 487 Firmen aus E2
+## 4. Die entscheidende Zahl: die 512 Firmen aus E2
 
-Die Firmenliste steht **nicht** im E2-Report — dort steht nur die Zahl 487. Sie wurde deshalb rekonstruiert, indem der **Originalcode** von E2 (`scripts/studie-basisraten.py`) als Bibliothek gerufen wurde, Schritt fuer Schritt in derselben Reihenfolge. Dass es dieselben Firmen sind, ist an vier Zahlen geankert: der Kalibrierungsweg liefert bei P 90 exakt 1.979 Feuerungen und 1.025 reife Firmen, bei P 95 exakt 877 und 487 — identisch mit dem veroeffentlichten E2-Report. Weicht eine dieser Zahlen ab, **haelt der Lauf an**, statt eine andere Grundgesamtheit als „die 487“ auszugeben.
+Die Firmenliste steht **nicht** im E2-Report — dort steht nur die Zahl 512. Sie wurde deshalb rekonstruiert, indem der **Originalcode** von E2 (`scripts/studie-basisraten.py`) als Bibliothek gerufen wurde, Schritt fuer Schritt in derselben Reihenfolge. Dass es dieselben Firmen sind, ist an vier Zahlen geankert: der Kalibrierungsweg liefert bei P 90 exakt 2.072 Feuerungen und 1.066 reife Firmen, bei P 95 exakt 925 und 512 — identisch mit dem veroeffentlichten E2-Report. Weicht eine dieser Zahlen ab, **haelt der Lauf an**, statt eine andere Grundgesamtheit als „die 487“ auszugeben.
+
+> **Die Bezugsgroesse hat sich am selben Tag geaendert.** Eine erste Fassung dieser Messung lief gegen **487** Firmen. E2 waehlte die Umsatzquelle je Firmen-Quartal; seit dem Neulauf vom 19.08. steht sie je FIRMA fest (laengste Serie zum Signalzeitpunkt, Punkt-in-der-Zeit-Fassung). Damit verschwinden die Quellen-Nahtstellen (2.663 -> 0) und die Fallzahl waechst von 487 auf 512 Firmen. Diese Fassung rechnet gegen die **512**. Das ist kein Zuwachs von 25 Firmen auf derselben Liste, sondern eine **andere Grundgesamtheit** — die Zahlen der beiden Fassungen duerfen nicht vermischt werden.
+>
+> Der Befund selbst ist davon kaum beruehrt, und das ist die eigentliche Nachricht: die Abdeckung im Ereignisfenster lag mit den Stichtagszahlen bei **83.6 %** (407 von 487) und liegt jetzt bei **84.0 %** (430 von 512); mit Periodendurchschnitten 11.3 % gegenueber jetzt 11.7 %. Die Empfehlung haengt also nicht an der Kohortenwahl.
 
 Drei Stufen, absteigend streng — weil „hat eine Aktienzahl“ und „hat sie dort, wo R10 sie braucht“ zwei verschiedene Dinge sind:
 
 | Kennung | (a) irgendein Wert | (b) **jedes** Quartal der Umsatzreihe | (c) Ereignisquartal + 4 Folgequartale | Median-Abdeckung der Umsatzquartale |
 |---|---:|---:|---:|---:|
-| `CommonStockSharesOutstanding` | 425 (87.3 %) | 25 (5.1 %) | 358 (73.5 %) | 85.7 % |
-| `CommonStockSharesIssued` | 443 (91.0 %) | 27 (5.5 %) | 378 (77.6 %) | 87.0 % |
-| `EntityCommonStockSharesOutstanding` | 466 (95.7 %) | 0 (0.0 %) | 9 (1.8 %) | 8.0 % |
-| `WeightedAverageNumberOfSharesOutstandingBasic` | 363 (74.5 %) | 12 (2.5 %) | 29 (6.0 %) | 42.9 % |
-| `WeightedAverageNumberOfDilutedSharesOutstanding` | 335 (68.8 %) | 11 (2.3 %) | 32 (6.6 %) | 34.6 % |
-| `WeightedAverageNumberOfShareOutstandingBasicAndDiluted` | 312 (64.1 %) | 1 (0.2 %) | 20 (4.1 %) | 35.7 % |
-| **alle Stichtags-Kennungen zusammen** | — | 29 (6.0 %) | 407 (83.6 %) | — |
-| **alle Durchschnitts-Kennungen zusammen** | — | 24 (4.9 %) | 55 (11.3 %) | — |
+| `CommonStockSharesOutstanding` | 447 (87.3 %) | 25 (4.9 %) | 378 (73.8 %) | 86.4 % |
+| `CommonStockSharesIssued` | 467 (91.2 %) | 27 (5.3 %) | 400 (78.1 %) | 87.0 % |
+| `EntityCommonStockSharesOutstanding` | 489 (95.5 %) | 0 (0.0 %) | 10 (2.0 %) | 8.0 % |
+| `WeightedAverageNumberOfSharesOutstandingBasic` | 385 (75.2 %) | 14 (2.7 %) | 33 (6.4 %) | 42.9 % |
+| `WeightedAverageNumberOfDilutedSharesOutstanding` | 353 (68.9 %) | 13 (2.5 %) | 34 (6.6 %) | 33.3 % |
+| `WeightedAverageNumberOfShareOutstandingBasicAndDiluted` | 329 (64.3 %) | 1 (0.2 %) | 21 (4.1 %) | 36.0 % |
+| **alle Stichtags-Kennungen zusammen** | — | 30 (5.9 %) | 430 (84.0 %) | — |
+| **alle Durchschnitts-Kennungen zusammen** | — | 26 (5.1 %) | 60 (11.7 %) | — |
 
 
 ## 5. Bewegt sich die Aktienzahl ueberhaupt?
@@ -138,7 +142,7 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 *Unverwaessert* zaehlt die Aktien, die es gibt. *Verwaessert* zaehlt zusaetzlich die Aktien, die es geben wird, wenn alle Optionen, Wandelanleihen und Bezugsrechte eingeloest werden. Fuer die Frage „kommt das Wachstum beim Anleger an?“ ist die verwaesserte Zahl die haertere — lehrbuchmaessig also die richtige. Die Messung dreht diese Rangfolge um; der zweite Punkt sagt, warum.
 
 - **Belegung, unverwaessert gegen verwaessert:** unverwaessert 96.757 Firmen-Quartale (48.2 %), verwaessert 89.455 (44.6 %). Die unverwaesserte Zahl ist also um 7.5 % besser belegt — ein kleiner Vorsprung. Dazu kommen 41.150 Firmen-Quartale in der gemeinsamen Kennung `WeightedAverageNumberOfShareOutstandingBasicAndDiluted`, die Firmen benutzen, wenn beide Zahlen gleich sind — typisch bei Verlustfirmen, wo Optionen nicht eingerechnet werden duerfen. Wer diese dritte Kennung vergisst, verliert ausgerechnet die verlustschreibenden Wachstumsfirmen.
-- **Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf das es ankommt (Ereignisquartal plus vier Folgequartale bei den 487 Firmen), liefert der verwaesserte Durchschnitt 6.6 % Abdeckung, der unverwaesserte 6.0 %, alle Durchschnitts-Kennungen zusammen 11.3 %. Die Stichtagszahlen kommen im selben Fenster auf 83.6 %. Der rechnerisch sauberere Nenner ist hier also der, den es fast nie gibt.
+- **Der Befund, der die Rangfolge umdreht:** fuer das Fenster, auf das es ankommt (Ereignisquartal plus vier Folgequartale bei den 512 Firmen), liefert der verwaesserte Durchschnitt 6.6 % Abdeckung, der unverwaesserte 6.4 %, alle Durchschnitts-Kennungen zusammen 11.7 %. Die Stichtagszahlen kommen im selben Fenster auf 84.0 %. Der rechnerisch sauberere Nenner ist hier also der, den es fast nie gibt.
 - **Der Grund ist Bauart, nicht Datenqualitaet:** E2 leitet den Umsatz des vierten Quartals aus dem Geschaeftsjahr minus den drei Vorquartalen ab. Bei einem *Durchschnitt* geht diese Subtraktion nicht (ein Durchschnitt ist nicht addierbar). Fuer jedes so abgeleitete Quartal existiert deshalb gar kein Durchschnitts-Nenner — und Firmen, die ohnehin nur Jahreswerte melden, haben nie einen.
 - **Empfehlung — primaer die Stichtagszahl:** `CommonStockSharesOutstanding` (126.098 Firmen-Quartale, 87.3 % passende Stichtage), und wo sie fehlt `CommonStockSharesIssued` — mit **protokollierter Herkunft je Wert**, nicht als stille Mischung. Dass dieser Rueckfall traegt, ist nachgezaehlt und nicht geglaubt: an 117.871 Stichtagen liegen beide Kennungen vor, an 99.43 % davon ist 'ausgegeben' groesser oder gleich 'im Umlauf' — der Fehler geht also in eine bekannte Richtung (die Je-Aktie-Groesse wird zu klein, also zu vorsichtig) — und an 77.2 % sind beide Zahlen identisch, dort kostet der Rueckfall gar nichts. Die restlichen 0.57 % (667 Stichtage) verletzen die Regel und sind damit ein eigener, gezaehlter Vorbehalt statt einer Ausnahme, die unter den Tisch faellt.
 - **Empfehlung — verwaessert als Zweitrechnung:** die verwaesserte Zahl ist die haertere Pruefung (sie zaehlt die Ansprueche mit, die dem Altaktionaer noch bevorstehen) und bleibt deshalb im Vertrag — aber als **Sensitivitaets-Rechnung auf der Teilmenge, wo sie existiert**, nicht als Hauptnenner. Innerhalb der Durchschnitts-Familie ist verwaessert der Vorzug, zusammen mit der gemeinsamen Kennung fuer die Verlustfirmen.
@@ -148,8 +152,8 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 **JA, MIT AUFLAGEN — praeregistrierbar, aber die Abdeckungsquote gehoert als Pflichtangabe in jeden Report, und die fehlenden Firmen brauchen Unsicherheits-Schranken nach R11.**
 
-- Der Nenner ist da, wo er gebraucht wird: 407 von 487 Firmen (83.6 %) tragen eine Stichtags-Aktienzahl im Ereignisquartal und in allen vier Folgequartalen.
-- Mit Periodendurchschnitten waeren es nur 55 (11.3 %). Der rechnerisch sauberere Nenner ist also der, den es fast nie gibt — die Praeregistrierung muss den Stichtags-Nenner benennen und den Durchschnitt als Sensitivitaets-Rechnung fuehren, nicht umgekehrt.
+- Der Nenner ist da, wo er gebraucht wird: 430 von 512 Firmen (84.0 %) tragen eine Stichtags-Aktienzahl im Ereignisquartal und in allen vier Folgequartalen.
+- Mit Periodendurchschnitten waeren es nur 60 (11.7 %). Der rechnerisch sauberere Nenner ist also der, den es fast nie gibt — die Praeregistrierung muss den Stichtags-Nenner benennen und den Durchschnitt als Sensitivitaets-Rechnung fuehren, nicht umgekehrt.
 - Die Rechnung ist nicht wirkungslos: in 39.7 % aller gemessenen Firmenjahre aendert sich die Aktienzahl um mehr als 5 %.
 - Offene Auflage: Aktiensplits sind aus dieser Quelle nicht von echter Verwaesserung zu trennen (9.7 % der Firmen mit Split-Verdacht). Das gehoert als Vorbehalt in die Praeregistrierung — genauso wie R10 den Zukauf-Waechter offen als nicht berechenbar fuehrt.
 
@@ -160,24 +164,36 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 | `berichte_gesamt` | 176.502 |
 | `berichte_nicht_periodisch` | 5.892 |
 | `berichte_periodisch` | 170.610 |
+| `e2_firma_ohne_umsatzreihe_CommonStockSharesIssued` | 0 |
+| `e2_firma_ohne_umsatzreihe_CommonStockSharesOutstanding` | 0 |
+| `e2_firma_ohne_umsatzreihe_EntityCommonStockSharesOutstanding` | 0 |
+| `e2_firma_ohne_umsatzreihe_WeightedAverageNumberOfDilutedSharesOutstanding` | 0 |
+| `e2_firma_ohne_umsatzreihe_WeightedAverageNumberOfShareOutstandingBasicAndDiluted` | 0 |
+| `e2_firma_ohne_umsatzreihe_WeightedAverageNumberOfSharesOutstandingBasic` | 0 |
 | `kandidaten_zeilen` | 1.532.109 |
 | `shares_kennungen_firmeneigen` | 78.878 |
 | `shares_kennungen_standard` | 358 |
 | `shares_zeilen` | 3.984.536 |
 | `shares_zeilen_firmeneigen` | 444.935 |
 | `shares_zeilen_standard` | 3.539.601 |
+| `verwaesserung_unter_zwei_werten_CommonStockSharesIssued` | 1.319 |
+| `verwaesserung_unter_zwei_werten_CommonStockSharesOutstanding` | 1.866 |
+| `verwaesserung_unter_zwei_werten_EntityCommonStockSharesOutstanding` | 891 |
+| `verwaesserung_unter_zwei_werten_WeightedAverageNumberOfDilutedSharesOutstanding` | 4.537 |
+| `verwaesserung_unter_zwei_werten_WeightedAverageNumberOfShareOutstandingBasicAndDiluted` | 6.548 |
+| `verwaesserung_unter_zwei_werten_WeightedAverageNumberOfSharesOutstandingBasic` | 3.753 |
 | `verworfen_coreg` | 21.158 |
 | `verworfen_firmeneigene_taxonomie` | 2.265 |
-| `verworfen_nicht_periodisch` | 53.909 |
+| `verworfen_kein_gueltiger_bericht` | 53.909 |
 | `verworfen_wert_leer` | 2.558 |
 | `verworfen_wert_nicht_positiv` | 6.592 |
-| `werte_fassungskonflikt` | 65.135 |
+| `werte_fassungskonflikt` | 46.583 |
 | `werte_pit` | 877.504 |
 | `werte_spaetere_fassung` | 568.123 |
 
 ## Woran das geprueft ist
 
-- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit von Hand nachgerechneten Erwartungswerten, 11 Pruefungen: `python scripts/studie-panel-aktienzahl.py --selbsttest`
+- **Selbsttest** gegen eine selbstgebaute Mini-Datenbank mit von Hand nachgerechneten Erwartungswerten, 12 Pruefungen: `python scripts/studie-panel-aktienzahl.py --selbsttest`
 - **Gegenprobe**: jede dieser Pruefungen wird einmal absichtlich kaputtgemacht — kaputtgemacht wird die *Sache*, die sie schuetzt, nicht die Pruefung selbst — und muss rot werden. Bleibt eine gruen, ist sie wirkungslos und der Lauf meldet das: `python scripts/studie-panel-aktienzahl.py --gegenprobe`
 - **Fenster-Mauer**: geoeffnet wird ausschliesslich `panel-entdeckung.sqlite`, schreibgeschuetzt. Geprueft wird der *aufgeloeste* Pfad, nicht der geschriebene — eine harmlos benannte Verzeichnis-Verknuepfung in Richtung Endtest wird abgewiesen. Der Endtest wurde nie geoeffnet, nie entschluesselt, nie gezaehlt.
 - **Plausibilitaetsanker** gegen die Vor-Etappen (unten). Ein Anker, der Abweichungen schluckt, waere keiner: eine Abweichung von einer einzigen Firma haelt den Lauf an.
@@ -185,7 +201,7 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 ## Plausibilitaetsanker
 
 - Firmen im Entdeckungsfenster (E1): erwartet 11.156, gemessen 11.156 — **stimmt**
-- reife Erst-Ereignisse S-U (E2): erwartet 487, gemessen 487 — **stimmt**
+- reife Erst-Ereignisse S-U (E2): erwartet 512, gemessen 512 — **stimmt**
 
 ## Neue Fragen und Hypothesen (R16)
 
@@ -196,4 +212,4 @@ Wenn nicht, waere R10 teuer und wirkungslos: eine Division durch eine Konstante 
 
 ---
 
-Lauf: 2026-08-19T10:01:14Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**
+Lauf: 2026-08-19T10:12:46Z · gelesene Dateien: `panel/panel-entdeckung.sqlite` · Ergebnisdaten (Kurse, Renditen) beruehrt: **nein**
