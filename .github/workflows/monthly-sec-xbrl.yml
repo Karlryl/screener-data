@@ -30,6 +30,28 @@ permissions:
 env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
 
+  # ZWEIG-WACHE (19.08.2026) — die EINZIGE Stelle, an der entschieden wird, ob ein
+  # Lauf veroeffentlichen darf. Gleiche Sache und gleiche Bauform wie in daily-pull.yml.
+  #
+  # BEFUND: dieser Workflow laesst sich per workflow_dispatch auf JEDEM Zweig starten,
+  # sein Commit-Schritt pushte aber unbedingt. Ein Handlauf von einem Feature-Zweig
+  # haette das monatliche SEC-Manifest samt sec-secannual.json aus ungepruefter
+  # Zweig-Rechnung in den Repo-Baum geschrieben.
+  #
+  # WARUM KEIN `if:` AM SCHRITT (die naheliegende Loesung, bewusst verworfen): ein
+  # UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+  # schreibt keine Zeile ins Protokoll. Der Schritt laeuft darum weiter und steigt ganz
+  # vorn mit ::warning:: aus — die Nicht-Veroeffentlichung ist ein LESBARER Vorgang.
+  #
+  # KEIN `nur_rechnen`-Ventil wie in daily-pull.yml: dort deckt es einen 4-Stunden-Lauf
+  # mit sechs Publizierern ab, den man auf main einmal komplett durchrechnen lassen will.
+  # Hier ist der Trockenlauf jetzt einfach der Zweig-Lauf — genau das macht diese Wache
+  # erst gefahrlos moeglich.
+  #
+  # Bei schedule-Laeufen ist github.ref refs/heads/main -> der Cron veroeffentlicht wie
+  # bisher. Waechter: tests/zweig-wache.test.js
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' }}
+
 concurrency:
   group: ${{ github.event_name == 'workflow_dispatch' && format('manual-{0}', github.run_id) || 'main-push' }}
   cancel-in-progress: false
@@ -258,6 +280,10 @@ jobs:
 
       - name: Commit manifest
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von SEC-Manifest, sec-secannual(-smallcap).json und ROIC-Bericht. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            exit 0
+          fi
           git config user.name "sec-xbrl-bot"
           git config user.email "sec-xbrl-bot@users.noreply.github.com"
           mkdir -p reports
