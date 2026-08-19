@@ -150,9 +150,13 @@ const { readJsonExistingOrThrow, FEHLT } = require(path.join(ROOT, 'lib/read-jso
 const { fetchJson } = require(path.join(ROOT, 'lib/fetch-retry.js'));
 
 const API = 'https://datacenter.eastmoney.com/securities/api/data/v1/get';
-// Eine Antwortseite muss den ganzen Batch tragen — sonst waere die Seitengrenze bei
-// gleichrangigen Sortierschluesseln eine stille Verlustquelle. count > PAGE_SIZE -> Abbruch.
-const PAGE_SIZE = 2000;
+// Seitengroesse. GEMESSEN, nicht angenommen: der A-Endpunkt (source=HSF10) liefert hoechstens
+// 500 Zeilen je Seite, egal was pageSize sagt — ein Batch mit 552 Treffern kam mit 500 Zeilen
+// und count=552 zurueck. Genau dafuer steht die Vollstaendigkeitspruefung in holeBericht: der
+// Lauf brach laut ab, statt 52 Perioden stillschweigend zu verlieren. Jetzt wird geblaettert
+// und am Ende gegen count UND gegen die Zahl der eindeutigen Schluessel geprueft.
+const PAGE_SIZE = 500;
+const MAX_SEITEN = 40;   // 20.000 Zeilen je Abruf — weit ueber jedem realen Batch
 const BATCH = 10;              // Ticker je Abruf; 10 x 64 Perioden bleibt weit unter PAGE_SIZE
 const PAUSE_MS = 1500;         // schonender als der lib-Standard (1200) — inoffizieller Kanal
 const MIN_JAHRE = 3;           // wie TW/KR/JP: weniger ist keine Reihe
@@ -181,6 +185,22 @@ const CN_HK = [
   '1357.HK', '1729.HK', '1768.HK', '3750.HK', '6880.HK', '9630.HK', '1929.HK', '6618.HK',
   '2269.HK', '0668.HK', '9863.HK', '0666.HK', '3355.HK', '2476.HK', '3277.HK', '3986.HK',
 ];
+
+// ⛔ NAMENTLICH BEKANNT NICHT BAUBAR — und warum. Diese Namen stehen ebenfalls auf Karls Board,
+// lassen sich aus dieser Quelle aber heute nicht ehrlich zu einer Jahresreihe verrechnen. Sie
+// stehen HIER, damit der Lauf gruen bleiben kann, ohne dass ein echter Fehler mitrutscht: jeder
+// NICHT gelistete Ticker mit demselben Problem faerbt den Lauf weiterhin rot (Muster aus
+// build-twannual TW_NICHT_BAUBAR / build-krannual KR_OHNE_STANDARDKONTEN).
+const CN_NICHT_BAUBAR = {
+  '301717.SZ': 'junge Notierung: die drei Vor-Boersen-Jahre liegen nur als Jahreszeilen vor, '
+    + 'Zwischenberichte gibt es erst ab 2025 — damit sind nur 2 Perioden-Paare da und die '
+    + 'YTD-Konvention ist an dieser Firma nicht belegbar (gemessen 19.08.2026)',
+  '688411.SS': 'nur 2 Perioden-Paare mit Kassen-Anfangs-/Endbestand; der Jahres-Cashflow waere '
+    + 'ohne diesen Anker geraten (gemessen 19.08.2026)',
+  '6880.HK': 'die Quelle fuehrt fuer FY2023 ZWEI Jahresabschluss-Zeilen mit voellig '
+    + 'verschiedenen Zahlen (Umsatz 742.745.000 gegen 135.185.368,50, operativer Cashflow '
+    + '-1.068.557.000 gegen +1.910.311,76) — welche gilt, ist nicht entscheidbar (gemessen 19.08.2026)',
+};
 
 // ---------------------------------------------------------------------------------------
 // Ticker-Uebersetzung Yahoo <-> Eastmoney.
@@ -304,6 +324,40 @@ function dekumuliere(ytd) {
 }
 
 /**
+ * Wurf fuer "aus dieser Quelle NICHT baubar" — eine Eigenschaft der Daten, kein Alarm.
+ * Solche Faelle darf die namentliche Liste CN_NICHT_BAUBAR gruen stellen; ein Konventions-
+ * BRUCH (YTD verletzt, unbekannter Standard) bekommt diese Markierung ausdruecklich NICHT.
+ */
+function wurfNichtBaubar(text) {
+  const e = new Error(text);
+  e.nichtBaubar = true;
+  throw e;
+}
+
+/**
+ * ZWEI ZEILEN FUER DIESELBE PERIODE MIT VERSCHIEDENEN ZAHLEN sind nicht entscheidbar.
+ * Live belegt an 06880.HK (MOMENTA): die Quelle fuehrt fuer das Geschaeftsjahr 2023 ZWEI
+ * Jahresabschluss-Zeilen — Umsatz 742.745.000 in der einen, 135.185.368,50 in der anderen,
+ * operativer Cashflow -1.068.557.000 gegen +1.910.311,76. "Die erste gewinnt" waere eine
+ * stille Wahl zwischen einem Gewinn und einem Verlust. Diese Firma wird verworfen, nicht der
+ * ganze Batch. Identische Dubletten sind harmlos und gehen durch (wie bei TW/JP).
+ */
+function eindeutigOderWurf(zeilen, wertFelder, tk, bericht) {
+  const gesehen = new Map();
+  for (const z of zeilen) {
+    const k = tag(z.REPORT_DATE);
+    const sig = wertFelder.map((f) => z[f]).join('|');
+    const alt = gesehen.get(k);
+    if (alt !== undefined && alt !== sig) {
+      wurfNichtBaubar(tk + ': ' + bericht + ' fuehrt fuer ' + k + ' ZWEI Zeilen mit verschiedenen '
+        + 'Zahlen (' + alt + ' gegen ' + sig + '). Welche gilt, ist nicht entscheidbar — Firma '
+        + 'verworfen statt stiller Auswahl.');
+    }
+    if (alt === undefined) gesehen.set(k, sig);
+  }
+}
+
+/**
  * ROHERTRAGS-PLATZHALTER AUSSORTIEREN. Ein Rohertrag, der auf den Cent dem Umsatz entspricht,
  * ist kein gemessener Rohertrag, sondern ein Fuellwert der Quelle (belegt an 01208.HK FY2025:
  * 营运收入 und 毛利 beide 6.218.000.000). Als 100-%-Rohmarge liefe er direkt in gpGrowth und
@@ -344,43 +398,77 @@ function pruefeSchema(zeilen, spalten, kontext) {
 // ---------------------------------------------------------------------------------------
 // Abruf
 // ---------------------------------------------------------------------------------------
-function baueUrl(reportName, spalten, filter, source, sortColumn) {
+function baueUrl(reportName, spalten, filter, source, sortColumn, seite) {
   return API
     + '?reportName=' + encodeURIComponent(reportName)
     + '&columns=' + spalten.join(',')
     + '&filter=' + encodeURIComponent(filter)
-    + '&pageNumber=1&pageSize=' + PAGE_SIZE
+    + '&pageNumber=' + seite + '&pageSize=' + PAGE_SIZE
     + (sortColumn ? '&sortTypes=-1&sortColumns=' + sortColumn : '')
     + '&source=' + source + '&client=PC';
 }
 
+/** Eindeutiger Schluessel einer Zeile — je nach Bericht mit oder ohne Posten-Code. */
+function zeilenSchluessel(z) {
+  return [z.SECUCODE, tag(z.REPORT_DATE), z.STD_ITEM_CODE || '', z.REPORT_TYPE || '',
+    z.DATE_TYPE_CODE || ''].join('|');
+}
+
 /**
- * Holt EINEN Bericht. Wirft bei allem, was nicht eindeutig eine vollstaendige Antwort ist.
- * `success:false` mit "返回数据为空" (Code 9201) ist KEIN Fehler, sondern "zu diesem Filter
- * gibt es nichts" — das kommt bei jungen Firmen und bei Bilanzposten vor, die eine Branche
- * nicht fuehrt, und liefert eine leere Liste.
+ * Holt EINEN Bericht, ueber alle Seiten. Wirft bei allem, was nicht eindeutig eine
+ * VOLLSTAENDIGE Antwort ist.
+ * `success:false` mit "返回数据为空" (Code 9201) ist KEIN Fehler, sondern "zu diesem Filter gibt
+ * es nichts" — das kommt bei jungen Firmen und bei Posten vor, die eine Branche nicht fuehrt,
+ * und liefert eine leere Liste.
+ *
+ * WARUM DIE DOPPELTE SCHLUSSPRUEFUNG (Zeilenzahl UND Zahl der eindeutigen Schluessel): beim
+ * Blaettern entscheidet die Sortierung, welche Zeile auf welcher Seite landet. Sind zwei Zeilen
+ * im Sortierschluessel gleichrangig, koennte die Quelle dieselbe Zeile zweimal ausliefern und
+ * eine andere gar nicht — die Gesamtzahl stimmte dann trotzdem. Nur die Eindeutigkeit deckt das
+ * auf. Beides muss zur gemeldeten Trefferzahl passen, sonst Abbruch.
  */
 async function holeBericht(reportName, spalten, filter, source, sortColumn, holen) {
-  const url = baueUrl(reportName, spalten, filter, source, sortColumn);
-  const j = await holen(url, { pauseMs: PAUSE_MS });
-  if (!j || typeof j !== 'object') throw new Error(reportName + ': Antwort ist kein Objekt');
-  if (j.success !== true) {
-    if (j.code === 9201) return [];   // leerer Treffer, kein Fehler
-    throw new Error(reportName + ': Quelle meldet Fehler (code=' + j.code + ', message='
-      + JSON.stringify(j.message) + '). Bei einer umbenannten Spalte steht der Spaltenname in '
-      + 'der Meldung — dann ist das Schema gewandert.');
+  const gesammelt = [];
+  let erwartet = null, seitenGeholt = 0;
+  for (let seite = 1; seite <= MAX_SEITEN; seite += 1) {
+    seitenGeholt = seite;
+    const url = baueUrl(reportName, spalten, filter, source, sortColumn, seite);
+    const j = await holen(url, { pauseMs: PAUSE_MS });
+    if (!j || typeof j !== 'object') throw new Error(reportName + ': Antwort ist kein Objekt');
+    if (j.success !== true) {
+      if (j.code === 9201) break;   // leerer Treffer, kein Fehler
+      throw new Error(reportName + ': Quelle meldet Fehler (code=' + j.code + ', message='
+        + JSON.stringify(j.message) + '). Bei einer umbenannten Spalte steht der Spaltenname in '
+        + 'der Meldung — dann ist das Schema gewandert.');
+    }
+    const r = j.result;
+    if (!r || !Array.isArray(r.data)) throw new Error(reportName + ': result.data fehlt oder ist kein Array');
+    if (erwartet == null && Number.isFinite(r.count)) erwartet = r.count;
+    pruefeSchema(r.data, spalten, reportName + ' Seite ' + seite);
+    gesammelt.push(...r.data);
+    if (erwartet == null || gesammelt.length >= erwartet || !r.data.length) break;
   }
-  const r = j.result;
-  if (!r || !Array.isArray(r.data)) throw new Error(reportName + ': result.data fehlt oder ist kein Array');
-  if (Number.isFinite(r.count) && r.count > PAGE_SIZE) {
-    throw new Error(reportName + ': ' + r.count + ' Zeilen > pageSize ' + PAGE_SIZE
-      + ' — der Batch waere abgeschnitten worden. BATCH verkleinern statt halbe Reihen zu schreiben.');
+  if (erwartet != null) {
+    if (gesammelt.length !== erwartet) {
+      throw new Error(reportName + ': Quelle meldet count=' + erwartet + ', geblaettert kamen '
+        + gesammelt.length + ' Zeilen — unvollstaendige Antwort, Abbruch statt halber Reihen.');
+    }
+    // Die Eindeutigkeit wird NUR geprueft, wenn wirklich geblaettert wurde. Innerhalb EINER
+    // Seite kann kein Blaetter-Fehler entstehen — dort sind doppelte Schluessel eine Eigenschaft
+    // der Quelle, kein Transportfehler, und die gehoert in die Firmen-Pruefung (eindeutigOderWurf),
+    // damit sie nur DIESE Firma kostet und nicht den ganzen Batch. Live belegt an 06880.HK:
+    // die Quelle fuehrt fuer FY2023 zwei Zeilen mit voellig verschiedenen Zahlen (Umsatz
+    // 742.745.000 gegen 135.185.368,50) — in einer einzigen, nicht geblaetterten Antwort.
+    if (seitenGeholt > 1) {
+      const eindeutig = new Set(gesammelt.map(zeilenSchluessel)).size;
+      if (eindeutig !== erwartet) {
+        throw new Error(reportName + ': von ' + erwartet + ' gemeldeten Zeilen sind nur '
+          + eindeutig + ' verschieden — beim Blaettern wurden Zeilen doppelt geliefert und andere '
+          + 'verloren. Abbruch statt luckenhafter Reihe.');
+      }
+    }
   }
-  if (Number.isFinite(r.count) && r.data.length !== r.count) {
-    throw new Error(reportName + ': Quelle meldet count=' + r.count + ', liefert aber '
-      + r.data.length + ' Zeilen — unvollstaendige Antwort, Abbruch.');
-  }
-  return pruefeSchema(r.data, spalten, reportName);
+  return gesammelt;
 }
 
 const inFilter = (feld, werte) => '(' + feld + ' in (' + werte.map((w) => '"' + w + '"').join(',') + '))';
@@ -443,7 +531,7 @@ function pruefeYtdA(tk, incZeilen, cfZeilen) {
     }
   }
   if (guPaare < 3) {
-    throw new Error(tk + ': YTD-Konvention der GuV NICHT pruefbar — nur ' + guPaare
+    wurfNichtBaubar(tk + ': YTD-Konvention der GuV NICHT pruefbar — nur ' + guPaare
       + ' aufeinanderfolgende Perioden im Jahr (mind. 3 noetig). Ohne Beleg waere der Jahreswert '
       + 'geraten statt belegt.');
   }
@@ -476,18 +564,27 @@ function pruefeYtdA(tk, incZeilen, cfZeilen) {
       if (bAnfang === aEnde) diskretTreffer += 1;
     }
   }
-  if (cfPaare < 3) {
-    throw new Error(tk + ': YTD-Konvention des Cashflows NICHT pruefbar — nur ' + cfPaare
-      + ' Perioden-Paare mit Kassen-Anfangs-/Endbestand (mind. 3 noetig). Der Adapter nimmt die '
-      + '12-31-Zeile als Jahres-Cashflow; ohne diesen Anker waere das geraten.');
+  // AUSSAGEKRAEFTIG sind nur die Paare, in denen der Anfangsbestand EINE der beiden Konventionen
+  // trifft. Die uebrigen sind Berichtigungen: der Anfangsbestand eines Jahres wird nachtraeglich
+  // korrigiert, weil der Schlussbestand des Vorjahres berichtigt wurde. Live an 002314.SZ
+  // gemessen — 17 Paare, davon 8 eindeutig YTD, 0 eindeutig diskret, der Rest Berichtigungen.
+  // Eine feste Trefferquote (wie "60 % aller Paare") haette diese Firma als Konventionsbruch
+  // verworfen, obwohl KEIN EINZIGES Paar fuer die Gegenthese spricht. Also: genug positive
+  // Belege verlangen und verlangen, dass die Gegenthese klar in der Minderheit ist.
+  const aussagekraeftig = ytdTreffer + diskretTreffer;
+  if (aussagekraeftig < 3) {
+    wurfNichtBaubar(tk + ': YTD-Konvention des Cashflows NICHT pruefbar — von ' + cfPaare
+      + ' Perioden-Paaren mit Kassen-Anfangs-/Endbestand sind nur ' + aussagekraeftig
+      + ' aussagekraeftig (mind. 3 noetig). Der Adapter nimmt die 12-31-Zeile als Jahres-Cashflow; '
+      + 'ohne diesen Anker waere das geraten.');
   }
-  if (!(ytdTreffer > diskretTreffer && ytdTreffer >= cfPaare * 0.6)) {
-    throw new Error(tk + ': YTD-Konvention des Cashflows verletzt — von ' + cfPaare
-      + ' Paaren sprechen nur ' + ytdTreffer + ' fuer YTD, aber ' + diskretTreffer
+  if (!(ytdTreffer > diskretTreffer * 3)) {
+    throw new Error(tk + ': YTD-Konvention des Cashflows verletzt — von ' + aussagekraeftig
+      + ' aussagekraeftigen Paaren sprechen ' + ytdTreffer + ' fuer YTD, aber ' + diskretTreffer
       + ' fuer periodendiskret. Bei diskreten Zeilen waere der Jahres-Cashflow um bis zu Faktor 4 '
       + 'zu niedrig. Abbruch statt stiller Fehlzahl.');
   }
-  return { guPaare, cfPaare, ytdTreffer, diskretTreffer };
+  return { guPaare, cfPaare, aussagekraeftig, ytdTreffer, diskretTreffer };
 }
 
 /**
@@ -523,6 +620,9 @@ function nennwertAusDaten(jahresIncZeilen, kapitalJeFy) {
  */
 function bauAJahre(roh, tk) {
   const waechter = pruefeYtdA(tk, roh.inc, roh.cf);
+  eindeutigOderWurf(roh.inc, ['TOTAL_OPERATE_INCOME', 'OPERATE_PROFIT', 'PARENT_NETPROFIT'], tk, 'die A-GuV');
+  eindeutigOderWurf(roh.bal, ['TOTAL_ASSETS', 'TOTAL_PARENT_EQUITY', 'SHARE_CAPITAL'], tk, 'die A-Bilanz');
+  eindeutigOderWurf(roh.cf, ['NETCASH_OPERATE'], tk, 'der A-Cashflow');
 
   const istJahr = (z) => z.REPORT_TYPE === JAHR_A && /-12-31$/.test(tag(z.REPORT_DATE));
   const jahresInc = roh.inc.filter(istJahr).sort((a, b) => tag(b.REPORT_DATE).localeCompare(tag(a.REPORT_DATE)));
@@ -677,12 +777,22 @@ function pruefeYtdHk(tk, zeilen) {
  */
 function bauHkJahre(roh, tk) {
   const waechter = pruefeYtdHk(tk, roh.main);
+  eindeutigOderWurf(roh.main.filter((z) => z.DATE_TYPE_CODE === HK_JAHR_TYP),
+    ['OPERATE_INCOME', 'NETCASH_OPERATE'], tk, 'der HK-Kennzahlen-Bericht');
 
   // Rechenwerk-Zeilen nach Stichtag und Posten aufschluesseln. Zwei verschiedene Werte fuer
   // denselben Stichtag UND denselben Posten sind nicht entscheidbar -> Wurf (wie TW/JP).
+  // ⚠ ETIKETT JE BERICHT, NICHT JE PERIODE. Live an 03931.HK (中创新航) FY2025 gemessen: die
+  // GuV traegt 国际会计准则 (IFRS, runde Tausender), die BILANZ derselben Periode 大陆会计准则
+  // (CAS, auf den Fen genau: 148.534.615.986,10). Die Quelle mischt dort zwei Standards
+  // innerhalb eines Geschaeftsjahres. Beide Teile in EINE Reihe zu schreiben waere genau der
+  // Vergleichbarkeits-Bruch aus Falle 5. Die Firma deswegen ganz wegzuwerfen waere aber zu viel:
+  // die GuV-Reihe ist in sich sauber. Also werden Bilanzwerte nur uebernommen, wenn die Bilanz
+  // fuer DIESE Periode dasselbe Etikett traegt wie die GuV — sonst bleiben Bilanzsumme,
+  // Eigenkapital und kurzfristige Verbindlichkeiten dieses Jahres null.
   const posten = new Map();      // 'YYYY-MM-DD' -> {STD_ITEM_CODE -> AMOUNT}
-  const etikett = new Map();     // 'YYYY-MM-DD' -> {standardRoh, waehrung}
-  const uebernehmen = (z) => {
+  const etiketten = { inc: new Map(), bal: new Map() };
+  const uebernehmen = (z, welcher) => {
     if (z.DATE_TYPE_CODE !== HK_JAHR_TYP) return;
     const d = tag(z.REPORT_DATE);
     if (!posten.has(d)) posten.set(d, {});
@@ -697,16 +807,22 @@ function bauHkJahre(roh, tk) {
     const std = String(z.ACCOUNT_STANDARD || '').trim();
     const ccy = String(z.CURRENCY_CODE || '').trim();
     if (!std || !ccy) return;
-    const alt = etikett.get(d);
+    const karte = etiketten[welcher];
+    const alt = karte.get(d);
     if (alt && (alt.standardRoh !== std || alt.waehrung !== ccy)) {
-      throw new Error(tk + ' ' + d + ': dieselbe Periode traegt zwei Etiketten ('
-        + alt.standardRoh + '/' + alt.waehrung + ' gegen ' + std + '/' + ccy + '). '
-        + 'Ein Abschluss hat genau einen Standard und eine Waehrung — Abbruch.');
+      throw new Error(tk + ' ' + d + ': derselbe Bericht traegt fuer dieselbe Periode zwei '
+        + 'Etiketten (' + alt.standardRoh + '/' + alt.waehrung + ' gegen ' + std + '/' + ccy
+        + '). Ein Abschluss hat genau einen Standard und eine Waehrung — Abbruch.');
     }
-    if (!alt) etikett.set(d, { standardRoh: std, waehrung: ccy });
+    if (!alt) karte.set(d, { standardRoh: std, waehrung: ccy });
   };
-  for (const z of roh.inc) uebernehmen(z);
-  for (const z of roh.bal) uebernehmen(z);
+  for (const z of roh.inc) uebernehmen(z, 'inc');
+  for (const z of roh.bal) uebernehmen(z, 'bal');
+  const etikett = etiketten.inc;
+  const gleichesEtikett = (d) => {
+    const i = etiketten.inc.get(d), b = etiketten.bal.get(d);
+    return !!(i && b && i.standardRoh === b.standardRoh && i.waehrung === b.waehrung);
+  };
 
   // Zeitachse: die Jahresabschluesse des Kennzahlen-Berichts (dort stehen FISCAL_YEAR und der
   // Cashflow), aber nur solche, die im Rechenwerk auch ein Etikett haben.
@@ -770,17 +886,24 @@ function bauHkJahre(roh, tk) {
   const fys = behalten.map((z) => jahrVon(z.REPORT_DATE));
   const serien = {};
   for (const f of FELD_NAMEN) serien[f] = [];
+  let bilanzVerworfen = 0;
   for (const z of behalten) {
-    const p = posten.get(tag(z.REPORT_DATE)) || {};
+    const d = tag(z.REPORT_DATE);
+    const p = posten.get(d) || {};
     const w = (code) => (Number.isFinite(p[code]) ? p[code] : null);
+    // Bilanz nur, wenn sie fuer DIESE Periode denselben Standard und dieselbe Waehrung meldet
+    // wie die GuV (03931.HK-Fall oben).
+    const bilanzOk = gleichesEtikett(d);
+    if (!bilanzOk && etiketten.bal.get(d)) bilanzVerworfen += 1;
+    const b = (code) => (bilanzOk ? w(code) : null);
     const rev = w(HK_INC_ITEMS.annualRev);
     serien.annualRev.push({ value: rev });
     serien.annualGrossProfit.push({ value: rohertrag(rev, w(HK_INC_ITEMS.annualGrossProfit)) });
     serien.annualOpInc.push({ value: w(HK_INC_ITEMS.annualOpInc) });
     serien.annualNetIncome.push({ value: w(HK_INC_ITEMS.annualNetIncome) });
-    serien.annualAssets.push({ value: w(HK_BAL_ITEMS.annualAssets) });
-    serien.annualEquity.push({ value: w(HK_BAL_ITEMS.annualEquity) });
-    serien.annualCurrentLiabilities.push({ value: w(HK_BAL_ITEMS.annualCurrentLiabilities) });
+    serien.annualAssets.push({ value: b(HK_BAL_ITEMS.annualAssets) });
+    serien.annualEquity.push({ value: b(HK_BAL_ITEMS.annualEquity) });
+    serien.annualCurrentLiabilities.push({ value: b(HK_BAL_ITEMS.annualCurrentLiabilities) });
     serien.annualOCF.push({ value: ocfBrauchbar ? zahl(z.NETCASH_OPERATE) : null });
     // Aktienzahl: bewusst NICHT (Falle 6). ISSUED_COMMON_SHARES ist der heutige Stand, in alle
     // Jahre kopiert — eine flache Linie behauptete "keine Verwaesserung".
@@ -803,6 +926,7 @@ function bauHkJahre(roh, tk) {
     waehrung,
     fiscalYearEnd: String(jahre[0].FISCAL_YEAR || '').trim() || null,
     abgeschnitten,
+    bilanzVerworfen,
     ocfBrauchbar,
     ocfGrund,
     _waechter: waechter,
@@ -927,6 +1051,18 @@ async function main(opts = {}) {
 
   // ---- 3) Schreiben -------------------------------------------------------------------
   let geschrieben = 0, periodenGesamt = 0;
+  const bekannt = [];
+  // Ein NICHT baubarer Fall zaehlt nur dann als Fehler, wenn er nicht namentlich bekannt ist.
+  // Ein Konventionsbruch (e.nichtBaubar fehlt) bleibt IMMER ein Fehler, auch bei bekannten Namen.
+  const melde = (tk, e) => {
+    if (e && e.nichtBaubar && CN_NICHT_BAUBAR[tk]) {
+      bekannt.push(tk);
+      console.warn(tk + ': nicht baubar, aber bekannt — ' + CN_NICHT_BAUBAR[tk]);
+      return;
+    }
+    gescheitert.push(tk + ': ' + e.message);
+    console.warn(tk + ': ' + e.message);
+  };
   const schreibe = (tk, satz, protokoll) => {
     out[tk] = satz;
     geschrieben += 1;
@@ -943,7 +1079,7 @@ async function main(opts = {}) {
     }
     let j;
     try { j = bauAJahre(roh, tk); }
-    catch (e) { gescheitert.push(tk + ': ' + e.message); console.warn(tk + ': ' + e.message); return; }
+    catch (e) { melde(tk, e); return; }
     const serien = {};
     for (const f of FELD_NAMEN) serien[f] = j[f];
     if (zaehle(serien.annualRev) < MIN_JAHRE) {
@@ -1006,7 +1142,7 @@ async function main(opts = {}) {
     }
     let j;
     try { j = bauHkJahre(roh, tk); }
-    catch (e) { gescheitert.push(tk + ': ' + e.message); console.warn(tk + ': ' + e.message); continue; }
+    catch (e) { melde(tk, e); continue; }
     const serien = {};
     for (const f of FELD_NAMEN) serien[f] = j[f];
     if (zaehle(serien.annualRev) < MIN_JAHRE) {
@@ -1044,13 +1180,15 @@ async function main(opts = {}) {
       + ' op=' + zaehle(serien.annualOpInc) + ' ni=' + zaehle(serien.annualNetIncome)
       + ' assets=' + zaehle(serien.annualAssets) + ' eq=' + zaehle(serien.annualEquity)
       + ' curliab=' + zaehle(serien.annualCurrentLiabilities) + ' ocf=' + zaehle(serien.annualOCF)
-      + (j.abgeschnitten ? ' (' + j.abgeschnitten + ' Jahre wegen Standard-/Waehrungswechsel abgeschnitten)' : ''));
+      + (j.abgeschnitten ? ' (' + j.abgeschnitten + ' Jahre wegen Standard-/Waehrungswechsel abgeschnitten)' : '')
+      + (j.bilanzVerworfen ? ' (' + j.bilanzVerworfen + ' Jahre ohne Bilanz: GuV und Bilanz melden verschiedene Standards)' : ''));
   }
 
   writeFileAtomic(outPfad, JSON.stringify(out, null, 1));
   console.log('geschrieben: ' + outPfad + ' (' + Object.keys(out).length + ' Namen; dieser Lauf: '
     + geschrieben + ' Namen, ' + periodenGesamt + ' Perioden, ' + gescheitert.length + ' Fehler, '
-    + ((Date.now() - zeitStart) / 1000).toFixed(1) + ' s)');
+    + bekannt.length + ' bekannt nicht baubar, ' + ((Date.now() - zeitStart) / 1000).toFixed(1) + ' s)');
+  if (bekannt.length) console.log('bekannt nicht baubar: ' + bekannt.join(', '));
   // Erst schreiben (Merge erhaelt den Altbestand), dann rot werden.
   if (gescheitert.length) {
     throw new Error('build-cnannual unvollstaendig — ' + gescheitert.join('; ')
@@ -1063,7 +1201,7 @@ if (require.main === module) main().catch((e) => { console.error('::error::' + e
 module.exports = {
   main, bauAJahre, bauHkJahre, pruefeYtdA, pruefeYtdHk, pruefeSchema, dekumuliere, rohertrag,
   nennwertAusDaten, secucodeFuerYahoo, yahooFuerSecucode, istEchterACode, spanneTage,
-  loeseAhAuf, holeBericht, CN_A, CN_HK, STANDARD, NENNWERTE, FELD_NAMEN, MIN_JAHRE,
+  loeseAhAuf, holeBericht, eindeutigOderWurf, CN_A, CN_HK, CN_NICHT_BAUBAR, STANDARD, NENNWERTE, FELD_NAMEN, MIN_JAHRE,
   A_INC, A_BAL, A_CF, HK_MAIN, HK_INC, HK_BAL, HK_INC_ITEMS, HK_BAL_ITEMS, HK_JAHR_TYP,
   JAHR_A, PAGE_SIZE, BATCH,
 };

@@ -116,6 +116,16 @@ test('GEGENPROBE: wird der A-Cashflow periodendiskret, wirft der Waechter', () =
   assert.throws(() => B.bauAJahre(roh, '688256.SS'), /Cashflows verletzt/);
 });
 
+test('GEGENPROBE: ohne Zwischenberichte ist die YTD-Konvention unbelegt — dann wird geworfen', () => {
+  // Diese Luecke fiel erst bei der Sabotage-Gegenprobe auf: der Wurf bei zu wenigen Belegen war
+  // von keinem Test gedeckt. Ohne ihn liefe eine Firma, die NUR Jahreszeilen liefert, ohne
+  // jeden Beweis durch — und genau dort waere ein Konventionswechsel unsichtbar.
+  const roh = a('688256.SH');
+  roh.inc = roh.inc.filter((z) => z.REPORT_TYPE === '年报');
+  assert.ok(roh.inc.length >= 5, 'die Jahreszeilen bleiben ja da (' + roh.inc.length + ')');
+  assert.throws(() => B.bauAJahre(roh, '688256.SS'), /GuV NICHT pruefbar/);
+});
+
 test('GEGENPROBE: fehlt der Kassen-Anker ganz, wird nicht geraten sondern geworfen', () => {
   const roh = a('688256.SH');
   for (const z of roh.cf) z.BEGIN_CASH = null;
@@ -367,17 +377,106 @@ test('pruefeSchema: eine Zahl-Spalte, die ploetzlich Text liefert, ist ein Fehle
     ['SECUCODE', 'TOTAL_OPERATE_INCOME'], 'test'), 'null ist erlaubt — fehlender Wert, kein Typbruch');
 });
 
-test('holeBericht: Fehlermeldung der Quelle, abgeschnittene Seite und Zaehl-Luecke werfen', async () => {
+test('holeBericht: Quellenfehler, unvollstaendige Blaetterung und Doppel-Zeilen werfen', async () => {
   const antwort = (o) => async () => o;
   await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
-    antwort({ success: false, code: 9501, message: 'TOTAL_OPERATE_INCOME返回字段不存在' })), /Schema gewandert|Quelle meldet Fehler/);
-  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
-    antwort({ success: true, result: { count: B.PAGE_SIZE + 1, data: [] } })), /abgeschnitten/);
-  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
-    antwort({ success: true, result: { count: 3, data: [{ SECUCODE: 'A' }] } })), /unvollstaendige Antwort/);
+    antwort({ success: false, code: 9501, message: 'TOTAL_OPERATE_INCOME返回字段不存在' })), /Quelle meldet Fehler/);
+  // ECHTER FALL vom 19.08.: der A-Endpunkt liefert hoechstens 500 Zeilen je Seite und meldet
+  // count=552. Bleibt die zweite Seite leer, fehlen 52 Perioden — das muss auffallen.
+  let seite = 0;
+  const abgeschnitten = async () => {
+    seite += 1;
+    const data = seite === 1 ? Array.from({ length: 500 }, (_, i) => ({ SECUCODE: 'A' + i })) : [];
+    return { success: true, result: { count: 552, data } };
+  };
+  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'HSF10', null, abgeschnitten),
+    /geblaettert kamen 500 Zeilen/);
+  // Gleichrangige Sortierschluessel BEIM BLAETTERN: dieselbe Zeile zweimal, eine andere gar
+  // nicht. Die Gesamtzahl stimmt — nur die Eindeutigkeit deckt es auf.
+  let s3 = 0;
+  const geblaettertDoppelt = async () => {
+    s3 += 1;
+    const data = s3 === 1
+      ? Array.from({ length: 500 }, (_, i) => ({ SECUCODE: 'A' + Math.min(i, 498) }))
+      : Array.from({ length: 52 }, (_, i) => ({ SECUCODE: 'B' + i }));
+    return { success: true, result: { count: 552, data } };
+  };
+  await assert.rejects(() => B.holeBericht('R', ['SECUCODE'], '(x)', 'HSF10', null, geblaettertDoppelt),
+    /nur 551 verschieden/);
+  // Auf EINER Seite ist eine Dublette dagegen eine Eigenschaft der Quelle, kein Transportfehler —
+  // sie darf nicht den ganzen Batch kosten, sondern wird firmenweise behandelt (Test unten).
+  assert.equal((await B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
+    antwort({ success: true, result: { count: 2, data: [{ SECUCODE: 'A' }, { SECUCODE: 'A' }] } }))).length, 2);
   // Leerer Treffer ist KEIN Fehler.
   assert.deepEqual(await B.holeBericht('R', ['SECUCODE'], '(x)', 'F10', null,
     antwort({ success: false, code: 9201, message: '返回数据为空' })), []);
+  // Vollstaendige Blaetterung ueber zwei Seiten geht durch.
+  let s2 = 0;
+  const zweiSeiten = async () => {
+    s2 += 1;
+    const data = s2 === 1
+      ? Array.from({ length: 500 }, (_, i) => ({ SECUCODE: 'A' + i }))
+      : Array.from({ length: 52 }, (_, i) => ({ SECUCODE: 'B' + i }));
+    return { success: true, result: { count: 552, data } };
+  };
+  assert.equal((await B.holeBericht('R', ['SECUCODE'], '(x)', 'HSF10', null, zweiSeiten)).length, 552);
+});
+
+test('ECHTER FALL 6880.HK: zwei Jahreszeilen mit verschiedenen Zahlen — die Firma wird verworfen', () => {
+  // Gemessen 19.08.2026: die Quelle fuehrt fuer FY2023 zwei Jahresabschluss-Zeilen. Eine meldet
+  // Umsatz 742.745.000 und einen operativen Mittelabfluss von 1,07 Mrd, die andere 135.185.368,50
+  // und einen Zufluss von 1,9 Mio. "Die erste gewinnt" waere eine stille Wahl zwischen Gewinn
+  // und Verlust.
+  const zeilen = [
+    { REPORT_DATE: '2023-12-31 00:00:00', OPERATE_INCOME: 742745000, NETCASH_OPERATE: -1068557000 },
+    { REPORT_DATE: '2023-12-31 00:00:00', OPERATE_INCOME: 135185368.5, NETCASH_OPERATE: 1910311.76 },
+  ];
+  assert.notEqual(zeilen[0].OPERATE_INCOME, zeilen[1].OPERATE_INCOME, 'VORAUSSETZUNG: die Zeilen widersprechen sich');
+  let e = null;
+  try { B.eindeutigOderWurf(zeilen, ['OPERATE_INCOME', 'NETCASH_OPERATE'], '6880.HK', 'der HK-Kennzahlen-Bericht'); }
+  catch (x) { e = x; }
+  assert.ok(e, 'zwei widerspruechliche Zeilen muessen werfen');
+  assert.match(e.message, /nicht entscheidbar/);
+  assert.equal(e.nichtBaubar, true, 'als "nicht baubar" markiert — das ist eine Dateneigenschaft, kein Konventionsbruch');
+  // Identische Dubletten sind harmlos.
+  assert.doesNotThrow(() => B.eindeutigOderWurf([zeilen[0], { ...zeilen[0] }],
+    ['OPERATE_INCOME', 'NETCASH_OPERATE'], '6880.HK', 'der HK-Kennzahlen-Bericht'));
+});
+
+test('bekannt nicht baubare Namen stehen namentlich mit Begruendung im Code', () => {
+  for (const [tk, grund] of Object.entries(B.CN_NICHT_BAUBAR)) {
+    assert.ok(grund && grund.length > 40, tk + ': die Begruendung muss den Grund nennen, nicht nur "geht nicht"');
+    assert.match(grund, /gemessen/, tk + ': die Begruendung muss auf einer Messung beruhen');
+  }
+});
+
+test('ECHTER FALL 3931.HK: GuV meldet IFRS, die Bilanz derselben Periode CAS — die Bilanz faellt weg', () => {
+  const roh = hk('03931.HK');
+  const incStd = roh.inc.filter((z) => z.REPORT_DATE.startsWith('2025-12-31'))[0].ACCOUNT_STANDARD;
+  const balStd = roh.bal.filter((z) => z.REPORT_DATE.startsWith('2025-12-31'))[0].ACCOUNT_STANDARD;
+  assert.equal(incStd, '国际会计准则');
+  assert.equal(balStd, '大陆会计准则');
+  assert.notEqual(incStd, balStd, 'VORAUSSETZUNG: die beiden Berichte widersprechen sich wirklich');
+  const j = B.bauHkJahre(roh, '3931.HK');
+  assert.equal(j.standard, 'IFRS');
+  assert.ok(Number.isFinite(wert(j, 'annualRev', 2025)), 'die GuV-Reihe bleibt erhalten');
+  assert.equal(wert(j, 'annualAssets', 2025), null, 'die CAS-Bilanz darf nicht neben die IFRS-GuV');
+  assert.equal(wert(j, 'annualEquity', 2025), null);
+  assert.ok(Number.isFinite(wert(j, 'annualAssets', 2024)), 'FY2024 ist einheitlich und bleibt vollstaendig');
+  assert.equal(j.bilanzVerworfen, 1);
+});
+
+test('ECHTER FALL 002314.SZ: Berichtigungen im Kassenbestand sind KEIN Konventionsbruch', () => {
+  // 17 Perioden-Paare, davon 8 eindeutig YTD und 0 eindeutig periodendiskret; die uebrigen sind
+  // nachtraeglich berichtigte Anfangsbestaende. Eine feste Trefferquote haette die Firma
+  // verworfen, obwohl kein einziges Paar fuer die Gegenthese spricht.
+  const roh = a('002314.SZ');
+  const w = B.pruefeYtdA('002314.SZ', roh.inc, roh.cf);
+  assert.equal(w.diskretTreffer, 0, 'kein einziges Paar spricht fuer periodendiskret');
+  assert.ok(w.ytdTreffer >= 3, 'genug positive Belege: ' + w.ytdTreffer);
+  assert.ok(w.ytdTreffer < w.cfPaare * 0.6, 'und trotzdem unter der alten starren Quote ('
+    + w.ytdTreffer + ' von ' + w.cfPaare + ') — genau der Fall, der frueher falsch rot war');
+  assert.ok(B.bauAJahre(roh, '002314.SZ').fys.length >= 10);
 });
 
 test('GEGENPROBE: verschwindet eine Spalte in der echten Antwort, bricht der Abruf ab', async () => {
