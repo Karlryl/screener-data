@@ -5,14 +5,35 @@
   "quelle": "Neue Verfassung der Early-Detection-Studie, 2026-08-16, Teil 2 (17 Regeln)",
   "scharfGeschaltetAm": "2026-08-16",
   "fenster": {
-    "entdeckung": {"von": "2009q1", "bis": "2015q4", "versiegelt": false},
-    "validierung": {"von": "2017q1", "bis": "2019q4", "versiegelt": false},
-    "endtest": {"von": "2021q1", "bis": "2023q4", "versiegelt": true}
+    "entdeckung": {
+      "von": "2009q1",
+      "bis": "2015q4",
+      "versiegelt": false
+    },
+    "validierung": {
+      "von": "2017q1",
+      "bis": "2019q4",
+      "versiegelt": false
+    },
+    "endtest": {
+      "von": "2021q1",
+      "bis": "2023q4",
+      "versiegelt": true
+    }
   },
-  "pufferjahre": [2016, 2020],
+  "pufferjahre": [
+    2016,
+    2020
+  ],
   "pufferGrund": "Reifebereinigung: jedes Ereignis braucht 4 Folgequartale, der Speicher endet 2024q4 — kein Folgequartal darf ueber eine Fenstergrenze reichen.",
   "oeffnungsprotokollMarke": "OEFFNUNG-2021-2023-NACH-PROTOKOLL-TEIL-4",
-  "evidenztragendeWaechter": ["R1", "R2", "R4", "R6", "R13"],
+  "evidenztragendeWaechter": [
+    "R1",
+    "R2",
+    "R4",
+    "R6",
+    "R13"
+  ],
   "waechterArten": {
     "laufzeit": "im Code durchgesetzt (lib/studie-verfassung.js) und von einem Wachtest festgenagelt",
     "skript": "von einem eigenen Pruefskript durchgesetzt und von einem Wachtest festgenagelt",
@@ -26,13 +47,18 @@
       "nagelt": "Kein Ergebnis-Zugriff ohne vorherigen, verketteten Eintrag im Zugriffs-Register; ein nachtraeglich veraenderter oder umgehaengter Eintrag bricht die Kette.",
       "waechter": {
         "art": "laufzeit",
-        "funktionen": ["pruefeZugriffsRegister", "haengeEintragAn"],
+        "funktionen": [
+          "pruefeZugriffsRegister",
+          "haengeEintragAn",
+          "pruefeServerzeit"
+        ],
         "test": "tests/studie-r1-register.test.js",
         "artefakt": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
         "scharfAb": "E0",
         "ausbauProbe": true,
         "rotGezeigtAm": "2026-08-16",
-        "offen": "Der Vergleich der SERVER-Push-Zeit gegen den ersten Datenzugriff wird in E3 ergaenzt (braucht einen realen Push und einen realen Zugriff, beides existiert vor E3 nicht)."
+        "serverzeitVergleich": "Geschlossen am 2026-08-19 (E3). scripts/studie-r1-serverzeit.js holt per `gh api` den Commit des Register-Eintrags von origin und schreibt den Date-Kopf der API-Antwort (GitHub-Serveruhr) als serverConfirmedAt in ein Freigabe-Protokoll. scripts/studie-zaehlprobe.py bricht ab, wenn sein erster Datenzugriff nicht spaeter als serverConfirmedAt und nicht spaeter oder gleich accessedAt liegt. Verglichen wird die SERVER-Zeit, nie ein lokaler Zeitstempel.",
+        "zusatzTest": "tests/studie-zaehlprobe.test.js (W2 — Serverzeit im echten Ablauf)"
       }
     },
     {
@@ -42,7 +68,9 @@
       "nagelt": "Eine Testfenster-Anfrage im Entdeckungs-Modus wirft einen Fehler; das Endtest-Fenster oeffnet nur mit der Oeffnungsprotokoll-Marke.",
       "waechter": {
         "art": "laufzeit",
-        "funktionen": ["pruefeFenster"],
+        "funktionen": [
+          "pruefeFenster"
+        ],
         "test": "tests/studie-r2-fenster.test.js",
         "artefakt": "protocol/early-detection/2.0.0/rules.json",
         "scharfAb": "E0",
@@ -71,13 +99,35 @@
       "nagelt": "Ein Lauf, der Ergebnisdaten liest, ohne unter seiner laufId im Register angemeldet zu sein, bricht ab; jeder Lauf fuehrt das Flag ergebnisdatenBeruehrt mit.",
       "waechter": {
         "art": "laufzeit",
-        "funktionen": ["starteLauf"],
+        "funktionen": [
+          "starteLauf",
+          "leseErgebnisdaten"
+        ],
         "test": "tests/studie-r4-sperre.test.js",
         "artefakt": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
         "scharfAb": "E0",
         "ausbauProbe": true,
-        "rotGezeigtAm": "2026-08-16"
-      }
+        "rotGezeigtAm": "2026-08-16",
+        "zusatzTest": "tests/studie-e3-praereg.test.js (W5 — Endpunkt-Klassen-Sperre, beide Richtungen)"
+      },
+      "endpunktSperren": [
+        {
+          "signalfamilie": "FEM-SEC-US-BESCHLEUNIGUNG@2.0.0",
+          "verbrauchtAm": "2026-07-20",
+          "verbraucht": "Kurs-Endpunkt — praeregistriert getestet, gueltiges Null-Ergebnis (FEM-SEC-US@1.2.0-Linie)",
+          "regel": "Diese Signalfamilie (Beschleunigung auf SEC-Fundamentaldaten) erhaelt NIE wieder einen Kurs-, Rendite- oder Preis-Endpunkt — auch nicht in Folgeprotokollen, auch nicht als Sekundaerendpunkt. Der einzige Endpunkt von FEM-SEC-US@2.0.0 ist die Wachstums-Persistenz der Folgequartale.",
+          "endpunktKlasse": "fundamental_folgequartale",
+          "verboteneKlassen": [
+            "kurs",
+            "preis",
+            "rendite",
+            "price",
+            "return",
+            "breakout"
+          ],
+          "warumHier": "Die Registry ueberlebt Protokollversionen, die Praeregistrierung nicht. Ein Registry-Eintrag allein waere ein Versprechen, ein Waechter allein stuerbe mit dem Testlauf — deshalb beides plus die Laufzeit-Sperre."
+        }
+      ]
     },
     {
       "id": "R5",
@@ -100,7 +150,10 @@
       "nagelt": "Es gilt der Beobachtungs-Stand, der zum Signal-Zeitpunkt schon existierte; existiert keiner, ist das Ergebnis NICHT BERECHENBAR; jede Zeile traegt die Stand-Kennung.",
       "waechter": {
         "art": "laufzeit",
-        "funktionen": ["waehleStand", "stempleZeile"],
+        "funktionen": [
+          "waehleStand",
+          "stempleZeile"
+        ],
         "test": "tests/studie-r6-vintage.test.js",
         "artefakt": "protocol/early-detection/2.0.0/provenance-closure.json",
         "scharfAb": "E0",
@@ -142,11 +195,13 @@
       "marke": "GESCHAERFT",
       "nagelt": "Keine p-Werte, wenn die Testfamilie unvollstaendig ist oder die Auffindbarkeit unter 90 Prozent bzw. die Differenz ueber 10 Punkte liegt.",
       "waechter": {
-        "art": "vorlage",
-        "test": null,
-        "artefakt": "E3-Praeregistrierung (Testfamilie) und E4-Auswerteskript",
+        "art": "skript",
+        "test": "tests/studie-e3-praereg.test.js",
+        "artefakt": "protocol/early-detection/2.0.0/preregistration.json (Testfamilie, 8 Tests, Auffindbarkeits-Gates) und scripts/studie-zaehlprobe.py (Gate-Messung) sowie das E4-Auswerteskript",
         "scharfAb": "E3",
-        "ausbauProbe": false
+        "ausbauProbe": false,
+        "hinweis": "Seit E3 ist die Testfamilie eingefroren und die Auffindbarkeit maschinell gemessen. Was noch aussteht, ist der p-Wert-Teil: die Verweigerung von p-Werten bei rotem Gate wird erst im E4-Auswerteskript scharf, weil vorher kein p-Wert existiert.",
+        "zusatzTest": "tests/studie-zaehlprobe.test.js"
       }
     },
     {
@@ -224,9 +279,9 @@
       "marke": "NEU",
       "nagelt": "Fallzahl unter den Praereg-Minima endet als INCONCLUSIVE_DATA VOR der Oeffnung; jeder Langlauf ist nach Absturz exakt wiederaufnehmbar (Kill-Test mit identischer Ergebnis-Pruefsumme).",
       "waechter": {
-        "art": "vorlage",
-        "test": null,
-        "artefakt": "E1-Haeppchenlauf (Kill-Test) und E3-Nur-Zaehlen-Probe",
+        "art": "skript",
+        "test": "tests/studie-zaehlprobe.test.js",
+        "artefakt": "E1-Haeppchenlauf (Kill-Test) und scripts/studie-zaehlprobe.py (R15b Nur-Zaehlen-Probe mit Ausgabe-Allowlist und Minima-Ampel)",
         "scharfAb": "E1",
         "ausbauProbe": false
       }
@@ -257,5 +312,14 @@
         "ausbauProbe": false
       }
     }
-  ]
+  ],
+  "e3Nachzug": {
+    "am": "2026-08-19",
+    "was": [
+      "R1 offenes Feld geschlossen (Serverzeit-Vergleich existiert)",
+      "R4 endpunktSperren als dauerhafte Registry-Eintragung",
+      "R9 und R15 von 'vorlage' auf 'skript' mit benanntem Artefakt und Test",
+      "Der Endtest-Zaehllauf ist NICHT freigegeben (Karl-Sperrzone) — dazu kein Register-Eintrag, kein Schluesselzugriff, kein Entschluesselungs-Aufruf im Repo-Code der Zaehlprobe."
+    ]
+  }
 }

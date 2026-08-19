@@ -1,0 +1,232 @@
+#!/usr/bin/env node
+'use strict';
+
+// R1 — Erst festschreiben, dann messen. Der Serverzeit-Teil.
+//
+// DIE SACHE: Eine Vorab-Anmeldung, die nur lokal existiert, ist kein Beweis. Sie wird
+// erst dann einer, wenn sie nachweislich auf dem geschuetzten Server liegt, BEVOR die
+// Daten angefasst wurden — und "bevor" wird an der SERVERUHR gemessen, nicht an der
+// eigenen. Eine lokale Uhr laesst sich stellen.
+//
+// Zwei Schritte, in dieser Reihenfolge, nie parallel:
+//   1. `anmelden`     — haengt den Eintrag an das Zugriffs-Register. Danach committen
+//                       und pushen. Das macht dieses Skript NICHT: ein Skript, das
+//                       selbst pusht, verwischt die Grenze zwischen Anmeldung und
+//                       Veroeffentlichung.
+//   2. `bestaetigen`  — holt den Register-Inhalt von origin zurueck, prueft, dass der
+//                       eventHash dort wirklich steht, und schreibt den `Date`-Kopf der
+//                       API-Antwort (GitHub-Serveruhr) als `serverConfirmedAt` in ein
+//                       Freigabe-Protokoll. Ohne diese Datei laeuft die Zaehlprobe nicht.
+//
+// Was hier ABSICHTLICH nicht passiert: das Skript entscheidet nicht, ob ein Lauf
+// erlaubt ist. Es stellt nur fest, was der Server sagt. Die Erlaubnis steht in der
+// Praeregistrierung.
+
+const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const {
+  VerfassungsBruch,
+  haengeEintragAn,
+  pruefeZugriffsRegister,
+  pruefeServerzeit,
+  ART_ZAEHLPROBE,
+} = require('../lib/studie-verfassung');
+
+const WURZEL = path.join(__dirname, '..');
+const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
+const LEDGER = path.join(WURZEL, ...LEDGER_REL.split('/'));
+const PRAEREG = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'preregistration.json');
+
+function argument(argv, name, pflicht = true) {
+  const i = argv.indexOf(`--${name}`);
+  if (i === -1 || i === argv.length - 1) {
+    if (pflicht) throw new VerfassungsBruch(`Argument --${name} fehlt`);
+    return null;
+  }
+  return argv[i + 1];
+}
+
+function lies(pfad) {
+  return JSON.parse(fs.readFileSync(pfad, 'utf8'));
+}
+
+// Das Register wird mit derselben Formatierung zurueckgeschrieben, mit der es
+// ausgeliefert wurde (ein Leerzeichen Einrueckung). Ein umformatiertes Register waere
+// im Diff ein Neuschrieb und im Review nicht mehr lesbar.
+function schreibeRegister(register) {
+  fs.writeFileSync(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+}
+
+function anmelden(argv) {
+  const runId = argument(argv, 'runid');
+  const fenster = argument(argv, 'fenster');
+  const zugriffAb = argument(argv, 'zugriff-ab');
+  const praereg = lies(PRAEREG);
+  const erlaubt = praereg.zaehlprobe.ausgabeAllowlist;
+
+  const register = lies(LEDGER);
+  if ((register.events || []).some((e) => e.runId === runId)) {
+    throw new VerfassungsBruch(
+      `R1: runId ${runId} steht schon im Register. Nur-Anhaengen heisst auch: keine zweite Anmeldung `
+      + 'unter demselben Namen — sonst waere hinterher nicht entscheidbar, welcher Lauf gemeint war.',
+    );
+  }
+  const jetzt = new Date();
+  const registeredAt = jetzt.toISOString();
+  if (Date.parse(zugriffAb) <= Date.parse(registeredAt)) {
+    throw new VerfassungsBruch(
+      `R1: --zugriff-ab (${zugriffAb}) muss NACH der Anmeldung (${registeredAt}) liegen. `
+      + 'Eine Anmeldung, die den Zugriff schon erlaubt, ist ein Nachher-Protokoll.',
+    );
+  }
+  const eintrag = {
+    runId,
+    typ: ART_ZAEHLPROBE,
+    registeredAt,
+    accessedAt: zugriffAb,
+    fenster: [fenster],
+    allowedOutputs: erlaubt,
+    erlaubt:
+      'Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, '
+      + 'keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.',
+    verboten:
+      'Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes '
+      + 'Fenster; jeder Zugriff auf Schluesselmaterial.',
+    begruendung:
+      'R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, '
+      + 'Abschnitt zaehlprobe.',
+    endtestSiegel:
+      'unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das '
+      + 'Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.',
+  };
+  const neu = haengeEintragAn(register, eintrag);
+  pruefeZugriffsRegister(neu);
+  schreibeRegister(neu);
+  const letzter = neu.events[neu.events.length - 1];
+  process.stdout.write(
+    `${JSON.stringify({ runId, registeredAt, accessedAt: zugriffAb, eventHash: letzter.eventHash }, null, 1)}\n`,
+  );
+  process.stdout.write(
+    '\nJETZT: committen und pushen. Erst danach `bestaetigen` aufrufen — die Reihenfolge IST die Methodik.\n',
+  );
+  return 0;
+}
+
+function gh(args) {
+  return execFileSync('gh', args, { encoding: 'utf8', cwd: WURZEL, maxBuffer: 64 * 1024 * 1024 });
+}
+
+function serverAntwort(pfad) {
+  // `-i` liefert die Kopfzeilen mit. Der `Date`-Kopf ist die GitHub-Serveruhr; genau
+  // sie verlangt R1, weil die lokale Uhr dem Laufenden gehoert.
+  const roh = gh(['api', '-i', pfad]);
+  const trenner = roh.indexOf('\r\n\r\n') >= 0 ? '\r\n\r\n' : '\n\n';
+  const schnitt = roh.indexOf(trenner);
+  if (schnitt === -1) throw new VerfassungsBruch('R1: Antwort ohne Kopf/Rumpf-Trennung');
+  const kopf = roh.slice(0, schnitt);
+  const rumpf = roh.slice(schnitt + trenner.length);
+  const datum = /^date:\s*(.+)$/im.exec(kopf);
+  if (!datum) {
+    throw new VerfassungsBruch(
+      'R1: die API-Antwort traegt keinen Date-Kopf. Ohne Serveruhr gibt es keine Bestaetigung — '
+      + 'ein lokaler Zeitstempel waere genau das Alibi, das R1 ausschliesst.',
+    );
+  }
+  const server = new Date(datum[1].trim());
+  if (Number.isNaN(server.getTime())) {
+    throw new VerfassungsBruch(`R1: unlesbarer Date-Kopf: ${datum[1]}`);
+  }
+  return { serverConfirmedAt: server.toISOString(), rumpf };
+}
+
+function bestaetigen(argv) {
+  const runId = argument(argv, 'runid');
+  const ziel = argument(argv, 'ziel');
+  const zweig = argument(argv, 'zweig', false)
+    || execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf8', cwd: WURZEL }).trim();
+
+  const register = lies(LEDGER);
+  pruefeZugriffsRegister(register);
+  const eintrag = (register.events || []).find((e) => e.runId === runId);
+  if (!eintrag) throw new VerfassungsBruch(`R1: runId ${runId} steht nicht im lokalen Register`);
+  if ((eintrag.typ || eintrag.type) !== ART_ZAEHLPROBE) {
+    throw new VerfassungsBruch(`R1: Eintrag ${runId} ist keine Zaehlproben-Anmeldung`);
+  }
+
+  const nwo = execFileSync('gh', ['repo', 'view', '--json', 'nameWithOwner', '-q', '.nameWithOwner'], {
+    encoding: 'utf8', cwd: WURZEL,
+  }).trim();
+  const { serverConfirmedAt, rumpf } = serverAntwort(
+    `repos/${nwo}/contents/${LEDGER_REL}?ref=${encodeURIComponent(zweig)}`,
+  );
+  const inhalt = JSON.parse(rumpf);
+  const entfernt = Buffer.from(inhalt.content || '', inhalt.encoding || 'base64').toString('utf8');
+  if (!entfernt.includes(eintrag.eventHash)) {
+    throw new VerfassungsBruch(
+      `R1: der Register-Eintrag ${runId} (eventHash ${eintrag.eventHash.slice(0, 16)}...) liegt NICHT auf `
+      + `origin/${zweig}. Ein Zaehllauf ohne bestaetigte Vorab-Anmeldung ist wertlos und beschaedigt die `
+      + 'Studie — es wird nicht gezaehlt.',
+    );
+  }
+  // Gegenprobe an der eigenen Kette: das, was auf dem Server liegt, muss dieselbe
+  // gueltige Kette sein wie lokal. Ein Server-Stand mit gebrochener Kette waere ein
+  // gepushter Nachher-Eintrag.
+  pruefeZugriffsRegister(JSON.parse(entfernt));
+
+  const freigabe = {
+    schema: 'early-detection-zaehlprobe-freigabe/v1',
+    protokoll: 'FEM-SEC-US@2.0.0',
+    runId,
+    fenster: (eintrag.fenster || [])[0],
+    registerEventHash: eintrag.eventHash,
+    registerZweig: zweig,
+    registeredAt: eintrag.registeredAt,
+    accessedAt: eintrag.accessedAt,
+    serverConfirmedAt,
+    quelle: `gh api -i repos/${nwo}/contents/${LEDGER_REL}?ref=${zweig} — Date-Kopf der Antwort`,
+    bedeutung:
+      'Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder '
+      + 'Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab.',
+  };
+  // Sanity: die Anmeldung muss vor der Serverbestaetigung liegen, sonst hat jemand die
+  // Reihenfolge gedreht.
+  if (Date.parse(eintrag.registeredAt) >= Date.parse(serverConfirmedAt)) {
+    throw new VerfassungsBruch(
+      `R1: die Anmeldung (${eintrag.registeredAt}) liegt nicht vor der Server-Bestaetigung (${serverConfirmedAt}).`,
+    );
+  }
+  pruefeServerzeit({
+    serverConfirmedAt,
+    ersterZugriffAm: new Date(Date.parse(serverConfirmedAt) + 1000).toISOString(),
+    accessedAt: null,
+  });
+  fs.mkdirSync(path.dirname(path.resolve(ziel)), { recursive: true });
+  fs.writeFileSync(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
+  process.stdout.write(`${JSON.stringify(freigabe, null, 1)}\n`);
+  return 0;
+}
+
+function haupt(argv) {
+  const befehl = argv[0];
+  if (befehl === 'anmelden') return anmelden(argv);
+  if (befehl === 'bestaetigen') return bestaetigen(argv);
+  process.stderr.write(
+    'Aufruf:\n'
+    + '  node scripts/studie-r1-serverzeit.js anmelden --runid <id> --fenster <name> --zugriff-ab <ISO>\n'
+    + '  node scripts/studie-r1-serverzeit.js bestaetigen --runid <id> --ziel <freigabe.json> [--zweig <name>]\n',
+  );
+  return 2;
+}
+
+if (require.main === module) {
+  try {
+    process.exit(haupt(process.argv.slice(2)));
+  } catch (fehler) {
+    process.stderr.write(`${fehler instanceof VerfassungsBruch ? 'VERFASSUNGSBRUCH' : 'FEHLER'}: ${fehler.message}\n`);
+    process.exit(1);
+  }
+}
+
+module.exports = { anmelden, bestaetigen, serverAntwort };
