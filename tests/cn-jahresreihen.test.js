@@ -443,6 +443,33 @@ test('ECHTER FALL 6880.HK: zwei Jahreszeilen mit verschiedenen Zahlen — die Fi
     ['OPERATE_INCOME', 'NETCASH_OPERATE'], '6880.HK', 'der HK-Kennzahlen-Bericht'));
 });
 
+test('die Bekannt-Liste stellt NUR "nicht baubar" gruen — ein Konventionsbruch bleibt rot', async () => {
+  // Ohne diese Probe waere CN_NICHT_BAUBAR ein Loch: ein Name auf der Liste koennte JEDEN
+  // Fehler verschlucken. Erst die Sabotage-Gegenprobe hat die Luecke gezeigt.
+  assert.ok(B.CN_NICHT_BAUBAR['6880.HK'], 'VORAUSSETZUNG: 6880.HK steht auf der Liste');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cnannual-'));
+
+  // (a) der BEKANNTE Fall (zwei widerspruechliche Jahreszeilen): Lauf bleibt gruen, aber der
+  //     Name wird nicht geschrieben — kein geratener Wert.
+  const outA = path.join(dir, 'a.json');
+  await B.main({ fetchJson: fakeQuelle(FIX), out: outA, aTickers: [], hkTickers: ['6880.HK'] });
+  assert.equal(JSON.parse(fs.readFileSync(outA, 'utf8'))['6880.HK'], undefined,
+    'ein nicht entscheidbarer Fall darf keinen Wert schreiben');
+
+  // (b) derselbe Name, aber ein echter KONVENTIONSBRUCH: der Lauf muss rot werden, obwohl der
+  //     Ticker auf der Liste steht.
+  const kaputt = tiefKopie(FIX);
+  for (const z of kaputt.hk['06880.HK'].main) {
+    if (z.DATE_TYPE_CODE !== '001') z.START_DATE = z.REPORT_DATE.slice(0, 8) + '01 00:00:00';
+  }
+  const outB = path.join(dir, 'b.json');
+  await assert.rejects(
+    () => B.main({ fetchJson: fakeQuelle(kaputt), out: outB, aTickers: [], hkTickers: ['6880.HK'] }),
+    /unvollstaendig/,
+    'ein YTD-Konventionsbruch darf NICHT von der Bekannt-Liste geschluckt werden');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('bekannt nicht baubare Namen stehen namentlich mit Begruendung im Code', () => {
   for (const [tk, grund] of Object.entries(B.CN_NICHT_BAUBAR)) {
     assert.ok(grund && grund.length > 40, tk + ': die Begruendung muss den Grund nennen, nicht nur "geht nicht"');

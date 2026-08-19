@@ -3,8 +3,19 @@
  * build-cnannual.js — OFFLINE-Generator fuer China A (Festland) und Hongkong.
  * ==========================================================================
  * Zieht die Jahresreihen aus dem Eastmoney-Datacenter (F10, ohne Schluessel) und schreibt
- * external-data/cn-secannual.json im secAnnual-Format, das run-screener.js liest
- * (SECANNUAL_FILES; Schluessel = Yahoo-Ticker wie 688256.SS / 300308.SZ / 9992.HK).
+ * external-data/cn-secannual.json im secAnnual-Format der Geschwisterdateien
+ * (Schluessel = Yahoo-Ticker wie 688256.SS / 300308.SZ / 9992.HK).
+ *
+ * ⚠ NOCH NICHT VERDRAHTET — und das ist Absicht. Damit run-screener.js die Datei liest, muss
+ * 'cn-secannual.json' in dessen SECANNUAL_FILES stehen. src/scoring/run-screener.js ist aber
+ * seit dem 19.08.2026 unter GQS-00@1.1.0 quell-hash-VERSIEGELT (protocol/gqs-00/1.1.0/
+ * formula-registry.json). Nachgemessen: der Stand auf main trifft den Siegelhash exakt, jede
+ * Aenderung — auch diese eine Zeile — laesst tests/scoring/gqs00-freeze.test.js rot werden.
+ * Das Siegel oeffnet man nur ueber einen Uebergang (protocol/gqs-00/<version>-pending/
+ * transition.json) mit Gerichtsurteil und Karl-Freigabe; das ist eine Methodik-Entscheidung
+ * und keine Adapter-Frage. Die Datei wird also erzeugt und committet, das Eintragen bleibt ein
+ * Ein-Zeilen-Schritt fuer den naechsten geoeffneten Uebergang. Bis dahin aendert dieser Adapter
+ * am Scoring NICHTS — kein Ticker, kein Score bewegt sich.
  *
  * QUELLE UND IHR CHARAKTER: Eastmoney ist KEIN Amt und hat keinen veroeffentlichten Vertrag.
  * Der Kanal kann sich unangekuendigt aendern. Karl-Entscheid 19.08.2026: "voll nutzen wie jede
