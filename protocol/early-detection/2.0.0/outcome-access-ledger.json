@@ -263,6 +263,68 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "fbe8cb64df9e62de3762ecab1b9cba70ad1d5d38f15ef2f23eb786a54483a47b",
    "eventHash": "967f61536c4af1837a6d82aa89f9820d67d46dad785d158766e10f5af038e5e5"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:36:27.591Z",
+   "accessedAt": "2026-08-19T17:39:27.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, dritter Lauf nach dem Code-Review: die Zaehl-Logik ist unveraendert (Listenzugehoerigkeit statt zweiter Schwellenabfrage, harte Sperre gegen Klasse d), aber die Skript-Bytes sind es nicht. Gemessen statt geglaubt, dass die Zahlen gleich bleiben.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "967f61536c4af1837a6d82aa89f9820d67d46dad785d158766e10f5af038e5e5",
+   "eventHash": "037adf4aaf41a82d9df2fb736873e2cbefccedc3b9d15330bed275d0e984f516"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:36:27.651Z",
+   "accessedAt": "2026-08-19T17:39:27.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, dritter Lauf nach dem Code-Review: die Zaehl-Logik ist unveraendert (Listenzugehoerigkeit statt zweiter Schwellenabfrage, harte Sperre gegen Klasse d), aber die Skript-Bytes sind es nicht. Gemessen statt geglaubt, dass die Zahlen gleich bleiben.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "037adf4aaf41a82d9df2fb736873e2cbefccedc3b9d15330bed275d0e984f516",
+   "eventHash": "8b35f80c50de8995daee959c9a17de54c30177f654d92e0dd2826b6410353eba"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
