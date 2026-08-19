@@ -111,6 +111,34 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa",
    "eventHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b"
+  },
+  {
+   "runId": "e3-zaehlprobe-pruefung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:24:42.550Z",
+   "accessedAt": "2026-08-19T16:27:42.493Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "feuerungen",
+    "auswertbare_firmen_quartale",
+    "feuerrate",
+    "firmen_mit_erst_ereignis",
+    "zensierte_erst_ereignisse",
+    "fallzahl",
+    "auffindbarkeit",
+    "fallzahl_mit_aktienzahl_nenner",
+    "kontrollpool_firmen",
+    "kontrollpool_auffindbarkeit",
+    "ampel"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, Abschnitt zaehlprobe.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b",
+   "eventHash": "e2bf486231669d1df24257f14a9807faaeed4cc822efb349378f17ce69be3249"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
