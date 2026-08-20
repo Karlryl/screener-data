@@ -456,6 +456,29 @@
    "endtestSiegel": "unberuehrt",
    "previousHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
    "eventHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f"
+  },
+  {
+   "runId": "c1-freeze1-2026-08-20",
+   "typ": "C1_REGELFREEZE",
+   "registeredAt": "2026-08-20T01:13:54.337702Z",
+   "accessedAt": "2026-08-20T01:22:54.220619Z",
+   "fenster": [
+    "kein Studienfenster - lebende Fremdquellen, kein Kursdatum"
+   ],
+   "allowedOutputs": [
+    "firmenzahl_je_jahr",
+    "filer_liste",
+    "ereignis_datum",
+    "quellen_pruefsumme",
+    "kontextfenster",
+    "rolle"
+   ],
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten je Jahr sowie datierte Ereignis-Kandidaten aus arXiv, Crossref, Wikipedia und Federal Register; Kontextfenster um die Themenphrase aus einzelnen SEC-Filing-Dokumenten.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert-, Marktkapitalisierungs- oder Volumenwert; jeder Zugriff auf den versiegelten SEC-Speicher oder auf Schluesselmaterial; jede Aenderung an den C0-Siegeln.",
+   "begruendung": "C1 Strang C - Zeitleisten je Thema. Buendel-SHA-256 73b647b1f1c6d511ea5b4ee953ebab01cda096f1e253cdbc554b47a9244ef086 ueber Regeltext und Werkzeug.",
+   "endtestSiegel": "unberuehrt - C1 fasst den versiegelten Speicher nicht an.",
+   "previousHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f",
+   "eventHash": "bfb08fba3c754d19c2e0b1b048b4bc4a5c5eda1f9692696b7a677a0c3cd23ed6"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",

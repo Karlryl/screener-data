@@ -33,11 +33,12 @@ const {
   pruefeServerzeit,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
+  ART_C1_REGELFREEZE,
 } = require('../lib/studie-verfassung');
 
 // Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
 // geschlossen: eine unbekannte Art bekommt keine Server-Bestaetigung.
-const BESTAETIGBAR = new Set([ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
+const BESTAETIGBAR = new Set([ART_ZAEHLPROBE, ART_C0_REGELFREEZE, ART_C1_REGELFREEZE]);
 
 const WURZEL = path.join(__dirname, '..');
 const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
