@@ -1,13 +1,13 @@
 {
  "schema": "early-detection-zaehlprobe-freigabe/v1",
  "protokoll": "FEM-SEC-US@2.0.0",
- "runId": "c1-freeze1-2026-08-20",
+ "runId": "c1-freeze1b-2026-08-20",
  "fenster": "kein Studienfenster - lebende Fremdquellen, kein Kursdatum",
- "registerEventHash": "bfb08fba3c754d19c2e0b1b048b4bc4a5c5eda1f9692696b7a677a0c3cd23ed6",
+ "registerEventHash": "4a0816824cba0b8e2570de5a991b443dc5a14bc21eabb7652081ad4dbef1059b",
  "registerZweig": "studie/c1-zeitleisten",
- "registeredAt": "2026-08-20T01:13:54.337702Z",
- "accessedAt": "2026-08-20T01:22:54.220619Z",
- "serverConfirmedAt": "2026-08-20T01:14:08.000Z",
+ "registeredAt": "2026-08-20T01:34:19.917087Z",
+ "accessedAt": "2026-08-20T01:41:19.786471Z",
+ "serverConfirmedAt": "2026-08-20T01:34:36.000Z",
  "quelle": "gh api -i repos/Karlryl/screener-data/contents/protocol/early-detection/2.0.0/outcome-access-ledger.json?ref=studie/c1-zeitleisten — Date-Kopf der Antwort",
  "bedeutung": "Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab."
 }
