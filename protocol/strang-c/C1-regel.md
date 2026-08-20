@@ -6,7 +6,25 @@ Quellen. Beantwortet wird ausschließlich die **Ereignis-Seite** von Karls Frage
 wird von C1 nicht berührt — kein Kurs, keine Rendite, kein Marktwert, kein Volumen.
 
 Diese Datei wird **vor der ersten Messung** eingefroren (FREEZE 1, zusammen mit
-`scripts/studie-c1.py`) und danach nicht mehr geändert.
+`scripts/studie-c1.py`).
+
+> **Zweiter Regelstand (FREEZE 1b), offen als Ersetzung angemeldet.** Nach FREEZE 1 und
+> **vor** dem Ereignis- und Führungslauf haben zwei unabhängige Code-Reviews vier
+> Stellen gefunden, an denen das Werkzeug still etwas anderes tat, als hier steht:
+> (1) das Kontextfenster suchte die Phrase **ohne Wortgrenzen** und hätte `cloud` in
+> `cloudy` gefunden — ein Beleg, der aussieht wie ein Beleg; (2) „Dokument nicht
+> erreichbar" und „Phrase nicht enthalten" waren derselbe leere Wert; (3) aus einem
+> **gedeckelten** EDGAR-Jahr wurden „früheste" Nennungen gezogen, obwohl die Quelle
+> dort keine vollständige, datumssortierte Liste herausgibt; (4) der Kandidaten-Deckel
+> griff **vor** der Zulässigkeitsprüfung und konnte einen gültigen Anker durch
+> Datenmüll verdrängen. **Kein Schwellenwert, kein Zeitraum, keine Sonde und keine
+> Fenstergröße wurde angefasst** — die Parameter des Abschnitts 2 bis 5 sind in beiden
+> Ständen identisch. Die Verbreitungskurve war zu diesem Zeitpunkt bereits im Lauf; sie
+> ist von keiner der vier Stellen berührt. Nachgemessen statt behauptet: von den
+> geänderten Funktionen ruft `kurve` **eine einzige** auf — `themen()`, und dort kam
+> nur eine zusätzliche Abbruchbedingung dazu (zwei Themen dürfen nicht denselben
+> Dateinamen ergeben). Die von `themen()` zurückgegebene Liste ist in beiden Ständen
+> **byte-gleich**; der Nachweis steht im C1-Bericht. Gültig ist FREEZE 1b.
 
 ---
 
@@ -64,6 +82,8 @@ wäre eine zweite Wahrheit.
   nie durch das Vorjahr ersetzt.
 - **Anker gegen C0:** Für jedes `REGEL`-Thema muss `D(Leitphrase, Aufnahmejahr)`
   **exakt** dem `D` aus `C0-themenliste.json` entsprechen. Abweichung ⇒ Wächter rot.
+- **Linkszensur ist dreiwertig.** Ist `D(2001)` gedeckelt, heißt das **nicht**
+  „nicht zensiert", sondern „nicht bestimmbar" (`null`).
 
 ---
 
@@ -97,6 +117,7 @@ Rohantwort. Alle fünf Quellen sind ohne Zahlung, Konto oder Trial erreichbar (R
 | P2 | Crossref-API | **fachlich** | frühester `published`-Datumsteil | exakte Phrase im **Titel**, Typ Aufsatz/Konferenzbeitrag | — |
 | P3 | Wikipedia-API | **öffentlich** | Zeitstempel der **ersten Version** | Lemma stimmt (Groß-/Kleinschreibung egal) mit der Phrase überein | 2001 |
 | P4 | EDGAR-Volltext | **öffentlich** | `file_date` des frühesten 10-K | exakte Phrase im Volltext | 2001 |
+| | | | *entfällt (fail-closed), wenn das früheste Jahr mit Nennungen **gedeckelt** ist — dort gibt EDGAR keine vollständige, datumssortierte Liste heraus, „das früheste 10-K" wäre eine Behauptung über eine Liste, die niemand ganz sehen kann* | | |
 | P5 | Federal Register | **öffentlich** | `publication_date` | exakte Phrase (Anführungszeichen-Suche) | 1994 |
 
 **Warum diese Zweiteilung:** Ein Forschungsdurchbruch, über den außerhalb der
@@ -109,6 +130,12 @@ ausgewiesen.
 Liefert eine Ebene keinen einzigen zulässigen Kandidaten, lautet ihr Anker
 **NICHT BELEGBAR**. Alle Kandidaten bleiben in der Ausgabe stehen, auch die
 späteren — die Wahl ist damit nachprüfbar statt behauptet.
+
+**Der Kandidaten-Deckel greift NACH der Zulässigkeit.** Je Sonde werden bis zu fünf
+ankerfähige **und** bis zu fünf nicht ankerfähige Kandidaten behalten, beide nach
+Datum aufsteigend. Andernfalls könnten fünf kaputte Metadatensätze einen gültigen
+Anker verdrängen — und ob ein Thema davon getroffen wird, hängt an der zufälligen
+Datenqualität seiner Quellen, wäre also Ungleichbehandlung.
 
 **Zulässigkeits-Ausschlüsse (fail-closed, für alle Themen gleich):**
 
@@ -131,8 +158,11 @@ späteren — die Wahl ist damit nachprüfbar statt behauptet.
 ## 5 · Die Führungsfrage (Karls Vorläufer zur NVIDIA-Frage)
 
 Je Thema die **acht frühesten 10-K-Nennungen**, sortiert nach (`file_date`, `cik`,
-`adsh`). Für jede wird das Dokument bei der SEC geholt, die Phrase im Text gesucht und
-ein **Kontextfenster von ±400 Zeichen** gespeichert.
+`adsh`). Für jede wird das Dokument bei der SEC geholt, die Phrase **an Wortgrenzen**
+im Text gesucht (dieselbe Regel wie bei den Titel-Sonden) und ein **Kontextfenster von
+±400 Zeichen** gespeichert. Nennungen, die aus einem **gedeckelten** Jahr stammen,
+bleiben in der Liste — sonst verschwiegen wir die einzigen Namen, die es für dieses
+Jahr gibt — und tragen die Marke `ausGedeckeltemJahr`.
 
 **Rollenregel — mechanisch, in dieser Reihenfolge:**
 
@@ -147,8 +177,16 @@ ein **Kontextfenster von ±400 Zeichen** gespeichert.
 Die Signalzahlen stehen mit in der Ausgabe. **Diese Einordnung ist eine grobe
 Kontext-Marke, kein Urteil über das Geschäftsmodell** — sie sagt, in welchem
 Zusammenhang das Wort stand, mehr nicht. Ist das Dokument nicht abrufbar oder die
-Phrase im Text nicht auffindbar, steht `NICHT BELEGBAR`; ein leeres Fenster wird nie
-als `ERWAEHNUNG` gebucht.
+Phrase im Text nicht auffindbar, steht `NICHT BELEGBAR` — **mit unterschiedlichem
+Grund**: „Index nicht abrufbar", „Index listet kein prüfbares Dokument", „keines der
+Dokumente war abrufbar" und „Phrase nicht gefunden" sind vier verschiedene Sachverhalte
+und werden nie zu einem zusammengezogen. Ein leeres Fenster wird nie als `ERWAEHNUNG`
+gebucht.
+
+**Bekannte Lücke, offen gelassen statt repariert:** Filings, die ihre Abschnitts-
+Überschrift nur optisch (fett, größer) statt mit Satzzeichen abtrennen, sind aus reinem
+Text nicht erkennbar. Dort bleibt `abschnitt` leer und die Rolle fällt auf die
+Signalfamilien zurück.
 
 **Kurs-Sperre:** Aus den Filing-Dokumenten wird ausschließlich das Kontextfenster um
 die Themenphrase entnommen. Kein Kurs-, Rendite-, Marktwert- oder Volumenwert wird

@@ -115,6 +115,10 @@ def schreib_json(pfad, obj, einrueckung=1):
 
 # ── Themen und Phrasen ────────────────────────────────────────────────────────
 
+def _dateiname(text):
+    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
+
+
 def themen():
     """Alle 26 C0-Themen, unveraendert. Reihenfolge und Zahl sind Pflicht: waer hier
     ein Thema herausfiele, waere genau die Rueckblick-Auswahl passiert, die C0
@@ -134,6 +138,10 @@ def themen():
         aus.append({"thema": t["thema"], "herkunft": t.get("herkunft"),
                     "leitphrase": leit, "begriffe": begriffe,
                     "c0SpikeJahr": t.get("spikeJahr"), "c0D": t.get("D")})
+    namen = [_dateiname(t["thema"]) for t in aus]
+    if len(set(namen)) != len(namen):
+        raise Bruch("Zwei Themen haetten denselben Dateinamen - eins wuerde das andere "
+                    "ueberschreiben")
     if len(aus) != 26:
         raise Bruch("C0 fuehrt %d Themen statt 26 - die Themenmenge ist nicht die "
                     "eingefrorene" % len(aus))
@@ -221,6 +229,9 @@ def wert(argv, name):
 def befehl_freeze1(argv):
     runid = wert(argv, "runid")
     zugriff_ab = wert(argv, "zugriff-ab")
+    # Ein zweiter Regelstand am selben Tag ist eine Sache, die ein Pruefer sehen muss.
+    # Deshalb steht die Ersetzung IM Register, nicht nur im Bericht.
+    ersetzt = argv[argv.index("--ersetzt") + 1] if "--ersetzt" in argv else None
     if C0.zeitpunkt(zugriff_ab) <= datetime.now(timezone.utc):
         raise Bruch("--zugriff-ab liegt nicht in der Zukunft - eine Anmeldung, die den "
                     "Zugriff schon erlaubt, ist ein Nachher-Protokoll")
@@ -228,6 +239,7 @@ def befehl_freeze1(argv):
     schreib_json(FREEZE1, {
         "schema": "strang-c-freeze/v1", "stufe": "C1_FREEZE_1", "runId": runid,
         "erzeugtAm": jetzt(), "buendelSha256": gesamt, "buendel": zeilen,
+        "ersetzt": ersetzt,
         "bedeutung": "Regeltext und Werkzeug von C1, eingefroren vor der ersten Messung.",
     })
     gesamt2, zeilen2 = buendel1()
@@ -248,8 +260,15 @@ def befehl_freeze1(argv):
         "verboten": "Jeder Kurs-, Rendite-, Marktwert-, Marktkapitalisierungs- oder "
                     "Volumenwert; jeder Zugriff auf den versiegelten SEC-Speicher oder "
                     "auf Schluesselmaterial; jede Aenderung an den C0-Siegeln.",
-        "begruendung": "C1 Strang C - Zeitleisten je Thema. Buendel-SHA-256 %s ueber "
-                       "Regeltext und Werkzeug." % gesamt,
+        "begruendung": ("C1 Strang C - Zeitleisten je Thema. Buendel-SHA-256 %s ueber "
+                        "Regeltext und Werkzeug." % gesamt)
+                       + ("" if not ersetzt else
+                          " Ersetzt die Anmeldung %s: zwei unabhaengige Code-Reviews "
+                          "fanden vier Stellen, an denen das Werkzeug still etwas "
+                          "anderes tat als der Regeltext sagt. Kein Schwellenwert, "
+                          "kein Zeitraum, keine Sonde, keine Fenstergroesse veraendert; "
+                          "der Zaehlpfad (befehl_kurve, fruehste_filer, beleg_je_filer, "
+                          "alle_phrasen) ist byte-gleich." % ersetzt),
         "endtestSiegel": "unberuehrt - C1 fasst den versiegelten Speicher nicht an.",
     })
     print(json.dumps({"runId": runid, "buendelSha256": gesamt,
@@ -439,15 +458,30 @@ def p1_openalex(phrase, protokoll):
                             {"jahr": satz.get("publication_year"),
                              "typ": satz.get("type"),
                              "trefferGesamt": (daten.get("meta") or {}).get("count")}))
-        if len(aus) >= KANDIDATEN_JE_SONDE:
-            break
-    return aus
+    return deckeln(aus)
+
+
+def deckeln(kandidaten):
+    """Der Kandidaten-Deckel greift NACH der Zulaessigkeit, nicht davor.
+
+    Die erste Fassung brach ab, sobald KANDIDATEN_JE_SONDE Titel-Treffer beisammen
+    waren - unabhaengig davon, ob sie ankerfaehig sind. Ein Thema, dessen fruehe
+    Datensaetze kaputte Metadaten tragen (Jahr 0 und aehnliches), haette damit still
+    'NICHT BELEGBAR' bekommen, obwohl ein gueltiger Kandidat existierte. Und das
+    haengt an der zufaelligen Metadatenqualitaet je Thema - also genau die
+    Ungleichbehandlung, die C1 ausschliesst. (Silent-Failure-Review 20.08.)"""
+    geordnet = sorted(kandidaten, key=lambda k: (k["datumVergleich"],
+                                                 k.get("bezeichnung") or ""))
+    ja = [k for k in geordnet if k["ankerfaehig"]][:KANDIDATEN_JE_SONDE]
+    nein = [k for k in geordnet if not k["ankerfaehig"]][:KANDIDATEN_JE_SONDE]
+    return sorted(ja + nein, key=lambda k: (k["datumVergleich"],
+                                            k.get("bezeichnung") or ""))
 
 
 def _crossref_treffer(rohbytes, h, phrase, url):
     daten = json.loads(rohbytes.decode("utf-8", "replace"))
     aus = []
-    for satz in daten.get("message", {}).get("items", []):
+    for satz in (daten.get("message") or {}).get("items") or []:
         titel = normraum(" ".join(satz.get("title") or []))
         if not enthaelt_phrase(titel, phrase):
             continue
@@ -462,11 +496,12 @@ def _crossref_treffer(rohbytes, h, phrase, url):
             ankerfaehig, grund = False, "Jahr < 1900 - unplausibler Metadatensatz"
         elif not erzeugt:
             ankerfaehig, grund = False, "kein created-Zeitstempel"
+        doi = satz.get("DOI")
         aus.append(kandidat("crossref", phrase, datum, titel,
-                            "https://doi.org/%s" % satz.get("DOI"), h,
+                            ("https://doi.org/%s" % doi) if doi else None, h,
                             ankerfaehig, grund,
                             {"abgelegtAm": erzeugt, "typ": satz.get("type")}))
-    return aus, daten.get("message", {}).get("total-results")
+    return aus, (daten.get("message") or {}).get("total-results")
 
 
 def p2_crossref(phrase, protokoll):
@@ -493,15 +528,14 @@ def p2_crossref(phrase, protokoll):
     aus.sort(key=lambda k: (k["datumVergleich"], k["bezeichnung"]))
     gesehen, eindeutig = set(), []
     for k in aus:
-        if k["url"] in gesehen:
+        schluessel = k["url"] or (k["bezeichnung"], k["datum"])
+        if schluessel in gesehen:
             continue
-        gesehen.add(k["url"])
+        gesehen.add(schluessel)
         k["fensterVoll"] = voll
         k["trefferGesamt"] = gesamt
         eindeutig.append(k)
-        if len(eindeutig) >= KANDIDATEN_JE_SONDE:
-            break
-    return eindeutig
+    return deckeln(eindeutig)
 
 
 def p3_wikipedia(phrase, protokoll):
@@ -514,7 +548,7 @@ def p3_wikipedia(phrase, protokoll):
         raise Bruch("Wikipedia antwortet HTTP %s auf %s" % (status, url))
     daten = json.loads(rohbytes.decode("utf-8", "replace"))
     aus = []
-    for seite in daten.get("query", {}).get("pages", []):
+    for seite in ((daten.get("query") or {}).get("pages") or []):
         if seite.get("missing"):
             continue
         versionen = seite.get("revisions") or []
@@ -604,13 +638,40 @@ def kurve_lesen():
 
 
 def erste_nennungen(leitphrase, stand):
+    """Die acht fruehesten Nennungen - mit der Marke, aus welchem Jahr sie stammen.
+
+    Ein GEDECKELTES Jahr gibt seine Trefferliste nur unvollstaendig und nach EDGARs
+    Relevanz sortiert heraus, nicht nach Datum. Die daraus gezogenen Namen sind
+    Nennungen, aber nicht belegbar die fruehesten. Sie bleiben in der Liste - sonst
+    verschwiegen wir die einzigen Namen, die es fuer dieses Jahr gibt - und tragen die
+    Marke `ausGedeckeltemJahr`."""
     alle = []
     for jahr in JAHRE:
         satz = stand.get((leitphrase, jahr))
         if satz is None:
             raise Bruch("Kurve fuer %r/%d fehlt" % (leitphrase, jahr))
-        alle.extend(satz.get("fruehesteFiler") or [])
+        for f in (satz.get("fruehesteFiler") or []):
+            eintrag = dict(f)
+            eintrag["ausGedeckeltemJahr"] = bool(satz.get("gedeckelt"))
+            alle.append(eintrag)
     return fruehste_filer(alle, FUEHRUNG_N)
+
+
+def p4_kandidat_moeglich(leitphrase, stand):
+    """Darf aus der Kurve ein EDGAR-Ereignisdatum abgeleitet werden?
+
+    Nur wenn das frueheste Jahr mit ueberhaupt einer Nennung nicht gedeckelt ist.
+    Sonst waere "das frueheste 10-K" eine Behauptung ueber eine Liste, die die Quelle
+    gar nicht vollstaendig herausgibt - fail-closed."""
+    for jahr in JAHRE:
+        satz = stand.get((leitphrase, jahr))
+        if satz is None:
+            raise Bruch("Kurve fuer %r/%d fehlt" % (leitphrase, jahr))
+        if satz.get("gedeckelt"):
+            return False, "fruehestes Jahr mit Nennungen (%d) ist gedeckelt" % jahr
+        if satz.get("fruehesteFiler"):
+            return True, None
+    return False, "keine Nennung im Zeitraum"
 
 
 def text_aus(rohbytes):
@@ -620,7 +681,11 @@ def text_aus(rohbytes):
     return normraum(htmlmod.unescape(text))
 
 
-ITEM_MUSTER = re.compile(r"(?i)\bitem\s+(\d{1,2}\s*[A-Za-z]?)\s*[\.\:\-]")
+# Bekannte Luecke, bewusst so gelassen: Filings, die ihre Item-Ueberschrift nur
+# optisch (fett/gross) statt mit Satzzeichen abtrennen, sind aus reinem Text nicht
+# erkennbar. Dort bleibt `abschnitt` leer und die Rolle faellt auf die
+# Signalfamilien zurueck - das ist der ehrliche Ausgang, kein stiller Treffer.
+ITEM_MUSTER = re.compile(r"(?i)\bitem\s+(\d{1,2}\s*[A-Za-z]?)\s*[\.\:\-\u2013\u2014]")
 
 
 def abschnitt_vor(text, stelle):
@@ -649,13 +714,13 @@ def rolle_aus(fenster, abschnitt):
 def dokumente_von(cik, adsh, protokoll):
     ohne = (adsh or "").replace("-", "")
     if not ohne:
-        return [], None
+        return [], None, False
     url = ("https://www.sec.gov/Archives/edgar/data/%d/%s/index.json"
            % (int(cik), ohne))
     rohbytes, h, status = hole_und_siegle("filing", url, mindestabstand=0.15,
                                           protokoll=protokoll)
     if rohbytes is None:
-        return [], status
+        return [], status, False
     daten = json.loads(rohbytes.decode("utf-8", "replace"))
     posten = (daten.get("directory") or {}).get("item") or []
     haupt = sorted((p for p in posten if (p.get("type") or "") == "10-K"),
@@ -667,25 +732,43 @@ def dokumente_von(cik, adsh, protokoll):
                   key=lambda p: -int(p.get("size") or 0))
     namen = [p.get("name") for p in haupt + rest if p.get("name")]
     return ["https://www.sec.gov/Archives/edgar/data/%d/%s/%s" % (int(cik), ohne, n)
-            for n in namen[:DOK_HOECHSTENS]], status
+            for n in namen[:DOK_HOECHSTENS]], status, True
+
+
+def phrasenstelle(text, phrase):
+    """Fundstelle an Wortgrenzen - dieselbe Regel wie enthaelt_phrase.
+
+    Die erste Fassung nahm hier str.find(). Damit haette "cloud" in "cloudy"
+    getroffen, und Kontextfenster samt Rolle waeren fuer eine Stelle berechnet worden,
+    an der die Phrase gar nicht steht - ein Beleg, der aussieht wie ein Beleg. Zwei
+    unabhaengige Reviews haben genau das gefunden (20.08.)."""
+    treffer = re.search(r"(?<!\w)%s(?!\w)" % re.escape(normraum(phrase)),
+                        normraum(text), re.IGNORECASE)
+    return treffer.start() if treffer else -1
 
 
 def fenster_suchen(phrase, urls, protokoll):
+    """Gibt (fund, gelesen) zurueck. `gelesen` sagt, ob ueberhaupt ein Dokument
+    gelesen werden konnte - sonst waeren "nicht erreichbar" und "Phrase nicht
+    enthalten" derselbe leere Wert, und der Bericht wiese das eine als das andere
+    aus."""
+    gelesen_eins = False
     for url in urls:
         rohbytes, h, status = hole_und_siegle("filing", url, mindestabstand=0.15,
                                               protokoll=protokoll)
         if rohbytes is None:
             continue
-        text = text_aus(rohbytes)
-        stelle = text.lower().find(normraum(phrase).lower())
+        gelesen_eins = True
+        text = normraum(text_aus(rohbytes))
+        stelle = phrasenstelle(text, phrase)
         if stelle < 0:
             continue
         von = max(0, stelle - FENSTER)
         bis = min(len(text), stelle + len(normraum(phrase)) + FENSTER)
         return {"url": url, "sha256": h, "fenster": text[von:bis],
                 "abschnitt": abschnitt_vor(text, stelle), "stelle": stelle,
-                "textLaenge": len(text)}
-    return None
+                "textLaenge": len(text)}, True
+    return None, gelesen_eins
 
 
 def fuehrung_pfad():
@@ -713,16 +796,26 @@ def befehl_fuehrung(_argv):
             thema, cik, adsh = schluessel
             f = daten[schluessel]
             phrase = nach_thema[thema]["leitphrase"]
-            urls, status = dokumente_von(cik, adsh, protokoll)
-            fund = fenster_suchen(phrase, urls, protokoll) if urls else None
+            urls, status, indexgelesen = dokumente_von(cik, adsh, protokoll)
+            fund, gelesen_eins = (fenster_suchen(phrase, urls, protokoll) if urls
+                                  else (None, False))
             satz = {"thema": thema, "cik": cik, "adsh": adsh, "name": f.get("name"),
                     "datum": f.get("datum"), "form": f.get("form"),
+                    "ausGedeckeltemJahr": bool(f.get("ausGedeckeltemJahr")),
                     "geholtAm": jetzt()}
             if fund is None:
                 satz["belegbar"] = False
-                satz["grund"] = (NICHT_BELEGBAR + ": Dokument nicht abrufbar (HTTP %s)"
-                                 % status) if not urls else \
-                    NICHT_BELEGBAR + ": Phrase in den geprueften Dokumenten nicht gefunden"
+                if not urls:
+                    satz["grund"] = NICHT_BELEGBAR + (
+                        ": Einreichungs-Index gelesen, listet aber kein pruefbares "
+                        "Dokument" if indexgelesen
+                        else ": Einreichungs-Index nicht abrufbar (HTTP %s)" % status)
+                elif not gelesen_eins:
+                    satz["grund"] = (NICHT_BELEGBAR + ": keines der %d Dokumente war "
+                                     "abrufbar" % len(urls))
+                else:
+                    satz["grund"] = (NICHT_BELEGBAR + ": Phrase in den geprueften "
+                                     "Dokumenten nicht gefunden")
             else:
                 rolle, signale = rolle_aus(fund["fenster"], fund["abschnitt"])
                 satz.update({"belegbar": True, "rolle": rolle, "signale": signale,
@@ -820,10 +913,6 @@ def monate_zwischen(frueh, spaet):
     return (b[0] - a[0]) * 12 + (b[1] - a[1])
 
 
-def _dateiname(text):
-    return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-
-
 def befehl_ableiten(_argv):
     pruefe_regelstand("ableiten")
     stand = kurve_lesen()
@@ -848,7 +937,8 @@ def befehl_ableiten(_argv):
         kand = list(ereignisse.get(t["thema"]) or [])
         # P4 EDGAR entsteht aus der eigenen Kurve, nicht aus einem zweiten Abruf.
         erste = erste_nennungen(t["leitphrase"], stand)
-        if erste and erste[0].get("datum") and erste[0].get("belegSha256"):
+        p4_ok, p4_grund = p4_kandidat_moeglich(t["leitphrase"], stand)
+        if p4_ok and erste and erste[0].get("datum") and erste[0].get("belegSha256"):
             f = erste[0]
             kand.append(kandidat("edgar", t["leitphrase"], f["datum"],
                                  "%s (10-K)" % f.get("name"),
@@ -863,9 +953,13 @@ def befehl_ableiten(_argv):
             "leitphrase": t["leitphrase"], "begriffe": t["begriffe"],
             "c0SpikeJahr": t["c0SpikeJahr"], "c0D": t["c0D"],
             "sondenLaeufe": len(laeufe.get(t["thema"]) or ()),
+            "p4Moeglich": p4_ok, "p4Grund": p4_grund,
             "sondenLaeufeSoll": len(t["begriffe"]) * len(SONDEN),
             "reihe": {str(j): reihe[j] for j in sorted(reihe)},
-            "linkszensiert": reihe.get(JAHRE[0]) not in (None, 0),
+            # Ein gedeckeltes Startjahr heisst NICHT "nicht zensiert", sondern
+            # "unbekannt". Die alte Fassung buchte es als False.
+            "linkszensiert": (None if reihe.get(JAHRE[0]) is None
+                              else reihe[JAHRE[0]] > 0),
             "gedeckelteJahre": [j for j in sorted(reihe) if reihe[j] is None],
             "beschleunigung": beschleunigung(reihe),
             "ankerFachlich": fach or NICHT_BELEGBAR,
@@ -1035,6 +1129,20 @@ def pruefungen():
                 schlecht.append("%s/%s: Rolle trotz NICHT BELEGBAR" % (z["thema"], n["cik"]))
     w("W7_keine_rolle_ohne_belegtes_kontextfenster", not schlecht,
       "verletzt: %s" % (schlecht[:5] or "keins"))
+
+    # W8 - Die Dateimenge ist genau die der 26 Themen. Sonst wanderte eine
+    # liegengebliebene Datei aus einem frueheren Lauf stillschweigend ins Siegel,
+    # und W6 bliebe gruen, weil es denselben verunreinigten Stand nachrechnet.
+    soll = {_dateiname(z["thema"]) + ".json" for z in leisten}
+    fremd = []
+    for ordner, kurz in ((FUEHRUNG_DIR, "c1-fuehrung"), (KANDIDATEN_DIR, "c1-kandidaten")):
+        ist = {n for n in os.listdir(ordner) if n.endswith(".json")}
+        for n in sorted(ist - soll):
+            fremd.append("%s/%s ueberzaehlig" % (kurz, n))
+        for n in sorted(soll - ist):
+            fremd.append("%s/%s fehlt" % (kurz, n))
+    w("W8_nur_die_26_themendateien_stehen_im_siegel", not fremd,
+      "abweichend: %s" % (fremd[:5] or "keins"))
     return aus
 
 
@@ -1131,6 +1239,22 @@ def befehl_selbsttest(_argv):
     ist("Item 1A" in t and "<p>" not in t, "HTML wird gestrippt")
     ist(abschnitt_vor(t, t.find("cloud")).lower().startswith("item 1a"), "Abschnitt gefunden")
     ist(abschnitt_vor("kein Kopf hier", 5) is None, "ohne Kopf None")
+
+    # phrasenstelle - der Befund, den zwei Reviews gefunden haben
+    ist(phrasenstelle("a cloudy day", "cloud") == -1, "cloudy ist kein cloud-Treffer")
+    ist(phrasenstelle("our cloud, revisited", "cloud") == 4, "echter Treffer wird gefunden")
+    ist(phrasenstelle("nichts hier", "cloud") == -1, "kein Treffer -> -1")
+
+    # deckeln - Zulaessigkeit vor Deckel
+    viele = [kandidat("openalex", "x", "190%d" % i, "T%d" % i, "u%d" % i, "a" * 64,
+                      False, "kaputt") for i in range(6)]
+    viele.append(kandidat("openalex", "x", "2001-01-01", "gut", "ug", "b" * 64, True))
+    gedeckelt = deckeln(viele)
+    ist(any(k["ankerfaehig"] for k in gedeckelt),
+        "ein gueltiger Kandidat ueberlebt den Deckel auch hinter 6 kaputten")
+    ist(len([k for k in gedeckelt if not k["ankerfaehig"]]) == KANDIDATEN_JE_SONDE,
+        "die kaputten werden auf den Deckel gekuerzt")
+    ist(deckeln([]) == [], "leere Liste bleibt leer")
 
     # fruehste_filer
     ff = fruehste_filer([{"cik": "2", "adsh": "b", "datum": "2005-01-01"},
