@@ -525,6 +525,29 @@
    "endtestSiegel": "unberuehrt - C1 fasst den versiegelten Speicher nicht an.",
    "previousHash": "4a0816824cba0b8e2570de5a991b443dc5a14bc21eabb7652081ad4dbef1059b",
    "eventHash": "8a142954abd84aeaa770e7098f8f2042fe40b7c7819dd7c2b88ae304575eeda9"
+  },
+  {
+   "runId": "c1-freeze2-2026-08-20",
+   "typ": "C1_REGELFREEZE",
+   "registeredAt": "2026-08-20T01:49:27.834313Z",
+   "accessedAt": "2026-08-20T01:54:27.726740Z",
+   "fenster": [
+    "kein Studienfenster - abgeleitetes Ergebnis"
+   ],
+   "allowedOutputs": [
+    "zeitleiste",
+    "firmenzahl_je_jahr",
+    "ereignis_datum",
+    "quellen_pruefsumme",
+    "kontextfenster",
+    "rolle"
+   ],
+   "erlaubt": "Veroeffentlichung der abgeleiteten Zeitleisten und Fuehrungs-Dateien.",
+   "verboten": "Jede nachtraegliche Aenderung an Zeitleisten oder Fuehrungs-Dateien; jeder Kurs-, Rendite- oder Marktwert.",
+   "begruendung": "C1 FREEZE 2 - Buendel-SHA-256 fdd2d7e5544948e80fa02fc209cf839f6d35f045bbdd46ebd4b810ddd5146c78 ueber Zeitleisten und Fuehrungs-Dateien.",
+   "endtestSiegel": "unberuehrt",
+   "previousHash": "8a142954abd84aeaa770e7098f8f2042fe40b7c7819dd7c2b88ae304575eeda9",
+   "eventHash": "3289feca8c11b28afedf1e1b9bafe18706f6d8a3ce2c330e432ba26f6bd72ba7"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
