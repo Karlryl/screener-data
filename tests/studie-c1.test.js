@@ -9,9 +9,11 @@
 // erzeugt genau den Unterschied, den er spaeter zu messen glaubt.
 //
 // Jeder Waechter wird deshalb in BEIDE Richtungen geprueft: der ausgelieferte Stand
-// muss DURCHGEHEN, und jede der drei Manipulationen muss ROT werden. Dazu der
+// muss DURCHGEHEN, und jede der vier Manipulationen muss ROT werden (Datum ohne Beleg,
+// Thema ohne Zeitleiste, C0-Anker verletzt, unerklaerte Live-Abweichung). Dazu der
 // Meta-Test: ohne den C0-Anker-Vergleich darf die dritte Manipulation NICHT mehr
-// auffliegen — er belegt, dass der Vergleich die tragende Stelle ist.
+// auffliegen — er belegt, dass der Vergleich die tragende Stelle ist und nicht ein
+// Ritual daneben.
 
 const assert = require('node:assert/strict');
 const { execFileSync, spawnSync } = require('node:child_process');
@@ -145,17 +147,31 @@ test('W4 (Sabotage C): eine Reihe, die C0 im Aufnahmejahr nicht reproduziert, fl
   const ziel = arbeitskopie();
   const datei = path.join(ziel, 'protocol', 'strang-c', 'C1-zeitleisten.json');
   const inhalt = lies(datei);
-  const z = inhalt.zeitleisten.find((x) => x.herkunft === 'REGEL');
-  const jahr = String(z.c0SpikeJahr);
-  z.reihe[jahr] = (z.reihe[jahr] || 0) + 1;
-  const p = inhalt.c0Ankerpruefung.find((x) => x.thema === z.thema);
-  p.c1D = z.reihe[jahr];
-  p.gleich = false;
-  inhalt.c0AnkerAlleGleich = false;
+  const p = inhalt.c0Ankerpruefung.find((x) => x.stufe1_methode_gleich);
+  assert.ok(p, 'Testfall taugt nichts: keine gruene Stufe-1-Pruefung vorhanden');
+  p.stufe1_methode_gleich = false;
+  inhalt.c0AnkerMethodeGleich = false;
   fs.writeFileSync(datei, `${JSON.stringify(inhalt, null, 1)}\n`, 'utf8');
   const lauf = pruefe(ziel);
   assert.equal(lauf.status, 1, `Eine C0-Abweichung blieb unbemerkt:\n${lauf.stdout}`);
   assert.match(lauf.stdout, /ROT .*W2_c0_firmenzahl_im_aufnahmejahr_reproduziert/);
+});
+
+test('W4b (Sabotage D): eine UNERKLAERTE Live-Abweichung fliegt auf', () => {
+  // Genau der Fall, den ein Toleranzband verschluckt haette: die heutige Zahl weicht
+  // ab, aber kein Dokument-Diff erklaert, warum.
+  const ziel = arbeitskopie();
+  const datei = path.join(ziel, 'protocol', 'strang-c', 'C1-zeitleisten.json');
+  const inhalt = lies(datei);
+  const p = inhalt.c0Ankerpruefung[0];
+  p.stufe2_abweichung = true;
+  p.stufe2_erklaert = false;
+  p.dokumenteNurInC0 = [];
+  p.dokumenteNurInC1 = [];
+  fs.writeFileSync(datei, `${JSON.stringify(inhalt, null, 1)}\n`, 'utf8');
+  const lauf = pruefe(ziel);
+  assert.equal(lauf.status, 1, `Eine unerklaerte Abweichung blieb unbemerkt:\n${lauf.stdout}`);
+  assert.match(lauf.stdout, /ROT .*W2b_jede_live_abweichung_ist_byte_genau_erklaert/);
 });
 
 test('W5 (Meta): ohne den C0-Anker-Vergleich findet der Waechter die Abweichung NICHT mehr', () => {
@@ -164,21 +180,32 @@ test('W5 (Meta): ohne den C0-Anker-Vergleich findet der Waechter die Abweichung 
   const ziel = arbeitskopie();
   const skript = path.join(ziel, 'scripts', 'studie-c1.py');
   const code = fs.readFileSync(skript, 'utf8');
-  const alt = 'schief = [p for p in daten["c0Ankerpruefung"] if not p["gleich"]]';
+  const alt = `schief = [p["thema"] for p in daten["c0Ankerpruefung"]
+              if not p["stufe1_methode_gleich"]]`;
   assert.ok(code.includes(alt), 'Die geschuetzte Stelle steht nicht mehr im Skript');
   fs.writeFileSync(skript, code.replace(alt, 'schief = []'), 'utf8');
 
   const datei = path.join(ziel, 'protocol', 'strang-c', 'C1-zeitleisten.json');
   const inhalt = lies(datei);
-  const z = inhalt.zeitleisten.find((x) => x.herkunft === 'REGEL');
-  const p = inhalt.c0Ankerpruefung.find((x) => x.thema === z.thema);
-  p.c1D = (p.c1D || 0) + 1;
-  p.gleich = false;
+  const p = inhalt.c0Ankerpruefung.find((x) => x.stufe1_methode_gleich);
+  p.stufe1_methode_gleich = false;
   fs.writeFileSync(datei, `${JSON.stringify(inhalt, null, 1)}\n`, 'utf8');
 
   const lauf = pruefe(ziel);
   assert.doesNotMatch(lauf.stdout, /ROT .*W2_c0_firmenzahl_im_aufnahmejahr_reproduziert/,
     'Der ausgebaute Vergleich findet die Abweichung immer noch — dann war er nicht die tragende Stelle');
+});
+
+test('C1: die Live-Abweichung gegen C0 ist ausgewiesen, nicht geglaettet', () => {
+  // Der Befund selbst gehoert in die Ausgabe: EDGARs Volltextindex lebt, und wo er
+  // sich zwischen C0 und C1 bewegt hat, steht das mit Dokument-Kennung da.
+  const daten = lies(ZEITLEISTEN);
+  for (const p of daten.c0Ankerpruefung) {
+    if (!p.stufe2_abweichung) continue;
+    assert.ok((p.dokumenteNurInC0.length + p.dokumenteNurInC1.length) > 0,
+      `${p.thema}: Abweichung ohne Dokument-Beleg`);
+    assert.equal(p.stufe2_erklaert, true, `${p.thema}: Abweichung nicht aufgegangen`);
+  }
 });
 
 test('C1: die beiden Freezes haengen aneinander und beschreiben den Arbeitsbaum', () => {

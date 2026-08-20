@@ -24,7 +24,24 @@ Diese Datei wird **vor der ersten Messung** eingefroren (FREEZE 1, zusammen mit
 > geänderten Funktionen ruft `kurve` **eine einzige** auf — `themen()`, und dort kam
 > nur eine zusätzliche Abbruchbedingung dazu (zwei Themen dürfen nicht denselben
 > Dateinamen ergeben). Die von `themen()` zurückgegebene Liste ist in beiden Ständen
-> **byte-gleich**; der Nachweis steht im C1-Bericht. Gültig ist FREEZE 1b.
+> **byte-gleich**; der Nachweis steht im C1-Bericht.
+
+> **Dritter Regelstand (FREEZE 1c), ebenfalls offen angemeldet.** Der C0-Anker ist beim
+> ersten Lauf **rot geworden** — und zwar zu Recht: für `transparency` zählte C0 im
+> Aufnahmejahr 2004 genau 395 Firmen, C1 einen Tag später 394. Die Ursache wurde
+> byte-genau gefunden, nicht vermutet: **EDGARs Volltextindex lebt.** Beide Läufe
+> melden dieselben 446 Treffer, aber der heutige Index liefert nur noch 445 Dokumente
+> aus; verschwunden ist `0001047469-04-006934:a2129092zex-13.htm` (IBMs Anhang 13 zum
+> 2003er Jahresbericht) — das einzige Dokument, das IBM in diese Zählung brachte.
+>
+> Die erste Fassung des Ankers verlangte, dass eine **lebende** Quelle sich zwischen
+> zwei Läufen nicht ändert. Das ist keine Eigenschaft, die es zu prüfen gäbe, sondern
+> eine, die die Quelle nicht hat — der Wächter wäre von jetzt an dauerhaft rot, ohne je
+> etwas über die Methodik auszusagen. Er wird deshalb **nicht abgeschwächt, sondern
+> geteilt und verschärft** (Abschnitt 2). Der Sabotage-Fall, für den er gebaut wurde —
+> eine Zeitleiste, die C0s Firmenzahl nicht reproduziert —, fliegt in der neuen Fassung
+> weiterhin auf; zusätzlich fliegt jetzt auch eine **unerklärte** Abweichung auf, die
+> die alte Fassung mit einer Toleranz verschluckt hätte. Gültig ist FREEZE 1c.
 
 ---
 
@@ -80,8 +97,17 @@ wäre eine zweite Wahrheit.
 - **Deckelung:** Meldet EDGAR oberhalb seiner internen Grenze nur eine untere Schranke,
   ist `D` für dieses Jahr **NICHT BERECHENBAR** (`gedeckelt: true`) — nie geschätzt,
   nie durch das Vorjahr ersetzt.
-- **Anker gegen C0:** Für jedes `REGEL`-Thema muss `D(Leitphrase, Aufnahmejahr)`
-  **exakt** dem `D` aus `C0-themenliste.json` entsprechen. Abweichung ⇒ Wächter rot.
+- **Anker gegen C0 — zweistufig, beide Stufen ohne Toleranz.**
+  - **Stufe 1, Methoden-Identität:** Derselbe Zähl-Code muss aus **C0s versiegelten
+    Rohantworten** für (Leitphrase, Aufnahmejahr) *genau* die Firmenmenge von C0s
+    versiegelter Filer-Liste herausrechnen, und deren Größe muss `D` aus
+    `C0-themenliste.json` sein. Das ist die Sache, die der Wächter schützt: dass C0 und
+    C1 dasselbe messen. Abweichung ⇒ rot.
+  - **Stufe 2, Live-Abweichung mit Erklärungspflicht:** Weicht die **heutige** Zahl von
+    C0s Zahl ab, muss die Differenz byte-genau aufgehen — welche Dokument-Kennungen im
+    einen Siegel stehen und im anderen nicht, und dass genau daraus die Firmendifferenz
+    folgt. Eine Abweichung **ohne** diese Erklärung ⇒ rot. Ein Toleranzband gibt es
+    nicht: es würde jede künftige stille Zähl-Drift durchwinken.
 - **Linkszensur ist dreiwertig.** Ist `D(2001)` gedeckelt, heißt das **nicht**
   „nicht zensiert", sondern „nicht bestimmbar" (`null`).
 

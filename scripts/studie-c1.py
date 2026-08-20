@@ -43,6 +43,7 @@ ZEITLEISTEN = os.path.join(PROTO, "C1-zeitleisten.json")
 FUEHRUNG_DIR = os.path.join(PROTO, "c1-fuehrung")
 KANDIDATEN_DIR = os.path.join(PROTO, "c1-kandidaten")
 C0_THEMEN = os.path.join(PROTO, "C0-themenliste.json")
+C0_FILER_DIR = os.path.join(PROTO, "filer")
 FREIGABE = os.path.join(WURZEL, "reports", "studie", "C1-freigabe.json")
 
 # Regel-Parameter. Sie stehen hier EINMAL und sind mit dem Skript eingefroren.
@@ -913,6 +914,92 @@ def monate_zwischen(frueh, spaet):
     return (b[0] - a[0]) * 12 + (b[1] - a[1])
 
 
+def c0_filerliste():
+    """Der versiegelte C0-Anker: die Filer-Listen aus C0s FREEZE-2-Buendel."""
+    aus = {}
+    for name in sorted(os.listdir(C0_FILER_DIR)):
+        if not name.endswith(".json"):
+            continue
+        satz = lies_json(os.path.join(C0_FILER_DIR, name))
+        aus[satz["thema"]] = satz
+    return aus
+
+
+def c0_zaehlstand(paare):
+    """Liest aus C0s Zaehl-Protokoll die Antwort-Pruefsummen der gesuchten
+    (Phrase, Jahr)-Paare. Zeilenweise, weil die Datei zig Megabyte gross ist."""
+    pfad = os.path.join(C0.rohordner("."), "C0-zaehlung.jsonl")
+    if not os.path.exists(pfad):
+        raise Bruch("C0s Zaehl-Protokoll fehlt - der Anker kann nicht geprueft werden")
+    gesucht, aus = set(paare), {}
+    with open(pfad, "r", encoding="utf-8") as f:
+        for zeile in f:
+            zeile = zeile.strip()
+            if not zeile:
+                continue
+            satz = json.loads(zeile)
+            schluessel = (satz["phrase"], satz["jahr"])
+            if schluessel in gesucht:
+                aus[schluessel] = satz
+    return aus
+
+
+def ciks_und_ids(hashes):
+    """Rechnet CIK-Menge und Dokument-Kennungen aus versiegelten EDGAR-Antworten -
+    mit DEMSELBEN Leser wie die Zaehlung (C0.filer_aus). Ein zweiter Leser waere eine
+    zweite Wahrheit und der Anker bewiese nichts mehr."""
+    ciks, ids = set(), set()
+    for h in hashes or []:
+        antwort = json.loads(C0.entsiegle("edgar", h).decode("utf-8", "replace"))
+        teil, _ = C0.filer_aus(antwort)
+        for f in teil:
+            ciks.add(f["cik"])
+        for treffer in antwort["hits"]["hits"]:
+            if "10-K" in (treffer["_source"].get("root_forms") or []):
+                ids.add(treffer["_id"])
+    return ciks, ids
+
+
+def c0_anker(t, stand, c0liste, c0zaehl):
+    """Der C0-Anker, zweistufig.
+
+    Stufe 1 - METHODEN-IDENTITAET (exakt, ohne Toleranz): derselbe Code muss aus C0s
+    VERSIEGELTEN Bytes genau C0s Firmenmenge herausrechnen. Das ist die Sache, die der
+    Waechter schuetzt: dass C0 und C1 dasselbe messen.
+
+    Stufe 2 - LIVE-ABWEICHUNG, ERKLAERUNGSPFLICHTIG: EDGARs Volltextindex lebt. Weicht
+    die heutige Zahl von C0s Zahl ab, muss die Differenz byte-genau aufgehen - welche
+    Dokument-Kennungen im einen Siegel stehen und im anderen nicht, und dass genau
+    daraus die Firmendifferenz folgt. Eine Abweichung OHNE diese Erklaerung ist rot.
+    Eine blosse Toleranz waere hier die bequeme Loesung und wuerde jede kuenftige
+    stille Zaehl-Drift durchwinken."""
+    jahr = t["c0SpikeJahr"]
+    liste = c0liste.get(t["thema"])
+    if liste is None:
+        raise Bruch("C0 fuehrt keine Filer-Liste fuer %r" % t["thema"])
+    c0_ciks = {f["cik"] for f in liste["filer"]}
+    c0zeile = c0zaehl.get((t["leitphrase"], jahr))
+    if c0zeile is None:
+        raise Bruch("C0s Zaehlstand kennt %r/%s nicht" % (t["leitphrase"], jahr))
+    nach_c0_bytes, c0_ids = ciks_und_ids(c0zeile.get("antworten"))
+    c1zeile = stand.get((t["leitphrase"], jahr))
+    live_ciks = set(c1zeile.get("ciks") or [])
+    _, c1_ids = ciks_und_ids(c1zeile.get("antworten"))
+    nur_c0 = sorted(c0_ciks - live_ciks)
+    nur_c1 = sorted(live_ciks - c0_ciks)
+    erklaert = (len(c0_ciks) - len(live_ciks)) == (len(nur_c0) - len(nur_c1))
+    return {
+        "thema": t["thema"], "jahr": jahr, "c0D": t["c0D"], "c1D": c1zeile["D"],
+        "stufe1_methode_gleich": (nach_c0_bytes == c0_ciks
+                                  and len(c0_ciks) == t["c0D"]),
+        "stufe2_abweichung": len(c0_ciks) != len(live_ciks),
+        "stufe2_erklaert": erklaert,
+        "nurInC0": nur_c0, "nurInC1": nur_c1,
+        "dokumenteNurInC0": sorted(c0_ids - c1_ids),
+        "dokumenteNurInC1": sorted(c1_ids - c0_ids),
+    }
+
+
 def befehl_ableiten(_argv):
     pruefe_regelstand("ableiten")
     stand = kurve_lesen()
@@ -931,6 +1018,9 @@ def befehl_ableiten(_argv):
 
     os.makedirs(FUEHRUNG_DIR, exist_ok=True)
     os.makedirs(KANDIDATEN_DIR, exist_ok=True)
+    c0liste = c0_filerliste()
+    c0zaehl = c0_zaehlstand([(t["leitphrase"], t["c0SpikeJahr"]) for t in themen()
+                             if t["herkunft"] == "REGEL"])
     aus, ankerpruefung = [], []
     for t in themen():
         reihe = reihe_von(t["leitphrase"], stand)
@@ -972,11 +1062,9 @@ def befehl_ableiten(_argv):
         if len(t["begriffe"]) > 1:
             v = vereinigungsreihe(t["begriffe"], stand)
             zeile["vereinigungsreihe"] = {str(j): v[j] for j in sorted(v)}
-        # Anker gegen C0: dieselbe Zahl im Aufnahmejahr, sonst rot.
+        # Anker gegen C0, zweistufig - siehe c0_anker().
         if t["herkunft"] == "REGEL":
-            ist = reihe.get(t["c0SpikeJahr"])
-            ankerpruefung.append({"thema": t["thema"], "jahr": t["c0SpikeJahr"],
-                                  "c0D": t["c0D"], "c1D": ist, "gleich": ist == t["c0D"]})
+            ankerpruefung.append(c0_anker(t, stand, c0liste, c0zaehl))
         aus.append(zeile)
         # Die Kandidaten liegen je Thema in einer eigenen Datei: alle zusammen sprengen
         # den 200-KB-Deckel (R14a), und ein gekuerzter Kandidatensatz waere genau die
@@ -997,11 +1085,17 @@ def befehl_ableiten(_argv):
         "schema": "strang-c-zeitleisten/v1", "erzeugtAm": jetzt(),
         "jahre": [JAHRE[0], JAHRE[-1]], "themen": len(aus),
         "c0Ankerpruefung": ankerpruefung,
-        "c0AnkerAlleGleich": all(p["gleich"] for p in ankerpruefung),
+        "c0AnkerMethodeGleich": all(p["stufe1_methode_gleich"] for p in ankerpruefung),
+        "c0AnkerAbweichungenErklaert": all(p["stufe2_erklaert"] for p in ankerpruefung),
+        "c0AnkerLiveAbweichungen": [p["thema"] for p in ankerpruefung
+                                    if p["stufe2_abweichung"]],
         "zeitleisten": aus,
     })
     print(json.dumps({"themen": len(aus),
-                      "c0AnkerAlleGleich": all(p["gleich"] for p in ankerpruefung),
+                      "c0AnkerMethodeGleich": all(p["stufe1_methode_gleich"]
+                                                  for p in ankerpruefung),
+                      "c0AnkerAbweichungenErklaert": all(p["stufe2_erklaert"]
+                                                         for p in ankerpruefung),
                       "ankerFachlichBelegt": sum(1 for z in aus
                                                  if z["ankerFachlich"] != NICHT_BELEGBAR),
                       "ankerOeffentlichBelegt": sum(1 for z in aus
@@ -1067,11 +1161,20 @@ def pruefungen():
     w("W1_alle_26_themen_haben_eine_zeitleiste", not fehlend and len(leisten) == 26,
       "fehlend: %s (n=%d)" % (fehlend or "keins", len(leisten)))
 
-    # W2 - Der C0-Anker: die Firmenzahl im Aufnahmejahr muss reproduziert sein.
-    schief = [p for p in daten["c0Ankerpruefung"] if not p["gleich"]]
+    # W2 - Der C0-Anker, Stufe 1: derselbe Code, C0s versiegelte Bytes, C0s Firmenmenge.
+    schief = [p["thema"] for p in daten["c0Ankerpruefung"]
+              if not p["stufe1_methode_gleich"]]
     w("W2_c0_firmenzahl_im_aufnahmejahr_reproduziert",
       not schief and len(daten["c0Ankerpruefung"]) == 24,
       "abweichend: %s (geprueft=%d)" % (schief or "keins", len(daten["c0Ankerpruefung"])))
+
+    # W2b - Stufe 2: jede Abweichung gegen den heutigen Index ist byte-genau erklaert.
+    unerklaert = [p["thema"] for p in daten["c0Ankerpruefung"] if not p["stufe2_erklaert"]]
+    stumm = [p["thema"] for p in daten["c0Ankerpruefung"]
+             if p["stufe2_abweichung"] and not (p["dokumenteNurInC0"]
+                                                or p["dokumenteNurInC1"])]
+    w("W2b_jede_live_abweichung_ist_byte_genau_erklaert", not unerklaert and not stumm,
+      "unerklaert: %s | ohne Dokument-Beleg: %s" % (unerklaert or "keins", stumm or "keins"))
 
     # W3 - Belegpflicht: jedes Datum in der Ausgabe traegt eine Quellen-Pruefsumme.
     ohne = []
