@@ -1,0 +1,57 @@
+{
+  "schema": "D6-descriptive-closure-audit-registration/1",
+  "status": "FROZEN_BEFORE_D6_ASSEMBLY_AFTER_D1_D5_PUBLICATION",
+  "createdAt": "2026-08-23",
+  "purpose": "Produce a panel-free, identity-free integrity and handoff audit over the already published D1-D5 descriptive evidence without adding a study verdict.",
+  "accessOrder": [
+    "freeze this audit contract and all source-file hashes",
+    "run the synthetic fixture self-test and deliberate sabotage",
+    "read only the committed D1-D5 preregistrations, scripts, JSON artifacts, and reports",
+    "verify the sealed cadence script hash without executing a panel run",
+    "recompute headline arithmetic and cross-study consistency flags",
+    "write the identity-free D6 JSON audit",
+    "render the D6 handoff report only from that audit"
+  ],
+  "forbiddenInputs": "No SQLite panel, encrypted file, outcome file, price file, signal row, or company-level record may be opened by D6.",
+  "sourceFiles": {
+    "protocol/early-detection/2.0.0/d1-panel-survival-preregistration.json": "732b5b1af9de91458073623f9c31cb985662636496049fdaee9049e7c74a430a",
+    "scripts/studie-panel-survival.py": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54",
+    "reports/studie/D1-panel-survival-2026-08-23.json": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724",
+    "reports/studie/D1-panel-survival-2026-08-23.md": "be6d56fff9797ec5f23ea791c712f9a46783aaf518120afff445535b6382e08c",
+    "protocol/early-detection/2.0.0/d2-attrition-size-sector-preregistration.json": "34fc058d7dd591c0bbd019a2c60224408a6916044b23f24e29a007f45e5febf7",
+    "scripts/studie-attrition-size-sector.py": "a3f8e7806168b1b3b6dfda4e6e646dfe67cb7f42ddf35ff65a0a6a2ac58658b2",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.json": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.md": "5a97fa1457686b88784a803032746ffc996b3a1393f7a6e80b6e6b92d8a69eb5",
+    "protocol/early-detection/2.0.0/d3-identifier-bridge-preregistration.json": "16d05291a5de1b74a0e959ffa3048ffacfc1dc4d7a6db2b04ffe6a0ce79513f1",
+    "scripts/studie-identifier-bridge.py": "70330f0241169266b5427de47e0c511ccac4e23b4defabb29dca7088f997181e",
+    "reports/studie/D3-identifier-bridge-2026-08-23.json": "e2832119769e96c2ebda79feb7af303093266c1652fc03c7ca09156409566a62",
+    "reports/studie/D3-identifier-bridge-2026-08-23.md": "32f58516a0d4c714b2df205054c77f6504b1b9b27a772740b71e3ce969b2d0b6",
+    "protocol/early-detection/2.0.0/d4-censoring-aware-attrition-preregistration.json": "3250c8bfb0e3a2c730bb2bdf53e9c91ab6fc082b7da29fc85272fdbb22f4ef62",
+    "scripts/studie-censoring-aware-attrition.py": "65944d3bfce5ca92174cad33b91516b9e6f627a3e27216dc8d0682d4aa8d1d51",
+    "reports/studie/D4-censoring-aware-attrition-2026-08-23.json": "f4b252613cc03cac4f40b4b701b6e7017855cfb638759dc4ccbdb6d857a996f5",
+    "reports/studie/D4-censoring-aware-attrition-2026-08-23.md": "a7137a5e5b34f6795e2946534902e215031895dc442b808a20b10e3a61185e26",
+    "protocol/early-detection/2.0.0/d5-entry-cohort-standardization-preregistration.json": "73abcc84d05632f24715a8da114c48bd30968421c0f45d5a2ca145c609d584f3",
+    "scripts/studie-entry-cohort-standardization.py": "21e8107a0c790d3b701ce67ab86928da7a207f15e6f20470cc4dbddd794644d7",
+    "reports/studie/D5-entry-cohort-standardization-2026-08-23.json": "a75e25633f080ecfa3b24948d75e1a2d978ab80f3a2467dd3d861c591b3121da",
+    "reports/studie/D5-entry-cohort-standardization-2026-08-23.md": "aa0790e3e0e914e94f02ff4867f725c59231717a66ffa50a29b1a7f554cf03d4",
+    "scripts/studie-e4d-kadenz.py": "8ed0ca7c7747daabd780d85d95951e10d25ff8f3f61d9764a2517421218b81df"
+  },
+  "auditStatistic": "number of source-hash, report-contract, arithmetic, anchor, scope, or cross-study reconciliation failures",
+  "nullModel": "zero integrity failures in the published D1-D5 descriptive package",
+  "threshold": "one or more failures makes the D6 handoff audit fail closed",
+  "interpretationPolicy": "D6 may expose numeric agreements, disagreements, and unanswered review questions but may not choose a study verdict, modify a threshold, or promote a method.",
+  "effectiveN": "D6 adds no empirical observations. Every effective N remains the one declared in its source artifact.",
+  "requiredOutputs": [
+    "byte hashes for every bound source",
+    "recomputed D1-D5 headline numbers",
+    "population and arithmetic reconciliation flags",
+    "explicit list of remaining judgment questions owned by Claude",
+    "zero company identifiers and zero new panel observations"
+  ],
+  "explicitNonClaims": [
+    "D6 is not a new empirical analysis or preregistered hypothesis test.",
+    "A clean audit does not make any descriptive association causal.",
+    "A clean audit does not change the completed confirmatory verdict.",
+    "Only Claude may decide whether the descriptive study is methodologically complete."
+  ]
+}
