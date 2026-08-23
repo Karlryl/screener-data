@@ -10,6 +10,8 @@ const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-panel-survival.py');
 const PREREG = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'd1-panel-survival-preregistration.json');
+const ARTIFACT = path.join(REPO, 'reports', 'studie', 'D1-panel-survival-2026-08-23.json');
+const REPORT = path.join(REPO, 'reports', 'studie', 'D1-panel-survival-2026-08-23.md');
 
 const REQUIRED_SELF_TESTS = [
   'Fixture zaehlt genau drei periodische Firmen',
@@ -53,4 +55,52 @@ test('D1: die Vorregistrierung friert Inputs, Statistik, Nullmodell und Schwelle
   assert.match(prereg.threshold, /At least one terminal event/);
   assert.match(prereg.timeDefinition.rightCensoring, /2020-12-31/);
   assert.equal(prereg.population.identityPolicy.includes('No company identifier'), true);
+});
+
+test('D1: das Ergebnisartefakt ist aggregiert und rechnerisch geschlossen', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  assert.equal(result.counts.terminalExits + result.counts.rightCensored,
+    result.counts.companies);
+  assert.equal(result.counts.quarterlyCadenceCompanies + result.counts.annualCadenceCompanies,
+    result.counts.companies);
+  assert.equal(result.exitByQuarter.reduce((sum, row) => sum + row.companies, 0),
+    result.counts.terminalExits);
+  assert.equal(result.effectiveN.companies, result.counts.companies);
+  assert.equal(result.effectiveN.filingsAreIndependentObservations, false);
+  assert.equal(result.effectiveN.dailyPoints, 0);
+  assert.equal(result.scope.companyIdentifiersWritten, 0);
+  assert.equal(result.scope.signalsUsed, 0);
+  assert.equal(result.scope.lastAllowedDate, '2020-12-31');
+  let previous = 1;
+  for (const row of result.survivalCurve) {
+    assert.ok(row.survival >= 0 && row.survival <= previous);
+    previous = row.survival;
+  }
+  const keys = [];
+  JSON.stringify(result, (key, value) => {
+    keys.push(key.toLowerCase());
+    return value;
+  });
+  for (const forbidden of ['cik', 'ticker', 'adsh', 'companyname', 'company_name']) {
+    assert.ok(!keys.includes(forbidden), `Identitaetsschluessel ${forbidden} im Artefakt`);
+  }
+});
+
+test('D1: jede Zahlenreihe im Bericht stammt aus dem JSON-Artefakt', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const report = fs.readFileSync(REPORT, 'utf8');
+  assert.match(report.split(/\r?\n/)[0], /Medianverweildauer beträgt 27 Quartale/);
+  for (const row of result.survivalCurve) {
+    const survival = Number(row.survival).toFixed(12);
+    const line = `| ${row.quartersSinceEntry} | ${row.atRisk} | ${row.exits} | `
+      + `${row.censored} | ${survival} | ${row.cumulativeExits} |`;
+    assert.ok(report.includes(line), `Kurvenzeile fehlt: ${line}`);
+  }
+  for (const row of result.exitByQuarter) {
+    const line = `| ${row.quarter} | ${row.companies} |`;
+    assert.ok(report.includes(line), `Ausscheidequartal fehlt: ${line}`);
+  }
+  const limitation = report.split('## Was ausdrücklich nicht gezeigt ist')[1];
+  assert.ok(limitation && limitation.trim().length > 0,
+    'Pflichtabschnitt "Was ausdrücklich nicht gezeigt ist" fehlt oder ist leer');
 });
