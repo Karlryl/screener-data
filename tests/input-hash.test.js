@@ -36,7 +36,10 @@ function bauSnapshot(faktor = 1) {
     metrics: { priceSales: { value: 7 }, pe: { value: 20 } },
     annual: {}, timeseries: {},
   };
-  for (const f of serienFelder()) {
+  // BEWUSST aus dem Register und NICHT aus serienFelder(): sonst baut sich die Probe aus
+  // derselben Liste, die geprueft wird - eine geschrumpfte Liste faellt dann nicht auf.
+  // (Genau dieser Zirkel liess die erste Fassung eine Sabotage ueberleben.)
+  for (const f of Object.keys(FIELD_REGISTRY)) {
     const [container, format] = FIELD_REGISTRY[f];
     s[container] = s[container] || {};
     s[container][f] = serieFuer(format, faktor);
@@ -44,8 +47,14 @@ function bauSnapshot(faktor = 1) {
   return s;
 }
 
+test('die abgeleitete Feldliste IST das Register - keine stille Teilmenge', () => {
+  assert.deepEqual(serienFelder(), Object.keys(FIELD_REGISTRY).sort(),
+    'serienFelder() weicht vom FIELD_REGISTRY ab. Jedes ausgelassene Feld wird ab sofort als '
+    + 'Lineal-Drift verbucht statt als Daten-Drift - die Zerlegung luegt dann leise.');
+});
+
 test('das Register ist nicht leer und der Probe-Snapshot besetzt es vollstaendig', () => {
-  const felder = serienFelder();
+  const felder = Object.keys(FIELD_REGISTRY).sort();
   assert.ok(felder.length >= 15, `nur ${felder.length} Register-Felder - Register geschrumpft?`);
   const h = inputHash(bauSnapshot());
   assert.equal(h.felder.length, felder.length,
@@ -56,7 +65,7 @@ test('das Register ist nicht leer und der Probe-Snapshot besetzt es vollstaendig
 test('JEDES Register-Feld bewegt den Serien-Hash - Liste zur Laufzeit abgeleitet', () => {
   const basis = inputHash(bauSnapshot()).serienHash;
   const taub = [];
-  for (const f of serienFelder()) {
+  for (const f of Object.keys(FIELD_REGISTRY)) {
     const s = bauSnapshot();
     const [container, format] = FIELD_REGISTRY[f];
     s[container][f] = serieFuer(format, 2);        // nur DIESES eine Feld anfassen
@@ -71,7 +80,7 @@ test('JEDES Register-Feld bewegt den Serien-Hash - Liste zur Laufzeit abgeleitet
 test('ein fehlendes Feld bewegt den Hash genauso wie ein geaendertes', () => {
   const basis = inputHash(bauSnapshot()).serienHash;
   const taub = [];
-  for (const f of serienFelder()) {
+  for (const f of Object.keys(FIELD_REGISTRY)) {
     const s = bauSnapshot();
     const [container] = FIELD_REGISTRY[f];
     delete s[container][f];
