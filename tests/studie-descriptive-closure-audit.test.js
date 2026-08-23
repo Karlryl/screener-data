@@ -2,6 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
@@ -10,6 +11,10 @@ const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-descriptive-closure-audit.py');
 const REGISTRATION = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'd6-descriptive-closure-audit-registration.json');
+const ARTIFACT = path.join(REPO, 'reports', 'studie',
+  'D6-descriptive-closure-audit-2026-08-23.json');
+const REPORT = path.join(REPO, 'reports', 'studie',
+  'D6-descriptive-closure-audit-2026-08-23.md');
 
 const REQUIRED = [
   'Einundzwanzig Quellen sind bytegleich an den Auditvertrag gebunden',
@@ -50,4 +55,110 @@ test('D6: Auditvertrag ist ehrlich nach D1-D5-Publikation eingefroren', () => {
   assert.match(registration.nullModel, /zero integrity failures/);
   assert.match(registration.threshold, /one or more failures/);
   assert.match(registration.interpretationPolicy, /may not choose a study verdict/);
+});
+
+function sha256(file) {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+test('D6: alle einundzwanzig Quellen und der Auditvertrag sind bytegleich', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  assert.equal(result.registration.sha256, sha256(REGISTRATION));
+  assert.equal(Object.keys(result.sourceFiles).length, 21);
+  for (const [relative, expected] of Object.entries(result.sourceFiles)) {
+    assert.equal(sha256(path.join(REPO, relative)), expected, relative);
+  }
+});
+
+test('D6: Null-Fehler-Vertrag und Scope schließen ohne neue Daten', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  assert.deepEqual(result.auditContract, {
+    failures: [],
+    nullModel: 'zero integrity failures',
+    observedFailures: 0,
+    passes: true,
+    testStatistic: 'integrity failure count',
+    threshold: 'one or more failures fails closed',
+  });
+  assert.deepEqual(result.scope, {
+    companyIdentifiersWritten: 0,
+    companyLevelRecordsRead: 0,
+    newEmpiricalObservations: 0,
+    panelFilesOpened: 0,
+    signalsChanged: 0,
+    thresholdsChanged: 0,
+    verdictsChanged: 0,
+  });
+  assert.ok(Object.values(result.crossChecks).every(Boolean));
+});
+
+test('D6: Schlagzahlen sind gegen D1-D5 neu gerechnet und geschlossen', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const sources = ['D1-panel-survival', 'D2-attrition-size-sector',
+    'D3-identifier-bridge', 'D4-censoring-aware-attrition',
+    'D5-entry-cohort-standardization'];
+  const [d1, d2, d3, d4, d5] = sources.map((name) => JSON.parse(fs.readFileSync(
+    path.join(REPO, 'reports', 'studie', `${name}-2026-08-23.json`), 'utf8')));
+  assert.equal(result.headlines.d1.companies, d1.counts.companies);
+  assert.equal(result.headlines.d1.medianStayQuarters, d1.medianStayQuarters);
+  assert.equal(result.headlines.d2.rawSizeAttritionDifferencePercentagePoints,
+    d2.size.riskDifferencePercentagePointsSmallerMinusLarger);
+  assert.equal(result.headlines.d2.sectorCramersV, d2.sector.cramersV);
+  const target = d3.results.find((row) => row.window === 'pruefung'
+    && row.arm === 'signal');
+  assert.equal(result.headlines.d3.targetIdentityOnlyRecovered, target.identityOnlyRecovered);
+  assert.equal(result.headlines.d3.targetRemainingAttrition, target.remainingAttrition);
+  assert.equal(result.headlines.d3.targetIdentityOnlyRecovered
+    + result.headlines.d3.targetRemainingAttrition,
+  result.headlines.d3.targetAttritionBeforeBridge);
+  assert.equal(result.headlines.d4.sizeSurvivalDifferencePercentagePoints,
+    d4.size.survivalDifferencePercentagePointsSmallerMinusLarger);
+  assert.equal(result.headlines.d4.sectorSurvivalRangePercentagePoints,
+    d4.sector.maxMinusMinSurvivalPercentagePoints);
+  assert.equal(result.headlines.d5.standardizedSizeSurvivalDifferencePercentagePoints,
+    d5.standardizedSize.survivalDifferencePercentagePointsSmallerMinusLarger);
+  assert.equal(result.headlines.d5.entryCohortRangePercentagePoints,
+    d5.entryCohorts.maxMinusMinSurvivalPercentagePoints);
+});
+
+test('D6: jede Schlagzahl und Urteilsfrage im Bericht stammt aus dem Artefakt', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const report = fs.readFileSync(REPORT, 'utf8');
+  const firstLine = report.split(/\r?\n/)[0];
+  assert.ok(firstLine.includes(`${result.auditContract.observedFailures} Integritätsfehlern`));
+  assert.ok(firstLine.includes(`${Object.keys(result.sourceFiles).length} bytegebundene`));
+  assert.ok(firstLine.includes(`${result.scope.panelFilesOpened} Paneldateien`));
+  assert.ok(firstLine.includes(`${result.reviewQueue.length} Urteilsfragen`));
+
+  const expectedLines = [
+    `| D1 | Firmen | ${result.headlines.d1.companies} |`,
+    `| D1 | terminale Ausstiege | ${result.headlines.d1.terminalExits} |`,
+    `| D1 | rechtszensiert | ${result.headlines.d1.rightCensored} |`,
+    `| D1 | Median Verweildauer | ${result.headlines.d1.medianStayQuarters} Quartale |`,
+    `| D2 | rohe Schwunddifferenz smaller minus larger | ${result.headlines.d2.rawSizeAttritionDifferencePercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D2 | Sektor Cramérs V | ${result.headlines.d2.sectorCramersV.toFixed(12)} |`,
+    `| D3 | S-U-Prüfsignal Firmen beim ersten Ereignis | ${result.headlines.d3.targetFirstEventCompanies} |`,
+    `| D3 | Schwund vor Kennungsbrücke | ${result.headlines.d3.targetAttritionBeforeBridge} |`,
+    `| D3 | reine Kennungsfälle zurückgewonnen | ${result.headlines.d3.targetIdentityOnlyRecovered} |`,
+    `| D3 | verbleibender Schwund | ${result.headlines.d3.targetRemainingAttrition} |`,
+    `| D3 | verbleibende Schwundquote | ${(100 * result.headlines.d3.targetRemainingAttritionRate).toFixed(6)} % |`,
+    `| D3 | Retention nach Brücke | ${(100 * result.headlines.d3.targetRetentionAfterBridge).toFixed(6)} % |`,
+    `| D4 | Survivaldifferenz smaller minus larger | ${result.headlines.d4.sizeSurvivalDifferencePercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D4 | Sektorspannweite Survival Q12 | ${result.headlines.d4.sectorSurvivalRangePercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D5 | standardisierte Survivaldifferenz smaller minus larger | ${result.headlines.d5.standardizedSizeSurvivalDifferencePercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D5 | absolute Verschiebung gegenüber D4 | ${result.headlines.d5.absoluteShiftFromD4PercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D5 | Kadenzdifferenz annual minus quarterly | ${result.headlines.d5.cadenceDifferencePercentagePoints.toFixed(12)} Prozentpunkte |`,
+    `| D5 | Eintrittskohorten-Spannweite | ${result.headlines.d5.entryCohortRangePercentagePoints.toFixed(12)} Prozentpunkte |`,
+  ];
+  for (const line of expectedLines) {
+    assert.ok(report.includes(line), `Schlagzahl fehlt: ${line}`);
+  }
+  for (const item of result.reviewQueue) {
+    assert.ok(report.includes(`| ${item.key} |`), `Urteilsfrage fehlt: ${item.key}`);
+    assert.equal(item.decisionOwner, 'Claude');
+    assert.equal(item.resolvedByD6, false);
+  }
+  const limitation = report.split('## Was ausdrücklich nicht gezeigt ist')[1];
+  assert.ok(limitation && limitation.trim().length > 0,
+    'Pflichtabschnitt "Was ausdrücklich nicht gezeigt ist" fehlt oder ist leer');
 });
