@@ -93,6 +93,13 @@ function fussabdruck(basis, kandidat, hashes) {
   const ticker = bewegt.map((x) => x[0]);
   return {
     zeilenMitScoreAenderung: bewegt.length,
+    // Gerichtsauflage 3 (23.08., Kriterium K5): eine ABSOLUTE Zeilenzahl waechst mit dem
+    // Universum - dieselbe anteilige Wirkung ergibt morgen eine andere Zahl, und eine
+    // Deklaration von heute wuerde rot, ohne dass jemand etwas geaendert hat. Der Anteil an den
+    // tatsaechlich verglichenen Zeilen ist die universums-invariante Groesse. Sie ersetzt die
+    // absolute Zahl NICHT (gegen ein eingefrorenes Fixture ist die exakt), sondern macht die
+    // Deklaration ueber Fixture-Staende hinweg lesbar.
+    anteilBewegt: verglichen > 0 ? Math.round((bewegt.length / verglichen) * 1e6) / 1e6 : null,
     maxAbsDelta: Number.isFinite(maxAbs) ? Math.round(maxAbs * 100) / 100 : null,
     tickerListHash: sha(ticker.join(',')),
     // Gerichtsauflage 1 (23.08.): Anzahl, Maximum und Ticker-Liste sind KEINE hinreichende
