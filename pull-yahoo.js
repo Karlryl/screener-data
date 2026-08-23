@@ -1279,6 +1279,33 @@ function _alignEnds(ends, values) {
   return new Array(n).fill(null);
 }
 
+// A10-Nachzug Jahresseite (23.08.): Werte und ihre Perioden-Enden in EINEM Schritt
+// austauschen. Die Enden entstehen in mapYahooToCanonical aus den isHist-Zeilen;
+// gewinnt spaeter ein anderes Bundle (FTS), gehoeren sie nicht mehr zu diesen Werten.
+// Eine zufaellig gleiche Laenge wuerde _alignEnds austricksen und ein FALSCHES Jahr an
+// einen fremden Wert heften — ein stiller Datenfehler, schlimmer als gar kein Datum.
+// Deshalb sind Zuweisung und Nullung hier ZUSAMMENGEBUNDEN: wer die Werte tauscht,
+// kann die Enden nicht mehr vergessen. (Upgrade-Pfad, bewusst nicht hier: FTS kennt
+// seine eigenen Perioden — wer sie mitfuehren will, baut sie im FTS-Mapper, statt die
+// QS-Enden weiterzureichen.)
+function _applyAnnualIncomeWinner(annual, winner, winnerIsQS) {
+  if (!annual || !winner) return annual;
+  // Die bisherigen Enden VOR dem Tausch sichern — sie gehoeren zu den QS-Werten.
+  const vorher = {
+    rev: annual.annualRevEnds, gp: annual.annualGPEnds, oi: annual.annualOpIncEnds,
+  };
+  annual.annualRev = winner.annualRev;
+  annual.annualOpInc = winner.annualOpInc;
+  annual.annualGP = winner.annualGP;
+  annual.annualNetIncome = winner.annualNetIncome;
+  // Gewinnt QS, sind es dieselben Werte — die Enden bleiben gueltig, _alignEnds prueft
+  // nur noch die Laenge. Gewinnt ein fremdes Bundle, sind sie ungueltig -> hart null.
+  annual.annualRevEnds = _alignEnds(winnerIsQS ? vorher.rev : null, annual.annualRev);
+  annual.annualGPEnds = _alignEnds(winnerIsQS ? vorher.gp : null, annual.annualGP);
+  annual.annualOpIncEnds = _alignEnds(winnerIsQS ? vorher.oi : null, annual.annualOpInc);
+  return annual;
+}
+
 // ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
 // Yahoo's `incomeStatementHistory.operatingIncome` (and FTS counterpart) is
 // null for many Financial-Services tickers — banks (JPM, BAC), credit (UPST,
@@ -1917,7 +1944,30 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
       // Tag 202: quoteSummary-derived RnD (primary). FTS path may overwrite below
       // when FTS has strictly more non-null entries (see post-FTS merge in main pull).
-      annualRnD: annualRnDFromQS
+      annualRnD: annualRnDFromQS,
+      // ── A10-Nachzug fuer die JAHRESseite (Befund 23.08.) ─────────────────────────
+      // Die Auflage A10 des 2.8-Bestaetigungs-Courts ("nackte value-Arrays ohne
+      // Perioden-Ende") wurde fuer die QUARTALSreihen erfuellt und fuer die
+      // Jahresreihen nie gestellt — obwohl an ihnen 100 % des Achsen-Gewichts haengt
+      // (gemessen am Vintage 2026-08-19: Gewichtssumme 88.978,9 ueber 9.009 Zeilen,
+      // alle acht Achsen lesen annual*). Folge: eine Reihe, deren juengstes Jahr 2012
+      // ist, war von einer mit Stand 2025 strukturell nicht unterscheidbar.
+      // Die Daten waren immer da: dieselbe isHist-Zeile, aus der _arr NUR den Wert
+      // nimmt, traegt ein endDate (live geprueft 23.08. an MSFT: 2026-06-30 |
+      // 2025-06-30 | 2024-06-30 | 2023-06-30).
+      // REINES SUBSTRAT, KEIN GUARD — woertlich das Muster von opIncQEnds: keine Achse
+      // liest diese Felder, FIELD_REGISTRY/norm() kennen sie nicht, der Score bleibt
+      // byte-identisch. Der Waechter, der daraus Wirkung zieht, ist gauntlet- und
+      // siegelpflichtig und wird hier NICHT gebaut.
+      // Je Reihe ein eigenes slice auf ihre EIGENE Laenge: _arr trimmt jede Reihe
+      // einzeln auf ihre letzte Nicht-Null, die Laengen laufen also auseinander (eine
+      // Firma kann ein operatives Ergebnis fuer ein Jahr fuehren, fuer das kein Umsatz
+      // gemeldet ist). _alignEnds ist der fail-safe Abschluss: passt die Laenge nicht,
+      // liefert es null-Enden statt versetzter Daten — ein UNBEKANNTES Datum ist
+      // harmlos, ein FALSCH zugeordnetes waere schlimmer als gar keines.
+      annualRevEnds: _alignEnds(isHist.slice(0, annualRev.length).map((r) => _isoDay(_y(r, 'endDate'))), annualRev),
+      annualGPEnds: _alignEnds(isHist.slice(0, annualGP.length).map((r) => _isoDay(_y(r, 'endDate'))), annualGP),
+      annualOpIncEnds: _alignEnds(isHist.slice(0, annualOpInc.length).map((r) => _isoDay(_y(r, 'endDate'))), annualOpInc)
     },
     // Tag 137: insider buy/sell activity (90d window, open-market only)
     insiderActivity: insiderActivity || null
@@ -3381,10 +3431,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Tag 206f: move siblings WITHOUT filtering nulls — null placeholders keep
         // annualOpInc[i]/annualNetIncome[i] aligned with annualRev[i] by fiscal year
         // (a bank's [3,null,2,null] OpInc must stay 4-long, not collapse to [3,2]).
-        canonical.annual.annualRev = _winner.annualRev;
-        canonical.annual.annualOpInc = _winner.annualOpInc;
-        canonical.annual.annualGP = _winner.annualGP;
-        canonical.annual.annualNetIncome = _winner.annualNetIncome;
+        // A10-Nachzug Jahresseite (23.08.): Werte UND ihre Perioden-Enden in EINEM
+        // Schritt — sonst kann der Tausch die Enden vergessen und ein falsches Jahr an
+        // einen fremden Wert heften. Details in _applyAnnualIncomeWinner.
+        _applyAnnualIncomeWinner(canonical.annual, _winner, _incomeWinnerIsQS);
         // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
         // native Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
         // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
@@ -4228,7 +4278,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
   salvageValidationReject,
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
-  mapFTSToQuarterly, _isoDay, _alignEnds, _applyCurrencyConsistencyGuard,
+  mapFTSToQuarterly, _isoDay, _alignEnds, _applyAnnualIncomeWinner, _applyCurrencyConsistencyGuard,
   // Tag 559: die Quartals-Buendel-Entscheidung als Seam — der Waechter
   // (tests/tag559-quartals-buendel.test.js) FUEHRT sie aus, statt Quelltext nach
   // Schreibmustern abzusuchen.
