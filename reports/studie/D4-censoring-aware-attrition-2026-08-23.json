@@ -1,0 +1,5218 @@
+{
+  "anchors": {
+    "countsMatched": true,
+    "d1": {
+      "path": "reports/studie/D1-panel-survival-2026-08-23.json",
+      "sha256": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724"
+    },
+    "d2": {
+      "path": "reports/studie/D2-attrition-size-sector-2026-08-23.json",
+      "sha256": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63"
+    },
+    "groupsMatched": true
+  },
+  "boundInputs": {
+    "reports/studie/D1-panel-survival-2026-08-23.json": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.json": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63",
+    "scripts/studie-attrition-size-sector.py": "a3f8e7806168b1b3b6dfda4e6e646dfe67cb7f42ddf35ff65a0a6a2ac58658b2",
+    "scripts/studie-panel-survival.py": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54"
+  },
+  "counts": {
+    "companies": 13317,
+    "rightCensored": 6398,
+    "terminalExits": 6919
+  },
+  "effectiveN": {
+    "companies": 13317,
+    "dailyPoints": 0,
+    "filingsAreIndependentObservations": false,
+    "independentUnit": "company within stratum",
+    "repeatedCompaniesAcrossStrata": 0
+  },
+  "horizonQuarters": 12,
+  "inputs": [
+    {
+      "file": "panel-entdeckung.sqlite",
+      "rowsRead": 176502
+    },
+    {
+      "file": "panel-validierung.sqlite",
+      "rowsRead": 148912
+    }
+  ],
+  "preregistration": {
+    "path": "protocol/early-detection/2.0.0/d4-censoring-aware-attrition-preregistration.json",
+    "sha256": "3250c8bfb0e3a2c730bb2bdf53e9c91ab6fc082b7da29fc85272fdbb22f4ef62",
+    "status": "FROZEN_BEFORE_D4_PANEL_ACCESS"
+  },
+  "schema": "D4-censoring-aware-attrition/1",
+  "scope": {
+    "companyIdentifiersWritten": 0,
+    "dailyObservationsUsed": 0,
+    "lastAllowedDate": "2020-12-31",
+    "signalsUsed": 0
+  },
+  "sector": {
+    "eligibleSectors": [
+      "Finance, Insurance and Real Estate",
+      "Manufacturing",
+      "Mining",
+      "Retail Trade",
+      "Services",
+      "Transportation, Communications and Utilities",
+      "Wholesale Trade"
+    ],
+    "groups": [
+      {
+        "atRiskAtHorizon": 48,
+        "companies": 74,
+        "horizonEstimable": true,
+        "medianStayQuarters": 27,
+        "rightCensored": 31,
+        "sector": "Agriculture, Forestry and Fishing",
+        "survivalAtHorizon": 0.716235490263,
+        "survivalCurve": [
+          {
+            "atRisk": 74,
+            "censored": 0,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 74,
+            "censored": 0,
+            "cumulativeExits": 2,
+            "exits": 2,
+            "quartersSinceEntry": 1,
+            "survival": 0.972972972973
+          },
+          {
+            "atRisk": 72,
+            "censored": 1,
+            "cumulativeExits": 7,
+            "exits": 5,
+            "quartersSinceEntry": 2,
+            "survival": 0.905405405405
+          },
+          {
+            "atRisk": 66,
+            "censored": 1,
+            "cumulativeExits": 9,
+            "exits": 2,
+            "quartersSinceEntry": 3,
+            "survival": 0.877968877969
+          },
+          {
+            "atRisk": 63,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 3,
+            "quartersSinceEntry": 4,
+            "survival": 0.836160836161
+          },
+          {
+            "atRisk": 60,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 1,
+            "quartersSinceEntry": 5,
+            "survival": 0.822224822225
+          },
+          {
+            "atRisk": 59,
+            "censored": 2,
+            "cumulativeExits": 13,
+            "exits": 0,
+            "quartersSinceEntry": 6,
+            "survival": 0.822224822225
+          },
+          {
+            "atRisk": 57,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 1,
+            "quartersSinceEntry": 7,
+            "survival": 0.807799825344
+          },
+          {
+            "atRisk": 56,
+            "censored": 2,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 8,
+            "survival": 0.807799825344
+          },
+          {
+            "atRisk": 54,
+            "censored": 1,
+            "cumulativeExits": 16,
+            "exits": 2,
+            "quartersSinceEntry": 9,
+            "survival": 0.777881313294
+          },
+          {
+            "atRisk": 51,
+            "censored": 1,
+            "cumulativeExits": 18,
+            "exits": 2,
+            "quartersSinceEntry": 10,
+            "survival": 0.747376163753
+          },
+          {
+            "atRisk": 48,
+            "censored": 0,
+            "cumulativeExits": 18,
+            "exits": 0,
+            "quartersSinceEntry": 11,
+            "survival": 0.747376163753
+          },
+          {
+            "atRisk": 48,
+            "censored": 0,
+            "cumulativeExits": 20,
+            "exits": 2,
+            "quartersSinceEntry": 12,
+            "survival": 0.716235490263
+          },
+          {
+            "atRisk": 46,
+            "censored": 0,
+            "cumulativeExits": 21,
+            "exits": 1,
+            "quartersSinceEntry": 13,
+            "survival": 0.700665153518
+          },
+          {
+            "atRisk": 45,
+            "censored": 1,
+            "cumulativeExits": 21,
+            "exits": 0,
+            "quartersSinceEntry": 14,
+            "survival": 0.700665153518
+          },
+          {
+            "atRisk": 44,
+            "censored": 0,
+            "cumulativeExits": 21,
+            "exits": 0,
+            "quartersSinceEntry": 15,
+            "survival": 0.700665153518
+          },
+          {
+            "atRisk": 44,
+            "censored": 1,
+            "cumulativeExits": 22,
+            "exits": 1,
+            "quartersSinceEntry": 16,
+            "survival": 0.684740945484
+          },
+          {
+            "atRisk": 42,
+            "censored": 0,
+            "cumulativeExits": 23,
+            "exits": 1,
+            "quartersSinceEntry": 17,
+            "survival": 0.668437589639
+          },
+          {
+            "atRisk": 41,
+            "censored": 3,
+            "cumulativeExits": 25,
+            "exits": 2,
+            "quartersSinceEntry": 18,
+            "survival": 0.635830877949
+          },
+          {
+            "atRisk": 36,
+            "censored": 0,
+            "cumulativeExits": 28,
+            "exits": 3,
+            "quartersSinceEntry": 19,
+            "survival": 0.582844971454
+          },
+          {
+            "atRisk": 33,
+            "censored": 0,
+            "cumulativeExits": 29,
+            "exits": 1,
+            "quartersSinceEntry": 20,
+            "survival": 0.565183002622
+          },
+          {
+            "atRisk": 32,
+            "censored": 0,
+            "cumulativeExits": 30,
+            "exits": 1,
+            "quartersSinceEntry": 21,
+            "survival": 0.54752103379
+          },
+          {
+            "atRisk": 31,
+            "censored": 2,
+            "cumulativeExits": 30,
+            "exits": 0,
+            "quartersSinceEntry": 22,
+            "survival": 0.54752103379
+          },
+          {
+            "atRisk": 29,
+            "censored": 0,
+            "cumulativeExits": 31,
+            "exits": 1,
+            "quartersSinceEntry": 23,
+            "survival": 0.528640998142
+          },
+          {
+            "atRisk": 28,
+            "censored": 0,
+            "cumulativeExits": 32,
+            "exits": 1,
+            "quartersSinceEntry": 24,
+            "survival": 0.509760962494
+          },
+          {
+            "atRisk": 27,
+            "censored": 0,
+            "cumulativeExits": 32,
+            "exits": 0,
+            "quartersSinceEntry": 25,
+            "survival": 0.509760962494
+          },
+          {
+            "atRisk": 27,
+            "censored": 0,
+            "cumulativeExits": 32,
+            "exits": 0,
+            "quartersSinceEntry": 26,
+            "survival": 0.509760962494
+          },
+          {
+            "atRisk": 27,
+            "censored": 0,
+            "cumulativeExits": 33,
+            "exits": 1,
+            "quartersSinceEntry": 27,
+            "survival": 0.490880926846
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 34,
+            "exits": 1,
+            "quartersSinceEntry": 28,
+            "survival": 0.472000891198
+          },
+          {
+            "atRisk": 25,
+            "censored": 0,
+            "cumulativeExits": 35,
+            "exits": 1,
+            "quartersSinceEntry": 29,
+            "survival": 0.45312085555
+          },
+          {
+            "atRisk": 24,
+            "censored": 0,
+            "cumulativeExits": 36,
+            "exits": 1,
+            "quartersSinceEntry": 30,
+            "survival": 0.434240819902
+          },
+          {
+            "atRisk": 23,
+            "censored": 1,
+            "cumulativeExits": 37,
+            "exits": 1,
+            "quartersSinceEntry": 31,
+            "survival": 0.415360784254
+          },
+          {
+            "atRisk": 21,
+            "censored": 0,
+            "cumulativeExits": 37,
+            "exits": 0,
+            "quartersSinceEntry": 32,
+            "survival": 0.415360784254
+          },
+          {
+            "atRisk": 21,
+            "censored": 1,
+            "cumulativeExits": 38,
+            "exits": 1,
+            "quartersSinceEntry": 33,
+            "survival": 0.39558169929
+          },
+          {
+            "atRisk": 19,
+            "censored": 1,
+            "cumulativeExits": 39,
+            "exits": 1,
+            "quartersSinceEntry": 34,
+            "survival": 0.374761609853
+          },
+          {
+            "atRisk": 17,
+            "censored": 2,
+            "cumulativeExits": 39,
+            "exits": 0,
+            "quartersSinceEntry": 35,
+            "survival": 0.374761609853
+          },
+          {
+            "atRisk": 15,
+            "censored": 3,
+            "cumulativeExits": 40,
+            "exits": 1,
+            "quartersSinceEntry": 36,
+            "survival": 0.34977750253
+          },
+          {
+            "atRisk": 11,
+            "censored": 7,
+            "cumulativeExits": 43,
+            "exits": 3,
+            "quartersSinceEntry": 37,
+            "survival": 0.254383638204
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 43,
+            "exits": 0,
+            "quartersSinceEntry": 38,
+            "survival": 0.254383638204
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 43,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.254383638204
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 43,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.254383638204
+          },
+          {
+            "atRisk": 1,
+            "censored": 1,
+            "cumulativeExits": 43,
+            "exits": 0,
+            "quartersSinceEntry": 41,
+            "survival": 0.254383638204
+          }
+        ],
+        "terminalExits": 43
+      },
+      {
+        "atRiskAtHorizon": 82,
+        "companies": 119,
+        "horizonEstimable": true,
+        "medianStayQuarters": 30,
+        "rightCensored": 58,
+        "sector": "Construction",
+        "survivalAtHorizon": 0.729844535829,
+        "survivalCurve": [
+          {
+            "atRisk": 119,
+            "censored": 1,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 118,
+            "censored": 0,
+            "cumulativeExits": 2,
+            "exits": 2,
+            "quartersSinceEntry": 1,
+            "survival": 0.983050847458
+          },
+          {
+            "atRisk": 116,
+            "censored": 1,
+            "cumulativeExits": 5,
+            "exits": 3,
+            "quartersSinceEntry": 2,
+            "survival": 0.957627118644
+          },
+          {
+            "atRisk": 112,
+            "censored": 1,
+            "cumulativeExits": 7,
+            "exits": 2,
+            "quartersSinceEntry": 3,
+            "survival": 0.940526634383
+          },
+          {
+            "atRisk": 109,
+            "censored": 1,
+            "cumulativeExits": 8,
+            "exits": 1,
+            "quartersSinceEntry": 4,
+            "survival": 0.931897949663
+          },
+          {
+            "atRisk": 107,
+            "censored": 0,
+            "cumulativeExits": 10,
+            "exits": 2,
+            "quartersSinceEntry": 5,
+            "survival": 0.914479296399
+          },
+          {
+            "atRisk": 105,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 4,
+            "quartersSinceEntry": 6,
+            "survival": 0.879641989869
+          },
+          {
+            "atRisk": 101,
+            "censored": 0,
+            "cumulativeExits": 18,
+            "exits": 4,
+            "quartersSinceEntry": 7,
+            "survival": 0.84480468334
+          },
+          {
+            "atRisk": 97,
+            "censored": 0,
+            "cumulativeExits": 22,
+            "exits": 4,
+            "quartersSinceEntry": 8,
+            "survival": 0.80996737681
+          },
+          {
+            "atRisk": 93,
+            "censored": 2,
+            "cumulativeExits": 26,
+            "exits": 4,
+            "quartersSinceEntry": 9,
+            "survival": 0.775130070281
+          },
+          {
+            "atRisk": 87,
+            "censored": 1,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 10,
+            "survival": 0.775130070281
+          },
+          {
+            "atRisk": 86,
+            "censored": 1,
+            "cumulativeExits": 29,
+            "exits": 3,
+            "quartersSinceEntry": 11,
+            "survival": 0.748090649225
+          },
+          {
+            "atRisk": 82,
+            "censored": 1,
+            "cumulativeExits": 31,
+            "exits": 2,
+            "quartersSinceEntry": 12,
+            "survival": 0.729844535829
+          },
+          {
+            "atRisk": 79,
+            "censored": 0,
+            "cumulativeExits": 34,
+            "exits": 3,
+            "quartersSinceEntry": 13,
+            "survival": 0.702128920544
+          },
+          {
+            "atRisk": 76,
+            "censored": 0,
+            "cumulativeExits": 37,
+            "exits": 3,
+            "quartersSinceEntry": 14,
+            "survival": 0.67441330526
+          },
+          {
+            "atRisk": 73,
+            "censored": 0,
+            "cumulativeExits": 37,
+            "exits": 0,
+            "quartersSinceEntry": 15,
+            "survival": 0.67441330526
+          },
+          {
+            "atRisk": 73,
+            "censored": 0,
+            "cumulativeExits": 38,
+            "exits": 1,
+            "quartersSinceEntry": 16,
+            "survival": 0.665174766831
+          },
+          {
+            "atRisk": 72,
+            "censored": 0,
+            "cumulativeExits": 40,
+            "exits": 2,
+            "quartersSinceEntry": 17,
+            "survival": 0.646697689975
+          },
+          {
+            "atRisk": 70,
+            "censored": 0,
+            "cumulativeExits": 42,
+            "exits": 2,
+            "quartersSinceEntry": 18,
+            "survival": 0.628220613118
+          },
+          {
+            "atRisk": 68,
+            "censored": 0,
+            "cumulativeExits": 42,
+            "exits": 0,
+            "quartersSinceEntry": 19,
+            "survival": 0.628220613118
+          },
+          {
+            "atRisk": 68,
+            "censored": 0,
+            "cumulativeExits": 42,
+            "exits": 0,
+            "quartersSinceEntry": 20,
+            "survival": 0.628220613118
+          },
+          {
+            "atRisk": 68,
+            "censored": 1,
+            "cumulativeExits": 46,
+            "exits": 4,
+            "quartersSinceEntry": 21,
+            "survival": 0.591266459406
+          },
+          {
+            "atRisk": 63,
+            "censored": 0,
+            "cumulativeExits": 47,
+            "exits": 1,
+            "quartersSinceEntry": 22,
+            "survival": 0.58188127751
+          },
+          {
+            "atRisk": 62,
+            "censored": 1,
+            "cumulativeExits": 47,
+            "exits": 0,
+            "quartersSinceEntry": 23,
+            "survival": 0.58188127751
+          },
+          {
+            "atRisk": 61,
+            "censored": 0,
+            "cumulativeExits": 47,
+            "exits": 0,
+            "quartersSinceEntry": 24,
+            "survival": 0.58188127751
+          },
+          {
+            "atRisk": 61,
+            "censored": 2,
+            "cumulativeExits": 47,
+            "exits": 0,
+            "quartersSinceEntry": 25,
+            "survival": 0.58188127751
+          },
+          {
+            "atRisk": 59,
+            "censored": 3,
+            "cumulativeExits": 49,
+            "exits": 2,
+            "quartersSinceEntry": 26,
+            "survival": 0.562156488442
+          },
+          {
+            "atRisk": 54,
+            "censored": 1,
+            "cumulativeExits": 49,
+            "exits": 0,
+            "quartersSinceEntry": 27,
+            "survival": 0.562156488442
+          },
+          {
+            "atRisk": 53,
+            "censored": 0,
+            "cumulativeExits": 51,
+            "exits": 2,
+            "quartersSinceEntry": 28,
+            "survival": 0.540943036048
+          },
+          {
+            "atRisk": 51,
+            "censored": 1,
+            "cumulativeExits": 54,
+            "exits": 3,
+            "quartersSinceEntry": 29,
+            "survival": 0.509122857457
+          },
+          {
+            "atRisk": 47,
+            "censored": 2,
+            "cumulativeExits": 55,
+            "exits": 1,
+            "quartersSinceEntry": 30,
+            "survival": 0.498290456235
+          },
+          {
+            "atRisk": 44,
+            "censored": 0,
+            "cumulativeExits": 55,
+            "exits": 0,
+            "quartersSinceEntry": 31,
+            "survival": 0.498290456235
+          },
+          {
+            "atRisk": 44,
+            "censored": 0,
+            "cumulativeExits": 56,
+            "exits": 1,
+            "quartersSinceEntry": 32,
+            "survival": 0.486965673138
+          },
+          {
+            "atRisk": 43,
+            "censored": 0,
+            "cumulativeExits": 56,
+            "exits": 0,
+            "quartersSinceEntry": 33,
+            "survival": 0.486965673138
+          },
+          {
+            "atRisk": 43,
+            "censored": 2,
+            "cumulativeExits": 57,
+            "exits": 1,
+            "quartersSinceEntry": 34,
+            "survival": 0.475640890042
+          },
+          {
+            "atRisk": 40,
+            "censored": 0,
+            "cumulativeExits": 57,
+            "exits": 0,
+            "quartersSinceEntry": 35,
+            "survival": 0.475640890042
+          },
+          {
+            "atRisk": 40,
+            "censored": 3,
+            "cumulativeExits": 57,
+            "exits": 0,
+            "quartersSinceEntry": 36,
+            "survival": 0.475640890042
+          },
+          {
+            "atRisk": 37,
+            "censored": 21,
+            "cumulativeExits": 59,
+            "exits": 2,
+            "quartersSinceEntry": 37,
+            "survival": 0.449930571661
+          },
+          {
+            "atRisk": 14,
+            "censored": 1,
+            "cumulativeExits": 60,
+            "exits": 1,
+            "quartersSinceEntry": 38,
+            "survival": 0.417792673686
+          },
+          {
+            "atRisk": 12,
+            "censored": 0,
+            "cumulativeExits": 60,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.417792673686
+          },
+          {
+            "atRisk": 12,
+            "censored": 1,
+            "cumulativeExits": 61,
+            "exits": 1,
+            "quartersSinceEntry": 40,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 10,
+            "censored": 6,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 41,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 4,
+            "censored": 3,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 45,
+            "survival": 0.382976617545
+          },
+          {
+            "atRisk": 1,
+            "censored": 1,
+            "cumulativeExits": 61,
+            "exits": 0,
+            "quartersSinceEntry": 46,
+            "survival": 0.382976617545
+          }
+        ],
+        "terminalExits": 61
+      },
+      {
+        "atRiskAtHorizon": 1996,
+        "companies": 3344,
+        "horizonEstimable": true,
+        "medianStayQuarters": 26,
+        "rightCensored": 1688,
+        "sector": "Finance, Insurance and Real Estate",
+        "survivalAtHorizon": 0.702653888318,
+        "survivalCurve": [
+          {
+            "atRisk": 3344,
+            "censored": 130,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 3214,
+            "censored": 49,
+            "cumulativeExits": 98,
+            "exits": 98,
+            "quartersSinceEntry": 1,
+            "survival": 0.969508400747
+          },
+          {
+            "atRisk": 3067,
+            "censored": 44,
+            "cumulativeExits": 193,
+            "exits": 95,
+            "quartersSinceEntry": 2,
+            "survival": 0.939477980769
+          },
+          {
+            "atRisk": 2928,
+            "censored": 20,
+            "cumulativeExits": 261,
+            "exits": 68,
+            "quartersSinceEntry": 3,
+            "survival": 0.917659503074
+          },
+          {
+            "atRisk": 2840,
+            "censored": 24,
+            "cumulativeExits": 367,
+            "exits": 106,
+            "quartersSinceEntry": 4,
+            "survival": 0.88340883148
+          },
+          {
+            "atRisk": 2710,
+            "censored": 21,
+            "cumulativeExits": 450,
+            "exits": 83,
+            "quartersSinceEntry": 5,
+            "survival": 0.856352398634
+          },
+          {
+            "atRisk": 2606,
+            "censored": 47,
+            "cumulativeExits": 546,
+            "exits": 96,
+            "quartersSinceEntry": 6,
+            "survival": 0.824806032453
+          },
+          {
+            "atRisk": 2463,
+            "censored": 10,
+            "cumulativeExits": 613,
+            "exits": 67,
+            "quartersSinceEntry": 7,
+            "survival": 0.802369165147
+          },
+          {
+            "atRisk": 2386,
+            "censored": 32,
+            "cumulativeExits": 669,
+            "exits": 56,
+            "quartersSinceEntry": 8,
+            "survival": 0.783537365797
+          },
+          {
+            "atRisk": 2298,
+            "censored": 26,
+            "cumulativeExits": 723,
+            "exits": 54,
+            "quartersSinceEntry": 9,
+            "survival": 0.765125260596
+          },
+          {
+            "atRisk": 2218,
+            "censored": 53,
+            "cumulativeExits": 809,
+            "exits": 86,
+            "quartersSinceEntry": 10,
+            "survival": 0.735458546253
+          },
+          {
+            "atRisk": 2079,
+            "censored": 34,
+            "cumulativeExits": 858,
+            "exits": 49,
+            "quartersSinceEntry": 11,
+            "survival": 0.718124506443
+          },
+          {
+            "atRisk": 1996,
+            "censored": 19,
+            "cumulativeExits": 901,
+            "exits": 43,
+            "quartersSinceEntry": 12,
+            "survival": 0.702653888318
+          },
+          {
+            "atRisk": 1934,
+            "censored": 27,
+            "cumulativeExits": 947,
+            "exits": 46,
+            "quartersSinceEntry": 13,
+            "survival": 0.685941334614
+          },
+          {
+            "atRisk": 1861,
+            "censored": 20,
+            "cumulativeExits": 1002,
+            "exits": 55,
+            "quartersSinceEntry": 14,
+            "survival": 0.6656690222
+          },
+          {
+            "atRisk": 1786,
+            "censored": 8,
+            "cumulativeExits": 1039,
+            "exits": 37,
+            "quartersSinceEntry": 15,
+            "survival": 0.651878566533
+          },
+          {
+            "atRisk": 1741,
+            "censored": 12,
+            "cumulativeExits": 1082,
+            "exits": 43,
+            "quartersSinceEntry": 16,
+            "survival": 0.635778176894
+          },
+          {
+            "atRisk": 1686,
+            "censored": 13,
+            "cumulativeExits": 1125,
+            "exits": 43,
+            "quartersSinceEntry": 17,
+            "survival": 0.619563193735
+          },
+          {
+            "atRisk": 1630,
+            "censored": 11,
+            "cumulativeExits": 1195,
+            "exits": 70,
+            "quartersSinceEntry": 18,
+            "survival": 0.592956185415
+          },
+          {
+            "atRisk": 1549,
+            "censored": 4,
+            "cumulativeExits": 1227,
+            "exits": 32,
+            "quartersSinceEntry": 19,
+            "survival": 0.580706606375
+          },
+          {
+            "atRisk": 1513,
+            "censored": 17,
+            "cumulativeExits": 1255,
+            "exits": 28,
+            "quartersSinceEntry": 20,
+            "survival": 0.569959887949
+          },
+          {
+            "atRisk": 1468,
+            "censored": 11,
+            "cumulativeExits": 1295,
+            "exits": 40,
+            "quartersSinceEntry": 21,
+            "survival": 0.55442964577
+          },
+          {
+            "atRisk": 1417,
+            "censored": 25,
+            "cumulativeExits": 1339,
+            "exits": 44,
+            "quartersSinceEntry": 22,
+            "survival": 0.537213764038
+          },
+          {
+            "atRisk": 1348,
+            "censored": 7,
+            "cumulativeExits": 1360,
+            "exits": 21,
+            "quartersSinceEntry": 23,
+            "survival": 0.528844706884
+          },
+          {
+            "atRisk": 1320,
+            "censored": 12,
+            "cumulativeExits": 1384,
+            "exits": 24,
+            "quartersSinceEntry": 24,
+            "survival": 0.519229348577
+          },
+          {
+            "atRisk": 1284,
+            "censored": 15,
+            "cumulativeExits": 1409,
+            "exits": 25,
+            "quartersSinceEntry": 25,
+            "survival": 0.50911974288
+          },
+          {
+            "atRisk": 1244,
+            "censored": 32,
+            "cumulativeExits": 1450,
+            "exits": 41,
+            "quartersSinceEntry": 26,
+            "survival": 0.492340072898
+          },
+          {
+            "atRisk": 1171,
+            "censored": 1,
+            "cumulativeExits": 1468,
+            "exits": 18,
+            "quartersSinceEntry": 27,
+            "survival": 0.484772078609
+          },
+          {
+            "atRisk": 1152,
+            "censored": 20,
+            "cumulativeExits": 1487,
+            "exits": 19,
+            "quartersSinceEntry": 28,
+            "survival": 0.476776705785
+          },
+          {
+            "atRisk": 1113,
+            "censored": 10,
+            "cumulativeExits": 1501,
+            "exits": 14,
+            "quartersSinceEntry": 29,
+            "survival": 0.470779514517
+          },
+          {
+            "atRisk": 1089,
+            "censored": 26,
+            "cumulativeExits": 1531,
+            "exits": 30,
+            "quartersSinceEntry": 30,
+            "survival": 0.457810381886
+          },
+          {
+            "atRisk": 1033,
+            "censored": 8,
+            "cumulativeExits": 1545,
+            "exits": 14,
+            "quartersSinceEntry": 31,
+            "survival": 0.451605788133
+          },
+          {
+            "atRisk": 1011,
+            "censored": 8,
+            "cumulativeExits": 1565,
+            "exits": 20,
+            "quartersSinceEntry": 32,
+            "survival": 0.442671944649
+          },
+          {
+            "atRisk": 983,
+            "censored": 11,
+            "cumulativeExits": 1584,
+            "exits": 19,
+            "quartersSinceEntry": 33,
+            "survival": 0.434115721914
+          },
+          {
+            "atRisk": 953,
+            "censored": 24,
+            "cumulativeExits": 1608,
+            "exits": 24,
+            "quartersSinceEntry": 34,
+            "survival": 0.423183111918
+          },
+          {
+            "atRisk": 905,
+            "censored": 8,
+            "cumulativeExits": 1619,
+            "exits": 11,
+            "quartersSinceEntry": 35,
+            "survival": 0.418039449784
+          },
+          {
+            "atRisk": 886,
+            "censored": 33,
+            "cumulativeExits": 1632,
+            "exits": 13,
+            "quartersSinceEntry": 36,
+            "survival": 0.411905688106
+          },
+          {
+            "atRisk": 840,
+            "censored": 564,
+            "cumulativeExits": 1645,
+            "exits": 13,
+            "quartersSinceEntry": 37,
+            "survival": 0.405530957218
+          },
+          {
+            "atRisk": 263,
+            "censored": 22,
+            "cumulativeExits": 1650,
+            "exits": 5,
+            "quartersSinceEntry": 38,
+            "survival": 0.397821243203
+          },
+          {
+            "atRisk": 236,
+            "censored": 2,
+            "cumulativeExits": 1651,
+            "exits": 1,
+            "quartersSinceEntry": 39,
+            "survival": 0.396135559969
+          },
+          {
+            "atRisk": 233,
+            "censored": 6,
+            "cumulativeExits": 1652,
+            "exits": 1,
+            "quartersSinceEntry": 40,
+            "survival": 0.394435407351
+          },
+          {
+            "atRisk": 226,
+            "censored": 152,
+            "cumulativeExits": 1654,
+            "exits": 2,
+            "quartersSinceEntry": 41,
+            "survival": 0.390944828525
+          },
+          {
+            "atRisk": 72,
+            "censored": 5,
+            "cumulativeExits": 1655,
+            "exits": 1,
+            "quartersSinceEntry": 42,
+            "survival": 0.38551503924
+          },
+          {
+            "atRisk": 66,
+            "censored": 1,
+            "cumulativeExits": 1655,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.38551503924
+          },
+          {
+            "atRisk": 65,
+            "censored": 1,
+            "cumulativeExits": 1655,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.38551503924
+          },
+          {
+            "atRisk": 64,
+            "censored": 63,
+            "cumulativeExits": 1656,
+            "exits": 1,
+            "quartersSinceEntry": 45,
+            "survival": 0.379491366752
+          }
+        ],
+        "terminalExits": 1656
+      },
+      {
+        "atRiskAtHorizon": 2781,
+        "companies": 4113,
+        "horizonEstimable": true,
+        "medianStayQuarters": 33,
+        "rightCensored": 2211,
+        "sector": "Manufacturing",
+        "survivalAtHorizon": 0.77446091981,
+        "survivalCurve": [
+          {
+            "atRisk": 4113,
+            "censored": 46,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 4067,
+            "censored": 37,
+            "cumulativeExits": 88,
+            "exits": 88,
+            "quartersSinceEntry": 1,
+            "survival": 0.978362429309
+          },
+          {
+            "atRisk": 3942,
+            "censored": 32,
+            "cumulativeExits": 175,
+            "exits": 87,
+            "quartersSinceEntry": 2,
+            "survival": 0.956769955603
+          },
+          {
+            "atRisk": 3823,
+            "censored": 15,
+            "cumulativeExits": 246,
+            "exits": 71,
+            "quartersSinceEntry": 3,
+            "survival": 0.939001013189
+          },
+          {
+            "atRisk": 3737,
+            "censored": 28,
+            "cumulativeExits": 349,
+            "exits": 103,
+            "quartersSinceEntry": 4,
+            "survival": 0.913120064739
+          },
+          {
+            "atRisk": 3606,
+            "censored": 26,
+            "cumulativeExits": 426,
+            "exits": 77,
+            "quartersSinceEntry": 5,
+            "survival": 0.89362193801
+          },
+          {
+            "atRisk": 3503,
+            "censored": 48,
+            "cumulativeExits": 515,
+            "exits": 89,
+            "quartersSinceEntry": 6,
+            "survival": 0.870917869359
+          },
+          {
+            "atRisk": 3366,
+            "censored": 16,
+            "cumulativeExits": 558,
+            "exits": 43,
+            "quartersSinceEntry": 7,
+            "survival": 0.859792061759
+          },
+          {
+            "atRisk": 3307,
+            "censored": 39,
+            "cumulativeExits": 639,
+            "exits": 81,
+            "quartersSinceEntry": 8,
+            "survival": 0.838732746064
+          },
+          {
+            "atRisk": 3187,
+            "censored": 46,
+            "cumulativeExits": 710,
+            "exits": 71,
+            "quartersSinceEntry": 9,
+            "survival": 0.820047454263
+          },
+          {
+            "atRisk": 3070,
+            "censored": 92,
+            "cumulativeExits": 776,
+            "exits": 66,
+            "quartersSinceEntry": 10,
+            "survival": 0.802417769579
+          },
+          {
+            "atRisk": 2912,
+            "censored": 81,
+            "cumulativeExits": 826,
+            "exits": 50,
+            "quartersSinceEntry": 11,
+            "survival": 0.788639991942
+          },
+          {
+            "atRisk": 2781,
+            "censored": 23,
+            "cumulativeExits": 876,
+            "exits": 50,
+            "quartersSinceEntry": 12,
+            "survival": 0.77446091981
+          },
+          {
+            "atRisk": 2708,
+            "censored": 17,
+            "cumulativeExits": 940,
+            "exits": 64,
+            "quartersSinceEntry": 13,
+            "survival": 0.756157559815
+          },
+          {
+            "atRisk": 2627,
+            "censored": 25,
+            "cumulativeExits": 1012,
+            "exits": 72,
+            "quartersSinceEntry": 14,
+            "survival": 0.735433028293
+          },
+          {
+            "atRisk": 2530,
+            "censored": 14,
+            "cumulativeExits": 1063,
+            "exits": 51,
+            "quartersSinceEntry": 15,
+            "survival": 0.720608093731
+          },
+          {
+            "atRisk": 2465,
+            "censored": 20,
+            "cumulativeExits": 1125,
+            "exits": 62,
+            "quartersSinceEntry": 16,
+            "survival": 0.70248326541
+          },
+          {
+            "atRisk": 2383,
+            "censored": 25,
+            "cumulativeExits": 1177,
+            "exits": 52,
+            "quartersSinceEntry": 17,
+            "survival": 0.687154213878
+          },
+          {
+            "atRisk": 2306,
+            "censored": 28,
+            "cumulativeExits": 1242,
+            "exits": 65,
+            "quartersSinceEntry": 18,
+            "survival": 0.667785166219
+          },
+          {
+            "atRisk": 2213,
+            "censored": 4,
+            "cumulativeExits": 1286,
+            "exits": 44,
+            "quartersSinceEntry": 19,
+            "survival": 0.654507919353
+          },
+          {
+            "atRisk": 2165,
+            "censored": 21,
+            "cumulativeExits": 1331,
+            "exits": 45,
+            "quartersSinceEntry": 20,
+            "survival": 0.64090382865
+          },
+          {
+            "atRisk": 2099,
+            "censored": 33,
+            "cumulativeExits": 1377,
+            "exits": 46,
+            "quartersSinceEntry": 21,
+            "survival": 0.62685829453
+          },
+          {
+            "atRisk": 2020,
+            "censored": 34,
+            "cumulativeExits": 1420,
+            "exits": 43,
+            "quartersSinceEntry": 22,
+            "survival": 0.61351428133
+          },
+          {
+            "atRisk": 1943,
+            "censored": 11,
+            "cumulativeExits": 1465,
+            "exits": 45,
+            "quartersSinceEntry": 23,
+            "survival": 0.599305252684
+          },
+          {
+            "atRisk": 1887,
+            "censored": 20,
+            "cumulativeExits": 1504,
+            "exits": 39,
+            "quartersSinceEntry": 24,
+            "survival": 0.586918975601
+          },
+          {
+            "atRisk": 1828,
+            "censored": 33,
+            "cumulativeExits": 1537,
+            "exits": 33,
+            "quartersSinceEntry": 25,
+            "survival": 0.576323611162
+          },
+          {
+            "atRisk": 1762,
+            "censored": 48,
+            "cumulativeExits": 1583,
+            "exits": 46,
+            "quartersSinceEntry": 26,
+            "survival": 0.561277705309
+          },
+          {
+            "atRisk": 1668,
+            "censored": 3,
+            "cumulativeExits": 1611,
+            "exits": 28,
+            "quartersSinceEntry": 27,
+            "survival": 0.551855777402
+          },
+          {
+            "atRisk": 1637,
+            "censored": 24,
+            "cumulativeExits": 1634,
+            "exits": 23,
+            "quartersSinceEntry": 28,
+            "survival": 0.544102153162
+          },
+          {
+            "atRisk": 1590,
+            "censored": 18,
+            "cumulativeExits": 1657,
+            "exits": 23,
+            "quartersSinceEntry": 29,
+            "survival": 0.536231493085
+          },
+          {
+            "atRisk": 1549,
+            "censored": 15,
+            "cumulativeExits": 1698,
+            "exits": 41,
+            "quartersSinceEntry": 30,
+            "survival": 0.522038148207
+          },
+          {
+            "atRisk": 1493,
+            "censored": 8,
+            "cumulativeExits": 1719,
+            "exits": 21,
+            "quartersSinceEntry": 31,
+            "survival": 0.51469534773
+          },
+          {
+            "atRisk": 1464,
+            "censored": 10,
+            "cumulativeExits": 1741,
+            "exits": 22,
+            "quartersSinceEntry": 32,
+            "survival": 0.506960854799
+          },
+          {
+            "atRisk": 1432,
+            "censored": 12,
+            "cumulativeExits": 1765,
+            "exits": 24,
+            "quartersSinceEntry": 33,
+            "survival": 0.49846430416
+          },
+          {
+            "atRisk": 1396,
+            "censored": 58,
+            "cumulativeExits": 1797,
+            "exits": 32,
+            "quartersSinceEntry": 34,
+            "survival": 0.487038188306
+          },
+          {
+            "atRisk": 1306,
+            "censored": 26,
+            "cumulativeExits": 1821,
+            "exits": 24,
+            "quartersSinceEntry": 35,
+            "survival": 0.478088022517
+          },
+          {
+            "atRisk": 1256,
+            "censored": 120,
+            "cumulativeExits": 1848,
+            "exits": 27,
+            "quartersSinceEntry": 36,
+            "survival": 0.467810652607
+          },
+          {
+            "atRisk": 1109,
+            "censored": 669,
+            "cumulativeExits": 1877,
+            "exits": 29,
+            "quartersSinceEntry": 37,
+            "survival": 0.455577551682
+          },
+          {
+            "atRisk": 411,
+            "censored": 26,
+            "cumulativeExits": 1882,
+            "exits": 5,
+            "quartersSinceEntry": 38,
+            "survival": 0.4500352457
+          },
+          {
+            "atRisk": 380,
+            "censored": 14,
+            "cumulativeExits": 1887,
+            "exits": 5,
+            "quartersSinceEntry": 39,
+            "survival": 0.444113729309
+          },
+          {
+            "atRisk": 361,
+            "censored": 29,
+            "cumulativeExits": 1894,
+            "exits": 7,
+            "quartersSinceEntry": 40,
+            "survival": 0.435502105749
+          },
+          {
+            "atRisk": 325,
+            "censored": 174,
+            "cumulativeExits": 1896,
+            "exits": 2,
+            "quartersSinceEntry": 41,
+            "survival": 0.432822092791
+          },
+          {
+            "atRisk": 149,
+            "censored": 8,
+            "cumulativeExits": 1898,
+            "exits": 2,
+            "quartersSinceEntry": 42,
+            "survival": 0.42701240027
+          },
+          {
+            "atRisk": 139,
+            "censored": 7,
+            "cumulativeExits": 1900,
+            "exits": 2,
+            "quartersSinceEntry": 43,
+            "survival": 0.420868336957
+          },
+          {
+            "atRisk": 130,
+            "censored": 14,
+            "cumulativeExits": 1902,
+            "exits": 2,
+            "quartersSinceEntry": 44,
+            "survival": 0.414393439465
+          },
+          {
+            "atRisk": 114,
+            "censored": 111,
+            "cumulativeExits": 1902,
+            "exits": 0,
+            "quartersSinceEntry": 45,
+            "survival": 0.414393439465
+          },
+          {
+            "atRisk": 3,
+            "censored": 3,
+            "cumulativeExits": 1902,
+            "exits": 0,
+            "quartersSinceEntry": 46,
+            "survival": 0.414393439465
+          }
+        ],
+        "terminalExits": 1902
+      },
+      {
+        "atRiskAtHorizon": 698,
+        "companies": 1146,
+        "horizonEstimable": true,
+        "medianStayQuarters": 20,
+        "rightCensored": 405,
+        "sector": "Mining",
+        "survivalAtHorizon": 0.678930856043,
+        "survivalCurve": [
+          {
+            "atRisk": 1146,
+            "censored": 2,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 1144,
+            "censored": 0,
+            "cumulativeExits": 37,
+            "exits": 37,
+            "quartersSinceEntry": 1,
+            "survival": 0.967657342657
+          },
+          {
+            "atRisk": 1107,
+            "censored": 6,
+            "cumulativeExits": 73,
+            "exits": 36,
+            "quartersSinceEntry": 2,
+            "survival": 0.936188811189
+          },
+          {
+            "atRisk": 1065,
+            "censored": 3,
+            "cumulativeExits": 102,
+            "exits": 29,
+            "quartersSinceEntry": 3,
+            "survival": 0.910696345908
+          },
+          {
+            "atRisk": 1033,
+            "censored": 2,
+            "cumulativeExits": 139,
+            "exits": 37,
+            "quartersSinceEntry": 4,
+            "survival": 0.8780770189
+          },
+          {
+            "atRisk": 994,
+            "censored": 2,
+            "cumulativeExits": 164,
+            "exits": 25,
+            "quartersSinceEntry": 5,
+            "survival": 0.855992586835
+          },
+          {
+            "atRisk": 967,
+            "censored": 3,
+            "cumulativeExits": 196,
+            "exits": 32,
+            "quartersSinceEntry": 6,
+            "survival": 0.827666048284
+          },
+          {
+            "atRisk": 932,
+            "censored": 5,
+            "cumulativeExits": 222,
+            "exits": 26,
+            "quartersSinceEntry": 7,
+            "survival": 0.804576652088
+          },
+          {
+            "atRisk": 901,
+            "censored": 8,
+            "cumulativeExits": 253,
+            "exits": 31,
+            "quartersSinceEntry": 8,
+            "survival": 0.776894214557
+          },
+          {
+            "atRisk": 862,
+            "censored": 9,
+            "cumulativeExits": 275,
+            "exits": 22,
+            "quartersSinceEntry": 9,
+            "survival": 0.757066287968
+          },
+          {
+            "atRisk": 831,
+            "censored": 37,
+            "cumulativeExits": 299,
+            "exits": 24,
+            "quartersSinceEntry": 10,
+            "survival": 0.735201557629
+          },
+          {
+            "atRisk": 770,
+            "censored": 45,
+            "cumulativeExits": 326,
+            "exits": 27,
+            "quartersSinceEntry": 11,
+            "survival": 0.709421762752
+          },
+          {
+            "atRisk": 698,
+            "censored": 4,
+            "cumulativeExits": 356,
+            "exits": 30,
+            "quartersSinceEntry": 12,
+            "survival": 0.678930856043
+          },
+          {
+            "atRisk": 664,
+            "censored": 2,
+            "cumulativeExits": 371,
+            "exits": 15,
+            "quartersSinceEntry": 13,
+            "survival": 0.663593562608
+          },
+          {
+            "atRisk": 647,
+            "censored": 9,
+            "cumulativeExits": 404,
+            "exits": 33,
+            "quartersSinceEntry": 14,
+            "survival": 0.629747213974
+          },
+          {
+            "atRisk": 605,
+            "censored": 1,
+            "cumulativeExits": 422,
+            "exits": 18,
+            "quartersSinceEntry": 15,
+            "survival": 0.611010933228
+          },
+          {
+            "atRisk": 586,
+            "censored": 4,
+            "cumulativeExits": 438,
+            "exits": 16,
+            "quartersSinceEntry": 16,
+            "survival": 0.594328040853
+          },
+          {
+            "atRisk": 566,
+            "censored": 3,
+            "cumulativeExits": 465,
+            "exits": 27,
+            "quartersSinceEntry": 17,
+            "survival": 0.565976703215
+          },
+          {
+            "atRisk": 536,
+            "censored": 3,
+            "cumulativeExits": 505,
+            "exits": 40,
+            "quartersSinceEntry": 18,
+            "survival": 0.523739635811
+          },
+          {
+            "atRisk": 493,
+            "censored": 1,
+            "cumulativeExits": 511,
+            "exits": 6,
+            "quartersSinceEntry": 19,
+            "survival": 0.517365522597
+          },
+          {
+            "atRisk": 486,
+            "censored": 0,
+            "cumulativeExits": 528,
+            "exits": 17,
+            "quartersSinceEntry": 20,
+            "survival": 0.499268374687
+          },
+          {
+            "atRisk": 469,
+            "censored": 2,
+            "cumulativeExits": 553,
+            "exits": 25,
+            "quartersSinceEntry": 21,
+            "survival": 0.472654921878
+          },
+          {
+            "atRisk": 442,
+            "censored": 5,
+            "cumulativeExits": 572,
+            "exits": 19,
+            "quartersSinceEntry": 22,
+            "survival": 0.452337176368
+          },
+          {
+            "atRisk": 418,
+            "censored": 3,
+            "cumulativeExits": 586,
+            "exits": 14,
+            "quartersSinceEntry": 23,
+            "survival": 0.437187127398
+          },
+          {
+            "atRisk": 401,
+            "censored": 4,
+            "cumulativeExits": 598,
+            "exits": 12,
+            "quartersSinceEntry": 24,
+            "survival": 0.424104220843
+          },
+          {
+            "atRisk": 385,
+            "censored": 5,
+            "cumulativeExits": 610,
+            "exits": 12,
+            "quartersSinceEntry": 25,
+            "survival": 0.410885387985
+          },
+          {
+            "atRisk": 368,
+            "censored": 1,
+            "cumulativeExits": 626,
+            "exits": 16,
+            "quartersSinceEntry": 26,
+            "survival": 0.393020805899
+          },
+          {
+            "atRisk": 351,
+            "censored": 2,
+            "cumulativeExits": 641,
+            "exits": 15,
+            "quartersSinceEntry": 27,
+            "survival": 0.376225044963
+          },
+          {
+            "atRisk": 334,
+            "censored": 3,
+            "cumulativeExits": 652,
+            "exits": 11,
+            "quartersSinceEntry": 28,
+            "survival": 0.36383439977
+          },
+          {
+            "atRisk": 320,
+            "censored": 2,
+            "cumulativeExits": 661,
+            "exits": 9,
+            "quartersSinceEntry": 29,
+            "survival": 0.353601557276
+          },
+          {
+            "atRisk": 309,
+            "censored": 4,
+            "cumulativeExits": 675,
+            "exits": 14,
+            "quartersSinceEntry": 30,
+            "survival": 0.337580774746
+          },
+          {
+            "atRisk": 291,
+            "censored": 4,
+            "cumulativeExits": 682,
+            "exits": 7,
+            "quartersSinceEntry": 31,
+            "survival": 0.32946027501
+          },
+          {
+            "atRisk": 280,
+            "censored": 1,
+            "cumulativeExits": 690,
+            "exits": 8,
+            "quartersSinceEntry": 32,
+            "survival": 0.320047124295
+          },
+          {
+            "atRisk": 271,
+            "censored": 0,
+            "cumulativeExits": 697,
+            "exits": 7,
+            "quartersSinceEntry": 33,
+            "survival": 0.311780224406
+          },
+          {
+            "atRisk": 264,
+            "censored": 14,
+            "cumulativeExits": 709,
+            "exits": 12,
+            "quartersSinceEntry": 34,
+            "survival": 0.297608396024
+          },
+          {
+            "atRisk": 238,
+            "censored": 7,
+            "cumulativeExits": 720,
+            "exits": 11,
+            "quartersSinceEntry": 35,
+            "survival": 0.283853386123
+          },
+          {
+            "atRisk": 220,
+            "censored": 24,
+            "cumulativeExits": 727,
+            "exits": 7,
+            "quartersSinceEntry": 36,
+            "survival": 0.274821687474
+          },
+          {
+            "atRisk": 189,
+            "censored": 110,
+            "cumulativeExits": 735,
+            "exits": 8,
+            "quartersSinceEntry": 37,
+            "survival": 0.263189023454
+          },
+          {
+            "atRisk": 71,
+            "censored": 2,
+            "cumulativeExits": 737,
+            "exits": 2,
+            "quartersSinceEntry": 38,
+            "survival": 0.255775248145
+          },
+          {
+            "atRisk": 67,
+            "censored": 0,
+            "cumulativeExits": 738,
+            "exits": 1,
+            "quartersSinceEntry": 39,
+            "survival": 0.251957707128
+          },
+          {
+            "atRisk": 66,
+            "censored": 1,
+            "cumulativeExits": 738,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.251957707128
+          },
+          {
+            "atRisk": 65,
+            "censored": 25,
+            "cumulativeExits": 739,
+            "exits": 1,
+            "quartersSinceEntry": 41,
+            "survival": 0.248081434711
+          },
+          {
+            "atRisk": 39,
+            "censored": 4,
+            "cumulativeExits": 739,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.248081434711
+          },
+          {
+            "atRisk": 35,
+            "censored": 2,
+            "cumulativeExits": 739,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.248081434711
+          },
+          {
+            "atRisk": 33,
+            "censored": 1,
+            "cumulativeExits": 739,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.248081434711
+          },
+          {
+            "atRisk": 32,
+            "censored": 26,
+            "cumulativeExits": 741,
+            "exits": 2,
+            "quartersSinceEntry": 45,
+            "survival": 0.232576345042
+          },
+          {
+            "atRisk": 4,
+            "censored": 4,
+            "cumulativeExits": 741,
+            "exits": 0,
+            "quartersSinceEntry": 46,
+            "survival": 0.232576345042
+          }
+        ],
+        "terminalExits": 741
+      },
+      {
+        "atRiskAtHorizon": 22,
+        "companies": 37,
+        "horizonEstimable": true,
+        "medianStayQuarters": 14,
+        "rightCensored": 6,
+        "sector": "Nonclassifiable Establishments",
+        "survivalAtHorizon": 0.567567567568,
+        "survivalCurve": [
+          {
+            "atRisk": 37,
+            "censored": 0,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 37,
+            "censored": 0,
+            "cumulativeExits": 2,
+            "exits": 2,
+            "quartersSinceEntry": 1,
+            "survival": 0.945945945946
+          },
+          {
+            "atRisk": 35,
+            "censored": 0,
+            "cumulativeExits": 3,
+            "exits": 1,
+            "quartersSinceEntry": 2,
+            "survival": 0.918918918919
+          },
+          {
+            "atRisk": 34,
+            "censored": 0,
+            "cumulativeExits": 5,
+            "exits": 2,
+            "quartersSinceEntry": 3,
+            "survival": 0.864864864865
+          },
+          {
+            "atRisk": 32,
+            "censored": 0,
+            "cumulativeExits": 9,
+            "exits": 4,
+            "quartersSinceEntry": 4,
+            "survival": 0.756756756757
+          },
+          {
+            "atRisk": 28,
+            "censored": 0,
+            "cumulativeExits": 10,
+            "exits": 1,
+            "quartersSinceEntry": 5,
+            "survival": 0.72972972973
+          },
+          {
+            "atRisk": 27,
+            "censored": 0,
+            "cumulativeExits": 11,
+            "exits": 1,
+            "quartersSinceEntry": 6,
+            "survival": 0.702702702703
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 11,
+            "exits": 0,
+            "quartersSinceEntry": 7,
+            "survival": 0.702702702703
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 11,
+            "exits": 0,
+            "quartersSinceEntry": 8,
+            "survival": 0.702702702703
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 11,
+            "exits": 0,
+            "quartersSinceEntry": 9,
+            "survival": 0.702702702703
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 2,
+            "quartersSinceEntry": 10,
+            "survival": 0.648648648649
+          },
+          {
+            "atRisk": 24,
+            "censored": 0,
+            "cumulativeExits": 15,
+            "exits": 2,
+            "quartersSinceEntry": 11,
+            "survival": 0.594594594595
+          },
+          {
+            "atRisk": 22,
+            "censored": 0,
+            "cumulativeExits": 16,
+            "exits": 1,
+            "quartersSinceEntry": 12,
+            "survival": 0.567567567568
+          },
+          {
+            "atRisk": 21,
+            "censored": 0,
+            "cumulativeExits": 17,
+            "exits": 1,
+            "quartersSinceEntry": 13,
+            "survival": 0.540540540541
+          },
+          {
+            "atRisk": 20,
+            "censored": 0,
+            "cumulativeExits": 20,
+            "exits": 3,
+            "quartersSinceEntry": 14,
+            "survival": 0.459459459459
+          },
+          {
+            "atRisk": 17,
+            "censored": 0,
+            "cumulativeExits": 20,
+            "exits": 0,
+            "quartersSinceEntry": 15,
+            "survival": 0.459459459459
+          },
+          {
+            "atRisk": 17,
+            "censored": 0,
+            "cumulativeExits": 21,
+            "exits": 1,
+            "quartersSinceEntry": 16,
+            "survival": 0.432432432432
+          },
+          {
+            "atRisk": 16,
+            "censored": 0,
+            "cumulativeExits": 21,
+            "exits": 0,
+            "quartersSinceEntry": 17,
+            "survival": 0.432432432432
+          },
+          {
+            "atRisk": 16,
+            "censored": 0,
+            "cumulativeExits": 22,
+            "exits": 1,
+            "quartersSinceEntry": 18,
+            "survival": 0.405405405405
+          },
+          {
+            "atRisk": 15,
+            "censored": 0,
+            "cumulativeExits": 22,
+            "exits": 0,
+            "quartersSinceEntry": 19,
+            "survival": 0.405405405405
+          },
+          {
+            "atRisk": 15,
+            "censored": 0,
+            "cumulativeExits": 22,
+            "exits": 0,
+            "quartersSinceEntry": 20,
+            "survival": 0.405405405405
+          },
+          {
+            "atRisk": 15,
+            "censored": 0,
+            "cumulativeExits": 23,
+            "exits": 1,
+            "quartersSinceEntry": 21,
+            "survival": 0.378378378378
+          },
+          {
+            "atRisk": 14,
+            "censored": 0,
+            "cumulativeExits": 24,
+            "exits": 1,
+            "quartersSinceEntry": 22,
+            "survival": 0.351351351351
+          },
+          {
+            "atRisk": 13,
+            "censored": 0,
+            "cumulativeExits": 25,
+            "exits": 1,
+            "quartersSinceEntry": 23,
+            "survival": 0.324324324324
+          },
+          {
+            "atRisk": 12,
+            "censored": 0,
+            "cumulativeExits": 25,
+            "exits": 0,
+            "quartersSinceEntry": 24,
+            "survival": 0.324324324324
+          },
+          {
+            "atRisk": 12,
+            "censored": 0,
+            "cumulativeExits": 25,
+            "exits": 0,
+            "quartersSinceEntry": 25,
+            "survival": 0.324324324324
+          },
+          {
+            "atRisk": 12,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 1,
+            "quartersSinceEntry": 26,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 27,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 28,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 29,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 30,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 26,
+            "exits": 0,
+            "quartersSinceEntry": 31,
+            "survival": 0.297297297297
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 27,
+            "exits": 1,
+            "quartersSinceEntry": 32,
+            "survival": 0.27027027027
+          },
+          {
+            "atRisk": 10,
+            "censored": 0,
+            "cumulativeExits": 27,
+            "exits": 0,
+            "quartersSinceEntry": 33,
+            "survival": 0.27027027027
+          },
+          {
+            "atRisk": 10,
+            "censored": 0,
+            "cumulativeExits": 29,
+            "exits": 2,
+            "quartersSinceEntry": 34,
+            "survival": 0.216216216216
+          },
+          {
+            "atRisk": 8,
+            "censored": 0,
+            "cumulativeExits": 29,
+            "exits": 0,
+            "quartersSinceEntry": 35,
+            "survival": 0.216216216216
+          },
+          {
+            "atRisk": 8,
+            "censored": 2,
+            "cumulativeExits": 31,
+            "exits": 2,
+            "quartersSinceEntry": 36,
+            "survival": 0.162162162162
+          },
+          {
+            "atRisk": 4,
+            "censored": 4,
+            "cumulativeExits": 31,
+            "exits": 0,
+            "quartersSinceEntry": 37,
+            "survival": 0.162162162162
+          }
+        ],
+        "terminalExits": 31
+      },
+      {
+        "atRiskAtHorizon": 439,
+        "companies": 630,
+        "horizonEstimable": true,
+        "medianStayQuarters": 26,
+        "rightCensored": 278,
+        "sector": "Retail Trade",
+        "survivalAtHorizon": 0.735223956729,
+        "survivalCurve": [
+          {
+            "atRisk": 630,
+            "censored": 3,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 627,
+            "censored": 4,
+            "cumulativeExits": 18,
+            "exits": 18,
+            "quartersSinceEntry": 1,
+            "survival": 0.971291866029
+          },
+          {
+            "atRisk": 605,
+            "censored": 6,
+            "cumulativeExits": 34,
+            "exits": 16,
+            "quartersSinceEntry": 2,
+            "survival": 0.945604808415
+          },
+          {
+            "atRisk": 583,
+            "censored": 3,
+            "cumulativeExits": 50,
+            "exits": 16,
+            "quartersSinceEntry": 3,
+            "survival": 0.919653390002
+          },
+          {
+            "atRisk": 564,
+            "censored": 1,
+            "cumulativeExits": 63,
+            "exits": 13,
+            "quartersSinceEntry": 4,
+            "survival": 0.898455705481
+          },
+          {
+            "atRisk": 550,
+            "censored": 7,
+            "cumulativeExits": 74,
+            "exits": 11,
+            "quartersSinceEntry": 5,
+            "survival": 0.880486591371
+          },
+          {
+            "atRisk": 532,
+            "censored": 4,
+            "cumulativeExits": 91,
+            "exits": 17,
+            "quartersSinceEntry": 6,
+            "survival": 0.852350741647
+          },
+          {
+            "atRisk": 511,
+            "censored": 2,
+            "cumulativeExits": 98,
+            "exits": 7,
+            "quartersSinceEntry": 7,
+            "survival": 0.84067470409
+          },
+          {
+            "atRisk": 502,
+            "censored": 2,
+            "cumulativeExits": 108,
+            "exits": 10,
+            "quartersSinceEntry": 8,
+            "survival": 0.82392819604
+          },
+          {
+            "atRisk": 490,
+            "censored": 3,
+            "cumulativeExits": 118,
+            "exits": 10,
+            "quartersSinceEntry": 9,
+            "survival": 0.807113334897
+          },
+          {
+            "atRisk": 477,
+            "censored": 7,
+            "cumulativeExits": 130,
+            "exits": 12,
+            "quartersSinceEntry": 10,
+            "survival": 0.786808596912
+          },
+          {
+            "atRisk": 458,
+            "censored": 1,
+            "cumulativeExits": 148,
+            "exits": 18,
+            "quartersSinceEntry": 11,
+            "survival": 0.7558859883
+          },
+          {
+            "atRisk": 439,
+            "censored": 5,
+            "cumulativeExits": 160,
+            "exits": 12,
+            "quartersSinceEntry": 12,
+            "survival": 0.735223956729
+          },
+          {
+            "atRisk": 422,
+            "censored": 1,
+            "cumulativeExits": 175,
+            "exits": 15,
+            "quartersSinceEntry": 13,
+            "survival": 0.709090403764
+          },
+          {
+            "atRisk": 406,
+            "censored": 2,
+            "cumulativeExits": 186,
+            "exits": 11,
+            "quartersSinceEntry": 14,
+            "survival": 0.689878594795
+          },
+          {
+            "atRisk": 393,
+            "censored": 2,
+            "cumulativeExits": 193,
+            "exits": 7,
+            "quartersSinceEntry": 15,
+            "survival": 0.677590680893
+          },
+          {
+            "atRisk": 384,
+            "censored": 3,
+            "cumulativeExits": 198,
+            "exits": 5,
+            "quartersSinceEntry": 16,
+            "survival": 0.668767885569
+          },
+          {
+            "atRisk": 376,
+            "censored": 2,
+            "cumulativeExits": 208,
+            "exits": 10,
+            "quartersSinceEntry": 17,
+            "survival": 0.650981505634
+          },
+          {
+            "atRisk": 364,
+            "censored": 2,
+            "cumulativeExits": 228,
+            "exits": 20,
+            "quartersSinceEntry": 18,
+            "survival": 0.615213291039
+          },
+          {
+            "atRisk": 342,
+            "censored": 1,
+            "cumulativeExits": 238,
+            "exits": 10,
+            "quartersSinceEntry": 19,
+            "survival": 0.597224598318
+          },
+          {
+            "atRisk": 331,
+            "censored": 4,
+            "cumulativeExits": 249,
+            "exits": 11,
+            "quartersSinceEntry": 20,
+            "survival": 0.577377255172
+          },
+          {
+            "atRisk": 316,
+            "censored": 3,
+            "cumulativeExits": 259,
+            "exits": 10,
+            "quartersSinceEntry": 21,
+            "survival": 0.559105823046
+          },
+          {
+            "atRisk": 303,
+            "censored": 4,
+            "cumulativeExits": 265,
+            "exits": 6,
+            "quartersSinceEntry": 22,
+            "survival": 0.548034420609
+          },
+          {
+            "atRisk": 293,
+            "censored": 2,
+            "cumulativeExits": 269,
+            "exits": 4,
+            "quartersSinceEntry": 23,
+            "survival": 0.540552722034
+          },
+          {
+            "atRisk": 287,
+            "censored": 5,
+            "cumulativeExits": 277,
+            "exits": 8,
+            "quartersSinceEntry": 24,
+            "survival": 0.52548505034
+          },
+          {
+            "atRisk": 274,
+            "censored": 3,
+            "cumulativeExits": 284,
+            "exits": 7,
+            "quartersSinceEntry": 25,
+            "survival": 0.512060249784
+          },
+          {
+            "atRisk": 264,
+            "censored": 5,
+            "cumulativeExits": 292,
+            "exits": 8,
+            "quartersSinceEntry": 26,
+            "survival": 0.496543272518
+          },
+          {
+            "atRisk": 251,
+            "censored": 5,
+            "cumulativeExits": 298,
+            "exits": 6,
+            "quartersSinceEntry": 27,
+            "survival": 0.484673712219
+          },
+          {
+            "atRisk": 240,
+            "censored": 5,
+            "cumulativeExits": 304,
+            "exits": 6,
+            "quartersSinceEntry": 28,
+            "survival": 0.472556869413
+          },
+          {
+            "atRisk": 229,
+            "censored": 3,
+            "cumulativeExits": 309,
+            "exits": 5,
+            "quartersSinceEntry": 29,
+            "survival": 0.462239033836
+          },
+          {
+            "atRisk": 221,
+            "censored": 4,
+            "cumulativeExits": 314,
+            "exits": 5,
+            "quartersSinceEntry": 30,
+            "survival": 0.451781137143
+          },
+          {
+            "atRisk": 212,
+            "censored": 1,
+            "cumulativeExits": 317,
+            "exits": 3,
+            "quartersSinceEntry": 31,
+            "survival": 0.445388007844
+          },
+          {
+            "atRisk": 208,
+            "censored": 4,
+            "cumulativeExits": 323,
+            "exits": 6,
+            "quartersSinceEntry": 32,
+            "survival": 0.432540276849
+          },
+          {
+            "atRisk": 198,
+            "censored": 4,
+            "cumulativeExits": 328,
+            "exits": 5,
+            "quartersSinceEntry": 33,
+            "survival": 0.421617542585
+          },
+          {
+            "atRisk": 189,
+            "censored": 6,
+            "cumulativeExits": 337,
+            "exits": 9,
+            "quartersSinceEntry": 34,
+            "survival": 0.401540516747
+          },
+          {
+            "atRisk": 174,
+            "censored": 3,
+            "cumulativeExits": 338,
+            "exits": 1,
+            "quartersSinceEntry": 35,
+            "survival": 0.399232812628
+          },
+          {
+            "atRisk": 170,
+            "censored": 9,
+            "cumulativeExits": 341,
+            "exits": 3,
+            "quartersSinceEntry": 36,
+            "survival": 0.392187527699
+          },
+          {
+            "atRisk": 158,
+            "censored": 75,
+            "cumulativeExits": 347,
+            "exits": 6,
+            "quartersSinceEntry": 37,
+            "survival": 0.377294330445
+          },
+          {
+            "atRisk": 77,
+            "censored": 5,
+            "cumulativeExits": 349,
+            "exits": 2,
+            "quartersSinceEntry": 38,
+            "survival": 0.367494477706
+          },
+          {
+            "atRisk": 70,
+            "censored": 2,
+            "cumulativeExits": 350,
+            "exits": 1,
+            "quartersSinceEntry": 39,
+            "survival": 0.362244556596
+          },
+          {
+            "atRisk": 67,
+            "censored": 6,
+            "cumulativeExits": 350,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.362244556596
+          },
+          {
+            "atRisk": 61,
+            "censored": 29,
+            "cumulativeExits": 351,
+            "exits": 1,
+            "quartersSinceEntry": 41,
+            "survival": 0.356306121242
+          },
+          {
+            "atRisk": 31,
+            "censored": 4,
+            "cumulativeExits": 351,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.356306121242
+          },
+          {
+            "atRisk": 27,
+            "censored": 0,
+            "cumulativeExits": 351,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.356306121242
+          },
+          {
+            "atRisk": 27,
+            "censored": 5,
+            "cumulativeExits": 352,
+            "exits": 1,
+            "quartersSinceEntry": 44,
+            "survival": 0.343109598233
+          },
+          {
+            "atRisk": 21,
+            "censored": 20,
+            "cumulativeExits": 352,
+            "exits": 0,
+            "quartersSinceEntry": 45,
+            "survival": 0.343109598233
+          },
+          {
+            "atRisk": 1,
+            "censored": 1,
+            "cumulativeExits": 352,
+            "exits": 0,
+            "quartersSinceEntry": 46,
+            "survival": 0.343109598233
+          }
+        ],
+        "terminalExits": 352
+      },
+      {
+        "atRiskAtHorizon": 1625,
+        "companies": 2533,
+        "horizonEstimable": true,
+        "medianStayQuarters": 23,
+        "rightCensored": 1087,
+        "sector": "Services",
+        "survivalAtHorizon": 0.706904753915,
+        "survivalCurve": [
+          {
+            "atRisk": 2533,
+            "censored": 22,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 2511,
+            "censored": 17,
+            "cumulativeExits": 72,
+            "exits": 72,
+            "quartersSinceEntry": 1,
+            "survival": 0.971326164875
+          },
+          {
+            "atRisk": 2422,
+            "censored": 27,
+            "cumulativeExits": 155,
+            "exits": 83,
+            "quartersSinceEntry": 2,
+            "survival": 0.938039595228
+          },
+          {
+            "atRisk": 2312,
+            "censored": 12,
+            "cumulativeExits": 194,
+            "exits": 39,
+            "quartersSinceEntry": 3,
+            "survival": 0.922216262955
+          },
+          {
+            "atRisk": 2261,
+            "censored": 18,
+            "cumulativeExits": 249,
+            "exits": 55,
+            "quartersSinceEntry": 4,
+            "survival": 0.8997828731
+          },
+          {
+            "atRisk": 2188,
+            "censored": 21,
+            "cumulativeExits": 302,
+            "exits": 53,
+            "quartersSinceEntry": 5,
+            "survival": 0.877987401311
+          },
+          {
+            "atRisk": 2114,
+            "censored": 41,
+            "cumulativeExits": 393,
+            "exits": 91,
+            "quartersSinceEntry": 6,
+            "survival": 0.840193241652
+          },
+          {
+            "atRisk": 1982,
+            "censored": 13,
+            "cumulativeExits": 445,
+            "exits": 52,
+            "quartersSinceEntry": 7,
+            "survival": 0.818149826634
+          },
+          {
+            "atRisk": 1917,
+            "censored": 16,
+            "cumulativeExits": 494,
+            "exits": 49,
+            "quartersSinceEntry": 8,
+            "survival": 0.797237285421
+          },
+          {
+            "atRisk": 1852,
+            "censored": 22,
+            "cumulativeExits": 550,
+            "exits": 56,
+            "quartersSinceEntry": 9,
+            "survival": 0.773130758432
+          },
+          {
+            "atRisk": 1774,
+            "censored": 30,
+            "cumulativeExits": 606,
+            "exits": 56,
+            "quartersSinceEntry": 10,
+            "survival": 0.748725277895
+          },
+          {
+            "atRisk": 1688,
+            "censored": 11,
+            "cumulativeExits": 658,
+            "exits": 52,
+            "quartersSinceEntry": 11,
+            "survival": 0.725660281183
+          },
+          {
+            "atRisk": 1625,
+            "censored": 15,
+            "cumulativeExits": 700,
+            "exits": 42,
+            "quartersSinceEntry": 12,
+            "survival": 0.706904753915
+          },
+          {
+            "atRisk": 1568,
+            "censored": 9,
+            "cumulativeExits": 753,
+            "exits": 53,
+            "quartersSinceEntry": 13,
+            "survival": 0.683010651902
+          },
+          {
+            "atRisk": 1506,
+            "censored": 22,
+            "cumulativeExits": 808,
+            "exits": 55,
+            "quartersSinceEntry": 14,
+            "survival": 0.658066703791
+          },
+          {
+            "atRisk": 1429,
+            "censored": 4,
+            "cumulativeExits": 849,
+            "exits": 41,
+            "quartersSinceEntry": 15,
+            "survival": 0.639185853647
+          },
+          {
+            "atRisk": 1384,
+            "censored": 18,
+            "cumulativeExits": 895,
+            "exits": 46,
+            "quartersSinceEntry": 16,
+            "survival": 0.617941237124
+          },
+          {
+            "atRisk": 1320,
+            "censored": 10,
+            "cumulativeExits": 940,
+            "exits": 45,
+            "quartersSinceEntry": 17,
+            "survival": 0.596875058586
+          },
+          {
+            "atRisk": 1265,
+            "censored": 18,
+            "cumulativeExits": 998,
+            "exits": 58,
+            "quartersSinceEntry": 18,
+            "survival": 0.569508455109
+          },
+          {
+            "atRisk": 1189,
+            "censored": 8,
+            "cumulativeExits": 1024,
+            "exits": 26,
+            "quartersSinceEntry": 19,
+            "survival": 0.557054948101
+          },
+          {
+            "atRisk": 1155,
+            "censored": 9,
+            "cumulativeExits": 1062,
+            "exits": 38,
+            "quartersSinceEntry": 20,
+            "survival": 0.538727599159
+          },
+          {
+            "atRisk": 1108,
+            "censored": 18,
+            "cumulativeExits": 1093,
+            "exits": 31,
+            "quartersSinceEntry": 21,
+            "survival": 0.523654895573
+          },
+          {
+            "atRisk": 1059,
+            "censored": 26,
+            "cumulativeExits": 1132,
+            "exits": 39,
+            "quartersSinceEntry": 22,
+            "survival": 0.504370154376
+          },
+          {
+            "atRisk": 994,
+            "censored": 8,
+            "cumulativeExits": 1153,
+            "exits": 21,
+            "quartersSinceEntry": 23,
+            "survival": 0.493714446889
+          },
+          {
+            "atRisk": 965,
+            "censored": 11,
+            "cumulativeExits": 1172,
+            "exits": 19,
+            "quartersSinceEntry": 24,
+            "survival": 0.483993644308
+          },
+          {
+            "atRisk": 935,
+            "censored": 15,
+            "cumulativeExits": 1203,
+            "exits": 31,
+            "quartersSinceEntry": 25,
+            "survival": 0.467946796208
+          },
+          {
+            "atRisk": 889,
+            "censored": 33,
+            "cumulativeExits": 1235,
+            "exits": 32,
+            "quartersSinceEntry": 26,
+            "survival": 0.451102817042
+          },
+          {
+            "atRisk": 824,
+            "censored": 4,
+            "cumulativeExits": 1262,
+            "exits": 27,
+            "quartersSinceEntry": 27,
+            "survival": 0.436321535415
+          },
+          {
+            "atRisk": 793,
+            "censored": 15,
+            "cumulativeExits": 1276,
+            "exits": 14,
+            "quartersSinceEntry": 28,
+            "survival": 0.428618507047
+          },
+          {
+            "atRisk": 764,
+            "censored": 11,
+            "cumulativeExits": 1296,
+            "exits": 20,
+            "quartersSinceEntry": 29,
+            "survival": 0.417398127282
+          },
+          {
+            "atRisk": 733,
+            "censored": 20,
+            "cumulativeExits": 1322,
+            "exits": 26,
+            "quartersSinceEntry": 30,
+            "survival": 0.402592736682
+          },
+          {
+            "atRisk": 687,
+            "censored": 3,
+            "cumulativeExits": 1339,
+            "exits": 17,
+            "quartersSinceEntry": 31,
+            "survival": 0.392630471
+          },
+          {
+            "atRisk": 667,
+            "censored": 4,
+            "cumulativeExits": 1360,
+            "exits": 21,
+            "quartersSinceEntry": 32,
+            "survival": 0.380268792003
+          },
+          {
+            "atRisk": 642,
+            "censored": 11,
+            "cumulativeExits": 1377,
+            "exits": 17,
+            "quartersSinceEntry": 33,
+            "survival": 0.370199369162
+          },
+          {
+            "atRisk": 614,
+            "censored": 36,
+            "cumulativeExits": 1410,
+            "exits": 33,
+            "quartersSinceEntry": 34,
+            "survival": 0.350302660396
+          },
+          {
+            "atRisk": 545,
+            "censored": 23,
+            "cumulativeExits": 1418,
+            "exits": 8,
+            "quartersSinceEntry": 35,
+            "survival": 0.345160602996
+          },
+          {
+            "atRisk": 514,
+            "censored": 54,
+            "cumulativeExits": 1424,
+            "exits": 6,
+            "quartersSinceEntry": 36,
+            "survival": 0.341131490898
+          },
+          {
+            "atRisk": 454,
+            "censored": 285,
+            "cumulativeExits": 1440,
+            "exits": 16,
+            "quartersSinceEntry": 37,
+            "survival": 0.329109235713
+          },
+          {
+            "atRisk": 153,
+            "censored": 19,
+            "cumulativeExits": 1442,
+            "exits": 2,
+            "quartersSinceEntry": 38,
+            "survival": 0.3248071542
+          },
+          {
+            "atRisk": 132,
+            "censored": 6,
+            "cumulativeExits": 1444,
+            "exits": 2,
+            "quartersSinceEntry": 39,
+            "survival": 0.319885833682
+          },
+          {
+            "atRisk": 124,
+            "censored": 11,
+            "cumulativeExits": 1444,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.319885833682
+          },
+          {
+            "atRisk": 113,
+            "censored": 70,
+            "cumulativeExits": 1445,
+            "exits": 1,
+            "quartersSinceEntry": 41,
+            "survival": 0.317054985596
+          },
+          {
+            "atRisk": 42,
+            "censored": 4,
+            "cumulativeExits": 1445,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.317054985596
+          },
+          {
+            "atRisk": 38,
+            "censored": 3,
+            "cumulativeExits": 1445,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.317054985596
+          },
+          {
+            "atRisk": 35,
+            "censored": 6,
+            "cumulativeExits": 1445,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.317054985596
+          },
+          {
+            "atRisk": 29,
+            "censored": 25,
+            "cumulativeExits": 1445,
+            "exits": 0,
+            "quartersSinceEntry": 45,
+            "survival": 0.317054985596
+          },
+          {
+            "atRisk": 4,
+            "censored": 3,
+            "cumulativeExits": 1446,
+            "exits": 1,
+            "quartersSinceEntry": 46,
+            "survival": 0.237791239197
+          }
+        ],
+        "terminalExits": 1446
+      },
+      {
+        "atRiskAtHorizon": 660,
+        "companies": 971,
+        "horizonEstimable": true,
+        "medianStayQuarters": 32,
+        "rightCensored": 493,
+        "sector": "Transportation, Communications and Utilities",
+        "survivalAtHorizon": 0.776333789278,
+        "survivalCurve": [
+          {
+            "atRisk": 971,
+            "censored": 3,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 968,
+            "censored": 1,
+            "cumulativeExits": 39,
+            "exits": 39,
+            "quartersSinceEntry": 1,
+            "survival": 0.959710743802
+          },
+          {
+            "atRisk": 928,
+            "censored": 4,
+            "cumulativeExits": 69,
+            "exits": 30,
+            "quartersSinceEntry": 2,
+            "survival": 0.928685611998
+          },
+          {
+            "atRisk": 894,
+            "censored": 0,
+            "cumulativeExits": 77,
+            "exits": 8,
+            "quartersSinceEntry": 3,
+            "survival": 0.920375226208
+          },
+          {
+            "atRisk": 886,
+            "censored": 3,
+            "cumulativeExits": 100,
+            "exits": 23,
+            "quartersSinceEntry": 4,
+            "survival": 0.896482867063
+          },
+          {
+            "atRisk": 860,
+            "censored": 3,
+            "cumulativeExits": 111,
+            "exits": 11,
+            "quartersSinceEntry": 5,
+            "survival": 0.88501622574
+          },
+          {
+            "atRisk": 846,
+            "censored": 8,
+            "cumulativeExits": 129,
+            "exits": 18,
+            "quartersSinceEntry": 6,
+            "survival": 0.866186093277
+          },
+          {
+            "atRisk": 820,
+            "censored": 7,
+            "cumulativeExits": 143,
+            "exits": 14,
+            "quartersSinceEntry": 7,
+            "survival": 0.851397550221
+          },
+          {
+            "atRisk": 799,
+            "censored": 3,
+            "cumulativeExits": 162,
+            "exits": 19,
+            "quartersSinceEntry": 8,
+            "survival": 0.831151550904
+          },
+          {
+            "atRisk": 777,
+            "censored": 7,
+            "cumulativeExits": 170,
+            "exits": 8,
+            "quartersSinceEntry": 9,
+            "survival": 0.822594005979
+          },
+          {
+            "atRisk": 762,
+            "censored": 58,
+            "cumulativeExits": 183,
+            "exits": 13,
+            "quartersSinceEntry": 10,
+            "survival": 0.808560249971
+          },
+          {
+            "atRisk": 691,
+            "censored": 21,
+            "cumulativeExits": 193,
+            "exits": 10,
+            "quartersSinceEntry": 11,
+            "survival": 0.796858943893
+          },
+          {
+            "atRisk": 660,
+            "censored": 5,
+            "cumulativeExits": 210,
+            "exits": 17,
+            "quartersSinceEntry": 12,
+            "survival": 0.776333789278
+          },
+          {
+            "atRisk": 638,
+            "censored": 3,
+            "cumulativeExits": 228,
+            "exits": 18,
+            "quartersSinceEntry": 13,
+            "survival": 0.754430955098
+          },
+          {
+            "atRisk": 617,
+            "censored": 11,
+            "cumulativeExits": 251,
+            "exits": 23,
+            "quartersSinceEntry": 14,
+            "survival": 0.726307921115
+          },
+          {
+            "atRisk": 583,
+            "censored": 3,
+            "cumulativeExits": 262,
+            "exits": 11,
+            "quartersSinceEntry": 15,
+            "survival": 0.712603998075
+          },
+          {
+            "atRisk": 569,
+            "censored": 2,
+            "cumulativeExits": 272,
+            "exits": 10,
+            "quartersSinceEntry": 16,
+            "survival": 0.700080201976
+          },
+          {
+            "atRisk": 557,
+            "censored": 2,
+            "cumulativeExits": 283,
+            "exits": 11,
+            "quartersSinceEntry": 17,
+            "survival": 0.686254560644
+          },
+          {
+            "atRisk": 544,
+            "censored": 2,
+            "cumulativeExits": 301,
+            "exits": 18,
+            "quartersSinceEntry": 18,
+            "survival": 0.66354760827
+          },
+          {
+            "atRisk": 524,
+            "censored": 2,
+            "cumulativeExits": 307,
+            "exits": 6,
+            "quartersSinceEntry": 19,
+            "survival": 0.655949734893
+          },
+          {
+            "atRisk": 516,
+            "censored": 1,
+            "cumulativeExits": 320,
+            "exits": 13,
+            "quartersSinceEntry": 20,
+            "survival": 0.639423869479
+          },
+          {
+            "atRisk": 502,
+            "censored": 3,
+            "cumulativeExits": 333,
+            "exits": 13,
+            "quartersSinceEntry": 21,
+            "survival": 0.622865084014
+          },
+          {
+            "atRisk": 486,
+            "censored": 2,
+            "cumulativeExits": 347,
+            "exits": 14,
+            "quartersSinceEntry": 22,
+            "survival": 0.604922468425
+          },
+          {
+            "atRisk": 470,
+            "censored": 4,
+            "cumulativeExits": 357,
+            "exits": 10,
+            "quartersSinceEntry": 23,
+            "survival": 0.592051777608
+          },
+          {
+            "atRisk": 456,
+            "censored": 5,
+            "cumulativeExits": 369,
+            "exits": 12,
+            "quartersSinceEntry": 24,
+            "survival": 0.576471467671
+          },
+          {
+            "atRisk": 439,
+            "censored": 5,
+            "cumulativeExits": 376,
+            "exits": 7,
+            "quartersSinceEntry": 25,
+            "survival": 0.567279439712
+          },
+          {
+            "atRisk": 427,
+            "censored": 8,
+            "cumulativeExits": 385,
+            "exits": 9,
+            "quartersSinceEntry": 26,
+            "survival": 0.55532273021
+          },
+          {
+            "atRisk": 410,
+            "censored": 4,
+            "cumulativeExits": 394,
+            "exits": 9,
+            "quartersSinceEntry": 27,
+            "survival": 0.543132719059
+          },
+          {
+            "atRisk": 397,
+            "censored": 4,
+            "cumulativeExits": 403,
+            "exits": 9,
+            "quartersSinceEntry": 28,
+            "survival": 0.530819886637
+          },
+          {
+            "atRisk": 384,
+            "censored": 5,
+            "cumulativeExits": 408,
+            "exits": 5,
+            "quartersSinceEntry": 29,
+            "survival": 0.523908169363
+          },
+          {
+            "atRisk": 374,
+            "censored": 7,
+            "cumulativeExits": 413,
+            "exits": 5,
+            "quartersSinceEntry": 30,
+            "survival": 0.516904049452
+          },
+          {
+            "atRisk": 362,
+            "censored": 3,
+            "cumulativeExits": 419,
+            "exits": 6,
+            "quartersSinceEntry": 31,
+            "survival": 0.508336579019
+          },
+          {
+            "atRisk": 353,
+            "censored": 4,
+            "cumulativeExits": 430,
+            "exits": 11,
+            "quartersSinceEntry": 32,
+            "survival": 0.492496062392
+          },
+          {
+            "atRisk": 338,
+            "censored": 1,
+            "cumulativeExits": 439,
+            "exits": 9,
+            "quartersSinceEntry": 33,
+            "survival": 0.479382261914
+          },
+          {
+            "atRisk": 328,
+            "censored": 18,
+            "cumulativeExits": 451,
+            "exits": 12,
+            "quartersSinceEntry": 34,
+            "survival": 0.461843886479
+          },
+          {
+            "atRisk": 298,
+            "censored": 14,
+            "cumulativeExits": 458,
+            "exits": 7,
+            "quartersSinceEntry": 35,
+            "survival": 0.450995204581
+          },
+          {
+            "atRisk": 277,
+            "censored": 6,
+            "cumulativeExits": 460,
+            "exits": 2,
+            "quartersSinceEntry": 36,
+            "survival": 0.447738921516
+          },
+          {
+            "atRisk": 269,
+            "censored": 115,
+            "cumulativeExits": 466,
+            "exits": 6,
+            "quartersSinceEntry": 37,
+            "survival": 0.437752179772
+          },
+          {
+            "atRisk": 148,
+            "censored": 11,
+            "cumulativeExits": 470,
+            "exits": 4,
+            "quartersSinceEntry": 38,
+            "survival": 0.425921039778
+          },
+          {
+            "atRisk": 133,
+            "censored": 2,
+            "cumulativeExits": 470,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.425921039778
+          },
+          {
+            "atRisk": 131,
+            "censored": 0,
+            "cumulativeExits": 471,
+            "exits": 1,
+            "quartersSinceEntry": 40,
+            "survival": 0.422669734131
+          },
+          {
+            "atRisk": 130,
+            "censored": 70,
+            "cumulativeExits": 474,
+            "exits": 3,
+            "quartersSinceEntry": 41,
+            "survival": 0.41291581719
+          },
+          {
+            "atRisk": 57,
+            "censored": 4,
+            "cumulativeExits": 476,
+            "exits": 2,
+            "quartersSinceEntry": 42,
+            "survival": 0.398427542902
+          },
+          {
+            "atRisk": 51,
+            "censored": 0,
+            "cumulativeExits": 477,
+            "exits": 1,
+            "quartersSinceEntry": 43,
+            "survival": 0.390615238139
+          },
+          {
+            "atRisk": 50,
+            "censored": 3,
+            "cumulativeExits": 477,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.390615238139
+          },
+          {
+            "atRisk": 47,
+            "censored": 43,
+            "cumulativeExits": 478,
+            "exits": 1,
+            "quartersSinceEntry": 45,
+            "survival": 0.382304275626
+          },
+          {
+            "atRisk": 3,
+            "censored": 3,
+            "cumulativeExits": 478,
+            "exits": 0,
+            "quartersSinceEntry": 46,
+            "survival": 0.382304275626
+          }
+        ],
+        "terminalExits": 478
+      },
+      {
+        "atRiskAtHorizon": 229,
+        "companies": 332,
+        "horizonEstimable": true,
+        "medianStayQuarters": 24,
+        "rightCensored": 138,
+        "sector": "Wholesale Trade",
+        "survivalAtHorizon": 0.700101937691,
+        "survivalCurve": [
+          {
+            "atRisk": 332,
+            "censored": 1,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 331,
+            "censored": 3,
+            "cumulativeExits": 12,
+            "exits": 12,
+            "quartersSinceEntry": 1,
+            "survival": 0.963746223565
+          },
+          {
+            "atRisk": 316,
+            "censored": 0,
+            "cumulativeExits": 24,
+            "exits": 12,
+            "quartersSinceEntry": 2,
+            "survival": 0.927148265708
+          },
+          {
+            "atRisk": 304,
+            "censored": 0,
+            "cumulativeExits": 32,
+            "exits": 8,
+            "quartersSinceEntry": 3,
+            "survival": 0.902749627137
+          },
+          {
+            "atRisk": 296,
+            "censored": 0,
+            "cumulativeExits": 35,
+            "exits": 3,
+            "quartersSinceEntry": 4,
+            "survival": 0.893600137673
+          },
+          {
+            "atRisk": 293,
+            "censored": 2,
+            "cumulativeExits": 42,
+            "exits": 7,
+            "quartersSinceEntry": 5,
+            "survival": 0.872251328923
+          },
+          {
+            "atRisk": 284,
+            "censored": 2,
+            "cumulativeExits": 46,
+            "exits": 4,
+            "quartersSinceEntry": 6,
+            "survival": 0.859966098938
+          },
+          {
+            "atRisk": 278,
+            "censored": 0,
+            "cumulativeExits": 56,
+            "exits": 10,
+            "quartersSinceEntry": 7,
+            "survival": 0.829032066602
+          },
+          {
+            "atRisk": 268,
+            "censored": 3,
+            "cumulativeExits": 62,
+            "exits": 6,
+            "quartersSinceEntry": 8,
+            "survival": 0.8104716472
+          },
+          {
+            "atRisk": 259,
+            "censored": 1,
+            "cumulativeExits": 69,
+            "exits": 7,
+            "quartersSinceEntry": 9,
+            "survival": 0.788567008087
+          },
+          {
+            "atRisk": 251,
+            "censored": 2,
+            "cumulativeExits": 78,
+            "exits": 9,
+            "quartersSinceEntry": 10,
+            "survival": 0.76029169704
+          },
+          {
+            "atRisk": 240,
+            "censored": 0,
+            "cumulativeExits": 89,
+            "exits": 11,
+            "quartersSinceEntry": 11,
+            "survival": 0.725444994259
+          },
+          {
+            "atRisk": 229,
+            "censored": 2,
+            "cumulativeExits": 97,
+            "exits": 8,
+            "quartersSinceEntry": 12,
+            "survival": 0.700101937691
+          },
+          {
+            "atRisk": 219,
+            "censored": 2,
+            "cumulativeExits": 105,
+            "exits": 8,
+            "quartersSinceEntry": 13,
+            "survival": 0.674527437684
+          },
+          {
+            "atRisk": 209,
+            "censored": 1,
+            "cumulativeExits": 116,
+            "exits": 11,
+            "quartersSinceEntry": 14,
+            "survival": 0.639025993595
+          },
+          {
+            "atRisk": 197,
+            "censored": 0,
+            "cumulativeExits": 121,
+            "exits": 5,
+            "quartersSinceEntry": 15,
+            "survival": 0.622807059748
+          },
+          {
+            "atRisk": 192,
+            "censored": 1,
+            "cumulativeExits": 124,
+            "exits": 3,
+            "quartersSinceEntry": 16,
+            "survival": 0.613075699439
+          },
+          {
+            "atRisk": 188,
+            "censored": 3,
+            "cumulativeExits": 132,
+            "exits": 8,
+            "quartersSinceEntry": 17,
+            "survival": 0.586987371804
+          },
+          {
+            "atRisk": 177,
+            "censored": 3,
+            "cumulativeExits": 141,
+            "exits": 9,
+            "quartersSinceEntry": 18,
+            "survival": 0.557140556288
+          },
+          {
+            "atRisk": 165,
+            "censored": 2,
+            "cumulativeExits": 146,
+            "exits": 5,
+            "quartersSinceEntry": 19,
+            "survival": 0.540257509128
+          },
+          {
+            "atRisk": 158,
+            "censored": 1,
+            "cumulativeExits": 149,
+            "exits": 3,
+            "quartersSinceEntry": 20,
+            "survival": 0.529999455157
+          },
+          {
+            "atRisk": 154,
+            "censored": 1,
+            "cumulativeExits": 149,
+            "exits": 0,
+            "quartersSinceEntry": 21,
+            "survival": 0.529999455157
+          },
+          {
+            "atRisk": 153,
+            "censored": 1,
+            "cumulativeExits": 150,
+            "exits": 1,
+            "quartersSinceEntry": 22,
+            "survival": 0.526535406431
+          },
+          {
+            "atRisk": 151,
+            "censored": 0,
+            "cumulativeExits": 154,
+            "exits": 4,
+            "quartersSinceEntry": 23,
+            "survival": 0.512587448644
+          },
+          {
+            "atRisk": 147,
+            "censored": 2,
+            "cumulativeExits": 158,
+            "exits": 4,
+            "quartersSinceEntry": 24,
+            "survival": 0.498639490858
+          },
+          {
+            "atRisk": 141,
+            "censored": 2,
+            "cumulativeExits": 162,
+            "exits": 4,
+            "quartersSinceEntry": 25,
+            "survival": 0.484493689699
+          },
+          {
+            "atRisk": 135,
+            "censored": 0,
+            "cumulativeExits": 169,
+            "exits": 7,
+            "quartersSinceEntry": 26,
+            "survival": 0.459371794678
+          },
+          {
+            "atRisk": 128,
+            "censored": 1,
+            "cumulativeExits": 171,
+            "exits": 2,
+            "quartersSinceEntry": 27,
+            "survival": 0.452194110386
+          },
+          {
+            "atRisk": 125,
+            "censored": 2,
+            "cumulativeExits": 173,
+            "exits": 2,
+            "quartersSinceEntry": 28,
+            "survival": 0.44495900462
+          },
+          {
+            "atRisk": 121,
+            "censored": 1,
+            "cumulativeExits": 175,
+            "exits": 2,
+            "quartersSinceEntry": 29,
+            "survival": 0.437604310328
+          },
+          {
+            "atRisk": 118,
+            "censored": 2,
+            "cumulativeExits": 176,
+            "exits": 1,
+            "quartersSinceEntry": 30,
+            "survival": 0.433895799224
+          },
+          {
+            "atRisk": 115,
+            "censored": 1,
+            "cumulativeExits": 178,
+            "exits": 2,
+            "quartersSinceEntry": 31,
+            "survival": 0.426349785324
+          },
+          {
+            "atRisk": 112,
+            "censored": 2,
+            "cumulativeExits": 181,
+            "exits": 3,
+            "quartersSinceEntry": 32,
+            "survival": 0.414929701789
+          },
+          {
+            "atRisk": 107,
+            "censored": 0,
+            "cumulativeExits": 181,
+            "exits": 0,
+            "quartersSinceEntry": 33,
+            "survival": 0.414929701789
+          },
+          {
+            "atRisk": 107,
+            "censored": 6,
+            "cumulativeExits": 187,
+            "exits": 6,
+            "quartersSinceEntry": 34,
+            "survival": 0.391662615707
+          },
+          {
+            "atRisk": 95,
+            "censored": 3,
+            "cumulativeExits": 190,
+            "exits": 3,
+            "quartersSinceEntry": 35,
+            "survival": 0.37929432258
+          },
+          {
+            "atRisk": 89,
+            "censored": 11,
+            "cumulativeExits": 192,
+            "exits": 2,
+            "quartersSinceEntry": 36,
+            "survival": 0.370770854656
+          },
+          {
+            "atRisk": 76,
+            "censored": 44,
+            "cumulativeExits": 192,
+            "exits": 0,
+            "quartersSinceEntry": 37,
+            "survival": 0.370770854656
+          },
+          {
+            "atRisk": 32,
+            "censored": 1,
+            "cumulativeExits": 192,
+            "exits": 0,
+            "quartersSinceEntry": 38,
+            "survival": 0.370770854656
+          },
+          {
+            "atRisk": 31,
+            "censored": 3,
+            "cumulativeExits": 192,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.370770854656
+          },
+          {
+            "atRisk": 28,
+            "censored": 3,
+            "cumulativeExits": 194,
+            "exits": 2,
+            "quartersSinceEntry": 40,
+            "survival": 0.344287222181
+          },
+          {
+            "atRisk": 23,
+            "censored": 15,
+            "cumulativeExits": 194,
+            "exits": 0,
+            "quartersSinceEntry": 41,
+            "survival": 0.344287222181
+          },
+          {
+            "atRisk": 8,
+            "censored": 0,
+            "cumulativeExits": 194,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.344287222181
+          },
+          {
+            "atRisk": 8,
+            "censored": 0,
+            "cumulativeExits": 194,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.344287222181
+          },
+          {
+            "atRisk": 8,
+            "censored": 3,
+            "cumulativeExits": 194,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.344287222181
+          },
+          {
+            "atRisk": 5,
+            "censored": 5,
+            "cumulativeExits": 194,
+            "exits": 0,
+            "quartersSinceEntry": 45,
+            "survival": 0.344287222181
+          }
+        ],
+        "terminalExits": 194
+      },
+      {
+        "atRiskAtHorizon": 2,
+        "companies": 18,
+        "horizonEstimable": true,
+        "medianStayQuarters": 2,
+        "rightCensored": 3,
+        "sector": "unclassified",
+        "survivalAtHorizon": 0.2,
+        "survivalCurve": [
+          {
+            "atRisk": 18,
+            "censored": 0,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 18,
+            "censored": 0,
+            "cumulativeExits": 7,
+            "exits": 7,
+            "quartersSinceEntry": 1,
+            "survival": 0.611111111111
+          },
+          {
+            "atRisk": 11,
+            "censored": 0,
+            "cumulativeExits": 10,
+            "exits": 3,
+            "quartersSinceEntry": 2,
+            "survival": 0.444444444444
+          },
+          {
+            "atRisk": 8,
+            "censored": 0,
+            "cumulativeExits": 10,
+            "exits": 0,
+            "quartersSinceEntry": 3,
+            "survival": 0.444444444444
+          },
+          {
+            "atRisk": 8,
+            "censored": 1,
+            "cumulativeExits": 12,
+            "exits": 2,
+            "quartersSinceEntry": 4,
+            "survival": 0.333333333333
+          },
+          {
+            "atRisk": 5,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 5,
+            "survival": 0.333333333333
+          },
+          {
+            "atRisk": 5,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 6,
+            "survival": 0.333333333333
+          },
+          {
+            "atRisk": 5,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 7,
+            "survival": 0.333333333333
+          },
+          {
+            "atRisk": 5,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 1,
+            "quartersSinceEntry": 8,
+            "survival": 0.266666666667
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 1,
+            "quartersSinceEntry": 9,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 3,
+            "censored": 1,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 10,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 11,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 12,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 13,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 14,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 2,
+            "censored": 1,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 15,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 16,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 17,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 18,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 19,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 20,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 21,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 22,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 23,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 24,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 25,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 26,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 27,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 28,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 29,
+            "survival": 0.2
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 15,
+            "exits": 1,
+            "quartersSinceEntry": 30,
+            "survival": 0.0
+          }
+        ],
+        "terminalExits": 15
+      }
+    ],
+    "isSignificanceTest": false,
+    "maxMinusMinSurvivalPercentagePoints": 9.7402933235,
+    "minimumCompaniesForRange": 200,
+    "nullModel": "equal 12-quarter evaluability survival across eligible sectors",
+    "rangeThresholdPercentagePoints": 10.0,
+    "thresholdCrossed": false
+  },
+  "size": {
+    "absoluteDifferenceThresholdPercentagePoints": 5.0,
+    "directionConsistentWithD2": true,
+    "groups": {
+      "larger": {
+        "atRiskAtHorizon": 2982,
+        "companies": 3734,
+        "horizonEstimable": true,
+        "medianStayQuarters": null,
+        "rightCensored": 2305,
+        "survivalAtHorizon": 0.85851785763,
+        "survivalCurve": [
+          {
+            "atRisk": 3734,
+            "censored": 1,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 3733,
+            "censored": 3,
+            "cumulativeExits": 50,
+            "exits": 50,
+            "quartersSinceEntry": 1,
+            "survival": 0.98660594696
+          },
+          {
+            "atRisk": 3680,
+            "censored": 4,
+            "cumulativeExits": 96,
+            "exits": 46,
+            "quartersSinceEntry": 2,
+            "survival": 0.974273372623
+          },
+          {
+            "atRisk": 3630,
+            "censored": 4,
+            "cumulativeExits": 119,
+            "exits": 23,
+            "quartersSinceEntry": 3,
+            "survival": 0.968100290647
+          },
+          {
+            "atRisk": 3603,
+            "censored": 6,
+            "cumulativeExits": 185,
+            "exits": 66,
+            "quartersSinceEntry": 4,
+            "survival": 0.950366563425
+          },
+          {
+            "atRisk": 3531,
+            "censored": 2,
+            "cumulativeExits": 234,
+            "exits": 49,
+            "quartersSinceEntry": 5,
+            "survival": 0.93717824238
+          },
+          {
+            "atRisk": 3480,
+            "censored": 8,
+            "cumulativeExits": 284,
+            "exits": 50,
+            "quartersSinceEntry": 6,
+            "survival": 0.923713037748
+          },
+          {
+            "atRisk": 3422,
+            "censored": 5,
+            "cumulativeExits": 311,
+            "exits": 27,
+            "quartersSinceEntry": 7,
+            "survival": 0.916424828508
+          },
+          {
+            "atRisk": 3390,
+            "censored": 13,
+            "cumulativeExits": 367,
+            "exits": 56,
+            "quartersSinceEntry": 8,
+            "survival": 0.901286247271
+          },
+          {
+            "atRisk": 3321,
+            "censored": 18,
+            "cumulativeExits": 406,
+            "exits": 39,
+            "quartersSinceEntry": 9,
+            "survival": 0.890702036598
+          },
+          {
+            "atRisk": 3264,
+            "censored": 115,
+            "cumulativeExits": 446,
+            "exits": 40,
+            "quartersSinceEntry": 10,
+            "survival": 0.879786570463
+          },
+          {
+            "atRisk": 3109,
+            "censored": 91,
+            "cumulativeExits": 482,
+            "exits": 36,
+            "quartersSinceEntry": 11,
+            "survival": 0.869599270194
+          },
+          {
+            "atRisk": 2982,
+            "censored": 2,
+            "cumulativeExits": 520,
+            "exits": 38,
+            "quartersSinceEntry": 12,
+            "survival": 0.85851785763
+          },
+          {
+            "atRisk": 2942,
+            "censored": 3,
+            "cumulativeExits": 557,
+            "exits": 37,
+            "quartersSinceEntry": 13,
+            "survival": 0.847720726177
+          },
+          {
+            "atRisk": 2902,
+            "censored": 3,
+            "cumulativeExits": 595,
+            "exits": 38,
+            "quartersSinceEntry": 14,
+            "survival": 0.836620316944
+          },
+          {
+            "atRisk": 2861,
+            "censored": 3,
+            "cumulativeExits": 624,
+            "exits": 29,
+            "quartersSinceEntry": 15,
+            "survival": 0.828140069062
+          },
+          {
+            "atRisk": 2829,
+            "censored": 1,
+            "cumulativeExits": 663,
+            "exits": 39,
+            "quartersSinceEntry": 16,
+            "survival": 0.816723503953
+          },
+          {
+            "atRisk": 2789,
+            "censored": 3,
+            "cumulativeExits": 696,
+            "exits": 33,
+            "quartersSinceEntry": 17,
+            "survival": 0.807059869808
+          },
+          {
+            "atRisk": 2753,
+            "censored": 3,
+            "cumulativeExits": 756,
+            "exits": 60,
+            "quartersSinceEntry": 18,
+            "survival": 0.789470479256
+          },
+          {
+            "atRisk": 2690,
+            "censored": 2,
+            "cumulativeExits": 779,
+            "exits": 23,
+            "quartersSinceEntry": 19,
+            "survival": 0.782720359917
+          },
+          {
+            "atRisk": 2665,
+            "censored": 4,
+            "cumulativeExits": 827,
+            "exits": 48,
+            "quartersSinceEntry": 20,
+            "survival": 0.768622582327
+          },
+          {
+            "atRisk": 2613,
+            "censored": 2,
+            "cumulativeExits": 856,
+            "exits": 29,
+            "quartersSinceEntry": 21,
+            "survival": 0.760092136523
+          },
+          {
+            "atRisk": 2582,
+            "censored": 3,
+            "cumulativeExits": 900,
+            "exits": 44,
+            "quartersSinceEntry": 22,
+            "survival": 0.7471393658
+          },
+          {
+            "atRisk": 2535,
+            "censored": 3,
+            "cumulativeExits": 934,
+            "exits": 34,
+            "quartersSinceEntry": 23,
+            "survival": 0.737118561682
+          },
+          {
+            "atRisk": 2498,
+            "censored": 3,
+            "cumulativeExits": 970,
+            "exits": 36,
+            "quartersSinceEntry": 24,
+            "survival": 0.72649555599
+          },
+          {
+            "atRisk": 2459,
+            "censored": 2,
+            "cumulativeExits": 1009,
+            "exits": 39,
+            "quartersSinceEntry": 25,
+            "survival": 0.714973259656
+          },
+          {
+            "atRisk": 2418,
+            "censored": 6,
+            "cumulativeExits": 1064,
+            "exits": 55,
+            "quartersSinceEntry": 26,
+            "survival": 0.698710427034
+          },
+          {
+            "atRisk": 2357,
+            "censored": 2,
+            "cumulativeExits": 1099,
+            "exits": 35,
+            "quartersSinceEntry": 27,
+            "survival": 0.688335007031
+          },
+          {
+            "atRisk": 2320,
+            "censored": 0,
+            "cumulativeExits": 1127,
+            "exits": 28,
+            "quartersSinceEntry": 28,
+            "survival": 0.680027515567
+          },
+          {
+            "atRisk": 2292,
+            "censored": 2,
+            "cumulativeExits": 1158,
+            "exits": 31,
+            "quartersSinceEntry": 29,
+            "survival": 0.670829935732
+          },
+          {
+            "atRisk": 2259,
+            "censored": 3,
+            "cumulativeExits": 1184,
+            "exits": 26,
+            "quartersSinceEntry": 30,
+            "survival": 0.663109006857
+          },
+          {
+            "atRisk": 2230,
+            "censored": 4,
+            "cumulativeExits": 1205,
+            "exits": 21,
+            "quartersSinceEntry": 31,
+            "survival": 0.656864482577
+          },
+          {
+            "atRisk": 2205,
+            "censored": 1,
+            "cumulativeExits": 1237,
+            "exits": 32,
+            "quartersSinceEntry": 32,
+            "survival": 0.647331755392
+          },
+          {
+            "atRisk": 2172,
+            "censored": 4,
+            "cumulativeExits": 1268,
+            "exits": 31,
+            "quartersSinceEntry": 33,
+            "survival": 0.638092674169
+          },
+          {
+            "atRisk": 2137,
+            "censored": 45,
+            "cumulativeExits": 1295,
+            "exits": 27,
+            "quartersSinceEntry": 34,
+            "survival": 0.63003067033
+          },
+          {
+            "atRisk": 2065,
+            "censored": 25,
+            "cumulativeExits": 1318,
+            "exits": 23,
+            "quartersSinceEntry": 35,
+            "survival": 0.623013379571
+          },
+          {
+            "atRisk": 2017,
+            "censored": 70,
+            "cumulativeExits": 1334,
+            "exits": 16,
+            "quartersSinceEntry": 36,
+            "survival": 0.618071280378
+          },
+          {
+            "atRisk": 1931,
+            "censored": 756,
+            "cumulativeExits": 1361,
+            "exits": 27,
+            "quartersSinceEntry": 37,
+            "survival": 0.609429165116
+          },
+          {
+            "atRisk": 1148,
+            "censored": 72,
+            "cumulativeExits": 1381,
+            "exits": 20,
+            "quartersSinceEntry": 38,
+            "survival": 0.598811932274
+          },
+          {
+            "atRisk": 1056,
+            "censored": 27,
+            "cumulativeExits": 1391,
+            "exits": 10,
+            "quartersSinceEntry": 39,
+            "survival": 0.593141364734
+          },
+          {
+            "atRisk": 1019,
+            "censored": 57,
+            "cumulativeExits": 1403,
+            "exits": 12,
+            "quartersSinceEntry": 40,
+            "survival": 0.58615638301
+          },
+          {
+            "atRisk": 950,
+            "censored": 541,
+            "cumulativeExits": 1413,
+            "exits": 10,
+            "quartersSinceEntry": 41,
+            "survival": 0.57998631582
+          },
+          {
+            "atRisk": 399,
+            "censored": 28,
+            "cumulativeExits": 1418,
+            "exits": 5,
+            "quartersSinceEntry": 42,
+            "survival": 0.572718316875
+          },
+          {
+            "atRisk": 366,
+            "censored": 12,
+            "cumulativeExits": 1421,
+            "exits": 3,
+            "quartersSinceEntry": 43,
+            "survival": 0.568023904442
+          },
+          {
+            "atRisk": 351,
+            "censored": 32,
+            "cumulativeExits": 1424,
+            "exits": 3,
+            "quartersSinceEntry": 44,
+            "survival": 0.563168999276
+          },
+          {
+            "atRisk": 316,
+            "censored": 296,
+            "cumulativeExits": 1428,
+            "exits": 4,
+            "quartersSinceEntry": 45,
+            "survival": 0.556040277766
+          },
+          {
+            "atRisk": 16,
+            "censored": 15,
+            "cumulativeExits": 1429,
+            "exits": 1,
+            "quartersSinceEntry": 46,
+            "survival": 0.521287760405
+          }
+        ],
+        "terminalExits": 1429
+      },
+      "missingOrUnknown": {
+        "atRiskAtHorizon": 26,
+        "companies": 120,
+        "horizonEstimable": true,
+        "medianStayQuarters": null,
+        "rightCensored": 101,
+        "survivalAtHorizon": 0.883588596613,
+        "survivalCurve": [
+          {
+            "atRisk": 120,
+            "censored": 0,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 120,
+            "censored": 0,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 1,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 120,
+            "censored": 1,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 2,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 119,
+            "censored": 5,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 3,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 114,
+            "censored": 2,
+            "cumulativeExits": 5,
+            "exits": 5,
+            "quartersSinceEntry": 4,
+            "survival": 0.956140350877
+          },
+          {
+            "atRisk": 107,
+            "censored": 3,
+            "cumulativeExits": 5,
+            "exits": 0,
+            "quartersSinceEntry": 5,
+            "survival": 0.956140350877
+          },
+          {
+            "atRisk": 104,
+            "censored": 6,
+            "cumulativeExits": 6,
+            "exits": 1,
+            "quartersSinceEntry": 6,
+            "survival": 0.946946693657
+          },
+          {
+            "atRisk": 97,
+            "censored": 6,
+            "cumulativeExits": 6,
+            "exits": 0,
+            "quartersSinceEntry": 7,
+            "survival": 0.946946693657
+          },
+          {
+            "atRisk": 91,
+            "censored": 7,
+            "cumulativeExits": 11,
+            "exits": 5,
+            "quartersSinceEntry": 8,
+            "survival": 0.894916655544
+          },
+          {
+            "atRisk": 79,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 1,
+            "quartersSinceEntry": 9,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 78,
+            "censored": 8,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 10,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 70,
+            "censored": 44,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 11,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 12,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 26,
+            "censored": 0,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 13,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 26,
+            "censored": 1,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 14,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 25,
+            "censored": 1,
+            "cumulativeExits": 12,
+            "exits": 0,
+            "quartersSinceEntry": 15,
+            "survival": 0.883588596613
+          },
+          {
+            "atRisk": 24,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 1,
+            "quartersSinceEntry": 16,
+            "survival": 0.846772405088
+          },
+          {
+            "atRisk": 23,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 0,
+            "quartersSinceEntry": 17,
+            "survival": 0.846772405088
+          },
+          {
+            "atRisk": 23,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 0,
+            "quartersSinceEntry": 18,
+            "survival": 0.846772405088
+          },
+          {
+            "atRisk": 23,
+            "censored": 0,
+            "cumulativeExits": 13,
+            "exits": 0,
+            "quartersSinceEntry": 19,
+            "survival": 0.846772405088
+          },
+          {
+            "atRisk": 23,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 1,
+            "quartersSinceEntry": 20,
+            "survival": 0.809956213562
+          },
+          {
+            "atRisk": 22,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 21,
+            "survival": 0.809956213562
+          },
+          {
+            "atRisk": 22,
+            "censored": 0,
+            "cumulativeExits": 14,
+            "exits": 0,
+            "quartersSinceEntry": 22,
+            "survival": 0.809956213562
+          },
+          {
+            "atRisk": 22,
+            "censored": 0,
+            "cumulativeExits": 15,
+            "exits": 1,
+            "quartersSinceEntry": 23,
+            "survival": 0.773140022037
+          },
+          {
+            "atRisk": 21,
+            "censored": 0,
+            "cumulativeExits": 16,
+            "exits": 1,
+            "quartersSinceEntry": 24,
+            "survival": 0.736323830511
+          },
+          {
+            "atRisk": 20,
+            "censored": 0,
+            "cumulativeExits": 16,
+            "exits": 0,
+            "quartersSinceEntry": 25,
+            "survival": 0.736323830511
+          },
+          {
+            "atRisk": 20,
+            "censored": 0,
+            "cumulativeExits": 16,
+            "exits": 0,
+            "quartersSinceEntry": 26,
+            "survival": 0.736323830511
+          },
+          {
+            "atRisk": 20,
+            "censored": 2,
+            "cumulativeExits": 17,
+            "exits": 1,
+            "quartersSinceEntry": 27,
+            "survival": 0.699507638985
+          },
+          {
+            "atRisk": 17,
+            "censored": 0,
+            "cumulativeExits": 18,
+            "exits": 1,
+            "quartersSinceEntry": 28,
+            "survival": 0.65836013081
+          },
+          {
+            "atRisk": 16,
+            "censored": 0,
+            "cumulativeExits": 18,
+            "exits": 0,
+            "quartersSinceEntry": 29,
+            "survival": 0.65836013081
+          },
+          {
+            "atRisk": 16,
+            "censored": 0,
+            "cumulativeExits": 18,
+            "exits": 0,
+            "quartersSinceEntry": 30,
+            "survival": 0.65836013081
+          },
+          {
+            "atRisk": 16,
+            "censored": 1,
+            "cumulativeExits": 18,
+            "exits": 0,
+            "quartersSinceEntry": 31,
+            "survival": 0.65836013081
+          },
+          {
+            "atRisk": 15,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 1,
+            "quartersSinceEntry": 32,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 14,
+            "censored": 1,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 33,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 13,
+            "censored": 3,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 34,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 10,
+            "censored": 6,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 35,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 36,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 4,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 37,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 4,
+            "censored": 2,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 38,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 41,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 2,
+            "censored": 1,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.614469455423
+          },
+          {
+            "atRisk": 1,
+            "censored": 1,
+            "cumulativeExits": 19,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.614469455423
+          }
+        ],
+        "terminalExits": 19
+      },
+      "smaller": {
+        "atRiskAtHorizon": 5574,
+        "companies": 9463,
+        "horizonEstimable": true,
+        "medianStayQuarters": 21,
+        "rightCensored": 3992,
+        "survivalAtHorizon": 0.673824152637,
+        "survivalCurve": [
+          {
+            "atRisk": 9463,
+            "censored": 207,
+            "cumulativeExits": 0,
+            "exits": 0,
+            "quartersSinceEntry": 0,
+            "survival": 1.0
+          },
+          {
+            "atRisk": 9256,
+            "censored": 108,
+            "cumulativeExits": 327,
+            "exits": 327,
+            "quartersSinceEntry": 1,
+            "survival": 0.964671564391
+          },
+          {
+            "atRisk": 8821,
+            "censored": 116,
+            "cumulativeExits": 652,
+            "exits": 325,
+            "quartersSinceEntry": 2,
+            "survival": 0.929129306322
+          },
+          {
+            "atRisk": 8380,
+            "censored": 46,
+            "cumulativeExits": 874,
+            "exits": 222,
+            "quartersSinceEntry": 3,
+            "survival": 0.904515140927
+          },
+          {
+            "atRisk": 8112,
+            "censored": 70,
+            "cumulativeExits": 1153,
+            "exits": 279,
+            "quartersSinceEntry": 4,
+            "survival": 0.873405707456
+          },
+          {
+            "atRisk": 7763,
+            "censored": 77,
+            "cumulativeExits": 1375,
+            "exits": 222,
+            "quartersSinceEntry": 5,
+            "survival": 0.848428756914
+          },
+          {
+            "atRisk": 7464,
+            "censored": 141,
+            "cumulativeExits": 1676,
+            "exits": 301,
+            "quartersSinceEntry": 6,
+            "survival": 0.814214253186
+          },
+          {
+            "atRisk": 7022,
+            "censored": 42,
+            "cumulativeExits": 1873,
+            "exits": 197,
+            "quartersSinceEntry": 7,
+            "survival": 0.791371728566
+          },
+          {
+            "atRisk": 6783,
+            "censored": 85,
+            "cumulativeExits": 2069,
+            "exits": 196,
+            "quartersSinceEntry": 8,
+            "survival": 0.768504434036
+          },
+          {
+            "atRisk": 6502,
+            "censored": 99,
+            "cumulativeExits": 2264,
+            "exits": 195,
+            "quartersSinceEntry": 9,
+            "survival": 0.74545639272
+          },
+          {
+            "atRisk": 6208,
+            "censored": 159,
+            "cumulativeExits": 2494,
+            "exits": 230,
+            "quartersSinceEntry": 10,
+            "survival": 0.717838001881
+          },
+          {
+            "atRisk": 5819,
+            "censored": 59,
+            "cumulativeExits": 2680,
+            "exits": 186,
+            "quartersSinceEntry": 11,
+            "survival": 0.694892844921
+          },
+          {
+            "atRisk": 5574,
+            "censored": 72,
+            "cumulativeExits": 2849,
+            "exits": 169,
+            "quartersSinceEntry": 12,
+            "survival": 0.673824152637
+          },
+          {
+            "atRisk": 5333,
+            "censored": 58,
+            "cumulativeExits": 3036,
+            "exits": 187,
+            "quartersSinceEntry": 13,
+            "survival": 0.650196716571
+          },
+          {
+            "atRisk": 5088,
+            "censored": 87,
+            "cumulativeExits": 3264,
+            "exits": 228,
+            "quartersSinceEntry": 14,
+            "survival": 0.621060542951
+          },
+          {
+            "atRisk": 4773,
+            "censored": 29,
+            "cumulativeExits": 3405,
+            "exits": 141,
+            "quartersSinceEntry": 15,
+            "survival": 0.602713688445
+          },
+          {
+            "atRisk": 4603,
+            "censored": 60,
+            "cumulativeExits": 3553,
+            "exits": 148,
+            "quartersSinceEntry": 16,
+            "survival": 0.583334669134
+          },
+          {
+            "atRisk": 4395,
+            "censored": 55,
+            "cumulativeExits": 3719,
+            "exits": 166,
+            "quartersSinceEntry": 17,
+            "survival": 0.561302005863
+          },
+          {
+            "atRisk": 4174,
+            "censored": 67,
+            "cumulativeExits": 3944,
+            "exits": 225,
+            "quartersSinceEntry": 18,
+            "survival": 0.531044949965
+          },
+          {
+            "atRisk": 3882,
+            "censored": 20,
+            "cumulativeExits": 4053,
+            "exits": 109,
+            "quartersSinceEntry": 19,
+            "survival": 0.516134105156
+          },
+          {
+            "atRisk": 3753,
+            "censored": 49,
+            "cumulativeExits": 4160,
+            "exits": 107,
+            "quartersSinceEntry": 20,
+            "survival": 0.501418850892
+          },
+          {
+            "atRisk": 3597,
+            "censored": 70,
+            "cumulativeExits": 4302,
+            "exits": 142,
+            "quartersSinceEntry": 21,
+            "survival": 0.481624167315
+          },
+          {
+            "atRisk": 3385,
+            "censored": 96,
+            "cumulativeExits": 4426,
+            "exits": 124,
+            "quartersSinceEntry": 22,
+            "survival": 0.463981214067
+          },
+          {
+            "atRisk": 3165,
+            "censored": 33,
+            "cumulativeExits": 4512,
+            "exits": 86,
+            "quartersSinceEntry": 23,
+            "survival": 0.451373825627
+          },
+          {
+            "atRisk": 3046,
+            "censored": 56,
+            "cumulativeExits": 4594,
+            "exits": 82,
+            "quartersSinceEntry": 24,
+            "survival": 0.43922259329
+          },
+          {
+            "atRisk": 2908,
+            "censored": 78,
+            "cumulativeExits": 4674,
+            "exits": 80,
+            "quartersSinceEntry": 25,
+            "survival": 0.427139440792
+          },
+          {
+            "atRisk": 2750,
+            "censored": 124,
+            "cumulativeExits": 4781,
+            "exits": 107,
+            "quartersSinceEntry": 26,
+            "survival": 0.410519833459
+          },
+          {
+            "atRisk": 2519,
+            "censored": 17,
+            "cumulativeExits": 4851,
+            "exits": 70,
+            "quartersSinceEntry": 27,
+            "survival": 0.399111977825
+          },
+          {
+            "atRisk": 2432,
+            "censored": 73,
+            "cumulativeExits": 4909,
+            "exits": 58,
+            "quartersSinceEntry": 28,
+            "survival": 0.389593682301
+          },
+          {
+            "atRisk": 2301,
+            "censored": 49,
+            "cumulativeExits": 4960,
+            "exits": 51,
+            "quartersSinceEntry": 29,
+            "survival": 0.380958620243
+          },
+          {
+            "atRisk": 2201,
+            "censored": 77,
+            "cumulativeExits": 5059,
+            "exits": 99,
+            "quartersSinceEntry": 30,
+            "survival": 0.363823271127
+          },
+          {
+            "atRisk": 2025,
+            "censored": 24,
+            "cumulativeExits": 5109,
+            "exits": 50,
+            "quartersSinceEntry": 31,
+            "survival": 0.354839980482
+          },
+          {
+            "atRisk": 1951,
+            "censored": 32,
+            "cumulativeExits": 5169,
+            "exits": 60,
+            "quartersSinceEntry": 32,
+            "survival": 0.343927423419
+          },
+          {
+            "atRisk": 1859,
+            "censored": 35,
+            "cumulativeExits": 5220,
+            "exits": 51,
+            "quartersSinceEntry": 33,
+            "survival": 0.334492082594
+          },
+          {
+            "atRisk": 1773,
+            "censored": 117,
+            "cumulativeExits": 5325,
+            "exits": 105,
+            "quartersSinceEntry": 34,
+            "survival": 0.314682906806
+          },
+          {
+            "atRisk": 1551,
+            "censored": 55,
+            "cumulativeExits": 5367,
+            "exits": 42,
+            "quartersSinceEntry": 35,
+            "survival": 0.306161512811
+          },
+          {
+            "atRisk": 1454,
+            "censored": 195,
+            "cumulativeExits": 5414,
+            "exits": 47,
+            "quartersSinceEntry": 36,
+            "survival": 0.29626495772
+          },
+          {
+            "atRisk": 1212,
+            "censored": 1138,
+            "cumulativeExits": 5470,
+            "exits": 56,
+            "quartersSinceEntry": 37,
+            "survival": 0.282576147792
+          },
+          {
+            "atRisk": 18,
+            "censored": 13,
+            "cumulativeExits": 5471,
+            "exits": 1,
+            "quartersSinceEntry": 38,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 4,
+            "censored": 2,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 39,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 2,
+            "censored": 0,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 40,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 2,
+            "censored": 1,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 41,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 42,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 1,
+            "censored": 0,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 43,
+            "survival": 0.266877472915
+          },
+          {
+            "atRisk": 1,
+            "censored": 1,
+            "cumulativeExits": 5471,
+            "exits": 0,
+            "quartersSinceEntry": 44,
+            "survival": 0.266877472915
+          }
+        ],
+        "terminalExits": 5471
+      }
+    },
+    "isSignificanceTest": false,
+    "nullModel": "equal 12-quarter evaluability survival",
+    "rawD2AttritionDifferencePercentagePointsSmallerMinusLarger": 19.544694723695,
+    "survivalDifferencePercentagePointsSmallerMinusLarger": -18.4693704993,
+    "thresholdCrossed": true
+  }
+}

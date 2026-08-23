@@ -2,6 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
@@ -10,6 +11,14 @@ const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-censoring-aware-attrition.py');
 const PREREG = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'd4-censoring-aware-attrition-preregistration.json');
+const ARTIFACT = path.join(REPO, 'reports', 'studie',
+  'D4-censoring-aware-attrition-2026-08-23.json');
+const REPORT = path.join(REPO, 'reports', 'studie',
+  'D4-censoring-aware-attrition-2026-08-23.md');
+const D1_ARTIFACT = path.join(REPO, 'reports', 'studie',
+  'D1-panel-survival-2026-08-23.json');
+const D2_ARTIFACT = path.join(REPO, 'reports', 'studie',
+  'D2-attrition-size-sector-2026-08-23.json');
 
 const REQUIRED = [
   'Gebundene D1- und D2-Eingaenge sind bytegleich zur Vorregistrierung',
@@ -53,4 +62,131 @@ test('D4: Vorregistrierung bindet Horizont, Nullmodelle und Effektgrenzen', () =
   assert.match(prereg.sectorSensitivity.threshold, /10\.0 percentage points/);
   assert.equal(prereg.primaryTest.isSignificanceTest, false);
   assert.equal(prereg.sectorSensitivity.isSignificanceTest, false);
+});
+
+function sha256(file) {
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+}
+
+test('D4: gebundene Dateien und D1/D2-Anker reproduzieren exakt', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const d1 = JSON.parse(fs.readFileSync(D1_ARTIFACT, 'utf8'));
+  const d2 = JSON.parse(fs.readFileSync(D2_ARTIFACT, 'utf8'));
+  assert.equal(result.preregistration.sha256, sha256(PREREG));
+  for (const [relative, expected] of Object.entries(result.boundInputs)) {
+    assert.equal(sha256(path.join(REPO, relative)), expected, relative);
+  }
+  assert.deepEqual(result.counts, {
+    companies: d1.counts.companies,
+    rightCensored: d1.counts.rightCensored,
+    terminalExits: d1.counts.terminalExits,
+  });
+  assert.equal(result.anchors.countsMatched, true);
+  assert.equal(result.anchors.groupsMatched, true);
+  for (const [name, sourceName] of [
+    ['larger', 'larger'],
+    ['smaller', 'smaller'],
+    ['missingOrUnknown', 'missingOrUnknown'],
+  ]) {
+    const actual = result.size.groups[name];
+    const expected = d2.size.groups[sourceName];
+    assert.equal(actual.companies, expected.companies);
+    assert.equal(actual.terminalExits, expected.terminalExits);
+    assert.equal(actual.rightCensored, expected.rightCensored);
+  }
+});
+
+test('D4: alle Gruppen und Kaplan-Meier-Kurven sind rechnerisch geschlossen', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const groups = [...Object.values(result.size.groups), ...result.sector.groups];
+  for (const group of groups) {
+    assert.equal(group.terminalExits + group.rightCensored, group.companies);
+    let previous = 1;
+    for (const row of group.survivalCurve) {
+      assert.ok(row.survival >= 0 && row.survival <= previous);
+      previous = row.survival;
+    }
+    const horizon = group.survivalCurve.find((row) =>
+      row.quartersSinceEntry === result.horizonQuarters);
+    const expected = horizon && horizon.atRisk > 0 ? horizon.survival : null;
+    assert.equal(group.survivalAtHorizon, expected);
+    assert.equal(group.atRiskAtHorizon, horizon ? horizon.atRisk : 0);
+  }
+  assert.equal(Object.values(result.size.groups)
+    .reduce((sum, group) => sum + group.companies, 0), result.counts.companies);
+  assert.equal(result.sector.groups
+    .reduce((sum, group) => sum + group.companies, 0), result.counts.companies);
+});
+
+test('D4: Größenkontrast und Sektorspannweite werden aus Gruppenwerten reproduziert', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const difference = 100 * (result.size.groups.smaller.survivalAtHorizon
+    - result.size.groups.larger.survivalAtHorizon);
+  assert.ok(Math.abs(difference
+    - result.size.survivalDifferencePercentagePointsSmallerMinusLarger) < 1e-10);
+  assert.equal(result.size.thresholdCrossed,
+    Math.abs(difference) >= result.size.absoluteDifferenceThresholdPercentagePoints);
+  assert.equal(result.size.directionConsistentWithD2,
+    result.size.rawD2AttritionDifferencePercentagePointsSmallerMinusLarger * difference < 0);
+
+  const eligible = result.sector.groups.filter((group) =>
+    group.companies >= result.sector.minimumCompaniesForRange
+    && group.horizonEstimable);
+  assert.deepEqual(result.sector.eligibleSectors, eligible.map((group) => group.sector));
+  const values = eligible.map((group) => group.survivalAtHorizon);
+  const range = 100 * (Math.max(...values) - Math.min(...values));
+  assert.ok(Math.abs(range - result.sector.maxMinusMinSurvivalPercentagePoints) < 1e-10);
+  assert.equal(result.sector.thresholdCrossed,
+    range >= result.sector.rangeThresholdPercentagePoints);
+});
+
+test('D4: Scope bleibt aggregiert, signal-frei und auf Firma als effektivem N', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  assert.deepEqual(result.scope, {
+    companyIdentifiersWritten: 0,
+    dailyObservationsUsed: 0,
+    lastAllowedDate: '2020-12-31',
+    signalsUsed: 0,
+  });
+  assert.equal(result.effectiveN.companies, result.counts.companies);
+  assert.equal(result.effectiveN.filingsAreIndependentObservations, false);
+  assert.equal(result.effectiveN.repeatedCompaniesAcrossStrata, 0);
+});
+
+test('D4: jede Größen- und Sektorzeile im Bericht stammt aus dem JSON-Artefakt', () => {
+  const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const report = fs.readFileSync(REPORT, 'utf8');
+  const firstLine = report.split(/\r?\n/)[0];
+  assert.ok(firstLine.includes((100 * result.size.groups.smaller.survivalAtHorizon)
+    .toFixed(6).replace('.', ',')));
+  assert.ok(firstLine.includes(Math.abs(
+    result.size.survivalDifferencePercentagePointsSmallerMinusLarger)
+    .toFixed(12).replace('.', ',')));
+  assert.ok(firstLine.includes(result.sector.maxMinusMinSurvivalPercentagePoints
+    .toFixed(12).replace('.', ',')));
+
+  const sizeLabels = {
+    larger: 'larger',
+    smaller: 'smaller',
+    missingOrUnknown: 'fehlend/unbekannt',
+  };
+  for (const [name, group] of Object.entries(result.size.groups)) {
+    const median = group.medianStayQuarters === null
+      ? 'nicht erreicht' : String(group.medianStayQuarters);
+    const line = `| ${sizeLabels[name]} | ${group.companies} | ${group.terminalExits} | `
+      + `${group.rightCensored} | ${group.atRiskAtHorizon} | `
+      + `${(100 * group.survivalAtHorizon).toFixed(6)} % | ${median} |`;
+    assert.ok(report.includes(line), `Größenzeile fehlt: ${line}`);
+  }
+  for (const group of result.sector.groups) {
+    const median = group.medianStayQuarters === null
+      ? 'nicht erreicht' : String(group.medianStayQuarters);
+    const line = `| ${group.sector} | ${group.companies} | ${group.terminalExits} | `
+      + `${group.rightCensored} | ${group.atRiskAtHorizon} | `
+      + `${(100 * group.survivalAtHorizon).toFixed(6)} % | ${median} |`;
+    assert.ok(report.includes(line), `Sektorzeile fehlt: ${line}`);
+  }
+  const limitation = report.split('## Was ausdrücklich nicht gezeigt ist')[1];
+  assert.ok(limitation && limitation.trim().length > 0,
+    'Pflichtabschnitt "Was ausdrücklich nicht gezeigt ist" fehlt oder ist leer');
 });
