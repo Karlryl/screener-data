@@ -96,6 +96,16 @@ test('JEDES Feld, das das Scoring beim Laufen liest, ist einer Schicht zugeordne
   console.log(`  (Beobachtungs-Substrat: ${substrat})`);
   const gelesen = nurBlattpfade(beobachte(universum, (u) => scoreUniverse(u, formeln)));
   assert.ok(gelesen.size >= 20, `nur ${gelesen.size} beobachtete Pfade - die Beobachtung greift nicht`);
+  // Das Instrument selbst wird geprueft, nicht nur sein Ergebnis: eine Beobachtung, die einen
+  // ganzen Container verschweigt, waere leise blind und der Test daneben gruen. Erwartet wird
+  // hier eine Eigenschaft des SCORINGS (es liest aus jedem dieser Bloecke), nicht eine des
+  // Hash-Moduls - sonst pruefte sich die Abdeckung an sich selbst (L36).
+  for (const block of ['meta', 'annual', 'timeseries', 'marketCap']) {
+    const treffer = [...gelesen].filter((p) => p.startsWith(block + '.'));
+    assert.ok(treffer.length > 0,
+      `Die Beobachtung meldet KEIN Feld aus "${block}" - das Scoring liest dort nachweislich. `
+      + 'Damit ist das Messinstrument blind, nicht der Code sauber.');
+  }
   const abgedeckt = abgedecktePfade().alle;
   const fehlend = [...gelesen].filter((p) => !abgedeckt.has(p)).sort();
   assert.deepEqual(fehlend, [],
