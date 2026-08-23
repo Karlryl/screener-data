@@ -1,0 +1,83 @@
+{
+  "schema": "D5-entry-cohort-standardization-preregistration/1",
+  "status": "FROZEN_BEFORE_D5_PANEL_ACCESS",
+  "createdAt": "2026-08-23",
+  "purpose": "Test whether the D4 size-survival difference remains after both size groups are standardized to the same entry-year distribution; separately expose reporting-cadence and entry-cohort survival.",
+  "accessOrder": [
+    "freeze this preregistration and its D1/D2/D4 inputs",
+    "run the fixture-only self-test and deliberate sabotage",
+    "verify all bound scripts and aggregate anchors byte-for-byte",
+    "read panel-entdeckung.sqlite",
+    "read panel-validierung.sqlite",
+    "reproduce D1 counts, D2 size groups, and D4 unstandardized survival exactly",
+    "compute the common entry-year weights before either standardized size survival",
+    "write only identity-free aggregate JSON",
+    "render the report only from that JSON artifact"
+  ],
+  "boundInputs": {
+    "scripts/studie-panel-survival.py": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54",
+    "scripts/studie-attrition-size-sector.py": "a3f8e7806168b1b3b6dfda4e6e646dfe67cb7f42ddf35ff65a0a6a2ac58658b2",
+    "scripts/studie-censoring-aware-attrition.py": "65944d3bfce5ca92174cad33b91516b9e6f627a3e27216dc8d0682d4aa8d1d51",
+    "reports/studie/D1-panel-survival-2026-08-23.json": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.json": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63",
+    "reports/studie/D4-censoring-aware-attrition-2026-08-23.json": "f4b252613cc03cac4f40b4b701b6e7017855cfb638759dc4ccbdb6d857a996f5"
+  },
+  "runtime": "Python 3.12.10",
+  "allowedPanels": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "forbiddenInputPolicy": "Every other panel basename, encrypted file, or row with accepted date after 2020-12-31 aborts before aggregation.",
+  "population": {
+    "unit": "the exact D1 company population",
+    "eventAndCensoring": "unchanged from D1 and D4",
+    "sizeGroups": "unchanged from D2 and D4",
+    "entryYear": "calendar year of the earliest accepted periodic filing after D1 deduplication",
+    "cadence": "unchanged from D1: any 10-K/10-Q means quarterly; only 20-F/40-F means annual",
+    "identityPolicy": "CIKs may exist only in process memory. No company identifier or company name may be written to an artifact or report."
+  },
+  "commonHorizon": {
+    "quarters": 12,
+    "eligibility": "a company enters the primary standardization only if the administrative cutoff is at least 12 integer calendar quarters after its entry quarter",
+    "lateCohorts": "later cohorts remain visible with counts and curves but never receive a carried-forward 12-quarter estimate",
+    "eventCensorOrder": "events are applied before censoring at the same integer duration"
+  },
+  "primaryStandardization": {
+    "eligibleGroups": ["larger", "smaller"],
+    "commonWeights": "within every eligible entry year, pooled larger-plus-smaller company count divided by the total eligible larger-plus-smaller count",
+    "groupEstimate": "sum over eligible years of common weight times that size group's within-year Kaplan-Meier survival at 12 quarters",
+    "statistic": "standardized 12-quarter survival for smaller minus larger, in percentage points",
+    "nullModel": "the two size groups have equal entry-year-standardized 12-quarter evaluability survival",
+    "threshold": "absolute difference of at least 5.0 percentage points, carried forward from D2/D4 before panel access",
+    "directionCheck": "the standardized and unstandardized D4 differences must have the same non-zero sign to be directionally consistent",
+    "isSignificanceTest": false
+  },
+  "cadenceSensitivity": {
+    "statistic": "annual minus quarterly Kaplan-Meier survival at 12 quarters",
+    "nullModel": "annual-only and quarterly-reporting companies have equal 12-quarter evaluability survival",
+    "threshold": "absolute difference of at least 5.0 percentage points is flagged descriptively",
+    "isSignificanceTest": false
+  },
+  "entryCohortSensitivity": {
+    "statistic": "maximum minus minimum 12-quarter Kaplan-Meier survival among eligible entry years with at least 200 companies",
+    "nullModel": "eligible entry-year cohorts have equal 12-quarter evaluability survival",
+    "threshold": "a range of at least 10.0 percentage points is flagged descriptively",
+    "isSignificanceTest": false
+  },
+  "effectiveN": "unique company; the same company appears in one size group, one cadence group, and one entry cohort, so table totals are never added or treated as independent repeated observations",
+  "requiredInvariants": [
+    "D1 company, event, censoring, and cadence totals reproduce exactly",
+    "D2 size company, event, and censoring totals reproduce exactly",
+    "D4 unstandardized size survival reproduces exactly",
+    "common entry-year weights sum to one and are identical for both size groups",
+    "every primary entry year contains both size groups and an estimable 12-quarter survival",
+    "all group outcomes and Kaplan-Meier curves reconcile",
+    "the output contains no company identifiers, company names, signal fields, daily observations, or post-2020 dates"
+  ],
+  "explicitNonClaims": [
+    "Standardization controls observed entry year only; it does not prove exchangeability or non-informative censoring.",
+    "Cadence differences partly reflect the frozen D1 event-definition cadence and are not a pure issuer effect.",
+    "The result is descriptive and not causal.",
+    "No threshold here is a study, method, or product gate."
+  ]
+}
