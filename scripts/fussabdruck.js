@@ -73,7 +73,7 @@ function scoresVon(ergebnisse) {
  * Konstruktion nicht dem Code zuzurechnen.
  */
 function fussabdruck(basis, kandidat, hashes) {
-  const bewegt = [];
+  const bewegt = [];                       // [ticker, delta] - delta VORZEICHENBEHAFTET
   let maxAbs = 0, verglichen = 0, uebersprungen = 0;
   for (const t of Object.keys(basis)) {
     if (!(t in kandidat)) { uebersprungen++; continue; }
@@ -81,16 +81,27 @@ function fussabdruck(basis, kandidat, hashes) {
     verglichen++;
     const a = basis[t], b = kandidat[t];
     if (a === b) continue;
-    if (a === null || b === null) { bewegt.push(t); maxAbs = Infinity; continue; }
-    bewegt.push(t);
-    const d = Math.abs(b - a);
-    if (d > maxAbs) maxAbs = d;
+    if (a === null || b === null) { bewegt.push([t, null]); maxAbs = Infinity; continue; }
+    // Auf 4 Stellen runden: die Scores selbst sind einstellig gerundet, aber die Subtraktion
+    // erzeugt Fliesskomma-Rauschen (56.2 - 50 = 6.199999999999999). Ohne Rundung wuerde der
+    // Vektor-Hash bei bit-gleicher Wirkung zappeln und das Gate falsch-rot melden.
+    const d = Math.round((b - a) * 1e4) / 1e4;
+    bewegt.push([t, d]);
+    if (Math.abs(d) > maxAbs) maxAbs = Math.abs(d);
   }
-  bewegt.sort();
+  bewegt.sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0));
+  const ticker = bewegt.map((x) => x[0]);
   return {
     zeilenMitScoreAenderung: bewegt.length,
     maxAbsDelta: Number.isFinite(maxAbs) ? Math.round(maxAbs * 100) / 100 : null,
-    tickerListHash: sha(bewegt.join(',')),
+    tickerListHash: sha(ticker.join(',')),
+    // Gerichtsauflage 1 (23.08.): Anzahl, Maximum und Ticker-Liste sind KEINE hinreichende
+    // Statistik - eine vollstaendige Vorzeichen-Umkehr passiert sie identisch (am Artefakt
+    // reproduziert). Der Vektor-Hash traegt Richtung UND Verteilung.
+    deltaVektorHash: sha(JSON.stringify(bewegt)),
+    // Und die Namen im Klartext, nicht nur ihr Hash: ein Reviewer soll sehen, WELCHE Firmen
+    // sich bewegen. Ein Hash allein macht die Deklaration zur Selbstbestaetigung (Einwand E4).
+    bewegteTicker: ticker,
     verglichen, uebersprungen,
   };
 }
@@ -130,9 +141,23 @@ function pruefen(deklPfad, achse, faktor) {
   const e = d.erwartet || {};
   const g = m.gemessen;
   const abweichungen = [];
-  for (const k of ['zeilenMitScoreAenderung', 'maxAbsDelta', 'tickerListHash']) {
+  // deltaVektorHash ist Pflicht: ohne ihn ist die Deklaration blind fuer Richtung und
+  // Verteilung, und genau daran ist der Vertrag am 23.08. gescheitert.
+  for (const k of ['zeilenMitScoreAenderung', 'maxAbsDelta', 'tickerListHash', 'deltaVektorHash']) {
     if (!(k in e)) { abweichungen.push(`${k}: nicht deklariert`); continue; }
     if (e[k] !== g[k]) abweichungen.push(`${k}: deklariert ${e[k]}, gemessen ${g[k]}`);
+  }
+  // Die Namen im Klartext werden exakt verglichen - und die Abweichung nennt die Firmen,
+  // nicht nur ihre Zahl, sonst ist die Fehlermeldung wieder nur ein Hash.
+  if (!Array.isArray(e.bewegteTicker)) {
+    abweichungen.push('bewegteTicker: nicht deklariert (die Namen gehoeren in die Deklaration, nicht nur ihr Hash)');
+  } else {
+    const dekl = new Set(e.bewegteTicker), gem = new Set(g.bewegteTicker);
+    const zuviel = [...gem].filter((t) => !dekl.has(t)).sort();
+    const zuwenig = [...dekl].filter((t) => !gem.has(t)).sort();
+    const kurz = (a) => (a.length > 12 ? a.slice(0, 12).join(', ') + ` … (+${a.length - 12})` : a.join(', '));
+    if (zuviel.length) abweichungen.push(`bewegteTicker: ${zuviel.length} nicht deklariert -> ${kurz(zuviel)}`);
+    if (zuwenig.length) abweichungen.push(`bewegteTicker: ${zuwenig.length} deklariert, aber unbewegt -> ${kurz(zuwenig)}`);
   }
   return { ...m, deklariert: e, abweichungen };
 }
