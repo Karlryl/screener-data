@@ -306,12 +306,20 @@ test('W8: eine um EINS verschobene Fallzahl fliegt auf - im Signal UND im Pool',
   }
 });
 
-test('W8: der E4a-Anker des Entdeckungsfensters geht DURCH und faellt bei Abweichung', () => {
+test('W8/B5: der E4a-Anker des Entdeckungsfensters geht DURCH und faellt bei Signal- UND Poolabweichung', () => {
+  // Vorab festgelegt: Gemessen wird, ob W8 eine Abweichung von exakt +1 in je
+  // einer veroeffentlichten Signal- und Poolzahl verwirft. Teststatistik sind
+  // Exit-Code != 0 UND der benannte W8-ABBRUCH; Nullmodell ist, dass die
+  // veraenderte Zahl akzeptiert wird. Schwelle: Nulltoleranz, bereits +1 muss rot.
   const gut = ankerLauf(BERICHT_ENTDECKUNG);
   assert.equal(gut.status, 0, `${gut.stdout}${gut.stderr}`);
-  const kaputt = ankerLauf(BERICHT_ENTDECKUNG, ['2009-2015', 'S-G', 'signal', 'fallzahl']);
-  assert.notEqual(kaputt.status, 0);
-  assert.match(`${kaputt.stdout}${kaputt.stderr}`, /W8-ABBRUCH/);
+  for (const ziel of [['2009-2015', 'S-G', 'signal', 'fallzahl'],
+    ['2009-2015', 'S-U', 'kontrolle', 'firmen_mit_erst_ereignis']]) {
+    const kaputt = ankerLauf(BERICHT_ENTDECKUNG, ziel);
+    assert.notEqual(kaputt.status, 0,
+      `Der Entdeckungsanker haette bei ${ziel.join('/')} abbrechen muessen`);
+    assert.match(`${kaputt.stdout}${kaputt.stderr}`, /W8-ABBRUCH/);
+  }
 });
 
 test('Der E3-Block trifft E3 bit-fuer-bit - Signal UND Kontrollpool', () => {
