@@ -1,17 +1,18 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-19T04:30:35.823Z",
+  "generated_at": "2026-08-25T04:25:54.673Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
-    "status": "degradiert",
-    "degraded": true,
+    "status": "ok",
+    "degraded": false,
     "blocked": false,
-    "coverage_pct": 70.7
+    "coverage_pct": 74
   },
   "profitable": [
     {
       "rank": 1,
+      "rankGrund": null,
       "ticker": "NVEC",
       "score": 50.9,
       "track": "profitable",
@@ -93,6 +94,7 @@
   "unprofitable": [
     {
       "rank": 1,
+      "rankGrund": null,
       "ticker": "ALMU",
       "score": 45.6,
       "track": "unprofitable",
@@ -182,6 +184,7 @@
     },
     {
       "rank": 2,
+      "rankGrund": null,
       "ticker": "MRAM",
       "score": 44.3,
       "track": "unprofitable",
@@ -200,7 +203,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "nicht-profitabel",
@@ -264,6 +267,7 @@
     },
     {
       "rank": 3,
+      "rankGrund": null,
       "ticker": "LAES",
       "score": 34.4,
       "track": "unprofitable",
@@ -286,7 +290,7 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -345,10 +349,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -86.3,
+        "distancePct": -88.7,
         "athDate": "2023-05-24",
         "monthsAgo": 39,
-        "lastDate": "2026-08-14"
+        "lastDate": "2026-08-24"
       },
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null

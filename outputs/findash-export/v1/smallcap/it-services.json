@@ -1,17 +1,18 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-19T04:30:35.819Z",
+  "generated_at": "2026-08-25T04:25:54.669Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
-    "status": "degradiert",
-    "degraded": true,
+    "status": "ok",
+    "degraded": false,
     "blocked": false,
-    "coverage_pct": 70.7
+    "coverage_pct": 74
   },
   "profitable": [
     {
       "rank": 1,
+      "rankGrund": null,
       "ticker": "IBEX",
       "score": 69.8,
       "track": "profitable",
@@ -91,6 +92,7 @@
     },
     {
       "rank": 2,
+      "rankGrund": null,
       "ticker": "GDYN",
       "score": 47.9,
       "track": "profitable",
@@ -110,9 +112,9 @@
       "sector": "Technology",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2018,
       "coverageAxes": "7/7",
@@ -177,6 +179,7 @@
     },
     {
       "rank": 3,
+      "rankGrund": null,
       "ticker": "TASK",
       "score": 45.6,
       "track": "profitable",
@@ -256,6 +259,7 @@
     },
     {
       "rank": 4,
+      "rankGrund": null,
       "ticker": "VRRM",
       "score": 36.7,
       "track": "profitable",
