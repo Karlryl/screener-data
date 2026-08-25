@@ -1,0 +1,59 @@
+{
+  "schema": "R2-A1-blocker2-independent-rebuild-correction/1",
+  "status": "FROZEN_BEFORE_INDEPENDENT_REBUILDS",
+  "createdAt": "2026-08-25",
+  "purpose": "Replace the same-process canonicalization tautology with two fresh operating-system processes that each scan both allowed panels and independently reconstruct the complete R2-A1 v1.1.0 panel fingerprint.",
+  "boundArtifact": {
+    "artifactVersion": "1.1.0",
+    "manifestFile": "reports/studie/R2-A1-identity-bridge-panel-v1.json",
+    "manifestSha256BeforeCorrection": "583c30c303014de3d44dfcc42294809a4e4d09b741992e128ffc77657b720ac1",
+    "expectedPanels": [
+      "panel-entdeckung.sqlite",
+      "panel-validierung.sqlite"
+    ]
+  },
+  "accessOrder": [
+    "freeze and commit this correction before starting either corrected empirical build",
+    "builder A starts with a fresh scan state, loads the external HMAC key, opens both allowed panels read-only, and calls scan_panel once per panel",
+    "builder B starts in a separate operating-system process with a fresh scan state and independently repeats both panel scans",
+    "compare only deterministic build fields: logical payload, complete manifest bytes, ordered shard descriptors, shard-set hash, counts, input evidence hashes, and HMAC-key fingerprint",
+    "require distinct process identifiers, exactly two scan_panel calls per process, and byte-exact equality of the complete deterministic fingerprint",
+    "publish a machine proof bound to the manifest and a report correction; never label a same-process reserialization as independent evidence",
+    "deliberately alter one reported rebuild fingerprint after two real scans and require the comparator to exit non-zero"
+  ],
+  "testStatistic": {
+    "primary": "number of unequal deterministic fingerprint fields across builder A and builder B",
+    "processIndependence": "number of distinct operating-system process identifiers",
+    "scanExecution": "number of scan_panel calls in each process and in total",
+    "effectiveN": "two complete builds of the same two-panel input; files, rows, shards, and hash fields are deterministic reconstruction material rather than independent empirical observations"
+  },
+  "nullModel": "At least one deterministic fingerprint field differs, both builds share one process identifier, either process does not execute exactly two scan_panel calls, or the deliberate mismatched fingerprint remains green.",
+  "threshold": "Zero fingerprint mismatches, two distinct process identifiers, two scan_panel calls per process, four total scan_panel calls, and non-zero exit for the deliberate mismatch sabotage.",
+  "deterministicFingerprintFields": [
+    "artifactVersion",
+    "logicalPayloadSha256",
+    "manifestFileSha256",
+    "manifestPayloadSha256",
+    "shardSetSha256",
+    "orderedShardDescriptorsSha256",
+    "countsSha256",
+    "inputsSha256",
+    "keyFingerprintSha256"
+  ],
+  "requiredInvariants": [
+    "the two build processes share no in-memory scan state",
+    "each process opens and scans panel-entdeckung.sqlite and panel-validierung.sqlite itself",
+    "the external HMAC key is never printed or written to the repository",
+    "the panel artifact remains byte-identical because this correction changes verification rather than linkage or seam construction",
+    "the independent-rebuild proof writes no raw CIK, company name, accession number, ticker, reversible identity, or HMAC key",
+    "no end-test file or row is opened, counted, or rendered",
+    "scripts/studie-e4d-kadenz.py remains byte-identical",
+    "Blocker 3, accepted-time seam placement, multiple-seam counts, and Task 2 remain untouched"
+  ],
+  "explicitNonClaims": [
+    "Two byte-identical builds establish reproducibility for the pinned inputs, implementation, runtime, and external HMAC key; they do not prove reproducibility under other runtimes or changed inputs.",
+    "This correction does not validate the seam guard or seam placement.",
+    "This correction does not make Task 1 complete and does not begin Task 2.",
+    "This correction does not alter the sealed confirmatory verdict."
+  ]
+}
