@@ -1,0 +1,58 @@
+{
+  "schema": "R2-A1-blocker1-identity-protection-correction/1",
+  "status": "FROZEN_BEFORE_IDENTITY_REBUILD",
+  "createdAt": "2026-08-25",
+  "purpose": "Correct the reversible entity identifiers in the unpushed R2-A1 artifact without changing linkage evidence, seam placement, the sealed confirmatory verdict, or any later descriptive result.",
+  "supersedes": {
+    "artifactVersion": "1.0.0",
+    "manifestSha256": "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc",
+    "status": "REJECTED_REVERSIBLE_IDENTIFIERS",
+    "reason": "Entity IDs were a truncated unsalted SHA-256 over an enumerable CIK namespace and were empirically inverted by review."
+  },
+  "correctedArtifactVersion": "1.1.0",
+  "accessOrder": [
+    "freeze and commit this correction before rebuilding any published identity artifact",
+    "install HMAC identifier derivation and fixture-only inversion tests",
+    "create or load a 256-bit identity key outside the repository; never print or commit it",
+    "rebuild the artifact from the same two allowed panels without changing linkage or seam rules",
+    "in a separate public-only check, sample fifty published entity IDs and brute-force CIK 1 through 2100000 through every repository-public legacy mapping",
+    "require zero invertible published IDs and deliberately require fifty reversible legacy fixture IDs to fail red",
+    "publish a correction report that keeps the full R2-A1 task on HOLD for blockers 2 and 3"
+  ],
+  "identifierProtection": {
+    "algorithm": "HMAC-SHA-256",
+    "keyMinimumBytes": 32,
+    "keyLocation": "Outside the repository, supplied only through --identity-key-file.",
+    "repositoryRule": "The key, a reversible mapping, and raw company identity may never be written to the repository, report, proof, manifest, shard, console, or test output.",
+    "versionNamespace": "R2-A1 identity artifact 1.1.0",
+    "entityId": "Twenty hexadecimal HMAC characters over the normalized internal CIK and the version namespace.",
+    "identifierId": "Twenty hexadecimal HMAC characters over entity ID, source tag family, unit, and the version namespace.",
+    "seamId": "Twenty hexadecimal HMAC characters over entity ID, unit, publication-time seam, old identifier ID, new identifier ID, and the version namespace.",
+    "keyBinding": "Only a one-way SHA-256 key fingerprint is written so independent authorized processes can prove they used the same unseen key."
+  },
+  "rejectedAlternative": "A random salt stored in the manifest prevents precomputation but not enumeration: an attacker who knows the salt can still try the complete CIK namespace. It does not satisfy the inversion test.",
+  "testStatistic": {
+    "primary": "number of fifty sampled published entity IDs recovered by brute-forcing CIK 1 through 2100000 through repository-public legacy mappings",
+    "secondary": "number of deliberately reversible legacy fixture IDs recovered by the same watcher",
+    "effectiveN": "fifty published pseudonymous entity IDs; CIK candidates are attack attempts, not empirical observations"
+  },
+  "nullModel": "At least one sampled published entity ID is reversible from public repository information over the plausible CIK namespace.",
+  "threshold": "Zero of fifty published IDs may be inverted. The deliberate legacy sabotage must recover all fifty fixture IDs and exit non-zero.",
+  "requiredInvariants": [
+    "the empirical HMAC key contains at least 256 random bits and is outside the repository",
+    "the public inversion watcher does not read the HMAC key",
+    "no raw CIK, company name, accession number, ticker, reversible company identity, or HMAC key is written",
+    "the corrected artifact version is 1.1.0 and explicitly marks version 1.0.0 rejected",
+    "linkage eligibility and seam placement remain byte-for-byte the Blocker-1 input logic; their separate review blockers are not silently repaired here",
+    "the full R2-A1 result remains HOLD until independent determinism and provenance-derived seam enforcement are repaired",
+    "no end-test file or row is opened, counted, or rendered",
+    "scripts/studie-e4d-kadenz.py remains byte-identical"
+  ],
+  "explicitNonClaims": [
+    "Passing the public inversion watcher is not a proof against compromise of the external HMAC key.",
+    "This correction does not repair or validate the independent-build claim.",
+    "This correction does not repair or validate the seam guard or seam placement.",
+    "This correction does not make Task 1 complete and does not begin Task 2.",
+    "This correction does not alter the sealed confirmatory verdict."
+  ]
+}
