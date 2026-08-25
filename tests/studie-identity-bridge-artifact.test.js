@@ -12,6 +12,8 @@ const PREREG = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'r2-a1-identity-bridge-artifact-preregistration.json');
 const CORRECTION = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'r2-a1-blocker1-identity-protection-correction.json');
+const DETERMINISM_CORRECTION = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
+  'r2-a1-blocker2-independent-rebuild-correction.json');
 const ARTIFACT = path.join(REPO, 'reports', 'studie',
   'R2-A1-identity-bridge-panel-v1.json');
 const RESULT = path.join(REPO, 'reports', 'studie',
@@ -24,6 +26,10 @@ const ID_PROOF = path.join(REPO, 'reports', 'studie',
   'R2-A1-public-identity-inversion-proof-2026-08-25.json');
 const ID_SABOTAGE = path.join(REPO, 'reports', 'studie',
   'R2-A1-public-identity-inversion-sabotage-2026-08-25.json');
+const INDEPENDENT_PROOF = path.join(REPO, 'reports', 'studie',
+  'R2-A1-independent-rebuild-proof-2026-08-25.json');
+const INDEPENDENT_SABOTAGE = path.join(REPO, 'reports', 'studie',
+  'R2-A1-independent-rebuild-sabotage-2026-08-25.json');
 
 const REQUIRED = [
   'Registration is frozen before R2-A1 fact access',
@@ -46,6 +52,8 @@ const REQUIRED = [
   'HMAC entity IDs change when the unseen key changes',
   'Secure fixture IDs resist the public legacy namespace attack',
   'Legacy reversible fixture IDs are recovered by the public watcher',
+  'Independent comparator accepts two distinct complete build records',
+  'Independent comparator rejects one mismatched rebuild fingerprint',
 ];
 
 test('R2-A1: fixture self-test is named, countable, and green', () => {
@@ -59,7 +67,7 @@ test('R2-A1: fixture self-test is named, countable, and green', () => {
     .map((line) => line.replace(/^\s{2}ok\s{4}/, '').trim()));
   assert.deepEqual(REQUIRED.filter((name) => !green.has(name)), []);
   assert.equal(green.size, REQUIRED.length);
-  assert.match(run.stdout, /SELBSTTEST GREEN - 20 named checks/);
+  assert.match(run.stdout, /SELBSTTEST GREEN - 22 named checks/);
 });
 
 test('R2-A1: deliberate unmarked cross-seam calculation fails red', () => {
@@ -84,6 +92,21 @@ test('R2-A1: registration freezes statistic, null, threshold, and seam contract'
   assert.equal(correction.identifierProtection.algorithm, 'HMAC-SHA-256');
   assert.match(correction.rejectedAlternative, /salt.*not enumeration/i);
   assert.match(correction.threshold, /Zero of fifty/);
+  const determinismCorrection = JSON.parse(fs.readFileSync(DETERMINISM_CORRECTION, 'utf8'));
+  assert.equal(determinismCorrection.status, 'FROZEN_BEFORE_INDEPENDENT_REBUILDS');
+  assert.match(determinismCorrection.threshold, /two distinct process identifiers/i);
+  assert.match(determinismCorrection.threshold, /four total scan_panel calls/i);
+  assert.deepEqual(determinismCorrection.deterministicFingerprintFields, [
+    'artifactVersion',
+    'logicalPayloadSha256',
+    'manifestFileSha256',
+    'manifestPayloadSha256',
+    'shardSetSha256',
+    'orderedShardDescriptorsSha256',
+    'countsSha256',
+    'inputsSha256',
+    'keyFingerprintSha256',
+  ]);
 });
 
 test('R2-A1 Blocker 1: public watcher attacks fifty published IDs and sabotage is red', () => {
@@ -155,12 +178,17 @@ test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', ()
   assert.equal(manifest.schema, 'R2-A1-identity-bridge-panel-manifest/1');
   assert.equal(manifest.artifactVersion, '1.1.0');
   assert.equal(result.panelArtifact.sha256, sha256(ARTIFACT));
-  assert.equal(result.panelArtifact.sameProcessCanonicalizationSha256, sha256(ARTIFACT));
-  assert.equal(result.panelArtifact.sameProcessCanonicalizationCheck, true);
-  assert.equal(result.panelArtifact.independentRebuildsExecuted, 0);
-  assert.equal(result.contract.status, 'HOLD_BLOCKERS_2_AND_3');
+  assert.equal(result.panelArtifact.independentRebuildManifestSha256, sha256(ARTIFACT));
+  assert.equal(result.panelArtifact.independentRebuildsExecuted, 2);
+  assert.equal(result.panelArtifact.independentRebuildFingerprintMismatches, 0);
+  assert.equal(result.contract.status, 'HOLD_BLOCKER_3_AND_METHOD_CORRECTIONS');
   assert.equal(result.contract.passes, false);
-  assert.equal(result.contract.blocker2IndependentDeterminism.status, 'OPEN');
+  assert.equal(result.contract.blocker2IndependentDeterminism.status, 'PASS');
+  assert.equal(result.contract.blocker2IndependentDeterminism.processIdsDistinct, true);
+  assert.deepEqual(result.contract.blocker2IndependentDeterminism.scanPanelCallsPerProcess,
+    [2, 2]);
+  assert.equal(result.contract.blocker2IndependentDeterminism.totalScanPanelCalls, 4);
+  assert.equal(result.contract.blocker2IndependentDeterminism.fingerprintMismatches, 0);
   assert.equal(result.panelArtifact.shards, manifest.shards.length);
   const expectedManifestHash = manifest.canonicalPayloadSha256;
   delete manifest.canonicalPayloadSha256;
@@ -224,6 +252,40 @@ test('R2-A1: every identifier and seam satisfies the semantic contract', () => {
   assert.equal(result.contract.blocker1IdentityProtection.invertiblePublishedIds, 0);
 });
 
+test('R2-A1 Blocker 2: two full process-isolated rebuilds match and sabotage is red', () => {
+  const proof = JSON.parse(fs.readFileSync(INDEPENDENT_PROOF, 'utf8'));
+  const sabotage = JSON.parse(fs.readFileSync(INDEPENDENT_SABOTAGE, 'utf8'));
+  const result = JSON.parse(fs.readFileSync(RESULT, 'utf8'));
+  assert.equal(proof.schema, 'R2-A1-independent-rebuild-proof/1');
+  assert.equal(proof.passes, true);
+  assert.equal(proof.observedStatus, 'GREEN');
+  assert.equal(proof.independentProcessesExecuted, 2);
+  assert.equal(proof.processIdsDistinct, true);
+  assert.equal(proof.pythonRuntimesEqual, true);
+  assert.notEqual(proof.builders[0].processId, proof.builders[1].processId);
+  assert.deepEqual(proof.scanPanelCallsPerProcess, [2, 2]);
+  assert.equal(proof.totalScanPanelCalls, 4);
+  assert.equal(proof.matchesBoundManifest, true);
+  assert.deepEqual(proof.fingerprintMismatches, []);
+  assert.deepEqual(proof.builders[0].fingerprint, proof.builders[1].fingerprint);
+  assert.equal(proof.manifestSha256, sha256(ARTIFACT));
+  assert.equal(proof.companyIdentifiersWritten, 0);
+  assert.equal(proof.fingerprintFieldsCompared.length, 9);
+  assert.doesNotMatch(JSON.stringify(proof),
+    /"(?:cik|ticker|adsh|company|companyname|company_name)"\s*:/i);
+
+  assert.equal(sabotage.passes, false);
+  assert.equal(sabotage.observedStatus, 'RED');
+  assert.equal(sabotage.processIdsDistinct, true);
+  assert.deepEqual(sabotage.scanPanelCallsPerProcess, [2, 2]);
+  assert.deepEqual(sabotage.fingerprintMismatches, ['shardSetSha256']);
+  assert.equal(sabotage.builders[1].sabotageApplied, true);
+  assert.equal(result.independentRebuildProof.sha256, sha256(INDEPENDENT_PROOF));
+  assert.equal(result.independentRebuildProof.sabotage.sha256,
+    sha256(INDEPENDENT_SABOTAGE));
+  assert.equal(result.independentRebuildProof.sabotage.observedRed, true);
+});
+
 test('R2-A1: red sabotage proof and report are bound to machine artifacts', () => {
   const proof = JSON.parse(fs.readFileSync(PROOF, 'utf8'));
   const result = JSON.parse(fs.readFileSync(RESULT, 'utf8'));
@@ -243,10 +305,12 @@ test('R2-A1: red sabotage proof and report are bound to machine artifacts', () =
   assert.equal(result.identityProtection.publicInversionProof.sha256, sha256(ID_PROOF));
   assert.equal(result.identityProtection.legacySabotageProof.sha256, sha256(ID_SABOTAGE));
   const firstLine = report.split(/\r?\n/)[0];
-  assert.match(firstLine, /Blocker 1.*0 von 50.*HOLD/);
+  assert.match(firstLine, /Blocker 1 und 2.*0 Fingerprint-Abweichungen.*HOLD/);
   const marker = '## Was ausdruecklich nicht gezeigt ist';
   assert.ok(report.includes(marker));
   assert.ok(report.split(marker, 2)[1].trim().length > 0);
-  assert.match(report, /Blocker 2 ist offen/);
+  assert.match(report, /Prozess A und Prozess B.*getrenntem Speicher/s);
+  assert.match(report, /fruehere In-Prozess-Check.*nicht.*unabhaengiger Determinismusbeleg/s);
   assert.match(report, /Blocker 3 ist offen/);
+  assert.match(report, /ddate.*accepted/);
 });

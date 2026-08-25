@@ -1,4 +1,4 @@
-**Ergebnis: Blocker 1 ist in Kennungsbruecke v1.1.0 geheilt: 0 von 50 veroeffentlichten Entity-IDs waren im CIK-Raum 1 bis 2100000 oeffentlich invertierbar; Auftrag 1 bleibt HOLD fuer Blocker 2 und 3.**
+**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v1.1.0 geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `583c30c303014de3d44dfcc42294809a4e4d09b741992e128ffc77657b720ac1` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**
 
 # R2-A1 - Die Kennungsbruecke als Panel-Artefakt
 
@@ -22,7 +22,16 @@ alle CIKs von 1 bis 2100000 durch die im Repo bekannte alte Abbildung; 0 IDs
 waren invertierbar. Die absichtlich alte Abbildung wurde mit 50 von 50
 Treffern rot erkannt.
 
-Das versionierte Panel-Artefakt enthaelt 3159 pseudonymisierte Entitaeten,
+Die Determinismus-Korrektur wurde vor den beiden Neubauten in `protocol/early-detection/2.0.0/r2-a1-blocker2-independent-rebuild-correction.json`
+eingefroren. Prozess A und Prozess B starteten mit getrenntem Speicher,
+oeffneten jeweils beide Panels und riefen `scan_panel` je zweimal auf.
+Verglichen wurden logische Nutzlast, vollstaendige Manifestbytes, geordnete
+Shard-Deskriptoren, Shard-Set, Zaehler, Eingangsbelege und Key-Fingerprint:
+0 Abweichungen. Ein absichtlich veraenderter Shard-Set-Fingerprint im
+zweiten echten Neubau wurde rot abgewiesen. Der fruehere In-Prozess-Check
+gilt ausdruecklich nicht als unabhaengiger Determinismusbeleg.
+
+Die unveraenderte, noch `ddate`-basierte Panel-Fassung enthaelt 3159 pseudonymisierte Entitaeten,
 6794 Kennungszuordnungen und 5146 Naehte.
 
 ## Was ausdruecklich nicht gezeigt ist
@@ -32,8 +41,10 @@ Das versionierte Panel-Artefakt enthaelt 3159 pseudonymisierte Entitaeten,
 - Es wurde keine Aussage ueber die alte, versiegelte Hypothese abgeleitet und kein Verdikt geaendert.
 - Das Endtest-Fenster wurde weder geoeffnet noch gezaehlt oder dargestellt.
 - Ergebnisartefakt und Bericht enthalten keine Firmenidentitaeten; das Panel-Artefakt verwendet nur pseudonyme Entitaets- und Kennungs-IDs.
-- Blocker 2 ist offen: Es liefen noch keine zwei unabhaengigen Prozesse ueber beide Panels; die fruehere Determinismus-Behauptung ist zurueckgenommen.
+- Blocker 2 ist nur fuer die gebundenen Panelbytes, Python-Laufzeit, Implementierung und denselben externen HMAC-Schluessel bestanden; andere Laufzeiten oder Eingaben wurden nicht verglichen.
 - Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.
+- Die Quellenwahl verwendet weiterhin `ddate` statt `accepted`; die 5.146 Naehte sind deshalb noch nicht methodisch korrigiert oder abgenommen.
+- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.
 
 ## Neue Fragen und Hypothesen
 

@@ -27,6 +27,13 @@ CORRECTION_REL = (
     "r2-a1-blocker1-identity-protection-correction.json"
 )
 CORRECTION = os.path.join(REPO, *CORRECTION_REL.split("/"))
+DETERMINISM_CORRECTION_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-blocker2-independent-rebuild-correction.json"
+)
+DETERMINISM_CORRECTION = os.path.join(
+    REPO, *DETERMINISM_CORRECTION_REL.split("/")
+)
 D3_SCRIPT_REL = "scripts/studie-identifier-bridge.py"
 BASIS_SCRIPT_REL = "scripts/studie-basisraten.py"
 COUNT_SCRIPT_REL = "scripts/studie-zaehlprobe.py"
@@ -38,6 +45,17 @@ PRIOR_ARTIFACT_VERSION = "1.0.0"
 PRIOR_MANIFEST_SHA256 = "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc"
 PUBLIC_ID_SAMPLE = 50
 PUBLIC_CIK_MAX = 2_100_000
+INDEPENDENT_FINGERPRINT_FIELDS = (
+    "artifactVersion",
+    "logicalPayloadSha256",
+    "manifestFileSha256",
+    "manifestPayloadSha256",
+    "shardSetSha256",
+    "orderedShardDescriptorsSha256",
+    "countsSha256",
+    "inputsSha256",
+    "keyFingerprintSha256",
+)
 BLOCK = 4_000_000
 SHARD_MAX_BYTES = 180 * 1024
 FACT_METADATA_COLUMNS = (
@@ -171,6 +189,113 @@ def manifest_from_artifact(artifact, manifest_basename):
     return manifest, shards
 
 
+def deterministic_build_fingerprint(artifact, manifest):
+    fingerprint = {
+        "artifactVersion": artifact["artifactVersion"],
+        "logicalPayloadSha256": artifact["canonicalPayloadSha256"],
+        "manifestFileSha256": sha256_bytes(canonical_bytes(manifest)),
+        "manifestPayloadSha256": manifest["canonicalPayloadSha256"],
+        "shardSetSha256": manifest["shardSetSha256"],
+        "orderedShardDescriptorsSha256": canonical_hash(manifest["shards"]),
+        "countsSha256": canonical_hash(artifact["counts"]),
+        "inputsSha256": canonical_hash(artifact["inputs"]),
+        "keyFingerprintSha256": artifact["construction"]["identifierProtection"][
+            "keyFingerprintSha256"],
+    }
+    if tuple(fingerprint) != INDEPENDENT_FINGERPRINT_FIELDS:
+        raise ArtifactError("Independent fingerprint fields drifted from registration")
+    return fingerprint
+
+
+def independent_build_record(artifact, manifest, state, sabotage=False):
+    fingerprint = deterministic_build_fingerprint(artifact, manifest)
+    if sabotage:
+        fingerprint = dict(fingerprint)
+        fingerprint["shardSetSha256"] = "0" * 64
+    return {
+        "schema": "R2-A1-independent-builder-record/1",
+        "processId": os.getpid(),
+        "pythonRuntime": "%d.%d.%d" % sys.version_info[:3],
+        "scanPanelCalls": state["scanPanelCalls"],
+        "panelsScanned": [row["file"] for row in artifact["inputs"]],
+        "fingerprint": fingerprint,
+        "sabotageApplied": sabotage,
+    }
+
+
+def load_determinism_correction():
+    with open(DETERMINISM_CORRECTION, encoding="utf-8") as handle:
+        correction = json.load(handle)
+    if correction.get("status") != "FROZEN_BEFORE_INDEPENDENT_REBUILDS":
+        raise ArtifactError("Independent-rebuild correction is not frozen")
+    if tuple(correction.get("deterministicFingerprintFields", ())) != (
+            INDEPENDENT_FINGERPRINT_FIELDS):
+        raise ArtifactError("Independent fingerprint no longer matches its correction")
+    return correction
+
+
+def compare_independent_build_records(builder_a, builder_b):
+    correction = load_determinism_correction()
+    mismatches = [
+        field for field in INDEPENDENT_FINGERPRINT_FIELDS
+        if builder_a["fingerprint"].get(field)
+        != builder_b["fingerprint"].get(field)
+    ]
+    process_ids_distinct = (
+        builder_a.get("processId") != builder_b.get("processId")
+    )
+    runtimes_equal = (
+        builder_a.get("pythonRuntime") == builder_b.get("pythonRuntime")
+    )
+    scans_per_process = [
+        builder_a.get("scanPanelCalls"), builder_b.get("scanPanelCalls")
+    ]
+    expected_panels = correction["boundArtifact"]["expectedPanels"]
+    panels_match = (
+        builder_a.get("panelsScanned") == expected_panels
+        and builder_b.get("panelsScanned") == expected_panels
+    )
+    bound_manifest_match = (
+        builder_a["fingerprint"].get("manifestFileSha256")
+        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
+        and builder_b["fingerprint"].get("manifestFileSha256")
+        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
+    )
+    passes = (
+        not mismatches
+        and process_ids_distinct
+        and scans_per_process == [2, 2]
+        and panels_match
+        and bound_manifest_match
+        and runtimes_equal
+    )
+    return {
+        "schema": "R2-A1-independent-rebuild-proof/1",
+        "artifactVersion": builder_a["fingerprint"]["artifactVersion"],
+        "manifestSha256": builder_a["fingerprint"]["manifestFileSha256"],
+        "determinismCorrection": {
+            "path": DETERMINISM_CORRECTION_REL,
+            "sha256": sha256_file(DETERMINISM_CORRECTION),
+            "status": correction["status"],
+        },
+        "builders": [builder_a, builder_b],
+        "independentProcessesExecuted": 2,
+        "processIdsDistinct": process_ids_distinct,
+        "pythonRuntimesEqual": runtimes_equal,
+        "scanPanelCallsPerProcess": scans_per_process,
+        "totalScanPanelCalls": sum(
+            value for value in scans_per_process if isinstance(value, int)
+        ),
+        "panelsMatchRegistration": panels_match,
+        "matchesBoundManifest": bound_manifest_match,
+        "fingerprintFieldsCompared": list(INDEPENDENT_FINGERPRINT_FIELDS),
+        "fingerprintMismatches": mismatches,
+        "observedStatus": "GREEN" if passes else "RED",
+        "passes": passes,
+        "companyIdentifiersWritten": 0,
+    }
+
+
 def write_sharded_artifact(manifest_path, manifest, shards):
     root = os.path.dirname(os.path.abspath(manifest_path))
     expected_names = {relative.replace("/", os.sep) for relative, _payload in shards}
@@ -253,6 +378,7 @@ def load_identity_key(path):
 def new_scan_state(identity_key=None):
     return {
         "identityKey": identity_key,
+        "scanPanelCalls": 0,
         "identities": defaultdict(lambda: {
             "names": set(), "renameEdges": set(), "windows": set()
         }),
@@ -270,6 +396,7 @@ def update_digest(digest, row):
 def scan_panel(path, window_name, wall_name, expected_basename, state):
     if os.path.basename(os.path.abspath(path)) != expected_basename:
         raise ArtifactError("Panel basename does not match the preregistered window")
+    state["scanPanelCalls"] += 1
     checked = COUNT.pruefe_mauer(path, wall_name)
     panel = COUNT.oeffne_nur_lesend(checked, wall_name)
     identity_digest = hashlib.sha256()
@@ -846,6 +973,8 @@ SELF_TEST_NAMES = (
     "HMAC entity IDs change when the unseen key changes",
     "Secure fixture IDs resist the public legacy namespace attack",
     "Legacy reversible fixture IDs are recovered by the public watcher",
+    "Independent comparator accepts two distinct complete build records",
+    "Independent comparator rejects one mismatched rebuild fingerprint",
 )
 
 
@@ -950,6 +1079,36 @@ def self_test():
     check(SELF_TEST_NAMES[18], legacy_inversion_matches(secure_fixture_ids, 100) == 0)
     legacy_fixture_ids = [legacy_stable_id("E", str(value)) for value in range(1, 11)]
     check(SELF_TEST_NAMES[19], legacy_inversion_matches(legacy_fixture_ids, 100) == 10)
+    registered_manifest = load_determinism_correction()["boundArtifact"][
+        "manifestSha256BeforeCorrection"]
+    base_fingerprint = {
+        field: (ARTIFACT_VERSION if field == "artifactVersion" else "a" * 64)
+        for field in INDEPENDENT_FINGERPRINT_FIELDS
+    }
+    base_fingerprint["manifestFileSha256"] = registered_manifest
+    record_a = {
+        "schema": "R2-A1-independent-builder-record/1",
+        "processId": 101,
+        "pythonRuntime": "%d.%d.%d" % sys.version_info[:3],
+        "scanPanelCalls": 2,
+        "panelsScanned": ["panel-entdeckung.sqlite", "panel-validierung.sqlite"],
+        "fingerprint": dict(base_fingerprint),
+        "sabotageApplied": False,
+    }
+    record_b = dict(record_a)
+    record_b["processId"] = 202
+    record_b["fingerprint"] = dict(base_fingerprint)
+    independent_ok = compare_independent_build_records(record_a, record_b)
+    check(SELF_TEST_NAMES[20], independent_ok["passes"] is True, independent_ok)
+    record_b["fingerprint"]["shardSetSha256"] = "0" * 64
+    record_b["sabotageApplied"] = True
+    independent_red = compare_independent_build_records(record_a, record_b)
+    check(
+        SELF_TEST_NAMES[21],
+        independent_red["observedStatus"] == "RED"
+        and independent_red["fingerprintMismatches"] == ["shardSetSha256"],
+        independent_red,
+    )
     if failures:
         print("SELBSTTEST ROT - %d named checks failed" % len(failures))
         return 1
@@ -1034,12 +1193,130 @@ def load_identity_proof(path, manifest_path):
     return proof
 
 
+def construct_empirical_build(discovery, validation, identity_key_file,
+                              manifest_basename):
+    state = new_scan_state(load_identity_key(identity_key_file))
+    for path, (window, wall, basename) in zip(
+            (discovery, validation), WINDOWS):
+        scan_panel(path, window, wall, basename, state)
+    artifact = artifact_from_state(state)
+    manifest, shards = manifest_from_artifact(artifact, manifest_basename)
+    return state, artifact, manifest, shards
+
+
+def emit_independent_build(args):
+    state, artifact, manifest, _shards = construct_empirical_build(
+        args.discovery, args.validation, args.identity_key_file,
+        os.path.basename(args.artifact),
+    )
+    record = independent_build_record(
+        artifact, manifest, state, sabotage=args.sabotage_independent_fingerprint
+    )
+    print(json.dumps(record, ensure_ascii=False, sort_keys=True))
+    return 0
+
+
+def run_independent_build_pair(args, sabotage_child=False):
+    state, artifact, manifest, shards = construct_empirical_build(
+        args.discovery, args.validation, args.identity_key_file,
+        os.path.basename(args.artifact),
+    )
+    builder_a = independent_build_record(artifact, manifest, state)
+    command = [
+        sys.executable, os.path.abspath(__file__),
+        "--emit-independent-build",
+        "--discovery", os.path.abspath(args.discovery),
+        "--validation", os.path.abspath(args.validation),
+        "--artifact", os.path.abspath(args.artifact),
+        "--identity-key-file", os.path.abspath(args.identity_key_file),
+    ]
+    if sabotage_child:
+        command.append("--sabotage-independent-fingerprint")
+    child = subprocess.run(
+        command, cwd=REPO, capture_output=True, text=True, check=False
+    )
+    if child.returncode != 0:
+        raise ArtifactError(
+            "Independent builder process failed: " + child.stderr.strip()
+        )
+    try:
+        builder_b = json.loads(child.stdout)
+    except json.JSONDecodeError as error:
+        raise ArtifactError("Independent builder did not emit one JSON record") from error
+    proof = compare_independent_build_records(builder_a, builder_b)
+    write_json(args.independent_proof, proof)
+    return artifact, manifest, shards, proof
+
+
+def sabotage_independent_rebuild(args):
+    _artifact, _manifest, _shards, proof = run_independent_build_pair(
+        args, sabotage_child=True
+    )
+    expected_mismatches = ["shardSetSha256"]
+    if (
+            proof["observedStatus"] == "RED"
+            and proof["fingerprintMismatches"] == expected_mismatches
+            and proof["processIdsDistinct"] is True
+            and proof["scanPanelCallsPerProcess"] == [2, 2]):
+        print(
+            "INDEPENDENT REBUILD SABOTAGE RED: mismatched child fingerprint detected",
+            file=sys.stderr,
+        )
+        return 1
+    print(
+        "INDEPENDENT REBUILD SABOTAGE FAILED: mismatched child stayed green",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def load_independent_rebuild_proof(path, manifest_path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("manifestSha256") != sha256_file(manifest_path):
+        raise ArtifactError("Independent rebuild proof is bound to another manifest")
+    if proof.get("observedStatus") != "GREEN" or proof.get("passes") is not True:
+        raise ArtifactError("Independent rebuild proof is not green")
+    if proof.get("processIdsDistinct") is not True:
+        raise ArtifactError("Independent rebuilds did not use distinct processes")
+    if proof.get("scanPanelCallsPerProcess") != [2, 2]:
+        raise ArtifactError("Independent rebuilds did not each scan both panels")
+    if proof.get("totalScanPanelCalls") != 4:
+        raise ArtifactError("Independent rebuild proof did not record four panel scans")
+    if proof.get("fingerprintMismatches") != []:
+        raise ArtifactError("Independent rebuild fingerprints differ")
+    if proof.get("matchesBoundManifest") is not True:
+        raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    if any(row.get("sabotageApplied") for row in proof.get("builders", [])):
+        raise ArtifactError("Green independent rebuild proof contains a sabotage")
+    return proof
+
+
+def load_independent_rebuild_sabotage(path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("observedStatus") != "RED" or proof.get("passes") is not False:
+        raise ArtifactError("Independent rebuild sabotage proof is not red")
+    if proof.get("processIdsDistinct") is not True:
+        raise ArtifactError("Independent rebuild sabotage reused one process")
+    if proof.get("scanPanelCallsPerProcess") != [2, 2]:
+        raise ArtifactError("Independent rebuild sabotage did not run both full scans")
+    if proof.get("fingerprintMismatches") != ["shardSetSha256"]:
+        raise ArtifactError("Independent rebuild sabotage did not isolate its mismatch")
+    builders = proof.get("builders", [])
+    if len(builders) != 2 or builders[1].get("sabotageApplied") is not True:
+        raise ArtifactError("Independent rebuild sabotage is not present in builder B")
+    return proof
+
+
 def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
                  identity_proof, identity_proof_path, identity_sabotage,
-                 identity_sabotage_path, same_process_hash):
+                 identity_sabotage_path, independent_proof,
+                 independent_proof_path, independent_sabotage,
+                 independent_sabotage_path):
     artifact_file_hash = sha256_file(artifact_path)
     contract = {
-        "status": "HOLD_BLOCKERS_2_AND_3",
+        "status": "HOLD_BLOCKER_3_AND_METHOD_CORRECTIONS",
         "passes": False,
         "blocker1IdentityProtection": {
             "status": "PASS",
@@ -1050,18 +1327,31 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "legacySabotageStatus": identity_sabotage["observedStatus"],
         },
         "blocker2IndependentDeterminism": {
-            "status": "OPEN",
-            "independentProcessesExecuted": 0,
-            "sameProcessCanonicalizationIsNotIndependentEvidence": True,
+            "status": "PASS",
+            "independentProcessesExecuted": independent_proof[
+                "independentProcessesExecuted"],
+            "processIdsDistinct": independent_proof["processIdsDistinct"],
+            "scanPanelCallsPerProcess": independent_proof[
+                "scanPanelCallsPerProcess"],
+            "totalScanPanelCalls": independent_proof["totalScanPanelCalls"],
+            "fingerprintMismatches": len(independent_proof[
+                "fingerprintMismatches"]),
+            "deliberateMismatchSabotageStatus": independent_sabotage[
+                "observedStatus"],
         },
         "blocker3ProvenanceDerivedSeamGuard": {
             "status": "OPEN",
             "knownSingleSabotageRed": seam_proof["observedStatus"] == "RED",
             "threeRequiredBypassSabotagesCompleted": 0,
         },
+        "methodCorrections": {
+            "acceptedTimeSeamPlacement": "OPEN",
+            "multipleSeamExposureRestoration": "OPEN",
+            "completeExclusionCounters": "OPEN",
+        },
     }
     result = {
-        "schema": "R2-A1-identity-bridge-artifact-result/2",
+        "schema": "R2-A1-identity-bridge-artifact-result/3",
         "preregistration": artifact["preregistration"],
         "identityProtectionCorrection": artifact["identityProtectionCorrection"],
         "corrections": [{
@@ -1071,6 +1361,10 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
         }, {
             "artifactVersion": ARTIFACT_VERSION,
             "status": "CURRENT_BLOCKER1_CORRECTION",
+        }, {
+            "path": DETERMINISM_CORRECTION_REL,
+            "sha256": sha256_file(DETERMINISM_CORRECTION),
+            "status": "BLOCKER2_INDEPENDENT_REBUILDS_PASS",
         }],
         "boundImplementation": {
             D3_SCRIPT_REL: sha256_file(repo_path(D3_SCRIPT_REL)),
@@ -1088,9 +1382,31 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "shardSetSha256": manifest["shardSetSha256"],
             "shards": len(manifest["shards"]),
             "totalShardBytes": sum(row["bytes"] for row in manifest["shards"]),
-            "sameProcessCanonicalizationSha256": same_process_hash,
-            "sameProcessCanonicalizationCheck": artifact_file_hash == same_process_hash,
-            "independentRebuildsExecuted": 0,
+            "independentRebuildsExecuted": independent_proof[
+                "independentProcessesExecuted"],
+            "independentRebuildFingerprintMismatches": len(
+                independent_proof["fingerprintMismatches"]),
+            "independentRebuildManifestSha256": independent_proof[
+                "manifestSha256"],
+        },
+        "independentRebuildProof": {
+            "file": os.path.basename(independent_proof_path),
+            "sha256": sha256_file(independent_proof_path),
+            "processIdsDistinct": independent_proof["processIdsDistinct"],
+            "scanPanelCallsPerProcess": independent_proof[
+                "scanPanelCallsPerProcess"],
+            "totalScanPanelCalls": independent_proof["totalScanPanelCalls"],
+            "fingerprintMismatches": independent_proof[
+                "fingerprintMismatches"],
+            "passes": independent_proof["passes"],
+            "sabotage": {
+                "file": os.path.basename(independent_sabotage_path),
+                "sha256": sha256_file(independent_sabotage_path),
+                "fingerprintMismatches": independent_sabotage[
+                    "fingerprintMismatches"],
+                "observedRed": independent_sabotage[
+                    "observedStatus"] == "RED",
+            },
         },
         "identityProtection": {
             "algorithm": artifact["construction"]["identifierProtection"]["algorithm"],
@@ -1151,8 +1467,8 @@ def render_report(result):
     artifact = result["panelArtifact"]
     evidence = result["identityEvidence"]
     return "\n".join([
-        "**Ergebnis: Blocker 1 ist in Kennungsbruecke v%s geheilt: 0 von 50 veroeffentlichten Entity-IDs waren im CIK-Raum 1 bis 2100000 oeffentlich invertierbar; Auftrag 1 bleibt HOLD fuer Blocker 2 und 3.**" % (
-            artifact["artifactVersion"]),
+        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
+            artifact["artifactVersion"], artifact["sha256"]),
         "",
         "# R2-A1 - Die Kennungsbruecke als Panel-Artefakt",
         "",
@@ -1179,7 +1495,17 @@ def render_report(result):
         "waren invertierbar. Die absichtlich alte Abbildung wurde mit 50 von 50",
         "Treffern rot erkannt.",
         "",
-        "Das versionierte Panel-Artefakt enthaelt %d pseudonymisierte Entitaeten," % (
+        "Die Determinismus-Korrektur wurde vor den beiden Neubauten in `%s`" % (
+            DETERMINISM_CORRECTION_REL),
+        "eingefroren. Prozess A und Prozess B starteten mit getrenntem Speicher,",
+        "oeffneten jeweils beide Panels und riefen `scan_panel` je zweimal auf.",
+        "Verglichen wurden logische Nutzlast, vollstaendige Manifestbytes, geordnete",
+        "Shard-Deskriptoren, Shard-Set, Zaehler, Eingangsbelege und Key-Fingerprint:",
+        "0 Abweichungen. Ein absichtlich veraenderter Shard-Set-Fingerprint im",
+        "zweiten echten Neubau wurde rot abgewiesen. Der fruehere In-Prozess-Check",
+        "gilt ausdruecklich nicht als unabhaengiger Determinismusbeleg.",
+        "",
+        "Die unveraenderte, noch `ddate`-basierte Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
             counts["entitiesWithBridgeSeams"]),
         "%d Kennungszuordnungen und %d Naehte." % (
             counts["identifierMappings"], counts["bridgeSeams"]),
@@ -1191,8 +1517,10 @@ def render_report(result):
         "- Es wurde keine Aussage ueber die alte, versiegelte Hypothese abgeleitet und kein Verdikt geaendert.",
         "- Das Endtest-Fenster wurde weder geoeffnet noch gezaehlt oder dargestellt.",
         "- Ergebnisartefakt und Bericht enthalten keine Firmenidentitaeten; das Panel-Artefakt verwendet nur pseudonyme Entitaets- und Kennungs-IDs.",
-        "- Blocker 2 ist offen: Es liefen noch keine zwei unabhaengigen Prozesse ueber beide Panels; die fruehere Determinismus-Behauptung ist zurueckgenommen.",
+        "- Blocker 2 ist nur fuer die gebundenen Panelbytes, Python-Laufzeit, Implementierung und denselben externen HMAC-Schluessel bestanden; andere Laufzeiten oder Eingaben wurden nicht verglichen.",
         "- Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.",
+        "- Die Quellenwahl verwendet weiterhin `ddate` statt `accepted`; die 5.146 Naehte sind deshalb noch nicht methodisch korrigiert oder abgenommen.",
+        "- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
         "",
         "## Neue Fragen und Hypothesen",
         "",
@@ -1207,28 +1535,16 @@ def render_report(result):
 def build_empirical(args):
     seam_proof = load_and_validate_sabotage(args.sabotage_proof)
     identity_sabotage = load_identity_sabotage(args.identity_sabotage_proof)
-    state = new_scan_state(load_identity_key(args.identity_key_file))
-    for path, (window, wall, basename) in zip(
-            (args.discovery, args.validation), WINDOWS):
-        scan_panel(path, window, wall, basename, state)
-    artifact = artifact_from_state(state)
-    reversed_artifact = artifact_from_state(state, reverse_inputs=True)
-    if canonical_bytes(artifact) != canonical_bytes(reversed_artifact):
-        raise ArtifactError("Same input produced a different canonical artifact")
-    manifest_basename = os.path.basename(args.artifact)
-    manifest, shards = manifest_from_artifact(artifact, manifest_basename)
-    reversed_manifest, reversed_shards = manifest_from_artifact(
-        reversed_artifact, manifest_basename
+    independent_sabotage = load_independent_rebuild_sabotage(
+        args.independent_sabotage_proof
     )
-    if canonical_bytes(manifest) != canonical_bytes(reversed_manifest):
-        raise ArtifactError("Same input produced a different canonical manifest")
-    if [canonical_bytes(value) for _path, value in shards] != [
-            canonical_bytes(value) for _path, value in reversed_shards]:
-        raise ArtifactError("Same input produced different canonical shards")
+    artifact, manifest, shards, independent_proof = run_independent_build_pair(args)
+    if independent_proof["passes"] is not True:
+        raise ArtifactError("Independent rebuild fingerprints differ")
     write_sharded_artifact(args.artifact, manifest, shards)
-    same_process_hash = sha256_bytes(canonical_bytes(reversed_manifest))
-    if same_process_hash != sha256_file(args.artifact):
-        raise ArtifactError("Written artifact differs from same-process canonicalization")
+    independent_proof = load_independent_rebuild_proof(
+        args.independent_proof, args.artifact
+    )
     public_check = subprocess.run([
         sys.executable, os.path.abspath(__file__),
         "--verify-public-ids",
@@ -1245,7 +1561,9 @@ def build_empirical(args):
     result = build_result(
         artifact, manifest, args.artifact, seam_proof, args.sabotage_proof,
         identity_proof, args.identity_proof, identity_sabotage,
-        args.identity_sabotage_proof, same_process_hash,
+        args.identity_sabotage_proof, independent_proof,
+        args.independent_proof, independent_sabotage,
+        args.independent_sabotage_proof,
     )
     write_json(args.result, result)
     write_text(args.report, render_report(result))
@@ -1256,6 +1574,10 @@ def build_empirical(args):
         "identifierMappings": result["counts"]["identifierMappings"],
         "identityInvertiblePublishedIds": result["identityProtection"][
             "publicInversionProof"]["invertiblePublishedIds"],
+        "independentProcessesExecuted": result["contract"][
+            "blocker2IndependentDeterminism"]["independentProcessesExecuted"],
+        "independentFingerprintMismatches": result["contract"][
+            "blocker2IndependentDeterminism"]["fingerprintMismatches"],
         "status": result["contract"]["status"],
     }, sort_keys=True))
     return 0
@@ -1267,6 +1589,9 @@ def main(argv=None):
     parser.add_argument("--sabotage-cross-seam", action="store_true")
     parser.add_argument("--verify-public-ids", action="store_true")
     parser.add_argument("--sabotage-reversible-ids", action="store_true")
+    parser.add_argument("--emit-independent-build", action="store_true")
+    parser.add_argument("--sabotage-independent-fingerprint", action="store_true")
+    parser.add_argument("--sabotage-independent-rebuild", action="store_true")
     parser.add_argument("--namespace-max", type=int, default=PUBLIC_CIK_MAX)
     parser.add_argument("--proof")
     parser.add_argument("--discovery")
@@ -1278,6 +1603,8 @@ def main(argv=None):
     parser.add_argument("--identity-key-file")
     parser.add_argument("--identity-proof")
     parser.add_argument("--identity-sabotage-proof")
+    parser.add_argument("--independent-proof")
+    parser.add_argument("--independent-sabotage-proof")
     args = parser.parse_args(argv)
     if args.self_test:
         return self_test()
@@ -1289,10 +1616,25 @@ def main(argv=None):
         return verify_public_identity(args.artifact, args.proof, args.namespace_max)
     if args.sabotage_reversible_ids:
         return sabotage_reversible_ids(args.proof, args.namespace_max)
+    independent_required = (
+        args.discovery, args.validation, args.artifact, args.identity_key_file,
+        args.independent_proof,
+    )
+    if args.emit_independent_build:
+        if not all(independent_required[:-1]):
+            parser.error("independent builder requires both panels, artifact, and key")
+        return emit_independent_build(args)
+    if args.sabotage_independent_rebuild:
+        if not all(independent_required):
+            parser.error("independent rebuild sabotage requires both panels, artifact, key, and proof")
+        return sabotage_independent_rebuild(args)
+    if args.sabotage_independent_fingerprint:
+        parser.error("--sabotage-independent-fingerprint is internal to the builder mode")
     required = (
         args.discovery, args.validation, args.artifact, args.result,
         args.report, args.sabotage_proof, args.identity_key_file,
         args.identity_proof, args.identity_sabotage_proof,
+        args.independent_proof, args.independent_sabotage_proof,
     )
     if not all(required):
         parser.error("empirical build requires both panels, artifact, result, report, key, and proof paths")
