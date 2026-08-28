@@ -73,12 +73,44 @@ check('(d) er steht am ENDE, nicht vor merge/scoring', () => {
 });
 
 check('(e) KEIN anderer Job haengt an ihm (ausser laufstatus) — er blockiert nichts', () => {
-  // Jede needs-Deklaration einsammeln und pruefen, wer den Waechter nennt.
+  // Diese Probe ist die tragende Aussage der ganzen Datei — deshalb hier KEINE
+  // Zeilen-Regex. Review-Befund 28.08.: die erste Fassung las `needs:` nur bis zum
+  // Zeilenende und haette die YAML-BLOCKFORM (`needs:` + Listenzeilen darunter) nur
+  // mit ihrem ERSTEN Eintrag gesehen. Eine Abhaengigkeit an zweiter Stelle waere
+  // unsichtbar geblieben, die Probe gruen — genau die Blockade, die Weg E aufloest,
+  // waere still zurueckgekehrt. Ausserdem verglich sie per Teilzeichenkette, sodass
+  // ein kuenftiger Job `<etwas>-jahres-ausreisser-waechter-gate` falsch angeschlagen
+  // haette. Jetzt: Job-Bloecke trennen, beide YAML-Formen lesen, exakt vergleichen.
+  const bloecke = [];
+  const kopf = /^  ([a-z0-9-]+):[ \t]*$/gm;
+  let k, letzte = null;
+  while ((k = kopf.exec(YML)) !== null) {
+    if (letzte) bloecke.push({ name: letzte.name, text: YML.slice(letzte.start, k.index) });
+    letzte = { name: k[1], start: k.index };
+  }
+  if (letzte) bloecke.push({ name: letzte.name, text: YML.slice(letzte.start) });
+  assert.ok(bloecke.length >= 8, 'nur ' + bloecke.length + ' Job-Bloecke erkannt — die Zerlegung greift nicht mehr');
+
   const nenner = [];
-  const re = /\n  ([a-z0-9-]+):\s*\n(?:\s{4}[^\n]*\n)*?\s{4}needs:\s*([^\n]+)\n/g;
-  let m;
-  while ((m = re.exec(YML)) !== null) {
-    if (m[2].includes(JOB)) nenner.push(m[1]);
+  for (const b of bloecke) {
+    const m = /\n    needs:[ \t]*(.*)\n/.exec(b.text);
+    if (!m) continue;
+    let namen;
+    const rest = m[1].trim();
+    if (rest.startsWith('[')) {                       // Flussform: needs: [a, b]
+      namen = rest.replace(/^\[|\]$/g, '').split(',');
+    } else if (rest) {                                // Skalar: needs: a
+      namen = [rest];
+    } else {                                          // Blockform: needs:\n      - a
+      const nach = b.text.slice(b.text.indexOf(m[0]) + m[0].length);
+      namen = [];
+      for (const zeile of nach.split('\n')) {
+        const e = /^\s+-\s+(.+?)\s*$/.exec(zeile);
+        if (!e) break;
+        namen.push(e[1]);
+      }
+    }
+    if (namen.map((x) => x.trim()).includes(JOB)) nenner.push(b.name);
   }
   assert.deepEqual(nenner, ['laufstatus'],
     'diese Jobs haengen am Waechter: ' + (nenner.join(', ') || '(keine)')
