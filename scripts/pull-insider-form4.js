@@ -717,7 +717,7 @@ async function main() {
       userAgentSource: 'process.env.SEC_CONTACT',
       lookbackDays: FORM4_LOOKBACK_DAYS,
       byTicker
-    }, null, 2));
+    }));
   }
 
   console.log('');
