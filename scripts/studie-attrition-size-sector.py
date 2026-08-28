@@ -22,9 +22,7 @@ D1_ARTIFACT_REL = "reports/studie/D1-panel-survival-2026-08-23.json"
 D1_ARTIFACT = os.path.join(REPO, *D1_ARTIFACT_REL.split("/"))
 PREREG_REL = "protocol/early-detection/2.0.0/d2-attrition-size-sector-preregistration.json"
 PREREG = os.path.join(REPO, *PREREG_REL.split("/"))
-SIZE_THRESHOLD_PP = 5.0
-SECTOR_THRESHOLD_V = 0.10
-SECTOR_MIN_N = 200
+THRESHOLD_SCRIPT_REL = "scripts/studie-threshold-seal.py"
 
 AFS = {
     "1-LAF": ("Large Accelerated Filer", "larger"),
@@ -61,6 +59,24 @@ def load_d1():
 
 
 D1 = load_d1()
+
+
+def load_threshold_seal():
+    spec = importlib.util.spec_from_file_location(
+        "d_series_threshold_seal", os.path.join(REPO, *THRESHOLD_SCRIPT_REL.split("/"))
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+THRESHOLD_SEAL = load_threshold_seal()
+THRESHOLDS, THRESHOLD_SEAL_META = THRESHOLD_SEAL.load_thresholds(
+    "d2", __file__, AssociationError
+)
+SIZE_THRESHOLD_PP = THRESHOLDS["sizeThresholdPP"]
+SECTOR_THRESHOLD_V = THRESHOLDS["sectorThresholdV"]
+SECTOR_MIN_N = THRESHOLDS["sectorMinimumN"]
 
 
 def sha256_file(path: str) -> str:
@@ -212,6 +228,7 @@ def result_from_rows(rows, inputs, d1_anchor=None):
         "schema": "D2-attrition-size-sector/1",
         "preregistration": {"path": PREREG_REL, "sha256": sha256_file(PREREG),
                             "status": "FROZEN_BEFORE_D2_PANEL_ACCESS"},
+        "thresholdSeal": THRESHOLD_SEAL_META,
         "d1Anchor": ({"path": D1_ARTIFACT_REL, "sha256": sha256_file(D1_ARTIFACT)}
                      if d1_anchor is not None else None),
         "scope": {"lastAllowedDate": D1.CUTOFF.isoformat(), "signalsUsed": 0,

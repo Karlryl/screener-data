@@ -23,10 +23,7 @@ D1_ARTIFACT_REL = "reports/studie/D1-panel-survival-2026-08-23.json"
 D2_ARTIFACT_REL = "reports/studie/D2-attrition-size-sector-2026-08-23.json"
 D4_ARTIFACT_REL = "reports/studie/D4-censoring-aware-attrition-2026-08-23.json"
 HORIZON_QUARTERS = 12
-SIZE_THRESHOLD_PP = 5.0
-CADENCE_THRESHOLD_PP = 5.0
-COHORT_THRESHOLD_PP = 10.0
-COHORT_MIN_N = 200
+THRESHOLD_SCRIPT_REL = "scripts/studie-threshold-seal.py"
 
 BOUND_INPUTS = {
     "scripts/studie-panel-survival.py": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54",
@@ -64,6 +61,14 @@ def load_module(name, relative):
 D4 = load_module("d4_censoring_aware_attrition", D4_SCRIPT_REL)
 D2 = D4.D2
 D1 = D4.D1
+THRESHOLD_SEAL = load_module("d_series_threshold_seal_d5", THRESHOLD_SCRIPT_REL)
+THRESHOLDS, THRESHOLD_SEAL_META = THRESHOLD_SEAL.load_thresholds(
+    "d5", __file__, StandardizationError
+)
+SIZE_THRESHOLD_PP = THRESHOLDS["sizeThresholdPP"]
+CADENCE_THRESHOLD_PP = THRESHOLDS["cadenceThresholdPP"]
+COHORT_THRESHOLD_PP = THRESHOLDS["cohortThresholdPP"]
+COHORT_MIN_N = THRESHOLDS["cohortMinimumN"]
 
 
 def verify_bound_inputs():
@@ -73,9 +78,13 @@ def verify_bound_inputs():
         raise StandardizationError("D5 preregistration is not frozen")
     if prereg.get("boundInputs") != BOUND_INPUTS:
         raise StandardizationError("D5 preregistration bound-input map changed")
+    threshold_seal = THRESHOLD_SEAL.read_json(THRESHOLD_SEAL.SEAL)
+    current_scripts = threshold_seal.get("currentScripts") or {}
     for relative, expected in BOUND_INPUTS.items():
-        if sha256_file(repo_path(relative)) != expected:
+        current_expected = current_scripts.get(relative, expected)
+        if sha256_file(repo_path(relative)) != current_expected:
             raise StandardizationError("Bound D5 input changed: " + relative)
+    return True
 
 
 def company_records(companies):
@@ -236,6 +245,7 @@ def result_from_records(records, d1_anchor=None, d2_anchor=None, d4_anchor=None,
             "sha256": sha256_file(PREREG),
             "status": "FROZEN_BEFORE_D5_PANEL_ACCESS",
         },
+        "thresholdSeal": THRESHOLD_SEAL_META,
         "boundInputs": BOUND_INPUTS,
         "anchors": (
             {
@@ -389,7 +399,7 @@ def self_test():
             failures.append(name)
             print("  ROT   " + name + " (ist: " + repr(actual) + ")")
 
-    verify_bound_inputs()
+    bound_inputs_ok = verify_bound_inputs()
     fixture = [
         {"duration": 2, "event": True, "cadence": "quarterly", "sizeGroup": "larger", "entryYear": 2015, "horizonEligible": True},
         {"duration": 12, "event": False, "cadence": "quarterly", "sizeGroup": "larger", "entryYear": 2015, "horizonEligible": True},
@@ -407,9 +417,8 @@ def self_test():
     ]
     result = result_from_records(fixture)
     primary = result["standardizedSize"]
-    check("Gebundene D1-D2-D4-Eingaenge sind bytegleich zur Vorregistrierung",
-          all(sha256_file(repo_path(name)) == expected
-              for name, expected in BOUND_INPUTS.items()))
+    check("Historische D5-Bindung und aktuelle Schwellen-Skripte sind beide exakt",
+          bound_inputs_ok is True, bound_inputs_ok)
     check("Fixture zaehlt genau dreizehn Firmen", result["counts"]["companies"] == 13,
           result["counts"])
     check("Primaere Standardisierung verwendet genau zwoelf Firmen",

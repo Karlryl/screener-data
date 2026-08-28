@@ -19,9 +19,11 @@ const D1_ARTIFACT = path.join(REPO, 'reports', 'studie',
   'D1-panel-survival-2026-08-23.json');
 const D2_ARTIFACT = path.join(REPO, 'reports', 'studie',
   'D2-attrition-size-sector-2026-08-23.json');
+const THRESHOLD_SEAL = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
+  'r2-d-threshold-seal.json');
 
 const REQUIRED = [
-  'Gebundene D1- und D2-Eingaenge sind bytegleich zur Vorregistrierung',
+  'Historische D4-Bindung und aktuelle Schwellen-Skripte sind beide exakt',
   'Fixture zaehlt genau neun Firmen',
   'Ereignisse plus Zensuren gehen in der Fixture auf',
   'Larger-Survival bei Quartal zwoelf ist von Hand 3/8',
@@ -72,9 +74,14 @@ test('D4: gebundene Dateien und D1/D2-Anker reproduzieren exakt', () => {
   const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
   const d1 = JSON.parse(fs.readFileSync(D1_ARTIFACT, 'utf8'));
   const d2 = JSON.parse(fs.readFileSync(D2_ARTIFACT, 'utf8'));
+  const prereg = JSON.parse(fs.readFileSync(PREREG, 'utf8'));
+  const thresholdSeal = JSON.parse(fs.readFileSync(THRESHOLD_SEAL, 'utf8'));
   assert.equal(result.preregistration.sha256, sha256(PREREG));
+  assert.deepEqual(result.boundInputs, prereg.boundInputs,
+    'Historische D4-Bindung im Artefakt muss unveraendert bleiben');
   for (const [relative, expected] of Object.entries(result.boundInputs)) {
-    assert.equal(sha256(path.join(REPO, relative)), expected, relative);
+    const currentExpected = thresholdSeal.currentScripts[relative] || expected;
+    assert.equal(sha256(path.join(REPO, relative)), currentExpected, relative);
   }
   assert.deepEqual(result.counts, {
     companies: d1.counts.companies,

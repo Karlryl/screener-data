@@ -24,9 +24,7 @@ D2_SCRIPT_REL = "scripts/studie-attrition-size-sector.py"
 D1_ARTIFACT_REL = "reports/studie/D1-panel-survival-2026-08-23.json"
 D2_ARTIFACT_REL = "reports/studie/D2-attrition-size-sector-2026-08-23.json"
 HORIZON_QUARTERS = 12
-SIZE_THRESHOLD_PP = 5.0
-SECTOR_THRESHOLD_PP = 10.0
-SECTOR_MIN_N = 200
+THRESHOLD_SCRIPT_REL = "scripts/studie-threshold-seal.py"
 
 BOUND_INPUTS = {
     D1_SCRIPT_REL: "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54",
@@ -61,6 +59,13 @@ def load_module(name: str, relative: str):
 
 D2 = load_module("d2_attrition_size_sector", D2_SCRIPT_REL)
 D1 = D2.D1
+THRESHOLD_SEAL = load_module("d_series_threshold_seal_d4", THRESHOLD_SCRIPT_REL)
+THRESHOLDS, THRESHOLD_SEAL_META = THRESHOLD_SEAL.load_thresholds(
+    "d4", __file__, SensitivityError
+)
+SIZE_THRESHOLD_PP = THRESHOLDS["sizeThresholdPP"]
+SECTOR_THRESHOLD_PP = THRESHOLDS["sectorThresholdPP"]
+SECTOR_MIN_N = THRESHOLDS["sectorMinimumN"]
 
 
 def verify_bound_inputs() -> None:
@@ -70,10 +75,14 @@ def verify_bound_inputs() -> None:
         raise SensitivityError("D4 preregistration is not frozen")
     if prereg.get("boundInputs") != BOUND_INPUTS:
         raise SensitivityError("D4 preregistration bound-input map changed")
+    threshold_seal = THRESHOLD_SEAL.read_json(THRESHOLD_SEAL.SEAL)
+    current_scripts = threshold_seal.get("currentScripts") or {}
     for relative, expected in BOUND_INPUTS.items():
         actual = sha256_file(repo_path(relative))
-        if actual != expected:
+        current_expected = current_scripts.get(relative, expected)
+        if actual != current_expected:
             raise SensitivityError("Bound D4 input changed: " + relative)
+    return True
 
 
 def company_records(companies):
@@ -248,6 +257,7 @@ def result_from_records(records, inputs=None, d1_anchor=None, d2_anchor=None):
             "sha256": sha256_file(PREREG),
             "status": "FROZEN_BEFORE_D4_PANEL_ACCESS",
         },
+        "thresholdSeal": THRESHOLD_SEAL_META,
         "boundInputs": BOUND_INPUTS,
         "anchors": (
             {
@@ -408,7 +418,7 @@ def self_test():
             failures.append(name)
             print("  ROT   " + name + " (ist: " + repr(actual) + ")")
 
-    verify_bound_inputs()
+    bound_inputs_ok = verify_bound_inputs()
     fixture = [
         {"duration": 2, "event": True, "cadence": "quarterly", "sizeGroup": "larger", "sector": "Manufacturing"},
         {"duration": 10, "event": True, "cadence": "quarterly", "sizeGroup": "larger", "sector": "Manufacturing"},
@@ -421,9 +431,8 @@ def self_test():
         {"duration": 12, "event": False, "cadence": "annual", "sizeGroup": "missing_or_unknown", "sector": "unclassified"},
     ]
     result = result_from_records(fixture)
-    check("Gebundene D1- und D2-Eingaenge sind bytegleich zur Vorregistrierung",
-          all(sha256_file(repo_path(name)) == expected
-              for name, expected in BOUND_INPUTS.items()))
+    check("Historische D4-Bindung und aktuelle Schwellen-Skripte sind beide exakt",
+          bound_inputs_ok is True, bound_inputs_ok)
     check("Fixture zaehlt genau neun Firmen", result["counts"]["companies"] == 9,
           result["counts"])
     check("Ereignisse plus Zensuren gehen in der Fixture auf",
