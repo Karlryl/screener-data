@@ -63,6 +63,60 @@ const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const OUT_FILE = path.join(OUT_DIR, 'excluded.json');
 const INDEX_FILE = path.join(OUT_DIR, 'index.json');
+// T155/W3: Traeger-Datei fuer den Universums-Hash. Bewusst NICHT unter
+// outputs/findash-export/v1/ und nicht unter outputs/hypergrowth/ — nur diese beiden
+// Verzeichnisse kopiert der gh-pages-Deploy (daily-pull.yml, "cp ../outputs/hypergrowth/*.json"
+// bzw. "cp -r ../outputs/findash-export/v1/."). Der Traeger bleibt damit lauf-lokal und
+// erzeugt keine neue oeffentliche Datei; wer den Hash oeffentlich braucht, liest ihn aus
+// excluded.json bzw. aus dem Vintage.
+const UNIVERSE_HASH_FILE = path.join(ROOT, 'outputs', 'universe-hash.json');
+
+/**
+ * T155/W3 — Pruefsumme ueber die MENGE der bewerteten Ticker.
+ *
+ * WOZU. Bewegt sich ein Score zwischen zwei Laeufen, war bisher nicht maschinell
+ * unterscheidbar, ob sich die DATEN bewegt haben oder die KOHORTE (das Produkt
+ * normiert kohorten-relativ und kalibriert taeglich neu). Mit dem Hash ist die
+ * Herkunftsfrage ein Zeichenketten-Vergleich: gleicher Hash + andere Scores =
+ * Datenaenderung; anderer Hash = Kohortenwechsel.
+ *
+ * WAS GEHASHT WIRD. Genau das, was loadUniverse() zurueckgibt — nicht ein
+ * Stellvertreter aus einem Board. Ein Board ist gekappt bzw. gefiltert; die
+ * Normierungs-Kohorte ist das geladene Universum. Sortiert und dedupliziert, damit
+ * die Datei-Lesereihenfolge (OS-abhaengig) den Hash nicht bewegt.
+ *
+ * FORM. Wie `summeVon` in scripts/snapshot-ticker-map.js:198 (sha256 ueber die
+ * sortierte, komma-getrennte Symbolliste, auf 16 Hex gekuerzt) — bewusst NICHT von
+ * dort importiert: jenes Modul ruft beim Laden secUserAgent() auf (:68) und wuerde
+ * diesen Lauf an eine SEC-Umgebungsvariable binden, die er nicht braucht.
+ */
+function universumsHash(tickers) {
+  // Review-Befund (typescript-reviewer, 28.08.): ohne Pruefung waere ein `undefined`
+  // in der Liste KEIN Fehler, sondern eine stille Verschiebung — sort() haengt es
+  // hinten an, join() macht ein leeres Feld daraus, und der Hash bewegt sich aus einem
+  // Grund, der nichts mit der Kohorte zu tun hat. Genau die Klasse, gegen die diese
+  // Pruefsumme gebaut ist. Deshalb: laut werfen statt still faelschen.
+  const kaputt = [...tickers].filter((t) => typeof t !== 'string' || t.length === 0).length;
+  if (kaputt > 0) {
+    throw new Error(`[universums-hash] ${kaputt} von ${[...tickers].length} Eintraegen sind kein nicht-leerer `
+      + 'String. Ein solcher Eintrag verschoebe den Hash, ohne dass sich die Kohorte geaendert hat — '
+      + 'die Pruefsumme waere damit wertlos.');
+  }
+  return require('crypto').createHash('sha256')
+    .update([...new Set(tickers)].sort().join(',')).digest('hex').slice(0, 16);
+}
+
+/**
+ * Derselbe Hash, aber ueber ein UNIVERSUM (Snapshot-Objekte) statt ueber eine
+ * Tickerliste. Existiert als eigene Funktion, damit die Abbildung
+ * `Snapshot -> meta.ticker` gepinnt ist und nicht nur als Einzeiler in main() lebt:
+ * ein spaeteres `s.ticker` statt `s.meta.ticker` waere sonst eine Aenderung ohne
+ * Waechter (Review-Befund MITTEL, 28.08.). loadUniverse() garantiert `meta.ticker`
+ * (run-screener.js:297) — die Pruefung oben faengt eine Aufweichung dieser Garantie.
+ */
+function universumsHashVon(universe) {
+  return universumsHash(universe.map((s) => (s && s.meta ? s.meta.ticker : undefined)));
+}
 const SCHEMA = 'findash-export/v1';
 
 // Derselbe Schluessel wie produceRankings (score.js:1416). Bewusst hier als EINZEILER
@@ -223,20 +277,35 @@ function main() {
     throw new Error(`[excluded-list] Gruppierung hat Zeilen verschluckt: ${beineGesamt(rows)} Beine in ${rows.length} Firmen, erwartet ${legs}.`);
   }
 
+  // T155/W3: der Hash wird HIER berechnet, weil hier das Universum ohnehin schon
+  // geladen ist — ein zweiter Scan ueber ~15.000 Snapshot-Dateien waere derselbe Wert
+  // zum doppelten Preis. write-board-history.js liest ihn spaeter aus der Traeger-Datei
+  // (daily-pull.yml: dieser Schritt laeuft vor dem Vintage-Schreiber).
+  const universeHash = universumsHashVon(universe);
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   writeJsonAtomic(OUT_FILE, {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
     generatedFromSnapshots: universe.length,
+    universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason },
     rows,
   });
+  fs.mkdirSync(path.dirname(UNIVERSE_HASH_FILE), { recursive: true });
+  writeJsonAtomic(UNIVERSE_HASH_FILE, {
+    schema: 'universe-hash/v1',
+    generated_at: new Date().toISOString(),
+    universeHash,
+    universeCount: universe.length,
+  });
+  console.log(`[excluded-list] Universums-Hash ${universeHash} ueber ${universe.length} bewertete Ticker`);
   console.log(`[excluded-list] ${legs} Ausschluss-Zeilen in ${rows.length} Firmen -> ${path.relative(ROOT, OUT_FILE)} `
     + `(${(fs.statSync(OUT_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`[excluded-list] Summen je Grund decken sich mit index.json.excluded: `
     + Object.keys(byReason).sort().map((k) => `${k}=${byReason[k]}`).join(' · '));
 }
 
-module.exports = { buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, SCHEMA, OUT_FILE, INDEX_FILE };
+module.exports = { buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon, SCHEMA, OUT_FILE, INDEX_FILE, UNIVERSE_HASH_FILE };
 
 if (require.main === module) main();
