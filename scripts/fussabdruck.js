@@ -96,9 +96,8 @@ function fussabdruck(basis, kandidat, hashes) {
     // Gerichtsauflage 3 (23.08., Kriterium K5): eine ABSOLUTE Zeilenzahl waechst mit dem
     // Universum - dieselbe anteilige Wirkung ergibt morgen eine andere Zahl, und eine
     // Deklaration von heute wuerde rot, ohne dass jemand etwas geaendert hat. Der Anteil an den
-    // tatsaechlich verglichenen Zeilen ist die universums-invariante Groesse. Sie ersetzt die
-    // absolute Zahl NICHT (gegen ein eingefrorenes Fixture ist die exakt), sondern macht die
-    // Deklaration ueber Fixture-Staende hinweg lesbar.
+    // tatsaechlich verglichenen Zeilen ist die universums-invariante Groesse. Die absolute Zahl
+    // bleibt als Berichtswert erhalten; die Gate-Entscheidung vergleicht den Anteil.
     anteilBewegt: verglichen > 0 ? Math.round((bewegt.length / verglichen) * 1e6) / 1e6 : null,
     maxAbsDelta: Number.isFinite(maxAbs) ? Math.round(maxAbs * 100) / 100 : null,
     tickerListHash: sha(ticker.join(',')),
@@ -142,15 +141,12 @@ function messen(achse, faktor) {
   };
 }
 
-function pruefen(deklPfad, achse, faktor) {
-  const d = JSON.parse(fs.readFileSync(deklPfad, 'utf8'));
-  const m = messen(achse, faktor);
-  const e = d.erwartet || {};
-  const g = m.gemessen;
+function abweichungenFuer(e, g) {
   const abweichungen = [];
-  // deltaVektorHash ist Pflicht: ohne ihn ist die Deklaration blind fuer Richtung und
-  // Verteilung, und genau daran ist der Vertrag am 23.08. gescheitert.
-  for (const k of ['zeilenMitScoreAenderung', 'maxAbsDelta', 'tickerListHash', 'deltaVektorHash']) {
+  // Der Anteil entscheidet statt der absoluten Zeilenzahl: 2/10 und 4/20 sind dieselbe
+  // proportionale Wirkung. deltaVektorHash bleibt Pflicht, weil Anteil, Maximum und
+  // Ticker-Liste allein blind fuer Richtung und Verteilung sind.
+  for (const k of ['anteilBewegt', 'maxAbsDelta', 'tickerListHash', 'deltaVektorHash']) {
     if (!(k in e)) { abweichungen.push(`${k}: nicht deklariert`); continue; }
     if (e[k] !== g[k]) abweichungen.push(`${k}: deklariert ${e[k]}, gemessen ${g[k]}`);
   }
@@ -166,7 +162,14 @@ function pruefen(deklPfad, achse, faktor) {
     if (zuviel.length) abweichungen.push(`bewegteTicker: ${zuviel.length} nicht deklariert -> ${kurz(zuviel)}`);
     if (zuwenig.length) abweichungen.push(`bewegteTicker: ${zuwenig.length} deklariert, aber unbewegt -> ${kurz(zuwenig)}`);
   }
-  return { ...m, deklariert: e, abweichungen };
+  return abweichungen;
+}
+
+function pruefen(deklPfad, achse, faktor) {
+  const d = JSON.parse(fs.readFileSync(deklPfad, 'utf8'));
+  const m = messen(achse, faktor);
+  const e = d.erwartet || {};
+  return { ...m, deklariert: e, abweichungen: abweichungenFuer(e, m.gemessen) };
 }
 
 if (require.main === module) {
@@ -194,4 +197,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { messen, pruefen, fussabdruck };
+module.exports = { messen, pruefen, fussabdruck, abweichungenFuer };
