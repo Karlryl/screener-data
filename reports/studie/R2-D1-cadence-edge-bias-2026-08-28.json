@@ -1,0 +1,1357 @@
+{
+  "correction": {
+    "appendOnlyNotesRequired": false,
+    "learnedMedianStayQuarters": 27,
+    "publishedMedianStayQuarters": 27,
+    "reports": [
+      "D1",
+      "D2",
+      "D4",
+      "D5"
+    ]
+  },
+  "counts": {
+    "companies": 13317,
+    "fallbackImputedCompanies": 700,
+    "frozenOnlyExits": 17,
+    "learnedOnlyExits": 28,
+    "sameCensored": 6370,
+    "sameEvent": 6902
+  },
+  "frozenOnlyByPanelEdgeDays": [
+    {
+      "companies": 0,
+      "panelEdgeDays": "0-90"
+    },
+    {
+      "companies": 4,
+      "panelEdgeDays": "91-120"
+    },
+    {
+      "companies": 2,
+      "panelEdgeDays": "121-180"
+    },
+    {
+      "companies": 5,
+      "panelEdgeDays": "181-270"
+    },
+    {
+      "companies": 3,
+      "panelEdgeDays": "271-365"
+    },
+    {
+      "companies": 3,
+      "panelEdgeDays": "366+"
+    }
+  ],
+  "frozenOnlyByReporterType": [
+    {
+      "companies": 15,
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 2,
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 0,
+      "reporterType": "foreign-annual-only"
+    }
+  ],
+  "frozenOnlyByReporterTypeAndPanelEdgeDays": [
+    {
+      "companies": 0,
+      "panelEdgeDays": "0-90",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 4,
+      "panelEdgeDays": "91-120",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 2,
+      "panelEdgeDays": "121-180",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 4,
+      "panelEdgeDays": "181-270",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 2,
+      "panelEdgeDays": "271-365",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 3,
+      "panelEdgeDays": "366+",
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "0-90",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "91-120",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "121-180",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 1,
+      "panelEdgeDays": "181-270",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 1,
+      "panelEdgeDays": "271-365",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "366+",
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "0-90",
+      "reporterType": "foreign-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "91-120",
+      "reporterType": "foreign-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "121-180",
+      "reporterType": "foreign-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "181-270",
+      "reporterType": "foreign-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "271-365",
+      "reporterType": "foreign-annual-only"
+    },
+    {
+      "companies": 0,
+      "panelEdgeDays": "366+",
+      "reporterType": "foreign-annual-only"
+    }
+  ],
+  "inputs": {
+    "files": [
+      {
+        "bytes": 7176175616,
+        "file": "panel-entdeckung.sqlite",
+        "rowsRead": 176502,
+        "sha256": "66454100aab13a972be848d10fd90b1401fe227da66aa442db41b05ccc261818"
+      },
+      {
+        "bytes": 4447633408,
+        "file": "panel-validierung.sqlite",
+        "rowsRead": 148912,
+        "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c"
+      }
+    ],
+    "nonperiodicRowsExcluded": 54985,
+    "periodicRows": 270429,
+    "reportRowsRead": 325414
+  },
+  "learnedCadenceByReporterType": [
+    {
+      "companies": 12176,
+      "fallbackImputedCompanies": 510,
+      "learnedCompanies": 11666,
+      "maximumLearnedDays": 2983,
+      "medianLearnedDays": 91.0,
+      "minimumLearnedDays": 1,
+      "reporterType": "domestic-quarterly"
+    },
+    {
+      "companies": 39,
+      "fallbackImputedCompanies": 34,
+      "learnedCompanies": 5,
+      "maximumLearnedDays": 367,
+      "medianLearnedDays": 365.0,
+      "minimumLearnedDays": 206,
+      "reporterType": "domestic-annual-only"
+    },
+    {
+      "companies": 1102,
+      "fallbackImputedCompanies": 156,
+      "learnedCompanies": 946,
+      "maximumLearnedDays": 1817,
+      "medianLearnedDays": 365.0,
+      "minimumLearnedDays": 5,
+      "reporterType": "foreign-annual-only"
+    }
+  ],
+  "panelEdgeCheck": {
+    "frozenTerminalExits": 224,
+    "learnedTerminalExits": 248,
+    "quarter": "2020Q4"
+  },
+  "preregistration": {
+    "path": "protocol/early-detection/2.0.0/r2-d1-cadence-edge-bias-preregistration.json",
+    "sha256": "d2f4ee8ee3dcdc92ccfe6b7ffdc9417379143064210cbf21b83a93bb84f388cd",
+    "status": "FROZEN_BEFORE_CORRECTION_PANEL_ACCESS"
+  },
+  "publishedD1": {
+    "path": "reports/studie/D1-panel-survival-2026-08-23.json",
+    "reproducedExactly": true,
+    "sha256": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724"
+  },
+  "readings": {
+    "companyLearned": {
+      "exitByQuarter": [
+        {
+          "companies": 2,
+          "quarter": "2009Q4"
+        },
+        {
+          "companies": 1,
+          "quarter": "2010Q1"
+        },
+        {
+          "companies": 1,
+          "quarter": "2010Q2"
+        },
+        {
+          "companies": 5,
+          "quarter": "2010Q3"
+        },
+        {
+          "companies": 9,
+          "quarter": "2010Q4"
+        },
+        {
+          "companies": 16,
+          "quarter": "2011Q1"
+        },
+        {
+          "companies": 9,
+          "quarter": "2011Q2"
+        },
+        {
+          "companies": 23,
+          "quarter": "2011Q3"
+        },
+        {
+          "companies": 158,
+          "quarter": "2011Q4"
+        },
+        {
+          "companies": 307,
+          "quarter": "2012Q1"
+        },
+        {
+          "companies": 95,
+          "quarter": "2012Q2"
+        },
+        {
+          "companies": 264,
+          "quarter": "2012Q3"
+        },
+        {
+          "companies": 199,
+          "quarter": "2012Q4"
+        },
+        {
+          "companies": 286,
+          "quarter": "2013Q1"
+        },
+        {
+          "companies": 153,
+          "quarter": "2013Q2"
+        },
+        {
+          "companies": 185,
+          "quarter": "2013Q3"
+        },
+        {
+          "companies": 175,
+          "quarter": "2013Q4"
+        },
+        {
+          "companies": 268,
+          "quarter": "2014Q1"
+        },
+        {
+          "companies": 149,
+          "quarter": "2014Q2"
+        },
+        {
+          "companies": 172,
+          "quarter": "2014Q3"
+        },
+        {
+          "companies": 145,
+          "quarter": "2014Q4"
+        },
+        {
+          "companies": 277,
+          "quarter": "2015Q1"
+        },
+        {
+          "companies": 138,
+          "quarter": "2015Q2"
+        },
+        {
+          "companies": 214,
+          "quarter": "2015Q3"
+        },
+        {
+          "companies": 202,
+          "quarter": "2015Q4"
+        },
+        {
+          "companies": 323,
+          "quarter": "2016Q1"
+        },
+        {
+          "companies": 140,
+          "quarter": "2016Q2"
+        },
+        {
+          "companies": 182,
+          "quarter": "2016Q3"
+        },
+        {
+          "companies": 195,
+          "quarter": "2016Q4"
+        },
+        {
+          "companies": 225,
+          "quarter": "2017Q1"
+        },
+        {
+          "companies": 135,
+          "quarter": "2017Q2"
+        },
+        {
+          "companies": 170,
+          "quarter": "2017Q3"
+        },
+        {
+          "companies": 140,
+          "quarter": "2017Q4"
+        },
+        {
+          "companies": 209,
+          "quarter": "2018Q1"
+        },
+        {
+          "companies": 114,
+          "quarter": "2018Q2"
+        },
+        {
+          "companies": 141,
+          "quarter": "2018Q3"
+        },
+        {
+          "companies": 110,
+          "quarter": "2018Q4"
+        },
+        {
+          "companies": 216,
+          "quarter": "2019Q1"
+        },
+        {
+          "companies": 133,
+          "quarter": "2019Q2"
+        },
+        {
+          "companies": 136,
+          "quarter": "2019Q3"
+        },
+        {
+          "companies": 118,
+          "quarter": "2019Q4"
+        },
+        {
+          "companies": 255,
+          "quarter": "2020Q1"
+        },
+        {
+          "companies": 140,
+          "quarter": "2020Q2"
+        },
+        {
+          "companies": 147,
+          "quarter": "2020Q3"
+        },
+        {
+          "companies": 248,
+          "quarter": "2020Q4"
+        }
+      ],
+      "medianStayQuarters": 27,
+      "rightCensored": 6387,
+      "survivalCurve": [
+        {
+          "atRisk": 13317,
+          "censored": 203,
+          "cumulativeExits": 30,
+          "exits": 30,
+          "quartersSinceEntry": 0,
+          "survival": 0.997747240369
+        },
+        {
+          "atRisk": 13084,
+          "censored": 104,
+          "cumulativeExits": 411,
+          "exits": 381,
+          "quartersSinceEntry": 1,
+          "survival": 0.968693304373
+        },
+        {
+          "atRisk": 12599,
+          "censored": 120,
+          "cumulativeExits": 753,
+          "exits": 342,
+          "quartersSinceEntry": 2,
+          "survival": 0.942398113477
+        },
+        {
+          "atRisk": 12137,
+          "censored": 54,
+          "cumulativeExits": 983,
+          "exits": 230,
+          "quartersSinceEntry": 3,
+          "survival": 0.924539370287
+        },
+        {
+          "atRisk": 11853,
+          "censored": 78,
+          "cumulativeExits": 1350,
+          "exits": 367,
+          "quartersSinceEntry": 4,
+          "survival": 0.895913204009
+        },
+        {
+          "atRisk": 11408,
+          "censored": 80,
+          "cumulativeExits": 1630,
+          "exits": 280,
+          "quartersSinceEntry": 5,
+          "survival": 0.873923749492
+        },
+        {
+          "atRisk": 11048,
+          "censored": 155,
+          "cumulativeExits": 1972,
+          "exits": 342,
+          "quartersSinceEntry": 6,
+          "survival": 0.846870715248
+        },
+        {
+          "atRisk": 10551,
+          "censored": 50,
+          "cumulativeExits": 2206,
+          "exits": 234,
+          "quartersSinceEntry": 7,
+          "survival": 0.828088822786
+        },
+        {
+          "atRisk": 10267,
+          "censored": 104,
+          "cumulativeExits": 2451,
+          "exits": 245,
+          "quartersSinceEntry": 8,
+          "survival": 0.808328253819
+        },
+        {
+          "atRisk": 9918,
+          "censored": 118,
+          "cumulativeExits": 2692,
+          "exits": 241,
+          "quartersSinceEntry": 9,
+          "survival": 0.78868648036
+        },
+        {
+          "atRisk": 9559,
+          "censored": 282,
+          "cumulativeExits": 2964,
+          "exits": 272,
+          "quartersSinceEntry": 10,
+          "survival": 0.766244517534
+        },
+        {
+          "atRisk": 9005,
+          "censored": 194,
+          "cumulativeExits": 3174,
+          "exits": 210,
+          "quartersSinceEntry": 11,
+          "survival": 0.748375406075
+        },
+        {
+          "atRisk": 8601,
+          "censored": 73,
+          "cumulativeExits": 3391,
+          "exits": 217,
+          "quartersSinceEntry": 12,
+          "survival": 0.729494175623
+        },
+        {
+          "atRisk": 8311,
+          "censored": 61,
+          "cumulativeExits": 3623,
+          "exits": 232,
+          "quartersSinceEntry": 13,
+          "survival": 0.709130483078
+        },
+        {
+          "atRisk": 8018,
+          "censored": 91,
+          "cumulativeExits": 3890,
+          "exits": 267,
+          "quartersSinceEntry": 14,
+          "survival": 0.685516384926
+        },
+        {
+          "atRisk": 7660,
+          "censored": 32,
+          "cumulativeExits": 4050,
+          "exits": 160,
+          "quartersSinceEntry": 15,
+          "survival": 0.671197504823
+        },
+        {
+          "atRisk": 7468,
+          "censored": 61,
+          "cumulativeExits": 4245,
+          "exits": 195,
+          "quartersSinceEntry": 16,
+          "survival": 0.653671592472
+        },
+        {
+          "atRisk": 7212,
+          "censored": 58,
+          "cumulativeExits": 4443,
+          "exits": 198,
+          "quartersSinceEntry": 17,
+          "survival": 0.635725533776
+        },
+        {
+          "atRisk": 6956,
+          "censored": 70,
+          "cumulativeExits": 4732,
+          "exits": 289,
+          "quartersSinceEntry": 18,
+          "survival": 0.609313130202
+        },
+        {
+          "atRisk": 6597,
+          "censored": 22,
+          "cumulativeExits": 4864,
+          "exits": 132,
+          "quartersSinceEntry": 19,
+          "survival": 0.597121325869
+        },
+        {
+          "atRisk": 6443,
+          "censored": 53,
+          "cumulativeExits": 5020,
+          "exits": 156,
+          "quartersSinceEntry": 20,
+          "survival": 0.582663631187
+        },
+        {
+          "atRisk": 6234,
+          "censored": 71,
+          "cumulativeExits": 5192,
+          "exits": 172,
+          "quartersSinceEntry": 21,
+          "survival": 0.566587573349
+        },
+        {
+          "atRisk": 5991,
+          "censored": 99,
+          "cumulativeExits": 5359,
+          "exits": 167,
+          "quartersSinceEntry": 22,
+          "survival": 0.55079386199
+        },
+        {
+          "atRisk": 5725,
+          "censored": 36,
+          "cumulativeExits": 5474,
+          "exits": 115,
+          "quartersSinceEntry": 23,
+          "survival": 0.539729880483
+        },
+        {
+          "atRisk": 5574,
+          "censored": 60,
+          "cumulativeExits": 5596,
+          "exits": 122,
+          "quartersSinceEntry": 24,
+          "survival": 0.527916632292
+        },
+        {
+          "atRisk": 5392,
+          "censored": 82,
+          "cumulativeExits": 5716,
+          "exits": 120,
+          "quartersSinceEntry": 25,
+          "survival": 0.516167745816
+        },
+        {
+          "atRisk": 5190,
+          "censored": 130,
+          "cumulativeExits": 5878,
+          "exits": 162,
+          "quartersSinceEntry": 26,
+          "survival": 0.500056151438
+        },
+        {
+          "atRisk": 4898,
+          "censored": 21,
+          "cumulativeExits": 5984,
+          "exits": 106,
+          "quartersSinceEntry": 27,
+          "survival": 0.489234193077
+        },
+        {
+          "atRisk": 4771,
+          "censored": 74,
+          "cumulativeExits": 6070,
+          "exits": 86,
+          "quartersSinceEntry": 28,
+          "survival": 0.480415467316
+        },
+        {
+          "atRisk": 4611,
+          "censored": 51,
+          "cumulativeExits": 6153,
+          "exits": 83,
+          "quartersSinceEntry": 29,
+          "survival": 0.471767780527
+        },
+        {
+          "atRisk": 4477,
+          "censored": 81,
+          "cumulativeExits": 6279,
+          "exits": 126,
+          "quartersSinceEntry": 30,
+          "survival": 0.45849042061
+        },
+        {
+          "atRisk": 4270,
+          "censored": 28,
+          "cumulativeExits": 6348,
+          "exits": 69,
+          "quartersSinceEntry": 31,
+          "survival": 0.451081559012
+        },
+        {
+          "atRisk": 4173,
+          "censored": 33,
+          "cumulativeExits": 6441,
+          "exits": 93,
+          "quartersSinceEntry": 32,
+          "survival": 0.441028698963
+        },
+        {
+          "atRisk": 4047,
+          "censored": 40,
+          "cumulativeExits": 6524,
+          "exits": 83,
+          "quartersSinceEntry": 33,
+          "survival": 0.431983632984
+        },
+        {
+          "atRisk": 3924,
+          "censored": 165,
+          "cumulativeExits": 6655,
+          "exits": 131,
+          "quartersSinceEntry": 34,
+          "survival": 0.417562161037
+        },
+        {
+          "atRisk": 3628,
+          "censored": 87,
+          "cumulativeExits": 6716,
+          "exits": 61,
+          "quartersSinceEntry": 35,
+          "survival": 0.410541408054
+        },
+        {
+          "atRisk": 3480,
+          "censored": 265,
+          "cumulativeExits": 6778,
+          "exits": 62,
+          "quartersSinceEntry": 36,
+          "survival": 0.403227164577
+        },
+        {
+          "atRisk": 3153,
+          "censored": 1899,
+          "cumulativeExits": 6862,
+          "exits": 84,
+          "quartersSinceEntry": 37,
+          "survival": 0.392484671134
+        },
+        {
+          "atRisk": 1170,
+          "censored": 86,
+          "cumulativeExits": 6884,
+          "exits": 22,
+          "quartersSinceEntry": 38,
+          "survival": 0.385104617489
+        },
+        {
+          "atRisk": 1062,
+          "censored": 29,
+          "cumulativeExits": 6894,
+          "exits": 10,
+          "quartersSinceEntry": 39,
+          "survival": 0.381478396986
+        },
+        {
+          "atRisk": 1023,
+          "censored": 59,
+          "cumulativeExits": 6904,
+          "exits": 10,
+          "quartersSinceEntry": 40,
+          "survival": 0.377749380397
+        },
+        {
+          "atRisk": 954,
+          "censored": 542,
+          "cumulativeExits": 6914,
+          "exits": 10,
+          "quartersSinceEntry": 41,
+          "survival": 0.373789743286
+        },
+        {
+          "atRisk": 402,
+          "censored": 29,
+          "cumulativeExits": 6919,
+          "exits": 5,
+          "quartersSinceEntry": 42,
+          "survival": 0.369140617126
+        },
+        {
+          "atRisk": 368,
+          "censored": 13,
+          "cumulativeExits": 6922,
+          "exits": 3,
+          "quartersSinceEntry": 43,
+          "survival": 0.366131318617
+        },
+        {
+          "atRisk": 352,
+          "censored": 33,
+          "cumulativeExits": 6925,
+          "exits": 3,
+          "quartersSinceEntry": 44,
+          "survival": 0.363010881242
+        },
+        {
+          "atRisk": 316,
+          "censored": 296,
+          "cumulativeExits": 6929,
+          "exits": 4,
+          "quartersSinceEntry": 45,
+          "survival": 0.358415806796
+        },
+        {
+          "atRisk": 16,
+          "censored": 15,
+          "cumulativeExits": 6930,
+          "exits": 1,
+          "quartersSinceEntry": 46,
+          "survival": 0.336014818871
+        }
+      ],
+      "terminalExits": 6930
+    },
+    "frozenFormImputed": {
+      "exitByQuarter": [
+        {
+          "companies": 2,
+          "quarter": "2009Q4"
+        },
+        {
+          "companies": 1,
+          "quarter": "2010Q1"
+        },
+        {
+          "companies": 4,
+          "quarter": "2010Q2"
+        },
+        {
+          "companies": 2,
+          "quarter": "2010Q3"
+        },
+        {
+          "companies": 9,
+          "quarter": "2010Q4"
+        },
+        {
+          "companies": 17,
+          "quarter": "2011Q1"
+        },
+        {
+          "companies": 7,
+          "quarter": "2011Q2"
+        },
+        {
+          "companies": 24,
+          "quarter": "2011Q3"
+        },
+        {
+          "companies": 151,
+          "quarter": "2011Q4"
+        },
+        {
+          "companies": 315,
+          "quarter": "2012Q1"
+        },
+        {
+          "companies": 109,
+          "quarter": "2012Q2"
+        },
+        {
+          "companies": 253,
+          "quarter": "2012Q3"
+        },
+        {
+          "companies": 189,
+          "quarter": "2012Q4"
+        },
+        {
+          "companies": 286,
+          "quarter": "2013Q1"
+        },
+        {
+          "companies": 169,
+          "quarter": "2013Q2"
+        },
+        {
+          "companies": 177,
+          "quarter": "2013Q3"
+        },
+        {
+          "companies": 173,
+          "quarter": "2013Q4"
+        },
+        {
+          "companies": 266,
+          "quarter": "2014Q1"
+        },
+        {
+          "companies": 161,
+          "quarter": "2014Q2"
+        },
+        {
+          "companies": 164,
+          "quarter": "2014Q3"
+        },
+        {
+          "companies": 146,
+          "quarter": "2014Q4"
+        },
+        {
+          "companies": 279,
+          "quarter": "2015Q1"
+        },
+        {
+          "companies": 145,
+          "quarter": "2015Q2"
+        },
+        {
+          "companies": 203,
+          "quarter": "2015Q3"
+        },
+        {
+          "companies": 206,
+          "quarter": "2015Q4"
+        },
+        {
+          "companies": 325,
+          "quarter": "2016Q1"
+        },
+        {
+          "companies": 142,
+          "quarter": "2016Q2"
+        },
+        {
+          "companies": 180,
+          "quarter": "2016Q3"
+        },
+        {
+          "companies": 186,
+          "quarter": "2016Q4"
+        },
+        {
+          "companies": 231,
+          "quarter": "2017Q1"
+        },
+        {
+          "companies": 137,
+          "quarter": "2017Q2"
+        },
+        {
+          "companies": 166,
+          "quarter": "2017Q3"
+        },
+        {
+          "companies": 139,
+          "quarter": "2017Q4"
+        },
+        {
+          "companies": 212,
+          "quarter": "2018Q1"
+        },
+        {
+          "companies": 113,
+          "quarter": "2018Q2"
+        },
+        {
+          "companies": 142,
+          "quarter": "2018Q3"
+        },
+        {
+          "companies": 106,
+          "quarter": "2018Q4"
+        },
+        {
+          "companies": 219,
+          "quarter": "2019Q1"
+        },
+        {
+          "companies": 132,
+          "quarter": "2019Q2"
+        },
+        {
+          "companies": 139,
+          "quarter": "2019Q3"
+        },
+        {
+          "companies": 117,
+          "quarter": "2019Q4"
+        },
+        {
+          "companies": 259,
+          "quarter": "2020Q1"
+        },
+        {
+          "companies": 143,
+          "quarter": "2020Q2"
+        },
+        {
+          "companies": 149,
+          "quarter": "2020Q3"
+        },
+        {
+          "companies": 224,
+          "quarter": "2020Q4"
+        }
+      ],
+      "medianStayQuarters": 27,
+      "rightCensored": 6398,
+      "survivalCurve": [
+        {
+          "atRisk": 13317,
+          "censored": 208,
+          "cumulativeExits": 0,
+          "exits": 0,
+          "quartersSinceEntry": 0,
+          "survival": 1.0
+        },
+        {
+          "atRisk": 13109,
+          "censored": 111,
+          "cumulativeExits": 377,
+          "exits": 377,
+          "quartersSinceEntry": 1,
+          "survival": 0.971241132047
+        },
+        {
+          "atRisk": 12621,
+          "censored": 121,
+          "cumulativeExits": 748,
+          "exits": 371,
+          "quartersSinceEntry": 2,
+          "survival": 0.942691059945
+        },
+        {
+          "atRisk": 12129,
+          "censored": 55,
+          "cumulativeExits": 993,
+          "exits": 245,
+          "quartersSinceEntry": 3,
+          "survival": 0.923649151323
+        },
+        {
+          "atRisk": 11829,
+          "censored": 78,
+          "cumulativeExits": 1343,
+          "exits": 350,
+          "quartersSinceEntry": 4,
+          "survival": 0.896319943193
+        },
+        {
+          "atRisk": 11401,
+          "censored": 82,
+          "cumulativeExits": 1614,
+          "exits": 271,
+          "quartersSinceEntry": 5,
+          "survival": 0.875014557297
+        },
+        {
+          "atRisk": 11048,
+          "censored": 155,
+          "cumulativeExits": 1966,
+          "exits": 352,
+          "quartersSinceEntry": 6,
+          "survival": 0.847135744465
+        },
+        {
+          "atRisk": 10541,
+          "censored": 53,
+          "cumulativeExits": 2190,
+          "exits": 224,
+          "quartersSinceEntry": 7,
+          "survival": 0.829133808523
+        },
+        {
+          "atRisk": 10264,
+          "censored": 105,
+          "cumulativeExits": 2447,
+          "exits": 257,
+          "quartersSinceEntry": 8,
+          "survival": 0.808373151003
+        },
+        {
+          "atRisk": 9902,
+          "censored": 117,
+          "cumulativeExits": 2682,
+          "exits": 235,
+          "quartersSinceEntry": 9,
+          "survival": 0.789188371111
+        },
+        {
+          "atRisk": 9550,
+          "censored": 282,
+          "cumulativeExits": 2952,
+          "exits": 270,
+          "quartersSinceEntry": 10,
+          "survival": 0.766876239153
+        },
+        {
+          "atRisk": 8998,
+          "censored": 194,
+          "cumulativeExits": 3174,
+          "exits": 222,
+          "quartersSinceEntry": 11,
+          "survival": 0.747955754035
+        },
+        {
+          "atRisk": 8582,
+          "censored": 74,
+          "cumulativeExits": 3381,
+          "exits": 207,
+          "quartersSinceEntry": 12,
+          "survival": 0.729914872995
+        },
+        {
+          "atRisk": 8301,
+          "censored": 61,
+          "cumulativeExits": 3605,
+          "exits": 224,
+          "quartersSinceEntry": 13,
+          "survival": 0.710218338656
+        },
+        {
+          "atRisk": 8016,
+          "censored": 91,
+          "cumulativeExits": 3871,
+          "exits": 266,
+          "quartersSinceEntry": 14,
+          "survival": 0.686650714144
+        },
+        {
+          "atRisk": 7659,
+          "censored": 33,
+          "cumulativeExits": 4041,
+          "exits": 170,
+          "quartersSinceEntry": 15,
+          "survival": 0.671409739944
+        },
+        {
+          "atRisk": 7456,
+          "censored": 61,
+          "cumulativeExits": 4229,
+          "exits": 188,
+          "quartersSinceEntry": 16,
+          "survival": 0.654480417102
+        },
+        {
+          "atRisk": 7207,
+          "censored": 58,
+          "cumulativeExits": 4428,
+          "exits": 199,
+          "quartersSinceEntry": 17,
+          "survival": 0.636408875128
+        },
+        {
+          "atRisk": 6950,
+          "censored": 70,
+          "cumulativeExits": 4713,
+          "exits": 285,
+          "quartersSinceEntry": 18,
+          "survival": 0.610311532767
+        },
+        {
+          "atRisk": 6595,
+          "censored": 22,
+          "cumulativeExits": 4845,
+          "exits": 132,
+          "quartersSinceEntry": 19,
+          "survival": 0.598096047956
+        },
+        {
+          "atRisk": 6441,
+          "censored": 53,
+          "cumulativeExits": 5001,
+          "exits": 156,
+          "quartersSinceEntry": 20,
+          "survival": 0.583610256389
+        },
+        {
+          "atRisk": 6232,
+          "censored": 72,
+          "cumulativeExits": 5172,
+          "exits": 171,
+          "quartersSinceEntry": 21,
+          "survival": 0.56759656033
+        },
+        {
+          "atRisk": 5989,
+          "censored": 99,
+          "cumulativeExits": 5340,
+          "exits": 168,
+          "quartersSinceEntry": 22,
+          "survival": 0.551674666502
+        },
+        {
+          "atRisk": 5722,
+          "censored": 36,
+          "cumulativeExits": 5461,
+          "exits": 121,
+          "quartersSinceEntry": 23,
+          "survival": 0.540008704488
+        },
+        {
+          "atRisk": 5565,
+          "censored": 59,
+          "cumulativeExits": 5580,
+          "exits": 119,
+          "quartersSinceEntry": 24,
+          "survival": 0.528461348543
+        },
+        {
+          "atRisk": 5387,
+          "censored": 80,
+          "cumulativeExits": 5699,
+          "exits": 119,
+          "quartersSinceEntry": 25,
+          "survival": 0.516787522577
+        },
+        {
+          "atRisk": 5188,
+          "censored": 130,
+          "cumulativeExits": 5861,
+          "exits": 162,
+          "quartersSinceEntry": 26,
+          "survival": 0.500650364008
+        },
+        {
+          "atRisk": 4896,
+          "censored": 21,
+          "cumulativeExits": 5967,
+          "exits": 106,
+          "quartersSinceEntry": 27,
+          "survival": 0.489811120016
+        },
+        {
+          "atRisk": 4769,
+          "censored": 73,
+          "cumulativeExits": 6054,
+          "exits": 87,
+          "quartersSinceEntry": 28,
+          "survival": 0.480875584801
+        },
+        {
+          "atRisk": 4609,
+          "censored": 51,
+          "cumulativeExits": 6136,
+          "exits": 82,
+          "quartersSinceEntry": 29,
+          "survival": 0.472320193619
+        },
+        {
+          "atRisk": 4476,
+          "censored": 80,
+          "cumulativeExits": 6261,
+          "exits": 125,
+          "quartersSinceEntry": 30,
+          "survival": 0.459129839687
+        },
+        {
+          "atRisk": 4271,
+          "censored": 29,
+          "cumulativeExits": 6332,
+          "exits": 71,
+          "quartersSinceEntry": 31,
+          "survival": 0.451497383911
+        },
+        {
+          "atRisk": 4171,
+          "censored": 33,
+          "cumulativeExits": 6425,
+          "exits": 93,
+          "quartersSinceEntry": 32,
+          "survival": 0.441430431932
+        },
+        {
+          "atRisk": 4045,
+          "censored": 40,
+          "cumulativeExits": 6507,
+          "exits": 82,
+          "quartersSinceEntry": 33,
+          "survival": 0.432481780407
+        },
+        {
+          "atRisk": 3923,
+          "censored": 165,
+          "cumulativeExits": 6639,
+          "exits": 132,
+          "quartersSinceEntry": 34,
+          "survival": 0.417929755168
+        },
+        {
+          "atRisk": 3626,
+          "censored": 86,
+          "cumulativeExits": 6704,
+          "exits": 65,
+          "quartersSinceEntry": 35,
+          "survival": 0.410437909033
+        },
+        {
+          "atRisk": 3475,
+          "censored": 265,
+          "cumulativeExits": 6767,
+          "exits": 63,
+          "quartersSinceEntry": 36,
+          "survival": 0.402996876438
+        },
+        {
+          "atRisk": 3147,
+          "censored": 1894,
+          "cumulativeExits": 6850,
+          "exits": 83,
+          "quartersSinceEntry": 37,
+          "survival": 0.392368105944
+        },
+        {
+          "atRisk": 1170,
+          "censored": 87,
+          "cumulativeExits": 6871,
+          "exits": 21,
+          "quartersSinceEntry": 38,
+          "survival": 0.385325601478
+        },
+        {
+          "atRisk": 1062,
+          "censored": 29,
+          "cumulativeExits": 6881,
+          "exits": 10,
+          "quartersSinceEntry": 39,
+          "survival": 0.381697300146
+        },
+        {
+          "atRisk": 1023,
+          "censored": 57,
+          "cumulativeExits": 6893,
+          "exits": 12,
+          "quartersSinceEntry": 40,
+          "survival": 0.377219912461
+        },
+        {
+          "atRisk": 954,
+          "censored": 542,
+          "cumulativeExits": 6903,
+          "exits": 10,
+          "quartersSinceEntry": 41,
+          "survival": 0.373265825328
+        },
+        {
+          "atRisk": 402,
+          "censored": 29,
+          "cumulativeExits": 6908,
+          "exits": 5,
+          "quartersSinceEntry": 42,
+          "survival": 0.36862321556
+        },
+        {
+          "atRisk": 368,
+          "censored": 13,
+          "cumulativeExits": 6911,
+          "exits": 3,
+          "quartersSinceEntry": 43,
+          "survival": 0.365618134999
+        },
+        {
+          "atRisk": 352,
+          "censored": 33,
+          "cumulativeExits": 6914,
+          "exits": 3,
+          "quartersSinceEntry": 44,
+          "survival": 0.362502071348
+        },
+        {
+          "atRisk": 316,
+          "censored": 296,
+          "cumulativeExits": 6918,
+          "exits": 4,
+          "quartersSinceEntry": 45,
+          "survival": 0.357913437534
+        },
+        {
+          "atRisk": 16,
+          "censored": 15,
+          "cumulativeExits": 6919,
+          "exits": 1,
+          "quartersSinceEntry": 46,
+          "survival": 0.335543847688
+        }
+      ],
+      "terminalExits": 6919
+    }
+  },
+  "schema": "R2-D1-cadence-edge-bias/1",
+  "scope": {
+    "companyIdentifiersWritten": 0,
+    "endtestOpened": false,
+    "lastAllowedDate": "2020-12-31",
+    "outcomesUsed": 0,
+    "pricesUsed": 0,
+    "signalsUsed": 0
+  }
+}
