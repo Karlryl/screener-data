@@ -65,9 +65,9 @@ jobs:
 
       - name: (a) Daten-Frische
         run: |
-          age=$(node -e "try{const m=JSON.parse(require('fs').readFileSync('./snapshots/_manifest.json','utf8'));const t=Date.parse(m.pulled_at);console.log(Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):9999);}catch(e){console.log(9999);}")
-          echo "Export-Alter: ${age} Tage (Schwelle 3)"
-          if [ "$age" -gt 3 ]; then echo "::error::Wochen-Guard: Daten ${age}d alt (>3). Daily-Pull rot/aus? Actions pruefen."; exit 1; fi
+          age=$(node -e "try{const m=JSON.parse(require('fs').readFileSync('./snapshots/_manifest.json','utf8'));const t=Date.parse(m.pulled_at);console.log(Number.isFinite(t)?require('./lib/alter.js').alterStunden(t,Date.now()):999999);}catch(e){console.log(999999);}")
+          echo "Export-Alter: ${age} Stunden (Schwelle 3 d = 72 h)"
+          if [ "$age" -gt 72 ]; then echo "::error::Wochen-Guard: Daten ${age}h alt (> 72 h = 3 d). Daily-Pull rot/aus? Actions pruefen."; exit 1; fi
           echo "OK: Daten frisch."
 
       - name: (b) Coverage stabil
