@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-25T04:25:54.665Z",
+  "generated_at": "2026-08-28T17:02:13.621Z",
   "branch": "industrials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74
+    "coverage_pct": 72.4
   },
   "profitable": [
     {
@@ -782,7 +782,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -2029,7 +2029,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
@@ -2187,7 +2187,7 @@
         "value": 0.563,
         "companion": 13
       },
-      "name": "Innovative Aerosystems, Inc.",
+      "name": "Innovative Solutions and Support Inc",
       "country": "United States",
       "region": "North America",
       "sector": "Industrials",
@@ -2195,9 +2195,9 @@
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
+      "ipoRecency": null,
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2000,
+      "ipoYear": null,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 33,
@@ -2680,91 +2680,6 @@
     {
       "rank": 2,
       "rankGrund": null,
-      "ticker": "TRC",
-      "score": 79.9,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 2.229,
-        "companion": 147.1
-      },
-      "name": "Tejon Ranch Co.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 28,
-      "cohortFallback": false,
-      "scoreBase": 82,
-      "scoreShrunk": 79.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.9,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 78,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 93.2,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 83.9,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 81.6,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 86.5,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 47.9,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 71.65041531238714,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 3,
-      "rankGrund": null,
       "ticker": "XRX",
       "score": 69.5,
       "track": "unprofitable",
@@ -2847,7 +2762,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 4,
+      "rank": 3,
       "rankGrund": null,
       "ticker": "FIP",
       "score": 67.4,
@@ -2936,7 +2851,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 5,
+      "rank": 4,
       "rankGrund": null,
       "ticker": "KRNT",
       "score": 63,
@@ -3019,7 +2934,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 6,
+      "rank": 5,
       "rankGrund": null,
       "ticker": "ELMT",
       "score": 61.9,
@@ -3102,7 +3017,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 7,
+      "rank": 6,
       "rankGrund": null,
       "ticker": "ABAT",
       "score": 61.1,
@@ -3126,7 +3041,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "nicht-profitabel",
@@ -3192,7 +3107,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 8,
+      "rank": 7,
       "rankGrund": null,
       "ticker": "CMCO",
       "score": 60,
@@ -3216,7 +3131,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "kurz-vor-profitabel",
@@ -3279,7 +3194,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 8,
       "rankGrund": null,
       "ticker": "PESI",
       "score": 59.6,
@@ -3364,7 +3279,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 10,
+      "rank": 9,
       "rankGrund": null,
       "ticker": "RGR",
       "score": 59.3,
@@ -3446,7 +3361,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 11,
+      "rank": 10,
       "rankGrund": null,
       "ticker": "KELYA",
       "score": 57,
@@ -3529,7 +3444,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 12,
+      "rank": 11,
       "rankGrund": null,
       "ticker": "NVRI",
       "score": 44.3,
@@ -3551,7 +3466,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "nicht-profitabel",
@@ -3614,7 +3529,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 13,
+      "rank": 12,
       "rankGrund": null,
       "ticker": "PAMT",
       "score": 41.6,
@@ -3699,7 +3614,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 14,
+      "rank": 13,
       "rankGrund": null,
       "ticker": "OIO",
       "score": 41.5,
@@ -3786,7 +3701,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 15,
+      "rank": 14,
       "rankGrund": null,
       "ticker": "ULH",
       "score": 38.2,
@@ -3871,7 +3786,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 16,
+      "rank": 15,
       "rankGrund": null,
       "ticker": "MRLN",
       "score": 31.3,
@@ -3959,7 +3874,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 17,
+      "rank": 16,
       "rankGrund": null,
       "ticker": "MTRX",
       "score": 30.9,
@@ -4042,7 +3957,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 18,
+      "rank": 17,
       "rankGrund": null,
       "ticker": "AIAI",
       "score": 29.8,
@@ -4063,7 +3978,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -4122,16 +4037,16 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -70.8,
+        "distancePct": -78,
         "athDate": "2026-06-23",
         "monthsAgo": 2,
-        "lastDate": "2026-08-24"
+        "lastDate": "2026-08-28"
       },
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
     {
-      "rank": 19,
+      "rank": 18,
       "rankGrund": null,
       "ticker": "SERV",
       "score": 28,
@@ -4218,6 +4133,91 @@
         "ratePct": 34.1,
         "pctl": 0.962
       },
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 19,
+      "rankGrund": null,
+      "ticker": "TRC",
+      "score": 26.6,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 2.229,
+        "companion": 147.1
+      },
+      "name": "Tejon Ranch Co.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 28,
+      "cohortFallback": false,
+      "scoreBase": 82,
+      "scoreShrunk": 79.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.333
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 83.9,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 78,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 93.2,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 83.9,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 81.6,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 86.5,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 47.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 71.65041531238714,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
       "ath": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
@@ -4603,7 +4603,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -4692,7 +4692,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -4745,7 +4745,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": -1.6556799018856316,
+      "revGrowthYoYPct": -1.6556799018856427,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -5011,7 +5011,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": -31.495988338330616,
+      "revGrowthYoYPct": -31.495988338330626,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",

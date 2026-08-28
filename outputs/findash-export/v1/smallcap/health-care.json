@@ -1,20 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-25T04:25:54.661Z",
+  "generated_at": "2026-08-28T17:02:13.617Z",
   "branch": "health-care",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74
+    "coverage_pct": 72.4
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "CRMD",
-      "score": 71.1,
+      "score": 71,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -41,7 +41,7 @@
       "cohortN": 22,
       "cohortFallback": false,
       "scoreBase": 78.4,
-      "scoreShrunk": 71.1,
+      "scoreShrunk": 71,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -100,7 +100,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "BWAY",
-      "score": 68.8,
+      "score": 67.7,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -125,8 +125,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 70.5,
-      "scoreShrunk": 68.8,
+      "scoreBase": 69.3,
+      "scoreShrunk": 67.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -135,7 +135,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.6,
+          "pct": 84.1,
           "weight": 1.7
         },
         {
@@ -150,7 +150,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 84.1,
+          "pct": 79.5,
           "weight": 1.1
         },
         {
@@ -182,7 +182,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "ELMD",
-      "score": 66.4,
+      "score": 65.3,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -207,8 +207,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 66.4,
+      "scoreBase": 66.7,
+      "scoreShrunk": 65.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -217,7 +217,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.9,
+          "pct": 61.4,
           "weight": 1.7
         },
         {
@@ -232,7 +232,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 65.9,
+          "pct": 61.4,
           "weight": 1.1
         },
         {
@@ -264,7 +264,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "TCMD",
-      "score": 65.7,
+      "score": 64.6,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -290,8 +290,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 67.1,
-      "scoreShrunk": 65.7,
+      "scoreBase": 66,
+      "scoreShrunk": 64.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -300,7 +300,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
+          "pct": 70.5,
           "weight": 1.7
         },
         {
@@ -315,7 +315,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 70.5,
+          "pct": 65.9,
           "weight": 1.1
         },
         {
@@ -347,7 +347,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "VMD",
-      "score": 56.6,
+      "score": 55.5,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -370,8 +370,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56.6,
+      "scoreBase": 56,
+      "scoreShrunk": 55.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -380,7 +380,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.5,
+          "pct": 75,
           "weight": 1.7
         },
         {
@@ -395,7 +395,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 75,
+          "pct": 70.5,
           "weight": 1.1
         },
         {
@@ -427,7 +427,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "PBYI",
-      "score": 55.9,
+      "score": 54.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -454,8 +454,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 56.5,
-      "scoreShrunk": 55.9,
+      "scoreBase": 55.3,
+      "scoreShrunk": 54.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -464,7 +464,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 38.6,
+          "pct": 34.1,
           "weight": 1.7
         },
         {
@@ -479,7 +479,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 43.2,
+          "pct": 38.6,
           "weight": 1.1
         },
         {
@@ -511,7 +511,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "VREX",
-      "score": 54.1,
+      "score": 53.1,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -537,8 +537,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 54.5,
-      "scoreShrunk": 54.1,
+      "scoreBase": 53.3,
+      "scoreShrunk": 53.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -547,7 +547,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 20.5,
+          "pct": 15.9,
           "weight": 1.7
         },
         {
@@ -562,7 +562,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 11.4,
+          "pct": 6.8,
           "weight": 1.1
         },
         {
@@ -594,7 +594,7 @@
       "rank": 8,
       "rankGrund": null,
       "ticker": "AKBA",
-      "score": 51.8,
+      "score": 51,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -620,8 +620,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 52,
-      "scoreShrunk": 51.8,
+      "scoreBase": 51.1,
+      "scoreShrunk": 51,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -630,7 +630,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 11.4,
+          "pct": 6.8,
           "weight": 1.7
         },
         {
@@ -645,12 +645,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 20.5,
+          "pct": 15.9,
           "weight": 1.1
         },
         {
           "key": "marginTrajectory",
-          "pct": 7.1,
+          "pct": 11.9,
           "weight": 0.7
         },
         {
@@ -680,7 +680,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "ANGO",
-      "score": 49.8,
+      "score": 48.7,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -706,8 +706,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 49.8,
-      "scoreShrunk": 49.8,
+      "scoreBase": 48.6,
+      "scoreShrunk": 48.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -716,7 +716,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47.7,
+          "pct": 43.2,
           "weight": 1.7
         },
         {
@@ -731,7 +731,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 29.5,
+          "pct": 25,
           "weight": 1.1
         },
         {
@@ -763,7 +763,7 @@
       "rank": 10,
       "rankGrund": null,
       "ticker": "DCTH",
-      "score": 49.6,
+      "score": 48.6,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -790,8 +790,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 49.6,
-      "scoreShrunk": 49.6,
+      "scoreBase": 48.4,
+      "scoreShrunk": 48.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -800,7 +800,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.5,
+          "pct": 65.9,
           "weight": 1.7
         },
         {
@@ -815,7 +815,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 79.5,
+          "pct": 75,
           "weight": 1.1
         },
         {
@@ -850,7 +850,7 @@
       "rank": 11,
       "rankGrund": null,
       "ticker": "KMDA",
-      "score": 49.5,
+      "score": 48.4,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -860,7 +860,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.092,
-        "companion": 12.5
+        "companion": 14.5
       },
       "name": "Kamada Ltd.",
       "country": "Israel",
@@ -877,8 +877,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 49.4,
-      "scoreShrunk": 49.5,
+      "scoreBase": 48.2,
+      "scoreShrunk": 48.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -887,7 +887,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 25,
+          "pct": 20.5,
           "weight": 1.7
         },
         {
@@ -902,7 +902,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 25,
+          "pct": 20.5,
           "weight": 1.1
         },
         {
@@ -937,7 +937,7 @@
       "rank": 12,
       "rankGrund": null,
       "ticker": "NRC",
-      "score": 47.8,
+      "score": 46.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -960,8 +960,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 47.6,
-      "scoreShrunk": 47.8,
+      "scoreBase": 46.4,
+      "scoreShrunk": 46.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -970,7 +970,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 29.5,
+          "pct": 25,
           "weight": 1.7
         },
         {
@@ -985,7 +985,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 34.1,
+          "pct": 29.5,
           "weight": 1.1
         },
         {
@@ -1017,7 +1017,7 @@
       "rank": 13,
       "rankGrund": null,
       "ticker": "WEAV",
-      "score": 46.6,
+      "score": 45.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1043,8 +1043,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 46.3,
-      "scoreShrunk": 46.6,
+      "scoreBase": 45.1,
+      "scoreShrunk": 45.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1053,7 +1053,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 61.4,
+          "pct": 56.8,
           "weight": 1.7
         },
         {
@@ -1068,7 +1068,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 61.4,
+          "pct": 56.8,
           "weight": 1.1
         },
         {
@@ -1100,7 +1100,7 @@
       "rank": 14,
       "rankGrund": null,
       "ticker": "CUVL",
-      "score": 44.5,
+      "score": 43.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -1114,7 +1114,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -1123,8 +1123,8 @@
       "coverageWeight": 0.88,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 43.3,
-      "scoreShrunk": 44.5,
+      "scoreBase": 42,
+      "scoreShrunk": 43.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1133,7 +1133,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 43.2,
+          "pct": 38.6,
           "weight": 1.7
         },
         {
@@ -1148,7 +1148,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 56.8,
+          "pct": 52.3,
           "weight": 1.1
         },
         {
@@ -1180,7 +1180,7 @@
       "rank": 15,
       "rankGrund": null,
       "ticker": "EVH",
-      "score": 44.3,
+      "score": 43.2,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1207,8 +1207,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 43.8,
-      "scoreShrunk": 44.3,
+      "scoreBase": 42.6,
+      "scoreShrunk": 43.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1217,7 +1217,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.2,
+          "pct": 88.6,
           "weight": 1.7
         },
         {
@@ -1232,7 +1232,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 93.2,
+          "pct": 88.6,
           "weight": 1.1
         },
         {
@@ -1267,7 +1267,7 @@
       "rank": 16,
       "rankGrund": null,
       "ticker": "MDXG",
-      "score": 42.2,
+      "score": 42.4,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1295,8 +1295,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 41.4,
-      "scoreShrunk": 42.2,
+      "scoreBase": 41.7,
+      "scoreShrunk": 42.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1325,7 +1325,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 2.4,
+          "pct": 7.1,
           "weight": 0.7
         },
         {
@@ -1352,7 +1352,7 @@
       "rank": 17,
       "rankGrund": null,
       "ticker": "PHR",
-      "score": 41.1,
+      "score": 40,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1379,8 +1379,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 40.3,
-      "scoreShrunk": 41.1,
+      "scoreBase": 39.1,
+      "scoreShrunk": 40,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1389,7 +1389,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 56.8,
+          "pct": 52.3,
           "weight": 1.7
         },
         {
@@ -1404,7 +1404,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 52.3,
+          "pct": 47.7,
           "weight": 1.1
         },
         {
@@ -1436,7 +1436,7 @@
       "rank": 18,
       "rankGrund": null,
       "ticker": "CERS",
-      "score": 38,
+      "score": 36.9,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1463,8 +1463,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 36.9,
-      "scoreShrunk": 38,
+      "scoreBase": 35.7,
+      "scoreShrunk": 36.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1473,7 +1473,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 52.3,
+          "pct": 47.7,
           "weight": 1.7
         },
         {
@@ -1488,7 +1488,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 38.6,
+          "pct": 34.1,
           "weight": 1.1
         },
         {
@@ -1523,7 +1523,7 @@
       "rank": 19,
       "rankGrund": null,
       "ticker": "SLP",
-      "score": 37.3,
+      "score": 36.2,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1549,8 +1549,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 36.2,
-      "scoreShrunk": 37.3,
+      "scoreBase": 35,
+      "scoreShrunk": 36.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1559,7 +1559,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 34.1,
+          "pct": 29.5,
           "weight": 1.7
         },
         {
@@ -1574,7 +1574,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 47.7,
+          "pct": 43.2,
           "weight": 1.1
         },
         {
@@ -1605,8 +1605,90 @@
     {
       "rank": 20,
       "rankGrund": null,
+      "ticker": "EBS",
+      "score": 34.3,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.141,
+        "companion": 175.2
+      },
+      "name": "Emergent BioSolutions Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 22,
+      "cohortFallback": false,
+      "scoreBase": 51.7,
+      "scoreShrunk": 51.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 93.2,
+          "weight": 1.7
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 11.4,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.5,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 93.2,
+          "weight": 1.1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 2.4,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 20.5,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 83.3,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 74.05986185725249,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 21,
+      "rankGrund": null,
       "ticker": "IRWD",
-      "score": 29.4,
+      "score": 28.8,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1631,8 +1713,8 @@
       "coverageWeight": 0.82,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 61.9,
-      "scoreShrunk": 58.8,
+      "scoreBase": 60.5,
+      "scoreShrunk": 57.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1641,7 +1723,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.1,
+          "pct": 79.5,
           "weight": 1.7
         },
         {
@@ -1656,7 +1738,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 88.6,
+          "pct": 84.1,
           "weight": 1.1
         },
         {
@@ -1685,10 +1767,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 21,
+      "rank": 22,
       "rankGrund": null,
       "ticker": "AIRS",
-      "score": 28.2,
+      "score": 27.1,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1714,8 +1796,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 26.2,
-      "scoreShrunk": 28.2,
+      "scoreBase": 25,
+      "scoreShrunk": 27.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1724,7 +1806,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 15.9,
+          "pct": 11.4,
           "weight": 1.7
         },
         {
@@ -1739,7 +1821,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 15.9,
+          "pct": 11.4,
           "weight": 1.1
         },
         {
@@ -1759,88 +1841,6 @@
         }
       ],
       "revGrowthYoYPct": 0.045718930177041095,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 22,
-      "rankGrund": null,
-      "ticker": "EBS",
-      "score": 21.2,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.141,
-        "companion": -27.5
-      },
-      "name": "Emergent BioSolutions Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 30.1,
-      "scoreShrunk": 31.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.667
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 6.8,
-          "weight": 1.7
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 11.4,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 87.5,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 6.8,
-          "weight": 1.1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 11.9,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 20.5,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 83.3,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -28.407460545193686,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -2039,7 +2039,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2414.3
+        "companion": 2418.4
       },
       "name": "Century Therapeutics, Inc.",
       "country": "United States",
@@ -2124,7 +2124,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2414.3
+        "companion": 2418.4
       },
       "name": "Ovid Therapeutics Inc.",
       "country": "United States",
@@ -2393,7 +2393,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "nicht-profitabel",
@@ -3083,7 +3083,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2414.3
+        "companion": 2418.4
       },
       "name": "Verastem, Inc.",
       "country": "United States",
@@ -3091,7 +3091,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
@@ -3180,7 +3180,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
@@ -3797,7 +3797,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "kurz-vor-profitabel",
@@ -4143,7 +4143,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -4230,7 +4230,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -4633,7 +4633,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -96.50924588005049,
+      "revGrowthYoYPct": -96.50924588005047,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
@@ -5098,7 +5098,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -5531,7 +5531,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
@@ -5621,7 +5621,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -5793,7 +5793,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",

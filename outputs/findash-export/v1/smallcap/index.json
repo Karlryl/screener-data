@@ -1,11 +1,11 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-25T04:25:54.685Z",
+  "generated_at": "2026-08-28T17:02:13.641Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74
+    "coverage_pct": 72.4
   },
   "generatedFromSnapshots": 503,
   "boards": [
@@ -38,8 +38,8 @@
   },
   "counts": {
     "smallcap-consumer-discretionary": {
-      "profitable": 24,
-      "unprofitable": 15
+      "profitable": 23,
+      "unprofitable": 14
     },
     "smallcap-consumer-staples": {
       "profitable": 21,
@@ -89,12 +89,12 @@
   "excluded": {
     "balance-sheet-bank": 63,
     "data-suspect": 8,
-    "dup-issuer": 1,
     "insurer": 8,
     "lender-gp0": 7,
     "mortgage-reit": 5,
     "no-revenue": 34,
     "no-sector": 2,
+    "smallcap-mcap-out-of-band": 3,
     "smallcap-thin-coverage": 30,
     "telecom": 5,
     "unrouted": 10
