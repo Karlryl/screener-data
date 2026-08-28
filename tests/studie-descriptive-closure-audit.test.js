@@ -15,9 +15,11 @@ const ARTIFACT = path.join(REPO, 'reports', 'studie',
   'D6-descriptive-closure-audit-2026-08-23.json');
 const REPORT = path.join(REPO, 'reports', 'studie',
   'D6-descriptive-closure-audit-2026-08-23.md');
+const THRESHOLD_SEAL = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
+  'r2-d-threshold-seal.json');
 
 const REQUIRED = [
-  'Einundzwanzig Quellen sind bytegleich an den Auditvertrag gebunden',
+  'Historische 21 Quellen und aktuelle Schwellen-Skripte sind beide exakt',
   'Fixture-D1 geht als vier plus sechs gleich zehn auf',
   'Fixture-Groessenrichtung bleibt ueber drei Deskriptoren konsistent',
   'Fixture-Sektorflag widerspricht sich sichtbar zwischen D2 und D4',
@@ -63,10 +65,15 @@ function sha256(file) {
 
 test('D6: alle einundzwanzig Quellen und der Auditvertrag sind bytegleich', () => {
   const result = JSON.parse(fs.readFileSync(ARTIFACT, 'utf8'));
+  const registration = JSON.parse(fs.readFileSync(REGISTRATION, 'utf8'));
+  const thresholdSeal = JSON.parse(fs.readFileSync(THRESHOLD_SEAL, 'utf8'));
   assert.equal(result.registration.sha256, sha256(REGISTRATION));
   assert.equal(Object.keys(result.sourceFiles).length, 21);
+  assert.deepEqual(result.sourceFiles, registration.sourceFiles,
+    'Historische D6-Quellbindung im Artefakt muss unveraendert bleiben');
   for (const [relative, expected] of Object.entries(result.sourceFiles)) {
-    assert.equal(sha256(path.join(REPO, relative)), expected, relative);
+    const currentExpected = thresholdSeal.currentScripts[relative] || expected;
+    assert.equal(sha256(path.join(REPO, relative)), currentExpected, relative);
   }
 });
 

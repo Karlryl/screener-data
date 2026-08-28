@@ -1,0 +1,192 @@
+{
+  "checks": [
+    {
+      "id": "D1",
+      "matchesExactly": true,
+      "published": 6919,
+      "publishedArtifact": {
+        "path": "reports/studie/D1-panel-survival-2026-08-23.json",
+        "sha256": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724"
+      },
+      "recomputed": 6919,
+      "script": {
+        "path": "scripts/studie-panel-survival.py",
+        "sha256": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54"
+      },
+      "source": {
+        "files": [
+          {
+            "file": "panel-entdeckung.sqlite",
+            "sha256": "66454100aab13a972be848d10fd90b1401fe227da66aa442db41b05ccc261818"
+          },
+          {
+            "file": "panel-validierung.sqlite",
+            "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c"
+          }
+        ],
+        "kind": "pre-endtest panels",
+        "lastAllowedDate": "2020-12-31"
+      },
+      "statistic": "counts.terminalExits"
+    },
+    {
+      "id": "D2",
+      "matchesExactly": true,
+      "published": 19.544694723695,
+      "publishedArtifact": {
+        "path": "reports/studie/D2-attrition-size-sector-2026-08-23.json",
+        "sha256": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63"
+      },
+      "recomputed": 19.544694723695,
+      "script": {
+        "path": "scripts/studie-attrition-size-sector.py",
+        "sha256": "150240626948873c227d0bb9eedcdf9e06670fa36bd5e9d940f2a09a3bf2ee6e"
+      },
+      "source": {
+        "files": [
+          {
+            "file": "panel-entdeckung.sqlite",
+            "sha256": "66454100aab13a972be848d10fd90b1401fe227da66aa442db41b05ccc261818"
+          },
+          {
+            "file": "panel-validierung.sqlite",
+            "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c"
+          }
+        ],
+        "kind": "pre-endtest panels",
+        "lastAllowedDate": "2020-12-31"
+      },
+      "statistic": "size.riskDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D3",
+      "matchesExactly": true,
+      "published": 72,
+      "publishedArtifact": {
+        "path": "reports/studie/D3-identifier-bridge-2026-08-23.json",
+        "sha256": "e2832119769e96c2ebda79feb7af303093266c1652fc03c7ca09156409566a62"
+      },
+      "recomputed": 72,
+      "script": {
+        "path": "scripts/studie-identifier-bridge.py",
+        "sha256": "70330f0241169266b5427de47e0c511ccac4e23b4defabb29dca7088f997181e"
+      },
+      "source": {
+        "eStageExecuted": false,
+        "kind": "committed E4a aggregate anchor",
+        "path": "reports/studie/E4a-diagnose-pruefung-2026-08-19.json",
+        "sha256": "afecfd7019b4354155aa258eaca99c0145ac38be9a71e5cdbd104d66e7d645e7"
+      },
+      "statistic": "pruefung/S-U/signal.identityOnlyRecovered"
+    },
+    {
+      "id": "D4",
+      "matchesExactly": true,
+      "published": -18.4693704993,
+      "publishedArtifact": {
+        "path": "reports/studie/D4-censoring-aware-attrition-2026-08-23.json",
+        "sha256": "f4b252613cc03cac4f40b4b701b6e7017855cfb638759dc4ccbdb6d857a996f5"
+      },
+      "recomputed": -18.4693704993,
+      "script": {
+        "path": "scripts/studie-censoring-aware-attrition.py",
+        "sha256": "f2f073f04bce7685ed765e132fcd940bcb2bd50f5c9de6a917b8ab9bb9ee754f"
+      },
+      "source": {
+        "files": [
+          {
+            "file": "panel-entdeckung.sqlite",
+            "sha256": "66454100aab13a972be848d10fd90b1401fe227da66aa442db41b05ccc261818"
+          },
+          {
+            "file": "panel-validierung.sqlite",
+            "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c"
+          }
+        ],
+        "kind": "pre-endtest panels",
+        "lastAllowedDate": "2020-12-31"
+      },
+      "statistic": "size.survivalDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D5",
+      "matchesExactly": true,
+      "published": -11.968435603766,
+      "publishedArtifact": {
+        "path": "reports/studie/D5-entry-cohort-standardization-2026-08-23.json",
+        "sha256": "a75e25633f080ecfa3b24948d75e1a2d978ab80f3a2467dd3d861c591b3121da"
+      },
+      "recomputed": -11.968435603766,
+      "script": {
+        "path": "scripts/studie-entry-cohort-standardization.py",
+        "sha256": "5c304c09153aacf38648f87e60b81c1aab05cfb5cef98a6705959efc545a5d88"
+      },
+      "source": {
+        "files": [
+          {
+            "file": "panel-entdeckung.sqlite",
+            "sha256": "66454100aab13a972be848d10fd90b1401fe227da66aa442db41b05ccc261818"
+          },
+          {
+            "file": "panel-validierung.sqlite",
+            "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c"
+          }
+        ],
+        "kind": "pre-endtest panels",
+        "lastAllowedDate": "2020-12-31"
+      },
+      "statistic": "standardizedSize.survivalDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D6",
+      "matchesExactly": true,
+      "published": 0,
+      "publishedArtifact": {
+        "path": "reports/studie/D6-descriptive-closure-audit-2026-08-23.json",
+        "sha256": "1c646c9d0f53a5377558f84c3098fb80b9dd53db42ff5e0c44c3cfad0ec2d29c"
+      },
+      "recomputed": 0,
+      "script": {
+        "path": "scripts/studie-descriptive-closure-audit.py",
+        "sha256": "e5cd96c9903dc3ef6661b7508592b192469587cefe5854a7a9866e58a68aaa67"
+      },
+      "source": {
+        "kind": "committed D1-D5 artifacts",
+        "panelFilesOpened": 0,
+        "paths": [
+          "reports/studie/D1-panel-survival-2026-08-23.json",
+          "reports/studie/D2-attrition-size-sector-2026-08-23.json",
+          "reports/studie/D3-identifier-bridge-2026-08-23.json",
+          "reports/studie/D4-censoring-aware-attrition-2026-08-23.json",
+          "reports/studie/D5-entry-cohort-standardization-2026-08-23.json"
+        ]
+      },
+      "statistic": "auditContract.observedFailures"
+    }
+  ],
+  "integrityContract": {
+    "mismatchedChecks": [],
+    "nullModel": "zero exact mismatches across D1-D6",
+    "observedMismatches": 0,
+    "passes": true,
+    "testStatistic": "exact mismatch count",
+    "threshold": "one or more mismatches fails closed"
+  },
+  "registration": {
+    "path": "protocol/early-detection/2.0.0/r2-d-artifact-data-backcalculation-registration.json",
+    "sha256": "e00afee0208ba080a7541842aaebde6182ce91588a33712472a0df9431e152e9",
+    "status": "FROZEN_BEFORE_BACKCALCULATION_PANEL_ACCESS"
+  },
+  "schema": "R2-D-artifact-data-backcalculation/1",
+  "scope": {
+    "companyIdentifiersWritten": 0,
+    "eStagesExecuted": 0,
+    "endtestOpened": false,
+    "lastAllowedDate": "2020-12-31",
+    "outcomesUsed": 0,
+    "pricesUsed": 0,
+    "signalsReadOutsideCommittedAggregates": 0,
+    "uniquePanelFilesOpened": 2,
+    "verdictsChanged": 0
+  }
+}

@@ -16,6 +16,7 @@ REGISTRATION_REL = (
     "d6-descriptive-closure-audit-registration.json"
 )
 REGISTRATION = os.path.join(REPO, *REGISTRATION_REL.split("/"))
+THRESHOLD_SEAL_REL = "protocol/early-detection/2.0.0/r2-d-threshold-seal.json"
 ARTIFACTS = {
     "d1": "reports/studie/D1-panel-survival-2026-08-23.json",
     "d2": "reports/studie/D2-attrition-size-sector-2026-08-23.json",
@@ -57,13 +58,18 @@ def load_json(relative):
 def verify_sources(registration):
     failures = []
     sources = registration.get("sourceFiles", {})
+    threshold_seal = load_json(THRESHOLD_SEAL_REL)
+    if threshold_seal.get("status") != "FROZEN_THRESHOLD_BINDING_CORRECTION":
+        failures.append("threshold-seal-status")
+    current_scripts = threshold_seal.get("currentScripts") or {}
     if len(sources) != EXPECTED_SOURCE_COUNT:
         failures.append("source-count")
     for relative, expected in sources.items():
         path = repo_path(relative)
+        current_expected = current_scripts.get(relative, expected)
         if not os.path.isfile(path):
             failures.append("missing:" + relative)
-        elif sha256_file(path) != expected:
+        elif sha256_file(path) != current_expected:
             failures.append("hash:" + relative)
     return failures
 
@@ -393,7 +399,7 @@ def self_test():
     source_failures = verify_sources(registration)
     fixture = synthetic_fixture()
     result = result_from_artifacts(fixture, registration["sourceFiles"])
-    check("Einundzwanzig Quellen sind bytegleich an den Auditvertrag gebunden",
+    check("Historische 21 Quellen und aktuelle Schwellen-Skripte sind beide exakt",
           len(registration["sourceFiles"]) == 21 and not source_failures,
           source_failures)
     check("Fixture-D1 geht als vier plus sechs gleich zehn auf",
