@@ -424,7 +424,8 @@ function resolveMergeTicker(parsedTxns, fallbackTicker) {
 // external-data/sec-annual-bulk.jsonl und die NDJSON-Archive aus archive-old-snapshots.js:
 // Massendaten werden hier kompakt geschrieben, nicht menschenlesbar eingerueckt.
 // KEIN Ersatz fuer die eigentliche Frage (gehoert die Datei ueberhaupt nach git?) —
-// das ist eine Karl-Entscheidung, siehe agent-reports/2026-08-28-karl-entscheidungen.md.
+// das ist eine Karl-Entscheidung und liegt im Vault (Knowledge/Trading/growth-screener,
+// Entscheidungsseite vom 28.08.2026), NICHT in diesem Repo.
 function writeCache(byTicker, lastIndexedDate) {
   writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
     updatedAt: new Date().toISOString(),

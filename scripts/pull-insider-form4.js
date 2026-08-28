@@ -712,6 +712,9 @@ async function main() {
     }
     // After every ticker, atomically re-write the full cache. This makes
     // the script resumable — Ctrl-C at any point leaves a valid cache.
+    // Kompakt geschrieben wie writeCache() in pull-insider-form4-daily.js — Begruendung
+    // und Messwerte stehen im Kommentar dort. Beide Schreiber muessen dasselbe Format
+    // benutzen, sonst blaeht ein Lauf von hier die Datei wieder auf 58 MB auf.
     writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
       updatedAt: new Date().toISOString(),
       userAgentSource: 'process.env.SEC_CONTACT',
