@@ -61,14 +61,15 @@ jobs:
               try {
                 const idx=JSON.parse(s);
                 const t=Date.parse(idx.generated_at);
-                if(!Number.isFinite(t)){ console.log(9999); return; }
-                console.log(Math.floor((Date.now()-t)/86400000));
-              } catch(e){ console.log(9999); }
+                if(!Number.isFinite(t)){ console.log(999999); return; }
+                console.log(require('./lib/alter.js').alterStunden(t, Date.now()));
+              } catch(e){ console.log(999999); }
             });
           ")
-          echo "Export-Alter (gh-pages findash-export/v1/index.json .generated_at): ${age_days} Tage (Schwelle: ${MAX_AGE_DAYS})"
-          if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$MAX_AGE_DAYS" ]; then
-            msg="Screener-Daten VERALTET: Export ${age_days} Tage alt (Schwelle ${MAX_AGE_DAYS}d). URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
+          max_hours=$(( MAX_AGE_DAYS * 24 ))
+          echo "Export-Alter (gh-pages findash-export/v1/index.json .generated_at): ${age_days} Stunden (Schwelle: ${MAX_AGE_DAYS} d = ${max_hours} h)"
+          if [ "$FORCE" = "true" ] || [ "$age_days" -gt "$max_hours" ]; then
+            msg="Screener-Daten VERALTET: Export ${age_days} Stunden alt (Schwelle ${MAX_AGE_DAYS}d)." URSACHE: Daily-Pull ist rot oder laeuft nicht. NAECHSTER SCHRITT: Actions pruefen -> ${{ github.server_url }}/${{ github.repository }}/actions/workflows/daily-pull.yml"
             # 29.07.: Discord-Zweig entfernt (Karl-Freigabe). Der Webhook war nie gesetzt,
             # es lief also immer der else-Zweig — zwei Kanaele auf dem Papier, einer in
             # Wirklichkeit. Der wirksame Alarm ist die Zeile darueber (::error:: + exit 1
@@ -76,7 +77,7 @@ jobs:
             echo "::error::$msg"
             exit 1
           fi
-          echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage)."
+          echo "OK: Export frisch (<= ${MAX_AGE_DAYS} Tage = ${max_hours} h)."
 
       # T564-B1 (Review Tag 564, F-17a-Publish) — dieselbe Sonde ein zweites Mal, diesmal
       # auf den BEWEGUNGS-Kanal (NEU/Rangpfeile). Der Schritt darueber misst nur den
@@ -112,19 +113,20 @@ jobs:
           BH_MAX_AGE_DAYS: '2'
         run: |
           (curl -s --max-time 20 "https://raw.githubusercontent.com/${{ github.repository }}/gh-pages/outputs/board-history/index.json" || true) | node -e "
+            const A=require('./lib/alter.js');
             let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{
               const MAX=Number(process.env.BH_MAX_AGE_DAYS);
               let idx=null; try { idx=JSON.parse(s); } catch(e){ idx=null; }
               const t=idx?Date.parse(idx.generated_at):NaN;
-              const age=Number.isFinite(t)?Math.floor((Date.now()-t)/86400000):9999;
+              const age=A.alterTage(t, Date.now());
               const n=(idx&&Array.isArray(idx.vintages))?idx.vintages.length:0;
               const vt=n?Date.parse(idx.vintages.at(-1).date):NaN;
-              const vAlter=Number.isFinite(vt)?Math.floor((Date.now()-vt)/86400000):9999;
-              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+age+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s), juengster Stand vom '+((idx&&n)?idx.vintages.at(-1).date:'?')+' ('+vAlter+' Tage alt)');
-              if(age>MAX){ console.log('::error::BEWEGUNGS-ANZEIGE VERALTET: board-history im Datenkanal '+age+' Tage alt (Schwelle '+MAX+'d), waehrend die Boards weiter deployt werden. URSACHE: einer der vier Schritte zwischen Board-Deploy und Vintage-Publish faellt aus. FOLGE: findash zeigt heutige Boards mit gestrigen Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritte \"Write board-history vintage\" / \"Commit board-history vintage\" / \"Publish board-history vintages\".'); process.exit(1); }
+              const vAlter=A.alterTage(vt, Date.now());
+              console.log('Bewegungs-Kanal (gh-pages outputs/board-history/index.json): '+A.zeigeTage(age)+' Tage alt (Schwelle '+MAX+'), '+n+' Vintage(s), juengster Stand vom '+((idx&&n)?idx.vintages.at(-1).date:'?')+' ('+A.zeigeTage(vAlter)+' Tage alt)');
+              if(A.istVeraltet(age,MAX)){ console.log('::error::BEWEGUNGS-ANZEIGE VERALTET: board-history im Datenkanal '+A.zeigeTage(age)+' Tage alt (Schwelle '+MAX+'d), waehrend die Boards weiter deployt werden. URSACHE: einer der vier Schritte zwischen Board-Deploy und Vintage-Publish faellt aus. FOLGE: findash zeigt heutige Boards mit gestrigen Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritte \"Write board-history vintage\" / \"Commit board-history vintage\" / \"Publish board-history vintages\".'); process.exit(1); }
               if(n<2){ console.log('::error::BEWEGUNGS-ANZEIGE OHNE VERGLEICHSSTAND: nur '+n+' Vintage(s) im Datenkanal — findash vergleicht die zwei juengsten Staende und zeigt ohne den zweiten gar keine Bewegung, ohne es zu melden. NAECHSTER SCHRITT: board-history/ im Repo und den Publish-Schritt in daily-pull.yml pruefen.'); process.exit(1); }
-              if(vAlter>MAX){ console.log('::error::BEWEGUNGS-DATEN VERALTET: der juengste publizierte Vintage traegt das Datum '+idx.vintages.at(-1).date+', ist also '+vAlter+' Tage alt (Schwelle '+MAX+'d). Der Publish LAEUFT (sein Stempel ist frisch), schiebt aber immer denselben alten Stand hoch — findash zeigt heutige Boards mit alten Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritt \"Write board-history vintage\": entsteht ueberhaupt noch ein Vintage von heute?'); process.exit(1); }
-              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages, juengster Stand '+vAlter+' Tage alt.');
+              if(A.istVeraltet(vAlter,MAX)){ console.log('::error::BEWEGUNGS-DATEN VERALTET: der juengste publizierte Vintage traegt das Datum '+idx.vintages.at(-1).date+', ist also '+A.zeigeTage(vAlter)+' Tage alt (Schwelle '+MAX+'d). Der Publish LAEUFT (sein Stempel ist frisch), schiebt aber immer denselben alten Stand hoch — findash zeigt heutige Boards mit alten Bewegungspfeilen. NAECHSTER SCHRITT: Actions -> daily-pull.yml -> Schritt \"Write board-history vintage\": entsteht ueberhaupt noch ein Vintage von heute?'); process.exit(1); }
+              console.log('OK: Bewegungs-Kanal frisch (<= '+MAX+' Tage) mit '+n+' Vintages, juengster Stand '+A.zeigeTage(vAlter)+' Tage alt.');
             });
           "
 
@@ -143,19 +145,20 @@ jobs:
         run: |
           node -e "
             const store=require('./lib/price-history-store.js');
+            const A=require('./lib/alter.js');
             const META_MAX=Number(process.env.PRICE_META_MAX_AGE_DAYS), SPY_MAX=Number(process.env.SPY_MAX_AGE_DAYS);
             const errs=[];
             const m=store.loadMeta('prices');
             if(!m){ console.log('::warning::prices/history/_meta.json fehlt — Bootstrap (erster gestempelter Pull nach Tag 295 steht aus); nicht rot.'); }
             else {
-              const age=Math.floor((Date.now()-Date.parse(m.updatedAt))/86400000);
-              console.log('Preis-Store-Stempel: '+age+' Tage alt (Schwelle '+META_MAX+'), tickerCount='+m.tickerCount);
-              if(!Number.isFinite(age)||age>META_MAX) errs.push('Preis-Store-Stempel '+age+'d > '+META_MAX+'d — der Preis-Pull schreibt den Store nicht mehr (A7-Fehlermodus).');
+              const age=A.alterTage(Date.parse(m.updatedAt), Date.now());
+              console.log('Preis-Store-Stempel: '+A.zeigeTage(age)+' Tage alt (Schwelle '+META_MAX+'), tickerCount='+m.tickerCount);
+              if(A.istVeraltet(age,META_MAX)) errs.push('Preis-Store-Stempel '+A.zeigeTage(age)+'d > '+META_MAX+'d — der Preis-Pull schreibt den Store nicht mehr (A7-Fehlermodus).');
               const spy=(store.loadShard('prices', store.shardOf('SPY'))['SPY'])||[];
               const last=spy.length?spy[spy.length-1].date:null;
-              const spyAge=last?Math.floor((Date.now()-Date.parse(last))/86400000):Infinity;
-              console.log('SPY letzte Bar: '+last+' ('+spyAge+' Tage alt, Schwelle '+SPY_MAX+')');
-              if(spyAge>SPY_MAX) errs.push('SPY-Serie steht auf '+last+' ('+spyAge+'d > '+SPY_MAX+'d) — Preis-Daten schreiten nicht fort.');
+              const spyAge=last?A.alterTage(Date.parse(last), Date.now()):null;
+              console.log('SPY letzte Bar: '+last+' ('+A.zeigeTage(spyAge)+' Tage alt, Schwelle '+SPY_MAX+')');
+              if(A.istVeraltet(spyAge,SPY_MAX)) errs.push('SPY-Serie steht auf '+last+' ('+A.zeigeTage(spyAge)+'d > '+SPY_MAX+'d) — Preis-Daten schreiten nicht fort.');
             }
             if(errs.length){ console.log('::error::PREIS-SUBSTRAT VERALTET — '+errs.join(' | ')+' NAECHSTER SCHRITT: daily-pull Step \"Pull Historical Prices\" pruefen.'); process.exit(1); }
             console.log('OK: Preis-Substrat frisch (oder Bootstrap).');
