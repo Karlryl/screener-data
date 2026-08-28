@@ -151,6 +151,29 @@ test('ein blosser Kurstick bewegt weder Kohorte noch stabil - nur ein echter Kla
   assert.notEqual(inputHash(sprung).kohorteHash, a.kohorteHash, 'ein echter Groessenklassen-Wechsel bleibt unbemerkt');
 });
 
+test('der Trading-FX-Kurs geht als Null-/Gesetzt-Klasse ein, nicht als Tageswert', () => {
+  const fehlend = bauSnapshot();
+  delete fehlend.meta.tradingFxRateApplied;
+  const kurs091 = bauSnapshot(); kurs091.meta.tradingFxRateApplied = 0.91;
+  const kurs093 = bauSnapshot(); kurs093.meta.tradingFxRateApplied = 0.93;
+  const hFehlend = inputHash(fehlend), h091 = inputHash(kurs091), h093 = inputHash(kurs093);
+
+  const assertFlip = (vorher, nachher, richtung) => {
+    assert.notEqual(vorher.kohorteHash, nachher.kohorteHash,
+      `${richtung}: Null-/Gesetzt-Wechsel erreicht kohorteHash nicht`);
+    assert.notEqual(vorher.stabil, nachher.stabil,
+      `${richtung}: Null-/Gesetzt-Wechsel erreicht stabil nicht`);
+  };
+  assertFlip(hFehlend, h091, 'null -> gesetzt');
+  assertFlip(h091, hFehlend, 'gesetzt -> null');
+  assert.equal(h091.kohorteHash, h093.kohorteHash,
+    '0.91 -> 0.93 bewegt kohorteHash, obwohl fxSuspect() nur Null/Gesetzt auswertet');
+  assert.equal(h091.stabil, h093.stabil,
+    '0.91 -> 0.93 bewegt stabil, obwohl der taegliche Rohkurs nicht wirksam ist');
+  assert.equal(hFehlend.serienHash, h091.serienHash,
+    'Die abgeleitete FX-Klasse ist in den Serien-Hash ausgelaufen');
+});
+
 test('volatile Felder bewegen `gesamt`, aber NICHT `stabil`', () => {
   const a = inputHash(bauSnapshot());
   const v = bauSnapshot(); v.metrics.beta = { value: 9.99 };
