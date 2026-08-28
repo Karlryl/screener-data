@@ -12,10 +12,9 @@
  *   (b) TRENNSCHAERFE. Der Hash muss auf jede Register-Reihe reagieren, auf einen echten
  *       Klassenwechsel reagieren - und auf einen blossen Kurstick NICHT.
  *
- * NIE UEBERSPRUNGEN: liegen echte Snapshots, wird gegen sie beobachtet (staerker); sonst gegen
- * einen im Test gebauten Satz. Beides ist eine echte Pruefung - das blockierende Gate laeuft
- * vor dem Yahoo-Pull, wo `snapshots/` leer ist, und ein Test der dort aussteigt meldet gruen,
- * ohne etwas geprueft zu haben. Skip ist nicht Pass.
+ * NIE UEBERSPRUNGEN und seit T151 SUBSTRAT-INVARIANT: die Beobachtung laeuft immer gegen das
+ * eingecheckte kanonische Probe-Universum. Lokale Snapshots duerfen die Zweig-Abdeckung nicht
+ * mehr veraendern; derselbe Commit muss mit und ohne `snapshots/` dieselbe Pfadmenge sehen.
  *
  * Usage:  node --test tests/input-hash.test.js
  */
@@ -23,16 +22,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { FIELD_REGISTRY } = require('../src/scoring/snapshot.js');
 const { scoreUniverse } = require('../src/scoring/score.js');
 const formeln = require('../src/scoring/formulas/index.js');
-const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { beobachte, nurBlattpfade } = require('../lib/gelesene-felder.js');
 const {
   inputHash, serienFelder, abgedecktePfade, KOHORTE_FELDER, VOLATIL_FELDER, SERIEN_EXTRA,
 } = require('../lib/input-hash.js');
 
-const REPO = path.resolve(__dirname, '..');
+const PROBE_FIXTURE = path.join(__dirname, 'fixtures', 'input-hash-probe-universe.json');
+const sha = (x) => crypto.createHash('sha256').update(x).digest('hex').slice(0, 16);
 
 function serieFuer(format, faktor) {
   if (format === 'value') return [{ value: 100 * faktor }, { value: 90 * faktor }, { value: 80 * faktor }];
@@ -66,36 +66,38 @@ function bauSnapshot(faktor = 1, extra = {}) {
   return s;
 }
 
-/** Echtes Universum, wenn vorhanden - sonst ein gebauter Satz. Nie ein Skip. */
+/** Kanonisches Universum aus eingecheckten konstruierten Faellen. Nie ein Skip/Fallback. */
 function probeUniversum() {
-  const dir = path.join(REPO, 'snapshots');
-  try {
-    const files = fs.readdirSync(dir).filter((x) => x.endsWith('.json') && !isMetadataSnapshot(x));
-    if (files.length >= 100) {
-      const u = [];
-      const schritt = Math.max(1, Math.floor(files.length / 300));
-      for (let i = 0; i < files.length && u.length < 300; i += schritt) {
-        try {
-          const s = JSON.parse(fs.readFileSync(path.join(dir, files[i]), 'utf8'));
-          if (s && s.meta && s.meta.ticker) u.push(s);
-        } catch (_) { /* unlesbar zaehlt nicht */ }
-      }
-      if (u.length >= 100) return { universum: u, substrat: `echte Snapshots (${u.length})` };
-    }
-  } catch (_) { /* kein Verzeichnis */ }
-  const gebaut = [1, 2, 3].map((f) => bauSnapshot(f));
-  gebaut.push(bauSnapshot(4, { sector: 'Financial Services', industry: 'Credit Services' }));
-  gebaut.push(bauSnapshot(5, { sector: 'Healthcare', industry: 'Biotechnology', region: 'EU', tradingCurrency: 'EUR' }));
-  return { universum: gebaut, substrat: `gebauter Satz (${gebaut.length}) - kein echtes Universum vorhanden` };
+  const fixture = JSON.parse(fs.readFileSync(PROBE_FIXTURE, 'utf8'));
+  assert.equal(fixture.schema, 'input-hash-probe-universe/v1', 'unbekanntes Probe-Schema');
+  assert.equal(fixture.cases.length, 7,
+    'Das kanonische Universum soll nur die sieben begruendeten Zweig-Faelle enthalten.');
+  const universum = fixture.cases.map((fall) => bauSnapshot(fall.factor, fall.meta));
+  return { universum, substrat: `kanonisches Probe-Universum (${universum.length})` };
 }
 
 // --- (a) Vollstaendigkeit: abgeleitet, nicht behauptet ----------------------------------
 
+test('das kanonische Probe-Universum ist klein und enthaelt keine Rohdaten', () => {
+  const bytes = fs.readFileSync(PROBE_FIXTURE);
+  assert.ok(bytes.length < 200 * 1024, `Probe-Universum ist ${bytes.length} Bytes gross`);
+  const fixture = JSON.parse(bytes.toString('utf8'));
+  assert.deepEqual(Object.keys(fixture).sort(), ['cases', 'schema']);
+  for (const fall of fixture.cases) {
+    assert.deepEqual(Object.keys(fall).sort(), ['factor', 'id', 'meta'],
+      `${fall.id}: Ein Probe-Fall darf nur Faktor und Meta-Zweigwerte tragen`);
+  }
+});
+
 test('JEDES Feld, das das Scoring beim Laufen liest, ist einer Schicht zugeordnet', () => {
   const { universum, substrat } = probeUniversum();
-  console.log(`  (Beobachtungs-Substrat: ${substrat})`);
   const gelesen = nurBlattpfade(beobachte(universum, (u) => scoreUniverse(u, formeln)));
+  const pfade = [...gelesen].sort();
+  console.log(`  (Beobachtungs-Substrat: ${substrat}; Pfade: ${pfade.length}; Pfad-Hash: ${sha(pfade.join('\n'))})`);
   assert.ok(gelesen.size >= 20, `nur ${gelesen.size} beobachtete Pfade - die Beobachtung greift nicht`);
+  assert.ok(gelesen.has('meta.tradingFxRateApplied'),
+    'meta.tradingFxRateApplied wurde nicht beobachtet. Der kanonische FX-Paar-Fall muss den '
+    + 'fxSuspect()-Tie-Break betreten; sonst bleibt derselbe score-wirksame Eingang wieder blind.');
   // Das Instrument selbst wird geprueft, nicht nur sein Ergebnis: eine Beobachtung, die einen
   // ganzen Container verschweigt, waere leise blind und der Test daneben gruen. Erwartet wird
   // hier eine Eigenschaft des SCORINGS (es liest aus jedem dieser Bloecke), nicht eine des
