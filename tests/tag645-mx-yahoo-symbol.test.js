@@ -91,14 +91,24 @@ test('null/undefined/Zahl werden unveraendert durchgereicht (kein Crash)', () =>
   assert.equal(normalizeYahooSymbol(42), 42);
 });
 
-// ── Gezaehlt statt geschaetzt: die reale watchlist.json trägt exakt 47 betroffene
-// Zeilen (grep-verifiziert 19.08.2026). Dieser Test friert die Zahl ein UND beweist,
-// dass jede einzelne davon nach der Normalisierung schraegstrichfrei ist.
-test('watchlist.json: exakt 47 yahoo_symbol-Zeilen mit Schraegstrich, alle .MX, alle normalisieren schraegstrichfrei', () => {
+// ── Bestandsprobe an der ECHTEN watchlist.json. Die urspruengliche Fassung fror
+// hier die am 19.08.2026 gegriffene Zahl 47 ein. Das ist die falsche Sache: die
+// watchlist ist ein LEBENDER Bestand, den der taegliche Yahoo-Pull fortschreibt.
+// Der Pull vom 20.08. (Commit 8ff70815f1) hat das Universum von 20.973 auf 17.719
+// Zeilen abgeglichen und dabei zwei der 47 mitgenommen (MEGA/CPO.MX, NEXT/25.MX)
+// -- ein regulaerer Bestandsabgleich, kein Defekt. Der eingefrorene Zaehler machte
+// daraus ab dem 21.08. drei rote Tagesläufe am blockierenden pre-pull-Test-Gate.
+// Festgenagelt wird deshalb die SACHE, nicht der Zaehlerstand:
+//   (a) Anwesenheit -- es MUSS betroffene Zeilen geben, sonst prueft die Schleife
+//       darunter stillschweigend nichts mehr und der Waechter wird zur Attrappe;
+//   (b) jede einzelne davon ist .MX und wird schraegstrichfrei normalisiert.
+test('watchlist.json: jede yahoo_symbol-Zeile mit Schraegstrich ist .MX und normalisiert schraegstrichfrei (Bestand nicht leer)', () => {
   const wlPath = path.join(__dirname, '..', 'watchlist.json');
   const wl = JSON.parse(fs.readFileSync(wlPath, 'utf8'));
   const betroffen = wl.stocks.filter(s => s && typeof s.yahoo_symbol === 'string' && s.yahoo_symbol.includes('/'));
-  assert.equal(betroffen.length, 47, 'erwartete Anzahl betroffener Zeilen laut Befund');
+  assert.ok(betroffen.length > 0,
+    'kein einziger Schraegstrich-Fall mehr im Bestand -- diese Bestandsprobe pruefte damit nichts; '
+    + 'entweder ist der Befund erledigt (dann Test bewusst entfernen) oder die watchlist ist kaputt');
   for (const s of betroffen) {
     assert.match(s.yahoo_symbol, /\.MX$/i, `unerwartete Nicht-.MX-Zeile mit Schraegstrich: ${s.ticker}`);
     const normalized = normalizeYahooSymbol(s.yahoo_symbol);
