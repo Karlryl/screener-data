@@ -314,10 +314,16 @@ test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () 
   // 18.08.: 'prices' dazu. Die SACHE hat sich geaendert, nicht nur der Code — der Kursabruf
   // ist vom Schritt zum eigenen Job geworden. Er steht zwischen pull und merge, weil er ein
   // Daten-Kettenglied ist; die Regel "Kettenglieder vor Diagnose-Waechtern" bleibt unberuehrt.
+  // 28.08. (Weg E, Gerichtsurteil): 'jahres-ausreisser-waechter' dazu. Auch hier hat sich
+  // die SACHE geaendert, nicht nur der Code — der Jahres-Ausreisser-Waechter ist vom Schritt
+  // im merge-Job zum eigenen Job geworden, damit sein rotes X nicht mehr den Scoring-Tag
+  // kostet. Er steht ganz HINTEN bei den anderen nicht-blockierenden Diagnose-Waechtern;
+  // die Regel "Kettenglieder vor Diagnose-Waechtern" bleibt unberuehrt.
   assert.deepEqual(JOB_REIHENFOLGE,
-    ['prep', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter'],
+    ['prep', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter',
+      'jahres-ausreisser-waechter'],
     'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
-    + 'Ursache steht: die fuenf Kettenglieder zuerst, die zwei nicht-blockierenden Diagnose-'
+    + 'Ursache steht: die fuenf Kettenglieder zuerst, die drei nicht-blockierenden Diagnose-'
     + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '
     + 'Diagnose-Job statt des Datenschritts — Karl sucht am falschen Job.');
 });

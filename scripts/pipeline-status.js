@@ -56,7 +56,7 @@
  * fehlendem Datum entfaellt drueben der ganze Datumssatz (nachgesehen in screener-rows.ts).
  *
  * Aufruf (im Workflow, Job `laufstatus`) — Eingaben kommen aus der Umgebung:
- *   NEEDS_JSON   = ${{ toJSON(needs) }}   (Ergebnisse aller sechs Jobs)
+ *   NEEDS_JSON   = ${{ toJSON(needs) }}   (Ergebnisse aller Jobs aus JOB_REIHENFOLGE)
  *   RUN_ID / RUN_ATTEMPT / HEAD_SHA / STARTED_AT / COMPLETED_AT
  *   node scripts/pipeline-status.js --out outputs/pipeline-status/v1/latest.json \
  *        --vorgaenger _vorgaenger.json
@@ -76,11 +76,16 @@ const SCHEMA = 'screener-pipeline-status/v1';
 // Vorgaenger, faellt prep, werden die anderen nur noch uebersprungen). Die beiden Waechter
 // sind aber GESCHWISTER, keine Kettenglieder: `entdeckungs-waechter` haengt allein an prep
 // (wie pull), `earnings-transport-waechter` an [prep, merge]. Beide sind nicht-blockierende
-// Diagnose-Jobs — es haengt nichts an ihnen.
+// Diagnose-Jobs — es haengt nichts an ihnen. Seit dem 28.08. gehoert `jahres-ausreisser-waechter`
+// zu dieser Gruppe (Weg E: aus dem merge-Job ausgekoppelt, damit sein rotes X nicht mehr den
+// Scoring-Tag kostet).
 // Fallen ein Waechter und ein Datenschritt UNABHAENGIG gleichzeitig, waere "der erste in der
 // Datei" die falsche Ursache: der Marker meldete den Diagnose-Job, waehrend der Datenschritt
-// der Grund fuer die uebersprungenen Folgejobs ist. Darum stehen die vier Kettenglieder
-// zuerst und die zwei Waechter dahinter — ein echter Datenausfall schlaegt eine Diagnose.
+// der Grund fuer die uebersprungenen Folgejobs ist. Darum stehen die Kettenglieder zuerst und
+// die Diagnose-Waechter dahinter — ein echter Datenausfall schlaegt eine Diagnose.
+// BEWUSST OHNE ZAHLEN: hier standen "sechs Jobs" und "die vier Kettenglieder ... die zwei
+// Waechter", beides schon vor dem 28.08. veraltet. Eine Zahl im Fliesstext veraltet bei jedem
+// neuen Job still; die Liste unten ist die einzige Wahrheit.
 // Das vollstaendige Bild steht ohnehin in `reason` (alle sechs Ergebnisse), fuer den, der
 // die Rohdatei liest; findash zeigt bewusst nur den einen Bereich.
 //
@@ -105,6 +110,12 @@ const JOB_REIHENFOLGE = [
   'scoring',
   'entdeckungs-waechter',
   'earnings-transport-waechter',
+  // 28.08. (Weg E, Gerichtsurteil): der Jahres-Ausreisser-Waechter ist aus dem
+  // merge-Job ausgekoppelt und laeuft jetzt als eigener Job parallel zu `scoring`.
+  // Er steht am ENDE bei den anderen Diagnose-Waechtern, nie vor merge/scoring:
+  // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt
+  // stehen und nicht die Diagnose — sonst sucht Karl am falschen Job.
+  'jahres-ausreisser-waechter',
 ];
 
 /**
