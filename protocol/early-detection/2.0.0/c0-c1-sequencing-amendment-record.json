@@ -1,0 +1,60 @@
+{
+  "schema": "early-detection-sequencing-amendment-record/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "mode": "AMENDMENT_NO_RETROACTIVE_REWRITE",
+  "recordedAt": "2026-08-28",
+  "source": {
+    "path": "Knowledge/Trading/growth-screener/_STUDIE-NEUE-VERFASSUNG-2026-08-16.md",
+    "sha256": "debcb57b102e3d8643519e1cfe3ca27259d62089fd7aa6ec7010bf843acc08cc",
+    "bytes": 57077,
+    "status": "VERBINDLICH_ZIELFASSUNG_2",
+    "effectiveDate": "2026-08-16",
+    "sequenceLocations": [
+      "section 3 table rows E6b and Danach Strang C",
+      "section 4b Einordnung"
+    ]
+  },
+  "plannedSequence": [
+    "E6b",
+    "Strang C"
+  ],
+  "observedExecution": {
+    "C0": {
+      "branch": "studie/c0-themenliste",
+      "startedCommit": "395a39e74beaa5b7063656dd972b069b5fd444a9",
+      "startedAt": "2026-08-19T21:23:18+02:00",
+      "completedCommit": "86b35923013e70d4faaab0219e87c33ab3ce8e22",
+      "completedAt": "2026-08-20T01:53:40+02:00",
+      "artifact": "studie/c0-themenliste:reports/studie/C0-themenliste-2026-08-19.md",
+      "artifactDate": "2026-08-19"
+    },
+    "C1": {
+      "branch": "studie/c1-zeitleisten",
+      "startedCommit": "38621876af52287a5a3a297ad9e80dc911a40d44",
+      "startedAt": "2026-08-20T03:14:01+02:00",
+      "completedCommit": "de1c6e9b80d63ee613abd7e6610873d1488d339a",
+      "completedAt": "2026-08-20T03:56:21+02:00",
+      "artifact": "studie/c1-zeitleisten:reports/studie/C1-zeitleisten-2026-08-20.md",
+      "artifactDate": "2026-08-20"
+    },
+    "E6b": {
+      "statusAtC0Start": "NOT_COMPLETED",
+      "statusAtC1Completion": "NOT_COMPLETED",
+      "pathsAcrossLocalGitRefsAsOfRecordDate": 0,
+      "asOf": "2026-08-28"
+    }
+  },
+  "deviation": {
+    "planned": "E6b_THEN_STRANG_C",
+    "observed": "C0_AND_C1_BEFORE_E6b",
+    "recorded": true,
+    "recordedAt": "2026-08-28"
+  },
+  "preservation": {
+    "C0Rewritten": false,
+    "C1Rewritten": false,
+    "E6bCreatedByThisRecord": false,
+    "confirmatoryVerdictsChanged": 0,
+    "endtestOpened": false
+  }
+}
