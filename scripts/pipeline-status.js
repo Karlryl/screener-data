@@ -105,6 +105,12 @@ const JOB_REIHENFOLGE = [
   'scoring',
   'entdeckungs-waechter',
   'earnings-transport-waechter',
+  // 28.08. (Weg E, Gerichtsurteil): der Jahres-Ausreisser-Waechter ist aus dem
+  // merge-Job ausgekoppelt und laeuft jetzt als eigener Job parallel zu `scoring`.
+  // Er steht am ENDE bei den anderen Diagnose-Waechtern, nie vor merge/scoring:
+  // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt
+  // stehen und nicht die Diagnose — sonst sucht Karl am falschen Job.
+  'jahres-ausreisser-waechter',
 ];
 
 /**
