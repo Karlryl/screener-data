@@ -271,10 +271,45 @@ test('Die ausgegebene Allowlist ist genau die, die E4d durchlaesst', () => {
 const BERICHT_PRUEFUNG = path.join(REPO, 'reports', 'studie', 'E4d-kadenz-pruefung-2026-08-19.json');
 const BERICHT_ENTDECKUNG = path.join(REPO, 'reports', 'studie', 'E4d-kadenz-entdeckung-2026-08-19.json');
 
+// Tag 977 deliberately left this object as the B5 negative fixture. The guard
+// below resolves the published object before the mutation; it does not search
+// source text for a test name or path fragment.
+const B5_ENTDECKUNG_POOL_NEGATIVFIXTURE = Object.freeze({
+  schema: 'B5-discovery-pool-sabotage/1',
+  fenster: 'entdeckung',
+  band: '2009-2015',
+  variante: 'S-U',
+  arm: 'kontrolle',
+  feld: 'firmen_mit_erst_ereignis',
+  delta: 1,
+});
+
+function pruefeB5SabotageObjekt(bericht, fixture) {
+  if (fixture.schema !== 'B5-discovery-pool-sabotage/1'
+      || fixture.fenster !== bericht.fenster) {
+    throw new Error('B5-GUARD: negative fixture is bound to another object');
+  }
+  const arm = bericht.baender?.[fixture.band]?.varianten?.[fixture.variante]?.[fixture.arm];
+  if (!arm || !Object.hasOwn(arm, fixture.feld)) {
+    throw new Error('B5-GUARD: discovery-pool target object is absent');
+  }
+  if (!Number.isInteger(arm[fixture.feld])) {
+    throw new Error('B5-GUARD: discovery-pool target is not an integer count');
+  }
+  if (fixture.delta !== 1) {
+    throw new Error('B5-GUARD: deliberate +1 sabotage is absent');
+  }
+  return [fixture.band, fixture.variante, fixture.arm, fixture.feld];
+}
+
 function ankerLauf(berichtPfad, aenderung = null) {
   // Ruft pruefe_anker() mit dem ECHTEN Laufergebnis auf - einmal unveraendert (muss
   // durchgehen) und einmal mit einer gekippten Zahl (muss abbrechen). Ein Anker, der
   // eine falsche Zahl durchlaesst, ist Deko.
+  const bericht = JSON.parse(fs.readFileSync(berichtPfad, 'utf8'));
+  const ziel = aenderung && !Array.isArray(aenderung)
+    ? pruefeB5SabotageObjekt(bericht, aenderung)
+    : aenderung;
   const skript = [
     'import importlib.util, json, sys',
     'sp = importlib.util.spec_from_file_location("d", sys.argv[1])',
@@ -286,8 +321,8 @@ function ankerLauf(berichtPfad, aenderung = null) {
     'print(m.pruefe_anker(d["baender"], sys.argv[3]))',
   ].join('\n');
   return spawnSync(process.env.PYTHON || 'python',
-    ['-c', skript, SKRIPT, berichtPfad, JSON.parse(fs.readFileSync(berichtPfad, 'utf8')).fenster,
-      aenderung ? JSON.stringify(aenderung) : ''],
+    ['-c', skript, SKRIPT, berichtPfad, bericht.fenster,
+      ziel ? JSON.stringify(ziel) : ''],
     { encoding: 'utf8', cwd: REPO });
 }
 
@@ -314,12 +349,34 @@ test('W8/B5: der E4a-Anker des Entdeckungsfensters geht DURCH und faellt bei Sig
   const gut = ankerLauf(BERICHT_ENTDECKUNG);
   assert.equal(gut.status, 0, `${gut.stdout}${gut.stderr}`);
   for (const ziel of [['2009-2015', 'S-G', 'signal', 'fallzahl'],
-    ['2009-2015', 'S-U', 'kontrolle', 'firmen_mit_erst_ereignis']]) {
+    B5_ENTDECKUNG_POOL_NEGATIVFIXTURE]) {
     const kaputt = ankerLauf(BERICHT_ENTDECKUNG, ziel);
     assert.notEqual(kaputt.status, 0,
-      `Der Entdeckungsanker haette bei ${ziel.join('/')} abbrechen muessen`);
+      'Der Entdeckungsanker haette bei der gebundenen Objektsabotage abbrechen muessen');
     assert.match(`${kaputt.stdout}${kaputt.stderr}`, /W8-ABBRUCH/);
   }
+});
+
+test('W8/B5: der Objektwaechter beweist Anwesenheit UND Abwesenheit der Pool-Sabotage', () => {
+  const bericht = JSON.parse(fs.readFileSync(BERICHT_ENTDECKUNG, 'utf8'));
+  assert.deepEqual(
+    pruefeB5SabotageObjekt(bericht, B5_ENTDECKUNG_POOL_NEGATIVFIXTURE),
+    ['2009-2015', 'S-U', 'kontrolle', 'firmen_mit_erst_ereignis'],
+  );
+  assert.throws(
+    () => pruefeB5SabotageObjekt(bericht, {
+      ...B5_ENTDECKUNG_POOL_NEGATIVFIXTURE,
+      delta: 0,
+    }),
+    /B5-GUARD: deliberate \+1 sabotage is absent/,
+  );
+  assert.throws(
+    () => pruefeB5SabotageObjekt(bericht, {
+      ...B5_ENTDECKUNG_POOL_NEGATIVFIXTURE,
+      feld: 'nicht_vorhanden',
+    }),
+    /B5-GUARD: discovery-pool target object is absent/,
+  );
 });
 
 test('Der E3-Block trifft E3 bit-fuer-bit - Signal UND Kontrollpool', () => {
