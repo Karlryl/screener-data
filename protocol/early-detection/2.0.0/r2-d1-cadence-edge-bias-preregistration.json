@@ -1,0 +1,93 @@
+{
+  "schema": "R2-D1-cadence-edge-bias-preregistration/1",
+  "status": "FROZEN_BEFORE_CORRECTION_PANEL_ACCESS",
+  "createdAt": "2026-08-28",
+  "purpose": "Measure how much of D1 terminal attrition is created by the frozen form-imputed cadence rule and place it beside a company-learned cadence reading without replacing published D1 numbers.",
+  "relationshipToPublishedD1": {
+    "publishedArtifact": "reports/studie/D1-panel-survival-2026-08-23.json",
+    "policy": "append-only comparison; published D1 values are never overwritten",
+    "verdictAuthority": "none"
+  },
+  "allowedInputs": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "forbiddenInputs": [
+    "panel/panel-endtest.sqlite.enc",
+    "any row with accepted date after 2020-12-31",
+    "signals",
+    "prices",
+    "outcomes",
+    "company names"
+  ],
+  "population": {
+    "unit": "one non-empty CIK with at least one 10-K, 10-Q, 20-F, or 40-F filing in an allowed panel",
+    "deduplication": "within company and fiscal period keep the earliest accepted timestamp; amendments do not add intervals",
+    "identityPolicy": "CIK is an in-memory grouping key only and is never written"
+  },
+  "frozenReading": {
+    "quarterlyDays": 91,
+    "annualDays": 365,
+    "rule": "any 10-K or 10-Q makes the company quarterly; companies with only 20-F/40-F are annual",
+    "event": "last accepted date plus frozen cadence is on or before 2020-12-31"
+  },
+  "learnedReading": {
+    "intervalAxis": "positive calendar-day gaps between consecutive unique accepted dates after fiscal-period deduplication",
+    "companyCadenceDays": "ceiling of the median positive interval for that company",
+    "insufficientHistoryFallback": "if fewer than two unique accepted dates remain, reuse the frozen cadence and label the company fallback-imputed",
+    "event": "last accepted date plus learned-or-fallback cadence is on or before 2020-12-31",
+    "curve": "discrete Kaplan-Meier curve using the same entry, duration, event ordering, and administrative cutoff as published D1"
+  },
+  "reporterTypes": [
+    {
+      "name": "domestic-quarterly",
+      "rule": "at least one 10-Q"
+    },
+    {
+      "name": "domestic-annual-only",
+      "rule": "at least one 10-K and no 10-Q"
+    },
+    {
+      "name": "foreign-annual-only",
+      "rule": "no 10-K or 10-Q and at least one 20-F or 40-F"
+    }
+  ],
+  "panelEdgeDistance": {
+    "statistic": "calendar days from the company's last accepted filing to 2020-12-31",
+    "bandsDaysInclusive": [
+      "0-90",
+      "91-120",
+      "121-180",
+      "181-270",
+      "271-365",
+      "366+"
+    ]
+  },
+  "testStatistics": {
+    "primary": "count of frozen terminal exits that become right-censored under the learned reading",
+    "secondary": [
+      "primary count by reporter type and panel-edge distance band",
+      "terminal exits, right-censored companies, and median stay quarters under both readings",
+      "learned cadence distribution by reporter type",
+      "count of learned terminal exits that are right-censored under the frozen reading",
+      "2020Q4 terminal exits under both readings"
+    ],
+    "effectiveN": "unique companies; filings and intervals are not independent observations"
+  },
+  "nullModel": "The frozen form-imputed reading and the company-learned reading classify every company identically at the panel edge.",
+  "threshold": "Any classification difference is reported descriptively; no significance, study, method, or product gate is created.",
+  "correctionRule": "If the learned-reading median differs from the published D1 median of 27 quarters, append a correction note to D1, D2, D4, and D5; never edit their published numbers.",
+  "requiredInvariants": [
+    "the frozen reading reproduces the complete published D1 counts, median, survival curve, and exit-quarter table exactly",
+    "both readings reconcile terminal exits plus right-censored companies to the same effective N",
+    "reporter-type rows and panel-edge bands each partition the primary difference count",
+    "no company identifier, company name, signal, price, outcome, or post-2020 date is written",
+    "the output contains both readings and cannot silently replace published D1"
+  ],
+  "explicitNonClaims": [
+    "The learned cadence is a sensitivity reading, not a corrected study verdict.",
+    "A reporting gap does not identify bankruptcy, delisting, or business failure.",
+    "A fallback-imputed company does not provide a company-learned cadence.",
+    "The comparison does not access or describe the sealed 2021-2023 endtest."
+  ]
+}
