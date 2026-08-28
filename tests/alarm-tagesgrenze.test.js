@@ -124,5 +124,65 @@ check('(f) Verdrahtung: heartbeat.yml-Block liefert fuer den Vorfall Stunden > S
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+// ── (g) JEDER run-Block beider Workflows ist syntaktisch gueltige Shell ────────
+// WARUM DAS HIER STEHT (28.08., Review-Befund): die Erst-Fassung dieses Fixes schob
+// beim Umschreiben ein ueberzaehliges " in die Alarm-Meldung (heartbeat.yml:72). Der
+// String schloss ~700 Zeichen zu frueh, und weil bash den kompletten if/fi-Block VOR
+// der Ausfuehrung parst, waere der Schritt bei JEDEM Lauf mit einem Parser-Fehler rot
+// geworden — bei frischen Daten genauso wie bei veralteten. Ein dauerhaft rotes,
+// inhaltsloses X ist fuer Karl dasselbe wie gar kein Alarm: genau die Fehlerklasse,
+// die dieser Fix schliessen soll, nur eine Ebene tiefer.
+// Probe (f) oben hat es NICHT gefangen — sie schneidet das JS-Fragment heraus und
+// fasst die umgebende Shell nie an. Diese Probe deckt die Luecke fuer ALLE Bloecke.
+check('(g) jeder run-Block in heartbeat.yml und weekly-guard.yml parst als Shell', () => {
+  // ZWEI STAERKEN, nie ein stiller Skip. Auf ubuntu (CI) parst bash die Bloecke
+  // wirklich. Auf Karls Windows-Kiste liegt bash nicht im PATH des Test-Gates —
+  // dort laeuft ersatzweise eine Anfuehrungszeichen-Bilanz ueber denselben Bloecken.
+  // Die ist schwaecher, faengt aber genau die Klasse, um die es hier geht (ein
+  // ueberzaehliges "). Welche Stufe lief, steht in der Ausgabe — ein Waechter, der
+  // heimlich nicht laeuft, waere wertlos.
+  const hatBash = spawnSync('bash', ['--version'], { encoding: 'utf8' }).status === 0;
+  console.log('       Stufe: ' + (hatBash ? 'bash -n (voll)' : 'Anfuehrungszeichen-Bilanz (Ersatz, kein bash im PATH)'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'runblocks-'));
+  let geprueft = 0;
+  for (const datei of ['heartbeat.yml', 'weekly-guard.yml']) {
+    const text = fs.readFileSync(path.join(ROOT, '.github', 'workflows', datei), 'utf8');
+    const zeilen = text.split(/\r?\n/);
+    for (let i = 0; i < zeilen.length; i++) {
+      const m = /^(\s*)(?:- )?run: \|\s*$/.exec(zeilen[i]);
+      if (!m) continue;
+      const tiefer = m[1].length + 1;
+      const rumpf = [];
+      for (let j = i + 1; j < zeilen.length; j++) {
+        if (zeilen[j].trim() === '') { rumpf.push(''); continue; }
+        const einzug = zeilen[j].length - zeilen[j].trimStart().length;
+        if (einzug < tiefer) break;
+        rumpf.push(zeilen[j].slice(tiefer));
+      }
+      // ${{ ... }} ist Actions-Interpolation, keine Shell — durch einen harmlosen
+      // Platzhalter ersetzen, sonst stolpert bash ueber die geschweiften Klammern.
+      const skript = rumpf.join('\n').replace(/\$\{\{[^}]*\}\}/g, 'PLATZHALTER');
+      if (hatBash) {
+        const f = path.join(dir, datei + '-' + i + '.sh');
+        fs.writeFileSync(f, skript);
+        const r = spawnSync('bash', ['-n', f], { encoding: 'utf8' });
+        assert.equal(r.status, 0,
+          datei + ', run-Block ab Zeile ' + (i + 1) + ': Shell-Syntaxfehler — der Schritt waere bei JEDEM Lauf rot.\n' + r.stderr);
+      } else {
+        // Ersatzstufe: unmaskierte " je Block muessen sich paaren. Mehrzeilige
+        // Zeichenketten (node -e "...") sind damit erlaubt, ein einzelnes
+        // ueberzaehliges " nicht — genau der Fehler vom 28.08.
+        const anfuehrung = (skript.match(/(^|[^\\])"/g) || []).length;
+        assert.equal(anfuehrung % 2, 0,
+          datei + ', run-Block ab Zeile ' + (i + 1) + ': ungerade Zahl unmaskierter Anfuehrungszeichen ('
+          + anfuehrung + ') — eine Zeichenkette schliesst zu frueh, der Schritt waere bei JEDEM Lauf rot.');
+      }
+      geprueft++;
+    }
+  }
+  assert.ok(geprueft >= 6, 'nur ' + geprueft + ' run-Bloecke gefunden — die Extraktion greift nicht mehr');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
