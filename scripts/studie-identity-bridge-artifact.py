@@ -34,6 +34,15 @@ DETERMINISM_CORRECTION_REL = (
 DETERMINISM_CORRECTION = os.path.join(
     REPO, *DETERMINISM_CORRECTION_REL.split("/")
 )
+BLOCKER_CLOSURE_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-blocker2-3-closure-record.json"
+)
+BLOCKER_CLOSURE = os.path.join(REPO, *BLOCKER_CLOSURE_REL.split("/"))
+DETERMINISM_FIXTURE_REL = (
+    "tests/fixtures/studie-identity-bridge-determinism-input.json"
+)
+DETERMINISM_FIXTURE = os.path.join(REPO, *DETERMINISM_FIXTURE_REL.split("/"))
 D3_SCRIPT_REL = "scripts/studie-identifier-bridge.py"
 BASIS_SCRIPT_REL = "scripts/studie-basisraten.py"
 COUNT_SCRIPT_REL = "scripts/studie-zaehlprobe.py"
@@ -296,7 +305,8 @@ def compare_independent_build_records(builder_a, builder_b):
     }
 
 
-def write_sharded_artifact(manifest_path, manifest, shards):
+def write_sharded_artifact(manifest_path, artifact, manifest, shards):
+    validate_bridge_write_bundle(artifact, manifest, shards)
     root = os.path.dirname(os.path.abspath(manifest_path))
     expected_names = {relative.replace("/", os.sep) for relative, _payload in shards}
     shard_root = os.path.join(root, os.path.splitext(os.path.basename(manifest_path))[0])
@@ -879,6 +889,45 @@ def seam_pairs(artifact):
     return pairs
 
 
+def validate_bridge_write_payload(value, known_seams):
+    """Reject derived cross-seam rows unless their enclosing result is explicit."""
+    guarded_results = 0
+
+    def visit(node):
+        nonlocal guarded_results
+        if isinstance(node, dict):
+            if "changes" in node:
+                validate_derived_result(node, known_seams)
+                guarded_results += 1
+                for key, child in node.items():
+                    if key != "changes":
+                        visit(child)
+                return
+            if {"fromIdentifierId", "toIdentifierId"}.issubset(node):
+                if node["fromIdentifierId"] != node["toIdentifierId"]:
+                    raise ArtifactError(
+                        "Cross-seam provenance row is outside a guarded derived result"
+                    )
+            for child in node.values():
+                visit(child)
+        elif isinstance(node, list):
+            for child in node:
+                visit(child)
+
+    visit(value)
+    return guarded_results
+
+
+def validate_bridge_write_bundle(artifact, manifest, shards):
+    """Production write gate for the manifest and every identity-bridge shard."""
+    validate_artifact(artifact)
+    known_seams = seam_pairs(artifact)
+    guarded_results = validate_bridge_write_payload(manifest, known_seams)
+    for _relative, payload in shards:
+        guarded_results += validate_bridge_write_payload(payload, known_seams)
+    return guarded_results
+
+
 def derive_changes(observations, artifact, cross_seam=False, emit_marker=True):
     ordered = sorted(observations, key=lambda row: row["date"])
     known_seams = seam_pairs(artifact)
@@ -952,6 +1001,103 @@ def fixture_state():
     return state
 
 
+def state_from_fixed_fixture(payload):
+    if payload.get("schema") != "R2-A1-identity-bridge-determinism-input/1":
+        raise ArtifactError("Determinism fixture has the wrong schema")
+    key = payload.get("identityKeyUtf8", "").encode("utf-8")
+    state = new_scan_state(key)
+    for row in payload.get("identities", []):
+        identity = state["identities"][str(row["cik"])]
+        identity["names"].update(row.get("names", []))
+        identity["renameEdges"].update(
+            tuple(sorted(edge)) for edge in row.get("renameEdges", [])
+        )
+        identity["windows"].update(row.get("windows", []))
+    for row in payload.get("components", []):
+        key_tuple = (
+            str(row["cik"]), row["unit"], row["date"], row["quarterSpan"]
+        )
+        state["components"][key_tuple].update(row.get("tags", []))
+    for row in payload.get("dateWindows", []):
+        key_tuple = (str(row["cik"]), row["unit"], row["date"])
+        state["dateWindows"][key_tuple].update(row.get("windows", []))
+    state["inputSummaries"] = payload.get("inputSummaries", [])
+    state["counters"].update(payload.get("counters", {}))
+    return state
+
+
+def fixed_fixture_artifact(path):
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    return artifact_from_fixed_fixture_payload(payload)
+
+
+def artifact_from_fixed_fixture_payload(payload):
+    return artifact_from_state(state_from_fixed_fixture(payload))
+
+
+def load_blocker_closure():
+    with open(BLOCKER_CLOSURE, encoding="utf-8") as handle:
+        record = json.load(handle)
+    if record.get("status") != "FROZEN_BLOCKER_2_3_CLOSURE":
+        raise ArtifactError("Blocker closure record is not frozen")
+    return record
+
+
+def verify_determinism_fixture(path):
+    record = load_blocker_closure()
+    binding = record["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+        raise ArtifactError("Fixed determinism input fixture hash mismatch")
+    observed = fixed_fixture_artifact(path)["canonicalPayloadSha256"]
+    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    if observed != expected:
+        raise ArtifactError(
+            "Fixed determinism output hash mismatch: " + observed + " != " + expected
+        )
+    print(json.dumps({
+        "fixtureSha256": sha256_file(path),
+        "logicalPayloadSha256": observed,
+        "status": "GREEN",
+    }, sort_keys=True))
+    return 0
+
+
+def sabotage_determinism_fixture(path, proof_path=None):
+    record = load_blocker_closure()
+    binding = record["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+        raise ArtifactError("Fixed determinism input fixture hash mismatch before sabotage")
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    mutation = binding["deliberateMutation"]
+    component = payload["components"][mutation["componentIndex"]]
+    if component[mutation["field"]] != mutation["from"]:
+        raise ArtifactError("Determinism sabotage fixture no longer has its pinned source value")
+    component[mutation["field"]] = mutation["to"]
+    observed = artifact_from_fixed_fixture_payload(payload)["canonicalPayloadSha256"]
+    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    proof = {
+        "schema": "R2-A1-determinism-fixture-sabotage-proof/1",
+        "fixture": DETERMINISM_FIXTURE_REL,
+        "mutation": mutation,
+        "expectedLogicalPayloadSha256": expected,
+        "observedLogicalPayloadSha256": observed,
+        "observedStatus": "RED" if observed != expected else "GREEN",
+        "passes": observed != expected,
+    }
+    if proof_path:
+        write_json(proof_path, proof)
+    if proof["passes"]:
+        print(
+            "DETERMINISM FIXTURE SABOTAGE RED: input mutation changed the pinned output hash",
+            file=sys.stderr,
+        )
+        return 1
+    print("DETERMINISM FIXTURE SABOTAGE FAILED: mutation stayed green", file=sys.stderr)
+    return 0
+
+
 SELF_TEST_NAMES = (
     "Registration is frozen before R2-A1 fact access",
     "Production fact query excludes every numeric and result column",
@@ -975,6 +1121,9 @@ SELF_TEST_NAMES = (
     "Legacy reversible fixture IDs are recovered by the public watcher",
     "Independent comparator accepts two distinct complete build records",
     "Independent comparator rejects one mismatched rebuild fingerprint",
+    "Fixed input fixture reproduces its pinned logical payload hash",
+    "One fixed input field mutation changes the pinned logical payload hash",
+    "Production bridge writer gates the manifest and every shard",
 )
 
 
@@ -1109,6 +1258,56 @@ def self_test():
         and independent_red["fingerprintMismatches"] == ["shardSetSha256"],
         independent_red,
     )
+    closure = load_blocker_closure()
+    fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
+    fixture_artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
+    check(
+        SELF_TEST_NAMES[22],
+        sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
+        and fixture_artifact["canonicalPayloadSha256"]
+        == fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        fixture_artifact["canonicalPayloadSha256"],
+    )
+    with open(DETERMINISM_FIXTURE, encoding="utf-8") as handle:
+        mutated_payload = json.load(handle)
+    mutation = fixture_binding["deliberateMutation"]
+    mutated_payload["components"][mutation["componentIndex"]][mutation["field"]] = (
+        mutation["to"]
+    )
+    mutated_hash = artifact_from_fixed_fixture_payload(mutated_payload)[
+        "canonicalPayloadSha256"
+    ]
+    check(
+        SELF_TEST_NAMES[23],
+        mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        mutated_hash,
+    )
+    clean_manifest, clean_shards = manifest_from_artifact(
+        fixture_artifact, "fixture-bridge.json"
+    )
+    clean_guarded = validate_bridge_write_bundle(
+        fixture_artifact, clean_manifest, clean_shards
+    )
+    sabotaged_shards = json.loads(json.dumps(clean_shards))
+    seam = fixture_artifact["entities"][0]["seams"][0]
+    sabotaged_shards[0][1]["derivedSeries"] = {
+        "changes": [{
+            "fromIdentifierId": seam["oldIdentifierId"],
+            "toIdentifierId": seam["newIdentifierId"],
+            "change": 1.0,
+        }]
+    }
+    try:
+        write_sharded_artifact(
+            os.path.join(REPO, ".never-written-bridge-sabotage.json"),
+            fixture_artifact,
+            clean_manifest,
+            sabotaged_shards,
+        )
+        writer_rejected = False
+    except ArtifactError:
+        writer_rejected = True
+    check(SELF_TEST_NAMES[24], clean_guarded == 0 and writer_rejected)
     if failures:
         print("SELBSTTEST ROT - %d named checks failed" % len(failures))
         return 1
@@ -1144,6 +1343,44 @@ def sabotage_cross_seam(proof_path=None):
         print("SABOTAGE RED: " + str(error), file=sys.stderr)
         return 1
     print("SABOTAGE FAILED: unmarked cross-seam calculation stayed green", file=sys.stderr)
+    return 0
+
+
+def sabotage_bridge_write(proof_path=None):
+    artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
+    manifest, shards = manifest_from_artifact(artifact, "fixture-bridge.json")
+    sabotaged = json.loads(json.dumps(shards))
+    seam = artifact["entities"][0]["seams"][0]
+    sabotaged[0][1]["derivedSeries"] = {
+        "changes": [{
+            "fromIdentifierId": seam["oldIdentifierId"],
+            "toIdentifierId": seam["newIdentifierId"],
+            "change": 1.0,
+        }]
+    }
+    try:
+        write_sharded_artifact(
+            os.path.join(REPO, ".never-written-bridge-sabotage.json"),
+            artifact,
+            manifest,
+            sabotaged,
+        )
+    except ArtifactError as error:
+        proof = {
+            "schema": "R2-A1-bridge-write-sabotage-proof/1",
+            "writer": "write_sharded_artifact",
+            "guard": "validate_bridge_write_bundle",
+            "payload": "identity-bridge shard",
+            "sabotage": "unmarked cross-seam derived row before shard write",
+            "guardMessage": str(error),
+            "observedStatus": "RED",
+            "writeOccurred": False,
+        }
+        if proof_path:
+            write_json(proof_path, proof)
+        print("BRIDGE WRITE SABOTAGE RED: " + str(error), file=sys.stderr)
+        return 1
+    print("BRIDGE WRITE SABOTAGE FAILED: unmarked seam reached the writer", file=sys.stderr)
     return 0
 
 
@@ -1541,7 +1778,7 @@ def build_empirical(args):
     artifact, manifest, shards, independent_proof = run_independent_build_pair(args)
     if independent_proof["passes"] is not True:
         raise ArtifactError("Independent rebuild fingerprints differ")
-    write_sharded_artifact(args.artifact, manifest, shards)
+    write_sharded_artifact(args.artifact, artifact, manifest, shards)
     independent_proof = load_independent_rebuild_proof(
         args.independent_proof, args.artifact
     )
@@ -1592,8 +1829,12 @@ def main(argv=None):
     parser.add_argument("--emit-independent-build", action="store_true")
     parser.add_argument("--sabotage-independent-fingerprint", action="store_true")
     parser.add_argument("--sabotage-independent-rebuild", action="store_true")
+    parser.add_argument("--verify-determinism-fixture", action="store_true")
+    parser.add_argument("--sabotage-determinism-fixture", action="store_true")
+    parser.add_argument("--sabotage-bridge-write", action="store_true")
     parser.add_argument("--namespace-max", type=int, default=PUBLIC_CIK_MAX)
     parser.add_argument("--proof")
+    parser.add_argument("--fixture", default=DETERMINISM_FIXTURE)
     parser.add_argument("--discovery")
     parser.add_argument("--validation")
     parser.add_argument("--artifact")
@@ -1610,6 +1851,12 @@ def main(argv=None):
         return self_test()
     if args.sabotage_cross_seam:
         return sabotage_cross_seam(args.proof)
+    if args.verify_determinism_fixture:
+        return verify_determinism_fixture(args.fixture)
+    if args.sabotage_determinism_fixture:
+        return sabotage_determinism_fixture(args.fixture, args.proof)
+    if args.sabotage_bridge_write:
+        return sabotage_bridge_write(args.proof)
     if args.verify_public_ids:
         if not args.artifact:
             parser.error("--verify-public-ids requires --artifact")

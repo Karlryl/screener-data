@@ -14,6 +14,10 @@ const CORRECTION = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'r2-a1-blocker1-identity-protection-correction.json');
 const DETERMINISM_CORRECTION = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'r2-a1-blocker2-independent-rebuild-correction.json');
+const BLOCKER_CLOSURE = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
+  'r2-a1-blocker2-3-closure-record.json');
+const DETERMINISM_FIXTURE = path.join(REPO, 'tests', 'fixtures',
+  'studie-identity-bridge-determinism-input.json');
 const ARTIFACT = path.join(REPO, 'reports', 'studie',
   'R2-A1-identity-bridge-panel-v1.json');
 const RESULT = path.join(REPO, 'reports', 'studie',
@@ -30,6 +34,12 @@ const INDEPENDENT_PROOF = path.join(REPO, 'reports', 'studie',
   'R2-A1-independent-rebuild-proof-2026-08-25.json');
 const INDEPENDENT_SABOTAGE = path.join(REPO, 'reports', 'studie',
   'R2-A1-independent-rebuild-sabotage-2026-08-25.json');
+const DETERMINISM_SABOTAGE = path.join(REPO, 'reports', 'studie',
+  'R2-A1-determinism-fixture-sabotage-2026-08-28.json');
+const BRIDGE_WRITE_SABOTAGE = path.join(REPO, 'reports', 'studie',
+  'R2-A1-bridge-write-sabotage-2026-08-28.json');
+const CLOSURE_REPORT = path.join(REPO, 'reports', 'studie',
+  'R2-A1-identity-bridge-blocker-closure-2026-08-28.md');
 
 const REQUIRED = [
   'Registration is frozen before R2-A1 fact access',
@@ -54,6 +64,9 @@ const REQUIRED = [
   'Legacy reversible fixture IDs are recovered by the public watcher',
   'Independent comparator accepts two distinct complete build records',
   'Independent comparator rejects one mismatched rebuild fingerprint',
+  'Fixed input fixture reproduces its pinned logical payload hash',
+  'One fixed input field mutation changes the pinned logical payload hash',
+  'Production bridge writer gates the manifest and every shard',
 ];
 
 test('R2-A1: fixture self-test is named, countable, and green', () => {
@@ -67,7 +80,7 @@ test('R2-A1: fixture self-test is named, countable, and green', () => {
     .map((line) => line.replace(/^\s{2}ok\s{4}/, '').trim()));
   assert.deepEqual(REQUIRED.filter((name) => !green.has(name)), []);
   assert.equal(green.size, REQUIRED.length);
-  assert.match(run.stdout, /SELBSTTEST GREEN - 22 named checks/);
+  assert.match(run.stdout, /SELBSTTEST GREEN - 25 named checks/);
 });
 
 test('R2-A1: deliberate unmarked cross-seam calculation fails red', () => {
@@ -175,6 +188,7 @@ function loadBundle() {
 test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', () => {
   const { manifest, logical } = loadBundle();
   const result = JSON.parse(fs.readFileSync(RESULT, 'utf8'));
+  const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
   assert.equal(manifest.schema, 'R2-A1-identity-bridge-panel-manifest/1');
   assert.equal(manifest.artifactVersion, '1.1.0');
   assert.equal(result.panelArtifact.sha256, sha256(ARTIFACT));
@@ -212,7 +226,8 @@ test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', ()
   assert.deepEqual(result.inputs.map((row) => row.file).sort(),
     ['panel-entdeckung.sqlite', 'panel-validierung.sqlite']);
   for (const [relative, expected] of Object.entries(result.boundImplementation)) {
-    assert.equal(sha256(path.join(REPO, ...relative.split('/'))), expected, relative);
+    const currentExpected = closure.currentImplementation[relative] || expected;
+    assert.equal(sha256(path.join(REPO, ...relative.split('/'))), currentExpected, relative);
   }
 });
 
@@ -284,6 +299,74 @@ test('R2-A1 Blocker 2: two full process-isolated rebuilds match and sabotage is 
   assert.equal(result.independentRebuildProof.sabotage.sha256,
     sha256(INDEPENDENT_SABOTAGE));
   assert.equal(result.independentRebuildProof.sabotage.observedRed, true);
+});
+
+test('R2-A1 Blocker 2: fixed fixture hits pinned output hash and one field flip is red', () => {
+  const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
+  const binding = closure.blocker2MutationSensitiveDeterminism;
+  assert.equal(closure.status, 'FROZEN_BLOCKER_2_3_CLOSURE');
+  assert.equal(sha256(DETERMINISM_FIXTURE), binding.fixedInputFixture.sha256);
+
+  const green = spawnSync(process.env.PYTHON || 'python', [
+    SCRIPT, '--verify-determinism-fixture', '--fixture', DETERMINISM_FIXTURE,
+  ], { cwd: REPO, encoding: 'utf8' });
+  assert.equal(green.status, 0, `${green.stdout}\n${green.stderr}`);
+  const observed = JSON.parse(green.stdout.trim());
+  assert.equal(observed.logicalPayloadSha256,
+    binding.pinnedExpectedLogicalPayloadSha256);
+
+  const red = spawnSync(process.env.PYTHON || 'python', [
+    SCRIPT, '--sabotage-determinism-fixture', '--fixture', DETERMINISM_FIXTURE,
+  ], { cwd: REPO, encoding: 'utf8' });
+  assert.notEqual(red.status, 0, `${red.stdout}\n${red.stderr}`);
+  assert.match(`${red.stdout}\n${red.stderr}`,
+    /DETERMINISM FIXTURE SABOTAGE RED/);
+  const proof = JSON.parse(fs.readFileSync(DETERMINISM_SABOTAGE, 'utf8'));
+  assert.equal(proof.observedStatus, 'RED');
+  assert.equal(proof.passes, true);
+  assert.notEqual(proof.observedLogicalPayloadSha256,
+    proof.expectedLogicalPayloadSha256);
+  assert.equal(sha256(DETERMINISM_SABOTAGE), binding.proof.sha256);
+});
+
+test('R2-A1 Blocker 3: production bridge writer guards manifest and every shard', () => {
+  const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
+  const binding = closure.blocker3ProductionSeamGuard;
+  const source = fs.readFileSync(SCRIPT, 'utf8');
+  assert.match(source,
+    /def write_sharded_artifact\([\s\S]*?validate_bridge_write_bundle\(artifact, manifest, shards\)[\s\S]*?root =/);
+  assert.deepEqual(binding.guardedWrites,
+    ['identity-bridge manifest', 'every identity-bridge shard']);
+
+  const red = spawnSync(process.env.PYTHON || 'python', [
+    SCRIPT, '--sabotage-bridge-write',
+  ], { cwd: REPO, encoding: 'utf8' });
+  assert.notEqual(red.status, 0, `${red.stdout}\n${red.stderr}`);
+  assert.match(`${red.stdout}\n${red.stderr}`,
+    /BRIDGE WRITE SABOTAGE RED: Unmarked cross-seam derived calculation/);
+  const proof = JSON.parse(fs.readFileSync(BRIDGE_WRITE_SABOTAGE, 'utf8'));
+  assert.equal(proof.observedStatus, 'RED');
+  assert.equal(proof.writeOccurred, false);
+  assert.equal(sha256(BRIDGE_WRITE_SABOTAGE), binding.proof.sha256);
+});
+
+test('R2-A1 blocker closure leaves historical artifact and sealed scope unchanged', () => {
+  const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
+  assert.equal(sha256(RESULT), closure.historicalArtifact.sha256);
+  assert.equal(closure.historicalArtifact.changed, false);
+  assert.equal(closure.closureReady, true);
+  assert.deepEqual(closure.scope, {
+    panelsOpened: 0,
+    eStagesExecuted: 0,
+    outcomesRead: 0,
+    pricesRead: 0,
+    endtestOpened: false,
+    confirmatoryVerdictsChanged: 0,
+    historicalArtifactsRewritten: 0,
+  });
+  const report = fs.readFileSync(CLOSURE_REPORT, 'utf8');
+  assert.match(report, /T159 ist schliessbereit/);
+  assert.match(report, /Methodik-Korrekturen[\s\S]*bleiben unveraendert offen/);
 });
 
 test('R2-A1: red sabotage proof and report are bound to machine artifacts', () => {

@@ -1,0 +1,78 @@
+{
+  "schema": "R2-A1-identity-bridge-determinism-input/1",
+  "identityKeyUtf8": "fixture-only-hmac-key-32-bytes!!",
+  "identities": [
+    {
+      "cik": "100",
+      "names": ["ALPHA INC"],
+      "renameEdges": [],
+      "windows": ["pruefung"]
+    },
+    {
+      "cik": "200",
+      "names": ["NEW CO", "OLD CO"],
+      "renameEdges": [["NEW CO", "OLD CO"]],
+      "windows": ["pruefung"]
+    },
+    {
+      "cik": "300",
+      "names": ["UNLINKED A", "UNLINKED B"],
+      "renameEdges": [],
+      "windows": ["pruefung"]
+    }
+  ],
+  "components": [
+    {
+      "cik": "100",
+      "unit": "USD",
+      "date": "20180331",
+      "quarterSpan": "1",
+      "tags": ["SalesRevenueNet"]
+    },
+    {
+      "cik": "100",
+      "unit": "USD",
+      "date": "20180630",
+      "quarterSpan": "1",
+      "tags": ["SalesRevenueNet"]
+    },
+    {
+      "cik": "100",
+      "unit": "USD",
+      "date": "20180930",
+      "quarterSpan": "1",
+      "tags": ["RevenueFromContractWithCustomerExcludingAssessedTax"]
+    },
+    {
+      "cik": "100",
+      "unit": "EUR",
+      "date": "20181231",
+      "quarterSpan": "1",
+      "tags": ["RevenueFromContractWithCustomerExcludingAssessedTax"]
+    }
+  ],
+  "dateWindows": [
+    {"cik": "100", "unit": "EUR", "date": "20180331", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "EUR", "date": "20180630", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "EUR", "date": "20180930", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "EUR", "date": "20181231", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "USD", "date": "20180331", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "USD", "date": "20180630", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "USD", "date": "20180930", "windows": ["pruefung"]},
+    {"cik": "100", "unit": "USD", "date": "20181231", "windows": ["pruefung"]}
+  ],
+  "inputSummaries": [
+    {
+      "file": "fixture.sqlite",
+      "bytes": 1,
+      "reportRowsRead": 3,
+      "periodicIdentityRows": 3,
+      "factMetadataRowsRead": 4,
+      "eligibleFactMetadataRows": 4,
+      "lastAllowedDate": "2020-12-31",
+      "identityEvidenceSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "factMetadataEvidenceSha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    }
+  ],
+  "counters": {}
+}
