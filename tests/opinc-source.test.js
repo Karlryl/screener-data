@@ -220,6 +220,29 @@ t('run() ueber ein Verzeichnis: schreibt, zaehlt und laesst Nur-Yahoo-Namen in R
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// H1 (Nacht-Sweep 29.08.): FEHLEND und UNLESBAR sind zwei verschiedene Zustaende.
+// Beide Richtungen, sonst ist die Wache blind: die abwesende Schicht MUSS still
+// uebersprungen werden (sonst laeuft kein Small-Cap-Lauf mehr), die truncierte MUSS
+// den Lauf reissen (sonst faellt die Quellen-Praeferenz still auf Yahoo zurueck).
+t('loadSecLayer: fehlende Schicht = still, kaputte Schicht = Abbruch', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-sec-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(path.join(tmp, 'external-data'), { recursive: true });
+  fs.mkdirSync(store, { recursive: true });
+  fs.writeFileSync(path.join(store, 'HNRG.json'), JSON.stringify(snap('HNRG', HNRG_YAHOO_OPINC, HNRG_YAHOO_REV)));
+
+  // Richtung A: gar keine Schicht -> kein Wurf, nur leeres `geladen`.
+  const ohne = run({ root: tmp, dirs: ['snapshots'] });
+  assert.deepEqual(ohne.zusammenfassung.secDateien, [], 'fehlende Datei darf nicht werfen');
+
+  // Richtung B: Schicht vorhanden, aber abgeschnitten -> Abbruch statt stiller Rueckfall.
+  const p = path.join(tmp, 'external-data', 'sec-secannual.json');
+  fs.writeFileSync(p, JSON.stringify({ HNRG: secOf(HNRG_SEC_OPINC, HNRG_SEC_REV) }).slice(0, 120));
+  assert.throws(() => run({ root: tmp, dirs: ['snapshots'] }), /JSON|Unexpected|Unterminated/i,
+    'truncierte SEC-Schicht muss den Lauf reissen, nicht die Praeferenz zurueckdrehen');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });

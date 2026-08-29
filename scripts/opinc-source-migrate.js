@@ -217,7 +217,11 @@ function loadSecLayer(root = ROOT, files = SECANNUAL_FILES) {
   for (const f of files) {
     const p = path.join(root, 'external-data', f);
     try { Object.assign(data, JSON.parse(fs.readFileSync(p, 'utf8'))); geladen.push(f); }
-    catch (_) { /* Datei fehlt -> skip, wie mergeSecIntoUniverse */ }
+    // FEHLT ist erlaubt (wie mergeSecIntoUniverse), UNLESBAR nicht: eine truncierte
+    // Schicht sah bisher aus wie eine abwesende und drehte die Quellen-Praeferenz still
+    // zurueck auf den Urteilsanker (HNRG -> yahoo-adjusted / FY2024 -555000), waehrend
+    // der Lauf mit Exit 0 weiterlief und run-screener.js direkt danach veroeffentlichte.
+    catch (e) { if (e.code !== 'ENOENT') throw e; }
   }
   return { data, geladen };
 }
