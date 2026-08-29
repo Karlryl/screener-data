@@ -39,6 +39,10 @@ BLOCKER_CLOSURE_REL = (
     "r2-a1-blocker2-3-closure-record.json"
 )
 BLOCKER_CLOSURE = os.path.join(REPO, *BLOCKER_CLOSURE_REL.split("/"))
+V120_CLOSURE_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-v120-closure-record.json"
+)
 DETERMINISM_FIXTURE_REL = (
     "tests/fixtures/studie-identity-bridge-determinism-input.json"
 )
@@ -52,13 +56,15 @@ LAST_ALLOWED_DDATE = "20201231"
 ARTIFACT_VERSION = "1.2.0"
 PRIOR_ARTIFACT_VERSION = "1.0.0"
 BLOCKER1_ARTIFACT_VERSION = "1.1.0"
-# The determinism-fixture pin in the frozen closure record was computed under
-# this artifact version. ARTIFACT_VERSION sits inside the HMAC payload, so any
-# bump changes every E-, I- and S-ID and therefore the pinned logical payload
-# hash. The pin must be re-registered by the orchestrator before it can be
-# compared again; until then the fixture checks fail loudly instead of
-# comparing a 1.1.0 hash against a 1.2.0 artifact.
-PINNED_FIXTURE_ARTIFACT_VERSION = "1.1.0"
+# ARTIFACT_VERSION sits inside the HMAC payload, so every bump changes all E-,
+# I- and S-IDs and therefore the pinned logical payload hash. A payload pin is
+# valid for exactly ONE artifact version and is written by that version's
+# post-run closure record. Old versions stay checkable against their own
+# record; a missing entry is a loud refusal, never a silent pass.
+CLOSURE_RECORDS = {
+    "1.1.0": (BLOCKER_CLOSURE_REL, "FROZEN_BLOCKER_2_3_CLOSURE"),
+    "1.2.0": (V120_CLOSURE_REL, "FROZEN_V120_CLOSURE"),
+}
 PRIOR_MANIFEST_SHA256 = "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc"
 PUBLIC_ID_SAMPLE = 50
 PUBLIC_CIK_MAX = 2_100_000
@@ -1197,25 +1203,54 @@ def load_blocker_closure():
     return record
 
 
-def pinned_fixture_binding():
-    """Refuse to reuse a pin that was computed under another artifact version."""
-    binding = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
-    if ARTIFACT_VERSION != PINNED_FIXTURE_ARTIFACT_VERSION:
+def pinned_fixture_binding(version=None):
+    """Resolve the logical-payload pin from the closure record OF THAT VERSION.
+
+    Two-stage pin protocol (ENTSCHIED 6, Q1): a correction record frozen BEFORE
+    a run can only pin what is knowable beforehand - script hash, artifact
+    version, procedure. The payload hash is knowable only afterwards and is
+    therefore carried by a post-run closure record, one per artifact version.
+    Resolving per version keeps the old pin checkable against the old artifact
+    and stops a pin from one version silently judging another version's bytes.
+    """
+    version = version or ARTIFACT_VERSION
+    entry = CLOSURE_RECORDS.get(version)
+    if entry is None:
         raise ArtifactError(
-            "Determinism fixture pin belongs to artifact version "
-            + PINNED_FIXTURE_ARTIFACT_VERSION + "; version " + ARTIFACT_VERSION
-            + " needs a re-pin registered by the orchestrator before this "
-            "comparison can mean anything"
+            "No closure record is registered for artifact version " + version
+        )
+    relative, expected_status = entry
+    path = repo_path(relative)
+    if not os.path.isfile(path):
+        raise ArtifactError(
+            "The post-run closure record for artifact version " + version
+            + " does not exist yet (" + relative + "). Its payload pin is"
+            " written after the one canonical re-proof, never before it."
+        )
+    with open(path, encoding="utf-8") as handle:
+        record = json.load(handle)
+    if record.get("status") != expected_status:
+        raise ArtifactError(
+            "Closure record for artifact version " + version + " is not frozen"
+        )
+    binding = record["blocker2MutationSensitiveDeterminism"]
+    # The 1.1.0 record predates the field; the version->record map already binds
+    # it. Any record that DOES carry it must agree, or the pin is not its own.
+    if binding.get("boundArtifactVersion", version) != version:
+        raise ArtifactError(
+            "Closure record pin is bound to another artifact version"
         )
     return binding
 
 
 def verify_determinism_fixture(path):
-    binding = pinned_fixture_binding()
-    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+    # Input-side facts (fixture bytes, deliberate mutation) are version-free and
+    # stay in the blocker closure; only the OUTPUT pin is resolved per version.
+    inputs = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != inputs["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch")
     observed = fixed_fixture_artifact(path)["canonicalPayloadSha256"]
-    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    expected = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
     if observed != expected:
         raise ArtifactError(
             "Fixed determinism output hash mismatch: " + observed + " != " + expected
@@ -1229,22 +1264,23 @@ def verify_determinism_fixture(path):
 
 
 def sabotage_determinism_fixture(path, proof_path=None):
-    # Guarded too: under a drifted version the mutation would look red for the
-    # version bump rather than for the mutation - green-but-wrong in reverse.
-    binding = pinned_fixture_binding()
-    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+    # The mutation must be CONTENT under the SAME artifact version, so the pin
+    # fires for the mutation and not for a version jump (ENTSCHIED 6, Q1d).
+    inputs = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
+    expected = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
+    if sha256_file(path) != inputs["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch before sabotage")
     with open(path, encoding="utf-8") as handle:
         payload = json.load(handle)
-    mutation = binding["deliberateMutation"]
+    mutation = inputs["deliberateMutation"]
     component = payload["components"][mutation["componentIndex"]]
     if component[mutation["field"]] != mutation["from"]:
         raise ArtifactError("Determinism sabotage fixture no longer has its pinned source value")
     component[mutation["field"]] = mutation["to"]
     observed = artifact_from_fixed_fixture_payload(payload)["canonicalPayloadSha256"]
-    expected = binding["pinnedExpectedLogicalPayloadSha256"]
     proof = {
         "schema": "R2-A1-determinism-fixture-sabotage-proof/1",
+        "artifactVersion": ARTIFACT_VERSION,
         "fixture": DETERMINISM_FIXTURE_REL,
         "mutation": mutation,
         "expectedLogicalPayloadSha256": expected,
@@ -1429,16 +1465,20 @@ def self_test():
     )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
-    pin_valid = ARTIFACT_VERSION == PINNED_FIXTURE_ARTIFACT_VERSION
-    pin_state = "pin registered for %s, artifact is %s" % (
-        PINNED_FIXTURE_ARTIFACT_VERSION, ARTIFACT_VERSION)
+    # Documented interim state (ENTSCHIED 6, Q2): the v1.2.0 closure record is
+    # written only after the one canonical re-proof, so these two checks are
+    # RED with a plaintext reason until then. Everything else must stay green.
+    try:
+        pinned_payload = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
+        pin_state = "pin resolved for " + ARTIFACT_VERSION
+    except ArtifactError as error:
+        pinned_payload = None
+        pin_state = str(error)
     fixture_artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
     check(
         SELF_TEST_NAMES[22],
-        pin_valid
-        and sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
-        and fixture_artifact["canonicalPayloadSha256"]
-        == fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
+        and fixture_artifact["canonicalPayloadSha256"] == pinned_payload,
         (pin_state, fixture_artifact["canonicalPayloadSha256"]),
     )
     with open(DETERMINISM_FIXTURE, encoding="utf-8") as handle:
@@ -1452,8 +1492,7 @@ def self_test():
     ]
     check(
         SELF_TEST_NAMES[23],
-        pin_valid
-        and mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        pinned_payload is not None and mutated_hash != pinned_payload,
         (pin_state, mutated_hash),
     )
     clean_manifest, clean_shards = manifest_from_artifact(
