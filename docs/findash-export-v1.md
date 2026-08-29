@@ -79,7 +79,7 @@ Zusaetzlich zur Huelle (§2):
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
 | `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. **Seit 19.08.2026 in DIESEM Feed bei 100,0 gedeckelt** — die Engine kann bis 105 liefern; Einzelheiten und der Grund fuer die zwei Skalen: §3a. |
 | `track` | `"profitable"` \| `"unprofitable"` (Enum) | Pflicht | ja (Enum) | |
-| `lamps` | string[] | Pflicht | ja (Array) | z.B. `["peakMargin","cyclePeak"]`, kann `[]`. |
+| `lamps` | string[] | Pflicht | ja (Array) | z.B. `["peakMargin","cyclePeak"]`, kann `[]`. Registry: `src/scoring/lamps.js` `LAMPS` (18 Lampen); ausgewiesen wird nur, was `true` ist (`evaluateLamps().active`) — `false` und `null` sind im Array nicht unterscheidbar. Die zwei juengsten Eintraege `opIncSynthetisch`/`opIncYahooAdjusted` sind der EINZIGE Weg, auf dem `meta.opIncSource` diesen Feed erreicht: §3c. |
 | `overview` | Objekt \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz; wenn Objekt: alle Sub-Felder) | VERSCHACHTELT (im Gegensatz zu overview.json). |
 | `overview.kind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` (Enum) | wenn overview≠null | ja (Enum gegen die 4 Werte) | In Boards nur `gp`/`revenue-badge`/`ffo-badge` beobachtet; `runway-badge` schema-erlaubt. |
 | `overview.value` | number \| null | wenn overview≠null | ja (finite\|null) | **KANN NEGATIV sein** (z.B. `-0.055`, `-1.17` = YoY-Schrumpfung). |
@@ -156,6 +156,39 @@ Zwei Filter, zwei Mengen, ein Paar im Export. Ein datiertes Periodenende ohne Um
 **Konsumenten-Stand — DATIERT, weil er sich aendern kann:** Zum **30.08.2026** hat `qSpanTage` **null** Konsumenten. Geprueft: findash (`86462c8`) enthaelt repo-weit keinen Treffer fuer `qPunkte`/`qSpanTage`; gelesen wird dort ausschliesslich `coverageAxes` (`data-layer/axis-labels.js`). `web/src/lib/screener-rows.ts` mappt eine explizite Feld-Whitelist (`type Row`) und reicht unbekannte Felder nicht durch. Beide Felder sind **OPTIONAL (additiv)**, score-, rang- und gate-inert und stammen aus PR #91 (29.08.2026) — sie waren bei dieser Beschlussfassung **einen Tag alt und noch von niemandem gelesen**. Findet sich spaeter ein Leser (Dossier-Kette, Briefing-Skript, Codex-Artefakt), ist diese Notiz veraltet: dann wird der Semantik-Fix zum echten Vertragswechsel mit Migrationspflicht und gehoert unter neuem Feldnamen ausgeliefert, nicht als stille Neudefinition.
 
 **Kein Code geaendert.** `belegPunkte()` und `tests/belegpunkte.test.js` bleiben unberuehrt; dieser Abschnitt aendert nur, was der Vertrag ueber das Feld behauptet.
+
+---
+
+## 3c. `opIncSource` — Herkunft der Jahres-OpInc-Reihe: KEIN Export-Feld, aber zwei Lampen tragen es
+
+**Die eine Zeile, die zaehlt: `meta.opIncSource` steht im Snapshot, nicht in diesem Feed — und anders als `qPunkte` ist es NICHT score-inert. Der Wert `computed-margin` nimmt der Zeile ihre gesamte OpInc-HISTORIE (hartes Gate, s.u.); in den Export gelangt das Etikett ausschliesslich ueber die zwei Lampen `opIncSynthetisch`/`opIncYahooAdjusted` im `lamps`-Array.**
+
+**Warum es hier dokumentiert wird, obwohl es kein Vertragsfeld ist:** `opIncSource` traegt eine Herkunfts-Behauptung, die bis zum 29.08.2026 falsch war (s. „`'native'` ist tot"), es steuert seit demselben Tag ein Score-Gate, und seine beiden Lampen stehen ab sofort auf Board-Zeilen dieses Feeds. Ein Konsument, der `lamps` liest, braucht die Bedeutung — und dies ist die einzige feld-genaue Doku im Repo. Der Vertrag selbst aendert sich dadurch NICHT: `opIncSource` ist kein Export-Feld, steht in keinem `--check` und gehoert nicht in `docs/findash-export-v1.contract.json` (dort stuende sonst ein Feld, das der Export nie schreibt).
+
+**Die Etiketten** — definiert an genau EINER Stelle, dem Modulkopf-Block „SEMANTIK VON meta.opIncSource" in `scripts/opinc-source-migrate.js` (verlaesslicher Anker ist der Block, nicht die Zeilennummer):
+
+| Wert | Bedeutung |
+| --- | --- |
+| `'sec-gaap'` | `annual.annualOpInc` stammt aus dem eingereichten SEC-XBRL-Filing (`us-gaap`/`ifrs-full`, via `merge-sec-xbrl.js` → `external-data/*-secannual.json`). GAAP-as-filed, versioniert, reproduzierbar. Die ersetzte Yahoo-Reihe bleibt unter `annual.annualOpIncYahoo`, ihr altes Etikett unter `meta.opIncSourceYahoo` (K1.3: kein Name verliert Daten). |
+| `'yahoo-adjusted'` | Die Reihe stammt aus Yahoo (`quoteSummary` isHist bzw. `fundamentalsTimeSeries`). Yahoo bereinigt still und unversioniert (Impairments, Restrukturierung). **Ehrlich etikettierter Proxy, kein Fehler** — nur eben nicht der eingereichte Abschluss. |
+| `'computed-margin'` | Synthetisch: `annualRev x operatingMargins-TTM` (Financial-Services-Fallback, `pull-yahoo.js _deriveOpIncForFinancials` Pfad 3). EINE Marge, auf alle Jahre gestempelt. |
+| `'computed-bank'` | Synthetisch: `totalRev - totalOpEx - Kreditrisikovorsorge` (Pfad 1). |
+| `'computed-insurance'` | Synthetisch: `totalRev - costOfRev - SG&A` (Pfad 2). |
+| `null` | Keine OpInc-Reihe vorhanden — **und ausdruecklich auch dann, wenn die Reihe existiert, aber keinen einzigen finiten Wert traegt**: ueber nichts gibt es keine Herkunft zu behaupten (M5a, `yahooLabelFuer()`, Orchestrator ENTSCHIED 52). |
+
+**`'native'` ist tot** (PR #90, 29.08.2026 — Urteil `_COURT-T164-OPINC-2026-08-29.md` K1.2, ratifiziert als Orchestrator **ENTSCHIED 15**). Das alte Etikett behauptete eine ROH-Herkunft, die es bei Yahoo nicht gibt; alles, was `'native'` trug, heisst heute `'yahoo-adjusted'`. Der Bestand wurde lokal migriert (`scripts/opinc-source-migrate.js`), **kein Re-Pull**. `pull-yahoo.js` schreibt das Wort nicht mehr — `tests/opinc-source.test.js` pinnt beides: die Abwesenheit im Quelltext UND das neue Etikett am erzeugten Snapshot. Die synthetischen Etiketten blieben unangetastet, sie waren nie unehrlich (Urteil K2).
+
+**Score-Wirkung: JA — hier liegt der Unterschied zu `qPunkte`/`qSpanTage`.** `computed-margin` fabriziert per Konstruktion konstante Marge und konstantes Vorzeichen, also genau die Stabilitaet, die jede historische Achse messen will. Seit PR #93 (ENTSCHIED 15, Karl-Freigabe **ENTSCHIED 18**, versiegelter Slot `protocol/gqs-00/1.2.0-pending/`) liefert `histOpInc()` in `src/scoring/snapshot.js` fuer solche Zeilen `[]` — alle historischen Achsen, Profitphasen und longitudinalen Lampen sehen dann „keine Jahresreihe". Das AKTUELLE Vorzeichen (`norm(s,'annualOpInc')`, Track-Split) bleibt bewusst erlaubt. **Ein FEHLENDES Etikett gilt nie als synthetisch** — sonst verloere ein Alt-Snapshot ohne `meta` still seine ganze Historie.
+
+**Die beiden Lampen** (`src/scoring/lamps.js` 17/18, Auflagen K2-3 und K1-Doppelboden): `opIncSynthetisch` = die Reihe ist zurueckgerechnet; `opIncYahooAdjusted` = die Reihe ist Yahoos bereinigter Stream statt des eingereichten Abschlusses. Beide liefern `null`, solange `opIncSource` fehlt oder `null` ist (kein Urteil ohne Etikett) — und `null` wie `false` erscheinen im Export gleich, naemlich gar nicht (nur `true` landet in `lamps`). **Ausdruecklich KEINE data-suspect-Lampen** (`score.js` `DATA_SUSPECT_LAMPS`): `opIncSynthetisch` steht an 300 der 354 Zeilen des Financials-Boards, in der Exclude-Liste waere sie ein 300-Zeilen-Ausschluss durch die Hintertuer — das Gericht hat diese „Board-Ausweidung ohne Ersatz" 3:0 verboten. Wer die Lampen dort eintraegt, kippt das Urteil.
+
+**Bestandszahlen, DATIERT** (Stand der Migration vom 29.08.2026, PR #90/#93 — nachgefuehrt in den Modulkoepfen von `lamps.js` und `snapshot.js`, nicht bei jedem Lauf neu gemessen): **12.629** Snapshots `yahoo-adjusted` gegen **128** `sec-gaap`; **1.859** `computed-margin` im Hauptstore, davon 100 % Financial Services. Die Breite der Lampe `opIncYahooAdjusted` IST der K1-Befund, keine Fehlkalibrierung.
+
+**Wer es liest** (`grep` ueber den Baum, Stand 30.08.2026): Schreibseite `pull-yahoo.js` (`mapYahooToCanonical`, FTS-Merge) und `scripts/opinc-source-migrate.js` (taeglich im SCORING-Job vor `run-screener.js`, bewusst NICHT im Merge-Job — sonst verglichen `build-secannual{,-smallcap}.js` ihre `looseSanity` kuenftig SEC gegen SEC und das Tor waere still zur Tautologie geworden); Messung `scripts/ab-computed-margin.js`; Engine `src/scoring/snapshot.js` (Gate) und `src/scoring/lamps.js` (Lampen 17/18).
+
+**Konsumenten-Stand — DATIERT, weil er sich aendern kann:** Zum **30.08.2026** hat findash (`29b8727`) repo-weit **null** Treffer fuer `opIncSource`, `opIncSynthetisch` und `opIncYahooAdjusted`; `data-layer/lamp-legend.js` fuehrt Eintraege fuer andere Lampen (u.a. `shareCountDilution`, `einmalertrag`), fuer diese beiden keinen. Die Lampennamen stehen also bereits im Feed, ohne dass eine Legende sie erklaert. Wer dort eine Legende ergaenzt, sollte die Trennung mitnehmen: `opIncSynthetisch` ist ein Qualitaets-Vorbehalt MIT Score-Wirkung, `opIncYahooAdjusted` ist eine reine Herkunfts-Angabe ohne — sie als eine Warnstufe zu zeichnen, faerbte 12.629 Zeilen falsch-rot.
+
+**Waechter:** `tests/opinc-source.test.js` (Migration + toter `'native'`-Anker) und `tests/scoring/opinc-gate-computed-margin.test.js` (das Gate, inkl. byte-gleichem Zwilling, bei dem nur `meta.opIncSource` abweicht).
 
 ---
 
