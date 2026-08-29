@@ -72,15 +72,16 @@ function pruefeNenner(reg) {
 
 // (III) APPEND-ONLY: der committete Stand muss ein PRAEFIX des neuen sein, und
 // m darf nie sinken. Ohne diese Pruefung waere "append-only" eine Behauptung.
-function pruefeAppendOnly(alt, neu) {
+function pruefeAppendOnly(alt, neu, wo = '') {
+  const p = wo ? wo + ': ' : '';
   assert.ok(neu.eintraege.length >= alt.eintraege.length,
-    'Eintraege verschwunden: ' + alt.eintraege.length + ' -> ' + neu.eintraege.length);
+    p + 'Eintraege verschwunden: ' + alt.eintraege.length + ' -> ' + neu.eintraege.length);
   alt.eintraege.forEach((a, i) => {
     assert.strictEqual(JSON.stringify(neu.eintraege[i]), JSON.stringify(a),
-      'Eintrag ' + i + ' (' + a.id + ') wurde nachtraeglich geaendert oder umgeordnet — append-only verletzt');
+      p + 'Eintrag ' + i + ' (' + a.id + ') wurde nachtraeglich geaendert oder umgeordnet — append-only verletzt');
   });
   assert.ok(neu.laufenderNenner >= alt.laufenderNenner,
-    'm ist gesunken (' + alt.laufenderNenner + ' -> ' + neu.laufenderNenner + ') — der Nenner laeuft nur vorwaerts');
+    p + 'm ist gesunken (' + alt.laufenderNenner + ' -> ' + neu.laufenderNenner + ') — der Nenner laeuft nur vorwaerts');
 }
 
 // ── DURCHGEHEN: das echte Register ───────────────────────────────────────────
@@ -104,15 +105,38 @@ assert.deepStrictEqual(
 assert.ok(echt.eintraege.some((e) => e.art === 'schranke'),
   'mindestens eine Schranken-View ist GEFUEHRT — die Ausnahme muss sichtbar sein, nicht fehlen');
 
-// Gegen die committete Fassung, sobald es eine gibt (beim ersten Commit noch nicht).
+// ── EXTERNER ANKER: Git-Praefix ueber JEDE Revision ──────────────────────────
+// Die einzige Manipulation, die pruefeKette() uebersteht, ist der komplett neu
+// gehashte Schwanz: einen Eintrag aendern und alle Folge-Hashes nachziehen.
+// Dagegen hilft nur ein Anker AUSSERHALB der Datei — die Git-Historie.
+//
+// Warum nicht mehr nur HEAD (Befund F1, ENTSCHIED 55): im sauberen Checkout — und
+// genau so laeuft der CI — ist HEAD:REL byte-identisch mit dem Arbeitsstand. Der
+// Vergleich prueft die Datei gegen sich selbst und kann nichts finden. Geprueft
+// wird deshalb jede committete Revision als Praefix des heutigen Stands; die
+// rueckwirkende Umschrift faellt dann an ihrer eigenen Vorgaenger-Revision auf.
+//
+// Ehrliche Grenze: einen History-Rewrite auf dem Server faengt nur der
+// geschuetzte Branch, nicht dieser Test.
+let geankerteRevisionen = 0;
 {
-  let alt = null;
-  try {
-    // stderr stumm: solange die Datei noch nicht committet ist, ist der Fehlschlag normal.
-    alt = JSON.parse(execFileSync('git', ['show', 'HEAD:' + REL],
-      { cwd: WURZEL, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
-  } catch (e) { /* noch nicht committet — beim ersten Lauf normal */ }
-  if (alt) pruefeAppendOnly(alt, echt);
+  const git = (...args) => execFileSync('git', args, { cwd: WURZEL, encoding: 'utf8' });
+
+  // Unvollstaendige Historie ist ein ROTER Befund, kein stiller Skip: ein flacher
+  // Klon koennte genau die Revision verbergen, die den Betrug zeigt. Der frueher
+  // hier stehende leere catch hat die Invariante uebersprungen und trotzdem die
+  // Erfolgszeile gedruckt — ein Waechter, der schweigend nichts prueft.
+  assert.strictEqual(git('rev-parse', '--is-shallow-repository').trim(), 'false',
+    'flacher Klon — die Historie kann den Praefix-Anker nicht belegen. Mit `git fetch --unshallow` holen.');
+
+  const revisionen = git('log', '--format=%H', '--', REL).trim().split('\n').filter(Boolean);
+  assert.ok(revisionen.length > 0,
+    'das Register steht in KEINER committeten Revision — ohne Historie ist "append-only" unbelegt');
+
+  for (const rev of revisionen) {
+    pruefeAppendOnly(JSON.parse(git('show', rev + ':' + REL)), echt, 'Revision ' + rev.slice(0, 10));
+  }
+  geankerteRevisionen = revisionen.length;
 }
 
 // ── ROT WERDEN: jede Manipulation einzeln ────────────────────────────────────
@@ -157,4 +181,5 @@ mussBrechen('m gesunken', () => {
 });
 
 console.log('fdr-register.test.js: echtes Register gueltig (m = ' + echt.laufenderNenner
-  + ', c = ' + echt.byFaktorC + '), alle 8 Manipulationen rot');
+  + ', c = ' + echt.byFaktorC + '), ' + geankerteRevisionen
+  + ' committete Revision(en) als Praefix geprueft, alle 8 Manipulationen rot');
