@@ -49,8 +49,16 @@ COUNT_SCRIPT_REL = "scripts/studie-zaehlprobe.py"
 SEALED_SCRIPT_REL = "scripts/studie-e4d-kadenz.py"
 LAST_ALLOWED_DATE = "2020-12-31"
 LAST_ALLOWED_DDATE = "20201231"
-ARTIFACT_VERSION = "1.1.0"
+ARTIFACT_VERSION = "1.2.0"
 PRIOR_ARTIFACT_VERSION = "1.0.0"
+BLOCKER1_ARTIFACT_VERSION = "1.1.0"
+# The determinism-fixture pin in the frozen closure record was computed under
+# this artifact version. ARTIFACT_VERSION sits inside the HMAC payload, so any
+# bump changes every E-, I- and S-ID and therefore the pinned logical payload
+# hash. The pin must be re-registered by the orchestrator before it can be
+# compared again; until then the fixture checks fail loudly instead of
+# comparing a 1.1.0 hash against a 1.2.0 artifact.
+PINNED_FIXTURE_ARTIFACT_VERSION = "1.1.0"
 PRIOR_MANIFEST_SHA256 = "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc"
 PUBLIC_ID_SAMPLE = 50
 PUBLIC_CIK_MAX = 2_100_000
@@ -1189,9 +1197,21 @@ def load_blocker_closure():
     return record
 
 
+def pinned_fixture_binding():
+    """Refuse to reuse a pin that was computed under another artifact version."""
+    binding = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
+    if ARTIFACT_VERSION != PINNED_FIXTURE_ARTIFACT_VERSION:
+        raise ArtifactError(
+            "Determinism fixture pin belongs to artifact version "
+            + PINNED_FIXTURE_ARTIFACT_VERSION + "; version " + ARTIFACT_VERSION
+            + " needs a re-pin registered by the orchestrator before this "
+            "comparison can mean anything"
+        )
+    return binding
+
+
 def verify_determinism_fixture(path):
-    record = load_blocker_closure()
-    binding = record["blocker2MutationSensitiveDeterminism"]
+    binding = pinned_fixture_binding()
     if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch")
     observed = fixed_fixture_artifact(path)["canonicalPayloadSha256"]
@@ -1209,8 +1229,9 @@ def verify_determinism_fixture(path):
 
 
 def sabotage_determinism_fixture(path, proof_path=None):
-    record = load_blocker_closure()
-    binding = record["blocker2MutationSensitiveDeterminism"]
+    # Guarded too: under a drifted version the mutation would look red for the
+    # version bump rather than for the mutation - green-but-wrong in reverse.
+    binding = pinned_fixture_binding()
     if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch before sabotage")
     with open(path, encoding="utf-8") as handle:
@@ -1408,13 +1429,17 @@ def self_test():
     )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
+    pin_valid = ARTIFACT_VERSION == PINNED_FIXTURE_ARTIFACT_VERSION
+    pin_state = "pin registered for %s, artifact is %s" % (
+        PINNED_FIXTURE_ARTIFACT_VERSION, ARTIFACT_VERSION)
     fixture_artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
     check(
         SELF_TEST_NAMES[22],
-        sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
+        pin_valid
+        and sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
         and fixture_artifact["canonicalPayloadSha256"]
         == fixture_binding["pinnedExpectedLogicalPayloadSha256"],
-        fixture_artifact["canonicalPayloadSha256"],
+        (pin_state, fixture_artifact["canonicalPayloadSha256"]),
     )
     with open(DETERMINISM_FIXTURE, encoding="utf-8") as handle:
         mutated_payload = json.load(handle)
@@ -1427,8 +1452,9 @@ def self_test():
     ]
     check(
         SELF_TEST_NAMES[23],
-        mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
-        mutated_hash,
+        pin_valid
+        and mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        (pin_state, mutated_hash),
     )
     clean_manifest, clean_shards = manifest_from_artifact(
         fixture_artifact, "fixture-bridge.json"
@@ -1791,8 +1817,11 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "manifestSha256": PRIOR_MANIFEST_SHA256,
             "status": "REJECTED_REVERSIBLE_IDENTIFIERS",
         }, {
+            "artifactVersion": BLOCKER1_ARTIFACT_VERSION,
+            "status": "BLOCKER1_IDENTITY_PROTECTION_CORRECTION",
+        }, {
             "artifactVersion": ARTIFACT_VERSION,
-            "status": "CURRENT_BLOCKER1_CORRECTION",
+            "status": "CURRENT_METHOD_CORRECTIONS_A_B_C",
         }, {
             "path": DETERMINISM_CORRECTION_REL,
             "sha256": sha256_file(DETERMINISM_CORRECTION),
