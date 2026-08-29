@@ -168,5 +168,63 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   } finally { fsT.rmSync(dir, { recursive: true, force: true }); }
 });
 
+// ── WEG C (29.08.2026): die Ausschluss-Liste der Neuaufnahme ─────────────────────────
+// --neu-aufnehmen absorbierte bisher ALLE heutigen Funde — ein bewusst offen gelassener
+// Fall (BANPU.BK, 19.08.) waere still verschluckt worden und haette nie wieder gefeuert.
+// Beide Richtungen: der Ausschluss haelt UND Nicht-Ausgeschlossenes wird aufgenommen
+// UND die Liste ueberlebt die Neuaufnahme unveraendert.
+{
+  const { baueNeuenBestand } = require('../scripts/watch-annual-spikes.js');
+  const fund = (ticker, reihe2, periode) => ({ ticker, reihe: reihe2, periode, index: 1, wert: 9e9, links: 1e8, rechts: 1e8 });
+  const funde = [
+    fund('BANPU.BK', 'annualOpInc', '2023-12-31'),
+    fund('AAA', 'annualRev', '2024-12-31'),
+    fund('BBB', 'annualNetIncome', '2022-12-31'),
+  ];
+  const basis = {
+    hinweis: 'x',
+    ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'NICHT ENTSCHEIDBAR (19.08.): Reihe widerspricht sich selbst und dem Emittenten; Verdacht eher auf Nachbarjahr 2022.', seit: '2026-08-29' }],
+  };
+
+  check('Weg C: der Ausschluss haelt — ein gesperrter Fall wird NIE in den Bestand aufgenommen', () => {
+    const b = baueNeuenBestand(basis, funde, 15045, new Date('2026-08-29T12:00:00Z'));
+    assert.ok(!b.faelle.includes('BANPU.BK|annualOpInc|2023-12-31'), 'BANPU darf nicht absorbiert werden');
+    assert.equal(b.anzahl, b.faelle.length, 'anzahl beschreibt den Bestand, nicht die Funde');
+  });
+
+  check('Weg C: Nicht-Ausgeschlossenes wird aufgenommen (Gegenrichtung)', () => {
+    const b = baueNeuenBestand(basis, funde, 15045, new Date('2026-08-29T12:00:00Z'));
+    assert.ok(b.faelle.includes('AAA|annualRev|2024-12-31'));
+    assert.ok(b.faelle.includes('BBB|annualNetIncome|2022-12-31'));
+    assert.equal(b.faelle.length, 2);
+    assert.equal(b.snapshotsBeiAufnahme, 15045);
+    assert.equal(b.aufgenommenAm, '2026-08-29');
+  });
+
+  check('Weg C: die Ausschluss-Liste ueberlebt die Neuaufnahme UNVERAENDERT', () => {
+    const b = baueNeuenBestand(basis, funde, 15045, new Date('2026-08-29T12:00:00Z'));
+    assert.deepEqual(b.ausgeschlossen, basis.ausgeschlossen,
+      'eine Neuaufnahme, die die Sperren verschluckt, waere exakt der Fehler, den sie verhindern soll');
+  });
+
+  check('Weg C: ein Ausschluss ohne schriftlichen Hinweis wird NICHT geschrieben (throw)', () => {
+    for (const kaputt of [
+      [{ schluessel: 'X|annualRev|2024-12-31' }],
+      [{ schluessel: 'X|annualRev|2024-12-31', hinweis: '   ' }],
+      [{ hinweis: 'Grund ohne Schluessel' }],
+      [null],
+    ]) {
+      assert.throws(() => baueNeuenBestand({ ...basis, ausgeschlossen: kaputt }, funde, 15045),
+        /schluessel UND schriftlichen hinweis/, JSON.stringify(kaputt));
+    }
+  });
+
+  check('Weg C: ohne Ausschluss-Liste verhaelt sich die Neuaufnahme wie bisher (Bestandsfaelle)', () => {
+    const b = baueNeuenBestand({ hinweis: 'x' }, funde, 15045, new Date('2026-08-29T12:00:00Z'));
+    assert.equal(b.faelle.length, 3, 'alle Funde absorbiert, wie vor Weg C');
+    assert.deepEqual(b.ausgeschlossen, [], 'leere Liste wird explizit geschrieben, nicht weggelassen');
+  });
+}
+
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -208,6 +208,47 @@ function basisGueltig(basis, anzahlSnapshots) {
 }
 
 /**
+ * WEG C (Gerichts-/Rat-Strecke Ausreisser-Bestand, 29.08.2026) — die Ausschluss-Liste.
+ *
+ * `--neu-aufnehmen` schreibt die Fallliste aus ALLEN heutigen Funden neu. Genau daran
+ * starb der Fix am 28.08.: BANPU.BK (bewusst offen gelassener, NICHT ENTSCHEIDBARER
+ * Fall vom 19.08.) waere still in den Bestand gerutscht und haette nie wieder gefeuert.
+ * Der Entscheid vom 19.08. lebte bis heute nur als Prosa im `hinweis`-Feld — ab jetzt
+ * traegt der Bestand ihn maschinenlesbar: `ausgeschlossen` ist eine Liste von
+ * Faellen, die eine Neuaufnahme NIE absorbieren darf. Sie bleiben dadurch dauerhaft
+ * "NEU" und damit rot-faehig, bis ein Mensch sie einzeln klaert und AKTIV von der
+ * Liste nimmt. Ein Ausschluss ohne schriftliche Begruendung ist verboten (throw) —
+ * eine unbegruendete Sperre waere derselbe stille Verlust in Gruen.
+ *
+ * Rein und ohne I/O, damit der Waechter (tests/annual-spikes.test.js) beide
+ * Richtungen fixieren kann: Ausschluss haelt UND Nicht-Ausgeschlossenes wird
+ * aufgenommen UND die Liste selbst ueberlebt die Neuaufnahme.
+ */
+function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()) {
+  const ausgeschlossen = Array.isArray(basis && basis.ausgeschlossen) ? basis.ausgeschlossen : [];
+  for (const a of ausgeschlossen) {
+    if (!a || typeof a.schluessel !== 'string' || !a.schluessel
+      || typeof a.hinweis !== 'string' || !a.hinweis.trim()) {
+      throw new Error('Ausschluss-Liste kaputt: jeder Eintrag braucht schluessel UND schriftlichen hinweis — '
+        + `gefunden: ${JSON.stringify(a)}. Eine unbegruendete Sperre wird nicht geschrieben.`);
+    }
+  }
+  const gesperrt = new Set(ausgeschlossen.map((a) => a.schluessel));
+  const faelle = [...new Set(funde.map(stabilerSchluessel))].filter((k) => !gesperrt.has(k)).sort();
+  return {
+    hinweis: (basis && basis.hinweis)
+      || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
+    aufgenommenAm: jetzt.toISOString().slice(0, 10),
+    snapshotsBeiAufnahme,
+    anzahl: faelle.length,
+    // Die Liste wird UNVERAENDERT fortgeschrieben — eine Neuaufnahme, die sie
+    // verschluckt, waere exakt der Fehler, den sie verhindern soll.
+    ausgeschlossen,
+    faelle,
+  };
+}
+
+/**
  * EIN Durchgang, alle Zaehler — mit dem Umfang, den er wirklich hatte (Review-Befund 03.08.2026).
  *
  * Vorher stand hier ein "catch (_) { continue; }": eine unlesbare Datei fiel still aus jeder
@@ -294,14 +335,13 @@ function main() {
 
   // Bewusstes Neuaufnehmen: NUR im CI sinnvoll (siehe Populations-Wache unten).
   if (process.argv.includes('--neu-aufnehmen')) {
-    const neuerBestand = {
-      hinweis: basis.hinweis || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
-      aufgenommenAm: new Date().toISOString().slice(0, 10),
-      snapshotsBeiAufnahme: scan.gescannt,
-      anzahl: funde.length,
-      faelle: [...new Set(funde.map(schluessel))].sort(),
-    };
+    const neuerBestand = baueNeuenBestand(basis, funde, scan.gescannt);
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
+    if (neuerBestand.ausgeschlossen.length) {
+      console.log(`::warning::${neuerBestand.ausgeschlossen.length} Fall/Faelle stehen auf der Ausschluss-Liste `
+        + 'und wurden NICHT in den Bestand aufgenommen — sie bleiben rot-faehig, bis sie einzeln geklaert sind: '
+        + neuerBestand.ausgeschlossen.map((a) => a.schluessel).join(' · '));
+    }
     // BEWUSST exit 0, nicht 1. Erste Fassung liess den Lauf absichtlich rot werden
     // ("die Basis ist sein eigenes Ergebnis, also wurde nichts geprueft"). Das ist
     // methodisch sauber und operativ falsch: der Waechter laeuft VOR dem Commit und
@@ -348,7 +388,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
