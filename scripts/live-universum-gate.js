@@ -39,7 +39,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
 const ERGEBNIS_DATEI = path.join(ROOT, 'outputs', 'live-universum-gate.json');
@@ -63,12 +63,22 @@ const SENTINEL = 'pre-pull-Gate';
  * Rein, ohne I/O — damit der Waechter beide Richtungen ohne echte Testlaeufe pruefen kann.
  * Gibt null zurueck, wenn KEINE solche Zeile da ist; das ist ausdruecklich ein Befund und
  * kein Fehlen von Information: ein Test ohne Abschlusszeile hat nicht berichtet.
+ *
+ * `datei` ist Pflicht und wird als ANKER benutzt: die Zeile muss mit dem Dateinamen des
+ * gelaufenen Tests beginnen. Review-Befund 29.08.: ein blosser Doppelpunkt als Anker ist
+ * zu weit — jede spaetere Zeile in der Form "irgendwas: 0 ok, 0 fail" haette den echten
+ * Abschluss ueberstimmt, weil rueckwaerts gesucht wird. Mit dem Dateinamen als Anker kann
+ * das nur noch der Test selbst, und der ist die Quelle, die wir lesen wollen.
  */
-function leseAbschluss(ausgabe) {
+function leseAbschluss(ausgabe, datei) {
+  const basis = datei ? path.basename(String(datei)) : null;
+  const anker = basis
+    ? new RegExp(`(?:^|[\\\\/\\s])${basis.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:\\s*(\\d+)\\s+ok,\\s*(\\d+)\\s+fail(?:,\\s*(\\d+)\\s+skipped)?`)
+    : /:\s*(\d+)\s+ok,\s*(\d+)\s+fail(?:,\s*(\d+)\s+skipped)?/;
   const zeilen = String(ausgabe || '').split(/\r?\n/);
   // von hinten, damit eine zufaellig passende Zeile aus der Mitte nicht gewinnt
   for (let i = zeilen.length - 1; i >= 0; i--) {
-    const m = zeilen[i].match(/:\s*(\d+)\s+ok,\s*(\d+)\s+fail(?:,\s*(\d+)\s+skipped)?/);
+    const m = zeilen[i].match(anker);
     if (m) return { ok: Number(m[1]), fail: Number(m[2]), skipped: m[3] ? Number(m[3]) : 0 };
   }
   return null;
@@ -79,10 +89,17 @@ function leseAbschluss(ausgabe) {
  * Reihenfolge der Pruefungen ist bewusst: der Exitcode zuerst (echte Fehler bleiben
  * echte Fehler), danach die Frage, ob ueberhaupt gemessen wurde.
  */
-function beurteile(datei, rc, ausgabe) {
-  const a = leseAbschluss(ausgabe);
+function beurteile(datei, rc, ausgabe, abbruch) {
+  const a = leseAbschluss(ausgabe, datei);
   if (rc !== 0) {
-    return { datei, status: 'fail', grund: `Exitcode ${rc}`, ...(a || {}) };
+    // Review-Befund 29.08.: bei Signal-Kill oder Puffer-Ueberlauf gibt es GAR KEINEN
+    // Exitcode — "Exitcode 1" waere dann eine erfundene Zahl und verdeckte die wahre
+    // Ursache genau bei den Faellen, die am schwersten zu lesen sind (OOM, Timeout,
+    // ausufernde Ausgabe). Deshalb den echten Grund nennen, wenn es einen gibt.
+    const grund = abbruch && abbruch.signal ? `Signal ${abbruch.signal}`
+      : abbruch && abbruch.code ? `${abbruch.code} (Exitcode ${rc})`
+        : `Exitcode ${rc}`;
+    return { datei, status: 'fail', grund, ...(a || {}) };
   }
   if (!a) {
     return { datei, status: 'kein-bericht', grund: 'keine Abschlusszeile "N ok, M fail" in der Ausgabe — der Test hat nicht berichtet' };
@@ -99,19 +116,27 @@ function beurteile(datei, rc, ausgabe) {
   return { datei, status: 'ok', ...a };
 }
 
-function main() {
+function main(argv = process.argv.slice(2)) {
+  // Der Workflow nennt die Tests ausdruecklich beim Namen (der versiegelte Waechter
+  // tests/scoring/bh-b09-dailyyml.test.js pinnt genau diese sechs Pfade IM Schritt —
+  // eine Liste, die nur hier im Skript stuende, waere fuer ihn unsichtbar). Ohne
+  // Argumente gilt die eingebaute Liste, damit ein Aufruf von Hand nichts braucht.
+  const tests = argv.length ? argv : TESTS;
   const ergebnisse = [];
-  for (const t of TESTS) {
+  for (const t of tests) {
     console.log(`--- ${t} ---`);
-    let rc = 0, out = '';
-    try {
-      out = execFileSync(process.execPath, [t], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch (e) {
-      rc = typeof e.status === 'number' ? e.status : 1;
-      out = `${e.stdout || ''}${e.stderr || ''}`;
-    }
+    // spawnSync statt execFileSync: Letzteres liefert bei ERFOLG nur stdout und wirft
+    // stderr weg (Review-Befund 29.08.). Eine Abschlusszeile, die ein Test kuenftig ueber
+    // console.error ausgibt, waere damit unsichtbar — das Gate meldete 'kein-bericht' fuer
+    // einen gruenen Test. maxBuffer grosszuegig, damit ausufernde Ausgabe kein ENOBUFS
+    // erzeugt, dessen Ursache dann nur noch als nackte 1 im Protokoll steht.
+    const p = spawnSync(process.execPath, [t], {
+      cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
+    });
+    const out = `${p.stdout || ''}${p.stderr || ''}`;
+    const rc = p.status === 0 ? 0 : (typeof p.status === 'number' ? p.status : 1);
     console.log(out.trimEnd());
-    const r = beurteile(t, rc, out);
+    const r = beurteile(t, rc, out, { signal: p.signal, code: p.error && p.error.code });
     ergebnisse.push(r);
     if (r.status !== 'ok') console.error(`::error::${t}: ${r.status} — ${r.grund}`);
   }
