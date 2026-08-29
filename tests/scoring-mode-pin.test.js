@@ -135,8 +135,13 @@ test('kanonisch(): NaN/Infinity/undefined sind von null unterscheidbar', () => {
 // Pfad-Vergleich gepinnt wie er IST (fail-closed): Gross/Kleinschreibung zaehlt als
 // Widerspruch — auf NTFS ein moeglicher Fehlalarm, aber ein Fehlalarm blockt laut
 // statt still durchzuwinken. Wer das lockert, muss diesen Pin bewusst umdrehen.
-test('Umgebungs-Vorstufe: Pfadvergleich ist exakt (Case zaehlt, Slashes normalisiert)', () => {
+test('Umgebungs-Vorstufe: Pfadvergleich ist exakt (Case zaehlt, native Separatoren nicht)', () => {
   const ref = { modus: 'referenz', refCalib: 'protocol/x/lineal.json' };
-  assert.equal(pruefeModusUmgebung(ref, 'protocol\\x\\lineal.json').length, 0, 'Slash-Richtung normalisiert path.resolve');
+  // path.join schreibt den Pfad in der NATIVEN Separator-Form der Plattform — Windows
+  // Backslashes, Linux (CI) Slashes. Beide Schreibweisen desselben Pfads duerfen kein
+  // Verstoss sein. Ein hartkodierter Backslash-Pfad war auf Linux doch einer — dort ist
+  // der Backslash ein Dateinamenszeichen (CI-Rot 29.08., Run 33249447457).
+  assert.equal(pruefeModusUmgebung(ref, path.join('protocol', 'x', 'lineal.json')).length, 0,
+    'native Separator-Schreibweise ist derselbe Pfad');
   assert.equal(pruefeModusUmgebung(ref, 'Protocol/x/Lineal.json').length, 1, 'Case-Abweichung bleibt ein Verstoss');
 });
