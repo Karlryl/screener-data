@@ -15,6 +15,33 @@
     "preservation": "Version 1.1.0 wird nicht geloescht, nicht umgeschrieben und nicht neu versiegelt; ihre Artefakte, Beweise und Berichte bleiben byte-genau erhalten."
   },
   "correctedArtifactVersion": "1.2.0",
+  "pinsAvailableInAdvance": {
+    "rule": "Ein VORAB eingefrorener Record kann nur pinnen, was vorab wissbar ist. Der Payload-Hash entsteht erst im Lauf und gehoert deshalb NICHT hierher - auch der 1.1.0-Closure-Record entstand NACH seinem Lauf.",
+    "artifactVersion": "1.2.0",
+    "currentImplementation": {
+      "scripts/studie-identity-bridge-artifact.py": "d2234902d0ad507d39f0fdee19f66a0d573a27af7e95afc1f93269c912e35c95",
+      "note": "sha256 des committeten Entwurfs-Skripts. Nachfolgende Commits dieses Zweigs beruehren das Skript nicht; weicht der Hash beim Einfrieren ab, ist der Record nicht mehr an den geprueften Stand gebunden und muss neu gefasst werden."
+    },
+    "procedure": [
+      "Zwei getrennte Betriebssystem-Prozesse bauen unabhaengig neu; jeder oeffnet beide freigegebenen Panels und ruft scan_panel genau zweimal auf.",
+      "Verglichen werden ausschliesslich die neun deterministischen Fingerprint-Felder.",
+      "Der externe HMAC-Schluessel wechselt nicht und wird nie geschrieben oder gedruckt.",
+      "Genau EIN kanonischer Re-Proof; kein Wiederholen bis gruen."
+    ]
+  },
+  "payloadPinFollows": {
+    "record": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json",
+    "status": "FROZEN_V120_CLOSURE",
+    "writtenWhen": "NACH dem einen kanonischen Re-Proof und NACH der Abnahme der neuen Nahtmenge durch den Orchestrator.",
+    "mustCarry": [
+      "blocker2MutationSensitiveDeterminism.pinnedExpectedLogicalPayloadSha256 (der unter 1.2.0 gemessene Wert)",
+      "blocker2MutationSensitiveDeterminism.boundArtifactVersion = '1.2.0' (macht den Pin selbst-bezeugend)",
+      "der gepinnte SOLLWERT von keyFingerprintSha256 - heute wird der Fingerprint nur A gegen B verglichen, nie gegen ein Soll",
+      "currentImplementation des tatsaechlich gelaufenen Skripts"
+    ],
+    "predecessorUntouched": "Der 1.1.0-Closure-Record wird NICHT editiert und NICHT neu versiegelt (SUPERSEDE_NO_DELETE). Version 1.1.0 bleibt gegen ihr eigenes, archiviertes Artefakt pruefbar.",
+    "codeBinding": "pinned_fixture_binding() loest den Pin je ARTIFACT_VERSION aus dem zugehoerigen Closure-Record auf. Fehlt der Record, ist er nicht eingefroren, oder widerspricht sein boundArtifactVersion, verweigert die Funktion laut - sie faellt nie still auf einen fremden Pin zurueck."
+  },
   "bundlingRationale": "ARTIFACT_VERSION steht im HMAC-Payload der ID-Ableitung (stable_id). Jeder Bump re-hasht saemtliche E-, I- und S-IDs. Drei Einzelversionen kosteten drei vollstaendige Determinismus-Beweise fuer dieselben Bytes (R14b) und braechen die Downstream-Referenzen dreimal. Deshalb: EIN Bump, EIN Record, EIN Re-Proof.",
   "corrections": [
     {
@@ -26,7 +53,9 @@
         "ddate bleibt Perioden-Schluessel: der Aggregations-Key (cik, unit, ddate, qtrs), die Quellenwahl und die Kennungszuordnungen (firstDate/lastDate) sind unveraendert ddate-basiert.",
         "adsh -> accepted wird durch die Aggregation getragen; je Komponente und Tag wird das frueheste tragende accepted gespeichert.",
         "Das Naht-EREIGNIS traegt das accepted der Einreichung, die die neue Quelle erstmals vollstaendig traegt (bei mehrteiligen Quellen der spaeteste der tag-weise ersten Traeger).",
-        "Perioden-Uebergaenge, die ein und dieselbe Einreichung erstmals trug, sind EIN Naht-Ereignis. Die Naht-ID wird ueber das Ereignis-Datum gebildet.",
+        "KOLLAPS-REGEL (ENTSCHIED 6, Q4, ausdruecklich): Eine Naht ist ein Offenlegungs-EREIGNIS auf der accepted-Achse, kein Perioden-Uebergang. Zwei oder mehr Uebergaenge, die ein und dieselbe Einreichung erstmals trug, sind EIN Wissens-Ereignis und damit EINE Naht - auch dann, wenn dieselbe Quellen-Paarung im Verlauf mehrfach auftritt (Muster A->B->A->B kollabiert, wenn beide A->B-Uebergaenge von derselben Einreichung erstmals getragen wurden). Es gibt bewusst KEINE Sequenznummer im Kollaps-Schluessel.",
+        "Kein Informationsverlust: die Uebergangs-Ebene bleibt vollstaendig ableitbar aus periodKeysCollapsed je Naht und counts.periodKeyTransitionsCollapsedIntoSeams. Braeuchte ein Downstream-Konsument Uebergangs-Zaehlung statt Ereignis-Zaehlung, rechnet er sie aus diesen Feldern aus; ein Umbau ist dafuer nicht noetig.",
+        "Die Naht-ID wird ueber das Ereignis-Datum gebildet, nicht ueber den Perioden-Schluessel.",
         "PFLICHTTEIL Datumsformat-Normalisierung: compact_date() faltet '2020-12-31' und '20201231' auf eine Schreibweise; jeder Mauer-Vergleich laeuft durch das eine Praedikat beyond_date_wall()."
       ],
       "whatDoesNotChange": [
@@ -49,6 +78,7 @@
         "Keine segmentweise Kontiguitaets-, Schwund- oder Ueberlebensmessung. Die ist von der eigenen Praeregistrierung ausgeschlossen und gehoert in Auftrag 2."
       ],
       "healsExistingBreach": "Der Renderer druckte die Mehrfachnaht-Zahl als Literal, obwohl die eingefrorene accessOrder 'render only from that artifact' verlangt. Das war ein BESTEHENDER R1-Bruch, keine Kuer - er wird auch dann geheilt, wenn die Studie mit R15a endet.",
+      "countingLevel": "PFLICHT-VERMERK (ENTSCHIED 6, Q4): Alle hier veroeffentlichten Naht-Zahlen - Verteilung, Mehrfachnaht-Entitaeten, Maximum - sind EREIGNIS-Zahlen auf der accepted-Achse, keine Perioden-Uebergangs-Zahlen. Die Uebergangs-Ebene steht je Naht in periodKeysCollapsed und aggregiert in counts.periodKeyTransitionsCollapsedIntoSeams. Wer die beiden Ebenen verwechselt, unterschaetzt die Uebergaenge; die Zahlen sind nicht gegeneinander austauschbar.",
       "placement": "Die Felder liegen in counts und damit im Manifest, nicht in den Shards. Die Shard-Decke ist von B nicht betroffen."
     },
     {
@@ -67,7 +97,7 @@
         "form": "append-only Supersede-/Korrektur-Record, keine Editierung des eingefrorenen Textes und keine Test-Abschwaechung.",
         "basis": "R13 verbietet Editieren und Abschwaechen, nicht die Erweiterung einer Offenlegung. Muster etabliert durch supersede-record.json (SUPERSEDE_NO_DELETE) und die beiden FROZEN_BEFORE-Korrekturen.",
         "authority": "Orchestrator-Weiche, keine Karl-Weiche.",
-        "draftStatus": "In diesem ENTWURF benannt, aber NICHT ausformuliert - der Wortlaut gehoert in den Freigabeschritt."
+        "draftStatus": "Ausformuliert als eigener Record, ENTWURF-r2-a1-v120-e3-allowlist-supplement.json (ENTSCHIED 6, Q5). Wird VOR dem Re-Proof eingefroren und gehasht."
       }
     }
   ],
@@ -107,10 +137,24 @@
     "Diese Korrektur beginnt Auftrag 2 nicht und praejudiziert dessen Praeregistrierung nicht.",
     "Zwei byte-gleiche Neubauten belegen Reproduzierbarkeit nur fuer die gepinnten Eingaben, die Implementierung, die Laufzeit und denselben externen HMAC-Schluessel."
   ],
-  "openForOrchestrator": [
-    "Welcher Record traegt den fuer 1.2.0 neu gemessenen pinnedExpectedLogicalPayloadSha256, und wie kann ein VORAB eingefrorener Record einen Ausgabewert pinnen, den er noch nicht berechnet hat? Bis das entschieden ist, weisen die beiden Fixture-Pruefungen den 1.1.0-Pin namentlich ab, statt einen 1.1.0-Hash gegen ein 1.2.0-Artefakt zu vergleichen.",
-    "Abnahme der neuen Nahtmenge (Erwartung: unter 5146) samt Zusammenfall-Zahl.",
-    "Wortlaut der append-only E3-Allowlist-Ergaenzung.",
-    "Der eingefrorene Closure-Record fuehrt currentImplementation als Hash von scripts/studie-identity-bridge-artifact.py; dieser Hash aendert sich mit der Korrektur. Der Folge-Record muss den neuen Hash aufnehmen, ohne den alten zu ueberschreiben."
-  ]
+  "resolvedByEntschied6": {
+    "source": "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 6 (17:13) - alle fuenf zuvor offenen Fragen entschieden.",
+    "Q1_pinProtokoll": "Zwei-Stufen-Muster; siehe pinsAvailableInAdvance und payloadPinFollows.",
+    "Q2_ciZwischenlage": "Zwei benannte Selbsttest-Rots plus Bridge-Test-Rot sind die erwartete Lage bis zum Neubau. Der Entwurfs-Zweig geht NICHT ins CI-Gate, kein PR, bleibt ENTWURF-markiert.",
+    "Q3_abnahme": "Neue Nahtmenge und Zusammenfall-Zahlen gehen nach dem Neubau an den Orchestrator; der Closure-Record entsteht erst nach dessen Abnahme.",
+    "Q4_kollaps": "Kollaps bleibt, keine Sequenznummer; ausformuliert in der Kollaps-Regel unter A und im countingLevel-Vermerk unter B.",
+    "Q5_e3Ergaenzung": "Eigener append-only Record, Entwurf liegt daneben.",
+    "praemissenKorrektur": "Die Warnung, die Sperrzonen-Wache sei nach der Umstellung tot, war zu stark und ist korrigiert uebernommen; siehe premiseCorrection unter A."
+  },
+  "sequenceAmendment": {
+    "source": "ENTSCHIED 6, Sequenz-AMENDMENT zu ENTSCHIED 3.",
+    "change": "Der Re-Proof wartet NICHT mehr auf die T171-Diagnose. Begruendung: die urspruengliche Reihenfolge war Ressourcen-Sequenzierung, keine Methodik-Abhaengigkeit - die Korrekturen aendern Bytes, keine Schlussfolgerung, und die Semantik ist jetzt vollstaendig entschieden.",
+    "order": [
+      "PR #79 mergen",
+      "Entwurfs-Zweig auf die neue Basis rebasen, Records finalisieren",
+      "Korrektur-Record und E3-Supplement einfrieren und hashen",
+      "EIN kanonischer Zwei-Prozess-Re-Proof",
+      "Zahlen an den Orchestrator, Abnahme, dann Closure-Record"
+    ]
+  }
 }

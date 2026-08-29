@@ -4,7 +4,12 @@
 > Liegt bewusst ausserhalb von `protocol/`, `reports/studie/` und `research/studie/`,
 > damit kein Waechter ihn als Studien-Artefakt fuehrt. Er wird erst Runbook, wenn der
 > Orchestrator den zugehoerigen Korrektur-Record abgenommen hat.
-> Der teure Determinismus-Re-Proof laeuft **genau einmal**, nach der Diagnose (T171).
+> Der teure Determinismus-Re-Proof laeuft **genau einmal**.
+>
+> **Sequenz-Amendment (ENTSCHIED 6):** Der Re-Proof wartet **nicht mehr** auf die
+> T171-Diagnose. Die urspruengliche Reihenfolge war Ressourcen-Sequenzierung, keine
+> Methodik-Abhaengigkeit — die Korrekturen aendern Bytes, keine Schlussfolgerung.
+> T171 laeuft parallel bei Codex.
 
 ---
 
@@ -41,6 +46,10 @@ das nicht sehen kann: Prozess B erbt denselben `--identity-key-file`-Pfad.
   gegen diesen Sollwert vergleichen. Abweichung = Abbruch, nicht Nacherzaehlung.
 - Der Sollwert ist ein Einweg-Fingerprint und darf in die Order; der Schluessel selbst
   niemals.
+- **Warum das ein Handgriff bleibt und kein Bau-Check ist:** Der Sollwert gehoert laut
+  ENTSCHIED 6 in den **Post-Run-Closure-Record** — und genau der entsteht erst durch
+  diesen Lauf. Ein Check im Bau waere zirkulaer. Er ist deshalb ein Pruefschritt
+  **nach** dem Lauf, sobald der Record existiert (Schritt 6 unten).
 
 ---
 
@@ -91,40 +100,54 @@ und damit ins **Manifest**, nicht in die Shards — B ist fuer die Decke unkriti
 
 ## 4. Reihenfolge des einen Laufs
 
-1. Korrektur-Record abnehmen, nach `protocol/early-detection/2.0.0/` verschieben,
-   einfrieren, committen. (Die dortige `.gitattributes`-Regel `/protocol/early-detection/**
-   text eol=lf` greift automatisch — kein eigener Eintrag noetig.)
+1. **Korrektur-Record** und **E3-Allowlist-Supplement** abnehmen, nach
+   `protocol/early-detection/2.0.0/` verschieben, einfrieren, hashen, committen. (Die
+   dortige `.gitattributes`-Regel `/protocol/early-detection/** text eol=lf` greift
+   automatisch — kein eigener Eintrag noetig.) Beim Einfrieren pruefen, ob der im
+   Korrektur-Record gepinnte Skript-Hash noch auf das Skript passt.
 2. HMAC-Key-Fingerprint-Sollwert in der Order festhalten (Abschnitt 1).
-3. `--self-test` fahren. **Erwartung heute: zwei benannte Pruefungen sind ROT** — die
-   beiden Fixture-Pin-Pruefungen. Grund steht im Klartext im Pruefausgang: der Pin wurde
-   unter 1.1.0 berechnet. Das ist **kein Defekt**, sondern die offene Orchestrator-Weiche
-   aus Abschnitt 5. Alle uebrigen Pruefungen muessen gruen sein.
+3. `--self-test` fahren. **Erwartung: genau zwei benannte Pruefungen sind ROT** — die
+   beiden Fixture-Pin-Pruefungen, mit Klartext-Grund im Pruefausgang („post-run closure
+   record for artifact version 1.2.0 does not exist yet"). Das ist die **dokumentierte
+   Zwischenlage** nach Abschnitt 5, kein Defekt. Alle uebrigen Pruefungen muessen gruen
+   sein — inklusive der drei neuen (Naht-Platzierung, Mauer-Guard auf accepted-Format,
+   zehn Zaehler je Fenster).
 4. Sabotagen einzeln fahren, Exit-Codes nach Abschnitt 2 lesen.
 5. Empirischen Bau **einmal** fahren.
-6. Key-Fingerprint gegen Sollwert, Shard-Groessen protokollieren.
+6. **Nach dem Lauf:** Shard-Groessen protokollieren; Key-Fingerprint des Artefakts gegen
+   den Sollwert aus Schritt 2 pruefen.
 7. Neue Nahtmenge + `periodKeyTransitionsCollapsedIntoSeams` +
    `seamEventDatesFallenBackToPeriodKey` dem Orchestrator zur **Methodik-Abnahme**
    vorlegen. Bis zur Abnahme wird die Zahl nirgends zitiert.
+8. **Erst nach der Abnahme:** den v1.2.0-Closure-Record schreiben (Abschnitt 5). Danach
+   werden die beiden roten Pruefungen aus Schritt 3 gruen — und zwar weil der Pin
+   existiert, nicht weil jemand eine Erwartung gesenkt hat.
 
 ---
 
-## 5. Offen — vor Schritt 3 zu entscheiden
+## 5. Pin-Protokoll — entschieden (ENTSCHIED 6, Q1)
 
-Der `pinnedExpectedLogicalPayloadSha256` der Determinismus-Fixture wurde unter
-Artefakt-Version 1.1.0 berechnet und steht im **eingefrorenen** Closure-Record.
-`ARTIFACT_VERSION` liegt im HMAC-Payload, also aendert der Bump jede E-, I- und S-ID und
-damit den Pin.
+**Zwei Stufen, weil ein Vorab-Record logisch nichts pinnen kann, was er noch nicht
+berechnet hat.** Auch der 1.1.0-Closure-Record entstand NACH seinem Lauf.
 
-Der Patch **weist den alten Pin namentlich ab**, in Pruef- **und** in Sabotage-Richtung.
-Die Sabotage-Richtung ist der unauffaelligere Fall: ohne Wache waere sie rot geworden,
-weil die Version sprang, nicht weil die Mutation wirkte — gruen-aber-falsch mit
-umgekehrtem Vorzeichen.
+| Stufe | Record | Wann | Pinnt |
+| --- | --- | --- | --- |
+| 1 | Korrektur-Record (vorab eingefroren) | vor dem Lauf | Skript-Hash, `ARTIFACT_VERSION` 1.2.0, Prozedur |
+| 2 | `r2-a1-v120-closure-record.json` (append-only) | nach dem Lauf **und** nach der Abnahme | `pinnedExpectedLogicalPayloadSha256`, `boundArtifactVersion`, `keyFingerprintSha256`-SOLLWERT, gelaufener Skript-Hash |
 
-**Weiche fuer den Orchestrator:** Welcher Record traegt den neuen Pin, und wie kann ein
-*vorab* eingefrorener Record einen Ausgabewert pinnen, den er noch nicht berechnet hat?
-Der eingefrorene Record wird **nicht** editiert. Naheliegend, aber hier nicht entschieden:
-ein eigener append-only Folge-Record, der nach dem einen Lauf den neuen Pin **und** den
-neuen Implementierungs-Hash aufnimmt, ohne die 1.1.0-Werte zu ueberschreiben.
+Der **1.1.0-Closure-Record bleibt unangetastet** (SUPERSEDE_NO_DELETE); Version 1.1.0
+bleibt gegen ihr eigenes archiviertes Artefakt pruefbar.
+
+**Im Code:** `pinned_fixture_binding()` loest den Payload-Pin ueber `CLOSURE_RECORDS` je
+`ARTIFACT_VERSION` auf. Fehlender Record, falscher Status oder ein widersprechendes
+`boundArtifactVersion` = **lautes Verweigern**, nie ein stiller Rueckfall auf einen
+fremden Pin.
+
+**Sabotage-Richtung:** Die Eingangs-Fakten (Fixture-Bytes, `deliberateMutation`) sind
+versionsfrei und kommen weiter aus dem Blocker-Closure; **nur der Ausgabe-Pin** wird je
+Version aufgeloest. Damit mutiert die Sabotage **Inhalt unter derselben Version** und der
+Pin feuert aus dem richtigen Grund. Ohne diese Trennung waere sie rot geworden, weil die
+Version sprang — gruen-aber-falsch mit umgekehrtem Vorzeichen.
 
 ---
 
