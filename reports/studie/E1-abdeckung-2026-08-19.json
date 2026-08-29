@@ -1,0 +1,3732 @@
+{
+ "schema": "early-detection-abdeckung-panel/v1",
+ "etappe": "E1d",
+ "erstelltAm": "2026-08-19T08:09:37+00:00",
+ "gelesen": [
+  "panel-entdeckung.sqlite",
+  "panel-validierung.sqlite"
+ ],
+ "nichtGeoeffnet": "panel-endtest.sqlite.enc (versiegelt, R2/R4) und das Schluesselmaterial — von diesem Lauf weder geoeffnet noch entschluesselt noch gezaehlt.",
+ "jeFenster": {
+  "entdeckung": {
+   "fenster": "entdeckung",
+   "berichte": {
+    "berichte_gesamt": 176502,
+    "berichte_periodisch": 170610,
+    "formen": {
+     "10-Q": 129707,
+     "10-K": 39033,
+     "S-1": 2806,
+     "20-F": 1742,
+     "8-K": 983,
+     "POS AM": 624,
+     "6-K": 604,
+     "S-4": 489,
+     "10-KT": 157,
+     "40-F": 128,
+     "S-11": 52,
+     "F-1": 34,
+     "10-QT": 34,
+     "10-12G": 31,
+     "424B3": 21,
+     "POS EX": 12,
+     "F-4": 11,
+     "S-3": 5,
+     "F-3": 5,
+     "425": 5,
+     "S-3ASR": 4,
+     "DEF 14A": 3,
+     "F-3ASR": 2,
+     "DEFA14A": 2,
+     "POSASR": 1,
+     "10-12B": 1,
+     "18-K": 1,
+     "424B4": 1,
+     "10-D": 1,
+     "PRE 14A": 1,
+     "NT 10-Q": 1,
+     "8-K12B": 1
+    },
+    "formen_je_jahr": {
+     "10-K": {
+      "2009": 33,
+      "2010": 555,
+      "2011": 1807,
+      "2012": 7789,
+      "2013": 7576,
+      "2014": 7392,
+      "2015": 7179,
+      "2016": 6702
+     },
+     "10-Q": {
+      "2009": 901,
+      "2010": 3208,
+      "2011": 16051,
+      "2012": 23505,
+      "2013": 22617,
+      "2014": 22239,
+      "2015": 21399,
+      "2016": 19787
+     },
+     "6-K": {
+      "2009": 9,
+      "2010": 30,
+      "2011": 43,
+      "2012": 102,
+      "2013": 107,
+      "2014": 104,
+      "2015": 103,
+      "2016": 106
+     },
+     "8-K": {
+      "2009": 6,
+      "2010": 58,
+      "2011": 95,
+      "2012": 186,
+      "2013": 198,
+      "2014": 153,
+      "2015": 149,
+      "2016": 138
+     },
+     "20-F": {
+      "2009": 2,
+      "2010": 45,
+      "2011": 88,
+      "2012": 367,
+      "2013": 345,
+      "2014": 310,
+      "2015": 303,
+      "2016": 282
+     },
+     "S-4": {
+      "2010": 5,
+      "2011": 42,
+      "2012": 74,
+      "2013": 156,
+      "2014": 78,
+      "2015": 78,
+      "2016": 56
+     },
+     "40-F": {
+      "2010": 2,
+      "2011": 6,
+      "2012": 24,
+      "2013": 27,
+      "2014": 28,
+      "2015": 22,
+      "2016": 19
+     },
+     "POS AM": {
+      "2010": 1,
+      "2011": 30,
+      "2012": 136,
+      "2013": 137,
+      "2014": 113,
+      "2015": 103,
+      "2016": 104
+     },
+     "S-1": {
+      "2011": 149,
+      "2012": 488,
+      "2013": 551,
+      "2014": 684,
+      "2015": 520,
+      "2016": 414
+     },
+     "F-4": {
+      "2011": 2,
+      "2012": 4,
+      "2013": 5
+     },
+     "10-KT": {
+      "2011": 4,
+      "2012": 22,
+      "2013": 31,
+      "2014": 44,
+      "2015": 21,
+      "2016": 35
+     },
+     "POSASR": {
+      "2011": 1
+     },
+     "F-1": {
+      "2011": 2,
+      "2012": 3,
+      "2013": 12,
+      "2014": 10,
+      "2015": 3,
+      "2016": 4
+     },
+     "S-3ASR": {
+      "2011": 1,
+      "2012": 2,
+      "2013": 1
+     },
+     "S-11": {
+      "2011": 2,
+      "2012": 10,
+      "2013": 17,
+      "2014": 17,
+      "2015": 2,
+      "2016": 4
+     },
+     "POS EX": {
+      "2011": 1,
+      "2012": 8,
+      "2013": 2,
+      "2016": 1
+     },
+     "10-12B": {
+      "2011": 1
+     },
+     "10-QT": {
+      "2012": 5,
+      "2013": 8,
+      "2014": 7,
+      "2015": 7,
+      "2016": 7
+     },
+     "S-3": {
+      "2012": 2,
+      "2013": 2,
+      "2015": 1
+     },
+     "F-3": {
+      "2012": 1,
+      "2014": 2,
+      "2015": 1,
+      "2016": 1
+     },
+     "10-12G": {
+      "2012": 3,
+      "2013": 3,
+      "2014": 16,
+      "2016": 9
+     },
+     "F-3ASR": {
+      "2014": 1,
+      "2016": 1
+     },
+     "424B3": {
+      "2014": 16,
+      "2015": 2,
+      "2016": 3
+     },
+     "18-K": {
+      "2014": 1
+     },
+     "424B4": {
+      "2014": 1
+     },
+     "DEFA14A": {
+      "2014": 1,
+      "2016": 1
+     },
+     "DEF 14A": {
+      "2014": 1,
+      "2015": 1,
+      "2016": 1
+     },
+     "10-D": {
+      "2014": 1
+     },
+     "425": {
+      "2015": 3,
+      "2016": 2
+     },
+     "PRE 14A": {
+      "2015": 1
+     },
+     "NT 10-Q": {
+      "2015": 1
+     },
+     "8-K12B": {
+      "2016": 1
+     }
+    },
+    "nicht_berechenbar": {
+     "accepted_fehlt": 0,
+     "period_unlesbar": 0,
+     "sic_fehlt_oder_unlesbar": 91,
+     "cik_fehlt": 0
+    },
+    "firmen_je_jahr_veroeffentlichung": {
+     "2009": 477,
+     "2010": 1504,
+     "2011": 7964,
+     "2012": 8490,
+     "2013": 8164,
+     "2014": 7992,
+     "2015": 7761,
+     "2016": 7229
+    },
+    "firmen_je_jahr_berichtsperiode": {
+     "2008": 1,
+     "2009": 504,
+     "2010": 1595,
+     "2011": 8584,
+     "2012": 8461,
+     "2013": 8090,
+     "2014": 7932,
+     "2015": 7637,
+     "2016": 6691
+    },
+    "berichte_je_jahr_veroeffentlichung": {
+     "2009": 951,
+     "2010": 3904,
+     "2011": 18325,
+     "2012": 32731,
+     "2013": 31795,
+     "2014": 31219,
+     "2015": 29899,
+     "2016": 27678
+    },
+    "firmen_je_division": {
+     "Verarbeitendes Gewerbe": 3696,
+     "Finanzen, Versicherung, Immobilien": 2779,
+     "Dienstleistungen": 2334,
+     "Bergbau und Rohstoffgewinnung": 1062,
+     "Transport, Kommunikation, Versorger": 879,
+     "Einzelhandel": 609,
+     "Grosshandel": 353,
+     "Bau": 119,
+     "Land- und Forstwirtschaft, Fischerei": 79,
+     "Nicht klassifiziert (SEC-Sammelcode)": 38
+    },
+    "firmen_je_sic2": {
+     "01": 36,
+     "02": 9,
+     "07": 23,
+     "08": 6,
+     "09": 5,
+     "10": 423,
+     "12": 33,
+     "13": 574,
+     "14": 49,
+     "15": 60,
+     "16": 24,
+     "17": 35,
+     "20": 238,
+     "21": 22,
+     "22": 19,
+     "23": 65,
+     "24": 33,
+     "25": 30,
+     "26": 52,
+     "27": 98,
+     "28": 1081,
+     "29": 45,
+     "30": 77,
+     "31": 20,
+     "32": 42,
+     "33": 77,
+     "34": 99,
+     "35": 360,
+     "36": 640,
+     "37": 179,
+     "38": 510,
+     "39": 87,
+     "40": 16,
+     "41": 3,
+     "42": 34,
+     "44": 83,
+     "45": 41,
+     "46": 24,
+     "47": 52,
+     "48": 275,
+     "49": 351,
+     "50": 194,
+     "51": 159,
+     "52": 21,
+     "53": 34,
+     "54": 42,
+     "55": 43,
+     "56": 69,
+     "57": 41,
+     "58": 131,
+     "59": 230,
+     "60": 813,
+     "61": 149,
+     "62": 266,
+     "63": 204,
+     "64": 26,
+     "65": 314,
+     "67": 1031,
+     "70": 78,
+     "72": 63,
+     "73": 1512,
+     "75": 21,
+     "76": 12,
+     "78": 93,
+     "79": 131,
+     "80": 163,
+     "81": 3,
+     "82": 74,
+     "83": 6,
+     "86": 2,
+     "87": 237,
+     "89": 8,
+     "99": 38
+    },
+    "firmen_gesamt": 11156
+   },
+   "abdeckungstiefe": {
+    "fensterbreiteQuartale": 32,
+    "quartaleJeFirma": {
+     "firmen": 11156,
+     "minimum": 1,
+     "p10": 3,
+     "p25": 7,
+     "median": 16,
+     "p75": 22,
+     "p90": 25,
+     "maximum": 31,
+     "summeFirmenQuartale": 165925,
+     "histogramm": {
+      "1": 446,
+      "2-3": 901,
+      "4-7": 1747,
+      "8-11": 1261,
+      "12-19": 2081,
+      "20-31": 4720
+     }
+    },
+    "laengsteKetteJeFirma": {
+     "minimum": 1,
+     "p25": 6,
+     "median": 15,
+     "p75": 22,
+     "p90": 25,
+     "maximum": 31
+    },
+    "fallzahlVorschau": [
+     {
+      "mindesttiefeQuartaleAmStueck": 1,
+      "firmen": 11156,
+      "firmenQuartaleInKetten": 162438,
+      "firmenQuartaleGesamtDieserFirmen": 165925,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 4,
+      "firmen": 9506,
+      "firmenQuartaleInKetten": 159651,
+      "firmenQuartaleGesamtDieserFirmen": 161688,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 6,
+      "firmen": 8814,
+      "firmenQuartaleInKetten": 156518,
+      "firmenQuartaleGesamtDieserFirmen": 158406,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 8,
+      "firmen": 7973,
+      "firmenQuartaleInKetten": 151109,
+      "firmenQuartaleGesamtDieserFirmen": 152769,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 12,
+      "firmen": 6680,
+      "firmenQuartaleInKetten": 138604,
+      "firmenQuartaleGesamtDieserFirmen": 139632,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 16,
+      "firmen": 5559,
+      "firmenQuartaleInKetten": 123327,
+      "firmenQuartaleGesamtDieserFirmen": 123674,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 20,
+      "firmen": 4594,
+      "firmenQuartaleInKetten": 106295,
+      "firmenQuartaleGesamtDieserFirmen": 106449,
+      "strukturellGedeckelt": false
+     }
+    ]
+   },
+   "kennzahlen": {
+    "faktenzeilen": 64487278,
+    "zeilenStandard": 55277463,
+    "zeilenFirmeneigen": 9209815,
+    "zeilenOhneKennung": 0,
+    "kennzahlenStandard": 9175,
+    "kennzahlenFirmeneigen": 1115270,
+    "nennerAlleBerichte": 176502,
+    "nennerPeriodischeBerichte": 170610,
+    "waisenZeilenOhneBericht": 0,
+    "belegungVerteilungTop": {
+     "nenner": "periodische Berichte (10-K, 10-Q, 20-F, 40-F)",
+     "kennzahlenBetrachtet": 150,
+     "kennzahlenOhneQuote": 0,
+     "ueber90Prozent": 3,
+     "ueber50Prozent": 34,
+     "unter10Prozent": 1,
+     "median": 29.0
+    },
+    "pflichtKennzahlen": [
+     {
+      "bezeichnung": "Umsatz (alt, bis ASC 606)",
+      "tag": "SalesRevenueNet",
+      "zeilen": 245081,
+      "berichte": 48899,
+      "anteilProzent": 27.7,
+      "berichtePeriodisch": 47344,
+      "anteilPeriodischProzent": 27.75
+     },
+     {
+      "bezeichnung": "Umsatz (alt, Waren)",
+      "tag": "SalesRevenueGoodsNet",
+      "zeilen": 115530,
+      "berichte": 26398,
+      "anteilProzent": 14.96,
+      "berichtePeriodisch": 25577,
+      "anteilPeriodischProzent": 14.99
+     },
+     {
+      "bezeichnung": "Umsatz (alt, Dienstleistung)",
+      "tag": "SalesRevenueServicesNet",
+      "zeilen": 66181,
+      "berichte": 15990,
+      "anteilProzent": 9.06,
+      "berichtePeriodisch": 15527,
+      "anteilPeriodischProzent": 9.1
+     },
+     {
+      "bezeichnung": "Umsatz (Sammelkennung)",
+      "tag": "Revenues",
+      "zeilen": 371321,
+      "berichte": 81557,
+      "anteilProzent": 46.21,
+      "berichtePeriodisch": 78548,
+      "anteilPeriodischProzent": 46.04
+     },
+     {
+      "bezeichnung": "Umsatz (neu, ab ASC 606)",
+      "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "zeilen": 0,
+      "berichte": 0,
+      "anteilProzent": 0.0,
+      "berichtePeriodisch": 0,
+      "anteilPeriodischProzent": 0.0
+     },
+     {
+      "bezeichnung": "Umsatz (neu, inkl. Umlagen)",
+      "tag": "RevenueFromContractWithCustomerIncludingAssessedTax",
+      "zeilen": 0,
+      "berichte": 0,
+      "anteilProzent": 0.0,
+      "berichtePeriodisch": 0,
+      "anteilPeriodischProzent": 0.0
+     },
+     {
+      "bezeichnung": "Ergebnis nach Steuern",
+      "tag": "NetIncomeLoss",
+      "zeilen": 776307,
+      "berichte": 155878,
+      "anteilProzent": 88.32,
+      "berichtePeriodisch": 150689,
+      "anteilPeriodischProzent": 88.32
+     },
+     {
+      "bezeichnung": "Betriebsergebnis",
+      "tag": "OperatingIncomeLoss",
+      "zeilen": 583622,
+      "berichte": 127020,
+      "anteilProzent": 71.97,
+      "berichtePeriodisch": 122616,
+      "anteilPeriodischProzent": 71.87
+     },
+     {
+      "bezeichnung": "Rohertrag",
+      "tag": "GrossProfit",
+      "zeilen": 307317,
+      "berichte": 68115,
+      "anteilProzent": 38.59,
+      "berichtePeriodisch": 65766,
+      "anteilPeriodischProzent": 38.55
+     },
+     {
+      "bezeichnung": "Forschung und Entwicklung",
+      "tag": "ResearchAndDevelopmentExpense",
+      "zeilen": 164319,
+      "berichte": 45385,
+      "anteilProzent": 25.71,
+      "berichtePeriodisch": 43194,
+      "anteilPeriodischProzent": 25.32
+     },
+     {
+      "bezeichnung": "Bilanzsumme",
+      "tag": "Assets",
+      "zeilen": 457664,
+      "berichte": 172305,
+      "anteilProzent": 97.62,
+      "berichtePeriodisch": 166702,
+      "anteilPeriodischProzent": 97.71
+     },
+     {
+      "bezeichnung": "Verbindlichkeiten",
+      "tag": "Liabilities",
+      "zeilen": 319066,
+      "berichte": 128896,
+      "anteilProzent": 73.03,
+      "berichtePeriodisch": 124615,
+      "anteilPeriodischProzent": 73.04
+     },
+     {
+      "bezeichnung": "Eigenkapital",
+      "tag": "StockholdersEquity",
+      "zeilen": 478700,
+      "berichte": 155065,
+      "anteilProzent": 87.85,
+      "berichtePeriodisch": 149947,
+      "anteilPeriodischProzent": 87.89
+     },
+     {
+      "bezeichnung": "Zahlungsmittel",
+      "tag": "CashAndCashEquivalentsAtCarryingValue",
+      "zeilen": 762531,
+      "berichte": 157564,
+      "anteilProzent": 89.27,
+      "berichtePeriodisch": 152521,
+      "anteilPeriodischProzent": 89.4
+     },
+     {
+      "bezeichnung": "Operativer Cashflow",
+      "tag": "NetCashProvidedByUsedInOperatingActivities",
+      "zeilen": 374210,
+      "berichte": 130977,
+      "anteilProzent": 74.21,
+      "berichtePeriodisch": 126823,
+      "anteilPeriodischProzent": 74.34
+     },
+     {
+      "bezeichnung": "Ergebnis je Aktie (verwaessert)",
+      "tag": "EarningsPerShareDiluted",
+      "zeilen": 389659,
+      "berichte": 91066,
+      "anteilProzent": 51.59,
+      "berichtePeriodisch": 88928,
+      "anteilPeriodischProzent": 52.12
+     },
+     {
+      "bezeichnung": "Aktien im Umlauf",
+      "tag": "CommonStockSharesOutstanding",
+      "zeilen": 260920,
+      "berichte": 124007,
+      "anteilProzent": 70.26,
+      "berichtePeriodisch": 119481,
+      "anteilPeriodischProzent": 70.03
+     },
+     {
+      "bezeichnung": "Vertrieb und Verwaltung",
+      "tag": "SellingGeneralAndAdministrativeExpense",
+      "zeilen": 246108,
+      "berichte": 55449,
+      "anteilProzent": 31.42,
+      "berichtePeriodisch": 53891,
+      "anteilPeriodischProzent": 31.59
+     }
+    ],
+    "haeufigsteKennzahlen": [
+     {
+      "tag": "NetIncomeLoss",
+      "zeilen": 776307,
+      "berichte": 155878,
+      "anteilProzent": 88.32,
+      "berichtePeriodisch": 150689,
+      "anteilPeriodischProzent": 88.32
+     },
+     {
+      "tag": "CashAndCashEquivalentsAtCarryingValue",
+      "zeilen": 762531,
+      "berichte": 157564,
+      "anteilProzent": 89.27,
+      "berichtePeriodisch": 152521,
+      "anteilPeriodischProzent": 89.4
+     },
+     {
+      "tag": "OperatingIncomeLoss",
+      "zeilen": 583622,
+      "berichte": 127020,
+      "anteilProzent": 71.97,
+      "berichtePeriodisch": 122616,
+      "anteilPeriodischProzent": 71.87
+     },
+     {
+      "tag": "IncomeTaxExpenseBenefit",
+      "zeilen": 553114,
+      "berichte": 127681,
+      "anteilProzent": 72.34,
+      "berichtePeriodisch": 123619,
+      "anteilPeriodischProzent": 72.46
+     },
+     {
+      "tag": "StockholdersEquity",
+      "zeilen": 478700,
+      "berichte": 155065,
+      "anteilProzent": 87.85,
+      "berichtePeriodisch": 149947,
+      "anteilPeriodischProzent": 87.89
+     },
+     {
+      "tag": "Assets",
+      "zeilen": 457664,
+      "berichte": 172305,
+      "anteilProzent": 97.62,
+      "berichtePeriodisch": 166702,
+      "anteilPeriodischProzent": 97.71
+     },
+     {
+      "tag": "InterestExpense",
+      "zeilen": 446044,
+      "berichte": 109879,
+      "anteilProzent": 62.25,
+      "berichtePeriodisch": 106270,
+      "anteilPeriodischProzent": 62.29
+     },
+     {
+      "tag": "LiabilitiesAndStockholdersEquity",
+      "zeilen": 440304,
+      "berichte": 172481,
+      "anteilProzent": 97.72,
+      "berichtePeriodisch": 166901,
+      "anteilPeriodischProzent": 97.83
+     },
+     {
+      "tag": "CashAndCashEquivalentsPeriodIncreaseDecrease",
+      "zeilen": 419464,
+      "berichte": 148618,
+      "anteilProzent": 84.2,
+      "berichtePeriodisch": 143889,
+      "anteilPeriodischProzent": 84.34
+     },
+     {
+      "tag": "EarningsPerShareBasic",
+      "zeilen": 404976,
+      "berichte": 96604,
+      "anteilProzent": 54.73,
+      "berichtePeriodisch": 94304,
+      "anteilPeriodischProzent": 55.27
+     },
+     {
+      "tag": "EarningsPerShareDiluted",
+      "zeilen": 389659,
+      "berichte": 91066,
+      "anteilProzent": 51.59,
+      "berichtePeriodisch": 88928,
+      "anteilPeriodischProzent": 52.12
+     },
+     {
+      "tag": "NetCashProvidedByUsedInOperatingActivities",
+      "zeilen": 374210,
+      "berichte": 130977,
+      "anteilProzent": 74.21,
+      "berichtePeriodisch": 126823,
+      "anteilPeriodischProzent": 74.34
+     },
+     {
+      "tag": "Revenues",
+      "zeilen": 371321,
+      "berichte": 81557,
+      "anteilProzent": 46.21,
+      "berichtePeriodisch": 78548,
+      "anteilPeriodischProzent": 46.04
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTax",
+      "zeilen": 369994,
+      "berichte": 88374,
+      "anteilProzent": 50.07,
+      "berichtePeriodisch": 86088,
+      "anteilPeriodischProzent": 50.46
+     },
+     {
+      "tag": "NetCashProvidedByUsedInFinancingActivities",
+      "zeilen": 366490,
+      "berichte": 128633,
+      "anteilProzent": 72.88,
+      "berichtePeriodisch": 124524,
+      "anteilPeriodischProzent": 72.99
+     },
+     {
+      "tag": "WeightedAverageNumberOfSharesOutstandingBasic",
+      "zeilen": 350227,
+      "berichte": 101388,
+      "anteilProzent": 57.44,
+      "berichtePeriodisch": 98884,
+      "anteilPeriodischProzent": 57.96
+     },
+     {
+      "tag": "AssetsCurrent",
+      "zeilen": 344745,
+      "berichte": 135731,
+      "anteilProzent": 76.9,
+      "berichtePeriodisch": 130880,
+      "anteilPeriodischProzent": 76.71
+     },
+     {
+      "tag": "LiabilitiesCurrent",
+      "zeilen": 342373,
+      "berichte": 134395,
+      "anteilProzent": 76.14,
+      "berichtePeriodisch": 129647,
+      "anteilPeriodischProzent": 75.99
+     },
+     {
+      "tag": "NetCashProvidedByUsedInInvestingActivities",
+      "zeilen": 340877,
+      "berichte": 119730,
+      "anteilProzent": 67.83,
+      "berichtePeriodisch": 115793,
+      "anteilPeriodischProzent": 67.87
+     },
+     {
+      "tag": "PropertyPlantAndEquipmentNet",
+      "zeilen": 338384,
+      "berichte": 134106,
+      "anteilProzent": 75.98,
+      "berichtePeriodisch": 129563,
+      "anteilPeriodischProzent": 75.94
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+      "zeilen": 331784,
+      "berichte": 74604,
+      "anteilProzent": 42.27,
+      "berichtePeriodisch": 72559,
+      "anteilPeriodischProzent": 42.53
+     },
+     {
+      "tag": "WeightedAverageNumberOfDilutedSharesOutstanding",
+      "zeilen": 328876,
+      "berichte": 94342,
+      "anteilProzent": 53.45,
+      "berichtePeriodisch": 92027,
+      "anteilPeriodischProzent": 53.94
+     },
+     {
+      "tag": "OperatingExpenses",
+      "zeilen": 325658,
+      "berichte": 85060,
+      "anteilProzent": 48.19,
+      "berichtePeriodisch": 81912,
+      "anteilPeriodischProzent": 48.01
+     },
+     {
+      "tag": "RetainedEarningsAccumulatedDeficit",
+      "zeilen": 322120,
+      "berichte": 145852,
+      "anteilProzent": 82.63,
+      "berichtePeriodisch": 141239,
+      "anteilPeriodischProzent": 82.78
+     },
+     {
+      "tag": "Liabilities",
+      "zeilen": 319066,
+      "berichte": 128896,
+      "anteilProzent": 73.03,
+      "berichtePeriodisch": 124615,
+      "anteilPeriodischProzent": 73.04
+     },
+     {
+      "tag": "GeneralAndAdministrativeExpense",
+      "zeilen": 318216,
+      "berichte": 84237,
+      "anteilProzent": 47.73,
+      "berichtePeriodisch": 80864,
+      "anteilPeriodischProzent": 47.4
+     },
+     {
+      "tag": "CommonStockValue",
+      "zeilen": 311705,
+      "berichte": 144014,
+      "anteilProzent": 81.59,
+      "berichtePeriodisch": 139205,
+      "anteilPeriodischProzent": 81.59
+     },
+     {
+      "tag": "GrossProfit",
+      "zeilen": 307317,
+      "berichte": 68115,
+      "anteilProzent": 38.59,
+      "berichtePeriodisch": 65766,
+      "anteilPeriodischProzent": 38.55
+     },
+     {
+      "tag": "ProfitLoss",
+      "zeilen": 298058,
+      "berichte": 58686,
+      "anteilProzent": 33.25,
+      "berichtePeriodisch": 56627,
+      "anteilPeriodischProzent": 33.19
+     },
+     {
+      "tag": "CommonStockSharesAuthorized",
+      "zeilen": 296986,
+      "berichte": 141837,
+      "anteilProzent": 80.36,
+      "berichtePeriodisch": 137039,
+      "anteilPeriodischProzent": 80.32
+     },
+     {
+      "tag": "CommonStockSharesIssued",
+      "zeilen": 290853,
+      "berichte": 138529,
+      "anteilProzent": 78.49,
+      "berichtePeriodisch": 133715,
+      "anteilPeriodischProzent": 78.37
+     },
+     {
+      "tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "zeilen": 283314,
+      "berichte": 104157,
+      "anteilProzent": 59.01,
+      "berichtePeriodisch": 100712,
+      "anteilPeriodischProzent": 59.03
+     },
+     {
+      "tag": "CommonStockParOrStatedValuePerShare",
+      "zeilen": 283091,
+      "berichte": 134574,
+      "anteilProzent": 76.25,
+      "berichtePeriodisch": 129928,
+      "anteilPeriodischProzent": 76.15
+     },
+     {
+      "tag": "ShareBasedCompensation",
+      "zeilen": 279920,
+      "berichte": 109413,
+      "anteilProzent": 61.99,
+      "berichtePeriodisch": 105701,
+      "anteilPeriodischProzent": 61.95
+     },
+     {
+      "tag": "CommonStockSharesOutstanding",
+      "zeilen": 260920,
+      "berichte": 124007,
+      "anteilProzent": 70.26,
+      "berichtePeriodisch": 119481,
+      "anteilPeriodischProzent": 70.03
+     },
+     {
+      "tag": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+      "zeilen": 250800,
+      "berichte": 98811,
+      "anteilProzent": 55.98,
+      "berichtePeriodisch": 96316,
+      "anteilPeriodischProzent": 56.45
+     },
+     {
+      "tag": "OtherNonoperatingIncomeExpense",
+      "zeilen": 247593,
+      "berichte": 58736,
+      "anteilProzent": 33.28,
+      "berichtePeriodisch": 56874,
+      "anteilPeriodischProzent": 33.34
+     },
+     {
+      "tag": "SellingGeneralAndAdministrativeExpense",
+      "zeilen": 246108,
+      "berichte": 55449,
+      "anteilProzent": 31.42,
+      "berichtePeriodisch": 53891,
+      "anteilPeriodischProzent": 31.59
+     },
+     {
+      "tag": "SalesRevenueNet",
+      "zeilen": 245081,
+      "berichte": 48899,
+      "anteilProzent": 27.7,
+      "berichtePeriodisch": 47344,
+      "anteilPeriodischProzent": 27.75
+     },
+     {
+      "tag": "AccountsPayableCurrent",
+      "zeilen": 238997,
+      "berichte": 97050,
+      "anteilProzent": 54.99,
+      "berichtePeriodisch": 93735,
+      "anteilPeriodischProzent": 54.94
+     },
+     {
+      "tag": "NonoperatingIncomeExpense",
+      "zeilen": 217847,
+      "berichte": 53920,
+      "anteilProzent": 30.55,
+      "berichtePeriodisch": 51662,
+      "anteilPeriodischProzent": 30.28
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+      "zeilen": 217671,
+      "berichte": 48354,
+      "anteilProzent": 27.4,
+      "berichtePeriodisch": 46701,
+      "anteilPeriodischProzent": 27.37
+     },
+     {
+      "tag": "OtherAssetsNoncurrent",
+      "zeilen": 216516,
+      "berichte": 82180,
+      "anteilProzent": 46.56,
+      "berichtePeriodisch": 79819,
+      "anteilPeriodischProzent": 46.78
+     },
+     {
+      "tag": "Goodwill",
+      "zeilen": 212355,
+      "berichte": 75196,
+      "anteilProzent": 42.6,
+      "berichtePeriodisch": 73170,
+      "anteilPeriodischProzent": 42.89
+     },
+     {
+      "tag": "AccountsReceivableNetCurrent",
+      "zeilen": 211071,
+      "berichte": 85162,
+      "anteilProzent": 48.25,
+      "berichtePeriodisch": 82197,
+      "anteilPeriodischProzent": 48.18
+     },
+     {
+      "tag": "EarningsPerShareBasicAndDiluted",
+      "zeilen": 210902,
+      "berichte": 60732,
+      "anteilProzent": 34.41,
+      "berichtePeriodisch": 57836,
+      "anteilPeriodischProzent": 33.9
+     },
+     {
+      "tag": "DepreciationDepletionAndAmortization",
+      "zeilen": 209452,
+      "berichte": 69661,
+      "anteilProzent": 39.47,
+      "berichtePeriodisch": 67445,
+      "anteilPeriodischProzent": 39.53
+     },
+     {
+      "tag": "InterestPaid",
+      "zeilen": 208716,
+      "berichte": 89477,
+      "anteilProzent": 50.69,
+      "berichtePeriodisch": 86101,
+      "anteilPeriodischProzent": 50.47
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsReceivable",
+      "zeilen": 195581,
+      "berichte": 83712,
+      "anteilProzent": 47.43,
+      "berichtePeriodisch": 80789,
+      "anteilPeriodischProzent": 47.35
+     },
+     {
+      "tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+      "zeilen": 192901,
+      "berichte": 51248,
+      "anteilProzent": 29.04,
+      "berichtePeriodisch": 49480,
+      "anteilPeriodischProzent": 29.0
+     },
+     {
+      "tag": "CommitmentsAndContingencies",
+      "zeilen": 185782,
+      "berichte": 86694,
+      "anteilProzent": 49.12,
+      "berichtePeriodisch": 83647,
+      "anteilPeriodischProzent": 49.03
+     },
+     {
+      "tag": "InventoryNet",
+      "zeilen": 183192,
+      "berichte": 71293,
+      "anteilProzent": 40.39,
+      "berichtePeriodisch": 68946,
+      "anteilPeriodischProzent": 40.41
+     },
+     {
+      "tag": "PreferredStockSharesAuthorized",
+      "zeilen": 182398,
+      "berichte": 90901,
+      "anteilProzent": 51.5,
+      "berichtePeriodisch": 87847,
+      "anteilPeriodischProzent": 51.49
+     },
+     {
+      "tag": "AdditionalPaidInCapital",
+      "zeilen": 182324,
+      "berichte": 85477,
+      "anteilProzent": 48.43,
+      "berichtePeriodisch": 82228,
+      "anteilPeriodischProzent": 48.2
+     },
+     {
+      "tag": "NetIncomeLossAvailableToCommonStockholdersBasic",
+      "zeilen": 178644,
+      "berichte": 41072,
+      "anteilProzent": 23.27,
+      "berichtePeriodisch": 39540,
+      "anteilPeriodischProzent": 23.18
+     },
+     {
+      "tag": "NetIncomeLossAttributableToNoncontrollingInterest",
+      "zeilen": 175536,
+      "berichte": 38796,
+      "anteilProzent": 21.98,
+      "berichtePeriodisch": 37407,
+      "anteilPeriodischProzent": 21.93
+     },
+     {
+      "tag": "OtherLiabilitiesNoncurrent",
+      "zeilen": 174680,
+      "berichte": 63675,
+      "anteilProzent": 36.08,
+      "berichtePeriodisch": 61987,
+      "anteilPeriodischProzent": 36.33
+     },
+     {
+      "tag": "DeferredIncomeTaxExpenseBenefit",
+      "zeilen": 173682,
+      "berichte": 67714,
+      "anteilProzent": 38.36,
+      "berichtePeriodisch": 65567,
+      "anteilPeriodischProzent": 38.43
+     },
+     {
+      "tag": "PreferredStockValue",
+      "zeilen": 170964,
+      "berichte": 82504,
+      "anteilProzent": 46.74,
+      "berichtePeriodisch": 79898,
+      "anteilPeriodischProzent": 46.83
+     },
+     {
+      "tag": "CostsAndExpenses",
+      "zeilen": 167459,
+      "berichte": 35397,
+      "anteilProzent": 20.05,
+      "berichtePeriodisch": 34344,
+      "anteilPeriodischProzent": 20.13
+     },
+     {
+      "tag": "AmortizationOfIntangibleAssets",
+      "zeilen": 165247,
+      "berichte": 51882,
+      "anteilProzent": 29.39,
+      "berichtePeriodisch": 50061,
+      "anteilPeriodischProzent": 29.34
+     },
+     {
+      "tag": "ResearchAndDevelopmentExpense",
+      "zeilen": 164319,
+      "berichte": 45385,
+      "anteilProzent": 25.71,
+      "berichtePeriodisch": 43194,
+      "anteilPeriodischProzent": 25.32
+     },
+     {
+      "tag": "EntityCommonStockSharesOutstanding",
+      "zeilen": 163492,
+      "berichte": 161362,
+      "anteilProzent": 91.42,
+      "berichtePeriodisch": 159590,
+      "anteilPeriodischProzent": 93.54
+     },
+     {
+      "tag": "DepreciationAndAmortization",
+      "zeilen": 161347,
+      "berichte": 47689,
+      "anteilProzent": 27.02,
+      "berichtePeriodisch": 45947,
+      "anteilPeriodischProzent": 26.93
+     },
+     {
+      "tag": "PreferredStockParOrStatedValuePerShare",
+      "zeilen": 160872,
+      "berichte": 80044,
+      "anteilProzent": 45.35,
+      "berichtePeriodisch": 77320,
+      "anteilPeriodischProzent": 45.32
+     },
+     {
+      "tag": "IncreaseDecreaseInInventories",
+      "zeilen": 160720,
+      "berichte": 68051,
+      "anteilProzent": 38.56,
+      "berichtePeriodisch": 65766,
+      "anteilPeriodischProzent": 38.55
+     },
+     {
+      "tag": "InvestmentIncomeInterest",
+      "zeilen": 159837,
+      "berichte": 42452,
+      "anteilProzent": 24.05,
+      "berichtePeriodisch": 40922,
+      "anteilPeriodischProzent": 23.99
+     },
+     {
+      "tag": "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment",
+      "zeilen": 158694,
+      "berichte": 74003,
+      "anteilProzent": 41.93,
+      "berichtePeriodisch": 70890,
+      "anteilPeriodischProzent": 41.55
+     },
+     {
+      "tag": "Depreciation",
+      "zeilen": 158316,
+      "berichte": 56170,
+      "anteilProzent": 31.82,
+      "berichtePeriodisch": 53538,
+      "anteilPeriodischProzent": 31.38
+     },
+     {
+      "tag": "IncomeLossFromEquityMethodInvestments",
+      "zeilen": 157995,
+      "berichte": 31255,
+      "anteilProzent": 17.71,
+      "berichtePeriodisch": 30167,
+      "anteilPeriodischProzent": 17.68
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsPayable",
+      "zeilen": 157918,
+      "berichte": 65657,
+      "anteilProzent": 37.2,
+      "berichtePeriodisch": 63269,
+      "anteilPeriodischProzent": 37.08
+     },
+     {
+      "tag": "CostOfGoodsSold",
+      "zeilen": 156468,
+      "berichte": 38107,
+      "anteilProzent": 21.59,
+      "berichtePeriodisch": 36860,
+      "anteilPeriodischProzent": 21.6
+     },
+     {
+      "tag": "AccruedLiabilitiesCurrent",
+      "zeilen": 155721,
+      "berichte": 65408,
+      "anteilProzent": 37.06,
+      "berichtePeriodisch": 62971,
+      "anteilPeriodischProzent": 36.91
+     },
+     {
+      "tag": "ProceedsFromIssuanceOfCommonStock",
+      "zeilen": 151435,
+      "berichte": 61825,
+      "anteilProzent": 35.03,
+      "berichtePeriodisch": 59030,
+      "anteilPeriodischProzent": 34.6
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTaxIncludingPortionAttributableToNoncontrollingInterest",
+      "zeilen": 149799,
+      "berichte": 33932,
+      "anteilProzent": 19.22,
+      "berichtePeriodisch": 32889,
+      "anteilPeriodischProzent": 19.28
+     },
+     {
+      "tag": "EffectOfExchangeRateOnCashAndCashEquivalents",
+      "zeilen": 149756,
+      "berichte": 50986,
+      "anteilProzent": 28.89,
+      "berichtePeriodisch": 49571,
+      "anteilPeriodischProzent": 29.06
+     },
+     {
+      "tag": "PreferredStockSharesIssued",
+      "zeilen": 148734,
+      "berichte": 73628,
+      "anteilProzent": 41.72,
+      "berichtePeriodisch": 71172,
+      "anteilPeriodischProzent": 41.72
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossNetOfTax",
+      "zeilen": 147738,
+      "berichte": 38746,
+      "anteilProzent": 21.95,
+      "berichtePeriodisch": 37688,
+      "anteilPeriodischProzent": 22.09
+     },
+     {
+      "tag": "IncomeTaxesPaid",
+      "zeilen": 145336,
+      "berichte": 62721,
+      "anteilProzent": 35.54,
+      "berichtePeriodisch": 60465,
+      "anteilPeriodischProzent": 35.44
+     },
+     {
+      "tag": "IntangibleAssetsNetExcludingGoodwill",
+      "zeilen": 144634,
+      "berichte": 56224,
+      "anteilProzent": 31.85,
+      "berichtePeriodisch": 54428,
+      "anteilPeriodischProzent": 31.9
+     },
+     {
+      "tag": "AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount",
+      "zeilen": 142717,
+      "berichte": 50531,
+      "anteilProzent": 28.63,
+      "berichtePeriodisch": 48966,
+      "anteilPeriodischProzent": 28.7
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+      "zeilen": 142665,
+      "berichte": 58982,
+      "anteilProzent": 33.42,
+      "berichtePeriodisch": 56943,
+      "anteilPeriodischProzent": 33.38
+     },
+     {
+      "tag": "AdditionalPaidInCapitalCommonStock",
+      "zeilen": 142661,
+      "berichte": 65446,
+      "anteilProzent": 37.08,
+      "berichtePeriodisch": 63579,
+      "anteilPeriodischProzent": 37.27
+     },
+     {
+      "tag": "IncreaseDecreaseInPrepaidDeferredExpenseAndOtherAssets",
+      "zeilen": 136915,
+      "berichte": 58059,
+      "anteilProzent": 32.89,
+      "berichtePeriodisch": 56083,
+      "anteilPeriodischProzent": 32.87
+     },
+     {
+      "tag": "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+      "zeilen": 135473,
+      "berichte": 42204,
+      "anteilProzent": 23.91,
+      "berichtePeriodisch": 40014,
+      "anteilPeriodischProzent": 23.45
+     },
+     {
+      "tag": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+      "zeilen": 134138,
+      "berichte": 47395,
+      "anteilProzent": 26.85,
+      "berichtePeriodisch": 45809,
+      "anteilPeriodischProzent": 26.85
+     },
+     {
+      "tag": "DeferredTaxLiabilitiesNoncurrent",
+      "zeilen": 131885,
+      "berichte": 47038,
+      "anteilProzent": 26.65,
+      "berichtePeriodisch": 45751,
+      "anteilPeriodischProzent": 26.82
+     },
+     {
+      "tag": "LongTermDebtNoncurrent",
+      "zeilen": 129884,
+      "berichte": 45437,
+      "anteilProzent": 25.74,
+      "berichtePeriodisch": 43911,
+      "anteilPeriodischProzent": 25.74
+     },
+     {
+      "tag": "PaymentsForRepurchaseOfCommonStock",
+      "zeilen": 129455,
+      "berichte": 50433,
+      "anteilProzent": 28.57,
+      "berichtePeriodisch": 49343,
+      "anteilPeriodischProzent": 28.92
+     },
+     {
+      "tag": "AllocatedShareBasedCompensationExpense",
+      "zeilen": 129177,
+      "berichte": 42205,
+      "anteilProzent": 23.91,
+      "berichtePeriodisch": 40619,
+      "anteilPeriodischProzent": 23.81
+     },
+     {
+      "tag": "PrepaidExpenseAndOtherAssetsCurrent",
+      "zeilen": 129063,
+      "berichte": 53320,
+      "anteilProzent": 30.21,
+      "berichtePeriodisch": 51381,
+      "anteilPeriodischProzent": 30.12
+     },
+     {
+      "tag": "PreferredStockSharesOutstanding",
+      "zeilen": 128086,
+      "berichte": 63632,
+      "anteilProzent": 36.05,
+      "berichtePeriodisch": 61424,
+      "anteilPeriodischProzent": 36.0
+     },
+     {
+      "tag": "PropertyPlantAndEquipmentGross",
+      "zeilen": 125021,
+      "berichte": 58041,
+      "anteilProzent": 32.88,
+      "berichtePeriodisch": 55381,
+      "anteilPeriodischProzent": 32.46
+     },
+     {
+      "tag": "NetCashProvidedByUsedInFinancingActivitiesContinuingOperations",
+      "zeilen": 119775,
+      "berichte": 43008,
+      "anteilProzent": 24.37,
+      "berichtePeriodisch": 41522,
+      "anteilPeriodischProzent": 24.34
+     },
+     {
+      "tag": "NetCashProvidedByUsedInInvestingActivitiesContinuingOperations",
+      "zeilen": 118402,
+      "berichte": 42586,
+      "anteilProzent": 24.13,
+      "berichtePeriodisch": 41158,
+      "anteilPeriodischProzent": 24.12
+     },
+     {
+      "tag": "EffectiveIncomeTaxRateContinuingOperations",
+      "zeilen": 117739,
+      "berichte": 41544,
+      "anteilProzent": 23.54,
+      "berichtePeriodisch": 39635,
+      "anteilPeriodischProzent": 23.23
+     },
+     {
+      "tag": "InterestIncomeExpenseNet",
+      "zeilen": 116040,
+      "berichte": 27056,
+      "anteilProzent": 15.33,
+      "berichtePeriodisch": 26436,
+      "anteilPeriodischProzent": 15.49
+     },
+     {
+      "tag": "SalesRevenueGoodsNet",
+      "zeilen": 115530,
+      "berichte": 26398,
+      "anteilProzent": 14.96,
+      "berichtePeriodisch": 25577,
+      "anteilPeriodischProzent": 14.99
+     },
+     {
+      "tag": "RepaymentsOfLongTermDebt",
+      "zeilen": 115226,
+      "berichte": 39976,
+      "anteilProzent": 22.65,
+      "berichtePeriodisch": 38707,
+      "anteilPeriodischProzent": 22.69
+     },
+     {
+      "tag": "OtherAssetsCurrent",
+      "zeilen": 113775,
+      "berichte": 42189,
+      "anteilProzent": 23.9,
+      "berichtePeriodisch": 40776,
+      "anteilPeriodischProzent": 23.9
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperations",
+      "zeilen": 111782,
+      "berichte": 26070,
+      "anteilProzent": 14.77,
+      "berichtePeriodisch": 25126,
+      "anteilPeriodischProzent": 14.73
+     },
+     {
+      "tag": "TreasuryStockValue",
+      "zeilen": 110887,
+      "berichte": 51985,
+      "anteilProzent": 29.45,
+      "berichtePeriodisch": 50924,
+      "anteilPeriodischProzent": 29.85
+     },
+     {
+      "tag": "AllowanceForDoubtfulAccountsReceivableCurrent",
+      "zeilen": 110356,
+      "berichte": 50887,
+      "anteilProzent": 28.83,
+      "berichtePeriodisch": 49500,
+      "anteilPeriodischProzent": 29.01
+     },
+     {
+      "tag": "CostOfRevenue",
+      "zeilen": 109991,
+      "berichte": 28403,
+      "anteilProzent": 16.09,
+      "berichtePeriodisch": 27253,
+      "anteilPeriodischProzent": 15.97
+     },
+     {
+      "tag": "IncreaseDecreaseInOtherOperatingAssets",
+      "zeilen": 109683,
+      "berichte": 44878,
+      "anteilProzent": 25.43,
+      "berichtePeriodisch": 43655,
+      "anteilPeriodischProzent": 25.59
+     },
+     {
+      "tag": "CommonStockDividendsPerShareDeclared",
+      "zeilen": 108889,
+      "berichte": 30756,
+      "anteilProzent": 17.43,
+      "berichtePeriodisch": 30272,
+      "anteilPeriodischProzent": 17.74
+     },
+     {
+      "tag": "ProceedsFromStockOptionsExercised",
+      "zeilen": 107008,
+      "berichte": 42175,
+      "anteilProzent": 23.89,
+      "berichtePeriodisch": 40967,
+      "anteilPeriodischProzent": 24.01
+     },
+     {
+      "tag": "MinorityInterest",
+      "zeilen": 106298,
+      "berichte": 38535,
+      "anteilProzent": 21.83,
+      "berichtePeriodisch": 37188,
+      "anteilPeriodischProzent": 21.8
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossForeignCurrencyTransactionAndTranslationAdjustmentNetOfTax",
+      "zeilen": 105076,
+      "berichte": 28328,
+      "anteilProzent": 16.05,
+      "berichtePeriodisch": 27503,
+      "anteilPeriodischProzent": 16.12
+     },
+     {
+      "tag": "DeferredTaxAssetsNetCurrent",
+      "zeilen": 102256,
+      "berichte": 40544,
+      "anteilProzent": 22.97,
+      "berichtePeriodisch": 39574,
+      "anteilPeriodischProzent": 23.2
+     },
+     {
+      "tag": "ProfessionalFees",
+      "zeilen": 102063,
+      "berichte": 30264,
+      "anteilProzent": 17.15,
+      "berichtePeriodisch": 29237,
+      "anteilPeriodischProzent": 17.14
+     },
+     {
+      "tag": "EmployeeRelatedLiabilitiesCurrent",
+      "zeilen": 99871,
+      "berichte": 44189,
+      "anteilProzent": 25.04,
+      "berichtePeriodisch": 42814,
+      "anteilPeriodischProzent": 25.09
+     },
+     {
+      "tag": "IncreaseDecreaseInAccruedLiabilities",
+      "zeilen": 97804,
+      "berichte": 41175,
+      "anteilProzent": 23.33,
+      "berichtePeriodisch": 39577,
+      "anteilPeriodischProzent": 23.2
+     },
+     {
+      "tag": "IncrementalCommonSharesAttributableToShareBasedPaymentArrangements",
+      "zeilen": 96688,
+      "berichte": 31293,
+      "anteilProzent": 17.73,
+      "berichtePeriodisch": 30724,
+      "anteilPeriodischProzent": 18.01
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest",
+      "zeilen": 95723,
+      "berichte": 16819,
+      "anteilProzent": 9.53,
+      "berichtePeriodisch": 16138,
+      "anteilPeriodischProzent": 9.46
+     },
+     {
+      "tag": "IncomeTaxesPaidNet",
+      "zeilen": 95697,
+      "berichte": 39254,
+      "anteilProzent": 22.24,
+      "berichtePeriodisch": 38024,
+      "anteilPeriodischProzent": 22.29
+     },
+     {
+      "tag": "Cash",
+      "zeilen": 94406,
+      "berichte": 30931,
+      "anteilProzent": 17.52,
+      "berichtePeriodisch": 29643,
+      "anteilPeriodischProzent": 17.37
+     },
+     {
+      "tag": "ProceedsFromSaleOfPropertyPlantAndEquipment",
+      "zeilen": 94389,
+      "berichte": 35859,
+      "anteilProzent": 20.32,
+      "berichtePeriodisch": 34679,
+      "anteilPeriodischProzent": 20.33
+     },
+     {
+      "tag": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+      "zeilen": 93961,
+      "berichte": 35433,
+      "anteilProzent": 20.08,
+      "berichtePeriodisch": 34351,
+      "anteilPeriodischProzent": 20.13
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTaxAttributableToNoncontrollingInterest",
+      "zeilen": 93329,
+      "berichte": 22807,
+      "anteilProzent": 12.92,
+      "berichtePeriodisch": 22064,
+      "anteilPeriodischProzent": 12.93
+     },
+     {
+      "tag": "PaymentsForProceedsFromOtherInvestingActivities",
+      "zeilen": 92901,
+      "berichte": 29344,
+      "anteilProzent": 16.63,
+      "berichtePeriodisch": 28437,
+      "anteilPeriodischProzent": 16.67
+     },
+     {
+      "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+      "zeilen": 92566,
+      "berichte": 38393,
+      "anteilProzent": 21.75,
+      "berichtePeriodisch": 36601,
+      "anteilPeriodischProzent": 21.45
+     },
+     {
+      "tag": "OtherComprehensiveIncomeUnrealizedHoldingGainLossOnSecuritiesArisingDuringPeriodNetOfTax",
+      "zeilen": 91180,
+      "berichte": 28724,
+      "anteilProzent": 16.27,
+      "berichtePeriodisch": 28092,
+      "anteilPeriodischProzent": 16.47
+     },
+     {
+      "tag": "TreasuryStockShares",
+      "zeilen": 91014,
+      "berichte": 44125,
+      "anteilProzent": 25.0,
+      "berichtePeriodisch": 43242,
+      "anteilPeriodischProzent": 25.35
+     },
+     {
+      "tag": "ExcessTaxBenefitFromShareBasedCompensationFinancingActivities",
+      "zeilen": 90518,
+      "berichte": 34401,
+      "anteilProzent": 19.49,
+      "berichtePeriodisch": 33889,
+      "anteilPeriodischProzent": 19.86
+     },
+     {
+      "tag": "LongTermDebtCurrent",
+      "zeilen": 90266,
+      "berichte": 35597,
+      "anteilProzent": 20.17,
+      "berichtePeriodisch": 34437,
+      "anteilPeriodischProzent": 20.18
+     },
+     {
+      "tag": "ProvisionForDoubtfulAccounts",
+      "zeilen": 89789,
+      "berichte": 35623,
+      "anteilProzent": 20.18,
+      "berichtePeriodisch": 34383,
+      "anteilPeriodischProzent": 20.15
+     },
+     {
+      "tag": "FiniteLivedIntangibleAssetsAccumulatedAmortization",
+      "zeilen": 89651,
+      "berichte": 44517,
+      "anteilProzent": 25.22,
+      "berichtePeriodisch": 42898,
+      "anteilPeriodischProzent": 25.14
+     },
+     {
+      "tag": "FiniteLivedIntangibleAssetsNet",
+      "zeilen": 87930,
+      "berichte": 42009,
+      "anteilProzent": 23.8,
+      "berichtePeriodisch": 40410,
+      "anteilPeriodischProzent": 23.69
+     },
+     {
+      "tag": "GainsLossesOnExtinguishmentOfDebt",
+      "zeilen": 86917,
+      "berichte": 25570,
+      "anteilProzent": 14.49,
+      "berichtePeriodisch": 24166,
+      "anteilPeriodischProzent": 14.16
+     },
+     {
+      "tag": "PaymentsOfDividendsCommonStock",
+      "zeilen": 86186,
+      "berichte": 29414,
+      "anteilProzent": 16.66,
+      "berichtePeriodisch": 28869,
+      "anteilPeriodischProzent": 16.92
+     },
+     {
+      "tag": "CostOfGoodsAndServicesSold",
+      "zeilen": 86168,
+      "berichte": 21047,
+      "anteilProzent": 11.92,
+      "berichtePeriodisch": 20473,
+      "anteilPeriodischProzent": 12.0
+     },
+     {
+      "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+      "zeilen": 85696,
+      "berichte": 35079,
+      "anteilProzent": 19.87,
+      "berichtePeriodisch": 33396,
+      "anteilPeriodischProzent": 19.57
+     },
+     {
+      "tag": "IncomeLossFromDiscontinuedOperationsNetOfTax",
+      "zeilen": 83350,
+      "berichte": 18247,
+      "anteilProzent": 10.34,
+      "berichtePeriodisch": 17548,
+      "anteilPeriodischProzent": 10.29
+     },
+     {
+      "tag": "LaborAndRelatedExpense",
+      "zeilen": 83155,
+      "berichte": 22845,
+      "anteilProzent": 12.94,
+      "berichtePeriodisch": 22331,
+      "anteilPeriodischProzent": 13.09
+     },
+     {
+      "tag": "AdjustmentsToAdditionalPaidInCapitalSharebasedCompensationRequisiteServicePeriodRecognitionValue",
+      "zeilen": 82871,
+      "berichte": 38938,
+      "anteilProzent": 22.06,
+      "berichtePeriodisch": 37143,
+      "anteilPeriodischProzent": 21.77
+     },
+     {
+      "tag": "OtherLiabilitiesCurrent",
+      "zeilen": 82645,
+      "berichte": 30922,
+      "anteilProzent": 17.52,
+      "berichtePeriodisch": 29936,
+      "anteilPeriodischProzent": 17.55
+     },
+     {
+      "tag": "DeferredRevenueCurrent",
+      "zeilen": 82601,
+      "berichte": 37218,
+      "anteilProzent": 21.09,
+      "berichtePeriodisch": 35789,
+      "anteilPeriodischProzent": 20.98
+     },
+     {
+      "tag": "ProceedsFromIssuanceOfLongTermDebt",
+      "zeilen": 82161,
+      "berichte": 29286,
+      "anteilProzent": 16.59,
+      "berichtePeriodisch": 28130,
+      "anteilPeriodischProzent": 16.49
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsPerBasicShare",
+      "zeilen": 80339,
+      "berichte": 19172,
+      "anteilProzent": 10.86,
+      "berichtePeriodisch": 18601,
+      "anteilPeriodischProzent": 10.9
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParent",
+      "zeilen": 80262,
+      "berichte": 22128,
+      "anteilProzent": 12.54,
+      "berichtePeriodisch": 21601,
+      "anteilPeriodischProzent": 12.66
+     },
+     {
+      "tag": "ProceedsFromPaymentsForOtherFinancingActivities",
+      "zeilen": 80219,
+      "berichte": 23916,
+      "anteilProzent": 13.55,
+      "berichtePeriodisch": 23139,
+      "anteilPeriodischProzent": 13.56
+     },
+     {
+      "tag": "OtherAssets",
+      "zeilen": 79587,
+      "berichte": 32280,
+      "anteilProzent": 18.29,
+      "berichtePeriodisch": 31374,
+      "anteilPeriodischProzent": 18.39
+     },
+     {
+      "tag": "EffectiveIncomeTaxRateReconciliationAtFederalStatutoryIncomeTaxRate",
+      "zeilen": 79565,
+      "berichte": 34133,
+      "anteilProzent": 19.34,
+      "berichtePeriodisch": 31777,
+      "anteilPeriodischProzent": 18.63
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsPerDilutedShare",
+      "zeilen": 77999,
+      "berichte": 18264,
+      "anteilProzent": 10.35,
+      "berichtePeriodisch": 17718,
+      "anteilPeriodischProzent": 10.39
+     },
+     {
+      "tag": "LongTermDebt",
+      "zeilen": 77944,
+      "berichte": 37760,
+      "anteilProzent": 21.39,
+      "berichtePeriodisch": 36247,
+      "anteilPeriodischProzent": 21.25
+     },
+     {
+      "tag": "IncreaseDecreaseInDeferredRevenue",
+      "zeilen": 77856,
+      "berichte": 34354,
+      "anteilProzent": 19.46,
+      "berichtePeriodisch": 32998,
+      "anteilPeriodischProzent": 19.34
+     },
+     {
+      "tag": "PrepaidExpenseCurrent",
+      "zeilen": 76128,
+      "berichte": 34259,
+      "anteilProzent": 19.41,
+      "berichtePeriodisch": 32562,
+      "anteilPeriodischProzent": 19.09
+     },
+     {
+      "tag": "UnrecognizedTaxBenefits",
+      "zeilen": 74060,
+      "berichte": 27903,
+      "anteilProzent": 15.81,
+      "berichtePeriodisch": 26639,
+      "anteilPeriodischProzent": 15.61
+     },
+     {
+      "tag": "SellingAndMarketingExpense",
+      "zeilen": 73882,
+      "berichte": 20443,
+      "anteilProzent": 11.58,
+      "berichtePeriodisch": 19672,
+      "anteilPeriodischProzent": 11.53
+     }
+    ]
+   },
+   "von": "2009-01-01",
+   "bis": "2016-12-31",
+   "datei": "panel-entdeckung.sqlite"
+  },
+  "validierung": {
+   "fenster": "validierung",
+   "berichte": {
+    "berichte_gesamt": 148912,
+    "berichte_periodisch": 99819,
+    "formen": {
+     "10-Q": 72501,
+     "8-K": 45547,
+     "10-K": 24512,
+     "20-F": 2401,
+     "S-1": 1595,
+     "6-K": 1063,
+     "40-F": 405,
+     "S-4": 333,
+     "POS AM": 293,
+     "10-KT": 93,
+     "F-1": 57,
+     "10-QT": 26,
+     "10-12G": 23,
+     "S-11": 19,
+     "8-K12B": 14,
+     "424B3": 10,
+     "F-4": 6,
+     "425": 3,
+     "S-3": 3,
+     "POS EX": 2,
+     "424B5": 1,
+     "424B4": 1,
+     "F-3ASR": 1,
+     "ARS": 1,
+     "20FR12G": 1,
+     "8-K12G3": 1
+    },
+    "formen_je_jahr": {
+     "10-K": {
+      "2017": 6378,
+      "2018": 6194,
+      "2019": 5988,
+      "2020": 5952
+     },
+     "10-Q": {
+      "2017": 19012,
+      "2018": 18395,
+      "2019": 17807,
+      "2020": 17287
+     },
+     "6-K": {
+      "2017": 131,
+      "2018": 271,
+      "2019": 308,
+      "2020": 353
+     },
+     "10-QT": {
+      "2017": 11,
+      "2018": 6,
+      "2019": 6,
+      "2020": 3
+     },
+     "40-F": {
+      "2017": 24,
+      "2018": 123,
+      "2019": 133,
+      "2020": 125
+     },
+     "8-K": {
+      "2017": 100,
+      "2018": 115,
+      "2019": 9581,
+      "2020": 35751
+     },
+     "S-1": {
+      "2017": 396,
+      "2018": 444,
+      "2019": 314,
+      "2020": 441
+     },
+     "S-4": {
+      "2017": 76,
+      "2018": 64,
+      "2019": 70,
+      "2020": 123
+     },
+     "POS AM": {
+      "2017": 98,
+      "2018": 62,
+      "2019": 60,
+      "2020": 73
+     },
+     "10-KT": {
+      "2017": 19,
+      "2018": 29,
+      "2019": 28,
+      "2020": 17
+     },
+     "20-F": {
+      "2017": 280,
+      "2018": 660,
+      "2019": 719,
+      "2020": 742
+     },
+     "424B5": {
+      "2017": 1
+     },
+     "S-11": {
+      "2017": 9,
+      "2018": 1,
+      "2019": 2,
+      "2020": 7
+     },
+     "F-1": {
+      "2017": 8,
+      "2018": 13,
+      "2019": 16,
+      "2020": 20
+     },
+     "10-12G": {
+      "2017": 8,
+      "2018": 6,
+      "2019": 3,
+      "2020": 6
+     },
+     "424B3": {
+      "2017": 5,
+      "2018": 4,
+      "2020": 1
+     },
+     "425": {
+      "2017": 1,
+      "2018": 2
+     },
+     "S-3": {
+      "2018": 1,
+      "2019": 1,
+      "2020": 1
+     },
+     "424B4": {
+      "2018": 1
+     },
+     "F-4": {
+      "2018": 2,
+      "2019": 1,
+      "2020": 3
+     },
+     "F-3ASR": {
+      "2019": 1
+     },
+     "8-K12B": {
+      "2019": 3,
+      "2020": 11
+     },
+     "ARS": {
+      "2020": 1
+     },
+     "20FR12G": {
+      "2020": 1
+     },
+     "POS EX": {
+      "2020": 2
+     },
+     "8-K12G3": {
+      "2020": 1
+     }
+    },
+    "nicht_berechenbar": {
+     "accepted_fehlt": 0,
+     "period_unlesbar": 0,
+     "sic_fehlt_oder_unlesbar": 77,
+     "cik_fehlt": 0
+    },
+    "firmen_je_jahr_veroeffentlichung": {
+     "2017": 6890,
+     "2018": 7133,
+     "2019": 7013,
+     "2020": 6993
+    },
+    "firmen_je_jahr_berichtsperiode": {
+     "2011": 5,
+     "2012": 5,
+     "2013": 7,
+     "2014": 29,
+     "2015": 137,
+     "2016": 6186,
+     "2017": 7208,
+     "2018": 7103,
+     "2019": 6899,
+     "2020": 5979
+    },
+    "berichte_je_jahr_veroeffentlichung": {
+     "2017": 26557,
+     "2018": 26393,
+     "2019": 35041,
+     "2020": 60921
+    },
+    "firmen_je_division": {
+     "Verarbeitendes Gewerbe": 3097,
+     "Finanzen, Versicherung, Immobilien": 2239,
+     "Dienstleistungen": 1703,
+     "Transport, Kommunikation, Versorger": 736,
+     "Bergbau und Rohstoffgewinnung": 665,
+     "Einzelhandel": 423,
+     "Grosshandel": 222,
+     "Bau": 84,
+     "Land- und Forstwirtschaft, Fischerei": 54,
+     "Nicht klassifiziert (SEC-Sammelcode)": 7
+    },
+    "firmen_je_sic2": {
+     "01": 27,
+     "02": 6,
+     "07": 14,
+     "08": 1,
+     "09": 6,
+     "10": 244,
+     "12": 22,
+     "13": 364,
+     "14": 37,
+     "15": 36,
+     "16": 20,
+     "17": 28,
+     "20": 159,
+     "21": 16,
+     "22": 11,
+     "23": 43,
+     "24": 24,
+     "25": 26,
+     "26": 39,
+     "27": 50,
+     "28": 1191,
+     "29": 35,
+     "30": 54,
+     "31": 12,
+     "32": 33,
+     "33": 59,
+     "34": 80,
+     "35": 239,
+     "36": 433,
+     "37": 159,
+     "38": 415,
+     "39": 56,
+     "40": 12,
+     "41": 1,
+     "42": 25,
+     "44": 75,
+     "45": 38,
+     "46": 25,
+     "47": 46,
+     "48": 204,
+     "49": 310,
+     "50": 117,
+     "51": 105,
+     "52": 16,
+     "53": 24,
+     "54": 24,
+     "55": 36,
+     "56": 40,
+     "57": 24,
+     "58": 98,
+     "59": 161,
+     "60": 593,
+     "61": 135,
+     "62": 220,
+     "63": 186,
+     "64": 24,
+     "65": 182,
+     "67": 924,
+     "70": 53,
+     "72": 44,
+     "73": 1110,
+     "75": 11,
+     "76": 5,
+     "78": 47,
+     "79": 81,
+     "80": 129,
+     "81": 1,
+     "82": 65,
+     "83": 4,
+     "87": 165,
+     "89": 2,
+     "99": 7
+    },
+    "firmen_gesamt": 8781
+   },
+   "abdeckungstiefe": {
+    "fensterbreiteQuartale": 16,
+    "quartaleJeFirma": {
+     "firmen": 8781,
+     "minimum": 1,
+     "p10": 2,
+     "p25": 5,
+     "median": 15,
+     "p75": 16,
+     "p90": 16,
+     "maximum": 37,
+     "summeFirmenQuartale": 97777,
+     "histogramm": {
+      "1": 527,
+      "2-3": 1104,
+      "4-7": 1167,
+      "8-11": 872,
+      "12-19": 5066,
+      "20-31": 42,
+      "32+": 3
+     }
+    },
+    "laengsteKetteJeFirma": {
+     "minimum": 1,
+     "p25": 5,
+     "median": 15,
+     "p75": 16,
+     "p90": 16,
+     "maximum": 37
+    },
+    "fallzahlVorschau": [
+     {
+      "mindesttiefeQuartaleAmStueck": 1,
+      "firmen": 8781,
+      "firmenQuartaleInKetten": 95298,
+      "firmenQuartaleGesamtDieserFirmen": 97777,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 4,
+      "firmen": 6892,
+      "firmenQuartaleInKetten": 92634,
+      "firmenQuartaleGesamtDieserFirmen": 93279,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 6,
+      "firmen": 6393,
+      "firmenQuartaleInKetten": 90441,
+      "firmenQuartaleGesamtDieserFirmen": 91033,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 8,
+      "firmen": 5948,
+      "firmenQuartaleInKetten": 87527,
+      "firmenQuartaleGesamtDieserFirmen": 88028,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 12,
+      "firmen": 5027,
+      "firmenQuartaleInKetten": 78836,
+      "firmenQuartaleGesamtDieserFirmen": 78964,
+      "strukturellGedeckelt": false
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 16,
+      "firmen": 4253,
+      "firmenQuartaleInKetten": 68446,
+      "firmenQuartaleGesamtDieserFirmen": 68484,
+      "strukturellGedeckelt": true
+     },
+     {
+      "mindesttiefeQuartaleAmStueck": 20,
+      "firmen": 42,
+      "firmenQuartaleInKetten": 933,
+      "firmenQuartaleGesamtDieserFirmen": 940,
+      "strukturellGedeckelt": true
+     }
+    ]
+   },
+   "kennzahlen": {
+    "faktenzeilen": 39858607,
+    "zeilenStandard": 34459835,
+    "zeilenFirmeneigen": 5398772,
+    "zeilenOhneKennung": 0,
+    "kennzahlenStandard": 10474,
+    "kennzahlenFirmeneigen": 586969,
+    "nennerAlleBerichte": 148912,
+    "nennerPeriodischeBerichte": 99819,
+    "waisenZeilenOhneBericht": 0,
+    "belegungVerteilungTop": {
+     "nenner": "periodische Berichte (10-K, 10-Q, 20-F, 40-F)",
+     "kennzahlenBetrachtet": 150,
+     "kennzahlenOhneQuote": 0,
+     "ueber90Prozent": 5,
+     "ueber50Prozent": 34,
+     "unter10Prozent": 0,
+     "median": 32.36
+    },
+    "pflichtKennzahlen": [
+     {
+      "bezeichnung": "Umsatz (alt, bis ASC 606)",
+      "tag": "SalesRevenueNet",
+      "zeilen": 56565,
+      "berichte": 11736,
+      "anteilProzent": 7.88,
+      "berichtePeriodisch": 11366,
+      "anteilPeriodischProzent": 11.39
+     },
+     {
+      "bezeichnung": "Umsatz (alt, Waren)",
+      "tag": "SalesRevenueGoodsNet",
+      "zeilen": 26314,
+      "berichte": 6503,
+      "anteilProzent": 4.37,
+      "berichtePeriodisch": 6339,
+      "anteilPeriodischProzent": 6.35
+     },
+     {
+      "bezeichnung": "Umsatz (alt, Dienstleistung)",
+      "tag": "SalesRevenueServicesNet",
+      "zeilen": 15330,
+      "berichte": 4136,
+      "anteilProzent": 2.78,
+      "berichtePeriodisch": 4016,
+      "anteilPeriodischProzent": 4.02
+     },
+     {
+      "bezeichnung": "Umsatz (Sammelkennung)",
+      "tag": "Revenues",
+      "zeilen": 204436,
+      "berichte": 47697,
+      "anteilProzent": 32.03,
+      "berichtePeriodisch": 45881,
+      "anteilPeriodischProzent": 45.96
+     },
+     {
+      "bezeichnung": "Umsatz (neu, ab ASC 606)",
+      "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "zeilen": 95353,
+      "berichte": 24007,
+      "anteilProzent": 16.12,
+      "berichtePeriodisch": 23436,
+      "anteilPeriodischProzent": 23.48
+     },
+     {
+      "bezeichnung": "Umsatz (neu, inkl. Umlagen)",
+      "tag": "RevenueFromContractWithCustomerIncludingAssessedTax",
+      "zeilen": 30924,
+      "berichte": 8383,
+      "anteilProzent": 5.63,
+      "berichtePeriodisch": 8114,
+      "anteilPeriodischProzent": 8.13
+     },
+     {
+      "bezeichnung": "Ergebnis nach Steuern",
+      "tag": "NetIncomeLoss",
+      "zeilen": 429982,
+      "berichte": 93785,
+      "anteilProzent": 62.98,
+      "berichtePeriodisch": 90688,
+      "anteilPeriodischProzent": 90.85
+     },
+     {
+      "bezeichnung": "Betriebsergebnis",
+      "tag": "OperatingIncomeLoss",
+      "zeilen": 313873,
+      "berichte": 77926,
+      "anteilProzent": 52.33,
+      "berichtePeriodisch": 75260,
+      "anteilPeriodischProzent": 75.4
+     },
+     {
+      "bezeichnung": "Rohertrag",
+      "tag": "GrossProfit",
+      "zeilen": 170670,
+      "berichte": 40710,
+      "anteilProzent": 27.34,
+      "berichtePeriodisch": 39232,
+      "anteilPeriodischProzent": 39.3
+     },
+     {
+      "bezeichnung": "Forschung und Entwicklung",
+      "tag": "ResearchAndDevelopmentExpense",
+      "zeilen": 106315,
+      "berichte": 31757,
+      "anteilProzent": 21.33,
+      "berichtePeriodisch": 30134,
+      "anteilPeriodischProzent": 30.19
+     },
+     {
+      "bezeichnung": "Bilanzsumme",
+      "tag": "Assets",
+      "zeilen": 233488,
+      "berichte": 102244,
+      "anteilProzent": 68.66,
+      "berichtePeriodisch": 98436,
+      "anteilPeriodischProzent": 98.61
+     },
+     {
+      "bezeichnung": "Verbindlichkeiten",
+      "tag": "Liabilities",
+      "zeilen": 181682,
+      "berichte": 83479,
+      "anteilProzent": 56.06,
+      "berichtePeriodisch": 80323,
+      "anteilPeriodischProzent": 80.47
+     },
+     {
+      "bezeichnung": "Eigenkapital",
+      "tag": "StockholdersEquity",
+      "zeilen": 309910,
+      "berichte": 92500,
+      "anteilProzent": 62.12,
+      "berichtePeriodisch": 89481,
+      "anteilPeriodischProzent": 89.64
+     },
+     {
+      "bezeichnung": "Zahlungsmittel",
+      "tag": "CashAndCashEquivalentsAtCarryingValue",
+      "zeilen": 317006,
+      "berichte": 89869,
+      "anteilProzent": 60.35,
+      "berichtePeriodisch": 87023,
+      "anteilPeriodischProzent": 87.18
+     },
+     {
+      "bezeichnung": "Operativer Cashflow",
+      "tag": "NetCashProvidedByUsedInOperatingActivities",
+      "zeilen": 201302,
+      "berichte": 85467,
+      "anteilProzent": 57.39,
+      "berichtePeriodisch": 82720,
+      "anteilPeriodischProzent": 82.87
+     },
+     {
+      "bezeichnung": "Ergebnis je Aktie (verwaessert)",
+      "tag": "EarningsPerShareDiluted",
+      "zeilen": 242198,
+      "berichte": 53238,
+      "anteilProzent": 35.75,
+      "berichtePeriodisch": 52150,
+      "anteilPeriodischProzent": 52.24
+     },
+     {
+      "bezeichnung": "Aktien im Umlauf",
+      "tag": "CommonStockSharesOutstanding",
+      "zeilen": 159635,
+      "berichte": 75536,
+      "anteilProzent": 50.73,
+      "berichtePeriodisch": 72857,
+      "anteilPeriodischProzent": 72.99
+     },
+     {
+      "bezeichnung": "Vertrieb und Verwaltung",
+      "tag": "SellingGeneralAndAdministrativeExpense",
+      "zeilen": 115735,
+      "berichte": 32985,
+      "anteilProzent": 22.15,
+      "berichtePeriodisch": 32010,
+      "anteilPeriodischProzent": 32.07
+     }
+    ],
+    "haeufigsteKennzahlen": [
+     {
+      "tag": "NetIncomeLoss",
+      "zeilen": 429982,
+      "berichte": 93785,
+      "anteilProzent": 62.98,
+      "berichtePeriodisch": 90688,
+      "anteilPeriodischProzent": 90.85
+     },
+     {
+      "tag": "CashAndCashEquivalentsAtCarryingValue",
+      "zeilen": 317006,
+      "berichte": 89869,
+      "anteilProzent": 60.35,
+      "berichtePeriodisch": 87023,
+      "anteilPeriodischProzent": 87.18
+     },
+     {
+      "tag": "OperatingIncomeLoss",
+      "zeilen": 313873,
+      "berichte": 77926,
+      "anteilProzent": 52.33,
+      "berichtePeriodisch": 75260,
+      "anteilPeriodischProzent": 75.4
+     },
+     {
+      "tag": "StockholdersEquity",
+      "zeilen": 309910,
+      "berichte": 92500,
+      "anteilProzent": 62.12,
+      "berichtePeriodisch": 89481,
+      "anteilPeriodischProzent": 89.64
+     },
+     {
+      "tag": "IncomeTaxExpenseBenefit",
+      "zeilen": 288582,
+      "berichte": 80098,
+      "anteilProzent": 53.79,
+      "berichtePeriodisch": 77483,
+      "anteilPeriodischProzent": 77.62
+     },
+     {
+      "tag": "EarningsPerShareBasic",
+      "zeilen": 247201,
+      "berichte": 55218,
+      "anteilProzent": 37.08,
+      "berichtePeriodisch": 54072,
+      "anteilPeriodischProzent": 54.17
+     },
+     {
+      "tag": "EarningsPerShareDiluted",
+      "zeilen": 242198,
+      "berichte": 53238,
+      "anteilProzent": 35.75,
+      "berichtePeriodisch": 52150,
+      "anteilPeriodischProzent": 52.24
+     },
+     {
+      "tag": "Assets",
+      "zeilen": 233488,
+      "berichte": 102244,
+      "anteilProzent": 68.66,
+      "berichtePeriodisch": 98436,
+      "anteilPeriodischProzent": 98.61
+     },
+     {
+      "tag": "LiabilitiesAndStockholdersEquity",
+      "zeilen": 218998,
+      "berichte": 100342,
+      "anteilProzent": 67.38,
+      "berichtePeriodisch": 97096,
+      "anteilPeriodischProzent": 97.27
+     },
+     {
+      "tag": "InterestExpense",
+      "zeilen": 218791,
+      "berichte": 61591,
+      "anteilProzent": 41.36,
+      "berichtePeriodisch": 59458,
+      "anteilPeriodischProzent": 59.57
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTax",
+      "zeilen": 205850,
+      "berichte": 59434,
+      "anteilProzent": 39.91,
+      "berichtePeriodisch": 57967,
+      "anteilPeriodischProzent": 58.07
+     },
+     {
+      "tag": "Revenues",
+      "zeilen": 204436,
+      "berichte": 47697,
+      "anteilProzent": 32.03,
+      "berichtePeriodisch": 45881,
+      "anteilPeriodischProzent": 45.96
+     },
+     {
+      "tag": "WeightedAverageNumberOfSharesOutstandingBasic",
+      "zeilen": 202606,
+      "berichte": 58520,
+      "anteilProzent": 39.3,
+      "berichtePeriodisch": 57298,
+      "anteilPeriodischProzent": 57.4
+     },
+     {
+      "tag": "NetCashProvidedByUsedInOperatingActivities",
+      "zeilen": 201302,
+      "berichte": 85467,
+      "anteilProzent": 57.39,
+      "berichtePeriodisch": 82720,
+      "anteilPeriodischProzent": 82.87
+     },
+     {
+      "tag": "NetCashProvidedByUsedInFinancingActivities",
+      "zeilen": 197252,
+      "berichte": 84125,
+      "anteilProzent": 56.49,
+      "berichtePeriodisch": 81406,
+      "anteilPeriodischProzent": 81.55
+     },
+     {
+      "tag": "RetainedEarningsAccumulatedDeficit",
+      "zeilen": 197247,
+      "berichte": 93437,
+      "anteilProzent": 62.75,
+      "berichtePeriodisch": 90381,
+      "anteilPeriodischProzent": 90.54
+     },
+     {
+      "tag": "WeightedAverageNumberOfDilutedSharesOutstanding",
+      "zeilen": 196938,
+      "berichte": 56535,
+      "anteilProzent": 37.97,
+      "berichtePeriodisch": 55383,
+      "anteilPeriodischProzent": 55.48
+     },
+     {
+      "tag": "NetCashProvidedByUsedInInvestingActivities",
+      "zeilen": 184331,
+      "berichte": 78423,
+      "anteilProzent": 52.66,
+      "berichtePeriodisch": 75841,
+      "anteilPeriodischProzent": 75.98
+     },
+     {
+      "tag": "Liabilities",
+      "zeilen": 181682,
+      "berichte": 83479,
+      "anteilProzent": 56.06,
+      "berichtePeriodisch": 80323,
+      "anteilPeriodischProzent": 80.47
+     },
+     {
+      "tag": "ProfitLoss",
+      "zeilen": 179501,
+      "berichte": 44228,
+      "anteilProzent": 29.7,
+      "berichtePeriodisch": 42395,
+      "anteilPeriodischProzent": 42.47
+     },
+     {
+      "tag": "OperatingExpenses",
+      "zeilen": 178525,
+      "berichte": 50850,
+      "anteilProzent": 34.15,
+      "berichtePeriodisch": 48902,
+      "anteilPeriodischProzent": 48.99
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+      "zeilen": 175847,
+      "berichte": 47824,
+      "anteilProzent": 32.12,
+      "berichtePeriodisch": 46274,
+      "anteilPeriodischProzent": 46.36
+     },
+     {
+      "tag": "CommonStockSharesAuthorized",
+      "zeilen": 174266,
+      "berichte": 82557,
+      "anteilProzent": 55.44,
+      "berichtePeriodisch": 79896,
+      "anteilPeriodischProzent": 80.04
+     },
+     {
+      "tag": "CommonStockValue",
+      "zeilen": 173778,
+      "berichte": 83044,
+      "anteilProzent": 55.77,
+      "berichtePeriodisch": 80291,
+      "anteilPeriodischProzent": 80.44
+     },
+     {
+      "tag": "AssetsCurrent",
+      "zeilen": 171715,
+      "berichte": 79185,
+      "anteilProzent": 53.18,
+      "berichtePeriodisch": 76322,
+      "anteilPeriodischProzent": 76.46
+     },
+     {
+      "tag": "PropertyPlantAndEquipmentNet",
+      "zeilen": 171692,
+      "berichte": 78992,
+      "anteilProzent": 53.05,
+      "berichtePeriodisch": 76477,
+      "anteilPeriodischProzent": 76.62
+     },
+     {
+      "tag": "LiabilitiesCurrent",
+      "zeilen": 170747,
+      "berichte": 78696,
+      "anteilProzent": 52.85,
+      "berichtePeriodisch": 75881,
+      "anteilPeriodischProzent": 76.02
+     },
+     {
+      "tag": "GrossProfit",
+      "zeilen": 170670,
+      "berichte": 40710,
+      "anteilProzent": 27.34,
+      "berichtePeriodisch": 39232,
+      "anteilPeriodischProzent": 39.3
+     },
+     {
+      "tag": "GeneralAndAdministrativeExpense",
+      "zeilen": 169663,
+      "berichte": 50475,
+      "anteilProzent": 33.9,
+      "berichtePeriodisch": 48242,
+      "anteilPeriodischProzent": 48.33
+     },
+     {
+      "tag": "CommonStockSharesIssued",
+      "zeilen": 168696,
+      "berichte": 80641,
+      "anteilProzent": 54.15,
+      "berichtePeriodisch": 77953,
+      "anteilPeriodischProzent": 78.09
+     },
+     {
+      "tag": "CommonStockParOrStatedValuePerShare",
+      "zeilen": 166272,
+      "berichte": 78851,
+      "anteilProzent": 52.95,
+      "berichtePeriodisch": 76167,
+      "anteilPeriodischProzent": 76.31
+     },
+     {
+      "tag": "ShareBasedCompensation",
+      "zeilen": 166063,
+      "berichte": 68120,
+      "anteilProzent": 45.75,
+      "berichtePeriodisch": 66048,
+      "anteilPeriodischProzent": 66.17
+     },
+     {
+      "tag": "CommonStockSharesOutstanding",
+      "zeilen": 159635,
+      "berichte": 75536,
+      "anteilProzent": 50.73,
+      "berichtePeriodisch": 72857,
+      "anteilPeriodischProzent": 72.99
+     },
+     {
+      "tag": "PaymentsToAcquirePropertyPlantAndEquipment",
+      "zeilen": 147468,
+      "berichte": 61749,
+      "anteilProzent": 41.47,
+      "berichtePeriodisch": 59831,
+      "anteilPeriodischProzent": 59.94
+     },
+     {
+      "tag": "OtherNonoperatingIncomeExpense",
+      "zeilen": 145903,
+      "berichte": 41810,
+      "anteilProzent": 28.08,
+      "berichtePeriodisch": 40630,
+      "anteilPeriodischProzent": 40.7
+     },
+     {
+      "tag": "EarningsPerShareBasicAndDiluted",
+      "zeilen": 141515,
+      "berichte": 39427,
+      "anteilProzent": 26.48,
+      "berichtePeriodisch": 37429,
+      "anteilPeriodischProzent": 37.5
+     },
+     {
+      "tag": "AccumulatedOtherComprehensiveIncomeLossNetOfTax",
+      "zeilen": 140328,
+      "berichte": 60140,
+      "anteilProzent": 40.39,
+      "berichtePeriodisch": 58593,
+      "anteilPeriodischProzent": 58.7
+     },
+     {
+      "tag": "CashAndCashEquivalentsPeriodIncreaseDecrease",
+      "zeilen": 131647,
+      "berichte": 54259,
+      "anteilProzent": 36.44,
+      "berichtePeriodisch": 52401,
+      "anteilPeriodischProzent": 52.5
+     },
+     {
+      "tag": "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+      "zeilen": 128759,
+      "berichte": 31685,
+      "anteilProzent": 21.28,
+      "berichtePeriodisch": 30721,
+      "anteilPeriodischProzent": 30.78
+     },
+     {
+      "tag": "CommitmentsAndContingencies",
+      "zeilen": 128703,
+      "berichte": 61969,
+      "anteilProzent": 41.61,
+      "berichtePeriodisch": 59818,
+      "anteilPeriodischProzent": 59.93
+     },
+     {
+      "tag": "AccountsPayableCurrent",
+      "zeilen": 124931,
+      "berichte": 58195,
+      "anteilProzent": 39.08,
+      "berichtePeriodisch": 56246,
+      "anteilPeriodischProzent": 56.35
+     },
+     {
+      "tag": "NonoperatingIncomeExpense",
+      "zeilen": 123264,
+      "berichte": 34958,
+      "anteilProzent": 23.48,
+      "berichtePeriodisch": 33556,
+      "anteilPeriodischProzent": 33.62
+     },
+     {
+      "tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+      "zeilen": 122144,
+      "berichte": 30051,
+      "anteilProzent": 20.18,
+      "berichtePeriodisch": 29262,
+      "anteilPeriodischProzent": 29.32
+     },
+     {
+      "tag": "Goodwill",
+      "zeilen": 119553,
+      "berichte": 48914,
+      "anteilProzent": 32.85,
+      "berichtePeriodisch": 47474,
+      "anteilPeriodischProzent": 47.56
+     },
+     {
+      "tag": "WeightedAverageNumberOfShareOutstandingBasicAndDiluted",
+      "zeilen": 118553,
+      "berichte": 36743,
+      "anteilProzent": 24.67,
+      "berichtePeriodisch": 34817,
+      "anteilPeriodischProzent": 34.88
+     },
+     {
+      "tag": "DepreciationDepletionAndAmortization",
+      "zeilen": 117222,
+      "berichte": 43424,
+      "anteilProzent": 29.16,
+      "berichtePeriodisch": 42345,
+      "anteilPeriodischProzent": 42.42
+     },
+     {
+      "tag": "SellingGeneralAndAdministrativeExpense",
+      "zeilen": 115735,
+      "berichte": 32985,
+      "anteilProzent": 22.15,
+      "berichtePeriodisch": 32010,
+      "anteilPeriodischProzent": 32.07
+     },
+     {
+      "tag": "AmortizationOfIntangibleAssets",
+      "zeilen": 113348,
+      "berichte": 37952,
+      "anteilProzent": 25.49,
+      "berichtePeriodisch": 36796,
+      "anteilPeriodischProzent": 36.86
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsReceivable",
+      "zeilen": 112504,
+      "berichte": 49594,
+      "anteilProzent": 33.3,
+      "berichtePeriodisch": 47919,
+      "anteilPeriodischProzent": 48.01
+     },
+     {
+      "tag": "PreferredStockSharesAuthorized",
+      "zeilen": 112121,
+      "berichte": 56038,
+      "anteilProzent": 37.63,
+      "berichtePeriodisch": 54162,
+      "anteilPeriodischProzent": 54.26
+     },
+     {
+      "tag": "IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments",
+      "zeilen": 111960,
+      "berichte": 29430,
+      "anteilProzent": 19.76,
+      "berichtePeriodisch": 28658,
+      "anteilPeriodischProzent": 28.71
+     },
+     {
+      "tag": "NetIncomeLossAvailableToCommonStockholdersBasic",
+      "zeilen": 110056,
+      "berichte": 27462,
+      "anteilProzent": 18.44,
+      "berichtePeriodisch": 26615,
+      "anteilPeriodischProzent": 26.66
+     },
+     {
+      "tag": "AccountsReceivableNetCurrent",
+      "zeilen": 109655,
+      "berichte": 50926,
+      "anteilProzent": 34.2,
+      "berichtePeriodisch": 49221,
+      "anteilPeriodischProzent": 49.31
+     },
+     {
+      "tag": "OtherAssetsNoncurrent",
+      "zeilen": 109553,
+      "berichte": 49995,
+      "anteilProzent": 33.57,
+      "berichtePeriodisch": 48713,
+      "anteilPeriodischProzent": 48.8
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossNetOfTax",
+      "zeilen": 108293,
+      "berichte": 31314,
+      "anteilProzent": 21.03,
+      "berichtePeriodisch": 30525,
+      "anteilPeriodischProzent": 30.58
+     },
+     {
+      "tag": "Depreciation",
+      "zeilen": 107946,
+      "berichte": 39257,
+      "anteilProzent": 26.36,
+      "berichtePeriodisch": 37455,
+      "anteilPeriodischProzent": 37.52
+     },
+     {
+      "tag": "AntidilutiveSecuritiesExcludedFromComputationOfEarningsPerShareAmount",
+      "zeilen": 106834,
+      "berichte": 38979,
+      "anteilProzent": 26.18,
+      "berichtePeriodisch": 37777,
+      "anteilPeriodischProzent": 37.85
+     },
+     {
+      "tag": "ResearchAndDevelopmentExpense",
+      "zeilen": 106315,
+      "berichte": 31757,
+      "anteilProzent": 21.33,
+      "berichtePeriodisch": 30134,
+      "anteilPeriodischProzent": 30.19
+     },
+     {
+      "tag": "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment",
+      "zeilen": 104802,
+      "berichte": 50516,
+      "anteilProzent": 33.92,
+      "berichtePeriodisch": 48554,
+      "anteilPeriodischProzent": 48.64
+     },
+     {
+      "tag": "AdditionalPaidInCapital",
+      "zeilen": 104486,
+      "berichte": 50526,
+      "anteilProzent": 33.93,
+      "berichtePeriodisch": 48464,
+      "anteilPeriodischProzent": 48.55
+     },
+     {
+      "tag": "PreferredStockValue",
+      "zeilen": 101802,
+      "berichte": 50096,
+      "anteilProzent": 33.64,
+      "berichtePeriodisch": 48461,
+      "anteilPeriodischProzent": 48.55
+     },
+     {
+      "tag": "EffectiveIncomeTaxRateContinuingOperations",
+      "zeilen": 101792,
+      "berichte": 35609,
+      "anteilProzent": 23.91,
+      "berichtePeriodisch": 34210,
+      "anteilPeriodischProzent": 34.27
+     },
+     {
+      "tag": "AllocatedShareBasedCompensationExpense",
+      "zeilen": 101400,
+      "berichte": 33347,
+      "anteilProzent": 22.39,
+      "berichtePeriodisch": 32301,
+      "anteilPeriodischProzent": 32.36
+     },
+     {
+      "tag": "InterestPaidNet",
+      "zeilen": 100537,
+      "berichte": 43822,
+      "anteilProzent": 29.43,
+      "berichtePeriodisch": 42364,
+      "anteilPeriodischProzent": 42.44
+     },
+     {
+      "tag": "PreferredStockParOrStatedValuePerShare",
+      "zeilen": 100006,
+      "berichte": 49887,
+      "anteilProzent": 33.5,
+      "berichtePeriodisch": 48184,
+      "anteilPeriodischProzent": 48.27
+     },
+     {
+      "tag": "AdjustmentsToAdditionalPaidInCapitalSharebasedCompensationRequisiteServicePeriodRecognitionValue",
+      "zeilen": 98816,
+      "berichte": 35126,
+      "anteilProzent": 23.59,
+      "berichtePeriodisch": 34115,
+      "anteilPeriodischProzent": 34.18
+     },
+     {
+      "tag": "DeferredIncomeTaxExpenseBenefit",
+      "zeilen": 98538,
+      "berichte": 39714,
+      "anteilProzent": 26.67,
+      "berichtePeriodisch": 38558,
+      "anteilPeriodischProzent": 38.63
+     },
+     {
+      "tag": "RevenueFromContractWithCustomerExcludingAssessedTax",
+      "zeilen": 95353,
+      "berichte": 24007,
+      "anteilProzent": 16.12,
+      "berichtePeriodisch": 23436,
+      "anteilPeriodischProzent": 23.48
+     },
+     {
+      "tag": "EntityCommonStockSharesOutstanding",
+      "zeilen": 92931,
+      "berichte": 91598,
+      "anteilProzent": 61.51,
+      "berichtePeriodisch": 91039,
+      "anteilPeriodischProzent": 91.2
+     },
+     {
+      "tag": "IncreaseDecreaseInInventories",
+      "zeilen": 92058,
+      "berichte": 39934,
+      "anteilProzent": 26.82,
+      "berichtePeriodisch": 38603,
+      "anteilPeriodischProzent": 38.67
+     },
+     {
+      "tag": "PreferredStockSharesIssued",
+      "zeilen": 92053,
+      "berichte": 45934,
+      "anteilProzent": 30.85,
+      "berichtePeriodisch": 44433,
+      "anteilPeriodischProzent": 44.51
+     },
+     {
+      "tag": "InventoryNet",
+      "zeilen": 90570,
+      "berichte": 41906,
+      "anteilProzent": 28.14,
+      "berichtePeriodisch": 40544,
+      "anteilPeriodischProzent": 40.62
+     },
+     {
+      "tag": "NetIncomeLossAttributableToNoncontrollingInterest",
+      "zeilen": 89871,
+      "berichte": 23693,
+      "anteilProzent": 15.91,
+      "berichtePeriodisch": 22923,
+      "anteilPeriodischProzent": 22.96
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsPayable",
+      "zeilen": 89348,
+      "berichte": 39061,
+      "anteilProzent": 26.23,
+      "berichtePeriodisch": 37688,
+      "anteilPeriodischProzent": 37.76
+     },
+     {
+      "tag": "OtherLiabilitiesNoncurrent",
+      "zeilen": 88438,
+      "berichte": 40310,
+      "anteilProzent": 27.07,
+      "berichtePeriodisch": 39472,
+      "anteilPeriodischProzent": 39.54
+     },
+     {
+      "tag": "PropertyPlantAndEquipmentGross",
+      "zeilen": 85827,
+      "berichte": 41442,
+      "anteilProzent": 27.83,
+      "berichtePeriodisch": 39765,
+      "anteilPeriodischProzent": 39.84
+     },
+     {
+      "tag": "IncreaseDecreaseInPrepaidDeferredExpenseAndOtherAssets",
+      "zeilen": 84984,
+      "berichte": 37495,
+      "anteilProzent": 25.18,
+      "berichtePeriodisch": 36313,
+      "anteilPeriodischProzent": 36.38
+     },
+     {
+      "tag": "AccruedLiabilitiesCurrent",
+      "zeilen": 83775,
+      "berichte": 39946,
+      "anteilProzent": 26.83,
+      "berichtePeriodisch": 38518,
+      "anteilPeriodischProzent": 38.59
+     },
+     {
+      "tag": "DepreciationAndAmortization",
+      "zeilen": 82916,
+      "berichte": 27580,
+      "anteilProzent": 18.52,
+      "berichtePeriodisch": 26578,
+      "anteilPeriodischProzent": 26.63
+     },
+     {
+      "tag": "PreferredStockSharesOutstanding",
+      "zeilen": 82215,
+      "berichte": 41058,
+      "anteilProzent": 27.57,
+      "berichtePeriodisch": 39613,
+      "anteilPeriodischProzent": 39.68
+     },
+     {
+      "tag": "AdditionalPaidInCapitalCommonStock",
+      "zeilen": 81487,
+      "berichte": 39080,
+      "anteilProzent": 26.24,
+      "berichtePeriodisch": 38126,
+      "anteilPeriodischProzent": 38.2
+     },
+     {
+      "tag": "CostOfGoodsAndServicesSold",
+      "zeilen": 81277,
+      "berichte": 23168,
+      "anteilProzent": 15.56,
+      "berichtePeriodisch": 22620,
+      "anteilPeriodischProzent": 22.66
+     },
+     {
+      "tag": "PrepaidExpenseAndOtherAssetsCurrent",
+      "zeilen": 81260,
+      "berichte": 37950,
+      "anteilProzent": 25.48,
+      "berichtePeriodisch": 36762,
+      "anteilPeriodischProzent": 36.83
+     },
+     {
+      "tag": "CommonStockDividendsPerShareDeclared",
+      "zeilen": 79238,
+      "berichte": 20496,
+      "anteilProzent": 13.76,
+      "berichtePeriodisch": 20220,
+      "anteilPeriodischProzent": 20.26
+     },
+     {
+      "tag": "CostsAndExpenses",
+      "zeilen": 78629,
+      "berichte": 20226,
+      "anteilProzent": 13.58,
+      "berichtePeriodisch": 19753,
+      "anteilPeriodischProzent": 19.79
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTaxIncludingPortionAttributableToNoncontrollingInterest",
+      "zeilen": 77933,
+      "berichte": 21593,
+      "anteilProzent": 14.5,
+      "berichtePeriodisch": 20968,
+      "anteilPeriodischProzent": 21.01
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossForeignCurrencyTransactionAndTranslationAdjustmentNetOfTax",
+      "zeilen": 77710,
+      "berichte": 23205,
+      "anteilProzent": 15.58,
+      "berichtePeriodisch": 22577,
+      "anteilPeriodischProzent": 22.62
+     },
+     {
+      "tag": "IncomeTaxesPaidNet",
+      "zeilen": 77370,
+      "berichte": 33004,
+      "anteilProzent": 22.16,
+      "berichtePeriodisch": 31839,
+      "anteilPeriodischProzent": 31.9
+     },
+     {
+      "tag": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+      "zeilen": 76819,
+      "berichte": 34005,
+      "anteilProzent": 22.84,
+      "berichtePeriodisch": 32818,
+      "anteilPeriodischProzent": 32.88
+     },
+     {
+      "tag": "EffectiveIncomeTaxRateReconciliationAtFederalStatutoryIncomeTaxRate",
+      "zeilen": 74386,
+      "berichte": 31313,
+      "anteilProzent": 21.03,
+      "berichtePeriodisch": 29543,
+      "anteilPeriodischProzent": 29.6
+     },
+     {
+      "tag": "PaymentsForRepurchaseOfCommonStock",
+      "zeilen": 73504,
+      "berichte": 31510,
+      "anteilProzent": 21.16,
+      "berichtePeriodisch": 30977,
+      "anteilPeriodischProzent": 31.03
+     },
+     {
+      "tag": "IntangibleAssetsNetExcludingGoodwill",
+      "zeilen": 73158,
+      "berichte": 33702,
+      "anteilProzent": 22.63,
+      "berichtePeriodisch": 32721,
+      "anteilPeriodischProzent": 32.78
+     },
+     {
+      "tag": "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalentsPeriodIncreaseDecreaseIncludingExchangeRateEffect",
+      "zeilen": 70647,
+      "berichte": 31288,
+      "anteilProzent": 21.01,
+      "berichtePeriodisch": 30412,
+      "anteilPeriodischProzent": 30.47
+     },
+     {
+      "tag": "InterestIncomeExpenseNet",
+      "zeilen": 70427,
+      "berichte": 17949,
+      "anteilProzent": 12.05,
+      "berichtePeriodisch": 17489,
+      "anteilPeriodischProzent": 17.52
+     },
+     {
+      "tag": "IncrementalCommonSharesAttributableToShareBasedPaymentArrangements",
+      "zeilen": 70162,
+      "berichte": 22679,
+      "anteilProzent": 15.23,
+      "berichtePeriodisch": 22359,
+      "anteilPeriodischProzent": 22.4
+     },
+     {
+      "tag": "ProceedsFromIssuanceOfCommonStock",
+      "zeilen": 69869,
+      "berichte": 31272,
+      "anteilProzent": 21.0,
+      "berichtePeriodisch": 29762,
+      "anteilPeriodischProzent": 29.82
+     },
+     {
+      "tag": "FiniteLivedIntangibleAssetsAccumulatedAmortization",
+      "zeilen": 68690,
+      "berichte": 34030,
+      "anteilProzent": 22.85,
+      "berichtePeriodisch": 32991,
+      "anteilPeriodischProzent": 33.05
+     },
+     {
+      "tag": "CostOfRevenue",
+      "zeilen": 66416,
+      "berichte": 19447,
+      "anteilProzent": 13.06,
+      "berichtePeriodisch": 18591,
+      "anteilPeriodischProzent": 18.62
+     },
+     {
+      "tag": "FiniteLivedIntangibleAssetsNet",
+      "zeilen": 65550,
+      "berichte": 33523,
+      "anteilProzent": 22.51,
+      "berichtePeriodisch": 32335,
+      "anteilPeriodischProzent": 32.39
+     },
+     {
+      "tag": "OtherComprehensiveIncomeLossNetOfTaxPortionAttributableToParent",
+      "zeilen": 65318,
+      "berichte": 19820,
+      "anteilProzent": 13.31,
+      "berichtePeriodisch": 19378,
+      "anteilPeriodischProzent": 19.41
+     },
+     {
+      "tag": "AllowanceForDoubtfulAccountsReceivableCurrent",
+      "zeilen": 64706,
+      "berichte": 29513,
+      "anteilProzent": 19.82,
+      "berichtePeriodisch": 28799,
+      "anteilPeriodischProzent": 28.85
+     },
+     {
+      "tag": "LongTermDebtNoncurrent",
+      "zeilen": 64641,
+      "berichte": 28857,
+      "anteilProzent": 19.38,
+      "berichtePeriodisch": 27995,
+      "anteilPeriodischProzent": 28.05
+     },
+     {
+      "tag": "EmployeeRelatedLiabilitiesCurrent",
+      "zeilen": 64306,
+      "berichte": 30876,
+      "anteilProzent": 20.73,
+      "berichtePeriodisch": 30043,
+      "anteilPeriodischProzent": 30.1
+     },
+     {
+      "tag": "IncomeTaxesPaid",
+      "zeilen": 64135,
+      "berichte": 28643,
+      "anteilProzent": 19.23,
+      "berichtePeriodisch": 27693,
+      "anteilPeriodischProzent": 27.74
+     },
+     {
+      "tag": "IncomeLossFromEquityMethodInvestments",
+      "zeilen": 63820,
+      "berichte": 17667,
+      "anteilProzent": 11.86,
+      "berichtePeriodisch": 17150,
+      "anteilPeriodischProzent": 17.18
+     },
+     {
+      "tag": "InvestmentIncomeInterest",
+      "zeilen": 63307,
+      "berichte": 18967,
+      "anteilProzent": 12.74,
+      "berichtePeriodisch": 18300,
+      "anteilPeriodischProzent": 18.33
+     },
+     {
+      "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingNumber",
+      "zeilen": 60198,
+      "berichte": 25424,
+      "anteilProzent": 17.07,
+      "berichtePeriodisch": 24378,
+      "anteilPeriodischProzent": 24.42
+     },
+     {
+      "tag": "InterestPaid",
+      "zeilen": 58435,
+      "berichte": 25532,
+      "anteilProzent": 17.15,
+      "berichtePeriodisch": 24669,
+      "anteilPeriodischProzent": 24.71
+     },
+     {
+      "tag": "ProceedsFromStockOptionsExercised",
+      "zeilen": 58103,
+      "berichte": 25349,
+      "anteilProzent": 17.02,
+      "berichtePeriodisch": 24738,
+      "anteilPeriodischProzent": 24.78
+     },
+     {
+      "tag": "UnrecognizedTaxBenefits",
+      "zeilen": 57132,
+      "berichte": 21377,
+      "anteilProzent": 14.36,
+      "berichtePeriodisch": 20474,
+      "anteilPeriodischProzent": 20.51
+     },
+     {
+      "tag": "RepaymentsOfLongTermDebt",
+      "zeilen": 56897,
+      "berichte": 23006,
+      "anteilProzent": 15.45,
+      "berichtePeriodisch": 22359,
+      "anteilPeriodischProzent": 22.4
+     },
+     {
+      "tag": "LongTermDebt",
+      "zeilen": 56779,
+      "berichte": 29400,
+      "anteilProzent": 19.74,
+      "berichtePeriodisch": 28340,
+      "anteilPeriodischProzent": 28.39
+     },
+     {
+      "tag": "TreasuryStockValue",
+      "zeilen": 56671,
+      "berichte": 27383,
+      "anteilProzent": 18.39,
+      "berichtePeriodisch": 26922,
+      "anteilPeriodischProzent": 26.97
+     },
+     {
+      "tag": "SalesRevenueNet",
+      "zeilen": 56565,
+      "berichte": 11736,
+      "anteilProzent": 7.88,
+      "berichtePeriodisch": 11366,
+      "anteilPeriodischProzent": 11.39
+     },
+     {
+      "tag": "ShareBasedCompensationArrangementByShareBasedPaymentAwardOptionsOutstandingWeightedAverageExercisePrice",
+      "zeilen": 55710,
+      "berichte": 23102,
+      "anteilProzent": 15.51,
+      "berichtePeriodisch": 22152,
+      "anteilPeriodischProzent": 22.19
+     },
+     {
+      "tag": "IncreaseDecreaseInOtherOperatingAssets",
+      "zeilen": 55217,
+      "berichte": 23365,
+      "anteilProzent": 15.69,
+      "berichtePeriodisch": 22807,
+      "anteilPeriodischProzent": 22.85
+     },
+     {
+      "tag": "ComprehensiveIncomeNetOfTaxAttributableToNoncontrollingInterest",
+      "zeilen": 54451,
+      "berichte": 15936,
+      "anteilProzent": 10.7,
+      "berichtePeriodisch": 15453,
+      "anteilPeriodischProzent": 15.48
+     },
+     {
+      "tag": "MinorityInterest",
+      "zeilen": 54390,
+      "berichte": 23323,
+      "anteilProzent": 15.66,
+      "berichtePeriodisch": 22579,
+      "anteilPeriodischProzent": 22.62
+     },
+     {
+      "tag": "OtherAssetsCurrent",
+      "zeilen": 53763,
+      "berichte": 24258,
+      "anteilProzent": 16.29,
+      "berichtePeriodisch": 23435,
+      "anteilPeriodischProzent": 23.48
+     },
+     {
+      "tag": "ProvisionForDoubtfulAccounts",
+      "zeilen": 53683,
+      "berichte": 22260,
+      "anteilProzent": 14.95,
+      "berichtePeriodisch": 21461,
+      "anteilPeriodischProzent": 21.5
+     },
+     {
+      "tag": "GainsLossesOnExtinguishmentOfDebt",
+      "zeilen": 53416,
+      "berichte": 17263,
+      "anteilProzent": 11.59,
+      "berichtePeriodisch": 16373,
+      "anteilPeriodischProzent": 16.4
+     },
+     {
+      "tag": "IncreaseDecreaseInAccruedLiabilities",
+      "zeilen": 53039,
+      "berichte": 23972,
+      "anteilProzent": 16.1,
+      "berichtePeriodisch": 23019,
+      "anteilPeriodischProzent": 23.06
+     },
+     {
+      "tag": "DeferredTaxAssetsValuationAllowance",
+      "zeilen": 52142,
+      "berichte": 25307,
+      "anteilProzent": 16.99,
+      "berichtePeriodisch": 23407,
+      "anteilPeriodischProzent": 23.45
+     },
+     {
+      "tag": "ProfessionalFees",
+      "zeilen": 50730,
+      "berichte": 16209,
+      "anteilProzent": 10.88,
+      "berichtePeriodisch": 15616,
+      "anteilPeriodischProzent": 15.64
+     },
+     {
+      "tag": "EffectOfExchangeRateOnCashAndCashEquivalents",
+      "zeilen": 50618,
+      "berichte": 20482,
+      "anteilProzent": 13.75,
+      "berichtePeriodisch": 19898,
+      "anteilPeriodischProzent": 19.93
+     },
+     {
+      "tag": "OtherAccruedLiabilitiesCurrent",
+      "zeilen": 50389,
+      "berichte": 24577,
+      "anteilProzent": 16.5,
+      "berichtePeriodisch": 23812,
+      "anteilPeriodischProzent": 23.86
+     },
+     {
+      "tag": "CurrentIncomeTaxExpenseBenefit",
+      "zeilen": 50374,
+      "berichte": 17573,
+      "anteilProzent": 11.8,
+      "berichtePeriodisch": 16648,
+      "anteilPeriodischProzent": 16.68
+     },
+     {
+      "tag": "FiniteLivedIntangibleAssetsGross",
+      "zeilen": 49748,
+      "berichte": 24831,
+      "anteilProzent": 16.67,
+      "berichtePeriodisch": 24049,
+      "anteilPeriodischProzent": 24.09
+     },
+     {
+      "tag": "LongTermDebtCurrent",
+      "zeilen": 49179,
+      "berichte": 22731,
+      "anteilProzent": 15.26,
+      "berichtePeriodisch": 21976,
+      "anteilPeriodischProzent": 22.02
+     },
+     {
+      "tag": "TreasuryStockShares",
+      "zeilen": 48655,
+      "berichte": 23573,
+      "anteilProzent": 15.83,
+      "berichtePeriodisch": 23222,
+      "anteilPeriodischProzent": 23.26
+     },
+     {
+      "tag": "PaymentsOfDividendsCommonStock",
+      "zeilen": 48494,
+      "berichte": 18665,
+      "anteilProzent": 12.53,
+      "berichtePeriodisch": 18425,
+      "anteilPeriodischProzent": 18.46
+     },
+     {
+      "tag": "OtherComprehensiveIncomeUnrealizedHoldingGainLossOnSecuritiesArisingDuringPeriodNetOfTax",
+      "zeilen": 48151,
+      "berichte": 15115,
+      "anteilProzent": 10.15,
+      "berichtePeriodisch": 14840,
+      "anteilPeriodischProzent": 14.87
+     },
+     {
+      "tag": "PaymentsToAcquireBusinessesNetOfCashAcquired",
+      "zeilen": 47890,
+      "berichte": 20598,
+      "anteilProzent": 13.83,
+      "berichtePeriodisch": 20084,
+      "anteilPeriodischProzent": 20.12
+     },
+     {
+      "tag": "StockIssuedDuringPeriodValueStockOptionsExercised",
+      "zeilen": 46550,
+      "berichte": 20075,
+      "anteilProzent": 13.48,
+      "berichtePeriodisch": 19398,
+      "anteilPeriodischProzent": 19.43
+     },
+     {
+      "tag": "StockIssuedDuringPeriodValueNewIssues",
+      "zeilen": 46505,
+      "berichte": 25701,
+      "anteilProzent": 17.26,
+      "berichtePeriodisch": 24053,
+      "anteilPeriodischProzent": 24.1
+     },
+     {
+      "tag": "WeightedAverageNumberDilutedSharesOutstandingAdjustment",
+      "zeilen": 46494,
+      "berichte": 15325,
+      "anteilProzent": 10.29,
+      "berichtePeriodisch": 15092,
+      "anteilPeriodischProzent": 15.12
+     },
+     {
+      "tag": "OperatingLeaseRightOfUseAsset",
+      "zeilen": 46449,
+      "berichte": 26139,
+      "anteilProzent": 17.55,
+      "berichtePeriodisch": 25497,
+      "anteilPeriodischProzent": 25.54
+     },
+     {
+      "tag": "NetCashProvidedByUsedInOperatingActivitiesContinuingOperations",
+      "zeilen": 45961,
+      "berichte": 18319,
+      "anteilProzent": 12.3,
+      "berichtePeriodisch": 17692,
+      "anteilPeriodischProzent": 17.72
+     },
+     {
+      "tag": "PaymentsForProceedsFromOtherInvestingActivities",
+      "zeilen": 45432,
+      "berichte": 17253,
+      "anteilProzent": 11.59,
+      "berichtePeriodisch": 16807,
+      "anteilPeriodischProzent": 16.84
+     },
+     {
+      "tag": "AmortizationOfFinancingCosts",
+      "zeilen": 45245,
+      "berichte": 18261,
+      "anteilProzent": 12.26,
+      "berichtePeriodisch": 17599,
+      "anteilPeriodischProzent": 17.63
+     },
+     {
+      "tag": "PrepaidExpenseCurrent",
+      "zeilen": 45005,
+      "berichte": 21662,
+      "anteilProzent": 14.55,
+      "berichtePeriodisch": 20476,
+      "anteilPeriodischProzent": 20.51
+     },
+     {
+      "tag": "ProceedsFromSaleOfPropertyPlantAndEquipment",
+      "zeilen": 44949,
+      "berichte": 19615,
+      "anteilProzent": 13.17,
+      "berichtePeriodisch": 18981,
+      "anteilPeriodischProzent": 19.02
+     },
+     {
+      "tag": "Cash",
+      "zeilen": 44772,
+      "berichte": 16350,
+      "anteilProzent": 10.98,
+      "berichtePeriodisch": 15418,
+      "anteilPeriodischProzent": 15.45
+     },
+     {
+      "tag": "OtherLiabilitiesCurrent",
+      "zeilen": 44723,
+      "berichte": 19787,
+      "anteilProzent": 13.29,
+      "berichtePeriodisch": 19162,
+      "anteilPeriodischProzent": 19.2
+     },
+     {
+      "tag": "LaborAndRelatedExpense",
+      "zeilen": 44223,
+      "berichte": 13451,
+      "anteilProzent": 9.03,
+      "berichtePeriodisch": 13160,
+      "anteilPeriodischProzent": 13.18
+     },
+     {
+      "tag": "CurrentFederalTaxExpenseBenefit",
+      "zeilen": 44071,
+      "berichte": 16001,
+      "anteilProzent": 10.75,
+      "berichtePeriodisch": 15112,
+      "anteilPeriodischProzent": 15.14
+     },
+     {
+      "tag": "SellingAndMarketingExpense",
+      "zeilen": 43295,
+      "berichte": 12795,
+      "anteilProzent": 8.59,
+      "berichtePeriodisch": 12274,
+      "anteilPeriodischProzent": 12.3
+     },
+     {
+      "tag": "PaymentsRelatedToTaxWithholdingForShareBasedCompensation",
+      "zeilen": 43057,
+      "berichte": 18714,
+      "anteilProzent": 12.57,
+      "berichtePeriodisch": 18511,
+      "anteilPeriodischProzent": 18.54
+     },
+     {
+      "tag": "ForeignCurrencyTransactionGainLossBeforeTax",
+      "zeilen": 42770,
+      "berichte": 13677,
+      "anteilProzent": 9.18,
+      "berichtePeriodisch": 13043,
+      "anteilPeriodischProzent": 13.07
+     },
+     {
+      "tag": "ProceedsFromIssuanceOfLongTermDebt",
+      "zeilen": 42604,
+      "berichte": 17319,
+      "anteilProzent": 11.63,
+      "berichtePeriodisch": 16738,
+      "anteilPeriodischProzent": 16.77
+     }
+    ]
+   },
+   "von": "2017-01-01",
+   "bis": "2020-12-31",
+   "datei": "panel-validierung.sqlite"
+  }
+ },
+ "loecher": [
+  {
+   "art": "Jahr duenn besetzt",
+   "fenster": "entdeckung",
+   "stelle": "2009",
+   "zahl": 477,
+   "vergleich": 7761,
+   "text": "Im Entdeckungsfenster tragen die Berichte aus 2009 nur 477 Firmen gegen 7761 im Mittel des Fensters (6 %)."
+  },
+  {
+   "art": "Jahr duenn besetzt",
+   "fenster": "entdeckung",
+   "stelle": "2010",
+   "zahl": 1504,
+   "vergleich": 7761,
+   "text": "Im Entdeckungsfenster tragen die Berichte aus 2010 nur 1504 Firmen gegen 7761 im Mittel des Fensters (19 %)."
+  },
+  {
+   "art": "Kennzahl kippt zwischen den Fenstern",
+   "fenster": "beide",
+   "stelle": "RevenueFromContractWithCustomerExcludingAssessedTax",
+   "zahl": 23.48,
+   "vergleich": 0.0,
+   "text": "Umsatz (neu, ab ASC 606) (RevenueFromContractWithCustomerExcludingAssessedTax) steht in 0.0 % der periodischen Berichte im Entdeckungsfenster, aber in 23.5 % im Prüffenster — Unterschied 23.5 Punkte."
+  },
+  {
+   "art": "Formularmix bricht in einem Jahr",
+   "fenster": "validierung",
+   "stelle": "8-K 2019",
+   "zahl": 9581,
+   "vergleich": 115,
+   "text": "Im Prüffenster springt 8-K im Jahr 2019 auf 9581 Berichte gegen 115 im Mittel der uebrigen Jahre des Fensters (Faktor 83). Die Zahl der Berichte je Jahr ist damit ueber die Jahre nicht vergleichbar."
+  },
+  {
+   "art": "Formularmix bricht in einem Jahr",
+   "fenster": "validierung",
+   "stelle": "8-K 2020",
+   "zahl": 35751,
+   "vergleich": 115,
+   "text": "Im Prüffenster springt 8-K im Jahr 2020 auf 35751 Berichte gegen 115 im Mittel der uebrigen Jahre des Fensters (Faktor 311). Die Zahl der Berichte je Jahr ist damit ueber die Jahre nicht vergleichbar."
+  },
+  {
+   "art": "Fenster zu schmal fuer die geforderte Tiefe",
+   "fenster": "validierung",
+   "stelle": "16 Quartale, 20 Quartale",
+   "zahl": 16,
+   "vergleich": 16,
+   "text": "Das Prüffenster ist nur 16 Quartale breit. Die Mindesttiefen 16 und 20 liegen an oder ueber dieser Grenze — die kleinen Fallzahlen dort sind Arithmetik, kein Datenmangel."
+  },
+  {
+   "art": "Sektor zu duenn fuer eine eigene Auswertung",
+   "fenster": "entdeckung",
+   "stelle": "Land- und Forstwirtschaft, Fischerei",
+   "zahl": 79,
+   "vergleich": 100,
+   "text": "Land- und Forstwirtschaft, Fischerei hat im Entdeckungsfenster nur 79 Firmen — unter 100 traegt kein eigener Sektor-Schnitt."
+  },
+  {
+   "art": "Sektor zu duenn fuer eine eigene Auswertung",
+   "fenster": "entdeckung",
+   "stelle": "Nicht klassifiziert (SEC-Sammelcode)",
+   "zahl": 38,
+   "vergleich": 100,
+   "text": "Nicht klassifiziert (SEC-Sammelcode) hat im Entdeckungsfenster nur 38 Firmen — unter 100 traegt kein eigener Sektor-Schnitt."
+  },
+  {
+   "art": "Sektor zu duenn fuer eine eigene Auswertung",
+   "fenster": "validierung",
+   "stelle": "Bau",
+   "zahl": 84,
+   "vergleich": 100,
+   "text": "Bau hat im Prüffenster nur 84 Firmen — unter 100 traegt kein eigener Sektor-Schnitt."
+  },
+  {
+   "art": "Sektor zu duenn fuer eine eigene Auswertung",
+   "fenster": "validierung",
+   "stelle": "Land- und Forstwirtschaft, Fischerei",
+   "zahl": 54,
+   "vergleich": 100,
+   "text": "Land- und Forstwirtschaft, Fischerei hat im Prüffenster nur 54 Firmen — unter 100 traegt kein eigener Sektor-Schnitt."
+  },
+  {
+   "art": "Sektor zu duenn fuer eine eigene Auswertung",
+   "fenster": "validierung",
+   "stelle": "Nicht klassifiziert (SEC-Sammelcode)",
+   "zahl": 7,
+   "vergleich": 100,
+   "text": "Nicht klassifiziert (SEC-Sammelcode) hat im Prüffenster nur 7 Firmen — unter 100 traegt kein eigener Sektor-Schnitt."
+  }
+ ],
+ "plausibilitaetsanker": {
+  "status": "alle Anker stimmen",
+  "quelle": "E1-panel-bau-2026-08-19.json",
+  "pruefungen": [
+   {
+    "fenster": "entdeckung",
+    "groesse": "berichte",
+    "ist": 176502,
+    "sollLautBauReport": 176502,
+    "status": "stimmt",
+    "differenz": 0
+   },
+   {
+    "fenster": "entdeckung",
+    "groesse": "fakten",
+    "ist": 64487278,
+    "sollLautBauReport": 64487278,
+    "status": "stimmt",
+    "differenz": 0
+   },
+   {
+    "fenster": "validierung",
+    "groesse": "berichte",
+    "ist": 148912,
+    "sollLautBauReport": 148912,
+    "status": "stimmt",
+    "differenz": 0
+   },
+   {
+    "fenster": "validierung",
+    "groesse": "fakten",
+    "ist": 39858607,
+    "sollLautBauReport": 39858607,
+    "status": "stimmt",
+    "differenz": 0
+   }
+  ]
+ },
+ "neueFragen": [
+  "1 Pflicht-Kennzahlen wechseln zwischen Entdeckungs- und Prüffenster stark die Belegung. Zu klären, bevor irgendeine Größe über beide Fenster gerechnet wird: Braucht die Studie eine zusammengesetzte Umsatz-Größe, die die alten und die neuen Kennungen zu einer Reihe verbindet? (Zeitschätzung: 1 Tag)",
+  "Die Abdeckungstiefe misst Berichtsquartale, nicht Zahlen-Vollständigkeit: eine Firma kann 20 Quartale abgeben und in der Hälfte davon keinen Umsatz ausweisen. Offen: eine Tiefen-Zahl auf Kennzahl-Ebene (Quartale mit belegtem Umsatz je Firma) statt auf Berichts-Ebene. (Zeitschätzung: 1 Tag)",
+  "Firmeneigene Kennungen tragen einen messbaren Teil der Zeilen, sind aber zwischen Firmen nicht vergleichbar. Offen: Wie viel Substanz geht verloren, wenn die Studie sie ignoriert — betrifft es Randgrößen oder Kern-Positionen? (Zeitschätzung: 2 Tage)",
+  "Die Fenstergrenzen laufen am Veröffentlichungszeitpunkt, die Berichtsperioden reichen darüber hinaus. Offen: Wie vielen Firmen zerreißt die Fenstergrenze die Kette, und verzerrt das die Fallzahl? (Zeitschätzung: 1 Tag)"
+ ]
+}

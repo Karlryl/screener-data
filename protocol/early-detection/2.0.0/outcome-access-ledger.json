@@ -1,12 +1,463 @@
 {
-  "schema": "early-detection-outcome-access-ledger/v2",
-  "protocol": "FEM-SEC-US@2.0.0",
-  "lastSealedAncestor": "FEM-SEC-US@1.2.0",
-  "genesisSha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
-  "genesisHerkunft": "sha256 der Datei protocol/early-detection/1.2.0/outcome-access-ledger.json — die neue Kette haengt am letzten Glied der alten, statt bei null anzufangen.",
-  "confirmatoryWindows": ["2021-01-01/2023-12-31"],
-  "initialStatus": "NO_CONFIRMATORY_OUTCOME_ACCESS",
-  "events": [],
-  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
-  "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4)."
+ "schema": "early-detection-outcome-access-ledger/v2",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "lastSealedAncestor": "FEM-SEC-US@1.2.0",
+ "genesisSha256": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
+ "genesisHerkunft": "sha256 der Datei protocol/early-detection/1.2.0/outcome-access-ledger.json — die neue Kette haengt am letzten Glied der alten, statt bei null anzufangen.",
+ "confirmatoryWindows": [
+  "2021-01-01/2023-12-31"
+ ],
+ "initialStatus": "R15B_COUNT_ONLY_PROBE_REGISTERED_PARAM_MIN4",
+ "events": [
+  {
+   "runId": "e1b-abnahme-2026-08-16",
+   "typ": "R15b_NUR_ZAEHLEN",
+   "registeredAt": "2026-08-16T17:24:03.674Z",
+   "accessedAt": null,
+   "fenster": [
+    "pruefung 2017-2019",
+    "endtest 2021-2023"
+   ],
+   "erlaubt": "Anzahl Einreichungen je Fenster/Jahr und EXISTENZ eines Umsatztraegers. Keine Kennzahl-Werte, keine Signalrechnung, keine Ergebnis-/Kursdaten.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn- oder Kurswertes aus Pruef- oder Endtestfenster.",
+   "regelVorher": {
+    "conceptMap": "FEM-SEC-CONCEPT-MAP@1.1.0",
+    "mapSha256": "933934db813b5fedfa1a56bc9050ca9c2906d31810774c14940f0da343bc697f",
+    "frozenAt": "2026-08-16T17:14:21.655Z",
+    "universum": "SIC 6000-6799 ausgeschlossen",
+    "gate": {
+     "population": "Firmen im Universum mit mindestens einem Umsatztraeger nach dieser Landkarte.",
+     "schwelle": 0.9,
+     "maxFensterDifferenzPunkte": 10,
+     "maxRestSprung2017_2018Punkte": 5,
+     "pflichtfeldDeckungsgrad": "Je Fenster ausweisen, wie viele Firmen und Einreichungen ausserhalb des Definitionsbereichs bleiben und warum: Finanzsektor, Vor-Umsatz, 20-F.",
+     "unveraendert": "Schwelle und Differenz sind gegenueber R9 NICHT gesenkt."
+    }
+   },
+   "begruendung": "E1b-Abnahmelauf nach _BESCHLUSS-AUFFINDBARKEIT-2026-08-16.md.",
+   "endtestSiegel": "unberuehrt - die Zaehlung laeuft auf dem Panel, nicht auf der verschluesselten Fenster-Datei.",
+   "previousHash": "a3185c8d8398c1dc269e5d58ee1c1ba83c787154de6dfb7821eff33edf1ba498",
+   "eventHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b"
+  },
+  {
+   "runId": "e1b-abnahme-neulauf-2026-08-16",
+   "typ": "PARAMETER_REGISTRIERUNG_UND_R15b_NUR_ZAEHLEN",
+   "registeredAt": "2026-08-16T18:02:59.538Z",
+   "accessedAt": null,
+   "registrierterParameter": {
+    "name": "minTraegerFuerDefinitionsmenge",
+    "wert": 4,
+    "technischeBedeutung": "Anzahl EINREICHUNGEN (Filings) einer Firma im Fenster, die einen Umsatzwert nach Landkarte 1.1.0 tragen. Zeitachsen-Groesse, NICHT Umsatz-Tags je Einreichung.",
+    "codestelle": "scripts/early-detection-e1.py, cmd_abnahme: 'having sum(rev>0) >= ?' — der Boolean-Kollaps rev>0 je submission_key macht aus der Tag-Zaehlung eine Einreichungs-Zaehlung.",
+    "verifikation": "Empirisch an allen 10.699 Firmen des Entdeckungsfensters: sum(rev>0) stimmt zu 100,0 % mit der Anzahl Einreichungen mit Umsatzwert ueberein und nur zu 20,8 % mit der Summe der Tag-Zeilen. Die Kippstelle beider Blindurteile ist damit auf der richtigen Seite.",
+    "offengelegteEinschraenkung": "Einreichungen sind nicht durchgaengig verschiedene Perioden: 10-K und 10-Q koennen dasselbe period_end tragen, Amendments wiederholen es. Stichprobe: 6 Einreichungen mit Umsatz -> 3 verschiedene period_end. Die Bedingung nannte ausdruecklich 'Quartal BZW. Einreichung', die Groesse ist also zulaessig — aber sie ist die groszuegigere der beiden zulaessigen Lesarten."
+   },
+   "herkunftDerEntscheidung": {
+    "verfahren": "Zwei Fable-Instanzen, unabhaengig voneinander, OHNE Kenntnis des Laufergebnisses und OHNE Kenntnis der jeweils anderen. Messen der Quote, Lesen des E1-Berichts, des Arbeitsverzeichnisses und des Datenordners waren beiden ausdruecklich verboten. Vorab vereinbart: bei Widerspruch bleibt es bei INCONCLUSIVE_DATA.",
+    "ergebnis": "Beide unabhaengig: >=4.",
+    "begruendungen": [
+     "Normativer Wortlaut: Wo der Beschluss ANORDNET (Abschnitt 3), definiert er die Population als 'Firmen mit Umsatzreihe' und den Pflichtsatz als 'operative SEC-Filer mit Umsatzhistorie'; die Verfassung (R9) spricht von 'Faellen' in 'beiden Gruppen'. Reihe, Historie, Faelle sind Mehrzahl-Semantik. Die lockere Formulierung steht ausschliesslich im Beleg-Teil — an genau der Stelle, deren Zweideutigkeit den Defekt ausmacht; sie kann nicht zugleich seine Aufloesung sein.",
+     "Mathematik des Indikators: Die Hauptfrage misst Beschleunigung. Wachstum braucht zwei Punkte, Beschleunigung drei, ein Quartals-YoY fuenf. Auf einer Firma mit einem einzigen Umsatzwert ist nicht einmal eine Wachstumsrate definiert; 'Nachverfolgbarkeit' ist dort semantisch leer.",
+     "Binnenkonsistenz: Derselbe Beschluss nimmt 20-F-Halbjahresfiler aus dem Nenner, WEIL sie 'strukturell kein Quartals-Signal tragen koennen'. Eine Ein-Punkt-Firma kann noch weniger tragen. >=1 erzeugte einen Widerspruch zur eigenen 20-F-Begruendung.",
+     "Konservativitaet, ausdruecklich geprueft: Gate-haerter ist >=1 (die >=4-Population ist Teilmenge). Das spricht NICHT fuer >=1. Diese Haerte besteht vollstaendig aus Faellen ausserhalb des Definitionsbereichs — dieselbe Fehlklasse wie die Banken im Nenner, mit der der Beschluss das rote Gate ueberhaupt erst diagnostiziert hat. Falsche Haerte ist keine Vorsicht, sondern Fehlspezifikation.",
+     "Kandidaten unberuehrt: Universum und Eintrittskriterium (>=8 Quartale) aendern sich nicht. Es aendert sich nur der Nenner einer DATENQUALITAETS-Messung. Die LQDA-Klasse bleibt erhalten."
+    ],
+    "restExposition": "Der Beleg-Teil des Beschlusses enthaelt eine Ex-ante-Prognose vom ALTEN Werkzeug, in der BEIDE Lesarten ueber 90 % liegen — sie diskriminiert also nicht zwischen ihnen und konnte die Blindurteile nicht in eine Richtung ziehen."
+   },
+   "offengelegterVerstoss": {
+    "regel": "Kriterium 1 der fuenf Unterscheidungsmerkmale ('die Korrektur passiert, bevor irgendein Ergebnis existiert')",
+    "status": "DEM BUCHSTABEN NACH VERLETZT — ein Ergebnis existierte, als der Parameter bestimmt wurde.",
+    "surrogat": "Zwei unabhaengige Blindurteile, beide rein textlich-semantisch begruendet, beide mit vollstaendiger Offenlegung ihrer Rest-Exposition.",
+    "pruefbarkeit": "Der gesamte Vorgang ist an den zitierten Textstellen nachpruefbar und verwerfbar. Diese Offenheit ist der Preis dafuer, dass der Lauf ueberhaupt noch etwas wert ist."
+   },
+   "ersterLaufBleibtInDerAkte": {
+    "runId": "e1b-abnahme-2026-08-16",
+    "lesart": ">=1 (unregistrierte Skript-Vorgabe)",
+    "verdikt": "INCONCLUSIVE_DATA",
+    "verfehlt": "K1: Entdeckung 89,7 % gegen 90 % (0,3 Punkte)",
+    "k2": "2,2 Punkte, erfuellt",
+    "k3": "2,4 Punkte, erfuellt",
+    "vermerk": "Wird NICHT ersetzt und NICHT kleingeschrieben. Zahlen je Fenster und je Jahr stehen in reports/studie/E1b-abnahme-2026-08-16.md und reports/early-detection/abnahme-e1b.json."
+   },
+   "erlaubt": "Anzahl Einreichungen je Fenster/Jahr und Existenz eines Umsatztraegers in Pruef- und Endtestfenster. Keine Kennzahl-Werte, keine Signalrechnung, keine Ergebnisdaten.",
+   "grenze": "Das ist der EINZIGE Neulauf. Verfehlt er das Gate, endet Strang B als INCONCLUSIVE_DATA, endgueltig. Keine dritte Lesart, keine weitere Revision, kein Nachjustieren.",
+   "previousHash": "eb24faae8859b4220d80b1a27d56a6dd19b15804a80f24cec56e05df95b4f38b",
+   "eventHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa"
+  },
+  {
+   "runId": "e3-zaehlprobe-pruefung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:08:50.974Z",
+   "accessedAt": "2026-08-19T16:12:50.914Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "feuerungen",
+    "auswertbare_firmen_quartale",
+    "feuerrate",
+    "firmen_mit_erst_ereignis",
+    "zensierte_erst_ereignisse",
+    "fallzahl",
+    "auffindbarkeit",
+    "fallzahl_mit_aktienzahl_nenner",
+    "kontrollpool_firmen",
+    "kontrollpool_auffindbarkeit",
+    "ampel"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, Abschnitt zaehlprobe.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "00e1c8dbefc2fbf7f6a2d94803de785a75045880d2216a6ceec448b75b0060aa",
+   "eventHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b"
+  },
+  {
+   "runId": "e3-zaehlprobe-pruefung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:24:42.550Z",
+   "accessedAt": "2026-08-19T16:27:42.493Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "feuerungen",
+    "auswertbare_firmen_quartale",
+    "feuerrate",
+    "firmen_mit_erst_ereignis",
+    "zensierte_erst_ereignisse",
+    "fallzahl",
+    "auffindbarkeit",
+    "fallzahl_mit_aktienzahl_nenner",
+    "kontrollpool_firmen",
+    "kontrollpool_auffindbarkeit",
+    "ampel"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "R15b Nur-Zaehlen-Probe vor der Einmal-Oeffnung (Angriff P3). Praeregistrierung FEM-SEC-US@2.0.0, Abschnitt zaehlprobe.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "8848114fb6bb2d5999735d8083ed388fa456d53cbf2c719428b5c6198820672b",
+   "eventHash": "e2bf486231669d1df24257f14a9807faaeed4cc822efb349378f17ce69be3249"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:50:45.504Z",
+   "accessedAt": "2026-08-19T17:02:45.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose (R15b, nur zaehlen): Klassen-Zerlegung der unreifen Erst-Ereignisse, hypothetische Anschlussquote als Rechnung, Auffindbarkeit je Kalenderjahr. Erklaert den E3-Befund, aendert keine Schwelle und keine Reifedefinition.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "e2bf486231669d1df24257f14a9807faaeed4cc822efb349378f17ce69be3249",
+   "eventHash": "aa02084fbf767d4a8af833b0ecdc52c4b9ca1092c4eb695988047e9103d40fc1"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T16:50:45.553Z",
+   "accessedAt": "2026-08-19T17:02:45.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose (R15b, nur zaehlen) auf dem Entdeckungsfenster: dieselbe Klassen-Zerlegung, zusaetzlich Gegenprobe gegen die veroeffentlichten E2-Anker (Band 2012-2016).",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "aa02084fbf767d4a8af833b0ecdc52c4b9ca1092c4eb695988047e9103d40fc1",
+   "eventHash": "878a2e0111eff8eb012639a0462963a1a6bd6e472abd9c61e15bc24574403221"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:09:31.332Z",
+   "accessedAt": "2026-08-19T17:12:31.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, Neulauf nach dem Fensterkanten-Befund: die geerbte Auffindbarkeits-Formel liefert an der Fensterkante keine Quote und heisst dort jetzt NICHT BERECHENBAR. Zaehl-Logik unveraendert, aber geaenderte Skript-Bytes - Lauf 1 bleibt in der Akte.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "878a2e0111eff8eb012639a0462963a1a6bd6e472abd9c61e15bc24574403221",
+   "eventHash": "fbe8cb64df9e62de3762ecab1b9cba70ad1d5d38f15ef2f23eb786a54483a47b"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19-neulauf",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:09:31.569Z",
+   "accessedAt": "2026-08-19T17:12:31.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, Neulauf nach dem Fensterkanten-Befund: die geerbte Auffindbarkeits-Formel liefert an der Fensterkante keine Quote und heisst dort jetzt NICHT BERECHENBAR. Zaehl-Logik unveraendert, aber geaenderte Skript-Bytes - Lauf 1 bleibt in der Akte.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "fbe8cb64df9e62de3762ecab1b9cba70ad1d5d38f15ef2f23eb786a54483a47b",
+   "eventHash": "967f61536c4af1837a6d82aa89f9820d67d46dad785d158766e10f5af038e5e5"
+  },
+  {
+   "runId": "e4a-diagnose-pruefung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:36:27.591Z",
+   "accessedAt": "2026-08-19T17:39:27.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, dritter Lauf nach dem Code-Review: die Zaehl-Logik ist unveraendert (Listenzugehoerigkeit statt zweiter Schwellenabfrage, harte Sperre gegen Klasse d), aber die Skript-Bytes sind es nicht. Gemessen statt geglaubt, dass die Zahlen gleich bleiben.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "967f61536c4af1837a6d82aa89f9820d67d46dad785d158766e10f5af038e5e5",
+   "eventHash": "037adf4aaf41a82d9df2fb736873e2cbefccedc3b9d15330bed275d0e984f516"
+  },
+  {
+   "runId": "e4a-diagnose-entdeckung-2026-08-19-nachreview",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T17:36:27.651Z",
+   "accessedAt": "2026-08-19T17:39:27.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "hypothetische_auffindbarkeit_anschlussfaehig",
+    "hypothetische_fallzahl_anschlussfaehig",
+    "klasse_a_keine_folgequartale",
+    "klasse_b1_nur_kennungsname",
+    "klasse_b2_auch_waehrungseinheit",
+    "klasse_b_kennung_gewechselt",
+    "klasse_c_zu_wenige_folgequartale",
+    "klasse_d_ohne_gewaehlte_reihe",
+    "nenner_auffindbarkeit",
+    "unreif_gesamt",
+    "zensierte_erst_ereignisse"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4a-Diagnose, dritter Lauf nach dem Code-Review: die Zaehl-Logik ist unveraendert (Listenzugehoerigkeit statt zweiter Schwellenabfrage, harte Sperre gegen Klasse d), aber die Skript-Bytes sind es nicht. Gemessen statt geglaubt, dass die Zahlen gleich bleiben.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "037adf4aaf41a82d9df2fb736873e2cbefccedc3b9d15330bed275d0e984f516",
+   "eventHash": "8b35f80c50de8995daee959c9a17de54c30177f654d92e0dd2826b6410353eba"
+  },
+  {
+   "runId": "e4d-kadenz-pruefung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T18:26:45.885Z",
+   "accessedAt": "2026-08-19T18:32:45.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "abstand_histogramm_klasse_c",
+    "ampel",
+    "auffindbarkeit_e3",
+    "auffindbarkeit_kadenz",
+    "auffindbarkeit_kadenz_e3formel",
+    "differenz_auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "kadenz_untergrenze_gebunden",
+    "klasse_c_firmen",
+    "nenner_e3",
+    "nenner_kadenz",
+    "zaehler_kadenz",
+    "zensiert_e3",
+    "zensiert_kadenz",
+    "zensiert_kadenz_und_reif"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4d/E4e - Kadenz-Zensur und konsistente Auffindbarkeits-Formel. Die Entscheidungsregel ist VORAB verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 e36d8d12cb9029f0a7873b621267323b35f75c566049b7d3c693c3b2f97d02be. Rein zaehlend (R15b/R4): kein Ergebniswert, keine Firmen-Kennung. Endtest-Fenster unberuehrt.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "8b35f80c50de8995daee959c9a17de54c30177f654d92e0dd2826b6410353eba",
+   "eventHash": "6fd263a869c2d0d995f776f03c4e70989364d28a505e1661463a343973e54569"
+  },
+  {
+   "runId": "e4d-kadenz-entdeckung-2026-08-19",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-19T18:26:45.948Z",
+   "accessedAt": "2026-08-19T18:32:45.000Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "abstand_histogramm_klasse_c",
+    "ampel",
+    "auffindbarkeit_e3",
+    "auffindbarkeit_kadenz",
+    "auffindbarkeit_kadenz_e3formel",
+    "differenz_auffindbarkeit",
+    "fallzahl",
+    "firmen_mit_erst_ereignis",
+    "kadenz_untergrenze_gebunden",
+    "klasse_c_firmen",
+    "nenner_e3",
+    "nenner_kadenz",
+    "zaehler_kadenz",
+    "zensiert_e3",
+    "zensiert_kadenz",
+    "zensiert_kadenz_und_reif"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "E4d/E4e - Gegenprobe im Entdeckungsfenster (Band 2009-2015), entscheidet nichts. Entscheidungsregel vorab verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 e36d8d12cb9029f0a7873b621267323b35f75c566049b7d3c693c3b2f97d02be. Rein zaehlend (R15b/R4).",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "6fd263a869c2d0d995f776f03c4e70989364d28a505e1661463a343973e54569",
+   "eventHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd"
+  },
+  {
+   "runId": "c0-freeze1-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T20:51:28.480311Z",
+   "accessedAt": "2026-08-19T21:16:22.000Z",
+   "fenster": [
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
+   ],
+   "allowedOutputs": [
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
+   ],
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen. Die Filer-Listen sind ausdruecklich erlaubt - eine spaetere Etappe leitet daraus Korb-Mitgliedschaften jaehrlich neu ab.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher oder auf Schluesselmaterial; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - Themenliste per Vorab-Regel. Eingefroren: Regeltext + Register-Manifest + Vokabular, Buendel-SHA-256 193081aa124a52c1e05e127985c8e69ee41b211514d9983dba6784bf906652ff. Die EDGAR-Zaehlung darf erst nach der Server-Bestaetigung dieses Eintrags starten.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an und braucht ihn nicht. Gezaehlt wird ausschliesslich im lebenden EDGAR-Volltextdienst.",
+   "previousHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
+   "eventHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb"
+  },
+  {
+   "runId": "c0-freeze1b-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T22:36:27.777994Z",
+   "accessedAt": "2026-08-19T22:44:27.668Z",
+   "fenster": [
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
+   ],
+   "allowedOutputs": [
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
+   ],
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - zweiter Regelstand. Buendel-SHA-256 1c13f5e1341508b0b632dc26057b47aa9e57686dcab23bc96c48180c73266f6d. Ersetzt die Anmeldung c0-freeze1-2026-08-19: an dem Stand war ausschliesslich das SKRIPT geaendert (Lesen von EDGARs unterer Trefferschranke), Regeltext, Register-Manifest und Vokabular tragen unveraenderte Pruefsummen.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an.",
+   "previousHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb",
+   "eventHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81"
+  },
+  {
+   "runId": "c0-freeze2-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T23:48:18.080987Z",
+   "accessedAt": "2026-08-19T23:54:17.953Z",
+   "fenster": [
+    "kein Studienfenster - abgeleitetes Ergebnis"
+   ],
+   "allowedOutputs": [
+    "themenliste",
+    "filer_liste",
+    "leiter_log",
+    "query_log"
+   ],
+   "erlaubt": "Veroeffentlichung der abgeleiteten Themenliste und der Filer-Listen.",
+   "verboten": "Jede nachtraegliche Aenderung an Themenliste, Filer-Listen oder Leiter-Log.",
+   "begruendung": "C0 FREEZE 2 - Buendel-SHA-256 502d52a5da82c51d62495b886072572d21e31abd9c8f615a8d67118a087cffdb ueber Themenliste, Filer-Listen, Query-Log und Leiter-Log. Baut auf c0-freeze1b-2026-08-19 auf.",
+   "endtestSiegel": "unberuehrt",
+   "previousHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
+   "eventHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f"
+  }
+ ],
+ "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
+ "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4)."
 }

@@ -107,6 +107,11 @@ const REPORT_FILES = [
   'tests/early-detection-sec-wayback-truncation-audit.test.js',
   'tests/early-detection-sic-routing.test.js',
   'tests/early-detection-web-archive.test.js',
+  // Orchestrator-Ruling 2026-08-29 14:10: C0 ist Strang-C-Themenauswahl, kein
+  // Auslieferungs-Waechter — ein rotes C0 darf Karls Preis-Abruf nicht anhalten.
+  // Der Substrat-Fall (EARLY_DETECTION_DATA_ROOT fehlt) faellt in der Datei selbst
+  // als LAUTER Skip an (siehe dort), nicht als stiller Durchmarsch.
+  'tests/studie-c0.test.js',
 ];
 
 // ── Muessen blockierend BLEIBEN, obwohl Studien-Strecke ───────────────────────

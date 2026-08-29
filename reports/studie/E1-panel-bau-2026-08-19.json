@@ -1,0 +1,2055 @@
+{
+ "schema": "early-detection-panel-bau/v1",
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "variante": "legacy_earliest_archived",
+ "erstelltAm": "2026-08-19T06:44:05+00:00",
+ "fenster": {
+  "entdeckung": {
+   "von": "2009-01-01",
+   "bis": "2016-12-31"
+  },
+  "validierung": {
+   "von": "2017-01-01",
+   "bis": "2020-12-31"
+  },
+  "endtest": {
+   "von": "2021-01-01",
+   "bis": "2024-12-31"
+  }
+ },
+ "fensterAbweichungVonRulesJson": "Die Pufferjahre 2016 und 2020 sind hier dem jeweils frueheren Fenster zugeschlagen, 2024 dem Endtest; rules.json laesst sie frei. Beide Verschiebungen laufen containment-sicher — nichts verlaesst den Endtest.",
+ "payloadsGesamt": 64,
+ "payloadsGebaut": 64,
+ "summe": {
+  "zeilen_gelesen": 148638282,
+  "dubletten": 0,
+  "waisen": 0,
+  "berichte_gelesen": 710734,
+  "zeilen_defekt": 0,
+  "wert_leer": 3427309,
+  "wert_unparsebar": 0,
+  "ohne_accepted": 0,
+  "accepted_ausserhalb": 0,
+  "zeilen_ersatzzeichen": 1206,
+  "schluessel_ersatzzeichen": 4,
+  "fakten_geschrieben": 148638282,
+  "berichte_geschrieben": 710734,
+  "berichte_dubletten": 0
+ },
+ "jeFenster": {
+  "entdeckung": {
+   "datei": "panel-entdeckung.sqlite",
+   "bytes": 7176175616,
+   "payloads": 64,
+   "berichte": 176502,
+   "fakten": 64487278,
+   "berichte_payload_fallback": 0,
+   "fakten_wert_null": 1464329
+  },
+  "validierung": {
+   "datei": "panel-validierung.sqlite",
+   "bytes": 4447633408,
+   "payloads": 64,
+   "berichte": 148912,
+   "fakten": 39858607,
+   "berichte_payload_fallback": 0,
+   "fakten_wert_null": 905982
+  },
+  "endtest": {
+   "datei": "panel-endtest.sqlite",
+   "bytes": 5025230848,
+   "payloads": 64,
+   "berichte": 385320,
+   "fakten": 44292397,
+   "berichte_payload_fallback": 0,
+   "fakten_wert_null": 1056998
+  }
+ },
+ "waisenSatz": "0 Fakten-Zeilen ohne zugehoerigen Bericht wurden NICHT geschrieben (ohne accepted-Zeitstempel ist jedes PIT-Signal darauf nicht berechenbar) — sie stehen je Payload in diesem Report, verschwiegen wird keine.",
+ "payloads": {
+  "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83": {
+   "quartal": "2009q1",
+   "zeilen_gelesen": 0,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 0,
+   "zeilen_defekt": 0,
+   "wert_leer": 0,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28": {
+   "quartal": "2009q2",
+   "zeilen_gelesen": 4930,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 26,
+   "zeilen_defekt": 0,
+   "wert_leer": 11,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 4930,
+     "berichte": 26,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd": {
+   "quartal": "2009q3",
+   "zeilen_gelesen": 116671,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 439,
+   "zeilen_defekt": 0,
+   "wert_leer": 47,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 116671,
+     "berichte": 439,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef": {
+   "quartal": "2009q4",
+   "zeilen_gelesen": 131984,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 486,
+   "zeilen_defekt": 0,
+   "wert_leer": 13,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 131984,
+     "berichte": 486,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3": {
+   "quartal": "2010q1",
+   "zeilen_gelesen": 151692,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 495,
+   "zeilen_defekt": 0,
+   "wert_leer": 27,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 151692,
+     "berichte": 495,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4": {
+   "quartal": "2010q2",
+   "zeilen_gelesen": 118947,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 522,
+   "zeilen_defekt": 0,
+   "wert_leer": 318,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 118947,
+     "berichte": 522,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757": {
+   "quartal": "2010q3",
+   "zeilen_gelesen": 476310,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 1413,
+   "zeilen_defekt": 0,
+   "wert_leer": 2715,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 476310,
+     "berichte": 1413,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979": {
+   "quartal": "2010q4",
+   "zeilen_gelesen": 505411,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 1474,
+   "zeilen_defekt": 0,
+   "wert_leer": 5434,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 505411,
+     "berichte": 1474,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695": {
+   "quartal": "2011q1",
+   "zeilen_gelesen": 663971,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 1500,
+   "zeilen_defekt": 0,
+   "wert_leer": 5430,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 663971,
+     "berichte": 1500,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367": {
+   "quartal": "2011q2",
+   "zeilen_gelesen": 483670,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 1705,
+   "zeilen_defekt": 0,
+   "wert_leer": 3508,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 1,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 483670,
+     "berichte": 1705,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2": {
+   "quartal": "2011q3",
+   "zeilen_gelesen": 1903993,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7104,
+   "zeilen_defekt": 0,
+   "wert_leer": 32545,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 9,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 1903993,
+     "berichte": 7104,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1": {
+   "quartal": "2011q4",
+   "zeilen_gelesen": 2150890,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8015,
+   "zeilen_defekt": 0,
+   "wert_leer": 40177,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 4,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2150890,
+     "berichte": 8015,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f": {
+   "quartal": "2012q1",
+   "zeilen_gelesen": 2439119,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7417,
+   "zeilen_defekt": 0,
+   "wert_leer": 40785,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 16,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2439119,
+     "berichte": 7417,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f": {
+   "quartal": "2012q2",
+   "zeilen_gelesen": 2122165,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 9193,
+   "zeilen_defekt": 0,
+   "wert_leer": 55949,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 6,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2122165,
+     "berichte": 9193,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a": {
+   "quartal": "2012q3",
+   "zeilen_gelesen": 2881650,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8005,
+   "zeilen_defekt": 0,
+   "wert_leer": 76829,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 18,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2881650,
+     "berichte": 8005,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026": {
+   "quartal": "2012q4",
+   "zeilen_gelesen": 3062966,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8117,
+   "zeilen_defekt": 0,
+   "wert_leer": 88134,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 11,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3062966,
+     "berichte": 8117,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011": {
+   "quartal": "2013q1",
+   "zeilen_gelesen": 3421534,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6794,
+   "zeilen_defekt": 0,
+   "wert_leer": 71970,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 21,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3421534,
+     "berichte": 6794,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419": {
+   "quartal": "2013q2",
+   "zeilen_gelesen": 3061520,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 9114,
+   "zeilen_defekt": 0,
+   "wert_leer": 99109,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 11,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3061520,
+     "berichte": 9114,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11": {
+   "quartal": "2013q3",
+   "zeilen_gelesen": 3105541,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8043,
+   "zeilen_defekt": 0,
+   "wert_leer": 92795,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 14,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3105541,
+     "berichte": 8043,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193": {
+   "quartal": "2013q4",
+   "zeilen_gelesen": 3059380,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7844,
+   "zeilen_defekt": 0,
+   "wert_leer": 91255,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 18,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3059380,
+     "berichte": 7844,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1": {
+   "quartal": "2014q1",
+   "zeilen_gelesen": 3591652,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7161,
+   "zeilen_defekt": 0,
+   "wert_leer": 86417,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 21,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3591652,
+     "berichte": 7161,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506": {
+   "quartal": "2014q2",
+   "zeilen_gelesen": 2804902,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8553,
+   "zeilen_defekt": 0,
+   "wert_leer": 95411,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 15,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2804902,
+     "berichte": 8553,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92": {
+   "quartal": "2014q3",
+   "zeilen_gelesen": 2906042,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7790,
+   "zeilen_defekt": 0,
+   "wert_leer": 71449,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 28,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2906042,
+     "berichte": 7790,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523": {
+   "quartal": "2014q4",
+   "zeilen_gelesen": 2877905,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7715,
+   "zeilen_defekt": 0,
+   "wert_leer": 67503,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 11,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2877905,
+     "berichte": 7715,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866": {
+   "quartal": "2015q1",
+   "zeilen_gelesen": 3449733,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6996,
+   "zeilen_defekt": 0,
+   "wert_leer": 52398,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 21,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3449733,
+     "berichte": 6996,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643": {
+   "quartal": "2015q2",
+   "zeilen_gelesen": 2602230,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 8213,
+   "zeilen_defekt": 0,
+   "wert_leer": 61312,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 15,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2602230,
+     "berichte": 8213,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a": {
+   "quartal": "2015q3",
+   "zeilen_gelesen": 2763374,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7456,
+   "zeilen_defekt": 0,
+   "wert_leer": 56672,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 21,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2763374,
+     "berichte": 7456,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d": {
+   "quartal": "2015q4",
+   "zeilen_gelesen": 2738754,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7234,
+   "zeilen_defekt": 0,
+   "wert_leer": 54890,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 7,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2738754,
+     "berichte": 7234,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169": {
+   "quartal": "2016q1",
+   "zeilen_gelesen": 3485997,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6535,
+   "zeilen_defekt": 0,
+   "wert_leer": 48696,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 21,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 3485997,
+     "berichte": 6535,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232": {
+   "quartal": "2016q2",
+   "zeilen_gelesen": 2384035,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7523,
+   "zeilen_defekt": 0,
+   "wert_leer": 58199,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 16,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2384035,
+     "berichte": 7523,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3": {
+   "quartal": "2016q3",
+   "zeilen_gelesen": 2517179,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6865,
+   "zeilen_defekt": 0,
+   "wert_leer": 52807,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 67,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2517179,
+     "berichte": 6865,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b": {
+   "quartal": "2016q4",
+   "zeilen_gelesen": 2502865,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6754,
+   "zeilen_defekt": 0,
+   "wert_leer": 51491,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 777,
+   "schluessel_ersatzzeichen": 1,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 2502865,
+     "berichte": 6754,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1": {
+   "quartal": "2017q1",
+   "zeilen_gelesen": 3313595,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6272,
+   "zeilen_defekt": 0,
+   "wert_leer": 53794,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 22,
+   "schluessel_ersatzzeichen": 1,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 266,
+     "berichte": 1,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 3313329,
+     "berichte": 6271,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a": {
+   "quartal": "2017q2",
+   "zeilen_gelesen": 2235130,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7228,
+   "zeilen_defekt": 0,
+   "wert_leer": 61483,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 16,
+   "schluessel_ersatzzeichen": 1,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2235130,
+     "berichte": 7228,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4": {
+   "quartal": "2017q3",
+   "zeilen_gelesen": 2262111,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6506,
+   "zeilen_defekt": 0,
+   "wert_leer": 51387,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 19,
+   "schluessel_ersatzzeichen": 1,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2262111,
+     "berichte": 6506,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9": {
+   "quartal": "2017q4",
+   "zeilen_gelesen": 2281152,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6550,
+   "zeilen_defekt": 0,
+   "wert_leer": 54134,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2281152,
+     "berichte": 6550,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4": {
+   "quartal": "2018q1",
+   "zeilen_gelesen": 3030131,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 5992,
+   "zeilen_defekt": 0,
+   "wert_leer": 50173,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 3030131,
+     "berichte": 5992,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6": {
+   "quartal": "2018q2",
+   "zeilen_gelesen": 2345136,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7490,
+   "zeilen_defekt": 0,
+   "wert_leer": 65937,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2345136,
+     "berichte": 7490,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720": {
+   "quartal": "2018q3",
+   "zeilen_gelesen": 2229050,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6492,
+   "zeilen_defekt": 0,
+   "wert_leer": 52267,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2229050,
+     "berichte": 6492,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894": {
+   "quartal": "2018q4",
+   "zeilen_gelesen": 2247296,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 6421,
+   "zeilen_defekt": 0,
+   "wert_leer": 55713,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2247296,
+     "berichte": 6421,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0": {
+   "quartal": "2019q1",
+   "zeilen_gelesen": 2890146,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 5724,
+   "zeilen_defekt": 0,
+   "wert_leer": 47563,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2890146,
+     "berichte": 5724,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c": {
+   "quartal": "2019q2",
+   "zeilen_gelesen": 2368057,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 7300,
+   "zeilen_defekt": 0,
+   "wert_leer": 71177,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2368057,
+     "berichte": 7300,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31": {
+   "quartal": "2019q3",
+   "zeilen_gelesen": 2325267,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 9353,
+   "zeilen_defekt": 0,
+   "wert_leer": 56833,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2325267,
+     "berichte": 9353,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32": {
+   "quartal": "2019q4",
+   "zeilen_gelesen": 2402955,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 12664,
+   "zeilen_defekt": 0,
+   "wert_leer": 61064,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2402955,
+     "berichte": 12664,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781": {
+   "quartal": "2020q1",
+   "zeilen_gelesen": 3005393,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 13561,
+   "zeilen_defekt": 0,
+   "wert_leer": 58208,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 3005393,
+     "berichte": 13561,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925": {
+   "quartal": "2020q2",
+   "zeilen_gelesen": 2197732,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 16411,
+   "zeilen_defekt": 0,
+   "wert_leer": 59057,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2197732,
+     "berichte": 16411,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d": {
+   "quartal": "2020q3",
+   "zeilen_gelesen": 2351640,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 14832,
+   "zeilen_defekt": 0,
+   "wert_leer": 52972,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2351640,
+     "berichte": 14832,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61": {
+   "quartal": "2020q4",
+   "zeilen_gelesen": 2373224,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 16113,
+   "zeilen_defekt": 0,
+   "wert_leer": 54251,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 2373224,
+     "berichte": 16113,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "877c6b0019d5476c79b08e870fbcafe94bcab887cf845ba80b87fac77e4acde8": {
+   "quartal": "2021q1",
+   "zeilen_gelesen": 3070341,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 17292,
+   "zeilen_defekt": 0,
+   "wert_leer": 54082,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 858,
+     "berichte": 4,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 3069483,
+     "berichte": 17288,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "78ad598ef8d820585d27659307b7ff6057cc4cb27c570fa964508262adea3ae4": {
+   "quartal": "2021q2",
+   "zeilen_gelesen": 2441790,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 20694,
+   "zeilen_defekt": 0,
+   "wert_leer": 67509,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2441790,
+     "berichte": 20694,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "d65db22bd5b9f546bb7dc86de8918d7f7dcc011a1b5a0f6234665c107f2b3a2b": {
+   "quartal": "2021q3",
+   "zeilen_gelesen": 2603323,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 20652,
+   "zeilen_defekt": 0,
+   "wert_leer": 64565,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2603323,
+     "berichte": 20652,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f0df629157513a6ef515aa4e0cf11400b5cd617410777b26948196049ffeeaaf": {
+   "quartal": "2021q4",
+   "zeilen_gelesen": 2698033,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 24092,
+   "zeilen_defekt": 0,
+   "wert_leer": 67040,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2698033,
+     "berichte": 24092,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "8653f6e4198872c98b0e09adc4f2facf90bd178ea69a89525b1c17c6db4ef0e3": {
+   "quartal": "2022q1",
+   "zeilen_gelesen": 3277028,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 23656,
+   "zeilen_defekt": 0,
+   "wert_leer": 64299,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 3277028,
+     "berichte": 23656,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "f42188c48188669ede9e9156f17f96f179eaccbf1bc6557ab515b6befa8fcef4": {
+   "quartal": "2022q2",
+   "zeilen_gelesen": 2705510,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 27262,
+   "zeilen_defekt": 0,
+   "wert_leer": 78496,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2705510,
+     "berichte": 27262,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "d421b324acdaa1b4091ba62f5152e9a52b5502102471075fbcfbcaf2451355fb": {
+   "quartal": "2022q3",
+   "zeilen_gelesen": 2691248,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 22951,
+   "zeilen_defekt": 0,
+   "wert_leer": 65024,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2691248,
+     "berichte": 22951,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "2b67ec9f4c0800eae1344f062e65b395b616819737d159e5562cc074dd80d64b": {
+   "quartal": "2022q4",
+   "zeilen_gelesen": 2701629,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 23943,
+   "zeilen_defekt": 0,
+   "wert_leer": 68604,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2701629,
+     "berichte": 23943,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "5e1f00b79f50a72ef4fe07c28202c61ad5010c846040f86e4becb09555b7a627": {
+   "quartal": "2023q1",
+   "zeilen_gelesen": 3293693,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 25942,
+   "zeilen_defekt": 0,
+   "wert_leer": 62982,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 3293693,
+     "berichte": 25942,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "d81320fc0360448ce4d2d14935e554cbe5840fafbbb5054340675ebe6c5cfc65": {
+   "quartal": "2023q2",
+   "zeilen_gelesen": 2719392,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 30209,
+   "zeilen_defekt": 0,
+   "wert_leer": 74626,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2719392,
+     "berichte": 30209,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "3fb0d7a2d334ed2274806eac138bad87819387f8961780816e640b3ccdf80c34": {
+   "quartal": "2023q3",
+   "zeilen_gelesen": 2648179,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 23751,
+   "zeilen_defekt": 0,
+   "wert_leer": 66433,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2648179,
+     "berichte": 23751,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "49df6a086e435a99cd2096db92a2442cf2b70d0bdee64cf31bcb963f348854eb": {
+   "quartal": "2023q4",
+   "zeilen_gelesen": 2639066,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 24097,
+   "zeilen_defekt": 0,
+   "wert_leer": 67124,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2639066,
+     "berichte": 24097,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "8b0a6d1603967bfc6e96928e759de9796508351aef6f5442248a61d95ff5952b": {
+   "quartal": "2024q1",
+   "zeilen_gelesen": 3054006,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 24336,
+   "zeilen_defekt": 0,
+   "wert_leer": 53492,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 3054006,
+     "berichte": 24336,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "4d96a8c441edbfe6907ea4338e1fc2266b11688e1a9df5baf10e93befc5e02b3": {
+   "quartal": "2024q2",
+   "zeilen_gelesen": 2655470,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 29399,
+   "zeilen_defekt": 0,
+   "wert_leer": 77336,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2655470,
+     "berichte": 29399,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "e1d2bca0f656bef924848cacd44b4704ba2d84ff6411e220d44851985de21b5e": {
+   "quartal": "2024q3",
+   "zeilen_gelesen": 2532517,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 23952,
+   "zeilen_defekt": 0,
+   "wert_leer": 61291,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2532517,
+     "berichte": 23952,
+     "berichte_dubletten": 0
+    }
+   }
+  },
+  "7b3718c9edff3f678dbdebb65e904801d7909ca0ffa3b6fdddd6932e2787fc38": {
+   "quartal": "2024q4",
+   "zeilen_gelesen": 2562030,
+   "dubletten": 0,
+   "waisen": 0,
+   "berichte_gelesen": 23096,
+   "zeilen_defekt": 0,
+   "wert_leer": 64097,
+   "wert_unparsebar": 0,
+   "ohne_accepted": 0,
+   "accepted_ausserhalb": 0,
+   "zeilen_ersatzzeichen": 0,
+   "schluessel_ersatzzeichen": 0,
+   "geschrieben": {
+    "entdeckung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "validierung": {
+     "fakten": 0,
+     "berichte": 0,
+     "berichte_dubletten": 0
+    },
+    "endtest": {
+     "fakten": 2562030,
+     "berichte": 23096,
+     "berichte_dubletten": 0
+    }
+   }
+  }
+ }
+}

@@ -146,3 +146,13 @@ prices-max/
 
 # Python-Bytecode der Studien-Skripte (entsteht beim Import der Bau-Module)
 __pycache__/
+
+# Studie 2.0.0 / R2: der Schluessel der versiegelten Endtest-Datei lebt AUSSERHALB
+# des Repos, unter $EARLY_DETECTION_DATA_ROOT/schluessel/endtest.key — er wird nie
+# committet, sonst waere die Verschluesselung Theater. Diese Muster sind das Netz
+# fuer den Fall, dass ihn jemand doch einmal ins Repo kopiert; sie fangen ausserdem
+# die Panel-Dateien selbst ab (mehrere GB, gehoeren nie in die Historie).
+*.key
+/schluessel/
+panel-*.sqlite
+panel-*.sqlite.enc

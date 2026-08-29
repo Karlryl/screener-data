@@ -22,6 +22,9 @@
 /scripts/studie-*.js text eol=lf
 /scripts/studie-*.py text eol=lf
 /tests/studie-*.test.js text eol=lf
+# Strang C (C0-Themenliste). Gehasht wird der Dateiinhalt, also muss er auf jeder
+# Maschine byte-gleich im Baum liegen.
+/protocol/strang-c/** text eol=lf
 
 # Immutable generated evidence: preserve the exact sealed bytes in Git.
 /reports/early-detection/prospective-listing-snapshot-verification-2026-08-10-v2.json -text

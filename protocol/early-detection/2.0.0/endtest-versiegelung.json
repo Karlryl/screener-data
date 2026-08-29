@@ -1,0 +1,19 @@
+{
+  "schema": "early-detection-endtest-versiegelung/v1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "regel": "R2 — Drei Zeitfenster, physisch getrennt",
+  "algorithmus": "aes-256-gcm",
+  "versiegeltAm": "2026-08-19T06:59:44.416Z",
+  "klartextDatei": "panel-endtest.sqlite",
+  "siegelDatei": "panel-endtest.sqlite.enc",
+  "schluesselAblage": "<EARLY_DETECTION_DATA_ROOT>/schluessel/endtest.key",
+  "iv": "080d71a1066f9e93c5a4c983",
+  "authTag": "f8beb4bae8a0d04af4414a2c59403c4d",
+  "sha256Klartext": "c2467fe2f4f7d8051ecdae4604e5a44ce5ef30f4688afa296da9d8303900e758",
+  "sha256Siegel": "1b182e958cd63681528a3f5658c65b51966aa851baa25a6ffe75f55e1edb7ebf",
+  "sha256Schluessel": "01227c0735f7d375b89caa048d028d66721827820744a210a69fca20f47e7878",
+  "bytesKlartext": 5025230848,
+  "bytesSiegel": 5025230848,
+  "klartextGeloescht": true,
+  "hinweis": "Der Schluessel steht hier bewusst NICHT. sha256Schluessel ist der Fingerabdruck seiner 32 Rohbytes — damit beweist die spaetere Oeffnung, dass der vorgelegte Schluessel derselbe ist, mit dem versiegelt wurde. Verifiziert wurde durch Rueckentschluesselung im Arbeitsspeicher; es lag zu keiner Zeit eine zweite Klartext-Kopie auf der Platte."
+}

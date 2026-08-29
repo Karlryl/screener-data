@@ -1,0 +1,66 @@
+{
+  "schema": "early-detection-friedhof/v1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "regel": "R13 — Friedhof, Nur-Anhaengen, Herkunfts-Schliessung",
+  "rule": "Nur-Anhaengen. Ein Eintrag wird nie geloescht, nie umetikettiert und nie stillschweigend wiederbelebt. Wer eine beerdigte Hypothese neu aufnimmt, legt ein NEUES Protokoll an und verweist hier darauf.",
+  "eintraege": [
+    {
+      "id": "S-UG",
+      "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal (Konjunktion aus S-U und S-G)",
+      "stand": "GESCHEITERT — nicht weiterverfolgt",
+      "entschiedenAm": "2026-08-19",
+      "kriterium": "K1 (Mindest-Fallzahl), VORAB festgelegt in E2",
+      "grund": "29 Firmen mit reifem Erst-Ereignis gegen geforderte 300.",
+      "zahlen": {"fallzahl": 29, "fallzahlGefordert": 300, "feuerungenBand": 43, "firmenMitFeuerungBand": 41},
+      "zweitesKriterium": "K3a: 51,2 % aller Feuerungen im Bereich Verarbeitendes Gewerbe (Konzentrationsgrenze 50 %)",
+      "beschreibenderBefundBleibt": "Beide Signale treten 6,11-mal haeufiger gemeinsam auf, als es bei Unabhaengigkeit zu erwarten waere (43 beobachtet gegen 7,04 erwartet). Das ist eine Aussage ueber die KOPPLUNG beider Signale und bleibt als Beobachtung stehen — es ist kein tragfaehiges eigenes Signal und darf nie als eines zitiert werden.",
+      "beleg": "reports/studie/E2-basisraten-2026-08-19.json, Abschnitt muster_friedhof und signale/S-UG"
+    },
+    {
+      "id": "banken-sonderfamilie",
+      "beschreibung": "Eigene Signalfamilie fuer SIC 6000-6799 (Banken, Versicherer, Immobilien) mit Zinsertrag statt Warenumsatz als Wachstumsgroesse",
+      "stand": "VERTAGT — nicht widerlegt, nicht in dieser Familie",
+      "entschiedenAm": "2026-08-19",
+      "grund": "Der Bereich stellt die zweitgroesste Firmengruppe des Fensters, hat aber ein anderes Umsatzverstaendnis. Eine Sonderfamilie braucht eigene Basisraten und eine eigene Kalibrierung; jetzt eingeschoben waere sie eine ungetestete Variante in einer eingefrorenen Familie.",
+      "wiederaufnahme": "Nur als eigenes Folgeprotokoll mit eigener Basisraten-Etappe. Zeitschaetzung 2-3 Tage.",
+      "beleg": "reports/studie/E2-basisraten-2026-08-19.json, Abschnitt fragen"
+    },
+    {
+      "id": "treasury-nenner-option",
+      "beschreibung": "Die Luecke zwischen CommonStockSharesIssued und CommonStockSharesOutstanding ueber TreasuryStockShares schliessen, statt sie als Herkunfts-Vermerk mitzuschleppen",
+      "stand": "VERWORFEN fuer 2.0.0",
+      "entschiedenAm": "2026-08-19",
+      "grund": "Der Rueckfall von outstanding auf issued haelt an 99,43 % von 117.871 gemeinsamen Stichtagen die Richtung (issued >= outstanding), der Fehler geht also konservativ. Eine dritte Kennung im Nenner brachte 0,57 % Genauigkeit gegen eine zusaetzliche Fehlerquelle und eine dritte Herkunfts-Klasse je Wert. Nicht dieselbe Sache mit mehr Apparat messen.",
+      "zahlen": {"stichtageMitBeiden": 117871, "regelHaeltProzent": 99.43412713899093, "verletzt": 667},
+      "beleg": "reports/studie/E2-aktienzahl-2026-08-19.json, Abschnitt rueckfall_issued_outstanding"
+    },
+    {
+      "id": "netincome-alternative",
+      "beschreibung": "NetIncomeLoss (Ergebnis nach Steuern) als dritte Signalgroesse neben Umsatz und Betriebsergebnis",
+      "stand": "REGISTRIERT ALS FOLGEPROTOKOLL — bewusst nicht in der Familie",
+      "entschiedenAm": "2026-08-19",
+      "grund": "In E2 nur als Diagnose gefuehrt, ohne Schwelle und ohne Kalibrierung. Wer sie jetzt in die eingefrorene Familie einschoebe, testete eine Variante, deren Basisrate nie gemessen wurde — und vergroesserte die Testfamilie ohne Kalibrierung.",
+      "zahlen": {"aWerte": 118534, "firmenMitReihe": 10128},
+      "wiederaufnahme": "Eigenes Folgeprotokoll mit eigener Basisraten-Etappe und eigener Kalibrierung. Zeitschaetzung 2-3 Tage.",
+      "beleg": "reports/studie/E2-basisraten-2026-08-19.json, Abschnitt diagnose_nettoergebnis"
+    },
+    {
+      "id": "kurs-endpunkt",
+      "beschreibung": "Kurs-, Rendite- oder Preisausbruch als Endpunkt dieser Signalfamilie",
+      "stand": "VERBRAUCHT — praeregistriert getestet, gueltiges Null-Ergebnis",
+      "entschiedenAm": "2026-07-20",
+      "grund": "Der Endpunkt wurde in der 1.2.0-Linie praeregistriert getestet und lieferte ein gueltiges Nullergebnis. Er ist damit fuer diese Signalfamilie aufgebraucht; ein zweiter Anlauf waere ein zweiter Blick auf dieselben Daten mit derselben Frage.",
+      "durchsetzung": "endpunktSperre in preregistration.json, endpunktSperren in rules.json unter R4, Laufzeit-Sperre in lib/studie-verfassung.js::leseErgebnisdaten",
+      "beleg": "protocol/early-detection/1.2.0/preregistration.json, outcomes.primaryPriceBreakout"
+    },
+    {
+      "id": "themen-codierung-beweisarm",
+      "beschreibung": "Manuelle Themen-Codierung (T/E/L/M) als konfirmatorischer Beweis-Arm",
+      "stand": "UNPRUEFBAR — nicht widerlegt",
+      "entschiedenAm": "2026-08-16",
+      "grund": "Braucht zwei unabhaengige menschliche Codierer mit Kappa-Gate; die gibt es nicht. LLM-Label sind nach 1.2.0 qualitativeCoding.llmRestriction nie blinde unabhaengige Codierung.",
+      "abgrenzung": "Strang C ist KEIN Wiedereinstieg: dort ist Themenarbeit deskriptiv und prospektiv, LLM-Codierung nur mit mitgemessenem Rueckschau-Bias und ohne konfirmatorischen Anspruch. Dieser Eintrag bleibt stehen.",
+      "beleg": "Verfassung 2026-08-16, Teil 5, Streichung 1"
+    }
+  ]
+}

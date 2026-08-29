@@ -1,0 +1,13 @@
+{
+ "schema": "early-detection-zaehlprobe-freigabe/v1",
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "c0-freeze1b-2026-08-19",
+ "fenster": "kein Studienfenster - lebende EDGAR-Volltextsuche",
+ "registerEventHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
+ "registerZweig": "studie/c0-themenliste",
+ "registeredAt": "2026-08-19T22:36:27.777994Z",
+ "accessedAt": "2026-08-19T22:44:27.668Z",
+ "serverConfirmedAt": "2026-08-19T22:36:43.000Z",
+ "quelle": "gh api -i repos/Karlryl/screener-data/contents/protocol/early-detection/2.0.0/outcome-access-ledger.json?ref=studie/c0-themenliste — Date-Kopf der Antwort",
+ "bedeutung": "Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab."
+}

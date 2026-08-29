@@ -1,0 +1,316 @@
+{
+  "schema": "early-detection-preregistration/v2.0",
+  "identity": {
+    "protocolId": "FEM-SEC-US",
+    "version": "2.0.0",
+    "status": "preregistered",
+    "frozenAt": "2026-08-19T00:00:00.000Z",
+    "parentProtocol": "FEM-SEC-US@1.2.0",
+    "parentStatus": "SUPERSEDED_BY_CONSTITUTION_2026-08-16",
+    "lastSealedAncestor": "FEM-SEC-US@1.2.0",
+    "lastSealedAncestorManifestSha256": "GEBUNDEN_UEBER_hash-manifest.json_DER_VERSION_1.2.0",
+    "constitution": "Neue Verfassung der Early-Detection-Studie, 2026-08-16, 17 Regeln R1-R17",
+    "baseline": "GQS-00@1.1.0",
+    "productiveIntegration": "prohibited",
+    "signalFamilyId": "FEM-SEC-US-BESCHLEUNIGUNG@2.0.0",
+    "abgrenzung": "Diese Signalfamilie ist NICHT der Screener-Frueherkennungsmelder aus Masterplan 6.2 (Katalog-Ast E2, lib/e2-earnings-blowout.js, Yahoo-board-history). Die Namensgleichheit 'E2' ist eine Kollision zwischen Katalog-Ast und Studien-Etappe. Kein Studien-Artefakt haengt an PR #54 und umgekehrt."
+  },
+  "researchQuestion": "Zeigen Firmen mit praeregistriertem Beschleunigungs-Signal in den SEC-Zahlen eine hoehere Wachstums-Persistenz in den vier Folgequartalen als jede der vier Vergleichsbaselines?",
+  "researchQuestionStatus": "EINGEFROREN — Wortlaut unveraenderlich ab frozenAt; jede Aenderung startet ein neues Protokoll und verliert den konfirmatorischen Status.",
+  "currentVerdict": "OPEN_UNTIL_VALIDATION_WINDOW_TEST",
+
+  "signalFamily": {
+    "gemeinsameMechanik": {
+      "quelle": "SEC-Fundamentaldaten aus dem versiegelten Komponentenspeicher, PIT nach R6 (frueheste veroeffentlichte Fassung je (cik, tag, ddate, qtrs, uom))",
+      "wachstum": "symmetrisches Jahresvergleichs-Wachstum g = (x - x_minus4) / Mittelwert(|x|, |x_minus4|), gedeckelt auf +-2 (G_DECKEL)",
+      "beschleunigung": "a(t) = g(t) - g(t-1)",
+      "feuerung": "a(t) > 0 UND a(t-1) > 0 (zwei Beschleunigungsquartale in Folge) UND a(t) >= Schwelle(q) UND g(t) > 0",
+      "schwelle": "nachlaufendes Perzentil der Querschnittsverteilung von a ueber die Kalenderquartale q-5 bis q-2; unter 200 Werten im Pool gibt es keine Schwelle und das Quartal ist NICHT BEWERTBAR (R5)",
+      "perzentil": 95,
+      "perzentilHerkunft": "Endstand der E2-Kalibrierung im Entdeckungsfenster (P_START 90, ein Schritt nach oben, Zielband Feuerrate 0,5-2,5 % und mindestens 300 reife Firmen). Ab dieser Praeregistrierung ist P = 95 EINGEFROREN; im Pruef- und Endtestfenster wird NICHT nachkalibriert.",
+      "quellenwahl": "Vier eingefrorene Umsatzquellen mit Prioritaetsrang; gewaehlt wird die zum Signalzeitpunkt laengste auswertbare Serie, Gleichstand: Prioritaetsrang -> USD -> Einheit alphabetisch. Quelle je FIRMA fixiert. Die ganze Rechenkette eines Signals (g(t), Vorjahrespartner, g(t-1), a(t-1)) stammt aus DERSELBEN Serie — es wird nie ueber eine Quellengrenze gerechnet.",
+      "umsatzQuellenAllowlist": [
+        "Revenues",
+        "RevenueFromContractWithCustomerExcludingAssessedTax",
+        "SalesRevenueNet",
+        "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+      ],
+      "viertesQuartal": "Q4 = Geschaeftsjahr (qtrs=4) minus die drei Vorquartale desselben Fiskaljahres, alle vier aus derselben Kennung und Einheit; frueheste veroeffentlichte Fassung. Fehlt eine Komponente: NICHT BERECHENBAR, gezaehlt, nie geschaetzt.",
+      "partnerFenster": {"jahr": [330, 380], "quartal": [80, 110], "q4Komponenten": [[80, 110, 91], [165, 200, 182], [255, 295, 273]]},
+      "codestelle": "scripts/studie-basisraten.py — der Code ist die Wahrheit; diese Beschreibung ist an seinen SHA-256 im hash-manifest.json gebunden."
+    },
+    "varianten": [
+      {
+        "id": "H1",
+        "name": "S-U",
+        "groesse": "Quartalsumsatz aus der eingefrorenen Vier-Quellen-Allowlist",
+        "status": "konfirmatorisch",
+        "basisrateEntdeckung": {"feuerungen": 925, "auswertbareFirmenQuartale": 65809, "feuerrate": 0.014055828230181281, "reifeErstEreignisFirmen": 512, "quelle": "reports/studie/E2-basisraten-2026-08-19.json"}
+      },
+      {
+        "id": "H2",
+        "name": "S-G",
+        "groesse": "OperatingIncomeLoss (Betriebsergebnis), identische Mechanik, ohne Positivitaets-Filter auf den Rohwert",
+        "status": "konfirmatorisch",
+        "basisrateEntdeckung": {"feuerungen": 873, "auswertbareFirmenQuartale": 82642, "feuerrate": 0.010563635923622371, "reifeErstEreignisFirmen": 546, "quelle": "reports/studie/E2-basisraten-2026-08-19.json"}
+      }
+    ],
+    "nichtInDerFamilie": [
+      {"id": "S-UG", "grund": "beerdigt in friedhof.json, K1: 29 reife Erst-Ereignis-Firmen gegen geforderte 300. Der 6,1-fache Kopplungs-Ueberhang bleibt ein beschreibender Befund, nie ein Signal."},
+      {"id": "NetIncomeLoss-Alternative", "grund": "als Folgeprotokoll-Kandidat registriert. Wer sie jetzt einschoebe, testete eine Variante ohne Basisraten-Kalibrierung."},
+      {"id": "Banken-Sonderfamilie", "grund": "vertagt; eigenes Umsatzverstaendnis (Zinsertrag). Folgeprotokoll, nicht diese Familie."}
+    ]
+  },
+
+  "outcomes": {
+    "primaryEndpoint": {
+      "id": "wachstumsPersistenz",
+      "endpunktKlasse": "fundamental_folgequartale",
+      "definition": "positives symmetrisches Jahresvergleichs-Wachstum DERSELBEN fuer die Firma fixierten Quelle in mindestens 3 von q+1 bis q+4",
+      "musterHerkunft": "woertlich uebernommen aus FEM-SEC-US@1.2.0 outcomes.durability.economicMeasureRule ('positive year-over-year growth in at least three of q plus 1 through q plus 4'); uebersetzt auf die 2.0.0-Wachstumsdefinition, weil 2.0.0 symmetrisch statt asymmetrisch rechnet.",
+      "minimumQuarters": 4,
+      "verboten": "Kein Kurs, keine Rendite, kein Ergebnis-Etikett, kein Preis-Ausbruch. Der Endpunkt ist der EINZIGE dieser Familie.",
+      "nichtBerechenbar": "Fehlt ein Folgequartal derselben Quelle, heisst das Ergebnis NICHT BERECHENBAR (R5) und geht in die Unsicherheits-Schranken nach R11, nie als Misserfolg in den Zaehler."
+    },
+    "reife": {
+      "definition": "Ein Ereignis ist REIF, wenn nach seinem Bilanzstichtag mindestens vier weitere Fiskalquartale DERSELBEN Quellen-Basis im Fenster-Panel existieren. Reife ist eine EXISTENZ-Pruefung (IS NOT NULL); sie berechnet keinen einzigen Ergebniswert.",
+      "codestelle": "scripts/studie-basisraten.py::erst_ereignisse"
+    },
+    "rechtsZensur": {
+      "definition": "Ein Erst-Ereignis ist RECHTS-ZENSIERT, wenn seine vier Folgequartale aus Fenstergruenden gar nicht im Panel liegen KOENNEN: ordinal(accepted) + 4 * 80 Tage > ordinal(Panel-Rand).",
+      "achse": "accepted (Veroeffentlichungszeitpunkt) — genau die Achse, an der die Panel-Dateien geschnitten sind (scripts/studie-panel-bau.py).",
+      "untergrenze": "4 * 80 Tage ist die UNTERE Kante des Quartals-Paarungsfensters. Sie erklaert so wenige Ereignisse wie moeglich fuer zensiert und macht die Auffindbarkeit damit so niedrig wie moeglich — konservativ in der Richtung, die R9 verlangt.",
+      "erwartung": "Im Prueffenster duerfte die Zahl bei oder nahe null liegen, weil das Pufferjahr 2020 im Panel liegt und die Folgequartale traegt. Genau dafuer gibt es das Pufferjahr (R2). Eine Zensur-Quote deutlich ueber null waere ein Befund ueber die Fensterschnitte, kein Alibi fuer eine niedrige Auffindbarkeit.",
+      "musterHerkunft": "1.2.0 outcomes.primaryPriceBreakout.youngListingPolicy: 'separately right-censored; never treated as no-breakout'."
+    },
+    "auffindbarkeit": {
+      "formel": "reife Erst-Ereignisse / (Erst-Ereignisse - rechts-zensierte Erst-Ereignisse)",
+      "gate": {"minimum": 0.9, "gilt": "Signal-Arm UND Kontrollpool", "maxDifferenzPunkte": 10},
+      "regel": "R9 — Pass/Fail, nicht Fussnote. Die Vorstudie fiel mit 67 %/61 % genau hier durch."
+    }
+  },
+
+  "splits": {
+    "entdeckung": "2009-01-01/2015-12-31 (Signalfenster) mit Pufferjahr 2016 fuer die Reife",
+    "pruefung": "2017-01-01/2019-12-31 (Signalfenster) mit Pufferjahr 2020 fuer die Reife",
+    "endtest": "2021-01-01/2023-12-31 (Signalfenster) mit Pufferjahr 2024 fuer die Reife — VERSCHLUESSELT (aes-256-gcm), Nachweis in endtest-versiegelung.json",
+    "fensterAchse": "Jedes Fenster wird am `accepted`-Zeitstempel der SEC-Einreichung geschnitten, nie am Bilanzstichtag.",
+    "abweichungVonE2": "E2 hat sein Kalibrierungsband auf 2012-2016 gelegt und damit das Pufferjahr 2016 in das SIGNALband genommen. Das ist der Grund fuer die niedrige naive Auffindbarkeit des Entdeckungsfensters (512/731 = 70,0 %): 2016er Feuerungen koennen ihre Folgequartale nicht mehr im Panel haben. Ab 2.0.0 gilt verbindlich: Signalband = Fensterjahre OHNE Pufferjahr, Reife darf das Pufferjahr nutzen.",
+    "firmenDisjunkteReplikation": {"regel": "R3", "aufteilung": "Pruefsummen-Rest der CIK modulo 2", "status": "praeregistriert, ausgewertet in E4"},
+    "correctionLimit": 1,
+    "outcomeAccessBeforeSeal": "prohibited",
+    "outcomeLock": "Nach dem ersten Zugriff auf ein Endtest-Ergebnis darf keine Regelaenderung den konfirmatorischen Status behalten."
+  },
+
+  "tests": {
+    "anzahlGeplanterTests": 8,
+    "aufbau": "2 konfirmatorische Varianten (S-U, S-G) x 4 Baselines (R8), je Fenster",
+    "baselines": [
+      {"id": "a", "name": "gematchte Kontrollen", "definition": "je Signalfirma bis zu 5 Kontrollfirmen, gematcht nach Sektor (SIC-Division), Groesse (Bilanzsummen-Quartil), Kalenderquartal und Wachstumsniveau g(t); Signalfirmen sind aus dem Kontrollpool komplett ausgeschlossen (R3)."},
+      {"id": "b", "name": "Nur-Technik", "definition": "252-Sessions-Kursausbruch woertlich aus 1.2.0 ('close_t > max(close_t-252 through close_t-1), with no other 252-session breakout in t-63 through t-1') auf freien Kursdaten, gerechnet NUR auf der gemeinsamen Teilmenge.", "auffindbarkeitsGate": "gilt auch hier; reisst es, lautet das Verdikt hoechstens PASS_EX_TECHNIK, nie Voll-PASS.", "einschraenkung": "Freie Kursdaten decken rund 39 % ab und nur Ueberlebende. Diese Baseline ist deshalb strukturell schwaecher als a, c, d — das ist hier praeregistriert, nicht hinterher entschuldigt."},
+      {"id": "c", "name": "Karls Ist-System", "definition": "GQS-00@1.1.0-Schattenlauf mit Zeitpunkt-Ehrlichkeit.", "pflichtangabe": "Die 47-%-Abdeckungsluecke des Schattenlaufs steht in JEDEM Report, der diese Baseline nennt."},
+      {"id": "d", "name": "Niveau-Null", "definition": "gleich grosse, nach g(t) absteigend gereihte Gruppe im selben Kalenderquartal — ein Vergleichsmodell, das nur das WachstumsNIVEAU kennt und nichts von Beschleunigung weiss."}
+    ],
+    "teststatistik": {
+      "groesse": "Differenz der Persistenzraten (Signal minus Baseline)",
+      "seitigkeit": "einseitig",
+      "verfahren": "Firmen-Cluster-Bootstrap",
+      "replikate": 10000,
+      "startwert": 20260819,
+      "korrektur": {"verfahren": "Benjamini-Hochberg", "q": 0.05, "ueber": "alle 8 Tests des jeweiligen Fensters"}
+    },
+    "zusatznutzen": {
+      "musterHerkunft": "woertlich aus 1.2.0 primarySuccessCriteria (precisionLiftVsSectorSizeTimeBaselineMinimum 1.5 / precisionLift95PercentIntervalLowerBoundMinimum 1.0)",
+      "gegenBaselineA": {"verhaeltnisMinimum": 1.5, "intervallUntergrenzeMinimum": 1.0},
+      "gegenUebrigeBaselines": {"intervallUntergrenzeMinimum": 1.0, "strikt": true}
+    },
+    "variantenAusfall": "Faellt eine Variante an den Minima (unter 200 reife Erst-Ereignis-Firmen im Fenster), entfallen ihre 4 Tests nach dieser praeregistrierten Regel; die Benjamini-Hochberg-Korrektur laeuft dann ueber die verbleibenden Tests. Das ist keine nachtraegliche Auswahl — die Regel steht hier vor jedem Zugriff."
+  },
+
+  "primarySuccessCriteria": {
+    "minimumReifeErstEreignisFirmenJeVarianteJeFenster": 200,
+    "schwellenEbene": "Firmen-Ebene NACH der R3-Trennung (Firmen mit reifem ERST-Ereignis), je konfirmatorisch getesteter Variante, je Fenster.",
+    "schwellenBegruendung": "R3 macht die Firma zur statistischen Einheit; eine Schwelle auf Feuerungen wuerde Dichte mit Stichprobe verwechseln. Das 1.2.0-Doppelkriterium (200 mature events / 50 matrix signals) kollabiert in 2.0.0, weil Ereignis und Signal zusammenfallen — verbindlich ist die schaerfere Lesart. E2s eigenes Scheiternskriterium K1 zaehlte genauso (29 Firmen gegen 300).",
+    "auffindbarkeitsGate": {"minimum": 0.9, "maxDifferenzPunkte": 10},
+    "konzentrationsgrenzen": {"maximalerAnteilEinerSicDivision": 0.5, "maximalerAnteilEinesKalenderjahres": 0.4},
+    "verdiktBeiUnterschreitung": {
+      "eineVariante": "INCONCLUSIVE_DATA fuer diese Variante; ihre 4 Tests entfallen.",
+      "beideVarianten": "Die Studie endet als INCONCLUSIVE_DATA, das Endtest-Fenster bleibt zu, und die geparkte Karl-Geldfrage (bezahlte Daten ja/nein) wird nach R17 mit Gratis-Suchvermerk vorgelegt.",
+      "auffindbarkeitsGateRot": "INCONCLUSIVE_DATA fuer das betroffene Fenster; kein p-Wert wird berechnet (R9)."
+    }
+  },
+
+  "sensitivitaeten": {
+    "status": "praeregistriert, OHNE konfirmatorischen Status",
+    "liste": [
+      {"id": "jeAktie", "regel": "R10", "inhalt": "Umsatz je Aktie als Pflicht-Nebenrechnung, Auflagen siehe jeAktieRegel"},
+      {"id": "splitKennzeichen", "inhalt": "Je-Aktie-Nebenrechnung MIT und OHNE splitverdaechtige Ereignisse"},
+      {"id": "verwaesserteTeilmenge", "inhalt": "Periodendurchschnitt als Nenner auf der Teilmenge, wo er existiert (11,7 %)"},
+      {"id": "firmenDisjunkteReplikation", "regel": "R3", "inhalt": "Aufteilung per Pruefsummen-Rest der CIK, beide Haelften getrennt ausgewertet"},
+      {"id": "vintageVergleich", "regel": "R6", "inhalt": "Alt-Stand gegen reprozessiert, je Quartal, auf Fakten-Ebene — nie als Fenster-Aggregat"}
+    ]
+  },
+
+  "endpunktSperre": {
+    "verbrauchtAm": "2026-07-20",
+    "verbraucht": "Kurs-Endpunkt — praeregistriert getestet, gueltiges Null-Ergebnis (FEM-SEC-US@1.2.0-Linie)",
+    "regel": "Diese Signalfamilie (Beschleunigung auf SEC-Fundamentaldaten) erhaelt NIE wieder einen Kurs-, Rendite- oder Preis-Endpunkt — auch nicht in Folgeprotokollen, auch nicht als Sekundaerendpunkt. Der einzige Endpunkt von FEM-SEC-US@2.0.0 ist die Wachstums-Persistenz der Folgequartale.",
+    "endpunktKlasse": "fundamental_folgequartale",
+    "verboteneKlassen": ["kurs", "preis", "rendite", "price", "return", "breakout"],
+    "durchsetzung": [
+      "1. dieser Block in der versiegelten Praeregistrierung",
+      "2. derselbe Eintrag dauerhaft in rules.json unter R4 (endpunktSperren) — die Registry ueberlebt Protokollversionen, die Praeregistrierung nicht",
+      "3. lib/studie-verfassung.js::leseErgebnisdaten wirft VerfassungsBruch, sobald der Endpunkt-Name eine verbotene Klasse trifft — vor jeder Anmeldungs-Pruefung, also auch fuer ordnungsgemaess angemeldete Laeufe"
+    ],
+    "warumDreifach": "Ein Registry-Eintrag allein waere ein Versprechen; ein Waechter allein stuerbe mit dem Testlauf; die Laufzeit-Sperre greift auch in jedem kuenftigen E4/E5-Skript."
+  },
+
+  "grundgesamtheit": {
+    "definition": "SEC-Einreicher mit auswertbarem Quartalsumsatz in einer der vier eingefrorenen Quellen",
+    "ausgeschlossen": "3.959 von 11.024 Firmen des Entdeckungsfensters (35,91 %) melden in keiner der vier Quellen einen auswertbaren Umsatz (u. a. Banken, Versicherer, Beteiligungen)",
+    "nennerHinweis": "Der Nenner 11.024 ist 'Firmen mit Umsatzreihe (7.065) plus Firmen ohne jede Quelle (3.959)' — so rechnet scripts/studie-basisraten.py. Das Entdeckungsfenster zaehlt daneben 11.156 Firmen mit angegebenem Geschaeftsjahresende; gegen diesen Nenner waeren es 35,49 %. Beide Zahlen stehen hier, damit spaeter niemand die eine fuer die andere haelt.",
+    "pflichtsatz": "Ueber Firmen ohne auswertbaren Umsatz in den vier eingefrorenen Quellen trifft diese Studie keine Aussage. Ihre Ergebnisse gelten nicht fuer den ganzen US-Markt.",
+    "berichtspflicht": "Der Pflichtsatz und die je Fenster gemessene Ausschlussquote stehen in JEDEM Folgereport (E3-Probe, E4, E5, E6, E6b)."
+  },
+
+  "jeAktieRegel": {
+    "status": "praeregistriert MIT AUFLAGEN",
+    "nenner": "CommonStockSharesOutstanding (primaer), Rueckfall CommonStockSharesIssued mit protokollierter Herkunft je Wert; Richtungsgarantie nachgezaehlt: an 99,43 % von 117.871 gemeinsamen Stichtagen ist issued >= outstanding, der Rueckfall-Fehler geht konservativ",
+    "verboten": "EntityCommonStockSharesOutstanding als Nenner — Stichtag ist der Einreichungstag, deckt das Ereignisfenster zu 2,0 % statt 84,0 %",
+    "sensitivitaet": "verwaesserter Periodendurchschnitt nur als Nebenrechnung auf der Teilmenge, wo er existiert (11,7 %)",
+    "abdeckung": "430 von 512 Firmen (84,0 %) der S-U-Kohorte tragen den Nenner im Ereignisquartal + 4 Folgequartalen; Abdeckungsquote ist Pflichtangabe jedes Reports; fehlende Firmen erhalten Unsicherheits-Schranken nach R11 (alle fehlenden = Erfolg / alle = Misserfolg)",
+    "splitVorbehalt": "OFFEN: Aktiensplits sind aus dieser Quelle nicht von echter Verwaesserung zu trennen (9,7 % der Firmen mit Split-Verdacht = Verhaeltnis auf 1 % genau ein gaengiges Splitverhaeltnis). Praeregistrierte Robustheit: Je-Aktie-Nebenrechnung wird MIT und OHNE splitverdaechtige Ereignisse berichtet. Keine externe Split-Historie in E3 (neue Quelle = neue R7-Pflichten); Gratis-Suche nach R17 ist registrierte Folgefrage, verzoegert E3 nicht.",
+    "zukaufWaechter": "NICHT BERECHENBAR mit freien Daten (R10). Das steht als Pflichtsatz im Endbericht und wird nicht wegdefiniert."
+  },
+
+  "kennungsFalle": {
+    "befund": "Die Umsatz-Kennung wechselt zwischen den Fenstern den Namen (ASC 606, in Kraft 2018), gemessen als Anteil der periodischen Berichte: RevenueFromContractWithCustomerExcludingAssessedTax 0,0 % (Entdeckung) -> 23,5 % (Pruefung); SalesRevenueNet 27,8 % -> 11,4 %. Die Sammelkennung Revenues bleibt dagegen stabil bei 46,0 % -> 46,0 %. Quelle: reports/studie/E1-abdeckung-2026-08-19.md, Abschnitt 4.",
+    "strukturloesung": "Eingefrorene Vier-Quellen-Allowlist mit Prioritaet + Quelle-je-Firma-Regel (laengste Serie zum Signalzeitpunkt); Vergleiche NIE ueber eine Namensgrenze — ein Kennungswechsel erzeugt eine GEZAEHLTE Luecke, nie einen Sprung. Nachweis Entdeckungsfenster: der Naht-Zaehler steht bei 0 (vorher 2.663). EHRLICHKEITS-VORBEHALT aus dem E2-Report: diese Null ist seit der Quellen-Umstellung STRUKTURELL — jede Rechenkette stammt von vornherein aus einer Reihe, also kann nichts mehr gemischt sein. Der Nachzaehler ist eine Rueckversicherung, kein bestandener unabhaengiger Test.",
+    "registrierteErwartung": "Im Pruef- und Endtest-Fenster wird Prioritaet 2 einen wesentlichen Teil der Firmen tragen (Entdeckung: 0 %). Dieser Mixwechsel ist HIER praeregistriert und darf spaeter nicht als Verhaltensaenderung interpretiert werden."
+  },
+
+  "zaehlprobe": {
+    "regel": "R15b — Nur-Zaehlen-Probe VOR der Einmal-Oeffnung",
+    "zweck": "Fallzahl und Auffindbarkeit eines Fensters pruefen, ohne einen einzigen Ergebniswert zu berechnen. Ohne sie faellt eine zu kleine Stichprobe erst NACH der verbrannten Einmal-Oeffnung auf (Angriff P3).",
+    "skript": "scripts/studie-zaehlprobe.py",
+    "ausgabeAllowlist": [
+      "feuerungen",
+      "auswertbare_firmen_quartale",
+      "feuerrate",
+      "firmen_mit_erst_ereignis",
+      "zensierte_erst_ereignisse",
+      "fallzahl",
+      "auffindbarkeit",
+      "fallzahl_mit_aktienzahl_nenner",
+      "kontrollpool_firmen",
+      "kontrollpool_auffindbarkeit",
+      "ampel"
+    ],
+    "ampelWerte": ["GRUEN", "INCONCLUSIVE_DATA"],
+    "umschlagAllowlist": [
+      "schema",
+      "protokoll",
+      "runId",
+      "fenster",
+      "fensterVon",
+      "fensterBis",
+      "panelRand",
+      "perzentil",
+      "serverConfirmedAt",
+      "accessedAt",
+      "ersterZugriffAm",
+      "beendetAm",
+      "gelesenePfade",
+      "geschriebenePfade",
+      "ergebnisdatenBeruehrt",
+      "siegelWache",
+      "manifestGeprueft",
+      "umgebung",
+      "zaehler",
+      "varianten"
+    ],
+    "verboten": "Firmen-Kennungen, Monatsreihen, Wachstums- oder Persistenzwerte, Aktienzahl-Werte, jede Groesse, die nicht in der Ausgabe-Allowlist steht. Ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter.",
+    "kontrollpool": {
+      "definition": "Firmen des Fensters mit mindestens einem auswertbaren Firmen-Quartal im Signalband, die im Signalband NIE feuern (R3: Signalfirmen sind komplett ausgeschlossen).",
+      "referenzquartal": "das frueheste auswertbare Firmen-Quartal der Firma im Signalband — das strukturelle Gegenstueck zum Erst-Ereignis",
+      "rechenGleichbehandlung": "Signal-Arm und Kontrollpool laufen durch EXAKT dieselbe Funktion (scripts/studie-basisraten.py::erst_ereignisse) mit exakt derselben Behandlung fehlender Felder. Genau daran ist die Vorstudie gescheitert (R5).",
+      "keinMatching": "Das Sektor-/Groessen-Matching der Baseline a laeuft in E3 NICHT. Gezaehlt wird nur die Pool-Auffindbarkeit — eine Zaehlung, kein Ergebnis."
+    },
+    "reihenfolge": [
+      "1. preregistration.json + hash-manifest.json fertig; Manifest bindet Praeregistrierung UND Probe-Skript UND studie-basisraten.py per SHA-256. Commit + Push auf origin.",
+      "2. Register-Eintrag je Zaehllauf anhaengen (typ count_only_probe_authorized, runId, fenster, allowedOutputs, registeredAt, accessedAt), Commit, Push.",
+      "3. Server-Bestaetigung einholen: per gh api verifizieren, dass der Register-Commit auf origin liegt; der Date-Kopf der API-Antwort (GitHub-Serveruhr) wird als serverConfirmedAt ins Lauf-Protokoll geschrieben. Kein Zugriff ohne diese Bestaetigung.",
+      "4. Zaehllauf Prueffenster: panel-validierung.sqlite nur lesend, aufgeloester Pfad (realpath-Mauer).",
+      "5. Zaehllauf Endtest: AUSGESETZT (Sperrzone). Kein Schluesselzugriff, kein Register-Eintrag, kein Entschluesseln.",
+      "6. Erstzugriffszeit jedes ausgefuehrten Laufs muss > serverConfirmedAt und >= accessedAt sein — der Waechter vergleicht."
+    ],
+    "sperrzoneEndtest": {
+      "wortlaut": "Studien-Endtest ist VERSCHLUESSELT: nicht oeffnen, keinen Oeffner bauen.",
+      "quelle": "Karl, Nachtlauf-Auftrag 2026-08-19",
+      "folge": "scripts/studie-zaehlprobe.py kennt das Endtest-Fenster, prueft seine Siegel-Wache und WEIGERT sich dann. Es enthaelt keinen Entschluesselungs-Aufruf. Die Oeffnung gehoert nach E5 und laeuft ueber das Oeffnungsprotokoll, nicht ueber die Zaehlprobe.",
+      "einordnung": "Die Freigabe eines Endtest-Zaehllaufs ist keine Methodik-Frage, sondern eine Sperrzonen-Freigabe — und die ist Karls Entscheidung."
+    }
+  },
+
+  "abweichungenVomElternprotokoll": [
+    {"feld": "researchQuestion", "eltern": "Frueherkennungs-Matrix mit Kurs-Ausbruch und GQS-Vorlauf", "jetzt": "Beschleunigung auf SEC-Zahlen gegen vier Baselines, Endpunkt Wachstums-Persistenz", "grund": "Verfassung 2026-08-16 Strang B; der Kurs-Endpunkt ist verbraucht (endpunktSperre)."},
+    {"feld": "outcomes.primaryPriceBreakout", "eltern": "konfirmatorischer Endpunkt", "jetzt": "nur noch als Baseline b (Nur-Technik) und nur auf der gemeinsamen Teilmenge", "grund": "Freie Kursdaten decken rund 39 % ab und nur Ueberlebende (Verfassung Teil 5, Streichung 2)."},
+    {"feld": "primarySuccessCriteria.minimumMatureEvents/minimumMatrixSignals", "eltern": "200 mature events UND 50 matrix signals", "jetzt": "200 reife Erst-Ereignis-FIRMEN je Variante je Fenster", "grund": "In 2.0.0 fallen Ereignis und Signal zusammen; das Doppelkriterium kollabiert. Gewaehlt ist die schaerfere Lesart."},
+    {"feld": "statistics (DSR/PBO/Hansen SPA)", "eltern": "nicht gefordert", "jetzt": "nicht gefordert", "grund": "Verfassung Teil 5, Streichung 4: ohne Strategie-Performance-Behauptung nicht erforderlich. Wird der Preis-Anhang je zur Performance-Behauptung, gelten sie sofort."},
+    {"feld": "Wachstumsdefinition", "eltern": "growth_q = revenue_q / revenue_q-4 - 1, nur bei positivem Nenner", "jetzt": "symmetrisch, gedeckelt +-2", "grund": "Der asymmetrische Bruch ist bei kleinen und bei negativen Basen unbrauchbar; die symmetrische Form ist beidseitig beschraenkt und traegt auch das Betriebsergebnis (S-G)."},
+    {"feld": "qualitativeCoding / historicalTimeCapsules / aiRemoval", "eltern": "Bestandteil des Protokolls", "jetzt": "nicht Bestandteil dieser Familie", "grund": "Verfassung Teil 5, Streichung 1: Themen-Codierung als Beweis-Arm ist beerdigt (Status 'unpruefbar'). Themenarbeit lebt deskriptiv in Strang C."}
+  ],
+
+  "abweichungenCodeGegenDokument": [
+    {
+      "stelle": "Signalbedingung (b)",
+      "entscheidDokument": "a(t) > nachlaufendes P95",
+      "code": "scripts/studie-basisraten.py::signale — 'jetzt[\"a\"] >= grenze'",
+      "gilt": "der Code",
+      "wirkung": "Gleichstand mit der Schwelle zaehlt als Feuerung. Bei stetigen Groessen praktisch wirkungslos, aber die Praeregistrierung nennt die Form, die wirklich gerechnet wird."
+    },
+    {
+      "stelle": "Perzentil 95",
+      "entscheidDokument": "P95 als eingefrorener Parameter",
+      "code": "P_START = 90, P_ERLAUBT = (80, 85, 90, 95), hoechstens zwei regelbasierte Schritte; im E2-Lauf endete die Kalibrierung fuer S-U und S-G bei 95",
+      "gilt": "der Code — 95 ist ein KALIBRIERUNGSERGEBNIS des Entdeckungsfensters, kein a priori gesetzter Wert",
+      "wirkung": "Ab dieser Praeregistrierung ist 95 eingefroren. Im Pruef- und Endtestfenster wird nicht nachkalibriert; kaeme dort ein anderes Perzentil besser heraus, waere das ein Befund, keine Erlaubnis."
+    },
+    {
+      "stelle": "Ausschlussquote der Grundgesamtheit",
+      "entscheidDokument": "3.959 von 11.156 Firmen (35,91 %)",
+      "code": "3.959 / (7.065 + 3.959) = 3.959 / 11.024 = 35,91 %; 11.156 ist die Zahl der Firmen mit angegebenem Geschaeftsjahresende",
+      "gilt": "der Code",
+      "wirkung": "Die Prozentzahl stimmt, der Nenner im Entscheid-Dokument nicht. Gegen 11.156 waeren es 35,49 %. Beide Nenner stehen in der Klausel."
+    },
+    {
+      "stelle": "Dateiname des Prueffensters",
+      "entscheidDokument": "panel-pruefung.sqlite",
+      "code": "scripts/studie-panel-bau.py: Fenstername 'validierung' -> panel-validierung.sqlite",
+      "gilt": "der Code",
+      "wirkung": "Nur ein Name. Die Zaehlprobe spricht das Fenster als 'pruefung' an und loest es auf den ausgelieferten Dateinamen auf."
+    },
+    {
+      "stelle": "Fenstergrenzen des Entdeckungsfensters",
+      "entscheidDokument": "rules.json: entdeckung 2009q1..2015q4, Pufferjahre 2016 und 2020",
+      "code": "scripts/studie-basisraten.py: FENSTER_BIS 2016-12-31, BAND_JAHRE (2012, 2016) — das Pufferjahr 2016 liegt im Kalibrierungsband",
+      "gilt": "die Registry fuer 2.0.0 ab hier; der E2-Lauf bleibt unveraendert in der Akte",
+      "wirkung": "Erklaert die naive Auffindbarkeit 512/731 = 70,0 % des Entdeckungsfensters. Ab dieser Praeregistrierung ist das Signalband immer OHNE Pufferjahr; die Reife darf das Pufferjahr nutzen. Fuer das Pruefenster heisst das: Signalband 2017-2019, Reife bis 2020-12-31."
+    },
+    {
+      "stelle": "Kennungs-Falle, zweite Zahlenreihe",
+      "entscheidDokument": "Revenues 27,8 % -> 11,4 %",
+      "code": "reports/studie/E1-abdeckung-2026-08-19.md Abschnitt 4: 27,8 -> 11,4 gehoert zu SalesRevenueNet; Revenues steht in beiden Fenstern bei 46,0 %",
+      "gilt": "der Report",
+      "wirkung": "Die Kennung war vertauscht. Die Aussage 'die Umsatz-Kennung wechselt den Namen' bleibt richtig, aber sie wechselt von SalesRevenueNet zu RevenueFromContractWithCustomerExcludingAssessedTax, nicht von Revenues."
+    }
+  ],
+
+  "pflichtsaetzeImReport": [
+    "Ueber Firmen ohne auswertbaren Umsatz in den vier eingefrorenen Quellen trifft diese Studie keine Aussage. Ihre Ergebnisse gelten nicht fuer den ganzen US-Markt.",
+    "Der Zukauf-Waechter (Akquisitions-Anteil am Wachstum) ist mit freien Daten NICHT berechenbar. Die Je-Aktie-Rechnung faengt nur den Kapitalerhoehungs-Teil.",
+    "Das Universum sind SEC-Einreicher mit ausreichender Historie — keine ueberlebenden-sichere Vollerhebung. Die CIK ist Firmen-, keine Wertpapier-Identitaet.",
+    "PSEUDO-PROSPEKTIV, nie vollstaendig blind: Schwellen kommen regelbasiert aus der Entdeckungs-Verteilung, aber der Rueckschau-Kanal ist nicht vollstaendig eliminierbar. Der einzige wirklich blinde Test ist die Vorwaerts-Mitschrift.",
+    "2009q1 ist in beiden Beobachtungs-Staenden leer (die SEC liefert dort ein Archiv ohne Datenzeilen aus). Wer 2009q1 als Startpunkt nimmt, rechnet mit einem Quartal ohne Daten."
+  ]
+}
