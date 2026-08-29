@@ -34,7 +34,17 @@ jobs:
     steps:
       # actions/checkout@v4 = Konvention der LESENDEN Workflows (weekly-guard.yml).
       # Die SHA-Pins in daily-pull.yml existieren nur wegen contents: write.
+      #
+      # fetch-depth: 0 wie im prep-Job von daily-pull.yml (dort F-CI-004). Grund hier:
+      # tests/studie-r1-register.test.js verankert die Append-only-Kette des
+      # Zugriffs-Registers AUSSERHALB der Datei in der Git-Historie und behandelt eine
+      # unvollstaendige Historie bewusst als ROT statt als stillen Skip — ein flacher
+      # Klon koennte genau die Revision verbergen, die eine Manipulation zeigt. Mit dem
+      # Standard fetch-depth: 1 ist dieser Anker im PR-Check strukturell nicht belegbar
+      # und der Test daher unabhaengig vom PR-Inhalt rot.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
