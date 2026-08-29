@@ -50,6 +50,32 @@ function pruefe(wurzel) {
   });
 }
 
+// Substrat-Weiche (Orchestrator-Ruling 2026-08-29 14:10). W1/W2/W3 fahren den ECHTEN
+// Waechter gegen den Siegelstore. Ohne EARLY_DETECTION_DATA_ROOT existiert dieser Store
+// nicht (R12a verbietet einen fest verdrahteten Pfad) — der Waechter meldet dann
+// "Speicherort unbekannt" und die drei Proben werden rot, ohne dass an C0 irgendetwas
+// kaputt waere. Das ist ein FEHLENDES SUBSTRAT, kein Befund.
+//
+// Ausgewiesen wird es als LAUTER Skip, nie als stiller Durchmarsch: TAP-SKIP mit
+// Begruendung am Testnamen, Zaehler in der Summenzeile (skipped 3) UND eine
+// ::warning::-Annotation im CI-Log. Wer die Datei MIT gesetztem Store faehrt — lokal
+// oder in einem Job, der den Store mitbringt — bekommt unveraendert alle 14 Proben.
+const SUBSTRAT_FEHLT = process.env.EARLY_DETECTION_DATA_ROOT
+  ? null
+  : 'SUBSTRAT FEHLT: EARLY_DETECTION_DATA_ROOT ist nicht gesetzt — der echte Waechterlauf (W1/W2/W3) wurde NICHT geprueft';
+if (SUBSTRAT_FEHLT) {
+  console.log(`::warning::tests/studie-c0.test.js: ${SUBSTRAT_FEHLT}`);
+}
+
+// FALLE, an der die erste Fassung dieses Gates hing (node v24, hier verifiziert):
+// steht der Schluessel `skip` ueberhaupt im Options-Objekt, faengt node einen
+// GEWORFENEN Fehler des Testkoerpers ab und meldet ihn als SKIP — `{ skip: null }`
+// laesst den Koerper laufen, verschluckt die Assertion und zaehlt sie NICHT als fail
+// (Exit 0). Genau der stille Durchmarsch, den dieses Gate verhindern soll. Darum wird
+// das Options-Objekt nur im Skip-Fall ueberhaupt gebaut; sonst geht `{}` hinein, und
+// ein echter Fehlschlag bleibt rot.
+const NUR_MIT_SUBSTRAT = SUBSTRAT_FEHLT ? { skip: SUBSTRAT_FEHLT } : {};
+
 // Eine Arbeitskopie: Skript + Protokoll-Ordner. Die grossen Rohdaten bleiben, wo sie
 // sind — sie kommen ueber EARLY_DETECTION_DATA_ROOT und werden nur gelesen.
 function arbeitskopie() {
@@ -187,12 +213,12 @@ test('C0: die beiden Freezes haengen aneinander', () => {
   assert.equal(zwei.stufe, 'FREEZE_2');
 });
 
-test('W1: der ausgelieferte Stand geht durch den Waechter', () => {
+test('W1: der ausgelieferte Stand geht durch den Waechter', NUR_MIT_SUBSTRAT, () => {
   const lauf = pruefe(REPO);
   assert.equal(lauf.status, 0, `pruefen ist auf dem Auslieferungsstand rot:\n${lauf.stdout}${lauf.stderr}`);
 });
 
-test('W2: ein umbenanntes Thema wird ROT', () => {
+test('W2: ein umbenanntes Thema wird ROT', NUR_MIT_SUBSTRAT, () => {
   const kopie = arbeitskopie();
   const gruen = pruefe(kopie);
   assert.equal(gruen.status, 0, 'Die unveraenderte Arbeitskopie ist schon rot — dann beweist die Sabotage nichts');
@@ -208,7 +234,7 @@ test('W2: ein umbenanntes Thema wird ROT', () => {
   fs.rmSync(kopie, { recursive: true, force: true });
 });
 
-test('W3 (Meta): ohne den Hash-Vergleich findet der Waechter nichts mehr', () => {
+test('W3 (Meta): ohne den Hash-Vergleich findet der Waechter nichts mehr', NUR_MIT_SUBSTRAT, () => {
   const kopie = arbeitskopie();
   const skript = path.join(kopie, 'scripts', 'studie-c0.py');
   const quelle = fs.readFileSync(skript, 'utf8');
