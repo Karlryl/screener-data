@@ -435,5 +435,43 @@ t('M5a: honestYahooLabel selbst bleibt die reine String-Abbildung (unberuehrt)',
   assert.equal(yahooLabelFuer({}, cells([1])), 'yahoo-adjusted');
 });
 
+// ─── 12. N1 — der Beleg muss das GANZE Fenster decken (ENTSCHIED 52, Option B) ───
+// Frueher genuegten 2 belegte Positionen irgendwo im Fenster, um den Tausch ALLER n
+// Positionen zu lizenzieren. Beide Richtungen: voll gedeckt tauscht weiter, eine einzige
+// blinde Position verweigert.
+t('N1: voll gedecktes Fenster (n von n Umsatzpaaren) tauscht weiterhin', () => {
+  const s = snap('VOLL', [10, 20, 30, 40], [100, 200, 300, 400]);
+  const r = migrateSnapshot(s, secOf([11, 21, 31, 41], [100, 200, 300, 400]));
+  assert.equal(r.alignment.pairs, 4);
+  assert.equal(r.reason, 'sec-preferred');
+  assert.equal(r.label, 'sec-gaap');
+  assert.deepEqual(plain(s.annual.annualOpInc), [11, 21, 31, 41]);
+});
+
+t('N1: EINE blinde Fensterposition verweigert den Tausch (frueher: durchgewunken)', () => {
+  // 3 von 4 Umsatzpaaren belegt — unter der alten Schwelle (>= 2) waeren alle vier
+  // Positionen getauscht worden, die vierte ohne jeden Beleg.
+  const s = snap('BLIND', [10, 20, 30, 40], [100, 200, 300, null]);
+  const r = migrateSnapshot(s, secOf([11, 21, 31, 41], [100, 200, 300, 400]));
+  assert.equal(r.alignment.pairs, 3);
+  assert.equal(r.reason, 'alignment-unprovable');
+  assert.equal(r.label, 'yahoo-adjusted');
+  assert.deepEqual(plain(s.annual.annualOpInc), [10, 20, 30, 40], 'kein Wert darf wandern');
+});
+
+t('N1 AUTO-REVERT: ein bestehender sec-gaap-Treffer mit blinder Position faellt zurueck', () => {
+  // Genau die 14 Namen aus dem N1-Memo: heute getauscht, morgen unbelegt -> die bewahrte
+  // Yahoo-Reihe kommt zurueck, ohne Sonderpfad und ohne Grandfathering.
+  const s = snap('RTEZ', [11, 21, 31, 41], [100, 200, 300, 400], 'sec-gaap');
+  s.annual.annualOpIncYahoo = cells([10, 20, 30, 40]);
+  s.meta.opIncSourceYahoo = 'yahoo-adjusted';
+  const r = migrateSnapshot(s, secOf([11, 21, 31, 41], [100, null, 300, 400]));
+  assert.equal(r.reason, 'alignment-unprovable');
+  assert.equal(r.label, 'yahoo-adjusted');
+  assert.deepEqual(plain(s.annual.annualOpInc), [10, 20, 30, 40]);
+  assert.equal(s.annual.annualOpIncYahoo, undefined, 'nach dem Rueckweg kein Schattenfeld');
+  assert.equal(s.meta.opIncSourceYahoo, undefined);
+});
+
 if (fails) { console.error(`\n${fails} Pruefung(en) gerissen.`); process.exit(1); }
 console.log('\nalle Pruefungen gruen.');

@@ -48,6 +48,9 @@
  * Ausrichtung je Name AM UMSATZ BELEGT — in beiden Quellen eindeutig, keine
  * Definitionsfrage — mit derselben 2-%-Schwelle wie die Erhebung vom 28.07.
  * Kein Beleg -> kein Tausch. Die Luecke wird benannt, nicht erfunden.
+ * Seit N1 (ENTSCHIED 52) deckt der Beleg das GANZE Fenster: getauscht werden alle n
+ * Positionen, also braucht jede ihr eigenes Umsatzpaar. Eine Teil-Deckung belegte
+ * frueher zwei Positionen und lizenzierte trotzdem den Tausch aller.
  *
  * ─── DIE ERSETZUNGSREGEL ────────────────────────────────────────────────────────
  * Ersetzt wird POSITIONSWEISE ueber die LAENGE der Yahoo-Reihe. Die tiefere SEC-Reihe
@@ -90,9 +93,6 @@ const DEFAULT_DIRS = ['snapshots', 'snapshots-smallcap'];
 // Schwelle das Tor. Eine Konstante am Modulkopf wie MAX_UEBERSPRUNGEN_ANTEIL in
 // filter-snapshot-merge.js — dieses Repo fuehrt Schwellen dort, nicht in einer Config.
 const REV_ALIGN_TOL = 0.02;
-// Ein einziges uebereinstimmendes Umsatzjahr belegt keine Ausrichtung (jede Reihe trifft
-// irgendwo einmal). Zwei Positionen sind das Minimum, ab dem ein Versatz auffiele.
-const REV_ALIGN_MIN_PAIRS = 2;
 
 const val = (x) => (x && typeof x === 'object') ? x.value : x;
 const fin = (x) => Number.isFinite(val(x));
@@ -178,7 +178,16 @@ function decideOpInc(snapshot, secEntry) {
     return { label: yahooLabel, opInc: null, reason: 'no-yahoo-window', alignment: null };
   }
   const alignment = revAlignment(annual.annualRev, secEntry.annualRev, n);
-  if (alignment.pairs < REV_ALIGN_MIN_PAIRS) {
+  // N1 (Memo 30.08., ENTSCHIED 52 — Option B ratifiziert): VOLLE Fensterdeckung. Getauscht
+  // werden ALLE n Positionen (Schleife unten), also braucht auch JEDE ein eigenes
+  // Umsatzpaar. Die alte Schwelle (>= 2 Paare irgendwo im Fenster) belegte zwei Positionen
+  // und lizenzierte den Tausch von bis zu fuenf — am Live-Bestand vom 30.08. trugen 14 von
+  // 128 getauschten Zeilen zusammen 19 unbelegte Zellen. pairs kann n nie ueberschreiten
+  // (revAlignment laeuft ueber min(n, y.length, s.length)), die Bedingung ist damit exakt
+  // "alle n belegt". Kein Grandfathering: die Transformation bleibt eine reine Funktion,
+  // die 14 fallen beim naechsten Lauf auf ihre bewahrte Yahoo-Reihe zurueck und holen sich
+  // den Tausch selbsttaetig zurueck, sobald die SEC-Schicht die fehlenden Jahre nachliefert.
+  if (alignment.pairs < n) {
     return { label: yahooLabel, opInc: null, reason: 'alignment-unprovable', alignment };
   }
   if (alignment.maxRel > REV_ALIGN_TOL) {
@@ -357,5 +366,5 @@ if (require.main === module) main(process.argv.slice(2));
 
 module.exports = {
   decideOpInc, migrateSnapshot, honestYahooLabel, yahooLabelFuer, revAlignment, loadSecLayer, run,
-  SECANNUAL_FILES, DEFAULT_DIRS, REV_ALIGN_TOL, REV_ALIGN_MIN_PAIRS,
+  SECANNUAL_FILES, DEFAULT_DIRS, REV_ALIGN_TOL,
 };
