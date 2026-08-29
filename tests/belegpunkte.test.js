@@ -129,8 +129,16 @@ try {
   }), 'utf8');
   fixtureGelegt = true;
 } catch (e) {
-  console.warn('::warning::belegpunkte: Fixture-Snapshot nicht schreibbar (' + e.message +
-    ') — der Verdrahtungs-Durchgang wurde NICHT gemessen.');
+  // N6: frueher ein ::warning:: mit `fail` unveraendert 0 — der Waechter endete mit
+  // Exit 0, waehrend GENAU die drei Pruefungen entfielen, die die Commit-Message als
+  // Bruchstelle ausweist (Mapper-Verdrahtung, "liest die Reihe wirklich",
+  // Survival-Ausschluss). scripts/test-gate.js sah das nicht: sein SKIP-Detektor
+  // verlangt 0 ok UND 0 fail, hier standen 6 ok. Seit M9 schreibt die Fixture in ein
+  // mkdtemp-Verzeichnis — ein Fehlschlag ist damit kein legitimer Umweltzustand mehr,
+  // sondern ein echter Defekt. Wer nicht messen kann, meldet das rot, nicht beilaeufig.
+  fail++;
+  console.error('FAIL   (N6) Fixture-Snapshot nicht schreibbar (' + e.message +
+    ') — der Verdrahtungs-Durchgang wurde NICHT gemessen und darf nicht als gruen gelten.');
 }
 
 if (fixtureGelegt) {
