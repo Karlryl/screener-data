@@ -165,3 +165,29 @@ hier unverändert weiter.
 | `reports/studie/E4d-E4e-kadenz-2026-08-19.md` | der geprüfte Originalbericht — **unverändert** |
 | `reports/studie/E4d-kadenz-pruefung-2026-08-19.json` | Rohumschlag Prüffenster (alle vier Arme, Histogrammfächer) |
 | `reports/studie/E4d-kadenz-entdeckung-2026-08-19.json` | Rohumschlag Entdeckungsfenster |
+
+---
+
+## 6 · Neue Fragen und Hypothesen (Pflichtblock nach R16)
+
+Dieser Block führt ausschließlich zusammen, was der Bericht oben selbst als offenen
+Punkt oder als ausdrückliche Grenze benennt.
+
+- **B5 ist offen, nicht erledigt.** Der Bericht führt B5 als offenen Prüfschritt: eine
+  Sabotage der Entdeckungs-Poolzahl ist nachzuziehen, bevor das Sabotage-Protokoll
+  dieser Etappe als vollständig gilt. Sie ändert keine gemessene Zahl — offen ist
+  ausschließlich die Testabdeckung.
+- **Die menschliche Zweitkodierung fehlt weiterhin.** Der Bericht hält ausdrücklich
+  fest, dass er keine menschliche Zweitkodierung ersetzt: ein zweites Sprachmodell ist
+  ein zweiter Motor, nicht ein zweiter Kopf. Offen bleibt, welche Evidenzart diese
+  Lücke schließen könnte — mehr Wiederholungen tun es laut der zitierten Lektion vom
+  14.08. nicht.
+- **Abschnitt 11 des Originalberichts gilt als widerlegt.** Der Originaltext bleibt
+  append-only stehen. Offen bleibt, ob weitere Zitate dieser Aussage im Bestand
+  existieren, die denselben Nachtrag brauchen.
+- **Was diese Etappe nicht nachmessen konnte.** Der Bericht misst nichts nach, was
+  Datenzugriff bräuchte, und öffnet das Endtest-Fenster 2021–2023 nicht. Jede
+  Anschlussfrage, die daran hinge, ist aus diesem Nachtrag heraus nicht beantwortbar.
+
+**Keine neue Etappe vorgeschlagen.** Ein Etappen-Vorschlag mit Zeitschätzung nach R16
+wäre eine Forschungsentscheidung des Autors und wird hier nicht nachträglich erfunden.

@@ -34,16 +34,26 @@
     {"path": "reports/studie/D4-censoring-aware-attrition-2026-08-23.md", "sha256": "a7137a5e5b34f6795e2946534902e215031895dc442b808a20b10e3a61185e26"},
     {"path": "reports/studie/D5-entry-cohort-standardization-2026-08-23.md", "sha256": "aa0790e3e0e914e94f02ff4867f725c59231717a66ffa50a29b1a7f554cf03d4"}
   ],
-  "notCoveredByThisRecord": {
-    "note": "Diese Berichte tragen ebenfalls keinen R16-Block, sind aber von KEINEM Hash-Manifest gebunden (Erhebung 2026-08-29: git grep der Dateinamen ueber alle *.json des Zweigs, kein Treffer). Fuer sie gilt die Ausnahme NICHT; der Block bleibt Pflicht und ist nachtragbar, ohne ein Siegel zu bewegen.",
+  "unsealedReportsThatReceivedTheirBlock": {
+    "note": "Diese Berichte trugen am 2026-08-29 ebenfalls keinen R16-Block, sind aber von KEINEM Hash-Manifest gebunden (Erhebung: git grep der Dateinamen ueber alle *.json des Zweigs, kein Treffer ausser diesem Record). Fuer sie gilt die Siegel-Ausnahme NICHT. Sie haben den Block daher regulaer bekommen, mechanisch abgeleitet aus den im jeweiligen Bericht selbst dokumentierten Grenzen; kein Siegel wurde dabei bewegt.",
+    "decidedAt": "2026-08-29",
+    "decisionSource": "Orchestrator-Ruling 2026-08-29 15:20",
     "paths": [
       "reports/studie/D6-descriptive-closure-audit-2026-08-23.md",
       "reports/studie/E4f-nachrechnung-2026-08-23.md",
-      "reports/studie/E6b-mechanical-evidence-index-2026-08-28.md",
-      "reports/studie/R2-A1-identity-bridge-blocker-closure-2026-08-28.md",
       "reports/studie/R2-D-artifact-data-backcalculation-2026-08-28.md",
       "reports/studie/R2-D-threshold-sealing-2026-08-28.md",
       "reports/studie/R2-D1-cadence-edge-bias-2026-08-28.md"
+    ]
+  },
+  "nonAnalysisArtifacts": {
+    "note": "Namentliche Ausnahme von R16: diese beiden Dateien liegen in reports/studie/, sind aber keine Etappen-Reports. R16 verlangt Anschlussfragen einer Analyse; ein Index und ein Abschluss-Record haben keine eigenen Befunde, aus denen Anschlussfragen folgen koennten. Die Ausnahme ist NAMENTLICH und geschlossen — sie darf nicht auf Analyse-Berichte ausgedehnt werden.",
+    "decidedAt": "2026-08-29",
+    "decisionSource": "Orchestrator-Ruling 2026-08-29 15:20",
+    "listIsClosed": true,
+    "paths": [
+      {"path": "reports/studie/E6b-mechanical-evidence-index-2026-08-28.md", "kind": "Index", "reason": "reiner maschineller Belegindex ohne eigene Befunde"},
+      {"path": "reports/studie/R2-A1-identity-bridge-blocker-closure-2026-08-28.md", "kind": "Abschluss-Record", "reason": "Closure-Record ueber zwei mechanische Blocker, keine Analyse"}
     ]
   }
 }

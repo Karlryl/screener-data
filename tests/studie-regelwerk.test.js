@@ -123,18 +123,54 @@ function siegelAusnahme() {
   return namen;
 }
 
+// Zweite, DAVON GETRENNTE Ausnahmeklasse (Orchestrator-Ruling 2026-08-29 15:20):
+// zwei Dateien liegen in reports/studie/, sind aber keine Etappen-Reports — ein reiner
+// Belegindex und ein Abschluss-Record. R16 verlangt die Anschlussfragen einer Analyse;
+// wo es keine eigenen Befunde gibt, gibt es nichts, woraus Fragen folgen koennten.
+// Bewusst NAMENTLICH und nicht ueber ein Muster wie /index|closure/: ein Muster wuerde
+// jeden kuenftigen Bericht mit passendem Namen still aus der Pflicht nehmen.
+function nichtAnalyseAusnahme() {
+  if (!fs.existsSync(ABWEICHUNGS_RECORD)) return new Set();
+  const record = JSON.parse(fs.readFileSync(ABWEICHUNGS_RECORD, 'utf8'));
+  const klasse = record.nonAnalysisArtifacts;
+  if (!klasse) return new Set();
+  assert.equal(klasse.listIsClosed, true, 'Die Nicht-Analyse-Ausnahme ist nicht geschlossen');
+  const namen = new Set();
+  for (const eintrag of klasse.paths) {
+    // Stale-Schutz: eine Ausnahme fuer eine Datei, die es nicht mehr gibt, ist eine
+    // Ausnahme, die beim naechsten Umbenennen still auf etwas anderes zeigt.
+    assert.ok(
+      fs.existsSync(path.join(REPO, eintrag.path)),
+      `${eintrag.path} steht als Nicht-Analyse-Artefakt im Record, existiert aber nicht mehr`,
+    );
+    assert.ok((eintrag.reason || '').length > 10, `${eintrag.path}: Ausnahme ohne Begruendung`);
+    namen.add(path.basename(eintrag.path));
+  }
+  return namen;
+}
+
 test('R16: jeder Etappen-Report fuehrt den Block Neue Fragen und Hypothesen', () => {
   if (!fs.existsSync(REPORTS)) return; // vor dem ersten Report gibt es nichts zu pruefen
   const berichte = fs.readdirSync(REPORTS).filter((name) => name.endsWith('.md'));
   assert.ok(berichte.length > 0, 'reports/studie/ existiert, ist aber leer');
-  const ausgenommen = siegelAusnahme();
-  // Gegenprobe zur Ausnahme: sie darf nur greifen, wo sie greifen soll. Ein Bericht,
-  // der nicht im Record steht, muss den Block weiterhin fuehren — sonst pruefte der
-  // Test nach der Lockerung nichts mehr.
+  const versiegeltAusgenommen = siegelAusnahme();
+  const nichtAnalyse = nichtAnalyseAusnahme();
+  const ausgenommen = new Set([...versiegeltAusgenommen, ...nichtAnalyse]);
+  // Gegenproben zu beiden Ausnahmen: sie duerfen nur greifen, wo sie greifen sollen.
+  // Ein Bericht, der in keiner Liste steht, muss den Block weiterhin fuehren — sonst
+  // pruefte der Test nach der Lockerung nichts mehr.
   assert.ok(
     !ausgenommen.has('E0-ratifizierung-2026-08-16.md'),
-    'Die Siegel-Ausnahme greift auf einen unversiegelten Bericht — sie ist zu weit',
+    'Eine der Ausnahmen greift auf einen regulaeren Analyse-Bericht — sie ist zu weit',
   );
+  // Die beiden Klassen muessen getrennt bleiben: ein versiegelter Altbericht darf sich
+  // nicht zusaetzlich als "keine Analyse" ausweisen und dadurch doppelt gedeckt sein.
+  for (const name of nichtAnalyse) {
+    assert.ok(
+      !versiegeltAusgenommen.has(name),
+      `${name} steht in BEIDEN Ausnahmelisten — die Klassen muessen sich ausschliessen`,
+    );
+  }
   for (const name of berichte) {
     const text = fs.readFileSync(path.join(REPORTS, name), 'utf8');
     assert.ok(

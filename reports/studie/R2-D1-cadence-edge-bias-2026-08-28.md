@@ -99,3 +99,24 @@ Firmen mit weniger als zwei verschiedenen Berichtsdaten behalten sichtbar die al
 - Die Messung verwendet keine Signale, Preise oder Outcomes.
 
 Alle Zahlen stehen in `reports/studie/R2-D1-cadence-edge-bias-2026-08-28.json`. Die eingefrorene Lesart reproduziert D1 vollstaendig und byteunabhaengig nach Zahlenstruktur.
+
+## Neue Fragen und Hypothesen (Pflichtblock nach R16)
+
+Dieser Block fuehrt ausschliesslich die oben selbst dokumentierten Grenzen als
+Anschlussfragen zusammen. Es kommt keine Grenze hinzu, die der Bericht nicht nennt.
+
+- **Welche der beiden Lesarten gilt?** Der Bericht stellt beide nebeneinander und haelt
+  fest, dass die firmengelernte Lesart weder D1 noch ein Studienverdikt ersetzt. Offen
+  bleibt, welche Lesart die Studie fuehrt — der Vergleich entscheidet das nicht.
+- **Firmen mit nur einem Bericht.** Sie liefern keine gelernte Kadenz; ihr Fallback ist
+  ausgewiesen. Offen bleibt, wie gross der Einfluss dieser Klasse auf den Unterschied
+  zwischen den Lesarten ist.
+- **Was ein Berichtsabstand nicht belegt.** Er beweist laut Bericht weder Insolvenz noch
+  Delisting oder wirtschaftliches Scheitern. Offen bleibt, gegen welche unabhaengige
+  Quelle sich die kadenzbedingten Ausstiege ueberhaupt einordnen liessen.
+- **Was verschlossen blieb.** Das Endtest-Fenster 2021-2023 wurde weder geoeffnet noch
+  gezaehlt, und die Messung verwendet keine Signale, Preise oder Outcomes. Jede
+  Anschlussfrage, die daran haengt, ist aus diesem Bericht heraus nicht beantwortbar.
+
+**Keine neue Etappe vorgeschlagen.** Ein Etappen-Vorschlag mit Zeitschaetzung nach R16
+waere eine Forschungsentscheidung des Autors und wird hier nicht nachtraeglich erfunden.

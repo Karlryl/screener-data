@@ -86,3 +86,25 @@ Quellartefakte; D6 addiert sie nicht.
 Alle Zahlen und vier offenen Schlüssel dieses Berichts stehen
 maschinenlesbar in
 `reports/studie/D6-descriptive-closure-audit-2026-08-23.json`.
+
+## Neue Fragen und Hypothesen (Pflichtblock nach R16)
+
+Dieser Block führt ausschließlich zusammen, was der Bericht oben selbst als Grenze
+oder als offene Urteilsfrage benennt. Es kommt nichts hinzu, was hier nicht schon steht.
+
+- **Vorrang unter den deskriptiven Statistiken.** Der Bericht hält fest, dass ein
+  sauberer Audit nicht entscheidet, welche der verschiedenen deskriptiven Statistiken
+  methodisch Vorrang hat. Offen bleibt genau diese Reihenfolge.
+- **Ist der beschreibende Strang methodisch abgeschlossen?** „Übergabereif" bedeutet
+  laut Bericht ausschließlich, dass Hashes, Rechenketten und Berichtskontrakte
+  geschlossen sind. Die methodische Abschlussfrage ist ausdrücklich offen und liegt
+  bei Claude.
+- **Kausalität bleibt außerhalb.** Der Bericht hält fest, dass ein Audit keinen
+  Zusammenhang kausal macht. Offen bleibt, welche Evidenzart das überhaupt leisten
+  könnte — der Audit selbst kann es konstruktionsbedingt nicht.
+- **Keine neue Evidenz aus D6.** D6 liefert laut eigener Aussage keine neue empirische
+  Evidenz und ist keine nachträgliche Präregistrierung von D1–D5. Jede Anschlussfrage,
+  die neue Evidenz bräuchte, ist aus diesem Bericht heraus nicht beantwortbar.
+
+**Keine neue Etappe vorgeschlagen.** Ein Etappen-Vorschlag mit Zeitschätzung nach R16
+wäre eine Forschungsentscheidung des Autors und wird hier nicht nachträglich erfunden.
