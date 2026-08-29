@@ -1,0 +1,89 @@
+{
+ "accessedAt": "2026-08-29T20:38:00.000Z",
+ "arme": {
+  "kontrolle": {
+   "alternativ_mehrere_achsen": 19,
+   "alternativ_nur_andere_unit": 0,
+   "alternativ_nur_anderer_track": 0,
+   "alternativ_nur_anderes_konzept": 4,
+   "ddate_abgedeckt": 38,
+   "fallzahl": 4285,
+   "gewaehlte_serie_endet": 8,
+   "mit_nutzbarer_alternativserie": 23,
+   "nenner_alternativpruefung": 192,
+   "ohne_nutzbare_alternativserie": 169,
+   "qtrs_abgedeckt": 26,
+   "quartalsfakten_im_filing_vorhanden": 192
+  },
+  "signal": {
+   "alternativ_mehrere_achsen": 3,
+   "alternativ_nur_andere_unit": 0,
+   "alternativ_nur_anderer_track": 0,
+   "alternativ_nur_anderes_konzept": 1,
+   "ddate_abgedeckt": 4,
+   "fallzahl": 326,
+   "gewaehlte_serie_endet": 1,
+   "mit_nutzbarer_alternativserie": 4,
+   "nenner_alternativpruefung": 25,
+   "ohne_nutzbare_alternativserie": 21,
+   "qtrs_abgedeckt": 4,
+   "quartalsfakten_im_filing_vorhanden": 25
+  }
+ },
+ "beendetAm": "2026-08-29T20:39:18.067Z",
+ "ergebnisdatenBeruehrt": false,
+ "ersterZugriffAm": "2026-08-29T20:38:13.802Z",
+ "fenster": "pruefung",
+ "gelesenePfade": [
+  "panel/panel-validierung.sqlite"
+ ],
+ "geschriebenePfade": [
+  "arbeit/E4h-pruefung-zwischenstand.sqlite"
+ ],
+ "kontrollpool_weiterfiler": 192,
+ "manifestGeprueft": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "panelRand": "2020-12-31",
+ "perzentil": 95,
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "e4h-serienende-pruefung-2026-08-29",
+ "schema": "early-detection-e4h-serienende/v1",
+ "selbstCheck": {
+  "bestanden": true,
+  "istFallzahlKontrolle": 4285,
+  "istFallzahlSignal": 326,
+  "istKontrollpoolWeiterfiler": 192,
+  "istSignalWeiterfiler": 25,
+  "quelle": "reports/studie/E4g-restursachen-diagnose-2026-08-29.json + reports/studie/E4a-diagnose-pruefung-2026-08-19.json",
+  "sollFallzahlKontrolle": 4285,
+  "sollFallzahlSignal": 326,
+  "sollKontrollpoolWeiterfiler": 192,
+  "sollSignalWeiterfiler": 25
+ },
+ "serverConfirmedAt": "2026-08-29T20:04:17.000Z",
+ "siegelWache": {
+  "bytes": 5025230848,
+  "klartextKopie": false,
+  "schluesselAngefasst": false,
+  "sha256Geprueft": true,
+  "siegelDatei": "panel/panel-endtest.sqlite.enc"
+ },
+ "signal_weiterfiler": 25,
+ "sondenSpalten": [
+  "adsh",
+  "ddate",
+  "qtrs",
+  "tag",
+  "uom",
+  "version"
+ ],
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "variante": "S-G"
+}
