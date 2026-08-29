@@ -263,6 +263,19 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
+          # Entdeckungsband 800 Mio - 2 Mrd geoeffnet (Messung 19.08., PR #61).
+          # ZWEI Tore in Reihe — beide muessen fallen, sonst wirkt keins:
+          #   TV_PRECUT_USD schneidet fuer 31 TradingView-Laender VOR dem Prefilter.
+          #   Nur MCAP_PREFILTER_MIN_USD zu senken laesst 368 Namen liegen (gemessen);
+          #   nur TV_PRECUT_USD zu senken bringt 3 (gemessen). Zusammen: 960 Ticker.
+          # KEINE Absenkung unter 800 Mio — Karls Boden bleibt. Gemessene Score-Quote
+          # im Band: 90,6 %, die beste des Universums (ab 10 Mrd nur 32,2 %, weil dort
+          # die Doppellistungen sitzen).
+          MCAP_PREFILTER_MIN_USD: '800000000'
+          TV_PRECUT_USD: '800000000'
+          # Ohne das schneidet der Zeilendeckel Shenzhen bei 800 Mio ab (3.008 Treffer
+          # gegen Deckel 2.500) — also genau bei den Namen, um die es geht.
+          TV_SCAN_RANGE: '4000'
         timeout-minutes: 20
         run: |
           if [ -z "$FINNHUB_API_KEY" ]; then
