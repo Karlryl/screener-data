@@ -43,6 +43,39 @@ function watchlistSize(wl) {
   return Object.keys(wl).length;
 }
 
+function parseExpectedShards(argv) {
+  const indices = argv
+    .map((argument, index) => (argument === '--expected-shards' ? index : -1))
+    .filter(index => index >= 0);
+  if (indices.length === 0) return undefined;
+  if (indices.length > 1) {
+    throw new Error('--expected-shards must not be repeated');
+  }
+  const [index] = indices;
+  const raw = argv[index + 1];
+  if (typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw)) {
+    throw new Error('--expected-shards must be a positive integer');
+  }
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error('--expected-shards must be a safe positive integer');
+  }
+  return parsed;
+}
+
+function resolveExpectedShards(shardManifests, expectedShards) {
+  if (!Array.isArray(shardManifests)) throw new TypeError('shardManifests must be an array');
+  const observedSlots = shardManifests.length;
+  if (expectedShards === undefined) return observedSlots;
+  if (!Number.isSafeInteger(expectedShards) || expectedShards <= 0) {
+    throw new TypeError('expectedShards must be a positive integer when provided');
+  }
+  if (expectedShards < observedSlots) {
+    throw new RangeError(`expectedShards ${expectedShards} is smaller than ${observedSlots} observed manifest slots`);
+  }
+  return expectedShards;
+}
+
 // Tag 464 — der ehrliche Coverage-Nenner, als eigene reine Funktion, weil hier die
 // GEFAEHRLICHE Fehlerrichtung liegt: ein zu KLEINER Nenner macht die Coverage zu gross und
 // schaltet Karls einzigen Alarm dauerhaft auf gruen. Ein zu grosser Nenner meldet nur zu
@@ -72,10 +105,11 @@ function honestDenominator(fullUniverseSize, skippedMcap, skippedOwned, nOk) {
 // partial = OR(alle Shards) OR (weniger Shards vorhanden als erwartet).
 // shardManifests: Array der geparsten Shard-Manifest-Objekte (null-Eintraege = fehlender Shard).
 function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
+  const expected = resolveExpectedShards(shardManifests, expectedShards);
   const present = shardManifests.filter(m => m && typeof m === 'object');
   const sum = (f) => present.reduce((a, m) => a + (Number.isFinite(m[f]) ? m[f] : 0), 0);
   const anyShardPartial = present.some(m => m.partial === true);
-  const missingShards = Number.isFinite(expectedShards) ? expectedShards - present.length : 0;
+  const missingShards = expected - present.length;
   const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
     pulled_at: new Date().toISOString(),
@@ -104,7 +138,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     partial: anyShardPartial || missingShards > 0,
     // Instrumentierung fuer den Merge-Log (nicht von coverage-gate gelesen, aber im Artefakt sichtbar):
     n_shards_present: present.length,
-    n_shards_expected: Number.isFinite(expectedShards) ? expectedShards : present.length,
+    n_shards_expected: expected,
     n_shards_partial: present.filter(m => m.partial === true).length,
   };
   return merged;
@@ -157,7 +191,13 @@ function run() {
   const manifestDir = get('--shard-manifests', 'shard-manifests');
   const snapDir = get('--snapshots', 'snapshots');
   const watchlistPath = get('--watchlist', 'watchlist.json');
-  const expectedShards = parseInt(get('--expected-shards', '0'), 10) || undefined;
+  let expectedShards;
+  try {
+    expectedShards = parseExpectedShards(argv);
+  } catch (error) {
+    console.error(`::error::merge-shard-manifests — ${error.message}.`);
+    process.exit(1);
+  }
 
   const fullUniverse = watchlistSize(readJSON(watchlistPath));
   if (!(fullUniverse > 0)) {
@@ -390,6 +430,14 @@ function selftest() {
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { mergeManifests, crossCheckDisjoint, watchlistSize, reconcileOnDisk, honestDenominator };
+module.exports = {
+  mergeManifests,
+  crossCheckDisjoint,
+  watchlistSize,
+  reconcileOnDisk,
+  honestDenominator,
+  parseExpectedShards,
+  resolveExpectedShards,
+};
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) run();
