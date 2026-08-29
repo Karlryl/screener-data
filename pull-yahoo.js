@@ -1693,7 +1693,30 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
     meta: {
       ticker: watchlistEntry.ticker,
-      name: _y(pr, 'longName') || watchlistEntry.name || watchlistEntry.ticker,
+      // U1 (Orchestrator ENTSCHIED 21, 2026-08-29; Akte befund-doppelgaenger-2026-08-29.md):
+      // `shortName` als ZWISCHENSTUFE vor dem Ticker-Rueckfall. Ohne sie landete jeder Stand
+      // ohne `longName` bei `name === ticker` — 110 der 15.046 Snapshots und 3.225 der 20.762
+      // Watchlist-Zeilen (gemessen 29.08.). Der Emittenten-Dedup gruppiert ueber den Namen
+      // (`issuerKeyLoose`, src/scoring/score.js:134), also kann ein solcher Platzhalter NIE mit
+      // dem Klarnamen der Zweitnotiz verschmelzen: 27 der 53 doppelt im Board stehenden
+      // Emittenten haben genau daran gelegen.
+      //
+      // EINSEITIG SICHER, und das ist der Grund, warum dieser Teil ohne Gericht gebaut werden
+      // durfte: alle vier Quellen sind Felder DIESES Wertpapiers (Yahoo-Datensatz + eigene
+      // Watchlist-Zeile). Der Name kann von hier aus nie aus einem FREMDEN Datensatz kommen,
+      // also kann diese Kette eine Verschmelzung nur VERHINDERN (schlechterer Name), nie
+      // ERZWINGEN. Genau diese Eigenschaft nagelt tests/u1-namensplatzhalter.test.js fest.
+      //
+      // ANKER-GRENZE (bewusst offen, ENTSCHIED 21 Punkt 2): das Uebertragen eines Klarnamens
+      // ueber die Notierungen EINES Emittenten hinweg braucht einen Anker, der die Beine
+      // zusammenbringt. Der gebaute Anker ist die `.BO`/`.NS`-Wurzel (s. Vorstufe in
+      // scripts/filter-snapshot-merge.js). 11 der 27 Platzhalter-Gruppen haben KEINEN
+      // gemeinsamen Ticker-Stamm (ZG/Z, PLD/PRLD.VI, UU2.DE/BLK, ED/EDC.DE, IC2.DE/ICE,
+      // NOC/NTH.DE, NFS.DE/NSC, ZOTS.VI/ZTS, ABR0.DE/B, COLO-B.CO/COLO.VI, 1NLOK.MI/GEN) —
+      // fuer sie bleibt allein dieser `shortName`-Rueckfall, und der wirkt erst, wenn Yahoo im
+      // naechsten Zug ueberhaupt einen `shortName` liefert. Ein Anker ueber beliebige
+      // Boersensuffixe waere ungemessen und ist deshalb NICHT gebaut.
+      name: _y(pr, 'longName') || _y(pr, 'shortName') || watchlistEntry.name || watchlistEntry.ticker,
       sector: _y(ap, 'sector') || null,
       industry: _y(ap, 'industry') || null,
       region: normalizeRegion(rcOriginal, exchangeName),  // Tag 134: enum, not Yahoo string
