@@ -13,7 +13,7 @@ SEC-Schicht `external-data/{sec,kr,jp,tw}-secannual*.json` mit 537 Namen.
 |---|---|
 | **K1.1** SEC-GAAP-OpInc beim Snapshot-Merge bevorzugen | `scripts/opinc-source-migrate.js`, verdrahtet im **scoring-Job** von `daily-pull.yml` unmittelbar vor `run-screener.js` |
 | **K1.2** `'native'` stirbt, `meta.opIncSource` wird ehrlich | `pull-yahoo.js` schreibt kuenftig `'yahoo-adjusted'`; der Bestand wird lokal migriert, **kein Re-Pull** |
-| **K1.3** kein Name verliert Daten, kein Exclude fuer Nur-Yahoo-Namen | 14.887 Namen ohne SEC-Serie bleiben unberuehrt; die ersetzte Yahoo-Reihe bleibt als `annual.annualOpIncYahoo` am Datensatz; **0 Abgaenge, 0 Neuzugaenge** im Board-Diff |
+| **K1.3** kein Name verliert Daten, kein Exclude fuer Nur-Yahoo-Namen | 14.891 Namen ohne SEC-Serie bleiben unberuehrt; die ersetzte Yahoo-Reihe bleibt als `annual.annualOpIncYahoo` am Datensatz; **0 Abgaenge, 0 Neuzugaenge** im Board-Diff |
 | **K1.4** Board-Diff mit HNRG-/EGY-Flips explizit | Abschnitte 4 und 5 dieses Berichts |
 
 ### Warum die Praeferenz im scoring-Job sitzt und nicht im merge-Job
@@ -49,23 +49,23 @@ Zweiter Boden fuer lokale Laeufe: beide Builder lesen `annual.annualOpIncYahoo`,
 
 ---
 
-## 3. Zensus des Laufs (15.141 Snapshots)
+## 3. Zensus des Laufs (15.145 Snapshots)
 
 ### Etiketten-Migration
 | Uebergang | Dateien |
 |---|---|
-| `native` → `yahoo-adjusted` | **12.625** |
+| `native` → `yahoo-adjusted` | **12.629** |
 | → `sec-gaap` | **128** |
 | `computed-margin` unveraendert | 1.883 |
 | `null` unveraendert | 505 |
-| **geschriebene Dateien** | **12.753** |
+| **geschriebene Dateien** | **12.757** |
 
 Nach dem Lauf traegt **kein** Snapshot mehr das Etikett `'native'`.
 
 ### Warum ein Name nicht getauscht wurde
 | Grund | Namen |
 |---|---|
-| keine SEC-Serie (K1.3: Yahoo bleibt, ehrlich etikettiert) | 14.887 |
+| keine SEC-Serie (K1.3: Yahoo bleibt, ehrlich etikettiert) | 14.891 |
 | Umsatz-Ausrichtung reisst (> 2 %) | 82 |
 | weniger als zwei vergleichbare Umsatzjahre (unbelegbar) | 17 |
 | Loch in der SEC-Reihe im Fenster | 20 |
@@ -149,6 +149,17 @@ oder das Artefakt zurueck.
 
 Der lokale Store (Haupt-Checkout) wurde mit demselben Skript migriert — das ist der A2-Entscheid
 aus ENTSCHIED 15: **kein Massen-Re-Pull der 1.859 Namen**, die Etiketten werden lokal abgeleitet.
+Nachgeprueft am migrierten Live-Store: Etiketten `yahoo-adjusted` 12.629 · `computed-margin` 1.883 ·
+`sec-gaap` 128 · `null` 505, **Restbestand `native` = 0**. EGY traegt `sec-gaap` mit −20,607 Mio. und
+der bewahrten Yahoo-Reihe daneben, HNRG FY2024 −218,156 Mio. Ein zweiter Lauf schreibt **0 Dateien**
+— die Idempotenz ist am echten Bestand belegt, nicht nur an der Fixture.
+
+*Zensus-Vermerk:* Der Board-Diff in Abschnitt 5 wurde auf einer Kopie mit einer fruehen Fassung des
+Skripts gemessen, die noch den Blanket-Filter `f.startsWith('_')` statt des zentralen Praedikats
+`isMetadataSnapshot()` benutzte (vom Test-Gate gefunden, im selben Commit geheilt). Betroffen sind
+**4 Snapshots** mit Windows-Reservename-Faltung (`_CON.json`-Klasse) — sie bekommen jetzt ebenfalls
+ein ehrliches Etikett. Am Board aendert das nichts: die Zahl der SEC-bevorzugten Namen bleibt bei
+128, die der Wertaenderungen bei 44.
 
 ---
 
