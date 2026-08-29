@@ -440,7 +440,12 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
   const kollisionen = [];
   for (const k of klassen) {
     const beine = k.beine;
-    let grund = milanTor(beine, k.registerQuelle ? null : mehrfachAbdruecke);
+    // A5 haengt daran, OB die Klasse ein Mailaender Bein traegt — nicht daran, woher die Klasse
+    // kommt. Vorher war der Riegel fuer jede Register-Klasse pauschal aus, obwohl nichts einen
+    // Register-Eintrag daran hindert, einen `1XXX.MI`-Ticker zu nennen; die Zusicherung stand
+    // nur im Kommentar. Jetzt greift er ueberall dort, wo er greifen kann.
+    const mitMilanBein = Array.isArray(beine) && beine.some((b) => b && MILAN_SPIEGEL.test(b.ticker));
+    let grund = milanTor(beine, mitMilanBein ? mehrfachAbdruecke : null);
     let sieger = null;
     const verlierer = [];
     if (grund === 'umbenennen') {
@@ -544,12 +549,24 @@ function ladeIdentitaetsRegister(registerPfad) {
  */
 function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
   const gelesen = new Map();
+  // FEHLT ist nicht KAPUTT. Beide enden im Tor auf 'beine-unvollstaendig' und fuehren damit nie
+  // zu einer Umbenennung — aber sie sind zwei verschiedene Weltzustaende, und der Unterschied
+  // traegt den Mengen-Riegel: "keine Datei da" ist ein anderes Universum (Fixture, Kaltstart),
+  // "alle Dateien da, keine lesbar" ist ein Bruch. Ohne die Trennung liess ein systemischer
+  // Lesefehler ueber alle 17 Anker die Zahl auf 0 fallen, der Riegel wurde uebersprungen und die
+  // Log-Zeile war von der harmlosen Lage nicht zu unterscheiden. Reproduziert: 120 Fuell-
+  // Snapshots + alle 34 Kandidaten-Dateien mit kaputtem JSON -> Exit 0, "Riegel uebersprungen".
+  const lesefehler = [];
+  const dateienImBestand = new Set();
   const lies = (ticker) => {
     if (gelesen.has(ticker)) return gelesen.get(ticker);
     let bein = null;
+    let datei = null;
     try {
-      const datei = safeSnapshotFilename(ticker);
-      const j = JSON.parse(fs.readFileSync(path.join(ziel, datei), 'utf8'));
+      datei = safeSnapshotFilename(ticker);
+      const roh = fs.readFileSync(path.join(ziel, datei), 'utf8');
+      dateienImBestand.add(ticker);
+      const j = JSON.parse(roh);
       const meta = (j && j.meta) || {};
       const ts = (j && j.timeseries) || {};
       bein = {
@@ -559,7 +576,16 @@ function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
         usPrimaerlisting: isUsPrimaryListing(meta),
         schluessel: issuerKeyLoose(j), strengerSchluessel: issuerKeyStrengOhneGattung(j),
       };
-    } catch (_) { bein = null; } // fehlendes/unlesbares Bein => 'beine-unvollstaendig' im Tor
+    } catch (e) {
+      bein = null;
+      // ENOENT ist der legitime Normalfall (der Ticker steht nicht im Bestand). Alles andere —
+      // kaputtes JSON, Rechte, ein Wurf aus issuerKeyLoose/isUsPrimaryListing — ist ein Befund
+      // und wird gemeldet, gleiche Bauform wie in wendeWurzelZwillingeAn oben.
+      if (!e || e.code !== 'ENOENT') {
+        lesefehler.push({ ticker, grund: e && e.message ? e.message : String(e) });
+        console.error(`::warning::U3-Milan — ${datei || ticker} nicht auswertbar (${e && e.message ? e.message : e}); dieses Bein nimmt nicht teil.`);
+      }
+    }
     gelesen.set(ticker, bein);
     return bein;
   };
@@ -588,7 +614,13 @@ function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
   for (const e of registerEintraege || []) {
     klassen.push({ anker: e.kanonisch, registerQuelle: 'identitaets-register', beine: e.mitglieder.map(lies) });
   }
-  return { klassen, mehrfachAbdruecke, milanBeine };
+  const kandidatenTicker = kandidaten.flatMap((k) => [k.anker, ...k.partner]);
+  return {
+    klassen, mehrfachAbdruecke, milanBeine, lesefehler,
+    // Fuer den Mengen-Riegel: wie viele Kandidaten-DATEIEN liegen ueberhaupt im Bestand
+    // (unabhaengig davon, ob sie auswertbar waren)?
+    kandidatenDateien: kandidatenTicker.filter((t) => dateienImBestand.has(t)).length,
+  };
 }
 
 /** Schreibt die beschlossenen Umbenennungen — atomar wie jeder andere Schreiber hier. */
@@ -913,13 +945,12 @@ function run(argv) {
   // im Bestand, ist das keine Mengen-Abweichung, sondern ein anderes Universum (Fixture,
   // Teil-Shard, Kaltstart). Sobald auch nur EIN Anker da ist, bindet der Riegel wieder voll —
   // ein Bestand, aus dem die Haelfte der Anker verschwunden ist, bricht also ab.
-  const kandidatenBeineImBestand = milan.klassen
-    .filter((k) => !k.registerQuelle)
-    .reduce((s, k) => s + k.beine.filter(Boolean).length, 0);
-  if (zuPruefen < MIN_GESCANNT_FUER_ANTEIL || kandidatenBeineImBestand === 0) {
-    console.log(`[u3-milan] Mengen-Riegel uebersprungen: ${zuPruefen} zu pruefende Snapshots, ${kandidatenBeineImBestand} Beine der Kandidatenliste im Bestand. Geplant waren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen.`);
+  // Gezaehlt werden DATEIEN, nicht auswertbare Beine: sonst schaltet ein systemischer Lesefehler
+  // ueber alle Anker den Riegel ab und die Log-Zeile sieht aus wie der harmlose Fall.
+  if (zuPruefen < MIN_GESCANNT_FUER_ANTEIL || milan.kandidatenDateien === 0) {
+    console.log(`[u3-milan] Mengen-Riegel uebersprungen: ${zuPruefen} zu pruefende Snapshots, ${milan.kandidatenDateien} Dateien der Kandidatenliste im Bestand, ${milan.lesefehler.length} nicht auswertbar. Geplant waren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen.`);
   } else if (geplanteBeine !== MILAN_ERWARTETE_BEINE || geplanteGruppen !== MILAN_ERWARTETE_GRUPPEN) {
-    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
     return 1;
   }
 

@@ -291,7 +291,11 @@ jobs:
         run: |
           mkdir -p reports
           set -o pipefail
-          node scripts/probe-fingerprint-zensus.js | tee "reports/fingerprint-zensus-$(date -u +%Y-%m).txt"
+          # 2>&1: der "Bestand nicht lesbar"-Befund geht auf stderr. Ohne die Umleitung
+          # bekaeme der committete Monatsbericht eine leere Datei OHNE Grund — die Erklaerung
+          # lebte nur im fluechtigen Actions-Log, genau ausserhalb der Drift-Spur, die hier
+          # ueber Monate aufgebaut werden soll.
+          node scripts/probe-fingerprint-zensus.js 2>&1 | tee "reports/fingerprint-zensus-$(date -u +%Y-%m).txt"
 
       - name: Commit manifest
         run: |

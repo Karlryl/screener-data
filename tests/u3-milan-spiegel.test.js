@@ -363,6 +363,19 @@ test('REGISTER/A6: ein Bein in ZWEI Klassen wird verworfen, nicht still uebersch
     'GEN darf NIE den Namen der fremden Klasse bekommen');
 });
 
+test('A5 gilt auch fuer Register-Klassen, sobald sie ein Mailaender Bein nennen', () => {
+  // Vorher haing der Riegel an der QUELLE der Klasse, nicht am Mailaender Bein: jede
+  // Register-Klasse bekam `null` und damit gar keine Mehrdeutigkeits-Pruefung — obwohl nichts
+  // einen Register-Eintrag daran hindert, einen `1XXX.MI`-Ticker zu nennen. Die Zusicherung
+  // stand nur im Kommentar.
+  const beine = [bein('1ABC.MI', 'Beispiel AG'), bein('ABC', 'Beispiel A.G.')];
+  const abdruck = JSON.stringify(beine[0].revenueQ) + '|' + JSON.stringify(beine[0].grossProfitQ);
+  const klasse = { anker: 'beispiel', registerQuelle: 'identitaets-register', beine };
+  const { urteile, umbenennungen } = milanUmbenennungen([klasse], new Set([abdruck]));
+  assert.equal(urteile[0].grund, 'mehrdeutig', 'A5 darf nicht an der Quelle der Klasse haengen');
+  assert.equal(umbenennungen.size, 0);
+});
+
 // ─── 5. I/O-Mantel: liest den Bestand, schreibt nur die Verlierer ────────────────────────
 
 test('I/O: milanKlassenLesen + milanSchreiben setzen genau die Verlierer-Beine um', () => {
@@ -445,10 +458,38 @@ test('A7 am Prozess: EIN vorhandener Anker mit falscher Menge bricht den Lauf HA
   assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
 });
 
+test('A7 am Prozess: alle Anker-Dateien DA, aber unlesbar -> Riegel feuert (FEHLT != KAPUTT)', () => {
+  // Reproduziert (vor dem Fix): ein systemischer Lesefehler ueber alle 17 Anker liess die Zahl
+  // der auswertbaren Beine auf 0 fallen; der Riegel wurde uebersprungen und schrieb dieselbe
+  // Zeile wie im harmlosen "anderes Universum"-Fall. Exit 0, Befund unsichtbar.
+  const kaputt = MILAN_KANDIDATEN.flatMap((k) => [k.anker, ...k.partner]);
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'u3-kaputt-'));
+  const eingang = path.join(root, 'eingang');
+  fs.mkdirSync(eingang, { recursive: true });
+  const tickers = [];
+  for (const [t, n, o] of fueller(120)) {
+    fs.writeFileSync(path.join(eingang, t + '.json'), JSON.stringify(snapshot(t, n, o)));
+    tickers.push({ ticker: t });
+  }
+  for (const t of kaputt) {
+    fs.writeFileSync(path.join(eingang, t.replace(/[^A-Z0-9.-]/gi, '_') + '.json'), '{ KAPUTT');
+    tickers.push({ ticker: t });
+  }
+  const wl = path.join(root, 'watchlist.json');
+  fs.writeFileSync(wl, JSON.stringify({ stocks: tickers }));
+  const r = spawnSync(process.execPath, [SCRIPT, '--eingang', eingang, '--ziel', path.join(root, 'ziel'), '--watchlist', wl], { encoding: 'utf8' });
+  const ausgabe = (r.stdout || '') + (r.stderr || '');
+  fs.rmSync(root, { recursive: true, force: true });
+  assert.equal(r.status, 1, 'ein Bruch ueber ALLE Anker darf den Riegel nicht abschalten. Ausgabe:\n' + ausgabe);
+  assert.match(ausgabe, /Mengen-Riegel gerissen/);
+  assert.match(ausgabe, /Kandidaten-Datei\(en\) waren nicht auswertbar/, 'der Grund muss in der Abbruch-Meldung stehen');
+  assert.match(ausgabe, /::warning::U3-Milan — .*nicht auswertbar/, 'jede unlesbare Datei faellt einzeln auf');
+});
+
 test('A7 am Prozess: ohne jedes Anker-Bein laeuft der Filter durch (anderes Universum, nicht Drift)', () => {
   const r = lauf(fueller(120));
   assert.equal(r.code, 0, 'ein Bestand ohne Mailaender Anker ist kein Mengen-Fehler. Ausgabe:\n' + r.ausgabe);
-  assert.match(r.ausgabe, /\[u3-milan\] Mengen-Riegel uebersprungen: 120 zu pruefende Snapshots, 0 Beine der Kandidatenliste/);
+  assert.match(r.ausgabe, /\[u3-milan\] Mengen-Riegel uebersprungen: 120 zu pruefende Snapshots, 0 Dateien der Kandidatenliste im Bestand, 0 nicht auswertbar/);
 });
 
 test('A10 am Prozess: jede Nicht-Umbenennung steht mit Grund und beiden Tickern im Log', () => {
@@ -471,6 +512,9 @@ test('§6.5: der Voll-Zensus laeuft monatlich und sein Bericht wird committet', 
   const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'monthly-sec-xbrl.yml'), 'utf8');
   assert.match(yml, /node scripts\/probe-fingerprint-zensus\.js/, 'der Zensus muss im Monatslauf stehen');
   assert.match(yml, /git add reports\/fingerprint-zensus-\*\.txt/, 'sein Bericht muss committet werden, sonst sieht ihn niemand');
+  // Der "Bestand nicht lesbar"-Befund geht auf stderr. Ohne 2>&1 bekaeme der committete
+  // Bericht eine leere Datei OHNE Grund, und die Erklaerung lebte nur im fluechtigen Actions-Log.
+  assert.match(yml, /probe-fingerprint-zensus\.js 2>&1 \| tee/, 'stderr muss in den committeten Bericht');
   const zensus = require('../scripts/probe-fingerprint-zensus.js');
   assert.equal(zensus.main(['--selftest']), 0, 'die Wachprobe des Zensus muss gruen sein');
 });
