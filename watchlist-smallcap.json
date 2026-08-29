@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 509,
+    "count": 505,
     "partial": false
   },
   "stocks": [
@@ -25,14 +25,6 @@
       "yahoo_symbol": "WLKP",
       "name": "Westlake Chemical Partners LP Common Units representing limited partner interests",
       "marketCapUsd": 776466752,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "METC",
-      "yahoo_symbol": "METC",
-      "name": "Ramaco Resources, Inc. - Class A Common Stock",
-      "marketCapUsd": 775242048,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -193,14 +185,6 @@
       "yahoo_symbol": "SLRC",
       "name": "SLR Investment Corp. - Closed End Fund",
       "marketCapUsd": 721757760,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "TXO",
-      "yahoo_symbol": "TXO",
-      "name": "TXO Partners, L.P. Common Units Representing Limited Partner Interests",
-      "marketCapUsd": 721467200,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -957,14 +941,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "LOT",
-      "yahoo_symbol": "LOT",
-      "name": "Lotus Technology Inc. - American Depositary Shares",
-      "marketCapUsd": 584941248,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "SFST",
       "yahoo_symbol": "SFST",
       "name": "Southern First Bancshares, Inc. - Common Stock",
@@ -977,14 +953,6 @@
       "yahoo_symbol": "CBNK",
       "name": "Capital Bancorp, Inc. - Common Stock",
       "marketCapUsd": 582786560,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "SMWB",
-      "yahoo_symbol": "SMWB",
-      "name": "Similarweb Ltd. Ordinary Shares",
-      "marketCapUsd": 582543616,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -4085,77 +4053,27 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-08-22T06:33:58.693Z",
+  "lastReconcile": "2026-08-29T12:12:16.662Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "BBNX",
+      "ticker": "METC",
       "grund": "band-austritt-oben",
-      "mcap": 857053504
+      "mcap": 843063616
     },
     {
-      "ticker": "JMIA",
+      "ticker": "TXO",
       "grund": "band-austritt-oben",
-      "mcap": 839587456
+      "mcap": 803972928
     },
     {
-      "ticker": "REPX",
+      "ticker": "LOT",
       "grund": "band-austritt-oben",
-      "mcap": 845609920
+      "mcap": 803686656
     },
     {
-      "ticker": "SB",
+      "ticker": "SMWB",
       "grund": "band-austritt-oben",
-      "mcap": 868639488
-    },
-    {
-      "ticker": "PEO",
-      "grund": "band-austritt-oben",
-      "mcap": 803010048
-    },
-    {
-      "ticker": "SXC",
-      "grund": "band-austritt-oben",
-      "mcap": 822437248
-    },
-    {
-      "ticker": "RIGL",
-      "grund": "band-austritt-oben",
-      "mcap": 857218944
-    },
-    {
-      "ticker": "TRON",
-      "grund": "band-austritt-oben",
-      "mcap": 953507968
-    },
-    {
-      "ticker": "IMMX",
-      "grund": "band-austritt-oben",
-      "mcap": 972454720
-    },
-    {
-      "ticker": "ACHV",
-      "grund": "band-austritt-oben",
-      "mcap": 822190848
-    },
-    {
-      "ticker": "PAR",
-      "grund": "band-austritt-oben",
-      "mcap": 807813696
-    },
-    {
-      "ticker": "FDMT",
-      "grund": "band-austritt-oben",
-      "mcap": 874515840
-    },
-    {
-      "ticker": "SLN",
-      "grund": "band-austritt-oben",
-      "mcap": 824784768
-    },
-    {
-      "ticker": "HELP",
-      "grund": "band-austritt-oben",
-      "mcap": 919827648
+      "mcap": 801298240
     }
   ]
 }
