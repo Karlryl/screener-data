@@ -234,14 +234,17 @@ function run(opts = {}) {
   const { data: sec, geladen } = loadSecLayer(root, opts.secFiles || SECANNUAL_FILES);
   const zusammenfassung = {
     secNamen: Object.keys(sec).length, secDateien: geladen,
-    dateien: 0, geschrieben: 0, uebersprungen: 0,
+    dateien: 0, geschrieben: 0, uebersprungen: 0, fehlendeVerzeichnisse: [],
     etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0, sonstige: 0 },
     gruende: {}, werteGeaendert: 0,
   };
   const zeilen = [];
   for (const dir of dirs) {
     const abs = path.isAbsolute(dir) ? dir : path.join(root, dir);
-    if (!fs.existsSync(abs)) { continue; }
+    // Ein fehlendes Store-Verzeichnis ist NICHT dasselbe wie ein leeres. Scheitert der
+    // Small-Cap-Cache-Restore (continue-on-error in daily-pull.yml), blieb bisher der
+    // komplette Small-Cap-Store unmigriert und der Lauf trotzdem gruen.
+    if (!fs.existsSync(abs)) { zusammenfassung.fehlendeVerzeichnisse.push(dir); continue; }
     for (const f of fs.readdirSync(abs)) {
       // Das zentrale Praedikat, nicht `f.startsWith('_')`: ein Ticker kann legitim mit
       // Unterstrich beginnen (Windows-Reservename -> safeSnapshotFilename faltet CON zu _CON).
@@ -309,6 +312,11 @@ function main(argv) {
     + `unveraendert ${z.etiketten.unveraendert}`);
   console.log(`[opinc-source-migrate] Gruende: ${Object.entries(z.gruende).map(([k, v]) => `${k}=${v}`).join(' · ')}`);
   console.log(`[opinc-source-migrate] Reihen mit geaenderten Werten: ${z.werteGeaendert} · geschrieben: ${z.geschrieben}`);
+  if (z.fehlendeVerzeichnisse.length) {
+    console.log(`::warning::opinc-source-migrate: Store-Verzeichnis(se) nicht vorhanden — `
+      + `${z.fehlendeVerzeichnisse.join(', ')}. Dieser Bestand bleibt UNMIGRIERT; ein fehlgeschlagener `
+      + 'Cache-Restore sieht sonst aus wie ein bereits migrierter Store.');
+  }
   if (z.uebersprungen) {
     console.log(`::warning::opinc-source-migrate: ${z.uebersprungen} Snapshot(s) unlesbar uebersprungen — `
       + `die ${z.dateien} geprueften Dateien decken den Store NICHT vollstaendig ab.`);

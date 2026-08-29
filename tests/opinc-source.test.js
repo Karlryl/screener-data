@@ -290,6 +290,21 @@ t('Etiketten-Eimer schoepfen den Bestand aus, auch auf dem Rueckweg', () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// M3 (Nacht-Sweep 29.08.): fehlendes Store-Verzeichnis wurde stumm uebersprungen.
+// Beide Richtungen: vorhandenes Verzeichnis meldet nichts, fehlendes wird benannt.
+t('fehlendes Store-Verzeichnis wird gemeldet, nicht stumm uebersprungen', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dir-'));
+  fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });
+
+  const da = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.deepEqual(da.fehlendeVerzeichnisse, [], 'vorhandenes Verzeichnis darf nichts melden');
+
+  const weg = run({ root: tmp, dirs: ['snapshots', 'snapshots-smallcap'] }).zusammenfassung;
+  assert.deepEqual(weg.fehlendeVerzeichnisse, ['snapshots-smallcap'],
+    'fehlender Small-Cap-Store muss namentlich auftauchen');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });
