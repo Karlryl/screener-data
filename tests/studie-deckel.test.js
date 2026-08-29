@@ -44,6 +44,7 @@ function studienArtefakte() {
   const treffer = [];
   const wurzeln = [
     path.join(REPO, 'protocol', 'early-detection', '2.0.0'),
+    path.join(REPO, 'protocol', 'strang-c'),
     path.join(REPO, 'reports', 'studie'),
     path.join(REPO, 'research', 'studie'),
   ];

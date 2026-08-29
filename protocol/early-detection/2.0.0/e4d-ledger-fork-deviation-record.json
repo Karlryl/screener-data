@@ -1,0 +1,93 @@
+{
+  "schema": "early-detection-deviation-record/v1",
+  "recordId": "e4d-ledger-fork-2026-08-29",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "rule": "R1",
+  "mode": "DOCUMENT_NO_LEDGER_APPEND",
+  "recordedAt": "2026-08-29",
+  "decisionSource": "Orchestrator-Ruling 2026-08-29 15:40 (ENTSCHIED 4)",
+  "deviation": {
+    "what": "Zwei Anmeldungen der E4d-Kadenzprobe stehen NICHT in der Ledger-Kette auf main. Sie existieren ausschliesslich auf dem Zweig studie/fortsetzung-20260828.",
+    "why": "Zwei Studien-Straenge haben am 2026-08-19 unabhaengig an dieselbe append-only Kette angemeldet: Strang E4d um 18:54 UTC, Strang C0 um 20:51-23:48 UTC. Ueber getrennte Zweige gemergt ergab das eine Gabel — gemeinsames Praefix 12 Eintraege, danach main 15 (C0) gegen Zweig 14 (E4d). Keine der beiden Ketten ist Praefix der anderen.",
+    "whyNoAppend": "Alle Append-Varianten sind konstruktiv tot. Die E4d-Eintraege tragen typ count_only_probe_authorized und liegen damit in ARTEN_MIT_ZUGRIFFSZEIT: accessedAt ist Pflicht und registeredAt MUSS davor liegen. Mit Originalstempel schlaegt die Monotonie zu (R1: rueckdatiert), mit heutigem Stempel die Einzeleintrags-Regel (R1: nicht VOR dem Zugriff angemeldet). Eine eigene Eintragsart ist fail-closed (unbekannte Art). Ein neu berechneter eventHash wuerde zusaetzlich den Zweig-Freigabe-Beleg brechen und scripts/studie-zaehlprobe.py in den W2-Abbruch fuehren."
+  },
+  "affectedEntries": [
+    {
+      "runId": "e4d-kadenz-pruefung-2026-08-19-nachreview",
+      "typ": "count_only_probe_authorized",
+      "eventHash": "9401cc738663adf250cd284e1abf1cd496d522d998acfadd8267d3e90fc8deb1",
+      "registeredAt": "2026-08-19T18:54:48.047Z",
+      "accessedAt": "2026-08-19T18:58:47.000Z",
+      "serverConfirmedAt": "2026-08-19T18:54:51.000Z",
+      "evidence": "reports/studie/E4d-freigabe-pruefung-2026-08-19.json"
+    },
+    {
+      "runId": "e4d-kadenz-entdeckung-2026-08-19-nachreview",
+      "typ": "count_only_probe_authorized",
+      "eventHash": "6ebfded712863641239e83b435a3a02eec7adf783f86e416439e56d4b74cc956",
+      "registeredAt": "2026-08-19T18:54:48.110Z",
+      "accessedAt": "2026-08-19T18:58:47.000Z",
+      "serverConfirmedAt": "2026-08-19T18:54:52.000Z",
+      "evidence": "reports/studie/E4d-freigabe-entdeckung-2026-08-19.json"
+    }
+  ],
+  "evidenceCarrier": {
+    "branch": "studie/fortsetzung-20260828",
+    "commit": "929f41c35d189819e80af2bf2e170af8edc9847d",
+    "path": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
+    "positions": [13, 14],
+    "registerZweig": "studie/e3-praereg",
+    "note": "Auf diesem Zweig steht die 14-Eintrags-Kette mit den beiden E4d-Anmeldungen. Sie erreicht main NIE — siehe mainLedgerUnchanged."
+  },
+  "priorRegistrationProof": {
+    "claim": "Die R1-Eigenschaft 'Anmeldung VOR dem Zugriff' ist fuer beide Laeufe bereits zeitgerecht und maschinell belegt. Eine Neuanmeldung ist weder noetig noch zulaessig.",
+    "mechanism": "gh api -i auf die Ledger-Datei im Zweig studie/e3-praereg; der Date-Kopf der Server-Antwort ist der unabhaengige Zeitstempel.",
+    "serverConfirmedAt": ["2026-08-19T18:54:51.000Z", "2026-08-19T18:54:52.000Z"],
+    "firstAccessAt": "2026-08-19T18:58:47.000Z",
+    "holds": "serverConfirmedAt < accessedAt fuer beide Laeufe, Abstand rund 236 Sekunden."
+  },
+  "mainLedgerUnchanged": {
+    "eventCount": 15,
+    "appendedByThisRecord": 0,
+    "rewritten": false,
+    "reason": "Der Git-Praefix-Anker in tests/studie-r1-register.test.js prueft jede committete Revision der Ledger-Datei als byte-identisches Praefix des aktuellen Stands. Der Zweig-Ledger traegt an Position 13 den E4d-Eintrag, main an Position 13 den C0-Eintrag — er wuerde den Anker sofort rot schlagen."
+  },
+  "residualDebt": {
+    "statement": "Mains Ledger allein erzaehlt die E4d-Geschichte nicht mehr. Wer die Kette auf main liest, sieht die beiden Zaehlproben-Anmeldungen vom 19.08. nicht. Vollstaendig ist die Anmeldelage nur aus Ledger PLUS diesem Datensatz PLUS den beiden Freigabe-Belegen.",
+    "acknowledged": true,
+    "closedBy": null
+  },
+  "branchProtection": {
+    "branch": "studie/fortsetzung-20260828",
+    "protection": ["kein Loeschen", "kein Force-Push", "keine rueckwirkende Aenderung"],
+    "standing": true,
+    "reason": "Der Zweig ist ab jetzt der einzige Traeger der beiden E4d-Ledger-Eintraege. Geht er verloren, ist der Nachweis der Vorab-Anmeldung nur noch mittelbar ueber die Freigabe-Belege gefuehrt."
+  },
+  "structuralFinding": {
+    "what": "Das Zugriffs-Register hat keine Merge-Semantik. Append-only PLUS monotone Anmeldezeit setzt genau EINEN Anhaenger voraus.",
+    "consequence": "Zwei Straenge, die zwischen zwei main-Staenden parallel anmelden, erzeugen zwangslaeufig eine Gabel, die weder durch Anhaengen (Monotonie) noch durch Umsortieren (Praefix-Anker) heilbar ist.",
+    "openRule": "Verfahrensregel noch nicht gefasst: welcher Strang zwischen zwei main-Staenden anmelden darf."
+  },
+  "w10Exception": {
+    "decidedAt": "2026-08-29",
+    "decisionSource": "Orchestrator-Ruling 2026-08-29 (ENTSCHIED 5)",
+    "guard": "tests/studie-e4d-kadenz.test.js",
+    "test": "W10: die ECHTE Anmeldung traegt den Fingerabdruck - Gegenrichtung",
+    "problem": "W10 verlangt, dass die Anmeldungen zum HEUTIGEN Siegel beide Fenster decken. Das heutige Siegel ist ausschliesslich durch die beiden -nachreview-Eintraege angemeldet, und die stehen nach Punkt 1 dieses Datensatzes nur auf dem Zweig. Aus mains Ledger allein ist die Bedingung daher nicht erfuellbar.",
+    "resolution": "Der Waechter akzeptiert fuer GENAU dieses eine Siegel die Anmeldung als belegt durch diesen Datensatz PLUS die zwei Freigabe-Belege — mit denselben Feldpruefungen, die auch ein Ledger-Eintrag bestehen muesste (runId, eventHash, Fenster, serverConfirmedAt < accessedAt).",
+    "pinnedFreezeSha256": "def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2",
+    "provenBy": [
+      "protocol/early-detection/2.0.0/e4d-ledger-fork-deviation-record.json",
+      "reports/studie/E4d-freigabe-pruefung-2026-08-19.json",
+      "reports/studie/E4d-freigabe-entdeckung-2026-08-19.json"
+    ],
+    "scope": "Hash-genau gepinnt. Die Ausnahme gilt AUSSCHLIESSLICH fuer das Siegel def349666beb…; jedes andere, neue oder geaenderte Siegel ohne Ledger-Anmeldung faellt weiterhin durch W10 durch. Die Ausnahme ist kein Bypass des Wachtests, sondern ein zweiter Beweisweg fuer genau eine belegte Lage.",
+    "breakProbe": "Vor der Auslieferung einmal absichtlich gebrochen: Siegelinhalt geaendert -> neuer Hash -> Ausnahme greift nicht mehr -> W10 rot."
+  },
+  "preservation": {
+    "ledgerRewritten": false,
+    "reportsRewritten": false,
+    "confirmatoryVerdictsChanged": 0,
+    "endtestOpened": false
+  }
+}

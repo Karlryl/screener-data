@@ -89,11 +89,30 @@ check('Leakage-/Zeitpunkt-Waechter bleiben blockierend (nicht in der Melde-Spur)
   assert.ok(gate.BLOCKING_ALWAYS.length === 7, 'BLOCKING_ALWAYS zaehlt nicht mehr sieben Waechter');
 });
 
+// Namentlich zugelassen, obwohl ausserhalb des early-detection-Praefixes.
+// Orchestrator-Ruling 2026-08-29 14:10: tests/studie-c0.test.js (Strang C,
+// Themenauswahl) gehoert in die Melde-Spur — ein rotes C0 ist kein Auslieferungs-
+// Befund und darf den Preis-Abruf nicht anhalten.
+// BEWUSST eine Namensliste und KEINE aufgeweichte Praefix-Regel ('tests/studie-*'):
+// die tragende Eigenschaft dieses Checks ist, dass jede WEITERE fremde Datei in der
+// Forschungs-Spur auffliegt und auf der sicheren Seite blockierend landet.
+const NAMENTLICH_IN_DER_MELDE_SPUR = ['tests/studie-c0.test.js'];
+
 check('Forschungs-Spur ist eine Namensliste (neue Studien-Tests landen blockierend)', () => {
   for (const f of gate.REPORT_FILES) {
-    assert.ok(f.startsWith('tests/early-detection-'), 'Fremde Datei in der Forschungs-Spur: ' + f);
+    assert.ok(
+      f.startsWith('tests/early-detection-') || NAMENTLICH_IN_DER_MELDE_SPUR.includes(f),
+      'Fremde Datei in der Forschungs-Spur: ' + f,
+    );
     assert.ok(fs.existsSync(path.join(ROOT, f)), f + ' existiert nicht mehr — Liste veraltet');
   }
+  // Gegenprobe am Waechter selbst: eine NICHT namentlich zugelassene fremde Datei
+  // muss weiterhin auffliegen, sonst prueft die Regel nach der Lockerung nichts mehr.
+  const fremd = 'tests/irgendein-fremder.test.js';
+  assert.ok(
+    !fremd.startsWith('tests/early-detection-') && !NAMENTLICH_IN_DER_MELDE_SPUR.includes(fremd),
+    'Die Lockerung laesst beliebige fremde Dateien durch',
+  );
 });
 
 console.log(fail ? `\n${fail} FAIL` : '\nAlle Gate-Coverage-Checks ok');

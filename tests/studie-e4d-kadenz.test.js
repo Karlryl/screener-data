@@ -435,6 +435,59 @@ test('W10: eine Anmeldung OHNE den Fingerabdruck der Regel traegt keinen Lauf', 
   assert.match(`${lauf.stdout}${lauf.stderr}`, /W10-ABBRUCH/);
 });
 
+// ── W10-Ausnahme, HASH-GENAU gepinnt (Orchestrator-Ruling 2026-08-29, ENTSCHIED 5) ──
+// Die zwei Anmeldungen, die GENAU dieses Siegel binden, stehen nicht in mains Ledger:
+// zwei Studien-Straenge haben am 19.08. parallel an dieselbe append-only Kette
+// angemeldet, die Kette ist gegabelt, und jede Append-Variante ist konstruktiv tot
+// (Originalstempel -> rueckdatiert, heutiger Stempel -> nicht VOR dem Zugriff, eigene
+// Art -> fail-closed). Statt den Waechter zu entschaerfen, wird die Anmeldung hier auf
+// dem zweiten Beweisweg gefuehrt: Abweichungs-Datensatz PLUS die zwei Freigabe-Belege,
+// geprueft an denselben Feldern, die auch ein Ledger-Eintrag bestehen muesste.
+//
+// BEWUSST an den Siegel-Hash gepinnt und NICHT an "der Datensatz existiert": ein neues,
+// geaendertes oder unbekanntes Siegel ohne Ledger-Anmeldung MUSS weiterhin rot werden.
+// Sonst waere das hier ein Bypass statt eines Beweiswegs.
+const W10_AUSNAHME_SIEGEL = 'def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2';
+const W10_RECORD_ID = 'e4d-ledger-fork-2026-08-29';
+const ABWEICHUNGS_DATENSATZ = path.join(
+  REPO, 'protocol', 'early-detection', '2.0.0', 'e4d-ledger-fork-deviation-record.json',
+);
+const FREIGABE_BELEGE = {
+  pruefung: path.join(REPO, 'reports', 'studie', 'E4d-freigabe-pruefung-2026-08-19.json'),
+  entdeckung: path.join(REPO, 'reports', 'studie', 'E4d-freigabe-entdeckung-2026-08-19.json'),
+};
+
+/** Laeufe, deren Anmeldung zu `siegelSha` ausserhalb des Ledgers belegt ist ({fenster, runId}). */
+function belegeAusAbweichungsDatensatz(siegelSha) {
+  // Das Tor: alles andere als genau dieses Siegel bekommt hier NICHTS.
+  if (siegelSha !== W10_AUSNAHME_SIEGEL) return [];
+  const record = JSON.parse(fs.readFileSync(ABWEICHUNGS_DATENSATZ, 'utf8'));
+  assert.equal(record.recordId, W10_RECORD_ID, 'Anderer Datensatz als der gepinnte');
+  assert.equal(record.rule, 'R1');
+  assert.equal(record.mode, 'DOCUMENT_NO_LEDGER_APPEND');
+  assert.equal(record.w10Exception.pinnedFreezeSha256, W10_AUSNAHME_SIEGEL,
+    'Der Datensatz pinnt ein anderes Siegel als der Waechter');
+  assert.equal(record.affectedEntries.length, 2);
+
+  const belege = [];
+  for (const [name, pfad] of Object.entries(FREIGABE_BELEGE)) {
+    const beleg = JSON.parse(fs.readFileSync(pfad, 'utf8'));
+    const eintrag = record.affectedEntries.find((e) => e.runId === beleg.runId);
+    assert.ok(eintrag, `${name}: der Datensatz fuehrt den Lauf ${beleg.runId} nicht`);
+    assert.equal(eintrag.eventHash, beleg.registerEventHash,
+      `${name}: eventHash im Datensatz und im Freigabe-Beleg gehen auseinander`);
+    assert.equal(beleg.fenster, name, `${name}: der Beleg gehoert zu einem anderen Fenster`);
+    // Die eigentliche R1-Eigenschaft, feldgenau statt "Datei ist da":
+    // serverbestaetigte Anmeldung VOR dem ersten Zugriff.
+    assert.ok(Date.parse(beleg.registeredAt) < Date.parse(beleg.serverConfirmedAt),
+      `${name}: Anmeldung liegt nicht vor ihrer Server-Bestaetigung`);
+    assert.ok(Date.parse(beleg.serverConfirmedAt) < Date.parse(beleg.accessedAt),
+      `${name}: Server-Bestaetigung liegt nicht VOR dem Zugriff — R1 waere verletzt`);
+    belege.push({ fenster: name, runId: beleg.runId });
+  }
+  return belege;
+}
+
 test('W10: die ECHTE Anmeldung traegt den Fingerabdruck - Gegenrichtung', () => {
   // Wie viele Laeufe es je Fenster gab, ist eine Frage der Akte, nicht des
   // Waechters: Vorlaeufe bleiben im Register stehen (siehe E3/E4a). Geprueft wird
@@ -451,15 +504,22 @@ test('W10: die ECHTE Anmeldung traegt den Fingerabdruck - Gegenrichtung', () => 
       `Die Anmeldung ${e.runId} traegt gar keinen Siegel-Fingerabdruck`);
   }
   const zumHeutigenSiegel = eintraege.filter((e) => JSON.stringify(e).includes(siegelSha));
-  assert.deepEqual([...new Set(zumHeutigenSiegel.map((e) => (e.fenster || [])[0]))].sort(),
+  const ausLedger = zumHeutigenSiegel.map((e) => (e.fenster || [])[0]);
+  const ausDatensatz = belegeAusAbweichungsDatensatz(siegelSha);
+  assert.deepEqual([...new Set([...ausLedger, ...ausDatensatz.map((b) => b.fenster)])].sort(),
     ['entdeckung', 'pruefung'],
     'Zum heutigen Siegel muessen beide Fenster angemeldet sein');
-  // Und die ausgelieferten Artefakte muessen aus GENAU diesen Laeufen stammen.
+  // Und die ausgelieferten Artefakte muessen aus GENAU diesen Laeufen stammen —
+  // gleichgueltig, ob der Lauf im Ledger oder auf dem zweiten Beweisweg belegt ist.
+  const angemeldeteLaeufe = new Set([
+    ...zumHeutigenSiegel.map((e) => e.runId),
+    ...ausDatensatz.map((b) => b.runId),
+  ]);
   for (const p of [BERICHT_PRUEFUNG, BERICHT_ENTDECKUNG]) {
     const bericht = JSON.parse(fs.readFileSync(p, 'utf8'));
     assert.equal(bericht.freezeGeprueft.sha256, siegelSha,
       `${p} stammt aus einem Lauf unter einem ANDEREN Siegel`);
-    assert.ok(zumHeutigenSiegel.some((e) => e.runId === bericht.runId),
+    assert.ok(angemeldeteLaeufe.has(bericht.runId),
       `${p} nennt eine runId, die nicht zum heutigen Siegel angemeldet ist`);
   }
 });

@@ -393,70 +393,69 @@
    "eventHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd"
   },
   {
-   "runId": "e4d-kadenz-pruefung-2026-08-19-nachreview",
-   "typ": "count_only_probe_authorized",
-   "registeredAt": "2026-08-19T18:54:48.047Z",
-   "accessedAt": "2026-08-19T18:58:47.000Z",
+   "runId": "c0-freeze1-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T20:51:28.480311Z",
+   "accessedAt": "2026-08-19T21:16:22.000Z",
    "fenster": [
-    "pruefung"
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
    ],
    "allowedOutputs": [
-    "abstand_histogramm_klasse_c",
-    "ampel",
-    "auffindbarkeit_e3",
-    "auffindbarkeit_kadenz",
-    "auffindbarkeit_kadenz_e3formel",
-    "differenz_auffindbarkeit",
-    "fallzahl",
-    "firmen_mit_erst_ereignis",
-    "kadenz_untergrenze_gebunden",
-    "klasse_c_firmen",
-    "nenner_e3",
-    "nenner_kadenz",
-    "zaehler_kadenz",
-    "zensiert_e3",
-    "zensiert_kadenz",
-    "zensiert_kadenz_und_reif"
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
    ],
-   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
-   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
-   "begruendung": "E4d/E4e Neulauf nach dem Code-Review (fuenf Befunde geheilt, u. a. der abschwaechbare Siegel-Schalter). Entscheidungsregel unveraendert und vorab verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2. Rein zaehlend (R15b/R4).",
-   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen. Die Filer-Listen sind ausdruecklich erlaubt - eine spaetere Etappe leitet daraus Korb-Mitgliedschaften jaehrlich neu ab.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher oder auf Schluesselmaterial; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - Themenliste per Vorab-Regel. Eingefroren: Regeltext + Register-Manifest + Vokabular, Buendel-SHA-256 193081aa124a52c1e05e127985c8e69ee41b211514d9983dba6784bf906652ff. Die EDGAR-Zaehlung darf erst nach der Server-Bestaetigung dieses Eintrags starten.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an und braucht ihn nicht. Gezaehlt wird ausschliesslich im lebenden EDGAR-Volltextdienst.",
    "previousHash": "592fca89634d75c9331fafccf3bbcf00f096be41bd756871e7bf25fc32f371bd",
-   "eventHash": "9401cc738663adf250cd284e1abf1cd496d522d998acfadd8267d3e90fc8deb1"
+   "eventHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb"
   },
   {
-   "runId": "e4d-kadenz-entdeckung-2026-08-19-nachreview",
-   "typ": "count_only_probe_authorized",
-   "registeredAt": "2026-08-19T18:54:48.110Z",
-   "accessedAt": "2026-08-19T18:58:47.000Z",
+   "runId": "c0-freeze1b-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T22:36:27.777994Z",
+   "accessedAt": "2026-08-19T22:44:27.668Z",
    "fenster": [
-    "entdeckung"
+    "kein Studienfenster - lebende EDGAR-Volltextsuche"
    ],
    "allowedOutputs": [
-    "abstand_histogramm_klasse_c",
-    "ampel",
-    "auffindbarkeit_e3",
-    "auffindbarkeit_kadenz",
-    "auffindbarkeit_kadenz_e3formel",
-    "differenz_auffindbarkeit",
-    "fallzahl",
-    "firmen_mit_erst_ereignis",
-    "kadenz_untergrenze_gebunden",
-    "klasse_c_firmen",
-    "nenner_e3",
-    "nenner_kadenz",
-    "zaehler_kadenz",
-    "zensiert_e3",
-    "zensiert_kadenz",
-    "zensiert_kadenz_und_reif"
+    "dokument_treffer",
+    "eindeutige_ciks",
+    "filer_liste",
+    "spike_jahr",
+    "leiter_schritt"
    ],
-   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
-   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
-   "begruendung": "E4d/E4e Neulauf nach dem Code-Review (fuenf Befunde geheilt, u. a. der abschwaechbare Siegel-Schalter). Entscheidungsregel unveraendert und vorab verriegelt in protocol/early-detection/2.0.0/e4d-freeze.json, SHA-256 def349666bebf8c5e95c2c0d038ecfdf7cc50a3a4fa8820959d5ef7a17bb97a2. Rein zaehlend (R15b/R4).",
-   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
-   "previousHash": "9401cc738663adf250cd284e1abf1cd496d522d998acfadd8267d3e90fc8deb1",
-   "eventHash": "6ebfded712863641239e83b435a3a02eec7adf783f86e416439e56d4b74cc956"
+   "erlaubt": "Zaehlung eindeutiger CIKs in 10-K-Volltexten der lebenden EDGAR-Volltextsuche und die daraus abgeleitete Themenliste samt Filer-Listen.",
+   "verboten": "Jeder Kurs-, Rendite-, Marktwert- oder Ergebniswert; jeder Zugriff auf den versiegelten SEC-Speicher; jede Aenderung am Vokabular nach diesem Hash.",
+   "begruendung": "C0 Strang C - zweiter Regelstand. Buendel-SHA-256 1c13f5e1341508b0b632dc26057b47aa9e57686dcab23bc96c48180c73266f6d. Ersetzt die Anmeldung c0-freeze1-2026-08-19: an dem Stand war ausschliesslich das SKRIPT geaendert (Lesen von EDGARs unterer Trefferschranke), Regeltext, Register-Manifest und Vokabular tragen unveraenderte Pruefsummen.",
+   "endtestSiegel": "unberuehrt - C0 fasst den versiegelten Speicher nicht an.",
+   "previousHash": "09f1a888a1cde2f98dfdcdd29a72444ed99eda880b9e66626356ea4de319babb",
+   "eventHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81"
+  },
+  {
+   "runId": "c0-freeze2-2026-08-19",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-19T23:48:18.080987Z",
+   "accessedAt": "2026-08-19T23:54:17.953Z",
+   "fenster": [
+    "kein Studienfenster - abgeleitetes Ergebnis"
+   ],
+   "allowedOutputs": [
+    "themenliste",
+    "filer_liste",
+    "leiter_log",
+    "query_log"
+   ],
+   "erlaubt": "Veroeffentlichung der abgeleiteten Themenliste und der Filer-Listen.",
+   "verboten": "Jede nachtraegliche Aenderung an Themenliste, Filer-Listen oder Leiter-Log.",
+   "begruendung": "C0 FREEZE 2 - Buendel-SHA-256 502d52a5da82c51d62495b886072572d21e31abd9c8f615a8d67118a087cffdb ueber Themenliste, Filer-Listen, Query-Log und Leiter-Log. Baut auf c0-freeze1b-2026-08-19 auf.",
+   "endtestSiegel": "unberuehrt",
+   "previousHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
+   "eventHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
