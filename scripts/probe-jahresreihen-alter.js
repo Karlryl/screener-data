@@ -22,6 +22,11 @@
  */
 const fs = require('fs');
 const path = require('path');
+// Das ZENTRALE Praedikat, nicht `!f.startsWith('_')`: Snapshots mit reserviertem Namen
+// (z. B. `_CON.json` — CON ist unter Windows ein Geraetename) tragen aus genau diesem
+// Grund einen Unterstrich und sind ECHTE Firmen. Ein Pauschal-Filter verschluckt sie
+// still. Gepinnt in tests/p1-welle8-metadata-filter.test.js.
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const args = process.argv.slice(2);
 const argVal = (name, def) => {
@@ -46,7 +51,7 @@ function tageZwischen(a, b) {
 }
 
 function main() {
-  const dateien = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  const dateien = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   const alter = [];
   let ohneEnden = 0, kaputt = 0, gescannt = 0;
   const jeMonat = new Map();

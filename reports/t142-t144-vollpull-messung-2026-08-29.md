@@ -10,17 +10,24 @@
 > Meine Messung las `x.value`, fand `undefined` und zählte jeden echten Wert als leer.
 >
 > **Korrekt gemessen sind die Reihen gefüllt:**
-> `annualRepurchase` **48,10 %** · `annualDividendsPaid` **78,48 %** ·
-> `annualNetCommonStockIssuance` **62,63 %**.
+> `annualRepurchase` **48,11 %** · `annualDividendsPaid` **78,48 %** ·
+> `annualNetCommonStockIssuance` **62,64 %**.
 >
 > **T142 ist damit KEIN Defekt**, sondern positiv beantwortet: nach dem vollen Pull sind
 > die Felder belegt. §1 unten ist entsprechend ersetzt. Was als kleinerer Befund übrig
 > bleibt, steht in §1b.
 >
 > Der Commit `Tag 1049` trug die falsche Fassung; `Tag 1050` korrigiert sie.
+>
+> **Zweite Korrektur (Tag 1052), gemeldet vom Orchestrator:** die Messungen liefen zunächst
+> über einen Pauschal-Filter `!f.startsWith('_')` statt über das zentrale Prädikat
+> `isMetadataSnapshot`. Dadurch fielen **4 echte Snapshots** mit reserviertem Namen
+> (z. B. `_CON.json` — CON ist unter Windows ein Gerätename) still heraus: Nenner 15.040
+> statt 15.044. Die Zahlen oben sind mit dem korrekten Prädikat nachgerechnet; an den
+> Quoten und an keiner Schlussfolgerung ändert sich etwas.
 
 **Stand:** 2026-08-29 · **Datenbasis:** `snapshots/` aus dem CI-Artefakt des Laufs `33244450690`
-(15.040 lesbare Dateien; die alten Messungen liefen gegen 4.769 lokale Altbestände)
+(15.044 lesbare Dateien; die alten Messungen liefen gegen 4.769 lokale Altbestände)
 
 ---
 
@@ -33,7 +40,7 @@ vollen Pull messbar"*. Der Pull ist da. **Das Ergebnis ist gegensätzlich:**
   (48,1 % / 78,5 % / 62,6 %). T142s vorab festgelegte Bedingung („Belegung immer noch 0")
   ist **nicht** eingetreten. Ein kleinerer Nebenbefund bleibt: die Schreib-Wache prüft
   Länge statt Inhalt und lässt reine `null`-Reihen ins Schema (§1b).
-- **T144 — erledigt.** **0 von 15.040** Snapshots ohne Marktwert. Die ursprünglichen
+- **T144 — erledigt.** **0 von 15.044** Snapshots ohne Marktwert. Die ursprünglichen
   „91 von 4.769" waren ein Artefakt des alten lokalen Bestands; im echten Universum fällt
   niemand still durch.
 
@@ -43,9 +50,9 @@ vollen Pull messbar"*. Der Pull ist da. **Das Ergebnis ist gegensätzlich:**
 
 | Reihe | mit echtem Wert | nur `null`-Einträge | Feld fehlt |
 |---|---:|---:|---:|
-| `annualRepurchase` | **7.234 (48,10 %)** | 6.841 | 965 |
-| `annualDividendsPaid` | **11.803 (78,48 %)** | 2.272 | 965 |
-| `annualNetCommonStockIssuance` | **9.420 (62,63 %)** | 4.655 | 965 |
+| `annualRepurchase` | **7.237 (48,11 %)** | 6.842 | 965 |
+| `annualDividendsPaid` | **11.807 (78,48 %)** | 2.272 | 965 |
+| `annualNetCommonStockIssuance` | **9.423 (62,64 %)** | 4.656 | 965 |
 
 **T142s vorab festgelegtes Kriterium lautete:** *„Ist die Belegung danach immer noch 0, ist es
 dann einer [ein Defekt]."* Die Belegung ist **nicht** 0 — die Bedingung ist **nicht**
@@ -63,7 +70,7 @@ Rückkaufprogramm ist die richtige Antwort, keine Lücke.
 *„nur setzen wenn nicht leer, damit ein alter FTS-Cache kein leeres Feld ins Schema schreibt."*
 
 **Die Wache hält das nicht ein.** Ein Array `[null, null, null]` hat `length === 3` und läuft
-durch — gemessen in 6.841 Fällen bei `annualRepurchase`. Das Feld landet dann im Schema und
+durch — gemessen in 6.842 Fällen bei `annualRepurchase`. Das Feld landet dann im Schema und
 enthält nichts.
 
 Das ist **exakt die Klasse, die F-NY-001 an anderer Stelle beseitigt hat** — der Befund steht
@@ -79,7 +86,7 @@ Tageslaufs und gehört deshalb als eigener, geprüfter Bau gefahren — nicht ne
 
 ## §2 T144 — Marktwert: kein einziger Ausfall
 
-**0 von 15.040** Snapshots ohne brauchbaren Marktwert (Feld fehlt: 0 · Wert null/0/NaN: 0).
+**0 von 15.044** Snapshots ohne brauchbaren Marktwert (Feld fehlt: 0 · Wert null/0/NaN: 0).
 
 Damit ist die offene Frage beantwortet: es gibt heute keine Zeilen, für die weder Größenklasse
 noch Kohorten-Zuteilung berechenbar wäre — die Alternative *„zählen sie als ausgeschlossen oder

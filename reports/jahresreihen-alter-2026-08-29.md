@@ -1,7 +1,15 @@
 # T134 — Altersverteilung der Jahresreihen: messbar, aber nur auf 6,9 % des Bestands
 
-**Stand:** 2026-08-29 · **Datenbasis:** `snapshots/` aus dem CI-Artefakt des Laufs `33244450690` (15.040 lesbare Dateien)
+**Stand:** 2026-08-29 · **Datenbasis:** `snapshots/` aus dem CI-Artefakt des Laufs `33244450690` (15.044 lesbare Dateien)
 **Messskript:** `scripts/probe-jahresreihen-alter.js` (rein lesend)
+
+> **Korrektur (Tag 1052), gemeldet vom Orchestrator:** die erste Fassung des Messskripts
+> filterte mit `!f.startsWith('_')` statt mit dem zentralen Prädikat `isMetadataSnapshot`.
+> Dadurch fielen **4 echte Snapshots** mit reserviertem Namen (z. B. `_CON.json` — CON ist
+> unter Windows ein Gerätename) still heraus, und der blockierende Wächter
+> `tests/p1-welle8-metadata-filter.test.js` wurde auf `main` rot. Beides ist behoben; die
+> Zahlen unten stehen mit dem korrekten Prädikat (Nenner 15.044 statt 15.040), die
+> Kernaussage — 1.043 befüllte Jahres-Enden — ist unverändert.
 
 ---
 
@@ -10,7 +18,7 @@
 **T134 bleibt blockiert — aber ab jetzt aus einem präzisen, gemessenen Grund statt aus „der volle Pull fehlt".**
 Der volle Pull ist gelaufen. Die Jahres-Perioden-Enden sind trotzdem fast überall leer.
 
-- **Nur 1.043 von 15.040 Snapshots (6,9 %)** tragen in `annual.annualRevEnds` tatsächlich Datumswerte.
+- **Nur 1.043 von 15.044 Snapshots (6,9 %)** tragen in `annual.annualRevEnds` tatsächlich Datumswerte.
 - **Weitere 5.238 (34,8 %) tragen das Feld, aber LEER** — und genau das ist die Falle: eine
   Anwesenheits-Prüfung („hat der Snapshot `annualRevEnds`?") meldet für diese Dateien „ja".
   Die im Masterplan notierten „~39 % der Snapshots" beschreiben die **Anwesenheit**, nicht den Inhalt.
