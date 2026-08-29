@@ -1,0 +1,118 @@
+{
+  "schema": "early-detection-disclosure-addendum/v1",
+  "recordId": "r2-a1-t173-form-type-counter-2026-08-29",
+  "status": "FROZEN_T173_FORM_TYPE_COUNTER_ADDENDUM",
+  "frozenNotice": "FROZEN. Genehmigt durch ENTSCHIED 17 (Orchestrator-Direktiven 2026-08-29, 19:06) exakt in der von Codex vorgelegten Spezifikation (studie-dauerlauf-2026-08-29.md, Abschnitt 'T173 - Formtyp-Nachzaehlung periodenloser Berichte - vor Zugriff eingefroren'). Committet VOR jeder T173-Zaehlung. Die versiegelte Praeregistrierung und alle bestehenden frozen Records bleiben byte-unveraendert; dieser Record steht NEBEN ihnen und nimmt ihnen nichts weg.",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "frozenAt": "2026-08-29",
+  "authority": [
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 17, Punkt 3 - 'GENEHMIGT wie von Codex spezifiziert ... Deren Spezifikation ist vorbildlich - unveraendert uebernommen'",
+    "Verfassung der Early-Detection-Studie Z.286 (Offenlegungs-Weichen liegen beim Orchestrator)"
+  ],
+  "purpose": "Die bereits gezaehlte Gesamtmenge der nichtperiodischen Berichts-Ausschluesse je Fenster nach Formtyp aufschluesseln. Ein Zaehler ohne Verteilung sagt nicht, WAS ausgeschlossen wurde; die Aufschluesselung nutzt ausschliesslich einen Eingabewert, den der Bruecken-Code beim Ausschluss ohnehin schon liest.",
+  "referencedSealedSources": [
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-identity-bridge-artifact-preregistration.json",
+      "sha256AtFreezeTime": "0f1f14243826410b91a6868b7d108a75c4af92fb1bee198de27cce7639146cb4",
+      "changed": false
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json",
+      "sha256AtFreezeTime": "1239a61cc37d8ae3d49f3f3d05397534bf06d1f8054ea7885334cb0edc15a2f3",
+      "changed": false,
+      "note": "Friert exakt zehn Gesamt-Ausschlusszaehler je Fenster ein. Keiner davon wird durch dieses Addendum bewegt, umbenannt oder ersetzt."
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-comparator-defect-addendum.json",
+      "sha256AtFreezeTime": "6cc114424344023f7873703b7444572cf465625f270c6b42ae5d4a94d08fd10e",
+      "changed": false
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json",
+      "sha256AtFreezeTime": "53d77849b3a00115edf949d8fda3f4aabdfc9b4aee2f13f80600c1e14e6332db",
+      "changed": false
+    }
+  ],
+  "changeRule": "Keiner der oben referenzierten Records wird editiert, neu versiegelt oder ergaenzt. Wer einen von ihnen anfasst, hat diesen Vertrag verlassen.",
+  "scope": {
+    "governedArtifact": "Das R2-A1-Kennungsbruecken-Artefakt, scripts/studie-identity-bridge-artifact.py. NICHT die Ausgabe von scripts/studie-zaehlprobe.py und NICHT das Zugriffs-Register.",
+    "readColumns": [
+      "bericht.form"
+    ],
+    "readColumnsRule": "AUSSCHLIESSLICH bericht.form. Kein Zugriff auf die Tabelle fakt, keine Firmen- oder Personenidentitaet, kein Signal, kein Outcome, kein Preis, keine Rendite, kein Schluesselmaterial.",
+    "windowLabels": [
+      "entdeckung",
+      "pruefung"
+    ],
+    "windowLabelsRule": "Festes Fensterlabel aus der bestehenden WINDOWS-Konstante des Artefakts. Das Endtest-Fenster ist strukturell nicht enthalten und wird nicht geoeffnet, nicht gezaehlt und nicht benannt.",
+    "noNewDataAccess": "bericht.form wird beim Periodizitaets-Ausschluss bereits heute gelesen (scripts/studie-identity-bridge-artifact.py, SELECT ... form ... FROM bericht; Ausschluss ueber form_stem gegen BASIS.PERIODISCHE_FORMEN). Es wird KEINE Zeile zusaetzlich gelesen, KEINE Quelle zusaetzlich geoeffnet, KEIN Zugriffsrecht erweitert - nur ein bereits gelesener Wert wird nicht mehr verworfen, sondern aggregiert."
+  },
+  "normalization": {
+    "function": "form_stem",
+    "definition": "str(value or '').upper().strip().split('/', 1)[0]",
+    "periodicSet": [
+      "10-K",
+      "10-Q",
+      "20-F",
+      "40-F"
+    ],
+    "periodicSetSource": "scripts/studie-basisraten.py, PERIODISCHE_FORMEN",
+    "rule": "EXAKT die bestehende Normalisierung. Keine neue, keine erweiterte, keine zusaetzliche Regel. Ein Formtyp gilt genau dann als nichtperiodisch, wenn form_stem(form) nicht in der periodicSet liegt - dieselbe Bedingung, die den Ausschluss ausloest."
+  },
+  "output": {
+    "field": "nonperiodicReportsExcludedByForm",
+    "level": "je Fenster, neben dem bestehenden Gesamtzaehler",
+    "shape": "Map von form_stem (Zeichenkette) auf Ganzzahl, nach Schluessel sortiert",
+    "sortRule": "Aufsteigend nach Schluessel. Deterministische Reihenfolge, damit zwei Laeufe byte-identische Ausgaben erzeugen.",
+    "emptyMapSemantics": "Eine leere Map heisst 'gemessen, kein nichtperiodischer Bericht aufgetreten', nicht 'nie gemessen'. Sie ist nur dann zulaessig, wenn der Gesamtzaehler im selben Lauf 0 ist.",
+    "forbidden": "Keine Firmen-Kennung, kein adsh, kein cik, kein Name, kein Datum, keine Naht-ID, kein Ergebnis-, Signal-, Outcome-, Preis- oder Kennzahlwert. Die Map traegt Formtyp-Schluessel und Anzahlen, sonst nichts."
+  },
+  "reconciliation": {
+    "rule": "Die Summe aller Werte der Map MUSS je Fenster exakt dem im SELBEN Lauf ermittelten Gesamtzaehler nonperiodicReportsExcluded entsprechen.",
+    "againstCounter": "nonperiodicReportsExcluded",
+    "sameRunOnly": "Der Abgleich laeuft gegen den Zaehler DIESES Laufs, nie gegen einen zitierten, gespeicherten oder erinnerten Wert. Ein Abgleich gegen eine fremde Zahl waere eine Behauptung, keine Pruefung.",
+    "onMismatch": "ABBRUCH. Eine Abweichung heisst, dass die Aufschluesselung etwas anderes zaehlt als der Ausschluss - Weiterrechnen wuerde den Fehler in die Ausgabe schreiben."
+  },
+  "requiredProofs": [
+    {
+      "id": "zwei-fenster-waechter",
+      "kind": "synthetisch",
+      "requirement": "Ein hermetischer Zwei-Fenster-Fall mit unterschiedlicher Formtyp-Verteilung je Fenster. Belegt, dass die Maps je Fenster getrennt gefuehrt werden und nicht in einen gemeinsamen Topf laufen."
+    },
+    {
+      "id": "sabotage-leck",
+      "kind": "absichtlicher Bruch",
+      "requirement": "Ein periodischer Bericht wird kuenstlich in die Map geleitet. Der Summenabgleich MUSS rot werden und den gebrochenen Vertrag benennen."
+    },
+    {
+      "id": "sabotage-fehlklassifikation",
+      "kind": "absichtlicher Bruch",
+      "requirement": "Die Normalisierung wird kuenstlich veraendert, sodass ein nichtperiodischer Formtyp als periodisch gilt. Der Waechter MUSS rot werden und Ist gegen Soll zeigen."
+    }
+  ],
+  "proofRule": "Jeder der drei Belege wird VOR der Abnahme einmal absichtlich gebrochen und sein Feuern gezeigt. Ein Waechter, dessen Rotwerden nie beobachtet wurde, ist kein Beleg.",
+  "notAWeakening": [
+    "Keine Schwelle, kein Gate und keine Entscheidungsregel wird beruehrt.",
+    "Keine Pruefung wird entfernt, uebersprungen oder toleranter gemacht.",
+    "Kein bestehender Ausschlusszaehler aendert seine Definition oder seinen Wert.",
+    "Es wird kein Ergebniswert, kein Signal, kein Outcome und kein Preis offengelegt.",
+    "Die Zahl der offengelegten Groessen steigt; die Zahl der zulaessigen Schluessel in der Zaehlproben-Allowlist bleibt exakt gleich."
+  ],
+  "explicitNonClaims": [
+    "Das Addendum bewertet nicht, ob ein gezaehlter Ausschluss inhaltlich richtig war.",
+    "Es interpretiert die Verteilung nicht und leitet aus ihr keine Schlussfolgerung ab.",
+    "Es beruehrt weder das versiegelte konfirmatorische Verdikt noch das Endtest-Fenster.",
+    "Es autorisiert keinen Lauf ueber Ergebnisdaten und keinen Eintrag im Zugriffs-Register."
+  ],
+  "ledgerRelation": {
+    "accessLedgerEntryRequired": false,
+    "reason": "Das Zugriffs-Register (protocol/early-detection/2.0.0/outcome-access-ledger.json) regelt Zugriffe auf ERGEBNISDATEN. T173 liest keine Ergebnisdaten, sondern eine Metadatenspalte, die der Bruecken-Code beim Ausschluss ohnehin schon liest. Der Praezedenzfall steht fest: der Blocker-2-Neubau des Bruecken-Artefakts registrierte via Praeregistrierung, nicht via Register - kein Ledger-Pfad (Orchestrator-Direktiven 2026-08-29, ENTSCHIED 9). Dieses Addendum ist der gleiche Weg.",
+    "ifInDoubt": "Bei Zweifel gilt die Ein-Appender-Regel unveraendert: ein Registereintrag entstuende main-first per Mini-PR VOR dem Zugriff, nie auf einem Zweig (protocol/early-detection/2.0.0/register-single-appender-rule.json)."
+  },
+  "executionEnvironment": {
+    "rule": "Der T173-Lauf startet aus einem frischen Worktree von origin/main (Post-Merge-Stand). Der Studienzweig traegt die verworfene Ledger-Gabel und wird fuer diesen Lauf nicht verwendet.",
+    "authority": "ENTSCHIED 17, Punkt 1 und Punkt 3 ('Gleiches Umgebungs-Muster: Lauf von main-Worktree')",
+    "outputTransport": "Lauf-Ausgaben landen per Mini-PR auf main durch einen berechtigten Motor. Codex committet lokal; der Transport landet."
+  }
+}
