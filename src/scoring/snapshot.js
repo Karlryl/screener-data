@@ -104,6 +104,45 @@ function norm(snapshot, field, key) {
   });
 }
 
+// --- K2-Gate: synthetische OpInc-Jahresreihen ------------------------------
+// Urteil T164/165/166 vom 29.08.2026, K2 EINSTIMMIG (3:0) "zulaessig-mit-Kennzeichnung
+// mit hartem Gate"; ratifiziert als ENTSCHIED 15, Karl-Freigabe 29.08.2026 20:10
+// (ENTSCHIED 18). Doppel-Autorisierung dokumentiert in protocol/gqs-00/1.2.0-pending/.
+//
+// WAS SYNTHETISCH IST: pull-yahoo.js _deriveOpIncForFinancials Pfad 3 fuellt fehlende
+// Jahres-Betriebsergebnisse von Finanzfirmen mit `annualRev[jahr] x operatingMargins(TTM)`
+// — EINE Marge, auf alle Jahre gestempelt. Solche Snapshots tragen
+// meta.opIncSource === 'computed-margin' (1.859 Namen im Hauptstore, 100 % Financial
+// Services). Die Reihe hat per Konstruktion konstante Marge UND konstantes Vorzeichen:
+// sie fabriziert exakt die Stabilitaet, die jede historische Achse messen will.
+//
+// DIE TRENNLINIE (K2-Auflage 1 vs. 2), warum es ZWEI Leser gibt und nicht einen:
+//   norm(s,'annualOpInc')  = AKTUELLES VORZEICHEN. Bleibt erlaubt. Der Track-Split liest
+//                            nur das juengste Jahr, und dessen Vorzeichen IST das der
+//                            realen TTM-Operating-Margin (rev>0 x marge) — also genau das
+//                            Signal, das R3 in K2.1 verlangt, ohne zweiten Rechenweg.
+//   histOpInc(s)           = HISTORIE. Bei computed-margin leer. Fuer alle historischen
+//                            Achsen, Profitphasen und longitudinalen Lampen.
+//
+// WARUM [] UND KEIN eigener null-Pfad: norm() liefert laut eigenem Vertrag (iii) fuer ein
+// fehlendes/leeres Rohfeld []. Alle historischen Verbraucher behandeln [] bereits korrekt als
+// "keine Jahresreihe" (dokumentierte Rueckfaelle: NetIncome-Rescue, renorm-on-drop,
+// Daempfer-Faktor exakt 1.0). Die Messung scripts/ab-computed-margin.js hat genau diese
+// Aequivalenz am echten Bestand belegt. Ein neuer Sonderpfad waere eine zweite Semantik
+// fuer denselben Zustand.
+const OPINC_SYNTHETIC_LABEL = 'computed-margin';
+// true = synthetisch, false = echte Quelle (yahoo-adjusted/sec-gaap) ODER gar kein Etikett.
+// Ein FEHLENDES Etikett darf nie als synthetisch gelten — sonst wuerde ein Alt-Snapshot
+// ohne meta still seine ganze Historie verlieren.
+function opIncSynthetic(snapshot) {
+  return !!(snapshot && snapshot.meta && snapshot.meta.opIncSource === OPINC_SYNTHETIC_LABEL);
+}
+// Die Jahres-OpInc-Reihe fuer HISTORISCHE Auswertung. Identisch zu norm() ausser bei
+// synthetischer Herkunft — dort [].
+function histOpInc(snapshot) {
+  return opIncSynthetic(snapshot) ? [] : norm(snapshot, 'annualOpInc');
+}
+
 // --- abgeleitete Helfer auf normalisierten Serien -------------------------
 // Ersetzen jede rohe Index-Arithmetik durch abstrakte, luecken-sichere Begriffe.
 
@@ -291,6 +330,8 @@ function metricVal(snapshot, key) {
 
 module.exports = {
   norm, hasPresent, firstPresent, sumPresent, sign, FIELD_REGISTRY,
+  // K2-Gate (Urteil T164 K2.2): synthetische OpInc-Historie sperren, Vorzeichen behalten.
+  histOpInc, opIncSynthetic, OPINC_SYNTHETIC_LABEL,
   presentValues, firstTwoPresent, recentSumPresent, metricVal, ratioSeries,
   // F-4: datumsbewusste Auswahl des Jahres-Vergleichsquartals
   periodEnds, jahresVergleichIdx, jahresFensterAusgerichtet,

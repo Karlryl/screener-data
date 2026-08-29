@@ -81,6 +81,8 @@ function buildCalibMatrix(universe, formulas, opts = {}) {
     // (real-estate/it-services) gegen die profit-Vorzeichen-Sub-Kohorte (Iron-Rule 2). Hier exakt
     // spiegeln (score.js:575-577), sonst weicht die Kalibrier-Matrix von der Produktion ab -> Weights
     // wuerden gegen ein Ranking getunt, das Produktion fuer diese 2 Branchen nie erzeugt (100% Mismatch).
+    // norm(), nicht histOpInc(): Vorzeichen-Signal wie trackOf (K2-Auflage 1, Urteil T164) —
+    // muss mit score.js:1030 und gqs00-freeze.js comparisonBasis() zeichengleich bleiben.
     const profitSign = formula.subCohortByProfit
       ? entries.map((e) => signTrack(norm(e.s, 'annualOpInc')))
       : null;

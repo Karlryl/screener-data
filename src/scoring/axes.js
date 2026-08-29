@@ -26,7 +26,8 @@
  *  9 marginLevel           Bruttomarge-NIVEAU (Franchise-vs-commodity-Diskriminator, 2.12b)
  */
 
-const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx } = require('./snapshot.js');
+const { norm, hasPresent, firstPresent, presentValues, metricVal, ratioSeries, jahresVergleichIdx,
+  histOpInc } = require('./snapshot.js');
 const { fcfMarginValid } = require('./engine.js');
 
 // --- kleine Helfer auf normalisierten Serien (luecken-sicher) ---------------
@@ -370,7 +371,11 @@ function capitalEfficiency(s) {
   // dem Eigen-Schnitt -> Discount holt den ROIC auf zyklus-bereinigtes Niveau
   // zurueck. Trough-Recovery/stabil (cur <= histRest) -> Discount 1 (neutral);
   // Software mit stabil hoher Marge unberuehrt. 1/(1+overshoot) bleibt in (0,1].
-  const opIncRaw = norm(s, 'annualOpInc'), revRaw = norm(s, 'annualRev');
+  // K2-Gate: der Discount ist eine MEHRJAHRES-Aussage (juengste Marge gegen den Eigen-Schnitt)
+  // und liest deshalb histOpInc, nicht norm. Bei computed-margin ist die Margenreihe per
+  // Konstruktion konstant — cur == histRest, der Discount koennte gar nie greifen. Das Gate
+  // macht aus diesem stillen Zufall eine ausgesprochene Regel: keine Reihe, kein Discount (1).
+  const opIncRaw = histOpInc(s), revRaw = norm(s, 'annualRev');
   const marginsRaw = ratioSeries(opIncRaw, revRaw);
   const margins = presentValues(marginsRaw);
   let cycleDiscount = 1;
@@ -493,8 +498,20 @@ function secSeries(s, field) {
 // cycleSeriesPair via useSec verbietet (score.js:358-359). secAnnual-Bilanz liegt in buildAnnual
 // index-aligned zu OpInc (dieselbe _fys-Achse) -> FY-kohaerent. useSec gdw alle drei tiefen Serien present,
 // Index0 non-null, und die tiefe OpInc mind. so tief wie Yahoo. Kein secAnnual -> Yahoo (byte-identisch).
+// K2-Gate (B1) UND K3-Ausnahme (B3) fallen hier aus EINER Zeile — opY kommt aus histOpInc():
+//   B1  Kein secAnnual-Trio -> opY ist bei computed-margin [] -> capitalEfficiency und
+//       roicStability finden kein einziges gepaartes Jahr -> beide null (renorm-on-drop).
+//       Dasselbe gilt fuer die Anzeige-Lampe lowRoic, die diese Quelle mitliest.
+//   B3  Mit secAnnual-Trio ist der Laengen-Vergleich `opS.length >= opY.length` gegen eine
+//       synthetische Reihe `>= 0` und damit IMMER erfuellt: eine ECHTE SEC-Serie gewinnt gegen
+//       Synthetik unabhaengig von ihrer Laenge (Urteil K3, einstimmig; belegt an IREN, capEff
+//       -0,1147 -> +0,0062, echte 1-Jahres-SEC-Serie schlaegt 4 synthetische Yahoo-Jahre).
+//       Gegen eine ECHTE Yahoo-Reihe bleibt die Laengenbedingung unveraendert scharf — der
+//       Duenne-Serien-Schutz ist NICHT gelockert, nur die Synthetik verliert ihr Stimmrecht.
+// Single-Source-Trio-Guard und Index-0-Guard darunter sind bewusst UNANGETASTET (K3-Auflage 1).
+// Waechter: tests/scoring/opinc-gate-computed-margin.test.js (G1, G3).
 function roicStabilitySource(s) {
-  const opY = norm(s, 'annualOpInc');
+  const opY = histOpInc(s);
   const assetsY = norm(s, 'annualBalance', 'totalAssets');
   const curLiabY = norm(s, 'annualBalance', 'currentLiabilities');
   const opS = secSeries(s, 'annualOpInc');

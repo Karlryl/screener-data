@@ -12,7 +12,7 @@
  *   { ticker, action, formulaId, track, score|null, lamps[], overview, reason? }
  */
 
-const { norm, metricVal, firstPresent, presentValues, firstTwoPresent } = require('./snapshot.js');
+const { norm, metricVal, firstPresent, presentValues, firstTwoPresent, histOpInc } = require('./snapshot.js');
 const { q, weightedScore, coverageWeight, signTrack, fcfTrack } = require('./engine.js');
 const { route, isUS, isUsPrimaryListing } = require('./router.js');
 const { evaluateLamps, burnPressFactor, einmalertragPrognose, einmalertragBewertbarkeit } = require('./lamps.js');
@@ -342,6 +342,13 @@ function issuerDedupComparator(a, b) {
 // annual-currency-Leak) ODER snapshot _quality.grade='D' wird aus dem Ranking EXCLUDIERT, sonst
 // koennte ein Auslandsname auf fabriziertem Wachstum #1 werden. Die uebrigen 10 Lampen sind reine
 // Timing-Warnungen und excludieren NICHT (BE/PLTR ranken trotz Lampe oben).
+// ⚠ HERKUNFTS-LAMPEN GEHOEREN NICHT HIER HINEIN (Urteil T164 K2-Auflage 3, einstimmig 3:0,
+// ratifiziert ENTSCHIED 15): opIncSynthetisch und opIncYahooAdjusted (lamps.js 17/18) sind
+// KENNZEICHNUNG, kein Ausschluss. opIncSynthetisch allein brennt an 300 von 354 Zeilen des
+// Financials-Boards — ein Eintrag hier waere ein 300-Zeilen-Exclude durch die Hintertuer und
+// exakt die vom Gericht verbotene Board-Ausweidung. Ein zurueckgerechnetes Betriebsergebnis ist
+// eine BENANNTE Naeherung, kein fabriziertes Quartal wie newestQtrSuspect.
+// Waechter: tests/scoring/opinc-gate-computed-margin.test.js (G4).
 const DATA_SUSPECT_LAMPS = ['newestQtrSuspect', 'annualCurrencyLeak'];
 
 // Einmalertrag-Konsequenz (Gerichtsurteil 16.08.2026, F-16-Einzelfreigabe Karl).
@@ -640,7 +647,12 @@ function normSec(s, field) {
 // spaet-startende SEC-Filer. signFlips/revMaxDrawdown sind vorzeichen-/verhaeltnis-basiert -> robust gegen
 // SEC-vs-Yahoo FY-Versatz + Level-Restatement. Kein secAnnual -> Yahoo (byte-identisch zum 4J-Verhalten).
 function cycleSeriesPair(s) {
-  const opRaw = norm(s, 'annualOpInc'), revRaw = norm(s, 'annualRev');
+  // K2-Gate: der Zyklus-Daempfer ist die longitudinalste Groesse der Engine (Vorzeichenwechsel
+  // ueber die Jahresreihe). Eine per TTM-Marge zurueckgerechnete Reihe hat KONSTANTES
+  // Vorzeichen — sie kann nur Ruhe melden, nie Zyklus. Mit histOpInc faellt das Yahoo-Bein bei
+  // Synthetik weg (opRaw[0] undefined -> {op:[],rev:[]} -> cycleSignal 0 -> Faktor exakt 1.0);
+  // eine echte tiefe SEC-Serie speist den Daempfer unveraendert weiter.
+  const opRaw = histOpInc(s), revRaw = norm(s, 'annualRev');
   const opY = presentValues(opRaw);
   const revY = presentValues(revRaw);
   const opS = normSec(s, 'annualOpInc'), revS = normSec(s, 'annualRev');
@@ -686,6 +698,14 @@ function trackOf(s, formula) {
       t = fcfTrack(metricVal(s, 'fcfMarginTTM'), norm(s, 'annualFCF'), norm(s, 'annualOCF'));
       break;
     case 'OpInc': {
+      // ABSICHTLICH norm(), NICHT histOpInc(): K2-Auflage 1 (Urteil T164, einstimmig) laesst die
+      // computed-margin-Reihe genau EIN Signal speisen — das aktuelle Vorzeichen des Track-Splits.
+      // signTrack liest nur das juengste Jahr, und dessen Vorzeichen IST das der realen
+      // TTM-Operating-Margin (annualRev[0] > 0 mal Marge). R3s Praezisierung "das Signal direkt
+      // aus der Operating-Margin ziehen" ist damit bereits erfuellt, ohne einen zweiten
+      // Rechenweg zu derselben Zahl zu bauen. Wer hier auf histOpInc umstellt, schiebt 1.859
+      // Finanznamen auf den NetIncome-Rescue und aendert Tracks — das waere ein Urteilsbruch.
+      // Waechter: tests/scoring/opinc-gate-computed-margin.test.js (G2).
       const opInc = norm(s, 'annualOpInc');
       t = signTrack(opInc);
       // audit/fix (Court Fall 3, F5+F27): leeres annualOpInc -> signTrack='unknown' -> NICHT
@@ -720,8 +740,13 @@ function trackOf(s, formula) {
 // Gewinn-Serie fuer die Phase: annualOpInc primaer (operativer Kern), annualNetIncome NUR Rescue wenn
 // OpInc-Serie leer — analog zum trackOf-Muster. NBIS (OpInc[----], NI[+...] via Yandex-Einmaleffekt)
 // bleibt so korrekt 'unprofitable' (operativ), konsistent zum Track. presentValues haelt newest-first-Reihenfolge.
+// K2-Gate: phaseOf() liest die GANZE Reihe (`ser.every(v => v >= 0)` = established). Auf einer
+// konstant-vorzeichigen Synthetik-Reihe ist "nie ein Verlustjahr" eine Tautologie, kein Befund.
+// histOpInc leert die Reihe bei computed-margin -> der bereits dokumentierte NetIncome-Rescue
+// greift (dieselbe Mechanik wie bei leerem OpInc, NBIS-Muster), die Phase bleibt belegt statt
+// erfunden. NetIncome ist eine echte Yahoo-Reihe und war nie Teil des Notbehelfs.
 function profitSeries(s) {
-  const op = presentValues(norm(s, 'annualOpInc'));
+  const op = presentValues(histOpInc(s));
   return op.length ? op : presentValues(norm(s, 'annualNetIncome'));
 }
 // Profitabilitaets-Phase: established (nie ein Verlustjahr im Fenster) / inflected (juengstes positiv,
@@ -1008,6 +1033,9 @@ function scoreUniverse(snapshots, formulas, opts = {}) {
     // Achse capitalEfficiency nur gegen Firmen GLEICHEN Profit-Vorzeichens perzentil-
     // ieren, damit Verlust-Wachser nicht vom Niveau-ROIC im SCORE demoviert werden
     // (Iron-Rule 2). Split-Branchen (mit Ankern) trennen das ohnehin via Track.
+    // norm(), nicht histOpInc(): das ist dasselbe VORZEICHEN-Signal wie in trackOf (K2-Auflage 1),
+    // und scripts/gqs00-freeze.js comparisonBasis() spiegelt genau diese Zeile — ein Wechsel hier
+    // muesste dort und in calibrate.js:85 mitgehen, sonst driften Siegel und Produktion auseinander.
     const profitSign = formula.subCohortByProfit
       ? entries.map((e) => signTrack(norm(e.snapshot, 'annualOpInc')))
       : null;

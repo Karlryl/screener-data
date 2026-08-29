@@ -10,7 +10,7 @@
  */
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
-  jahresVergleichIdx, jahresFensterAusgerichtet } = require('./snapshot.js');
+  jahresVergleichIdx, jahresFensterAusgerichtet, histOpInc } = require('./snapshot.js');
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
@@ -48,6 +48,9 @@ function _median(arr) {
 }
 
 // 1. Unprofitabel (reine Warnung, KEINE Score-Strafe) ------------------------
+// norm(), nicht histOpInc(): firstPresent liest EINEN Wert — das aktuelle Vorzeichen, dieselbe
+// Groesse wie der Track-Split (K2-Auflage 1). Der eigene Rueckfall dieser Lampe ist ohnehin die
+// TTM-operatingMargin, aus der die synthetische Reihe stammt: beides waere dieselbe Aussage.
 function unprofit(s) {
   const op = firstPresent(norm(s, 'annualOpInc'));
   const om = metricVal(s, 'operatingMargin');
@@ -111,7 +114,10 @@ function peakMargin(s) {
   // seine EIGENE Baseline gemittelt -> Lampe feuerte zu selten (8/46 Faelle, z.B. NEU/UVV). Reine
   // Display-Lampe (nicht in DATA_SUSPECT_LAMPS) -> kein Score/Exclude-Effekt; KEIN !rising-Guard
   // (Court F22: peakMargin bleibt die breite Mean-Reversion-Watch, NICHT cyclePeak-Duplikat).
-  const m = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  // K2-Gate (longitudinale Lampe): cur gegen den Eigen-Schnitt der Vorjahre. Bei computed-margin
+  // ist die Margenreihe konstant, cur == histRest -> die Lampe koennte konstruktionsbedingt nie
+  // feuern und meldete 'false' als waere das ein Befund. histOpInc macht daraus ein ehrliches null.
+  const m = presentValues(ratioSeries(histOpInc(s), norm(s, 'annualRev')));
   const cur = m.length ? m[0] : null;
   const histRest = meanPresent(m.slice(1)); // ohne juengstes (kompaktiert, kein Eigen-Overlap)
   if (cur === null || histRest === null || histRest <= 0) return null;
@@ -183,7 +189,7 @@ function fcfArtefact(s) {
 // werden Commodity-Peak-Price-Taker (Gold-Miner am Rekordpreis) markiert, ein
 // echter Margen-Expandierer (cur>hist aber steigend) NICHT.
 function cyclePeak(s) {
-  const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')); // aligned
+  const margins = ratioSeries(histOpInc(s), norm(s, 'annualRev')); // aligned; K2-Gate wie peakMargin
   const m = presentValues(margins);
   if (m.length < 3) return null;
   const histRest = meanPresent(m.slice(1));
@@ -345,8 +351,13 @@ function burnAccelerating(s) {
   // 0,54, Kohorten-Rang 39 statt 1). Die Vertiefungs-Pruefung laeuft aus demselben Grund
   // ebenfalls auf der operativen Groesse: ein groesseres Bauprogramm ist keine
   // Verschlechterung der Einheiten-Oekonomie.
+  // K2-Gate: opi[0] gegen opi[1] ist ein Zwei-Jahres-Vergleich (longitudinal) UND er druckt ueber
+  // burnPressFactor den Score. Bei computed-margin ist `opi[0] < opi[1]` nichts weiter als
+  // `rev[0] < rev[1]`, mit der TTM-Marge als Vorzeichen — eine "sich vertiefende Verlustdynamik",
+  // die allein aus der Umsatzbewegung fabriziert waere. histOpInc -> opi leer -> Lampe null ->
+  // burnPressFactor exakt 1.0 (kein Abzug aus Fiktion, und auch kein Rescue).
   const ocf = operatingCashSeries(s);
-  const opi = norm(s, 'annualOpInc');
+  const opi = histOpInc(s);
   if (!Number.isFinite(ocf[0]) || !Number.isFinite(ocf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
   if (!(ocf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: operativ Cash-verbrennend UND operativ unprofitabel
   return ocf[0] < ocf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt

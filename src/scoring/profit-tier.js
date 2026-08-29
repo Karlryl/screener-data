@@ -42,7 +42,7 @@
  *
  * Schwellen: Ausgangspunkt, im Ledger festgezurrt — als benannte Konstanten, keine Magic Numbers.
  */
-const { norm, presentValues } = require('./snapshot.js');
+const { norm, presentValues, histOpInc } = require('./snapshot.js');
 
 const LONGTERM_MIN_YEARS = 4;      // 'langfristig' braucht >= so viele annual-Perioden, alle >= 0
 const TRAJECTORY_MIN_QUARTERS = 2; // fuer eine Trajektorie-Aussage mindestens noetige Quartale
@@ -57,8 +57,14 @@ const BREAKEVEN_MAX_QUARTERS = 4;  // 'kurz vor': Breakeven bei aktueller Rate b
 // profitabel"). Fehlt das juengste OpInc-Jahr, ist die OpInc-Serie fuer DAS aktuelle Jahr nicht
 // aussagekraeftig -> komplett auf NetIncome zurueckfallen (dessen eigene Index0-Position gilt dann),
 // analog zum bestehenden Fallback bei komplett leerem OpInc.
+// K2-Gate (Urteil T164 K2.2, "Profitphasen"): 'langfristig-profitabel' verlangt >= 4 Jahre ALLE
+// >= 0. Auf einer konstant-vorzeichigen computed-margin-Reihe ist das automatisch erfuellt — das
+// Etikett kaeme aus der Konstruktion, nicht aus der Firma. Und es ist NICHT nur deskriptiv:
+// quality-route.js benutzt profitTierOf() als Aufnahmeregel fuers Quality-Board. histOpInc leert
+// die Reihe bei Synthetik -> der bereits vorhandene, dokumentierte NetIncome-Fallback (BH-081,
+// gleiche Zeile) traegt die Stufe aus einer ECHTEN Reihe. Kein neuer Pfad, kein Nullen.
 function annualProfitSeries(s) {
-  const raw = norm(s, 'annualOpInc');
+  const raw = histOpInc(s);
   const op = (raw.length && raw[0] !== null && raw[0] !== undefined) ? presentValues(raw) : [];
   return op.length ? op : presentValues(norm(s, 'annualNetIncome'));
 }
