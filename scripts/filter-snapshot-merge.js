@@ -437,6 +437,7 @@ function milanSieger(beine) {
 function milanUmbenennungen(klassen, mehrfachAbdruecke) {
   const umbenennungen = new Map();
   const urteile = [];
+  const kollisionen = [];
   for (const k of klassen) {
     const beine = k.beine;
     let grund = milanTor(beine, k.registerQuelle ? null : mehrfachAbdruecke);
@@ -446,12 +447,27 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
       sieger = milanSieger(beine);
       if (!sieger) grund = 'nur-platzhalter';
       else {
-        for (const b of beine) {
-          if (b.schluessel === sieger.schluessel) continue;
-          umbenennungen.set(b.datei, sieger.name);
-          verlierer.push(b.ticker);
+        const geplant = beine.filter((b) => b.schluessel !== sieger.schluessel);
+        // KOLLISION: zwei Klassen beanspruchen DASSELBE Bein mit VERSCHIEDENEN Namen. Ohne
+        // diesen Riegel gewaenne still die zuletzt gerechnete Klasse — und weil der
+        // Mengen-Riegel A7 nur die Kandidatenliste zaehlt, koennte ein Register-Eintrag, der
+        // ein Bein der Liste mitnennt, ihm lautlos einen fremden Emittentennamen aufpraegen.
+        // Reproduziert: Register-Eintrag mit Mitglied `GEN` gegen Klasse `1NLOK.MI`/`GEN` —
+        // `GEN.json` bekam den Namen des Register-Eintrags. Ein Bein, zwei Identitaets-
+        // Aussagen, ist immer ein Widerspruch; hier wird KEINE der beiden ausgefuehrt, und
+        // run() bricht danach ab. Der Riegel sitzt bewusst hier, wo ALLE Klassen-Quellen
+        // zusammenlaufen, nicht am Register-Lader allein.
+        const kollision = geplant.find((b) => umbenennungen.has(b.datei) && umbenennungen.get(b.datei) !== sieger.name);
+        if (kollision) {
+          grund = 'kollision';
+          kollisionen.push({ anker: k.anker, ticker: kollision.ticker, wollte: sieger.name, steht: umbenennungen.get(kollision.datei) });
+        } else {
+          for (const b of geplant) {
+            umbenennungen.set(b.datei, sieger.name);
+            verlierer.push(b.ticker);
+          }
+          if (!verlierer.length) grund = 'schon-vereint';
         }
-        if (!verlierer.length) grund = 'schon-vereint';
       }
     }
     urteile.push({
@@ -462,7 +478,7 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
       verlierer,
     });
   }
-  return { umbenennungen, urteile };
+  return { umbenennungen, urteile, kollisionen };
 }
 
 /**
@@ -855,7 +871,7 @@ function run(argv) {
   // U3-Milan (ENTSCHIED 31): NACH der .BO/.NS-Strecke, gleiche Bauform, gleiche Stelle — und
   // erst NACH dem Kopieren, damit der Eingang unangetastet bleibt.
   const milan = milanKlassenLesen(ziel, MILAN_KANDIDATEN, identitaetsEintraege);
-  const { umbenennungen: milanPlan, urteile } = milanUmbenennungen(milan.klassen, milan.mehrfachAbdruecke);
+  const { umbenennungen: milanPlan, urteile, kollisionen } = milanUmbenennungen(milan.klassen, milan.mehrfachAbdruecke);
   const ausListe = urteile.filter((u) => u.quelle === 'kandidatenliste');
   const ausRegister = urteile.filter((u) => u.quelle === 'identitaets-register');
   const geplanteBeine = ausListe.reduce((s, u) => s + u.verlierer.length, 0);
@@ -870,6 +886,17 @@ function run(argv) {
     } else {
       console.log(`[u3-milan] ${u.anker}: keine Umbenennung (${u.grund}) [${u.beine.join(' + ')}, Quelle ${u.quelle}]`);
     }
+  }
+
+  // Widerspruechliche Identitaets-Aussage: ein Bein, zwei Klassen, zwei Namen. Vor jedem
+  // Mengen-Riegel und vor jedem Schreiben — die betroffenen Klassen sind bereits verworfen,
+  // aber ein Widerspruch im Kandidaten-/Registerbestand ist ein Pflege-Fehler, kein Betriebszustand.
+  if (kollisionen.length) {
+    for (const k of kollisionen) {
+      console.error(`::error::U3-Milan — Kollision: ${k.ticker} soll gleichzeitig "${k.wollte}" (Klasse ${k.anker}) und "${k.steht}" heissen. Beide Klassen sind verworfen.`);
+    }
+    console.error(`::error::U3-Milan — ${kollisionen.length} widerspruechliche Identitaets-Aussage(n). Stop: ein Bein gehoert zu genau EINEM Emittenten. Kandidatenliste und Identitaets-Register in Deckung bringen.`);
+    return 1;
   }
 
   // A7 — Mengen-Riegel. VOR dem Schreiben, damit ein Abbruch keinen halb umbenannten Bestand

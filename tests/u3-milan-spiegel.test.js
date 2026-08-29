@@ -346,6 +346,23 @@ test('REGISTER B4: ein Eintrag ist KEIN Freifahrtschein — er muss dasselbe Tor
   assert.equal(umbenennungen.size, 0);
 });
 
+test('REGISTER/A6: ein Bein in ZWEI Klassen wird verworfen, nicht still ueberschrieben', () => {
+  // Reproduziert (vor dem Fix): ein Register-Eintrag, der `GEN` mitnennt, praegte GEN.json
+  // still den Namen des Register-Eintrags auf — die zuletzt gerechnete Klasse gewann, und der
+  // Mengen-Riegel sah es nicht, weil er nur die Kandidatenliste zaehlt. Ein Bein gehoert zu
+  // genau EINEM Emittenten; zwei Aussagen darueber sind ein Widerspruch, keine Rangfolge.
+  const klassen = [
+    { anker: '1NLOK.MI', beine: [bein('1NLOK.MI', 'Gen Digital Inc.'), bein('GEN', 'GEN', { usPrimaer: true })] },
+    { anker: 'fremd', registerQuelle: 'identitaets-register', beine: [bein('XYZ', 'Voellig Andere AG'), bein('GEN', 'GEN', { usPrimaer: true })] },
+  ];
+  const { umbenennungen, urteile, kollisionen } = milanUmbenennungen(klassen, new Set());
+  assert.equal(kollisionen.length, 1, 'die Kollision wird gemeldet, nicht verschluckt');
+  assert.equal(kollisionen[0].ticker, 'GEN');
+  assert.equal(urteile[1].grund, 'kollision');
+  assert.notEqual(umbenennungen.get('GEN.json'), 'Voellig Andere AG',
+    'GEN darf NIE den Namen der fremden Klasse bekommen');
+});
+
 // ─── 5. I/O-Mantel: liest den Bestand, schreibt nur die Verlierer ────────────────────────
 
 test('I/O: milanKlassenLesen + milanSchreiben setzen genau die Verlierer-Beine um', () => {
