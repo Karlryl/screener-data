@@ -1,0 +1,51 @@
+{
+  "_doku": [
+    "QUARANTAENE — Ausschluss einzelner Ticker, deren Zahlen BEWIESEN einer anderen Firma gehoeren.",
+    "Auftrag: Orchestrator ENTSCHIED 37 (2026-08-29 22:57). Gelesen von scripts/filter-snapshot-merge.js.",
+    "",
+    "WIRKUNG: der Snapshot wird beim Zusammenfuehren NICHT ins Ziel uebernommen und erreicht damit",
+    "das Scoring nie. GELOESCHT WIRD NICHTS (Karl-Entscheid F-12): der Eingangsordner behaelt jede",
+    "Datei, sie wandert nur nicht weiter. Jeder Lauf meldet den Stand laut ('QUARANTAENE: n Zeilen').",
+    "",
+    "WARUM VERWERFEN HIER RICHTIG IST, obwohl die drei anderen Vorstufen (U2-BO/NS, U3-Milan,",
+    "T179-Nennwert) ausdruecklich NUR umbenennen: dort ist die Identitaet UNSICHER, und der",
+    "versiegelte Dedup soll entscheiden. Hier ist sie BEWIESEN falsch. Eine Zeile, deren Zahlen",
+    "einer anderen Firma gehoeren, kann durch keine Umbenennung richtig werden.",
+    "",
+    "AUFNAHMESCHWELLE, dreiteilig — alle drei Punkte muessen erfuellt sein:",
+    "  (i)   BEWEIS, dass die Zahlen einer anderen Firma gehoeren. Der tragende Anker ist der",
+    "        SELBSTWIDERSPRUCH der Zeile (gemeldete Aktienzahl gegen die Aktienzahl in ihrer",
+    "        EIGENEN Jahresreihe), nicht 'teilt eine Reihe mit X' — siehe AVBC.VI unten.",
+    "  (ii)  ZWEITER, unabhaengiger Zug mit demselben Fremdergebnis. Ein einzelner Zug kann eine",
+    "        transiente Feed-Panne sein; erst der zweite belegt eine stehende Fehlaufloesung.",
+    "  (iii) Belegdatei in 'beleg' und ein Wiedervorlage-Datum in 'pruefungBis'.",
+    "",
+    "⚠ AUSNAHME VON DER AKTIENZAHL-REGEL (Beleg fix-mrksw-vmrk-2026-08-30.md §2): Beteiligungs- und",
+    "Komplementaerstrukturen brechen den Anker strukturell. MRK.DE (Merck KGaA) zeigt 0,297, weil nur",
+    "~30 % des Kapitals boersennotiert sind — das ist KEIN Befund. Eine maschinelle Aktienzahl-Regel",
+    "braucht diese Ausnahme, sonst meldet sie KGaAs und Partnerships dauerhaft falsch.",
+    "",
+    "FEHLERRICHTUNG: ein falscher Eintrag LOESCHT eine echte Firma aus dem Board. Im Zweifel KEIN",
+    "Eintrag — die falsche Zusatzzeile ist die billigere Lage.",
+    "",
+    "UNTERSUCHT UND NICHT AUFGENOMMEN — AVBC.VI (Auftrag ENTSCHIED 39, 'drittes Bein der",
+    "AVB/VMRK-Fremdklasse'): AVBC.VI ist eine LEGITIME Wiener Notierung von AvalonBay, kein",
+    "Fremdlaeufer. Gemessen am Bestand 2026-08-30: eigener korrekter Name 'AvalonBay Communities Inc',",
+    "sharesOutstanding 142.797.963 gegen die eigene Jahresreihe 142.826.382 = Verhaeltnis 1,000",
+    "(VMRK: 2,792), Qualitaetsnote A+ (VMRK: D), gleicher issuerKeyLoose wie AVB — die Zeile dedupt",
+    "also KORREKT in AVB hinein und erzeugt gar keinen Extra-Platz. Dass sie AvalonBays Umsatzreihe",
+    "traegt, ist bei einer Zweitnotierung der Normalfall und beweist NICHTS; VMRK faellt nicht durch",
+    "die geteilte Reihe auf, sondern durch den Selbstwiderspruch und den fremden Namen.",
+    "",
+    "Eintrags-Form: { ticker, grund, beleg, aufgenommen, pruefungBis }"
+  ],
+  "eintraege": [
+    {
+      "ticker": "VMRK",
+      "grund": "Traegt AvalonBays kompletten Fundamentalblock unter eigenem Namen ('Vivmark Residential'): byte-identische 19-Serien-Uebereinstimmung mit AVB, und die gemeldete Aktienzahl 398.834.711 widerspricht der eigenen Jahresreihe 142.826.382 (Faktor 2,79). Der AVB-Cache trug die Serie 2,5 Monate bevor VMRK ueberhaupt existierte. Zwei unabhaengige Zuege (26.08. und 29.08.) liefern denselben Fremdblock, der zweite zusaetzlich unter AvalonBays Namen — die Fehlaufloesung ist stehend, nicht transient, und liegt auf Feed-/Mapping-Ebene.",
+      "beleg": "agent-reports/fix-mrksw-vmrk-2026-08-30.md (§1 Zuege, §2 Aktienzahl-Anker, §4 warum nicht uebernommen); agent-reports/befund-t178-t179-evidenz-2026-08-30.md §A1 Belege 1-3",
+      "aufgenommen": "2026-08-30",
+      "pruefungBis": "2026-09-25"
+    }
+  ]
+}
