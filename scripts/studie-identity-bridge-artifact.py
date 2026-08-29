@@ -351,6 +351,25 @@ def accepted_date(value):
     return raw[:10]
 
 
+def compact_date(value):
+    """Render either date notation as the panel's compact YYYYMMDD form.
+
+    `ddate` arrives as "20201231", `accepted` as "2020-12-31". Both must be
+    comparable against LAST_ALLOWED_DDATE and sortable against each other, so
+    every date that reaches the artifact is normalised here first.
+    """
+    raw = re.sub(r"[^0-9]", "", str(value or ""))
+    return raw if re.match(r"^\d{8}$", raw) else None
+
+
+def beyond_date_wall(value):
+    """Single date-wall predicate; an unreadable date is never inside the wall."""
+    compact = compact_date(value)
+    if compact is None:
+        return True
+    return compact > LAST_ALLOWED_DDATE
+
+
 def legacy_stable_id(prefix, *parts):
     """Rejected v1.0.0 mapping, retained only so the public attack stays executable."""
     payload = ("R2-A1/" + prefix + "/1\0" + "\0".join(parts)).encode("utf-8")
@@ -392,7 +411,9 @@ def new_scan_state(identity_key=None):
         "identities": defaultdict(lambda: {
             "names": set(), "renameEdges": set(), "windows": set()
         }),
-        "components": defaultdict(set),
+        # tag -> compact accepted date of the earliest filing carrying that tag
+        # for this (cik, unit, ddate, qtrs) period. ddate stays the period key.
+        "components": defaultdict(dict),
         "dateWindows": defaultdict(set),
         "inputSummaries": [],
         "counters": defaultdict(int),
@@ -412,6 +433,7 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
     identity_digest = hashlib.sha256()
     fact_digest = hashlib.sha256()
     adsh_to_cik = {}
+    adsh_accepted = {}
     summary = {
         "file": expected_basename,
         "bytes": os.path.getsize(checked),
@@ -451,6 +473,7 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
             if existing is not None and existing != cik:
                 raise ArtifactError("One filing identifier points to two internal CIKs")
             adsh_to_cik[adsh] = cik
+            adsh_accepted[adsh] = compact_date(date)
             identity = state["identities"][cik]
             identity["names"].add(current_name)
             identity["windows"].add(window_name)
@@ -501,7 +524,10 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
                     continue
                 quarter_span = str(qtrs).strip()
                 key = (cik, unit, date, quarter_span)
-                state["components"][key].add(tag)
+                carried_at = adsh_accepted[adsh]
+                known_at = state["components"][key].get(tag)
+                if known_at is None or carried_at < known_at:
+                    state["components"][key][tag] = carried_at
                 state["dateWindows"][(cik, unit, date)].add(window_name)
                 update_digest(fact_digest, (
                     cik, tag, str(version).strip(), date, quarter_span, unit, window_name
@@ -547,6 +573,27 @@ def source_dates_from_components(components):
     return source_dates
 
 
+def source_event_dates_from_components(components):
+    """accepted date on which each (cik, unit, source, ddate) was first carried.
+
+    A source is carried once every tag it requires exists, so the completing
+    moment is the latest of the per-tag first-carrying filings; across the
+    quarter spans of one period key the earliest such moment wins.
+    """
+    events = {}
+    for (cik, unit, date, _quarter_span), accepted_by_tag in components.items():
+        for source, required_tags in SOURCE_DEFINITIONS:
+            carried = [accepted_by_tag.get(tag) for tag in required_tags]
+            if any(value is None for value in carried):
+                continue
+            complete_at = max(carried)
+            key = (cik, unit, source, date)
+            known = events.get(key)
+            if known is None or complete_at < known:
+                events[key] = complete_at
+    return events
+
+
 def selected_track(source_dates, cik, unit):
     by_source = {
         source: sorted(dates)
@@ -583,6 +630,11 @@ def artifact_from_state(state, reverse_inputs=False):
         raise ArtifactError("Artifact state lacks a valid identity HMAC key")
     identities = state["identities"]
     source_dates = source_dates_from_components(state["components"])
+    source_events = source_event_dates_from_components(state["components"])
+    # Locals, never state: artifact_from_state is called repeatedly on one state
+    # (ordering proof, stability proof) and must stay side-effect free.
+    collapsed_transitions = 0
+    fallback_event_dates = 0
     eligible = {}
     rejected_ambiguous = 0
     for cik, identity in identities.items():
@@ -610,28 +662,45 @@ def artifact_from_state(state, reverse_inputs=False):
             for date, source in track:
                 selected_by_source[source].append(date)
             previous = None
+            unit_seams = {}
             for date, source in track:
                 current_identifier = identifier_id(identity_key, entity, source, unit)
                 if previous is not None and previous[1] != source:
                     old_identifier = identifier_id(
                         identity_key, entity, previous[1], unit
                     )
-                    sid = seam_id(
-                        identity_key, entity, unit, date,
-                        old_identifier, current_identifier,
-                    )
-                    seams.append({
-                        "seamId": sid,
-                        "entityId": entity,
-                        "date": date,
-                        "unit": unit,
-                        "oldIdentifierId": old_identifier,
-                        "newIdentifierId": current_identifier,
-                        "identityEvidenceClass": eligible[cik],
-                        "defaultSeriesPolicy": "terminate-at-seam",
-                        "crossSeamRequiresExplicitMarker": True,
-                    })
+                    event_date = source_events.get((cik, unit, source, date))
+                    if event_date is None:
+                        fallback_event_dates += 1
+                        event_date = date
+                    # One filing that first carries the new source for several
+                    # period keys is ONE seam event, not one per period.
+                    event_key = (old_identifier, current_identifier, event_date)
+                    seam = unit_seams.get(event_key)
+                    if seam is None:
+                        unit_seams[event_key] = {
+                            "seamId": seam_id(
+                                identity_key, entity, unit, event_date,
+                                old_identifier, current_identifier,
+                            ),
+                            "entityId": entity,
+                            "date": date,
+                            "seamEventDate": event_date,
+                            "periodKeysCollapsed": 1,
+                            "unit": unit,
+                            "oldIdentifierId": old_identifier,
+                            "newIdentifierId": current_identifier,
+                            "identityEvidenceClass": eligible[cik],
+                            "defaultSeriesPolicy": "terminate-at-seam",
+                            "crossSeamRequiresExplicitMarker": True,
+                        }
+                    else:
+                        seam["periodKeysCollapsed"] += 1
+                        collapsed_transitions += 1
+                        if date < seam["date"]:
+                            seam["date"] = date
                 previous = (date, source)
+            seams.extend(unit_seams.values())
             for source, dates in selected_by_source.items():
                 iid = identifier_id(identity_key, entity, source, unit)
                 mappings[iid] = {
@@ -672,8 +741,9 @@ def artifact_from_state(state, reverse_inputs=False):
     for entity in entities:
         entity["identifiers"] = sorted(entity["identifiers"],
                                         key=lambda row: row["identifierId"])
-        entity["seams"] = sorted(entity["seams"],
-                                  key=lambda row: (row["date"], row["seamId"]))
+        entity["seams"] = sorted(
+            entity["seams"],
+            key=lambda row: (row["seamEventDate"], row["date"], row["seamId"]))
     entities = sorted(entities, key=lambda row: row["entityId"])
     input_summaries = sorted(state["inputSummaries"], key=lambda row: row["file"])
     counts = {
@@ -683,6 +753,8 @@ def artifact_from_state(state, reverse_inputs=False):
         "entitiesWithBridgeSeams": len(entities),
         "identifierMappings": sum(len(row["identifiers"]) for row in entities),
         "bridgeSeams": sum(len(row["seams"]) for row in entities),
+        "periodKeyTransitionsCollapsedIntoSeams": collapsed_transitions,
+        "seamEventDatesFallenBackToPeriodKey": fallback_event_dates,
         "exchangeEvidenceRows": 0,
     }
     artifact = {
@@ -751,7 +823,7 @@ def validate_artifact(artifact, raw_ciks=None, raw_names=None):
             owner = identifier_owner.setdefault(iid, entity_id_value)
             if owner != entity_id_value:
                 raise ArtifactError("Identifier maps to multiple entities")
-            if row["lastDate"] > LAST_ALLOWED_DDATE:
+            if beyond_date_wall(row["lastDate"]):
                 raise ArtifactError("Identifier mapping crosses the date wall")
         for seam in entity["seams"]:
             if seam["oldIdentifierId"] not in identifiers:
@@ -762,8 +834,10 @@ def validate_artifact(artifact, raw_ciks=None, raw_names=None):
             new = identifiers[seam["newIdentifierId"]]
             if old["unit"] != new["unit"] or seam["unit"] != old["unit"]:
                 raise ArtifactError("A currency or unit boundary was bridged")
-            if seam["date"] > LAST_ALLOWED_DDATE:
+            if beyond_date_wall(seam["date"]):
                 raise ArtifactError("A seam crosses the date wall")
+            if beyond_date_wall(seam["seamEventDate"]):
+                raise ArtifactError("A seam event crosses the date wall")
             if seam["defaultSeriesPolicy"] != "terminate-at-seam":
                 raise ArtifactError("A seam lost its termination default")
     expected = dict(artifact)
@@ -982,12 +1056,14 @@ def fixture_state():
         state["identities"][cik]["names"].update(names)
         state["identities"][cik]["renameEdges"].update(edges)
         state["identities"][cik]["windows"].add("pruefung")
-    state["components"][("100", "USD", "20180331", "1")].add("SalesRevenueNet")
-    state["components"][("100", "USD", "20180630", "1")].add("SalesRevenueNet")
-    state["components"][("100", "USD", "20180930", "1")].add(
-        "RevenueFromContractWithCustomerExcludingAssessedTax")
-    state["components"][("100", "EUR", "20181231", "1")].add(
-        "RevenueFromContractWithCustomerExcludingAssessedTax")
+    # accepted dates deliberately differ from the period keys so the fixture
+    # exercises the accepted-time seam placement rather than the fallback.
+    state["components"][("100", "USD", "20180331", "1")]["SalesRevenueNet"] = "20180510"
+    state["components"][("100", "USD", "20180630", "1")]["SalesRevenueNet"] = "20180809"
+    state["components"][("100", "USD", "20180930", "1")][
+        "RevenueFromContractWithCustomerExcludingAssessedTax"] = "20181108"
+    state["components"][("100", "EUR", "20181231", "1")][
+        "RevenueFromContractWithCustomerExcludingAssessedTax"] = "20190215"
     for date in ("20180331", "20180630", "20180930", "20181231"):
         for unit in ("USD", "EUR"):
             state["dateWindows"][("100", unit, date)].add("pruefung")
@@ -1017,7 +1093,12 @@ def state_from_fixed_fixture(payload):
         key_tuple = (
             str(row["cik"]), row["unit"], row["date"], row["quarterSpan"]
         )
-        state["components"][key_tuple].update(row.get("tags", []))
+        # A fixture without acceptedByTag carries no accepted evidence; the
+        # seam then falls back to the period key and is counted as such.
+        accepted_by_tag = row.get("acceptedByTag", {})
+        for tag in row.get("tags", []):
+            state["components"][key_tuple][tag] = compact_date(
+                accepted_by_tag.get(tag))
     for row in payload.get("dateWindows", []):
         key_tuple = (str(row["cik"]), row["unit"], row["date"])
         state["dateWindows"][key_tuple].update(row.get("windows", []))
@@ -1124,6 +1205,8 @@ SELF_TEST_NAMES = (
     "Fixed input fixture reproduces its pinned logical payload hash",
     "One fixed input field mutation changes the pinned logical payload hash",
     "Production bridge writer gates the manifest and every shard",
+    "Seam event carries the accepted date while ddate stays the period key",
+    "Post-wall seam event is rejected in the accepted date notation",
 )
 
 
@@ -1308,6 +1391,35 @@ def self_test():
     except ArtifactError:
         writer_rejected = True
     check(SELF_TEST_NAMES[24], clean_guarded == 0 and writer_rejected)
+    placed = artifact["entities"][0]["seams"][0]
+    check(
+        SELF_TEST_NAMES[25],
+        placed["seamEventDate"] == "20181108"
+        and placed["date"] == "20180930"
+        and placed["periodKeysCollapsed"] == 1,
+        placed,
+    )
+    post_wall_event = json.loads(json.dumps(artifact))
+    post_wall_event["entities"][0]["seams"][0]["seamEventDate"] = "2021-03-05"
+    body = dict(post_wall_event)
+    body.pop("canonicalPayloadSha256")
+    post_wall_event["canonicalPayloadSha256"] = canonical_hash(body)
+    try:
+        validate_artifact(post_wall_event)
+        event_rejected = False
+    except ArtifactError:
+        event_rejected = True
+    # The raw string compare mis-orders the wall day itself ("2020-12-31" sorts
+    # below "20201231"); only the normalisation makes the guard sound.
+    check(
+        SELF_TEST_NAMES[26],
+        event_rejected
+        and beyond_date_wall("2021-03-05")
+        and not beyond_date_wall("2020-12-31")
+        and compact_date("2020-12-31") == LAST_ALLOWED_DDATE
+        and ("2020-12-31" > LAST_ALLOWED_DDATE) is False,
+        event_rejected,
+    )
     if failures:
         print("SELBSTTEST ROT - %d named checks failed" % len(failures))
         return 1
@@ -1582,7 +1694,7 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "threeRequiredBypassSabotagesCompleted": 0,
         },
         "methodCorrections": {
-            "acceptedTimeSeamPlacement": "OPEN",
+            "acceptedTimeSeamPlacement": "APPLIED_PENDING_METHOD_ACCEPTANCE",
             "multipleSeamExposureRestoration": "OPEN",
             "completeExclusionCounters": "OPEN",
         },
@@ -1742,10 +1854,16 @@ def render_report(result):
         "zweiten echten Neubau wurde rot abgewiesen. Der fruehere In-Prozess-Check",
         "gilt ausdruecklich nicht als unabhaengiger Determinismusbeleg.",
         "",
-        "Die unveraenderte, noch `ddate`-basierte Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
+        "Die Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
             counts["entitiesWithBridgeSeams"]),
-        "%d Kennungszuordnungen und %d Naehte." % (
+        "%d Kennungszuordnungen und %d Naehte. `ddate` bleibt Perioden-Schluessel;" % (
             counts["identifierMappings"], counts["bridgeSeams"]),
+        "das Naht-EREIGNIS traegt das `accepted` der Einreichung, die die neue Quelle",
+        "erstmals traegt. %d Perioden-Uebergaenge fielen dadurch mit einem frueheren" % (
+            counts["periodKeyTransitionsCollapsedIntoSeams"]),
+        "Ereignis derselben Einreichung zusammen; %d Naehte hatten keinen" % (
+            counts["seamEventDatesFallenBackToPeriodKey"]),
+        "Annahme-Zeitstempel und fielen auf den Perioden-Schluessel zurueck.",
         "",
         "## Was ausdruecklich nicht gezeigt ist",
         "",
@@ -1756,7 +1874,8 @@ def render_report(result):
         "- Ergebnisartefakt und Bericht enthalten keine Firmenidentitaeten; das Panel-Artefakt verwendet nur pseudonyme Entitaets- und Kennungs-IDs.",
         "- Blocker 2 ist nur fuer die gebundenen Panelbytes, Python-Laufzeit, Implementierung und denselben externen HMAC-Schluessel bestanden; andere Laufzeiten oder Eingaben wurden nicht verglichen.",
         "- Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.",
-        "- Die Quellenwahl verwendet weiterhin `ddate` statt `accepted`; die 5.146 Naehte sind deshalb noch nicht methodisch korrigiert oder abgenommen.",
+        "- Die Naht-Datierung auf `accepted` ist gebaut, aber methodisch noch nicht abgenommen; die neue Nahtmenge (%d) braucht die Abnahme durch den Orchestrator." % (
+            counts["bridgeSeams"]),
         "- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
         "",
         "## Neue Fragen und Hypothesen",
