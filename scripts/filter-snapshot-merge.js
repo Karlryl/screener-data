@@ -792,11 +792,24 @@ function wendeNennwertAn(ziel, dateien) {
   return { kandidaten: staende.length, geplant: umbenennungen.size, geheilt: geschrieben.sort(), unlesbar, unschreibbar };
 }
 
-function ladeNavRegister(registerPfad) {
-  let eintraege;
-  try { eintraege = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
+/**
+ * Gemeinsamer Lader der beiden TICKER-Register (NAV-Ausschluss und Quarantaene). Ein einziger
+ * Lader, weil beide dieselben Wachen brauchen — Pflichtfelder, Ticker-Dublette,
+ * Dateinamen-Dublette — und eine Kopie genau einmal mitgezogen wuerde und einmal nicht.
+ *
+ * Zwei Container-Formen, beide erlaubt: ein blankes Array (nav-holdings.json, historisch) oder
+ * ein Objekt mit `eintraege` (quarantine.json, wie issuer-identity.json — nur so passt die
+ * Doku IN die Datei, und bei einem Register, das Zeilen VERWIRFT, gehoert sie dorthin).
+ *
+ * `pflichtFelder` unterscheidet die beiden: die Quarantaene verlangt zusaetzlich ein
+ * Wiedervorlage-Datum, damit ein Eintrag nicht als Dauerzustand einschlaeft.
+ */
+function ladeTickerRegister(registerPfad, pflichtFelder) {
+  let roh;
+  try { roh = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
   catch (e) { throw new Error(`${registerPfad}: ${e.message}`); }
-  if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Wurzel muss ein Array sein`);
+  const eintraege = Array.isArray(roh) ? roh : (roh && typeof roh === 'object' ? roh.eintraege : undefined);
+  if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Wurzel muss ein Array sein oder ein Objekt mit dem Array 'eintraege'`);
   const tickers = new Set();
   // T612-L1 (Review Tag 612): die Dublette wird auf DATEINAMEN-Ebene gesucht, nicht auf der
   // Rohstring-Ebene. safeSnapshotFilename faltet (Grossschreibung, [^A-Z0-9.-] -> _), also
@@ -805,7 +818,7 @@ function ladeNavRegister(registerPfad) {
   const dateinamen = new Map();
   for (const [i, e] of eintraege.entries()) {
     if (!e || typeof e !== 'object' || Array.isArray(e)) throw new Error(`${registerPfad}: Eintrag ${i} ist kein Objekt`);
-    for (const feld of ['ticker', 'grund', 'beleg', 'aufgenommen']) {
+    for (const feld of pflichtFelder) {
       if (typeof e[feld] !== 'string' || !e[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld ${feld} fehlt/ist leer`);
     }
     const ticker = e.ticker.trim();
@@ -821,7 +834,57 @@ function ladeNavRegister(registerPfad) {
     }
     dateinamen.set(datei, ticker);
   }
-  return tickers;
+  return { tickers, eintraege };
+}
+
+const NAV_PFLICHTFELDER = ['ticker', 'grund', 'beleg', 'aufgenommen'];
+function ladeNavRegister(registerPfad) { return ladeTickerRegister(registerPfad, NAV_PFLICHTFELDER).tickers; }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * QUARANTAENE — das Ausschlussregister fuer BEWIESEN vergiftete Zeilen
+ * Auftrag: ENTSCHIED 37 (Orchestrator 2026-08-29 22:57), Beleg
+ * `fix-mrksw-vmrk-2026-08-30.md` §4/§6 Punkt 2.
+ *
+ * WARUM ES DIESE DATEI GEBEN MUSS, obwohl es schon Ausschluss-Wege gibt (der Sofort-Fix hat
+ * alle vier durchgeprueft und alle vier verworfen, §4 Punkt 3):
+ *   - `nav-holdings.json` ist inhaltlich fuer NAV-Holdings und Closed-End-Fonds gebaut (alle
+ *     sieben Eintraege sind das). Ein Datenkreuzungs-Fall dort waere ein Kategoriefehler.
+ *   - `board-history/_excluded.json` schliesst VINTAGES aus, keine Ticker.
+ *   - die `ausgeschlossen`-Liste der Neuverankerung gehoert zum Jahres-Ausreisser-Waechter
+ *     und nimmt keine Zeile vom Board.
+ *   - die Scoring-Ausschluesse in `src/scoring/router.js` sind versiegelt.
+ *
+ * ⚠ HIER WIRD VERWORFEN, NICHT UMBENANNT — und das ist der Unterschied zu ALLEM anderen in
+ * dieser Datei. U2/U3/T179 praegen Namen auf und lassen den versiegelten Dedup entscheiden,
+ * weil dort die Identitaet UNSICHER ist. Hier ist sie BEWIESEN falsch: `VMRK` traegt
+ * AvalonBays kompletten Zahlenblock, zweimal unabhaengig nachgezogen (26.08. und 29.08.), und
+ * widerspricht sich selbst (`sharesOutstanding` 398.834.711 gegen die eigene Jahresreihe
+ * 142.826.382 = Faktor 2,79). Eine Zeile, deren Zahlen einer anderen Firma gehoeren, kann
+ * durch keine Umbenennung richtig werden — sie kann nur draussen bleiben.
+ *
+ * NICHTS WIRD GELOESCHT (Karl-Entscheid F-12, s. Modulkopf): der Eingang behaelt jede Datei,
+ * sie wandert nur nicht ins Ziel und damit nicht ins Scoring.
+ *
+ * DIE AUFNAHMESCHWELLE IST HOCH, denn die Fehlerrichtung ist teuer: ein falscher Eintrag
+ * LOESCHT eine echte Firma aus dem Board. Ein Eintrag braucht
+ *   (i)   einen BEWEIS, dass die Zahlen der Zeile einer anderen Firma gehoeren — nicht bloss
+ *         einen Verdacht, und nicht bloss "teilt eine Reihe mit X" (s. AVBC.VI in der Datei),
+ *   (ii)  einen zweiten, unabhaengigen Zug mit demselben Fremdergebnis (transient vs. stehend),
+ *   (iii) die Belegdatei im Feld `beleg` und ein Wiedervorlage-Datum in `pruefungBis`.
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+const QUARANTAENE_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'quarantine.json');
+const QUARANTAENE_PFLICHTFELDER = ['ticker', 'grund', 'beleg', 'aufgenommen', 'pruefungBis'];
+function ladeQuarantaene(registerPfad) { return ladeTickerRegister(registerPfad, QUARANTAENE_PFLICHTFELDER); }
+
+/**
+ * Wiedervorlage: welche Eintraege sind ueber ihr `pruefungBis` hinaus? Ein Ausschluss ohne
+ * Ablaufdatum wird still zum Dauerzustand, und genau das soll dieses Register NICHT werden —
+ * es ist eine Notbremse, kein Friedhof. Reine Funktion (Datum injizierbar), damit die Wache
+ * ohne Systemuhr pruefbar ist.
+ */
+function quarantaeneFaellig(eintraege, heute) {
+  const stichtag = String(heute).slice(0, 10);
+  return (eintraege || []).filter((e) => typeof e.pruefungBis === 'string' && e.pruefungBis.trim() < stichtag);
 }
 
 /**
@@ -914,17 +977,23 @@ function schreibeEingangsZahl(ziel, gescannt) {
  *                  sie sind keine Ticker-Staende und traegen keine Karteileichen-Daten.
  *   uebersprungen = Snapshots ohne Watchlist-Eintrag.
  *   gescannt      = nur die echten Ticker-Snapshots (der Nenner des Zaehl-Logs).
+ *
+ * DIE QUARANTAENE WIRD ZUERST GEFRAGT. Steht ein Ticker in beiden Registern, ist die
+ * Quarantaene die staerkere Aussage ("diese Zeile traegt fremde Zahlen") und soll auch die
+ * gemeldete sein; ohne die feste Reihenfolge haette derselbe Ticker je nach Register-Pflege
+ * mal die eine, mal die andere Meldezeile erzeugt, und doppelt gezaehlt wuerde er auch.
  */
-function teileEingang(files, erlaubt, navDateinamen = new Set()) {
-  const uebernehmen = [], uebersprungen = [], navAusgeschlossen = [];
+function teileEingang(files, erlaubt, navDateinamen = new Set(), quarantaeneDateinamen = new Set()) {
+  const uebernehmen = [], uebersprungen = [], navAusgeschlossen = [], quarantaeneAusgeschlossen = [];
   let gescannt = 0;
   for (const f of files) {
     if (!f.endsWith('.json') || isMetadataSnapshot(f)) { uebernehmen.push(f); continue; }
     gescannt++;
-    if (navDateinamen.has(f)) navAusgeschlossen.push(f);
+    if (quarantaeneDateinamen.has(f)) quarantaeneAusgeschlossen.push(f);
+    else if (navDateinamen.has(f)) navAusgeschlossen.push(f);
     else if (erlaubt.has(f)) uebernehmen.push(f); else uebersprungen.push(f);
   }
-  return { uebernehmen, uebersprungen, navAusgeschlossen, gescannt };
+  return { uebernehmen, uebersprungen, navAusgeschlossen, quarantaeneAusgeschlossen, gescannt };
 }
 
 function run(argv) {
@@ -934,6 +1003,8 @@ function run(argv) {
   const watchlistPfad = get('--watchlist', 'watchlist.json');
   const navRegisterPfad = get('--nav-register', NAV_REGISTER_STANDARDPFAD);
   const identitaetsRegisterPfad = get('--identitaets-register', IDENTITAETS_REGISTER_STANDARDPFAD);
+  const quarantaenePfad = get('--quarantaene', QUARANTAENE_STANDARDPFAD);
+  const heute = get('--heute', new Date().toISOString());
 
   // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
   // trotzdem, sonst waere die spaetere Befuellung still wirkungslos.
@@ -960,6 +1031,22 @@ function run(argv) {
     return 1;
   }
 
+  // Quarantaene (ENTSCHIED 37): fail-closed wie die beiden anderen Register. Eine kaputte Datei
+  // stoppt den Lauf — ein Register, das Zeilen VERWIRFT, darf niemals lautlos leer laufen: das
+  // Ergebnis waere ein Board mit bewiesen vergifteten Zahlen darin.
+  let quarantaene;
+  try { quarantaene = ladeQuarantaene(quarantaenePfad); }
+  catch (e) {
+    console.error(`::error::filter-snapshot-merge — Quarantaene-Register nicht ladbar (${e.message}). Abbruch statt lautlosem Scoring mit bewiesen vergifteten Zeilen.`);
+    return 1;
+  }
+  let quarantaeneDateinamen;
+  try { quarantaeneDateinamen = new Map([...quarantaene.tickers].map((t) => [safeSnapshotFilename(t), t])); }
+  catch (e) {
+    console.error(`::error::filter-snapshot-merge — Quarantaene-Register enthaelt unbrauchbaren Ticker (${e.message}). Abbruch statt Teilfilterung.`);
+    return 1;
+  }
+
   // Ladefehler != leere Watchlist. Genau dieselbe Unterscheidung wie in loadUniverse
   // (S5-SC-001): eine unlesbare Datei liefert stocks=[] und wuerde hier ALLES als
   // Karteileiche wegfiltern — das Universum verschwaende still. Hart abbrechen.
@@ -980,7 +1067,34 @@ function run(argv) {
     return 1;
   }
 
-  const { uebernehmen, uebersprungen, navAusgeschlossen, gescannt } = teileEingang(files, erlaubt, navDateinamen);
+  const { uebernehmen, uebersprungen, navAusgeschlossen, quarantaeneAusgeschlossen, gescannt } = teileEingang(files, erlaubt, navDateinamen, quarantaeneDateinamen);
+
+  // DIE LAUTE MELDEZEILE — vor jeder Wache, damit sie auch dann im Log steht, wenn der Lauf
+  // gleich abbricht. Sie steht in JEDEM Lauf, auch bei 0: ein Register, das nur dann etwas
+  // sagt, wenn es zuschlaegt, ist von einem kaputt geladenen Register nicht zu unterscheiden.
+  const quarantaeneTickerListe = quarantaeneAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
+  console.log(`QUARANTAENE: ${quarantaeneTickerListe.length} Zeilen — ${quarantaeneTickerListe.join(', ') || '(keine)'} [Register: ${quarantaene.tickers.size} Eintraege]`);
+
+  // Gleiche Bauform wie die NAV-Wache darunter, und hier noch wichtiger: ein Quarantaene-
+  // Eintrag ohne Datei im Eingang ist ein STILL WIRKUNGSLOSER Ausschluss. Genau das ist die
+  // 25.09.-Falle in der anderen Richtung — wer den Ticker umbenannt findet, muss es merken.
+  //
+  // BEWUSST ANDERER WORTLAUT als die NAV-Zeile darunter ("hatte keinen Treffer im Eingang").
+  // Zwei Register duerfen nicht denselben Satz sagen: `tests/nav-holdings-register.test.js`
+  // pinnt M1 ueber genau diese Formulierung, und mit einem geteilten Wortlaut haette die
+  // Quarantaene-Meldung dort einen fremden Befund vorgetaeuscht (reproduziert: M1 wurde rot,
+  // obwohl am NAV-Register nichts falsch war). Jede Meldung nennt ihr eigenes Register.
+  const imEingang = new Set(files);
+  for (const [datei, ticker] of quarantaeneDateinamen) {
+    if (!imEingang.has(datei)) {
+      console.error(`::warning::QUARANTAENE: ${ticker} liegt nicht im Eingang (delisted/umbenannt/Tippfehler?) — der Ausschluss ist damit wirkungslos.`);
+    }
+  }
+  // Wiedervorlage: ein Ausschluss ohne Ablauf wird still zum Dauerzustand. Kein Hardstop —
+  // die Zeile ist ja weiterhin vergiftet, der ueberfaellige Eintrag schuetzt also korrekt.
+  for (const e of quarantaeneFaellig(quarantaene.eintraege, heute)) {
+    console.error(`::warning::QUARANTAENE: ${e.ticker} ist seit ${e.pruefungBis} zur Wiedervorlage faellig (aufgenommen ${e.aufgenommen}, Beleg ${e.beleg}). Nachziehen oder austragen — nicht einschlafen lassen.`);
+  }
 
   // T612-M1 (Review Tag 612): ein Register-Eintrag, zu dem gar keine Datei im Eingang liegt, war
   // still wirkungslos — ein Tippfehler (oder ein delisteter/umbenannter Name) haette das Register
@@ -988,7 +1102,6 @@ function run(argv) {
   // beim Delisting legitim, und ein toter Eintrag schadet nichts ausser seiner eigenen Wirkung.
   // Nur "Datei gar nicht im Eingang" ist der Warnfall — ein Treffer, der ausgeschlossen wurde,
   // ist genau der Normalbetrieb.
-  const imEingang = new Set(files);
   for (const [datei, ticker] of navDateinamen) {
     if (!imEingang.has(datei)) {
       console.error(`::warning::NAV-Register: ${ticker} hatte keinen Treffer im Eingang (delisted/umbenannt/Tippfehler?)`);
@@ -1002,7 +1115,11 @@ function run(argv) {
   // Namensschema-/Watchlist-Bruch, komplettes Universum still weg) war dauerhaft ausgeknipst.
   // `gescannt` bleibt die Zahl fuer den Coverage-Floor (schreibeEingangsZahl weiter unten) —
   // der zaehlt bewusst den vollen Eingang, nicht die Pruef-Population.
-  const zuPruefen = gescannt - navAusgeschlossen.length;
+  //
+  // Die Quarantaene gehoert aus DEMSELBEN Grund abgezogen: ihre Treffer zaehlen in `gescannt`,
+  // landen aber nie in `uebersprungen`. Ohne den Abzug haette schon der erste Eintrag (VMRK)
+  // denselben T612-H1-Schaden ein zweites Mal angerichtet und den ALL-Stop abgeschaltet.
+  const zuPruefen = gescannt - navAusgeschlossen.length - quarantaeneAusgeschlossen.length;
 
   // 0 gescannte Snapshots ist ein eigener Befund: entweder ein Kaltstart ohne jeden
   // Shard-Cache oder ein leerer Download. Kein harter Stop (der Zustand ist legitim und
@@ -1039,6 +1156,19 @@ function run(argv) {
 
   fs.mkdirSync(ziel, { recursive: true });
   for (const f of uebernehmen) fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
+
+  // DAS EINZIGE LOCH IM AUSSCHLUSS: dieser Schritt KOPIERT nur, er raeumt das Ziel nicht ab.
+  // In CI ist das folgenlos (frischer Runner, `snapshots/` ist gitignoriert und existiert
+  // beim Checkout gar nicht), lokal kann aber ein Stand aus einem Lauf VOR der Aufnahme
+  // liegenbleiben — der Ausschluss saehe im Log wirksam aus und das Scoring bekaeme die
+  // vergiftete Zeile trotzdem. Nicht selbst geloescht (Karl-Entscheid F-12: filtern, nie
+  // loeschen), aber laut gemeldet, mit dem Handgriff in der Meldung.
+  for (const [datei, ticker] of quarantaeneDateinamen) {
+    if (fs.existsSync(path.join(ziel, datei))) {
+      console.error(`::error::QUARANTAENE: ${ticker} ist ausgeschlossen, aber ${path.join(ziel, datei)} liegt noch aus einem frueheren Lauf im Ziel und wuerde weiter gescort. Diese Datei von Hand entfernen (der Eingang behaelt sie).`);
+      return 1;
+    }
+  }
   schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
 
   // U2-BO/NS: NACH dem Kopieren, damit der Eingang unangetastet bleibt (Karl-Entscheid F-12:
@@ -1147,5 +1277,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
   MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   // T179-Nennwert (ENTSCHIED 35.2) — fuer TDD. Waechter: tests/t179-nennwert.test.js
-  nennwertStrip, nennwertUmbenennungen, wendeNennwertAn, NENNWERT_KUERZEL, NENNWERT_ANKER };
+  nennwertStrip, nennwertUmbenennungen, wendeNennwertAn, NENNWERT_KUERZEL, NENNWERT_ANKER,
+  // Quarantaene (ENTSCHIED 37) — fuer TDD. Waechter: tests/quarantaene.test.js
+  ladeTickerRegister, ladeQuarantaene, quarantaeneFaellig,
+  QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER };
 if (require.main === module) process.exit(run(process.argv));
