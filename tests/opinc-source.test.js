@@ -305,6 +305,27 @@ t('fehlendes Store-Verzeichnis wird gemeldet, nicht stumm uebersprungen', () => 
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// M4 (Nacht-Sweep 29.08.): der geschriebene Diff war die einzige Beweiskette des
+// Schritts und wurde am Job-Ende weggeworfen (kein Upload, kein Commit).
+// Gepinnt wird das OBJEKT (der Pfad, den der Step schreibt), nicht eine Formulierung:
+// der hochgeladene Pfad MUSS derselbe sein, den --json erzeugt.
+t('daily-pull laedt den OpInc-Source-Diff hoch (Beweiskette ueberlebt den Runner)', () => {
+  const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+  const geschrieben = /opinc-source-migrate\.js --json (\S+)/.exec(yml);
+  assert.ok(geschrieben, 'der Migrations-Step schreibt keinen --json-Diff mehr');
+  const pfad = geschrieben[1];
+
+  const iStep = yml.indexOf('node scripts/opinc-source-migrate.js');
+  const iRun = yml.indexOf('name: Run Hypergrowth Screener');
+  const dazwischen = yml.slice(iStep, iRun);
+  assert.match(dazwischen, /actions\/upload-artifact/,
+    'kein Upload zwischen Migration und Scoring — der Diff stirbt mit dem Runner');
+  assert.ok(dazwischen.includes(`path: ${pfad}`),
+    `der Upload muss genau ${pfad} mitnehmen, nicht irgendeinen Pfad`);
+  assert.match(dazwischen, /if: always\(\)/,
+    'ohne if:always() fehlt der Beleg genau im Fehlerfall');
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });
