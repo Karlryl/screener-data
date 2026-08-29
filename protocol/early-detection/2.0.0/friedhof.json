@@ -61,6 +61,38 @@
       "grund": "Braucht zwei unabhaengige menschliche Codierer mit Kappa-Gate; die gibt es nicht. LLM-Label sind nach 1.2.0 qualitativeCoding.llmRestriction nie blinde unabhaengige Codierung.",
       "abgrenzung": "Strang C ist KEIN Wiedereinstieg: dort ist Themenarbeit deskriptiv und prospektiv, LLM-Codierung nur mit mitgemessenem Rueckschau-Bias und ohne konfirmatorischen Anspruch. Dieser Eintrag bleibt stehen.",
       "beleg": "Verfassung 2026-08-16, Teil 5, Streichung 1"
+    },
+    {
+      "id": "sec-beschleunigung-2.0.0-prueffenster",
+      "beschreibung": "SEC-Beschleunigungs-Signal, Varianten S-U (Umsatz) und S-G (Betriebsergebnis), konfirmatorischer Anlauf auf dem Prueffenster 2017-01-01/2019-12-31",
+      "stand": "INCONCLUSIVE_DATA — endgueltig nach R15a; die Studie endet, die Hypothese ist NICHT widerlegt",
+      "entschiedenAm": "2026-08-30",
+      "kriterium": "Auffindbarkeits-Gate (R9), VORAB festgelegt in E3: mindestens 90 % der Signal-Firmen muessen nach dem Signal verfolgbar sein",
+      "grund": "Der Signal-Arm erreichte 89,32 % (326 von 365) gegen ein Tor von 90 % bzw. 329 von 365 — Fehlbetrag exakt 3 Firmen bzw. 0,685 Prozentpunkte. Damit wurde KEIN einziger Test gerechnet und KEIN p-Wert berechnet. Zwei angemeldete Nachmessungen haben anschliessend beide gratis reparierbaren Erklaerungen ausgeschlossen: die Verluste sind weder Zensur-Artefakte der Fensterkante (E4g) noch Artefakte der Serien-Konstruktion (E4h).",
+      "zahlen": {
+        "reif": 326,
+        "nenner": 365,
+        "auffindbarkeit": 0.893150685,
+        "schwelle": 0.90,
+        "fehlbetragFirmen": 3,
+        "signalVerluste": 39,
+        "kontrollpoolVerluste": 448,
+        "echteAbgaenge": 8,
+        "jahreskadenz": 2,
+        "restRegime": 4,
+        "datenlageZuDuenn": 21,
+        "unterReifeschwelleRettbar": 4,
+        "kennungswechsel": 0,
+        "e4gVereinigungGegenSchwelle10": 2,
+        "e4hAlternativserienGegenSchwelle13": 4
+      },
+      "todesursache": "Duenne Datenlage bei LEBENDEN Quartalsmeldern, nicht Attrition und nicht die eigene Auswahlregel. 21 der 25 Firmen, die nach ihrem Signal weiterhin 10-Q einreichen, tragen unter KEINEM Konzept, KEINER Einheit und KEINER Taxonomie-Fassung vier Post-Signal-Quartalsstichtage. E4h belegt es mechanisch: mit_nutzbarer_alternativserie (4) ist gleich qtrs_abgedeckt (4) — die Sonde verliert niemanden an der Konzept/Unit/Track-Frage, sie erschoepft die vorhandene Datenlage vollstaendig.",
+      "entscheidungsweg": "ENTSCHIED 1/2 (Lesart vor den Zahlen eingefroren) -> E4g 2 < 10 -> ENTSCHIED 32.2 (Instrument unschluessig, Freeze-Fehler protokolliert) -> ENTSCHIED 32.3 (Praemisse des Abbruch-Zweigs gemessen widerlegt, Vollzug ausgesetzt) -> ENTSCHIED 32.4 (Mehrheitsregel vor den Zahlen eingefroren und gehasht) -> E4h 4 < 13 -> ENTSCHIED 36 (Vollzug).",
+      "beschreibenderBefundBleibt": "Die Signal-Firmen sind LEBENDIGER als der Kontrollpool: 20,5 % echte Abgaenge gegen 38,4 %, 5,1 % Jahreskadenz gegen 11,8 %. Das ist die Gegenrichtung zur naheliegenden Erwartung und bleibt unerklaert. Ebenfalls stehen bleibt: Einheit und Taxonomie-Fassung tragen auf beiden Seiten NULL Firmen allein — wo eine Alternative existiert, unterscheidet sie sich am Konzept.",
+      "wasAusdruecklichNichtGilt": "Dass das Signal nicht existiert. Diese Studie hat es nicht geprueft; sie hat es nicht pruefen duerfen. Ebenso gilt nicht, dass es keinen Kanten-Effekt gibt — die 0 der Kantenprobe ist wegen des Bandzuschnitts unschluessig (minimale Restlaufzeit 366 Tage gegen 365 Tage Kantenfenster).",
+      "endtestFenster": "2021-01-01/2023-12-31 — VERSIEGELT UND UNVERBRAUCHT. Nie geoeffnet, Klartext geloescht, kein Entschluesselungs-Aufruf existiert. Karls Freigabe fuer die R15b-Zaehlprobe lag vor und wurde NICHT genutzt (im R15a-Zweig gegenstandslos).",
+      "wiederaufnahme": "Nur als NEUES Protokoll mit Verweis auf diesen Eintrag. Zwei Wege, in dieser Rangfolge: (1) eine ZWEITE FAKTENQUELLE, die fuer lebende 10-Q-Filer vier Post-Signal-Quartale traegt, wo die SEC-Datensaetze sie nicht fuehren — greift die dominante Ursache direkt an; (2) Delisting- und Kursevidenz fuer verschwundene Firmen — adressiert nur 8 von 39 und reicht allein NICHT. In beiden Faellen zwingend: belegbare Auffindbarkeit ueber 90 % in BEIDEN Armen, Entscheidungsregel VORHER eingefroren, Nur-Zaehl-Probe nach R15b vor jeder Oeffnung, breiterer Puffer im Bandzuschnitt. Warnung: die Verfolgbarkeit faellt ueber die Jahre monoton; das versiegelte Fenster liegt AUF diesem Trend, nicht davor.",
+      "beleg": "protocol/early-detection/2.0.0/r15a-verdict-record.json; reports/studie/R15a-abschluss-2026-08-30.md; reports/studie/E4g-restursachen-diagnose-2026-08-29.md (PR 94); reports/studie/E4h-serienende-diagnose-2026-08-29.md (PR 103)"
     }
   ]
 }
