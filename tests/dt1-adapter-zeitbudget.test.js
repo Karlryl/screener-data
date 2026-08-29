@@ -82,7 +82,18 @@ const timeoutFehler = (url) => { const e = new Error('timeout fetching ' + url);
 // ── Herleitung: das Budget haengt am Workflow, nicht an einer gegriffenen Zahl ────
 await test('DT-1: SCHRITT_TIMEOUT_MIN ist das timeout-minutes des Refresh-Schritts', () => {
   const yml = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
-  const m = yml.match(/- name: Refresh Universe[\s\S]{0,600}?timeout-minutes: (\d+)/);
+  // Tag 660: vorher stand hier ein Zeichenfenster (`[\s\S]{0,600}?`). Es ist gerissen, als
+  // dem Schritt drei env-Zeilen mit Begruendung hinzugefuegt wurden — timeout-minutes rutschte
+  // ueber die 600 Zeichen hinaus, und der Test meldete "nicht gefunden", obwohl es unveraendert
+  // dastand. Die SACHE hatte sich nicht geaendert, nur der Abstand. Ein Fenster ist eine
+  // Annahme ueber die Schreibweise, keine ueber den Gegenstand — also am OBJEKT suchen:
+  // den Block dieses Schritts nehmen (bis zum naechsten "- name:") und darin lesen.
+  // Dasselbe Muster wie pullSchritte() in refresh-universe.test.js (T562-L1).
+  const bloecke = yml.split(/^ {6}- name: /m).filter((b) => b.startsWith('Refresh Universe'));
+  assert.equal(bloecke.length, 1,
+    bloecke.length + ' Schritte beginnen mit "Refresh Universe" — dann ist nicht mehr eindeutig, '
+    + 'welches timeout-minutes gemeint ist.');
+  const m = bloecke[0].match(/^\s*timeout-minutes:\s*(\d+)\s*$/m);
   assert.ok(m, 'Schritt "Refresh Universe" oder sein timeout-minutes nicht gefunden');
   assert.equal(zb.SCHRITT_TIMEOUT_MIN, Number(m[1]),
     'discovery/zeitbudget.js rechnet mit ' + zb.SCHRITT_TIMEOUT_MIN + ' Minuten, der Workflow-Schritt '

@@ -1,0 +1,33 @@
+{
+  "schema": "gqs-hash-manifest/v1",
+  "canonicalId": "GQS-00@1.1.0",
+  "sealedAt": "2026-08-19T08:31:56+02:00",
+  "canonicalization": "Recursively sort object keys; preserve array order; JSON.stringify without whitespace; UTF-8; SHA-256 lowercase hex.",
+  "formulaRegistrySha256": "56fa714e05285713d567b88aebe07b438e80fde2bdf710824ce042705e374a90",
+  "artifacts": {
+    "formula-registry.json": {
+      "canonicalJsonSha256": "56fa714e05285713d567b88aebe07b438e80fde2bdf710824ce042705e374a90",
+      "bytesSha256": "1663b9defc1708df00590ac61b89b48d2282d310b86c769f513aea14554963cd"
+    },
+    "frozen-calibration.json": {
+      "canonicalJsonSha256": "cdea40f579c7607e84cf0b5a7e899fec784a95ebe3b05a4fd3bbb7d06442f126",
+      "bytesSha256": "f85b11e8677c98dc932e9991104e1e619e85857c28965e7465c9bdf1f1dd507d"
+    },
+    "golden-fixtures.json": {
+      "canonicalJsonSha256": "8dd1cf942fea73d5167eae522bfe42a6a62a2d8e8e2c7e8270556131585f4616",
+      "bytesSha256": "7a4fea7df27505fba85e970065903869e57cabb7eedbd14bc33c188a8eb9bb3b"
+    },
+    "score-traces.json": {
+      "canonicalJsonSha256": "eb512ce649243e4b8ac54a1dabd6cfaa0c9f961f63ee154a9c283a603861262b",
+      "bytesSha256": "e205ded3ec832a7a9abd71a64648b12ba7a3b97debdce66ed7f0186e4f4ce093"
+    },
+    "production-equivalence.json": {
+      "canonicalJsonSha256": "a5bbc2ced7cf514ae9c7053b8dffe2f14a8b48ffa73f5bd50946af95ad30d930",
+      "bytesSha256": "3d5ee65aea5f09f9c269ff4dd72b6f1ceae2bad18e0b9747b0df990c8c58bac4"
+    },
+    "ges-sec-us-pilot-preregistration.json": {
+      "canonicalJsonSha256": "b2616b7fd35176e1f603b8ec8d34566a6fb57535debe63371383515789b4c895",
+      "bytesSha256": "08c4830f4d86b4c01e540aba1dc94a98a51aad98a922cfecbee469d2bf7e84c5"
+    }
+  }
+}

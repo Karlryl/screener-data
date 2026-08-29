@@ -159,7 +159,7 @@ async function run() {
   }
   console.log('US-routed>=3y:', routedUS.length, '| p75=' + p75.toFixed(4), '| Kandidaten:', cands.length);
   const tmap = await fetchSecTickers();
-  let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0;
+  let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, ohneReihe = 0, parseErr = 0;
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
     const entry = tmap.get(tk); const cik = entry && entry.cik;
@@ -178,10 +178,27 @@ async function run() {
       if (!body) { no404++; await sleep(125); continue; }
       writeFileAtomic(tmpFile, body); pulled++; await sleep(130);
     }
-    let sec; try { sec = extractSecSeries(JSON.parse(body), tk); } catch (_) { continue; }
+    // Review-Fund 19.08.2026: hier stand `catch (_) { continue; }` — ein blankes Verschlucken.
+    // Seit der Taxonomie-Erweiterung laeuft in extractSecSeries() deutlich mehr (Wahl ueber zwei
+    // Standards, Konzept-Union statt Einzelkonzept), also gibt es mehr, was werfen kann. Ohne
+    // Log und Zaehler saehe ein Lauf, in dem die halbe SEC-Struktur kippt, aus wie ein Lauf, in
+    // dem es einfach nichts zu holen gab: kein Wort im Log, kein Zaehler, keine rote Ampel.
+    let sec;
+    try { sec = extractSecSeries(JSON.parse(body), tk); }
+    catch (e) { console.log('  parse-fail', tk, cik, e.message); parseErr++; continue; }
+    // 'nicht verfuegbar' wird GEZAEHLT, nicht geschrieben. taxonomie===null heisst: weder
+    // us-gaap noch ifrs-full liefert ein einziges Jahresdatum (haeufigster Grund: der Filer
+    // berichtet in EUR/ZAR statt USD — belegt an BNTX und STLA, beide reine EUR-Melder).
+    // Bis 19.08.2026 landeten genau diese Faelle als HOHLE Datensaetze im Store: 45 der 214
+    // Namen trugen {annualRev:[],annualOpInc:[],...} ohne nfy — im Log ununterscheidbar von
+    // echter Abdeckung. Kein Wert ist ehrlicher als ein leeres Geruest, das wie Abdeckung aussieht.
+    if (!sec.taxonomie) { ohneReihe++; continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
     if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
-    out[tk] = { cik, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
+    // taxonomie = HERKUNFT der Reihen, gleiche Ebene wie cik/nfy. Ohne sie waeren us-gaap-
+    // und ifrs-full-Werte im Store nicht auseinanderzuhalten — und dieselbe Firma kann sich
+    // unter zwei Standards um Prozente unterscheiden.
+    out[tk] = { cik, taxonomie: sec.taxonomie, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF,
       annualShares: sec.annual.annualShares };
     // Phase 4.1: tiefe Bilanz NUR wenn plausibel (newest Assets>0 UND newest CurrLiab>=0) — sonst laeuft
@@ -193,7 +210,7 @@ async function run() {
   }
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
-  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent}`);
+  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr}`);
 }
 
 // BH-036-adjacent hardening (in-scope, minimal): guard direct execution so

@@ -223,7 +223,10 @@ async function run() {
         const cf = JSON.parse(roh.toString('utf8'));
         const reihen = extractSecSeries(cf);
         for (const tk of proCik.get(e.cik)) {
-          strom.write(JSON.stringify({ ticker: tk, cik: e.cik, name: cf.entityName || null, annual: reihen.annual }) + '\n');
+          // taxonomie = HERKUNFT der Reihen (us-gaap|ifrs-full|null). Ohne sie waeren die beiden
+          // Bilanzierungsstandards in der Langhistorie nicht auseinanderzuhalten — dieselbe Firma
+          // kann sich unter zwei Standards um Prozente unterscheiden. null = nicht verfuegbar.
+          strom.write(JSON.stringify({ ticker: tk, cik: e.cik, name: cf.entityName || null, taxonomie: reihen.taxonomie, annual: reihen.annual }) + '\n');
           geschrieben += 1;
         }
       } catch (err) { kaputt += 1; }

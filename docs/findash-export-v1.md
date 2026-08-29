@@ -73,7 +73,8 @@ Zusaetzlich zur Huelle (§2):
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung / Herkunft |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | **Abgeleitet** = Array-Index+1. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber score-desc-Sortierung. Der Export macht ihn explizit. |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | **Abgeleitet** aus der score-desc-Reihenfolge. Die Engine hat KEIN rank-Feld; Rang war nur implizit ueber die Sortierung. Der Export macht ihn explizit. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"NVDA"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
 | `score` | number (round1, finite) | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. |
@@ -119,7 +120,8 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1). |
+| `rank` | int ≥ 1 \| null | Pflicht (nullable) | ja (Integer ≥ 1 ODER null mit Grund) | Abgeleitet aus der score-desc-Reihenfolge. **Belegbarkeits-Gate (18.08.2026):** `null`, wenn die Zeile weniger als **4 belegte Messachsen** hat (`coverageAxes`) — dann steht der Grund in `rankGrund`. Die Zeile bleibt vollstaendig in der Liste (Score, Lampen, alle Felder) und verbraucht KEINE Rangnummer: die uebrigen Raenge laufen lueckenlos 1,2,3,… |
+| `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
 | `ticker` | string (nichtleer) | Pflicht | ja | |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `formulaId` | string (nichtleer) | Pflicht | ja | Branchen-ID (nur hier als Feld; in Boards implizit ueber Datei). |
@@ -143,7 +145,7 @@ Huelle (§2) + `rows: Array<SurvivalRow>`, 73 Zeilen, **runway-desc nulls-last**
 
 | Feld | Typ | Pflicht | Geprueft | Bedeutung |
 | --- | --- | --- | --- | --- |
-| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1), = Runway-Rang. |
+| `rank` | int ≥ 1 | Pflicht | ja (Integer ≥ 1) | Abgeleitet (Index+1), = Runway-Rang. **Vom Belegbarkeits-Gate ausgenommen:** pre-revenue-Zeilen werden nie gescort und tragen `coverageAxes` nie — der Runway-Rang bleibt immer ein Integer, `rankGrund` ist hier immer `null` (geprueft). |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"PAH3.DE"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `runwayQuarters` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Runway in Quartalen. **`9999` = Sentinel fuer quasi-unendlichen Runway** (pre-revenue mit Cash-Ueberdeckung). Sortierschluessel. **Real nullable** (3 von 73 Rows null). |
@@ -278,7 +280,57 @@ Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStabi
 
 ---
 
-## 11. Datenkanal-Beipack (F-17a) — NICHT Teil des v1-Vertrags
+## 11. `full/` (Vollboards) — additiver Feed (19.08.2026)
+
+`src/scoring/run-screener.js` ruft `produceRankings(results, { topN: topN || 100 })`, und die CI ruft ohne `--topN`. Jede Board-Liste ist damit bei **100 Zeilen je Track** gekappt — die Zeilen dahinter waren im Export weder abrufbar noch erwaehnt. Gemessen am Vintage 03.08.2026: **1.512 von 3.042** gescorten Board-Zeilen erreichten die Oberflaeche, **50,3 % fehlten**. Bei `industrials` standen 100 von 516 Zeilen zur Verfuegung. Das bricht die Direktive „nichts verschwindet".
+
+Die vollen Kohorten liegen seit 2.3-A8 in `outputs/hypergrowth/full/`, wurden aber nie publiziert (der gh-pages-Deploy kopiert `hypergrowth` flach: `cp ../outputs/hypergrowth/*.json`). Sie werden jetzt **additiv** in denselben v1-Vertrag aufgenommen — als Unterordner `outputs/findash-export/v1/full/`. Kein v2-Bump: bestehende Dateien und Felder werden **nicht** angefasst.
+
+### Dateien (unter `outputs/findash-export/v1/full/`)
+
+| Datei | Inhalt | Quelle |
+| --- | --- | --- |
+| `<branche>.json` (13, PFLICHT) | Dieselbe Board-Datei-Form wie §3 (`{schema, generated_at, branch, boardStatus, coverage, mcapBounds, profitable[], unprofitable[]}`), aber mit der **ganzen** Kohorte je Track | `outputs/hypergrowth/full/<branche>.json` |
+
+`survival` hat **kein** Vollboard und braucht keins: die Liste ist flach nach Runway sortiert und wird nie gekappt (§5). `overview.json` ebenfalls nicht — es ist per Definition ein Cross-Branch-Auszug, kein Board.
+
+### Verhaeltnis zur gekappten Datei — die tragende Zusage
+
+**Die ersten `topN` Zeilen je Track sind mit `<branche>.json` TIEF gleich, inklusive `rank`.** Nicht „ungefaehr dieselben Namen" — dieselben Objekte, Feld fuer Feld. Danach laeuft die Rangfolge im Vollboard einfach weiter: Zeile 101 traegt `rank: 101`, bis zum Ende der Kohorte.
+
+Das ist **konstruktiv** garantiert, nicht gehofft. Das gekappte Board ist das byte-gleiche `topN`-Praefix der full-Liste (`tests/scoring/anchors.rank.test.js`, Pruefung A8), es laufen dieselben Mapper (`mapBoardRow`) und dieselbe Rangvergabe (`vergebeRaenge`, sequenziell-deterministisch je Zeile) darueber. Beides ist trotzdem festgenagelt statt vorausgesetzt: `tests/scoring/export-vollboard.test.js` (20 Pruefungen) vergleicht die ersten 100 Zeilen tief und pinnt den Deckel selbst.
+
+Das **Belegbarkeits-Gate** (§3, seit 18.08.) laeuft auf beiden Dateien identisch: eine Zeile mit zu duenner Achsen-Abdeckung traegt `rank: null` + `rankGrund` und **verbraucht keine Rangnummer**. Die uebrigen Raenge bleiben dadurch in beiden Dateien lueckenlos `1..k` — und deckungsgleich.
+
+### Ladeverhalten
+
+`full/` wird **auf Anforderung** geladen, nicht im Erstaufschlag. `<branche>.json` bleibt der schnelle erste Blick; wer ueber Rang 100 hinaus will, holt die Vollliste derselben Branche nach. Eine zweite, schlanke Zeilenform im Erstladevorgang waere teurer — sie belastete **jeden** Aufruf, auch die grosse Mehrheit, die nie ueber Rang 100 hinausschaut, und braeuchte fuer die Detailzeilen trotzdem eine Nachlade-Quelle.
+
+Die Dateien sind deshalb **kompakt** geschrieben (`indent 0`, wie die Quelle in `outputs/hypergrowth/full/`) — sie sind maschinell gelesen, nicht handgelesen.
+
+### Groesse
+
+Am Vintage 03.08.2026 gemessen (Dezimal-MB, wie `du -b` zaehlt): `full/` gesamt **3,63 MB** ueber 13 Dateien, von 54 kB (`it-services`) bis 651 kB (`industrials`). Der v1-Ordner waechst dadurch von **6,11 MB auf 9,74 MB** — die Differenz ist exakt `full/`, die 42 Bestandsdateien bleiben byte-identisch (sha256-Vergleich vor/nach dem Umbau). Der **Erstaufschlag waechst um 0 Byte** — das ist der Sinn der Trennung. §9 (latest-only, kein Jahres-Wachstum) gilt unveraendert.
+
+### Gate
+
+Anders als `quality/` ist `full/` **nicht** optional-wenn-abwesend. `run-screener.js` schreibt die Quelle bei jedem Lauf; zu jedem der 13 Branchen-Boards gehoert genau ein Vollboard. `--check` (`validateFullExport`) prueft alle 13 als **Pflicht** und validiert jede Datei mit derselben Board-Pruefung wie §3 (`branch` == Dateiname, `boardStatus`-Enum, jede Zeile, Rang- und Score-Folge). Alle Meldungen tragen ein `full/`-Praefix, damit der Alarm-Kanal ein Vollboard-Problem nie mit einem Board-Problem verwechselt.
+
+Zusaetzlich zaehlt `daily-pull.yml` nach dem Bau die Dateien: **13 oder `::error::` + Exit 1**. Grund: ein still fehlendes Vollboard sieht in findash aus wie ein Board ohne Nachruecker — stumm halb statt sichtbar rot, und das ist der teuerste Fehlerfall dieses Feeds. Fehlt das **Quell**verzeichnis `outputs/hypergrowth/full/`, bricht der Bau laut ab statt einen leeren Feed auszuliefern.
+
+### Waehrungs-Waechter: eigene Bilanz, KEINE eigene Abbruchgrenze
+
+Die Zeilen der Vollboards laufen durch denselben Waehrungs-Waechter (§3): ohne Handelskurs-Nachweis wird `marketCap` genullt — sonst waere die Zeilen-Gleichheit mit der gekappten Datei gebrochen. Sie zaehlen aber **nicht** in die 25-%-Abbruchquote, denn die wurde auf den **gekappten** Listen gemessen; ~1.500 zusaetzliche Tail-Zeilen im Nenner verschoeben eine gemessene Grenze.
+
+Damit der Tail trotzdem nicht unhoerbar wird, meldet der Bau eine **eigene** Bilanz (`::warning::Waehrungs-Waechter (Vollboards, EIGENE Bilanz, …)`). Der Tail ist nachweislich duenner belegt — am 19.08. gemessen: gekappt 61,9 %, voll 66,7 %. Eine **eigene Abbruchgrenze gibt es bewusst nicht**: jede Zahl waere auf dieser nie gemessenen Grundgesamtheit geraten, und ein geratener Abbruch kippte den ganzen Export. Erst wird gemessen, dann darf jemand eine Schwelle setzen.
+
+### Retention / Deploy
+
+`full/` faellt unter dieselbe **Retention-Grundgesetz-7a**-Regel (§8): latest-only, atomar ueberschrieben, kein Anhaengen; das Zielverzeichnis wird vor jedem Bau geleert, damit ein abgebrochener Lauf nie Vollboards zweier Vintages mischt. Der Deploy-Step kopiert `outputs/findash-export/v1/.` rekursiv (`cp -r`, `daily-pull.yml` Zeile 1757) und nimmt den `full/`-Unterordner damit automatisch mit — **keine** Aenderung am Deploy-Step noetig.
+
+---
+
+## 12. Datenkanal-Beipack (F-17a) — NICHT Teil des v1-Vertrags
 
 **Karl-Entscheid 04.08.2026, Option c.** findash las bis dahin zwei Dinge per `git pull` aus einem lokalen Checkout dieses Repos statt aus dem oeffentlichen Kanal: den Termin-Kalender und die Vintages der Bewegungs-Anzeige. Auf dem findash-Server gibt es diesen Checkout nicht — der Pull wird dort abgeschaltet, beides liegt jetzt auf `gh-pages`.
 

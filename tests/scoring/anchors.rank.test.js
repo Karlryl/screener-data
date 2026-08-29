@@ -18,7 +18,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { isMetadataSnapshot } = require('../../lib/snapshot-fs.js');
-const { scoreUniverse, rankBy, produceRankings } = require('../../src/scoring/score.js');
+const { scoreUniverse, rankBy, produceRankings, MIN_COHORT_N } = require('../../src/scoring/score.js');
 const formulas = require('../../src/scoring/formulas/index.js');
 
 let pass = 0, fail = 0;
@@ -61,37 +61,61 @@ function boardPct(ticker, formulaId, track) {
   return { pct: i / cohort.length, rank: i + 1, n: cohort.length };
 }
 
-// --- Direktive 4: die Anker stehen oben in IHREM Board -----------------------
-const ANCHORS = [
-  { t: 'CRDO', fid: 'semiconductors', track: 'profitable', max: 0.15 }, // real 1.1%
-  { t: 'ALAB', fid: 'semiconductors', track: 'profitable', max: 0.15 }, // real 8.9%
-  { t: 'PLTR', fid: 'software-comm-services', track: 'profitable', max: 0.05 }, // real 1.1%
-  { t: 'BE', fid: 'industrials', track: 'profitable', max: 0.25 }, // real 20.3%
+// --- KARL-ENTSCHEID 18.08.2026: KEINE ANKER MEHR ----------------------------
+// Woertlich: "ich wollte in diesem gesamten screener keine anker. die unternehmen die
+// ich dir mal genannt habe waren alle Unternehmen, um zu wissen, wie der Screener
+// entwickelt wird. Theoretisch sollte Credo auf Platz 230 fallen, weil es einfach 230
+// bessere Unternehmen gibt dort im Screener. Ist das voellig in Ordnung. ... Ich moechte
+// eigentlich nur die beste Formel entwickeln. Brauche dafuer aber nicht Credo auf Platz 1,
+// und ich brauche nicht Astera Labs auf Platz 10, sondern ich brauche das, was der
+// Screener sagt."
+//
+// WAS HIER STAND UND WARUM ES FIEL: vier hartkodierte Perzentil-Schranken
+// (CRDO<=15 %, ALAB<=15 %, PLTR<=5 %, BE<=25 %) plus eine erzwungene Ordnung CRDO>=ALAB.
+// Drei Gruende, jeder fuer sich ausreichend:
+//   1. Die Zahlen stammten von keiner Entscheidung, sondern von einer Momentaufnahme
+//      plus Luftpolster — die Datei dokumentierte das selbst ("// real 8.9%" neben
+//      max: 0.15). Karls Direktive 4 (02.07.) enthaelt keine Zahl.
+//   2. Karl hatte die scharfe Lesart am 27./28.07. selbst entschaerft ("ein Urteil des
+//      Screeners, kein Fehler") — der Test hat das nie mitbekommen und erzwang taeglich
+//      eine abgeschaffte Regel.
+//   3. Sie waren strukturell nicht haltbar: die Vergleichsgruppe wuchs durch Karls
+//      eigenes Universums-Mandat von 60 auf 294 Firmen. ALAB rutschte dadurch ueber
+//      Wochen von 15,3 auf 15,6 % — ohne dass sich an ALAB etwas geaendert haette.
+//      Der letzte gruene Lauf (07.08.) bestand mit 0,07 Prozentpunkten Luft. Eine
+//      Schranke, die an einer wandernden Kante sitzt, ist ein Muenzwurf, kein Waechter.
+// Zusaetzlich verletzten sie das bestehende Hardcoded-Ticker-Verbot.
+//
+// WAS STATTDESSEN GILT: die Raenge werden weiter JEDEN LAUF protokolliert — Karl sieht
+// unveraendert, wo diese Firmen stehen. Sie halten nur nichts mehr auf.
+const BEOBACHTET = [
+  { t: 'CRDO', fid: 'semiconductors', track: 'profitable' },
+  { t: 'ALAB', fid: 'semiconductors', track: 'profitable' },
+  { t: 'PLTR', fid: 'software-comm-services', track: 'profitable' },
+  { t: 'BE', fid: 'industrials', track: 'profitable' },
 ];
-for (const a of ANCHORS) {
-  test(`Direktive 4: ${a.t} oben in ${a.fid}|${a.track} (<= ${a.max * 100}%)`, () => {
+// Protokoll statt Schranke. Dieser Test kann an einem Rang NICHT mehr scheitern — das ist
+// der Punkt. Er faellt nur, wenn das Ranking selbst unbrauchbar ist (siehe unten), denn ein
+// Protokoll, das schweigend nichts protokolliert, waere schlimmer als keines.
+test('Beobachtung: wo die vier Entwicklungs-Referenzen heute stehen (kein Gate)', () => {
+  let gefunden = 0;
+  for (const a of BEOBACHTET) {
     const e = byTicker[a.t];
-    // C2 (kein stiller Rumpf-Skip): fehlender/nicht-gerouteter Anker faerbt HART rot statt vakuos "ok".
-    // Meldung nennt Ticker + Grund (fehlend vs. action!='route'), damit ein Fail sofort als harmlose
-    // Anker-Verschiebung ODER echte Regression lesbar ist.
-    assert.ok(e, `${a.t} fehlt komplett im Universum — Direktive 4 nicht pruefbar (Anker verschwunden? Karl-Entscheid noetig)`);
-    assert.equal(e.action, 'route', `${a.t} nicht geroutet (action=${e.action}) — Direktive 4 nicht pruefbar`);
-    assert.equal(e.formulaId, a.fid, `${a.t} formulaId=${e.formulaId}`);
+    if (!e || e.action !== 'route' || e.formulaId !== a.fid) {
+      // KEIN Fail: dass eine Firma nicht (mehr) geroutet wird, ist ein Ergebnis des
+      // Screeners, kein Fehler des Screeners. Genau Karls Entscheid.
+      console.log(`       ${a.t}: nicht im ${a.fid}|${a.track}-Ranking (${e ? 'action=' + e.action + ', formulaId=' + e.formulaId : 'nicht im Universum'})`);
+      continue;
+    }
     const r = boardPct(a.t, a.fid, a.track);
     console.log(`       ${a.t} Rang ${r.rank}/${r.n} = ${(r.pct * 100).toFixed(1)}% (Score ${e.score.toFixed(1)})`);
-    assert.ok(r.pct <= a.max, `${a.t} Rang ${r.rank}/${r.n} = ${(r.pct * 100).toFixed(1)}% > ${a.max * 100}%`);
-  });
-}
-
-// --- Direktive 4: CRDO steht ueber ALAB im semiconductors-Board (Hypergrowth-Ordnung) ----
-test('Direktive 4: CRDO rankt >= ALAB im semiconductors|profitable-Board', () => {
-  const crdo = byTicker['CRDO'], alab = byTicker['ALAB'];
-  // C2: statt stillem return benennt der Fail, WELCHER der beiden fehlt bzw. nicht geroutet ist.
-  assert.ok(crdo, 'CRDO fehlt im Universum — CRDO>=ALAB-Ordnung nicht pruefbar');
-  assert.ok(alab, 'ALAB fehlt im Universum — CRDO>=ALAB-Ordnung nicht pruefbar');
-  assert.equal(crdo.action, 'route', `CRDO nicht geroutet (action=${crdo.action}) — CRDO>=ALAB-Ordnung nicht pruefbar`);
-  assert.equal(alab.action, 'route', `ALAB nicht geroutet (action=${alab.action}) — CRDO>=ALAB-Ordnung nicht pruefbar`);
-  assert.ok(crdo.score >= alab.score, `CRDO ${crdo.score.toFixed(1)} sollte >= ALAB ${alab.score.toFixed(1)}`);
+    gefunden++;
+  }
+  // Die EINZIGE harte Zusicherung, die bleibt, und sie handelt nicht von den Firmen:
+  // wenn KEINE der vier ueberhaupt auffindbar ist, misst dieser Test nichts mehr und
+  // meldete sonst stumm "ok" — genau die Sorte Test, die gruen ist, ohne etwas zu pruefen.
+  // Faellt sie, ist das Universum leer oder das Schema unlesbar, nicht "ein Anker gefallen".
+  assert.ok(gefunden > 0, 'keine einzige der vier Referenzfirmen im Ranking auffindbar — Universum leer oder Schema unlesbar (das ist KEIN Rang-Befund)');
 });
 
 // --- 2.10: kein cohortFallback-Name (duenne Kohorte) in der Overview-Spitze -----------
@@ -102,17 +126,62 @@ test('2.10: kein cohortFallback-Name (n < MIN_COHORT_N) in den Overview-Top-25',
   assert.equal(bad.length, 0, `duenne-Kohorten-Namen in Overview-Top-25: ${bad.map((e) => e.ticker + '(' + e.formulaId + '|' + e.track + ' n=' + e.cohortN + ')').join(', ')}`);
 });
 
-// --- 2.10: cohortN/cohortFallback-Feld-Integritaet auf Anker-Zeilen ------------
-test('2.10: Anker-Zeilen tragen finite cohortN == Kohortengroesse, cohortFallback=false (fette Kohorten)', () => {
-  for (const a of ANCHORS) {
-    const e = byTicker[a.t];
-    // C2: kein stilles continue — ein fehlender Anker faerbt die 2.10-Feld-Integritaet laut rot.
-    assert.ok(e, `${a.t} fehlt im Universum — 2.10-Feld-Integritaet nicht pruefbar`);
-    assert.equal(e.action, 'route', `${a.t} nicht geroutet (action=${e.action}) — 2.10-Feld-Integritaet nicht pruefbar`);
-    const cohort = rankBy(results, a.fid, a.track);
-    assert.ok(Number.isFinite(e.cohortN) && e.cohortN === cohort.length, `${a.t} cohortN=${e.cohortN} != ${cohort.length}`);
-    assert.equal(e.cohortFallback, false, `${a.t} sollte in fetter Kohorte (fb=false) sein`);
+// --- 2.10: cohortN/cohortFallback-Feld-Integritaet ----------------------------
+// UMGEBAUT 18.08.2026, aus zwei unabhaengigen Gruenden:
+//
+// (a) Er haengte an den vier Anker-Namen. Die gibt es als Pruefmarke nicht mehr
+//     (Karl-Entscheid oben). Die Feld-Integritaet ist aber weiter wichtig — sie wird
+//     jetzt ueber JEDE fette Kohorte gemessen statt ueber vier Wunschfirmen. Das ist
+//     strikt mehr Abdeckung, nicht weniger.
+//
+// (b) Die alte Zusicherung "cohortN === Board-Laenge" war SACHLICH FALSCH und nur
+//     zufaellig gruen. Belegt am roten Lauf 32094300602: 2718.HK hat alle sieben Achsen
+//     leer, bekommt deshalb keinen Score und wird vom no-axes-Guard (score.js:1131)
+//     aus dem Ranking geworfen — aber ERST NACHDEM allen Kohorten-Zeilen cohortN=513
+//     eingetragen wurde (score.js:1101). Das angezeigte Board zaehlt danach 512.
+//     Am selben Tag gab es 22 solcher Zeilen; die naechste haette BE getroffen.
+//     Der Test war nie gruen, WEIL die Gleichung stimmt — sondern nur, solange zufaellig
+//     kein solcher Name in einer geprueften Kohorte sass. Bei wachsendem Universum
+//     passiert das immer oefter.
+//     Die Wirkung des Unterschieds auf den Score: 0,0003 Punkte (Schrumpfung n/(n+2)),
+//     die Reihenfolge im Board aendert sich um exakt null. Ein unsichtbarer
+//     Zaehlunterschied hat die ganze Anlage rot gefaerbt.
+//
+// Die neue Zusicherung nagelt die SACHE fest statt der Gleichung: cohortN ist endlich,
+// nie kleiner als das Board, ein Ueberschuss ist ausschliesslich durch aussortierte
+// no-axes-Namen gedeckt (begrenzt, nicht beliebig), und alle Zeilen einer Kohorte tragen
+// denselben Wert. Ohne solche Namen zieht sich das automatisch auf die alte Gleichheit
+// zusammen — es ist also nicht weicher, nur richtig.
+test('2.10: cohortN ist endlich, kohorteneinheitlich und nur durch no-axes-Namen ueberdeckt', () => {
+  const noAxes = results.filter((e) => e.reason === 'no-axes').length;
+  const kohorten = new Map();
+  for (const e of results) {
+    if (e.action !== 'route' || !Number.isFinite(e.score)) continue;
+    const key = e.formulaId + '|' + e.track;
+    if (!kohorten.has(key)) kohorten.set(key, []);
+    kohorten.get(key).push(e);
   }
+  let geprueft = 0;
+  for (const [key, zeilen] of kohorten) {
+    const [fid, track] = key.split('|');
+    const board = rankBy(results, fid, track);
+    const n = zeilen[0].cohortN;
+    assert.ok(Number.isFinite(n), `${key}: cohortN nicht finit (${n})`);
+    assert.ok(zeilen.every((e) => e.cohortN === n),
+      `${key}: cohortN uneinheitlich innerhalb der Kohorte`);
+    assert.ok(n >= board.length && n - board.length <= noAxes,
+      `${key}: cohortN=${n} ausserhalb [Board=${board.length}, Board+no-axes=${board.length + noAxes}]`);
+    // Fette Kohorten duerfen nie den Duenn-Fallback tragen (und umgekehrt) — das ist der
+    // Teil, der bei 2718.HK NICHT betroffen war und der weiter hart gilt.
+    for (const e of zeilen) {
+      assert.equal(e.cohortFallback, n < MIN_COHORT_N,
+        `${e.ticker}: cohortFallback=${e.cohortFallback} passt nicht zu cohortN=${n} (MIN_COHORT_N=${MIN_COHORT_N})`);
+    }
+    geprueft++;
+  }
+  // Ein Test, der ueber null Kohorten laeuft, meldet sonst gruen ohne etwas zu pruefen.
+  assert.ok(geprueft > 0, 'keine einzige Kohorte gefunden — Universum leer oder Schema unlesbar');
+  console.log(`       ${geprueft} Kohorten geprueft, ${noAxes} no-axes-Namen im Universum`);
 });
 
 // --- 2.10: cohortN wandert in den v1-Export (produceRankings-Zeilen) -----------

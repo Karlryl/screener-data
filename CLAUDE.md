@@ -46,7 +46,7 @@ Richtung Scoring/Board läuft zusätzlich den vollen Gauntlet oben und ist Karl-
 ## Härtungs-Loop & Source of Truth
 Der laufende Formel-Härtungs-Loop liest **ZUERST** das Ledger:
 **`…\Jarvis\Knowledge\Trading\growth-screener\screener-formel-ledger.md`** (Fitness-Gate, eingefrorene Baseline, ✅/❌/⚠️-Befunde mit Verifizierbarkeits-Befehlen, P0/P1/P2-Backlog, WORKLOG). Mess-Artefakte in `screener-data\fitness\`.
-**Kein Kostenlimit** beim Loop (Karl, 2026-06-16): voll exhaustiv arbeiten — großer Fan-out, viele parallele/adversariale Subagenten, mehrere Verifikationsrunden erwünscht. Keine Kosten-Rückfragen.
+**Loop-Budget (aktualisiert 2026-08-23, ersetzt „kein Kostenlimit" vom 16.06.):** Qualität bleibt exhaustiv (adversariale Verifikation, mehrere Runden), aber output-sparsam — wenige gut gebriefte Agents statt Masse, Bulk an Codex delegieren wo erlaubt, Antworten auf Englisch. Grund: Karls Wochenlimit ist der Engpass. Keine Kosten-Rückfragen.
 
 ## Wissensbasis / Recherche (getrennt vom Code)
 Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault**
