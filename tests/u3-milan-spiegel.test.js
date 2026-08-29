@@ -446,4 +446,17 @@ test('A10 am Prozess: jede Nicht-Umbenennung steht mit Grund und beiden Tickern 
   assert.match(r.ausgabe, /\[u3-milan\] 1ANE\.MI: keine Umbenennung \(beine-unvollstaendig\)/);
 });
 
+// ─── 7. Drift-Spur (§6.5) — die Verdrahtung, nicht nur das Skript ───────────────────────
 
+test('§6.5: der Voll-Zensus laeuft monatlich und sein Bericht wird committet', () => {
+  // Ein Messskript, das niemand startet, ist keine Drift-Spur. Der Zensus haengt bewusst im
+  // Monatslauf, weil nur der den vollen Snapshot-Bestand ohnehin wiederherstellt.
+  const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'monthly-sec-xbrl.yml'), 'utf8');
+  assert.match(yml, /node scripts\/probe-fingerprint-zensus\.js/, 'der Zensus muss im Monatslauf stehen');
+  assert.match(yml, /git add reports\/fingerprint-zensus-\*\.txt/, 'sein Bericht muss committet werden, sonst sieht ihn niemand');
+  const zensus = require('../scripts/probe-fingerprint-zensus.js');
+  assert.equal(zensus.main(['--selftest']), 0, 'die Wachprobe des Zensus muss gruen sein');
+});
+
+console.log(`\nu3-milan-spiegel.test.js: ${pass} ok, ${fail} fail`);
+process.exit(fail ? 1 : 0);
