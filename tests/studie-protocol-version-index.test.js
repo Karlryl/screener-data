@@ -98,6 +98,15 @@ test('protocol version index rejects status relabelling', () => {
   assert.throws(() => verifyIndex(relabelled, realDirectories), /1\.2\.0 status must remain exact/);
 });
 
+test('protocol version index carries the dated supersede header', () => {
+  // The header exists so a session reading the index never re-opens the 11 red 1.2.0 gates.
+  assert.match(realIndex, /\*\*Supersede status \(2026-08-16\):\*\*/, 'the dated supersede header must stay');
+  assert.match(realIndex, /2\.0\.0\/supersede-record\.json/, 'the supersede header must name its evidence record');
+  assert.match(realIndex, /readiness-and-blockers\.md/, 'the header must point at the superseded status page');
+  // Absence side: the header must never be written as a version entry, which would break the bijection.
+  verifyIndex(realIndex, realDirectories);
+});
+
 test('protocol version index rejects mutation of the no-relabel invariant', () => {
   const mutated = realIndex.replace('may be re-labelled', 'may be relabelled');
   assert.throws(() => verifyIndex(mutated, realDirectories), /no-relabel invariant/);
