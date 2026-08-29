@@ -1,0 +1,116 @@
+{
+  "schema": "R2-A1-method-corrections-correction/1",
+  "status": "ENTWURF_NOT_FROZEN_NOT_REGISTERED",
+  "draftNotice": "ENTWURF. Dieser Datensatz ist NICHT eingefroren, NICHT registriert und liegt bewusst ausserhalb von protocol/. Er wird erst wirksam, wenn der Orchestrator ihn abnimmt, nach protocol/early-detection/2.0.0/ verschiebt, status auf FROZEN_BEFORE_METHOD_CORRECTION_REBUILD setzt und ihn VOR dem einen Neubau committet. Solange er hier liegt, darf kein Lauf sich auf ihn berufen.",
+  "draftCreatedAt": "2026-08-29",
+  "draftAuthor": "Opus-Executor, Trockenarbeit-Auftrag laut ENTSCHIED 3",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "decisionSource": "Orchestrator-Direktiven Tageslauf 2026-08-29, Abschnitt 'ENTSCHIED 3 - Bruecken-Korrekturen A/B/C: EINE gebuendelte v1.2.0, EIN vorab eingefrorener Korrektur-Record', gestuetzt auf Bruecken-Rat Stimme 1 (Praktiker), Stimme 2 (Verfassungs-Methodiker) und Stimme 3 (Messtechniker).",
+  "purpose": "Drei benannte Methodik-Korrekturen der Kennungsbruecke in EINER Version nachziehen, ohne Verkettungsregel, versiegeltes konfirmatorisches Verdikt oder das Endtest-Fenster zu beruehren.",
+  "supersedes": {
+    "artifactVersion": "1.1.0",
+    "manifestSha256": "583c30c303014de3d44dfcc42294809a4e4d09b741992e128ffc77657b720ac1",
+    "status": "SUPERSEDED_BY_METHOD_CORRECTIONS",
+    "reason": "Version 1.1.0 heilte Blocker 1 und 2, liess die drei Methodik-Korrekturen aber ausdruecklich offen. Der Blocker-2-Record fuehrt sie namentlich als kuenftigen Korrektur-Umfang.",
+    "preservation": "Version 1.1.0 wird nicht geloescht, nicht umgeschrieben und nicht neu versiegelt; ihre Artefakte, Beweise und Berichte bleiben byte-genau erhalten."
+  },
+  "correctedArtifactVersion": "1.2.0",
+  "bundlingRationale": "ARTIFACT_VERSION steht im HMAC-Payload der ID-Ableitung (stable_id). Jeder Bump re-hasht saemtliche E-, I- und S-IDs. Drei Einzelversionen kosteten drei vollstaendige Determinismus-Beweise fuer dieselben Bytes (R14b) und braechen die Downstream-Referenzen dreimal. Deshalb: EIN Bump, EIN Record, EIN Re-Proof.",
+  "corrections": [
+    {
+      "id": "A",
+      "name": "acceptedTimeSeamPlacement",
+      "variant": "b - Trennung, nicht Tausch",
+      "constitutionalBasis": "R6 (SEC-Annahme-Zeitstempel, nie Abrufzeitpunkt) und R2. Das Panel selbst ist am accepted geschnitten; ddate-datierte Naehte lagen in einer anderen Zeitbasis als ihre eigenen Fenstermauern.",
+      "whatChanges": [
+        "ddate bleibt Perioden-Schluessel: der Aggregations-Key (cik, unit, ddate, qtrs), die Quellenwahl und die Kennungszuordnungen (firstDate/lastDate) sind unveraendert ddate-basiert.",
+        "adsh -> accepted wird durch die Aggregation getragen; je Komponente und Tag wird das frueheste tragende accepted gespeichert.",
+        "Das Naht-EREIGNIS traegt das accepted der Einreichung, die die neue Quelle erstmals vollstaendig traegt (bei mehrteiligen Quellen der spaeteste der tag-weise ersten Traeger).",
+        "Perioden-Uebergaenge, die ein und dieselbe Einreichung erstmals trug, sind EIN Naht-Ereignis. Die Naht-ID wird ueber das Ereignis-Datum gebildet.",
+        "PFLICHTTEIL Datumsformat-Normalisierung: compact_date() faltet '2020-12-31' und '20201231' auf eine Schreibweise; jeder Mauer-Vergleich laeuft durch das eine Praedikat beyond_date_wall()."
+      ],
+      "whatDoesNotChange": [
+        "Verkettungs- und Eignungsregel (interne CIK plus Namenskontinuitaet oder Umbenennungskette).",
+        "Die Quellen-Rangfolge und die Laengen-Regel der Quellenwahl.",
+        "Der Zugriffsumfang: accepted wurde in scan_panel schon vor dieser Korrektur gelesen, es entsteht KEINE R1-Zugriffserweiterung."
+      ],
+      "expectedEffect": "Die Nahtmenge sinkt unter 5146. Der Rueckgang stammt aus dem Ereignis-Zusammenfall, nicht aus einer neuen Mauer; er ist durch die Felder periodKeysCollapsed je Naht und counts.periodKeyTransitionsCollapsedIntoSeams nachrechenbar. Die neue Menge braucht Methodik-Abnahme durch den Orchestrator, BEVOR sie zitiert wird.",
+      "premiseCorrection": "Die Ratsformulierung, die Sperrzonen-Wache feuere nach der Umstellung 'NIE mehr', ist zu stark. '2020-12-31' sortiert nur solange unter '20201231', wie das Jahr uebereinstimmt; ab 2021 feuert auch der rohe Vergleich. Die Normalisierung bleibt Pflicht - fuer korrekte Ordnung, Naht-Identitaet und Formatmischung -, nicht weil jedes nachmauerliche Datum durchrutschen wuerde."
+    },
+    {
+      "id": "B",
+      "name": "multipleSeamExposureRestoration",
+      "scope": "nur publizieren",
+      "whatChanges": [
+        "Verteilung der Nahtzahl je Entitaet, Zahl der Mehrfachnaht-Entitaeten und die maximale Nahtzahl werden aus entities[...].seams abgeleitete Artefakt-FELDER.",
+        "Der Bericht liest diese drei Groessen aus dem Artefakt statt sie als Literale zu drucken."
+      ],
+      "whatDoesNotChange": [
+        "Keine segmentweise Kontiguitaets-, Schwund- oder Ueberlebensmessung. Die ist von der eigenen Praeregistrierung ausgeschlossen und gehoert in Auftrag 2."
+      ],
+      "healsExistingBreach": "Der Renderer druckte die Mehrfachnaht-Zahl als Literal, obwohl die eingefrorene accessOrder 'render only from that artifact' verlangt. Das war ein BESTEHENDER R1-Bruch, keine Kuer - er wird auch dann geheilt, wenn die Studie mit R15a endet.",
+      "placement": "Die Felder liegen in counts und damit im Manifest, nicht in den Shards. Die Shard-Decke ist von B nicht betroffen."
+    },
+    {
+      "id": "C",
+      "name": "completeExclusionCounters",
+      "whatChanges": [
+        "Alle zehn Ausschlusszaehler sind namentlich deklariert und mit 0 vorbelegt: eine 0 heisst gemessen und nie eingetreten, nicht ungemessen.",
+        "Der geteilte Zaehler-Sack im Scan-State entfaellt. Jeder Zaehler gehoert dem Fenster, das ihn erzeugt hat, und steht in dessen inputs-Eintrag.",
+        "Das Artefakt traegt exclusions mit byWindow, denominators und total; das Ergebnisartefakt traegt exclusions ebenfalls, der Bericht rendert nur daraus.",
+        "AUFLAGE Stimme 2 erfuellt: die dict(sorted(...))-Kanonisierung wandert mit - je Fensterblock, fuer byWindow und fuer total. Zwei Fenster-Zusammenfassungen mit demselben Fensternamen brechen laut ab statt still zu ueberschreiben.",
+        "Ein unbekannter Zaehlername wird abgewiesen; ein Tippfehler kann nicht still verschwinden."
+      ],
+      "denominators": "reportRowsRead fuer die vier Bericht-Ausschluesse, factMetadataRowsRead fuer die sechs Faktmetadaten-Ausschluesse. Beide standen bereits je Fenster in inputs - es wird NICHTS zusaetzlich gelesen.",
+      "e3AllowlistExtension": {
+        "affected": "Die E3-Zaehlproben-Allowlist der Praeregistrierung.",
+        "form": "append-only Supersede-/Korrektur-Record, keine Editierung des eingefrorenen Textes und keine Test-Abschwaechung.",
+        "basis": "R13 verbietet Editieren und Abschwaechen, nicht die Erweiterung einer Offenlegung. Muster etabliert durch supersede-record.json (SUPERSEDE_NO_DELETE) und die beiden FROZEN_BEFORE-Korrekturen.",
+        "authority": "Orchestrator-Weiche, keine Karl-Weiche.",
+        "draftStatus": "In diesem ENTWURF benannt, aber NICHT ausformuliert - der Wortlaut gehoert in den Freigabeschritt."
+      }
+    }
+  ],
+  "accessOrder": [
+    "diesen Record abnehmen, nach protocol/early-detection/2.0.0/ verschieben, einfrieren und committen, BEVOR irgendein korrigierter Neubau startet",
+    "den Soll-Wert des HMAC-Key-Fingerprints (keyFingerprintSha256) VOR dem Lauf schriftlich festhalten und gegen ihn pruefen, nicht nur Prozess A gegen Prozess B",
+    "den Neubau GENAU EINMAL fahren: beide freigegebenen Panels, zwei getrennte Betriebssystem-Prozesse, unveraenderter externer HMAC-Schluessel",
+    "die neue Nahtmenge zusammen mit periodKeyTransitionsCollapsedIntoSeams und seamEventDatesFallenBackToPeriodKey dem Orchestrator zur Methodik-Abnahme vorlegen, bevor sie irgendwo zitiert wird",
+    "den fuer 1.2.0 neu gemessenen pinnedExpectedLogicalPayloadSha256 der Determinismus-Fixture in einem eigenen append-only Folge-Record registrieren; der 1.1.0-Pin wird nicht ueberschrieben",
+    "Bericht und Ergebnisartefakt ausschliesslich aus dem Artefakt rendern",
+    "Auftrag 1 bleibt HOLD: Blocker 3 ist unberuehrt und wird durch diese Korrektur nicht geschlossen"
+  ],
+  "testStatistic": {
+    "primary": "Zahl der Vertragsverletzungen des korrigierten Artefakts gegen validate_artifact, unveraendert gegenueber 1.1.0",
+    "seamPlacement": "Zahl der Naehte, deren seamEventDate nicht aus einem accepted stammt (seamEventDatesFallenBackToPeriodKey); Sollwert im empirischen Lauf: 0",
+    "exclusionCompleteness": "Zahl der zehn deklarierten Zaehler, die je Fenster fehlen; Sollwert: 0",
+    "effectiveN": "zwei vollstaendige Neubauten derselben zwei Paneldateien; Zeilen, Shards und Hashfelder sind Rekonstruktionsmaterial, keine unabhaengigen empirischen Beobachtungen"
+  },
+  "nullModel": "Mindestens ein deterministisches Fingerprint-Feld weicht zwischen den beiden Prozessen ab, ein Zaehler fehlt in einem Fenster, eine Naht traegt kein Annahme-Datum, oder eine der drei publizierten Mehrfachnaht-Groessen weicht von der Ableitung aus entities[...].seams ab.",
+  "threshold": "Null Fingerprint-Abweichungen, zehn von zehn Zaehlern in jedem Fenster, null Rueckfaelle auf den Perioden-Schluessel im empirischen Lauf, und die benannten Sabotagen bleiben rot.",
+  "requiredInvariants": [
+    "keine Erweiterung des Datenzugriffs: accepted und die Nenner-Zeilenzahlen wurden bereits gelesen",
+    "keine numerische Faktspalte, kein Signal, kein Outcome, kein Preis",
+    "keine rohe CIK, kein Firmenname, keine Accession-Nummer, kein Ticker, kein HMAC-Schluessel in Artefakt, Manifest, Shard, Beweis, Bericht oder Konsole",
+    "kein Endtest-Datei- oder Zeilenzugriff, keine Zaehlung, keine Darstellung",
+    "scripts/studie-e4d-kadenz.py bleibt byte-identisch",
+    "das versiegelte konfirmatorische Verdikt bleibt unveraendert",
+    "die Artefakte der Version 1.1.0 werden weder geloescht noch umgeschrieben",
+    "Blocker 3 bleibt offen und wird nicht stillschweigend als geheilt gefuehrt",
+    "die Shard-Decke von 180 KB im Bau und 200 KB im Schreiben bleibt gueltig; die Entitaeten mit der hoechsten Nahtzahl sind die Ueberlauf-Kandidaten und werden im Lauf beobachtet"
+  ],
+  "explicitNonClaims": [
+    "Diese Korrektur belegt nicht, dass die Kennungsbruecke die Auffindbarkeits-Luecke schliesst; Stimme 3 hat den Hub fuer S-G mit 0,000pp gemessen.",
+    "Diese Korrektur wertet die Mehrfachnaht-Verteilung nicht aus; sie veroeffentlicht sie nur.",
+    "Diese Korrektur bewertet nicht, ob ein gezaehlter Ausschluss inhaltlich richtig war.",
+    "Diese Korrektur schliesst Blocker 3 nicht und macht Auftrag 1 nicht vollstaendig.",
+    "Diese Korrektur beginnt Auftrag 2 nicht und praejudiziert dessen Praeregistrierung nicht.",
+    "Zwei byte-gleiche Neubauten belegen Reproduzierbarkeit nur fuer die gepinnten Eingaben, die Implementierung, die Laufzeit und denselben externen HMAC-Schluessel."
+  ],
+  "openForOrchestrator": [
+    "Welcher Record traegt den fuer 1.2.0 neu gemessenen pinnedExpectedLogicalPayloadSha256, und wie kann ein VORAB eingefrorener Record einen Ausgabewert pinnen, den er noch nicht berechnet hat? Bis das entschieden ist, weisen die beiden Fixture-Pruefungen den 1.1.0-Pin namentlich ab, statt einen 1.1.0-Hash gegen ein 1.2.0-Artefakt zu vergleichen.",
+    "Abnahme der neuen Nahtmenge (Erwartung: unter 5146) samt Zusammenfall-Zahl.",
+    "Wortlaut der append-only E3-Allowlist-Ergaenzung.",
+    "Der eingefrorene Closure-Record fuehrt currentImplementation als Hash von scripts/studie-identity-bridge-artifact.py; dieser Hash aendert sich mit der Korrektur. Der Folge-Record muss den neuen Hash aufnehmen, ohne den alten zu ueberschreiben."
+  ]
+}
