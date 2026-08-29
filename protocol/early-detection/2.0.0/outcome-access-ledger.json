@@ -561,6 +561,37 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207",
    "eventHash": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17"
+  },
+  {
+   "runId": "post-mortem-explorativ-pruefung-2026-08-30",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-29T22:48:42.702Z",
+   "accessedAt": "2026-08-30T06:00:00.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "differenz_persistenz_rate",
+    "fallzahl",
+    "folgequartale_verfuegbar",
+    "folgequartale_zensiert",
+    "kontrollpool_firmen",
+    "nenner_persistenz",
+    "nenner_verfolgbarkeit",
+    "persistenz_ja",
+    "persistenz_nein",
+    "persistenz_rate",
+    "persistenz_rate_kontrolle",
+    "signal_arm_firmen",
+    "unentscheidbar_gesamt",
+    "verfolgbare_firmen"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "Explorative Post-Mortem-Obduktion 'Signal-Performance auf den 89,3 % verfolgbaren Firmen', autorisiert durch orchestrator-2026-08-29.md ENTSCHIED 45 und ENTSCHIED 53. EXPLORATIV — NIEMALS KONFIRMATORISCH: dieser Lauf erzeugt kein konfirmatorisches Verdikt, bewegt keine Schwelle, aendert keine Praeregistrierung und darf in keiner spaeteren Argumentation als Bestaetigung zitiert werden. Jede Ausgabe dieses Laufs traegt den Pflicht-Stempel 'bekannte Überlebens-Verzerrung, Obergrenzen-Lesart' — die fehlenden 10,7 % sind nicht zufaellig, Verlierer verschwinden oefter, also ist jede berichtete Rate eine OBERGRENZE und keine Punktschaetzung. Das Endtest-Fenster bleibt VERBOTEN: es wird nicht geoeffnet, nicht gelesen, nicht gezaehlt und bleibt versiegelt. Kurs-/Rendite-/Preis-Endpunkte sind per R4 dauerhaft ausgeschlossen und werden von diesem Lauf weder berechnet noch ausgegeben. ENDPUNKT: ausschliesslich die WACHSTUMS-PERSISTENZ DER FOLGEQUARTALE (Endpunktklasse wachstums_persistenz_folgequartale) — der einzige registrierte und erlaubte Anspruch der Signalfamilie FEM-SEC-US@2.0.0; R4 endpunktSperren wurde nicht umgangen, sondern eingehalten, Laufzeit-Check gegen pruefeEndpunktKlasse bestanden. INPUT-SCOPE: woertlich der Scope der committeten E4a-Registrierung (e4a-diagnose-pruefung-2026-08-19) und der Eintraege e4g-restursachen-pruefung-v2-2026-08-29 sowie e4h-serienende-pruefung-2026-08-29 — ausschliesslich die Panel-Datei des durch R15a wissenschaftlich VERBRAUCHTEN Prueffensters, dieselbe SQLite-Quelle, keine neue Quelle, kein anderes Fenster, kein Schluesselmaterial. Interne Faktwert-Berechnung ist nach dem E4g-v2-Muster autorisiert (ENTSCHIED 17); die AUSGABE bleibt strikt auf Aggregat-Zaehlungen und daraus gebildete Persistenz-Raten beschraenkt. AUSGABE: ausschliesslich die 14 angemeldeten Aggregatfelder. Keine Firmen-Kennungen, keine adsh-, cik- oder Namenswerte, keine Rohwerte, keine Monatsreihen, keine Kurs-, Rendite- oder Preisgroessen, keine Naht-IDs des Bruecken-Artefakts. Die Obduktion gehoert zum Nachlass, nicht zum Verfahren (ENTSCHIED 45): sie laeuft NACH dem Versiegeln des Abschlusses und entscheidet nichts. UMGEBUNG: Lauf aus einem frischen Worktree von origin/main (Post-Merge-Stand), damit Erzeuger und Verbraucher an die gueltige Registerkette binden; der Studienzweig erhaelt NIE den main-Ledger (Ein-Appender-Regel, ENTSCHIED 7). Anmeldung main-first per Mini-PR VOR dem Zugriff.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17",
+   "eventHash": "69b2af0d838995a46811329201148e4dede218d33c96e991c2f030eb41246a0a"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
