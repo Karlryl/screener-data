@@ -16,7 +16,7 @@
 - **Ein synthetischer Datensatz auf dem Board:** **BTBT** trägt `meta.opIncSource = "computed-margin"` — die gesamte 4-Jahres-OpInc-Reihe ist eine TTM-Marge × Umsatz, kein Filing-Wert. Einziger von 54 Board-Zeilen, und zugleich der einzige der Stichprobe, dessen `capitalEfficiency` aus Yahoo statt SEC rechnet.
 - **Auch die Grundwahrheit hat Löcher:** CWCO trägt in der SEC-Schicht einen Teilumsatz (108,95 statt ~180 Mio. $ für GJ 2023); NVEC/IPI/RMR/IIIV haben große Umsatzlücken. Die SEC-Schicht ist kein bedingungsloser Schiedsrichter.
 
-**Sprungkarte:** §1 Auswahlregel · §2 Grundwahrheit + Grenzen · §3 Toleranz · §4 Rechenwahrheit · §5 Datenwahrheit (Eingangsgrößen) · §6 Achsen-Ebene · §7 HNRG-Tiefenanker · §8 Befunde · §9 Urteil · §10 Was zur wörtlichen Erfüllung fehlt
+**Sprungkarte:** §1 Auswahlregel · §2 Grundwahrheit + Grenzen · §3 Toleranz · §4 Rechenwahrheit · §5 Datenwahrheit (Eingangsgrößen) · §6 Achsen-Ebene · §7 HNRG-Tiefenanker · §8 Befunde · §9 Urteil · §10 Was zur wörtlichen Erfüllung fehlt · §11 Abgleich mit dem Vorlauf 21.07.
 
 ---
 
@@ -88,7 +88,7 @@ Die Regel ist rein geometrisch (Board-Position), nicht ergebnisabhängig. Sie st
 ### Perioden-Zuordnung (getestet, nicht angenommen)
 
 Die Store-Jahresreihen tragen **keine Geschäftsjahres-Stempel** (`annual.annualRev` ist `[{value:…}]` ohne `end`). Die Zuordnung Store-Index *i* ↔ SEC-Index *i* ↔ GJ `nfy−i` ist deshalb eine Annahme — sie wurde **geprüft**: für jeden Namen wurde die Umsatzreihe mit Versatz −2…+2 gegen die SEC-Reihe gelegt und der Versatz mit der kleinsten Median-Abweichung gewählt.
-**Ergebnis: Versatz 0 gewinnt bei 22 von 26 Namen mit Median-Abweichung 0,000 %.** Ausnahmen: EBS (−1 minimal besser, 2,55 % vs. 3,99 %), CWCO (−1, 13,6 % vs. 16,9 %), IIIV (+2), NVEC (kein Überlapp bei Versatz 0, weil die SEC-Umsatzreihe für die vier jüngsten Jahre leer ist). Alle vier sind in §5/§8 als Perioden-/Lückenfälle eingeordnet — keiner davon kippt die Zuordnung für die restlichen 22.
+**Ergebnis: Versatz 0 gewinnt bei **22 von 26** Namen; bei **19** davon ist die Median-Abweichung exakt **0,000 %** (Store- und SEC-Umsatzreihe sind dort Wert für Wert identisch), bei MCFT/AGNT/HNRG gewinnt Versatz 0 mit 9,36 / 0,17 / 0,06 %.** Ausnahmen: EBS (−1 minimal besser, 2,55 % vs. 3,99 %), CWCO (−1, 13,6 % vs. 16,9 %), IIIV (+2), NVEC (kein Überlapp bei Versatz 0, weil die SEC-Umsatzreihe für die vier jüngsten Jahre leer ist). Alle vier sind in §5/§8 als Perioden-/Lückenfälle eingeordnet — keiner davon kippt die Zuordnung für die restlichen 22.
 
 **Zusatzbefund zur Periode:** alle Store-Snapshots tragen `metrics.*.asOf = 2026-07-22`, das Board wurde am **2026-08-29** erzeugt. Der Skalar-Teil des Stores (u. a. `fcfMarginTTM` im `ruleOfX`) ist damit **38 Tage alt** gegenüber dem Board-Stempel.
 
@@ -316,7 +316,7 @@ Nur **46,5 %** der prüfbaren OpInc-Jahreswerte decken sich mit den Filings (Ums
 `snapshots-smallcap/BTBT.json → meta.opIncSource = "computed-margin"`. Die Reihe lautet
 `[−590 848 666,944 · −562 182 493,624 · −233 696 378,584 · −168 037 542,941]`
 und ist Zeile für Zeile `annualRev[i] × (−5,2028)` — **eine einzige TTM-Betriebsmarge, auf vier Umsatzjahre multipliziert**. Zusätzlich ist `annual.annualGP = [0,0,0,0]` (die `gpGrowth`-Achse droppt korrekt).
-**Reichweite:** von 82 Small-Cap-Snapshots tragen 24 `computed-margin` und 22 ein durchgängig genulltes `annualGP` — davon steht aber **nur BTBT** auf einem Board (die übrigen fliegen als `balance-sheet-bank`/`insurer` raus). BTBT ist zugleich der **einzige** Name der Stichprobe, dessen `capitalEfficiency` aus Yahoo statt SEC rechnet (`roicStabilitySource._source = 'yahoo'`, weil die SEC-Tiefe 2 GJ < Yahoo-Tiefe 4 GJ ist) — der synthetische Wert geht damit **ungefiltert** in die Achse: −1,98524 statt −1,17201 aus den Filings (−69,4 %).
+**Reichweite:** von 101 gescannten Snapshot-Dateien in `snapshots-smallcap/` tragen **24** `computed-margin` und **27** ein durchgängig genulltes `annualGP` (19 beides) — davon steht aber **nur BTBT** auf einem Board (die übrigen fliegen als `balance-sheet-bank`/`insurer` raus). BTBT ist zugleich der **einzige** Name der Stichprobe, dessen `capitalEfficiency` aus Yahoo statt SEC rechnet (`roicStabilitySource._source = 'yahoo'`, weil die SEC-Tiefe 2 GJ < Yahoo-Tiefe 4 GJ ist) — der synthetische Wert geht damit **ungefiltert** in die Achse: −1,98524 statt −1,17201 aus den Filings (−69,4 %).
 Betroffene Board-Zeile: `outputs/smallcap/smallcap-financials.json → unprofitable[1]`, Score 18,1.
 
 ### 8.3 Die Grundwahrheit selbst hat Defekte ⚠️
@@ -377,9 +377,25 @@ Genau ein Schritt, **gratis, aber netzgebunden** — und damit ein Karl-Stop:
 
 **Vorschlag für die Befund-Queue (nicht selbst gefixt, Methodik-nah):**
 - **B1 (hoch):** `annualOpInc`-Herkunft. Entweder die SEC-`OperatingIncomeLoss`-Reihe auch für Track-Split und `cycleDiscount` zur Quelle machen (dann ist eine Definition durchgehend), oder die Divergenz als Lampe sichtbar machen. Heute läuft der ROIC-Kern auf SEC und die Zusatzterme auf Yahoo — zwei Definitionen in einer Achse.
-- **B2 (hoch):** `opIncSource: "computed-margin"` gehört fail-loud behandelt (Exclude oder `data-suspect`-Lampe), nicht stillschweigend gescort. Heute betrifft es 1 von 54 Board-Zeilen, aber 24 von 82 Snapshots.
+- **B2 (hoch):** `opIncSource: "computed-margin"` gehört fail-loud behandelt (Exclude oder `data-suspect`-Lampe), nicht stillschweigend gescort. Heute betrifft es 1 von 54 Board-Zeilen, aber 24 von 101 Snapshot-Dateien.
 - **B3 (mittel):** `axes.js:212` auf Adjazenz härten (BH-079/BH-080-Muster), solange der Fall noch latent ist.
 - **B4 (mittel):** Umsatz-Konzeptwahl in `merge-sec-xbrl.js` gegen Bestandteils-Tags absichern — CWCO ist ein lebender Beleg dafür, dass die Prioritäts-Union eine Teilgröße durchlässt.
+
+---
+
+## §11 Abgleich mit dem Vorlauf vom 2026-07-21
+
+Im Repo liegt bereits `reports/5.2-auflage1-stichprobe-2026-07-21.md` (10 Namen, 7 Sektoren). Dieser Lauf hier ist der erste, der die **Achsen** selbst nachrechnet — der Vorlauf sagt das ausdrücklich von sich: „Bewusst NICHT alle 7 Achsen einzeln von Hand nachgerechnet" (Zeile 20-21). Auflage 1 war damit auch damals nicht wörtlich eingelöst; beide Läufe kommen unabhängig zu „teilweise erfüllt".
+
+**Bestätigt, auf den Dollar:** der Vorlauf meldet für MGPI `OperatingIncomeLoss` FY2025 = **−94.615.000 $** (10-K, filed 2026-02-25) gegen Snapshot **+83.507.000 $**. Meine Messung heute, aus einer anderen Datei (`sec-secannual-smallcap.json`) und mit anderer Arithmetik: **−94,61 M vs. +83,51 M**. Identisch. Der Befund ist 39 Tage alt und im Store **unrepariert**.
+
+**Repariert und heute verifiziert:** der damalige Befund hat den SEC-Präferenz-Fix ausgelöst (`axes.js:311-318` nennt „MGPI Vorzeichen-Flip, KODK-Betrag" wörtlich als Anlass). Der Fix **wirkt**: MGPIs `capitalEfficiency` stimmt heute mit der reinen SEC-Rechnung **exakt** überein (−0,0253067 = −0,0253067, `_source='sec'`). Das ist der eine Punkt, an dem das Board seit Juli nachweislich besser geworden ist.
+
+**Was der Fix nicht abdeckt — und was dieser Lauf neu findet:**
+1. Der Track-Split (`signTrack(annualOpInc)`) und der `cycleDiscount` innerhalb von `capitalEfficiency` lesen **weiterhin Yahoo**. Deshalb der EGY-Fall (§8.4), den der Vorlauf nicht sehen konnte.
+2. Der Vorlauf prüfte nur das **jüngste** OpInc-Jahr und kam auf 2/10 = 20 % Divergenz. Über **vier** Jahre gemessen liegt die Nicht-Übereinstimmung bei **53,5 %** (54 von 101 Zellen). Die Rate, die der Vorlauf „im Auge zu behalten" empfahl, ist bei tieferer Messung deutlich schlechter, nicht besser.
+3. Der Vorlauf notierte als offenen Punkt, „ob Yahoos Quartals-OpInc für diese 2 Namen ebenfalls abweicht". **Für HNRG ist das jetzt beantwortet:** die Quartals-OpInc-Reihe weicht um −0,2 bis −8,0 % ab (§7) — also spürbar, aber ohne Vorzeichen- oder Größenordnungsfehler. Für MGPI/KODK bleibt der Punkt offen (keine Roh-`companyfacts` offline).
+4. `meta.opIncSource = "computed-margin"` (§8.2) kommt im Vorlauf nicht vor.
 
 ---
 
