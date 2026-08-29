@@ -36,7 +36,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const {
-  milanTor, milanSieger, milanUmbenennungen, milanKlassenLesen, milanSchreiben,
+  milanTor, milanSieger, milanUmbenennungen, milanKlassenLesen, milanSchreiben, milanFingerabdruck,
   ladeIdentitaetsRegister, MILAN_KANDIDATEN, MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   MILAN_SHARES_BAND, MILAN_MIN_QUARTALE, MILAN_SPIEGEL,
 } = require('../scripts/filter-snapshot-merge.js');
@@ -248,7 +248,7 @@ test('RUECKWAERTS A4: leeres meta.country blockt — die zweite Achse darf nie n
 
 test('RUECKWAERTS A5: ein zweites Mailaender Bein auf demselben Fingerabdruck bricht ab', () => {
   const beine = [bein('1ABC.MI', 'Beispiel AG'), bein('ABC', 'Beispiel A.G.')];
-  const abdruck = JSON.stringify(beine[0].revenueQ) + '|' + JSON.stringify(beine[0].grossProfitQ);
+  const abdruck = milanFingerabdruck(beine[0]); // importiert, nicht nachgebaut (F1334)
   assert.equal(milanTor(beine, new Set([abdruck])), 'mehrdeutig');
 });
 
@@ -363,13 +363,45 @@ test('REGISTER/A6: ein Bein in ZWEI Klassen wird verworfen, nicht still uebersch
     'GEN darf NIE den Namen der fremden Klasse bekommen');
 });
 
+test('A1: nicht-endliche Reihenwerte bleiben unterscheidbar (JSON.stringify macht alles zu null)', () => {
+  // Reproduziert: JSON.stringify schreibt NaN, Infinity, -Infinity und undefined ALLE als
+  // `null`. Zwei Reihen, die sich nur dort unterscheiden, hatten denselben Fingerabdruck —
+  // ein Loch in der Zusicherung "Wert fuer Wert, ohne Toleranz".
+  const mit = (letzter) => ({ revenueQ: [100, 200, 300, 400, letzter], grossProfitQ: [70, 140, 210, 280, 7] });
+  const abdruecke = [NaN, Infinity, -Infinity, null, undefined, 500].map((x) => milanFingerabdruck(mit(x)));
+  assert.equal(new Set(abdruecke).size, abdruecke.length, 'jeder Sonderwert bleibt sein eigener Fingerabdruck');
+  const beine = [
+    { ...bein('1X.MI', 'Alpha AG'), revenueQ: [100, 200, 300, 400, NaN], grossProfitQ: [70, 140, 210, 280, 7] },
+    { ...bein('X', 'Alpha A.G.'), revenueQ: [100, 200, 300, 400, Infinity], grossProfitQ: [70, 140, 210, 280, 7] },
+  ];
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck', 'und das Tor sieht den Unterschied auch');
+});
+
+test('KOLLISION: ein Ticker als Verlierer in Klasse A und Sieger in Klasse B faellt auf', () => {
+  // Reproduziert: `T` wurde von Klasse A auf "Erste Holding AG" umbenannt, waehrend Klasse B
+  // ihn als Identitaets-Quelle bescheinigte und `1BBB.MI` auf "Tango Corp" schrieb — die
+  // Identitaet, die B beglaubigt hatte, war danach weg. Die alte Pruefung sah nur die
+  // Verlierer und meldete 0 Kollisionen.
+  const kl = [
+    { anker: '1AAA.MI', beine: [bein('1AAA.MI', 'Erste Holding AG'), bein('T', 'Tango Corp')] },
+    { anker: '1BBB.MI', beine: [bein('1BBB.MI', '1BBB.MI'), bein('T', 'Tango Corp')] },
+  ];
+  const { kollisionen, umbenennungen } = milanUmbenennungen(kl, new Set());
+  assert.equal(kollisionen.length, 1, 'der Anspruch auf dieselbe Datei muss auffallen');
+  assert.equal(kollisionen[0].ticker, 'T');
+  assert.ok(!umbenennungen.has('1BBB.MI.json'), 'die widerspruechliche Klasse wird nicht ausgefuehrt');
+  // Auch in der anderen Reihenfolge (Sieger zuerst, Verlierer danach).
+  const { kollisionen: k2 } = milanUmbenennungen([kl[1], kl[0]], new Set());
+  assert.equal(k2.length, 1, 'die Reihenfolge der Klassen darf nichts daran aendern');
+});
+
 test('A5 gilt auch fuer Register-Klassen, sobald sie ein Mailaender Bein nennen', () => {
   // Vorher haing der Riegel an der QUELLE der Klasse, nicht am Mailaender Bein: jede
   // Register-Klasse bekam `null` und damit gar keine Mehrdeutigkeits-Pruefung — obwohl nichts
   // einen Register-Eintrag daran hindert, einen `1XXX.MI`-Ticker zu nennen. Die Zusicherung
   // stand nur im Kommentar.
   const beine = [bein('1ABC.MI', 'Beispiel AG'), bein('ABC', 'Beispiel A.G.')];
-  const abdruck = JSON.stringify(beine[0].revenueQ) + '|' + JSON.stringify(beine[0].grossProfitQ);
+  const abdruck = milanFingerabdruck(beine[0]); // importiert, nicht nachgebaut (F1334)
   const klasse = { anker: 'beispiel', registerQuelle: 'identitaets-register', beine };
   const { urteile, umbenennungen } = milanUmbenennungen([klasse], new Set([abdruck]));
   assert.equal(urteile[0].grund, 'mehrdeutig', 'A5 darf nicht an der Quelle der Klasse haengen');

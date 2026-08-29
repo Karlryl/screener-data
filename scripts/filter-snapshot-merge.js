@@ -369,7 +369,16 @@ function milanEndlicheQuartale(reihe) {
  *  einzelne Reihe zufaellig uebereinstimmen kann (runde Zahlen, kurze Reihen); beide zusammen
  *  nicht. Wortgleich zu `probe-dedup-fingerprint.js:82-84`, nur eine Datenebene frueher. */
 function milanFingerabdruck(bein) {
-  return JSON.stringify(bein.revenueQ) + '|' + JSON.stringify(bein.grossProfitQ);
+  // `JSON.stringify` schreibt NaN, Infinity, -Infinity und undefined ALLE als `null` — zwei
+  // Reihen, die sich nur in nicht-endlichen Feldern unterscheiden, bekaemen denselben
+  // Fingerabdruck, obwohl A1 "Wert fuer Wert, ohne Toleranz" verlangt. Reproduziert:
+  // [100,200,300,400,NaN] und [100,200,300,400,Infinity] waren bytegleich. Nicht-endliche
+  // Werte werden deshalb als ihr eigener Name serialisiert; `null`, `NaN`, `Infinity`,
+  // `-Infinity` und `undefined` bleiben damit paarweise verschieden.
+  const fest = (reihe) => JSON.stringify(Array.isArray(reihe)
+    ? reihe.map((x) => (typeof x === 'number' && Number.isFinite(x) ? x : String(x)))
+    : reihe);
+  return fest(bein.revenueQ) + '|' + fest(bein.grossProfitQ);
 }
 
 /**
@@ -438,6 +447,8 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
   const umbenennungen = new Map();
   const urteile = [];
   const kollisionen = [];
+  // datei -> { name, anker }: welche Klasse hat fuer diese Datei welchen Emittentennamen belegt.
+  const beansprucht = new Map();
   for (const k of klassen) {
     const beine = k.beine;
     // A5 haengt daran, OB die Klasse ein Mailaender Bein traegt — nicht daran, woher die Klasse
@@ -453,6 +464,14 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
       if (!sieger) grund = 'nur-platzhalter';
       else {
         const geplant = beine.filter((b) => b.schluessel !== sieger.schluessel);
+        // Jede Klasse erhebt EINEN Anspruch je beteiligter Datei: "der Emittentenname dieses
+        // Beins ist X". Fuer die Verlierer heisst das "wird zu X", fuer den Sieger "ist bereits
+        // X" — dieselbe Aussage, deshalb dieselbe Buchung. Nur so faellt auch der Fall auf, in
+        // dem ein Ticker in Klasse A Verlierer und in Klasse B Sieger ist: reproduziert mit
+        // `T` als Verlierer von `1AAA.MI` und Sieger von `1BBB.MI` — `T` wurde auf
+        // "Erste Holding AG" umbenannt, waehrend `1BBB.MI` auf "Tango Corp" ging und damit
+        // genau die Identitaet verlor, die Klasse B bescheinigt hatte. Beide Richtungen, jede
+        // Reihenfolge.
         // KOLLISION: zwei Klassen beanspruchen DASSELBE Bein mit VERSCHIEDENEN Namen. Ohne
         // diesen Riegel gewaenne still die zuletzt gerechnete Klasse — und weil der
         // Mengen-Riegel A7 nur die Kandidatenliste zaehlt, koennte ein Register-Eintrag, der
@@ -462,12 +481,15 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
         // Aussagen, ist immer ein Widerspruch; hier wird KEINE der beiden ausgefuehrt, und
         // run() bricht danach ab. Der Riegel sitzt bewusst hier, wo ALLE Klassen-Quellen
         // zusammenlaufen, nicht am Register-Lader allein.
-        const kollision = geplant.find((b) => umbenennungen.has(b.datei) && umbenennungen.get(b.datei) !== sieger.name);
+        const kollision = [sieger, ...geplant]
+          .find((b) => beansprucht.has(b.datei) && beansprucht.get(b.datei).name !== sieger.name);
         if (kollision) {
           grund = 'kollision';
-          kollisionen.push({ anker: k.anker, ticker: kollision.ticker, wollte: sieger.name, steht: umbenennungen.get(kollision.datei) });
+          kollisionen.push({ anker: k.anker, ticker: kollision.ticker, wollte: sieger.name, steht: beansprucht.get(kollision.datei).name, von: beansprucht.get(kollision.datei).anker });
         } else {
+          beansprucht.set(sieger.datei, { name: sieger.name, anker: k.anker });
           for (const b of geplant) {
+            beansprucht.set(b.datei, { name: sieger.name, anker: k.anker });
             umbenennungen.set(b.datei, sieger.name);
             verlierer.push(b.ticker);
           }
@@ -925,7 +947,7 @@ function run(argv) {
   // aber ein Widerspruch im Kandidaten-/Registerbestand ist ein Pflege-Fehler, kein Betriebszustand.
   if (kollisionen.length) {
     for (const k of kollisionen) {
-      console.error(`::error::U3-Milan — Kollision: ${k.ticker} soll gleichzeitig "${k.wollte}" (Klasse ${k.anker}) und "${k.steht}" heissen. Beide Klassen sind verworfen.`);
+      console.error(`::error::U3-Milan — Kollision: ${k.ticker} soll gleichzeitig "${k.wollte}" (Klasse ${k.anker}) und "${k.steht}" (Klasse ${k.von}) heissen. Beide Klassen sind verworfen.`);
     }
     console.error(`::error::U3-Milan — ${kollisionen.length} widerspruechliche Identitaets-Aussage(n). Stop: ein Bein gehoert zu genau EINEM Emittenten. Kandidatenliste und Identitaets-Register in Deckung bringen.`);
     return 1;
@@ -975,5 +997,5 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
   MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
-  MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN, IDENTITAETS_REGISTER_STANDARDPFAD };
+  MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN };
 if (require.main === module) process.exit(run(process.argv));
