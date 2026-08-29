@@ -125,8 +125,14 @@ function honestYahooLabel(src) {
  * solche korrekt (gepinnt). Die Datenlage gehoert nicht in eine String-Abbildung.
  */
 function yahooLabelFuer(meta, yahooOpInc) {
+  // `|| 'native'` haette ein AUSDRUECKLICHES null (das dieser Guard selbst schreiben kann)
+  // wie ein fehlendes Feld behandelt und es ueber honestYahooLabel zu 'yahoo-adjusted'
+  // zurueckgedreht — die Erfindung waere ueber den Umweg des Rueckwegs wieder da, sobald
+  // die Reihe zwischenzeitlich einen finiten Wert bekommt. Nur ABWESENHEIT faellt auf
+  // 'native' zurueck (der Alt-Snapshot-Fall, fuer den der Fallback gebaut wurde).
+  const bewahrt = meta.opIncSourceYahoo === undefined ? 'native' : meta.opIncSourceYahoo;
   const label = honestYahooLabel(
-    meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+    meta.opIncSource === 'sec-gaap' ? bewahrt : meta.opIncSource);
   if (label !== 'yahoo-adjusted') return label;
   return (Array.isArray(yahooOpInc) && yahooOpInc.some(fin)) ? label : null;
 }
@@ -188,7 +194,14 @@ function decideOpInc(snapshot, secEntry) {
   // die 14 fallen beim naechsten Lauf auf ihre bewahrte Yahoo-Reihe zurueck und holen sich
   // den Tausch selbsttaetig zurueck, sobald die SEC-Schicht die fehlenden Jahre nachliefert.
   if (alignment.pairs < n) {
-    return { label: yahooLabel, opInc: null, reason: 'alignment-unprovable', alignment };
+    // Zwei sehr verschiedene Lagen, seit das Tor auf VOLLE Deckung steht: "kein einziges
+    // vergleichbares Umsatzjahr" (nie eine Chance auf Beleg) und "ein Feld fehlt im sonst
+    // gedeckten Fenster" (Beinahe-Treffer, holt sich den Tausch bei der naechsten
+    // SEC-Nachlieferung von selbst zurueck). Unter EINEM Grund-Etikett waere im
+    // Tageslauf-Log nicht zu sehen, welche der beiden der Bestand ist — und genau daran
+    // haengt, ob das schaerfere Tor zu streng steht.
+    return { label: yahooLabel, opInc: null, alignment,
+      reason: alignment.pairs === 0 ? 'alignment-unprovable-zero' : 'alignment-unprovable-partial' };
   }
   if (alignment.maxRel > REV_ALIGN_TOL) {
     return { label: yahooLabel, opInc: null, reason: 'alignment-failed', alignment };
@@ -219,7 +232,14 @@ function migrateSnapshot(snapshot, secEntry) {
   const yahooOpInc = Array.isArray(annual.annualOpIncYahoo) ? annual.annualOpIncYahoo
     : (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []);
   const before = (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []).map(val);
-  const prevLabel = meta.opIncSource === undefined ? null : meta.opIncSource;
+  // Ein FEHLENDER Schluessel ist nicht dasselbe wie ein explizites null. prevLabel faltet
+  // beide auf null zusammen — das ist fuer den Diff richtig, fuer den Schreibentscheid
+  // aber falsch, seit M5a fuer genau den Alt-Snapshot-Fall (Feld fehlt + leere Reihe)
+  // ebenfalls null liefert: labelChanged waere null !== null, der Lauf schriebe nie, und
+  // die Datei bekaeme ihren Schluessel NIE — der Bestand konvergierte nicht, und der
+  // Eimer 'unveraendert' saugte die nicht migrierten Alt-Snapshots stumm auf.
+  const etikettFehlte = meta.opIncSource === undefined;
+  const prevLabel = etikettFehlte ? null : meta.opIncSource;
 
   if (d.opInc) {
     // K1.3: die ersetzte Yahoo-Reihe bleibt am Datensatz — kein Name verliert Daten.
@@ -238,7 +258,8 @@ function migrateSnapshot(snapshot, secEntry) {
   }
   const after = (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []).map(val);
   const valuesChanged = before.length !== after.length || before.some((v, i) => v !== after[i]);
-  const labelChanged = prevLabel !== meta.opIncSource;
+  // Abwesend -> anwesend ist eine Aenderung, auch wenn beide Seiten null LESEN.
+  const labelChanged = etikettFehlte || prevLabel !== meta.opIncSource;
   return {
     changed: valuesChanged || labelChanged, valuesChanged, labelChanged,
     before, after, prevLabel, label: meta.opIncSource, reason: d.reason, alignment: d.alignment,

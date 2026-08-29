@@ -328,7 +328,7 @@ function bericht(r) {
     L.push('oder eine leere Messmenge belegt NICHTS und heisst **UNAUFGELOEST** — nie');
     L.push('FEHLALARM und nie Befund.');
     L.push('');
-    L.push('| Ticker | Schicht | kippt bei VOLL | kippt bei NUR-UMSATZ | bester Versatz | Umsatz-Paare (bei Versatz 0) | Einordnung |');
+    L.push('| Ticker | Schicht | kippt bei VOLL | kippt bei NUR-UMSATZ | bester Versatz | Umsatz-Paare: bester (Versatz 0) | Einordnung |');
     L.push('| --- | --- | :---: | :---: | :---: | :---: | --- |');
     const nurU = new Set(r.t174.kippenNurUmsatz.map((k) => k.tk));
     for (const k of r.t174.kippen) {

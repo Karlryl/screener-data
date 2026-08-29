@@ -110,6 +110,17 @@ test(`H5: ein einzelnes Paar bleibt unter der Schwelle (MIN_PAARE = ${VERSATZ_MI
   assert.equal(v.off, VERSATZ_UNBESTIMMT);
 });
 
+test(`H5 GRENZE: genau ${VERSATZ_MIN_PAARE} Paare reichen (Mutation < auf <= muss rot werden)`, () => {
+  // Vom JS-Reviewer gefunden und von mir reproduziert: keiner der uebrigen H5-Waechter
+  // beruehrt den Schwellwert selbst — `maxHits <= VERSATZ_MIN_PAARE` lief komplett gruen
+  // durch und haette die Schwelle still von ">= 2" auf ">= 3" gehoben.
+  // Versatz +1 trifft genau zwei Paare, Versatz 0 keines.
+  const v = besterVersatz(zellen([100, 200, 7]), zellen([9, 100, 200]));
+  assert.equal(v.hits, VERSATZ_MIN_PAARE, 'Vorbedingung: exakt auf der Schwelle');
+  assert.equal(v.lage, 'versatz', 'genau MIN_PAARE Paare sind ein Beleg, nicht einer zu wenig');
+  assert.equal(v.off, 1);
+});
+
 test('H5 GEGENRICHTUNG: ein belegter Versatz != 0 bleibt bestimmbar', () => {
   // Die SEC-Reihe ist um eine Position nach hinten verschoben -> Versatz +1, 3 Paare.
   const v = besterVersatz(zellen([100, 200, 300]), zellen([7, 100, 200, 300]));

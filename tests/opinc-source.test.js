@@ -93,7 +93,7 @@ t('weniger als zwei vergleichbare Umsatzjahre -> unbelegbar, kein Tausch (IREN-K
   const s = snap('SHORT', [-329045000, -10000000, -5000000, -1000000], [501000000, 75000000, 4000000, 1000000]);
   const r = migrateSnapshot(s, secOf([17327000], [510000000]));
   assert.equal(r.alignment.pairs, 1);
-  assert.equal(r.reason, 'alignment-unprovable');
+  assert.equal(r.reason, 'alignment-unprovable-partial');
   assert.deepEqual(plain(s.annual.annualOpInc), [-329045000, -10000000, -5000000, -1000000]);
 });
 
@@ -454,7 +454,7 @@ t('N1: EINE blinde Fensterposition verweigert den Tausch (frueher: durchgewunken
   const s = snap('BLIND', [10, 20, 30, 40], [100, 200, 300, null]);
   const r = migrateSnapshot(s, secOf([11, 21, 31, 41], [100, 200, 300, 400]));
   assert.equal(r.alignment.pairs, 3);
-  assert.equal(r.reason, 'alignment-unprovable');
+  assert.equal(r.reason, 'alignment-unprovable-partial');
   assert.equal(r.label, 'yahoo-adjusted');
   assert.deepEqual(plain(s.annual.annualOpInc), [10, 20, 30, 40], 'kein Wert darf wandern');
 });
@@ -466,11 +466,92 @@ t('N1 AUTO-REVERT: ein bestehender sec-gaap-Treffer mit blinder Position faellt 
   s.annual.annualOpIncYahoo = cells([10, 20, 30, 40]);
   s.meta.opIncSourceYahoo = 'yahoo-adjusted';
   const r = migrateSnapshot(s, secOf([11, 21, 31, 41], [100, null, 300, 400]));
-  assert.equal(r.reason, 'alignment-unprovable');
+  assert.equal(r.reason, 'alignment-unprovable-partial');
   assert.equal(r.label, 'yahoo-adjusted');
   assert.deepEqual(plain(s.annual.annualOpInc), [10, 20, 30, 40]);
   assert.equal(s.annual.annualOpIncYahoo, undefined, 'nach dem Rueckweg kein Schattenfeld');
   assert.equal(s.meta.opIncSourceYahoo, undefined);
+});
+
+// ─── 13. Reviewer-Runde zum Memo-Quartett (silent-failure-hunter + JS-Reviewer) ──
+// Jeder Befund unten wurde ZUERST reproduziert, dann gefixt, dann hier festgenagelt.
+
+// MEDIUM (silent-failure-hunter, NEU durch M5a): ein Alt-Snapshot ohne das Feld und mit
+// leerer Reihe bekam nach dem Guard label null — und prevLabel faltet ein FEHLENDES Feld
+// ebenfalls auf null. labelChanged war damit false, die Datei wurde NIE geschrieben, der
+// Schluessel entstand nur im Speicher, und der Eimer 'unveraendert' sog den nicht
+// migrierten Alt-Snapshot stumm auf. Der Bestand konvergierte nie.
+t('M5a: Feld ABWESEND -> anwesend gilt als Aenderung und wird geschrieben', () => {
+  const s = { meta: { ticker: 'LEGACY' }, annual: { annualOpInc: [], annualRev: cells([100, 200]) } };
+  const r = migrateSnapshot(s, undefined);
+  assert.equal(r.label, null);
+  assert.equal(r.labelChanged, true, 'abwesend und null LESEN sich gleich, sind es aber nicht');
+  assert.equal(r.changed, true, 'ohne changed schreibt run() die Datei nie');
+});
+
+t('M5a: und der zweite Lauf ist ruhig — der Schluessel ist jetzt da', () => {
+  const s = { meta: { ticker: 'LEGACY' }, annual: { annualOpInc: [], annualRev: cells([100, 200]) } };
+  migrateSnapshot(s, undefined);
+  const r2 = migrateSnapshot(s, undefined);
+  assert.equal(r2.changed, false, 'sonst schriebe der Tageslauf dieselbe Datei jeden Tag neu');
+  assert.equal(s.meta.opIncSource, null);
+});
+
+t('M5a: run() schreibt den Alt-Snapshot wirklich auf die Platte', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-legacy-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(store, { recursive: true });
+  const p = path.join(store, 'LEGACY.json');
+  fs.writeFileSync(p, JSON.stringify({ meta: { ticker: 'LEGACY' }, annual: { annualOpInc: [], annualRev: cells([100]) } }));
+  const z = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.equal(z.geschrieben, 1, 'der Alt-Snapshot muss genau einmal geschrieben werden');
+  assert.equal(z.etiketten.unveraendert, 0, "'unveraendert' darf ihn nicht aufsaugen");
+  const nach = JSON.parse(fs.readFileSync(p, 'utf8'));
+  assert.ok(Object.prototype.hasOwnProperty.call(nach.meta, 'opIncSource'),
+    'der Schluessel muss auf der Platte ankommen, nicht nur im Speicher entstehen');
+  assert.equal(nach.meta.opIncSource, null);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// LOW (JS-Reviewer): `meta.opIncSourceYahoo || 'native'` behandelte ein AUSDRUECKLICHES
+// null wie ein fehlendes Feld und drehte es ueber honestYahooLabel auf 'yahoo-adjusted'
+// zurueck. Nur Abwesenheit darf auf 'native' fallen.
+t('bewahrtes Etikett null bleibt null — nur ABWESENHEIT faellt auf native zurueck', () => {
+  const mitNull = { opIncSource: 'sec-gaap', opIncSourceYahoo: null };
+  assert.equal(yahooLabelFuer(mitNull, cells([1, 2])), null,
+    'ein ausdrueckliches null darf nicht ueber den Rueckweg zu yahoo-adjusted werden');
+  const ohneFeld = { opIncSource: 'sec-gaap' };
+  assert.equal(yahooLabelFuer(ohneFeld, cells([1, 2])), 'yahoo-adjusted',
+    'der Alt-Snapshot-Fall, fuer den der native-Fallback gebaut wurde, bleibt');
+});
+
+t('M5a x N1: Tausch ueber leerer Yahoo-Reihe und zurueck, ohne Halbzustand', () => {
+  // Die eine Stelle, an der beide Aenderungen sich beruehren: die bewahrte Yahoo-Reihe
+  // ist leer, das Tor traegt trotzdem (der Beleg haengt am Umsatz, nicht am OpInc).
+  const s = { meta: { ticker: 'X' }, annual: { annualOpInc: cells([null, null, null]), annualRev: cells([100, 200, 300]) } };
+  const sec = secOf([1, 2, 3], [100, 200, 300]);
+  assert.equal(migrateSnapshot(s, sec).label, 'sec-gaap');
+  assert.equal(s.meta.opIncSourceYahoo, null, 'auch die bewahrte Herkunft wird nicht erfunden');
+  const stand = JSON.stringify(s);
+  assert.equal(migrateSnapshot(s, sec).changed, false, 'idempotent');
+  assert.equal(JSON.stringify(s), stand);
+  const r = migrateSnapshot(s, undefined);
+  assert.equal(r.label, null, 'zurueck auf die leere Reihe heisst zurueck auf kein Etikett');
+  assert.deepEqual(plain(s.annual.annualOpInc), [null, null, null]);
+  assert.equal(s.annual.annualOpIncYahoo, undefined);
+  assert.equal(migrateSnapshot(s, undefined).changed, false, 'auch der Rueckweg ist idempotent');
+});
+
+// LOW (silent-failure-hunter): seit dem Voll-Deckungs-Tor deckt EIN Grund-Etikett zwei
+// sehr verschiedene Lagen ab. Getrennt, damit im Tageslauf-Log sichtbar ist, ob der
+// Bestand aus Beinahe-Treffern besteht (holt sich den Tausch selbst zurueck) oder aus
+// Namen ohne jede Vergleichsbasis.
+t('Grund unterscheidet "kein einziges Umsatzjahr" von "ein Feld fehlt"', () => {
+  const ohne = snap('NULLDECKUNG', [10, 20], [null, null]);
+  assert.equal(migrateSnapshot(ohne, secOf([11, 21], [100, 200])).reason, 'alignment-unprovable-zero');
+  const fast = snap('FASTVOLL', [10, 20, 30, 40], [100, 200, 300, null]);
+  assert.equal(migrateSnapshot(fast, secOf([11, 21, 31, 41], [100, 200, 300, 400])).reason,
+    'alignment-unprovable-partial');
 });
 
 if (fails) { console.error(`\n${fails} Pruefung(en) gerissen.`); process.exit(1); }
