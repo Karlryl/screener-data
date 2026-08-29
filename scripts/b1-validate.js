@@ -428,10 +428,82 @@ function assessBalance(beforeDelta, outcomeDelta, threshold = BALANCE_GATE_PP) {
   return { passed: maxDelta <= threshold, maxDelta };
 }
 
+// ── estimable-Gate, fail closed (Urteile vom 30.08.2026) ─────────────────────
+// ZWEI Gerichte fanden dieselbe Stelle unabhaengig voneinander:
+//   _COURT-B2-2026-08-30.md    K3 Punkt 7 / R4 / Abhilfe A3 (3:0, blockierend)
+//   _COURT-FORM25-LABEL-...md  Auflage B5 (2 von 3 Richtern am Objekt gefunden)
+// Der alte Test lautete `S.estimable === false` und war damit fail-OPEN: ein
+// FEHLENDES Feld, `null`, der String 'true' oder `{estimable:true, mean:null}`
+// machten die Shumway-View still "auswertbar", das Pflicht-Gate im Verdikt lief
+// ins Leere und der POSITIV-Pfad stand offen. Das ist die teure Richtung — ein
+// POSITIV, das ein Pflicht-Gate uebersprungen hat, behauptet etwas; ein zu
+// Unrecht gekapptes POSITIV behauptet nichts.
+// Deshalb jetzt umgekehrt: NUR ein vollstaendig belegtes `=== true` zaehlt,
+// JEDER andere Zustand — einschliesslich eines Fehlers IM Gate selbst — ergibt
+// estimable=false und kappt ein POSITIV. Ein NULL bleibt davon unberuehrt
+// (par.8: NULL braucht das Veto nicht); genau das ist der Konstruktionspunkt
+// des Gates und keine Nachlaessigkeit.
+// K3 Punkt 7 verlangt zusaetzlich Intervallgrenzen und Breitenpruefung
+// MASCHINELL: eine "schaetzbare" View ohne bezifferte Schranke ist keine.
+// ponytail: die Unbrauchbarkeits-Schwelle (10 pp) wird hier NICHT hartkodiert —
+// sie ist praeregistrierungspflichtig (5.B Punkt 5). Das Gate liefert die
+// Breite maschinell; der Schwellenvergleich kommt mit der B2-Praereg dazu.
+function shumwayEstimableGate(S) {
+  try {
+    if (!S || typeof S !== 'object') return { estimable: false, reason: 'GATE_NO_VIEW' };
+    if (S.estimable !== true) {
+      return {
+        estimable: false,
+        reason: S.estimable === false ? (S.reason || 'NOT_ESTIMABLE') : 'GATE_ESTIMABLE_NOT_TRUE',
+      };
+    }
+    if (!Number.isFinite(S.mean)) return { estimable: false, reason: 'GATE_NO_POINT_ESTIMATE' };
+    const ci = S.ci90;
+    if (!ci || typeof ci !== 'object' || !Number.isFinite(ci.lo) || !Number.isFinite(ci.hi)) {
+      return { estimable: false, reason: 'GATE_NO_INTERVAL_BOUNDS' };
+    }
+    const width = ci.hi - ci.lo;
+    if (!Number.isFinite(width) || width < 0) return { estimable: false, reason: 'GATE_WIDTH_NOT_COMPUTABLE' };
+    return { estimable: true, reason: 'OK', width, widthPp: +(100 * width).toFixed(1) };
+  } catch (e) {
+    // Ein Fehler IM Gate darf nie zum Durchlassen fuehren (R4: fail closed).
+    return { estimable: false, reason: 'GATE_INTERNAL_ERROR: ' + ((e && e.message) || e) };
+  }
+}
+
+// Verdikt-Kette (§8) — aus main() herausgeloest, WORTGLEICH, damit der Waechter
+// die echte Entscheidung fuettern kann statt einer Nachbildung. Auflage B5
+// verlangt woertlich den Nachweis, dass eine View OHNE `estimable`-Feld KEIN
+// POSITIV erzeugen kann; das ist an einer Kopie der Logik nicht beweisbar.
+function decideVerdict(famResults, balanceDelta) {
+  const H = famResults.haupttest || {};
+  const powerOk = H.nEff != null && H.nEff >= MIN_NEFF_CLUSTERS;
+  const outcomeDelta = H.outcomeBalanceDelta || 0;
+  const balance = assessBalance(balanceDelta, outcomeDelta);
+  const balanceOk = balance.passed;
+  // Option E (fail closed, Duell-Ruling 20.07.): eine nicht schaetzbare
+  // Shumway-View darf ein POSITIV nicht durchwinken (das waere ein still
+  // uebersprungenes Pflicht-Gate) — sie kappt es auf 'nicht belastbar'.
+  // Ein NULL bleibt ein gueltiges Ergebnis (par.8: NULL braucht das Veto nicht).
+  const S = famResults.shumway || {};
+  const shumwayGate = shumwayEstimableGate(S);
+  const shumwayNotEstimable = !shumwayGate.estimable;
+  const shumwayVeto = shumwayGate.estimable && S.mean < 0 && H.mean > 0;
+  const positivBlockedByGate = !!(H.bySignificant && H.mean > 0 && shumwayNotEstimable);
+  let verdict;
+  if (!powerOk) verdict = 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF_CLUSTERS + ' Cluster)';
+  else if (!balanceOk) verdict = 'nicht belastbar unter Attrition (Balance-Gate)';
+  else if (shumwayVeto) verdict = 'nicht belastbar unter Attrition (Shumway-Veto: Vorzeichen kippt)';
+  else if (positivBlockedByGate) verdict = 'nicht belastbar unter Attrition (Shumway-View nicht auswertbar — keine unabhaengigen Delisting-Labels, Addendum 20260720)';
+  else if (H.bySignificant && H.mean > 0) verdict = 'POSITIV: Haupttest überlebt BY + Gates';
+  else verdict = 'NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)';
+  return { verdict, powerOk, balanceOk, balance, shumwayGate, shumwayVeto, positivBlockedByGate };
+}
+
 module.exports = {
   firstPassage, matchVarsAt, buildPairs, clusterBootstrap, evSales, idxOnOrAfter,
   buildEventDatedCandidatePools, selectViewRecords, matchDistance, bcaInterval,
-  evaluatePairOutcomes, assessBalance,
+  evaluatePairOutcomes, assessBalance, shumwayEstimableGate, decideVerdict,
   ensureSubmissions, sic2Of, loadPriceSeries,
   _const: { VAL_START, VAL_END, DISC_END, K_SIGMA, TIMEOUT_TD, CALIPER, BALANCE_GATE_PP, MIN_NEFF_CLUSTERS, BY_Q },
 };
@@ -622,25 +694,15 @@ async function main() {
   keys.forEach((k, i) => { famResults[k].bySignificant = sig[i]; });
 
   // 5) Verdikt (§8)
+  const D = decideVerdict(famResults, balanceDelta);
+  const { verdict, powerOk, balanceOk, balance, shumwayGate, shumwayVeto, positivBlockedByGate } = D;
   const H = famResults.haupttest || {};
-  const powerOk = H.nEff != null && H.nEff >= MIN_NEFF_CLUSTERS;
-  const outcomeDelta = H.outcomeBalanceDelta || 0;
-  const balance = assessBalance(balanceDelta, outcomeDelta);
-  const balanceOk = balance.passed;
-  // Option E (fail closed, Duell-Ruling 20.07.): eine nicht schaetzbare
-  // Shumway-View darf ein POSITIV nicht durchwinken (das waere ein still
-  // uebersprungenes Pflicht-Gate) — sie kappt es auf 'nicht belastbar'.
-  // Ein NULL bleibt ein gueltiges Ergebnis (par.8: NULL braucht das Veto nicht).
-  const S = famResults.shumway || {};
-  const shumwayNotEstimable = S.estimable === false;
-  const shumwayVeto = !shumwayNotEstimable && Number.isFinite(S.mean) && S.mean < 0 && H.mean > 0;
-  let verdict;
-  if (!powerOk) verdict = 'unterpowert — kein Urteil (N_eff<' + MIN_NEFF_CLUSTERS + ' Cluster)';
-  else if (!balanceOk) verdict = 'nicht belastbar unter Attrition (Balance-Gate)';
-  else if (shumwayVeto) verdict = 'nicht belastbar unter Attrition (Shumway-Veto: Vorzeichen kippt)';
-  else if (H.bySignificant && H.mean > 0 && shumwayNotEstimable) verdict = 'nicht belastbar unter Attrition (Shumway-View nicht auswertbar — keine unabhaengigen Delisting-Labels, Addendum 20260720)';
-  else if (H.bySignificant && H.mean > 0) verdict = 'POSITIV: Haupttest überlebt BY + Gates';
-  else verdict = 'NEGATIV/NULL: kein BY-signifikanter Effekt (gültiges Ergebnis)';
+  // Laut, nicht still: ein gekapptes POSITIV ist der Fall, der frueher stumm
+  // durchfiel. Er gehoert in stderr, nicht nur in die JSON-Datei.
+  if (positivBlockedByGate) {
+    console.error('[b1-validate] GATE FAIL-CLOSED: POSITIV gekappt — Shumway-View nicht auswertbar (Grund: '
+      + shumwayGate.reason + '). Urteile _COURT-B2-2026-08-30 (K3/R4) und _COURT-FORM25-LABEL-2026-08-30 (B5).');
+  }
   report.family = famResults;
   report.missingness.outcome = Object.fromEntries(keys.map((k) => [k, {
     pairsAttempted: famResults[k].pairsAttempted,
@@ -657,7 +719,10 @@ async function main() {
     balanceDeltaOutcomePp: H.outcomeBalanceDeltaPp || 0,
     balanceDeltaMaxPp: +(100 * balance.maxDelta).toFixed(1),
     shumwayVeto: !!shumwayVeto,
-    shumwayEstimable: !shumwayNotEstimable,
+    shumwayEstimable: shumwayGate.estimable,
+    shumwayGateReason: shumwayGate.reason,
+    shumwayIntervalWidthPp: shumwayGate.widthPp != null ? shumwayGate.widthPp : null,
+    positivBlockedByGate,
   };
   report.verdict = verdict;
 
