@@ -67,6 +67,10 @@
  *  PAR_VALUE_GUARD  — die naive Preis-Regex liefert bei XLNX $0,01: das ist der
  *           NENNWERT ("par value $0.01 per share"), nicht der Terminalwert.
  *           Jeder Betrag in Nennwert-Kontext wird verworfen.
+ *  UNIT_SCALE_GUARD — ein Aggregat ist kein Je-Aktie-Preis. Selbstfund beim
+ *           Durchmessen der Vivendi-Vorlage: "aggregate purchase price of
+ *           approximately $1.731 billion in cash" passt auf die Gegenleistungs-
+ *           Formel; die Dominanz allein haette es NICHT gefangen.
  *  DOMINANCE_GUARD  — der Terminalpreis ist im Ankerdokument haeufigkeits-
  *           dominant (TWTR 29:1, ATVI 6:2). Ohne Dominanz: NICHT bestimmbar
  *           statt raten.
@@ -89,6 +93,7 @@ const secPit = require('../lib/sec-pit.js');
 const { assertSecContact } = require('../lib/sec-user-agent.js');
 const { fetchBuffer } = require('../lib/fetch-retry.js');
 const { RATE_DELAY_MS } = require('../lib/sec-rate-limit.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 // ── Konstanten, alle benannt (keine Magic Numbers im Ablauf) ─────────────────
 
@@ -140,6 +145,14 @@ const TEMPLATE_LOOKBACK_DAYS = 1096;
 const DOMINANCE_FACTOR = 2;
 
 const EDGAR_HOST = 'https://www.sec.gov';
+
+/**
+ * Deckel fuer entpackte Antworten. Das groesste real gelesene Dokument ist die
+ * ATVI-Vorlage von 2008 mit 5,1 MB; 128 MB lassen jeden echten Fall durch und
+ * verhindern, dass eine praeparierte Antwort den Prozess per Dekompressions-
+ * bombe umbringt. Reine Tiefenverteidigung — die Quelle ist sec.gov.
+ */
+const MAX_DECOMPRESSED_BYTES = 128 * 1024 * 1024;
 
 // ── Ergebnis-Vokabular ───────────────────────────────────────────────────────
 const EventType = Object.freeze({
@@ -193,6 +206,59 @@ function toRows(arrays, cik) {
 const SUBMISSIONS_API = 'https://data.sec.gov/submissions/';
 
 /**
+ * PATH_GUARD — jeder Datei- und URL-Baustein stammt aus FERNGELIEFERTEM JSON
+ * (`filings.files[].name`, `accessionNumber`, `primaryDocument`). Ungeprueft
+ * landet er in `path.join` und damit ausserhalb des Cache-Verzeichnisses:
+ * reproduziert mit `{"name": "../GEHEIM.json"}` — die Datei WURDE gelesen und
+ * der Block galt als "konsultiert".
+ *
+ * Darum EINE zentrale Stelle statt drei halber Filter. Die Namensform des
+ * Bulk-Pfads galt schon, nur nicht fuer die beiden aktiven Lesewege.
+ */
+const SUBMISSIONS_ENTRY_RE = /^CIK\d{10}(?:-submissions-\d+)?\.json$/;
+const ACCESSION_RE = /^\d{10}-?\d{2}-?\d{6}$/;
+
+function assertSubmissionsEntryName(name) {
+  if (typeof name !== 'string' || !SUBMISSIONS_ENTRY_RE.test(name)) {
+    throw new Error('[exit-event-resolver] PATH_GUARD: unzulaessiger submissions-Eintragsname '
+      + JSON.stringify(name) + '. Erlaubt ist ausschliesslich CIK##########[-submissions-NNN].json — '
+      + 'der Name stammt aus ferngeliefertem JSON und darf nie in einen Pfad wandern.');
+  }
+  return name;
+}
+
+/**
+ * Dokument-Bausteine. `primaryDocument` traegt REGULAER einen Schraegstrich
+ * (Form 25: "xslF25X02/primary_doc.xml"), der Pfad ist also nicht flach — aber
+ * jedes Segment muss harmlos sein und ".." ist nie zulaessig.
+ */
+function safeDocPath(doc) {
+  const s = String(doc || '');
+  const segments = s.split('/');
+  const ok = s.length > 0 && s.length <= 200 && segments.length <= 3
+    && segments.every((seg) => seg.length > 0 && seg.length <= 100 && /^[\w.-]+$/.test(seg) && seg !== '..');
+  if (!ok) {
+    throw new Error('[exit-event-resolver] PATH_GUARD: unzulaessiger Dokumentname ' + JSON.stringify(doc)
+      + '. Erlaubt sind bis zu drei Segmente aus [A-Za-z0-9_.-], kein "..".');
+  }
+  return s;
+}
+
+function safeAccession(accessionNumber) {
+  const s = String(accessionNumber || '');
+  if (!ACCESSION_RE.test(s)) {
+    throw new Error('[exit-event-resolver] PATH_GUARD: unzulaessige Accession ' + JSON.stringify(accessionNumber)
+      + '. Erwartet wird die EDGAR-Form ##########-##-######.');
+  }
+  return s.replace(/-/g, '');
+}
+
+/** Flacher, kollisionsfreier Cache-Schluessel — Trennzeichen werden ersetzt. */
+function cacheKey(accessionNumber, doc, suffix) {
+  return safeAccession(accessionNumber) + '_' + safeDocPath(doc).replace(/[/]/g, '__') + (suffix || '');
+}
+
+/**
  * Quelle der Einreichungen, in dieser Reihenfolge:
  *   1. `submissionsDir` — ein entpackter Bestand bzw. Fixtures (kein Netz).
  *   2. lokaler `submissions.zip`-Bulk — der Auftragsweg "Bulk zuerst".
@@ -211,7 +277,7 @@ function openSubmissionsSource({ zipPath, submissionsDir, docCacheDir, offline }
     return {
       origin: 'dir:' + submissionsDir,
       readEntry(name) {
-        const p = path.join(submissionsDir, name);
+        const p = path.join(submissionsDir, assertSubmissionsEntryName(name));
         return fs.existsSync(p) ? fs.readFileSync(p) : null;
       },
       close() {},
@@ -226,11 +292,12 @@ function openSubmissionsSource({ zipPath, submissionsDir, docCacheDir, offline }
     // Folge harmlos: EDGAR statt Bulk, gleiche Daten, nur langsamer.
     const kannFiltern = /entryFilter/.test(String(secPit.openStore));
     let store = null;
+    let oeffnungsFehler = null;
     if (kannFiltern) {
       try {
         store = secPit.openStore(zp, { entryFilter: (n) => /^CIK\d{10}(?:-submissions-\d+)?\.json$/.test(n) });
         if (typeof store.readEntryByName !== 'function') { store.close(); store = null; }
-      } catch (e) { store = null; }
+      } catch (e) { store = null; oeffnungsFehler = e.message; }
     }
     if (store) return { origin: 'bulk:' + zp, readEntry: (n) => store.readEntryByName(n), close: () => store.close() };
     process.stderr.write('[exit-event-resolver] HINWEIS: ' + zp + ' liegt vor, aber lib/sec-pit.js '
@@ -253,7 +320,7 @@ function openEdgarSubmissionsSource({ docCacheDir } = {}) {
     origin: 'edgar:' + SUBMISSIONS_API,
     async readEntry(name) {
       fs.mkdirSync(dir, { recursive: true });
-      const p = path.join(dir, name);
+      const p = path.join(dir, assertSubmissionsEntryName(name));
       if (fs.existsSync(p)) return fs.readFileSync(p);
       let r;
       try {
@@ -268,7 +335,7 @@ function openEdgarSubmissionsSource({ docCacheDir } = {}) {
         throw e;
       }
       const body = decoded(r);
-      fs.writeFileSync(p, body);
+      writeFileAtomic(p, body);   // halb geschriebener Cache wird sonst als vollstaendig gelesen
       return body;
     },
     close() {},
@@ -282,9 +349,10 @@ function openEdgarSubmissionsSource({ docCacheDir } = {}) {
  */
 function decoded(res) {
   const enc = String((res.headers && res.headers['content-encoding']) || '').toLowerCase();
-  if (enc === 'gzip') return zlib.gunzipSync(res.body);
-  if (enc === 'deflate') return zlib.inflateSync(res.body);
-  if (enc === 'br') return zlib.brotliDecompressSync(res.body);
+  const cap = { maxOutputLength: MAX_DECOMPRESSED_BYTES };
+  if (enc === 'gzip') return zlib.gunzipSync(res.body, cap);
+  if (enc === 'deflate') return zlib.inflateSync(res.body, cap);
+  if (enc === 'br') return zlib.brotliDecompressSync(res.body, { maxOutputLength: MAX_DECOMPRESSED_BYTES });
   return res.body;
 }
 
@@ -302,7 +370,11 @@ async function loadFilings(cik, opts = {}) {
     const base = 'CIK' + String(cik).padStart(10, '0');
     const buf = await src.readEntry(base + '.json');
     if (!buf) {
-      throw new Error('[exit-event-resolver] ISSUER_DOCS_GUARD: kein submissions-Objekt fuer CIK '
+      // NICHT der ISSUER_DOCS_GUARD: dort geht es um eine Firma, die nachweislich
+      // nicht an die SEC berichtet (FRC-Klasse). Hier fehlt UNS die Datei. Zwei
+      // verschiedene Sachverhalte brauchen zwei verschiedene Namen, sonst sind sie
+      // im Log nicht trennbar.
+      throw new Error('[exit-event-resolver] SUBMISSIONS_NOT_FOUND: kein submissions-Objekt fuer CIK '
         + cik + ' im Bestand. Das ist ein Bestandsproblem, kein Messergebnis.');
     }
     const sub = JSON.parse(buf.toString('utf8'));
@@ -326,6 +398,11 @@ async function loadFilings(cik, opts = {}) {
       // juengsten Einreichungen. Bei ATVI (2.043) liegt die Vivendi-Vorlage von
       // 2008 im Block; ohne ihn faende der Aufloeser sie nicht — und ein Aufruf
       // fuer ein Fenster VOR der recent-Kante saehe schlicht nichts.
+      // PATH_GUARD an der Stelle, an der der ferngelieferte Name in eine Quelle
+      // geht — NICHT erst in der Quelle selbst. Jede Quelle wird ueber diese
+      // Schleife erreicht; eine injizierte Quelle (Tests, kuenftige Store-Art)
+      // umginge eine Pruefung, die nur im Datei-Leser haengt.
+      assertSubmissionsEntryName(b.name);
       const bbuf = await src.readEntry(b.name);
       if (!bbuf) {
         throw new Error('[exit-event-resolver] ARCHIVE_BLOCK_GUARD: Archivblock ' + b.name
@@ -335,7 +412,18 @@ async function loadFilings(cik, opts = {}) {
       }
       const parsed = JSON.parse(bbuf.toString('utf8'));
       // Blockdateien tragen die Arrays direkt (kein filings-Wrapper).
-      rows = rows.concat(toRows(parsed.filings ? parsed.filings.recent : parsed, sub.cik != null ? sub.cik : cik));
+      const blockArrays = parsed.filings ? parsed.filings.recent : parsed;
+      // Dieselbe Formpruefung wie beim Haupteintrag — sie fehlte hier, und der
+      // Unterschied ist genau die stille Null eine Ebene tiefer: reproduziert
+      // mit einem lesbaren Block, der {"error":"Not Found"} enthaelt. Er parste,
+      // lieferte 0 Zeilen und galt trotzdem als "konsultiert", obwohl 900
+      // Einreichungen deklariert waren.
+      if (!blockArrays || !Array.isArray(blockArrays.form)) {
+        throw new Error('[exit-event-resolver] ARCHIVE_BLOCK_GUARD: Archivblock ' + b.name
+          + ' ist lesbar, traegt aber kein form-Array (' + b.filingCount + ' Einreichungen deklariert). '
+          + 'Ein Block der falschen Form ergibt still 0 Zeilen — Abbruch statt Teilmessung.');
+      }
+      rows = rows.concat(toRows(blockArrays, sub.cik != null ? sub.cik : cik));
       blocksConsulted.push(b.name);
     }
     rows.sort((a, b) => (a.filingDate < b.filingDate ? -1 : a.filingDate > b.filingDate ? 1 : 0));
@@ -431,9 +519,13 @@ function pickValueTemplate(rows, eventDate, { forms = VALUE_TEMPLATE_FORMS, look
 function plainText(raw) {
   return String(raw)
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#\d+;|&[a-z]+;/g, "'")
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    // Alle uebrigen Entities werden zu EINEM Apostroph zusammengezogen — nicht
+    // korrekt dekodiert, aber ausreichend: die beiden konsumierenden Muster
+    // schliessen ' nicht aus, ein stehen gebliebenes ';' wuerde dagegen die
+    // Naehe-Suche [^.$;] zerreissen. Gross/klein, weil Einreicher &NBSP; schreiben.
+    .replace(/&#\d+;|&[a-z]+;/gi, "'")
     .replace(/\s+/g, ' ');
 }
 
@@ -449,7 +541,15 @@ function plainText(raw) {
  * "converted into the right to receive N.NNNN shares".
  */
 function detectExchangeRatio(text) {
-  const re = /(?:right to receive|converted into|convert(?:ed|ible)? into the right to receive)[^.;]{0,160}?\b(\d+(?:\.\d{2,6})?)\s+shares\b/i;
+  // "shares" UND "of a share": Umtauschverhaeltnisse unter 1,0 werden fast immer
+  // im Singular formuliert ("the right to receive 0.6323 of a share of Parent
+  // common stock"). Die reine Plural-Fassung liess genau diese Faelle durch —
+  // reproduziert — und damit ein Aktientausch-Ereignis in die Preis-Extraktion.
+  // Das ist dieselbe Fehlerklasse wie die XLNX-Nennwert-Falle, nur ueber eine
+  // Formulierungsvariante. Der XLNX-Fall selbst ist zufaellig Plural.
+  // EINE Nachkommastelle genuegt ebenfalls: runde Verhaeltnisse wie "1.5 shares"
+  // oder "0.5 shares" sind ueblich und wurden von der {2,6}-Fassung uebersehen.
+  const re = /(?:right to receive|converted into|convert(?:ed|ible)? into the right to receive)[^.;]{0,160}?\b(\d+(?:\.\d{1,6})?)\s+(?:shares?\b|of\s+an?\s+share\b)/i;
   const m = re.exec(text);
   if (!m) return null;
   const start = Math.max(0, m.index);
@@ -457,9 +557,42 @@ function detectExchangeRatio(text) {
 }
 
 /**
- * Barpreis je Aktie aus einem Dokument. Zwei Waechter:
- *  PAR_VALUE_GUARD  — jeder Betrag im Nennwert-Kontext faellt raus.
- *  DOMINANCE_GUARD  — der Sieger muss den Zweitplatzierten um Faktor 2 schlagen.
+ * Obergrenze fuer einen Terminalpreis JE AKTIE. Der hoechste je an einer
+ * US-Boerse notierte Stammaktienkurs liegt im fuenfstelligen Bereich
+ * (BRK.A); alles darueber ist im Gegenleistungs-Kontext kein Je-Aktie-Preis,
+ * sondern ein Aggregat. Bewusst sehr grosszuegig — die Grenze soll Unsinn
+ * abfangen, nicht plausible Preise beschneiden.
+ */
+const MAX_PER_SHARE_USD = 1000000;
+
+/**
+ * UNIT_SCALE_GUARD — Aggregat-Betraege sind KEINE Je-Aktie-Preise.
+ * Selbst gefunden beim Durchmessen der 5,1-MB-Vivendi-Vorlage: dort steht
+ * "aggregate purchase price of approximately $1.731 billion in cash" — die
+ * Stufe-1-Formel "… in cash" nimmt das an und haette 1,731 als Terminalwert je
+ * Aktie geliefert. Skalenwoerter und das Wort "aggregate" schliessen den
+ * Treffer aus; die Dominanz allein haette hier NICHT gereicht.
+ */
+function isAggregateAmount(afterNumber) {
+  // Das Skalenwort steht DIREKT hinter der Zahl und damit INNERHALB des
+  // Treffers ("$1.731 billion in cash") — nicht dahinter. Geprueft wird darum
+  // der Text ab dem Zahlenende, streng verankert: "…780 million shares" weiter
+  // hinten im Satz darf einen Je-Aktie-Preis nicht entwerten.
+  //
+  // Eine zusaetzliche Rueckwaertssuche nach dem Wort "aggregate" stand hier
+  // kurzzeitig und ist wieder RAUS: sie verwarf "the aggregate merger
+  // consideration per share of $54.20 in cash" — echte Vorlagen-Formulierung,
+  // echter Je-Aktie-Preis (reproduziert: value null statt 54,20). Fuer den
+  // Vivendi-Fall, wegen dem der Waechter existiert, genuegt das Skalenwort
+  // allein vollstaendig. Weniger Regel, weniger Fehlwurf.
+  return /^\s*(?:billion|million|thousand|bn\b|mm\b)/i.test(afterNumber);
+}
+
+/**
+ * Barpreis je Aktie aus einem Dokument. Drei Waechter:
+ *  PAR_VALUE_GUARD   — jeder Betrag im Nennwert-Kontext faellt raus.
+ *  UNIT_SCALE_GUARD  — Aggregate ("$1.731 billion in cash") fallen raus.
+ *  DOMINANCE_GUARD   — der Sieger muss den Zweitplatzierten um Faktor 2 schlagen.
  * Zwei Muster-Stufen: "in cash" ist die Gegenleistungs-Formel, "per share"
  * die schwaechere Rueckfallebene. Stufe 2 wird nur betrachtet, wenn Stufe 1
  * leer bleibt — sonst gewinnen Bewertungs-Tabellen gegen die Gegenleistung.
@@ -470,19 +603,31 @@ function extractCashPrice(rawText) {
     /\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)(?:[^.$;]{0,40}?)\bin\s+cash\b/gi,
     /\$\s?([0-9][0-9,]*(?:\.[0-9]+)?)\s*(?:\([^)]{0,40}\)\s*)?per\s+share\b/gi,
   ];
-  let parRejected = 0;   // ueber alle Stufen gezaehlt: der PAR_VALUE_GUARD muss
-                         // im Ergebnis SICHTBAR sein, sonst feuert er still.
+  // Beide Wurf-Zaehler laufen ueber ALLE Stufen: ein Waechter, der still feuert,
+  // ist im Ergebnis nicht von "gab es nicht" zu unterscheiden.
+  let parRejected = 0;
+  let scaleRejected = 0;
   for (let tier = 0; tier < tiers.length; tier++) {
     const counts = new Map();
     let m;
     const re = tiers[tier];
-    re.lastIndex = 0;
     while ((m = re.exec(t)) !== null) {
-      const ctx = t.slice(Math.max(0, m.index - 110), m.index + 110);
+      const before = t.slice(Math.max(0, m.index - 110), m.index);
+      const after = t.slice(m.index + m[0].length, m.index + m[0].length + 40);
+      const ctx = before + m[0] + after;
       // PAR_VALUE_GUARD — "common stock, par value $0.01 per share".
-      if (/par\s+value/i.test(ctx)) { parRejected++; continue; }
+      // IMPLIED_VALUE_GUARD (dieselbe Klasse, andere Formel) — Fairness-Opinion-
+      // Boilerplate "the analysis implied a value of $120.00 per share" ist eine
+      // BEWERTUNG, keine Gegenleistung. Sie steht in echten Vorlagen (im
+      // TWTR-DEFM14A nachgewiesen) und wiederholt sich oft genug, um die
+      // Dominanz zu gewinnen, wenn keine Bar-Formel dagegensteht.
+      if (/par\s+value/i.test(ctx) || /impl(?:ied|ies|ying)\b/i.test(before + m[0])) { parRejected++; continue; }
       const value = Number(m[1].replace(/,/g, ''));
       if (!Number.isFinite(value) || value <= 0) continue;
+      // UNIT_SCALE_GUARD — "aggregate purchase price of approximately
+      // $1.731 billion in cash" ist kein Je-Aktie-Preis.
+      const afterNumber = m[0].slice(m[0].indexOf(m[1]) + m[1].length);
+      if (value > MAX_PER_SHARE_USD || isAggregateAmount(afterNumber)) { scaleRejected++; continue; }
       const e = counts.get(value) || { value, hits: 0, sample: null };
       e.hits++;
       if (!e.sample) e.sample = ctx.trim();
@@ -493,18 +638,18 @@ function extractCashPrice(rawText) {
     const [best, runnerUp] = ranked;
     // DOMINANCE_GUARD — ohne klare Dominanz lieber nichts als eine plausible Zahl.
     if (runnerUp && best.hits < runnerUp.hits * DOMINANCE_FACTOR) {
-      return { value: null, reason: Unresolved.NO_PRICE, tier, parRejected, ranked: ranked.slice(0, 3) };
+      return { value: null, reason: Unresolved.NO_PRICE, tier, parRejected, scaleRejected, ranked: ranked.slice(0, 3) };
     }
-    return { value: best.value, hits: best.hits, runnerUpHits: runnerUp ? runnerUp.hits : 0, tier, parRejected, sample: best.sample };
+    return { value: best.value, hits: best.hits, runnerUpHits: runnerUp ? runnerUp.hits : 0, tier, parRejected, scaleRejected, sample: best.sample };
   }
-  return { value: null, reason: Unresolved.NO_PRICE, tier: null, parRejected, ranked: [] };
+  return { value: null, reason: Unresolved.NO_PRICE, tier: null, parRejected, scaleRejected, ranked: [] };
 }
 
 // ── Dokument-Abruf: EDGAR, hoeflich, mit Plattencache ────────────────────────
 
 function edgarDocUrl(cik, accessionNumber, doc) {
   return EDGAR_HOST + '/Archives/edgar/data/' + Number(cik) + '/'
-    + String(accessionNumber).replace(/-/g, '') + '/' + doc;
+    + safeAccession(accessionNumber) + '/' + safeDocPath(doc);
 }
 
 function makeEdgarFetcher({ cacheDir } = {}) {
@@ -512,15 +657,17 @@ function makeEdgarFetcher({ cacheDir } = {}) {
   const ua = assertSecContact();
   return async function fetchDoc(cik, accessionNumber, doc) {
     fs.mkdirSync(dir, { recursive: true });
-    const key = String(accessionNumber).replace(/-/g, '') + '_' + String(doc).replace(/[^\w.-]/g, '_');
-    const p = path.join(dir, key);
+    const p = path.join(dir, cacheKey(accessionNumber, doc));
     if (fs.existsSync(p)) return fs.readFileSync(p, 'utf8');
     const r = await fetchBuffer(edgarDocUrl(cik, accessionNumber, doc), {
       headers: { 'User-Agent': ua },
       pauseMs: Math.max(RATE_DELAY_MS * 2, 250),
     });
     const body = decoded(r).toString('utf8');
-    fs.writeFileSync(p, body);
+    // Nicht-atomar geschrieben wuerde ein abgebrochener Lauf eine GEKUERZTE
+    // Datei hinterlassen, die der naechste Lauf als vollstaendiges Dokument
+    // liest — ein abgeschnittener Treffer verschiebt still die Dominanz.
+    writeFileAtomic(p, body);
     return body;
   };
 }
@@ -528,8 +675,7 @@ function makeEdgarFetcher({ cacheDir } = {}) {
 /** Liest Fixture-Dokumente aus einem Ordner (hermetische Tests, kein Netz). */
 function makeDirFetcher(dir) {
   return async function fetchDoc(_cik, accessionNumber, doc) {
-    const key = String(accessionNumber).replace(/-/g, '') + '_' + String(doc).replace(/\.html?$/i, '') + '.txt';
-    const p = path.join(dir, key);
+    const p = path.join(dir, cacheKey(accessionNumber, String(doc).replace(/\.html?$/i, ''), '.txt'));
     if (!fs.existsSync(p)) throw new Error('Fixture-Dokument fehlt: ' + p);
     return fs.readFileSync(p, 'utf8');
   };
@@ -567,6 +713,22 @@ function unresolved(cik, reason, evidence, extra) {
  * @param {object} [opts] { fetchDoc, source, zipPath, submissionsDir, crossCheck }
  */
 async function resolveExitEvent(cik, from, to, opts = {}) {
+  // WINDOW_GUARD — das Fenster wird per STRING-Vergleich gegen die
+  // nullgepolsterten SEC-Daten geschnitten. Ein Aufrufer, der '2022-1-1'
+  // uebergibt, bekaeme damit still ein falsches Fenster: '2022-01-15' >=
+  // '2022-1-1' ist FALSE. Kein Fehler, kein Hinweis, nur weniger Einreichungen —
+  // genau die Klasse, gegen die dieses Werkzeug gebaut ist. Geprueft wird an der
+  // API-Grenze, nicht erst im CLI, damit auch Bibliotheks-Aufrufer gedeckt sind.
+  for (const [label, v] of [['from', from], ['to', to]]) {
+    if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) {
+      throw new Error('[exit-event-resolver] WINDOW_GUARD: ' + label + ' = ' + JSON.stringify(v)
+        + ' ist kein nullgepolstertes ISO-Datum (YYYY-MM-DD). Der Fenster-Schnitt '
+        + 'vergleicht Zeichenketten — eine andere Schreibweise schneidet still falsch.');
+    }
+  }
+  if (from > to) {
+    throw new Error('[exit-event-resolver] WINDOW_GUARD: leeres Fenster (' + from + ' > ' + to + ').');
+  }
   const { rows, name, blocksConsulted, blocksDeclared } = await loadFilings(cik, opts);
 
   // FALLE 4 — ISSUER_DOCS_GUARD, vor allem anderen: bei der FRC-Klasse ist jede
@@ -629,6 +791,10 @@ async function resolveExitEvent(cik, from, to, opts = {}) {
       valueBasis: ValueBasis.INSOLVENCY_ZERO_BY_RULE,
       evidence,
       confidence: 0.85,
+      // Maschinenlesbar, weil ein Konsument auf `confidence` filtert und den
+      // Fliesstext nie liest. Die HOEHE der Konfidenz ist eine Methodik-Frage
+      // und bleibt bewusst unveraendert — sie gehoert ans Gericht, nicht hierher.
+      ruleValidated: false,
       note: 'Wert 0 PER REGEL, nicht per Extraktion: der bestaetigte Plan wurde '
         + 'wirksam (8-K ' + cls.planEffective.filingDate + ', Items ' + cls.planEffective.items
         + ') — Item 3.03 belegt das Erloeschen der Eigenkapitalrechte. Im Dokument '
@@ -695,6 +861,7 @@ async function resolveExitEvent(cik, from, to, opts = {}) {
   // Verankerte Vorlage als Zweitquelle (FALLE 3 sitzt in pickValueTemplate).
   const tpl = pickValueTemplate(rows, cls.eventDate);
   let fromTemplate = null;
+  let crossCheckError = null;
   if (tpl.chosen && opts.crossCheck !== false) {
     try {
       const tplText = await fetchDoc(tpl.chosen.cik, tpl.chosen.accessionNumber, tpl.chosen.primaryDocument);
@@ -703,7 +870,16 @@ async function resolveExitEvent(cik, from, to, opts = {}) {
         anchoredTo: cls.eventDate,
         rejectedTemplates: tpl.rejected.map((r) => r.filingDate + ' ' + r.form + ' ' + r.accessionNumber),
       }));
-    } catch (_) { /* Vorlage optional — der 8-K-Pfad traegt allein. */ }
+    } catch (e) {
+      // Frueher wurde hier ALLES verschluckt. Damit sah ein Lauf, dessen
+      // Quervergleich an einem 503 scheiterte, exakt aus wie einer, bei dem es
+      // gar keine Vorlage gab: derselbe Wert, dieselbe Konfidenz 0,9, KEINE
+      // Spur — reproduziert. Der SOURCE_AGREEMENT_GUARD faellt dann still aus,
+      // und genau er soll einen falsch extrahierten 8-K-Preis fangen.
+      // Ein fehlendes Dokument (404) ist weiterhin harmlos: die Vorlage IST
+      // optional. Jeder andere Fehlschlag wird sichtbar und kostet Konfidenz.
+      crossCheckError = /HTTP 404|fehlt/i.test(e.message) ? null : e.message;
+    }
   }
 
   const a = fromEvent.value;
@@ -722,8 +898,15 @@ async function resolveExitEvent(cik, from, to, opts = {}) {
       terminalValue: a,
       valueBasis: b != null ? ValueBasis.CASH_FROM_BOTH : ValueBasis.CASH_FROM_8K,
       evidence,
-      confidence: b != null ? 0.95 : 0.9,
-      extraction: { hits: fromEvent.hits, runnerUpHits: fromEvent.runnerUpHits, tier: fromEvent.tier, parValueRejected: fromEvent.parRejected },
+      // Ein ausgefallener Quervergleich ist NICHT dasselbe wie kein Quervergleich.
+      confidence: crossCheckError ? 0.7 : (b != null ? 0.95 : 0.9),
+      crossCheckError,
+      extraction: { hits: fromEvent.hits, runnerUpHits: fromEvent.runnerUpHits, tier: fromEvent.tier, parValueRejected: fromEvent.parRejected, scaleRejected: fromEvent.scaleRejected },
+      note: crossCheckError
+        ? 'Der Quervergleich mit der verankerten Vorlage ' + tpl.chosen.accessionNumber
+          + ' ist FEHLGESCHLAGEN (' + crossCheckError + '). Der Wert steht nur auf EINER '
+          + 'Quelle; der SOURCE_AGREEMENT_GUARD konnte nicht laufen. Lauf wiederholen.'
+        : undefined,
     });
   }
   if (b != null) {
@@ -791,5 +974,5 @@ module.exports = {
   openSubmissionsSource, makeDirFetcher, makeEdgarFetcher, edgarDocUrl, toRows, hasItem,
   EventType, ValueBasis, Unresolved,
   ANCHOR_FORMS_STRONG, ANCHOR_FORMS_WEAK, VALUE_TEMPLATE_FORMS, ISSUER_FORM_PREFIXES,
-  EVENT_WINDOW_DAYS, TEMPLATE_LOOKBACK_DAYS, DOMINANCE_FACTOR,
+  EVENT_WINDOW_DAYS, TEMPLATE_LOOKBACK_DAYS, DOMINANCE_FACTOR, MAX_PER_SHARE_USD, isAggregateAmount,
 };

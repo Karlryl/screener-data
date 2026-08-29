@@ -295,6 +295,31 @@ function testPreisWaechter() {
     assert.strictEqual(R.extractCashPrice(twtr).value, 54.20);
   });
 
+  t('UNIT_SCALE_GUARD — ein Aggregat ist KEIN Je-Aktie-Preis', () => {
+    // Selbstfund am 5,1-MB-Vivendi-Dokument: "aggregate purchase price of
+    // approximately $1.731 billion in cash" passt auf die Gegenleistungs-Formel
+    // und haette 1,731 als Terminalwert je Aktie geliefert. Die Dominanz allein
+    // haette das NICHT gefangen — der Betrag war der haeufigste seiner Stufe.
+    const aggregat = 'purchased shares for an aggregate purchase price of approximately '
+      + '$1.731 billion in cash. The aggregate consideration of $1.731 billion in cash '
+      + 'was funded from available cash. A further $1.731 billion in cash followed. ';
+    const p = R.extractCashPrice(aggregat);
+    assert.strictEqual(p.value, null, 'Milliardenbetraege sind keine Je-Aktie-Preise');
+    assert.ok(p.scaleRejected >= 3, 'die Wuerfe muessen sichtbar sein (war: ' + p.scaleRejected + ')');
+    assert.strictEqual(R.isAggregateAmount(' billion in cash', 'price of approximately '), true);
+    assert.strictEqual(R.isAggregateAmount(' in cash for each of the 780 million shares', 'receive '), false,
+      'ein Skalenwort WEITER HINTEN im Satz darf einen Je-Aktie-Preis nicht entwerten');
+    assert.strictEqual(R.isAggregateAmount(' in cash, without interest', 'right to receive '), false,
+      'die echte Gegenleistungs-Formel darf NICHT als Aggregat gelten');
+  });
+
+  t('UNIT_SCALE_GUARD — Gegenrichtung: TWTR und ATVI bleiben unberuehrt', () => {
+    const twtr = fs.readFileSync(path.join(DOCS, '000119312522272772_d411753d8k.txt'), 'utf8');
+    const atvi = fs.readFileSync(path.join(DOCS, '000110465923108985_tm2328253d1_8k.txt'), 'utf8');
+    assert.strictEqual(R.extractCashPrice(twtr).value, 54.20);
+    assert.strictEqual(R.extractCashPrice(atvi).value, 95.00);
+  });
+
   t('DOMINANCE_GUARD — ohne klare Dominanz lieber kein Wert als ein plausibler', () => {
     const patt = 'converted into the right to receive $40.00 in cash. '
       + 'Alternatively holders receive $50.00 in cash under the other agreement. ';
@@ -407,6 +432,139 @@ async function testSchema() {
   }
 }
 
+// ── (D) Waechter aus dem Review-Durchgang ───────────────────────────────────
+// Jeder Punkt hier wurde ZUERST reproduziert und dann gefixt; der Test haelt
+// die Reproduktion fest, damit der Fix nicht wieder wegdriftet.
+
+async function testReviewWaechter() {
+  await ta('PATH_GUARD — ein Blockname aus ferngeliefertem JSON darf nie in einen Pfad', async () => {
+    // Reproduziert: {"name":"../GEHEIM.json"} wurde GELESEN und der Block galt
+    // als konsultiert. Der Name kommt aus fremdem JSON, nie vom Aufrufer.
+    // Die Quelle liefert den Ausbruchspfad BEREITWILLIG aus — sie simuliert ein
+    // Dateisystem, in dem der Traversal gelingt. Ohne Waechter laeuft loadFilings
+    // damit sauber durch; NUR der Waechter kann hier noch werfen.
+    let ausbruchGelesen = false;
+    const giftig = {
+      readEntry(name) {
+        if (/^CIK\d{10}\.json$/.test(name)) {
+          return Buffer.from(JSON.stringify({ cik: 42, name: 'X', filings: {
+            recent: { form: ['8-K'], filingDate: ['2023-01-01'], accessionNumber: ['a'], primaryDocument: ['d.htm'], items: ['2.01'] },
+            files: [{ name: '../../GEHEIM.json', filingFrom: '2000-01-01', filingTo: '2001-01-01', filingCount: 1 }] } }));
+        }
+        ausbruchGelesen = true;
+        return Buffer.from(JSON.stringify({ form: [], filingDate: [], accessionNumber: [] }));
+      },
+      close() {},
+    };
+    // Auf die konkrete Waechter-Meldung geprueft, nicht auf das Wort PATH_GUARD:
+    // eine Test-eigene Fehlermeldung, die dasselbe Wort traegt, wuerde den Test
+    // sonst selbst gruen faerben, egal ob der Waechter existiert.
+    await assert.rejects(() => R.loadFilings(42, { source: giftig }),
+      /unzulaessiger submissions-Eintragsname/);
+    assert.strictEqual(ausbruchGelesen, false, 'der Ausbruchspfad darf gar nicht erst gelesen werden');
+  });
+
+  t('PATH_GUARD — auch Dokumentname und Accession, aber echte SEC-Pfade bleiben gueltig', () => {
+    // Form 25 traegt REGULAER einen Schraegstrich — der darf nicht mitverboten werden.
+    assert.strictEqual(R.edgarDocUrl(886158, '0001354457-23-000478', 'xslF25X02/primary_doc.xml'),
+      'https://www.sec.gov/Archives/edgar/data/886158/000135445723000478/xslF25X02/primary_doc.xml');
+    assert.throws(() => R.edgarDocUrl(1, '0001354457-23-000478', '../../../etc/passwd'), /PATH_GUARD/);
+    assert.throws(() => R.edgarDocUrl(1, '../../evil', 'd.htm'), /PATH_GUARD/);
+  });
+
+  await ta('ARCHIVE_BLOCK_GUARD — ein lesbarer Block der FALSCHEN Form ist auch ein Fehler', async () => {
+    // Reproduziert: ein Block mit {"error":"Not Found"} parste, lieferte 0 Zeilen
+    // und galt als konsultiert — obwohl 900 Einreichungen deklariert waren.
+    const kaputt = {
+      readEntry(name) {
+        if (/^CIK\d{10}\.json$/.test(name)) {
+          return Buffer.from(JSON.stringify({ cik: 43, name: 'Y', filings: {
+            recent: { form: ['8-K'], filingDate: ['2023-01-01'], accessionNumber: ['a'], primaryDocument: ['d.htm'], items: ['2.01'] },
+            files: [{ name: 'CIK0000000043-submissions-001.json', filingFrom: '2000-01-01', filingTo: '2001-01-01', filingCount: 900 }] } }));
+        }
+        return Buffer.from('{"error":"Not Found"}');
+      },
+      close() {},
+    };
+    await assert.rejects(() => R.loadFilings(43, { source: kaputt }), /ARCHIVE_BLOCK_GUARD/);
+  });
+
+  t('Aktientausch — Singular und eine Nachkommastelle werden erkannt', () => {
+    // Beide Varianten fielen durch und landeten damit in der Preis-Extraktion:
+    // dieselbe Fehlerklasse wie die XLNX-Nennwert-Falle, nur ueber die Formulierung.
+    const satz = (s) => 'each share was converted into the right to receive ' + s + ' of Parent common stock';
+    assert.strictEqual(R.detectExchangeRatio(satz('0.6323 of a share')).ratio, '0.6323', 'Singular');
+    assert.strictEqual(R.detectExchangeRatio(satz('1.5 shares')).ratio, '1.5', 'eine Nachkommastelle');
+    assert.strictEqual(R.detectExchangeRatio(satz('0.5 shares')).ratio, '0.5', 'Verhaeltnis unter 1');
+    assert.strictEqual(R.detectExchangeRatio(satz('1.7234 shares')).ratio, '1.7234', 'der XLNX-Fall bleibt');
+  });
+
+  t('IMPLIED_VALUE_GUARD — Fairness-Opinion-Bewertung ist keine Gegenleistung', () => {
+    // "implied a value of $X per share" steht nachweislich im echten TWTR-DEFM14A
+    // und wiederholt sich oft genug, um die Dominanz zu gewinnen.
+    const boiler = 'the analysis implied a value of $120.00 per share. A second approach '
+      + 'implied a value of $120.00 per share. A third implied a value of $120.00 per share.';
+    assert.strictEqual(R.extractCashPrice(boiler).value, null);
+    const echt = fs.readFileSync(path.join(DOCS, '000119312522202163_d283119ddefm14a.txt'), 'utf8');
+    assert.ok(/impl(?:ied|ies)[^.]{0,40}value/i.test(echt), 'die Formel steht wirklich in echten Vorlagen');
+    assert.strictEqual(R.extractCashPrice(echt).value, 54.20, 'und der echte Preis ueberlebt den Waechter');
+  });
+
+  t('UNIT_SCALE_GUARD — "aggregate … per share" ist ein ECHTER Je-Aktie-Preis', () => {
+    // Eine Rueckwaertssuche nach "aggregate" stand kurz im Waechter und verwarf
+    // genau diese Formulierung. Sie ist wieder raus; das Skalenwort genuegt.
+    const s = 'the aggregate merger consideration per share of $54.20 in cash was paid. '
+      + 'aggregate merger consideration per share of $54.20 in cash. aggregate per share of $54.20 in cash.';
+    assert.strictEqual(R.extractCashPrice(s).value, 54.20);
+  });
+
+  await ta('Ein AUSGEFALLENER Quervergleich ist nicht dasselbe wie keiner', async () => {
+    // Reproduziert: ein 503 auf die Vorlage lieferte Wert 54,20 bei Konfidenz 0,9 —
+    // ununterscheidbar vom sauberen Einzelquellen-Fall, ohne jede Spur.
+    const echt = R.makeDirFetcher(DOCS);
+    const flaky = async (cik, acc, doc) => {
+      if (acc === '0001193125-22-202163') throw new Error('HTTP 503 (nicht wiederholbar)');
+      return echt(cik, acc, doc);
+    };
+    const r = await R.resolveExitEvent(1418091, '2022-01-01', '2022-12-31', { submissionsDir: SUBS, fetchDoc: flaky });
+    assert.strictEqual(r.terminalValue, 54.20, 'der 8-K-Pfad traegt weiter');
+    assert.ok(r.crossCheckError, 'aber der Ausfall MUSS im Ergebnis stehen');
+    assert.ok(r.confidence < 0.9, 'und Konfidenz kosten (war: ' + r.confidence + ')');
+    assert.ok(/fehlgeschlagen/i.test(r.note || ''), 'mit lesbarer Begruendung');
+  });
+
+  await ta('WINDOW_GUARD — ein nicht nullgepolstertes Datum schneidet still falsch', async () => {
+    assert.strictEqual('2022-01-15' >= '2022-1-1', false, 'der Zeichenketten-Vergleich ist der Mechanismus');
+    for (const bad of ['2022-1-1', '20220101', '', null, '2022-13-45x']) {
+      // eslint-disable-next-line no-await-in-loop
+      await assert.rejects(() => R.resolveExitEvent(1418091, bad, '2022-12-31', opts()), /WINDOW_GUARD/,
+        'from=' + JSON.stringify(bad));
+    }
+    await assert.rejects(() => R.resolveExitEvent(1418091, '2022-12-31', '2022-01-01', opts()), /WINDOW_GUARD/,
+      'leeres Fenster');
+  });
+
+  await ta('Namenstrennung — fehlender Bestand ist NICHT die FRC-Klasse', async () => {
+    // Beide hiessen ISSUER_DOCS_GUARD und waren im Log nicht trennbar:
+    // "wir haben die Datei nicht" vs. "die Firma berichtet nicht an die SEC".
+    const leer = { readEntry() { return null; }, close() {} };
+    await assert.rejects(() => R.loadFilings(999999, { source: leer }), /SUBMISSIONS_NOT_FOUND/);
+    // Und die echte FRC-Klasse traegt weiterhin IHREN Namen — die beiden duerfen
+    // sich nicht wieder angleichen.
+    const frc = await R.resolveExitEvent(1132979, '2023-01-01', '2023-12-31',
+      { submissionsDir: SUBS, fetchDoc: forbiddenFetch });
+    assert.strictEqual(frc.unresolvedReason, R.Unresolved.NO_ISSUER_DOCS);
+  });
+
+  await ta('Insolvenz-Null traegt die fehlende juristische Validierung maschinenlesbar', async () => {
+    const r = await R.resolveExitEvent(886158, '2023-01-01', '2023-12-31',
+      { submissionsDir: SUBS, fetchDoc: forbiddenFetch });
+    assert.strictEqual(r.terminalValue, 0);
+    assert.strictEqual(r.ruleValidated, false,
+      'ein Konsument filtert auf Felder, nicht auf Fliesstext');
+  });
+}
+
 async function main() {
   console.log('tests/exit-event-resolver.test.js');
   console.log(' (A) die fuenf Machbarkeits-Faelle');
@@ -420,6 +578,8 @@ async function main() {
   testPreisWaechter();
   testEreignisNurStrukturiert();
   await testQuellenkonflikt();
+  console.log(' (D) Waechter aus dem Review-Durchgang');
+  await testReviewWaechter();
   await testSchema();
   if (fails) { console.error('\n' + fails + ' WAECHTER ROT'); process.exit(1); }
   console.log('\nALLE EXIT-EVENT-WAECHTER GRUEN');
