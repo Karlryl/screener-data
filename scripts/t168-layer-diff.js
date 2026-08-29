@@ -126,9 +126,60 @@ function altSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   for (let i = 1; i < r.length - 1; i++) if (r[i] > 0 && r[i] * 10 < r[i - 1] && r[i] * 10 < r[i + 1]) return false;
   return true;
 }
+// VERENGTE Variante (ENTSCHIED 14 Punkt 2): Umsatz-Skala ueber die ganze Reihe,
+// OpInc-Vorzeichen bleibt beim neuesten Jahr. Auch dieses Literal steht hier und nicht
+// in build-secannual.js — es wird GEMESSEN, bevor entschieden wird, ob es dorthin gehoert.
+function nurUmsatzSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
+  const first = (a) => { for (const v of V(a)) if (Number.isFinite(v)) return v; return null; };
+  const yOp = first(yOpArr), sOp = first(sOpArr);
+  if (yOp !== null && sOp !== null && Math.sign(yOp) !== Math.sign(sOp) && yOp !== 0 && sOp !== 0) return false;
+  const yR = first(yRevArr), sR = first(sRevArr);
+  if (yR !== null && sR !== null && yR > 0 && sR > 0 && Math.max(yR, sR) / Math.min(yR, sR) > 2) return false;
+  const y = V(yRevArr), s = V(sRevArr);
+  for (let i = 0; i < Math.min(y.length, s.length); i++) {
+    const a = y[i], b = s[i];
+    if (Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0 && Math.max(a, b) / Math.min(a, b) > 2) return false;
+  }
+  const r = V(sRevArr).filter(Number.isFinite);
+  for (let i = 1; i < r.length - 1; i++) if (r[i] > 0 && r[i] * 10 < r[i - 1] && r[i] * 10 < r[i + 1]) return false;
+  return true;
+}
+
+// Jahres-Versatz-Erkennung, mechanisch statt per Augenmass — dieselbe Methode wie die
+// Erhebung vom 28.07. (merge-sec-xbrl.js:405-410): je Versatz -2..+2 zaehlen, wie viele
+// Umsatz-Paare auf <2 % zusammenfallen; der Versatz mit den meisten Treffern gewinnt.
+// Gewinnt ein Versatz != 0, ist eine positionsweise Ablehnung ein FEHLALARM, kein Befund.
+function besterVersatz(yRevArr, sRevArr) {
+  const y = V(yRevArr), s = V(sRevArr);
+  let best = { off: 0, hits: -1 };
+  for (let off = -2; off <= 2; off++) {
+    let hits = 0;
+    for (let i = 0; i < y.length; i++) {
+      const a = y[i], b = s[i + off];
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0) continue;
+      if (Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < 0.02) hits++;
+    }
+    if (hits > best.hits) best = { off, hits };
+  }
+  return best;
+}
+
+// VOLLE Variante (Vorzeichen UND Umsatz ueber die ganze Reihe). Auch sie ist ein LITERAL
+// und wird NICHT aus build-secannual.js importiert: der Bericht muss die Messung weiter
+// belegen koennen, nachdem T174 aus dem PR geflogen ist (ENTSCHIED 14 Punkt 2, Anhang zum
+// offenen Inbox-Eintrag). Ein Import haette die Messung beim Revert still auf 0 gedreht.
+function vollSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
+  if (!nurUmsatzSanity(yOpArr, sOpArr, yRevArr, sRevArr)) return false;
+  const y = V(yOpArr), s = V(sOpArr);
+  for (let i = 0; i < Math.min(y.length, s.length); i++) {
+    const a = y[i], b = s[i];
+    if (Number.isFinite(a) && Number.isFinite(b) && a !== 0 && b !== 0 && Math.sign(a) !== Math.sign(b)) return false;
+  }
+  return true;
+}
+
 function t174Messung(vorhanden, snapDirs) {
-  const { looseSanity } = require(path.join(ROOT, 'scripts', 'build-secannual.js'));
-  const res = { geprueft: 0, altGruen: 0, kippen: [] };
+  const res = { geprueft: 0, altGruen: 0, kippen: [], kippenNurUmsatz: [] };
   const paare = [['largecap', LAYERS[0][1], snapDirs[0]], ['smallcap', LAYERS[1][1], snapDirs[1]]];
   for (const [layer, lp, sd] of paare) {
     if (!sd || !fs.existsSync(sd)) continue;
@@ -142,9 +193,12 @@ function t174Messung(vorhanden, snapDirs) {
       const sec = stumm(() => extractSecSeries(JSON.parse(fs.readFileSync(cf, 'utf8')), tk));
       const yO = snap.annual && snap.annual.annualOpInc, yR = snap.annual && snap.annual.annualRev;
       const a = altSanity(yO, sec.annual.annualOpInc, yR, sec.annual.annualRev);
-      const b = looseSanity(yO, sec.annual.annualOpInc, yR, sec.annual.annualRev);
+      const b = vollSanity(yO, sec.annual.annualOpInc, yR, sec.annual.annualRev);
+      const c = nurUmsatzSanity(yO, sec.annual.annualOpInc, yR, sec.annual.annualRev);
       if (a) res.altGruen++;
-      if (a !== b) res.kippen.push({ layer, tk, alt: a, neu: b });
+      const vs = besterVersatz(yR, sec.annual.annualRev);
+      if (a !== b) res.kippen.push({ layer, tk, versatz: vs });
+      if (a !== c) res.kippenNurUmsatz.push({ layer, tk, versatz: vs });
     }
   }
   return res;
@@ -208,11 +262,21 @@ function bericht(r) {
     L.push('| --- | ---: |');
     L.push(`| beidseitig pruefbar | ${r.t174.geprueft} |`);
     L.push(`| unter der ALTEN Wache gruen | ${r.t174.altGruen} |`);
-    L.push(`| **kippen auf rot (werden eingefroren)** | **${r.t174.kippen.length}** |`);
+    L.push(`| kippen unter der VOLLEN Variante (Vorzeichen + Umsatz) | ${r.t174.kippen.length} |`);
+    L.push(`| **kippen unter der VERENGTEN Variante (nur Umsatz-Skala)** | **${r.t174.kippenNurUmsatz.length}** |`);
     L.push('');
-    L.push(r.t174.kippen.length
-      ? 'Betroffen: ' + r.t174.kippen.map((k) => `\`${k.tk}\` (${k.layer})`).join(', ')
-      : '_keine_');
+    L.push('Jahres-Versatz je Kandidat mechanisch bestimmt (Methode der 28.07.-Erhebung:');
+    L.push('bester Versatz aus -2..+2 nach Zahl der Umsatz-Paare unter 2 % Abweichung).');
+    L.push('**Versatz != 0 = Fehlalarm**, nicht Befund: dort vergleicht die positionsweise');
+    L.push('Pruefung Jahr gegen Nachbarjahr.');
+    L.push('');
+    L.push('| Ticker | Schicht | kippt bei VOLL | kippt bei NUR-UMSATZ | bester Versatz | Einordnung |');
+    L.push('| --- | --- | :---: | :---: | :---: | --- |');
+    const nurU = new Set(r.t174.kippenNurUmsatz.map((k) => k.tk));
+    for (const k of r.t174.kippen) {
+      L.push(`| ${k.tk} | ${k.layer} | ja | ${nurU.has(k.tk) ? '**ja**' : 'nein'} | ${k.versatz.off} | ${
+        k.versatz.off !== 0 ? '**FEHLALARM (Jahres-Versatz)**' : 'Tag-Divergenz-Signatur'}` + ' |');
+    }
     L.push('');
   }
   L.push('## Prognose (ENTSCHIED 13: "exakt 6 Namen") gegen Messung');
