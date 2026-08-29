@@ -172,19 +172,25 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 // waere die stille Variante desselben Schadens.
 const NULL_ANTEIL_STOPP = 0.25;
 let _mcapGenullt = 0, _mcapGeprueft = 0;
-const _belegCache = new Map();
+// EIN Snapshot-Lesevorgang je Ticker, zwei Ableitungen daraus (Waehrungsbeleg + Belegpunkte).
+// Zwei getrennte Caches hiessen zwei Lesevorgaenge ueber ~9.000 Ticker fuer dieselbe Datei.
+const _snapCache = new Map();
+function snapAbleitungenFuer(ticker) {
+  if (_snapCache.has(ticker)) return _snapCache.get(ticker);
+  let snap = null;
+  try { snap = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')); }
+  catch (_) { snap = null; }
+  const abl = {
+    beleg: beurteileWaehrungsbeleg(snap && snap.meta),
+    punkte: belegPunkte(snap && snap.timeseries),
+  };
+  _snapCache.set(ticker, abl);
+  return abl;
+}
 
 // Beweis-Frage, bewusst eng: wurde die marketCap dieser Zeile von der HANDELS-Waehrung
 // nach USD gebracht? Vier Wege zaehlen als Beleg, alles andere ist unbelegt.
-function waehrungsbelegFuer(ticker) {
-  if (_belegCache.has(ticker)) return _belegCache.get(ticker);
-  let meta = null;
-  try { meta = JSON.parse(fs.readFileSync(path.join(SNAP_DIR, safeSnapshotFilename(ticker)), 'utf8')).meta; }
-  catch (_) { meta = null; }
-  const beleg = beurteileWaehrungsbeleg(meta);
-  _belegCache.set(ticker, beleg);
-  return beleg;
-}
+function waehrungsbelegFuer(ticker) { return snapAbleitungenFuer(ticker).beleg; }
 
 // Reine Entscheidung, exportiert — der Waechter tests/waehrung-ausliefer-waechter.test.js
 // FUEHRT sie aus, statt den Quelltext nach Schreibmustern abzusuchen.
@@ -222,6 +228,50 @@ function beurteileWaehrungsbeleg(meta) {
     return { ok: true, grund: 'identitaet', rate: meta.fxRateApplied };
   }
   return { ok: false, grund: 'kein-handelskurs-nachweis', rate };
+}
+
+// ---- Belegpunkte (29.08.2026, Abhilfe A der Coverage-Akte) ---------------------------
+// BEFUND (agent-reports/befund-coverage-luege-2026-08-29.md, Orchestrator ENTSCHIED 20):
+// coverageAxes (src/scoring/score.js:1098, versiegelt) zaehlt "die Achsenfunktion hat eine
+// Zahl zurueckgegeben" — NICHT "wie viele Rohdatenpunkte standen dahinter". Die meisten
+// Achsen liefern schon ab ZWEI Punkten einen Wert. Gemessen am Vintage 2026-08-29: 295
+// Zeilen tragen n>=6 belegte Achsen bei real <3 Quartalspunkten; 7666.HK steht mit
+// coverageAxes "7/7" und exakt zwei Umsatzquartalen auf Rang 7 des health-care-Boards.
+// Das Belegbarkeits-Gate oben (RANK_MIN_AXES) prueft gegen genau diesen Zaehler und laesst
+// sie deshalb durch — es misst Rechenbarkeit und nennt sie Beleg.
+//
+// WAS HIER GEBAUT WIRD UND WAS NICHT: der Zaehler selbst bleibt unangetastet (score.js ist
+// GQS-00-versiegelt; die Wurzel-Umstellung "rechenbar -> belegt" ist S1 und braucht einen
+// eigenen Gerichtstermin). Was hier entsteht, ist die MESSEBENE dafuer: zwei rein additive
+// Anzeige-Felder, die die Beleglage neben der Coverage-Behauptung sichtbar machen. Kein
+// Score-, kein Rang-, kein Gate-Einfluss — die Zeile wird nicht anders behandelt, sie ist
+// nur nicht mehr unwiderlegbar.
+//   qPunkte   — Anzahl der Quartale mit einem echten Umsatzwert (Quelle: dieselbe
+//               timeseries.revenueQ, aus der write-board-history.js pit.revenueQ baut).
+//   qSpanTage — Tage zwischen aeltestem und juengstem DATIERTEN Quartalsende. Ohne gueltige
+//               Enden null (betrifft ~6,6 % der Zeilen; A10-Nachzuegler).
+// null heisst "nicht gemessen" (kein Snapshot / kein Feld), NICHT "null Punkte" — eine
+// erfundene 0 waere genau die Sorte Behauptung, die dieser Befund abschafft.
+function belegPunkte(timeseries) {
+  if (!timeseries || typeof timeseries !== 'object') return { qPunkte: null, qSpanTage: null };
+  // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
+  const roh = Array.isArray(timeseries.revenueQ) ? timeseries.revenueQ : null;
+  const wert = (x) => (x && typeof x === 'object' && 'value' in x ? x.value : x);
+  const qPunkte = roh === null ? null : roh.filter((x) => Number.isFinite(wert(x))).length;
+  const ends = Array.isArray(timeseries.revenueQEnds)
+    ? timeseries.revenueQEnds.map((d) => Date.parse(d)).filter((t) => Number.isFinite(t))
+    : [];
+  const qSpanTage = ends.length ? Math.round((Math.max(...ends) - Math.min(...ends)) / 86400000) : null;
+  return { qPunkte, qSpanTage };
+}
+
+// Anwender fuer die zwei GESCORTEN Mapper. survival-Zeilen bekommen die Felder bewusst
+// nicht: sie tragen nie ein coverageAxes, haben also keine Beleg-Behauptung zu stuetzen.
+function ergaenzeBelegpunkte(out) {
+  const p = snapAbleitungenFuer(out.ticker).punkte;
+  out.qPunkte = p.qPunkte;
+  out.qSpanTage = p.qSpanTage;
+  return out;
 }
 
 // Ein Anwender fuer alle drei Zeilen-Mapper — drei Kopien derselben Regel laufen auseinander.
@@ -429,6 +479,7 @@ function mapBoardRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2: ATH-Anzeige (null wenn nicht geseedet/Split-Wächter)
+  ergaenzeBelegpunkte(out);            // 29.08.: Belegpunkte neben der Coverage-Behauptung
   return ergaenzeWaehrungsbeleg(out);  // Chunk 4a: Groesse nur mit Handelskurs-Nachweis
 }
 
@@ -447,6 +498,7 @@ function mapOverviewRow(r, i) {
   };
   for (const k of ROW_FIELDS) out[k] = k === 'name' ? normalizeName(r[k]) : (r[k] === undefined ? null : r[k]);
   out.ath = athFor(r.ticker); // 2.2
+  ergaenzeBelegpunkte(out);            // 29.08.: s. mapBoardRow
   return ergaenzeWaehrungsbeleg(out);  // Chunk 4a
 }
 
@@ -871,6 +923,15 @@ function checkOptionalNumOrNull(r, key, where, errs) {
   if (!(key in r)) return;
   if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
 }
+// 29.08.: dasselbe Muster fuer einen ZAEHLER (qPunkte). Eine gebrochene Zahl oder ein
+// negativer Wert ist keine Anzahl von Datenpunkten, sondern ein kaputter Erzeuger — und
+// ein Beleg-Feld, das selbst Unsinn traegt, waere schlimmer als keins.
+function checkOptionalZaehlerOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && (!Number.isInteger(r[key]) || r[key] < 0)) {
+    errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Anzahl (ganzzahlig >= 0 | null)");
+  }
+}
 // Chunk 4a: dasselbe additiv-optionale Muster fuer ein Enum (marketCapCurrency).
 function checkOptionalEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) return;
@@ -1019,6 +1080,10 @@ function validateGeo(r, where, errs) {
   // geprueft: marketCap ist im v1-Vertrag IMMER USD, ein anderer Wert waere ein Bruch.
   checkOptionalEnumOrNull(r, 'marketCapCurrency', ['USD'], where, errs);
   checkOptionalNumOrNull(r, 'tradingFxRateApplied', where, errs);
+  // 29.08. (Abhilfe A, Coverage-Akte): Belegpunkte neben coverageAxes. Additiv OPTIONAL —
+  // bereits ausgelieferte v1-Dateien tragen sie nicht und duerfen nicht rot werden.
+  checkOptionalZaehlerOrNull(r, 'qPunkte', where, errs);
+  checkOptionalNumOrNull(r, 'qSpanTage', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
@@ -1608,4 +1673,7 @@ module.exports = {
   // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
   beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,
   waehrungsWaechterBilanz, NULL_ANTEIL_STOPP,
+  // 29.08. (Abhilfe A, Coverage-Akte): die Belegpunkt-Ableitung als Seam —
+  // tests/belegpunkte.test.js FUEHRT sie aus, statt den Quelltext nach Mustern abzusuchen.
+  belegPunkte,
 };
