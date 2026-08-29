@@ -1,0 +1,159 @@
+{
+  "addendum": {
+    "accessLedgerEntryRequired": false,
+    "authority": "ENTSCHIED 17 (Orchestrator-Direktiven 2026-08-29)",
+    "path": "protocol/early-detection/2.0.0/r2-a1-t173-form-type-counter-addendum.json",
+    "sha256": "a7002de9b01c83bb025471ce1fc2c32faf3d947ca0f76e99eb4e6b5eb931dcc7"
+  },
+  "crossCheckNonBinding": {
+    "available": true,
+    "binding": false,
+    "byWindow": {
+      "entdeckung": {
+        "match": true,
+        "measuredThisRun": 5892,
+        "published": 5892
+      },
+      "pruefung": {
+        "match": true,
+        "measuredThisRun": 49093,
+        "published": 49093
+      }
+    },
+    "source": "reports/studie/R2-A1-identity-bridge-artifact-2026-08-29.json"
+  },
+  "measuredAt": "2026-08-29T20:33:54Z",
+  "normalization": {
+    "definition": "str(valueor'').upper().strip().split('/',1)[0]",
+    "periodicSet": [
+      "10-K",
+      "10-Q",
+      "20-F",
+      "40-F"
+    ],
+    "probeCases": 12
+  },
+  "proofs": [
+    {
+      "direction": "intakt",
+      "guard": "normalisierung",
+      "signal": "GRUEN"
+    },
+    {
+      "direction": "gebrochen",
+      "guard": "sabotage-fehlklassifikation",
+      "signal": "ROT"
+    },
+    {
+      "direction": "intakt",
+      "guard": "zwei-fenster-waechter",
+      "signal": "GRUEN"
+    },
+    {
+      "direction": "gebrochen",
+      "guard": "zwei-fenster-waechter",
+      "signal": "ROT"
+    },
+    {
+      "direction": "intakt",
+      "guard": "sabotage-leck",
+      "signal": "GRUEN"
+    },
+    {
+      "direction": "gebrochen",
+      "guard": "sabotage-leck",
+      "signal": "ROT"
+    }
+  ],
+  "readColumns": [
+    "bericht.form"
+  ],
+  "reconciliation": {
+    "result": {
+      "entdeckung": {
+        "counter": 5892,
+        "match": true,
+        "sum": 5892
+      },
+      "pruefung": {
+        "counter": 49093,
+        "match": true,
+        "sum": 49093
+      }
+    },
+    "rule": "sum(nonperiodicReportsExcludedByForm) == nonperiodicReportsExcluded",
+    "sameRunOnly": true
+  },
+  "runId": "T173-formtyp-zaehlung-2026-08-29",
+  "schema": "t173-form-type-count/v1",
+  "windows": [
+    {
+      "file": "panel-entdeckung.sqlite",
+      "nonperiodicReportsExcluded": 5892,
+      "nonperiodicReportsExcludedByForm": {
+        "10-12B": 1,
+        "10-12G": 31,
+        "10-D": 1,
+        "10-KT": 157,
+        "10-QT": 34,
+        "18-K": 1,
+        "424B3": 21,
+        "424B4": 1,
+        "425": 5,
+        "6-K": 604,
+        "8-K": 983,
+        "8-K12B": 1,
+        "DEF 14A": 3,
+        "DEFA14A": 2,
+        "F-1": 34,
+        "F-3": 5,
+        "F-3ASR": 2,
+        "F-4": 11,
+        "NT 10-Q": 1,
+        "POS AM": 624,
+        "POS EX": 12,
+        "POSASR": 1,
+        "PRE 14A": 1,
+        "S-1": 2806,
+        "S-11": 52,
+        "S-3": 5,
+        "S-3ASR": 4,
+        "S-4": 489
+      },
+      "reconciled": true,
+      "reportRowsRead": 176502,
+      "window": "entdeckung"
+    },
+    {
+      "file": "panel-validierung.sqlite",
+      "nonperiodicReportsExcluded": 49093,
+      "nonperiodicReportsExcludedByForm": {
+        "10-12G": 23,
+        "10-KT": 93,
+        "10-QT": 26,
+        "20FR12G": 1,
+        "424B3": 10,
+        "424B4": 1,
+        "424B5": 1,
+        "425": 3,
+        "6-K": 1063,
+        "8-K": 45547,
+        "8-K12B": 14,
+        "8-K12G3": 1,
+        "ARS": 1,
+        "F-1": 57,
+        "F-3ASR": 1,
+        "F-4": 6,
+        "POS AM": 293,
+        "POS EX": 2,
+        "S-1": 1595,
+        "S-11": 19,
+        "S-3": 3,
+        "S-4": 333
+      },
+      "reconciled": true,
+      "reportRowsRead": 148912,
+      "window": "pruefung"
+    }
+  ]
+}
