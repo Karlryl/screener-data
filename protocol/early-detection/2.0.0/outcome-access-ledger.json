@@ -530,6 +530,37 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "5e5bc2866a4f4a9824e9251457cc924d2eb3cbbfd12ffaf8f0e0eb7dd49891b0",
    "eventHash": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207"
+  },
+  {
+   "runId": "e4h-serienende-pruefung-2026-08-29",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-29T19:59:16.369Z",
+   "accessedAt": "2026-08-29T20:38:00.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "alternativ_mehrere_achsen",
+    "alternativ_nur_andere_unit",
+    "alternativ_nur_anderer_track",
+    "alternativ_nur_anderes_konzept",
+    "ddate_abgedeckt",
+    "fallzahl",
+    "gewaehlte_serie_endet",
+    "kontrollpool_weiterfiler",
+    "mit_nutzbarer_alternativserie",
+    "nenner_alternativpruefung",
+    "ohne_nutzbare_alternativserie",
+    "qtrs_abgedeckt",
+    "quartalsfakten_im_filing_vorhanden",
+    "signal_weiterfiler"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "T171/E4h-Serienende-Diagnose (R15b, nur zaehlen), autorisiert durch orchestrator-2026-08-29.md ENTSCHIED 32, Punkt 4 - eingefroren VOR Kenntnis der Zahlen. INPUT-SCOPE: woertlich der Scope der committeten E4a-Registrierung (e4a-diagnose-pruefung-2026-08-19) und des E4g-v2-Eintrags - ausschliesslich die Panel-Datei des angemeldeten, bereits VERBRAUCHTEN Prueffensters, dieselbe SQLite-Quelle, keine neue Quelle, kein anderes Fenster, kein Endtest, kein Schluesselmaterial. Gelesen werden ausschliesslich FAKT-METADATEN je Filing: tag (Konzept), version (Taxonomie-Track), uom (Einheit), ddate und qtrs als Anwesenheitsmerkmal, verknuepft ueber adsh. AUSDRUECKLICH NICHT gelesen wird fakt.value - E4h ist eine reine Metadaten-Zaehlung und schwaecher als der bereits mit ENTSCHIED 17 autorisierte Faktwert-Zugriff derselben Datei. ZWECK: Fuer die Firmen, die nach ihrem Signal weiterhin 10-Q einreichen, waehrend ihre GEWAEHLTE Serie endet, zaehlen, ob im SELBEN Filing nutzbare Alternativ-Serien existieren - abweichendes Konzept, abweichende Unit oder abweichender Track. BINDENDER SELBST-CHECK MIT BIT-ANKER: Die Population MUSS exakt 25 Firmen im S-G-Signal-Arm und 192 Firmen im Kontrollpool ergeben, die committeten E4g-Aggregatzahlen (reports/studie/E4g-restursachen-diagnose-2026-08-29.md, letzte_form_nach_signal 10-Q). JEDE Abweichung ist ein SOFORT-STOPP mit Eskalation an den Orchestrator - kein Weiterrechnen, keine Anpassung der Rekonstruktion an die Sollzahl, keine zweite Variante. EINGEFRORENE ENTSCHEIDUNGSREGEL (ENTSCHIED 32, Punkt 4, VOR den Zahlen fixiert, keine Grauzone, keine Nachjustierung): Mindestens 13 der 25 mit nutzbarer Alternativ-Serie bedeutet, der Verlust ist ein Definitions-Artefakt - korrigierte Serien-Konstruktions-Regel NUR VORWAERTS, R15b-Zaehlprobe-Pfad. Weniger als 13 bedeutet, R15a wird vollzogen. Dieser Lauf wendet die Regel NICHT an und entscheidet nichts - er meldet ausschliesslich Zahlen; die Anwendung liegt beim Orchestrator. AUSGABE: ausschliesslich die 14 benannten Aggregatzaehler. Keine Firmen-Kennungen, keine adsh-, cik- oder Namenswerte, keine Konzept- oder Unit-Listen, keine Wertangaben, keine Naht-IDs des Bruecken-Artefakts. E4h ist Diagnose, keine Korrektur, und beruehrt e4d-freeze nicht (gleiche Klasse wie E4g). UMGEBUNG: der Lauf startet aus einem frischen Worktree von origin/main (Post-Merge-Stand), damit Erzeuger und Verbraucher an die gueltige Registerkette binden; der Studienzweig erhaelt NIE den main-Ledger (Ein-Appender-Regel, ENTSCHIED 7). Anmeldung main-first per Mini-PR VOR dem Zugriff.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207",
+   "eventHash": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
