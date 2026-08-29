@@ -1,0 +1,513 @@
+{
+ "accessedAt": "2026-08-29T18:40:00.000Z",
+ "arme": {
+  "kontrolle": {
+   "afs": {
+    "1-LAF": 65,
+    "2-ACC": 66,
+    "4-NON": 66,
+    "5-SML": 251
+   },
+   "afs_gruppe": {
+    "larger": 131,
+    "smaller": 317
+   },
+   "fallzahl": 4285,
+   "jahreskadenz_ja": 53,
+   "jahreskadenz_nein": 395,
+   "kante_unmoeglich_ja": 0,
+   "kante_unmoeglich_nein": 448,
+   "kantenfenster_accepted_tage": 365.0,
+   "klasse_a_keine_folgequartale": 165,
+   "klasse_c_zu_wenige_folgequartale": 282,
+   "letzte_form_nach_signal": {
+    "10-K": 61,
+    "10-Q": 192,
+    "20-F": 1,
+    "6-K": 1,
+    "8-K": 17,
+    "S-1": 3,
+    "S-4": 1,
+    "keine": 172
+   },
+   "median_abstand_accepted_tage": 91.25,
+   "nenner_restursachen": 448,
+   "ohne_zeile_nach_signal": 172,
+   "restlaufzeit_accepted_tage": 1143.0,
+   "zeilen": [
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 5
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "S-4",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 6
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 35
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 5
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 10
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 7
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 13
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 37
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 4
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 4
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 6
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "6-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "S-1",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 22
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 27
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 4
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 31
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "S-1",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 8
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "S-1",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 107
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "b",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 8
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 84
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "20-F",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 6
+    }
+   ]
+  },
+  "signal": {
+   "afs": {
+    "1-LAF": 5,
+    "2-ACC": 12,
+    "4-NON": 3,
+    "5-SML": 19
+   },
+   "afs_gruppe": {
+    "larger": 17,
+    "smaller": 22
+   },
+   "fallzahl": 326,
+   "jahreskadenz_ja": 2,
+   "jahreskadenz_nein": 37,
+   "kante_unmoeglich_ja": 0,
+   "kante_unmoeglich_nein": 39,
+   "kantenfenster_accepted_tage": 365.0,
+   "klasse_a_keine_folgequartale": 9,
+   "klasse_c_zu_wenige_folgequartale": 30,
+   "letzte_form_nach_signal": {
+    "10-K": 4,
+    "10-Q": 25,
+    "8-K": 2,
+    "keine": 8
+   },
+   "median_abstand_accepted_tage": 91.25,
+   "nenner_restursachen": 39,
+   "ohne_zeile_nach_signal": 8,
+   "restlaufzeit_accepted_tage": 902.0,
+   "zeilen": [
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 3
+    },
+    {
+     "afs": "1-LAF",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 4
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 6
+    },
+    {
+     "afs": "2-ACC",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "8-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "4-NON",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "ja",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 1
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "a",
+     "letzte_form_nach_signal": "keine",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-K",
+     "nenner_restursachen": 2
+    },
+    {
+     "afs": "5-SML",
+     "jahreskadenz": "nein",
+     "kante_unmoeglich": "nein",
+     "klasse": "c",
+     "letzte_form_nach_signal": "10-Q",
+     "nenner_restursachen": 13
+    }
+   ]
+  }
+ },
+ "beendetAm": "2026-08-29T19:35:56.217Z",
+ "ergebnisdatenBeruehrt": false,
+ "ersterZugriffAm": "2026-08-29T19:35:28.016Z",
+ "fenster": "pruefung",
+ "gelesenePfade": [
+  "panel/panel-validierung.sqlite"
+ ],
+ "geschriebenePfade": [
+  "arbeit/E4g-pruefung-zwischenstand.sqlite"
+ ],
+ "kontrollpool_verluste": 448,
+ "manifestGeprueft": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "panelRand": "2020-12-31",
+ "perzentil": 95,
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "e4g-restursachen-pruefung-v2-2026-08-29",
+ "schema": "early-detection-e4g-restursachen/v1",
+ "selbstCheck": {
+  "bestanden": true,
+  "istFallzahlKontrolle": 4285,
+  "istFallzahlSignal": 326,
+  "istKontrollpoolVerluste": 448,
+  "istSignalVerluste": 39,
+  "quelle": "reports/studie/E4a-diagnose-pruefung-2026-08-19.json",
+  "sollFallzahlKontrolle": 4285,
+  "sollFallzahlSignal": 326,
+  "sollKontrollpoolVerluste": 448,
+  "sollSignalVerluste": 39
+ },
+ "serverConfirmedAt": "2026-08-29T17:17:53.000Z",
+ "siegelWache": {
+  "bytes": 5025230848,
+  "klartextKopie": false,
+  "schluesselAngefasst": false,
+  "sha256Geprueft": true,
+  "siegelDatei": "panel/panel-endtest.sqlite.enc"
+ },
+ "signal_verluste": 39,
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "variante": "S-G"
+}
