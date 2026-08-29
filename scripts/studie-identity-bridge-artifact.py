@@ -272,6 +272,35 @@ def load_determinism_correction():
     return correction
 
 
+REPLICATION_BINDING = "REPLICATION_AGAINST_BOUND_MANIFEST"
+FIRST_BUILD_BINDING = "FIRST_BUILD_OF_VERSION"
+
+
+def bound_manifest_binding(version):
+    """Resolve the prior-manifest binding for THAT artifact version.
+
+    Context-dependent, version-aware (ENTSCHIED 9), same two-stage shape as the
+    Q1 payload pin: what a run can be held against depends on whether a frozen
+    record already pins it.
+
+    REPLICATION_AGAINST_BOUND_MANIFEST - the version HAS a bound record, so both
+        rebuilds must reproduce that exact manifest. Blocker-2 semantics for
+        1.1.0 are untouched.
+    FIRST_BUILD_OF_VERSION - no such record exists yet, so there is nothing to
+        replicate: a corrected version changes the artifact bytes by design and
+        can never reproduce its predecessor's manifest. The gate is then the
+        A==B identity, and the prior-manifest binding is deferred to that
+        version's post-run closure record.
+
+    The mode is returned so the attestation can NAME it. A weaker gate that is
+    not named is the failure this function exists to prevent.
+    """
+    bound = load_determinism_correction()["boundArtifact"]
+    if version == bound["artifactVersion"]:
+        return REPLICATION_BINDING, bound["manifestSha256BeforeCorrection"]
+    return FIRST_BUILD_BINDING, None
+
+
 def compare_independent_build_records(builder_a, builder_b):
     correction = load_determinism_correction()
     mismatches = [
@@ -293,18 +322,24 @@ def compare_independent_build_records(builder_a, builder_b):
         builder_a.get("panelsScanned") == expected_panels
         and builder_b.get("panelsScanned") == expected_panels
     )
-    bound_manifest_match = (
-        builder_a["fingerprint"].get("manifestFileSha256")
-        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
-        and builder_b["fingerprint"].get("manifestFileSha256")
-        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
-    )
+    built_version = builder_a["fingerprint"].get("artifactVersion")
+    binding_mode, expected_manifest = bound_manifest_binding(built_version)
+    if expected_manifest is None:
+        # Not applicable, not "passed": None never reads as a satisfied check.
+        bound_manifest_match = None
+        deferred_to = (CLOSURE_RECORDS.get(built_version) or (None,))[0]
+    else:
+        bound_manifest_match = (
+            builder_a["fingerprint"].get("manifestFileSha256") == expected_manifest
+            and builder_b["fingerprint"].get("manifestFileSha256") == expected_manifest
+        )
+        deferred_to = None
     passes = (
         not mismatches
         and process_ids_distinct
         and scans_per_process == [2, 2]
         and panels_match
-        and bound_manifest_match
+        and bound_manifest_match is not False
         and runtimes_equal
     )
     return {
@@ -325,7 +360,9 @@ def compare_independent_build_records(builder_a, builder_b):
             value for value in scans_per_process if isinstance(value, int)
         ),
         "panelsMatchRegistration": panels_match,
+        "boundManifestMode": binding_mode,
         "matchesBoundManifest": bound_manifest_match,
+        "priorManifestBindingDeferredTo": deferred_to,
         "fingerprintFieldsCompared": list(INDEPENDENT_FINGERPRINT_FIELDS),
         "fingerprintMismatches": mismatches,
         "observedStatus": "GREEN" if passes else "RED",
@@ -1329,6 +1366,9 @@ SELF_TEST_NAMES = (
     "Seam event carries the accepted date while ddate stays the period key",
     "Post-wall seam event is rejected in the accepted date notation",
     "Ten exclusion counters are published per window and zero-initialised",
+    "Bound-manifest replication mode enforces the pinned manifest",
+    "A new artifact version defers the prior-manifest binding and names the mode",
+    "Replication mode still rejects a manifest that does not match its pin",
 )
 
 
@@ -1433,10 +1473,14 @@ def self_test():
     check(SELF_TEST_NAMES[18], legacy_inversion_matches(secure_fixture_ids, 100) == 0)
     legacy_fixture_ids = [legacy_stable_id("E", str(value)) for value in range(1, 11)]
     check(SELF_TEST_NAMES[19], legacy_inversion_matches(legacy_fixture_ids, 100) == 10)
-    registered_manifest = load_determinism_correction()["boundArtifact"][
-        "manifestSha256BeforeCorrection"]
+    bound_artifact = load_determinism_correction()["boundArtifact"]
+    registered_manifest = bound_artifact["manifestSha256BeforeCorrection"]
+    # The bound version, not ARTIFACT_VERSION: pairing a corrected version with
+    # its predecessor's manifest is a combination that cannot occur in a real
+    # build, and pretending it can is what hid the comparator defect.
     base_fingerprint = {
-        field: (ARTIFACT_VERSION if field == "artifactVersion" else "a" * 64)
+        field: (bound_artifact["artifactVersion"]
+                if field == "artifactVersion" else "a" * 64)
         for field in INDEPENDENT_FINGERPRINT_FIELDS
     }
     base_fingerprint["manifestFileSha256"] = registered_manifest
@@ -1462,6 +1506,46 @@ def self_test():
         independent_red["observedStatus"] == "RED"
         and independent_red["fingerprintMismatches"] == ["shardSetSha256"],
         independent_red,
+    )
+
+    def compared_pair(version, manifest_sha):
+        fingerprint = dict(base_fingerprint)
+        fingerprint["artifactVersion"] = version
+        fingerprint["manifestFileSha256"] = manifest_sha
+        return compare_independent_build_records(
+            dict(record_a, processId=303, fingerprint=dict(fingerprint),
+                 sabotageApplied=False),
+            dict(record_a, processId=404, fingerprint=dict(fingerprint),
+                 sabotageApplied=False),
+        )
+
+    replication = compared_pair(
+        bound_artifact["artifactVersion"], registered_manifest)
+    check(
+        SELF_TEST_NAMES[28],
+        replication["boundManifestMode"] == REPLICATION_BINDING
+        and replication["matchesBoundManifest"] is True
+        and replication["passes"] is True,
+        replication,
+    )
+    first_build = compared_pair(ARTIFACT_VERSION, "b" * 64)
+    check(
+        SELF_TEST_NAMES[29],
+        first_build["boundManifestMode"] == FIRST_BUILD_BINDING
+        and first_build["matchesBoundManifest"] is None
+        and first_build["priorManifestBindingDeferredTo"] == V120_CLOSURE_REL
+        and first_build["passes"] is True,
+        first_build,
+    )
+    # The guard must still bite in replication mode, or the fix would be a
+    # blanket weakening dressed up as a mode.
+    wrong_manifest = compared_pair(bound_artifact["artifactVersion"], "c" * 64)
+    check(
+        SELF_TEST_NAMES[30],
+        wrong_manifest["boundManifestMode"] == REPLICATION_BINDING
+        and wrong_manifest["matchesBoundManifest"] is False
+        and wrong_manifest["passes"] is False,
+        wrong_manifest,
     )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
@@ -1750,9 +1834,11 @@ def sabotage_independent_rebuild(args):
         args, sabotage_child=True
     )
     expected_mismatches = ["shardSetSha256"]
+    # Anchored on the isolated mismatch, NOT on observedStatus RED (ENTSCHIED 9).
+    # RED is over-determined: any other failing condition also colours the proof
+    # red, so RED alone would not prove that the sabotage is what was detected.
     if (
-            proof["observedStatus"] == "RED"
-            and proof["fingerprintMismatches"] == expected_mismatches
+            proof["fingerprintMismatches"] == expected_mismatches
             and proof["processIdsDistinct"] is True
             and proof["scanPanelCallsPerProcess"] == [2, 2]):
         print(
@@ -1782,8 +1868,16 @@ def load_independent_rebuild_proof(path, manifest_path):
         raise ArtifactError("Independent rebuild proof did not record four panel scans")
     if proof.get("fingerprintMismatches") != []:
         raise ArtifactError("Independent rebuild fingerprints differ")
-    if proof.get("matchesBoundManifest") is not True:
-        raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    # Mode-aware (ENTSCHIED 9). A proof that does not NAME its mode is refused
+    # outright, so an older or hand-made proof cannot slip past the weaker gate
+    # by simply omitting the field.
+    if proof.get("boundManifestMode") not in (REPLICATION_BINDING, FIRST_BUILD_BINDING):
+        raise ArtifactError("Independent rebuild proof does not name its bound-manifest mode")
+    if proof.get("boundManifestMode") == REPLICATION_BINDING:
+        if proof.get("matchesBoundManifest") is not True:
+            raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    elif proof.get("matchesBoundManifest") is not None:
+        raise ArtifactError("First build of a version cannot claim a bound-manifest match")
     if any(row.get("sabotageApplied") for row in proof.get("builders", [])):
         raise ArtifactError("Green independent rebuild proof contains a sabotage")
     return proof

@@ -1,0 +1,105 @@
+{
+  "schema": "R2-A1-method-corrections-addendum/1",
+  "status": "FROZEN_COMPARATOR_DEFECT_ADDENDUM",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "frozenAt": "2026-08-29",
+  "frozenNotice": "FROZEN. Append-only Addendum, eingefroren und gehasht VOR dem einen autorisierten Wiederholungslauf. Es ergaenzt den Korrektur-Record, ohne ihn zu editieren.",
+  "authority": [
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 9 (17:38) - Comparator-Defekt: kontext-abhaengige Bindung + EIN autorisierter Wiederholungslauf"
+  ],
+  "amends": {
+    "record": "protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json",
+    "sha256": "1239a61cc37d8ae3d49f3f3d05397534bf06d1f8054ea7885334cb0edc15a2f3",
+    "status": "FROZEN_BEFORE_METHOD_CORRECTION_REBUILD",
+    "edited": false,
+    "rule": "Der Korrektur-Record wird NICHT editiert und NICHT neu versiegelt. Dieses Addendum steht neben ihm; bei Widerspruch ueber den Skript-Hash gilt der hier gepinnte Wert, weil er den tatsaechlich gelaufenen Stand bezeugt."
+  },
+  "whyThisAddendumExists": "Der im Korrektur-Record vorab gepinnte Skript-Hash d2234902... galt fuer den Stand VOR dem Comparator-Fix. Der von ENTSCHIED 9 angeordnete Fix aendert das Skript und macht diesen Pin ungueltig. Da ein eingefrorener Record nicht editiert werden darf, wird der neue Hash hier append-only nachgezogen.",
+  "defect": {
+    "name": "boundManifestBindingWasVersionBlind",
+    "site": "compare_independent_build_records in scripts/studie-identity-bridge-artifact.py",
+    "whatWasWrong": "matchesBoundManifest verglich das frisch gebaute Manifest gegen manifestSha256BeforeCorrection aus dem Blocker-2-Record. Dieser Wert ist hart an Artefakt-Version 1.1.0 gebunden. Das Manifest traegt artifactVersion, counts und exclusions, also kann ein v1.2.0-Manifest diesen Hash niemals erreichen - unabhaengig vom Ausgabedateinamen. Die Bedingung war fuer JEDE Korrektur-Version strukturell unerfuellbar, und genau das Aendern dieser Bytes ist der Zweck der Korrekturen A/B/C.",
+    "twinOf": "Der Defekt ist der Zwilling des mit ENTSCHIED 6, Q1 behobenen Payload-Pin-Defekts: der Payload-Pin wurde versions-bewusst (CLOSURE_RECORDS), die Manifest-Bindung im Comparator blieb es nicht.",
+    "misleadingSymptom": "build_empirical brach mit 'Independent rebuild fingerprints differ' ab, obwohl NULL Fingerprints abwichen. Die Meldung zeigte auf eine Nicht-Determinismus-Ursache, die es nicht gab.",
+    "empiricalIsolation": {
+      "run": "2026-08-29, zwei getrennte Prozesse, 4 Panel-Scans, 181 s gesamt",
+      "proof": "reports/studie/R2-A1-independent-rebuild-proof-2026-08-29.json",
+      "proofSha256": "05b382180f4f9d8262f633d5de36ba8ec530152d646bfe8acbfec3fbfa9ea155",
+      "sixAndedConditions": {
+        "noFingerprintMismatches": true,
+        "processIdsDistinct": true,
+        "scanPanelCallsPerProcessIsTwoTwo": true,
+        "panelsMatchRegistration": true,
+        "pythonRuntimesEqual": true,
+        "matchesBoundManifest": false
+      },
+      "conclusion": "Fuenf der sechs UND-verknuepften Bedingungen waren wahr; allein matchesBoundManifest war falsch.",
+      "values": {
+        "freshV120ManifestFileSha256": "4cd71577b8cf84e7c0ba3781b266b8380ae1400eb1147778c5e7013b15a0044b",
+        "boundV110ManifestSha256BeforeCorrection": "583c30c303014de3d44dfcc42294809a4e4d09b741992e128ffc77657b720ac1",
+        "equal": false
+      },
+      "noNumbersSeen": "Der Abbruch erfolgte VOR write_sharded_artifact. Es entstand kein Artefakt, kein Shard, kein Ergebnisartefakt und kein Bericht; die counts existierten nur im Speicher. Niemand hat eine Ergebniszahl gesehen, deshalb kann der Wiederholungslauf durch gesehene Ergebnisse nicht verzerrt sein."
+    }
+  },
+  "correction": {
+    "shape": "kontext-abhaengige, versions-bewusste Bindung (ENTSCHIED 9, Punkt 1)",
+    "modes": [
+      {
+        "name": "REPLICATION_AGAINST_BOUND_MANIFEST",
+        "when": "Die gebaute Version HAT einen gebundenen Record, der ihr Manifest pinnt.",
+        "gate": "Beide Neubauten muessen dieses Manifest exakt reproduzieren. Die Blocker-2-Semantik fuer 1.1.0 bleibt unveraendert erhalten."
+      },
+      {
+        "name": "FIRST_BUILD_OF_VERSION",
+        "when": "Fuer die gebaute Version existiert noch kein solcher Record.",
+        "gate": "Das Gate ist die A==B-Identitaet ueber die neun deterministischen Fingerprint-Felder. Die Prior-Manifest-Bindung wird AUSDRUECKLICH auf den Post-Run-Closure-Record dieser Version verschoben.",
+        "deferredTo": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json"
+      }
+    ],
+    "loudness": "Der Attest-Ausgang benennt den Modus im Feld boundManifestMode. matchesBoundManifest ist dreiwertig: true, false oder null fuer 'nicht anwendbar' - null liest sich nie als erfuellte Pruefung. Zusaetzlich verweigert load_independent_rebuild_proof jeden Beleg, der seinen Modus NICHT benennt, und weist einen First-Build-Beleg ab, der einen Manifest-Treffer behauptet. Ein schwaecheres Gate kann damit nicht still eintreten.",
+    "sabotageReanchoring": {
+      "decision": "ENTSCHIED 9, Punkt 2",
+      "before": "sabotage_independent_rebuild verlangte observedStatus == 'RED' UND fingerprintMismatches == ['shardSetSha256'].",
+      "after": "Die Zusicherung ankert allein auf fingerprintMismatches == ['shardSetSha256'] plus den Struktur-Bedingungen.",
+      "reason": "RED war auf v1.2.0 ueberdeterminiert: der Manifest-Defekt faerbte den Beleg unabhaengig von der Sabotage rot. RED allein belegt deshalb nicht, dass die Sabotage das Erkannte war. Die isolierte Abweichung tut es."
+    },
+    "guardProvenBothDirections": {
+      "rule": "Ein Waechter muss auch feuern, wenn er feuern soll - einmal absichtlich gebrochen und das Feuern belegt.",
+      "selfTestChecks": [
+        "Bound-manifest replication mode enforces the pinned manifest",
+        "A new artifact version defers the prior-manifest binding and names the mode",
+        "Replication mode still rejects a manifest that does not match its pin"
+      ],
+      "consumerRefusalsProven": [
+        "Modus-Feld fehlt -> abgewiesen",
+        "Modus-Feld mit unbekanntem Wert -> abgewiesen",
+        "First-Build-Beleg behauptet Manifest-Treffer -> abgewiesen",
+        "Replikations-Beleg mit abweichendem Manifest -> abgewiesen"
+      ],
+      "selfTestFixed": "Der Selbsttest baute zuvor einen Datensatz mit artifactVersion 1.2.0 UND dem 1.1.0-Manifest-Hash - eine Kombination, die in einem echten Bau nicht vorkommen kann. Genau diese Konstruktion verdeckte den Defekt. Der Basis-Datensatz traegt jetzt die gebundene Version."
+    }
+  },
+  "currentImplementation": {
+    "scripts/studie-identity-bridge-artifact.py": "40669a86564939e31bbee8c3d58bcb79de790137122a7a5fc0dd36a65015d897",
+    "supersedesPin": "d2234902d0ad507d39f0fdee19f66a0d573a27af7e95afc1f93269c912e35c95",
+    "note": "Dieser Hash bindet den Stand, mit dem der eine autorisierte Wiederholungslauf gefahren wird. Der aeltere Pin bleibt im Korrektur-Record unveraendert stehen und ist damit als Vor-Fix-Stand weiter belegt."
+  },
+  "authorizedRerun": {
+    "decision": "ENTSCHIED 9, Punkt 4",
+    "count": 1,
+    "notThresholdShopping": "Benannter Code-Defekt, kein Artefakt entstand, und niemand hat eine Ergebniszahl gesehen. Die Regel 'genau einmal' verbietet repeat-until-green, nicht die Wiederholung nach einem benannten Defekt.",
+    "unchangedObligations": [
+      "Zahlen gehen an den Orchestrator; Sollwert seamEventDatesFallenBackToPeriodKey = 0",
+      "Der Closure-Record entsteht erst nach der Abnahme",
+      "Kein PR, kein Merge, kein Siegelbruch, kein Ledger-Append, kein Force-Push, keine Loeschung"
+    ]
+  },
+  "explicitNonClaims": [
+    "Das Addendum aendert keine Methodik-Semantik der Korrekturen A, B oder C.",
+    "Es bewertet die neue Nahtmenge nicht und nimmt der Abnahme nichts vorweg.",
+    "Es beruehrt weder das versiegelte konfirmatorische Verdikt noch das Endtest-Fenster.",
+    "Es schliesst Blocker 3 nicht und macht Auftrag 1 nicht vollstaendig.",
+    "Die Artefakte der Version 1.1.0 bleiben unveraendert und gegen ihren eigenen Record pruefbar."
+  ]
+}
