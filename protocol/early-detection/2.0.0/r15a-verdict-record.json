@@ -5,7 +5,7 @@
   "mode": "APPEND_ONLY_NO_EDIT",
   "regel": "R15 (a) — Abbruch, Fallzahl-Vorpruefung und Wiederaufnahme",
   "date": "2026-08-30",
-  "frozenAt": "2026-08-29T23:03:18Z",
+  "frozenAt": "2026-08-29T23:20:57Z",
   "frozenNotice": "FROZEN. Schriftliches Verdikt nach R15 (a). Append-only: ab hier nicht mehr editiert. Wer diese Signalfamilie neu aufnimmt, legt ein NEUES Protokoll an und verweist hierauf.",
 
   "verdikt": "INCONCLUSIVE_DATA",
@@ -166,7 +166,7 @@
     ],
     "wiedervorlage": "Automatisch NUR, falls der gratis verfuegbare Rettungsweg (zweite Faktenquelle) scheitert UND ein Neuanlauf sonst unmoeglich ist (ENTSCHIED 48). Keine Wiedervorlage aus Anlass eines gerissenen Tors.",
     "hinweis": "Die Frage wird nach R17 NUR mit dem obigen Gratis-Suchvermerk gestellt. Ohne ihn waere sie zurueckzuweisen, nicht zu stellen.",
-    "verhaeltnisZurEinfrierProzedurPunkt5": "Die Einfrier-Prozedur verlangte den karlAnswer als SEPARATEN Folge-Record, 'nie durch Editieren dieses Records'. Diese Auflage schuetzt einen BEREITS EINGEFRORENEN Record vor nachtraeglicher Bearbeitung. Karl hat VOR dem Einfrieren geantwortet (ENTSCHIED 48, 2026-08-30 00:26; frozenAt dieses Records 2026-08-29T23:03:18Z = 2026-08-30 01:03 Ortszeit) — der geschuetzte Fall ist nicht eingetreten. ENTSCHIED 48 und ENTSCHIED 54 ordnen das Fuellen beim Freeze ausdruecklich an. Ein Platzhalter waere hier eingefrorene Luecke, kein Schutz."
+    "verhaeltnisZurEinfrierProzedurPunkt5": "Die Einfrier-Prozedur verlangte den karlAnswer als SEPARATEN Folge-Record, 'nie durch Editieren dieses Records'. Diese Auflage schuetzt einen BEREITS EINGEFRORENEN Record vor nachtraeglicher Bearbeitung. Karl hat VOR dem Einfrieren geantwortet (ENTSCHIED 48, 2026-08-30 00:26; frozenAt dieses Records 2026-08-29T23:20:57Z = 2026-08-30 01:20 Ortszeit) — der geschuetzte Fall ist nicht eingetreten. ENTSCHIED 48 und ENTSCHIED 54 ordnen das Fuellen beim Freeze ausdruecklich an. Ein Platzhalter waere hier eingefrorene Luecke, kein Schutz."
   },
 
   "korrekturenNachEntschied44": {
@@ -184,7 +184,15 @@
       "id": "a5-form25-abgleich",
       "beschreibung": "Abgleich der 8 echten Signal-Abgaenge (und 172 Kontroll-Abgaenge) gegen den freien Form-25-Bestand: fuer wie viele existiert eine Meldung im plausiblen Fenster?",
       "vorabGenehmigt": "orchestrator-2026-08-29.md ENTSCHIED 28.3, fuer BEIDE Ausgaenge",
-      "status": "OFFEN — BRAUCHT NEUEN REGISTER-EINTRAG",
+      "status": "EINTRAG GELANDET + NACHERNTE KOMPLETT — Lauf registriert fuer 08:30 Ortszeit",
+      "aufloesung": {
+        "registerEintrag": "a5-form25-abgleich-2026-08-30, eventHash af9fa8d99aa9b3bc57466167ce39ea5a8a2a1e41cbf75789c97ef62cfd88fbee, gelandet main-first per PR #108 (Ledger-Eintrag 20). registeredAt 2026-08-29T22:55:48.248Z, accessedAt 2026-08-30T06:30:00.000Z — Anmeldung VOR dem Zugriff, Ein-Appender-Regel gewahrt (ENTSCHIED 7).",
+        "bitAnkerGehasht": "Der bindende Selbst-Check mit Bit-Anker exakt 8 Signal- und 172 Kontroll-Abgaenge steht woertlich im Eintragstext und ist damit mitgehasht; jede Abweichung ist Sofort-Stopp mit Eskalation, kein Anpassen der Rekonstruktion an die Sollzahl.",
+        "nachernte": "KOMPLETT. Form-25-Re-Harvest ab 2016-01-01 aus dem lokalen submissions.zip, ohne Netz: Union 9.028 Accessions, Signalband 2017-2019 jetzt 3/3 gedeckt (vorher 1/3). Beleg agent-reports/frueher-finden-d2-2016-2018-2026-08-30.md. Die im Entwurf befuerchtete unbekannt starke Unterschaetzung des Treffer-Zaehlers entfaellt damit.",
+        "scopeBruchGeschlossen": "Der in der A.5-Eskalation geruegte Scope-Bruch 'neue Quelle' ist geschlossen: der Form-25-Cache wird im neuen Eintrag ausdruecklich als ZWEITE, lokale Quelle benannt, samt eigener Ausgabe-Allowlist (11 Aggregatzaehler, keine Kennungen).",
+        "verhaeltnisZuDiesemVerdikt": "Der Lauf bleibt ein beschreibender ANNEX (ENTSCHIED 38), ausdruecklich NICHT Bedingung dieses Abschlusses, explorativ und niemals konfirmatorisch. Das Verdikt INCONCLUSIVE_DATA steht unabhaengig von seinem Ausgang. Die Liste 'wasAusdruecklichNICHTGiltR11' bleibt gueltig: der Abgleich ist zum frozenAt NICHT durchgefuehrt und wird nicht als Zahl geschaetzt."
+      },
+      "nichtAusgefuehrtWeilHistorisch": "Die folgende Blocker-Analyse ist der Stand des Entwurfs und wird als HISTORIE gefuehrt, nicht geloescht: sie erklaert, WARUM der neue Register-Eintrag genau so zugeschnitten werden musste (eigene Ausgabe-Allowlist, benannte Zweitquelle, Bit-Anker). Alle vier Punkte sind durch die Aufloesung oben erledigt.",
       "nichtAusgefuehrtWeil": [
         "Ausgabe-Allowlist: E4g-v2 listet exakt 20 Aggregatfelder, E4h 14. Ein Zaehler 'Abgaenge mit Form-25-Treffer' steht in KEINER der beiden Listen.",
         "Kennungs-Verbot: beide Eintraege sagen woertlich 'Keine Firmen-Kennungen'. Der Abgleich braucht panelseitig die CIK der 8 Firmen.",
@@ -195,6 +203,7 @@
         "Neuer Register-Eintrag, main-first vor dem Zugriff (Ein-Appender-Regel, ENTSCHIED 7): Input-Scope Panel + benannter Form-25-Bestand als zweite Quelle; Bit-Anker exakt 8 Signal- und 172 Kontroll-Abgaenge; Ausgabe-Allowlist zwei bis vier neue Zaehler, keine Kennungen, keine Datumslisten; das Zeitfenster fuer 'plausibel' VORAB fixiert.",
         "Form-25-Nachernte mit Fensterbeginn 2016-01-01: das Signalband laeuft 2017-01-01/2019-12-31 bei Panelrand 2020-12-31, plausible Meldezeitpunkte liegen also etwa 2017-2021 — der geerntete Bestand beginnt aber erst 2019-01-01, rund zwei der drei Signaljahre sind strukturell unabgedeckt. Ein Treffer-Zaehler auf dem heutigen Bestand waere unbekannt stark nach unten verzerrt. Der Bulk-Bestand liegt lokal; der Re-Scan kostet Rechenzeit, kein Geld und keinen Abruf."
       ],
+      "vorbedingungenErfuellt": "BEIDE. Vorbedingung 1 (neuer Register-Eintrag main-first) durch PR #108; Vorbedingung 2 (Form-25-Nachernte ab 2016-01-01) komplett. Die Liste unten bleibt als Spezifikation stehen, gegen die der Eintrag geprueft werden kann.",
       "zeitschaetzungNachEintrag": "unter 0,5 Tage inklusive Nachernte",
       "technischeMachbarkeit": "trivial — Panel traegt sub.cik, der D2-Bestand traegt cik plus filingDate je Treffer. Der Aufwand liegt in der Anmeldung, nicht in der Rechnung."
     },
@@ -246,7 +255,8 @@
   "siegelUndLedger": {
     "endtestSiegelBeruehrt": false,
     "ledgerAppendDurchDiesenRecord": false,
-    "ledgerEintraegeUnveraendert": 18,
+    "ledgerEintraegeUnveraendert": 20,
+    "ledgerStandHinweis": "Stand zum frozenAt dieses Records: 20 Eintraege. Die beiden juengsten (19: post-mortem-explorativ-pruefung-2026-08-30, eventHash 69b2af0d83…, PR #107; 20: a5-form25-abgleich-2026-08-30, eventHash af9fa8d99a…, PR #108) sind die nachgelagerten explorativen Anmeldungen und wurden UNABHAENGIG von diesem Record angehaengt — dieser Record selbst haengt nichts an. Der Entwurf nannte 18; das war der Stand vor diesen beiden Merges und ist hier korrigiert.",
     "versiegelteDateienEditiert": false,
     "testsAbgeschwaecht": false,
     "hinweis": "Dieser Record ist eine NEUE Datei. Er editiert nichts Bestehendes. Der Friedhof-Append (R13) ist der einzige Schreibvorgang an einer bestehenden Datei und ist per Schema nur-anhaengend."
