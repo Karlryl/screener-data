@@ -88,6 +88,23 @@ const plain = (arr) => (arr || []).map(x => x && typeof x === 'object' ? x.value
 // Level-Restatement (kein positional-overlap-Guard, der flaggt FY-Versatz falsch). Minimal gegen GENUIN falsches
 // Konzept: (1) neuestes OpInc gleiches Vorzeichen; (2) neuester Umsatz ~2x-Skala (RGEN 141M vs 738M); (3) kein
 // isoliertes Einzeljahr >10x unter beiden Nachbarn (ARWR 3.5M zwischen 240M/829M = Konzept-Mix-Phantom-Drawdown).
+/**
+ * A1/K1 (Urteil T164, ENTSCHIED 15 vom 29.08.2026): looseSanity validiert die SEC-Reihe GEGEN
+ * die YAHOO-Reihe des Stores. Seit scripts/opinc-source-migrate.js kann snapshot.annual.
+ * annualOpInc bereits die SEC-Reihe SEIN — dann verglichen wir SEC gegen SEC und das Tor
+ * waere still zur Tautologie geworden (Vorzeichen stimmt immer, Skala stimmt immer).
+ * Diese eine Stelle entscheidet fuer BEIDE Builder (build-secannual.js und -smallcap.js),
+ * welche Reihe die Yahoo-Referenz ist: die bewahrte, wo sie existiert.
+ * Kein Ersatz fuer die Trennung im Workflow — der Migrationsschritt laeuft bewusst im
+ * scoring-Job und nicht im merge-Job, damit das hochgeladene Artefakt unberuehrt bleibt.
+ * Dies ist der zweite Boden, falls jemand die Builder lokal auf einem migrierten Store faehrt.
+ */
+function yahooOpIncOf(snap) {
+  const a = snap && snap.annual;
+  if (!a) return null;
+  return Array.isArray(a.annualOpIncYahoo) ? a.annualOpIncYahoo : a.annualOpInc;
+}
+
 function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   const yOp = newestPresent(yOpArr), sOp = newestPresent(sOpArr);
   if (yOp !== null && sOp !== null && Math.sign(yOp) !== Math.sign(sOp) && yOp !== 0 && sOp !== 0) return false;
@@ -194,7 +211,7 @@ async function run() {
     // echter Abdeckung. Kein Wert ist ehrlicher als ein leeres Geruest, das wie Abdeckung aussieht.
     if (!sec.taxonomie) { ohneReihe++; continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
-    if (!looseSanity(snap.annual && snap.annual.annualOpInc, sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
+    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
     // taxonomie = HERKUNFT der Reihen, gleiche Ebene wie cik/nfy. Ohne sie waeren us-gaap-
     // und ifrs-full-Werte im Store nicht auseinanderzuhalten — und dieselbe Firma kann sich
     // unter zwei Standards um Prozente unterscheiden.
@@ -220,4 +237,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, plain, loadUniverse, ladeMergeBasis };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, yahooOpIncOf, plain, loadUniverse, ladeMergeBasis };

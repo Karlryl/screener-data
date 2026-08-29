@@ -1795,6 +1795,25 @@ jobs:
           restore-keys: |
             snapshots-smallcap-store-
 
+      # A1 — Gerichts-Abhilfe zu K1 (Urteil _COURT-T164-OPINC-2026-08-29.md, ratifiziert als
+      # ENTSCHIED 15 am 29.08.2026): wo eine SEC-GAAP-OpInc-Serie existiert und die
+      # Jahres-Ausrichtung am Umsatz belegt ist, speist SIE das Scoring — nicht die still
+      # bereinigte Yahoo-Reihe. Gleichzeitig stirbt das Etikett 'native' ('yahoo-adjusted' /
+      # 'sec-gaap' / 'computed-*' sagen ab jetzt die Wahrheit).
+      #
+      # WARUM GENAU HIER (scoring-Job, nach beiden Store-Restores, vor run-screener.js):
+      #  - beide Stores liegen an dieser Stelle vor (snapshots aus dem Artefakt,
+      #    snapshots-smallcap aus dem Cache-Restore darueber) — EINE Station statt zwei;
+      #  - der Schritt beruehrt WEDER die per-Shard-Snapshot-Caches NOCH das im merge-Job
+      #    hochgeladene snapshots-Artefakt. Genau das ist der Punkt: monthly-sec-xbrl.yml
+      #    zieht dieses Artefakt und validiert dort die SEC-Reihe GEGEN die Yahoo-Reihe
+      #    (build-secannual.js looseSanity). Liefe die Praeferenz im merge-Job, vergliche
+      #    dieses Tor kuenftig SEC gegen SEC und waere still zur Tautologie geworden.
+      # Der Lauf ist idempotent und eine reine Funktion aus (Yahoo-Reihe, SEC-Schicht) —
+      # er kettet nicht und stellt bei wegfallender SEC-Serie die Yahoo-Reihe wieder her.
+      - name: A1/K1 SEC-GAAP-OpInc bevorzugen + ehrliche opIncSource-Etiketten
+        run: node scripts/opinc-source-migrate.js --json reports/opinc-source-diff.json
+
       - name: Run Hypergrowth Screener
         run: |
           node src/scoring/run-screener.js

@@ -1440,7 +1440,10 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // SECTOR-GATED: never fires for non-financial sectors. Source recorded in
   // meta.opIncSource so methods can flag derived data. The FTS-merge in
   // pullAll re-applies this fallback if FTS also produced empty (see line ~990).
-  let opIncSource = annualOpInc.length > 0 ? 'native' : null;
+  // A1/K1.2 (Urteil T164, ENTSCHIED 15 vom 29.08.2026): 'native' ist tot. Yahoo bereinigt
+  // die Reihe still und unversioniert — 'yahoo-adjusted' sagt das, 'native' behauptete eine
+  // Roh-Herkunft, die es nie gab. Vollstaendige Semantik aller Werte: scripts/opinc-source-migrate.js.
+  let opIncSource = annualOpInc.length > 0 ? 'yahoo-adjusted' : null;
   const _sectorRaw = _y(ap, 'sector') || null;
   const _opMargRaw = _y(fd, 'operatingMargins');
   // Tag 206f (Bug-Hunt Agent D HIGH F3): Yahoo occasionally returns 'Financials'
@@ -1715,10 +1718,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       filingDate: null,  // Yahoo liefert kein Filing-Datum für TTM
       firstTradeDate: null,  // wird unten aus yf.quote() gesetzt (Tag 106)
       ipoYear: null,
-      // Tag 203: provenance for annualOpInc. 'native' = Yahoo isHist/FTS,
-      // 'computed-bank' / 'computed-insurance' = per-year line-item derivation,
-      // 'computed-margin' = annualRev × operatingMargin TTM (universal fallback
-      // for Financial Services when line-items absent). null = no OpInc at all.
+      // Tag 203 / A1-K1.2 (Urteil T164 OpInc, ENTSCHIED 15, 29.08.2026): provenance for
+      // annualOpInc. Die Werte und ihre Bedeutung:
+      //   'yahoo-adjusted'     = Yahoo isHist/FTS. Yahoo bereinigt still und unversioniert
+      //                          (Impairments, Restrukturierung) — ehrlich etikettierter
+      //                          Proxy. Hiess bis 29.08.2026 'native'; das Etikett behauptete
+      //                          eine Roh-Herkunft, die es nicht gibt, und ist per Urteil tot.
+      //   'sec-gaap'           = GAAP-as-filed aus dem SEC-XBRL-Filing. Wird NICHT hier
+      //                          gesetzt, sondern von scripts/opinc-source-migrate.js, wenn
+      //                          eine SEC-Serie existiert und die Jahres-Ausrichtung am
+      //                          Umsatz belegt ist. Die ersetzte Yahoo-Reihe bleibt dabei
+      //                          unter annual.annualOpIncYahoo erhalten.
+      //   'computed-bank' / 'computed-insurance' = per-year line-item derivation,
+      //   'computed-margin'    = annualRev × operatingMargin TTM (universal fallback
+      //                          for Financial Services when line-items absent).
+      //   null                 = no OpInc at all.
       opIncSource,
       // Tag 206b: fcfMarginTTM was suppressed because |raw value| > 200%.
       // Downstream methods (rule-of-40 etc.) will use the annual-FCF fallback
@@ -3436,12 +3450,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // einen fremden Wert heften. Details in _applyAnnualIncomeWinner.
         _applyAnnualIncomeWinner(canonical.annual, _winner, _incomeWinnerIsQS);
         // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
-        // native Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
+        // Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
         // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
         // fallback below re-derives a margin-based OpInc when the winner left it empty.
+        // A1/K1.2 (Urteil T164, ENTSCHIED 15): 'native' -> 'yahoo-adjusted', siehe Mapper oben.
         if (_winner === _ftsIncome &&
             (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
-          if (canonical.meta) canonical.meta.opIncSource = 'native';
+          if (canonical.meta) canonical.meta.opIncSource = 'yahoo-adjusted';
         }
       }
       // Bug 21 (audit 2026-07-03): when QS won the income bundle with a newer FY

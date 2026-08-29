@@ -172,7 +172,13 @@ function ladeSchwellen() {
 // --- Selbsttest (beide Richtungen) -------------------------------------------
 function selbsttest(universum) {
   const markiert = universum.filter(istMarkiert);
-  const nativ = universum.filter((s) => s && s.meta && s.meta.opIncSource === 'native'
+  // A1/K1.2 (Urteil T164, ENTSCHIED 15): das Etikett 'native' heisst seit 29.08.2026
+  // 'yahoo-adjusted'. Beide werden akzeptiert — Alt-Snapshots aus den Shard-Caches tragen
+  // das alte Etikett, bis ein Vollabruf oder scripts/opinc-source-migrate.js sie anfasst.
+  // Waere hier nur der neue Wert gepruegt worden, faende der Selbsttest auf einem Alt-Store
+  // null Vergleichsnamen und meldete "NICHT AUSFUEHRBAR" statt zu messen.
+  const nativ = universum.filter((s) => s && s.meta
+    && (s.meta.opIncSource === 'yahoo-adjusted' || s.meta.opIncSource === 'native')
     && s.annual && Array.isArray(s.annual.annualOpInc) && s.annual.annualOpInc.length);
   const zeilen = [];
   let ok = true;
