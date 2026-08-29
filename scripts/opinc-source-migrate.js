@@ -233,7 +233,7 @@ function run(opts = {}) {
   const { data: sec, geladen } = loadSecLayer(root, opts.secFiles || SECANNUAL_FILES);
   const zusammenfassung = {
     secNamen: Object.keys(sec).length, secDateien: geladen,
-    dateien: 0, geschrieben: 0,
+    dateien: 0, geschrieben: 0, uebersprungen: 0,
     etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0 },
     gruende: {}, werteGeaendert: 0,
   };
@@ -248,8 +248,11 @@ function run(opts = {}) {
       if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       const p = path.join(abs, f);
       let snap;
-      try { snap = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { continue; }
-      if (!snap || !snap.meta || !snap.meta.ticker) continue;
+      // Ein unlesbarer Snapshot wird uebersprungen, aber GEZAEHLT: sonst ist die Aussage
+      // "Restbestand native = 0" aus dieser Ausgabe nicht belegbar — der Name kann
+      // genauso gut nur nie geprueft worden sein.
+      try { snap = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { zusammenfassung.uebersprungen++; continue; }
+      if (!snap || !snap.meta || !snap.meta.ticker) { zusammenfassung.uebersprungen++; continue; }
       zusammenfassung.dateien++;
       const prev = snap.meta.opIncSource;
       const r = migrateSnapshot(snap, sec[snap.meta.ticker]);
@@ -294,6 +297,10 @@ function main(argv) {
     + `unveraendert ${z.etiketten.unveraendert}`);
   console.log(`[opinc-source-migrate] Gruende: ${Object.entries(z.gruende).map(([k, v]) => `${k}=${v}`).join(' · ')}`);
   console.log(`[opinc-source-migrate] Reihen mit geaenderten Werten: ${z.werteGeaendert} · geschrieben: ${z.geschrieben}`);
+  if (z.uebersprungen) {
+    console.log(`::warning::opinc-source-migrate: ${z.uebersprungen} Snapshot(s) unlesbar uebersprungen — `
+      + `die ${z.dateien} geprueften Dateien decken den Store NICHT vollstaendig ab.`);
+  }
   if (jsonOut) {
     const p = path.isAbsolute(jsonOut) ? jsonOut : path.join(ROOT, jsonOut);
     fs.mkdirSync(path.dirname(p), { recursive: true });

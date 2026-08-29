@@ -243,6 +243,26 @@ t('loadSecLayer: fehlende Schicht = still, kaputte Schicht = Abbruch', () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// M1 (Nacht-Sweep 29.08.): ein unlesbarer Snapshot verschwand spurlos aus der Bilanz.
+// Beide Richtungen: sauberer Store -> Zaehler 0, kaputte Datei -> Zaehler > 0 UND
+// `dateien` zaehlt sie nicht mit (sonst waere die Abdeckungsaussage weiterhin falsch).
+t('run() zaehlt unlesbare Snapshots, statt sie stumm zu ueberspringen', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-skip-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(store, { recursive: true });
+  fs.writeFileSync(path.join(store, 'OK.json'), JSON.stringify(snap('OK', [1, 2, 3, 4], [10, 20, 30, 40])));
+
+  const sauber = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.equal(sauber.uebersprungen, 0, 'sauberer Store darf nichts als uebersprungen melden');
+  assert.equal(sauber.dateien, 1);
+
+  fs.writeFileSync(path.join(store, 'KAPUTT.json'), '{"meta":{"ticker":"KAPUTT"');
+  const mit = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.equal(mit.uebersprungen, 1, 'kaputte Datei muss im Zaehler landen');
+  assert.equal(mit.dateien, 1, 'und darf NICHT als geprueft gelten');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });
