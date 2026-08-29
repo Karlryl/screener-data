@@ -252,6 +252,14 @@ function beurteileWaehrungsbeleg(meta) {
 //               Enden null (betrifft ~6,6 % der Zeilen; A10-Nachzuegler).
 // null heisst "nicht gemessen" (kein Snapshot / kein Feld), NICHT "null Punkte" — eine
 // erfundene 0 waere genau die Sorte Behauptung, die dieser Befund abschafft.
+//
+// WAS qPunkte NICHT MISST (gemessen am Vintage 2026-08-29, 8.946 gescorte Zeilen): es
+// zaehlt QUARTALS-Umsatzpunkte, sonst nichts. 592 Zeilen stehen bei qPunkte 0 und haben
+// trotzdem einen Score — mehrere Achsen (revGrowthLevel, revAcceleration) haben einen
+// JAHRES-Fallback, und HK/UK/SG-Halbjahres- und Jahresmelder scoren genau darueber.
+// qPunkte 0 heisst deshalb "kein Quartalsbeleg", NICHT "keine Daten". Wer das Feld als
+// Datenluecken-Alarm liest, faerbt eine ganze legitime Melde-Klasse falsch-rot — und ein
+// Beleg-Feld, das selbst zur Fehlbehauptung wird, waere der Befund von vorne.
 function belegPunkte(timeseries) {
   if (!timeseries || typeof timeseries !== 'object') return { qPunkte: null, qSpanTage: null };
   // revenueQ ist [{value}] (pull-yahoo-Serialisierung), historisch auch mal blanke Zahlen.
