@@ -645,8 +645,18 @@ function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
   };
 }
 
-/** Schreibt die beschlossenen Umbenennungen — atomar wie jeder andere Schreiber hier. */
-function milanSchreiben(ziel, umbenennungen) {
+/**
+ * Schreibt die beschlossenen Umbenennungen — atomar wie jeder andere Schreiber hier.
+ *
+ * `kennung`/`stufe` sind Parameter, weil T179 (unten) denselben Schreiber braucht: ein
+ * zweiter, wortgleicher Schreiber waere eine Kopie, die beim naechsten Fix genau einmal
+ * mitgezogen wird und einmal nicht. Die Voreinstellung ist exakt das bisherige Verhalten.
+ * `stufe` ist verschieden, weil die Fehlerrichtung verschieden ist: eine halb ausgefuehrte
+ * MILAN-Vereinheitlichung ist ein Board auf halbem Stand (::error::, run() bricht ab), eine
+ * ausgefallene NENNWERT-Normalisierung kostet nur einen doppelten Platz (::warning::, wie in
+ * wendeWurzelZwillingeAn).
+ */
+function milanSchreiben(ziel, umbenennungen, kennung = 'U3-Milan', stufe = 'error') {
   const geschrieben = [];
   let unschreibbar = 0;
   for (const [datei, neuerName] of umbenennungen) {
@@ -659,10 +669,127 @@ function milanSchreiben(ziel, umbenennungen) {
       geschrieben.push(datei.slice(0, -'.json'.length));
     } catch (e) {
       unschreibbar++;
-      console.error(`::error::U3-Milan — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
+      console.error(`::${stufe}::${kennung} — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
     }
   }
   return { geschrieben, unschreibbar };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * T179 — NENNWERT-NORMALISIERUNG der XETRA-Kurzform
+ * Befund: `befund-t178-t179-evidenz-2026-08-30.md` §B1-B6 (Empfehlung "N1 in der
+ * 4-Kuerzel-Fassung freigeben", 0 Fremdpaare bei 100 % Pruefquote), freigegeben als
+ * ENTSCHIED 35 Punkt 2, dispatcht mit ENTSCHIED 39.
+ *
+ * DAS PROBLEM: XETRA haengt an den Emittentennamen die Nennwert-Kurzform an —
+ * "ANALOG DEVICES INC.DL-166", "GENMAB AS            DK 1", "CELLNEX TELECOM SA EO-,25".
+ * `issuerKeyLoose` wirft nur Nicht-Buchstaben weg, das Anhaengsel bleibt also im Schluessel
+ * stehen (`analogdevicesincdl166` gegen `analogdevicesinc`) und dieselbe Firma steht zweimal
+ * im Board.
+ *
+ * BAUFORM WIE PR #92/#104: diese Vorstufe MERGED NICHTS. Sie nimmt das Anhaengsel vom Namen
+ * und laesst danach den versiegelten Dedup entscheiden (`issuerKeyLoose` +
+ * `issuerDedupComparator` + `splitFalseIssuerMerges`). Kein Bein wird geloescht, keine Zeile
+ * ausgewaehlt, `src/scoring/**` bleibt unberuehrt.
+ *
+ * ⚠ N1 IST NICHT EINSEITIG SICHER (Kipp-Bedingung, Befund §B5). U1 kann eine Verschmelzung
+ * nur VERHINDERN; das Abschneiden hier macht Schluessel GLEICHER und kann sie deshalb
+ * ERZWINGEN. Der einzige tragende Beleg ist die Fremdpaar-Messung: alle 14 neuen Paare
+ * wurden EINZELN fundamental gegengeprobt (positionsweiser Vergleich der ersten bis zu vier
+ * `annual.annualRev`-Werte, "fremd" ab 15 % Abweichung) — 0 Fremdpaare, 0 nicht pruefbar,
+ * 100 % Pruefquote statt einer Stichprobe. Am Live-Bestand 2026-08-30 unabhaengig
+ * reproduziert: 8 Namen, 14 Paare, 0 Fremdpaare.
+ *
+ * NUR DIE VIER BEOBACHTETEN KUERZEL (Befund §B1 Entscheid 2). Die Gegenprobe mit sieben
+ * weiteren plausiblen Kuerzeln (SK NK LS YE HD CD RC) liefert EXAKT dasselbe Ergebnis —
+ * die Erweiterung kauft nichts und vergroessert nur die Angriffsflaeche fuer Falschtreffer.
+ *
+ * ANKER `(?:^|[\s.\-])` STATT `\s+` (Befund §B1 Entscheid 1): XETRA klebt das Kuerzel an das
+ * Vorwort, "ANALOG DEVICES INC.DL-166" hat KEIN Leerzeichen vor `DL`. Ein `\s+`-Anker
+ * verfehlt genau den Top-100-Fall.
+ *
+ * WAS N1 AUSDRUECKLICH NICHT LOEST (Befund §B3, Auflage b der Entscheidungsvorlage — damit
+ * niemand spaeter ein fehlendes Ergebnis fuer einen Bug haelt): `D2MN.DE`/`DUK` scheitert an
+ * der Wort-ABKUERZUNG ("Energy" -> "EN."), `3SM.DE`/`AOS` an der WORTSTELLUNG
+ * ("SMITH -A.O.-"). Zwei eigene, ungemessene Klassen; N1 tut fuer sie nichts. Die
+ * Ticket-Angabe "5 von 5" ist als Namensform richtig, als Wirkung aber zu optimistisch:
+ * N1 schliesst 3 der 5 benannten Gruppen plus 2 im Ticket nicht genannte.
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+const NENNWERT_KUERZEL = /(?:^|[\s.\-])(DL|EO|DK|SF)\s*-?\s*[0-9]*[.,]?[0-9]+\s*$/i;
+
+/**
+ * Nicht-Regressions-Anker (Befund §B5 Waechter 3): so viele Namen aendern sich am Live-Bestand
+ * unter N1, gemessen am Vintage 2026-08-30 ueber alle 15.040 Snapshots. JEDES Anwachsen ist ein
+ * Neubefund, kein stiller Normalzustand.
+ *
+ * BEWUSST ::warning:: STATT HARTEM ABBRUCH — anders als der Milan-Riegel A7, und das ist kein
+ * Versehen: A7 ist eine Auflage des Milan-Urteils (2:1 gegen J2s Sondervotum), N1 hat keine
+ * solche Anordnung. Dazu kommt ein messtechnischer Grund: dieser Schritt laeuft NACH U3-Milan
+ * (s. run()), und Milan hat `472.DE` bis dahin schon auf den sauberen Cellnex-Namen gesetzt —
+ * die Laufzeit sieht also 7, waehrend die Vor-Milan-Messung 8 sieht. Beide Zahlen sind richtig,
+ * eine harte Gleichheit waere hier eine Falle. Die scharfe Wache sitzt deshalb auf der reinen
+ * Funktion in tests/t179-nennwert.test.js.
+ */
+const NENNWERT_ANKER = 8;
+
+/**
+ * Schneidet das Nennwert-Anhaengsel am NAMENSENDE ab. Reine Funktion.
+ *
+ * DIE `test`-VORPRUEFUNG IST NICHT ZIERRAT. Ohne sie wuerde `.trim()` auch jeden Namen
+ * umschreiben, der bloss ein Leerzeichen am Ende traegt — am Live-Bestand gemessen faellt
+ * `688790.SS` ("BEIJING ONMICRO ELECTRONICS CO ") genau so hinein: 9 statt 8 geaenderte Namen,
+ * ein Schreibvorgang ohne jede Wirkung auf den Schluessel (`issuerKeyLoose` wirft Leerzeichen
+ * ohnehin weg) und ein Anker, der bei jeder Feed-Schlamperei wandert. Nur echte Treffer
+ * werden angefasst.
+ *
+ * Ein Name, der NUR aus dem Anhaengsel besteht, bleibt unveraendert: ein leerer Name waere ein
+ * `issuerKeyLoose === null` und damit schlechter als der Feed-Artefakt.
+ */
+function nennwertStrip(name) {
+  if (typeof name !== 'string' || !NENNWERT_KUERZEL.test(name)) return name;
+  const kurz = name.replace(NENNWERT_KUERZEL, '').trim();
+  return kurz || name;
+}
+
+/** Reiner Kern (kein I/O): Staende -> Map<Datei, neuer Name>. Nur echte Treffer stehen drin. */
+function nennwertUmbenennungen(staende) {
+  const umbenennungen = new Map();
+  for (const s of staende || []) {
+    if (!s) continue;
+    const neu = nennwertStrip(s.name);
+    if (typeof neu === 'string' && neu !== s.name) umbenennungen.set(s.datei, neu);
+  }
+  return umbenennungen;
+}
+
+/**
+ * I/O-Mantel. Liest ALLE Snapshots — anders als die .BO/.NS- und die Milan-Strecke, die sich
+ * ueber den Ticker vorfiltern koennen. Das geht hier nicht: die Regel haengt am NAMEN, und der
+ * steht in der Datei. Ein Vorfilter auf `.DE` waere eine ungemessene Verengung der Regel
+ * (heute liegen alle acht Treffer auf XETRA, aber das ist ein Messergebnis, keine Eigenschaft).
+ * Gemessener Preis: 15.046 Dateien parsen kostet ~1 s — neben dem Kopieren derselben Dateien
+ * eine Zeile weiter oben faellt das nicht auf.
+ *
+ * Eine unlesbare Datei ist KEIN Abbruch (gleiche Bauform und gleicher Grund wie in
+ * wendeWurzelZwillingeAn): dieser Schritt ist im Tageslauf vorgeschaltet, ein einzelner
+ * kaputter Snapshot darf die Pipeline nicht toeten — er faellt aber laut auf.
+ */
+function wendeNennwertAn(ziel, dateien) {
+  const staende = [];
+  let unlesbar = 0;
+  for (const f of dateien) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
+      staende.push({ datei: f, name: j && j.meta && j.meta.name });
+    } catch (e) {
+      unlesbar++;
+      console.error(`::warning::T179-Nennwert — ${f} nicht lesbar (${e.message}); dieser Stand nimmt nicht teil.`);
+    }
+  }
+  const umbenennungen = nennwertUmbenennungen(staende);
+  const { geschrieben, unschreibbar } = milanSchreiben(ziel, umbenennungen, 'T179-Nennwert', 'warning');
+  return { kandidaten: staende.length, geplant: umbenennungen.size, geheilt: geschrieben.sort(), unlesbar, unschreibbar };
 }
 
 function ladeNavRegister(registerPfad) {
@@ -983,6 +1110,27 @@ function run(argv) {
   }
   console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
 
+  // T179-Nennwert: NACH U3-Milan, und die Reihenfolge ist SICHERHEIT, nicht Geschmack.
+  //
+  // `472.DE` ("CELLNEX TELECOM SA EO-,25") ist ein Nennwert-Treffer UND zugleich das
+  // Partner-Bein der Milan-Klasse `1CLNX.MI`. Liefe N1 VOR Milan, waeren beide Schluessel
+  // schon gleich (`cellnextelecomsa`), `milanTor` gaebe 'schon-vereint' zurueck, der
+  // Mengen-Riegel A7 zaehlte 17/16 statt 18/17 — und der GANZE Tageslauf braeche ab.
+  // Am Live-Bestand 2026-08-30 nachgemessen: genau eine der 17 Milan-Klassen kippt so
+  // (`1CLNX.MI`; `1GEBN.MI`/`GBRA.DE` wird zwar auch beruehrt, behaelt aber zwei Schluessel).
+  //
+  // Nach Milan ist der Fall harmlos: Milan hat `472.DE` da bereits den sauberen Namen des
+  // Mailaender Beins aufgepraegt, das Anhaengsel ist weg, und N1 findet dort nichts mehr zu
+  // tun. Der ENDZUSTAND ist in beiden Reihenfolgen identisch — nur diese haelt den vom
+  // Milan-Urteil gesetzten Stolperdraht am Leben. Wer N1 vorzieht, dreht damit A7 ab.
+  const nennwert = wendeNennwertAn(ziel, uebernehmen);
+  console.log(`[t179-nennwert] ${nennwert.geheilt.length} von ${nennwert.kandidaten} Namen um das XETRA-Nennwert-Anhaengsel gekuerzt${nennwert.geheilt.length ? ` (${nennwert.geheilt.join(', ')})` : ''}; nicht lesbar: ${nennwert.unlesbar}, nicht schreibbar: ${nennwert.unschreibbar}. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
+  if (nennwert.geplant > NENNWERT_ANKER) {
+    // Befund §B5 Waechter 3: das Anwachsen ist der gefaehrliche Fall — N1 kann Verschmelzungen
+    // ERZWINGEN (Kipp-Bedingung), und jeder neue Treffer ist ein ungeprueftes Paar.
+    console.error(`::warning::T179-Nennwert — ${nennwert.geplant} Treffer, Anker ist ${NENNWERT_ANKER} (Live-Bestand 2026-08-30). Jeder zusaetzliche Treffer ist ein Neubefund und braucht die Fremdpaar-Gegenprobe aus Befund §B4, bevor er als Normalzustand gilt.`);
+  }
+
   const navTickerListe = navAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
   console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
@@ -997,5 +1145,7 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
   MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
-  MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN };
+  MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
+  // T179-Nennwert (ENTSCHIED 35.2) — fuer TDD. Waechter: tests/t179-nennwert.test.js
+  nennwertStrip, nennwertUmbenennungen, wendeNennwertAn, NENNWERT_KUERZEL, NENNWERT_ANKER };
 if (require.main === module) process.exit(run(process.argv));
