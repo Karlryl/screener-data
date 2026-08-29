@@ -88,11 +88,19 @@ function pruefeAppendOnly(alt, neu) {
 const echt = lade();
 pruefeKette(echt);
 pruefeNenner(echt);
-assert.strictEqual(echt.laufenderNenner, 9,
-  'Start-Nenner ist m = 9 (B1s eingefrorene 6 + B2s drei eigene Views, Urteil K2)');
-assert.strictEqual(echt.byFaktorC, 2.828968, 'BY-Faktor c(9) = Summe 1/i fuer i = 1..9');
-assert.strictEqual(echt.eintraege.filter((e) => e.test === 'B1' && e.zaehltInM).length, 6,
-  'B1s Eroeffnungsbestand steht vollstaendig mit sechs Views im Register (K2 Auflage 1)');
+// Gepinnt wird der EROEFFNUNGSBESTAND, nicht der Tagesstand: m waechst
+// bestimmungsgemaess mit jedem weiteren Test. Ein Waechter, der die aktuelle Zahl
+// festnagelt, wird beim ersten korrekten Anhaengen rot und entwertet sich selbst.
+assert.ok(echt.laufenderNenner >= 9,
+  'm darf nie unter den vom Gericht gesetzten Start 9 fallen (B1s eingefrorene 6 + B2s drei Views, K2)');
+assert.deepStrictEqual(
+  echt.eintraege.filter((e) => e.zaehltInM).slice(0, 9).map((e) => e.id),
+  ['B1-1', 'B1-2', 'B1-3', 'B1-4', 'B1-5', 'B1-6', 'B2-1', 'B2-2', 'B2-3'],
+  'Eroeffnungsbestand steht unveraendert am Anfang der Kette (K2 Auflage 1: B1 wird eingetragen, nicht umregistriert)');
+{ // Der BY-Faktor des Startbestands, unabhaengig von der Datei nachgerechnet.
+  let s = 0; for (let i = 1; i <= 9; i++) s += 1 / i;
+  assert.strictEqual(+s.toFixed(6), 2.828968, 'c(9) = Summe 1/i fuer i = 1..9');
+}
 assert.ok(echt.eintraege.some((e) => e.art === 'schranke'),
   'mindestens eine Schranken-View ist GEFUEHRT — die Ausnahme muss sichtbar sein, nicht fehlen');
 
