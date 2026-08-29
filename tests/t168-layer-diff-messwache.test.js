@@ -44,6 +44,17 @@ function ersterCik() {
   throw new Error('Vorbedingung kaputt: die secannual-Schicht fuehrt keinen einzigen CIK');
 }
 
+test('M12: leere Cache-Menge reisst den Lauf, statt eine 0 zu berichten', () => {
+  const leer = fs.mkdtempSync(path.join(os.tmpdir(), 't168-leer-'));
+  // Richtung A: existierendes, aber leeres Verzeichnis.
+  assert.throws(() => mitCache(leer, run), /leere Cache-Menge/,
+    'leeres Cache-Verzeichnis muss reissen, nicht "0 Bewegungen" melden');
+  // Richtung B: der eigentliche Befund — ein Pfad, den es gar nicht gibt (Tippfehler).
+  assert.throws(() => mitCache(path.join(leer, 'tippfehler'), run), /leere Cache-Menge/,
+    'Muellpfad muss reissen — genau der M12-Repro');
+  fs.rmSync(leer, { recursive: true, force: true });
+});
+
 test('M11: truncierter Cache landet in `kaputt`, nicht in `ohneCache`', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't168-kaputt-'));
   const cik = ersterCik();

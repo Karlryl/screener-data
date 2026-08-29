@@ -76,6 +76,15 @@ function run() {
     }
   }
 
+  // Ein Tippfehler im --cache-Pfad lieferte bisher "Namen mit veraenderter Umsatzreihe: 0"
+  // und EXITCODE 0 — ein Bericht, der nicht luegt, sondern leer ist, und dabei aussieht
+  // wie ein Negativbefund. Eine leere Messmenge ist kein Ergebnis.
+  if (!vorhanden.size) {
+    console.error(`::error::t168-layer-diff: kein einziger companyfacts-Cache unter `
+      + `${cacheDirs.join(';')} gefunden. Eine leere Messmenge ist KEIN Negativbefund.`);
+    throw new Error(`t168-layer-diff: leere Cache-Menge (${cacheDirs.join(';')})`);
+  }
+
   const zeilen = [];
   const geprueftNamen = new Set();
   const stat = { namen: 0, geprueft: 0, ohneCache: 0, kaputt: 0, bewegt: 0, zellen: 0 };
