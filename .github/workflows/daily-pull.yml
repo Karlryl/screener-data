@@ -1702,30 +1702,33 @@ jobs:
       # damit misst der Anker taeglich echt, ohne pre-pull/PR-Check falsch-rot zu machen.
       # Gemessen am Universum vom 08.08. (4769 Snapshots): CRDO 1,1 % · ALAB 11,0 % ·
       # PLTR 0,0 % · BE 4,6 % — alle innerhalb ihrer Schwellen, 9 ok / 0 fail.
+      # T147 (29.08.2026): die Schleife stand frueher HIER als Shell-Grep auf das Wort
+      # 'pre-pull-Gate'. Das war eine SCHWARZE Liste — sie kennt genau eine Schreibweise, und
+      # ein umformulierter Skip lief still als PASS durch ("0 ok, 0 fail" gilt sonst als
+      # bestanden). scripts/live-universum-gate.js dreht die Richtung um und verlangt den
+      # POSITIVEN Beleg, dass gemessen wurde; das alte Sentinel laeuft dort als Zusatz weiter.
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
+        run: node scripts/live-universum-gate.js
+
+      # Die zweite Haelfte von T147: das Gate schreibt ein maschinenlesbares Ergebnis mit
+      # explizitem status-Feld — und FEHLT die Datei, ist der Lauf rot. Ein Gate, dessen
+      # Ergebnis nur im Protokolltext steht, ist genauso pruefbar wie der Grep, den es
+      # ersetzt: naemlich gar nicht. if:always(), damit ein rotes Gate oben nicht diese
+      # Pruefung ueberspringt und die Abwesenheit der Datei dadurch ungeprueft bliebe.
+      - name: Live-Universum-Gate — Ergebnisdatei belegen
+        if: always()
         run: |
-          fail=0
-          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js tests/scoring/anchors.rank.test.js; do
-            echo "--- $t ---"
-            set +e
-            out=$(node "$t" 2>&1)
-            rc=$?
-            set -e
-            echo "$out"
-            if [ "$rc" -ne 0 ]; then
-              echo "::error::Live-Universum-Test failed: $t (exit $rc)"
-              fail=1
-            fi
-            if echo "$out" | grep -q 'pre-pull-Gate'; then
-              echo "::error::$t skipped its live-universe anchor(s) in the scoring job — real snapshots were expected here. Treating as failure."
-              fail=1
-            fi
-          done
-          if [ "$fail" -ne 0 ]; then
-            echo "::error::Live-Universum-Gate failed — a ranking/routing/dedup/board regression may be present. See above."
+          f=outputs/live-universum-gate.json
+          if [ ! -f "$f" ]; then
+            echo "::error::$f fehlt — das Live-Universum-Gate hat kein maschinenlesbares Ergebnis hinterlassen (T147). Ohne Beleg gilt der Lauf als ungeprueft."
             exit 1
           fi
-          echo "Live-Universum-Gate OK (real snapshots, no skip)."
+          status=$(node -p "require('./$f').status")
+          echo "Live-Universum-Gate Ergebnisdatei: status=$status"
+          if [ "$status" != "ok" ]; then
+            echo "::error::Live-Universum-Gate meldet status=$status in $f."
+            exit 1
+          fi
 
       # F4/F6: die im merge-Job frisch erzeugten Handoff-Dateien holen, BEVOR die
       # Reader laufen — external-data/ath-state.json (write-findash-export.js:78, F4)
