@@ -77,7 +77,7 @@ Zusaetzlich zur Huelle (§2):
 | `rankGrund` | `"zuWenigBelegteAchsen"` \| `"coverageUnbekannt"` \| null | **OPTIONAL (additiv)** | ja, beide Richtungen (`rank`=null ⇔ Grund gesetzt) | **Task Belegbarkeits-Gate (18.08.2026)** — warum die Zeile keinen Rang traegt. `zuWenigBelegteAchsen` = weniger als 4 von 7/8 Achsen belegt; `coverageUnbekannt` = `coverageAxes` fehlt oder ist unlesbar (ohne Beleg kein Rang — bewusst nicht durchgewunken). `null` = Rang vergeben. Abwesenheit des Feldes wird wie `null` gelesen. Score-inert: das Gate aendert keinen Score und keine Sortierung, nur die Rangnummer. |
 | `ticker` | string (nichtleer) | Pflicht | ja | z.B. `"NVDA"`. |
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Bereinigter Emittentenname aus `snapshot.meta.name`; Rand-/Mehrfach-Whitespace wird normalisiert. Fehlend, leer oder nicht-string wird `null`. Alte v1-Daten ohne Feld bleiben consumer-kompatibel. Reine Anzeige, kein Score-/Rang-Einfluss. |
-| `score` | number (round1, finite) | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. |
+| `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | Anzeige-gerundet, z.B. `88.2`. Sortier-Determinismus lag intern an `_raw` (nicht im Output) — daher ist `rank` die verbindliche Reihenfolge, nicht `score`-Vergleich. **Seit 19.08.2026 in DIESEM Feed bei 100,0 gedeckelt** — die Engine kann bis 105 liefern; Einzelheiten und der Grund fuer die zwei Skalen: §3a. |
 | `track` | `"profitable"` \| `"unprofitable"` (Enum) | Pflicht | ja (Enum) | |
 | `lamps` | string[] | Pflicht | ja (Array) | z.B. `["peakMargin","cyclePeak"]`, kann `[]`. |
 | `overview` | Objekt \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz; wenn Objekt: alle Sub-Felder) | VERSCHACHTELT (im Gegensatz zu overview.json). |
@@ -112,6 +112,28 @@ Zusaetzlich zur Huelle (§2):
 
 ---
 
+## 3a. Skala des `score`-Feldes: hier gedeckelt, in `board-history/` ungedeckelt
+
+**Die eine Zeile, die zaehlt: derselbe Name kann heute zwei verschiedene Scores tragen — 100,0 in diesem Feed und bis zu 101,0 in `board-history/`. Das ist gewollt und hier dokumentiert, damit keine Auswertung die zwei Quellen stillschweigend mischt.**
+
+**Wo der Deckel sitzt:** `scripts/write-findash-export.js`, Konstante `SCORE_MAX = 100` + Funktion `gedeckelt()` — zum Zeitpunkt des Befunds Zeilen **411–414**, heute (nach dem Belegpunkte-Einbau vom 29.08.) Zeilen 461–464; verlaesslicher Anker ist der Funktionsname, nicht die Zeilennummer. Angewandt in `mapBoardRow` und `mapOverviewRow`, also auf `<branche>.json`, `overview.json`, `full/` und die additiven Feeds, die dieselben Mapper benutzen.
+
+**Seit wann:** 19.08.2026.
+
+**Warum die Engine ueber 100 kommt:** der Wachstums-Bonus in `src/scoring/score.js` (`GROWTH_BOOST_K = 0.05`) hebt einen Basis-Score strukturell um bis zu Faktor 1,05 — 96,2 × 1,05 = 101,0. Der Bonus ist gerichtlich bestaetigt; der Skalenbruch ist ein AUSGABE-Problem.
+
+**Warum der Deckel hier steht und nicht in der Engine:** `Math.min(100, …)` VOR der Sortierung machte aus 101,0 und 100,5 einen exakten Gleichstand — dann entschiede der Ticker-Tie-Break ueber Platz 1 und 2. Der Deckel wuerde genau das verschieben, was er schuetzen soll. Hier ist der Rang bereits vergeben und positional (`rank: i + 1`), der Deckel kann also per Konstruktion keinen Rang aendern. `Infinity` wird bewusst nicht gedeckelt.
+
+**Warum `board-history/` ungedeckelt bleibt — Absicht, kein vergessener Schritt:** `board-history/` ist das Forschungs-Substrat (Rank-IC, Vintage-Vergleiche, `lib/e1-compression.js`, `scripts/rank-ic.js`). Fuer eine Messung ist der ungekappte Wert der richtige: ein Deckel wuerde die Spitze kuenstlich zusammenschieben und Rangkorrelationen ueber Vintages verfaelschen. `scripts/write-board-history.js` kennt deshalb keinen Deckel und soll keinen bekommen. Dieser Feed ist die ANZEIGE fuer findash, `board-history/` ist die MESSUNG — zwei Zwecke, zwei zulaessige Skalen.
+
+**Fuer Konsumenten heisst das:** wer Zahlen aus beiden Quellen vergleicht (z.B. einen Export-Score gegen einen Vintage-Score), muss den Deckel kennen; oberhalb von 100 sind die Quellen nicht deckungsgleich. Betroffen sind sehr wenige Zeilen: Vintage 2026-08-29 = **2 von 8.946** (0,022 %; Maximum 101,0).
+
+**Scheiternskriterium (vorab deklariert, weiterhin gueltig):** liegen mehr als 10 Zeilen bzw. 0,1 % eines Vintages exakt auf 100,0, maskiert der Deckel echte Skaleninflation — dann geht der Fall mit Zahlen in den Gauntlet und diese Dokumentation ist ueberholt. Waechter: `tests/scoring/score-deckel.test.js` (5 Pruefungen, u.a. „Deckel verschiebt keinen Rang" und das Scheiternskriterium selbst).
+
+Beleg-Akte: `agent-reports/befund-score-ueber-100-2026-08-29.md`, Orchestrator ENTSCHIED 20 (29.08.2026) — Option A (dokumentieren) beschlossen, Engine-Rescale/Clamp ausdruecklich NICHT.
+
+---
+
 ## 4. `overview.json` (FLACH)
 
 Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen.
@@ -128,7 +150,7 @@ Huelle (§2) + `rows: Array<OverviewRow>`. Cross-Branch, score-desc, ~200 Zeilen
 | `name` | string \| null | **OPTIONAL (additiv)** | Form ja, wenn present; neuer Producer emittiert es immer | Wie BoardRow §3; derselbe bereinigte `snapshot.meta.name`, reine Anzeige. Alte v1-Daten ohne Feld bleiben lesbar. |
 | `formulaId` | string (nichtleer) | Pflicht | ja | Branchen-ID (nur hier als Feld; in Boards implizit ueber Datei). |
 | `track` | `"profitable"`\|`"unprofitable"` (Enum) | Pflicht | ja (Enum) | **Meistgelesene Cross-Branch-Liste — der Enum-Bruch bei `track` wird hier erkannt.** |
-| `score` | number (round1, finite) | Pflicht | ja (finite) | z.B. `94.9`. |
+| `score` | number (round1, finite), **Spanne 0–100** | Pflicht | ja (finite) | z.B. `94.9`. Derselbe Deckel wie in §3 (`mapOverviewRow`, seit 19.08.2026) — s. §3a zu den zwei Skalen. |
 | `overviewKind` | `"gp"`\|`"revenue-badge"`\|`"ffo-badge"`\|`"runway-badge"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Wie board `overview.kind`, aber FLACH. |
 | `overviewValue` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | KANN NEGATIV. |
 | `overviewCompanion` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | |
