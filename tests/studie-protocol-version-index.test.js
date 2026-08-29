@@ -107,6 +107,21 @@ test('protocol version index carries the dated supersede header', () => {
   verifyIndex(realIndex, realDirectories);
 });
 
+test('the 2.0.0 index stays descriptive and stays outside its own seal', () => {
+  // Preregistration territory: a README in here must never become a shadow rule source,
+  // and it must stay outside hash-manifest.json - sealing it would make every later
+  // correction a seal break, which is exactly why 1.2.0/README.md cannot carry its own
+  // supersede note today.
+  const readme = fs.readFileSync(path.join(PROTOCOL_DIR, '2.0.0', 'README.md'), 'utf8');
+  assert.match(readme, /\*\*This file is descriptive only\.\*\*/,
+    'the descriptive-only disclaimer must stay');
+  assert.match(readme, /supersede-record\.json/, 'the index must name its supersede record');
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(PROTOCOL_DIR, '2.0.0', 'hash-manifest.json'), 'utf8'));
+  assert.ok(!Object.keys(manifest.files || {}).some((key) => key.endsWith('2.0.0/README.md')),
+    'the 2.0.0 README must not be pulled into the hash manifest');
+});
+
 test('protocol version index rejects mutation of the no-relabel invariant', () => {
   const mutated = realIndex.replace('may be re-labelled', 'may be relabelled');
   assert.throws(() => verifyIndex(mutated, realDirectories), /no-relabel invariant/);
