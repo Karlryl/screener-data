@@ -25,7 +25,14 @@
  */
 const assert = require('node:assert/strict');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+// M9: EIGENER Snapshot-Bestand, VOR dem require des Moduls gesetzt. Vorher legte dieser
+// Waechter seine Fixture im produktiven snapshots/ ab — genau dem readdirSync, aus dem
+// run-screener.js (:287/:411) das Universum und den universeHash baut. Ein Abbruch im
+// Fenster bis zum unlinkSync hinterliess die Phantom-Firma "Beleg AG" im Universum.
+const FIXTURE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'belegpunkte-'));
+process.env.FINDASH_SNAPSHOTS_DIR = FIXTURE_DIR;
 const wx = require('../scripts/write-findash-export.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 
@@ -101,9 +108,18 @@ check('Altform (blanke Zahlen statt {value}) wird mitgezaehlt', () => {
 // ---------------------------------------------------------------------------
 // Verdrahtung: fuehren die Zeilen-Mapper die Ableitung wirklich aus?
 // ---------------------------------------------------------------------------
-const SNAP_DIR = path.join(__dirname, '..', 'snapshots');
+const SNAP_DIR = FIXTURE_DIR;
 const TESTTICKER = 'ZZBELEGZZ';
 const TESTDATEI = path.join(SNAP_DIR, safeSnapshotFilename(TESTTICKER));
+
+// M9-Wache: der produktive Bestand darf von diesem Waechter NIE beschrieben werden.
+check('(M9) die Fixture liegt NICHT im produktiven snapshots/', () => {
+  const produktiv = path.join(__dirname, '..', 'snapshots');
+  assert.notEqual(path.resolve(SNAP_DIR), path.resolve(produktiv),
+    'der Fixture-Bestand darf nicht der Produktiv-Bestand sein');
+  assert.ok(!fs.existsSync(path.join(produktiv, safeSnapshotFilename(TESTTICKER))),
+    'ZZBELEGZZ darf im produktiven Store nicht auftauchen — run-screener.js baut daraus sein Universum');
+});
 let fixtureGelegt = false;
 try {
   fs.mkdirSync(SNAP_DIR, { recursive: true });
@@ -136,7 +152,7 @@ if (fixtureGelegt) {
       assert.ok(!('qPunkte' in s), 'survival-Zeilen haben keine Beleg-Behauptung zu stuetzen');
     });
   } finally {
-    try { fs.unlinkSync(TESTDATEI); } catch (_) { /* Fixture weg = gut */ }
+    try { fs.rmSync(FIXTURE_DIR, { recursive: true, force: true }); } catch (_) { /* Fixture weg = gut */ }
   }
 }
 

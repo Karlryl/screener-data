@@ -164,7 +164,11 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 // REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
 // gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
-const SNAP_DIR = path.join(ROOT, 'snapshots');
+// Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
+// Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
+// Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
+// snapshots/ ab — aus dem run-screener.js sein Universum baut (M9).
+const SNAP_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
 // Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
 // Grund: bei einem Schema-Bruch (z. B. der Snapshot-Bestand ist aelter als der Stempel)
 // wuerde der Waechter der halben Rangliste die Groesse nehmen und das Board damit
