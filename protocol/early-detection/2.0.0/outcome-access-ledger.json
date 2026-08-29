@@ -456,6 +456,43 @@
    "endtestSiegel": "unberuehrt",
    "previousHash": "bce039ef89dcb28549d7f1ef940d6167149fb96fd50ab78b7c4a227f309bea81",
    "eventHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f"
+  },
+  {
+   "runId": "e4g-restursachen-pruefung-2026-08-29",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-29T15:59:27.698Z",
+   "accessedAt": "2026-08-29T17:35:00.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "afs",
+    "afs_gruppe",
+    "fallzahl",
+    "jahreskadenz",
+    "jahreskadenz_ja",
+    "jahreskadenz_nein",
+    "kante_unmoeglich",
+    "kante_unmoeglich_ja",
+    "kante_unmoeglich_nein",
+    "kantenfenster_accepted_tage",
+    "klasse",
+    "klasse_a_keine_folgequartale",
+    "klasse_c_zu_wenige_folgequartale",
+    "kontrollpool_verluste",
+    "letzte_form_nach_signal",
+    "median_abstand_accepted_tage",
+    "nenner_restursachen",
+    "ohne_zeile_nach_signal",
+    "restlaufzeit_accepted_tage",
+    "signal_verluste"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "T171/E4g-Restursachen-Diagnose (R15b, nur zaehlen) ueber das VERBRAUCHTE Prueffenster, dieselbe SQLite-Quelle wie E4a. Population: die 39 S-G-Signal-Verluste plus die 448 S-G-Kontrollpool-Verluste (E4a Abschnitt 5, geteilte Restursache). Gelesen werden ausschliesslich Metadaten-Spalten der Tabelle bericht: cik, adsh, form, period, accepted, afs. Drei Kreuzungen: (1) Kantenprobe auf der ACCEPTED-Achse - Median-Abstand accepted->accepted mal 4 gegen Restlaufzeit bis 2020-12-31, alles auf einer Achse; (2) Formularregime nach dem Signaldatum - Jahreskadenz (20-F/40-F/10-K-only) gegen echten Abgang (keine Zeile mehr); (3) afs-Gruppe als Gegenprobe zu D2. Die Entscheidungsregel ist VORAB eingefroren in orchestrator-2026-08-29.md ENTSCHIED 2; dieser Lauf meldet nur Zahlen, aendert keine Schwelle, keine Reifedefinition, erstellt keine neue Praeregistrierung. Zusaetzlich verboten: Naht-IDs des Bruecken-Artefakts - der Lauf bleibt auf der PANEL-Ebene. Anmeldung nach ENTSCHIED 7 (Ein-Appender-Regel, protocol/early-detection/2.0.0/register-single-appender-rule.json) als main-first Mini-PR.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f",
+   "eventHash": "5e5bc2866a4f4a9824e9251457cc924d2eb3cbbfd12ffaf8f0e0eb7dd49891b0"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
