@@ -1942,8 +1942,9 @@ def render_report(result):
                 "- %s / %s: %d von %d gelesenen Zeilen" % (
                     window, name, value, read[base]))
     return "\n".join([
-        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
-            artifact["artifactVersion"], artifact["sha256"]),
+        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; die drei Methodik-Korrekturen A/B/C sind gebaut, die neue Nahtmenge (%d) steht noch zur Methodik-Abnahme, und Auftrag 1 bleibt HOLD fuer Blocker 3.**" % (
+            artifact["artifactVersion"], artifact["sha256"],
+            counts["bridgeSeams"]),
         "",
         "# R2-A1 - Die Kennungsbruecke als Panel-Artefakt",
         "",
