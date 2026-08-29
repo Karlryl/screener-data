@@ -746,6 +746,11 @@ def artifact_from_state(state, reverse_inputs=False):
             key=lambda row: (row["seamEventDate"], row["date"], row["seamId"]))
     entities = sorted(entities, key=lambda row: row["entityId"])
     input_summaries = sorted(state["inputSummaries"], key=lambda row: row["file"])
+    # B: the multi-seam exposure is derived from the published entities and
+    # carried BY the artifact; the report renders it instead of literals.
+    seam_distribution = defaultdict(int)
+    for row in entities:
+        seam_distribution[str(len(row["seams"]))] += 1
     counts = {
         "identityEntitiesSeen": len(identities),
         "identityEntitiesEligible": len(eligible),
@@ -753,6 +758,12 @@ def artifact_from_state(state, reverse_inputs=False):
         "entitiesWithBridgeSeams": len(entities),
         "identifierMappings": sum(len(row["identifiers"]) for row in entities),
         "bridgeSeams": sum(len(row["seams"]) for row in entities),
+        "entitiesWithMultipleBridgeSeams": sum(
+            1 for row in entities if len(row["seams"]) > 1),
+        "maximumBridgeSeamsPerEntity": max(
+            (len(row["seams"]) for row in entities), default=0),
+        "bridgeSeamCountDistribution": dict(sorted(
+            seam_distribution.items(), key=lambda item: int(item[0]))),
         "periodKeyTransitionsCollapsedIntoSeams": collapsed_transitions,
         "seamEventDatesFallenBackToPeriodKey": fallback_event_dates,
         "exchangeEvidenceRows": 0,
@@ -1695,7 +1706,7 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
         },
         "methodCorrections": {
             "acceptedTimeSeamPlacement": "APPLIED_PENDING_METHOD_ACCEPTANCE",
-            "multipleSeamExposureRestoration": "OPEN",
+            "multipleSeamExposureRestoration": "PUBLISHED_IN_ARTIFACT",
             "completeExclusionCounters": "OPEN",
         },
     }
@@ -1815,6 +1826,10 @@ def render_report(result):
     contract = result["contract"]
     artifact = result["panelArtifact"]
     evidence = result["identityEvidence"]
+    seam_distribution = ", ".join(
+        "%s Naehte: %d Entitaeten" % (seams, entities)
+        for seams, entities in counts["bridgeSeamCountDistribution"].items()
+    )
     return "\n".join([
         "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
             artifact["artifactVersion"], artifact["sha256"]),
@@ -1865,6 +1880,14 @@ def render_report(result):
             counts["seamEventDatesFallenBackToPeriodKey"]),
         "Annahme-Zeitstempel und fielen auf den Perioden-Schluessel zurueck.",
         "",
+        "%d der %d Entitaeten tragen mehr als eine Naht; die hoechste Nahtzahl" % (
+            counts["entitiesWithMultipleBridgeSeams"],
+            counts["entitiesWithBridgeSeams"]),
+        "einer einzelnen Entitaet betraegt %d. Verteilung: %s." % (
+            counts["maximumBridgeSeamsPerEntity"], seam_distribution),
+        "Alle drei Groessen stehen als Felder im Artefakt und werden hier nur",
+        "wiedergegeben, nicht im Bericht gerechnet.",
+        "",
         "## Was ausdruecklich nicht gezeigt ist",
         "",
         "- Die Bruecke zeigt keine wirtschaftliche Vergleichbarkeit von Werten auf beiden Seiten einer Naht.",
@@ -1876,7 +1899,8 @@ def render_report(result):
         "- Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.",
         "- Die Naht-Datierung auf `accepted` ist gebaut, aber methodisch noch nicht abgenommen; die neue Nahtmenge (%d) braucht die Abnahme durch den Orchestrator." % (
             counts["bridgeSeams"]),
-        "- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
+        "- Die Mehrfachnaht-Verteilung ist nur veroeffentlicht, nicht ausgewertet: eine segmentweise Kontiguitaets- oder Schwundmessung ist von der Praeregistrierung ausgeschlossen und gehoert in Auftrag 2.",
+        "- Die vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
         "",
         "## Neue Fragen und Hypothesen",
         "",
