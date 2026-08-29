@@ -26,7 +26,9 @@
  *                      Fallback, pull-yahoo.js _deriveOpIncForFinancials Pfad 3).
  *   'computed-bank'    Synthetisch: totalRev - totalOpEx - Kreditrisikovorsorge (Pfad 1).
  *   'computed-insurance' Synthetisch: totalRev - costOfRev - SG&A (Pfad 2).
- *   null               Keine OpInc-Reihe vorhanden.
+ *   null               Keine OpInc-Reihe vorhanden. Gilt AUCH fuer eine Reihe, die zwar
+ *                      existiert, aber keinen einzigen finiten Wert traegt: ueber nichts
+ *                      gibt es keine Herkunft zu behaupten (M5a, yahooLabelFuer()).
  *
  * ─── WARUM HIER UND NICHT IM MERGE-JOB ──────────────────────────────────────────
  * scripts/build-secannual.js validiert die SEC-Reihe GEGEN die Yahoo-Reihe des Stores
@@ -46,6 +48,9 @@
  * Ausrichtung je Name AM UMSATZ BELEGT — in beiden Quellen eindeutig, keine
  * Definitionsfrage — mit derselben 2-%-Schwelle wie die Erhebung vom 28.07.
  * Kein Beleg -> kein Tausch. Die Luecke wird benannt, nicht erfunden.
+ * Seit N1 (ENTSCHIED 52) deckt der Beleg das GANZE Fenster: getauscht werden alle n
+ * Positionen, also braucht jede ihr eigenes Umsatzpaar. Eine Teil-Deckung belegte
+ * frueher zwei Positionen und lizenzierte trotzdem den Tausch aller.
  *
  * ─── DIE ERSETZUNGSREGEL ────────────────────────────────────────────────────────
  * Ersetzt wird POSITIONSWEISE ueber die LAENGE der Yahoo-Reihe. Die tiefere SEC-Reihe
@@ -88,9 +93,6 @@ const DEFAULT_DIRS = ['snapshots', 'snapshots-smallcap'];
 // Schwelle das Tor. Eine Konstante am Modulkopf wie MAX_UEBERSPRUNGEN_ANTEIL in
 // filter-snapshot-merge.js — dieses Repo fuehrt Schwellen dort, nicht in einer Config.
 const REV_ALIGN_TOL = 0.02;
-// Ein einziges uebereinstimmendes Umsatzjahr belegt keine Ausrichtung (jede Reihe trifft
-// irgendwo einmal). Zwei Positionen sind das Minimum, ab dem ein Versatz auffiele.
-const REV_ALIGN_MIN_PAIRS = 2;
 
 const val = (x) => (x && typeof x === 'object') ? x.value : x;
 const fin = (x) => Number.isFinite(val(x));
@@ -103,6 +105,36 @@ const fin = (x) => Number.isFinite(val(x));
 function honestYahooLabel(src) {
   if (src === 'native' || src === undefined) return 'yahoo-adjusted';
   return src;
+}
+
+/**
+ * M5a (Nacht-Sweep 29.08. Fund M5, Memo 30.08., ENTSCHIED 52) — die DATENPRAESENZ, eine
+ * Ebene UEBER honestYahooLabel. 'yahoo-adjusted' behauptet eine Herkunft; ueber einer
+ * Reihe, die keinen einzigen finiten Wert traegt, gibt es keine zu behaupten.
+ * honestYahooLabel sieht nur den alten Quell-Tag, nie die Reihe: bei einem Alt-Snapshot
+ * aus der Zeit vor der Konvention (meta.opIncSource fehlt ganz -> undefined) erfand es
+ * deshalb ein Etikett ueber einer leeren Reihe. Die Schreibseite macht es bereits richtig
+ * (pull-yahoo.js mapYahooToCanonical: keine Reihe -> opIncSource null, gepinnt in
+ * tests/opinc-source.test.js) — dieser Schritt hat die Konvention nachtraeglich verletzt.
+ *
+ * BEWUSST ENG auf den Yahoo-Zweig: der Guard greift NUR, wo das Ergebnis 'yahoo-adjusted'
+ * waere. Ein synthetisches Etikett (computed-margin/-bank/-insurance) bleibt stehen, auch
+ * wenn seine Reihe durchgehend nicht-finit ist — ein globaler Guard ueber der Endreihe
+ * naehme der Lampe opIncSynthetisch (src/scoring/lamps.js) ihr Warnsignal.
+ * honestYahooLabel selbst bleibt unangetastet: es ist die reine String-Abbildung und als
+ * solche korrekt (gepinnt). Die Datenlage gehoert nicht in eine String-Abbildung.
+ */
+function yahooLabelFuer(meta, yahooOpInc) {
+  // `|| 'native'` haette ein AUSDRUECKLICHES null (das dieser Guard selbst schreiben kann)
+  // wie ein fehlendes Feld behandelt und es ueber honestYahooLabel zu 'yahoo-adjusted'
+  // zurueckgedreht — die Erfindung waere ueber den Umweg des Rueckwegs wieder da, sobald
+  // die Reihe zwischenzeitlich einen finiten Wert bekommt. Nur ABWESENHEIT faellt auf
+  // 'native' zurueck (der Alt-Snapshot-Fall, fuer den der Fallback gebaut wurde).
+  const bewahrt = meta.opIncSourceYahoo === undefined ? 'native' : meta.opIncSourceYahoo;
+  const label = honestYahooLabel(
+    meta.opIncSource === 'sec-gaap' ? bewahrt : meta.opIncSource);
+  if (label !== 'yahoo-adjusted') return label;
+  return (Array.isArray(yahooOpInc) && yahooOpInc.some(fin)) ? label : null;
 }
 
 /**
@@ -139,8 +171,7 @@ function decideOpInc(snapshot, secEntry) {
   const yahooOpInc = Array.isArray(annual.annualOpIncYahoo) ? annual.annualOpIncYahoo
     : (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []);
   // War die aktuelle Reihe schon SEC, ist das Alt-Etikett das der Yahoo-Reihe.
-  const yahooLabel = honestYahooLabel(
-    meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+  const yahooLabel = yahooLabelFuer(meta, yahooOpInc);
 
   const n = yahooOpInc.length;
   const secOpInc = (secEntry && Array.isArray(secEntry.annualOpInc)) ? secEntry.annualOpInc : null;
@@ -153,8 +184,24 @@ function decideOpInc(snapshot, secEntry) {
     return { label: yahooLabel, opInc: null, reason: 'no-yahoo-window', alignment: null };
   }
   const alignment = revAlignment(annual.annualRev, secEntry.annualRev, n);
-  if (alignment.pairs < REV_ALIGN_MIN_PAIRS) {
-    return { label: yahooLabel, opInc: null, reason: 'alignment-unprovable', alignment };
+  // N1 (Memo 30.08., ENTSCHIED 52 — Option B ratifiziert): VOLLE Fensterdeckung. Getauscht
+  // werden ALLE n Positionen (Schleife unten), also braucht auch JEDE ein eigenes
+  // Umsatzpaar. Die alte Schwelle (>= 2 Paare irgendwo im Fenster) belegte zwei Positionen
+  // und lizenzierte den Tausch von bis zu fuenf — am Live-Bestand vom 30.08. trugen 14 von
+  // 128 getauschten Zeilen zusammen 19 unbelegte Zellen. pairs kann n nie ueberschreiten
+  // (revAlignment laeuft ueber min(n, y.length, s.length)), die Bedingung ist damit exakt
+  // "alle n belegt". Kein Grandfathering: die Transformation bleibt eine reine Funktion,
+  // die 14 fallen beim naechsten Lauf auf ihre bewahrte Yahoo-Reihe zurueck und holen sich
+  // den Tausch selbsttaetig zurueck, sobald die SEC-Schicht die fehlenden Jahre nachliefert.
+  if (alignment.pairs < n) {
+    // Zwei sehr verschiedene Lagen, seit das Tor auf VOLLE Deckung steht: "kein einziges
+    // vergleichbares Umsatzjahr" (nie eine Chance auf Beleg) und "ein Feld fehlt im sonst
+    // gedeckten Fenster" (Beinahe-Treffer, holt sich den Tausch bei der naechsten
+    // SEC-Nachlieferung von selbst zurueck). Unter EINEM Grund-Etikett waere im
+    // Tageslauf-Log nicht zu sehen, welche der beiden der Bestand ist — und genau daran
+    // haengt, ob das schaerfere Tor zu streng steht.
+    return { label: yahooLabel, opInc: null, alignment,
+      reason: alignment.pairs === 0 ? 'alignment-unprovable-zero' : 'alignment-unprovable-partial' };
   }
   if (alignment.maxRel > REV_ALIGN_TOL) {
     return { label: yahooLabel, opInc: null, reason: 'alignment-failed', alignment };
@@ -185,13 +232,19 @@ function migrateSnapshot(snapshot, secEntry) {
   const yahooOpInc = Array.isArray(annual.annualOpIncYahoo) ? annual.annualOpIncYahoo
     : (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []);
   const before = (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []).map(val);
-  const prevLabel = meta.opIncSource === undefined ? null : meta.opIncSource;
+  // Ein FEHLENDER Schluessel ist nicht dasselbe wie ein explizites null. prevLabel faltet
+  // beide auf null zusammen — das ist fuer den Diff richtig, fuer den Schreibentscheid
+  // aber falsch, seit M5a fuer genau den Alt-Snapshot-Fall (Feld fehlt + leere Reihe)
+  // ebenfalls null liefert: labelChanged waere null !== null, der Lauf schriebe nie, und
+  // die Datei bekaeme ihren Schluessel NIE — der Bestand konvergierte nicht, und der
+  // Eimer 'unveraendert' saugte die nicht migrierten Alt-Snapshots stumm auf.
+  const etikettFehlte = meta.opIncSource === undefined;
+  const prevLabel = etikettFehlte ? null : meta.opIncSource;
 
   if (d.opInc) {
     // K1.3: die ersetzte Yahoo-Reihe bleibt am Datensatz — kein Name verliert Daten.
     annual.annualOpIncYahoo = yahooOpInc;
-    meta.opIncSourceYahoo = honestYahooLabel(
-      meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+    meta.opIncSourceYahoo = yahooLabelFuer(meta, yahooOpInc);
     annual.annualOpInc = d.opInc;
     meta.opIncSource = 'sec-gaap';
   } else {
@@ -205,7 +258,8 @@ function migrateSnapshot(snapshot, secEntry) {
   }
   const after = (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []).map(val);
   const valuesChanged = before.length !== after.length || before.some((v, i) => v !== after[i]);
-  const labelChanged = prevLabel !== meta.opIncSource;
+  // Abwesend -> anwesend ist eine Aenderung, auch wenn beide Seiten null LESEN.
+  const labelChanged = etikettFehlte || prevLabel !== meta.opIncSource;
   return {
     changed: valuesChanged || labelChanged, valuesChanged, labelChanged,
     before, after, prevLabel, label: meta.opIncSource, reason: d.reason, alignment: d.alignment,
@@ -332,6 +386,6 @@ function main(argv) {
 if (require.main === module) main(process.argv.slice(2));
 
 module.exports = {
-  decideOpInc, migrateSnapshot, honestYahooLabel, revAlignment, loadSecLayer, run,
-  SECANNUAL_FILES, DEFAULT_DIRS, REV_ALIGN_TOL, REV_ALIGN_MIN_PAIRS,
+  decideOpInc, migrateSnapshot, honestYahooLabel, yahooLabelFuer, revAlignment, loadSecLayer, run,
+  SECANNUAL_FILES, DEFAULT_DIRS, REV_ALIGN_TOL,
 };
