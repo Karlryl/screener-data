@@ -77,6 +77,21 @@ WINDOWS = (
     ("entdeckung", "entdeckung", "panel-entdeckung.sqlite"),
     ("pruefung", "pruefung", "panel-validierung.sqlite"),
 )
+# Every exclusion the scan can make, with the already-read row count it is
+# measured against. Declared here so a counter that never fires reports 0
+# instead of being absent: zero and never-measured must stay distinguishable.
+EXCLUSION_COUNTERS = {
+    "nonperiodicReportsExcluded": "reportRowsRead",
+    "reportsWithoutAcceptedExcluded": "reportRowsRead",
+    "reportsWithoutValidCikExcluded": "reportRowsRead",
+    "reportsWithoutNameExcluded": "reportRowsRead",
+    "coregFactMetadataExcluded": "factMetadataRowsRead",
+    "customTaxonomyMetadataExcluded": "factMetadataRowsRead",
+    "nonperiodicFactMetadataExcluded": "factMetadataRowsRead",
+    "factMetadataWithoutIdentityExcluded": "factMetadataRowsRead",
+    "factMetadataWithoutUnitExcluded": "factMetadataRowsRead",
+    "factMetadataOutsideDateExcluded": "factMetadataRowsRead",
+}
 
 
 class ArtifactError(Exception):
@@ -415,9 +430,20 @@ def new_scan_state(identity_key=None):
         # for this (cik, unit, ddate, qtrs) period. ddate stays the period key.
         "components": defaultdict(dict),
         "dateWindows": defaultdict(set),
+        # No shared counter bag: exclusions belong to the window that made
+        # them and live in that window's entry of inputSummaries.
         "inputSummaries": [],
-        "counters": defaultdict(int),
     }
+
+
+def zero_exclusions(observed=None):
+    """All ten counters, zero-initialised, overlaid with what was observed."""
+    counters = dict.fromkeys(EXCLUSION_COUNTERS, 0)
+    for name, value in (observed or {}).items():
+        if name not in counters:
+            raise ArtifactError("Unknown exclusion counter: " + str(name))
+        counters[name] = value
+    return dict(sorted(counters.items()))
 
 
 def update_digest(digest, row):
@@ -434,8 +460,10 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
     fact_digest = hashlib.sha256()
     adsh_to_cik = {}
     adsh_accepted = {}
+    exclusions = dict.fromkeys(EXCLUSION_COUNTERS, 0)
     summary = {
         "file": expected_basename,
+        "window": window_name,
         "bytes": os.path.getsize(checked),
         "reportRowsRead": 0,
         "periodicIdentityRows": 0,
@@ -451,11 +479,11 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
         for adsh, raw_cik, name, former, changed, form, accepted in panel.execute(query):
             summary["reportRowsRead"] += 1
             if form_stem(form) not in BASIS.PERIODISCHE_FORMEN:
-                state["counters"]["nonperiodicReportsExcluded"] += 1
+                exclusions["nonperiodicReportsExcluded"] += 1
                 continue
             date = accepted_date(accepted)
             if date is None:
-                state["counters"]["reportsWithoutAcceptedExcluded"] += 1
+                exclusions["reportsWithoutAcceptedExcluded"] += 1
                 continue
             if date > LAST_ALLOWED_DATE:
                 raise ArtifactError("A report beyond the allowed date entered an allowed panel")
@@ -464,10 +492,10 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
             former_name = normalize_name(former)
             changed_raw = str(changed or "").strip()
             if cik is None:
-                state["counters"]["reportsWithoutValidCikExcluded"] += 1
+                exclusions["reportsWithoutValidCikExcluded"] += 1
                 continue
             if not current_name:
-                state["counters"]["reportsWithoutNameExcluded"] += 1
+                exclusions["reportsWithoutNameExcluded"] += 1
                 continue
             existing = adsh_to_cik.get(adsh)
             if existing is not None and existing != cik:
@@ -502,25 +530,25 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
                     fact_query, params):
                 summary["factMetadataRowsRead"] += 1
                 if coreg is not None and str(coreg).strip():
-                    state["counters"]["coregFactMetadataExcluded"] += 1
+                    exclusions["coregFactMetadataExcluded"] += 1
                     continue
                 if not BASIS.STANDARD_VERSION_RE.match(str(version or "").strip()):
-                    state["counters"]["customTaxonomyMetadataExcluded"] += 1
+                    exclusions["customTaxonomyMetadataExcluded"] += 1
                     continue
                 if str(qtrs or "").strip() not in {"1", "4"}:
-                    state["counters"]["nonperiodicFactMetadataExcluded"] += 1
+                    exclusions["nonperiodicFactMetadataExcluded"] += 1
                     continue
                 cik = adsh_to_cik.get(adsh)
                 if cik is None:
-                    state["counters"]["factMetadataWithoutIdentityExcluded"] += 1
+                    exclusions["factMetadataWithoutIdentityExcluded"] += 1
                     continue
                 unit = str(uom or "").strip()
                 date = str(ddate or "").strip()
                 if not unit:
-                    state["counters"]["factMetadataWithoutUnitExcluded"] += 1
+                    exclusions["factMetadataWithoutUnitExcluded"] += 1
                     continue
                 if not re.match(r"^\d{8}$", date) or date > LAST_ALLOWED_DDATE:
-                    state["counters"]["factMetadataOutsideDateExcluded"] += 1
+                    exclusions["factMetadataOutsideDateExcluded"] += 1
                     continue
                 quarter_span = str(qtrs).strip()
                 key = (cik, unit, date, quarter_span)
@@ -538,6 +566,7 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
         panel.close()
     summary["identityEvidenceSha256"] = identity_digest.hexdigest()
     summary["factMetadataEvidenceSha256"] = fact_digest.hexdigest()
+    summary["exclusions"] = zero_exclusions(exclusions)
     state["inputSummaries"].append(summary)
 
 
@@ -746,6 +775,21 @@ def artifact_from_state(state, reverse_inputs=False):
             key=lambda row: (row["seamEventDate"], row["date"], row["seamId"]))
     entities = sorted(entities, key=lambda row: row["entityId"])
     input_summaries = sorted(state["inputSummaries"], key=lambda row: row["file"])
+    # C: exclusions stay window-separated; the canonicalising sort travels with
+    # them (zero_exclusions sorts each block, and byWindow/total sort here).
+    by_window = {}
+    totals = dict.fromkeys(EXCLUSION_COUNTERS, 0)
+    for row in input_summaries:
+        if row["window"] in by_window:
+            raise ArtifactError("Two panel summaries claim one window name")
+        by_window[row["window"]] = row["exclusions"]
+        for name, value in row["exclusions"].items():
+            totals[name] += value
+    exclusions = {
+        "byWindow": dict(sorted(by_window.items())),
+        "denominators": dict(sorted(EXCLUSION_COUNTERS.items())),
+        "total": dict(sorted(totals.items())),
+    }
     # B: the multi-seam exposure is derived from the published entities and
     # carried BY the artifact; the report renders it instead of literals.
     seam_distribution = defaultdict(int)
@@ -803,7 +847,7 @@ def artifact_from_state(state, reverse_inputs=False):
             "requiredMarkerFields": ["crossSeam", "crossedSeamCount", "seamPolicy"],
         },
         "inputs": input_summaries,
-        "exclusions": dict(sorted(state["counters"].items())),
+        "exclusions": exclusions,
         "counts": counts,
         "entities": entities,
     }
@@ -1079,11 +1123,13 @@ def fixture_state():
         for unit in ("USD", "EUR"):
             state["dateWindows"][("100", unit, date)].add("pruefung")
     state["inputSummaries"] = [{
-        "file": "fixture.sqlite", "bytes": 1, "reportRowsRead": 3,
+        "file": "fixture.sqlite", "window": "pruefung", "bytes": 1,
+        "reportRowsRead": 3,
         "periodicIdentityRows": 3, "factMetadataRowsRead": 4,
         "eligibleFactMetadataRows": 4, "lastAllowedDate": LAST_ALLOWED_DATE,
         "identityEvidenceSha256": "0" * 64,
         "factMetadataEvidenceSha256": "1" * 64,
+        "exclusions": zero_exclusions(),
     }]
     return state
 
@@ -1113,8 +1159,15 @@ def state_from_fixed_fixture(payload):
     for row in payload.get("dateWindows", []):
         key_tuple = (str(row["cik"]), row["unit"], row["date"])
         state["dateWindows"][key_tuple].update(row.get("windows", []))
-    state["inputSummaries"] = payload.get("inputSummaries", [])
-    state["counters"].update(payload.get("counters", {}))
+    # The frozen fixture predates the per-window split: its single summary
+    # inherits the fixture's counters, every further one starts at explicit 0.
+    state["inputSummaries"] = [
+        dict(row,
+             window=row.get("window", "pruefung"),
+             exclusions=zero_exclusions(
+                 payload.get("counters", {}) if index == 0 else {}))
+        for index, row in enumerate(payload.get("inputSummaries", []))
+    ]
     return state
 
 
@@ -1218,6 +1271,7 @@ SELF_TEST_NAMES = (
     "Production bridge writer gates the manifest and every shard",
     "Seam event carries the accepted date while ddate stays the period key",
     "Post-wall seam event is rejected in the accepted date notation",
+    "Ten exclusion counters are published per window and zero-initialised",
 )
 
 
@@ -1430,6 +1484,24 @@ def self_test():
         and compact_date("2020-12-31") == LAST_ALLOWED_DDATE
         and ("2020-12-31" > LAST_ALLOWED_DDATE) is False,
         event_rejected,
+    )
+    try:
+        zero_exclusions({"typoCounterName": 1})
+        unknown_counter_rejected = False
+    except ArtifactError:
+        unknown_counter_rejected = True
+    published = artifact["exclusions"]
+    check(
+        SELF_TEST_NAMES[27],
+        len(EXCLUSION_COUNTERS) == 10
+        and set(published["total"]) == set(EXCLUSION_COUNTERS)
+        and all(set(block) == set(EXCLUSION_COUNTERS)
+                for block in published["byWindow"].values())
+        and set(published["byWindow"]) == {"pruefung"}
+        and all(value == 0 for value in published["total"].values())
+        and list(published["total"]) == sorted(published["total"])
+        and unknown_counter_rejected,
+        published,
     )
     if failures:
         print("SELBSTTEST ROT - %d named checks failed" % len(failures))
@@ -1707,7 +1779,7 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
         "methodCorrections": {
             "acceptedTimeSeamPlacement": "APPLIED_PENDING_METHOD_ACCEPTANCE",
             "multipleSeamExposureRestoration": "PUBLISHED_IN_ARTIFACT",
-            "completeExclusionCounters": "OPEN",
+            "completeExclusionCounters": "PUBLISHED_IN_ARTIFACT",
         },
     }
     result = {
@@ -1798,6 +1870,7 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "reviewStatus": "INSUFFICIENT_BLOCKER_3_OPEN",
         },
         "inputs": artifact["inputs"],
+        "exclusions": artifact["exclusions"],
         "counts": artifact["counts"],
         "identityEvidence": {
             "internalCikUsed": True,
@@ -1830,6 +1903,15 @@ def render_report(result):
         "%s Naehte: %d Entitaeten" % (seams, entities)
         for seams, entities in counts["bridgeSeamCountDistribution"].items()
     )
+    denominators = {row["window"]: row for row in result["inputs"]}
+    exclusion_lines = []
+    for window in sorted(result["exclusions"]["byWindow"]):
+        read = denominators[window]
+        for name, value in result["exclusions"]["byWindow"][window].items():
+            base = result["exclusions"]["denominators"][name]
+            exclusion_lines.append(
+                "- %s / %s: %d von %d gelesenen Zeilen" % (
+                    window, name, value, read[base]))
     return "\n".join([
         "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
             artifact["artifactVersion"], artifact["sha256"]),
@@ -1888,6 +1970,15 @@ def render_report(result):
         "Alle drei Groessen stehen als Felder im Artefakt und werden hier nur",
         "wiedergegeben, nicht im Bericht gerechnet.",
         "",
+        "## Ausschluesse je Fenster",
+        "",
+        "Alle %d Zaehler sind mit 0 vorbelegt; eine 0 heisst gemessen und nie" % (
+            len(EXCLUSION_COUNTERS)),
+        "eingetreten, nicht ungemessen. Nenner ist die jeweils bereits gelesene",
+        "Zeilenzahl desselben Fensters; es wurde dafuer nichts zusaetzlich gelesen.",
+        "",
+        "\n".join(exclusion_lines),
+        "",
         "## Was ausdruecklich nicht gezeigt ist",
         "",
         "- Die Bruecke zeigt keine wirtschaftliche Vergleichbarkeit von Werten auf beiden Seiten einer Naht.",
@@ -1900,7 +1991,7 @@ def render_report(result):
         "- Die Naht-Datierung auf `accepted` ist gebaut, aber methodisch noch nicht abgenommen; die neue Nahtmenge (%d) braucht die Abnahme durch den Orchestrator." % (
             counts["bridgeSeams"]),
         "- Die Mehrfachnaht-Verteilung ist nur veroeffentlicht, nicht ausgewertet: eine segmentweise Kontiguitaets- oder Schwundmessung ist von der Praeregistrierung ausgeschlossen und gehoert in Auftrag 2.",
-        "- Die vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
+        "- Die Ausschlusszaehler sind vollstaendig und fenstergetrennt veroeffentlicht, aber nicht ausgewertet; ob ein Ausschluss inhaltlich richtig ist, sagt der Zaehler nicht.",
         "",
         "## Neue Fragen und Hypothesen",
         "",
