@@ -1,0 +1,32 @@
+{
+  "_doku": [
+    "Identitaets-Register — das belegpflichtige VENTIL neben der gemessenen Regel.",
+    "Urteil _COURT-MILAN-U3-2026-08-29.md K2 (3/3 BEIDES-MIT-ARBEITSTEILUNG), ratifiziert als ENTSCHIED 31.",
+    "",
+    "ES IST LEER, UND DAS IST DAS ZIEL (B2). Dasselbe Urteil steht im versiegelten Code an ISSUER_ALIASE",
+    "(src/scoring/score.js:82-88): 'Eine Handliste ist an einer Identitaets-Entscheidung immer die",
+    "schlechtere Loesung: sie waechst still, und was nicht drinsteht, faellt lautlos durch.' Gemessene",
+    "Merkmale und Regeln tragen die Strecke; dieses Register faengt nur, was keine Regel fangen kann.",
+    "",
+    "AUFNAHMESCHWELLE, dreiteilig (B3) — alle drei Punkte muessen erfuellt sein:",
+    "  (i)   ueber den vollen Snapshot-Bestand gemessen ist KEINE Regelmaessigkeit nachweisbar,",
+    "        und die Messung liegt dem Eintrag bei (Skript + Datum im Feld 'beleg'),",
+    "  (ii)  der Fall kostet mindestens EINEN Top-100-Platz,",
+    "  (iii) der Eintrag nennt beide Ticker, den Beleg und das Aufnahmedatum.",
+    "Unter der Schwelle: keine Regel, kein Eintrag — der Platz bleibt doppelt. Das ist billiger als",
+    "ein falscher Eintrag, denn eine Fehlverschmelzung LOESCHT eine echte Firma aus dem Board.",
+    "",
+    "KEIN FREIFAHRTSCHEIN (B4): scripts/filter-snapshot-merge.js macht aus jedem Eintrag eine ganz",
+    "normale Kandidatenklasse, die dasselbe gemessene Tor bestehen muss wie die Milan-Liste",
+    "(Fingerabdruck + >=4 Umsatzquartale + gleiches Land + Aktienzahl-Band + US-Primaer-Abstinenz).",
+    "Ticker werden im Bestand recycelt — ein stehender Eintrag wuerde sonst still fehlverschmelzen.",
+    "Nicht-Treffer = Verwurf mit Ausweis im Lauf-Log, nie stille Wirkung.",
+    "",
+    "DIESES REGISTER IST NICHT nav-holdings.json (B1): jenes ist eine AUSSCHLUSS-Liste einzelner",
+    "Ticker und kann die Aussage 'A und B sind derselbe Emittent' strukturell nicht ausdruecken.",
+    "Es darf dafuer nicht erweitert werden.",
+    "",
+    "Eintrags-Form: { kanonisch, mitglieder: [>=2 Ticker], beleg, aufgenommen }"
+  ],
+  "eintraege": []
+}
