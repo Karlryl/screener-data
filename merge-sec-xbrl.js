@@ -57,13 +57,32 @@ const ANNUAL_FORMS = ['10-K', '20-F', '40-F'];
 
 // --- SEC-Konzept-Namen (us-gaap) --------------------------------------------
 // Umsatz wechselt das Konzept ueber die Jahre -> Prioritaets-Union (aktuelles zuerst).
+// T168 (29.08.2026): 'Revenues' steht seit heute VOR dem Including-Tag. Grund ist kein
+// Geschmack, sondern ein gemessener Konzeptfehler. Die Annahme darunter ("GLEICHE Groesse,
+// andere Steuer-Behandlung") haelt nur fuer Filer, die NUR dieses Tag fuehren. Bei Filern,
+// die BEIDE fuehren, ist IncludingAssessedTax haeufig eine kleinere TEILGROESSE, nicht der
+// Gesamtumsatz brutto Steuer. Gemessen an den lokal pruefbaren Namen (Ratio-Scan
+// agent-reports/diagnose-t168-ratioscan-2026-08-29.md): 48 Geschaeftsjahre mit Koexistenz
+// beider Tags; 30 davon weichen um mehr als Faktor 2 ab — die faengt annualRevUnion() schon
+// und verwirft das Jahr. Aber 7 liegen in der BLINDEN ZONE zwischen 1,05x und 2,0x und liefen
+// bisher als Jahresumsatz durch:
+//   CWCO fy2023 108,95 gegen 180,21 Mio. (1,65x) · fy2024 114,59 gegen 133,97 Mio. (1,17x)
+//   EXE  fy2018 5.189 gegen 10.231 Mio. (1,97x) · fy2019 4.517 gegen 8.595 Mio. (1,90x)
+//   HE   fy2021 2.521 gegen 2.850 Mio. (1,13x) · fy2023 3.297 gegen 3.682 · fy2022 3.465 gegen 3.742
+// An genau diesen Stellen ist 'Revenues' die Gesamtzeile des Abschlusses. Der Tausch ist
+// monoton korrigierend: er greift AUSSCHLIESSLICH da, wo beide Tags dasselbe fy tragen —
+// Filer ohne 'Revenues' behalten das Including-Tag unveraendert (siehe Fallback-Vermerk unten).
 const REV_CONCEPTS = [
   'RevenueFromContractWithCustomerExcludingAssessedTax', // ~2019+
+  'Revenues',                                            // Gesamtzeile + Fallback-Uebergangsjahre
   'RevenueFromContractWithCustomerIncludingAssessedTax', // ~2019+, Filer die Verkaufssteuern
-  //   im Umsatz ausweisen (Einzelhandel, Vertriebe). GLEICHE Groesse, andere Steuer-Behandlung
-  //   -> als Gesamtumsatz brauchbar. Live-Beleg 28.07.: AAR Corp fuehrt AUSSCHLIESSLICH dieses
-  //   Tag fuer 8 Jahre, hatte damit 8/16 statt 16/16 Umsatzjahren.
-  'Revenues',                                            // Fallback-Uebergangsjahre
+  //   im Umsatz ausweisen (Einzelhandel, Vertriebe). BLEIBT in der Liste, nur eine Stufe tiefer:
+  //   fuer Filer, die ueberhaupt kein 'Revenues' fuehren, ist es die einzige Gesamtgroesse, die
+  //   sie haben. Live-Beleg 28.07.: AAR Corp fuehrt AUSSCHLIESSLICH dieses Tag fuer 8 Jahre,
+  //   hatte damit 8/16 statt 16/16 Umsatzjahren. Dieselbe Klasse heute belegt: CALX, CEVA,
+  //   COHU, LITE tragen Including-Jahre OHNE koexistierendes 'Revenues' — ein Flip ohne diesen
+  //   Fallback naehme genau diesen vier ihre Umsatzjahre. Regressionsanker:
+  //   tests/t168-rev-priority.test.js.
   'SalesRevenueNet',                                     // ~2017-
 ];
 // BEWUSST NICHT in der Liste: SalesRevenueGoodsNet / SalesRevenueServicesNet. Das sind
