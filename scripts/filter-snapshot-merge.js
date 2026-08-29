@@ -188,7 +188,11 @@ function wurzelZwillingsUmbenennungen(staende) {
  */
 function wendeWurzelZwillingeAn(ziel, dateien) {
   const staende = [];
+  // Getrennt gezaehlt: ein Bein, das nicht GELESEN werden konnte, nimmt gar nicht erst
+  // teil; eines, das nicht GESCHRIEBEN werden konnte, war ausgewaehlt und blieb trotzdem
+  // getrennt. Ein gemeinsamer Zaehler haette beide Lagen als eine Zahl ausgegeben.
   let unlesbar = 0;
+  let unschreibbar = 0;
   for (const f of dateien) {
     if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
     const ticker = f.slice(0, -'.json'.length);
@@ -212,11 +216,11 @@ function wendeWurzelZwillingeAn(ziel, dateien) {
       writeFileAtomic(p, JSON.stringify(j));
       geheilt.push(datei.slice(0, -'.json'.length));
     } catch (e) {
-      unlesbar++;
+      unschreibbar++;
       console.error(`::warning::U2-Wurzelzwillinge — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
     }
   }
-  return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar };
+  return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar, unschreibbar };
 }
 
 function ladeNavRegister(registerPfad) {
@@ -461,7 +465,10 @@ function run(argv) {
   // U2-BO/NS: NACH dem Kopieren, damit der Eingang unangetastet bleibt (Karl-Entscheid F-12:
   // filtern statt loeschen — hier entsprechend: nur die Arbeitskopie bekommt den Namen).
   const zwillinge = wendeWurzelZwillingeAn(ziel, uebernehmen);
-  console.log(`[u2-wurzelzwillinge] ${zwillinge.geheilt.length} von ${zwillinge.kandidaten} .BO/.NS-Beinen auf den Emittenten-Namen des Zwillings gesetzt${zwillinge.geheilt.length ? ` (${zwillinge.geheilt.join(', ')})` : ''}. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup (issuerKeyLoose + splitFalseIssuerMerges); hier wird kein Bein entfernt.`);
+  // Die Ausfallzahlen gehoeren AN diese Zeile: ohne sie lautet die Meldung bei
+  // Totalausfall "0 von 0 .BO/.NS-Beinen ... gesetzt" und ist nicht von "keine
+  // Zwillinge im Bestand" zu unterscheiden — dieselbe Zeile fuer zwei Weltzustaende.
+  console.log(`[u2-wurzelzwillinge] ${zwillinge.geheilt.length} von ${zwillinge.kandidaten} .BO/.NS-Beinen auf den Emittenten-Namen des Zwillings gesetzt${zwillinge.geheilt.length ? ` (${zwillinge.geheilt.join(', ')})` : ''}; nicht lesbar: ${zwillinge.unlesbar}, nicht schreibbar: ${zwillinge.unschreibbar}. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup (issuerKeyLoose + splitFalseIssuerMerges); hier wird kein Bein entfernt.`);
 
   const navTickerListe = navAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
   console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
