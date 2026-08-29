@@ -35,6 +35,9 @@ const path = require('path');
 const { safeSnapshotFilename, isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
+// U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
+// Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
+const { issuerKeyLoose } = require('../src/scoring/score.js');
 
 /**
  * F-12-R2 (Review Tag 563): Anteil uebersprungener Snapshots, ab dem dieser Schritt hart
@@ -63,6 +66,158 @@ const MAX_UEBERSPRUNGEN_ANTEIL = 0.30;
  */
 const DRIFT_VENTIL = 'ALLOW_UEBERSPRUNGEN_DRIFT';
 const NAV_REGISTER_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'nav-holdings.json');
+
+/**
+ * U2-BO/NS (Orchestrator ENTSCHIED 21 vom 2026-08-29, Akte
+ * `befund-doppelgaenger-2026-08-29.md` inkl. Addendum) — Wurzel-Zwillinge der beiden
+ * indischen Boersen als EIN Emittent.
+ *
+ * BEFUND: 53 Emittenten-Gruppen standen am 29.08. mit BEIDEN Beinen im Board (107 Zeilen,
+ * 54 ueberzaehlige Plaetze; 13 Gruppen mit beiden Beinen in den Top 100). 12 davon sind
+ * BSE/NSE-Zwillinge: `KRN.BO` + `KRN.NS` ist eine Firma an zwei Boersen, aber die beiden
+ * Feeds schreiben ihren Namen verschieden ("KRN Heat Exchanger and Refrigeration Limited"
+ * gegen die NSE-Kurzform "KRN HEAT EXCHANGE N REF L"). Der Emittenten-Dedup gruppiert ueber
+ * den NAMEN (`issuerKeyLoose`, `src/scoring/score.js:134`) — verschiedene Namen, also zwei
+ * Zeilen.
+ *
+ * WARUM HIER UND NICHT IM DEDUP: `src/scoring/**` ist GQS-versiegelt. Der Namenskanal ist
+ * der einzige unversiegelte Hebel, und dieses Skript ist die letzte Station, durch die JEDER
+ * Snapshot vor dem Scoring laeuft (s. Modulkopf). Diese Vorstufe FUEHRT NICHT SELBST ZUSAMMEN
+ * — sie gibt beiden Beinen denselben Emittenten-Namen und laesst danach den vorhandenen,
+ * gepruefeten Dedup entscheiden. Damit bleiben Sieger-Regel (`issuerDedupComparator`) und
+ * Fehlverschmelzungs-Schutz (`splitFalseIssuerMerges`) unveraendert zustaendig; hier wird kein
+ * Bein geloescht und keine Zeile ausgewaehlt.
+ *
+ * BELEGLAGE (unabhaengig am Live-Bestand nachgemessen, Vintage 2026-08-29, 15.046 Snapshots):
+ * 524 Wurzel-Zwillinge `.BO`/`.NS`; nach `issuerKeyLoose` bleiben nur eine Handvoll Paare
+ * ueberhaupt getrennt, und die abweichenden Paare (JNPR, SKFINDUS, TARIL, TATAPOWER) sind
+ * allesamt DIESELBE Firma — Platzhalter, Feed-Abkuerzung, Artikel. NULL Fremdpaare. Fuer die
+ * beiden indischen Boersen ist die Wurzel-Identitaet eine Tatsache der Boersen, keine Heuristik.
+ *
+ * BEWUSST NUR `.BO`/`.NS`. Die naheliegende Verallgemeinerung "gleiche Wurzel + irgendein
+ * Boersensuffix" ist NICHT gemessen und wird hier NICHT gebaut. Der Mailaender Spiegel
+ * (`1XXX.MI`) traegt das HEIMATMARKT-Kuerzel und liefert 28 belegte Fremdpaare
+ * (`1SAN.MI` Sanofi gegen `SAN` Banco Santander, `1MRK.MI` Merck KGaA gegen `MRK` Merck & Co.).
+ * Er ist ein PRAEFIX und faellt durch die Suffix-Regel unten ohnehin heraus; er bleibt laut
+ * ENTSCHIED 21 Punkt 3 dem Gericht vorbehalten. Eine Fehlverschmelzung LOESCHT eine echte Firma
+ * aus dem Board — eine ausbleibende Verschmelzung kostet nur einen Platz.
+ */
+const WURZEL_ZWILLING = /^(.+)\.(BO|NS)$/;
+
+/**
+ * "Kein Name" heisst hier auch: der Name IST nur die Kennung (Platzhalter aus
+ * `pull-yahoo.js`, wenn Yahoo weder `longName` noch `shortName` liefert). Gleiche Bauform und
+ * gleicher Grund wie `platzhalter()` in `refresh-universe.js:883-887`, nur eine Ebene tiefer:
+ * dort ueber die Watchlist-Zeilen EINES Symbols, hier ueber die beiden Beine EINES Emittenten.
+ */
+function istPlatzhalter(name, ...kennungen) {
+  const n = typeof name === 'string' ? name.trim() : '';
+  if (!n) return true;
+  return kennungen.some((k) => k && String(k).trim().toUpperCase() === n.toUpperCase());
+}
+
+/**
+ * Welcher der beiden Namen gilt fuer beide Beine. Rangfolge, an den 44 real abweichenden
+ * Paaren des Live-Bestands geprueft:
+ *   1. Platzhalter verliert immer      (`JNPR.BO` "JNPR.BO" gegen "Juniper Green Energy Limited")
+ *   2. sonst der LAENGERE Name         (BSE schneidet bei 30 Zeichen ab, NSE kuerzt auf ~25 mit
+ *                                       "N" fuer "and" und "L" fuer "Limited" — laenger ist
+ *                                       durchgehend der vollstaendigere: "Transformers and
+ *                                       Rectifiers (India) Limited" gegen "TRANS & RECTI. LTD")
+ *   3. Gleichstand: Code-Unit-Vergleich. Locale-frei aus demselben Grund wie `cmpTicker`
+ *      (`score.js`): `localeCompare` haengt an der OS-Locale und wuerde CI gegen lokal
+ *      auseinanderlaufen lassen. Erreichbar nur bei gleich langen, verschiedenen Namen —
+ *      gleiche Namen kommen wegen der Schluessel-Vorpruefung gar nicht bis hierher.
+ */
+function besseresBein(a, b) {
+  const rang = (s) => (istPlatzhalter(s.name, s.ticker, s.metaTicker) ? 0 : 1);
+  if (rang(a) !== rang(b)) return rang(a) > rang(b) ? a : b;
+  const la = String(a.name || '').length;
+  const lb = String(b.name || '').length;
+  if (la !== lb) return la > lb ? a : b;
+  return String(a.name) <= String(b.name) ? a : b;
+}
+
+/**
+ * Reiner Kern (kein I/O): Staende -> Map<Datei, neuer Name>. Nur VERLIERER-Beine stehen drin,
+ * und nur dann, wenn der Dedup sie heute wirklich NICHT zusammenfuehrt.
+ *
+ * `issuerKeyLoose` wird aus `src/scoring/score.js` IMPORTIERT, nicht nachgebaut. Lesen von
+ * `src/scoring/**` ist ausdruecklich erlaubt (Orchestrator-Entscheid 2026-08-29 13:15; das
+ * Siegel bindet Aenderungen, nicht Lesen), und ein Nachbau des Schluessels ist der bekannte
+ * Fehler F1334: die Vorstufe wuerde gegen eine ANDERE Regel messen als die, die anschliessend
+ * gruppiert, und damit entweder umsonst umbenennen oder Faelle uebersehen.
+ *
+ * Beide Wachrichtungen sind Vertrag und in `tests/u2-wurzelzwillinge.test.js` festgenagelt:
+ *   - ein `.BO`/`.NS`-Zwillingspaar mit abweichenden Namen WIRD vereinheitlicht,
+ *   - alles ohne gemeinsame Wurzel (und jedes andere Suffix) wird NIE angefasst.
+ */
+function wurzelZwillingsUmbenennungen(staende) {
+  const nachWurzel = new Map();
+  for (const s of staende || []) {
+    const m = WURZEL_ZWILLING.exec(s.ticker);
+    if (!m) continue;
+    if (!nachWurzel.has(m[1])) nachWurzel.set(m[1], new Map());
+    // Ein doppelt geliefertes Suffix (kann es ueber Dateinamen nicht geben) wuerde still das
+    // zweite gewinnen lassen — deshalb nur den ERSTEN Stand je Suffix nehmen.
+    if (!nachWurzel.get(m[1]).has(m[2])) nachWurzel.get(m[1]).set(m[2], s);
+  }
+  const umbenennungen = new Map();
+  for (const beine of nachWurzel.values()) {
+    const bo = beine.get('BO');
+    const ns = beine.get('NS');
+    if (!bo || !ns) continue; // kein Zwilling: ein einzelnes .BO oder .NS bleibt unberuehrt
+    if (issuerKeyLoose({ meta: { name: bo.name } }) === issuerKeyLoose({ meta: { name: ns.name } })) continue;
+    const sieger = besseresBein(bo, ns);
+    const verlierer = sieger === bo ? ns : bo;
+    // Beide Beine ohne brauchbaren Namen: es gibt nichts zu uebertragen. Ein Platzhalter auf
+    // BEIDEN Seiten bleibt ein Platzhalter — geraten wird hier nichts.
+    if (istPlatzhalter(sieger.name, sieger.ticker, sieger.metaTicker)) continue;
+    umbenennungen.set(verlierer.datei, sieger.name);
+  }
+  return umbenennungen;
+}
+
+/**
+ * I/O-Mantel: liest NUR die Zwillings-Kandidaten (ca. 1.000 von 15.000 Dateien) und schreibt
+ * nur die wenigen Verlierer-Beine zurueck — atomar wie jeder andere Schreiber hier.
+ *
+ * Eine unlesbare Datei ist KEIN Abbruch: dieser Schritt ist im Tageslauf vorgeschaltet, und
+ * ein einzelner kaputter Snapshot darf die Pipeline nicht toeten. Sie faellt aber laut auf,
+ * statt still zu einer ausbleibenden Vereinheitlichung zu werden.
+ */
+function wendeWurzelZwillingeAn(ziel, dateien) {
+  const staende = [];
+  let unlesbar = 0;
+  for (const f of dateien) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    const ticker = f.slice(0, -'.json'.length);
+    if (!WURZEL_ZWILLING.test(ticker)) continue;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
+      staende.push({ datei: f, ticker, metaTicker: j && j.meta && j.meta.ticker, name: j && j.meta && j.meta.name });
+    } catch (e) {
+      unlesbar++;
+      console.error(`::warning::U2-Wurzelzwillinge — ${f} nicht lesbar (${e.message}); dieses Bein nimmt nicht teil.`);
+    }
+  }
+  const umbenennungen = wurzelZwillingsUmbenennungen(staende);
+  const geheilt = [];
+  for (const [datei, neuerName] of umbenennungen) {
+    const p = path.join(ziel, datei);
+    try {
+      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (!j || typeof j !== 'object' || !j.meta) throw new Error('kein meta-Block');
+      j.meta.name = neuerName;
+      writeFileAtomic(p, JSON.stringify(j));
+      geheilt.push(datei.slice(0, -'.json'.length));
+    } catch (e) {
+      unlesbar++;
+      console.error(`::warning::U2-Wurzelzwillinge — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
+    }
+  }
+  return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar };
+}
 
 function ladeNavRegister(registerPfad) {
   let eintraege;
@@ -303,6 +458,11 @@ function run(argv) {
   for (const f of uebernehmen) fs.copyFileSync(path.join(eingang, f), path.join(ziel, f));
   schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
 
+  // U2-BO/NS: NACH dem Kopieren, damit der Eingang unangetastet bleibt (Karl-Entscheid F-12:
+  // filtern statt loeschen — hier entsprechend: nur die Arbeitskopie bekommt den Namen).
+  const zwillinge = wendeWurzelZwillingeAn(ziel, uebernehmen);
+  console.log(`[u2-wurzelzwillinge] ${zwillinge.geheilt.length} von ${zwillinge.kandidaten} .BO/.NS-Beinen auf den Emittenten-Namen des Zwillings gesetzt${zwillinge.geheilt.length ? ` (${zwillinge.geheilt.join(', ')})` : ''}. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup (issuerKeyLoose + splitFalseIssuerMerges); hier wird kein Bein entfernt.`);
+
   const navTickerListe = navAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
   console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
@@ -310,5 +470,7 @@ function run(argv) {
   return 0;
 }
 
-module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze };
+module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze,
+  // U2-BO/NS (ENTSCHIED 21) — fuer TDD. Waechter: tests/u2-wurzelzwillinge.test.js
+  istPlatzhalter, besseresBein, wurzelZwillingsUmbenennungen, wendeWurzelZwillingeAn, WURZEL_ZWILLING };
 if (require.main === module) process.exit(run(process.argv));
