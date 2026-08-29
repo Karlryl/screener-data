@@ -163,11 +163,42 @@ function nurUmsatzSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
 
 // Jahres-Versatz-Erkennung, mechanisch statt per Augenmass — dieselbe Methode wie die
 // Erhebung vom 28.07. (merge-sec-xbrl.js:405-410): je Versatz -2..+2 zaehlen, wie viele
-// Umsatz-Paare auf <2 % zusammenfallen; der Versatz mit den meisten Treffern gewinnt.
-// Gewinnt ein Versatz != 0, ist eine positionsweise Ablehnung ein FEHLALARM, kein Befund.
+// Umsatz-Paare auf <2 % zusammenfallen.
+//
+// H5 (Nacht-Pruef-Sweep 29.08., Memo 30.08., ENTSCHIED 52) — DIE VERGABEREGEL:
+// FEHLALARM ist ein ENTLASTUNGS-Urteil, und die Beweislast liegt bei der Entlastung.
+// Die alte Fassung startete mit `hits = -1` und `best.off = 0`; bei null Treffern ueber
+// alle fuenf Versaetze feuerte `0 > -1` beim ERSTEN Durchlauf und der Rueckgabewert war
+// -2 — ein Versatz, den nichts belegte. Bei Gleichstand gewann ebenso der zuerst
+// gesehene, also der aeusserste negative. `hits` verliess die Funktion zwar, wurde aber
+// nie gedruckt: der Bericht schrieb allein aus `off !== 0` ein FEHLALARM. Genau die
+// Signatur, die eine Umsatz-Skalen-Wache FANGEN soll (null passende Umsatzpaare),
+// wurde so als Messfehler wegsortiert. Gegenregel M12 ("eine leere Messmenge ist KEIN
+// Negativbefund") ist in dieser Datei bereits ratifiziert; dies ist derselbe Satz eine
+// Ebene tiefer.
+//
+// Drei Ausgaenge, keiner aus dem anderen abgeleitet:
+//   lage 'versatz'       ein Versatz != 0 ist BELEGT (eindeutige Spitze, >= MIN_PAARE
+//                        Treffer; die strikte Dominanz gegenueber off = 0 folgt daraus,
+//                        weil 0 dann nicht in der Spitze liegt) -> FEHLALARM zulaessig.
+//   lage 'null-versatz'  off = 0 ist die eindeutige, belegte Spitze -> die positionsweise
+//                        Pruefung ist ausgerichtet, der Kipp ist echt.
+//   lage 'unaufgeloest'  zu wenige Treffer ODER Gleichstand -> KEINE Aussage. Nie
+//                        FEHLALARM, nie Befund.
+// `off` traegt nur im Fall 'versatz' eine Zahl; sonst das Sentinel VERSATZ_UNBESTIMMT
+// (null) — nie wieder eine erfundene -2.
+const VERSATZ_UNBESTIMMT = null;
+// Ein einziges zusammenfallendes Umsatzjahr belegt keine Ausrichtung (jede Reihe trifft
+// irgendwo einmal). Die Zahl stand bis zum 30.08. auch als REV_ALIGN_MIN_PAIRS in
+// scripts/opinc-source-migrate.js; dort hat ENTSCHIED 52 (N1) die Schwelle durch VOLLE
+// Fensterdeckung ersetzt, weil eine Teil-Deckung den Tausch des ganzen Fensters
+// lizenzierte. Hier wird nicht getauscht, sondern nur ein Versatz BENANNT — deshalb
+// bleibt die Mindestschwelle das richtige Werkzeug und steht seither eigenstaendig.
+const VERSATZ_MIN_PAARE = 2;
+
 function besterVersatz(yRevArr, sRevArr) {
   const y = V(yRevArr), s = V(sRevArr);
-  let best = { off: 0, hits: -1 };
+  const jeVersatz = new Map();
   for (let off = -2; off <= 2; off++) {
     let hits = 0;
     for (let i = 0; i < y.length; i++) {
@@ -175,9 +206,17 @@ function besterVersatz(yRevArr, sRevArr) {
       if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0) continue;
       if (Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < 0.02) hits++;
     }
-    if (hits > best.hits) best = { off, hits };
+    jeVersatz.set(off, hits);
   }
-  return best;
+  const maxHits = Math.max(...jeVersatz.values());
+  const spitze = [...jeVersatz.keys()].filter((o) => jeVersatz.get(o) === maxHits);
+  const einzig = spitze.length === 1 ? spitze[0] : null;
+  const lage = (einzig === null || maxHits < VERSATZ_MIN_PAARE) ? 'unaufgeloest'
+    : (einzig === 0 ? 'null-versatz' : 'versatz');
+  return {
+    off: lage === 'versatz' ? einzig : VERSATZ_UNBESTIMMT,
+    hits: maxHits, hits0: jeVersatz.get(0), spitze, lage,
+  };
 }
 
 // VOLLE Variante (Vorzeichen UND Umsatz ueber die ganze Reihe). Auch sie ist ein LITERAL
@@ -282,16 +321,24 @@ function bericht(r) {
     L.push(`| **kippen unter der VERENGTEN Variante (nur Umsatz-Skala)** | **${r.t174.kippenNurUmsatz.length}** |`);
     L.push('');
     L.push('Jahres-Versatz je Kandidat mechanisch bestimmt (Methode der 28.07.-Erhebung:');
-    L.push('bester Versatz aus -2..+2 nach Zahl der Umsatz-Paare unter 2 % Abweichung).');
-    L.push('**Versatz != 0 = Fehlalarm**, nicht Befund: dort vergleicht die positionsweise');
-    L.push('Pruefung Jahr gegen Nachbarjahr.');
+    L.push('Versatz aus -2..+2 nach Zahl der Umsatz-Paare unter 2 % Abweichung).');
+    L.push('**Vergaberegel (H5, ENTSCHIED 52): FEHLALARM ist ein Entlastungs-Urteil und');
+    L.push(`braucht einen positiven Beleg** — eine eindeutige Spitze mit mindestens ${VERSATZ_MIN_PAARE}`);
+    L.push('Umsatz-Paaren. Die Trefferzahl steht deshalb mit in der Tabelle. Ein Gleichstand');
+    L.push('oder eine leere Messmenge belegt NICHTS und heisst **UNAUFGELOEST** — nie');
+    L.push('FEHLALARM und nie Befund.');
     L.push('');
-    L.push('| Ticker | Schicht | kippt bei VOLL | kippt bei NUR-UMSATZ | bester Versatz | Einordnung |');
-    L.push('| --- | --- | :---: | :---: | :---: | --- |');
+    L.push('| Ticker | Schicht | kippt bei VOLL | kippt bei NUR-UMSATZ | bester Versatz | Umsatz-Paare (bei Versatz 0) | Einordnung |');
+    L.push('| --- | --- | :---: | :---: | :---: | :---: | --- |');
     const nurU = new Set(r.t174.kippenNurUmsatz.map((k) => k.tk));
     for (const k of r.t174.kippen) {
-      L.push(`| ${k.tk} | ${k.layer} | ja | ${nurU.has(k.tk) ? '**ja**' : 'nein'} | ${k.versatz.off} | ${
-        k.versatz.off !== 0 ? '**FEHLALARM (Jahres-Versatz)**' : 'Tag-Divergenz-Signatur'}` + ' |');
+      const v = k.versatz;
+      const einordnung = v.lage === 'versatz' ? '**FEHLALARM (Jahres-Versatz)**'
+        : v.lage === 'null-versatz' ? 'Tag-Divergenz-Signatur'
+        : `**UNAUFGELOEST** — ${v.hits === 0 ? 'kein Versatz trifft ein einziges Umsatzpaar'
+          : v.spitze.length > 1 ? `Gleichstand (${v.spitze.join('/')})` : `nur ${v.hits} Paar(e)`}`;
+      L.push(`| ${k.tk} | ${k.layer} | ja | ${nurU.has(k.tk) ? '**ja**' : 'nein'} | ${
+        v.off === VERSATZ_UNBESTIMMT ? 'NICHT BESTIMMBAR' : v.off} | ${v.hits} (${v.hits0}) | ${einordnung}` + ' |');
     }
     L.push('');
   }
@@ -331,4 +378,5 @@ if (require.main === module) {
   console.error(`[t168-layer-diff] geprueft=${r.stat.geprueft} ohneCache=${r.stat.ohneCache} kaputt=${r.stat.kaputt} bewegt=${r.stat.bewegt} zellen=${r.stat.zellen}`);
 }
 
-module.exports = { run, bericht, ALT_REV, NEU_REV, reiheMit };
+module.exports = { run, bericht, besterVersatz, ALT_REV, NEU_REV, reiheMit,
+  VERSATZ_MIN_PAARE, VERSATZ_UNBESTIMMT };
