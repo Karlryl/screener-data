@@ -1,0 +1,73 @@
+{
+  "schema": "gqs-00-transition/v1",
+  "status": "pending",
+  "from": "GQS-00@1.1.0",
+  "to": "GQS-00@1.2.0",
+  "opened": "2026-08-29",
+  "reason": "Hartes Gate gegen synthetische OpInc-Jahresreihen. pull-yahoo.js fuellt fehlende Jahres-Betriebsergebnisse von Finanzfirmen mit annualRev[jahr] x operatingMargins(TTM) und kennzeichnet das als meta.opIncSource='computed-margin' (1.859 Namen im Hauptstore, 100 % Financial Services). Eine so entstandene Reihe hat konstruktionsbedingt konstante Marge und konstantes Vorzeichen: sie fabriziert exakt die Stabilitaet, die jede historische Achse misst (GLXY stand mit capitalEfficiency-Perzentil 99,7 aus Fiktion auf Rang 1 des financials-Boards). Das Gate sperrt die Reihe fuer alle historischen Achsen, Profitphasen und longitudinalen Lampen; das aktuelle Vorzeichen des Track-Splits bleibt ausdruecklich erlaubt (K2-Auflage 1). Zusaetzlich die K3-Ausnahme: Synthetik zaehlt nicht mehr als Laengen-Konkurrent gegen eine echte SEC-Serie, und zwei nicht-excludierende Herkunfts-Lampen machen das Etikett in der Engine sichtbar.",
+  "authority": {
+    "gerichtsurteil": "T164/T165/T166 (OpInc-Herkunft), 29.08.2026 — K2 EINSTIMMIG 3:0 'zulaessig-mit-Kennzeichnung mit hartem Gate', K3 EINSTIMMIG 3:0 'behalten-mit-Ausnahme'. Akte: C:\\Users\\Anwender\\.codex\\delegation-locks\\richter-t164-opinc-20260829-akte.md; Urteil: Vault agent-reports/_COURT-T164-OPINC-2026-08-29.md. Bank vollzaehlig (R1/R2 Claude, R3 Codex CLI gpt-5.6-sol) — kein Richterausfall, volle Bindungskraft.",
+    "ratifikation": "Orchestrator ENTSCHIED 15 vom 29.08.2026 18:55 — 'RATIFIZIERT ohne Aenderung'.",
+    "formelsperre": "GQS-00 punktuell geoeffnet, nur dieser Fall (versiegelte Empfehlungen B1-B4 des Urteils, Abschnitt Abhilfen (b), gebuendelt in EINEN Karl-Freigabe-Slot).",
+    "karlFreigabe": "2026-08-29 20:10, Kreuzelrunde Frage 1 'Versiegelter Score-Slot B1-B4' -> JA, gebuendelt. Protokolliert als Orchestrator ENTSCHIED 18 vom 29.08.2026 20:07.",
+    "gqs00Bedingung": "Beide Glieder der Doppel-Autorisierung liegen vor (einstimmiges Gerichtsurteil UND Karl-Freigabe). Ohne eines von beiden ist dieser Uebergang ungueltig.",
+    "pullRequest": "Karlryl/screener-data — 'B1-B4: hard gate against synthetic operating-income series'"
+  },
+  "scope": "NUR die hier gelisteten sechs Quelldateien duerfen zusaetzlich zum 1.1.0-Hash den pending-Hash tragen. Jede andere Datei und jeder dritte Hash-Stand bleibt rot. protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ bleiben unangetastet — beide Nachweise sind byte-identisch erhalten.",
+  "goldenFixtureImpact": {
+    "casesGeprueft": 25,
+    "syntheticCases": 1,
+    "mitComputedMargin": 3,
+    "erwarteteScoresGeaendert": 0,
+    "bemerkung": "Drei versiegelte Golden-Fixtures tragen meta.opIncSource='computed-margin' (STB.OL, GDG.AX, 001236.SZ). KEINE aendert ihren erwarteten Score: bei STB.OL und GDG.AX ist capitalEfficiency bereits im Siegel null (Rohwert null, kein Perzentil, kein Gewicht), 001236.SZ ist gar nicht geroutet (action 'survival', reason 'no-revenue'). Auch kein Endfaktor bewegt sich — beide gerouteten Zeilen tragen weder burnAccelerating noch ein Zyklus-Signal. Der volle Trace-Rebuild in gqs00-freeze.js verify() bestaetigt das maschinell (assert.deepEqual gegen score-traces.json). Es reisst ausschliesslich die Source-Hash-Schaerfe. Die beiden neuen Herkunfts-Lampen beruehren die Traces strukturell nicht: Traces fuehren keine Lampen, und die Lampen stehen NICHT in DATA_SUSPECT_LAMPS."
+  },
+  "wirkungAmEchtenBestand": {
+    "messstand": "byte-identische Kopie des Live-Stores vom 29.08.2026 (15.046 Dateien), voller lokaler Re-Score beider Staende (origin/main 66b8f78ffd gegen diesen Zweig), identisches geladenes Universum 15.044",
+    "computedMarginZeilen": 1859,
+    "dScoreBase_aktivBetroffen": { "n": 160, "mittel": 5.9057, "median": 5.3449, "max": 26.5734 },
+    "scoreAenderungen": { "computedMargin": 297, "uebrige": 54, "gesamt": 354 },
+    "boardWirkung": { "eintritte": 0, "austritte": 3, "rangbewegungen": 324, "betroffeneBoards": ["financials|profitable", "financials|unprofitable"] },
+    "scoreAusfaelle": ["0290.HK", "0622.HK", "EXO.AS"],
+    "scoreAusfaelleErklaerung": "Genau die drei vom Gericht in K2.5 vorhergesagten Ausfaelle. Ihre EINZIGE getragene Achse war capitalEfficiency (coverageWeight 0,18 = 1 von 7; Perzentile 83,9 / 94,6 / 98,2 — samt und sonders aus der synthetischen Reihe). Faellt sie, bleibt keine bewertbare Achse; es greift der vorbestehende, universelle Vertrag action='exclude', reason='no-axes' — NICHT die Herkunfts-Lampe und NICHT DATA_SUSPECT_LAMPS.",
+    "k26PraemissenWiderlegung": {
+      "entscheid": "Orchestrator ENTSCHIED 24 vom 29.08.2026 20:55 — Weg (3) ratifiziert, Konfidenz ~85 % geteilt.",
+      "befund": "K2-Auflage 6 verlangt, die drei Coverage-1/7-Namen behielten ihren Restscore. Diese TATSACHEN-PRAEMISSE ist durch die Messung WIDERLEGT: es existiert kein Restscore. capitalEfficiency war bei allen dreien die einzige bewertbare Achse und vollstaendig synthetisch. K2.5 (drei Ausfaelle als akzeptierte Folge) und K2.6 (Restscore fuer dieselben drei Zeilen) sind am selben Trio unvereinbar.",
+      "begruendung": "Bei toter Praemisse regiert der KERN des einstimmigen Urteils. K2.2 verbietet Rang aus Fiktion — eine Ausnahme vom Gate fuer Ein-Achsen-Zeilen wuerde 100-%-Fiktions-Scores auf dem Board halten und K2.2 frontal brechen. Ein Routen mit coverageWeight 0 waere der vom Engine-Vertrag ausdruecklich verbotene Fake-50. R2s Sorge vor einem Lampen-Hintertuer-Massen-Exclude greift hier NICHT: der Abgang laeuft ueber den vorbestehenden universellen no-axes-Vertrag, nicht ueber die Lampe — bewiesen in Waechter G4b (die Herkunfts-Lampen aendern isDataSuspect nachweislich nicht).",
+      "klasseUrsaechlich": "Zeile mit meta.opIncSource='computed-margin', deren EINZIGE bewertbare Achse capitalEfficiency ist. Das Gate nimmt ihr diese eine Achse, damit bleibt keine bewertbare Achse uebrig.",
+      "klasseOperativ": "Zeilen, die beim Gate-Vergleich von action='route' auf action='exclude' mit reason='no-axes' wechseln UND das Etikett 'computed-margin' tragen.",
+      "anzahlAmMessstand": 3,
+      "mitglieder": ["0290.HK", "0622.HK", "EXO.AS"],
+      "wachstumsPruefung": "Bei jedem kuenftigen Re-Run dieselben zwei Vollaeufe auf identischem Snapshot-Baum fahren und die route->exclude/no-axes-Wechsel unter computed-margin zaehlen. MEHR ALS 3 = die Klasse waechst: dann haengen mehr Namen mit ihrem GANZEN Score an einer synthetischen Achse. Das ist ein neuer Befund fuer den Orchestrator, KEINE stille Anpassung."
+    },
+    "regressionsAnker": {
+      "IREN": "K3-Anker GETROFFEN: capitalEfficiency -0,11469 -> +0,00621 (Vorzeichenwechsel wie vom Gericht angesagt), Perzentil 62,5 -> 96,7, Score 53,939 -> 59,561, roicStabilitySource yahoo -> sec. Die ECHTE 1-Jahres-SEC-Serie schlaegt jetzt die 4 synthetischen Yahoo-Jahre.",
+      "BTBT": "NICHT messbar: BTBT steht in watchlist.json, hat aber weder einen Snapshot im Store noch einen Eintrag in external-data/sec-secannual.json. Datenluecke, keine Code-Frage — ehrlich ausgewiesen statt behauptet.",
+      "GLXY": "Kernfall des Urteils: capitalEfficiency-Perzentil 99,7 faellt weg, Score 88,814 -> 80,217. Der Rang-1-Treiber aus Fiktion ist fort, die Zeile bleibt mit ihren echten Achsen geroutet und gekennzeichnet."
+    },
+    "b3Reichweite": "Genau EIN Name im ganzen Universum wechselt durch die K3-Ausnahme die ROIC-Quelle (IREN). Von 1.859 computed-margin-Namen haben nur 6 ueberhaupt eine committete SEC-OpInc-Serie; die uebrigen 5 scheitern am unveraenderten Single-Source-Trio-Guard (fehlende tiefe Bilanz bzw. Index-0-Luecke). Der Duenne-Serien-Schutz ist also nicht mitgelockert worden."
+  },
+  "aufloesung": "Nach dem ersten GRUENEN PLANMAESSIGEN daily-pull mit dem neuen Code (Cron '17 2 * * 2-6', Di-Sa) wird GQS-00@1.2.0 mit eigener Baseline vollversiegelt (scripts/gqs00-freeze.js --initialize + --seal gegen das snapshots-Artefakt genau dieses Laufs) und dieses Verzeichnis entfaellt. Bis dahin gilt fuer die sechs gelisteten Dateien der pending-Hash ALS ZWEITE erlaubte Variante neben dem 1.1.0-Siegelhash; jeder dritte Stand bleibt rot. WICHTIG: gqs00-freeze.js liest aus dieser Datei nur status + from + sourceFiles — die uebrigen Felder sind Beleg fuer Menschen, nicht Steuerung.",
+  "sourceFiles": {
+    "src/scoring/snapshot.js": "f1d15da18e0ab21eb408e735b7a6018309945d4377139faa4c26b5a6fd475dec",
+    "src/scoring/axes.js": "48022620d5dc488600b6d1dec1a5e048f26d9f6832daaaf7c8646884614d5288",
+    "src/scoring/score.js": "9e3841b5649dfe26c3d9d9383e70f5b3e017dc0df1d8b0aa23502f38f86d1d8f",
+    "src/scoring/calibrate.js": "0b3ac3116274c80f885ec1228a6ddc7836bc6c16abd99c3f838a90d4b27eb3ff",
+    "src/scoring/lamps.js": "e68ecf6ebdf1da2f18c0eece6575035a964d449020275974dbad509d6a74dd03",
+    "src/scoring/profit-tier.js": "a7af103912b2bfdec3dbe5bfa40268ec95d5fb8f12b87a0661af8f347f5c3eaf"
+  },
+  "sourceFilesBegruendung": {
+    "src/scoring/snapshot.js": "traegt das Gate selbst (histOpInc/opIncSynthetic) — die EINE Stelle, an der 'synthetisch' definiert ist",
+    "src/scoring/axes.js": "roicStabilitySource liest histOpInc (B1-Gate fuer capitalEfficiency/roicStability UND K3-Ausnahme in einer Zeile); capitalEfficiency cycleDiscount ebenso",
+    "src/scoring/score.js": "cycleSeriesPair und profitSeries auf histOpInc; trackOf bleibt ausdruecklich auf norm (K2-Auflage 1); Anker-Kommentar an DATA_SUSPECT_LAMPS",
+    "src/scoring/calibrate.js": "nur ein Anker-Kommentar an profitSign (norm bleibt) — muss mit score.js und gqs00-freeze.js comparisonBasis zeichengleich bleiben",
+    "src/scoring/lamps.js": "peakMargin/cyclePeak/burnAccelerating auf histOpInc; die zwei neuen nicht-excludierenden Herkunfts-Lampen (B2/B4); unprofit bleibt auf norm",
+    "src/scoring/profit-tier.js": "annualProfitSeries auf histOpInc (Profitphasen; speist ueber quality-route.js die Quality-Board-Aufnahme)"
+  },
+  "nichtBeruehrt": [
+    "protocol/gqs-00/1.1.0/ und protocol/gqs-00/1.0.0/ (byte-identisch erhalten)",
+    "src/scoring/formulas/** (kein Gewicht, keine Achsenliste, kein Split geaendert)",
+    "src/scoring/engine.js, router.js, run-screener.js, snapshot-Router, calibrate-Mechanik",
+    "der Ledger und die committeten SEC-Schichten",
+    "DATA_SUSPECT_LAMPS selbst (Inhalt unveraendert; nur ein Anker-Kommentar davor)"
+  ]
+}

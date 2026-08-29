@@ -10,7 +10,7 @@
  */
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
-  jahresVergleichIdx, jahresFensterAusgerichtet } = require('./snapshot.js');
+  jahresVergleichIdx, jahresFensterAusgerichtet, histOpInc, opIncSynthetic } = require('./snapshot.js');
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
@@ -48,6 +48,9 @@ function _median(arr) {
 }
 
 // 1. Unprofitabel (reine Warnung, KEINE Score-Strafe) ------------------------
+// norm(), nicht histOpInc(): firstPresent liest EINEN Wert — das aktuelle Vorzeichen, dieselbe
+// Groesse wie der Track-Split (K2-Auflage 1). Der eigene Rueckfall dieser Lampe ist ohnehin die
+// TTM-operatingMargin, aus der die synthetische Reihe stammt: beides waere dieselbe Aussage.
 function unprofit(s) {
   const op = firstPresent(norm(s, 'annualOpInc'));
   const om = metricVal(s, 'operatingMargin');
@@ -111,7 +114,10 @@ function peakMargin(s) {
   // seine EIGENE Baseline gemittelt -> Lampe feuerte zu selten (8/46 Faelle, z.B. NEU/UVV). Reine
   // Display-Lampe (nicht in DATA_SUSPECT_LAMPS) -> kein Score/Exclude-Effekt; KEIN !rising-Guard
   // (Court F22: peakMargin bleibt die breite Mean-Reversion-Watch, NICHT cyclePeak-Duplikat).
-  const m = presentValues(ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')));
+  // K2-Gate (longitudinale Lampe): cur gegen den Eigen-Schnitt der Vorjahre. Bei computed-margin
+  // ist die Margenreihe konstant, cur == histRest -> die Lampe koennte konstruktionsbedingt nie
+  // feuern und meldete 'false' als waere das ein Befund. histOpInc macht daraus ein ehrliches null.
+  const m = presentValues(ratioSeries(histOpInc(s), norm(s, 'annualRev')));
   const cur = m.length ? m[0] : null;
   const histRest = meanPresent(m.slice(1)); // ohne juengstes (kompaktiert, kein Eigen-Overlap)
   if (cur === null || histRest === null || histRest <= 0) return null;
@@ -183,7 +189,7 @@ function fcfArtefact(s) {
 // werden Commodity-Peak-Price-Taker (Gold-Miner am Rekordpreis) markiert, ein
 // echter Margen-Expandierer (cur>hist aber steigend) NICHT.
 function cyclePeak(s) {
-  const margins = ratioSeries(norm(s, 'annualOpInc'), norm(s, 'annualRev')); // aligned
+  const margins = ratioSeries(histOpInc(s), norm(s, 'annualRev')); // aligned; K2-Gate wie peakMargin
   const m = presentValues(margins);
   if (m.length < 3) return null;
   const histRest = meanPresent(m.slice(1));
@@ -345,8 +351,13 @@ function burnAccelerating(s) {
   // 0,54, Kohorten-Rang 39 statt 1). Die Vertiefungs-Pruefung laeuft aus demselben Grund
   // ebenfalls auf der operativen Groesse: ein groesseres Bauprogramm ist keine
   // Verschlechterung der Einheiten-Oekonomie.
+  // K2-Gate: opi[0] gegen opi[1] ist ein Zwei-Jahres-Vergleich (longitudinal) UND er druckt ueber
+  // burnPressFactor den Score. Bei computed-margin ist `opi[0] < opi[1]` nichts weiter als
+  // `rev[0] < rev[1]`, mit der TTM-Marge als Vorzeichen — eine "sich vertiefende Verlustdynamik",
+  // die allein aus der Umsatzbewegung fabriziert waere. histOpInc -> opi leer -> Lampe null ->
+  // burnPressFactor exakt 1.0 (kein Abzug aus Fiktion, und auch kein Rescue).
   const ocf = operatingCashSeries(s);
-  const opi = norm(s, 'annualOpInc');
+  const opi = histOpInc(s);
   if (!Number.isFinite(ocf[0]) || !Number.isFinite(ocf[1]) || !Number.isFinite(opi[0]) || !Number.isFinite(opi[1])) return null;
   if (!(ocf[0] < 0) || !(opi[0] < 0)) return false;   // Gate: operativ Cash-verbrennend UND operativ unprofitabel
   return ocf[0] < ocf[1] && opi[0] < opi[1];           // beide tiefer als Vorjahr -> Burn/Verlust beschleunigt
@@ -783,6 +794,37 @@ function einmalertragBewertbarkeit(s) {
   return 'ungleicheKadenz';
 }
 
+// --- 17+18: OpInc-HERKUNFTS-Lampen (Urteil T164, K2-Auflage 3 / K1-Doppelboden) ---------------
+// ⚠ AUSDRUECKLICH NICHT in DATA_SUSPECT_LAMPS (score.js). Das ist keine Formalie, sondern der
+// woertliche Auflagentext beider Richter: `opIncSynthetisch` steht heute an 300 der 354 Zeilen des
+// Financials-Boards. In der Exclude-Liste waere sie ein 300-Zeilen-Ausschluss durch die Hintertuer
+// — genau die "Board-Ausweidung ohne Ersatz", die das Gericht mit 3:0 verboten hat (SEC-Alternative
+// existiert fuer 8 von 1.883 Namen). Die drei Coverage-1/7-Namen behalten ihren Restscore, sichtbar
+// gekennzeichnet (K2-Auflage 6). Wer diese Namen hier eintraegt, kippt das Urteil.
+//
+// Warum ZWEI Lampen und nicht ein Herkunfts-Feld: Lampen sind der einzige Kanal, der bereits an
+// JEDER Board-Zeile haengt (score.js:1421/1437, findash-Export). Bis heute erreichte
+// meta.opIncSource die Engine ueberhaupt nicht (K3-Auflage 3: grep in src/scoring = 0 Treffer ueber
+// 31 Dateien, von R1 und R2 unabhaengig verifiziert) — das Etikett existierte nur im Store.
+
+// 17. (B2) Die Jahres-OpInc-Reihe ist zurueckgerechnet (annualRev x operatingMargins-TTM), nicht
+// gemeldet. Genau die Reihe, die das K2-Gate oben aus allen historischen Auswertungen heraushaelt.
+function opIncSynthetisch(s) {
+  if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
+  return opIncSynthetic(s);
+}
+
+// 18. (B4) K1-Doppelboden (R1): die Reihe stammt aus Yahoos still und unversioniert bereinigtem
+// Stream, nicht aus dem eingereichten Abschluss. K1 hat 2:1 GAAP-as-filed zur Scoring-Definition
+// erklaert; wo keine SEC-Serie existiert, bleibt die Yahoo-Reihe als ehrlich etikettierter Proxy
+// stehen (K1-Auflage 3: kein Name verliert Daten). Diese Lampe sagt, welcher Fall vorliegt.
+// Sie feuert breit — das IST der K1-Befund und keine Fehlkalibrierung: der Store traegt 12.629
+// yahoo-adjusted gegen 128 sec-gaap (Migration 29.08., PR #90).
+function opIncYahooAdjusted(s) {
+  if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
+  return s.meta.opIncSource === 'yahoo-adjusted';
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -791,6 +833,7 @@ const LAMPS = {
   inflationSuspect,
   shareCountDilution,
   einmalertrag,
+  opIncSynthetisch, opIncYahooAdjusted,
 };
 
 /**
