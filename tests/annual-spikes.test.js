@@ -224,6 +224,44 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     assert.equal(b.faelle.length, 3, 'alle Funde absorbiert, wie vor Weg C');
     assert.deepEqual(b.ausgeschlossen, [], 'leere Liste wird explizit geschrieben, nicht weggelassen');
   });
+
+  // Review-Befund HIGH (29.08.): "Feld fehlt" darf still [] sein, "Feld da aber kein
+  // Array" NICHT — sonst hoebe ein kaputter Merge alle Sperren lautlos auf.
+  check('Weg C: ausgeschlossen mit falschem Typ wirft, statt still alle Sperren aufzuheben', () => {
+    for (const kaputt of [null, 'BANPU.BK', { schluessel: 'x' }, 42]) {
+      assert.throws(() => baueNeuenBestand({ hinweis: 'x', ausgeschlossen: kaputt }, funde, 15045),
+        /statt einer Liste/, `ausgeschlossen=${JSON.stringify(kaputt)}`);
+    }
+  });
+
+  // Review-Befund MITTEL (29.08.): Sperre in ausgeschlossen UND faelle -> faelle gewinnt
+  // still in istBekannt(). basisGueltig() faengt den handgebauten Zustand jetzt laut.
+  check('Weg C: Schluessel in ausgeschlossen UND faelle macht den Bestand UNGUELTIG', () => {
+    const { basisGueltig } = require('../scripts/watch-annual-spikes.js');
+    const widerspruch = {
+      faelle: ['BANPU.BK|annualOpInc|2023-12-31'],
+      snapshotsBeiAufnahme: 15045,
+      ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'x', seit: '2026-08-29' }],
+    };
+    const g = basisGueltig(widerspruch, 15045);
+    assert.equal(g.ok, false);
+    assert.match(g.grund, /ausgeschlossen UND in faelle/);
+    // Abwesenheits-Richtung: disjunkte Mengen bleiben gueltig.
+    const sauber = basisGueltig({ ...widerspruch, faelle: ['AAA|annualRev|2024-12-31'] }, 15045);
+    assert.equal(sauber.ok, true, sauber.grund);
+  });
+
+  // Review-Befund MITTEL (29.08.): eine Sperre ohne heutigen Treffer unterdrueckt nichts
+  // mehr und muss sichtbar werden (Aufloesung ODER kaputter Schluessel).
+  check('Weg C: Sperren ohne heutigen Treffer werden benannt, treffende nicht', () => {
+    const { sperrenOhneTreffer } = require('../scripts/watch-annual-spikes.js');
+    const sperren = [
+      { schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'x' },
+      { schluessel: 'WEG.GE|annualRev|2019-12-31', hinweis: 'Tippfehler-Kandidat' },
+    ];
+    assert.deepEqual(sperrenOhneTreffer(sperren, funde), ['WEG.GE|annualRev|2019-12-31']);
+    assert.deepEqual(sperrenOhneTreffer([], funde), []);
+  });
 }
 
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');

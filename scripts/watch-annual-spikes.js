@@ -184,6 +184,24 @@ const POP_TOLERANZ = 0.2;
  */
 function basisGueltig(basis, anzahlSnapshots) {
   if (!basis || !Array.isArray(basis.faelle)) return { ok: true, grund: '' };  // Erstlauf: nichts zu pruefen
+  // Review-Befund MITTEL (29.08.): steht ein Schluessel in ausgeschlossen UND in faelle
+  // (Hand-Edit, Merge-Artefakt), gewinnt faelle in istBekannt() still — der Fall gilt
+  // als bekannt, obwohl die Sperre "bleibt rot-faehig" verspricht. baueNeuenBestand()
+  // kann den Zustand nicht erzeugen; diese Wache faengt den Weg daran vorbei.
+  if (Array.isArray(basis.ausgeschlossen)) {
+    const faelle = new Set(basis.faelle);
+    const doppelt = basis.ausgeschlossen
+      .filter((a) => a && typeof a.schluessel === 'string' && faelle.has(a.schluessel))
+      .map((a) => a.schluessel);
+    if (doppelt.length) {
+      return {
+        ok: false,
+        grund: `Der Ausreisser-Bestand widerspricht sich: ${doppelt.length} Schluessel stehen in `
+          + `ausgeschlossen UND in faelle (${doppelt.join(' · ')}). faelle wuerde still gewinnen und `
+          + 'die Sperre aushebeln — Bestand von Hand bereinigen (Schluessel gehoert auf GENAU eine Seite).',
+      };
+    }
+  }
   const beiAufnahme = Number(basis.snapshotsBeiAufnahme) || 0;
   if (beiAufnahme <= 0) {
     return {
@@ -225,7 +243,16 @@ function basisGueltig(basis, anzahlSnapshots) {
  * aufgenommen UND die Liste selbst ueberlebt die Neuaufnahme.
  */
 function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()) {
-  const ausgeschlossen = Array.isArray(basis && basis.ausgeschlossen) ? basis.ausgeschlossen : [];
+  // Review-Befund HIGH (29.08.): "Feld fehlt" (Alt-Bestand vor Weg C) und "Feld da,
+  // aber falscher Typ" (kaputter Merge, versehentliches null) sind zwei verschiedene
+  // Faelle. Nur der erste darf still zu [] werden — der zweite wuerde sonst ALLE
+  // Sperren lautlos aufheben: genau die Fehlerklasse, die Weg C schliesst.
+  const roh = basis ? basis.ausgeschlossen : undefined;
+  if (roh !== undefined && !Array.isArray(roh)) {
+    throw new Error(`Ausschluss-Liste kaputt: ausgeschlossen ist ${JSON.stringify(roh)} statt einer Liste — `
+      + 'eine still zu [] degradierte Sperrliste hoebe alle Sperren lautlos auf.');
+  }
+  const ausgeschlossen = roh || [];
   for (const a of ausgeschlossen) {
     if (!a || typeof a.schluessel !== 'string' || !a.schluessel
       || typeof a.hinweis !== 'string' || !a.hinweis.trim()) {
@@ -246,6 +273,18 @@ function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()
     ausgeschlossen,
     faelle,
   };
+}
+
+/**
+ * Review-Befund MITTEL (29.08.): eine Sperre, deren Schluessel heute NICHTS mehr trifft
+ * (Wert-Revision verschiebt die werte:-Signatur, Tippfehler beim Eintragen), sieht in
+ * der JSON intakt aus und unterdrueckt trotzdem nichts mehr. Sichtbar machen statt
+ * schweigen: 0 Treffer heisst entweder "Fall hat sich aufgeloest -> Sperre AKTIV
+ * entfernen" oder "Schluessel kaputt -> reparieren". Rein, fuer den Waechter.
+ */
+function sperrenOhneTreffer(ausgeschlossen, funde) {
+  const heutig = new Set(funde.map(stabilerSchluessel));
+  return (ausgeschlossen || []).filter((a) => a && !heutig.has(a.schluessel)).map((a) => a.schluessel);
 }
 
 /**
@@ -341,6 +380,12 @@ function main() {
       console.log(`::warning::${neuerBestand.ausgeschlossen.length} Fall/Faelle stehen auf der Ausschluss-Liste `
         + 'und wurden NICHT in den Bestand aufgenommen — sie bleiben rot-faehig, bis sie einzeln geklaert sind: '
         + neuerBestand.ausgeschlossen.map((a) => a.schluessel).join(' · '));
+      const leer = sperrenOhneTreffer(neuerBestand.ausgeschlossen, funde);
+      if (leer.length) {
+        console.log(`::warning::${leer.length} Sperre(n) treffen HEUTE keinen Fund mehr — entweder hat sich der `
+          + 'Fall aufgeloest (Sperre AKTIV entfernen) oder der Schluessel ist kaputt (reparieren): '
+          + leer.join(' · '));
+      }
     }
     // BEWUSST exit 0, nicht 1. Erste Fassung liess den Lauf absichtlich rot werden
     // ("die Basis ist sein eigenes Ergebnis, also wurde nichts geprueft"). Das ist
@@ -388,7 +433,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
