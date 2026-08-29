@@ -88,11 +88,40 @@ const plain = (arr) => (arr || []).map(x => x && typeof x === 'object' ? x.value
 // Level-Restatement (kein positional-overlap-Guard, der flaggt FY-Versatz falsch). Minimal gegen GENUIN falsches
 // Konzept: (1) neuestes OpInc gleiches Vorzeichen; (2) neuester Umsatz ~2x-Skala (RGEN 141M vs 738M); (3) kein
 // isoliertes Einzeljahr >10x unter beiden Nachbarn (ARWR 3.5M zwischen 240M/829M = Konzept-Mix-Phantom-Drawdown).
+// T174 (29.08.2026): Regeln (1) und (2) pruefte diese Wache nur am NEUESTEN Jahr. Ein
+// Konzeptfehler, der erst in den Altjahren sitzt, kam damit ungebremst in die committete
+// Schicht — genau die Klasse, die T168 an CWCO/EXE/HE zutage foerderte (dort betroffene
+// Geschaeftsjahre bis fy2018 zurueck, waehrend das neueste Jahr harmlos aussah). Die
+// SCHWELLEN bleiben unveraendert (Vorzeichen bzw. Faktor 2), nur ihr Geltungsbereich waechst
+// vom neuesten Jahr auf die ganze Reihe. Die newest-Pruefungen darueber bleiben ZUSAETZLICH
+// stehen: newestPresent() ueberspringt fuehrende Nullen, vergleicht also unter Umstaenden ein
+// anderes Paar als der positionsweise Durchlauf — beide Fassungen nebeneinander koennen die
+// Wache nur haerten, nie schwaechen.
+// Positionsweise, wie overlapDivergence() in merge-sec-xbrl.js: Position i beider Reihen meint
+// dasselbe Geschaeftsjahr. Diese Annahme traegt gemessen bei ~80 % der Firmen (Begruendung dort);
+// fuer eine GROBmuell-Wache mit Faktor-2-Schwelle reicht sie — ein Jahresversatz laesst
+// Umsatzniveaus selten um mehr als Faktor 2 auseinanderlaufen.
+function paare(yArr, sArr) {
+  const y = (yArr || []).map((x) => (x && typeof x === 'object' ? x.value : x));
+  const s = (sArr || []).map((x) => (x && typeof x === 'object' ? x.value : x));
+  const out = [];
+  for (let i = 0; i < Math.min(y.length, s.length); i++) {
+    if (Number.isFinite(y[i]) && Number.isFinite(s[i])) out.push([y[i], s[i]]);
+  }
+  return out;
+}
 function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   const yOp = newestPresent(yOpArr), sOp = newestPresent(sOpArr);
   if (yOp !== null && sOp !== null && Math.sign(yOp) !== Math.sign(sOp) && yOp !== 0 && sOp !== 0) return false;
   const yR = newestPresent(yRevArr), sR = newestPresent(sRevArr);
   if (yR !== null && sR !== null && yR > 0 && sR > 0) { if (Math.max(yR, sR) / Math.min(yR, sR) > 2) return false; }
+  // T174: dieselben zwei Regeln, dieselben Schwellen, jetzt ueber JEDES Jahr der Ueberlappung.
+  for (const [a, b] of paare(yOpArr, sOpArr)) {
+    if (a !== 0 && b !== 0 && Math.sign(a) !== Math.sign(b)) return false;
+  }
+  for (const [a, b] of paare(yRevArr, sRevArr)) {
+    if (a > 0 && b > 0 && Math.max(a, b) / Math.min(a, b) > 2) return false;
+  }
   const r = plain(sRevArr);
   for (let i = 1; i < r.length - 1; i++) { if (r[i] > 0 && r[i] * 10 < r[i - 1] && r[i] * 10 < r[i + 1]) return false; }
   return true;
