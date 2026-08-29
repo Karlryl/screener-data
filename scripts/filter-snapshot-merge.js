@@ -37,7 +37,10 @@ const { loadWatchlist } = require('../lib/watchlist-fs.js');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 // U2-BO/NS (s. WURZEL_ZWILLING unten): der Emittenten-Schluessel wird IMPORTIERT, nie nachgebaut.
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
-const { issuerKeyLoose } = require('../src/scoring/score.js');
+// U3-Milan (s. MILAN_KANDIDATEN unten) braucht zusaetzlich den STRENGEN Schluessel und den
+// Listing-Test — beide ebenfalls importiert (Auflage A3 des Urteils, Nachbau-Fehler F1334).
+const { issuerKeyLoose, issuerKeyStrengOhneGattung } = require('../src/scoring/score.js');
+const { isUsPrimaryListing } = require('../src/scoring/router.js');
 
 /**
  * F-12-R2 (Review Tag 563): Anteil uebersprungener Snapshots, ab dem dieser Schritt hart
@@ -223,6 +226,445 @@ function wendeWurzelZwillingeAn(ziel, dateien) {
   return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar, unschreibbar };
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * U3-MILAN — der Mailaender Spiegel, freigegeben mit elf Auflagen
+ * Urteil: `_COURT-MILAN-U3-2026-08-29.md` (K1 3/3 FREIGABE-MIT-AUFLAGEN), ratifiziert als
+ * ENTSCHIED 31. Akte: `richter-milan-u3-20260829-akte.md`.
+ *
+ * BAUFORM WIE PR #92: diese Vorstufe MERGED NICHTS. Sie praegt den Beinen EINES Emittenten
+ * denselben Namen auf und laesst den versiegelten Dedup entscheiden (`issuerKeyLoose` +
+ * `issuerDedupComparator` + `splitFalseIssuerMerges`). Kein Bein wird geloescht, keine Zeile
+ * ausgewaehlt. Alle Schluessel sind IMPORTIERT, keiner nachgebaut (F1334).
+ *
+ * WARUM DAS HIER GEFAEHRLICHER IST ALS .BO/.NS: das Mailaender `1`-Praefix traegt das
+ * HEIMATMARKT-Kuerzel, nicht das US-Kuerzel. `1SAN.MI` ist Sanofi, `SAN` ist Banco Santander;
+ * ≥ 29 solcher Fremdpaare sind belegt (Urteil T12/T13). Eine naive Wurzel-Regel wuerde sie
+ * verschmelzen und damit eine echte Firma aus dem Board LOESCHEN. Deshalb entscheidet hier
+ * NICHT der Ticker, sondern eine Fundamentaldaten-Gegenprobe mit drei weiteren Riegeln.
+ *
+ * ⚠ ZWEI BEFUNDE DES GERICHTS, DIE DIE BAUFORM BESTIMMEN:
+ *   (i) `splitFalseIssuerMerges` (`score.js:264-277`) teilt ueber `issuerKeyStrengOhneGattung`
+ *       (`score.js:257-263`) — und der liest DENSELBEN `meta.name` wie der lose Schluessel.
+ *       Eine Vorstufe, die Namen vereinheitlicht, macht auch die strengen Schluessel gleich und
+ *       hebelt den Schutz aus (T4). Er darf deshalb NICHT als Sicherung eingeplant werden.
+ *  (ii) Fuer Milan-Paare feuert er ohnehin nie: er verlangt ≥ 2 US-Primaerlistings, und das
+ *       Mailaender Bein ist keins (T2/T3).
+ *   FOLGE (Auflage A2): der GESAMTE Fehlverschmelzungs-Schutz liegt HIER, VOR der Namensmutation.
+ *
+ * DIE ELF AUFLAGEN, UND WO SIE STEHEN:
+ *   A1  Wertgleichheit `timeseries.revenueQ` UND `timeseries.grossProfitQ`, keine Toleranz,
+ *       ≥ 4 endliche Quartale ≠ 0 auf JEDEM Bein ....................... milanTor(), Stufe 2+3
+ *   A2  Schutz VOR der Mutation, nicht im versiegelten Kern ............ diese ganze Datei
+ *   A3  US-Primaer-Abstinenz: ≥ 2 US-Primaerlistings mit VERSCHIEDENEN urspruenglichen
+ *       strengen Namensschluesseln ⇒ ganze Klasse verworfen ............ milanTor(), Stufe 6
+ *   A4  zweite unabhaengige Achse, Pflicht: gleiches nicht-leeres `meta.country`
+ *       UND `sharesOutstanding` im 20-%-Band ......................... milanTor(), Stufe 4+5
+ *   A5  1:1 — kein zweites Mailaender Bein auf demselben Fingerabdruck . milanTor(), Stufe 7
+ *   A6  eingefrorene Kandidatenliste .................................. MILAN_KANDIDATEN
+ *   A7  Mengen-Riegel, harter Abbruch bei Abweichung .................. run(), MILAN_ERWARTET_*
+ *   A8  Waechter am Objekt, beide Richtungen ......................... tests/u3-milan-spiegel.test.js
+ *   A9  Messebene `snapshot.timeseries`, NICHT `pit.*` ................ milanReihe()
+ *   A10 Laufzeit-Ausweis: jede Umbenennung mit BEIDEN Tickern geloggt .. run()
+ *   A11 Milan-Praefix ONLY — ein allgemeines Fingerabdruck-Tor ueber alle Suffixe ist mit
+ *       diesem Urteil NICHT freigegeben (2:1) und braucht Voll-Zensus + eigenes Gericht.
+ *       Der Zensus als reines Messskript: `scripts/probe-fingerprint-zensus.js`.
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+
+/** Das Mailaender Spiegel-Praefix. Anker jeder Kandidatenklasse; A11 haengt daran. */
+const MILAN_SPIEGEL = /^1(.+)\.MI$/;
+
+/** A1: die Pflicht-Auflage aus `scripts/probe-dedup-fingerprint.js:24-30`, wortgleich uebernommen.
+ *  Ohne sie verschmelzen die Pre-Revenue-Zeilen (alle Reihen leer, also alle "identisch") zu
+ *  Scheingruppen — am Vintage 2026-07-14 mit 183, 70 und 8 fremden Firmen gemessen. */
+const MILAN_MIN_QUARTALE = 4;
+
+/** A4, zweite Achse: gemessener Abstand der Aktienzahl. `AVB`/`VMRK` (bytegleiche Reihen, beide
+ *  NYSE, beide `country=United States`) liegen bei 0,642 und werden dadurch geblockt; alle 17
+ *  Kandidatenklassen liegen bei 0,000 bis 0,0047 (`1RSG.MI`/`RSG` ist die weiteste). Die
+ *  strengere Fassung "exakt gleiche Aktienzahl" scheidet aus: sie wuerde `1RSG.MI` verwerfen und
+ *  damit den vom Urteil verlangten Mengen-Riegel 18/17 unerreichbar machen. */
+const MILAN_SHARES_BAND = 0.20;
+
+/**
+ * A6 — DIE EINGEFRORENE KANDIDATENLISTE.
+ *
+ * WARUM SIE EXISTIERT, obwohl das Repo Handlisten an Identitaets-Entscheidungen ablehnt
+ * (`score.js:82-88`): sie ENTSCHEIDET keine Identitaet, sie BEGRENZT nur die Reichweite. Jeder
+ * Eintrag muss trotzdem das volle gemessene Tor bestehen (A1/A3/A4/A5); die Liste kann nie eine
+ * Verschmelzung ERZEUGEN, nur eine verhindern. Ihre Fehlerrichtung ist damit ausschliesslich die
+ * harmlose (ein Platz bleibt doppelt), nie die teure (eine Firma verschwindet).
+ *
+ * WARUM SIE NOETIG IST — nachgemessen am Live-Bestand (15.040 Snapshots, Vintage 2026-08-29,
+ * `snapshot.timeseries`-Ebene): der Fingerabdruck-Index findet **47** Klassen, die ein
+ * Mailaender Bein enthalten UND divergente `issuerKeyLoose` tragen — nicht 17. Vier davon sind
+ * XETRA-Kurzform-Paare (`ANL.DE`/`ADI`, `D2MN.DE`/`DUK`, `KMI.VI`/`KMI`, `PRLD.VI`/`PLD`), also
+ * die Klasse T179, die das Gericht ausdruecklich NICHT verhandelt hat (§5(c) c2/c5). Ohne diese
+ * Liste raeumte der Lauf 8 statt 4 Top-100-Plaetze — was §6.4 des Urteils als FEHLERSIGNAL
+ * fuehrt, nicht als Bonus. Die Diskrepanz 17 (Board) vs. 47 (Bestand) vs. 88 (J2-Zensus) ist
+ * ratspflichtig und ungeklaert; bis dahin ist diese Liste laut A6 der Notriegel.
+ *
+ * HERKUNFT DER 17 EINTRAEGE: `befund-doppelgaenger-2026-08-29.md` §5, Zeilen 132-181 — genau die
+ * Gruppen, die am 29.08. mit beiden Beinen im SELBEN Board standen. Der Board-Rang steht als
+ * Beleg dabei; die vier Top-100-Faelle sind markiert.
+ */
+const MILAN_KANDIDATEN = [
+  { anker: '1ANE.MI',  partner: ['ANE.MC'],           beleg: 'utilities 9+10 (Top 100)' },
+  { anker: '1CRCL.MI', partner: ['CRCL'],             beleg: 'financials/unprofitable 12+13 (Top 100)' },
+  { anker: '1FWON.MI', partner: ['FWONK'],            beleg: 'software-comm-services 12+13 (Top 100)' },
+  { anker: '1NLOK.MI', partner: ['GEN'],              beleg: 'software-comm-services 19+20 (Top 100)' },
+  { anker: '1EXC.MI',  partner: ['EXC'],              beleg: 'utilities 116+117' },
+  { anker: '1CLNX.MI', partner: ['472.DE'],           beleg: 'real-estate 186+187' },
+  { anker: '1SO.MI',   partner: ['SO'],               beleg: 'utilities 205+206' },
+  { anker: '1MO.MI',   partner: ['MO'],               beleg: 'consumer-staples 207+208' },
+  { anker: '1MDT.MI',  partner: ['MDT'],              beleg: 'health-care 215+216' },
+  { anker: '1EIX.MI',  partner: ['EIX'],              beleg: 'utilities 223+224' },
+  { anker: '1MTZ.MI',  partner: ['MTZ'],              beleg: 'industrials 292+293' },
+  { anker: '1BEI.MI',  partner: ['BEI.DE', 'BEI.SW'], beleg: 'consumer-staples 333+334+335 (Dreibein)' },
+  { anker: '1ALC.MI',  partner: ['ALC'],              beleg: 'health-care 414+415' },
+  { anker: '1HII.MI',  partner: ['HII'],              beleg: 'industrials 626+627' },
+  { anker: '1JCI.MI',  partner: ['JCI'],              beleg: 'industrials 780+781' },
+  { anker: '1GEBN.MI', partner: ['GBRA.DE'],          beleg: 'industrials 873+874' },
+  { anker: '1RSG.MI',  partner: ['RSG'],              beleg: 'industrials 1279+1280' },
+];
+
+/**
+ * A7 — DER MENGEN-RIEGEL (2:1-Mehrheitsentscheid; J2s Sondervotum "nur ::warning::" ist
+ * ueberstimmt). Am Live-Bestand vom 29.08. gemessen: 16 Klassen mit je einem Verlierer-Bein plus
+ * `1BEI.MI` mit zweien = 18 umbenannte Beine, 17 kollabierte Gruppen.
+ *
+ * ⚠ DIESE ZAHL IST EIN STOLPERDRAHT, KEIN GLEICHGEWICHT. Die Population ist Wetter (Urteil T19:
+ * 133 → 53 Doppelgaenger-Gruppen in zwei Wochen ohne einen einzigen Fix). Liefert Yahoo fuer
+ * eines der elf Platzhalter-Beine (`GEN`, `EXC`, `SO`, `MO`, `MDT`, `EIX`, `MTZ`, `BEI.DE`,
+ * `HII`, `JCI`, `RSG`) beim naechsten Zug einen Klarnamen, faellt die Zahl auf 17 und DIESER
+ * LAUF BRICHT AB. Das ist die vom Gericht gewollte Wirkung: die Kandidatenliste soll neu
+ * vorgelegt werden, statt still zu driften. Wer den Abbruch sieht, misst nach
+ * (`node scripts/probe-fingerprint-zensus.js`) und legt die Liste neu vor — er dreht NICHT die
+ * Zahl hoch. Das Ventil ist die Wiedervorlage, nicht eine Repo-Variable.
+ */
+const MILAN_ERWARTETE_BEINE = 18;
+const MILAN_ERWARTETE_GRUPPEN = 17;
+
+const IDENTITAETS_REGISTER_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'issuer-identity.json');
+
+/**
+ * A9 — MESSEBENE. Das Messwerkzeug `probe-dedup-fingerprint.js` liest `pit.revenueQ` aus dem
+ * Board-Artefakt; diese Vorstufe laeuft davor und liest `snapshot.timeseries`. Beide Ebenen
+ * wertgleich zu unterstellen war ausdruecklich verboten — sie sind es fuer alle 35 Milan-Beine
+ * (Gegenprobe J3), aber `write-board-history.js:463-478` haelt fest, dass BH-108 `revenueQ` bei
+ * JEDEM Yahoo-Abruf mit dem dann aktuellen FX-Faktor neu in USD rechnet. Deshalb wird hier auf
+ * der Ebene gemessen, auf der auch gehandelt wird, mit derselben Entpackung wie
+ * `seriesValues()` dort ([{value}]-Serialisierung von pull-yahoo).
+ */
+function milanReihe(arr) {
+  if (!Array.isArray(arr)) return null;
+  return arr.map((x) => (x && typeof x === 'object' && 'value' in x ? x.value : x));
+}
+function milanEndlicheQuartale(reihe) {
+  if (!Array.isArray(reihe)) return 0;
+  let n = 0;
+  for (const x of reihe) if (Number.isFinite(x) && x !== 0) n++;
+  return n;
+}
+/** A1: Umsatz- UND Bruttogewinn-Reihe zusammen, Wert fuer Wert, ohne Toleranz. Beide, weil eine
+ *  einzelne Reihe zufaellig uebereinstimmen kann (runde Zahlen, kurze Reihen); beide zusammen
+ *  nicht. Wortgleich zu `probe-dedup-fingerprint.js:82-84`, nur eine Datenebene frueher. */
+function milanFingerabdruck(bein) {
+  // `JSON.stringify` schreibt NaN, Infinity, -Infinity und undefined ALLE als `null` — zwei
+  // Reihen, die sich nur in nicht-endlichen Feldern unterscheiden, bekaemen denselben
+  // Fingerabdruck, obwohl A1 "Wert fuer Wert, ohne Toleranz" verlangt. Reproduziert:
+  // [100,200,300,400,NaN] und [100,200,300,400,Infinity] waren bytegleich. Nicht-endliche
+  // Werte werden deshalb als ihr eigener Name serialisiert; `null`, `NaN`, `Infinity`,
+  // `-Infinity` und `undefined` bleiben damit paarweise verschieden.
+  const fest = (reihe) => JSON.stringify(Array.isArray(reihe)
+    ? reihe.map((x) => (typeof x === 'number' && Number.isFinite(x) ? x : String(x)))
+    : reihe);
+  return fest(bein.revenueQ) + '|' + fest(bein.grossProfitQ);
+}
+
+/**
+ * DAS TOR. Reine Funktion ueber EINE Kandidatenklasse; gibt IMMER einen Grund zurueck, auch beim
+ * Ja. Die Reihenfolge der Stufen ist Vertrag, nicht Geschmack: der Waechter pinnt je Fremdpaar
+ * den ERSTEN greifenden Riegel, und genau daran wird sichtbar, wenn ein einzelner Riegel
+ * stirbt. Faellt Stufe 2 heraus, wechselt `1DGX.MI`/`DGX` von 'fingerabdruck' auf 'aktienzahl'
+ * und der Test wird rot — bei einer blossen Ja/Nein-Zusicherung waere der Tod des
+ * Fingerabdrucks unter den redundanten Riegeln unsichtbar geblieben.
+ *
+ * `milanFingerabdruecke` ist die Menge der Fingerabdruecke, die im Bestand von MEHR ALS EINEM
+ * Mailaender Bein getragen werden (A5). Fehlt sie, entfaellt Stufe 7 — das ist nur fuer
+ * Register-Klassen ohne Mailaender Bein zulaessig.
+ */
+function milanTor(beine, mehrfachAbdruecke) {
+  if (!Array.isArray(beine) || beine.length < 2 || beine.some((b) => !b)) return 'beine-unvollstaendig';
+  const abdruck = milanFingerabdruck(beine[0]);
+  if (beine.some((b) => milanFingerabdruck(b) !== abdruck)) return 'fingerabdruck';
+  if (beine.some((b) => milanEndlicheQuartale(b.revenueQ) < MILAN_MIN_QUARTALE)) return 'umsatzquartale';
+  const land = beine[0].country;
+  if (typeof land !== 'string' || !land.trim() || beine.some((b) => b.country !== land)) return 'land';
+  const shares = beine.map((b) => b.shares);
+  if (shares.some((s) => !Number.isFinite(s) || s <= 0)) return 'aktienzahl';
+  for (let i = 0; i < shares.length; i++) {
+    for (let j = i + 1; j < shares.length; j++) {
+      if (Math.abs(shares[i] - shares[j]) / Math.max(shares[i], shares[j]) > MILAN_SHARES_BAND) return 'aktienzahl';
+    }
+  }
+  // A3, strengste Fassung (J3): nicht "beide Beine US-primaer", sondern ≥ 2 US-Primaerlistings
+  // mit VERSCHIEDENEN urspruenglichen strengen Schluesseln — dann faellt die GANZE Klasse.
+  // Das ist der `AVB`/`VMRK`-Riegel, den `splitFalseIssuerMerges` nach der Umbenennung nicht
+  // mehr stellen koennte (T4), hier VOR der Mutation nachgebildet. Fuer die 17 Milan-Klassen
+  // feuert er strukturell nie (hoechstens EIN Bein ist US-primaer) — er steht trotzdem, weil
+  // dasselbe Modul die Klassen T179/T180 erben wird.
+  const usPrimaer = beine.filter((b) => b.usPrimaerlisting);
+  if (usPrimaer.length >= 2 && new Set(usPrimaer.map((b) => b.strengerSchluessel)).size >= 2) return 'us-primaerlisting';
+  if (mehrfachAbdruecke && mehrfachAbdruecke.has(abdruck)) return 'mehrdeutig';
+  if (new Set(beine.map((b) => b.schluessel)).size === 1) return 'schon-vereint';
+  return 'umbenennen';
+}
+
+/**
+ * Welcher Name gilt fuer die ganze Klasse. Das MAILAENDER Bein gewinnt — gemessen an allen 17
+ * Klassen traegt es durchgehend den sauberen Emittentennamen ("Cellnex Telecom S.A.",
+ * "Geberit AG", "Gen Digital Inc."), waehrend die Partner die Feed-Artefakte tragen
+ * (Platzhalter `GEN`, XETRA-Nennwert-Anhaengsel "CELLNEX TELECOM SA EO-,25", Kurzformen).
+ * `besseresBein` aus der .BO/.NS-Strecke taugt hier NICHT: seine Regel "der laengere Name
+ * gewinnt" ist an indischen Feeds gemessen und wuerde ausgerechnet die XETRA-Anhaengsel zum
+ * Sieger machen.
+ *
+ * EINZIGE AUSNAHME: traegt das Mailaender Bein selbst nur einen Platzhalter, faellt es zurueck
+ * auf das beste Partner-Bein (`besseresBein`) — geraten wird nichts, und wenn ALLE Beine
+ * Platzhalter tragen, gibt es nichts zu uebertragen.
+ */
+function milanSieger(beine) {
+  const echt = beine.filter((b) => !istPlatzhalter(b.name, b.ticker, b.metaTicker));
+  if (!echt.length) return null;
+  return echt.includes(beine[0]) ? beine[0] : echt.reduce(besseresBein);
+}
+
+/**
+ * Reiner Kern (kein I/O): Kandidatenklassen -> Map<Datei, neuer Name> plus je Klasse ein
+ * nachvollziehbares Urteil. Nur VERLIERER-Beine stehen in der Map.
+ */
+function milanUmbenennungen(klassen, mehrfachAbdruecke) {
+  const umbenennungen = new Map();
+  const urteile = [];
+  const kollisionen = [];
+  // datei -> { name, anker }: welche Klasse hat fuer diese Datei welchen Emittentennamen belegt.
+  const beansprucht = new Map();
+  for (const k of klassen) {
+    const beine = k.beine;
+    // A5 haengt daran, OB die Klasse ein Mailaender Bein traegt — nicht daran, woher die Klasse
+    // kommt. Vorher war der Riegel fuer jede Register-Klasse pauschal aus, obwohl nichts einen
+    // Register-Eintrag daran hindert, einen `1XXX.MI`-Ticker zu nennen; die Zusicherung stand
+    // nur im Kommentar. Jetzt greift er ueberall dort, wo er greifen kann.
+    const mitMilanBein = Array.isArray(beine) && beine.some((b) => b && MILAN_SPIEGEL.test(b.ticker));
+    let grund = milanTor(beine, mitMilanBein ? mehrfachAbdruecke : null);
+    let sieger = null;
+    const verlierer = [];
+    if (grund === 'umbenennen') {
+      sieger = milanSieger(beine);
+      if (!sieger) grund = 'nur-platzhalter';
+      else {
+        const geplant = beine.filter((b) => b.schluessel !== sieger.schluessel);
+        // Jede Klasse erhebt EINEN Anspruch je beteiligter Datei: "der Emittentenname dieses
+        // Beins ist X". Fuer die Verlierer heisst das "wird zu X", fuer den Sieger "ist bereits
+        // X" — dieselbe Aussage, deshalb dieselbe Buchung. Nur so faellt auch der Fall auf, in
+        // dem ein Ticker in Klasse A Verlierer und in Klasse B Sieger ist: reproduziert mit
+        // `T` als Verlierer von `1AAA.MI` und Sieger von `1BBB.MI` — `T` wurde auf
+        // "Erste Holding AG" umbenannt, waehrend `1BBB.MI` auf "Tango Corp" ging und damit
+        // genau die Identitaet verlor, die Klasse B bescheinigt hatte. Beide Richtungen, jede
+        // Reihenfolge.
+        // KOLLISION: zwei Klassen beanspruchen DASSELBE Bein mit VERSCHIEDENEN Namen. Ohne
+        // diesen Riegel gewaenne still die zuletzt gerechnete Klasse — und weil der
+        // Mengen-Riegel A7 nur die Kandidatenliste zaehlt, koennte ein Register-Eintrag, der
+        // ein Bein der Liste mitnennt, ihm lautlos einen fremden Emittentennamen aufpraegen.
+        // Reproduziert: Register-Eintrag mit Mitglied `GEN` gegen Klasse `1NLOK.MI`/`GEN` —
+        // `GEN.json` bekam den Namen des Register-Eintrags. Ein Bein, zwei Identitaets-
+        // Aussagen, ist immer ein Widerspruch; hier wird KEINE der beiden ausgefuehrt, und
+        // run() bricht danach ab. Der Riegel sitzt bewusst hier, wo ALLE Klassen-Quellen
+        // zusammenlaufen, nicht am Register-Lader allein.
+        const kollision = [sieger, ...geplant]
+          .find((b) => beansprucht.has(b.datei) && beansprucht.get(b.datei).name !== sieger.name);
+        if (kollision) {
+          grund = 'kollision';
+          kollisionen.push({ anker: k.anker, ticker: kollision.ticker, wollte: sieger.name, steht: beansprucht.get(kollision.datei).name, von: beansprucht.get(kollision.datei).anker });
+        } else {
+          beansprucht.set(sieger.datei, { name: sieger.name, anker: k.anker });
+          for (const b of geplant) {
+            beansprucht.set(b.datei, { name: sieger.name, anker: k.anker });
+            umbenennungen.set(b.datei, sieger.name);
+            verlierer.push(b.ticker);
+          }
+          if (!verlierer.length) grund = 'schon-vereint';
+        }
+      }
+    }
+    urteile.push({
+      anker: k.anker, quelle: k.registerQuelle || 'kandidatenliste', grund,
+      beine: beine.map((b) => (b ? b.ticker : null)),
+      sieger: grund === 'umbenennen' ? sieger.ticker : null,
+      name: grund === 'umbenennen' ? sieger.name : null,
+      verlierer,
+    });
+  }
+  return { umbenennungen, urteile, kollisionen };
+}
+
+/**
+ * B1/B2/B4 (Urteilsfrage K2, 3/3 BEIDES-MIT-ARBEITSTEILUNG) — das Identitaets-Register als
+ * belegpflichtiges VENTIL neben der gemessenen Regel.
+ *
+ * EIGENE DATEI, ausdruecklich NICHT `nav-holdings.json` (B1): jenes ist eine AUSSCHLUSS-Liste
+ * mit sieben Einzeltickern und kann die Aussage "A und B sind derselbe Emittent" strukturell
+ * gar nicht ausdruecken.
+ *
+ * LEER AUSGELIEFERT (B2), und das ist das Ziel — dasselbe Urteil wie `ISSUER_ALIASE`
+ * (`score.js:82-88`): "Eine Handliste ist an einer Identitaets-Entscheidung immer die
+ * schlechtere Loesung: sie waechst still, und was nicht drinsteht, faellt lautlos durch."
+ * `ISSUER_ALIASE` bleibt unberuehrt und leer (B5).
+ *
+ * B4 — REVALIDIERUNG GEGEN LIVE-DATEN: ein Eintrag ist KEIN Freifahrtschein. Er wird zu einer
+ * ganz normalen Kandidatenklasse und muss dasselbe Tor bestehen wie die Milan-Liste (A1/A3/A4).
+ * Ticker werden im Bestand recycelt (`VMRK` belegt, dass der Store Zeilen mit fremder Identitaet
+ * fuehrt); ein stehender Eintrag wuerde sonst still fehlverschmelzen. Nicht-Treffer = Verwurf
+ * mit Ausweis, nie stille Wirkung.
+ *
+ * Fail-closed geladen wie das NAV-Register: eine kaputte Datei stoppt den Lauf, statt ihn ohne
+ * Register weiterlaufen zu lassen.
+ */
+function ladeIdentitaetsRegister(registerPfad) {
+  let roh;
+  try { roh = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
+  catch (e) { throw new Error(`${registerPfad}: ${e.message}`); }
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh)) throw new Error(`${registerPfad}: Wurzel muss ein Objekt sein`);
+  const eintraege = roh.eintraege;
+  if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Feld 'eintraege' muss ein Array sein`);
+  const ids = new Set();
+  const belegteTicker = new Map();
+  for (const [i, e] of eintraege.entries()) {
+    if (!e || typeof e !== 'object' || Array.isArray(e)) throw new Error(`${registerPfad}: Eintrag ${i} ist kein Objekt`);
+    for (const feld of ['kanonisch', 'beleg', 'aufgenommen']) {
+      if (typeof e[feld] !== 'string' || !e[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld ${feld} fehlt/ist leer`);
+    }
+    if (!Array.isArray(e.mitglieder) || e.mitglieder.length < 2
+      || e.mitglieder.some((t) => typeof t !== 'string' || !t.trim())) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, 'mitglieder' braucht mindestens zwei nicht-leere Ticker`);
+    }
+    if (ids.has(e.kanonisch)) throw new Error(`${registerPfad}: kanonische ID ${e.kanonisch} ist doppelt`);
+    ids.add(e.kanonisch);
+    // Derselbe Ticker in zwei Eintraegen waere eine still widerspruechliche Identitaets-Aussage:
+    // beide Klassen wuerden ihn umbenennen, die letzte gewaenne. Hart statt lautlos.
+    for (const t of e.mitglieder) {
+      if (belegteTicker.has(t)) throw new Error(`${registerPfad}: Ticker ${t} steht in ${belegteTicker.get(t)} UND ${e.kanonisch}`);
+      belegteTicker.set(t, e.kanonisch);
+    }
+  }
+  return eintraege;
+}
+
+/**
+ * I/O-Mantel. Liest genau drei Sorten Dateien: die Beine der eingefrorenen Kandidatenliste, die
+ * Beine der Register-Eintraege und ALLE Mailaender Beine (fuer die A5-Mehrdeutigkeitsprobe —
+ * ~900 von 15.000 Dateien).
+ *
+ * REIHENFOLGE IST SICHERHEIT: erst alles lesen, dann das Tor rechnen, dann den Mengen-Riegel
+ * pruefen, ERST DANN schreiben. Ein Abbruch nach A7 darf keinen halb umbenannten Bestand
+ * hinterlassen.
+ */
+function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
+  const gelesen = new Map();
+  // FEHLT ist nicht KAPUTT. Beide enden im Tor auf 'beine-unvollstaendig' und fuehren damit nie
+  // zu einer Umbenennung — aber sie sind zwei verschiedene Weltzustaende, und der Unterschied
+  // traegt den Mengen-Riegel: "keine Datei da" ist ein anderes Universum (Fixture, Kaltstart),
+  // "alle Dateien da, keine lesbar" ist ein Bruch. Ohne die Trennung liess ein systemischer
+  // Lesefehler ueber alle 17 Anker die Zahl auf 0 fallen, der Riegel wurde uebersprungen und die
+  // Log-Zeile war von der harmlosen Lage nicht zu unterscheiden. Reproduziert: 120 Fuell-
+  // Snapshots + alle 34 Kandidaten-Dateien mit kaputtem JSON -> Exit 0, "Riegel uebersprungen".
+  const lesefehler = [];
+  const dateienImBestand = new Set();
+  const lies = (ticker) => {
+    if (gelesen.has(ticker)) return gelesen.get(ticker);
+    let bein = null;
+    let datei = null;
+    try {
+      datei = safeSnapshotFilename(ticker);
+      const roh = fs.readFileSync(path.join(ziel, datei), 'utf8');
+      dateienImBestand.add(ticker);
+      const j = JSON.parse(roh);
+      const meta = (j && j.meta) || {};
+      const ts = (j && j.timeseries) || {};
+      bein = {
+        datei, ticker, metaTicker: meta.ticker, name: meta.name, country: meta.country,
+        shares: meta.sharesOutstanding,
+        revenueQ: milanReihe(ts.revenueQ), grossProfitQ: milanReihe(ts.grossProfitQ),
+        usPrimaerlisting: isUsPrimaryListing(meta),
+        schluessel: issuerKeyLoose(j), strengerSchluessel: issuerKeyStrengOhneGattung(j),
+      };
+    } catch (e) {
+      bein = null;
+      // ENOENT ist der legitime Normalfall (der Ticker steht nicht im Bestand). Alles andere —
+      // kaputtes JSON, Rechte, ein Wurf aus issuerKeyLoose/isUsPrimaryListing — ist ein Befund
+      // und wird gemeldet, gleiche Bauform wie in wendeWurzelZwillingeAn oben.
+      if (!e || e.code !== 'ENOENT') {
+        lesefehler.push({ ticker, grund: e && e.message ? e.message : String(e) });
+        console.error(`::warning::U3-Milan — ${datei || ticker} nicht auswertbar (${e && e.message ? e.message : e}); dieses Bein nimmt nicht teil.`);
+      }
+    }
+    gelesen.set(ticker, bein);
+    return bein;
+  };
+
+  // A5: welche Fingerabdruecke traegt MEHR ALS EIN Mailaender Bein? Nur diese Menge, nicht der
+  // ganze Index — ein Voll-Index ueber alle Suffixe waere genau das von A11 gesperrte Tor.
+  const proAbdruck = new Map();
+  let milanBeine = 0;
+  for (const f of fs.readdirSync(ziel)) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    const ticker = f.slice(0, -'.json'.length);
+    if (!MILAN_SPIEGEL.test(ticker)) continue;
+    const b = lies(ticker);
+    if (!b || milanEndlicheQuartale(b.revenueQ) < MILAN_MIN_QUARTALE) continue;
+    milanBeine++;
+    const a = milanFingerabdruck(b);
+    proAbdruck.set(a, (proAbdruck.get(a) || 0) + 1);
+  }
+  const mehrfachAbdruecke = new Set();
+  for (const [a, n] of proAbdruck) if (n > 1) mehrfachAbdruecke.add(a);
+
+  const klassen = [];
+  for (const k of kandidaten) {
+    klassen.push({ anker: k.anker, beine: [k.anker, ...k.partner].map(lies) });
+  }
+  for (const e of registerEintraege || []) {
+    klassen.push({ anker: e.kanonisch, registerQuelle: 'identitaets-register', beine: e.mitglieder.map(lies) });
+  }
+  const kandidatenTicker = kandidaten.flatMap((k) => [k.anker, ...k.partner]);
+  return {
+    klassen, mehrfachAbdruecke, milanBeine, lesefehler,
+    // Fuer den Mengen-Riegel: wie viele Kandidaten-DATEIEN liegen ueberhaupt im Bestand
+    // (unabhaengig davon, ob sie auswertbar waren)?
+    kandidatenDateien: kandidatenTicker.filter((t) => dateienImBestand.has(t)).length,
+  };
+}
+
+/** Schreibt die beschlossenen Umbenennungen — atomar wie jeder andere Schreiber hier. */
+function milanSchreiben(ziel, umbenennungen) {
+  const geschrieben = [];
+  let unschreibbar = 0;
+  for (const [datei, neuerName] of umbenennungen) {
+    const p = path.join(ziel, datei);
+    try {
+      const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (!j || typeof j !== 'object' || !j.meta) throw new Error('kein meta-Block');
+      j.meta.name = neuerName;
+      writeFileAtomic(p, JSON.stringify(j));
+      geschrieben.push(datei.slice(0, -'.json'.length));
+    } catch (e) {
+      unschreibbar++;
+      console.error(`::error::U3-Milan — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
+    }
+  }
+  return { geschrieben, unschreibbar };
+}
+
 function ladeNavRegister(registerPfad) {
   let eintraege;
   try { eintraege = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
@@ -364,6 +806,16 @@ function run(argv) {
   const ziel = get('--ziel', 'snapshots');
   const watchlistPfad = get('--watchlist', 'watchlist.json');
   const navRegisterPfad = get('--nav-register', NAV_REGISTER_STANDARDPFAD);
+  const identitaetsRegisterPfad = get('--identitaets-register', IDENTITAETS_REGISTER_STANDARDPFAD);
+
+  // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
+  // trotzdem, sonst waere die spaetere Befuellung still wirkungslos.
+  let identitaetsEintraege;
+  try { identitaetsEintraege = ladeIdentitaetsRegister(identitaetsRegisterPfad); }
+  catch (e) {
+    console.error(`::error::filter-snapshot-merge — Identitaets-Register nicht ladbar (${e.message}). Abbruch statt lautlosem Lauf ohne das belegpflichtige Ventil.`);
+    return 1;
+  }
 
   let navTickers;
   try { navTickers = ladeNavRegister(navRegisterPfad); }
@@ -470,6 +922,67 @@ function run(argv) {
   // Zwillinge im Bestand" zu unterscheiden — dieselbe Zeile fuer zwei Weltzustaende.
   console.log(`[u2-wurzelzwillinge] ${zwillinge.geheilt.length} von ${zwillinge.kandidaten} .BO/.NS-Beinen auf den Emittenten-Namen des Zwillings gesetzt${zwillinge.geheilt.length ? ` (${zwillinge.geheilt.join(', ')})` : ''}; nicht lesbar: ${zwillinge.unlesbar}, nicht schreibbar: ${zwillinge.unschreibbar}. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup (issuerKeyLoose + splitFalseIssuerMerges); hier wird kein Bein entfernt.`);
 
+  // U3-Milan (ENTSCHIED 31): NACH der .BO/.NS-Strecke, gleiche Bauform, gleiche Stelle — und
+  // erst NACH dem Kopieren, damit der Eingang unangetastet bleibt.
+  const milan = milanKlassenLesen(ziel, MILAN_KANDIDATEN, identitaetsEintraege);
+  const { umbenennungen: milanPlan, urteile, kollisionen } = milanUmbenennungen(milan.klassen, milan.mehrfachAbdruecke);
+  const ausListe = urteile.filter((u) => u.quelle === 'kandidatenliste');
+  const ausRegister = urteile.filter((u) => u.quelle === 'identitaets-register');
+  const geplanteBeine = ausListe.reduce((s, u) => s + u.verlierer.length, 0);
+  const geplanteGruppen = ausListe.filter((u) => u.grund === 'umbenennen').length;
+
+  // A10 — Laufzeit-Ausweis: JEDE Umbenennung mit beiden Tickern, keine stille Wirkung. Auch die
+  // Nein-Faelle stehen hier, sonst waere "hat das Tor gehalten oder gar nicht erst gegriffen?"
+  // aus dem Log nicht beantwortbar.
+  for (const u of urteile) {
+    if (u.grund === 'umbenennen') {
+      console.log(`[u3-milan] ${u.verlierer.join(' + ')} -> Emittenten-Name von ${u.sieger} ("${u.name}") [${u.beine.join(' + ')}, Quelle ${u.quelle}]`);
+    } else {
+      console.log(`[u3-milan] ${u.anker}: keine Umbenennung (${u.grund}) [${u.beine.join(' + ')}, Quelle ${u.quelle}]`);
+    }
+  }
+
+  // Widerspruechliche Identitaets-Aussage: ein Bein, zwei Klassen, zwei Namen. Vor jedem
+  // Mengen-Riegel und vor jedem Schreiben — die betroffenen Klassen sind bereits verworfen,
+  // aber ein Widerspruch im Kandidaten-/Registerbestand ist ein Pflege-Fehler, kein Betriebszustand.
+  if (kollisionen.length) {
+    for (const k of kollisionen) {
+      console.error(`::error::U3-Milan — Kollision: ${k.ticker} soll gleichzeitig "${k.wollte}" (Klasse ${k.anker}) und "${k.steht}" (Klasse ${k.von}) heissen. Beide Klassen sind verworfen.`);
+    }
+    console.error(`::error::U3-Milan — ${kollisionen.length} widerspruechliche Identitaets-Aussage(n). Stop: ein Bein gehoert zu genau EINEM Emittenten. Kandidatenliste und Identitaets-Register in Deckung bringen.`);
+    return 1;
+  }
+
+  // A7 — Mengen-Riegel. VOR dem Schreiben, damit ein Abbruch keinen halb umbenannten Bestand
+  // hinterlaesst. Harter Abbruch, kein ::warning:: (2:1 gegen J2s Sondervotum, s. Urteil §4).
+  //
+  // Die Mindest-Fallzahl ist dieselbe wie beim Karteileichen-Anteil oben und aus demselben Grund
+  // (s. MIN_GESCANNT_FUER_ANTEIL): eine Zahl aus einer Handvoll Dateien ist kein Befund, sondern
+  // eine andere Population. Real kommen ~12.500 Snapshots an; die 17 Mailaender Anker stehen dort
+  // seit Monaten. Ein Bestand unter 100 ist entweder eine Fixture oder eine Katastrophe, die das
+  // Coverage-Gate faengt — der Riegel wuerde dort nur denselben Alarm ein zweites Mal schlagen.
+  // Still ist das nie: der Ueberspring-Fall wird ausgewiesen.
+  //
+  // ZWEITE Ausnahme, aus demselben Grund: liegt von der eingefrorenen Liste ueberhaupt KEIN Bein
+  // im Bestand, ist das keine Mengen-Abweichung, sondern ein anderes Universum (Fixture,
+  // Teil-Shard, Kaltstart). Sobald auch nur EIN Anker da ist, bindet der Riegel wieder voll —
+  // ein Bestand, aus dem die Haelfte der Anker verschwunden ist, bricht also ab.
+  // Gezaehlt werden DATEIEN, nicht auswertbare Beine: sonst schaltet ein systemischer Lesefehler
+  // ueber alle Anker den Riegel ab und die Log-Zeile sieht aus wie der harmlose Fall.
+  if (zuPruefen < MIN_GESCANNT_FUER_ANTEIL || milan.kandidatenDateien === 0) {
+    console.log(`[u3-milan] Mengen-Riegel uebersprungen: ${zuPruefen} zu pruefende Snapshots, ${milan.kandidatenDateien} Dateien der Kandidatenliste im Bestand, ${milan.lesefehler.length} nicht auswertbar. Geplant waren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen.`);
+  } else if (geplanteBeine !== MILAN_ERWARTETE_BEINE || geplanteGruppen !== MILAN_ERWARTETE_GRUPPEN) {
+    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    return 1;
+  }
+
+  const milanGeschrieben = milanSchreiben(ziel, milanPlan);
+  if (milanGeschrieben.unschreibbar > 0) {
+    console.error(`::error::U3-Milan — ${milanGeschrieben.unschreibbar} von ${milanPlan.size} beschlossenen Umbenennungen sind nicht geschrieben worden. Der Bestand ist halb vereinheitlicht; Stop statt eines Boards auf halbem Stand.`);
+    return 1;
+  }
+  console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
+
   const navTickerListe = navAusgeschlossen.map((f) => f.slice(0, -'.json'.length)).sort();
   console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
@@ -479,5 +992,10 @@ function run(argv) {
 
 module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, MAX_UEBERSPRUNGEN_ANTEIL, MIN_GESCANNT_FUER_ANTEIL, MANIFEST_EINGANG_FELD, DRIFT_VENTIL, ventilObergrenze,
   // U2-BO/NS (ENTSCHIED 21) — fuer TDD. Waechter: tests/u2-wurzelzwillinge.test.js
-  istPlatzhalter, besseresBein, wurzelZwillingsUmbenennungen, wendeWurzelZwillingeAn, WURZEL_ZWILLING };
+  istPlatzhalter, besseresBein, wurzelZwillingsUmbenennungen, wendeWurzelZwillingeAn, WURZEL_ZWILLING,
+  // U3-Milan (ENTSCHIED 31) — fuer TDD. Waechter: tests/u3-milan-spiegel.test.js
+  milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
+  milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
+  MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
+  MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN };
 if (require.main === module) process.exit(run(process.argv));

@@ -278,10 +278,29 @@ jobs:
           set -o pipefail
           node scripts/roic-reliability.js | tee "reports/roic-reliability-$(date -u +%Y-%m).txt"
 
+      # U3-Milan (Urteil _COURT-MILAN-U3-2026-08-29 §6.5, ratifiziert ENTSCHIED 31) — die
+      # DRIFT-SPUR. Der Milan-Zweig in filter-snapshot-merge.js benutzt den Fundamental-
+      # Fingerabdruck als Identitaets-Gegenprobe, aber nur auf einer eingefrorenen Liste; das
+      # allgemeine Tor ueber alle Suffixe ist 2:1 gesperrt und braucht genau diese Messung als
+      # Vorbedingung. Der Zensus laeuft HIER, weil dieser Job als einziger monatlicher Lauf den
+      # vollen Snapshot-Bestand ohnehin schon wiederhergestellt hat (Schritt oben).
+      # Er entscheidet nichts (Exit immer 0) und darf den Monatslauf deshalb nie faerben —
+      # meldepflichtig ist seine Ausgabe, nicht sein Exit-Code.
+      - name: Fingerprint census / drift track (U3-Milan §6.5)
+        if: steps.find_run.outputs.run_id != ''
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          # 2>&1: der "Bestand nicht lesbar"-Befund geht auf stderr. Ohne die Umleitung
+          # bekaeme der committete Monatsbericht eine leere Datei OHNE Grund — die Erklaerung
+          # lebte nur im fluechtigen Actions-Log, genau ausserhalb der Drift-Spur, die hier
+          # ueber Monate aufgebaut werden soll.
+          node scripts/probe-fingerprint-zensus.js 2>&1 | tee "reports/fingerprint-zensus-$(date -u +%Y-%m).txt"
+
       - name: Commit manifest
         run: |
           if [ "$VEROEFFENTLICHEN" != "true" ]; then
-            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von SEC-Manifest, sec-secannual(-smallcap).json und ROIC-Bericht. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit von SEC-Manifest, sec-secannual(-smallcap).json, ROIC-Bericht und Fingerabdruck-Zensus. Lauf laeuft auf $GITHUB_REF; veroeffentlicht wird nur von refs/heads/main. Gerechnet/geprueft wurde alles, gepusht nichts."
             exit 0
           fi
           git config user.name "sec-xbrl-bot"
@@ -290,6 +309,7 @@ jobs:
           git add external-data/sec-xbrl/_manifest.json external-data/sec-secannual.json external-data/sec-secannual-smallcap.json
           if [ -f external-data/sec-annual-bulk.jsonl ]; then git add external-data/sec-annual-bulk.jsonl; fi
           if ls reports/roic-reliability-*.txt >/dev/null 2>&1; then git add reports/roic-reliability-*.txt; fi
+          if ls reports/fingerprint-zensus-*.txt >/dev/null 2>&1; then git add reports/fingerprint-zensus-*.txt; fi
           if git diff --staged --quiet; then
             echo "No manifest changes to commit."
           else
