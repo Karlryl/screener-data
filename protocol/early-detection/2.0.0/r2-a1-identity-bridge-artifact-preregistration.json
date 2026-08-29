@@ -1,0 +1,76 @@
+{
+  "schema": "R2-A1-identity-bridge-artifact-preregistration/1",
+  "status": "FROZEN_BEFORE_R2_A1_FACT_ACCESS",
+  "createdAt": "2026-08-25",
+  "purpose": "Build a deterministic, versioned identity-only bridge artifact from the D3 seam logic without reading outcomes, signals, prices, or the sealed end-test window and without carrying a derived series silently across a seam.",
+  "accessOrder": [
+    "freeze this preregistration in a dedicated commit before reading the D3 result artifact, D3 report, panel rows, or identity evidence",
+    "inspect the committed D3 implementation and the panel schema without executing an empirical calculation",
+    "implement the bridge builder and seam-aware derived-series contract",
+    "run the synthetic fixture self-test",
+    "deliberately enable an unmarked cross-seam calculation and require the seam guard to fail red",
+    "restore the guard and rerun the synthetic fixture self-test green",
+    "build the bridge only from allowed identity evidence and validate all invariants",
+    "build the same artifact a second time from the same inputs and require the canonical SHA-256 hash to match",
+    "write an identity-free result artifact and render the report only from that artifact"
+  ],
+  "allowedIdentityEvidence": [
+    "normalized company name attached to the panel identity record",
+    "internal CIK attached to the panel identity record",
+    "exchange or listing venue attached to the panel identity record",
+    "explicit rename records or identifier-change records available before any outcome is observed",
+    "D3's pre-existing pure identifier-change classification, but not D3 recovery outcomes or rates"
+  ],
+  "forbiddenInputs": [
+    "outcomes or outcome-derived labels",
+    "signal values or signal-arm membership as linkage evidence",
+    "prices, returns, ranks, or forward windows",
+    "growth, acceleration, revenue-value similarity, or any other numeric-series agreement",
+    "the sealed 2021-2023 end-test window",
+    "post-linkage retention or attrition results as linkage evidence"
+  ],
+  "bridgeRule": {
+    "entityKey": "A versioned pseudonymous entity key is derived deterministically from the internal CIK namespace; raw company names and raw CIK values are not written to result artifacts.",
+    "eligibleLink": "Two identifiers may share an entity only when internal CIK equality is present and the remaining available identity evidence is non-contradictory: exact normalized-name continuity, an explicit rename chain, or exchange continuity. Any conflicting CIK, conflicting exchange without an explicit transfer record, or ambiguous one-to-many evidence fails closed.",
+    "identifierScope": "The bridge records identifier membership and seam locations. It does not concatenate numeric observations or assert economic comparability across identifiers.",
+    "ordering": "Canonical records are sorted by pseudonymous entity key, seam time, old identifier, and new identifier before hashing.",
+    "duplicatePolicy": "Exact duplicate evidence collapses deterministically; conflicting or ambiguous duplicates are invariant violations and are never resolved from empirical results."
+  },
+  "seamContract": {
+    "default": "Every derived series terminates at its first bridge seam.",
+    "explicitCrossSeamMode": "A caller may cross a seam only by declaring crossSeam=true and receiving an output marker that names the seam policy and the crossed-seam count.",
+    "forbiddenBehavior": "A derived series that contains observations on both sides of a seam while lacking the explicit cross-seam marker is a hard failure.",
+    "requiredSabotage": "A deliberate fixture mutation that removes the marker from a cross-seam calculation must make the self-test exit non-zero before completion is claimed."
+  },
+  "testStatistic": {
+    "primary": "count of bridge-contract violations: invalid identity links, ambiguous mappings, unmarked cross-seam derived series, forbidden-input accesses, and canonical rerun hash mismatches",
+    "secondary": [
+      "number of deterministic entity mappings",
+      "number of seams",
+      "number of explicitly marked cross-seam fixture calculations",
+      "canonical artifact SHA-256"
+    ],
+    "effectiveN": "identity-evidence links and seams; no company outcome, signal observation, price observation, or quarterly value is an observation for this task"
+  },
+  "nullModel": "The artifact is not reproducibly safe: at least one contract violation exists or identical canonical inputs can produce a different artifact hash.",
+  "threshold": "Zero contract violations and exact SHA-256 equality across two independent builds are required. One violation or one hash mismatch fails closed. Link count and seam count have no minimum success threshold and are descriptive only.",
+  "requiredInvariants": [
+    "no linkage decision reads or depends on an outcome, signal, price, growth, acceleration, rank, or retention result",
+    "no row dated in 2021-2023 is opened, counted, or rendered",
+    "each old identifier maps to at most one pseudonymous entity within an artifact version",
+    "each seam has exactly one old identifier, one new identifier, and an auditable identity-evidence class",
+    "every derived series either stops at the seam or carries the explicit cross-seam marker",
+    "the deliberate unmarked cross-seam sabotage exits red",
+    "same canonical input produces the same canonical artifact SHA-256",
+    "the result artifact and report contain no raw company name, ticker, CIK, accession number, or other reversible company identity",
+    "the sealed script scripts/studie-e4d-kadenz.py remains byte-identical"
+  ],
+  "roundingPolicy": "Integer counts are exact. Percentages, if any are needed for artifact integrity reporting, are rounded to one decimal place; hashes are printed in full.",
+  "explicitNonClaims": [
+    "This artifact does not reopen, alter, or reinterpret the completed confirmatory verdict.",
+    "An identity link does not prove that numeric values on opposite sides of a seam are economically comparable.",
+    "The artifact does not test the old hypothesis and cannot be used as evidence for it.",
+    "No descriptive attrition or survival result is produced in task R2-A1.",
+    "Installing this substrate does not authorize a new preregistered study or a method promotion."
+  ]
+}

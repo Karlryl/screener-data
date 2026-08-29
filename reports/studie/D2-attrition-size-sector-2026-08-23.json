@@ -1,0 +1,201 @@
+{
+  "counts": {
+    "companies": 13317,
+    "rightCensored": 6398,
+    "terminalExits": 6919
+  },
+  "d1Anchor": {
+    "path": "reports/studie/D1-panel-survival-2026-08-23.json",
+    "sha256": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724"
+  },
+  "effectiveN": {
+    "companies": 13317,
+    "dailyPoints": 0,
+    "filingsAreIndependentObservations": false,
+    "independentUnit": "company"
+  },
+  "inputs": [
+    {
+      "file": "panel-entdeckung.sqlite",
+      "rowsRead": 176502
+    },
+    {
+      "file": "panel-validierung.sqlite",
+      "rowsRead": 148912
+    }
+  ],
+  "preregistration": {
+    "path": "protocol/early-detection/2.0.0/d2-attrition-size-sector-preregistration.json",
+    "sha256": "34fc058d7dd591c0bbd019a2c60224408a6916044b23f24e29a007f45e5febf7",
+    "status": "FROZEN_BEFORE_D2_PANEL_ACCESS"
+  },
+  "schema": "D2-attrition-size-sector/1",
+  "scope": {
+    "companyIdentifiersWritten": 0,
+    "dailyObservationsUsed": 0,
+    "lastAllowedDate": "2020-12-31",
+    "signalsUsed": 0
+  },
+  "sector": {
+    "chiSquare": 190.996103801332,
+    "classifiedCompanies": 13299,
+    "cramersV": 0.119840265081,
+    "cramersVThreshold": 0.1,
+    "groups": [
+      {
+        "companies": 74,
+        "exitRate": 0.581081081081081,
+        "rightCensored": 31,
+        "sector": "Agriculture, Forestry and Fishing",
+        "terminalExits": 43
+      },
+      {
+        "companies": 119,
+        "exitRate": 0.5126050420168067,
+        "rightCensored": 58,
+        "sector": "Construction",
+        "terminalExits": 61
+      },
+      {
+        "companies": 3344,
+        "exitRate": 0.49521531100478466,
+        "rightCensored": 1688,
+        "sector": "Finance, Insurance and Real Estate",
+        "terminalExits": 1656
+      },
+      {
+        "companies": 4113,
+        "exitRate": 0.462436177972283,
+        "rightCensored": 2211,
+        "sector": "Manufacturing",
+        "terminalExits": 1902
+      },
+      {
+        "companies": 1146,
+        "exitRate": 0.6465968586387435,
+        "rightCensored": 405,
+        "sector": "Mining",
+        "terminalExits": 741
+      },
+      {
+        "companies": 37,
+        "exitRate": 0.8378378378378378,
+        "rightCensored": 6,
+        "sector": "Nonclassifiable Establishments",
+        "terminalExits": 31
+      },
+      {
+        "companies": 630,
+        "exitRate": 0.5587301587301587,
+        "rightCensored": 278,
+        "sector": "Retail Trade",
+        "terminalExits": 352
+      },
+      {
+        "companies": 2533,
+        "exitRate": 0.5708645874457166,
+        "rightCensored": 1087,
+        "sector": "Services",
+        "terminalExits": 1446
+      },
+      {
+        "companies": 971,
+        "exitRate": 0.4922760041194645,
+        "rightCensored": 493,
+        "sector": "Transportation, Communications and Utilities",
+        "terminalExits": 478
+      },
+      {
+        "companies": 332,
+        "exitRate": 0.5843373493975904,
+        "rightCensored": 138,
+        "sector": "Wholesale Trade",
+        "terminalExits": 194
+      },
+      {
+        "companies": 18,
+        "exitRate": 0.8333333333333334,
+        "rightCensored": 3,
+        "sector": "unclassified",
+        "terminalExits": 15
+      }
+    ],
+    "isSignificanceTest": false,
+    "maxMinusMinExitRatePercentagePoints": 18.416068066646,
+    "minimumNForRateRange": 200,
+    "nullModel": "terminal attrition independent of entry SIC division",
+    "thresholdCrossed": true,
+    "unclassifiedCompanies": 18
+  },
+  "size": {
+    "absoluteRiskDifferenceThresholdPercentagePoints": 5.0,
+    "afsCategories": [
+      {
+        "code": "1-LAF",
+        "companies": 1921,
+        "exitRate": 0.3269130661114003,
+        "label": "Large Accelerated Filer",
+        "rightCensored": 1293,
+        "terminalExits": 628
+      },
+      {
+        "code": "2-ACC",
+        "companies": 1813,
+        "exitRate": 0.44180915609487037,
+        "label": "Accelerated Filer",
+        "rightCensored": 1012,
+        "terminalExits": 801
+      },
+      {
+        "code": "3-SRA",
+        "companies": 7,
+        "exitRate": 0.8571428571428571,
+        "label": "Smaller Reporting Accelerated Filer",
+        "rightCensored": 1,
+        "terminalExits": 6
+      },
+      {
+        "code": "4-NON",
+        "companies": 3610,
+        "exitRate": 0.37562326869806095,
+        "label": "Non-Accelerated Filer",
+        "rightCensored": 2254,
+        "terminalExits": 1356
+      },
+      {
+        "code": "5-SML",
+        "companies": 5846,
+        "exitRate": 0.7028737598357852,
+        "label": "Smaller Reporting Filer",
+        "rightCensored": 1737,
+        "terminalExits": 4109
+      }
+    ],
+    "groups": {
+      "larger": {
+        "companies": 3734,
+        "exitRate": 0.38269951794322443,
+        "rightCensored": 2305,
+        "terminalExits": 1429
+      },
+      "missingOrUnknown": {
+        "companies": 120,
+        "exitRate": 0.15833333333333333,
+        "rightCensored": 101,
+        "terminalExits": 19
+      },
+      "smaller": {
+        "companies": 9463,
+        "exitRate": 0.5781464651801754,
+        "rightCensored": 3992,
+        "terminalExits": 5471
+      }
+    },
+    "isSignificanceTest": false,
+    "nullModel": "equal terminal-exit risk",
+    "proxy": "SEC afs at entry",
+    "riskDifferencePercentagePointsSmallerMinusLarger": 19.544694723695,
+    "riskRatioSmallerToLarger": 1.510706018882,
+    "thresholdCrossed": true
+  }
+}

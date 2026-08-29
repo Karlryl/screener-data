@@ -1,0 +1,57 @@
+{
+  "schema": "R2-A1-blocker2-3-closure-record/1",
+  "status": "FROZEN_BLOCKER_2_3_CLOSURE",
+  "date": "2026-08-28",
+  "task": "T159",
+  "historicalArtifact": {
+    "path": "reports/studie/R2-A1-identity-bridge-artifact-2026-08-25.json",
+    "sha256": "0e4c5bc12892c454415675078fb2104c3559c4583756d74753beefba1588f999",
+    "boundImplementationSha256": "5cb693daa37d9fc4f58000c086a9d8c99cf74aee984ef1267ee816514f67a2bf",
+    "changed": false
+  },
+  "blocker2MutationSensitiveDeterminism": {
+    "fixedInputFixture": {
+      "path": "tests/fixtures/studie-identity-bridge-determinism-input.json",
+      "sha256": "190b723e4f063e6c57106b899098df39339fda8ac1376837fa219d5e09d43547"
+    },
+    "pinnedExpectedLogicalPayloadSha256": "6485e5775f2f45d4cb1a241a6ae21fd49d84fad410659b9b913d9a0cf2c26ce9",
+    "deliberateMutation": {
+      "componentIndex": 2,
+      "field": "date",
+      "from": "20180930",
+      "to": "20180929",
+      "expectedStatus": "RED"
+    },
+    "proof": {
+      "path": "reports/studie/R2-A1-determinism-fixture-sabotage-2026-08-28.json",
+      "sha256": "db173dca02e6ec34bb9e10d3ae4954bf730e048ca9a256e58af1e5fe04ec4da2"
+    }
+  },
+  "blocker3ProductionSeamGuard": {
+    "productionWriter": "write_sharded_artifact",
+    "guard": "validate_bridge_write_bundle",
+    "guardedWrites": [
+      "identity-bridge manifest",
+      "every identity-bridge shard"
+    ],
+    "guardOrder": "before first file write",
+    "deliberateSabotage": "unmarked cross-seam derived row in one shard",
+    "proof": {
+      "path": "reports/studie/R2-A1-bridge-write-sabotage-2026-08-28.json",
+      "sha256": "a26930931421910eade2a3a150441f7ff644cf87422ff5d0284c9fb778cde8b8"
+    }
+  },
+  "currentImplementation": {
+    "scripts/studie-identity-bridge-artifact.py": "aca6ff15ad5f936ab69fb7f7b6cf677d9ded285c41ef6d2610ff5562620dd297"
+  },
+  "scope": {
+    "panelsOpened": 0,
+    "eStagesExecuted": 0,
+    "outcomesRead": 0,
+    "pricesRead": 0,
+    "endtestOpened": false,
+    "confirmatoryVerdictsChanged": 0,
+    "historicalArtifactsRewritten": 0
+  },
+  "closureReady": true
+}

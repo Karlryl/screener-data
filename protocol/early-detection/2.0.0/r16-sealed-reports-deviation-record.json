@@ -1,0 +1,59 @@
+{
+  "schema": "early-detection-deviation-record/v1",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "rule": "R16",
+  "mode": "DOCUMENT_NO_RETROFIT",
+  "decidedAt": "2026-08-29",
+  "decisionSource": "Orchestrator-Ruling 2026-08-29 15:05",
+  "deviation": "Die unter 'reports' gelisteten Berichte tragen keinen Block 'Neue Fragen und Hypothesen'.",
+  "whyRetrofitIsImpossible": {
+    "mechanism": "Jeder dieser Berichte ist eine per SHA-256 gebundene Quelle des D6-Abschluss-Audits. Das Anhaengen des Blocks aendert den Dateiinhalt und damit den Hash; der Wachtest tests/studie-descriptive-closure-audit.test.js vergleicht jede Quelle gegen den versiegelten Wert und wird rot.",
+    "sealedBy": [
+      "protocol/early-detection/2.0.0/d6-descriptive-closure-audit-registration.json",
+      "reports/studie/D6-descriptive-closure-audit-2026-08-23.json"
+    ],
+    "guard": "tests/studie-descriptive-closure-audit.test.js",
+    "empiricalProof": {
+      "attemptedAt": "2026-08-29",
+      "attempt": "Tag 1053, Commit 0f6e95d5ff: Block an reports/studie/D1-panel-survival-2026-08-23.md angehaengt",
+      "observedHashBefore": "be6d56fff9797ec5f23ea791c712f9a46783aaf518120afff445535b6382e08c",
+      "observedHashAfter": "a7736cb0143232d490f3abe0897c1bc2e47177a5b3407e0f8484fb6133833753",
+      "observedEffect": "zwei zuvor gruene D6-Proben rot; CI-Lauf 33249681198 (vorher) 2 Fehler ohne D6, CI-Lauf 33253128208 (nachher) 4 Fehler mit D6",
+      "revertedBy": "Tag 1054, Commit 1a10fb4846; Hash danach wieder be6d56fff9797ec5f23ea791c712f9a46783aaf518120afff445535b6382e08c"
+    }
+  },
+  "scope": {
+    "appliesOnlyToReportsSealedBefore": "2026-08-29",
+    "listIsClosed": true,
+    "futureReports": "Fuer jeden Bericht, der nicht unter 'reports' steht, bleibt der R16-Block Pflicht VOR der Versiegelung. Diese Abweichung darf nicht auf neue Berichte ausgedehnt werden."
+  },
+  "reports": [
+    {"path": "reports/studie/D1-panel-survival-2026-08-23.md", "sha256": "be6d56fff9797ec5f23ea791c712f9a46783aaf518120afff445535b6382e08c"},
+    {"path": "reports/studie/D2-attrition-size-sector-2026-08-23.md", "sha256": "5a97fa1457686b88784a803032746ffc996b3a1393f7a6e80b6e6b92d8a69eb5"},
+    {"path": "reports/studie/D3-identifier-bridge-2026-08-23.md", "sha256": "32f58516a0d4c714b2df205054c77f6504b1b9b27a772740b71e3ce969b2d0b6"},
+    {"path": "reports/studie/D4-censoring-aware-attrition-2026-08-23.md", "sha256": "a7137a5e5b34f6795e2946534902e215031895dc442b808a20b10e3a61185e26"},
+    {"path": "reports/studie/D5-entry-cohort-standardization-2026-08-23.md", "sha256": "aa0790e3e0e914e94f02ff4867f725c59231717a66ffa50a29b1a7f554cf03d4"}
+  ],
+  "unsealedReportsThatReceivedTheirBlock": {
+    "note": "Diese Berichte trugen am 2026-08-29 ebenfalls keinen R16-Block, sind aber von KEINEM Hash-Manifest gebunden (Erhebung: git grep der Dateinamen ueber alle *.json des Zweigs, kein Treffer ausser diesem Record). Fuer sie gilt die Siegel-Ausnahme NICHT. Sie haben den Block daher regulaer bekommen, mechanisch abgeleitet aus den im jeweiligen Bericht selbst dokumentierten Grenzen; kein Siegel wurde dabei bewegt.",
+    "decidedAt": "2026-08-29",
+    "decisionSource": "Orchestrator-Ruling 2026-08-29 15:20",
+    "paths": [
+      "reports/studie/D6-descriptive-closure-audit-2026-08-23.md",
+      "reports/studie/E4f-nachrechnung-2026-08-23.md",
+      "reports/studie/R2-D-artifact-data-backcalculation-2026-08-28.md",
+      "reports/studie/R2-D-threshold-sealing-2026-08-28.md",
+      "reports/studie/R2-D1-cadence-edge-bias-2026-08-28.md"
+    ]
+  },
+  "nonAnalysisArtifacts": {
+    "note": "Namentliche Ausnahme von R16: diese beiden Dateien liegen in reports/studie/, sind aber keine Etappen-Reports. R16 verlangt Anschlussfragen einer Analyse; ein Index und ein Abschluss-Record haben keine eigenen Befunde, aus denen Anschlussfragen folgen koennten. Die Ausnahme ist NAMENTLICH und geschlossen — sie darf nicht auf Analyse-Berichte ausgedehnt werden.",
+    "decidedAt": "2026-08-29",
+    "decisionSource": "Orchestrator-Ruling 2026-08-29 15:20",
+    "listIsClosed": true,
+    "paths": [
+      {"path": "reports/studie/E6b-mechanical-evidence-index-2026-08-28.md", "kind": "Index", "reason": "reiner maschineller Belegindex ohne eigene Befunde"},
+      {"path": "reports/studie/R2-A1-identity-bridge-blocker-closure-2026-08-28.md", "kind": "Abschluss-Record", "reason": "Closure-Record ueber zwei mechanische Blocker, keine Analyse"}
+    ]
+  }
+}

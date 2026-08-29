@@ -1,0 +1,78 @@
+{
+  "schema": "D4-censoring-aware-attrition-preregistration/1",
+  "status": "FROZEN_BEFORE_D4_PANEL_ACCESS",
+  "createdAt": "2026-08-23",
+  "purpose": "Test whether the descriptive D2 size and sector attrition patterns remain visible after accounting for unequal follow-up and administrative right censoring.",
+  "accessOrder": [
+    "freeze this preregistration and its bound D1/D2 inputs",
+    "run the fixture-only self-test and deliberate sabotage",
+    "verify the committed D1 and D2 aggregate anchors byte-for-byte",
+    "read panel-entdeckung.sqlite",
+    "read panel-validierung.sqlite",
+    "reproduce the D1 population/outcomes and D2 groups exactly",
+    "compute identity-free Kaplan-Meier summaries within the frozen groups",
+    "write the aggregate JSON artifact",
+    "render the report only from that JSON artifact"
+  ],
+  "boundInputs": {
+    "scripts/studie-panel-survival.py": "d1a6fae94a46588f5f1783a288ad5055737648de1fb480f673b985c75dbf4c54",
+    "scripts/studie-attrition-size-sector.py": "a3f8e7806168b1b3b6dfda4e6e646dfe67cb7f42ddf35ff65a0a6a2ac58658b2",
+    "reports/studie/D1-panel-survival-2026-08-23.json": "81e9f312df2faac322fc64647ed33cf6862d8ce15120c80ce665e5fde14c8724",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.json": "c4d0c1f30b850920b48163f790f2a8704f892702d0686b583e4e315705a98d63"
+  },
+  "runtime": "Python 3.12.10",
+  "allowedPanels": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "forbiddenInputPolicy": "Every other panel basename, encrypted file, or row with accepted date after 2020-12-31 aborts before aggregation.",
+  "population": {
+    "unit": "the exact D1 company population",
+    "eventAndCensoring": "unchanged from D1",
+    "sizeGroups": "unchanged from D2: entry AFS 1-LAF/2-ACC versus 3-SRA/4-NON/5-SML; missing or unknown remains separate",
+    "sectorGroups": "unchanged from D2: SIC division at the entry filing; unclassified remains separate",
+    "identityPolicy": "CIKs may exist only in process memory. No company identifier or company name may be written to an artifact or report."
+  },
+  "timeDefinition": {
+    "axis": "integer calendar quarters since D1 entry",
+    "event": "the exact D1 terminal event",
+    "rightCensoring": "the exact D1 administrative censoring at 2020-12-31",
+    "eventCensorOrder": "events are applied before censoring at the same integer duration",
+    "commonHorizonQuarters": 12
+  },
+  "primaryTest": {
+    "statistic": "Kaplan-Meier survival at 12 quarters for smaller minus larger, in percentage points",
+    "nullModel": "the two entry-AFS size groups have equal 12-quarter evaluability survival",
+    "threshold": "absolute difference of at least 5.0 percentage points, carried forward from D2 before panel access",
+    "directionCheck": "D2 and D4 are directionally consistent only when a positive D2 smaller-minus-larger attrition difference corresponds to a negative D4 smaller-minus-larger survival difference",
+    "isSignificanceTest": false
+  },
+  "sectorSensitivity": {
+    "statistic": "maximum minus minimum 12-quarter Kaplan-Meier survival among D2 sectors with at least 200 companies and an estimable horizon",
+    "nullModel": "all eligible entry-sector groups have equal 12-quarter evaluability survival",
+    "threshold": "a range of at least 10.0 percentage points is flagged descriptively",
+    "isSignificanceTest": false
+  },
+  "secondaryOutputs": [
+    "full Kaplan-Meier curve and median stay for each size group",
+    "full Kaplan-Meier curve and median stay for each entry-sector group",
+    "company, event, censoring, and at-risk counts for every group",
+    "explicit non-estimability if a group has no observation at the common horizon"
+  ],
+  "effectiveN": "unique company within each stratum; strata are compared but never pooled as independent repeated observations; filings and days add no observations",
+  "requiredInvariants": [
+    "D1 company, event, censoring, and cadence totals reproduce exactly",
+    "D2 size and sector company, event, and censoring totals reproduce exactly",
+    "every group reconciles events plus censoring to companies",
+    "every Kaplan-Meier curve is monotone and within [0,1]",
+    "the primary contrast is recomputable from the two group survival probabilities",
+    "the output contains no company identifiers, company names, signal fields, daily observations, or post-2020 dates"
+  ],
+  "explicitNonClaims": [
+    "This sensitivity analysis does not replace or rewrite D2.",
+    "Kaplan-Meier adjustment does not prove non-informative censoring.",
+    "AFS remains a regulatory size proxy, not market capitalization or accounting size.",
+    "Associations are not causal and do not identify why a company disappears.",
+    "No threshold here is a study, method, or product gate."
+  ]
+}

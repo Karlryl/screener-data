@@ -1,0 +1,98 @@
+{
+  "schema": "R2-D-artifact-data-backcalculation-registration/1",
+  "status": "FROZEN_BEFORE_BACKCALCULATION_PANEL_ACCESS",
+  "createdAt": "2026-08-28",
+  "purpose": "Recompute at least one published aggregate for every D1-D6 script from its underlying permitted data object and compare it to the committed artifact.",
+  "accessOrder": [
+    "freeze this registration",
+    "run fixture-only self-test and deliberate mutation",
+    "verify script and committed artifact availability",
+    "read panel-entdeckung.sqlite and panel-validierung.sqlite for D1/D2/D4/D5 only",
+    "derive D3 only from its already committed E4a aggregate anchor without executing E4a",
+    "derive D6 only from committed D1-D5 artifacts without opening panels",
+    "write one identity-free indexed comparison artifact and report"
+  ],
+  "allowedInputs": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite",
+    "reports/studie/E4a-diagnose-pruefung-2026-08-19.json",
+    "reports/studie/D1-panel-survival-2026-08-23.json",
+    "reports/studie/D2-attrition-size-sector-2026-08-23.json",
+    "reports/studie/D3-identifier-bridge-2026-08-23.json",
+    "reports/studie/D4-censoring-aware-attrition-2026-08-23.json",
+    "reports/studie/D5-entry-cohort-standardization-2026-08-23.json",
+    "reports/studie/D6-descriptive-closure-audit-2026-08-23.json"
+  ],
+  "forbiddenInputs": [
+    "panel/panel-endtest.sqlite.enc",
+    "signals outside already committed aggregate artifacts",
+    "prices",
+    "outcomes",
+    "company names",
+    "any row after 2020-12-31"
+  ],
+  "checks": [
+    {
+      "id": "D1",
+      "script": "scripts/studie-panel-survival.py",
+      "source": "the two allowed panels",
+      "publishedArtifact": "reports/studie/D1-panel-survival-2026-08-23.json",
+      "statistic": "counts.terminalExits"
+    },
+    {
+      "id": "D2",
+      "script": "scripts/studie-attrition-size-sector.py",
+      "source": "the two allowed panels",
+      "publishedArtifact": "reports/studie/D2-attrition-size-sector-2026-08-23.json",
+      "statistic": "size.riskDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D3",
+      "script": "scripts/studie-identifier-bridge.py",
+      "source": "the committed E4a pruefung aggregate anchor",
+      "publishedArtifact": "reports/studie/D3-identifier-bridge-2026-08-23.json",
+      "statistic": "pruefung/S-U/signal.identityOnlyRecovered",
+      "executionLimit": "E4a is not executed"
+    },
+    {
+      "id": "D4",
+      "script": "scripts/studie-censoring-aware-attrition.py",
+      "source": "the two allowed panels",
+      "publishedArtifact": "reports/studie/D4-censoring-aware-attrition-2026-08-23.json",
+      "statistic": "size.survivalDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D5",
+      "script": "scripts/studie-entry-cohort-standardization.py",
+      "source": "the two allowed panels",
+      "publishedArtifact": "reports/studie/D5-entry-cohort-standardization-2026-08-23.json",
+      "statistic": "standardizedSize.survivalDifferencePercentagePointsSmallerMinusLarger"
+    },
+    {
+      "id": "D6",
+      "script": "scripts/studie-descriptive-closure-audit.py",
+      "source": "the committed D1-D5 artifacts",
+      "publishedArtifact": "reports/studie/D6-descriptive-closure-audit-2026-08-23.json",
+      "statistic": "auditContract.observedFailures",
+      "executionLimit": "no panel is opened"
+    }
+  ],
+  "testStatistic": "count of exact mismatches across the six registered object-level back-calculations",
+  "nullModel": "all six recomputed aggregates equal their committed published values",
+  "threshold": "one or more mismatches fails closed; this is an integrity threshold, not a study, method, or product gate",
+  "requiredInvariants": [
+    "exactly one check exists for each of D1 through D6",
+    "every check binds the executing script and published artifact by SHA-256",
+    "D1/D2/D4/D5 share the same effective company population and cutoff",
+    "D3 executes no E stage and writes no identity",
+    "D6 opens no panel",
+    "one mutated expected or recomputed value fails closed",
+    "the output contains no company identifier, company name, price, signal value, outcome, or post-2020 date"
+  ],
+  "explicitNonClaims": [
+    "The back-calculation does not change any published D artifact or report.",
+    "The check does not rerun, reinterpret, or change any E-stage verdict.",
+    "The check does not open the sealed 2021-2023 endtest.",
+    "D3 is traced to its committed aggregate anchor, not independently rebuilt from panels in this task."
+  ]
+}

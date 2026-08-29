@@ -1,0 +1,180 @@
+{
+  "boundImplementation": {
+    "scripts/studie-basisraten.py": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+    "scripts/studie-e4a-diagnose.py": "f52ce0378a0f83ecb28decb99a5477b18feb448272ac405308e3c5da498cae04",
+    "scripts/studie-zaehlprobe.py": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b"
+  },
+  "negativeControlSG": [
+    {
+      "arm": "signal",
+      "attritionBeforeBridge": 90,
+      "attritionRateBeforeBridge": 0.1391035548686244,
+      "band": "2009-2015",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 647,
+      "identityOnlyRecovered": 0,
+      "remainingAttrition": 90,
+      "remainingAttritionRate": 0.1391035548686244,
+      "retainedAfterBridge": 557,
+      "retainedBeforeBridge": 557,
+      "retentionImprovementPercentagePoints": 0.0,
+      "retentionRateAfterBridge": 0.8608964451313755,
+      "window": "entdeckung",
+      "zeroRecoveryNullRejectedDescriptively": false
+    },
+    {
+      "arm": "kontrolle",
+      "attritionBeforeBridge": 768,
+      "attritionRateBeforeBridge": 0.13314840499306518,
+      "band": "2009-2015",
+      "currencyChangeNotRecovered": 2,
+      "firstEventCompanies": 5768,
+      "identityOnlyRecovered": 0,
+      "remainingAttrition": 768,
+      "remainingAttritionRate": 0.13314840499306518,
+      "retainedAfterBridge": 5000,
+      "retainedBeforeBridge": 5000,
+      "retentionImprovementPercentagePoints": 0.0,
+      "retentionRateAfterBridge": 0.8668515950069348,
+      "window": "entdeckung",
+      "zeroRecoveryNullRejectedDescriptively": false
+    },
+    {
+      "arm": "signal",
+      "attritionBeforeBridge": 39,
+      "attritionRateBeforeBridge": 0.10684931506849316,
+      "band": "2017-2019",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 365,
+      "identityOnlyRecovered": 0,
+      "remainingAttrition": 39,
+      "remainingAttritionRate": 0.10684931506849316,
+      "retainedAfterBridge": 326,
+      "retainedBeforeBridge": 326,
+      "retentionImprovementPercentagePoints": 0.0,
+      "retentionRateAfterBridge": 0.8931506849315068,
+      "window": "pruefung",
+      "zeroRecoveryNullRejectedDescriptively": false
+    },
+    {
+      "arm": "kontrolle",
+      "attritionBeforeBridge": 448,
+      "attritionRateBeforeBridge": 0.0946545531375449,
+      "band": "2017-2019",
+      "currencyChangeNotRecovered": 1,
+      "firstEventCompanies": 4733,
+      "identityOnlyRecovered": 0,
+      "remainingAttrition": 448,
+      "remainingAttritionRate": 0.0946545531375449,
+      "retainedAfterBridge": 4285,
+      "retainedBeforeBridge": 4285,
+      "retentionImprovementPercentagePoints": 0.0,
+      "retentionRateAfterBridge": 0.9053454468624551,
+      "window": "pruefung",
+      "zeroRecoveryNullRejectedDescriptively": false
+    }
+  ],
+  "nullModel": {
+    "anyRowRejectsDescriptively": true,
+    "isSignificanceTest": false,
+    "name": "identity-only bridge recovers zero companies",
+    "threshold": "at least one recovered company"
+  },
+  "preregistration": {
+    "path": "protocol/early-detection/2.0.0/d3-identifier-bridge-preregistration.json",
+    "sha256": "16d05291a5de1b74a0e959ffa3048ffacfc1dc4d7a6db2b04ffe6a0ce79513f1",
+    "status": "FROZEN_BEFORE_D3_FACT_ACCESS"
+  },
+  "results": [
+    {
+      "arm": "signal",
+      "attritionBeforeBridge": 108,
+      "attritionRateBeforeBridge": 0.16589861751152074,
+      "band": "2009-2015",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 651,
+      "identityOnlyRecovered": 17,
+      "remainingAttrition": 91,
+      "remainingAttritionRate": 0.13978494623655913,
+      "retainedAfterBridge": 560,
+      "retainedBeforeBridge": 543,
+      "retentionImprovementPercentagePoints": 2.61136712749616,
+      "retentionRateAfterBridge": 0.8602150537634409,
+      "window": "entdeckung",
+      "zeroRecoveryNullRejectedDescriptively": true
+    },
+    {
+      "arm": "kontrolle",
+      "attritionBeforeBridge": 753,
+      "attritionRateBeforeBridge": 0.1668143553389455,
+      "band": "2009-2015",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 4514,
+      "identityOnlyRecovered": 139,
+      "remainingAttrition": 614,
+      "remainingAttritionRate": 0.13602126716880816,
+      "retainedAfterBridge": 3900,
+      "retainedBeforeBridge": 3761,
+      "retentionImprovementPercentagePoints": 3.079308817013735,
+      "retentionRateAfterBridge": 0.8639787328311919,
+      "window": "entdeckung",
+      "zeroRecoveryNullRejectedDescriptively": true
+    },
+    {
+      "arm": "signal",
+      "attritionBeforeBridge": 146,
+      "attritionRateBeforeBridge": 0.3333333333333333,
+      "band": "2017-2019",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 438,
+      "identityOnlyRecovered": 72,
+      "remainingAttrition": 74,
+      "remainingAttritionRate": 0.1689497716894977,
+      "retainedAfterBridge": 364,
+      "retainedBeforeBridge": 292,
+      "retentionImprovementPercentagePoints": 16.438356164383563,
+      "retentionRateAfterBridge": 0.8310502283105022,
+      "window": "pruefung",
+      "zeroRecoveryNullRejectedDescriptively": true
+    },
+    {
+      "arm": "kontrolle",
+      "attritionBeforeBridge": 1078,
+      "attritionRateBeforeBridge": 0.2589478741292337,
+      "band": "2017-2019",
+      "currencyChangeNotRecovered": 0,
+      "firstEventCompanies": 4163,
+      "identityOnlyRecovered": 613,
+      "remainingAttrition": 465,
+      "remainingAttritionRate": 0.11169829449915926,
+      "retainedAfterBridge": 3698,
+      "retainedBeforeBridge": 3085,
+      "retentionImprovementPercentagePoints": 14.724957963007446,
+      "retentionRateAfterBridge": 0.8883017055008408,
+      "window": "pruefung",
+      "zeroRecoveryNullRejectedDescriptively": true
+    }
+  ],
+  "schema": "D3-identifier-bridge/1",
+  "scope": {
+    "companyIdentifiersWritten": 0,
+    "crossSeamValueComputations": 0,
+    "dailyObservationsUsed": 0,
+    "lastAllowedDate": "2020-12-31",
+    "signalsChanged": 0,
+    "variant": "S-U"
+  },
+  "sourceReproduction": {
+    "anchors": [
+      {
+        "file": "E4a-diagnose-entdeckung-2026-08-19.json",
+        "sha256": "f2681b5c69ec4bbb2c4b9c5f65396a4bac4bed44d200704dd2ab117bf4b4b1ef"
+      },
+      {
+        "file": "E4a-diagnose-pruefung-2026-08-19.json",
+        "sha256": "afecfd7019b4354155aa258eaca99c0145ac38be9a71e5cdbd104d66e7d645e7"
+      }
+    ],
+    "anchorsMatched": true
+  }
+}

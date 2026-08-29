@@ -1,0 +1,57 @@
+{
+  "schema": "D2-attrition-size-sector-preregistration/1",
+  "status": "FROZEN_BEFORE_D2_PANEL_ACCESS",
+  "createdAt": "2026-08-23",
+  "purpose": "Measure whether the terminal attrition defined in D1 is associated with company size proxy or entry sector.",
+  "accessOrder": [
+    "freeze this preregistration",
+    "run fixture-only self-test and sabotage",
+    "read panel-entdeckung.sqlite",
+    "read panel-validierung.sqlite",
+    "reconcile the D2 company/event/censor totals to the committed D1 artifact",
+    "write aggregate identity-free JSON artifact",
+    "render the report from that JSON artifact"
+  ],
+  "allowedInputs": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "populationAndOutcome": {
+    "population": "exactly the D1 company population",
+    "outcome": "exactly the D1 terminal-exit versus administrative-censor classification",
+    "anchor": "reports/studie/D1-panel-survival-2026-08-23.json",
+    "effectiveN": "one company; filings and days are not independent observations"
+  },
+  "sizeProxy": {
+    "field": "SEC afs at the earliest accepted periodic filing",
+    "officialDefinition": "https://www.sec.gov/files/financial-statement-data-sets.pdf",
+    "largerCodes": ["1-LAF", "2-ACC"],
+    "smallerCodes": ["3-SRA", "4-NON", "5-SML"],
+    "missingPolicy": "Missing or unknown afs is reported and excluded from the binary size contrast.",
+    "testStatistic": "terminal-exit risk difference in percentage points, smaller minus larger; risk ratio is secondary",
+    "nullModel": "equal terminal-exit risk in the smaller and larger groups",
+    "threshold": "absolute risk difference at least 5.0 percentage points; descriptive practical-effect threshold, not a significance or product gate"
+  },
+  "sector": {
+    "field": "SIC division at the earliest accepted periodic filing",
+    "testStatistic": "Cramer's V for the 2 x K table of terminal exit/censor by entry SIC division",
+    "secondary": "maximum minus minimum sector exit rate among sectors with at least 200 companies",
+    "nullModel": "terminal attrition is independent of entry SIC division",
+    "threshold": "Cramer's V at least 0.10; descriptive practical-effect threshold, not a significance or product gate",
+    "minimumNForRateRange": 200,
+    "missingPolicy": "Unparseable or unmapped SIC is reported as unclassified and excluded from the primary Cramer's V."
+  },
+  "requiredInvariants": [
+    "D2 company, event, and censor totals equal the committed D1 artifact exactly",
+    "size groups plus missing/unknown equal effective N",
+    "sector groups plus unclassified equal effective N",
+    "every group reconciles events plus censored to companies",
+    "the output contains no company identifier, company name, filing identifier, signal field, daily observation, or post-2020 date"
+  ],
+  "explicitNonClaims": [
+    "AFS is a regulatory filer-status proxy, not market capitalization, assets, or revenue.",
+    "Associations are not causal effects.",
+    "The result does not identify which companies exited.",
+    "No threshold changes D1, the confirmatory result, or any product behavior."
+  ]
+}

@@ -1,0 +1,1896 @@
+#!/usr/bin/env python3
+"""R2-A1: deterministic identity-only panel bridge with a semantic seam guard."""
+
+from __future__ import annotations
+
+import argparse
+import bisect
+import hashlib
+import hmac
+import importlib.util
+import json
+import os
+import re
+import subprocess
+import sys
+from collections import defaultdict
+
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PREREG_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-identity-bridge-artifact-preregistration.json"
+)
+PREREG = os.path.join(REPO, *PREREG_REL.split("/"))
+CORRECTION_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-blocker1-identity-protection-correction.json"
+)
+CORRECTION = os.path.join(REPO, *CORRECTION_REL.split("/"))
+DETERMINISM_CORRECTION_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-blocker2-independent-rebuild-correction.json"
+)
+DETERMINISM_CORRECTION = os.path.join(
+    REPO, *DETERMINISM_CORRECTION_REL.split("/")
+)
+BLOCKER_CLOSURE_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-blocker2-3-closure-record.json"
+)
+BLOCKER_CLOSURE = os.path.join(REPO, *BLOCKER_CLOSURE_REL.split("/"))
+DETERMINISM_FIXTURE_REL = (
+    "tests/fixtures/studie-identity-bridge-determinism-input.json"
+)
+DETERMINISM_FIXTURE = os.path.join(REPO, *DETERMINISM_FIXTURE_REL.split("/"))
+D3_SCRIPT_REL = "scripts/studie-identifier-bridge.py"
+BASIS_SCRIPT_REL = "scripts/studie-basisraten.py"
+COUNT_SCRIPT_REL = "scripts/studie-zaehlprobe.py"
+SEALED_SCRIPT_REL = "scripts/studie-e4d-kadenz.py"
+LAST_ALLOWED_DATE = "2020-12-31"
+LAST_ALLOWED_DDATE = "20201231"
+ARTIFACT_VERSION = "1.1.0"
+PRIOR_ARTIFACT_VERSION = "1.0.0"
+PRIOR_MANIFEST_SHA256 = "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc"
+PUBLIC_ID_SAMPLE = 50
+PUBLIC_CIK_MAX = 2_100_000
+INDEPENDENT_FINGERPRINT_FIELDS = (
+    "artifactVersion",
+    "logicalPayloadSha256",
+    "manifestFileSha256",
+    "manifestPayloadSha256",
+    "shardSetSha256",
+    "orderedShardDescriptorsSha256",
+    "countsSha256",
+    "inputsSha256",
+    "keyFingerprintSha256",
+)
+BLOCK = 4_000_000
+SHARD_MAX_BYTES = 180 * 1024
+FACT_METADATA_COLUMNS = (
+    "rowid", "adsh", "tag", "version", "coreg", "ddate", "qtrs", "uom"
+)
+FORBIDDEN_FACT_COLUMNS = {
+    "value", "signal", "outcome", "price", "return", "growth", "acceleration"
+}
+WINDOWS = (
+    ("entdeckung", "entdeckung", "panel-entdeckung.sqlite"),
+    ("pruefung", "pruefung", "panel-validierung.sqlite"),
+)
+
+
+class ArtifactError(Exception):
+    """Fail-closed bridge-contract violation."""
+
+
+def load_module(relative, name):
+    path = os.path.join(REPO, *relative.split("/"))
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ArtifactError("Module cannot be loaded: " + relative)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+BASIS = load_module(BASIS_SCRIPT_REL, "r2_a1_basis")
+COUNT = load_module(COUNT_SCRIPT_REL, "r2_a1_count")
+SOURCE_DEFINITIONS = tuple(BASIS.UMSATZ_QUELLEN)
+SOURCE_RANK = {source: rank for rank, (source, _tags) in enumerate(SOURCE_DEFINITIONS)}
+SOURCE_TAGS = tuple(sorted({tag for _source, tags in SOURCE_DEFINITIONS for tag in tags}))
+
+
+def repo_path(relative):
+    return os.path.join(REPO, *relative.split("/"))
+
+
+def sha256_bytes(value):
+    return hashlib.sha256(value).hexdigest()
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def canonical_bytes(value):
+    return (json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ) + "\n").encode("utf-8")
+
+
+def canonical_hash(value):
+    return sha256_bytes(canonical_bytes(value))
+
+
+def write_json(path, value):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "wb") as handle:
+        handle.write(canonical_bytes(value))
+
+
+def write_text(path, value):
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(value)
+
+
+def shard_payload(part, entities):
+    return {
+        "schema": "R2-A1-identity-bridge-panel-shard/1",
+        "artifactVersion": ARTIFACT_VERSION,
+        "part": part,
+        "entities": entities,
+    }
+
+
+def manifest_from_artifact(artifact, manifest_basename):
+    groups = []
+    current = []
+    for entity in artifact["entities"]:
+        candidate = current + [entity]
+        payload = shard_payload(len(groups) + 1, candidate)
+        if len(canonical_bytes(payload)) >= SHARD_MAX_BYTES and current:
+            groups.append(current)
+            current = [entity]
+            payload = shard_payload(len(groups) + 1, current)
+        else:
+            current = candidate
+        if len(canonical_bytes(payload)) >= SHARD_MAX_BYTES:
+            raise ArtifactError("One bridge entity exceeds the artifact shard ceiling")
+    if current:
+        groups.append(current)
+
+    shard_dir = os.path.splitext(manifest_basename)[0]
+    shards = []
+    descriptors = []
+    for index, entities in enumerate(groups, start=1):
+        payload = shard_payload(index, entities)
+        raw = canonical_bytes(payload)
+        relative = shard_dir + "/part-%04d.json" % index
+        descriptors.append({
+            "file": relative,
+            "sha256": sha256_bytes(raw),
+            "bytes": len(raw),
+            "entities": len(entities),
+            "identifierMappings": sum(len(row["identifiers"]) for row in entities),
+            "bridgeSeams": sum(len(row["seams"]) for row in entities),
+        })
+        shards.append((relative, payload))
+    manifest = {
+        "schema": "R2-A1-identity-bridge-panel-manifest/1",
+        "artifactVersion": artifact["artifactVersion"],
+        "preregistration": artifact["preregistration"],
+        "identityProtectionCorrection": artifact["identityProtectionCorrection"],
+        "construction": artifact["construction"],
+        "seamContract": artifact["seamContract"],
+        "inputs": artifact["inputs"],
+        "exclusions": artifact["exclusions"],
+        "counts": artifact["counts"],
+        "logicalPayloadSha256": artifact["canonicalPayloadSha256"],
+        "shardSetSha256": canonical_hash(descriptors),
+        "shards": descriptors,
+    }
+    manifest["canonicalPayloadSha256"] = canonical_hash(manifest)
+    return manifest, shards
+
+
+def deterministic_build_fingerprint(artifact, manifest):
+    fingerprint = {
+        "artifactVersion": artifact["artifactVersion"],
+        "logicalPayloadSha256": artifact["canonicalPayloadSha256"],
+        "manifestFileSha256": sha256_bytes(canonical_bytes(manifest)),
+        "manifestPayloadSha256": manifest["canonicalPayloadSha256"],
+        "shardSetSha256": manifest["shardSetSha256"],
+        "orderedShardDescriptorsSha256": canonical_hash(manifest["shards"]),
+        "countsSha256": canonical_hash(artifact["counts"]),
+        "inputsSha256": canonical_hash(artifact["inputs"]),
+        "keyFingerprintSha256": artifact["construction"]["identifierProtection"][
+            "keyFingerprintSha256"],
+    }
+    if tuple(fingerprint) != INDEPENDENT_FINGERPRINT_FIELDS:
+        raise ArtifactError("Independent fingerprint fields drifted from registration")
+    return fingerprint
+
+
+def independent_build_record(artifact, manifest, state, sabotage=False):
+    fingerprint = deterministic_build_fingerprint(artifact, manifest)
+    if sabotage:
+        fingerprint = dict(fingerprint)
+        fingerprint["shardSetSha256"] = "0" * 64
+    return {
+        "schema": "R2-A1-independent-builder-record/1",
+        "processId": os.getpid(),
+        "pythonRuntime": "%d.%d.%d" % sys.version_info[:3],
+        "scanPanelCalls": state["scanPanelCalls"],
+        "panelsScanned": [row["file"] for row in artifact["inputs"]],
+        "fingerprint": fingerprint,
+        "sabotageApplied": sabotage,
+    }
+
+
+def load_determinism_correction():
+    with open(DETERMINISM_CORRECTION, encoding="utf-8") as handle:
+        correction = json.load(handle)
+    if correction.get("status") != "FROZEN_BEFORE_INDEPENDENT_REBUILDS":
+        raise ArtifactError("Independent-rebuild correction is not frozen")
+    if tuple(correction.get("deterministicFingerprintFields", ())) != (
+            INDEPENDENT_FINGERPRINT_FIELDS):
+        raise ArtifactError("Independent fingerprint no longer matches its correction")
+    return correction
+
+
+def compare_independent_build_records(builder_a, builder_b):
+    correction = load_determinism_correction()
+    mismatches = [
+        field for field in INDEPENDENT_FINGERPRINT_FIELDS
+        if builder_a["fingerprint"].get(field)
+        != builder_b["fingerprint"].get(field)
+    ]
+    process_ids_distinct = (
+        builder_a.get("processId") != builder_b.get("processId")
+    )
+    runtimes_equal = (
+        builder_a.get("pythonRuntime") == builder_b.get("pythonRuntime")
+    )
+    scans_per_process = [
+        builder_a.get("scanPanelCalls"), builder_b.get("scanPanelCalls")
+    ]
+    expected_panels = correction["boundArtifact"]["expectedPanels"]
+    panels_match = (
+        builder_a.get("panelsScanned") == expected_panels
+        and builder_b.get("panelsScanned") == expected_panels
+    )
+    bound_manifest_match = (
+        builder_a["fingerprint"].get("manifestFileSha256")
+        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
+        and builder_b["fingerprint"].get("manifestFileSha256")
+        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
+    )
+    passes = (
+        not mismatches
+        and process_ids_distinct
+        and scans_per_process == [2, 2]
+        and panels_match
+        and bound_manifest_match
+        and runtimes_equal
+    )
+    return {
+        "schema": "R2-A1-independent-rebuild-proof/1",
+        "artifactVersion": builder_a["fingerprint"]["artifactVersion"],
+        "manifestSha256": builder_a["fingerprint"]["manifestFileSha256"],
+        "determinismCorrection": {
+            "path": DETERMINISM_CORRECTION_REL,
+            "sha256": sha256_file(DETERMINISM_CORRECTION),
+            "status": correction["status"],
+        },
+        "builders": [builder_a, builder_b],
+        "independentProcessesExecuted": 2,
+        "processIdsDistinct": process_ids_distinct,
+        "pythonRuntimesEqual": runtimes_equal,
+        "scanPanelCallsPerProcess": scans_per_process,
+        "totalScanPanelCalls": sum(
+            value for value in scans_per_process if isinstance(value, int)
+        ),
+        "panelsMatchRegistration": panels_match,
+        "matchesBoundManifest": bound_manifest_match,
+        "fingerprintFieldsCompared": list(INDEPENDENT_FINGERPRINT_FIELDS),
+        "fingerprintMismatches": mismatches,
+        "observedStatus": "GREEN" if passes else "RED",
+        "passes": passes,
+        "companyIdentifiersWritten": 0,
+    }
+
+
+def write_sharded_artifact(manifest_path, artifact, manifest, shards):
+    validate_bridge_write_bundle(artifact, manifest, shards)
+    root = os.path.dirname(os.path.abspath(manifest_path))
+    expected_names = {relative.replace("/", os.sep) for relative, _payload in shards}
+    shard_root = os.path.join(root, os.path.splitext(os.path.basename(manifest_path))[0])
+    if os.path.isdir(shard_root):
+        observed = {
+            os.path.relpath(os.path.join(base, name), root)
+            for base, _dirs, files in os.walk(shard_root)
+            for name in files
+        }
+        unexpected = observed - expected_names
+        if unexpected:
+            raise ArtifactError("Shard directory contains unexpected files; refusing implicit deletion")
+    for relative, payload in shards:
+        path = os.path.join(root, *relative.split("/"))
+        write_json(path, payload)
+        if os.path.getsize(path) >= 200 * 1024:
+            raise ArtifactError("Written bridge shard exceeds the study artifact ceiling")
+    write_json(manifest_path, manifest)
+
+
+def normalize_cik(value):
+    raw = str(value or "").strip()
+    if not raw.isdigit():
+        return None
+    return str(int(raw))
+
+
+def normalize_name(value):
+    raw = str(value or "").upper().strip()
+    raw = re.sub(r"[^A-Z0-9]+", " ", raw)
+    return " ".join(raw.split())
+
+
+def form_stem(value):
+    return str(value or "").upper().strip().split("/", 1)[0]
+
+
+def accepted_date(value):
+    raw = str(value or "").strip()
+    if not re.match(r"^\d{4}-\d{2}-\d{2}", raw):
+        return None
+    return raw[:10]
+
+
+def legacy_stable_id(prefix, *parts):
+    """Rejected v1.0.0 mapping, retained only so the public attack stays executable."""
+    payload = ("R2-A1/" + prefix + "/1\0" + "\0".join(parts)).encode("utf-8")
+    return prefix + "-" + hashlib.sha256(payload).hexdigest()[:20]
+
+
+def stable_id(identity_key, prefix, *parts):
+    if not isinstance(identity_key, bytes) or len(identity_key) < 32:
+        raise ArtifactError("Identity HMAC key must contain at least 32 bytes")
+    payload = (
+        "R2-A1/identity-artifact/" + ARTIFACT_VERSION + "/" + prefix + "\0"
+        + "\0".join(parts)
+    ).encode("utf-8")
+    return prefix + "-" + hmac.new(identity_key, payload, hashlib.sha256).hexdigest()[:20]
+
+
+def load_identity_key(path):
+    if not path:
+        raise ArtifactError("--identity-key-file is required for empirical identifiers")
+    absolute = os.path.realpath(os.path.abspath(path))
+    try:
+        if os.path.commonpath((REPO, absolute)) == os.path.commonpath((REPO, REPO)):
+            raise ArtifactError("Identity HMAC key must remain outside the repository")
+    except ValueError:
+        pass
+    if not os.path.isfile(absolute):
+        raise ArtifactError("Identity HMAC key file does not exist")
+    with open(absolute, "rb") as handle:
+        key = handle.read()
+    if len(key) < 32:
+        raise ArtifactError("Identity HMAC key must contain at least 32 bytes")
+    return key
+
+
+def new_scan_state(identity_key=None):
+    return {
+        "identityKey": identity_key,
+        "scanPanelCalls": 0,
+        "identities": defaultdict(lambda: {
+            "names": set(), "renameEdges": set(), "windows": set()
+        }),
+        "components": defaultdict(set),
+        "dateWindows": defaultdict(set),
+        "inputSummaries": [],
+        "counters": defaultdict(int),
+    }
+
+
+def update_digest(digest, row):
+    digest.update(canonical_bytes(list(row)))
+
+
+def scan_panel(path, window_name, wall_name, expected_basename, state):
+    if os.path.basename(os.path.abspath(path)) != expected_basename:
+        raise ArtifactError("Panel basename does not match the preregistered window")
+    state["scanPanelCalls"] += 1
+    checked = COUNT.pruefe_mauer(path, wall_name)
+    panel = COUNT.oeffne_nur_lesend(checked, wall_name)
+    identity_digest = hashlib.sha256()
+    fact_digest = hashlib.sha256()
+    adsh_to_cik = {}
+    summary = {
+        "file": expected_basename,
+        "bytes": os.path.getsize(checked),
+        "reportRowsRead": 0,
+        "periodicIdentityRows": 0,
+        "factMetadataRowsRead": 0,
+        "eligibleFactMetadataRows": 0,
+        "lastAllowedDate": LAST_ALLOWED_DATE,
+    }
+    try:
+        query = (
+            "SELECT adsh,cik,name,former,changed,form,accepted FROM bericht "
+            "ORDER BY adsh"
+        )
+        for adsh, raw_cik, name, former, changed, form, accepted in panel.execute(query):
+            summary["reportRowsRead"] += 1
+            if form_stem(form) not in BASIS.PERIODISCHE_FORMEN:
+                state["counters"]["nonperiodicReportsExcluded"] += 1
+                continue
+            date = accepted_date(accepted)
+            if date is None:
+                state["counters"]["reportsWithoutAcceptedExcluded"] += 1
+                continue
+            if date > LAST_ALLOWED_DATE:
+                raise ArtifactError("A report beyond the allowed date entered an allowed panel")
+            cik = normalize_cik(raw_cik)
+            current_name = normalize_name(name)
+            former_name = normalize_name(former)
+            changed_raw = str(changed or "").strip()
+            if cik is None:
+                state["counters"]["reportsWithoutValidCikExcluded"] += 1
+                continue
+            if not current_name:
+                state["counters"]["reportsWithoutNameExcluded"] += 1
+                continue
+            existing = adsh_to_cik.get(adsh)
+            if existing is not None and existing != cik:
+                raise ArtifactError("One filing identifier points to two internal CIKs")
+            adsh_to_cik[adsh] = cik
+            identity = state["identities"][cik]
+            identity["names"].add(current_name)
+            identity["windows"].add(window_name)
+            if former_name and re.match(r"^\d{8}$", changed_raw):
+                identity["renameEdges"].add(tuple(sorted((current_name, former_name))))
+            update_digest(identity_digest, (
+                cik, current_name, former_name, changed_raw, date, window_name
+            ))
+            summary["periodicIdentityRows"] += 1
+
+        highest = panel.execute("SELECT MAX(rowid) FROM fakt").fetchone()[0] or 0
+        placeholders = ",".join("?" * len(SOURCE_TAGS))
+        selected_columns = ",".join(FACT_METADATA_COLUMNS)
+        if FORBIDDEN_FACT_COLUMNS.intersection(FACT_METADATA_COLUMNS):
+            raise ArtifactError("Production fact query contains a forbidden numeric column")
+        start = 1
+        while start <= highest:
+            stop = start + BLOCK - 1
+            fact_query = (
+                "SELECT " + selected_columns + " FROM fakt "
+                "WHERE rowid BETWEEN ? AND ? AND tag IN (" + placeholders + ") "
+                "AND ddate <= ? ORDER BY rowid"
+            )
+            params = (start, stop) + SOURCE_TAGS + (LAST_ALLOWED_DDATE,)
+            for (_rowid, adsh, tag, version, coreg, ddate, qtrs, uom) in panel.execute(
+                    fact_query, params):
+                summary["factMetadataRowsRead"] += 1
+                if coreg is not None and str(coreg).strip():
+                    state["counters"]["coregFactMetadataExcluded"] += 1
+                    continue
+                if not BASIS.STANDARD_VERSION_RE.match(str(version or "").strip()):
+                    state["counters"]["customTaxonomyMetadataExcluded"] += 1
+                    continue
+                if str(qtrs or "").strip() not in {"1", "4"}:
+                    state["counters"]["nonperiodicFactMetadataExcluded"] += 1
+                    continue
+                cik = adsh_to_cik.get(adsh)
+                if cik is None:
+                    state["counters"]["factMetadataWithoutIdentityExcluded"] += 1
+                    continue
+                unit = str(uom or "").strip()
+                date = str(ddate or "").strip()
+                if not unit:
+                    state["counters"]["factMetadataWithoutUnitExcluded"] += 1
+                    continue
+                if not re.match(r"^\d{8}$", date) or date > LAST_ALLOWED_DDATE:
+                    state["counters"]["factMetadataOutsideDateExcluded"] += 1
+                    continue
+                quarter_span = str(qtrs).strip()
+                key = (cik, unit, date, quarter_span)
+                state["components"][key].add(tag)
+                state["dateWindows"][(cik, unit, date)].add(window_name)
+                update_digest(fact_digest, (
+                    cik, tag, str(version).strip(), date, quarter_span, unit, window_name
+                ))
+                summary["eligibleFactMetadataRows"] += 1
+            start = stop + 1
+    finally:
+        panel.close()
+    summary["identityEvidenceSha256"] = identity_digest.hexdigest()
+    summary["factMetadataEvidenceSha256"] = fact_digest.hexdigest()
+    state["inputSummaries"].append(summary)
+
+
+def identity_class(identity):
+    names = set(identity["names"])
+    if not names:
+        return None
+    if len(names) == 1:
+        return "cik+normalized-name-continuity"
+    graph = defaultdict(set)
+    for left, right in identity["renameEdges"]:
+        graph[left].add(right)
+        graph[right].add(left)
+    reached = set()
+    pending = [next(iter(names))]
+    while pending:
+        current = pending.pop()
+        if current in reached:
+            continue
+        reached.add(current)
+        pending.extend(graph[current] - reached)
+    if names.issubset(reached):
+        return "cik+explicit-rename-chain"
+    return None
+
+
+def source_dates_from_components(components):
+    source_dates = defaultdict(set)
+    for (cik, unit, date, _quarter_span), tags_present in components.items():
+        for source, required_tags in SOURCE_DEFINITIONS:
+            if set(required_tags).issubset(tags_present):
+                source_dates[(cik, unit, source)].add(date)
+    return source_dates
+
+
+def selected_track(source_dates, cik, unit):
+    by_source = {
+        source: sorted(dates)
+        for (track_cik, track_unit, source), dates in source_dates.items()
+        if track_cik == cik and track_unit == unit
+    }
+    all_dates = sorted({date for dates in by_source.values() for date in dates})
+    selected = []
+    for date in all_dates:
+        candidates = []
+        for source, dates in by_source.items():
+            if date not in dates:
+                continue
+            length = bisect.bisect_right(dates, date)
+            candidates.append((-length, SOURCE_RANK[source], source))
+        if candidates:
+            selected.append((date, min(candidates)[2]))
+    return selected
+
+
+def identifier_id(identity_key, entity_id, source, unit):
+    return stable_id(identity_key, "I", entity_id, source, unit)
+
+
+def seam_id(identity_key, entity_id, unit, date, old_identifier, new_identifier):
+    return stable_id(
+        identity_key, "S", entity_id, unit, date, old_identifier, new_identifier
+    )
+
+
+def artifact_from_state(state, reverse_inputs=False):
+    identity_key = state.get("identityKey")
+    if not isinstance(identity_key, bytes) or len(identity_key) < 32:
+        raise ArtifactError("Artifact state lacks a valid identity HMAC key")
+    identities = state["identities"]
+    source_dates = source_dates_from_components(state["components"])
+    eligible = {}
+    rejected_ambiguous = 0
+    for cik, identity in identities.items():
+        evidence = identity_class(identity)
+        if evidence is None:
+            rejected_ambiguous += 1
+        else:
+            eligible[cik] = evidence
+
+    units_by_cik = defaultdict(set)
+    for cik, unit, _source in source_dates:
+        units_by_cik[cik].add(unit)
+
+    entities = []
+    identifier_owner = {}
+    all_seam_ids = set()
+    for cik in sorted(eligible, key=lambda value: (int(value), value),
+                      reverse=reverse_inputs):
+        entity = stable_id(identity_key, "E", cik)
+        mappings = {}
+        seams = []
+        for unit in sorted(units_by_cik.get(cik, set()), reverse=reverse_inputs):
+            track = selected_track(source_dates, cik, unit)
+            selected_by_source = defaultdict(list)
+            for date, source in track:
+                selected_by_source[source].append(date)
+            previous = None
+            for date, source in track:
+                current_identifier = identifier_id(identity_key, entity, source, unit)
+                if previous is not None and previous[1] != source:
+                    old_identifier = identifier_id(
+                        identity_key, entity, previous[1], unit
+                    )
+                    sid = seam_id(
+                        identity_key, entity, unit, date,
+                        old_identifier, current_identifier,
+                    )
+                    seams.append({
+                        "seamId": sid,
+                        "entityId": entity,
+                        "date": date,
+                        "unit": unit,
+                        "oldIdentifierId": old_identifier,
+                        "newIdentifierId": current_identifier,
+                        "identityEvidenceClass": eligible[cik],
+                        "defaultSeriesPolicy": "terminate-at-seam",
+                        "crossSeamRequiresExplicitMarker": True,
+                    })
+                previous = (date, source)
+            for source, dates in selected_by_source.items():
+                iid = identifier_id(identity_key, entity, source, unit)
+                mappings[iid] = {
+                    "identifierId": iid,
+                    "entityId": entity,
+                    "source": source,
+                    "unit": unit,
+                    "firstDate": min(dates),
+                    "lastDate": max(dates),
+                    "windows": sorted({
+                        window
+                        for date in dates
+                        for window in state["dateWindows"].get((cik, unit, date), set())
+                    }),
+                }
+        if not seams:
+            continue
+        for mapping in mappings.values():
+            owner = identifier_owner.setdefault(mapping["identifierId"], entity)
+            if owner != entity:
+                raise ArtifactError("One identifier maps to more than one entity")
+        for seam in seams:
+            if seam["seamId"] in all_seam_ids:
+                raise ArtifactError("Duplicate seam identifier")
+            all_seam_ids.add(seam["seamId"])
+        entities.append({
+            "entityId": entity,
+            "identityEvidenceClass": eligible[cik],
+            "identityEvidence": {
+                "internalCikExact": True,
+                "normalizedNameContinuityOrRenameChain": True,
+                "exchangeEvidenceAvailable": False,
+            },
+            "identifiers": list(mappings.values()),
+            "seams": seams,
+        })
+
+    for entity in entities:
+        entity["identifiers"] = sorted(entity["identifiers"],
+                                        key=lambda row: row["identifierId"])
+        entity["seams"] = sorted(entity["seams"],
+                                  key=lambda row: (row["date"], row["seamId"]))
+    entities = sorted(entities, key=lambda row: row["entityId"])
+    input_summaries = sorted(state["inputSummaries"], key=lambda row: row["file"])
+    counts = {
+        "identityEntitiesSeen": len(identities),
+        "identityEntitiesEligible": len(eligible),
+        "identityEntitiesRejectedAmbiguous": rejected_ambiguous,
+        "entitiesWithBridgeSeams": len(entities),
+        "identifierMappings": sum(len(row["identifiers"]) for row in entities),
+        "bridgeSeams": sum(len(row["seams"]) for row in entities),
+        "exchangeEvidenceRows": 0,
+    }
+    artifact = {
+        "schema": "R2-A1-identity-bridge-panel/1",
+        "artifactVersion": ARTIFACT_VERSION,
+        "preregistration": {
+            "path": PREREG_REL,
+            "sha256": sha256_file(PREREG),
+            "status": "FROZEN_BEFORE_R2_A1_FACT_ACCESS",
+        },
+        "identityProtectionCorrection": {
+            "path": CORRECTION_REL,
+            "sha256": sha256_file(CORRECTION),
+            "status": "FROZEN_BEFORE_IDENTITY_REBUILD",
+            "supersedesArtifactVersion": PRIOR_ARTIFACT_VERSION,
+            "supersedesManifestSha256": PRIOR_MANIFEST_SHA256,
+        },
+        "construction": {
+            "entityRule": "exact internal CIK plus normalized-name continuity or explicit rename chain",
+            "sourceRule": "metadata-only longest available source history, then frozen source priority",
+            "exchangeEvidenceAvailable": False,
+            "numericFactColumnsRead": 0,
+            "lastAllowedDate": LAST_ALLOWED_DATE,
+            "identifierProtection": {
+                "algorithm": "HMAC-SHA-256",
+                "keyBytesMinimum": 32,
+                "keyStoredInRepository": False,
+                "keyFingerprintSha256": sha256_bytes(identity_key),
+                "publicSaltUsed": False,
+            },
+        },
+        "seamContract": {
+            "default": "terminate-at-seam",
+            "explicitCrossSeamMarker": "crossSeam=true",
+            "requiredMarkerFields": ["crossSeam", "crossedSeamCount", "seamPolicy"],
+        },
+        "inputs": input_summaries,
+        "exclusions": dict(sorted(state["counters"].items())),
+        "counts": counts,
+        "entities": entities,
+    }
+    artifact["canonicalPayloadSha256"] = canonical_hash(artifact)
+    validate_artifact(artifact)
+    return artifact
+
+
+def validate_artifact(artifact, raw_ciks=None, raw_names=None):
+    if artifact.get("artifactVersion") != ARTIFACT_VERSION:
+        raise ArtifactError("Artifact version does not match the identity correction")
+    protection = artifact["construction"].get("identifierProtection", {})
+    if protection.get("algorithm") != "HMAC-SHA-256":
+        raise ArtifactError("Artifact does not use the corrected HMAC identifier scheme")
+    if protection.get("keyStoredInRepository") is not False:
+        raise ArtifactError("Artifact claims an in-repository identity key")
+    if artifact["construction"]["numericFactColumnsRead"] != 0:
+        raise ArtifactError("A numeric fact column entered the bridge artifact")
+    if artifact["construction"]["lastAllowedDate"] != LAST_ALLOWED_DATE:
+        raise ArtifactError("The artifact date wall changed")
+    identifier_owner = {}
+    for entity in artifact["entities"]:
+        entity_id_value = entity["entityId"]
+        identifiers = {row["identifierId"]: row for row in entity["identifiers"]}
+        for iid, row in identifiers.items():
+            if row["entityId"] != entity_id_value:
+                raise ArtifactError("Identifier mapping points to another entity")
+            owner = identifier_owner.setdefault(iid, entity_id_value)
+            if owner != entity_id_value:
+                raise ArtifactError("Identifier maps to multiple entities")
+            if row["lastDate"] > LAST_ALLOWED_DDATE:
+                raise ArtifactError("Identifier mapping crosses the date wall")
+        for seam in entity["seams"]:
+            if seam["oldIdentifierId"] not in identifiers:
+                raise ArtifactError("Seam old identifier has no mapping")
+            if seam["newIdentifierId"] not in identifiers:
+                raise ArtifactError("Seam new identifier has no mapping")
+            old = identifiers[seam["oldIdentifierId"]]
+            new = identifiers[seam["newIdentifierId"]]
+            if old["unit"] != new["unit"] or seam["unit"] != old["unit"]:
+                raise ArtifactError("A currency or unit boundary was bridged")
+            if seam["date"] > LAST_ALLOWED_DDATE:
+                raise ArtifactError("A seam crosses the date wall")
+            if seam["defaultSeriesPolicy"] != "terminate-at-seam":
+                raise ArtifactError("A seam lost its termination default")
+    expected = dict(artifact)
+    observed_hash = expected.pop("canonicalPayloadSha256")
+    if canonical_hash(expected) != observed_hash:
+        raise ArtifactError("Canonical payload hash mismatch")
+    serialized = canonical_bytes(artifact).decode("utf-8")
+    banned_keys = {"cik", "ticker", "adsh", "company", "companyname", "company_name"}
+
+    def visit(value):
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if str(key).lower() in banned_keys:
+                    raise ArtifactError("Raw company identity key leaked into artifact")
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+    visit(artifact)
+    for raw in raw_ciks or ():
+        if json.dumps(str(raw)) in serialized:
+            raise ArtifactError("Raw internal CIK leaked into artifact")
+    for raw in raw_names or ():
+        if raw and json.dumps(str(raw), ensure_ascii=False) in serialized:
+            raise ArtifactError("Raw company name leaked into artifact")
+
+
+def published_entity_ids(manifest_path, sample_size=PUBLIC_ID_SAMPLE):
+    with open(manifest_path, encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    if manifest.get("artifactVersion") != ARTIFACT_VERSION:
+        raise ArtifactError("Public ID watcher received the wrong artifact version")
+    root = os.path.dirname(os.path.abspath(manifest_path))
+    entity_ids = []
+    for descriptor in manifest.get("shards", []):
+        path = os.path.join(root, *descriptor["file"].split("/"))
+        if sha256_file(path) != descriptor["sha256"]:
+            raise ArtifactError("Public ID watcher found a shard hash mismatch")
+        with open(path, encoding="utf-8") as handle:
+            shard = json.load(handle)
+        entity_ids.extend(row["entityId"] for row in shard.get("entities", []))
+        if len(entity_ids) >= sample_size:
+            break
+    sample = entity_ids[:sample_size]
+    if len(sample) != sample_size or len(set(sample)) != sample_size:
+        raise ArtifactError("Public ID watcher could not obtain fifty unique entity IDs")
+    return sample
+
+
+def legacy_inversion_matches(published_ids, namespace_max):
+    targets = set(published_ids)
+    matches = set()
+    for candidate in range(1, namespace_max + 1):
+        derived = legacy_stable_id("E", str(candidate))
+        if derived in targets:
+            matches.add(derived)
+    return len(matches)
+
+
+def public_identity_proof(manifest_path, namespace_max=PUBLIC_CIK_MAX):
+    sample = published_entity_ids(manifest_path, PUBLIC_ID_SAMPLE)
+    matches = legacy_inversion_matches(sample, namespace_max)
+    return {
+        "schema": "R2-A1-public-identity-inversion-proof/1",
+        "artifactVersion": ARTIFACT_VERSION,
+        "manifestSha256": sha256_file(manifest_path),
+        "sampledPublishedEntityIds": len(sample),
+        "candidateCikMinimum": 1,
+        "candidateCikMaximum": namespace_max,
+        "candidateCiksTried": namespace_max,
+        "repositoryPublicMappingsTried": ["v1.0.0-unsalted-truncated-sha256"],
+        "hmacKeyRead": False,
+        "invertiblePublishedIds": matches,
+        "threshold": "zero of fifty",
+        "passes": matches == 0,
+        "companyIdentifiersWritten": 0,
+    }
+
+
+def verify_public_identity(manifest_path, proof_path=None, namespace_max=PUBLIC_CIK_MAX):
+    proof = public_identity_proof(manifest_path, namespace_max)
+    if proof_path:
+        write_json(proof_path, proof)
+    print(json.dumps({
+        "candidateCikMaximum": proof["candidateCikMaximum"],
+        "candidateCiksTried": proof["candidateCiksTried"],
+        "invertiblePublishedIds": proof["invertiblePublishedIds"],
+        "passes": proof["passes"],
+        "sampledPublishedEntityIds": proof["sampledPublishedEntityIds"],
+    }, sort_keys=True))
+    return 0 if proof["passes"] else 1
+
+
+def sabotage_reversible_ids(proof_path=None, namespace_max=PUBLIC_CIK_MAX):
+    sample = [legacy_stable_id("E", str(candidate)) for candidate in range(1, 51)]
+    matches = legacy_inversion_matches(sample, namespace_max)
+    proof = {
+        "schema": "R2-A1-public-identity-inversion-sabotage/1",
+        "sabotage": "fifty-legacy-unsalted-entity-ids",
+        "sampledPublishedEntityIds": len(sample),
+        "candidateCikMinimum": 1,
+        "candidateCikMaximum": namespace_max,
+        "candidateCiksTried": namespace_max,
+        "invertiblePublishedIds": matches,
+        "expectedStatus": "RED",
+        "observedStatus": "RED" if matches > 0 else "GREEN",
+        "companyIdentifiersWritten": 0,
+    }
+    if proof_path:
+        write_json(proof_path, proof)
+    if matches > 0:
+        print("IDENTITY SABOTAGE RED: reversible published IDs detected", file=sys.stderr)
+        return 1
+    print("IDENTITY SABOTAGE FAILED: reversible IDs stayed green", file=sys.stderr)
+    return 0
+
+
+def seam_pairs(artifact):
+    pairs = set()
+    for entity in artifact["entities"]:
+        for seam in entity["seams"]:
+            pairs.add((seam["oldIdentifierId"], seam["newIdentifierId"]))
+    return pairs
+
+
+def validate_bridge_write_payload(value, known_seams):
+    """Reject derived cross-seam rows unless their enclosing result is explicit."""
+    guarded_results = 0
+
+    def visit(node):
+        nonlocal guarded_results
+        if isinstance(node, dict):
+            if "changes" in node:
+                validate_derived_result(node, known_seams)
+                guarded_results += 1
+                for key, child in node.items():
+                    if key != "changes":
+                        visit(child)
+                return
+            if {"fromIdentifierId", "toIdentifierId"}.issubset(node):
+                if node["fromIdentifierId"] != node["toIdentifierId"]:
+                    raise ArtifactError(
+                        "Cross-seam provenance row is outside a guarded derived result"
+                    )
+            for child in node.values():
+                visit(child)
+        elif isinstance(node, list):
+            for child in node:
+                visit(child)
+
+    visit(value)
+    return guarded_results
+
+
+def validate_bridge_write_bundle(artifact, manifest, shards):
+    """Production write gate for the manifest and every identity-bridge shard."""
+    validate_artifact(artifact)
+    known_seams = seam_pairs(artifact)
+    guarded_results = validate_bridge_write_payload(manifest, known_seams)
+    for _relative, payload in shards:
+        guarded_results += validate_bridge_write_payload(payload, known_seams)
+    return guarded_results
+
+
+def derive_changes(observations, artifact, cross_seam=False, emit_marker=True):
+    ordered = sorted(observations, key=lambda row: row["date"])
+    known_seams = seam_pairs(artifact)
+    changes = []
+    crossed = 0
+    for previous, current in zip(ordered, ordered[1:]):
+        different = previous["identifierId"] != current["identifierId"]
+        if different:
+            pair = (previous["identifierId"], current["identifierId"])
+            if pair not in known_seams:
+                raise ArtifactError("A derived calculation crosses an unknown seam")
+            if not cross_seam:
+                continue
+            crossed += 1
+        changes.append({
+            "fromIdentifierId": previous["identifierId"],
+            "toIdentifierId": current["identifierId"],
+            "change": current["value"] - previous["value"],
+        })
+    result = {"changes": changes}
+    if emit_marker:
+        result.update({
+            "crossSeam": bool(cross_seam and crossed),
+            "crossedSeamCount": crossed,
+            "seamPolicy": "explicit-cross-seam" if crossed else "terminate-at-seam",
+        })
+    validate_derived_result(result, known_seams)
+    return result
+
+
+def validate_derived_result(result, known_seams):
+    crossed = [row for row in result.get("changes", [])
+               if row["fromIdentifierId"] != row["toIdentifierId"]]
+    for row in crossed:
+        if (row["fromIdentifierId"], row["toIdentifierId"]) not in known_seams:
+            raise ArtifactError("A derived calculation crosses an unknown seam")
+    if crossed:
+        if result.get("crossSeam") is not True:
+            raise ArtifactError("Unmarked cross-seam derived calculation")
+        if result.get("crossedSeamCount") != len(crossed):
+            raise ArtifactError("Cross-seam marker count does not match the calculation")
+        if result.get("seamPolicy") != "explicit-cross-seam":
+            raise ArtifactError("Cross-seam calculation lacks the explicit seam policy")
+
+
+def fixture_state():
+    state = new_scan_state(b"fixture-only-hmac-key-32-bytes!!")
+    for cik, names, edges in (
+            ("100", {"ALPHA INC"}, set()),
+            ("200", {"OLD CO", "NEW CO"}, {("NEW CO", "OLD CO")}),
+            ("300", {"UNLINKED A", "UNLINKED B"}, set())):
+        state["identities"][cik]["names"].update(names)
+        state["identities"][cik]["renameEdges"].update(edges)
+        state["identities"][cik]["windows"].add("pruefung")
+    state["components"][("100", "USD", "20180331", "1")].add("SalesRevenueNet")
+    state["components"][("100", "USD", "20180630", "1")].add("SalesRevenueNet")
+    state["components"][("100", "USD", "20180930", "1")].add(
+        "RevenueFromContractWithCustomerExcludingAssessedTax")
+    state["components"][("100", "EUR", "20181231", "1")].add(
+        "RevenueFromContractWithCustomerExcludingAssessedTax")
+    for date in ("20180331", "20180630", "20180930", "20181231"):
+        for unit in ("USD", "EUR"):
+            state["dateWindows"][("100", unit, date)].add("pruefung")
+    state["inputSummaries"] = [{
+        "file": "fixture.sqlite", "bytes": 1, "reportRowsRead": 3,
+        "periodicIdentityRows": 3, "factMetadataRowsRead": 4,
+        "eligibleFactMetadataRows": 4, "lastAllowedDate": LAST_ALLOWED_DATE,
+        "identityEvidenceSha256": "0" * 64,
+        "factMetadataEvidenceSha256": "1" * 64,
+    }]
+    return state
+
+
+def state_from_fixed_fixture(payload):
+    if payload.get("schema") != "R2-A1-identity-bridge-determinism-input/1":
+        raise ArtifactError("Determinism fixture has the wrong schema")
+    key = payload.get("identityKeyUtf8", "").encode("utf-8")
+    state = new_scan_state(key)
+    for row in payload.get("identities", []):
+        identity = state["identities"][str(row["cik"])]
+        identity["names"].update(row.get("names", []))
+        identity["renameEdges"].update(
+            tuple(sorted(edge)) for edge in row.get("renameEdges", [])
+        )
+        identity["windows"].update(row.get("windows", []))
+    for row in payload.get("components", []):
+        key_tuple = (
+            str(row["cik"]), row["unit"], row["date"], row["quarterSpan"]
+        )
+        state["components"][key_tuple].update(row.get("tags", []))
+    for row in payload.get("dateWindows", []):
+        key_tuple = (str(row["cik"]), row["unit"], row["date"])
+        state["dateWindows"][key_tuple].update(row.get("windows", []))
+    state["inputSummaries"] = payload.get("inputSummaries", [])
+    state["counters"].update(payload.get("counters", {}))
+    return state
+
+
+def fixed_fixture_artifact(path):
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    return artifact_from_fixed_fixture_payload(payload)
+
+
+def artifact_from_fixed_fixture_payload(payload):
+    return artifact_from_state(state_from_fixed_fixture(payload))
+
+
+def load_blocker_closure():
+    with open(BLOCKER_CLOSURE, encoding="utf-8") as handle:
+        record = json.load(handle)
+    if record.get("status") != "FROZEN_BLOCKER_2_3_CLOSURE":
+        raise ArtifactError("Blocker closure record is not frozen")
+    return record
+
+
+def verify_determinism_fixture(path):
+    record = load_blocker_closure()
+    binding = record["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+        raise ArtifactError("Fixed determinism input fixture hash mismatch")
+    observed = fixed_fixture_artifact(path)["canonicalPayloadSha256"]
+    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    if observed != expected:
+        raise ArtifactError(
+            "Fixed determinism output hash mismatch: " + observed + " != " + expected
+        )
+    print(json.dumps({
+        "fixtureSha256": sha256_file(path),
+        "logicalPayloadSha256": observed,
+        "status": "GREEN",
+    }, sort_keys=True))
+    return 0
+
+
+def sabotage_determinism_fixture(path, proof_path=None):
+    record = load_blocker_closure()
+    binding = record["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+        raise ArtifactError("Fixed determinism input fixture hash mismatch before sabotage")
+    with open(path, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    mutation = binding["deliberateMutation"]
+    component = payload["components"][mutation["componentIndex"]]
+    if component[mutation["field"]] != mutation["from"]:
+        raise ArtifactError("Determinism sabotage fixture no longer has its pinned source value")
+    component[mutation["field"]] = mutation["to"]
+    observed = artifact_from_fixed_fixture_payload(payload)["canonicalPayloadSha256"]
+    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    proof = {
+        "schema": "R2-A1-determinism-fixture-sabotage-proof/1",
+        "fixture": DETERMINISM_FIXTURE_REL,
+        "mutation": mutation,
+        "expectedLogicalPayloadSha256": expected,
+        "observedLogicalPayloadSha256": observed,
+        "observedStatus": "RED" if observed != expected else "GREEN",
+        "passes": observed != expected,
+    }
+    if proof_path:
+        write_json(proof_path, proof)
+    if proof["passes"]:
+        print(
+            "DETERMINISM FIXTURE SABOTAGE RED: input mutation changed the pinned output hash",
+            file=sys.stderr,
+        )
+        return 1
+    print("DETERMINISM FIXTURE SABOTAGE FAILED: mutation stayed green", file=sys.stderr)
+    return 0
+
+
+SELF_TEST_NAMES = (
+    "Registration is frozen before R2-A1 fact access",
+    "Production fact query excludes every numeric and result column",
+    "Exact CIK and normalized-name continuity is eligible",
+    "Explicit rename chain is eligible",
+    "Ambiguous name evidence is rejected",
+    "Same-unit source change creates a semantic seam",
+    "Unit change is not bridged",
+    "Each identifier maps to exactly one entity",
+    "Default derived calculation stops at the seam",
+    "Explicit cross-seam calculation carries all markers",
+    "Unmarked cross-seam calculation is rejected",
+    "Unknown cross-seam calculation is rejected",
+    "Canonical hash is independent of input ordering",
+    "Raw company identity is absent from the artifact",
+    "Date-wall violation is rejected",
+    "Canonical payload hash mismatch is rejected",
+    "Same-process canonical serialization is stable",
+    "HMAC entity IDs change when the unseen key changes",
+    "Secure fixture IDs resist the public legacy namespace attack",
+    "Legacy reversible fixture IDs are recovered by the public watcher",
+    "Independent comparator accepts two distinct complete build records",
+    "Independent comparator rejects one mismatched rebuild fingerprint",
+    "Fixed input fixture reproduces its pinned logical payload hash",
+    "One fixed input field mutation changes the pinned logical payload hash",
+    "Production bridge writer gates the manifest and every shard",
+)
+
+
+def self_test():
+    failures = []
+
+    def check(name, condition, actual=None):
+        if condition:
+            print("  ok    " + name)
+        else:
+            failures.append(name)
+            print("  ROT   " + name + " (actual: " + repr(actual) + ")")
+
+    with open(PREREG, encoding="utf-8") as handle:
+        prereg = json.load(handle)
+    check(SELF_TEST_NAMES[0], prereg.get("status") == "FROZEN_BEFORE_R2_A1_FACT_ACCESS",
+          prereg.get("status"))
+    check(SELF_TEST_NAMES[1], not FORBIDDEN_FACT_COLUMNS.intersection(FACT_METADATA_COLUMNS),
+          FACT_METADATA_COLUMNS)
+    state = fixture_state()
+    check(SELF_TEST_NAMES[2], identity_class(state["identities"]["100"])
+          == "cik+normalized-name-continuity")
+    check(SELF_TEST_NAMES[3], identity_class(state["identities"]["200"])
+          == "cik+explicit-rename-chain")
+    check(SELF_TEST_NAMES[4], identity_class(state["identities"]["300"]) is None)
+    artifact = artifact_from_state(state)
+    entity = artifact["entities"][0]
+    check(SELF_TEST_NAMES[5], len(entity["seams"]) == 1, entity["seams"])
+    check(SELF_TEST_NAMES[6], all(
+        seam["unit"] == "USD" for seam in entity["seams"]), entity["seams"])
+    ownership = defaultdict(set)
+    for row in artifact["entities"]:
+        for mapping in row["identifiers"]:
+            ownership[mapping["identifierId"]].add(mapping["entityId"])
+    check(SELF_TEST_NAMES[7], all(len(owners) == 1 for owners in ownership.values()),
+          ownership)
+    old_id = entity["seams"][0]["oldIdentifierId"]
+    new_id = entity["seams"][0]["newIdentifierId"]
+    observations = [
+        {"date": "20180331", "identifierId": old_id, "value": 10.0},
+        {"date": "20180630", "identifierId": old_id, "value": 12.0},
+        {"date": "20180930", "identifierId": new_id, "value": 30.0},
+    ]
+    stopped = derive_changes(observations, artifact)
+    check(SELF_TEST_NAMES[8], len(stopped["changes"]) == 1
+          and stopped["crossedSeamCount"] == 0, stopped)
+    crossed = derive_changes(observations, artifact, cross_seam=True)
+    check(SELF_TEST_NAMES[9], crossed["crossSeam"] is True
+          and crossed["crossedSeamCount"] == 1
+          and crossed["seamPolicy"] == "explicit-cross-seam", crossed)
+    try:
+        derive_changes(observations, artifact, cross_seam=True, emit_marker=False)
+        unmarked_rejected = False
+    except ArtifactError:
+        unmarked_rejected = True
+    check(SELF_TEST_NAMES[10], unmarked_rejected)
+    unknown = [dict(row) for row in observations]
+    unknown[-1]["identifierId"] = "I-unknown"
+    try:
+        derive_changes(unknown, artifact, cross_seam=True)
+        unknown_rejected = False
+    except ArtifactError:
+        unknown_rejected = True
+    check(SELF_TEST_NAMES[11], unknown_rejected)
+    reversed_artifact = artifact_from_state(state, reverse_inputs=True)
+    check(SELF_TEST_NAMES[12], canonical_hash(artifact) == canonical_hash(reversed_artifact),
+          (canonical_hash(artifact), canonical_hash(reversed_artifact)))
+    try:
+        validate_artifact(artifact, raw_ciks={"100", "200", "300"},
+                          raw_names={"ALPHA INC", "OLD CO", "NEW CO"})
+        identity_absent = True
+    except ArtifactError:
+        identity_absent = False
+    check(SELF_TEST_NAMES[13], identity_absent)
+    bad_date = json.loads(json.dumps(artifact))
+    bad_date["entities"][0]["seams"][0]["date"] = "20210101"
+    body = dict(bad_date)
+    body.pop("canonicalPayloadSha256")
+    bad_date["canonicalPayloadSha256"] = canonical_hash(body)
+    try:
+        validate_artifact(bad_date)
+        date_rejected = False
+    except ArtifactError:
+        date_rejected = True
+    check(SELF_TEST_NAMES[14], date_rejected)
+    bad_hash = json.loads(json.dumps(artifact))
+    bad_hash["canonicalPayloadSha256"] = "f" * 64
+    try:
+        validate_artifact(bad_hash)
+        hash_rejected = False
+    except ArtifactError:
+        hash_rejected = True
+    check(SELF_TEST_NAMES[15], hash_rejected)
+    check(SELF_TEST_NAMES[16], canonical_hash(artifact_from_state(state))
+          == canonical_hash(artifact_from_state(state)), canonical_hash(artifact))
+    first_key_id = stable_id(b"a" * 32, "E", "100")
+    second_key_id = stable_id(b"b" * 32, "E", "100")
+    check(SELF_TEST_NAMES[17], first_key_id != second_key_id,
+          (first_key_id, second_key_id))
+    secure_fixture_ids = [stable_id(b"a" * 32, "E", str(value))
+                          for value in range(1, 11)]
+    check(SELF_TEST_NAMES[18], legacy_inversion_matches(secure_fixture_ids, 100) == 0)
+    legacy_fixture_ids = [legacy_stable_id("E", str(value)) for value in range(1, 11)]
+    check(SELF_TEST_NAMES[19], legacy_inversion_matches(legacy_fixture_ids, 100) == 10)
+    registered_manifest = load_determinism_correction()["boundArtifact"][
+        "manifestSha256BeforeCorrection"]
+    base_fingerprint = {
+        field: (ARTIFACT_VERSION if field == "artifactVersion" else "a" * 64)
+        for field in INDEPENDENT_FINGERPRINT_FIELDS
+    }
+    base_fingerprint["manifestFileSha256"] = registered_manifest
+    record_a = {
+        "schema": "R2-A1-independent-builder-record/1",
+        "processId": 101,
+        "pythonRuntime": "%d.%d.%d" % sys.version_info[:3],
+        "scanPanelCalls": 2,
+        "panelsScanned": ["panel-entdeckung.sqlite", "panel-validierung.sqlite"],
+        "fingerprint": dict(base_fingerprint),
+        "sabotageApplied": False,
+    }
+    record_b = dict(record_a)
+    record_b["processId"] = 202
+    record_b["fingerprint"] = dict(base_fingerprint)
+    independent_ok = compare_independent_build_records(record_a, record_b)
+    check(SELF_TEST_NAMES[20], independent_ok["passes"] is True, independent_ok)
+    record_b["fingerprint"]["shardSetSha256"] = "0" * 64
+    record_b["sabotageApplied"] = True
+    independent_red = compare_independent_build_records(record_a, record_b)
+    check(
+        SELF_TEST_NAMES[21],
+        independent_red["observedStatus"] == "RED"
+        and independent_red["fingerprintMismatches"] == ["shardSetSha256"],
+        independent_red,
+    )
+    closure = load_blocker_closure()
+    fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
+    fixture_artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
+    check(
+        SELF_TEST_NAMES[22],
+        sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
+        and fixture_artifact["canonicalPayloadSha256"]
+        == fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        fixture_artifact["canonicalPayloadSha256"],
+    )
+    with open(DETERMINISM_FIXTURE, encoding="utf-8") as handle:
+        mutated_payload = json.load(handle)
+    mutation = fixture_binding["deliberateMutation"]
+    mutated_payload["components"][mutation["componentIndex"]][mutation["field"]] = (
+        mutation["to"]
+    )
+    mutated_hash = artifact_from_fixed_fixture_payload(mutated_payload)[
+        "canonicalPayloadSha256"
+    ]
+    check(
+        SELF_TEST_NAMES[23],
+        mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
+        mutated_hash,
+    )
+    clean_manifest, clean_shards = manifest_from_artifact(
+        fixture_artifact, "fixture-bridge.json"
+    )
+    clean_guarded = validate_bridge_write_bundle(
+        fixture_artifact, clean_manifest, clean_shards
+    )
+    sabotaged_shards = json.loads(json.dumps(clean_shards))
+    seam = fixture_artifact["entities"][0]["seams"][0]
+    sabotaged_shards[0][1]["derivedSeries"] = {
+        "changes": [{
+            "fromIdentifierId": seam["oldIdentifierId"],
+            "toIdentifierId": seam["newIdentifierId"],
+            "change": 1.0,
+        }]
+    }
+    try:
+        write_sharded_artifact(
+            os.path.join(REPO, ".never-written-bridge-sabotage.json"),
+            fixture_artifact,
+            clean_manifest,
+            sabotaged_shards,
+        )
+        writer_rejected = False
+    except ArtifactError:
+        writer_rejected = True
+    check(SELF_TEST_NAMES[24], clean_guarded == 0 and writer_rejected)
+    if failures:
+        print("SELBSTTEST ROT - %d named checks failed" % len(failures))
+        return 1
+    print("SELBSTTEST GREEN - %d named checks" % len(SELF_TEST_NAMES))
+    return 0
+
+
+def sabotage_cross_seam(proof_path=None):
+    state = fixture_state()
+    artifact = artifact_from_state(state)
+    entity = artifact["entities"][0]
+    old_id = entity["seams"][0]["oldIdentifierId"]
+    new_id = entity["seams"][0]["newIdentifierId"]
+    observations = [
+        {"date": "20180630", "identifierId": old_id, "value": 12.0},
+        {"date": "20180930", "identifierId": new_id, "value": 30.0},
+    ]
+    try:
+        derive_changes(observations, artifact, cross_seam=True, emit_marker=False)
+    except ArtifactError as error:
+        proof = {
+            "schema": "R2-A1-cross-seam-sabotage-proof/1",
+            "preregistrationSha256": sha256_file(PREREG),
+            "sabotage": "unmarked-cross-seam-derived-calculation",
+            "expectedStatus": "RED",
+            "observedStatus": "RED",
+            "failureClass": "unmarked-cross-seam",
+            "guardMessage": str(error),
+            "companyIdentifiersWritten": 0,
+        }
+        if proof_path:
+            write_json(proof_path, proof)
+        print("SABOTAGE RED: " + str(error), file=sys.stderr)
+        return 1
+    print("SABOTAGE FAILED: unmarked cross-seam calculation stayed green", file=sys.stderr)
+    return 0
+
+
+def sabotage_bridge_write(proof_path=None):
+    artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
+    manifest, shards = manifest_from_artifact(artifact, "fixture-bridge.json")
+    sabotaged = json.loads(json.dumps(shards))
+    seam = artifact["entities"][0]["seams"][0]
+    sabotaged[0][1]["derivedSeries"] = {
+        "changes": [{
+            "fromIdentifierId": seam["oldIdentifierId"],
+            "toIdentifierId": seam["newIdentifierId"],
+            "change": 1.0,
+        }]
+    }
+    try:
+        write_sharded_artifact(
+            os.path.join(REPO, ".never-written-bridge-sabotage.json"),
+            artifact,
+            manifest,
+            sabotaged,
+        )
+    except ArtifactError as error:
+        proof = {
+            "schema": "R2-A1-bridge-write-sabotage-proof/1",
+            "writer": "write_sharded_artifact",
+            "guard": "validate_bridge_write_bundle",
+            "payload": "identity-bridge shard",
+            "sabotage": "unmarked cross-seam derived row before shard write",
+            "guardMessage": str(error),
+            "observedStatus": "RED",
+            "writeOccurred": False,
+        }
+        if proof_path:
+            write_json(proof_path, proof)
+        print("BRIDGE WRITE SABOTAGE RED: " + str(error), file=sys.stderr)
+        return 1
+    print("BRIDGE WRITE SABOTAGE FAILED: unmarked seam reached the writer", file=sys.stderr)
+    return 0
+
+
+def load_and_validate_sabotage(path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("observedStatus") != "RED":
+        raise ArtifactError("Cross-seam sabotage proof is not red")
+    if proof.get("failureClass") != "unmarked-cross-seam":
+        raise ArtifactError("Cross-seam sabotage failed for the wrong reason")
+    if proof.get("preregistrationSha256") != sha256_file(PREREG):
+        raise ArtifactError("Cross-seam sabotage proof is bound to another registration")
+    return proof
+
+
+def load_identity_sabotage(path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("observedStatus") != "RED":
+        raise ArtifactError("Identity inversion sabotage proof is not red")
+    if proof.get("sampledPublishedEntityIds") != PUBLIC_ID_SAMPLE:
+        raise ArtifactError("Identity sabotage does not contain fifty fixture IDs")
+    if proof.get("invertiblePublishedIds") != PUBLIC_ID_SAMPLE:
+        raise ArtifactError("Identity sabotage did not recover all reversible fixture IDs")
+    if proof.get("candidateCikMaximum") != PUBLIC_CIK_MAX:
+        raise ArtifactError("Identity sabotage did not scan the full plausible namespace")
+    if proof.get("candidateCiksTried") != PUBLIC_CIK_MAX:
+        raise ArtifactError("Identity sabotage did not execute every configured CIK attempt")
+    return proof
+
+
+def load_identity_proof(path, manifest_path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("manifestSha256") != sha256_file(manifest_path):
+        raise ArtifactError("Public identity proof is bound to another manifest")
+    if proof.get("sampledPublishedEntityIds") != PUBLIC_ID_SAMPLE:
+        raise ArtifactError("Public identity proof does not sample fifty IDs")
+    if proof.get("candidateCikMaximum") != PUBLIC_CIK_MAX:
+        raise ArtifactError("Public identity proof did not scan the full plausible namespace")
+    if proof.get("candidateCiksTried") != PUBLIC_CIK_MAX:
+        raise ArtifactError("Public identity proof did not execute every configured CIK attempt")
+    if proof.get("invertiblePublishedIds") != 0 or proof.get("passes") is not True:
+        raise ArtifactError("At least one sampled published ID is publicly invertible")
+    if proof.get("hmacKeyRead") is not False:
+        raise ArtifactError("Public identity watcher read the private HMAC key")
+    return proof
+
+
+def construct_empirical_build(discovery, validation, identity_key_file,
+                              manifest_basename):
+    state = new_scan_state(load_identity_key(identity_key_file))
+    for path, (window, wall, basename) in zip(
+            (discovery, validation), WINDOWS):
+        scan_panel(path, window, wall, basename, state)
+    artifact = artifact_from_state(state)
+    manifest, shards = manifest_from_artifact(artifact, manifest_basename)
+    return state, artifact, manifest, shards
+
+
+def emit_independent_build(args):
+    state, artifact, manifest, _shards = construct_empirical_build(
+        args.discovery, args.validation, args.identity_key_file,
+        os.path.basename(args.artifact),
+    )
+    record = independent_build_record(
+        artifact, manifest, state, sabotage=args.sabotage_independent_fingerprint
+    )
+    print(json.dumps(record, ensure_ascii=False, sort_keys=True))
+    return 0
+
+
+def run_independent_build_pair(args, sabotage_child=False):
+    state, artifact, manifest, shards = construct_empirical_build(
+        args.discovery, args.validation, args.identity_key_file,
+        os.path.basename(args.artifact),
+    )
+    builder_a = independent_build_record(artifact, manifest, state)
+    command = [
+        sys.executable, os.path.abspath(__file__),
+        "--emit-independent-build",
+        "--discovery", os.path.abspath(args.discovery),
+        "--validation", os.path.abspath(args.validation),
+        "--artifact", os.path.abspath(args.artifact),
+        "--identity-key-file", os.path.abspath(args.identity_key_file),
+    ]
+    if sabotage_child:
+        command.append("--sabotage-independent-fingerprint")
+    child = subprocess.run(
+        command, cwd=REPO, capture_output=True, text=True, check=False
+    )
+    if child.returncode != 0:
+        raise ArtifactError(
+            "Independent builder process failed: " + child.stderr.strip()
+        )
+    try:
+        builder_b = json.loads(child.stdout)
+    except json.JSONDecodeError as error:
+        raise ArtifactError("Independent builder did not emit one JSON record") from error
+    proof = compare_independent_build_records(builder_a, builder_b)
+    write_json(args.independent_proof, proof)
+    return artifact, manifest, shards, proof
+
+
+def sabotage_independent_rebuild(args):
+    _artifact, _manifest, _shards, proof = run_independent_build_pair(
+        args, sabotage_child=True
+    )
+    expected_mismatches = ["shardSetSha256"]
+    if (
+            proof["observedStatus"] == "RED"
+            and proof["fingerprintMismatches"] == expected_mismatches
+            and proof["processIdsDistinct"] is True
+            and proof["scanPanelCallsPerProcess"] == [2, 2]):
+        print(
+            "INDEPENDENT REBUILD SABOTAGE RED: mismatched child fingerprint detected",
+            file=sys.stderr,
+        )
+        return 1
+    print(
+        "INDEPENDENT REBUILD SABOTAGE FAILED: mismatched child stayed green",
+        file=sys.stderr,
+    )
+    return 0
+
+
+def load_independent_rebuild_proof(path, manifest_path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("manifestSha256") != sha256_file(manifest_path):
+        raise ArtifactError("Independent rebuild proof is bound to another manifest")
+    if proof.get("observedStatus") != "GREEN" or proof.get("passes") is not True:
+        raise ArtifactError("Independent rebuild proof is not green")
+    if proof.get("processIdsDistinct") is not True:
+        raise ArtifactError("Independent rebuilds did not use distinct processes")
+    if proof.get("scanPanelCallsPerProcess") != [2, 2]:
+        raise ArtifactError("Independent rebuilds did not each scan both panels")
+    if proof.get("totalScanPanelCalls") != 4:
+        raise ArtifactError("Independent rebuild proof did not record four panel scans")
+    if proof.get("fingerprintMismatches") != []:
+        raise ArtifactError("Independent rebuild fingerprints differ")
+    if proof.get("matchesBoundManifest") is not True:
+        raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    if any(row.get("sabotageApplied") for row in proof.get("builders", [])):
+        raise ArtifactError("Green independent rebuild proof contains a sabotage")
+    return proof
+
+
+def load_independent_rebuild_sabotage(path):
+    with open(path, encoding="utf-8") as handle:
+        proof = json.load(handle)
+    if proof.get("observedStatus") != "RED" or proof.get("passes") is not False:
+        raise ArtifactError("Independent rebuild sabotage proof is not red")
+    if proof.get("processIdsDistinct") is not True:
+        raise ArtifactError("Independent rebuild sabotage reused one process")
+    if proof.get("scanPanelCallsPerProcess") != [2, 2]:
+        raise ArtifactError("Independent rebuild sabotage did not run both full scans")
+    if proof.get("fingerprintMismatches") != ["shardSetSha256"]:
+        raise ArtifactError("Independent rebuild sabotage did not isolate its mismatch")
+    builders = proof.get("builders", [])
+    if len(builders) != 2 or builders[1].get("sabotageApplied") is not True:
+        raise ArtifactError("Independent rebuild sabotage is not present in builder B")
+    return proof
+
+
+def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
+                 identity_proof, identity_proof_path, identity_sabotage,
+                 identity_sabotage_path, independent_proof,
+                 independent_proof_path, independent_sabotage,
+                 independent_sabotage_path):
+    artifact_file_hash = sha256_file(artifact_path)
+    contract = {
+        "status": "HOLD_BLOCKER_3_AND_METHOD_CORRECTIONS",
+        "passes": False,
+        "blocker1IdentityProtection": {
+            "status": "PASS",
+            "sampledPublishedEntityIds": identity_proof["sampledPublishedEntityIds"],
+            "invertiblePublishedIds": identity_proof["invertiblePublishedIds"],
+            "threshold": identity_proof["threshold"],
+            "legacySabotageRecovered": identity_sabotage["invertiblePublishedIds"],
+            "legacySabotageStatus": identity_sabotage["observedStatus"],
+        },
+        "blocker2IndependentDeterminism": {
+            "status": "PASS",
+            "independentProcessesExecuted": independent_proof[
+                "independentProcessesExecuted"],
+            "processIdsDistinct": independent_proof["processIdsDistinct"],
+            "scanPanelCallsPerProcess": independent_proof[
+                "scanPanelCallsPerProcess"],
+            "totalScanPanelCalls": independent_proof["totalScanPanelCalls"],
+            "fingerprintMismatches": len(independent_proof[
+                "fingerprintMismatches"]),
+            "deliberateMismatchSabotageStatus": independent_sabotage[
+                "observedStatus"],
+        },
+        "blocker3ProvenanceDerivedSeamGuard": {
+            "status": "OPEN",
+            "knownSingleSabotageRed": seam_proof["observedStatus"] == "RED",
+            "threeRequiredBypassSabotagesCompleted": 0,
+        },
+        "methodCorrections": {
+            "acceptedTimeSeamPlacement": "OPEN",
+            "multipleSeamExposureRestoration": "OPEN",
+            "completeExclusionCounters": "OPEN",
+        },
+    }
+    result = {
+        "schema": "R2-A1-identity-bridge-artifact-result/3",
+        "preregistration": artifact["preregistration"],
+        "identityProtectionCorrection": artifact["identityProtectionCorrection"],
+        "corrections": [{
+            "artifactVersion": PRIOR_ARTIFACT_VERSION,
+            "manifestSha256": PRIOR_MANIFEST_SHA256,
+            "status": "REJECTED_REVERSIBLE_IDENTIFIERS",
+        }, {
+            "artifactVersion": ARTIFACT_VERSION,
+            "status": "CURRENT_BLOCKER1_CORRECTION",
+        }, {
+            "path": DETERMINISM_CORRECTION_REL,
+            "sha256": sha256_file(DETERMINISM_CORRECTION),
+            "status": "BLOCKER2_INDEPENDENT_REBUILDS_PASS",
+        }],
+        "boundImplementation": {
+            D3_SCRIPT_REL: sha256_file(repo_path(D3_SCRIPT_REL)),
+            BASIS_SCRIPT_REL: sha256_file(repo_path(BASIS_SCRIPT_REL)),
+            COUNT_SCRIPT_REL: sha256_file(repo_path(COUNT_SCRIPT_REL)),
+            SEALED_SCRIPT_REL: sha256_file(repo_path(SEALED_SCRIPT_REL)),
+            "scripts/studie-identity-bridge-artifact.py": sha256_file(__file__),
+        },
+        "panelArtifact": {
+            "file": os.path.basename(artifact_path),
+            "artifactVersion": artifact["artifactVersion"],
+            "sha256": artifact_file_hash,
+            "manifestPayloadSha256": manifest["canonicalPayloadSha256"],
+            "logicalPayloadSha256": artifact["canonicalPayloadSha256"],
+            "shardSetSha256": manifest["shardSetSha256"],
+            "shards": len(manifest["shards"]),
+            "totalShardBytes": sum(row["bytes"] for row in manifest["shards"]),
+            "independentRebuildsExecuted": independent_proof[
+                "independentProcessesExecuted"],
+            "independentRebuildFingerprintMismatches": len(
+                independent_proof["fingerprintMismatches"]),
+            "independentRebuildManifestSha256": independent_proof[
+                "manifestSha256"],
+        },
+        "independentRebuildProof": {
+            "file": os.path.basename(independent_proof_path),
+            "sha256": sha256_file(independent_proof_path),
+            "processIdsDistinct": independent_proof["processIdsDistinct"],
+            "scanPanelCallsPerProcess": independent_proof[
+                "scanPanelCallsPerProcess"],
+            "totalScanPanelCalls": independent_proof["totalScanPanelCalls"],
+            "fingerprintMismatches": independent_proof[
+                "fingerprintMismatches"],
+            "passes": independent_proof["passes"],
+            "sabotage": {
+                "file": os.path.basename(independent_sabotage_path),
+                "sha256": sha256_file(independent_sabotage_path),
+                "fingerprintMismatches": independent_sabotage[
+                    "fingerprintMismatches"],
+                "observedRed": independent_sabotage[
+                    "observedStatus"] == "RED",
+            },
+        },
+        "identityProtection": {
+            "algorithm": artifact["construction"]["identifierProtection"]["algorithm"],
+            "keyStoredInRepository": False,
+            "keyFingerprintSha256": artifact["construction"]["identifierProtection"][
+                "keyFingerprintSha256"],
+            "publicInversionProof": {
+                "file": os.path.basename(identity_proof_path),
+                "sha256": sha256_file(identity_proof_path),
+                "sampledPublishedEntityIds": identity_proof[
+                    "sampledPublishedEntityIds"],
+                "candidateCikMaximum": identity_proof["candidateCikMaximum"],
+                "invertiblePublishedIds": identity_proof["invertiblePublishedIds"],
+                "passes": identity_proof["passes"],
+            },
+            "legacySabotageProof": {
+                "file": os.path.basename(identity_sabotage_path),
+                "sha256": sha256_file(identity_sabotage_path),
+                "invertiblePublishedIds": identity_sabotage[
+                    "invertiblePublishedIds"],
+                "observedRed": identity_sabotage["observedStatus"] == "RED",
+            },
+        },
+        "seamSabotageProof": {
+            "file": os.path.basename(seam_proof_path),
+            "sha256": sha256_file(seam_proof_path),
+            "observedRed": seam_proof["observedStatus"] == "RED",
+            "failureClass": seam_proof["failureClass"],
+            "reviewStatus": "INSUFFICIENT_BLOCKER_3_OPEN",
+        },
+        "inputs": artifact["inputs"],
+        "counts": artifact["counts"],
+        "identityEvidence": {
+            "internalCikUsed": True,
+            "normalizedNameUsed": True,
+            "explicitRenameRecordsUsed": True,
+            "exchangeEvidenceAvailable": False,
+            "exchangeEvidenceRows": 0,
+        },
+        "contract": contract,
+        "scope": {
+            "companyIdentifiersWrittenToResult": 0,
+            "numericFactColumnsRead": 0,
+            "outcomesRead": 0,
+            "signalsRead": 0,
+            "pricesRead": 0,
+            "endtestFilesOpened": 0,
+            "lastAllowedDate": LAST_ALLOWED_DATE,
+            "confirmatoryVerdictsChanged": 0,
+        },
+    }
+    return result
+
+
+def render_report(result):
+    counts = result["counts"]
+    contract = result["contract"]
+    artifact = result["panelArtifact"]
+    evidence = result["identityEvidence"]
+    return "\n".join([
+        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
+            artifact["artifactVersion"], artifact["sha256"]),
+        "",
+        "# R2-A1 - Die Kennungsbruecke als Panel-Artefakt",
+        "",
+        "## Wie gemessen",
+        "",
+        "Die Identitaetskorrektur wurde vor dem Neubau in `%s` eingefroren." % CORRECTION_REL,
+        "Version 1.0.0 mit Manifest-Hash `%s` ist wegen reversibler IDs verworfen;" % (
+            PRIOR_MANIFEST_SHA256),
+        "die aktuelle Nutzlast traegt deshalb Version %s. Gelesen wurden" % (
+            artifact["artifactVersion"]),
+        "nur die zwei freigegebenen Paneldateien bis %s. Die Bruecke verwendet" % LAST_ALLOWED_DATE,
+        "interne CIK-Gleichheit zusammen mit normalisierter Namenskontinuitaet oder",
+        "einer expliziten Umbenennungskette. Boersenplatzdaten sind im Panel nicht",
+        "vorhanden; das Artefakt behauptet deshalb keine solche Evidenz (verfuegbare",
+        "Boersenplatz-Zeilen: %d). Mehrdeutige Namensketten werden ausgeschlossen." % (
+            evidence["exchangeEvidenceRows"]),
+        "",
+        "Die Faktentabelle wurde ausschliesslich ueber Kennungs-Metadaten gelesen;",
+        "numerische Faktspalten, Signale, Outcomes und Preise blieben unberuehrt.",
+        "Die Entity-, Identifier- und Seam-IDs werden mit HMAC-SHA-256 und einem",
+        "256-Bit-Schluessel ausserhalb des Repos abgeleitet. Der oeffentliche Waechter",
+        "las den Schluessel nicht: Er probierte fuer 50 veroeffentlichte Entity-IDs",
+        "alle CIKs von 1 bis 2100000 durch die im Repo bekannte alte Abbildung; 0 IDs",
+        "waren invertierbar. Die absichtlich alte Abbildung wurde mit 50 von 50",
+        "Treffern rot erkannt.",
+        "",
+        "Die Determinismus-Korrektur wurde vor den beiden Neubauten in `%s`" % (
+            DETERMINISM_CORRECTION_REL),
+        "eingefroren. Prozess A und Prozess B starteten mit getrenntem Speicher,",
+        "oeffneten jeweils beide Panels und riefen `scan_panel` je zweimal auf.",
+        "Verglichen wurden logische Nutzlast, vollstaendige Manifestbytes, geordnete",
+        "Shard-Deskriptoren, Shard-Set, Zaehler, Eingangsbelege und Key-Fingerprint:",
+        "0 Abweichungen. Ein absichtlich veraenderter Shard-Set-Fingerprint im",
+        "zweiten echten Neubau wurde rot abgewiesen. Der fruehere In-Prozess-Check",
+        "gilt ausdruecklich nicht als unabhaengiger Determinismusbeleg.",
+        "",
+        "Die unveraenderte, noch `ddate`-basierte Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
+            counts["entitiesWithBridgeSeams"]),
+        "%d Kennungszuordnungen und %d Naehte." % (
+            counts["identifierMappings"], counts["bridgeSeams"]),
+        "",
+        "## Was ausdruecklich nicht gezeigt ist",
+        "",
+        "- Die Bruecke zeigt keine wirtschaftliche Vergleichbarkeit von Werten auf beiden Seiten einer Naht.",
+        "- Es wurde keine deskriptive Schwund- oder Ueberlebensrechnung ausgefuehrt; das ist erst Auftrag 2.",
+        "- Es wurde keine Aussage ueber die alte, versiegelte Hypothese abgeleitet und kein Verdikt geaendert.",
+        "- Das Endtest-Fenster wurde weder geoeffnet noch gezaehlt oder dargestellt.",
+        "- Ergebnisartefakt und Bericht enthalten keine Firmenidentitaeten; das Panel-Artefakt verwendet nur pseudonyme Entitaets- und Kennungs-IDs.",
+        "- Blocker 2 ist nur fuer die gebundenen Panelbytes, Python-Laufzeit, Implementierung und denselben externen HMAC-Schluessel bestanden; andere Laufzeiten oder Eingaben wurden nicht verglichen.",
+        "- Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.",
+        "- Die Quellenwahl verwendet weiterhin `ddate` statt `accepted`; die 5.146 Naehte sind deshalb noch nicht methodisch korrigiert oder abgenommen.",
+        "- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
+        "",
+        "## Neue Fragen und Hypothesen",
+        "",
+        "- Offen bleibt, wie stark der beschriebene Schwund auf diesem Substrat sinkt und ob die Groessen-/Sektor-Schieflage bestehen bleibt. Das wird hier nicht vorweggenommen; es gehoert in die eigene Praeregistrierung von Auftrag 2.",
+        "",
+        "Alle Zahlen dieses Berichts stehen in `reports/studie/R2-A1-identity-bridge-artifact-2026-08-25.json`;",
+        "das Manifest der einzelnen Zuordnungs- und Naht-Shards steht in `reports/studie/R2-A1-identity-bridge-panel-v1.json`.",
+        "",
+    ])
+
+
+def build_empirical(args):
+    seam_proof = load_and_validate_sabotage(args.sabotage_proof)
+    identity_sabotage = load_identity_sabotage(args.identity_sabotage_proof)
+    independent_sabotage = load_independent_rebuild_sabotage(
+        args.independent_sabotage_proof
+    )
+    artifact, manifest, shards, independent_proof = run_independent_build_pair(args)
+    if independent_proof["passes"] is not True:
+        raise ArtifactError("Independent rebuild fingerprints differ")
+    write_sharded_artifact(args.artifact, artifact, manifest, shards)
+    independent_proof = load_independent_rebuild_proof(
+        args.independent_proof, args.artifact
+    )
+    public_check = subprocess.run([
+        sys.executable, os.path.abspath(__file__),
+        "--verify-public-ids",
+        "--artifact", os.path.abspath(args.artifact),
+        "--proof", os.path.abspath(args.identity_proof),
+        "--namespace-max", str(PUBLIC_CIK_MAX),
+    ], cwd=REPO, capture_output=True, text=True, check=False)
+    if public_check.returncode != 0:
+        raise ArtifactError(
+            "Separate public identity inversion watcher rejected the artifact: "
+            + public_check.stderr.strip()
+        )
+    identity_proof = load_identity_proof(args.identity_proof, args.artifact)
+    result = build_result(
+        artifact, manifest, args.artifact, seam_proof, args.sabotage_proof,
+        identity_proof, args.identity_proof, identity_sabotage,
+        args.identity_sabotage_proof, independent_proof,
+        args.independent_proof, independent_sabotage,
+        args.independent_sabotage_proof,
+    )
+    write_json(args.result, result)
+    write_text(args.report, render_report(result))
+    print(json.dumps({
+        "artifactSha256": result["panelArtifact"]["sha256"],
+        "bridgeSeams": result["counts"]["bridgeSeams"],
+        "entitiesWithBridgeSeams": result["counts"]["entitiesWithBridgeSeams"],
+        "identifierMappings": result["counts"]["identifierMappings"],
+        "identityInvertiblePublishedIds": result["identityProtection"][
+            "publicInversionProof"]["invertiblePublishedIds"],
+        "independentProcessesExecuted": result["contract"][
+            "blocker2IndependentDeterminism"]["independentProcessesExecuted"],
+        "independentFingerprintMismatches": result["contract"][
+            "blocker2IndependentDeterminism"]["fingerprintMismatches"],
+        "status": result["contract"]["status"],
+    }, sort_keys=True))
+    return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="R2-A1 identity bridge panel artifact")
+    parser.add_argument("--self-test", action="store_true")
+    parser.add_argument("--sabotage-cross-seam", action="store_true")
+    parser.add_argument("--verify-public-ids", action="store_true")
+    parser.add_argument("--sabotage-reversible-ids", action="store_true")
+    parser.add_argument("--emit-independent-build", action="store_true")
+    parser.add_argument("--sabotage-independent-fingerprint", action="store_true")
+    parser.add_argument("--sabotage-independent-rebuild", action="store_true")
+    parser.add_argument("--verify-determinism-fixture", action="store_true")
+    parser.add_argument("--sabotage-determinism-fixture", action="store_true")
+    parser.add_argument("--sabotage-bridge-write", action="store_true")
+    parser.add_argument("--namespace-max", type=int, default=PUBLIC_CIK_MAX)
+    parser.add_argument("--proof")
+    parser.add_argument("--fixture", default=DETERMINISM_FIXTURE)
+    parser.add_argument("--discovery")
+    parser.add_argument("--validation")
+    parser.add_argument("--artifact")
+    parser.add_argument("--result")
+    parser.add_argument("--report")
+    parser.add_argument("--sabotage-proof")
+    parser.add_argument("--identity-key-file")
+    parser.add_argument("--identity-proof")
+    parser.add_argument("--identity-sabotage-proof")
+    parser.add_argument("--independent-proof")
+    parser.add_argument("--independent-sabotage-proof")
+    args = parser.parse_args(argv)
+    if args.self_test:
+        return self_test()
+    if args.sabotage_cross_seam:
+        return sabotage_cross_seam(args.proof)
+    if args.verify_determinism_fixture:
+        return verify_determinism_fixture(args.fixture)
+    if args.sabotage_determinism_fixture:
+        return sabotage_determinism_fixture(args.fixture, args.proof)
+    if args.sabotage_bridge_write:
+        return sabotage_bridge_write(args.proof)
+    if args.verify_public_ids:
+        if not args.artifact:
+            parser.error("--verify-public-ids requires --artifact")
+        return verify_public_identity(args.artifact, args.proof, args.namespace_max)
+    if args.sabotage_reversible_ids:
+        return sabotage_reversible_ids(args.proof, args.namespace_max)
+    independent_required = (
+        args.discovery, args.validation, args.artifact, args.identity_key_file,
+        args.independent_proof,
+    )
+    if args.emit_independent_build:
+        if not all(independent_required[:-1]):
+            parser.error("independent builder requires both panels, artifact, and key")
+        return emit_independent_build(args)
+    if args.sabotage_independent_rebuild:
+        if not all(independent_required):
+            parser.error("independent rebuild sabotage requires both panels, artifact, key, and proof")
+        return sabotage_independent_rebuild(args)
+    if args.sabotage_independent_fingerprint:
+        parser.error("--sabotage-independent-fingerprint is internal to the builder mode")
+    required = (
+        args.discovery, args.validation, args.artifact, args.result,
+        args.report, args.sabotage_proof, args.identity_key_file,
+        args.identity_proof, args.identity_sabotage_proof,
+        args.independent_proof, args.independent_sabotage_proof,
+    )
+    if not all(required):
+        parser.error("empirical build requires both panels, artifact, result, report, key, and proof paths")
+    return build_empirical(args)
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (ArtifactError, COUNT.ProbeFehler, BASIS.BasisratenFehler) as error:
+        print("ABORT: " + str(error), file=sys.stderr)
+        sys.exit(1)

@@ -1,0 +1,59 @@
+{
+  "schema": "D1-panel-survival-preregistration/1",
+  "status": "FROZEN_BEFORE_PANEL_ACCESS",
+  "createdAt": "2026-08-23",
+  "purpose": "Describe how long companies remain evaluable in the accessible pre-endtest panels, without using any signal.",
+  "accessOrder": [
+    "freeze this preregistration",
+    "run fixture-only self-test and sabotage",
+    "read panel-entdeckung.sqlite",
+    "read panel-validierung.sqlite",
+    "merge company histories",
+    "write aggregate identity-free JSON artifact",
+    "render the report from that JSON artifact"
+  ],
+  "allowedInputs": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "forbiddenInputPolicy": "Every other panel basename, encrypted file, or row with accepted date after 2020-12-31 aborts before aggregation.",
+  "population": {
+    "unit": "one non-empty CIK with at least one periodic SEC filing in an allowed panel",
+    "periodicFormRoots": ["10-K", "10-Q", "20-F", "40-F"],
+    "deduplication": "Within company and fiscal period, keep the earliest accepted filing; amendments do not add survival time.",
+    "identityPolicy": "CIKs may exist only in process memory. No company identifier or company name may be written to an artifact or report."
+  },
+  "timeDefinition": {
+    "axis": "calendar quarter of SEC accepted timestamp",
+    "entry": "earliest accepted periodic filing across both allowed panels",
+    "quarterlyCadenceDays": 91,
+    "annualCadenceDays": 365,
+    "cadenceRule": "Any 10-K or 10-Q makes the company quarterly; companies with only 20-F/40-F are annual.",
+    "event": "first expected filing date after the last observed periodic filing when that expected date is on or before 2020-12-31",
+    "rightCensoring": "If the next expected filing date is after 2020-12-31, censor administratively at 2020-12-31.",
+    "duration": "integer calendar-quarter distance from entry quarter to event or censor quarter"
+  },
+  "testStatistic": {
+    "primary": "discrete Kaplan-Meier survival probability for every integer quarter since entry",
+    "secondary": [
+      "first quarter where survival probability is <= 0.5 (median stay)",
+      "number of terminal exits by absolute calendar quarter"
+    ],
+    "effectiveN": "number of unique companies; daily points and filings are not independent observations"
+  },
+  "nullModel": "No terminal attrition after panel entry: zero events and survival probability 1.0 at every duration.",
+  "threshold": "At least one terminal event descriptively rejects the no-attrition null. This is not a significance threshold, decision gate, or product rule.",
+  "requiredInvariants": [
+    "events plus right-censored companies equals effective N",
+    "the at-risk set reconciles to zero",
+    "survival is monotone non-increasing and remains within [0,1]",
+    "exit-quarter counts sum to total events",
+    "the output contains no company identifiers, company names, signal fields, daily observations, or post-2020 dates"
+  ],
+  "explicitNonClaims": [
+    "The curve is not company lifetime; history before 2009 is not observed.",
+    "Terminal disappearance is not the same as bankruptcy, delisting, or business failure.",
+    "Temporary reporting gaps before the final filing are not modeled.",
+    "The calculation does not estimate a causal effect and has no gate behind it."
+  ]
+}

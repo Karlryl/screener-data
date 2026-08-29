@@ -1,0 +1,71 @@
+{
+  "schema": "D3-identifier-bridge-preregistration/1",
+  "status": "FROZEN_BEFORE_D3_FACT_ACCESS",
+  "createdAt": "2026-08-23",
+  "purpose": "Measure remaining S-U attrition when pure revenue-tag changes are bridged for availability only, without calculating a value across the seam.",
+  "accessOrder": [
+    "freeze this preregistration and implementation hashes",
+    "run fixture-only self-test and sabotage",
+    "recompute E4a on panel-entdeckung.sqlite",
+    "recompute E4a on panel-validierung.sqlite",
+    "require exact aggregate agreement with both committed E4a artifacts",
+    "apply the identity-only bridge to aggregate class counts",
+    "write aggregate identity-free JSON artifact",
+    "render the report from that JSON artifact"
+  ],
+  "allowedInputs": [
+    "panel/panel-entdeckung.sqlite",
+    "panel/panel-validierung.sqlite"
+  ],
+  "boundImplementation": {
+    "scripts/studie-e4a-diagnose.py": "f52ce0378a0f83ecb28decb99a5477b18feb448272ac405308e3c5da498cae04",
+    "scripts/studie-basisraten.py": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+    "scripts/studie-zaehlprobe.py": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b"
+  },
+  "scope": {
+    "windows": [
+      {"name": "entdeckung", "primaryBand": "2009-2015"},
+      {"name": "pruefung", "primaryBand": "2017-2019"}
+    ],
+    "variant": "S-U",
+    "arms": ["signal", "kontrolle"],
+    "negativeControl": "S-G in the same windows and arms"
+  },
+  "bridgeRule": {
+    "recoveredClass": "klasse_b1_nur_kennungsname",
+    "notRecovered": [
+      "klasse_a_keine_folgequartale",
+      "klasse_b2_auch_waehrungseinheit",
+      "klasse_c_zu_wenige_folgequartale",
+      "klasse_d_ohne_gewaehlte_reihe"
+    ],
+    "seamRule": "The bridge changes only availability membership. It receives aggregate counts, never company values, and performs no growth, acceleration, subtraction, ratio, or interpolation across two identifiers.",
+    "retainedAfterBridge": "fallzahl + klasse_b1_nur_kennungsname",
+    "remainingAttrition": "unreif_gesamt - klasse_b1_nur_kennungsname"
+  },
+  "testStatistic": {
+    "primary": "remaining attrition count and rate after the identity-only bridge",
+    "secondary": [
+      "companies recovered by the bridge",
+      "retention-rate improvement in percentage points",
+      "S-G recovered count as negative control"
+    ],
+    "effectiveN": "first-event companies in each window and arm; quarterly rows are not independent observations"
+  },
+  "nullModel": "A pure identifier bridge recovers zero companies and leaves attrition unchanged.",
+  "threshold": "At least one recovered company descriptively rejects the zero-recovery null. This is not a significance threshold, gate, or method promotion.",
+  "requiredInvariants": [
+    "every recomputed E4a aggregate used by D3 equals its committed E4a artifact exactly",
+    "recovered plus remaining attrition equals pre-bridge attrition",
+    "retained after bridge plus remaining attrition equals first-event companies",
+    "currency-unit changes are never recovered",
+    "S-G identity-only recovery is zero",
+    "the output contains no company identifiers, names, individual values, signal values, daily observations, or post-2020 dates"
+  ],
+  "explicitNonClaims": [
+    "The bridge is not installed in the confirmatory method or product.",
+    "Recovered availability does not prove that cross-tag values are economically comparable.",
+    "No result changes the completed red confirmatory verdict.",
+    "The result does not identify companies or causes of real attrition."
+  ]
+}

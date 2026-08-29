@@ -87,14 +87,94 @@ test('Was noch nicht scharf ist, wird offen benannt statt weggelassen', () => {
   assert.ok(vertagt.length > 0 && vertagt.length < 17, 'Entweder alles vertagt oder nichts — beides waere unehrlich');
 });
 
+// Siegel-Klassen-Ausnahme zu R16 (Orchestrator-Ruling 2026-08-29 15:05).
+//
+// Die Lage: fuenf D-Berichte sind per SHA-256 an das D6-Abschluss-Audit gebunden.
+// Der R16-Block laesst sich dort nicht nachtragen — jede Textaenderung bewegt den
+// Hash und macht den D6-Wachtest rot (einmal empirisch belegt, siehe Record).
+// Entschieden wurde "dokumentieren statt rueckwirkend heilen": fuer GENAU diese
+// versiegelten Altberichte erfuellt der Abweichungs-Record R16.
+//
+// Fail-closed by construction: die Ausnahmeliste wird aus dem Record gelesen UND
+// gegen das D6-Siegel gegengeprueft. Fehlt der Record, ist die Liste leer und die
+// Berichte werden wieder rot — die Ausnahme kann nicht durch Loeschen entstehen.
+// Ein Name, der im Record steht, aber nicht im Siegel, fliegt auf: sonst waere der
+// Record ein Freifahrtschein, in den man jeden unbequemen Bericht eintraegt.
+const ABWEICHUNGS_RECORD = path.join(
+  REPO, 'protocol', 'early-detection', '2.0.0', 'r16-sealed-reports-deviation-record.json',
+);
+const D6_ARTEFAKT = path.join(REPORTS, 'D6-descriptive-closure-audit-2026-08-23.json');
+
+function siegelAusnahme() {
+  if (!fs.existsSync(ABWEICHUNGS_RECORD) || !fs.existsSync(D6_ARTEFAKT)) return new Set();
+  const record = JSON.parse(fs.readFileSync(ABWEICHUNGS_RECORD, 'utf8'));
+  const versiegelt = new Set(Object.keys(JSON.parse(fs.readFileSync(D6_ARTEFAKT, 'utf8')).sourceFiles));
+  assert.equal(record.rule, 'R16', 'Der Abweichungs-Record gilt nicht R16');
+  assert.equal(record.scope.listIsClosed, true, 'Die Ausnahmeliste ist nicht geschlossen');
+  assert.equal(record.scope.appliesOnlyToReportsSealedBefore, '2026-08-29');
+  const namen = new Set();
+  for (const eintrag of record.reports) {
+    assert.ok(
+      versiegelt.has(eintrag.path),
+      `${eintrag.path} steht im Abweichungs-Record, ist aber gar nicht im D6-Siegel — die Ausnahme gilt nur fuer versiegelte Altberichte`,
+    );
+    namen.add(path.basename(eintrag.path));
+  }
+  return namen;
+}
+
+// Zweite, DAVON GETRENNTE Ausnahmeklasse (Orchestrator-Ruling 2026-08-29 15:20):
+// zwei Dateien liegen in reports/studie/, sind aber keine Etappen-Reports — ein reiner
+// Belegindex und ein Abschluss-Record. R16 verlangt die Anschlussfragen einer Analyse;
+// wo es keine eigenen Befunde gibt, gibt es nichts, woraus Fragen folgen koennten.
+// Bewusst NAMENTLICH und nicht ueber ein Muster wie /index|closure/: ein Muster wuerde
+// jeden kuenftigen Bericht mit passendem Namen still aus der Pflicht nehmen.
+function nichtAnalyseAusnahme() {
+  if (!fs.existsSync(ABWEICHUNGS_RECORD)) return new Set();
+  const record = JSON.parse(fs.readFileSync(ABWEICHUNGS_RECORD, 'utf8'));
+  const klasse = record.nonAnalysisArtifacts;
+  if (!klasse) return new Set();
+  assert.equal(klasse.listIsClosed, true, 'Die Nicht-Analyse-Ausnahme ist nicht geschlossen');
+  const namen = new Set();
+  for (const eintrag of klasse.paths) {
+    // Stale-Schutz: eine Ausnahme fuer eine Datei, die es nicht mehr gibt, ist eine
+    // Ausnahme, die beim naechsten Umbenennen still auf etwas anderes zeigt.
+    assert.ok(
+      fs.existsSync(path.join(REPO, eintrag.path)),
+      `${eintrag.path} steht als Nicht-Analyse-Artefakt im Record, existiert aber nicht mehr`,
+    );
+    assert.ok((eintrag.reason || '').length > 10, `${eintrag.path}: Ausnahme ohne Begruendung`);
+    namen.add(path.basename(eintrag.path));
+  }
+  return namen;
+}
+
 test('R16: jeder Etappen-Report fuehrt den Block Neue Fragen und Hypothesen', () => {
   if (!fs.existsSync(REPORTS)) return; // vor dem ersten Report gibt es nichts zu pruefen
   const berichte = fs.readdirSync(REPORTS).filter((name) => name.endsWith('.md'));
   assert.ok(berichte.length > 0, 'reports/studie/ existiert, ist aber leer');
+  const versiegeltAusgenommen = siegelAusnahme();
+  const nichtAnalyse = nichtAnalyseAusnahme();
+  const ausgenommen = new Set([...versiegeltAusgenommen, ...nichtAnalyse]);
+  // Gegenproben zu beiden Ausnahmen: sie duerfen nur greifen, wo sie greifen sollen.
+  // Ein Bericht, der in keiner Liste steht, muss den Block weiterhin fuehren — sonst
+  // pruefte der Test nach der Lockerung nichts mehr.
+  assert.ok(
+    !ausgenommen.has('E0-ratifizierung-2026-08-16.md'),
+    'Eine der Ausnahmen greift auf einen regulaeren Analyse-Bericht — sie ist zu weit',
+  );
+  // Die beiden Klassen muessen getrennt bleiben: ein versiegelter Altbericht darf sich
+  // nicht zusaetzlich als "keine Analyse" ausweisen und dadurch doppelt gedeckt sein.
+  for (const name of nichtAnalyse) {
+    assert.ok(
+      !versiegeltAusgenommen.has(name),
+      `${name} steht in BEIDEN Ausnahmelisten — die Klassen muessen sich ausschliessen`,
+    );
+  }
   for (const name of berichte) {
     const text = fs.readFileSync(path.join(REPORTS, name), 'utf8');
     assert.ok(
-      /Neue Fragen und Hypothesen/i.test(text),
+      /Neue Fragen und Hypothesen/i.test(text) || ausgenommen.has(name),
       `${name}: Etappen-Report ohne Folgefragen-Block ist nach R16 unvollstaendig`,
     );
     // Vorgeschlagene neue Etappen brauchen eine Zeitschaetzung, sonst werden sie
