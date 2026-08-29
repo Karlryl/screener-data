@@ -1,0 +1,155 @@
+{
+  "schema": "R2-A1-v120-closure-record/1",
+  "status": "FROZEN_V120_CLOSURE",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "date": "2026-08-29",
+  "frozenNotice": "FROZEN. Post-Run-Closure-Record nach dem Zwei-Stufen-Pin-Protokoll (ENTSCHIED 6, Q1). Er entstand NACH dem einen kanonischen Zwei-Prozess-Re-Proof und NACH der Zahlen-Abnahme durch den Orchestrator (ENTSCHIED 10). Append-only: ab hier nicht mehr editiert.",
+  "authority": [
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 6 Q1 (Zwei-Stufen-Pin-Protokoll)",
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 9 (Comparator-Defekt, EIN autorisierter Wiederholungslauf)",
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 10 (Zahlen abgenommen, Closure-GO)"
+  ],
+  "boundArtifactVersion": "1.2.0",
+  "recordChain": {
+    "correctionRecord": {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json",
+      "sha256": "1239a61cc37d8ae3d49f3f3d05397534bf06d1f8054ea7885334cb0edc15a2f3",
+      "status": "FROZEN_BEFORE_METHOD_CORRECTION_REBUILD",
+      "edited": false
+    },
+    "e3AllowlistSupplement": {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-e3-allowlist-supplement.json",
+      "sha256": "235bfb4afa64f82b9dff08e913cd24a3f41e507a4c4d2287bfd0aba3606a549c",
+      "status": "FROZEN_E3_ALLOWLIST_SUPPLEMENT",
+      "edited": false
+    },
+    "comparatorDefectAddendum": {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-comparator-defect-addendum.json",
+      "sha256": "6cc114424344023f7873703b7444572cf465625f270c6b42ae5d4a94d08fd10e",
+      "status": "FROZEN_COMPARATOR_DEFECT_ADDENDUM",
+      "edited": false
+    }
+  },
+  "supersedes": {
+    "artifactVersion": "1.1.0",
+    "record": "protocol/early-detection/2.0.0/r2-a1-blocker2-3-closure-record.json",
+    "supersededBinding": "Die 1.1.0-Bindung des Payload-Pins und der Manifest-Bindung gilt fuer 1.2.0 nicht mehr.",
+    "preservation": "SUPERSEDE_NO_DELETE. Der 1.1.0-Closure-Record wird NICHT editiert, NICHT neu versiegelt und NICHT geloescht. Sein Pin 6485e5775f2f45d4cb1a241a6ae21fd49d84fad410659b9b913d9a0cf2c26ce9 bleibt gueltig, und Version 1.1.0 bleibt gegen ihr eigenes archiviertes Artefakt pruefbar. Die 1.1.0-Artefakte sind byte-unveraendert."
+  },
+  "blocker2MutationSensitiveDeterminism": {
+    "boundArtifactVersion": "1.2.0",
+    "fixedInputFixture": {
+      "path": "tests/fixtures/studie-identity-bridge-determinism-input.json",
+      "sha256": "190b723e4f063e6c57106b899098df39339fda8ac1376837fa219d5e09d43547"
+    },
+    "pinnedExpectedLogicalPayloadSha256": "e8bcc98e0f989bfcd0e1ccdd569287b30643e5393a8f3fb273cf82466f6f4789",
+    "deliberateMutation": {
+      "componentIndex": 2,
+      "field": "date",
+      "from": "20180930",
+      "to": "20180929",
+      "expectedStatus": "RED"
+    },
+    "pinRationale": "ARTIFACT_VERSION liegt im HMAC-Payload der ID-Ableitung, deshalb gilt ein Payload-Pin fuer genau EINE Artefakt-Version. Der Wert wurde im einen kanonischen Re-Proof unter 1.2.0 gemessen; vorab war er logisch nicht pinnbar. Die Eingangs-Fakten (Fixture-Bytes, deliberateMutation) sind versionsfrei und stammen weiter aus dem Blocker-Closure - so mutiert die Sabotage Inhalt unter GLEICHER Version und der Pin feuert aus dem richtigen Grund."
+  },
+  "identifierProtection": {
+    "keyFingerprintSha256": "19b67426c38399d9c18dbcdab4cae52e211129e78183ad8e400dcf2ac5143c29",
+    "role": "SOLLWERT",
+    "pinnedBeforeRun": true,
+    "postRunCheck": "MATCH",
+    "note": "Der Schluessel wechselte mit der Korrektur nicht; der Sollwert ist der Fingerprint des Schluessels, mit dem 1.1.0 gebaut wurde. Bis 1.1.0 wurde keyFingerprintSha256 ausschliesslich A gegen B verglichen, nie gegen ein Soll - zwei Prozesse mit demselben falschen Schluessel waeren gruen gewesen. Der Sollwert steht jetzt hier und macht den Vergleich pruefbar. Er ist ein Einweg-Fingerprint; der Schluessel selbst liegt ausserhalb des Repos und wird nie geschrieben."
+  },
+  "boundManifest": {
+    "mode": "FIRST_BUILD_OF_VERSION",
+    "manifestFileSha256": "4cd71577b8cf84e7c0ba3781b266b8380ae1400eb1147778c5e7013b15a0044b",
+    "resolution": "Mit diesem Record existiert ab sofort eine gebundene Manifest-Referenz fuer 1.2.0. Ein spaeterer Neubau von 1.2.0 ist damit ein Replikations-Fall und muss dieses Manifest exakt reproduzieren; die im Lauf gefahrene Stufe FIRST_BUILD_OF_VERSION war die einmalige Erst-Bau-Stufe."
+  },
+  "currentImplementation": {
+    "scripts/studie-identity-bridge-artifact.py": "40669a86564939e31bbee8c3d58bcb79de790137122a7a5fc0dd36a65015d897"
+  },
+  "canonicalRun": {
+    "date": "2026-08-29",
+    "procedure": "Zwei getrennte Betriebssystem-Prozesse, jeder oeffnet beide freigegebenen Panels und ruft scan_panel genau zweimal auf.",
+    "independentProcessesExecuted": 2,
+    "processIdsDistinct": true,
+    "scanPanelCallsPerProcess": [2, 2],
+    "totalScanPanelCalls": 4,
+    "fingerprintFieldsCompared": 9,
+    "fingerprintMismatches": 0,
+    "observedStatus": "GREEN",
+    "durationSeconds": 91,
+    "artifacts": {
+      "manifest": "reports/studie/R2-A1-identity-bridge-panel-v2.json",
+      "result": "reports/studie/R2-A1-identity-bridge-artifact-2026-08-29.json",
+      "report": "reports/studie/R2-A1-identity-bridge-artifact-2026-08-29.md",
+      "independentRebuildProof": "reports/studie/R2-A1-independent-rebuild-proof-2026-08-29.json",
+      "independentRebuildSabotage": "reports/studie/R2-A1-independent-rebuild-sabotage-2026-08-29.json",
+      "crossSeamSabotage": "reports/studie/R2-A1-cross-seam-sabotage-2026-08-29.json",
+      "publicIdentityProof": "reports/studie/R2-A1-public-identity-inversion-proof-2026-08-29.json",
+      "publicIdentitySabotage": "reports/studie/R2-A1-public-identity-inversion-sabotage-2026-08-29.json"
+    },
+    "rerunJustification": "Der erste Lauf brach VOR write_sharded_artifact am Comparator-Defekt ab. Es entstand kein Artefakt, und niemand sah eine Ergebniszahl - der Wiederholungslauf kann durch gesehene Ergebnisse nicht verzerrt sein. ENTSCHIED 9 autorisierte genau EINEN Wiederholungslauf; die Regel 'genau einmal' verbietet repeat-until-green, nicht die Wiederholung nach einem benannten Defekt."
+  },
+  "acceptedCounts": {
+    "bridgeSeams": 4864,
+    "bridgeSeamsBefore": 5146,
+    "periodKeyTransitionsCollapsedIntoSeams": 282,
+    "seamEventDatesFallenBackToPeriodKey": 0,
+    "entitiesWithBridgeSeams": 3159,
+    "entitiesWithMultipleBridgeSeams": 971,
+    "maximumBridgeSeamsPerEntity": 11,
+    "identifierMappings": 6794,
+    "arithmeticIdentity": "5146 - 282 = 4864. Die gesamte Naht-Reduktion ist der Ereignis-Zusammenfall; nichts anderes bewegte sich.",
+    "bFieldsUnchangedInValue": "971 und 11 waren zuvor Literale im Renderer und sind jetzt artefakt-getragen - bei identischen Werten. Der bestehende R1-Render-Bruch ist damit wertlos geheilt.",
+    "acceptedBy": "Orchestrator, ENTSCHIED 10 (2026-08-29)"
+  },
+  "observations": [
+    {
+      "id": "nonperiodicReportsExcludedWindowDivergence",
+      "status": "UNERKLAERT - Nachzaehlung angesetzt (T173)",
+      "measured": {
+        "entdeckung": {"excluded": 5892, "denominator": 176502, "share": "3.3382%"},
+        "pruefung": {"excluded": 49093, "denominator": 148912, "share": "32.9678%"}
+      },
+      "publication": "as-measured. Der Wert wird veroeffentlicht wie gemessen; es wird nichts geglaettet, gefiltert oder weginterpretiert.",
+      "counterCheck": "Die FAKT-Ebene ist zwischen den Fenstern nahezu gleich (nonperiodicFactMetadataExcluded 23,70 % Entdeckung vs 22,44 % Pruefung). Waere die Zaehlung je Fenster defekt, muesste auch sie divergieren. Der Befund ist damit mit einem echten Kompositions-Unterschied vereinbar und nicht mit einem Zaehl-Defekt.",
+      "hypothesis": "Hoeherer Anteil auslaendischer Einreicher im Pruefungsfenster, also viele periodenlose 6-K mit wenigen Fakten je Bericht. NICHT bestaetigt - Hypothese, keine Feststellung.",
+      "followUp": "Formtyp-Nachzaehlung als T173 in der Inbox. Bis dahin bleibt die Divergenz ausdruecklich unerklaert.",
+      "decidedBy": "ENTSCHIED 10, Beobachtung 1 - kein Abnahme-Blocker"
+    },
+    {
+      "id": "shardCeilingHeadroom",
+      "status": "BEOBACHTET - Decke bleibt",
+      "measured": {
+        "shards": 22,
+        "maxShardBytes": 184302,
+        "buildCeilingBytes": 184320,
+        "headroomBytes": 18,
+        "writeCeilingBytes": 204800
+      },
+      "decision": "Die Bau-Decke BLEIBT bei 180 KB (184320 Byte). Es wird nichts praeventiv gelockert.",
+      "rationale": "Der Abbruch bei Ueberschreitung ist LAUT ('One bridge entity exceeds the artifact shard ceiling') und damit die designte Fehlerform. Eine praeventive Anhebung taeuschte Kopffreiheit vor, die niemand gemessen hat.",
+      "escalationRule": "Eine Anhebung ist eine Orchestrator-Entscheidung und wird getroffen, WENN die Decke tatsaechlich reisst - nicht vorher. Kein Agent hebt sie in Eigenregie an.",
+      "decidedBy": "ENTSCHIED 10, Beobachtung 2 - kein Abnahme-Blocker"
+    }
+  ],
+  "scope": {
+    "panelsOpened": 2,
+    "eStagesExecuted": 0,
+    "outcomesRead": 0,
+    "pricesRead": 0,
+    "endtestOpened": false,
+    "confirmatoryVerdictsChanged": 0,
+    "historicalArtifactsRewritten": 0,
+    "ledgerAppends": 0,
+    "sealsTouched": 0
+  },
+  "explicitNonClaims": [
+    "Dieser Record schliesst Blocker 3 nicht und macht Auftrag 1 nicht vollstaendig; der Vertragsstatus bleibt HOLD_BLOCKER_3_AND_METHOD_CORRECTIONS.",
+    "Er belegt nicht, dass die Kennungsbruecke die Auffindbarkeits-Luecke schliesst.",
+    "Er wertet die Mehrfachnaht-Verteilung nicht aus; sie wird nur veroeffentlicht.",
+    "Er bewertet nicht, ob ein gezaehlter Ausschluss inhaltlich richtig war.",
+    "Er beginnt Auftrag 2 nicht und praejudiziert dessen Praeregistrierung nicht.",
+    "Zwei byte-gleiche Neubauten belegen Reproduzierbarkeit nur fuer die gepinnten Eingaben, die Implementierung, die Laufzeit und denselben externen HMAC-Schluessel."
+  ]
+}

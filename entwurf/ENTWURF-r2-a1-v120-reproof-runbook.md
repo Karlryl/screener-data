@@ -96,6 +96,17 @@ kleiner, aber **nicht angenommen, sondern gemessen**.
 `max(shards[].bytes)` und die Zahl der Shards. Punkt B legt die neuen Groessen in `counts`
 und damit ins **Manifest**, nicht in die Shards — B ist fuer die Decke unkritisch.
 
+**Gemessen im Lauf vom 2026-08-29 (v1.2.0):** 22 Shards, `max(shards[].bytes)` = 184.302 von
+184.320 Byte — **18 Byte Kopffreiheit**. Keine Entitaet lief ueber; der harte Abbruch feuerte
+nicht.
+
+**ENTSCHIED 10, Beobachtung 2 — die Decke BLEIBT bei 180 KB.** Nichts wird praeventiv
+gelockert. Begruendung: der Abbruch bei Ueberschreitung ist **laut**
+(`One bridge entity exceeds the artifact shard ceiling`) und damit die designte Fehlerform.
+Eine vorsorgliche Anhebung taeuschte Kopffreiheit vor, die niemand gemessen hat. Eine
+Anhebung ist eine **Orchestrator-Entscheidung** und wird getroffen, WENN die Decke
+tatsaechlich reisst — nicht vorher. **Kein Agent hebt sie in Eigenregie an.**
+
 ---
 
 ## 4. Reihenfolge des einen Laufs
