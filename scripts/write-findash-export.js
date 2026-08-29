@@ -940,6 +940,16 @@ function checkOptionalZaehlerOrNull(r, key, where, errs) {
     errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Anzahl (ganzzahlig >= 0 | null)");
   }
 }
+// N7 (Nacht-Sweep 29.08.): eine SPANNE (qSpanTage). Wie der Zaehler oben, nur ohne
+// Ganzzahl-Zwang — der Vertrag sagt `number >= 0 | null`, nicht `int`. Negative Tage
+// zwischen aeltestem und juengstem Quartalsende sind per Konstruktion unerreichbar;
+// genau deshalb darf der Pruefer sie benennen, statt sie durchzulassen.
+function checkOptionalSpanneOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && (!Number.isFinite(r[key]) || r[key] < 0)) {
+    errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Spanne (finite >= 0 | null)");
+  }
+}
 // Chunk 4a: dasselbe additiv-optionale Muster fuer ein Enum (marketCapCurrency).
 function checkOptionalEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) return;
@@ -1091,7 +1101,10 @@ function validateGeo(r, where, errs) {
   // 29.08. (Abhilfe A, Coverage-Akte): Belegpunkte neben coverageAxes. Additiv OPTIONAL —
   // bereits ausgelieferte v1-Dateien tragen sie nicht und duerfen nicht rot werden.
   checkOptionalZaehlerOrNull(r, 'qPunkte', where, errs);
-  checkOptionalNumOrNull(r, 'qSpanTage', where, errs);
+  // N7: der Vertrag sagt `number >= 0 | null` (Doku Zeile 101) — eine negative Spanne
+  // ist keine Spanne. Bisher stand hier der vorzeichenblinde Pruefer, waehrend qPunkte
+  // eine Zeile hoeher voll geprueft wird; die Asymmetrie war unbegruendet.
+  checkOptionalSpanneOrNull(r, 'qSpanTage', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
@@ -1577,6 +1590,16 @@ function selftest() {
   trip(validateSurvivalRow, { ...s0, qPunkte: 4 }, 'survival qPunkte');
   trip(validateSurvivalRow, { ...s0, qPunkte: null }, 'survival qPunkte null');
   trip(validateSurvivalRow, { ...s0, qSpanTage: 546 }, 'survival qSpanTage');
+
+  // N7: qSpanTage gegen den eigenen Vertrag (number >= 0 | null). Beide Richtungen —
+  // die legitimen Werte (0, echte Spanne, null, Feld ganz abwesend) muessen sauber
+  // durchgehen, sonst faerbt die Wache die 6,6 % A10-Nachzuegler falsch-rot.
+  for (const gut of [0, 91, 546, null]) {
+    assert.strictEqual(cleanErrs(validateBoardRow, { ...b0, qSpanTage: gut }).length, 0,
+      `qSpanTage=${JSON.stringify(gut)} ist vertragsgemaess und darf nicht stolpern`);
+  }
+  trip(validateBoardRow, { ...b0, qSpanTage: -1 }, 'board qSpanTage negativ');
+  trip(validateBoardRow, { ...b0, qSpanTage: NaN }, 'board qSpanTage NaN');
 
   // hull-level: coverage key missing / bad status, branch mismatch, boardStatus (2.1).
   const mkHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null, branch: 'energy', profitable: [], unprofitable: [], ...over });
