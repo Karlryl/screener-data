@@ -21,20 +21,64 @@ on:
         description: 'Jahres-Ausreisser-Bestand auf der CI-Population neu aufnehmen (nur bewusst!)'
         type: boolean
         default: false
+      # ZWEIG-WACHE (19.08.2026). BEFUND: dieser Workflow laesst sich per
+      # workflow_dispatch auf JEDEM Zweig starten, seine sechs veroeffentlichenden
+      # Schritte pushten aber unbedingt — einer nach main, vier per --force nach
+      # gh-pages. Ein Handlauf von einem Feature-Zweig haette Karls live
+      # veroeffentlichte Daten mit Zahlen ueberschrieben, die ungepruefter
+      # Zweig-Code gerechnet hat. Nicht zurueckrollbar. Ausgeloest hat es nie
+      # jemand (16./18.08. liefen beide auf main), die Luecke war trotzdem offen.
+      # Seitdem entscheidet EINE Stelle (env VEROEFFENTLICHEN unten), ob ein Lauf
+      # publizieren darf: auf einem Zweig nie.
+      # DIESES VENTIL setzt dieselbe Sperre BEWUSST auch auf main — damit sich eine
+      # Aenderung dort einmal komplett durchrechnen laesst (Universum, Kurse,
+      # Bewertung, Zahlen im Protokoll), ohne dass irgendetwas rausgeht. Wer es
+      # setzt, weiss was er tut, und es steht in der Lauf-Historie.
+      nur_rechnen:
+        description: 'Nur rechnen, NICHTS veroeffentlichen (kein Push nach main, kein gh-pages-Deploy)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
-# AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
-# ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
-# puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
-# contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
-# but was never wired into this workflow's env, so every job here always sent an
-# empty User-Agent regardless. Top-level env applies to every job/step below —
-# fixing it once here instead of per-step matches how every SEC caller shares the
-# same lib/sec-user-agent.js.
+  # AS-SK-001 (Hard Review 2026-07-31): every SEC-EDGAR caller in this repo (snapshot-
+  # ticker-map.js, refresh-universe.js's discovery/sec-tickers.js, the daily Form-4
+  # puller) reads process.env.SEC_CONTACT at request time — SEC silently 403s a
+  # contactless User-Agent. The GitHub repo secret SEC_CONTACT exists (set 2026-07-21)
+  # but was never wired into this workflow's env, so every job here always sent an
+  # empty User-Agent regardless. Top-level env applies to every job/step below —
+  # fixing it once here instead of per-step matches how every SEC caller shares the
+  # same lib/sec-user-agent.js.
 env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
+
+  # ZWEIG-WACHE — die EINZIGE Stelle, an der "darf dieser Lauf veroeffentlichen?"
+  # entschieden wird. Die sechs gefaehrlichen Schritte lesen nur noch diese Variable.
+  #
+  # WARUM KEIN `if:` AN DEN SCHRITTEN (die naheliegende Loesung, bewusst verworfen):
+  # ein UEBERSPRUNGENER Schritt sieht in GitHub Actions aus wie ein erfolgreicher und
+  # schreibt keine Zeile ins Protokoll — genau die stille Bugklasse, gegen die dieses
+  # File an einem Dutzend Stellen gebaut ist. Die Schritte laufen darum weiter und
+  # steigen ganz vorn mit ::warning:: aus. Die Nicht-Veroeffentlichung ist damit ein
+  # LESBARER Vorgang, kein grauer Kasten.
+  #
+  # WARUM AUCH KEIN HARTER STOPP GANZ VORN: `laufstatus` traegt `if: always()` auf
+  # JOB-Ebene und sein Publish-Schritt ebenfalls. Ein `exit 1` im prep-Job haelt ihn
+  # nicht auf — der Statusmarker-Force-Push nach gh-pages liefe trotzdem. Ein
+  # Frueh-Stopp allein schliesst die Luecke also nicht.
+  #
+  # `github.event.inputs.*` ist bei schedule-Laeufen null; null != 'true' -> der
+  # Cron-Lauf auf main veroeffentlicht wie bisher. Boolean-Eingaben kommen ueber
+  # github.event.inputs als STRING an, darum der Vergleich gegen 'true'.
+  # Waechter: tests/zweig-wache.test.js
+  VEROEFFENTLICHEN: ${{ github.ref == 'refs/heads/main' && github.event.inputs.nur_rechnen != 'true' }}
+  # Nur fuer die Begruendung in der Warnung. Bewusst als env und NICHT als ${{ }}
+  # im run-Block: tests/pipeline-status-marker.test.js faehrt den Publish-Block ECHT
+  # in einer bash gegen ein Fixture-Remote und besteht darauf, dass darin kein
+  # unersetzter Workflow-Ausdruck steht — sonst prueft er etwas anderes als die CI
+  # faehrt. $GITHUB_REF ist in jedem Actions-Schritt ohnehin gesetzt.
+  NUR_RECHNEN: ${{ github.event.inputs.nur_rechnen }}
 
 # Tag 153: serialize pushes to main — daily + monthly-sec-xbrl both push via retry-rebase.
 # On the 1st of the month both fire within ~90 min of each other; without this one silently fails.
@@ -219,6 +263,19 @@ jobs:
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           MAX_UNIVERSE: '25000'
+          # Entdeckungsband 800 Mio - 2 Mrd geoeffnet (Messung 19.08., PR #61).
+          # ZWEI Tore in Reihe — beide muessen fallen, sonst wirkt keins:
+          #   TV_PRECUT_USD schneidet fuer 31 TradingView-Laender VOR dem Prefilter.
+          #   Nur MCAP_PREFILTER_MIN_USD zu senken laesst 368 Namen liegen (gemessen);
+          #   nur TV_PRECUT_USD zu senken bringt 3 (gemessen). Zusammen: 960 Ticker.
+          # KEINE Absenkung unter 800 Mio — Karls Boden bleibt. Gemessene Score-Quote
+          # im Band: 90,6 %, die beste des Universums (ab 10 Mrd nur 32,2 %, weil dort
+          # die Doppellistungen sitzen).
+          MCAP_PREFILTER_MIN_USD: '800000000'
+          TV_PRECUT_USD: '800000000'
+          # Ohne das schneidet der Zeilendeckel Shenzhen bei 800 Mio ab (3.008 Treffer
+          # gegen Deckel 2.500) — also genau bei den Namen, um die es geht.
+          TV_SCAN_RANGE: '4000'
         timeout-minutes: 20
         run: |
           if [ -z "$FINNHUB_API_KEY" ]; then
@@ -433,6 +490,7 @@ jobs:
             fx-rates.json
             earnings-calendar.json
             external-data/sec-form4-cache.json
+            data-health/entdeckungs-ausschluss.json
           if-no-files-found: warn
           retention-days: 1
 
@@ -687,8 +745,134 @@ jobs:
   # shard artifacts (coverage-gate catches partial coverage), but NOT if prep hard-
   # failed (no universe = merge is meaningless, and prep-state would be missing).
   # ============================================================================
-  merge:
+  # ===========================================================================
+  # 18.08.2026 — KURSABRUF ALS EIGENE MATRIX
+  #
+  # WAS VORHER WAR: der Schritt "Pull Historical Prices" lief im merge-Job auf
+  # EINEM Runner ueber ~20.900 Ticker, Nebenlaeufigkeit 8, 1500 ms Stapelpause.
+  # Allein die Schlafzeit betraegt dabei ~65 min gegen ein 25-min-Timeout — der
+  # Schritt lief JEDEN Tag in sein Timeout und `continue-on-error: true` hat es
+  # still geschluckt. Belegt daran, dass prices/<datum>.json (wird erst NACH der
+  # Abrufschleife geschrieben) nie in git angekommen ist: `git ls-files prices/`
+  # zeigt ausschliesslich history/. Auch das 75-%-Fehlerquoten-Gate am Skriptende
+  # hat deshalb nie gelaufen. Gemessen hatte rund die Haelfte der Ticker
+  # veraltete Kurse, das Universum rotierte in 3-4 Tagen durch.
+  #
+  # WARUM NICHT einfach die Nebenlaeufigkeit hoch: Yahoos Cloudflare-Kante
+  # drosselt PRO IP ab ~20 gleichzeitigen Anfragen (deshalb wurde
+  # PULL_CONCURRENCY an Tag 215f von 20 auf 8 gesenkt; ein Ein-IP-Lauf ueber nur
+  # 775 Namen endete mit 86,9 % Fehlern und 23x HTTP 429). Und selbst bei 20
+  # blieben 1.044 Stapel x 1,5 s = 26,1 min > 25 min — es loeste das Problem
+  # nicht einmal, wenn Yahoo mitspielte. Mehrere Runner heissen mehrere IPs,
+  # jede unter der Drossel. Genau das Muster, mit dem die Snapshot-Matrix
+  # darueber seit Tag 280 gruen faehrt.
+  #
+  # WARUM NACH der Snapshot-Matrix und nicht parallel: 17 + 4 gleichzeitige
+  # Runner ueberschreiten das 20-Runner-Limit, und Yahoo-Last soll sich nicht
+  # stapeln. Gemessene Schlafzeit je Preis-Shard: 16,7 min (5.337 Ticker im
+  # groessten von vier). timeout-minutes 45 laesst reichlich Luft fuer Netzzeit
+  # und traegt das Universum bis ~25.000 Ticker.
+  #
+  # WARUM DIE AUFTEILUNG SICHER IST: geteilt wird entlang der STORE-Shards
+  # (shardOf, djb2%32), nicht entlang der Listenposition. Nachgerechnet am
+  # echten Universum: 5140/5337/5216/5235 Ticker je Runner, je genau 8 der 32
+  # Store-Dateien, NULL Ueberschneidung — kein Runner kann die frischen Daten
+  # eines anderen ueberschreiben.
+  prices:
     needs: [prep, pull]
+    if: ${{ always() && needs.prep.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      # Unveraendert gegenueber dem alten Ein-Runner-Schritt: die Drossel sitzt
+      # pro IP, und jeder Runner hat seine eigene. Hier NICHT hochdrehen.
+      PRICE_CONCURRENCY: '8'
+      PRICE_SHARDS: '4'
+      RUN_DATE_UTC: ${{ needs.prep.outputs.run_date }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      # Dieselbe watchlist.json wie die Snapshot-Matrix -> identische Partition.
+      # Ohne sie zoege jeder Runner gegen den Checkout-Stand und die Aufteilung
+      # koennte zwischen den Runnern auseinanderlaufen.
+      - name: Download prep state
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: prep-state
+          path: .
+
+      # Defence-in-depth, analog zum Snapshot-Job: ein ungueltiges --shard wuerde
+      # das GANZE Universum auf diesem Runner ziehen. Das Skript wirft dann zwar
+      # selbst, aber lieber hier abbrechen als eine vierfache Yahoo-Last starten.
+      - name: Assert shard index in range
+        run: |
+          if [ "${{ matrix.shard }}" -ge "$PRICE_SHARDS" ] || [ "${{ matrix.shard }}" -lt 0 ]; then
+            echo "::error::Preis-Shard ${{ matrix.shard }} ausserhalb des Bereichs fuer N=$PRICE_SHARDS. Abbruch."
+            exit 1
+          fi
+          echo "Preis-Shard ${{ matrix.shard }}/$PRICE_SHARDS in range."
+
+      # KEIN continue-on-error mehr. Faellt dieser Schritt aus, fehlt sein
+      # Nachweis-Report — und der Waechter im merge-Job macht das laut. Genau der
+      # Fall, der bisher still blieb.
+      - name: Pull Historical Prices (shard)
+        run: node pull-historical-prices.js --out prices --rate-limit 1500 --shard ${{ matrix.shard }}/$PRICE_SHARDS
+
+      # Nur die EIGENEN Store-Dateien hochladen. Wer alle 32 hochlaedt, schiebt
+      # 24 Dateien mit, die er nur im Ladezustand vom letzten Commit kennt — beim
+      # Zusammenfuehren wuerde der letzte Schreiber die frischen Daten der anderen
+      # Runner mit seinem Altstand ueberschreiben. Die Zugehoerigkeit wird
+      # GERECHNET (shardOf % N), nicht als starre Dateiliste gepflegt: so bleibt
+      # der Schritt richtig, wenn sich PRICE_SHARDS oder SHARD_COUNT aendert.
+      - name: Eigene Store-Dateien einsammeln
+        run: |
+          mkdir -p price-shard-out/history
+          node -e "
+            const fs=require('fs'), path=require('path');
+            const store=require('./lib/price-history-store.js');
+            const i=parseInt(process.env.SHARD_IDX,10), n=parseInt(process.env.PRICE_SHARDS,10);
+            let kopiert=0;
+            for (let s=0; s<store.SHARD_COUNT; s++) {
+              if (s % n !== i) continue;
+              const name=store.shardFilename(s);
+              const von=path.join('prices','history',name);
+              if (!fs.existsSync(von)) continue;
+              fs.copyFileSync(von, path.join('price-shard-out','history',name));
+              kopiert++;
+            }
+            console.log('Store-Dateien fuer Shard '+i+': '+kopiert);
+            if (kopiert===0) { console.log('::error::Shard '+i+' hat KEINE Store-Datei geschrieben — der Abruf hat nichts persistiert.'); process.exit(1); }
+          "
+          cp prices/${{ needs.prep.outputs.run_date }}.shard-${{ matrix.shard }}.json price-shard-out/ 2>/dev/null || true
+          cp prices/prices-shard-report-${{ matrix.shard }}.json price-shard-out/ 2>/dev/null || true
+        env:
+          SHARD_IDX: ${{ matrix.shard }}
+          PRICE_SHARDS: '4'
+
+      - name: Upload price shard
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: prices-shard-${{ matrix.shard }}
+          path: price-shard-out/
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    needs: [prep, pull, prices]
     if: ${{ always() && needs.prep.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -821,14 +1005,31 @@ jobs:
       - name: Verify Pull Coverage (two-stage)
         run: node scripts/coverage-gate.js
 
-      # Tag-39: Historical-Price-Pull ueber das zusammengefuehrte Universum. Einmalige
-      # Yahoo-Last (NICHT je Shard). Tag 232c-25: PRICE_CONCURRENCY 20->8.
-      - name: Pull Historical Prices
-        env:
-          PRICE_CONCURRENCY: '8'
-        run: node pull-historical-prices.js --out prices --rate-limit 1500
-        timeout-minutes: 25
-        continue-on-error: true
+      # 18.08.2026: der Abruf selbst ist in den prices-Job gewandert (Begruendung
+      # dort). Hier werden nur noch die vier Ausschnitte eingesammelt und vereint.
+      # Der alte Schritt stand hier mit timeout-minutes:25 + continue-on-error:true
+      # und ist JEDEN Tag in dieses Timeout gelaufen, ohne dass es jemand sah.
+      - name: Download price shards
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: prices-shard-*
+          merge-multiple: true
+          path: price-shards-in
+
+      # Overlay statt Ersetzen: der Checkout bringt alle 32 Store-Dateien vom
+      # letzten Commit mit; die vier Runner liefern die 32 frischen. Ein Ticker,
+      # dessen Abruf heute fehlschlug, behaelt so seine Historie.
+      - name: Preis-Ausschnitte einlegen
+        run: |
+          mkdir -p prices/history
+          cp -f price-shards-in/history/*.json prices/history/ 2>/dev/null || true
+          # Nur die Tages-Ausschnitte, NICHT die Nachweis-Reports: die sind
+          # Betriebsspur des Laufs und haben im Datenbestand nichts verloren.
+          cp -f price-shards-in/*.shard-*.json prices/ 2>/dev/null || true
+          ls -1 prices/*.shard-*.json 2>/dev/null | wc -l | xargs -I{} echo "Tages-Ausschnitte eingelegt: {}"
+
+      - name: Preis-Shards zusammenfuehren
+        run: node scripts/merge-price-shards.js --prices prices --date "$RUN_DATE_UTC" --expected-shards 4
 
       # R5-SK-001 (Hard Review 2026-07-31): macro-regime.js's "leave an EXISTING
       # args.out untouched on failure" fallback (BH-138) can only protect a
@@ -910,14 +1111,6 @@ jobs:
         run: node scripts/watch-unrouted-quote.js
         continue-on-error: true
 
-      # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
-      # Groessenordnungen abweichen. Meldet nur NEUE Faelle gegen den mitgefuehrten
-      # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
-      - name: Watch Annual Spikes
-        id: w_spikes
-        run: node scripts/watch-annual-spikes.js ${{ inputs.spikes_neu_aufnehmen && '--neu-aufnehmen' || '' }}
-        continue-on-error: true
-
       - name: Watch FX Sanity
         id: w_fx
         run: node scripts/watch-fx-sanity.js
@@ -948,6 +1141,10 @@ jobs:
       # durchgereichte earnings-calendar.json + fx-rates.json + insider-cache.
       - name: Commit Snapshots
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein Commit der Snapshots nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           git config user.name "yahoo-pull-bot"
           git config user.email "yahoo-pull-bot@users.noreply.github.com"
           git add -A
@@ -990,6 +1187,61 @@ jobs:
 
       # Task 0.3: upload the final merged snapshots/ so the scoring job scores them on
       # a fresh runner. Runs after Commit so it captures the complete post-pull set.
+      # 18.08.2026: WAECHTER GEGEN DEN STILLEN AUSFALL.
+      # Das alte Muster war "timeout-minutes: 25" + "continue-on-error: true" am
+      # Abruf selbst: lief er in sein Timeout, blieb der Lauf gruen und der halbe
+      # Kursbestand veraltete unbemerkt. Das ist ersatzlos entfallen; stattdessen
+      # steht hier ein eigener Pruefschritt.
+      #
+      # WARUM ER NACH DEM COMMIT SITZT: die Daten des Tages sind dann bereits
+      # gesichert. Stuende er davor, wuerde sein Alarm auch das wegwerfen, was
+      # heute funktioniert hat — der Waechter darf melden, nicht schaden.
+      #
+      # WARUM DREI GRUENDE UND NICHT EINER: (a) fehlender Report = der Runner ist
+      # in sein Timeout gelaufen oder abgestuerzt, ohne sein Skriptende zu
+      # erreichen — genau der Fall, der bisher schwieg. (b) Fehlerquote > 75 %
+      # ist die bereits geweihte Schwelle aus pull-yahoo.js (Tag 147), kein neu
+      # erfundener Wert. (c) ein zu duenner Tages-Snapshot faengt den Fall ab,
+      # dass alle vier Runner formal durchliefen, aber Yahoo flaechendeckend
+      # gedrosselt hat.
+      # EINZELNE Yahoo-Aussetzer bleiben ausdruecklich gruen: sie erhoehen nur
+      # failed und reissen keine der drei Schwellen. Rot wird ausschliesslich
+      # Timeout, Absturz oder Massen-Drossel.
+      - name: Preis-Transport pruefen
+        run: |
+          node -e "
+            const fs=require('fs'), path=require('path');
+            const N=4, datum=process.env.RUN_DATE_UTC;
+            let rot=false;
+            for (let i=0;i<N;i++){
+              const p=path.join('price-shards-in','prices-shard-report-'+i+'.json');
+              if(!fs.existsSync(p)){
+                console.log('::error::Preis-Shard '+i+' hat keinen Nachweis-Report hinterlassen — er ist vor seinem Skriptende gestorben (Timeout oder Absturz). Die Kurse dieses Viertels sind heute NICHT erneuert worden.');
+                rot=true; continue;
+              }
+              const r=JSON.parse(fs.readFileSync(p,'utf8'));
+              const quote = r.attempted>0 ? r.failed/r.attempted : 1;
+              console.log('Shard '+i+': '+r.ok+' ok, '+r.failed+' fehlgeschlagen von '+r.attempted+' ('+(quote*100).toFixed(1)+'% Fehlerquote)');
+              if(quote>0.75){
+                console.log('::error::Preis-Shard '+i+' hat '+(quote*100).toFixed(1)+'% Fehlerquote (Grenze 75%, dieselbe wie beim Snapshot-Pull seit Tag 147) — das ist keine Einzelstoerung, sondern eine flaechige Drossel oder ein kaputter Abruf.');
+                rot=true;
+              }
+            }
+            const tages=path.join('prices',datum+'.json');
+            if(!fs.existsSync(tages)){
+              console.log('::error::Der Tages-Kursstand '+tages+' fehlt — genau die Datei, die es vor dem 18.08. nie in den Bestand geschafft hat.');
+              rot=true;
+            } else {
+              const n=Object.keys(JSON.parse(fs.readFileSync(tages,'utf8'))).length;
+              console.log('Tages-Kursstand: '+n+' Ticker');
+              if(n<15000){
+                console.log('::error::Tages-Kursstand traegt nur '+n+' Ticker (erwartet >=15.000 bei ~20.900 im Universum). Formal liefen alle Runner, aber es sind zu wenige Kurse angekommen.');
+                rot=true;
+              }
+            }
+            process.exit(rot?1:0);
+          "
+
       - name: Upload Snapshots Artifact
         if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -1056,7 +1308,6 @@ jobs:
           [ "${{ steps.w_exchange.outcome }}"  = "failure" ] && FEHLER="$FEHLER Boersen-Abdeckung"
           [ "${{ steps.w_unrouted.outcome }}"  = "failure" ] && FEHLER="$FEHLER nicht-geroutete-Namen"
           [ "${{ steps.w_fx.outcome }}"        = "failure" ] && FEHLER="$FEHLER FX-Plausibilitaet"
-          [ "${{ steps.w_spikes.outcome }}"    = "failure" ] && FEHLER="$FEHLER Jahres-Ausreisser"
           [ "${{ steps.w_pullstats.outcome }}" = "failure" ] && FEHLER="$FEHLER Pull-Schrumpfung"
           # F-NEU-01 (Tag 629): Waehrungs-Ehrlichkeit. Bewusst HIER und nicht als eigener
           # Schritt weiter oben: ein Abbruch vor "Commit Snapshots" wuerde denselben Schaden
@@ -1067,7 +1318,7 @@ jobs:
             echo "::error::Daten-Waechter haben angeschlagen:$FEHLER — Details im jeweiligen Schritt oben. Die Daten sind trotzdem committet (Baseline-Erhalt), aber der Stand ist verdaechtig."
             exit 1
           fi
-          echo "alle vier Daten-Waechter still."
+          echo "alle vier Daten-Waechter still (Jahres-Ausreisser laeuft seit Weg E im eigenen Job)."
 
       # R5-OPS-001 (Block-5-Verifikation 2026-08-03): dieser Schritt prueft seit dem
       # Hypergrowth-Umbau NICHTS mehr. Der Umbau loeschte jedes Skript, das je einen
@@ -1118,6 +1369,10 @@ jobs:
       - name: Deploy to GitHub Pages
         if: success()
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein gh-pages-Deploy von index.html/outputs. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _site
           # audit BH-114 (gleiche Haertung wie im scoring-Deploy unten): Branch-Existenz
           # separat pruefen. Existiert er und der Clone scheitert trotzdem (transientes
@@ -1294,6 +1549,76 @@ jobs:
           esac
 
   # ============================================================================
+  # JAHRES-AUSREISSER-WAECHTER — eigener Job (Weg E, Gerichtsurteil 28.08.2026).
+  #
+  # WARUM AUSGEKOPPELT: der Waechter sagt in seinem eigenen Kopf, er "repariert nichts
+  # und aendert keinen Score". Er sass trotzdem im merge-Job und faerbte ueber den
+  # Sammelschritt die merge-CONCLUSION rot — und `scoring` haengt per `needs: merge`
+  # OHNE eigenes `if:` daran, wurde also komplett uebersprungen. Ein reiner
+  # Melde-Waechter kostete so den ganzen Scoring-Tag: am 26./27.08. standen die Boards
+  # deshalb drei Tage, obwohl an den Daten nichts zu reparieren war (der Bestandsanker
+  # war schlicht veraltet). Dieselbe Datei hat diese Fehlerklasse schon zweimal
+  # geloest — `entdeckungs-waechter` und `earnings-transport-waechter` sind eigene
+  # Jobs mit `if: always()`, an denen NICHTS haengt. Hier der dritte Fall.
+  #
+  # `needs: merge` ist die DATEN-Kante, keine Blockade-Kante: der Waechter braucht den
+  # gemergten Snapshot-Stand (dasselbe Artefakt, das `scoring` laedt). Er laeuft
+  # PARALLEL zu `scoring`, nicht davor — sein rotes X erreicht keinen Datenschritt.
+  # Bei rotem merge wird er uebersprungen (sichtbar im Statusmarker, wie `scoring`),
+  # statt ueber fehlende Snapshots falsch-rot zu melden.
+  #
+  # SICHTBARKEIT: der Job steht in laufstatus.needs UND in JOB_REIHENFOLGE
+  # (scripts/pipeline-status.js) — sonst waere er aus der Blockade-Kette UND aus
+  # Karls Statusmarker verschwunden. Genau diese Halb-Aenderung nagelt
+  # tests/weg-e-waechter-verdrahtung.test.js fest.
+  # ============================================================================
+  jahres-ausreisser-waechter:
+    needs: merge
+    if: ${{ always() && needs.merge.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Download Snapshots Artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+
+      # CARRY-FORWARD A (Gerichts-Auflage 28.08.): --neu-aufnehmen schreibt den Bestand
+      # (watch-annual-spikes.js:304). Im merge-Job landete dieser Schreibvorgang im
+      # selben Arbeitsverzeichnis, das anschliessend nach main committet wurde. In
+      # diesem eigenen Job gibt es keinen Commit-Schritt — der neu aufgenommene Bestand
+      # wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Das waere
+      # ein stiller Fehlschlag genau der Klasse, gegen die dieser ganze Umbau laeuft.
+      # Deshalb: LAUT ANHALTEN statt still ins Leere schreiben, bis die
+      # Persistenz-Frage entschieden ist.
+      - name: Neuaufnahme-Sperre (Carry-forward A)
+        if: ${{ inputs.spikes_neu_aufnehmen }}
+        run: |
+          echo "::error::spikes_neu_aufnehmen ist gesetzt, aber dieser Job hat keinen Commit-Schritt. Der neu aufgenommene Bestand wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Die Persistenz-Frage ist Carry-forward A des Gerichtsurteils vom 28.08. und muss VOR der ersten Neuaufnahme entschieden werden — bis dahin ist dieser Weg gesperrt."
+          exit 1
+
+      # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
+      # Groessenordnungen abweichen. Meldet nur NEUE Faelle gegen den mitgefuehrten
+      # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
+      # KEIN continue-on-error: dieser Job DARF rot werden, er blockiert nichts.
+      - name: Watch Annual Spikes
+        id: w_spikes
+        run: node scripts/watch-annual-spikes.js
+
+  # ============================================================================
   # SCORING (unchanged logic; needs: pull -> needs: merge, + snapshot source).
   # needs:merge serialises the two gh-pages force-pushes (merge-Deploy first, then
   # scoring) so they never race. Scores the merged snapshots artifact on a fresh
@@ -1377,30 +1702,63 @@ jobs:
       # damit misst der Anker taeglich echt, ohne pre-pull/PR-Check falsch-rot zu machen.
       # Gemessen am Universum vom 08.08. (4769 Snapshots): CRDO 1,1 % · ALAB 11,0 % ·
       # PLTR 0,0 % · BE 4,6 % — alle innerhalb ihrer Schwellen, 9 ok / 0 fail.
+      # T147 (29.08.2026): die Schleife stand frueher HIER als Shell-Grep auf das Wort
+      # 'pre-pull-Gate'. Das war eine SCHWARZE Liste — sie kennt genau eine Schreibweise, und
+      # ein umformulierter Skip lief still als PASS durch ("0 ok, 0 fail" gilt sonst als
+      # bestanden). scripts/live-universum-gate.js dreht die Richtung um und verlangt den
+      # POSITIVEN Beleg, dass gemessen wurde; das alte Sentinel laeuft dort als Zusatz weiter.
+      # Die sechs Pfade stehen ausdruecklich HIER statt nur im Skript: der versiegelte
+      # Waechter tests/scoring/bh-b09-dailyyml.test.js pinnt sie in genau diesem Schritt
+      # (BH-003, Tag 952 — faellt anchors.rank aus der Liste, ist Direktive 4 wieder
+      # unbelegt). Eine Liste, die nur im Skript lebt, waere fuer ihn unsichtbar.
+      # Die Sentinel-Pruefung darunter laeuft auf der EINMAL erzeugten Ausgabe des
+      # Skripts — die Tests werden nicht zweimal gefahren.
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
         run: |
           fail=0
-          for t in tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js tests/scoring/anchors.rank.test.js; do
-            echo "--- $t ---"
-            set +e
-            out=$(node "$t" 2>&1)
-            rc=$?
-            set -e
-            echo "$out"
-            if [ "$rc" -ne 0 ]; then
-              echo "::error::Live-Universum-Test failed: $t (exit $rc)"
-              fail=1
-            fi
-            if echo "$out" | grep -q 'pre-pull-Gate'; then
-              echo "::error::$t skipped its live-universe anchor(s) in the scoring job — real snapshots were expected here. Treating as failure."
-              fail=1
-            fi
-          done
+          set +e
+          out=$(node scripts/live-universum-gate.js \
+            tests/scoring/score.integration.test.js \
+            tests/scoring/quality-board.test.js \
+            tests/scoring/phase.test.js \
+            tests/scoring/score-breakdown.test.js \
+            tests/scoring/acceleration-invariance.test.js \
+            tests/scoring/anchors.rank.test.js 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          [ "$rc" -ne 0 ] && fail=1
+          if echo "$out" | grep -q 'pre-pull-Gate'; then
+            echo "::error::Ein Test hat seine Anker gegen echte Snapshots uebersprungen — hier waren echte Snapshots erwartet."
+            fail=1
+          fi
           if [ "$fail" -ne 0 ]; then
             echo "::error::Live-Universum-Gate failed — a ranking/routing/dedup/board regression may be present. See above."
             exit 1
           fi
-          echo "Live-Universum-Gate OK (real snapshots, no skip)."
+
+      # Die zweite Haelfte von T147: das Gate schreibt ein maschinenlesbares Ergebnis mit
+      # explizitem status-Feld — und FEHLT die Datei, ist der Lauf rot. Ein Gate, dessen
+      # Ergebnis nur im Protokolltext steht, ist genauso pruefbar wie der Grep, den es
+      # ersetzt: naemlich gar nicht. if:always(), damit ein rotes Gate oben nicht diese
+      # Pruefung ueberspringt und die Abwesenheit der Datei dadurch ungeprueft bliebe.
+      # Der Name traegt bewusst NICHT die Zeichenkette des Gate-Schritts: der versiegelte
+      # Waechter (bh-b09-dailyyml.test.js) verlangt, dass es GENAU EINEN aktiv verankerten
+      # Schritt dieses Namens gibt — ein zweiter mit demselben Praefix zaehlte doppelt.
+      - name: Gate-Ergebnis belegen (T147)
+        if: always()
+        run: |
+          f=outputs/live-universum-gate.json
+          if [ ! -f "$f" ]; then
+            echo "::error::$f fehlt — das Live-Universum-Gate hat kein maschinenlesbares Ergebnis hinterlassen (T147). Ohne Beleg gilt der Lauf als ungeprueft."
+            exit 1
+          fi
+          status=$(node -p "require('./$f').status")
+          echo "Live-Universum-Gate Ergebnisdatei: status=$status"
+          if [ "$status" != "ok" ]; then
+            echo "::error::Live-Universum-Gate meldet status=$status in $f."
+            exit 1
+          fi
 
       # F4/F6: die im merge-Job frisch erzeugten Handoff-Dateien holen, BEVOR die
       # Reader laufen — external-data/ath-state.json (write-findash-export.js:78, F4)
@@ -1464,10 +1822,25 @@ jobs:
       - name: Build findash-export v1
         run: |
           node scripts/write-findash-export.js
+          # Ausschluss-Liste NACH dem Export: sie liest v1/index.json als Zaehler-Quelle und
+          # bricht laut ab, wenn ihre Summen davon abweichen. Vor dem gh-pages-Deploy, der
+          # v1/ komplett kopiert — excluded.json faehrt dadurch automatisch mit.
+          # Karl-Entscheid 02.08.: "Eine Grenze, die Namen wegnimmt, wird ersetzt —
+          # niemand verschwindet." Bis heute wurde je Ausschluss nur ein Zaehler erhoeht
+          # und die Zeile verworfen; kein Kuerzel, kein Name ueberlebte.
+          node scripts/write-excluded-list.js
           count=$(ls outputs/findash-export/v1/*.json 2>/dev/null | wc -l)
           echo "findash-export wrote $count JSON files to outputs/findash-export/v1/"
           if [ "$count" -lt 15 ]; then
             echo "::error::findash-export produced $count files (expected 15) — writer failed."
+            exit 1
+          fi
+          # Tag 650: Vollboards (v1/full/) sind PFLICHT, eines je Branche. Fehlt eines, sieht
+          # das Board in findash aus wie eines ohne Nachruecker — stumm halb statt sichtbar rot.
+          vgot=$(ls outputs/findash-export/v1/full/*.json 2>/dev/null | wc -l)
+          echo "findash-export full/ wrote $vgot Vollboards (expected 13)"
+          if [ "$vgot" -ne 13 ]; then
+            echo "::error::findash-export full/ produced $vgot Vollboards (expected 13) — die Kohorte hinter Rang 100 fehlt."
             exit 1
           fi
           # 3.2 QC-Board (quality/): expected = #QC boards + overview + index. Dynamic, no
@@ -1501,6 +1874,10 @@ jobs:
       - name: Deploy Scoring Output to GitHub Pages
         if: success()
         run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein gh-pages-Deploy von hypergrowth/findash-export. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _ghp
           # AE-CI-001 (Hard Review 2026-07-31): siehe merge-Deploy oben — exit 2 heisst
           # "Ref fehlt wirklich", jeder andere Nonzero-Code ist ein transienter Fehler
@@ -1638,6 +2015,24 @@ jobs:
           # hier. Vorher stand in beiden Texten unbedingt "board-history vintage <heute>",
           # auch wenn genau dieses Vintage ausgeschlossen wurde.
           VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          # ZWEIG-WACHE. Sie sitzt BEWUSST hier unten und nicht ganz oben im Schritt: sie
+          # liest damit denselben $VINTAGE_RC wie der Wert-Gate-Alarm am Schrittende.
+          # BEFUND zweier unabhaengiger Reviews (19.08.): stand die Wache davor, verschluckte
+          # sie den EINZIGEN Alarm dieses Schritts. Das Wert-Gate ist keine Publikations-Frage —
+          # es sagt, ob die heute gerechneten Zahlen strittig sind, und genau das will ein
+          # Trockenlauf wissen. Ein Zweiglauf zum Pruefen einer Schwellen-Aenderung waere sonst
+          # gruen geblieben, obwohl das Gate angeschlagen hat: derselbe stille gruene Haken,
+          # gegen den dieses File an einem Dutzend Stellen gebaut ist.
+          # Dasselbe $VINTAGE_RC, dasselbe exit 2 wie unten; nur der Grund im Text ist ein
+          # anderer. Waechter: tests/zweig-wache.test.js (ZW-6).
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — kein board-history-Vintage-Commit nach main. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            if [ "$VINTAGE_RC" = "2" ]; then
+              echo "::error::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — NICHT committet, weil dieser Lauf nicht veroeffentlicht. Der Wert ist trotzdem strittig: bitte pruefen, bevor die Aenderung nach main geht."
+              exit 2
+            fi
+            exit 0
+          fi
           if [ "$VINTAGE_RC" = "2" ]; then
             echo "::warning::board-history vintage SUSPECT geflaggt (Wert-Gate) fuer $VINTAGE_DATE — wird NICHT committet."
             git add board-history/ ":(exclude)board-history/$VINTAGE_DATE"
@@ -1730,6 +2125,10 @@ jobs:
         if: success()
         run: |
           node scripts/stage-public-data.js --ziel _public --board-history board-history --vintages 2
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — board-history NICHT in den oeffentlichen Datenkanal publiziert. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           if [ ! -d _ghp/.git ]; then
             echo "::error::_ghp fehlt (gh-pages-Klon des Deploy-Schritts) — board-history NICHT publiziert; findash zeigt sonst still keine Bewegung."
             exit 1
@@ -1822,7 +2221,7 @@ jobs:
   # outputs/pipeline-status/v1/ und fasst weder board-history/ noch main an.
   # ============================================================================
   laufstatus:
-    needs: [prep, entdeckungs-waechter, pull, merge, earnings-transport-waechter, scoring]
+    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -1920,6 +2319,10 @@ jobs:
               exit 1
             fi
           done
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "::warning::NICHT VEROEFFENTLICHT — Statusmarker NICHT nach gh-pages publiziert. Lauf laeuft auf $GITHUB_REF (nur_rechnen='$NUR_RECHNEN'); veroeffentlicht wird nur von refs/heads/main ohne Ventil. Gerechnet wurde alles, gepusht nichts."
+            exit 0
+          fi
           rm -rf _ghp_status
           # AE-CI-001: exit 2 heisst "Ref fehlt wirklich"; jeder andere Nonzero-Code ist
           # transient und muss hart abbrechen statt einen frischen Branch zu initialisieren

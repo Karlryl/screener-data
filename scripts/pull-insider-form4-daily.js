@@ -414,6 +414,18 @@ function resolveMergeTicker(parsedTxns, fallbackTicker) {
   return filedSymbol || fallbackTicker;
 }
 
+// KOMPAKT statt eingerueckt (28.08.2026): die Datei ist mit 58,3 MB die GROESSTE
+// getrackte Datei im ganzen Repo und waechst zuletzt ~1 MB pro Tag — bei dem Tempo
+// reisst sie im Oktober die 100-MB-Grenze von GitHub. `JSON.stringify(x, null, 2)`
+// kostete allein an Einrueckung 21,5 MB: 58.269.916 -> 36.739.725 Bytes (-36,9 %),
+// gemessen am echten Stand von origin/main, Round-Trip byte-identisch. Kein Datensatz
+// faellt weg, keine Aufbewahrungsfrist aendert sich — das 180-Tage-Fenster (siehe
+// FORM4_LOOKBACK_DAYS, mergeTransactions) bleibt unangetastet. Dieselbe Bauform wie
+// external-data/sec-annual-bulk.jsonl und die NDJSON-Archive aus archive-old-snapshots.js:
+// Massendaten werden hier kompakt geschrieben, nicht menschenlesbar eingerueckt.
+// KEIN Ersatz fuer die eigentliche Frage (gehoert die Datei ueberhaupt nach git?) —
+// das ist eine Karl-Entscheidung und liegt im Vault (Knowledge/Trading/growth-screener,
+// Entscheidungsseite vom 28.08.2026), NICHT in diesem Repo.
 function writeCache(byTicker, lastIndexedDate) {
   writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
     updatedAt: new Date().toISOString(),
@@ -423,7 +435,7 @@ function writeCache(byTicker, lastIndexedDate) {
     // it left off instead of always looking back a fixed DAYS window.
     lastIndexedDate: lastIndexedDate || null,
     byTicker
-  }, null, 2));
+  }));
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────

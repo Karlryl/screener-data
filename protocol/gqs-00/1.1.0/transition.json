@@ -1,6 +1,6 @@
 {
   "schema": "gqs-00-transition/v1",
-  "status": "pending",
+  "status": "completed",
   "from": "GQS-00@1.0.0",
   "to": "GQS-00@1.1.0",
   "opened": "2026-08-16",
@@ -23,5 +23,13 @@
     "src/scoring/lamps.js": "7b0e479958131e69f4de1bd4cfafd2160bf611c8ef5f84340e8caad27a06df34",
     "src/scoring/score.js": "c50adde4b2e3c2cb7cd15d4988f83f264f4d792674f1272d4d75c3094dd5ccfc",
     "src/scoring/calibrate.js": "ef184861c2d5ea1755d74d8f1785d1797809e8a8ece44154aeb73c302f1bee69"
+  },
+  "abschluss": {
+    "completedAt": "2026-08-19",
+    "workflowRun": 32211143015,
+    "sealedAs": "GQS-00@1.1.0",
+    "bedingung": "Erster GRUENER PLANMAESSIGER daily-pull mit dem neuen Code. Nicht der Dienstag 18.08. wie im Feld aufloesung erwartet: der geplante 18.08.-Lauf (32094300602) ist rot gelaufen, der gruene 18.08.-Lauf war ein manueller workflow_dispatch. Erst der geplante Lauf vom 19.08. (event=schedule, conclusion=success, headSha 9e2d183178a93d010e977e6c8e4b7aea42c0fef2) erfuellt die Bedingung.",
+    "wirkung": "Das Uebergangs-Fenster ist geschlossen: dieses Dokument liegt nicht mehr unter einem *-pending-Verzeichnis UND traegt nicht mehr status \"pending\". Die drei Quelldateien src/scoring/{lamps,score,calibrate}.js sind ab jetzt auf den 1.1.0-Siegelhash festgenagelt, ein zweiter erlaubter Stand existiert nicht mehr.",
+    "vorgaenger": "protocol/gqs-00/1.0.0/ bleibt byte-identisch erhalten."
   }
 }

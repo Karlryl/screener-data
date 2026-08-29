@@ -9,6 +9,7 @@
  *
  * READS  (read-only inputs, never a write target):
  *   outputs/hypergrowth/<branch>.json  (13 boards, {profitable[],unprofitable[]})
+ *   outputs/hypergrowth/full/<branch>.json  (19.08.: dieselben 13 Boards UNGEKAPPT)
  *   outputs/hypergrowth/overview.json  (flat cross-branch top-200)
  *   outputs/hypergrowth/survival.json  (flat pre-revenue, runway-desc)
  *   outputs/hypergrowth/index.json     (meta: counts/branches/excluded)
@@ -17,6 +18,7 @@
  *
  * WRITES (atomic tmp+rename, assertFinite -> fail-loud on NaN/Inf, never silent-null):
  *   outputs/findash-export/v1/<branch>.json
+ *   outputs/findash-export/v1/full/<branch>.json  (19.08.: die VOLLE Kohorte, on-demand)
  *   outputs/findash-export/v1/overview.json
  *   outputs/findash-export/v1/survival.json
  *   outputs/findash-export/v1/index.json
@@ -70,6 +72,20 @@ function readMcapBounds() {
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const QOUT_DIR = path.join(OUT_DIR, 'quality'); // 3.2: QC-Board export subdir
 const SCOUT_DIR = path.join(OUT_DIR, 'smallcap'); // 5.2: Small-Cap-Board export subdir
+// ---- Vollboards (19.08.2026) ----------------------------------------------------------
+// BEFUND: run-screener.js ruft produceRankings(results, {topN: topN || 100}) und die CI ruft
+// ohne --topN. Von 8.908 bewerteten Firmen erreichten damit 1.940 die Oberflaeche — 6.968
+// waren weder abrufbar noch erwaehnt. Das bricht die Direktive "nichts verschwindet":
+// Rang 101 existierte fuer Karl schlicht nicht.
+// Die vollen Kohorten liegen seit 2.3-A8 in outputs/hypergrowth/full/, wurden aber nie
+// publiziert (der gh-pages-Deploy kopiert hypergrowth flach: `cp ../outputs/hypergrowth/*.json`).
+// WEG: derselbe Schreiber, dieselben Mapper, dieselbe Rangvergabe -> v1/full/<branch>.json,
+// von findash on demand nachgeladen. KEIN --topN-Flag (jedes N unter dem Kohortenmaximum
+// verletzt die Direktive weiter und flutete den Newcomer-Log), KEIN zweites Format (dem
+// rohen hypergrowth/full/ fehlen rank/rankGrund, ath, Waehrungsbeleg, Namens-Normalisierung
+// und die Schema-Huelle), KEINE zweite Detailtiefe im Erstload (+1,3 MB in JEDEM Aufruf).
+const HG_FULL_DIR = path.join(HG_DIR, 'full');
+const FULL_OUT_DIR = path.join(OUT_DIR, 'full');
 
 const SCHEMA = 'findash-export/v1';
 const BRANCHES = [
@@ -228,6 +244,14 @@ function ergaenzeWaehrungsbeleg(out) {
 function waehrungsWaechterBilanz() {
   return { geprueft: _mcapGeprueft, genullt: _mcapGenullt };
 }
+// 19.08.: einziger Aufrufer ist buildFullBoards — die Vollkohorten-Zeilen werden normal
+// geprueft und genullt, zaehlen aber NICHT in die 25-%-Abbruchquote (die auf den gekappten
+// Listen gemessen wurde). Kein allgemeiner Setter-Missbrauch: wer die Bilanz sonst
+// zuruecksetzt, blendet den Waechter.
+function setzeWaehrungsWaechterBilanz(b) {
+  _mcapGeprueft = b.geprueft;
+  _mcapGenullt = b.genullt;
+}
 // Nach dem Bau: melden und bei Massen-Nullung abbrechen statt ein halbblindes Board
 // auszuliefern.
 // Reine Schwellen-Entscheidung (exportiert, damit der Waechter sie AUSFUEHREN kann).
@@ -252,16 +276,149 @@ function normalizeName(value) {
   return normalized || null;
 }
 
+// ---- Belegbarkeits-Gate (18.08.2026) -------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): 21 von ~40 Top-20-Zeilen
+// des Finanzwerte-Boards ruhen auf 3-4 von 7 Messachsen — darunter geschlossene Fonds (GGN
+// Rang 6; NXP = Nuveen Rang 7, Kuerzel-Kollision mit NXP Semiconductors), ein Hedgefonds
+// (BHMU.L Rang 14) und Holdings. Fehlt eine Achse, wird ueber die verbleibenden renormiert;
+// auf 3 Achsen genuegt zufaelliges Gutaussehen fuer Rohwerte um 97-99. Die halbe Rangliste
+// ist dann keine Firmenrangliste mehr.
+//
+// KEIN Typ-Filter (Entscheid 18.08.): jedes Fonds-Erkennungsmerkmal hat GEMESSENE
+// Kollateralschaeden — quoteType ist blind (Yahoo fuehrt CEFs als EQUITY), Branche
+// "Asset Management" traefe BlackRock/Blackstone/KKR, Mitarbeiterzahl killt MCX.BO (Rang 1)
+// und Rasan/8313.SR (Rang 2).
+//
+// STATTDESSEN das Belegbarkeits-Gate: wer weniger als RANK_MIN_AXES belegte Achsen hat,
+// bekommt KEINEN Rang — bleibt aber sichtbar, mit Score und mit dem Grund (Feld rankGrund).
+// Es wird nichts geloescht und nichts umsortiert; nur die Rangnummer entfaellt.
+//
+// WARUM 4 UND NICHT 5: gemessen an board-history/2026-08-16 (8.989 gescorte Zeilen) trifft
+// die 4er-Schwelle 253 Zeilen (2,8 %) — alle acht Problemfaelle und die komplette Fonds-
+// Schicht, waehrend die Schutznamen QXO 7/7, LQDA 7/7, ONDS 8/8, NBIS 7/7 sowie MCX.BO 5/7
+// und Rasan 7/7 ihren Rang behalten. Eine 5er-Schwelle wuerde zusaetzlich Schwab, Nomura
+// (NMR), FRVO (Rang 3), IDYA (Rang 13) und 127 weitere ECHTE Firmen den Rang kosten;
+// financials verloere 53 % seiner gerankten Zeilen. Die 4 ist der Punkt, an dem das Gate
+// noch fast nur Nicht-Firmen trifft.
+//
+// DEKLARIERTES, BEKANNTES LOCH: CBDG.PA (Compagnie du Cambodge, Holding) hat exakt 4 Achsen
+// und behaelt seinen Rang. Das ist GEWOLLT, kein Versehen. Wer das spaeter "repariert",
+// zahlt dafuer die 127 Fehlschuesse der 5er-Schwelle — die Entscheidung ist gemessen, nicht
+// vergessen.
+const RANK_MIN_AXES = 4;
+// Das Gate wurde auf den BRANCHEN-Formeln gemessen (7 bzw. 8 gewichtete Achsen). QC-Boards
+// (src/scoring/formulas/quality) fuehren nur 5 gewichtete Achsen — dieselbe ABSOLUTE Schwelle
+// waere dort eine andere, nie gemessene Regel (4 von 5 = 80 % statt 4 von 7 = 57 %). Deshalb
+// greift das Gate erst ab dieser Achsenzahl im NENNER. QC bleibt unberuehrt, bis jemand die
+// Wirkung dort misst; waechst eine QC-Formel je auf 7 Achsen, greift es automatisch mit.
+const RANK_GATE_MIN_NENNER = 7;
+// Anteil entrangter Zeilen je Liste, ab dem der Bau laut meldet — das vorab deklarierte
+// Scheiternskriterium ("ein Board ueber 40 % heisst: zu scharf") als laufender Waechter.
+// Gemessenes Maximum am 16.08.: financials/profitable 36,4 %. Ohne diese Meldung waere ein
+// flaechiger Coverage-Einbruch ein STILLER Total-Entrangungs-Unfall.
+const RANK_GATE_WARN_ANTEIL = 0.4;
+
+// "n/m" -> {n, m}; alles andere -> null. Konsumiert nur, rechnet nichts nach: coverageAxes
+// entsteht in src/scoring/score.js (versiegelt, GQS-00/F-16) und wird hier gelesen.
+function belegteAchsen(coverageAxes) {
+  const m = typeof coverageAxes === 'string' && coverageAxes.match(/^(\d+)\/(\d+)$/);
+  if (!m) return null;
+  const n = Number(m[1]);
+  const nenner = Number(m[2]);
+  // HAERTUNG (Reviewer-Befund 18.08., MITTEL): die Regex allein laesst inhaltlichen Unsinn
+  // durch. "0/0" und "9/7" sind regex-gueltig, ergaben aber { n:0, m:0 } bzw. { n:9, m:7 } —
+  // und liefen damit in rangGrund() auf den QC-Zweig (m < RANK_GATE_MIN_NENNER) bzw. auf
+  // "n >= RANK_MIN_AXES", also beide Male auf **null = 'Rang steht ihr zu'**. Eine Zeile mit
+  // kaputter Abdeckungsangabe haette so still einen Rang bekommen statt 'coverageUnbekannt'.
+  //
+  // Heute kann das nicht entstehen: der Nenner ist die feste Achsenzahl der Formel (7, bei
+  // tech-hardware 8, bei QC 5) — nachgesehen in allen 14 Branchen-Formeln plus quality/ und
+  // smallcap/. Der Pfad ist tot, NICHT ausnutzbar.
+  //
+  // Gehaertet wird er trotzdem, und zwar aus einem Grund, der nichts mit heute zu tun hat:
+  // coverageAxes ueberquert eine Serialisierungsgrenze (JSON) zwischen dem VERSIEGELTEN
+  // src/scoring/ und diesem Skript. Ein kuenftiger Fehler dort, ein Hand-Edit oder eine
+  // Migration wuerde hier ueber Rang-Vergabe entscheiden, ohne dass irgendetwas auffaellt.
+  // Genau diese Klasse — stille Fehlklassifikation an einer Wertgrenze statt sichtbarem
+  // Fehlschlag — ist die teuerste in diesem Projekt.
+  return (nenner > 0 && n <= nenner) ? { n, m: nenner } : null;
+}
+// Grund, warum eine GESCORTE Zeile keinen Rang traegt — null heisst "Rang steht ihr zu".
+// FEHLENDES/unlesbares coverageAxes ist bewusst KEIN Freifahrtschein: ohne Beleg kein Rang
+// ('coverageUnbekannt'). Durchwinken hiesse, genau die Zeilen zu ranken, ueber deren
+// Datenlage nichts bekannt ist — das Gegenteil des Zwecks. Still verworfen wird sie ebenso
+// wenig: sie bleibt mit Score in der Liste, traegt ihren eigenen, von 'zuWenigBelegteAchsen'
+// UNTERSCHEIDBAREN Grund und zaehlt in die Melde-Quote (RANK_GATE_WARN_ANTEIL).
+// Survival-Zeilen sind nie gescort und tragen coverageAxes nie — sie laufen NICHT durch
+// dieses Gate (s. buildSurvival/validateSurvivalRow), sonst haetten sie geschlossen alle 101
+// ihren Runway-Rang verloren.
+function rangGrund(row) {
+  const a = belegteAchsen(row && row.coverageAxes);
+  if (!a) return 'coverageUnbekannt';
+  if (a.m < RANK_GATE_MIN_NENNER) return null;   // QC-Formel: nie gemessen, nie gegated
+  return a.n < RANK_MIN_AXES ? 'zuWenigBelegteAchsen' : null;
+}
+// Vergibt die Raenge EINER score-desc-Liste: eine gegatete Zeile bekommt rank:null + Grund
+// und verbraucht KEINE Rangnummer — die uebrigen bleiben dadurch luecken- und sprungfrei
+// 1..k. Sie behaelt ihre Array-Position (Score-Ordnung bleibt lesbar) und ihren Score.
+// opts.warn === false schaltet NUR die Melde-Quote ab, nie die Rangvergabe. Gebraucht von
+// den Vollboards (19.08.): die 40-%-Schwelle wurde auf den GEKAPPTEN Listen gemessen
+// (Maximum 16.08.: financials/profitable 36,4 %). Im Tail einer Vollkohorte ist duenne
+// Abdeckung der Normalfall, nicht der Alarm — dort gerechnet, feuerte die Warnung ab der
+// ersten Nacht auf fast jedem Board und niemand laese sie mehr. Alarm-Ermuedung ist ein
+// echter Schaden, und eine Schwelle auf einer nie gemessenen Grundgesamtheit ist keine
+// Schwelle. Die gekappten Listen behalten sie unveraendert (Pruefung 7b im Waechter).
+function vergebeRaenge(rows, wo, opts = {}) {
+  let rang = 0, entrangt = 0;
+  for (const row of rows) {
+    const grund = rangGrund(row);
+    if (grund) { row.rank = null; row.rankGrund = grund; entrangt++; }
+    else { row.rank = ++rang; row.rankGrund = null; }
+  }
+  if (opts.warn !== false && rows.length && entrangt / rows.length > RANK_GATE_WARN_ANTEIL) {
+    console.warn('::warning::Belegbarkeits-Gate: ' + wo + ' verliert ' + entrangt + ' von ' +
+      rows.length + ' Raengen (' + (100 * entrangt / rows.length).toFixed(1) + ' %) — ueber ' +
+      (RANK_GATE_WARN_ANTEIL * 100) + ' %. Entweder ist die Datenlage eingebrochen oder die ' +
+      'Schwelle (' + RANK_MIN_AXES + ' Achsen) ist fuer dieses Board zu scharf.');
+  }
+  return rows;
+}
+
 // ---- row mappers ---------------------------------------------------------
 // Copy ONLY real engine fields. `rank` is derived = 1-based array index (score-desc;
 // survival runway-desc). currency/profitTier/ipoYear are RESERVED (1.2) — NOT
 // fabricated; consumers treat absent as "not available".
 
+// ---- Skalen-Deckel (19.08.2026) --------------------------------------------------------
+// BEFUND (_BEFUND-BOARDQUALITAET-2026-08-18.md, Vintage 2026-08-16): drei Zeilen tragen einen
+// Score ueber 100 (278470.KS 101,0 · CUPID.NS 100,6 · ZEAL.CO 100,1). Der Score ist als
+// 0-100-Skala gemeint; der Wachstums-Bonus in src/scoring/score.js hebt strukturell bis
+// Faktor 1,05 (96,2 x 1,05 = 101,0). Karl liest '101' auf Platz 1 und 2 seines Boards.
+//
+// WARUM DER DECKEL HIER STEHT UND NICHT IN score.js — das ist die eigentliche Entscheidung:
+// Math.min(100, ...) VOR der Sortierung macht aus 101,0 und 100,6 zwei exakte Gleichstaende.
+// Dann entschiede der Ticker-Tie-Break ueber Platz 1 und 2 — der Deckel wuerde Raenge
+// verschieben. Hier ist der Rang bereits vergeben und POSITIONAL (rank: i + 1), also kann er
+// per Konstruktion keinen Rang aendern. Der versiegelte Ort waere auch der schlechtere.
+//
+// Deshalb ist das KEIN F-16-Fall: src/scoring/ bleibt unberuehrt, gedeckelt wird die AUSGABE.
+// Nach dem Fall der Formel-Sperre ausdruecklich NICHT nachziehen: kein zweiter Deckel in
+// score.js. Der Bonus ist gerichtlich bestaetigt, der Skalenbruch ist ein Ausgabe-Problem.
+//
+// SCHEITERNSKRITERIUM (vorab deklariert): liegen mehr als 10 Zeilen (0,1 %) eines Vintages
+// exakt auf 100,0, maskiert der Deckel echte Skaleninflation — dann geht der Fall mit Zahlen
+// in den Gauntlet. Stand 19.08.: 2 Zeilen = 0,02 %.
+const SCORE_MAX = 100;
+function gedeckelt(score) {
+  return typeof score === 'number' && Number.isFinite(score) ? Math.min(SCORE_MAX, score) : score;
+}
+
 function mapBoardRow(r, i) {
   const out = {
-    rank: i + 1,           // derived: list is score-desc, rank = index+1
+    rank: i + 1,           // derived: list is score-desc, rank = index+1 — vergebeRaenge()
+    rankGrund: null,       // ueberschreibt beides, wenn das Belegbarkeits-Gate greift
     ticker: r.ticker,
-    score: r.score,        // round1 display score (sort determinism was internal _raw)
+    score: gedeckelt(r.score),        // round1 display score (sort determinism was internal _raw)
     track: r.track,        // 'profitable' | 'unprofitable'
     lamps: r.lamps || [],
     overview: r.overview == null ? null : {
@@ -278,10 +435,11 @@ function mapBoardRow(r, i) {
 function mapOverviewRow(r, i) {
   const out = {
     rank: i + 1,
+    rankGrund: null,            // 18.08.: gesetzt von vergebeRaenge(), s. Belegbarkeits-Gate
     ticker: r.ticker,
     formulaId: r.formulaId,     // branch id — only present in the flat overview feed
     track: r.track,
-    score: r.score,
+    score: gedeckelt(r.score),
     overviewKind: r.overviewKind,           // FLAT here, NOT nested (mirrors engine)
     overviewValue: r.overviewValue,         // number|null, CAN be negative
     overviewCompanion: r.overviewCompanion, // number|null
@@ -297,6 +455,7 @@ function mapSurvivalRow(r, i) {
   // (9999 sentinel = quasi-infinite runway) is the sort key, runway-desc nulls-last.
   const out = {
     rank: i + 1,
+    rankGrund: null,   // survival laeuft NIE durch das Belegbarkeits-Gate (nie gescort)
     ticker: r.ticker,
     runwayQuarters: r.runwayQuarters,  // number|null, 9999 = inf-runway sentinel
     lamps: r.lamps || [],
@@ -307,8 +466,14 @@ function mapSurvivalRow(r, i) {
 }
 
 // ---- build ---------------------------------------------------------------
-function buildBoard(id, coverage) {
-  const b = readJSON(path.join(HG_DIR, id + '.json'));
+// opts.srcDir  — Quellverzeichnis (Default outputs/hypergrowth/; die Vollboards reichen
+//                outputs/hypergrowth/full/ herein). Sonst ist alles identisch: dieselben
+//                Mapper, dieselbe Rangvergabe, dieselbe Schema-Huelle.
+// opts.rangOpts — an vergebeRaenge durchgereicht ({warn:false} fuer die Vollboards).
+function buildBoard(id, coverage, opts = {}) {
+  const srcDir = opts.srcDir || HG_DIR;
+  const rangOpts = opts.rangOpts;
+  const b = readJSON(path.join(srcDir, id + '.json'));
   return {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
@@ -316,14 +481,83 @@ function buildBoard(id, coverage) {
     boardStatus: boardStatusOf(id),                 // 'core' (Court-PASSED) | 'diagnostic' (unbewiesen, 2.1)
     coverage,                                       // {status,degraded,blocked,coverage_pct} | null
     mcapBounds: readMcapBounds(),                   // [p20,p40,p60,p80] USD | null — macht mcapBand lesbar
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable', rangOpts),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable', rangOpts),
   };
+}
+
+// ---- Vollboards (19.08.2026) ---------------------------------------------------------
+// Schreibt je Branche die UNGEKAPPTE Kohorte nach <OUT_DIR>/full/<id>.json, indent 0
+// (maschinell nachgeladen, ~5x groesser als das gekappte Board — genau wie die Quelle in
+// outputs/hypergrowth/full/, die run-screener.js ebenfalls kompakt schreibt).
+//
+// Rang-Paritaet ist KONSTRUKTIV garantiert, nicht gehofft: das gekappte Board ist das
+// byte-gleiche topN-Praefix der full-Liste (bewiesen in tests/scoring/anchors.rank.test.js
+// A8), und vergebeRaenge laeuft je Zeile sequenziell-deterministisch. Die ersten topN
+// Zeilen beider Dateien sind deshalb tief gleich, inklusive rank — festgenagelt in
+// tests/scoring/export-vollboard.test.js (Pruefung 3), nicht bloss angenommen.
+//
+// FEHLENDES full/-QUELLVERZEICHNIS IST EIN ABBRUCH, kein Optional-Zweig: der versiegelte
+// run-screener.js legt es bei JEDEM Lauf an (mkdirSync + 13 writeJsonAtomic). Ist es weg,
+// ist die Engine anomal gelaufen — und ein still leeres Vollboard sieht in findash exakt
+// aus wie ein Board ohne Nachruecker. Das ist der teuerste Fehlerfall dieses Feeds.
+//
+// survival braucht kein full/: die Liste wird nie gekappt (flach, runway-desc).
+function buildFullBoards(coverage, opts = {}) {
+  const hgFullDir = opts.hgFullDir || HG_FULL_DIR;
+  const outFullDir = opts.outFullDir || FULL_OUT_DIR;
+  if (!fs.existsSync(hgFullDir)) {
+    throw new Error('[findash-export] Vollkohorten-Quelle fehlt: ' + hgFullDir +
+      ' — run-screener.js schreibt sie bei jedem Lauf (2.3-A8). Fehlt sie, ist der Scoring-Lauf ' +
+      'anomal gelaufen; ein stumm leeres Vollboard waere von einem Board ohne Nachruecker nicht zu unterscheiden.');
+  }
+  // Reviewer-Befund 19.08. (MITTEL, reproduziert: 12 von 13 Dateien lagen nach einem Abbruch
+  // im 13. Branch auf der Platte): Ziel-Verzeichnis VOR dem Schreiben leeren — dasselbe Muster,
+  // das buildQuality/buildSmallcap seit Tag 348 fahren. Ohne das mischt ein abgebrochener Lauf
+  // frische und stehen gebliebene Vollboards des Vorlaufs, und der naechste Blick sieht 13
+  // Dateien, von denen einige aus einem anderen Vintage stammen. Ein Teil-Export nach einem
+  // Wurf bleibt moeglich — er ist aber immer NUR aus diesem Lauf, und der Wurf macht die CI rot,
+  // bevor irgendetwas deployt wird.
+  fs.rmSync(outFullDir, { recursive: true, force: true });
+  fs.mkdirSync(outFullDir, { recursive: true });
+  const woptsRang = { warn: false }; // s. vergebeRaenge: Schwelle gilt fuer die gekappten Listen
+  // Die Bilanz des Waehrungs-Waechters (Abbruch ab 25 % genullter Groessen) wurde ebenfalls
+  // auf den gekappten Listen gemessen. Die ~7.000 zusaetzlichen Tail-Zeilen gehoeren NICHT
+  // in denselben Nenner — sonst entschiede ein Zusatz-Feed ueber eine gemessene Abbruch-
+  // grenze und koennte den ganzen Export kippen. GENULLT wird auf den Vollzeilen trotzdem
+  // (ergaenzeWaehrungsbeleg laeuft normal), sonst waere die Zeilen-Paritaet gebrochen.
+  const bilanzVorher = waehrungsWaechterBilanz();
+  let eigen = { geprueft: 0, genullt: 0 };
+  try {
+    for (const id of BRANCHES) {
+      writeJsonAtomic(path.join(outFullDir, id + '.json'),
+        buildBoard(id, coverage, { srcDir: hgFullDir, rangOpts: woptsRang }),
+        { assertFinite: true, indent: 0 });
+    }
+  } finally {
+    const nachher = waehrungsWaechterBilanz();
+    eigen = { geprueft: nachher.geprueft - bilanzVorher.geprueft, genullt: nachher.genullt - bilanzVorher.genullt };
+    setzeWaehrungsWaechterBilanz(bilanzVorher);
+  }
+  // Reviewer-Befund 19.08. (HOCH): die Zaehler herausrechnen und dann NICHTS melden hiesse,
+  // dass ein Ausfall des Waehrungsbelegs, der nur den Tail trifft, voellig unhoerbar bliebe —
+  // und der Tail ist nachweislich duenner belegt (gemessen 19.08.: gekappt 61,9 %, voll 66,7 %).
+  // Gemeldet wird deshalb eine EIGENE Bilanz. KEINE eigene Abbruchgrenze: jede Zahl waere auf
+  // dieser nie gemessenen Grundgesamtheit geraten, und ein geratener Abbruch kippte den ganzen
+  // Export. Erst wird gemessen, dann darf jemand eine Schwelle setzen — die Zahl steht ab jetzt
+  // im Lauf. Der Kopf der Liste bleibt unabhaengig davon geschuetzt: die ersten topN Zeilen sind
+  // tief gleich mit der gekappten Datei, die ihre gemessene 25-%-Grenze weiter traegt.
+  if (eigen.genullt > 0) {
+    console.warn('::warning::Waehrungs-Waechter (Vollboards, EIGENE Bilanz, nicht in der 25-%-Grenze): ' +
+      eigen.genullt + ' von ' + eigen.geprueft + ' Zeilen ohne nachgewiesene Handelskurs-Umrechnung (' +
+      (100 * eigen.genullt / Math.max(1, eigen.geprueft)).toFixed(1) + ' %)');
+  }
+  return { out: outFullDir, boards: BRANCHES.length, mcapGenullt: eigen };
 }
 
 function buildOverview(coverage) {
   const o = readJSON(path.join(HG_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, mcapBounds: readMcapBounds(), rows: vergebeRaenge(o.map(mapOverviewRow), 'overview') };
 }
 
 function buildSurvival(coverage) {
@@ -367,14 +601,14 @@ function buildQualityBoard(file, coverage, qualityDir) {
     branch: stem,                                   // = filename stem (prefix dropped)
     boardStatus: boardStatusOf('quality-' + stem),  // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'quality/' + qualityStem(file) + '.unprofitable'),
   };
 }
 
 function buildQualityOverview(coverage, qualityDir) {
   const o = readJSON(path.join(qualityDir || QUALITY_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'quality/overview') };
 }
 
 function buildQualityIndex(coverage, qualityDir) {
@@ -502,14 +736,14 @@ function buildSmallcapBoard(file, coverage, smallcapDir) {
     branch: stem,
     boardStatus: boardStatusOf('smallcap-' + stem), // always 'diagnostic' by construction (board-status.js)
     coverage,
-    profitable: (b.profitable || []).map(mapBoardRow),
-    unprofitable: (b.unprofitable || []).map(mapBoardRow),
+    profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.profitable'),
+    unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), 'smallcap/' + smallcapStem(file) + '.unprofitable'),
   };
 }
 
 function buildSmallcapOverview(coverage, smallcapDir) {
   const o = readJSON(path.join(smallcapDir || SMALLCAP_DIR, 'overview.json'));
-  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: o.map(mapOverviewRow) };
+  return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: vergebeRaenge(o.map(mapOverviewRow), 'smallcap/overview') };
 }
 
 function buildSmallcapIndex(coverage, smallcapDir) {
@@ -579,6 +813,7 @@ function build() {
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
+  const voll = buildFullBoards(coverage); // 19.08.: v1/full/ — die Kohorte hinter Rang 100
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
   const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
   // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
@@ -592,7 +827,7 @@ function build() {
       ' %) — Export abgebrochen statt halbblind ausgeliefert. Ursache pruefen: ' +
       'traegt der Snapshot-Bestand meta.tradingFxRateApplied?');
   }
-  return { out: OUT_DIR, branches: BRANCHES.length, qualityBoards: q.boards, smallcapBoards: sc.boards,
+  return { out: OUT_DIR, branches: BRANCHES.length, fullBoards: voll.boards, qualityBoards: q.boards, smallcapBoards: sc.boards,
     mcapGenullt: bilanz };
 }
 
@@ -805,11 +1040,31 @@ function validateGeo(r, where, errs) {
   }
 }
 
+// Belegbarkeits-Gate, BEIDE Richtungen — der eigentliche Waechter der Regel:
+//   (a) eine gegatete Zeile darf KEINEN Rang tragen und MUSS ihren Grund tragen;
+//   (b) eine belegte Zeile MUSS einen Rang tragen und darf KEINEN Grund tragen.
+// Ohne (a) koennte eine Liste, die vergebeRaenge() nie gesehen hat, mit rank=i+1 stumm
+// durchrutschen; ohne (b) koennte ein zu scharfes Gate stumm halbe Boards entrangen.
+// Die Zeile bleibt in beiden Faellen sichtbar — score/ticker/Felder werden hier NICHT
+// gelockert, nur die Rangnummer haengt am Gate.
+function checkRangGate(r, where, errs) {
+  const grund = rangGrund(r);
+  if (grund) {
+    if (r.rank !== null) errs.push(`${where}: rank=${JSON.stringify(r.rank)} trotz ${grund} — Belegbarkeits-Gate nicht angewandt`);
+  } else if (!Number.isInteger(r.rank) || r.rank < 1) {
+    errs.push(`${where}: rank`);
+  }
+  // Abwesend == null (additiv-optionales Feld, Praezedenz coverageAxes/B1): eine GERANKTE
+  // Zeile darf das Feld weglassen. Eine ENTRANGTE nicht — ohne Grund waere sie stumm
+  // verschwunden, und genau das soll nie wieder passieren.
+  if ((r.rankGrund ?? null) !== grund) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)}, erwartet ${JSON.stringify(grund)}`);
+}
+
 function validateBoardRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!Number.isFinite(r.score)) errs.push(`${where}: score not finite`);
-  if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  checkRangGate(r, where, errs); // 18.08.: rank ist gate-abhaengig (int>=1 ODER null+Grund)
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
   if (!Array.isArray(r.lamps)) errs.push(`${where}: lamps not array`);
   // overview: Pflicht (nullable). Key must be present. If object, kind/value/companion checked.
@@ -830,7 +1085,7 @@ function validateBoardRow(r, where, errs) {
 
 function validateOverviewRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
-  if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  checkRangGate(r, where, errs); // 18.08.: Belegbarkeits-Gate, s. checkRangGate
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (typeof r.formulaId !== 'string' || !r.formulaId) errs.push(`${where}: formulaId`);
   if (!VALID_TRACK.includes(r.track)) errs.push(`${where}: track=${JSON.stringify(r.track)}`);
@@ -846,7 +1101,11 @@ function validateOverviewRow(r, where, errs) {
 
 function validateSurvivalRow(r, where, errs) {
   if (!r || typeof r !== 'object') { errs.push(`${where}: not an object`); return; }
+  // Survival ist von Belegbarkeits-Gate AUSGENOMMEN (nie gescort, traegt coverageAxes nie):
+  // rank bleibt Pflicht-Integer, rankGrund muss null sein. Die Ausnahme steht hier als
+  // Waechter, nicht nur als Kommentar — ein versehentlich gegatetes survival.json faellt auf.
   if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
+  if ((r.rankGrund ?? null) !== null) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)} auf survival-Zeile (dort greift kein Gate)`);
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!('runwayQuarters' in r)) errs.push(`${where}: runwayQuarters missing`);
   else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
@@ -881,8 +1140,19 @@ function validateCoverage(mk, kind, errs) {
 //                         that actually catches a broken sort. Only wired where score.js
 //                         GUARANTEES score-desc order (board tracks + overview.json) — survival
 //                         is runway-desc and its rows carry no .score field at all.
+// 18.08.: nicht mehr "rank === index+1" — eine vom Belegbarkeits-Gate entrangte Zeile bleibt
+// an ihrer Array-Position stehen (rank:null) und verbraucht KEINE Rangnummer. Geprueft wird
+// deshalb: die Raenge der uebrigen Zeilen sind in Array-Reihenfolge lueckenlos 1,2,3,… —
+// genau die Zusage "kein Loch, wo eine Zeile herausfiel". Ohne Gate ist das identisch zum
+// alten Check (jede Zeile gerankt -> Sollrang == index+1).
 function checkRankSequence(rows, where, errs) {
-  (rows || []).forEach((r, i) => { if (r && r.rank !== i + 1) errs.push(`${where}[${i}]: rank!=index+1 (rank=${JSON.stringify(r.rank)})`); });
+  let soll = 0;
+  (rows || []).forEach((r, i) => {
+    if (!r) return;
+    if (r.rank === null) return;   // entrangt: haelt keinen Platz in der Rangfolge
+    soll++;
+    if (r.rank !== soll) errs.push(`${where}[${i}]: rank!=Sollrang (rank=${JSON.stringify(r.rank)}, erwartet ${soll})`);
+  });
 }
 function checkScoreDescending(rows, where, errs) {
   for (let i = 1; i < (rows || []).length; i++) {
@@ -959,20 +1229,39 @@ function validateFile(mk, kind, errs, opts = {}) {
 }
 
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
-function validateExport() {
+function validateExport(outDir = OUT_DIR) {
   const errs = [];
   for (const id of BRANCHES) {
-    const mk = readJSONOrNull(path.join(OUT_DIR, id + '.json'));
+    const mk = readJSONOrNull(path.join(outDir, id + '.json'));
     if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
     validateFile(mk, id, errs);
   }
   for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival'], ['index.json', 'index']]) {
-    const mk = readJSONOrNull(path.join(OUT_DIR, name));
+    const mk = readJSONOrNull(path.join(outDir, name));
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateQualityExport())  // 3.2: QC-Board (empty when quality/ absent)
-             .concat(validateSmallcapExport()); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
+  return errs.concat(validateFullExport(path.join(outDir, 'full')))     // 19.08.: Vollboards, PFLICHT
+             .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
+             .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
+}
+
+// ---- Vollboard-Validierung (19.08.2026) ---------------------------------------------
+// ANDERS ALS quality/ und smallcap/ ist full/ NICHT optional: run-screener.js schreibt die
+// Quelle bei jedem Lauf, also gehoert zu jedem der 13 Branchen-Boards ein Vollboard. Fehlt
+// eines, hat Karl fuer diese Branche wieder nur die ersten 100 Zeilen — und zwar OHNE dass
+// irgendetwas es sagt. Genau diese Klasse (stumm halber Feed statt sichtbarem Ausfall) ist
+// die teuerste in diesem Projekt, deshalb ein harter Verstoss statt eines Optional-Zweigs.
+// Labels tragen ein 'full/'-Praefix, damit der Alarmkanal ein Vollboard-Problem von einem
+// Board-Problem unterscheiden kann (dasselbe Muster wie quality/ und smallcap/).
+function validateFullExport(fullDir = FULL_OUT_DIR) {
+  const raw = [];
+  for (const id of BRANCHES) {
+    const mk = readJSONOrNull(path.join(fullDir, id + '.json'));
+    if (!mk) { raw.push(`${id}: missing/unreadable`); continue; }
+    validateFile(mk, id, raw); // dieselbe Board-Datei-Pruefung: branch===id, boardStatus, jede Zeile, Rang- und Score-Folge
+  }
+  return raw.map((e) => (e.startsWith('full/') ? e : 'full/' + e));
 }
 
 // ---- QC-Board validation (3.2) ------------------------------------------
@@ -1104,6 +1393,7 @@ function selftest() {
     marketCap: 5457368842240, phase: 'established', mcapBand: 'mega', ipoRecency: 'mature',
     profitTier: 'langfristig-profitabel', ipoYear: 1999,
     cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: eine gerankte Zeile MUSS ihre Belegbarkeit ausweisen (Gate)
   };
   const cleanOv = {
     ticker: 'NVDA', name: 'NVIDIA Corporation', formulaId: 'semiconductors', track: 'profitable', score: 94.9,
@@ -1111,6 +1401,7 @@ function selftest() {
     country: 'United States', region: 'North America', sector: 'Technology',
     marketCap: 33018304599.802, phase: 'inflected', mcapBand: 'large', ipoRecency: 'growth',
     cohortN: 90, cohortFallback: false, // 2.10
+    coverageAxes: '7/7', // 18.08.: s. cleanBoard
   };
   const cleanSv = {
     ticker: 'PAH3.DE', name: 'Porsche Automobil Holding SE', runwayQuarters: 9999, lamps: ['burning'],
@@ -1296,14 +1587,23 @@ if (require.main === module) {
     process.exit(0);
   }
   const r = build();
-  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
+  console.log(`findash-export/v1 written: ${r.branches} boards + overview + survival + index + ${r.fullBoards} Vollboards (full/) + ${r.qualityBoards} QC boards (quality/) + ${r.smallcapBoards} Small-Cap boards (smallcap/) -> ${r.out}`);
 }
 
 module.exports = {
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
+  // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
+  // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  buildFullBoards, validateFullExport, buildBoard,
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
+  // Belegbarkeits-Gate (18.08.) als Seam: tests/scoring/belegbarkeits-gate.test.js FUEHRT die
+  // Rangvergabe aus, statt den Quelltext nach Schreibmustern abzusuchen.
+  vergebeRaenge, rangGrund, RANK_MIN_AXES,
+  // Skalen-Deckel (19.08.) als Seam: tests/scoring/score-deckel.test.js FUEHRT die
+  // Deckelung aus, statt den Quelltext nach Math.min abzusuchen.
+  gedeckelt, SCORE_MAX,
   // Chunk 4a (16.08.): der Waehrungs-Waechter als Seam — tests/waehrung-ausliefer-waechter.js
   // FUEHRT die Entscheidung aus, statt den Quelltext nach Schreibmustern abzusuchen.
   beurteileWaehrungsbeleg, waehrungsWaechterUrteil, waehrungsWaechterAbschluss,

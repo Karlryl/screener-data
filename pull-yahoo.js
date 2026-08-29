@@ -137,6 +137,11 @@ let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catc
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
 let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
+// Tag 645 (Review-Fund silent-failure-hunter): eine geglueckte yahoo_symbol-Reparatur
+// (Schraegstrich vor .MX entfernt) loggt zwar WARN, ging aber sonst in ~21k
+// INFO-Zeilen pro Lauf unter. Gleicher Zaehler-Mechanismus wie corruptYoung/etc.,
+// damit die Reparatur auch im Manifest/Tally sichtbar bleibt, nicht nur im Log.
+let _symbolsNormalized = 0;     // yahoo_symbol wurde vor dem Pull automatisch repariert
 // F-CGPT-012 (P1-Welle 9, 10.08.2026): der Checkpoint-Schreiber des inkrementellen
 // Manifests fing jeden Schreibfehler mit einer WARN-Zeile ab, ohne Zaehler. Ein dauerhaft
 // scheiterndes Checkpoint-Schreiben (OneDrive-Lock, AV-Scanner, volle Platte) blieb damit
@@ -265,6 +270,33 @@ function nextNotFoundState(existingMeta) {
 function shouldRetryKosdaq(stock, errClass) {
   return errClass === 'not-found' && !!(stock && stock.suffixUnsure) && !stock._kqRetried
     && /\.KS$/i.test((stock && stock.yahoo_symbol) || '');
+}
+
+// Tag 645 (belegter Datenfehler 19.08.2026): 47 mexikanische Ticker fragten Yahoo
+// mit einem Schraegstrich vor der Klassen-/Serien-Kennung an (z.B. "GFNORTE/O.MX"),
+// den Yahoo nicht kennt -> 404 bei jedem Pull. Live verifiziert: "GFNORTEO.MX" (ohne
+// Schraegstrich) trifft ("Grupo Financiero Banorte, Equity"), "GFNORTE/O.MX" trifft
+// nicht. Chirurgisch eng: NUR ein Schraegstrich unmittelbar vor der .MX-Endung wird
+// entfernt. Jede andere Boerse/Kennung (inkl. .KS/.KQ, US-Dash-Formen) laeuft
+// unveraendert durch — im ganzen aktuellen watchlist.json kommt "/" ausschliesslich
+// in .MX-Kennungen vor (grep-verifiziert, 47/47 Treffer), ein breiterer Guard waere
+// unbelegt. EIN Punkt (processOne, s.u.), durch den jeder Yahoo-Aufruf dieser Datei
+// laeuft (quoteSummary, quote, FTS) — kein Guard pro Aufrufer.
+function normalizeYahooSymbol(symbol) {
+  if (typeof symbol !== 'string') return symbol;
+  if (!/\.MX$/i.test(symbol)) return symbol;
+  // audit fix (silent-failure-hunter, Tag 645): the belegter Fall always has
+  // EXACTLY ONE slash (e.g. "GFNORTE/O.MX", "CEMEX/CPO.MX" — never adjacent to
+  // ".MX" itself, always somewhere before it). A blind global replace() would
+  // have silently collapsed an unknown MULTI-slash shape into a guessed symbol
+  // that could resolve to a DIFFERENT company — exactly the "silently pulls the
+  // wrong company's data" failure mode this project fears most. So: only touch
+  // the single-slash shape that is actually verified; anything else (0 or 2+
+  // slashes) passes through untouched and keeps failing loud as a 404, same as
+  // before this fix.
+  const slashCount = (symbol.match(/\//g) || []).length;
+  if (slashCount !== 1) return symbol;
+  return symbol.replace('/', '');
 }
 
 // Modules die wir brauchen für canonicalInput-Mapping
@@ -1247,6 +1279,33 @@ function _alignEnds(ends, values) {
   return new Array(n).fill(null);
 }
 
+// A10-Nachzug Jahresseite (23.08.): Werte und ihre Perioden-Enden in EINEM Schritt
+// austauschen. Die Enden entstehen in mapYahooToCanonical aus den isHist-Zeilen;
+// gewinnt spaeter ein anderes Bundle (FTS), gehoeren sie nicht mehr zu diesen Werten.
+// Eine zufaellig gleiche Laenge wuerde _alignEnds austricksen und ein FALSCHES Jahr an
+// einen fremden Wert heften — ein stiller Datenfehler, schlimmer als gar kein Datum.
+// Deshalb sind Zuweisung und Nullung hier ZUSAMMENGEBUNDEN: wer die Werte tauscht,
+// kann die Enden nicht mehr vergessen. (Upgrade-Pfad, bewusst nicht hier: FTS kennt
+// seine eigenen Perioden — wer sie mitfuehren will, baut sie im FTS-Mapper, statt die
+// QS-Enden weiterzureichen.)
+function _applyAnnualIncomeWinner(annual, winner, winnerIsQS) {
+  if (!annual || !winner) return annual;
+  // Die bisherigen Enden VOR dem Tausch sichern — sie gehoeren zu den QS-Werten.
+  const vorher = {
+    rev: annual.annualRevEnds, gp: annual.annualGPEnds, oi: annual.annualOpIncEnds,
+  };
+  annual.annualRev = winner.annualRev;
+  annual.annualOpInc = winner.annualOpInc;
+  annual.annualGP = winner.annualGP;
+  annual.annualNetIncome = winner.annualNetIncome;
+  // Gewinnt QS, sind es dieselben Werte — die Enden bleiben gueltig, _alignEnds prueft
+  // nur noch die Laenge. Gewinnt ein fremdes Bundle, sind sie ungueltig -> hart null.
+  annual.annualRevEnds = _alignEnds(winnerIsQS ? vorher.rev : null, annual.annualRev);
+  annual.annualGPEnds = _alignEnds(winnerIsQS ? vorher.gp : null, annual.annualGP);
+  annual.annualOpIncEnds = _alignEnds(winnerIsQS ? vorher.oi : null, annual.annualOpInc);
+  return annual;
+}
+
 // ─── Tag 203: Fintech-aware OpInc fallback ────────────────────────
 // Yahoo's `incomeStatementHistory.operatingIncome` (and FTS counterpart) is
 // null for many Financial-Services tickers — banks (JPM, BAC), credit (UPST,
@@ -1885,7 +1944,30 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
       // Tag 202: quoteSummary-derived RnD (primary). FTS path may overwrite below
       // when FTS has strictly more non-null entries (see post-FTS merge in main pull).
-      annualRnD: annualRnDFromQS
+      annualRnD: annualRnDFromQS,
+      // ── A10-Nachzug fuer die JAHRESseite (Befund 23.08.) ─────────────────────────
+      // Die Auflage A10 des 2.8-Bestaetigungs-Courts ("nackte value-Arrays ohne
+      // Perioden-Ende") wurde fuer die QUARTALSreihen erfuellt und fuer die
+      // Jahresreihen nie gestellt — obwohl an ihnen 100 % des Achsen-Gewichts haengt
+      // (gemessen am Vintage 2026-08-19: Gewichtssumme 88.978,9 ueber 9.009 Zeilen,
+      // alle acht Achsen lesen annual*). Folge: eine Reihe, deren juengstes Jahr 2012
+      // ist, war von einer mit Stand 2025 strukturell nicht unterscheidbar.
+      // Die Daten waren immer da: dieselbe isHist-Zeile, aus der _arr NUR den Wert
+      // nimmt, traegt ein endDate (live geprueft 23.08. an MSFT: 2026-06-30 |
+      // 2025-06-30 | 2024-06-30 | 2023-06-30).
+      // REINES SUBSTRAT, KEIN GUARD — woertlich das Muster von opIncQEnds: keine Achse
+      // liest diese Felder, FIELD_REGISTRY/norm() kennen sie nicht, der Score bleibt
+      // byte-identisch. Der Waechter, der daraus Wirkung zieht, ist gauntlet- und
+      // siegelpflichtig und wird hier NICHT gebaut.
+      // Je Reihe ein eigenes slice auf ihre EIGENE Laenge: _arr trimmt jede Reihe
+      // einzeln auf ihre letzte Nicht-Null, die Laengen laufen also auseinander (eine
+      // Firma kann ein operatives Ergebnis fuer ein Jahr fuehren, fuer das kein Umsatz
+      // gemeldet ist). _alignEnds ist der fail-safe Abschluss: passt die Laenge nicht,
+      // liefert es null-Enden statt versetzter Daten — ein UNBEKANNTES Datum ist
+      // harmlos, ein FALSCH zugeordnetes waere schlimmer als gar keines.
+      annualRevEnds: _alignEnds(isHist.slice(0, annualRev.length).map((r) => _isoDay(_y(r, 'endDate'))), annualRev),
+      annualGPEnds: _alignEnds(isHist.slice(0, annualGP.length).map((r) => _isoDay(_y(r, 'endDate'))), annualGP),
+      annualOpIncEnds: _alignEnds(isHist.slice(0, annualOpInc.length).map((r) => _isoDay(_y(r, 'endDate'))), annualOpInc)
     },
     // Tag 137: insider buy/sell activity (90d window, open-market only)
     insiderActivity: insiderActivity || null
@@ -2429,6 +2511,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _corruptYoungSnapshots = 0;
   _ftsCacheParseErrors = 0;
   _manifestCheckpointErrors = 0;
+  _symbolsNormalized = 0;
   _unparseableTimeAnchors = 0;
   _unparseableTimeAnchorsDue = 0;
   _ftsPartialTickers = 0;
@@ -2581,7 +2664,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // durch das volle Universum ersetzt.
         n_skipped_owned: (watchlist._skippedOwned || 0),
         n_failed: failures.length,
-        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors },
+        _silentErrors: { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized },
         partial: true
       };
       const mPath = path.join(outputDir, '_manifest.json');
@@ -2886,6 +2969,23 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
 
   async function processOne(stock) {
+    // Tag 645: normalize stock.yahoo_symbol ONCE, before ANY of the several
+    // Yahoo call sites below (price-only quote, full quoteSummary, IPO-date
+    // quote, FTS) read it. A shallow copy — never mutate the shared watchlist
+    // row — so the fix stays local to this pull and the original identifier
+    // (used for snapshot filenames, logging, the KOSDAQ-retry suffix check)
+    // is untouched. Fail-loud: every actual rewrite is logged AND counted (TASK
+    // 0.11 pattern, review-fund Tag 645: a WARN alone drowns among ~21k per-run
+    // INFO lines) so a bad normalization can never silently pull the wrong
+    // company's data.
+    {
+      const _normYahooSymbol = normalizeYahooSymbol(stock.yahoo_symbol);
+      if (_normYahooSymbol !== stock.yahoo_symbol) {
+        _log('WARN', `  yahoo_symbol normalisiert: "${stock.yahoo_symbol}" -> "${_normYahooSymbol}" (${stock.ticker})`);
+        _symbolsNormalized++;
+        stock = Object.assign({}, stock, { yahoo_symbol: _normYahooSymbol });
+      }
+    }
 
     try {
       // Tag 166: price-only fast-path if recent snapshot exists
@@ -3331,10 +3431,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Tag 206f: move siblings WITHOUT filtering nulls — null placeholders keep
         // annualOpInc[i]/annualNetIncome[i] aligned with annualRev[i] by fiscal year
         // (a bank's [3,null,2,null] OpInc must stay 4-long, not collapse to [3,2]).
-        canonical.annual.annualRev = _winner.annualRev;
-        canonical.annual.annualOpInc = _winner.annualOpInc;
-        canonical.annual.annualGP = _winner.annualGP;
-        canonical.annual.annualNetIncome = _winner.annualNetIncome;
+        // A10-Nachzug Jahresseite (23.08.): Werte UND ihre Perioden-Enden in EINEM
+        // Schritt — sonst kann der Tausch die Enden vergessen und ein falsches Jahr an
+        // einen fremden Wert heften. Details in _applyAnnualIncomeWinner.
+        _applyAnnualIncomeWinner(canonical.annual, _winner, _incomeWinnerIsQS);
         // Tag 203: when the FTS bundle wins and actually carries OpInc, that OpInc is
         // native Yahoo data — record provenance. If QS wins (or FTS OpInc is empty)
         // leave opIncSource as mapYahooToCanonical set it; the post-merge sector-aware
@@ -3854,8 +3954,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   const skippedMcapFinal = countSkippedMcap(results);
   // TASK 0.11: surface the silent-error tally in the run log so it is visible even on a
   // clean run (the manifest carries it too, but the log survives regardless of write path).
-  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors };
-  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors} manifestCheckpoint=${_manifestCheckpointErrors}`);
+  const _silentErrors = { lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized };
+  _log('INFO', `Silent-error tally (0.11): lamp=${_lampErrors} needsFullPull=${_needsFullPullThrew} corruptYoung=${_corruptYoungSnapshots} ftsCacheParse=${_ftsCacheParseErrors} snapshotDelete=${_snapshotDeleteErrors} manifestCheckpoint=${_manifestCheckpointErrors} symbolsNormalized=${_symbolsNormalized}`);
   const manifest = {
     pulled_at: new Date().toISOString(),
     watchlist_version: watchlist._meta && watchlist._meta.version,
@@ -4178,7 +4278,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // Task 0.13 (Tag 288): Schema-Salvage fuer TDD.
   salvageValidationReject,
   // A10 (2.3-Vorbedingung, §4b Delivery-IC): Perioden-Ende-Substrat fuer TDD.
-  mapFTSToQuarterly, _isoDay, _alignEnds, _applyCurrencyConsistencyGuard,
+  mapFTSToQuarterly, _isoDay, _alignEnds, _applyAnnualIncomeWinner, _applyCurrencyConsistencyGuard,
   // Tag 559: die Quartals-Buendel-Entscheidung als Seam — der Waechter
   // (tests/tag559-quartals-buendel.test.js) FUEHRT sie aus, statt Quelltext nach
   // Schreibmustern abzusuchen.
@@ -4189,11 +4289,13 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // 03.08.2026: die FTS-Extraktion als Seam, damit Tests sie AUSFUEHREN koennen statt den
   // Quelltext nach Schreibmustern abzusuchen (tests/scoring/f1-ausschuettungsfelder.test.js).
   _ftsExtractByYear, _mapFTSAnnualShares, _readFTSAnnualSharesFromCache, _writeFTSCache,
-  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors }),
-  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; _manifestCheckpointErrors = 0; },
+  _silentErrorCounts: () => ({ lamp: _lampErrors, needsFullPull: _needsFullPullThrew, corruptYoung: _corruptYoungSnapshots, ftsCacheParse: _ftsCacheParseErrors, snapshotDelete: _snapshotDeleteErrors, manifestCheckpoint: _manifestCheckpointErrors, symbolsNormalized: _symbolsNormalized }),
+  _resetSilentErrorCounts: () => { _lampErrors = 0; _needsFullPullThrew = 0; _corruptYoungSnapshots = 0; _ftsCacheParseErrors = 0; _snapshotDeleteErrors = 0; _manifestCheckpointErrors = 0; _symbolsNormalized = 0; },
   _removeStaleFiles,
   // audit fix BH-042/BH-047: pure decisions fuer TDD.
   shouldRetryKosdaq, nextNotFoundState,
+  // Tag 645: MX-Schraegstrich-Normalisierung fuer TDD (belegter Datenfehler 19.08.).
+  normalizeYahooSymbol,
   // audit fix BH-043: shared request-spacing gate fuer TDD (timing test, no network).
   acquireYfSlot, _setYfGateSleepMs: (ms) => { _yfGateSleepMs = ms; _yfGateNextSlotAt = 0; },
   YF_REQUESTS_PER_TICKER, _getYfGateSleepMs: () => _yfGateSleepMs,

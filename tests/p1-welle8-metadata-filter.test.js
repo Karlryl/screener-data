@@ -111,6 +111,7 @@ t('isMetadataSnapshot: Metadaten raus, Reserved-Name-Snapshots rein', () => {
 // Board-Dateinamen kommen nicht aus safeSnapshotFilename.
 const BOARD_HISTORY_LESER = [
   'lib/e1-compression.js',
+  'lib/e2-earnings-blowout.js',   // 6.2-E2, liest dasselbe board-history-Verzeichnis wie E1
   'scripts/formel-struktur-uebersicht.js',
   'scripts/rank-ic.js',
   'scripts/write-board-history.js',

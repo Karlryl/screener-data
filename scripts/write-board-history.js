@@ -78,6 +78,8 @@ function resolvePaths(base) {
     FULL_DIR: path.join(base, 'outputs', 'hypergrowth', 'full'),
     CALIBRATION_FILE: path.join(base, 'outputs', 'calibration.json'),
     MACRO_REGIME_FILE: path.join(base, 'outputs', 'macro-regime.json'),
+    // T155/W3: Träger des Universums-Hashes, geschrieben von scripts/write-excluded-list.js.
+    UNIVERSE_HASH_FILE: path.join(base, 'outputs', 'universe-hash.json'),
     SNAP_DIR: path.join(base, 'snapshots'),
     HISTORY_DIR: path.join(base, 'board-history'),          // GG7b: committet, Messgrundlage
     get ARCHIVE_DIR() {                                      // GG7c: gitignored, außerhalb CI-Checkout
@@ -104,11 +106,13 @@ function resolvePaths(base) {
     // Pathspec ":(exclude)board-history/$VINTAGE_DATE" im Commit-Schritt sie NICHT
     // beruehrt — die Sidecar-Reihe muss gerade an Suspect-Tagen mitfahren.
     P99_DELTA_HISTORY_FILE: path.join(base, 'data-health', 'p99-delta-history.json'),
+    // 6.2-E2 (Earnings-Blowout): Quelle des Report-Datums, das buildPit PIT-einfriert.
+    EARNINGS_CAL_FILE: path.join(base, 'earnings-calendar.json'),
     base,
   };
 }
 let P = resolvePaths(REPO_ROOT);
-function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); return P; }
+function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); _earningsCache = null; return P; }
 
 // 2.3-Gate-Kalibrierung: Anzahl messbarer Tages-Deltas, bevor eine board-eigene Schwelle
 // eingefroren wird. Ein Vintage ist erst messbar, wenn es einen Vorgänger hat (Vintage #1
@@ -273,6 +277,59 @@ function readJsonOrNull(file) {
   catch (_) { return null; }
 }
 
+/**
+ * T155/W3 — Universums-Hash des Laufs lesen (Träger: scripts/write-excluded-list.js).
+ *
+ * BEWUSST NICHT readJsonOrNull: dessen pauschales catch würde "Datei gibt es nicht"
+ * (legitim — lokaler Lauf ohne Export-Schritt) und "Datei ist kaputt" (ein Defekt, der
+ * still eine Metadaten-Spalte der Messreihe leert) ununterscheidbar machen. Genau diese
+ * Klasse stillen Fehlschlags soll die Zahl ja aufdecken.
+ *
+ * KEIN Wurf: ein fehlendes Metadaten-Feld darf das Vintage nicht verhindern — das
+ * Vintage ist die Messreihe, der Hash ist Zubehör. Der Defekt wird laut gemeldet und
+ * das Feld bleibt ehrlich null.
+ */
+// Form, die der Erzeuger garantiert (write-excluded-list.js universumsHash: sha256,
+// auf 16 Hex gekürzt). Review-Befund MITTEL (28.08.): "irgendein nicht-leerer String"
+// nähme auch einen abgeschnittenen, verrutschten oder aus einem anderen Feld kopierten
+// Wert widerspruchslos an — und eine falsche Zahl, die richtig aussieht, ist in dieser
+// Messreihe der teuerste Ausgang.
+const UNIVERSE_HASH_FORM = /^[0-9a-f]{16}$/;
+
+function readUniverseHash(file) {
+  // ::warning:: über console.log, wie an jeder anderen Stelle dieser Datei (968, 1268,
+  // 1285, 1301) — nicht über console.warn: ein späterer Schritt, der nur stdout mitschneidet,
+  // verschluckte sonst genau diese drei Meldungen.
+  const meldung = (text) => console.log('::warning::write-board-history: ' + text
+    + ' — Vintage wird ohne universeHash geschrieben.');
+  let roh;
+  try {
+    roh = fs.readFileSync(file, 'utf8');
+  } catch (e) {
+    if (e.code !== 'ENOENT') { meldung('Universums-Hash nicht lesbar (' + file + '): ' + e.message); return null; }
+    // FEHLT: lokal legitim (kein Export-Schritt gelaufen), in der CI NICHT — dort läuft
+    // write-excluded-list.js im selben Job vor diesem Schritt. Ein fehlender Träger in der
+    // CI heißt, dass die Übergabe gebrochen ist; ohne diese Unterscheidung trüge JEDES
+    // künftige Vintage still null, und niemand sähe es. GITHUB_SHA als CI-Merkmal ist
+    // dieselbe Quelle, die formulaCommit oben schon benutzt.
+    if (process.env.GITHUB_SHA) meldung('Universums-Hash-Träger fehlt (' + file + '), obwohl dieser Lauf in der CI '
+      + 'läuft — dort schreibt ihn write-excluded-list.js im selben Job. Die Übergabe ist gebrochen');
+    return null;
+  }
+  let geparst;
+  try {
+    geparst = JSON.parse(roh);
+  } catch (e) {
+    meldung('Universums-Hash-Datei ist kein gültiges JSON (' + file + '): ' + e.message);
+    return null;
+  }
+  const h = geparst && typeof geparst === 'object' ? geparst.universeHash : undefined;
+  if (typeof h === 'string' && UNIVERSE_HASH_FORM.test(h)) return h;
+  meldung('Universums-Hash-Datei ohne brauchbares Feld universeHash (' + file + ', erwartet 16 Hex-Zeichen, '
+    + 'gelesen ' + JSON.stringify(h) + ')');
+  return null;
+}
+
 // AX-SK-001 (Hard Review 2026-07-31): readJsonOrNull() is intentionally lenient for
 // most callers here (excludedDates(), per-ticker readSnapshot(), prior-vintage board
 // reads) — those read thousands of files per run and a single missing/corrupt one
@@ -333,6 +390,21 @@ function readSnapshot(ticker) {
   return readJsonOrNull(fp);
 }
 
+// 6.2-E2 (Earnings-Blowout): Report-Datum je Ticker aus earnings-calendar.json. Einmal je
+// Lauf gelesen (585 KB Datei, ~9 000 Board-Zeilen — je Zeile neu parsen waere der Lauf-Killer);
+// _setPaths setzt den Cache zurueck, damit Tests mit eigenem baseDir nie den Repo-Kalender
+// sehen. Fehlt die Datei, bleibt der Cache ein leeres Objekt: das ist eine Datenluecke
+// (pitGaps), kein Grund, den Tageslauf anzuhalten.
+let _earningsCache = null;
+function earningsEntryFor(ticker) {
+  if (_earningsCache === null) {
+    const raw = readJsonOrNull(P.EARNINGS_CAL_FILE);
+    _earningsCache = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  }
+  const e = ticker ? _earningsCache[ticker] : null;
+  return (e && typeof e === 'object' && typeof e.date === 'string') ? e : null;
+}
+
 // Preis/Bruttogewinn = MarketCap/GrossProfit = priceSales / grossMargin.
 // (grossMargin ist in %.) Nenner ≤0/undefiniert → null (LOSS-/GM0-Firmen, §4a-NaN-Linie).
 function priceGrossProfit(metrics) {
@@ -350,7 +422,7 @@ function seriesValues(arr) {
 
 // Baut den §7-PIT-Block je Board-Zeile. Fehlende Kontroll-Felder EXPLIZIT null
 // (Missing-Beta-Regel), fehlende Perioden-Enden → null + pitGaps-Vermerk.
-function buildPit(snap, pitGaps) {
+function buildPit(snap, pitGaps, ticker) {
   if (!snap) { pitGaps.add('snapshot-missing'); return null; }
   const m = snap.metrics || {};
   const ts = snap.timeseries || {};
@@ -385,6 +457,7 @@ function buildPit(snap, pitGaps) {
   const revEnds = validEnds(ts.revenueQEnds);
   const gpEnds = validEnds(ts.grossProfitQEnds);
   if (revEnds == null) pitGaps.add('revenueQEnds-missing');   // A10: parallel in pull-yahoo
+  if (earningsEntryFor(ticker) == null) pitGaps.add('earningsDate-missing');   // 6.2-E2
   if (gpEnds == null) pitGaps.add('grossProfitQEnds-missing');
   return {
     beta: val(m.beta),                       // Markt-Beta (Kontroll-Feld §7)
@@ -421,6 +494,15 @@ function buildPit(snap, pitGaps) {
     // (snap.marketCap liegt bereits am Snapshot, wie score.js mcapOf() es liest), Bestandsfelder
     // bleiben byte-identisch positioniert.
     marketCap: val(snap.marketCap),
+    // 6.2-E2 (Earnings-Blowout), analog E1 Option B: das Report-Datum PIT einfrieren.
+    // WARUM HIER UND NICHT ERST IM MELDEWEG: earnings-calendar.json ist eine LEBENDE Datei —
+    // sie kennt nur den heutigen Stand. Wer sie beim Auswerten eines alten Vintages liest,
+    // datiert einen Report mit Wissen von spaeter (derselbe Anachronismus, den E1s
+    // priceSalesAsOf verhindert). Rein additiv, kein neuer Abruf: die Datei liegt committet
+    // im Repo. earningsDateAsOf = wann WIR das Datum gezogen haben (pulledAt), nicht der
+    // Report selbst — dieselbe Trennung wie priceSales/priceSalesAsOf.
+    earningsDate: (earningsEntryFor(ticker) || {}).date || null,
+    earningsDateAsOf: (earningsEntryFor(ticker) || {}).pulledAt || null,
   };
 }
 
@@ -471,12 +553,23 @@ function pitCoverageBlock(rows, date) {
 }
 
 // ── Vintage-Aufbau für EIN Board ─────────────────────────────────────────────
-function buildBoardVintage(board, boardData, date, calibMeta) {
+function buildBoardVintage(board, boardData, date, calibMeta, universeHash = null) {
   const pitGaps = new Set();
   const buildTrack = (arr, track) => (Array.isArray(arr) ? arr : []).map((row, i) => ({
     rank: i + 1,                    // Board-Rang (Zeilenreihenfolge = sortierte Kohorte)
     ticker: row.ticker,
     track,
+    // KEIN Skalen-Deckel hier — und das ist die wichtigste Zeile dieser Datei (19.08.2026).
+    //
+    // Der erste Entwurf deckelte hier ebenfalls auf 100. Der Waechter (f3) in
+    // tests/board-history.test.js wurde daraufhin ROT und legte den Grund offen: er stellt
+    // einen echten Wertbruch nach (Score springt 92 -> 132) und erwartet, dass das Wert-Gate
+    // anschlaegt. Gedeckelt wurde aus dem Sprung von +40 ein Sprung von +8 — unter der
+    // Alarmschwelle. Der Deckel haette das Sicherheitsnetz stillgelegt.
+    //
+    // board-history ist die MESSREIHE, auf der das Wert-Gate rechnet: hier steht der echte
+    // Wert. Gedeckelt wird ausschliesslich die ANZEIGE (scripts/write-findash-export.js) —
+    // Karl sieht 100, gemessen wird 101. Wer das je zusammenlegt, blendet das Gate.
     score: row.score != null ? row.score : null, // survival-Zeilen sind nie gescort → null statt key-drop
     runwayQuarters: row.runwayQuarters != null ? row.runwayQuarters : null, // survival-Sortier-Substanz
     scoreBase: row.scoreBase != null ? row.scoreBase : null,
@@ -484,7 +577,7 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     coverageAxes: row.coverageAxes != null ? row.coverageAxes : null,
     axisBreakdown: Array.isArray(row.axisBreakdown) ? row.axisBreakdown : null,
     lamps: Array.isArray(row.lamps) ? row.lamps : null,
-    pit: buildPit(readSnapshot(row.ticker), pitGaps),  // §7-PIT-Freeze (A9-Join)
+    pit: buildPit(readSnapshot(row.ticker), pitGaps, row.ticker),  // §7-PIT-Freeze (A9-Join)
   }));
   // audit/fix: survival.json ist eine FLACHE Liste (nie gescort, keine Tracks) — als
   // Single-Track 'flat' einfrieren statt still leere profitable/unprofitable zu schreiben.
@@ -507,6 +600,17 @@ function buildBoardVintage(board, boardData, date, calibMeta) {
     // Messreihe entsteht ausschliesslich in CI. Fallback nachziehen, falls lokale
     // Vintages je in rank-ic einfliessen sollen.
     formulaCommit: process.env.GITHUB_SHA || null,
+    // T155/W3 (Rat vom 25.08.): Prüfsumme über die Menge der bewerteten Ticker DIESES
+    // Laufs. Erst damit ist die Herkunft einer Score-Verschiebung ein Zeichenketten-
+    // Vergleich statt einer Vermutung: gleicher Hash + andere Scores = Datenänderung,
+    // anderer Hash = Kohortenwechsel. Das Produkt normiert kohorten-relativ; ohne diese
+    // Zahl war die Kohortenwirkung von der Datenwirkung nicht trennbar (B1/B2).
+    // Berechnet wird er genau EINMAL pro Lauf, in scripts/write-excluded-list.js (dort
+    // liegt das Universum ohnehin geladen); hier wird er nur mitgeschrieben. Zwei
+    // Rechenstellen würden driften, ein zweiter Scan über ~15.000 Snapshots wäre
+    // derselbe Wert zum doppelten Preis.
+    // null ist ein gültiger, ehrlicher Wert (lokaler Ad-hoc-Lauf ohne Export-Schritt).
+    universeHash,
     calibrationGeneratedAt: calibMeta.generatedAt,
     cohortCount: { profitable: profitable.length, unprofitable: unprofitable.length },
     pitCoverage: pitCoverageBlock(allRows, date),
@@ -1050,6 +1154,9 @@ function run(opts) {
 
   const results = [];
   let anySuspect = false;
+  // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
+  // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
+  const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
   for (const board of boards) {
     const boardPath = path.join(P.FULL_DIR, board + '.json');
     const boardData = readJsonOrNull(boardPath);
@@ -1060,7 +1167,7 @@ function run(opts) {
     // with a board missing from the vintage, contradicting the header's own exit contract
     // ("1 = harter Fehler (Inputs fehlen)") and the fail-loud line the FULL_DIR-guards set.
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
-    const vintage = buildBoardVintage(board, boardData, date, calibMeta);
+    const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
     const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
@@ -1254,7 +1361,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  run, parseArgs, buildBoardVintage, evaluateGate, updateGateCalibration,
+  run, parseArgs, buildBoardVintage, readUniverseHash, evaluateGate, updateGateCalibration,
   updateP99DeltaHistory,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,

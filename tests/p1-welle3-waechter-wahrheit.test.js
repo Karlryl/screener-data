@@ -32,6 +32,13 @@ test('Cluster A: korrupte Exchange-/FX-Baselines sind kein Erstseeding', () => {
   assert.throws(() => fx.loadBaseline(corrupt('fx.json')), /NICHT ueberschrieben/);
   assert.deepEqual(exchange.loadBaseline(path.join(TMP, 'fehlt-exchange.json')), {});
   assert.equal(fx.loadBaseline(path.join(TMP, 'fehlt-fx.json')), null);
+  // Nachzug Tag 997: watch-annual-spikes wurde am 09.08. nicht mitgehaertet und lieferte
+  // fuer "Datei kaputt" DENSELBEN leeren Bestand wie fuer "Datei fehlt". Leerer Bestand =
+  // jeder bekannte Fall gilt als neu; das ist entweder ein Riss mit falscher Diagnose oder
+  // — bei wenigen Funden — stilles Durchrutschen. Beide Richtungen werden hier festgenagelt.
+  assert.throws(() => annual.loadBaseline(corrupt('annual.json')), /NICHT ueberschrieben/);
+  assert.deepEqual(annual.loadBaseline(path.join(TMP, 'fehlt-annual.json')), {},
+    'fehlende Datei bleibt Erstlauf — eine Wache, die immer wirft, waere so wertlos wie keine');
 });
 
 test('Cluster B: korrupte Label-Baseline wirft; leerer Scan ist sichtbar leer', () => {

@@ -68,8 +68,21 @@ function positiveCapexJahre(s) {
   return treffer;
 }
 
-function loadJson(p, fallback) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { return fallback; }
+// Ein KAPUTTER Bestand ist nicht dasselbe wie ein FEHLENDER (Review-Befund 19.08.2026).
+// Bis hierher lieferten beide Faelle {} — und {} laeuft durch basisGueltig() als "Erstlauf"
+// glatt durch. Danach ist der Bestand leer, jeder laengst bekannte Fall gilt als neu, und
+// der Waechter meldet "163 neue Ausreisser" statt "die Bestandsdatei ist kaputt": die
+// falsche Diagnose schickt den Leser in die Funde statt in die Basis. Bei wenigen Funden
+// (<= MAX_NEU) rutscht es sogar still durch. Die Schwester-Waechter watch-exchange-coverage
+// und watch-fx-sanity wurden am 09.08. (P1-Welle 3) genau dafuer gehaertet; dieser hier
+// wurde damals nicht nachgezogen. Exportiert, damit die Sache pruefbar ist statt geglaubt
+// (tests/p1-welle3-waechter-wahrheit.test.js, Cluster A).
+function loadBaseline(p) {
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    if (e.code === 'ENOENT') return {};
+    throw new Error(`Ausreisser-Bestand nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
+  }
 }
 
 /**
@@ -171,6 +184,24 @@ const POP_TOLERANZ = 0.2;
  */
 function basisGueltig(basis, anzahlSnapshots) {
   if (!basis || !Array.isArray(basis.faelle)) return { ok: true, grund: '' };  // Erstlauf: nichts zu pruefen
+  // Review-Befund MITTEL (29.08.): steht ein Schluessel in ausgeschlossen UND in faelle
+  // (Hand-Edit, Merge-Artefakt), gewinnt faelle in istBekannt() still — der Fall gilt
+  // als bekannt, obwohl die Sperre "bleibt rot-faehig" verspricht. baueNeuenBestand()
+  // kann den Zustand nicht erzeugen; diese Wache faengt den Weg daran vorbei.
+  if (Array.isArray(basis.ausgeschlossen)) {
+    const faelle = new Set(basis.faelle);
+    const doppelt = basis.ausgeschlossen
+      .filter((a) => a && typeof a.schluessel === 'string' && faelle.has(a.schluessel))
+      .map((a) => a.schluessel);
+    if (doppelt.length) {
+      return {
+        ok: false,
+        grund: `Der Ausreisser-Bestand widerspricht sich: ${doppelt.length} Schluessel stehen in `
+          + `ausgeschlossen UND in faelle (${doppelt.join(' · ')}). faelle wuerde still gewinnen und `
+          + 'die Sperre aushebeln — Bestand von Hand bereinigen (Schluessel gehoert auf GENAU eine Seite).',
+      };
+    }
+  }
   const beiAufnahme = Number(basis.snapshotsBeiAufnahme) || 0;
   if (beiAufnahme <= 0) {
     return {
@@ -192,6 +223,68 @@ function basisGueltig(basis, anzahlSnapshots) {
     };
   }
   return { ok: true, grund: '' };
+}
+
+/**
+ * WEG C (Gerichts-/Rat-Strecke Ausreisser-Bestand, 29.08.2026) — die Ausschluss-Liste.
+ *
+ * `--neu-aufnehmen` schreibt die Fallliste aus ALLEN heutigen Funden neu. Genau daran
+ * starb der Fix am 28.08.: BANPU.BK (bewusst offen gelassener, NICHT ENTSCHEIDBARER
+ * Fall vom 19.08.) waere still in den Bestand gerutscht und haette nie wieder gefeuert.
+ * Der Entscheid vom 19.08. lebte bis heute nur als Prosa im `hinweis`-Feld — ab jetzt
+ * traegt der Bestand ihn maschinenlesbar: `ausgeschlossen` ist eine Liste von
+ * Faellen, die eine Neuaufnahme NIE absorbieren darf. Sie bleiben dadurch dauerhaft
+ * "NEU" und damit rot-faehig, bis ein Mensch sie einzeln klaert und AKTIV von der
+ * Liste nimmt. Ein Ausschluss ohne schriftliche Begruendung ist verboten (throw) —
+ * eine unbegruendete Sperre waere derselbe stille Verlust in Gruen.
+ *
+ * Rein und ohne I/O, damit der Waechter (tests/annual-spikes.test.js) beide
+ * Richtungen fixieren kann: Ausschluss haelt UND Nicht-Ausgeschlossenes wird
+ * aufgenommen UND die Liste selbst ueberlebt die Neuaufnahme.
+ */
+function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()) {
+  // Review-Befund HIGH (29.08.): "Feld fehlt" (Alt-Bestand vor Weg C) und "Feld da,
+  // aber falscher Typ" (kaputter Merge, versehentliches null) sind zwei verschiedene
+  // Faelle. Nur der erste darf still zu [] werden — der zweite wuerde sonst ALLE
+  // Sperren lautlos aufheben: genau die Fehlerklasse, die Weg C schliesst.
+  const roh = basis ? basis.ausgeschlossen : undefined;
+  if (roh !== undefined && !Array.isArray(roh)) {
+    throw new Error(`Ausschluss-Liste kaputt: ausgeschlossen ist ${JSON.stringify(roh)} statt einer Liste — `
+      + 'eine still zu [] degradierte Sperrliste hoebe alle Sperren lautlos auf.');
+  }
+  const ausgeschlossen = roh || [];
+  for (const a of ausgeschlossen) {
+    if (!a || typeof a.schluessel !== 'string' || !a.schluessel
+      || typeof a.hinweis !== 'string' || !a.hinweis.trim()) {
+      throw new Error('Ausschluss-Liste kaputt: jeder Eintrag braucht schluessel UND schriftlichen hinweis — '
+        + `gefunden: ${JSON.stringify(a)}. Eine unbegruendete Sperre wird nicht geschrieben.`);
+    }
+  }
+  const gesperrt = new Set(ausgeschlossen.map((a) => a.schluessel));
+  const faelle = [...new Set(funde.map(stabilerSchluessel))].filter((k) => !gesperrt.has(k)).sort();
+  return {
+    hinweis: (basis && basis.hinweis)
+      || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
+    aufgenommenAm: jetzt.toISOString().slice(0, 10),
+    snapshotsBeiAufnahme,
+    anzahl: faelle.length,
+    // Die Liste wird UNVERAENDERT fortgeschrieben — eine Neuaufnahme, die sie
+    // verschluckt, waere exakt der Fehler, den sie verhindern soll.
+    ausgeschlossen,
+    faelle,
+  };
+}
+
+/**
+ * Review-Befund MITTEL (29.08.): eine Sperre, deren Schluessel heute NICHTS mehr trifft
+ * (Wert-Revision verschiebt die werte:-Signatur, Tippfehler beim Eintragen), sieht in
+ * der JSON intakt aus und unterdrueckt trotzdem nichts mehr. Sichtbar machen statt
+ * schweigen: 0 Treffer heisst entweder "Fall hat sich aufgeloest -> Sperre AKTIV
+ * entfernen" oder "Schluessel kaputt -> reparieren". Rein, fuer den Waechter.
+ */
+function sperrenOhneTreffer(ausgeschlossen, funde) {
+  const heutig = new Set(funde.map(stabilerSchluessel));
+  return (ausgeschlossen || []).filter((a) => a && !heutig.has(a.schluessel)).map((a) => a.schluessel);
 }
 
 /**
@@ -245,7 +338,7 @@ function main() {
   const { funde, capexPositiv, capexWerte } = scan;
   const gelesen = scan.gescannt - scan.parseFehler;
   const schluessel = stabilerSchluessel;
-  const basis = loadJson(BASELINE_PATH, {});
+  const basis = loadBaseline(BASELINE_PATH);
   const mio = (v) => (v / 1e6).toFixed(0);
 
   // LESE-UMFANG ZUERST, aus demselben Grund wie die Capex-Pruefung darunter: er haengt nicht am
@@ -281,14 +374,19 @@ function main() {
 
   // Bewusstes Neuaufnehmen: NUR im CI sinnvoll (siehe Populations-Wache unten).
   if (process.argv.includes('--neu-aufnehmen')) {
-    const neuerBestand = {
-      hinweis: basis.hinweis || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
-      aufgenommenAm: new Date().toISOString().slice(0, 10),
-      snapshotsBeiAufnahme: scan.gescannt,
-      anzahl: funde.length,
-      faelle: [...new Set(funde.map(schluessel))].sort(),
-    };
+    const neuerBestand = baueNeuenBestand(basis, funde, scan.gescannt);
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
+    if (neuerBestand.ausgeschlossen.length) {
+      console.log(`::warning::${neuerBestand.ausgeschlossen.length} Fall/Faelle stehen auf der Ausschluss-Liste `
+        + 'und wurden NICHT in den Bestand aufgenommen — sie bleiben rot-faehig, bis sie einzeln geklaert sind: '
+        + neuerBestand.ausgeschlossen.map((a) => a.schluessel).join(' · '));
+      const leer = sperrenOhneTreffer(neuerBestand.ausgeschlossen, funde);
+      if (leer.length) {
+        console.log(`::warning::${leer.length} Sperre(n) treffen HEUTE keinen Fund mehr — entweder hat sich der `
+          + 'Fall aufgeloest (Sperre AKTIV entfernen) oder der Schluessel ist kaputt (reparieren): '
+          + leer.join(' · '));
+      }
+    }
     // BEWUSST exit 0, nicht 1. Erste Fassung liess den Lauf absichtlich rot werden
     // ("die Basis ist sein eigenes Ergebnis, also wurde nichts geprueft"). Das ist
     // methodisch sauber und operativ falsch: der Waechter laeuft VOR dem Commit und
@@ -335,7 +433,7 @@ function main() {
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
