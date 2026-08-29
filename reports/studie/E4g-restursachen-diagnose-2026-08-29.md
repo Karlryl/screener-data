@@ -237,7 +237,40 @@ registrierten Felder).
 
 ---
 
-## 5. Was dieser Lauf nicht getan hat
+## 5. Neue Fragen und Hypothesen (R16)
+
+Offene Fragen, die dieser Lauf AUFGEWORFEN, aber nicht beantwortet hat. Keine
+davon ist hier entschieden; sie gehören vor den Orchestrator.
+
+1. **Welche Kanten-Lesart gilt?** Die registrierte (4 × eigener Melderhythmus)
+   trifft 0 von 39, ein fester 728-Tage-Maßstab trifft 16 von 39. Beide messen
+   auf derselben Achse dieselbe Population; sie unterscheiden sich nur darin, ob
+   der Maßstab firmenindividuell oder fest ist. Die Weiche der Studien-
+   Fortsetzung hängt an dieser Wahl.
+2. **Ist der Bandzuschnitt selbst der Befund?** Minimal mögliche Restlaufzeit im
+   Band 366 Tage gegen 365 Tage Kantenfenster eines Quartalsmelders — das
+   Pufferjahr ist exakt so breit wie die Reifeanforderung, mit einem Tag Luft.
+   Hypothese: die Kantenprobe ist in diesem Bandzuschnitt strukturell nahezu
+   nicht auslösbar; ein Fenster mit schmalerem Puffer würde sie sofort auslösen.
+   Das ist eine Eigenschaft des Designs, nicht der Daten.
+3. **Warum verliert der Zähler lebende Quartalsmelder?** 25 der 39 reichen nach
+   dem Signal weiter 10-Q ein und liefern der gewählten Reihe trotzdem keine
+   vier auswertbaren Folgequartale — darunter eine Klasse-(a)-Firma, deren
+   gewählte Reihe mit dem Ereignis endet, obwohl sie weiter meldet. Hypothese:
+   ein Teil der 30 Klasse-(c)-Fälle ist kein Firmen-Ereignis, sondern eine
+   Lücke in der Quellenwahl (`OperatingIncomeLoss` fehlt oder ist in einer
+   Fassung nicht auswertbar). Prüfbar wäre das nur mit einer Zählprobe auf der
+   Quellen-Ebene — eine EIGENE Anmeldung, nicht in diesem Scope.
+4. **Ist die Jahreskadenz systematisch?** 2/39 im Signalarm gegen 53/448 im
+   Kontrollpool. Wenn Jahresmelder überhaupt nie vier Folgequartale liefern
+   können, ist ihre Aufnahme in den Nenner eine Definitionsfrage, keine
+   Datenfrage — und sie trifft den Kontrollpool fünfmal härter als den
+   Signalarm.
+5. **Warum sind die Signalfirmen lebendiger als der Kontrollpool?** 20,5 %
+   echte Abgänge gegen 38,4 %. Das ist die Gegenrichtung zur naheliegenden
+   Erwartung („die Verlierer verschwinden") und bislang unerklärt.
+
+## 6. Was dieser Lauf nicht getan hat
 
 Keine Entscheidung, keine neue Klassendefinition, keine Schwellen- oder
 Reifeänderung, keine neue Präregistrierung, kein Ledger-Append, kein
