@@ -392,5 +392,48 @@ t('decideOpInc mutiert den Snapshot nicht (reine Funktion)', () => {
   assert.equal(JSON.stringify(s), vorher);
 });
 
+// ─── 11. M5a — kein erfundenes Etikett ueber einer leeren Reihe (ENTSCHIED 52) ──
+// Der Befund: honestYahooLabel sieht nur den alten Quell-Tag, nie die Reihe. Ein
+// Alt-Snapshot ohne meta.opIncSource (undefined) bekam 'yahoo-adjusted' — eine
+// Herkunfts-Behauptung ueber einer Reihe, die es nicht gibt. Beide Richtungen, weil ein
+// Guard, der immer feuert, das Warnsignal opIncSynthetisch mit abraeumt.
+const { yahooLabelFuer } = M;
+
+t('M5a: leere Reihe + fehlendes Feld -> Etikett null statt erfundenem yahoo-adjusted', () => {
+  const s = { meta: { ticker: 'LEER' }, annual: { annualOpInc: [], annualRev: cells([100, 200]) } };
+  const r = migrateSnapshot(s, undefined);
+  assert.equal(r.label, null, "'yahoo-adjusted' ueber einer nicht existenten Reihe ist erfunden");
+  assert.equal(s.meta.opIncSource, null);
+});
+
+t('M5a: durchgehend nicht-finite Reihe zaehlt wie keine Reihe', () => {
+  const s = { meta: { ticker: 'NULLZEILE' },
+    annual: { annualOpInc: cells([null, null, null]), annualRev: cells([100, 200, 300]) } };
+  assert.equal(migrateSnapshot(s, undefined).label, null);
+});
+
+t('M5a GEGENRICHTUNG: ein einziger finiter Wert genuegt fuer yahoo-adjusted', () => {
+  const s = { meta: { ticker: 'EINER' },
+    annual: { annualOpInc: cells([null, null, 7]), annualRev: cells([100, 200, 300]) } };
+  assert.equal(migrateSnapshot(s, undefined).label, 'yahoo-adjusted',
+    'der Guard darf nur die leere Reihe treffen, nicht die duenne');
+});
+
+t('M5a GEGENRICHTUNG: synthetisches Etikett ueberlebt auch ueber leerer Reihe', () => {
+  // Der haerteste Einwand des Memos: ein globaler Guard ueber der Endreihe naehme der
+  // Lampe opIncSynthetisch (lamps.js) ihr Signal, sobald die Rechnung nur NaN ergab.
+  const s = snap('SYNTHLEER', [null, null, null, null], [100, 200, 300, 400], 'computed-margin');
+  assert.equal(migrateSnapshot(s, undefined).label, 'computed-margin');
+  const b = snap('SYNTHBANK', [null, null], [100, 200], 'computed-bank');
+  assert.equal(migrateSnapshot(b, undefined).label, 'computed-bank');
+});
+
+t('M5a: honestYahooLabel selbst bleibt die reine String-Abbildung (unberuehrt)', () => {
+  // Die gepinnte Assertion in Zeile 125 gilt weiter — der Guard sitzt EINE EBENE HOEHER.
+  assert.equal(honestYahooLabel(undefined), 'yahoo-adjusted');
+  assert.equal(yahooLabelFuer({}, []), null, 'erst mit der Datenlage faellt das Etikett');
+  assert.equal(yahooLabelFuer({}, cells([1])), 'yahoo-adjusted');
+});
+
 if (fails) { console.error(`\n${fails} Pruefung(en) gerissen.`); process.exit(1); }
 console.log('\nalle Pruefungen gruen.');

@@ -26,7 +26,9 @@
  *                      Fallback, pull-yahoo.js _deriveOpIncForFinancials Pfad 3).
  *   'computed-bank'    Synthetisch: totalRev - totalOpEx - Kreditrisikovorsorge (Pfad 1).
  *   'computed-insurance' Synthetisch: totalRev - costOfRev - SG&A (Pfad 2).
- *   null               Keine OpInc-Reihe vorhanden.
+ *   null               Keine OpInc-Reihe vorhanden. Gilt AUCH fuer eine Reihe, die zwar
+ *                      existiert, aber keinen einzigen finiten Wert traegt: ueber nichts
+ *                      gibt es keine Herkunft zu behaupten (M5a, yahooLabelFuer()).
  *
  * ─── WARUM HIER UND NICHT IM MERGE-JOB ──────────────────────────────────────────
  * scripts/build-secannual.js validiert die SEC-Reihe GEGEN die Yahoo-Reihe des Stores
@@ -106,6 +108,30 @@ function honestYahooLabel(src) {
 }
 
 /**
+ * M5a (Nacht-Sweep 29.08. Fund M5, Memo 30.08., ENTSCHIED 52) — die DATENPRAESENZ, eine
+ * Ebene UEBER honestYahooLabel. 'yahoo-adjusted' behauptet eine Herkunft; ueber einer
+ * Reihe, die keinen einzigen finiten Wert traegt, gibt es keine zu behaupten.
+ * honestYahooLabel sieht nur den alten Quell-Tag, nie die Reihe: bei einem Alt-Snapshot
+ * aus der Zeit vor der Konvention (meta.opIncSource fehlt ganz -> undefined) erfand es
+ * deshalb ein Etikett ueber einer leeren Reihe. Die Schreibseite macht es bereits richtig
+ * (pull-yahoo.js mapYahooToCanonical: keine Reihe -> opIncSource null, gepinnt in
+ * tests/opinc-source.test.js) — dieser Schritt hat die Konvention nachtraeglich verletzt.
+ *
+ * BEWUSST ENG auf den Yahoo-Zweig: der Guard greift NUR, wo das Ergebnis 'yahoo-adjusted'
+ * waere. Ein synthetisches Etikett (computed-margin/-bank/-insurance) bleibt stehen, auch
+ * wenn seine Reihe durchgehend nicht-finit ist — ein globaler Guard ueber der Endreihe
+ * naehme der Lampe opIncSynthetisch (src/scoring/lamps.js) ihr Warnsignal.
+ * honestYahooLabel selbst bleibt unangetastet: es ist die reine String-Abbildung und als
+ * solche korrekt (gepinnt). Die Datenlage gehoert nicht in eine String-Abbildung.
+ */
+function yahooLabelFuer(meta, yahooOpInc) {
+  const label = honestYahooLabel(
+    meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+  if (label !== 'yahoo-adjusted') return label;
+  return (Array.isArray(yahooOpInc) && yahooOpInc.some(fin)) ? label : null;
+}
+
+/**
  * Ausrichtungs-Beleg am Umsatz ueber das Fenster [0, n). Gibt {pairs, maxRel} zurueck.
  * pairs = Zahl positionsweise vergleichbarer Umsatzjahre, maxRel = groesste relative
  * Abweichung darunter.
@@ -139,8 +165,7 @@ function decideOpInc(snapshot, secEntry) {
   const yahooOpInc = Array.isArray(annual.annualOpIncYahoo) ? annual.annualOpIncYahoo
     : (Array.isArray(annual.annualOpInc) ? annual.annualOpInc : []);
   // War die aktuelle Reihe schon SEC, ist das Alt-Etikett das der Yahoo-Reihe.
-  const yahooLabel = honestYahooLabel(
-    meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+  const yahooLabel = yahooLabelFuer(meta, yahooOpInc);
 
   const n = yahooOpInc.length;
   const secOpInc = (secEntry && Array.isArray(secEntry.annualOpInc)) ? secEntry.annualOpInc : null;
@@ -190,8 +215,7 @@ function migrateSnapshot(snapshot, secEntry) {
   if (d.opInc) {
     // K1.3: die ersetzte Yahoo-Reihe bleibt am Datensatz — kein Name verliert Daten.
     annual.annualOpIncYahoo = yahooOpInc;
-    meta.opIncSourceYahoo = honestYahooLabel(
-      meta.opIncSource === 'sec-gaap' ? (meta.opIncSourceYahoo || 'native') : meta.opIncSource);
+    meta.opIncSourceYahoo = yahooLabelFuer(meta, yahooOpInc);
     annual.annualOpInc = d.opInc;
     meta.opIncSource = 'sec-gaap';
   } else {
@@ -332,6 +356,6 @@ function main(argv) {
 if (require.main === module) main(process.argv.slice(2));
 
 module.exports = {
-  decideOpInc, migrateSnapshot, honestYahooLabel, revAlignment, loadSecLayer, run,
+  decideOpInc, migrateSnapshot, honestYahooLabel, yahooLabelFuer, revAlignment, loadSecLayer, run,
   SECANNUAL_FILES, DEFAULT_DIRS, REV_ALIGN_TOL, REV_ALIGN_MIN_PAIRS,
 };
