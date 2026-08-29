@@ -312,6 +312,25 @@ Nur **46,5 %** der prüfbaren OpInc-Jahreswerte decken sich mit den Filings (Ums
 `facts["us-gaap"].Revenues` FY2024 = 404,39 M; `CostsAndExpenses` = 622,55 M; `OperatingIncomeLoss` = **−218,16 M** (accn `0001558370-25-003141`, filed 2025-03-17); darin `ImpairmentOfLongLivedAssetsHeldForUse` = 215,14 M; `NetIncomeLoss` = −226,14 M. Der Store trägt **−0,56 M**. Die Differenz ist der Größe nach exakt die Wertminderung.
 **Muster:** die Abweichung tritt systematisch in Geschäftsjahren mit großen Wertminderungen/Sonderposten auf (MGPI, EGY, EBS, AGNT, IPI, BMBL). Ob Yahoo dort durchgängig „vor Sonderposten" ausweist, ist mit den vorhandenen Offline-Daten **nicht für jeden Namen belegbar** — bewiesen ist es für HNRG.
 
+> **NACHTRAG 29.08.2026 (T175, append-only — der Text darüber bleibt unverändert stehen):**
+> Der Satz „Die Differenz ist der Größe nach **exakt** die Wertminderung" ist **widerlegt**.
+> Nachgerechnet: 218,156 M − 0,555 M = **217,601 M** Differenz gegen eine Wertminderung von
+> **215,136 M** → **Δ 2,465 M bleiben unerklärt**. Die Wertminderung erklärt den Löwenanteil
+> der Lücke, aber nicht ihre volle Höhe; das Wort „exakt" trägt hier nicht und ist zurückgezogen.
+> Der Befund selbst (`annualOpInc` ist die Bruchstelle) ist davon unberührt — er wird kleiner
+> begründet, nicht widerlegt. Woher die 2,465 M kommen, ist offen und gehört als Frage in die
+> T164/165/166-Gerichtsakte (OpInc-Herkunft: GAAP as-filed gegen Yahoo-bereinigt).
+> Belegkette: Orchestrator-Direktive ENTSCHIED 12 Punkt 4 vom 29.08.2026,
+> `agent-reports/opinc-rat-memo-2026-08-29.md`.
+>
+> **Zur Nenner-Frage in §8.2 („von 101 gescannten Snapshot-Dateien"):** selbst nachgezählt am
+> 29.08.2026 — `snapshots-smallcap/` enthält **103** `.json`-Dateien, davon sind **zwei keine
+> Snapshots** (`_manifest.json`, `_manifest-full.json`); beide Lader überspringen sie
+> namentlich (`build-secannual-smallcap.js:51`). **Gescannte Snapshot-Dateien = 101 — die
+> Zahl im Bericht ist korrekt** und wird hiermit ausdrücklich bestätigt, nicht korrigiert.
+> (Die in der Auftragslage kursierende „103" ist die rohe Verzeichniszählung inklusive der
+> zwei Manifeste.)
+
 ### 8.2 BTBT trägt eine **synthetische** OpInc-Reihe ❌
 `snapshots-smallcap/BTBT.json → meta.opIncSource = "computed-margin"`. Die Reihe lautet
 `[−590 848 666,944 · −562 182 493,624 · −233 696 378,584 · −168 037 542,941]`
@@ -333,6 +352,18 @@ Betroffene Board-Zeile: `outputs/smallcap/smallcap-financials.json → unprofita
 | BMBL | software-comm-services | `FCF` | profitable | +240,48 M | −805,78 M |
 
 Nur bei EGY entscheidet `annualOpInc[0]` über den Track (`formulas/energy.js:14 splitMetric:'OpInc'` → `score.js:688-707 signTrack`). Mit dem Filing-Wert wäre EGY `unprofitable` — anderer Kohorten-Vergleich, andere Achsengewichte. EGY hält heute `smallcap-energy → profitable[0]`, Score 52,9, **Kohortengröße 1**. Nicht abschließend adjudizierbar: für EGY liegen die Roh-`companyfacts` offline nicht vor.
+
+> **NACHTRAG 29.08.2026 (T175, append-only — reine Kennzeichnung, KEIN Eingriff):**
+> Die Zeile **EGY** (`outputs/smallcap/smallcap-energy.json → profitable[0]`, Score 52,9) gilt ab
+> sofort als **bekannt falscher Track**: GAAP as-filed **−20,61 M** gegen Store/Yahoo **+46,62 M**
+> im jüngsten OpInc-Jahr; mit dem Filing-Wert stünde EGY im `unprofitable`-Track.
+> **Die Klärung läuft im T164/165/166-Gerichtsfall** (Kernfrage: welche OpInc-Definition scoren
+> darf — GAAP as-filed oder Yahoo-bereinigt). EGY ist dort **Exhibit A**.
+> **Ausdrücklich NICHT geschehen und bis zum Urteil untersagt:** Score-Override, Track-Wechsel,
+> Einzelfall-Ausschluss oder irgendeine Änderung an `src/scoring/**`. Dies ist eine Annotation
+> am Bericht, kein Eingriff in die Rechnung — die Board-Zeile steht unverändert.
+> Belegkette: Orchestrator-Direktive ENTSCHIED 12 Punkte 3 + 4 vom 29.08.2026,
+> `agent-reports/opinc-rat-memo-2026-08-29.md`.
 
 ### 8.5 Latent: `revAcceleration` kompaktiert Lücken ⚠️
 `axes.js:212` — `const ar = norm(s,'annualRev').filter(v => v !== null && v !== undefined && v > 0)` — entfernt Lücken **vor** der Index-Paarung und bildet dann `ar[0]/ar[1]` und `ar[1]/ar[2]`. Das ist exakt das Muster, das BH-079 (`adjacentTwoPresent`) und BH-080 (`quarterQoQRates`) an allen anderen Stellen beseitigt haben: bei einer Lücke wird eine **Mehrjahres**-Rate als Ein-Jahres-Wachstum verrechnet.
