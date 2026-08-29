@@ -10,7 +10,7 @@
  */
 
 const { norm, hasPresent, firstPresent, firstTwoPresent, presentValues, metricVal, ratioSeries,
-  jahresVergleichIdx, jahresFensterAusgerichtet, histOpInc } = require('./snapshot.js');
+  jahresVergleichIdx, jahresFensterAusgerichtet, histOpInc, opIncSynthetic } = require('./snapshot.js');
 // U-SC-003: die ROIC-Quellenwahl der ACHSEN (SEC-Trio wo vollstaendig, sonst Yahoo) — lowRoic liest
 // sie, statt eine zweite Yahoo-Kopie zu pflegen. axes.js kennt lamps.js nicht -> kein Zyklus.
 const { roicStabilitySource } = require('./axes.js');
@@ -794,6 +794,37 @@ function einmalertragBewertbarkeit(s) {
   return 'ungleicheKadenz';
 }
 
+// --- 17+18: OpInc-HERKUNFTS-Lampen (Urteil T164, K2-Auflage 3 / K1-Doppelboden) ---------------
+// ⚠ AUSDRUECKLICH NICHT in DATA_SUSPECT_LAMPS (score.js). Das ist keine Formalie, sondern der
+// woertliche Auflagentext beider Richter: `opIncSynthetisch` steht heute an 300 der 354 Zeilen des
+// Financials-Boards. In der Exclude-Liste waere sie ein 300-Zeilen-Ausschluss durch die Hintertuer
+// — genau die "Board-Ausweidung ohne Ersatz", die das Gericht mit 3:0 verboten hat (SEC-Alternative
+// existiert fuer 8 von 1.883 Namen). Die drei Coverage-1/7-Namen behalten ihren Restscore, sichtbar
+// gekennzeichnet (K2-Auflage 6). Wer diese Namen hier eintraegt, kippt das Urteil.
+//
+// Warum ZWEI Lampen und nicht ein Herkunfts-Feld: Lampen sind der einzige Kanal, der bereits an
+// JEDER Board-Zeile haengt (score.js:1421/1437, findash-Export). Bis heute erreichte
+// meta.opIncSource die Engine ueberhaupt nicht (K3-Auflage 3: grep in src/scoring = 0 Treffer ueber
+// 31 Dateien, von R1 und R2 unabhaengig verifiziert) — das Etikett existierte nur im Store.
+
+// 17. (B2) Die Jahres-OpInc-Reihe ist zurueckgerechnet (annualRev x operatingMargins-TTM), nicht
+// gemeldet. Genau die Reihe, die das K2-Gate oben aus allen historischen Auswertungen heraushaelt.
+function opIncSynthetisch(s) {
+  if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
+  return opIncSynthetic(s);
+}
+
+// 18. (B4) K1-Doppelboden (R1): die Reihe stammt aus Yahoos still und unversioniert bereinigtem
+// Stream, nicht aus dem eingereichten Abschluss. K1 hat 2:1 GAAP-as-filed zur Scoring-Definition
+// erklaert; wo keine SEC-Serie existiert, bleibt die Yahoo-Reihe als ehrlich etikettierter Proxy
+// stehen (K1-Auflage 3: kein Name verliert Daten). Diese Lampe sagt, welcher Fall vorliegt.
+// Sie feuert breit — das IST der K1-Befund und keine Fehlkalibrierung: der Store traegt 12.629
+// yahoo-adjusted gegen 128 sec-gaap (Migration 29.08., PR #90).
+function opIncYahooAdjusted(s) {
+  if (!s || !s.meta || s.meta.opIncSource === undefined || s.meta.opIncSource === null) return null;
+  return s.meta.opIncSource === 'yahoo-adjusted';
+}
+
 const LAMPS = {
   unprofit, burning, shortRunway, highDilution, peakMargin,
   lowRoic, arDivergence, crashRisk, fcfArtefact, cyclePeak,
@@ -802,6 +833,7 @@ const LAMPS = {
   inflationSuspect,
   shareCountDilution,
   einmalertrag,
+  opIncSynthetisch, opIncYahooAdjusted,
 };
 
 /**
