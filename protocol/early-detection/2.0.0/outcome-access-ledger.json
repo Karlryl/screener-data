@@ -592,6 +592,34 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17",
    "eventHash": "69b2af0d838995a46811329201148e4dede218d33c96e991c2f030eb41246a0a"
+  },
+  {
+   "runId": "a5-form25-abgleich-2026-08-30",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-29T22:55:48.248Z",
+   "accessedAt": "2026-08-30T06:30:00.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "abgaenge_gesamt",
+    "abgaenge_kontrollpool",
+    "abgaenge_signal_arm",
+    "ausserhalb_plausiblem_fenster",
+    "fallzahl",
+    "mit_form25_treffer",
+    "nenner_form25_abgleich",
+    "ohne_form25_treffer",
+    "plausibles_fenster_tage",
+    "trefferquote_form25",
+    "unentscheidbar_gesamt"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "A.5-Annex: Abgleich der echten Abgaenge gegen die lokale Form-25-Evidenz, autorisiert durch orchestrator-2026-08-29.md ENTSCHIED 38 und ENTSCHIED 54. ZWECK: beschreibender ANNEX zum R15a-Abschluss, ausdruecklich NICHT dessen Bedingung (ENTSCHIED 38). EXPLORATIV — NIEMALS KONFIRMATORISCH: dieser Lauf erzeugt kein konfirmatorisches Verdikt, bewegt keine Schwelle, aendert keine Praeregistrierung und darf in keiner spaeteren Argumentation als Bestaetigung zitiert werden. Jede Ausgabe traegt den Pflicht-Stempel 'bekannte Überlebens-Verzerrung, Obergrenzen-Lesart'. Das Endtest-Fenster bleibt VERBOTEN: nicht geoeffnet, nicht gelesen, nicht gezaehlt, versiegelt. Kurs-/Rendite-/Preis-Endpunkte sind per R4 dauerhaft ausgeschlossen und werden von diesem Lauf weder berechnet noch ausgegeben. ZWEI QUELLEN, BEIDE LOKAL, KEIN NETZZUGRIFF UND KEINE NEUE EXTERNE QUELLE: (1) die Panel-Datei des durch R15a verbrauchten Prueffensters — Input-Scope woertlich der committeten E4a-Registrierung (e4a-diagnose-pruefung-2026-08-19) und des Eintrags e4g-restursachen-pruefung-v2-2026-08-29, interne Faktwert-Rekonstruktion nach E4g-v2-Muster autorisiert (ENTSCHIED 17); (2) der bereits lokal geerntete Form-25-Evidenz-Cache, Union 2016-2024 mit 9.028 Accessions (Cache-Dateien form25-hits-*.jsonl und d2-*.jsonl, erzeugt durch den lokalen submissions.zip-Re-Harvest ohne Netz, dokumentiert in agent-reports/frueher-finden-d2-2016-2018-2026-08-30.md). Der Cache ist ein LOKALER Bestand, keine neue externe Quelle und kein Fetch; damit ist der in der A.5-Eskalation geruegte Scope-Bruch 'neue Quelle' geschlossen. Diese zweite Quelle wird hier ausdruecklich benannt, damit der Eintrag seinen eigenen Lesescope nicht verschweigt. BINDENDER SELBST-CHECK MIT BIT-ANKER: Die Rekonstruktion der Abgangs-Population MUSS exakt 8 Firmen im S-G-Signal-Arm und 172 Firmen im Kontrollpool ergeben (committete E4g-Aggregate, reports/studie/E4g-restursachen-diagnose-2026-08-29.md, letzte_form_nach_signal 'keine'). JEDE Abweichung ist ein SOFORT-STOPP mit Eskalation an den Orchestrator — kein Weiterrechnen, keine Anpassung der Rekonstruktion an die Sollzahl, keine zweite Variante. KEINE LABEL-SEMANTIK: Form 25 ist KEIN Todesbeleg. Der bekannte Gegenbeleg (25-NSE bei lebender Firma) gilt unveraendert; dieser Lauf liefert Ereignis-Evidenz, keine Zustands-Aussage, und darf nicht als Abgangs-Bestaetigung gelesen werden. AUSGABE: ausschliesslich die 11 angemeldeten Aggregatzaehler, je Jahr und je Arm gegliedert — Abgaenge mit und ohne Form-25-Treffer in einem plausiblen Fenster, Nenner, Trefferquote und Unentscheidbare. Keine Firmen-Kennungen, keine CIK-, adsh- oder Namenswerte, keine Accession-Nummern, keine Rohwerte, keine Naht-IDs. UMGEBUNG: Lauf aus einem frischen Worktree von origin/main (Post-Merge-Stand); der Studienzweig erhaelt NIE den main-Ledger (Ein-Appender-Regel, ENTSCHIED 7). Anmeldung main-first per Mini-PR VOR dem Zugriff.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "69b2af0d838995a46811329201148e4dede218d33c96e991c2f030eb41246a0a",
+   "eventHash": "af9fa8d99aa9b3bc57466167ce39ea5a8a2a1e41cbf75789c97ef62cfd88fbee"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
