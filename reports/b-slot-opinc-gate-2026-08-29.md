@@ -21,7 +21,7 @@ IREN-Anker kippt wie angesagt das Vorzeichen.**
 
 - **Wirkung ist auf die Financials-Boards begrenzt:** 0 Eintritte, **3 Austritte**, 324 Rangbewegungen. Kein anderes Board bewegt sich.
 - **GLXY**, der Anlassfall des Urteils: der Rang-1-Treiber `capitalEfficiency`-Perzentil **99,7 aus Fiktion** fällt weg, Score 88,814 → 80,217. Die Zeile bleibt geroutet und gekennzeichnet.
-- **Ein offener Punkt (§7):** die drei Score-Ausfälle SIND die drei Coverage-1/7-Namen aus K2.6. „Restscore behalten" ist bei ihnen mechanisch unmöglich — ihr ganzer Score bestand aus der gesperrten Achse. **Eskaliert, nicht selbst entschieden.**
+- **Der eine strittige Punkt (§7) ist entschieden:** die drei Score-Ausfälle SIND die drei Coverage-1/7-Namen aus K2.6. „Restscore behalten" ist bei ihnen mechanisch unmöglich — **K2.6s Tatsachen-Prämisse ist messtechnisch widerlegt**. Eskaliert statt selbst entschieden; **ENTSCHIED 24 ratifiziert den Abgang über den universellen `no-axes`-Vertrag**. Klassen-Definition und Zählung (exakt 3) in §7 festgehalten, damit ein Anwachsen der Klasse künftig auffällt.
 
 Sprungmarken: §1 Konsumenten-Inventur · §2 was gebaut wurde · §3 Gate-Wirkungs-Diff · §4 Anker
 · §5 Wächter und Bruchprobe · §6 Siegel · §7 Eskalation · §8 Nebenbefunde.
@@ -227,7 +227,45 @@ neuen Code (Cron `17 2 * * 2-6`) — so wie beim Übergang 1.0.0 → 1.1.0.
 
 ---
 
-## 7 ⚠ ESKALATION: K2.6 gegen K2.5 — die drei Coverage-1/7-Namen
+## 7 K2.6 gegen K2.5 — die drei Coverage-1/7-Namen (ENTSCHIED 24: entschieden)
+
+> **ENTSCHIED 24 vom 29.08.2026 20:55 — Weg (3) ratifiziert, Konfidenz ~85 % geteilt.**
+> **K2.6s Tatsachen-Prämisse ist messtechnisch widerlegt:** es EXISTIERT kein Restscore, den
+> diese drei Zeilen behalten könnten — `capitalEfficiency` war ihre einzige Achse und vollständig
+> synthetisch. **Bei toter Prämisse regiert der KERN des einstimmigen Urteils:** K2.2 verbietet
+> Rang aus Fiktion (Weg 1 würde ihn brechen), der Fake-50 ist verboten (Weg 2), und R2s Sorge vor
+> einem Lampen-Hintertür-Massen-Exclude greift hier nicht — **der Abgang läuft über den
+> vorbestehenden universellen `no-axes`-Vertrag, nicht über die Lampe** (bewiesen in Wächter G4b:
+> die Herkunfts-Lampen ändern `isDataSuspect` nicht).
+
+### Klassen-Definition und Zählung (Auflage aus ENTSCHIED 24)
+
+Damit ein künftiger Re-Run ein **Anwachsen** dieser Klasse erkennt statt es zu übersehen:
+
+**Ursächliche Definition:** eine Zeile mit `meta.opIncSource === 'computed-margin'`, deren
+**einzige** bewertbare Achse `capitalEfficiency` ist. Das Gate nimmt ihr diese eine Achse; damit
+bleibt keine bewertbare Achse übrig und der vorbestehende universelle Engine-Vertrag greift.
+
+**Operative Definition (das, was man zählt):** Zeilen, die beim Gate-Vergleich von
+`action='route'` auf `action='exclude'` mit `reason='no-axes'` wechseln **und** das Etikett
+`computed-margin` tragen.
+
+**Zählung am Messstand 2026-08-29: exakt 3.**
+
+| Ticker | Score vorher | einzige getragene Achse | Perzentil | coverageWeight | nachher |
+|---|---:|---|---:|---:|---|
+| `0290.HK` | 56,576 | `capitalEfficiency` | 83,9 | 0,18 | `exclude` / `no-axes` |
+| `0622.HK` | 58,367 | `capitalEfficiency` | 94,6 | 0,18 | `exclude` / `no-axes` |
+| `EXO.AS` | 58,965 | `capitalEfficiency` | 98,2 | 0,18 | `exclude` / `no-axes` |
+
+**Nachzählen bei jedem künftigen Re-Run:** dieselben zwei Voll-Läufe wie in §3 fahren (alter
+Stand gegen neuen Stand auf identischem Snapshot-Baum) und die Zeilen zählen, deren `action` von
+`route` auf `exclude`/`no-axes` kippt. **Mehr als 3 = die Klasse wächst** → das ist ein neuer
+Befund und gehört an den Orchestrator, nicht in eine stille Anpassung. Wächst sie, heißt das:
+mehr Namen hängen mit ihrem GANZEN Score an einer synthetischen Achse — genau die Entwicklung,
+vor der K2.5 gewarnt hat.
+
+### Der Befund, der zu dieser Entscheidung führte (Messung, unverändert)
 
 **Der Befund:** die drei Score-Ausfälle sind **dieselben drei Namen** wie die „3 Coverage-1/7-Namen"
 aus K2-Auflage 6.
@@ -257,10 +295,10 @@ Meine Messung zeigt, dass beides nicht gleichzeitig gehen kann.
 3. **`exclude`/`no-axes` akzeptieren** (der jetzige Stand) → drei Zeilen verlassen das
    `financials|unprofitable`-Board, die Lampe bleibt an der ausgeschlossenen Zeile sichtbar.
 
-**Fachlich halte ich (3) für richtig** (Konfidenz ~85 %): eine Board-Zeile ohne eine einzige
-belegbare Achse ist keine Aussage. Aber welche der drei Lesarten gilt, ist eine
-**Board-Sichtbarkeits-Entscheidung** und liegt nach ENTSCHIED 18 ausdrücklich beim Orchestrator,
-nicht bei mir. **Deshalb ist der PR offen und NICHT gemergt.**
+**Weg (3) ist ratifiziert** (ENTSCHIED 24, Konfidenz ~85 % geteilt): eine Board-Zeile ohne eine
+einzige belegbare Achse ist keine Aussage. Die Entscheidung lag als Board-Sichtbarkeits-Frage
+beim Orchestrator, nicht beim Executor — der PR wurde bis zur Antwort offen gehalten und erst
+danach gemergt.
 
 Die K2.7-Fallback-Klausel ist hiervon **nicht** berührt: das Gate ist vollständig (§1), die
 Nullungs-Bedingung ist nicht eingetreten.
