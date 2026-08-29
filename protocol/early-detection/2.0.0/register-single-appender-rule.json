@@ -1,0 +1,60 @@
+{
+  "schema": "early-detection-governance-rule/v1",
+  "recordId": "register-single-appender-2026-08-29",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "mode": "APPEND_ONLY_RULE_NO_RETROACTIVE_REWRITE",
+  "recordedAt": "2026-08-29",
+  "status": "BINDING",
+  "authority": {
+    "source": "Orchestrator-Ruling 2026-08-29",
+    "decision": "ENTSCHIED 7",
+    "decidedAt": "2026-08-29T17:16:00+02:00",
+    "scope": "Single-appender governance for protocol/early-detection/2.0.0/outcome-access-ledger.json"
+  },
+  "rule": {
+    "singleAppender": "main",
+    "ledgerAppendsAllowedOnlyInCommitsLandingDirectlyOn": "main",
+    "branchLedgerAppendsAllowed": false,
+    "accessBeforeMainRegistrationAllowed": false,
+    "branchWorkSequence": [
+      "prepare the exact access-ledger entry against the current main tail",
+      "submit the access-ledger entry first through a mini-PR targeting main",
+      "land the access-ledger entry on main",
+      "confirm the main-hosted entry and its independent server time",
+      "only then perform the registered data access"
+    ],
+    "timeInvariant": "registeredAt < serverConfirmedAt < accessedAt <= firstAccessAt",
+    "branchRule": "Study and implementation branches never carry outcome-access-ledger appends. They consume an entry that already landed on main."
+  },
+  "enforcement": {
+    "gitPrefixAnchor": {
+      "path": "tests/studie-r1-register.test.js",
+      "test": "R1: jede committete Revision ist byte-identisches Praefix der aktuellen",
+      "purpose": "Every committed ledger revision must remain a byte-identical prefix of the current main ledger."
+    },
+    "governanceRecord": "protocol/early-detection/2.0.0/register-single-appender-rule.json",
+    "serverProofTool": "scripts/studie-r1-serverzeit.js",
+    "failureMode": "A branch-local append, an entry based on a stale tail, or access before the main-hosted server proof is non-compliant and must not run."
+  },
+  "precedent": {
+    "path": "protocol/early-detection/2.0.0/e4d-ledger-fork-deviation-record.json",
+    "recordId": "e4d-ledger-fork-2026-08-29",
+    "sha256": "c3d7fe47ae92c8e764ad007f56a10835c713e8edebd26dac86190fe5f11d0517",
+    "lesson": "Append-only plus monotone registration time has no safe merge semantics when parallel branches append to the same tail.",
+    "referenceOnly": true,
+    "expectedResidualDebtClosedBy": null
+  },
+  "revisionCondition": {
+    "condition": "The mini-PR step demonstrably throttles the cadence of legitimate registered probes in real operation.",
+    "action": "Return the rule to the Orchestrator for an explicit revision; never create a branch exception locally."
+  },
+  "preservation": {
+    "deviationRecordEdited": false,
+    "deviationRecordResidualDebtClosed": false,
+    "constitutionChanged": false,
+    "ledgerChangedByThisRecord": false,
+    "sealChanged": false,
+    "confirmatoryVerdictsChanged": 0,
+    "endtestOpened": false
+  }
+}
