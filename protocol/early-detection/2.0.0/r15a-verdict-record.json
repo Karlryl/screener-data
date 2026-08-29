@@ -1,0 +1,254 @@
+{
+  "schema": "early-detection-r15a-verdict-record/1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "status": "FROZEN_R15A_VERDICT",
+  "mode": "APPEND_ONLY_NO_EDIT",
+  "regel": "R15 (a) — Abbruch, Fallzahl-Vorpruefung und Wiederaufnahme",
+  "date": "2026-08-30",
+  "frozenAt": "2026-08-29T23:03:18Z",
+  "frozenNotice": "FROZEN. Schriftliches Verdikt nach R15 (a). Append-only: ab hier nicht mehr editiert. Wer diese Signalfamilie neu aufnimmt, legt ein NEUES Protokoll an und verweist hierauf.",
+
+  "verdikt": "INCONCLUSIVE_DATA",
+  "endgueltig": true,
+  "reichweite": "Diese Signalfamilie (S-U und S-G) auf dem Prueffenster 2017-01-01/2019-12-31. Das Verdikt beendet die STUDIE, nicht die Hypothese: es ist ein Verdikt ueber die Datenlage, nicht ueber das Signal.",
+
+  "authority": [
+    "orchestrator-2026-08-29.md, ENTSCHIED 1/2 — Entscheidungsregel E4g, eingefroren VOR den Zahlen",
+    "orchestrator-2026-08-29.md, ENTSCHIED 32.2 — Instrument-Befund (a priori, nicht ergebnisbasiert)",
+    "orchestrator-2026-08-29.md, ENTSCHIED 32.3 — R15a-Vollzug ausgesetzt wegen gemessen widerlegter Zweig-Praemisse",
+    "orchestrator-2026-08-29.md, ENTSCHIED 32.4 — Mehrheitsregel E4h, eingefroren VOR den Zahlen",
+    "orchestrator-2026-08-29.md, ENTSCHIED 36 — Regel feuert (4 < 13), R15a-VOLLZUG",
+    "orchestrator-2026-08-29.md, ENTSCHIED 28.3 — A.5-Zaehllauf vorab genehmigt (nicht ausgefuehrt, s. openItems)",
+    "orchestrator-2026-08-29.md, ENTSCHIED 38 — Abschlussbericht abgenommen, Freeze-Prozedur unter Orchestrator-Aufsicht",
+    "orchestrator-2026-08-29.md, ENTSCHIED 44 — zwei Abschluss-Korrekturen VOR dem Freeze (s. korrekturenNachEntschied44)",
+    "orchestrator-2026-08-29.md, ENTSCHIED 48 — Karls Antwort auf die R17-Pflichtfrage: NICHT KAUFEN",
+    "orchestrator-2026-08-29.md, ENTSCHIED 54 — Freeze dispatcht: Platzhalter fuellen, Records setzen, PR oeffnen und stoppen"
+  ],
+
+  "gateFailure": {
+    "fenster": "pruefung",
+    "variante": "S-G",
+    "arm": "signal",
+    "reif": 326,
+    "nenner": 365,
+    "auffindbarkeit": 0.893150685,
+    "schwelle": 0.90,
+    "torAbsolut": "329 von 365 = 0.901369863",
+    "fehlbetragFirmen": 3,
+    "fehlbetragProzentpunkte": 0.685,
+    "pWertBerechnet": false,
+    "begruendungKeinPWert": "R9 — bei rotem Auffindbarkeits-Gate wird kein p-Wert berechnet. Es wurde KEIN einziger Test gerechnet.",
+    "weitereGates": {
+      "kontrollpool": {"reif": 4284, "nenner": 4732, "quote": 0.905325444, "status": "PASS"},
+      "differenzPunkte": {"wert": 1.217, "schwelle": 10, "status": "PASS"},
+      "fallzahl": {"wert": 326, "schwelle": 200, "status": "PASS"}
+    },
+    "beleg": "reports/studie/E4f-nachrechnung-2026-08-23.md B1, ueber E4d-kadenz-pruefung-2026-08-19.json"
+  },
+
+  "entscheidungskette": [
+    {
+      "schritt": 1,
+      "regel": "ENTSCHIED 1/2 — Kantenprobe: 4 x eigener gemessener Melderhythmus gegen Restlaufzeit, alles auf der accepted-Achse. Vereinigung mit Jahreskadenz >= 10 von 39 loest den Reparatur-Pfad aus.",
+      "eingefrorenVorDenZahlen": true,
+      "lauf": "e4g-restursachen-pruefung-v2-2026-08-29",
+      "registerEintrag": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207",
+      "gemessen": {"kanteUnmoeglich": 0, "jahreskadenz": 2, "vereinigung": 2, "schwelle": 10},
+      "ergebnis": "2 < 10 — Reparatur-Pfad NICHT ausgeloest",
+      "verworfeneAlternative": {
+        "lesart": "fester 728-Tage-Massstab statt firmenindividuellem Melderhythmus",
+        "haetteErgeben": 16,
+        "haetteDenZweigGedreht": true,
+        "wirkungAufDieQuote": "hebt die Auffindbarkeit in EINEM Schritt von 0.89315 auf 0.9341 — allein durch Leeren des Nenners, ohne dass eine einzige Firma zusaetzlich gefunden wuerde",
+        "grundDerVerwerfung": "Ein Massstab, der nach Kenntnis des Ergebnisses gewechselt wird, ist Schwellensuche. Die registrierte Lesart stand vor den Zahlen; sie gilt. Die Alternativzahl wird offengelegt, nicht kaschiert (R11)."
+      }
+    },
+    {
+      "schritt": 2,
+      "regel": "ENTSCHIED 32.2 — Instrument-Befund, a priori aus der Fenster-Geometrie, NICHT ergebnisbasiert",
+      "befund": "Signalband endet auf der Anmelde-Achse 2019-12-31, Panelrand 2020-12-31. Minimal moegliche Restlaufzeit 366 Tage gegen 365 Tage Kantenfenster eines Quartalsmelders. Alle 39 Signal-Verluste liegen auf dem 91,25-Tage-Floor; engstes Verhaeltnis Kantenfenster/Restlaufzeit 0,884.",
+      "konsequenz": "Die 0 der registrierten Kantenprobe ist UNSCHLUESSIG und niemals Positiv-Beweis fuer 'kein Kanten-Effekt'. Die Sonde war in diesem Bandzuschnitt strukturell nahezu feuerunfaehig.",
+      "selbstzuschreibung": "Vom Orchestrator als eigener Freeze-Fehler protokolliert, nicht als Befund verkauft."
+    },
+    {
+      "schritt": 3,
+      "regel": "ENTSCHIED 32.3 — Praemissen-Pruefung des Abbruch-Zweigs",
+      "praemisseDesZweigs": "die verschwundenen Firmen sind ueberwiegend echte Abgaenge",
+      "gemessen": "8 von 39 = 20,5 % echte Abgaenge; die Mehrheit lebt und reicht weiter ein",
+      "ergebnis": "Praemisse GEMESSEN FALSCH — R15a-Vollzug AUSGESETZT statt vollzogen",
+      "begruendung": "Einen Zweig zu vollziehen, dessen Tatsachen-Praemisse tot ist, waere Etikettenschwindel, nicht Gehorsam.",
+      "selbstGegenprobe": "Bei 30 von 39 echten Abgaengen waere R15a sofort vollzogen worden. Die Aussetzung ruht allein auf der gemessenen Praemissen-Verletzung."
+    },
+    {
+      "schritt": 4,
+      "regel": "ENTSCHIED 32.4 — Mehrheitsregel: von den 25 Signal-Weiterfilern >= 13 mit nutzbarer Alternativ-Serie bedeutet Definitions-Artefakt (R15b-Pfad); < 13 bedeutet R15a-Vollzug. Keine Grauzone, keine Nachjustierung.",
+      "eingefrorenVorDenZahlen": true,
+      "regeltextGehashtImRegisterEintrag": true,
+      "lauf": "e4h-serienende-pruefung-2026-08-29",
+      "registerEintrag": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17",
+      "gemessen": {"mitNutzbarerAlternativserie": 4, "nenner": 25, "schwelle": 13, "kontrolle": 23, "kontrollNenner": 192},
+      "ergebnis": "4 < 13 — R15a WIRD VOLLZOGEN",
+      "verworfeneAlternative": {
+        "argument": "vier zusaetzliche Firmen hoeben die Auffindbarkeit auf 0.9041 und damit ueber das Tor 0.901369863",
+        "grundDerVerwerfung": "Genau der Drei-Firmen-Rand innerhalb des Messrauschens (Standardfehler 1,62 Prozentpunkte), den die Mehrheits-Schwelle verhindern sollte. Zusaetzlich waere eine Konzept-Oeffnung eine Methodik-Aenderung, die nur VORWAERTS einzufrieren waere und nie rueckwirkend auf ein bereits rot ausgegangenes Fenster angewandt werden darf."
+      }
+    }
+  ],
+
+  "verlustzerlegung": {
+    "grundgesamtheit": {"signalVerluste": 39, "kontrollpoolVerluste": 448},
+    "bitAnkerExaktGetroffen": true,
+    "disjunkteKlassen": {
+      "echteAbgaenge": {"signal": 8, "kontrolle": 172, "definition": "nach dem Signal keine Zeile mehr, in KEINER Form, bis zum Panelrand 2020-12-31"},
+      "jahreskadenz": {"signal": 2, "kontrolle": 53, "definition": "periodische Zeilen ja, aber kein 10-Q mehr; kann vier FolgeQUARTALE bauartbedingt nicht liefern"},
+      "restRegime": {"signal": 4, "kontrolle": null, "definition": "letzte Form 10-K mit 10-Q dazwischen (2) bzw. nur noch 8-K (2); weder Abgang noch Jahreskadenz"},
+      "datenlageZuDuenn": {"signal": 21, "kontrolle": 169, "definition": "reicht weiter 10-Q ein, traegt aber unter KEINEM Konzept, KEINER Einheit und KEINER Taxonomie-Fassung vier Post-Signal-Quartalsstichtage"},
+      "unterReifeschwelleRettbar": {"signal": 4, "kontrolle": 23, "definition": "reicht weiter 10-Q ein UND hat eine nutzbare Alternativ-Serie; waere unter einer korrigierten Konstruktionsregel reif geworden"}
+    },
+    "summeSignal": 39,
+    "zweiterSchnittDerselbenMenge": {"klasseA": 9, "klasseB": 0, "klasseC": 30, "summe": 39, "quelle": "E4a, committet"},
+    "warnungGegenFalscheSummierung": "Die 9 der E4a-Klasse (a) UEBERSCHNEIDET die 8 echten Abgaenge: von den 9 Klasse-(a)-Firmen sind 8 echte Abgaenge und 1 ist ein Zaehlerverlust bei lebender Firma (E4g Abschnitt 2). Klassen-Schnitt und Regime-Schnitt duerfen nie addiert werden. Ebenso sind die beiden 4er-Werte (Rest-Regime und rettbar) VERSCHIEDENE Mengen.",
+    "dominanteUrsache": "Duenne Datenlage bei lebenden Quartalsmeldern (21 von 39). NICHT Attrition (8), NICHT Kennungswechsel (0), NICHT Serien-Konstruktion (E4h: mit_nutzbarer_alternativserie == qtrs_abgedeckt, die Sonde verliert niemanden an der Konzept/Unit/Track-Frage)."
+  },
+
+  "bridgeContribution": {
+    "variante": "S-G",
+    "hebungProzentpunkte": 0.0,
+    "grund": "0 von 39 Verlusten sind Kennungswechsel (Kontrollpool: 1 von 448). Das Werkzeug passt bauartbedingt nicht auf diese Verlustsorte.",
+    "bleibtNutzbar": true,
+    "einordnung": "Infrastruktur, nicht Studienergebnis. Fuer die Umsatz-Variante holt sie 72 von 146 verlorenen Firmen zurueck (Verbleibsquote 0.83105)."
+  },
+
+  "endtestFenster": {
+    "band": "2021-01-01/2023-12-31",
+    "status": "VERSIEGELT UND UNVERBRAUCHT",
+    "geoeffnet": false,
+    "klartextGeloescht": true,
+    "entschluesselungsAufrufExistiert": false,
+    "karlFreigabeLagVor": true,
+    "karlFreigabeGenutzt": false,
+    "begruendungNichtGenutzt": "Im R15a-Zweig gegenstandslos. Die R15b-Zaehlprobe haette eine RAM-Entschluesselung gebraucht; sie faellt mit dem R15b-Pfad weg.",
+    "wertErhaltung": "Ein konfirmatorischer Test ist genau einmal gueltig. Auf einer Datenbasis, die ein Zehntel der Gegenbeispiele verliert, waere er fuer ein bedeutungsloses Ergebnis verbrannt worden.",
+    "bedingungFuerKuenftigeOeffnung": "Nur-Zaehl-Probe nach R15b mit VORHER eingefrorener Entscheidungsregel; die 10-Punkte-Differenz-Bedingung der Praeregistrierung gilt ZUSAETZLICH und VERSCHAERFT ein Zaehl-Gruen, nie andersherum (ENTSCHIED 28.1). Vertrags-Entwurf: agent-reports/ENTWURF-r15b-zaehlprobe-vertrag-2026-08-30.md, NICHT in Kraft.",
+    "warnung": "Die Verfolgbarkeit faellt ueber die Jahre monoton (Signal 0.9167 / 0.8921 / 0.8769 fuer 2017/2018/2019). Das versiegelte Fenster liegt AUF diesem Trend, nicht davor."
+  },
+
+  "r17FreeSearchNote": {
+    "erfuellt": true,
+    "fundstelle": "reports/studie/R15a-abschluss-2026-08-30.md, Abschnitt 5.2",
+    "geprueft": [
+      {"weg": "SEC Form 25/25-NSE Massen-Download", "ergebnis": "gefunden und geholt: 6555 Meldungen auf 3861 Firmen, 1,56 GB in 122 s", "traegtNicht": "liefert das Ereignis, nicht die Ursache; kein Todesbeleg (65,5 % der mappbaren Faelle sind KEIN Austritt); keine Kurse"},
+      {"weg": "Rechtsgrundlagen aus den Formular-Dokumenten", "ergebnis": "vollstaendig geholt (D2.3, 100 % der 5708 Shard-Zeilen)", "traegtNicht": "die Kategorien sind Wertpapier-Ereignisse, nicht zwingend Firmen-Ereignisse; kein sauberer Ursachen-Split"},
+      {"weg": "Zensur-Indikator statt Labels (Manski-Schranken)", "ergebnis": "gerechnet", "traegtNicht": "verengt die Schranke nicht: 56,6 Prozentpunkte Weite gegen 151,9 ohne Labels — beides jenseits jeder Entscheidbarkeit"},
+      {"weg": "Boersen-/Listing-Angaben aus dem eigenen Screener", "ergebnis": "konstruktiv untauglich", "traegtNicht": "bei verschwundenen Firmen ist das Feld leer; zusaetzlich unter aktiver Sperre bis Ende Oktober"},
+      {"weg": "Kursluecken ueber den kostenlosen Kursanbieter fuellen", "ergebnis": "bewusst verworfen", "traegtNicht": "macht die Verzerrung schlimmer, waehrend die Vollstaendigkeitsanzeige gruener wird"},
+      {"weg": "Frei exportierbare Kurshistorie delisteter Firmen", "ergebnis": "existiert nicht", "traegtNicht": "einstimmiger Ratsbefund"},
+      {"weg": "Rechnen in fremder Cloud statt lokal", "ergebnis": "nicht uebertragbar", "traegtNicht": "beim Kursprojekt fehlte Rechenkapazitaet; hier fehlen DATEN, und die liegen in der Cloud genauso wenig vor"},
+      {"weg": "Nur Teilfragen statt Vollfrage", "ergebnis": "teilweise umgesetzt (D2-Strang, offener A.5-Abgleich)", "traegtNicht": "benennt die Luecke genauer, schliesst sie nicht"},
+      {"weg": "Alternative Kennzahlen im selben Filing ausschoepfen", "ergebnis": "ausgeschoepft und gescheitert (E4h)", "traegtNicht": "0 zusaetzliche Firmen. Die Datenlage, nicht die Auswahlregel, ist die Schranke."}
+    ],
+    "fazit": "Die Ereignis-Ebene ist gratis beschaffbar und wurde beschafft. Die Ursachen-Ebene und die Kursreihen verschwundener Firmen sind es nach dokumentierter Suche nicht. Der letzte gratis verfuegbare Hebel — mehr aus denselben Filings herausholen — wurde in der Nacht zum 30.08. ausgeschoepft und hat null gebracht."
+  },
+
+  "karlQuestion": {
+    "frage": "Sollen fuer einen spaeteren, sauberen Anlauf kostenpflichtige Delisting- und Kursdaten gekauft werden?",
+    "gestelltAm": "2026-08-30",
+    "optionen": ["NICHT_KAUFEN", "ANGEBOTE_EINHOLEN", "SPAETER_WIEDER_VORLEGEN"],
+    "empfehlung": "NICHT_KAUFEN",
+    "empfehlungsKonfidenz": 0.90,
+    "empfehlungsBegruendung": "Karls stehende Linie (so kostenfrei wie moeglich, Luecken ehrlich benennen statt kaufen) UND ein neuer Sachgrund: Bezahldaten haetten dieses Tor nicht gerettet. Nur 8 der 39 Verluste sind echte Abgaenge; die dominante Ursache (21 von 39) ist duenne Datenlage bei lebenden Firmen, und dagegen hilft kein Delisting-Datensatz.",
+    "karlAnswer": "NICHT_KAUFEN",
+    "karlAnswerQuelle": "orchestrator-2026-08-29.md, ENTSCHIED 48, protokolliert 2026-08-30 00:26 (Karl-Kreuzel-Runde 00:30): 'Bezahldaten: NICHT KAUFEN — die R17-Pflichtfrage der Verfassung ist damit BEANTWORTET.'",
+    "karlAnswerFolgtDerEmpfehlung": true,
+    "karlAnswerDoppelteBegruendung": [
+      "Karls stehende Linie: Beschaffung so kostenfrei wie moeglich, Luecken ehrlich ausweisen statt kaufen.",
+      "Wirkungslosigkeit in der Sache: Bezahldaten treffen nur 8 von 39 Verlusten (echte Abgaenge). Die dominante Ursache — duenne Datenlage bei 21 von 39 LEBENDEN Quartalsmeldern — waere von keinem Delisting- oder Kursdatensatz beruehrt worden. Der einzige Pfad, der diese Ursache direkt angreift, ist gratis und lokal (ENTSCHIED 38 und 44)."
+    ],
+    "wiedervorlage": "Automatisch NUR, falls der gratis verfuegbare Rettungsweg (zweite Faktenquelle) scheitert UND ein Neuanlauf sonst unmoeglich ist (ENTSCHIED 48). Keine Wiedervorlage aus Anlass eines gerissenen Tors.",
+    "hinweis": "Die Frage wird nach R17 NUR mit dem obigen Gratis-Suchvermerk gestellt. Ohne ihn waere sie zurueckzuweisen, nicht zu stellen.",
+    "verhaeltnisZurEinfrierProzedurPunkt5": "Die Einfrier-Prozedur verlangte den karlAnswer als SEPARATEN Folge-Record, 'nie durch Editieren dieses Records'. Diese Auflage schuetzt einen BEREITS EINGEFRORENEN Record vor nachtraeglicher Bearbeitung. Karl hat VOR dem Einfrieren geantwortet (ENTSCHIED 48, 2026-08-30 00:26; frozenAt dieses Records 2026-08-29T23:03:18Z = 2026-08-30 01:03 Ortszeit) — der geschuetzte Fall ist nicht eingetreten. ENTSCHIED 48 und ENTSCHIED 54 ordnen das Fuellen beim Freeze ausdruecklich an. Ein Platzhalter waere hier eingefrorene Luecke, kein Schutz."
+  },
+
+  "korrekturenNachEntschied44": {
+    "regel": "ENTSCHIED 44 (2026-08-30 00:02) — zwei Korrekturen VOR dem Freeze, append-only im Abschlussbericht.",
+    "ort": "reports/studie/R15a-abschluss-2026-08-30.md, Abschnitt 'KORREKTUR-BLOCK — angehaengt 2026-08-30, ENTSCHIED 44' (append-only; keine bestehende Zeile geaendert, Byte-Praefix-Erhalt bewiesen)",
+    "K1": "Die Angabe '372/372 nachgezogen, 1,035 GB' zur companyfacts-Strecke bezeichnete eine ANDERE Menge. Der lokale companyfacts.zip traegt 20.072 CIKs / 1,389 GB, Stand 19.07.2026 — rund 54-mal reichweiter. Betrifft die AUSSICHT der Wiederbelebung (A.5 Frage 1), nicht das Verdikt und keine Zahl dieses Records.",
+    "K1Verifikation": "Beim Einfrieren unabhaengig an der echten Datei nachgemessen, nicht aus ENTSCHIED 44 uebernommen: 20072 Eintraege im Zip-Verzeichnis, 1389741631 Bytes (= 1,390 GB dezimal), Aenderungsdatum 2026-07-19 13:47. Alle drei Angaben von ENTSCHIED 44 bestaetigt.",
+    "K2": "companyfacts fuehrt je Fakt nur 'filed', KEIN 'accepted'. Gegen das accepted-geschnittene Panel dieser Studie entsteht ein systematischer, gerichteter Achsen-Bruch von bis zu einem Geschaeftstag (R5-relevant); er ist in jedem kuenftigen Anlauf vorab zu deklarieren und zu messen. Zusaetzlich live ausgeloest: die stille Infinity-Falle in lib/sec-pit.js (pitSeriesFromFacts) — fehlt asOf, wird asOfMs = Infinity und der PIT-Schnitt faellt lautlos weg, ohne Fehlermeldung. Fuer Studiencode kuenftig harter Abbruch statt stillem Horizont.",
+    "ankerDrift": "ENTSCHIED 44 zitiert sec-pit.js:206; das ist dieselbe Zeile in der nicht committeten Arbeitskopie des Haupt-Klons. Auf origin/main (e496b41892) steht sie in lib/sec-pit.js:190. Identischer Mechanismus, keine zweite Fundstelle.",
+    "wirkungAufDiesesVerdikt": "KEINE. Beide Korrekturen betreffen den Ausblick, nicht eine Messung dieses Abschlusses."
+  },
+
+  "openItems": [
+    {
+      "id": "a5-form25-abgleich",
+      "beschreibung": "Abgleich der 8 echten Signal-Abgaenge (und 172 Kontroll-Abgaenge) gegen den freien Form-25-Bestand: fuer wie viele existiert eine Meldung im plausiblen Fenster?",
+      "vorabGenehmigt": "orchestrator-2026-08-29.md ENTSCHIED 28.3, fuer BEIDE Ausgaenge",
+      "status": "OFFEN — BRAUCHT NEUEN REGISTER-EINTRAG",
+      "nichtAusgefuehrtWeil": [
+        "Ausgabe-Allowlist: E4g-v2 listet exakt 20 Aggregatfelder, E4h 14. Ein Zaehler 'Abgaenge mit Form-25-Treffer' steht in KEINER der beiden Listen.",
+        "Kennungs-Verbot: beide Eintraege sagen woertlich 'Keine Firmen-Kennungen'. Der Abgleich braucht panelseitig die CIK der 8 Firmen.",
+        "Input-Scope: beide Eintraege sagen woertlich 'ausschliesslich die Panel-Datei ... keine neue Quelle'. Der Form-25-Bestand ist gegenueber diesen Eintraegen eine NEUE Quelle.",
+        "Gegenprobe: kein committetes Studien-Artefakt traegt die noetigen Kennungen (in E4a-diagnose-pruefung-2026-08-19.json kommt 'cik' nicht vor) — der Abgleich laesst sich auch nicht aus bereits veroeffentlichten Zahlen bauen."
+      ],
+      "vorbedingungen": [
+        "Neuer Register-Eintrag, main-first vor dem Zugriff (Ein-Appender-Regel, ENTSCHIED 7): Input-Scope Panel + benannter Form-25-Bestand als zweite Quelle; Bit-Anker exakt 8 Signal- und 172 Kontroll-Abgaenge; Ausgabe-Allowlist zwei bis vier neue Zaehler, keine Kennungen, keine Datumslisten; das Zeitfenster fuer 'plausibel' VORAB fixiert.",
+        "Form-25-Nachernte mit Fensterbeginn 2016-01-01: das Signalband laeuft 2017-01-01/2019-12-31 bei Panelrand 2020-12-31, plausible Meldezeitpunkte liegen also etwa 2017-2021 — der geerntete Bestand beginnt aber erst 2019-01-01, rund zwei der drei Signaljahre sind strukturell unabgedeckt. Ein Treffer-Zaehler auf dem heutigen Bestand waere unbekannt stark nach unten verzerrt. Der Bulk-Bestand liegt lokal; der Re-Scan kostet Rechenzeit, kein Geld und keinen Abruf."
+      ],
+      "zeitschaetzungNachEintrag": "unter 0,5 Tage inklusive Nachernte",
+      "technischeMachbarkeit": "trivial — Panel traegt sub.cik, der D2-Bestand traegt cik plus filingDate je Treffer. Der Aufwand liegt in der Anmeldung, nicht in der Rechnung."
+    },
+    {
+      "id": "zweite-faktenquelle",
+      "beschreibung": "Warum reisst die Quartals-Meldung ab, obwohl die Firma 10-Q einreicht? 21 von 25 tragen weniger als vier Post-Signal-Quartalsstichtage bei laufender 10-Q-Kadenz. Hypothese: die Panel-Befuellung endet, nicht die Firma.",
+      "status": "OFFEN — wichtigste Frage dieses Abschlusses",
+      "pruefbarNurGegen": "eine zweite Faktenquelle (etwa die companyfacts-Strecke, die fuer ein Nachbarprojekt bereits vollstaendig lokal vorliegt, 372/372, 1,035 GB, gratis)",
+      "pruefbarNurGegenKorrektur": "ENTSCHIED 44 (K1): '372/372, 1,035 GB' bezeichnete eine ANDERE Menge. Der lokale companyfacts.zip traegt 20.072 CIKs / 1,389 GB, Stand 19.07.2026 — die Reichweite der zweiten Faktenquelle ist rund 54-mal groesser als im Entwurfssatz oben beziffert. Der Entwurfssatz bleibt als Beleg stehen; verbindlich ist diese Korrektur. Siehe korrekturenNachEntschied44.",
+      "zeitschaetzung": "1-2 Tage, eigene Anmeldung noetig",
+      "einordnung": "Der einzige Weg, der diese Studie wiederbeleben koennte — er greift die dominante Ursache direkt an, waehrend Bezahldaten nur 8 von 39 adressieren.",
+      "disziplinBeiWiederaufnahme": "Ein NEUER Anlauf durch DIESELBEN eingefrorenen Tore: Panel mit angereicherter Quelle neu bauen, Zulassung NEU messen, bei >= 90 % neue Praeregistrierung. Nie eine rueckwirkende Rettung der 89,32 %. Die Vervollstaendigung muss regelbasiert und universell ueber ALLE Panel-Luecken laufen, nie handverlesen ueber die bekannten Misses — sonst wird der Nenner kuratiert. Der Achsen-Bruch aus K2 (filed statt accepted) ist dabei vorab zu deklarieren und zu messen."
+    },
+    {
+      "id": "e6-einbau-praereg-abweichungsrecord",
+      "beschreibung": "Abweichungs-Record 'fehlende Einbau-Praeregistrierung', Muster supersede-record.json",
+      "status": "OFFEN — aus E6 uebernommen, unabhaengig von diesem Verdikt"
+    }
+  ],
+
+  "erledigtVorDemAbschluss": [
+    {
+      "id": "v120-brueckenkorrektur",
+      "beschreibung": "Naht-Datierung auf der richtigen Zeitachse (5146 Naehte) und die Mehrfachnaht-Verteilung als echtes Artefakt statt gedrucktem Literal",
+      "status": "GEBAUT, RE-PROOFED, MIT CLOSURE-RECORD VERSIEGELT",
+      "bewusstAuchBeiStudienEnde": "Der Korrektur-Record haelt woertlich fest, dass die Heilung auch dann gilt, wenn die Studie mit R15a endet. Ein ehrlicher Abschluss laesst keinen offenen Regelbruch zurueck.",
+      "beleg": "protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json, r2-a1-v120-closure-record.json"
+    }
+  ],
+
+  "wasAusdruecklichNICHTGiltR11": [
+    "NICHT: das Signal existiert nicht. Diese Studie hat es nicht geprueft; sie hat es nicht pruefen DUERFEN. Es wurde kein einziger Test gerechnet.",
+    "NICHT: es gibt keinen Kanten-Effekt. Die 0 der Kantenprobe ist unschluessig (siehe entscheidungskette Schritt 2).",
+    "NICHT: die verschwundenen Firmen sind ueberwiegend echte Abgaenge. Gemessen 8 von 39 = 20,5 %.",
+    "NICHT: die Signalfirmen verschwinden haeufiger als der Kontrollpool. Gemessen ist die Gegenrichtung — 20,5 % gegen 38,4 %.",
+    "NICHT: der A.5-Form-25-Abgleich wurde durchgefuehrt. Er ist offen und wird nicht als Zahl geschaetzt.",
+    "Unsicherheits-Schranke ohne Annahmen (R11): 39 von 365 unverfolgbaren Firmen = 10,68 Prozentpunkte in unbekannter Richtung auf jede Kennzahl ueber die 326 verfolgbaren Firmen. Deshalb kein Punktwert."
+  ],
+
+  "belege": {
+    "abschlussbericht": {"pfad": "reports/studie/R15a-abschluss-2026-08-30.md", "sha256": "0346015f426b70ae92a9f1ca98005984bb55744a7de2927e518e32f49c39b95e"},
+    "e4g": {"pfad": "reports/studie/E4g-restursachen-diagnose-2026-08-29.md", "pr": 94, "commit": "9408126e60", "registerEintrag": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207"},
+    "e4h": {"pfad": "reports/studie/E4h-serienende-diagnose-2026-08-29.md", "pr": 103, "commit": "a12eabdd4b", "registerEintrag": "381fd9e08651fd0410b4adc98a941300e8d0a3827070105fa70f60f417ec7c17"},
+    "e4f": "reports/studie/E4f-nachrechnung-2026-08-23.md",
+    "praereg": "protocol/early-detection/2.0.0/preregistration.json",
+    "orchestratorLog": "Jarvis/Knowledge/Trading/growth-screener/agent-reports/orchestrator-2026-08-29.md"
+  },
+
+  "siegelUndLedger": {
+    "endtestSiegelBeruehrt": false,
+    "ledgerAppendDurchDiesenRecord": false,
+    "ledgerEintraegeUnveraendert": 18,
+    "versiegelteDateienEditiert": false,
+    "testsAbgeschwaecht": false,
+    "hinweis": "Dieser Record ist eine NEUE Datei. Er editiert nichts Bestehendes. Der Friedhof-Append (R13) ist der einzige Schreibvorgang an einer bestehenden Datei und ist per Schema nur-anhaengend."
+  }
+}
