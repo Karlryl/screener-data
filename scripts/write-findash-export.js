@@ -1179,6 +1179,13 @@ function validateSurvivalRow(r, where, errs) {
   // Waechter, nicht nur als Kommentar — ein versehentlich gegatetes survival.json faellt auf.
   if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
   if ((r.rankGrund ?? null) !== null) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)} auf survival-Zeile (dort greift kein Gate)`);
+  // Dieselbe Ausnahme, dieselbe Bauart (Vertrag docs/findash-export-v1.md §4):
+  // survival-Zeilen sind nie gescort, tragen kein coverageAxes und haben deshalb keine
+  // Beleg-Behauptung zu stuetzen. Ein qPunkte/qSpanTage hier waere ein Beleg fuer eine
+  // Behauptung, die es nicht gibt — und passierte den --check bisher sauber.
+  for (const key of ['qPunkte', 'qSpanTage']) {
+    if (key in r) errs.push(`${where}: ${key} auf survival-Zeile (dort gibt es keine coverageAxes-Behauptung zu belegen)`);
+  }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!('runwayQuarters' in r)) errs.push(`${where}: runwayQuarters missing`);
   else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
@@ -1562,6 +1569,14 @@ function selftest() {
   const sNoRank = { ...s0 }; delete sNoRank.rank; trip(validateSurvivalRow, sNoRank, 'survival rank removed');
   trip(validateSurvivalRow, { ...s0, marketCap: 'GARBAGE' }, 'survival marketCap garbage');
   trip(validateSurvivalRow, { ...s0, phase: 'zombie' }, 'survival phase bad enum');
+  // M8 (Nacht-Sweep 29.08.): eine survival-Zeile MIT Belegpunkten passierte den --check
+  // sauber, obwohl der Vertrag (§4) sie dort ausdruecklich ausschliesst. Beide
+  // Richtungen: die saubere Zeile OHNE die Felder muss weiterhin durchgehen (die Pruefung
+  // darf kein Pflichtfeld daraus machen), die Zeile MIT ihnen muss stolpern.
+  assert.strictEqual(cleanErrs(validateSurvivalRow, s0).length, 0, 'survival ohne Belegpunkte muss sauber bleiben');
+  trip(validateSurvivalRow, { ...s0, qPunkte: 4 }, 'survival qPunkte');
+  trip(validateSurvivalRow, { ...s0, qPunkte: null }, 'survival qPunkte null');
+  trip(validateSurvivalRow, { ...s0, qSpanTage: 546 }, 'survival qSpanTage');
 
   // hull-level: coverage key missing / bad status, branch mismatch, boardStatus (2.1).
   const mkHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null, branch: 'energy', profitable: [], unprofitable: [], ...over });
