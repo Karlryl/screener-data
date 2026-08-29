@@ -22,6 +22,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const args = process.argv.slice(2);
 const argVal = (name, def) => {
@@ -46,7 +47,7 @@ function tageZwischen(a, b) {
 }
 
 function main() {
-  const dateien = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  const dateien = fs.readdirSync(DIR).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   const alter = [];
   let ohneEnden = 0, kaputt = 0, gescannt = 0;
   const jeMonat = new Map();
