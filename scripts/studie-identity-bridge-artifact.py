@@ -39,6 +39,10 @@ BLOCKER_CLOSURE_REL = (
     "r2-a1-blocker2-3-closure-record.json"
 )
 BLOCKER_CLOSURE = os.path.join(REPO, *BLOCKER_CLOSURE_REL.split("/"))
+V120_CLOSURE_REL = (
+    "protocol/early-detection/2.0.0/"
+    "r2-a1-v120-closure-record.json"
+)
 DETERMINISM_FIXTURE_REL = (
     "tests/fixtures/studie-identity-bridge-determinism-input.json"
 )
@@ -49,8 +53,18 @@ COUNT_SCRIPT_REL = "scripts/studie-zaehlprobe.py"
 SEALED_SCRIPT_REL = "scripts/studie-e4d-kadenz.py"
 LAST_ALLOWED_DATE = "2020-12-31"
 LAST_ALLOWED_DDATE = "20201231"
-ARTIFACT_VERSION = "1.1.0"
+ARTIFACT_VERSION = "1.2.0"
 PRIOR_ARTIFACT_VERSION = "1.0.0"
+BLOCKER1_ARTIFACT_VERSION = "1.1.0"
+# ARTIFACT_VERSION sits inside the HMAC payload, so every bump changes all E-,
+# I- and S-IDs and therefore the pinned logical payload hash. A payload pin is
+# valid for exactly ONE artifact version and is written by that version's
+# post-run closure record. Old versions stay checkable against their own
+# record; a missing entry is a loud refusal, never a silent pass.
+CLOSURE_RECORDS = {
+    "1.1.0": (BLOCKER_CLOSURE_REL, "FROZEN_BLOCKER_2_3_CLOSURE"),
+    "1.2.0": (V120_CLOSURE_REL, "FROZEN_V120_CLOSURE"),
+}
 PRIOR_MANIFEST_SHA256 = "d6e6af0bded542bdc104f35a5b2d2a1e35d1ef95acc63fb4f17ebab3ea8414bc"
 PUBLIC_ID_SAMPLE = 50
 PUBLIC_CIK_MAX = 2_100_000
@@ -77,6 +91,21 @@ WINDOWS = (
     ("entdeckung", "entdeckung", "panel-entdeckung.sqlite"),
     ("pruefung", "pruefung", "panel-validierung.sqlite"),
 )
+# Every exclusion the scan can make, with the already-read row count it is
+# measured against. Declared here so a counter that never fires reports 0
+# instead of being absent: zero and never-measured must stay distinguishable.
+EXCLUSION_COUNTERS = {
+    "nonperiodicReportsExcluded": "reportRowsRead",
+    "reportsWithoutAcceptedExcluded": "reportRowsRead",
+    "reportsWithoutValidCikExcluded": "reportRowsRead",
+    "reportsWithoutNameExcluded": "reportRowsRead",
+    "coregFactMetadataExcluded": "factMetadataRowsRead",
+    "customTaxonomyMetadataExcluded": "factMetadataRowsRead",
+    "nonperiodicFactMetadataExcluded": "factMetadataRowsRead",
+    "factMetadataWithoutIdentityExcluded": "factMetadataRowsRead",
+    "factMetadataWithoutUnitExcluded": "factMetadataRowsRead",
+    "factMetadataOutsideDateExcluded": "factMetadataRowsRead",
+}
 
 
 class ArtifactError(Exception):
@@ -243,6 +272,35 @@ def load_determinism_correction():
     return correction
 
 
+REPLICATION_BINDING = "REPLICATION_AGAINST_BOUND_MANIFEST"
+FIRST_BUILD_BINDING = "FIRST_BUILD_OF_VERSION"
+
+
+def bound_manifest_binding(version):
+    """Resolve the prior-manifest binding for THAT artifact version.
+
+    Context-dependent, version-aware (ENTSCHIED 9), same two-stage shape as the
+    Q1 payload pin: what a run can be held against depends on whether a frozen
+    record already pins it.
+
+    REPLICATION_AGAINST_BOUND_MANIFEST - the version HAS a bound record, so both
+        rebuilds must reproduce that exact manifest. Blocker-2 semantics for
+        1.1.0 are untouched.
+    FIRST_BUILD_OF_VERSION - no such record exists yet, so there is nothing to
+        replicate: a corrected version changes the artifact bytes by design and
+        can never reproduce its predecessor's manifest. The gate is then the
+        A==B identity, and the prior-manifest binding is deferred to that
+        version's post-run closure record.
+
+    The mode is returned so the attestation can NAME it. A weaker gate that is
+    not named is the failure this function exists to prevent.
+    """
+    bound = load_determinism_correction()["boundArtifact"]
+    if version == bound["artifactVersion"]:
+        return REPLICATION_BINDING, bound["manifestSha256BeforeCorrection"]
+    return FIRST_BUILD_BINDING, None
+
+
 def compare_independent_build_records(builder_a, builder_b):
     correction = load_determinism_correction()
     mismatches = [
@@ -264,18 +322,24 @@ def compare_independent_build_records(builder_a, builder_b):
         builder_a.get("panelsScanned") == expected_panels
         and builder_b.get("panelsScanned") == expected_panels
     )
-    bound_manifest_match = (
-        builder_a["fingerprint"].get("manifestFileSha256")
-        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
-        and builder_b["fingerprint"].get("manifestFileSha256")
-        == correction["boundArtifact"]["manifestSha256BeforeCorrection"]
-    )
+    built_version = builder_a["fingerprint"].get("artifactVersion")
+    binding_mode, expected_manifest = bound_manifest_binding(built_version)
+    if expected_manifest is None:
+        # Not applicable, not "passed": None never reads as a satisfied check.
+        bound_manifest_match = None
+        deferred_to = (CLOSURE_RECORDS.get(built_version) or (None,))[0]
+    else:
+        bound_manifest_match = (
+            builder_a["fingerprint"].get("manifestFileSha256") == expected_manifest
+            and builder_b["fingerprint"].get("manifestFileSha256") == expected_manifest
+        )
+        deferred_to = None
     passes = (
         not mismatches
         and process_ids_distinct
         and scans_per_process == [2, 2]
         and panels_match
-        and bound_manifest_match
+        and bound_manifest_match is not False
         and runtimes_equal
     )
     return {
@@ -296,7 +360,9 @@ def compare_independent_build_records(builder_a, builder_b):
             value for value in scans_per_process if isinstance(value, int)
         ),
         "panelsMatchRegistration": panels_match,
+        "boundManifestMode": binding_mode,
         "matchesBoundManifest": bound_manifest_match,
+        "priorManifestBindingDeferredTo": deferred_to,
         "fingerprintFieldsCompared": list(INDEPENDENT_FINGERPRINT_FIELDS),
         "fingerprintMismatches": mismatches,
         "observedStatus": "GREEN" if passes else "RED",
@@ -351,6 +417,25 @@ def accepted_date(value):
     return raw[:10]
 
 
+def compact_date(value):
+    """Render either date notation as the panel's compact YYYYMMDD form.
+
+    `ddate` arrives as "20201231", `accepted` as "2020-12-31". Both must be
+    comparable against LAST_ALLOWED_DDATE and sortable against each other, so
+    every date that reaches the artifact is normalised here first.
+    """
+    raw = re.sub(r"[^0-9]", "", str(value or ""))
+    return raw if re.match(r"^\d{8}$", raw) else None
+
+
+def beyond_date_wall(value):
+    """Single date-wall predicate; an unreadable date is never inside the wall."""
+    compact = compact_date(value)
+    if compact is None:
+        return True
+    return compact > LAST_ALLOWED_DDATE
+
+
 def legacy_stable_id(prefix, *parts):
     """Rejected v1.0.0 mapping, retained only so the public attack stays executable."""
     payload = ("R2-A1/" + prefix + "/1\0" + "\0".join(parts)).encode("utf-8")
@@ -392,11 +477,24 @@ def new_scan_state(identity_key=None):
         "identities": defaultdict(lambda: {
             "names": set(), "renameEdges": set(), "windows": set()
         }),
-        "components": defaultdict(set),
+        # tag -> compact accepted date of the earliest filing carrying that tag
+        # for this (cik, unit, ddate, qtrs) period. ddate stays the period key.
+        "components": defaultdict(dict),
         "dateWindows": defaultdict(set),
+        # No shared counter bag: exclusions belong to the window that made
+        # them and live in that window's entry of inputSummaries.
         "inputSummaries": [],
-        "counters": defaultdict(int),
     }
+
+
+def zero_exclusions(observed=None):
+    """All ten counters, zero-initialised, overlaid with what was observed."""
+    counters = dict.fromkeys(EXCLUSION_COUNTERS, 0)
+    for name, value in (observed or {}).items():
+        if name not in counters:
+            raise ArtifactError("Unknown exclusion counter: " + str(name))
+        counters[name] = value
+    return dict(sorted(counters.items()))
 
 
 def update_digest(digest, row):
@@ -412,8 +510,11 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
     identity_digest = hashlib.sha256()
     fact_digest = hashlib.sha256()
     adsh_to_cik = {}
+    adsh_accepted = {}
+    exclusions = dict.fromkeys(EXCLUSION_COUNTERS, 0)
     summary = {
         "file": expected_basename,
+        "window": window_name,
         "bytes": os.path.getsize(checked),
         "reportRowsRead": 0,
         "periodicIdentityRows": 0,
@@ -429,11 +530,11 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
         for adsh, raw_cik, name, former, changed, form, accepted in panel.execute(query):
             summary["reportRowsRead"] += 1
             if form_stem(form) not in BASIS.PERIODISCHE_FORMEN:
-                state["counters"]["nonperiodicReportsExcluded"] += 1
+                exclusions["nonperiodicReportsExcluded"] += 1
                 continue
             date = accepted_date(accepted)
             if date is None:
-                state["counters"]["reportsWithoutAcceptedExcluded"] += 1
+                exclusions["reportsWithoutAcceptedExcluded"] += 1
                 continue
             if date > LAST_ALLOWED_DATE:
                 raise ArtifactError("A report beyond the allowed date entered an allowed panel")
@@ -442,15 +543,16 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
             former_name = normalize_name(former)
             changed_raw = str(changed or "").strip()
             if cik is None:
-                state["counters"]["reportsWithoutValidCikExcluded"] += 1
+                exclusions["reportsWithoutValidCikExcluded"] += 1
                 continue
             if not current_name:
-                state["counters"]["reportsWithoutNameExcluded"] += 1
+                exclusions["reportsWithoutNameExcluded"] += 1
                 continue
             existing = adsh_to_cik.get(adsh)
             if existing is not None and existing != cik:
                 raise ArtifactError("One filing identifier points to two internal CIKs")
             adsh_to_cik[adsh] = cik
+            adsh_accepted[adsh] = compact_date(date)
             identity = state["identities"][cik]
             identity["names"].add(current_name)
             identity["windows"].add(window_name)
@@ -479,29 +581,32 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
                     fact_query, params):
                 summary["factMetadataRowsRead"] += 1
                 if coreg is not None and str(coreg).strip():
-                    state["counters"]["coregFactMetadataExcluded"] += 1
+                    exclusions["coregFactMetadataExcluded"] += 1
                     continue
                 if not BASIS.STANDARD_VERSION_RE.match(str(version or "").strip()):
-                    state["counters"]["customTaxonomyMetadataExcluded"] += 1
+                    exclusions["customTaxonomyMetadataExcluded"] += 1
                     continue
                 if str(qtrs or "").strip() not in {"1", "4"}:
-                    state["counters"]["nonperiodicFactMetadataExcluded"] += 1
+                    exclusions["nonperiodicFactMetadataExcluded"] += 1
                     continue
                 cik = adsh_to_cik.get(adsh)
                 if cik is None:
-                    state["counters"]["factMetadataWithoutIdentityExcluded"] += 1
+                    exclusions["factMetadataWithoutIdentityExcluded"] += 1
                     continue
                 unit = str(uom or "").strip()
                 date = str(ddate or "").strip()
                 if not unit:
-                    state["counters"]["factMetadataWithoutUnitExcluded"] += 1
+                    exclusions["factMetadataWithoutUnitExcluded"] += 1
                     continue
                 if not re.match(r"^\d{8}$", date) or date > LAST_ALLOWED_DDATE:
-                    state["counters"]["factMetadataOutsideDateExcluded"] += 1
+                    exclusions["factMetadataOutsideDateExcluded"] += 1
                     continue
                 quarter_span = str(qtrs).strip()
                 key = (cik, unit, date, quarter_span)
-                state["components"][key].add(tag)
+                carried_at = adsh_accepted[adsh]
+                known_at = state["components"][key].get(tag)
+                if known_at is None or carried_at < known_at:
+                    state["components"][key][tag] = carried_at
                 state["dateWindows"][(cik, unit, date)].add(window_name)
                 update_digest(fact_digest, (
                     cik, tag, str(version).strip(), date, quarter_span, unit, window_name
@@ -512,6 +617,7 @@ def scan_panel(path, window_name, wall_name, expected_basename, state):
         panel.close()
     summary["identityEvidenceSha256"] = identity_digest.hexdigest()
     summary["factMetadataEvidenceSha256"] = fact_digest.hexdigest()
+    summary["exclusions"] = zero_exclusions(exclusions)
     state["inputSummaries"].append(summary)
 
 
@@ -545,6 +651,27 @@ def source_dates_from_components(components):
             if set(required_tags).issubset(tags_present):
                 source_dates[(cik, unit, source)].add(date)
     return source_dates
+
+
+def source_event_dates_from_components(components):
+    """accepted date on which each (cik, unit, source, ddate) was first carried.
+
+    A source is carried once every tag it requires exists, so the completing
+    moment is the latest of the per-tag first-carrying filings; across the
+    quarter spans of one period key the earliest such moment wins.
+    """
+    events = {}
+    for (cik, unit, date, _quarter_span), accepted_by_tag in components.items():
+        for source, required_tags in SOURCE_DEFINITIONS:
+            carried = [accepted_by_tag.get(tag) for tag in required_tags]
+            if any(value is None for value in carried):
+                continue
+            complete_at = max(carried)
+            key = (cik, unit, source, date)
+            known = events.get(key)
+            if known is None or complete_at < known:
+                events[key] = complete_at
+    return events
 
 
 def selected_track(source_dates, cik, unit):
@@ -583,6 +710,11 @@ def artifact_from_state(state, reverse_inputs=False):
         raise ArtifactError("Artifact state lacks a valid identity HMAC key")
     identities = state["identities"]
     source_dates = source_dates_from_components(state["components"])
+    source_events = source_event_dates_from_components(state["components"])
+    # Locals, never state: artifact_from_state is called repeatedly on one state
+    # (ordering proof, stability proof) and must stay side-effect free.
+    collapsed_transitions = 0
+    fallback_event_dates = 0
     eligible = {}
     rejected_ambiguous = 0
     for cik, identity in identities.items():
@@ -610,28 +742,45 @@ def artifact_from_state(state, reverse_inputs=False):
             for date, source in track:
                 selected_by_source[source].append(date)
             previous = None
+            unit_seams = {}
             for date, source in track:
                 current_identifier = identifier_id(identity_key, entity, source, unit)
                 if previous is not None and previous[1] != source:
                     old_identifier = identifier_id(
                         identity_key, entity, previous[1], unit
                     )
-                    sid = seam_id(
-                        identity_key, entity, unit, date,
-                        old_identifier, current_identifier,
-                    )
-                    seams.append({
-                        "seamId": sid,
-                        "entityId": entity,
-                        "date": date,
-                        "unit": unit,
-                        "oldIdentifierId": old_identifier,
-                        "newIdentifierId": current_identifier,
-                        "identityEvidenceClass": eligible[cik],
-                        "defaultSeriesPolicy": "terminate-at-seam",
-                        "crossSeamRequiresExplicitMarker": True,
-                    })
+                    event_date = source_events.get((cik, unit, source, date))
+                    if event_date is None:
+                        fallback_event_dates += 1
+                        event_date = date
+                    # One filing that first carries the new source for several
+                    # period keys is ONE seam event, not one per period.
+                    event_key = (old_identifier, current_identifier, event_date)
+                    seam = unit_seams.get(event_key)
+                    if seam is None:
+                        unit_seams[event_key] = {
+                            "seamId": seam_id(
+                                identity_key, entity, unit, event_date,
+                                old_identifier, current_identifier,
+                            ),
+                            "entityId": entity,
+                            "date": date,
+                            "seamEventDate": event_date,
+                            "periodKeysCollapsed": 1,
+                            "unit": unit,
+                            "oldIdentifierId": old_identifier,
+                            "newIdentifierId": current_identifier,
+                            "identityEvidenceClass": eligible[cik],
+                            "defaultSeriesPolicy": "terminate-at-seam",
+                            "crossSeamRequiresExplicitMarker": True,
+                        }
+                    else:
+                        seam["periodKeysCollapsed"] += 1
+                        collapsed_transitions += 1
+                        if date < seam["date"]:
+                            seam["date"] = date
                 previous = (date, source)
+            seams.extend(unit_seams.values())
             for source, dates in selected_by_source.items():
                 iid = identifier_id(identity_key, entity, source, unit)
                 mappings[iid] = {
@@ -672,10 +821,31 @@ def artifact_from_state(state, reverse_inputs=False):
     for entity in entities:
         entity["identifiers"] = sorted(entity["identifiers"],
                                         key=lambda row: row["identifierId"])
-        entity["seams"] = sorted(entity["seams"],
-                                  key=lambda row: (row["date"], row["seamId"]))
+        entity["seams"] = sorted(
+            entity["seams"],
+            key=lambda row: (row["seamEventDate"], row["date"], row["seamId"]))
     entities = sorted(entities, key=lambda row: row["entityId"])
     input_summaries = sorted(state["inputSummaries"], key=lambda row: row["file"])
+    # C: exclusions stay window-separated; the canonicalising sort travels with
+    # them (zero_exclusions sorts each block, and byWindow/total sort here).
+    by_window = {}
+    totals = dict.fromkeys(EXCLUSION_COUNTERS, 0)
+    for row in input_summaries:
+        if row["window"] in by_window:
+            raise ArtifactError("Two panel summaries claim one window name")
+        by_window[row["window"]] = row["exclusions"]
+        for name, value in row["exclusions"].items():
+            totals[name] += value
+    exclusions = {
+        "byWindow": dict(sorted(by_window.items())),
+        "denominators": dict(sorted(EXCLUSION_COUNTERS.items())),
+        "total": dict(sorted(totals.items())),
+    }
+    # B: the multi-seam exposure is derived from the published entities and
+    # carried BY the artifact; the report renders it instead of literals.
+    seam_distribution = defaultdict(int)
+    for row in entities:
+        seam_distribution[str(len(row["seams"]))] += 1
     counts = {
         "identityEntitiesSeen": len(identities),
         "identityEntitiesEligible": len(eligible),
@@ -683,6 +853,14 @@ def artifact_from_state(state, reverse_inputs=False):
         "entitiesWithBridgeSeams": len(entities),
         "identifierMappings": sum(len(row["identifiers"]) for row in entities),
         "bridgeSeams": sum(len(row["seams"]) for row in entities),
+        "entitiesWithMultipleBridgeSeams": sum(
+            1 for row in entities if len(row["seams"]) > 1),
+        "maximumBridgeSeamsPerEntity": max(
+            (len(row["seams"]) for row in entities), default=0),
+        "bridgeSeamCountDistribution": dict(sorted(
+            seam_distribution.items(), key=lambda item: int(item[0]))),
+        "periodKeyTransitionsCollapsedIntoSeams": collapsed_transitions,
+        "seamEventDatesFallenBackToPeriodKey": fallback_event_dates,
         "exchangeEvidenceRows": 0,
     }
     artifact = {
@@ -720,7 +898,7 @@ def artifact_from_state(state, reverse_inputs=False):
             "requiredMarkerFields": ["crossSeam", "crossedSeamCount", "seamPolicy"],
         },
         "inputs": input_summaries,
-        "exclusions": dict(sorted(state["counters"].items())),
+        "exclusions": exclusions,
         "counts": counts,
         "entities": entities,
     }
@@ -751,7 +929,7 @@ def validate_artifact(artifact, raw_ciks=None, raw_names=None):
             owner = identifier_owner.setdefault(iid, entity_id_value)
             if owner != entity_id_value:
                 raise ArtifactError("Identifier maps to multiple entities")
-            if row["lastDate"] > LAST_ALLOWED_DDATE:
+            if beyond_date_wall(row["lastDate"]):
                 raise ArtifactError("Identifier mapping crosses the date wall")
         for seam in entity["seams"]:
             if seam["oldIdentifierId"] not in identifiers:
@@ -762,8 +940,10 @@ def validate_artifact(artifact, raw_ciks=None, raw_names=None):
             new = identifiers[seam["newIdentifierId"]]
             if old["unit"] != new["unit"] or seam["unit"] != old["unit"]:
                 raise ArtifactError("A currency or unit boundary was bridged")
-            if seam["date"] > LAST_ALLOWED_DDATE:
+            if beyond_date_wall(seam["date"]):
                 raise ArtifactError("A seam crosses the date wall")
+            if beyond_date_wall(seam["seamEventDate"]):
+                raise ArtifactError("A seam event crosses the date wall")
             if seam["defaultSeriesPolicy"] != "terminate-at-seam":
                 raise ArtifactError("A seam lost its termination default")
     expected = dict(artifact)
@@ -982,21 +1162,25 @@ def fixture_state():
         state["identities"][cik]["names"].update(names)
         state["identities"][cik]["renameEdges"].update(edges)
         state["identities"][cik]["windows"].add("pruefung")
-    state["components"][("100", "USD", "20180331", "1")].add("SalesRevenueNet")
-    state["components"][("100", "USD", "20180630", "1")].add("SalesRevenueNet")
-    state["components"][("100", "USD", "20180930", "1")].add(
-        "RevenueFromContractWithCustomerExcludingAssessedTax")
-    state["components"][("100", "EUR", "20181231", "1")].add(
-        "RevenueFromContractWithCustomerExcludingAssessedTax")
+    # accepted dates deliberately differ from the period keys so the fixture
+    # exercises the accepted-time seam placement rather than the fallback.
+    state["components"][("100", "USD", "20180331", "1")]["SalesRevenueNet"] = "20180510"
+    state["components"][("100", "USD", "20180630", "1")]["SalesRevenueNet"] = "20180809"
+    state["components"][("100", "USD", "20180930", "1")][
+        "RevenueFromContractWithCustomerExcludingAssessedTax"] = "20181108"
+    state["components"][("100", "EUR", "20181231", "1")][
+        "RevenueFromContractWithCustomerExcludingAssessedTax"] = "20190215"
     for date in ("20180331", "20180630", "20180930", "20181231"):
         for unit in ("USD", "EUR"):
             state["dateWindows"][("100", unit, date)].add("pruefung")
     state["inputSummaries"] = [{
-        "file": "fixture.sqlite", "bytes": 1, "reportRowsRead": 3,
+        "file": "fixture.sqlite", "window": "pruefung", "bytes": 1,
+        "reportRowsRead": 3,
         "periodicIdentityRows": 3, "factMetadataRowsRead": 4,
         "eligibleFactMetadataRows": 4, "lastAllowedDate": LAST_ALLOWED_DATE,
         "identityEvidenceSha256": "0" * 64,
         "factMetadataEvidenceSha256": "1" * 64,
+        "exclusions": zero_exclusions(),
     }]
     return state
 
@@ -1017,12 +1201,24 @@ def state_from_fixed_fixture(payload):
         key_tuple = (
             str(row["cik"]), row["unit"], row["date"], row["quarterSpan"]
         )
-        state["components"][key_tuple].update(row.get("tags", []))
+        # A fixture without acceptedByTag carries no accepted evidence; the
+        # seam then falls back to the period key and is counted as such.
+        accepted_by_tag = row.get("acceptedByTag", {})
+        for tag in row.get("tags", []):
+            state["components"][key_tuple][tag] = compact_date(
+                accepted_by_tag.get(tag))
     for row in payload.get("dateWindows", []):
         key_tuple = (str(row["cik"]), row["unit"], row["date"])
         state["dateWindows"][key_tuple].update(row.get("windows", []))
-    state["inputSummaries"] = payload.get("inputSummaries", [])
-    state["counters"].update(payload.get("counters", {}))
+    # The frozen fixture predates the per-window split: its single summary
+    # inherits the fixture's counters, every further one starts at explicit 0.
+    state["inputSummaries"] = [
+        dict(row,
+             window=row.get("window", "pruefung"),
+             exclusions=zero_exclusions(
+                 payload.get("counters", {}) if index == 0 else {}))
+        for index, row in enumerate(payload.get("inputSummaries", []))
+    ]
     return state
 
 
@@ -1044,13 +1240,54 @@ def load_blocker_closure():
     return record
 
 
-def verify_determinism_fixture(path):
-    record = load_blocker_closure()
+def pinned_fixture_binding(version=None):
+    """Resolve the logical-payload pin from the closure record OF THAT VERSION.
+
+    Two-stage pin protocol (ENTSCHIED 6, Q1): a correction record frozen BEFORE
+    a run can only pin what is knowable beforehand - script hash, artifact
+    version, procedure. The payload hash is knowable only afterwards and is
+    therefore carried by a post-run closure record, one per artifact version.
+    Resolving per version keeps the old pin checkable against the old artifact
+    and stops a pin from one version silently judging another version's bytes.
+    """
+    version = version or ARTIFACT_VERSION
+    entry = CLOSURE_RECORDS.get(version)
+    if entry is None:
+        raise ArtifactError(
+            "No closure record is registered for artifact version " + version
+        )
+    relative, expected_status = entry
+    path = repo_path(relative)
+    if not os.path.isfile(path):
+        raise ArtifactError(
+            "The post-run closure record for artifact version " + version
+            + " does not exist yet (" + relative + "). Its payload pin is"
+            " written after the one canonical re-proof, never before it."
+        )
+    with open(path, encoding="utf-8") as handle:
+        record = json.load(handle)
+    if record.get("status") != expected_status:
+        raise ArtifactError(
+            "Closure record for artifact version " + version + " is not frozen"
+        )
     binding = record["blocker2MutationSensitiveDeterminism"]
-    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+    # The 1.1.0 record predates the field; the version->record map already binds
+    # it. Any record that DOES carry it must agree, or the pin is not its own.
+    if binding.get("boundArtifactVersion", version) != version:
+        raise ArtifactError(
+            "Closure record pin is bound to another artifact version"
+        )
+    return binding
+
+
+def verify_determinism_fixture(path):
+    # Input-side facts (fixture bytes, deliberate mutation) are version-free and
+    # stay in the blocker closure; only the OUTPUT pin is resolved per version.
+    inputs = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
+    if sha256_file(path) != inputs["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch")
     observed = fixed_fixture_artifact(path)["canonicalPayloadSha256"]
-    expected = binding["pinnedExpectedLogicalPayloadSha256"]
+    expected = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
     if observed != expected:
         raise ArtifactError(
             "Fixed determinism output hash mismatch: " + observed + " != " + expected
@@ -1064,21 +1301,23 @@ def verify_determinism_fixture(path):
 
 
 def sabotage_determinism_fixture(path, proof_path=None):
-    record = load_blocker_closure()
-    binding = record["blocker2MutationSensitiveDeterminism"]
-    if sha256_file(path) != binding["fixedInputFixture"]["sha256"]:
+    # The mutation must be CONTENT under the SAME artifact version, so the pin
+    # fires for the mutation and not for a version jump (ENTSCHIED 6, Q1d).
+    inputs = load_blocker_closure()["blocker2MutationSensitiveDeterminism"]
+    expected = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
+    if sha256_file(path) != inputs["fixedInputFixture"]["sha256"]:
         raise ArtifactError("Fixed determinism input fixture hash mismatch before sabotage")
     with open(path, encoding="utf-8") as handle:
         payload = json.load(handle)
-    mutation = binding["deliberateMutation"]
+    mutation = inputs["deliberateMutation"]
     component = payload["components"][mutation["componentIndex"]]
     if component[mutation["field"]] != mutation["from"]:
         raise ArtifactError("Determinism sabotage fixture no longer has its pinned source value")
     component[mutation["field"]] = mutation["to"]
     observed = artifact_from_fixed_fixture_payload(payload)["canonicalPayloadSha256"]
-    expected = binding["pinnedExpectedLogicalPayloadSha256"]
     proof = {
         "schema": "R2-A1-determinism-fixture-sabotage-proof/1",
+        "artifactVersion": ARTIFACT_VERSION,
         "fixture": DETERMINISM_FIXTURE_REL,
         "mutation": mutation,
         "expectedLogicalPayloadSha256": expected,
@@ -1124,6 +1363,12 @@ SELF_TEST_NAMES = (
     "Fixed input fixture reproduces its pinned logical payload hash",
     "One fixed input field mutation changes the pinned logical payload hash",
     "Production bridge writer gates the manifest and every shard",
+    "Seam event carries the accepted date while ddate stays the period key",
+    "Post-wall seam event is rejected in the accepted date notation",
+    "Ten exclusion counters are published per window and zero-initialised",
+    "Bound-manifest replication mode enforces the pinned manifest",
+    "A new artifact version defers the prior-manifest binding and names the mode",
+    "Replication mode still rejects a manifest that does not match its pin",
 )
 
 
@@ -1228,10 +1473,14 @@ def self_test():
     check(SELF_TEST_NAMES[18], legacy_inversion_matches(secure_fixture_ids, 100) == 0)
     legacy_fixture_ids = [legacy_stable_id("E", str(value)) for value in range(1, 11)]
     check(SELF_TEST_NAMES[19], legacy_inversion_matches(legacy_fixture_ids, 100) == 10)
-    registered_manifest = load_determinism_correction()["boundArtifact"][
-        "manifestSha256BeforeCorrection"]
+    bound_artifact = load_determinism_correction()["boundArtifact"]
+    registered_manifest = bound_artifact["manifestSha256BeforeCorrection"]
+    # The bound version, not ARTIFACT_VERSION: pairing a corrected version with
+    # its predecessor's manifest is a combination that cannot occur in a real
+    # build, and pretending it can is what hid the comparator defect.
     base_fingerprint = {
-        field: (ARTIFACT_VERSION if field == "artifactVersion" else "a" * 64)
+        field: (bound_artifact["artifactVersion"]
+                if field == "artifactVersion" else "a" * 64)
         for field in INDEPENDENT_FINGERPRINT_FIELDS
     }
     base_fingerprint["manifestFileSha256"] = registered_manifest
@@ -1258,15 +1507,63 @@ def self_test():
         and independent_red["fingerprintMismatches"] == ["shardSetSha256"],
         independent_red,
     )
+
+    def compared_pair(version, manifest_sha):
+        fingerprint = dict(base_fingerprint)
+        fingerprint["artifactVersion"] = version
+        fingerprint["manifestFileSha256"] = manifest_sha
+        return compare_independent_build_records(
+            dict(record_a, processId=303, fingerprint=dict(fingerprint),
+                 sabotageApplied=False),
+            dict(record_a, processId=404, fingerprint=dict(fingerprint),
+                 sabotageApplied=False),
+        )
+
+    replication = compared_pair(
+        bound_artifact["artifactVersion"], registered_manifest)
+    check(
+        SELF_TEST_NAMES[28],
+        replication["boundManifestMode"] == REPLICATION_BINDING
+        and replication["matchesBoundManifest"] is True
+        and replication["passes"] is True,
+        replication,
+    )
+    first_build = compared_pair(ARTIFACT_VERSION, "b" * 64)
+    check(
+        SELF_TEST_NAMES[29],
+        first_build["boundManifestMode"] == FIRST_BUILD_BINDING
+        and first_build["matchesBoundManifest"] is None
+        and first_build["priorManifestBindingDeferredTo"] == V120_CLOSURE_REL
+        and first_build["passes"] is True,
+        first_build,
+    )
+    # The guard must still bite in replication mode, or the fix would be a
+    # blanket weakening dressed up as a mode.
+    wrong_manifest = compared_pair(bound_artifact["artifactVersion"], "c" * 64)
+    check(
+        SELF_TEST_NAMES[30],
+        wrong_manifest["boundManifestMode"] == REPLICATION_BINDING
+        and wrong_manifest["matchesBoundManifest"] is False
+        and wrong_manifest["passes"] is False,
+        wrong_manifest,
+    )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
+    # Documented interim state (ENTSCHIED 6, Q2): the v1.2.0 closure record is
+    # written only after the one canonical re-proof, so these two checks are
+    # RED with a plaintext reason until then. Everything else must stay green.
+    try:
+        pinned_payload = pinned_fixture_binding()["pinnedExpectedLogicalPayloadSha256"]
+        pin_state = "pin resolved for " + ARTIFACT_VERSION
+    except ArtifactError as error:
+        pinned_payload = None
+        pin_state = str(error)
     fixture_artifact = fixed_fixture_artifact(DETERMINISM_FIXTURE)
     check(
         SELF_TEST_NAMES[22],
         sha256_file(DETERMINISM_FIXTURE) == fixture_binding["fixedInputFixture"]["sha256"]
-        and fixture_artifact["canonicalPayloadSha256"]
-        == fixture_binding["pinnedExpectedLogicalPayloadSha256"],
-        fixture_artifact["canonicalPayloadSha256"],
+        and fixture_artifact["canonicalPayloadSha256"] == pinned_payload,
+        (pin_state, fixture_artifact["canonicalPayloadSha256"]),
     )
     with open(DETERMINISM_FIXTURE, encoding="utf-8") as handle:
         mutated_payload = json.load(handle)
@@ -1279,8 +1576,8 @@ def self_test():
     ]
     check(
         SELF_TEST_NAMES[23],
-        mutated_hash != fixture_binding["pinnedExpectedLogicalPayloadSha256"],
-        mutated_hash,
+        pinned_payload is not None and mutated_hash != pinned_payload,
+        (pin_state, mutated_hash),
     )
     clean_manifest, clean_shards = manifest_from_artifact(
         fixture_artifact, "fixture-bridge.json"
@@ -1308,6 +1605,53 @@ def self_test():
     except ArtifactError:
         writer_rejected = True
     check(SELF_TEST_NAMES[24], clean_guarded == 0 and writer_rejected)
+    placed = artifact["entities"][0]["seams"][0]
+    check(
+        SELF_TEST_NAMES[25],
+        placed["seamEventDate"] == "20181108"
+        and placed["date"] == "20180930"
+        and placed["periodKeysCollapsed"] == 1,
+        placed,
+    )
+    post_wall_event = json.loads(json.dumps(artifact))
+    post_wall_event["entities"][0]["seams"][0]["seamEventDate"] = "2021-03-05"
+    body = dict(post_wall_event)
+    body.pop("canonicalPayloadSha256")
+    post_wall_event["canonicalPayloadSha256"] = canonical_hash(body)
+    try:
+        validate_artifact(post_wall_event)
+        event_rejected = False
+    except ArtifactError:
+        event_rejected = True
+    # The raw string compare mis-orders the wall day itself ("2020-12-31" sorts
+    # below "20201231"); only the normalisation makes the guard sound.
+    check(
+        SELF_TEST_NAMES[26],
+        event_rejected
+        and beyond_date_wall("2021-03-05")
+        and not beyond_date_wall("2020-12-31")
+        and compact_date("2020-12-31") == LAST_ALLOWED_DDATE
+        and ("2020-12-31" > LAST_ALLOWED_DDATE) is False,
+        event_rejected,
+    )
+    try:
+        zero_exclusions({"typoCounterName": 1})
+        unknown_counter_rejected = False
+    except ArtifactError:
+        unknown_counter_rejected = True
+    published = artifact["exclusions"]
+    check(
+        SELF_TEST_NAMES[27],
+        len(EXCLUSION_COUNTERS) == 10
+        and set(published["total"]) == set(EXCLUSION_COUNTERS)
+        and all(set(block) == set(EXCLUSION_COUNTERS)
+                for block in published["byWindow"].values())
+        and set(published["byWindow"]) == {"pruefung"}
+        and all(value == 0 for value in published["total"].values())
+        and list(published["total"]) == sorted(published["total"])
+        and unknown_counter_rejected,
+        published,
+    )
     if failures:
         print("SELBSTTEST ROT - %d named checks failed" % len(failures))
         return 1
@@ -1490,9 +1834,11 @@ def sabotage_independent_rebuild(args):
         args, sabotage_child=True
     )
     expected_mismatches = ["shardSetSha256"]
+    # Anchored on the isolated mismatch, NOT on observedStatus RED (ENTSCHIED 9).
+    # RED is over-determined: any other failing condition also colours the proof
+    # red, so RED alone would not prove that the sabotage is what was detected.
     if (
-            proof["observedStatus"] == "RED"
-            and proof["fingerprintMismatches"] == expected_mismatches
+            proof["fingerprintMismatches"] == expected_mismatches
             and proof["processIdsDistinct"] is True
             and proof["scanPanelCallsPerProcess"] == [2, 2]):
         print(
@@ -1522,8 +1868,16 @@ def load_independent_rebuild_proof(path, manifest_path):
         raise ArtifactError("Independent rebuild proof did not record four panel scans")
     if proof.get("fingerprintMismatches") != []:
         raise ArtifactError("Independent rebuild fingerprints differ")
-    if proof.get("matchesBoundManifest") is not True:
-        raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    # Mode-aware (ENTSCHIED 9). A proof that does not NAME its mode is refused
+    # outright, so an older or hand-made proof cannot slip past the weaker gate
+    # by simply omitting the field.
+    if proof.get("boundManifestMode") not in (REPLICATION_BINDING, FIRST_BUILD_BINDING):
+        raise ArtifactError("Independent rebuild proof does not name its bound-manifest mode")
+    if proof.get("boundManifestMode") == REPLICATION_BINDING:
+        if proof.get("matchesBoundManifest") is not True:
+            raise ArtifactError("Independent rebuild did not reproduce the bound manifest")
+    elif proof.get("matchesBoundManifest") is not None:
+        raise ArtifactError("First build of a version cannot claim a bound-manifest match")
     if any(row.get("sabotageApplied") for row in proof.get("builders", [])):
         raise ArtifactError("Green independent rebuild proof contains a sabotage")
     return proof
@@ -1582,9 +1936,9 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "threeRequiredBypassSabotagesCompleted": 0,
         },
         "methodCorrections": {
-            "acceptedTimeSeamPlacement": "OPEN",
-            "multipleSeamExposureRestoration": "OPEN",
-            "completeExclusionCounters": "OPEN",
+            "acceptedTimeSeamPlacement": "APPLIED_PENDING_METHOD_ACCEPTANCE",
+            "multipleSeamExposureRestoration": "PUBLISHED_IN_ARTIFACT",
+            "completeExclusionCounters": "PUBLISHED_IN_ARTIFACT",
         },
     }
     result = {
@@ -1596,8 +1950,11 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "manifestSha256": PRIOR_MANIFEST_SHA256,
             "status": "REJECTED_REVERSIBLE_IDENTIFIERS",
         }, {
+            "artifactVersion": BLOCKER1_ARTIFACT_VERSION,
+            "status": "BLOCKER1_IDENTITY_PROTECTION_CORRECTION",
+        }, {
             "artifactVersion": ARTIFACT_VERSION,
-            "status": "CURRENT_BLOCKER1_CORRECTION",
+            "status": "CURRENT_METHOD_CORRECTIONS_A_B_C",
         }, {
             "path": DETERMINISM_CORRECTION_REL,
             "sha256": sha256_file(DETERMINISM_CORRECTION),
@@ -1675,6 +2032,7 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
             "reviewStatus": "INSUFFICIENT_BLOCKER_3_OPEN",
         },
         "inputs": artifact["inputs"],
+        "exclusions": artifact["exclusions"],
         "counts": artifact["counts"],
         "identityEvidence": {
             "internalCikUsed": True,
@@ -1703,9 +2061,23 @@ def render_report(result):
     contract = result["contract"]
     artifact = result["panelArtifact"]
     evidence = result["identityEvidence"]
+    seam_distribution = ", ".join(
+        "%s Naehte: %d Entitaeten" % (seams, entities)
+        for seams, entities in counts["bridgeSeamCountDistribution"].items()
+    )
+    denominators = {row["window"]: row for row in result["inputs"]}
+    exclusion_lines = []
+    for window in sorted(result["exclusions"]["byWindow"]):
+        read = denominators[window]
+        for name, value in result["exclusions"]["byWindow"][window].items():
+            base = result["exclusions"]["denominators"][name]
+            exclusion_lines.append(
+                "- %s / %s: %d von %d gelesenen Zeilen" % (
+                    window, name, value, read[base]))
     return "\n".join([
-        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; Auftrag 1 bleibt HOLD fuer Blocker 3 und die offenen Methodik-Korrekturen.**" % (
-            artifact["artifactVersion"], artifact["sha256"]),
+        "**Ergebnis: Blocker 1 und 2 sind in Kennungsbruecke v%s geheilt: zwei getrennte Prozesse scannten beide Panels vollstaendig und trafen den Manifest-Hash `%s` mit 0 Fingerprint-Abweichungen; die drei Methodik-Korrekturen A/B/C sind gebaut, die neue Nahtmenge (%d) steht noch zur Methodik-Abnahme, und Auftrag 1 bleibt HOLD fuer Blocker 3.**" % (
+            artifact["artifactVersion"], artifact["sha256"],
+            counts["bridgeSeams"]),
         "",
         "# R2-A1 - Die Kennungsbruecke als Panel-Artefakt",
         "",
@@ -1742,10 +2114,33 @@ def render_report(result):
         "zweiten echten Neubau wurde rot abgewiesen. Der fruehere In-Prozess-Check",
         "gilt ausdruecklich nicht als unabhaengiger Determinismusbeleg.",
         "",
-        "Die unveraenderte, noch `ddate`-basierte Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
+        "Die Panel-Fassung enthaelt %d pseudonymisierte Entitaeten," % (
             counts["entitiesWithBridgeSeams"]),
-        "%d Kennungszuordnungen und %d Naehte." % (
+        "%d Kennungszuordnungen und %d Naehte. `ddate` bleibt Perioden-Schluessel;" % (
             counts["identifierMappings"], counts["bridgeSeams"]),
+        "das Naht-EREIGNIS traegt das `accepted` der Einreichung, die die neue Quelle",
+        "erstmals traegt. %d Perioden-Uebergaenge fielen dadurch mit einem frueheren" % (
+            counts["periodKeyTransitionsCollapsedIntoSeams"]),
+        "Ereignis derselben Einreichung zusammen; %d Naehte hatten keinen" % (
+            counts["seamEventDatesFallenBackToPeriodKey"]),
+        "Annahme-Zeitstempel und fielen auf den Perioden-Schluessel zurueck.",
+        "",
+        "%d der %d Entitaeten tragen mehr als eine Naht; die hoechste Nahtzahl" % (
+            counts["entitiesWithMultipleBridgeSeams"],
+            counts["entitiesWithBridgeSeams"]),
+        "einer einzelnen Entitaet betraegt %d. Verteilung: %s." % (
+            counts["maximumBridgeSeamsPerEntity"], seam_distribution),
+        "Alle drei Groessen stehen als Felder im Artefakt und werden hier nur",
+        "wiedergegeben, nicht im Bericht gerechnet.",
+        "",
+        "## Ausschluesse je Fenster",
+        "",
+        "Alle %d Zaehler sind mit 0 vorbelegt; eine 0 heisst gemessen und nie" % (
+            len(EXCLUSION_COUNTERS)),
+        "eingetreten, nicht ungemessen. Nenner ist die jeweils bereits gelesene",
+        "Zeilenzahl desselben Fensters; es wurde dafuer nichts zusaetzlich gelesen.",
+        "",
+        "\n".join(exclusion_lines),
         "",
         "## Was ausdruecklich nicht gezeigt ist",
         "",
@@ -1756,8 +2151,10 @@ def render_report(result):
         "- Ergebnisartefakt und Bericht enthalten keine Firmenidentitaeten; das Panel-Artefakt verwendet nur pseudonyme Entitaets- und Kennungs-IDs.",
         "- Blocker 2 ist nur fuer die gebundenen Panelbytes, Python-Laufzeit, Implementierung und denselben externen HMAC-Schluessel bestanden; andere Laufzeiten oder Eingaben wurden nicht verglichen.",
         "- Blocker 3 ist offen: Der bisherige Naht-Waechter vertraut noch Aufrufer-Etiketten und ist nicht im spaeteren Auftrag-2-Pfad installiert.",
-        "- Die Quellenwahl verwendet weiterhin `ddate` statt `accepted`; die 5.146 Naehte sind deshalb noch nicht methodisch korrigiert oder abgenommen.",
-        "- Die 971 Mehrfachnaht-Entitaeten, maximale Nahtzahl und vollstaendigen Ausschlusszaehler sind noch nicht wiederhergestellt.",
+        "- Die Naht-Datierung auf `accepted` ist gebaut, aber methodisch noch nicht abgenommen; die neue Nahtmenge (%d) braucht die Abnahme durch den Orchestrator." % (
+            counts["bridgeSeams"]),
+        "- Die Mehrfachnaht-Verteilung ist nur veroeffentlicht, nicht ausgewertet: eine segmentweise Kontiguitaets- oder Schwundmessung ist von der Praeregistrierung ausgeschlossen und gehoert in Auftrag 2.",
+        "- Die Ausschlusszaehler sind vollstaendig und fenstergetrennt veroeffentlicht, aber nicht ausgewertet; ob ein Ausschluss inhaltlich richtig ist, sagt der Zaehler nicht.",
         "",
         "## Neue Fragen und Hypothesen",
         "",

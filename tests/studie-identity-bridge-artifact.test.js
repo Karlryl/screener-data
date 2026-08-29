@@ -16,24 +16,33 @@ const DETERMINISM_CORRECTION = path.join(REPO, 'protocol', 'early-detection', '2
   'r2-a1-blocker2-independent-rebuild-correction.json');
 const BLOCKER_CLOSURE = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
   'r2-a1-blocker2-3-closure-record.json');
+// ENTSCHIED 11.2: with the v1.2.0 closure frozen, the guard follows the SEALED
+// state. Every pin below resolves out of a frozen record, never out of a
+// hand-typed literal. The 1.1.0 pins stay reachable where a test's job is
+// explicitly to prove the historical artifact was NOT rewritten.
+const V120_CLOSURE = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
+  'r2-a1-v120-closure-record.json');
 const DETERMINISM_FIXTURE = path.join(REPO, 'tests', 'fixtures',
   'studie-identity-bridge-determinism-input.json');
 const ARTIFACT = path.join(REPO, 'reports', 'studie',
-  'R2-A1-identity-bridge-panel-v1.json');
+  'R2-A1-identity-bridge-panel-v2.json');
 const RESULT = path.join(REPO, 'reports', 'studie',
-  'R2-A1-identity-bridge-artifact-2026-08-25.json');
+  'R2-A1-identity-bridge-artifact-2026-08-29.json');
 const REPORT = path.join(REPO, 'reports', 'studie',
-  'R2-A1-identity-bridge-artifact-2026-08-25.md');
+  'R2-A1-identity-bridge-artifact-2026-08-29.md');
+// SUPERSEDE_NO_DELETE: the 1.1.0 result stays pinned by its own closure record.
+const HISTORICAL_RESULT = path.join(REPO, 'reports', 'studie',
+  'R2-A1-identity-bridge-artifact-2026-08-25.json');
 const PROOF = path.join(REPO, 'reports', 'studie',
-  'R2-A1-cross-seam-sabotage-2026-08-25.json');
+  'R2-A1-cross-seam-sabotage-2026-08-29.json');
 const ID_PROOF = path.join(REPO, 'reports', 'studie',
-  'R2-A1-public-identity-inversion-proof-2026-08-25.json');
+  'R2-A1-public-identity-inversion-proof-2026-08-29.json');
 const ID_SABOTAGE = path.join(REPO, 'reports', 'studie',
-  'R2-A1-public-identity-inversion-sabotage-2026-08-25.json');
+  'R2-A1-public-identity-inversion-sabotage-2026-08-29.json');
 const INDEPENDENT_PROOF = path.join(REPO, 'reports', 'studie',
-  'R2-A1-independent-rebuild-proof-2026-08-25.json');
+  'R2-A1-independent-rebuild-proof-2026-08-29.json');
 const INDEPENDENT_SABOTAGE = path.join(REPO, 'reports', 'studie',
-  'R2-A1-independent-rebuild-sabotage-2026-08-25.json');
+  'R2-A1-independent-rebuild-sabotage-2026-08-29.json');
 const DETERMINISM_SABOTAGE = path.join(REPO, 'reports', 'studie',
   'R2-A1-determinism-fixture-sabotage-2026-08-28.json');
 const BRIDGE_WRITE_SABOTAGE = path.join(REPO, 'reports', 'studie',
@@ -67,6 +76,14 @@ const REQUIRED = [
   'Fixed input fixture reproduces its pinned logical payload hash',
   'One fixed input field mutation changes the pinned logical payload hash',
   'Production bridge writer gates the manifest and every shard',
+  // v1.2.0 corrections A and C
+  'Seam event carries the accepted date while ddate stays the period key',
+  'Post-wall seam event is rejected in the accepted date notation',
+  'Ten exclusion counters are published per window and zero-initialised',
+  // ENTSCHIED 9: the two bound-manifest modes, and the guard still biting
+  'Bound-manifest replication mode enforces the pinned manifest',
+  'A new artifact version defers the prior-manifest binding and names the mode',
+  'Replication mode still rejects a manifest that does not match its pin',
 ];
 
 test('R2-A1: fixture self-test is named, countable, and green', () => {
@@ -80,7 +97,10 @@ test('R2-A1: fixture self-test is named, countable, and green', () => {
     .map((line) => line.replace(/^\s{2}ok\s{4}/, '').trim()));
   assert.deepEqual(REQUIRED.filter((name) => !green.has(name)), []);
   assert.equal(green.size, REQUIRED.length);
-  assert.match(run.stdout, /SELBSTTEST GREEN - 25 named checks/);
+  // Literal on purpose: a second, independent pin. REQUIRED.length alone would
+  // move silently if someone edited the list.
+  assert.equal(REQUIRED.length, 31);
+  assert.match(run.stdout, /SELBSTTEST GREEN - 31 named checks/);
 });
 
 test('R2-A1: deliberate unmarked cross-seam calculation fails red', () => {
@@ -188,9 +208,12 @@ function loadBundle() {
 test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', () => {
   const { manifest, logical } = loadBundle();
   const result = JSON.parse(fs.readFileSync(RESULT, 'utf8'));
-  const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
+  const closure = JSON.parse(fs.readFileSync(V120_CLOSURE, 'utf8'));
+  assert.equal(closure.status, 'FROZEN_V120_CLOSURE');
   assert.equal(manifest.schema, 'R2-A1-identity-bridge-panel-manifest/1');
-  assert.equal(manifest.artifactVersion, '1.1.0');
+  assert.equal(manifest.artifactVersion, '1.2.0');
+  // The sealed manifest hash, straight out of the frozen closure record.
+  assert.equal(sha256(ARTIFACT), closure.boundManifest.manifestFileSha256);
   assert.equal(result.panelArtifact.sha256, sha256(ARTIFACT));
   assert.equal(result.panelArtifact.independentRebuildManifestSha256, sha256(ARTIFACT));
   assert.equal(result.panelArtifact.independentRebuildsExecuted, 2);
@@ -280,7 +303,14 @@ test('R2-A1 Blocker 2: two full process-isolated rebuilds match and sabotage is 
   assert.notEqual(proof.builders[0].processId, proof.builders[1].processId);
   assert.deepEqual(proof.scanPanelCallsPerProcess, [2, 2]);
   assert.equal(proof.totalScanPanelCalls, 4);
-  assert.equal(proof.matchesBoundManifest, true);
+  // ENTSCHIED 9: the bound-manifest binding is context-dependent and the proof
+  // must NAME its mode. v1.2.0 was the first build of its version, so there was
+  // no prior manifest to replicate and the binding is deferred to the closure
+  // record; matchesBoundManifest is null, which must never read as "passed".
+  assert.equal(proof.boundManifestMode, 'FIRST_BUILD_OF_VERSION');
+  assert.equal(proof.matchesBoundManifest, null);
+  assert.equal(proof.priorManifestBindingDeferredTo,
+    'protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json');
   assert.deepEqual(proof.fingerprintMismatches, []);
   assert.deepEqual(proof.builders[0].fingerprint, proof.builders[1].fingerprint);
   assert.equal(proof.manifestSha256, sha256(ARTIFACT));
@@ -302,10 +332,21 @@ test('R2-A1 Blocker 2: two full process-isolated rebuilds match and sabotage is 
 });
 
 test('R2-A1 Blocker 2: fixed fixture hits pinned output hash and one field flip is red', () => {
+  // Input-side facts stay version-free in the blocker closure; only the OUTPUT
+  // pin is resolved per artifact version (ENTSCHIED 6 Q1, ENTSCHIED 11.2).
   const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
   const binding = closure.blocker2MutationSensitiveDeterminism;
+  const v120 = JSON.parse(fs.readFileSync(V120_CLOSURE, 'utf8'));
+  const v120Binding = v120.blocker2MutationSensitiveDeterminism;
   assert.equal(closure.status, 'FROZEN_BLOCKER_2_3_CLOSURE');
+  assert.equal(v120.status, 'FROZEN_V120_CLOSURE');
+  assert.equal(v120Binding.boundArtifactVersion, '1.2.0');
   assert.equal(sha256(DETERMINISM_FIXTURE), binding.fixedInputFixture.sha256);
+  assert.equal(sha256(DETERMINISM_FIXTURE), v120Binding.fixedInputFixture.sha256);
+  // The two pins must genuinely differ: ARTIFACT_VERSION sits in the HMAC
+  // payload, so a shared value would mean the version namespace did not move.
+  assert.notEqual(v120Binding.pinnedExpectedLogicalPayloadSha256,
+    binding.pinnedExpectedLogicalPayloadSha256);
 
   const green = spawnSync(process.env.PYTHON || 'python', [
     SCRIPT, '--verify-determinism-fixture', '--fixture', DETERMINISM_FIXTURE,
@@ -313,7 +354,7 @@ test('R2-A1 Blocker 2: fixed fixture hits pinned output hash and one field flip 
   assert.equal(green.status, 0, `${green.stdout}\n${green.stderr}`);
   const observed = JSON.parse(green.stdout.trim());
   assert.equal(observed.logicalPayloadSha256,
-    binding.pinnedExpectedLogicalPayloadSha256);
+    v120Binding.pinnedExpectedLogicalPayloadSha256);
 
   const red = spawnSync(process.env.PYTHON || 'python', [
     SCRIPT, '--sabotage-determinism-fixture', '--fixture', DETERMINISM_FIXTURE,
@@ -352,7 +393,9 @@ test('R2-A1 Blocker 3: production bridge writer guards manifest and every shard'
 
 test('R2-A1 blocker closure leaves historical artifact and sealed scope unchanged', () => {
   const closure = JSON.parse(fs.readFileSync(BLOCKER_CLOSURE, 'utf8'));
-  assert.equal(sha256(RESULT), closure.historicalArtifact.sha256);
+  // Deliberately the 1.1.0 result: this test's whole job is to prove the
+  // historical artifact was not rewritten when v1.2.0 superseded it.
+  assert.equal(sha256(HISTORICAL_RESULT), closure.historicalArtifact.sha256);
   assert.equal(closure.historicalArtifact.changed, false);
   assert.equal(closure.closureReady, true);
   assert.deepEqual(closure.scope, {
@@ -395,5 +438,8 @@ test('R2-A1: red sabotage proof and report are bound to machine artifacts', () =
   assert.match(report, /Prozess A und Prozess B.*getrenntem Speicher/s);
   assert.match(report, /fruehere In-Prozess-Check.*nicht.*unabhaengiger Determinismusbeleg/s);
   assert.match(report, /Blocker 3 ist offen/);
-  assert.match(report, /ddate.*accepted/);
+  // v1.2.0 correction A: the report no longer discloses "still ddate instead of
+  // accepted" as an open defect, it states the corrected split. Pin the split.
+  assert.match(report,
+    /ddate` bleibt Perioden-Schluessel[\s\S]*?Naht-EREIGNIS traegt das `accepted/);
 });

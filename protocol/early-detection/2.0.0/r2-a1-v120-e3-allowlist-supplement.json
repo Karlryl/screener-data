@@ -1,0 +1,78 @@
+{
+  "schema": "early-detection-allowlist-supplement/v1",
+  "status": "FROZEN_E3_ALLOWLIST_SUPPLEMENT",
+  "frozenNotice": "FROZEN. Abgenommen durch ENTSCHIED 8 (Orchestrator-Direktiven 2026-08-29, 17:23, Freeze-GO) auf Grundlage von ENTSCHIED 6, Q5, nach protocol/early-detection/2.0.0/ verschoben und VOR dem einen kanonischen Re-Proof committet. Die versiegelte Praeregistrierung bleibt unberuehrt; dieser Record steht neben ihr und nimmt ihr nichts weg.",
+  "draftNoticeSuperseded": "ENTWURF. Nicht eingefroren, nicht registriert, bewusst ausserhalb von protocol/. Wird nach Abnahme nach protocol/early-detection/2.0.0/ verschoben, auf FROZEN_E3_ALLOWLIST_SUPPLEMENT gesetzt, gehasht und VOR dem Re-Proof committet (ENTSCHIED 6, Q5).",
+  "protocol": "FEM-SEC-US@2.0.0",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "draftCreatedAt": "2026-08-29",
+  "frozenAt": "2026-08-29",
+  "authority": [
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 6, Q5",
+    "Verfassung der Early-Detection-Studie Z.286 (Offenlegungs-Weichen liegen beim Orchestrator, nicht bei Karl)"
+  ],
+  "purpose": "Die zehn namentlich gelisteten Ausschlusszaehler der Kennungsbruecke um ihre Nenner ergaenzen, ohne die versiegelte Praeregistrierung zu beruehren.",
+  "referencedSealedSource": {
+    "path": "protocol/early-detection/2.0.0/preregistration.json",
+    "section": "zaehlprobe.ausgabeAllowlist",
+    "sha256AtDraftTime": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c",
+    "sealedBy": "protocol/early-detection/2.0.0/hash-manifest.json",
+    "changed": false,
+    "changeRule": "Diese Datei wird NICHT editiert, NICHT neu versiegelt und NICHT ergaenzt. Der Supplement-Record steht NEBEN ihr und nimmt ihr nichts weg.",
+    "anchorDriftNote": "Die Rats-Fundstelle nannte ':276-283'. Nachgeprueft am committeten Stand: die Zaehlproben-Ausgabe-Allowlist steht auf :196-208 im Block 'zaehlprobe' (:192 ff.); :276-283 traegt die Abweichungs-Klauseln (P95, Ausschlussquote, Dateiname des Prueffensters). Gemeint und hier referenziert ist die Allowlist auf :196-208."
+  },
+  "scope": {
+    "governedArtifact": "Das R2-A1-Kennungsbruecken-Artefakt und sein Ergebnisartefakt (scripts/studie-identity-bridge-artifact.py), NICHT die Ausgabe von scripts/studie-zaehlprobe.py.",
+    "whyStated": "Die Zaehlproben-Allowlist regelt die Ausgabe des Zaehlprobe-Skripts. Dieser Supplement erweitert die Offenlegung des Bruecken-Artefakts und wird ausdruecklich so benannt, damit niemand ihn als Aenderung am Zaehlprobe-Vertrag liest.",
+    "unchangedRule": "Die Regel 'ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter' bleibt in beiden Vertraegen unveraendert gueltig."
+  },
+  "disclosureExtension": {
+    "addedFields": [
+      {
+        "field": "reportRowsRead",
+        "level": "je Fenster, in inputs[]",
+        "isDenominatorFor": [
+          "nonperiodicReportsExcluded",
+          "reportsWithoutAcceptedExcluded",
+          "reportsWithoutValidCikExcluded",
+          "reportsWithoutNameExcluded"
+        ]
+      },
+      {
+        "field": "factMetadataRowsRead",
+        "level": "je Fenster, in inputs[]",
+        "isDenominatorFor": [
+          "coregFactMetadataExcluded",
+          "customTaxonomyMetadataExcluded",
+          "nonperiodicFactMetadataExcluded",
+          "factMetadataWithoutIdentityExcluded",
+          "factMetadataWithoutUnitExcluded",
+          "factMetadataOutsideDateExcluded"
+        ]
+      }
+    ],
+    "countersCovered": 10,
+    "machineReadableBinding": "Die Zuordnung Zaehler -> Nenner steht als exclusions.denominators im Artefakt selbst; sie wird nicht im Bericht gerechnet.",
+    "noNewDataAccess": "Beide Nenner wurden bereits vor dieser Ergaenzung je Fenster gelesen und in inputs geschrieben. Es wird KEINE Zeile zusaetzlich gelesen, keine Quelle zusaetzlich geoeffnet, kein Zugriffsrecht erweitert.",
+    "zeroSemantics": "Alle zehn Zaehler sind mit 0 vorbelegt. Eine 0 heisst 'gemessen und nie eingetreten', nicht 'nie gemessen'. Ein unbekannter Zaehlername bricht ab, damit ein Tippfehler nicht als stille Null erscheint."
+  },
+  "rationale": "Zaehler ohne Nenner ist nicht interpretierbar - Offenlegungs-Erweiterung, keine Test-Abschwaechung, R13-kompatibel. R13 verbietet das Editieren eingefrorener Texte und das Abschwaechen von Tests; er verbietet nicht, MEHR offenzulegen. Es wird keine Schwelle bewegt, kein Kriterium gelockert, keine Pruefung entfernt.",
+  "notAWeakening": [
+    "Keine Schwelle, kein Gate und keine Entscheidungsregel wird beruehrt.",
+    "Keine Pruefung wird entfernt, uebersprungen oder toleranter gemacht.",
+    "Es wird kein Ergebniswert, kein Signal, kein Outcome und kein Preis offengelegt.",
+    "Die Zahl der offengelegten Groessen steigt; die Zahl der zulaessigen Schluessel in der Zaehlproben-Allowlist bleibt exakt gleich."
+  ],
+  "explicitNonClaims": [
+    "Der Supplement bewertet nicht, ob ein gezaehlter Ausschluss inhaltlich richtig war.",
+    "Er interpretiert die Zaehler nicht und leitet aus ihnen keine Schlussfolgerung ab.",
+    "Er beruehrt weder das versiegelte konfirmatorische Verdikt noch das Endtest-Fenster.",
+    "Er macht Auftrag 1 nicht vollstaendig und schliesst Blocker 3 nicht."
+  ],
+  "freezeOrder": [
+    "Abnahme durch den Orchestrator",
+    "Verschieben nach protocol/early-detection/2.0.0/, status auf FROZEN_E3_ALLOWLIST_SUPPLEMENT",
+    "Hashen und committen - VOR dem einen kanonischen Re-Proof",
+    "Der Re-Proof zitiert den SHA-256 dieses Records in seiner Anmeldung"
+  ]
+}
