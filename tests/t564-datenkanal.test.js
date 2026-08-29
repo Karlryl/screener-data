@@ -269,12 +269,12 @@ test('B1: die Sonde misst gh-pages outputs/board-history/index.json an dessen ge
 // irgendwo in der Sonde — der n<2-Zweig erfuellte beide Checks, der ganze
 // Veraltungs-Zweig liess sich spurlos ausbauen (Repro M2/M4/M7).
 test('B1: der VERALTUNGS-Zweig selbst meldet ::error:: (Karls einziger Kanal ist das rote X)', () => {
-  assert.match(zweig(sonde(), /if\s*\(\s*age\s*>\s*MAX\s*\)\s*\{/, 'age>MAX'), /::error::/,
+  assert.match(zweig(sonde(), /if\s*\(\s*A\.istVeraltet\(\s*age\s*,\s*MAX\s*\)\s*\)\s*\{/, 'A.istVeraltet(age,MAX)'), /::error::/,
     'der Zweig "Kanal veraltet" meldet sich nicht per ::error::');
 });
 
 test('B1: der VERALTUNGS-Zweig selbst beendet den Lauf rot (process.exit(1))', () => {
-  assert.match(zweig(sonde(), /if\s*\(\s*age\s*>\s*MAX\s*\)\s*\{/, 'age>MAX'), /process\.exit\(1\)/,
+  assert.match(zweig(sonde(), /if\s*\(\s*A\.istVeraltet\(\s*age\s*,\s*MAX\s*\)\s*\)\s*\{/, 'A.istVeraltet(age,MAX)'), /process\.exit\(1\)/,
     'der Zweig "Kanal veraltet" kann den Workflow nicht rot machen');
 });
 
@@ -310,7 +310,7 @@ test('F7: die Sonde misst zusaetzlich das Datum des juengsten Vintages', () => {
 });
 
 test('F7: der Vintage-Datums-Zweig selbst meldet ::error:: und beendet rot', () => {
-  const z = zweig(sonde(), /if\s*\(\s*vAlter\s*>\s*MAX\s*\)\s*\{/, 'vAlter>MAX');
+  const z = zweig(sonde(), /if\s*\(\s*A\.istVeraltet\(\s*vAlter\s*,\s*MAX\s*\)\s*\)\s*\{/, 'A.istVeraltet(vAlter,MAX)');
   assert.match(z, /::error::/, 'der Zweig "Vintage-Datum veraltet" meldet sich nicht per ::error::');
   assert.match(z, /process\.exit\(1\)/, 'der Zweig "Vintage-Datum veraltet" kann den Workflow nicht rot machen');
 });

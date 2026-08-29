@@ -63,6 +63,63 @@ const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'findash-export', 'v1');
 const OUT_FILE = path.join(OUT_DIR, 'excluded.json');
 const INDEX_FILE = path.join(OUT_DIR, 'index.json');
+// T155/W3: Traeger-Datei fuer den Universums-Hash. Bewusst NICHT unter
+// outputs/findash-export/v1/ und nicht unter outputs/hypergrowth/ — nur diese beiden
+// Verzeichnisse kopiert der gh-pages-Deploy (daily-pull.yml, "cp ../outputs/hypergrowth/*.json"
+// bzw. "cp -r ../outputs/findash-export/v1/."). Der Traeger bleibt damit lauf-lokal und
+// erzeugt keine neue oeffentliche Datei; wer den Hash oeffentlich braucht, liest ihn aus
+// excluded.json bzw. aus dem Vintage.
+const UNIVERSE_HASH_FILE = path.join(ROOT, 'outputs', 'universe-hash.json');
+// W3/T155 (Rat 29.08., Weg D): Betriebsmodus-Deklaration + versiegeltes Lauf-Artefakt.
+const MODE_FILE = path.join(ROOT, 'configs', 'scoring-mode.json');
+const SEALED_CALIB_FILE = path.join(ROOT, 'outputs', 'calibration.json');
+
+/**
+ * T155/W3 — Pruefsumme ueber die MENGE der bewerteten Ticker.
+ *
+ * WOZU. Bewegt sich ein Score zwischen zwei Laeufen, war bisher nicht maschinell
+ * unterscheidbar, ob sich die DATEN bewegt haben oder die KOHORTE (das Produkt
+ * normiert kohorten-relativ und kalibriert taeglich neu). Mit dem Hash ist die
+ * Herkunftsfrage ein Zeichenketten-Vergleich: gleicher Hash + andere Scores =
+ * Datenaenderung; anderer Hash = Kohortenwechsel.
+ *
+ * WAS GEHASHT WIRD. Genau das, was loadUniverse() zurueckgibt — nicht ein
+ * Stellvertreter aus einem Board. Ein Board ist gekappt bzw. gefiltert; die
+ * Normierungs-Kohorte ist das geladene Universum. Sortiert und dedupliziert, damit
+ * die Datei-Lesereihenfolge (OS-abhaengig) den Hash nicht bewegt.
+ *
+ * FORM. Wie `summeVon` in scripts/snapshot-ticker-map.js:198 (sha256 ueber die
+ * sortierte, komma-getrennte Symbolliste, auf 16 Hex gekuerzt) — bewusst NICHT von
+ * dort importiert: jenes Modul ruft beim Laden secUserAgent() auf (:68) und wuerde
+ * diesen Lauf an eine SEC-Umgebungsvariable binden, die er nicht braucht.
+ */
+function universumsHash(tickers) {
+  // Review-Befund (typescript-reviewer, 28.08.): ohne Pruefung waere ein `undefined`
+  // in der Liste KEIN Fehler, sondern eine stille Verschiebung — sort() haengt es
+  // hinten an, join() macht ein leeres Feld daraus, und der Hash bewegt sich aus einem
+  // Grund, der nichts mit der Kohorte zu tun hat. Genau die Klasse, gegen die diese
+  // Pruefsumme gebaut ist. Deshalb: laut werfen statt still faelschen.
+  const kaputt = [...tickers].filter((t) => typeof t !== 'string' || t.length === 0).length;
+  if (kaputt > 0) {
+    throw new Error(`[universums-hash] ${kaputt} von ${[...tickers].length} Eintraegen sind kein nicht-leerer `
+      + 'String. Ein solcher Eintrag verschoebe den Hash, ohne dass sich die Kohorte geaendert hat — '
+      + 'die Pruefsumme waere damit wertlos.');
+  }
+  return require('crypto').createHash('sha256')
+    .update([...new Set(tickers)].sort().join(',')).digest('hex').slice(0, 16);
+}
+
+/**
+ * Derselbe Hash, aber ueber ein UNIVERSUM (Snapshot-Objekte) statt ueber eine
+ * Tickerliste. Existiert als eigene Funktion, damit die Abbildung
+ * `Snapshot -> meta.ticker` gepinnt ist und nicht nur als Einzeiler in main() lebt:
+ * ein spaeteres `s.ticker` statt `s.meta.ticker` waere sonst eine Aenderung ohne
+ * Waechter (Review-Befund MITTEL, 28.08.). loadUniverse() garantiert `meta.ticker`
+ * (run-screener.js:297) — die Pruefung oben faengt eine Aufweichung dieser Garantie.
+ */
+function universumsHashVon(universe) {
+  return universumsHash(universe.map((s) => (s && s.meta ? s.meta.ticker : undefined)));
+}
 const SCHEMA = 'findash-export/v1';
 
 // Derselbe Schluessel wie produceRankings (score.js:1416). Bewusst hier als EINZEILER
@@ -200,18 +257,140 @@ function readExcludedCounter(indexFile) {
   return idx.excluded;
 }
 
+/**
+ * W3/T155 (Rat 29.08., Weg D) — Betriebsmodus-Pinning ohne Siegelbruch.
+ *
+ * Der produktive Lauf waehlt seinen Modus ueber SCORING_REF_CALIB (gelesen im
+ * versiegelten run-screener.js) und hinterlaesst darueber KEINEN Beleg. Dieses
+ * Skript ist der freie Zweitleser: es scort ohnehin ein volles zweites Mal und
+ * prueft kuenftig, ob der Lauf TATSAECHLICH im deklarierten Modus fuhr — nicht,
+ * was er glaubte. Ground Truth ist das Lauf-Artefakt outputs/calibration.json:
+ * im Referenz-Modus stehen die fuenf Lineal-Skalare dort wholesale aus dem
+ * Lineal, im live-lernenden Modus aus dem Universum gelernt — die Skalare sind
+ * damit modus-diskriminierend. cohortBases/gDist* bleiben bewusst DRAUSSEN
+ * (nicht bytestabil ueber die Merge-Feinstruktur). Widerspruch => throw,
+ * fail-closed wie die Summen-Wache, die auf derselben Determinismus-Annahme
+ * (zwei Passes, gleiches Universum, gleiches Ergebnis) taeglich gruen steht.
+ *
+ * LOKALER BETRIEB: outputs/calibration.json wird nur von run-screener.js erneuert.
+ * Wer dieses Skript lokal ohne vorherigen run-screener-Lauf faehrt, vergleicht gegen
+ * ein ALTES Artefakt — im CI unmoeglich (frischer Runner, gleicher Job).
+ */
+const LINEAL_SKALARE = ['winsorBounds', 'growthBounds', 'cycleDDThreshold', 'mcapBounds', 'ipoBounds'];
+
+// Kanonische JSON-Form (Schluessel rekursiv sortiert): der Vergleich darf nicht an
+// der Serialisierungs-Reihenfolge haengen, nur am Wert. NaN/Infinity/undefined werden
+// EXPLIZIT unterscheidbar gemacht — JSON.stringify macht aus NaN ein "null", und ein
+// degenerierter NaN-Skalar saehe damit aus wie ein legitimes null der Gegenseite
+// (Review-Befund 29.08., unsichere Richtung: stiller Pass statt Widerspruch).
+function kanonisch(v) {
+  if (v === undefined) return '"__undefined__"';
+  if (typeof v === 'number' && !Number.isFinite(v)) return `"__nonfinite:${String(v)}__"`;
+  if (Array.isArray(v)) return `[${v.map(kanonisch).join(',')}]`;
+  if (v && typeof v === 'object') {
+    return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${kanonisch(v[k])}`).join(',')}}`;
+  }
+  return JSON.stringify(v);
+}
+
+/**
+ * Liest die eingecheckte Modus-Deklaration. Wirft bei fehlender/kaputter Datei und
+ * unbekanntem Modus — die Datei ist eingecheckt, ihr Fehlen ist ein kaputter
+ * Checkout, kein "dann eben Default" (fail-closed, nie still live oder still ref).
+ */
+function liesModusDeklaration(file = MODE_FILE) {
+  let d;
+  try { d = JSON.parse(fs.readFileSync(file, 'utf8')); }
+  catch (e) { throw new Error(`[scoring-modus] Deklaration ${file} fehlt/unlesbar (${e.message}) — ohne Deklaration kein Lauf.`); }
+  if (!d || d.schema !== 'scoring-mode/v1') throw new Error(`[scoring-modus] ${file}: schema fehlt/unbekannt (erwartet scoring-mode/v1).`);
+  if (d.modus === 'live-lernend') return { modus: 'live-lernend', refCalib: null };
+  if (d.modus === 'referenz') {
+    if (typeof d.refCalib !== 'string' || !d.refCalib) throw new Error(`[scoring-modus] ${file}: modus=referenz braucht refCalib=<Pfad zum Lineal>.`);
+    return { modus: 'referenz', refCalib: d.refCalib };
+  }
+  throw new Error(`[scoring-modus] ${file}: unbekannter modus "${d.modus}" (erlaubt: live-lernend, referenz).`);
+}
+
+/**
+ * Deklaration gegen die Umgebung DIESES Prozesses (billige Vorstufe, laeuft vor dem
+ * teuren Scoring): live-lernend deklariert + SCORING_REF_CALIB gesetzt ist bereits
+ * ein undeklarierter Modus — nicht erst der Skalar-Vergleich muss das finden.
+ * Rueckgabe: Liste der Verstoesse (leer = sauber), wie pruefeSummen.
+ */
+function pruefeModusUmgebung(dekl, envRefPath) {
+  const fehler = [];
+  if (dekl.modus === 'live-lernend' && envRefPath) {
+    fehler.push(`Deklaration sagt live-lernend, Umgebung setzt SCORING_REF_CALIB=${envRefPath}`);
+  }
+  if (dekl.modus === 'referenz' && envRefPath && path.resolve(envRefPath) !== path.resolve(dekl.refCalib)) {
+    fehler.push(`Deklaration sagt referenz mit ${dekl.refCalib}, Umgebung setzt SCORING_REF_CALIB=${envRefPath}`);
+  }
+  return fehler;
+}
+
+/**
+ * Die fuenf Lineal-Skalare des EIGENEN Passes (unter der Deklaration) gegen das
+ * versiegelte Lauf-Artefakt. Ein auf EINER Seite fehlender Skalar ist ein Verstoss,
+ * kein Skip — ein Emissions-Refactor (Umbenennung) muss hier LAUT brechen, sonst
+ * pruefte der Waechter still nichts mehr. Rueckgabe wie pruefeSummen.
+ */
+function vergleicheLinealSkalare(eigen, versiegelt) {
+  const fehler = [];
+  for (const k of LINEAL_SKALARE) {
+    const a = eigen ? eigen[k] : undefined;
+    const b = versiegelt ? versiegelt[k] : undefined;
+    if (a === undefined || b === undefined) {
+      fehler.push(`${k}: fehlt ${a === undefined ? 'im eigenen Pass' : ''}${a === undefined && b === undefined ? ' und ' : ''}${b === undefined ? 'im versiegelten Artefakt' : ''}`);
+    } else if (kanonisch(a) !== kanonisch(b)) {
+      fehler.push(`${k}: eigener Pass ${kanonisch(a)} != versiegelt ${kanonisch(b)}`);
+    }
+  }
+  return fehler;
+}
+
 function main() {
+  // W3: Deklaration lesen und Umgebung pruefen, BEVOR das teure Scoring startet.
+  const dekl = liesModusDeklaration();
+  const umgebungsFehler = pruefeModusUmgebung(dekl, process.env.SCORING_REF_CALIB);
+  if (umgebungsFehler.length) {
+    throw new Error('[scoring-modus] Undeklarierter Betriebsmodus — Deklaration und Umgebung widersprechen sich:\n  '
+      + umgebungsFehler.join('\n  '));
+  }
   const universe = loadUniverse();
-  // Gleicher Referenz-Modus wie run-screener.js: ist ein Lineal gesetzt, muss dieser
-  // Pass gegen DASSELBE scoren, sonst weichen die no-axes-Zahlen ab und die
-  // Summen-Wache faerbt den Lauf zu Recht rot. Fail-loud wie dort.
+  // W3: dieser Pass scort unter der DEKLARATION, nicht unter der Umgebung — nur so
+  // diskriminiert der Skalar-Vergleich unten, was der versiegelte Lauf tatsaechlich tat.
   let refCalibration = null;
-  const refPath = process.env.SCORING_REF_CALIB;
-  if (refPath) {
-    try { refCalibration = JSON.parse(fs.readFileSync(refPath, 'utf8')); }
-    catch (e) { throw new Error(`[excluded-list] SCORING_REF_CALIB gesetzt, aber nicht lesbar (${refPath}): ${e.message}`); }
+  if (dekl.modus === 'referenz') {
+    try { refCalibration = JSON.parse(fs.readFileSync(dekl.refCalib, 'utf8')); }
+    catch (e) { throw new Error(`[scoring-modus] refCalib deklariert, aber nicht lesbar (${dekl.refCalib}): ${e.message}`); }
   }
   const results = scoreUniverse(universe, formulas, refCalibration ? { refCalibration } : {});
+
+  // W3: Modus-Pinning VOR der Summen-Wache — ein Modus-Widerspruch erklaert abweichende
+  // no-axes-Zahlen; die Wurzel gehoert zuerst gemeldet. Fehlendes Artefakt = fail-loud
+  // (gleiches Muster wie readExcludedCounter: Degradierung zu "keine Abweichung" waere
+  // genau das stille Loch, das W3 schliessen soll).
+  let versiegelt;
+  try { versiegelt = JSON.parse(fs.readFileSync(SEALED_CALIB_FILE, 'utf8')); }
+  catch (e) {
+    throw new Error(`[scoring-modus] ${SEALED_CALIB_FILE} fehlt/unlesbar (${e.message}) — ohne das Lauf-Artefakt ist der `
+      + 'deklarierte Modus unpruefbar. Zuerst run-screener.js laufen lassen.');
+  }
+  const skalarFehler = vergleicheLinealSkalare(results.calibration, versiegelt);
+  if (skalarFehler.length) {
+    throw new Error(`[scoring-modus] Der versiegelte Lauf fuhr NICHT im deklarierten Modus (${dekl.modus}) — `
+      + 'Lineal-Skalare widersprechen sich:\n  ' + skalarFehler.join('\n  '));
+  }
+  // Vakuum-Beweis-Guard (Review 29.08.): sind ALLE fuenf Skalare beidseitig null (denkbar
+  // nur auf degenerierten Mini-Universen), hat der Vergleich nichts diskriminiert — dann
+  // ist "bestaetigt" eine Luege. Produktion hat immer gelernte Werte; fail-closed.
+  const tragend = LINEAL_SKALARE.filter((k) => kanonisch(results.calibration[k]) !== 'null').length;
+  if (tragend === 0) {
+    throw new Error('[scoring-modus] Alle Lineal-Skalare sind null — der Modus-Vergleich traegt nichts '
+      + '(degeneriertes Universum?). Keine Bestaetigung ohne Beweis.');
+  }
+  console.log(`[scoring-modus] Deklaration "${dekl.modus}" bestaetigt: ${LINEAL_SKALARE.length}/${LINEAL_SKALARE.length} Lineal-Skalare des Zweitlaufs decken sich mit outputs/calibration.json (${tragend} tragend)`);
+
   const { rows, legs, byReason } = buildExcludedList(results, universe);
 
   const fehler = pruefeSummen(byReason, readExcludedCounter(INDEX_FILE));
@@ -223,20 +402,39 @@ function main() {
     throw new Error(`[excluded-list] Gruppierung hat Zeilen verschluckt: ${beineGesamt(rows)} Beine in ${rows.length} Firmen, erwartet ${legs}.`);
   }
 
+  // T155/W3: der Hash wird HIER berechnet, weil hier das Universum ohnehin schon
+  // geladen ist — ein zweiter Scan ueber ~15.000 Snapshot-Dateien waere derselbe Wert
+  // zum doppelten Preis. write-board-history.js liest ihn spaeter aus der Traeger-Datei
+  // (daily-pull.yml: dieser Schritt laeuft vor dem Vintage-Schreiber).
+  const universeHash = universumsHashVon(universe);
+
   fs.mkdirSync(OUT_DIR, { recursive: true });
   writeJsonAtomic(OUT_FILE, {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
     generatedFromSnapshots: universe.length,
+    universeHash,
     counts: { firmen: rows.length, zeilen: legs, byReason },
     rows,
   });
+  fs.mkdirSync(path.dirname(UNIVERSE_HASH_FILE), { recursive: true });
+  writeJsonAtomic(UNIVERSE_HASH_FILE, {
+    schema: 'universe-hash/v1',
+    generated_at: new Date().toISOString(),
+    universeHash,
+    universeCount: universe.length,
+  });
+  console.log(`[excluded-list] Universums-Hash ${universeHash} ueber ${universe.length} bewertete Ticker`);
   console.log(`[excluded-list] ${legs} Ausschluss-Zeilen in ${rows.length} Firmen -> ${path.relative(ROOT, OUT_FILE)} `
     + `(${(fs.statSync(OUT_FILE).size / 1024 / 1024).toFixed(2)} MB)`);
   console.log(`[excluded-list] Summen je Grund decken sich mit index.json.excluded: `
     + Object.keys(byReason).sort().map((k) => `${k}=${byReason[k]}`).join(' · '));
 }
 
-module.exports = { buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, SCHEMA, OUT_FILE, INDEX_FILE };
+module.exports = {
+  buildExcludedList, pruefeSummen, beineGesamt, readExcludedCounter, grundVon, zeile, universumsHash, universumsHashVon,
+  liesModusDeklaration, pruefeModusUmgebung, vergleicheLinealSkalare, kanonisch, LINEAL_SKALARE,
+  SCHEMA, OUT_FILE, INDEX_FILE, UNIVERSE_HASH_FILE, MODE_FILE, SEALED_CALIB_FILE,
+};
 
 if (require.main === module) main();

@@ -1,0 +1,5 @@
+{
+  "schema": "scoring-mode/v1",
+  "modus": "live-lernend",
+  "_kommentar": "W3/T155 (Rat 29.08., Weg D): DEKLARATION des Betriebsmodus der Scoring-Pipeline. Default MUSS live-lernend sein - der produktive Scoring-Step laeuft ohne SCORING_REF_CALIB, ein anderer Default waere eine stille Score-Umstellung. Fuer Referenz-Betrieb: modus=referenz plus refCalib=<Pfad zum eingefrorenen Lineal>. Einziger Leser: scripts/write-excluded-list.js (freier Zweitleser, vergleicht die fuenf Lineal-Skalare seines Laufs unter DIESER Deklaration gegen outputs/calibration.json des versiegelten Laufs; Widerspruch = Abbruch)."
+}

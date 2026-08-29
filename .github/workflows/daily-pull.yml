@@ -1111,14 +1111,6 @@ jobs:
         run: node scripts/watch-unrouted-quote.js
         continue-on-error: true
 
-      # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
-      # Groessenordnungen abweichen. Meldet nur NEUE Faelle gegen den mitgefuehrten
-      # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
-      - name: Watch Annual Spikes
-        id: w_spikes
-        run: node scripts/watch-annual-spikes.js ${{ inputs.spikes_neu_aufnehmen && '--neu-aufnehmen' || '' }}
-        continue-on-error: true
-
       - name: Watch FX Sanity
         id: w_fx
         run: node scripts/watch-fx-sanity.js
@@ -1316,7 +1308,6 @@ jobs:
           [ "${{ steps.w_exchange.outcome }}"  = "failure" ] && FEHLER="$FEHLER Boersen-Abdeckung"
           [ "${{ steps.w_unrouted.outcome }}"  = "failure" ] && FEHLER="$FEHLER nicht-geroutete-Namen"
           [ "${{ steps.w_fx.outcome }}"        = "failure" ] && FEHLER="$FEHLER FX-Plausibilitaet"
-          [ "${{ steps.w_spikes.outcome }}"    = "failure" ] && FEHLER="$FEHLER Jahres-Ausreisser"
           [ "${{ steps.w_pullstats.outcome }}" = "failure" ] && FEHLER="$FEHLER Pull-Schrumpfung"
           # F-NEU-01 (Tag 629): Waehrungs-Ehrlichkeit. Bewusst HIER und nicht als eigener
           # Schritt weiter oben: ein Abbruch vor "Commit Snapshots" wuerde denselben Schaden
@@ -1327,7 +1318,7 @@ jobs:
             echo "::error::Daten-Waechter haben angeschlagen:$FEHLER — Details im jeweiligen Schritt oben. Die Daten sind trotzdem committet (Baseline-Erhalt), aber der Stand ist verdaechtig."
             exit 1
           fi
-          echo "alle vier Daten-Waechter still."
+          echo "alle vier Daten-Waechter still (Jahres-Ausreisser laeuft seit Weg E im eigenen Job)."
 
       # R5-OPS-001 (Block-5-Verifikation 2026-08-03): dieser Schritt prueft seit dem
       # Hypergrowth-Umbau NICHTS mehr. Der Umbau loeschte jedes Skript, das je einen
@@ -1556,6 +1547,76 @@ jobs:
               exit 1
               ;;
           esac
+
+  # ============================================================================
+  # JAHRES-AUSREISSER-WAECHTER — eigener Job (Weg E, Gerichtsurteil 28.08.2026).
+  #
+  # WARUM AUSGEKOPPELT: der Waechter sagt in seinem eigenen Kopf, er "repariert nichts
+  # und aendert keinen Score". Er sass trotzdem im merge-Job und faerbte ueber den
+  # Sammelschritt die merge-CONCLUSION rot — und `scoring` haengt per `needs: merge`
+  # OHNE eigenes `if:` daran, wurde also komplett uebersprungen. Ein reiner
+  # Melde-Waechter kostete so den ganzen Scoring-Tag: am 26./27.08. standen die Boards
+  # deshalb drei Tage, obwohl an den Daten nichts zu reparieren war (der Bestandsanker
+  # war schlicht veraltet). Dieselbe Datei hat diese Fehlerklasse schon zweimal
+  # geloest — `entdeckungs-waechter` und `earnings-transport-waechter` sind eigene
+  # Jobs mit `if: always()`, an denen NICHTS haengt. Hier der dritte Fall.
+  #
+  # `needs: merge` ist die DATEN-Kante, keine Blockade-Kante: der Waechter braucht den
+  # gemergten Snapshot-Stand (dasselbe Artefakt, das `scoring` laedt). Er laeuft
+  # PARALLEL zu `scoring`, nicht davor — sein rotes X erreicht keinen Datenschritt.
+  # Bei rotem merge wird er uebersprungen (sichtbar im Statusmarker, wie `scoring`),
+  # statt ueber fehlende Snapshots falsch-rot zu melden.
+  #
+  # SICHTBARKEIT: der Job steht in laufstatus.needs UND in JOB_REIHENFOLGE
+  # (scripts/pipeline-status.js) — sonst waere er aus der Blockade-Kette UND aus
+  # Karls Statusmarker verschwunden. Genau diese Halb-Aenderung nagelt
+  # tests/weg-e-waechter-verdrahtung.test.js fest.
+  # ============================================================================
+  jahres-ausreisser-waechter:
+    needs: merge
+    if: ${{ always() && needs.merge.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Download Snapshots Artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: snapshots
+          path: snapshots
+
+      # CARRY-FORWARD A (Gerichts-Auflage 28.08.): --neu-aufnehmen schreibt den Bestand
+      # (watch-annual-spikes.js:304). Im merge-Job landete dieser Schreibvorgang im
+      # selben Arbeitsverzeichnis, das anschliessend nach main committet wurde. In
+      # diesem eigenen Job gibt es keinen Commit-Schritt — der neu aufgenommene Bestand
+      # wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Das waere
+      # ein stiller Fehlschlag genau der Klasse, gegen die dieser ganze Umbau laeuft.
+      # Deshalb: LAUT ANHALTEN statt still ins Leere schreiben, bis die
+      # Persistenz-Frage entschieden ist.
+      - name: Neuaufnahme-Sperre (Carry-forward A)
+        if: ${{ inputs.spikes_neu_aufnehmen }}
+        run: |
+          echo "::error::spikes_neu_aufnehmen ist gesetzt, aber dieser Job hat keinen Commit-Schritt. Der neu aufgenommene Bestand wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Die Persistenz-Frage ist Carry-forward A des Gerichtsurteils vom 28.08. und muss VOR der ersten Neuaufnahme entschieden werden — bis dahin ist dieser Weg gesperrt."
+          exit 1
+
+      # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
+      # Groessenordnungen abweichen. Meldet nur NEUE Faelle gegen den mitgefuehrten
+      # Bestand — bekannte schweigen, sonst waere der Waechter ab Tag eins rot.
+      # KEIN continue-on-error: dieser Job DARF rot werden, er blockiert nichts.
+      - name: Watch Annual Spikes
+        id: w_spikes
+        run: node scripts/watch-annual-spikes.js
 
   # ============================================================================
   # SCORING (unchanged logic; needs: pull -> needs: merge, + snapshot source).
@@ -2127,7 +2188,7 @@ jobs:
   # outputs/pipeline-status/v1/ und fasst weder board-history/ noch main an.
   # ============================================================================
   laufstatus:
-    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring]
+    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
