@@ -493,6 +493,43 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "f4f39cf46a975567de6a3d6e281d33d3a621c85792d42d1e8a6484111887887f",
    "eventHash": "5e5bc2866a4f4a9824e9251457cc924d2eb3cbbfd12ffaf8f0e0eb7dd49891b0"
+  },
+  {
+   "runId": "e4g-restursachen-pruefung-v2-2026-08-29",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-08-29T17:10:39.777Z",
+   "accessedAt": "2026-08-29T18:40:00.000Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "afs",
+    "afs_gruppe",
+    "fallzahl",
+    "jahreskadenz",
+    "jahreskadenz_ja",
+    "jahreskadenz_nein",
+    "kante_unmoeglich",
+    "kante_unmoeglich_ja",
+    "kante_unmoeglich_nein",
+    "kantenfenster_accepted_tage",
+    "klasse",
+    "klasse_a_keine_folgequartale",
+    "klasse_c_zu_wenige_folgequartale",
+    "kontrollpool_verluste",
+    "letzte_form_nach_signal",
+    "median_abstand_accepted_tage",
+    "nenner_restursachen",
+    "ohne_zeile_nach_signal",
+    "restlaufzeit_accepted_tage",
+    "signal_verluste"
+   ],
+   "erlaubt": "Ausschliesslich die Zaehlfelder der Ausgabe-Allowlist je Signalvariante. Keine Firmen-Kennungen, keine Monatsreihen, keine Wachstums- oder Persistenzwerte, keine Aktienzahl-Werte.",
+   "verboten": "Jede Ausgabe eines Umsatz-, Gewinn-, Aktienzahl- oder Kurswertes; jeder Zugriff auf ein anderes Fenster; jeder Zugriff auf Schluesselmaterial.",
+   "begruendung": "T171/E4g-Restursachen-Diagnose v2 (R15b, nur zaehlen). Ersetzt den Zuschnitt von e4g-restursachen-pruefung-2026-08-29 NICHT durch Editieren - der Alt-Eintrag bleibt unberuehrt stehen; dieser Eintrag steht additiv daneben. Grund: die dort angemeldeten Metadaten-Spalten koennen die 39+448-Zielpopulation konstruktiv nicht auswaehlen (Codex-Freeze, 99 %; Klassen entstehen erst ueber fakt.value, PIT-Reduktion und Signalrechnung). ENTSCHIED 17 autorisiert daraufhin die rein INTERNE Faktwert-Rekonstruktion. INPUT-SCOPE: woertlich der Scope der committeten E4a-Registrierung (e4a-diagnose-pruefung-2026-08-19) - ausschliesslich die Panel-Datei des angemeldeten, bereits VERBRAUCHTEN Prueffensters, dieselbe SQLite-Quelle wie E4a, keine neue Quelle, kein anderes Fenster, kein Endtest, kein Schluesselmaterial. ZWECK: Rekonstruktion der eingefrorenen E4a-Klassenpopulation plus die drei Metadaten-Kreuzungen - (1) Kantenprobe auf der ACCEPTED-Achse, Median-Abstand accepted->accepted mal 4 gegen Restlaufzeit bis 2020-12-31, alles auf einer Achse; (2) Formularregime nach dem Signaldatum, Jahreskadenz (20-F/40-F/10-K-only) gegen echten Abgang; (3) afs-Gruppe als Gegenprobe zu D2. BINDENDER SELBST-CHECK MIT BIT-ANKER: Die Rekonstruktion MUSS exakt 39 S-G-Signal-Verluste und 448 S-G-Kontrollpool-Verluste ergeben, die committeten E4a-Zahlen. JEDE Abweichung ist ein SOFORT-STOPP mit Eskalation an den Orchestrator - kein Weiterrechnen, keine Anpassung der Rekonstruktion an die Sollzahl, keine zweite Variante. AUSGABE: unveraendert die 20 benannten Aggregatfelder. Keine Firmen-Kennungen, keine neuen Klassendefinitionen, keine Naht-IDs des Bruecken-Artefakts - der Lauf bleibt auf der PANEL-Ebene. Die Entscheidungsregel bleibt VORAB eingefroren in orchestrator-2026-08-29.md ENTSCHIED 2; dieser Lauf meldet nur Zahlen, aendert keine Schwelle, keine Reifedefinition, erstellt keine neue Praeregistrierung. UMGEBUNG: der Lauf startet aus einem frischen Worktree von origin/main (Post-Merge-Stand), damit Erzeuger und Verbraucher an die gueltige Registerkette binden; der Studienzweig erhaelt NIE den main-Ledger (Ein-Appender-Regel, ENTSCHIED 7). Anmeldung main-first per Mini-PR VOR dem Zugriff.",
+   "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
+   "previousHash": "5e5bc2866a4f4a9824e9251457cc924d2eb3cbbfd12ffaf8f0e0eb7dd49891b0",
+   "eventHash": "4183c3419b3f22def55207c26273507c0d99601c00b267399eb934b74d148207"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
