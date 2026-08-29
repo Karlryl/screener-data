@@ -161,35 +161,3 @@ verarbeitet.
 Alle Zahlen dieses Berichts stehen maschinenlesbar in
 `reports/studie/D1-panel-survival-2026-08-23.json`; der zugehörige Test gleicht
 jede Zeile der Kurven- und Ausscheidequartalstabellen gegen dieses Artefakt ab.
-
-## Neue Fragen und Hypothesen (Pflichtblock nach R16)
-
-Dieser Block führt ausschließlich die oben unter „Was ausdrücklich nicht gezeigt
-ist" bereits dokumentierten Grenzen als Anschlussfragen zusammen. Es kommt keine
-Grenze hinzu, die der Bericht nicht selbst nennt.
-
-- **Panelbeobachtungszeit statt Firmenalter.** Der Bericht hält fest, dass
-  Unternehmenshistorie vor 2009 in diesen beiden Panels nicht beobachtet ist.
-  Offen bleibt damit, welcher Anteil der Medianverweildauer von 27 Quartalen
-  Eigenschaft der Firmen und welcher Anteil Eigenschaft des Beobachtungsfensters
-  ist.
-- **Was ein terminaler Ausstieg belegt.** Der Bericht hält fest, dass terminales
-  Verschwinden aus periodischen SEC-Berichten weder Insolvenz noch Delisting noch
-  wirtschaftliches Scheitern beweist. Offen bleibt, gegen welche unabhängige
-  Quelle sich die 6.919 terminalen Ausstiege überhaupt einordnen ließen.
-- **Vorübergehende Lücken vor dem letzten Bericht.** Der Bericht modelliert solche
-  Lücken ausdrücklich nicht als eigene Ereignisse, sondern misst terminalen
-  Schwund. Offen bleibt, wie häufig sie sind und ob sie dieselben Firmen treffen,
-  die später terminal ausscheiden.
-- **Größe und Sektor.** Der Bericht verweist beides ausdrücklich an den getrennt
-  vorregistrierten Folgeauftrag
-  (`protocol/early-detection/2.0.0/d2-attrition-size-sector-preregistration.json`).
-  Hier nur als bestehende Anschlussstelle vermerkt, nicht als neue Etappe.
-- **Identitäten und Stichtag.** Der Bericht berichtet weder Firmen-Identitäten
-  noch Daten nach dem vorregistrierten Stichtag. Jede Anschlussfrage, die einzelne
-  Firmen adressieren müsste, ist aus diesem Bericht heraus nicht beantwortbar.
-
-**Keine neue Etappe vorgeschlagen.** Ein Etappen-Vorschlag mit Zeitschätzung nach
-R16 wäre eine Forschungsentscheidung des D1-Autors; er wird hier nicht
-nachträglich erfunden. Der Block ist damit vollständig im Sinne von R16, aber
-bewusst ohne Vorschlagszeile.
