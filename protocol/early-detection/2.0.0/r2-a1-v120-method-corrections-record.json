@@ -1,8 +1,10 @@
 {
   "schema": "R2-A1-method-corrections-correction/1",
-  "status": "ENTWURF_NOT_FROZEN_NOT_REGISTERED",
-  "draftNotice": "ENTWURF. Dieser Datensatz ist NICHT eingefroren, NICHT registriert und liegt bewusst ausserhalb von protocol/. Er wird erst wirksam, wenn der Orchestrator ihn abnimmt, nach protocol/early-detection/2.0.0/ verschiebt, status auf FROZEN_BEFORE_METHOD_CORRECTION_REBUILD setzt und ihn VOR dem einen Neubau committet. Solange er hier liegt, darf kein Lauf sich auf ihn berufen.",
+  "status": "FROZEN_BEFORE_METHOD_CORRECTION_REBUILD",
+  "frozenNotice": "FROZEN. Abgenommen durch ENTSCHIED 8 (Orchestrator-Direktiven 2026-08-29, 17:23, Freeze-GO), nach protocol/early-detection/2.0.0/ verschoben und VOR dem einen kanonischen Zwei-Prozess-Re-Proof committet. Der in pinsAvailableInAdvance gepinnte Skript-Hash wurde beim Einfrieren gegen scripts/studie-identity-bridge-artifact.py geprueft und stimmt ueberein. Append-only: dieser Record wird nicht mehr editiert; der Payload-Pin folgt im separaten Post-Run-Closure-Record.",
+  "draftNoticeSuperseded": "ENTWURF. Dieser Datensatz ist NICHT eingefroren, NICHT registriert und liegt bewusst ausserhalb von protocol/. Er wird erst wirksam, wenn der Orchestrator ihn abnimmt, nach protocol/early-detection/2.0.0/ verschiebt, status auf FROZEN_BEFORE_METHOD_CORRECTION_REBUILD setzt und ihn VOR dem einen Neubau committet. Solange er hier liegt, darf kein Lauf sich auf ihn berufen.",
   "draftCreatedAt": "2026-08-29",
+  "frozenAt": "2026-08-29",
   "draftAuthor": "Opus-Executor, Trockenarbeit-Auftrag laut ENTSCHIED 3",
   "mode": "SUPERSEDE_NO_DELETE",
   "decisionSource": "Orchestrator-Direktiven Tageslauf 2026-08-29, Abschnitt 'ENTSCHIED 3 - Bruecken-Korrekturen A/B/C: EINE gebuendelte v1.2.0, EIN vorab eingefrorener Korrektur-Record', gestuetzt auf Bruecken-Rat Stimme 1 (Praktiker), Stimme 2 (Verfassungs-Methodiker) und Stimme 3 (Messtechniker).",
