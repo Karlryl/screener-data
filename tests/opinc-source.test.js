@@ -263,6 +263,33 @@ t('run() zaehlt unlesbare Snapshots, statt sie stumm zu ueberspringen', () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// M2 (Nacht-Sweep 29.08.): die else-if-Kette hatte kein `else`. Der Rueckweg
+// sec-gaap -> computed-margin (SEC-Serie faellt weg) landete in keinem Eimer.
+// Beide Richtungen: der Rueckweg MUSS gezaehlt werden, und die Eimersumme MUSS
+// die geprueften Dateien ausschoepfen.
+t('Etiketten-Eimer schoepfen den Bestand aus, auch auf dem Rueckweg', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-zensus-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(path.join(tmp, 'external-data'), { recursive: true });
+  fs.mkdirSync(store, { recursive: true });
+
+  // Ein Name, der bereits sec-gaap traegt und die bewahrte Yahoo-Reihe mitfuehrt,
+  // aber KEINE SEC-Serie mehr vorfindet -> Etikett faellt auf computed-margin zurueck.
+  const zurueck = snap('RUECK', HNRG_SEC_OPINC, HNRG_SEC_REV, 'sec-gaap');
+  zurueck.annual.annualOpIncYahoo = cells(HNRG_YAHOO_OPINC);
+  zurueck.meta.opIncSourceYahoo = 'computed-margin';
+  fs.writeFileSync(path.join(store, 'RUECK.json'), JSON.stringify(zurueck));
+  fs.writeFileSync(path.join(tmp, 'external-data', 'sec-secannual.json'), JSON.stringify({}));
+
+  const z = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  const summe = Object.values(z.etiketten).reduce((a, b) => a + b, 0);
+  assert.equal(summe, z.dateien, 'Eimersumme muss die geprueften Dateien ausschoepfen');
+  assert.equal(z.werteGeaendert, 1, 'der Rueckweg bewegt die Werte');
+  assert.ok(z.etiketten.sonstige >= 1 || z.etiketten['sec-gaap->yahoo-adjusted'] >= 1,
+    'der Rueckweg muss in einem benannten Eimer landen, nicht im Nichts');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });

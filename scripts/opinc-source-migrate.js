@@ -68,6 +68,7 @@
  *   node scripts/opinc-source-migrate.js --dir snapshots --dry-run
  *   node scripts/opinc-source-migrate.js --json reports/opinc-diff.json
  */
+const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
@@ -234,7 +235,7 @@ function run(opts = {}) {
   const zusammenfassung = {
     secNamen: Object.keys(sec).length, secDateien: geladen,
     dateien: 0, geschrieben: 0, uebersprungen: 0,
-    etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0 },
+    etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0, sonstige: 0 },
     gruende: {}, werteGeaendert: 0,
   };
   const zeilen = [];
@@ -261,6 +262,11 @@ function run(opts = {}) {
       else if (prev === 'native' && r.label === 'yahoo-adjusted') zusammenfassung.etiketten['native->yahoo-adjusted']++;
       else if (prev === 'sec-gaap' && r.label === 'yahoo-adjusted') zusammenfassung.etiketten['sec-gaap->yahoo-adjusted']++;
       else if (!r.labelChanged) zusammenfassung.etiketten.unveraendert++;
+      // Auffangbecken. Ohne dieses `else` fiel genau das Kernszenario des Kopfkommentars
+      // durch die Kette: faellt die SEC-Serie weg, wechselt das Etikett sec-gaap ->
+      // computed-margin/null und wurde in KEINEM Eimer gezaehlt — sichtbar nur als
+      // werteGeaendert ohne passende Etiketten-Bewegung.
+      else zusammenfassung.etiketten.sonstige++;
       if (r.valuesChanged) {
         zusammenfassung.werteGeaendert++;
         zeilen.push({ ticker: snap.meta.ticker, dir, prevLabel: r.prevLabel, label: r.label,
@@ -272,6 +278,12 @@ function run(opts = {}) {
       else if (r.changed) zusammenfassung.geschrieben++;
     }
   }
+  // Die Eimer MUESSEN den geprueften Bestand ausschoepfen. Eine Zensus-Summe, die
+  // kleiner ist als die Grundgesamtheit, ist kein Zensus — sie sieht nur so aus.
+  const eimerSumme = Object.values(zusammenfassung.etiketten).reduce((a, b) => a + b, 0);
+  assert.equal(eimerSumme, zusammenfassung.dateien,
+    `opinc-source-migrate: Etiketten-Eimer summieren zu ${eimerSumme}, geprueft wurden `
+    + `${zusammenfassung.dateien} Dateien — eine Etiketten-Bewegung faellt durch die Kette.`);
   return { zusammenfassung, zeilen };
 }
 
