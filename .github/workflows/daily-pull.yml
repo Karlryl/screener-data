@@ -1814,6 +1814,19 @@ jobs:
       - name: A1/K1 SEC-GAAP-OpInc bevorzugen + ehrliche opIncSource-Etiketten
         run: node scripts/opinc-source-migrate.js --json reports/opinc-source-diff.json
 
+      # Der Per-Namen-Diff (welche Namen getauscht wurden, welche warum nicht) war die
+      # einzige Beweiskette dieses Schritts — und lebte nur so lange wie der Runner:
+      # geschrieben, nie hochgeladen, nie committet. if:always(), damit gerade der
+      # FEHLERFALL (kaputte SEC-Schicht -> Abbruch, H1) seine Belege mitbringt.
+      - name: Upload OpInc-Source-Diff (Beweiskette A1/K1)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: opinc-source-diff
+          path: reports/opinc-source-diff.json
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Run Hypergrowth Screener
         run: |
           node src/scoring/run-screener.js

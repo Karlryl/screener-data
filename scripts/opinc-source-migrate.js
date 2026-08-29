@@ -68,6 +68,7 @@
  *   node scripts/opinc-source-migrate.js --dir snapshots --dry-run
  *   node scripts/opinc-source-migrate.js --json reports/opinc-diff.json
  */
+const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
@@ -217,7 +218,11 @@ function loadSecLayer(root = ROOT, files = SECANNUAL_FILES) {
   for (const f of files) {
     const p = path.join(root, 'external-data', f);
     try { Object.assign(data, JSON.parse(fs.readFileSync(p, 'utf8'))); geladen.push(f); }
-    catch (_) { /* Datei fehlt -> skip, wie mergeSecIntoUniverse */ }
+    // FEHLT ist erlaubt (wie mergeSecIntoUniverse), UNLESBAR nicht: eine truncierte
+    // Schicht sah bisher aus wie eine abwesende und drehte die Quellen-Praeferenz still
+    // zurueck auf den Urteilsanker (HNRG -> yahoo-adjusted / FY2024 -555000), waehrend
+    // der Lauf mit Exit 0 weiterlief und run-screener.js direkt danach veroeffentlichte.
+    catch (e) { if (e.code !== 'ENOENT') throw e; }
   }
   return { data, geladen };
 }
@@ -229,14 +234,17 @@ function run(opts = {}) {
   const { data: sec, geladen } = loadSecLayer(root, opts.secFiles || SECANNUAL_FILES);
   const zusammenfassung = {
     secNamen: Object.keys(sec).length, secDateien: geladen,
-    dateien: 0, geschrieben: 0,
-    etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0 },
+    dateien: 0, geschrieben: 0, uebersprungen: 0, fehlendeVerzeichnisse: [],
+    etiketten: { 'native->yahoo-adjusted': 0, '->sec-gaap': 0, 'sec-gaap->yahoo-adjusted': 0, unveraendert: 0, sonstige: 0 },
     gruende: {}, werteGeaendert: 0,
   };
   const zeilen = [];
   for (const dir of dirs) {
     const abs = path.isAbsolute(dir) ? dir : path.join(root, dir);
-    if (!fs.existsSync(abs)) { continue; }
+    // Ein fehlendes Store-Verzeichnis ist NICHT dasselbe wie ein leeres. Scheitert der
+    // Small-Cap-Cache-Restore (continue-on-error in daily-pull.yml), blieb bisher der
+    // komplette Small-Cap-Store unmigriert und der Lauf trotzdem gruen.
+    if (!fs.existsSync(abs)) { zusammenfassung.fehlendeVerzeichnisse.push(dir); continue; }
     for (const f of fs.readdirSync(abs)) {
       // Das zentrale Praedikat, nicht `f.startsWith('_')`: ein Ticker kann legitim mit
       // Unterstrich beginnen (Windows-Reservename -> safeSnapshotFilename faltet CON zu _CON).
@@ -244,8 +252,11 @@ function run(opts = {}) {
       if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
       const p = path.join(abs, f);
       let snap;
-      try { snap = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { continue; }
-      if (!snap || !snap.meta || !snap.meta.ticker) continue;
+      // Ein unlesbarer Snapshot wird uebersprungen, aber GEZAEHLT: sonst ist die Aussage
+      // "Restbestand native = 0" aus dieser Ausgabe nicht belegbar — der Name kann
+      // genauso gut nur nie geprueft worden sein.
+      try { snap = JSON.parse(fs.readFileSync(p, 'utf8')); } catch (_) { zusammenfassung.uebersprungen++; continue; }
+      if (!snap || !snap.meta || !snap.meta.ticker) { zusammenfassung.uebersprungen++; continue; }
       zusammenfassung.dateien++;
       const prev = snap.meta.opIncSource;
       const r = migrateSnapshot(snap, sec[snap.meta.ticker]);
@@ -254,6 +265,11 @@ function run(opts = {}) {
       else if (prev === 'native' && r.label === 'yahoo-adjusted') zusammenfassung.etiketten['native->yahoo-adjusted']++;
       else if (prev === 'sec-gaap' && r.label === 'yahoo-adjusted') zusammenfassung.etiketten['sec-gaap->yahoo-adjusted']++;
       else if (!r.labelChanged) zusammenfassung.etiketten.unveraendert++;
+      // Auffangbecken. Ohne dieses `else` fiel genau das Kernszenario des Kopfkommentars
+      // durch die Kette: faellt die SEC-Serie weg, wechselt das Etikett sec-gaap ->
+      // computed-margin/null und wurde in KEINEM Eimer gezaehlt — sichtbar nur als
+      // werteGeaendert ohne passende Etiketten-Bewegung.
+      else zusammenfassung.etiketten.sonstige++;
       if (r.valuesChanged) {
         zusammenfassung.werteGeaendert++;
         zeilen.push({ ticker: snap.meta.ticker, dir, prevLabel: r.prevLabel, label: r.label,
@@ -265,6 +281,12 @@ function run(opts = {}) {
       else if (r.changed) zusammenfassung.geschrieben++;
     }
   }
+  // Die Eimer MUESSEN den geprueften Bestand ausschoepfen. Eine Zensus-Summe, die
+  // kleiner ist als die Grundgesamtheit, ist kein Zensus — sie sieht nur so aus.
+  const eimerSumme = Object.values(zusammenfassung.etiketten).reduce((a, b) => a + b, 0);
+  assert.equal(eimerSumme, zusammenfassung.dateien,
+    `opinc-source-migrate: Etiketten-Eimer summieren zu ${eimerSumme}, geprueft wurden `
+    + `${zusammenfassung.dateien} Dateien — eine Etiketten-Bewegung faellt durch die Kette.`);
   return { zusammenfassung, zeilen };
 }
 
@@ -290,6 +312,15 @@ function main(argv) {
     + `unveraendert ${z.etiketten.unveraendert}`);
   console.log(`[opinc-source-migrate] Gruende: ${Object.entries(z.gruende).map(([k, v]) => `${k}=${v}`).join(' · ')}`);
   console.log(`[opinc-source-migrate] Reihen mit geaenderten Werten: ${z.werteGeaendert} · geschrieben: ${z.geschrieben}`);
+  if (z.fehlendeVerzeichnisse.length) {
+    console.log(`::warning::opinc-source-migrate: Store-Verzeichnis(se) nicht vorhanden — `
+      + `${z.fehlendeVerzeichnisse.join(', ')}. Dieser Bestand bleibt UNMIGRIERT; ein fehlgeschlagener `
+      + 'Cache-Restore sieht sonst aus wie ein bereits migrierter Store.');
+  }
+  if (z.uebersprungen) {
+    console.log(`::warning::opinc-source-migrate: ${z.uebersprungen} Snapshot(s) unlesbar uebersprungen — `
+      + `die ${z.dateien} geprueften Dateien decken den Store NICHT vollstaendig ab.`);
+  }
   if (jsonOut) {
     const p = path.isAbsolute(jsonOut) ? jsonOut : path.join(ROOT, jsonOut);
     fs.mkdirSync(path.dirname(p), { recursive: true });

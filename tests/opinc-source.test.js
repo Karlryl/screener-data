@@ -220,6 +220,112 @@ t('run() ueber ein Verzeichnis: schreibt, zaehlt und laesst Nur-Yahoo-Namen in R
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+// H1 (Nacht-Sweep 29.08.): FEHLEND und UNLESBAR sind zwei verschiedene Zustaende.
+// Beide Richtungen, sonst ist die Wache blind: die abwesende Schicht MUSS still
+// uebersprungen werden (sonst laeuft kein Small-Cap-Lauf mehr), die truncierte MUSS
+// den Lauf reissen (sonst faellt die Quellen-Praeferenz still auf Yahoo zurueck).
+t('loadSecLayer: fehlende Schicht = still, kaputte Schicht = Abbruch', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-sec-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(path.join(tmp, 'external-data'), { recursive: true });
+  fs.mkdirSync(store, { recursive: true });
+  fs.writeFileSync(path.join(store, 'HNRG.json'), JSON.stringify(snap('HNRG', HNRG_YAHOO_OPINC, HNRG_YAHOO_REV)));
+
+  // Richtung A: gar keine Schicht -> kein Wurf, nur leeres `geladen`.
+  const ohne = run({ root: tmp, dirs: ['snapshots'] });
+  assert.deepEqual(ohne.zusammenfassung.secDateien, [], 'fehlende Datei darf nicht werfen');
+
+  // Richtung B: Schicht vorhanden, aber abgeschnitten -> Abbruch statt stiller Rueckfall.
+  const p = path.join(tmp, 'external-data', 'sec-secannual.json');
+  fs.writeFileSync(p, JSON.stringify({ HNRG: secOf(HNRG_SEC_OPINC, HNRG_SEC_REV) }).slice(0, 120));
+  assert.throws(() => run({ root: tmp, dirs: ['snapshots'] }), /JSON|Unexpected|Unterminated/i,
+    'truncierte SEC-Schicht muss den Lauf reissen, nicht die Praeferenz zurueckdrehen');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// M1 (Nacht-Sweep 29.08.): ein unlesbarer Snapshot verschwand spurlos aus der Bilanz.
+// Beide Richtungen: sauberer Store -> Zaehler 0, kaputte Datei -> Zaehler > 0 UND
+// `dateien` zaehlt sie nicht mit (sonst waere die Abdeckungsaussage weiterhin falsch).
+t('run() zaehlt unlesbare Snapshots, statt sie stumm zu ueberspringen', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-skip-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(store, { recursive: true });
+  fs.writeFileSync(path.join(store, 'OK.json'), JSON.stringify(snap('OK', [1, 2, 3, 4], [10, 20, 30, 40])));
+
+  const sauber = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.equal(sauber.uebersprungen, 0, 'sauberer Store darf nichts als uebersprungen melden');
+  assert.equal(sauber.dateien, 1);
+
+  fs.writeFileSync(path.join(store, 'KAPUTT.json'), '{"meta":{"ticker":"KAPUTT"');
+  const mit = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.equal(mit.uebersprungen, 1, 'kaputte Datei muss im Zaehler landen');
+  assert.equal(mit.dateien, 1, 'und darf NICHT als geprueft gelten');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// M2 (Nacht-Sweep 29.08.): die else-if-Kette hatte kein `else`. Der Rueckweg
+// sec-gaap -> computed-margin (SEC-Serie faellt weg) landete in keinem Eimer.
+// Beide Richtungen: der Rueckweg MUSS gezaehlt werden, und die Eimersumme MUSS
+// die geprueften Dateien ausschoepfen.
+t('Etiketten-Eimer schoepfen den Bestand aus, auch auf dem Rueckweg', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-zensus-'));
+  const store = path.join(tmp, 'snapshots');
+  fs.mkdirSync(path.join(tmp, 'external-data'), { recursive: true });
+  fs.mkdirSync(store, { recursive: true });
+
+  // Ein Name, der bereits sec-gaap traegt und die bewahrte Yahoo-Reihe mitfuehrt,
+  // aber KEINE SEC-Serie mehr vorfindet -> Etikett faellt auf computed-margin zurueck.
+  const zurueck = snap('RUECK', HNRG_SEC_OPINC, HNRG_SEC_REV, 'sec-gaap');
+  zurueck.annual.annualOpIncYahoo = cells(HNRG_YAHOO_OPINC);
+  zurueck.meta.opIncSourceYahoo = 'computed-margin';
+  fs.writeFileSync(path.join(store, 'RUECK.json'), JSON.stringify(zurueck));
+  fs.writeFileSync(path.join(tmp, 'external-data', 'sec-secannual.json'), JSON.stringify({}));
+
+  const z = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  const summe = Object.values(z.etiketten).reduce((a, b) => a + b, 0);
+  assert.equal(summe, z.dateien, 'Eimersumme muss die geprueften Dateien ausschoepfen');
+  assert.equal(z.werteGeaendert, 1, 'der Rueckweg bewegt die Werte');
+  assert.ok(z.etiketten.sonstige >= 1 || z.etiketten['sec-gaap->yahoo-adjusted'] >= 1,
+    'der Rueckweg muss in einem benannten Eimer landen, nicht im Nichts');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// M3 (Nacht-Sweep 29.08.): fehlendes Store-Verzeichnis wurde stumm uebersprungen.
+// Beide Richtungen: vorhandenes Verzeichnis meldet nichts, fehlendes wird benannt.
+t('fehlendes Store-Verzeichnis wird gemeldet, nicht stumm uebersprungen', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dir-'));
+  fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });
+
+  const da = run({ root: tmp, dirs: ['snapshots'] }).zusammenfassung;
+  assert.deepEqual(da.fehlendeVerzeichnisse, [], 'vorhandenes Verzeichnis darf nichts melden');
+
+  const weg = run({ root: tmp, dirs: ['snapshots', 'snapshots-smallcap'] }).zusammenfassung;
+  assert.deepEqual(weg.fehlendeVerzeichnisse, ['snapshots-smallcap'],
+    'fehlender Small-Cap-Store muss namentlich auftauchen');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+// M4 (Nacht-Sweep 29.08.): der geschriebene Diff war die einzige Beweiskette des
+// Schritts und wurde am Job-Ende weggeworfen (kein Upload, kein Commit).
+// Gepinnt wird das OBJEKT (der Pfad, den der Step schreibt), nicht eine Formulierung:
+// der hochgeladene Pfad MUSS derselbe sein, den --json erzeugt.
+t('daily-pull laedt den OpInc-Source-Diff hoch (Beweiskette ueberlebt den Runner)', () => {
+  const yml = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+  const geschrieben = /opinc-source-migrate\.js --json (\S+)/.exec(yml);
+  assert.ok(geschrieben, 'der Migrations-Step schreibt keinen --json-Diff mehr');
+  const pfad = geschrieben[1];
+
+  const iStep = yml.indexOf('node scripts/opinc-source-migrate.js');
+  const iRun = yml.indexOf('name: Run Hypergrowth Screener');
+  const dazwischen = yml.slice(iStep, iRun);
+  assert.match(dazwischen, /actions\/upload-artifact/,
+    'kein Upload zwischen Migration und Scoring — der Diff stirbt mit dem Runner');
+  assert.ok(dazwischen.includes(`path: ${pfad}`),
+    `der Upload muss genau ${pfad} mitnehmen, nicht irgendeinen Pfad`);
+  assert.match(dazwischen, /if: always\(\)/,
+    'ohne if:always() fehlt der Beleg genau im Fehlerfall');
+});
+
 t('--dry-run schreibt nicht', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'opinc-dry-'));
   fs.mkdirSync(path.join(tmp, 'snapshots'), { recursive: true });

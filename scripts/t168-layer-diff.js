@@ -76,9 +76,18 @@ function run() {
     }
   }
 
+  // Ein Tippfehler im --cache-Pfad lieferte bisher "Namen mit veraenderter Umsatzreihe: 0"
+  // und EXITCODE 0 — ein Bericht, der nicht luegt, sondern leer ist, und dabei aussieht
+  // wie ein Negativbefund. Eine leere Messmenge ist kein Ergebnis.
+  if (!vorhanden.size) {
+    console.error(`::error::t168-layer-diff: kein einziger companyfacts-Cache unter `
+      + `${cacheDirs.join(';')} gefunden. Eine leere Messmenge ist KEIN Negativbefund.`);
+    throw new Error(`t168-layer-diff: leere Cache-Menge (${cacheDirs.join(';')})`);
+  }
+
   const zeilen = [];
   const geprueftNamen = new Set();
-  const stat = { namen: 0, geprueft: 0, ohneCache: 0, bewegt: 0, zellen: 0 };
+  const stat = { namen: 0, geprueft: 0, ohneCache: 0, kaputt: 0, bewegt: 0, zellen: 0 };
   for (const [layer, p] of LAYERS) {
     const store = JSON.parse(fs.readFileSync(p, 'utf8'));
     for (const tk of Object.keys(store).sort()) {
@@ -86,8 +95,15 @@ function run() {
       const cik = store[tk].cik;
       if (!cik || !vorhanden.has(cik)) { stat.ohneCache++; continue; }
       let cf;
+      // "kein Cache" und "kaputter Cache" sind zwei verschiedene Befunde. Bei einem
+      // ephemeren Runner-Cache ist Trunkierung die WAHRSCHEINLICHSTE Stoerung — sie
+      // senkte bisher die Bewegungszahl still, waehrend der Bericht "kein Cache" behauptete.
       try { cf = JSON.parse(fs.readFileSync(vorhanden.get(cik), 'utf8')); }
-      catch (e) { stat.ohneCache++; continue; }
+      catch (e) {
+        stat.kaputt++;
+        console.error(`[t168-layer-diff] KAPUTTER Cache fuer ${tk} (CIK ${cik}): ${e.message}`);
+        continue;
+      }
       stat.geprueft++; geprueftNamen.add(tk);
       const alt = reiheMit(cf, tk, ALT_REV);
       const neu = reiheMit(cf, tk, NEU_REV);
@@ -312,7 +328,7 @@ if (require.main === module) {
   const txt = bericht(r);
   if (r.outFile) { fs.writeFileSync(r.outFile, txt, 'utf8'); console.log('geschrieben:', r.outFile); }
   else process.stdout.write(txt);
-  console.error(`[t168-layer-diff] geprueft=${r.stat.geprueft} ohneCache=${r.stat.ohneCache} bewegt=${r.stat.bewegt} zellen=${r.stat.zellen}`);
+  console.error(`[t168-layer-diff] geprueft=${r.stat.geprueft} ohneCache=${r.stat.ohneCache} kaputt=${r.stat.kaputt} bewegt=${r.stat.bewegt} zellen=${r.stat.zellen}`);
 }
 
 module.exports = { run, bericht, ALT_REV, NEU_REV, reiheMit };

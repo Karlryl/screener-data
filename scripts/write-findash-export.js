@@ -164,7 +164,11 @@ function readJSONOrNull(p) { try { return readJSON(p); } catch (_) { return null
 // REGEL (Karl): eine Zeile OHNE nachgewiesene Handelskurs-Umrechnung wird auf null
 // gesetzt statt ausgeliefert — eine fehlende Groesse ist harmlos, eine falsche nicht.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
-const SNAP_DIR = path.join(ROOT, 'snapshots');
+// Ueberschreibbar wie in build-secannual.js / fetch-secbulk.js (SEC_SNAPSHOTS_DIR):
+// Waechter, die die Snapshot-VERDRAHTUNG pruefen, brauchen einen eigenen Bestand.
+// Ohne diesen Seam legte tests/belegpunkte.test.js seine Fixture im PRODUKTIVEN
+// snapshots/ ab — aus dem run-screener.js sein Universum baut (M9).
+const SNAP_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(ROOT, 'snapshots');
 // Anteil genullter Zeilen, ab dem der Writer NICHT mehr ausliefert, sondern abbricht.
 // Grund: bei einem Schema-Bruch (z. B. der Snapshot-Bestand ist aelter als der Stempel)
 // wuerde der Waechter der halben Rangliste die Groesse nehmen und das Board damit
@@ -940,6 +944,16 @@ function checkOptionalZaehlerOrNull(r, key, where, errs) {
     errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Anzahl (ganzzahlig >= 0 | null)");
   }
 }
+// N7 (Nacht-Sweep 29.08.): eine SPANNE (qSpanTage). Wie der Zaehler oben, nur ohne
+// Ganzzahl-Zwang — der Vertrag sagt `number >= 0 | null`, nicht `int`. Negative Tage
+// zwischen aeltestem und juengstem Quartalsende sind per Konstruktion unerreichbar;
+// genau deshalb darf der Pruefer sie benennen, statt sie durchzulassen.
+function checkOptionalSpanneOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && (!Number.isFinite(r[key]) || r[key] < 0)) {
+    errs.push(where + ": " + key + " = " + JSON.stringify(r[key]) + " ist keine Spanne (finite >= 0 | null)");
+  }
+}
 // Chunk 4a: dasselbe additiv-optionale Muster fuer ein Enum (marketCapCurrency).
 function checkOptionalEnumOrNull(r, key, allowed, where, errs) {
   if (!(key in r)) return;
@@ -1091,7 +1105,10 @@ function validateGeo(r, where, errs) {
   // 29.08. (Abhilfe A, Coverage-Akte): Belegpunkte neben coverageAxes. Additiv OPTIONAL —
   // bereits ausgelieferte v1-Dateien tragen sie nicht und duerfen nicht rot werden.
   checkOptionalZaehlerOrNull(r, 'qPunkte', where, errs);
-  checkOptionalNumOrNull(r, 'qSpanTage', where, errs);
+  // N7: der Vertrag sagt `number >= 0 | null` (Doku Zeile 101) — eine negative Spanne
+  // ist keine Spanne. Bisher stand hier der vorzeichenblinde Pruefer, waehrend qPunkte
+  // eine Zeile hoeher voll geprueft wird; die Asymmetrie war unbegruendet.
+  checkOptionalSpanneOrNull(r, 'qSpanTage', where, errs);
   checkOptionalNumOrNull(r, 'revGrowthYoYPct', where, errs);
   checkOptionalProfitStreak(r, where, errs);                       // 4.5 additiv OPTIONAL
   checkEinmalertragPrognose(r, where, errs);                       // F-2 Stufe 1 additiv OPTIONAL
@@ -1179,6 +1196,13 @@ function validateSurvivalRow(r, where, errs) {
   // Waechter, nicht nur als Kommentar — ein versehentlich gegatetes survival.json faellt auf.
   if (!Number.isInteger(r.rank) || r.rank < 1) errs.push(`${where}: rank`);
   if ((r.rankGrund ?? null) !== null) errs.push(`${where}: rankGrund=${JSON.stringify(r.rankGrund)} auf survival-Zeile (dort greift kein Gate)`);
+  // Dieselbe Ausnahme, dieselbe Bauart (Vertrag docs/findash-export-v1.md §4):
+  // survival-Zeilen sind nie gescort, tragen kein coverageAxes und haben deshalb keine
+  // Beleg-Behauptung zu stuetzen. Ein qPunkte/qSpanTage hier waere ein Beleg fuer eine
+  // Behauptung, die es nicht gibt — und passierte den --check bisher sauber.
+  for (const key of ['qPunkte', 'qSpanTage']) {
+    if (key in r) errs.push(`${where}: ${key} auf survival-Zeile (dort gibt es keine coverageAxes-Behauptung zu belegen)`);
+  }
   if (typeof r.ticker !== 'string' || !r.ticker) errs.push(`${where}: ticker`);
   if (!('runwayQuarters' in r)) errs.push(`${where}: runwayQuarters missing`);
   else if (r.runwayQuarters !== null && !Number.isFinite(r.runwayQuarters)) errs.push(`${where}: runwayQuarters not finite|null`);
@@ -1562,6 +1586,24 @@ function selftest() {
   const sNoRank = { ...s0 }; delete sNoRank.rank; trip(validateSurvivalRow, sNoRank, 'survival rank removed');
   trip(validateSurvivalRow, { ...s0, marketCap: 'GARBAGE' }, 'survival marketCap garbage');
   trip(validateSurvivalRow, { ...s0, phase: 'zombie' }, 'survival phase bad enum');
+  // M8 (Nacht-Sweep 29.08.): eine survival-Zeile MIT Belegpunkten passierte den --check
+  // sauber, obwohl der Vertrag (§4) sie dort ausdruecklich ausschliesst. Beide
+  // Richtungen: die saubere Zeile OHNE die Felder muss weiterhin durchgehen (die Pruefung
+  // darf kein Pflichtfeld daraus machen), die Zeile MIT ihnen muss stolpern.
+  assert.strictEqual(cleanErrs(validateSurvivalRow, s0).length, 0, 'survival ohne Belegpunkte muss sauber bleiben');
+  trip(validateSurvivalRow, { ...s0, qPunkte: 4 }, 'survival qPunkte');
+  trip(validateSurvivalRow, { ...s0, qPunkte: null }, 'survival qPunkte null');
+  trip(validateSurvivalRow, { ...s0, qSpanTage: 546 }, 'survival qSpanTage');
+
+  // N7: qSpanTage gegen den eigenen Vertrag (number >= 0 | null). Beide Richtungen —
+  // die legitimen Werte (0, echte Spanne, null, Feld ganz abwesend) muessen sauber
+  // durchgehen, sonst faerbt die Wache die 6,6 % A10-Nachzuegler falsch-rot.
+  for (const gut of [0, 91, 546, null]) {
+    assert.strictEqual(cleanErrs(validateBoardRow, { ...b0, qSpanTage: gut }).length, 0,
+      `qSpanTage=${JSON.stringify(gut)} ist vertragsgemaess und darf nicht stolpern`);
+  }
+  trip(validateBoardRow, { ...b0, qSpanTage: -1 }, 'board qSpanTage negativ');
+  trip(validateBoardRow, { ...b0, qSpanTage: NaN }, 'board qSpanTage NaN');
 
   // hull-level: coverage key missing / bad status, branch mismatch, boardStatus (2.1).
   const mkHull = (over = {}) => ({ schema: SCHEMA, generated_at: 'x', boardStatus: 'core', coverage: null, branch: 'energy', profitable: [], unprofitable: [], ...over });

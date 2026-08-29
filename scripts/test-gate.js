@@ -209,6 +209,14 @@ function guard({ blocking, report, exempt, repoFiles, blockingAlways }, log) {
 // Dateien, die das "N ok"-Format gar nicht verwenden, bleiben unberuehrt.
 const NICHTS_GEPRUEFT = (out) => /(^|[^\d])0 ok\b/.test(out) && /(^|[^\d])0 fail\b/.test(out);
 
+// N14 (Nacht-Pruef-Sweep 29.08., ENTSCHIED 29): dieselbe Bugklasse, andere
+// Reporter-Familie. NICHTS_GEPRUEFT erkennt nur das EIGENFORMAT "N ok / N fail". Eine
+// node:test-Datei ohne einen einzigen `test(...)`-Aufruf schreibt GAR NICHTS und endet
+// mit Exit 0 — empirisch nachgefahren, beide Varianten (Datei leer, alle test() entfernt).
+// Das Gate sah Exit 0 ohne "0 ok" und schrieb PASS: eine Wache, aus der jemand alle
+// Pruefungen entfernt, bliebe still gruen. Wer nichts sagt, hat nichts belegt.
+const STUMM = (out) => out.trim() === '';
+
 function runFiles(files, cwd, log) {
   const failed = [];
   const skipped = [];
@@ -217,9 +225,15 @@ function runFiles(files, cwd, log) {
     const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
     process.stdout.write((r.stdout || '') + (r.stderr || ''));
     if (r.status !== 0) { failed.push(t); continue; }
-    if (NICHTS_GEPRUEFT((r.stdout || '') + (r.stderr || ''))) {
+    const ausgabe = (r.stdout || '') + (r.stderr || '');
+    if (NICHTS_GEPRUEFT(ausgabe)) {
       skipped.push(t);
       log(`SKIP ${t} — 0 Pruefungen ausgefuehrt (Voraussetzung fehlt), zaehlt NICHT als PASS`);
+      continue;
+    }
+    if (STUMM(ausgabe)) {
+      skipped.push(t);
+      log(`SKIP ${t} — keine Ausgabe bei Exit 0 (node:test ohne einen einzigen test(...)?), zaehlt NICHT als PASS`);
       continue;
     }
     log(`PASS ${t}`);
@@ -307,11 +321,19 @@ function selftest() {
   // Tag 956: Datei, die sauber endet, aber selbst meldet NICHTS geprueft zu haben —
   // exakt die Ausgabeform von anchors.rank.test.js bei leerem snapshots/.
   const leer = 'tests/leer.test.js';
+  // N14: die andere Reporter-Familie — node:test. Eine Datei ohne einen einzigen
+  // test(...)-Aufruf schreibt GAR NICHTS und endet mit 0; das Eigenformat "N ok/N fail"
+  // taucht nie auf, NICHTS_GEPRUEFT kann sie also gar nicht sehen.
+  const stumm = 'tests/stumm.test.js';
+  const nodetest = 'tests/nodetest.test.js';
   fs.writeFileSync(path.join(dir, green), 'console.log("3 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, red), 'process.exit(1);\n');
   fs.writeFileSync(path.join(dir, orphan), 'console.log("1 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, leer),
     'console.log("leer.test.js: 0 ok, 0 fail (skipped: kein Universum)");process.exit(0);\n');
+  fs.writeFileSync(path.join(dir, stumm), "'use strict';\nrequire('node:test');\n");
+  fs.writeFileSync(path.join(dir, nodetest),
+    "'use strict';\nconst test=require('node:test');\ntest('echt', () => {});\n");
 
   const summaryFile = path.join(dir, 'summary.txt');
   const base = { cwd: dir, exemptPrefixes: [], summaryFile };
@@ -411,12 +433,38 @@ function selftest() {
     && !r.lines.some(l => l.startsWith('UEBERSPRUNGEN')),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
+  // 6c. Stumm-Probe (N14): eine node:test-Datei OHNE einen einzigen test(...)-Aufruf
+  //     schreibt nichts und endet mit Exit 0. Sie darf nicht als PASS durchgehen —
+  //     sonst bleibt eine Wache, aus der jemand alle Pruefungen entfernt, still gruen.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/stumm*test.js'], reportFiles: [], repoFiles: [stumm],
+  });
+  check('Stumm-Probe (node:test ohne Tests zaehlt als SKIP, nicht als PASS)',
+    r.code === 0
+    && r.skipped.length === 1
+    && !r.lines.some(l => l.startsWith(`PASS ${stumm}`))
+    && r.lines.some(l => l.startsWith(`SKIP ${stumm}`))
+    && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(stumm)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6d. Gegenprobe dazu: eine ECHTE node:test-Datei mit ausgefuehrten Tests redet und
+  //     muss weiterhin PASS sein — sonst faerbt 6c jede node:test-Suite im Repo falsch.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/nodetest*test.js'], reportFiles: [], repoFiles: [nodetest],
+  });
+  check('Stumm-Gegenprobe (echte node:test-Datei bleibt PASS)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${nodetest}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (8 Proben).');
+  console.log('test-gate Selftest OK (10 Proben).');
   return 0;
 }
 

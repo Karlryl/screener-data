@@ -402,5 +402,42 @@ test('F-12-R4: ein echter Namespace-Bruch fliegt weiterhin auf (Negativ-Fixture)
   assert.equal(namespacesAusSchluesselzeilen(kaputt).size, 2, 'abweichende Namespaces muessen auffliegen');
 });
 
+// N9 (Nacht-Pruef-Sweep 29.08., ENTSCHIED 29): der unlesbar-Zaehler der
+// Wurzelzwillinge wurde gemessen (tests/u2-wurzelzwillinge.test.js pinnt ihn), aber
+// nie ausgegeben. Bei Totalausfall lautete die Betriebszeile "0 von 0 .BO/.NS-Beinen
+// ... gesetzt" — dieselbe Zeile wie bei "keine Zwillinge im Bestand". Zwei
+// Weltzustaende, eine Meldung.
+//
+// Gepinnt wird die UNTERSCHEIDBARKEIT, nicht die Formulierung: die Zeile eines Laufs
+// mit ausgefallenem Bein MUSS sich von der eines Laufs ohne Zwillinge unterscheiden.
+function u2Zeile(ausgabe) {
+  return (ausgabe.split('\n').find((z) => z.includes('[u2-wurzelzwillinge]')) || '').trim();
+}
+
+test('N9: Totalausfall der Wurzelzwillinge ist von "keine Zwillinge" unterscheidbar', () => {
+  // Lauf A: ein .BO-Bein liegt kaputt im Eingang, das .NS-Bein ist heil.
+  const ausfall = lauf(['KRN.BO', 'KRN.NS'], [['KRN.BO.json', 'KRN.BO'], ['KRN.NS.json', 'KRN.NS']]);
+  fs.writeFileSync(path.join(ausfall.ziel, 'KRN.BO.json'), '{ kein json');
+  // Der Filter hat schon kopiert; fuer die Messung zaehlt der zweite Lauf auf denselben
+  // Eingang mit dem kaputten Stand im Ziel — deshalb direkt ueber die Funktion:
+  const { wendeWurzelZwillingeAn } = require(path.join(__dirname, '..', 'scripts', 'filter-snapshot-merge.js'));
+  const res = wendeWurzelZwillingeAn(ausfall.ziel, ['KRN.BO.json', 'KRN.NS.json']);
+  assert.equal(res.unlesbar, 1, 'Vorbedingung: der Ausfall muss gemessen sein');
+
+  // Lauf B: gar keine Zwillinge im Bestand.
+  const ohne = lauf(['AAPL'], [['AAPL.json', 'AAPL']]);
+  const zeileOhne = u2Zeile(ohne.ausgabe);
+  assert.ok(zeileOhne, 'die Betriebszeile muss ueberhaupt erscheinen');
+
+  // Die Zeile MUSS die Ausfallzahlen tragen, sonst sind beide Lagen identisch gemeldet.
+  assert.match(zeileOhne, /nicht lesbar: 0/, 'ohne Ausfall gehoert die 0 sichtbar an die Zeile');
+  assert.match(zeileOhne, /nicht schreibbar: 0/, 'Lese- und Schreibausfall sind zwei Lagen');
+
+  // Gegenrichtung an der Sache: dieselbe Zeile mit einem Ausfall darf NICHT gleich lauten.
+  const mitAusfall = zeileOhne.replace('nicht lesbar: 0', `nicht lesbar: ${res.unlesbar}`);
+  assert.notEqual(mitAusfall, zeileOhne,
+    'Ausfall und Nicht-Ausfall muessen zu verschiedenen Zeilen fuehren');
+});
+
 console.log(`\nf12-merge-filter.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

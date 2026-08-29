@@ -39,6 +39,11 @@ const {
 // geschlossen: eine unbekannte Art bekommt keine Server-Bestaetigung.
 const BESTAETIGBAR = new Set([ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
 
+// Der EINE Appender aus protocol/early-detection/2.0.0/register-single-appender-rule.json
+// (`rule.singleAppender`). Steht hier als Konstante, damit der Server-Beweis nicht davon
+// abhaengt, auf welchem Zweig der Aufrufer zufaellig steht.
+const SINGLE_APPENDER_ZWEIG = 'main';
+
 const WURZEL = path.join(__dirname, '..');
 const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
 const LEDGER = path.join(WURZEL, ...LEDGER_REL.split('/'));
@@ -173,8 +178,15 @@ function serverAntwort(pfad) {
 function bestaetigen(argv) {
   const runId = argument(argv, 'runid');
   const ziel = argument(argv, 'ziel');
-  const zweig = argument(argv, 'zweig', false)
-    || execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf8', cwd: WURZEL }).trim();
+  // Der Beweis gilt GEGEN main, nicht gegen den Zweig, auf dem man gerade steht.
+  // register-single-appender-rule.json sagt beides ausdruecklich:
+  // ledgerAppendsAllowedOnlyInCommitsLandingDirectlyOn = 'main', und Schritt 4 der
+  // branchWorkSequence verlangt "confirm the MAIN-HOSTED entry and its independent
+  // server time". Der bisherige Default `git rev-parse --abbrev-ref HEAD` liess die
+  // Bestaetigung genau daran vorbeilaufen: ein Eintrag, der nur auf einem Zweig lag,
+  // bekam sein Server-Siegel, ohne je auf main gelandet zu sein — und kein Aufrufer im
+  // Repo uebergibt --zweig, der stille Pfad war also der einzige benutzte.
+  const zweig = argument(argv, 'zweig', false) || SINGLE_APPENDER_ZWEIG;
 
   const register = lies(LEDGER);
   pruefeZugriffsRegister(register);
