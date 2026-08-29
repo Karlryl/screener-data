@@ -6,7 +6,7 @@ const assert = require('assert');
 const {
   firstPassage, buildPairs, clusterBootstrap, evaluatePairOutcomes,
   assessBalance, buildEventDatedCandidatePools, selectViewRecords,
-  matchDistance, bcaInterval, _const,
+  matchDistance, bcaInterval, shumwayEstimableGate, decideVerdict, _const,
 } = require('../scripts/b1-validate.js');
 const detect = require('../lib/b1-detect.js');
 
@@ -305,4 +305,79 @@ function companyFacts(revenues, operatingIncome, shares) {
   assert.ok(sel.controls.some((r) => r.cik === 'C0'), 'Nicht-Event-Firmen bleiben Kontrollen');
 }
 
-console.log('b1-validate.test.js: alle 16 Blöcke grün');
+// ── (17)–(20) estimable-Gate, fail closed ────────────────────────────────────
+// Urteile vom 30.08.2026: _COURT-B2-2026-08-30 (K3 Punkt 7 / R4, 3:0) und
+// _COURT-FORM25-LABEL-2026-08-30 (Auflage B5). Beide fanden unabhaengig, dass
+// `S.estimable === false` fail-OPEN war: eine Shumway-View OHNE das Feld galt
+// als auswertbar und liess ein POSITIV durch. Gewacht wird an der ECHTEN
+// Entscheidung (decideVerdict), nicht an einer Nachbildung — B5 verlangt
+// woertlich den Nachweis, dass KEIN POSITIV entstehen KANN.
+// Beide Richtungen, weil ein Gate, das alles zumacht, genauso kaputt ist.
+const healthyMain = (extra) => Object.assign({
+  nEff: 12, outcomeBalanceDelta: 0, mean: 0.05, bySignificant: true, ci90: { lo: 0.01, hi: 0.09 },
+}, extra);
+const healthyShumway = (extra) => Object.assign({
+  estimable: true, mean: 0.02, ci90: { lo: -0.01, hi: 0.05, method: 'BCa' },
+}, extra);
+
+// (17) RICHTUNG A — gesunder Eingang kommt weiterhin durch.
+{
+  const g = shumwayEstimableGate(healthyShumway());
+  assert.strictEqual(g.estimable, true, 'vollstaendig belegte View bleibt schaetzbar');
+  assert.strictEqual(g.widthPp, 6, 'Breite maschinell: (0,05 − (−0,01)) = 6 pp');
+  const d = decideVerdict({ haupttest: healthyMain(), shumway: healthyShumway() }, 0);
+  assert.ok(/^POSITIV/.test(d.verdict), 'gesunder Lauf erreicht POSITIV — das Gate ist kein Generalriegel');
+  assert.strictEqual(d.positivBlockedByGate, false);
+}
+
+// (18) RICHTUNG B — jede kaputte/fehlende Form schliesst UND kappt das POSITIV.
+// Die ersten beiden Formen sind die von den Gerichten woertlich benannten.
+{
+  const kaputt = [
+    ['Feld fehlt ganz (der Gerichtsbefund)', {}],
+    ['estimable:true, mean:null (der zweite Gerichtsbefund)', { estimable: true, mean: null }],
+    ['estimable null', { estimable: null, mean: 0.02, ci90: { lo: 0, hi: 0.04 } }],
+    ['estimable als String', { estimable: 'true', mean: 0.02, ci90: { lo: 0, hi: 0.04 } }],
+    ['estimable 1 statt true', { estimable: 1, mean: 0.02, ci90: { lo: 0, hi: 0.04 } }],
+    ['View selbst fehlt', undefined],
+    ['View ist kein Objekt', 'schaetzbar'],
+    ['keine Intervallgrenzen (K3 Punkt 7)', { estimable: true, mean: 0.02 }],
+    ['Intervallgrenze nicht endlich', { estimable: true, mean: 0.02, ci90: { lo: NaN, hi: 0.04 } }],
+    ['Breite nicht rechenbar', { estimable: true, mean: 0.02, ci90: { lo: 0.04, hi: Infinity } }],
+    ['Grenzen verdreht', { estimable: true, mean: 0.02, ci90: { lo: 0.04, hi: 0.0 } }],
+  ];
+  for (const [name, S] of kaputt) {
+    const g = shumwayEstimableGate(S);
+    assert.strictEqual(g.estimable, false, 'fail closed: ' + name);
+    const fam = { haupttest: healthyMain() };
+    if (S !== undefined) fam.shumway = S;
+    const d = decideVerdict(fam, 0);
+    assert.ok(!/^POSITIV/.test(d.verdict), 'KEIN POSITIV trotz BY-signifikantem Haupttest: ' + name);
+    assert.strictEqual(d.positivBlockedByGate, true, 'Kappung wird ausgewiesen: ' + name);
+  }
+  // Der ehrlich gemeldete Ist-Zustand (Produktionspfad) bleibt unterscheidbar.
+  const echt = shumwayEstimableGate({ estimable: false, reason: 'NOT_ESTIMABLE_NO_DELISTING_LABELS', mean: null });
+  assert.strictEqual(echt.reason, 'NOT_ESTIMABLE_NO_DELISTING_LABELS', 'echter Grund wird nicht ueberschrieben');
+}
+
+// (19) Ein Fehler IM Gate darf nie durchlassen (R4 woertlich: fail closed).
+{
+  const explodiert = {};
+  Object.defineProperty(explodiert, 'estimable', { get() { throw new Error('Label-Store kaputt'); } });
+  const g = shumwayEstimableGate(explodiert);
+  assert.strictEqual(g.estimable, false, 'Gate-interner Fehler schliesst, statt durchzulassen');
+  assert.ok(/^GATE_INTERNAL_ERROR/.test(g.reason), 'Grund benennt den Gate-Fehler');
+  const d = decideVerdict({ haupttest: healthyMain(), shumway: explodiert }, 0);
+  assert.ok(!/^POSITIV/.test(d.verdict), 'kaputtes Gate erzeugt kein POSITIV');
+}
+
+// (20) Der Konstruktionspunkt: ein NULL bleibt trotz unauswertbarer View
+// zertifizierbar (par.8 — NULL braucht das Veto nicht). Ein Gate, das auch das
+// NULL kappte, waere die Ueberkorrektur.
+{
+  const d = decideVerdict({ haupttest: healthyMain({ bySignificant: false }), shumway: {} }, 0);
+  assert.ok(/^NEGATIV\/NULL/.test(d.verdict), 'NULL bleibt ein gueltiges Ergebnis');
+  assert.strictEqual(d.positivBlockedByGate, false, 'ohne POSITIV-Anwaerter wird nichts gekappt');
+}
+
+console.log('b1-validate.test.js: alle 20 Blöcke grün');
