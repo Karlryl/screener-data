@@ -37,6 +37,17 @@ for (const probe of [
   'negative Intra-Block-Korrelation kippt nichts (max bleibt max)',
   'WEITER ist binaer, nie etwas dazwischen',
   'genau EIN Zweig hat WEITER = 1',
+  // Nach dem Python-Review vom 30.08.: NaN und inf umgingen den
+  // Zulaessigkeits-Gate und erzeugten ein BESTANDEN.
+  'entartete Eingabe n = NaN -> nie ein Pass, kein Absturz',
+  'entartete Eingabe n = inf -> nie ein Pass, kein Absturz',
+  'entartete Eingabe n = True (bool ist ein int) -> nie ein Pass, kein Absturz',
+  'entartete Eingabe Ergebnis = True (bool ist ein int) -> nie ein Pass, kein Absturz',
+  'entartete Eingabe Ergebnis = NaN -> nie ein Pass, kein Absturz',
+  'entartete Eingabe Ergebnis negativ -> nie ein Pass, kein Absturz',
+  'entartete Eingabe Ergebnis > 1 -> nie ein Pass, kein Absturz',
+  'GEGENPROBE: saubere Zahlen gehen durch den Gate',
+  'se_binomial rechnet die registrierte Streuungsgroesse nach',
   'Wilson-Intervall steht in jedem Zweig',
   'Artefakt: der Freeze-Akt ist NICHT vollzogen',
   'Artefakt: das Siegel bleibt in ALLEN drei Zweigen zu',

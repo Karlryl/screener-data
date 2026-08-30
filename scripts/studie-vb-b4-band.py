@@ -76,7 +76,7 @@ def se_binomial(p_dach, n):
     Kontinuitaets-Feststellung, keine Praeferenz: unter max(...) kann diese
     Wahl ohnehin nur dort entscheiden, wo sie den klumpen-robusten SE
     uebersteigt."""
-    if n is None or n <= 0 or p_dach is None or not 0.0 <= p_dach <= 1.0:
+    if not _anteil(p_dach) or not _fallzahl(n):
         return None
     return math.sqrt(p_dach * (1.0 - p_dach) / n)
 
@@ -84,7 +84,7 @@ def se_binomial(p_dach, n):
 def wilson(p_dach, n, z=1.959963984540054):
     """Zweiseitiges 95-%-Wilson-Intervall (VB-A10). Steht in JEDEM Zweig neben
     dem Verdikt - es ist der stehende Vorbehalt D6, nicht seine Ausraeumung."""
-    if n is None or n <= 0 or p_dach is None:
+    if not _anteil(p_dach) or not _fallzahl(n):
         return None
     mitte = (p_dach + z * z / (2 * n)) / (1 + z * z / n)
     rand = (z / (1 + z * z / n)) * math.sqrt(
@@ -92,9 +92,31 @@ def wilson(p_dach, n, z=1.959963984540054):
     return [mitte - rand, mitte + rand]
 
 
-def _endlich(x):
+def _zahl(x):
+    """Eine echte, endliche Zahl - kein bool, kein NaN, kein inf.
+
+    `bool` ist in Python ein `int`; ohne den Ausschluss ginge `True` als 1
+    durch. Und NaN ist der gefaehrlichste Fall von allen: JEDER Vergleich mit
+    NaN ist False, eine Schranke der Form `if x < grenze` feuert also NIE.
+    Deshalb wird hier positiv geprueft, was gelten MUSS, statt negativ, was
+    nicht gelten darf.
+    """
     return isinstance(x, (int, float)) and not isinstance(x, bool) \
-        and math.isfinite(x) and x >= 0.0
+        and math.isfinite(x)
+
+
+def _endlich(x):
+    return _zahl(x) and x >= 0.0
+
+
+def _anteil(x):
+    """Ein Anteil in [0,1]. Alles andere ist kein Torergebnis."""
+    return _zahl(x) and 0.0 <= x <= 1.0
+
+
+def _fallzahl(x):
+    """Eine positive, endliche Fallzahl."""
+    return _zahl(x) and x > 0
 
 
 def se_stern(se_binom, se_klumpen):
@@ -121,6 +143,10 @@ def auswerten(ergebnis, n, se_binom, se_klumpen, schwelle=SCHWELLE,
     Gibt IMMER ein Verdikt zurueck - auch der gerissene Zulaessigkeits-Gate ist
     ein Verdikt, kein Fehler. `weiter` ist 0 oder 1, nie etwas dazwischen.
     """
+    # Das Wilson-Intervall steht nach VB-A10 in JEDEM Zweig - aber nur, wo es
+    # ueberhaupt existiert. Es wird deshalb erst gerechnet, wenn Ergebnis und
+    # Fallzahl echte Zahlen sind; sonst ist es None und nicht [nan, nan].
+    messbar = _anteil(ergebnis) and _fallzahl(n)
     bericht = {
         "schwelle": schwelle,
         "bandbreiteInSE": breite,
@@ -129,25 +155,38 @@ def auswerten(ergebnis, n, se_binom, se_klumpen, schwelle=SCHWELLE,
         "ergebnis": ergebnis,
         "seBinomial": se_binom,
         "seKlumpenRobust": se_klumpen,
-        "wilson95": wilson(ergebnis, n),
+        "wilson95": wilson(ergebnis, n) if messbar else None,
     }
 
-    # 1. Zulaessigkeits-Gate, fail-closed. Nie ein Pass.
-    if n is None or n < fallzahl_min:
+    def gate_gerissen(grund):
         return dict(bericht, seStern=None, entschied=None, abstand=None,
                     verdikt=VERDIKT_BAND, weiter=0, messgeraetVollstaendig=False,
-                    grund=("Zulaessigkeits-Gate gerissen: der Nenner des Tors "
-                           "ist " + repr(n) + " < " + str(fallzahl_min)
-                           + " (bestehende Praereg-Schwelle R5). NICHT "
-                           "BEWERTBAR."),
+                    grund="Zulaessigkeits-Gate gerissen: " + grund,
                     pflichtsatz=PFLICHTSATZ_BAND, zweitsatz=ZWEITSATZ_BAND)
+
+    # 1. Zulaessigkeits-Gate, fail-closed. Nie ein Pass.
+    #
+    # Es steht VOR jeder Rechnung, und es prueft POSITIV. Der Vorlaeufer fragte
+    # `if n is None or n < fallzahl_min` - und liess damit NaN und inf glatt
+    # durch, weil jeder Vergleich mit NaN False ist und inf jede Schwelle
+    # ueberschreitet. Beides erzeugte ein BESTANDEN mit
+    # messgeraetVollstaendig=True. Genau das darf dieses Tor nie tun.
+    if not _anteil(ergebnis):
+        return gate_gerissen(
+            "das Ergebnis ist kein Anteil in [0,1]: " + repr(ergebnis)
+            + ". Ein Torergebnis, das keine Zahl zwischen 0 und 1 ist, ist "
+            "kein Messwert.")
+    if not _fallzahl(n):
+        return gate_gerissen(
+            "die Fallzahl ist keine endliche Zahl groesser 0: " + repr(n) + ".")
+    if n < fallzahl_min:
+        return gate_gerissen(
+            "der Nenner des Tors ist " + repr(n) + " < " + str(fallzahl_min)
+            + " (bestehende Praereg-Schwelle R5). NICHT BEWERTBAR.")
     try:
         stern = se_stern(se_binom, se_klumpen)
     except BandNichtAuswertbar as exc:
-        return dict(bericht, seStern=None, entschied=None, abstand=None,
-                    verdikt=VERDIKT_BAND, weiter=0, messgeraetVollstaendig=False,
-                    grund="Zulaessigkeits-Gate gerissen: " + str(exc),
-                    pflichtsatz=PFLICHTSATZ_BAND, zweitsatz=ZWEITSATZ_BAND)
+        return gate_gerissen(str(exc))
 
     # 3./4. Band, geschlossen. Gleichheit zaehlt INS Band, keine Rundung vor
     #       dem Vergleich - deshalb wird hier nichts gerundet.
@@ -535,6 +574,47 @@ def selbsttest():
     pruefe("kein Rueckfall auf den kleineren SE",
            auswerten(0.99, n, 0.001, None)["weiter"] == 0)
 
+    # ENTARTETE EINGABEN. Nachgestellt am 30.08. nach dem Python-Review: der
+    # Gate fragte `if n is None or n < fallzahl_min`. Jeder Vergleich mit NaN
+    # ist False, und inf ueberschreitet jede Schwelle - beide lieferten ein
+    # BESTANDEN mit messgeraetVollstaendig=True. Ein negatives oder NaN-
+    # Ergebnis liess `wilson` mit math domain error abstuerzen bzw. fiel durch
+    # bis zu einem definitiven NICHT BESTANDEN. Das sind die Proben dagegen.
+    nan, inf = float("nan"), float("inf")
+    for name, args in (("n = NaN", (0.95, nan, 0.01, 0.02)),
+                       ("n = inf", (0.95, inf, 0.01, 0.02)),
+                       ("n = True (bool ist ein int)", (0.95, True, 0.01, 0.02)),
+                       # `True` ist in Python 1 und liegt damit brav in [0,1]:
+                       # ohne den bool-Ausschluss waere es ein Ergebnis von
+                       # 100 % und damit ein glattes BESTANDEN.
+                       ("Ergebnis = True (bool ist ein int)",
+                        (True, n, 0.01, 0.02)),
+                       ("Ergebnis = NaN", (nan, n, 0.01, 0.02)),
+                       ("Ergebnis negativ", (-0.5, n, 0.01, 0.02)),
+                       ("Ergebnis > 1", (1.5, n, 0.01, 0.02)),
+                       ("Ergebnis = None", (None, n, 0.01, 0.02))):
+        r = auswerten(*args)
+        pruefe("entartete Eingabe " + name + " -> nie ein Pass, kein Absturz",
+               r["verdikt"] == VERDIKT_BAND and r["weiter"] == 0
+               and r["messgeraetVollstaendig"] is False)
+
+    # Und die Gegenprobe zum Gate: dieselbe Rechnung mit sauberen Zahlen MUSS
+    # durchgehen - ein Gate, das alles abweist, misst nichts.
+    pruefe("GEGENPROBE: saubere Zahlen gehen durch den Gate",
+           auswerten(0.95, n, 0.01, 0.02)["messgeraetVollstaendig"] is True)
+
+    # Die Referenz-Implementierung der binomialen SE, direkt geprueft. Sie wird
+    # von `auswerten` nicht aufgerufen (der Wert kommt gemessen herein) - ohne
+    # eigene Probe waere sie ungetestet.
+    pruefe("se_binomial rechnet die registrierte Streuungsgroesse nach",
+           abs(se_binomial(326.0 / 365.0, 365) - 0.016170) < 1e-6)
+    pruefe("se_binomial weist entartete Eingaben ab",
+           all(se_binomial(*a) is None for a in
+               ((nan, 365), (0.5, nan), (0.5, 0), (-0.1, 365), (1.1, 365))))
+    pruefe("wilson weist entartete Eingaben ab",
+           all(wilson(*a) is None for a in
+               ((nan, 365), (0.5, nan), (-0.5, 365), (0.5, inf))))
+
     # Kipp-Bedingung 5: negativer Klumpen-SE kippt nichts.
     r = auswerten(0.95, n, 0.02, 0.01)
     pruefe("negative Intra-Block-Korrelation kippt nichts (max bleibt max)",
@@ -614,8 +694,8 @@ def main(argv=None):
         geschrieben = schreibe(a.ziel)
         print("Artefakt      : " + a.ziel)
         print("inhaltSha256  : " + geschrieben["inhaltSha256"])
-        print("Datei-SHA-256 : " + hashlib.sha256(
-            open(a.ziel, "rb").read()).hexdigest())
+        with open(a.ziel, "rb") as fh:
+            print("Datei-SHA-256 : " + hashlib.sha256(fh.read()).hexdigest())
         print("eingefroren   : "
               + str(geschrieben["freezeStatus"]["eingefroren"])
               + "  (Halter: " + geschrieben["freezeStatus"]["halter"] + ")")
@@ -626,8 +706,9 @@ def main(argv=None):
         ist = hashlib.sha256(kanonisch(gelesen["inhalt"])).hexdigest()
         print("inhaltSha256 gefuehrt : " + gelesen["inhaltSha256"])
         print("inhaltSha256 gerechnet: " + ist)
-        print("Datei-SHA-256         : " + hashlib.sha256(
-            open(a.datei, "rb").read()).hexdigest())
+        with open(a.datei, "rb") as fh:
+            print("Datei-SHA-256         : "
+                  + hashlib.sha256(fh.read()).hexdigest())
         if ist != gelesen["inhaltSha256"]:
             print("HASH WEICHT AB", file=sys.stderr)
             return 1
