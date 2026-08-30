@@ -1,0 +1,949 @@
+{
+  "schema": "studie-f1-datenfundament-freeze/v1",
+  "stufe": "F1",
+  "erzeugt": "2026-08-30T09:44:50.215Z",
+  "auftrag": "Studie 2.0, Phase F1 — Datenfundament des verbreiterten Konzept-Panels. Autorisierung: ratifiziertes Rats-Verdikt _COURT-ZWEITQUELLE-2026-08-30.md (ENTSCHIED 78, F1-F3 frei) + Orchestrator ENTSCHIED 120.",
+  "registerEintrag": "keiner — F1 arbeitet ausschliesslich auf oeffentlichen Daten (Bauplan §6, Zeile F1). Der Eintrag faellt bei F3.",
+  "block1_wahlGrundlage": {
+    "pfad": "C:/Users/Anwender/OneDrive/Dokumente/GitHub/Jarvis/Knowledge/Trading/growth-screener/agent-reports/konzept-inventar-blind-2026-08-30.json",
+    "sha256": "d86b1b129d7ec1ed25600f8f51cf9efdbb433cf7c00c1d73128af277985a4850",
+    "erzeugt": "2026-08-29T22:50:09.506Z",
+    "vermerk": "einziger zulaessiger Eingang der Konzeptwahl. Unzulaessig als Grundlage: die S0-Firmennamen und ihre Konzepte, jede E4g/E4h-Zahl, jede Klassen-Verteilung der 25/21 (N4.2)."
+  },
+  "block2_regel": {
+    "regelId": "F1-KONZEPTREGEL-Z0-Z4/2026-08-30",
+    "auswahl": "je Entity-Klasse die Kennung mit der hoechsten Rettungszahl in dieser Klasse, die alle Schranken erfuellt; Gleichstand = NICHT BERECHENBAR",
+    "schranken": {
+      "Z0": {
+        "groesse": "ciksRettung",
+        "operator": ">=",
+        "wert": 10,
+        "herkunft": "Dissens D9 (S1)"
+      },
+      "Z1": {
+        "groesse": "ciksRettungMitQuartal/ciksRettung",
+        "operator": ">=",
+        "wert": 0.9,
+        "herkunft": "Position P2 (S3)"
+      },
+      "Z2": {
+        "groesse": "qtrs1AnteilFakten",
+        "operator": ">=",
+        "wert": 0.5,
+        "herkunft": "Position P2 (S3)"
+      },
+      "Z3a": {
+        "groesse": "Kennungsname",
+        "operator": "kein Treffer ausserhalb bank",
+        "wert": "InterestIncome|InvestmentIncome|InterestAndDividendIncome|InterestAndOtherIncome|InterestAndFeeIncome|DividendIncome|InterestRevenue|InterestAndDiscount",
+        "herkunft": "Rang-4-Sperre, K7/K8"
+      },
+      "Z3b": {
+        "groesse": "Kennungsname",
+        "operator": "kein Treffer",
+        "wert": "Noninterest|Excluding(Interest|Dividend)|OtherThanInterest",
+        "herkunft": "Bestands-Doktrin, K7 (b), merge-sec-xbrl.js:88-92"
+      },
+      "Z4": {
+        "groesse": "taxonomy",
+        "operator": "in",
+        "wert": [
+          "us-gaap"
+        ],
+        "herkunft": "K7, 4:0 IFRS-Ausschluss"
+      },
+      "Z5": {
+        "status": "entfaellt",
+        "herkunft": "K7 (c), 3:0 reiner Fallback statt neuer Rang"
+      }
+    },
+    "eintrittsModus": "reiner_fallback",
+    "eintrittsModusBegruendung": "K7 (c), 3:0. Ein gemischter oder je-Stichtag wirkender Fallback ist UNZULAESSIG (S1, unwidersprochen).",
+    "bruttoNetto": "brutto",
+    "bruttoNettoBegruendung": "K7 (b), 3:0. Eine Netto-Zinsertragsreihe ist eine Differenz zweier Stroeme, kann null durchqueren und das Vorzeichen wechseln.",
+    "bankStratumBedingungenK8": [
+      "getrennt berichtet, getrennt gegen die Nullmodelle geprueft, getrennt in der FDR-Familie",
+      "praeregistrierte Klumpungseinheit Entity-Klasse x Signalquartal; effektives N konservativ",
+      "eigene Ereignis-/Label-Abdeckungszahl, vorab gemessen, nicht unter der des Gesamtpanels",
+      "Bank-Zinsertrag wird weder still mit operativem Produktumsatz gepoolt noch zur Reparatur des primaeren Arms benutzt"
+    ]
+  },
+  "block2_regelSha256": "6b3777186781084c9f0b2352aa25d5337f080afca16d2c546e5355fbcc622343",
+  "block3_konzeptliste": [
+    {
+      "taxonomy": "us-gaap",
+      "concept": "InterestAndDividendIncomeOperating",
+      "entityKlassen": [
+        "bank"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": true
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "OilAndGasRevenue",
+      "entityKlassen": [
+        "operativ"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RealEstateRevenueNet",
+      "entityKlassen": [
+        "immobilien",
+        "reit"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RegulatedAndUnregulatedOperatingRevenue",
+      "entityKlassen": [
+        "versorger"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    }
+  ],
+  "block3_konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+  "block3_ehrlicheAusschluesse": [
+    {
+      "klasse": "biotech_pharma",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "finanz_sonstige",
+      "kennung": null,
+      "grund": "NICHT BERECHENBAR: Gleichstand bei 1 Rettungen zwischen us-gaap:OilAndGasRevenue, us-gaap:RegulatedAndUnregulatedOperatingRevenue — nie eine Auswahl (Position P3, R)",
+      "gleichstand": [
+        "us-gaap:OilAndGasRevenue",
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue"
+      ]
+    },
+    {
+      "klasse": "spac_blankcheck",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "unbekannt",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "versicherer",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    }
+  ],
+  "block3_unterschreitungen": [
+    {
+      "klasse": "versorger",
+      "kennung": "us-gaap:RegulatedAndUnregulatedOperatingRevenue",
+      "ciksRettung": 10,
+      "protokoll": "S1s Dissens D9 verlangt eine Untergrenze UEBER 10. Die Mehrheit laesst diese Kennung bei Rett = 10 zu; die Unterschreitung ist hiermit ausdruecklich protokolliert. Der Dissens bleibt bestehen."
+    }
+  ],
+  "block4_datenfundament": {
+    "quelle": "primaer",
+    "jahrgang": "legacy_earliest_archived",
+    "fenster": {
+      "von": "2009q1",
+      "bis": "2020q4",
+      "siegelGrenze": "2020q4"
+    },
+    "herkunftsSchliessung": "protocol\\early-detection\\2.0.0\\provenance-closure.json",
+    "herkunftsSchliessungSha256": "f316859edb10a478c44effb8d0a86dddf3b5142596ef4d504f2637749ef96761",
+    "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-v4-sealed127",
+    "payloads": 48,
+    "bitGleich": 48,
+    "bitGleicheBytes": 1718255454,
+    "vintageIdentitaet": "BEWIESEN",
+    "gebrocheneZeilen": [],
+    "payloadMengeSha256": "cd371f211c62e3c8cf12a8948bc0a89312e2f7da7bb84ccd5302396f0a4ba571",
+    "jePayload": [
+      {
+        "quartal": "2009q1",
+        "sollSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+        "istSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2009q2",
+        "sollSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+        "istSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2009q3",
+        "sollSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+        "istSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2009q4",
+        "sollSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+        "istSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2010q1",
+        "sollSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+        "istSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2010q2",
+        "sollSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+        "istSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2010q3",
+        "sollSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+        "istSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2010q4",
+        "sollSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+        "istSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2011q1",
+        "sollSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+        "istSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2011q2",
+        "sollSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+        "istSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2011q3",
+        "sollSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+        "istSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2011q4",
+        "sollSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+        "istSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2012q1",
+        "sollSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+        "istSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2012q2",
+        "sollSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+        "istSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2012q3",
+        "sollSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+        "istSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2012q4",
+        "sollSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+        "istSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2013q1",
+        "sollSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+        "istSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2013q2",
+        "sollSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+        "istSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2013q3",
+        "sollSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+        "istSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2013q4",
+        "sollSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+        "istSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2014q1",
+        "sollSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+        "istSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2014q2",
+        "sollSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+        "istSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2014q3",
+        "sollSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+        "istSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2014q4",
+        "sollSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+        "istSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2015q1",
+        "sollSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+        "istSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2015q2",
+        "sollSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+        "istSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2015q3",
+        "sollSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+        "istSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2015q4",
+        "sollSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+        "istSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2016q1",
+        "sollSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+        "istSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2016q2",
+        "sollSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+        "istSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2016q3",
+        "sollSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+        "istSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2016q4",
+        "sollSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+        "istSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2017q1",
+        "sollSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+        "istSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2017q2",
+        "sollSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+        "istSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2017q3",
+        "sollSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+        "istSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2017q4",
+        "sollSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+        "istSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2018q1",
+        "sollSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+        "istSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2018q2",
+        "sollSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+        "istSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2018q3",
+        "sollSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+        "istSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2018q4",
+        "sollSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+        "istSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2019q1",
+        "sollSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+        "istSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2019q2",
+        "sollSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+        "istSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2019q3",
+        "sollSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+        "istSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2019q4",
+        "sollSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+        "istSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2020q1",
+        "sollSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+        "istSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2020q2",
+        "sollSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+        "istSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2020q3",
+        "sollSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+        "istSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+        "zustand": "VORHANDEN"
+      },
+      {
+        "quartal": "2020q4",
+        "sollSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+        "istSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+        "zustand": "VORHANDEN"
+      }
+    ],
+    "zweitlinie": {
+      "quelle": "zweitlinie",
+      "jahrgang": "legacy_earliest_archived",
+      "fenster": {
+        "von": "2009q1",
+        "bis": "2020q4",
+        "siegelGrenze": "2020q4"
+      },
+      "herkunftsSchliessung": "protocol\\early-detection\\2.0.0\\provenance-closure.json",
+      "herkunftsSchliessungSha256": "f316859edb10a478c44effb8d0a86dddf3b5142596ef4d504f2637749ef96761",
+      "dataRoot": "C:\\Users\\Anwender\\Documents\\GrowthScreenerResearchData\\early-detection-store",
+      "payloads": 48,
+      "bitGleich": 48,
+      "bitGleicheBytes": 1718255454,
+      "vintageIdentitaet": "BEWIESEN",
+      "gebrocheneZeilen": [],
+      "payloadMengeSha256": "cd371f211c62e3c8cf12a8948bc0a89312e2f7da7bb84ccd5302396f0a4ba571",
+      "jePayload": [
+        {
+          "quartal": "2009q1",
+          "sollSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+          "istSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2009q2",
+          "sollSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+          "istSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2009q3",
+          "sollSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+          "istSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2009q4",
+          "sollSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+          "istSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2010q1",
+          "sollSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+          "istSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2010q2",
+          "sollSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+          "istSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2010q3",
+          "sollSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+          "istSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2010q4",
+          "sollSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+          "istSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2011q1",
+          "sollSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+          "istSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2011q2",
+          "sollSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+          "istSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2011q3",
+          "sollSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+          "istSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2011q4",
+          "sollSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+          "istSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2012q1",
+          "sollSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+          "istSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2012q2",
+          "sollSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+          "istSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2012q3",
+          "sollSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+          "istSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2012q4",
+          "sollSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+          "istSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2013q1",
+          "sollSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+          "istSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2013q2",
+          "sollSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+          "istSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2013q3",
+          "sollSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+          "istSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2013q4",
+          "sollSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+          "istSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2014q1",
+          "sollSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+          "istSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2014q2",
+          "sollSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+          "istSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2014q3",
+          "sollSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+          "istSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2014q4",
+          "sollSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+          "istSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2015q1",
+          "sollSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+          "istSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2015q2",
+          "sollSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+          "istSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2015q3",
+          "sollSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+          "istSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2015q4",
+          "sollSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+          "istSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2016q1",
+          "sollSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+          "istSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2016q2",
+          "sollSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+          "istSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2016q3",
+          "sollSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+          "istSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2016q4",
+          "sollSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+          "istSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2017q1",
+          "sollSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+          "istSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2017q2",
+          "sollSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+          "istSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2017q3",
+          "sollSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+          "istSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2017q4",
+          "sollSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+          "istSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2018q1",
+          "sollSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+          "istSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2018q2",
+          "sollSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+          "istSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2018q3",
+          "sollSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+          "istSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2018q4",
+          "sollSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+          "istSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2019q1",
+          "sollSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+          "istSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2019q2",
+          "sollSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+          "istSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2019q3",
+          "sollSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+          "istSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2019q4",
+          "sollSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+          "istSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2020q1",
+          "sollSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+          "istSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2020q2",
+          "sollSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+          "istSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2020q3",
+          "sollSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+          "istSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+          "zustand": "WIEDERHERGESTELLT"
+        },
+        {
+          "quartal": "2020q4",
+          "sollSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+          "istSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+          "zustand": "WIEDERHERGESTELLT"
+        }
+      ]
+    },
+    "zweitlinieDeckungsgleich": true
+  },
+  "block5_extraktionsCode": [
+    {
+      "pfad": "scripts/studie-f1-vintage-wiederherstellung.py",
+      "sha256": "ceb7e2c97312fa9b83ab054d1be03ae5949f3ccfd05313e2df5804cfe5f55250",
+      "bytes": 18168
+    },
+    {
+      "pfad": "scripts/studie-f1-dera-leser.py",
+      "sha256": "e1661c07232c9b752305d040141158ccd8e64fdb194e3db4cb65cdb862c46b21",
+      "bytes": 27839
+    },
+    {
+      "pfad": "scripts/studie-f1-konzeptregel.py",
+      "sha256": "acf37294b8063a33debe59f3ac8432d0364156695ff7d5b0658c90266b5d977d",
+      "bytes": 22170
+    },
+    {
+      "pfad": "scripts/studie-f1-freeze.py",
+      "sha256": "380c2d8f0c7709ebdf7988be56e8f32ad08a69b787602fa68af2040bc6e2fc3b",
+      "bytes": 24602
+    }
+  ],
+  "block6_kontaminationsVorgeschichte": "Diese Konzeptliste entsteht in Kenntnis eines gerissenen Tors bei 89,32 % (326/365). Der Deckel von Arm (a) auf der alten Population betraegt 330/365 = 90,411 % und ist arithmetisch identisch mit der von ENTSCHIED 36 verworfenen Zahl. Dieser Deckel darf nicht mehr als Argument gefuehrt werden (A18) — weder fuer eine Beerdigung noch fuer eine Wiederbelebung von K1; beide Schluesse setzen m = 0 voraus, und m = 0 ist genau der Fall, den die Verbreiterung ausschliesst. Zulaessig bleibt allein: die Quote steigt genau dann, wenn die neu eintretende Kohorte selbst eine Reifequote ueber 89,32 % hat. Die Richtung kennt heute niemand.",
+  "k7aKoinzidenz": {
+    "sache": "K7 (a) ist mit 2:2 OFFEN — mechanische Regel gegen beschlossene Minimalliste. Das Gericht stellt fest, dass beide Lager dasselbe Ergebnis erzeugen.",
+    "regelErzeugt": [
+      "us-gaap:InterestAndDividendIncomeOperating",
+      "us-gaap:OilAndGasRevenue",
+      "us-gaap:RealEstateRevenueNet",
+      "us-gaap:RegulatedAndUnregulatedOperatingRevenue"
+    ],
+    "urteilsListe": [
+      "us-gaap:InterestAndDividendIncomeOperating",
+      "us-gaap:OilAndGasRevenue",
+      "us-gaap:RealEstateRevenueNet",
+      "us-gaap:RegulatedAndUnregulatedOperatingRevenue"
+    ],
+    "deckungsgleich": true
+  },
+  "block7_deraNachweis": {
+    "sache": "Zensus ueber die eingefrorene Liste auf dem wiederhergestellten Jahrgang: traegt die Quelle die gewaehlten Kennungen? Gelaufen NACH dem Einfrieren von Regel und Liste — seine Zahlen koennen die Wahl nicht mehr gesteuert haben.",
+    "payloads": 48,
+    "fenster": {
+      "von": "2009q1",
+      "bis": "2020q4",
+      "siegelGrenze": "2020q4"
+    },
+    "summeJeKennung": {
+      "us-gaap:InterestAndDividendIncomeOperating": {
+        "zeilenRoh": 51702,
+        "zeilenKonsolidiert": 50821,
+        "zeilenVerworfen": 881,
+        "quartaleMitZeilen": 45
+      },
+      "us-gaap:OilAndGasRevenue": {
+        "zeilenRoh": 7509,
+        "zeilenKonsolidiert": 6617,
+        "zeilenVerworfen": 892,
+        "quartaleMitZeilen": 40
+      },
+      "us-gaap:RealEstateRevenueNet": {
+        "zeilenRoh": 11796,
+        "zeilenKonsolidiert": 10093,
+        "zeilenVerworfen": 1703,
+        "quartaleMitZeilen": 39
+      },
+      "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+        "zeilenRoh": 3462,
+        "zeilenKonsolidiert": 2258,
+        "zeilenVerworfen": 1204,
+        "quartaleMitZeilen": 45
+      },
+      "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+        "zeilenRoh": 54366,
+        "zeilenKonsolidiert": 53239,
+        "zeilenVerworfen": 1127,
+        "quartaleMitZeilen": 14
+      },
+      "us-gaap:Revenues": {
+        "zeilenRoh": 309145,
+        "zeilenKonsolidiert": 275004,
+        "zeilenVerworfen": 34141,
+        "quartaleMitZeilen": 47
+      },
+      "us-gaap:SalesRevenueGoodsNet": {
+        "zeilenRoh": 73241,
+        "zeilenKonsolidiert": 64134,
+        "zeilenVerworfen": 9107,
+        "quartaleMitZeilen": 46
+      },
+      "us-gaap:SalesRevenueNet": {
+        "zeilenRoh": 168773,
+        "zeilenKonsolidiert": 146663,
+        "zeilenVerworfen": 22110,
+        "quartaleMitZeilen": 47
+      },
+      "us-gaap:SalesRevenueServicesNet": {
+        "zeilenRoh": 40328,
+        "zeilenKonsolidiert": 35952,
+        "zeilenVerworfen": 4376,
+        "quartaleMitZeilen": 45
+      }
+    },
+    "ohneZeilen": [],
+    "naturschluessel": [
+      "adsh",
+      "tag",
+      "version",
+      "ddate",
+      "qtrs",
+      "uom",
+      "segments",
+      "coreg"
+    ],
+    "namensraumAbbildung": {
+      "us-gaap": "us-gaap",
+      "ifrs-full": "ifrs",
+      "ifrs": "ifrs"
+    }
+  },
+  "offenePunkte": [
+    {
+      "id": "RR-1",
+      "sache": "Form der Konzeptauswahl: mechanische Regel oder beschlossene Minimalliste (K7 a, 2:2)",
+      "standF1": "beide Lesarten tragen dieselben Bytes — Regel und Liste sind hier getrennt gehasht, in dieser Reihenfolge. Die Weiche bleibt offen."
+    },
+    {
+      "id": "RR-2",
+      "sache": "OilAndGasRevenue drin oder draussen (keine Mehrheit)",
+      "standF1": "unter der Regel ist es DRIN (Z1 = 1,000, Z2 = 0,516, 60 Rettungen in der Klasse operativ). Faellt automatisch mit RR-1."
+    },
+    {
+      "id": "RR-4",
+      "sache": "PIT-feste Bestimmung der Entity-Klasse",
+      "standF1": "UNGELOEST. Die Klassenspalte des blinden Inventars stammt aus dem heutigen SIC (submissions.zip) und ist zeitpunktlos; 211 Firmen tragen gar keinen. Die Regel benutzt sie, weil es keine andere gibt — das ist hiermit offen ausgewiesen, nicht geglaettet."
+    },
+    {
+      "id": "RR-9",
+      "sache": "A2/A12/B3 ruhen auf der widerlegten Praemisse, der Vintage sei nicht wiederherstellbar",
+      "standF1": "die Praemisse ist hier zum dritten Mal widerlegt: der registrierte Jahrgang ist aus Quell-URL und sha256 bit-gleich wiederherstellbar. Die Umschrift von A2/A12/B3 ist Sache der naechsten Ratssitzung."
+    },
+    {
+      "id": "D9",
+      "sache": "S1s Rettungs-Untergrenze muss UEBER 10 liegen",
+      "standF1": "die Regel traegt >= 10; RegulatedAndUnregulatedOperatingRevenue steht bei genau 10. Die Unterschreitung ist protokolliert. Der Dissens bleibt bestehen und ist als solcher zu zitieren."
+    },
+    {
+      "id": "A10",
+      "sache": "Kontingent EINS auf das Prueffenster",
+      "standF1": "gehoert in den F3-Register-Eintragstext, mit eigener Zeile, beim zweiten Antrag maschinell sichtbar. F1 schreibt keinen Eintrag."
+    }
+  ],
+  "blindheitserklaerung": {
+    "gelesen": [
+      "_COURT-ZWEITQUELLE-2026-08-30.md (vollstaendig, inkl. beider Orchestrator-Nachtraege)",
+      "BAUPLAN-STUDIE-2.0-ENTWURF-2026-08-30.md (Entwurf, nicht bindend)",
+      "k1-restkanaele-messung-2026-08-30.md",
+      "k9-restschluss-2026-08-30.md",
+      "konzept-inventar-blind-2026-08-30.json + .md",
+      "protocol/early-detection/2.0.0/provenance-closure.json",
+      "scripts/studie-panel-bau.py, scripts/studie-basisraten.py (Kopfbereiche), scripts/early-detection-sec-wayback.py, scripts/early-detection-foundation.py",
+      "die DERA-Payload-Bytes selbst (oeffentliche SEC-Daten) — sowohl im versiegelten Sichtkasten early-detection-v4-sealed127 als auch in der eigenen Wiederherstellung; ausschliesslich Quartale bis 2020q4",
+      "VIEW.json / STORE.json des Sichtkastens (Bestandsangaben, keine Studiendaten)"
+    ],
+    "nichtGeoeffnet": [
+      "jede s0-*-Datei",
+      "jede Luecken- oder Fehlfirmen-Liste",
+      "E4g-/E4h-Berichtstexte ueber das hinaus, was das Urteil selbst zitiert",
+      "outcome-access-ledger.json",
+      "panel-entdeckung.sqlite und panel-validierung.sqlite — als Dateinamen im Traeger-Befund gezaehlt, NICHT geoeffnet",
+      "das versiegelte Endtest-Fenster 2021q1-2024q4 in jeder Form",
+      "Signalwerte, Outcomes, Allowlists",
+      "data/lockbox in jeder Form"
+    ],
+    "netzabrufe": "ausschliesslich die in provenance-closure.json registrierten SEC-/Wayback-Quell-URLs, gratis, mit hoeflichem User-Agent 'Karl Viehrig karl_viehrig@web.de research'"
+  },
+  "f1FreezeSha256": "615a34c891042242ef2f70aa7591c7258d6166d865ff01ac2dcb092b5ebc3b6a"
+}
