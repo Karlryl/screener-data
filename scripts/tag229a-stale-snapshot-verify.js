@@ -2,9 +2,9 @@
 /**
  * Tag 229a: Run-#110 stale-snapshot probe verification harness.
  *
- * Re-implements pull-yahoo.js `_existingSnapshotMissingTag211lFields` and
- * `_getExistingSnapshotAge` (both are locally-scoped inside pullAll(), not
- * exported), then exercises them against random snapshots to confirm:
+ * Uses pull-yahoo.js `_existingSnapshotMissingTag211lFields` (imported, see
+ * below) and a local copy of `_getExistingSnapshotAge`, then exercises them
+ * against random snapshots to confirm:
  *   1. The probe correctly flags pre-Tag-211l snapshots.
  *   2. No snapshot is "stale but would be skipped" (i.e. the schema-stale
  *      bucket and the price-only-eligible bucket are disjoint).
@@ -29,6 +29,25 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 // report a WRONG stale/full-pull result for those tickers. Sharing the one
 // helper keeps the harness's filename mapping bit-identical to production.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+
+// T181 (2026-08-30): das Tor wird IMPORTIERT, nicht nachgebaut. Vorher stand hier eine
+// Kopie von `_existingSnapshotMissingTag211lFields`, und die war ABGEDRIFTET: sie las
+// `Number.isFinite(bal[0].currentAssets)`, waehrend die Produktion seit dem Bug-13-Fix
+// (2026-07-03) `'currentAssets' in bal[0]` prueft — Schluessel-ANWESENHEIT statt finitem
+// Wert. Ueber dieselben 15.046 Snapshots gemessen:
+//
+//     Produktion  pull-yahoo.js   149 schema-stale
+//     Spiegel     dieses Skript  1719 schema-stale     (11,54x, 1.570 zu viel)
+//
+// und zwar als echte OBERMENGE (0 Snapshots, die die Produktion meldet und der Spiegel
+// nicht). Banken/Versicherer tragen `currentAssets:null` — Schluessel da, Wert nicht
+// finit. Wer das Werkzeug zur Abschaetzung benutzte, bekam eine 11-fach zu hohe Zahl.
+// Der Spiegel war die kaputte Messlatte, nicht der kaputte Gegenstand.
+//
+// Ein Nachbau kann nur wieder driften; deshalb ist er ersetzt statt repariert. Die
+// Funktion wurde in PR #118 dafuer auf Modul-Ebene gehoben und exportiert (F1334:
+// ein Pruefwerkzeug muss die Regel messen, die im Lauf wirklich entscheidet).
+const { _existingSnapshotMissingTag211lFields } = require('../pull-yahoo.js');
 
 const FUNDAMENTALS_MAX_AGE_DAYS = parseInt(process.env.FUNDAMENTALS_MAX_AGE_DAYS || '7', 10);
 const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
@@ -84,12 +103,20 @@ function existingSnapshotMissingTag211lFields(ticker, outputDir) {
     const hasCL = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].currentLiabilities);
     const hasTL = Array.isArray(bal) && bal[0] && Number.isFinite(bal[0].totalLiabilities);
     // audit F-A-2026-06-22: DIAGNOSTIC-ONLY fields — these do NOT participate in
-    // the stale gate. The actual gate is `!(hasSGA || hasDepr) || !hasCA` (see
-    // probeWouldFlag below, mirroring pull-yahoo.js). annualShares and the three
-    // quote-summary fields are surfaced solely into `missing[]` for reporting;
-    // the prior comment wrongly implied they were "part of the schema gate",
-    // which would mislead a reader into thinking a missing annualShares /
-    // targetMedianPrice forces a full pull (it does not).
+    // the stale gate. The gate is the IMPORTED production rule (see
+    // probeWouldFlag below). annualShares and the three quote-summary fields are
+    // surfaced solely into `missing[]` for reporting; the prior comment wrongly
+    // implied they were "part of the schema gate", which would mislead a reader
+    // into thinking a missing annualShares / targetMedianPrice forces a full pull
+    // (it does not).
+    //
+    // T181: `hasCA`/`hasCL`/`hasTL` bleiben hier bewusst FINIT-basiert — als
+    // Diagnose ist "kein brauchbarer Wert" die nuetzlichere Aussage. Sie sind aber
+    // ausdruecklich NICHT mehr das Tor. Genau diese Verwechslung war der Fehler:
+    // `probeWouldFlag` rechnete das Tor aus den Diagnose-Booleans NACH, und der
+    // finite `hasCA` machte daraus 1.719 statt 149. Ein `missing`-Eintrag
+    // 'annualBalance.currentAssets' bei `stale:false` ist deshalb kein Widerspruch,
+    // sondern heisst: Schluessel da (Schema aktuell), Wert null (Bank/Versicherer).
     const hasShares = Array.isArray(A.annualShares) && A.annualShares.length > 0;
     // Tag 219 quote-summary fields surfaced into the snapshot (diagnostic-only):
     const hasTgtMed = Number.isFinite(s && s.financialData && s.financialData.targetMedianPrice);
@@ -107,8 +134,8 @@ function existingSnapshotMissingTag211lFields(ticker, outputDir) {
     if (!hasEarnHist) missing.push('earningsHistory');
     if (!hasMHB) missing.push('majorHoldersBreakdown');
 
-    // Probe's own gating logic (line 1266 of pull-yahoo.js):
-    const probeWouldFlag = !(hasSGA || hasDepr) || !hasCA;
+    // Das ECHTE Tor, importiert statt nachgerechnet (s. Kopf der Datei).
+    const probeWouldFlag = _existingSnapshotMissingTag211lFields(s);
     return { stale: probeWouldFlag, missing, reason: probeWouldFlag ? 'tag211l-missing' : 'tag211l-ok' };
   } catch (e) { return { stale: false, missing: [], reason: 'parse-err:' + e.message }; }
 }
@@ -127,6 +154,20 @@ function sample(arr, n, seed) {
 }
 
 function tickerFromFile(fname) { return fname.replace(/\.json$/, '').replace(/^_/, ''); }
+
+// T181: als Bibliothek einbindbar, damit der Waechter
+// (tests/tag229a-spiegel-produktionsgleich.test.js) die Sonden dieses Werkzeugs
+// AUFRUFEN kann statt sie ein drittes Mal nachzubauen. Der Messlauf unten braucht den
+// echten Snapshot-Bestand und gehoert nicht in einen Test — deshalb der Frueh-Ausstieg.
+// (Top-level `return` ist in CommonJS zulaessig: Node wickelt jedes Modul in eine
+// Funktion. Gewaehlt, weil die Alternative — den ganzen Messlauf in eine main() zu
+// ruecken — 145 Zeilen umformatiert haette, ohne etwas zu aendern.)
+module.exports = {
+  existingSnapshotMissingTag211lFields,
+  existingSnapshotMissingCurrencyNormalization,
+  getExistingSnapshotAge,
+};
+if (require.main !== module) return;
 
 // --- main ---
 const allFiles = fs.readdirSync(SNAP_DIR).filter(f => f.endsWith('.json'));
