@@ -1170,6 +1170,242 @@ function umbenennungsProtokoll(eintraege) {
   return { gesamt: (eintraege || []).length, jeHerkunft, watchlistFaelle: watchlistFaelle.sort() };
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * M10 / M8-M16 — DER IDENTITAETS-TRIPWIRE (Anker A + B), MELDEND
+ * Urteil: `_COURT-M10-2026-08-30.md` (ENTSCHIED 126), Auflagen M8, M9, M10, M11, M12, M14, M15.
+ *
+ * ⚠ DIE ABGRENZUNGSFORMEL, WOERTLICH BESCHLOSSEN (M16, G6 3:0) — sie steht hier und im
+ * `_doku` von data-health/issuer-identity.json:
+ *
+ *   „Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser
+ *    Erkennung bleibt bis zu einem eigenen Gericht gesperrt."
+ *
+ * DIESER BAUSTEIN SCHREIBT EINE ZEILE IN EINEN BERICHT. Er faellt keine Zeile, er verschmilzt
+ * keine, er benennt keine um, er faerbt den Lauf nicht und er aendert den Exit-Code nicht.
+ * Das ist der ganze Unterschied zum 2:1 GESPERRTEN Voll-Tor (A11/c1): jenes praegt einen Namen
+ * auf und ERZEUGT eine Verschmelzung, dieses meldet. Fehlerrichtung dort: eine echte Firma
+ * verschwindet. Hier: ein Fehlalarm kostet einen Blick.
+ *
+ * MESSEBENE — VOR DEN UMBENENNUNGS-STUFEN, und das ist der Kern der Auflage (Urteil §3.2, §5).
+ * P1 (der Monatszensus) misst HINTER der Vorstufe: die behandelten Klassen tragen dort bereits
+ * den vereinheitlichten Namen, sind also nicht mehr divergent und koennen nie meldepflichtig
+ * werden — ein wirksamer Eingriff loescht seine eigene Klasse aus der Spur. Deshalb liest
+ * dieser Baustein den Bestand DIREKT NACH DEM KOPIEREN, und meldet erst ganz am Schluss. Die
+ * Vorstufe weist ihre eigenen Umbenennungen wie bisher aus; beides zusammen ergibt das
+ * Vorher/Nachher.
+ *
+ * FAIL-OPEN, ABER NICHT STILL (M8 + Kanzler-Zusatz). Praezedenz: eine Vorstufen-Reihenfolge hat
+ * in dieser Datei schon einmal einen harten Tageslauf-Abbruch verursacht; ein Wurf im neuen
+ * Baustein kostet dann die Tagesfrische ALLER ~15.000 Zeilen — verursacht von einer Lampe ohne
+ * Datenwirkung. Also wird jeder Wurf gefangen. Aber eine still ausfallende Lampe ist keine
+ * Lampe: die Degradation nennt den ausgefallenen Anker beim Namen.
+ *
+ * 🔒 M15 — F-16-STOPP-KLAUSEL, WOERTLICH VERFUEGT. Die Anker vergleichen Zeilen verschiedener
+ * Handelsplaetze AUSSCHLIESSLICH ueber Aktienzahlen, Umsatzreihen und Namensschluessel. KEINE
+ * Listing-Waehrungs-Logik, KEINE Waehrungs-Umrechnungsregel, KEINE Boersen-Identitaet je Firma,
+ * KEIN `exchanges[]`. Wird eines davon gebraucht: SOFORT STOPP, zurueck unter die Sperre,
+ * Wiedervorlage Ende Oktober — keine Umgehung ueber eine Hilfsgroesse.
+ * Die Kanonisierung der Umsatzreihe laeuft ueber `milanFingerabdruck`, also ueber die BEREITS
+ * RATIFIZIERTE A7-FX-Ruecknahme (`x / meta.fxRateApplied`, Milan-Urteil). Das ist WIEDERVERWENDUNG
+ * einer bestehenden Regel, keine neue Waehrungslogik — und ohne sie waere der Vergleich ein
+ * Abruf-Timing-Zufall, weil zwei Beine an verschiedenen Tagen mit verschiedenen Kursen gezogen
+ * werden (0 von 52 Faellen halten auf der konvertierten Ebene).
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ANKER A — SELBSTWIDERSPRUCH EINER ZEILE. Die gemeldete Aktienzahl gegen die Aktienzahl in
+ * der EIGENEN Jahresreihe. Kalibriert an `VMRK` (2,79: traegt AvalonBays Fundamentalblock
+ * unter eigenem Namen). Das Band stammt aus der Tripwire-Skizze O5 des Memos.
+ *
+ * A braucht KEINEN Gruppenkontext — er ist der einzige Anker, der eine einzelne Zeile allein
+ * beurteilen kann, und der einzige, der den KONTAMINATIONS-Selbstwiderspruch sieht, den Anker B
+ * ausdruecklich als „beweist NICHTS" abtut.
+ */
+const TRIPWIRE_A_BAND = [0.80, 1.25];
+
+/**
+ * M12 — DIE KGaA-/KOMPLEMENTAER-AUSNAHME, AM OBJEKT VERANKERT.
+ *
+ * `MRK.DE` (Merck KGaA) liegt strukturell bei 0,297, weil nur ~30 % des Kapitals boersennotiert
+ * sind — das ist KEIN Befund. Der Produktionstext dazu stand schon vor jedem Tripwire fest
+ * (`data-health/quarantine.json`, `_doku`): „Eine maschinelle Aktienzahl-Regel braucht diese
+ * Ausnahme, sonst meldet sie KGaAs und Partnerships dauerhaft falsch."
+ *
+ * VERANKERT AN DER RECHTSFORM IM EIGENEN NAMEN DER ZEILE, NICHT AN EINER TICKER-LISTE. Eine
+ * Ticker-Liste waere selbst die Handliste, die dieses Gericht unter G7 ablehnt: sie waechst
+ * still, und was nicht drinsteht, faellt lautlos durch. Die Rechtsform ist ein Strukturmerkmal
+ * der Zeile und traegt die ganze Klasse — genau das verlangt die Auflage.
+ *
+ * Am Live-Bestand 2026-08-30 nimmt sie 12 von 1.416 A-Treffern aus: 1MRK.MI/MRCK.VI/MRK.DE
+ * (Merck KGaA 0,297), DRW3.DE (Draegerwerk 0,459), HEN.DE/HEN3.DE (Henkel 0,611/0,365),
+ * ESBA/FISK/OGCP (Empire State Realty OP, L.P.), IEP (Icahn Enterprises L.P. 1,265),
+ * MNR (MACH NATURAL RESOURCES LP 1,268), PAGP (Plains GP Holdings, L.P. 0,281).
+ */
+const TRIPWIRE_KOMPLEMENTAERFORM = /(\bKGaA\b|\bKG\s*a\.?\s*A\.?|&\s*Co\.?\s*KG\b|\bL\.?\s?P\.?$|\bLLP\b|\bS\.?C\.?A\.?$)/i;
+
+/**
+ * Wie viele EINZELMELDUNGEN je Anker in den committeten Bericht wandern. Die ZAEHLUNGEN sind
+ * immer vollstaendig; gekappt wird nur die Detailliste, und die Kappung steht mit ihrer Zahl
+ * im Bericht.
+ * ponytail: harte Kappung mit bekannter Decke — der Bericht wird taeglich neu geschrieben, und
+ * ein taeglicher 1.400-Zeilen-Diff in data-health/ kostet mehr Repo als er Erkenntnis bringt.
+ * Wenn die Vollliste je gebraucht wird, gehoert sie in einen eigenen, nicht committeten Lauf.
+ */
+const TRIPWIRE_KAPPUNG = 25;
+
+/** Locale-frei, gleicher Grund wie `cmpTicker` in score.js: `localeCompare` haengt an der
+ *  OS-Locale und liesse CI gegen lokal auseinanderlaufen. */
+const cmpTickerLokal = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+
+/** Reiner Kern: Anker A ueber alle Zeilen. Gibt IMMER auch die ausgenommenen zurueck — eine
+ *  Ausnahme, die man nicht zaehlen kann, ist von einem toten Anker nicht zu unterscheiden. */
+function tripwireAnkerA(zeilen) {
+  const treffer = [];
+  let ausgenommen = 0, ohneBasis = 0;
+  for (const z of zeilen || []) {
+    if (!Number.isFinite(z.shares) || z.shares <= 0 || !Number.isFinite(z.jahresAktien) || z.jahresAktien <= 0) { ohneBasis++; continue; }
+    const wert = z.shares / z.jahresAktien;
+    if (wert >= TRIPWIRE_A_BAND[0] && wert <= TRIPWIRE_A_BAND[1]) continue;
+    if (TRIPWIRE_KOMPLEMENTAERFORM.test(String(z.name || ''))) { ausgenommen++; continue; }
+    treffer.push({
+      anker: 'A', wert, ticker: z.ticker, name: z.name, nameSource: z.nameSource,
+      schluessel: z.schluessel, fingerabdruck: z.fingerabdruck,
+      shares: z.shares, jahresAktien: z.jahresAktien,
+      // A ist ein EINZEILEN-Anker. Es gibt strukturell kein Partner-Bein; ein erfundenes
+      // waere schlimmer als ein fehlendes, deshalb steht hier ausdruecklich null mit Grund.
+      gegenstueck: null,
+      gegenstueckGrund: 'Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein',
+    });
+  }
+  // Schaerfster Fall zuerst: |ln(Verhaeltnis)| absteigend, dann Ticker (deterministisch, damit
+  // die Kappung nicht taeglich andere Zeilen zeigt).
+  treffer.sort((a, b) => Math.abs(Math.log(b.wert)) - Math.abs(Math.log(a.wert)) || cmpTickerLokal(a.ticker, b.ticker));
+  return { treffer, ausgenommen, ohneBasis };
+}
+
+/**
+ * ANKER B — REIHEN-EIGENTUM. Eine identische Jahresumsatz-Reihe, getragen von Zeilen aus
+ * ZWEI VERSCHIEDENEN Emittentengruppen (`issuerKeyLoose`).
+ *
+ * ⚠ M13, BINDEND: Anker B ist als MELDUNG brauchbar und als BEWEIS untauglich. Bei
+ * Zweitnotierungen ist die geteilte Reihe der Normalfall — „Dass sie AvalonBays Umsatzreihe
+ * traegt, ist bei einer Zweitnotierung der Normalfall und beweist NICHTS" (Produktionstext in
+ * data-health/quarantine.json). Der Register-Lader weist einen Eintrag ab, der nur B zitiert.
+ */
+function tripwireAnkerB(zeilen) {
+  const nachAbdruck = new Map();
+  for (const z of zeilen || []) {
+    if (!z.hatUmsatz || !z.schluessel || !z.fingerabdruck) continue;
+    if (!nachAbdruck.has(z.fingerabdruck)) nachAbdruck.set(z.fingerabdruck, []);
+    nachAbdruck.get(z.fingerabdruck).push(z);
+  }
+  const treffer = [];
+  for (const [fingerabdruck, beine] of nachAbdruck) {
+    const schluessel = new Set(beine.map((b) => b.schluessel));
+    if (schluessel.size < 2) continue;
+    treffer.push({
+      anker: 'B', wert: schluessel.size, fingerabdruck,
+      // Der Fingerabdruck steht EINMAL auf Klassenebene, nicht je Bein: seine GLEICHHEIT ueber
+      // alle Beine IST der Anker. Ihn n-mal zu wiederholen waere kein zweiter Beleg, sondern
+      // dieselbe Zeichenkette in einem taeglich committeten Bericht.
+      beine: [...beine].sort((a, b) => cmpTickerLokal(a.ticker, b.ticker)).map((b) => ({
+        ticker: b.ticker, name: b.name, nameSource: b.nameSource, schluessel: b.schluessel,
+      })),
+      hinweis: 'MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall',
+    });
+  }
+  treffer.sort((a, b) => b.wert - a.wert || b.beine.length - a.beine.length || cmpTickerLokal(a.beine[0].ticker, b.beine[0].ticker));
+  return { treffer };
+}
+
+/**
+ * I/O-Mantel: liest die Felder, die BEIDE Anker brauchen, in EINEM Durchgang. Bewusst nur
+ * skalare Felder plus zwei Reihen — der volle Snapshot mal 15.000 waere Speicher ohne Nutzen.
+ *
+ * Ein Bein OHNE `meta.fxRateApplied` bekommt ueber `milanFingerabdruck` den Platzhalter
+ * `OHNE-FX:<ticker>` und matcht damit mit NICHTS (fail-closed, ratifizierte A7-FX-Bauform) —
+ * es kann also keine Klasse erfinden.
+ */
+function tripwireLesen(ziel, dateien) {
+  const zeilen = [];
+  let unlesbar = 0;
+  for (const f of dateien) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
+      const meta = (j && j.meta) || {};
+      const annual = (j && j.annual) || {};
+      const jahresUmsatz = milanReihe(annual.annualRev);
+      const jahresAktienReihe = milanReihe(annual.annualShares);
+      zeilen.push({
+        ticker: f.slice(0, -'.json'.length),
+        // M9 verlangt die HERKUNFT beider Namen. Genommen wird der M1-Bucket, nicht der
+        // Rohwert: `JSON.stringify` laesst ein `undefined` einfach WEG, und ein fehlender
+        // Schluessel im Bericht waere von "Herkunft unbekannt" nicht zu unterscheiden —
+        // dieselbe Verwechslung, die der Bucket `fehlt` beim Zaehler verhindert. Gleiches
+        // Vokabular in Bericht und Messreihe, damit man sie nebeneinander lesen kann.
+        name: meta.name, nameSource: namensherkunftBucket(meta),
+        schluessel: issuerKeyLoose(j),
+        shares: meta.sharesOutstanding,
+        jahresAktien: Array.isArray(jahresAktienReihe) && jahresAktienReihe.length ? jahresAktienReihe[0] : null,
+        hatUmsatz: Array.isArray(jahresUmsatz) && jahresUmsatz.some((x) => Number.isFinite(x) && x !== 0),
+        fingerabdruck: milanFingerabdruck({ ticker: f.slice(0, -'.json'.length), fx: meta.fxRateApplied, revenueQ: jahresUmsatz, grossProfitQ: null }),
+      });
+    } catch (e) { unlesbar++; }
+  }
+  return { zeilen, unlesbar };
+}
+
+/**
+ * M9 — MELDEFORM: JEDE MELDUNG IST ALLEIN NACHRECHENBAR. Kein OR-verschmolzenes Boolean; A und
+ * B erscheinen als ZWEI Zaehlgroessen und zwei Listen, nie als eine (M11). Je Meldung stehen
+ * Anker, Wert, Ticker, Name, Fingerabdruck und die HERKUNFT des Namens (`nameSource`) da —
+ * ein Mensch kann ohne Zusatzabfrage entscheiden, ob die Klasse echt ist.
+ *
+ * Der Bericht wird COMMITTET, nicht nur ins fluechtige Actions-Log geschrieben. Er wird
+ * taeglich UEBERSCHRIEBEN: er ist ein Bericht ueber den heutigen Stand, keine Messreihe —
+ * die Messreihe ist data-health/namensherkunft-history.json (M1).
+ */
+function tripwireBericht(a, b, kopf) {
+  return {
+    _doku: [
+      'IDENTITAETS-TRIPWIRE — MELDUNG, KEINE ENTSCHEIDUNG (_COURT-M10-2026-08-30, ENTSCHIED 126).',
+      '',
+      '"Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser',
+      'Erkennung bleibt bis zu einem eigenen Gericht gesperrt." (Auflage M16, woertlich beschlossen)',
+      '',
+      'KEINE MELDUNG HIER IST JE ALLEIN BELEG fuer einen Eintrag in data-health/issuer-identity.json',
+      '(Auflage M18). Anker B taugt ueberhaupt nie als alleinige Begruendung (Auflage M13): bei',
+      'Zweitnotierungen ist die geteilte Umsatzreihe der Normalfall und beweist NICHTS.',
+      '',
+      'GEMESSEN VOR den Umbenennungs-Stufen des Laufs (U2/U3/T179) — sonst loeschte ein wirksamer',
+      'Eingriff seine eigene Klasse aus der Spur. Der Lauf weist seine Umbenennungen getrennt aus.',
+      '',
+      'A = Selbstwiderspruch: meta.sharesOutstanding gegen annual.annualShares[0], Band',
+      `[${TRIPWIRE_A_BAND[0]}, ${TRIPWIRE_A_BAND[1]}]. Ausgenommen sind Komplementaer-/Partnership-Strukturen`,
+      '(Auflage M12) — an der RECHTSFORM im eigenen Namen der Zeile, NICHT an einer Ticker-Liste.',
+      'B = Reihen-Eigentum: eine identische Jahresumsatz-Reihe ueber >= 2 Emittentengruppen.',
+      'A und B stehen getrennt (Auflage M11); Anker C ist NICHT gebaut (aufschiebend bedingt).',
+      '',
+      `Die Detaillisten sind bei ${TRIPWIRE_KAPPUNG} Eintraegen je Anker gekappt; die Zaehlungen sind vollstaendig.`,
+    ],
+    ...kopf,
+    zaehlung: {
+      ankerA: a.treffer.length,
+      ankerA_ausgenommen: a.ausgenommen,
+      ankerA_ohneBasis: a.ohneBasis,
+      ankerB: b.treffer.length,
+    },
+    ankerA: { gemeldet: a.treffer.length, gelistet: Math.min(a.treffer.length, TRIPWIRE_KAPPUNG), meldungen: a.treffer.slice(0, TRIPWIRE_KAPPUNG) },
+    ankerB: { gemeldet: b.treffer.length, gelistet: Math.min(b.treffer.length, TRIPWIRE_KAPPUNG), meldungen: b.treffer.slice(0, TRIPWIRE_KAPPUNG) },
+  };
+}
+
+/** Gleiche Begruendung wie beim Herkunfts-Zaehler: der Bericht gehoert zu dem Bestand, den er
+ *  gemessen hat, nicht fest ins Repo — sonst schriebe jeder Waechter-Lauf mit Temp-Ziel einen
+ *  Fixture-Bericht in die echte Datei. */
+const tripwireStandardpfad = (ziel) => path.join(path.dirname(path.resolve(ziel)), 'data-health', 'identitaets-tripwire.json');
+
 /**
  * Gemeinsamer Lader der beiden TICKER-Register (NAV-Ausschluss und Quarantaene). Ein einziger
  * Lader, weil beide dieselben Wachen brauchen — Pflichtfelder, Ticker-Dublette,
@@ -1383,6 +1619,7 @@ function run(argv) {
   const identitaetsRegisterPfad = get('--identitaets-register', IDENTITAETS_REGISTER_STANDARDPFAD);
   const quarantaenePfad = get('--quarantaene', QUARANTAENE_STANDARDPFAD);
   const namensherkunftPfad = get('--namensherkunft', namensherkunftStandardpfad(ziel));
+  const tripwirePfad = get('--tripwire-bericht', tripwireStandardpfad(ziel));
   const heute = get('--heute', new Date().toISOString());
 
   // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
@@ -1549,6 +1786,18 @@ function run(argv) {
     }
   }
   schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
+
+  // M10/M8 — TRIPWIRE-ROHDATEN, GELESEN VOR JEDER UMBENENNUNG.
+  // Die Stelle ist die Auflage, nicht Geschmack (Urteil §3.2): U2/U3/T179 vereinheitlichen
+  // gleich Namen, und genau die Divergenz, die dieser Baustein sehen soll, verschwindet dabei.
+  // Ein Wächter, der nichts sieht, sobald das bewachte Objekt wirkt, misst die Abwesenheit
+  // seines Gegenstands. GEMELDET wird trotzdem erst ganz am Schluss (sequenziell, fail-open).
+  let tripwireRoh = null;
+  try {
+    tripwireRoh = tripwireLesen(ziel, uebernehmen);
+  } catch (e) {
+    console.error(`::warning::M10-Tripwire — Rohdaten nicht erhoben (${e && e.message ? e.message : e}); Anker A UND B fallen heute aus. Der Lauf laeuft weiter (reine Meldung, keine Datenwirkung).`);
+  }
 
   // U2-BO/NS: NACH dem Kopieren, damit der Eingang unangetastet bleibt (Karl-Entscheid F-12:
   // filtern statt loeschen — hier entsprechend: nur die Arbeitskopie bekommt den Namen).
@@ -1722,6 +1971,40 @@ function run(argv) {
   } catch (e) {
     console.error(`::warning::M10-Herkunftszaehler — Messung ausgefallen (${e && e.message ? e.message : e}). Der Lauf laeuft weiter (Exit 0, reine Messung), aber die Tageszeile FEHLT in ${namensherkunftPfad}. Auflage M1 (_COURT-M10-2026-08-30) hat Frist 20.09.2026 — ein wiederholter Ausfall ist ein Befund, kein Wetter.`);
   }
+
+  // ── M10/M8-M16 — DER IDENTITAETS-TRIPWIRE, MELDEND, ZULETZT, FAIL-OPEN ───────────────────
+  // Jeder Anker faengt SEINEN Wurf selbst: faellt A aus, meldet B trotzdem. Eine gemeinsame
+  // Klammer haette aus einem kaputten Anker ein stilles Doppel-Aus gemacht, und die Meldung
+  // haette nicht gesagt, WELCHE Lampe erloschen ist (Auflage M8).
+  if (!tripwireRoh) {
+    console.error('::warning::M10-Tripwire — keine Rohdaten (s. Meldung oben): Anker A und Anker B melden heute nicht.');
+  } else {
+    let a = null, b = null;
+    try { a = tripwireAnkerA(tripwireRoh.zeilen); }
+    catch (e) { console.error(`::warning::M10-Tripwire — ANKER A ausgefallen (${e && e.message ? e.message : e}); Anker B meldet weiter.`); }
+    try { b = tripwireAnkerB(tripwireRoh.zeilen); }
+    catch (e) { console.error(`::warning::M10-Tripwire — ANKER B ausgefallen (${e && e.message ? e.message : e}); Anker A meldet weiter.`); }
+    // M11: ZWEI Zaehlgroessen, nie eine. Ein OR-verschmolzenes Boolean waere genau die
+    // Meldeform, die das Urteil ausschliesst — man koennte einer Meldung nicht mehr ansehen,
+    // welcher Anker sie erzeugt hat und mit welchem Wert.
+    if (a) console.log(`[m10-tripwire] Anker A (Selbstwiderspruch Aktienzahl): ${a.treffer.length} Meldungen, ${a.ausgenommen} Komplementaer-/Partnership-Strukturen ausgenommen (M12), ${a.ohneBasis} Zeilen ohne rechenbare Basis.`);
+    if (b) console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
+    console.log('[m10-tripwire] Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt (M16). Keine Zeile faellt, keine verschmilzt, Exit bleibt 0.');
+    try {
+      if (!a || !b) throw new Error(`unvollstaendig: ${!a ? 'Anker A' : ''}${!a && !b ? ' und ' : ''}${!b ? 'Anker B' : ''} ohne Ergebnis`);
+      const bericht = tripwireBericht(a, b, {
+        stand: String(heute).slice(0, 10),
+        gelesen: tripwireRoh.zeilen.length,
+        unlesbar: tripwireRoh.unlesbar,
+        messebene: 'vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs',
+      });
+      fs.mkdirSync(path.dirname(tripwirePfad), { recursive: true });
+      writeFileAtomic(tripwirePfad, JSON.stringify(bericht, null, 2) + '\n');
+      console.log(`[m10-tripwire] Bericht geschrieben: ${tripwirePfad} (Detaillisten bei ${TRIPWIRE_KAPPUNG} je Anker gekappt, Zaehlungen vollstaendig).`);
+    } catch (e) {
+      console.error(`::warning::M10-Tripwire — Bericht nicht geschrieben (${e && e.message ? e.message : e}). Die Zahlen stehen oben im Lauf-Log, der committete Bericht FEHLT heute.`);
+    }
+  }
   return 0;
 }
 
@@ -1742,5 +2025,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER,
   // M10/M1 + M5 (_COURT-M10-2026-08-30) — fuer TDD. Waechter: tests/m10-namensherkunft-zaehler.test.js
   namensherkunftBucket, namensherkunftZaehlen, namensherkunftLesen, namensherkunftSchreiben,
-  umbenennungsProtokoll, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad };
+  umbenennungsProtokoll, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad,
+  // M10/M8-M16 Identitaets-Tripwire — fuer TDD. Waechter: tests/m10-tripwire.test.js
+  tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
+  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG };
 if (require.main === module) process.exit(run(process.argv));

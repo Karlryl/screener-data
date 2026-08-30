@@ -283,14 +283,22 @@ test('M2: `src/scoring/**` kennt `nameSource` NICHT — ein Treffer dort loescht
 });
 
 test('M2: die Referenzen stehen ausschliesslich beim SCHREIBER und bei der MESSUNG', () => {
-  // Erlaubt sind genau drei Rollen: der Schreiber (pull-yahoo.js), die Messung
-  // (filter-snapshot-merge.js: M1-Zaehler + M5-Protokoll) und die Waechter. Alles andere ist
-  // ein Konsument und gehoert vor das Gericht zurueck (Urteil §8, Kipp-Bedingung G3-a).
+  // Erlaubt sind genau drei Rollen: der Schreiber (pull-yahoo.js), die MESSUNG
+  // (filter-snapshot-merge.js: M1-Zaehler, M5-Protokoll und die M9-Meldeform des Tripwires)
+  // und die Waechter. Alles andere ist ein Konsument und gehoert vor das Gericht zurueck
+  // (Urteil §8, Kipp-Bedingung G3-a).
+  //
+  // WARUM DER TRIPWIRE MITZAEHLT, ohne die Auflage zu dehnen: M2 verbietet Gruppierung,
+  // Sieger-Wahl, Umbenennung, Filterung und Score. Der Tripwire tut nichts davon — er
+  // schreibt eine Zeile in einen Bericht. Und M9 ORDNET das Feld dort ausdruecklich an
+  // („die Herkunft beider Namen (nameSource)"). Die beiden Auflagen widersprechen sich
+  // nicht; M2 schuetzt vor STEUERUNG, nicht vor Messung.
   const erlaubt = new Set([
     'pull-yahoo.js',
     'scripts/filter-snapshot-merge.js',
     'tests/m10-namensherkunft.test.js',
     'tests/m10-namensherkunft-zaehler.test.js',
+    'tests/m10-tripwire.test.js',
   ]);
   const gefunden = [
     ...dateienMitReferenz(path.join(REPO, 'scripts'), /nameSource/),
