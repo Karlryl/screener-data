@@ -48,14 +48,14 @@ const BEWEGUNG = 3 * BODEN;         // deutlich ueber dem Boden — ohne Ausnahm
 // Kohorte gleicher GROESSE vorher/nachher (genau der Fall, den der Schrumpfungs-Zweig
 // nicht sieht). Die ersten `lampen` Zeilen bewegen sich um `bewegung` und tragen die
 // Lampe; `stoerung` bewegt zusaetzlich eine Zeile OHNE Lampe.
-function lage({ lampen = LAMPEN_ZEILEN, bewegung = BEWEGUNG, stoerung = 0, lampenName = 'einmalertrag' } = {}) {
+function lage({ lampen = LAMPEN_ZEILEN, bewegung = BEWEGUNG, stoerung = 0, lampenName = 'einmalertrag', zeilen = ZEILEN } = {}) {
   const vorher = [], nachher = [];
-  for (let i = 0; i < ZEILEN; i++) {
+  for (let i = 0; i < zeilen; i++) {
     const istLampe = i < lampen;
     vorher.push({ ticker: 'T' + i, score: 50, lamps: [] });
     nachher.push({
       ticker: 'T' + i,
-      score: 50 + (istLampe ? bewegung : (i === ZEILEN - 1 ? stoerung : 0)),
+      score: 50 + (istLampe ? bewegung : (i === zeilen - 1 ? stoerung : 0)),
       lamps: istLampe ? [lampenName] : [],
     });
   }
@@ -172,8 +172,16 @@ check('BINDUNG VERFEHLT: null wie bisher UND die Warnung nennt beide Daten', () 
   const tatsaechlich = '2026-08-15';
   const r = mitProtokoll(() => W.massstabBruchFuer(tatsaechlich));
   assert.strictEqual(r.wert, null, 'Verhalten muss unveraendert fail-closed bleiben (null)');
-  const l = laute(r.zeilen);
-  assert.strictEqual(l.length, 1, 'genau eine Warnung erwartet, bekam ' + l.length);
+  // Es meldet sich JEDER wartende Eintrag, seit Tag 1085 also zwei (2026-08-16 und
+  // 2026-08-29). Geprueft wird deshalb die Warnung ZU DIESER Bindung statt der Gesamtzahl
+  // — die Sollzahl kommt aus dem Register, nicht aus einer im Test gepflegten Konstante.
+  const wartende = require('../board-history/_excluded.json')._massstab_brueche
+    .filter((x) => x && typeof x.letztes_altes_vintage === 'string' && x.letztes_altes_vintage > tatsaechlich);
+  const alle = laute(r.zeilen);
+  assert.strictEqual(alle.length, wartende.length,
+    'jeder wartende Eintrag muss sich melden: ' + alle.length + ' Warnungen zu ' + wartende.length + ' Eintraegen');
+  const l = alle.filter((z) => z.includes(GEBUNDEN));
+  assert.strictEqual(l.length, 1, 'genau eine Warnung zu ' + GEBUNDEN + ' erwartet, bekam ' + l.length);
   assert.ok(l[0].startsWith('::warning::'), 'falscher Kanal — muss der ::warning::-Kanal des Tageslaufs sein');
   assert.ok(l[0].includes(GEBUNDEN), 'das gebundene Vintage ' + GEBUNDEN + ' fehlt im Warntext');
   assert.ok(l[0].includes(tatsaechlich), 'der tatsaechliche Vorgaenger ' + tatsaechlich + ' fehlt im Warntext');
@@ -187,6 +195,63 @@ check('KEIN Dauerlaerm: verbrauchte Eintraege hinter der Vergleichsfront schweig
   const r = mitProtokoll(() => W.massstabBruchFuer('2026-09-30'));
   assert.strictEqual(r.wert, null);
   assert.strictEqual(laute(r.zeilen).length, 0, 'verbrauchte Eintraege duerfen nicht dauerhaft warnen: ' + laute(r.zeilen).join(' | '));
+});
+
+// ── Tag 1085: der ZWEITE Eintrag dieses Typs (opIncSynthetisch, PR #93) ──────
+// K2/K3-Hartgate gegen synthetische OpInc-Jahresreihen. Gemessen am ersten Rechenlauf
+// danach (33289964981, nur_rechnen, Wochenende): financials p99-Tagesdelta 16,80 gegen
+// Boden 11,50, waehrend zwoelf von dreizehn uebrigen Boards bei 0,20-0,50 stehen. 299 von
+// 354 financials-Zeilen tragen die Lampe, survival 1 von 106, alle uebrigen 0.
+// Der Eintrag wird NICHT nachgebaut, sondern aus dem Register gelesen — ein nachgebauter
+// Eintrag prueft nur die Kopie im Test und laesst ein Vertippen im Register durch.
+const E1085 = require('../board-history/_excluded.json')._massstab_brueche
+  .find((x) => x && x.erklaerende_lampe === 'opIncSynthetisch');
+const FIN = { zeilen: 354, lampen: 299, lampenName: 'opIncSynthetisch' };
+
+check('Tag 1085 / Register: Eintrag gepflegt, Lampe + beide gemessenen Boards, KEINE Zahl', () => {
+  assert.ok(E1085, 'kein Eintrag mit erklaerende_lampe opIncSynthetisch im Register');
+  assert.strictEqual(E1085.typ, 'score-definitions-bruch');
+  assert.strictEqual(E1085.letztes_altes_vintage, '2026-08-29', 'Bindung an den exakten Vorgaenger');
+  assert.deepStrictEqual(E1085.boards, ['financials', 'survival'], 'gemessene Board-Liste');
+  for (const k of ['allowance', 'tagesschwelle', 'schwelle', 'grenze', 'hoehe']) {
+    assert.ok(!(k in E1085), 'Register traegt eine Zahl (' + k + ') — die Hoehe muss gemessen werden');
+  }
+});
+
+check('Tag 1085 / Verdrahtung: die Bindung 2026-08-29 reicht Lampe und Boards durch, still', () => {
+  const r = mitProtokoll(() => W.massstabBruchFuer('2026-08-29'));
+  assert.ok(r.wert, 'die Ausnahme muss beim gebundenen Vorgaenger greifen');
+  assert.strictEqual(r.wert.erklaerendeLampe, 'opIncSynthetisch', 'Lampe kommt nicht am Gate an');
+  assert.ok(r.wert.boards.has('financials') && r.wert.boards.has('survival'), 'Board-Liste kommt nicht an');
+  assert.strictEqual(laute(r.zeilen).length, 0, 'Fehlalarm bei passender Bindung: ' + laute(r.zeilen).join(' | '));
+});
+
+check('Tag 1085 / AUSBAU-PROBE: ohne den Eintrag reisst financials wieder (Tag-938-Muster)', () => {
+  const l = lage(FIN);
+  const ohne = gate(l, null, 'financials');
+  assert.ok(ohne.suspect, 'ohne Register-Eintrag muesste financials anschlagen — sonst misst die Probe nichts');
+  assert.ok(ohne.reasons.includes('p99-delta-exceeds-threshold'), 'Grund: ' + ohne.reasons.join(','));
+  const mit = gate(l, W.massstabBruchFuer('2026-08-29'), 'financials');
+  assert.ok(!mit.suspect, 'suspect trotz registriertem Bruch: ' + mit.reasons.join(','));
+  assert.strictEqual(mit.erklaerteZeilen, FIN.lampen, 'erklaerte Zeilen falsch gezaehlt');
+  assert.strictEqual(mit.p99Delta, 0, 'ohne die Lampen-Zeilen bewegt sich nichts -> p99 0');
+});
+
+check('Tag 1085 / GRENZE: ein nicht registriertes Board erbt die Ausnahme nicht', () => {
+  const g = gate(lage(FIN), W.massstabBruchFuer('2026-08-29'), 'industrials');
+  assert.ok(g.suspect, 'industrials steht nicht im Eintrag und darf nicht mit durchlaufen');
+  assert.strictEqual(g.erklaerteZeilen, 0);
+});
+
+check('Tag 1085 / GRENZE: unerklaerte Bewegung neben dem Bruch faellt weiterhin auf', () => {
+  // 299 erklaerte Lampen-Zeilen PLUS eine Drift ueber die uebrigen 55 — genau der Fall,
+  // den ein pauschaler Schwellen-Zuschlag verschluckt haette.
+  const l = lage(FIN);
+  const rows = l.nachher.cohort.profitable;
+  for (let i = FIN.lampen; i < FIN.zeilen; i++) rows[i].score = 50 + BEWEGUNG;
+  const g = gate(l, W.massstabBruchFuer('2026-08-29'), 'financials');
+  assert.strictEqual(g.erklaerteZeilen, FIN.lampen, 'die erklaerten Zeilen bleiben erklaert');
+  assert.ok(g.suspect, 'ein Wertfehler neben dem Bruch muss weiterhin auffallen');
 });
 
 console.log(fail ? `\nFAIL: ${fail}` : '\nOK: score-definitions-bruch');
