@@ -28,10 +28,27 @@ nirgends eine Reifequote - weder `erst_ereignisse` noch `arm_zaehlen` noch
 gebildet werden. tests/studie-rr9-nullpunkt.test.js pinnt genau diese
 Abwesenheit.
 
+DIE SPALTUNG VON B3' (VB-A1..VB-A8, _COURT-VIERBANK-OFFEN23-2026-08-30)
+----------------------------------------------------------------------
+B3' ist seit dem Vier-Bank-Urteil vom 30.08. kein einzelner Waechter mehr,
+sondern zwei namentlich getrennte Zweige mit verschiedenen Sanktionen:
+
+  ANKER - die Registrierung selbst ist gebrochen oder der Nullpunkt ist nicht
+          reproduzierbar. BEERDIGEN, automatisch, ohne jede Ausnahme.
+  DRIFT - die zur Laufzeit geladene Liste fehlt oder weicht ab, WAEHREND die
+          Registrierung unversehrt ist. STOPP mit Kontingent EINS; das zweite
+          Feuern dieses Zweigs ist BEERDIGEN, automatisch.
+
+Der Zweig haengt an der PRUEFUNG, nie an einem Textmuster: welche Sanktion
+gilt, sagt `NullpunktBruch.sanktion`. Zwei Ausgaenge: 5 = BEERDIGEN
+(unveraendert), 6 = STOPP.
+
 Aufruf:
   python scripts/studie-rr9-nullpunkt.py provenienz [--ziel <datei.json>]
   python scripts/studie-rr9-nullpunkt.py tripwire [--liste <json-datei>]
   python scripts/studie-rr9-nullpunkt.py b2-trockenlauf [--ziel <datei.json>]
+  python scripts/studie-rr9-nullpunkt.py zweig-rotproben [--ziel <datei.json>]
+  python scripts/studie-rr9-nullpunkt.py register-anker [--ziel <datei.json>]
   python scripts/studie-rr9-nullpunkt.py selbsttest
 """
 
@@ -74,14 +91,70 @@ REGISTRIERTE_PRAEREG_SHA = ("799f925142860b4db97b5f18894b62c749aeb014"
 # Modul soll den Zaehlpfad gar nicht erst im Speicher haben.
 FALLZAHL_SCHWELLE = 200
 
-SANKTION = "BEERDIGEN"
-EXIT_B3 = 5
+# VB-A1 (_COURT-VIERBANK-OFFEN23-2026-08-30): B3' traegt nicht mehr EINE
+# Sanktionskonstante fuer alle sieben Pruefungen. Zwei benannte Konstanten,
+# zwei Meldungsformen, Zuordnung genau nach der Tabelle des Urteils. Der Zweig
+# haengt an der PRUEFUNG, nie an einem Textmuster: welche Sanktion gilt, sagt
+# das `sanktion`-Feld der Ausnahme, die die jeweilige Pruefung wirft.
+#   ANKER (Registrierung gebrochen / Nullpunkt nicht reproduzierbar) -> BEERDIGEN
+#   DRIFT (geladene Liste fehlt/weicht ab, Registrierung unversehrt) -> STOPP
+# Dieselbe Form wie B1' in scripts/studie-rr9-b1-manifest.py - bewusst, nicht
+# aus Bequemlichkeit: ein zweiter Zweig-Mechanismus waere ein zweites Verfahren.
+SANKTION_ANKER = "BEERDIGEN"
+SANKTION_DRIFT = "STOPP"
+EXIT_B3 = 5          # BEERDIGEN - die bestehende Maschinerie, unveraendert
+EXIT_B3_STOPP = 6    # STOPP mit Kontingent EINS (VB-A3)
+
+LEDGER = os.path.join(PROTOKOLL_2_0_0, "outcome-access-ledger.json")
+B1_MODUL = os.path.join(WURZEL, "scripts", "studie-rr9-b1-manifest.py")
+
+# VB-A3: das Feld, an dem ein Reparatur-Akt des DRIFT-Zweigs im nur-anhaengenden
+# Register erkannt wird. Ein Marker, nicht mehrere: zwei Erkennungswege waeren
+# zwei Zaehlungen, und "nicht eindeutig" ist nach dem Urteil selbst der Bruchfall.
+DRIFT_MARKE = "b3DriftReparatur"
 
 STOPPSATZ = "F4 darf nicht starten, Rueckgabe an Orchestrator"
 
+STOPP_VOLLZUG = (
+    "VOLLZUG DES STOPP, abschliessend, kein Ermessen (VB-A4): "
+    "1. sofortiger Halt VOR jedem geschuetzten Zugriff. "
+    "2. Vorfall veroeffentlichen. "
+    "3. AUSSCHLIESSLICH die registrierte Bit-Identitaet wiederherstellen - "
+    "erlaubt die Reparatur irgendeine Wahl statt exakter Wiederherstellung, "
+    "oder kann B3' erst NACH einem geschuetzten Zugriff feuern, gilt "
+    "automatisch BEERDIGEN. "
+    "4. Waechter erneut gruen und SERVER-BESTAETIGT nachweisen. "
+    "5. Wiederaufnahme nur nach registriertem, server-bestaetigtem "
+    "Reparatur-Akt, der die Ursache benennt (Registerfeld " + DRIFT_MARKE + "). "
+    "UNTERSAGT in beiden Zweigen: Neubemessung von Design, Liste, Preis oder "
+    "Zeitplan (P5-Logik, RR9-A2 Schritt 2). "
+    "KONTINGENT EINS (VB-A3): das ZWEITE Feuern dieses Zweigs - gleiche oder "
+    "andere Ursache - ist BEERDIGEN, automatisch, ohne weitere Beratung. "
+    "NICHTENTSCHEIDUNG IST EIN BENANNTER AKT (VB-A5): verstreicht das "
+    "Stopp-Datum ohne Entscheid, gilt K6s bestehende Regel (Rueckgabe an den "
+    "Orchestrator, nie stille Verlaengerung); verstreicht auch die "
+    "Wiedervorlage, ist der Pfad beerdigt und der Bericht fuehrt woertlich: "
+    "'beerdigt durch Nichtentscheidung des Orchestrators am <Datum>'.")
+
+# VB-A7: die 326/365 (S-G) belegt die Zaehlkette, nicht die Identitaet der
+# Allowlist. Sie ist BERICHTSPFLICHT ohne Sanktion - kein B3'-Ausloeser haengt
+# an ihr. tests/studie-vb-b3-spaltung.test.js prueft genau diese Abwesenheit.
+KETTENPROBE_326 = (
+    "VB-A7: Die Reproduktion der 326/365 (S-G) wird auf demselben "
+    "gespeicherten Zwischenstand MITBERICHTET, weil sie die Zaehlkette "
+    "unabhaengig von der Allowlist belegt. Sie traegt KEINE Sanktion; ein "
+    "Verfehlen ist ein Berichtsbefund, kein B3'-Ausloeser. Der B3'-ANKER "
+    "haengt allein an 292/438 (ENTSCHIED 130). Mitzufuehrende Grenze aus dem "
+    "Reproduktions-Artefakt selbst: reproduziert ist die Kette AB "
+    "pit_reduktion, die Stufe Panel -> Zwischenstand ist nicht nachgefahren.")
+
 
 class NullpunktBruch(Exception):
-    """B3' hat gefeuert."""
+    """B3' hat gefeuert. `sanktion` sagt, welcher der beiden Zweige."""
+
+    def __init__(self, sanktion, text):
+        super().__init__(text)
+        self.sanktion = sanktion
 
 
 def sha256_datei(pfad):
@@ -311,61 +384,402 @@ def jahrgangs_registrierung(panel_wurzel=None, panelbau=PANELBAU):
 # 2. RR9-A2 Schritt 3 - der Dauer-Tripwire von B3'
 # =============================================================================
 
+def _anker(text):
+    """Ein ANKER-Bruch: die Registrierung selbst ist gebrochen. BEERDIGEN,
+    automatisch und ohne jede Ausnahme (Urteil V1, Zweig ANKER)."""
+    return NullpunktBruch(
+        SANKTION_ANKER,
+        "B3'-ANKER-ABBRUCH (" + SANKTION_ANKER + "): " + text
+        + " Die Registrierung selbst ist gebrochen; ohne V0 ist jede Differenz "
+        "zwischen Vintage-Wechsel, Panel-Neubau und Konzept-Verbreiterung "
+        "konfundiert und damit uninterpretierbar, in jede Richtung.")
+
+
 def registrierte_allowlist(praereg=PRAEREG, manifest=MANIFEST):
-    """Die registrierte Liste - oder ein Bruch. Nie ein Default."""
+    """Die registrierte Liste - oder ein ANKER-Bruch. Nie ein Default.
+
+    Alle fuenf Pruefungen hier gehoeren nach der Urteilstabelle zum Zweig
+    ANKER: sie treffen die Registrierung, nicht die geladene Konfiguration.
+    """
     if not os.path.isfile(manifest):
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): kein hash-manifest.json unter "
-            + manifest + ". Ohne Registrierung gibt es keinen Nullpunkt.")
+        raise _anker("kein hash-manifest.json unter " + manifest + ".")
     registriert = (lies_json(manifest).get("files") or {}).get(
         "protocol/early-detection/2.0.0/preregistration.json")
     if registriert != REGISTRIERTE_PRAEREG_SHA:
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): das hash-manifest fuehrt fuer die "
-            "Praeregistrierung " + repr(registriert) + ", registriert ist "
+        raise _anker(
+            "das hash-manifest fuehrt fuer die Praeregistrierung "
+            + repr(registriert) + ", registriert ist "
             + REGISTRIERTE_PRAEREG_SHA + ".")
     if not os.path.isfile(praereg):
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): die registrierte Praeregistrierung "
-            "liegt nicht unter " + praereg + ".")
+        raise _anker(
+            "die registrierte Praeregistrierung liegt nicht unter "
+            + praereg + ".")
     ist = sha256_datei(praereg)
     if ist != registriert:
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): " + praereg + " traegt sha256 "
-            + ist + ", registriert ist " + registriert + ". Die Datei, aus der "
-            "der Nullpunkt stammt, ist nicht mehr die registrierte.")
+        raise _anker(
+            praereg + " traegt sha256 " + ist + ", registriert ist "
+            + registriert + ". Die Datei, aus der der Nullpunkt stammt, ist "
+            "nicht mehr die registrierte.")
     liste = hole(lies_json(praereg), ALLOWLIST_PFAD)
     if not liste:
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): in der registrierten "
-            "Praeregistrierung steht keine umsatzQuellenAllowlist unter "
-            + ".".join(ALLOWLIST_PFAD) + ".")
+        raise _anker(
+            "in der registrierten Praeregistrierung steht keine "
+            "umsatzQuellenAllowlist unter " + ".".join(ALLOWLIST_PFAD) + ".")
     return liste
 
 
-def pruefe_nullpunkt(geladene_liste, praereg=PRAEREG, manifest=MANIFEST):
+def drift_vorlauf(ledger=LEDGER):
+    """VB-A3: wie viele Reparatur-Akte des DRIFT-Zweigs stehen schon im Register?
+
+    Gezaehlt wird ueber das nur-anhaengende, verkettete
+    `outcome-access-ledger.json` - kein neuer Mechanismus: die Wiederaufnahme
+    nach einem DRIFT-STOPP IST nach dem Beschluss ohnehin ein registrierter,
+    server-bestaetigter Reparatur-Akt.
+
+    FAIL-CLOSED in die harte Richtung, woertlich aus dem Urteil: ist der
+    Datensatz nicht lesbar oder nicht eindeutig, gilt "mindestens ein Vorlauf"
+    -> BEERDIGEN. Ein NICHT geschriebener Datensatz macht die Regel damit
+    schaerfer, nicht weicher. Deshalb gibt es hier keinen Except-Zweig, der
+    still 0 zurueckgibt.
+    """
+    try:
+        ereignisse = lies_json(ledger)["events"]
+        if not isinstance(ereignisse, list):
+            raise ValueError("`events` ist keine Liste")
+    except Exception as exc:            # noqa: BLE001 - fail-closed ist der Zweck
+        return 1, ("FAIL-CLOSED: das Register unter " + ledger + " ist nicht "
+                   "lesbar (" + type(exc).__name__ + ": " + str(exc) + ") - "
+                   "es gilt 'mindestens ein Vorlauf'.")
+    anzahl = 0
+    for e in ereignisse:
+        if not isinstance(e, dict) or DRIFT_MARKE not in e:
+            continue
+        marke = e[DRIFT_MARKE]
+        if not isinstance(marke, dict) or not str(marke.get("ursache") or "").strip():
+            return 1, ("FAIL-CLOSED: Registereintrag " + repr(e.get("runId"))
+                       + " traegt " + DRIFT_MARKE + " ohne benannte Ursache - "
+                       "nicht eindeutig, es gilt 'mindestens ein Vorlauf'.")
+        anzahl += 1
+    return anzahl, ("gezaehlt ueber " + str(len(ereignisse))
+                    + " Registereintraege, Marke " + DRIFT_MARKE)
+
+
+def _lade_b1(pfad=B1_MODUL):
+    spec = importlib.util.spec_from_file_location("studie_rr9_b1_manifest", pfad)
+    modul = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modul)
+    return modul
+
+
+def beerdigungs_wache(b1_modul=B1_MODUL, praereg=PRAEREG):
+    """VB-A8, ausfuehrbar: stehen jenseits F3 wirklich noch ZWEI automatische
+    Beerdigungsregeln?
+
+    Gezaehlt wird nicht, was irgendwo geschrieben steht, sondern was FEUERT.
+    Jede der beiden Regeln wird an einer Wegwerf-Kopie einmal ausgeloest und
+    ihre Sanktion abgelesen. Wer eine von beiden auf STOPP senkt, faellt hier
+    auf - egal wie der Meldungstext danach lautet.
+
+    Sperrklausel: faellt der ANKER-Zweig weg, springt der DRIFT-Zweig ohne
+    weitere Sitzung auf BEERDIGEN beim ersten Ausloeser (siehe
+    `pruefe_nullpunkt`). Eine Lage mit weniger als zwei automatischen
+    Beerdigungsregeln jenseits F3 ist damit maschinell rot.
+    """
+    import tempfile
+    regeln = []
+
+    # Regel 1 - B1'-b, Byte-Nichtidentitaet (scripts/studie-rr9-b1-manifest.py).
+    beobachtet = None
+    try:
+        b1 = _lade_b1(b1_modul)
+        with tempfile.TemporaryDirectory() as tmp:
+            ort = b1.ORTE[0]
+            kasten = os.path.join(tmp, ort)
+            inhalt = b"vb-a8-probe"
+            sha = hashlib.sha256(inhalt).hexdigest()
+            verz = os.path.join(kasten, *b1.BLOB_UNTERPFAD, sha[:2])
+            os.makedirs(verz)
+            datei = os.path.join(verz, sha + ".bin")
+            with open(datei, "wb") as fh:
+                fh.write(inhalt)
+            m = b1.baue_manifest(tmp, orte=(ort,))
+            with open(datei, "wb") as fh:      # der Eingriff: ein Byte kippt
+                fh.write(b"gekippt")
+            try:
+                b1.pruefe_payload(m, kasten, sha)
+            except b1.BremsenBruch as exc:
+                beobachtet = exc.sanktion
+    except Exception as exc:                   # noqa: BLE001 - fail-closed
+        beobachtet = "NICHT AUSLOESBAR (" + type(exc).__name__ + ": " + str(exc) + ")"
+    regeln.append({
+        "regel": "B1'-b Byte-Nichtidentitaet",
+        "ort": "scripts/studie-rr9-b1-manifest.py::pruefe_payload",
+        "beobachteteSanktion": beobachtet,
+        "automatischeBeerdigung": beobachtet == "BEERDIGEN",
+    })
+
+    # Regel 2 - B3'-ANKER (dieses Modul).
+    beobachtet = None
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            falsch = os.path.join(tmp, "hash-manifest.json")
+            with open(falsch, "w", encoding="utf-8") as fh:
+                json.dump({"files": {
+                    "protocol/early-detection/2.0.0/preregistration.json":
+                        "0" * 64}}, fh)
+            try:
+                registrierte_allowlist(praereg=praereg, manifest=falsch)
+            except NullpunktBruch as exc:
+                beobachtet = exc.sanktion
+    except Exception as exc:                   # noqa: BLE001 - fail-closed
+        beobachtet = "NICHT AUSLOESBAR (" + type(exc).__name__ + ": " + str(exc) + ")"
+    regeln.append({
+        "regel": "B3'-ANKER",
+        "ort": "scripts/studie-rr9-nullpunkt.py::registrierte_allowlist",
+        "beobachteteSanktion": beobachtet,
+        "automatischeBeerdigung": beobachtet == SANKTION_ANKER,
+    })
+
+    anzahl = sum(1 for r in regeln if r["automatischeBeerdigung"])
+    return {
+        "auflage": "VB-A8 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+        "regeln": regeln,
+        "anzahlAutomatischerBeerdigungen": anzahl,
+        "sollAnzahl": 2,
+        "ankerZweigLebt": regeln[1]["automatischeBeerdigung"],
+        "rot": anzahl < 2,
+        "sperrklausel": (
+            "Faellt der ANKER-Zweig weg, springt der DRIFT-Zweig ohne weitere "
+            "Sitzung auf BEERDIGEN beim ersten Ausloeser, und S3s "
+            "ratspflichtiger Punkt lebt im selben Moment wieder auf. Keine "
+            "Lage mit weniger als zwei automatischen Beerdigungsregeln "
+            "jenseits F3 ist ohne neuen Gerichtsbeschluss erreichbar."),
+    }
+
+
+def _drift_sanktion(ledger=LEDGER, b1_modul=B1_MODUL, praereg=PRAEREG):
+    """Welche Sanktion traegt ein DRIFT-Bruch JETZT? STOPP ist der Regelfall -
+    aber nur, solange beide Bedingungen der Mehrheit halten."""
+    wache = beerdigungs_wache(b1_modul=b1_modul, praereg=praereg)
+    if not wache["ankerZweigLebt"]:
+        return SANKTION_ANKER, (
+            "SPERRKLAUSEL VB-A8 GEFEUERT: der ANKER-Zweig loest keine "
+            "automatische Beerdigung mehr aus (beobachtet: "
+            + repr(wache["regeln"][1]["beobachteteSanktion"]) + "). Der "
+            "DRIFT-Zweig springt damit ohne weitere Sitzung auf BEERDIGEN "
+            "beim ERSTEN Ausloeser."), wache
+    vorlauf, quelle = drift_vorlauf(ledger)
+    if vorlauf >= 1:
+        return SANKTION_ANKER, (
+            "KONTINGENT EINS VERBRAUCHT (VB-A3): " + str(vorlauf) + " "
+            "Reparatur-Akt(e) dieses Zweigs stehen bereits im Register ("
+            + quelle + "). Das zweite Feuern - gleiche oder andere Ursache - "
+            "ist BEERDIGEN, automatisch, ohne weitere Beratung."), wache
+    return SANKTION_DRIFT, (
+        "Kontingent EINS ist unverbraucht (" + quelle + "). " + STOPP_VOLLZUG), wache
+
+
+def pruefe_nullpunkt(geladene_liste, praereg=PRAEREG, manifest=MANIFEST,
+                     ledger=LEDGER, b1_modul=B1_MODUL):
     """B3', Dauer-Tripwire. Fail-closed, zur LAUFZEIT, nicht als Vorbedingung.
 
     Geprueft wird nicht "gibt es die Liste", sondern "ist die tatsaechlich
     geladene Liste bit-identisch mit der registrierten". Dieser Fall bleibt fuer
     immer eintretbar - eine reine Vorbedingungs-Regel loest sich auf, sobald man
     sie einmal erfuellt (S1s Konstruktionsauflage, woertlich uebernommen).
+
+    Die Registrierungs-Pruefungen laufen ZUERST und tragen den ANKER-Zweig;
+    erst danach kommen die beiden DRIFT-Pruefungen. Das ist keine Reihenfolge
+    aus Bequemlichkeit: eine gebrochene Registrierung darf nie als blosse Drift
+    durchgehen.
     """
     registriert = registrierte_allowlist(praereg, manifest)
+    bruch = None
     if geladene_liste is None:
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): zur Laufzeit ist keine "
-            "Umsatz-Allowlist geladen. Fehlen ist kein Sonderfall, sondern der "
-            "Bruchfall.")
-    if kanonisch(list(geladene_liste)) != kanonisch(registriert):
-        raise NullpunktBruch(
-            "B3'-ABBRUCH (" + SANKTION + "): die zur Laufzeit geladene "
-            "Umsatz-Allowlist ist nicht bit-identisch mit der registrierten.\n"
-            "  geladen     : " + kanonisch(list(geladene_liste)) + "\n"
-            "  registriert : " + kanonisch(registriert) + "\n"
-            "Sanktion vorlaeufig BEERDIGEN; die Absenkung auf STOPP liegt als "
-            "OFFEN-2 beim Gericht und ist NICHT vollzogen.")
-    return registriert
+        bruch = ("zur Laufzeit ist keine Umsatz-Allowlist geladen. Fehlen ist "
+                 "kein Sonderfall, sondern der Bruchfall.")
+    elif kanonisch(list(geladene_liste)) != kanonisch(registriert):
+        bruch = ("die zur Laufzeit geladene Umsatz-Allowlist ist nicht "
+                 "bit-identisch mit der registrierten.\n"
+                 "  geladen     : " + kanonisch(list(geladene_liste)) + "\n"
+                 "  registriert : " + kanonisch(registriert))
+    if bruch is None:
+        return registriert
+    sanktion, begruendung, _wache = _drift_sanktion(
+        ledger=ledger, b1_modul=b1_modul, praereg=praereg)
+    raise NullpunktBruch(
+        sanktion,
+        "B3'-DRIFT-ABBRUCH (" + sanktion + "): " + bruch + "\n"
+        "Die Registrierung ist unversehrt - das ist der Zweig DRIFT.\n"
+        + begruendung)
+
+
+def zweig_rotproben(praereg=PRAEREG, manifest=MANIFEST, b1_modul=B1_MODUL,
+                    datum="2026-08-30"):
+    """VB-A2: beide Zweige je einmal absichtlich rot, getrennt, mit Gegenprobe.
+
+    Alles an Wegwerf-Kopien, nie am Produktivobjekt. Der ANKER-Zweig MUSS
+    BEERDIGEN ausloesen, nicht STOPP; der DRIFT-Zweig MUSS beim ersten Feuern
+    STOPP ausloesen, nicht BEERDIGEN. Die Gegenprobe zeigt, dass der Waechter
+    auch schweigen kann - ein Waechter, der immer rot ist, misst nichts.
+
+    Diese Funktion IST der Nachweis: der Bericht wird aus ihrem Lauf gebaut,
+    nicht danebengeschrieben.
+    """
+    import tempfile
+    registriert = list(registrierte_allowlist(praereg, manifest))
+    proben = []
+
+    def ohne_maschinenpfade(text):
+        """R12a: ein Bericht traegt keinen maschinengebundenen Pfad. Die
+        Rot-Proben arbeiten unter genau zwei Wurzeln - Scratch und Repo -, und
+        die Meldungen der Waechter nennen sie beim Namen. Der Selbsttest
+        prueft darunter, dass danach wirklich keiner mehr uebrig ist;
+        tests/studie-deckel.test.js prueft es am fertigen Artefakt."""
+        for wurzel, marke in ((tempfile.gettempdir(), "<scratch>"),
+                              (WURZEL, "<repo>")):
+            for form in {wurzel, os.path.realpath(wurzel),
+                         wurzel.replace("\\", "/"),
+                         os.path.realpath(wurzel).replace("\\", "/")}:
+                text = text.replace(form, marke)
+        return text
+
+    def probe(zweig, eingriff, erwartet, lauf):
+        try:
+            lauf()
+            beobachtet, text = "KEIN BRUCH", ""
+        except NullpunktBruch as exc:
+            beobachtet = exc.sanktion
+            text = ohne_maschinenpfade(str(exc).split("\n")[0])
+        proben.append({
+            "zweig": zweig, "datum": datum, "eingriff": eingriff,
+            "erwarteteSanktion": erwartet, "beobachteteSanktion": beobachtet,
+            "beobachtetesVerhalten": text,
+            "traegt": beobachtet == erwartet,
+        })
+
+    # -- ANKER, rot: die Registrierung selbst verstellt -----------------------
+    with tempfile.TemporaryDirectory() as tmp:
+        falsch = os.path.join(tmp, "hash-manifest.json")
+        with open(falsch, "w", encoding="utf-8") as fh:
+            json.dump({"files": {
+                "protocol/early-detection/2.0.0/preregistration.json":
+                    "0" * 64}}, fh)
+        probe("ANKER", "hash-manifest fuehrt einen fremden Praereg-Hash",
+              SANKTION_ANKER,
+              lambda: pruefe_nullpunkt(registriert, praereg=praereg,
+                                       manifest=falsch, b1_modul=b1_modul))
+        kopie = os.path.join(tmp, "preregistration.json")
+        roh = lies_json(praereg)
+        roh["signalFamily"]["gemeinsameMechanik"]["umsatzQuellenAllowlist"] = ["X"]
+        with open(kopie, "w", encoding="utf-8") as fh:
+            json.dump(roh, fh)
+        probe("ANKER", "die registrierte Praeregistrierung traegt einen "
+                       "abweichenden sha256",
+              SANKTION_ANKER,
+              lambda: pruefe_nullpunkt(registriert, praereg=kopie,
+                                       manifest=manifest, b1_modul=b1_modul))
+
+    # -- DRIFT, rot: die geladene Liste weicht ab, Registrierung unversehrt ---
+    verstellt = list(registriert)
+    verstellt[0] = verstellt[0] + "X"
+    probe("DRIFT", "ein Eintrag der zur Laufzeit geladenen Liste geaendert",
+          SANKTION_DRIFT,
+          lambda: pruefe_nullpunkt(verstellt, praereg=praereg,
+                                   manifest=manifest, b1_modul=b1_modul))
+    probe("DRIFT", "zur Laufzeit gar keine Liste geladen", SANKTION_DRIFT,
+          lambda: pruefe_nullpunkt(None, praereg=praereg, manifest=manifest,
+                                   b1_modul=b1_modul))
+
+    # -- DRIFT, zweites Feuern: Kontingent EINS verbraucht -> BEERDIGEN -------
+    with tempfile.TemporaryDirectory() as tmp:
+        gebraucht = os.path.join(tmp, "ledger.json")
+        with open(gebraucht, "w", encoding="utf-8") as fh:
+            json.dump({"events": [{"runId": "b3-drift-reparatur-probe",
+                                   DRIFT_MARKE: {"ursache": "Probe"}}]}, fh)
+        probe("DRIFT", "zweites Feuern bei EINEM registrierten Reparatur-Akt",
+              SANKTION_ANKER,
+              lambda: pruefe_nullpunkt(verstellt, praereg=praereg,
+                                       manifest=manifest, ledger=gebraucht,
+                                       b1_modul=b1_modul))
+        unlesbar = os.path.join(tmp, "kaputt.json")
+        with open(unlesbar, "w", encoding="utf-8") as fh:
+            fh.write("{ kein json")
+        probe("DRIFT", "Register nicht lesbar (fail-closed)", SANKTION_ANKER,
+              lambda: pruefe_nullpunkt(verstellt, praereg=praereg,
+                                       manifest=manifest, ledger=unlesbar,
+                                       b1_modul=b1_modul))
+
+    # -- Gegenprobe: der Waechter muss auch schweigen koennen -----------------
+    probe("BEIDE", "GEGENPROBE - die registrierte Liste unveraendert",
+          "KEIN BRUCH",
+          lambda: pruefe_nullpunkt(registriert, praereg=praereg,
+                                   manifest=manifest, b1_modul=b1_modul))
+
+    wache = beerdigungs_wache(b1_modul=b1_modul, praereg=praereg)
+    zweige_rot = {z: any(p["traegt"] for p in proben if p["zweig"] == z)
+                  for z in ("ANKER", "DRIFT")}
+    return {
+        "schema": "studie-vb-a2-zweig-rotproben/v1",
+        "auflage": "VB-A2 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+        "datum": datum,
+        "proben": proben,
+        "beideZweigeGetrenntRot": all(zweige_rot.values()),
+        "alleProbenTragen": all(p["traegt"] for p in proben),
+        "a17": ("Bis beide Zweige getrennt rot waren, gilt B3' nach A17 als "
+                "nicht abgeschlossen - und dann steht B3' UNGETEILT auf "
+                "BEERDIGEN, nicht auf STOPP."),
+        "kettenprobe326": KETTENPROBE_326,
+        "vba8": wache,
+    }
+
+
+def register_anker(ledger=LEDGER, skript=None):
+    """VB-A6: der B3'-Sollwert ist heute in KEINEM Register-Eintrag verankert.
+
+    Kein eigener Akt - die beiden Werte werden im NAECHSTEN Register-Eintrag
+    jenseits F3 mitgefuehrt. Diese Funktion baut die mitzufuehrende Nutzlast
+    und misst am Objekt, ob sie schon drinsteht. Solange nicht, darf B3' nicht
+    als register-verankert zitiert werden - und genau das steht dann hier.
+    """
+    skript = skript or os.path.abspath(__file__)
+    rel = os.path.relpath(skript, WURZEL).replace(os.sep, "/")
+    nutzlast = {
+        "registriertePraeregSha": REGISTRIERTE_PRAEREG_SHA,
+        "waechterDatei": rel,
+        "waechterDateiSha256": sha256_datei(skript),
+    }
+    try:
+        roh = json.dumps(lies_json(ledger), ensure_ascii=False)
+    except Exception as exc:            # noqa: BLE001 - fail-closed
+        roh, lesbar = "", "Register nicht lesbar: " + str(exc)
+    else:
+        lesbar = "gelesen"
+    verankert = bool(roh) and all(w in roh for w in
+                                  (nutzlast["registriertePraeregSha"],
+                                   nutzlast["waechterDateiSha256"]))
+    return {
+        "schema": "studie-vb-a6-registeranker/v1",
+        "auflage": "VB-A6 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+        "nutzlast": nutzlast,
+        "register": ledger.replace(os.sep, "/").split("/")[-1],
+        "registerStatus": lesbar,
+        "registerVerankert": verankert,
+        "zitierverbot": (
+            "OFFEN" if not verankert else "AUFGEHOBEN - beide Werte stehen im Register"),
+        "mechanismus": (
+            "Der Sollwert ist eine QUELL-KONSTANTE im Waechter selbst "
+            "(REGISTRIERTE_PRAEREG_SHA), keine Manifest-Lesung. Wer Allowlist "
+            "und Manifest im selben Commit aendert, macht B3' rot. Die Luecke "
+            "sitzt eine Ebene hoeher: " + rel + " steht in keinem "
+            "hash-manifest-Tripel und in keinem Register-Eintrag - ein Commit, "
+            "der Allowlist, Manifest UND die Waechter-Konstante zugleich "
+            "verstellt, macht B3' stumm. Kanzlei-Befund §0.3."),
+        "vollzug": (
+            "KEIN eigener Akt, kein zusaetzlicher Eintrag: die Nutzlast wird "
+            "im naechsten Register-Eintrag jenseits F3 mitgefuehrt. Bis dahin "
+            "darf B3' NICHT als register-verankert zitiert werden."),
+    }
 
 
 # =============================================================================
@@ -592,34 +1006,35 @@ def selbsttest():
     pruefe("B3': die registrierte Liste geht durch (Anwesenheit)",
            pruefe_nullpunkt(list(registriert)) == registriert)
 
-    # ROT-PROBE: EIN veraenderter Eintrag muss B3' rot machen.
+    # ROT-PROBE: EIN veraenderter Eintrag muss B3' rot machen - Zweig DRIFT.
     verstellt = list(registriert)
     verstellt[0] = verstellt[0] + "X"
     try:
         pruefe_nullpunkt(verstellt)
-        pruefe("ROT-PROBE B3'-1: ein geaenderter Eintrag -> " + SANKTION, False)
+        pruefe("ROT-PROBE B3'-1: ein geaenderter Eintrag -> DRIFT/STOPP", False)
     except NullpunktBruch as exc:
-        pruefe("ROT-PROBE B3'-1: ein geaenderter Eintrag -> " + SANKTION,
-               SANKTION in str(exc) and "nicht bit-identisch" in str(exc))
+        pruefe("ROT-PROBE B3'-1: ein geaenderter Eintrag -> DRIFT/STOPP",
+               exc.sanktion == SANKTION_DRIFT
+               and "nicht bit-identisch" in str(exc))
 
     # ROT-PROBE: dieselbe Liste in anderer REIHENFOLGE ist nicht bit-identisch.
     try:
         pruefe_nullpunkt(list(reversed(registriert)))
-        pruefe("ROT-PROBE B3'-2: umsortierte Liste -> " + SANKTION, False)
+        pruefe("ROT-PROBE B3'-2: umsortierte Liste -> DRIFT/STOPP", False)
     except NullpunktBruch as exc:
-        pruefe("ROT-PROBE B3'-2: umsortierte Liste -> " + SANKTION,
-               SANKTION in str(exc))
+        pruefe("ROT-PROBE B3'-2: umsortierte Liste -> DRIFT/STOPP",
+               exc.sanktion == SANKTION_DRIFT)
 
     # ROT-PROBE: gar keine geladene Liste ist der Bruchfall, kein Sonderfall.
     try:
         pruefe_nullpunkt(None)
-        pruefe("ROT-PROBE B3'-3: keine geladene Liste -> " + SANKTION, False)
+        pruefe("ROT-PROBE B3'-3: keine geladene Liste -> DRIFT/STOPP", False)
     except NullpunktBruch as exc:
-        pruefe("ROT-PROBE B3'-3: keine geladene Liste -> " + SANKTION,
-               SANKTION in str(exc))
+        pruefe("ROT-PROBE B3'-3: keine geladene Liste -> DRIFT/STOPP",
+               exc.sanktion == SANKTION_DRIFT)
 
     # ROT-PROBE: eine verstellte REGISTRIERUNG feuert ebenfalls - der Tripwire
-    # haengt am Objekt, nicht nur am Aufrufer.
+    # haengt am Objekt, nicht nur am Aufrufer. Zweig ANKER, BEERDIGEN.
     with tempfile.TemporaryDirectory() as tmp:
         kopie = os.path.join(tmp, "preregistration.json")
         roh = lies_json(PRAEREG)
@@ -628,10 +1043,64 @@ def selbsttest():
             json.dump(roh, fh)
         try:
             pruefe_nullpunkt(list(registriert), praereg=kopie)
-            pruefe("ROT-PROBE B3'-4: verstellte Registrierung -> " + SANKTION, False)
+            pruefe("ROT-PROBE B3'-4: verstellte Registrierung -> ANKER/BEERDIGEN",
+                   False)
         except NullpunktBruch as exc:
-            pruefe("ROT-PROBE B3'-4: verstellte Registrierung -> " + SANKTION,
-                   SANKTION in str(exc) and "nicht mehr die registrierte" in str(exc))
+            pruefe("ROT-PROBE B3'-4: verstellte Registrierung -> ANKER/BEERDIGEN",
+                   exc.sanktion == SANKTION_ANKER
+                   and "nicht mehr die registrierte" in str(exc))
+
+    # -- VB-A1/A2/A3/A8: die Spaltung, an den Pruefungen abgelesen ------------
+    rp = zweig_rotproben()
+    pruefe("VB-A2: beide Zweige sind GETRENNT rot gefahren",
+           rp["beideZweigeGetrenntRot"] and rp["alleProbenTragen"])
+    pruefe("VB-A1: der ANKER-Zweig loest BEERDIGEN aus, nie STOPP",
+           all(p["beobachteteSanktion"] == SANKTION_ANKER
+               for p in rp["proben"] if p["zweig"] == "ANKER"))
+    pruefe("VB-A3: das ERSTE Feuern des DRIFT-Zweigs ist STOPP",
+           any(p["beobachteteSanktion"] == SANKTION_DRIFT
+               for p in rp["proben"] if p["zweig"] == "DRIFT"))
+    pruefe("VB-A3: das ZWEITE Feuern des DRIFT-Zweigs ist BEERDIGEN",
+           any(p["eingriff"].startswith("zweites Feuern")
+               and p["beobachteteSanktion"] == SANKTION_ANKER
+               for p in rp["proben"]))
+    pruefe("VB-A3: ein unlesbares Register ist BEERDIGEN (fail-closed)",
+           any(p["eingriff"].startswith("Register nicht lesbar")
+               and p["beobachteteSanktion"] == SANKTION_ANKER
+               for p in rp["proben"]))
+    pruefe("GEGENPROBE: der Waechter kann auch schweigen",
+           any(p["eingriff"].startswith("GEGENPROBE")
+               and p["beobachteteSanktion"] == "KEIN BRUCH"
+               for p in rp["proben"]))
+    pruefe("VB-A8: jenseits F3 stehen ZWEI automatische Beerdigungsregeln",
+           rp["vba8"]["anzahlAutomatischerBeerdigungen"] == 2
+           and rp["vba8"]["rot"] is False)
+
+    # ROT-PROBE VB-A8: nimmt man dem ANKER-Zweig die automatische Beerdigung,
+    # MUSS die Lage maschinell rot werden UND der DRIFT-Zweig auf BEERDIGEN
+    # beim ersten Ausloeser zurueckspringen. Der Eingriff sitzt am Objekt: ein
+    # B1'-Modul, dessen Byte-Nichtidentitaet nicht mehr ausloest.
+    with tempfile.TemporaryDirectory() as tmp:
+        stumm = os.path.join(tmp, "b1-stumm.py")
+        with io.open(B1_MODUL, encoding="utf-8", newline="") as fh:
+            quelle = fh.read()
+        with io.open(stumm, "w", encoding="utf-8", newline="") as fh:
+            fh.write(quelle.replace('SANKTION_BEERDIGEN = "BEERDIGEN"',
+                                    'SANKTION_BEERDIGEN = "STOPP"', 1))
+        w = beerdigungs_wache(b1_modul=stumm)
+        pruefe("ROT-PROBE VB-A8: eine fehlende Automatik macht die Lage ROT",
+               w["rot"] is True and w["anzahlAutomatischerBeerdigungen"] == 1)
+
+    pruefe("VB-A6: der Sollwert ist heute NICHT register-verankert",
+           register_anker()["registerVerankert"] is False)
+    pruefe("VB-A7: kein B3'-Ausloeser haengt an 326/365",
+           all("326" not in p["beobachtetesVerhalten"] for p in rp["proben"]))
+    # R12a: das Artefakt darf keinen maschinengebundenen Pfad tragen. Geprueft
+    # am fertigen JSON, nicht an der Absicht des Sanitizers.
+    import re as _re
+    pruefe("R12a: der Rotproben-Bericht traegt keinen Maschinenpfad",
+           not _re.search(r"[A-Za-z]:[\\/]|[\\/]Users[\\/]|/home/",
+                          json.dumps(rp, ensure_ascii=False)))
 
     # -- Jahrgang: der Vergleich muss ueberhaupt abweichen KOENNEN ------------
     j = jahrgangs_registrierung()
@@ -745,6 +1214,10 @@ def main(argv=None):
     tw.add_argument("--liste", help="JSON-Datei mit der zur Laufzeit geladenen Liste")
     b2 = unter.add_parser("b2-trockenlauf")
     b2.add_argument("--ziel")
+    zr = unter.add_parser("zweig-rotproben")
+    zr.add_argument("--ziel")
+    ra = unter.add_parser("register-anker")
+    ra.add_argument("--ziel")
     unter.add_parser("selbsttest")
     a = p.parse_args(argv)
 
@@ -777,6 +1250,28 @@ def main(argv=None):
                   + ("--liste " + a.liste if a.liste
                      else "scripts/studie-basisraten.py::UMSATZ_QUELLEN"))
             return 0
+        elif a.befehl == "zweig-rotproben":
+            bericht = zweig_rotproben()
+            for probe in bericht["proben"]:
+                print(("ok   " if probe["traegt"] else "FAIL ")
+                      + probe["zweig"] + ": " + probe["eingriff"] + " -> "
+                      + probe["beobachteteSanktion"])
+            print("beide Zweige getrennt rot : "
+                  + str(bericht["beideZweigeGetrenntRot"]))
+            print("VB-A8 automatische Beerdigungen jenseits F3 : "
+                  + str(bericht["vba8"]["anzahlAutomatischerBeerdigungen"])
+                  + " von " + str(bericht["vba8"]["sollAnzahl"])
+                  + ("  ROT" if bericht["vba8"]["rot"] else "  ok"))
+            if not (bericht["alleProbenTragen"] and not bericht["vba8"]["rot"]):
+                return EXIT_B3
+        elif a.befehl == "register-anker":
+            bericht = register_anker()
+            print("Praereg-Sollwert : "
+                  + bericht["nutzlast"]["registriertePraeregSha"])
+            print("Waechter-Datei   : " + bericht["nutzlast"]["waechterDatei"]
+                  + "  sha256 " + bericht["nutzlast"]["waechterDateiSha256"])
+            print("register-verankert : " + str(bericht["registerVerankert"]))
+            print("Zitierverbot       : " + bericht["zitierverbot"])
         else:
             bericht = b2_trockenlauf()
             print("ausfuehrbar : " + str(bericht["ausfuehrbar"]))
@@ -795,7 +1290,11 @@ def main(argv=None):
         return 0
     except NullpunktBruch as exc:
         print(str(exc), file=sys.stderr)
-        return EXIT_B3
+        # VB-A1: zwei Zweige, zwei Ausgaenge. EXIT_B3 (5) bleibt BEERDIGEN -
+        # die bestehende Maschinerie ist unveraendert; der neue Ausgang 6 ist
+        # der gesenkte DRIFT-Zweig. Wer beide gleich behandelt, hat die
+        # Spaltung nicht vollzogen.
+        return EXIT_B3_STOPP if exc.sanktion == SANKTION_DRIFT else EXIT_B3
 
 
 if __name__ == "__main__":

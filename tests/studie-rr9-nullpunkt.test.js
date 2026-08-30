@@ -27,12 +27,15 @@ for (const probe of [
   'Provenienz: der E3-Lauf lief unter genau diesem Tripel',
   'Provenienz: der Traeger der 326/365 ist GEMESSEN',
   'Provenienz: die Jahrgangs-Kette ist geschlossen',
-  // B3' Dauer-Tripwire: Anwesenheit UND vier Abwesenheiten
+  // B3' Dauer-Tripwire: Anwesenheit UND vier Abwesenheiten.
+  // Seit VB-A1 (_COURT-VIERBANK-OFFEN23-2026-08-30) tragen die drei
+  // Laufzeit-Abweichungen den Zweig DRIFT (STOPP), die verstellte
+  // Registrierung den Zweig ANKER (BEERDIGEN).
   "B3': die registrierte Liste geht durch (Anwesenheit)",
-  "ROT-PROBE B3'-1: ein geaenderter Eintrag -> BEERDIGEN",
-  "ROT-PROBE B3'-2: umsortierte Liste -> BEERDIGEN",
-  "ROT-PROBE B3'-3: keine geladene Liste -> BEERDIGEN",
-  "ROT-PROBE B3'-4: verstellte Registrierung -> BEERDIGEN",
+  "ROT-PROBE B3'-1: ein geaenderter Eintrag -> DRIFT/STOPP",
+  "ROT-PROBE B3'-2: umsortierte Liste -> DRIFT/STOPP",
+  "ROT-PROBE B3'-3: keine geladene Liste -> DRIFT/STOPP",
+  "ROT-PROBE B3'-4: verstellte Registrierung -> ANKER/BEERDIGEN",
   // B2-Trockenlauf
   'B2: die Kennungen der beiden Kohorten ueberschneiden sich nicht',
   'B2: das Verhaeltnis ist NICHT gerechnet',

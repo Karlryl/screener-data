@@ -1,0 +1,96 @@
+{
+ "a17": "Bis beide Zweige getrennt rot waren, gilt B3' nach A17 als nicht abgeschlossen - und dann steht B3' UNGETEILT auf BEERDIGEN, nicht auf STOPP.",
+ "alleProbenTragen": true,
+ "auflage": "VB-A2 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+ "beideZweigeGetrenntRot": true,
+ "datum": "2026-08-30",
+ "kettenprobe326": "VB-A7: Die Reproduktion der 326/365 (S-G) wird auf demselben gespeicherten Zwischenstand MITBERICHTET, weil sie die Zaehlkette unabhaengig von der Allowlist belegt. Sie traegt KEINE Sanktion; ein Verfehlen ist ein Berichtsbefund, kein B3'-Ausloeser. Der B3'-ANKER haengt allein an 292/438 (ENTSCHIED 130). Mitzufuehrende Grenze aus dem Reproduktions-Artefakt selbst: reproduziert ist die Kette AB pit_reduktion, die Stufe Panel -> Zwischenstand ist nicht nachgefahren.",
+ "proben": [
+  {
+   "beobachteteSanktion": "BEERDIGEN",
+   "beobachtetesVerhalten": "B3'-ANKER-ABBRUCH (BEERDIGEN): das hash-manifest fuehrt fuer die Praeregistrierung '0000000000000000000000000000000000000000000000000000000000000000', registriert ist 799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c. Die Registrierung selbst ist gebrochen; ohne V0 ist jede Differenz zwischen Vintage-Wechsel, Panel-Neubau und Konzept-Verbreiterung konfundiert und damit uninterpretierbar, in jede Richtung.",
+   "datum": "2026-08-30",
+   "eingriff": "hash-manifest fuehrt einen fremden Praereg-Hash",
+   "erwarteteSanktion": "BEERDIGEN",
+   "traegt": true,
+   "zweig": "ANKER"
+  },
+  {
+   "beobachteteSanktion": "BEERDIGEN",
+   "beobachtetesVerhalten": "B3'-ANKER-ABBRUCH (BEERDIGEN): <scratch>\\tmprxgey2fh\\preregistration.json traegt sha256 f87e5deeb0712c36aa74e268b74f0200c9e5dd4ab0dffa7d041ad907788401c7, registriert ist 799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c. Die Datei, aus der der Nullpunkt stammt, ist nicht mehr die registrierte. Die Registrierung selbst ist gebrochen; ohne V0 ist jede Differenz zwischen Vintage-Wechsel, Panel-Neubau und Konzept-Verbreiterung konfundiert und damit uninterpretierbar, in jede Richtung.",
+   "datum": "2026-08-30",
+   "eingriff": "die registrierte Praeregistrierung traegt einen abweichenden sha256",
+   "erwarteteSanktion": "BEERDIGEN",
+   "traegt": true,
+   "zweig": "ANKER"
+  },
+  {
+   "beobachteteSanktion": "STOPP",
+   "beobachtetesVerhalten": "B3'-DRIFT-ABBRUCH (STOPP): die zur Laufzeit geladene Umsatz-Allowlist ist nicht bit-identisch mit der registrierten.",
+   "datum": "2026-08-30",
+   "eingriff": "ein Eintrag der zur Laufzeit geladenen Liste geaendert",
+   "erwarteteSanktion": "STOPP",
+   "traegt": true,
+   "zweig": "DRIFT"
+  },
+  {
+   "beobachteteSanktion": "STOPP",
+   "beobachtetesVerhalten": "B3'-DRIFT-ABBRUCH (STOPP): zur Laufzeit ist keine Umsatz-Allowlist geladen. Fehlen ist kein Sonderfall, sondern der Bruchfall.",
+   "datum": "2026-08-30",
+   "eingriff": "zur Laufzeit gar keine Liste geladen",
+   "erwarteteSanktion": "STOPP",
+   "traegt": true,
+   "zweig": "DRIFT"
+  },
+  {
+   "beobachteteSanktion": "BEERDIGEN",
+   "beobachtetesVerhalten": "B3'-DRIFT-ABBRUCH (BEERDIGEN): die zur Laufzeit geladene Umsatz-Allowlist ist nicht bit-identisch mit der registrierten.",
+   "datum": "2026-08-30",
+   "eingriff": "zweites Feuern bei EINEM registrierten Reparatur-Akt",
+   "erwarteteSanktion": "BEERDIGEN",
+   "traegt": true,
+   "zweig": "DRIFT"
+  },
+  {
+   "beobachteteSanktion": "BEERDIGEN",
+   "beobachtetesVerhalten": "B3'-DRIFT-ABBRUCH (BEERDIGEN): die zur Laufzeit geladene Umsatz-Allowlist ist nicht bit-identisch mit der registrierten.",
+   "datum": "2026-08-30",
+   "eingriff": "Register nicht lesbar (fail-closed)",
+   "erwarteteSanktion": "BEERDIGEN",
+   "traegt": true,
+   "zweig": "DRIFT"
+  },
+  {
+   "beobachteteSanktion": "KEIN BRUCH",
+   "beobachtetesVerhalten": "",
+   "datum": "2026-08-30",
+   "eingriff": "GEGENPROBE - die registrierte Liste unveraendert",
+   "erwarteteSanktion": "KEIN BRUCH",
+   "traegt": true,
+   "zweig": "BEIDE"
+  }
+ ],
+ "schema": "studie-vb-a2-zweig-rotproben/v1",
+ "vba8": {
+  "ankerZweigLebt": true,
+  "anzahlAutomatischerBeerdigungen": 2,
+  "auflage": "VB-A8 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+  "regeln": [
+   {
+    "automatischeBeerdigung": true,
+    "beobachteteSanktion": "BEERDIGEN",
+    "ort": "scripts/studie-rr9-b1-manifest.py::pruefe_payload",
+    "regel": "B1'-b Byte-Nichtidentitaet"
+   },
+   {
+    "automatischeBeerdigung": true,
+    "beobachteteSanktion": "BEERDIGEN",
+    "ort": "scripts/studie-rr9-nullpunkt.py::registrierte_allowlist",
+    "regel": "B3'-ANKER"
+   }
+  ],
+  "rot": false,
+  "sollAnzahl": 2,
+  "sperrklausel": "Faellt der ANKER-Zweig weg, springt der DRIFT-Zweig ohne weitere Sitzung auf BEERDIGEN beim ersten Ausloeser, und S3s ratspflichtiger Punkt lebt im selben Moment wieder auf. Keine Lage mit weniger als zwei automatischen Beerdigungsregeln jenseits F3 ist ohne neuen Gerichtsbeschluss erreichbar."
+ }
+}
