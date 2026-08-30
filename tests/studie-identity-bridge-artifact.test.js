@@ -90,6 +90,7 @@ const REQUIRED = [
   'Bound manifest for a closed version resolves out of its frozen record',
   'An artifact version without a frozen record is refused, not degraded',
   'A record whose bound manifest is hollow is refused, not degraded',
+  'The report names the artifacts of its own run, never a literal',
 ];
 
 test('R2-A1: fixture self-test is named, countable, and green', () => {
@@ -105,8 +106,8 @@ test('R2-A1: fixture self-test is named, countable, and green', () => {
   assert.equal(green.size, REQUIRED.length);
   // Literal on purpose: a second, independent pin. REQUIRED.length alone would
   // move silently if someone edited the list.
-  assert.equal(REQUIRED.length, 34);
-  assert.match(run.stdout, /SELBSTTEST GREEN - 34 named checks/);
+  assert.equal(REQUIRED.length, 35);
+  assert.match(run.stdout, /SELBSTTEST GREEN - 35 named checks/);
 });
 
 test('R2-A1: deliberate unmarked cross-seam calculation fails red', () => {

@@ -1444,6 +1444,7 @@ SELF_TEST_NAMES = (
     "Bound manifest for a closed version resolves out of its frozen record",
     "An artifact version without a frozen record is refused, not degraded",
     "A record whose bound manifest is hollow is refused, not degraded",
+    "The report names the artifacts of its own run, never a literal",
 )
 
 
@@ -1656,10 +1657,19 @@ def self_test():
     # Before the fix an unknown version fell silently into the weaker mode.
     try:
         bound_manifest_binding("9.9.9")
-        unknown_version_refused = False
-    except ArtifactError:
-        unknown_version_refused = True
-    check(SELF_TEST_NAMES[32], unknown_version_refused)
+        unknown_version_refused = None
+    except ArtifactError as error:
+        # Not merely "an ArtifactError": load_determinism_correction() runs
+        # first and carries its own refusals. A check that cannot tell them
+        # apart stays green while the guard it is named after was never
+        # exercised - so the refusal has to be ABOUT the version.
+        unknown_version_refused = str(error)
+    check(
+        SELF_TEST_NAMES[32],
+        unknown_version_refused is not None
+        and "9.9.9" in unknown_version_refused,
+        unknown_version_refused,
+    )
     # A record that carries boundManifest must carry it properly. Absence is
     # the 1.1.0 shape and stays the only quiet answer; every hollow or
     # malformed body is a named refusal, or the weaker mode would be reachable
@@ -1687,6 +1697,26 @@ def self_test():
             {"boundManifest": {"manifestFileSha256": v120_manifest}},
             "1.2.0") == v120_manifest,
         hollow_refused,
+    )
+    # M14: a hardcoded filename outlived its target once already. The closing
+    # lines must name whatever run they are rendered FOR, so the check renders
+    # a synthetic result under two different names and requires the output to
+    # follow both. A literal cannot satisfy both halves.
+    rendered = [
+        report_artifact_references(
+            {"panelArtifact": {"file": stem + "-panel.json"}},
+            "reports/studie/" + stem + ".json")
+        for stem in ("A-result-9999-01-01", "B-result-9999-12-31")
+    ]
+    check(
+        SELF_TEST_NAMES[34],
+        rendered == [
+            ["reports/studie/A-result-9999-01-01.json",
+             "reports/studie/A-result-9999-01-01-panel.json"],
+            ["reports/studie/B-result-9999-12-31.json",
+             "reports/studie/B-result-9999-12-31-panel.json"],
+        ],
+        rendered,
     )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
@@ -2197,14 +2227,24 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
     return result
 
 
+def report_artifact_references(result, result_path):
+    """The two artifacts the report's closing lines name.
+
+    M14: these were hardcoded LITERALS, and the literals were the 1.1.0 files,
+    so every later report pointed readers at superseded artifacts. Both are
+    derived from the run now - the result from the path it is written to, the
+    manifest out of the result itself. They live in their own function so a
+    regression back to a literal is checkable without rendering a whole report.
+    """
+    return [
+        "reports/studie/" + os.path.basename(result_path),
+        "reports/studie/" + result["panelArtifact"]["file"],
+    ]
+
+
 def render_report(result, result_path):
-    # M14: the closing lines used to name the result artifact and the panel
-    # manifest as LITERALS, and those literals were the 1.1.0 files. Every
-    # later report therefore pointed readers at superseded artifacts. Both
-    # names are now derived from the run itself - the manifest out of the
-    # result, the result out of the path it is written to - so the class of
-    # defect cannot come back with the next version bump.
-    result_file = os.path.basename(result_path)
+    result_reference, manifest_reference = report_artifact_references(
+        result, result_path)
     counts = result["counts"]
     contract = result["contract"]
     artifact = result["panelArtifact"]
@@ -2308,9 +2348,9 @@ def render_report(result, result_path):
         "",
         "- Offen bleibt, wie stark der beschriebene Schwund auf diesem Substrat sinkt und ob die Groessen-/Sektor-Schieflage bestehen bleibt. Das wird hier nicht vorweggenommen; es gehoert in die eigene Praeregistrierung von Auftrag 2.",
         "",
-        "Alle Zahlen dieses Berichts stehen in `reports/studie/%s`;" % result_file,
-        "das Manifest der einzelnen Zuordnungs- und Naht-Shards steht in `reports/studie/%s`." % (
-            artifact["file"]),
+        "Alle Zahlen dieses Berichts stehen in `%s`;" % result_reference,
+        "das Manifest der einzelnen Zuordnungs- und Naht-Shards steht in `%s`." % (
+            manifest_reference),
         "",
     ])
 

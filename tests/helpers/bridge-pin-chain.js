@@ -33,7 +33,7 @@ const HEAD_STATUS = 'FROZEN_BOUND_MANIFEST_RESOLUTION_ADDENDUM';
 // tests green; reproduced before the anchor existed. Same shape the comparator
 // addendum's test already uses (EXPECTED_ADDENDUM_SHA256): moving the head now
 // costs a second, visible edit in a different file.
-const HEAD_SHA256 = 'eae2677676694a43c7cceffa7f39c970155834b1e74594663c0d4be5428f41bc';
+const HEAD_SHA256 = '56d1a72daa2248cda95857c63eaad55d0d126246a99a3a678ff546771e10bc55';
 const SHA256 = /^[0-9a-f]{64}$/;
 
 const abs = (relative) => path.join(ROOT, ...relative.split('/'));
@@ -82,6 +82,17 @@ function chain() {
 function resolvePin(relative) {
   let pinned = null;
   for (const { link, record } of chain()) {
+    // A link that MEANT to pin a path but mis-keyed it would leave `value`
+    // undefined, and resolution would quietly fall back to an older link —
+    // N13's shape one level up. Every path-shaped key in a link therefore has
+    // to name a file that exists, so a mis-keyed override is loud instead of
+    // lost. Ceiling, stated: on a case-insensitive filesystem a casing typo
+    // still slips through here; CI runs on Linux and is the arbiter.
+    for (const key of Object.keys(record[link.pinField] || {})) {
+      if (!key.includes('/')) continue;
+      assert.ok(fs.existsSync(abs(key)),
+        `${link.path} pins ${key}, which does not exist — mis-keyed override?`);
+    }
     const value = (record[link.pinField] || {})[relative];
     if (value === undefined) continue;
     assert.ok(typeof value === 'string' && SHA256.test(value),
