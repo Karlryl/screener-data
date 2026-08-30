@@ -188,10 +188,12 @@ def check_proof(proof, binding, manifest_path):
     # The deciding leg. SOLL out of the record, IST re-computed from the file,
     # CLAIM out of the proof - all three named in every outcome (condition 3).
     soll = binding["boundManifest"]
-    if not os.path.exists(manifest_path):
+    # isfile, not exists: a directory passes exists() and would then die in the
+    # hash read with a raw traceback instead of a refusal that names the SOLL.
+    if not os.path.isfile(manifest_path):
         raise ProofRefused(
-            "manifest %s does not exist; SOLL %s from %s cannot be checked "
-            "against anything" % (manifest_path, soll, binding["source"])
+            "manifest %s is not a readable file; SOLL %s from %s cannot be "
+            "checked against anything" % (manifest_path, soll, binding["source"])
         )
     ist = sha256_file(manifest_path)
     if ist != soll:
@@ -211,7 +213,10 @@ def check_proof(proof, binding, manifest_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--proof", required=True)
     parser.add_argument(
         "--manifest",
@@ -222,7 +227,9 @@ def main():
     with open(args.proof, encoding="utf-8") as handle:
         proof = json.load(handle)
     binding = frozen_binding()
-    manifest_path = args.manifest or os.path.join(
+    # `is not None`, not `or`: an explicitly empty --manifest must reach the
+    # refusal, never be silently replaced by the record's canonical manifest.
+    manifest_path = args.manifest if args.manifest is not None else os.path.join(
         REPO, *binding["manifestRel"].split("/")
     )
     result = check_proof(proof, binding, manifest_path)
@@ -240,4 +247,13 @@ if __name__ == "__main__":
         sys.exit(main())
     except ProofRefused as error:
         print("MODEGUARD REFUSED [%s]: %s" % (CHECK_RULE, error), file=sys.stderr)
+        sys.exit(1)
+    except (OSError, ValueError) as error:
+        # An unreadable proof, an unreadable frozen record or malformed JSON is
+        # a refusal like any other - never a traceback. Condition 3 wants every
+        # outcome spoken in the guard's own voice, and a caller that reads
+        # stderr for MODEGUARD REFUSED must not miss these. ValueError covers
+        # json.JSONDecodeError, which subclasses it.
+        print("MODEGUARD REFUSED [%s]: input could not be read: %s: %s"
+              % (CHECK_RULE, type(error).__name__, error), file=sys.stderr)
         sys.exit(1)

@@ -175,12 +175,37 @@ test('replication mode without a match is refused', () => {
 });
 
 test('a missing manifest refuses instead of skipping the check', () => {
-  refuses(REAL_PROOF, /does not exist; SOLL /,
+  refuses(REAL_PROOF, /is not a readable file; SOLL /,
     path.join(os.tmpdir(), 'modeguard-absent-manifest.json'));
 });
 
 test('the pre-field 1.1.0 proof is refused, so it can never stand in for a run', () => {
   refuses(HISTORIC_PROOF, /MODEGUARD REFUSED/);
+});
+
+// Condition 3: every outcome is spoken in the guard's own voice. A raw Python
+// traceback names neither SOLL nor IST, and a caller reading stderr for
+// MODEGUARD REFUSED would miss it entirely. These four inputs used to crash.
+test('a directory passed as manifest refuses instead of crashing in the hash read', () => {
+  refuses(REAL_PROOF, /is not a readable file; SOLL /, path.join(REPO, 'scripts'));
+});
+
+test('an unreadable proof file refuses instead of a traceback', () => {
+  refuses(path.join(os.tmpdir(), 'modeguard-no-such-proof.json'),
+    /input could not be read: FileNotFoundError/);
+});
+
+test('a malformed proof refuses instead of a traceback', () => {
+  const broken = tmpFile('broken.json');
+  fs.writeFileSync(broken, '{not json', 'utf8');
+  refuses(broken, /input could not be read: JSONDecodeError/);
+});
+
+test('an explicitly empty --manifest refuses, it is not silently defaulted', () => {
+  const result = spawnSync(process.env.PYTHON || 'python',
+    [GUARD, '--proof', REAL_PROOF, '--manifest', ''], { cwd: REPO, encoding: 'utf8' });
+  assert.notEqual(result.status, 0, `guard passed: ${result.stdout}${result.stderr}`);
+  assert.match(result.stderr, /is not a readable file/);
 });
 
 test('it reads the frozen records, not the pinned script', () => {
