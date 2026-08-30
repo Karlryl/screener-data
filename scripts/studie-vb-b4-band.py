@@ -101,8 +101,15 @@ def _zahl(x):
     Deshalb wird hier positiv geprueft, was gelten MUSS, statt negativ, was
     nicht gelten darf.
     """
-    return isinstance(x, (int, float)) and not isinstance(x, bool) \
-        and math.isfinite(x)
+    if not isinstance(x, (int, float)) or isinstance(x, bool):
+        return False
+    try:
+        return math.isfinite(x)
+    except OverflowError:
+        # Ein Python-int ohne Groessengrenze (10**400) laesst `isfinite`
+        # abstuerzen. Ein Absturz waere hier KEIN Verdikt - und das Tor
+        # verspricht auf jedem Pfad eines. Zu gross ist nicht endlich.
+        return False
 
 
 def _endlich(x):
@@ -592,7 +599,12 @@ def selbsttest():
                        ("Ergebnis = NaN", (nan, n, 0.01, 0.02)),
                        ("Ergebnis negativ", (-0.5, n, 0.01, 0.02)),
                        ("Ergebnis > 1", (1.5, n, 0.01, 0.02)),
-                       ("Ergebnis = None", (None, n, 0.01, 0.02))):
+                       ("Ergebnis = None", (None, n, 0.01, 0.02)),
+                       # Ein int ohne Groessengrenze laesst math.isfinite
+                       # abstuerzen - ein Absturz ist kein Verdikt.
+                       ("SE = 10**400 (int ohne Groessengrenze)",
+                        (0.95, n, 10 ** 400, 0.02)),
+                       ("n = 10**400", (0.95, 10 ** 400, 0.01, 0.02))):
         r = auswerten(*args)
         pruefe("entartete Eingabe " + name + " -> nie ein Pass, kein Absturz",
                r["verdikt"] == VERDIKT_BAND and r["weiter"] == 0

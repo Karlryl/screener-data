@@ -48,6 +48,8 @@ for (const probe of [
   'entartete Eingabe Ergebnis > 1 -> nie ein Pass, kein Absturz',
   'GEGENPROBE: saubere Zahlen gehen durch den Gate',
   'se_binomial rechnet die registrierte Streuungsgroesse nach',
+  'entartete Eingabe SE = 10**400 (int ohne Groessengrenze) -> nie ein Pass, kein Absturz',
+  'entartete Eingabe n = 10**400 -> nie ein Pass, kein Absturz',
   'Wilson-Intervall steht in jedem Zweig',
   'Artefakt: der Freeze-Akt ist NICHT vollzogen',
   'Artefakt: das Siegel bleibt in ALLEN drei Zweigen zu',
@@ -68,8 +70,8 @@ function auswerten(ergebnis, n, seB, seK) {
 
 // Drei erschoepfende Zweige, ZWEI Konsequenzen. n = 400 haelt den
 // Zulaessigkeits-Gate offen; SE* = 0,02.
-assert.deepEqual(auswerten(0.95, 400, 0.01, 0.02),
-  { verdikt: 'BESTANDEN', weiter: 1, roh: auswerten(0.95, 400, 0.01, 0.02).roh });
+assert.equal(auswerten(0.95, 400, 0.01, 0.02).verdikt, 'BESTANDEN');
+assert.equal(auswerten(0.95, 400, 0.01, 0.02).weiter, 1);
 assert.equal(auswerten(0.905, 400, 0.01, 0.02).verdikt, 'NICHT UNTERSCHEIDBAR');
 assert.equal(auswerten(0.905, 400, 0.01, 0.02).weiter, 0);
 assert.equal(auswerten(0.80, 400, 0.01, 0.02).verdikt, 'NICHT BESTANDEN');
