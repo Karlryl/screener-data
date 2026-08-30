@@ -106,6 +106,7 @@ function zensus(beine) {
 function liesStore(store) {
   const beine = [];
   let unlesbar = 0;
+  let ohneKurs = 0;
   for (const f of fs.readdirSync(store)) {
     if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
     let j;
@@ -113,19 +114,28 @@ function liesStore(store) {
     catch (_) { unlesbar++; continue; }
     const meta = (j && j.meta) || {};
     const ts = (j && j.timeseries) || {};
+    // A7-FX: der Kurs wandert MIT. `milanFingerabdruck` vergleicht seit ENTSCHIED 72 auf der
+    // Melde-Waehrung; misst die Drift-Spur weiter auf der konvertierten Ebene, misst sie eine
+    // andere Groesse als die, die das Tor entscheidet — genau der Nachbau-Fehler F1334, nur
+    // durch die Hintertuer. Der Import allein genuegt dafuer nicht mehr, das Bein braucht `fx`.
+    if (!Number.isFinite(meta.fxRateApplied) || meta.fxRateApplied <= 0) ohneKurs++;
     beine.push({
       ticker: f.slice(0, -'.json'.length), name: meta.name, country: meta.country,
-      shares: meta.sharesOutstanding, schluessel: issuerKeyLoose(j),
+      shares: meta.sharesOutstanding, schluessel: issuerKeyLoose(j), fx: meta.fxRateApplied,
       revenueQ: milanReihe(ts.revenueQ), grossProfitQ: milanReihe(ts.grossProfitQ),
     });
   }
-  return { beine, unlesbar };
+  return { beine, unlesbar, ohneKurs };
 }
 
-function bericht(z, store, unlesbar) {
+function bericht(z, store, unlesbar, ohneKurs) {
   const zeilen = [];
-  zeilen.push(`O1-Fingerabdruck-Zensus ueber ${store} (Ebene: snapshot.timeseries)`);
+  zeilen.push(`O1-Fingerabdruck-Zensus ueber ${store} (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)`);
   zeilen.push(`  Snapshots .................... ${z.beineGesamt}${unlesbar ? ` (${unlesbar} nicht lesbar)` : ''}`);
+  // Ohne diese Zeile waere ein Bestand ohne FX-Stempel von einem sauberen nicht zu
+  // unterscheiden: ein Bein ohne Kurs bekommt einen Abdruck, der mit nichts matcht, faellt
+  // also aus JEDER Klasse — und der Zensus meldete stillschweigend "0 meldepflichtig".
+  zeilen.push(`  ohne brauchbaren FX-Kurs ..... ${ohneKurs === undefined ? '?' : ohneKurs}${ohneKurs ? '  ⚠ diese Beine bilden keine Klasse' : ''}`);
   zeilen.push(`  belastbar (>=${MILAN_MIN_QUARTALE} Umsatzquartale) ... ${z.beineBelastbar}`);
   zeilen.push(`  Fingerabdruck-Klassen (>=2) .. ${z.klassen}`);
   zeilen.push(`  davon divergente issuerKeyLoose ${z.klassenDivergent}`);
@@ -157,8 +167,13 @@ function bericht(z, store, unlesbar) {
 function selftest() {
   const assert = require('node:assert/strict');
   const reihe = (n) => Array.from({ length: 5 }, (_, i) => (i + 1) * n);
-  const b = (ticker, name, country, shares, n, gp) => ({
+  // A7-FX: `fx` ist PFLICHT, seit der Fingerabdruck auf der Melde-Waehrung vergleicht. Ohne
+  // Kurs faellt jeder endliche Wert in die OHNE-FX-Schranke, die Reihe kollabiert auf einen
+  // ticker-eigenen Platzhalter und KEINE der fuenf Lagen bildet noch eine Klasse — die
+  // Wachprobe waere dann gruen im Sinne von "nichts gefunden", also blind.
+  const b = (ticker, name, country, shares, n, gp, fx) => ({
     ticker, name, country, shares, schluessel: issuerKeyLoose({ meta: { name } }),
+    fx: fx === undefined ? 1 : fx,
     revenueQ: reihe(n), grossProfitQ: reihe(gp === undefined ? n / 2 : gp),
   });
   // 1. gleiche Firma, gleiche Reihe, gleicher Schluessel -> Klasse, aber nicht divergent
@@ -174,9 +189,19 @@ function selftest() {
   z = zensus([b('1SAN.MI', 'Sanofi', 'France', 1198, 7), b('SAN', 'Banco Santander', 'Spain', 14266, 9)]);
   assert.equal(z.klassen, 0);
   // 5. Pre-Revenue: leere Reihen bilden KEINE Scheingruppe (die Pflicht-Auflage)
-  const leer = (t) => ({ ticker: t, name: t, country: 'US', shares: 1, schluessel: t, revenueQ: [], grossProfitQ: [] });
+  const leer = (t) => ({ ticker: t, name: t, country: 'US', shares: 1, schluessel: t, revenueQ: [], grossProfitQ: [], fx: 1 });
   assert.equal(zensus([leer('X1'), leer('X2'), leer('X3')]).klassen, 0);
-  console.log('probe-fingerprint-zensus --selftest: 5 ok');
+  // 6. A7-FX: dieselbe Firma, VERSCHIEDENE Kurse -> auf der Melde-Waehrung EINE Klasse.
+  //    Die Drift-Spur muss genau das messen, was das Tor entscheidet; misst sie weiter auf der
+  //    konvertierten Ebene, faellt diese Klasse aus dem Zensus und der Bericht meldet einen
+  //    Bestand als sauber, den das Tor gerade zusammenfuehrt.
+  const mitKurs = (t, name, fx) => ({
+    ticker: t, name, country: 'DE', shares: 100, schluessel: issuerKeyLoose({ meta: { name } }), fx,
+    revenueQ: reihe(7).map((x) => x * fx), grossProfitQ: reihe(3.5).map((x) => x * fx),
+  });
+  z = zensus([mitKurs('1CCC.MI', 'Cee AG', 1.1550012), mitKurs('CCC.DE', 'CCC.DE', 1.1511453)]);
+  assert.equal(z.klassen, 1, 'verschiedene Kurse duerfen die Klasse nicht zerreissen');
+  console.log('probe-fingerprint-zensus --selftest: 6 ok');
   return 0;
 }
 
@@ -191,19 +216,20 @@ function main(argv) {
     return 0; // Messwerkzeug, kein Gate
   }
   const z = zensus(gelesen.beine);
-  console.log(bericht(z, store, gelesen.unlesbar));
+  console.log(bericht(z, store, gelesen.unlesbar, gelesen.ohneKurs));
 
   const jsonArg = argv.find((a) => a === '--json' || a.startsWith('--json='));
   if (jsonArg) {
     const text = JSON.stringify({
       erzeugtAm: new Date().toISOString(),
       methode: {
-        ebene: 'snapshot.timeseries',
+        ebene: 'snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet (x / meta.fxRateApplied)',
         fingerabdruck: 'timeseries.revenueQ + timeseries.grossProfitQ wertgleich',
         auflage: `mindestens ${MILAN_MIN_QUARTALE} endliche Umsatzquartale ungleich null`,
         sharesBand: MILAN_SHARES_BAND,
         meldepflicht: 'divergente issuerKeyLoose UND (Aktienzahl-Abstand > Band ODER verschiedenes Land)',
       },
+      beineOhneKurs: gelesen.ohneKurs,
       zensus: z,
     }, null, 2);
     const ziel = jsonArg.indexOf('--json=') === 0 ? jsonArg.slice('--json='.length) : null;

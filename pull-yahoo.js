@@ -1087,6 +1087,23 @@ function _convertSnapshotToUSD(snap) {
   snap.meta.reportingCurrency = 'USD';
   // For GBp: store the effective combined factor (pence→USD = GBP_rate/100).
   // fxRateApplied reflects what was actually multiplied so callers can reverse if needed.
+  //
+  // FX7 — KOPPLUNG, NICHT NUR EIN PROTOKOLLFELD (Urteil `_COURT-A7-FX-2026-08-30.md`,
+  // ENTSCHIED 72). `scripts/filter-snapshot-merge.js` (`milanFingerabdruck`) RECHNET DIESE
+  // MULTIPLIKATION ZURUECK: es vergleicht die Milan-Spiegelbeine auf der Melde-Waehrung
+  // (x / meta.fxRateApplied, kanonisiert auf 15 signifikante Stellen), weil zwei Beine
+  // desselben Emittenten an verschiedenen Tagen gezogen werden und dann verschiedene Kurse
+  // tragen — auf der konvertierten Ebene hielten gemessen 0 von 52 simulierten Faellen, und
+  // der A7-Mengen-Riegel dort bricht den ganzen Tageslauf hart ab.
+  //
+  // DAHER GILT HIER, BEIM SCHREIBER: wer `fxRateApplied` je an einer anderen Stelle als in
+  // `_convertSnapshotToUSD` setzt, den Stempel weglaesst oder ihn ohne die zugehoerige
+  // Multiplikation schreibt, bricht die Rueckrechnung stromabwaerts — und zwar still, weil der
+  // Leser dann eine falsche Melde-Ebene rekonstruiert statt zu werfen. Ein Waechter, der nur
+  // beim Leser stuende, ueberlebte die naechste Aenderung an der FX-Strecke nicht.
+  // Zusicherung des heutigen Standes: genau vier Schreibstellen (:866, :879, :903 und diese),
+  // alle in dieser Funktion; jeder ungestempelte Rueckweg flaggt `fxConversionFailed` und der
+  // Snapshot wird geloescht statt geschrieben (:3734-3738).
   snap.meta.fxRateApplied = factor;
   // F-DP-008: mark as converted to prevent double-scaling on subsequent calls
   snap.meta.fxConverted = true;
