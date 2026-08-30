@@ -620,6 +620,22 @@
    "endtestSiegel": "unberuehrt — dieser Lauf oeffnet ausschliesslich die Panel-Datei des angemeldeten Fensters. Das Endtest-Fenster ist Sperrzone (Karl, 2026-08-19) und wird nicht gezaehlt.",
    "previousHash": "69b2af0d838995a46811329201148e4dede218d33c96e991c2f030eb41246a0a",
    "eventHash": "af9fa8d99aa9b3bc57466167ce39ea5a8a2a1e41cbf75789c97ef62cfd88fbee"
+  },
+  {
+   "runId": "f3-konzeptliste-freeze-2026-08-30",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-08-30T12:08:14.725Z",
+   "accessedAt": "2026-08-30T14:08:14.725Z",
+   "fenster": [
+    "kein Studienfenster - Artefakt-Freeze ohne Datenzugriff"
+   ],
+   "allowedOutputs": [],
+   "erlaubt": "Nichts. Dieser Eintrag beurkundet ausschliesslich den eingefrorenen Stand der Konzeptliste 2.1.0 und autorisiert KEINEN Datenzugriff: kein Panel, keine Lueckenliste, keine E4g-/E4h-Zahlen, keine Studiendaten, kein data/lockbox. Die Zaehlprobe der Verbreiterung (F4) ist ein EIGENER Vorgang und braeuchte Eintrag 22. Das Feld accessedAt bezeichnet hier keinen Zugriff, sondern den fruehesten Zeitpunkt, ab dem der eingefrorene Stand verwendet werden darf; die Art C0_REGELFREEZE verlangt das Feld (lib/studie-verfassung.js, ARTEN_MIT_ZUGRIFFSZEIT).",
+   "verboten": "Jede nachtraegliche Aenderung an der Konzeptliste 2.1.0, an ihrer Kontaminations-Vorgeschichte oder an der Rangordnung nach diesem Hash; jeder Datenzugriff unter dieser runId; jede Berufung auf diesen Eintrag als Autorisierung eines Laufs.",
+   "begruendung": "F3b - Register-Eintrag 21 zur eingefrorenen Konzeptliste der Studie 2.0. Konzeptlisten-SHA-256 88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247 (Kanonisierung: JSON, Schluessel sortiert, separators ',' und ':', ensure_ascii=False, UTF-8; identisch mit dem in F1 VOR dem Blick von F2 eingefrorenen Wert). Kontaminations-Vorgeschichte-SHA-256 c1f91af7f9e484f86ecb9cc8d93f020e6cfe615a27cb891dcf5a7771625ee723 - die Liste entsteht in Kenntnis eines gerissenen Tors bei 89,32 % (326/365); der Deckel 330/365 darf nach A18 nicht mehr als Argument gefuehrt werden. Herkunft: F2-Rats-Beschluss _RAT-F2-KONZEPTWAHL-2026-08-30.md, SHA-256 dd099f30ff2b29158d541f1817958b3ffd6bd47c391e024f1d343c9c3e1c6448; Artefakt protocol/early-detection/2.1.0/konzeptliste.json (F3a, PR #140). DIESER EINTRAG AUTORISIERT KEINEN DATENZUGRIFF - er friert ein Artefakt ein; die F4-Zaehlprobe waere Eintrag 22 mit eigener Anmeldung. Zur Art: C0_REGELFREEZE ist die einzige im Regelwerk vorhandene Art fuer die Anmeldung einer eingefrorenen Auswahlregel ohne Datenfreischaltung. Der Namensteil C0 ist historisch (erste Nutzung in Strang C) und bezeichnet hier keine Zugehoerigkeit zu Strang C. Erzeugt von scripts/studie-f3b-register.js; Ein-Appender-Regel: main-first per Mini-PR, danach Serverbeweis gegen main mit scripts/studie-r1-serverzeit.js bestaetigen.",
+   "endtestSiegel": "unberuehrt - F3 ist eine BLINDE Stufe. Weder das Endtest-Fenster noch das Prueffenster noch Schluesselmaterial werden geoeffnet, gelesen oder gezaehlt.",
+   "previousHash": "af9fa8d99aa9b3bc57466167ce39ea5a8a2a1e41cbf75789c97ef62cfd88fbee",
+   "eventHash": "9f32e5928acf36d147b4179357a59665d5e05163c90199d2387232f795aa6ad2"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
