@@ -21,7 +21,11 @@ Eingefroren werden deshalb, in dieser Reihenfolge:
    die Liste eine Ableitung ist und keine Wahl (RR-1, Kanzlei-Empfehlung an den
    Orchestrator: beide hashen, in dieser Reihenfolge).
 4. **Datenfundament** — je Payload Quartal, registrierter und gemessener
-   sha256, Zustand; dazu ein Mengen-Hash ueber alle Payload-Hashes.
+   sha256, Zustand; dazu ein Mengen-Hash ueber alle Payload-Hashes. Optional
+   eine ZWEITLINIE: dieselbe Pruefung, unabhaengig gewonnen (Bytes auf der
+   Platte gegen frischen Abruf der registrierten Quell-URL). Zwei Linien sind
+   fuer A2 strikt besser als eine, und ihre Deckungsgleichheit ist selbst eine
+   Aussage.
 5. **Extraktions-Code** — sha256 der drei F1-Skripte. Eine Regel, deren
    Implementierung sich danach aendert, ist nicht eingefroren.
 6. **Kontaminations-Vorgeschichte, woertlich** — Bedingung 5 des Urteils K3 und
@@ -54,6 +58,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA = "studie-f1-datenfundament-freeze/v1"
+CRLF = b"\r\n"
 # Der Code, der die Regel ausfuehrt und die Daten liest. Aendert er sich, ist der
 # Freeze nicht mehr derselbe — deshalb steht er mit im Hash.
 F1_SKRIPTE = (
@@ -115,12 +120,17 @@ BLINDHEIT = {
         "protocol/early-detection/2.0.0/provenance-closure.json",
         "scripts/studie-panel-bau.py, scripts/studie-basisraten.py (Kopfbereiche), "
         "scripts/early-detection-sec-wayback.py, scripts/early-detection-foundation.py",
-        "die selbst wiederhergestellten DERA-Payloads (oeffentliche SEC-Daten)",
+        "die DERA-Payload-Bytes selbst (oeffentliche SEC-Daten) — sowohl im "
+        "versiegelten Sichtkasten early-detection-v4-sealed127 als auch in der "
+        "eigenen Wiederherstellung; ausschliesslich Quartale bis 2020q4",
+        "VIEW.json / STORE.json des Sichtkastens (Bestandsangaben, keine Studiendaten)",
     ],
     "nichtGeoeffnet": [
         "jede s0-*-Datei", "jede Luecken- oder Fehlfirmen-Liste",
         "E4g-/E4h-Berichtstexte ueber das hinaus, was das Urteil selbst zitiert",
-        "outcome-access-ledger.json", "panel-*.sqlite in jeder Form",
+        "outcome-access-ledger.json",
+        "panel-entdeckung.sqlite und panel-validierung.sqlite — als Dateinamen im "
+        "Traeger-Befund gezaehlt, NICHT geoeffnet",
         "das versiegelte Endtest-Fenster 2021q1-2024q4 in jeder Form",
         "Signalwerte, Outcomes, Allowlists", "data/lockbox in jeder Form",
     ],
@@ -155,30 +165,17 @@ def lies(pfad):
     return json.loads(Path(pfad).read_text(encoding="utf-8-sig"))
 
 
-def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel):
-    regel_bericht = lies(regel_pfad)
-    vintage = lies(vintage_pfad)
-    zensus = lies(zensus_pfad) if zensus_pfad else None
-    wurzel = Path(wurzel)
-
-    # Der Freeze uebernimmt die Hashes NICHT, er rechnet sie nach. Ein Freeze, der
-    # seinen Eingaengen glaubt, friert eine Behauptung ein statt einer Tatsache.
-    regel_sha = hash_von(regel_bericht["regel"])
-    liste_sha = hash_von(regel_bericht["konzeptliste"])
-    if regel_sha != regel_bericht["regelSha256"]:
-        raise FreezeFehler("Regel-Hash im Bericht stimmt nicht mit dem Inhalt ueberein")
-    if liste_sha != regel_bericht["konzeptlisteSha256"]:
-        raise FreezeFehler("Listen-Hash im Bericht stimmt nicht mit dem Inhalt ueberein")
-
+def _fundament(vintage, quelle):
     gebrochen = [z for z in vintage["zeilen"]
                  if z["zustand"] not in ("WIEDERHERGESTELLT", "VORHANDEN")]
     payload_hashes = sorted(z["istSha256"] for z in vintage["zeilen"] if z.get("istSha256"))
-
-    datenfundament = {
+    return {
+        "quelle": quelle,
         "jahrgang": vintage["jahrgang"],
         "fenster": vintage["fenster"],
         "herkunftsSchliessung": vintage["herkunftsSchliessung"],
         "herkunftsSchliessungSha256": vintage["herkunftsSchliessungSha256"],
+        "dataRoot": vintage.get("dataRoot"),
         "payloads": vintage["payloads"],
         "bitGleich": vintage["bitGleich"],
         "bitGleicheBytes": vintage["bitGleicheBytes"],
@@ -192,11 +189,47 @@ def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel):
                              for z in vintage["zeilen"]), key=lambda z: z["quartal"]),
     }
 
+
+def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel, zweitlinie_pfad=None):
+    regel_bericht = lies(regel_pfad)
+    vintage = lies(vintage_pfad)
+    zweitlinie = lies(zweitlinie_pfad) if zweitlinie_pfad else None
+    zensus = lies(zensus_pfad) if zensus_pfad else None
+    wurzel = Path(wurzel)
+
+    # Der Freeze uebernimmt die Hashes NICHT, er rechnet sie nach. Ein Freeze, der
+    # seinen Eingaengen glaubt, friert eine Behauptung ein statt einer Tatsache.
+    regel_sha = hash_von(regel_bericht["regel"])
+    liste_sha = hash_von(regel_bericht["konzeptliste"])
+    if regel_sha != regel_bericht["regelSha256"]:
+        raise FreezeFehler("Regel-Hash im Bericht stimmt nicht mit dem Inhalt ueberein")
+    if liste_sha != regel_bericht["konzeptlisteSha256"]:
+        raise FreezeFehler("Listen-Hash im Bericht stimmt nicht mit dem Inhalt ueberein")
+
+    datenfundament = _fundament(vintage, "primaer")
+    if zweitlinie is not None:
+        # A2 verlangt den Beweis der Vintage-Identitaet. Zwei unabhaengig gewonnene
+        # Linien — die Bytes auf der Platte und ein frischer Abruf der registrierten
+        # Quell-URL — sind strikt besser als eine, und die Deckungsgleichheit ihrer
+        # Payload-Mengen ist selbst eine Aussage.
+        zweit = _fundament(zweitlinie, "zweitlinie")
+        datenfundament["zweitlinie"] = zweit
+        datenfundament["zweitlinieDeckungsgleich"] = (
+            zweit["payloadMengeSha256"] == datenfundament["payloadMengeSha256"])
+
     code = []
     for rel in F1_SKRIPTE:
         pfad = wurzel / rel
         if not pfad.exists():
             raise FreezeFehler("F1-Skript fehlt: " + rel)
+        # .gitattributes pinnt scripts/studie-*.py auf eol=lf. Laege hier CRLF,
+        # wuerde der Freeze Bytes hashen, die Git so nie speichert — der Hash
+        # waere nach dem naechsten Checkout falsch, ohne dass es jemand sieht.
+        # Live einmal passiert; deshalb steht die Pruefung hier und nicht im Kopf.
+        if CRLF in pfad.read_bytes():
+            raise FreezeFehler(
+                "F1-Skript traegt CRLF, .gitattributes pinnt aber eol=lf: " + rel
+                + " — der gehashte Stand waere nicht der committete")
         code.append({"pfad": rel, "sha256": datei_sha256(pfad),
                      "bytes": pfad.stat().st_size})
 
@@ -316,10 +349,34 @@ def selbsttest():
         tmp = Path(tmp)
         (tmp / "scripts").mkdir()
         for rel in F1_SKRIPTE:
-            (tmp / rel).write_text("# platzhalter\n", encoding="utf-8")
+            # write_bytes, nicht write_text: Letzteres macht auf Windows CRLF
+            # daraus — und genau das lehnt der Freeze jetzt ab.
+            (tmp / rel).write_bytes(b"# platzhalter\n")
         rp, vp = tmp / "regel.json", tmp / "vintage.json"
         rp.write_text(json.dumps(regel_bericht), encoding="utf-8")
         vp.write_text(json.dumps(vintage), encoding="utf-8")
+
+        zp = tmp / "zweitlinie.json"
+        zp.write_text(json.dumps(dict(vintage, dataRoot="anderswo")), encoding="utf-8")
+        mit_zweit = baue(rp, vp, None, tmp, zp)
+        pruefe("Zweitlinie wird als deckungsgleich erkannt",
+               mit_zweit["block4_datenfundament"]["zweitlinieDeckungsgleich"] is True)
+        abweichend = json.loads(json.dumps(vintage))
+        abweichend["zeilen"][0]["istSha256"] = "c" * 64
+        zp.write_text(json.dumps(abweichend), encoding="utf-8")
+        pruefe("abweichende Zweitlinie faellt auf",
+               baue(rp, vp, None, tmp, zp)["block4_datenfundament"]
+               ["zweitlinieDeckungsgleich"] is False)
+
+        # Die CRLF-Sperre muss reissen koennen.
+        echt_bytes = (tmp / F1_SKRIPTE[0]).read_bytes()
+        (tmp / F1_SKRIPTE[0]).write_bytes(b"# platzhalter" + CRLF)
+        try:
+            baue(rp, vp, None, tmp)
+            pruefe("CRLF im Extraktions-Code fliegt auf", False)
+        except FreezeFehler as exc:
+            pruefe("CRLF im Extraktions-Code fliegt auf", "CRLF" in str(exc))
+        (tmp / F1_SKRIPTE[0]).write_bytes(echt_bytes)
 
         eins = baue(rp, vp, None, tmp)
         pruefe("K7a-Koinzidenz wird festgestellt", eins["k7aKoinzidenz"]["deckungsgleich"])
@@ -344,7 +401,7 @@ def selbsttest():
 
         # Und der Code gehoert mit in den Hash — sonst friert man eine Regel ein,
         # deren Ausfuehrung sich danach still aendern kann.
-        (tmp / F1_SKRIPTE[2]).write_text("# andere Regel\n", encoding="utf-8")
+        (tmp / F1_SKRIPTE[2]).write_bytes(b"# andere Regel\n")
         zwei = baue(rp, vp, None, tmp)
         pruefe("geaenderter Code aendert den Freeze-Hash",
                zwei["f1FreezeSha256"] != eins["f1FreezeSha256"])
@@ -385,6 +442,8 @@ def main():
     p.add_argument("--konzeptregel")
     p.add_argument("--vintage")
     p.add_argument("--zensus")
+    p.add_argument("--vintage-zweitlinie",
+                   help="zweite, unabhaengig gewonnene Vintage-Pruefung (A2)")
     p.add_argument("--wurzel", default=".")
     p.add_argument("--bericht")
     p.add_argument("--pruefen")
@@ -406,7 +465,8 @@ def main():
         p.error("--konzeptregel und --vintage werden gebraucht")
 
     try:
-        inhalt = baue(args.konzeptregel, args.vintage, args.zensus, args.wurzel)
+        inhalt = baue(args.konzeptregel, args.vintage, args.zensus, args.wurzel,
+                      args.vintage_zweitlinie)
     except FreezeFehler as exc:
         print("ABBRUCH: " + str(exc), file=sys.stderr)
         return 2
@@ -423,6 +483,8 @@ def main():
         "inventarSha256": inhalt["block1_wahlGrundlage"]["sha256"],
         "payloadMengeSha256": inhalt["block4_datenfundament"]["payloadMengeSha256"],
         "vintageIdentitaet": inhalt["block4_datenfundament"]["vintageIdentitaet"],
+        "zweitlinieDeckungsgleich":
+            inhalt["block4_datenfundament"].get("zweitlinieDeckungsgleich"),
         "k7aDeckungsgleich": inhalt["k7aKoinzidenz"]["deckungsgleich"],
     }, indent=2))
     return 0

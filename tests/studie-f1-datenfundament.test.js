@@ -88,6 +88,9 @@ const PFLICHT = {
     'Freeze-Hash verifiziert sich selbst',
     'manipulierte Liste fliegt auf',
     'geaenderter Code aendert den Freeze-Hash',
+    'CRLF im Extraktions-Code fliegt auf',
+    'Zweitlinie wird als deckungsgleich erkannt',
+    'abweichende Zweitlinie faellt auf',
     'gebrochener Vintage steht namentlich im Freeze',
   ],
 };
