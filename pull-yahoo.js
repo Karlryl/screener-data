@@ -2561,6 +2561,88 @@ function preserveSnapshotForMissingCurrency(canonical, stock, outputDir, results
   return true;
 }
 
+// Tag 226a-2: detect snapshots that pre-date Tag 211l (annualSGA /
+// annualDepreciation / currentAssets / currentLiabilities / totalLiabilities)
+// or Tag 219 (annualShares). The price-only fast-path keeps a snapshot
+// young (<7d) indefinitely by refreshing meta.asOf without touching the
+// annual.* block — so a stock pulled before these tags would NEVER pick
+// them up unless we force a full pull on schema detection.
+//
+// Cost: one ~50KB JSON.parse per ticker (only on the snapshots that pass
+// the age gate, so ~3500 reads). Probe Tag 225d showed 0/100 random
+// snapshots had Tag 211l fields → roughly 98% of the universe will trip
+// this once, then settle into normal price-only cadence on subsequent runs.
+//
+// Constraint: must NOT bump FTS_CACHE_VERSION (per pull-yahoo invariants
+// — many fundamentals caches are <28d old and rebuilding them all would
+// multiply this run's Yahoo load). Instead: snapshot-level schema gate
+// here forces the full-pull code path, which then sees the stale FTS
+// cache lacks ftsAnnualSGA and falls through to a fresh FTS fetch via
+// the existing `cached._cacheVersion !== FTS_CACHE_VERSION` branch (the
+// cache file's _cacheVersion is `undefined` for pre-Tag-211l caches, so
+// that branch already handles the FTS-cache side correctly).
+// audit F-A-2026-06-21: accepts an already-parsed snapshot object instead of
+// re-reading+re-parsing the file. The schema-stale and currency-stale probes
+// plus _priceOnlyUpdate previously each did a full readFileSync+JSON.parse —
+// 3× parse per fast-path ticker on the ~80%-hit price-only path. Single parse
+// is now shared across all three (see processOne). Failure mode prevented:
+// wasteful triple-parse CPU/IO blowup on the hottest code path.
+//
+// T181 (Inbox, gemessen 2026-08-30): stand als block-lokale Funktion INNERHALB von
+// pullAll und war damit von aussen nicht aufrufbar. Auf Modul-Ebene gehoben und
+// exportiert — identischer Rumpf bis auf die unten belegte Klausel —, damit
+// tests/t181-schema-melder-inhalts-wache.test.js die ECHTE Regel misst statt sie
+// nachzubauen (Fehler F1334, gleiche Begruendung wie beim _nonNullCount-Hub in T142).
+// Die Funktion ist rein: sie liest ausschliesslich ihr Argument, nie eine
+// pullAll-Closure-Variable — deshalb ist das Heben verhaltensneutral.
+function _existingSnapshotMissingTag211lFields(s) {
+  try {
+    if (!s) return false;
+    const A = s && s.annual;
+    if (!A) return false;
+    // If the snapshot has no annualRev at all, it's a price-only seed
+    // (no fundamentals yet). Don't force full-pull just to add Tag 211l
+    // fields — the full-pull path will eventually run via normal age
+    // expiry. We only care about snapshots that DO have annual data but
+    // are missing the newer fields.
+    const hasRev = Array.isArray(A.annualRev) && A.annualRev.length > 0;
+    if (!hasRev) return false;
+    const bal = A.annualBalance;
+    // Bug 13 (audit 2026-07-03): key-PRESENCE, not finite-value. Banks/insurers
+    // (mapFTSToBalance writes currentAssets:null) and placeholder balance rows
+    // structurally never carry a finite currentAssets → hasCA stayed false after
+    // EVERY full pull → the schema-stale probe re-fired each run → permanent
+    // full-pull loop (budget drain, bypasses FUNDAMENTALS_REFRESH_BUDGET). Once a
+    // post-Tag-211l full pull has written the row, the currentAssets KEY exists
+    // (even if its value is null), which is the true "schema is current" signal.
+    const hasCA = Array.isArray(bal) && bal[0] && ('currentAssets' in bal[0]);
+    // T181: die Klausel lautete `return !(hasSGA || hasDepr) || !hasCA;` mit
+    //     hasSGA  = Array.isArray(A.annualSGA)          && A.annualSGA.length > 0
+    //     hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0
+    // Diese ODER-Haelfte ist am Live-Bestand TOT und wurde deshalb entfernt, nicht
+    // nur repariert. Gemessen ueber alle 15.028 Snapshots im Tor (Bestand 2026-08-29,
+    // unveraendert am 30.08. nachgemessen):
+    //     Melder gesamt  = 149 Snapshots
+    //     !hasCA allein  = 149 Snapshots
+    // und zwar MENGENGLEICH, nicht bloss zahlengleich (Differenz in beide Richtungen 0).
+    // `!(hasSGA||hasDepr)` trifft heute 16 Namen, davon 16 bereits ueber !hasCA — der
+    // eigene Beitrag der Klausel ist EXAKT 0. Grund: Tag 211l hat die Bilanz-Schluessel
+    // und SGA/Depreciation GEMEINSAM ausgerollt (s. Kopf dieses Blocks), die Bilanz-
+    // Haelfte deckt dieselbe Menge also vollstaendig ab. Ein Vor-Tag-211l-Ueberlebender
+    // waere die Kipp-Bedingung — gesucht, 0 von 15.028 gefunden.
+    //
+    // WARUM ENTFERNEN STATT MITWACHEN: die Klausel misst die LAENGE von annualSGA /
+    // annualDepreciation. Sobald die drei Schreibstellen weiter unten (Z. 3550-3554)
+    // auf INHALT umgestellt sind, faellt der Schluessel bei durchgehenden Null-Reihen
+    // weg — und eine tote Klausel wuerde daraus 51 Namen machen, die BEI JEDEM LAUF
+    // voll abrufen (der Voll-Abruf schreibt canonical neu, die Wache unterdrueckt das
+    // Feld erneut, der Melder feuert wieder). Genau das Bug-13-Muster von oben, ein
+    // drittes Mal. Zuerst-Melder-dann-Wache haelt den Netto-Effekt bei +0; gemessen:
+    // 149 vorher, 149 nachher, 0 hinzu, 0 weg. Andersherum waeren es +51 gewesen.
+    return !hasCA;
+  } catch { return false; }
+}
+
 async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   // audit/fix F3-budget (2026-06-25): reset the per-run time-based fundamentals-stale
@@ -2760,65 +2842,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     } catch { return null; }
   }
 
-  // Tag 226a-2: detect snapshots that pre-date Tag 211l (annualSGA /
-  // annualDepreciation / currentAssets / currentLiabilities / totalLiabilities)
-  // or Tag 219 (annualShares). The price-only fast-path keeps a snapshot
-  // young (<7d) indefinitely by refreshing meta.asOf without touching the
-  // annual.* block — so a stock pulled before these tags would NEVER pick
-  // them up unless we force a full pull on schema detection.
-  //
-  // Cost: one ~50KB JSON.parse per ticker (only on the snapshots that pass
-  // the age gate, so ~3500 reads). Probe Tag 225d showed 0/100 random
-  // snapshots had Tag 211l fields → roughly 98% of the universe will trip
-  // this once, then settle into normal price-only cadence on subsequent runs.
-  //
-  // Constraint: must NOT bump FTS_CACHE_VERSION (per pull-yahoo invariants
-  // — many fundamentals caches are <28d old and rebuilding them all would
-  // multiply this run's Yahoo load). Instead: snapshot-level schema gate
-  // here forces the full-pull code path, which then sees the stale FTS
-  // cache lacks ftsAnnualSGA and falls through to a fresh FTS fetch via
-  // the existing `cached._cacheVersion !== FTS_CACHE_VERSION` branch (the
-  // cache file's _cacheVersion is `undefined` for pre-Tag-211l caches, so
-  // that branch already handles the FTS-cache side correctly).
-  // audit F-A-2026-06-21: accepts an already-parsed snapshot object instead of
-  // re-reading+re-parsing the file. The schema-stale and currency-stale probes
-  // plus _priceOnlyUpdate previously each did a full readFileSync+JSON.parse —
-  // 3× parse per fast-path ticker on the ~80%-hit price-only path. Single parse
-  // is now shared across all three (see processOne). Failure mode prevented:
-  // wasteful triple-parse CPU/IO blowup on the hottest code path.
-  function _existingSnapshotMissingTag211lFields(s) {
-    try {
-      if (!s) return false;
-      const A = s && s.annual;
-      if (!A) return false;
-      // If the snapshot has no annualRev at all, it's a price-only seed
-      // (no fundamentals yet). Don't force full-pull just to add Tag 211l
-      // fields — the full-pull path will eventually run via normal age
-      // expiry. We only care about snapshots that DO have annual data but
-      // are missing the newer fields.
-      const hasRev = Array.isArray(A.annualRev) && A.annualRev.length > 0;
-      if (!hasRev) return false;
-      // Tag 211l fields: annualSGA, annualDepreciation, and the extended
-      // balance-sheet rows (currentAssets/currentLiabilities/totalLiabilities).
-      const hasSGA = Array.isArray(A.annualSGA) && A.annualSGA.length > 0;
-      const hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0;
-      const bal = A.annualBalance;
-      // Bug 13 (audit 2026-07-03): key-PRESENCE, not finite-value. Banks/insurers
-      // (mapFTSToBalance writes currentAssets:null) and placeholder balance rows
-      // structurally never carry a finite currentAssets → hasCA stayed false after
-      // EVERY full pull → the schema-stale probe re-fired each run → permanent
-      // full-pull loop (budget drain, bypasses FUNDAMENTALS_REFRESH_BUDGET). Once a
-      // post-Tag-211l full pull has written the row, the currentAssets KEY exists
-      // (even if its value is null), which is the true "schema is current" signal.
-      const hasCA = Array.isArray(bal) && bal[0] && ('currentAssets' in bal[0]);
-      // A snapshot is "stale-schema" if it lacks EITHER SGA/Depr OR the
-      // extended balance fields. We use AND on the balance row + OR with
-      // the income/cash items to avoid false-positives on companies that
-      // legitimately have null SGA (some financial filers) but DO have
-      // current-asset data persisted.
-      return !(hasSGA || hasDepr) || !hasCA;
-    } catch { return false; }
-  }
+  // Tag 226a-2 Schema-Melder: steht seit T181 auf Modul-Ebene (s. oben, direkt vor
+  // pullAll) — dieselbe Funktion, damit der Waechter sie AUFRUFEN kann statt sie
+  // nachzubauen (Fehler F1334). Aufgerufen wird sie unveraendert an Z. 3063.
 
   // Tag 230a: catch pre-Tag-219c snapshots that carry a non-USD `reportingCurrency`
   // but were written before `_convertSnapshotToUSD` existed (or before it ran on
@@ -3052,10 +3078,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     try {
       // Tag 166: price-only fast-path if recent snapshot exists
       // Tag 226a-2: but ONLY if the snapshot already carries the Tag 211l
-      // schema (annualSGA / annualDepreciation / extended balance fields).
-      // Pre-Tag-211l snapshots that pass the 7-day age gate would otherwise
-      // be price-only-refreshed forever, keeping methods/sga-revenue-trend,
+      // schema. Pre-Tag-211l snapshots that pass the 7-day age gate would
+      // otherwise be price-only-refreshed forever, keeping methods/sga-revenue-trend,
       // working-capital-trend, and ohlson-o-score at <2% coverage indefinitely.
+      // T181: der Melder erkennt das Schema seit 2026-08-30 allein an den erweiterten
+      // Bilanz-Zeilen (currentAssets-Schluessel). Die frueher mitgelesenen
+      // annualSGA/annualDepreciation waren am Live-Bestand mengengleich abgedeckt und
+      // durften nicht stehen bleiben, sobald die Schreibstellen auf Inhalt wachen —
+      // Begruendung und Messung stehen bei _existingSnapshotMissingTag211lFields.
       const age = _getExistingSnapshotAge(stock.ticker);
       const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
       // audit F-A-2026-06-21: parse the young snapshot ONCE here and share the
@@ -3564,11 +3594,38 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // else: keep canonical.annual.annualRnD as set by mapYahooToCanonical (quoteSummary).
       // Tag 211l: annualSGA + annualDepreciation surfacing — only set if non-empty,
       // mirrors the additive pattern used for annualSBC/annualCapex.
-      if ((ftsAnnualSGA || []).length > 0)          canonical.annual.annualSGA = ftsAnnualSGA;
-      if ((ftsAnnualDepreciation || []).length > 0) canonical.annual.annualDepreciation = ftsAnnualDepreciation;
+      //
+      // T181 (Inbox-Fund, gemessen 2026-08-30): dieselbe Laengen-statt-Inhalt-Klasse wie
+      // T142 zwanzig Zeilen weiter unten. `.length > 0` misst die LAENGE, waehrend der
+      // Kommentar "only set if non-empty" den INHALT beansprucht. `_ftsExtractByYear`
+      // schiebt fuer jedes Geschaeftsjahr ohne Zeile einen null-Platzhalter ein
+      // (Bug-#26-Muster, Jahres-Ausrichtung), also lief `[null,null,null]` durch und
+      // schrieb ein durchgehend leeres Feld ins Schema. Am Live-Bestand gemessen
+      // (15.044 Snapshots mit annual-Block, Vintage 2026-08-29):
+      //     annualSGA           1.138 Null-Reihen gegen 13.876 mit Werten
+      //     annualDepreciation    849 Null-Reihen gegen 14.137 mit Werten
+      //     annualShares           10 Null-Reihen gegen 15.009 mit Werten
+      // Vereinigung 1.944 Snapshots, die Abdeckung behaupten, die es nicht gibt.
+      //
+      // REIHENFOLGE IST KONSTITUTIV: diese Wache darf erst stehen, NACHDEM die
+      // SGA/Depr-Klausel aus dem Tag-226a-2-Melder entfernt ist (s. dort). Umgekehrt
+      // erzeugt sie 51 dauerhafte Voll-Abruf-Schleifen. Mit beiden Schritten zusammen
+      // gemessen: 149 schema-stale vorher, 149 nachher — netto +0.
+      //
+      // SCORE-NEUTRAL, nachgeprueft (dieselbe Kette wie T142): `norm()` in
+      // src/scoring/snapshot.js liefert fuer ein fehlendes Feld [] und fuer
+      // [null,null,null] lauter nulls, `presentValues()` macht aus beidem []. Der
+      // `_arrLen`-Zaehler in methods/data-quality.js zaehlt nur finite Werte, also in
+      // beiden Faellen 0. `field-coverage.js` zaehlt seit F-DQ-005 inhaltsbasiert
+      // (`v.some(finite)`), nicht per Laenge. Die beiden laengen-sensitiven Leser
+      // (overview.js ffoProxyGrowthYoY, lamps.js annualSharesSeries) sind
+      // ERGEBNISgleich: ueber einer reinen Null-Reihe fallen sie ohnehin auf null.
+      // Es aendert sich also nur die EHRLICHKEIT des Schemas.
+      if (_nonNullCount(ftsAnnualSGA) > 0)          canonical.annual.annualSGA = ftsAnnualSGA;
+      if (_nonNullCount(ftsAnnualDepreciation) > 0) canonical.annual.annualDepreciation = ftsAnnualDepreciation;
       // Tag 219: shares per year — see Tag 219c agent F4 fix. Unblocks
       // methods/buyback-yield.js + makes capital-allocation-quality 4/4.
-      if ((ftsAnnualShares || []).length > 0)       canonical.annual.annualShares = ftsAnnualShares;
+      if (_nonNullCount(ftsAnnualShares) > 0)       canonical.annual.annualShares = ftsAnnualShares;
       // F-1: Ausschuettungs-Reihen, additiv wie SGA/Depreciation (nur setzen wenn nicht leer,
       // damit ein alter FTS-Cache kein leeres Feld ins Schema schreibt). Alle drei sind
       // WAEHRUNGS-Betraege und laufen deshalb — anders als annualShares (Stueckzahl, Z.767) —
@@ -3591,11 +3648,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // nulls; `presentValues()` macht aus beidem `[]`. `methods/data-quality.js` liest
       // keine der drei Reihen. Es aendert sich also nur die EHRLICHKEIT des Schemas.
       //
-      // ABSICHTLICH NICHT MITGEAENDERT: annualSGA/annualDepreciation/annualShares drei
-      // Zeilen darueber tragen denselben `.length > 0`-Fehler (1.138 / 849 / 10 Faelle),
-      // haengen aber am Tag-226a-2-Altschema-Melder (Z. 2778 liest genau die ANWESENHEIT
-      // von annualSGA und wuerde bei Abwesenheit einen frischen FTS-Abruf ausloesen).
-      // Gemeldet als eigener Punkt, nicht blind in derselben Nacht gebaut.
+      // T142 meldete annualSGA/annualDepreciation/annualShares (drei Zeilen darueber) als
+      // denselben Fehler, liess sie aber bewusst liegen, weil sie am Tag-226a-2-Melder
+      // hingen. NACHGEZOGEN durch T181 (2026-08-30): erst die dort tote SGA/Depr-Klausel
+      // aus dem Melder entfernt, dann dieselbe Wache gesetzt — netto +0 Voll-Abrufe.
       if (_nonNullCount(ftsAnnualRepurchase) > 0)              canonical.annual.annualRepurchase = ftsAnnualRepurchase;
       if (_nonNullCount(ftsAnnualDividendsPaid) > 0)           canonical.annual.annualDividendsPaid = ftsAnnualDividendsPaid;
       if (_nonNullCount(ftsAnnualNetCommonStockIssuance) > 0)  canonical.annual.annualNetCommonStockIssuance = ftsAnnualNetCommonStockIssuance;
@@ -4354,6 +4410,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // (tests/t142-ausschuettungsreihen-inhalt.test.js) die ECHTE Regel misst statt sie
   // nachzubauen (Fehler F1334).
   _nonNullCount,
+  // T181: der Tag-226a-2-Schema-Melder. Exportiert aus demselben Grund — der Waechter
+  // (tests/t181-schema-melder-inhalts-wache.test.js) ruft ihn AUF und prueft an echten
+  // Snapshot-Formen, dass die tote SGA/Depr-Klausel weg ist und !hasCA allein entscheidet.
+  _existingSnapshotMissingTag211lFields,
   // 0.2/0.9 Sharding (Tag 279): fuer TDD
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
