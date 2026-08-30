@@ -33,6 +33,27 @@
  * Steigt diese Zahl, ist die Kontamination gewachsen und das Tor gehoert wiedervorgelegt,
  * BEVOR irgendeine Ausweitung sie merged.
  *
+ * ── DIE MAILAENDER TEILMENGE (`klassenMitMilanBeinDivergent`) ───────────────────────────
+ * `klassenMitMilanBein` zaehlt ALLE Klassen mit einem `1XXX.MI`-Bein — divergent oder nicht
+ * (heute 783). Die Zahl, die im Milan-Urteil TRAEGT, ist aber die divergente Teilmenge davon:
+ * Klassen mit Mailaender Bein UND verschiedenen `issuerKeyLoose` (J3s Vollmessung,
+ * `_COURT-MILAN-U3-2026-08-29.md:123`, heute 47). Genau die konnte dieses Skript bis
+ * `akte-c2-diskrepanz-2026-08-30.md` (Befund 2 / O-2) nicht drucken — wer sie nachmessen
+ * wollte, brauchte Zusatzcode, und eine urteilstragende Kennzahl ohne Drift-Spur driftet
+ * unbemerkt.
+ *
+ * ⚠ EBENEN-WECHSEL: die beiden Zahlen oben (783 / 47) sind auf der KONVERTIERTEN Ebene
+ * gemessen, also vor ENTSCHIED 72. Seit der Zensus auf der Melde-Waehrung misst, lautet
+ * derselbe Bestand 828 / 54 — die Klassen, die der Abrufzeitpunkt vorher auseinandergerissen
+ * hatte, fallen jetzt zusammen. Wer die Zahlenreihe ueber diesen Schnitt hinweg vergleicht,
+ * vergleicht zwei Groessen; die Trendaussage beginnt bei 828 / 54 neu.
+ *
+ * ⚠ WAS DIESE ZAHL NICHT KANN: die Milan-Vorstufe abnehmen. Sie misst Fingerabdruck-KLASSEN,
+ * die Vorstufe behandelt board-sichtbare PAARE — und in 10 von 17 Faellen ist der
+ * A6-Eintrag ENGER als seine Fingerabdruck-Klasse (die Geschwister-Beine bleiben auf dem
+ * alten Namen stehen, `akte-c2-diskrepanz-2026-08-30.md` §6). Der Zensus kann Drift
+ * ueberwachen; als Vollzugskontrolle der Vorstufe taugt er grundsaetzlich nicht.
+ *
  * ── NUTZUNG ─────────────────────────────────────────────────────────────────────────────
  *   node scripts/probe-fingerprint-zensus.js                    (Standard: snapshots/)
  *   node scripts/probe-fingerprint-zensus.js --store pfad/zu/snapshots
@@ -99,6 +120,7 @@ function zensus(beine) {
     klassenDivergent: klassen.filter((k) => k.divergent).length,
     klassenMeldepflichtig: klassen.filter((k) => k.meldepflichtig).length,
     klassenMitMilanBein: klassen.filter((k) => k.mitMilanBein).length,
+    klassenMitMilanBeinDivergent: klassen.filter((k) => k.mitMilanBein && k.divergent).length,
     detail: klassen,
   };
 }
@@ -140,6 +162,7 @@ function bericht(z, store, unlesbar, ohneKurs) {
   zeilen.push(`  Fingerabdruck-Klassen (>=2) .. ${z.klassen}`);
   zeilen.push(`  davon divergente issuerKeyLoose ${z.klassenDivergent}`);
   zeilen.push(`  davon mit Mailaender Bein .... ${z.klassenMitMilanBein}`);
+  zeilen.push(`     davon divergent ........... ${z.klassenMitMilanBeinDivergent}`);
   zeilen.push(`  MELDEPFLICHTIG (§6.5) ........ ${z.klassenMeldepflichtig}`);
   zeilen.push('');
   zeilen.push('Meldepflichtig = divergente Emittenten-Schluessel UND (Aktienzahl-Abstand > '
@@ -201,7 +224,50 @@ function selftest() {
   });
   z = zensus([mitKurs('1CCC.MI', 'Cee AG', 1.1550012), mitKurs('CCC.DE', 'CCC.DE', 1.1511453)]);
   assert.equal(z.klassen, 1, 'verschiedene Kurse duerfen die Klasse nicht zerreissen');
-  console.log('probe-fingerprint-zensus --selftest: 6 ok');
+
+  // ── Die Mailaender Teilmenge: drei Klassen, die die drei Verwechslungen trennen ────────
+  // A) Milan UND divergent -> zaehlt.  B) Milan, aber NICHT divergent -> zaehlt nicht.
+  // C) divergent, aber OHNE Mailaender Bein -> zaehlt nicht.
+  // Alle sechs Beine: gleiches Land, gleiche Aktienzahl -> nichts wird meldepflichtig, der
+  // Bericht bleibt damit auf seinem Kopf ohne Klassen-Block und ist als Ganzes einfrierbar.
+  // `b()` setzt `fx` auf 1, der Fingerabdruck rechnet also durch 1 zurueck (ENTSCHIED 72) —
+  // die Teilmengen-Lage haengt an Namen und Reihen, nicht am Kurs.
+  const teilmenge = [
+    b('1AAA.MI', 'Alpha Industries', 'US', 100, 3), b('AAA', 'Zeta Holding', 'US', 100, 3),
+    b('1BBB.MI', 'Beta Works', 'US', 100, 4), b('BBB', 'Beta Works', 'US', 100, 4),
+    b('CCC', 'Gamma Group', 'US', 100, 5), b('CCC.DE', 'Delta Trust', 'US', 100, 5),
+  ];
+  // 7. die neue Kennzahl ist die UND-Verknuepfung, nicht eine der beiden Haelften
+  z = zensus(teilmenge);
+  assert.equal(z.klassen, 3);
+  assert.equal(z.klassenDivergent, 2, 'A und C sind divergent, B nicht');
+  assert.equal(z.klassenMitMilanBein, 2, 'A und B tragen ein Mailaender Bein, C nicht');
+  assert.equal(z.klassenMitMilanBeinDivergent, 1, 'nur A erfuellt BEIDES');
+  // 8. eine absichtliche Divergenz in B hebt die Zahl — ohne sie waere eine tote Kennzahl
+  //    (konstant 0 oder konstant = klassenMitMilanBein) nicht von einer lebenden zu unterscheiden
+  const gedriftet = teilmenge.map((x) => (x.ticker !== 'BBB' ? x
+    : { ...x, name: 'Omega Beteiligungen', schluessel: issuerKeyLoose({ meta: { name: 'Omega Beteiligungen' } }) }));
+  assert.equal(zensus(gedriftet).klassenMitMilanBeinDivergent, 2, 'die neue Divergenz in B muss ankommen');
+  assert.equal(zensus(gedriftet).klassenMitMilanBein, 2, 'sie schafft aber keine neue Milan-Klasse');
+  // 9. DIE ALTEN BERICHTSZEILEN SIND EINGEFROREN. Der Zensus ist ein Drift-Instrument: seine
+  //    Monatsberichte (reports/fingerprint-zensus-*.txt) werden ueber Jahre verglichen. Die
+  //    neue Zeile darf additiv dazukommen, keine bestehende darf sich um ein Byte bewegen.
+  //    Der Kopf traegt seit ENTSCHIED 72 die Melde-Waehrungs-Ebene und die FX-Kurs-Zeile; beide
+  //    sind hier mit eingefroren, damit ein stiller Rueckfall auf die konvertierte Ebene oder
+  //    ein verschwundener FX-Ausweis genauso auffaellt wie eine verrutschte alte Zeile.
+  const zeilen = bericht(zensus(teilmenge), 'FIXTURE', 0, 0).split('\n');
+  assert.deepEqual(zeilen.slice(0, 9), [
+    'O1-Fingerabdruck-Zensus ueber FIXTURE (Ebene: snapshot.timeseries, auf Melde-Waehrung zurueckgerechnet)',
+    '  Snapshots .................... 6',
+    '  ohne brauchbaren FX-Kurs ..... 0',
+    '  belastbar (>=4 Umsatzquartale) ... 6',
+    '  Fingerabdruck-Klassen (>=2) .. 3',
+    '  davon divergente issuerKeyLoose 2',
+    '  davon mit Mailaender Bein .... 2',
+    '     davon divergent ........... 1',
+    '  MELDEPFLICHTIG (§6.5) ........ 0',
+  ], 'Berichtskopf byte-identisch, neue Zeile eingerueckt UNTER ihrer Obermenge');
+  console.log('probe-fingerprint-zensus --selftest: 9 ok');
   return 0;
 }
 
