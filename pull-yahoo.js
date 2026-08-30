@@ -2061,6 +2061,14 @@ function _ftsValue(row, ...keys) {
   return null;
 }
 
+// _nonNullCount: counts entries that hold an actual value (handles both raw
+// numbers and {value:n} wrappers, the two shapes these arrays carry).
+// T142 (Inbox, 2026-08-30): stand bis hierher als block-lokale Konstante mitten im
+// FTS-Merge. Auf Modul-Ebene gehoben, damit die Ausschuettungs-Reihen-Wache denselben
+// Zaehler benutzt wie der FTS-Merge daneben — ein Nachbau waere Fehler F1334 (die Wache
+// wuerde gegen eine ANDERE Regel messen als die, die spaeter wirklich entscheidet).
+const _nonNullCount = arr => (arr || []).filter(v => v != null && (v.value != null || typeof v === 'number')).length;
+
 // Mappt fundamentalsTimeSeries-Rows zu engine-Schema-Arrays (latest first).
 // Bug #26 fix: preserve null entries for years where the field is absent so that
 // annualSBC[i] and annualCapex[i] stay positionally aligned with annualRev[i].
@@ -3390,9 +3398,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // sparser FTS array overwrite a richer QS array (or vice-versa), drifting
       // the year index between annualRev / annualOpInc / annualGP / annualNetIncome.
       //
-      // _nonNullCount: counts entries that hold an actual value (handles both raw
-      // numbers and {value:n} wrappers, the two shapes these arrays carry).
-      const _nonNullCount = arr => (arr || []).filter(v => v != null && (v.value != null || typeof v === 'number')).length;
+      // _nonNullCount steht seit T142 auf Modul-Ebene (s. oben bei _ftsExtractByYear) —
+      // dieselbe Funktion, dieselben Semantiken, jetzt auch fuer die Ausschuettungs-Wache.
       // mergePreferRicher: returns ftsArr iff it is strictly richer than qsArr.
       //   mode:'count'  → compare non-null element counts (preserves null-placeholder
       //                   year alignment; the correct default for value series).
@@ -3549,9 +3556,32 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // damit ein alter FTS-Cache kein leeres Feld ins Schema schreibt). Alle drei sind
       // WAEHRUNGS-Betraege und laufen deshalb — anders als annualShares (Stueckzahl, Z.767) —
       // korrekt durch die FX-Skalierung von snap.annual mit.
-      if ((ftsAnnualRepurchase || []).length > 0)              canonical.annual.annualRepurchase = ftsAnnualRepurchase;
-      if ((ftsAnnualDividendsPaid || []).length > 0)           canonical.annual.annualDividendsPaid = ftsAnnualDividendsPaid;
-      if ((ftsAnnualNetCommonStockIssuance || []).length > 0)  canonical.annual.annualNetCommonStockIssuance = ftsAnnualNetCommonStockIssuance;
+      //
+      // T142 (Inbox-Fund, gemessen 2026-08-29, gefixt 2026-08-30): die Wache stand auf
+      // `.length > 0` und damit auf der LAENGE, waehrend der Kommentar daneben "nur setzen
+      // wenn nicht leer" beanspruchte — INHALT. `_ftsExtractByYear` gibt fuer jedes
+      // Geschaeftsjahr ohne Cash-Flow-Zeile einen null-Platzhalter zurueck (Bug-#26-Muster,
+      // Jahres-Ausrichtung), also lief `[null, null, null]` durch und schrieb ein
+      // durchgehend leeres Feld ins Schema. Am Live-Bestand gemessen (15.046 Snapshots,
+      // Vintage 2026-08-29): 6.842 x annualRepurchase, 2.272 x annualDividendsPaid,
+      // 4.656 x annualNetCommonStockIssuance tragen genau diese Null-Reihen. Anwesenheit
+      // behauptete damit Abdeckung, die es nicht gibt — dieselbe Laengen-statt-Inhalt-Klasse
+      // wie F-NY-001 zwoelf Zeilen weiter unten und wie der annualRevEnds-Fund aus T134.
+      //
+      // SCORE-NEUTRAL, nachgeprueft: die drei Reihen haben ausser `norm()` keinen Leser
+      // (repo-weit geprueft — `src/scoring/snapshot.js` FIELD_REGISTRY, sonst nichts), und
+      // `norm()` liefert fuer ein fehlendes Feld `[]` und fuer `[null,null,null]` lauter
+      // nulls; `presentValues()` macht aus beidem `[]`. `methods/data-quality.js` liest
+      // keine der drei Reihen. Es aendert sich also nur die EHRLICHKEIT des Schemas.
+      //
+      // ABSICHTLICH NICHT MITGEAENDERT: annualSGA/annualDepreciation/annualShares drei
+      // Zeilen darueber tragen denselben `.length > 0`-Fehler (1.138 / 849 / 10 Faelle),
+      // haengen aber am Tag-226a-2-Altschema-Melder (Z. 2778 liest genau die ANWESENHEIT
+      // von annualSGA und wuerde bei Abwesenheit einen frischen FTS-Abruf ausloesen).
+      // Gemeldet als eigener Punkt, nicht blind in derselben Nacht gebaut.
+      if (_nonNullCount(ftsAnnualRepurchase) > 0)              canonical.annual.annualRepurchase = ftsAnnualRepurchase;
+      if (_nonNullCount(ftsAnnualDividendsPaid) > 0)           canonical.annual.annualDividendsPaid = ftsAnnualDividendsPaid;
+      if (_nonNullCount(ftsAnnualNetCommonStockIssuance) > 0)  canonical.annual.annualNetCommonStockIssuance = ftsAnnualNetCommonStockIssuance;
       // Tag-90: quarterlyNI in timeseries
       // F-NY-001 (audit 2026-06-08): nulls were wrapped as {value:null}, so length-
       // based "computable" checks saw N entries that could be entirely empty. Keep
@@ -4303,6 +4333,10 @@ if (require.main === module) {
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   fundamentalsStaleness, ftsFailureSummary,
+  // T142: Inhalts-Zaehler der FTS-Reihen. Exportiert, damit die Ausschuettungs-Wache
+  // (tests/t142-ausschuettungsreihen-inhalt.test.js) die ECHTE Regel misst statt sie
+  // nachzubauen (Fehler F1334).
+  _nonNullCount,
   // 0.2/0.9 Sharding (Tag 279): fuer TDD
   shardHash, shardStocks, parseArgs,
   // F1 (Codex-Fund): ehrlicher mcap-Skip-Zaehler (schliesst fx-unknown aus) — fuer TDD
