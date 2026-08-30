@@ -1391,8 +1391,9 @@ function tripwireKlassenSchluessel(m) {
   if (m.anker === 'B') return `${m.wert} Emittentengruppen`;
   const e = Math.round(Math.log10(m.wert));
   // Ein nicht rechenbarer Wert bekaeme sonst den Schluessel `1eNaN` und verschwaende in einem
-  // stillen Sammel-Eimer. Die Anker garantieren endliche Werte > 0 — falls das je faellt,
-  // soll es im Bericht STEHEN, nicht in einer Klasse verschwinden.
+  // stillen Sammel-Eimer. Die Anker pruefen `shares` und `jahresAktien` je EINZELN auf endlich
+  // und > 0 — der QUOTIENT kann trotzdem ueberlaufen (winziger Nenner ⇒ Infinity). Genau dann
+  // soll das im Bericht STEHEN, nicht in einer Klasse verschwinden.
   if (!Number.isFinite(e)) return 'Groessenordnung nicht rechenbar';
   return `Groessenordnung 1e${e > 0 ? '+' : ''}${e}`;
 }
@@ -1574,7 +1575,13 @@ function tripwireBericht(a, b, kopf) {
   const berichtB = teil(b, 'B');
   // Die M12-Ausnahmen stehen NEBEN den Meldungen, nie darunter: sie sind das Gegenteil eines
   // Befundes, und eine gemeinsame Liste machte aus einer Nicht-Meldung eine Meldung.
-  if (a) berichtA.ausgenommen = { gemeldet: a.ausgenommen, klassen: tripwireKlassen(a.ausgenommenListe, TRIPWIRE_M12_KLASSE) };
+  // Faellt A aus, steht die Zahl auf null und der Schluessel bleibt TROTZDEM da (Review-Fund
+  // 30.08., MEDIUM, reproduziert): ein weggelassener Schluessel ueberlebt JSON.stringify nicht
+  // und ist von "keine Ausnahme gefunden" nicht zu unterscheiden — dieselbe Verwechslung, die
+  // der Bucket `fehlt` beim Zaehler verhindert.
+  berichtA.ausgenommen = a
+    ? { gemeldet: a.ausgenommen, klassen: tripwireKlassen(a.ausgenommenListe, TRIPWIRE_M12_KLASSE) }
+    : { gemeldet: null, klassen: [] };
   return {
     _doku: [
       'IDENTITAETS-TRIPWIRE — MELDUNG, KEINE ENTSCHEIDUNG (_COURT-M10-2026-08-30, ENTSCHIED 126).',
@@ -2225,23 +2232,35 @@ function run(argv) {
     // DROSSELUNG (ENTSCHIED 129): unter jeder Kopfzeile steht die Aufschluesselung nach
     // Ursachen-Klassen. Die Zahl der Zeilen haengt an der Zahl der KLASSEN, nicht an der Zahl
     // der Meldungen — genau das macht die Lampe wieder lesbar, wenn die Menge dreistellig ist.
-    const klassenZeilen = (anker, treffer, wertText) => {
-      for (const k of tripwireKlassen(treffer)) {
-        console.log(`[m10-tripwire]   ${anker} · ${k.klasse}: ${k.gemeldet} Meldungen — Beispiele (${k.gelistet}): ${k.beispiele.map(wertText).join(', ')}`);
+    // ⚠ FAIL-OPEN GILT AUCH FUER DIE DROSSELUNG (Review-Fund 30.08., HIGH, REPRODUZIERT).
+    // Dieser Block lag zuerst ZWISCHEN den beiden bestehenden Klammern — den Anker-Klammern
+    // darueber und der Bericht-Klammer darunter — und damit in keiner. Nachgestellt: ein Wurf
+    // hier beendete den Lauf mit EXIT 1 und nahm den committeten Bericht mit, obwohl dessen
+    // Schreibpfad eigens gefangen ist. Das ist exakt die Fehlerklasse des 30.08.-Funds ("ein
+    // Wurf in A nahm auch Bs fertige Meldungen aus der Datei"), nur eine Stufe frueher — und
+    // eine Lampe, die den Tageslauf umbringt, ist das Gegenteil dessen, was M8 verlangt.
+    const klassenLog = (name, wirkung) => {
+      try { wirkung(); }
+      catch (e) {
+        console.error(`::warning::M10-Tripwire — Klassen-Aufschluesselung fuer ${name} ausgefallen (${e && e.message ? e.message : e}); die Kopfzahl steht oben, der Bericht wird trotzdem geschrieben. NICHT als "keine Klassen" lesen.`);
       }
     };
+    const klassenZeilen = (anker, treffer, wertText, schluessel) => {
+      for (const k of tripwireKlassen(treffer, schluessel)) {
+        console.log(`[m10-tripwire]   ${anker} · ${k.klasse}: ${k.gemeldet} ${schluessel ? 'ausgenommen' : 'Meldungen'} — Beispiele (${k.gelistet}): ${k.beispiele.map(wertText).join(', ')}`);
+      }
+    };
+    const wertA = (m) => `${m.ticker}=${Number(m.wert).toPrecision(3)}`;
     if (a) {
       console.log(`[m10-tripwire] Anker A (Selbstwiderspruch Aktienzahl): ${a.treffer.length} Meldungen, ${a.ausgenommen} Komplementaer-/Partnership-Strukturen ausgenommen (M12), ${a.ohneBasis} Zeilen ohne rechenbare Basis.`);
-      klassenZeilen('A', a.treffer, (m) => `${m.ticker}=${Number(m.wert).toPrecision(3)}`);
+      klassenLog('Anker A', () => klassenZeilen('A', a.treffer, wertA));
       // Die Ausnahme wird GENANNT, nicht nur gezaehlt: eine Rechtsform-Regex, deren Treffer
       // niemand sieht, ist von einer zu weit gefassten Regel nicht zu unterscheiden.
-      for (const k of tripwireKlassen(a.ausgenommenListe, TRIPWIRE_M12_KLASSE)) {
-        console.log(`[m10-tripwire]   A · ${k.klasse}: ${k.gemeldet} ausgenommen — Beispiele (${k.gelistet}): ${k.beispiele.map((m) => `${m.ticker}=${Number(m.wert).toPrecision(3)}`).join(', ')}`);
-      }
+      klassenLog('die M12-Ausnahmen von Anker A', () => klassenZeilen('A', a.ausgenommenListe, wertA, TRIPWIRE_M12_KLASSE));
     }
     if (b) {
       console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
-      klassenZeilen('B', b.treffer, (m) => m.beine.map((x) => x.ticker).join('/'));
+      klassenLog('Anker B', () => klassenZeilen('B', b.treffer, (m) => m.beine.map((x) => x.ticker).join('/')));
     }
     console.log('[m10-tripwire] Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt (M16). Keine Zeile faellt, keine verschmilzt, Exit bleibt 0.');
     try {

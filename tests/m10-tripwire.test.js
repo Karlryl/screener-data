@@ -429,6 +429,64 @@ test('DROSSELUNG (am LAUF): die Klassen-Aufschluesselung steht im Lauf-Log', () 
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('DROSSELUNG FAIL-OPEN: ein Wurf im Klassen-Log kostet weder Exit 0 noch den Bericht', () => {
+  // Review-Fund 30.08. (HIGH, reproduziert): der Klassen-Log-Block lag ZWISCHEN den beiden
+  // bestehenden Klammern und damit in keiner. Nachgestellt vor dem Fix: Exit 1, und der
+  // committete Bericht fehlte — obwohl sein Schreibpfad eigens gefangen ist.
+  // Am OBJEKT gemessen, nicht am Quelltextmuster: eine Kopie des echten Skripts mit einem
+  // echten Wurf an genau dieser Stelle wird wirklich gefahren. Die Kopie liegt in scripts/,
+  // damit die relativen require()s aufloesen.
+  const kopie = path.join(__dirname, '..', 'scripts', '_m10-drosselung-wurfprobe.js');
+  const root = tmp();
+  try {
+    const quelle = fs.readFileSync(SKRIPT, 'utf8');
+    const gebrochen = quelle.replace(
+      '    const klassenZeilen = (anker, treffer, wertText, schluessel) => {',
+      '    const klassenZeilen = (anker, treffer, wertText, schluessel) => { throw new Error("Wurfprobe: Klassen-Log");');
+    assert.notEqual(gebrochen, quelle, 'Vorbedingung: die Wurfstelle wurde gefunden');
+    fs.writeFileSync(kopie, gebrochen);
+    const eingang = path.join(root, 'eingang');
+    const ziel = path.join(root, 'ziel');
+    fs.mkdirSync(eingang, { recursive: true });
+    const rev = [{ value: 9e9 }, { value: 8e9 }, { value: 7e9 }, { value: 6e9 }];
+    const schreib = (t, n, shares) => fs.writeFileSync(path.join(eingang, t + '.json'), JSON.stringify({
+      meta: { ticker: t, name: n, sharesOutstanding: shares, fxRateApplied: 1 },
+      annual: { annualRev: rev, annualShares: [142826382] }, marketCap: { value: 2e10 },
+    }));
+    schreib('AVB', 'AvalonBay Communities Inc', 142826382);
+    schreib('ZZMK', 'Vivmark Residential', 398834711);
+    fs.writeFileSync(path.join(root, 'wl.json'), JSON.stringify({ stocks: [{ ticker: 'AVB' }, { ticker: 'ZZMK' }] }));
+    const r = spawnSync(process.execPath, [kopie, '--eingang', eingang, '--ziel', ziel,
+      '--watchlist', path.join(root, 'wl.json'), '--heute', '2026-08-30T00:00:00Z'], { encoding: 'utf8' });
+    const ausgabe = (r.stdout || '') + (r.stderr || '');
+    assert.equal(r.status, 0, 'eine Lampe darf die Tagesfrische von 15.000 Zeilen nicht kosten');
+    assert.match(ausgabe, /::warning::M10-Tripwire — Klassen-Aufschluesselung fuer Anker A ausgefallen/,
+      'die Degradation nennt den ausgefallenen Anker beim Namen — still waere sie keine Lampe');
+    assert.match(ausgabe, /\[m10-tripwire\] Anker A .*: 1 Meldungen/, 'die Kopfzahl steht trotzdem da');
+    // DER TEURE TEIL DES FUNDS: der committete Bericht ueberlebt den Wurf.
+    const bericht = JSON.parse(fs.readFileSync(tripwireStandardpfad(ziel), 'utf8'));
+    assert.equal(bericht.zaehlung.ankerA, 1, 'der Bericht ist da UND vollstaendig');
+    assert.equal(bericht.ankerA.klassen.length, 1);
+  } finally {
+    fs.rmSync(kopie, { force: true });
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('DROSSELUNG: faellt Anker A aus, ist die M12-Ausnahme null — nie weggelassen', () => {
+  // Review-Fund 30.08. (MEDIUM, reproduziert): `ausgenommen` fehlte im Ausfall-Zweig als
+  // SCHLUESSEL. JSON.stringify laesst ihn dann weg, und "nicht gemessen" sieht aus wie
+  // "keine Ausnahme gefunden" — dieselbe Verwechslung wie FEHLT gegen NULL beim Zaehler.
+  const b = tripwireAnkerB([zeile('AVB', 'AvalonBay Communities Inc', { fp: FP_AVB }), zeile('VMRK', 'Vivmark Residential', { fp: FP_AVB })]);
+  const ber = tripwireBericht(null, b, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
+  assert.ok(Object.prototype.hasOwnProperty.call(ber.ankerA, 'ausgenommen'), 'der Schluessel ist da');
+  assert.equal(ber.ankerA.ausgenommen.gemeldet, null, 'und traegt null, nicht 0');
+  assert.ok(JSON.stringify(ber).includes('"ausgenommen"'), 'er ueberlebt die Serialisierung');
+  // ABWESENHEIT: laeuft A, steht dort eine echte Zahl.
+  const a = tripwireAnkerA([zeile('MRK.DE', 'Merck KGaA', { shares: 129242252, jahresAktien: 434777878 })]);
+  assert.equal(tripwireBericht(a, b, { stand: 'x', gelesen: 1, unlesbar: 0, messebene: 'x' }).ankerA.ausgenommen.gemeldet, 1);
+});
+
 test('MESSEBENE: der Tripwire sieht die Divergenz, die die Vorstufe gleich HEILT', () => {
   // DAS ist der Grund, warum P2 gewaehlt wurde und nicht P1 (Urteil §3.2): ein wirksamer
   // Eingriff loescht seine eigene Klasse aus der Spur. `ANL.DE` ("ANALOG DEVICES INC.DL-166")
