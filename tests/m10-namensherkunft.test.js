@@ -6,9 +6,13 @@
  * Bein, dessen Name nur aus der Watchlist stammt, eine Emittentengruppe gewinnen darf (G2),
  * ist heute eine Entscheidung unter UNBEKANNTEM Nutzen bei bekanntem Preis — die Obergrenze
  * liegt bei 6.862 Zeilen, die echte Klassengroesse kennt niemand. Das einzige heutige
- * Ersatz-Merkmal (`name === ticker`) verschwindet mit der 30-Tage-Rotation: spaetestens am
- * 25.09.2026 traegt jede watchlist-benannte Zeile still einen Feed-Namen. G3-c („vertagen
- * ohne Messung") ist deshalb keine Vertagung, sondern Beweisvernichtung.
+ * Ersatz-Merkmal ist der Vergleich `meta.name === watchlistEntry.name` (6.862 Zeilen, Akte
+ * §1.5) — NICHT das U1-Platzhalter-Merkmal (Name gleich Ticker, 110 von 15.046 Snapshots).
+ * Diese Berichtigung ist Auflage M3 aus _COURT-M10-2026-08-30 (Befund K-7): die urspruengliche
+ * Fassung nannte die falsche Klasse, um zwei Groessenordnungen daneben.
+ * Das Merkmal verschwindet mit der 30-Tage-Rotation: spaetestens am 25.09.2026 traegt jede
+ * watchlist-benannte Zeile still einen Feed-Namen. G3-c („vertagen ohne Messung") ist deshalb
+ * keine Vertagung, sondern Beweisvernichtung.
  *
  * WAS DIESER WAECHTER PINNT — zwei Dinge, und das zweite ist das wichtigere:
  *  (1) `meta.nameSource` nennt die Sprosse, aus der `meta.name` wirklich stammt.
