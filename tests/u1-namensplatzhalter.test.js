@@ -13,12 +13,18 @@
  * nicht der Quelltext nach Schreibmustern durchsucht — gleiche Bauform wie
  * tests/opinc-source.test.js und tests/a10-jahres-periodenenden.test.js).
  *
- * DIE TRAGENDE EIGENSCHAFT ist nicht die Ausbeute, sondern die EINSEITIGKEIT:
+ * DIE TRAGENDE EIGENSCHAFT ist nicht die Ausbeute, sondern die EINSEITIGKEIT DER QUELLE:
  * der Name entsteht ausschliesslich aus Feldern DIESES Wertpapiers (Yahoo-Datensatz +
  * eigene Watchlist-Zeile). Es gibt keinen Pfad, auf dem er aus einem FREMDEN Datensatz
- * stammt. Deshalb kann diese Kette eine Verschmelzung nur VERHINDERN, nie ERZWINGEN — und
- * genau deshalb durfte U1 ohne Gericht gebaut werden (ENTSCHIED 21 Punkt 2). Faellt diese
- * Wache, ist die Begruendung des Entscheids weg, nicht nur ein Detail.
+ * stammt. Das ist wahr, und Abschnitt 2 nagelt es fest.
+ *
+ * BERICHTIGT (_COURT-M10-2026-08-30, Auflage M3, Befund K-2): die frueher hier gezogene
+ * FOLGERUNG — diese Kette koenne eine Verschmelzung ausschliesslich VERHINDERN und niemals
+ * ERZWINGEN — ist FALSIFIZIERT. Ein EIGENES Feld kann den Namen einer FREMDEN Firma tragen:
+ * `MRK.SW` trug ueber die Watchlist-Zeile den Namen von Merck & Co. und fiel damit in die
+ * Emittentengruppe `merckkgaa`. Einseitige QUELLE heisst nicht einseitige WIRKUNG.
+ * Abschnitt 4 nagelt diese fehlende Richtung fest (Auflage M4). U1 selbst bleibt ratifiziert
+ * (ENTSCHIED 21 Punkt 2) — kassiert ist die Folgerung, nicht die Beobachtung.
  *
  * Standalone-Runner, keine Frameworks, kein Netz.
  * Run: node tests/u1-namensplatzhalter.test.js
@@ -124,6 +130,67 @@ test('Wirkung: geheilter Platzhalter faellt mit der Zweitnotiz auf denselben Emi
   assert.notEqual(k(vorher), k(zweitnotiz), 'Vorbedingung: der Platzhalter trennte die beiden Beine');
   assert.equal(k(nachher), k(zweitnotiz), 'nach der Heilung sieht der Dedup EINEN Emittenten');
 });
+
+// ─── 4. M10/M4: die FEHLENDE Richtung — die Kette kann eine Verschmelzung ERZWINGEN ──────
+//
+// Auflage M4 aus _COURT-M10-2026-08-30 (G1 3:0; die Sperre aus nacht-pruef-sweep-2026-08-29.md
+// :111 entfaellt mit diesem Urteil). Abschnitt 2 zeigt: die QUELLE ist einseitig. Dieser
+// Abschnitt zeigt: die WIRKUNG ist es nicht. Beide zusammen sind die vollstaendige Aussage —
+// wer nur Abschnitt 2 liest, zieht genau die Folgerung, die das Gericht kassiert hat.
+//
+// Am VERHALTEN verankert: gemessen wird gegen den IMPORTIERTEN `issuerKeyLoose`, nicht gegen
+// einen Nachbau (Fehler F1334) und nicht gegen ein Textmuster im Quelltext.
+{
+  const { issuerKeyLoose } = require('../src/scoring/score.js');
+  const k = (n) => issuerKeyLoose({ meta: { name: n } });
+  // Der reale Fall (Urteil §2, Akte fix-mrksw-vmrk-2026-08-30.md): eine Zeile trug ueber ihre
+  // EIGENE Watchlist-Zeile den Namen einer FREMDEN Firma. Ticker frei gewaehlt — die Eigenschaft
+  // haengt am Namensfeld, nicht am Symbol; eine Ticker-Liste waere hier die falsche Verankerung.
+  const FREMDER_NAME = 'Merck & Co., Inc.';
+  const EIGENE_ZEILE = { ticker: 'XMRK.SW', name: FREMDER_NAME };
+
+  test('ANWESENHEIT: ein Watchlist-Name traegt einen FREMDEN Emittenten-Schluessel in die Zeile', () => {
+    const ohneFeedName = mappe({}, EIGENE_ZEILE);
+    assert.equal(ohneFeedName, FREMDER_NAME, 'Vorbedingung: ohne Feed-Namen greift Sprosse 3');
+    assert.equal(k(ohneFeedName), k(FREMDER_NAME),
+      'der Watchlist-Name erreicht den Emittenten-Schluessel unveraendert');
+    assert.notEqual(k(ohneFeedName), k(EIGENE_ZEILE.ticker),
+      'Vorbedingung: ohne den Watchlist-Namen traege die Zeile ihren eigenen Platzhalter-Schluessel');
+  });
+
+  test('ANWESENHEIT: die Kette ERZWINGT damit eine Verschmelzung, sie verhindert nicht nur', () => {
+    // DAS ist der Satz, den die alte Begruendung fuer unmoeglich hielt: zwei VERSCHIEDENE
+    // Wertpapiere fallen auf EINEN Emittenten-Schluessel, und der einzige Grund dafuer ist ein
+    // Feld der einen Zeile. Faellt diese Wache, ist die falsifizierte Folgerung wieder
+    // unwidersprochen im Repo.
+    const eigene = mappe({}, EIGENE_ZEILE);                                 // nur Watchlist-Name
+    const fremde = mappe({ longName: FREMDER_NAME }, { ticker: 'MRKCO' });  // die echte Firma
+    assert.equal(k(eigene), k(fremde),
+      'ERZWUNGEN: beide Zeilen tragen denselben Emittenten-Schluessel, allein wegen des Watchlist-Namens');
+  });
+
+  test('ABWESENHEIT: mit einem Feed-Namen erreicht der Watchlist-Name den Schluessel NICHT', () => {
+    // Die zweite Richtung. Ohne sie waere die Wache oben mit einer Kette gruen, die den
+    // Watchlist-Namen IMMER durchreicht — sie pruefte dann nur noch sich selbst.
+    const mitFeedName = mappe({ longName: 'Merck KGaA' }, EIGENE_ZEILE);
+    const fremde = mappe({ longName: FREMDER_NAME }, { ticker: 'MRKCO' });
+    assert.equal(mitFeedName, 'Merck KGaA', 'Vorbedingung: longName gewinnt vor der Watchlist');
+    assert.notEqual(k(mitFeedName), k(fremde),
+      'mit Feed-Namen bleibt die Zeile bei ihrem eigenen Emittenten');
+    assert.equal(k(mitFeedName), k('Merck KGaA'));
+  });
+
+  test('M4-Gegenprobe (absichtlicher Bruch): eine Kette OHNE Sprosse 3 wuerde die Wache rot machen', () => {
+    // Nachbau der Lage, in der die Eigenschaft VERSCHWINDET (Watchlist-Sprosse entfernt). Zeigt,
+    // dass die Anwesenheits-Wache oben wirklich an der Sprosse haengt und nicht zufaellig gruen ist.
+    const ohneSprosse3 = (price, wl) => price.longName || price.shortName || wl.ticker;
+    const eigene = ohneSprosse3({}, EIGENE_ZEILE);
+    assert.equal(eigene, 'XMRK.SW', 'die verstuemmelte Kette faellt auf den Ticker durch');
+    assert.throws(() => {
+      assert.equal(k(eigene), k(FREMDER_NAME), 'der Watchlist-Name erreicht den Emittenten-Schluessel');
+    }, 'die M4-Wache MUSS rot werden, sobald Sprosse 3 den Schluessel nicht mehr erreicht');
+  });
+}
 
 console.log(`\nu1-namensplatzhalter.test.js: ${pass} ok, ${fail} fail`);
 process.exit(fail ? 1 : 0);

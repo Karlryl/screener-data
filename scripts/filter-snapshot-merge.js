@@ -39,7 +39,10 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // Lesen aus src/scoring/** ist ausdruecklich erlaubt; das GQS-Siegel bindet nur AENDERUNGEN dort.
 // U3-Milan (s. MILAN_KANDIDATEN unten) braucht zusaetzlich den STRENGEN Schluessel und den
 // Listing-Test — beide ebenfalls importiert (Auflage A3 des Urteils, Nachbau-Fehler F1334).
-const { issuerKeyLoose, issuerKeyStrengOhneGattung } = require('../src/scoring/score.js');
+// M10/M1 (s. unten) braucht zusaetzlich die PRODUKTIONS-Gruppierung und den PRODUKTIONS-
+// Sieger-Vergleich. Beide werden IMPORTIERT und ausschliesslich GELESEN — ein Nachbau waere
+// F1334 ein zweites Mal, und eine Aenderung dort ist unter N8 verboten (Urteil M7).
+const { issuerKeyLoose, issuerKeyStrengOhneGattung, issuerDedupGroups, issuerDedupComparator } = require('../src/scoring/score.js');
 const { isUsPrimaryListing } = require('../src/scoring/router.js');
 
 /**
@@ -155,7 +158,7 @@ function besseresBein(a, b) {
  *   - ein `.BO`/`.NS`-Zwillingspaar mit abweichenden Namen WIRD vereinheitlicht,
  *   - alles ohne gemeinsame Wurzel (und jedes andere Suffix) wird NIE angefasst.
  */
-function wurzelZwillingsUmbenennungen(staende) {
+function wurzelZwillingsUmbenennungen(staende, protokoll) {
   const nachWurzel = new Map();
   for (const s of staende || []) {
     const m = WURZEL_ZWILLING.exec(s.ticker);
@@ -177,6 +180,15 @@ function wurzelZwillingsUmbenennungen(staende) {
     // BEIDEN Seiten bleibt ein Platzhalter — geraten wird hier nichts.
     if (istPlatzhalter(sieger.name, sieger.ticker, sieger.metaTicker)) continue;
     umbenennungen.set(verlierer.datei, sieger.name);
+    // M10/M5 (Interims-Protokoll, _COURT-M10-2026-08-30): OPTIONALE Mitschrift, damit der
+    // Rueckgabewert derselbe Map-Vertrag bleibt, den tests/u2-wurzelzwillinge.test.js pinnt.
+    // Rein beobachtend: keine Umbenennung unterbleibt, keine zusaetzliche kommt hinzu.
+    if (Array.isArray(protokoll)) {
+      protokoll.push({
+        kanal: 'U2-Wurzelzwillinge', datei: verlierer.datei, verlierer: verlierer.ticker,
+        sieger: sieger.ticker, name: sieger.name, quelleHerkunft: sieger.nameSource,
+      });
+    }
   }
   return umbenennungen;
 }
@@ -202,13 +214,17 @@ function wendeWurzelZwillingeAn(ziel, dateien) {
     if (!WURZEL_ZWILLING.test(ticker)) continue;
     try {
       const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
-      staende.push({ datei: f, ticker, metaTicker: j && j.meta && j.meta.ticker, name: j && j.meta && j.meta.name });
+      // `nameSource` NUR fuer das M5-Protokoll mitgelesen — es geht in keine Auswahl ein
+      // (`besseresBein` kennt es nicht; die Bauform-Vorentscheidung M6 ist NICHT vollzogen).
+      staende.push({ datei: f, ticker, metaTicker: j && j.meta && j.meta.ticker, name: j && j.meta && j.meta.name,
+        nameSource: j && j.meta && j.meta.nameSource });
     } catch (e) {
       unlesbar++;
       console.error(`::warning::U2-Wurzelzwillinge — ${f} nicht lesbar (${e.message}); dieses Bein nimmt nicht teil.`);
     }
   }
-  const umbenennungen = wurzelZwillingsUmbenennungen(staende);
+  const protokoll = [];
+  const umbenennungen = wurzelZwillingsUmbenennungen(staende, protokoll);
   const geheilt = [];
   for (const [datei, neuerName] of umbenennungen) {
     const p = path.join(ziel, datei);
@@ -223,7 +239,11 @@ function wendeWurzelZwillingeAn(ziel, dateien) {
       console.error(`::warning::U2-Wurzelzwillinge — ${datei} nicht schreibbar (${e.message}); Bein bleibt getrennt.`);
     }
   }
-  return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar, unschreibbar };
+  // M5: nur die WIRKLICH geschriebenen Umbenennungen stehen im Protokoll — ein Bein, das
+  // unschreibbar blieb, wurde nicht umbenannt und darf die Zaehlung nicht aufblaehen.
+  const geschriebeneDateien = new Set(geheilt.map((t) => t + '.json'));
+  return { kandidaten: staende.length, geheilt: geheilt.sort(), unlesbar, unschreibbar,
+    protokoll: protokoll.filter((p) => geschriebeneDateien.has(p.datei)) };
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════════════
@@ -893,6 +913,174 @@ function wendeNennwertAn(ziel, dateien) {
   return { kandidaten: staende.length, geplant: umbenennungen.size, geheilt: geschrieben.sort(), unlesbar, unschreibbar };
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * M10 / M1 + M5 — DER HERKUNFTS-ZAEHLER UND DAS INTERIMS-PROTOKOLL
+ * Urteil: `_COURT-M10-2026-08-30.md`, Auflagen M1 (Frist 20.09.2026), M2, M5.
+ *
+ * WARUM ES DIESE DATEI GIBT (Urteil §6): `meta.nameSource` (pull-yahoo.js) rettet die
+ * Beweisspur je ZEILE — aber `snapshots/` ist gitignoriert, es gibt keine Versionshistorie,
+ * und jeder Voll-Zug ueberschreibt seinen eigenen Vorzustand. Wer am 26.09. den Bestand
+ * abfragt, sieht das ERGEBNIS der 30-Tage-Rotation, nie ihren VERLAUF. Die Erosions-Frist ist
+ * durch das Feld also nicht gestoppt, sondern von der Feld-Frist auf die ZAEHLER-Frist
+ * UMGEZOGEN. Diese Datei ist der Verlauf.
+ *
+ * BAUFORM IDENTISCH ZU `data-health/p99-delta-history.json` (Urteil §3 K-6): committete
+ * Tagesreihe, `_doc` + `byDate`, REINE MESSUNG — kein Gate, kein rc-Beitrag, kein Konsument
+ * im Scoring. Der Schritt kann NIE einen Lauf faellen: jeder Wurf wird gefangen und als
+ * ::warning:: ausgewiesen (eine still ausfallende Messung waere schlimmer als keine).
+ *
+ * ⚠ DER BUCKET `fehlt` IST DIE GANZE AUFLAGE (Urteil M1, §6 Feststellung 3). Eine Zeile, die
+ * den Schluessel `nameSource` gar nicht traegt, wurde seit PR #136 nicht neu gezogen. Ohne
+ * diesen Bucket wird der wachsende Deckungsgrad als schrumpfende Fehlerklasse fehlgelesen —
+ * die 6.862 watchlist-benannten Zeilen fallen im Zaehler, weil sie noch nicht gezogen wurden,
+ * nicht weil sie einen Feed-Namen bekamen. Das ist der Nenner-Fehler, an dem diese Messung als
+ * Einziges scheitern kann.
+ *
+ * MESSEBENE, ausdruecklich benannt: gezaehlt wird NACH den Umbenennungs-Stufen dieses Laufs,
+ * also auf genau der Population, die der versiegelte Dedup anschliessend sieht. Nur auf dieser
+ * Ebene ist "unterdruecktes Bein" eine echte Zahl. Die Umbenennungen des Laufs selbst stehen
+ * getrennt im Feld `umbenennungen` (M5) — Vorher und Nachher werden nie vermischt.
+ *
+ * WAS HIER NICHT PASSIERT (Urteil M2, M7): keine Zeile wird angefasst, keine Gruppierung,
+ * keine Sieger-Wahl und keine Umbenennung liest `nameSource`. `issuerDedupGroups` und
+ * `issuerDedupComparator` werden IMPORTIERT und nur gelesen; `src/scoring/**` bleibt
+ * unveraendert (N8). Die Zahlen beschreiben, sie steuern nichts.
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+/**
+ * Die Reihe gehoert zu dem BESTAND, den sie gemessen hat — deshalb wird der Pfad aus dem
+ * Zielordner abgeleitet und NICHT fest auf das Repo gelegt. Im Tageslauf ist `--ziel snapshots`
+ * im Repo-Wurzelverzeichnis, die Datei landet also unter `data-health/` und faehrt im
+ * `git add -A` des merge-Jobs mit (daily-pull.yml:1162), genau wie die Schwesterreihe
+ * `data-health/p99-delta-history.json`.
+ *
+ * WARUM NICHT `__dirname/..`: mehrere Waechter fahren dieses Skript mit einem Temp-Ziel
+ * (tests/quarantaene.test.js, tests/nav-holdings-register.test.js, tests/u3-milan-spiegel.test.js,
+ * tests/f12-merge-filter.test.js). Mit einem festen Repo-Pfad haette JEDER Testlauf eine
+ * Tageszeile aus einer FIXTURE-Population in die echte Messreihe geschrieben — eine Reihe, die
+ * ihre eigenen Testlaeufe mitzaehlt, ist als Beweis wertlos. Ueberschreibbar bleibt der Pfad
+ * ueber `--namensherkunft`.
+ */
+const namensherkunftStandardpfad = (ziel) => path.join(path.dirname(path.resolve(ziel)), 'data-health', 'namensherkunft-history.json');
+/** Die SECHS Pflicht-Zaehlgroessen der Zeilen-Verteilung (Urteil M1, Beweis 1). Ihre Summe
+ *  MUSS die Zahl der gelesenen Zeilen ergeben (Beweis 2) — deshalb ist `fehlt` ein Bucket
+ *  neben den Sprossen und keine Restgroesse, die man wegrechnen kann. */
+const NAMENSHERKUNFT_BUCKETS = ['longName', 'shortName', 'watchlist', 'ticker', 'null', 'fehlt'];
+const NAMENSHERKUNFT_DOC = 'M10/M1 (_COURT-M10-2026-08-30, Frist 20.09.2026) — taegliche Herkunftsreihe von meta.nameSource. REINE MESSUNG: kein Gate, keine rc-Semantik, kein Konsument im Scoring (Auflage M2). Bucket "fehlt" = die Zeile traegt den Schluessel nameSource gar nicht, wurde also seit PR #136 nicht neu gezogen; ohne ihn wird wachsender Deckungsgrad als schrumpfende Fehlerklasse fehlgelesen. Invariante: Summe aller Buckets === gelesen. Gemessen NACH den Umbenennungs-Stufen des Laufs (die Population, die der Dedup sieht); die Umbenennungen des Laufs stehen getrennt unter "umbenennungen" (Auflage M5).';
+
+/**
+ * In welchen Bucket faellt eine Zeile? FEHLT ist nicht NULL: "der Schluessel steht gar nicht
+ * da" (alter Zug) und "keine Sprosse hat geliefert" (Total-Leerzeile, pull-yahoo.js setzt
+ * bewusst `null`) sind zwei verschiedene Weltzustaende. Sie zusammenzuwerfen wuerde genau die
+ * Klasse verschleiern, die dieses Feld sichtbar machen soll.
+ *
+ * Ein UNBEKANNTER Wert bekommt seinen eigenen Bucket statt still in `fehlt` zu verschwinden —
+ * eine neue Sprosse in pull-yahoo.js soll hier auffallen, nicht in einer Sammelgroesse
+ * untergehen.
+ */
+function namensherkunftBucket(meta) {
+  if (!meta || typeof meta !== 'object' || !Object.prototype.hasOwnProperty.call(meta, 'nameSource')) return 'fehlt';
+  const q = meta.nameSource;
+  if (q === null || q === undefined) return 'null';
+  return NAMENSHERKUNFT_BUCKETS.includes(q) && q !== 'null' && q !== 'fehlt' ? q : `unbekannt:${String(q)}`;
+}
+
+/**
+ * Reiner Kern (kein I/O): Zeilen -> die Tages-Zaehlung. `zeilen` traegt je Eintrag den
+ * vorberechneten Bucket und einen SCHLANKEN Snapshot ({meta, marketCap}) — genau die Felder,
+ * die `issuerDedupGroups`/`issuerDedupComparator` lesen (issuerKeyLoose/isUsPrimaryListing/
+ * isUS/fxSuspect/mcapOf greifen ausschliesslich auf `meta` und `marketCap.value` zu).
+ */
+function namensherkunftZaehlen(zeilen) {
+  const verteilung = Object.fromEntries(NAMENSHERKUNFT_BUCKETS.map((b) => [b, 0]));
+  for (const z of zeilen) verteilung[z.bucket] = (verteilung[z.bucket] || 0) + 1;
+
+  const gruppen = issuerDedupGroups(zeilen.map((z) => ({ ticker: z.ticker, snapshot: z.snapshot })));
+  let mehrbeinGruppen = 0, watchlistSieger = 0, unterdrueckteBeine = 0;
+  for (const g of gruppen) {
+    if (g.length < 2) continue;
+    mehrbeinGruppen++;
+    // Genau die Produktions-Sortierung. Kopie statt in-place, damit der Aufrufer-Zustand
+    // unberuehrt bleibt — diese Messung darf nichts bewegen, auch keine Array-Reihenfolge.
+    const sieger = [...g].sort(issuerDedupComparator)[0];
+    const q = sieger && sieger.snapshot && sieger.snapshot.meta ? sieger.snapshot.meta.nameSource : undefined;
+    if (q === 'watchlist') { watchlistSieger++; unterdrueckteBeine += g.length - 1; }
+  }
+  return { gelesen: zeilen.length, verteilung, gruppen: gruppen.length, mehrbeinGruppen, watchlistSieger, unterdrueckteBeine };
+}
+
+/**
+ * I/O-Mantel: liest ALLE Snapshots des Ziels. Gleicher Preis und gleiche Begruendung wie
+ * `wendeNennwertAn` (~15.000 Dateien parsen kostet ~1 s neben dem Kopieren derselben Dateien).
+ *
+ * Unlesbare Dateien werden GEZAEHLT, nicht verschluckt: ohne die Zahl saehe ein systemischer
+ * Lesefehler wie ein geschrumpfter Bestand aus, und jeder Bucket faellt gleichzeitig — die
+ * Reihe wuerde einen Rueckgang zeigen, wo ein Bruch steht.
+ */
+function namensherkunftLesen(ziel) {
+  const zeilen = [];
+  let unlesbar = 0;
+  for (const f of fs.readdirSync(ziel)) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
+      const meta = (j && j.meta) || {};
+      zeilen.push({
+        ticker: f.slice(0, -'.json'.length),
+        bucket: namensherkunftBucket(j && j.meta),
+        snapshot: { meta, marketCap: j && j.marketCap },
+      });
+    } catch (e) { unlesbar++; }
+  }
+  return { zeilen, unlesbar };
+}
+
+/**
+ * Haengt den Tages-Eintrag an die Reihe an. ANHAENGEN, NIE UEBERSCHREIBEN — die Reihe IST die
+ * Auflage; eine Datei, die nur den letzten Tag traegt, misst genau das, was ohne sie auch
+ * schon sichtbar waere.
+ *
+ * EINE KAPUTTE BESTANDSDATEI WIRD NICHT UEBERSCHRIEBEN. Sie ist der einzige Ort, an dem der
+ * Verlauf liegt; ein "dann fange ich eben neu an" haette den Beweis vernichtet, den diese
+ * Auflage retten soll. Fehlende Datei (Erstanlage) ist dagegen der Normalfall.
+ */
+function namensherkunftSchreiben(pfad, datum, eintrag) {
+  let roh = null;
+  try {
+    roh = JSON.parse(fs.readFileSync(pfad, 'utf8'));
+  } catch (e) {
+    if (e && e.code === 'ENOENT') roh = { _doc: NAMENSHERKUNFT_DOC, byDate: {} };
+    else throw new Error(`${pfad} liegt vor, ist aber nicht lesbar/parsebar (${e.message}); die Reihe wird NICHT ueberschrieben`);
+  }
+  if (!roh || typeof roh !== 'object' || Array.isArray(roh) || !roh.byDate || typeof roh.byDate !== 'object' || Array.isArray(roh.byDate)) {
+    throw new Error(`${pfad}: 'byDate' fehlt oder ist kein Objekt; die Reihe wird NICHT ueberschrieben`);
+  }
+  roh._doc = NAMENSHERKUNFT_DOC;
+  roh.byDate[datum] = eintrag;
+  fs.mkdirSync(path.dirname(pfad), { recursive: true });
+  writeFileAtomic(pfad, JSON.stringify(roh, null, 2) + '\n');
+  return Object.keys(roh.byDate).length;
+}
+
+/**
+ * M5 — das Interims-Protokoll. Zaehlt die Umbenennungen dieses Laufs je HERKUNFT des
+ * QUELL-Beins (also des Beins, dessen Name aufgepraegt wird) und listet die
+ * `watchlist`-Faelle NAMENTLICH.
+ *
+ * KEINE WIRKUNG: keine Umbenennung unterbleibt, keine Zeile wird angefasst. Am
+ * Entscheidungstag (G2, Urteil §8) liegt damit nicht nur eine Zahl vor, sondern die pruefbare
+ * Liste — und genau das ist der Unterschied zwischen "es gibt die Klasse" und "hier ist sie".
+ */
+function umbenennungsProtokoll(eintraege) {
+  const jeHerkunft = {};
+  const watchlistFaelle = [];
+  for (const e of eintraege || []) {
+    const q = e.quelleHerkunft === null || e.quelleHerkunft === undefined ? 'fehlt' : String(e.quelleHerkunft);
+    jeHerkunft[q] = (jeHerkunft[q] || 0) + 1;
+    if (q === 'watchlist') watchlistFaelle.push(`${e.verlierer}<-${e.sieger}`);
+  }
+  return { gesamt: (eintraege || []).length, jeHerkunft, watchlistFaelle: watchlistFaelle.sort() };
+}
+
 /**
  * Gemeinsamer Lader der beiden TICKER-Register (NAV-Ausschluss und Quarantaene). Ein einziger
  * Lader, weil beide dieselben Wachen brauchen — Pflichtfelder, Ticker-Dublette,
@@ -1105,6 +1293,7 @@ function run(argv) {
   const navRegisterPfad = get('--nav-register', NAV_REGISTER_STANDARDPFAD);
   const identitaetsRegisterPfad = get('--identitaets-register', IDENTITAETS_REGISTER_STANDARDPFAD);
   const quarantaenePfad = get('--quarantaene', QUARANTAENE_STANDARDPFAD);
+  const namensherkunftPfad = get('--namensherkunft', namensherkunftStandardpfad(ziel));
   const heute = get('--heute', new Date().toISOString());
 
   // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
@@ -1403,6 +1592,47 @@ function run(argv) {
   console.log(`NAV-Register: ${navTickerListe.length} Namen vom Scoring ausgeschlossen (${navTickerListe.join(', ')})`);
   const anteil = gescannt > 0 ? (uebersprungen.length / gescannt * 100).toFixed(1) : '0.0';
   console.log(`[f12-filter] ${uebersprungen.length} von ${gescannt} Snapshots uebersprungen (kein Watchlist-Eintrag) = ${anteil} % — ${uebernehmen.length} Dateien nach ${ziel} uebernommen. Nichts geloescht: ${eingang} bleibt vollstaendig. Eingangs-Zahl fuer den Coverage-Floor: ${MANIFEST_EINGANG_FELD}=${gescannt}.`);
+
+  // ── M10/M1 + M5 (Urteil _COURT-M10-2026-08-30) — REINE MESSUNG, ganz am Schluss ──────────
+  // SEQUENZIELL und ZULETZT: dieser Schritt liest den Bestand, den alle Stufen davor
+  // hinterlassen haben, und aendert nichts mehr. Ein Wurf hier darf den Tageslauf niemals
+  // faellen (Praezedenz: der harte Tageslauf-Abbruch aus einer Vorstufen-Reihenfolge,
+  // orchestrator-2026-08-29.md:554) — deshalb faengt der Mantel ALLES und weist die
+  // Degradation aus. Eine still ausfallende Messung ist keine Messung.
+  try {
+    // M5: die Quell-Herkunft der U3-Milan-Umbenennungen wird REIN LESEND nachgeholt (Urteil
+    // §7: `milanSchreiben`/U3 ist N1 und wird nicht angefasst). Der Sieger wird von keiner
+    // Stufe umgeschrieben, sein `nameSource` ist also unveraendert.
+    const milanProtokoll = [];
+    for (const u of urteile) {
+      if (u.grund !== 'umbenennen') continue;
+      let quelleHerkunft;
+      try {
+        const j = JSON.parse(fs.readFileSync(path.join(ziel, safeSnapshotFilename(u.sieger)), 'utf8'));
+        quelleHerkunft = j && j.meta ? j.meta.nameSource : undefined;
+      } catch (e) { quelleHerkunft = undefined; }
+      for (const v of u.verlierer) {
+        milanProtokoll.push({ kanal: 'U3-Milan', verlierer: v, sieger: u.sieger, name: u.name, quelleHerkunft });
+      }
+    }
+    const protokoll = umbenennungsProtokoll([...(zwillinge.protokoll || []), ...milanProtokoll]);
+    console.log(`[m10-umbenennungs-protokoll] ${protokoll.gesamt} Umbenennungen in der Vorstufe, je Herkunft des Quell-Beins: ${JSON.stringify(protokoll.jeHerkunft)}. Kein Bein wurde deswegen anders behandelt — das Protokoll beobachtet nur (Auflage M5).`);
+    console.log(`[m10-umbenennungs-protokoll] watchlist-benannte Quell-Beine: ${protokoll.watchlistFaelle.length} — ${protokoll.watchlistFaelle.join(', ') || '(keine)'}`);
+
+    const { zeilen, unlesbar: mUnlesbar } = namensherkunftLesen(ziel);
+    const zaehlung = namensherkunftZaehlen(zeilen);
+    const summe = Object.values(zaehlung.verteilung).reduce((a, b) => a + b, 0);
+    if (summe !== zaehlung.gelesen) {
+      // Kann nur brechen, wenn jemand die Bucket-Zuordnung aufweicht. Dann ist die Reihe
+      // falsch, und eine falsche Messreihe ist schlimmer als eine fehlende.
+      throw new Error(`Bucket-Arithmetik gerissen: Summe ${summe} !== gelesene Zeilen ${zaehlung.gelesen}`);
+    }
+    const eintrag = { ...zaehlung, unlesbar: mUnlesbar, umbenennungen: protokoll };
+    const tage = namensherkunftSchreiben(namensherkunftPfad, String(heute).slice(0, 10), eintrag);
+    console.log(`[m10-namensherkunft] ${zaehlung.gelesen} Zeilen gezaehlt (${mUnlesbar} nicht lesbar): ${JSON.stringify(zaehlung.verteilung)}; ${zaehlung.mehrbeinGruppen} mehrbeinige Emittentengruppen, davon ${zaehlung.watchlistSieger} mit Sieger nameSource='watchlist' (${zaehlung.unterdrueckteBeine} unterdrueckte Beine). Reihe: ${tage} Tage in ${namensherkunftPfad}. REINE MESSUNG — kein Gate, kein Konsument.`);
+  } catch (e) {
+    console.error(`::warning::M10-Herkunftszaehler — Messung ausgefallen (${e && e.message ? e.message : e}). Der Lauf laeuft weiter (Exit 0, reine Messung), aber die Tageszeile FEHLT in ${namensherkunftPfad}. Auflage M1 (_COURT-M10-2026-08-30) hat Frist 20.09.2026 — ein wiederholter Ausfall ist ein Befund, kein Wetter.`);
+  }
   return 0;
 }
 
@@ -1418,5 +1648,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   nennwertStrip, nennwertUmbenennungen, wendeNennwertAn, NENNWERT_KUERZEL, NENNWERT_ANKER,
   // Quarantaene (ENTSCHIED 37) — fuer TDD. Waechter: tests/quarantaene.test.js
   ladeTickerRegister, ladeQuarantaene, quarantaeneFaellig,
-  QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER };
+  QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER,
+  // M10/M1 + M5 (_COURT-M10-2026-08-30) — fuer TDD. Waechter: tests/m10-namensherkunft-zaehler.test.js
+  namensherkunftBucket, namensherkunftZaehlen, namensherkunftLesen, namensherkunftSchreiben,
+  umbenennungsProtokoll, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad };
 if (require.main === module) process.exit(run(process.argv));

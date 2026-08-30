@@ -1714,12 +1714,25 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const _ccyAmbiguous = (_fc == null);
   const exchangeName = _y(pr, 'exchangeName') || '';
   // M10 / G3-a (Entscheid 30.08.2026): die HERKUNFT des Namens wird mitgeschrieben.
-  // Warum jetzt und nicht nach dem Gericht: das heutige Ersatz-Merkmal ist `name === ticker`,
-  // und es verschwindet mit der 30-Tage-Rotation der Watchlist — spaetestens am 25.09. traegt
-  // jede watchlist-benannte Zeile still einen Feed-Namen. Danach ist die Frage, wie gross die
-  // Klasse wirklich ist, nicht mehr unentschieden, sondern UNENTSCHEIDBAR. Das Feld ist rein
-  // additiv, hat KEINEN Konsumenten und trifft keine der sieben Gerichtsfragen vor — es macht
-  // die Messung erst moeglich, an der G2 laut Akte ohnehin haengt.
+  //
+  // WELCHES MERKMAL EROSIERT — berichtigt durch _COURT-M10-2026-08-30, Auflage M3, Befund K-7.
+  // Die urspruengliche Fassung nannte hier das U1-Platzhalter-Merkmal (Name gleich Ticker) als
+  // das erodierende. Das war um zwei Groessenordnungen falsch: gemessen ist die Klasse ueber
+  // `meta.name === watchlistEntry.name` — 6.862 Zeilen (Akte akte-m10-identitaet-2026-08-30.md
+  // §1.5); die U1-Platzhalterklasse zaehlt 110 von 15.046 Snapshots (s. U1-Kopf unten). Nach der
+  // Rotation ist dieser Kommentar das Einzige, was noch erklaert, WARUM es das Feld gibt — er
+  // darf die Klasse deshalb nicht falsch benennen.
+  //
+  // Warum jetzt und nicht nach dem Gericht: das Ersatz-Merkmal verschwindet mit der 30-Tage-
+  // Rotation der Watchlist — spaetestens am 25.09. traegt jede watchlist-benannte Zeile still
+  // einen Feed-Namen. Danach ist die Frage, wie gross die Klasse wirklich ist, nicht mehr
+  // unentschieden, sondern UNENTSCHEIDBAR. Das Feld ist rein additiv, hat KEINEN Konsumenten
+  // (Auflage M2, Waechter tests/m10-namensherkunft-zaehler.test.js) und trifft keine der sieben
+  // Gerichtsfragen vor — es macht die Messung erst moeglich, an der G2 laut Akte ohnehin haengt.
+  // Die Frist ist mit dem Feld allein NICHT gestoppt, sondern UMGEZOGEN (Urteil §6): ohne
+  // committeten Zaehler zeigt der Bestand am 26.09. nur das ERGEBNIS der Rotation, nie ihren
+  // VERLAUF. Der Zaehler ist Auflage M1, Frist 20.09.2026, und schreibt
+  // data-health/namensherkunft-history.json.
   // Eine Quelle, nicht zwei: Name und Herkunft entstehen in derselben Kette, sonst driften sie.
   const _namensKette = [
     ['longName', _y(pr, 'longName')],
@@ -1745,11 +1758,26 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // dem Klarnamen der Zweitnotiz verschmelzen: 27 der 53 doppelt im Board stehenden
       // Emittenten haben genau daran gelegen.
       //
-      // EINSEITIG SICHER, und das ist der Grund, warum dieser Teil ohne Gericht gebaut werden
-      // durfte: alle vier Quellen sind Felder DIESES Wertpapiers (Yahoo-Datensatz + eigene
-      // Watchlist-Zeile). Der Name kann von hier aus nie aus einem FREMDEN Datensatz kommen,
-      // also kann diese Kette eine Verschmelzung nur VERHINDERN (schlechterer Name), nie
-      // ERZWINGEN. Genau diese Eigenschaft nagelt tests/u1-namensplatzhalter.test.js fest.
+      // EINSEITIGE QUELLE — ABER NICHT EINSEITIGE WIRKUNG.
+      // Berichtigt durch _COURT-M10-2026-08-30, Auflage M3 (Befund K-2).
+      //
+      // WAHR und unveraendert gueltig: alle vier Quellen sind Felder DIESES Wertpapiers
+      // (Yahoo-Datensatz + eigene Watchlist-Zeile). Der Name kann von hier aus nie aus einem
+      // FREMDEN Datensatz kommen. Genau diese Beobachtung nagelt
+      // tests/u1-namensplatzhalter.test.js fest, und jene Assertions bleiben stehen.
+      //
+      // FALSCH war die daraus gezogene FOLGERUNG: dass diese Kette eine Verschmelzung
+      // ausschliesslich VERHINDERN und niemals ERZWINGEN koenne. Ein EIGENES Feld kann den
+      // Namen einer FREMDEN Firma tragen — `MRK.SW` trug ueber die Watchlist-Zeile (Sprosse 3)
+      // den Namen von Merck & Co. und fiel damit in die Emittentengruppe `merckkgaa`. Das ist
+      // eine ERZWUNGENE Verschmelzung, entstanden aus einer einseitigen Quelle. Die
+      // Einseitigkeit der QUELLE sagt nichts ueber die Richtung der WIRKUNG.
+      //
+      // Folge fuer die Bau-Begruendung: dieser Teil (U1, ENTSCHIED 21 Punkt 2) bleibt
+      // ratifiziert — das Urteil hat die Beobachtung bestaetigt und nur die Folgerung
+      // kassiert. Wer kuenftig eine Sprosse ergaenzt, darf sich NICHT mehr auf
+      // "kann nur verhindern" berufen; die fehlende Richtung ist in
+      // tests/u1-namensplatzhalter.test.js als eigene Wache festgenagelt (Auflage M4).
       //
       // ANKER-GRENZE (bewusst offen, ENTSCHIED 21 Punkt 2): das Uebertragen eines Klarnamens
       // ueber die Notierungen EINES Emittenten hinweg braucht einen Anker, der die Beine
