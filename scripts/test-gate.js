@@ -48,6 +48,7 @@
  */
 
 const { execFileSync, spawnSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -229,14 +230,39 @@ const STUMM = (out) => out.trim() === '';
 // Proben aus t168-layer-diff und bh-b05-universe — in einem prep-Job, der GRUEN
 // durchlief. Die Triage dieses Laufs ist genau daran haengengeblieben und hat eine
 // Stunde lang einen Fehler im prep-Job gesucht, den es nie gab.
-// Regel: nur was DIESES Skript selbst als Verdikt ausspricht, darf annotieren.
-// Fremder Text wird zitiert statt ausgefuehrt — er bleibt vollstaendig und
-// unveraendert im Protokoll lesbar, er kommandiert nur nichts mehr.
-// BEWUSST NICHT entschaerft: log() im echten Lauf. '::error::Test failed: X' und
+//
+// ERSTER VERSUCH, EMPIRISCH WIDERLEGT: die Zeilen einzuruecken ('::' -> '  ::').
+// Lokal sah das richtig aus (keine Zeile beginnt mehr mit '::'), im echten Lauf
+// 33293190156 standen die Annotationen unveraendert da — GitHubs Parser schneidet
+// fuehrenden Leerraum ab, bevor er auf '::' prueft. Die Messebene war falsch: nicht
+// "faengt die Zeile mit :: an", sondern "was macht der Runner damit".
+//
+// JETZT GitHubs EIGENER, DOKUMENTIERTER Mechanismus fuer genau diesen Fall
+// (Workflow commands, "Stopping and starting workflow commands"): ein zufaelliges,
+// pro Lauf eindeutiges Token schaltet die Kommando-Verarbeitung ab und wieder an.
+// Der fremde Text bleibt dadurch BYTE-IDENTISCH im Protokoll — er wird nicht
+// veraendert, nur nicht mehr ausgefuehrt.
+// BEWUSST NICHT umschlossen: log() im echten Lauf. '::error::Test failed: X' und
 // '::error::Testdatei X laeuft in KEINEM Job' sind das Verdikt des Gates ueber den
 // Kindprozess, nicht dessen eigene Rede — sie annotieren unveraendert weiter, und
 // damit bleibt jeder echte Fehlschlag im Annotationsband sichtbar.
-const zitiert = (text) => text.replace(/^::/gm, '  ::');
+const STOPP_TOKEN = 'test-gate-' + crypto.randomUUID();
+
+// Dieselbe Toleranz wie GitHubs Parser (fuehrender Leerraum zaehlt nicht) — sonst
+// haette die Wache denselben blinden Fleck wie der widerlegte erste Versuch.
+const HAT_KOMMANDO = /^[ \t]*::/m;
+
+/** Umschliesst fremden Text mit dem stop-commands-Paar. Marker und Text gehen in
+ *  EINEM Schreibvorgang raus: ein halb geschriebener Block wuerde die Kommandos
+ *  fuer den Rest des Jobs abgeschaltet lassen und echte Befunde verschlucken. */
+function ohneKommandos(text) {
+  const mitZeilenende = text.endsWith('\n') ? text : text + '\n';
+  return `::stop-commands::${STOPP_TOKEN}\n${mitZeilenende}::${STOPP_TOKEN}::\n`;
+}
+
+/** Nur umschliessen, wenn wirklich ein Kommando drinsteht — sonst stuenden zwei
+ *  Marker-Zeilen um die Ausgabe jeder der ~200 Testdateien. */
+const fremdeAusgabe = (text) => (HAT_KOMMANDO.test(text) ? ohneKommandos(text) : text);
 
 function runFiles(files, cwd, log) {
   const failed = [];
@@ -244,7 +270,7 @@ function runFiles(files, cwd, log) {
   for (const t of files) {
     log(`--- ${t} ---`);
     const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
-    process.stdout.write(zitiert((r.stdout || '') + (r.stderr || '')));
+    process.stdout.write(fremdeAusgabe((r.stdout || '') + (r.stderr || '')));
     if (r.status !== 0) { failed.push(t); continue; }
     const ausgabe = (r.stdout || '') + (r.stderr || '');
     if (NICHTS_GEPRUEFT(ausgabe)) {
@@ -364,7 +390,10 @@ function selftest() {
   // emit: die Proben simulieren rote Gate-Laeufe. Deren '::error::'/'::warning::'
   // sind Beweismittel, keine Befunde ueber dieses Repo — sie duerfen den Lauf nicht
   // annotieren. Die Pruefungen unten lesen r.lines (Rohtext) und merken davon nichts.
-  const base = { cwd: dir, exemptPrefixes: [], summaryFile, emit: (s) => console.log(zitiert(s)) };
+  const base = {
+    cwd: dir, exemptPrefixes: [], summaryFile,
+    emit: (s) => process.stdout.write(HAT_KOMMANDO.test(s) ? ohneKommandos(s) : s + '\n'),
+  };
   const fails = [];
   const check = (name, ok, detail) => {
     console.log(`${ok ? 'PASS' : 'FAIL'} selftest: ${name}${ok ? '' : ' — ' + detail}`);

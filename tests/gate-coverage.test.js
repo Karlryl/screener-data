@@ -33,7 +33,16 @@ const gate = require(GATE_SRC);
 let fail = 0;
 function check(name, fn) {
   try { fn(); console.log('  ok   ' + name); }
-  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+  catch (e) {
+    fail++;
+    // e.stdout mitschreiben: scripts/test-gate.js meldet seinen eigenen Selftest-
+    // Fehlschlag ausschliesslich auf stdout, execFileSync baut die Message eines
+    // Wurfs aber aus stderr. Ohne diese Zeile meldet ein Regress im Selftest bloss
+    // "Command failed: node … --selftest" — welche der zehn Proben brach, stuende
+    // nirgends. Genau die Klasse Blindflug, gegen die dieser PR angetreten ist.
+    const dazu = e.stdout ? '\n       ' + String(e.stdout).trim().split('\n').join('\n       ') : '';
+    console.error('FAIL   ' + name + '\n       ' + e.message + dazu);
+  }
 }
 
 const wf = fs.readFileSync(WF, 'utf8');
@@ -121,28 +130,52 @@ check('Forschungs-Spur ist eine Namensliste (neue Studien-Tests landen blockiere
 // stdout, GitHub machte daraus sechs echte Annotationen — an einem prep-Job, der
 // GRUEN durchlief, ueber Dateien, die im Repo gar nicht existieren. Die Triage hat
 // eine Stunde lang einen Fehler gesucht, den es nie gab.
-// Diese Wache haengt an den AUSGEGEBENEN BYTES, nicht an einem Textmuster in der
-// Quelle: sie faehrt den Selftest wirklich und liest, was herauskommt.
+//
+// DIE MESSEBENE IST DER PUNKT. Der erste Fix rueckte die Zeilen nur ein und die
+// Wache pruefte "faengt mit :: an" — beides gruen, und im echten Lauf 33293190156
+// standen die Annotationen unveraendert da: GitHubs Parser schneidet fuehrenden
+// Leerraum ab. Diese Wache bildet deshalb die ECHTE Semantik nach (fuehrender
+// Leerraum zaehlt nicht, stop-commands schaltet ab und wieder an) statt eine
+// bequemere Ersatzfrage zu stellen.
+function ungeschuetzteKommandos(text) {
+  const treffer = [];
+  let token = null;
+  for (const roh of text.split('\n')) {
+    const l = roh.replace(/\r$/, '').replace(/^[ \t]+/, '');
+    const stop = l.match(/^::stop-commands::(.+)$/);
+    if (stop) { token = stop[1]; continue; }
+    if (token !== null) { if (l === `::${token}::`) token = null; continue; }
+    if (l.startsWith('::')) treffer.push(l);
+  }
+  return treffer;
+}
+
 check('Selftest erzeugt KEINE Lauf-Annotation, behaelt den Text aber (33289964981)', () => {
   const out = execFileSync(process.execPath, [GATE_SRC, '--selftest'], { cwd: ROOT, encoding: 'utf8' });
-  const kommandos = out.split('\n').map((l) => l.replace(/\r$/, '')).filter((l) => l.startsWith('::'));
+  const offen = ungeschuetzteKommandos(out);
   assert.deepEqual(
-    kommandos, [],
-    'Der Selftest schickt Workflow-Kommandos nach stdout — GitHub macht daraus erfundene\n' +
-    '       Fehler an einem gruenen Lauf:\n         ' + kommandos.join('\n         '),
+    offen, [],
+    'Der Selftest schickt Workflow-Kommandos ungeschuetzt nach stdout — GitHub macht daraus\n' +
+    '       erfundene Fehler an einem gruenen Lauf:\n         ' + offen.join('\n         '),
   );
   // ABWESENHEIT allein waere auch erfuellt, wenn jemand die Ausgabe einfach loescht.
-  // Also die ANWESENHEIT gleich mit: der Beweis der Negativ-Probe steht noch da, zitiert.
+  // Also die ANWESENHEIT gleich mit: der Beweis der Negativ-Probe steht unveraendert da.
   assert.match(
-    out, /^ {2}::error::Testdatei tests\/orphan\.test\.js laeuft in KEINEM Job/m,
-    'Der Beleg der Waechter-Erhalt-Probe fehlt in der Ausgabe — entschaerft heisst zitiert, nicht geloescht.',
+    out, /^::error::Testdatei tests\/orphan\.test\.js laeuft in KEINEM Job/m,
+    'Der Beleg der Waechter-Erhalt-Probe fehlt — abgeschaltet heisst umschlossen, nicht geloescht.',
   );
+  // Und der Schutz muss wieder ZUGEMACHT werden: ein offenes stop-commands wuerde
+  // jede spaetere echte Annotation des Jobs mitverschlucken.
+  const auf = (out.match(/^::stop-commands::/gm) || []).length;
+  const zu = (out.match(/^::test-gate-[0-9a-f-]+::$/gm) || []).length;
+  assert.equal(auf, zu, `stop-commands ${auf}x geoeffnet, aber ${zu}x geschlossen — der Rest des Jobs bliebe stumm.`);
+  assert.ok(auf > 0, 'Kein einziges stop-commands-Paar — die Negativ-Proben laufen ungeschuetzt.');
 });
 
 // GEGENPROBE am selben Objekt: ein ECHTER Fehlschlag im echten Lauf MUSS weiter
-// annotieren. Ohne sie waere die Wache oben auch dann gruen, wenn die Entschaerfung
+// annotieren. Ohne sie waere die Wache oben auch dann gruen, wenn die Abschaltung
 // zu breit greift und das Gate seine roten X gar nicht mehr melden kann.
-check('ECHTER Gate-Befund annotiert weiterhin (Entschaerfung greift nicht zu breit)', () => {
+check('ECHTER Gate-Befund annotiert weiterhin (Abschaltung greift nicht zu breit)', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-annot-gegenprobe-'));
   const gesagt = [];
   const echtesLog = console.log;
@@ -158,8 +191,10 @@ check('ECHTER Gate-Befund annotiert weiterhin (Entschaerfung greift nicht zu bre
     console.log = echtesLog;
     fs.rmSync(tmp, { recursive: true, force: true });
   }
+  // Dieselbe Messebene wie oben: die Zeile muss ein Kommando BLEIBEN, nicht nur
+  // vorkommen — sonst waere ein versehentlich umschlossenes Verdikt weiter gruen.
   assert.ok(
-    gesagt.some((l) => l.startsWith('::error::') && l.includes('tests/rot.test.js')),
+    ungeschuetzteKommandos(gesagt.join('\n')).some((l) => l.startsWith('::error::') && l.includes('tests/rot.test.js')),
     'Ein echter Fehlschlag erzeugt keine Annotation mehr — das Gate ist stumm geworden.',
   );
 });
