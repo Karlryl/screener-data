@@ -1,0 +1,58 @@
+{
+ "schema": "studie-rr9-a1-ist-stand-nachweis/v1",
+ "auflage": "RR9-A1 (B1-Strich) Ziffer 1-3: Ist-Stand-Manifest ueber die drei benannten Orte",
+ "erstelltAm": "2026-08-30",
+ "warumNurDerNachweisImRepo": "Das Manifest fuehrt je Blob einen Eintrag und ist 4884 KB. R14a deckelt Studien-Artefakte typfrei bei 200 KB - der Deckel ist aelter als dieses Stueck und hat recht, der Altapparat starb an Megabyte-Artefakten. Das Manifest liegt deshalb NEBEN dem Speicher, wo der Lesepfad es zur Lesezeit prueft (scripts/studie-panel-bau.py --manifest); im Repo steht dieser Nachweis. Das Manifest ist mit dem im Repo liegenden Werkzeug jederzeit neu erzeugbar.",
+ "manifestPfad": "ARBEIT/RR9-A1-ist-stand-manifest-2026-08-30.json (relativ zu EARLY_DETECTION_DATA_ROOT)",
+ "manifestSha256": "a20ff059ae98a0196efa80f46493454dc93d0288285b41084ec0a935fe20919b",
+ "manifestBytes": 5001278,
+ "manifestSchema": "studie-rr9-b1-ist-stand-manifest/v2",
+ "erzeugtMit": "scripts/studie-rr9-b1-manifest.py bauen",
+ "selbsttestVorDemLauf": "19 ok, 0 FAIL",
+ "orte": {
+  "early-detection-v4": {
+   "blobs": 16984,
+   "bytes": 169978794950,
+   "vorhanden": true,
+   "ohneHashNamen": 0
+  },
+  "early-detection-v4-sealed127": {
+   "blobs": 127,
+   "bytes": 7540082000,
+   "vorhanden": true,
+   "ohneHashNamen": 0
+  },
+  "early-detection-store": {
+   "blobs": 48,
+   "bytes": 1718255454,
+   "vorhanden": true,
+   "ohneHashNamen": 0
+  }
+ },
+ "gesamt": {
+  "blobs": 17159,
+  "bytes": 179237132404
+ },
+ "dateienGegenInhalte": {
+  "dateien": 17159,
+  "verschiedeneInhalte": 17158,
+  "doppelablagen": 1,
+  "hinweis": "Die Differenz von 1 ist KEIN Zaehlfehler: unter early-detection-v4 liegt EIN Inhalt zweimal ab. Das Werkzeug fuehrt die Doppelablage unter einem Inhalts-Hash mit zwei Dateinamen und zaehlt sie als zwei Dateien - wer nur die Schluessel des Manifests zaehlt, kommt auf 17158 und meint, eine Datei fehle. Beide Zahlen gehoeren in den Bericht."
+ },
+ "nameGegenInhalt": {
+  "abweichungen": 0,
+  "geprueft": 17159,
+  "methode": {
+   "bytesJeSekunde": 1212950394,
+   "durchsatzMbProSekunde": 1213.0,
+   "sekunden": 147.77,
+   "warumBerichtet": "RR9-A4: ein Leser muss Inhalts-Hashen von einem Namensvergleich unterscheiden koennen, ohne den Code zu lesen.",
+   "wie": "Inhalts-Hash: SHA-256 ueber alle Dateibytes jedes Blobs. KEIN Dateinamens- und KEIN Indexvergleich."
+  }
+ },
+ "lesepfadTripwireBelegt": {
+  "bekannterBlob": "exit 0",
+  "unbekannterBlob": "exit 3 (STOPP)",
+  "hinweis": "am echten Exit-Code gemessen, nicht durch eine Pipe - der erste Versuch las tail und haette den STOPP als Erfolg gebucht"
+ }
+}
