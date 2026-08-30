@@ -681,15 +681,25 @@ def zweig_rotproben(praereg=PRAEREG, manifest=MANIFEST, b1_modul=B1_MODUL,
                                        manifest=manifest, b1_modul=b1_modul))
 
     # -- DRIFT, rot: die geladene Liste weicht ab, Registrierung unversehrt ---
+    # Die Vorlauf-Lage wird HEREINGEREICHT, nicht dem Produktivregister
+    # entnommen: "erstes Feuern" ist eine Eigenschaft des Zweigs, keine des
+    # heutigen Registerstandes. Liefe die Probe gegen das echte Register, wuerde
+    # sie nach einem spaeteren, voellig regelkonformen Reparatur-Eintrag rot -
+    # ein Fehlalarm, der die Rot-Probe selbst entwertet.
     verstellt = list(registriert)
     verstellt[0] = verstellt[0] + "X"
-    probe("DRIFT", "ein Eintrag der zur Laufzeit geladenen Liste geaendert",
-          SANKTION_DRIFT,
-          lambda: pruefe_nullpunkt(verstellt, praereg=praereg,
-                                   manifest=manifest, b1_modul=b1_modul))
-    probe("DRIFT", "zur Laufzeit gar keine Liste geladen", SANKTION_DRIFT,
-          lambda: pruefe_nullpunkt(None, praereg=praereg, manifest=manifest,
-                                   b1_modul=b1_modul))
+    with tempfile.TemporaryDirectory() as tmp:
+        ohne_vorlauf = os.path.join(tmp, "ledger-ohne-vorlauf.json")
+        with open(ohne_vorlauf, "w", encoding="utf-8") as fh:
+            json.dump({"events": []}, fh)
+        probe("DRIFT", "ein Eintrag der zur Laufzeit geladenen Liste geaendert",
+              SANKTION_DRIFT,
+              lambda: pruefe_nullpunkt(verstellt, praereg=praereg,
+                                       manifest=manifest, ledger=ohne_vorlauf,
+                                       b1_modul=b1_modul))
+        probe("DRIFT", "zur Laufzeit gar keine Liste geladen", SANKTION_DRIFT,
+              lambda: pruefe_nullpunkt(None, praereg=praereg, manifest=manifest,
+                                       ledger=ohne_vorlauf, b1_modul=b1_modul))
 
     # -- DRIFT, zweites Feuern: Kontingent EINS verbraucht -> BEERDIGEN -------
     with tempfile.TemporaryDirectory() as tmp:
@@ -719,6 +729,9 @@ def zweig_rotproben(praereg=PRAEREG, manifest=MANIFEST, b1_modul=B1_MODUL,
     wache = beerdigungs_wache(b1_modul=b1_modul, praereg=praereg)
     zweige_rot = {z: any(p["traegt"] for p in proben if p["zweig"] == z)
                   for z in ("ANKER", "DRIFT")}
+    # Der HEUTIGE Stand des Kontingents, am Produktivregister gemessen. Reine
+    # Berichtsangabe - die Rot-Proben oben haengen bewusst nicht daran.
+    vorlauf, vorlauf_quelle = drift_vorlauf()
     return {
         "schema": "studie-vb-a2-zweig-rotproben/v1",
         "auflage": "VB-A2 - _COURT-VIERBANK-OFFEN23-2026-08-30",
@@ -730,6 +743,13 @@ def zweig_rotproben(praereg=PRAEREG, manifest=MANIFEST, b1_modul=B1_MODUL,
                 "nicht abgeschlossen - und dann steht B3' UNGETEILT auf "
                 "BEERDIGEN, nicht auf STOPP."),
         "kettenprobe326": KETTENPROBE_326,
+        "produktivVorlauf": {
+            "reparaturAkteImRegister": vorlauf,
+            "quelle": vorlauf_quelle,
+            "bedeutung": ("0 = das Kontingent EINS ist unverbraucht, das "
+                          "naechste DRIFT-Feuern ist STOPP. >= 1 = verbraucht, "
+                          "das naechste DRIFT-Feuern ist BEERDIGEN."),
+        },
         "vba8": wache,
     }
 

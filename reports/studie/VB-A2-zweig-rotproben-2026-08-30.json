@@ -17,7 +17,7 @@
   },
   {
    "beobachteteSanktion": "BEERDIGEN",
-   "beobachtetesVerhalten": "B3'-ANKER-ABBRUCH (BEERDIGEN): <scratch>\\tmprxgey2fh\\preregistration.json traegt sha256 f87e5deeb0712c36aa74e268b74f0200c9e5dd4ab0dffa7d041ad907788401c7, registriert ist 799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c. Die Datei, aus der der Nullpunkt stammt, ist nicht mehr die registrierte. Die Registrierung selbst ist gebrochen; ohne V0 ist jede Differenz zwischen Vintage-Wechsel, Panel-Neubau und Konzept-Verbreiterung konfundiert und damit uninterpretierbar, in jede Richtung.",
+   "beobachtetesVerhalten": "B3'-ANKER-ABBRUCH (BEERDIGEN): <scratch>\\tmp76n0eibe\\preregistration.json traegt sha256 f87e5deeb0712c36aa74e268b74f0200c9e5dd4ab0dffa7d041ad907788401c7, registriert ist 799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c. Die Datei, aus der der Nullpunkt stammt, ist nicht mehr die registrierte. Die Registrierung selbst ist gebrochen; ohne V0 ist jede Differenz zwischen Vintage-Wechsel, Panel-Neubau und Konzept-Verbreiterung konfundiert und damit uninterpretierbar, in jede Richtung.",
    "datum": "2026-08-30",
    "eingriff": "die registrierte Praeregistrierung traegt einen abweichenden sha256",
    "erwarteteSanktion": "BEERDIGEN",
@@ -70,6 +70,11 @@
    "zweig": "BEIDE"
   }
  ],
+ "produktivVorlauf": {
+  "bedeutung": "0 = das Kontingent EINS ist unverbraucht, das naechste DRIFT-Feuern ist STOPP. >= 1 = verbraucht, das naechste DRIFT-Feuern ist BEERDIGEN.",
+  "quelle": "gezaehlt ueber 22 Registereintraege, Marke b3DriftReparatur",
+  "reparaturAkteImRegister": 0
+ },
  "schema": "studie-vb-a2-zweig-rotproben/v1",
  "vba8": {
   "ankerZweigLebt": true,

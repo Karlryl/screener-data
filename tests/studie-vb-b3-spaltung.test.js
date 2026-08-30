@@ -135,6 +135,14 @@ assert.ok(je('DRIFT').some((p) => p.eingriff.startsWith('Register nicht lesbar')
 assert.ok(a.proben.some((p) => p.eingriff.startsWith('GEGENPROBE')
   && p.beobachteteSanktion === 'KEIN BRUCH'));
 
+// Der Stand des Kontingents am PRODUKTIVREGISTER ist Berichtsangabe, keine
+// Bedingung: die Rot-Proben oben fahren gegen eingereichte Register-Lagen,
+// damit ein spaeterer, voellig regelkonformer Reparatur-Eintrag sie nicht
+// falsch rot faerbt. Geprueft wird nur, dass die Zahl ueberhaupt gemessen ist.
+assert.ok(Number.isInteger(a.produktivVorlauf.reparaturAkteImRegister)
+  && a.produktivVorlauf.reparaturAkteImRegister >= 0,
+'der Stand des Kontingents ist im Bericht nicht gemessen');
+
 // -- 5. VB-A8, die Sperrklausel als Pruefung --------------------------------
 assert.equal(a.vba8.anzahlAutomatischerBeerdigungen, 2);
 assert.equal(a.vba8.sollAnzahl, 2);
