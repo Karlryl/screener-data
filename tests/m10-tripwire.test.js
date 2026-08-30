@@ -676,6 +676,15 @@ test('M9: der Bericht wird geschrieben und liegt beim gemessenen Bestand, nicht 
   assert.ok(fs.existsSync(p), 'der Bericht existiert nach dem Lauf');
   assert.ok(!path.resolve(p).startsWith(path.resolve(__dirname, '..')),
     'ein Fixture-Lauf darf NIE in das echte data-health/ schreiben');
+  // GEGENRICHTUNG (ENTSCHIED 131): das ECHTE Tageslauf-Ziel muss sehr wohl im Repo landen —
+  // sonst faehrt der Bericht im `git add -A` des merge-Jobs nicht mit und die Zusage von M9
+  // ("Der Bericht wird COMMITTET") waere unerfuellbar. Ohne diese Haelfte pinnt der Test nur,
+  // wohin NICHT geschrieben wird; ein Pfad ins Nirgendwo bliebe gruen. Schwesterprobe:
+  // tests/m10-namensherkunft-zaehler.test.js (M1), Persistenz danach:
+  // tests/m10-persistenz-wache.test.js.
+  const repo = path.resolve(__dirname, '..');
+  assert.equal(path.resolve(tripwireStandardpfad(path.join(repo, 'snapshots'))),
+    path.resolve(repo, 'data-health', 'identitaets-tripwire.json'));
   const b = JSON.parse(fs.readFileSync(p, 'utf8'));
   assert.equal(b.zaehlung.ankerA, 1);
   assert.equal(b.zaehlung.ankerA_ausgenommen, 1);
