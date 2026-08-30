@@ -264,7 +264,7 @@ function bestaetigen(argv) {
   // Auch das Freigabe-Protokoll atomar: scripts/studie-zaehlprobe.py liest es als
   // Tor vor dem Datenzugriff. Eine halbe Datei waere dort kein Halt, sondern ein
   // Parse-Fehler an einer Stelle, an der ein Halt gemeint war.
-  writeFileAtomic(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
+  fs.writeFileSync(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
   process.stdout.write(`${JSON.stringify(freigabe, null, 1)}\n`);
   return 0;
 }
