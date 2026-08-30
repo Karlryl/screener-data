@@ -1706,6 +1706,21 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // vorhandene F-NY-004-Fail-Closed-Regel unten mit.
   const _ccyAmbiguous = (_fc == null);
   const exchangeName = _y(pr, 'exchangeName') || '';
+  // M10 / G3-a (Entscheid 30.08.2026): die HERKUNFT des Namens wird mitgeschrieben.
+  // Warum jetzt und nicht nach dem Gericht: das heutige Ersatz-Merkmal ist `name === ticker`,
+  // und es verschwindet mit der 30-Tage-Rotation der Watchlist — spaetestens am 25.09. traegt
+  // jede watchlist-benannte Zeile still einen Feed-Namen. Danach ist die Frage, wie gross die
+  // Klasse wirklich ist, nicht mehr unentschieden, sondern UNENTSCHEIDBAR. Das Feld ist rein
+  // additiv, hat KEINEN Konsumenten und trifft keine der sieben Gerichtsfragen vor — es macht
+  // die Messung erst moeglich, an der G2 laut Akte ohnehin haengt.
+  // Eine Quelle, nicht zwei: Name und Herkunft entstehen in derselben Kette, sonst driften sie.
+  const _namensKette = [
+    ['longName', _y(pr, 'longName')],
+    ['shortName', _y(pr, 'shortName')],
+    ['watchlist', watchlistEntry.name],
+    ['ticker', watchlistEntry.ticker],
+  ];
+  const _namensWahl = _namensKette.find(([, wert]) => wert) || ['ticker', watchlistEntry.ticker];
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
     meta: {
@@ -1733,7 +1748,8 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       // fuer sie bleibt allein dieser `shortName`-Rueckfall, und der wirkt erst, wenn Yahoo im
       // naechsten Zug ueberhaupt einen `shortName` liefert. Ein Anker ueber beliebige
       // Boersensuffixe waere ungemessen und ist deshalb NICHT gebaut.
-      name: _y(pr, 'longName') || _y(pr, 'shortName') || watchlistEntry.name || watchlistEntry.ticker,
+      name: _namensWahl[1],
+      nameSource: _namensWahl[0],   // longName | shortName | watchlist | ticker — M10/G3-a, ohne Konsument
       sector: _y(ap, 'sector') || null,
       industry: _y(ap, 'industry') || null,
       region: normalizeRegion(rcOriginal, exchangeName),  // Tag 134: enum, not Yahoo string
