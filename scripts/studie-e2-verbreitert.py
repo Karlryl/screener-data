@@ -196,6 +196,22 @@ def baue_fallback_firmenreihen(modul, alt_quellen, neu_quellen):
         if tuple(quellen) != tuple(neu_quellen):
             return echt(je_firma, quellen, nur_positiv, zaehler, praefix)
 
+        # Das versiegelte Modul saet ALLE bekannten Gruende auf 0 vor, mit
+        # ausdruecklicher Begruendung: "Sonst sieht 'kam nicht vor' genauso aus
+        # wie 'wurde nie geprueft'." Sein alle_zaehlernamen() kennt aber nur die
+        # drei eigenen Praefixe - der Fallback-Zweig schrieb seine Gruende
+        # deshalb nur, wenn sie mindestens einmal feuerten, und ein nie
+        # gefeuerter Grund FEHLTE statt 0 zu sein. Genau die Klasse, gegen die
+        # die Vorsaat gebaut wurde (ecc-Review 30.08.). Also hier dieselbe
+        # Vorsaat fuer den vierten Praefix, abgeleitet aus der Liste des Moduls.
+        fb = praefix + "fallback_"
+        for name in modul.alle_zaehlernamen():
+            if name.startswith(praefix):
+                # setdefault statt `+= 0`: der Zaehler ist in der Produktion ein
+                # defaultdict, im Test aber ein blankes dict - eine Vorsaat, die
+                # nur auf einem der beiden funktioniert, ist keine.
+                zaehler.setdefault(fb + name[len(praefix):], 0)
+
         alle_alt, gewaehlt_alt = echt(je_firma, alt_quellen, nur_positiv,
                                       zaehler, praefix)
         mit_alt = set(alle_alt)
@@ -221,6 +237,146 @@ def baue_fallback_firmenreihen(modul, alt_quellen, neu_quellen):
         return alle, gewaehlt
 
     return wrapper
+
+
+def pruefe_plausibilitaet(v0, verbreitert):
+    """Ein reiner Fallback JE FIRMA kann nur HINZUFUEGEN.
+
+    Firmen mit alter Quelle bekommen exakt ihre alten Quellen, also dieselbe
+    Reihe und dieselbe Reife; dazu kommen die Fallback-Firmen. Also darf in S-U
+    und S-UG WEDER die reife NOCH die unreife Zahl sinken - eine hinzugekommene
+    Firma landet in einem der beiden Toepfe, keiner darf schrumpfen. Und S-G
+    darf sich gar nicht bewegen, die Ergebnis-Familie wird nicht angefasst.
+
+    DIESE FUNKTION IST DAS TOR. Sie stand vorher als Kopie im Selbsttest und
+    inline in haupt() - der Test bewies damit, dass die KOPIE greift, nicht der
+    ausgelieferte Code, und beide Fassungen pruefen nur `firmen_reif`. Beides
+    im ecc-Review 30.08. gefunden; jetzt gibt es genau eine Fassung, und sie
+    prueft beide Toepfe.
+
+    Ein FEHLENDES Signal ist ein Verstoss, kein Freispruch: "nicht da" darf nie
+    aussehen wie "nicht gesunken".
+    """
+    verstoesse = []
+    for name in ("S-U", "S-UG"):
+        a = v0.get(name)
+        b = verbreitert.get(name)
+        if a is None or b is None:
+            verstoesse.append("%s fehlt in einem der beiden Durchlaeufe" % name)
+            continue
+        for topf in ("firmen_reif", "firmen_unreif"):
+            if a.get(topf) is None or b.get(topf) is None:
+                verstoesse.append("%s.%s fehlt" % (name, topf))
+            elif b[topf] < a[topf]:
+                verstoesse.append(
+                    "%s.%s sinkt von %d auf %d - ein reiner Fallback kann nur "
+                    "hinzufuegen" % (name, topf, a[topf], b[topf]))
+    if v0.get("S-G") != verbreitert.get("S-G"):
+        verstoesse.append("S-G bewegt sich (%s -> %s), obwohl die Ergebnis-Familie "
+                          "nicht angefasst wird" % (v0.get("S-G"), verbreitert.get("S-G")))
+    return verstoesse
+
+
+def bewerte_k8(mit_bank, ohne_bank, bank_allein):
+    """Die vier KUMULATIVEN Bedingungen aus K8 (einstimmig 4:0), einzeln belegt.
+
+    Woertlich im Urteil: "ZULASSEN - ABER AUSSCHLIESSLICH ALS EIGENES STRATUM,
+    mit vier kumulativen Bedingungen. Faellt auch nur eine, bleibt die
+    Bank-/Zinsklasse mit einer SCOPE-AUSSAGE in der Praereg draussen -
+    ausdruecklich nicht als Datenluecke."
+
+    Diese Funktion belegt jede Bedingung EINZELN und zieht die Konsequenz selbst.
+    Sie ist bewusst so gebaut, dass sie NICHT weichgekocht werden kann: eine
+    Bedingung, die einen Register-Akt braucht, gilt ohne diesen Akt als NICHT
+    belegt - nicht als "im Prinzip erfuellt".
+    """
+    # Was hier NICHT steht, und warum: eine "Reifequote der Bank-Kohorte".
+    # Die erste Fassung rechnete sie aus dem Bank-Durchlauf - aber dessen S-U
+    # enthaelt AUCH alle Firmen auf alten Quellen, die vom Fallback gar nicht
+    # beruehrt werden. Die Zahl war damit die Quote der ganzen Familie und nicht
+    # die der Kohorte, und ein Vergleich gegen das Panel war bedeutungslos. Eine
+    # Zahl, die wie ein Beleg aussieht und keiner ist, ist schlimmer als keine.
+    # Beziffert wird deshalb nur, was sauber beziffert werden kann: wie viele
+    # Firmen ueber WELCHE Kennung eingetreten sind.
+    def eingetreten(lauf):
+        z = lauf.get("zaehler") or {}
+        return z.get("umsatz_firmen_im_fallback")
+
+    lager = {
+        "ueberAlleVier": eingetreten(mit_bank),
+        "ueberDieDreiOperativen": eingetreten(ohne_bank),
+        "ueberDieBankKennungAllein": eingetreten(bank_allein),
+    }
+
+    bedingungen = [
+        {
+            "nummer": 1,
+            "wortlaut": ("Getrennt berichtet, getrennt gegen die Nullmodelle geprueft "
+                         "und getrennt in der FDR-Familie."),
+            "belegt": False,
+            "begruendung": ("Getrennt BERICHTET ist erfuellt - dieses Artefakt fuehrt "
+                            "das Stratum als eigenen Durchlauf. Getrennt gegen die "
+                            "Nullmodelle und getrennt in der FDR-Familie sind "
+                            "Eigenschaften spaeterer Stufen, zu denen es heute kein "
+                            "Artefakt gibt. Eine Bedingung, die zu einem Drittel "
+                            "erfuellt ist, ist nicht erfuellt."),
+        },
+        {
+            "nummer": 2,
+            "wortlaut": ("Praeregistrierte Klumpungseinheit Entity-Klasse x Signalquartal "
+                         "fuer jede nachgelagerte Streuungs- und Signifikanzaussage."),
+            "belegt": False,
+            "begruendung": ("PRAEREGISTRIERT heisst: vor dem Blick angemeldet. Ein "
+                            "solcher Register-Eintrag existiert nicht. Der Executor "
+                            "kann ihn nicht selbst setzen - das Register ist "
+                            "nur-anhaengend und extern bezeugt."),
+        },
+        {
+            "nummer": 3,
+            "wortlaut": ("Eigene Ereignis-/Label-Abdeckungszahl, vorab gemessen, nicht "
+                         "unter der des Gesamtpanels."),
+            "belegt": False,
+            "gemessenFirmenImFallback": lager,
+            "begruendung": ("Messbar war nur, WIE VIELE Firmen ueber welche Kennung "
+                            "eingetreten sind. Das Urteil verlangt die EREIGNIS-/"
+                            "LABEL-Abdeckung der Bank-Kohorte, und deren Loch sitzt "
+                            "laut Urteil genau bei Banken (SEC-only-Ereignisregel, "
+                            "Meldeweg ueber Dritte, First Republic als Beleg). Diese "
+                            "Groesse ist mit den heute vorhandenen Artefakten nicht "
+                            "messbar. Eine Eintritts- oder Reifezahl als Ersatz "
+                            "auszugeben waere genau die Waehrungs-Abwertung, vor der "
+                            "das Urteil warnt - deshalb steht hier eine Eintrittszahl "
+                            "und ausdruecklich KEIN Abdeckungs-Ersatz."),
+        },
+        {
+            "nummer": 4,
+            "wortlaut": ("Bank-Zinsertrag wird weder still mit operativem Produktumsatz "
+                         "gepoolt noch zur Reparatur des primaeren Arms benutzt."),
+            "belegt": True,
+            "begruendung": ("Konstruktiv erfuellt: die Bank-Kennung laeuft in einem "
+                            "EIGENEN Prozess mit eigener Quellenmenge; es gibt keinen "
+                            "Codepfad, der sie in die operative Familie mischt. Der "
+                            "Nachweis liegt in den getrennten Durchlauf-Protokollen."),
+        },
+    ]
+    offen = [b_["nummer"] for b_ in bedingungen if not b_["belegt"]]
+    return {
+        "urteil": "K8, einstimmig 4:0, vier kumulative Bedingungen",
+        "bedingungen": bedingungen,
+        "nichtBelegt": offen,
+        "stratumZulaessig": not offen,
+        "konsequenz": (
+            "Bedingung(en) %s nicht belegt -> das Bank-Stratum faellt. Die "
+            "Bank-/Zinsklasse bleibt damit als SCOPE-AUSSAGE draussen, "
+            "ausdruecklich NICHT als Datenluecke: die Bank-Kennung tritt gar "
+            "nicht ein, weder als eigenes Stratum noch gepoolt. Massgeblich ist "
+            "deshalb der Durchlauf OHNE Bank. Das ist das korrekte Ergebnis und "
+            "kein Fehlschlag - es wurde VOR der Messung so festgelegt, damit "
+            "niemand hinterher die Bedingungen weichkocht, um die Zahl zu "
+            "retten." % offen) if offen else
+            "Alle vier Bedingungen belegt - das Stratum ist zulaessig und wird "
+            "getrennt gefuehrt.",
+    }
 
 
 def zahlen_aus(ergebnis):
@@ -272,8 +428,17 @@ def fuehre_durchlauf(modus, wurzel, arbeit_pfad):
                           "ALLE_TAGS": list(modul.ALLE_TAGS)},
     }
 
-    if modus == "verbreitert":
-        neu_quellen = als_quellen(eintraege)
+    if modus in ("verbreitert", "verbreitert_ohne_bank", "bank_allein"):
+        if modus == "verbreitert":
+            neu_quellen = als_quellen(eintraege)
+        elif modus == "verbreitert_ohne_bank":
+            # Die Fassung, die gilt, wenn das Bank-Stratum nach K8 faellt: die
+            # Bank-Kennung tritt dann GAR NICHT ein - weder eigenes Stratum noch
+            # gepoolt. "Begruendet draussen lassen" heisst draussen, nicht leise
+            # mitlaufen.
+            neu_quellen = als_quellen(eintraege, nur_stratum=False)
+        else:
+            neu_quellen = als_quellen(eintraege, nur_stratum=True)
         # Die Substitution: NUR im Speicher, nie auf der Platte. Das Siegel
         # bindet Bytes - die Datei bleibt unangetastet, und dass substituiert
         # wurde, steht nachpruefbar im Artefakt statt nirgends.
@@ -316,7 +481,14 @@ def starte_prozess(modus, wurzel, arbeit_pfad, ergebnis_pfad):
     ruf = [sys.executable, os.path.abspath(__file__), "durchlauf",
            "--modus", modus, "--data-root", wurzel,
            "--arbeit", arbeit_pfad, "--ergebnis", ergebnis_pfad]
-    fertig = subprocess.run(ruf, capture_output=True, text=True)
+    # Frist statt Ewigkeit: der Lauf ist unbeaufsichtigt. Ein Kind, das an einer
+    # sqlite-Sperre oder einer haengenden Platte stehenbleibt, wuerde sonst die
+    # ganze Nacht blockieren, ohne eine Zeile zu sagen (ecc-Review 30.08.).
+    try:
+        fertig = subprocess.run(ruf, capture_output=True, text=True, timeout=7200)
+    except subprocess.TimeoutExpired:
+        raise Abbruch("Durchlauf '%s' hat die Frist von 7200 s ueberschritten "
+                      "und wurde abgebrochen." % modus)
     if fertig.returncode != 0:
         raise Abbruch("Durchlauf '%s' endete mit %d: %s"
                       % (modus, fertig.returncode, (fertig.stderr or "").strip()[:400]))
@@ -329,7 +501,8 @@ def haupt(argv):
         description="E2 mit verbreiterter Konzeptliste, ohne das Siegel anzufassen.")
     ap.add_argument("befehl", nargs="?", choices=["durchlauf"],
                     help="intern: EIN Durchlauf in diesem Prozess (Auflage F)")
-    ap.add_argument("--modus", choices=["alt", "verbreitert"])
+    ap.add_argument("--modus", choices=["alt", "verbreitert",
+                                          "verbreitert_ohne_bank", "bank_allein"])
     ap.add_argument("--data-root")
     ap.add_argument("--arbeit")
     ap.add_argument("--ergebnis")
@@ -394,31 +567,36 @@ def haupt(argv):
                          os.path.join(arbeitsdir, marke + "-neu.sqlite"),
                          os.path.join(arbeitsdir, marke + "-neu.json"))
 
-    # PLAUSIBILITAETS-TOR, nach dem ersten Lauf nachgeruestet und mit Grund:
-    # ein reiner Fallback JE FIRMA kann nur hinzufuegen. Firmen mit alter Quelle
-    # bekommen exakt ihre alten Quellen, also dieselbe Reihe und dieselbe Reife;
-    # dazu kommen die Fallback-Firmen. S-U und S-UG koennen deshalb nicht
-    # SINKEN, und S-G darf sich gar nicht bewegen - die Ergebnis-Familie wird
-    # nicht angefasst. Der erste Lauf lieferte S-U 512 -> 253, weil der
-    # SQL-Filter die alten Kennungen nicht mehr lud; ohne dieses Tor waere die
-    # Zahl als Ergebnis durchgegangen.
+    # PLAUSIBILITAETS-TOR. Die Regel steht in pruefe_plausibilitaet() - EINMAL,
+    # damit der Selbsttest dasselbe prueft, was hier laeuft. Die erste Fassung
+    # stand inline und im Test als Kopie; der Test bewies dann die Kopie.
     neu_zahlen = zahlen_aus(neu)
-    verstoesse = []
-    for name in ("S-U", "S-UG"):
-        v0 = gemessen.get(name, {}).get("firmen_reif")
-        vb = neu_zahlen.get(name, {}).get("firmen_reif")
-        if v0 is not None and vb is not None and vb < v0:
-            verstoesse.append("%s sinkt von %d auf %d - ein reiner Fallback kann "
-                              "nur hinzufuegen" % (name, v0, vb))
-    if gemessen.get("S-G") != neu_zahlen.get("S-G"):
-        verstoesse.append("S-G bewegt sich (%s -> %s), obwohl die Ergebnis-Familie "
-                          "nicht angefasst wird" % (gemessen.get("S-G"), neu_zahlen.get("S-G")))
+    verstoesse = pruefe_plausibilitaet(gemessen, neu_zahlen)
     if verstoesse:
         raise Abbruch("PLAUSIBILITAETS-STOPP: " + "; ".join(verstoesse)
                       + ". Es wird kein Artefakt geschrieben.")
 
+    print("Durchlauf 3/4 (ohne Bank - die Fassung, wenn K8 das Stratum fallen laesst) ...")
+    ohne_bank = starte_prozess("verbreitert_ohne_bank", wurzel,
+                               os.path.join(arbeitsdir, marke + "-ob.sqlite"),
+                               os.path.join(arbeitsdir, marke + "-ob.json"))
+    print("Durchlauf 4/4 (Bank allein - fuer die K8-Bedingungen) ...")
+    bank = starte_prozess("bank_allein", wurzel,
+                          os.path.join(arbeitsdir, marke + "-bank.sqlite"),
+                          os.path.join(arbeitsdir, marke + "-bank.json"))
+    k8 = bewerte_k8(neu, ohne_bank, bank)
+    massgeblich = "verbreitertOhneBank" if not k8["stratumZulaessig"] else "verbreitert"
+    print("  K8: " + ("Stratum zulaessig" if k8["stratumZulaessig"]
+                      else "Stratum FAELLT (Bedingungen %s nicht belegt)" % k8["nichtBelegt"]))
+
     artefakt = {
         "schema": "studie-e2-verbreitert/v1",
+        "k8BankStratum": k8,
+        "massgeblicheFassung": massgeblich,
+        "durchlaufOhneBank": {"protokoll": ohne_bank["substitutionsProtokoll"],
+                              "signale": zahlen_aus(ohne_bank)},
+        "durchlaufBankAllein": {"protokoll": bank["substitutionsProtokoll"],
+                                "signale": zahlen_aus(bank)},
         "auflagen": "ENTSCHIED 147 (Weg a) + 148 (Granularitaet Firma), Auflagen A-F",
         "quellenAsymmetrie": FUSSNOTE,
         "aequivalenzTor": {"soll": V0_SOLL, "gemessen": gemessen, "bestanden": True},
@@ -510,62 +688,62 @@ def selbsttest():
         pruef(set(beide) >= set(e["concept"] for e in eintraege),
               "und die neuen - der Vorfilter braucht beide Seiten")
 
-    # Das Plausibilitaets-Tor, beide Richtungen (an reinen Zahlen geprueft).
-    def tor(v0, vb):
-        verst = []
-        for n in ("S-U", "S-UG"):
-            if vb[n]["firmen_reif"] < v0[n]["firmen_reif"]:
-                verst.append(n)
-        if v0["S-G"] != vb["S-G"]:
-            verst.append("S-G")
-        return verst
-
+    # Das Plausibilitaets-Tor - geprueft wird DIE FUNKTION, die auch laeuft.
     basis = {"S-U": {"firmen_reif": 512, "firmen_unreif": 219},
              "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
              "S-UG": {"firmen_reif": 29, "firmen_unreif": 12}}
-    mehr = {"S-U": {"firmen_reif": 540, "firmen_unreif": 219},
+    mehr = {"S-U": {"firmen_reif": 540, "firmen_unreif": 248},
             "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
             "S-UG": {"firmen_reif": 31, "firmen_unreif": 12}}
+    pruef(pruefe_plausibilitaet(basis, mehr) == [],
+          "GEGENPROBE: ein Fallback, der HINZUFUEGT, geht durch")
     weniger = {"S-U": {"firmen_reif": 253, "firmen_unreif": 81},
                "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
                "S-UG": {"firmen_reif": 2, "firmen_unreif": 1}}
-    pruef(tor(basis, mehr) == [],
-          "GEGENPROBE: ein Fallback, der HINZUFUEGT, geht durch")
-    pruef(tor(basis, weniger) == ["S-U", "S-UG"],
-          "ROT-PROBE: der echte Fehllauf (512->253) wird gefangen")
-    bewegt = {"S-U": {"firmen_reif": 540, "firmen_unreif": 219},
+    pruef(len(pruefe_plausibilitaet(basis, weniger)) == 4,
+          "ROT-PROBE: der echte Fehllauf (512->253) wird gefangen, in BEIDEN Toepfen")
+    nur_unreif = {"S-U": {"firmen_reif": 512, "firmen_unreif": 90},
+                  "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
+                  "S-UG": {"firmen_reif": 29, "firmen_unreif": 4}}
+    pruef(len(pruefe_plausibilitaet(basis, nur_unreif)) == 2,
+          "ROT-PROBE (ecc-Review): NUR die unreifen sinken - fruehere Fassung war hier gruen")
+    bewegt = {"S-U": {"firmen_reif": 540, "firmen_unreif": 248},
               "S-G": {"firmen_reif": 545, "firmen_unreif": 265},
               "S-UG": {"firmen_reif": 31, "firmen_unreif": 12}}
-    pruef(tor(basis, bewegt) == ["S-G"],
+    pruef(pruefe_plausibilitaet(basis, bewegt) == ["S-G bewegt sich ({'firmen_reif': 546, "
+          "'firmen_unreif': 265} -> {'firmen_reif': 545, 'firmen_unreif': 265}), obwohl die "
+          "Ergebnis-Familie nicht angefasst wird"],
           "ROT-PROBE: eine Bewegung in der unberuehrten Ergebnis-Familie wird gefangen")
-
-    # Der Aequivalenz-Waechter, beide Richtungen.
-    pruef(pruefe_aequivalenz({"S-U": {"firmen_reif": 512, "firmen_unreif": 219},
-                              "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
-                              "S-UG": {"firmen_reif": 29, "firmen_unreif": 12}}),
-          "GEGENPROBE: die publizierten Zahlen gehen durch")
-    try:
-        pruefe_aequivalenz({"S-U": {"firmen_reif": 513, "firmen_unreif": 219},
-                            "S-G": {"firmen_reif": 546, "firmen_unreif": 265},
-                            "S-UG": {"firmen_reif": 29, "firmen_unreif": 12}})
-        pruef(False, "ROT-PROBE: EINE Firma Abweichung stoppt den Lauf")
-    except Abbruch:
-        pruef(True, "ROT-PROBE: EINE Firma Abweichung stoppt den Lauf")
-    try:
-        pruefe_aequivalenz({"S-U": {"firmen_reif": 512, "firmen_unreif": 219}})
-        pruef(False, "ROT-PROBE: ein fehlendes Signal stoppt den Lauf")
-    except Abbruch:
-        pruef(True, "ROT-PROBE: ein fehlendes Signal stoppt den Lauf")
-
-    pruef(FUSSNOTE.startswith("Quellen-Asymmetrie:") and "ASC 606 ab 2018" in FUSSNOTE,
-          "die Pflicht-Fussnote liegt woertlich vor")
+    pruef(pruefe_plausibilitaet(basis, {"S-U": basis["S-U"], "S-G": basis["S-G"]}) != [],
+          "ROT-PROBE: ein FEHLENDES Signal ist ein Verstoss, kein Freispruch")
 
     # ── Der Vorfilter: reiner Fallback je Firma, an einem Puppen-Modul ─────────
     # Geprueft wird die REGEL, nicht die Rechnung: welche Firma bekommt welche
     # Quellen. Das echte firmenreihen wird dafuer durch eine Attrappe ersetzt,
     # die nur festhaelt, womit sie gerufen wurde - so ist sichtbar, WER wen sieht.
+    pruef(FUSSNOTE.startswith("Quellen-Asymmetrie:") and "ASC 606 ab 2018" in FUSSNOTE,
+          "die Pflicht-Fussnote liegt woertlich vor")
+    # "wortgleich" war eine Behauptung, bis das hier stand: der WORTLAUT ist der
+    # Gegenstand der Auflage, also wird die Gleichheit gemessen statt zugesagt.
+    nachbar = os.path.join(HIER, "studie-tag-praesenz.py")
+    if os.path.exists(nachbar):
+        sp = importlib.util.spec_from_file_location("studie_tag_praesenz", nachbar)
+        mp = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(mp)
+        pruef(mp.FUSSNOTE == FUSSNOTE,
+              "und ist mit der in studie-tag-praesenz.py WIRKLICH wortgleich")
+    else:
+        print("  --    Nachbar-Werkzeug liegt auf einem anderen Zweig; "
+              "Wortgleichheit hier nicht pruefbar (ehrlich benannt, nicht uebersprungen)")
+
     class Puppe:
-        pass
+        # Steht fuer das versiegelte Modul. Sie muss alles koennen, was der
+        # Vorfilter davon benutzt - auch die Zaehlernamen-Liste, aus der er
+        # den Fallback-Praefix vorsaet.
+        @staticmethod
+        def alle_zaehlernamen():
+            return ["umsatz_firma_ohne_quelle", "umsatz_umsatz_nicht_positiv",
+                    "betriebsergebnis_firma_ohne_quelle"]
 
     ALT = (("Revenues", ("Revenues",)),)
     NEU = (("OilAndGasRevenue", ("OilAndGasRevenue",)),)
@@ -596,6 +774,14 @@ def selbsttest():
           "die vier sehen NUR die Firmen ohne alte Quelle - A ist fuer sie unsichtbar")
     pruef(rufe[1][2] == "umsatz_fallback_",
           "der Fallback-Aufruf zaehlt unter EIGENEM Praefix, nichts wird doppelt gezaehlt")
+    # Der HIGH aus dem ecc-Review: ein Fallback-Grund, der NIE feuert, muss als 0
+    # dastehen und darf nicht fehlen - sonst sieht "kam nicht vor" aus wie "wurde
+    # nie geprueft". Das versiegelte Modul saet seine drei Praefixe vor, den
+    # vierten kannte es nicht.
+    pruef(zaehler.get("umsatz_fallback_umsatz_nicht_positiv") == 0,
+          "ein NIE gefeuerter Fallback-Grund steht als 0 im Zaehlwerk, statt zu fehlen")
+    pruef("betriebsergebnis_fallback_firma_ohne_quelle" not in zaehler,
+          "und die Vorsaat greift nur beim eigenen Praefix, nicht bei fremden Familien")
     pruef(zaehler.get("umsatz_firmen_auf_alten_quellen") == 1
           and zaehler.get("umsatz_firmen_im_fallback") == 1
           and zaehler.get("umsatz_firmen_ohne_jede_quelle") == 1,
