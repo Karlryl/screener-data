@@ -1,0 +1,185 @@
+{
+ "schema": "studie-e2-schwellen-satz/v1",
+ "stufe": "E2, verbreiterte Konzeptliste",
+ "grundlage": {
+  "fassung": "verbreitertOhneBank",
+  "beschluss": "ENTSCHIED 150 - gerechnet wird auf der 540er-Familie, ausschliesslich; keine Parallel-Ableitung auf 614",
+  "warumOhneBank": "Bedingung(en) [1, 2, 3] nicht belegt -> das Bank-Stratum faellt. Die Bank-/Zinsklasse bleibt damit als SCOPE-AUSSAGE draussen, ausdruecklich NICHT als Datenluecke: die Bank-Kennung tritt gar nicht ein, weder als eigenes Stratum noch gepoolt. Massgeblich ist deshalb der Durchlauf OHNE Bank. Das ist das korrekte Ergebnis und kein Fehlschlag - es wurde VOR der Messung so festgelegt, damit niemand hinterher die Bedingungen weichkocht, um die Zahl zu retten."
+ },
+ "provenienz": {
+  "versiegeltesModul": "scripts/studie-basisraten.py",
+  "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+  "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+  "aequivalenzTorBestanden": true,
+  "aequivalenzTorSoll": {
+   "S-U": {
+    "firmen_reif": 512,
+    "firmen_unreif": 219
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 29,
+    "firmen_unreif": 12
+   }
+  },
+  "erzeugtMit": "scripts/studie-e2-verbreitert.py",
+  "hinweisZurAbleitung": "Die Schwellen wurden NICHT hier abgeleitet. kalibriere() laeuft innerhalb des versiegelten Moduls und ist im massgeblichen Durchlauf gelaufen; dieses Artefakt liest aus. Es gibt kein Ableitungs-Ermessen, das nachtraeglich bestritten werden koennte."
+ },
+ "regelParameter": {
+  "p_start": 90,
+  "p_erlaubt": [
+   80,
+   85,
+   90,
+   95
+  ],
+  "zielband": [
+   0.005,
+   0.025
+  ],
+  "ziel_firmen": 300,
+  "trailing_fenster": [
+   5,
+   2
+  ],
+  "trailing_min_n": 200,
+  "jahr_fenster": [
+   330,
+   380
+  ],
+  "quartal_fenster": [
+   80,
+   110
+  ],
+  "g_deckel": 2.0,
+  "reife_quartale": 4,
+  "band_jahre": [
+   2012,
+   2016
+  ],
+  "rumpfjahre": [
+   2009,
+   2010,
+   2011
+  ]
+ },
+ "jeFamilie": {
+  "S-U": {
+   "pFinal": 95,
+   "pFinalV0": 95,
+   "kalibrierungsWeg": [
+    {
+     "schritt": 0,
+     "p": 90,
+     "rate": 0.03147813569529517,
+     "feuerungen_band": 2143,
+     "auswertbar_band": 68079,
+     "firmen_reif": 1109,
+     "entscheid": "Rate ueber dem Band -> P 90 -> 95"
+    },
+    {
+     "schritt": 1,
+     "p": 95,
+     "rate": 0.014218775246404912,
+     "feuerungen_band": 968,
+     "auswertbar_band": 68079,
+     "firmen_reif": 540,
+     "entscheid": "im Zielband — keine Nachjustierung"
+    }
+   ],
+   "rateImBand": 0.014218775246404912,
+   "feuerungenImBand": 968,
+   "auswertbarImBand": 68079,
+   "firmenReif": 540,
+   "firmenUnreif": 226,
+   "scheiternskriterien": [],
+   "scheiternskriterienV0": []
+  },
+  "S-G": {
+   "pFinal": 95,
+   "pFinalV0": 95,
+   "kalibrierungsWeg": [
+    {
+     "schritt": 0,
+     "p": 90,
+     "rate": 0.0258343215314247,
+     "feuerungen_band": 2135,
+     "auswertbar_band": 82642,
+     "firmen_reif": 1309,
+     "entscheid": "Rate ueber dem Band -> P 90 -> 95"
+    },
+    {
+     "schritt": 1,
+     "p": 95,
+     "rate": 0.010563635923622371,
+     "feuerungen_band": 873,
+     "auswertbar_band": 82642,
+     "firmen_reif": 546,
+     "entscheid": "im Zielband — keine Nachjustierung"
+    }
+   ],
+   "rateImBand": 0.010563635923622371,
+   "feuerungenImBand": 873,
+   "auswertbarImBand": 82642,
+   "firmenReif": 546,
+   "firmenUnreif": 265,
+   "scheiternskriterien": [],
+   "scheiternskriterienV0": []
+  },
+  "S-UG": {
+   "pFinal": null,
+   "pFinalV0": null,
+   "kalibrierungsWeg": [],
+   "rateImBand": 0.0007889263429677975,
+   "feuerungenImBand": 44,
+   "auswertbarImBand": 55772,
+   "firmenReif": 30,
+   "firmenUnreif": 12,
+   "scheiternskriterien": [
+    "K1: nur 30 Firmen mit reifem Erst-Ereignis (gefordert 300)"
+   ],
+   "scheiternskriterienV0": [
+    "K1: nur 29 Firmen mit reifem Erst-Ereignis (gefordert 300)",
+    "K3a: 51.2 % aller Feuerungen im Bereich Verarbeitendes Gewerbe"
+   ]
+  }
+ },
+ "scheiternskriterienBewegungGegenV0": {
+  "S-UG": {
+   "nichtMehrGerissen": [
+    "K3a: 51.2 % aller Feuerungen im Bereich Verarbeitendes Gewerbe"
+   ],
+   "neuGerissen": [],
+   "reisstWeiterhinMitAndererZahl": [
+    {
+     "kriterium": "K1",
+     "v0": "K1: nur 29 Firmen mit reifem Erst-Ereignis (gefordert 300)",
+     "jetzt": "K1: nur 30 Firmen mit reifem Erst-Ereignis (gefordert 300)"
+    }
+   ]
+  }
+ },
+ "musterFriedhof": [
+  {
+   "muster": "S-UG",
+   "beschreibung": "Umsatz- UND Ergebnis-Beschleunigung im selben Fiskalquartal",
+   "stand": "gescheitert — nicht weiterverfolgt",
+   "grund": "Mindest-Fallzahl verfehlt: 30 Firmen mit reifem Erst-Ereignis gegen geforderte 300",
+   "fallzahl": 30,
+   "fallzahl_gefordert": 300,
+   "beschreibender_befund": "Beide Signale treten haeufiger gemeinsam auf als der Zufall es taete; das ist eine Aussage ueber die Kopplung beider Signale, kein tragfaehiges eigenes Signal.",
+   "ueberhang_faktor": 6.0218448090971775,
+   "entschieden_am": "2026-08-19"
+  }
+ ],
+ "quellenAsymmetrie": "Quellen-Asymmetrie: Im Entdeckungs-Fenster (bis 2016-12-30) trägt RevenueFromContractWithCustomerExcludingAssessedTax konstruktionsbedingt 0 Zeilen (ASC 606 ab 2018); die V0-Umsatzfamilie ruht hier faktisch auf drei ihrer vier Quellen. Jeder fensterübergreifende Vergleich muss diese Asymmetrie ausweisen.",
+ "wasDiesesArtefaktNichtTut": [
+  "kein Register-Eintrag - der Freeze gehoert in den EINEN F6-Tor-Akt",
+  "keine Rechnung mit dem Satz - bis zum F6-Akt wird damit nichts gerechnet",
+  "keine Aussage ueber den Ausgang eines Tors"
+ ],
+ "inhaltSha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee"
+}
