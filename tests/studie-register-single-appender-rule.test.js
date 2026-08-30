@@ -5,12 +5,37 @@
 // The object is the contract. These checks pin the required route in both
 // directions: the main-first sequence must be present, while branch escape
 // hatches and retroactive closure of the motivating deviation must be absent.
+//
+// H9 REBUILD (ENTSCHIED 67). The enforcement half of this file used to be
+// assert.match against the SOURCE TEXT of two other files. That proved a document
+// quotes a rule; it executed nothing, and a regex over a guard's source cannot tell
+// whether the guard actually catches anything. Worse, the anchor it quoted -- the R1
+// git-prefix invariant -- is structurally blind to the very violation this record
+// forbids: a branch-side append keeps every committed revision a byte-identical
+// prefix, so the prefix check passes, and a well-formed entry passes the chain check
+// too. Both blindnesses are now DEMONSTRATED, not assumed.
+//
+// The enforcement is therefore probed by EXECUTION: a throwaway git repository is
+// built in a temp directory, a real commit appends a real, chain-valid entry to a copy
+// of the real ledger on a study branch, and lib/ledger-single-appender.js must go red
+// on it -- while the clean branch and the prescribed ledger-only mini-PR stay green.
+// The live ledger on main is only ever READ; nothing here writes to it or pushes.
 
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+
+const {
+  checkSingleAppender,
+  resolveBaseRef,
+  SingleAppenderViolation,
+  LEDGER_REL,
+} = require('../lib/ledger-single-appender');
+const { pruefeZugriffsRegister, haengeEintragAn } = require('../lib/studie-verfassung');
 
 const ROOT = path.join(__dirname, '..');
 const RECORD_REL = 'protocol/early-detection/2.0.0/register-single-appender-rule.json';
@@ -25,6 +50,92 @@ const sha256 = (relative) => crypto
   .createHash('sha256')
   .update(fs.readFileSync(path.join(ROOT, ...relative.split('/'))))
   .digest('hex');
+
+// ── Sabotage fixture: a THROWAWAY repository, never the live checkout ──────────
+//
+// Hermetic by construction: `git init` in a temp directory, no network, no reuse of
+// the real .git, nothing pushed. The only thing borrowed from the live repository is
+// the ledger's BYTES, read once, so the probe runs against the real shape rather than
+// a toy object. The live ledger is never written.
+
+// Hermetic for real, not merely claimed: the developer's global/system git config must
+// not reach the fixture. An inherited core.hooksPath or commit template would break the
+// fixture's commits for reasons that have nothing to do with the guard under test.
+// Pointing GIT_CONFIG_GLOBAL/SYSTEM at a nonexistent file makes git read an empty
+// config (git >= 2.32); on older git the vars are ignored and we are no worse off.
+const KEINE_GITCONFIG = path.join(os.tmpdir(), 't172-no-such-gitconfig');
+const FIXTURE_ENV = {
+  ...process.env,
+  GIT_CONFIG_GLOBAL: KEINE_GITCONFIG,
+  GIT_CONFIG_SYSTEM: KEINE_GITCONFIG,
+  GIT_CONFIG_NOSYSTEM: '1',
+};
+
+const gitIn = (dir, ...args) => execFileSync('git', args, {
+  cwd: dir,
+  encoding: 'utf8',
+  env: FIXTURE_ENV,
+});
+
+const writeInto = (dir, relative, text) => {
+  const abs = path.join(dir, ...relative.split('/'));
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, text);
+};
+
+const commitAll = (dir, message) => {
+  gitIn(dir, 'add', '-A');
+  gitIn(dir, 'commit', '--quiet', '-m', message);
+};
+
+// The sabotage appends through the SAME lib the study code uses, so the planted entry
+// is genuinely chain-valid. A malformed entry would prove nothing: the point is that a
+// perfectly legal entry on the wrong branch must still be caught.
+const ledgerTextMitAnhang = () => {
+  const register = haengeEintragAn(readJson(LEDGER_REL), {
+    runId: 't172-sabotage-probe',
+    typ: 'R15b_NUR_ZAEHLEN',
+    registeredAt: '2026-12-20T10:00:00.000Z',
+    accessedAt: null,
+  });
+  return JSON.stringify(register, null, 2);
+};
+
+function withFixture(run) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't172-appender-probe-'));
+  try {
+    execFileSync('git', ['-c', 'init.defaultBranch=main', 'init', '--quiet', dir], { env: FIXTURE_ENV });
+    gitIn(dir, 'config', 'user.email', 'probe@example.invalid');
+    gitIn(dir, 'config', 'user.name', 'T172 probe');
+    gitIn(dir, 'config', 'commit.gpgsign', 'false');
+    gitIn(dir, 'config', 'core.autocrlf', 'false');
+
+    writeInto(dir, LEDGER_REL, readText(LEDGER_REL));
+    writeInto(dir, 'scripts/studie.js', '// main tail\n');
+    commitAll(dir, 'main tail: ledger as delivered');
+
+    run(dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  }
+}
+
+// Sabotage branch, in the shape the rule forbids: study work and a ledger append in
+// the same branch. `commits: 2` splits the append into its own commit -- the obvious
+// evasion of a per-commit check.
+function sabotiereZweig(dir, { commits = 1 } = {}) {
+  gitIn(dir, 'checkout', '--quiet', '-b', 'studie/sabotage');
+  if (commits === 2) {
+    writeInto(dir, 'scripts/studie.js', '// study work\n');
+    commitAll(dir, 'study work');
+    writeInto(dir, LEDGER_REL, ledgerTextMitAnhang());
+    commitAll(dir, 'register the access entry');
+  } else {
+    writeInto(dir, 'scripts/studie.js', '// study work\n');
+    writeInto(dir, LEDGER_REL, ledgerTextMitAnhang());
+    commitAll(dir, 'study work + access-ledger entry');
+  }
+}
 
 test('T172: the governance record is present and object-anchored', () => {
   const record = readJson(RECORD_REL);
@@ -109,21 +220,130 @@ test('T172: enforcement points to the live prefix and server-time guards', () =>
     failureMode: 'A branch-local append, an entry based on a stale tail, or access before the main-hosted server proof is non-compliant and must not run.',
   });
 
-  const prefixGuard = readText(PREFIX_GUARD_REL);
-  assert.match(prefixGuard, /git\('log', '--format=%H', '--', LEDGER_REL\)/);
-  assert.match(prefixGuard, /git\('show', `\$\{rev\}:\$\{LEDGER_REL\}`\)/);
+  // Existence, not source-text regexes. A regex over another file's internals rots on
+  // the first rename and never showed that anything fires; what the enforcement DOES
+  // is settled by the executed probes below.
+  assert.ok(fs.existsSync(path.join(ROOT, ...PREFIX_GUARD_REL.split('/'))), `${PREFIX_GUARD_REL} fehlt`);
+  assert.ok(fs.existsSync(path.join(ROOT, ...SERVER_PROOF_REL.split('/'))), `${SERVER_PROOF_REL} fehlt`);
+});
 
-  const serverProof = readText(SERVER_PROOF_REL);
-  assert.match(serverProof, /const roh = gh\(\['api', '-i', pfad\]\);/);
-  assert.match(serverProof, /const datum = \/\^date:\\s\*\(\.\+\)\$\/im\.exec\(kopf\);/);
-  assert.match(
-    serverProof,
-    /Date\.parse\(eintrag\.registeredAt\) >= Date\.parse\(serverConfirmedAt\)/,
+// ── EXECUTED PROBES ───────────────────────────────────────────────────────────
+
+test('T172 probe: an executed branch-side ledger append is CAUGHT', () => {
+  withFixture((dir) => {
+    sabotiereZweig(dir);
+
+    let bruch = null;
+    try {
+      checkSingleAppender({ repoDir: dir, baseRef: 'main', headRef: 'studie/sabotage' });
+    } catch (fehler) {
+      bruch = fehler;
+    }
+    assert.ok(bruch instanceof SingleAppenderViolation, 'the branch-side append went through');
+    // The message must name the evidence, not just say no.
+    assert.match(bruch.message, /outcome-access-ledger\.json/);
+    assert.match(bruch.message, /scripts\/studie\.js/);
+  });
+});
+
+test('T172 probe: splitting the append into its own commit does not buy an escape', () => {
+  // Why the check looks at the whole range instead of each commit: a study branch that
+  // puts the append in a separate commit is still a study branch carrying an append.
+  withFixture((dir) => {
+    sabotiereZweig(dir, { commits: 2 });
+    assert.throws(
+      () => checkSingleAppender({ repoDir: dir, baseRef: 'main', headRef: 'studie/sabotage' }),
+      SingleAppenderViolation,
+    );
+  });
+});
+
+test('T172 probe: chain check and git-prefix anchor are BLIND to that same append', () => {
+  // The load-bearing claim of this rebuild, executed rather than asserted: the two
+  // incumbent guards wave the sabotage through, so the record's enforcement section
+  // named nothing that could have stopped it.
+  withFixture((dir) => {
+    sabotiereZweig(dir);
+    const sabotiert = JSON.parse(fs.readFileSync(path.join(dir, ...LEDGER_REL.split('/')), 'utf8'));
+
+    // R1 chain check: green — the planted entry is genuinely well formed.
+    assert.doesNotThrow(() => pruefeZugriffsRegister(sabotiert));
+
+    // R1 git-prefix anchor: green — appending is exactly what a prefix invariant allows.
+    const revisionen = gitIn(dir, 'log', '--format=%H', '--', LEDGER_REL).trim().split('\n').filter(Boolean);
+    assert.equal(revisionen.length, 2, 'expects the main tail and the branch-side append');
+    for (const rev of revisionen) {
+      const alt = JSON.parse(gitIn(dir, 'show', `${rev}:${LEDGER_REL}`)).events;
+      assert.ok(alt.length <= sabotiert.events.length);
+      alt.forEach((event, i) => {
+        assert.equal(JSON.stringify(event), JSON.stringify(sabotiert.events[i]));
+      });
+    }
+
+    // Only the single-appender guard goes red.
+    assert.throws(
+      () => checkSingleAppender({ repoDir: dir, baseRef: 'main', headRef: 'studie/sabotage' }),
+      SingleAppenderViolation,
+    );
+  });
+});
+
+test('T172 probe: the clean branch and the prescribed mini-PR stay GREEN', () => {
+  // A guard that only ever says no is untested in the direction that matters daily.
+  withFixture((dir) => {
+    gitIn(dir, 'checkout', '--quiet', '-b', 'studie/sauber');
+    writeInto(dir, 'scripts/studie.js', '// study work only\n');
+    commitAll(dir, 'study work without any ledger touch');
+    assert.equal(
+      checkSingleAppender({ repoDir: dir, baseRef: 'main', headRef: 'studie/sauber' }).verdict,
+      'NO_LEDGER_APPEND',
+    );
+
+    gitIn(dir, 'checkout', '--quiet', 'main');
+    gitIn(dir, 'checkout', '--quiet', '-b', 'anmeldung/mini-pr');
+    writeInto(dir, LEDGER_REL, ledgerTextMitAnhang());
+    commitAll(dir, 'register the access entry (ledger only)');
+    assert.equal(
+      checkSingleAppender({ repoDir: dir, baseRef: 'main', headRef: 'anmeldung/mini-pr' }).verdict,
+      'LEDGER_ONLY_MINI_PR',
+    );
+  });
+});
+
+test('T172 probe: the guard refuses to run blind', () => {
+  // Both directions of the measurement plane itself. A guard that cannot measure must
+  // say so; it must never hand back a clean verdict because the measurement failed.
+  assert.equal(resolveBaseRef(ROOT, ['gibt-es-nicht/zweig']), null, 'a missing ref is a miss');
+  assert.throws(
+    () => resolveBaseRef(path.join(os.tmpdir(), `t172-no-such-repo-${Date.now()}`), ['main']),
+    /ENOENT/,
+    'a git that cannot run at all must not be laundered into "no base found"',
   );
-  assert.match(
-    serverProof,
-    /pruefeServerzeit\(\{ serverConfirmedAt, ersterZugriffAm: eintrag\.accessedAt \}\);/,
+  assert.throws(
+    () => checkSingleAppender({ repoDir: ROOT, baseRef: 'HEAD', ledgerRel: LEDGER_REL.split('/').join('\\') }),
+    TypeError,
+    'a backslash path would match nothing and return a clean verdict for the wrong reason',
   );
+});
+
+test('T172: the live checkout carries no branch-side ledger append', () => {
+  // Read-only against the real repository, so the guard is an anchor in CI and not a
+  // fixture-only ornament. On main the range is empty and the verdict trivially clean;
+  // on a branch it is the actual verdict for that branch.
+  //
+  // Precondition, shared with tests/studie-r1-register.test.js and documented in
+  // .github/workflows/pr-check.yml: the CI checkout uses fetch-depth: 0. Without it
+  // neither origin/main nor main resolves and this goes red. That is the intended
+  // handling -- the same "loud, not silently skipped" rule the R1 prefix anchor
+  // applies to a shallow clone -- not an accident to be softened into a skip.
+  const base = resolveBaseRef(ROOT, ['origin/main', 'main']);
+  assert.ok(
+    base,
+    'neither origin/main nor main resolves — the base of comparison is missing. '
+    + 'Loud, not skipped: a guard that cannot name its base proves nothing.',
+  );
+  const { verdict } = checkSingleAppender({ repoDir: ROOT, baseRef: base });
+  assert.ok(['NO_LEDGER_APPEND', 'LEDGER_ONLY_MINI_PR'].includes(verdict), verdict);
 });
 
 test('T172: motivating precedent is pinned without closing or rewriting it', () => {
