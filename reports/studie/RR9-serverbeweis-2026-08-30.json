@@ -1,0 +1,57 @@
+{
+ "alleIdentisch": true,
+ "artefakte": [
+  {
+   "bytes": 5001279,
+   "dateiSha256": "357e3cf97ab1e7a1a2a213e1cffd0bad827a3f91abe658a804fef18c96ee9616",
+   "gitBlobShaAufOrigin": "15cdda6ac16924ba17755b6f1a04868c6ce2f6f9",
+   "gitBlobShaLokal": "15cdda6ac16924ba17755b6f1a04868c6ce2f6f9",
+   "identisch": true,
+   "pfad": "protocol/early-detection/2.1.0/ist-stand-manifest-2026-08-30.json"
+  },
+  {
+   "bytes": 2341,
+   "dateiSha256": "aa4277fa9f39f38b3d1ffa4f9048d76f33e2515aa64afa021165d7895cb6074f",
+   "gitBlobShaAufOrigin": "d68f7617495e665b0c28497021cac1520f556da1",
+   "gitBlobShaLokal": "d68f7617495e665b0c28497021cac1520f556da1",
+   "identisch": true,
+   "pfad": "protocol/early-detection/2.1.0/jahrgang-registrierung-2026-08-30.json"
+  },
+  {
+   "bytes": 3351,
+   "dateiSha256": "b171030fc635309500853dc844883d51e19ce58db395bb2fc05ad3a1ae912d35",
+   "gitBlobShaAufOrigin": "f00d26285bbb30c59b8242956a15b7ad415663e1",
+   "gitBlobShaLokal": "f00d26285bbb30c59b8242956a15b7ad415663e1",
+   "identisch": true,
+   "pfad": "reports/studie/RR9-A2-provenienz-2026-08-30.json"
+  },
+  {
+   "bytes": 2558,
+   "dateiSha256": "e82232cd99ec7091e06597247a79fd2aecbbdbdfb3e8dc35125946f77f2e9cd0",
+   "gitBlobShaAufOrigin": "18e8b903567271026a35b237cb375ad9108a0eb3",
+   "gitBlobShaLokal": "18e8b903567271026a35b237cb375ad9108a0eb3",
+   "identisch": true,
+   "pfad": "reports/studie/RR9-B2-trockenlauf-2026-08-30.json"
+  },
+  {
+   "bytes": 2334,
+   "dateiSha256": "94cdfd3bba87ee36e599f72ecd71ec2d7ab126f1b9c01aba9419bf32f7fd356d",
+   "gitBlobShaAufOrigin": "91646b3843f72c614e4061d7c829142468003d30",
+   "gitBlobShaLokal": "91646b3843f72c614e4061d7c829142468003d30",
+   "identisch": true,
+   "pfad": "reports/studie/RR9-A6-paarungstabelle-2026-08-30.json"
+  }
+ ],
+ "auflage": "RR9-A1 Ziffer 1 - 'committet und server-bestaetigt' - _COURT-RR9-2026-08-30",
+ "keinRegisterEintrag": "Dieser Beweis ist KEIN Eintrag im outcome-access-ledger.json und autorisiert keinen Datenzugriff. Der Register-Akt der Jahrgangs-Registrierung (RR9-A3 Ziffer 2) ist an den Orchestrator zurueckgegeben - Eintrag 21 ist geschlossen, und einen eigenen Eintrag 22 hat das Urteil nicht beschlossen.",
+ "pruefmethode": {
+  "wasBelegtIst": "Ab serverConfirmedAt ist maschinell belegt, dass genau diese Bytes auf origin/main liegen.",
+  "wasNichtBelegtIst": "Dieser Beweis sagt nichts ueber den INHALT der Messungen - nur darueber, dass sie unveraendert veroeffentlicht sind.",
+  "wie": "Je Artefakt wird der von GitHub fuer main gemeldete Git-Blob-sha gegen `git hash-object` der lokalen Datei gestellt. Das ist ein INHALTS-Vergleich ueber den Blob-Hash, kein Namens- oder Pfadvergleich."
+ },
+ "quelle": "gh api -i repos/Karlryl/screener-data/contents/<pfad>?ref=main - Date-Kopf der Antwort; der Blob-sha stammt aus derselben Antwort.",
+ "runId": "rr9-bremsen-bau-2026-08-30",
+ "schema": "studie-rr9-serverbeweis/v1",
+ "serverConfirmedAt": "Sun, 30 Aug 2026 17:37:13 GMT",
+ "zweig": "main"
+}
