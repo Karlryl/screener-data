@@ -1,0 +1,57 @@
+{
+  "schema": "early-detection-drift-record/v1",
+  "protocol": "FEM-SEC-US@1.2.0",
+  "status": "active",
+  "recordedAt": "2026-08-30",
+  "title": "Formal drift record for FEM-SEC-US@1.2.0 -- three sealed files carry a second, recorded hash",
+  "authority": {
+    "discovery": "Orchestrator ENTSCHIED 60 (2026-08-30 01:18): the 1.2.0 seal has been silently broken since 6c2ce83755 (2026-08-09); verifyManifest() is called by nothing in CI.",
+    "ruling": "Orchestrator ENTSCHIED 63 (2026-08-30 01:35): 'NICHT stummschalten. Drift-Record dokumentiert 1.2.0-Drift UND 1.0.0-Supersede, DANN verifyManifest in CI - Reihenfolge weiter bindend.'",
+    "dispatch": "Orchestrator ENTSCHIED 110 (2026-08-30 08:55), seal slot (2).",
+    "delegation": "Standing delegation (verdict + ratification); Karl is informed in the morning report, not asked."
+  },
+  "sealReference": {
+    "manifest": "protocol/early-detection/1.2.0/hash-manifest.json",
+    "manifestSha256": "f35a282dad2f11b646c79e5cc660e7459d59f51317aea2d9e6b6475510ea4654",
+    "sealedAt": "2026-08-08T16:18:19.354Z",
+    "sealCommit": "055061f50f",
+    "manifestUntouched": true,
+    "manifestUntouchedReason": "The manifest bytes are pinned as evidence 'praereg-1.2.0-hash-manifest' in protocol/early-detection/2.0.0/supersede-record.json (sha256 f35a282d..., guarded by tests/studie-stilllegung.test.js). Rewriting the manifest in place would resolve this drift by creating a worse one inside a sealed 2.0.0 record. Append-only wins."
+  },
+  "finding": {
+    "driftCommit": "6c2ce8375505548c3c623fe1ad1617097fd856fb",
+    "driftAt": "2026-08-09T16:22:59+02:00",
+    "driftSubject": "Tag 613: F-25 CI-Heilung -- prep-Gate laeuft auf Linux (Selbsttest ohne OS-Siegel, GQS-Siegel zeilenenden-fest)",
+    "elapsedSinceSeal": "one day after the seal; undetected for 21 days",
+    "rootCause": "Blocker A of Tag 613 removed the runtime-lock check from self_test() in scripts/early-detection-confirmatory.py (Karl decision K1a; the real evaluation path still verifies it via authorize_execution -> verify_remote_seal_and_checkpoint -> verify_runtime_lock), and CONFIRMATORY_RUNBOOK.md was updated to match. The commit reasoned explicitly 'hash-manifest.json unveraendert' -- but that reasoning covered the GQS-00 manifest only. The early-detection 1.2.0 manifest, which pins the byte hashes of exactly these two files, was never looked at. Nothing in CI called verifyManifest, so nothing said a word.",
+    "substantiveAssessment": "The drift is a bookkeeping omission, not a methodology break: the confirmatory evaluation path kept its runtime-lock check, and no preregistration, fixture, threshold or outcome artifact moved. The seal was nevertheless broken, and it stays broken until it is recorded -- which is what this file does."
+  },
+  "driftedFiles": [
+    {
+      "path": "protocol/early-detection/1.2.0/CONFIRMATORY_RUNBOOK.md",
+      "sealedSha256": "36ea8ef4de0f682505f91e768f14e590d231dae35df5180ae69901dde7d5e17f",
+      "acceptedSha256": "89a4162943082b6a83769d02c3a60f2fa9f24c79c9c129ba8a02eaf8922888c0",
+      "movedIn": "6c2ce8375505548c3c623fe1ad1617097fd856fb",
+      "reason": "Runbook text follows Blocker A: the portable self-test no longer invokes the Windows runtime lock."
+    },
+    {
+      "path": "scripts/early-detection-confirmatory.py",
+      "sealedSha256": "f20a107653709e2c9c45b937338faffd8d16b76e8d908e7a604b2340551e8aab",
+      "acceptedSha256": "05c77ed3a285fd6166d59ecd5f80d4421dc039fb4429ad382911f6174eab54e0",
+      "movedIn": "6c2ce8375505548c3c623fe1ad1617097fd856fb",
+      "reason": "Blocker A (Karl decision K1a): self_test() no longer calls verify_runtime_lock(); main() -> authorize_execution() still does."
+    },
+    {
+      "path": "scripts/early-detection-audit.js",
+      "sealedSha256": "cebd5c19cc167a89ab054bf21f76bb86c84836249aa568df20c9bd191770f030",
+      "acceptedSha256": "4bf0bbafead56b5c56327279ae970932e2c39fee3389f7e99044e76df3f8bbb9",
+      "movedIn": "this record's own change set (ENTSCHIED 63, seal slot 2/3)",
+      "reason": "verifyManifest() had to learn to read this record before it could be wired into CI, and the reader necessarily lives in the sealed file it guards. Self-reference acknowledged and bounded: the entry names one exact hash, any other state of this file is red, and the record is a reviewed, committed artifact -- not a runtime switch."
+    }
+  ],
+  "rule": "For the files named above and only for them, the acceptedSha256 is a SECOND allowed value beside the sealed hash. Any third state is red. Every file not named here stays nailed to hash-manifest.json. A record that quotes a stale sealedSha256, names an unsealed file, or appears twice in active status makes verifyManifest throw instead of widening the window.",
+  "closure": "This window does not expire on a date. It closes when FEM-SEC-US gets its next sealed semantic version, whose manifest re-pins these files at one value each; this record then becomes history and status moves to 'closed'. Re-sealing 1.2.0 in place is expressly not the closure path (see sealReference.manifestUntouchedReason).",
+  "relatedRecords": [
+    "protocol/early-detection/1.0.0/supersede-record-2026-08-30.json"
+  ]
+}
