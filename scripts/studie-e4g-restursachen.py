@@ -170,6 +170,36 @@ AFS_GRUPPE_UNBEKANNT = "missing_or_unknown"
 JAHRES_FORMEN = ("10-K", "20-F", "40-F")
 KEINE_FORM = "keine"
 
+# T185 - der GESCHLOSSENE Vorrat fuer `letzte_form_nach_signal`.
+#
+# Bis 2026-08-30 hielt dieses eine Feld nur zwei Bedingungen: Laenge <= 20 und
+# nicht ausschliesslich Ziffern. Das faengt die NUMERISCHE Kennung (0000320193)
+# und laesst die ALPHABETISCHE durch: `AAPL`, `Apple Inc.` und
+# `OperatingIncomeLoss` gingen alle drei hindurch (RR-6-Audit, § P9, Testtabelle).
+# Ein realisiertes Leck war das nicht - der echte Datenpfad liefert hier
+# ausschliesslich `e2.formstamm(bericht.form)` -, aber der Waechter war an dieser
+# Stelle nicht das, was den Leak verhindert. Das ist der Unterschied zwischen
+# einer Zusicherung und einer Eigenschaft.
+#
+# Periodische Staemme wortgleich aus studie-basisraten.py::PERIODISCHE_FORMEN -
+# hier NICHT ein drittes Mal getippt, sondern aus JAHRES_FORMEN
+# zusammengesetzt, das bereits daraus abgeleitet ist. Der Selbsttest prueft die
+# Gleichheit gegen das geladene Modul; eine Drift wird rot, nicht still.
+PERIODISCHE_FORMSTAEMME = JAHRES_FORMEN + ("10-Q",)
+
+# Die uebrigen Staemme, die der committete Lauf TATSAECHLICH gemessen hat
+# (reports/studie/E4g-restursachen-diagnose-2026-08-29.json,
+# `letzte_form_nach_signal` beider Arme). Gemessen, nicht erfunden.
+WEITERE_FORMSTAEMME = ("6-K", "8-K", "S-1", "S-4")
+
+# KIPP-BEDINGUNG, benannt statt versteckt: ein Lauf ueber ein anderes Band kann
+# einen Formstamm liefern, der hier fehlt - dann BRICHT der Lauf ab, statt still
+# durchzulassen. Das ist die gewollte Richtung (RestursachenFehler statt stiller
+# Rueckfall). Die Heilung ist EINE Zeile in WEITERE_FORMSTAEMME, sichtbar im
+# Diff - und genau deshalb faellt ein Ticker in dieser Liste auf.
+FORM_VORRAT = tuple(sorted(
+    set(PERIODISCHE_FORMSTAEMME + WEITERE_FORMSTAEMME + (KEINE_FORM,))))
+
 
 class RestursachenFehler(Exception):
     """Ein Befund, der den Lauf anhaelt - nie ein stiller Rueckfall."""
@@ -634,9 +664,9 @@ ETIKETT_VORRAT = {
     "jahreskadenz": ("ja", "nein"),
     "kante_unmoeglich": ("ja", "nein"),
     "klasse": tuple(sorted(KLASSEN_ETIKETT.values())),
-    "letzte_form_nach_signal": None,   # freier Formstamm, unten geprueft
+    # T185: kein freies Feld mehr - geschlossener Vorrat wie die uebrigen fuenf.
+    "letzte_form_nach_signal": FORM_VORRAT,
 }
-FORM_MUSTER_MAX = 20
 
 
 def pruefe_etikett(feld, wert, ort):
@@ -645,18 +675,17 @@ def pruefe_etikett(feld, wert, ort):
             "W3-ABBRUCH: " + ort + "/" + feld + " traegt " + repr(wert)
             + " - erwartet ist ein Etikett.")
     vorrat = ETIKETT_VORRAT.get(feld, ())
-    if vorrat is None:
-        # Formstamm: kurz, druckbar, ohne Ziffernkette, die als Kennung taugt.
-        if len(wert) > FORM_MUSTER_MAX or wert.strip("0123456789") == "":
-            raise RestursachenFehler(
-                "W3-ABBRUCH: " + ort + "/" + feld + " traegt " + repr(wert)
-                + " - das ist kein Formstamm, sondern sieht nach einer Kennung "
-                "aus. Genau hier leckt eine Firmen-Identitaet.")
-        return True
     if wert not in vorrat:
+        hinweis = ""
+        if feld == "letzte_form_nach_signal":
+            hinweis = (" Ist das ein ECHTER SEC-Formstamm aus einem anderen "
+                       "Band, gehoert er in WEITERE_FORMSTAEMME - eine Zeile, "
+                       "sichtbar im Diff. Ist es keiner, leckt hier eine "
+                       "Firmen-Identitaet.")
         raise RestursachenFehler(
             "W3-ABBRUCH: " + ort + "/" + feld + " traegt " + repr(wert)
-            + " - erlaubt sind ausschliesslich " + str(list(vorrat)) + ".")
+            + " - erlaubt sind ausschliesslich " + str(list(vorrat)) + "."
+            + hinweis)
     return True
 
 
@@ -942,6 +971,27 @@ def selbsttest():
     pruefe("eine Kennung in der letzten Form fliegt auf",
            sabotage(lambda a: a["arme"]["signal"]["zeilen"][0].__setitem__(
                "letzte_form_nach_signal", "0000320193")))
+
+    # ── T185: die drei ALPHABETISCHEN Faelle der RR-6-Testtabelle ────────────
+    # Die alte Laengen-/Ziffern-Heuristik liess alle drei durch; sie testete den
+    # Waechter ausgerechnet dort, wo er stark war. Jetzt haelt sie der
+    # geschlossene Vorrat.
+    for _name, _wert in (("ein Ticker", "AAPL"),
+                         ("ein Firmenname", "Apple Inc."),
+                         ("ein Konzeptname", "OperatingIncomeLoss")):
+        pruefe("T185: " + _name + " in der letzten Form fliegt auf",
+               sabotage(lambda a, w=_wert: a["arme"]["signal"]["zeilen"][0]
+                        .__setitem__("letzte_form_nach_signal", w)))
+
+    # Gegenrichtung: der Vorrat darf nicht so eng sein, dass er den echten
+    # Datenpfad erschlaegt. Jeder Stamm, den der committete Lauf gemessen hat,
+    # muss durchgehen - sonst ist das hier eine Wache, die den Lauf bricht.
+    pruefe("T185: jeder Formstamm des Vorrats geht DURCH",
+           all(pruefe_etikett("letzte_form_nach_signal", stamm, "probe")
+               for stamm in FORM_VORRAT))
+    pruefe("T185: der Vorrat traegt PERIODISCHE_FORMEN wortgleich",
+           set(PERIODISCHE_FORMSTAEMME) == set(e2.PERIODISCHE_FORMEN),
+           sorted(PERIODISCHE_FORMSTAEMME), sorted(e2.PERIODISCHE_FORMEN))
     pruefe("ein durchgereichter Messwert fliegt am Typ auf",
            sabotage(lambda a: a["arme"]["signal"].__setitem__(
                "nenner_restursachen", 2.7)))
@@ -1006,12 +1056,18 @@ def main(argv=None):
     p.add_argument("--arbeit")
     p.add_argument("--selbsttest", action="store_true")
     p.add_argument("--allowlist-ausgeben", action="store_true")
+    p.add_argument("--form-vorrat-ausgeben", action="store_true")
     args = p.parse_args(argv)
 
     if args.selbsttest:
         return selbsttest()
     if args.allowlist_ausgeben:
         print(json.dumps(sorted(DATEN_FELDER), ensure_ascii=False, indent=1))
+        return 0
+    if args.form_vorrat_ausgeben:
+        # T185: damit ein Test von aussen belegen kann, dass der geschlossene
+        # Vorrat das committete Ergebnis wirklich deckt - statt es zu glauben.
+        print(json.dumps(list(FORM_VORRAT), ensure_ascii=False, indent=1))
         return 0
     if not args.freigabe:
         p.error("--freigabe fehlt")
