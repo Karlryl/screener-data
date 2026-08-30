@@ -1326,15 +1326,104 @@ const TRIPWIRE_A_BAND = [0.80, 1.25];
  */
 const TRIPWIRE_KOMPLEMENTAERFORM = /(\bKGaA\b|\bKG\s*a\.?\s*A\.?|&\s*Co\.?\s*KG\b|\bL\.?\s?P\.?$|\bLLP\b|\bS\.?C\.?A\.?$)/i;
 
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * DIE DROSSELUNG — Urteil `_COURT-M10-2026-08-30.md` §8, Kipp-Bedingung G4-I; ENTSCHIED 129.
+ *
+ * DIE REGEL STAND VOR DER ZAHL: „Der Trockenlauf (M10) meldet dauerhaft DREISTELLIGE
+ * Tagesmengen ⇒ Drosselung (eine Lampe, die niemand mehr liest, ist keine Wache)."
+ * Gemessen am Bestand vom 30.08. (15.044 Zeilen): Anker A 1.404 Meldungen, Anker B 183 Klassen.
+ * Beide ueber der vorab festgelegten Schwelle. Die Drosselung ist damit angeordnet.
+ *
+ * GEDROSSELT WIRD DIE ENTSCHEIDUNGSLAST, NICHT DIE ERKENNUNG. Jede Zeile wird weiter gegen
+ * beide Anker gerechnet, jede Meldung geht weiter in die Zaehlung. Was sich aendert, ist die
+ * MELDEFORM: statt EINER Liste der schaerfsten 25 Faelle steht je Ursachen-Klasse eine Zeile
+ * mit VOLLER Zahl und Beispielen.
+ *
+ * WARUM NICHT DIE IM URTEIL BENANNTE KADENZ (Wochen-/Monatstakt): gemessen, nicht gemeint.
+ * Die Kipp-Bedingung liest die Tagesmenge als Berichtsmenge — der gebaute Baustein schreibt
+ * aber 3 Log-Zeilen und eine bei 25 gekappte Liste, egal ob er 3 oder 1.404 Meldungen zaehlt.
+ * Ein Wochentakt senkt also nichts Unbegrenztes, sondern nur die Zahl der Lesegelegenheiten:
+ * 1.404 undifferenzierte Meldungen bleiben 1.404 pro Blick, sie kommen nur seltener. Er
+ * kostete zusaetzlich die taegliche P2-Meldung, die G4-I 3:0 ANGEORDNET hat. Die
+ * Klassen-Aggregation senkt dagegen genau die Groesse, die den Leser ueberfordert:
+ * A 1.404 -> 9 Klassen, B 183 -> 2 Klassen. Die Kadenz-Variante geht als Befund zurueck an
+ * den Orchestrator (§8 bleibt offen), gebaut wird sie nicht.
+ *
+ * WAS DIE DROSSELUNG BEHEBT — und das ist ein eigener, gemessener Befund: die alte Kappung
+ * zeigte die 25 SCHAERFSTEN Faelle, sortiert nach |ln(Verhaeltnis)|. Am Bestand vom 30.08.
+ * besetzten damit ausschliesslich die extremen Groessenordnungen dieses Fenster
+ * (1e-2 x12, 1e-3 x6, 1e+3 x5, 1e-6 x1, 1e-4 x1). VIER der neun Klassen kamen mit NULL Zeilen
+ * vor — darunter die beiden groessten: 1e0 mit 1.016 und 1e-1 mit 308 Meldungen. Also waren
+ * 94 % aller Meldungen im committeten Bericht durch keine einzige Zeile vertreten, und `VMRK`
+ * — der KALIBRIERUNGSFALL, an dem Anker A gebaut wurde (2,79) — stand auf Rang 448 von 1.404
+ * und tauchte nicht auf. Ein Extremwert-Fenster zeigt die duennsten Klassen und verschweigt
+ * die dicken; genau das macht eine Lampe unlesbar.
+ *
+ * ⚠ WAS SIE NICHT BEHEBT (Befund, nicht Aufgabe dieser Aenderung): `VMRK` steht auch nachher
+ * nicht namentlich im Bericht — es liegt auf Rang 60 INNERHALB seiner 1.016er-Klasse. Anker A
+ * trennt den Kontaminationsfall nicht von 1.000 gewoehnlichen Bandrand-Abweichungen; das ist
+ * eine Anker-PRAEZISIONS-Frage und damit Methodik. Sie geht als Befund an den Orchestrator,
+ * nicht in diesen Baustein. Einzeln nachgewiesen bleiben die drei Belegfaelle im Waechter
+ * (`tests/m10-tripwire.test.js`, "KALIBRIERUNG").
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+
 /**
- * Wie viele EINZELMELDUNGEN je Anker in den committeten Bericht wandern. Die ZAEHLUNGEN sind
- * immer vollstaendig; gekappt wird nur die Detailliste, und die Kappung steht mit ihrer Zahl
- * im Bericht.
- * ponytail: harte Kappung mit bekannter Decke — der Bericht wird taeglich neu geschrieben, und
- * ein taeglicher 1.400-Zeilen-Diff in data-health/ kostet mehr Repo als er Erkenntnis bringt.
- * Wenn die Vollliste je gebraucht wird, gehoert sie in einen eigenen, nicht committeten Lauf.
+ * Wie viele BEISPIEL-Meldungen je Ursachen-Klasse in den Bericht wandern. Die ZAEHLUNG je
+ * Klasse ist immer vollstaendig, und KEINE Klasse faellt weg: eine Klasse mit einem einzigen
+ * Treffer bekommt ihre eigene Zeile. Die Deckelung wirkt nur auf die Beispiele.
+ * ponytail: feste Zahl, keine Konfiguration — eine Stellschraube ohne zweiten Nutzer ist
+ * Ballast. Waechst der Bericht je ueber ein lesbares Mass, ist die Zahl der KLASSEN das
+ * Problem, nicht diese Konstante.
  */
-const TRIPWIRE_KAPPUNG = 25;
+const TRIPWIRE_KLASSEN_BEISPIELE = 5;
+
+/**
+ * DER KLASSENSCHLUESSEL IST DER GEMESSENE WERT — bei A auf die Zehnerpotenz gerundet, bei B
+ * die Zahl der Emittentengruppen selbst. KEINE neue Schwelle, KEINE Deutung, KEIN
+ * Ursachen-NAME im Code.
+ *
+ * ⚠ Das ist Absicht und die Grenze dieser Aenderung: eine Klassenbildung, die eine Ursache
+ * BENENNT („Einheiten-Desync"), waere eine neue Erkennungs-Semantik — also Methodik, und die
+ * gehoert vor ein Gericht, nicht in eine Meldeform. Der Leser sieht die Groessenordnung und
+ * zieht den Schluss selbst; der Bericht behauptet ihn nicht.
+ */
+function tripwireKlassenSchluessel(m) {
+  if (m.anker === 'B') return `${m.wert} Emittentengruppen`;
+  const e = Math.round(Math.log10(m.wert));
+  // Ein nicht rechenbarer Wert bekaeme sonst den Schluessel `1eNaN` und verschwaende in einem
+  // stillen Sammel-Eimer. Die Anker pruefen `shares` und `jahresAktien` je EINZELN auf endlich
+  // und > 0 — der QUOTIENT kann trotzdem ueberlaufen (winziger Nenner ⇒ Infinity). Genau dann
+  // soll das im Bericht STEHEN, nicht in einer Klasse verschwinden.
+  if (!Number.isFinite(e)) return 'Groessenordnung nicht rechenbar';
+  return `Groessenordnung 1e${e > 0 ? '+' : ''}${e}`;
+}
+
+/**
+ * Gruppiert eine Trefferliste in Ursachen-Klassen: je Klasse VOLLE Zahl + gekappte Beispiele.
+ * `treffer` kommt schaerfster-Fall-zuerst herein, die Beispiele sind damit deterministisch.
+ */
+function tripwireKlassen(treffer, schluessel = tripwireKlassenSchluessel) {
+  const nach = new Map();
+  for (const t of treffer || []) {
+    const k = schluessel(t);
+    if (!nach.has(k)) nach.set(k, []);
+    nach.get(k).push(t);
+  }
+  return [...nach.entries()]
+    // Groesste Klasse zuerst — die Ursache, die den Bericht dominiert, steht oben. Der
+    // Schluessel bricht den Gleichstand, sonst haenge die Reihenfolge an der Einfuegefolge.
+    .sort((x, y) => y[1].length - x[1].length || cmpTickerLokal(x[0], y[0]))
+    .map(([klasse, ts]) => ({
+      klasse,
+      gemeldet: ts.length,
+      gelistet: Math.min(ts.length, TRIPWIRE_KLASSEN_BEISPIELE),
+      beispiele: ts.slice(0, TRIPWIRE_KLASSEN_BEISPIELE),
+    }));
+}
+
+/** M12-Ausnahmen sind KEINE Meldungen — sie kommen deshalb nie in dieselbe Klassenliste,
+ *  sondern in einen eigenen Block mit derselben Bauform. */
+const TRIPWIRE_M12_KLASSE = () => 'M12-Ausnahme (Komplementaer-/Partnership-Struktur)';
 
 /** Locale-frei, gleicher Grund wie `cmpTicker` in score.js: `localeCompare` haengt an der
  *  OS-Locale und liesse CI gegen lokal auseinanderlaufen. */
@@ -1344,12 +1433,21 @@ const cmpTickerLokal = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
  *  Ausnahme, die man nicht zaehlen kann, ist von einem toten Anker nicht zu unterscheiden. */
 function tripwireAnkerA(zeilen) {
   const treffer = [];
-  let ausgenommen = 0, ohneBasis = 0;
+  // DIE AUSGENOMMENEN WERDEN GENANNT, NICHT NUR GEZAEHLT (Drosselung, ENTSCHIED 129). Eine
+  // Ausnahme, die man nicht zaehlen kann, ist von einem toten Anker nicht zu unterscheiden —
+  // eine, die man nicht LESEN kann, ist von einer zu weit gefassten Regel nicht zu
+  // unterscheiden. `M12` haengt an einer Rechtsform-Regex; welche Zeilen sie wirklich greift,
+  // muss im Bericht stehen.
+  const ausgenommenListe = [];
+  let ohneBasis = 0;
   for (const z of zeilen || []) {
     if (!Number.isFinite(z.shares) || z.shares <= 0 || !Number.isFinite(z.jahresAktien) || z.jahresAktien <= 0) { ohneBasis++; continue; }
     const wert = z.shares / z.jahresAktien;
     if (wert >= TRIPWIRE_A_BAND[0] && wert <= TRIPWIRE_A_BAND[1]) continue;
-    if (TRIPWIRE_KOMPLEMENTAERFORM.test(String(z.name || ''))) { ausgenommen++; continue; }
+    if (TRIPWIRE_KOMPLEMENTAERFORM.test(String(z.name || ''))) {
+      ausgenommenListe.push({ anker: 'A-ausgenommen', wert, ticker: z.ticker, name: z.name, nameSource: z.nameSource, grund: 'M12' });
+      continue;
+    }
     treffer.push({
       anker: 'A', wert, ticker: z.ticker, name: z.name, nameSource: z.nameSource,
       schluessel: z.schluessel, fingerabdruck: z.fingerabdruck,
@@ -1363,7 +1461,10 @@ function tripwireAnkerA(zeilen) {
   // Schaerfster Fall zuerst: |ln(Verhaeltnis)| absteigend, dann Ticker (deterministisch, damit
   // die Kappung nicht taeglich andere Zeilen zeigt).
   treffer.sort((a, b) => Math.abs(Math.log(b.wert)) - Math.abs(Math.log(a.wert)) || cmpTickerLokal(a.ticker, b.ticker));
-  return { treffer, ausgenommen, ohneBasis };
+  ausgenommenListe.sort((a, b) => Math.abs(Math.log(b.wert)) - Math.abs(Math.log(a.wert)) || cmpTickerLokal(a.ticker, b.ticker));
+  // `ausgenommen` bleibt die Zahl, ist aber jetzt aus der Liste ABGELEITET: zwei getrennt
+  // gefuehrte Groessen fuer dieselbe Tatsache laufen frueher oder spaeter auseinander.
+  return { treffer, ausgenommen: ausgenommenListe.length, ausgenommenListe, ohneBasis };
 }
 
 /**
@@ -1467,9 +1568,20 @@ function tripwireBericht(a, b, kopf) {
   // als `ausgefallen: true` da statt als 0 — dieselbe Trennung wie FEHLT gegen NULL beim
   // Zaehler: "nicht gemessen" darf nie wie "nichts gefunden" aussehen.
   const teil = (r, name) => (r
-    ? { ausgefallen: false, gemeldet: r.treffer.length, gelistet: Math.min(r.treffer.length, TRIPWIRE_KAPPUNG), meldungen: r.treffer.slice(0, TRIPWIRE_KAPPUNG) }
-    : { ausgefallen: true, gemeldet: null, gelistet: 0, meldungen: [],
+    ? { ausgefallen: false, gemeldet: r.treffer.length, klassen: tripwireKlassen(r.treffer) }
+    : { ausgefallen: true, gemeldet: null, klassen: [],
         grund: `Anker ${name} ist in diesem Lauf ausgefallen (s. ::warning:: im Lauf-Log). NICHT als 0 lesen: dieser Anker hat heute NICHTS gemessen.` });
+  const berichtA = teil(a, 'A');
+  const berichtB = teil(b, 'B');
+  // Die M12-Ausnahmen stehen NEBEN den Meldungen, nie darunter: sie sind das Gegenteil eines
+  // Befundes, und eine gemeinsame Liste machte aus einer Nicht-Meldung eine Meldung.
+  // Faellt A aus, steht die Zahl auf null und der Schluessel bleibt TROTZDEM da (Review-Fund
+  // 30.08., MEDIUM, reproduziert): ein weggelassener Schluessel ueberlebt JSON.stringify nicht
+  // und ist von "keine Ausnahme gefunden" nicht zu unterscheiden — dieselbe Verwechslung, die
+  // der Bucket `fehlt` beim Zaehler verhindert.
+  berichtA.ausgenommen = a
+    ? { gemeldet: a.ausgenommen, klassen: tripwireKlassen(a.ausgenommenListe, TRIPWIRE_M12_KLASSE) }
+    : { gemeldet: null, klassen: [] };
   return {
     _doku: [
       'IDENTITAETS-TRIPWIRE — MELDUNG, KEINE ENTSCHEIDUNG (_COURT-M10-2026-08-30, ENTSCHIED 126).',
@@ -1490,17 +1602,30 @@ function tripwireBericht(a, b, kopf) {
       'B = Reihen-Eigentum: eine identische Jahresumsatz-Reihe ueber >= 2 Emittentengruppen.',
       'A und B stehen getrennt (Auflage M11); Anker C ist NICHT gebaut (aufschiebend bedingt).',
       '',
-      `Die Detaillisten sind bei ${TRIPWIRE_KAPPUNG} Eintraegen je Anker gekappt; die Zaehlungen sind vollstaendig.`,
+      'DROSSELUNG (Urteil §8 Kipp-Bedingung G4-I, ENTSCHIED 129): der Trockenlauf meldete',
+      'dreistellige Tagesmengen (A 1.404, B 183). Statt EINER Liste der schaerfsten Faelle steht',
+      'jetzt je URSACHEN-KLASSE eine Zeile mit VOLLER Zahl und Beispielen. Gedrosselt ist die',
+      'Meldeform, NICHT die Erkennung: jede Zeile wird weiter gegen beide Anker gerechnet, und',
+      'KEINE Klasse faellt weg — eine Klasse mit einem einzigen Treffer bekommt ihre eigene Zeile.',
+      `Gekappt sind nur die Beispiele, bei ${TRIPWIRE_KLASSEN_BEISPIELE} je Klasse; `
+        + '`gemeldet` je Klasse ist immer vollstaendig.',
+      '',
+      'Der Klassenschluessel IST der gemessene Wert (A: Zehnerpotenz, B: Zahl der',
+      'Emittentengruppen) — KEINE neue Schwelle und KEINE Ursachen-Deutung. Eine Klasse zu',
+      'BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein',
+      'Gericht, nicht in eine Meldeform.',
     ],
     ...kopf,
     zaehlung: {
       ankerA: a ? a.treffer.length : null,
       ankerA_ausgenommen: a ? a.ausgenommen : null,
       ankerA_ohneBasis: a ? a.ohneBasis : null,
+      ankerA_klassen: a ? berichtA.klassen.length : null,
       ankerB: b ? b.treffer.length : null,
+      ankerB_klassen: b ? berichtB.klassen.length : null,
     },
-    ankerA: teil(a, 'A'),
-    ankerB: teil(b, 'B'),
+    ankerA: berichtA,
+    ankerB: berichtB,
   };
 }
 
@@ -2104,8 +2229,39 @@ function run(argv) {
     // M11: ZWEI Zaehlgroessen, nie eine. Ein OR-verschmolzenes Boolean waere genau die
     // Meldeform, die das Urteil ausschliesst — man koennte einer Meldung nicht mehr ansehen,
     // welcher Anker sie erzeugt hat und mit welchem Wert.
-    if (a) console.log(`[m10-tripwire] Anker A (Selbstwiderspruch Aktienzahl): ${a.treffer.length} Meldungen, ${a.ausgenommen} Komplementaer-/Partnership-Strukturen ausgenommen (M12), ${a.ohneBasis} Zeilen ohne rechenbare Basis.`);
-    if (b) console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
+    // DROSSELUNG (ENTSCHIED 129): unter jeder Kopfzeile steht die Aufschluesselung nach
+    // Ursachen-Klassen. Die Zahl der Zeilen haengt an der Zahl der KLASSEN, nicht an der Zahl
+    // der Meldungen — genau das macht die Lampe wieder lesbar, wenn die Menge dreistellig ist.
+    // ⚠ FAIL-OPEN GILT AUCH FUER DIE DROSSELUNG (Review-Fund 30.08., HIGH, REPRODUZIERT).
+    // Dieser Block lag zuerst ZWISCHEN den beiden bestehenden Klammern — den Anker-Klammern
+    // darueber und der Bericht-Klammer darunter — und damit in keiner. Nachgestellt: ein Wurf
+    // hier beendete den Lauf mit EXIT 1 und nahm den committeten Bericht mit, obwohl dessen
+    // Schreibpfad eigens gefangen ist. Das ist exakt die Fehlerklasse des 30.08.-Funds ("ein
+    // Wurf in A nahm auch Bs fertige Meldungen aus der Datei"), nur eine Stufe frueher — und
+    // eine Lampe, die den Tageslauf umbringt, ist das Gegenteil dessen, was M8 verlangt.
+    const klassenLog = (name, wirkung) => {
+      try { wirkung(); }
+      catch (e) {
+        console.error(`::warning::M10-Tripwire — Klassen-Aufschluesselung fuer ${name} ausgefallen (${e && e.message ? e.message : e}); die Kopfzahl steht oben, der Bericht wird trotzdem geschrieben. NICHT als "keine Klassen" lesen.`);
+      }
+    };
+    const klassenZeilen = (anker, treffer, wertText, schluessel) => {
+      for (const k of tripwireKlassen(treffer, schluessel)) {
+        console.log(`[m10-tripwire]   ${anker} · ${k.klasse}: ${k.gemeldet} ${schluessel ? 'ausgenommen' : 'Meldungen'} — Beispiele (${k.gelistet}): ${k.beispiele.map(wertText).join(', ')}`);
+      }
+    };
+    const wertA = (m) => `${m.ticker}=${Number(m.wert).toPrecision(3)}`;
+    if (a) {
+      console.log(`[m10-tripwire] Anker A (Selbstwiderspruch Aktienzahl): ${a.treffer.length} Meldungen, ${a.ausgenommen} Komplementaer-/Partnership-Strukturen ausgenommen (M12), ${a.ohneBasis} Zeilen ohne rechenbare Basis.`);
+      klassenLog('Anker A', () => klassenZeilen('A', a.treffer, wertA));
+      // Die Ausnahme wird GENANNT, nicht nur gezaehlt: eine Rechtsform-Regex, deren Treffer
+      // niemand sieht, ist von einer zu weit gefassten Regel nicht zu unterscheiden.
+      klassenLog('die M12-Ausnahmen von Anker A', () => klassenZeilen('A', a.ausgenommenListe, wertA, TRIPWIRE_M12_KLASSE));
+    }
+    if (b) {
+      console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
+      klassenLog('Anker B', () => klassenZeilen('B', b.treffer, (m) => m.beine.map((x) => x.ticker).join('/')));
+    }
     console.log('[m10-tripwire] Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt (M16). Keine Zeile faellt, keine verschmilzt, Exit bleibt 0.');
     try {
       // Auch bei nur EINEM lebenden Anker wird geschrieben (Review-Fund 30.08.): sonst nimmt
@@ -2120,7 +2276,7 @@ function run(argv) {
       });
       fs.mkdirSync(path.dirname(tripwirePfad), { recursive: true });
       writeFileAtomic(tripwirePfad, JSON.stringify(bericht, null, 2) + '\n');
-      console.log(`[m10-tripwire] Bericht geschrieben: ${tripwirePfad} (Detaillisten bei ${TRIPWIRE_KAPPUNG} je Anker gekappt, Zaehlungen vollstaendig).`);
+      console.log(`[m10-tripwire] Bericht geschrieben: ${tripwirePfad} (je Ursachen-Klasse volle Zahl + ${TRIPWIRE_KLASSEN_BEISPIELE} Beispiele; keine Klasse faellt weg).`);
     } catch (e) {
       console.error(`::warning::M10-Tripwire — Bericht nicht geschrieben (${e && e.message ? e.message : e}). Die Zahlen stehen oben im Lauf-Log, der committete Bericht FEHLT heute.`);
     }
@@ -2148,5 +2304,7 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   umbenennungsProtokoll, siegerHerkunftNachlesen, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad,
   // M10/M8-M16 Identitaets-Tripwire — fuer TDD. Waechter: tests/m10-tripwire.test.js
   tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
-  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG };
+  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM,
+  // Drosselung (ENTSCHIED 129). Waechter: tests/m10-tripwire.test.js, Abschnitt 4b
+  tripwireKlassen, tripwireKlassenSchluessel, TRIPWIRE_KLASSEN_BEISPIELE };
 if (require.main === module) process.exit(run(process.argv));
