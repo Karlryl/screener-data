@@ -80,7 +80,11 @@ class Abbruch(Exception):
 def pruefe_fenster(pfad):
     """Der aufgeloeste Pfad muss das Entdeckungs-Fenster sein - sonst Abbruch."""
     echt = os.path.realpath(pfad)
-    if os.path.basename(echt) != FENSTER_DATEI:
+    # casefold: NTFS ist case-insensitiv, und realpath normalisiert die
+    # Schreibweise nicht. Ein Pfad mit anderer Gross-/Kleinschreibung zeigt auf
+    # DIESELBE Datei und wuerde sonst als 'falsches Fenster' abgewiesen - ein
+    # Fehlalarm, der wie ein Bruch der Fenster-Mauer aussieht (ecc-Review 30.08.).
+    if os.path.basename(echt).casefold() != FENSTER_DATEI.casefold():
         raise Abbruch(
             "Geoeffnet werden darf nur %s. Aufgeloest wurde %s. Ein anderer "
             "Fenster-Stand ist fuer diese Etappe Sperrzone, kein Sonderfall."
