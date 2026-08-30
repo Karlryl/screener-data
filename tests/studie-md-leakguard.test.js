@@ -52,7 +52,11 @@ const HEX_LAUF = /\b(?=[0-9a-fA-F]{32,}\b)(?=[0-9a-fA-F]*[a-fA-F])[0-9a-fA-F]+\b
 const WORT = /[A-Za-zÄÖÜäöüß0-9_]+/gu;
 
 const KENNUNG_ADSH = /\b\d{10}-\d{2}-\d{6}\b/g;
-const KENNUNG_BENANNT = /\b(?:cik|adsh)\b\W{0,4}\d+/gi;
+// Trennzeichen eng gefasst: `\W{0,4}` hielt auch die Klammer in
+// "die Spalte `adsh` (10 Zeichen lang)" fuer Nachbarschaft und meldete die 10
+// als Kennung. `adsh` ist erlaubtes Schema-Vokabular — nur eine ZUGEWIESENE
+// Ziffernfolge ist der Fund.
+const KENNUNG_BENANNT = /\b(?:cik|adsh)\b[\s:=]{1,3}\d{4,}/gi;
 // Gemessen an beiden committeten Berichten: NULL Ziffernlaeufe >= 5 nach der
 // Hash-Vorreinigung. Deutsche Tausenderpunkte und Datumsteile zerfallen an der
 // Wortgrenze; ein nackter fuenfstelliger Lauf ist in einem Zaehl-Bericht bereits
@@ -70,18 +74,28 @@ const KONZEPT_FORM = /\b[A-ZÄÖÜ][a-zäöüß]+(?:[A-ZÄÖÜ][a-zäöüß]+)+\
 // ponytail: benannte Liste statt Taxonomie-Import — die Huegel-Form deckt die
 // grosse Mehrheit der Konzeptnamen; kommt ein weiteres Ein-Wort-Konzept in einem
 // Bericht vor, gehoert es hier hinein (eine Zeile, sichtbar im Diff).
+// DECKE, benannt: diese Liste trifft am WORT, nicht am Kontext — ein Bericht,
+// der ueber "die Kategorie Sales" schreibt, wird rot. Bewusst so herum: ein
+// falsch-rotes Wort kostet eine Zeile Diskussion, ein durchgelassener
+// Konzeptname kostet das Prueffenster. Zweite Decke (Huegel-Form): ein Konzept,
+// dessen erster Huegel eine Grossabkuerzung ist (`SECFoo`), traefe keine der
+// beiden Formen — us-gaap kennt diese Schreibweise nicht, deshalb nicht gebaut.
 const KONZEPT_EINWORT = new Set([
   'Revenues', 'Assets', 'Liabilities', 'Equity', 'Goodwill', 'Inventory',
   'Cash', 'Depreciation', 'Investments', 'Sales',
 ]);
 
-// Ein Signalwert kommt nie ohne Einheit. Zaehl-Berichte tragen keine Waehrung —
-// gemessen: beide committeten Berichte enthalten NULL Treffer.
+// Ein Signalwert kommt nie ohne Einheit — und eine Einheit ohne Zahl ist kein
+// Wert. "Millionen Datenpunkte" ist Prosa, "274,52 Mrd USD" ist ein Leck; die
+// Zahl muss deshalb am Marker haengen. Gemessen: beide committeten Berichte
+// enthalten NULL Treffer.
 // ponytail: Groessenordnungs-Marker statt Zahlenanalyse. Deckt Umsatz-, Gewinn-,
 // Aktienzahl- und Kurswerte in ihrer ueblichen Schreibweise; eine nackte Zahl
 // ohne Einheit faengt erst eine Nachbar-JSON-Abgleichstufe, die Regel (a) heute
 // nicht verlangt.
-const SIGNALWERT = /\b(?:USD|EUR|CHF|GBP|Mio|Mrd|Millionen|Milliarden)\b|[$€£]/g;
+const EINHEIT = 'USD|EUR|CHF|GBP|Mio|Mrd|Millionen|Milliarden';
+const SIGNALWERT = new RegExp(
+  `\\b\\d[\\d.,]*\\s*(?:${EINHEIT})\\b|\\b(?:${EINHEIT})\\b\\s*\\d|[$€£]\\s*\\d`, 'g');
 
 const TICKER_FORM = /^[A-ZÄÖÜ][A-ZÄÖÜ0-9]{1,4}$/u;
 // Studien- und Protokoll-Kennungen: D2, E3, E4a, R11, T171. Eine Form, keine Liste
@@ -110,6 +124,27 @@ const STUDIEN_VOKABULAR = new Set([
   'ID', 'PR', 'SEC', 'SHA', 'SQL', 'VORAB', 'WHERE',
 ]);
 
+/** Alle Schluesselnamen einer JSON rekursiv. Unparsbar -> leer (der Aufrufer
+ *  laeuft dann strenger, nie lockerer). */
+function jsonSchluessel(text) {
+  if (!text) return [];
+  let wurzel;
+  try {
+    wurzel = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const raus = [];
+  const geh = (k) => {
+    if (Array.isArray(k)) { k.forEach(geh); return; }
+    if (k && typeof k === 'object') {
+      for (const [name, wert] of Object.entries(k)) { raus.push(name); geh(wert); }
+    }
+  };
+  geh(wurzel);
+  return raus;
+}
+
 /**
  * Gibt jeden Fund als {klasse, wert, zeile} zurueck. Leeres Array = sauber.
  *
@@ -121,11 +156,27 @@ const STUDIEN_VOKABULAR = new Set([
 function pruefeBericht(text, nachbarJson = '') {
   const zeilen = text.split(/\r?\n/).map((z) => z.replace(HEX_LAUF, ' '));
   const alleWorte = zeilen.join('\n').match(WORT) || [];
-  const jsonVokabular = new Set((nachbarJson.match(WORT) || []).map((w) => w.toUpperCase()));
+  // NUR die SCHLUESSEL der Nachbar-JSON, nie ihre Werte. Wuerde man den ganzen
+  // JSON-Text nehmen, koennte ein ticker-foermiger WERT sich selbst freistellen
+  // — aus "Werte verboten" wuerde "Werte verboten, ausser sie stehen auch im
+  // JSON". Heute unmoeglich (pruefe_ausgabe sperrt das Schema), morgen eine Mine.
+  const jsonVokabular = new Set(
+    jsonSchluessel(nachbarJson).flatMap((k) => k.match(WORT) || [])
+      .map((w) => w.toUpperCase()),
+  );
+  // Zahlen dagegen DUERFEN aus der Ausgabe-Datei kommen — genau das schlaegt
+  // RR-6 § P11 vor. Sie sind maschinell bewacht und im Bericht zitierfaehig.
+  // Auch hier zuerst die Hashes raus: sonst stellte eine Ziffernfolge, die
+  // zufaellig IM sha256 der Ausgabe-Datei steht, dieselbe Folge in der Prosa frei.
+  const jsonZahlen = new Set(
+    nachbarJson.replace(HEX_LAUF, ' ').match(KENNUNG_ZIFFERN) || []);
   // Deutsche VERSALIEN-Betonung: das Wort steht anderswo im selben Dokument in
-  // normaler Schreibweise. Ein Ticker hat diesen Zwilling nicht.
+  // normaler Schreibweise. Ein Ticker hat diesen Zwilling nicht — ausser bei
+  // zwei Buchstaben, wo `IT`/`ON`/`SO`/`GO` echte Ticker UND gewoehnliche
+  // Woerter sind. Dort gilt die Ausnahme deshalb nicht.
   const kleinZwilling = new Set(
-    alleWorte.filter((w) => w !== w.toUpperCase()).map((w) => w.toUpperCase()),
+    alleWorte.filter((w) => w !== w.toUpperCase() && w.length > 2)
+      .map((w) => w.toUpperCase()),
   );
 
   const funde = [];
@@ -133,7 +184,9 @@ function pruefeBericht(text, nachbarJson = '') {
     const melde = (klasse, wert) => funde.push({ klasse, wert, zeile: i + 1 });
     for (const t of zeile.match(KENNUNG_ADSH) || []) melde('Firmen-Kennung', t);
     for (const t of zeile.match(KENNUNG_BENANNT) || []) melde('Firmen-Kennung', t);
-    for (const t of zeile.match(KENNUNG_ZIFFERN) || []) melde('Firmen-Kennung', t);
+    for (const t of zeile.match(KENNUNG_ZIFFERN) || []) {
+      if (!jsonZahlen.has(t)) melde('Firmen-Kennung', t);
+    }
     for (const t of zeile.match(KONZEPT_FORM) || []) {
       if (!KONZEPT_AUSNAHMEN.has(t)) melde('Konzeptname', t);
     }
@@ -270,6 +323,51 @@ test('Gegenprobe 3: Schema- und Metadaten-Vokabular ist erlaubt (Regel a)', () =
     + '`larger`/`smaller`, Felder `signal_weiterfiler` `qtrs_abgedeckt` '
     + '`sondenSpalten` `nenner_restursachen` `letzte_form_nach_signal`.';
   assert.deepEqual(pruefeBericht(text), []);
+});
+
+// ── Die Loecher, die der Reviewer gefunden hat — gepinnt, nicht nur gefixt ──
+
+test('Ein zweibuchstabiger Ticker kauft sich nicht am Kleinschreib-Zwilling frei', () => {
+  // `IT`, `ON`, `SO`, `GO` sind echte Ticker UND gewoehnliche Woerter. Die
+  // Zwillings-Ausnahme gilt deshalb erst ab drei Buchstaben.
+  const funde = pruefeBericht('Das System laeuft, it ist stabil. Der Fall IT bleibt offen.');
+  assert.ok(klassen(funde).includes('Ticker'), `Gemeldet wurde ${klassen(funde)}`);
+  // Gegenrichtung: die deutsche VERSALIEN-Betonung ab drei Buchstaben bleibt frei.
+  assert.deepEqual(pruefeBericht('Das gilt fuer alle, also ALLE Faelle.'), []);
+});
+
+test('Ein ticker-foermiger WERT im Nachbar-JSON stellt sich nicht selbst frei', () => {
+  const json = JSON.stringify({ variante: 'S-G', irgendein_feld: 'AAPL' });
+  const funde = pruefeBericht('Der Fall AAPL bleibt offen.', json);
+  assert.ok(klassen(funde).includes('Ticker'),
+    'Ein Wert im JSON darf sich nicht selbst zum erlaubten Vokabular erklaeren');
+  // Ein SCHLUESSEL dagegen ist Schema-Vokabular und darf.
+  assert.deepEqual(pruefeBericht('Das Feld `SGA` ist leer.',
+    JSON.stringify({ SGA: 3 })), []);
+});
+
+test('Eine Einheit ohne Zahl ist kein Signalwert — eine mit Zahl schon', () => {
+  assert.deepEqual(pruefeBericht('Der Bestand zaehlt Millionen von Zeilen.'), []);
+  assert.ok(klassen(pruefeBericht('Der Umsatz liegt bei 274,52 Mrd USD.'))
+    .includes('Signalwert'));
+  assert.ok(klassen(pruefeBericht('Der Kurs steht bei $ 231.')).includes('Signalwert'));
+});
+
+test('Schema-Prosa ueber `adsh` ist kein Kennungs-Fund — eine zugewiesene ist einer', () => {
+  assert.deepEqual(pruefeBericht('Die Spalte `adsh` (10 Zeichen lang) bleibt ungelesen.'), []);
+  assert.ok(klassen(pruefeBericht('Beleg: cik 0000320193.')).includes('Firmen-Kennung'));
+});
+
+test('Eine grosse Zahl AUS der bewachten Ausgabe-Datei ist zitierfaehig', () => {
+  // RR-6 § P11 nennt die Ausgabe-Datei ausdruecklich als Zahlen-Vorrat: was den
+  // JSON-Waechter passiert hat, darf der Bericht zitieren.
+  const json = JSON.stringify({ siegelWache: { bytes: 5025230848 } });
+  assert.deepEqual(pruefeBericht('Die Siegel-Datei misst 5025230848 Bytes.', json), []);
+  // Aber nur, wenn sie WIRKLICH dort steht — und nicht bloss in einem Hash.
+  const inHash = JSON.stringify({ sha256: 'ab5025230848cd' + 'e'.repeat(50) });
+  assert.ok(klassen(pruefeBericht('Die Firma 5025230848 faellt auf.', inHash))
+    .includes('Firmen-Kennung'),
+    'Eine Ziffernfolge im Hash darf keine Prosa-Zahl freistellen');
 });
 
 // ── Die Ausnahme ist benannt, nicht geduldet ────────────────────────────────
