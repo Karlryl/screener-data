@@ -74,7 +74,7 @@ function registerPraefix(ziel, anzahl) {
 function laufeMitSpion(skript, args, opt) {
   const o = opt || {};
   const spurDatei = path.join(o.spurIn, 'spur-' + String(Math.random()).slice(2, 8) + '.json');
-  const env = Object.assign({}, process.env, { SPION_AUSGABE: spurDatei });
+  const env = Object.assign({}, process.env, o.umgebung || {}, { SPION_AUSGABE: spurDatei });
   if (o.abbruch) env.SPION_ABBRUCH = '1';
   const e = spawnSync(process.execPath, ['--require', SPION].concat([skript], args), {
     encoding: 'utf8', cwd: o.cwd || REPO, env,
@@ -143,21 +143,110 @@ function fallR1(dir, marke) {
   };
 }
 
+// R1 `bestaetigen` schreibt die ZWEITE Datei dieses Werkzeugs: das
+// Freigabe-Protokoll, das scripts/studie-zaehlprobe.py als Tor vor dem
+// Datenzugriff liest. Eine halbe Datei ist dort kein Halt, sondern ein
+// Parse-Fehler an der Stelle, an der ein Halt gemeint war - also gehoert sie
+// unter dieselben drei Proben. Der Weg dorthin fuehrt durch zwei `gh`-Aufrufe;
+// gestellt wird deshalb ein `gh`, das genau die zwei Antworten gibt, die das
+// Werkzeug auswertet. Gefaelscht wird die AUSKUNFT DES SERVERS, nie die Pruefung:
+// das Werkzeug rechnet den Vergleich unveraendert selbst.
+function stelleGhBereit(baum, register) {
+  const bin = path.join(baum, 'bin');
+  fs.mkdirSync(bin, { recursive: true });
+  const js = path.join(bin, 'gh.js');
+  fs.writeFileSync(js, [
+    "'use strict';",
+    "const fs = require('node:fs');",
+    'const argv = process.argv.slice(2);',
+    "if (argv[0] === 'repo') { process.stdout.write('Karlryl/screener-data\\n'); process.exit(0); }",
+    "if (argv[0] === 'api') {",
+    // Die Serveruhr eine Sekunde nach der Anmeldung: das Werkzeug verlangt
+    // registeredAt < serverConfirmedAt STRIKT, und beide entstehen hier im
+    // selben Lauf. Ohne den Abstand scheiterte der Test an der Uhr, nicht an
+    // der Sache.
+    '  const jetzt = new Date(Date.now() + 1000).toUTCString();',
+    "  const roh = fs.readFileSync(process.env.SPION_REGISTER, 'utf8');",
+    "  const rumpf = JSON.stringify({ content: Buffer.from(roh, 'utf8').toString('base64'), encoding: 'base64' });",
+    "  process.stdout.write('HTTP/2 200\\r\\ndate: ' + jetzt + '\\r\\n\\r\\n' + rumpf);",
+    '  process.exit(0);',
+    '}',
+    'process.exit(9);',
+  ].join('\n'), 'utf8');
+  // NUR die Huelle der jeweiligen Plattform anlegen. Liegt unter Windows
+  // zusaetzlich eine endungslose Datei `gh` im selben Verzeichnis, findet die
+  // Prozess-Suche sie zuerst, kann sie nicht ausfuehren - und faellt auf das
+  // ECHTE gh weiter hinten im Suchpfad durch. Dann misst der Test die Werkbank.
+  if (process.platform === 'win32') {
+    fs.writeFileSync(path.join(bin, 'gh.cmd'), '@node "%~dp0gh.js" %*\n', 'utf8');
+  } else {
+    const sh = path.join(bin, 'gh');
+    fs.writeFileSync(sh, '#!/bin/sh\nexec node "$(dirname "$0")/gh.js" "$@"\n', 'utf8');
+    fs.chmodSync(sh, 0o755);
+  }
+  return { bin, register };
+}
+
+function fallR1Bestaetigen(dir, marke) {
+  const anmeldung = fallR1(dir, marke + '-best');
+  const runId = anmeldung.args[anmeldung.args.indexOf('--runid') + 1];
+  // Erst wirklich anmelden - der Eintrag muss im Register stehen, sonst prueft
+  // `bestaetigen` etwas, das es nicht gibt.
+  const vor = spawnSync(process.execPath, [anmeldung.skript].concat(anmeldung.args), {
+    encoding: 'utf8', cwd: anmeldung.cwd,
+  });
+  assert.equal(vor.status, 0, 'die Vor-Anmeldung fuer bestaetigen ist rot: ' + (vor.stderr || ''));
+
+  const { bin } = stelleGhBereit(anmeldung.cwd, anmeldung.register);
+  return {
+    skript: anmeldung.skript,
+    args: ['bestaetigen', '--runid', runId, '--ziel', path.join(anmeldung.cwd, 'freigabe.json')],
+    register: path.join(anmeldung.cwd, 'freigabe.json'),
+    cwd: anmeldung.cwd,
+    // Die Freigabe entsteht neu; es gibt kein "vorher" zum Vergleichen.
+    entstehtNeu: true,
+    // GENAU EIN Suchpfad-Schluessel. Windows fuehrt ihn als `Path`, POSIX als
+    // `PATH`; setzt man beide, enthaelt der Umgebungsblock zwei Suchpfade und
+    // es ist nicht bestimmt, welchen der Kindprozess nimmt - dann laeuft das
+    // ECHTE gh und der Test misst die Werkbank statt das Werkzeug.
+    umgebung: (() => {
+      const schluessel = Object.keys(process.env).find((k) => k.toLowerCase() === 'path') || 'PATH';
+      const u = { SPION_REGISTER: anmeldung.register };
+      u[schluessel] = bin + path.delimiter + process.env[schluessel];
+      return u;
+    })(),
+  };
+}
+
+// `bestaetigen` ruft `gh` als eigenes Programm. Ein vorgeschobenes Stub-`gh`
+// findet der Aufruf nur dort, wo eine ausfuehrbare Datei OHNE Endung reicht -
+// unter Windows sucht die Prozess-Erzeugung ohne Shell keine `.cmd` und meldet
+// ENOENT, faellt also auf das ECHTE gh im Suchpfad durch. Diese Probe liefe dort
+// gegen die Werkbank statt gegen das Werkzeug und waere schlimmer als keine.
+// Der Gate-Lauf ist ubuntu-latest (.github/workflows/pr-check.yml), dort laeuft
+// sie scharf; auf dem Windows-Rechner wird sie mit Grund uebersprungen.
+const NUR_POSIX = process.platform === 'win32'
+  ? 'nur auf POSIX: unter Windows findet execFileSync kein Stub-gh ohne Shell (ENOENT)'
+  : false;
+
 const WERKZEUGE = [
-  { name: 'F3b', bau: fallF3b },
-  { name: 'RR9-A3', bau: fallRr9 },
-  { name: 'R1-anmelden', bau: fallR1 },
+  { name: 'F3b', bau: fallF3b, ueberspringen: false },
+  { name: 'RR9-A3', bau: fallRr9, ueberspringen: false },
+  { name: 'R1-anmelden', bau: fallR1, ueberspringen: false },
+  { name: 'R1-bestaetigen', bau: fallR1Bestaetigen, ueberspringen: NUR_POSIX },
 ];
 
 // -- (1) Das Register wird nie direkt schreibend geoeffnet --------------------
 
 for (const w of WERKZEUGE) {
-  test(w.name + ': das Register entsteht als rename-Ziel, nie als direkt beschriebene Datei', () => {
+  test(w.name + ': das Register entsteht als rename-Ziel, nie als direkt beschriebene Datei',
+    { skip: w.ueberspringen }, () => {
     const dir = tempdir(w.name.toLowerCase());
     const fall = w.bau(dir, 'a');
-    const vorher = dateihash(fall.register);
+    const vorher = fall.entstehtNeu ? null : dateihash(fall.register);
 
-    const lauf = laufeMitSpion(fall.skript, fall.args, { cwd: fall.cwd, spurIn: dir });
+    const lauf = laufeMitSpion(fall.skript, fall.args,
+      { cwd: fall.cwd, spurIn: dir, umgebung: fall.umgebung });
     assert.equal(lauf.status, 0, w.name + ' ist rot: ' + lauf.fehler);
     assert.ok(lauf.spur, 'Der Spion hat keine Spur hinterlassen');
 
@@ -178,16 +267,20 @@ for (const w of WERKZEUGE) {
     );
     assert.ok(daneben.length > 0, 'Die Zwischendatei lag nicht im selben Verzeichnis wie das Register');
 
-    // Und das Ergebnis stimmt: geschrieben wurde wirklich, die Kette haelt.
-    assert.notEqual(dateihash(fall.register), vorher,
-      w.name + ' hat gar nichts geschrieben - dann misst diese Probe nichts');
-    pruefeZugriffsRegister(lies(fall.register));
+    // Und das Ergebnis stimmt: geschrieben wurde wirklich.
+    if (fall.entstehtNeu) {
+      assert.ok(fs.existsSync(fall.register), w.name + ' hat die Datei nicht angelegt');
+    } else {
+      assert.notEqual(dateihash(fall.register), vorher,
+        w.name + ' hat gar nichts geschrieben - dann misst diese Probe nichts');
+      pruefeZugriffsRegister(lies(fall.register)); // nur das Register traegt eine Kette
+    }
 
     // (3) Byte-Format: exakt die Auslieferungs-Formatierung, kein Zeichen anders.
     assert.equal(
       fs.readFileSync(fall.register, 'utf8'),
       alsRegisterBytes(lies(fall.register)),
-      w.name + ' hat das Register umformatiert - das bricht die Verkettung bestehender Eintraege',
+      w.name + ' hat umformatiert - beim Register braeche das die Verkettung bestehender Eintraege',
     );
 
     // Kein Zwischenstand bleibt liegen.
@@ -201,22 +294,53 @@ for (const w of WERKZEUGE) {
 // -- (2) Ein Abbruch mitten im Schreiben laesst das Register unversehrt -------
 
 for (const w of WERKZEUGE) {
-  test(w.name + ': ein Abbruch mitten im Schreiben laesst das Register byte-identisch', () => {
+  test(w.name + ': ein Abbruch mitten im Schreiben laesst das Register byte-identisch',
+    { skip: w.ueberspringen }, () => {
     const dir = tempdir(w.name.toLowerCase() + '-abbruch');
     const fall = w.bau(dir, 'b');
-    const vorher = dateihash(fall.register);
-    const bytesVorher = fs.readFileSync(fall.register, 'utf8');
+    const vorher = fall.entstehtNeu ? null : dateihash(fall.register);
+    const bytesVorher = fall.entstehtNeu ? null : fs.readFileSync(fall.register, 'utf8');
 
-    const lauf = laufeMitSpion(fall.skript, fall.args, { abbruch: true, cwd: fall.cwd, spurIn: dir });
+    const lauf = laufeMitSpion(fall.skript, fall.args,
+      { abbruch: true, cwd: fall.cwd, spurIn: dir, umgebung: fall.umgebung });
     assert.notEqual(lauf.status, 0,
       w.name + ' meldet Erfolg, obwohl der Schreibvorgang abgebrochen wurde');
     assert.ok(lauf.spur && lauf.spur.abbruchAusgeloest,
       'Der Abbruch wurde nie ausgeloest - die Probe misst nichts');
 
-    assert.equal(dateihash(fall.register), vorher,
-      w.name + ': das Register ist nach dem Abbruch veraendert');
-    assert.equal(fs.readFileSync(fall.register, 'utf8'), bytesVorher);
-    pruefeZugriffsRegister(lies(fall.register)); // wirft, wenn die Kette gebrochen waere
+    // Der Abbruch muss DAS REGISTER getroffen haben, nicht irgendeine Datei.
+    // Ohne diese Zeile geht die Probe gruen durch, sobald ein Werkzeug vor dem
+    // Register-Schreibvorgang irgendetwas anderes schreibt (Debug-Log,
+    // Sperrdatei, Telemetrie): der Abbruch faengt dann die fremde Datei, das
+    // Register bleibt unberuehrt, und alle uebrigen Zusicherungen halten -
+    // auch bei vollstaendig zurueckgebautem, nicht-atomarem Schreibweg.
+    // Ausgefuehrt reproduziert im ecc-Review 30.08.
+    // Zugelassen ist genau zweierlei: das Register selbst (der nicht-atomare
+    // Fall, den wir ausschliessen wollen) oder SEINE Zwischendatei nach dem
+    // Muster aus lib/atomic-write.js (`<ziel>.tmp.<pid>.<n>`). Ein blosses
+    // "faengt mit dem Zielpfad an" reicht NICHT: eine Nachbardatei wie
+    // `<ziel>.debug.log` erfuellt das auch und liesse die Probe wieder gruen
+    // durchgehen. Genau daran ist die erste Fassung dieser Zeile gescheitert.
+    const zielPfad = path.resolve(fall.register);
+    const getroffen = String(lauf.spur.abbruchPfad);
+    assert.ok(
+      getroffen === zielPfad || /^\.tmp\.\d+\.\d+$/.test(getroffen.slice(zielPfad.length)),
+      w.name + ': der Abbruch traf ' + getroffen + ' statt das Register (' + zielPfad
+        + ') oder dessen Zwischendatei - diese Probe misst dann nichts',
+    );
+
+    if (fall.entstehtNeu) {
+      // Eine abgebrochene NEUANLAGE darf keinen Torso hinterlassen: das
+      // Freigabe-Protokoll ist ein Tor, und ein halbes Tor ist ein Parse-Fehler
+      // an genau der Stelle, an der ein Halt gemeint war.
+      assert.equal(fs.existsSync(fall.register), false,
+        w.name + ': der Abbruch hat einen Torso hinterlassen');
+    } else {
+      assert.equal(dateihash(fall.register), vorher,
+        w.name + ': das Register ist nach dem Abbruch veraendert');
+      assert.equal(fs.readFileSync(fall.register, 'utf8'), bytesVorher);
+      pruefeZugriffsRegister(lies(fall.register)); // wirft, wenn die Kette gebrochen waere
+    }
   });
 }
 

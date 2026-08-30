@@ -93,8 +93,8 @@ function saboteur(dir, name, suchen, ersetzen) {
       // Zwilling liegt ausserhalb von scripts/. Fehlt einer, stirbt er an
       // MODULE_NOT_FOUND - und ein Test, der nur 'rot' prueft, liest das als
       // gegriffene Wache. Gefunden 30.08. beim Umbau auf lib/atomic-write.js.
-      /require\('\.\.\/lib\/([^']+)'\)/g,
-      (_treffer, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
+      /require\((['"])\.\.\/lib\/([^'"]+)\1\)/g,
+      (_treffer, _anf, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
     ),
     'utf8',
   );
@@ -316,7 +316,7 @@ test('RR9-A3 (d): dieselbe runId ein zweites Mal wird abgewiesen', () => {
 
 // ── (f) Der Schreibvorgang ist atomar ─────────────────────────────────────────
 
-// RR9-A3 (f) IST HIERHER UMGEZOGEN: tests/studie-register-schreibweg-atomar.js
+// RR9-A3 (f) IST HIERHER UMGEZOGEN: tests/studie-register-schreibweg-atomar.test.js
 //
 // Der Test stand hier als Sabotage an zwei woertlichen Codezeilen der inline
 // nachgebauten tmp+rename-Fassung. Diese Fassung ist am 30.08. durch den seit

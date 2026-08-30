@@ -85,8 +85,8 @@ function saboteur(dir, name, suchen, ersetzen) {
       // Zwilling liegt ausserhalb von scripts/. Fehlt einer, stirbt er an
       // MODULE_NOT_FOUND - und ein Test, der nur 'rot' prueft, liest das als
       // gegriffene Wache. Gefunden 30.08. beim Umbau auf lib/atomic-write.js.
-      /require\('\.\.\/lib\/([^']+)'\)/g,
-      (_treffer, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
+      /require\((['"])\.\.\/lib\/([^'"]+)\1\)/g,
+      (_treffer, _anf, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
     ),
     'utf8',
   );
