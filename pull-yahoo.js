@@ -1720,7 +1720,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     ['watchlist', watchlistEntry.name],
     ['ticker', watchlistEntry.ticker],
   ];
-  const _namensWahl = _namensKette.find(([, wert]) => wert) || ['ticker', watchlistEntry.ticker];
+  // Review-Fund (30.08.): der Rueckfall darf die Herkunft NICHT auf 'ticker' setzen. Traegt
+  // auch der Ticker nichts (leere/kaputte Watchlist-Zeile), hat keine Sprosse geliefert —
+  // `nameSource: 'ticker'` waere dann eine Luege, und zwar genau die teure: die Messung
+  // zaehlte eine Total-Leerzeile als legitime Ticker-Herkunft und unterschaetzte die Klasse,
+  // die dieses Feld ueberhaupt erst sichtbar machen soll. Der NAME bleibt unveraendert.
+  const _namensWahl = _namensKette.find(([, wert]) => wert) || [null, watchlistEntry.ticker];
   return {
     identifier: { primary: 'ISIN', value: watchlistEntry.isin || `TICKER:${watchlistEntry.ticker}` },
     meta: {

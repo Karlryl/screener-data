@@ -98,5 +98,22 @@ test('Bruchprobe: nameSource ist nie eine Sprosse, die gar nichts geliefert hat'
   }
 });
 
+// --- 5. Die Total-Leerzeile: keine Sprosse hat geliefert ------------------------
+// Review-Fund 30.08.: der Rueckfall setzte die Herkunft hart auf 'ticker', auch wenn der
+// Ticker selbst leer war. Das ist die teuerste Luege, die dieses Feld erzaehlen kann - die
+// Messung haette eine kaputte Zeile als legitime Ticker-Herkunft gezaehlt und damit genau
+// die Klasse unterschaetzt, die sie sichtbar machen soll.
+for (const [titel, wl] of [
+  ['Ticker fehlt', { ticker: undefined }],
+  ['Ticker leer', { ticker: '' }],
+  ['alles null', { ticker: null, name: null }],
+]) {
+  test('Total-Leerzeile (' + titel + '): keine Herkunft statt falscher Herkunft', () => {
+    const m = meta({}, wl);
+    assert.equal(m.nameSource, null, 'ohne gelieferte Sprosse darf keine benannt werden');
+    assert.equal(m.name, wl.ticker, 'der Name bleibt exakt das, was die alte Kette lieferte');
+  });
+}
+
 console.log(`\nm10-namensherkunft.test.js: ${pass} ok, ${fail} fail`);
 if (fail) process.exit(1);
