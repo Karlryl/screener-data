@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
+const pinChain = require('./helpers/bridge-pin-chain');
+
 const ROOT = path.join(__dirname, '..');
 const ADDENDUM_REL = 'protocol/early-detection/2.0.0/r2-a1-v120-comparator-defect-addendum.json';
 const METHOD_REL = 'protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json';
@@ -149,7 +151,14 @@ test('v1.2 comparator addendum: old and new implementation pins form one source 
   );
   assert.equal(addendum.currentImplementation.supersedesPin, EXPECTED_OLD_SCRIPT_PIN);
   assert.equal(addendum.currentImplementation[SCRIPT_REL], EXPECTED_NEW_SCRIPT_PIN);
-  assert.equal(sha256File(SCRIPT_PATH), EXPECTED_NEW_SCRIPT_PIN);
+  // This record's pin is a HISTORICAL claim and stays asserted above
+  // (SUPERSEDE_NO_DELETE). What the LIVE file must match is the youngest link
+  // of the chain — the bound-manifest resolution addendum superseded this one.
+  // Asserting the live file against a literal here was the same self-standing
+  // pin N13 named in the other enforcer: it cannot know it has been superseded.
+  assert.equal(sha256File(SCRIPT_PATH), pinChain.resolvePin(SCRIPT_REL));
+  assert.notEqual(pinChain.resolvePin(SCRIPT_REL), EXPECTED_NEW_SCRIPT_PIN,
+    'the chain must resolve past this record once a younger link supersedes it');
 });
 
 test('v1.2 comparator addendum: a shape-stable second-rerun mutation is rejected', () => {

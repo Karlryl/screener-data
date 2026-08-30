@@ -139,9 +139,9 @@
     }
   },
   "currentImplementation": {
-    "scripts/studie-identity-bridge-artifact.py": "<TBD-NACH-EINGRIFF>",
+    "scripts/studie-identity-bridge-artifact.py": "3aadcbbd3178ed361c16c6a35e8ae4564f62dd1fffb6f9a3b1868fc60d01fea2",
     "supersedesPin": "40669a86564939e31bbee8c3d58bcb79de790137122a7a5fc0dd36a65015d897",
-    "note": "Zweistufig wie beim Comparator-Addendum: dieser Record wird eingefroren und committet BEVOR das gepinnte Skript angefasst wird, der Wert wird im selben PR nachgetragen, sobald der neue Skript-Hash existiert. Der aeltere Pin bleibt im Closure-Record und im Comparator-Addendum unveraendert stehen und ist damit als Vor-Fix-Stand weiter belegt."
+    "note": "Zweistufig wie beim Comparator-Addendum: dieser Record wurde eingefroren und committet BEVOR das gepinnte Skript angefasst wurde (Commit a8a27afe73), der Wert wurde im selben PR nachgetragen, sobald der neue Skript-Hash existierte. Der aeltere Pin bleibt im Closure-Record und im Comparator-Addendum unveraendert stehen und ist damit als Vor-Fix-Stand weiter belegt."
   },
   "requiredProofs": [
     {
