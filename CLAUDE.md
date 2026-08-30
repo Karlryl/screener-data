@@ -60,6 +60,10 @@ Sektor-Dossiers (evidence-graded, englisch, zitiert) liegen im **Obsidian-Vault*
 ## Fallen
 - **`GitHub\screener-data-fix`** = eingefrorene Kopie/Ex-Worktree (18.05.2026) — **nicht anfassen**.
 - **`GitHub\docGPT`** = totes Fremd-Repo (zum Löschen markiert) — nie als Workspace nutzen.
+- **Zwei Tests sind auf dieser Maschine dauerhaft rot und in CI grün — kein Defekt, sondern Umgebung.** Gemessen 30.08.2026 gegen den gleichen Stand, der als PR-Check grün durchlief:
+  - `tests/scoring/calibration-ref.test.js` — genau ein Block (*R2.9 Test B*) hat eine **Vorbedingung**, die lokal nicht gilt: er braucht die Kohorte `utilities|unprofitable` als FEHLEND im lokalen Kalibrier-Artefakt. Lokal ist sie da. 16 von 17 Blöcken grün.
+  - `tests/waehrung-ausliefer-waechter.test.js` — der LIVE-Block läuft über die **lokal ausgelieferten** Beine und findet dort Kreuznotiz-Verstöße (Mehrfachlistings desselben Emittenten). Das ist die bekannte Listing-Währungs-Falle, **gesperrte Klasse bis Ende Oktober: melden, nicht bauen**. Die synthetischen Blöcke derselben Datei sind grün.
+  - **Regel:** Diese zwei lokalen Roten sind **kein** Grund, einen Chunk anzuhalten oder zu „reparieren". Jede *dritte* rote Datei ist es sehr wohl. Wer den lokalen Lauf sauber braucht: `git config core.autocrlf false` beseitigt eine dritte, ältere Klasse (Zeilenenden), nicht diese beiden.
 
 
 ## Zwei-Motoren-Betrieb (Codex) — Anker (2026-07-16)
