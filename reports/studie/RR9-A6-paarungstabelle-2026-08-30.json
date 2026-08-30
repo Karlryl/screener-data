@@ -1,0 +1,82 @@
+{
+ "auflage": "RR9-A6 Stufe 1, erste Ausgabe - _COURT-RR9-2026-08-30",
+ "bekannteVergleichsgrenze": "Die `segments`-Asymmetrie zwischen den Jahrgaengen (K1 §4 Grenze 4, A4-Legacy-Sonderfall) und die 6 bzw. 11 gezaehlten, nicht untersuchten `value`-Abweichungen bleiben als benannte Grenze im R6-Bericht - diese Tabelle raeumt sie nicht aus.",
+ "beobachtungenGesamt": 358,
+ "jeFenster": {
+  "endtest": {
+   "beideJahrgaenge": 16,
+   "nurLegacy": 0,
+   "nurPost2024": 0,
+   "quartaleGesamt": 16,
+   "quartaleOhneBeide": []
+  },
+  "entdeckung": {
+   "beideJahrgaenge": 32,
+   "nurLegacy": 0,
+   "nurPost2024": 0,
+   "quartaleGesamt": 32,
+   "quartaleOhneBeide": []
+  },
+  "pruefung": {
+   "beideJahrgaenge": 16,
+   "nurLegacy": 0,
+   "nurPost2024": 0,
+   "quartaleGesamt": 16,
+   "quartaleOhneBeide": []
+  }
+ },
+ "ohneJahrgangsKennzeichen": 0,
+ "orte": {
+  "early-detection-store": {
+   "beobachtungen": 48,
+   "vorhanden": true
+  },
+  "early-detection-v4": {
+   "beobachtungen": 183,
+   "vorhanden": true
+  },
+  "early-detection-v4-sealed127": {
+   "beobachtungen": 127,
+   "vorhanden": true
+  }
+ },
+ "pruefmethode": {
+  "wasNichtEnthaltenIst": "Stufe 1s Schluessel- und Zeilenvergleich sowie Stufe 2 (Zwei-Panel-Sensitivitaet).",
+  "wie": "Gezaehlt werden die Beobachtungs-Records des Speichers (observations/sec-fsd/<quartal>/*.json) am Feld `datasetVariant`. Kein Panel, kein Blob-Inhalt, kein Wert."
+ },
+ "quartaleBeideJahrgaenge": 64,
+ "quartaleGesamt": 69,
+ "quartaleNurLegacy": [],
+ "quartaleNurPost2024": [
+  "2025q1",
+  "2025q2",
+  "2025q3",
+  "2025q4",
+  "2026q1"
+ ],
+ "rueckkehrklausel": "NICHT AUSGELOEST: die Schnittmenge deckt die Prueffenster-Quartale vollstaendig. R6 ist je Quartal ausfuehrbar; RR-5 kehrt NICHT als Methodikfrage zurueck.",
+ "schema": "studie-rr9-a6-paarungstabelle/v1",
+ "schnittmengeDecktPrueffenster": true,
+ "suchachsen": [
+  {
+   "achse": "Verzeichnis",
+   "status": "gemessen",
+   "wert": "je Ort observations/sec-fsd/<quartal>"
+  },
+  {
+   "achse": "Feldname",
+   "status": "gemessen",
+   "wert": "datasetVariant"
+  },
+  {
+   "achse": "Registerfeld",
+   "status": "ungemessen",
+   "wert": "ob ein Payload registriert ist, sagt diese Tabelle nicht"
+  }
+ ],
+ "variantenGesamt": {
+  "archived_digest_revision": 50,
+  "legacy_earliest_archived": 176,
+  "post_2024_reprocessed_or_current": 132
+ }
+}

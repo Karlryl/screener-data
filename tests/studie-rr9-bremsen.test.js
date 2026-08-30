@@ -50,6 +50,30 @@ for (const probe of [
   assert.ok(bau.includes(`ok   ${probe}`), `Lesepfad-Probe fehlt oder rot: ${probe}`);
 }
 
+// -- 2b. RR9-A6: die Paarungstabelle und ihre Rueckkehr-Klausel --------------
+const paarung = lauf('studie-rr9-a6-paarung.py', ['--selbsttest']);
+assert.match(paarung, /selbsttest: \d+ ok, 0 FAIL/, 'A6-Selbsttest nicht sauber');
+for (const probe of [
+  'Rueckkehrklausel schweigt, wenn das Prueffenster gedeckt ist',
+  'ROT-PROBE A6: ungepaartes Prueffenster-Quartal loest die Rueckkehrklausel aus',
+  'fehlendes datasetVariant zaehlt als OHNE_KENNZEICHEN',
+]) {
+  assert.ok(paarung.includes(`ok   ${probe}`), `A6-Probe fehlt oder rot: ${probe}`);
+}
+
+// Das gemessene Artefakt: die Klausel haengt am Prueffenster, nicht am Gefuehl.
+const tabelle = path.join(__dirname, '..', 'reports', 'studie',
+  'RR9-A6-paarungstabelle-2026-08-30.json');
+if (require('node:fs').existsSync(tabelle)) {
+  const t = JSON.parse(require('node:fs').readFileSync(tabelle, 'utf8'));
+  assert.equal(t.jeFenster.pruefung.quartaleOhneBeide.length, 0);
+  assert.equal(t.schnittmengeDecktPrueffenster, true);
+  // Gemessene Korrektur zur Vorlagen-Zahl "50 von 183 ohne Kennzeichen":
+  // die 50 sind die dritte, benannte Variante archived_digest_revision.
+  assert.equal(t.ohneJahrgangsKennzeichen, 0);
+  assert.equal(t.variantenGesamt.archived_digest_revision, 50);
+}
+
 // -- 3. Der Tripwire haengt am Lesepfad, nicht an einem Vorlauf ---------------
 // bau() darf ohne Manifest nicht aufrufbar sein. Das ist die Eigenschaft, die
 // verhindert, dass jemand den Waechter durch Weglassen eines Arguments umgeht.
