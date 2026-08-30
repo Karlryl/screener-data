@@ -1,22 +1,44 @@
 #!/usr/bin/env python3
 """Caller-side pre-flight for the R2-A1 independent-rebuild proof (finding H6).
 
-`scripts/studie-identity-bridge-artifact.py` believes the mode a proof claims
-about ITSELF: `load_independent_rebuild_proof()` reads `boundManifestMode` but
-never re-derives it, and never holds `artifactVersion` against
-`ARTIFACT_VERSION`. Two holes follow from that:
+Rule modeguard/2 - MANIFEST EQUALITY. Ordered by the court of 2026-08-30
+(`_COURT-MODEGUARD-2026-08-30.md`, option C, seven binding conditions) after
+rule modeguard/1 was found not viable (DENIED, severity 9/10).
 
-  * a proof carrying `artifactVersion` 1.1.0 together with
-    `boundManifestMode` FIRST_BUILD_OF_VERSION is accepted, although 1.1.0 is
-    the replication-bound version ("FORGED PROOF ACCEPTED -> mode never
-    re-derived");
-  * an unknown version silently falls through to the weaker FIRST_BUILD mode
-    instead of refusing (fail-open).
+WHY THE RULE CHANGED. modeguard/1 re-derived the bound-manifest MODE from the
+frozen records and refused any proof whose named mode differed. For the current
+version 1.2.0 it derived FIRST_BUILD_OF_VERSION, because its replication case
+was read out of the 1.1.0 correction alone. The repaired resolver in the pinned
+script derives REPLICATION_AGAINST_BOUND_MANIFEST for the same version. The
+consequence was measured, not suspected: an honest future 1.2.0 rebuild proof
+was refused as a lying mode, and the only proof shape that passed was one that
+downgraded ITSELF to the weaker mode - the guard rewarded exactly the
+self-declaration it was built against.
 
-That script is byte-pinned - `currentImplementation` in
-`protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json`, enforced by
-`tests/studie-identity-bridge-artifact.test.js` - so the re-derivation lives
-here instead and runs BEFORE the bridge script is reached:
+WHAT DECIDES NOW. Not the mode, but the invariant the frozen closure record
+states in words for every 1.2.0 proof, first build or rebuild alike: "Ein
+spaeterer Neubau von 1.2.0 ist damit ein Replikations-Fall und muss dieses
+Manifest exakt reproduzieren". Three values must agree:
+
+  * SOLL   - `boundManifest.manifestFileSha256`, resolved out of the frozen
+             closure record. Never a literal in this file (condition 1).
+  * IST    - sha256 RE-COMPUTED here from the manifest file on disk. A proof
+             that merely NAMES the bound hash proves nothing; the hash must be
+             recomputed or a hand-edited proof walks through (condition R1,
+             pinned by the sabotage test in the test file).
+  * CLAIM  - `manifestSha256` as carried by the proof.
+
+`boundManifestMode` stays DESCRIPTIVE. It must still be named and must still
+agree with `matchesBoundManifest` - a missing field is refused, never
+defaulted - but it no longer switches which gate applies.
+
+H6 IS NOT CLOSED (condition 5). The root is still open: the pinned
+`load_independent_rebuild_proof()` believes the mode a proof claims about
+itself and never re-derives it. It does recompute the manifest hash, but only
+against the manifest of the CURRENT run - never against the frozen record - so
+a rebuild that diverges from the bound manifest is not caught there either.
+H6 is carried as "root open, mitigated at the caller"; option D (re-derivation
+inside the pinned loader) stays in the queue.
 
     python scripts/studie-bridge-proof-modeguard.py --proof <proof.json>
     python scripts/studie-identity-bridge-artifact.py --discovery ... \
@@ -24,16 +46,26 @@ here instead and runs BEFORE the bridge script is reached:
 
 Every value is read out of the frozen records, never out of the guarded
 script, so a defect in the guarded resolver cannot travel into its own gate.
-This guard does NOT decide whether 1.2.0 should already be a replication case
-(finding H7) - it mirrors the bound records as they stand today.
+`--manifest` points the check at the manifest a future run actually built;
+without it the manifest named by the record's canonical run is checked. The
+pinned loader independently holds the proof against the run's own manifest, so
+a wrong `--manifest` does not buy a green run - it only moves which of the two
+legs reports first.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# The rule is versioned and named in every verdict line (condition 7). A
+# rollback may switch the default checker, but must invalidate neither the
+# historic first-build proof nor a proof already carried under this rule -
+# both are pinned as acceptable in tests/studie-bridge-proof-modeguard.test.js.
+CHECK_RULE = "modeguard/2-manifest-equality"
 
 REPLICATION_BINDING = "REPLICATION_AGAINST_BOUND_MANIFEST"
 FIRST_BUILD_BINDING = "FIRST_BUILD_OF_VERSION"
@@ -56,8 +88,20 @@ def _load(rel, repo=REPO):
         return json.load(handle)
 
 
+def sha256_file(path):
+    """Re-compute, never read a claimed value. Kept local on purpose: the guard
+    must not import the pinned script it gates."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for block in iter(lambda: handle.read(65536), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 def frozen_binding(repo=REPO):
-    """Read the version binding out of the frozen records themselves."""
+    """Read the version binding AND the bound manifest out of the frozen
+    records themselves. Every field is mandatory: a record that does not name
+    its bound manifest refuses the run instead of degrading to a mode check."""
     closure = _load(V120_CLOSURE_REL, repo)
     if closure.get("status") != "FROZEN_V120_CLOSURE":
         raise ProofRefused("v1.2.0 closure record is not frozen")
@@ -69,69 +113,125 @@ def frozen_binding(repo=REPO):
     replication = (correction.get("boundArtifact") or {}).get("artifactVersion")
     if not current or not replication:
         raise ProofRefused("frozen records do not name their artifact versions")
+    bound_manifest = (closure.get("boundManifest") or {}).get("manifestFileSha256")
+    if not bound_manifest:
+        raise ProofRefused(
+            "frozen closure record %s names no boundManifest.manifestFileSha256;"
+            " refusing instead of falling back to a mode check" % V120_CLOSURE_REL
+        )
+    manifest_rel = ((closure.get("canonicalRun") or {}).get("artifacts") or {}).get(
+        "manifest"
+    )
+    if not manifest_rel:
+        raise ProofRefused(
+            "frozen closure record %s names no canonicalRun.artifacts.manifest"
+            % V120_CLOSURE_REL
+        )
+    # `replication` feeds the known-version set only. It is deliberately NOT
+    # returned: it is the 1.1.0 value that modeguard/1 derived its mode from,
+    # and a returned key of that name invites a future patch to wire mode
+    # re-derivation back into the gate - which would reinstate H6 in its
+    # original shape. Under modeguard/2 nothing may branch on it.
     return {
         "current": current,
-        "replication": replication,
         "known": {v for v in (current, superseded, replication) if v},
+        "boundManifest": bound_manifest,
+        "manifestRel": manifest_rel,
+        "source": V120_CLOSURE_REL,
     }
 
 
-def expected_mode(version, binding):
-    """Re-derive the bound-manifest mode. Unknown version = refusal, not a
-    silent fall-through to the weaker mode."""
+def check_proof(proof, binding, manifest_path):
+    """Refuse a proof that does not reproduce the bound manifest.
+
+    Order matters, and every hole keeps its own reachable refusal: an unknown
+    version dies first, a proof for the wrong version second, an unnamed or
+    self-contradicting mode third, a manifest that is not the bound one last.
+    """
+    version = proof.get("artifactVersion")
     if version not in binding["known"]:
         raise ProofRefused(
             "artifact version %r has no frozen record (known: %s); refusing "
             "instead of falling back to %s"
             % (version, ", ".join(sorted(binding["known"])), FIRST_BUILD_BINDING)
         )
-    if version == binding["replication"]:
-        return REPLICATION_BINDING
-    return FIRST_BUILD_BINDING
-
-
-def check_proof(proof, binding):
-    """Refuse a proof whose named mode does not survive re-derivation.
-
-    Order matters: an unknown version dies first, a lying mode second, a proof
-    for the wrong version third - so each of the three holes has its own
-    reachable refusal instead of being masked by an earlier check.
-    """
-    version = proof.get("artifactVersion")
-    derived = expected_mode(version, binding)
-    claimed = proof.get("boundManifestMode")
-    if claimed != derived:
-        raise ProofRefused(
-            "proof claims bound-manifest mode %r, re-derived mode for %s is %r"
-            % (claimed, version, derived)
-        )
     if version != binding["current"]:
         raise ProofRefused(
             "proof is for artifact version %r, the current bound version is %r"
             % (version, binding["current"])
         )
+    # The mode is descriptive now, but it is still mandatory and still has to
+    # agree with itself - no branch waves a missing field through (condition 2).
+    claimed_mode = proof.get("boundManifestMode")
+    if claimed_mode not in (REPLICATION_BINDING, FIRST_BUILD_BINDING):
+        raise ProofRefused(
+            "proof claims bound-manifest mode %r, which names neither %s nor %s"
+            % (claimed_mode, REPLICATION_BINDING, FIRST_BUILD_BINDING)
+        )
     matches = proof.get("matchesBoundManifest")
-    if derived == REPLICATION_BINDING and matches is not True:
+    if claimed_mode == REPLICATION_BINDING and matches is not True:
         raise ProofRefused(
             "replication mode requires matchesBoundManifest true, got %r" % (matches,)
         )
-    if derived == FIRST_BUILD_BINDING and matches is not None:
+    if claimed_mode == FIRST_BUILD_BINDING and matches is not None:
         raise ProofRefused(
             "first build of a version cannot claim a bound-manifest match (%r)"
             % (matches,)
         )
-    return derived
+    # The deciding leg. SOLL out of the record, IST re-computed from the file,
+    # CLAIM out of the proof - all three named in every outcome (condition 3).
+    soll = binding["boundManifest"]
+    # isfile, not exists: a directory passes exists() and would then die in the
+    # hash read with a raw traceback instead of a refusal that names the SOLL.
+    if not os.path.isfile(manifest_path):
+        raise ProofRefused(
+            "manifest %s is not a readable file; SOLL %s from %s cannot be "
+            "checked against anything" % (manifest_path, soll, binding["source"])
+        )
+    ist = sha256_file(manifest_path)
+    if ist != soll:
+        raise ProofRefused(
+            "manifest does not reproduce the bound manifest: SOLL %s (source %s), "
+            "IST %s (re-computed from %s)"
+            % (soll, binding["source"], ist, manifest_path)
+        )
+    claim = proof.get("manifestSha256")
+    if claim != soll:
+        raise ProofRefused(
+            "proof is bound to another manifest: SOLL %s (source %s), proof "
+            "claims %s" % (soll, binding["source"], claim)
+        )
+    return {"mode": claimed_mode, "soll": soll, "ist": ist,
+            "source": binding["source"], "manifest": manifest_path}
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("--proof", required=True)
+    parser.add_argument(
+        "--manifest",
+        help="manifest the run actually built; defaults to the manifest named "
+             "by canonicalRun.artifacts.manifest in the frozen closure record",
+    )
     args = parser.parse_args()
     with open(args.proof, encoding="utf-8") as handle:
         proof = json.load(handle)
-    mode = check_proof(proof, frozen_binding())
-    print("MODEGUARD OK - %s re-derived for artifact version %s"
-          % (mode, proof.get("artifactVersion")))
+    binding = frozen_binding()
+    # `is not None`, not `or`: an explicitly empty --manifest must reach the
+    # refusal, never be silently replaced by the record's canonical manifest.
+    manifest_path = args.manifest if args.manifest is not None else os.path.join(
+        REPO, *binding["manifestRel"].split("/")
+    )
+    result = check_proof(proof, binding, manifest_path)
+    print(
+        "MODEGUARD OK [%s] - manifest reproduced: SOLL %s (source %s), IST %s "
+        "(re-computed from %s); artifact version %s, declared mode %s"
+        % (CHECK_RULE, result["soll"], result["source"], result["ist"],
+           result["manifest"], proof.get("artifactVersion"), result["mode"])
+    )
     return 0
 
 
@@ -139,5 +239,14 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except ProofRefused as error:
-        print("MODEGUARD REFUSED: " + str(error), file=sys.stderr)
+        print("MODEGUARD REFUSED [%s]: %s" % (CHECK_RULE, error), file=sys.stderr)
+        sys.exit(1)
+    except (OSError, ValueError) as error:
+        # An unreadable proof, an unreadable frozen record or malformed JSON is
+        # a refusal like any other - never a traceback. Condition 3 wants every
+        # outcome spoken in the guard's own voice, and a caller that reads
+        # stderr for MODEGUARD REFUSED must not miss these. ValueError covers
+        # json.JSONDecodeError, which subclasses it.
+        print("MODEGUARD REFUSED [%s]: input could not be read: %s: %s"
+              % (CHECK_RULE, type(error).__name__, error), file=sys.stderr)
         sys.exit(1)
