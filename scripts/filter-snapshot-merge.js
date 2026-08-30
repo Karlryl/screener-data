@@ -632,20 +632,109 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
  *
  * Fail-closed geladen wie das NAV-Register: eine kaputte Datei stoppt den Lauf, statt ihn ohne
  * Register weiterlaufen zu lassen.
+ *
+ * ══ M17 (_COURT-M10-2026-08-30, G6 3:0) — DIE AUFNAHMESCHWELLE WIRD MASCHINELL GEHAERTET ══
+ * REIHENFOLGE-AUFLAGE: diese Haertung kommt VOR dem Identitaets-Tripwire, nicht danach. Grund
+ * ist nicht Vorsicht, sondern Arithmetik (Urteil §2 zu G6): der schaerfste bisherige Riegel war
+ * ein Test, der das Register LEER verlangt — eine Bedingung mit eingebautem Verfallsdatum, die
+ * am Tag des ersten Eintrags zwangslaeufig faellt. Eine zuverlaessig feuernde Lampe vor einer
+ * weichen Schwelle ist ein Trichter.
+ *
+ * VERIFIZIERT WEICH, nicht vermutet weich (Urteil §3 K-8): bis hierher war `beleg` ein FREIER
+ * STRING. `{ beleg: 'Messung X' }` und sogar `{ "beleg": "klar" }` luden sauber durch —
+ * geprueft wurden Typen, Dubletten und Mehrfach-Ticker, nie der Inhalt.
+ *
+ * (a) `beleg` IST JETZT STRUKTURIERT und die zitierte Berichtsdatei muss IM REPO EXISTIEREN.
+ *     Ein Beleg, den die CI nicht oeffnen kann, ist keiner. Das schliesst Vault-Pfade
+ *     (`agent-reports/...`) bewusst aus: wer eine echte Firma vom Board nehmen will, legt die
+ *     Messung dorthin, wo jeder Leser sie findet.
+ *     ⚠ SELBST-GEGENREDE, ausdruecklich (Urteil M17): die Existenzpruefung mechanisiert die
+ *     ZITIERPFLICHT, nicht den BEWEIS. B3(i) verlangt einen Negativbeweis ueber den vollen
+ *     Bestand — den kann kein Lader pruefen. Sie hebt die Schwelle, sie ersetzt sie nicht.
+ * (b) D-A — ABLAUFDATUM JE EINTRAG, FAIL-CLOSED. Ein Identitaets-Eintrag verschmilzt
+ *     Emittenten; er darf nicht als Dauerzustand einschlafen. Abgelaufen heisst hier hart
+ *     Abbruch (anders als die Quarantaene, die nur warnt): die Quarantaene VERWIRFT eine
+ *     bewiesen vergiftete Zeile und schuetzt auch ueberfaellig korrekt weiter — dieses
+ *     Register FUEHRT ZUSAMMEN, und eine ueberfaellige Zusammenfuehrung schuetzt niemanden.
+ * (c) D-D (Zaehler-Anker) sitzt im Waechter, nicht hier: tests/u3-milan-spiegel.test.js pinnt
+ *     `IDENTITAETS_REGISTER_ANKER` nach dem Muster des A7-Mengen-Riegels.
+ *
+ * M13 (3:0): REIHEN-GLEICHHEIT IST MELDUNG, NIE BEGRUENDUNG. Anker B (geteilte Umsatzreihe)
+ * darf in keinem Eintrag der alleinige Beleg sein — bei Zweitnotierungen ist die geteilte
+ * Reihe der Normalfall und beweist NICHTS (Produktionstext in data-health/quarantine.json).
+ * ⚠ Die Pruefung haengt an der SELBSTAUSKUNFT `beleg.anker`; wer das Feld weglaesst, kommt an
+ * ihr vorbei. Sie ist ein Gelaender, kein Schloss — das Schloss ist B3(i) plus M18.
  */
-function ladeIdentitaetsRegister(registerPfad) {
+const IDENTITAETS_BELEG_PFLICHTFELDER = ['bericht', 'abschnitt', 'gemessenAm'];
+const IST_ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * M17c (D-D) — DER ZAEHLER-ANKER, Nachfolger des Leer-Tests.
+ *
+ * Der bisherige Riegel war `REGISTER B2`: "die ausgelieferte Datei laedt und ist LEER". Er ist
+ * strukturell wirksam, solange er steht — und er faellt ZWANGSLAEUFIG am Tag des ersten
+ * Eintrags. Ein Riegel mit eingebautem Verfallsdatum ist keine Absicherung, sondern ein
+ * Countdown (Urteil §2 zu G6).
+ *
+ * Gleiche Bauform wie MILAN_ERWARTETE_BEINE/-GRUPPEN (A7): die Zusage lautet nicht mehr
+ * "leer", sondern "GENAU DIESE Zahl". 0 ist heute der Sollwert; ein erster Eintrag hebt ihn —
+ * aber nur zusammen mit einer bewussten Aenderung DIESER Zeile, in demselben Diff, unter
+ * denselben Augen. Genau das ist der Unterschied zu einem Riegel, der sich selbst aufloest.
+ *
+ * WER DIESE ZAHL HEBEN DARF: der Rat (N5). Der Anspruchstyp "A und B sind derselbe Emittent"
+ * ist ratspflichtig; dieses Register wird nicht vom Executor befuellt.
+ */
+const IDENTITAETS_REGISTER_ANKER = 0;
+
+function ladeIdentitaetsRegister(registerPfad, heute, repoWurzel = path.join(__dirname, '..')) {
   let roh;
   try { roh = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
   catch (e) { throw new Error(`${registerPfad}: ${e.message}`); }
   if (!roh || typeof roh !== 'object' || Array.isArray(roh)) throw new Error(`${registerPfad}: Wurzel muss ein Objekt sein`);
   const eintraege = roh.eintraege;
   if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Feld 'eintraege' muss ein Array sein`);
+  // Ohne Datum kann D-A nicht pruefen — und ein Ablauf, der bei fehlendem Datum stillschweigend
+  // durchlaesst, ist genau die Bauform, die dieses Register nicht haben darf.
+  const heuteTag = String(heute || '').slice(0, 10);
+  if (!IST_ISO_DATUM.test(heuteTag)) throw new Error(`${registerPfad}: kein brauchbares Datum uebergeben (${heute}); D-A kann nicht pruefen`);
   const ids = new Set();
   const belegteTicker = new Map();
   for (const [i, e] of eintraege.entries()) {
     if (!e || typeof e !== 'object' || Array.isArray(e)) throw new Error(`${registerPfad}: Eintrag ${i} ist kein Objekt`);
-    for (const feld of ['kanonisch', 'beleg', 'aufgenommen']) {
+    for (const feld of ['kanonisch', 'aufgenommen']) {
       if (typeof e[feld] !== 'string' || !e[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld ${feld} fehlt/ist leer`);
+    }
+    // ── M17a: strukturierter Beleg mit Existenzpruefung ──────────────────────────────────
+    if (!e.beleg || typeof e.beleg !== 'object' || Array.isArray(e.beleg)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, 'beleg' muss ein Objekt sein { ${IDENTITAETS_BELEG_PFLICHTFELDER.join(', ')} } — ein freier String ist seit M17a kein Beleg mehr`);
+    }
+    for (const feld of IDENTITAETS_BELEG_PFLICHTFELDER) {
+      if (typeof e.beleg[feld] !== 'string' || !e.beleg[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld beleg.${feld} fehlt/ist leer`);
+    }
+    if (!IST_ISO_DATUM.test(e.beleg.gemessenAm)) throw new Error(`${registerPfad}: Eintrag ${i}, beleg.gemessenAm muss JJJJ-MM-TT sein (ist "${e.beleg.gemessenAm}")`);
+    const berichtRel = e.beleg.bericht.trim();
+    const berichtAbs = path.resolve(repoWurzel, berichtRel);
+    if (path.isAbsolute(berichtRel) || !berichtAbs.startsWith(path.resolve(repoWurzel) + path.sep)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, beleg.bericht muss ein Pfad INNERHALB des Repos sein (ist "${berichtRel}")`);
+    }
+    if (!fs.existsSync(berichtAbs)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, beleg.bericht "${berichtRel}" existiert nicht im Repo. Ein Beleg, den die CI nicht oeffnen kann, ist keiner — die Messung gehoert nach reports/ oder data-health/, nicht in den Vault`);
+    }
+    // ── M13: Anker B darf nie der ALLEINIGE Beleg sein ───────────────────────────────────
+    if (e.beleg.anker !== undefined) {
+      if (!Array.isArray(e.beleg.anker) || e.beleg.anker.some((a) => typeof a !== 'string' || !a.trim())) {
+        throw new Error(`${registerPfad}: Eintrag ${i}, beleg.anker muss eine Liste nicht-leerer Bezeichner sein`);
+      }
+      if (e.beleg.anker.length && e.beleg.anker.every((a) => a.trim().toUpperCase() === 'B')) {
+        throw new Error(`${registerPfad}: Eintrag ${i} nennt ausschliesslich Anker B als Beleg. Reihen-Gleichheit ist MELDUNG, nie BEGRUENDUNG (Auflage M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall und beweist NICHTS`);
+      }
+    }
+    // ── M17b (D-A): Ablaufdatum, fail-closed ─────────────────────────────────────────────
+    if (typeof e.gueltigBis !== 'string' || !IST_ISO_DATUM.test(e.gueltigBis)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, 'gueltigBis' fehlt oder ist kein JJJJ-MM-TT (D-A, fail-closed): ein Identitaets-Eintrag darf nicht als Dauerzustand einschlafen`);
+    }
+    if (e.gueltigBis < heuteTag) {
+      throw new Error(`${registerPfad}: Eintrag ${i} (${e.kanonisch}) ist seit ${e.gueltigBis} abgelaufen (heute ${heuteTag}). Stop: eine ueberfaellige Zusammenfuehrung schuetzt niemanden. Eintrag neu belegen oder austragen`);
     }
     if (!Array.isArray(e.mitglieder) || e.mitglieder.length < 2
       || e.mitglieder.some((t) => typeof t !== 'string' || !t.trim())) {
@@ -1299,7 +1388,7 @@ function run(argv) {
   // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
   // trotzdem, sonst waere die spaetere Befuellung still wirkungslos.
   let identitaetsEintraege;
-  try { identitaetsEintraege = ladeIdentitaetsRegister(identitaetsRegisterPfad); }
+  try { identitaetsEintraege = ladeIdentitaetsRegister(identitaetsRegisterPfad, heute); }
   catch (e) {
     console.error(`::error::filter-snapshot-merge — Identitaets-Register nicht ladbar (${e.message}). Abbruch statt lautlosem Lauf ohne das belegpflichtige Ventil.`);
     return 1;
@@ -1642,6 +1731,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   // U3-Milan (ENTSCHIED 31) — fuer TDD. Waechter: tests/u3-milan-spiegel.test.js
   milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
+  // M10/M17 (_COURT-M10-2026-08-30) — Aufnahmeschwelle. Waechter: tests/u3-milan-spiegel.test.js
+  IDENTITAETS_REGISTER_ANKER, IDENTITAETS_BELEG_PFLICHTFELDER, IDENTITAETS_REGISTER_STANDARDPFAD,
   MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
   MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   // T179-Nennwert (ENTSCHIED 35.2) — fuer TDD. Waechter: tests/t179-nennwert.test.js
