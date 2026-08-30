@@ -20,6 +20,7 @@
 // Run: node tests/gate-coverage.test.js   (Exit 0/1)
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
@@ -112,6 +113,54 @@ check('Forschungs-Spur ist eine Namensliste (neue Studien-Tests landen blockiere
   assert.ok(
     !fremd.startsWith('tests/early-detection-') && !NAMENTLICH_IN_DER_MELDE_SPUR.includes(fremd),
     'Die Lockerung laesst beliebige fremde Dateien durch',
+  );
+});
+
+// Beweislauf 33289964981 (ENTSCHIED 106): der Selftest simuliert rote Gate-Laeufe.
+// Seine '::error::'-Zeilen ueber tests/{green,red,orphan}.test.js gingen roh nach
+// stdout, GitHub machte daraus sechs echte Annotationen — an einem prep-Job, der
+// GRUEN durchlief, ueber Dateien, die im Repo gar nicht existieren. Die Triage hat
+// eine Stunde lang einen Fehler gesucht, den es nie gab.
+// Diese Wache haengt an den AUSGEGEBENEN BYTES, nicht an einem Textmuster in der
+// Quelle: sie faehrt den Selftest wirklich und liest, was herauskommt.
+check('Selftest erzeugt KEINE Lauf-Annotation, behaelt den Text aber (33289964981)', () => {
+  const out = execFileSync(process.execPath, [GATE_SRC, '--selftest'], { cwd: ROOT, encoding: 'utf8' });
+  const kommandos = out.split('\n').map((l) => l.replace(/\r$/, '')).filter((l) => l.startsWith('::'));
+  assert.deepEqual(
+    kommandos, [],
+    'Der Selftest schickt Workflow-Kommandos nach stdout — GitHub macht daraus erfundene\n' +
+    '       Fehler an einem gruenen Lauf:\n         ' + kommandos.join('\n         '),
+  );
+  // ABWESENHEIT allein waere auch erfuellt, wenn jemand die Ausgabe einfach loescht.
+  // Also die ANWESENHEIT gleich mit: der Beweis der Negativ-Probe steht noch da, zitiert.
+  assert.match(
+    out, /^ {2}::error::Testdatei tests\/orphan\.test\.js laeuft in KEINEM Job/m,
+    'Der Beleg der Waechter-Erhalt-Probe fehlt in der Ausgabe — entschaerft heisst zitiert, nicht geloescht.',
+  );
+});
+
+// GEGENPROBE am selben Objekt: ein ECHTER Fehlschlag im echten Lauf MUSS weiter
+// annotieren. Ohne sie waere die Wache oben auch dann gruen, wenn die Entschaerfung
+// zu breit greift und das Gate seine roten X gar nicht mehr melden kann.
+check('ECHTER Gate-Befund annotiert weiterhin (Entschaerfung greift nicht zu breit)', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gate-annot-gegenprobe-'));
+  const gesagt = [];
+  const echtesLog = console.log;
+  try {
+    fs.mkdirSync(path.join(tmp, 'tests'));
+    fs.writeFileSync(path.join(tmp, 'tests', 'rot.test.js'), 'process.exit(1);\n');
+    console.log = (s) => { gesagt.push(String(s)); };
+    gate.runGate({
+      mode: 'blocking', cwd: tmp, blockingGlobs: ['tests/rot*test.js'],
+      reportFiles: [], exemptPrefixes: [], blockingAlways: [], repoFiles: ['tests/rot.test.js'],
+    });
+  } finally {
+    console.log = echtesLog;
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+  assert.ok(
+    gesagt.some((l) => l.startsWith('::error::') && l.includes('tests/rot.test.js')),
+    'Ein echter Fehlschlag erzeugt keine Annotation mehr — das Gate ist stumm geworden.',
   );
 });
 

@@ -217,13 +217,34 @@ const NICHTS_GEPRUEFT = (out) => /(^|[^\d])0 ok\b/.test(out) && /(^|[^\d])0 fail
 // Pruefungen entfernt, bliebe still gruen. Wer nichts sagt, hat nichts belegt.
 const STUMM = (out) => out.trim() === '';
 
+// Beweislauf 33289964981 (ENTSCHIED 106): GitHub liest JEDE Zeile, die mit '::'
+// beginnt, als Workflow-Kommando und haengt eine Annotation an den Lauf. Das Gate
+// gab bisher zwei Sorten fremden Text unveraendert weiter:
+//   (a) die vollstaendige Ausgabe der Kindprozesse in runFiles, und
+//   (b) im --selftest die SIMULIERTEN Gate-Zeilen seiner eigenen Negativ-Proben.
+// Beide bestehen zum grossen Teil aus ABSICHTLICH roten Zeilen — genau das, was
+// eine Negativ-Probe beweisen soll. Im Annotationsband des Laufs standen dadurch
+// sechs erfundene Fehler ueber tests/{green,red,orphan}.test.js (Dateien, die es
+// im Repo gar nicht gibt, sondern nur im Temp-Verzeichnis des Selftests), dazu die
+// Proben aus t168-layer-diff und bh-b05-universe — in einem prep-Job, der GRUEN
+// durchlief. Die Triage dieses Laufs ist genau daran haengengeblieben und hat eine
+// Stunde lang einen Fehler im prep-Job gesucht, den es nie gab.
+// Regel: nur was DIESES Skript selbst als Verdikt ausspricht, darf annotieren.
+// Fremder Text wird zitiert statt ausgefuehrt — er bleibt vollstaendig und
+// unveraendert im Protokoll lesbar, er kommandiert nur nichts mehr.
+// BEWUSST NICHT entschaerft: log() im echten Lauf. '::error::Test failed: X' und
+// '::error::Testdatei X laeuft in KEINEM Job' sind das Verdikt des Gates ueber den
+// Kindprozess, nicht dessen eigene Rede — sie annotieren unveraendert weiter, und
+// damit bleibt jeder echte Fehlschlag im Annotationsband sichtbar.
+const zitiert = (text) => text.replace(/^::/gm, '  ::');
+
 function runFiles(files, cwd, log) {
   const failed = [];
   const skipped = [];
   for (const t of files) {
     log(`--- ${t} ---`);
     const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
-    process.stdout.write((r.stdout || '') + (r.stderr || ''));
+    process.stdout.write(zitiert((r.stdout || '') + (r.stderr || '')));
     if (r.status !== 0) { failed.push(t); continue; }
     const ausgabe = (r.stdout || '') + (r.stderr || '');
     if (NICHTS_GEPRUEFT(ausgabe)) {
@@ -246,9 +267,13 @@ function runFiles(files, cwd, log) {
  * synthetischen Dateien statt der echten Listen fahren kann.
  * @returns {{code:number, lines:string[]}}
  */
-function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile }) {
+function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile, emit }) {
   const lines = [];
-  const log = (s) => { lines.push(s); console.log(s); };
+  // `lines` traegt IMMER den Rohtext — alle Proben pruefen darauf und bleiben damit
+  // unberuehrt davon, wie die Zeile ausgegeben wird. `emit` faerbt nur die Ausgabe:
+  // im echten Lauf console.log (annotiert), im Selftest zitiert (annotiert nicht).
+  const schreib = emit || console.log;
+  const log = (s) => { lines.push(s); schreib(s); };
 
   const report = reportFiles.filter(f => fs.existsSync(path.join(cwd, f)));
   // Die Forschungs-Spur wird aus der Glob-Expansion herausgerechnet: 'tests/*test.js'
@@ -336,7 +361,10 @@ function selftest() {
     "'use strict';\nconst test=require('node:test');\ntest('echt', () => {});\n");
 
   const summaryFile = path.join(dir, 'summary.txt');
-  const base = { cwd: dir, exemptPrefixes: [], summaryFile };
+  // emit: die Proben simulieren rote Gate-Laeufe. Deren '::error::'/'::warning::'
+  // sind Beweismittel, keine Befunde ueber dieses Repo — sie duerfen den Lauf nicht
+  // annotieren. Die Pruefungen unten lesen r.lines (Rohtext) und merken davon nichts.
+  const base = { cwd: dir, exemptPrefixes: [], summaryFile, emit: (s) => console.log(zitiert(s)) };
   const fails = [];
   const check = (name, ok, detail) => {
     console.log(`${ok ? 'PASS' : 'FAIL'} selftest: ${name}${ok ? '' : ' — ' + detail}`);
