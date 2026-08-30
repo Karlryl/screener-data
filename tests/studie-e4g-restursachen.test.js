@@ -67,6 +67,10 @@ const PFLICHT_PRUEFUNGEN = [
   'die gueltige Ausgabe geht DURCH',
   'eine geleckte Firmen-Kennung fliegt am Etikett-Vorrat auf',
   'eine Kennung in der letzten Form fliegt auf',
+  'T185: ein Ticker in der letzten Form fliegt auf',
+  'T185: ein Firmenname in der letzten Form fliegt auf',
+  'T185: ein Konzeptname in der letzten Form fliegt auf',
+  'T185: der Vorrat traegt PERIODISCHE_FORMEN wortgleich',
   'ein durchgereichter Messwert fliegt am Typ auf',
   'ein zusaetzliches Feld im Arm fliegt auf',
   'ein FEHLENDES Pflichtfeld fliegt genauso auf wie ein zusaetzliches',
@@ -210,6 +214,27 @@ test('Das committete Ergebnis haelt die 20-Felder-Sperre ein', () => {
         ['afs', 'jahreskadenz', 'kante_unmoeglich', 'klasse',
           'letzte_form_nach_signal', 'nenner_restursachen']);
     }
+  }
+});
+
+test('T185: der geschlossene Formstamm-Vorrat deckt das committete Ergebnis', () => {
+  // Die Gegenrichtung zur Haertung: ein Vorrat, der zu eng ist, bricht den
+  // naechsten Lauf an einem voellig legitimen SEC-Formular. Belegt wird das am
+  // ECHTEN Artefakt, nicht an der Fixtur des Selbsttests.
+  const lauf = e4g(['--form-vorrat-ausgeben']);
+  assert.equal(lauf.status, 0, lauf.stderr);
+  const vorrat = new Set(JSON.parse(lauf.stdout));
+  const d = JSON.parse(fs.readFileSync(ARTEFAKT, 'utf8'));
+  const gemessen = new Set(Object.values(d.arme)
+    .flatMap((arm) => Object.keys(arm.letzte_form_nach_signal)));
+  assert.ok(gemessen.size >= 4, `Nur ${gemessen.size} Formstaemme im Artefakt gefunden`);
+  for (const stamm of gemessen) {
+    assert.ok(vorrat.has(stamm), `Formstamm '${stamm}' fehlt im geschlossenen Vorrat`);
+  }
+  // Und in die andere Richtung: der Vorrat ist nicht heimlich zum Freibrief
+  // geworden. Ein Ticker gehoert nicht hinein.
+  for (const kein of ['AAPL', 'PLTR', 'NVDA', 'OperatingIncomeLoss', 'Apple Inc.']) {
+    assert.ok(!vorrat.has(kein), `'${kein}' steht im Formstamm-Vorrat`);
   }
 });
 
