@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { pruefePins } = require('./helpers/pin-abdeckung.js');
 
 const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-entry-cohort-standardization.py');
@@ -79,10 +80,32 @@ test('D5: gebundene Dateien und D1/D2/D4-Anker reproduzieren exakt', () => {
   assert.equal(result.preregistration.sha256, sha256(PREREG));
   assert.deepEqual(result.boundInputs, prereg.boundInputs,
     'Historische D5-Bindung im Artefakt muss unveraendert bleiben');
-  for (const [relative, expected] of Object.entries(result.boundInputs)) {
-    const currentExpected = thresholdSeal.currentScripts[relative] || expected;
-    assert.equal(sha256(path.join(REPO, relative)), currentExpected, relative);
-  }
+  // N13-Klasse (Nachtlauf 30.08.): der bisherige `|| expected`-Rueckfall machte den Pin bei
+  // einem Schluessel-Tippfehler zur Tautologie - der Eintrag fiel still auf den historischen
+  // Hash zurueck und der Test blieb gruen. Verhalten unveraendert, aber die ABDECKUNG ist
+  // jetzt eine gepinnte Groesse: ein Tippfehler verschiebt einen Eintrag von `ueberSiegel`
+  // nach `historisch` UND erzeugt eine Waise, bricht also gleich zwei Zaehler.
+  const abdeckung = pruefePins(REPO, result.boundInputs, thresholdSeal.currentScripts);
+  // Review-Fund 30.08.: NUR die Groesse zu pinnen reicht nicht. Zwei gleichzeitige Aenderungen
+  // (ein Schluessel verliert seinen Pin, ein anderer bekommt einen) halten die Zaehler konstant,
+  // waehrend sich die Menge komplett verschiebt. Gepinnt wird deshalb die MITGLIEDSCHAFT.
+  // Review-Fund 30.08.: NUR die Groesse zu pinnen reicht nicht. Zwei gleichzeitige Aenderungen
+  // (ein Schluessel verliert seinen Pin, ein anderer bekommt einen) halten die Zaehler konstant,
+  // waehrend sich die Menge komplett verschiebt. Gepinnt wird deshalb die MITGLIEDSCHAFT.
+  assert.deepEqual(abdeckung.ueberSiegel.slice().sort(), [
+    'scripts/studie-attrition-size-sector.py',
+    'scripts/studie-censoring-aware-attrition.py',
+  ],
+    'D5: WELCHE Dateien ueber das aktuelle Siegel gepinnt sind — nicht nur wie viele');
+  assert.deepEqual(abdeckung.waisen.slice().sort(), [
+    'scripts/studie-entry-cohort-standardization.py',
+    'scripts/studie-threshold-seal.py',
+  ],
+    'D5: WELCHE Siegel-Schluessel in dieser Bindung fehlen (Schwester-Waechter oder gar keine Bindung)');
+  // Der historische Rest ist abgeleitet: Bindung minus Siegel-Pins. Eine eigene Liste waere
+  // hier 18 Zeilen Literal ohne Zusatznutzen — die Verschiebung faengt schon die Menge oben.
+  assert.equal(abdeckung.historisch.length, 4,
+    'D5: Anzahl der auf den historischen Hash gebundenen Dateien');
   assert.deepEqual(result.counts, {
     companies: d1.counts.companies,
     rightCensored: d1.counts.rightCensored,
