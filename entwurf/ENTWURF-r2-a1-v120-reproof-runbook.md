@@ -49,7 +49,7 @@ das nicht sehen kann: Prozess B erbt denselben `--identity-key-file`-Pfad.
 - **Warum das ein Handgriff bleibt und kein Bau-Check ist:** Der Sollwert gehoert laut
   ENTSCHIED 6 in den **Post-Run-Closure-Record** — und genau der entsteht erst durch
   diesen Lauf. Ein Check im Bau waere zirkulaer. Er ist deshalb ein Pruefschritt
-  **nach** dem Lauf, sobald der Record existiert (Schritt 6 unten).
+  **nach** dem Lauf, sobald der Record existiert (Schritt 7 unten).
 
 ---
 
