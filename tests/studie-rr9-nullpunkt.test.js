@@ -40,6 +40,15 @@ for (const probe of [
   'B2: die Fallzahl der eintretenden Kohorte bleibt UNGEMESSEN (F4)',
   'ROT-PROBE B2: ohne bestimmbare Kohorten kommt der Stoppsatz woertlich',
   'ROT-PROBE B2-Waechter: ein eingeschmuggeltes Quoten-Feld faellt auf',
+  // Nach dem Review vom 30.08. dazugekommen.
+  'ROT-PROBE Provenienz: leeres Tripel gilt NICHT als unveraendert',
+  'ROT-PROBE Provenienz: falscher Tripel-Hash schliesst nicht',
+  "B3' vergleicht gegen scripts/studie-basisraten.py::UMSATZ_QUELLEN",
+  'Jahrgang: gewaehlt kommt aus dem BAU, gemessen aus dem E1-Bericht',
+  'ROT-PROBE Jahrgang: abweichender Bau-Jahrgang loest A2 Satz 3 aus',
+  'ROT-PROBE B2-Waechter: auch unter `verhaeltnis` wird gesucht',
+  'Gegenprobe: der Block `verhaeltnis` selbst gilt nicht als Treffer',
+  'B2: der Bestand ist als SYNTHETISCH gekennzeichnet',
 ]) {
   assert.ok(selbst.stdout.includes(`ok   ${probe}`), `Probe fehlt oder rot: ${probe}`);
 }
@@ -80,6 +89,10 @@ if (fs.existsSync(bericht)) {
   assert.equal(b.verhaeltnis.gerechnet, false);
   assert.equal(b.fallzahlSchwelle, 200);
   assert.equal(b.fallzahlDerEintretendenKohorte.status, 'UNGEMESSEN');
+  // Der Kunst-Bestand muss im Artefakt selbst als solcher erkennbar sein -
+  // ein Leser ohne den Quelltext haette die CIK-Zahlen sonst fuer Messwerte
+  // halten koennen.
+  assert.match(b.bestand, /^SYNTHETISCH/);
   const flach = JSON.stringify(b);
   for (const verboten of ['"reifequote"', '"auffindbarkeit"', '"ratio"']) {
     assert.ok(!flach.includes(verboten), `Trockenlauf-Bericht traegt ${verboten}`);

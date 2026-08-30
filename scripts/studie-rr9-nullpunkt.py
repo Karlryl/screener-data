@@ -57,6 +57,16 @@ BASISRATEN = os.path.join(WURZEL, "scripts", "studie-basisraten.py")
 # Der registrierte Nullpunkt (§0.2 Befund 1 des Urteils, am Repo entschieden -
 # hier NICHT neu hergeleitet, sondern als Tatsache gefuehrt und geprueft).
 ALLOWLIST_PFAD = ("signalFamily", "gemeinsameMechanik", "umsatzQuellenAllowlist")
+# Das Tripel, das hash-manifest.json 2.0.0 bindet - namentlich, nicht "was
+# gerade drinsteht". Ohne diese Liste war `all()` ueber einen LEEREN Block
+# `True`: ein Manifest mit fehlendem `files`-Block haette "das Tripel ist
+# unveraendert" gemeldet, ohne eine einzige Datei geprueft zu haben.
+TRIPEL_DATEIEN = (
+    "protocol/early-detection/2.0.0/preregistration.json",
+    "scripts/studie-basisraten.py",
+    "scripts/studie-zaehlprobe.py",
+)
+PANELBAU = os.path.join(WURZEL, "scripts", "studie-panel-bau.py")
 REGISTRIERTE_PRAEREG_SHA = ("799f925142860b4db97b5f18894b62c749aeb014"
                             "872279aa6a7df8ee99ac5a6c")
 # Die Fallzahl-Schwelle aus scripts/studie-zaehlprobe.py (FALLZAHL_MIN). Sie
@@ -117,11 +127,16 @@ def provenienz(praereg=PRAEREG, manifest=MANIFEST, e3=E3_BERICHT, e1=E1_BERICHT,
         }
         tripel_ist[rel]["identisch"] = (
             tripel_ist[rel]["gemessen"] == tripel_ist[rel]["registriert"])
-    tripel_haelt = all(v["identisch"] for v in tripel_ist.values())
+    # FAIL-CLOSED gegen die leere Menge: erst muss das Tripel VOLLSTAENDIG und
+    # namentlich das erwartete sein, dann darf ueber seine Hashes geurteilt
+    # werden. `all()` ueber nichts ist sonst wahr.
+    tripel_vollstaendig = sorted(tripel) == sorted(TRIPEL_DATEIEN)
+    tripel_haelt = (tripel_vollstaendig
+                    and all(v["identisch"] for v in tripel_ist.values()))
 
     bericht = lies_json(e3)
     geprueft = sorted(bericht.get("manifestGeprueft") or [])
-    lauf_unter_tripel = geprueft == sorted(tripel)
+    lauf_unter_tripel = tripel_vollstaendig and geprueft == sorted(TRIPEL_DATEIEN)
 
     # WO liegt die 326/365 wirklich? Gemessen, nicht angenommen.
     treffer = []
@@ -183,6 +198,8 @@ def provenienz(praereg=PRAEREG, manifest=MANIFEST, e3=E3_BERICHT, e1=E1_BERICHT,
              "wert": "SHA-256 ueber die Dateibytes der drei Tripel-Dateien"},
         ],
         "tripel": tripel_ist,
+        "tripelVollstaendigUndNamentlich": tripel_vollstaendig,
+        "erwarteteTripelDateien": list(TRIPEL_DATEIEN),
         "tripelUnveraendertSeitDemSiegeln": tripel_haelt,
         "e3LiefUnterDemTripel": lauf_unter_tripel,
         "e3ManifestGeprueft": geprueft,
@@ -217,7 +234,7 @@ def _provenienz_satz(geschlossen, variante, groesse, ruht_auf_allowlist, jahrgan
             "die Zaehlkette, aber NICHT die Identitaet der Allowlist.")
 
 
-def jahrgangs_registrierung(panel_wurzel=None):
+def jahrgangs_registrierung(panel_wurzel=None, panelbau=PANELBAU):
     """RR9-A3 Ziffer 2 - der Registrierungs-GEGENSTAND, nicht der Register-Akt.
 
     Diese Datei benennt und hasht, was einzufrieren ist: den gewaehlten Jahrgang
@@ -227,12 +244,22 @@ def jahrgangs_registrierung(panel_wurzel=None):
     p = provenienz(panel_wurzel=panel_wurzel)
     kette = p["jahrgangsKette"]
     basis_jahrgang = kette["e1Jahrgang"]
-    gewaehlt = basis_jahrgang
+    # UNABHAENGIGE QUELLE, sonst waere der Vergleich eine Tautologie: der
+    # gewaehlte Jahrgang ist der, den der BAU deklariert - die Konstante
+    # VARIANTE in scripts/studie-panel-bau.py. Frueher stand hier
+    # `gewaehlt = basis_jahrgang`, und `gewaehlt != basis_jahrgang` konnte
+    # damit nie feuern. Genau die Fehlklasse, die RR9-A4 benennt.
+    spec = importlib.util.spec_from_file_location("studie_panel_bau", panelbau)
+    modul = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modul)
+    gewaehlt = getattr(modul, "VARIANTE", None)
     inhalt = {
         "gewaehlterJahrgang": gewaehlt,
         "gemessenerJahrgangDerBasis": basis_jahrgang,
         "weichenBeideVoneinanderAb": gewaehlt != basis_jahrgang,
         "kette": kette,
+        "gewaehlterJahrgangHerkunft": "scripts/studie-panel-bau.py::VARIANTE",
+        "gemessenerJahrgangHerkunft": "reports/studie/E1-panel-bau-2026-08-19.json::variante",
         "protokoll": "FEM-SEC-US@2.1.0",
     }
     inhalt_sha = hashlib.sha256(json.dumps(
@@ -358,12 +385,16 @@ def quellen_aus_konzeptliste(pfad=KONZEPTLISTE_2_1_0):
     return tuple((e["concept"], (e["concept"],)) for e in liste)
 
 
-def quellen_aus_allowlist(liste):
-    """Die registrierte Allowlist im Format, das `firmenreihen` erwartet.
+def geladene_allowlist(e2):
+    """Die Liste, die der Zaehlcode ZUR LAUFZEIT wirklich faehrt.
 
-    `A+B` bezeichnet eine Quelle aus zwei Kennungen - genau die Schreibweise
-    der registrierten Liste."""
-    return tuple((name, tuple(name.split("+"))) for name in liste)
+    Das ist `UMSATZ_QUELLEN` in scripts/studie-basisraten.py - der versiegelten
+    Datei, aus der `firmenreihen` seine Quellen bezieht. Frueher las diese
+    Stelle die Liste erneut aus derselben preregistration.json, gegen die
+    B3' sie dann verglich: ein Vergleich einer Datei mit sich selbst, der eine
+    Drift zwischen Code und Protokoll nie haette sehen koennen.
+    """
+    return [name for name, _tags in e2.UMSATZ_QUELLEN]
 
 
 def kunst_je_firma(firmen):
@@ -389,9 +420,11 @@ def b2_trockenlauf(je_firma=None, praereg=PRAEREG, manifest=MANIFEST,
     from collections import defaultdict
 
     e2 = lade_basisraten()
-    registriert = pruefe_nullpunkt(
-        hole(lies_json(praereg), ALLOWLIST_PFAD), praereg, manifest)
-    referenz_quellen = quellen_aus_allowlist(registriert)
+    # B3' zuerst, und gegen die geladene Konstante - nicht gegen eine zweite
+    # Lesung derselben Datei. Erst wenn Code und Registrierung bit-identisch
+    # sind, darf mit dem Code gerechnet werden.
+    pruefe_nullpunkt(geladene_allowlist(e2), praereg, manifest)
+    referenz_quellen = e2.UMSATZ_QUELLEN
     neue_quellen = quellen_aus_konzeptliste(konzeptliste)
 
     ueberschneidung = sorted(
@@ -438,6 +471,10 @@ def b2_trockenlauf(je_firma=None, praereg=PRAEREG, manifest=MANIFEST,
                             "Positivitaets-Filter und Reihenbildung sind gleich"),
             "quellenUeberschneidung": ueberschneidung,
         },
+        "bestand": ("SYNTHETISCH - Kunst-Firmen aus _trockenbestand(), kein "
+                    "Panel. Die `ciks` und `firmenMitAuswertbarerReihe` unten "
+                    "sind KEINE gemessenen Populationszahlen; sie beantworten "
+                    "allein die Frage, ob der Codepfad beide Kohorten traegt."),
         "kohorten": kohorten,
         "fallzahlSchwelle": FALLZAHL_SCHWELLE,
         "fallzahlDerReferenzkohorte": {
@@ -499,6 +536,7 @@ def _trockenbestand(referenz_quellen, neue_quellen):
 
 def selbsttest():
     import copy
+    import io
     import tempfile
     ok = fehl = 0
 
@@ -524,8 +562,33 @@ def selbsttest():
            and p["jahrgangsKette"]["e3LasDieseDatei"])
     pruefe("Provenienz: geschlossen", p["provenienzGeschlossen"])
 
+    # ROT-PROBE Provenienz: ein Manifest mit LEEREM files-Block darf nicht
+    # "das Tripel ist unveraendert" melden. `all()` ueber nichts ist wahr -
+    # genau diese Vakuum-Wahrheit war hier einmal das Tor.
+    with tempfile.TemporaryDirectory() as tmp:
+        leer = os.path.join(tmp, "hash-manifest.json")
+        with open(leer, "w", encoding="utf-8") as fh:
+            json.dump({"files": {}}, fh)
+        v = provenienz(manifest=leer)
+        pruefe("ROT-PROBE Provenienz: leeres Tripel gilt NICHT als unveraendert",
+               v["tripelUnveraendertSeitDemSiegeln"] is False
+               and v["e3LiefUnterDemTripel"] is False
+               and v["provenienzGeschlossen"] is False)
+        # Und ein Tripel mit den richtigen Namen, aber falschem Hash, ebenso.
+        falsch = os.path.join(tmp, "hash-manifest-falsch.json")
+        with open(falsch, "w", encoding="utf-8") as fh:
+            json.dump({"files": {d: "0" * 64 for d in TRIPEL_DATEIEN}}, fh)
+        v2 = provenienz(manifest=falsch)
+        pruefe("ROT-PROBE Provenienz: falscher Tripel-Hash schliesst nicht",
+               v2["tripelVollstaendigUndNamentlich"] is True
+               and v2["tripelUnveraendertSeitDemSiegeln"] is False
+               and v2["provenienzGeschlossen"] is False)
+
     # -- B3' Dauer-Tripwire ---------------------------------------------------
     registriert = registrierte_allowlist()
+    # Der Tripwire haengt an der Konstante, die der Zaehlcode wirklich faehrt.
+    pruefe("B3' vergleicht gegen scripts/studie-basisraten.py::UMSATZ_QUELLEN",
+           geladene_allowlist(lade_basisraten()) == list(registriert))
     pruefe("B3': die registrierte Liste geht durch (Anwesenheit)",
            pruefe_nullpunkt(list(registriert)) == registriert)
 
@@ -570,6 +633,27 @@ def selbsttest():
             pruefe("ROT-PROBE B3'-4: verstellte Registrierung -> " + SANKTION,
                    SANKTION in str(exc) and "nicht mehr die registrierte" in str(exc))
 
+    # -- Jahrgang: der Vergleich muss ueberhaupt abweichen KOENNEN ------------
+    j = jahrgangs_registrierung()
+    pruefe("Jahrgang: gewaehlt kommt aus dem BAU, gemessen aus dem E1-Bericht",
+           j["inhalt"]["gewaehlterJahrgang"] == "legacy_earliest_archived"
+           and j["inhalt"]["gemessenerJahrgangDerBasis"] == "legacy_earliest_archived"
+           and j["inhalt"]["weichenBeideVoneinanderAb"] is False)
+    # ROT-PROBE: weicht der Bau-Jahrgang ab, MUSS der Vergleich das sehen.
+    # Frueher stand `gewaehlt = basis_jahrgang` - der Zweig war tot.
+    with tempfile.TemporaryDirectory() as tmp:
+        kopie = os.path.join(tmp, "studie-panel-bau.py")
+        with io.open(PANELBAU, encoding="utf-8", newline="") as fh:
+            quelle = fh.read()
+        with io.open(kopie, "w", encoding="utf-8", newline="") as fh:
+            fh.write(quelle.replace(
+                'VARIANTE = "legacy_earliest_archived"',
+                'VARIANTE = "post_2024_reprocessed_or_current"', 1))
+        j2 = jahrgangs_registrierung(panelbau=kopie)
+        pruefe("ROT-PROBE Jahrgang: abweichender Bau-Jahrgang loest A2 Satz 3 aus",
+               j2["inhalt"]["weichenBeideVoneinanderAb"] is True
+               and j2["a2Satz3"].startswith("AUSGELOEST"))
+
     # -- B2-Trockenlauf -------------------------------------------------------
     t = b2_trockenlauf()
     pruefe("B2: beide Kohorten tragen Firmen",
@@ -604,6 +688,15 @@ def selbsttest():
     verseucht["kohorten"]["referenz"]["reifequote"] = 0.9
     pruefe("ROT-PROBE B2-Waechter: ein eingeschmuggeltes Quoten-Feld faellt auf",
            _quotenfelder(verseucht) == ["kohorten.referenz.reifequote"])
+    # Und ausgerechnet UNTER `verhaeltnis` darf er nicht blind sein - dort
+    # uebersprang er frueher die ganze Teilstruktur.
+    pruefe("ROT-PROBE B2-Waechter: auch unter `verhaeltnis` wird gesucht",
+           _quotenfelder({"verhaeltnis": {"gerechnet": False, "reifequote": 0.9}})
+           == ["verhaeltnis.reifequote"])
+    pruefe("Gegenprobe: der Block `verhaeltnis` selbst gilt nicht als Treffer",
+           _quotenfelder({"verhaeltnis": {"gerechnet": False}}) == [])
+    pruefe("B2: der Bestand ist als SYNTHETISCH gekennzeichnet",
+           t["bestand"].startswith("SYNTHETISCH"))
 
     print("selbsttest: %d ok, %d FAIL" % (ok, fehl))
     return 0 if fehl == 0 else 1
@@ -611,6 +704,9 @@ def selbsttest():
 
 VERBOTENE_TEILE = ("quote", "rate", "verhaeltnis", "ratio", "auffindbarkeit",
                    "reife", "ampel")
+# Genau ein Pfad darf den verbotenen Wortstamm im Namen tragen: der Block, der
+# die Abwesenheit selbst beurkundet. Sein INHALT wird trotzdem durchsucht.
+ERLAUBTE_QUOTENPFADE = ("verhaeltnis",)
 
 
 def _quotenfelder(baum, pfad=""):
@@ -621,9 +717,13 @@ def _quotenfelder(baum, pfad=""):
     if isinstance(baum, dict):
         for name, wert in baum.items():
             voll = (pfad + "." + name) if pfad else name
-            if voll.startswith("verhaeltnis"):
-                continue
-            if any(teil in name.lower() for teil in VERBOTENE_TEILE):
+            # NUR der Block-Name selbst ist ausgenommen, nicht sein Inhalt.
+            # Frueher stand hier ein `continue`, das die ganze Teilstruktur
+            # uebersprang - ein `verhaeltnis.reifequote` waere unentdeckt
+            # geblieben, ausgerechnet unter dem Schluessel, der die Abwesenheit
+            # beurkundet.
+            if voll not in ERLAUBTE_QUOTENPFADE and any(
+                    teil in name.lower() for teil in VERBOTENE_TEILE):
                 treffer.append(voll)
             treffer.extend(_quotenfelder(wert, voll))
     elif isinstance(baum, list):
@@ -667,11 +767,15 @@ def main(argv=None):
             print("Eskalation: " + bericht["eskalationNachZiffer6"])
             print("Register  : " + bericht["registerHinweis"])
         elif a.befehl == "tripwire":
-            liste = lies_json(a.liste) if a.liste else hole(lies_json(PRAEREG),
-                                                            ALLOWLIST_PFAD)
+            liste = (lies_json(a.liste) if a.liste
+                     else geladene_allowlist(lade_basisraten()))
             pruefe_nullpunkt(liste)
-            print("B3' ok: die geladene Allowlist ist bit-identisch mit der "
-                  "registrierten (" + kanonisch(liste) + ")")
+            print("B3' ok: die zur Laufzeit geladene Allowlist ist "
+                  "bit-identisch mit der registrierten (" + kanonisch(liste)
+                  + ")")
+            print("  geladen aus: "
+                  + ("--liste " + a.liste if a.liste
+                     else "scripts/studie-basisraten.py::UMSATZ_QUELLEN"))
             return 0
         else:
             bericht = b2_trockenlauf()
