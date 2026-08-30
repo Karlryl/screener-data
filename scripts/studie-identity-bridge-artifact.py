@@ -274,6 +274,70 @@ def load_determinism_correction():
 
 REPLICATION_BINDING = "REPLICATION_AGAINST_BOUND_MANIFEST"
 FIRST_BUILD_BINDING = "FIRST_BUILD_OF_VERSION"
+SHA256_PATTERN = re.compile(r"[0-9a-f]{64}\Z")
+
+
+def closure_record(version):
+    """The FROZEN post-run closure record of that version, or None.
+
+    None means exactly one thing: the version IS registered, but its post-run
+    record has not been written yet. A record that exists with the wrong status
+    is not absence, it is tampering, and it refuses loudly. An unregistered
+    version refuses loudly too - guessing a record path is how a pin turns into
+    a suggestion.
+    """
+    entry = CLOSURE_RECORDS.get(version)
+    if entry is None:
+        raise ArtifactError(
+            "No closure record is registered for artifact version " + version
+        )
+    relative, expected_status = entry
+    path = repo_path(relative)
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as handle:
+        record = json.load(handle)
+    # These records are hand-maintained JSON. A malformed one must arrive as a
+    # named ArtifactError, not as an AttributeError from the next .get() - the
+    # fail-closed contract is only worth something if it is readable.
+    if not isinstance(record, dict):
+        raise ArtifactError(
+            "Closure record for artifact version " + version
+            + " is not a JSON object: " + relative
+        )
+    if record.get("status") != expected_status:
+        raise ArtifactError(
+            "Closure record for artifact version " + version + " is not frozen"
+        )
+    return record
+
+
+def frozen_bound_manifest(record, version):
+    """The manifest a FROZEN record binds for that version, or None.
+
+    None means the record carries no boundManifest AT ALL - the 1.1.0 shape,
+    an honest "nothing to replicate". Absence is the only reading that means
+    it. A record that DOES carry the field has to carry it properly: a hollow
+    body, a wrong type or a value that is not a sha256 is a named refusal, not
+    a quiet fall-through to the weaker mode. These records are hand-maintained
+    JSON, so a malformed one must arrive as an ArtifactError rather than as an
+    AttributeError from the next attribute access.
+    """
+    if "boundManifest" not in record:
+        return None
+    bound_manifest = record["boundManifest"]
+    if not isinstance(bound_manifest, dict):
+        raise ArtifactError(
+            "boundManifest of artifact version " + version
+            + " is not a JSON object: " + repr(bound_manifest)
+        )
+    pinned = bound_manifest.get("manifestFileSha256")
+    if not isinstance(pinned, str) or not SHA256_PATTERN.match(pinned):
+        raise ArtifactError(
+            "Bound manifest pin for artifact version " + version
+            + " is not a sha256: " + repr(pinned)
+        )
+    return pinned
 
 
 def bound_manifest_binding(version):
@@ -281,24 +345,42 @@ def bound_manifest_binding(version):
 
     Context-dependent, version-aware (ENTSCHIED 9), same two-stage shape as the
     Q1 payload pin: what a run can be held against depends on whether a frozen
-    record already pins it.
+    record already pins it. The binding is READ OUT OF THE RECORDS - H7 was the
+    defect where it came from one hardwired version instead.
 
-    REPLICATION_AGAINST_BOUND_MANIFEST - the version HAS a bound record, so both
-        rebuilds must reproduce that exact manifest. Blocker-2 semantics for
-        1.1.0 are untouched.
-    FIRST_BUILD_OF_VERSION - no such record exists yet, so there is nothing to
-        replicate: a corrected version changes the artifact bytes by design and
-        can never reproduce its predecessor's manifest. The gate is then the
-        A==B identity, and the prior-manifest binding is deferred to that
-        version's post-run closure record.
+    REPLICATION_AGAINST_BOUND_MANIFEST - a frozen record binds a manifest for
+        this version, so both rebuilds must reproduce that exact manifest.
+        Blocker-2 semantics for 1.1.0 are untouched; the v1.2.0 closure record
+        promises the same thing for 1.2.0 in boundManifest.resolution, and that
+        promise is what this function now keeps.
+    FIRST_BUILD_OF_VERSION - the version is registered but its post-run record
+        is not written yet, so there is nothing to replicate: a corrected
+        version changes the artifact bytes by design and can never reproduce
+        its predecessor's manifest. The gate is then the A==B identity, and the
+        binding is deferred to the record it will be written to. Unchanged in
+        semantics and gate - it merely stops being the silent default.
 
-    The mode is returned so the attestation can NAME it. A weaker gate that is
-    not named is the failure this function exists to prevent.
+    A version that is neither is REFUSED. Falling back to the weaker mode for
+    an unknown version is precisely the fail-open this function exists to
+    prevent, and the mode is returned so the attestation can NAME it.
+
+    Authority: r2-a1-v120-bound-manifest-resolution-addendum-2026-08-30.json.
     """
     bound = load_determinism_correction()["boundArtifact"]
     if version == bound["artifactVersion"]:
         return REPLICATION_BINDING, bound["manifestSha256BeforeCorrection"]
-    return FIRST_BUILD_BINDING, None
+    if version not in CLOSURE_RECORDS:
+        raise ArtifactError(
+            "Artifact version " + version + " binds no frozen record and is no"
+            " registered first build; refusing to degrade to " + FIRST_BUILD_BINDING
+        )
+    record = closure_record(version)
+    if record is None:
+        return FIRST_BUILD_BINDING, None
+    pinned = frozen_bound_manifest(record, version)
+    if pinned is None:
+        return FIRST_BUILD_BINDING, None
+    return REPLICATION_BINDING, pinned
 
 
 def compare_independent_build_records(builder_a, builder_b):
@@ -1251,24 +1333,13 @@ def pinned_fixture_binding(version=None):
     and stops a pin from one version silently judging another version's bytes.
     """
     version = version or ARTIFACT_VERSION
-    entry = CLOSURE_RECORDS.get(version)
-    if entry is None:
-        raise ArtifactError(
-            "No closure record is registered for artifact version " + version
-        )
-    relative, expected_status = entry
-    path = repo_path(relative)
-    if not os.path.isfile(path):
+    record = closure_record(version)
+    if record is None:
         raise ArtifactError(
             "The post-run closure record for artifact version " + version
-            + " does not exist yet (" + relative + "). Its payload pin is"
-            " written after the one canonical re-proof, never before it."
-        )
-    with open(path, encoding="utf-8") as handle:
-        record = json.load(handle)
-    if record.get("status") != expected_status:
-        raise ArtifactError(
-            "Closure record for artifact version " + version + " is not frozen"
+            + " does not exist yet (" + CLOSURE_RECORDS[version][0] + "). Its"
+            " payload pin is written after the one canonical re-proof, never"
+            " before it."
         )
     binding = record["blocker2MutationSensitiveDeterminism"]
     # The 1.1.0 record predates the field; the version->record map already binds
@@ -1369,6 +1440,11 @@ SELF_TEST_NAMES = (
     "Bound-manifest replication mode enforces the pinned manifest",
     "A new artifact version defers the prior-manifest binding and names the mode",
     "Replication mode still rejects a manifest that does not match its pin",
+    # H7: the two directions of the record-resolving binding.
+    "Bound manifest for a closed version resolves out of its frozen record",
+    "An artifact version without a frozen record is refused, not degraded",
+    "A record whose bound manifest is hollow is refused, not degraded",
+    "The report names the artifacts of its own run, never a literal",
 )
 
 
@@ -1528,12 +1604,26 @@ def self_test():
         and replication["passes"] is True,
         replication,
     )
-    first_build = compared_pair(ARTIFACT_VERSION, "b" * 64)
+    # H7: ARTIFACT_VERSION cannot serve here any more - 1.2.0 HAS a frozen
+    # record now and is therefore a replication case, which is the whole fix.
+    # The deferred branch is the state 1.2.0 itself was in during its own first
+    # build: registered, post-run record not yet written. Registering that
+    # state for the length of one check is the only way to reach the branch
+    # without deleting a frozen record; the entry is removed again either way.
+    unwritten_version = "1.3.0-self-test"
+    unwritten_record = (
+        "protocol/early-detection/2.0.0/r2-a1-v130-closure-record-not-written.json"
+    )
+    CLOSURE_RECORDS[unwritten_version] = (unwritten_record, "FROZEN_V130_CLOSURE")
+    try:
+        first_build = compared_pair(unwritten_version, "b" * 64)
+    finally:
+        del CLOSURE_RECORDS[unwritten_version]
     check(
         SELF_TEST_NAMES[29],
         first_build["boundManifestMode"] == FIRST_BUILD_BINDING
         and first_build["matchesBoundManifest"] is None
-        and first_build["priorManifestBindingDeferredTo"] == V120_CLOSURE_REL
+        and first_build["priorManifestBindingDeferredTo"] == unwritten_record
         and first_build["passes"] is True,
         first_build,
     )
@@ -1546,6 +1636,87 @@ def self_test():
         and wrong_manifest["matchesBoundManifest"] is False
         and wrong_manifest["passes"] is False,
         wrong_manifest,
+    )
+    # H7, both directions on the version the closure record actually binds. The
+    # expected manifest is read out of that record here too: a literal in the
+    # check would only prove that script and check share one copy.
+    v120_manifest = closure_record(ARTIFACT_VERSION)["boundManifest"][
+        "manifestFileSha256"]
+    v120_green = compared_pair(ARTIFACT_VERSION, v120_manifest)
+    v120_red = compared_pair(ARTIFACT_VERSION, "d" * 64)
+    check(
+        SELF_TEST_NAMES[31],
+        v120_green["boundManifestMode"] == REPLICATION_BINDING
+        and v120_green["matchesBoundManifest"] is True
+        and v120_green["passes"] is True
+        and v120_red["boundManifestMode"] == REPLICATION_BINDING
+        and v120_red["matchesBoundManifest"] is False
+        and v120_red["passes"] is False,
+        (v120_green, v120_red),
+    )
+    # Before the fix an unknown version fell silently into the weaker mode.
+    try:
+        bound_manifest_binding("9.9.9")
+        unknown_version_refused = None
+    except ArtifactError as error:
+        # Not merely "an ArtifactError": load_determinism_correction() runs
+        # first and carries its own refusals. A check that cannot tell them
+        # apart stays green while the guard it is named after was never
+        # exercised - so the refusal has to be ABOUT the version.
+        unknown_version_refused = str(error)
+    check(
+        SELF_TEST_NAMES[32],
+        unknown_version_refused is not None
+        and "9.9.9" in unknown_version_refused,
+        unknown_version_refused,
+    )
+    # A record that carries boundManifest must carry it properly. Absence is
+    # the 1.1.0 shape and stays the only quiet answer; every hollow or
+    # malformed body is a named refusal, or the weaker mode would be reachable
+    # again through a record body instead of through an unknown version.
+    hollow_records = [
+        {"boundManifest": {}},
+        {"boundManifest": {"manifestFileSha256": "not-a-hash"}},
+        {"boundManifest": "a string, not an object"},
+        {"boundManifest": {"manifestFileSha256": v120_manifest + "trailing"}},
+    ]
+    hollow_refused = []
+    for candidate in hollow_records:
+        try:
+            frozen_bound_manifest(candidate, "1.2.0")
+            hollow_refused.append(False)
+        except ArtifactError:
+            hollow_refused.append(True)
+    check(
+        SELF_TEST_NAMES[33],
+        all(hollow_refused)
+        # ... and the two honest answers still work, or the check above would
+        # be satisfied by a function that only ever refuses.
+        and frozen_bound_manifest({}, "1.1.0") is None
+        and frozen_bound_manifest(
+            {"boundManifest": {"manifestFileSha256": v120_manifest}},
+            "1.2.0") == v120_manifest,
+        hollow_refused,
+    )
+    # M14: a hardcoded filename outlived its target once already. The closing
+    # lines must name whatever run they are rendered FOR, so the check renders
+    # a synthetic result under two different names and requires the output to
+    # follow both. A literal cannot satisfy both halves.
+    rendered = [
+        report_artifact_references(
+            {"panelArtifact": {"file": stem + "-panel.json"}},
+            "reports/studie/" + stem + ".json")
+        for stem in ("A-result-9999-01-01", "B-result-9999-12-31")
+    ]
+    check(
+        SELF_TEST_NAMES[34],
+        rendered == [
+            ["reports/studie/A-result-9999-01-01.json",
+             "reports/studie/A-result-9999-01-01-panel.json"],
+            ["reports/studie/B-result-9999-12-31.json",
+             "reports/studie/B-result-9999-12-31-panel.json"],
+        ],
+        rendered,
     )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
@@ -2056,7 +2227,24 @@ def build_result(artifact, manifest, artifact_path, seam_proof, seam_proof_path,
     return result
 
 
-def render_report(result):
+def report_artifact_references(result, result_path):
+    """The two artifacts the report's closing lines name.
+
+    M14: these were hardcoded LITERALS, and the literals were the 1.1.0 files,
+    so every later report pointed readers at superseded artifacts. Both are
+    derived from the run now - the result from the path it is written to, the
+    manifest out of the result itself. They live in their own function so a
+    regression back to a literal is checkable without rendering a whole report.
+    """
+    return [
+        "reports/studie/" + os.path.basename(result_path),
+        "reports/studie/" + result["panelArtifact"]["file"],
+    ]
+
+
+def render_report(result, result_path):
+    result_reference, manifest_reference = report_artifact_references(
+        result, result_path)
     counts = result["counts"]
     contract = result["contract"]
     artifact = result["panelArtifact"]
@@ -2160,8 +2348,9 @@ def render_report(result):
         "",
         "- Offen bleibt, wie stark der beschriebene Schwund auf diesem Substrat sinkt und ob die Groessen-/Sektor-Schieflage bestehen bleibt. Das wird hier nicht vorweggenommen; es gehoert in die eigene Praeregistrierung von Auftrag 2.",
         "",
-        "Alle Zahlen dieses Berichts stehen in `reports/studie/R2-A1-identity-bridge-artifact-2026-08-25.json`;",
-        "das Manifest der einzelnen Zuordnungs- und Naht-Shards steht in `reports/studie/R2-A1-identity-bridge-panel-v1.json`.",
+        "Alle Zahlen dieses Berichts stehen in `%s`;" % result_reference,
+        "das Manifest der einzelnen Zuordnungs- und Naht-Shards steht in `%s`." % (
+            manifest_reference),
         "",
     ])
 
@@ -2200,7 +2389,7 @@ def build_empirical(args):
         args.independent_sabotage_proof,
     )
     write_json(args.result, result)
-    write_text(args.report, render_report(result))
+    write_text(args.report, render_report(result, args.result))
     print(json.dumps({
         "artifactSha256": result["panelArtifact"]["sha256"],
         "bridgeSeams": result["counts"]["bridgeSeams"],

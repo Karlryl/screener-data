@@ -1,0 +1,204 @@
+{
+  "schema": "R2-A1-method-corrections-addendum/1",
+  "recordId": "r2-a1-v120-bound-manifest-resolution-addendum-2026-08-30",
+  "status": "FROZEN_BOUND_MANIFEST_RESOLUTION_ADDENDUM",
+  "mode": "SUPERSEDE_NO_DELETE",
+  "frozenAt": "2026-08-30",
+  "frozenNotice": "FROZEN. Append-only Addendum, eingefroren und gehasht VOR der Aenderung am gepinnten Bruecken-Skript. Es ergaenzt den v1.2.0-Closure-Record, ohne ihn zu editieren, neu zu versiegeln oder zu loeschen.",
+  "authority": [
+    "Orchestrator-Direktiven 2026-08-29, SOFORT-RULING 4 - 'H7-Grundsatz bestaetigt (bound_manifest_binding SOLL den Closure-Record lesen - ENTSCHIED-9-Intention)'",
+    "Orchestrator-Direktiven 2026-08-29, ENTSCHIED 9 - kontext-abhaengige, versions-bewusste Bindung",
+    "Orchestrator-Direktiven 2026-08-30, ENTSCHIED 77 - v1.2.x-Addendum-Slot",
+    "Orchestrator-Direktiven 2026-08-30, ENTSCHIED 81 + ENTSCHIED 104 - Freigabe des Dreiteilers H7-b + M14 + N13 als EIN Zyklus"
+  ],
+  "amends": {
+    "record": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json",
+    "sha256": "53d77849b3a00115edf949d8fda3f4aabdfc9b4aee2f13f80600c1e14e6332db",
+    "status": "FROZEN_V120_CLOSURE",
+    "edited": false,
+    "rule": "Der Closure-Record wird NICHT editiert und NICHT neu versiegelt. Dieses Addendum steht neben ihm; bei Widerspruch ueber den Skript-Hash gilt der hier gepinnte Wert, weil er den Stand bezeugt, der die im Closure-Record versprochene Bindung tatsaechlich einloest.",
+    "chainRule": "Die Pin-Aufloesung geht kettenweise, juengstes eingefrorenes Glied gewinnt: closure-record -> comparator-defect-addendum -> dieses Addendum. Kein Glied wird entfernt; jedes bleibt gegen seinen eigenen Zeitpunkt pruefbar."
+  },
+  "referencedSealedSources": [
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json",
+      "sha256AtFreezeTime": "53d77849b3a00115edf949d8fda3f4aabdfc9b4aee2f13f80600c1e14e6332db",
+      "changed": false,
+      "note": "Quelle des Versprechens: boundManifest.resolution und boundManifest.manifestFileSha256 fuer Version 1.2.0."
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-blocker2-independent-rebuild-correction.json",
+      "sha256AtFreezeTime": "fb66e70417a46fffe3caf1c86f6fd38cf3262dc545cb7a0258af8edcd855ce14",
+      "changed": false,
+      "note": "Quelle der 1.1.0-Bindung. Ihre Semantik bleibt exakt erhalten."
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-comparator-defect-addendum.json",
+      "sha256AtFreezeTime": "6cc114424344023f7873703b7444572cf465625f270c6b42ae5d4a94d08fd10e",
+      "changed": false,
+      "note": "Praezedenzfall des Pin-Nachzugs per Addendum. Sein supersedesPin bleibt unveraendert stehen."
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-method-corrections-record.json",
+      "sha256AtFreezeTime": "1239a61cc37d8ae3d49f3f3d05397534bf06d1f8054ea7885334cb0edc15a2f3",
+      "changed": false
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r15a-verdict-record.json",
+      "sha256AtFreezeTime": "87c4fdf54ed909f41930b73157d03f5547badfb591701aaac164474447504381",
+      "changed": false,
+      "note": "Das Verdikt zitiert die Bruecken-Korrektur unter erledigtVorDemAbschluss NUR ueber Record-Pfade, ohne Byte-Hashes. Dieses Addendum aendert keinen dieser Pfade und keinen der zitierten Records."
+    }
+  ],
+  "changeRule": "Keiner der oben referenzierten Records wird editiert, neu versiegelt oder ergaenzt. Wer einen von ihnen anfasst, hat diesen Vertrag verlassen.",
+  "whyThisAddendumExists": "Der v1.2.0-Closure-Record verspricht in boundManifest.resolution, dass ein spaeterer 1.2.0-Neubau ein Replikations-Fall ist und das gepinnte Manifest exakt reproduzieren muss. bound_manifest_binding() im gepinnten Skript kann dieses Versprechen strukturell nicht einloesen: es liest ausschliesslich load_determinism_correction()['boundArtifact'], und dort steht fest 1.1.0. Die Einloesung erfordert eine Aenderung am gepinnten Skript; da ein eingefrorener Record nicht editiert werden darf, wird der neue Hash hier append-only nachgezogen - genau wie beim Comparator-Defekt.",
+  "defect": {
+    "name": "boundManifestBindingIgnoresClosureRecords",
+    "site": "bound_manifest_binding in scripts/studie-identity-bridge-artifact.py",
+    "whatIsWrong": "Die Bindung wird aus genau EINER Quelle abgeleitet (Blocker-2-Korrektur, artifactVersion 1.1.0). Jede andere Version faellt in den Zweig FIRST_BUILD_OF_VERSION. Fuer 1.2.0 liefert die Funktion dauerhaft ('FIRST_BUILD_OF_VERSION', None), obwohl der Closure-Record fuer genau diese Version ein Manifest bindet.",
+    "reproduction": "bound_manifest_binding('1.2.0') -> ('FIRST_BUILD_OF_VERSION', None). Ein 1.2.0-Neubau mit abweichenden Bytes liefert weiter matchesBoundManifest=null und passes=True.",
+    "evidence": "agent-reports/nacht-pruef-sweep-2026-08-29.md, Befund H7 (REPRODUZIERT).",
+    "notCoveredByH6Guard": "Die H6-Vorpruefung (scripts/studie-bridge-proof-modeguard.py) leitet ihren Replikations-Fall aus derselben 1.1.0-Quelle ab und stimmt deshalb mit dem defekten Resolver ueberein. Sie deckt den Defekt, statt ihn zu fangen. Ihr Docstring haelt das ausdruecklich fest. Sie wird von diesem Addendum NICHT geaendert: eine Vorpruefung, die 1.2.0-Belege im FIRST_BUILD-Modus abweist, wuerde den committeten Beleg vom 2026-08-29 rot machen, der genau diesen Modus ehrlich ausweist.",
+    "notAPayloadDefect": "Der Defekt sitzt in der Attestierung, nicht in der Nutzlast. Weder pinnedExpectedLogicalPayloadSha256 (e8bcc98e...) noch boundManifest.manifestFileSha256 (4cd71577...) werden durch die Korrektur bewegt."
+  },
+  "correction": {
+    "shape": "Record-aufloesende, versions-bewusste Bindung. Der Modus wird aus den eingefrorenen Records abgeleitet statt aus einer einzigen fest verdrahteten Version.",
+    "resolutionOrder": [
+      "Eine Version, fuer die ein FROZEN-Record ein Manifest bindet, ist REPLICATION_AGAINST_BOUND_MANIFEST gegen genau dieses Manifest.",
+      "Heute aufloesbar: 1.1.0 gegen manifestSha256BeforeCorrection (Blocker-2-Korrektur), 1.2.0 gegen boundManifest.manifestFileSha256 (v1.2.0-Closure-Record).",
+      "Eine Version, deren Closure-Record registriert, aber noch nicht geschrieben ist, ist FIRST_BUILD_OF_VERSION und benennt den Record, in den ihre Bindung geschrieben wird - unveraendert in Semantik und Gate.",
+      "Eine Version, die weder Record noch benannter Erstbau ist, wird ABGEWIESEN. Kein stiller Rueckfall auf den schwaecheren Modus."
+    ],
+    "recordStatusRequirement": "Ein Record zaehlt nur mit dem erwarteten FROZEN_*-Status. Ein Record ohne Freeze-Status bindet nichts und wird als Manipulation behandelt, nicht als Abwesenheit.",
+    "unchangedSemantics": [
+      "Die Blocker-2-Semantik fuer 1.1.0 bleibt byte-genau dieselbe.",
+      "FIRST_BUILD_OF_VERSION behaelt sein Gate (A==B-Identitaet ueber die neun deterministischen Fingerprint-Felder).",
+      "matchesBoundManifest bleibt dreiwertig; null liest sich weiter nie als erfuellte Pruefung.",
+      "Kein Schwellenwert, kein Zaehler, kein Ausschluss und keine Offenlegungsmenge wird beruehrt."
+    ]
+  },
+  "reportReferenceCorrection": {
+    "finding": "M14",
+    "site": "render_report in scripts/studie-identity-bridge-artifact.py",
+    "whatIsWrong": "Der Schlusssatz des Berichts nannte das Ergebnisartefakt und das Panel-Manifest als HARTE LITERALE des 1.1.0-Laufs (R2-A1-identity-bridge-artifact-2026-08-25.json, R2-A1-identity-bridge-panel-v1.json). Jeder spaetere Lauf verweist damit auf die abgeloesten Dateien statt auf seine eigenen.",
+    "correction": "Beide Namen werden aus dem Lauf selbst abgeleitet: das Manifest aus result.panelArtifact.file, das Ergebnisartefakt aus dem Pfad, unter dem der Lauf es schreibt. Ein Literal, das veralten kann, verschwindet damit ganz.",
+    "committedReportNotRewritten": "reports/studie/R2-A1-identity-bridge-artifact-2026-08-29.md wird NICHT neu geschrieben. Der Bericht ist die Ausgabe des eingefrorenen kanonischen Laufs vom 2026-08-29; er wird nicht nachtraeglich editiert. Die Korrektur wirkt fuer jeden kuenftigen Render.",
+    "notReproducibleFromResultAlone": "Beim Bau selbst gemessen und hier als offener Befund festgehalten: render_report(result) auf das committete Ergebnisartefakt reproduziert den committeten Bericht NICHT byte-genau. Die Mehrfachnaht-Verteilung wird beim Lauf ueber ganzzahlige Schluessel sortiert, nach dem Umweg durch JSON ueber Zeichenketten - '11 Naehte' steht dann hinter '1 Naehte' statt hinter '9 Naehte'. Es ist eine reine Reihenfolge, keine Zahl aendert sich. Bewusst NICHT in diesem Zyklus gefixt: die Korrektur bewegt eine veroeffentlichte Berichtszeile und gehoert damit vor den Orchestrator, nicht in einen Addendum-Slot."
+  },
+  "guardFallbackCorrection": {
+    "finding": "N13",
+    "site": "tests/studie-identity-bridge-artifact.test.js, Implementierungs-Pin-Wache",
+    "whatIsWrong": "Der Rueckfall 'closure.currentImplementation[relative] || expected' war selbstbezueglich: fehlte der Pfad-Schluessel im Record, beglaubigte die Wache den Lauf mit dem Wert aus genau diesem Lauf.",
+    "measuredDamage": "Beim Bau gemessen, nicht geschaetzt: der v1.2.0-Closure-Record nennt in currentImplementation GENAU EINEN Pfad. Vier der fuenf in result.boundImplementation gefuehrten Dateien (studie-basisraten.py, studie-zaehlprobe.py, studie-identifier-bridge.py, studie-e4d-kadenz.py) liefen damit dauerhaft ueber den Rueckfall und wurden gegen die Behauptung des eigenen Laufs geprueft. Das Ergebnisartefakt selbst ist nirgends byte-gepinnt - die Tautologie war vollstaendig.",
+    "correction": "Der Rueckfall entfaellt ersatzlos. Ein Pfad ohne Pin in einer eingefrorenen Quelle wird ROT. Damit die Wache das ueberhaupt erfuellen kann, benennt dieses Addendum fuer jeden der fuenf Pfade die eingefrorene Quelle, die ihn haelt - siehe pinChain und familyPinsHeldElsewhere.",
+    "noHashCopied": "Dieses Addendum kopiert KEINEN fremden Hash. Es benennt nur, welcher eingefrorene Record welchen Pfad haelt; der Wert wird dort gelesen, wo er eingefroren wurde."
+  },
+  "pinChain": [
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json",
+      "status": "FROZEN_V120_CLOSURE",
+      "pinField": "currentImplementation",
+      "sha256AtFreezeTime": "53d77849b3a00115edf949d8fda3f4aabdfc9b4aee2f13f80600c1e14e6332db"
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-comparator-defect-addendum.json",
+      "status": "FROZEN_COMPARATOR_DEFECT_ADDENDUM",
+      "pinField": "currentImplementation",
+      "sha256AtFreezeTime": "6cc114424344023f7873703b7444572cf465625f270c6b42ae5d4a94d08fd10e"
+    },
+    {
+      "path": "protocol/early-detection/2.0.0/r2-a1-v120-bound-manifest-resolution-addendum-2026-08-30.json",
+      "status": "FROZEN_BOUND_MANIFEST_RESOLUTION_ADDENDUM",
+      "pinField": "currentImplementation",
+      "sha256AtFreezeTime": null,
+      "note": "Dieses Addendum selbst - das juengste Glied. Ein Record kann seinen eigenen Hash nicht tragen; sein Inhalt ist durch die Kette und die Wache gebunden."
+    }
+  ],
+  "pinChainRule": "Aufloesung geht die Kette von alt nach jung; das juengste Glied, das einen Pfad nennt, gewinnt. Kein Glied wird entfernt. Nennt KEIN Glied den Pfad, gilt familyPinsHeldElsewhere; nennt auch das ihn nicht, ist der Pin ABWESEND und die Wache wird rot. Es gibt keinen Rueckfall auf einen Wert aus dem geprueften Lauf.",
+  "familyPinsHeldElsewhere": {
+    "note": "Die vier uebrigen Dateien der Bruecken-Familie stehen in result.boundImplementation, wurden aber nie von einem Record der v1.2.0-Kette gehalten. Sie sind anderswo laengst eingefroren; hier wird nur benannt, wo. Ihre Bytes bleiben unveraendert.",
+    "scripts/studie-basisraten.py": {
+      "record": "protocol/early-detection/2.0.0/d3-identifier-bridge-preregistration.json",
+      "status": "FROZEN_BEFORE_D3_FACT_ACCESS",
+      "pinField": "boundImplementation"
+    },
+    "scripts/studie-zaehlprobe.py": {
+      "record": "protocol/early-detection/2.0.0/d3-identifier-bridge-preregistration.json",
+      "status": "FROZEN_BEFORE_D3_FACT_ACCESS",
+      "pinField": "boundImplementation"
+    },
+    "scripts/studie-identifier-bridge.py": {
+      "record": "protocol/early-detection/2.0.0/d6-descriptive-closure-audit-registration.json",
+      "status": "FROZEN_BEFORE_D6_ASSEMBLY_AFTER_D1_D5_PUBLICATION",
+      "pinField": "sourceFiles"
+    },
+    "scripts/studie-e4d-kadenz.py": {
+      "record": "protocol/early-detection/2.0.0/d6-descriptive-closure-audit-registration.json",
+      "status": "FROZEN_BEFORE_D6_ASSEMBLY_AFTER_D1_D5_PUBLICATION",
+      "pinField": "sourceFiles"
+    }
+  },
+  "currentImplementation": {
+    "scripts/studie-identity-bridge-artifact.py": "9cfe07c32c2b40d2cf9c403e7fb1eb8973e8791b3ce1065ecc12ddebeaa0dfe9",
+    "supersedesPin": "40669a86564939e31bbee8c3d58bcb79de790137122a7a5fc0dd36a65015d897",
+    "note": "Zweistufig wie beim Comparator-Addendum: dieser Record wurde eingefroren und committet BEVOR das gepinnte Skript angefasst wurde (Commit a8a27afe73), der Wert wurde im selben PR nachgetragen, sobald der neue Skript-Hash existierte. Der aeltere Pin bleibt im Closure-Record und im Comparator-Addendum unveraendert stehen und ist damit als Vor-Fix-Stand weiter belegt."
+  },
+  "requiredProofs": [
+    {
+      "id": "replikation-1-2-0-abgeleitet",
+      "kind": "synthetisch",
+      "requirement": "bound_manifest_binding('1.2.0') liefert REPLICATION_AGAINST_BOUND_MANIFEST gegen boundManifest.manifestFileSha256 aus dem Closure-Record - aufgeloest AUS dem Record, nicht aus einem Literal im Skript."
+    },
+    {
+      "id": "replikation-1-1-0-unveraendert",
+      "kind": "Regressions-Beleg",
+      "requirement": "bound_manifest_binding('1.1.0') liefert unveraendert REPLICATION_AGAINST_BOUND_MANIFEST gegen manifestSha256BeforeCorrection. Die Blocker-2-Semantik darf sich nicht bewegen."
+    },
+    {
+      "id": "sabotage-abweichendes-manifest",
+      "kind": "absichtlicher Bruch",
+      "requirement": "Ein 1.2.0-Neubau-Beleg mit abweichendem Manifest MUSS rot werden und das gebrochene Gate benennen. Vorher lief er als matchesBoundManifest=null, passes=True durch."
+    },
+    {
+      "id": "sabotage-unbekannte-version",
+      "kind": "absichtlicher Bruch",
+      "requirement": "Eine Version ohne Record MUSS abgewiesen werden statt still auf FIRST_BUILD_OF_VERSION zu fallen."
+    },
+    {
+      "id": "echter-proof-bleibt-gruen",
+      "kind": "Gegenrichtung",
+      "requirement": "Der committete Beleg reports/studie/R2-A1-independent-rebuild-proof-2026-08-29.json bleibt gruen. Ein Waechter, der nur rot kann, ist kein Waechter."
+    },
+    {
+      "id": "pin-kette-aufgeloest",
+      "kind": "Wachtest am Durchsetzer",
+      "requirement": "Der Implementierungs-Pin-Test loest den Pin ueber die Kette auf (juengstes Glied gewinnt) UND der selbstbezuegliche Rueckfall '|| expected' ist entfernt (Befund N13). Ein fehlender Pfad-Schluessel MUSS rot werden, nicht auf den Lauf-eigenen Wert zurueckfallen."
+    }
+  ],
+  "proofRule": "Jeder Beleg wird VOR der Abnahme einmal absichtlich gebrochen und sein Feuern gezeigt. Ein Waechter, dessen Rotwerden nie beobachtet wurde, ist kein Beleg.",
+  "notAWeakening": [
+    "Keine Pruefung wird entfernt, uebersprungen oder toleranter gemacht; die Bindung wird ausschliesslich strenger.",
+    "Kein Schwellenwert, kein Gate und keine Entscheidungsregel der Studie wird beruehrt.",
+    "Kein Ausschlusszaehler und keine veroeffentlichte Zahl aendert Definition oder Wert.",
+    "Es wird kein Ergebniswert, kein Signal, kein Outcome und kein Preis offengelegt.",
+    "Die 1.1.0-Artefakte bleiben byte-unveraendert und gegen ihren eigenen Record pruefbar."
+  ],
+  "explicitNonClaims": [
+    "Das Addendum aendert keine Methodik-Semantik der Korrekturen A, B oder C.",
+    "Es beruehrt weder das versiegelte konfirmatorische Verdikt R15a noch das Endtest-Fenster.",
+    "Es autorisiert KEINEN Neubau des Bruecken-Artefakts und KEINEN Lauf ueber Panels, E-Stadien, Outcomes oder Preise.",
+    "Es aendert keine veroeffentlichte Zahl des Laufs vom 2026-08-29; das Ergebnisartefakt und der Bericht bleiben byte-unveraendert.",
+    "Es entscheidet nicht, ob ein spaeterer 1.2.0-Neubau stattfindet - es sagt nur, woran er gemessen wuerde.",
+    "Es aendert die H6-Vorpruefung scripts/studie-bridge-proof-modeguard.py nicht und bewertet die Route H7-a nicht neu."
+  ],
+  "ledgerRelation": {
+    "accessLedgerEntryRequired": false,
+    "reason": "Das Zugriffs-Register regelt Zugriffe auf ERGEBNISDATEN. Dieses Addendum aendert eine Beweispruefungs-Regel und liest keine Ergebnisdaten, kein Panel, keinen Outcome und keinen Preis. Praezedenzfall: der Blocker-2-Neubau registrierte via Praeregistrierung, nicht via Register (ENTSCHIED 9), und das T173-Addendum ging denselben Weg.",
+    "ifInDoubt": "Bei Zweifel gilt die Ein-Appender-Regel unveraendert: ein Registereintrag entstuende main-first per Mini-PR VOR dem Zugriff, nie auf einem Zweig (protocol/early-detection/2.0.0/register-single-appender-rule.json)."
+  },
+  "executionEnvironment": {
+    "rule": "Der Eingriff entsteht in einem frischen Worktree von origin/main (Post-Merge-Stand). Der Addendum-Record wird VOR der Skript-Aenderung committet und gehasht; der Pin-Wert wird im selben PR nachgetragen, nachdem der neue Skript-Hash existiert.",
+    "sequencing": "Record zuerst einfrieren, dann aendern, dann Pin eintragen - dieselbe Zwei-Stufen-Form wie beim Comparator-Addendum (Vorab-Pin im Korrektur-Record, Nachzug im Addendum).",
+    "outputTransport": "Ein PR auf main durch einen berechtigten Motor. Kein Force-Push, keine Loeschung, kein Siegelbruch, kein Ledger-Append."
+  }
+}

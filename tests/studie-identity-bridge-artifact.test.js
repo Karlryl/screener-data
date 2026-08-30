@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
+const pinChain = require('./helpers/bridge-pin-chain');
+
 const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-identity-bridge-artifact.py');
 const PREREG = path.join(REPO, 'protocol', 'early-detection', '2.0.0',
@@ -84,6 +86,11 @@ const REQUIRED = [
   'Bound-manifest replication mode enforces the pinned manifest',
   'A new artifact version defers the prior-manifest binding and names the mode',
   'Replication mode still rejects a manifest that does not match its pin',
+  // H7: the binding is resolved out of the frozen records, both directions.
+  'Bound manifest for a closed version resolves out of its frozen record',
+  'An artifact version without a frozen record is refused, not degraded',
+  'A record whose bound manifest is hollow is refused, not degraded',
+  'The report names the artifacts of its own run, never a literal',
 ];
 
 test('R2-A1: fixture self-test is named, countable, and green', () => {
@@ -99,8 +106,8 @@ test('R2-A1: fixture self-test is named, countable, and green', () => {
   assert.equal(green.size, REQUIRED.length);
   // Literal on purpose: a second, independent pin. REQUIRED.length alone would
   // move silently if someone edited the list.
-  assert.equal(REQUIRED.length, 31);
-  assert.match(run.stdout, /SELBSTTEST GREEN - 31 named checks/);
+  assert.equal(REQUIRED.length, 35);
+  assert.match(run.stdout, /SELBSTTEST GREEN - 35 named checks/);
 });
 
 test('R2-A1: deliberate unmarked cross-seam calculation fails red', () => {
@@ -256,9 +263,13 @@ test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', ()
     closure.identifierProtection.keyFingerprintSha256);
   assert.deepEqual(result.inputs.map((row) => row.file).sort(),
     ['panel-entdeckung.sqlite', 'panel-validierung.sqlite']);
-  for (const [relative, expected] of Object.entries(result.boundImplementation)) {
-    const currentExpected = closure.currentImplementation[relative] || expected;
-    assert.equal(sha256(path.join(REPO, ...relative.split('/'))), currentExpected, relative);
+  // N13 + pin chain: the pin resolves out of the frozen chain, youngest link
+  // wins, never out of the run being certified. The old fallback `|| expected`
+  // took the value from THIS run whenever the record did not name the path —
+  // and the v1.2.0 closure record names exactly one of these five paths, so
+  // four of them were checked against nothing but their own claim.
+  for (const relative of Object.keys(result.boundImplementation)) {
+    pinChain.assertPinned(relative);
   }
 });
 
