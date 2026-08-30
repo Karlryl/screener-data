@@ -55,11 +55,14 @@ const VORLAGE = {
   PRETAG211L: [true, 'kein currentAssets-Schluessel — echt vor Tag 211l, muss voll ziehen'],
   PRICEONLY: [false, 'Price-only-Seed ohne annualRev — Vor-Tor, kein erzwungener Voll-Abruf'],
   NOBALROWS: [true, 'annualBalance leer — kein bal[0], Schema nicht nachweisbar aktuell'],
-  NULLROW0: [true,
-    'erste Bilanzzeile null: der positionale bal[0]-Zugriff faellt auf falsy. HEUTIGES '
-    + 'Verhalten, bewusst festgehalten — das ist die T182-Klasse (149 dauerhafte '
-    + 'Schleifen). Ein spaeterer T182-Fix MUSS diesen Waechter anfassen, statt ihn '
-    + 'unbemerkt zu ueberholen.'],
+  NULLROW0: [false,
+    'T182 (30.08.2026), BEWUSST GEKIPPT von true auf false: erste Bilanzzeile null, ZWEITE '
+    + 'Zeile traegt den currentAssets-Schluessel. Der alte positionale bal[0]-Zugriff sah '
+    + 'nur die null und meldete stale — 149 dauerhafte Voll-Abruf-Schleifen, davon 131 aus '
+    + 'genau dieser Form (gemessen, agent-reports/t182-schleifen-messung-2026-08-30.md). '
+    + 'Die Regel sucht jetzt nach INHALT: irgendeine Zeile mit dem Schluessel beweist, dass '
+    + 'ein Voll-Abruf nach Tag 211l gelaufen ist. Der frueherere Eintrag hat diesen Fix '
+    + 'ausdruecklich verlangt, statt ihn unbemerkt ueberholen zu lassen.'],
 };
 const SOLL_STALE = Object.values(VORLAGE).filter(([e]) => e).length;   // 3
 

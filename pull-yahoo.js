@@ -135,6 +135,13 @@ let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run
 let _lampErrors = 0;            // lamp/advisory-tally detectors that threw (data stays faithful)
 let _needsFullPullThrew = 0;    // needsFullPull hit its (near-unreachable) catch on exotic input
 let _corruptYoungSnapshots = 0; // a young cached snapshot failed to JSON.parse (treated as no-cache)
+// T182 (Review-Fund 30.08.): der Schema-Melder hatte weder Fehler- noch Trefferzaehler.
+// Beides fehlte an derselben Stelle und aus demselben Grund gefaehrlich: ohne Fehlerzaehler
+// wird eine geworfene Ausnahme still zu "Schema aktuell" (die teure Richtung - der Snapshot
+// wird nie wieder geprueft), ohne Trefferzaehler ist die Wirkung des Fixes im Lauf gar nicht
+// sichtbar (149 -> 18 stand nur in einer Handmessung).
+let _schemaProbeErrors = 0;   // Melder geworfen und als "aktuell" gewertet
+let _schemaStaleCount = 0;    // wie oft der Melder im Lauf gefeuert hat
 let _ftsCacheParseErrors = 0;   // an FTS cache file failed to JSON.parse (treated as cache-miss)
 let _snapshotDeleteErrors = 0;  // stale snapshot/cache could not be removed
 // Tag 645 (Review-Fund silent-failure-hunter): eine geglueckte yahoo_symbol-Reparatur
@@ -2636,7 +2643,21 @@ function _existingSnapshotMissingTag211lFields(s) {
     // full-pull loop (budget drain, bypasses FUNDAMENTALS_REFRESH_BUDGET). Once a
     // post-Tag-211l full pull has written the row, the currentAssets KEY exists
     // (even if its value is null), which is the true "schema is current" signal.
-    const hasCA = Array.isArray(bal) && bal[0] && ('currentAssets' in bal[0]);
+    // T182 (gemessen 2026-08-30, agent-reports/t182-schleifen-messung-2026-08-30.md):
+    // hier stand `bal[0] && ('currentAssets' in bal[0])` — ein POSITIONALER Zugriff. Eine
+    // erste Bilanzzeile `null` ist falsy, also blieb hasCA false, obwohl weiter hinten eine
+    // Zeile mit dem Schluessel stand: der Snapshot HAT einen Voll-Abruf nach Tag 211l
+    // gesehen, der Melder sah es nur nicht. Ergebnis waren 149 dauerhafte Voll-Abruf-
+    // Schleifen am FUNDAMENTALS_REFRESH_BUDGET vorbei — dieselbe Bug-13-Klasse wie oben,
+    // eine Ebene tiefer. Gemessen ueber alle 15.046 Snapshots: 131 der 149 tragen weiter
+    // hinten eine Zeile mit dem Schluessel (87,9 %), 18 haben ueberhaupt keine Bilanzzeile.
+    // Die 18 bleiben absichtlich stale: fuer sie ist "Schema nicht nachweisbar aktuell"
+    // die WAHRE Aussage. Ob sie je heilen koennen, ist eine eigene Frage (Abruf-Diaet) und
+    // wird hier NICHT mitentschieden.
+    // Der Fall "Zeile ist ein Objekt ohne den Schluessel, spaetere Zeile hat ihn" kommt am
+    // Live-Bestand 0-mal vor — die Regel deckt ihn trotzdem ab, weil sie nach Inhalt sucht.
+    const hasCA = Array.isArray(bal)
+      && bal.some((zeile) => zeile && typeof zeile === 'object' && ('currentAssets' in zeile));
     // T181: die Klausel lautete `return !(hasSGA || hasDepr) || !hasCA;` mit
     //     hasSGA  = Array.isArray(A.annualSGA)          && A.annualSGA.length > 0
     //     hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0
@@ -2661,7 +2682,17 @@ function _existingSnapshotMissingTag211lFields(s) {
     // drittes Mal. Zuerst-Melder-dann-Wache haelt den Netto-Effekt bei +0; gemessen:
     // 149 vorher, 149 nachher, 0 hinzu, 0 weg. Andersherum waeren es +51 gewesen.
     return !hasCA;
-  } catch { return false; }
+  } catch (e) {
+    // Review-Fund 30.08. (HOCH, vorbestehend): hier stand ein zaehler- und logloses
+    // `return false`. `false` heisst "Schema ist aktuell" - eine geworfene Ausnahme wurde
+    // damit zur Entwarnung, und der Snapshot nie wieder geprueft. Jede Schwester-Sonde
+    // dieser Datei zaehlt und meldet ihre verschluckten Fehler (s. _corruptYoungSnapshots);
+    // hier fehlte das Gegenstueck. Das VERHALTEN bleibt (fail-open ist hier richtig: eine
+    // kaputte Sonde darf nicht 16.000 Voll-Abrufe ausloesen), aber es ist nicht mehr still.
+    _schemaProbeErrors++;
+    _log('WARN', `schema-stale probe threw (-> als "Schema aktuell" gewertet): ${e && e.message}`);
+    return false;
+  }
 }
 
 async function pullAll(watchlist, outputDir, rateLimitMs) {
@@ -2674,6 +2705,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _lampErrors = 0;
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
+  _schemaProbeErrors = 0;
+  _schemaStaleCount = 0;
   _ftsCacheParseErrors = 0;
   _manifestCheckpointErrors = 0;
   _symbolsNormalized = 0;
@@ -3131,6 +3164,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const staleSchema = youngEnough
         ? _existingSnapshotMissingTag211lFields(_parsedSnapshot)
         : false;
+      if (staleSchema) _schemaStaleCount++;
       // Tag 230a: separate sibling probe for mixed-currency envelopes.
       const staleCurrency = youngEnough
         ? _existingSnapshotMissingCurrencyNormalization(_parsedSnapshot)
@@ -4099,6 +4133,14 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   }
   // Nachzug Tag 622 (Review-Fund HOCH): rohes console.warn statt _log — siehe oben,
   // ein '[ts] [WARN] '-Praefix macht die GitHub-Annotation wirkungslos.
+  // T182: der Melder-Stand gehoert in die Zusammenfassung, nicht nur in die Ticker-Zeilen -
+  // dort ertrinkt er unter ~21k INFO-Zeilen. Erwartung nach dem Fix vom 30.08.: ~18 (die
+  // Klasse ohne jede Bilanzzeile). Steigt die Zahl wieder Richtung 149, ist der positionale
+  // Zugriff zurueck oder eine neue Klasse entstanden - beides soll man am Lauf sehen und
+  // nicht erst an der Abrufmenge.
+  _log('INFO', `Schema-Melder: ${_schemaStaleCount} Snapshots als schema-stale gewertet`
+    + (_schemaProbeErrors > 0 ? ` - ACHTUNG: ${_schemaProbeErrors} Sonden-Ausnahmen als "aktuell" gewertet` : ''));
+  if (_schemaProbeErrors > 0) console.warn(`::warning::Schema-Melder: ${_schemaProbeErrors} Sonden-Ausnahmen still als "Schema aktuell" gewertet`);
   if (_unparseableTimeAnchors > 0) console.warn(`::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
   if (_ftsFailedSeries > 0) console.warn(`::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
   if (_ftsAllEmptyTickers > 0) console.warn(`::warning::FTS leer ohne Fehler: ${_ftsAllEmptyTickers} Ticker (als fundamentalsIncomplete markiert, naechster Lauf zieht sie erneut voll)`);

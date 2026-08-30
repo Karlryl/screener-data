@@ -97,10 +97,32 @@ test('feuert, wenn der currentAssets-SCHLUESSEL fehlt', () => {
     + 'sonst holt die Pipeline das Schema nie nach');
   assert.equal(melder(snap({ annualBalance: [] })), true, 'gar keine Bilanzzeilen');
   assert.equal(melder(snap({ annualBalance: [null] })), true,
-    'Bilanzzeile vorhanden, aber null — der positionale bal[0]-Zugriff faellt hier auf '
-    + 'falsy (Nebenbefund T181/6.1: 149 dauerhafte Schleifen, EIGENER Punkt T182, hier '
-    + 'nur festgehalten, damit ein spaeterer Fix diesen Waechter bewusst anfasst)');
+    'EINE Zeile, und die ist null: keine Zeile traegt den Schluessel, also ist das Schema '
+    + 'nicht nachweisbar aktuell. Bleibt stale — auch nach T182.');
+  // T182 (30.08.2026): die Gegenrichtung, und sie ist der eigentliche Fix. Vorher fiel der
+  // positionale bal[0]-Zugriff auf die null und meldete stale, obwohl die zweite Zeile den
+  // Schluessel traegt — 131 der 149 Dauerschleifen hatten genau diese Form.
+  assert.equal(melder(snap({ annualBalance: [null, { currentAssets: 120 }] })), false,
+    'erste Zeile null, ZWEITE traegt den Schluessel: irgendeine Zeile mit dem Schluessel '
+    + 'beweist den Voll-Abruf nach Tag 211l — der Melder darf hier NICHT mehr feuern');
+  assert.equal(melder(snap({ annualBalance: [null, { umsatz: 1 }] })), true,
+    'spaetere Zeile OHNE den Schluessel heilt nichts — sonst wuerde die Regel raten');
   assert.equal(melder(snap({ annualBalance: undefined })), true, 'annualBalance fehlt ganz');
+});
+
+// T182-Nachzug (Review-Fund 30.08.): die Sonde ist fail-open - wirft sie, gilt der Snapshot
+// als "Schema aktuell". Das bleibt so (eine kaputte Sonde darf nicht 16.000 Voll-Abrufe
+// ausloesen), ist aber ab jetzt gezaehlt und geloggt statt still.
+// EHRLICHE GRENZE dieses Blocks: der Zaehler selbst ist modul-lokal und von aussen nicht
+// lesbar - geprueft wird hier nur, dass das Verhalten fail-open BLEIBT. Die Sichtbarkeit
+// haengt an der WARN-Zeile und der Lauf-Zusammenfassung, nicht an dieser Probe.
+test('wirft die Sonde, bleibt sie fail-open (und faellt nicht durch)', () => {
+  const kaputt = { annual: { annualRev: [1, 2, 3] } };
+  Object.defineProperty(kaputt.annual, 'annualBalance', {
+    get() { throw new Error('absichtlich kaputt'); },
+  });
+  assert.equal(melder(kaputt), false,
+    'eine geworfene Sonde darf den Lauf nicht in 16.000 Voll-Abrufe kippen');
 });
 
 test('schweigt, wenn der currentAssets-SCHLUESSEL da ist — auch bei Wert null', () => {
