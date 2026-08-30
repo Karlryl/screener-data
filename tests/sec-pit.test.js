@@ -298,8 +298,29 @@ mitStore(undefined, (s) => {
   assert.strictEqual(s.hasCik(999), false, '15: ohne Filter bleibt "fehlt" ein sauberes false');
 });
 
+// (16) Ein scheiterndes openStore darf keinen Deskriptor zurücklassen.
+//     Mit entryFilter läuft erstmals FREMDER Code (der Callback des Aufrufers)
+//     zwischen fs.openSync und dem fertigen Handle. Wirft er, kommt niemand mehr
+//     an den fd — auf einer 1,5-GB-Datei, in einem Prozess, der den Store pro
+//     Lauf mehrfach öffnet. Gemessen wird nicht geraten: fd-Nummern werden vom
+//     Betriebssystem als kleinste freie vergeben, also bleibt die Nummer einer
+//     frisch geöffneten Datei konstant, solange nichts leckt — und wächst
+//     monoton, sobald doch.
+{
+  const nummern = [];
+  for (let i = 0; i < 5; i++) {
+    assert.throws(() => openStore(ZIP_PFAD, { entryFilter: () => { throw new Error('boom'); } }), /boom/);
+    const fd = fs.openSync(ZIP_PFAD, 'r');
+    nummern.push(fd);
+    fs.closeSync(fd);
+  }
+  assert.strictEqual(nummern[nummern.length - 1], nummern[0],
+    '16: fd-Leck — nach fünf gescheiterten openStore-Versuchen ist die fd-Nummer von '
+    + nummern[0] + ' auf ' + nummern[nummern.length - 1] + ' gestiegen (' + nummern.join(', ') + ')');
+}
+
 } finally {
   fs.rmSync(ZIP_TMP, { recursive: true, force: true });
 }
 
-console.log('sec-pit.test.js: alle 15 Blöcke grün (8 PIT + 7 ZIP-Schicht)');
+console.log('sec-pit.test.js: alle 16 Blöcke grün (8 PIT + 8 ZIP-Schicht)');
