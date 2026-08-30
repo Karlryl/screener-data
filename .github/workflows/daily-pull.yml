@@ -1197,6 +1197,72 @@ jobs:
             exit 1
           fi
 
+      # ── M1/M9-PERSISTENZ-WACHE (_COURT-M10-2026-08-30, ENTSCHIED 131) ────────────
+      # DIE ZUSICHERUNG: was dieser Lauf unter data-health/ fuer M1 und M9 geschrieben
+      # hat, ist nach diesem Schritt WIRKLICH committet — oder der Lauf ist rot.
+      #
+      # WARUM ES SIE BRAUCHT, obwohl heute nichts kaputt ist: gemessen (30.08., der echte
+      # "Commit Snapshots"-Block oben gegen ein Fixture-Remote gefahren) landen beide
+      # Dateien im veroeffentlichten Commit — `git add -A` nimmt sie mit, und kein
+      # .gitignore-Muster fasst data-health/ an. Die Auflagen M1 ("Persistenzstelle") und
+      # M9 ("Der Bericht wird COMMITTET") haengen damit an EINEM blanken `git add -A`, den
+      # niemand nachprueft. Im scoring-Job steht das Gegenmodell: dort wird bewusst gezielt
+      # angemeldet ("gezieltes add auf die Datei, nie -A"). Wird der Commit hier eines Tages
+      # genauso verengt — oder faellt data-health/ in ein Ignore-Muster — sterben beide
+      # Dateien still mit dem Runner und die Messreihe reisst, ohne dass irgendwo ein X steht.
+      #
+      # ANGENAGELT AN DIE SACHE, nicht an ein Schreibmuster: geprueft wird der ZUSTAND der
+      # Datei nach dem Commit (ist sie im Index? ist ihr heutiger Stand drin?), nicht der
+      # Wortlaut des add-Befehls. Jeder Weg, auf dem sie nicht ankommt, faellt damit auf.
+      #
+      # GESCHRIEBEN-ABER-NICHT-COMMITTET ist rot. GAR-NICHT-GESCHRIEBEN ist nur eine
+      # Warnung: diesen Fall meldet filter-snapshot-merge.js selbst (dort ausdruecklich
+      # fail-soft, reine Messung). Diese Wache prueft die PERSISTENZ, nicht die Messung.
+      #
+      # BEKANNTE DECKE (ponytail): faellt ein Schritt VOR dem Commit aus, laeuft diese Wache
+      # gar nicht — dann ist der Lauf aber ohnehin rot, und der fehlende Tag steht als Luecke
+      # in `byDate` der Reihe selbst. Sie deckt den STILLEN Fall ab, nicht den lauten.
+      #
+      # KOSTEN EINES ALARMS, offen benannt: exit 1 macht den merge-Job rot, und der
+      # scoring-Job (needs: merge) faellt damit aus — dieselbe Kaskade wie beim
+      # "Preis-Transport pruefen" unten, und aus demselben Grund akzeptiert: eine Warnung
+      # in einem gruenen Job erreicht Karls Alarmkanal (das rote X) nicht. Die Tagesdaten
+      # sind an dieser Stelle bereits gepusht, der Alarm wirft also nichts weg, was der
+      # Lauf schon gesichert hat. Waechter: tests/m10-persistenz-wache.test.js.
+      - name: M1/M9-Persistenz pruefen (nach dem Commit)
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "Kein veroeffentlichender Lauf — es wurde nichts committet, also ist hier nichts zu pruefen."
+            exit 0
+          fi
+          rot=0
+          for f in data-health/namensherkunft-history.json data-health/identitaets-tripwire.json; do
+            if [ ! -f "$f" ]; then
+              echo "::warning::$f wurde in diesem Lauf gar nicht geschrieben (der Grund steht als ::warning:: von filter-snapshot-merge.js weiter oben). Diese Wache prueft die Persistenz, nicht die Messung."
+              continue
+            fi
+            if ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+              echo "::error::$f wurde geschrieben, ist aber NICHT im Repo angemeldet — die Datei stirbt mit dem Runner. Die Auflagen M1/M9 (_COURT-M10-2026-08-30) verlangen die COMMITTETE Datei. Wahrscheinliche Ursache: der Commit-Schritt oben meldet nicht mehr blank per 'git add -A' an, oder ein Ignore-Muster fasst data-health/ an."
+              rot=1
+              continue
+            fi
+            # NICHT GEMESSEN darf nie wie IN ORDNUNG aussehen: faellt `git status` selbst aus,
+            # waere `$(...)` leer und die Datei gaelte als sauber — genau die Verwechslung, die
+            # der Bucket `fehlt` im Herkunfts-Zaehler verhindert.
+            if ! stand=$(git status --porcelain -- "$f"); then
+              echo "::error::git status fuer $f ist selbst fehlgeschlagen — der Zustand der Datei ist damit UNGEPRUEFT. Das ist kein Freispruch."
+              rot=1
+              continue
+            fi
+            if [ -n "$stand" ]; then
+              echo "::error::$f ist angemeldet, aber der HEUTIGE Stand ist nicht committet — die Datei auf main traegt einen aelteren Inhalt als den, den dieser Lauf geschrieben hat."
+              rot=1
+            else
+              echo "ok: $f ist committet (zuletzt $(git log -1 --format='%h %ad' --date=short -- "$f"))."
+            fi
+          done
+          exit $rot
+
       # Task 0.3: upload the final merged snapshots/ so the scoring job scores them on
       # a fresh runner. Runs after Commit so it captures the complete post-pull set.
       # 18.08.2026: WAECHTER GEGEN DEN STILLEN AUSFALL.
