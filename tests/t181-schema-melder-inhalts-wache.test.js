@@ -110,6 +110,21 @@ test('feuert, wenn der currentAssets-SCHLUESSEL fehlt', () => {
   assert.equal(melder(snap({ annualBalance: undefined })), true, 'annualBalance fehlt ganz');
 });
 
+// T182-Nachzug (Review-Fund 30.08.): die Sonde ist fail-open - wirft sie, gilt der Snapshot
+// als "Schema aktuell". Das bleibt so (eine kaputte Sonde darf nicht 16.000 Voll-Abrufe
+// ausloesen), ist aber ab jetzt gezaehlt und geloggt statt still.
+// EHRLICHE GRENZE dieses Blocks: der Zaehler selbst ist modul-lokal und von aussen nicht
+// lesbar - geprueft wird hier nur, dass das Verhalten fail-open BLEIBT. Die Sichtbarkeit
+// haengt an der WARN-Zeile und der Lauf-Zusammenfassung, nicht an dieser Probe.
+test('wirft die Sonde, bleibt sie fail-open (und faellt nicht durch)', () => {
+  const kaputt = { annual: { annualRev: [1, 2, 3] } };
+  Object.defineProperty(kaputt.annual, 'annualBalance', {
+    get() { throw new Error('absichtlich kaputt'); },
+  });
+  assert.equal(melder(kaputt), false,
+    'eine geworfene Sonde darf den Lauf nicht in 16.000 Voll-Abrufe kippen');
+});
+
 test('schweigt, wenn der currentAssets-SCHLUESSEL da ist — auch bei Wert null', () => {
   assert.equal(melder(snap({ annualBalance: BILANZ_MIT_CA })), false,
     'Bug 13: Banken/Versicherer tragen currentAssets:null. Der SCHLUESSEL ist das '
