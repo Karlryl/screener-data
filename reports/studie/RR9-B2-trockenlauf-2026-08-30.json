@@ -1,0 +1,64 @@
+{
+ "auflage": "OFFEN-1 aus _COURT-RR9-2026-08-30, entschieden vom Orchestrator (ENTSCHIED 127) - F4-Startgate-Artefakt",
+ "ausfuehrbar": true,
+ "bestand": "SYNTHETISCH - Kunst-Firmen aus _trockenbestand(), kein Panel. Die `ciks` und `firmenMitAuswertbarerReihe` unten sind KEINE gemessenen Populationszahlen; sie beantworten allein die Frage, ob der Codepfad beide Kohorten traegt.",
+ "fallzahlDerEintretendenKohorte": {
+  "grund": "Ihre Messung IST die Zaehlprobe der Verbreiterung und damit F4. Register-Eintrag 21 sagt woertlich, dass dieser Vorgang einen eigenen Eintrag braucht. Dieser Trockenlauf misst sie deshalb nicht.",
+  "status": "UNGEMESSEN"
+ },
+ "fallzahlDerReferenzkohorte": {
+  "S-G": 326,
+  "S-U": 292,
+  "art": "bereits registriert und veroeffentlicht - hier nur zitiert",
+  "quelle": "reports/studie/E3-zaehlprobe-pruefung-2026-08-19.json",
+  "ueberDerSchwelle": true
+ },
+ "fallzahlSchwelle": 200,
+ "frage": "Ist V2' ueberhaupt ausfuehrbar - beide Kohorten in DERSELBEN Geometrie bestimmbar?",
+ "gateSatz": "V2' ist in derselben Geometrie ausfuehrbar: beide Kohorten entstehen aus demselben Bestand durch dieselbe Funktion, unterschieden nur durch den Quellen-Parameter.",
+ "geometrie": {
+  "funktion": "scripts/studie-basisraten.py::firmenreihen",
+  "identischerCodepfad": true,
+  "quellenUeberschneidung": [],
+  "unterschied": "ausschliesslich der Parameter `quellen`; Bestand, Positivitaets-Filter und Reihenbildung sind gleich"
+ },
+ "kohorten": {
+  "eintretend": {
+   "ciks": [
+    "0000000003",
+    "0000000004"
+   ],
+   "firmenMitAuswertbarerReihe": 2,
+   "firmenOhneQuelle": 4,
+   "nurUeberNeueKennung": [
+    "0000000003",
+    "0000000004"
+   ],
+   "quellen": [
+    "InterestAndDividendIncomeOperating",
+    "OilAndGasRevenue",
+    "RealEstateRevenueNet",
+    "RegulatedAndUnregulatedOperatingRevenue"
+   ]
+  },
+  "referenz": {
+   "ciks": [
+    "0000000001",
+    "0000000002"
+   ],
+   "firmenMitAuswertbarerReihe": 2,
+   "firmenOhneQuelle": 4,
+   "quellen": [
+    "Revenues",
+    "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "SalesRevenueNet",
+    "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+   ]
+  }
+ },
+ "schema": "studie-rr9-b2-trockenlauf/v1",
+ "verhaeltnis": {
+  "gerechnet": false,
+  "warumStrukturellUnmoeglich": "Dieser Lauf ruft ausschliesslich `firmenreihen` auf. Es entsteht an keiner Stelle eine Reifequote - weder `erst_ereignisse` noch `arm_zaehlen` noch `ampel_fuer` werden geladen. Wo keine Quote entsteht, kann kein Verhaeltnis gebildet werden; es wird nicht uebersprungen, es ist nicht da."
+ }
+}

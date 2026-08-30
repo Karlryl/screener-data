@@ -1,0 +1,34 @@
+{
+ "a2Satz3": "NICHT AUSGELOEST: gewaehlter und gemessener Jahrgang sind identisch. Der Ausloeser aus U1 ('bei nicht dokumentiertem Jahrgang der 89,32-%-Basis, oder wenn der gewaehlte Jahrgang von ihm abweicht') greift damit nicht. Das Zitierverbot bleibt woertlich in Kraft; es feuert hier nur nicht.",
+ "auflage": "RR9-A3 Ziffer 2 und 3 - _COURT-RR9-2026-08-30",
+ "eskalationNachZiffer6": "NICHT EINGETRETEN: die Provenienz ist eindeutig und zeigt legacy_earliest_archived, nicht post_2024_reprocessed_or_current. Die Jahrgangsfrage bleibt damit eine Messung und wird keine Weiche.",
+ "inhalt": {
+  "gemessenerJahrgangDerBasis": "legacy_earliest_archived",
+  "gemessenerJahrgangHerkunft": "reports/studie/E1-panel-bau-2026-08-19.json::variante",
+  "gewaehlterJahrgang": "legacy_earliest_archived",
+  "gewaehlterJahrgangHerkunft": "scripts/studie-panel-bau.py::VARIANTE",
+  "kette": {
+   "e1Jahrgang": "legacy_earliest_archived",
+   "e1PanelBytes": 4447633408,
+   "e1PanelDatei": "panel-validierung.sqlite",
+   "e1PayloadsGebaut": 64,
+   "e1Protokoll": "FEM-SEC-US@2.0.0",
+   "e3GelesenePfade": [
+    "panel/panel-validierung.sqlite"
+   ],
+   "e3LasDieseDatei": true,
+   "panelBytesAufPlatte": 4447633408,
+   "panelBytesIdentisch": true
+  },
+  "protokoll": "FEM-SEC-US@2.1.0",
+  "weichenBeideVoneinanderAb": false
+ },
+ "inhaltSha256": "0363702f5aa6fd486a6901aecaef3108f81828248657bcfb455b6a4ae413c567",
+ "registerHinweis": "RR9-A3 Ziffer 2 verlangt die Eintragung IM F3b-EINTRAG. Der F3b-Eintrag ist Eintrag 21 im nur-anhaengenden, verketteten outcome-access-ledger.json und war zum Zeitpunkt des Urteils bereits geschlossen (PR #142, Serverbeweis PR #143). Er kann nicht nachtraeglich um den Jahrgang ergaenzt werden, ohne die Append-only-Disziplin zu brechen. Ein EIGENER Eintrag 22 waere der einzige gangbare Weg - das ist eine Entscheidung, die das Urteil nicht getroffen hat. Der Register-Akt wird deshalb NICHT vollzogen, sondern an den Orchestrator zurueckgegeben. Diese Datei ist sein vollstaendig vorbereiteter Gegenstand.",
+ "schema": "studie-rr9-a3-jahrgang/v1",
+ "tripwire": {
+  "ort": "scripts/studie-panel-bau.py::payload_liste",
+  "regel": "Ein Payload ohne Jahrgangs-Kennzeichen tritt nie in einen jahrgangs-deklarierten Bau ein; der Bau bricht hart ab.",
+  "rotProbe": "tests/studie-rr9-bremsen.test.js, ROT-PROBE A3"
+ }
+}

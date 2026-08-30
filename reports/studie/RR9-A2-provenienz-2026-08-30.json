@@ -1,0 +1,81 @@
+{
+ "art": "Berichts-Provenienz-Lesung. Keine Rechnung, kein Panel-Zugriff.",
+ "auflage": "RR9-A2 Schritt 1 + RR9-A3 Ziffer 1 - _COURT-RR9-2026-08-30",
+ "befund": "POSITIV: die registrierte 326/365 wurde unter genau dem Tripel gezaehlt, das hash-manifest.json 2.0.0 bindet, und ruht auf dem Jahrgang 'legacy_earliest_archived'. KORREKTUR, GEMESSEN: Traeger ist die Variante 'S-G' mit der Groesse 'OperatingIncomeLoss (Betriebsergebnis), identische Mechanik, ohne Positivitaets-Filter auf den Rohwert' - NICHT die umsatzQuellenAllowlist. Das Urteil fuehrt die 326/365 in RR9-A2 Schritt 1 als Wert 'unter dem Tripel aus preregistration.json (umsatzQuellenAllowlist), studie-basisraten.py und studie-zaehlprobe.py'. Der Tripel-Teil haelt; die Zuordnung zur Allowlist haelt nicht. Eine Reproduktion der 326/365 belegt damit die Zaehlkette, aber NICHT die Identitaet der Allowlist.",
+ "e3LiefUnterDemTripel": true,
+ "e3ManifestGeprueft": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "erwarteteTripelDateien": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "jahrgangsKette": {
+  "e1Jahrgang": "legacy_earliest_archived",
+  "e1PanelBytes": 4447633408,
+  "e1PanelDatei": "panel-validierung.sqlite",
+  "e1PayloadsGebaut": 64,
+  "e1Protokoll": "FEM-SEC-US@2.0.0",
+  "e3GelesenePfade": [
+   "panel/panel-validierung.sqlite"
+  ],
+  "e3LasDieseDatei": true,
+  "panelBytesAufPlatte": 4447633408,
+  "panelBytesIdentisch": true
+ },
+ "provenienzGeschlossen": true,
+ "registrierteAllowlist": [
+  "Revenues",
+  "RevenueFromContractWithCustomerExcludingAssessedTax",
+  "SalesRevenueNet",
+  "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+ ],
+ "ruhtAufUmsatzAllowlist": false,
+ "schema": "studie-rr9-a2-provenienz/v1",
+ "suchachsen": [
+  {
+   "achse": "Registerfeld",
+   "status": "gemessen",
+   "wert": "hash-manifest.json 2.0.0, files-Block"
+  },
+  {
+   "achse": "Dateiname",
+   "status": "gemessen",
+   "wert": "die drei Tripel-Dateien am registrierten Pfad"
+  },
+  {
+   "achse": "Feldname",
+   "status": "gemessen",
+   "wert": "varianten.*.fallzahl / .firmen_mit_erst_ereignis im E3-Bericht"
+  },
+  {
+   "achse": "Inhalts-String",
+   "status": "gemessen",
+   "wert": "SHA-256 ueber die Dateibytes der drei Tripel-Dateien"
+  }
+ ],
+ "traegerGroesse": "OperatingIncomeLoss (Betriebsergebnis), identische Mechanik, ohne Positivitaets-Filter auf den Rohwert",
+ "traegerVariante": "S-G",
+ "tripel": {
+  "protocol/early-detection/2.0.0/preregistration.json": {
+   "gemessen": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c",
+   "identisch": true,
+   "registriert": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c"
+  },
+  "scripts/studie-basisraten.py": {
+   "gemessen": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+   "identisch": true,
+   "registriert": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d"
+  },
+  "scripts/studie-zaehlprobe.py": {
+   "gemessen": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+   "identisch": true,
+   "registriert": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b"
+  }
+ },
+ "tripelUnveraendertSeitDemSiegeln": true,
+ "tripelVollstaendigUndNamentlich": true
+}
