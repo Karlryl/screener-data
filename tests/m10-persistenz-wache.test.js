@@ -25,9 +25,9 @@
  * Fixture-Remote gefahren; danach wird der ebenfalls herausgeloeste Wache-Block gefahren.
  * ANWESENHEIT UND ABWESENHEIT: der gute Fall muss gruen sein, drei kaputte Faelle rot.
  *
- * ZWEI STAERKEN, NIE EIN STILLER SKIP (Muster: tests/alarm-tagesgrenze.test.js): ohne bash
- * im PATH (Karls Windows-Kiste) laufen nur die Struktur-Bloecke, und die Stufe wird
- * ausgedruckt. Im CI (ubuntu) laeuft alles.
+ * KEIN SKIP-VENTIL: ohne bash bricht die Datei ab statt Teil-Gruen zu melden. Ein Teil-Lauf
+ * ("2 ok, 0 fail") sieht fuer scripts/test-gate.js wie ein voller PASS aus — dann stuende
+ * gruen in der Spalte, ohne dass eine einzige Bruchprobe gelaufen waere.
  */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -37,7 +37,11 @@ const { spawnSync } = require('node:child_process');
 
 const REPO = path.resolve(__dirname, '..');
 const WF = path.join(REPO, '.github', 'workflows', 'daily-pull.yml');
-const YML = fs.readFileSync(WF, 'utf8');
+// CRLF wird weggenommen (Hausmuster: alarm-tagesgrenze.test.js, gate-coverage.test.js): die
+// Datei ist in .gitattributes NICHT auf lf gepinnt, ein Windows-Checkout liefert sie also mit
+// \r. Dass der hiesige bash-Build das heute schluckt, ist eine Eigenschaft dieses Builds,
+// keine Zusage.
+const YML = fs.readFileSync(WF, 'utf8').replace(/\r\n/g, '\n');
 
 const COMMIT_SCHRITT = 'Commit Snapshots';
 const WACHE_SCHRITT = 'M1/M9-Persistenz pruefen (nach dem Commit)';
@@ -58,19 +62,37 @@ function schrittZeile(schritt) {
   return i;
 }
 
-/** Den `run: |`-Block eines Schritts herausloesen und auf Spalte 0 ausruecken. */
+/** Den `run: |`-Block eines Schritts herausloesen und auf Spalte 0 ausruecken.
+ *
+ * REVIEW-FUND (beide Reviewer): die Vorwaerts-Suche lief bis zum naechsten `run: |` IRGENDWO
+ * in der Datei. Verliert der gesuchte Schritt sein `run:` (Umbau auf `uses:`), lieferte sie
+ * still den Block eines FREMDEN Schritts — nicht leer, nicht abgeschnitten, sondern plausibel
+ * falsch, und jede Bruchprobe haette danach den falschen Code geprueft. Die Suche endet
+ * deshalb an der naechsten Schritt-Grenze.
+ *
+ * Und die Einrueckung kommt aus der `run:`-Zeile selbst (+2), nicht aus der ersten Inhalts-
+ * zeile: waere die je leer, waere das Mass 0 und der Block haette den Rest der Datei
+ * verschluckt. (Muster: tests/gate-coverage.test.js.)
+ */
 function runBlock(schritt) {
   const z = YML.split('\n');
-  let i = schrittZeile(schritt);
-  while (i < z.length && !/^\s*run: \|\s*$/.test(z[i])) i++;
+  const start = schrittZeile(schritt);
+  let i = start;
+  while (i < z.length && !/^\s*run: \|\s*$/.test(z[i])) {
+    assert.ok(i === start || !/^ {6}- (name|uses):/.test(z[i]),
+      'Schritt ' + schritt + ' hat keinen eigenen `run: |`-Block (die Suche waere in den '
+      + 'naechsten Schritt gelaufen und haette dessen Shell geprueft).');
+    i++;
+  }
   assert.ok(i < z.length, 'kein `run: |`-Block in Schritt ' + schritt);
-  const einr = z[i + 1].match(/^\s*/)[0].length;
+  const einr = z[i].match(/^\s*/)[0].length + 2;
   const out = [];
   for (let k = i + 1; k < z.length; k++) {
     if (z[k].trim() === '') { out.push(''); continue; }
     if (z[k].match(/^\s*/)[0].length < einr) break;
     out.push(z[k].slice(einr));
   }
+  assert.ok(out.some((l) => l.trim() !== ''), 'der extrahierte Block von ' + schritt + ' ist leer');
   return out.join('\n');
 }
 
@@ -105,8 +127,17 @@ test('S2: die Wache ist nicht entschaerft (kein continue-on-error, beide Dateien
 
 // ── VERHALTEN: der ECHTE Block gegen ein Fixture-Remote ───────────────────────
 
-const hatBash = spawnSync('bash', ['--version'], { encoding: 'utf8' }).status === 0;
-console.log('       Stufe: ' + (hatBash ? 'voll (echter Block gegen Fixture-Remote)' : 'nur Struktur (kein bash im PATH)'));
+// REVIEW-FUND (silent-failure-hunter): die erste Fassung sprang ohne bash still ueber die
+// SECHS Verhaltens-Bloecke und meldete trotzdem "2 ok, 0 fail" — test-gate.js erkennt einen
+// TEIL-Lauf nicht als SKIP (seine Heuristik verlangt "0 ok"), also stand PASS in der Spalte,
+// ohne dass eine einzige Bruchprobe gelaufen waere. Ohne bash ist die Zusage UNGEPRUEFT, und
+// ungeprueft ist kein Freispruch — dieselbe Regel wie im Wache-Block selbst. Der Waechter
+// laeuft auf ubuntu (CI) und auf Karls Kiste (Git-bash), das Ventil war ohnehin totes Holz.
+if (spawnSync('bash', ['--version'], { encoding: 'utf8' }).status !== 0) {
+  console.error('FAIL   kein bash im PATH — dieser Waechter faehrt die ECHTEN Shell-Bloecke aus '
+    + 'daily-pull.yml. Ohne bash ist die M1/M9-Persistenz-Zusage ungeprueft, nicht in Ordnung.');
+  process.exit(1);
+}
 
 const sh = (cmd, cwd) => {
   const r = spawnSync('bash', ['-lc', cmd], { cwd, encoding: 'utf8' });
@@ -114,24 +145,50 @@ const sh = (cmd, cwd) => {
   return r.stdout.trim();
 };
 
+// REVIEW-FUND (typescript-reviewer, nachgestellt): das Aufraeumen stand als LETZTE Zeile in
+// jedem Block, also genau hinter den Zusicherungen — bei ROT wurde es nie erreicht. Ausgerechnet
+// wenn dieser Waechter seine Arbeit tut, blieb je Bruchprobe ein Bare-Remote plus Klon liegen.
+// Jetzt zentral beim Prozess-Ende, damit es keinen Weg mehr gibt, der daran vorbeifuehrt.
+const muell = [];
+process.on('exit', () => {
+  for (const d of muell) { try { fs.rmSync(d, { recursive: true, force: true }); } catch (_) { /* Aufraeumen darf nie das Urteil kippen */ } }
+});
+
 /**
  * Baut den Tageslauf-Zustand nach: Fixture-Remote + Arbeitsbaum mit der ECHTEN .gitignore
  * des Repos (die Frage "greift ein Ignore-Muster?" wird gemessen, nicht geglaubt), darin
  * die drei data-health-Dateien, die der Lauf schreibt, und ein gitignoriertes snapshots/.
  * `zusatzIgnore` und `blockErsatz` sind die Sabotage-Schrauben.
  */
-function sandkasten({ zusatzIgnore = '', schreibeM1M9 = true } = {}) {
+function sandkasten({ zusatzIgnore = '', schreibeM1M9 = true, gestern = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'm10persist-'));
+  muell.push(root);
   const remote = path.join(root, 'origin.git');
   const work = path.join(root, 'work');
   fs.mkdirSync(remote); fs.mkdirSync(work);
   sh('git init --bare -b main .', remote);
-  sh('git init -b main . && git config user.email w@e.ch && git config user.name w', work);
+  // REVIEW-FUND (typescript-reviewer, nachgemessen): `git init` erbt auf dieser Kiste
+  // core.autocrlf=true aus der System-Konfiguration, das echte Repo steht lokal auf false.
+  // Der Sandkasten faehrt sonst unter einer ANDEREN Zeilenenden-Politik als der Lauf, den er
+  // nachstellt — heute wirkungslos (alle Fixtures sind reines LF), aber die Datei behauptet,
+  // git so zu fragen wie die Produktion. Also wird es gepinnt statt geerbt.
+  sh('git init -b main . && git config user.email w@e.ch && git config user.name w'
+    + ' && git config core.autocrlf false && git config core.eol lf', work);
   fs.writeFileSync(path.join(work, '.gitignore'),
     fs.readFileSync(path.join(REPO, '.gitignore'), 'utf8') + '\n' + zusatzIgnore + '\n');
   fs.mkdirSync(path.join(work, 'data-health'));
   fs.writeFileSync(path.join(work, 'data-health', 'p99-delta-history.json'), '{"byDate":{}}\n');
-  sh('git add -A && git commit -q -m init && git remote add origin '
+  // `gestern`: beide Dateien liegen schon committet im Bestand — der Normalfall ab Tag 2,
+  // weil der Checkout sie vor jeden Schritt legt.
+  if (gestern) {
+    fs.writeFileSync(path.join(work, 'data-health', 'namensherkunft-history.json'), '{"byDate":{"gestern":{}}}\n');
+    fs.writeFileSync(path.join(work, 'data-health', 'identitaets-tripwire.json'), '{"zaehlung":{}}\n');
+  }
+  // Der Alt-Commit traegt ein COMMITTER-Datum in der Vergangenheit (nicht nur --date, das nur
+  // den Autor setzt) — die Wache liest %cd, und nur so ist "aelter als der Lauftag" echt.
+  sh('git add -A && '
+    + (gestern ? 'GIT_COMMITTER_DATE="2020-01-02T10:00:00Z" GIT_AUTHOR_DATE="2020-01-02T10:00:00Z" ' : '')
+    + 'git commit -q -m init && git remote add origin '
     + JSON.stringify(remote.replace(/\\/g, '/')) + ' && git push -q -u origin main', work);
 
   // Das, was der Lauf danach schreibt.
@@ -147,28 +204,26 @@ function sandkasten({ zusatzIgnore = '', schreibeM1M9 = true } = {}) {
   return { root, remote, work };
 }
 
-/** Einen Shell-Block im Sandkasten fahren — mit `-e`, weil GitHub Actions `run:`-Bloecke
- *  auf ubuntu genau so faehrt (`bash -e {0}`). Ohne das Flag liefe der Block hier
- *  nachsichtiger als in Produktion, und ein durch errexit abgebrochener Schritt bliebe im
- *  Test unsichtbar. */
-function fahre(work, text, veroeffentlichen = 'true') {
+/** Einen Shell-Block im Sandkasten fahren — mit GENAU den Flags, die GitHub Actions fuer
+ *  `run:`-Bloecke setzt (`bash --noprofile --norc -eo pipefail {0}`). Nachsichtiger zu fahren
+ *  hiesse, den Block unter anderen Regeln zu pruefen als er laeuft: ein unkontrollierter
+ *  Befehl, der in Produktion den Schritt abbricht, liefe hier einfach weiter. */
+function fahre(work, text, veroeffentlichen = 'true', lauftag = '') {
   const f = path.join(work, '..', 'block-' + Math.random().toString(36).slice(2) + '.sh');
   fs.writeFileSync(f, text);
-  return spawnSync('bash', ['-e', f.replace(/\\/g, '/')], {
+  return spawnSync('bash', ['--noprofile', '--norc', '-eo', 'pipefail', f.replace(/\\/g, '/')], {
     cwd: work, encoding: 'utf8',
-    env: { ...process.env, VEROEFFENTLICHEN: veroeffentlichen, GITHUB_REF: 'refs/heads/main', NUR_RECHNEN: 'false' },
+    env: { ...process.env, VEROEFFENTLICHEN: veroeffentlichen, GITHUB_REF: 'refs/heads/main',
+      NUR_RECHNEN: 'false', RUN_DATE_UTC: lauftag },
   });
 }
 
+const HEUTE = new Date().toISOString().slice(0, 10);
+
 const remoteDateien = (remote) => sh('git ls-tree -r --name-only main', remote).split('\n');
 
-function btest(name, fn) {
-  if (!hatBash) { console.log('  --   ' + name + ' (uebersprungen: kein bash — Struktur-Bloecke oben decken die Verdrahtung ab)'); return; }
-  test(name, fn);
-}
-
-btest('B1 ANWESENHEIT: beide Dateien landen im veroeffentlichten Commit, Wache gruen', () => {
-  const { root, remote, work } = sandkasten();
+test('B1 ANWESENHEIT: beide Dateien landen im veroeffentlichten Commit, Wache gruen', () => {
+  const { remote, work } = sandkasten();
   const c = fahre(work, runBlock(COMMIT_SCHRITT));
   assert.equal(c.status, 0, 'Commit-Block fehlgeschlagen: ' + c.stdout + c.stderr);
   const dateien = remoteDateien(remote);
@@ -176,11 +231,10 @@ btest('B1 ANWESENHEIT: beide Dateien landen im veroeffentlichten Commit, Wache g
   assert.ok(dateien.includes(M9), 'M9-Bericht kam NICHT auf dem Remote an: ' + dateien.join(', '));
   const w = fahre(work, runBlock(WACHE_SCHRITT));
   assert.equal(w.status, 0, 'die Wache schlaegt im GUTEN Fall Alarm (Fehlalarm): ' + w.stdout + w.stderr);
-  fs.rmSync(root, { recursive: true, force: true });
 });
 
-btest('B2 BRUCHPROBE: data-health/ gitignoriert -> Dateien kommen nicht an, Wache ROT', () => {
-  const { root, remote, work } = sandkasten({ zusatzIgnore: 'data-health/' });
+test('B2 BRUCHPROBE: data-health/ gitignoriert -> Dateien kommen nicht an, Wache ROT', () => {
+  const { remote, work } = sandkasten({ zusatzIgnore: 'data-health/' });
   fahre(work, runBlock(COMMIT_SCHRITT));
   const dateien = remoteDateien(remote);
   assert.ok(!dateien.includes(M1) && !dateien.includes(M9),
@@ -190,13 +244,12 @@ btest('B2 BRUCHPROBE: data-health/ gitignoriert -> Dateien kommen nicht an, Wach
   for (const f of [M1, M9]) {
     assert.ok(w.stdout.includes('::error::' + f), 'die Wache nennt ' + f + ' nicht als Fehler:\n' + w.stdout);
   }
-  fs.rmSync(root, { recursive: true, force: true });
 });
 
-btest('B3 BRUCHPROBE: `git add -A` auf eine gezielte Liste verengt -> Wache ROT', () => {
+test('B3 BRUCHPROBE: `git add -A` auf eine gezielte Liste verengt -> Wache ROT', () => {
   // Genau das Muster des scoring-Jobs ("gezieltes add auf die Datei, nie -A"). Wandert es
   // eines Tages hierher, faellt es auf, statt die beiden Reihen lautlos abzuschneiden.
-  const { root, remote, work } = sandkasten();
+  const { remote, work } = sandkasten();
   const verengt = runBlock(COMMIT_SCHRITT).replace('git add -A', 'git add data-health/p99-delta-history.json');
   assert.notEqual(verengt, runBlock(COMMIT_SCHRITT), 'die Mutation griff nicht (heisst der add-Befehl noch so?)');
   fahre(work, verengt);
@@ -204,43 +257,69 @@ btest('B3 BRUCHPROBE: `git add -A` auf eine gezielte Liste verengt -> Wache ROT'
   assert.ok(!dateien.includes(M1) && !dateien.includes(M9), 'die Sabotage griff nicht');
   const w = fahre(work, runBlock(WACHE_SCHRITT));
   assert.notEqual(w.status, 0, 'ein verengtes add bleibt unbemerkt');
-  fs.rmSync(root, { recursive: true, force: true });
 });
 
-btest('B4 BRUCHPROBE: angemeldet, aber der heutige Stand nicht committet -> Wache ROT', () => {
+test('B4 BRUCHPROBE: angemeldet, aber der heutige Stand nicht committet -> Wache ROT', () => {
   // Der dritte Weg in die Luecke: die Datei IST getrackt (ls-files findet sie), nur der
   // Inhalt dieses Laufs ist nicht mit hineingekommen. Ein reiner "ist sie getrackt?"-Test
   // waere hier gruen und die Reihe stuende trotzdem auf gestern.
-  const { root, work } = sandkasten();
+  const { work } = sandkasten();
   fahre(work, runBlock(COMMIT_SCHRITT));
   fs.writeFileSync(path.join(work, M1), '{"_doc":"M1","byDate":{"2026-09-02":{"gelesen":1}}}\n');
   const w = fahre(work, runBlock(WACHE_SCHRITT));
   assert.notEqual(w.status, 0, 'ein nicht committeter Tagesstand bleibt unbemerkt');
   assert.ok(w.stdout.includes('::error::' + M1), 'die Wache nennt die Datei nicht:\n' + w.stdout);
-  fs.rmSync(root, { recursive: true, force: true });
 });
 
-btest('B5 GEGENRICHTUNG: Zweig-/Trockenlauf ist kein Alarm', () => {
+test('B5 GEGENRICHTUNG: Zweig-/Trockenlauf ist kein Alarm', () => {
   // Ohne Ventil waere jeder nicht veroeffentlichende Lauf dauerrot — die Wache wuerde
   // abgestellt, und dann schuetzt sie gar nichts mehr.
-  const { root, work } = sandkasten();
+  const { work } = sandkasten();
   const c = fahre(work, runBlock(COMMIT_SCHRITT), 'false');
   assert.equal(c.status, 0);
   const w = fahre(work, runBlock(WACHE_SCHRITT), 'false');
   assert.equal(w.status, 0, 'die Wache wird auf einem Zweig-Lauf rot, obwohl dort bewusst nichts committet wird');
-  fs.rmSync(root, { recursive: true, force: true });
 });
 
-btest('B6 GEGENRICHTUNG: gar nicht geschrieben ist eine WARNUNG, kein roter Lauf', () => {
+test('B6 GEGENRICHTUNG: gar nicht geschrieben ist eine WARNUNG, kein roter Lauf', () => {
   // Der Ausfall der Messung meldet filter-snapshot-merge.js selbst (fail-soft, reine
   // Messung). Diese Wache prueft die Persistenz — sonst wuerde sie denselben Vorfall ein
   // zweites Mal melden, und zwar mit der falschen Diagnose.
-  const { root, work } = sandkasten({ schreibeM1M9: false });
+  const { work } = sandkasten({ schreibeM1M9: false });
   fahre(work, runBlock(COMMIT_SCHRITT));
   const w = fahre(work, runBlock(WACHE_SCHRITT));
   assert.equal(w.status, 0, 'eine ausgefallene MESSUNG wird als Persistenz-Bruch gemeldet');
   assert.ok(w.stdout.includes('::warning::' + M1), 'der Ausfall wird gar nicht erwaehnt:\n' + w.stdout);
-  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('B7 REVIEW-FUND: gestern committet, heute nicht angefasst -> sichtbare WARNUNG statt "ok"', () => {
+  // REPRODUZIERT vor dem Fix (silent-failure-hunter, HIGH): ab Tag 2 liegt die Datei durch den
+  // Checkout schon vor dem Lauf auf der Platte. Faellt die Messung dann fail-soft aus, ist sie
+  // da, getrackt und sauber — die erste Fassung druckte "ok: ist committet" und ging gruen
+  // durch, an einem Tag, an dem die Reihe ein Loch bekommt. Rot wird der Lauf davon bewusst
+  // NICHT (M1 ist per Urteil fail-soft); sichtbar muss es trotzdem sein.
+  const { work } = sandkasten({ gestern: true, schreibeM1M9: false });
+  const c = fahre(work, runBlock(COMMIT_SCHRITT), 'true', HEUTE);
+  assert.equal(c.status, 0, 'Commit-Block fehlgeschlagen: ' + c.stdout + c.stderr);
+  const w = fahre(work, runBlock(WACHE_SCHRITT), 'true', HEUTE);
+  assert.equal(w.status, 0, 'ein alter Commit-Tag ist eine Warnung, kein roter Lauf — sonst waere '
+    + 'die per Urteil fail-soft gebaute Messung ueber die Hintertuer doch ein Gate');
+  for (const f of [M1, M9]) {
+    assert.ok(w.stdout.includes('::warning::' + f),
+      'kein Hinweis auf den veralteten Commit-Tag von ' + f + ' — die Zeile "ok: ist committet" '
+      + 'liest sich dann als Entwarnung fuer einen Tag ohne Messung:\n' + w.stdout);
+  }
+});
+
+test('B8 GEGENPROBE zu B7: frisch geschriebene Dateien warnen NICHT', () => {
+  // Ohne diese Gegenrichtung koennte die Frische-Pruefung an JEDEM Tag warnen und waere damit
+  // wertlos — eine Warnung, die immer kommt, wird weggeschaut.
+  const { work } = sandkasten({ gestern: true });
+  fahre(work, runBlock(COMMIT_SCHRITT), 'true', HEUTE);
+  const w = fahre(work, runBlock(WACHE_SCHRITT), 'true', HEUTE);
+  assert.equal(w.status, 0);
+  assert.ok(!w.stdout.includes('::warning::'),
+    'die Frische-Pruefung warnt auch am Tag des eigenen Commits:\n' + w.stdout);
 });
 
 console.log('\nm10-persistenz-wache.test.js: ' + pass + ' ok, ' + fail + ' fail');

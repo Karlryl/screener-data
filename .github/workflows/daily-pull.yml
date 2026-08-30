@@ -1258,7 +1258,19 @@ jobs:
               echo "::error::$f ist angemeldet, aber der HEUTIGE Stand ist nicht committet — die Datei auf main traegt einen aelteren Inhalt als den, den dieser Lauf geschrieben hat."
               rot=1
             else
-              echo "ok: $f ist committet (zuletzt $(git log -1 --format='%h %ad' --date=short -- "$f"))."
+              # REVIEW-FUND (silent-failure-hunter, reproduziert): ab Tag 2 liegt die Datei
+              # durch den Checkout schon VOR dem Lauf auf der Platte. Faellt die Messung dann
+              # fail-soft aus, ist die Datei da, getrackt und sauber — und ein blankes
+              # "ok: ist committet" laese sich als Entwarnung fuer einen Tag, an dem die Reihe
+              # ein Loch hat. Der Commit-Tag wird deshalb IMMER genannt und gegen den Lauftag
+              # geprueft. Bewusst nur ::warning::: ob eine fehlende Tageszeile den Lauf ROT
+              # machen soll, ist eine Methodik-Weiche (M1 ist per Urteil ausdruecklich
+              # fail-soft, "reine Messung") — die gehoert vors Gericht, nicht in eine Wache.
+              tag=$(git log -1 --format='%cd' --date=short -- "$f")
+              echo "ok: $f ist committet (letzter Commit $(git log -1 --format='%h' -- "$f") vom $tag)."
+              if [ -n "$RUN_DATE_UTC" ] && [ "$tag" != "$RUN_DATE_UTC" ]; then
+                echo "::warning::$f traegt den Commit vom $tag, der Lauf ist vom $RUN_DATE_UTC — dieser Lauf hat an der Datei NICHTS geaendert. Entweder ist die Messung fail-soft ausgefallen (dann steht ihr ::warning:: weiter oben) oder sie hat byte-gleichen Inhalt erzeugt. Persistenz ist in Ordnung, die Tageszeile ist es moeglicherweise nicht."
+              fi
             fi
           done
           exit $rot
