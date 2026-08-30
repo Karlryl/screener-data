@@ -134,6 +134,52 @@ function istPlatzhalter(name, ...kennungen) {
  *      (`score.js`): `localeCompare` haengt an der OS-Locale und wuerde CI gegen lokal
  *      auseinanderlaufen lassen. Erreichbar nur bei gleich langen, verschiedenen Namen —
  *      gleiche Namen kommen wegen der Schluessel-Vorpruefung gar nicht bis hierher.
+ *
+ * ══════════════════════════════════════════════════════════════════════════════════════
+ * ⚠ M6 — BAUFORM-VORENTSCHEID FUER DIE KUENFTIGE G2-ENTSCHEIDUNG. OHNE VOLLZUG.
+ * `_COURT-M10-2026-08-30.md` (ENTSCHIED 126), Auflage M6. HEUTE WIRD HIER NICHTS GEAENDERT —
+ * dieser Block ist Dokumentation, kein Bau. Er steht hier und nicht in einem Urteil, weil der
+ * naechste Bauende HIER hinsieht.
+ *
+ * FAELLT die G2-Entscheidung, lautet sie: ein HERKUNFTS-KRITERIUM IN DIESER FUNKTION — bei
+ * gleichem Platzhalter-Rang schlaegt ein Bein mit `nameSource !== 'watchlist'` eines mit
+ * `'watchlist'`. Ausdruecklich NICHT das Abschalten des Schreibers weiter unten
+ * (`wendeWurzelZwillingeAn`): der ist die RATIFIZIERTE U2-Heilung (ENTSCHIED 21), nicht der
+ * allgemeine Aufpraege-Kanal, den die Akte dort vermutete (Urteil §3 K-4). Der zweite
+ * Schreiber (`milanSchreiben`, U3-Milan) ist N1 und unantastbar.
+ *
+ * WARUM DIE FRAGE UEBERHAUPT AN DIESER FUNKTION HAENGT: `besseresBein` kennt die HERKUNFT des
+ * Namens nicht. Ein Watchlist-Name kann hier gewinnen und eine Verschmelzung ERZWINGEN — der
+ * Befund der Akte gilt, nur schmaler als dort beschrieben (nur `.BO`/`.NS`-Zwillinge, nur wo
+ * `issuerKeyLoose` heute noch verschieden ist).
+ *
+ * AUSLOESUNG AUSSCHLIESSLICH durch die M1-Messung (data-health/namensherkunft-history.json)
+ * plus Orchestrator-Entscheid. Die Schwellen sind im Urteil §8 VORAB festgelegt und duerfen
+ * NICHT nachtraeglich ans Ergebnis angepasst werden:
+ *   Bucket `fehlt` <= 5 %                      ⇒ die echte Klassengroesse liegt ueberhaupt vor
+ *   watchlist-benannte Sieger deutlich > ~500  ⇒ M6 wird vollzogen
+ *   unter ~1.500                               ⇒ G2 sinkt endgueltig auf ein Einzelfall-Ventil
+ * Vorzeitig: tritt ein ZWEITER belegter Fall der `MRK.SW`-Klasse auf, wird M6 sofort und ohne
+ * die volle Messung gezogen.
+ *
+ * IM EREIGNISFALL gehoert dazu ein DRITTER Fall in `tests/u2-wurzelzwillinge.test.js` — ein
+ * WL-benanntes Bein verliert gegen ein feed-benanntes bei gleichem Platzhalter-Rang —, einmal
+ * absichtlich gebrochen, und beide bestehenden Wachrichtungen bleiben gruen.
+ *
+ * ⛔ M7 — G2-a WIRD NICHT VOLLZOGEN UND IST IN DIESER VORSTUFE NICHT VOLLZIEHBAR.
+ * Befund K-3 des Urteils, am Code gelesen: `issuerDedupComparator` (`src/scoring/score.js`)
+ * sortiert nach US-Primaerlisting, US-Domizil, FX-Verdacht, Marktkapitalisierung und Ticker.
+ * KEIN NAMENSBEZUG. Der Name wirkt ausschliesslich ueber `issuerKeyLoose` auf die
+ * GRUPPENBILDUNG: er entscheidet die ZUGEHOERIGKEIT, nie den SIEG. `MRK.SW` gewann seine
+ * Gruppe wegen der fremden Marktkapitalisierung, nicht wegen des fremden Namens — der Name
+ * hat die Zeile nur HINEINGETRAGEN.
+ * Folge: wer ein Bein am SIEGEN hindern will, braucht entweder den versiegelten Komparator
+ * (N8) oder eine Namens-Ueberschreibung (G7-a, 3:0 dauerhaft verboten). Beide Wege sind zu.
+ * WER ES DENNOCH VORBEREITET: STOPP, zurueck ans Gericht.
+ * Die Zahl „984 Sieger / 1.254 Beine" ist eine BESCHREIBUNG, kein Hebel — sie beschreibt, wer
+ * gewonnen hat, nicht warum. Sie darf in keiner kuenftigen Vorlage als Preisschild fuer G2-a
+ * auftreten. Waechter fuer die Premisse: tests/m10-namensherkunft-zaehler.test.js.
+ * ══════════════════════════════════════════════════════════════════════════════════════
  */
 function besseresBein(a, b) {
   const rang = (s) => (istPlatzhalter(s.name, s.ticker, s.metaTicker) ? 0 : 1);
