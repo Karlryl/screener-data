@@ -80,7 +80,14 @@ function saboteur(dir, name, suchen, ersetzen) {
   const ziel = path.join(dir, name);
   fs.writeFileSync(
     ziel,
-    quelle.replace(suchen, ersetzen).replace("require('../lib/studie-verfassung')", `require(${JSON.stringify(LIB)})`),
+    quelle.replace(suchen, ersetzen).replace(
+      // ALLE ../lib/-Requires absolut setzen, nicht nur studie-verfassung: der
+      // Zwilling liegt ausserhalb von scripts/. Fehlt einer, stirbt er an
+      // MODULE_NOT_FOUND - und ein Test, der nur 'rot' prueft, liest das als
+      // gegriffene Wache. Gefunden 30.08. beim Umbau auf lib/atomic-write.js.
+      /require\('\.\.\/lib\/([^']+)'\)/g,
+      (_treffer, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
+    ),
     'utf8',
   );
   return ziel;

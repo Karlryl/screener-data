@@ -88,7 +88,14 @@ function saboteur(dir, name, suchen, ersetzen) {
   const ziel = path.join(dir, name);
   fs.writeFileSync(
     ziel,
-    quelle.replace(suchen, ersetzen).replace("require('../lib/studie-verfassung')", `require(${JSON.stringify(LIB)})`),
+    quelle.replace(suchen, ersetzen).replace(
+      // ALLE ../lib/-Requires absolut setzen, nicht nur studie-verfassung: der
+      // Zwilling liegt ausserhalb von scripts/. Fehlt einer, stirbt er an
+      // MODULE_NOT_FOUND - und ein Test, der nur 'rot' prueft, liest das als
+      // gegriffene Wache. Gefunden 30.08. beim Umbau auf lib/atomic-write.js.
+      /require\('\.\.\/lib\/([^']+)'\)/g,
+      (_treffer, datei) => `require(${JSON.stringify(path.join(REPO, 'lib', datei))})`,
+    ),
     'utf8',
   );
   return ziel;
@@ -309,45 +316,18 @@ test('RR9-A3 (d): dieselbe runId ein zweites Mal wird abgewiesen', () => {
 
 // ── (f) Der Schreibvorgang ist atomar ─────────────────────────────────────────
 
-test('RR9-A3 (f): bricht der Schreibvorgang ab, bleibt das Register unversehrt', () => {
-  // Das Register ist nur-anhaengend und verkettet: eine halb geschriebene Datei
-  // hat keinen Reparaturweg im Werkzeug. Geprueft wird am OBJEKT — der Bytes der
-  // Kopie —, nicht an der Formulierung des Kommentars.
-  const dir = tempdir();
-  const { register, jahrgang } = kopien(dir);
-  const vorher = dateihash(register);
-
-  const abbruchBeimUmbenennen = saboteur(
-    dir, 'rename-bricht.js',
-    "    fs.renameSync(daneben, pfad);",
-    "    throw new Error('Platte voll (Probe)');",
-  );
-  const lauf = laufeMit(abbruchBeimUmbenennen, [
-    '--register', register, '--jahrgang', jahrgang, '--schreiben',
-  ]);
-  assert.notEqual(lauf.status, 0, 'der abgebrochene Schreibvorgang meldet Erfolg');
-  assert.equal(dateihash(register), vorher, 'das Register ist trotz Abbruch veraendert');
-  assert.deepEqual(
-    fs.readdirSync(dir).filter((n) => n.includes('.neu-')), [],
-    'ein halber Zwischenstand ist liegengeblieben',
-  );
-
-  // Abwesenheits-Probe: derselbe Abbruch an einem Zwilling, der DIREKT auf das
-  // Register schreibt, laesst es veraendert zurueck. Ohne sie beweist der
-  // Hash-Vergleich oben nur, dass irgendetwas fehlschlug.
-  const direkt = saboteur(
-    dir, 'ohne-atomar.js',
-    "  const daneben = `${pfad}.neu-${process.pid}`;\n  try {\n    fs.writeFileSync(daneben, `${JSON.stringify(register, null, 1)}\\n`, 'utf8');\n    fs.renameSync(daneben, pfad);",
-    "  const daneben = `${pfad}.neu-${process.pid}`;\n  try {\n    fs.writeFileSync(pfad, `${JSON.stringify(register, null, 1)}\\n`, 'utf8');\n    throw new Error('Platte voll (Probe)');",
-  );
-  const { register: zweiter, jahrgang: j2 } = kopien(dir);
-  const vorher2 = dateihash(zweiter);
-  laufeMit(direkt, ['--register', zweiter, '--jahrgang', j2, '--schreiben']);
-  assert.notEqual(
-    dateihash(zweiter), vorher2,
-    'auch der direkte Schreibweg laesst das Register unveraendert — dann misst der Test nichts',
-  );
-});
+// RR9-A3 (f) IST HIERHER UMGEZOGEN: tests/studie-register-schreibweg-atomar.js
+//
+// Der Test stand hier als Sabotage an zwei woertlichen Codezeilen der inline
+// nachgebauten tmp+rename-Fassung. Diese Fassung ist am 30.08. durch den seit
+// Tag 189 vorhandenen Helfer lib/atomic-write.js ersetzt worden (zwei Kopien
+// derselben Regel driften), und damit waren die Sabotage-Anker tote Zeichen-
+// ketten. Die gepruefte EIGENSCHAFT ist unveraendert und wird strenger geprueft:
+// nicht am Quelltext, sondern am Lauf - ein Preload-Modul zeichnet auf, welche
+// Pfade schreibend geoeffnet und welche umbenannt werden, und das fuer ALLE DREI
+// Werkzeuge, die an das Register duerfen (F3b, RR9-A3, R1). Belegt: der Rueckbau
+// von schreibeRegister auf fs.writeFileSync faerbt dort genau die beiden
+// RR9-A3-Proben rot.
 
 // ── (e) Der Eintrag autorisiert nichts ────────────────────────────────────────
 

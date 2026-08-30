@@ -26,6 +26,7 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const {
   VerfassungsBruch,
   haengeEintragAn,
@@ -65,8 +66,19 @@ function lies(pfad) {
 // Das Register wird mit derselben Formatierung zurueckgeschrieben, mit der es
 // ausgeliefert wurde (ein Leerzeichen Einrueckung). Ein umformatiertes Register waere
 // im Diff ein Neuschrieb und im Review nicht mehr lesbar.
+//
+// UND ATOMAR, ueber lib/atomic-write.js: ein direktes writeFileSync auf ein
+// nur-anhaengendes, verkettetes Register laesst bei einem Abbruch mitten im
+// Schreiben (Platte voll, Kill, Stromausfall, OneDrive-/AV-Sperre) eine halbe,
+// ungueltige Datei zurueck - und dafuer gibt es keinen Reparaturweg im Werkzeug,
+// nur `git checkout`. Der naechste Lauf saehe einen rohen SyntaxError aus
+// JSON.parse. Genommen wird der vorhandene Helfer (Tag 189, ~20 Aufrufer im
+// Repo), nicht ein zweiter Eigenbau: er kann mehr als tmp+rename - fsync der
+// tmp-Datei VOR dem Umbenennen, Wiederholung des rename unter Windows-
+// EPERM/EBUSY (OneDrive/AV halten Handles), fsync des Verzeichnisses, Schleife
+// ueber Teilschreibvorgaenge. Zwei Kopien derselben Regel driften; eine nicht.
 function schreibeRegister(register) {
-  fs.writeFileSync(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+  writeFileAtomic(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
 // Die Ausgabe-Allowlist des Laufs. Ohne `--allowlist` ist es die der versiegelten
@@ -249,7 +261,10 @@ function bestaetigen(argv) {
   // Code-Review 19.08.)
   pruefeServerzeit({ serverConfirmedAt, ersterZugriffAm: eintrag.accessedAt });
   fs.mkdirSync(path.dirname(path.resolve(ziel)), { recursive: true });
-  fs.writeFileSync(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
+  // Auch das Freigabe-Protokoll atomar: scripts/studie-zaehlprobe.py liest es als
+  // Tor vor dem Datenzugriff. Eine halbe Datei waere dort kein Halt, sondern ein
+  // Parse-Fehler an einer Stelle, an der ein Halt gemeint war.
+  writeFileAtomic(ziel, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
   process.stdout.write(`${JSON.stringify(freigabe, null, 1)}\n`);
   return 0;
 }

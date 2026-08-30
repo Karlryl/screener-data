@@ -60,6 +60,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const {
   VerfassungsBruch,
   haengeEintragAn,
@@ -126,26 +127,24 @@ function argument(argv, name) {
 // ausgeliefert wurde (ein Leerzeichen Einrueckung). Umformatiert waere es im
 // Diff ein Neuschrieb und im Review nicht mehr lesbar.
 //
-// UND ATOMAR: erst daneben schreiben, dann umbenennen. Ein direktes
-// writeFileSync auf das Register laesst bei einem Abbruch mitten im Schreiben
-// (Platte voll, Kill, Stromausfall) eine halbe, ungueltige Datei zurueck — und
-// fuer ein nur-anhaengendes, verkettetes Register gibt es dafuer keinen
-// Reparaturweg im Werkzeug, nur `git checkout`. Der naechste Lauf saehe einen
-// rohen SyntaxError aus JSON.parse. `rename` ist auf demselben Dateisystem
-// atomar, auch unter Windows (MoveFileEx mit REPLACE_EXISTING).
-// Gefunden im Code-Review 30.08.; dieselbe Stelle steht wortgleich in
-// scripts/studie-f3b-register.js und scripts/studie-r1-serverzeit.js — dort
-// gemeldet, nicht hier mitgeaendert (fremde Zustaendigkeit).
+// UND ATOMAR, ueber lib/atomic-write.js: ein direktes writeFileSync auf ein
+// nur-anhaengendes, verkettetes Register laesst bei einem Abbruch mitten im
+// Schreiben (Platte voll, Kill, Stromausfall, OneDrive-/AV-Sperre) eine halbe,
+// ungueltige Datei zurueck - und dafuer gibt es keinen Reparaturweg im Werkzeug,
+// nur `git checkout`. Der naechste Lauf saehe einen rohen SyntaxError aus
+// JSON.parse.
+//
+// KORREKTUR ZUM CODE-REVIEW 30.08.: die erste Fassung dieser Stelle baute
+// tmp+rename HIER nach. Das war ein zweiter Eigenbau neben lib/atomic-write.js,
+// das seit Tag 189 im Repo liegt und von ~20 Aufrufern benutzt wird - und der
+// Eigenbau konnte weniger: kein fsync der tmp-Datei vor dem Umbenennen (ein
+// Stromausfall zwischen Schreiben und rename liefert eine leere Datei), keine
+// Wiederholung des rename unter Windows-EPERM/EBUSY (OneDrive und AV halten
+// Handles auf genau solche Dateien), kein fsync des Verzeichnisses, keine
+// Schleife ueber Teilschreibvorgaenge. Zwei Kopien derselben Regel driften;
+// eine nicht. Deshalb steht die Regel jetzt nur noch an EINER Stelle.
 function schreibeRegister(pfad, register) {
-  const daneben = `${pfad}.neu-${process.pid}`;
-  try {
-    fs.writeFileSync(daneben, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
-    fs.renameSync(daneben, pfad);
-  } finally {
-    // Ein liegengebliebener Zwischenstand waere beim naechsten Lauf ein
-    // zweites, halbes Register neben dem echten.
-    if (fs.existsSync(daneben)) fs.rmSync(daneben, { force: true });
-  }
+  writeFileAtomic(pfad, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
 // ── Die vier fail-closed Tore ─────────────────────────────────────────────────
