@@ -781,15 +781,47 @@ def verify_store(data_root: Path) -> dict[str, Any]:
     }
 
 
+# Flake-Ursache (gemessen 2026-08-30, agent-reports/flaky-early-detection-foundation-
+# repro-2026-08-30.md): writestr(name, ...) ohne ZipInfo laesst die stdlib die AKTUELLE
+# Ortszeit in den Eintrag stempeln - im 2-Sekunden-Raster des ZIP-Formats. Der Selbsttest
+# baut dieselbe Fixtur ZWEIMAL und verlangt, dass der zweite Bau denselben Blob
+# wiederverwendet; faellt der Bau ueber eine Rastergrenze, sind die Bytes verschieden, der
+# sha256 auch, und der Selbsttest bricht ab. Fenster ~1,4 ms je 2000 ms = ~0,07 % je Lauf -
+# selten genug, um lokal nie aufzutreten, haeufig genug, um CI gelegentlich rot zu faerben.
+# Fixtur-Bytes duerfen nicht von der Uhr abhaengen: fester Stempel statt Jetzt.
+FIXTURE_ZIP_STAMP = (1980, 1, 1, 0, 0, 0)  # ZIP-Epoche, aeltester darstellbarer Wert
+
+
+def _fixture_member(name: str) -> zipfile.ZipInfo:
+    """Archiv-Eintrag mit eingefrorenem Zeitstempel (ZipInfo setzt sonst 'jetzt')."""
+    info = zipfile.ZipInfo(name, date_time=FIXTURE_ZIP_STAMP)
+    info.compress_type = zipfile.ZIP_DEFLATED  # ZipInfo-Default waere ZIP_STORED
+    return info
+
+
 def make_test_fsd() -> bytes:
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for name in sorted(REQUIRED_FSD_MEMBERS):
-            archive.writestr(name, "header\nvalue\n")
+            archive.writestr(_fixture_member(name), "header\nvalue\n")
     return buffer.getvalue()
 
 
 def self_test() -> dict[str, Any]:
+    # Waechter zur Flake-Ursache (30.08.2026): die Fixtur darf NICHT von der Uhr abhaengen.
+    # Geprueft wird die SACHE, nicht der Aufrufstil: (1) zwei Baeue ergeben dieselben Bytes,
+    # (2) jeder Eintrag traegt den eingefrorenen Stempel. Ohne (2) waere (1) nur ein
+    # Gluecksfall - zwei Baeue innerhalb desselben 2-Sekunden-Rasters sind auch mit der
+    # alten, kaputten Fassung byte-gleich.
+    if make_test_fsd() != make_test_fsd():
+        raise FoundationError("self-test fixture is not byte-stable across two builds")
+    with zipfile.ZipFile(io.BytesIO(make_test_fsd())) as _probe:
+        for _info in _probe.infolist():
+            if _info.date_time != FIXTURE_ZIP_STAMP:
+                raise FoundationError(
+                    "self-test fixture carries a wall-clock timestamp: "
+                    f"{_info.filename} -> {_info.date_time}"
+                )
     with tempfile.TemporaryDirectory(prefix="early-detection-foundation-") as temporary:
         base = Path(temporary)
         source = base / "source"
@@ -866,7 +898,12 @@ def self_test() -> dict[str, Any]:
             raise FoundationError("self-test archived source acceptance failed")
         midas_buffer = io.BytesIO()
         with zipfile.ZipFile(midas_buffer, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr("sample.csv", "Date,Security,Ticker\n20120103,Stock,ABC\n")
+            # Gleiche Anlage wie make_test_fsd (heute nicht ausloesbar, weil nur einmal
+            # gebaut) - mit erschlagen, damit die Klasse nicht als Rest stehen bleibt.
+            archive.writestr(
+                _fixture_member("sample.csv"),
+                "Date,Security,Ticker\n20120103,Stock,ABC\n",
+            )
         midas_payload = midas_buffer.getvalue()
         midas_digest, midas_relative, _ = store_blob(store, ".zip", midas_payload)
         midas_observation = {
