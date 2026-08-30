@@ -450,9 +450,32 @@ def drift_vorlauf(ledger=LEDGER):
         return 1, ("FAIL-CLOSED: das Register unter " + ledger + " ist nicht "
                    "lesbar (" + type(exc).__name__ + ": " + str(exc) + ") - "
                    "es gilt 'mindestens ein Vorlauf'.")
+    def steckt_irgendwo(baum):
+        """Traegt dieser Teilbaum die Marke - egal wie tief?
+
+        Gesucht wird REKURSIV, nicht nur an der Oberflaeche. Eine Marke, die
+        durch einen Schema-Wechsel eine Ebene tiefer rutscht, waere sonst still
+        ungezaehlt: ein echter Reparatur-Akt gaelte als nie geschehen, und das
+        ZWEITE Feuern bekaeme wieder STOPP statt der vorgeschriebenen
+        Beerdigung. Fail-open an genau der Stelle, die fail-closed sein muss.
+        """
+        if isinstance(baum, dict):
+            return DRIFT_MARKE in baum or any(
+                steckt_irgendwo(v) for v in baum.values())
+        if isinstance(baum, list):
+            return any(steckt_irgendwo(v) for v in baum)
+        return False
+
     anzahl = 0
     for e in ereignisse:
-        if not isinstance(e, dict) or DRIFT_MARKE not in e:
+        if not isinstance(e, dict):
+            continue
+        if DRIFT_MARKE not in e:
+            if steckt_irgendwo(e):
+                return 1, ("FAIL-CLOSED: Registereintrag " + repr(e.get("runId"))
+                           + " traegt " + DRIFT_MARKE + " NICHT auf der obersten "
+                           "Ebene, sondern verschachtelt - die Zaehlung ist "
+                           "nicht eindeutig, es gilt 'mindestens ein Vorlauf'.")
             continue
         marke = e[DRIFT_MARKE]
         if not isinstance(marke, dict) or not str(marke.get("ursache") or "").strip():
@@ -1088,6 +1111,22 @@ def selbsttest():
            any(p["eingriff"].startswith("Register nicht lesbar")
                and p["beobachteteSanktion"] == SANKTION_ANKER
                for p in rp["proben"]))
+    # ROT-PROBE VB-A3: eine Marke, die eine Ebene tiefer liegt, darf NICHT
+    # still ungezaehlt bleiben. Nachgestellt am 30.08. nach dem
+    # Silent-Failure-Review: sie lieferte 0 statt fail-closed 1.
+    with tempfile.TemporaryDirectory() as tmp:
+        for name, ereignis, erwartet in (
+            ("verschachtelt", {"runId": "x", "meta": {DRIFT_MARKE: {"ursache": "echt"}}}, 1),
+            ("tief verschachtelt",
+             {"runId": "x", "a": [{"b": {DRIFT_MARKE: {"ursache": "echt"}}}]}, 1),
+            ("oben, wohlgeformt", {"runId": "x", DRIFT_MARKE: {"ursache": "echt"}}, 1),
+            ("gar keine Marke", {"runId": "x"}, 0),
+        ):
+            pfad = os.path.join(tmp, "l.json")
+            with open(pfad, "w", encoding="utf-8") as fh:
+                json.dump({"events": [ereignis]}, fh)
+            pruefe("VB-A3-Zaehlung, Marke " + name + " -> " + str(erwartet),
+                   drift_vorlauf(pfad)[0] == erwartet)
     pruefe("GEGENPROBE: der Waechter kann auch schweigen",
            any(p["eingriff"].startswith("GEGENPROBE")
                and p["beobachteteSanktion"] == "KEIN BRUCH"
@@ -1221,6 +1260,21 @@ def _quotenfelder(baum, pfad=""):
     return treffer
 
 
+def schreibe_ziel(a, bericht):
+    """Schreibt den Bericht nach --ziel, falls gesetzt.
+
+    Als eigene Funktion, damit auch der ROTE Ausgang ihn schreibt: frueher
+    stand der Schreibvorgang hinter einem `return`, und ausgerechnet im
+    Schadensfall - wenn eine Rot-Probe nicht traegt - entstand keine Datei.
+    """
+    if not getattr(a, "ziel", None):
+        return
+    with open(a.ziel, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(bericht, fh, ensure_ascii=False, indent=1, sort_keys=True)
+        fh.write("\n")
+    print("Bericht     : " + a.ziel)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(description="RR9-A2 (B3') und der B2-Trockenlauf")
     unter = p.add_subparsers(dest="befehl", required=True)
@@ -1283,6 +1337,11 @@ def main(argv=None):
                   + " von " + str(bericht["vba8"]["sollAnzahl"])
                   + ("  ROT" if bericht["vba8"]["rot"] else "  ok"))
             if not (bericht["alleProbenTragen"] and not bericht["vba8"]["rot"]):
+                # Der Bericht wird AUCH im roten Fall geschrieben - gerade dann
+                # ist er der Gegenstand, den jemand lesen muss. Frueher stand
+                # hier ein blankes `return`, und genau im Schadensfall entstand
+                # keine Datei.
+                schreibe_ziel(a, bericht)
                 return EXIT_B3
         elif a.befehl == "register-anker":
             bericht = register_anker()
@@ -1302,11 +1361,7 @@ def main(argv=None):
                   + bericht["fallzahlDerEintretendenKohorte"]["status"]
                   + " - " + bericht["fallzahlDerEintretendenKohorte"]["grund"])
             print("Verhaeltnis : nicht gerechnet, strukturell nicht bildbar")
-        if getattr(a, "ziel", None):
-            with open(a.ziel, "w", encoding="utf-8", newline="\n") as fh:
-                json.dump(bericht, fh, ensure_ascii=False, indent=1, sort_keys=True)
-                fh.write("\n")
-            print("Bericht     : " + a.ziel)
+        schreibe_ziel(a, bericht)
         return 0
     except NullpunktBruch as exc:
         print(str(exc), file=sys.stderr)

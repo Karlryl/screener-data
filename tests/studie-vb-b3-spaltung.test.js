@@ -103,14 +103,35 @@ for (const [name, liste] of [
 }
 
 // -- 4. Der gefahrene Nachweis: VB-A2-Rotproben-Artefakt ---------------------
-// Es wird nicht das committete Artefakt geglaubt, sondern der Lauf selbst
-// wiederholt - und DANN gegen das Artefakt gehalten.
-const rot = spawnSync(python, [skript, 'zweig-rotproben'], { encoding: 'utf8' });
+// Nicht das committete Artefakt wird geglaubt, sondern der Lauf JETZT
+// wiederholt und sein frisches JSON geprueft; das committete Artefakt wird
+// danach gegen das frische gehalten. Ein Test, der nur die eingefrorene Datei
+// liest, prueft eine Zahl von gestern und bleibt gruen, waehrend der Waechter
+// darunter kaputtgeht - das war der Zustand vor dem Review vom 30.08.
+const frisch = fs.mkdtempSync(path.join(os.tmpdir(), 'vb-a2-frisch-'));
+const frischesZiel = path.join(frisch, 'rotproben.json');
+const rot = spawnSync(python, [skript, 'zweig-rotproben', '--ziel', frischesZiel],
+  { encoding: 'utf8' });
 assert.equal(rot.status, 0, rot.stdout + rot.stderr);
+assert.ok(fs.existsSync(frischesZiel), 'der Lauf hat kein Artefakt geschrieben');
+const a = JSON.parse(fs.readFileSync(frischesZiel, 'utf8'));
 
 const artefakt = path.join(wurzel, 'reports', 'studie',
   'VB-A2-zweig-rotproben-2026-08-30.json');
-const a = JSON.parse(fs.readFileSync(artefakt, 'utf8'));
+assert.ok(fs.existsSync(artefakt), `VB-A2-Artefakt fehlt: ${artefakt}`);
+const kern = (x) => JSON.stringify({
+  proben: x.proben.map((p) => [p.zweig, p.eingriff, p.erwarteteSanktion,
+    p.beobachteteSanktion, p.traegt]),
+  beideZweigeGetrenntRot: x.beideZweigeGetrenntRot,
+  alleProbenTragen: x.alleProbenTragen,
+  vba8: x.vba8.regeln.map((r) => [r.regel, r.beobachteteSanktion,
+    r.automatischeBeerdigung]),
+  kettenprobe326: x.kettenprobe326,
+});
+assert.equal(kern(JSON.parse(fs.readFileSync(artefakt, 'utf8'))), kern(a),
+  'das committete VB-A2-Artefakt weicht vom frischen Lauf ab: '
+  + '`python scripts/studie-rr9-nullpunkt.py zweig-rotproben --ziel '
+  + 'reports/studie/VB-A2-zweig-rotproben-2026-08-30.json`');
 assert.equal(a.beideZweigeGetrenntRot, true);
 assert.equal(a.alleProbenTragen, true);
 
@@ -220,8 +241,24 @@ for (const regel of a.vba8.regeln) {
 }
 
 // -- 6. VB-A6: die Register-Luecke steht offen und mit ihrem Mechanismus -----
-const anker = JSON.parse(fs.readFileSync(path.join(wurzel, 'reports', 'studie',
-  'VB-A6-registeranker-2026-08-30.json'), 'utf8'));
+// Auch hier gilt: der Lauf wird gefahren, nicht die Datei geglaubt. Vor dem
+// Review vom 30.08. wurde `register-anker` in diesem Test ueberhaupt nicht
+// aufgerufen - eine Logik, die still auf "verankert" umgekippt waere, haette
+// hier nie jemand gesehen.
+const ankerZiel = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'vb-a6-')),
+  'anker.json');
+const ankerLauf = spawnSync(python, [skript, 'register-anker', '--ziel', ankerZiel],
+  { encoding: 'utf8' });
+assert.equal(ankerLauf.status, 0, ankerLauf.stdout + ankerLauf.stderr);
+const anker = JSON.parse(fs.readFileSync(ankerZiel, 'utf8'));
+
+const ankerArtefakt = path.join(wurzel, 'reports', 'studie',
+  'VB-A6-registeranker-2026-08-30.json');
+assert.ok(fs.existsSync(ankerArtefakt), `VB-A6-Artefakt fehlt: ${ankerArtefakt}`);
+assert.deepEqual(JSON.parse(fs.readFileSync(ankerArtefakt, 'utf8')), anker,
+  'das committete VB-A6-Artefakt weicht vom frischen Lauf ab: '
+  + '`python scripts/studie-rr9-nullpunkt.py register-anker --ziel '
+  + 'reports/studie/VB-A6-registeranker-2026-08-30.json`');
 assert.equal(anker.registerVerankert, false,
   'Steht der Sollwert im Register, ist VB-A6 vollzogen - dann gehoert dieser '
   + 'Test auf true umgestellt und das Zitierverbot faellt.');
