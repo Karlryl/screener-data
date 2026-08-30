@@ -1,11 +1,22 @@
 'use strict';
 // tests/sec-pit.test.js — PIT-Semantik der lib/sec-pit.js an synthetischen
-// Fixtures (kein Zip, kein Netz): (1) „bekannt am Stichtag" filtert auf
+// Fixtures (kein Netz): (1) „bekannt am Stichtag" filtert auf
 // filed <= asOf; (2) „Korrektur gewinnt" = jüngstes filed je Periode;
 // (3) YTD-Fakten (BH-017-Falle) fallen aus der Quartals-Serie; (4) Shares-
 // Historie (instant) mit denselben Regeln; (5) freshness-first Konzeptwahl.
+//
+// Blöcke 9-15 (ENTSCHIED 95, Auflagen 2-4) prüfen die ZIP-Schicht — openStore,
+// entryFilter, entryNames, readEntryByName — gegen ein ECHTES, im Test gebautes
+// Archiv (tests/helpers/zip-fixture.js). Vorher hatte diese Schicht null
+// Abdeckung: die Blöcke 1-8 fassen kein ZIP an.
 const assert = require('assert');
-const { pitSeries, pitSeriesFromFacts, sharesHistory, pitQuarterlyWithDerivedQ4 } = require('../lib/sec-pit.js');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const secPit = require('../lib/sec-pit.js');
+const { pitSeries, pitSeriesFromFacts, sharesHistory, pitQuarterlyWithDerivedQ4 } = secPit;
+const { openStore, cikEntryName } = secPit;
+const { baueZip } = require('./helpers/zip-fixture.js');
 
 function fixtureCompany() {
   return {
@@ -167,4 +178,128 @@ const REVS = ['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax',
   assert.ok(!got.series.some((p) => p.derived), 'F4: kein derived Q4 ueber Konzeptgrenzen');
 }
 
-console.log('sec-pit.test.js: alle 8 Blöcke grün');
+// ─────────────────────────────────────────────────────────────────────────────
+// ZIP-Schicht (ENTSCHIED 95 / morgen-schritt5-secpit-worktrees-2026-08-30.md).
+// Bis hierher hat KEIN Test dieser Datei ein ZIP geöffnet — entryFilter,
+// entryNames() und readEntryByName() gingen mit null Abdeckung ins Repo, an eine
+// Bibliothek mit drei fremden Konsumenten (b1-validate, b1-instrument,
+// sec-pit-check) plus dem Bulk-Pfad von scripts/exit-event-resolver.js.
+// Fixture ist ein echtes Archiv, kein Mock: die Fehler, die dieser Code machen
+// kann, sind Byte-Versätze — ein Mock, der Offsets zurückgibt statt sie zu
+// berechnen, ließe genau diese Klasse durch.
+const ZIP_DATEIEN = [
+  { name: cikEntryName(1), inhalt: JSON.stringify({ cik: 1, entityName: 'Eins', facts: { 'us-gaap': {} } }) },
+  // Der auszufilternde Eintrag steht MITTEN im Verzeichnis und trägt ein
+  // Zusatzfeld UND einen Kommentar im Zentralverzeichnis-Kopf. Beides zusammen
+  // ist der Prüfstein für die Positionsfortschaltung im übersprungenen Zweig:
+  // wer dort `pos += 46 + fnLen` rechnet statt `+ extraLen + commentLen`, landet
+  // im nächsten Durchlauf mitten im Namen und verliert CIK 2 stumm. Stünde
+  // other.txt am Ende oder wären beide Längen 0, wäre dieser Off-by-one von
+  // außen nicht unterscheidbar — dann prüfte Block 10 nichts.
+  { name: 'other.txt', inhalt: 'kein CIK-Eintrag', cdZusatzLen: 9, cdKommentar: 'kommentar' },
+  // Zusatzfeld NUR im lokalen Kopf: wer die Längen aus dem Zentralverzeichnis
+  // nimmt, liest 17 Byte versetzt und bekommt Datenmüll statt Inhalt.
+  { name: cikEntryName(2), inhalt: JSON.stringify({ cik: 2, entityName: 'Zwei', facts: { 'us-gaap': {} } }), zusatzLen: 17 },
+];
+const INHALT = (name) => ZIP_DATEIEN.find((d) => d.name === name).inhalt;
+const ZIP_TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'sec-pit-zip-'));
+const ZIP_PFAD = path.join(ZIP_TMP, 'fixture.zip');
+fs.writeFileSync(ZIP_PFAD, baueZip(ZIP_DATEIEN));
+const NUR_CIK = (n) => /^CIK\d{10}\.json$/.test(n);
+/** Öffnet den Store, führt fn aus und schließt ihn auch im Fehlerfall. */
+function mitStore(opt, fn) {
+  const store = openStore(ZIP_PFAD, opt);
+  try { return fn(store); } finally { store.close(); }
+}
+
+try {
+
+// (9 / Auflage 2a) Ohne Filter ist das Verhalten unverändert — das ist die
+//     Zusicherung für die drei Bestandsaufrufer, die openStore() ohne Argument rufen.
+mitStore(undefined, (s) => {
+  assert.strictEqual(s.entryCount, 3, '9: ungefiltert müssen alle drei Einträge im Index liegen');
+  assert.deepStrictEqual(s.entryNames().sort(), ZIP_DATEIEN.map((d) => d.name).sort(), '9: entryNames() = alle Namen');
+  assert.strictEqual(s.hasCik(1), true, '9: hasCik(1)');
+  assert.strictEqual(s.hasCik(999), false, '9: eine wirklich fehlende CIK bleibt false');
+  assert.strictEqual(s.factsForCik(2).entityName, 'Zwei', '9: factsForCik parst weiter');
+  assert.strictEqual(s.factsForCik(999), null, '9: fehlende CIK ohne Filter -> null, kein Wurf');
+});
+
+// (10 / Auflage 2b) Mit Filter landen nur passende Namen im Index, und
+//     entryCount und entryNames() sagen dasselbe. Ein Off-by-one in der
+//     Positionsfortschaltung des übersprungenen Eintrags fällt hier auf.
+mitStore({ entryFilter: NUR_CIK }, (s) => {
+  assert.strictEqual(s.entryCount, 2, '10: nur die beiden CIK-Einträge sind indiziert');
+  assert.deepStrictEqual(s.entryNames().sort(), [cikEntryName(1), cikEntryName(2)], '10: entryNames() ohne other.txt');
+  assert.strictEqual(s.entryNames().length, s.entryCount, '10: entryCount und entryNames() müssen konsistent sein');
+  assert.strictEqual(s.hasCik(1), true, '10: der Filter darf die behaltenen Einträge nicht verschieben');
+  assert.strictEqual(s.factsForCik(2).entityName, 'Zwei', '10: Eintrag NACH dem übersprungenen liest korrekt');
+});
+
+// (11 / Auflage 2c) readEntryByName: byte-korrekter Roh-Buffer; null für
+//     ausgefilterte UND für unbekannte Namen — beide sagen dasselbe wie der
+//     EDGAR-Rückfallpfad in scripts/exit-event-resolver.js: "existiert nicht".
+mitStore({ entryFilter: NUR_CIK }, (s) => {
+  const buf = s.readEntryByName(cikEntryName(2));
+  assert.ok(Buffer.isBuffer(buf), '11: readEntryByName liefert einen Buffer');
+  assert.strictEqual(buf.toString('utf8'), INHALT(cikEntryName(2)), '11: Inhalt byte-korrekt (Zusatzfeld im lokalen Kopf!)');
+  assert.strictEqual(s.readEntryByName('other.txt'), null, '11: ausgefilterter Name -> null');
+  assert.strictEqual(s.readEntryByName('gibtsnicht.json'), null, '11: unbekannter Name -> null');
+});
+
+// (12 / Auflage 2d) Ein alles ablehnender Filter ergibt einen leeren Index —
+//     und stürzt nicht ab. Der Grenzfall, an dem eine Schleife über ein leeres
+//     Zentralverzeichnis gern hängt.
+mitStore({ entryFilter: () => false }, (s) => {
+  assert.strictEqual(s.entryCount, 0, '12: leerer Index');
+  assert.deepStrictEqual(s.entryNames(), [], '12: keine Namen');
+  assert.strictEqual(s.readEntryByName(cikEntryName(1)), null, '12: nichts lesbar');
+});
+
+// (13 / Auflage 2e) Ein werfender Filter propagiert laut, statt still einen
+//     zu kleinen Index zu liefern. "Zu wenige Treffer" ist genau die Klasse
+//     Fehler, die später als "EDGAR ist halt langsam" durchgeht.
+assert.throws(
+  () => openStore(ZIP_PFAD, { entryFilter: () => { throw new Error('Filter kaputt'); } }),
+  /Filter kaputt/,
+  '13: der Fehler des Filters darf nicht geschluckt werden',
+);
+
+// (14 / Auflage 3) Wächter auf das Introspektions-Token.
+//     scripts/exit-event-resolver.js:293 (PR #113) prüft das Feature per
+//     Quelltext-Introspektion — /entryFilter/.test(String(secPit.openStore)) —,
+//     weil ein Probe-AUFRUF den 988.373-Einträge-Index bauen würde, den der
+//     Filter gerade vermeiden soll. Verschwindet das Literal (Umbenennung,
+//     Wrapper, anderes Destrukturieren), fällt der Resolver STILL auf den
+//     EDGAR-Pfad zurück: gleiche Daten, langsamer, kein Alarm. Diese Wache ist
+//     die einzige Stelle, an der diese unsichtbare Kopplung sichtbar wird.
+assert.ok(
+  /entryFilter/.test(String(secPit.openStore)),
+  '14: openStore hat das Literal "entryFilter" verloren — exit-event-resolver.js:293 fällt damit still auf EDGAR zurück',
+);
+assert.ok(
+  /^function openStore\s*\([^)]*\{\s*entryFilter\s*\}/.test(String(secPit.openStore)),
+  '14: das Token muss in der SIGNATUR von openStore stehen, nicht bloss irgendwo im Rumpf',
+);
+
+// (15 / Auflage 4) Der gefilterte Store darf "nicht indiziert" nicht als
+//     "nicht vorhanden" ausgeben. Vor diesem Riegel meldete hasCik(1) false und
+//     factsForCik(1) null, obwohl CIK0000000001.json im Archiv liegt — falsche
+//     Negative, die aussehen wie Daten. Die Label-Store-Spur (ENTSCHIED 86) ist
+//     genau der Konsument, der enge Filter setzen wird.
+mitStore({ entryFilter: (n) => n === 'other.txt' }, (s) => {
+  assert.throws(() => s.hasCik(1), /nicht indiziert/, '15: hasCik muss werfen statt false zu melden');
+  assert.throws(() => s.factsForCik(1), /nicht indiziert/, '15: factsForCik muss werfen statt null zu melden');
+});
+// Gegenprobe: ohne Filter wirft nichts (Bestandsaufrufer bleiben unberührt) —
+// sonst prüfte Block 15 nur, dass irgendetwas wirft.
+mitStore(undefined, (s) => {
+  assert.strictEqual(s.hasCik(1), true, '15: ohne Filter unverändert');
+  assert.strictEqual(s.hasCik(999), false, '15: ohne Filter bleibt "fehlt" ein sauberes false');
+});
+
+} finally {
+  fs.rmSync(ZIP_TMP, { recursive: true, force: true });
+}
+
+console.log('sec-pit.test.js: alle 15 Blöcke grün (8 PIT + 7 ZIP-Schicht)');
