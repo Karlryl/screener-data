@@ -12,11 +12,23 @@ on:
     - cron: '17 2 * * 2-6'
   workflow_dispatch:
     inputs:
-      # Tag 497: der Ausreisser-Bestand kann NUR hier neu aufgenommen werden, nie
-      # lokal — snapshots/ ist gitignored (Tag 151), was lokal liegt ist Schutt
-      # alter Laeufe. Genau daran ist der erste Bestand gescheitert: lokal auf 4.768
-      # statt 12.482 Snapshots aufgenommen -> 75 Schein-Neuzugaenge, Lauf rot,
-      # scoring uebersprungen. Bewusster Zuruf, kein Automatismus.
+      # DIE REGEL (Tag 497, praezisiert 30.08.2026 unter RA5): Neuaufnahme nur gegen
+      # eine CI-POPULATION — im CI oder lokal gegen ein heruntergeladenes CI-Artefakt;
+      # niemals gegen das lokale snapshots/. Der Grund ist die Population, nicht der
+      # Ort: snapshots/ ist gitignored (Tag 151), was lokal liegt ist Schutt alter
+      # Laeufe. Genau daran ist der erste Bestand gescheitert: lokal auf 4.768 statt
+      # 12.482 Snapshots aufgenommen -> 75 Schein-Neuzugaenge, Lauf rot, scoring
+      # uebersprungen.
+      #
+      # ⚠ DIESER INPUT IST GESPERRT und schaltet nichts frei (Sperre unten, :1607).
+      # Der CI-Weg ist BEWUSST ohne Commit-Schritt (ENTSCHIED 12:40 vom 29.08.) —
+      # ein Commit-Schritt hier waere ein dritter main-Schreiber im Rennen mit
+      # scoring. Der entschiedene Weg ist der EINMAL-AKT LOKAL gegen ein
+      # heruntergeladenes CI-Artefakt (Weg C, ENTSCHIED 113 / RA6), Write-Ziel genau
+      # data-health/annual-spikes-baseline.json, committet vom Ausfuehrenden.
+      # PFLICHT dabei: unmittelbar danach derselbe Befehl OHNE Flag gegen dieselbe
+      # Population — der Verankerungslauf selbst prueft nichts
+      # (watch-annual-spikes.js:400 kehrt vor :411/:419/:429 zurueck), RA8.
       spikes_neu_aufnehmen:
         description: 'Jahres-Ausreisser-Bestand auf der CI-Population neu aufnehmen (nur bewusst!)'
         type: boolean
@@ -1596,18 +1608,26 @@ jobs:
           name: snapshots
           path: snapshots
 
-      # CARRY-FORWARD A (Gerichts-Auflage 28.08.): --neu-aufnehmen schreibt den Bestand
-      # (watch-annual-spikes.js:304). Im merge-Job landete dieser Schreibvorgang im
-      # selben Arbeitsverzeichnis, das anschliessend nach main committet wurde. In
-      # diesem eigenen Job gibt es keinen Commit-Schritt — der neu aufgenommene Bestand
-      # wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Das waere
-      # ein stiller Fehlschlag genau der Klasse, gegen die dieser ganze Umbau laeuft.
-      # Deshalb: LAUT ANHALTEN statt still ins Leere schreiben, bis die
-      # Persistenz-Frage entschieden ist.
-      - name: Neuaufnahme-Sperre (Carry-forward A)
+      # NEUAUFNAHME-SPERRE — seit 30.08.2026 (RA5) die KODIFIZIERUNG einer getroffenen
+      # Entscheidung, nicht mehr das Warten auf eine offene Frage.
+      #
+      # Die Persistenz-Frage („wer committet den Bestands-Write") IST entschieden:
+      # ENTSCHIED 12:40 vom 29.08. — der Executor, lokal; der CI-Jobschnitt bleibt
+      # BEWUSST ohne Commit-Schritt (ein Commit hier waere ein dritter main-Schreiber
+      # im Rennen mit scoring). Vollzogen in PR #81 / be47468617.
+      # Deshalb bleibt dieser Weg zu — nicht weil etwas ungeklaert ist, sondern weil
+      # die Antwort „nicht hier" lautet. Drei Gruende tragen die Sperre gleichzeitig:
+      # (1) kein Commit-Schritt in diesem Job -> der Write verschwaende mit dem Runner;
+      # (2) der Input ist nirgends interpoliert (:1617) -> das Flag erreicht das Skript
+      #     ohnehin nie, ein Dispatch liefe gruen und taete NICHTS (stiller Fehlschlag);
+      # (3) unter nur_rechnen=true ist VEROEFFENTLICHEN=false (:75) -> ein nach dem
+      #     Hausmuster gebauter Commit-Schritt schaltete sich selbst ab.
+      # Die Sperre bleibt darum stehen: sie faengt genau den stillen Fehlschlag,
+      # gegen den dieser ganze Umbau laeuft.
+      - name: Neuaufnahme-Sperre (CI-Weg bewusst geschlossen)
         if: ${{ inputs.spikes_neu_aufnehmen }}
         run: |
-          echo "::error::spikes_neu_aufnehmen ist gesetzt, aber dieser Job hat keinen Commit-Schritt. Der neu aufgenommene Bestand wuerde mit dem Runner verschwinden und der Lauf trotzdem gruen melden. Die Persistenz-Frage ist Carry-forward A des Gerichtsurteils vom 28.08. und muss VOR der ersten Neuaufnahme entschieden werden — bis dahin ist dieser Weg gesperrt."
+          echo "::error::spikes_neu_aufnehmen ist gesetzt — dieser Weg ist BEWUSST geschlossen (ENTSCHIED 12:40 vom 29.08.), nicht ungeklaert: dieser Job hat keinen Commit-Schritt, der Input ist nirgends interpoliert, und unter nur_rechnen=true waere VEROEFFENTLICHEN=false. Ein Dispatch schriebe ins Leere und meldete gruen. RICHTIGER WEG (ENTSCHIED 113 / RA6, Weg C): Neuaufnahme nur gegen eine CI-Population — im CI oder LOKAL gegen ein heruntergeladenes CI-Artefakt (gh run download <RUN_ID> -n snapshots -D snapshots), niemals gegen das lokale snapshots/; danach 'node scripts/watch-annual-spikes.js --neu-aufnehmen', Write-Ziel data-health/annual-spikes-baseline.json, Commit durch den Ausfuehrenden. PFLICHT-KONTROLLLAUF (RA8): unmittelbar danach derselbe Befehl OHNE Flag gegen dieselbe Population — der Verankerungslauf prueft sich selbst nicht (watch-annual-spikes.js:400 kehrt vor Populations-Wache und beiden Ausreisser-Toren zurueck)."
           exit 1
 
       # 29.07. (Anlass Cigna): einzelne Jahre, die von BEIDEN Nachbarn um
