@@ -290,10 +290,51 @@ function seal(now = new Date().toISOString()) {
   return files;
 }
 
+// A formally recorded drift makes the recorded post-drift hash a SECOND allowed
+// value for the NAMED files -- nothing more. Every third state stays red, every
+// unnamed file stays nailed to the seal, and hash-manifest.json is never rewritten
+// (its own bytes are pinned as evidence in 2.0.0/supersede-record.json, so
+// re-sealing in place would trade one drift for a worse one).
+//
+// Discovered by CONTENT, not by a hardcoded filename: a hardcoded name would be
+// the next hidden version-bound value, and gqs00-freeze.js already paid for that
+// lesson once. A malformed or over-reaching record throws instead of silently
+// widening the window; two active records are a finding, not a state.
+function recordedDriftHashes(manifest) {
+  const records = fs.readdirSync(PROTOCOL)
+    .filter((name) => /^drift-record-.*\.json$/.test(name))
+    .map((name) => ({ name, doc: readJson(path.join(PROTOCOL, name)) }))
+    .filter((entry) => entry.doc && entry.doc.status === 'active');
+  if (!records.length) return {};
+  if (records.length > 1) {
+    throw new Error(`more than one active drift record: ${records.map((entry) => entry.name).join(', ')}`);
+  }
+  const { name, doc } = records[0];
+  if (doc.schema !== 'early-detection-drift-record/v1' || doc.protocol !== 'FEM-SEC-US@1.2.0') {
+    throw new Error(`drift record ${name} does not identify as an active v1 record for FEM-SEC-US@1.2.0`);
+  }
+  const accepted = {};
+  for (const entry of doc.driftedFiles || []) {
+    // The record may only widen a pin it actually quotes correctly. If the sealed
+    // value moved since the record was written, the record is stale and the file
+    // goes back to being pinned by the manifest alone.
+    if (!SEALED_FILES.includes(entry.path)) throw new Error(`drift record ${name} lists an unsealed file: ${entry.path}`);
+    if ((manifest.files || {})[entry.path] !== entry.sealedSha256) {
+      throw new Error(`drift record ${name} quotes a stale sealed hash for ${entry.path}`);
+    }
+    if (!/^[0-9a-f]{64}$/.test(String(entry.acceptedSha256 || ''))) {
+      throw new Error(`drift record ${name} carries no valid accepted hash for ${entry.path}`);
+    }
+    accepted[entry.path] = entry.acceptedSha256;
+  }
+  return accepted;
+}
+
 function verifyManifest() {
   if (!fs.existsSync(MANIFEST)) throw new Error('hash-manifest.json missing; run --seal after review');
   const manifest = readJson(MANIFEST);
   const preregistration = readJson(path.join(PROTOCOL, 'preregistration.json'));
+  const accepted = recordedDriftHashes(manifest);
   const issues = [];
   if (!fs.existsSync(PARENT_MANIFEST) || sha256File(PARENT_MANIFEST) !== PARENT_MANIFEST_SHA256) {
     issues.push('manifest:parent_file_hash_mismatch');
@@ -314,7 +355,13 @@ function verifyManifest() {
     const key = relative.replaceAll('\\', '/');
     const absolute = path.join(ROOT, relative);
     if (!fs.existsSync(absolute)) issues.push(`${key}:missing`);
-    else if ((manifest.files || {})[key] !== sha256File(absolute)) issues.push(`${key}:hash_mismatch`);
+    else {
+      const allowed = [(manifest.files || {})[key]];
+      if (accepted[key]) allowed.push(accepted[key]);
+      if (!allowed.includes(sha256File(absolute))) {
+        issues.push(accepted[key] ? `${key}:hash_mismatch_against_seal_and_drift_record` : `${key}:hash_mismatch`);
+      }
+    }
   }
   for (const key of Object.keys(manifest.files || {})) {
     if (!SEALED_FILES.map((item) => item.replaceAll('\\', '/')).includes(key)) issues.push(`${key}:unexpected_manifest_entry`);
