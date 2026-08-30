@@ -36,7 +36,11 @@ function test(name, fn) {
 const ASOF = '2026-08-30T00:00:00.000Z';
 const meta = (price, wl) => mapYahooToCanonical({ price }, wl, ASOF).meta;
 
-// Die alte Kette woertlich — sie ist der Massstab fuer Punkt (2) oben.
+// Die alte Kette in ihrer String-Form — der Massstab fuer Punkt (2) oben.
+// EHRLICHE GRENZE (Review-Fund 30.08.): das ist NICHT die produktive `_y()`-Lesung, sondern
+// ihr Zeichenketten-Fall. `_y()` packt zusaetzlich Yahoos {raw, fmt}-Huelle aus; bei Namens-
+// feldern liefert Yahoo bis heute reine Zeichenketten, deshalb deckt sich beides. Wuerde
+// Yahoo Namen je einpacken, saehe dieser Vergleich die Abweichung NICHT.
 const alteKette = (price, wl) =>
   (price && price.longName) || (price && price.shortName) || wl.name || wl.ticker;
 
