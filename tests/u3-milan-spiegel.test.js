@@ -51,6 +51,18 @@ function test(name, fn) {
 }
 
 // ─── Fixture-Bau ────────────────────────────────────────────────────────────────────────
+//
+// FX10 — FIXTURE-MIGRATION ALS MIGRATION, NICHT ALS UMBAU (Urteil `_COURT-A7-FX-2026-08-30.md`).
+// Beide Bauer bekommen den FX-Kurs; die Voreinstellung ist `fx: 1`, weil die Division durch 1
+// die Identitaet ist und JEDE bestehende Zusicherung damit wortgleich weiterlaeuft — kein
+// DARF-NICHT-Fixture wird durch die Migration zu einem MUSS.
+//
+// ⚠ DIE MIGRATION HAT EINE FALLE, UND SIE IST DER GRUND FUER DIESEN KOMMENTAR: `milanFingerabdruck`
+// ist exportiert und wird von drei Wachen DIREKT aufgerufen. Ein Aufruf mit einem Objekt ohne
+// `fx` laeuft nicht in einen Fehler, sondern in die OHNE-FX-Schranke — jeder endliche Wert wird
+// dann zu 'OHNE-FX:<ticker>', die Reihe kollabiert auf eine Konstante, und eine
+// Trennschaerfe-Zusicherung waere GRUEN AUS DEM FALSCHEN GRUND. Wer hier ein Bein von Hand baut,
+// gibt ihm ein `fx`.
 const reihe = (basis, n = 5) => Array.from({ length: n }, (_, i) => basis * (i + 1));
 /** Ein Bein in der Form, in der `milanKlassenLesen` es an `milanTor` uebergibt. */
 function bein(ticker, name, opt = {}) {
@@ -60,26 +72,39 @@ function bein(ticker, name, opt = {}) {
     datei: ticker + '.json', ticker, metaTicker: ticker, name,
     country: opt.country === undefined ? 'United States' : opt.country,
     shares: opt.shares === undefined ? 1000000 : opt.shares,
+    fx: opt.fx === undefined ? 1 : opt.fx,
     revenueQ: reihe(basis, n), grossProfitQ: reihe(basis * 0.7, n),
     usPrimaerlisting: !!opt.usPrimaer,
     schluessel: issuerKeyLoose({ meta: { name } }),
     strengerSchluessel: String(name).toLowerCase(),
   };
 }
-/** Ein voller Snapshot fuer die I/O- und Dedup-Proben. */
+/**
+ * Ein voller Snapshot fuer die I/O- und Dedup-Proben.
+ *
+ * `meta.fxRateApplied` ist PFLICHT, seit `milanKlassenLesen` fail-closed wirft: ein Snapshot
+ * ohne finiten Kurs nimmt nicht teil. `opt.ohneFx` laesst den Stempel absichtlich weg — genau
+ * das braucht der FAIL-CLOSED-Waechter.
+ */
 function snapshot(ticker, name, opt = {}) {
   const basis = opt.basis === undefined ? 1000 : opt.basis;
   const n = opt.quartale === undefined ? 5 : opt.quartale;
+  const fx = opt.fx === undefined ? 1 : opt.fx;
+  const meta = {
+    ticker, name, country: opt.country === undefined ? 'United States' : opt.country,
+    sharesOutstanding: opt.shares === undefined ? 1000000 : opt.shares,
+    exchangeName: opt.exchangeName || 'Milan',
+    marketCap: opt.marketCap,
+  };
+  // Die gespeicherten Reihen sind die KONVERTIERTEN — genau wie im Bestand, wo
+  // `pull-yahoo.js:1083` jede Reihe mit `fx` multipliziert und den Kurs bei `:1090` stempelt.
+  // Die Melde-Ebene ist `basis`, die gespeicherte ist `basis * fx`.
+  if (!opt.ohneFx) meta.fxRateApplied = fx;
   return {
-    meta: {
-      ticker, name, country: opt.country === undefined ? 'United States' : opt.country,
-      sharesOutstanding: opt.shares === undefined ? 1000000 : opt.shares,
-      exchangeName: opt.exchangeName || 'Milan',
-      marketCap: opt.marketCap,
-    },
+    meta,
     timeseries: {
-      revenueQ: reihe(basis, n).map((v) => ({ value: v })),
-      grossProfitQ: reihe(basis * 0.7, n).map((v) => ({ value: v })),
+      revenueQ: reihe(basis, n).map((v) => ({ value: v * fx })),
+      grossProfitQ: reihe(basis * 0.7, n).map((v) => ({ value: v * fx })),
     },
   };
 }
@@ -367,14 +392,155 @@ test('A1: nicht-endliche Reihenwerte bleiben unterscheidbar (JSON.stringify mach
   // Reproduziert: JSON.stringify schreibt NaN, Infinity, -Infinity und undefined ALLE als
   // `null`. Zwei Reihen, die sich nur dort unterscheiden, hatten denselben Fingerabdruck —
   // ein Loch in der Zusicherung "Wert fuer Wert, ohne Toleranz".
-  const mit = (letzter) => ({ revenueQ: [100, 200, 300, 400, letzter], grossProfitQ: [70, 140, 210, 280, 7] });
+  // FX10: `fx` MUSS hier stehen. Ohne den Kurs faellt jeder ENDLICHE Wert in die
+  // OHNE-FX-Schranke, die vier Vorderwerte kollabieren auf denselben String, und die Wache
+  // pruefte nur noch, ob sich die letzte Position unterscheidet — gruen aus dem falschen Grund.
+  const mit = (letzter) => ({ ticker: 'FIX', fx: 1, revenueQ: [100, 200, 300, 400, letzter], grossProfitQ: [70, 140, 210, 280, 7] });
   const abdruecke = [NaN, Infinity, -Infinity, null, undefined, 500].map((x) => milanFingerabdruck(mit(x)));
+  // Vorbedingung der Wache selbst: die vier endlichen Vorderwerte muessen als Zahlen
+  // durchkommen, nicht als OHNE-FX-Platzhalter. Faellt das `fx` oben weg, wird DIESE Zeile rot.
+  assert.ok(milanFingerabdruck(mit(500)).startsWith('[100,200,300,400,500]'),
+    'die endlichen Werte stehen als Zahlen im Abdruck, nicht als OHNE-FX-Platzhalter');
   assert.equal(new Set(abdruecke).size, abdruecke.length, 'jeder Sonderwert bleibt sein eigener Fingerabdruck');
   const beine = [
     { ...bein('1X.MI', 'Alpha AG'), revenueQ: [100, 200, 300, 400, NaN], grossProfitQ: [70, 140, 210, 280, 7] },
     { ...bein('X', 'Alpha A.G.'), revenueQ: [100, 200, 300, 400, Infinity], grossProfitQ: [70, 140, 210, 280, 7] },
   ];
   assert.equal(milanTor(beine, new Set()), 'fingerabdruck', 'und das Tor sieht den Unterschied auch');
+});
+
+// ─── 4b. A7-FX — die Melde-Waehrungs-Ebene (Urteil `_COURT-A7-FX-2026-08-30.md`) ─────────
+//
+// WAS AUF DEM SPIEL STEHT: `pull-yahoo.js:1083` multipliziert JEDE timeseries-Reihe mit dem beim
+// Abruf gueltigen Kurs. Zwei Beine desselben Emittenten werden vom Shard-Lauf an verschiedenen
+// Tagen gezogen (gemessen: 21 Tage Versatz bei 1JCI.MI) und tragen dann VERSCHIEDENE Kurse. Auf
+// der konvertierten Ebene reisst der Byte-Vergleich dann — in der Simulation ueber alle real
+// vorkommenden Kurspaare hielten 0 von 52 Faellen —, der A7-Mengen-Riegel faellt unter 18/17 und
+// der GANZE Tageslauf bricht ab. Die Melde-Waehrung ist die einzige Ebene, auf der dieselben
+// Fundamentaldaten dieselbe Zahl ergeben, egal wann sie geholt wurden.
+
+test('A7-FX VORWAERTS: gleiche Melde-Reihen, VERSCHIEDENE Kurse — die Klasse haelt', () => {
+  // Der Bombenfall. Beide Beine melden dieselbe Ganzzahl-Reihe (Basis 2.468.000.000, echte
+  // 1BEI.MI-Groessenordnung); gespeichert ist sie mit zwei verschiedenen, real im Bestand
+  // vorkommenden EUR-Kursen. Auf der konvertierten Ebene sind das zwei verschiedene Zahlenreihen.
+  const A = 1.1550012, B = 1.1511453;
+  const roh = [2468000000, 4936000000, 7404000000, 9872000000];
+  const mkBein = (t, n, fx) => ({
+    ...bein(t, n, { country: 'Germany', shares: 218072613, fx }),
+    revenueQ: roh.map((x) => x * fx),
+    grossProfitQ: roh.map((x) => x * 0.7 * fx),
+  });
+  const beine = [mkBein('1BEI.MI', 'Beiersdorf Aktiengesellschaft', A), mkBein('BEI.DE', 'BEI.DE', B)];
+
+  // Vorbedingung: auf der GESPEICHERTEN Ebene sind die Reihen verschieden — sonst prueft die
+  // Wache nichts. Genau hier reisst der Vergleich ohne die Kanonisierung.
+  assert.notEqual(JSON.stringify(beine[0].revenueQ), JSON.stringify(beine[1].revenueQ),
+    'Vorbedingung: die konvertierten Reihen sind NICHT bytegleich');
+  assert.equal(milanFingerabdruck(beine[0]), milanFingerabdruck(beine[1]),
+    'auf der Melde-Waehrung ist es dieselbe Firma');
+  assert.equal(milanTor(beine, new Set()), 'umbenennen');
+});
+
+test('A7-FX RUECKWAERTS: eine Melde-Einheit Abstand trennt weiterhin (Band 1e9..1e15)', () => {
+  // FX8 — DAS BAND IST GEMESSEN, NICHT GEWAEHLT, und diese Wache steht und faellt mit ihm.
+  // Die Bruchprobe "FINGERABDRUCK_STELLEN auf 8 => rot" kann NUR feuern, wo 15 Stellen eine
+  // Einheit trennen und 8 Stellen es nicht tun. Selbst nachgemessen:
+  //   1e3 (die Default-Fixture-Basis!) 4 Stellen: S=15 trennt, S=8 trennt AUCH -> feuert NICHT
+  //   1e6                              7 Stellen: S=15 trennt, S=8 trennt AUCH -> feuert NICHT
+  //   1e9 .. 1e14                  10-15 Stellen: S=15 trennt, S=8 trennt nicht -> FEUERT
+  //   1e15                            16 Stellen: S=15 trennt NICHT MEHR -> schon vorher rot
+  // Auf der Default-Basis 1000 waere diese Wache also reine Dekoration gewesen. Sie traegt
+  // deshalb einen Wert mit 10 signifikanten Stellen — EUR-Groessenordnung der Milan-Population.
+  const fx = 1.1550012;
+  const roh = 2468000000;              // 10 signifikante Stellen, mitten im Band
+  const mkBein = (t, n, wert) => ({
+    ...bein(t, n, { fx }),
+    revenueQ: [wert * fx, wert * 2 * fx, wert * 3 * fx, wert * 4 * fx],
+    grossProfitQ: [wert * 0.7 * fx, wert * 1.4 * fx, wert * 2.1 * fx, wert * 2.8 * fx],
+  });
+  const beine = [mkBein('1AAA.MI', 'Alpha AG', roh), mkBein('AAA', 'Alpha Anders AG', roh + 1)];
+  assert.ok(roh >= 1e9 && roh < 1e15, 'Vorbedingung FX8: der Wert liegt im gemessenen Band');
+  assert.notEqual(milanFingerabdruck(beine[0]), milanFingerabdruck(beine[1]),
+    'EINE Melde-Einheit Abstand bleibt sichtbar — die Kanonisierung ist keine Toleranz');
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck');
+});
+
+test('A7-FX FX3: ein nicht-endlicher QUOTIENT faltet nicht auf null', () => {
+  // Reproduziert (Urteil §3 K-1): Infinity.toPrecision(15) -> "Infinity" -> Number(…) ->
+  // Infinity -> JSON.stringify -> null. Zwei Beine mit VERSCHIEDENEN Werten wuerden bytegleich.
+  // Die Eingangspruefung allein faengt das nicht: 1e300 und 2e300 sind beide endlich, erst der
+  // Quotient laeuft ueber. Das ist dieselbe Nullen-Faltung, die A1 oben schon einmal kostete.
+  assert.equal(JSON.stringify([Number((1e300 / 5e-324).toPrecision(15))]), '[null]',
+    'Vorbedingung: ohne Quotienten-Pruefung faltet der Ueberlauf auf null');
+  assert.equal(JSON.stringify([Number((2e300 / 5e-324).toPrecision(15))]), '[null]',
+    'Vorbedingung: und zwar fuer BEIDE verschiedenen Werte gleich');
+  const fx = 5e-324;
+  const mk = (t, n, x) => ({
+    ...bein(t, n, { fx }),
+    revenueQ: [x, x * 2, x * 3, x * 4], grossProfitQ: [x, x * 2, x * 3, x * 4],
+  });
+  const beine = [mk('1INF.MI', 'Erste AG', 1e300), mk('INF', 'Zweite AG', 2e300)];
+  assert.notEqual(milanFingerabdruck(beine[0]), milanFingerabdruck(beine[1]),
+    'zwei verschiedene Werte duerfen nie denselben Abdruck bekommen');
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck');
+});
+
+test('A7-FX FAIL-CLOSED: ein Snapshot ohne meta.fxRateApplied faellt MIT AUSWEIS heraus', () => {
+  // Nicht "eine andere Fehlermeldung", sondern der Unterschied zwischen Herausfallen und einem
+  // STILLEN RUECKFALL auf die konvertierte Ebene. Ohne die Schranke wuerde `fx === undefined`
+  // in `melde()` in die OHNE-FX-Zeile laufen — das Bein bekaeme einen Abdruck, der mit nichts
+  // matcht, und die Klasse endete auf 'fingerabdruck' statt mit einem Ausweis in `lesefehler`.
+  // Genau dieser Unterschied wird hier gepinnt: die Klasse muss 'beine-unvollstaendig' geben
+  // UND der Ticker muss in `lesefehler` stehen.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'u3-fx-fc-'));
+  const leg = (t, n, o) => fs.writeFileSync(path.join(dir, t + '.json'), JSON.stringify(snapshot(t, n, o)));
+  leg('1OHN.MI', 'Ohnekurs AG', { country: 'Germany', shares: 1000 });
+  leg('OHN', 'Ohnekurs A.G.', { country: 'Germany', shares: 1000, ohneFx: true, exchangeName: 'XETRA' });
+
+  const gelesen = milanKlassenLesen(dir, [{ anker: '1OHN.MI', partner: ['OHN'] }], []);
+  assert.deepEqual(gelesen.lesefehler.map((f) => f.ticker), ['OHN'],
+    'das Bein ohne Kurs steht im Ausweis — nicht still verschluckt');
+  assert.match(gelesen.lesefehler[0].grund, /fxRateApplied/,
+    'und der Grund benennt das fehlende Feld');
+  const { urteile, umbenennungen } = milanUmbenennungen(gelesen.klassen, gelesen.mehrfachAbdruecke);
+  assert.equal(urteile[0].grund, 'beine-unvollstaendig',
+    'fail-closed: die Klasse faellt aus, sie wird nicht auf der konvertierten Ebene verglichen');
+  assert.equal(umbenennungen.size, 0);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('A7-FX / A5: ein unlesbares Mailaender Bein laesst eine Klasse NICHT aus "mehrdeutig" fallen', () => {
+  // FX4 — der A5-Index ist fail-OPEN (`if (!b || …) continue`). Ein unlesbares Mailaender Bein
+  // verschwindet aus dem Mehrdeutigkeits-Index; eine Klasse, die als 'mehrdeutig' haette
+  // scheitern muessen, passiert dann leise. Die Kanonisierung erzeugt diese Asymmetrie nicht,
+  // sie verbreitert ihre Ausloeseflaeche von "kaputtes JSON" auf "kaputtes JSON ODER fehlender
+  // Kurs". Deshalb MUSS `lesefehler` im Ausweis stehen — hier wird gepinnt, dass der Kanal
+  // ueberhaupt sichtbar ist.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'u3-fx-a5-'));
+  const leg = (t, n, o) => fs.writeFileSync(path.join(dir, t + '.json'), JSON.stringify(snapshot(t, n, o)));
+  leg('1ZGU.MI', 'Beispiel Group Class A', { shares: 1000 });
+  leg('1ZUS.MI', 'Beispiel Group Class C', { shares: 1000 });
+  leg('ZG', 'Beispiel Group, Inc.', { shares: 1000, exchangeName: 'NasdaqGS' });
+
+  // Gegenprobe zuerst: mit allen drei Beinen lesbar greift A5.
+  const heil = milanKlassenLesen(dir, [{ anker: '1ZGU.MI', partner: ['ZG'] }], []);
+  assert.equal(heil.mehrfachAbdruecke.size, 1);
+  assert.equal(heil.lesefehler.length, 0);
+  assert.equal(milanUmbenennungen(heil.klassen, heil.mehrfachAbdruecke).urteile[0].grund, 'mehrdeutig');
+
+  // Jetzt verliert das ZWEITE Mailaender Bein seinen Kurs. Der Index sieht nur noch EIN Bein
+  // auf diesem Abdruck, A5 greift nicht mehr — und ohne den Ausweis waere das unsichtbar.
+  leg('1ZUS.MI', 'Beispiel Group Class C', { shares: 1000, ohneFx: true });
+  const blind = milanKlassenLesen(dir, [{ anker: '1ZGU.MI', partner: ['ZG'] }], []);
+  assert.deepEqual(blind.lesefehler.map((f) => f.ticker), ['1ZUS.MI'],
+    'der Wegfall MUSS im Ausweis stehen — sonst passiert die Klasse leise');
+  assert.equal(blind.mehrfachAbdruecke.size, 0, 'Vorbedingung: A5 greift jetzt wirklich nicht mehr');
+  // UND GENAU DESHALB REICHT DER AUSWEIS NICHT: die Klasse wuerde jetzt umbenannt. Der Ausweis
+  // macht den Kanal sichtbar, er schliesst ihn nicht — das schliesst erst der
+  // A5-Integritaets-Riegel im Prozess (naechster Test).
+  assert.equal(milanUmbenennungen(blind.klassen, blind.mehrfachAbdruecke).urteile[0].grund, 'umbenennen',
+    'die Luecke ist real: ohne Riegel wuerde die vorher blockierte Klasse umbenannt');
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test('KOLLISION: ein Ticker als Verlierer in Klasse A und Sieger in Klasse B faellt auf', () => {
@@ -416,8 +582,18 @@ test('I/O: milanKlassenLesen + milanSchreiben setzen genau die Verlierer-Beine u
   leg('1ANE.MI', 'Corporacion Acciona Energias Renovables SA', { country: 'Spain', shares: 324323262 });
   leg('ANE.MC', 'Corporación Acciona Energías Renovables, S.A.', { country: 'Spain', shares: 324323262, exchangeName: 'Madrid' });
   // Fremdpaar im selben Verzeichnis: es darf NICHT angefasst werden.
+  // FX9 — GENAU EIN BEIN DIESER PROBE LAEUFT MIT `fx != 1` (realer EUR-Kurs aus dem Bestand).
+  // Ohne das bewiese die gruene Suite nur, dass die Division durch 1 funktioniert: `fx: 1` ist
+  // als Migrations-Default richtig, macht aber jeden bestehenden Waechter zum Sonderfall, in
+  // dem `x/1` nichts tut. Hier laeuft die Rueckrechnung wirklich — die gespeicherte Reihe von
+  // SAN ist 9999*1,1550012, die Melde-Ebene ist 9999, und sie bleibt von Sanofis 4242 getrennt.
   leg('1SAN.MI', 'Sanofi', { country: 'France', shares: 1198068685, basis: 4242 });
-  leg('SAN', 'Banco Santander, S.A.', { country: 'Spain', shares: 14266584458, basis: 9999, exchangeName: 'NYSE' });
+  leg('SAN', 'Banco Santander, S.A.', { country: 'Spain', shares: 14266584458, basis: 9999, exchangeName: 'NYSE', fx: 1.1550012 });
+
+  const rohSAN = JSON.parse(fs.readFileSync(path.join(dir, 'SAN.json'), 'utf8'));
+  assert.notEqual(rohSAN.meta.fxRateApplied, 1, 'FX9: diese Probe laeuft mit einem echten Kurs');
+  assert.notEqual(rohSAN.timeseries.revenueQ[0].value, 9999,
+    'Vorbedingung: die GESPEICHERTE Reihe ist die konvertierte, nicht die gemeldete');
 
   const gelesen = milanKlassenLesen(dir, [{ anker: '1ANE.MI', partner: ['ANE.MC'] }, { anker: '1SAN.MI', partner: ['SAN'] }], []);
   assert.equal(gelesen.milanBeine, 2, 'beide Mailaender Beine wurden fuer die A5-Probe gelesen');
@@ -516,6 +692,55 @@ test('A7 am Prozess: alle Anker-Dateien DA, aber unlesbar -> Riegel feuert (FEHL
   assert.match(ausgabe, /Mengen-Riegel gerissen/);
   assert.match(ausgabe, /Kandidaten-Datei\(en\) waren nicht auswertbar/, 'der Grund muss in der Abbruch-Meldung stehen');
   assert.match(ausgabe, /::warning::U3-Milan — .*nicht auswertbar/, 'jede unlesbare Datei faellt einzeln auf');
+});
+
+/**
+ * Baut ALLE 17 eingefrorenen Klassen so, dass der Mengen-Riegel bei genau 18/17 GRUEN ist.
+ * Jede Klasse bekommt eine eigene Basis, damit kein Abdruck doppelt vorkommt (sonst 'mehrdeutig').
+ * Das Partner-Bein traegt einen Platzhalternamen, damit das Mailaender Bein den Namen stellt.
+ */
+function alleKandidatenDateien() {
+  const aus = [];
+  MILAN_KANDIDATEN.forEach((k, i) => {
+    const opt = { shares: 1000000, basis: 1000 + i * 7 };
+    aus.push([k.anker, `Emittent ${i} AG`, opt]);
+    for (const p of k.partner) aus.push([p, p, opt]);
+  });
+  return aus;
+}
+
+test('A5-INTEGRITAET am Prozess: ein unlesbares Mailaender Bein bricht HART ab, obwohl A7 gruen ist', () => {
+  // Die Luecke, die A7 STRUKTURELL nicht sehen kann: das kaputte Bein ist KEIN Kandidat, also
+  // bewegt sich keine Zaehlgroesse — 18/17 stimmt weiterhin. Trotzdem ist der A5-Index jetzt
+  // lueckenhaft (fail-OPEN), und eine Klasse koennte still fehlverschmelzen.
+  // Vorprobe: ohne das kaputte Bein laeuft derselbe Bestand SAUBER DURCH (Exit 0) — nur so ist
+  // bewiesen, dass der Abbruch unten wirklich am kaputten Bein haengt und nicht an der Menge.
+  const sauber = lauf([...fueller(120), ...alleKandidatenDateien()]);
+  assert.equal(sauber.code, 0, 'Vorprobe: 18/17 muss gruen durchlaufen. Ausgabe:\n' + sauber.ausgabe);
+  assert.match(sauber.ausgabe, /18 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
+
+  // Jetzt dasselbe, plus EIN unlesbares Mailaender Bein ausserhalb der Kandidatenliste.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien(),
+    ['1KAPUTT.MI', 'Kaputt AG', { shares: 1000, basis: 999999, ohneFx: true }],
+  ]);
+  assert.equal(r.code, 1, 'ein unlesbares Mailaender Bein muss hart abbrechen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::error::U3-Milan — A5-Integritaet gerissen: 1 Mailaender Bein\(e\) nicht auswertbar \(1KAPUTT\.MI\)/);
+  assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
+  assert.doesNotMatch(r.ausgabe, /Mengen-Riegel gerissen/,
+    'A7 ist hier GRUEN — der Abbruch kommt nachweislich vom A5-Riegel, nicht vom Mengen-Riegel');
+  assert.doesNotMatch(r.ausgabe, /Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/,
+    'der Abbruch liegt VOR dem Schreiben');
+});
+
+test('A5-INTEGRITAET: ein unlesbares NICHT-Mailaender Bein bricht NICHT ab', () => {
+  // Gegenrichtung, damit der Riegel nicht einfach "jeder Lesefehler bricht ab" ist: ein
+  // kaputtes Bein ohne Mailaender Suffix beruehrt den A5-Index nicht und darf den Lauf nicht
+  // kosten. Ohne diese Probe waere der Riegel viel zu breit und niemand haette es gemerkt.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien(),
+    ['XKAPUTT', 'Kaputt AG', { shares: 1000, basis: 999999, ohneFx: true }],
+  ]);
+  assert.equal(r.code, 0, 'ein Nicht-Mailaender Lesefehler ist kein A5-Problem. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /18 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
 });
 
 test('A7 am Prozess: ohne jedes Anker-Bein laeuft der Filter durch (anderes Universum, nicht Drift)', () => {

@@ -347,13 +347,66 @@ const MILAN_ERWARTETE_GRUPPEN = 17;
 const IDENTITAETS_REGISTER_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'issuer-identity.json');
 
 /**
- * A9 — MESSEBENE. Das Messwerkzeug `probe-dedup-fingerprint.js` liest `pit.revenueQ` aus dem
- * Board-Artefakt; diese Vorstufe laeuft davor und liest `snapshot.timeseries`. Beide Ebenen
- * wertgleich zu unterstellen war ausdruecklich verboten — sie sind es fuer alle 35 Milan-Beine
- * (Gegenprobe J3), aber `write-board-history.js:463-478` haelt fest, dass BH-108 `revenueQ` bei
- * JEDEM Yahoo-Abruf mit dem dann aktuellen FX-Faktor neu in USD rechnet. Deshalb wird hier auf
- * der Ebene gemessen, auf der auch gehandelt wird, mit derselben Entpackung wie
- * `seriesValues()` dort ([{value}]-Serialisierung von pull-yahoo).
+ * FX1/FX2 — SIGNIFIKANTE STELLEN DER FINGERABDRUCK-KANONISIERUNG.
+ * Urteil: `_COURT-A7-FX-2026-08-30.md` (ENTSCHIED 72), Akte: `akte-a7-fx-melde-waehrung-2026-08-30.md`.
+ *
+ * DIE KONSTANTE BLEIBT EIN LITERAL (FX1). Nie `process.env`, nie `configs/`, nie
+ * Funktionsargument, nie vererbt ohne Neumessung. Ein Parameter mit genau EINEM zulaessigen Wert
+ * ist kein Knopf; ein drehbarer waere die Toleranz, die A1 ("Wertgleichheit, keine Toleranz")
+ * verbietet. Der Praezedenzfall steht im selben Repo: `pull-yahoo.js:86` liest
+ * `FUNDAMENTALS_MAX_AGE_DAYS` als `parseInt(process.env.… || '7', 10)` — aus einer gemessenen
+ * Zahl wird ein Umgebungsknopf, ohne dass jemand die Messung wiederholt. Genau das darf hier
+ * nicht passieren.
+ *
+ * WARUM 15: ein IEEE-754-Double traegt ~15,95 Dezimalstellen. Die Ruecktransformation x/fx ist
+ * NICHT selbstinvers: `fl(fl(r*f1)/f1) === fl(fl(r*f2)/f2)` gilt ueber 939.715 gemessene
+ * Wertpaare aus 34 Waehrungen nur in 82,95 % der Faelle; die Abweichung ist immer 1 oder 2 ULP,
+ * nie mehr. 15 signifikante Stellen schneiden genau diese Rausch-Stelle ab: Reparatur 100,000 %,
+ * Fehlverschmelzung auf Ein-Einheiten-Abstand 0,000 % (gemessene Gegenprobe ueber denselben
+ * Bestand). Weniger Stellen kaufen nichts und kosten Trennschaerfe (13 Stellen: bereits 3,3 %
+ * Fehlverschmelzung bei 1 Einheit Abstand).
+ *
+ * DREI GRENZEN, DIE MITZULESEN SIND (FX2 — keine davon ist kosmetisch):
+ *
+ * 1. DIE GRENZE IST RELATIV, NICHT ABSOLUT. 15 signifikante Stellen heissen bei einer
+ *    30-Mrd-Zeile eine Unterscheidungsschwelle von ~30 Melde-Einheiten, nicht von einem Cent.
+ *    Die Cent-Aufloesung traegt A4 (gleiches `country` UND `sharesOutstanding` im 20-%-Band),
+ *    nicht der Fingerabdruck. Auf Cent-Abstand verschmilzt die Kanonisierung gemessen 3,3 % —
+ *    dieser Rest faellt A4 zu und ist vom Gericht ausdruecklich ratifiziert (FX22).
+ *
+ * 2. DIE 0,000 % SIND EINE EIGENSCHAFT DER POPULATION, NICHT DER KONSTANTE.
+ *    Reichweite = eingefrorene Milan-Kandidatenliste (A6/A11); jede Erbschaft nach T179/T180
+ *    oder ein Voll-Tor misst die Fehlverschmelzungsrate auf der NEUEN Population neu, BEVOR sie
+ *    landet. Wer die Liste erweitert und diese Zahl uebernimmt, hat sie nicht gemessen.
+ *
+ * 3. GEMESSENE OBERGRENZE: ab ~1e15 Melde-Einheiten (16 signifikante Stellen) trennen 15 Stellen
+ *    EINE Einheit nicht mehr. Fuer EUR/CHF der Milan-Population (~1e9) folgenlos, fuer eine
+ *    JPY/KRW/IDR-Klasse nicht. Der RUECKWAERTS-Waechter ist deshalb auf das Band
+ *    1e9 <= x < 1e15 geeicht (FX8) — unterhalb davon feuert seine Bruchprobe nicht, oberhalb ist
+ *    er schon vor jeder Sabotage rot.
+ *
+ * NICHT auf Ganzzahl runden, obwohl ALLE 1.986 Mailaender Nicht-USD-Werte ganzzahlig sind:
+ * ueber den ganzen Bestand sind es nur 63,1 % (`000002.SZ` meldet CNY mit Cent-Stellen). Das
+ * Modul erbt laut A11 spaeter T179/T180 — eine Rundung, die heute folgenlos ist, waere dort eine
+ * Toleranz-Ausweitung gegen A1, und ihre Sicherheit haengt an einer Momentaufnahme, die sich
+ * nicht anpinnen laesst (Urteil F4, 2/2).
+ */
+const FINGERABDRUCK_STELLEN = 15;
+
+/**
+ * A9 — MESSEBENE, durch die A7-FX-Bank fortgeschrieben (FX20). Das Messwerkzeug
+ * `probe-dedup-fingerprint.js` liest `pit.revenueQ` aus dem Board-Artefakt; diese Vorstufe
+ * laeuft davor und liest `snapshot.timeseries`, **auf Melde-Waehrung zurueckgerechnet**.
+ *
+ * Die Fortschreibung ist die Erfuellung von A9s Sinn, keine Aufweichung: A9 begruendet die
+ * Ebenenwahl selbst mit BH-108s FX-Neurechnung (`write-board-history.js:463-478` haelt fest,
+ * dass `revenueQ` bei JEDEM Yahoo-Abruf mit dem dann aktuellen FX-Faktor neu in USD gerechnet
+ * wird). Derselbe Gedanke traegt eine Ebene weiter: dieselbe Eigenschaft trifft auch
+ * `snapshot.timeseries`, sobald zwei Beine an verschiedenen Tagen gezogen werden. "Dort messen,
+ * wo gehandelt wird" heisst dann auf der Melde-Waehrung, weil der Handelsort FX-verschoben ist.
+ * Beide Ebenen wertgleich zu unterstellen war ausdruecklich verboten — sie sind es fuer alle 35
+ * Milan-Beine (Gegenprobe J3). Entpackt wird weiterhin wie `seriesValues()` dort
+ * ([{value}]-Serialisierung von pull-yahoo).
  */
 function milanReihe(arr) {
   if (!Array.isArray(arr)) return null;
@@ -375,9 +428,39 @@ function milanFingerabdruck(bein) {
   // [100,200,300,400,NaN] und [100,200,300,400,Infinity] waren bytegleich. Nicht-endliche
   // Werte werden deshalb als ihr eigener Name serialisiert; `null`, `NaN`, `Infinity`,
   // `-Infinity` und `undefined` bleiben damit paarweise verschieden.
-  const fest = (reihe) => JSON.stringify(Array.isArray(reihe)
-    ? reihe.map((x) => (typeof x === 'number' && Number.isFinite(x) ? x : String(x)))
-    : reihe);
+  //
+  // A7-FX: VERGLICHEN WIRD AUF DER MELDE-WAEHRUNG, NICHT AUF DEN GESPEICHERTEN WERTEN.
+  // `pull-yahoo.js:1083` multipliziert JEDE timeseries-Reihe mit dem beim Abruf gueltigen Kurs
+  // und protokolliert ihn als `meta.fxRateApplied` (`:1090`). Zwei Beine desselben Emittenten
+  // werden vom Shard-Lauf an verschiedenen Tagen gezogen (gemessen: 21 Tage Versatz in der
+  // Klasse 1JCI.MI) und tragen dann verschiedene Kurse — im Bestand liegen 16 verschiedene
+  // EUR- und 8 verschiedene CHF-Kurse. Bytegleichheit auf der konvertierten Ebene ist damit ein
+  // Abruf-Timing-Zufall: in der Simulation ueber alle real vorkommenden Kurspaare halten 0 von
+  // 52 Faellen. Die Melde-Waehrung ist die einzige Ebene, auf der dieselben Fundamentaldaten
+  // dieselbe Zahl ergeben, egal wann sie geholt wurden. Zur Pflicht-Kanonisierung siehe
+  // FINGERABDRUCK_STELLEN: die nackte Division allein repariert nur 57,7 % der Faelle.
+  const fx = bein.fx;
+  const melde = (x) => {
+    if (typeof x !== 'number' || !Number.isFinite(x)) return String(x);
+    // Fail-closed: OHNE Kurs ist der Wert nicht vergleichbar. Nie stillschweigend auf die
+    // konvertierte Ebene zurueckfallen — das waere genau die Bombe. Der Fall kann hier
+    // strukturell nicht auftreten (milanKlassenLesen laesst ein Bein ohne Kurs gar nicht erst
+    // entstehen, s. u.); die Schranke steht als zweite Verteidigungslinie und macht ein Bein
+    // ohne Kurs zu einem, das mit NICHTS uebereinstimmt.
+    if (!Number.isFinite(fx) || fx <= 0) return 'OHNE-FX:' + bein.ticker;
+    // FX3 — QUOTIENTEN-FINITHEIT, PFLICHT. `Number.isFinite` auf dem EINGANG und `fx > 0`
+    // genuegen nicht: der QUOTIENT kann ueberlaufen. Reproduziert (Urteil §3 K-1):
+    //   Infinity.toPrecision(15) -> "Infinity" -> Number(…) -> Infinity -> JSON.stringify -> null
+    //   JSON.stringify([Number((1e300/5e-324).toPrecision(15))]) -> [null]
+    //   JSON.stringify([Number((2e300/5e-324).toPrecision(15))]) -> [null]
+    // Zwei Beine mit VERSCHIEDENEN Werten werden bytegleich — dieselbe Nullen-Faltung, die der
+    // Kommentar oben fuer den Eingangspfad bereits einmal repariert hat, nur eine Rechnung
+    // spaeter. Ein nicht-endlicher Quotient matcht ab hier mit NICHTS.
+    const y = x / fx;
+    if (!Number.isFinite(y)) return 'UNENDLICH:' + bein.ticker;
+    return Number(y.toPrecision(FINGERABDRUCK_STELLEN));
+  };
+  const fest = (reihe) => JSON.stringify(Array.isArray(reihe) ? reihe.map(melde) : reihe);
   return fest(bein.revenueQ) + '|' + fest(bein.grossProfitQ);
 }
 
@@ -591,9 +674,27 @@ function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
       const j = JSON.parse(roh);
       const meta = (j && j.meta) || {};
       const ts = (j && j.timeseries) || {};
+      // A7-FX: OHNE Kurs kein vergleichbarer Fingerabdruck. Der Wurf laeuft in denselben catch
+      // wie kaputtes JSON — das Bein faellt mit Ausweis (`lesefehler` + ::warning::) heraus und
+      // die Klasse endet im Tor auf 'beine-unvollstaendig'. Fail-closed statt eines Vergleichs
+      // auf einer Ebene, die der Abrufzeitpunkt verschiebt.
+      //
+      // DIE INVARIANTE GEHOERT DEM SCHREIBER, nicht dieser Zeile (FX12): `meta.fxRateApplied`
+      // wird an genau vier Stellen zugewiesen (`pull-yahoo.js:866/:879/:903/:1090`, alle in
+      // `_convertSnapshotToUSD`); jeder ungestempelte Rueckweg flaggt `fxConversionFailed`
+      // (`:821/:867/:904/:976/:1111`, letzteres der fail-closed-Wrapper
+      // `_convertSnapshotToUSDGuarded`), und ein geflaggter Snapshot wird GELOESCHT statt
+      // geschrieben (`:3734-3738`, `_removeStaleFiles`). Der billige Kurs-Pfad verlangt einen
+      // finiten Kurs (`:2846-2848`) und weist fruehere Fehlschlaege ab (`:2850`). Deshalb ist
+      // dieser Zweig heute unerreichbar — er steht fuer den Tag, an dem er es nicht mehr ist.
+      // Die Kette Loeschung -> ENOENT -> 'beine-unvollstaendig' -> A7-Abbruch ist VORBESTEHEND
+      // und nicht von dieser Schranke erzeugt.
+      if (!Number.isFinite(meta.fxRateApplied) || meta.fxRateApplied <= 0) {
+        throw new Error('kein brauchbares meta.fxRateApplied — Fingerabdruck nicht vergleichbar');
+      }
       bein = {
         datei, ticker, metaTicker: meta.ticker, name: meta.name, country: meta.country,
-        shares: meta.sharesOutstanding,
+        shares: meta.sharesOutstanding, fx: meta.fxRateApplied,
         revenueQ: milanReihe(ts.revenueQ), grossProfitQ: milanReihe(ts.grossProfitQ),
         usPrimaerlisting: isUsPrimaryListing(meta),
         schluessel: issuerKeyLoose(j), strengerSchluessel: issuerKeyStrengOhneGattung(j),
@@ -1229,7 +1330,36 @@ function run(argv) {
   if (zuPruefen < MIN_GESCANNT_FUER_ANTEIL || milan.kandidatenDateien === 0) {
     console.log(`[u3-milan] Mengen-Riegel uebersprungen: ${zuPruefen} zu pruefende Snapshots, ${milan.kandidatenDateien} Dateien der Kandidatenliste im Bestand, ${milan.lesefehler.length} nicht auswertbar. Geplant waren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen.`);
   } else if (geplanteBeine !== MILAN_ERWARTETE_BEINE || geplanteGruppen !== MILAN_ERWARTETE_GRUPPEN) {
-    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    // FX5 — ZENSUS IN DIE ABBRUCHZEILE: `milanBeine` und die Zahl der mehrdeutigen Abdruecke
+    // beantworten die erste Triage-Frage — "hat sich die EBENE bewegt oder die MENGE?" — ohne
+    // Nachmessung. FX6 — DIE FX-URSACHENKLASSE: bei FX-Desync ist die Population unveraendert,
+    // und die Kandidatenliste neu vorzulegen waere exakt der falsche Griff.
+    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Erst \`meta.fxRateApplied\` der Beine paarweise vergleichen; Kandidatenliste nur bei tatsaechlicher Mengenaenderung neu vorlegen. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    return 1;
+  }
+
+  // A5-INTEGRITAETS-RIEGEL — ein unlesbares MAILAENDER Bein bricht den Lauf ab.
+  //
+  // WARUM DAS KEIN "zweiter Hardstop" IM SINNE VON FX17 IST: FX17 verbietet einen zweiten harten
+  // Abbruch auf die A5-MENGE — auf eine Zahl also, die in einer Wetter-Population driftet und zum
+  // Hochdrehen einlaedt. Dieser Riegel haengt an keiner Zahl, sondern an der Datenintegritaet des
+  // A5-Index, und er deckt genau die Luecke, die A7 STRUKTURELL NICHT SEHEN KANN:
+  //   - Ist ein KANDIDATEN-Bein unlesbar, faellt `geplanteBeine` unter 18 und A7 oben bricht
+  //     bereits ab. Dieser Fall kommt hier gar nicht mehr an.
+  //   - Ist eines der ~857 uebrigen Mailaender Beine unlesbar, bewegt sich KEINE Zaehlgroesse:
+  //     das Bein faellt per `if (!b || …) continue` (fail-OPEN) aus dem Mehrdeutigkeits-Index,
+  //     `mehrfachAbdruecke` schrumpft, und eine Klasse, die als 'mehrdeutig' haette scheitern
+  //     muessen, wird umbenannt. Gemessen am Fixture: mit drei lesbaren Beinen greift A5
+  //     (`mehrfachAbdruecke.size` 1, Urteil 'mehrdeutig'); verliert das zweite Mailaender Bein
+  //     seinen Kurs, steht es zwar im Ausweis, aber die Menge faellt auf 0 und die Klasse WIRD
+  //     umbenannt. Der Ausweis (FX4) macht den Kanal sichtbar — er schliesst ihn nicht.
+  //
+  // Die Fehlerrichtung ist die teuerste, die dieses Modul kennt: eine Fehlverschmelzung loescht
+  // eine echte Firma, ein Abbruch kostet einen Board-Tag. Deshalb dieselbe Haltung wie A7:
+  // hart, VOR jeder Mutation, kein Bein wird angefasst.
+  const milanBeineUnlesbar = milan.lesefehler.filter((f) => MILAN_SPIEGEL.test(f.ticker));
+  if (milanBeineUnlesbar.length) {
+    console.error(`::error::U3-Milan — A5-Integritaet gerissen: ${milanBeineUnlesbar.length} Mailaender Bein(e) nicht auswertbar (${milanBeineUnlesbar.map((f) => f.ticker).join(', ')}). Kein Bein wurde angefasst. Ein unlesbares Mailaender Bein faellt fail-OPEN aus dem A5-Mehrdeutigkeits-Index; eine Klasse, die als 'mehrdeutig' haette scheitern muessen, wuerde still umbenannt — und eine Fehlverschmelzung loescht eine echte Firma. Erst die Datei reparieren oder ihren fehlenden \`meta.fxRateApplied\` klaeren, dann erneut laufen. NICHT die Kandidatenliste neu vorlegen: die Population ist unveraendert.`);
     return 1;
   }
 
@@ -1238,7 +1368,15 @@ function run(argv) {
     console.error(`::error::U3-Milan — ${milanGeschrieben.unschreibbar} von ${milanPlan.size} beschlossenen Umbenennungen sind nicht geschrieben worden. Der Bestand ist halb vereinheitlicht; Stop statt eines Boards auf halbem Stand.`);
     return 1;
   }
-  console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
+  // FX4 — `lesefehler` GEHOERT AUCH IN DEN GRUEN-PFAD. Der A5-Index ist fail-OPEN: ein
+  // unlesbares Mailaender Bein faellt oben per `if (!b || …) continue` aus dem
+  // Mehrdeutigkeits-Index heraus, und eine Klasse, die als 'mehrdeutig' haette scheitern
+  // muessen, passiert — leise. Die Kanonisierung erzeugt diese Asymmetrie nicht, sie
+  // verbreitert ihre Ausloeseflaeche von "kaputtes JSON" auf "kaputtes JSON ODER fehlender
+  // Kurs". Weil `lies()` seine Nicht-ENOENT-Fehler in dieselbe `lesefehler`-Liste schreibt,
+  // schliesst der Ausweis hier die Luecke mechanisch, nicht kosmetisch: ein stiller Erfolgslauf
+  // mit Lesefehlern ist ab sofort nicht mehr still.
+  console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, ${milan.lesefehler.length} nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
 
   // T179-Nennwert: NACH U3-Milan, und die Reihenfolge ist SICHERHEIT, nicht Geschmack.
   //
