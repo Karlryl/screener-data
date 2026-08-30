@@ -48,6 +48,7 @@
  */
 
 const { execFileSync, spawnSync } = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -217,13 +218,59 @@ const NICHTS_GEPRUEFT = (out) => /(^|[^\d])0 ok\b/.test(out) && /(^|[^\d])0 fail
 // Pruefungen entfernt, bliebe still gruen. Wer nichts sagt, hat nichts belegt.
 const STUMM = (out) => out.trim() === '';
 
+// Beweislauf 33289964981 (ENTSCHIED 106): GitHub liest JEDE Zeile, die mit '::'
+// beginnt, als Workflow-Kommando und haengt eine Annotation an den Lauf. Das Gate
+// gab bisher zwei Sorten fremden Text unveraendert weiter:
+//   (a) die vollstaendige Ausgabe der Kindprozesse in runFiles, und
+//   (b) im --selftest die SIMULIERTEN Gate-Zeilen seiner eigenen Negativ-Proben.
+// Beide bestehen zum grossen Teil aus ABSICHTLICH roten Zeilen — genau das, was
+// eine Negativ-Probe beweisen soll. Im Annotationsband des Laufs standen dadurch
+// sechs erfundene Fehler ueber tests/{green,red,orphan}.test.js (Dateien, die es
+// im Repo gar nicht gibt, sondern nur im Temp-Verzeichnis des Selftests), dazu die
+// Proben aus t168-layer-diff und bh-b05-universe — in einem prep-Job, der GRUEN
+// durchlief. Die Triage dieses Laufs ist genau daran haengengeblieben und hat eine
+// Stunde lang einen Fehler im prep-Job gesucht, den es nie gab.
+//
+// ERSTER VERSUCH, EMPIRISCH WIDERLEGT: die Zeilen einzuruecken ('::' -> '  ::').
+// Lokal sah das richtig aus (keine Zeile beginnt mehr mit '::'), im echten Lauf
+// 33293190156 standen die Annotationen unveraendert da — GitHubs Parser schneidet
+// fuehrenden Leerraum ab, bevor er auf '::' prueft. Die Messebene war falsch: nicht
+// "faengt die Zeile mit :: an", sondern "was macht der Runner damit".
+//
+// JETZT GitHubs EIGENER, DOKUMENTIERTER Mechanismus fuer genau diesen Fall
+// (Workflow commands, "Stopping and starting workflow commands"): ein zufaelliges,
+// pro Lauf eindeutiges Token schaltet die Kommando-Verarbeitung ab und wieder an.
+// Der fremde Text bleibt dadurch BYTE-IDENTISCH im Protokoll — er wird nicht
+// veraendert, nur nicht mehr ausgefuehrt.
+// BEWUSST NICHT umschlossen: log() im echten Lauf. '::error::Test failed: X' und
+// '::error::Testdatei X laeuft in KEINEM Job' sind das Verdikt des Gates ueber den
+// Kindprozess, nicht dessen eigene Rede — sie annotieren unveraendert weiter, und
+// damit bleibt jeder echte Fehlschlag im Annotationsband sichtbar.
+const STOPP_TOKEN = 'test-gate-' + crypto.randomUUID();
+
+// Dieselbe Toleranz wie GitHubs Parser (fuehrender Leerraum zaehlt nicht) — sonst
+// haette die Wache denselben blinden Fleck wie der widerlegte erste Versuch.
+const HAT_KOMMANDO = /^[ \t]*::/m;
+
+/** Umschliesst fremden Text mit dem stop-commands-Paar. Marker und Text gehen in
+ *  EINEM Schreibvorgang raus: ein halb geschriebener Block wuerde die Kommandos
+ *  fuer den Rest des Jobs abgeschaltet lassen und echte Befunde verschlucken. */
+function ohneKommandos(text) {
+  const mitZeilenende = text.endsWith('\n') ? text : text + '\n';
+  return `::stop-commands::${STOPP_TOKEN}\n${mitZeilenende}::${STOPP_TOKEN}::\n`;
+}
+
+/** Nur umschliessen, wenn wirklich ein Kommando drinsteht — sonst stuenden zwei
+ *  Marker-Zeilen um die Ausgabe jeder der ~200 Testdateien. */
+const fremdeAusgabe = (text) => (HAT_KOMMANDO.test(text) ? ohneKommandos(text) : text);
+
 function runFiles(files, cwd, log) {
   const failed = [];
   const skipped = [];
   for (const t of files) {
     log(`--- ${t} ---`);
     const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
-    process.stdout.write((r.stdout || '') + (r.stderr || ''));
+    process.stdout.write(fremdeAusgabe((r.stdout || '') + (r.stderr || '')));
     if (r.status !== 0) { failed.push(t); continue; }
     const ausgabe = (r.stdout || '') + (r.stderr || '');
     if (NICHTS_GEPRUEFT(ausgabe)) {
@@ -246,9 +293,13 @@ function runFiles(files, cwd, log) {
  * synthetischen Dateien statt der echten Listen fahren kann.
  * @returns {{code:number, lines:string[]}}
  */
-function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile }) {
+function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blockingAlways, repoFiles, summaryFile, emit }) {
   const lines = [];
-  const log = (s) => { lines.push(s); console.log(s); };
+  // `lines` traegt IMMER den Rohtext — alle Proben pruefen darauf und bleiben damit
+  // unberuehrt davon, wie die Zeile ausgegeben wird. `emit` faerbt nur die Ausgabe:
+  // im echten Lauf console.log (annotiert), im Selftest zitiert (annotiert nicht).
+  const schreib = emit || console.log;
+  const log = (s) => { lines.push(s); schreib(s); };
 
   const report = reportFiles.filter(f => fs.existsSync(path.join(cwd, f)));
   // Die Forschungs-Spur wird aus der Glob-Expansion herausgerechnet: 'tests/*test.js'
@@ -336,7 +387,13 @@ function selftest() {
     "'use strict';\nconst test=require('node:test');\ntest('echt', () => {});\n");
 
   const summaryFile = path.join(dir, 'summary.txt');
-  const base = { cwd: dir, exemptPrefixes: [], summaryFile };
+  // emit: die Proben simulieren rote Gate-Laeufe. Deren '::error::'/'::warning::'
+  // sind Beweismittel, keine Befunde ueber dieses Repo — sie duerfen den Lauf nicht
+  // annotieren. Die Pruefungen unten lesen r.lines (Rohtext) und merken davon nichts.
+  const base = {
+    cwd: dir, exemptPrefixes: [], summaryFile,
+    emit: (s) => process.stdout.write(HAT_KOMMANDO.test(s) ? ohneKommandos(s) : s + '\n'),
+  };
   const fails = [];
   const check = (name, ok, detail) => {
     console.log(`${ok ? 'PASS' : 'FAIL'} selftest: ${name}${ok ? '' : ' — ' + detail}`);
