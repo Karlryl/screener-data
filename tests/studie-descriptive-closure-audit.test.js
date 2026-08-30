@@ -78,9 +78,26 @@ test('D6: alle einundzwanzig Quellen und der Auditvertrag sind bytegleich', () =
   // jetzt eine gepinnte Groesse: ein Tippfehler verschiebt einen Eintrag von `ueberSiegel`
   // nach `historisch` UND erzeugt eine Waise, bricht also gleich zwei Zaehler.
   const abdeckung = pruefePins(REPO, result.sourceFiles, thresholdSeal.currentScripts);
-  assert.equal(abdeckung.ueberSiegel.length, 3, 'D6: Anzahl der ueber das aktuelle Siegel gepinnten Dateien');
-  assert.equal(abdeckung.historisch.length, 18, 'D6: Anzahl der auf den historischen Hash gebundenen Dateien');
-  assert.equal(abdeckung.waisen.length, 1, 'D6: Siegel-Schluessel ohne gebundene Datei - bis 30.08. ungeprueft, jetzt mitgeprueft');
+  // Review-Fund 30.08.: NUR die Groesse zu pinnen reicht nicht. Zwei gleichzeitige Aenderungen
+  // (ein Schluessel verliert seinen Pin, ein anderer bekommt einen) halten die Zaehler konstant,
+  // waehrend sich die Menge komplett verschiebt. Gepinnt wird deshalb die MITGLIEDSCHAFT.
+  // Review-Fund 30.08.: NUR die Groesse zu pinnen reicht nicht. Zwei gleichzeitige Aenderungen
+  // (ein Schluessel verliert seinen Pin, ein anderer bekommt einen) halten die Zaehler konstant,
+  // waehrend sich die Menge komplett verschiebt. Gepinnt wird deshalb die MITGLIEDSCHAFT.
+  assert.deepEqual(abdeckung.ueberSiegel.slice().sort(), [
+    'scripts/studie-attrition-size-sector.py',
+    'scripts/studie-censoring-aware-attrition.py',
+    'scripts/studie-entry-cohort-standardization.py',
+  ],
+    'D6: WELCHE Dateien ueber das aktuelle Siegel gepinnt sind — nicht nur wie viele');
+  assert.deepEqual(abdeckung.waisen.slice().sort(), [
+    'scripts/studie-threshold-seal.py',
+  ],
+    'D6: WELCHE Siegel-Schluessel in dieser Bindung fehlen (Schwester-Waechter oder gar keine Bindung)');
+  // Der historische Rest ist abgeleitet: Bindung minus Siegel-Pins. Eine eigene Liste waere
+  // hier 18 Zeilen Literal ohne Zusatznutzen — die Verschiebung faengt schon die Menge oben.
+  assert.equal(abdeckung.historisch.length, 18,
+    'D6: Anzahl der auf den historischen Hash gebundenen Dateien');
 });
 
 test('D6: Null-Fehler-Vertrag und Scope schließen ohne neue Daten', () => {

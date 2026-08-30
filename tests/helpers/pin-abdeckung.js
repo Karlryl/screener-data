@@ -50,10 +50,17 @@ function pruefePins(repo, gebunden, currentScripts) {
     (imSiegel ? ueberSiegel : historisch).push(rel);
     assert.equal(sha256Datei(path.join(repo, rel)), imSiegel ? siegel[rel] : historischerHash, rel);
   }
+  // "Waise" heisst hier: nicht in DIESER Bindung enthalten. Das ist zweierlei, und die
+  // Meldung muss es auseinanderhalten (Review-Fund 30.08.): entweder gehoert der Schluessel
+  // zu einem SCHWESTER-Waechter (dort ist er gebunden und wird geprueft) — oder er gehoert
+  // nirgendwo hin und hat bis zum 30.08. ueberhaupt nichts geprueft. Wer beim Triage den
+  // falschen Satz liest, sucht am falschen Ort.
   const waisen = Object.keys(siegel).filter((k) => !Object.prototype.hasOwnProperty.call(gebunden, k));
   for (const rel of waisen) {
     assert.equal(sha256Datei(path.join(repo, rel)), siegel[rel],
-      'Siegel-Waise ' + rel + ' (Schluessel ohne gebundene Datei — bis 30.08. ungeprueft)');
+      'Siegel-Eintrag ' + rel + ' stimmt nicht mit der Datei ueberein. Hinweis: dieser Schluessel '
+      + 'ist in DIESER Bindung nicht enthalten — er gehoert entweder einem Schwester-Waechter '
+      + '(dort ebenfalls geprueft) oder gar keiner Bindung (dann war er bis 30.08. ungeprueft).');
   }
   return { ueberSiegel, historisch, waisen };
 }
