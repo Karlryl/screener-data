@@ -70,7 +70,6 @@ const PFLICHT_PRUEFUNGEN = [
   'T185: ein Ticker in der letzten Form fliegt auf',
   'T185: ein Firmenname in der letzten Form fliegt auf',
   'T185: ein Konzeptname in der letzten Form fliegt auf',
-  'T185: jeder Formstamm des Vorrats geht DURCH',
   'T185: der Vorrat traegt PERIODISCHE_FORMEN wortgleich',
   'ein durchgereichter Messwert fliegt am Typ auf',
   'ein zusaetzliches Feld im Arm fliegt auf',

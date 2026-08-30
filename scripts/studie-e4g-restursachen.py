@@ -983,12 +983,11 @@ def selbsttest():
                sabotage(lambda a, w=_wert: a["arme"]["signal"]["zeilen"][0]
                         .__setitem__("letzte_form_nach_signal", w)))
 
-    # Gegenrichtung: der Vorrat darf nicht so eng sein, dass er den echten
-    # Datenpfad erschlaegt. Jeder Stamm, den der committete Lauf gemessen hat,
-    # muss durchgehen - sonst ist das hier eine Wache, die den Lauf bricht.
-    pruefe("T185: jeder Formstamm des Vorrats geht DURCH",
-           all(pruefe_etikett("letzte_form_nach_signal", stamm, "probe")
-               for stamm in FORM_VORRAT))
+    # Die Gegenrichtung - "der Vorrat ist nicht so eng, dass er den echten
+    # Datenpfad erschlaegt" - steht bewusst NICHT hier: gegen FORM_VORRAT selbst
+    # geprueft waere sie tautologisch (jedes Element seiner eigenen Menge geht
+    # durch, egal was drinsteht). Sie haengt in tests/studie-e4g-restursachen.test.js
+    # am ECHTEN committeten Artefakt, wo sie etwas aussagt.
     pruefe("T185: der Vorrat traegt PERIODISCHE_FORMEN wortgleich",
            set(PERIODISCHE_FORMSTAEMME) == set(e2.PERIODISCHE_FORMEN),
            sorted(PERIODISCHE_FORMSTAEMME), sorted(e2.PERIODISCHE_FORMEN))
