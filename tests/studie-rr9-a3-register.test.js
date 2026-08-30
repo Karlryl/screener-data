@@ -307,6 +307,48 @@ test('RR9-A3 (d): dieselbe runId ein zweites Mal wird abgewiesen', () => {
   );
 });
 
+// ── (f) Der Schreibvorgang ist atomar ─────────────────────────────────────────
+
+test('RR9-A3 (f): bricht der Schreibvorgang ab, bleibt das Register unversehrt', () => {
+  // Das Register ist nur-anhaengend und verkettet: eine halb geschriebene Datei
+  // hat keinen Reparaturweg im Werkzeug. Geprueft wird am OBJEKT — der Bytes der
+  // Kopie —, nicht an der Formulierung des Kommentars.
+  const dir = tempdir();
+  const { register, jahrgang } = kopien(dir);
+  const vorher = dateihash(register);
+
+  const abbruchBeimUmbenennen = saboteur(
+    dir, 'rename-bricht.js',
+    "    fs.renameSync(daneben, pfad);",
+    "    throw new Error('Platte voll (Probe)');",
+  );
+  const lauf = laufeMit(abbruchBeimUmbenennen, [
+    '--register', register, '--jahrgang', jahrgang, '--schreiben',
+  ]);
+  assert.notEqual(lauf.status, 0, 'der abgebrochene Schreibvorgang meldet Erfolg');
+  assert.equal(dateihash(register), vorher, 'das Register ist trotz Abbruch veraendert');
+  assert.deepEqual(
+    fs.readdirSync(dir).filter((n) => n.includes('.neu-')), [],
+    'ein halber Zwischenstand ist liegengeblieben',
+  );
+
+  // Abwesenheits-Probe: derselbe Abbruch an einem Zwilling, der DIREKT auf das
+  // Register schreibt, laesst es veraendert zurueck. Ohne sie beweist der
+  // Hash-Vergleich oben nur, dass irgendetwas fehlschlug.
+  const direkt = saboteur(
+    dir, 'ohne-atomar.js',
+    "  const daneben = `${pfad}.neu-${process.pid}`;\n  try {\n    fs.writeFileSync(daneben, `${JSON.stringify(register, null, 1)}\\n`, 'utf8');\n    fs.renameSync(daneben, pfad);",
+    "  const daneben = `${pfad}.neu-${process.pid}`;\n  try {\n    fs.writeFileSync(pfad, `${JSON.stringify(register, null, 1)}\\n`, 'utf8');\n    throw new Error('Platte voll (Probe)');",
+  );
+  const { register: zweiter, jahrgang: j2 } = kopien(dir);
+  const vorher2 = dateihash(zweiter);
+  laufeMit(direkt, ['--register', zweiter, '--jahrgang', j2, '--schreiben']);
+  assert.notEqual(
+    dateihash(zweiter), vorher2,
+    'auch der direkte Schreibweg laesst das Register unveraendert — dann misst der Test nichts',
+  );
+});
+
 // ── (e) Der Eintrag autorisiert nichts ────────────────────────────────────────
 
 test('RR9-A3 (e): der gebaute Eintrag schaltet nachweislich nichts frei', () => {

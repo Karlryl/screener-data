@@ -125,8 +125,27 @@ function argument(argv, name) {
 // Das Register wird mit der Formatierung zurueckgeschrieben, mit der es
 // ausgeliefert wurde (ein Leerzeichen Einrueckung). Umformatiert waere es im
 // Diff ein Neuschrieb und im Review nicht mehr lesbar.
+//
+// UND ATOMAR: erst daneben schreiben, dann umbenennen. Ein direktes
+// writeFileSync auf das Register laesst bei einem Abbruch mitten im Schreiben
+// (Platte voll, Kill, Stromausfall) eine halbe, ungueltige Datei zurueck — und
+// fuer ein nur-anhaengendes, verkettetes Register gibt es dafuer keinen
+// Reparaturweg im Werkzeug, nur `git checkout`. Der naechste Lauf saehe einen
+// rohen SyntaxError aus JSON.parse. `rename` ist auf demselben Dateisystem
+// atomar, auch unter Windows (MoveFileEx mit REPLACE_EXISTING).
+// Gefunden im Code-Review 30.08.; dieselbe Stelle steht wortgleich in
+// scripts/studie-f3b-register.js und scripts/studie-r1-serverzeit.js — dort
+// gemeldet, nicht hier mitgeaendert (fremde Zustaendigkeit).
 function schreibeRegister(pfad, register) {
-  fs.writeFileSync(pfad, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+  const daneben = `${pfad}.neu-${process.pid}`;
+  try {
+    fs.writeFileSync(daneben, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+    fs.renameSync(daneben, pfad);
+  } finally {
+    // Ein liegengebliebener Zwischenstand waere beim naechsten Lauf ein
+    // zweites, halbes Register neben dem echten.
+    if (fs.existsSync(daneben)) fs.rmSync(daneben, { force: true });
+  }
 }
 
 // ── Die vier fail-closed Tore ─────────────────────────────────────────────────
@@ -165,7 +184,13 @@ function pruefeTail(register, stand) {
 // bleibt trotzdem das letzte, schaerfste Tor: er faengt auch das Artefakt, dessen
 // `inhalt` stimmt und dessen Begleittext umgeschrieben wurde.
 function pruefeJahrgang(pfad) {
-  const datei = lies(pfad);
+  // EINE Lesung, zwei Hashes. Vorher las diese Funktion die Datei zweimal —
+  // einmal geparst fuer die Inhalts-Pruefungen, einmal roh fuer den Datei-Hash.
+  // Nichts band die beiden Lesungen an dieselben Bytes, und damit war die
+  // Eigenschaft, die der Kommentar oben verspricht ("faellt nur am zweiten
+  // auf"), nicht garantiert. Code-Review 30.08.
+  const rohbytes = fs.readFileSync(pfad);
+  const datei = JSON.parse(rohbytes.toString('utf8'));
   const { gewaehlterJahrgang: gewaehlt, gemessenerJahrgangDerBasis: gemessen } = datei.inhalt || {};
   if (gewaehlt !== JAHRGANG_WERT || gemessen !== JAHRGANG_WERT) {
     throw new VerfassungsBruch(
@@ -200,7 +225,7 @@ function pruefeJahrgang(pfad) {
       `RR9-A3: der Inhalts-Block hasht auf ${inhalt}, erwartet ist ${INHALT_SHA256}.`,
     );
   }
-  const dateiHash = crypto.createHash('sha256').update(fs.readFileSync(pfad)).digest('hex');
+  const dateiHash = crypto.createHash('sha256').update(rohbytes).digest('hex');
   if (dateiHash !== DATEI_SHA256) {
     throw new VerfassungsBruch(
       `RR9-A3: ${JAHRGANG_REL} traegt sha256 ${dateiHash}, registriert ist ${DATEI_SHA256}. `
@@ -353,7 +378,17 @@ function haupt(argv) {
   pruefeZugriffsRegister(zurueck);
   const kontrolle = zurueck.events[zurueck.events.length - 1];
   if (kontrolle.eventHash !== fertig.eventHash) {
-    throw new VerfassungsBruch('RR9-A3: der geschriebene Eintrag traegt einen anderen eventHash als der gepruefte');
+    // Wenn das je feuert, ist das Register auf der Platte BEREITS veraendert —
+    // mit einem Stand, den dieses Werkzeug gerade fuer nicht vertrauenswuerdig
+    // erklaert hat. Die generische Meldung liess das wie einen normalen Abbruch
+    // aussehen. Sie muss sagen, was zu tun ist, nicht nur, was falsch ist.
+    throw new VerfassungsBruch(
+      'RR9-A3 — HALT, NICHT ERNEUT AUSFUEHREN: das Register auf der Platte traegt jetzt einen '
+      + `anderen eventHash (${kontrolle.eventHash}) als der geprueft gebaute (${fertig.eventHash}). `
+      + 'Die Datei ist bereits geschrieben und weicht vom verifizierten Stand ab. Ein zweiter Lauf '
+      + 'wuerde darauf aufsetzen. Zuerst von Hand pruefen und den Stand aus der Git-Historie '
+      + `wiederherstellen (${registerPfad}), dann erst weiter.`,
+    );
   }
   process.stdout.write(
     `\nGESCHRIEBEN: ${registerPfad}\n`
@@ -369,7 +404,12 @@ if (require.main === module) {
   try {
     process.exit(haupt(process.argv.slice(2)));
   } catch (fehler) {
-    process.stderr.write(`${fehler.message}\n`);
+    // Ein VerfassungsBruch IST seine Meldung. Alles andere ist ein Fehler im
+    // Werkzeug selbst — und dann ist der Stack das Einzige, was jemandem sagt,
+    // WO es brach. Ihn wegzuwerfen macht aus einem lauten Fehler einen stummen.
+    process.stderr.write(
+      `${fehler instanceof VerfassungsBruch ? fehler.message : (fehler.stack || String(fehler))}\n`,
+    );
     process.exit(1);
   }
 }
