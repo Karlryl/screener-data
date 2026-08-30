@@ -124,13 +124,32 @@ tatsaechlich reisst — nicht vorher. **Kein Agent hebt sie in Eigenregie an.**
    sein — inklusive der drei neuen (Naht-Platzierung, Mauer-Guard auf accepted-Format,
    zehn Zaehler je Fenster).
 4. Sabotagen einzeln fahren, Exit-Codes nach Abschnitt 2 lesen.
-5. Empirischen Bau **einmal** fahren.
-6. **Nach dem Lauf:** Shard-Groessen protokollieren; Key-Fingerprint des Artefakts gegen
+5. **H6-Vorpruefung — erzwungener Schritt, nicht optional** (T183, Akte
+   `akte-bruecken-addendum-H6H7M13-2026-08-30.md` §2.3):
+
+   ```
+   python scripts/studie-bridge-proof-modeguard.py --proof <proof.json>
+   ```
+
+   Exit-Code ungleich 0 heisst: **Schritt 6 wird nicht gefahren.** Das Tor sitzt
+   beim Aufrufer, weil die Wurzel im gepinnten Loader offen ist (H6 laeuft als
+   „root open, mitigated at the caller"); wer das Bruecken-Skript direkt startet,
+   umgeht die Pruefung vollstaendig. Bis zu diesem Eintrag stand die Reihenfolge
+   AUSSCHLIESSLICH im Docstring des Moduls — sie ist jetzt maschinell gebunden:
+   `tests/studie-h6-vorpruefung-verdrahtung.test.js` faerbt rot, sobald irgendwo
+   ein Bruecken-Aufruf ohne vorangehende Vorpruefung steht.
+6. Empirischen Bau **einmal** fahren:
+
+   ```
+   python scripts/studie-identity-bridge-artifact.py --discovery ... \
+       --independent-proof <proof.json> ...
+   ```
+7. **Nach dem Lauf:** Shard-Groessen protokollieren; Key-Fingerprint des Artefakts gegen
    den Sollwert aus Schritt 2 pruefen.
-7. Neue Nahtmenge + `periodKeyTransitionsCollapsedIntoSeams` +
+8. Neue Nahtmenge + `periodKeyTransitionsCollapsedIntoSeams` +
    `seamEventDatesFallenBackToPeriodKey` dem Orchestrator zur **Methodik-Abnahme**
    vorlegen. Bis zur Abnahme wird die Zahl nirgends zitiert.
-8. **Erst nach der Abnahme:** den v1.2.0-Closure-Record schreiben (Abschnitt 5). Danach
+9. **Erst nach der Abnahme:** den v1.2.0-Closure-Record schreiben (Abschnitt 5). Danach
    werden die beiden roten Pruefungen aus Schritt 3 gruen — und zwar weil der Pin
    existiert, nicht weil jemand eine Erwartung gesenkt hat.
 
