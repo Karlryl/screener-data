@@ -1,0 +1,135 @@
+{
+ "abgaenge_gesamt": 180,
+ "abgaenge_kontrollpool": 172,
+ "abgaenge_signal_arm": 8,
+ "accessedAt": "2026-08-30T06:30:00.000Z",
+ "arme": {
+  "kontrolle": {
+   "ausserhalb_plausiblem_fenster": 6,
+   "fallzahl": 172,
+   "jahre": {
+    "2017": {
+     "ausserhalb_plausiblem_fenster": 5,
+     "fallzahl": 109,
+     "mit_form25_treffer": 21,
+     "nenner_form25_abgleich": 109,
+     "ohne_form25_treffer": 88,
+     "trefferquote_form25": 0.1926605504587156,
+     "unentscheidbar_gesamt": 0
+    },
+    "2018": {
+     "ausserhalb_plausiblem_fenster": 0,
+     "fallzahl": 41,
+     "mit_form25_treffer": 4,
+     "nenner_form25_abgleich": 41,
+     "ohne_form25_treffer": 37,
+     "trefferquote_form25": 0.0975609756097561,
+     "unentscheidbar_gesamt": 0
+    },
+    "2019": {
+     "ausserhalb_plausiblem_fenster": 1,
+     "fallzahl": 22,
+     "mit_form25_treffer": 5,
+     "nenner_form25_abgleich": 22,
+     "ohne_form25_treffer": 17,
+     "trefferquote_form25": 0.22727272727272727,
+     "unentscheidbar_gesamt": 0
+    }
+   },
+   "mit_form25_treffer": 30,
+   "nenner_form25_abgleich": 172,
+   "ohne_form25_treffer": 142,
+   "trefferquote_form25": 0.1744186046511628,
+   "unentscheidbar_gesamt": 0
+  },
+  "signal": {
+   "ausserhalb_plausiblem_fenster": 1,
+   "fallzahl": 8,
+   "jahre": {
+    "2017": {
+     "ausserhalb_plausiblem_fenster": 0,
+     "fallzahl": 2,
+     "mit_form25_treffer": 0,
+     "nenner_form25_abgleich": 2,
+     "ohne_form25_treffer": 2,
+     "trefferquote_form25": 0.0,
+     "unentscheidbar_gesamt": 0
+    },
+    "2019": {
+     "ausserhalb_plausiblem_fenster": 1,
+     "fallzahl": 6,
+     "mit_form25_treffer": 3,
+     "nenner_form25_abgleich": 6,
+     "ohne_form25_treffer": 3,
+     "trefferquote_form25": 0.5,
+     "unentscheidbar_gesamt": 0
+    }
+   },
+   "mit_form25_treffer": 3,
+   "nenner_form25_abgleich": 8,
+   "ohne_form25_treffer": 5,
+   "trefferquote_form25": 0.375,
+   "unentscheidbar_gesamt": 0
+  }
+ },
+ "beendetAm": "2026-08-30T07:38:01.558Z",
+ "ergebnisdatenBeruehrt": false,
+ "ersterZugriffAm": "2026-08-30T07:37:45.690Z",
+ "evidenzCache": {
+  "accessions": 9028,
+  "bis": "2024-12-31",
+  "ciks": 4281,
+  "dateien": [
+   "d2-nachernte-2026-08-30.jsonl",
+   "d2-2016-2018-2026-08-30.jsonl"
+  ],
+  "von": "2016-01-04"
+ },
+ "fenster": "pruefung",
+ "fensterRegel": "Plausibles Fenster = Melde-Zeitpunkt des Signals + 4 * 91.25 Tage = 365 Tage - genau das Fenster, in dem die vier fehlenden Folgequartale haetten liegen muessen. Beide Faktoren eingefroren uebernommen, keine dritte Zahl erfunden. Treffer ausserhalb werden ausgewiesen, nie gefiltert.",
+ "gelesenePfade": [
+  "panel/panel-validierung.sqlite",
+  "submissions-bulk/d2-2016-2018-2026-08-30.jsonl",
+  "submissions-bulk/d2-nachernte-2026-08-30.jsonl"
+ ],
+ "geschriebenePfade": [
+  "arbeit/A5-pruefung-zwischenstand.sqlite"
+ ],
+ "keineLabelSemantik": "Form 25 ist KEIN Todesbeleg. Der Gegenbeleg 25-NSE bei lebender Firma gilt unveraendert; dieser Lauf liefert EREIGNIS-Evidenz, keine Zustands-Aussage, und darf nicht als Abgangs-Bestaetigung gelesen werden.",
+ "lesart": "bekannte Ueberlebens-Verzerrung, Obergrenzen-Lesart: die fehlenden 10,7 % sind nicht zufaellig, Verlierer verschwinden oefter - jede hier berichtete Rate ist eine OBERGRENZE, keine Punktschaetzung",
+ "manifestGeprueft": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "panelRand": "2020-12-31",
+ "perzentil": 95,
+ "plausibles_fenster_tage": 365,
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "a5-form25-abgleich-2026-08-30",
+ "schema": "early-detection-a5-form25-abgleich/v1",
+ "selbstCheck": {
+  "bestanden": true,
+  "istAbgaengeKontrollpool": 172,
+  "istAbgaengeSignal": 8,
+  "joinDeckungPanelCiksImCache": 1866,
+  "panelCiks": 6123,
+  "quelle": "reports/studie/E4g-restursachen-diagnose-2026-08-29.json",
+  "sollAbgaengeKontrollpool": 172,
+  "sollAbgaengeSignal": 8
+ },
+ "serverConfirmedAt": "2026-08-29T23:01:30.000Z",
+ "siegelWache": {
+  "bytes": 5025230848,
+  "klartextKopie": false,
+  "schluesselAngefasst": false,
+  "sha256Geprueft": true,
+  "siegelDatei": "panel/panel-endtest.sqlite.enc"
+ },
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "variante": "S-G"
+}

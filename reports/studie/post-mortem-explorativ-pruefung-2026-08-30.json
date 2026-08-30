@@ -1,0 +1,83 @@
+{
+ "accessedAt": "2026-08-30T06:00:00.000Z",
+ "arme": {
+  "kontrolle": {
+   "fallzahl": 4285,
+   "folgequartale_verfuegbar": 17097,
+   "folgequartale_zensiert": 43,
+   "nenner_persistenz": 4249,
+   "nenner_verfolgbarkeit": 4733,
+   "persistenz_ja": 893,
+   "persistenz_nein": 3356,
+   "persistenz_rate": 0.210167098140739,
+   "unentscheidbar_gesamt": 36,
+   "verfolgbare_firmen": 4285
+  },
+  "signal": {
+   "fallzahl": 326,
+   "folgequartale_verfuegbar": 1302,
+   "folgequartale_zensiert": 2,
+   "nenner_persistenz": 325,
+   "nenner_verfolgbarkeit": 365,
+   "persistenz_ja": 66,
+   "persistenz_nein": 259,
+   "persistenz_rate": 0.20307692307692307,
+   "unentscheidbar_gesamt": 1,
+   "verfolgbare_firmen": 326
+  }
+ },
+ "beendetAm": "2026-08-30T07:34:11.545Z",
+ "differenz_persistenz_rate": -0.007090175063815929,
+ "endpunkt": "wachstums_persistenz_folgequartale",
+ "endpunktGeprueft": "lib/studie-verfassung.js::pruefeEndpunktKlasse",
+ "ergebnisdatenBeruehrt": false,
+ "ersterZugriffAm": "2026-08-30T07:33:50.640Z",
+ "fenster": "pruefung",
+ "gelesenePfade": [
+  "panel/panel-validierung.sqlite"
+ ],
+ "geschriebenePfade": [
+  "arbeit/Obduktion-pruefung-zwischenstand.sqlite"
+ ],
+ "kontrollpool_firmen": 4733,
+ "lesart": "bekannte Ueberlebens-Verzerrung, Obergrenzen-Lesart: die fehlenden 10,7 % sind nicht zufaellig, Verlierer verschwinden oefter - jede hier berichtete Rate ist eine OBERGRENZE, keine Punktschaetzung",
+ "manifestGeprueft": [
+  "protocol/early-detection/2.0.0/preregistration.json",
+  "scripts/studie-basisraten.py",
+  "scripts/studie-zaehlprobe.py"
+ ],
+ "panelRand": "2020-12-31",
+ "persistenzRegel": "Persistenz JA <=> g > 0 in ALLEN 4 Folgequartalen derselben Quellen-Basis. Das ist Bedingung (c) des Signals (studie-basisraten.py::signale) vorwaerts gelegt, keine neue Schwelle. Ein Folgequartal ohne berechenbaren g-Wert macht die Firma unentscheidbar; sie faellt aus dem Nenner statt als 'nein' zu zaehlen.",
+ "persistenz_rate_kontrolle": 0.210167098140739,
+ "perzentil": 95,
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "post-mortem-explorativ-pruefung-2026-08-30",
+ "schema": "early-detection-post-mortem-obduktion/v1",
+ "selbstCheck": {
+  "bestanden": true,
+  "istReifKontrolle": 4285,
+  "istReifSignal": 326,
+  "istUnreifKontrolle": 448,
+  "istUnreifSignal": 39,
+  "quelle": "reports/studie/E4a-diagnose-pruefung-2026-08-19.json",
+  "sollReifKontrolle": 4285,
+  "sollReifSignal": 326,
+  "sollUnreifKontrolle": 448,
+  "sollUnreifSignal": 39
+ },
+ "serverConfirmedAt": "2026-08-29T22:54:12.000Z",
+ "siegelWache": {
+  "bytes": 5025230848,
+  "klartextKopie": false,
+  "schluesselAngefasst": false,
+  "sha256Geprueft": true,
+  "siegelDatei": "panel/panel-endtest.sqlite.enc"
+ },
+ "signal_arm_firmen": 365,
+ "umgebung": {
+  "plattform": "win32",
+  "python": "3.12.10",
+  "sqlite": "3.49.1"
+ },
+ "variante": "S-G"
+}
