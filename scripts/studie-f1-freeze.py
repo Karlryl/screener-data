@@ -26,7 +26,7 @@ Eingefroren werden deshalb, in dieser Reihenfolge:
    Platte gegen frischen Abruf der registrierten Quell-URL). Zwei Linien sind
    fuer A2 strikt besser als eine, und ihre Deckungsgleichheit ist selbst eine
    Aussage.
-5. **Extraktions-Code** — sha256 der drei F1-Skripte. Eine Regel, deren
+5. **Extraktions-Code** — sha256 der vier F1-Skripte. Eine Regel, deren
    Implementierung sich danach aendert, ist nicht eingefroren.
 6. **Kontaminations-Vorgeschichte, woertlich** — Bedingung 5 des Urteils K3 und
    Auflage A16 verlangen sie im Eintragstext. Sie steht hier, damit F3 sie
@@ -175,7 +175,8 @@ def _fundament(vintage, quelle):
         "fenster": vintage["fenster"],
         "herkunftsSchliessung": vintage["herkunftsSchliessung"],
         "herkunftsSchliessungSha256": vintage["herkunftsSchliessungSha256"],
-        "dataRoot": vintage.get("dataRoot"),
+        "datenwurzelName": vintage.get("datenwurzelName"),
+        "datenwurzelHerkunft": vintage.get("datenwurzelHerkunft"),
         "payloads": vintage["payloads"],
         "bitGleich": vintage["bitGleich"],
         "bitGleicheBytes": vintage["bitGleicheBytes"],
@@ -190,7 +191,8 @@ def _fundament(vintage, quelle):
     }
 
 
-def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel, zweitlinie_pfad=None):
+def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel, zweitlinie_pfad=None,
+         selbst_pfad=None):
     regel_bericht = lies(regel_pfad)
     vintage = lies(vintage_pfad)
     zweitlinie = lies(zweitlinie_pfad) if zweitlinie_pfad else None
@@ -232,6 +234,19 @@ def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel, zweitlinie_pfad=None):
                 + " — der gehashte Stand waere nicht der committete")
         code.append({"pfad": rel, "sha256": datei_sha256(pfad),
                      "bytes": pfad.stat().st_size})
+    # `--wurzel` steht per Voreinstellung auf "." — hier liegen mehrere Worktrees
+    # nebeneinander. Zeigte die Wurzel auf ein anderes Checkout, hashte der Freeze
+    # klaglos FREMDE Skript-Bytes neben Zahlen, die dieses Checkout erzeugt hat,
+    # und verifizierte sich danach sauber gegen seinen eigenen Irrtum. Mindest-
+    # Bodensatz: die Datei, die gerade laeuft, muss die sein, die gehasht wurde.
+    selbst = datei_sha256(Path(selbst_pfad or __file__).resolve())
+    gehasht = next(c["sha256"] for c in code
+                   if c["pfad"].endswith("studie-f1-freeze.py"))
+    if selbst != gehasht:
+        raise FreezeFehler(
+            "Die gehashte Fassung von studie-f1-freeze.py ist nicht die laufende "
+            "(--wurzel zeigt auf ein anderes Checkout): gehasht " + gehasht[:16]
+            + ", laufend " + selbst[:16])
 
     inhalt = {
         "schema": SCHEMA,
@@ -245,7 +260,8 @@ def baue(regel_pfad, vintage_pfad, zensus_pfad, wurzel, zweitlinie_pfad=None):
         "registerEintrag": "keiner — F1 arbeitet ausschliesslich auf oeffentlichen "
                            "Daten (Bauplan §6, Zeile F1). Der Eintrag faellt bei F3.",
         "block1_wahlGrundlage": {
-            "pfad": regel_bericht["inventar"]["pfad"],
+            "datei": regel_bericht["inventar"]["datei"],
+            "ablage": regel_bericht["inventar"]["ablage"],
             "sha256": regel_bericht["inventar"]["sha256"],
             "erzeugt": regel_bericht["inventar"].get("erzeugt"),
             "vermerk": "einziger zulaessiger Eingang der Konzeptwahl. Unzulaessig als "
@@ -326,7 +342,8 @@ def selbsttest():
                        "RealEstateRevenueNet", "RegulatedAndUnregulatedOperatingRevenue")]
     regel = {"regelId": "test", "schranken": {}}
     regel_bericht = {
-        "inventar": {"pfad": "inv.json", "sha256": "0" * 64, "erzeugt": "x"},
+        "inventar": {"datei": "inv.json", "ablage": "Vault", "sha256": "0" * 64,
+                     "erzeugt": "x"},
         "regel": regel, "regelSha256": hash_von(regel),
         "konzeptliste": liste, "konzeptlisteSha256": hash_von(liste),
         "ehrlicheAusschluesse": [], "unterschreitungen": [],
@@ -357,28 +374,38 @@ def selbsttest():
         vp.write_text(json.dumps(vintage), encoding="utf-8")
 
         zp = tmp / "zweitlinie.json"
-        zp.write_text(json.dumps(dict(vintage, dataRoot="anderswo")), encoding="utf-8")
-        mit_zweit = baue(rp, vp, None, tmp, zp)
+        zp.write_text(json.dumps(dict(vintage, datenwurzelName="anderswo")),
+                      encoding="utf-8")
+        mit_zweit = baue(rp, vp, None, tmp, zp, selbst_pfad=tmp / F1_SKRIPTE[3])
         pruefe("Zweitlinie wird als deckungsgleich erkannt",
                mit_zweit["block4_datenfundament"]["zweitlinieDeckungsgleich"] is True)
         abweichend = json.loads(json.dumps(vintage))
         abweichend["zeilen"][0]["istSha256"] = "c" * 64
         zp.write_text(json.dumps(abweichend), encoding="utf-8")
         pruefe("abweichende Zweitlinie faellt auf",
-               baue(rp, vp, None, tmp, zp)["block4_datenfundament"]
+               baue(rp, vp, None, tmp, zp, selbst_pfad=tmp / F1_SKRIPTE[3])["block4_datenfundament"]
                ["zweitlinieDeckungsgleich"] is False)
 
         # Die CRLF-Sperre muss reissen koennen.
         echt_bytes = (tmp / F1_SKRIPTE[0]).read_bytes()
         (tmp / F1_SKRIPTE[0]).write_bytes(b"# platzhalter" + CRLF)
         try:
-            baue(rp, vp, None, tmp)
+            baue(rp, vp, None, tmp, selbst_pfad=tmp / F1_SKRIPTE[3])
             pruefe("CRLF im Extraktions-Code fliegt auf", False)
         except FreezeFehler as exc:
             pruefe("CRLF im Extraktions-Code fliegt auf", "CRLF" in str(exc))
         (tmp / F1_SKRIPTE[0]).write_bytes(echt_bytes)
 
-        eins = baue(rp, vp, None, tmp)
+        # Zeigt die Wurzel auf ein FREMDES Checkout, hasht der Freeze fremde
+        # Skript-Bytes neben eigenen Zahlen und verifiziert sich danach sauber
+        # gegen seinen eigenen Irrtum. Der Bodensatz muss das sehen.
+        try:
+            baue(rp, vp, None, tmp)  # laufende Datei != Platzhalter in tmp
+            pruefe("fremdes Checkout fliegt auf", False)
+        except FreezeFehler as exc:
+            pruefe("fremdes Checkout fliegt auf", "anderes Checkout" in str(exc))
+
+        eins = baue(rp, vp, None, tmp, selbst_pfad=tmp / F1_SKRIPTE[3])
         pruefe("K7a-Koinzidenz wird festgestellt", eins["k7aKoinzidenz"]["deckungsgleich"])
         pruefe("Kontaminations-Vorgeschichte steht woertlich drin",
                "89,32 %" in eins["block6_kontaminationsVorgeschichte"]
@@ -402,7 +429,7 @@ def selbsttest():
         # Und der Code gehoert mit in den Hash — sonst friert man eine Regel ein,
         # deren Ausfuehrung sich danach still aendern kann.
         (tmp / F1_SKRIPTE[2]).write_bytes(b"# andere Regel\n")
-        zwei = baue(rp, vp, None, tmp)
+        zwei = baue(rp, vp, None, tmp, selbst_pfad=tmp / F1_SKRIPTE[3])
         pruefe("geaenderter Code aendert den Freeze-Hash",
                zwei["f1FreezeSha256"] != eins["f1FreezeSha256"])
 
@@ -411,7 +438,7 @@ def selbsttest():
         falsch = dict(regel_bericht, konzeptlisteSha256="f" * 64)
         (tmp / "falsch.json").write_text(json.dumps(falsch), encoding="utf-8")
         try:
-            baue(tmp / "falsch.json", vp, None, tmp)
+            baue(tmp / "falsch.json", vp, None, tmp, selbst_pfad=tmp / F1_SKRIPTE[3])
             pruefe("falsch gemeldeter Listen-Hash wird abgelehnt", False)
         except FreezeFehler as exc:
             pruefe("falsch gemeldeter Listen-Hash wird abgelehnt",
@@ -423,7 +450,7 @@ def selbsttest():
         kaputt_vintage["zeilen"][0]["grund"] = "Testbruch"
         kaputt_vintage["vintageIdentitaet"] = "GEBROCHEN"
         (tmp / "vkaputt.json").write_text(json.dumps(kaputt_vintage), encoding="utf-8")
-        drei = baue(rp, tmp / "vkaputt.json", None, tmp)
+        drei = baue(rp, tmp / "vkaputt.json", None, tmp, selbst_pfad=tmp / F1_SKRIPTE[3])
         pruefe("gebrochener Vintage steht namentlich im Freeze",
                drei["block4_datenfundament"]["gebrocheneZeilen"][0]["quartal"] == "2009q1"
                and drei["block4_datenfundament"]["vintageIdentitaet"] == "GEBROCHEN")

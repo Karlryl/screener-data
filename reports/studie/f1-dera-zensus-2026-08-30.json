@@ -1,0 +1,4088 @@
+{
+  "schema": "studie-f1-dera-zensus/v1",
+  "erzeugt": "2026-08-30T10:00:48.108Z",
+  "datenwurzelName": "early-detection-v4-sealed127",
+  "datenwurzelHerkunft": "EARLY_DETECTION_DATA_ROOT bzw. --data-root",
+  "jahrgang": "legacy_earliest_archived",
+  "fenster": {
+    "von": "2009q1",
+    "bis": "2020q4",
+    "siegelGrenze": "2020q4"
+  },
+  "payloads": 48,
+  "maxVerhaeltnis": 100.0,
+  "naturschluessel": [
+    "adsh",
+    "tag",
+    "version",
+    "ddate",
+    "qtrs",
+    "uom",
+    "segments",
+    "coreg"
+  ],
+  "namensraumAbbildung": {
+    "us-gaap": "us-gaap",
+    "ifrs-full": "ifrs",
+    "ifrs": "ifrs"
+  },
+  "ifrsAbQuartal": "2018q1",
+  "summeJeKennung": {
+    "us-gaap:InterestAndDividendIncomeOperating": {
+      "zeilenRoh": 51702,
+      "zeilenKonsolidiert": 50821,
+      "zeilenVerworfen": 881,
+      "quartaleMitZeilen": 45
+    },
+    "us-gaap:OilAndGasRevenue": {
+      "zeilenRoh": 7509,
+      "zeilenKonsolidiert": 6617,
+      "zeilenVerworfen": 892,
+      "quartaleMitZeilen": 40
+    },
+    "us-gaap:RealEstateRevenueNet": {
+      "zeilenRoh": 11796,
+      "zeilenKonsolidiert": 10093,
+      "zeilenVerworfen": 1703,
+      "quartaleMitZeilen": 39
+    },
+    "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+      "zeilenRoh": 3462,
+      "zeilenKonsolidiert": 2258,
+      "zeilenVerworfen": 1204,
+      "quartaleMitZeilen": 45
+    },
+    "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+      "zeilenRoh": 54366,
+      "zeilenKonsolidiert": 53239,
+      "zeilenVerworfen": 1127,
+      "quartaleMitZeilen": 14
+    },
+    "us-gaap:Revenues": {
+      "zeilenRoh": 309145,
+      "zeilenKonsolidiert": 275004,
+      "zeilenVerworfen": 34141,
+      "quartaleMitZeilen": 47
+    },
+    "us-gaap:SalesRevenueGoodsNet": {
+      "zeilenRoh": 73241,
+      "zeilenKonsolidiert": 64134,
+      "zeilenVerworfen": 9107,
+      "quartaleMitZeilen": 46
+    },
+    "us-gaap:SalesRevenueNet": {
+      "zeilenRoh": 168773,
+      "zeilenKonsolidiert": 146663,
+      "zeilenVerworfen": 22110,
+      "quartaleMitZeilen": 47
+    },
+    "us-gaap:SalesRevenueServicesNet": {
+      "zeilenRoh": 40328,
+      "zeilenKonsolidiert": 35952,
+      "zeilenVerworfen": 4376,
+      "quartaleMitZeilen": 45
+    }
+  },
+  "ohneZeilen": [],
+  "jePayload": [
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 0,
+      "dimensionszeilenVerworfen": 0,
+      "jeKennung": {},
+      "quartal": "2009q1",
+      "payloadSha256": "bd74910aad9e62e69bc2f1a431d7b4f57f39b661bca8605a8d39d4552088df83",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 4930,
+      "dimensionszeilenVerworfen": 0,
+      "jeKennung": {
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 34,
+          "zeilenKonsolidiert": 34,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 34,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 10,
+          "zeilenKonsolidiert": 10,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 10,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2009q2",
+      "payloadSha256": "96cfa9e422fc8fc476efb4cb3ae87a91442e70c6b925899a63d8c946ab6f7d28",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 116671,
+      "dimensionszeilenVerworfen": 42,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 49,
+          "zeilenKonsolidiert": 47,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0426,
+          "naturschluesselKonsolidiert": 47,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 28,
+          "zeilenKonsolidiert": 28,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 28,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 10,
+          "zeilenKonsolidiert": 10,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 10,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 2.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 488,
+          "zeilenKonsolidiert": 468,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.0427,
+          "naturschluesselKonsolidiert": 468,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 164,
+          "zeilenKonsolidiert": 160,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.025,
+          "naturschluesselKonsolidiert": 160,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 255,
+          "zeilenKonsolidiert": 253,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0079,
+          "naturschluesselKonsolidiert": 253,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 116,
+          "zeilenKonsolidiert": 104,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.1154,
+          "naturschluesselKonsolidiert": 104,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2009q3",
+      "payloadSha256": "f7a6a642ef572fe077ed9c7b837de793d56dab63071897b9aedc9cc784ee3bfd",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 131984,
+      "dimensionszeilenVerworfen": 54,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 51,
+          "zeilenKonsolidiert": 51,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 51,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 28,
+          "zeilenKonsolidiert": 28,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 28,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 14,
+          "zeilenKonsolidiert": 14,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 14,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 2.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 512,
+          "zeilenKonsolidiert": 482,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.0622,
+          "naturschluesselKonsolidiert": 482,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 180,
+          "zeilenKonsolidiert": 172,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.0465,
+          "naturschluesselKonsolidiert": 172,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 257,
+          "zeilenKonsolidiert": 255,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0078,
+          "naturschluesselKonsolidiert": 255,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 106,
+          "zeilenKonsolidiert": 94,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.1277,
+          "naturschluesselKonsolidiert": 94,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2009q4",
+      "payloadSha256": "8a17b95e6ed7b7207aa5a590888d3b8e2baf5dc176bc6b6d6bfe0f94b6685bef",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 151692,
+      "dimensionszeilenVerworfen": 0,
+      "jeKennung": {
+        "us-gaap:Revenues": {
+          "zeilenRoh": 76,
+          "zeilenKonsolidiert": 76,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 76,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 48,
+          "zeilenKonsolidiert": 48,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 48,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 78,
+          "zeilenKonsolidiert": 78,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 78,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 28,
+          "zeilenKonsolidiert": 28,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 28,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2010q1",
+      "payloadSha256": "8b037a9c4a26e51bc6cd94a8cedcc7eefae1c6e5a7b18b0b596669354410d4d3",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 118947,
+      "dimensionszeilenVerworfen": 40,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 53,
+          "zeilenKonsolidiert": 53,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 53,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 20,
+          "zeilenKonsolidiert": 20,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 20,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 14,
+          "zeilenKonsolidiert": 14,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 14,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 6,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.5,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 506,
+          "zeilenKonsolidiert": 478,
+          "zeilenVerworfen": 28,
+          "verhaeltnisRohKonsolidiert": 1.0586,
+          "naturschluesselKonsolidiert": 478,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 188,
+          "zeilenKonsolidiert": 184,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.0217,
+          "naturschluesselKonsolidiert": 184,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 294,
+          "zeilenKonsolidiert": 294,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 294,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 122,
+          "zeilenKonsolidiert": 116,
+          "zeilenVerworfen": 6,
+          "verhaeltnisRohKonsolidiert": 1.0517,
+          "naturschluesselKonsolidiert": 116,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2010q2",
+      "payloadSha256": "3e14314fe9a5fc4d9f4195bf2c3dfb03118d49adab06b3e2320766e64e41cfa4",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 476310,
+      "dimensionszeilenVerworfen": 437,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 202,
+          "zeilenKonsolidiert": 171,
+          "zeilenVerworfen": 31,
+          "verhaeltnisRohKonsolidiert": 1.1813,
+          "naturschluesselKonsolidiert": 171,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 52,
+          "zeilenKonsolidiert": 36,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.4444,
+          "naturschluesselKonsolidiert": 36,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 74,
+          "zeilenKonsolidiert": 66,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.1212,
+          "naturschluesselKonsolidiert": 66,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 28,
+          "zeilenKonsolidiert": 22,
+          "zeilenVerworfen": 6,
+          "verhaeltnisRohKonsolidiert": 1.2727,
+          "naturschluesselKonsolidiert": 22,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 1480,
+          "zeilenKonsolidiert": 1253,
+          "zeilenVerworfen": 227,
+          "verhaeltnisRohKonsolidiert": 1.1812,
+          "naturschluesselKonsolidiert": 1253,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 568,
+          "zeilenKonsolidiert": 522,
+          "zeilenVerworfen": 46,
+          "verhaeltnisRohKonsolidiert": 1.0881,
+          "naturschluesselKonsolidiert": 522,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 1008,
+          "zeilenKonsolidiert": 923,
+          "zeilenVerworfen": 85,
+          "verhaeltnisRohKonsolidiert": 1.0921,
+          "naturschluesselKonsolidiert": 923,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 336,
+          "zeilenKonsolidiert": 318,
+          "zeilenVerworfen": 18,
+          "verhaeltnisRohKonsolidiert": 1.0566,
+          "naturschluesselKonsolidiert": 318,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2010q3",
+      "payloadSha256": "24a7aef0f79ad2a2d5f03149c659e8148a11f5d5c3a8666a7d907eb9931ca757",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 505411,
+      "dimensionszeilenVerworfen": 497,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 188,
+          "zeilenKonsolidiert": 167,
+          "zeilenVerworfen": 21,
+          "verhaeltnisRohKonsolidiert": 1.1257,
+          "naturschluesselKonsolidiert": 167,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 42,
+          "zeilenKonsolidiert": 32,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.3125,
+          "naturschluesselKonsolidiert": 32,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 76,
+          "zeilenKonsolidiert": 66,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.1515,
+          "naturschluesselKonsolidiert": 66,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 14,
+          "zeilenKonsolidiert": 14,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 14,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 1549,
+          "zeilenKonsolidiert": 1276,
+          "zeilenVerworfen": 273,
+          "verhaeltnisRohKonsolidiert": 1.2139,
+          "naturschluesselKonsolidiert": 1276,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 549,
+          "zeilenKonsolidiert": 508,
+          "zeilenVerworfen": 41,
+          "verhaeltnisRohKonsolidiert": 1.0807,
+          "naturschluesselKonsolidiert": 508,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 1092,
+          "zeilenKonsolidiert": 989,
+          "zeilenVerworfen": 103,
+          "verhaeltnisRohKonsolidiert": 1.1041,
+          "naturschluesselKonsolidiert": 989,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 339,
+          "zeilenKonsolidiert": 300,
+          "zeilenVerworfen": 39,
+          "verhaeltnisRohKonsolidiert": 1.13,
+          "naturschluesselKonsolidiert": 300,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2010q4",
+      "payloadSha256": "d58e5843e1cd6c80b49bb293dabe619779fe99ba1011e220c34c19567aa9f979",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 663971,
+      "dimensionszeilenVerworfen": 125,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 20,
+          "zeilenKonsolidiert": 20,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 20,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 24,
+          "zeilenKonsolidiert": 24,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 24,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 18,
+          "zeilenKonsolidiert": 18,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 18,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 10,
+          "zeilenKonsolidiert": 6,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.6667,
+          "naturschluesselKonsolidiert": 6,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 1265,
+          "zeilenKonsolidiert": 1182,
+          "zeilenVerworfen": 83,
+          "verhaeltnisRohKonsolidiert": 1.0702,
+          "naturschluesselKonsolidiert": 1182,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 320,
+          "zeilenKonsolidiert": 312,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.0256,
+          "naturschluesselKonsolidiert": 312,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 1007,
+          "zeilenKonsolidiert": 977,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.0307,
+          "naturschluesselKonsolidiert": 977,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 114,
+          "zeilenKonsolidiert": 114,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 114,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2011q1",
+      "payloadSha256": "b3a58a8a396ae1607d392d53e4ec93c1d66e2a7779ba857dd037e5bdbb05b695",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 483670,
+      "dimensionszeilenVerworfen": 583,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 219,
+          "zeilenKonsolidiert": 199,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.1005,
+          "naturschluesselKonsolidiert": 199,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 54,
+          "zeilenKonsolidiert": 38,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.4211,
+          "naturschluesselKonsolidiert": 38,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 81,
+          "zeilenKonsolidiert": 69,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.1739,
+          "naturschluesselKonsolidiert": 69,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 30,
+          "zeilenKonsolidiert": 26,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.1538,
+          "naturschluesselKonsolidiert": 26,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 1766,
+          "zeilenKonsolidiert": 1427,
+          "zeilenVerworfen": 339,
+          "verhaeltnisRohKonsolidiert": 1.2376,
+          "naturschluesselKonsolidiert": 1427,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 658,
+          "zeilenKonsolidiert": 610,
+          "zeilenVerworfen": 48,
+          "verhaeltnisRohKonsolidiert": 1.0787,
+          "naturschluesselKonsolidiert": 610,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 1247,
+          "zeilenKonsolidiert": 1140,
+          "zeilenVerworfen": 107,
+          "verhaeltnisRohKonsolidiert": 1.0939,
+          "naturschluesselKonsolidiert": 1140,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 403,
+          "zeilenKonsolidiert": 366,
+          "zeilenVerworfen": 37,
+          "verhaeltnisRohKonsolidiert": 1.1011,
+          "naturschluesselKonsolidiert": 366,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2011q2",
+      "payloadSha256": "24947f943d177bf9959f6931c6275f738cf5b4c4eeb3c1c22dd862afc669b367",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 1903993,
+      "dimensionszeilenVerworfen": 1797,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1446,
+          "zeilenKonsolidiert": 1396,
+          "zeilenVerworfen": 50,
+          "verhaeltnisRohKonsolidiert": 1.0358,
+          "naturschluesselKonsolidiert": 1396,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 294,
+          "zeilenKonsolidiert": 256,
+          "zeilenVerworfen": 38,
+          "verhaeltnisRohKonsolidiert": 1.1484,
+          "naturschluesselKonsolidiert": 256,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 318,
+          "zeilenKonsolidiert": 302,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.053,
+          "naturschluesselKonsolidiert": 302,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 56,
+          "zeilenKonsolidiert": 34,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.6471,
+          "naturschluesselKonsolidiert": 34,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 6454,
+          "zeilenKonsolidiert": 5707,
+          "zeilenVerworfen": 747,
+          "verhaeltnisRohKonsolidiert": 1.1309,
+          "naturschluesselKonsolidiert": 5707,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2216,
+          "zeilenKonsolidiert": 2022,
+          "zeilenVerworfen": 194,
+          "verhaeltnisRohKonsolidiert": 1.0959,
+          "naturschluesselKonsolidiert": 2022,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4423,
+          "zeilenKonsolidiert": 3839,
+          "zeilenVerworfen": 584,
+          "verhaeltnisRohKonsolidiert": 1.1521,
+          "naturschluesselKonsolidiert": 3839,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1348,
+          "zeilenKonsolidiert": 1202,
+          "zeilenVerworfen": 146,
+          "verhaeltnisRohKonsolidiert": 1.1215,
+          "naturschluesselKonsolidiert": 1202,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2011q3",
+      "payloadSha256": "a524e95df8fdf4b5218d5694326faa44d587fe237d63b148d77a25d80ea540b2",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2150890,
+      "dimensionszeilenVerworfen": 1856,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1487,
+          "zeilenKonsolidiert": 1446,
+          "zeilenVerworfen": 41,
+          "verhaeltnisRohKonsolidiert": 1.0284,
+          "naturschluesselKonsolidiert": 1446,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 315,
+          "zeilenKonsolidiert": 276,
+          "zeilenVerworfen": 39,
+          "verhaeltnisRohKonsolidiert": 1.1413,
+          "naturschluesselKonsolidiert": 276,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 334,
+          "zeilenKonsolidiert": 309,
+          "zeilenVerworfen": 25,
+          "verhaeltnisRohKonsolidiert": 1.0809,
+          "naturschluesselKonsolidiert": 309,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 70,
+          "zeilenKonsolidiert": 52,
+          "zeilenVerworfen": 18,
+          "verhaeltnisRohKonsolidiert": 1.3462,
+          "naturschluesselKonsolidiert": 52,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7159,
+          "zeilenKonsolidiert": 6352,
+          "zeilenVerworfen": 807,
+          "verhaeltnisRohKonsolidiert": 1.127,
+          "naturschluesselKonsolidiert": 6352,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2388,
+          "zeilenKonsolidiert": 2184,
+          "zeilenVerworfen": 204,
+          "verhaeltnisRohKonsolidiert": 1.0934,
+          "naturschluesselKonsolidiert": 2184,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4846,
+          "zeilenKonsolidiert": 4250,
+          "zeilenVerworfen": 596,
+          "verhaeltnisRohKonsolidiert": 1.1402,
+          "naturschluesselKonsolidiert": 4250,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1367,
+          "zeilenKonsolidiert": 1241,
+          "zeilenVerworfen": 126,
+          "verhaeltnisRohKonsolidiert": 1.1015,
+          "naturschluesselKonsolidiert": 1241,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2011q4",
+      "payloadSha256": "f75c0f451aaabea27efd8e399b96b590051821f06982f7f8cbe746044ad0c4d1",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2439119,
+      "dimensionszeilenVerworfen": 579,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 375,
+          "zeilenKonsolidiert": 375,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 375,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 118,
+          "zeilenKonsolidiert": 118,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 118,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 237,
+          "zeilenKonsolidiert": 228,
+          "zeilenVerworfen": 9,
+          "verhaeltnisRohKonsolidiert": 1.0395,
+          "naturschluesselKonsolidiert": 228,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 60,
+          "zeilenKonsolidiert": 58,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0345,
+          "naturschluesselKonsolidiert": 58,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5342,
+          "zeilenKonsolidiert": 5035,
+          "zeilenVerworfen": 307,
+          "verhaeltnisRohKonsolidiert": 1.061,
+          "naturschluesselKonsolidiert": 5035,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 1585,
+          "zeilenKonsolidiert": 1489,
+          "zeilenVerworfen": 96,
+          "verhaeltnisRohKonsolidiert": 1.0645,
+          "naturschluesselKonsolidiert": 1489,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4295,
+          "zeilenKonsolidiert": 4146,
+          "zeilenVerworfen": 149,
+          "verhaeltnisRohKonsolidiert": 1.0359,
+          "naturschluesselKonsolidiert": 4146,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 706,
+          "zeilenKonsolidiert": 690,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.0232,
+          "naturschluesselKonsolidiert": 690,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2012q1",
+      "payloadSha256": "03151500362fd3e678be27e226f4a7cba39022cf7f8e9261c118caced4fa404f",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2122165,
+      "dimensionszeilenVerworfen": 2127,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1472,
+          "zeilenKonsolidiert": 1435,
+          "zeilenVerworfen": 37,
+          "verhaeltnisRohKonsolidiert": 1.0258,
+          "naturschluesselKonsolidiert": 1435,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 339,
+          "zeilenKonsolidiert": 294,
+          "zeilenVerworfen": 45,
+          "verhaeltnisRohKonsolidiert": 1.1531,
+          "naturschluesselKonsolidiert": 294,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 342,
+          "zeilenKonsolidiert": 301,
+          "zeilenVerworfen": 41,
+          "verhaeltnisRohKonsolidiert": 1.1362,
+          "naturschluesselKonsolidiert": 301,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 58,
+          "zeilenKonsolidiert": 36,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.6111,
+          "naturschluesselKonsolidiert": 36,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7246,
+          "zeilenKonsolidiert": 6304,
+          "zeilenVerworfen": 942,
+          "verhaeltnisRohKonsolidiert": 1.1494,
+          "naturschluesselKonsolidiert": 6304,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2362,
+          "zeilenKonsolidiert": 2103,
+          "zeilenVerworfen": 259,
+          "verhaeltnisRohKonsolidiert": 1.1232,
+          "naturschluesselKonsolidiert": 2103,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4837,
+          "zeilenKonsolidiert": 4175,
+          "zeilenVerworfen": 662,
+          "verhaeltnisRohKonsolidiert": 1.1586,
+          "naturschluesselKonsolidiert": 4175,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1338,
+          "zeilenKonsolidiert": 1219,
+          "zeilenVerworfen": 119,
+          "verhaeltnisRohKonsolidiert": 1.0976,
+          "naturschluesselKonsolidiert": 1219,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2012q2",
+      "payloadSha256": "c8fdea81d502dc5ea04085b3a251d6e878dcdd732c3a44019b36c3e19e4ca69f",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2881650,
+      "dimensionszeilenVerworfen": 3952,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1451,
+          "zeilenKonsolidiert": 1379,
+          "zeilenVerworfen": 72,
+          "verhaeltnisRohKonsolidiert": 1.0522,
+          "naturschluesselKonsolidiert": 1379,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 336,
+          "zeilenKonsolidiert": 287,
+          "zeilenVerworfen": 49,
+          "verhaeltnisRohKonsolidiert": 1.1707,
+          "naturschluesselKonsolidiert": 287,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 399,
+          "zeilenKonsolidiert": 301,
+          "zeilenVerworfen": 98,
+          "verhaeltnisRohKonsolidiert": 1.3256,
+          "naturschluesselKonsolidiert": 301,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 76,
+          "zeilenKonsolidiert": 44,
+          "zeilenVerworfen": 32,
+          "verhaeltnisRohKonsolidiert": 1.7273,
+          "naturschluesselKonsolidiert": 44,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8134,
+          "zeilenKonsolidiert": 6589,
+          "zeilenVerworfen": 1545,
+          "verhaeltnisRohKonsolidiert": 1.2345,
+          "naturschluesselKonsolidiert": 6589,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2708,
+          "zeilenKonsolidiert": 2138,
+          "zeilenVerworfen": 570,
+          "verhaeltnisRohKonsolidiert": 1.2666,
+          "naturschluesselKonsolidiert": 2138,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5742,
+          "zeilenKonsolidiert": 4396,
+          "zeilenVerworfen": 1346,
+          "verhaeltnisRohKonsolidiert": 1.3062,
+          "naturschluesselKonsolidiert": 4396,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1508,
+          "zeilenKonsolidiert": 1268,
+          "zeilenVerworfen": 240,
+          "verhaeltnisRohKonsolidiert": 1.1893,
+          "naturschluesselKonsolidiert": 1268,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2012q3",
+      "payloadSha256": "6ac7972beff95b1a0534730748a4e6827dd311f15ba2672a717183819d1a273a",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3062966,
+      "dimensionszeilenVerworfen": 4034,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1449,
+          "zeilenKonsolidiert": 1402,
+          "zeilenVerworfen": 47,
+          "verhaeltnisRohKonsolidiert": 1.0335,
+          "naturschluesselKonsolidiert": 1402,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 329,
+          "zeilenKonsolidiert": 270,
+          "zeilenVerworfen": 59,
+          "verhaeltnisRohKonsolidiert": 1.2185,
+          "naturschluesselKonsolidiert": 270,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 371,
+          "zeilenKonsolidiert": 304,
+          "zeilenVerworfen": 67,
+          "verhaeltnisRohKonsolidiert": 1.2204,
+          "naturschluesselKonsolidiert": 304,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 94,
+          "zeilenKonsolidiert": 74,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.2703,
+          "naturschluesselKonsolidiert": 74,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8572,
+          "zeilenKonsolidiert": 6881,
+          "zeilenVerworfen": 1691,
+          "verhaeltnisRohKonsolidiert": 1.2457,
+          "naturschluesselKonsolidiert": 6881,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2830,
+          "zeilenKonsolidiert": 2320,
+          "zeilenVerworfen": 510,
+          "verhaeltnisRohKonsolidiert": 1.2198,
+          "naturschluesselKonsolidiert": 2320,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 6149,
+          "zeilenKonsolidiert": 4806,
+          "zeilenVerworfen": 1343,
+          "verhaeltnisRohKonsolidiert": 1.2794,
+          "naturschluesselKonsolidiert": 4806,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1585,
+          "zeilenKonsolidiert": 1288,
+          "zeilenVerworfen": 297,
+          "verhaeltnisRohKonsolidiert": 1.2306,
+          "naturschluesselKonsolidiert": 1288,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2012q4",
+      "payloadSha256": "af2d0c465d4fadebe608993911b0d2e3385f74536fe67812337b5ff5232f4026",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3421534,
+      "dimensionszeilenVerworfen": 1536,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1735,
+          "zeilenKonsolidiert": 1734,
+          "zeilenVerworfen": 1,
+          "verhaeltnisRohKonsolidiert": 1.0006,
+          "naturschluesselKonsolidiert": 1734,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 195,
+          "zeilenKonsolidiert": 179,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.0894,
+          "naturschluesselKonsolidiert": 179,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 492,
+          "zeilenKonsolidiert": 456,
+          "zeilenVerworfen": 36,
+          "verhaeltnisRohKonsolidiert": 1.0789,
+          "naturschluesselKonsolidiert": 456,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 102,
+          "zeilenKonsolidiert": 90,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.1333,
+          "naturschluesselKonsolidiert": 90,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 10378,
+          "zeilenKonsolidiert": 9562,
+          "zeilenVerworfen": 816,
+          "verhaeltnisRohKonsolidiert": 1.0853,
+          "naturschluesselKonsolidiert": 9562,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2502,
+          "zeilenKonsolidiert": 2295,
+          "zeilenVerworfen": 207,
+          "verhaeltnisRohKonsolidiert": 1.0902,
+          "naturschluesselKonsolidiert": 2295,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7505,
+          "zeilenKonsolidiert": 7103,
+          "zeilenVerworfen": 402,
+          "verhaeltnisRohKonsolidiert": 1.0566,
+          "naturschluesselKonsolidiert": 7103,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1188,
+          "zeilenKonsolidiert": 1142,
+          "zeilenVerworfen": 46,
+          "verhaeltnisRohKonsolidiert": 1.0403,
+          "naturschluesselKonsolidiert": 1142,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2013q1",
+      "payloadSha256": "77a3820b5d89aba943cf6b6dc92139564ca542fc38af959874c817a9e242b011",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3061520,
+      "dimensionszeilenVerworfen": 4431,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1422,
+          "zeilenKonsolidiert": 1365,
+          "zeilenVerworfen": 57,
+          "verhaeltnisRohKonsolidiert": 1.0418,
+          "naturschluesselKonsolidiert": 1365,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 378,
+          "zeilenKonsolidiert": 296,
+          "zeilenVerworfen": 82,
+          "verhaeltnisRohKonsolidiert": 1.277,
+          "naturschluesselKonsolidiert": 296,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 382,
+          "zeilenKonsolidiert": 300,
+          "zeilenVerworfen": 82,
+          "verhaeltnisRohKonsolidiert": 1.2733,
+          "naturschluesselKonsolidiert": 300,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 60,
+          "zeilenKonsolidiert": 38,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.5789,
+          "naturschluesselKonsolidiert": 38,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 9007,
+          "zeilenKonsolidiert": 7206,
+          "zeilenVerworfen": 1801,
+          "verhaeltnisRohKonsolidiert": 1.2499,
+          "naturschluesselKonsolidiert": 7206,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 3054,
+          "zeilenKonsolidiert": 2481,
+          "zeilenVerworfen": 573,
+          "verhaeltnisRohKonsolidiert": 1.231,
+          "naturschluesselKonsolidiert": 2481,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 6720,
+          "zeilenKonsolidiert": 5231,
+          "zeilenVerworfen": 1489,
+          "verhaeltnisRohKonsolidiert": 1.2846,
+          "naturschluesselKonsolidiert": 5231,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1684,
+          "zeilenKonsolidiert": 1359,
+          "zeilenVerworfen": 325,
+          "verhaeltnisRohKonsolidiert": 1.2391,
+          "naturschluesselKonsolidiert": 1359,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2013q2",
+      "payloadSha256": "cbe316cbfdc704df2d041b530ac8d8c10fbb2d3ffb5cc7795daa781c20539419",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3105541,
+      "dimensionszeilenVerworfen": 4494,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1340,
+          "zeilenKonsolidiert": 1292,
+          "zeilenVerworfen": 48,
+          "verhaeltnisRohKonsolidiert": 1.0372,
+          "naturschluesselKonsolidiert": 1292,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 379,
+          "zeilenKonsolidiert": 297,
+          "zeilenVerworfen": 82,
+          "verhaeltnisRohKonsolidiert": 1.2761,
+          "naturschluesselKonsolidiert": 297,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 401,
+          "zeilenKonsolidiert": 318,
+          "zeilenVerworfen": 83,
+          "verhaeltnisRohKonsolidiert": 1.261,
+          "naturschluesselKonsolidiert": 318,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 66,
+          "zeilenKonsolidiert": 44,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.5,
+          "naturschluesselKonsolidiert": 44,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8895,
+          "zeilenKonsolidiert": 7095,
+          "zeilenVerworfen": 1800,
+          "verhaeltnisRohKonsolidiert": 1.2537,
+          "naturschluesselKonsolidiert": 7095,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2929,
+          "zeilenKonsolidiert": 2305,
+          "zeilenVerworfen": 624,
+          "verhaeltnisRohKonsolidiert": 1.2707,
+          "naturschluesselKonsolidiert": 2305,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 6272,
+          "zeilenKonsolidiert": 4731,
+          "zeilenVerworfen": 1541,
+          "verhaeltnisRohKonsolidiert": 1.3257,
+          "naturschluesselKonsolidiert": 4731,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1568,
+          "zeilenKonsolidiert": 1274,
+          "zeilenVerworfen": 294,
+          "verhaeltnisRohKonsolidiert": 1.2308,
+          "naturschluesselKonsolidiert": 1274,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2013q3",
+      "payloadSha256": "580cfe142416b285bf7e1fb5df3521bc4f899e288c19e2486cbf19878ee96c11",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3059380,
+      "dimensionszeilenVerworfen": 4104,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1347,
+          "zeilenKonsolidiert": 1314,
+          "zeilenVerworfen": 33,
+          "verhaeltnisRohKonsolidiert": 1.0251,
+          "naturschluesselKonsolidiert": 1314,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 323,
+          "zeilenKonsolidiert": 256,
+          "zeilenVerworfen": 67,
+          "verhaeltnisRohKonsolidiert": 1.2617,
+          "naturschluesselKonsolidiert": 256,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 379,
+          "zeilenKonsolidiert": 295,
+          "zeilenVerworfen": 84,
+          "verhaeltnisRohKonsolidiert": 1.2847,
+          "naturschluesselKonsolidiert": 295,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 92,
+          "zeilenKonsolidiert": 72,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.2778,
+          "naturschluesselKonsolidiert": 72,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8748,
+          "zeilenKonsolidiert": 7029,
+          "zeilenVerworfen": 1719,
+          "verhaeltnisRohKonsolidiert": 1.2446,
+          "naturschluesselKonsolidiert": 7029,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2834,
+          "zeilenKonsolidiert": 2266,
+          "zeilenVerworfen": 568,
+          "verhaeltnisRohKonsolidiert": 1.2507,
+          "naturschluesselKonsolidiert": 2266,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 6097,
+          "zeilenKonsolidiert": 4782,
+          "zeilenVerworfen": 1315,
+          "verhaeltnisRohKonsolidiert": 1.275,
+          "naturschluesselKonsolidiert": 4782,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1558,
+          "zeilenKonsolidiert": 1260,
+          "zeilenVerworfen": 298,
+          "verhaeltnisRohKonsolidiert": 1.2365,
+          "naturschluesselKonsolidiert": 1260,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2013q4",
+      "payloadSha256": "929d8a2396a6d3b0912f198bf0b418df59a9a7bb2539a2c06c925daac89b8193",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3591652,
+      "dimensionszeilenVerworfen": 1394,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1629,
+          "zeilenKonsolidiert": 1627,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0012,
+          "naturschluesselKonsolidiert": 1627,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 190,
+          "zeilenKonsolidiert": 190,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 190,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 519,
+          "zeilenKonsolidiert": 494,
+          "zeilenVerworfen": 25,
+          "verhaeltnisRohKonsolidiert": 1.0506,
+          "naturschluesselKonsolidiert": 494,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 92,
+          "zeilenKonsolidiert": 82,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.122,
+          "naturschluesselKonsolidiert": 82,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 10810,
+          "zeilenKonsolidiert": 10157,
+          "zeilenVerworfen": 653,
+          "verhaeltnisRohKonsolidiert": 1.0643,
+          "naturschluesselKonsolidiert": 10157,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2518,
+          "zeilenKonsolidiert": 2352,
+          "zeilenVerworfen": 166,
+          "verhaeltnisRohKonsolidiert": 1.0706,
+          "naturschluesselKonsolidiert": 2352,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7685,
+          "zeilenKonsolidiert": 7201,
+          "zeilenVerworfen": 484,
+          "verhaeltnisRohKonsolidiert": 1.0672,
+          "naturschluesselKonsolidiert": 7201,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1228,
+          "zeilenKonsolidiert": 1174,
+          "zeilenVerworfen": 54,
+          "verhaeltnisRohKonsolidiert": 1.046,
+          "naturschluesselKonsolidiert": 1174,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2014q1",
+      "payloadSha256": "33146afbe22f5b1b552d3e2cf218f9c110dbf6ead88f3622f04a1b93457f88f1",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2804902,
+      "dimensionszeilenVerworfen": 3800,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1347,
+          "zeilenKonsolidiert": 1311,
+          "zeilenVerworfen": 36,
+          "verhaeltnisRohKonsolidiert": 1.0275,
+          "naturschluesselKonsolidiert": 1311,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 313,
+          "zeilenKonsolidiert": 271,
+          "zeilenVerworfen": 42,
+          "verhaeltnisRohKonsolidiert": 1.155,
+          "naturschluesselKonsolidiert": 271,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 399,
+          "zeilenKonsolidiert": 314,
+          "zeilenVerworfen": 85,
+          "verhaeltnisRohKonsolidiert": 1.2707,
+          "naturschluesselKonsolidiert": 314,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 46,
+          "zeilenKonsolidiert": 34,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.3529,
+          "naturschluesselKonsolidiert": 34,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8783,
+          "zeilenKonsolidiert": 7231,
+          "zeilenVerworfen": 1552,
+          "verhaeltnisRohKonsolidiert": 1.2146,
+          "naturschluesselKonsolidiert": 7231,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2882,
+          "zeilenKonsolidiert": 2350,
+          "zeilenVerworfen": 532,
+          "verhaeltnisRohKonsolidiert": 1.2264,
+          "naturschluesselKonsolidiert": 2350,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 6155,
+          "zeilenKonsolidiert": 4904,
+          "zeilenVerworfen": 1251,
+          "verhaeltnisRohKonsolidiert": 1.2551,
+          "naturschluesselKonsolidiert": 4904,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1595,
+          "zeilenKonsolidiert": 1305,
+          "zeilenVerworfen": 290,
+          "verhaeltnisRohKonsolidiert": 1.2222,
+          "naturschluesselKonsolidiert": 1305,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2014q2",
+      "payloadSha256": "eb7bf616f2cb920d605909da81c346a051175b33e01a1e481ceaaac6e9b05506",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2906042,
+      "dimensionszeilenVerworfen": 3611,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1260,
+          "zeilenKonsolidiert": 1230,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.0244,
+          "naturschluesselKonsolidiert": 1230,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 349,
+          "zeilenKonsolidiert": 303,
+          "zeilenVerworfen": 46,
+          "verhaeltnisRohKonsolidiert": 1.1518,
+          "naturschluesselKonsolidiert": 303,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 381,
+          "zeilenKonsolidiert": 295,
+          "zeilenVerworfen": 86,
+          "verhaeltnisRohKonsolidiert": 1.2915,
+          "naturschluesselKonsolidiert": 295,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 70,
+          "zeilenKonsolidiert": 46,
+          "zeilenVerworfen": 24,
+          "verhaeltnisRohKonsolidiert": 1.5217,
+          "naturschluesselKonsolidiert": 46,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8456,
+          "zeilenKonsolidiert": 7022,
+          "zeilenVerworfen": 1434,
+          "verhaeltnisRohKonsolidiert": 1.2042,
+          "naturschluesselKonsolidiert": 7022,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2730,
+          "zeilenKonsolidiert": 2219,
+          "zeilenVerworfen": 511,
+          "verhaeltnisRohKonsolidiert": 1.2303,
+          "naturschluesselKonsolidiert": 2219,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5763,
+          "zeilenKonsolidiert": 4545,
+          "zeilenVerworfen": 1218,
+          "verhaeltnisRohKonsolidiert": 1.268,
+          "naturschluesselKonsolidiert": 4545,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1567,
+          "zeilenKonsolidiert": 1305,
+          "zeilenVerworfen": 262,
+          "verhaeltnisRohKonsolidiert": 1.2008,
+          "naturschluesselKonsolidiert": 1305,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2014q3",
+      "payloadSha256": "af55e284b67b9d7bb4dc4f98c5fbd8d0b758864f9b5932f980b2a2a240fc5b92",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2877905,
+      "dimensionszeilenVerworfen": 3367,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1233,
+          "zeilenKonsolidiert": 1211,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.0182,
+          "naturschluesselKonsolidiert": 1211,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 325,
+          "zeilenKonsolidiert": 279,
+          "zeilenVerworfen": 46,
+          "verhaeltnisRohKonsolidiert": 1.1649,
+          "naturschluesselKonsolidiert": 279,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 372,
+          "zeilenKonsolidiert": 290,
+          "zeilenVerworfen": 82,
+          "verhaeltnisRohKonsolidiert": 1.2828,
+          "naturschluesselKonsolidiert": 290,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 88,
+          "zeilenKonsolidiert": 66,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.3333,
+          "naturschluesselKonsolidiert": 66,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8407,
+          "zeilenKonsolidiert": 6971,
+          "zeilenVerworfen": 1436,
+          "verhaeltnisRohKonsolidiert": 1.206,
+          "naturschluesselKonsolidiert": 6971,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2599,
+          "zeilenKonsolidiert": 2167,
+          "zeilenVerworfen": 432,
+          "verhaeltnisRohKonsolidiert": 1.1994,
+          "naturschluesselKonsolidiert": 2167,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5808,
+          "zeilenKonsolidiert": 4730,
+          "zeilenVerworfen": 1078,
+          "verhaeltnisRohKonsolidiert": 1.2279,
+          "naturschluesselKonsolidiert": 4730,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1554,
+          "zeilenKonsolidiert": 1305,
+          "zeilenVerworfen": 249,
+          "verhaeltnisRohKonsolidiert": 1.1908,
+          "naturschluesselKonsolidiert": 1305,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2014q4",
+      "payloadSha256": "8d456531f5c18857aa84a91b7c3c8ea73b30f31bc3e12f7c2dd037a99b84d523",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3449733,
+      "dimensionszeilenVerworfen": 1211,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1655,
+          "zeilenKonsolidiert": 1654,
+          "zeilenVerworfen": 1,
+          "verhaeltnisRohKonsolidiert": 1.0006,
+          "naturschluesselKonsolidiert": 1654,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 254,
+          "zeilenKonsolidiert": 254,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 254,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 497,
+          "zeilenKonsolidiert": 471,
+          "zeilenVerworfen": 26,
+          "verhaeltnisRohKonsolidiert": 1.0552,
+          "naturschluesselKonsolidiert": 471,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 94,
+          "zeilenKonsolidiert": 80,
+          "zeilenVerworfen": 14,
+          "verhaeltnisRohKonsolidiert": 1.175,
+          "naturschluesselKonsolidiert": 80,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 10969,
+          "zeilenKonsolidiert": 10342,
+          "zeilenVerworfen": 627,
+          "verhaeltnisRohKonsolidiert": 1.0606,
+          "naturschluesselKonsolidiert": 10342,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2497,
+          "zeilenKonsolidiert": 2349,
+          "zeilenVerworfen": 148,
+          "verhaeltnisRohKonsolidiert": 1.063,
+          "naturschluesselKonsolidiert": 2349,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7621,
+          "zeilenKonsolidiert": 7268,
+          "zeilenVerworfen": 353,
+          "verhaeltnisRohKonsolidiert": 1.0486,
+          "naturschluesselKonsolidiert": 7268,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1290,
+          "zeilenKonsolidiert": 1248,
+          "zeilenVerworfen": 42,
+          "verhaeltnisRohKonsolidiert": 1.0337,
+          "naturschluesselKonsolidiert": 1248,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2015q1",
+      "payloadSha256": "e8f3158d33c7d588affc398ad554216aca4ba24cd94c71ef90e68bddfdbfe866",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2602230,
+      "dimensionszeilenVerworfen": 3453,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1290,
+          "zeilenKonsolidiert": 1249,
+          "zeilenVerworfen": 41,
+          "verhaeltnisRohKonsolidiert": 1.0328,
+          "naturschluesselKonsolidiert": 1249,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 310,
+          "zeilenKonsolidiert": 265,
+          "zeilenVerworfen": 45,
+          "verhaeltnisRohKonsolidiert": 1.1698,
+          "naturschluesselKonsolidiert": 265,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 421,
+          "zeilenKonsolidiert": 337,
+          "zeilenVerworfen": 84,
+          "verhaeltnisRohKonsolidiert": 1.2493,
+          "naturschluesselKonsolidiert": 337,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 60,
+          "zeilenKonsolidiert": 36,
+          "zeilenVerworfen": 24,
+          "verhaeltnisRohKonsolidiert": 1.6667,
+          "naturschluesselKonsolidiert": 36,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8363,
+          "zeilenKonsolidiert": 7005,
+          "zeilenVerworfen": 1358,
+          "verhaeltnisRohKonsolidiert": 1.1939,
+          "naturschluesselKonsolidiert": 7005,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2791,
+          "zeilenKonsolidiert": 2331,
+          "zeilenVerworfen": 460,
+          "verhaeltnisRohKonsolidiert": 1.1973,
+          "naturschluesselKonsolidiert": 2331,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5871,
+          "zeilenKonsolidiert": 4717,
+          "zeilenVerworfen": 1154,
+          "verhaeltnisRohKonsolidiert": 1.2446,
+          "naturschluesselKonsolidiert": 4717,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1647,
+          "zeilenKonsolidiert": 1360,
+          "zeilenVerworfen": 287,
+          "verhaeltnisRohKonsolidiert": 1.211,
+          "naturschluesselKonsolidiert": 1360,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2015q2",
+      "payloadSha256": "487d518107855410b8fc2b45daa91e9f9428045225e3a4450f5f7b60cc199643",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2763374,
+      "dimensionszeilenVerworfen": 3374,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1279,
+          "zeilenKonsolidiert": 1240,
+          "zeilenVerworfen": 39,
+          "verhaeltnisRohKonsolidiert": 1.0315,
+          "naturschluesselKonsolidiert": 1240,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 289,
+          "zeilenKonsolidiert": 249,
+          "zeilenVerworfen": 40,
+          "verhaeltnisRohKonsolidiert": 1.1606,
+          "naturschluesselKonsolidiert": 249,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 406,
+          "zeilenKonsolidiert": 320,
+          "zeilenVerworfen": 86,
+          "verhaeltnisRohKonsolidiert": 1.2688,
+          "naturschluesselKonsolidiert": 320,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 68,
+          "zeilenKonsolidiert": 44,
+          "zeilenVerworfen": 24,
+          "verhaeltnisRohKonsolidiert": 1.5455,
+          "naturschluesselKonsolidiert": 44,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8218,
+          "zeilenKonsolidiert": 6863,
+          "zeilenVerworfen": 1355,
+          "verhaeltnisRohKonsolidiert": 1.1974,
+          "naturschluesselKonsolidiert": 6863,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2631,
+          "zeilenKonsolidiert": 2166,
+          "zeilenVerworfen": 465,
+          "verhaeltnisRohKonsolidiert": 1.2147,
+          "naturschluesselKonsolidiert": 2166,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5410,
+          "zeilenKonsolidiert": 4273,
+          "zeilenVerworfen": 1137,
+          "verhaeltnisRohKonsolidiert": 1.2661,
+          "naturschluesselKonsolidiert": 4273,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1479,
+          "zeilenKonsolidiert": 1251,
+          "zeilenVerworfen": 228,
+          "verhaeltnisRohKonsolidiert": 1.1823,
+          "naturschluesselKonsolidiert": 1251,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2015q3",
+      "payloadSha256": "26579da8ae83582ce2baccfb6553c32e87626b69f70a2882fa3f5230c20bd10a",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2738754,
+      "dimensionszeilenVerworfen": 3092,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1232,
+          "zeilenKonsolidiert": 1202,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.025,
+          "naturschluesselKonsolidiert": 1202,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 272,
+          "zeilenKonsolidiert": 245,
+          "zeilenVerworfen": 27,
+          "verhaeltnisRohKonsolidiert": 1.1102,
+          "naturschluesselKonsolidiert": 245,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 368,
+          "zeilenKonsolidiert": 294,
+          "zeilenVerworfen": 74,
+          "verhaeltnisRohKonsolidiert": 1.2517,
+          "naturschluesselKonsolidiert": 294,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 110,
+          "zeilenKonsolidiert": 66,
+          "zeilenVerworfen": 44,
+          "verhaeltnisRohKonsolidiert": 1.6667,
+          "naturschluesselKonsolidiert": 66,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 8080,
+          "zeilenKonsolidiert": 6740,
+          "zeilenVerworfen": 1340,
+          "verhaeltnisRohKonsolidiert": 1.1988,
+          "naturschluesselKonsolidiert": 6740,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2566,
+          "zeilenKonsolidiert": 2170,
+          "zeilenVerworfen": 396,
+          "verhaeltnisRohKonsolidiert": 1.1825,
+          "naturschluesselKonsolidiert": 2170,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5399,
+          "zeilenKonsolidiert": 4410,
+          "zeilenVerworfen": 989,
+          "verhaeltnisRohKonsolidiert": 1.2243,
+          "naturschluesselKonsolidiert": 4410,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1399,
+          "zeilenKonsolidiert": 1207,
+          "zeilenVerworfen": 192,
+          "verhaeltnisRohKonsolidiert": 1.1591,
+          "naturschluesselKonsolidiert": 1207,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2015q4",
+      "payloadSha256": "2f5508663411f4e911bec6ff4e5409ebabbe586c1959bbd6ef8a3ca79de67b2d",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3485997,
+      "dimensionszeilenVerworfen": 1199,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1961,
+          "zeilenKonsolidiert": 1944,
+          "zeilenVerworfen": 17,
+          "verhaeltnisRohKonsolidiert": 1.0087,
+          "naturschluesselKonsolidiert": 1944,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 190,
+          "zeilenKonsolidiert": 176,
+          "zeilenVerworfen": 14,
+          "verhaeltnisRohKonsolidiert": 1.0795,
+          "naturschluesselKonsolidiert": 176,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 605,
+          "zeilenKonsolidiert": 562,
+          "zeilenVerworfen": 43,
+          "verhaeltnisRohKonsolidiert": 1.0765,
+          "naturschluesselKonsolidiert": 562,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 118,
+          "zeilenKonsolidiert": 90,
+          "zeilenVerworfen": 28,
+          "verhaeltnisRohKonsolidiert": 1.3111,
+          "naturschluesselKonsolidiert": 90,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 11125,
+          "zeilenKonsolidiert": 10456,
+          "zeilenVerworfen": 669,
+          "verhaeltnisRohKonsolidiert": 1.064,
+          "naturschluesselKonsolidiert": 10456,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2521,
+          "zeilenKonsolidiert": 2420,
+          "zeilenVerworfen": 101,
+          "verhaeltnisRohKonsolidiert": 1.0417,
+          "naturschluesselKonsolidiert": 2420,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7714,
+          "zeilenKonsolidiert": 7413,
+          "zeilenVerworfen": 301,
+          "verhaeltnisRohKonsolidiert": 1.0406,
+          "naturschluesselKonsolidiert": 7413,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1291,
+          "zeilenKonsolidiert": 1265,
+          "zeilenVerworfen": 26,
+          "verhaeltnisRohKonsolidiert": 1.0206,
+          "naturschluesselKonsolidiert": 1265,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2016q1",
+      "payloadSha256": "71dbd07ec70871a96acf068404010a723566a7124e6af647cddee55db8bde169",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2384035,
+      "dimensionszeilenVerworfen": 2906,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1182,
+          "zeilenKonsolidiert": 1160,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.019,
+          "naturschluesselKonsolidiert": 1160,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 248,
+          "zeilenKonsolidiert": 228,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.0877,
+          "naturschluesselKonsolidiert": 228,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 392,
+          "zeilenKonsolidiert": 316,
+          "zeilenVerworfen": 76,
+          "verhaeltnisRohKonsolidiert": 1.2405,
+          "naturschluesselKonsolidiert": 316,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 56,
+          "zeilenKonsolidiert": 40,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.4,
+          "naturschluesselKonsolidiert": 40,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7495,
+          "zeilenKonsolidiert": 6286,
+          "zeilenVerworfen": 1209,
+          "verhaeltnisRohKonsolidiert": 1.1923,
+          "naturschluesselKonsolidiert": 6286,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2617,
+          "zeilenKonsolidiert": 2203,
+          "zeilenVerworfen": 414,
+          "verhaeltnisRohKonsolidiert": 1.1879,
+          "naturschluesselKonsolidiert": 2203,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 5418,
+          "zeilenKonsolidiert": 4445,
+          "zeilenVerworfen": 973,
+          "verhaeltnisRohKonsolidiert": 1.2189,
+          "naturschluesselKonsolidiert": 4445,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1411,
+          "zeilenKonsolidiert": 1235,
+          "zeilenVerworfen": 176,
+          "verhaeltnisRohKonsolidiert": 1.1425,
+          "naturschluesselKonsolidiert": 1235,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2016q2",
+      "payloadSha256": "27f894ed4c13da3370621b2f94045a62c7152a6ad8ccad786b709fb3cc1a6232",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2517179,
+      "dimensionszeilenVerworfen": 2475,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1201,
+          "zeilenKonsolidiert": 1185,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.0135,
+          "naturschluesselKonsolidiert": 1185,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 219,
+          "zeilenKonsolidiert": 197,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.1117,
+          "naturschluesselKonsolidiert": 197,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 351,
+          "zeilenKonsolidiert": 291,
+          "zeilenVerworfen": 60,
+          "verhaeltnisRohKonsolidiert": 1.2062,
+          "naturschluesselKonsolidiert": 291,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 58,
+          "zeilenKonsolidiert": 42,
+          "zeilenVerworfen": 16,
+          "verhaeltnisRohKonsolidiert": 1.381,
+          "naturschluesselKonsolidiert": 42,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7368,
+          "zeilenKonsolidiert": 6284,
+          "zeilenVerworfen": 1084,
+          "verhaeltnisRohKonsolidiert": 1.1725,
+          "naturschluesselKonsolidiert": 6284,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2483,
+          "zeilenKonsolidiert": 2119,
+          "zeilenVerworfen": 364,
+          "verhaeltnisRohKonsolidiert": 1.1718,
+          "naturschluesselKonsolidiert": 2119,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4829,
+          "zeilenKonsolidiert": 4059,
+          "zeilenVerworfen": 770,
+          "verhaeltnisRohKonsolidiert": 1.1897,
+          "naturschluesselKonsolidiert": 4059,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1393,
+          "zeilenKonsolidiert": 1250,
+          "zeilenVerworfen": 143,
+          "verhaeltnisRohKonsolidiert": 1.1144,
+          "naturschluesselKonsolidiert": 1250,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2016q3",
+      "payloadSha256": "f8267e551c5c39b1470eedbfd794c41521e72e312753826fe39c4be70ab0f2b3",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2502865,
+      "dimensionszeilenVerworfen": 2342,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1215,
+          "zeilenKonsolidiert": 1205,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.0083,
+          "naturschluesselKonsolidiert": 1205,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 184,
+          "zeilenKonsolidiert": 162,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.1358,
+          "naturschluesselKonsolidiert": 162,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 348,
+          "zeilenKonsolidiert": 290,
+          "zeilenVerworfen": 58,
+          "verhaeltnisRohKonsolidiert": 1.2,
+          "naturschluesselKonsolidiert": 290,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 100,
+          "zeilenKonsolidiert": 56,
+          "zeilenVerworfen": 44,
+          "verhaeltnisRohKonsolidiert": 1.7857,
+          "naturschluesselKonsolidiert": 56,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7169,
+          "zeilenKonsolidiert": 6123,
+          "zeilenVerworfen": 1046,
+          "verhaeltnisRohKonsolidiert": 1.1708,
+          "naturschluesselKonsolidiert": 6123,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2377,
+          "zeilenKonsolidiert": 2045,
+          "zeilenVerworfen": 332,
+          "verhaeltnisRohKonsolidiert": 1.1623,
+          "naturschluesselKonsolidiert": 2045,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4914,
+          "zeilenKonsolidiert": 4219,
+          "zeilenVerworfen": 695,
+          "verhaeltnisRohKonsolidiert": 1.1647,
+          "naturschluesselKonsolidiert": 4219,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1361,
+          "zeilenKonsolidiert": 1226,
+          "zeilenVerworfen": 135,
+          "verhaeltnisRohKonsolidiert": 1.1101,
+          "naturschluesselKonsolidiert": 1226,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2016q4",
+      "payloadSha256": "af51bbb5857301614916a09ecd900531c7ebb057c01a5db591b1430d4e739c4b",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3313595,
+      "dimensionszeilenVerworfen": 1122,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1985,
+          "zeilenKonsolidiert": 1951,
+          "zeilenVerworfen": 34,
+          "verhaeltnisRohKonsolidiert": 1.0174,
+          "naturschluesselKonsolidiert": 1951,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 174,
+          "zeilenKonsolidiert": 174,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 174,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 685,
+          "zeilenKonsolidiert": 592,
+          "zeilenVerworfen": 93,
+          "verhaeltnisRohKonsolidiert": 1.1571,
+          "naturschluesselKonsolidiert": 592,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 95,
+          "zeilenKonsolidiert": 83,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.1446,
+          "naturschluesselKonsolidiert": 83,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 10832,
+          "zeilenKonsolidiert": 10205,
+          "zeilenVerworfen": 627,
+          "verhaeltnisRohKonsolidiert": 1.0614,
+          "naturschluesselKonsolidiert": 10205,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2374,
+          "zeilenKonsolidiert": 2287,
+          "zeilenVerworfen": 87,
+          "verhaeltnisRohKonsolidiert": 1.038,
+          "naturschluesselKonsolidiert": 2287,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7564,
+          "zeilenKonsolidiert": 7307,
+          "zeilenVerworfen": 257,
+          "verhaeltnisRohKonsolidiert": 1.0352,
+          "naturschluesselKonsolidiert": 7307,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1150,
+          "zeilenKonsolidiert": 1138,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.0105,
+          "naturschluesselKonsolidiert": 1138,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2017q1",
+      "payloadSha256": "808aa9be51f8eac2940ca9711f40ff67b6cea60dce3c3c05d5d4215fef4718e1",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2235130,
+      "dimensionszeilenVerworfen": 2211,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1186,
+          "zeilenKonsolidiert": 1154,
+          "zeilenVerworfen": 32,
+          "verhaeltnisRohKonsolidiert": 1.0277,
+          "naturschluesselKonsolidiert": 1154,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 208,
+          "zeilenKonsolidiert": 178,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.1685,
+          "naturschluesselKonsolidiert": 178,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 365,
+          "zeilenKonsolidiert": 294,
+          "zeilenVerworfen": 71,
+          "verhaeltnisRohKonsolidiert": 1.2415,
+          "naturschluesselKonsolidiert": 294,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 72,
+          "zeilenKonsolidiert": 44,
+          "zeilenVerworfen": 28,
+          "verhaeltnisRohKonsolidiert": 1.6364,
+          "naturschluesselKonsolidiert": 44,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7005,
+          "zeilenKonsolidiert": 6068,
+          "zeilenVerworfen": 937,
+          "verhaeltnisRohKonsolidiert": 1.1544,
+          "naturschluesselKonsolidiert": 6068,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2376,
+          "zeilenKonsolidiert": 2047,
+          "zeilenVerworfen": 329,
+          "verhaeltnisRohKonsolidiert": 1.1607,
+          "naturschluesselKonsolidiert": 2047,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4765,
+          "zeilenKonsolidiert": 4113,
+          "zeilenVerworfen": 652,
+          "verhaeltnisRohKonsolidiert": 1.1585,
+          "naturschluesselKonsolidiert": 4113,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1325,
+          "zeilenKonsolidiert": 1193,
+          "zeilenVerworfen": 132,
+          "verhaeltnisRohKonsolidiert": 1.1106,
+          "naturschluesselKonsolidiert": 1193,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2017q2",
+      "payloadSha256": "a226586e51e7a6c338f53cb18adbd14aadca54fed2109575c5be6a85d0d5e53a",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2262111,
+      "dimensionszeilenVerworfen": 1220,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1152,
+          "zeilenKonsolidiert": 1140,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.0105,
+          "naturschluesselKonsolidiert": 1140,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 178,
+          "zeilenKonsolidiert": 166,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.0723,
+          "naturschluesselKonsolidiert": 166,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 341,
+          "zeilenKonsolidiert": 299,
+          "zeilenVerworfen": 42,
+          "verhaeltnisRohKonsolidiert": 1.1405,
+          "naturschluesselKonsolidiert": 299,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 62,
+          "zeilenKonsolidiert": 40,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.55,
+          "naturschluesselKonsolidiert": 40,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 6474,
+          "zeilenKonsolidiert": 5910,
+          "zeilenVerworfen": 564,
+          "verhaeltnisRohKonsolidiert": 1.0954,
+          "naturschluesselKonsolidiert": 5910,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2111,
+          "zeilenKonsolidiert": 1938,
+          "zeilenVerworfen": 173,
+          "verhaeltnisRohKonsolidiert": 1.0893,
+          "naturschluesselKonsolidiert": 1938,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4162,
+          "zeilenKonsolidiert": 3814,
+          "zeilenVerworfen": 348,
+          "verhaeltnisRohKonsolidiert": 1.0912,
+          "naturschluesselKonsolidiert": 3814,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1209,
+          "zeilenKonsolidiert": 1162,
+          "zeilenVerworfen": 47,
+          "verhaeltnisRohKonsolidiert": 1.0404,
+          "naturschluesselKonsolidiert": 1162,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2017q3",
+      "payloadSha256": "c201b56301ec8c10b93b8f23812389c65aae6b13c20f1722fd6f9192601862d4",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2281152,
+      "dimensionszeilenVerworfen": 975,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1181,
+          "zeilenKonsolidiert": 1171,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.0085,
+          "naturschluesselKonsolidiert": 1171,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 177,
+          "zeilenKonsolidiert": 174,
+          "zeilenVerworfen": 3,
+          "verhaeltnisRohKonsolidiert": 1.0172,
+          "naturschluesselKonsolidiert": 174,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 314,
+          "zeilenKonsolidiert": 275,
+          "zeilenVerworfen": 39,
+          "verhaeltnisRohKonsolidiert": 1.1418,
+          "naturschluesselKonsolidiert": 275,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 100,
+          "zeilenKonsolidiert": 56,
+          "zeilenVerworfen": 44,
+          "verhaeltnisRohKonsolidiert": 1.7857,
+          "naturschluesselKonsolidiert": 56,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 6430,
+          "zeilenKonsolidiert": 5969,
+          "zeilenVerworfen": 461,
+          "verhaeltnisRohKonsolidiert": 1.0772,
+          "naturschluesselKonsolidiert": 5969,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2075,
+          "zeilenKonsolidiert": 1958,
+          "zeilenVerworfen": 117,
+          "verhaeltnisRohKonsolidiert": 1.0598,
+          "naturschluesselKonsolidiert": 1958,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 4244,
+          "zeilenKonsolidiert": 3972,
+          "zeilenVerworfen": 272,
+          "verhaeltnisRohKonsolidiert": 1.0685,
+          "naturschluesselKonsolidiert": 3972,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1200,
+          "zeilenKonsolidiert": 1171,
+          "zeilenVerworfen": 29,
+          "verhaeltnisRohKonsolidiert": 1.0248,
+          "naturschluesselKonsolidiert": 1171,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2017q4",
+      "payloadSha256": "0d201045d36b5dbcafa3c66c5f5f1a090fb960484f8dad20f490b329369b5ff9",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3030131,
+      "dimensionszeilenVerworfen": 872,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1952,
+          "zeilenKonsolidiert": 1944,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.0041,
+          "naturschluesselKonsolidiert": 1944,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 167,
+          "zeilenKonsolidiert": 167,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 167,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 608,
+          "zeilenKonsolidiert": 546,
+          "zeilenVerworfen": 62,
+          "verhaeltnisRohKonsolidiert": 1.1136,
+          "naturschluesselKonsolidiert": 546,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 228,
+          "zeilenKonsolidiert": 94,
+          "zeilenVerworfen": 134,
+          "verhaeltnisRohKonsolidiert": 2.4255,
+          "naturschluesselKonsolidiert": 94,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 3,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 1,
+          "verhaeltnisRohKonsolidiert": 1.5,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 10378,
+          "zeilenKonsolidiert": 9832,
+          "zeilenVerworfen": 546,
+          "verhaeltnisRohKonsolidiert": 1.0555,
+          "naturschluesselKonsolidiert": 9832,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2084,
+          "zeilenKonsolidiert": 2079,
+          "zeilenVerworfen": 5,
+          "verhaeltnisRohKonsolidiert": 1.0024,
+          "naturschluesselKonsolidiert": 2079,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 7108,
+          "zeilenKonsolidiert": 6996,
+          "zeilenVerworfen": 112,
+          "verhaeltnisRohKonsolidiert": 1.016,
+          "naturschluesselKonsolidiert": 6996,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 1199,
+          "zeilenKonsolidiert": 1195,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.0033,
+          "naturschluesselKonsolidiert": 1195,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2018q1",
+      "payloadSha256": "1689a87b9891abe984606bb2bcf9f59066a995b233be40fe11fd860e0cb3e4e4",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2345136,
+      "dimensionszeilenVerworfen": 725,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1102,
+          "zeilenKonsolidiert": 1097,
+          "zeilenVerworfen": 5,
+          "verhaeltnisRohKonsolidiert": 1.0046,
+          "naturschluesselKonsolidiert": 1097,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 133,
+          "zeilenKonsolidiert": 129,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.031,
+          "naturschluesselKonsolidiert": 129,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 292,
+          "zeilenKonsolidiert": 262,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.1145,
+          "naturschluesselKonsolidiert": 262,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 54,
+          "zeilenKonsolidiert": 32,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.6875,
+          "naturschluesselKonsolidiert": 32,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 1429,
+          "zeilenKonsolidiert": 1399,
+          "zeilenVerworfen": 30,
+          "verhaeltnisRohKonsolidiert": 1.0214,
+          "naturschluesselKonsolidiert": 1399,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7010,
+          "zeilenKonsolidiert": 6614,
+          "zeilenVerworfen": 396,
+          "verhaeltnisRohKonsolidiert": 1.0599,
+          "naturschluesselKonsolidiert": 6614,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 1742,
+          "zeilenKonsolidiert": 1696,
+          "zeilenVerworfen": 46,
+          "verhaeltnisRohKonsolidiert": 1.0271,
+          "naturschluesselKonsolidiert": 1696,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 3779,
+          "zeilenKonsolidiert": 3606,
+          "zeilenVerworfen": 173,
+          "verhaeltnisRohKonsolidiert": 1.048,
+          "naturschluesselKonsolidiert": 3606,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 984,
+          "zeilenKonsolidiert": 965,
+          "zeilenVerworfen": 19,
+          "verhaeltnisRohKonsolidiert": 1.0197,
+          "naturschluesselKonsolidiert": 965,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2018q2",
+      "payloadSha256": "9cbc16472d645a8ec656dc5b7cb4c6492823533fbdd9b8c571ecd4d946a485e6",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2229050,
+      "dimensionszeilenVerworfen": 532,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1114,
+          "zeilenKonsolidiert": 1107,
+          "zeilenVerworfen": 7,
+          "verhaeltnisRohKonsolidiert": 1.0063,
+          "naturschluesselKonsolidiert": 1107,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 47,
+          "zeilenKonsolidiert": 47,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 47,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 108,
+          "zeilenKonsolidiert": 100,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.08,
+          "naturschluesselKonsolidiert": 100,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 57,
+          "zeilenKonsolidiert": 35,
+          "zeilenVerworfen": 22,
+          "verhaeltnisRohKonsolidiert": 1.6286,
+          "naturschluesselKonsolidiert": 35,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 2942,
+          "zeilenKonsolidiert": 2869,
+          "zeilenVerworfen": 73,
+          "verhaeltnisRohKonsolidiert": 1.0254,
+          "naturschluesselKonsolidiert": 2869,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 6850,
+          "zeilenKonsolidiert": 6545,
+          "zeilenVerworfen": 305,
+          "verhaeltnisRohKonsolidiert": 1.0466,
+          "naturschluesselKonsolidiert": 6545,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 715,
+          "zeilenKonsolidiert": 672,
+          "zeilenVerworfen": 43,
+          "verhaeltnisRohKonsolidiert": 1.064,
+          "naturschluesselKonsolidiert": 672,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 1328,
+          "zeilenKonsolidiert": 1266,
+          "zeilenVerworfen": 62,
+          "verhaeltnisRohKonsolidiert": 1.049,
+          "naturschluesselKonsolidiert": 1266,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 390,
+          "zeilenKonsolidiert": 378,
+          "zeilenVerworfen": 12,
+          "verhaeltnisRohKonsolidiert": 1.0317,
+          "naturschluesselKonsolidiert": 378,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2018q3",
+      "payloadSha256": "a352c627ce5ab4e79a5e9d3d2540174c829d70ec3aaac49e35824f2878228720",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2247296,
+      "dimensionszeilenVerworfen": 560,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1124,
+          "zeilenKonsolidiert": 1118,
+          "zeilenVerworfen": 6,
+          "verhaeltnisRohKonsolidiert": 1.0054,
+          "naturschluesselKonsolidiert": 1118,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 8,
+          "zeilenKonsolidiert": 8,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 8,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 40,
+          "zeilenKonsolidiert": 38,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0526,
+          "naturschluesselKonsolidiert": 38,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 114,
+          "zeilenKonsolidiert": 60,
+          "zeilenVerworfen": 54,
+          "verhaeltnisRohKonsolidiert": 1.9,
+          "naturschluesselKonsolidiert": 60,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 3621,
+          "zeilenKonsolidiert": 3521,
+          "zeilenVerworfen": 100,
+          "verhaeltnisRohKonsolidiert": 1.0284,
+          "naturschluesselKonsolidiert": 3521,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 7114,
+          "zeilenKonsolidiert": 6787,
+          "zeilenVerworfen": 327,
+          "verhaeltnisRohKonsolidiert": 1.0482,
+          "naturschluesselKonsolidiert": 6787,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 270,
+          "zeilenKonsolidiert": 250,
+          "zeilenVerworfen": 20,
+          "verhaeltnisRohKonsolidiert": 1.08,
+          "naturschluesselKonsolidiert": 250,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 591,
+          "zeilenKonsolidiert": 544,
+          "zeilenVerworfen": 47,
+          "verhaeltnisRohKonsolidiert": 1.0864,
+          "naturschluesselKonsolidiert": 544,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 157,
+          "zeilenKonsolidiert": 153,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.0261,
+          "naturschluesselKonsolidiert": 153,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2018q4",
+      "payloadSha256": "c25d7fb85257bbeb6c1ad1c2c6cc44feb2744062adcd064c7abae5f0399e9894",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2890146,
+      "dimensionszeilenVerworfen": 796,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1896,
+          "zeilenKonsolidiert": 1896,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 1896,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 12,
+          "zeilenKonsolidiert": 12,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 12,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 36,
+          "zeilenKonsolidiert": 36,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 36,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 196,
+          "zeilenKonsolidiert": 106,
+          "zeilenVerworfen": 90,
+          "verhaeltnisRohKonsolidiert": 1.8491,
+          "naturschluesselKonsolidiert": 106,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 6594,
+          "zeilenKonsolidiert": 6541,
+          "zeilenVerworfen": 53,
+          "verhaeltnisRohKonsolidiert": 1.0081,
+          "naturschluesselKonsolidiert": 6541,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 11018,
+          "zeilenKonsolidiert": 10389,
+          "zeilenVerworfen": 629,
+          "verhaeltnisRohKonsolidiert": 1.0605,
+          "naturschluesselKonsolidiert": 10389,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 105,
+          "zeilenKonsolidiert": 105,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 105,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 372,
+          "zeilenKonsolidiert": 348,
+          "zeilenVerworfen": 24,
+          "verhaeltnisRohKonsolidiert": 1.069,
+          "naturschluesselKonsolidiert": 348,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 27,
+          "zeilenKonsolidiert": 27,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 27,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2019q1",
+      "payloadSha256": "e3c5364fdfcae7fc08aeab5ddb21990d6ac9715d22e16fea6b86c76bd31a83c0",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2368057,
+      "dimensionszeilenVerworfen": 496,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1105,
+          "zeilenKonsolidiert": 1100,
+          "zeilenVerworfen": 5,
+          "verhaeltnisRohKonsolidiert": 1.0045,
+          "naturschluesselKonsolidiert": 1100,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:OilAndGasRevenue": {
+          "zeilenRoh": 4,
+          "zeilenKonsolidiert": 4,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 4,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RealEstateRevenueNet": {
+          "zeilenRoh": 6,
+          "zeilenKonsolidiert": 6,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 6,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 57,
+          "zeilenKonsolidiert": 30,
+          "zeilenVerworfen": 27,
+          "verhaeltnisRohKonsolidiert": 1.9,
+          "naturschluesselKonsolidiert": 30,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 4846,
+          "zeilenKonsolidiert": 4720,
+          "zeilenVerworfen": 126,
+          "verhaeltnisRohKonsolidiert": 1.0267,
+          "naturschluesselKonsolidiert": 4720,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 6514,
+          "zeilenKonsolidiert": 6184,
+          "zeilenVerworfen": 330,
+          "verhaeltnisRohKonsolidiert": 1.0534,
+          "naturschluesselKonsolidiert": 6184,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 81,
+          "zeilenKonsolidiert": 79,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0253,
+          "naturschluesselKonsolidiert": 79,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 126,
+          "zeilenKonsolidiert": 122,
+          "zeilenVerworfen": 4,
+          "verhaeltnisRohKonsolidiert": 1.0328,
+          "naturschluesselKonsolidiert": 122,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 48,
+          "zeilenKonsolidiert": 46,
+          "zeilenVerworfen": 2,
+          "verhaeltnisRohKonsolidiert": 1.0435,
+          "naturschluesselKonsolidiert": 46,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2019q2",
+      "payloadSha256": "cde4b886a559e0b5a48acb644f6c8c85ada938ca21468eca273acb979b3e906c",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2325267,
+      "dimensionszeilenVerworfen": 464,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1049,
+          "zeilenKonsolidiert": 1042,
+          "zeilenVerworfen": 7,
+          "verhaeltnisRohKonsolidiert": 1.0067,
+          "naturschluesselKonsolidiert": 1042,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 57,
+          "zeilenKonsolidiert": 30,
+          "zeilenVerworfen": 27,
+          "verhaeltnisRohKonsolidiert": 1.9,
+          "naturschluesselKonsolidiert": 30,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 4974,
+          "zeilenKonsolidiert": 4849,
+          "zeilenVerworfen": 125,
+          "verhaeltnisRohKonsolidiert": 1.0258,
+          "naturschluesselKonsolidiert": 4849,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5859,
+          "zeilenKonsolidiert": 5554,
+          "zeilenVerworfen": 305,
+          "verhaeltnisRohKonsolidiert": 1.0549,
+          "naturschluesselKonsolidiert": 5554,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 1,
+          "zeilenKonsolidiert": 1,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 1,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 3,
+          "zeilenKonsolidiert": 3,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 3,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2019q3",
+      "payloadSha256": "dacfd8db8d27119154b8ebd16ecfceb8dd81090a6ed05535ac20157dcce01e31",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2402955,
+      "dimensionszeilenVerworfen": 522,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1094,
+          "zeilenKonsolidiert": 1089,
+          "zeilenVerworfen": 5,
+          "verhaeltnisRohKonsolidiert": 1.0046,
+          "naturschluesselKonsolidiert": 1089,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 100,
+          "zeilenKonsolidiert": 62,
+          "zeilenVerworfen": 38,
+          "verhaeltnisRohKonsolidiert": 1.6129,
+          "naturschluesselKonsolidiert": 62,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 5234,
+          "zeilenKonsolidiert": 5080,
+          "zeilenVerworfen": 154,
+          "verhaeltnisRohKonsolidiert": 1.0303,
+          "naturschluesselKonsolidiert": 5080,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5890,
+          "zeilenKonsolidiert": 5565,
+          "zeilenVerworfen": 325,
+          "verhaeltnisRohKonsolidiert": 1.0584,
+          "naturschluesselKonsolidiert": 5565,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2019q4",
+      "payloadSha256": "f848ae097c0d8389ed580b7bd389df0019fc8ff35172d596cb3d2186f875ee32",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 3005393,
+      "dimensionszeilenVerworfen": 789,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1837,
+          "zeilenKonsolidiert": 1837,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 1837,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 218,
+          "zeilenKonsolidiert": 132,
+          "zeilenVerworfen": 86,
+          "verhaeltnisRohKonsolidiert": 1.6515,
+          "naturschluesselKonsolidiert": 132,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 8156,
+          "zeilenKonsolidiert": 8082,
+          "zeilenVerworfen": 74,
+          "verhaeltnisRohKonsolidiert": 1.0092,
+          "naturschluesselKonsolidiert": 8082,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 9417,
+          "zeilenKonsolidiert": 8788,
+          "zeilenVerworfen": 629,
+          "verhaeltnisRohKonsolidiert": 1.0716,
+          "naturschluesselKonsolidiert": 8788,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2020q1",
+      "payloadSha256": "287c8f4e7f02545b85bf2a6e4da8ab56bfe9d0e245aefad0422518fb6a899781",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2197732,
+      "dimensionszeilenVerworfen": 481,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1022,
+          "zeilenKonsolidiert": 1016,
+          "zeilenVerworfen": 6,
+          "verhaeltnisRohKonsolidiert": 1.0059,
+          "naturschluesselKonsolidiert": 1016,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 76,
+          "zeilenKonsolidiert": 42,
+          "zeilenVerworfen": 34,
+          "verhaeltnisRohKonsolidiert": 1.8095,
+          "naturschluesselKonsolidiert": 42,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 5413,
+          "zeilenKonsolidiert": 5283,
+          "zeilenVerworfen": 130,
+          "verhaeltnisRohKonsolidiert": 1.0246,
+          "naturschluesselKonsolidiert": 5283,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5077,
+          "zeilenKonsolidiert": 4766,
+          "zeilenVerworfen": 311,
+          "verhaeltnisRohKonsolidiert": 1.0653,
+          "naturschluesselKonsolidiert": 4766,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2020q2",
+      "payloadSha256": "07fc3a8ad0ebf51a13eacdeda428ca4f09ec0cf7158866de46b5aeab09474925",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2351640,
+      "dimensionszeilenVerworfen": 416,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1032,
+          "zeilenKonsolidiert": 1022,
+          "zeilenVerworfen": 10,
+          "verhaeltnisRohKonsolidiert": 1.0098,
+          "naturschluesselKonsolidiert": 1022,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 74,
+          "zeilenKonsolidiert": 42,
+          "zeilenVerworfen": 32,
+          "verhaeltnisRohKonsolidiert": 1.7619,
+          "naturschluesselKonsolidiert": 42,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 5600,
+          "zeilenKonsolidiert": 5483,
+          "zeilenVerworfen": 117,
+          "verhaeltnisRohKonsolidiert": 1.0213,
+          "naturschluesselKonsolidiert": 5483,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5272,
+          "zeilenKonsolidiert": 5015,
+          "zeilenVerworfen": 257,
+          "verhaeltnisRohKonsolidiert": 1.0512,
+          "naturschluesselKonsolidiert": 5015,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2020q3",
+      "payloadSha256": "739f3e4cd2ed7dca6142939fe304931e679680e65c710c380d2cdb25b5d3300d",
+      "jahrgang": "legacy_earliest_archived"
+    },
+    {
+      "kopfzeile": [
+        "adsh",
+        "tag",
+        "version",
+        "coreg",
+        "ddate",
+        "qtrs",
+        "uom",
+        "value",
+        "footnote"
+      ],
+      "spaltensatz": "legacy_9",
+      "dimensionsAchse": "nur coreg (Alt-Jahrgang ohne segments-Spalte, auf dieser Achse NICHT mit dem heutigen vergleichbar)",
+      "zeilenGesamt": 2373224,
+      "dimensionszeilenVerworfen": 448,
+      "jeKennung": {
+        "us-gaap:InterestAndDividendIncomeOperating": {
+          "zeilenRoh": 1081,
+          "zeilenKonsolidiert": 1073,
+          "zeilenVerworfen": 8,
+          "verhaeltnisRohKonsolidiert": 1.0075,
+          "naturschluesselKonsolidiert": 1073,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue": {
+          "zeilenRoh": 112,
+          "zeilenKonsolidiert": 70,
+          "zeilenVerworfen": 42,
+          "verhaeltnisRohKonsolidiert": 1.6,
+          "naturschluesselKonsolidiert": 70,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax": {
+          "zeilenRoh": 5546,
+          "zeilenKonsolidiert": 5402,
+          "zeilenVerworfen": 144,
+          "verhaeltnisRohKonsolidiert": 1.0267,
+          "naturschluesselKonsolidiert": 5402,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:Revenues": {
+          "zeilenRoh": 5151,
+          "zeilenKonsolidiert": 4897,
+          "zeilenVerworfen": 254,
+          "verhaeltnisRohKonsolidiert": 1.0519,
+          "naturschluesselKonsolidiert": 4897,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueGoodsNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        },
+        "us-gaap:SalesRevenueServicesNet": {
+          "zeilenRoh": 2,
+          "zeilenKonsolidiert": 2,
+          "zeilenVerworfen": 0,
+          "verhaeltnisRohKonsolidiert": 1.0,
+          "naturschluesselKonsolidiert": 2,
+          "dublettenKonsolidiert": 0
+        }
+      },
+      "quartal": "2020q4",
+      "payloadSha256": "4914a3fdbf73f14c1770f68eabfbb5e15a1e1ad742c5082c85b22bd8068dae61",
+      "jahrgang": "legacy_earliest_archived"
+    }
+  ]
+}

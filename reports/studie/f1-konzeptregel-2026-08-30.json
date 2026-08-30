@@ -1,0 +1,254 @@
+{
+  "schema": "studie-f1-konzeptregel/v1",
+  "erzeugt": "2026-08-30T09:59:39.252Z",
+  "auftrag": "Studie 2.0 F1 — K7 (a) ist OFFEN (2:2). Regel UND Liste, in dieser Reihenfolge gehasht (RR-1, Kanzlei-Empfehlung).",
+  "inventar": {
+    "datei": "konzept-inventar-blind-2026-08-30.json",
+    "ablage": "agent-reports",
+    "sha256": "d86b1b129d7ec1ed25600f8f51cf9efdbb433cf7c00c1d73128af277985a4850",
+    "erzeugt": "2026-08-29T22:50:09.506Z"
+  },
+  "regel": {
+    "regelId": "F1-KONZEPTREGEL-Z0-Z4/2026-08-30",
+    "auswahl": "je Entity-Klasse die Kennung mit der hoechsten Rettungszahl in dieser Klasse, die alle Schranken erfuellt; Gleichstand = NICHT BERECHENBAR",
+    "schranken": {
+      "Z0": {
+        "groesse": "ciksRettung",
+        "operator": ">=",
+        "wert": 10,
+        "herkunft": "Dissens D9 (S1)"
+      },
+      "Z1": {
+        "groesse": "ciksRettungMitQuartal/ciksRettung",
+        "operator": ">=",
+        "wert": 0.9,
+        "herkunft": "Position P2 (S3)"
+      },
+      "Z2": {
+        "groesse": "qtrs1AnteilFakten",
+        "operator": ">=",
+        "wert": 0.5,
+        "herkunft": "Position P2 (S3)"
+      },
+      "Z3a": {
+        "groesse": "Kennungsname",
+        "operator": "kein Treffer ausserhalb bank",
+        "wert": "InterestIncome|InvestmentIncome|InterestAndDividendIncome|InterestAndOtherIncome|InterestAndFeeIncome|DividendIncome|InterestRevenue|InterestAndDiscount",
+        "herkunft": "Rang-4-Sperre, K7/K8"
+      },
+      "Z3b": {
+        "groesse": "Kennungsname",
+        "operator": "kein Treffer",
+        "wert": "Noninterest|Excluding(Interest|Dividend)|OtherThanInterest",
+        "herkunft": "Bestands-Doktrin, K7 (b), merge-sec-xbrl.js:88-92"
+      },
+      "Z4": {
+        "groesse": "taxonomy",
+        "operator": "in",
+        "wert": [
+          "us-gaap"
+        ],
+        "herkunft": "K7, 4:0 IFRS-Ausschluss"
+      },
+      "Z5": {
+        "status": "entfaellt",
+        "herkunft": "K7 (c), 3:0 reiner Fallback statt neuer Rang"
+      }
+    },
+    "eintrittsModus": "reiner_fallback",
+    "eintrittsModusBegruendung": "K7 (c), 3:0. Ein gemischter oder je-Stichtag wirkender Fallback ist UNZULAESSIG (S1, unwidersprochen).",
+    "bruttoNetto": "brutto",
+    "bruttoNettoBegruendung": "K7 (b), 3:0. Eine Netto-Zinsertragsreihe ist eine Differenz zweier Stroeme, kann null durchqueren und das Vorzeichen wechseln.",
+    "bankStratumBedingungenK8": [
+      "getrennt berichtet, getrennt gegen die Nullmodelle geprueft, getrennt in der FDR-Familie",
+      "praeregistrierte Klumpungseinheit Entity-Klasse x Signalquartal; effektives N konservativ",
+      "eigene Ereignis-/Label-Abdeckungszahl, vorab gemessen, nicht unter der des Gesamtpanels",
+      "Bank-Zinsertrag wird weder still mit operativem Produktumsatz gepoolt noch zur Reparatur des primaeren Arms benutzt"
+    ]
+  },
+  "regelSha256": "6b3777186781084c9f0b2352aa25d5337f080afca16d2c546e5355fbcc622343",
+  "jeKlasse": [
+    {
+      "klasse": "bank",
+      "kennung": "us-gaap:InterestAndDividendIncomeOperating",
+      "taxonomy": "us-gaap",
+      "concept": "InterestAndDividendIncomeOperating",
+      "rettungenInKlasse": 653,
+      "ciksRettung": 734,
+      "ciksRettungMitQuartal": 724,
+      "z1": 0.9864,
+      "z2": 0.5506,
+      "naechsterVerfolger": null
+    },
+    {
+      "klasse": "biotech_pharma",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "finanz_sonstige",
+      "kennung": null,
+      "grund": "NICHT BERECHENBAR: Gleichstand bei 1 Rettungen zwischen us-gaap:OilAndGasRevenue, us-gaap:RegulatedAndUnregulatedOperatingRevenue — nie eine Auswahl (Position P3, R)",
+      "gleichstand": [
+        "us-gaap:OilAndGasRevenue",
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue"
+      ]
+    },
+    {
+      "klasse": "immobilien",
+      "kennung": "us-gaap:RealEstateRevenueNet",
+      "taxonomy": "us-gaap",
+      "concept": "RealEstateRevenueNet",
+      "rettungenInKlasse": 7,
+      "ciksRettung": 32,
+      "ciksRettungMitQuartal": 30,
+      "z1": 0.9375,
+      "z2": 0.569,
+      "naechsterVerfolger": null
+    },
+    {
+      "klasse": "operativ",
+      "kennung": "us-gaap:OilAndGasRevenue",
+      "taxonomy": "us-gaap",
+      "concept": "OilAndGasRevenue",
+      "rettungenInKlasse": 60,
+      "ciksRettung": 63,
+      "ciksRettungMitQuartal": 63,
+      "z1": 1.0,
+      "z2": 0.5155,
+      "naechsterVerfolger": "us-gaap:OilAndGasSalesRevenue"
+    },
+    {
+      "klasse": "reit",
+      "kennung": "us-gaap:RealEstateRevenueNet",
+      "taxonomy": "us-gaap",
+      "concept": "RealEstateRevenueNet",
+      "rettungenInKlasse": 23,
+      "ciksRettung": 32,
+      "ciksRettungMitQuartal": 30,
+      "z1": 0.9375,
+      "z2": 0.569,
+      "naechsterVerfolger": null
+    },
+    {
+      "klasse": "spac_blankcheck",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "unbekannt",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "versicherer",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "versorger",
+      "kennung": "us-gaap:RegulatedAndUnregulatedOperatingRevenue",
+      "taxonomy": "us-gaap",
+      "concept": "RegulatedAndUnregulatedOperatingRevenue",
+      "rettungenInKlasse": 9,
+      "ciksRettung": 10,
+      "ciksRettungMitQuartal": 10,
+      "z1": 1.0,
+      "z2": 0.5903,
+      "naechsterVerfolger": "us-gaap:OilAndGasRevenue"
+    }
+  ],
+  "unterschreitungen": [
+    {
+      "klasse": "versorger",
+      "kennung": "us-gaap:RegulatedAndUnregulatedOperatingRevenue",
+      "ciksRettung": 10,
+      "protokoll": "S1s Dissens D9 verlangt eine Untergrenze UEBER 10. Die Mehrheit laesst diese Kennung bei Rett = 10 zu; die Unterschreitung ist hiermit ausdruecklich protokolliert. Der Dissens bleibt bestehen."
+    }
+  ],
+  "konzeptliste": [
+    {
+      "taxonomy": "us-gaap",
+      "concept": "InterestAndDividendIncomeOperating",
+      "entityKlassen": [
+        "bank"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": true
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "OilAndGasRevenue",
+      "entityKlassen": [
+        "operativ"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RealEstateRevenueNet",
+      "entityKlassen": [
+        "immobilien",
+        "reit"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RegulatedAndUnregulatedOperatingRevenue",
+      "entityKlassen": [
+        "versorger"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    }
+  ],
+  "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+  "waechterUrteilDraussen": [
+    "us-gaap:InterestIncomeExpenseNet",
+    "us-gaap:InterestIncomeOperating",
+    "us-gaap:InterestIncomeOther",
+    "us-gaap:InvestmentIncomeInterest",
+    "us-gaap:NoninterestIncome",
+    "us-gaap:PremiumsEarnedNet",
+    "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+    "us-gaap:RevenueFromRelatedParties"
+  ],
+  "ehrlicheAusschluesse": [
+    {
+      "klasse": "biotech_pharma",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "finanz_sonstige",
+      "kennung": null,
+      "grund": "NICHT BERECHENBAR: Gleichstand bei 1 Rettungen zwischen us-gaap:OilAndGasRevenue, us-gaap:RegulatedAndUnregulatedOperatingRevenue — nie eine Auswahl (Position P3, R)",
+      "gleichstand": [
+        "us-gaap:OilAndGasRevenue",
+        "us-gaap:RegulatedAndUnregulatedOperatingRevenue"
+      ]
+    },
+    {
+      "klasse": "spac_blankcheck",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "unbekannt",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    },
+    {
+      "klasse": "versicherer",
+      "kennung": null,
+      "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+    }
+  ]
+}

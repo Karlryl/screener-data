@@ -1,0 +1,20 @@
+{
+  "schema": "studie-f1-zensus-kennungen/v1",
+  "zweck": "Eingang des F1-DERA-Zensus. Zwei Gruppen in EINEM Lauf, damit die Zahlen der Verbreiterung eine Referenz haben, die unter derselben Leseregel entstanden ist.",
+  "gruppen": {
+    "verbreiterung": "die vier Kennungen, die die eingefrorene Regel Z0-Z4 erzeugt (F1-Freeze, block3)",
+    "kontrolle": "die akzeptierte Umsatz-Abbildungsschicht der laufenden Studie (scripts/studie-basisraten.py UMSATZ_QUELLEN == preregistration.json umsatzQuellenAllowlist). Reine Referenz, keine Aenderung an ihr."
+  },
+  "vermerk": "Der Zensus laeuft NACH dem Einfrieren von Regel und Liste. Seine Zahlen koennen die Konzeptwahl nicht mehr gesteuert haben — das ist die Reihenfolge, nicht eine Zusage.",
+  "konzepte": [
+    { "taxonomy": "us-gaap", "concept": "InterestAndDividendIncomeOperating", "gruppe": "verbreiterung" },
+    { "taxonomy": "us-gaap", "concept": "OilAndGasRevenue", "gruppe": "verbreiterung" },
+    { "taxonomy": "us-gaap", "concept": "RealEstateRevenueNet", "gruppe": "verbreiterung" },
+    { "taxonomy": "us-gaap", "concept": "RegulatedAndUnregulatedOperatingRevenue", "gruppe": "verbreiterung" },
+    { "taxonomy": "us-gaap", "concept": "Revenues", "gruppe": "kontrolle" },
+    { "taxonomy": "us-gaap", "concept": "RevenueFromContractWithCustomerExcludingAssessedTax", "gruppe": "kontrolle" },
+    { "taxonomy": "us-gaap", "concept": "SalesRevenueNet", "gruppe": "kontrolle" },
+    { "taxonomy": "us-gaap", "concept": "SalesRevenueGoodsNet", "gruppe": "kontrolle" },
+    { "taxonomy": "us-gaap", "concept": "SalesRevenueServicesNet", "gruppe": "kontrolle" }
+  ]
+}
