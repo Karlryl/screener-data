@@ -32,7 +32,8 @@ const { spawnSync } = require('node:child_process');
 
 const {
   tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
-  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG, umbenennungsProtokoll,
+  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, umbenennungsProtokoll,
+  tripwireKlassen, tripwireKlassenSchluessel, TRIPWIRE_KLASSEN_BEISPIELE,
 } = require('../scripts/filter-snapshot-merge.js');
 
 let pass = 0, fail = 0;
@@ -189,8 +190,8 @@ test('M11: A und B sind ZWEI Zaehlgroessen, nie ein verschmolzenes Boolean', () 
   assert.equal(ber.zaehlung.ankerB, 1);
   assert.ok(Object.prototype.hasOwnProperty.call(ber, 'ankerA') && Object.prototype.hasOwnProperty.call(ber, 'ankerB'),
     'zwei getrennte Listen — VMRK steht in beiden, und man sieht welcher Anker was sah');
-  assert.equal(ber.ankerA.meldungen[0].ticker, 'VMRK');
-  assert.ok(ber.ankerB.meldungen[0].beine.some((x) => x.ticker === 'VMRK'));
+  assert.equal(ber.ankerA.klassen[0].beispiele[0].ticker, 'VMRK');
+  assert.ok(ber.ankerB.klassen[0].beispiele[0].beine.some((x) => x.ticker === 'VMRK'));
 });
 
 test('M9: jede Meldung ist allein nachrechenbar — Anker, Wert, Ticker, Name, Fingerabdruck, Herkunft', () => {
@@ -225,15 +226,104 @@ test('M9: die Herkunft ist NIE undefined — sonst verschluckt JSON.stringify de
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test('M9: die Kappung ist ausgewiesen, die ZAEHLUNG bleibt vollstaendig', () => {
-  const viele = [];
-  for (let i = 0; i < TRIPWIRE_KAPPUNG + 7; i++) viele.push(zeile('T' + i, 'Firma ' + i + ' Inc', { shares: 10, jahresAktien: 1 }));
-  const a = tripwireAnkerA(viele);
-  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: viele.length, unlesbar: 0, messebene: 'x' });
-  assert.equal(ber.zaehlung.ankerA, TRIPWIRE_KAPPUNG + 7, 'die Zahl ist vollstaendig');
-  assert.equal(ber.ankerA.gemeldet, TRIPWIRE_KAPPUNG + 7);
-  assert.equal(ber.ankerA.meldungen.length, TRIPWIRE_KAPPUNG, 'die Liste ist gekappt');
-  assert.equal(ber.ankerA.gelistet, TRIPWIRE_KAPPUNG, 'und die Kappung steht im Bericht');
+// ─── 4b. DIE DROSSELUNG (Urteil §8 Kipp-Bedingung G4-I, ENTSCHIED 129) ───────────────────
+// Gedrosselt wird die MELDEFORM, nie die Erkennung. Die drei Bruchproben des Auftrags:
+// (1) Flut EINER Klasse bleibt beschraenkt und zaehlt richtig, (2) eine Klasse mit einem
+// einzigen Treffer wird trotzdem gedruckt, (3) absichtlich gebrochene Drosselung wird rot.
+
+/** Zeile mit vorgegebenem Verhaeltnis shares/jahresAktien — am OBJEKT, kein Regel-Nachbau. */
+const verhaeltnis = (t, v) => zeile(t, 'Firma ' + t + ' Inc', { shares: v * 1e6, jahresAktien: 1e6 });
+
+test('DROSSELUNG-ANWESENHEIT: eine Flut EINER Klasse bleibt beschraenkt — die Zahl bleibt voll', () => {
+  // Der gemessene Live-Fall in klein: 5.000 Zeilen derselben Ursache. Vor der Drosselung
+  // besetzte genau so eine Klasse das ganze Anzeigefenster.
+  const flut = [];
+  for (let i = 0; i < 5000; i++) flut.push(verhaeltnis('T' + i, 1000));
+  const a = tripwireAnkerA(flut);
+  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: flut.length, unlesbar: 0, messebene: 'x' });
+  assert.equal(ber.zaehlung.ankerA, 5000, 'die ZAEHLUNG bleibt vollstaendig — gedrosselt ist die Anzeige');
+  assert.equal(ber.ankerA.klassen.length, 1, 'eine Ursache, eine Zeile');
+  assert.equal(ber.ankerA.klassen[0].gemeldet, 5000, 'und die Zeile traegt die volle Zahl');
+  assert.equal(ber.ankerA.klassen[0].beispiele.length, TRIPWIRE_KLASSEN_BEISPIELE, 'die Beispiele sind gekappt');
+  assert.equal(ber.ankerA.klassen[0].gelistet, TRIPWIRE_KLASSEN_BEISPIELE, 'und die Kappung steht im Bericht');
+  // DIE EIGENTLICHE ZUSAGE: der Bericht waechst mit der Zahl der KLASSEN, nicht der Meldungen.
+  const gelistet = ber.ankerA.klassen.reduce((s, k) => s + k.beispiele.length, 0);
+  assert.ok(gelistet <= ber.ankerA.klassen.length * TRIPWIRE_KLASSEN_BEISPIELE,
+    `der Bericht ist beschraenkt: ${gelistet} gelistete Zeilen bei 5.000 Meldungen`);
+  assert.ok(gelistet < 50, 'und zwar wirklich beschraenkt, nicht nur formal');
+});
+
+test('DROSSELUNG: KEINE Klasse faellt weg — eine Klasse mit EINEM Treffer wird gedruckt', () => {
+  // Die Fehlerrichtung, die eine Drosselung teuer macht: eine Klasse verschwindet ganz.
+  // Genau das tat die alte Kappung am Bestand vom 30.08. — ihr Extremwert-Fenster liess VIER
+  // der neun Klassen mit NULL Zeilen zurueck, darunter die beiden groessten (1.016 und 308
+  // Meldungen, zusammen 94 % aller Meldungen).
+  const bestand = [];
+  for (let i = 0; i < 5000; i++) bestand.push(verhaeltnis('T' + i, 1000));
+  bestand.push(verhaeltnis('EINZELFALL', 0.000001));
+  const a = tripwireAnkerA(bestand);
+  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: bestand.length, unlesbar: 0, messebene: 'x' });
+  assert.equal(ber.zaehlung.ankerA, 5001);
+  const einzel = ber.ankerA.klassen.find((k) => k.gemeldet === 1);
+  assert.ok(einzel, 'die Ein-Treffer-Klasse hat ihre eigene Zeile');
+  assert.equal(einzel.beispiele[0].ticker, 'EINZELFALL', 'und sie NENNT ihren einen Fall');
+  assert.equal(ber.ankerA.klassen.length, 2, 'zwei Ursachen, zwei Zeilen');
+});
+
+test('DROSSELUNG-ABWESENHEIT: ohne Flut aendert die Drosselung NICHTS', () => {
+  // Ohne diese Richtung waere die Wache oben mit einer Drosselung gruen, die immer kappt.
+  const a = tripwireAnkerA([verhaeltnis('AAA', 3), verhaeltnis('BBB', 0.5)]);
+  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
+  const gelistet = ber.ankerA.klassen.reduce((s, k) => s + k.beispiele.length, 0);
+  assert.equal(gelistet, 2, 'beide Meldungen stehen vollstaendig da');
+  for (const k of ber.ankerA.klassen) assert.equal(k.gelistet, k.gemeldet, 'nichts gekappt');
+});
+
+test('DROSSELUNG: der Klassenschluessel ist der GEMESSENE WERT, keine benannte Ursache', () => {
+  // Der Schluessel darf nichts hineindeuten — eine benannte Ursache waere neue Semantik und
+  // damit Methodik. Geprueft am Verhalten: gleiche Groessenordnung -> gleiche Klasse,
+  // verschiedene -> verschiedene.
+  const k = (v) => tripwireKlassenSchluessel({ anker: 'A', wert: v });
+  assert.equal(k(1000), k(1200), 'gleiche Zehnerpotenz, gleiche Klasse');
+  assert.notEqual(k(1000), k(0.001), 'entgegengesetzte Richtung, andere Klasse');
+  assert.notEqual(k(0.001), k(0.01), 'benachbarte Potenzen bleiben getrennt');
+  assert.equal(tripwireKlassenSchluessel({ anker: 'B', wert: 3 }), '3 Emittentengruppen');
+  // Ein nicht rechenbarer Wert verschwindet nicht still in `1eNaN`.
+  assert.match(tripwireKlassenSchluessel({ anker: 'A', wert: 0 }), /nicht rechenbar/);
+});
+
+test('DROSSELUNG: die M12-Ausnahmen werden GENANNT, nicht nur gezaehlt', () => {
+  // Eine Rechtsform-Regex, deren Treffer niemand sieht, ist von einer zu weit gefassten Regel
+  // nicht zu unterscheiden. Vorher stand im Bericht nur die Zahl.
+  const a = tripwireAnkerA([
+    zeile('MRK.DE', 'Merck KGaA', { shares: 129242252, jahresAktien: 434777878 }),
+    zeile('IEP', 'Icahn Enterprises L.P.', { shares: 1265, jahresAktien: 1000 }),
+  ]);
+  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
+  assert.equal(ber.zaehlung.ankerA, 0, 'beide sind KEIN Befund');
+  assert.equal(ber.ankerA.ausgenommen.gemeldet, 2);
+  const genannt = ber.ankerA.ausgenommen.klassen[0].beispiele.map((x) => x.ticker).sort();
+  assert.deepEqual(genannt, ['IEP', 'MRK.DE'], 'die ausgenommenen Zeilen stehen namentlich da');
+  // Und sie stehen NICHT in der Meldungs-Liste: eine Nicht-Meldung darf nie wie eine aussehen.
+  assert.deepEqual(ber.ankerA.klassen, []);
+});
+
+test('KALIBRIERUNG: die drei Belegfaelle bleiben EINZELN sichtbar', () => {
+  // VMRK feuert, MRK.DE ist ausgenommen, MRK.SW (Merck & Co., 0,984 — dieselbe Namenswurzel,
+  // aber keine KGaA) bleibt still. Der dritte Fall pinnt, dass die M12-Ausnahme NICHT ueber
+  // den Namen "Merck" greift, sondern ueber die Rechtsform: sonst waere jede Merck-Zeile
+  // stumm, und die Ausnahme haette sich in eine Handliste zurueckverwandelt.
+  const a = tripwireAnkerA([
+    zeile('VMRK', 'Vivmark Residential', { shares: 398834711, jahresAktien: 142826382 }),
+    zeile('MRK.DE', 'Merck KGaA', { shares: 129242252, jahresAktien: 434777878 }),
+    zeile('MRK.SW', 'Merck & Co., Inc.', { shares: 2467171638, jahresAktien: 2507000000 }),
+  ]);
+  const ber = tripwireBericht(a, { treffer: [] }, { stand: '2026-08-30', gelesen: 3, unlesbar: 0, messebene: 'x' });
+  const gemeldet = ber.ankerA.klassen.flatMap((k) => k.beispiele).map((x) => x.ticker);
+  assert.deepEqual(gemeldet, ['VMRK'], 'VMRK feuert und steht namentlich im Bericht');
+  assert.deepEqual(ber.ankerA.ausgenommen.klassen[0].beispiele.map((x) => x.ticker), ['MRK.DE'],
+    'MRK.DE ist ausgenommen und steht namentlich im Ausnahme-Block');
+  assert.equal(ber.zaehlung.ankerA_ohneBasis, 0, 'MRK.SW ist still, weil sauber — nicht weil unrechenbar');
 });
 
 test('M16: die Abgrenzungsformel steht woertlich im Kopf des Bausteins UND im Bericht', () => {
@@ -327,6 +417,18 @@ test('M8 FAIL-OPEN: ein Wurf im Baustein laesst den Lauf bei Exit 0 — und wird
   fs.rmSync(sack, { recursive: true, force: true });
 });
 
+test('DROSSELUNG (am LAUF): die Klassen-Aufschluesselung steht im Lauf-Log', () => {
+  // Der Bericht ist committet, das Log ist der Ort, an dem die Lampe wirklich gelesen wird.
+  // Die Wache oben misst die Funktion; DIESE misst die Aufrufstelle.
+  const { root, ausgabe } = laufe();
+  assert.match(ausgabe, /\[m10-tripwire\] {3}A · Groessenordnung 1e[+-]?\d+: 1 Meldungen — Beispiele \(1\): ZZMK=/,
+    'die A-Klassenzeile mit voller Zahl und Beispiel');
+  assert.match(ausgabe, /\[m10-tripwire\] {3}A · M12-Ausnahme .*: 1 ausgenommen — Beispiele \(1\): MRK\.DE=/,
+    'die M12-Ausnahme wird im Log GENANNT, nicht nur gezaehlt');
+  assert.match(ausgabe, /\[m10-tripwire\] {3}B · 2 Emittentengruppen: 1 Meldungen/, 'die B-Klassenzeile');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test('MESSEBENE: der Tripwire sieht die Divergenz, die die Vorstufe gleich HEILT', () => {
   // DAS ist der Grund, warum P2 gewaehlt wurde und nicht P1 (Urteil §3.2): ein wirksamer
   // Eingriff loescht seine eigene Klasse aus der Spur. `ANL.DE` ("ANALOG DEVICES INC.DL-166")
@@ -354,7 +456,7 @@ test('MESSEBENE: der Tripwire sieht die Divergenz, die die Vorstufe gleich HEILT
   assert.match(ausgabe, /\[m10-tripwire\] Anker B .*: 1 Klassen/,
     'der Tripwire hat die Divergenz VOR der Heilung gesehen');
   const b = JSON.parse(fs.readFileSync(tripwireStandardpfad(ziel), 'utf8'));
-  assert.deepEqual(b.ankerB.meldungen[0].beine.map((x) => x.schluessel).sort(),
+  assert.deepEqual(b.ankerB.klassen[0].beispiele[0].beine.map((x) => x.schluessel).sort(),
     ['analogdevicesinc', 'analogdevicesincdl166'], 'zwei Schluessel — der Zustand VOR der Stufe');
   fs.rmSync(root, { recursive: true, force: true });
 });
@@ -457,7 +559,7 @@ test('REVIEW-HAERTUNG: ein AUSGEFALLENER Anker steht als ausgefallen da, nie als
   assert.ok(ber.ankerA.grund, 'und der Grund steht dabei');
   assert.equal(ber.ankerB.ausgefallen, false, 'der lebende Anker bleibt vollstaendig im Bericht');
   assert.equal(ber.zaehlung.ankerB, 1);
-  assert.equal(ber.ankerB.meldungen.length, 1);
+  assert.equal(ber.ankerB.klassen[0].gemeldet, 1);
   // ABWESENHEIT: laufen beide, ist nichts als ausgefallen markiert.
   const a = tripwireAnkerA([zeile('VMRK', 'Vivmark Residential', { shares: 398834711, jahresAktien: 142826382 })]);
   const beide = tripwireBericht(a, b, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
@@ -505,7 +607,7 @@ test('REVIEW-HAERTUNG (am LAUF): eine Altlast im Ziel wird vom Tripwire MITGEMES
   const b = JSON.parse(fs.readFileSync(tripwireStandardpfad(ziel), 'utf8'));
   assert.equal(b.gelesen, 2, 'der Tripwire hat BEIDE Dateien gesehen, nicht nur die uebernommene');
   assert.equal(b.zaehlung.ankerA, 1);
-  assert.equal(b.ankerA.meldungen[0].ticker, 'ALTLAST',
+  assert.equal(b.ankerA.klassen[0].beispiele[0].ticker, 'ALTLAST',
     'genau die Altlast, die keine Uebernahme-Liste je genannt haette');
   fs.rmSync(root, { recursive: true, force: true });
 });
@@ -520,7 +622,7 @@ test('M9: der Bericht wird geschrieben und liegt beim gemessenen Bestand, nicht 
   assert.equal(b.zaehlung.ankerA, 1);
   assert.equal(b.zaehlung.ankerA_ausgenommen, 1);
   assert.equal(b.zaehlung.ankerB, 1);
-  assert.equal(b.ankerA.meldungen[0].ticker, 'ZZMK');
+  assert.equal(b.ankerA.klassen[0].beispiele[0].ticker, 'ZZMK');
   assert.ok(/vor den Umbenennungs-Stufen/.test(b.messebene), 'die Messebene steht im Bericht');
   fs.rmSync(root, { recursive: true, force: true });
 });
