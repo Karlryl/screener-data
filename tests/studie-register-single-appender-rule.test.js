@@ -33,6 +33,7 @@ const {
   checkSingleAppender,
   resolveBaseRef,
   SingleAppenderViolation,
+  LEDGER_REL,
 } = require('../lib/ledger-single-appender');
 const { pruefeZugriffsRegister, haengeEintragAn } = require('../lib/studie-verfassung');
 
@@ -50,8 +51,6 @@ const sha256 = (relative) => crypto
   .update(fs.readFileSync(path.join(ROOT, ...relative.split('/'))))
   .digest('hex');
 
-const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
-
 // ── Sabotage fixture: a THROWAWAY repository, never the live checkout ──────────
 //
 // Hermetic by construction: `git init` in a temp directory, no network, no reuse of
@@ -59,7 +58,24 @@ const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
 // the ledger's BYTES, read once, so the probe runs against the real shape rather than
 // a toy object. The live ledger is never written.
 
-const gitIn = (dir, ...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8' });
+// Hermetic for real, not merely claimed: the developer's global/system git config must
+// not reach the fixture. An inherited core.hooksPath or commit template would break the
+// fixture's commits for reasons that have nothing to do with the guard under test.
+// Pointing GIT_CONFIG_GLOBAL/SYSTEM at a nonexistent file makes git read an empty
+// config (git >= 2.32); on older git the vars are ignored and we are no worse off.
+const KEINE_GITCONFIG = path.join(os.tmpdir(), 't172-no-such-gitconfig');
+const FIXTURE_ENV = {
+  ...process.env,
+  GIT_CONFIG_GLOBAL: KEINE_GITCONFIG,
+  GIT_CONFIG_SYSTEM: KEINE_GITCONFIG,
+  GIT_CONFIG_NOSYSTEM: '1',
+};
+
+const gitIn = (dir, ...args) => execFileSync('git', args, {
+  cwd: dir,
+  encoding: 'utf8',
+  env: FIXTURE_ENV,
+});
 
 const writeInto = (dir, relative, text) => {
   const abs = path.join(dir, ...relative.split('/'));
@@ -88,7 +104,7 @@ const ledgerTextMitAnhang = () => {
 function withFixture(run) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 't172-appender-probe-'));
   try {
-    execFileSync('git', ['-c', 'init.defaultBranch=main', 'init', '--quiet', dir]);
+    execFileSync('git', ['-c', 'init.defaultBranch=main', 'init', '--quiet', dir], { env: FIXTURE_ENV });
     gitIn(dir, 'config', 'user.email', 'probe@example.invalid');
     gitIn(dir, 'config', 'user.name', 'T172 probe');
     gitIn(dir, 'config', 'commit.gpgsign', 'false');
@@ -294,10 +310,32 @@ test('T172 probe: the clean branch and the prescribed mini-PR stay GREEN', () =>
   });
 });
 
+test('T172 probe: the guard refuses to run blind', () => {
+  // Both directions of the measurement plane itself. A guard that cannot measure must
+  // say so; it must never hand back a clean verdict because the measurement failed.
+  assert.equal(resolveBaseRef(ROOT, ['gibt-es-nicht/zweig']), null, 'a missing ref is a miss');
+  assert.throws(
+    () => resolveBaseRef(path.join(os.tmpdir(), `t172-no-such-repo-${Date.now()}`), ['main']),
+    /ENOENT/,
+    'a git that cannot run at all must not be laundered into "no base found"',
+  );
+  assert.throws(
+    () => checkSingleAppender({ repoDir: ROOT, baseRef: 'HEAD', ledgerRel: LEDGER_REL.split('/').join('\\') }),
+    TypeError,
+    'a backslash path would match nothing and return a clean verdict for the wrong reason',
+  );
+});
+
 test('T172: the live checkout carries no branch-side ledger append', () => {
   // Read-only against the real repository, so the guard is an anchor in CI and not a
   // fixture-only ornament. On main the range is empty and the verdict trivially clean;
   // on a branch it is the actual verdict for that branch.
+  //
+  // Precondition, shared with tests/studie-r1-register.test.js and documented in
+  // .github/workflows/pr-check.yml: the CI checkout uses fetch-depth: 0. Without it
+  // neither origin/main nor main resolves and this goes red. That is the intended
+  // handling -- the same "loud, not silently skipped" rule the R1 prefix anchor
+  // applies to a shallow clone -- not an accident to be softened into a skip.
   const base = resolveBaseRef(ROOT, ['origin/main', 'main']);
   assert.ok(
     base,
