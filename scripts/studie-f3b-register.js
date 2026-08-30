@@ -54,6 +54,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const {
   VerfassungsBruch,
   haengeEintragAn,
@@ -109,8 +110,19 @@ function argument(argv, name) {
 // Das Register wird mit der Formatierung zurueckgeschrieben, mit der es
 // ausgeliefert wurde (ein Leerzeichen Einrueckung). Umformatiert waere es im
 // Diff ein Neuschrieb und im Review nicht mehr lesbar.
+//
+// UND ATOMAR, ueber lib/atomic-write.js: ein direktes writeFileSync auf ein
+// nur-anhaengendes, verkettetes Register laesst bei einem Abbruch mitten im
+// Schreiben (Platte voll, Kill, Stromausfall, OneDrive-/AV-Sperre) eine halbe,
+// ungueltige Datei zurueck - und dafuer gibt es keinen Reparaturweg im Werkzeug,
+// nur `git checkout`. Der naechste Lauf saehe einen rohen SyntaxError aus
+// JSON.parse. Genommen wird der vorhandene Helfer (Tag 189, ~20 Aufrufer im
+// Repo), nicht ein zweiter Eigenbau: er kann mehr als tmp+rename - fsync der
+// tmp-Datei VOR dem Umbenennen, Wiederholung des rename unter Windows-
+// EPERM/EBUSY (OneDrive/AV halten Handles), fsync des Verzeichnisses, Schleife
+// ueber Teilschreibvorgaenge. Zwei Kopien derselben Regel driften; eine nicht.
 function schreibeRegister(pfad, register) {
-  fs.writeFileSync(pfad, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+  writeFileAtomic(pfad, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
 // ── Die vier fail-closed Tore ─────────────────────────────────────────────────
