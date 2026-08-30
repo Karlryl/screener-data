@@ -6,6 +6,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { pruefePins } = require('./helpers/pin-abdeckung.js');
 
 const REPO = path.join(__dirname, '..');
 const SCRIPT = path.join(REPO, 'scripts', 'studie-censoring-aware-attrition.py');
@@ -79,10 +80,15 @@ test('D4: gebundene Dateien und D1/D2-Anker reproduzieren exakt', () => {
   assert.equal(result.preregistration.sha256, sha256(PREREG));
   assert.deepEqual(result.boundInputs, prereg.boundInputs,
     'Historische D4-Bindung im Artefakt muss unveraendert bleiben');
-  for (const [relative, expected] of Object.entries(result.boundInputs)) {
-    const currentExpected = thresholdSeal.currentScripts[relative] || expected;
-    assert.equal(sha256(path.join(REPO, relative)), currentExpected, relative);
-  }
+  // N13-Klasse (Nachtlauf 30.08.): der bisherige `|| expected`-Rueckfall machte den Pin bei
+  // einem Schluessel-Tippfehler zur Tautologie - der Eintrag fiel still auf den historischen
+  // Hash zurueck und der Test blieb gruen. Verhalten unveraendert, aber die ABDECKUNG ist
+  // jetzt eine gepinnte Groesse: ein Tippfehler verschiebt einen Eintrag von `ueberSiegel`
+  // nach `historisch` UND erzeugt eine Waise, bricht also gleich zwei Zaehler.
+  const abdeckung = pruefePins(REPO, result.boundInputs, thresholdSeal.currentScripts);
+  assert.equal(abdeckung.ueberSiegel.length, 1, 'D4: Anzahl der ueber das aktuelle Siegel gepinnten Dateien');
+  assert.equal(abdeckung.historisch.length, 3, 'D4: Anzahl der auf den historischen Hash gebundenen Dateien');
+  assert.equal(abdeckung.waisen.length, 3, 'D4: Siegel-Schluessel ohne gebundene Datei - bis 30.08. ungeprueft, jetzt mitgeprueft');
   assert.deepEqual(result.counts, {
     companies: d1.counts.companies,
     rightCensored: d1.counts.rightCensored,
