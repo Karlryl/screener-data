@@ -49,6 +49,11 @@ const { assertSecContact } = require('../lib/sec-user-agent.js');
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BULK_HOST = 'www.sec.gov';
 const BULK_PATH = '/Archives/edgar/daily-index/bulkdata/submissions.zip';
+// T187 (a): jeder Abruf bekommt eine Inaktivitaets-Frist. Ohne sie haengt ein
+// stillstehender Socket unbegrenzt — der Lauf sieht dann aus wie "laeuft noch"
+// und nicht wie "kaputt". 30 s misst PAUSEN, nicht die Gesamtdauer: der 1,5-GB-
+// Download darf beliebig lange laufen, solange Bytes fliessen.
+const HTTP_TIMEOUT_MS = 30000;
 
 // Getrennter Store (Rats-Auflage §5, einstimmig) — NIE <cache>/submissions/.
 const STORE_DIR = path.join(secPit.CACHE_DIR, 'submissions-bulk');
@@ -111,6 +116,7 @@ function headBulk(ua) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(HTTP_TIMEOUT_MS, () => req.destroy(new Error('HEAD-Timeout nach ' + HTTP_TIMEOUT_MS + ' ms')));
     req.end();
   });
 }
@@ -177,6 +183,12 @@ async function cmdProbe() {
 
 // ── D2.1 — EIN Download + Eingangsstempel (Bauplan §4.4) ────────────────────
 function downloadBulk(ua, dest) {
+  // Review-Fund (30.08.): bricht die Anfrage mitten im Strom ab, bekommt der
+  // Schreibstrom weder 'finish' noch 'close' — er bliebe offen. In diesem
+  // Einmal-Prozess raeumt der Prozess-Ende auf, in einer Wiederhol-Schleife nicht.
+  // Deshalb hier explizit: ein abgebrochener Download schliesst seine Datei.
+  let ws = null;
+  const abbrechen = (fehler) => { if (ws) ws.destroy(); reject(fehler); };
   return new Promise((resolve, reject) => {
     const req = https.get({
       host: BULK_HOST, path: BULK_PATH,
@@ -185,7 +197,7 @@ function downloadBulk(ua, dest) {
       if (res.statusCode !== 200) { res.resume(); return reject(new Error('HTTP ' + res.statusCode)); }
       const hash = crypto.createHash('sha256');
       const tmp = dest + '.part';
-      const ws = fs.createWriteStream(tmp);
+      ws = fs.createWriteStream(tmp);
       let got = 0, lastLog = Date.now();
       const declared = res.headers['content-length'] ? Number(res.headers['content-length']) : null;
       res.on('data', (c) => {
@@ -196,7 +208,7 @@ function downloadBulk(ua, dest) {
             + (declared ? ' / ' + (declared / 1e6).toFixed(0) + ' MB' : ''));
         }
       });
-      res.on('error', reject);
+      res.on('error', abbrechen);
       ws.on('error', reject);
       res.pipe(ws);
       ws.on('finish', () => {
@@ -213,13 +225,25 @@ function downloadBulk(ua, dest) {
         });
       });
     });
-    req.on('error', reject);
+    req.on('error', abbrechen);
+    req.setTimeout(HTTP_TIMEOUT_MS, () => req.destroy(new Error('Download-Timeout: ' + HTTP_TIMEOUT_MS + ' ms ohne Bytes')));
   });
 }
 
 async function cmdDownload() {
   const ua = assertSecContact();
   fs.mkdirSync(STORE_DIR, { recursive: true });
+  // T187 (d): eine .part aus einem abgebrochenen Lauf ist KEIN Store — sie faellt
+  // sonst still unter den Tisch und belegt GB. Sie wird verworfen und gemeldet, nicht
+  // fortgesetzt: ponytail — ohne Range-Request waere "fortsetzen" ein zweiter Voll-
+  // Download mit Extra-Buchhaltung. Wird Wiederaufnahme je gebraucht, ist der Weg
+  // `Range: bytes=<got>-` plus Hash-ueber-den-Rest, nicht dieser Zweig.
+  const partPath = ZIP_PATH + '.part';
+  if (fs.existsSync(partPath)) {
+    const groesse = fs.statSync(partPath).size;
+    fs.unlinkSync(partPath);
+    console.log('[d2.1] verwaiste Teil-Datei verworfen (' + groesse + ' B): ' + partPath);
+  }
   if (fs.existsSync(ZIP_PATH)) {
     console.log('[d2.1] Store existiert bereits — kein zweiter Download (additiv, nie ueberschreibend): ' + ZIP_PATH);
     if (fs.existsSync(STAMP_PATH)) console.log(fs.readFileSync(STAMP_PATH, 'utf8'));
@@ -291,23 +315,44 @@ function classifyRuleProvision(xml) {
   return { klasse: 'unknown', roh: raw };
 }
 
-async function scanZip() {
-  console.log('[d2.2] oeffne ' + ZIP_PATH + ' (Namensfilter: nur CIK##########.json) ...');
-  const store = secPit.openStore(ZIP_PATH, { entryFilter: (n) => CIK_ENTRY.test(n) });
+async function scanZip(opt) {
+  const zipPath = (opt && opt.zipPath) || ZIP_PATH;
+  const hitsPath = (opt && opt.hitsPath) || HITS_PATH;
+  console.log('[d2.2] oeffne ' + zipPath + ' (Namensfilter: nur CIK##########.json) ...');
+  const store = secPit.openStore(zipPath, { entryFilter: (n) => CIK_ENTRY.test(n) });
   const names = store.entryNames();
   console.log('[d2.2] ' + names.length + ' CIK-Eintraege im Verzeichnis.');
-  const ws = fs.createWriteStream(HITS_PATH);
+  const ws = fs.createWriteStream(hitsPath);
+  // Review-Fund (30.08.), KRITISCH: der Fehler-Zuhoerer hing bisher erst UNTER der Schleife.
+  // Ein Schreibfehler mitten im Lauf (Platte voll, Rechte, I/O) war damit eine unbehandelte
+  // Ausnahme auf Prozessebene - sie haette das `finally` unten uebersprungen und den Lauf
+  // mit rohem Stapelabzug beendet statt mit der roten Zeile. Zuhoerer ab der ersten Zeile.
+  let schreibFehler = null;
+  ws.on('error', (e) => { schreibFehler = e; });
   let scanned = 0, parsed = 0, hitCik = 0, hits = 0, mitUeberlauf = 0, ueberlaufImFenster = 0;
+  // T186: bisher stand hier ein zaehlerloses `catch (_) { continue; }`. Ein
+  // unlesbarer Eintrag fiel damit still aus der Zaehlung — und §6 des publizierten
+  // Berichts konnte die dritte Ursache der Zaehl-Diskrepanz weder ein- noch
+  // ausschliessen, weil niemand wusste, ob es sie ueberhaupt gibt. Derselbe
+  // Zaehler existiert bei den Schwester-Waechtern (watch-annual-spikes,
+  // watch-fx-sanity) laengst; hier fehlte das Gegenstueck.
+  let parseFehler = 0, leseFehler = 0;
+  try {
   for (const name of names) {
     scanned++;
-    const buf = store.readEntryByName(name);
+    // Review-Fund (30.08.): das Entpacken selbst kann werfen (kaputter Deflate-Strom).
+    // Unbehandelt riss EIN kaputter Eintrag den ganzen 1,5-GB-Lauf mit — und der
+    // Parse-Zaehler haette ihn nie gesehen, weil er eine Ebene tiefer haengt.
+    // Eigener Zaehler, weil es eine andere Sache ist als unlesbares JSON.
+    let buf;
+    try { buf = store.readEntryByName(name); } catch (_) { leseFehler++; continue; }
     // Billiger Vorfilter auf dem Rohtext: jede echte Form-25-Zeile steht als
     // "25" oder "25-NSE" im form-Array, beide beginnen mit dem Praefix "25 —
     // beweisbare Obermenge, spart ~90 % der JSON.parse-Arbeit ueber ~15 GB.
     if (buf.indexOf('"25') === -1) continue;
     parsed++;
     let sub;
-    try { sub = JSON.parse(buf.toString('utf8')); } catch (_) { continue; }
+    try { sub = JSON.parse(buf.toString('utf8')); } catch (_) { parseFehler++; continue; }
     const r = extractForm25(sub, WINDOW_FROM, WINDOW_TO);
     if (r.hatUeberlauf) { mitUeberlauf++; ueberlaufImFenster += r.ueberlaufImFenster; }
     if (r.hits.length) {
@@ -319,12 +364,31 @@ async function scanZip() {
   // MUSS awaited werden: ws.end() ist asynchron. Ohne das Warten liest die
   // naechste Stufe eine noch ungeschriebene Datei und meldet stillschweigend
   // 0 Treffer, obwohl der Scan Tausende gefunden hat (einmal live passiert).
-  await new Promise((res, rej) => { ws.on('finish', res); ws.on('error', rej); ws.end(); });
-  store.close();
-  const stats = { eintraege: names.length, gescannt: scanned, geparst: parsed, trefferCiks: hitCik, trefferZeilen: hits, ciksMitUeberlauf: mitUeberlauf, ueberlaufDateienImFenster: ueberlaufImFenster };
+  await new Promise((res, rej) => {
+    if (schreibFehler) return rej(schreibFehler);   // schon unterwegs gescheitert
+    ws.on('error', rej); ws.on('finish', res); ws.end();
+  });
+  } finally {
+    // T187 (c): der Datei-Deskriptor faellt auch dann zu, wenn oben etwas wirft —
+    // sonst haelt ein Fehlschlag das 1,5-GB-Archiv bis zum Prozessende offen.
+    // Ein Fehlschlag BEIM Schliessen darf den urspruenglichen Fehler nicht verdraengen:
+    // der ist der Befund, das Schliessen ist Aufraeumen (Review-Fund 30.08.).
+    try { store.close(); } catch (_) { /* siehe oben */ }
+  }
+  const stats = { eintraege: names.length, gescannt: scanned, geparst: parsed, parseFehler, leseFehler, trefferCiks: hitCik, trefferZeilen: hits, ciksMitUeberlauf: mitUeberlauf, ueberlaufDateienImFenster: ueberlaufImFenster };
   console.log('[d2.2] Scan fertig: ' + JSON.stringify(stats));
+  console.log('[d2.2] Lese-Umfang: ' + (parsed - parseFehler) + ' von ' + parsed + ' vorgefilterten Eintraegen geparst'
+    + (parseFehler ? ', ' + parseFehler + ' NICHT lesbar (JSON-Parse-Fehler)' : ''));
+  if (leseFehler > 0) {
+    console.error('[d2.2] WARNUNG: ' + leseFehler + ' Eintrag/Eintraege liessen sich nicht aus dem Archiv '
+      + 'entpacken — sie fallen aus JEDER Zaehlung dieses Laufs heraus.');
+  }
+  if (parseFehler > 0) {
+    console.error('[d2.2] WARNUNG: ' + parseFehler + ' Eintrag/Eintraege nicht parsebar — sie fallen aus JEDER '
+      + 'Zaehlung dieses Laufs heraus. Die Trefferzahlen sind Untergrenzen, keine Vollzaehlung.');
+  }
   // Wache gegen genau diesen Fehler: was gezaehlt wurde, muss auch lesbar sein.
-  const aufPlatte = readJsonl(HITS_PATH).length;
+  const aufPlatte = readJsonl(hitsPath).length;
   if (aufPlatte !== hits) throw new Error('Scan-Wache: ' + hits + ' Treffer gezaehlt, ' + aufPlatte + ' auf Platte lesbar');
   return stats;
 }
@@ -348,8 +412,59 @@ function getDoc(ua, cik, accession, doc) {
       res.on('data', (c) => chunks.push(c));
       res.on('end', () => resolve({ status: 200, body: Buffer.concat(chunks).toString('utf8') }));
     });
+    // status 0 = NICHT GEHOLT (Netzfehler/Frist), nie ein Befund ueber das Dokument.
     req.on('error', () => resolve({ status: 0, body: null }));
+    req.setTimeout(HTTP_TIMEOUT_MS, () => req.destroy(new Error('Doc-Timeout')));
   });
+}
+
+/**
+ * T187 (b): Darf diese Antwort in den Ergebnis-Store? status 0 = nicht erreicht
+ * (Netzfehler oder abgelaufene Frist in getDoc) — das ist FEHLENDE ABDECKUNG, keine
+ * Aussage ueber das Dokument. Wird sie geschrieben, gilt sie im naechsten Lauf als
+ * erledigt und im Bericht als bestimmter Negativbefund. Jeder echte HTTP-Status
+ * (200, 403, 404 …) ist dagegen ein Befund und wird persistiert.
+ */
+function istPersistierbar(status) { return status !== 0; }
+
+/** SEC-schonende Pause zwischen zwei Dokument-Abrufen (< 10 req/s). */
+const drossel = () => new Promise((res) => setTimeout(res, 150));
+
+/**
+ * Welche Klasse traegt eine Trefferzeile? VIER, nicht drei (Review-Fund 30.08.):
+ *  nichtGeholt            - nie versucht (Abruf abgebrochen)
+ *  nichtAbrufbar          - versucht, echter HTTP-Fehlschlag (403/404/429/5xx)
+ *  b / c                  - Rechtsgrundlage aus dem Dokument gelesen
+ *  andereRechtsgrundlage  - Dokument GELESEN, traegt eine andere Grundlage
+ * Die ersten beiden sind FEHLENDE ABDECKUNG. Landeten sie wie bisher in
+ * `andereRechtsgrundlage`, laese der Bericht eine SEC-Sperre als dritte
+ * Rechtsgrundlage - genau die stille Falschaussage, die dieser Strang vermeidet.
+ */
+function provisionKlasse(p) {
+  if (!p) return 'nichtGeholt';
+  if (p.status !== 200) return 'nichtAbrufbar';
+  return (p.klasse === 'b' || p.klasse === 'c') ? p.klasse : 'andereRechtsgrundlage';
+}
+
+/**
+ * Der Satz zum Parse-Verlust - EINE Quelle fuer Bericht-JSON und Bericht-Text.
+ * Fehlt der Zaehler (Kennzahlen aus einem Lauf vor T186), heisst das NICHT GEMESSEN
+ * und wird nie als 0 gedruckt.
+ */
+function parseVerlustSatz(scanStats) {
+  const gemessen = scanStats && typeof scanStats.parseFehler === 'number';
+  if (!gemessen) {
+    return 'PARSE-VERLUST NICHT GEMESSEN: diese Scan-Kennzahlen stammen aus einem Lauf VOR dem '
+      + 'Zaehler (T186); die Zahl ist unbekannt, ausdruecklich nicht 0.';
+  }
+  const lese = typeof scanStats.leseFehler === 'number' && scanStats.leseFehler > 0
+    ? ' Dazu ' + scanStats.leseFehler + ' Eintrag/Eintraege, die sich nicht entpacken liessen.' : '';
+  if (scanStats.parseFehler === 0) {
+    return 'PARSE-VERLUST GEMESSEN: 0 von ' + scanStats.geparst + ' vorgefilterten Eintraegen war unlesbar - '
+      + 'die dritte Kandidaten-Ursache der Zaehl-Diskrepanz (par. 6) ist damit AUSGESCHLOSSEN.' + lese;
+  }
+  return 'PARSE-VERLUST GEMESSEN: ' + scanStats.parseFehler + ' von ' + scanStats.geparst + ' vorgefilterten '
+    + 'Eintraegen waren unlesbar und fallen aus jeder Zaehlung heraus - die Trefferzahlen sind Untergrenzen.' + lese;
 }
 
 function readJsonl(p) {
@@ -363,17 +478,21 @@ async function fetchRuleProvisions(ua) {
   const todo = hits.filter((h) => h.accessionNumber && !done.has(h.accessionNumber));
   console.log('[d2.2] ruleProvision: ' + hits.length + ' Treffer, ' + done.size + ' bereits geholt, ' + todo.length + ' offen.');
   const ws = fs.createWriteStream(RULEPROV_PATH, { flags: 'a' });
-  let n = 0;
+  let n = 0, nichtErreicht = 0;
   for (const h of todo) {
     const r = await getDoc(ua, h.cik, h.accessionNumber, h.primaryDocument);
+    // Die Drossel gilt AUCH fuer Fehlschlaege (Review-Fund 30.08.): ohne sie faehrt der
+    // Lauf genau dann schneller gegen die SEC, wenn die Abrufe ohnehin schon scheitern.
+    if (!istPersistierbar(r.status)) { nichtErreicht++; await drossel(); continue; }
     const cls = r.status === 200 ? classifyRuleProvision(r.body) : { klasse: 'unknown', roh: null };
     ws.write(JSON.stringify({ accessionNumber: h.accessionNumber, cik: h.cik, status: r.status, klasse: cls.klasse, roh: cls.roh }) + '\n');
     n++;
     if (n % 250 === 0) console.log('[d2.2] ruleProvision ' + n + '/' + todo.length);
-    await new Promise((res) => setTimeout(res, 150)); // < 10 req/s, SEC-schonend
+    await drossel();
   }
   await new Promise((res) => ws.end(res));
-  console.log('[d2.2] ruleProvision fertig.');
+  console.log('[d2.2] ruleProvision fertig: ' + n + ' persistiert'
+    + (nichtErreicht ? ', ' + nichtErreicht + ' nicht erreicht (bleiben offen)' : '') + '.');
 }
 
 // STRUKTURELLE Doppelzaehl-Wache, ohne jede Boersen-Kenntnis:
@@ -419,17 +538,19 @@ async function cmdSample() {
   const pick = offen.slice(0, limit);
   console.log('[d2.2] Zufallsstratum: ' + pick.length + ' von ' + offen.length + ' offenen (Seed ' + SAMPLE_SEED + ')');
   const ws = fs.createWriteStream(RULEPROV_PATH, { flags: 'a' });
-  let n = 0;
+  let n = 0, nichtErreicht = 0;
   for (const acc of pick) {
     const h = byAcc.get(acc);
     const r = await getDoc(ua, h.cik, acc, h.primaryDocument);
+    if (!istPersistierbar(r.status)) { nichtErreicht++; await drossel(); continue; }   // T187 (b) + Drossel, wie oben
     const cls = r.status === 200 ? classifyRuleProvision(r.body) : { klasse: 'unknown', roh: null };
     ws.write(JSON.stringify({ accessionNumber: acc, cik: h.cik, status: r.status, klasse: cls.klasse, roh: cls.roh, stratum: 'zufall' }) + '\n');
     if (++n % 200 === 0) console.log('[d2.2] Stratum ' + n + '/' + pick.length);
-    await new Promise((res) => setTimeout(res, 150));
+    await drossel();
   }
   await new Promise((res) => ws.end(res));
-  console.log('[d2.2] Zufallsstratum fertig: ' + n);
+  console.log('[d2.2] Zufallsstratum fertig: ' + n
+    + (nichtErreicht ? ' (' + nichtErreicht + ' nicht erreicht, bleiben offen)' : ''));
 }
 
 function buildReport(scanStats) {
@@ -446,7 +567,7 @@ function buildReport(scanStats) {
     // NICHT GEHOLT ist eine eigene Klasse, nie „unknown": ein ungeholtes Dokument
     // ist fehlende Abdeckung, keine dritte Rechtsgrundlage. Das Zusammenwerfen
     // waere genau die stille Falschaussage, die dieser Strang vermeiden soll.
-    const split = { b: 0, c: 0, andereRechtsgrundlage: 0, nichtGeholt: 0 };
+    const split = { b: 0, c: 0, andereRechtsgrundlage: 0, nichtAbrufbar: 0, nichtGeholt: 0 };
     const formen = {};
     // Wortlaut-Verteilung der Rechtsgrundlage — VERBATIM, ohne Deutung. Der
     // beauftragte (b)/(c)-Schnitt partitioniert die Daten NICHT: die Masse traegt
@@ -455,12 +576,12 @@ function buildReport(scanStats) {
     let mitPrimaryDoc = 0, ohneDokument = 0;
     for (const h of rows) {
       const y = h.filingDate.slice(0, 4);
-      jahre[y] = jahre[y] || { zeilen: 0, ciks: new Set(), b: 0, c: 0, andereRechtsgrundlage: 0, nichtGeholt: 0 };
+      jahre[y] = jahre[y] || { zeilen: 0, ciks: new Set(), b: 0, c: 0, andereRechtsgrundlage: 0, nichtAbrufbar: 0, nichtGeholt: 0 };
       jahre[y].zeilen++; jahre[y].ciks.add(h.cik);
       ciks.add(h.cik);
       formen[h.form] = (formen[h.form] || 0) + 1;
       const p = prov.get(h.accessionNumber);
-      const k = !p ? 'nichtGeholt' : (p.klasse === 'b' || p.klasse === 'c') ? p.klasse : 'andereRechtsgrundlage';
+      const k = provisionKlasse(p);
       split[k]++; jahre[y][k]++;
       if (p && p.status === 200) mitPrimaryDoc++; else if (p) ohneDokument++;
       const w = !p ? 'NOCH NICHT GEHOLT'
@@ -470,13 +591,15 @@ function buildReport(scanStats) {
     }
     const jahreOut = {};
     for (const y of Object.keys(jahre).sort()) {
-      jahreOut[y] = { zeilen: jahre[y].zeilen, uniqueCiks: jahre[y].ciks.size, b: jahre[y].b, c: jahre[y].c, andereRechtsgrundlage: jahre[y].andereRechtsgrundlage, nichtGeholt: jahre[y].nichtGeholt };
+      jahreOut[y] = { zeilen: jahre[y].zeilen, uniqueCiks: jahre[y].ciks.size, b: jahre[y].b, c: jahre[y].c, andereRechtsgrundlage: jahre[y].andereRechtsgrundlage, nichtAbrufbar: jahre[y].nichtAbrufbar, nichtGeholt: jahre[y].nichtGeholt };
     }
     const sortiert = Object.fromEntries(Object.entries(provisionVerteilung).sort((a, b) => b[1] - a[1]));
-    const geholt = rows.length - split.nichtGeholt;
+    // GEHOLT heisst: Dokument liegt vor. Ein 403 ist nicht geholt, auch wenn er beantwortet wurde.
+    const geholt = rows.length - split.nichtGeholt - split.nichtAbrufbar;
     return {
       zeilen: rows.length, uniqueCiks: ciks.size, formen,
-      abdeckung: { geholt, offen: split.nichtGeholt, quote: rows.length ? Number((geholt / rows.length).toFixed(4)) : 0 },
+      abdeckung: { geholt, offen: split.nichtGeholt, nichtAbrufbar: split.nichtAbrufbar,
+        quote: rows.length ? Number((geholt / rows.length).toFixed(4)) : 0 },
       mitPrimaryDoc, ohneDokument, ruleProvisionSplit: split, provisionVerteilung: sortiert, jahre: jahreOut,
     };
   }
@@ -566,14 +689,15 @@ function buildReport(scanStats) {
         + 'trotzdem einen Treffer tragen; die 5.353 sind die harte Obergrenze, die 991 eine '
         + 'Teilmenge. Der blinde Fleck ist eingegrenzt, nicht geschlossen.',
       'exchanges[] wurde nie gelesen; eine Boersen-Identitaet je Firma liefert dieser Lauf bewusst NICHT.',
-      'ABDECKUNG TEILWEISE: die Rechtsgrundlage wurde fuer ' + (alle.zeilen - alle.ruleProvisionSplit.nichtGeholt)
+      'ABDECKUNG TEILWEISE: die Rechtsgrundlage wurde fuer ' + alle.abdeckung.geholt
         + ' von ' + alle.zeilen + ' Zeilen geholt (' + (100 * alle.abdeckung.quote).toFixed(1) + ' %). '
         + 'Der Rest ist als „nichtGeholt" gefuehrt, NICHT als unbekannte Rechtsgrundlage. Abgebrochen '
         + 'wurde bewusst: bei ~150 ms/Dokument haette der Vollabruf rund 90 weitere Minuten gekostet.',
       'Das Kopf-Stratum folgt der Dateireihenfolge (CIK aufsteigend) und ist damit auf alte '
         + 'Registranten verzerrt — es darf NICHT hochgerechnet werden. Fuer belastbare Anteile ist '
         + 'allein das seed-feste Zufallsstratum zu verwenden (stichprobe.zufallsStratum).',
-      'Ticker-Bruecke (D2.5) NICHT gebaut: die Treffer sind CIK-geschluesselt, nicht ticker-geschluesselt.',
+      parseVerlustSatz(scanStats),
+    'Ticker-Bruecke (D2.5) NICHT gebaut: die Treffer sind CIK-geschluesselt, nicht ticker-geschluesselt.',
       '(c)-Faelle sind mit dieser Methode NICHT zaehlbar: Form „25" liefert HTML statt primary_doc.xml. '
         + 'Die 0 in der (c)-Spalte bedeutet „nicht messbar", nicht „kommt nicht vor". Siehe §5 Punkt 4.',
       'ABWEICHUNG zum Rats-Mengengeruest (§3: 1.721/1.927/2.124/2.087 form.idx-Zeilen 2019–2022): '
@@ -666,14 +790,18 @@ function buildReport(scanStats) {
   L.push('Archiv-Aufteilung, exakt: **983.019** CIK-Dateien + **5.353** Ueberlauf-Shards + 1 `placeholder.txt`');
   L.push('= **988.373** — deckungsgleich mit der ZIP64-Zaehlung des Rats.');
   L.push('');
-  L.push('| Jahr | Form-25-Zeilen | Unique CIKs | (b) | (c) | andere Rechtsgrundlage | noch nicht geholt |');
-  L.push('| --- | --- | --- | --- | --- | --- | --- |');
+  L.push('| Jahr | Form-25-Zeilen | Unique CIKs | (b) | (c) | andere Rechtsgrundlage | nicht abrufbar | noch nicht geholt |');
+  L.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const y of Object.keys(jahreOut)) {
     const r = jahreOut[y];
-    L.push('| ' + y + ' | ' + r.zeilen + ' | ' + r.uniqueCiks + ' | ' + r.b + ' | ' + r.c + ' | ' + r.andereRechtsgrundlage + ' | ' + r.nichtGeholt + ' |');
+    L.push('| ' + y + ' | ' + r.zeilen + ' | ' + r.uniqueCiks + ' | ' + r.b + ' | ' + r.c + ' | ' + r.andereRechtsgrundlage + ' | ' + r.nichtAbrufbar + ' | ' + r.nichtGeholt + ' |');
   }
   L.push('| **Summe** | **' + hits.length + '** | **' + ciks.size + '** | **' + split.b + '** | **' + split.c
-    + '** | **' + split.andereRechtsgrundlage + '** | **' + split.nichtGeholt + '** |');
+    + '** | **' + split.andereRechtsgrundlage + '** | **' + split.nichtAbrufbar + '** | **' + split.nichtGeholt + '** |');
+  L.push('');
+  L.push('*"nicht abrufbar" ist eine eigene Spalte und keine Rechtsgrundlage: ein geblockter oder');
+  L.push('fehlgeschlagener Abruf (403/404/429/5xx) ist fehlende Abdeckung. Wuerde er wie frueher unter');
+  L.push('"andere Rechtsgrundlage" gezaehlt, laese dieser Bericht eine SEC-Sperre als Befund.*');
   L.push('');
   L.push('Formulare: ' + JSON.stringify(formen) + ' · Rechtsgrundlage geholt fuer **'
     + alle.abdeckung.geholt + '/' + hits.length + '** Zeilen (' + (100 * alle.abdeckung.quote).toFixed(1) + ' %).');
@@ -684,12 +812,12 @@ function buildReport(scanStats) {
   L.push('EDGAR haengt jede Form 25 an **beide** Seiten. Trennregel rein arithmetisch,');
   L.push('ohne jede Boersen-Kenntnis: `cik == erste 10 Ziffern der accessionNumber` = eigene Kopie des Einreichers.');
   L.push('');
-  L.push('| Seite | Zeilen | Unique CIKs | (b) | (c) | andere | noch nicht geholt |');
-  L.push('| --- | --- | --- | --- | --- | --- | --- |');
+  L.push('| Seite | Zeilen | Unique CIKs | (b) | (c) | andere | nicht abrufbar | noch nicht geholt |');
+  L.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const [nm, a] of [['Emittenten-/Subjekt-Seite', subjekt], ['Einreicher-Kopie (selbst)', selbst]]) {
     const s = a.ruleProvisionSplit;
     L.push('| ' + nm + ' | ' + a.zeilen + ' | ' + a.uniqueCiks + ' | ' + s.b + ' | ' + s.c + ' | '
-      + s.andereRechtsgrundlage + ' | ' + s.nichtGeholt + ' |');
+      + s.andereRechtsgrundlage + ' | ' + s.nichtAbrufbar + ' | ' + s.nichtGeholt + ' |');
   }
   L.push('');
   L.push('### Emittenten-Seite je Jahr');
@@ -757,6 +885,7 @@ function buildReport(scanStats) {
   L.push('  gefundene — Faktor ~2. Dagegen spricht Stimme Bs Befund von nur 694 Einzel-CIKs in 2021.');
   L.push('- **(b) Ueberlauf-Shards.** Aktive Vielfachmelder halten ihre aelteren Eintraege in');
   L.push('  `CIK…-submissions-NNN.json`; dieser Lauf las auftragsgemaess nur `filings.recent`.');
+  L.push('- **(c) Stiller Parse-Verlust** — ' + parseVerlustSatz(scanStats));
   L.push('');
   L.push('Die Aufloesung braucht einen zweiten Zaehl-Lauf (Shard-Scan bzw. `form.idx`-Gegenprobe) und');
   L.push('gehoert **nicht** in D2.2. Sie ist Vorbedingung dafuer, die Label-Grundgesamtheit zu beziffern.');
@@ -814,4 +943,4 @@ if (require.main === module) {
   fn().catch((e) => { console.error('[d2] ROT: ' + (e && e.message || e)); process.exit(1); });
 }
 
-module.exports = { extractForm25, classifyRuleProvision, rawDocName, istSelbstEinreichung, windowMass, ABORT_THRESHOLD_PCT, WINDOW_FROM, WINDOW_TO };
+module.exports = { extractForm25, classifyRuleProvision, rawDocName, istSelbstEinreichung, windowMass, scanZip, istPersistierbar, provisionKlasse, parseVerlustSatz, HTTP_TIMEOUT_MS, ABORT_THRESHOLD_PCT, WINDOW_FROM, WINDOW_TO };
