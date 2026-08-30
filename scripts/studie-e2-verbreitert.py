@@ -302,6 +302,56 @@ def schwellensatz(massgeblich_lauf, v0_lauf):
     return satz
 
 
+def freeze_artefakt(bericht):
+    """Das einzufrierende Artefakt aus dem fertigen Bericht - eine reine Umformung.
+
+    Bewusst KEIN neuer Lauf: der Satz steht im Bericht, und ein Freeze, der die
+    Zahlen noch einmal selbst erhebt, friert etwas anderes ein als das, was
+    geprueft wurde. Die Umformung ist deterministisch und jederzeit
+    wiederholbar.
+
+    Kanonisierung wie bei Register-Eintrag 22: JSON, Schluessel sortiert,
+    separators ',' und ':', ensure_ascii=False, UTF-8. `inhaltSha256` deckt den
+    Inhalt OHNE sich selbst - ein Hash, der sich selbst umfasst, ist keiner.
+    """
+    s = bericht["schwellensatz"]
+    inhalt = {
+        "schema": "studie-e2-schwellen-satz/v1",
+        "stufe": "E2, verbreiterte Konzeptliste",
+        "grundlage": {
+            "fassung": bericht["massgeblicheFassung"],
+            "beschluss": "ENTSCHIED 150 - gerechnet wird auf der 540er-Familie, "
+                         "ausschliesslich; keine Parallel-Ableitung auf 614",
+            "warumOhneBank": bericht["k8BankStratum"]["konsequenz"],
+        },
+        "provenienz": {
+            "versiegeltesModul": VERSIEGELT_REL,
+            "modulSha256": bericht["durchlaufAlt"]["protokoll"]["modulSha256"],
+            "konzeptlisteSha256":
+                bericht["durchlaufVerbreitert"]["protokoll"]["konzeptlisteSha256"],
+            "aequivalenzTorBestanden": bericht["aequivalenzTor"]["bestanden"],
+            "aequivalenzTorSoll": bericht["aequivalenzTor"]["soll"],
+            "erzeugtMit": "scripts/studie-e2-verbreitert.py",
+            "hinweisZurAbleitung":
+                "Die Schwellen wurden NICHT hier abgeleitet. kalibriere() laeuft "
+                "innerhalb des versiegelten Moduls und ist im massgeblichen "
+                "Durchlauf gelaufen; dieses Artefakt liest aus. Es gibt kein "
+                "Ableitungs-Ermessen, das nachtraeglich bestritten werden koennte.",
+        },
+        "regelParameter": s["regelParameter"],
+        "jeFamilie": s["jeFamilie"],
+        "scheiternskriterienBewegungGegenV0": s["scheiternskriterienBewegung"],
+        "musterFriedhof": s["musterFriedhof"],
+        "quellenAsymmetrie": bericht["quellenAsymmetrie"],
+        "wasDiesesArtefaktNichtTut": [
+            "kein Register-Eintrag - der Freeze gehoert in den EINEN F6-Tor-Akt",
+            "keine Rechnung mit dem Satz - bis zum F6-Akt wird damit nichts gerechnet",
+            "keine Aussage ueber den Ausgang eines Tors",
+        ],
+    }
+    return {**inhalt, "inhaltSha256": kanonisch_sha256(inhalt)}
+
+
 def pruefe_plausibilitaet(v0, verbreitert):
     """Ein reiner Fallback JE FIRMA kann nur HINZUFUEGEN.
 
@@ -570,6 +620,7 @@ def haupt(argv):
     ap.add_argument("--arbeit")
     ap.add_argument("--ergebnis")
     ap.add_argument("--ziel")
+    ap.add_argument("--freeze-aus", help="fertigen Bericht in ein Freeze-Artefakt umformen")
     ap.add_argument("--bericht", action="store_true")
     ap.add_argument("--selbsttest", action="store_true")
     # BEWUSST OHNE VORGABEWERT: die Granularitaet des reinen Fallbacks ist eine
@@ -580,6 +631,22 @@ def haupt(argv):
 
     if a.selbsttest:
         return selbsttest()
+
+    if a.freeze_aus:
+        if not a.ziel:
+            ap.error("--freeze-aus braucht --ziel")
+        with open(a.freeze_aus, encoding="utf-8") as fh:
+            bericht = json.load(fh)
+        art = freeze_artefakt(bericht)
+        text = json.dumps(art, ensure_ascii=False, indent=1) + "\n"
+        with open(a.ziel + ".teil", "w", encoding="utf-8") as fh:
+            fh.write(text)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(a.ziel + ".teil", a.ziel)
+        print("Freeze-Artefakt: " + a.ziel)
+        print("inhaltSha256:    " + art["inhaltSha256"])
+        return 0
 
     wurzel = a.data_root or os.environ.get("EARLY_DETECTION_DATA_ROOT")
     if not wurzel:
@@ -823,6 +890,31 @@ def selbsttest():
     bw2 = schwellensatz(mass, v0l2)["scheiternskriterienBewegung"]["S-UG"]
     pruef(bw2["neuGerissen"] == ["K1: zu wenige"] and bw2["nichtMehrGerissen"] == [],
           "ROT-RICHTUNG: ein NEU gerissenes Kriterium wird ebenso benannt")
+
+    # Das Freeze-Artefakt: der ausgewiesene Hash muss sich aus dem Inhalt OHNE
+    # sich selbst reproduzieren, und eine Bewegung am Inhalt muss ihn bewegen.
+    bericht_probe = {
+        "massgeblicheFassung": "verbreitertOhneBank",
+        "k8BankStratum": {"konsequenz": "Stratum faellt"},
+        "aequivalenzTor": {"bestanden": True, "soll": V0_SOLL},
+        "durchlaufAlt": {"protokoll": {"modulSha256": "a" * 64}},
+        "durchlaufVerbreitert": {"protokoll": {"konzeptlisteSha256": "b" * 64}},
+        "quellenAsymmetrie": FUSSNOTE,
+        "schwellensatz": {"regelParameter": {"zielband": [0.005, 0.025]},
+                          "jeFamilie": {"S-U": {"pFinal": 95}},
+                          "scheiternskriterienBewegung": {},
+                          "musterFriedhof": []},
+    }
+    art = freeze_artefakt(bericht_probe)
+    ohne = {k: v for k, v in art.items() if k != "inhaltSha256"}
+    pruef(kanonisch_sha256(ohne) == art["inhaltSha256"],
+          "der ausgewiesene inhaltSha256 reproduziert sich aus dem Inhalt ohne sich selbst")
+    bericht_probe2 = json.loads(json.dumps(bericht_probe))
+    bericht_probe2["schwellensatz"]["jeFamilie"]["S-U"]["pFinal"] = 90
+    pruef(freeze_artefakt(bericht_probe2)["inhaltSha256"] != art["inhaltSha256"],
+          "ROT-PROBE: eine geaenderte Schwelle bewegt den Hash")
+    pruef("kein Register-Eintrag" in art["wasDiesesArtefaktNichtTut"][0],
+          "das Artefakt sagt selbst, dass es kein Register-Eintrag ist")
 
     pruef(FUSSNOTE.startswith("Quellen-Asymmetrie:") and "ASC 606 ab 2018" in FUSSNOTE,
           "die Pflicht-Fussnote liegt woertlich vor")
