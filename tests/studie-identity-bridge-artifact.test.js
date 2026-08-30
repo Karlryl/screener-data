@@ -246,6 +246,14 @@ test('R2-A1: panel artifact is canonical, HMAC-protected, and identity-free', ()
   assert.equal(result.scope.endtestFilesOpened, 0);
   assert.equal(result.identityProtection.algorithm, 'HMAC-SHA-256');
   assert.equal(result.identityProtection.keyStoredInRepository, false);
+  // M13: the closure record pins keyFingerprintSha256 as SOLLWERT with
+  // postRunCheck MATCH, but nothing ever compared it — the record names the
+  // defect itself ("two processes with the same wrong key would have been
+  // green"). The shape check first: it makes a renamed or missing field on
+  // EITHER side fail loudly instead of comparing undefined to undefined.
+  assert.match(closure.identifierProtection.keyFingerprintSha256, /^[0-9a-f]{64}$/);
+  assert.equal(result.identityProtection.keyFingerprintSha256,
+    closure.identifierProtection.keyFingerprintSha256);
   assert.deepEqual(result.inputs.map((row) => row.file).sort(),
     ['panel-entdeckung.sqlite', 'panel-validierung.sqlite']);
   for (const [relative, expected] of Object.entries(result.boundImplementation)) {
