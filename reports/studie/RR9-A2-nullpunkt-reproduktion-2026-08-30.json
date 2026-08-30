@@ -1,0 +1,74 @@
+{
+ "allowlistAlsParameter": true,
+ "anker": "ENTSCHIED 130: ZIEL = 292/438 (S-U, umsatzQuellenAllowlist), NICHT 326/365. Die 326/365 ruht nach der gemessenen Korrektur 1 des Bremsen-Baus auf der Variante S-G (OperatingIncomeLoss, ERGEBNIS_QUELLEN) und belegt die Identitaet der Allowlist deshalb nicht; B3' soll die Basis pinnen, AUF der die Verbreiterung aufsetzt, und das ist die Quellen-Allowlist.",
+ "auflage": "RR9-A2 Schritt 2 - _COURT-RR9-2026-08-30",
+ "befund": "POSITIV: der V0-Nullpunkt ist bit-gleich reproduziert. fallzahl 292, firmen_mit_erst_ereignis 438, zensiert 0 - identisch mit dem registrierten Wert des E3-Laufs.",
+ "bitGleich": true,
+ "eintretendeKohorteGemessen": false,
+ "f4": "GESPERRT. Die Zaehlprobe der Verbreiterung ist ein eigener Vorgang mit eigenem Register-Eintrag; dieser Lauf laedt die Konzeptliste 2.1.0 nicht.",
+ "geladeneAllowlist": [
+  "Revenues",
+  "RevenueFromContractWithCustomerExcludingAssessedTax",
+  "SalesRevenueNet",
+  "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+ ],
+ "gemessen": {
+  "fallzahl": 292,
+  "firmen_mit_erst_ereignis": 438,
+  "zensierte_erst_ereignisse": 0
+ },
+ "grenze": "WAS DIESER LAUF NICHT ZEIGT: die Stufe Panel -> Zwischenstand (lade_berichte + lies_rohwerte) ist NICHT nachgefahren - sie ist die einzige, die das Panel oeffnen wuerde. Reproduziert ist die Kette AB pit_reduktion. Das ist kein Zirkel: der Zwischenstand ist eine feste Eingabe, und dieselbe Eingabe wandert bei verstelltem Zaehlparameter oder verkuerzter Allowlist NACHWEISLICH vom Nullpunkt weg (zwei Rot-Proben im Selbsttest). Was der Lauf damit belegt, ist genau die Drift, gegen die B3' geschrieben ist: der versiegelte Zaehlcode rechnet heute noch, was das registrierte Protokoll sagt. Die nicht nachgefahrene Stufe ist anderweitig gedeckt - studie-basisraten.py hasht IN DIESEM LAUF gegen ihren registrierten Wert (siehe Block `siegel`; die erste Fassung dieses Berichts behauptete das, ohne es zu pruefen - der Code-Review vom 30.08. hat den Fall nachgestellt und die Pruefung eingezogen), und panel-validierung.sqlite liegt mit den 4.447.633.408 Bytes des E1-Baus auf der Platte. Beides ist eine Groessen- und Hash-Aussage ueber Code und Datei, keine Nachrechnung der Stufe selbst.",
+ "kipp": "Liest eine kuenftige Ratssitzung V0 anders, wird umverankert; die B3'-Tests machen die Umverankerung billig (ENTSCHIED 130).",
+ "pruefmethode": {
+  "eingabeGepinnt": "Der Zwischenstand ist auf sha256 5c489c62944ea93fa0cfaf836b973b532383d0a3a4d11e42b555cca5193dc53e festgelegt. Die Vorher/Nachher-Hashung zeigt nur, dass der Lauf die Datei nicht angefasst hat - erst der Sollwert sagt, dass es DIE Eingabe ist.",
+  "keinPanel": "KEIN Panel-Fenster geoeffnet - pruefe_kein_panel haelt das fail-closed fest",
+  "keineFreigabeNoetig": "Es entsteht kein neuer Wert und kein neuer Fenster-Zugriff: reproduziert wird ein seit 2026-08-19 im Repo veroeffentlichter, registrierter Wert. Nach RR9-A2 Ziffer 2 verbraucht dieser Lauf ausdruecklich KEINE Einheit des K2-Kontingents; die Zeile dazu steht vorab in Register-Eintrag 22.",
+  "siegelGeprueft": "IN DIESEM LAUF, nicht anderswo zitiert: zp.pruefe_manifest() hasht preregistration.json, studie-zaehlprobe.py und studie-basisraten.py gegen hash-manifest.json 2.0.0, bevor ein Wert entsteht. Ohne dieses Tor waere 'identischer Codepfad' eine Behauptung ueber Dateien, die niemand angesehen hat.",
+  "wie": "identischer Codepfad: e2.firmenreihen -> e2.wachstum_und_beschleunigung -> e2.signale -> zp.im_signalband -> zp.arm_zaehlen, mit der Allowlist als PARAMETER statt als Nachschlagung im Zaehlpfad",
+  "worauf": "gespeicherter Zwischenstand des bereits angemeldeten E3-Laufs, nur-lesend geoeffnet und vor/nach dem Lauf byte-gegengeprueft"
+ },
+ "registrierterNullpunkt": {
+  "fallzahl": 292,
+  "firmen_mit_erst_ereignis": 438,
+  "zensierte_erst_ereignisse": 0
+ },
+ "registrierterNullpunktHerkunft": "reports/studie/E3-zaehlprobe-pruefung-2026-08-19.json::varianten['S-U'] - registriert und veroeffentlicht am 2026-08-19, runId e3-zaehlprobe-pruefung-2026-08-19-neulauf",
+ "schema": "studie-rr9-a2-nullpunkt-reproduktion/v1",
+ "siegel": [
+  {
+   "datei": "protocol/early-detection/2.0.0/preregistration.json",
+   "sha256": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c"
+  },
+  {
+   "datei": "scripts/studie-basisraten.py",
+   "sha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d"
+  },
+  {
+   "datei": "scripts/studie-zaehlprobe.py",
+   "sha256": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b"
+  }
+ ],
+ "suchachsen": [
+  {
+   "achse": "Feldname",
+   "status": "gemessen",
+   "wert": "varianten['S-U'].fallzahl / .firmen_mit_erst_ereignis"
+  },
+  {
+   "achse": "Registerfeld",
+   "status": "gemessen",
+   "wert": "NULLPUNKT-Konstante gegen den E3-Bericht, zwei Quellen"
+  },
+  {
+   "achse": "Inhalts-String",
+   "status": "gemessen",
+   "wert": "SHA-256 des Zwischenstands vor und nach dem Lauf"
+  }
+ ],
+ "umfang": {
+  "firmen_im_zwischenstand": 8142,
+  "perzentil": 95,
+  "roh_zeilen": 771178
+ },
+ "zwischenstandSha256": "5c489c62944ea93fa0cfaf836b973b532383d0a3a4d11e42b555cca5193dc53e"
+}
