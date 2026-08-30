@@ -54,6 +54,7 @@ Aufruf:
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -66,6 +67,23 @@ from datetime import datetime, timezone
 DATENWURZEL_ENV = "EARLY_DETECTION_DATA_ROOT"
 VARIANTE = "legacy_earliest_archived"
 SICHTKASTEN_NAME = "early-detection-v4-sealed127"
+
+# RR9-A1 (B1'): der Lesepfad-Tripwire. Der Dateiname traegt einen Bindestrich,
+# ein normales `import` geht deshalb nicht - geladen wird ueber den Pfad, wie es
+# scripts/studie-zaehlprobe.py mit denselben Nachbarn schon tut.
+B1_MODUL_PFAD = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "studie-rr9-b1-manifest.py")
+B1_MANIFEST_STANDARD = os.path.join(
+    "protocol", "early-detection", "2.1.0", "ist-stand-manifest-2026-08-30.json")
+
+
+def lade_b1():
+    spec = importlib.util.spec_from_file_location("studie_rr9_b1_manifest", B1_MODUL_PFAD)
+    if spec is None or spec.loader is None:
+        raise BauFehler("B1'-Modul nicht ladbar: " + B1_MODUL_PFAD)
+    modul = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(modul)
+    return modul
 
 # Fenster am accepted-Datum. Bewusst LUECKENLOS: jeder Bericht zwischen 2009 und
 # 2024 landet in genau einer Datei.
@@ -423,6 +441,23 @@ def baue_payload(zip_pfad, meta, conns, offen):
 def payload_liste(schema_json):
     with open(schema_json, encoding="utf-8") as fh:
         payloads = json.load(fh)["payloads"]
+    # RR9-A3 Ziffer 4 - JAHRGANGS-TRIPWIRE, harter Abbruch, kein Filter:
+    # ein Payload OHNE Jahrgangs-Kennzeichen tritt nie in einen
+    # jahrgangs-deklarierten Bau ein. Vorher hat der Variantenfilter unten
+    # solche Zeilen stillschweigend weggeschnitten - ein fehlendes Kennzeichen
+    # sah damit genauso aus wie ein fremder Jahrgang. Genau diese Verwechslung
+    # ist der Schaden: der Bau haette sich als "legacy" ausgewiesen, obwohl
+    # Zeilen ohne bekannten Jahrgang im selben Tisch standen.
+    ohne_kennzeichen = [p for p in payloads
+                        if not str(p.get("variante") or "").strip()]
+    if ohne_kennzeichen:
+        raise BauFehler(
+            "RR9-A3-ABBRUCH: " + str(len(ohne_kennzeichen)) + " von "
+            + str(len(payloads)) + " Payloads in " + schema_json + " tragen kein "
+            "Jahrgangs-Kennzeichen (erstes: " + repr(
+                ohne_kennzeichen[0].get("quartal") or ohne_kennzeichen[0].get("sha256"))
+            + "). Ein jahrgangs-deklarierter Bau nimmt keine Zeile auf, deren "
+            "Jahrgang unbekannt ist - das ist ein Befund, kein Filterfall.")
     legacy = [p for p in payloads if p["variante"] == VARIANTE]
     if not legacy:
         raise BauFehler("Keine Payloads der Variante " + VARIANTE + " in " + schema_json)
@@ -430,8 +465,15 @@ def payload_liste(schema_json):
     return legacy
 
 
-def bau(sichtkasten, panel_dir, schema_json, grenze=None):
+def bau(sichtkasten, panel_dir, schema_json, manifest_pfad, grenze=None):
+    """`manifest_pfad` ist Pflicht: RR9-A1 verlangt den Tripwire AM LESEPFAD,
+    nicht als Vorlauf. Ein Default waere ein Weg, ihn zu vergessen."""
+    b1 = lade_b1()
     payloads = payload_liste(schema_json)
+    try:
+        manifest = b1.lade_manifest(manifest_pfad)
+    except b1.BremsenBruch as exc:
+        raise BauFehler(str(exc))
     conns = oeffne_alle(panel_dir)
     try:
         gemacht = 0
@@ -446,6 +488,13 @@ def bau(sichtkasten, panel_dir, schema_json, grenze=None):
                 raise BauFehler(
                     "Blob fehlt fuer " + p["quartal"] + " (" + p["sha256"][:16] + ") — ein "
                     "fehlender Payload ist ein Befund, kein uebersprungenes Quartal")
+            # RR9-A1 Ziffer 2: der Hash wird zur LESEZEIT gegen das Ist-Stand-
+            # Manifest geprueft, fail-closed. Zwei abgestufte Konsequenzen -
+            # nicht im Manifest = STOPP, Byte-Nichtidentitaet = BEERDIGEN.
+            try:
+                b1.pruefe_payload(manifest, sichtkasten, p["sha256"])
+            except b1.BremsenBruch as exc:
+                raise BauFehler(str(exc))
             start = time.time()
             z = baue_payload(zp, p, conns, offen)
             gemacht += 1
@@ -635,6 +684,19 @@ def selftest():
             kunst_payload(os.path.join(bd, sha + ".zip"), subs, nums)
         with open(os.path.join(kasten, "VIEW.json"), "w", encoding="utf-8") as fh:
             json.dump({"payloadCount": len(payloads)}, fh)
+
+        # RR9-A1: das Ist-Stand-Manifest der Kunst-Ablage. Es wird nach jeder
+        # Aenderung an den Kunst-Blobs neu gebaut - der Tripwire soll den
+        # Speicherstand pruefen, den der Bau LIEST, nicht einen von vorgestern.
+        b1 = lade_b1()
+        manifest_datei = os.path.join(tmp, "ist-stand-manifest.json")
+
+        def manifest_bauen():
+            b1.schreibe_manifest(
+                b1.baue_manifest(wurzel, orte=(SICHTKASTEN_NAME,)), manifest_datei)
+            return manifest_datei
+
+        manifest = manifest_bauen()
         schema = os.path.join(tmp, "schema.json")
         with open(schema, "w", encoding="utf-8") as fh:
             json.dump({"payloads": [{"quartal": q, "sha256": s, "variante": VARIANTE}
@@ -644,7 +706,7 @@ def selftest():
 
         # === 1. Voller Bau, dann alle Inhalts-Pruefungen ======================
         panel = os.path.join(tmp, "panel")
-        erg = bau(kasten, panel, schema)
+        erg = bau(kasten, panel, schema, manifest)
         conns = oeffne_alle(panel)
         try:
             def eins(name, sql):
@@ -760,10 +822,10 @@ def selftest():
 
         # === 2. R15: Kill-Wiederaufnahme ======================================
         panel_a = os.path.join(tmp, "kill_a")
-        bau(kasten, panel_a, schema, grenze=1)      # Abbruch nach dem ersten Payload
-        bau(kasten, panel_a, schema)                # Wiederaufnahme
+        bau(kasten, panel_a, schema, manifest, grenze=1)      # Abbruch nach dem ersten Payload
+        bau(kasten, panel_a, schema, manifest)                # Wiederaufnahme
         panel_b = os.path.join(tmp, "kill_b")
-        bau(kasten, panel_b, schema)                # ungestoerter Vergleichslauf
+        bau(kasten, panel_b, schema, manifest)                # ungestoerter Vergleichslauf
         gleich = True
         for name, _, _ in FENSTER:
             a = sqlite3.connect(os.path.join(panel_a, DATEINAME[name]))
@@ -783,9 +845,9 @@ def selftest():
         # alles. Die Wiederaufnahme muss B allein nachziehen und dieselbe Pruefsumme
         # liefern wie der ungestoerte Lauf.
         panel_c = os.path.join(tmp, "kill_mitten")
-        bau(kasten, panel_c, schema)
+        bau(kasten, panel_c, schema, manifest)
         os.remove(os.path.join(panel_c, DATEINAME["validierung"]))
-        bau(kasten, panel_c, schema)
+        bau(kasten, panel_c, schema, manifest)
         mitten = True
         for name, _, _ in FENSTER:
             a = sqlite3.connect(os.path.join(panel_c, DATEINAME[name]))
@@ -813,7 +875,7 @@ def selftest():
         panel2 = os.path.join(tmp, "panel2")
         os.remove(os.path.join(kasten, "blobs", "sha256", "bb", "bb" + "0" * 62 + ".zip"))
         try:
-            bau(kasten, panel2, schema)
+            bau(kasten, panel2, schema, manifest)
             pruefe("fehlender Blob haelt den Lauf an", False)
         except BauFehler as e:
             pruefe("fehlender Blob haelt den Lauf an (statt still zu ueberspringen)",
@@ -839,10 +901,83 @@ def selftest():
             json.dump({"payloads": [{"quartal": "2013q2", "sha256": sha,
                                      "variante": VARIANTE}]}, fh)
         try:
-            bau(kasten, os.path.join(tmp, "panel3"), schema2)
+            bau(kasten, os.path.join(tmp, "panel3"), schema2, manifest_bauen())
             pruefe("fremder Spaltenkopf fliegt auf", False)
         except BauFehler as e:
             pruefe("fremder Spaltenkopf fliegt auf", "Spaltenkopf" in str(e))
+
+        # === 3b. RR9-Rot-Proben am Lesepfad ===================================
+        # Jede Probe faehrt den Waechter absichtlich rot UND zeigt die Gegenprobe:
+        # ohne den Eingriff darf er nicht feuern. Ein Waechter, der immer feuert,
+        # ist so wertlos wie einer, der nie feuert.
+
+        # RR9-A3 Jahrgangs-Tripwire: ein Payload OHNE Kennzeichen bricht hart ab.
+        schema_ohne = os.path.join(tmp, "schema-ohne-jahrgang.json")
+        with open(schema_ohne, "w", encoding="utf-8") as fh:
+            json.dump({"payloads": [
+                {"quartal": "2013q1", "sha256": "aa" + "0" * 62, "variante": VARIANTE},
+                {"quartal": "2014q1", "sha256": "cc" + "0" * 62},
+            ]}, fh)
+        try:
+            payload_liste(schema_ohne)
+            pruefe("ROT-PROBE A3: Payload ohne Jahrgang bricht den Bau ab", False)
+        except BauFehler as e:
+            pruefe("ROT-PROBE A3: Payload ohne Jahrgang bricht den Bau ab",
+                   "RR9-A3-ABBRUCH" in str(e))
+        try:
+            payload_liste(schema)
+            pruefe("A3-Gegenprobe: vollstaendig gekennzeichnete Liste geht durch", True)
+        except BauFehler:
+            pruefe("A3-Gegenprobe: vollstaendig gekennzeichnete Liste geht durch", False)
+
+        # RR9-A1 STOPP-Zweig: ein Payload, das in KEINEM Ort des Manifests steht.
+        fremd = "9f" + "0" * 62
+        bd = os.path.join(kasten, "blobs", "sha256", fremd[:2])
+        os.makedirs(bd, exist_ok=True)
+        kunst_payload(os.path.join(bd, fremd + ".zip"),
+                      [sub("Z1", "2013-02-01 10:00:00.0")], [num("Z1", "Rev", "1")])
+        schema_fremd = os.path.join(tmp, "schema-fremd.json")
+        with open(schema_fremd, "w", encoding="utf-8") as fh:
+            json.dump({"payloads": [{"quartal": "2013q1", "sha256": fremd,
+                                     "variante": VARIANTE}]}, fh)
+        try:
+            # manifest = der Stand VOR dem Einschleusen. Genau das ist der Fall.
+            bau(kasten, os.path.join(tmp, "panel_stopp"), schema_fremd, manifest)
+            pruefe("ROT-PROBE A1a: nicht registriertes Payload -> STOPP", False)
+        except BauFehler as e:
+            pruefe("ROT-PROBE A1a: nicht registriertes Payload -> STOPP",
+                   "STOPP" in str(e) and "Rueckgabe an den Orchestrator" in str(e))
+        try:
+            bau(kasten, os.path.join(tmp, "panel_stopp2"), schema_fremd, manifest_bauen())
+            pruefe("A1a-Gegenprobe: nach Neubau des Manifests geht dasselbe "
+                   "Payload durch", True)
+        except BauFehler:
+            pruefe("A1a-Gegenprobe: nach Neubau des Manifests geht dasselbe "
+                   "Payload durch", False)
+
+        # RR9-A1 BEERDIGEN-Zweig: ein Payload im Manifest, dessen Bytes kippen.
+        gekippt = manifest_bauen()
+        zp = os.path.join(kasten, "blobs", "sha256", fremd[:2], fremd + ".zip")
+        with open(zp, "r+b") as fh:
+            fh.seek(0)
+            erstes = fh.read(1)
+            fh.seek(0)
+            fh.write(bytes([erstes[0] ^ 0x01]))
+        try:
+            bau(kasten, os.path.join(tmp, "panel_beerdigen"), schema_fremd, gekippt)
+            pruefe("ROT-PROBE A1b: bit-gekipptes Payload -> BEERDIGEN", False)
+        except BauFehler as e:
+            pruefe("ROT-PROBE A1b: bit-gekipptes Payload -> BEERDIGEN",
+                   "BEERDIGEN" in str(e) and "Byte-Nichtidentitaet" in str(e))
+
+        # Und ohne Manifest gibt es keinen Bau, nicht einen ungeprueften.
+        try:
+            bau(kasten, os.path.join(tmp, "panel_ohne"), schema,
+                os.path.join(tmp, "gibt-es-nicht.json"))
+            pruefe("ROT-PROBE A1c: fehlendes Manifest -> STOPP", False)
+        except BauFehler as e:
+            pruefe("ROT-PROBE A1c: fehlendes Manifest -> STOPP",
+                   "kein Ist-Stand-Manifest" in str(e))
 
         # Das Panel darf nicht in den versiegelten Sichtkasten geschrieben werden.
         try:
@@ -885,6 +1020,8 @@ def main():
     p.add_argument("--panel", help="sonst <datenwurzel>/panel")
     p.add_argument("--schema", default="reports/studie/E1-panel-schema-2026-08-18.json")
     p.add_argument("--out", default="reports/studie/E1-panel-bau-2026-08-19.json")
+    p.add_argument("--manifest", default=B1_MANIFEST_STANDARD,
+                   help="RR9-A1 Ist-Stand-Manifest; ohne gueltiges Manifest kein Bau")
     p.add_argument("--grenze", type=int, help="nur die ersten N offenen Payloads (Probelauf)")
     p.add_argument("--pruefsumme", action="store_true", help="R15-Ergebnis-Pruefsumme je Datei")
     p.add_argument("--bericht-only", action="store_true", help="Report neu aus bau_stand")
@@ -910,7 +1047,7 @@ def main():
         else:
             kasten = a.sichtkasten or finde_sichtkasten(wurzel)
             print("Sichtkasten: " + kasten + "\nPanel:       " + panel_dir + "\n")
-            erg = bau(kasten, panel_dir, a.schema, a.grenze)
+            erg = bau(kasten, panel_dir, a.schema, a.manifest, a.grenze)
     except BauFehler as e:
         print("FEHLER: " + str(e), file=sys.stderr)
         return 1
