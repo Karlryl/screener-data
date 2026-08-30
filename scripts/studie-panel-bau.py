@@ -73,8 +73,6 @@ SICHTKASTEN_NAME = "early-detection-v4-sealed127"
 # scripts/studie-zaehlprobe.py mit denselben Nachbarn schon tut.
 B1_MODUL_PFAD = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              "studie-rr9-b1-manifest.py")
-B1_MANIFEST_STANDARD = os.path.join(
-    "protocol", "early-detection", "2.1.0", "ist-stand-manifest-2026-08-30.json")
 
 
 def lade_b1():
@@ -1020,8 +1018,11 @@ def main():
     p.add_argument("--panel", help="sonst <datenwurzel>/panel")
     p.add_argument("--schema", default="reports/studie/E1-panel-schema-2026-08-18.json")
     p.add_argument("--out", default="reports/studie/E1-panel-bau-2026-08-19.json")
-    p.add_argument("--manifest", default=B1_MANIFEST_STANDARD,
-                   help="RR9-A1 Ist-Stand-Manifest; ohne gueltiges Manifest kein Bau")
+    # KEIN Default, auch kein datierter: ein voreingestelltes Manifest waere
+    # ein Weg, den Lesepfad-Tripwire jahrelang gegen einen immer aelteren
+    # Stand laufen zu lassen, ohne dass es jemandem auffaellt.
+    p.add_argument("--manifest",
+                   help="RR9-A1 Ist-Stand-Manifest; PFLICHT fuer einen Bau")
     p.add_argument("--grenze", type=int, help="nur die ersten N offenen Payloads (Probelauf)")
     p.add_argument("--pruefsumme", action="store_true", help="R15-Ergebnis-Pruefsumme je Datei")
     p.add_argument("--bericht-only", action="store_true", help="Report neu aus bau_stand")
@@ -1047,6 +1048,12 @@ def main():
         else:
             kasten = a.sichtkasten or finde_sichtkasten(wurzel)
             print("Sichtkasten: " + kasten + "\nPanel:       " + panel_dir + "\n")
+            if not a.manifest:
+                raise BauFehler(
+                    "--manifest fehlt. RR9-A1 verlangt den Lesepfad-Tripwire "
+                    "gegen ein Ist-Stand-Manifest; ohne eines gibt es keinen "
+                    "Bau, nicht einen ungeprueften. Erzeugen mit "
+                    "scripts/studie-rr9-b1-manifest.py bauen.")
             erg = bau(kasten, panel_dir, a.schema, a.manifest, a.grenze)
     except BauFehler as e:
         print("FEHLER: " + str(e), file=sys.stderr)

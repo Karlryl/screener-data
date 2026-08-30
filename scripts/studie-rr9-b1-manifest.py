@@ -48,7 +48,11 @@ SANKTION_BEERDIGEN = "BEERDIGEN"
 EXIT_STOPP = 3
 EXIT_BEERDIGEN = 4
 
-SCHEMA = "studie-rr9-b1-ist-stand-manifest/v1"
+# v2 gegenueber v1: je Blob steht jetzt der ECHTE Dateiname im Manifest. Der
+# Lesepfad raet die Endung nicht mehr (.zip war fest verdrahtet, der Speicher
+# fuehrt auch .warc.gz und .tar.zst). Ein v1-Manifest wird deshalb fail-closed
+# abgewiesen statt stillschweigend weiterbenutzt.
+SCHEMA = "studie-rr9-b1-ist-stand-manifest/v2"
 LESEBLOCK = 4 * 1024 * 1024
 
 
@@ -106,8 +110,21 @@ def baue_manifest(daten_wurzel, orte=ORTE):
     eintraege = {}
     ort_berichte = []
     abweichungen = []
+    kollisionen = []
     for ort in orte:
         ort_pfad = os.path.join(daten_wurzel, ort)
+        if not os.path.isdir(ort_pfad):
+            # FAIL-CLOSED, nicht "0 Blobs". Ein nicht eingehaengter oder falsch
+            # geschriebener Ort saehe sonst genauso aus wie ein leerer - und
+            # jeder spaetere Lesevorgang dort meldete STOPP ("nicht
+            # registriert"), also einen Disziplinfehler statt des echten
+            # Platten-/Mount-Problems. Genau diese Verwechslung ist der Grund,
+            # aus dem B1' gebaut wurde.
+            raise BremsenBruch(
+                SANKTION_STOPP,
+                "B1'-ABBRUCH (STOPP): der namentlich benannte Ort " + repr(ort)
+                + " liegt nicht unter " + ort_pfad + ". Ein Manifest ueber "
+                "zwei von drei Orten ist kein Ist-Stand-Manifest.")
         dateien = blob_dateien(ort_pfad)
         blobs = {}
         bytes_ort = 0
@@ -122,11 +139,46 @@ def baue_manifest(daten_wurzel, orte=ORTE):
                 # Name-gegen-Inhalt-Vergleich ein, sonst misst der Vergleich
                 # die Namenskonvention statt der Bytes.
                 ohne_hashnamen += 1
-                behauptet = os.path.basename(pfad)
+                behauptet = os.path.relpath(pfad, ort_pfad).replace(os.sep, "/")
             elif inhalt != behauptet:
                 abweichungen.append({"ort": ort, "nameSha256": behauptet,
                                      "inhaltSha256": inhalt, "bytes": groesse})
-            blobs[behauptet] = {"inhaltSha256": inhalt, "bytes": groesse}
+            if behauptet in blobs:
+                # ZWEI DATEIEN, EIN SCHLUESSEL. Frueher hat die zweite die
+                # erste still ueberschrieben - Zaehlung (len(dateien)) und
+                # Nachschlagetabelle (len(blobs)) waren dann uneinig, ein
+                # Manifest, das vollstaendig AUSSIEHT. Gemessen gibt es das im
+                # Bestand wirklich: EIN Schluessel liegt als .bin UND als .txt
+                # (byte-gleich). Solange beide denselben Inhalt tragen, ist das
+                # eine Doppelablage und wird als Befund GEFUEHRT; tragen sie
+                # verschiedenen Inhalt, kann das Manifest sie nicht beide
+                # darstellen und der Lauf haelt an.
+                vorher = blobs[behauptet]
+                if vorher["inhaltSha256"] != inhalt:
+                    raise BremsenBruch(
+                        SANKTION_STOPP,
+                        "B1'-ABBRUCH (STOPP): zwei Dateien in " + repr(ort)
+                        + " beanspruchen denselben Manifest-Schluessel "
+                        + repr(behauptet) + " mit VERSCHIEDENEM Inhalt ("
+                        + vorher["inhaltSha256"] + " gegen " + inhalt
+                        + ", zuletzt " + pfad + ").")
+                vorher["dateinamen"].append(os.path.basename(pfad))
+                kollisionen.append({
+                    "ort": ort, "schluessel": behauptet,
+                    "dateinamen": list(vorher["dateinamen"]),
+                    "inhaltSha256": inhalt, "bytes": groesse,
+                    "inhaltGleich": True})
+                bytes_ort += groesse
+                continue
+            blobs[behauptet] = {
+                "inhaltSha256": inhalt,
+                "bytes": groesse,
+                # Die ECHTEN Dateinamen. Der v4-Speicher fuehrt 16.399 .txt,
+                # 300 .zip, 121 .bin, 147 .json, 14 .warc.gz und je eines
+                # .tar.gz/.gz/.html - wer die Endung raet, meldet eine
+                # vorhandene Datei als fehlend.
+                "dateinamen": [os.path.basename(pfad)],
+            }
             bytes_ort += groesse
         eintraege[ort] = blobs
         ort_berichte.append({
@@ -178,6 +230,13 @@ def baue_manifest(daten_wurzel, orte=ORTE):
         "inhaltsSha256": hashlib.sha256(json.dumps(
             eintraege, ensure_ascii=False, sort_keys=True,
             separators=(",", ":")).encode("utf-8")).hexdigest(),
+        "schluesselKollisionen": {
+            "anzahl": len(kollisionen),
+            "regel": ("Zwei Dateien mit demselben behaupteten Hash sind eine "
+                      "Doppelablage, solange ihr INHALT gleich ist. Bei "
+                      "verschiedenem Inhalt haelt der Bau an."),
+            "faelle": kollisionen[:50],
+        },
         "nameGegenInhalt": {
             "regel": ("Verglichen wird nur, wo der Dateiname einen 64-stelligen "
                       "Hex-Hash BEHAUPTET (Schnitt am ersten Punkt). Namen ohne "
@@ -186,6 +245,7 @@ def baue_manifest(daten_wurzel, orte=ORTE):
             "geprueft": blobs_gesamt - sum(o["ohneHashNamen"] for o in ort_berichte),
             "ohneHashNamen": sum(o["ohneHashNamen"] for o in ort_berichte),
             "abweichend": len(abweichungen),
+            "abweichungenGekuerzt": len(abweichungen) > 100,
             "abweichungen": abweichungen[:100],
         },
         "blobs": eintraege,
@@ -218,15 +278,35 @@ def lade_manifest(pfad):
     return manifest
 
 
-def blob_pfad(sichtkasten, sha256):
-    return os.path.join(sichtkasten, *BLOB_UNTERPFAD, sha256[:2], sha256 + ".zip")
+def ort_des_sichtkastens(sichtkasten):
+    """Welcher der drei Orte ist das? Der Verzeichnisname IST der Ortsname."""
+    return os.path.basename(os.path.normpath(os.path.abspath(sichtkasten)))
 
 
-def _eintrag(manifest, sha256):
-    for blobs in (manifest.get("blobs") or {}).values():
-        if sha256 in blobs:
-            return blobs[sha256]
-    return None
+def blob_pfad(sichtkasten, sha256, dateiname=None):
+    """Ohne `dateiname` wird die Endung geraten - das ist nur fuer Aufrufer
+    zulaessig, die keinen Manifest-Eintrag haben (Fehlermeldungen)."""
+    return os.path.join(sichtkasten, *BLOB_UNTERPFAD, sha256[:2],
+                        dateiname or (sha256 + ".zip"))
+
+
+def blob_pfade(sichtkasten, sha256, eintrag):
+    """Alle Ablagen, die das Manifest fuer diesen Schluessel kennt."""
+    namen = eintrag.get("dateinamen") or []
+    return [blob_pfad(sichtkasten, sha256, n) for n in namen] or [
+        blob_pfad(sichtkasten, sha256)]
+
+
+def _eintrag(manifest, ort, sha256):
+    """ORTSGEBUNDEN. Frueher suchte diese Funktion in ALLEN Orten und nahm den
+    ersten Treffer - bei 127 bzw. 48 Blobs, die in mehreren Orten unter
+    demselben Hash liegen, konnte sie damit den Eintrag eines FREMDEN Ortes
+    zurueckgeben. Eine dort verdorbene Kopie haette ein einwandfreies Payload
+    BEERDIGEN lassen: die haerteste Sanktion auf eine fremde Ursache."""
+    blobs = (manifest.get("blobs") or {}).get(ort)
+    if blobs is None:
+        return None
+    return blobs.get(sha256)
 
 
 def pruefe_payload(manifest, sichtkasten, sha256):
@@ -235,20 +315,30 @@ def pruefe_payload(manifest, sichtkasten, sha256):
     Verankert am OBJEKT: geprueft wird der Inhalt der Datei gegen den im
     Manifest festgehaltenen Inhalts-Hash. Kein Textmuster, kein Dateiname.
     """
-    eintrag = _eintrag(manifest, sha256)
+    ort = ort_des_sichtkastens(sichtkasten)
+    if ort not in (manifest.get("blobs") or {}):
+        raise BremsenBruch(
+            SANKTION_STOPP,
+            "B1'-ABBRUCH (STOPP, Rueckgabe an den Orchestrator): der gelesene "
+            "Ort " + repr(ort) + " steht nicht im Ist-Stand-Manifest (bekannt: "
+            + ", ".join(sorted(manifest.get("blobs") or {})) + ").")
+    eintrag = _eintrag(manifest, ort, sha256)
     if eintrag is None:
         raise BremsenBruch(
             SANKTION_STOPP,
             "B1'-ABBRUCH (STOPP, Rueckgabe an den Orchestrator): Payload "
-            + sha256 + " steht in KEINEM der Orte des Ist-Stand-Manifests. Ein "
-            "Bau liest damit an der Messgrundlage vorbei. Das ist ein "
-            "reparabler Disziplinfehler - kein Datenschaden.")
-    pfad = blob_pfad(sichtkasten, sha256)
-    if not os.path.isfile(pfad):
+            + sha256 + " steht nicht im Ist-Stand-Manifest des Ortes "
+            + repr(ort) + ". Ein Bau liest damit an der Messgrundlage vorbei. "
+            "Das ist ein reparabler Disziplinfehler - kein Datenschaden.")
+    kandidaten = blob_pfade(sichtkasten, sha256, eintrag)
+    vorhandene = [k for k in kandidaten if os.path.isfile(k)]
+    if not vorhandene:
         raise BremsenBruch(
             SANKTION_STOPP,
             "B1'-ABBRUCH (STOPP): Payload " + sha256 + " steht im Manifest, "
-            "liegt aber nicht unter " + pfad + ".")
+            "liegt aber unter keiner der bekannten Ablagen ("
+            + ", ".join(kandidaten) + ").")
+    pfad = vorhandene[0]
     ist = sha256_datei(pfad)
     if ist != eintrag["inhaltSha256"]:
         raise BremsenBruch(
@@ -339,6 +429,100 @@ def selbsttest():
             pruefe("ROT-PROBE 3: fehlendes Manifest -> STOPP",
                    exc.sanktion == SANKTION_STOPP)
 
+        # ABWESENHEIT 4: ein Payload, das nur in einem FREMDEN Ort steht, darf
+        # den Lesepfad nicht befriedigen. Vorher suchte die Nachschlagung in
+        # allen Orten und nahm den ersten Treffer.
+        zwei_orte = dict(manifest)
+        zwei_orte["blobs"] = {ORTE[0]: dict(manifest["blobs"][ort]), ort: {}}
+        try:
+            pruefe_payload(zwei_orte, kasten, namen[0])
+            pruefe("ROT-PROBE 4: Treffer in einem FREMDEN Ort zaehlt nicht", False)
+        except BremsenBruch as exc:
+            pruefe("ROT-PROBE 4: Treffer in einem FREMDEN Ort zaehlt nicht",
+                   exc.sanktion == SANKTION_STOPP
+                   and "des Ortes" in str(exc))
+
+    # ABWESENHEIT 5: ein namentlich benannter Ort fehlt -> kein Manifest.
+    with tempfile.TemporaryDirectory() as tmp:
+        verz = os.path.join(tmp, ORTE[0], *BLOB_UNTERPFAD, "aa")
+        os.makedirs(verz)
+        with open(os.path.join(verz, "aa" + "0" * 62 + ".zip"), "wb") as fh:
+            fh.write(b"x")
+        try:
+            baue_manifest(tmp)   # ORTE[1] und ORTE[2] fehlen
+            pruefe("ROT-PROBE 5: fehlender benannter Ort -> STOPP", False)
+        except BremsenBruch as exc:
+            pruefe("ROT-PROBE 5: fehlender benannter Ort -> STOPP",
+                   exc.sanktion == SANKTION_STOPP
+                   and "namentlich benannte Ort" in str(exc))
+        pruefe("Gegenprobe: derselbe Ort allein baut durch",
+               baue_manifest(tmp, orte=(ORTE[0],))["gesamt"]["blobs"] == 1)
+
+    # ABWESENHEIT 6: zwei Dateien, ein Manifest-Schluessel -> STOPP statt
+    # stillem Ueberschreiben. Sonst waeren Zaehlung und Tabelle uneinig.
+    with tempfile.TemporaryDirectory() as tmp:
+        ort = ORTE[0]
+        sha = "bb" + "0" * 62
+        verz = os.path.join(tmp, ort, *BLOB_UNTERPFAD, sha[:2])
+        os.makedirs(verz)
+        for endung, inhalt in ((".zip", b"eins"), (".tar.zst", b"zwei")):
+            with open(os.path.join(verz, sha + endung), "wb") as fh:
+                fh.write(inhalt)
+        try:
+            baue_manifest(tmp, orte=(ort,))
+            pruefe("ROT-PROBE 6: Kollision mit VERSCHIEDENEM Inhalt -> STOPP", False)
+        except BremsenBruch as exc:
+            pruefe("ROT-PROBE 6: Kollision mit VERSCHIEDENEM Inhalt -> STOPP",
+                   exc.sanktion == SANKTION_STOPP
+                   and "VERSCHIEDENEM Inhalt" in str(exc))
+
+    # Gegenprobe: dieselben Bytes unter zwei Endungen sind eine Doppelablage.
+    # Genau das liegt im echten Bestand (ein Schluessel als .bin UND .txt).
+    with tempfile.TemporaryDirectory() as tmp:
+        ort = ORTE[0]
+        kasten = os.path.join(tmp, ort)
+        import hashlib as _h
+        inhalt = b"doppelt abgelegt"
+        sha = _h.sha256(inhalt).hexdigest()
+        verz = os.path.join(kasten, *BLOB_UNTERPFAD, sha[:2])
+        os.makedirs(verz)
+        for endung in (".bin", ".txt"):
+            with open(os.path.join(verz, sha + endung), "wb") as fh:
+                fh.write(inhalt)
+        m = baue_manifest(tmp, orte=(ort,))
+        pruefe("Doppelablage gleichen Inhalts wird GEFUEHRT, nicht verschluckt",
+               m["schluesselKollisionen"]["anzahl"] == 1
+               and m["blobs"][ort][sha]["dateinamen"] == [sha + ".bin", sha + ".txt"])
+        pruefe("und der Lesepfad findet sie trotzdem",
+               pruefe_payload(m, kasten, sha) == len(inhalt))
+        # Und wenn EINE der beiden Ablagen kippt, muss BEERDIGEN kommen.
+        with open(os.path.join(verz, sha + ".bin"), "wb") as fh:
+            fh.write(b"gekippt")
+        try:
+            pruefe_payload(m, kasten, sha)
+            pruefe("ROT-PROBE 7: gekippte Doppelablage -> BEERDIGEN", False)
+        except BremsenBruch as exc:
+            pruefe("ROT-PROBE 7: gekippte Doppelablage -> BEERDIGEN",
+                   exc.sanktion == SANKTION_BEERDIGEN)
+
+    # ANWESENHEIT: ein Blob OHNE .zip-Endung wird gefunden, nicht als fehlend
+    # gemeldet. Die Endung stand frueher fest verdrahtet im Lesepfad.
+    with tempfile.TemporaryDirectory() as tmp:
+        ort = ORTE[0]
+        kasten = os.path.join(tmp, ort)
+        import hashlib as _h
+        inhalt = b"warc-inhalt"
+        sha = _h.sha256(inhalt).hexdigest()
+        verz = os.path.join(kasten, *BLOB_UNTERPFAD, sha[:2])
+        os.makedirs(verz)
+        with open(os.path.join(verz, sha + ".warc.gz"), "wb") as fh:
+            fh.write(inhalt)
+        m = baue_manifest(tmp, orte=(ort,))
+        pruefe("ein .warc.gz-Blob wird ueber seinen echten Dateinamen gefunden",
+               pruefe_payload(m, kasten, sha) == len(inhalt))
+        pruefe("und sein Name-gegen-Inhalt-Vergleich ist sauber",
+               m["nameGegenInhalt"]["abweichend"] == 0)
+
     print("selbsttest: %d ok, %d FAIL" % (ok, fehl))
     return 0 if fehl == 0 else 1
 
@@ -366,7 +550,8 @@ def main(argv=None):
             manifest = baue_manifest(args.daten_wurzel)
             selbst = schreibe_manifest(manifest, args.ziel)
             print("Orte      : " + ", ".join(
-                "%s %d Blobs / %d B" % (o["name"], o["blobs"], o["bytes"])
+                "%s %d Blobs / %d B (vorhanden=%s)"
+                % (o["name"], o["blobs"], o["bytes"], o["vorhanden"])
                 for o in manifest["orte"]))
             print("Gesamt    : %d Blobs / %d B"
                   % (manifest["gesamt"]["blobs"], manifest["gesamt"]["bytes"]))
