@@ -127,30 +127,18 @@ def frozen_binding(repo=REPO):
             "frozen closure record %s names no canonicalRun.artifacts.manifest"
             % V120_CLOSURE_REL
         )
+    # `replication` feeds the known-version set only. It is deliberately NOT
+    # returned: it is the 1.1.0 value that modeguard/1 derived its mode from,
+    # and a returned key of that name invites a future patch to wire mode
+    # re-derivation back into the gate - which would reinstate H6 in its
+    # original shape. Under modeguard/2 nothing may branch on it.
     return {
         "current": current,
-        "replication": replication,
         "known": {v for v in (current, superseded, replication) if v},
         "boundManifest": bound_manifest,
         "manifestRel": manifest_rel,
         "source": V120_CLOSURE_REL,
     }
-
-
-def expected_mode(version, binding):
-    """Descriptive only under modeguard/2: the mode a proof for this version is
-    expected to NAME. It no longer decides whether the proof passes - manifest
-    equality does. Kept because the refusal for an unknown version still has to
-    say what the weaker mode would have been."""
-    if version not in binding["known"]:
-        raise ProofRefused(
-            "artifact version %r has no frozen record (known: %s); refusing "
-            "instead of falling back to %s"
-            % (version, ", ".join(sorted(binding["known"])), FIRST_BUILD_BINDING)
-        )
-    if version == binding["replication"]:
-        return REPLICATION_BINDING
-    return FIRST_BUILD_BINDING
 
 
 def check_proof(proof, binding, manifest_path):
@@ -161,7 +149,12 @@ def check_proof(proof, binding, manifest_path):
     self-contradicting mode third, a manifest that is not the bound one last.
     """
     version = proof.get("artifactVersion")
-    expected_mode(version, binding)
+    if version not in binding["known"]:
+        raise ProofRefused(
+            "artifact version %r has no frozen record (known: %s); refusing "
+            "instead of falling back to %s"
+            % (version, ", ".join(sorted(binding["known"])), FIRST_BUILD_BINDING)
+        )
     if version != binding["current"]:
         raise ProofRefused(
             "proof is for artifact version %r, the current bound version is %r"

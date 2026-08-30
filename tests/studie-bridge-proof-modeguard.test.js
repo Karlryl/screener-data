@@ -208,6 +208,86 @@ test('an explicitly empty --manifest refuses, it is not silently defaulted', () 
   assert.match(result.stderr, /is not a readable file/);
 });
 
+// The record layer is the foundation: if the frozen records are malformed,
+// every value downstream is meaningless. These six branches are the least
+// observed code in the guard, and a refactor that gave any of them a default
+// would pass every proof-level test above. So each one is fired once.
+// The guard derives its repo from its own location, so a copy in a throwaway
+// tree checks a mutated record without touching the real one.
+const CORRECTION_REL = 'protocol/early-detection/2.0.0/' +
+  'r2-a1-blocker2-independent-rebuild-correction.json';
+const CLOSURE_REL = 'protocol/early-detection/2.0.0/r2-a1-v120-closure-record.json';
+
+const withRecords = (mutate) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'modeguard-repo-'));
+  const records = {
+    closure: JSON.parse(fs.readFileSync(V120_CLOSURE, 'utf8')),
+    correction: JSON.parse(fs.readFileSync(path.join(REPO, ...CORRECTION_REL.split('/')), 'utf8')),
+  };
+  mutate(records);
+  fs.mkdirSync(path.join(root, 'scripts'), { recursive: true });
+  fs.copyFileSync(GUARD, path.join(root, 'scripts', 'guard.py'));
+  for (const [key, rel] of [['closure', CLOSURE_REL], ['correction', CORRECTION_REL]]) {
+    const target = path.join(root, ...rel.split('/'));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, JSON.stringify(records[key]), 'utf8');
+  }
+  const result = spawnSync(process.env.PYTHON || 'python',
+    [path.join(root, 'scripts', 'guard.py'), '--proof', REAL_PROOF,
+      '--manifest', REAL_MANIFEST], { cwd: root, encoding: 'utf8' });
+  return result;
+};
+
+const recordRefuses = (mutate, pattern) => {
+  const result = withRecords(mutate);
+  assert.notEqual(result.status, 0, `guard passed: ${result.stdout}${result.stderr}`);
+  assert.match(result.stderr, /MODEGUARD REFUSED/);
+  assert.match(result.stderr, pattern);
+};
+
+test('record layer, break-proof: unmutated copies of the records still pass', () => {
+  const result = withRecords(() => {});
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+});
+
+test('record layer: an unfrozen closure record is refused', () => {
+  recordRefuses((r) => { r.closure.status = 'DRAFT'; }, /closure record is not frozen/);
+});
+
+test('record layer: an unfrozen determinism correction is refused', () => {
+  recordRefuses((r) => { r.correction.status = 'DRAFT'; },
+    /correction is not frozen/);
+});
+
+test('record layer: a record that does not name its artifact version is refused', () => {
+  recordRefuses((r) => { delete r.closure.boundArtifactVersion; },
+    /do not name their artifact versions/);
+});
+
+test('record layer: a correction without its bound artifact version is refused', () => {
+  recordRefuses((r) => { delete r.correction.boundArtifact.artifactVersion; },
+    /do not name their artifact versions/);
+});
+
+test('record layer: a record without a bound manifest hash refuses, it does not fall back', () => {
+  recordRefuses((r) => { delete r.closure.boundManifest.manifestFileSha256; },
+    /names no boundManifest\.manifestFileSha256/);
+});
+
+test('record layer: a record that names no canonical manifest is refused', () => {
+  recordRefuses((r) => { delete r.closure.canonicalRun.artifacts.manifest; },
+    /names no canonicalRun\.artifacts\.manifest/);
+});
+
+// The landmine the review found: modeguard/1 derived its mode from the 1.1.0
+// correction, and that value must never again reach a branch. It may only
+// widen the known-version set.
+test('the guard branches on no replication version', () => {
+  const source = fs.readFileSync(GUARD, 'utf8');
+  assert.doesNotMatch(source, /binding\["replication"\]/);
+  assert.doesNotMatch(source, /def expected_mode/);
+});
+
 test('it reads the frozen records, not the pinned script', () => {
   const source = fs.readFileSync(GUARD, 'utf8');
   assert.doesNotMatch(source, /import.*studie_identity_bridge_artifact/);
