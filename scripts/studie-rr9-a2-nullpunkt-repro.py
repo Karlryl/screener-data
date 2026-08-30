@@ -128,12 +128,24 @@ def sha256_datei(pfad, block=1 << 22):
     return h.hexdigest()
 
 
+class KeinSpeicherort(ReproBruch):
+    """Der Speicherort ist gar nicht erst benannt.
+
+    EIGENE KLASSE, und das ist der ganze Punkt: 'niemand hat gesagt, wo die
+    Daten liegen' (im CI der Normalfall) und 'der benannte Ort ist leer' sind
+    zwei verschiedene Lagen. Der Selbsttest darf nur die ERSTE ueberspringen.
+    Vorher fielen beide in dasselbe `except ReproBruch` und ein verschwundener
+    Zwischenstand meldete '0 FAIL', ohne je etwas reproduziert zu haben -
+    genau die Klasse, gegen die dieses Modul geschrieben ist.
+    """
+
+
 def zwischenstand_pfad(vorgabe=None):
     if vorgabe:
         return vorgabe
     wurzel = os.environ.get(DATENWURZEL_ENV)
     if not wurzel:
-        raise ReproBruch(
+        raise KeinSpeicherort(
             "Speicherort unbekannt: " + DATENWURZEL_ENV + " ist nicht gesetzt und "
             "--zwischenstand fehlt (R12a verbietet einen fest verdrahteten Pfad).")
     return os.path.join(wurzel, ZWISCHENSTAND_REL)
@@ -470,12 +482,23 @@ def selbsttest(zwischenstand=None):
         pruefe("ROT-PROBE Nullpunkt: 291 statt 292 -> Stopp",
                SANKTION in str(exc) and "untersagt" in str(exc))
 
-    # -- Die teure Probe: nur, wenn der Zwischenstand liegt -------------------
+    # -- Die teure Probe ------------------------------------------------------
+    # Uebersprungen wird sie NUR, wenn niemand einen Speicherort genannt hat.
+    # Ist einer genannt und die Datei fehlt, ist das ein Befund und kein
+    # Sonderfall: sonst meldete dieser Selbsttest '0 FAIL', ohne die eine
+    # Sache getan zu haben, fuer die es ihn gibt.
     try:
         pfad = zwischenstand_pfad(zwischenstand)
-    except ReproBruch:
+    except KeinSpeicherort as exc:
         pfad = None
-    if pfad and os.path.isfile(pfad):
+        grund = str(exc)
+    if pfad and not os.path.isfile(pfad):
+        raise ReproBruch(
+            "RR9-A2-ABBRUCH: der Speicherort ist benannt, aber unter " + pfad
+            + " liegt kein Zwischenstand. Das ist kein CI-Fall, sondern ein "
+            "Befund - ein gruener Selbsttest ohne die Reproduktion waere "
+            "genau die stille Luege, die dieses Modul verhindern soll.")
+    if pfad:
         e2 = lade(BASISRATEN, "studie_basisraten")
         zp = lade(ZAEHLPROBE, "studie_zaehlprobe")
         vorher = sha256_datei(pfad)
@@ -485,28 +508,27 @@ def selbsttest(zwischenstand=None):
         pruefe("REPRODUKTION: der Zwischenstand ist byte-identisch geblieben",
                sha256_datei(pfad) == vorher)
         # ROT-PROBE des Beweisplans: ein absichtlich verstellter ZAEHLPARAMETER
-        # muss den Nullpunkt verfehlen und den Stopp ausloesen.
-        verstellt = reproduziere(e2.UMSATZ_QUELLEN, pfad, perzentil=94, e2=e2,
-                                 zp=zp)
+        # muss den Nullpunkt verfehlen und den Stopp ausloesen. Der LAUF steht
+        # mit im try: braecht er aus einem anderen Grund, waere die Meldung
+        # sonst dieser Probe zugeschrieben und der ganze Selbsttest tot.
         try:
-            pruefe_gegen_nullpunkt(verstellt)
+            pruefe_gegen_nullpunkt(
+                reproduziere(e2.UMSATZ_QUELLEN, pfad, perzentil=94, e2=e2, zp=zp))
             pruefe("ROT-PROBE Zaehlparameter: Perzentil 94 -> Stopp", False)
         except ReproBruch as exc:
             pruefe("ROT-PROBE Zaehlparameter: Perzentil 94 -> Stopp",
                    SANKTION in str(exc))
         # Und eine verstellte ALLOWLIST muss ihn ebenfalls verfehlen - sonst
         # haenge der Nullpunkt gar nicht an der Liste, und B3' waere gegenstandslos.
-        halbe = tuple(e2.UMSATZ_QUELLEN[:2])
-        verkuerzt = reproduziere(halbe, pfad, e2=e2, zp=zp)
         try:
-            pruefe_gegen_nullpunkt(verkuerzt)
+            pruefe_gegen_nullpunkt(
+                reproduziere(tuple(e2.UMSATZ_QUELLEN[:2]), pfad, e2=e2, zp=zp))
             pruefe("ROT-PROBE Allowlist: verkuerzte Liste -> Stopp", False)
         except ReproBruch as exc:
             pruefe("ROT-PROBE Allowlist: verkuerzte Liste -> Stopp",
                    SANKTION in str(exc))
     else:
-        print("  --   REPRODUKTION uebersprungen: kein Zwischenstand unter "
-              + str(pfad) + " (nur lokal vorhanden, nicht im CI)")
+        print("  --   REPRODUKTION uebersprungen: " + grund)
 
     print("selbsttest: %d ok, %d FAIL" % (ok, fehl))
     return 0 if fehl == 0 else 1

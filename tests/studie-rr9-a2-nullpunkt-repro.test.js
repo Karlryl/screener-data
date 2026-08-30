@@ -27,7 +27,9 @@ const python = process.env.PYTHON || 'python';
 const skript = path.join(__dirname, '..', 'scripts', 'studie-rr9-a2-nullpunkt-repro.py');
 
 const selbst = spawnSync(python, [skript, 'selbsttest'], { encoding: 'utf8' });
-assert.equal(selbst.status, 0, selbst.stdout + selbst.stderr);
+// `error` gehoert in die Meldung: findet die Shell `python` nicht, sind stdout
+// und stderr LEER und die Zusicherung schwiege ueber den einzigen Grund.
+assert.equal(selbst.status, 0, `${selbst.error || ''}${selbst.stdout}${selbst.stderr}`);
 assert.match(selbst.stdout, /selbsttest: \d+ ok, 0 FAIL/);
 
 // Die Proben, die OHNE den lokalen Zwischenstand laufen - also auch im CI.
@@ -57,12 +59,37 @@ const teuer = [
   'ROT-PROBE Allowlist: verkuerzte Liste -> Stopp',
 ];
 if (selbst.stdout.includes('REPRODUKTION uebersprungen')) {
+  // Und uebersprungen werden darf sie NUR, weil niemand einen Speicherort
+  // genannt hat. Jede andere Begruendung waere die stille Luege.
+  assert.match(selbst.stdout, /REPRODUKTION uebersprungen: Speicherort unbekannt/);
   for (const probe of teuer) {
     assert.ok(!selbst.stdout.includes(probe), `uebersprungen gemeldet, aber ${probe} lief doch`);
   }
 } else {
   for (const probe of teuer) {
     assert.ok(selbst.stdout.includes(`ok   ${probe}`), `Probe fehlt oder rot: ${probe}`);
+  }
+}
+
+// ROT-PROBE zur Ueberspring-Regel: ein GESETZTER, aber leerer Speicherort darf
+// nicht als "nicht im CI" durchgehen. Vorher meldete genau dieser Fall
+// "0 FAIL", ohne je etwas reproduziert zu haben - ein gruener Selbsttest, der
+// die eine Sache nicht getan hatte, fuer die es ihn gibt.
+{
+  const leer = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'rr9-leer-'));
+  try {
+    const lauf = spawnSync(python, [skript, 'selbsttest'], {
+      encoding: 'utf8', env: { ...process.env, EARLY_DETECTION_DATA_ROOT: leer },
+    });
+    assert.notEqual(lauf.status, 0, 'leerer Speicherort kommt still durch');
+    assert.match(
+      `${lauf.stdout}${lauf.stderr}`, /der Speicherort ist benannt, aber unter/,
+      'der Abbruch nennt nicht den Grund',
+    );
+    assert.ok(!lauf.stdout.includes('REPRODUKTION uebersprungen'),
+      'ein leerer Speicherort wird immer noch als CI-Fall ausgegeben');
+  } finally {
+    fs.rmSync(leer, { recursive: true, force: true });
   }
 }
 
@@ -101,6 +128,53 @@ for (const noetig of ['arm_zaehlen', 'firmenreihen', 'signale', 'pit_reduktion']
 for (const text of texte) {
   assert.ok(!text.toLowerCase().includes('konzeptliste.json'),
     `Die Reproduktion nennt die verbreiterte Konzeptliste als Pfad: ${text}`);
+}
+
+// DIE LUECKE DES NAMENS-ZAUNS, geschlossen: `getattr(zp, "ampel_fuer")` steht
+// nirgends als Name im Syntaxbaum - es ist eine Zeichenkette. Der Zaun oben
+// haette so einen Aufruf durchgelassen (nachgestellt und gesehen, bevor das
+// hier stand). Statt jede verbotene Kennung zusaetzlich als String zu suchen -
+// der Docstring nennt sie ja absichtlich - wird die AUFLOESUNGSART verboten:
+// dieses Modul loest nichts dynamisch auf, und das ist eine kleine, eindeutige
+// Flaeche.
+const DYNAMISCH = ['getattr', 'globals', 'locals', 'vars', 'eval', 'exec', '__import__'];
+for (const verboten of DYNAMISCH) {
+  assert.ok(!erreichbar.has(verboten),
+    `Die Reproduktion loest mit ${verboten} dynamisch auf - damit ist der Namens-Zaun blind`);
+}
+
+// Und der geschlossene Zaun muss auch wirklich zubeissen. Bruchprobe an einer
+// Kopie: derselbe verbotene Aufruf, per String-Dispatch eingeschmuggelt.
+{
+  const quelle = fs.readFileSync(skript, 'utf8');
+  const anker = '    return {\n        "fallzahl": arm["fallzahl"],';
+  assert.ok(quelle.includes(anker), 'Sabotage-Anker nicht gefunden');
+  const sabotiert = quelle.replace(
+    anker, `    getattr(zp, "ampel_fuer")(arm["fallzahl"], 0.9, 0.9)\n${anker}`,
+  );
+  const dir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'rr9-ast-'));
+  try {
+    const ziel = path.join(dir, 'sabotiert.py');
+    fs.writeFileSync(ziel, sabotiert, 'utf8');
+    const gelesen2 = spawnSync(python, ['-c', [
+      'import ast, io, json, sys',
+      'n = set()',
+      'for k in ast.walk(ast.parse(io.open(sys.argv[1], encoding="utf-8").read())):',
+      '    if isinstance(k, ast.Name): n.add(k.id)',
+      '    elif isinstance(k, ast.Attribute): n.add(k.attr)',
+      'print(json.dumps(sorted(n)))',
+    ].join('\n'), ziel], { encoding: 'utf8' });
+    assert.equal(gelesen2.status, 0, gelesen2.stderr);
+    const sabotierteNamen = new Set(JSON.parse(gelesen2.stdout));
+    // Der alte Zaun bleibt gruen - das ist der BEFUND, hier festgenagelt.
+    assert.ok(!sabotierteNamen.has('ampel_fuer'),
+      'der String-Dispatch taucht doch als Name auf - dann misst diese Probe etwas anderes');
+    // Der neue Zaun wird rot.
+    assert.ok(DYNAMISCH.some((d) => sabotierteNamen.has(d)),
+      'der Aufloesungsart-Zaun sieht den eingeschmuggelten Aufruf nicht');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 // -- Das Artefakt --------------------------------------------------------------
