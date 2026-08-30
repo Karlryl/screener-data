@@ -239,6 +239,69 @@ def baue_fallback_firmenreihen(modul, alt_quellen, neu_quellen):
     return wrapper
 
 
+def schwellensatz(massgeblich_lauf, v0_lauf):
+    """Der einzufrierende Schwellen-Satz - AUSGELESEN, nicht abgeleitet.
+
+    Wichtig fuer den Leser: hier wird nichts gerechnet und nichts gewaehlt. Die
+    Kalibrierung ist Sache der versiegelten Mechanik und ist im massgeblichen
+    Durchlauf bereits gelaufen; dieser Block schreibt sie auf, damit sie
+    eingefroren werden kann, BEVOR ein Tor mit ihr rechnet. Wer hier ein
+    Ableitungs-Ermessen sucht, findet keines - genau das ist der Punkt.
+
+    Die `regelParameter` sind Konstanten der versiegelten Datei (hash-gebunden),
+    nicht heute gesetzte Werte. Sie stehen mit im Satz, weil eine Schwelle ohne
+    die Regel, die sie erzeugt hat, nicht einfrierbar ist.
+    """
+    satz = {
+        "grundlage": "der massgebliche Durchlauf (ohne Bank-Kennung, K8-Stratum gefallen)",
+        "abgeleitetVon": ("scripts/studie-basisraten.py::kalibriere, unveraendert und "
+                          "hash-gebunden - dieses Werkzeug liest aus, es rechnet nicht"),
+        "regelParameter": massgeblich_lauf.get("parameter"),
+        "jeFamilie": {},
+        "musterFriedhof": massgeblich_lauf.get("muster_friedhof"),
+    }
+    for name in ("S-U", "S-G", "S-UG"):
+        s = massgeblich_lauf.get("signale", {}).get(name, {})
+        v = v0_lauf.get("signale", {}).get(name, {})
+        satz["jeFamilie"][name] = {
+            "pFinal": s.get("p_final"),
+            "pFinalV0": v.get("p_final"),
+            "kalibrierungsWeg": s.get("kalibrierung"),
+            "rateImBand": s.get("rate_band"),
+            "feuerungenImBand": s.get("feuerungen_band"),
+            "auswertbarImBand": s.get("auswertbar_band"),
+            "firmenReif": s.get("firmen_reif"),
+            "firmenUnreif": s.get("firmen_unreif"),
+            "scheiternskriterien": s.get("scheitern"),
+            "scheiternskriterienV0": v.get("scheitern"),
+        }
+    # Was sich gegenueber V0 an den KRITERIEN bewegt hat - nicht an den Zahlen.
+    # Eine Schwelle, die gleich bleibt, waehrend ein Scheiternskriterium
+    # verschwindet, ist eine andere Lage; das gehoert nebeneinander und nicht in
+    # eine Fussnote.
+    # Verglichen wird die KENNUNG des Kriteriums, nie sein Meldungstext. Die
+    # erste Fassung verglich die ganzen Saetze - und weil in "K1: nur 29 Firmen"
+    # die Zahl steckt, erschien K1 zugleich als weggefallen UND als neu
+    # gerissen, obwohl es durchgehend reisst und sich nur die Zahl bewegt hat.
+    # Wieder eine Zahl, die richtig aussieht und die falsche Frage beantwortet.
+    def kennung(satzteil):
+        return str(satzteil).split(":", 1)[0].strip()
+
+    bewegt = {}
+    for name, w in satz["jeFamilie"].items():
+        jetzt = {kennung(k): k for k in (w["scheiternskriterien"] or [])}
+        vorher = {kennung(k): k for k in (w["scheiternskriterienV0"] or [])}
+        weg = sorted(vorher[k] for k in vorher if k not in jetzt)
+        dazu = sorted(jetzt[k] for k in jetzt if k not in vorher)
+        bleibt = [{"kriterium": k, "v0": vorher[k], "jetzt": jetzt[k]}
+                  for k in sorted(set(jetzt) & set(vorher)) if vorher[k] != jetzt[k]]
+        if weg or dazu or bleibt:
+            bewegt[name] = {"nichtMehrGerissen": weg, "neuGerissen": dazu,
+                            "reisstWeiterhinMitAndererZahl": bleibt}
+    satz["scheiternskriterienBewegung"] = bewegt
+    return satz
+
+
 def pruefe_plausibilitaet(v0, verbreitert):
     """Ein reiner Fallback JE FIRMA kann nur HINZUFUEGEN.
 
@@ -593,6 +656,8 @@ def haupt(argv):
         "schema": "studie-e2-verbreitert/v1",
         "k8BankStratum": k8,
         "massgeblicheFassung": massgeblich,
+        "schwellensatz": schwellensatz(
+            ohne_bank if massgeblich == "verbreitertOhneBank" else neu, alt),
         "durchlaufOhneBank": {"protokoll": ohne_bank["substitutionsProtokoll"],
                               "signale": zahlen_aus(ohne_bank)},
         "durchlaufBankAllein": {"protokoll": bank["substitutionsProtokoll"],
@@ -721,6 +786,44 @@ def selbsttest():
     # Geprueft wird die REGEL, nicht die Rechnung: welche Firma bekommt welche
     # Quellen. Das echte firmenreihen wird dafuer durch eine Attrappe ersetzt,
     # die nur festhaelt, womit sie gerufen wurde - so ist sichtbar, WER wen sieht.
+    # Der Schwellen-Satz: geprueft wird, dass er AUSLIEST und nichts erfindet.
+    mass = {"parameter": {"p_erlaubt": [80, 85, 90, 95], "zielband": [0.005, 0.025]},
+            "signale": {"S-U": {"p_final": 95, "scheitern": []},
+                        "S-G": {"p_final": 95, "scheitern": []},
+                        "S-UG": {"p_final": None, "scheitern": ["K1: zu wenige"]}},
+            "muster_friedhof": [{"muster": "S-UG"}]}
+    v0l = {"signale": {"S-U": {"p_final": 95, "scheitern": []},
+                       "S-G": {"p_final": 95, "scheitern": []},
+                       "S-UG": {"p_final": None,
+                                "scheitern": ["K1: zu wenige", "K3a: Klumpung"]}}}
+    sz = schwellensatz(mass, v0l)
+    pruef(sz["regelParameter"] == mass["parameter"],
+          "die Regel-Parameter werden uebernommen, nicht neu gesetzt")
+    pruef(sz["jeFamilie"]["S-U"]["pFinal"] == 95 and sz["jeFamilie"]["S-UG"]["pFinal"] is None,
+          "jede Familie traegt ihr p_final, auch wenn es None ist")
+    pruef(sz["scheiternskriterienBewegung"]["S-UG"]["nichtMehrGerissen"] == ["K3a: Klumpung"]
+          and sz["scheiternskriterienBewegung"]["S-UG"]["neuGerissen"] == [],
+          "ein gegenueber V0 WEGGEFALLENES Scheiternskriterium wird benannt, nicht verschluckt")
+    # Die Probe gegen den eigenen Fehler: derselbe Kriterien-Schluessel mit
+    # ANDERER Zahl darf nicht als weggefallen-und-neu erscheinen. Die erste
+    # Fassung verglich Meldungstexte und tat genau das.
+    mass2 = {"parameter": {}, "signale": {
+        "S-U": {"p_final": 95, "scheitern": []}, "S-G": {"p_final": 95, "scheitern": []},
+        "S-UG": {"p_final": None, "scheitern": ["K1: nur 30 Firmen (gefordert 300)"]}}}
+    v03 = {"signale": {
+        "S-U": {"p_final": 95, "scheitern": []}, "S-G": {"p_final": 95, "scheitern": []},
+        "S-UG": {"p_final": None, "scheitern": ["K1: nur 29 Firmen (gefordert 300)"]}}}
+    bw = schwellensatz(mass2, v03)["scheiternskriterienBewegung"]["S-UG"]
+    pruef(bw["nichtMehrGerissen"] == [] and bw["neuGerissen"] == []
+          and len(bw["reisstWeiterhinMitAndererZahl"]) == 1,
+          "ROT-PROBE (eigener Fehler): K1 mit anderer Zahl reisst WEITER, faellt nicht weg")
+    v0l2 = {"signale": {"S-U": {"p_final": 95, "scheitern": []},
+                        "S-G": {"p_final": 95, "scheitern": []},
+                        "S-UG": {"p_final": None, "scheitern": []}}}
+    bw2 = schwellensatz(mass, v0l2)["scheiternskriterienBewegung"]["S-UG"]
+    pruef(bw2["neuGerissen"] == ["K1: zu wenige"] and bw2["nichtMehrGerissen"] == [],
+          "ROT-RICHTUNG: ein NEU gerissenes Kriterium wird ebenso benannt")
+
     pruef(FUSSNOTE.startswith("Quellen-Asymmetrie:") and "ASC 606 ab 2018" in FUSSNOTE,
           "die Pflicht-Fussnote liegt woertlich vor")
     # "wortgleich" war eine Behauptung, bis das hier stand: der WORTLAUT ist der
