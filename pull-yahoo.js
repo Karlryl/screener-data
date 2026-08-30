@@ -2615,7 +2615,21 @@ function _existingSnapshotMissingTag211lFields(s) {
     // full-pull loop (budget drain, bypasses FUNDAMENTALS_REFRESH_BUDGET). Once a
     // post-Tag-211l full pull has written the row, the currentAssets KEY exists
     // (even if its value is null), which is the true "schema is current" signal.
-    const hasCA = Array.isArray(bal) && bal[0] && ('currentAssets' in bal[0]);
+    // T182 (gemessen 2026-08-30, agent-reports/t182-schleifen-messung-2026-08-30.md):
+    // hier stand `bal[0] && ('currentAssets' in bal[0])` — ein POSITIONALER Zugriff. Eine
+    // erste Bilanzzeile `null` ist falsy, also blieb hasCA false, obwohl weiter hinten eine
+    // Zeile mit dem Schluessel stand: der Snapshot HAT einen Voll-Abruf nach Tag 211l
+    // gesehen, der Melder sah es nur nicht. Ergebnis waren 149 dauerhafte Voll-Abruf-
+    // Schleifen am FUNDAMENTALS_REFRESH_BUDGET vorbei — dieselbe Bug-13-Klasse wie oben,
+    // eine Ebene tiefer. Gemessen ueber alle 15.046 Snapshots: 131 der 149 tragen weiter
+    // hinten eine Zeile mit dem Schluessel (87,9 %), 18 haben ueberhaupt keine Bilanzzeile.
+    // Die 18 bleiben absichtlich stale: fuer sie ist "Schema nicht nachweisbar aktuell"
+    // die WAHRE Aussage. Ob sie je heilen koennen, ist eine eigene Frage (Abruf-Diaet) und
+    // wird hier NICHT mitentschieden.
+    // Der Fall "Zeile ist ein Objekt ohne den Schluessel, spaetere Zeile hat ihn" kommt am
+    // Live-Bestand 0-mal vor — die Regel deckt ihn trotzdem ab, weil sie nach Inhalt sucht.
+    const hasCA = Array.isArray(bal)
+      && bal.some((zeile) => zeile && typeof zeile === 'object' && ('currentAssets' in zeile));
     // T181: die Klausel lautete `return !(hasSGA || hasDepr) || !hasCA;` mit
     //     hasSGA  = Array.isArray(A.annualSGA)          && A.annualSGA.length > 0
     //     hasDepr = Array.isArray(A.annualDepreciation) && A.annualDepreciation.length > 0

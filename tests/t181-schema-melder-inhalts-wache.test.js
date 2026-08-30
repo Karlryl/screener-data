@@ -97,9 +97,16 @@ test('feuert, wenn der currentAssets-SCHLUESSEL fehlt', () => {
     + 'sonst holt die Pipeline das Schema nie nach');
   assert.equal(melder(snap({ annualBalance: [] })), true, 'gar keine Bilanzzeilen');
   assert.equal(melder(snap({ annualBalance: [null] })), true,
-    'Bilanzzeile vorhanden, aber null — der positionale bal[0]-Zugriff faellt hier auf '
-    + 'falsy (Nebenbefund T181/6.1: 149 dauerhafte Schleifen, EIGENER Punkt T182, hier '
-    + 'nur festgehalten, damit ein spaeterer Fix diesen Waechter bewusst anfasst)');
+    'EINE Zeile, und die ist null: keine Zeile traegt den Schluessel, also ist das Schema '
+    + 'nicht nachweisbar aktuell. Bleibt stale — auch nach T182.');
+  // T182 (30.08.2026): die Gegenrichtung, und sie ist der eigentliche Fix. Vorher fiel der
+  // positionale bal[0]-Zugriff auf die null und meldete stale, obwohl die zweite Zeile den
+  // Schluessel traegt — 131 der 149 Dauerschleifen hatten genau diese Form.
+  assert.equal(melder(snap({ annualBalance: [null, { currentAssets: 120 }] })), false,
+    'erste Zeile null, ZWEITE traegt den Schluessel: irgendeine Zeile mit dem Schluessel '
+    + 'beweist den Voll-Abruf nach Tag 211l — der Melder darf hier NICHT mehr feuern');
+  assert.equal(melder(snap({ annualBalance: [null, { umsatz: 1 }] })), true,
+    'spaetere Zeile OHNE den Schluessel heilt nichts — sonst wuerde die Regel raten');
   assert.equal(melder(snap({ annualBalance: undefined })), true, 'annualBalance fehlt ganz');
 });
 
