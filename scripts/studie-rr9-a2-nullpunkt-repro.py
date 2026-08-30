@@ -91,6 +91,14 @@ NULLPUNKT_HERKUNFT = ("reports/studie/E3-zaehlprobe-pruefung-2026-08-19.json"
                       "::varianten['S-U'] - registriert und veroeffentlicht am "
                       "2026-08-19, runId e3-zaehlprobe-pruefung-2026-08-19-neulauf")
 
+# Die EINGABE wird ebenso gepinnt wie das Ergebnis. Die Vorher/Nachher-Hashung
+# des Laufs zeigt nur, dass NIEMAND die Datei waehrend des Laufs angefasst hat -
+# sie zeigt NICHT, dass es dieselbe Datei ist, aus der die 292/438 einmal
+# entstanden sind. Ohne diesen Sollwert waere "bit-gleich reproduziert" eine
+# Aussage ueber eine unbenannte Eingabe (Code-Review 30.08.).
+ZWISCHENSTAND_SHA256 = ("5c489c62944ea93fa0cfaf836b973b532383d0a3a4d11e42b555"
+                        "cca5193dc53e")
+
 # Die Sanktion ist unveraendert die von B3'. Die Absenkung auf STOPP liegt als
 # OFFEN-2 beim Gericht und ist NICHT vollzogen.
 SANKTION = "BEERDIGEN"
@@ -112,6 +120,10 @@ class ReproBruch(Exception):
 
 def lade(pfad, name):
     spec = importlib.util.spec_from_file_location(name, pfad)
+    if spec is None or spec.loader is None:
+        # Ohne diesen Zweig endet ein falscher Pfad in einem AttributeError auf
+        # None - eine Meldung, die den Grund verschweigt.
+        raise ReproBruch("RR9-A2-ABBRUCH: Skript nicht ladbar: " + pfad)
     modul = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(modul)
     return modul
@@ -214,7 +226,8 @@ def registrierter_nullpunkt(bericht=E3_BERICHT):
 # Die Reproduktion - identischer Codepfad, Allowlist als Parameter
 # =============================================================================
 
-def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None):
+def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None,
+                 manifest=None, zwischenstand_soll=ZWISCHENSTAND_SHA256):
     """Zaehlt EINEN Arm auf dem gespeicherten Zwischenstand.
 
     `quellen` ist der PARAMETER, um den es der Auflage geht: die alte Allowlist
@@ -231,10 +244,35 @@ def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None):
     fenster = zp.FENSTER["pruefung"]
     p_wert = zp.PERZENTIL if perzentil is None else perzentil
 
+    # DAS TOR, DAS "IDENTISCHER CODEPFAD" ERST ZU EINER MESSUNG MACHT.
+    # Ohne es war der Satz eine Behauptung: die beiden Zaehl-Skripte wurden
+    # geladen, wie sie gerade auf der Platte lagen, und nichts verglich sie mit
+    # ihrem Siegel. Nachgestellt am 30.08.: eine angehaengte Kommentarzeile in
+    # studie-basisraten.py trieb den Hash vom registrierten 997a80d2... weg -
+    # und dieser Lauf meldete trotzdem "POSITIV: bit-gleich reproduziert",
+    # waehrend der Bericht im selben Atemzug behauptete, die Datei hashe
+    # unveraendert. Genau die Drift, gegen die B3' geschrieben ist, und genau
+    # die Klasse "gepflegte Behauptung". `pruefe_manifest` bindet namentlich
+    # preregistration.json + studie-zaehlprobe.py + studie-basisraten.py und ist
+    # gegen das Weglassen einer Bindung fail-closed - es lag fertig da und wurde
+    # nur nie gerufen. Damit sind auch die TAGS je Allowlist-Eintrag gepinnt,
+    # die der Namensvergleich von B3' allein nicht sieht.
+    try:
+        siegel = zp.pruefe_manifest(manifest) if manifest else zp.pruefe_manifest()
+    except zp.ProbeFehler as exc:
+        raise ReproBruch(
+            "RR9-A2-ABBRUCH (" + SANKTION + "): der versiegelte Zaehlcode ist "
+            "nicht mehr der registrierte. " + str(exc)) from exc
+
     voll = pruefe_kein_panel(zwischenstand)
     if not os.path.isfile(voll):
         raise ReproBruch("RR9-A2-ABBRUCH: Zwischenstand nicht gefunden: " + voll)
     vorher = sha256_datei(voll)
+    if zwischenstand_soll and vorher != zwischenstand_soll:
+        raise ReproBruch(
+            "RR9-A2-ABBRUCH (" + SANKTION + "): der Zwischenstand traegt sha256 "
+            + vorher + ", gepinnt ist " + zwischenstand_soll + ". Eine "
+            "Reproduktion auf einer ANDEREN Eingabe ist keine Reproduktion.")
 
     # NUR-LESEND, und das ist keine Bequemlichkeit: der Zwischenstand ist das
     # Arbeitsartefakt eines bereits angemeldeten Laufs. Wuerde `pit_reduktion`
@@ -242,11 +280,13 @@ def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None):
     # richtig so. Wir schreiben nicht in ein Beweisstueck.
     arbeit = sqlite3.connect("file:" + voll.replace("\\", "/") + "?mode=ro",
                              uri=True)
-    arbeit.execute("PRAGMA cache_size=-200000")
     zaehler = defaultdict(int)
     for name in e2.alle_zaehlernamen():
         zaehler[name] += 0
     try:
+        # Innerhalb des try, nicht davor: sonst laege bei einem Fehler des
+        # PRAGMA eine offene Verbindung herum.
+        arbeit.execute("PRAGMA cache_size=-200000")
         roh_zeilen = arbeit.execute("SELECT COUNT(*) FROM roh").fetchone()[0]
         je_firma = e2.pit_reduktion(arbeit, zaehler)
     finally:
@@ -263,14 +303,30 @@ def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None):
     # `quellen` als Parameter. `nur_positiv=True` ist die S-U-Einstellung; sie
     # steht dort in derselben Zeile wie die Allowlist und wird hier nicht neu
     # erfunden.
-    alle, gewaehlt = e2.firmenreihen(je_firma, quellen, True, zaehler, "umsatz_")
-    _g, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
-    feuerungen, _auswertbar, _grenzen = e2.signale(a_saetze, p_wert, zaehler,
-                                                   "umsatz_")
-    band = [f for f in feuerungen
-            if zp.im_signalband(f, e2, fenster["von"], fenster["bis"])]
-    arm = zp.arm_zaehlen(band, gewaehlt, e2,
-                         e2.ordinal(fenster["rand"].replace("-", "")))
+    #
+    # Der versiegelte Zaehlcode haelt seine EIGENEN Abbrueche in seiner eigenen
+    # Ausnahme-Klasse (zp.ProbeFehler): R5-ABBRUCH bei unlesbarem Zeitstempel,
+    # R3-ABBRUCH wenn eine Firma mehr als ein Erst-Ereignis traegt. Die kamen
+    # hier ungefangen durch und endeten als roher Traceback mit Exit 1 - statt
+    # in der Stopp-Form, die RR9-A2 Ziffer 2 verlangt ("Stopp UND
+    # Veroeffentlichung der Abweichung"). Nachgestellt am 30.08. mit einem
+    # Eintrag ohne lesbaren Zeitstempel. Der Abbruch bleibt ein Abbruch; er
+    # bekommt nur die Form, unter der er berichtet wird.
+    try:
+        alle, gewaehlt = e2.firmenreihen(je_firma, quellen, True, zaehler, "umsatz_")
+        _g, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, "umsatz_")
+        feuerungen, _auswertbar, _grenzen = e2.signale(a_saetze, p_wert, zaehler,
+                                                       "umsatz_")
+        band = [f for f in feuerungen
+                if zp.im_signalband(f, e2, fenster["von"], fenster["bis"])]
+        arm = zp.arm_zaehlen(band, gewaehlt, e2,
+                             e2.ordinal(fenster["rand"].replace("-", "")))
+    except zp.ProbeFehler as exc:
+        raise ReproBruch(
+            "RR9-A2-ABBRUCH (" + SANKTION + "): der versiegelte Zaehlcode hat "
+            "selbst angehalten - " + str(exc) + " Die Reproduktion ist damit "
+            "nicht durchgefuehrt; die Abweichung wird veroeffentlicht, nicht "
+            "umgangen.") from exc
     return {
         "fallzahl": arm["fallzahl"],
         "firmen_mit_erst_ereignis": arm["firmen_mit_erst_ereignis"],
@@ -279,6 +335,7 @@ def reproduziere(quellen, zwischenstand, perzentil=None, e2=None, zp=None):
         "firmen_im_zwischenstand": len(je_firma),
         "zwischenstandSha256": vorher,
         "perzentil": p_wert,
+        "siegel": siegel,
     }
 
 
@@ -340,6 +397,18 @@ def bericht(zwischenstand=None, ziel=None):
                        "byte-gegengeprueft"),
             "keinPanel": ("KEIN Panel-Fenster geoeffnet - pruefe_kein_panel "
                           "haelt das fail-closed fest"),
+            "siegelGeprueft": ("IN DIESEM LAUF, nicht anderswo zitiert: "
+                               "zp.pruefe_manifest() hasht preregistration.json, "
+                               "studie-zaehlprobe.py und studie-basisraten.py "
+                               "gegen hash-manifest.json 2.0.0, bevor ein Wert "
+                               "entsteht. Ohne dieses Tor waere 'identischer "
+                               "Codepfad' eine Behauptung ueber Dateien, die "
+                               "niemand angesehen hat."),
+            "eingabeGepinnt": ("Der Zwischenstand ist auf sha256 "
+                               + ZWISCHENSTAND_SHA256 + " festgelegt. Die "
+                               "Vorher/Nachher-Hashung zeigt nur, dass der Lauf "
+                               "die Datei nicht angefasst hat - erst der "
+                               "Sollwert sagt, dass es DIE Eingabe ist."),
             "keineFreigabeNoetig": (
                 "Es entsteht kein neuer Wert und kein neuer Fenster-Zugriff: "
                 "reproduziert wird ein seit 2026-08-19 im Repo "
@@ -380,12 +449,21 @@ def bericht(zwischenstand=None, ziel=None):
             "belegt, ist genau die Drift, gegen die B3' geschrieben ist: der "
             "versiegelte Zaehlcode rechnet heute noch, was das registrierte "
             "Protokoll sagt. Die nicht nachgefahrene Stufe ist anderweitig "
-            "gedeckt - studie-basisraten.py hasht unveraendert auf ihren "
-            "registrierten Wert (hash-manifest.json 2.0.0, Provenienz-Lesung "
-            "RR9-A2 Schritt 1), und panel-validierung.sqlite liegt mit den "
+            "gedeckt - studie-basisraten.py hasht IN DIESEM LAUF gegen ihren "
+            "registrierten Wert (siehe Block `siegel`; die erste Fassung "
+            "dieses Berichts behauptete das, ohne es zu pruefen - der Code-"
+            "Review vom 30.08. hat den Fall nachgestellt und die Pruefung "
+            "eingezogen), und panel-validierung.sqlite liegt mit den "
             "4.447.633.408 Bytes des E1-Baus auf der Platte. Beides ist eine "
             "Groessen- und Hash-Aussage ueber Code und Datei, keine "
             "Nachrechnung der Stufe selbst."),
+        # LISTE, nicht Abbildung: als Abbildung waeren die SCHLUESSEL Dateipfade,
+        # und der Feld-Zaun oben prueft Feldnamen. Er ist prompt an
+        # "prereg-ist-ration" haengengeblieben - ein Kategorienfehler meinerseits,
+        # nicht ein zu strenger Zaun. Der Zaun bleibt unveraendert scharf; die
+        # Form ist die falsche gewesen.
+        "siegel": [{"datei": d, "sha256": h}
+                   for d, h in sorted(gemessen["siegel"].items())],
         "eintretendeKohorteGemessen": False,
         "f4": ("GESPERRT. Die Zaehlprobe der Verbreiterung ist ein eigener "
                "Vorgang mit eigenem Register-Eintrag; dieser Lauf laedt die "
@@ -409,6 +487,26 @@ def bericht(zwischenstand=None, ziel=None):
 # =============================================================================
 # Selbsttest - mit der Rot-Probe, die der Beweisplan verlangt
 # =============================================================================
+
+class _ZpMitAbbruch:
+    """Der ECHTE Zaehlcode, nur `arm_zaehlen` haelt an - so wie R5/R3 es tun.
+
+    Die Felder werden einzeln durchgereicht statt per `__getattr__`: dieses
+    Modul loest nichts dynamisch auf, und der AST-Zaun in
+    tests/studie-rr9-a2-nullpunkt-repro.test.js verlaesst sich darauf.
+    """
+
+    def __init__(self, echt):
+        self.FENSTER = echt.FENSTER
+        self.PERZENTIL = echt.PERZENTIL
+        self.ProbeFehler = echt.ProbeFehler
+        self.pruefe_manifest = echt.pruefe_manifest
+        self.im_signalband = echt.im_signalband
+
+    def arm_zaehlen(self, *_argumente, **_schluessel):
+        raise self.ProbeFehler(
+            "R5-ABBRUCH: Erst-Ereignis mit unlesbarem Zeitstempel (Probe).")
+
 
 def selbsttest(zwischenstand=None):
     ok = fehl = 0
@@ -456,9 +554,42 @@ def selbsttest(zwischenstand=None):
         except ReproBruch:
             pruefe("ROT-PROBE Zaun: " + os.path.basename(boese) + " -> Abbruch",
                    True)
-    pruefe("Gegenprobe Zaun: der Zwischenstand selbst geht durch",
-           pruefe_kein_panel(os.path.join("x", "arbeit",
-                                          "E3-zwischenstand.sqlite")) is not None)
+    # Gegenprobe. Frueher stand hier `is not None` - und die Funktion gibt auf
+    # ihrem nicht werfenden Weg IMMER einen Pfad zurueck, die Zusicherung war
+    # also tautologisch wahr. Jetzt wird der zurueckgegebene Wert geprueft, und
+    # ein kuenftiges Muster, das den Zwischenstand versehentlich mitfaengt,
+    # ergibt eine saubere FAIL-Zeile statt eines Absturzes.
+    harmlos = os.path.join("x", "arbeit", "E3-zwischenstand.sqlite")
+    try:
+        pruefe("Gegenprobe Zaun: der Zwischenstand selbst geht durch",
+               pruefe_kein_panel(harmlos) == os.path.realpath(harmlos))
+    except ReproBruch:
+        pruefe("Gegenprobe Zaun: der Zwischenstand selbst geht durch", False)
+
+    # -- Zaun 1: der versiegelte Zaehlcode ------------------------------------
+    zp_fuer_siegel = lade(ZAEHLPROBE, "studie_zaehlprobe")
+    pruefe("Siegel: das Manifest bindet die drei Dateien und sie halten",
+           set(zp_fuer_siegel.pruefe_manifest()) >= {
+               "protocol/early-detection/2.0.0/preregistration.json",
+               "scripts/studie-basisraten.py",
+               "scripts/studie-zaehlprobe.py"})
+    # ROT-PROBE: ein Manifest, das fuer studie-basisraten.py etwas anderes
+    # fuehrt, muss den Lauf anhalten, BEVOR ein Wert entsteht. Ohne dieses Tor
+    # meldete der Lauf "bit-gleich reproduziert" ueber gedriftetem Zaehlcode.
+    with tempfile.TemporaryDirectory() as tmp:
+        gefaelscht = os.path.join(tmp, "hash-manifest.json")
+        roh = json.load(open(zp_fuer_siegel.MANIFEST, encoding="utf-8"))
+        roh["files"]["scripts/studie-basisraten.py"] = "0" * 64
+        with open(gefaelscht, "w", encoding="utf-8") as fh:
+            json.dump(roh, fh)
+        try:
+            reproduziere(lade(BASISRATEN, "e2_probe").UMSATZ_QUELLEN,
+                         os.path.join("x", "arbeit", "E3-zwischenstand.sqlite"),
+                         manifest=gefaelscht)
+            pruefe("ROT-PROBE Siegel: gedrifteter Zaehlcode -> " + SANKTION, False)
+        except ReproBruch as exc:
+            pruefe("ROT-PROBE Siegel: gedrifteter Zaehlcode -> " + SANKTION,
+                   SANKTION in str(exc) and "nicht mehr der registrierte" in str(exc))
 
     # -- Zaun 2: bewertende Felder -------------------------------------------
     pruefe("ROT-PROBE Bericht: ein eingeschmuggeltes Quoten-Feld faellt auf",
@@ -481,6 +612,22 @@ def selbsttest(zwischenstand=None):
     except ReproBruch as exc:
         pruefe("ROT-PROBE Nullpunkt: 291 statt 292 -> Stopp",
                SANKTION in str(exc) and "untersagt" in str(exc))
+
+    # -- Der versiegelte Code haelt selbst an: kommt das in der Stopp-Form an? -
+    # zp.ProbeFehler ist eine ANDERE Ausnahme-Klasse. Ungefangen endete sie als
+    # roher Traceback mit Exit 1 statt in der von RR9-A2 Ziffer 2 verlangten
+    # Form. Nachgestellt mit einem Erst-Ereignis ohne lesbaren Zeitstempel.
+    zp_probe = lade(ZAEHLPROBE, "studie_zaehlprobe_probe")
+    e2_probe = lade(BASISRATEN, "studie_basisraten_probe")
+    pruefe("Vorbedingung: zp.ProbeFehler ist KEIN ReproBruch",
+           not issubclass(zp_probe.ProbeFehler, ReproBruch))
+    try:
+        zp_probe.arm_zaehlen(
+            [{"cik": "1", "accepted": "unlesbar", "tag": "Revenues",
+              "uom": "USD", "ddate": "20130331"}], {}, e2_probe, 999999)
+        pruefe("Vorbedingung: der R5-Abbruch feuert ueberhaupt", False)
+    except zp_probe.ProbeFehler:
+        pruefe("Vorbedingung: der R5-Abbruch feuert ueberhaupt", True)
 
     # -- Die teure Probe ------------------------------------------------------
     # Uebersprungen wird sie NUR, wenn niemand einen Speicherort genannt hat.
@@ -527,6 +674,18 @@ def selbsttest(zwischenstand=None):
         except ReproBruch as exc:
             pruefe("ROT-PROBE Allowlist: verkuerzte Liste -> Stopp",
                    SANKTION in str(exc))
+        # ROT-PROBE der Uebersetzung: haelt der versiegelte Zaehlcode selbst an
+        # (R5/R3), muss das als ReproBruch in der Stopp-Form ankommen - nicht
+        # als roher Traceback. Der Zwilling ist der ECHTE Zaehlcode, nur
+        # `arm_zaehlen` haelt an; kein getattr, damit der AST-Zaun greifbar
+        # bleibt.
+        try:
+            reproduziere(e2.UMSATZ_QUELLEN, pfad, e2=e2, zp=_ZpMitAbbruch(zp))
+            pruefe("ROT-PROBE R5/R3: Abbruch des Zaehlcodes -> Stopp-Form", False)
+        except ReproBruch as exc:
+            pruefe("ROT-PROBE R5/R3: Abbruch des Zaehlcodes -> Stopp-Form",
+                   SANKTION in str(exc)
+                   and "der versiegelte Zaehlcode hat selbst angehalten" in str(exc))
     else:
         print("  --   REPRODUKTION uebersprungen: " + grund)
 

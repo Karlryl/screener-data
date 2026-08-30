@@ -41,10 +41,14 @@ for (const probe of [
   'ROT-PROBE Zaun: panel-endtest.sqlite.enc -> Abbruch',
   'ROT-PROBE Zaun: endtest.key -> Abbruch',
   'Gegenprobe Zaun: der Zwischenstand selbst geht durch',
+  'Siegel: das Manifest bindet die drei Dateien und sie halten',
+  'ROT-PROBE Siegel: gedrifteter Zaehlcode -> BEERDIGEN',
   'ROT-PROBE Bericht: ein eingeschmuggeltes Quoten-Feld faellt auf',
   'Gegenprobe Bericht: reine Zaehlungen sind erlaubt',
   'Nullpunkt: der registrierte Wert geht durch (Anwesenheit)',
   'ROT-PROBE Nullpunkt: 291 statt 292 -> Stopp',
+  'Vorbedingung: zp.ProbeFehler ist KEIN ReproBruch',
+  'Vorbedingung: der R5-Abbruch feuert ueberhaupt',
 ]) {
   assert.ok(selbst.stdout.includes(`ok   ${probe}`), `Probe fehlt oder rot: ${probe}`);
 }
@@ -57,6 +61,7 @@ const teuer = [
   'REPRODUKTION: der Zwischenstand ist byte-identisch geblieben',
   'ROT-PROBE Zaehlparameter: Perzentil 94 -> Stopp',
   'ROT-PROBE Allowlist: verkuerzte Liste -> Stopp',
+  'ROT-PROBE R5/R3: Abbruch des Zaehlcodes -> Stopp-Form',
 ];
 if (selbst.stdout.includes('REPRODUKTION uebersprungen')) {
   // Und uebersprungen werden darf sie NUR, weil niemand einen Speicherort
@@ -194,6 +199,20 @@ if (fs.existsSync(bericht)) {
   assert.match(b.anker, /292\/438 \(S-U, umsatzQuellenAllowlist\), NICHT 326\/365/);
   assert.match(b.kipp, /wird umverankert; die B3'-Tests machen die Umverankerung billig/);
   assert.match(b.grenze, /Panel -> Zwischenstand \(lade_berichte \+ lies_rohwerte\) ist NICHT nachgefahren/);
+  // Das Siegel steht IM Bericht, mit genau den drei Dateien, die das Urteil in
+  // RR9-A2 Schritt 1 namentlich nennt - und mit den Hashes, die es dort zitiert.
+  // Die erste Fassung behauptete das nur; der Review vom 30.08. hat den Fall
+  // nachgestellt (gedrifteter Zaehlcode, Bericht meldete trotzdem POSITIV).
+  assert.deepEqual(b.siegel.map((s) => s.datei), [
+    'protocol/early-detection/2.0.0/preregistration.json',
+    'scripts/studie-basisraten.py',
+    'scripts/studie-zaehlprobe.py',
+  ]);
+  const jeDatei = Object.fromEntries(b.siegel.map((s) => [s.datei, s.sha256]));
+  assert.match(jeDatei['scripts/studie-basisraten.py'], /^997a80d2/);
+  assert.match(jeDatei['scripts/studie-zaehlprobe.py'], /^a3fce5a1/);
+  // Und die EINGABE ist gepinnt, nicht bloss waehrend des Laufs unveraendert.
+  assert.match(b.zwischenstandSha256, /^5c489c62944ea93fa0cfaf836b973b53/);
   const flach = JSON.stringify(b);
   for (const verboten of ['"auffindbarkeit"', '"ampel"', '"reifequote"', '"verhaeltnis"']) {
     assert.ok(!flach.includes(verboten), `Reproduktions-Bericht traegt ${verboten}`);
