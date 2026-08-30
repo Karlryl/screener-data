@@ -1,0 +1,335 @@
+{
+ "schema": "studie-e2-verbreitert/v1",
+ "k8BankStratum": {
+  "urteil": "K8, einstimmig 4:0, vier kumulative Bedingungen",
+  "bedingungen": [
+   {
+    "nummer": 1,
+    "wortlaut": "Getrennt berichtet, getrennt gegen die Nullmodelle geprueft und getrennt in der FDR-Familie.",
+    "belegt": false,
+    "begruendung": "Getrennt BERICHTET ist erfuellt - dieses Artefakt fuehrt das Stratum als eigenen Durchlauf. Getrennt gegen die Nullmodelle und getrennt in der FDR-Familie sind Eigenschaften spaeterer Stufen, zu denen es heute kein Artefakt gibt. Eine Bedingung, die zu einem Drittel erfuellt ist, ist nicht erfuellt."
+   },
+   {
+    "nummer": 2,
+    "wortlaut": "Praeregistrierte Klumpungseinheit Entity-Klasse x Signalquartal fuer jede nachgelagerte Streuungs- und Signifikanzaussage.",
+    "belegt": false,
+    "begruendung": "PRAEREGISTRIERT heisst: vor dem Blick angemeldet. Ein solcher Register-Eintrag existiert nicht. Der Executor kann ihn nicht selbst setzen - das Register ist nur-anhaengend und extern bezeugt."
+   },
+   {
+    "nummer": 3,
+    "wortlaut": "Eigene Ereignis-/Label-Abdeckungszahl, vorab gemessen, nicht unter der des Gesamtpanels.",
+    "belegt": false,
+    "gemessenFirmenImFallback": {
+     "ueberAlleVier": 989,
+     "ueberDieDreiOperativen": 209,
+     "ueberDieBankKennungAllein": 786
+    },
+    "begruendung": "Messbar war nur, WIE VIELE Firmen ueber welche Kennung eingetreten sind. Das Urteil verlangt die EREIGNIS-/LABEL-Abdeckung der Bank-Kohorte, und deren Loch sitzt laut Urteil genau bei Banken (SEC-only-Ereignisregel, Meldeweg ueber Dritte, First Republic als Beleg). Diese Groesse ist mit den heute vorhandenen Artefakten nicht messbar. Eine Eintritts- oder Reifezahl als Ersatz auszugeben waere genau die Waehrungs-Abwertung, vor der das Urteil warnt - deshalb steht hier eine Eintrittszahl und ausdruecklich KEIN Abdeckungs-Ersatz."
+   },
+   {
+    "nummer": 4,
+    "wortlaut": "Bank-Zinsertrag wird weder still mit operativem Produktumsatz gepoolt noch zur Reparatur des primaeren Arms benutzt.",
+    "belegt": true,
+    "begruendung": "Konstruktiv erfuellt: die Bank-Kennung laeuft in einem EIGENEN Prozess mit eigener Quellenmenge; es gibt keinen Codepfad, der sie in die operative Familie mischt. Der Nachweis liegt in den getrennten Durchlauf-Protokollen."
+   }
+  ],
+  "nichtBelegt": [
+   1,
+   2,
+   3
+  ],
+  "stratumZulaessig": false,
+  "konsequenz": "Bedingung(en) [1, 2, 3] nicht belegt -> das Bank-Stratum faellt. Die Bank-/Zinsklasse bleibt damit als SCOPE-AUSSAGE draussen, ausdruecklich NICHT als Datenluecke: die Bank-Kennung tritt gar nicht ein, weder als eigenes Stratum noch gepoolt. Massgeblich ist deshalb der Durchlauf OHNE Bank. Das ist das korrekte Ergebnis und kein Fehlschlag - es wurde VOR der Messung so festgelegt, damit niemand hinterher die Bedingungen weichkocht, um die Zahl zu retten."
+ },
+ "massgeblicheFassung": "verbreitertOhneBank",
+ "durchlaufOhneBank": {
+  "protokoll": {
+   "modus": "verbreitert_ohne_bank",
+   "versiegeltesModul": "scripts/studie-basisraten.py",
+   "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+   "modulSha256GegenManifestGeprueft": true,
+   "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+   "globalsVorher": {
+    "UMSATZ_QUELLEN": [
+     "Revenues",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "SalesRevenueNet",
+     "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ]
+   },
+   "globalsNachher": {
+    "UMSATZ_QUELLEN": [
+     "OilAndGasRevenue",
+     "RealEstateRevenueNet",
+     "RegulatedAndUnregulatedOperatingRevenue"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OilAndGasRevenue",
+     "OperatingIncomeLoss",
+     "RealEstateRevenueNet",
+     "RegulatedAndUnregulatedOperatingRevenue",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ],
+    "firmenreihen": "Vorfilter reiner Fallback je Firma (ENTSCHIED 148)"
+   },
+   "fallbackGranularitaet": "firma"
+  },
+  "signale": {
+   "S-U": {
+    "firmen_reif": 540,
+    "firmen_unreif": 226
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 30,
+    "firmen_unreif": 12
+   }
+  }
+ },
+ "durchlaufBankAllein": {
+  "protokoll": {
+   "modus": "bank_allein",
+   "versiegeltesModul": "scripts/studie-basisraten.py",
+   "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+   "modulSha256GegenManifestGeprueft": true,
+   "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+   "globalsVorher": {
+    "UMSATZ_QUELLEN": [
+     "Revenues",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "SalesRevenueNet",
+     "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ]
+   },
+   "globalsNachher": {
+    "UMSATZ_QUELLEN": [
+     "InterestAndDividendIncomeOperating"
+    ],
+    "ALLE_TAGS": [
+     "InterestAndDividendIncomeOperating",
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ],
+    "firmenreihen": "Vorfilter reiner Fallback je Firma (ENTSCHIED 148)"
+   },
+   "fallbackGranularitaet": "firma"
+  },
+  "signale": {
+   "S-U": {
+    "firmen_reif": 586,
+    "firmen_unreif": 242
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 31,
+    "firmen_unreif": 12
+   }
+  }
+ },
+ "auflagen": "ENTSCHIED 147 (Weg a) + 148 (Granularitaet Firma), Auflagen A-F",
+ "quellenAsymmetrie": "Quellen-Asymmetrie: Im Entdeckungs-Fenster (bis 2016-12-30) trägt RevenueFromContractWithCustomerExcludingAssessedTax konstruktionsbedingt 0 Zeilen (ASC 606 ab 2018); die V0-Umsatzfamilie ruht hier faktisch auf drei ihrer vier Quellen. Jeder fensterübergreifende Vergleich muss diese Asymmetrie ausweisen.",
+ "aequivalenzTor": {
+  "soll": {
+   "S-U": {
+    "firmen_reif": 512,
+    "firmen_unreif": 219
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 29,
+    "firmen_unreif": 12
+   }
+  },
+  "gemessen": {
+   "S-U": {
+    "firmen_reif": 512,
+    "firmen_unreif": 219
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 29,
+    "firmen_unreif": 12
+   }
+  },
+  "bestanden": true
+ },
+ "durchlaufAlt": {
+  "protokoll": {
+   "modus": "alt",
+   "versiegeltesModul": "scripts/studie-basisraten.py",
+   "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+   "modulSha256GegenManifestGeprueft": true,
+   "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+   "globalsVorher": {
+    "UMSATZ_QUELLEN": [
+     "Revenues",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "SalesRevenueNet",
+     "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ]
+   },
+   "globalsNachher": {
+    "UMSATZ_QUELLEN": [
+     "Revenues",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "SalesRevenueNet",
+     "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ]
+   }
+  },
+  "signale": {
+   "S-U": {
+    "firmen_reif": 512,
+    "firmen_unreif": 219
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 29,
+    "firmen_unreif": 12
+   }
+  }
+ },
+ "durchlaufVerbreitert": {
+  "protokoll": {
+   "modus": "verbreitert",
+   "versiegeltesModul": "scripts/studie-basisraten.py",
+   "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+   "modulSha256GegenManifestGeprueft": true,
+   "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+   "globalsVorher": {
+    "UMSATZ_QUELLEN": [
+     "Revenues",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "SalesRevenueNet",
+     "SalesRevenueGoodsNet+SalesRevenueServicesNet"
+    ],
+    "ALLE_TAGS": [
+     "NetIncomeLoss",
+     "OperatingIncomeLoss",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ]
+   },
+   "globalsNachher": {
+    "UMSATZ_QUELLEN": [
+     "InterestAndDividendIncomeOperating",
+     "OilAndGasRevenue",
+     "RealEstateRevenueNet",
+     "RegulatedAndUnregulatedOperatingRevenue"
+    ],
+    "ALLE_TAGS": [
+     "InterestAndDividendIncomeOperating",
+     "NetIncomeLoss",
+     "OilAndGasRevenue",
+     "OperatingIncomeLoss",
+     "RealEstateRevenueNet",
+     "RegulatedAndUnregulatedOperatingRevenue",
+     "RevenueFromContractWithCustomerExcludingAssessedTax",
+     "Revenues",
+     "SalesRevenueGoodsNet",
+     "SalesRevenueNet",
+     "SalesRevenueServicesNet"
+    ],
+    "firmenreihen": "Vorfilter reiner Fallback je Firma (ENTSCHIED 148)"
+   },
+   "fallbackGranularitaet": "firma"
+  },
+  "signale": {
+   "S-U": {
+    "firmen_reif": 614,
+    "firmen_unreif": 248
+   },
+   "S-G": {
+    "firmen_reif": 546,
+    "firmen_unreif": 265
+   },
+   "S-UG": {
+    "firmen_reif": 32,
+    "firmen_unreif": 12
+   }
+  },
+  "zaehlerFallback": {
+   "umsatz_fallback_firma_ohne_quelle": 3019,
+   "umsatz_fallback_jahrespaar_abstand_abweichend": 0,
+   "umsatz_fallback_kein_vorjahrespartner": 0,
+   "umsatz_fallback_kein_vorquartal": 0,
+   "umsatz_fallback_kein_vorquartal_beschleunigung": 0,
+   "umsatz_fallback_keine_schwelle": 0,
+   "umsatz_fallback_komponente_fehlt_quartal": 0,
+   "umsatz_fallback_nenner_null": 0,
+   "umsatz_fallback_q4_abgeleitet": 1904,
+   "umsatz_fallback_q4_komponente_fehlt": 1594,
+   "umsatz_fallback_q4_komponente_nicht_positiv": 59,
+   "umsatz_fallback_q4_stichtag_unlesbar": 0,
+   "umsatz_fallback_quellen_naht": 0,
+   "umsatz_fallback_umsatz_nicht_positiv": 344,
+   "umsatz_firmen_auf_alten_quellen": 7065,
+   "umsatz_firmen_im_fallback": 989,
+   "umsatz_firmen_ohne_jede_quelle": 3019
+  }
+ }
+}
