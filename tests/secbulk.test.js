@@ -10,8 +10,12 @@
  * Usage:  node tests/secbulk.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const zlib = require('zlib');
 const zip = require('../lib/zip-stream.js');
+// baueZip stand bis 2026-08-30 hier inline. Nach tests/helpers/zip-fixture.js
+// gehoben, weil tests/sec-pit.test.js dieselbe Fixture braucht (ZIP-Schicht von
+// lib/sec-pit.js) und diese Datei sich nicht requiren laesst — sie endet mit
+// process.exit. Inhalt unveraendert uebernommen.
+const { baueZip } = require('./helpers/zip-fixture.js');
 const { baueBloecke, cikKarte } = require('../scripts/fetch-secbulk.js');
 const { extractSecSeries } = require('../merge-sec-xbrl.js');
 
@@ -19,52 +23,6 @@ let pass = 0, fail = 0;
 function check(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
-}
-
-/**
- * Baut ein gueltiges ZIP aus {name, inhalt}-Paaren. Bewusst per Hand statt mit einer
- * Bibliothek — der Test darf nicht dieselbe Annahme teilen wie der Code, den er prueft.
- */
-function baueZip(dateien, opt = {}) {
-  const lokale = [], verzeichnis = [];
-  let offset = 0;
-  for (const d of dateien) {
-    const nameBuf = Buffer.from(d.name, 'utf8');
-    const roh = Buffer.from(d.inhalt, 'utf8');
-    const gepackt = opt.gespeichert ? roh : zlib.deflateRawSync(roh);
-    const methode = opt.gespeichert ? 0 : 8;
-    // Lokaler Kopf mit einem Zusatzfeld variabler Laenge — genau die Stelle, an der ein
-    // Leser danebengreift, der die Laengen aus dem Zentralverzeichnis nimmt.
-    const zusatz = Buffer.alloc(d.zusatzLen || 0);
-    const lfh = Buffer.alloc(30);
-    lfh.writeUInt32LE(0x04034b50, 0);
-    lfh.writeUInt16LE(methode, 8);
-    lfh.writeUInt32LE(gepackt.length, 18);
-    lfh.writeUInt32LE(roh.length, 22);
-    lfh.writeUInt16LE(nameBuf.length, 26);
-    lfh.writeUInt16LE(zusatz.length, 28);
-    lokale.push(lfh, nameBuf, zusatz, gepackt);
-
-    const cdh = Buffer.alloc(46);
-    cdh.writeUInt32LE(0x02014b50, 0);
-    cdh.writeUInt16LE(methode, 10);
-    cdh.writeUInt32LE(gepackt.length, 20);
-    cdh.writeUInt32LE(roh.length, 24);
-    cdh.writeUInt16LE(nameBuf.length, 28);
-    cdh.writeUInt32LE(offset, 42);
-    verzeichnis.push(cdh, nameBuf);
-    offset += 30 + nameBuf.length + zusatz.length + gepackt.length;
-  }
-  const cdBuf = Buffer.concat(verzeichnis);
-  const eocd = Buffer.alloc(22 + (opt.kommentar || '').length);
-  eocd.writeUInt32LE(0x06054b50, 0);
-  eocd.writeUInt16LE(dateien.length, 8);
-  eocd.writeUInt16LE(dateien.length, 10);
-  eocd.writeUInt32LE(cdBuf.length, 12);
-  eocd.writeUInt32LE(offset, 16);
-  eocd.writeUInt16LE((opt.kommentar || '').length, 20);
-  if (opt.kommentar) eocd.write(opt.kommentar, 22, 'utf8');
-  return Buffer.concat([...lokale, cdBuf, eocd]);
 }
 
 const DATEIEN = [
