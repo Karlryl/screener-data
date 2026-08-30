@@ -1,0 +1,293 @@
+{
+  "schema": "studie-f3-konzeptliste/v1",
+  "protocol": "FEM-SEC-US@2.1.0",
+  "version": "2.1.0",
+  "stufe": "F3a — Konzeptliste einfrieren (Artefakt). Der Register-Eintrag 21 und der Serverbeweis sind F3b und stehen NICHT in dieser Datei.",
+  "status": "FROZEN_BEFORE_F3B_REGISTER_ENTRY",
+  "erstelltAm": "2026-08-30",
+  "eigeneVersion": {
+    "satz": "Diese Liste ist eine EIGENE Protokollversion 2.1.0 und ausdruecklich KEIN Nachtrag zu 2.0.0.",
+    "grund": "2.0.0 hat seine Konzeptbasis unter einem anderen Stand beschlossen und ist versiegelt. Eine Verbreiterung, die dort nachtraeglich eingelegt wuerde, veraenderte den Geltungsbereich eines abgeschlossenen Protokolls rueckwirkend — genau die Ergebnis-Kalibrierung, gegen die das Freeze-Geruest gebaut ist.",
+    "keinRuecketikett": "Kein unter 2.0.0 gewonnenes Ergebnis wird unter 2.1.0 als konfirmatorisch umetikettiert, und umgekehrt."
+  },
+  "herkunft": {
+    "beschluss": "F2 — Rats-Protokoll zur Konzeptwahl der Studie 2.0, beschlossen und ratifiziert am 2026-08-30",
+    "datei": "_RAT-F2-KONZEPTWAHL-2026-08-30.md",
+    "ablage": "agent-reports",
+    "sha256": "dd099f30ff2b29158d541f1817958b3ffd6bd47c391e024f1d343c9c3e1c6448",
+    "regelVorDenZahlen": {
+      "regelId": "F1-KONZEPTREGEL-Z0-Z4/2026-08-30",
+      "regelSha256": "6b3777186781084c9f0b2352aa25d5337f080afca16d2c546e5355fbcc622343",
+      "erzeugendesSkript": "scripts/studie-f1-konzeptregel.py",
+      "eingefrorenDurch": "scripts/studie-f1-freeze.py",
+      "f1FreezeSha256": "58b865592069254808348e0b6c0bbb69600dd74110613ac809050107ef7b9a66",
+      "satz": "Die Regel Z0-Z4 stand VOR den Zahlen. Die Liste unten ist ihre Ableitung, keine Wahl — sie wird hier unveraendert uebernommen."
+    }
+  },
+  "konzeptliste": [
+    {
+      "taxonomy": "us-gaap",
+      "concept": "InterestAndDividendIncomeOperating",
+      "entityKlassen": [
+        "bank"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": true
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "OilAndGasRevenue",
+      "entityKlassen": [
+        "operativ"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RealEstateRevenueNet",
+      "entityKlassen": [
+        "immobilien",
+        "reit"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    },
+    {
+      "taxonomy": "us-gaap",
+      "concept": "RegulatedAndUnregulatedOperatingRevenue",
+      "entityKlassen": [
+        "versorger"
+      ],
+      "eintrittsModus": "reiner_fallback",
+      "brutto": true,
+      "eigenesStratum": false
+    }
+  ],
+  "konzeptlisteSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+  "kontaminationsVorgeschichte": "Diese Konzeptliste entsteht in Kenntnis eines gerissenen Tors bei 89,32 % (326/365). Der Deckel von Arm (a) auf der alten Population betraegt 330/365 = 90,411 % und ist arithmetisch identisch mit der von ENTSCHIED 36 verworfenen Zahl. Dieser Deckel darf nicht mehr als Argument gefuehrt werden (A18) — weder fuer eine Beerdigung noch fuer eine Wiederbelebung von K1; beide Schluesse setzen m = 0 voraus, und m = 0 ist genau der Fall, den die Verbreiterung ausschliesst. Zulaessig bleibt allein: die Quote steigt genau dann, wenn die neu eintretende Kohorte selbst eine Reifequote ueber 89,32 % hat. Die Richtung kennt heute niemand.",
+  "kontaminationsVorgeschichteSha256": "c1f91af7f9e484f86ecb9cc8d93f020e6cfe615a27cb891dcf5a7771625ee723",
+  "hashRechenweg": {
+    "algorithmus": "SHA-256",
+    "konzeptliste": {
+      "gegenstand": "der Wert des Feldes konzeptliste dieser Datei",
+      "kanonisierung": "JSON, Schluessel sortiert, ohne Leerzeichen (separators ',' und ':'), Nicht-ASCII nicht escaped (ensure_ascii=False), Kodierung UTF-8, kein Zeilenende",
+      "python": "hashlib.sha256(json.dumps(d['konzeptliste'], sort_keys=True, separators=(',',':'), ensure_ascii=False).encode('utf-8')).hexdigest()",
+      "erwartet": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+      "bindung": "Derselbe Wert steht als konzeptlisteSha256 im F1-Regel-Bericht und als block3_konzeptlisteSha256 im F1-Freeze. Gleicher Hash = bit-identisch dieselbe Liste; jede Abweichung waere eine nachtraegliche Aenderung an der Wahl."
+    },
+    "kontaminationsVorgeschichte": {
+      "gegenstand": "der Wert des Feldes kontaminationsVorgeschichte dieser Datei, als Zeichenkette NACH dem JSON-Parsen — nicht die Bytes der Datei, damit eine Escape-Schreibweise den Hash nicht bewegt",
+      "kanonisierung": "UTF-8, kein Zeilenende, keine Kuerzung. Der Text enthaelt einen Geviertstrich (3 Bytes): 632 Zeichen, 634 Bytes.",
+      "python": "hashlib.sha256(d['kontaminationsVorgeschichte'].encode('utf-8')).hexdigest()",
+      "erwartet": "c1f91af7f9e484f86ecb9cc8d93f020e6cfe615a27cb891dcf5a7771625ee723"
+    },
+    "waechter": "tests/studie-f3-konzeptliste.test.js rechnet beide Werte aus dieser Datei nach und wird rot, wenn Text und Hash auseinanderlaufen."
+  },
+  "rangordnung": {
+    "regel": "Je Entity-Klasse gewinnt die Kennung mit der hoechsten Rettungszahl in dieser Klasse, die alle Schranken Z0-Z4 erfuellt; Gleichstand ist NICHT BERECHENBAR und erzeugt keine Auswahl.",
+    "geltungDerRangzahl": "Rang 1 gilt AUSSCHLIESSLICH unter den neuen Kennungen dieser Klasse. Jede akzeptierte Reihe der Basis steht per Eintritts-Modus (b) vor allen vier Kennungen — eine neue Kennung kann eine bestehende nie ueberholen.",
+    "jeKlasse": [
+      {
+        "klasse": "bank",
+        "rang": 1,
+        "kennung": "us-gaap:InterestAndDividendIncomeOperating",
+        "rettungenInKlasse": 653,
+        "ciksRettung": 734,
+        "z1": 0.9864,
+        "z2": 0.5506,
+        "naechsterVerfolger": null
+      },
+      {
+        "klasse": "immobilien",
+        "rang": 1,
+        "kennung": "us-gaap:RealEstateRevenueNet",
+        "rettungenInKlasse": 7,
+        "ciksRettung": 32,
+        "z1": 0.9375,
+        "z2": 0.569,
+        "naechsterVerfolger": null
+      },
+      {
+        "klasse": "operativ",
+        "rang": 1,
+        "kennung": "us-gaap:OilAndGasRevenue",
+        "rettungenInKlasse": 60,
+        "ciksRettung": 63,
+        "z1": 1.0,
+        "z2": 0.5155,
+        "naechsterVerfolger": "us-gaap:OilAndGasSalesRevenue"
+      },
+      {
+        "klasse": "reit",
+        "rang": 1,
+        "kennung": "us-gaap:RealEstateRevenueNet",
+        "rettungenInKlasse": 23,
+        "ciksRettung": 32,
+        "z1": 0.9375,
+        "z2": 0.569,
+        "naechsterVerfolger": null
+      },
+      {
+        "klasse": "versorger",
+        "rang": 1,
+        "kennung": "us-gaap:RegulatedAndUnregulatedOperatingRevenue",
+        "rettungenInKlasse": 9,
+        "ciksRettung": 10,
+        "z1": 1.0,
+        "z2": 0.5903,
+        "naechsterVerfolger": "us-gaap:OilAndGasRevenue"
+      }
+    ],
+    "klassenOhneKennung": [
+      {
+        "klasse": "biotech_pharma",
+        "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+      },
+      {
+        "klasse": "finanz_sonstige",
+        "grund": "NICHT BERECHENBAR: Gleichstand bei 1 Rettungen zwischen us-gaap:OilAndGasRevenue, us-gaap:RegulatedAndUnregulatedOperatingRevenue — nie eine Auswahl (Position P3, R)"
+      },
+      {
+        "klasse": "spac_blankcheck",
+        "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+      },
+      {
+        "klasse": "unbekannt",
+        "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+      },
+      {
+        "klasse": "versicherer",
+        "grund": "keine Kennung dieser Klasse erfuellt Z0-Z4 — ehrlicher Ausschluss mit Grund, nie Imputation, nie Miss (K10, 4:0)"
+      }
+    ],
+    "vermerk": "Klassen ohne zulaessige Kennung sind ehrliche Ausschluesse mit Grund — nie eine Datenluecke, nie imputiert (K10, 4:0)."
+  },
+  "eintrittsModus": {
+    "modus": "b_reiner_fallback",
+    "beschluss": "F2, K7-3, 3/4",
+    "regel": "Eine neue Kennung greift NUR, wenn die Firma keine akzeptierte Reihe hat.",
+    "warumNichtModusA": "Der Rueckwaerts-Kanal in Modus (a) ist im Code belegt und getestet: die Quellenwahl ordnet nach Reihenlaenge vor Rang; ein laengeres neues Konzept schaltet die Basis der Post-Signal-Stichtage um. Der Kanal ist breiter als der Bauplan sah — dieselbe Quellenwahl bestimmt auch die Signalwerte selbst und damit, WELCHES Ereignis das Erst-Ereignis ist.",
+    "preisOffenBenannt": "Firmen mit einer kurzen akzeptierten und einer langen Alternativreihe profitieren nicht. Der Rat haelt das fuer inhaltlich richtig — wer schon eine Umsatzzeile hat, ist kein Blindheitsfall.",
+    "unzulaessig": "Ein gemischter oder je-Stichtag wirkender Fallback ist UNZULAESSIG (S1, unwidersprochen)."
+  },
+  "bruttoNieNetto": {
+    "beschluss": "F2, K7-2, 4/4",
+    "regel": "Die Gesamtgroesse kommt aus EINEM Tag, das sie selbst traegt. Keine Netto-Zeile, keine selbstgebaute Summe.",
+    "gruende": [
+      "rechnerisch: netto = brutto minus Zinsaufwand, also die Differenz zweier grosser, hochkorrelierter Reihen. Der Hebel ist 1/(1-s) mit s = Aufwand/Ertrag — bei s = 0,7 also 3,3-fach. Die gemessene Beschleunigung wird mit demselben Faktor verstaerkt.",
+      "definitorisch: eine Nettogroesse kann durch null gehen oder kippen. Wachstumsraten sind dort undefiniert oder explodieren. Brutto ist strikt positiv.",
+      "mechanisch: eine selbstgebaute Summe waere fragil — der Code wirft die GANZE Quelle weg, wenn ein Bestandteil in der Firmenhistorie einmal fehlt. InterestAndDividendIncomeOperating ist bereits das Brutto-Aggregat in einem Tag."
+    ]
+  },
+  "rang4Sperre": {
+    "satz": "Zins-Teilposten sind nie Umsatz ausserhalb des Bank-/Zins-Stratums.",
+    "herkunft": "F1-Regel Z3a (Rang-4-Sperre, K7/K8), in F2 3.1 bestaetigt",
+    "muster": "InterestIncome|InvestmentIncome|InterestAndDividendIncome|InterestAndOtherIncome|InterestAndFeeIncome|DividendIncome|InterestRevenue|InterestAndDiscount",
+    "einzigeAusnahme": "us-gaap:InterestAndDividendIncomeOperating im Stratum bank — dort IST der Zinsertrag die Kopfzeile der GuV (K8).",
+    "belegAusDemBlindenInventar": "InterestAndDividendIncomeOperating traegt 653 von 734 Rettungen eine Bank; InvestmentIncomeInterest traegt 492 von 834 einen SPAC und 109 ein Biotech."
+  },
+  "bankStratum": {
+    "auflage": "Banken laufen als eigenes Stratum mit eigenem effektiven N.",
+    "surrogatNullmodell": "Fuer das Bank-Stratum wird das Surrogat-Nullmodell ueber die ZEIT block-gebootstrappt, nicht ueber Firmen.",
+    "grund": "Bei ~653 Banken ist die gemessene Umsatz-Beschleunigung mechanisch die Ableitung des Zinsniveaus — ueber die ganze Klasse gleichgerichtet. Das erzeugt Vorhersagekraft ohne jede Firmeneigenschaft und trifft Invariante 4 (effektives N) frontal: die Bankklasse ist eher eine einstellige Zahl unabhaengiger Beobachtungen als 653.",
+    "k8Bedingungen": [
+      "getrennt berichtet, getrennt gegen die Nullmodelle geprueft, getrennt in der FDR-Familie",
+      "praeregistrierte Klumpungseinheit Entity-Klasse x Signalquartal; effektives N konservativ",
+      "eigene Ereignis-/Label-Abdeckungszahl, vorab gemessen, nicht unter der des Gesamtpanels",
+      "Bank-Zinsertrag wird weder still mit operativem Produktumsatz gepoolt noch zur Reparatur des primaeren Arms benutzt"
+    ]
+  },
+  "ausschluesse": [
+    {
+      "kennung": "us-gaap:RevenueFromRelatedParties",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Bestandteil-Sperre",
+      "grund": "Bestandteil per Konstruktion (ASC-850-Angabepflicht: welcher ANTEIL kam von nahestehenden Personen). Der Lehrbuchfall gegen die Bestands-Doktrin: gewinnt die Firma externe Kunden, faellt die Related-Party-Zeile, waehrend das Geschaeft waechst — gemessenes Schrumpfen bei realem Wachstum.",
+      "vermerk": "Der Ausschluss folgt aus einem BLINDEN Grund, nicht aus einem frueheren nicht-blinden Befund."
+    },
+    {
+      "kennung": "ifrs-full:Revenue",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Taxonomie-Schranke Z4 plus technischer Blocker",
+      "gruende": [
+        "(i) nur 70 der 269 Rettungen tragen ueberhaupt Quartalsfakten (Quartalsanteil 0,13) — die Kennung vergroessert den Nenner beweisbar staerker als den Zaehler.",
+        "(ii) HARTER BLOCKER: der Einlesepfad speichert den Tag OHNE Namensraum. ifrs-full:Revenue kaeme als blankes Revenue herein und verschmoelze mit dem gleichnamigen us-gaap-Tag. Die Aufnahme waere nicht nur unwirtschaftlich, sondern aktiv gefaehrlich."
+      ]
+    },
+    {
+      "kennung": "us-gaap:InvestmentIncomeInterest",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Kassenzins",
+      "grund": "Zins auf Kassen- und Treuhandbestand. Eine SPAC mit steigenden Treuhandzinsen ist keine wachsende Firma; das Wachstum waere eine Ableitung der Zinskurve, ueber ~730 Maentel praktisch perfekt korreliert. Mechanisch zusaetzlich: rund 600 Maentel kippten in den Querschnitts-Pool der Schwellenbildung und verschoeben die Latte fuer JEDE Bestandsfirma."
+    },
+    {
+      "kennung": "us-gaap:InterestIncomeOther",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Kassenzins",
+      "grund": "wie InvestmentIncomeInterest: Zins auf Kassen- und Treuhandbestand, kein Umsatz."
+    },
+    {
+      "kennung": "us-gaap:InterestIncomeExpenseNet",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Kassenzins und netto",
+      "grund": "Zins auf Kassen- und Treuhandbestand und zusaetzlich eine Nettogroesse — beides schliesst sie aus (K7-2, brutto nie netto)."
+    },
+    {
+      "kennung": "us-gaap:NoninterestIncome",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Bestandteil-Sperre",
+      "grund": "Bestandteil neben der Zinszeile. Als Alternative gewaehlt hiesse: Bank A wird am Zinsgeschaeft gemessen, Bank B am Provisionsgeschaeft."
+    },
+    {
+      "kennung": "us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax",
+      "stimmen": "einstimmig draussen",
+      "kategorie": "Bestaetigung des heutigen Ausschlusses",
+      "grund": "heutiger Ausschluss blind bestaetigt."
+    }
+  ],
+  "scopeSatz": "IFRS-Melder sind damit keine Luecke, die wir schliessen, sondern eine Grenze des Geltungsbereichs. Das steht hier als Scope-Satz, statt stillschweigend zu passieren.",
+  "dissens": [
+    {
+      "id": "D9",
+      "gegenstand": "us-gaap:RegulatedAndUnregulatedOperatingRevenue (Versorger)",
+      "lage": "1:3 bestritten — bleibt drin.",
+      "woertlich": [
+        "S1, Dissens D9 (F1): \"die Auswahlregel muss eine Rettungs-Untergrenze tragen, die ueber 10 liegt — jede Regel mit einer Untergrenze <= 10 muss ausdruecklich als solche protokolliert und begruendet werden.\"",
+        "F2, 3.4: \"RegulatedAndUnregulatedOperatingRevenue: bleibt drin, 1:3 bestritten. Die Aufnahme folgt aus der vor den Zahlen eingefrorenen Regel (Z0: Rettungs-Untergrenze >= 10). Sie nachtraeglich zu streichen, weil drei Stimmen sie fuer unwirtschaftlich halten, waere genau die Ergebnis-Kalibrierung, gegen die das ganze Geruest gebaut ist — eine Regel aendert man vor den Zahlen oder gar nicht.\"",
+        "F2, 3.4: \"Der Dissens D9 bleibt bestehen und wird nicht geglaettet.\"",
+        "F2, 4: \"(1) RegulatedAndUnregulatedOperatingRevenue 1:3 — bleibt drin, weil die Regel vor den Zahlen stand; D9 bleibt offen, mit Messtermin vor F5b.\""
+      ],
+      "unterschreitung": {
+        "klasse": "versorger",
+        "kennung": "us-gaap:RegulatedAndUnregulatedOperatingRevenue",
+        "ciksRettung": 10,
+        "protokoll": "S1s Dissens D9 verlangt eine Untergrenze UEBER 10. Die Mehrheit laesst diese Kennung bei Rett = 10 zu; die Unterschreitung ist hiermit ausdruecklich protokolliert. Der Dissens bleibt bestehen."
+      },
+      "kippBedingung": "Zeigt die Zaehlprobe vor F5, dass die Kennung in der Studienpopulation NULL Firmen traegt, wird sie in F5b als wirkungslos vermerkt und fliegt aus der naechsten Regel-Fassung — nicht aus dieser.",
+      "messtermin": "vor dem F5b-Freeze",
+      "offen": true
+    },
+    {
+      "id": "D-K7-3",
+      "gegenstand": "Eintritts-Modus (b) als zweitbeste Loesung (Statistiker)",
+      "lage": "3/4 fuer (b); die vierte Stimme legt eine dritte Form vor.",
+      "woertlich": [
+        "F2, 3.3: \"Modus (b) verzichtet auf den effizientesten Kanal. Eine Klasse-A-Umwandlung bewegt das Tor 0,274 Punkte, ueber Neueintritte allein braeuchte es je nach Reifequote 31 bis 62 Firmen. Sein Vorschlag statt der Modus-Frage: eine monotone Auswahlregel — je Firma gewinnt die quellenreine Reihe mit der laengsten zusammenhaengenden Abdeckung im Fenster [Signal-k, Signal+m], entschieden allein aus Datenverfuegbarkeit, nie aus Ergebniswerten.\""
+      ],
+      "standF3a": "NICHT beschlossen — sie braucht einen neuen Praereg-Text und eine ausdrueckliche Selektion-auf-Verfuegbarkeit, die das Nullmodell mittragen muss. Wiedervorlage: vor F5b, nicht spaeter.",
+      "messtermin": "vor F5b",
+      "offen": true
+    }
+  ],
+  "wasF3aNichtTut": [
+    "kein Eintrag in outcome-access-ledger.json — Register-Eintrag 21 ist F3b (Ein-Appender-Regel, ausfuehrbarer Waechter seit PR #115/#124)",
+    "kein Serverbeweis-Schritt (scripts/studie-r1-serverzeit.js) — F3b",
+    "kein Zugriff auf Studiendaten, Lueckenliste, E4g-/E4h-Zahlen, Panel-Dateien, data/lockbox oder den versiegelten Endtest — F3 ist eine BLINDE Stufe",
+    "keine Aenderung an 2.0.0, an src/scoring oder an tests/scoring",
+    "keine Zaehlprobe: die Wirkung der Verbreiterung wird hier NICHT gemessen"
+  ]
+}
