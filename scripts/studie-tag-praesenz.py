@@ -61,6 +61,18 @@ ALT = (
 )
 
 
+# Pflicht-Fussnote fuer jedes Artefakt eines unversiegelten Werkzeugs zu diesem
+# Fenster (Anordnung des Orchestrators, einheitlicher Wortlaut). Sie steht hier
+# WOERTLICH und wird nie umformuliert: der Satz ist der Gegenstand der Auflage,
+# nicht seine Aussage. In versiegelte Ausgaben wird nichts injiziert.
+FUSSNOTE = (
+    "Quellen-Asymmetrie: Im Entdeckungs-Fenster (bis 2016-12-30) trägt "
+    "RevenueFromContractWithCustomerExcludingAssessedTax konstruktionsbedingt 0 Zeilen "
+    "(ASC 606 ab 2018); die V0-Umsatzfamilie ruht hier faktisch auf drei ihrer vier "
+    "Quellen. Jeder fensterübergreifende Vergleich muss diese Asymmetrie ausweisen."
+)
+
+
 class Abbruch(Exception):
     pass
 
@@ -124,6 +136,7 @@ def messe(panel_pfad):
         "altV0": alt,
         "verbreiterteOhneZeile": ohne_zeile,
         "kippBedingungGetroffen": bool(ohne_zeile),
+        "quellenAsymmetrie": FUSSNOTE,
     }
 
 
@@ -168,6 +181,10 @@ def selbsttest():
               "verschiedene Firmen werden ueber den Bericht aufgeloest")
         pruef(erg["altV0"]["Revenues"]["berichte"] == 2,
               "die alte Vergleichsgroesse wird im selben Lauf gemessen")
+        pruef(erg.get("quellenAsymmetrie") == FUSSNOTE,
+              "die Pflicht-Fussnote steht WOERTLICH im Artefakt")
+        pruef("ASC 606 ab 2018" in erg.get("quellenAsymmetrie", ""),
+              "und sie traegt den Grund, nicht nur die Behauptung")
 
         # Gegenprobe: liegt die vierte Kennung vor, ist die Bedingung NICHT getroffen.
         verb = sqlite3.connect(pfad)
