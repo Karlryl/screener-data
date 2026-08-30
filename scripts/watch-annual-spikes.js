@@ -218,8 +218,11 @@ function basisGueltig(basis, anzahlSnapshots) {
       grund: `Der Ausreisser-Bestand ist UNGUELTIG, nicht die Funde: aufgenommen auf ${beiAufnahme} `
         + `Snapshots, dieser Lauf hat ${anzahlSnapshots} (${(abweichung * 100).toFixed(0)} % Abweichung). `
         + 'Ein Bestand aus einer anderen Population kann nicht sagen, was neu ist. Heilung: '
-        + '"node scripts/watch-annual-spikes.js --neu-aufnehmen" IM CI laufen lassen (nie lokal — '
-        + 'snapshots/ ist gitignored und lokal nur Schutt alter Laeufe).',
+        + '"node scripts/watch-annual-spikes.js --neu-aufnehmen" gegen eine CI-POPULATION laufen '
+        + 'lassen — im CI oder lokal gegen ein heruntergeladenes CI-Artefakt '
+        + '("gh run download <RUN_ID> -n snapshots -D snapshots"); NIEMALS gegen das lokale '
+        + 'snapshots/ (gitignored, nur Schutt alter Laeufe). Danach PFLICHT: derselbe Befehl OHNE '
+        + 'Flag gegen dieselbe Population — der Verankerungslauf prueft sich selbst nicht.',
     };
   }
   return { ok: true, grund: '' };
@@ -372,7 +375,15 @@ function main() {
       + 'Ist das Vorzeichen gedreht, kann eine Strafe entstehen, die die Lampe nicht anzeigt. Liste oben.');
   }
 
-  // Bewusstes Neuaufnehmen: NUR im CI sinnvoll (siehe Populations-Wache unten).
+  // Bewusstes Neuaufnehmen: NUR gegen eine CI-POPULATION sinnvoll (siehe Populations-Wache
+  // unten) — im CI oder lokal gegen ein heruntergeladenes CI-Artefakt, niemals gegen das
+  // lokale snapshots/. Entschiedener Weg seit 30.08.2026 (ENTSCHIED 113 / RA6): Einmal-Akt
+  // LOKAL gegen das Artefakt, Commit durch den Ausfuehrenden — der CI-Job hat bewusst
+  // keinen Commit-Schritt (ENTSCHIED 12:40 vom 29.08.).
+  // ⚠ DIESER ZWEIG PRUEFT NICHTS: das `return datenExit` unten kehrt VOR der
+  // Populations-Wache und VOR beiden Ausreisser-Toren zurueck. Deshalb ist ein
+  // flagfreier Kontrolllauf gegen dieselbe Population PFLICHT (RA8), bevor der
+  // Verankerungs-Commit gilt.
   if (process.argv.includes('--neu-aufnehmen')) {
     const neuerBestand = baueNeuenBestand(basis, funde, scan.gescannt);
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
