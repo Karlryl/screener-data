@@ -1338,6 +1338,31 @@ function run(argv) {
     return 1;
   }
 
+  // A5-INTEGRITAETS-RIEGEL — ein unlesbares MAILAENDER Bein bricht den Lauf ab.
+  //
+  // WARUM DAS KEIN "zweiter Hardstop" IM SINNE VON FX17 IST: FX17 verbietet einen zweiten harten
+  // Abbruch auf die A5-MENGE — auf eine Zahl also, die in einer Wetter-Population driftet und zum
+  // Hochdrehen einlaedt. Dieser Riegel haengt an keiner Zahl, sondern an der Datenintegritaet des
+  // A5-Index, und er deckt genau die Luecke, die A7 STRUKTURELL NICHT SEHEN KANN:
+  //   - Ist ein KANDIDATEN-Bein unlesbar, faellt `geplanteBeine` unter 18 und A7 oben bricht
+  //     bereits ab. Dieser Fall kommt hier gar nicht mehr an.
+  //   - Ist eines der ~857 uebrigen Mailaender Beine unlesbar, bewegt sich KEINE Zaehlgroesse:
+  //     das Bein faellt per `if (!b || …) continue` (fail-OPEN) aus dem Mehrdeutigkeits-Index,
+  //     `mehrfachAbdruecke` schrumpft, und eine Klasse, die als 'mehrdeutig' haette scheitern
+  //     muessen, wird umbenannt. Gemessen am Fixture: mit drei lesbaren Beinen greift A5
+  //     (`mehrfachAbdruecke.size` 1, Urteil 'mehrdeutig'); verliert das zweite Mailaender Bein
+  //     seinen Kurs, steht es zwar im Ausweis, aber die Menge faellt auf 0 und die Klasse WIRD
+  //     umbenannt. Der Ausweis (FX4) macht den Kanal sichtbar — er schliesst ihn nicht.
+  //
+  // Die Fehlerrichtung ist die teuerste, die dieses Modul kennt: eine Fehlverschmelzung loescht
+  // eine echte Firma, ein Abbruch kostet einen Board-Tag. Deshalb dieselbe Haltung wie A7:
+  // hart, VOR jeder Mutation, kein Bein wird angefasst.
+  const milanBeineUnlesbar = milan.lesefehler.filter((f) => MILAN_SPIEGEL.test(f.ticker));
+  if (milanBeineUnlesbar.length) {
+    console.error(`::error::U3-Milan — A5-Integritaet gerissen: ${milanBeineUnlesbar.length} Mailaender Bein(e) nicht auswertbar (${milanBeineUnlesbar.map((f) => f.ticker).join(', ')}). Kein Bein wurde angefasst. Ein unlesbares Mailaender Bein faellt fail-OPEN aus dem A5-Mehrdeutigkeits-Index; eine Klasse, die als 'mehrdeutig' haette scheitern muessen, wuerde still umbenannt — und eine Fehlverschmelzung loescht eine echte Firma. Erst die Datei reparieren oder ihren fehlenden \`meta.fxRateApplied\` klaeren, dann erneut laufen. NICHT die Kandidatenliste neu vorlegen: die Population ist unveraendert.`);
+    return 1;
+  }
+
   const milanGeschrieben = milanSchreiben(ziel, milanPlan);
   if (milanGeschrieben.unschreibbar > 0) {
     console.error(`::error::U3-Milan — ${milanGeschrieben.unschreibbar} von ${milanPlan.size} beschlossenen Umbenennungen sind nicht geschrieben worden. Der Bestand ist halb vereinheitlicht; Stop statt eines Boards auf halbem Stand.`);

@@ -535,8 +535,11 @@ test('A7-FX / A5: ein unlesbares Mailaender Bein laesst eine Klasse NICHT aus "m
   assert.deepEqual(blind.lesefehler.map((f) => f.ticker), ['1ZUS.MI'],
     'der Wegfall MUSS im Ausweis stehen — sonst passiert die Klasse leise');
   assert.equal(blind.mehrfachAbdruecke.size, 0, 'Vorbedingung: A5 greift jetzt wirklich nicht mehr');
-  assert.ok(blind.lesefehler.length > 0,
-    'FX4: genau dieser Zaehler steht in der Gruen-Pfad-Logzeile und macht den Kanal sichtbar');
+  // UND GENAU DESHALB REICHT DER AUSWEIS NICHT: die Klasse wuerde jetzt umbenannt. Der Ausweis
+  // macht den Kanal sichtbar, er schliesst ihn nicht — das schliesst erst der
+  // A5-Integritaets-Riegel im Prozess (naechster Test).
+  assert.equal(milanUmbenennungen(blind.klassen, blind.mehrfachAbdruecke).urteile[0].grund, 'umbenennen',
+    'die Luecke ist real: ohne Riegel wuerde die vorher blockierte Klasse umbenannt');
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
@@ -689,6 +692,55 @@ test('A7 am Prozess: alle Anker-Dateien DA, aber unlesbar -> Riegel feuert (FEHL
   assert.match(ausgabe, /Mengen-Riegel gerissen/);
   assert.match(ausgabe, /Kandidaten-Datei\(en\) waren nicht auswertbar/, 'der Grund muss in der Abbruch-Meldung stehen');
   assert.match(ausgabe, /::warning::U3-Milan — .*nicht auswertbar/, 'jede unlesbare Datei faellt einzeln auf');
+});
+
+/**
+ * Baut ALLE 17 eingefrorenen Klassen so, dass der Mengen-Riegel bei genau 18/17 GRUEN ist.
+ * Jede Klasse bekommt eine eigene Basis, damit kein Abdruck doppelt vorkommt (sonst 'mehrdeutig').
+ * Das Partner-Bein traegt einen Platzhalternamen, damit das Mailaender Bein den Namen stellt.
+ */
+function alleKandidatenDateien() {
+  const aus = [];
+  MILAN_KANDIDATEN.forEach((k, i) => {
+    const opt = { shares: 1000000, basis: 1000 + i * 7 };
+    aus.push([k.anker, `Emittent ${i} AG`, opt]);
+    for (const p of k.partner) aus.push([p, p, opt]);
+  });
+  return aus;
+}
+
+test('A5-INTEGRITAET am Prozess: ein unlesbares Mailaender Bein bricht HART ab, obwohl A7 gruen ist', () => {
+  // Die Luecke, die A7 STRUKTURELL nicht sehen kann: das kaputte Bein ist KEIN Kandidat, also
+  // bewegt sich keine Zaehlgroesse — 18/17 stimmt weiterhin. Trotzdem ist der A5-Index jetzt
+  // lueckenhaft (fail-OPEN), und eine Klasse koennte still fehlverschmelzen.
+  // Vorprobe: ohne das kaputte Bein laeuft derselbe Bestand SAUBER DURCH (Exit 0) — nur so ist
+  // bewiesen, dass der Abbruch unten wirklich am kaputten Bein haengt und nicht an der Menge.
+  const sauber = lauf([...fueller(120), ...alleKandidatenDateien()]);
+  assert.equal(sauber.code, 0, 'Vorprobe: 18/17 muss gruen durchlaufen. Ausgabe:\n' + sauber.ausgabe);
+  assert.match(sauber.ausgabe, /18 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
+
+  // Jetzt dasselbe, plus EIN unlesbares Mailaender Bein ausserhalb der Kandidatenliste.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien(),
+    ['1KAPUTT.MI', 'Kaputt AG', { shares: 1000, basis: 999999, ohneFx: true }],
+  ]);
+  assert.equal(r.code, 1, 'ein unlesbares Mailaender Bein muss hart abbrechen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /::error::U3-Milan — A5-Integritaet gerissen: 1 Mailaender Bein\(e\) nicht auswertbar \(1KAPUTT\.MI\)/);
+  assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
+  assert.doesNotMatch(r.ausgabe, /Mengen-Riegel gerissen/,
+    'A7 ist hier GRUEN — der Abbruch kommt nachweislich vom A5-Riegel, nicht vom Mengen-Riegel');
+  assert.doesNotMatch(r.ausgabe, /Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/,
+    'der Abbruch liegt VOR dem Schreiben');
+});
+
+test('A5-INTEGRITAET: ein unlesbares NICHT-Mailaender Bein bricht NICHT ab', () => {
+  // Gegenrichtung, damit der Riegel nicht einfach "jeder Lesefehler bricht ab" ist: ein
+  // kaputtes Bein ohne Mailaender Suffix beruehrt den A5-Index nicht und darf den Lauf nicht
+  // kosten. Ohne diese Probe waere der Riegel viel zu breit und niemand haette es gemerkt.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien(),
+    ['XKAPUTT', 'Kaputt AG', { shares: 1000, basis: 999999, ohneFx: true }],
+  ]);
+  assert.equal(r.code, 0, 'ein Nicht-Mailaender Lesefehler ist kein A5-Problem. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /18 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
 });
 
 test('A7 am Prozess: ohne jedes Anker-Bein laeuft der Filter durch (anderes Universum, nicht Drift)', () => {
