@@ -134,6 +134,52 @@ function istPlatzhalter(name, ...kennungen) {
  *      (`score.js`): `localeCompare` haengt an der OS-Locale und wuerde CI gegen lokal
  *      auseinanderlaufen lassen. Erreichbar nur bei gleich langen, verschiedenen Namen —
  *      gleiche Namen kommen wegen der Schluessel-Vorpruefung gar nicht bis hierher.
+ *
+ * ══════════════════════════════════════════════════════════════════════════════════════
+ * ⚠ M6 — BAUFORM-VORENTSCHEID FUER DIE KUENFTIGE G2-ENTSCHEIDUNG. OHNE VOLLZUG.
+ * `_COURT-M10-2026-08-30.md` (ENTSCHIED 126), Auflage M6. HEUTE WIRD HIER NICHTS GEAENDERT —
+ * dieser Block ist Dokumentation, kein Bau. Er steht hier und nicht in einem Urteil, weil der
+ * naechste Bauende HIER hinsieht.
+ *
+ * FAELLT die G2-Entscheidung, lautet sie: ein HERKUNFTS-KRITERIUM IN DIESER FUNKTION — bei
+ * gleichem Platzhalter-Rang schlaegt ein Bein mit `nameSource !== 'watchlist'` eines mit
+ * `'watchlist'`. Ausdruecklich NICHT das Abschalten des Schreibers weiter unten
+ * (`wendeWurzelZwillingeAn`): der ist die RATIFIZIERTE U2-Heilung (ENTSCHIED 21), nicht der
+ * allgemeine Aufpraege-Kanal, den die Akte dort vermutete (Urteil §3 K-4). Der zweite
+ * Schreiber (`milanSchreiben`, U3-Milan) ist N1 und unantastbar.
+ *
+ * WARUM DIE FRAGE UEBERHAUPT AN DIESER FUNKTION HAENGT: `besseresBein` kennt die HERKUNFT des
+ * Namens nicht. Ein Watchlist-Name kann hier gewinnen und eine Verschmelzung ERZWINGEN — der
+ * Befund der Akte gilt, nur schmaler als dort beschrieben (nur `.BO`/`.NS`-Zwillinge, nur wo
+ * `issuerKeyLoose` heute noch verschieden ist).
+ *
+ * AUSLOESUNG AUSSCHLIESSLICH durch die M1-Messung (data-health/namensherkunft-history.json)
+ * plus Orchestrator-Entscheid. Die Schwellen sind im Urteil §8 VORAB festgelegt und duerfen
+ * NICHT nachtraeglich ans Ergebnis angepasst werden:
+ *   Bucket `fehlt` <= 5 %                      ⇒ die echte Klassengroesse liegt ueberhaupt vor
+ *   watchlist-benannte Sieger deutlich > ~500  ⇒ M6 wird vollzogen
+ *   unter ~1.500                               ⇒ G2 sinkt endgueltig auf ein Einzelfall-Ventil
+ * Vorzeitig: tritt ein ZWEITER belegter Fall der `MRK.SW`-Klasse auf, wird M6 sofort und ohne
+ * die volle Messung gezogen.
+ *
+ * IM EREIGNISFALL gehoert dazu ein DRITTER Fall in `tests/u2-wurzelzwillinge.test.js` — ein
+ * WL-benanntes Bein verliert gegen ein feed-benanntes bei gleichem Platzhalter-Rang —, einmal
+ * absichtlich gebrochen, und beide bestehenden Wachrichtungen bleiben gruen.
+ *
+ * ⛔ M7 — G2-a WIRD NICHT VOLLZOGEN UND IST IN DIESER VORSTUFE NICHT VOLLZIEHBAR.
+ * Befund K-3 des Urteils, am Code gelesen: `issuerDedupComparator` (`src/scoring/score.js`)
+ * sortiert nach US-Primaerlisting, US-Domizil, FX-Verdacht, Marktkapitalisierung und Ticker.
+ * KEIN NAMENSBEZUG. Der Name wirkt ausschliesslich ueber `issuerKeyLoose` auf die
+ * GRUPPENBILDUNG: er entscheidet die ZUGEHOERIGKEIT, nie den SIEG. `MRK.SW` gewann seine
+ * Gruppe wegen der fremden Marktkapitalisierung, nicht wegen des fremden Namens — der Name
+ * hat die Zeile nur HINEINGETRAGEN.
+ * Folge: wer ein Bein am SIEGEN hindern will, braucht entweder den versiegelten Komparator
+ * (N8) oder eine Namens-Ueberschreibung (G7-a, 3:0 dauerhaft verboten). Beide Wege sind zu.
+ * WER ES DENNOCH VORBEREITET: STOPP, zurueck ans Gericht.
+ * Die Zahl „984 Sieger / 1.254 Beine" ist eine BESCHREIBUNG, kein Hebel — sie beschreibt, wer
+ * gewonnen hat, nicht warum. Sie darf in keiner kuenftigen Vorlage als Preisschild fuer G2-a
+ * auftreten. Waechter fuer die Premisse: tests/m10-namensherkunft-zaehler.test.js.
+ * ══════════════════════════════════════════════════════════════════════════════════════
  */
 function besseresBein(a, b) {
   const rang = (s) => (istPlatzhalter(s.name, s.ticker, s.metaTicker) ? 0 : 1);
@@ -632,20 +678,126 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
  *
  * Fail-closed geladen wie das NAV-Register: eine kaputte Datei stoppt den Lauf, statt ihn ohne
  * Register weiterlaufen zu lassen.
+ *
+ * ══ M17 (_COURT-M10-2026-08-30, G6 3:0) — DIE AUFNAHMESCHWELLE WIRD MASCHINELL GEHAERTET ══
+ * REIHENFOLGE-AUFLAGE: diese Haertung kommt VOR dem Identitaets-Tripwire, nicht danach. Grund
+ * ist nicht Vorsicht, sondern Arithmetik (Urteil §2 zu G6): der schaerfste bisherige Riegel war
+ * ein Test, der das Register LEER verlangt — eine Bedingung mit eingebautem Verfallsdatum, die
+ * am Tag des ersten Eintrags zwangslaeufig faellt. Eine zuverlaessig feuernde Lampe vor einer
+ * weichen Schwelle ist ein Trichter.
+ *
+ * VERIFIZIERT WEICH, nicht vermutet weich (Urteil §3 K-8): bis hierher war `beleg` ein FREIER
+ * STRING. `{ beleg: 'Messung X' }` und sogar `{ "beleg": "klar" }` luden sauber durch —
+ * geprueft wurden Typen, Dubletten und Mehrfach-Ticker, nie der Inhalt.
+ *
+ * (a) `beleg` IST JETZT STRUKTURIERT und die zitierte Berichtsdatei muss IM REPO EXISTIEREN.
+ *     Ein Beleg, den die CI nicht oeffnen kann, ist keiner. Das schliesst Vault-Pfade
+ *     (`agent-reports/...`) bewusst aus: wer eine echte Firma vom Board nehmen will, legt die
+ *     Messung dorthin, wo jeder Leser sie findet.
+ *     ⚠ SELBST-GEGENREDE, ausdruecklich (Urteil M17): die Existenzpruefung mechanisiert die
+ *     ZITIERPFLICHT, nicht den BEWEIS. B3(i) verlangt einen Negativbeweis ueber den vollen
+ *     Bestand — den kann kein Lader pruefen. Sie hebt die Schwelle, sie ersetzt sie nicht.
+ * (b) D-A — ABLAUFDATUM JE EINTRAG, FAIL-CLOSED. Ein Identitaets-Eintrag verschmilzt
+ *     Emittenten; er darf nicht als Dauerzustand einschlafen. Abgelaufen heisst hier hart
+ *     Abbruch (anders als die Quarantaene, die nur warnt): die Quarantaene VERWIRFT eine
+ *     bewiesen vergiftete Zeile und schuetzt auch ueberfaellig korrekt weiter — dieses
+ *     Register FUEHRT ZUSAMMEN, und eine ueberfaellige Zusammenfuehrung schuetzt niemanden.
+ * (c) D-D (Zaehler-Anker) sitzt im Waechter, nicht hier: tests/u3-milan-spiegel.test.js pinnt
+ *     `IDENTITAETS_REGISTER_ANKER` nach dem Muster des A7-Mengen-Riegels.
+ *
+ * M13 (3:0): REIHEN-GLEICHHEIT IST MELDUNG, NIE BEGRUENDUNG. Anker B (geteilte Umsatzreihe)
+ * darf in keinem Eintrag der alleinige Beleg sein — bei Zweitnotierungen ist die geteilte
+ * Reihe der Normalfall und beweist NICHTS (Produktionstext in data-health/quarantine.json).
+ * ⚠ Die Pruefung haengt an der SELBSTAUSKUNFT `beleg.anker`; wer das Feld weglaesst, kommt an
+ * ihr vorbei. Sie ist ein Gelaender, kein Schloss — das Schloss ist B3(i) plus M18.
  */
-function ladeIdentitaetsRegister(registerPfad) {
+const IDENTITAETS_BELEG_PFLICHTFELDER = ['bericht', 'abschnitt', 'gemessenAm'];
+
+/**
+ * KALENDER-ECHT, nicht nur formatrichtig (Review-Fund 30.08.).
+ *
+ * Eine reine Formatpruefung `/^\d{4}-\d{2}-\d{2}$/` liess `"2026-13-45"` durch. Der D-A-Ablauf
+ * vergleicht danach LEXIKOGRAFISCH — und `'2026-13-45' < '2026-08-30'` ist FALSE. Ein Eintrag
+ * mit einem Unsinnsdatum waere also nie abgelaufen: ein fail-OPEN mitten in dem einzigen
+ * Register, das ausdruecklich fail-closed sein muss. Reproduziert.
+ *
+ * `Date.UTC` + Rueckvergleich faengt den Monats-/Tagesueberlauf, den JS sonst still weiterrollt
+ * (aus dem 31.02. wird der 03.03.).
+ */
+const IST_ISO_DATUM = (s) => {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [j, m, t] = s.split('-').map(Number);
+  const d = new Date(Date.UTC(j, m - 1, t));
+  return d.getUTCFullYear() === j && d.getUTCMonth() === m - 1 && d.getUTCDate() === t;
+};
+
+/**
+ * M17c (D-D) — DER ZAEHLER-ANKER, Nachfolger des Leer-Tests.
+ *
+ * Der bisherige Riegel war `REGISTER B2`: "die ausgelieferte Datei laedt und ist LEER". Er ist
+ * strukturell wirksam, solange er steht — und er faellt ZWANGSLAEUFIG am Tag des ersten
+ * Eintrags. Ein Riegel mit eingebautem Verfallsdatum ist keine Absicherung, sondern ein
+ * Countdown (Urteil §2 zu G6).
+ *
+ * Gleiche Bauform wie MILAN_ERWARTETE_BEINE/-GRUPPEN (A7): die Zusage lautet nicht mehr
+ * "leer", sondern "GENAU DIESE Zahl". 0 ist heute der Sollwert; ein erster Eintrag hebt ihn —
+ * aber nur zusammen mit einer bewussten Aenderung DIESER Zeile, in demselben Diff, unter
+ * denselben Augen. Genau das ist der Unterschied zu einem Riegel, der sich selbst aufloest.
+ *
+ * WER DIESE ZAHL HEBEN DARF: der Rat (N5). Der Anspruchstyp "A und B sind derselbe Emittent"
+ * ist ratspflichtig; dieses Register wird nicht vom Executor befuellt.
+ */
+const IDENTITAETS_REGISTER_ANKER = 0;
+
+function ladeIdentitaetsRegister(registerPfad, heute, repoWurzel = path.join(__dirname, '..')) {
   let roh;
   try { roh = JSON.parse(fs.readFileSync(registerPfad, 'utf8')); }
   catch (e) { throw new Error(`${registerPfad}: ${e.message}`); }
   if (!roh || typeof roh !== 'object' || Array.isArray(roh)) throw new Error(`${registerPfad}: Wurzel muss ein Objekt sein`);
   const eintraege = roh.eintraege;
   if (!Array.isArray(eintraege)) throw new Error(`${registerPfad}: Feld 'eintraege' muss ein Array sein`);
+  // Ohne Datum kann D-A nicht pruefen — und ein Ablauf, der bei fehlendem Datum stillschweigend
+  // durchlaesst, ist genau die Bauform, die dieses Register nicht haben darf.
+  const heuteTag = String(heute || '').slice(0, 10);
+  if (!IST_ISO_DATUM(heuteTag)) throw new Error(`${registerPfad}: kein brauchbares Datum uebergeben (${heute}); D-A kann nicht pruefen`);
   const ids = new Set();
   const belegteTicker = new Map();
   for (const [i, e] of eintraege.entries()) {
     if (!e || typeof e !== 'object' || Array.isArray(e)) throw new Error(`${registerPfad}: Eintrag ${i} ist kein Objekt`);
-    for (const feld of ['kanonisch', 'beleg', 'aufgenommen']) {
+    for (const feld of ['kanonisch', 'aufgenommen']) {
       if (typeof e[feld] !== 'string' || !e[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld ${feld} fehlt/ist leer`);
+    }
+    // ── M17a: strukturierter Beleg mit Existenzpruefung ──────────────────────────────────
+    if (!e.beleg || typeof e.beleg !== 'object' || Array.isArray(e.beleg)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, 'beleg' muss ein Objekt sein { ${IDENTITAETS_BELEG_PFLICHTFELDER.join(', ')} } — ein freier String ist seit M17a kein Beleg mehr`);
+    }
+    for (const feld of IDENTITAETS_BELEG_PFLICHTFELDER) {
+      if (typeof e.beleg[feld] !== 'string' || !e.beleg[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld beleg.${feld} fehlt/ist leer`);
+    }
+    if (!IST_ISO_DATUM(e.beleg.gemessenAm)) throw new Error(`${registerPfad}: Eintrag ${i}, beleg.gemessenAm muss JJJJ-MM-TT sein (ist "${e.beleg.gemessenAm}")`);
+    const berichtRel = e.beleg.bericht.trim();
+    const berichtAbs = path.resolve(repoWurzel, berichtRel);
+    if (path.isAbsolute(berichtRel) || !berichtAbs.startsWith(path.resolve(repoWurzel) + path.sep)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, beleg.bericht muss ein Pfad INNERHALB des Repos sein (ist "${berichtRel}")`);
+    }
+    if (!fs.existsSync(berichtAbs)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, beleg.bericht "${berichtRel}" existiert nicht im Repo. Ein Beleg, den die CI nicht oeffnen kann, ist keiner — die Messung gehoert nach reports/ oder data-health/, nicht in den Vault`);
+    }
+    // ── M13: Anker B darf nie der ALLEINIGE Beleg sein ───────────────────────────────────
+    if (e.beleg.anker !== undefined) {
+      if (!Array.isArray(e.beleg.anker) || e.beleg.anker.some((a) => typeof a !== 'string' || !a.trim())) {
+        throw new Error(`${registerPfad}: Eintrag ${i}, beleg.anker muss eine Liste nicht-leerer Bezeichner sein`);
+      }
+      if (e.beleg.anker.length && e.beleg.anker.every((a) => a.trim().toUpperCase() === 'B')) {
+        throw new Error(`${registerPfad}: Eintrag ${i} nennt ausschliesslich Anker B als Beleg. Reihen-Gleichheit ist MELDUNG, nie BEGRUENDUNG (Auflage M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall und beweist NICHTS`);
+      }
+    }
+    // ── M17b (D-A): Ablaufdatum, fail-closed ─────────────────────────────────────────────
+    if (typeof e.gueltigBis !== 'string' || !IST_ISO_DATUM(e.gueltigBis)) {
+      throw new Error(`${registerPfad}: Eintrag ${i}, 'gueltigBis' fehlt oder ist kein JJJJ-MM-TT (D-A, fail-closed): ein Identitaets-Eintrag darf nicht als Dauerzustand einschlafen`);
+    }
+    if (e.gueltigBis < heuteTag) {
+      throw new Error(`${registerPfad}: Eintrag ${i} (${e.kanonisch}) ist seit ${e.gueltigBis} abgelaufen (heute ${heuteTag}). Stop: eine ueberfaellige Zusammenfuehrung schuetzt niemanden. Eintrag neu belegen oder austragen`);
     }
     if (!Array.isArray(e.mitglieder) || e.mitglieder.length < 2
       || e.mitglieder.some((t) => typeof t !== 'string' || !t.trim())) {
@@ -1070,6 +1222,26 @@ function namensherkunftSchreiben(pfad, datum, eintrag) {
  * Entscheidungstag (G2, Urteil §8) liegt damit nicht nur eine Zahl vor, sondern die pruefbare
  * Liste — und genau das ist der Unterschied zwischen "es gibt die Klasse" und "hier ist sie".
  */
+/**
+ * M5, Nachlese-Halbteil: die Herkunft des SIEGER-Beins einer U3-Milan-Umbenennung. REIN
+ * LESEND — `milanSchreiben`/U3 ist N1 und wird nicht angefasst (Urteil §7); der Sieger wird
+ * von keiner Stufe umgeschrieben, sein `nameSource` ist also unveraendert.
+ *
+ * EIGENE FUNKTION, damit die Unterscheidung pruefbar ist (Review-Fund 30.08., MEDIUM): NICHT
+ * LESBAR ist nicht KEINE HERKUNFT. Vorher landeten beide Lagen im Bucket `fehlt`, und ein
+ * systemischer Lesefehler war von einem Tag ohne watchlist-benannte Sieger nicht zu
+ * unterscheiden — dieselbe Verwechslung, die dieselbe Datei an drei anderen Stellen
+ * ausdruecklich vermeidet.
+ */
+function siegerHerkunftNachlesen(ziel, ticker) {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(ziel, safeSnapshotFilename(ticker)), 'utf8'));
+    return { herkunft: j && j.meta ? j.meta.nameSource : undefined, unlesbar: false };
+  } catch (e) {
+    return { herkunft: '(unlesbar)', unlesbar: true, grund: e && e.message ? e.message : String(e) };
+  }
+}
+
 function umbenennungsProtokoll(eintraege) {
   const jeHerkunft = {};
   const watchlistFaelle = [];
@@ -1080,6 +1252,262 @@ function umbenennungsProtokoll(eintraege) {
   }
   return { gesamt: (eintraege || []).length, jeHerkunft, watchlistFaelle: watchlistFaelle.sort() };
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════
+ * M10 / M8-M16 — DER IDENTITAETS-TRIPWIRE (Anker A + B), MELDEND
+ * Urteil: `_COURT-M10-2026-08-30.md` (ENTSCHIED 126), Auflagen M8, M9, M10, M11, M12, M14, M15.
+ *
+ * ⚠ DIE ABGRENZUNGSFORMEL, WOERTLICH BESCHLOSSEN (M16, G6 3:0) — sie steht hier und im
+ * `_doku` von data-health/issuer-identity.json:
+ *
+ *   „Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser
+ *    Erkennung bleibt bis zu einem eigenen Gericht gesperrt."
+ *
+ * DIESER BAUSTEIN SCHREIBT EINE ZEILE IN EINEN BERICHT. Er faellt keine Zeile, er verschmilzt
+ * keine, er benennt keine um, er faerbt den Lauf nicht und er aendert den Exit-Code nicht.
+ * Das ist der ganze Unterschied zum 2:1 GESPERRTEN Voll-Tor (A11/c1): jenes praegt einen Namen
+ * auf und ERZEUGT eine Verschmelzung, dieses meldet. Fehlerrichtung dort: eine echte Firma
+ * verschwindet. Hier: ein Fehlalarm kostet einen Blick.
+ *
+ * MESSEBENE — VOR DEN UMBENENNUNGS-STUFEN, und das ist der Kern der Auflage (Urteil §3.2, §5).
+ * P1 (der Monatszensus) misst HINTER der Vorstufe: die behandelten Klassen tragen dort bereits
+ * den vereinheitlichten Namen, sind also nicht mehr divergent und koennen nie meldepflichtig
+ * werden — ein wirksamer Eingriff loescht seine eigene Klasse aus der Spur. Deshalb liest
+ * dieser Baustein den Bestand DIREKT NACH DEM KOPIEREN, und meldet erst ganz am Schluss. Die
+ * Vorstufe weist ihre eigenen Umbenennungen wie bisher aus; beides zusammen ergibt das
+ * Vorher/Nachher.
+ *
+ * FAIL-OPEN, ABER NICHT STILL (M8 + Kanzler-Zusatz). Praezedenz: eine Vorstufen-Reihenfolge hat
+ * in dieser Datei schon einmal einen harten Tageslauf-Abbruch verursacht; ein Wurf im neuen
+ * Baustein kostet dann die Tagesfrische ALLER ~15.000 Zeilen — verursacht von einer Lampe ohne
+ * Datenwirkung. Also wird jeder Wurf gefangen. Aber eine still ausfallende Lampe ist keine
+ * Lampe: die Degradation nennt den ausgefallenen Anker beim Namen.
+ *
+ * 🔒 M15 — F-16-STOPP-KLAUSEL, WOERTLICH VERFUEGT. Die Anker vergleichen Zeilen verschiedener
+ * Handelsplaetze AUSSCHLIESSLICH ueber Aktienzahlen, Umsatzreihen und Namensschluessel. KEINE
+ * Listing-Waehrungs-Logik, KEINE Waehrungs-Umrechnungsregel, KEINE Boersen-Identitaet je Firma,
+ * KEIN `exchanges[]`. Wird eines davon gebraucht: SOFORT STOPP, zurueck unter die Sperre,
+ * Wiedervorlage Ende Oktober — keine Umgehung ueber eine Hilfsgroesse.
+ * Die Kanonisierung der Umsatzreihe laeuft ueber `milanFingerabdruck`, also ueber die BEREITS
+ * RATIFIZIERTE A7-FX-Ruecknahme (`x / meta.fxRateApplied`, Milan-Urteil). Das ist WIEDERVERWENDUNG
+ * einer bestehenden Regel, keine neue Waehrungslogik — und ohne sie waere der Vergleich ein
+ * Abruf-Timing-Zufall, weil zwei Beine an verschiedenen Tagen mit verschiedenen Kursen gezogen
+ * werden (0 von 52 Faellen halten auf der konvertierten Ebene).
+ * ══════════════════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ANKER A — SELBSTWIDERSPRUCH EINER ZEILE. Die gemeldete Aktienzahl gegen die Aktienzahl in
+ * der EIGENEN Jahresreihe. Kalibriert an `VMRK` (2,79: traegt AvalonBays Fundamentalblock
+ * unter eigenem Namen). Das Band stammt aus der Tripwire-Skizze O5 des Memos.
+ *
+ * A braucht KEINEN Gruppenkontext — er ist der einzige Anker, der eine einzelne Zeile allein
+ * beurteilen kann, und der einzige, der den KONTAMINATIONS-Selbstwiderspruch sieht, den Anker B
+ * ausdruecklich als „beweist NICHTS" abtut.
+ */
+const TRIPWIRE_A_BAND = [0.80, 1.25];
+
+/**
+ * M12 — DIE KGaA-/KOMPLEMENTAER-AUSNAHME, AM OBJEKT VERANKERT.
+ *
+ * `MRK.DE` (Merck KGaA) liegt strukturell bei 0,297, weil nur ~30 % des Kapitals boersennotiert
+ * sind — das ist KEIN Befund. Der Produktionstext dazu stand schon vor jedem Tripwire fest
+ * (`data-health/quarantine.json`, `_doku`): „Eine maschinelle Aktienzahl-Regel braucht diese
+ * Ausnahme, sonst meldet sie KGaAs und Partnerships dauerhaft falsch."
+ *
+ * VERANKERT AN DER RECHTSFORM IM EIGENEN NAMEN DER ZEILE, NICHT AN EINER TICKER-LISTE. Eine
+ * Ticker-Liste waere selbst die Handliste, die dieses Gericht unter G7 ablehnt: sie waechst
+ * still, und was nicht drinsteht, faellt lautlos durch. Die Rechtsform ist ein Strukturmerkmal
+ * der Zeile und traegt die ganze Klasse — genau das verlangt die Auflage.
+ *
+ * Am Live-Bestand 2026-08-30 nimmt sie 12 von 1.416 A-Treffern aus: 1MRK.MI/MRCK.VI/MRK.DE
+ * (Merck KGaA 0,297), DRW3.DE (Draegerwerk 0,459), HEN.DE/HEN3.DE (Henkel 0,611/0,365),
+ * ESBA/FISK/OGCP (Empire State Realty OP, L.P.), IEP (Icahn Enterprises L.P. 1,265),
+ * MNR (MACH NATURAL RESOURCES LP 1,268), PAGP (Plains GP Holdings, L.P. 0,281).
+ */
+const TRIPWIRE_KOMPLEMENTAERFORM = /(\bKGaA\b|\bKG\s*a\.?\s*A\.?|&\s*Co\.?\s*KG\b|\bL\.?\s?P\.?$|\bLLP\b|\bS\.?C\.?A\.?$)/i;
+
+/**
+ * Wie viele EINZELMELDUNGEN je Anker in den committeten Bericht wandern. Die ZAEHLUNGEN sind
+ * immer vollstaendig; gekappt wird nur die Detailliste, und die Kappung steht mit ihrer Zahl
+ * im Bericht.
+ * ponytail: harte Kappung mit bekannter Decke — der Bericht wird taeglich neu geschrieben, und
+ * ein taeglicher 1.400-Zeilen-Diff in data-health/ kostet mehr Repo als er Erkenntnis bringt.
+ * Wenn die Vollliste je gebraucht wird, gehoert sie in einen eigenen, nicht committeten Lauf.
+ */
+const TRIPWIRE_KAPPUNG = 25;
+
+/** Locale-frei, gleicher Grund wie `cmpTicker` in score.js: `localeCompare` haengt an der
+ *  OS-Locale und liesse CI gegen lokal auseinanderlaufen. */
+const cmpTickerLokal = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+
+/** Reiner Kern: Anker A ueber alle Zeilen. Gibt IMMER auch die ausgenommenen zurueck — eine
+ *  Ausnahme, die man nicht zaehlen kann, ist von einem toten Anker nicht zu unterscheiden. */
+function tripwireAnkerA(zeilen) {
+  const treffer = [];
+  let ausgenommen = 0, ohneBasis = 0;
+  for (const z of zeilen || []) {
+    if (!Number.isFinite(z.shares) || z.shares <= 0 || !Number.isFinite(z.jahresAktien) || z.jahresAktien <= 0) { ohneBasis++; continue; }
+    const wert = z.shares / z.jahresAktien;
+    if (wert >= TRIPWIRE_A_BAND[0] && wert <= TRIPWIRE_A_BAND[1]) continue;
+    if (TRIPWIRE_KOMPLEMENTAERFORM.test(String(z.name || ''))) { ausgenommen++; continue; }
+    treffer.push({
+      anker: 'A', wert, ticker: z.ticker, name: z.name, nameSource: z.nameSource,
+      schluessel: z.schluessel, fingerabdruck: z.fingerabdruck,
+      shares: z.shares, jahresAktien: z.jahresAktien,
+      // A ist ein EINZEILEN-Anker. Es gibt strukturell kein Partner-Bein; ein erfundenes
+      // waere schlimmer als ein fehlendes, deshalb steht hier ausdruecklich null mit Grund.
+      gegenstueck: null,
+      gegenstueckGrund: 'Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein',
+    });
+  }
+  // Schaerfster Fall zuerst: |ln(Verhaeltnis)| absteigend, dann Ticker (deterministisch, damit
+  // die Kappung nicht taeglich andere Zeilen zeigt).
+  treffer.sort((a, b) => Math.abs(Math.log(b.wert)) - Math.abs(Math.log(a.wert)) || cmpTickerLokal(a.ticker, b.ticker));
+  return { treffer, ausgenommen, ohneBasis };
+}
+
+/**
+ * ANKER B — REIHEN-EIGENTUM. Eine identische Jahresumsatz-Reihe, getragen von Zeilen aus
+ * ZWEI VERSCHIEDENEN Emittentengruppen (`issuerKeyLoose`).
+ *
+ * ⚠ M13, BINDEND: Anker B ist als MELDUNG brauchbar und als BEWEIS untauglich. Bei
+ * Zweitnotierungen ist die geteilte Reihe der Normalfall — „Dass sie AvalonBays Umsatzreihe
+ * traegt, ist bei einer Zweitnotierung der Normalfall und beweist NICHTS" (Produktionstext in
+ * data-health/quarantine.json). Der Register-Lader weist einen Eintrag ab, der nur B zitiert.
+ */
+function tripwireAnkerB(zeilen) {
+  const nachAbdruck = new Map();
+  for (const z of zeilen || []) {
+    if (!z.hatUmsatz || !z.schluessel || !z.fingerabdruck) continue;
+    if (!nachAbdruck.has(z.fingerabdruck)) nachAbdruck.set(z.fingerabdruck, []);
+    nachAbdruck.get(z.fingerabdruck).push(z);
+  }
+  const treffer = [];
+  for (const [fingerabdruck, beine] of nachAbdruck) {
+    const schluessel = new Set(beine.map((b) => b.schluessel));
+    if (schluessel.size < 2) continue;
+    treffer.push({
+      anker: 'B', wert: schluessel.size, fingerabdruck,
+      // Der Fingerabdruck steht EINMAL auf Klassenebene, nicht je Bein: seine GLEICHHEIT ueber
+      // alle Beine IST der Anker. Ihn n-mal zu wiederholen waere kein zweiter Beleg, sondern
+      // dieselbe Zeichenkette in einem taeglich committeten Bericht.
+      beine: [...beine].sort((a, b) => cmpTickerLokal(a.ticker, b.ticker)).map((b) => ({
+        ticker: b.ticker, name: b.name, nameSource: b.nameSource, schluessel: b.schluessel,
+      })),
+      hinweis: 'MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall',
+    });
+  }
+  treffer.sort((a, b) => b.wert - a.wert || b.beine.length - a.beine.length || cmpTickerLokal(a.beine[0].ticker, b.beine[0].ticker));
+  return { treffer };
+}
+
+/**
+ * I/O-Mantel: liest die Felder, die BEIDE Anker brauchen, in EINEM Durchgang. Bewusst nur
+ * skalare Felder plus zwei Reihen — der volle Snapshot mal 15.000 waere Speicher ohne Nutzen.
+ *
+ * Ein Bein OHNE `meta.fxRateApplied` bekommt ueber `milanFingerabdruck` den Platzhalter
+ * `OHNE-FX:<ticker>` und matcht damit mit NICHTS (fail-closed, ratifizierte A7-FX-Bauform) —
+ * es kann also keine Klasse erfinden.
+ */
+function tripwireLesen(ziel) {
+  const zeilen = [];
+  let unlesbar = 0;
+  // DAS VERZEICHNIS, NICHT DIE UEBERNAHME-LISTE (Review-Fund 30.08., MEDIUM, reproduziert).
+  // Vorher las dieser Durchgang `uebernehmen`, also nur die Dateien DIESES Laufs — waehrend
+  // sein Schwester-Zaehler (`namensherkunftLesen`) das ganze Verzeichnis liest. Dieser Schritt
+  // raeumt `ziel` nie ab (s. "DAS EINZIGE LOCH IM AUSSCHLUSS" in run()): lokal kann ein Stand
+  // aus einem frueheren Lauf liegenbleiben, der weiter gescort WIRD — und genau der waere
+  // an beiden Ankern vorbeigelaufen, waehrend die Schwester-Messung ihn zaehlt. Zwei
+  // Messungen desselben Urteils duerfen nicht zwei verschiedene Populationen meinen.
+  // In CI faellt der Unterschied nicht auf (frischer Runner, `ziel` startet leer) — das ist
+  // der Grund, warum er ohne diesen Fund nie aufgefallen waere.
+  for (const f of fs.readdirSync(ziel)) {
+    if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
+      const meta = (j && j.meta) || {};
+      const annual = (j && j.annual) || {};
+      const jahresUmsatz = milanReihe(annual.annualRev);
+      const jahresAktienReihe = milanReihe(annual.annualShares);
+      zeilen.push({
+        ticker: f.slice(0, -'.json'.length),
+        // M9 verlangt die HERKUNFT beider Namen. Genommen wird der M1-Bucket, nicht der
+        // Rohwert: `JSON.stringify` laesst ein `undefined` einfach WEG, und ein fehlender
+        // Schluessel im Bericht waere von "Herkunft unbekannt" nicht zu unterscheiden —
+        // dieselbe Verwechslung, die der Bucket `fehlt` beim Zaehler verhindert. Gleiches
+        // Vokabular in Bericht und Messreihe, damit man sie nebeneinander lesen kann.
+        name: meta.name, nameSource: namensherkunftBucket(meta),
+        schluessel: issuerKeyLoose(j),
+        shares: meta.sharesOutstanding,
+        jahresAktien: Array.isArray(jahresAktienReihe) && jahresAktienReihe.length ? jahresAktienReihe[0] : null,
+        hatUmsatz: Array.isArray(jahresUmsatz) && jahresUmsatz.some((x) => Number.isFinite(x) && x !== 0),
+        fingerabdruck: milanFingerabdruck({ ticker: f.slice(0, -'.json'.length), fx: meta.fxRateApplied, revenueQ: jahresUmsatz, grossProfitQ: null }),
+      });
+    } catch (e) { unlesbar++; }
+  }
+  return { zeilen, unlesbar };
+}
+
+/**
+ * M9 — MELDEFORM: JEDE MELDUNG IST ALLEIN NACHRECHENBAR. Kein OR-verschmolzenes Boolean; A und
+ * B erscheinen als ZWEI Zaehlgroessen und zwei Listen, nie als eine (M11). Je Meldung stehen
+ * Anker, Wert, Ticker, Name, Fingerabdruck und die HERKUNFT des Namens (`nameSource`) da —
+ * ein Mensch kann ohne Zusatzabfrage entscheiden, ob die Klasse echt ist.
+ *
+ * Der Bericht wird COMMITTET, nicht nur ins fluechtige Actions-Log geschrieben. Er wird
+ * taeglich UEBERSCHRIEBEN: er ist ein Bericht ueber den heutigen Stand, keine Messreihe —
+ * die Messreihe ist data-health/namensherkunft-history.json (M1).
+ */
+function tripwireBericht(a, b, kopf) {
+  // EIN AUSGEFALLENER ANKER IST NICHT EIN ANKER OHNE BEFUND (Review-Fund 30.08.).
+  // Vorher wurde der committete Bericht nur geschrieben, wenn BEIDE Anker durchliefen — ein
+  // Wurf in A nahm also auch Bs bereits fertig gerechnete Meldungen aus der persistierten
+  // Datei, und die fail-open-Zusage "faellt A aus, meldet B trotzdem" galt nur fuers Log.
+  // Jetzt wird der Bericht immer geschrieben, und der ausgefallene Anker steht ausdruecklich
+  // als `ausgefallen: true` da statt als 0 — dieselbe Trennung wie FEHLT gegen NULL beim
+  // Zaehler: "nicht gemessen" darf nie wie "nichts gefunden" aussehen.
+  const teil = (r, name) => (r
+    ? { ausgefallen: false, gemeldet: r.treffer.length, gelistet: Math.min(r.treffer.length, TRIPWIRE_KAPPUNG), meldungen: r.treffer.slice(0, TRIPWIRE_KAPPUNG) }
+    : { ausgefallen: true, gemeldet: null, gelistet: 0, meldungen: [],
+        grund: `Anker ${name} ist in diesem Lauf ausgefallen (s. ::warning:: im Lauf-Log). NICHT als 0 lesen: dieser Anker hat heute NICHTS gemessen.` });
+  return {
+    _doku: [
+      'IDENTITAETS-TRIPWIRE — MELDUNG, KEINE ENTSCHEIDUNG (_COURT-M10-2026-08-30, ENTSCHIED 126).',
+      '',
+      '"Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser',
+      'Erkennung bleibt bis zu einem eigenen Gericht gesperrt." (Auflage M16, woertlich beschlossen)',
+      '',
+      'KEINE MELDUNG HIER IST JE ALLEIN BELEG fuer einen Eintrag in data-health/issuer-identity.json',
+      '(Auflage M18). Anker B taugt ueberhaupt nie als alleinige Begruendung (Auflage M13): bei',
+      'Zweitnotierungen ist die geteilte Umsatzreihe der Normalfall und beweist NICHTS.',
+      '',
+      'GEMESSEN VOR den Umbenennungs-Stufen des Laufs (U2/U3/T179) — sonst loeschte ein wirksamer',
+      'Eingriff seine eigene Klasse aus der Spur. Der Lauf weist seine Umbenennungen getrennt aus.',
+      '',
+      'A = Selbstwiderspruch: meta.sharesOutstanding gegen annual.annualShares[0], Band',
+      `[${TRIPWIRE_A_BAND[0]}, ${TRIPWIRE_A_BAND[1]}]. Ausgenommen sind Komplementaer-/Partnership-Strukturen`,
+      '(Auflage M12) — an der RECHTSFORM im eigenen Namen der Zeile, NICHT an einer Ticker-Liste.',
+      'B = Reihen-Eigentum: eine identische Jahresumsatz-Reihe ueber >= 2 Emittentengruppen.',
+      'A und B stehen getrennt (Auflage M11); Anker C ist NICHT gebaut (aufschiebend bedingt).',
+      '',
+      `Die Detaillisten sind bei ${TRIPWIRE_KAPPUNG} Eintraegen je Anker gekappt; die Zaehlungen sind vollstaendig.`,
+    ],
+    ...kopf,
+    zaehlung: {
+      ankerA: a ? a.treffer.length : null,
+      ankerA_ausgenommen: a ? a.ausgenommen : null,
+      ankerA_ohneBasis: a ? a.ohneBasis : null,
+      ankerB: b ? b.treffer.length : null,
+    },
+    ankerA: teil(a, 'A'),
+    ankerB: teil(b, 'B'),
+  };
+}
+
+/** Gleiche Begruendung wie beim Herkunfts-Zaehler: der Bericht gehoert zu dem Bestand, den er
+ *  gemessen hat, nicht fest ins Repo — sonst schriebe jeder Waechter-Lauf mit Temp-Ziel einen
+ *  Fixture-Bericht in die echte Datei. */
+const tripwireStandardpfad = (ziel) => path.join(path.dirname(path.resolve(ziel)), 'data-health', 'identitaets-tripwire.json');
 
 /**
  * Gemeinsamer Lader der beiden TICKER-Register (NAV-Ausschluss und Quarantaene). Ein einziger
@@ -1294,12 +1722,13 @@ function run(argv) {
   const identitaetsRegisterPfad = get('--identitaets-register', IDENTITAETS_REGISTER_STANDARDPFAD);
   const quarantaenePfad = get('--quarantaene', QUARANTAENE_STANDARDPFAD);
   const namensherkunftPfad = get('--namensherkunft', namensherkunftStandardpfad(ziel));
+  const tripwirePfad = get('--tripwire-bericht', tripwireStandardpfad(ziel));
   const heute = get('--heute', new Date().toISOString());
 
   // B1/B4: fail-closed wie das NAV-Register. Heute leer (B2) — ein Ladefehler stoppt den Lauf
   // trotzdem, sonst waere die spaetere Befuellung still wirkungslos.
   let identitaetsEintraege;
-  try { identitaetsEintraege = ladeIdentitaetsRegister(identitaetsRegisterPfad); }
+  try { identitaetsEintraege = ladeIdentitaetsRegister(identitaetsRegisterPfad, heute); }
   catch (e) {
     console.error(`::error::filter-snapshot-merge — Identitaets-Register nicht ladbar (${e.message}). Abbruch statt lautlosem Lauf ohne das belegpflichtige Ventil.`);
     return 1;
@@ -1461,6 +1890,18 @@ function run(argv) {
   }
   schreibeEingangsZahl(ziel, gescannt); // F-12-R1: NACH dem Kopieren (das Manifest kommt aus dem Eingang mit)
 
+  // M10/M8 — TRIPWIRE-ROHDATEN, GELESEN VOR JEDER UMBENENNUNG.
+  // Die Stelle ist die Auflage, nicht Geschmack (Urteil §3.2): U2/U3/T179 vereinheitlichen
+  // gleich Namen, und genau die Divergenz, die dieser Baustein sehen soll, verschwindet dabei.
+  // Ein Wächter, der nichts sieht, sobald das bewachte Objekt wirkt, misst die Abwesenheit
+  // seines Gegenstands. GEMELDET wird trotzdem erst ganz am Schluss (sequenziell, fail-open).
+  let tripwireRoh = null;
+  try {
+    tripwireRoh = tripwireLesen(ziel);
+  } catch (e) {
+    console.error(`::warning::M10-Tripwire — Rohdaten nicht erhoben (${e && e.message ? e.message : e}); Anker A UND B fallen heute aus. Der Lauf laeuft weiter (reine Meldung, keine Datenwirkung).`);
+  }
+
   // U2-BO/NS: NACH dem Kopieren, damit der Eingang unangetastet bleibt (Karl-Entscheid F-12:
   // filtern statt loeschen — hier entsprechend: nur die Arbeitskopie bekommt den Namen).
   const zwillinge = wendeWurzelZwillingeAn(ziel, uebernehmen);
@@ -1599,26 +2040,38 @@ function run(argv) {
   // faellen (Praezedenz: der harte Tageslauf-Abbruch aus einer Vorstufen-Reihenfolge,
   // orchestrator-2026-08-29.md:554) — deshalb faengt der Mantel ALLES und weist die
   // Degradation aus. Eine still ausfallende Messung ist keine Messung.
+  // ZWEI GETRENNTE MAENTEL, nicht einer (Review-Fund 30.08., MEDIUM). M5 ist ein Diagnose-
+  // Protokoll, M1 ist die Auflage MIT FRIST — und M1 lag im selben try wie der komplexere
+  // M5-Teil (Array-Bau, Datei-Nachlesen, `safeSnabshotFilename`, das bei einem kaputten Ticker
+  // wirft). Ein Wurf auf der M5-Seite haette die M1-Tageszeile still verschluckt, und die
+  // Warnzeile haette nicht gesagt, welche Haelfte gebrochen ist. Genau der Verlust, den die
+  // Frist verhindern soll.
+  let protokoll = null;
   try {
     // M5: die Quell-Herkunft der U3-Milan-Umbenennungen wird REIN LESEND nachgeholt (Urteil
     // §7: `milanSchreiben`/U3 ist N1 und wird nicht angefasst). Der Sieger wird von keiner
     // Stufe umgeschrieben, sein `nameSource` ist also unveraendert.
     const milanProtokoll = [];
+    let siegerUnlesbar = 0;
     for (const u of urteile) {
       if (u.grund !== 'umbenennen') continue;
-      let quelleHerkunft;
-      try {
-        const j = JSON.parse(fs.readFileSync(path.join(ziel, safeSnapshotFilename(u.sieger)), 'utf8'));
-        quelleHerkunft = j && j.meta ? j.meta.nameSource : undefined;
-      } catch (e) { quelleHerkunft = undefined; }
+      const nachlese = siegerHerkunftNachlesen(ziel, u.sieger);
+      if (nachlese.unlesbar) {
+        siegerUnlesbar++;
+        console.error(`::warning::M10-Protokoll (M5) — Sieger-Bein ${u.sieger} nicht nachlesbar (${nachlese.grund}); seine Herkunft zaehlt als (unlesbar), nicht als fehlend. Die Umbenennung selbst ist davon unberuehrt.`);
+      }
       for (const v of u.verlierer) {
-        milanProtokoll.push({ kanal: 'U3-Milan', verlierer: v, sieger: u.sieger, name: u.name, quelleHerkunft });
+        milanProtokoll.push({ kanal: 'U3-Milan', verlierer: v, sieger: u.sieger, name: u.name, quelleHerkunft: nachlese.herkunft });
       }
     }
-    const protokoll = umbenennungsProtokoll([...(zwillinge.protokoll || []), ...milanProtokoll]);
-    console.log(`[m10-umbenennungs-protokoll] ${protokoll.gesamt} Umbenennungen in der Vorstufe, je Herkunft des Quell-Beins: ${JSON.stringify(protokoll.jeHerkunft)}. Kein Bein wurde deswegen anders behandelt — das Protokoll beobachtet nur (Auflage M5).`);
+    protokoll = umbenennungsProtokoll([...(zwillinge.protokoll || []), ...milanProtokoll]);
+    console.log(`[m10-umbenennungs-protokoll] ${protokoll.gesamt} Umbenennungen in der Vorstufe, je Herkunft des Quell-Beins: ${JSON.stringify(protokoll.jeHerkunft)} (${siegerUnlesbar} Sieger-Beine nicht nachlesbar). Kein Bein wurde deswegen anders behandelt — das Protokoll beobachtet nur (Auflage M5).`);
     console.log(`[m10-umbenennungs-protokoll] watchlist-benannte Quell-Beine: ${protokoll.watchlistFaelle.length} — ${protokoll.watchlistFaelle.join(', ') || '(keine)'}`);
+  } catch (e) {
+    console.error(`::warning::M10-Protokoll (M5) — Interims-Protokoll ausgefallen (${e && e.message ? e.message : e}). Der Herkunfts-Zaehler (M1) laeuft davon UNBERUEHRT weiter; im Tages-Eintrag fehlt nur das Feld 'umbenennungen'.`);
+  }
 
+  try {
     const { zeilen, unlesbar: mUnlesbar } = namensherkunftLesen(ziel);
     const zaehlung = namensherkunftZaehlen(zeilen);
     const summe = Object.values(zaehlung.verteilung).reduce((a, b) => a + b, 0);
@@ -1627,11 +2080,50 @@ function run(argv) {
       // falsch, und eine falsche Messreihe ist schlimmer als eine fehlende.
       throw new Error(`Bucket-Arithmetik gerissen: Summe ${summe} !== gelesene Zeilen ${zaehlung.gelesen}`);
     }
+    // `umbenennungen: null` statt eines stillen Weglassens: ein fehlendes Feld waere von
+    // "an diesem Tag wurde nichts umbenannt" nicht zu unterscheiden.
     const eintrag = { ...zaehlung, unlesbar: mUnlesbar, umbenennungen: protokoll };
     const tage = namensherkunftSchreiben(namensherkunftPfad, String(heute).slice(0, 10), eintrag);
     console.log(`[m10-namensherkunft] ${zaehlung.gelesen} Zeilen gezaehlt (${mUnlesbar} nicht lesbar): ${JSON.stringify(zaehlung.verteilung)}; ${zaehlung.mehrbeinGruppen} mehrbeinige Emittentengruppen, davon ${zaehlung.watchlistSieger} mit Sieger nameSource='watchlist' (${zaehlung.unterdrueckteBeine} unterdrueckte Beine). Reihe: ${tage} Tage in ${namensherkunftPfad}. REINE MESSUNG — kein Gate, kein Konsument.`);
   } catch (e) {
     console.error(`::warning::M10-Herkunftszaehler — Messung ausgefallen (${e && e.message ? e.message : e}). Der Lauf laeuft weiter (Exit 0, reine Messung), aber die Tageszeile FEHLT in ${namensherkunftPfad}. Auflage M1 (_COURT-M10-2026-08-30) hat Frist 20.09.2026 — ein wiederholter Ausfall ist ein Befund, kein Wetter.`);
+  }
+
+  // ── M10/M8-M16 — DER IDENTITAETS-TRIPWIRE, MELDEND, ZULETZT, FAIL-OPEN ───────────────────
+  // Jeder Anker faengt SEINEN Wurf selbst: faellt A aus, meldet B trotzdem. Eine gemeinsame
+  // Klammer haette aus einem kaputten Anker ein stilles Doppel-Aus gemacht, und die Meldung
+  // haette nicht gesagt, WELCHE Lampe erloschen ist (Auflage M8).
+  if (!tripwireRoh) {
+    console.error('::warning::M10-Tripwire — keine Rohdaten (s. Meldung oben): Anker A und Anker B melden heute nicht.');
+  } else {
+    let a = null, b = null;
+    try { a = tripwireAnkerA(tripwireRoh.zeilen); }
+    catch (e) { console.error(`::warning::M10-Tripwire — ANKER A ausgefallen (${e && e.message ? e.message : e}); Anker B meldet weiter.`); }
+    try { b = tripwireAnkerB(tripwireRoh.zeilen); }
+    catch (e) { console.error(`::warning::M10-Tripwire — ANKER B ausgefallen (${e && e.message ? e.message : e}); Anker A meldet weiter.`); }
+    // M11: ZWEI Zaehlgroessen, nie eine. Ein OR-verschmolzenes Boolean waere genau die
+    // Meldeform, die das Urteil ausschliesst — man koennte einer Meldung nicht mehr ansehen,
+    // welcher Anker sie erzeugt hat und mit welchem Wert.
+    if (a) console.log(`[m10-tripwire] Anker A (Selbstwiderspruch Aktienzahl): ${a.treffer.length} Meldungen, ${a.ausgenommen} Komplementaer-/Partnership-Strukturen ausgenommen (M12), ${a.ohneBasis} Zeilen ohne rechenbare Basis.`);
+    if (b) console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
+    console.log('[m10-tripwire] Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt (M16). Keine Zeile faellt, keine verschmilzt, Exit bleibt 0.');
+    try {
+      // Auch bei nur EINEM lebenden Anker wird geschrieben (Review-Fund 30.08.): sonst nimmt
+      // ein Wurf in A die fertig gerechneten Meldungen von B aus der committeten Datei, und
+      // die fail-open-Zusage gaelte nur fuers fluechtige Log. Der ausgefallene Anker steht im
+      // Bericht als `ausgefallen: true`, nie als 0.
+      const bericht = tripwireBericht(a, b, {
+        stand: String(heute).slice(0, 10),
+        gelesen: tripwireRoh.zeilen.length,
+        unlesbar: tripwireRoh.unlesbar,
+        messebene: 'vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs',
+      });
+      fs.mkdirSync(path.dirname(tripwirePfad), { recursive: true });
+      writeFileAtomic(tripwirePfad, JSON.stringify(bericht, null, 2) + '\n');
+      console.log(`[m10-tripwire] Bericht geschrieben: ${tripwirePfad} (Detaillisten bei ${TRIPWIRE_KAPPUNG} je Anker gekappt, Zaehlungen vollstaendig).`);
+    } catch (e) {
+      console.error(`::warning::M10-Tripwire — Bericht nicht geschrieben (${e && e.message ? e.message : e}). Die Zahlen stehen oben im Lauf-Log, der committete Bericht FEHLT heute.`);
+    }
   }
   return 0;
 }
@@ -1642,6 +2134,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   // U3-Milan (ENTSCHIED 31) — fuer TDD. Waechter: tests/u3-milan-spiegel.test.js
   milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
+  // M10/M17 (_COURT-M10-2026-08-30) — Aufnahmeschwelle. Waechter: tests/u3-milan-spiegel.test.js
+  IDENTITAETS_REGISTER_ANKER, IDENTITAETS_BELEG_PFLICHTFELDER, IDENTITAETS_REGISTER_STANDARDPFAD,
   MILAN_SPIEGEL, MILAN_KANDIDATEN, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND,
   MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   // T179-Nennwert (ENTSCHIED 35.2) — fuer TDD. Waechter: tests/t179-nennwert.test.js
@@ -1651,5 +2145,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER,
   // M10/M1 + M5 (_COURT-M10-2026-08-30) — fuer TDD. Waechter: tests/m10-namensherkunft-zaehler.test.js
   namensherkunftBucket, namensherkunftZaehlen, namensherkunftLesen, namensherkunftSchreiben,
-  umbenennungsProtokoll, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad };
+  umbenennungsProtokoll, siegerHerkunftNachlesen, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad,
+  // M10/M8-M16 Identitaets-Tripwire — fuer TDD. Waechter: tests/m10-tripwire.test.js
+  tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
+  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG };
 if (require.main === module) process.exit(run(process.argv));

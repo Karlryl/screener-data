@@ -252,7 +252,31 @@ test('M5-VERDRAHTUNG: die echte U2-Stufe liefert die Herkunft des SIEGER-Beins m
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-// ─── 6. M2 — KEIN KONSUMENT von nameSource ──────────────────────────────────────────────
+// ─── 6. M7 — DIE PREMISSE, AN DER DAS GANZE VERBOT HAENGT ───────────────────────────────
+
+test('M7: der Sieger-Komparator kennt den NAMEN nicht — Zugehoerigkeit ja, Sieg nein', () => {
+  // Befund K-3 des Urteils, hier AM VERHALTEN festgenagelt statt als Prosa. Auf ihm ruht das
+  // Verbot M7: G2-a ("ein WL-benanntes Bein darf seine Gruppe nicht gewinnen") ist in der
+  // unversiegelten Vorstufe gar nicht baubar, weil die Vorstufe kein Bein am Siegen hindern
+  // kann — der Komparator sieht den Namen nie. Aendert sich das je, faellt die Begruendung
+  // des Verbots weg, nicht nur ein Detail: dann gehoert die Sache zurueck ans Gericht.
+  const { issuerDedupComparator } = require('../src/scoring/score.js');
+  const e = (ticker, name, mcap) => ({ ticker, snapshot: { meta: { ticker, name }, marketCap: { value: mcap } } });
+  const basis = issuerDedupComparator(e('AAA', 'Alpha AG', 2e9), e('BBB', 'Beta SA', 1e9));
+  assert.equal(
+    issuerDedupComparator(e('AAA', 'Voellig anderer Name Inc', 2e9), e('BBB', 'Noch ein anderer Ltd', 1e9)),
+    basis, 'ein VOELLIG anderer Name aendert die Sieger-Reihenfolge nicht');
+  assert.equal(
+    issuerDedupComparator(e('AAA', '', 2e9), e('BBB', 'Beta SA', 1e9)),
+    basis, 'auch ein leerer Name aendert sie nicht');
+  // Gegenprobe: die Marktkapitalisierung tut es sehr wohl. Ohne sie pruefte die Wache einen
+  // Komparator, der vielleicht ueberhaupt nichts mehr unterscheidet.
+  assert.notEqual(
+    issuerDedupComparator(e('AAA', 'Alpha AG', 1e9), e('BBB', 'Beta SA', 2e9)),
+    basis, 'Vorbedingung: der Komparator unterscheidet ueberhaupt noch etwas');
+});
+
+// ─── 7. M2 — KEIN KONSUMENT von nameSource ──────────────────────────────────────────────
 
 /** Quelltext-Scan ueber die Verzeichnisse, in denen Produktionscode lebt. Bewusst KEIN
  *  `git grep`: der Waechter soll auch in einem Baum ohne git-Binary laufen. */
@@ -283,14 +307,22 @@ test('M2: `src/scoring/**` kennt `nameSource` NICHT — ein Treffer dort loescht
 });
 
 test('M2: die Referenzen stehen ausschliesslich beim SCHREIBER und bei der MESSUNG', () => {
-  // Erlaubt sind genau drei Rollen: der Schreiber (pull-yahoo.js), die Messung
-  // (filter-snapshot-merge.js: M1-Zaehler + M5-Protokoll) und die Waechter. Alles andere ist
-  // ein Konsument und gehoert vor das Gericht zurueck (Urteil §8, Kipp-Bedingung G3-a).
+  // Erlaubt sind genau drei Rollen: der Schreiber (pull-yahoo.js), die MESSUNG
+  // (filter-snapshot-merge.js: M1-Zaehler, M5-Protokoll und die M9-Meldeform des Tripwires)
+  // und die Waechter. Alles andere ist ein Konsument und gehoert vor das Gericht zurueck
+  // (Urteil §8, Kipp-Bedingung G3-a).
+  //
+  // WARUM DER TRIPWIRE MITZAEHLT, ohne die Auflage zu dehnen: M2 verbietet Gruppierung,
+  // Sieger-Wahl, Umbenennung, Filterung und Score. Der Tripwire tut nichts davon — er
+  // schreibt eine Zeile in einen Bericht. Und M9 ORDNET das Feld dort ausdruecklich an
+  // („die Herkunft beider Namen (nameSource)"). Die beiden Auflagen widersprechen sich
+  // nicht; M2 schuetzt vor STEUERUNG, nicht vor Messung.
   const erlaubt = new Set([
     'pull-yahoo.js',
     'scripts/filter-snapshot-merge.js',
     'tests/m10-namensherkunft.test.js',
     'tests/m10-namensherkunft-zaehler.test.js',
+    'tests/m10-tripwire.test.js',
   ]);
   const gefunden = [
     ...dateienMitReferenz(path.join(REPO, 'scripts'), /nameSource/),

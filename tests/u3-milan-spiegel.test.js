@@ -39,6 +39,7 @@ const {
   milanTor, milanSieger, milanUmbenennungen, milanKlassenLesen, milanSchreiben, milanFingerabdruck,
   ladeIdentitaetsRegister, MILAN_KANDIDATEN, MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   MILAN_SHARES_BAND, MILAN_MIN_QUARTALE, MILAN_SPIEGEL,
+  IDENTITAETS_REGISTER_ANKER, IDENTITAETS_REGISTER_STANDARDPFAD,
 } = require('../scripts/filter-snapshot-merge.js');
 // Die Produktionsregeln selbst — die Wache misst am Schluessel und an der Gruppierung, die
 // spaeter wirklich entscheiden, nicht an einem Nachbau (Fehler F1334).
@@ -328,9 +329,33 @@ test('A11: KEIN Fremdpaar steht in der Kandidatenliste', () => {
 
 // ─── 4. Identitaets-Register (K2, B1-B5) ────────────────────────────────────────────────
 
-test('REGISTER B2: die ausgelieferte Datei laedt und ist LEER', () => {
-  const eintraege = ladeIdentitaetsRegister(path.join(__dirname, '..', 'data-health', 'issuer-identity.json'));
-  assert.deepEqual(eintraege, [], 'das Register wird leer ausgeliefert und bleibt es bis zum ersten Messbeleg');
+const HEUTE = '2026-08-30';
+
+test('REGISTER B2 / M17c (D-D): die ausgelieferte Datei laedt und traegt GENAU den Anker-Wert', () => {
+  // NACHFOLGER DES LEER-TESTS (Auflage M17c, _COURT-M10-2026-08-30). Der alte Riegel verlangte
+  // "leer" — eine Bedingung mit eingebautem Verfallsdatum, die am Tag des ersten Eintrags
+  // zwangslaeufig faellt. Gepinnt wird jetzt die ANZAHL gegen eine hartkodierte Zahl, gleiche
+  // Bauform wie der A7-Mengen-Riegel: ein erster Eintrag hebt sie, aber nur zusammen mit einer
+  // bewussten Aenderung derselben Konstante, im selben Diff, unter denselben Augen.
+  const eintraege = ladeIdentitaetsRegister(IDENTITAETS_REGISTER_STANDARDPFAD, HEUTE);
+  assert.equal(eintraege.length, IDENTITAETS_REGISTER_ANKER,
+    `das Register traegt genau ${IDENTITAETS_REGISTER_ANKER} Eintraege — jede Abweichung ist ein Neubefund, kein Betriebszustand`);
+  assert.equal(IDENTITAETS_REGISTER_ANKER, 0,
+    'heute ist der Sollwert 0; ihn zu heben ist eine Sache des Rates (N5), nicht des Executors');
+});
+
+test('REGISTER M16/M18/M19: die Produktionstexte stehen woertlich in der ausgelieferten Datei', () => {
+  // Drei bindende Saetze, die im Ereignisfall die einzige Bremse zwischen einer Lampe und einem
+  // Register-Eintrag sind. Sie gehoeren IN die Datei, nicht in ein Urteil, das niemand oeffnet.
+  const doku = JSON.parse(fs.readFileSync(IDENTITAETS_REGISTER_STANDARDPFAD, 'utf8'))._doku.join('\n');
+  assert.ok(doku.includes("'Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung"),
+    'M16: die Abgrenzungsformel steht woertlich da');
+  assert.ok(/bleibt bis zu einem eigenen Gericht gesperrt\./.test(doku), 'M16: zweite Haelfte der Formel');
+  assert.ok(/KEINE TRIPWIRE-MELDUNG IST JE ALLEIN BELEG/.test(doku), 'M18: die Lampe ist kein Nachweis');
+  assert.ok(/die EIGENE WATCHLIST-ZEILE/.test(doku),
+    'M19: der Ersatzweg nennt BEIDE Quellen — den Feed UND unsere eigene Watchlist-Zeile');
+  assert.ok(/Reihen-Gleichheit ist MELDUNG, nie BEGRUENDUNG|REIHEN-GLEICHHEIT IST MELDUNG, NIE BEGRUENDUNG/.test(doku),
+    'M13: Anker B ist nie Begruendung');
 });
 
 test('REGISTER B5: ISSUER_ALIASE in score.js bleibt leer', () => {
@@ -339,23 +364,110 @@ test('REGISTER B5: ISSUER_ALIASE in score.js bleibt leer', () => {
     'das Urteil laesst ISSUER_ALIASE ausdruecklich leer — eine Befuellung dort waere ein Siegelvorgang');
 });
 
-test('REGISTER B1: Pflichtfelder, Dubletten und Mehrfach-Ticker brechen das Laden hart ab', () => {
+/** Ein Register-Fixture samt eigenem "Repo", damit die Existenzpruefung eine echte Datei
+ *  findet oder eben nicht — und nicht an einer zufaellig vorhandenen Repo-Datei haengt. */
+function registerFixture() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'u3-reg-'));
+  fs.mkdirSync(path.join(dir, 'reports'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'reports', 'messung.md'), '# Messung ueber den vollen Bestand\n');
   const schreib = (o) => { const p = path.join(dir, 'r.json'); fs.writeFileSync(p, JSON.stringify(o)); return p; };
-  const gut = { kanonisch: 'acme', mitglieder: ['AAA', 'BBB'], beleg: 'Messung X', aufgenommen: '2026-08-29' };
-  assert.equal(ladeIdentitaetsRegister(schreib({ eintraege: [gut] })).length, 1);
-  assert.throws(() => ladeIdentitaetsRegister(schreib([])), /Wurzel muss ein Objekt sein/);
-  assert.throws(() => ladeIdentitaetsRegister(schreib({})), /'eintraege' muss ein Array sein/);
-  for (const feld of ['kanonisch', 'beleg', 'aufgenommen']) {
+  const gut = {
+    kanonisch: 'acme', mitglieder: ['AAA', 'BBB'],
+    beleg: { bericht: 'reports/messung.md', abschnitt: '§2 Aktienzahl-Anker', gemessenAm: '2026-08-29' },
+    aufgenommen: '2026-08-29', gueltigBis: '2026-12-31',
+  };
+  const lade = (o, heute = HEUTE) => ladeIdentitaetsRegister(schreib(o), heute, dir);
+  return { dir, gut, lade, schreib };
+}
+
+test('REGISTER B1: Pflichtfelder, Dubletten und Mehrfach-Ticker brechen das Laden hart ab', () => {
+  const { dir, gut, lade, schreib } = registerFixture();
+  assert.equal(lade({ eintraege: [gut] }).length, 1, 'Vorbedingung: ein vollstaendiger Eintrag laedt');
+  assert.throws(() => ladeIdentitaetsRegister(schreib([]), HEUTE, dir), /Wurzel muss ein Objekt sein/);
+  assert.throws(() => lade({}), /'eintraege' muss ein Array sein/);
+  for (const feld of ['kanonisch', 'aufgenommen']) {
     const kaputt = { ...gut }; delete kaputt[feld];
-    assert.throws(() => ladeIdentitaetsRegister(schreib({ eintraege: [kaputt] })), new RegExp(`Feld ${feld} fehlt`));
+    assert.throws(() => lade({ eintraege: [kaputt] }), new RegExp(`Feld ${feld} fehlt`));
   }
-  assert.throws(() => ladeIdentitaetsRegister(schreib({ eintraege: [{ ...gut, mitglieder: ['AAA'] }] })),
-    /mindestens zwei nicht-leere Ticker/);
-  assert.throws(() => ladeIdentitaetsRegister(schreib({ eintraege: [gut, { ...gut, mitglieder: ['CCC', 'DDD'] }] })),
-    /kanonische ID acme ist doppelt/);
-  assert.throws(() => ladeIdentitaetsRegister(schreib({ eintraege: [gut, { ...gut, kanonisch: 'zweite', mitglieder: ['AAA', 'CCC'] }] })),
+  assert.throws(() => lade({ eintraege: [{ ...gut, mitglieder: ['AAA'] }] }), /mindestens zwei nicht-leere Ticker/);
+  assert.throws(() => lade({ eintraege: [gut, { ...gut, mitglieder: ['CCC', 'DDD'] }] }), /kanonische ID acme ist doppelt/);
+  assert.throws(() => lade({ eintraege: [gut, { ...gut, kanonisch: 'zweite', mitglieder: ['AAA', 'CCC'] }] }),
     /Ticker AAA steht in acme UND zweite/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// ─── M17: die vier Beweise der Aufnahmeschwellen-Haertung ───────────────────────────────
+
+test('M17a-1: ein freier String als `beleg` laedt NICHT mehr durch', () => {
+  // Der verifizierte Zustand VOR der Haertung (Urteil §3 K-8): `beleg: 'Messung X'` und sogar
+  // `"beleg": "klar"` gingen sauber durch. Genau das ist jetzt ein Ladefehler.
+  const { dir, gut, lade } = registerFixture();
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: 'Messung X' }] }), /'beleg' muss ein Objekt sein/);
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: 'klar' }] }), /'beleg' muss ein Objekt sein/);
+  for (const feld of ['bericht', 'abschnitt', 'gemessenAm']) {
+    const b = { ...gut.beleg }; delete b[feld];
+    assert.throws(() => lade({ eintraege: [{ ...gut, beleg: b }] }), new RegExp(`beleg\\.${feld} fehlt`));
+  }
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, gemessenAm: 'neulich' } }] }),
+    /gemessenAm muss JJJJ-MM-TT sein/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('M17a-2: eine NICHT EXISTIERENDE Berichtsdatei laedt NICHT durch', () => {
+  const { dir, gut, lade } = registerFixture();
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, bericht: 'reports/gibtsnicht.md' } }] }),
+    /existiert nicht im Repo/);
+  // Vault-Pfade fallen damit durch — und das ist der Zweck: die CI kann agent-reports/ nicht oeffnen.
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, bericht: 'agent-reports/irgendwas.md' } }] }),
+    /existiert nicht im Repo/);
+  // Und kein Ausbruch aus dem Repo, auch nicht ueber einen existierenden Pfad ausserhalb.
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, bericht: '../irgendwas.md' } }] }),
+    /INNERHALB des Repos/);
+  // ABWESENHEIT: die vorhandene Datei laedt sehr wohl — sonst pruefte die Wache nur, dass
+  // ueberhaupt nichts durchkommt.
+  assert.equal(lade({ eintraege: [gut] }).length, 1);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('M17b (D-A): ein ABGELAUFENER Eintrag stoppt den Lauf, ein gueltiger nicht', () => {
+  const { dir, gut, lade } = registerFixture();
+  assert.throws(() => lade({ eintraege: [{ ...gut, gueltigBis: '2026-08-29' }] }, '2026-08-30'),
+    /ist seit 2026-08-29 abgelaufen/);
+  const ohne = { ...gut }; delete ohne.gueltigBis;
+  assert.throws(() => lade({ eintraege: [ohne] }), /'gueltigBis' fehlt/);
+  assert.throws(() => lade({ eintraege: [{ ...gut, gueltigBis: 'irgendwann' }] }), /'gueltigBis' fehlt oder ist kein/);
+  // ABWESENHEIT (beide Randfaelle): am Ablauftag selbst gilt der Eintrag noch, danach nicht mehr.
+  assert.equal(lade({ eintraege: [{ ...gut, gueltigBis: '2026-08-30' }] }, '2026-08-30').length, 1);
+  assert.throws(() => lade({ eintraege: [{ ...gut, gueltigBis: '2026-08-30' }] }, '2026-08-31'), /abgelaufen/);
+  // Ohne brauchbares Datum kann D-A nicht pruefen — und darf dann nicht stillschweigend durchlassen.
+  assert.throws(() => lade({ eintraege: [gut] }, null), /D-A kann nicht pruefen/);
+  assert.throws(() => lade({ eintraege: [gut] }, 'irgendwann'), /D-A kann nicht pruefen/);
+  // Review-Fund 30.08.: eine reine FORMAT-Pruefung liess `2026-13-45` durch, und der Ablauf
+  // vergleicht lexikografisch — `'2026-13-45' < '2026-08-30'` ist FALSE, der Eintrag waere also
+  // NIE abgelaufen. Ein fail-OPEN mitten im einzigen Register, das fail-closed sein muss.
+  for (const unsinn of ['2026-13-45', '2026-02-31', '2026-00-10', '2026-01-00', '2026-1-5']) {
+    assert.throws(() => lade({ eintraege: [{ ...gut, gueltigBis: unsinn }] }),
+      /'gueltigBis' fehlt oder ist kein/, `${unsinn} darf nicht als Datum durchgehen`);
+    assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, gemessenAm: unsinn } }] }),
+      /gemessenAm muss JJJJ-MM-TT sein/, `${unsinn} darf auch als Messdatum nicht durchgehen`);
+  }
+  // ABWESENHEIT: ein echter Schalttag laedt — die Pruefung darf nicht einfach alles ablehnen.
+  assert.equal(lade({ eintraege: [{ ...gut, gueltigBis: '2028-02-29' }] }).length, 1);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('M13: ein Eintrag mit Anker B als ALLEINIGEM Beleg laedt nicht durch', () => {
+  const { dir, gut, lade } = registerFixture();
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, anker: ['B'] } }] }),
+    /ausschliesslich Anker B/);
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, anker: ['b', 'B'] } }] }),
+    /ausschliesslich Anker B/);
+  // ABWESENHEIT: B ZUSAMMEN mit einem anderen Anker ist zulaessig — B ist als Meldung brauchbar,
+  // nur als alleinige Begruendung nicht.
+  assert.equal(lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, anker: ['A', 'B'] } }] }).length, 1);
+  assert.equal(lade({ eintraege: [gut] }).length, 1, 'ohne Anker-Angabe bleibt alles wie bisher');
+  assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, anker: 'B' } }] }),
+    /beleg\.anker muss eine Liste/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
