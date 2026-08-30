@@ -27,6 +27,13 @@ const ROOT = path.join(__dirname, '..', '..');
 const HEAD_REL = 'protocol/early-detection/2.0.0/'
   + 'r2-a1-v120-bound-manifest-resolution-addendum-2026-08-30.json';
 const HEAD_STATUS = 'FROZEN_BOUND_MANIFEST_RESOLUTION_ADDENDUM';
+// A record cannot carry its own hash, and the head is the link that DECIDES the
+// pin — so it is anchored here, outside its own chain. Without this, changing
+// the script and rewriting the head's pin in the same breath left both pin
+// tests green; reproduced before the anchor existed. Same shape the comparator
+// addendum's test already uses (EXPECTED_ADDENDUM_SHA256): moving the head now
+// costs a second, visible edit in a different file.
+const HEAD_SHA256 = 'eae2677676694a43c7cceffa7f39c970155834b1e74594663c0d4be5428f41bc';
 const SHA256 = /^[0-9a-f]{64}$/;
 
 const abs = (relative) => path.join(ROOT, ...relative.split('/'));
@@ -43,6 +50,7 @@ function frozenRecord(relative, expectedStatus) {
 // Oldest -> youngest, exactly as the head record declares it.
 function chain() {
   const head = frozenRecord(HEAD_REL, HEAD_STATUS);
+  assert.equal(sha256(HEAD_REL), HEAD_SHA256, 'the chain head moved after it was frozen');
   const links = head.pinChain;
   assert.ok(Array.isArray(links) && links.length >= 2, 'the pin chain is missing');
   assert.equal(links[links.length - 1].path, HEAD_REL,
@@ -50,9 +58,16 @@ function chain() {
   return links.map((link) => {
     const record = frozenRecord(link.path, link.status);
     // M16 was: nothing ever recomputed the record hashes, so an accidental edit
-    // of a frozen link went unnoticed. Every link that carries the bytes it was
-    // frozen with is held against them here. The head cannot carry its own hash.
-    if (link.sha256AtFreezeTime !== null) {
+    // of a frozen link went unnoticed. Every link is held against the bytes it
+    // was frozen with — the head against the constant above, every other link
+    // against the hash it declares. A link that declares none is a hole, not a
+    // permission: a null anywhere but the head fails here.
+    if (link.path === HEAD_REL) {
+      assert.equal(link.sha256AtFreezeTime, null,
+        'the head cannot carry its own hash');
+    } else {
+      assert.ok(typeof link.sha256AtFreezeTime === 'string',
+        `${link.path} declares no hash to be held against`);
       assert.equal(sha256(link.path), link.sha256AtFreezeTime,
         `${link.path} moved after it was frozen`);
     }

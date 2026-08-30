@@ -297,11 +297,47 @@ def closure_record(version):
         return None
     with open(path, encoding="utf-8") as handle:
         record = json.load(handle)
+    # These records are hand-maintained JSON. A malformed one must arrive as a
+    # named ArtifactError, not as an AttributeError from the next .get() - the
+    # fail-closed contract is only worth something if it is readable.
+    if not isinstance(record, dict):
+        raise ArtifactError(
+            "Closure record for artifact version " + version
+            + " is not a JSON object: " + relative
+        )
     if record.get("status") != expected_status:
         raise ArtifactError(
             "Closure record for artifact version " + version + " is not frozen"
         )
     return record
+
+
+def frozen_bound_manifest(record, version):
+    """The manifest a FROZEN record binds for that version, or None.
+
+    None means the record carries no boundManifest AT ALL - the 1.1.0 shape,
+    an honest "nothing to replicate". Absence is the only reading that means
+    it. A record that DOES carry the field has to carry it properly: a hollow
+    body, a wrong type or a value that is not a sha256 is a named refusal, not
+    a quiet fall-through to the weaker mode. These records are hand-maintained
+    JSON, so a malformed one must arrive as an ArtifactError rather than as an
+    AttributeError from the next attribute access.
+    """
+    if "boundManifest" not in record:
+        return None
+    bound_manifest = record["boundManifest"]
+    if not isinstance(bound_manifest, dict):
+        raise ArtifactError(
+            "boundManifest of artifact version " + version
+            + " is not a JSON object: " + repr(bound_manifest)
+        )
+    pinned = bound_manifest.get("manifestFileSha256")
+    if not isinstance(pinned, str) or not SHA256_PATTERN.match(pinned):
+        raise ArtifactError(
+            "Bound manifest pin for artifact version " + version
+            + " is not a sha256: " + repr(pinned)
+        )
+    return pinned
 
 
 def bound_manifest_binding(version):
@@ -341,18 +377,9 @@ def bound_manifest_binding(version):
     record = closure_record(version)
     if record is None:
         return FIRST_BUILD_BINDING, None
-    pinned = (record.get("boundManifest") or {}).get("manifestFileSha256")
+    pinned = frozen_bound_manifest(record, version)
     if pinned is None:
-        # A frozen record that carries no bound manifest binds no manifest.
-        # That is the 1.1.0 shape - its binding lives in the blocker-2
-        # correction and is resolved above - so this is the honest "nothing to
-        # replicate", not a fallback for a version that should have one.
         return FIRST_BUILD_BINDING, None
-    if not SHA256_PATTERN.match(str(pinned)):
-        raise ArtifactError(
-            "Bound manifest pin for artifact version " + version
-            + " is not a sha256: " + repr(pinned)
-        )
     return REPLICATION_BINDING, pinned
 
 
@@ -1416,6 +1443,7 @@ SELF_TEST_NAMES = (
     # H7: the two directions of the record-resolving binding.
     "Bound manifest for a closed version resolves out of its frozen record",
     "An artifact version without a frozen record is refused, not degraded",
+    "A record whose bound manifest is hollow is refused, not degraded",
 )
 
 
@@ -1632,6 +1660,34 @@ def self_test():
     except ArtifactError:
         unknown_version_refused = True
     check(SELF_TEST_NAMES[32], unknown_version_refused)
+    # A record that carries boundManifest must carry it properly. Absence is
+    # the 1.1.0 shape and stays the only quiet answer; every hollow or
+    # malformed body is a named refusal, or the weaker mode would be reachable
+    # again through a record body instead of through an unknown version.
+    hollow_records = [
+        {"boundManifest": {}},
+        {"boundManifest": {"manifestFileSha256": "not-a-hash"}},
+        {"boundManifest": "a string, not an object"},
+        {"boundManifest": {"manifestFileSha256": v120_manifest + "trailing"}},
+    ]
+    hollow_refused = []
+    for candidate in hollow_records:
+        try:
+            frozen_bound_manifest(candidate, "1.2.0")
+            hollow_refused.append(False)
+        except ArtifactError:
+            hollow_refused.append(True)
+    check(
+        SELF_TEST_NAMES[33],
+        all(hollow_refused)
+        # ... and the two honest answers still work, or the check above would
+        # be satisfied by a function that only ever refuses.
+        and frozen_bound_manifest({}, "1.1.0") is None
+        and frozen_bound_manifest(
+            {"boundManifest": {"manifestFileSha256": v120_manifest}},
+            "1.2.0") == v120_manifest,
+        hollow_refused,
+    )
     closure = load_blocker_closure()
     fixture_binding = closure["blocker2MutationSensitiveDeterminism"]
     # Documented interim state (ENTSCHIED 6, Q2): the v1.2.0 closure record is
