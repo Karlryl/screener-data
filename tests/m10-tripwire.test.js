@@ -32,7 +32,7 @@ const { spawnSync } = require('node:child_process');
 
 const {
   tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
-  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG,
+  TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG, umbenennungsProtokoll,
 } = require('../scripts/filter-snapshot-merge.js');
 
 let pass = 0, fail = 0;
@@ -219,7 +219,7 @@ test('M9: die Herkunft ist NIE undefined — sonst verschluckt JSON.stringify de
   // nicht mehr zu unterscheiden. Der Bericht benutzt deshalb dasselbe Bucket-Vokabular wie M1.
   const dir = tmp();
   fs.writeFileSync(path.join(dir, 'AAA.json'), JSON.stringify({ meta: { name: 'Alpha AG' }, annual: {} }));
-  const { zeilen } = tripwireLesen(dir, ['AAA.json']);
+  const { zeilen } = tripwireLesen(dir);
   assert.equal(zeilen[0].nameSource, 'fehlt');
   assert.ok(JSON.stringify(zeilen[0]).includes('"nameSource"'), 'der Schluessel ueberlebt die Serialisierung');
   fs.rmSync(dir, { recursive: true, force: true });
@@ -356,6 +356,157 @@ test('MESSEBENE: der Tripwire sieht die Divergenz, die die Vorstufe gleich HEILT
   const b = JSON.parse(fs.readFileSync(tripwireStandardpfad(ziel), 'utf8'));
   assert.deepEqual(b.ankerB.meldungen[0].beine.map((x) => x.schluessel).sort(),
     ['analogdevicesinc', 'analogdevicesincdl166'], 'zwei Schluessel — der Zustand VOR der Stufe');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('REVIEW-HAERTUNG: ein unlesbares SIEGER-Bein zaehlt als (unlesbar), nicht als fehlend', () => {
+  // Review-Fund 30.08. (MEDIUM): das Nachlesen der Quell-Herkunft (M5) verschluckte jeden
+  // Wurf und lieferte `undefined` — gebucht als `fehlt`, also derselbe Bucket wie "die Zeile
+  // trug nie eine Herkunft". Ein systemischer Lesefehler war damit von einem Tag ohne
+  // watchlist-benannte Sieger nicht zu unterscheiden.
+  //
+  // Gefahren wird die U2-Strecke, weil sie ohne die eingefrorene Milan-Kandidatenliste
+  // auskommt: ein `.BO`/`.NS`-Zwillingspaar, dessen SIEGER-Datei zwischen Schreiben und
+  // Nachlesen unlesbar wird. Die Umbenennung selbst passiert trotzdem — das ist die Zusage.
+  const root = tmp();
+  const eingang = path.join(root, 'eingang');
+  const ziel = path.join(root, 'ziel');
+  fs.mkdirSync(eingang, { recursive: true });
+  const schreib = (t, n) => fs.writeFileSync(path.join(eingang, t + '.json'), JSON.stringify({
+    meta: { ticker: t, name: n, nameSource: 'watchlist', sharesOutstanding: 1e6, fxRateApplied: 1 },
+    annual: { annualShares: [1e6] }, marketCap: { value: 1e9 },
+  }));
+  schreib('KRN.BO', 'KRN Heat Exchanger and Refrigeration Limited');
+  schreib('KRN.NS', 'KRN HEAT EXCHANGE N REF L');
+  fs.writeFileSync(path.join(root, 'wl.json'), JSON.stringify({ stocks: [{ ticker: 'KRN.BO' }, { ticker: 'KRN.NS' }] }));
+  const r = spawnSync(process.execPath, [SKRIPT, '--eingang', eingang, '--ziel', ziel,
+    '--watchlist', path.join(root, 'wl.json'), '--heute', '2026-08-30T00:00:00Z'], { encoding: 'utf8' });
+  const ausgabe = (r.stdout || '') + (r.stderr || '');
+  assert.equal(r.status, 0);
+  assert.match(ausgabe, /je Herkunft des Quell-Beins: \{"watchlist":1\}/,
+    'ANWESENHEIT: die Herkunft des Siegers wird gelesen und gezaehlt');
+  assert.match(ausgabe, /watchlist-benannte Quell-Beine: 1 — KRN\.NS<-KRN\.BO/);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('REVIEW-HAERTUNG: NICHT LESBAR ist nicht KEINE HERKUNFT (Sieger-Nachlese)', () => {
+  // Review-Fund 30.08. (MEDIUM): das Nachlesen der Quell-Herkunft verschluckte jeden Wurf und
+  // lieferte `undefined` — gebucht als `fehlt`, also derselbe Bucket wie "die Zeile trug nie
+  // eine Herkunft". Ein systemischer Lesefehler war damit von einem Tag ohne watchlist-
+  // benannte Sieger nicht zu unterscheiden.
+  //
+  // Gemessen an der Funktion selbst, weil der U3-Pfad im Lauf die eingefrorene
+  // Milan-Kandidatenliste braucht; die Verdrahtung deckt der End-to-End-Test darunter ab.
+  const { siegerHerkunftNachlesen } = require('../scripts/filter-snapshot-merge.js');
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'GUT.json'), JSON.stringify({ meta: { name: 'Gut AG', nameSource: 'watchlist' } }));
+  fs.writeFileSync(path.join(dir, 'KAPUTT.json'), '{ das ist kein json');
+  fs.writeFileSync(path.join(dir, 'OHNE.json'), JSON.stringify({ meta: { name: 'Ohne AG' } }));
+
+  // ANWESENHEIT: eine lesbare Datei liefert ihre echte Herkunft.
+  assert.deepEqual(siegerHerkunftNachlesen(dir, 'GUT'), { herkunft: 'watchlist', unlesbar: false });
+  // Die drei Lagen muessen DREI verschiedene Buckets ergeben — das ist die ganze Haertung.
+  const bucket = (t) => umbenennungsProtokoll([{ verlierer: 'X', sieger: t, quelleHerkunft: siegerHerkunftNachlesen(dir, t).herkunft }]).jeHerkunft;
+  assert.deepEqual(bucket('GUT'), { watchlist: 1 });
+  assert.deepEqual(bucket('OHNE'), { fehlt: 1 }, 'gelesen, aber ohne Herkunft: FEHLT');
+  assert.deepEqual(bucket('KAPUTT'), { '(unlesbar)': 1 }, 'gar nicht lesbar: eigener Bucket, NICHT fehlt');
+  assert.equal(siegerHerkunftNachlesen(dir, 'KAPUTT').unlesbar, true);
+  assert.ok(siegerHerkunftNachlesen(dir, 'KAPUTT').grund, 'und der Grund steht dabei, statt verschluckt zu werden');
+  // ABWESENHEIT: eine gar nicht vorhandene Datei ist ebenfalls "nicht lesbar", nicht "fehlt".
+  assert.equal(siegerHerkunftNachlesen(dir, 'GIBTSNICHT').herkunft, '(unlesbar)');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('REVIEW-HAERTUNG: ein M1-Ausfall reisst das M5-Protokoll NICHT mit', () => {
+  // Review-Fund 30.08. (MEDIUM): beide lagen in EINEM try. Ein Wurf auf der M5-Seite haette
+  // die M1-Tageszeile still verschluckt — und M1 ist die Auflage MIT FRIST (20.09.), deren
+  // ganzer Zweck es ist, dass Beweise nicht still verlorengehen.
+  //
+  // GEMESSEN, nicht am Quelltext geprueft: der Zaehler-Pfad wird zum Scheitern gebracht (der
+  // Reihen-Pfad zeigt auf eine DATEI statt in ein Verzeichnis), und es wird nachgesehen, ob
+  // das M5-Protokoll trotzdem vollstaendig im Log steht. Waeren die beiden noch gekoppelt,
+  // haette der erste Wurf beide Ausgaben genommen.
+  const sack = tmp();
+  const blocker = path.join(sack, 'blocker');
+  fs.writeFileSync(blocker, 'ich bin eine Datei, kein Verzeichnis');
+  const { root, r, ausgabe } = laufe(['--namensherkunft', path.join(blocker, 'reihe.json')]);
+  assert.equal(r.status, 0, 'reine Messung — der Lauf stirbt nicht daran');
+  assert.match(ausgabe, /::warning::M10-Herkunftszaehler — Messung ausgefallen/,
+    'der M1-Ausfall meldet sich, und zwar unter SEINEM Namen');
+  assert.match(ausgabe, /\[m10-umbenennungs-protokoll\] \d+ Umbenennungen in der Vorstufe/,
+    'das M5-Protokoll ist trotzdem vollstaendig da');
+  assert.match(ausgabe, /\[m10-umbenennungs-protokoll\] watchlist-benannte Quell-Beine:/);
+  assert.doesNotMatch(ausgabe, /::warning::M10-Protokoll \(M5\)/, 'und M5 hat NICHT mitgemeldet');
+  // Gegenrichtung, soweit von aussen erreichbar: die M5-Degradationsmeldung sagt ausdruecklich
+  // zu, dass sie M1 nicht mitreisst. Der Satz ist die Zusage, auf die sich ein Leser des Logs
+  // verlaesst, wenn der umgekehrte Fall eintritt.
+  assert.match(fs.readFileSync(SKRIPT, 'utf8'),
+    /::warning::M10-Protokoll \(M5\) — Interims-Protokoll ausgefallen[^`]*Der Herkunfts-Zaehler \(M1\) laeuft davon UNBERUEHRT weiter/);
+  fs.rmSync(root, { recursive: true, force: true });
+  fs.rmSync(sack, { recursive: true, force: true });
+});
+
+test('REVIEW-HAERTUNG: ein AUSGEFALLENER Anker steht als ausgefallen da, nie als 0', () => {
+  // Review-Fund 30.08.: der Bericht wurde nur geschrieben, wenn BEIDE Anker durchliefen — ein
+  // Wurf in A nahm also auch Bs fertig gerechnete Meldungen aus der committeten Datei, und die
+  // fail-open-Zusage "faellt A aus, meldet B trotzdem" galt nur fuers fluechtige Log.
+  const b = tripwireAnkerB([zeile('AVB', 'AvalonBay Communities Inc', { fp: FP_AVB }), zeile('VMRK', 'Vivmark Residential', { fp: FP_AVB })]);
+  const ber = tripwireBericht(null, b, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
+  assert.equal(ber.ankerA.ausgefallen, true);
+  assert.equal(ber.zaehlung.ankerA, null, 'NICHT 0 — "nicht gemessen" darf nie wie "nichts gefunden" aussehen');
+  assert.ok(ber.ankerA.grund, 'und der Grund steht dabei');
+  assert.equal(ber.ankerB.ausgefallen, false, 'der lebende Anker bleibt vollstaendig im Bericht');
+  assert.equal(ber.zaehlung.ankerB, 1);
+  assert.equal(ber.ankerB.meldungen.length, 1);
+  // ABWESENHEIT: laufen beide, ist nichts als ausgefallen markiert.
+  const a = tripwireAnkerA([zeile('VMRK', 'Vivmark Residential', { shares: 398834711, jahresAktien: 142826382 })]);
+  const beide = tripwireBericht(a, b, { stand: '2026-08-30', gelesen: 2, unlesbar: 0, messebene: 'x' });
+  assert.equal(beide.ankerA.ausgefallen, false);
+  assert.equal(beide.ankerB.ausgefallen, false);
+});
+
+test('REVIEW-HAERTUNG: der Tripwire misst DASSELBE Verzeichnis wie sein Schwester-Zaehler', () => {
+  // Review-Fund 30.08. (MEDIUM, reproduziert): `tripwireLesen` las die Uebernahme-Liste dieses
+  // Laufs, `namensherkunftLesen` das ganze Verzeichnis. Dieser Schritt raeumt `ziel` nie ab —
+  // ein Stand aus einem frueheren Lauf wird weiter GESCORT, waere aber an beiden Ankern
+  // vorbeigelaufen. Zwei Messungen desselben Urteils duerfen nicht zwei Populationen meinen.
+  const dir = tmp();
+  fs.writeFileSync(path.join(dir, 'NEU.json'), JSON.stringify({ meta: { name: 'Neu AG', sharesOutstanding: 10, fxRateApplied: 1 }, annual: { annualShares: [1] } }));
+  fs.writeFileSync(path.join(dir, 'ALT.json'), JSON.stringify({ meta: { name: 'Alt aus frueherem Lauf AG', sharesOutstanding: 10, fxRateApplied: 1 }, annual: { annualShares: [1] } }));
+  const { zeilen } = tripwireLesen(dir);
+  assert.deepEqual(zeilen.map((z) => z.ticker).sort(), ['ALT', 'NEU'],
+    'die Altlast wird MITGEMESSEN — sie wird ja auch mitgescort');
+  const { namensherkunftLesen } = require('../scripts/filter-snapshot-merge.js');
+  assert.equal(namensherkunftLesen(dir).zeilen.length, zeilen.length,
+    'beide M10-Messungen sehen dieselbe Population');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('REVIEW-HAERTUNG (am LAUF): eine Altlast im Ziel wird vom Tripwire MITGEMESSEN', () => {
+  // Die Wache darueber misst die Funktion; DIESE misst die Aufrufstelle. Genau dort lag der
+  // Fund: `run()` reichte die Uebernahme-Liste dieses Laufs hinein. Eine Datei, die aus einem
+  // frueheren Lauf im Ziel liegt, steht in keiner Uebernahme-Liste — wird aber weiter GESCORT.
+  // Sie muss also in beiden M10-Messungen auftauchen.
+  const root = tmp();
+  const eingang = path.join(root, 'eingang');
+  const ziel = path.join(root, 'ziel');
+  fs.mkdirSync(eingang, { recursive: true });
+  fs.mkdirSync(ziel, { recursive: true });
+  const daten = (n, shares) => JSON.stringify({
+    meta: { ticker: n, name: n + ' AG', sharesOutstanding: shares, fxRateApplied: 1 },
+    annual: { annualShares: [1000000] }, marketCap: { value: 1e9 },
+  });
+  fs.writeFileSync(path.join(eingang, 'NEU.json'), daten('NEU', 1000000));      // sauber, 1,000
+  fs.writeFileSync(path.join(ziel, 'ALTLAST.json'), daten('ALTLAST', 9000000)); // 9,0 -> Anker A
+  fs.writeFileSync(path.join(root, 'wl.json'), JSON.stringify({ stocks: [{ ticker: 'NEU' }] }));
+  const r = spawnSync(process.execPath, [SKRIPT, '--eingang', eingang, '--ziel', ziel,
+    '--watchlist', path.join(root, 'wl.json'), '--heute', '2026-08-30T00:00:00Z'], { encoding: 'utf8' });
+  assert.equal(r.status, 0);
+  const b = JSON.parse(fs.readFileSync(tripwireStandardpfad(ziel), 'utf8'));
+  assert.equal(b.gelesen, 2, 'der Tripwire hat BEIDE Dateien gesehen, nicht nur die uebernommene');
+  assert.equal(b.zaehlung.ankerA, 1);
+  assert.equal(b.ankerA.meldungen[0].ticker, 'ALTLAST',
+    'genau die Altlast, die keine Uebernahme-Liste je genannt haette');
   fs.rmSync(root, { recursive: true, force: true });
 });
 

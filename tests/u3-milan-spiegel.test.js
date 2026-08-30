@@ -442,6 +442,17 @@ test('M17b (D-A): ein ABGELAUFENER Eintrag stoppt den Lauf, ein gueltiger nicht'
   // Ohne brauchbares Datum kann D-A nicht pruefen — und darf dann nicht stillschweigend durchlassen.
   assert.throws(() => lade({ eintraege: [gut] }, null), /D-A kann nicht pruefen/);
   assert.throws(() => lade({ eintraege: [gut] }, 'irgendwann'), /D-A kann nicht pruefen/);
+  // Review-Fund 30.08.: eine reine FORMAT-Pruefung liess `2026-13-45` durch, und der Ablauf
+  // vergleicht lexikografisch — `'2026-13-45' < '2026-08-30'` ist FALSE, der Eintrag waere also
+  // NIE abgelaufen. Ein fail-OPEN mitten im einzigen Register, das fail-closed sein muss.
+  for (const unsinn of ['2026-13-45', '2026-02-31', '2026-00-10', '2026-01-00', '2026-1-5']) {
+    assert.throws(() => lade({ eintraege: [{ ...gut, gueltigBis: unsinn }] }),
+      /'gueltigBis' fehlt oder ist kein/, `${unsinn} darf nicht als Datum durchgehen`);
+    assert.throws(() => lade({ eintraege: [{ ...gut, beleg: { ...gut.beleg, gemessenAm: unsinn } }] }),
+      /gemessenAm muss JJJJ-MM-TT sein/, `${unsinn} darf auch als Messdatum nicht durchgehen`);
+  }
+  // ABWESENHEIT: ein echter Schalttag laedt — die Pruefung darf nicht einfach alles ablehnen.
+  assert.equal(lade({ eintraege: [{ ...gut, gueltigBis: '2028-02-29' }] }).length, 1);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
