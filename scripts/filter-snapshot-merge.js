@@ -712,7 +712,24 @@ function milanUmbenennungen(klassen, mehrfachAbdruecke) {
  * ihr vorbei. Sie ist ein Gelaender, kein Schloss — das Schloss ist B3(i) plus M18.
  */
 const IDENTITAETS_BELEG_PFLICHTFELDER = ['bericht', 'abschnitt', 'gemessenAm'];
-const IST_ISO_DATUM = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * KALENDER-ECHT, nicht nur formatrichtig (Review-Fund 30.08.).
+ *
+ * Eine reine Formatpruefung `/^\d{4}-\d{2}-\d{2}$/` liess `"2026-13-45"` durch. Der D-A-Ablauf
+ * vergleicht danach LEXIKOGRAFISCH — und `'2026-13-45' < '2026-08-30'` ist FALSE. Ein Eintrag
+ * mit einem Unsinnsdatum waere also nie abgelaufen: ein fail-OPEN mitten in dem einzigen
+ * Register, das ausdruecklich fail-closed sein muss. Reproduziert.
+ *
+ * `Date.UTC` + Rueckvergleich faengt den Monats-/Tagesueberlauf, den JS sonst still weiterrollt
+ * (aus dem 31.02. wird der 03.03.).
+ */
+const IST_ISO_DATUM = (s) => {
+  if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const [j, m, t] = s.split('-').map(Number);
+  const d = new Date(Date.UTC(j, m - 1, t));
+  return d.getUTCFullYear() === j && d.getUTCMonth() === m - 1 && d.getUTCDate() === t;
+};
 
 /**
  * M17c (D-D) — DER ZAEHLER-ANKER, Nachfolger des Leer-Tests.
@@ -742,7 +759,7 @@ function ladeIdentitaetsRegister(registerPfad, heute, repoWurzel = path.join(__d
   // Ohne Datum kann D-A nicht pruefen — und ein Ablauf, der bei fehlendem Datum stillschweigend
   // durchlaesst, ist genau die Bauform, die dieses Register nicht haben darf.
   const heuteTag = String(heute || '').slice(0, 10);
-  if (!IST_ISO_DATUM.test(heuteTag)) throw new Error(`${registerPfad}: kein brauchbares Datum uebergeben (${heute}); D-A kann nicht pruefen`);
+  if (!IST_ISO_DATUM(heuteTag)) throw new Error(`${registerPfad}: kein brauchbares Datum uebergeben (${heute}); D-A kann nicht pruefen`);
   const ids = new Set();
   const belegteTicker = new Map();
   for (const [i, e] of eintraege.entries()) {
@@ -757,7 +774,7 @@ function ladeIdentitaetsRegister(registerPfad, heute, repoWurzel = path.join(__d
     for (const feld of IDENTITAETS_BELEG_PFLICHTFELDER) {
       if (typeof e.beleg[feld] !== 'string' || !e.beleg[feld].trim()) throw new Error(`${registerPfad}: Eintrag ${i}, Feld beleg.${feld} fehlt/ist leer`);
     }
-    if (!IST_ISO_DATUM.test(e.beleg.gemessenAm)) throw new Error(`${registerPfad}: Eintrag ${i}, beleg.gemessenAm muss JJJJ-MM-TT sein (ist "${e.beleg.gemessenAm}")`);
+    if (!IST_ISO_DATUM(e.beleg.gemessenAm)) throw new Error(`${registerPfad}: Eintrag ${i}, beleg.gemessenAm muss JJJJ-MM-TT sein (ist "${e.beleg.gemessenAm}")`);
     const berichtRel = e.beleg.bericht.trim();
     const berichtAbs = path.resolve(repoWurzel, berichtRel);
     if (path.isAbsolute(berichtRel) || !berichtAbs.startsWith(path.resolve(repoWurzel) + path.sep)) {
@@ -776,7 +793,7 @@ function ladeIdentitaetsRegister(registerPfad, heute, repoWurzel = path.join(__d
       }
     }
     // ── M17b (D-A): Ablaufdatum, fail-closed ─────────────────────────────────────────────
-    if (typeof e.gueltigBis !== 'string' || !IST_ISO_DATUM.test(e.gueltigBis)) {
+    if (typeof e.gueltigBis !== 'string' || !IST_ISO_DATUM(e.gueltigBis)) {
       throw new Error(`${registerPfad}: Eintrag ${i}, 'gueltigBis' fehlt oder ist kein JJJJ-MM-TT (D-A, fail-closed): ein Identitaets-Eintrag darf nicht als Dauerzustand einschlafen`);
     }
     if (e.gueltigBis < heuteTag) {
@@ -1205,6 +1222,26 @@ function namensherkunftSchreiben(pfad, datum, eintrag) {
  * Entscheidungstag (G2, Urteil §8) liegt damit nicht nur eine Zahl vor, sondern die pruefbare
  * Liste — und genau das ist der Unterschied zwischen "es gibt die Klasse" und "hier ist sie".
  */
+/**
+ * M5, Nachlese-Halbteil: die Herkunft des SIEGER-Beins einer U3-Milan-Umbenennung. REIN
+ * LESEND — `milanSchreiben`/U3 ist N1 und wird nicht angefasst (Urteil §7); der Sieger wird
+ * von keiner Stufe umgeschrieben, sein `nameSource` ist also unveraendert.
+ *
+ * EIGENE FUNKTION, damit die Unterscheidung pruefbar ist (Review-Fund 30.08., MEDIUM): NICHT
+ * LESBAR ist nicht KEINE HERKUNFT. Vorher landeten beide Lagen im Bucket `fehlt`, und ein
+ * systemischer Lesefehler war von einem Tag ohne watchlist-benannte Sieger nicht zu
+ * unterscheiden — dieselbe Verwechslung, die dieselbe Datei an drei anderen Stellen
+ * ausdruecklich vermeidet.
+ */
+function siegerHerkunftNachlesen(ziel, ticker) {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(ziel, safeSnapshotFilename(ticker)), 'utf8'));
+    return { herkunft: j && j.meta ? j.meta.nameSource : undefined, unlesbar: false };
+  } catch (e) {
+    return { herkunft: '(unlesbar)', unlesbar: true, grund: e && e.message ? e.message : String(e) };
+  }
+}
+
 function umbenennungsProtokoll(eintraege) {
   const jeHerkunft = {};
   const watchlistFaelle = [];
@@ -1372,10 +1409,19 @@ function tripwireAnkerB(zeilen) {
  * `OHNE-FX:<ticker>` und matcht damit mit NICHTS (fail-closed, ratifizierte A7-FX-Bauform) —
  * es kann also keine Klasse erfinden.
  */
-function tripwireLesen(ziel, dateien) {
+function tripwireLesen(ziel) {
   const zeilen = [];
   let unlesbar = 0;
-  for (const f of dateien) {
+  // DAS VERZEICHNIS, NICHT DIE UEBERNAHME-LISTE (Review-Fund 30.08., MEDIUM, reproduziert).
+  // Vorher las dieser Durchgang `uebernehmen`, also nur die Dateien DIESES Laufs — waehrend
+  // sein Schwester-Zaehler (`namensherkunftLesen`) das ganze Verzeichnis liest. Dieser Schritt
+  // raeumt `ziel` nie ab (s. "DAS EINZIGE LOCH IM AUSSCHLUSS" in run()): lokal kann ein Stand
+  // aus einem frueheren Lauf liegenbleiben, der weiter gescort WIRD — und genau der waere
+  // an beiden Ankern vorbeigelaufen, waehrend die Schwester-Messung ihn zaehlt. Zwei
+  // Messungen desselben Urteils duerfen nicht zwei verschiedene Populationen meinen.
+  // In CI faellt der Unterschied nicht auf (frischer Runner, `ziel` startet leer) — das ist
+  // der Grund, warum er ohne diesen Fund nie aufgefallen waere.
+  for (const f of fs.readdirSync(ziel)) {
     if (!f.endsWith('.json') || isMetadataSnapshot(f)) continue;
     try {
       const j = JSON.parse(fs.readFileSync(path.join(ziel, f), 'utf8'));
@@ -1413,6 +1459,17 @@ function tripwireLesen(ziel, dateien) {
  * die Messreihe ist data-health/namensherkunft-history.json (M1).
  */
 function tripwireBericht(a, b, kopf) {
+  // EIN AUSGEFALLENER ANKER IST NICHT EIN ANKER OHNE BEFUND (Review-Fund 30.08.).
+  // Vorher wurde der committete Bericht nur geschrieben, wenn BEIDE Anker durchliefen — ein
+  // Wurf in A nahm also auch Bs bereits fertig gerechnete Meldungen aus der persistierten
+  // Datei, und die fail-open-Zusage "faellt A aus, meldet B trotzdem" galt nur fuers Log.
+  // Jetzt wird der Bericht immer geschrieben, und der ausgefallene Anker steht ausdruecklich
+  // als `ausgefallen: true` da statt als 0 — dieselbe Trennung wie FEHLT gegen NULL beim
+  // Zaehler: "nicht gemessen" darf nie wie "nichts gefunden" aussehen.
+  const teil = (r, name) => (r
+    ? { ausgefallen: false, gemeldet: r.treffer.length, gelistet: Math.min(r.treffer.length, TRIPWIRE_KAPPUNG), meldungen: r.treffer.slice(0, TRIPWIRE_KAPPUNG) }
+    : { ausgefallen: true, gemeldet: null, gelistet: 0, meldungen: [],
+        grund: `Anker ${name} ist in diesem Lauf ausgefallen (s. ::warning:: im Lauf-Log). NICHT als 0 lesen: dieser Anker hat heute NICHTS gemessen.` });
   return {
     _doku: [
       'IDENTITAETS-TRIPWIRE — MELDUNG, KEINE ENTSCHEIDUNG (_COURT-M10-2026-08-30, ENTSCHIED 126).',
@@ -1437,13 +1494,13 @@ function tripwireBericht(a, b, kopf) {
     ],
     ...kopf,
     zaehlung: {
-      ankerA: a.treffer.length,
-      ankerA_ausgenommen: a.ausgenommen,
-      ankerA_ohneBasis: a.ohneBasis,
-      ankerB: b.treffer.length,
+      ankerA: a ? a.treffer.length : null,
+      ankerA_ausgenommen: a ? a.ausgenommen : null,
+      ankerA_ohneBasis: a ? a.ohneBasis : null,
+      ankerB: b ? b.treffer.length : null,
     },
-    ankerA: { gemeldet: a.treffer.length, gelistet: Math.min(a.treffer.length, TRIPWIRE_KAPPUNG), meldungen: a.treffer.slice(0, TRIPWIRE_KAPPUNG) },
-    ankerB: { gemeldet: b.treffer.length, gelistet: Math.min(b.treffer.length, TRIPWIRE_KAPPUNG), meldungen: b.treffer.slice(0, TRIPWIRE_KAPPUNG) },
+    ankerA: teil(a, 'A'),
+    ankerB: teil(b, 'B'),
   };
 }
 
@@ -1840,7 +1897,7 @@ function run(argv) {
   // seines Gegenstands. GEMELDET wird trotzdem erst ganz am Schluss (sequenziell, fail-open).
   let tripwireRoh = null;
   try {
-    tripwireRoh = tripwireLesen(ziel, uebernehmen);
+    tripwireRoh = tripwireLesen(ziel);
   } catch (e) {
     console.error(`::warning::M10-Tripwire — Rohdaten nicht erhoben (${e && e.message ? e.message : e}); Anker A UND B fallen heute aus. Der Lauf laeuft weiter (reine Meldung, keine Datenwirkung).`);
   }
@@ -1983,26 +2040,38 @@ function run(argv) {
   // faellen (Praezedenz: der harte Tageslauf-Abbruch aus einer Vorstufen-Reihenfolge,
   // orchestrator-2026-08-29.md:554) — deshalb faengt der Mantel ALLES und weist die
   // Degradation aus. Eine still ausfallende Messung ist keine Messung.
+  // ZWEI GETRENNTE MAENTEL, nicht einer (Review-Fund 30.08., MEDIUM). M5 ist ein Diagnose-
+  // Protokoll, M1 ist die Auflage MIT FRIST — und M1 lag im selben try wie der komplexere
+  // M5-Teil (Array-Bau, Datei-Nachlesen, `safeSnabshotFilename`, das bei einem kaputten Ticker
+  // wirft). Ein Wurf auf der M5-Seite haette die M1-Tageszeile still verschluckt, und die
+  // Warnzeile haette nicht gesagt, welche Haelfte gebrochen ist. Genau der Verlust, den die
+  // Frist verhindern soll.
+  let protokoll = null;
   try {
     // M5: die Quell-Herkunft der U3-Milan-Umbenennungen wird REIN LESEND nachgeholt (Urteil
     // §7: `milanSchreiben`/U3 ist N1 und wird nicht angefasst). Der Sieger wird von keiner
     // Stufe umgeschrieben, sein `nameSource` ist also unveraendert.
     const milanProtokoll = [];
+    let siegerUnlesbar = 0;
     for (const u of urteile) {
       if (u.grund !== 'umbenennen') continue;
-      let quelleHerkunft;
-      try {
-        const j = JSON.parse(fs.readFileSync(path.join(ziel, safeSnapshotFilename(u.sieger)), 'utf8'));
-        quelleHerkunft = j && j.meta ? j.meta.nameSource : undefined;
-      } catch (e) { quelleHerkunft = undefined; }
+      const nachlese = siegerHerkunftNachlesen(ziel, u.sieger);
+      if (nachlese.unlesbar) {
+        siegerUnlesbar++;
+        console.error(`::warning::M10-Protokoll (M5) — Sieger-Bein ${u.sieger} nicht nachlesbar (${nachlese.grund}); seine Herkunft zaehlt als (unlesbar), nicht als fehlend. Die Umbenennung selbst ist davon unberuehrt.`);
+      }
       for (const v of u.verlierer) {
-        milanProtokoll.push({ kanal: 'U3-Milan', verlierer: v, sieger: u.sieger, name: u.name, quelleHerkunft });
+        milanProtokoll.push({ kanal: 'U3-Milan', verlierer: v, sieger: u.sieger, name: u.name, quelleHerkunft: nachlese.herkunft });
       }
     }
-    const protokoll = umbenennungsProtokoll([...(zwillinge.protokoll || []), ...milanProtokoll]);
-    console.log(`[m10-umbenennungs-protokoll] ${protokoll.gesamt} Umbenennungen in der Vorstufe, je Herkunft des Quell-Beins: ${JSON.stringify(protokoll.jeHerkunft)}. Kein Bein wurde deswegen anders behandelt — das Protokoll beobachtet nur (Auflage M5).`);
+    protokoll = umbenennungsProtokoll([...(zwillinge.protokoll || []), ...milanProtokoll]);
+    console.log(`[m10-umbenennungs-protokoll] ${protokoll.gesamt} Umbenennungen in der Vorstufe, je Herkunft des Quell-Beins: ${JSON.stringify(protokoll.jeHerkunft)} (${siegerUnlesbar} Sieger-Beine nicht nachlesbar). Kein Bein wurde deswegen anders behandelt — das Protokoll beobachtet nur (Auflage M5).`);
     console.log(`[m10-umbenennungs-protokoll] watchlist-benannte Quell-Beine: ${protokoll.watchlistFaelle.length} — ${protokoll.watchlistFaelle.join(', ') || '(keine)'}`);
+  } catch (e) {
+    console.error(`::warning::M10-Protokoll (M5) — Interims-Protokoll ausgefallen (${e && e.message ? e.message : e}). Der Herkunfts-Zaehler (M1) laeuft davon UNBERUEHRT weiter; im Tages-Eintrag fehlt nur das Feld 'umbenennungen'.`);
+  }
 
+  try {
     const { zeilen, unlesbar: mUnlesbar } = namensherkunftLesen(ziel);
     const zaehlung = namensherkunftZaehlen(zeilen);
     const summe = Object.values(zaehlung.verteilung).reduce((a, b) => a + b, 0);
@@ -2011,6 +2080,8 @@ function run(argv) {
       // falsch, und eine falsche Messreihe ist schlimmer als eine fehlende.
       throw new Error(`Bucket-Arithmetik gerissen: Summe ${summe} !== gelesene Zeilen ${zaehlung.gelesen}`);
     }
+    // `umbenennungen: null` statt eines stillen Weglassens: ein fehlendes Feld waere von
+    // "an diesem Tag wurde nichts umbenannt" nicht zu unterscheiden.
     const eintrag = { ...zaehlung, unlesbar: mUnlesbar, umbenennungen: protokoll };
     const tage = namensherkunftSchreiben(namensherkunftPfad, String(heute).slice(0, 10), eintrag);
     console.log(`[m10-namensherkunft] ${zaehlung.gelesen} Zeilen gezaehlt (${mUnlesbar} nicht lesbar): ${JSON.stringify(zaehlung.verteilung)}; ${zaehlung.mehrbeinGruppen} mehrbeinige Emittentengruppen, davon ${zaehlung.watchlistSieger} mit Sieger nameSource='watchlist' (${zaehlung.unterdrueckteBeine} unterdrueckte Beine). Reihe: ${tage} Tage in ${namensherkunftPfad}. REINE MESSUNG — kein Gate, kein Konsument.`);
@@ -2037,7 +2108,10 @@ function run(argv) {
     if (b) console.log(`[m10-tripwire] Anker B (geteilte Jahresumsatz-Reihe ueber >=2 Emittentengruppen): ${b.treffer.length} Klassen. MELDUNG, NIE BEGRUENDUNG (M13).`);
     console.log('[m10-tripwire] Erkennung und Meldung sind erlaubt; jede Verschmelzungs-Entscheidung auf Basis dieser Erkennung bleibt bis zu einem eigenen Gericht gesperrt (M16). Keine Zeile faellt, keine verschmilzt, Exit bleibt 0.');
     try {
-      if (!a || !b) throw new Error(`unvollstaendig: ${!a ? 'Anker A' : ''}${!a && !b ? ' und ' : ''}${!b ? 'Anker B' : ''} ohne Ergebnis`);
+      // Auch bei nur EINEM lebenden Anker wird geschrieben (Review-Fund 30.08.): sonst nimmt
+      // ein Wurf in A die fertig gerechneten Meldungen von B aus der committeten Datei, und
+      // die fail-open-Zusage gaelte nur fuers fluechtige Log. Der ausgefallene Anker steht im
+      // Bericht als `ausgefallen: true`, nie als 0.
       const bericht = tripwireBericht(a, b, {
         stand: String(heute).slice(0, 10),
         gelesen: tripwireRoh.zeilen.length,
@@ -2071,7 +2145,7 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   QUARANTAENE_STANDARDPFAD, QUARANTAENE_PFLICHTFELDER, NAV_PFLICHTFELDER,
   // M10/M1 + M5 (_COURT-M10-2026-08-30) — fuer TDD. Waechter: tests/m10-namensherkunft-zaehler.test.js
   namensherkunftBucket, namensherkunftZaehlen, namensherkunftLesen, namensherkunftSchreiben,
-  umbenennungsProtokoll, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad,
+  umbenennungsProtokoll, siegerHerkunftNachlesen, NAMENSHERKUNFT_BUCKETS, namensherkunftStandardpfad,
   // M10/M8-M16 Identitaets-Tripwire — fuer TDD. Waechter: tests/m10-tripwire.test.js
   tripwireAnkerA, tripwireAnkerB, tripwireLesen, tripwireBericht, tripwireStandardpfad,
   TRIPWIRE_A_BAND, TRIPWIRE_KOMPLEMENTAERFORM, TRIPWIRE_KAPPUNG };
