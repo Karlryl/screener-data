@@ -147,11 +147,32 @@ def spaltenplan(kopfzeile):
 
 
 def feld(felder, plan, name):
-    """Spaltenwert nach NAME. Fehlt die Spalte im Jahrgang, gilt sie als leer."""
+    """Spaltenwert nach NAME. Fehlt die Spalte im JAHRGANG, gilt sie als leer.
+
+    Eine im Jahrgang fehlende Spalte (`segments` im Alt-Stand) ist der
+    legitime Fall. Eine in der ZEILE fehlende Spalte ist es nicht — die prueft
+    `zerlege_zeile`, bevor hier irgendetwas gelesen wird.
+    """
     i = plan.get(name)
     if i is None:
         return ""
-    return felder[i] if i < len(felder) else ""
+    return felder[i]
+
+
+def zerlege_zeile(zeile, plan, quelle):
+    """Zeile -> Felder, mit Laengenpruefung.
+
+    Ohne diese Pruefung liest eine abgeschnittene Zeile ihre fehlenden
+    Endspalten als leer — und `segments`/`coreg` stehen am Ende. Eine kaputte
+    Dimensionszeile zaehlte dann als KONZERNZEILE, ohne dass irgendetwas
+    auffaellt. Genau die Klasse stiller Falschzahl, gegen die A3/A4 stehen.
+    """
+    felder = zeile.rstrip("\r\n").split("\t")
+    if len(felder) != len(plan):
+        raise LeseFehler(
+            "num.txt-Zeile hat " + str(len(felder)) + " Felder, der Kopf aber "
+            + str(len(plan)) + " Spalten (" + quelle + "): " + repr(zeile[:160]))
+    return felder
 
 
 def ist_dimensionszeile(felder, plan):
@@ -172,6 +193,8 @@ def payloads_der_wurzel(wurzel, jahrgang, von, bis):
     if quartal_schluessel(bis) > grenze:
         raise LeseFehler("Quartal " + bis + " liegt hinter " + LETZTES_OFFENES_QUARTAL
                          + " — das Endtest-Fenster ist versiegelt")
+    if quartal_schluessel(von) > quartal_schluessel(bis):
+        raise LeseFehler("--von liegt hinter --bis")
     treffer = {}
     for pfad in sorted(beobachtungen.rglob("*.json")):
         eintrag = json.loads(pfad.read_text(encoding="utf-8-sig"))
@@ -179,7 +202,10 @@ def payloads_der_wurzel(wurzel, jahrgang, von, bis):
             continue
         quartal = eintrag.get("quarter")
         if not quartal:
-            continue
+            # Kein stilles continue: ein verschwundener Payload sieht danach aus
+            # wie "das Fenster traegt weniger", nicht wie "wir haben eine kaputte
+            # Beobachtung uebersprungen".
+            raise LeseFehler("Beobachtung ohne Quartal: " + str(pfad))
         schluessel = quartal_schluessel(quartal)
         if not (quartal_schluessel(von) <= schluessel <= grenze):
             continue
@@ -232,6 +258,10 @@ def zensus_payload(blob, abbildung, max_verhaeltnis):
         if "num.txt" not in namen:
             raise LeseFehler("Payload ohne num.txt: " + str(blob))
         with z.open(namen["num.txt"]) as fh:
+            # errors="replace": die Spalte `footnote` traegt Freitext und in
+            # Altjahrgaengen gelegentlich Nicht-UTF-8. Der Zensus liest sie nicht,
+            # und ein Abbruch am Fussnotentext waere ein Abbruch am Irrelevanten.
+            # Die gelesenen Spalten sind durchweg ASCII.
             text = io.TextIOWrapper(fh, encoding="utf-8", errors="replace", newline="")
             kopfzeile = text.readline()
             if not kopfzeile:
@@ -241,7 +271,7 @@ def zensus_payload(blob, abbildung, max_verhaeltnis):
                 if not zeile.strip():
                     continue
                 zeilen_gesamt += 1
-                felder = zeile.rstrip("\r\n").split("\t")
+                felder = zerlege_zeile(zeile, plan, str(blob))
                 if feld(felder, plan, "qtrs").strip() != "1":
                     continue
                 schluessel = (version_praefix(feld(felder, plan, "version")),
@@ -345,7 +375,10 @@ def zensus(wurzel, jahrgang, von, bis, konzepte, max_verhaeltnis):
         "schema": SCHEMA,
         "erzeugt": datetime.now(timezone.utc).isoformat(timespec="milliseconds")
                    .replace("+00:00", "Z"),
-        "dataRoot": str(Path(wurzel).resolve()),
+        # R12a, wie im Wiederherstellungs-Werkzeug: kein maschinengebundener
+        # Pfad im Artefakt.
+        "datenwurzelName": Path(wurzel).name,
+        "datenwurzelHerkunft": DATENWURZEL_ENV + " bzw. --data-root",
         "jahrgang": jahrgang,
         "fenster": {"von": von, "bis": bis, "siegelGrenze": LETZTES_OFFENES_QUARTAL},
         "payloads": len(je_payload),
@@ -471,6 +504,21 @@ def selbsttest():
                zensus_payload(blob, abb, MAX_VERHAELTNIS_STD)["jeKennung"]
                ["us-gaap:Revenues"]["zeilenKonsolidiert"] == 2)
 
+        # Die abgeschnittene Zeile. `segments` und `coreg` stehen am Zeilenende;
+        # ohne Laengenpruefung laese der Filter sie als leer und zaehlte eine
+        # Dimensionszeile als Konzernzeile — still und plausibel.
+        kurz = _zip_mit_num(tmp / "kurz.zip", KOPF10,
+                            zeilen10[:2] + [zeilen10[2][:6]])
+        try:
+            zensus_payload(kurz, abb, MAX_VERHAELTNIS_STD)
+            pruefe("abgeschnittene Zeile fliegt auf", False)
+        except LeseFehler as exc:
+            pruefe("abgeschnittene Zeile fliegt auf", "Felder" in str(exc))
+        # Gegenprobe: die vollstaendige Zeile geht weiter durch.
+        pruefe("vollstaendige Zeile bleibt gruen",
+               zensus_payload(blob, abb, MAX_VERHAELTNIS_STD)["jeKennung"]
+               ["us-gaap:Revenues"]["zeilenRoh"] == 5)
+
         # Gegenprobe zum Alt-Jahrgang: 9 Spalten, keine segments-Spalte, coreg
         # traegt die Trennung allein — und W-A4-b darf dort NICHT feuern.
         zeilen9 = [
@@ -559,6 +607,12 @@ def main():
                              args.max_verhaeltnis)
     except LeseFehler as exc:
         print("ABBRUCH: " + str(exc), file=sys.stderr)
+        return 2
+    except (KeyError, TypeError, ValueError) as exc:
+        # Eine kaputte Eingabedatei soll denselben lesbaren Abbruch erzeugen wie
+        # ein fachlicher Befund, nicht einen rohen Traceback mit anderem Exitcode.
+        print("ABBRUCH: unbrauchbare Eingabe (" + type(exc).__name__ + "): "
+              + str(exc), file=sys.stderr)
         return 2
 
     if args.bericht:

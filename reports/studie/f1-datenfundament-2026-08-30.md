@@ -8,7 +8,7 @@
 
 ## AUF EINEN BLICK
 
-**F1 steht. Der F1-Freeze-Hash lautet `615a34c891042242ef2f70aa7591c7258d6166d865ff01ac2dcb092b5ebc3b6a`. Und der wichtigste Befund der Stufe war nicht geplant: der FSD-Speicher ist nicht weg — er liegt vollständig auf der Platte.**
+**F1 steht. Der F1-Freeze-Hash lautet `58b865592069254808348e0b6c0bbb69600dd74110613ac809050107ef7b9a66`. Und der wichtigste Befund der Stufe war nicht geplant: der FSD-Speicher ist nicht weg — er liegt vollständig auf der Platte.**
 
 1. **Trägerfrage (B1) beantwortet, positiv.** Der versiegelte Sichtkasten `early-detection-v4-sealed127` führt **127 Payloads / 7.540.082.000 Bytes** und 64 Quartals-Ordner; der übergeordnete Speicher `early-detection-v4` **16.984 Dateien / 169,98 GB**. Die 48 registrierten `legacy_earliest_archived`-Payloads des Fensters 2009q1–2020q4 sind **48 von 48 bit-gleich** mit dem im Repo registrierten `payloadSha256`. **Abbruchregel B1 feuert nicht.**
 2. **Warum ihn niemand fand:** Die A1-Suche vom Vormittag suchte nach dem Dateinamensmuster `<jjjj>q<n>.zip`. Ein inhaltsadressierter Speicher legt seine Payloads unter `blobs/sha256/xx/<sha256>.zip` ab — dieses Muster **konnte** dort nichts finden. Dazu war `EARLY_DETECTION_DATA_ROOT` nicht gesetzt. Das ist Muster-Lehre 11 im Spiegel: die Negativ-Behauptung nannte die durchsuchten **Orte**, aber nicht die durchsuchte **Achse**.
@@ -17,7 +17,7 @@
 5. **Die Quelle trägt alle vier.** Der Zensus über den wiederhergestellten Jahrgang findet für jede der vier Kennungen konsolidierte Quartalszeilen in 39–45 der 48 Quartale. **Keine Kennung ohne Zeilen.**
 6. **Was F1 nicht schließt:** RR-4 (PIT-feste Entity-Klasse) bleibt ungelöst und ist im Freeze offen ausgewiesen. Auflage **A8** (`asOf`-Wächter) ist unerledigt und gehört nicht zu F1 — Einzelheiten in §6.
 
-**Sprungkarte:** [§1 Trägerfrage](#1-die-trägerfrage--der-speicher-ist-da) · [§2 Vintage-Identität](#2-vintage-identität-a2--zwei-unabhängige-linien) · [§3 Die Regel](#3-die-regel-und-die-liste-daraus) · [§4 Der Zensus](#4-der-zensus-trägt-die-quelle-die-vier-kennungen) · [§5 Was eingefroren ist](#5-was-eingefroren-ist) · [§6 Offen](#6-offen--ohne-glättung) · [§7 Blindheit](#7-blindheits-erklärung)
+**Sprungkarte:** [§1 Trägerfrage](#1-die-trägerfrage--der-speicher-ist-da) · [§2 Vintage-Identität](#2-vintage-identität-a2--zwei-unabhängige-linien) · [§3 Die Regel](#3-die-regel-und-die-liste-daraus) · [§4 Der Zensus](#4-der-zensus-trägt-die-quelle-die-vier-kennungen) · [§5 Was eingefroren ist](#5-was-eingefroren-ist) · [§6 Offen](#6-offen--ohne-glättung) · [§7 Neue Fragen](#7-neue-fragen-und-hypothesen) · [§8 Blindheit](#8-blindheits-erklärung)
 
 ---
 
@@ -27,16 +27,16 @@ Das Urteil führt die Trägerfrage als **Hardware, nicht Methodik** und als Abbr
 
 | Ort | Befund |
 | --- | --- |
-| `…\Documents\GrowthScreenerResearchData\early-detection-v4-sealed127\VIEW.json` | vorhanden, `payloadCount 127`, `payloadSetSha256 c861d255…`, `blobsVerknuepft 127` |
-| …`\early-detection-v4-sealed127\blobs\sha256` | **127 Dateien / 7.540.082.000 Bytes** |
-| …`\early-detection-v4-sealed127\observations\sec-fsd` | **64 Quartals-Ordner** |
-| …`\early-detection-v4\blobs\sha256` | **16.984 Dateien / 169.978.794.950 Bytes** |
-| …`\GrowthScreenerResearchData\panel\` | `panel-entdeckung.sqlite` (6.843,7 MB), `panel-validierung.sqlite` (4.241,6 MB) — **als Dateinamen gezählt, nicht geöffnet** |
-| freier Plattenplatz C: | 606,6 GB (A7-Gate bestanden, gefordert waren 0,13 GB) |
+| `<Datenwurzel>` / `early-detection-v4-sealed127` / `VIEW.json` | vorhanden, `payloadCount 127`, `payloadSetSha256 c861d255…`, `blobsVerknuepft 127` |
+| `early-detection-v4-sealed127` / `blobs` / `sha256` | **127 Dateien / 7.540.082.000 Bytes** |
+| `early-detection-v4-sealed127` / `observations` / `sec-fsd` | **64 Quartals-Ordner** |
+| `early-detection-v4` / `blobs` / `sha256` | **16.984 Dateien / 169.978.794.950 Bytes** |
+| `<Datenwurzel>` / `panel` | `panel-entdeckung.sqlite` (6.843,7 MB), `panel-validierung.sqlite` (4.241,6 MB) — **als Dateinamen gezählt, nicht geöffnet** |
+| freier Plattenplatz des Systemlaufwerks | 606,6 GB (A7-Gate bestanden, gefordert waren 0,13 GB) |
 
-**Die Datenwurzel ist damit bestimmt:** `EARLY_DETECTION_DATA_ROOT=C:\Users\Anwender\Documents\GrowthScreenerResearchData`. `studie-panel-bau.py` sucht den Sichtkasten entweder in der Wurzel selbst oder unter `early-detection-v4-sealed127` darunter — beides trifft zu. Für die F1-Werkzeuge wurde direkt auf den Sichtkasten gezeigt.
+**Die Datenwurzel ist damit bestimmt:** `EARLY_DETECTION_DATA_ROOT` zeigt auf das Verzeichnis `GrowthScreenerResearchData` (der absolute Pfad steht nach R12a in keinem Artefakt, nur in der Umgebung). `studie-panel-bau.py` sucht den Sichtkasten entweder in der Wurzel selbst oder unter `early-detection-v4-sealed127` darunter — beides trifft zu. Für die F1-Werkzeuge wurde direkt auf den Sichtkasten gezeigt.
 
-**Warum das nicht früher auffiel, ohne Schuldzuweisung:** Der A1-Sweep vom Vormittag suchte über `C:\Users\Anwender` nach Dateien mit dem Namensmuster `<jjjj>q<n>.zip` und fand vier Treffer, alle im Sitzungs-Scratchpad. Das ist korrekt gemessen und trotzdem blind: der Speicher ist **inhaltsadressiert**, seine Payloads heißen `<sha256>.zip`. Die Suchachse „Dateiname" konnte den Speicher nicht sehen. Zusammen mit dem nicht gesetzten `EARLY_DETECTION_DATA_ROOT` ergab das eine Negativ-Behauptung, die auf einer einzigen, ungeeigneten Achse ruhte — **genau die Klasse, gegen die Muster-Lehre 11 und Auflage A13/W9 geschrieben sind**.
+**Warum das nicht früher auffiel, ohne Schuldzuweisung:** Der A1-Sweep vom Vormittag suchte über das Nutzerverzeichnis nach Dateien mit dem Namensmuster `<jjjj>q<n>.zip` und fand vier Treffer, alle im Sitzungs-Scratchpad. Das ist korrekt gemessen und trotzdem blind: der Speicher ist **inhaltsadressiert**, seine Payloads heißen `<sha256>.zip`. Die Suchachse „Dateiname" konnte den Speicher nicht sehen. Zusammen mit dem nicht gesetzten `EARLY_DETECTION_DATA_ROOT` ergab das eine Negativ-Behauptung, die auf einer einzigen, ungeeigneten Achse ruhte — **genau die Klasse, gegen die Muster-Lehre 11 und Auflage A13/W9 geschrieben sind**.
 
 **Folge für den Rat:** Die Kostengabel aus K9 kollabiert. Ast **(a-2)** („Store weg → Neubezug", 11–19,5 Tage plus eine ungelöste R6-Frage) hat keine Grundlage mehr; es gilt Ast **(a-1)**. Der Neubezug entfällt, damit auch das Plattenplatz-Problem, die Leser-Migration 9→10 Spalten für den Neubestand und der R6-Gegenstück-Verlust (RR-5) in der Form, in der er dort steht. **Das ist ein Befund, kein Beschluss** — die Umschrift von A2/A12/B3 und RR-5 ist Sache der nächsten Ratssitzung (RR-9).
 
@@ -146,7 +146,7 @@ Der Bauplan verlangt an dieser Stelle nur den SHA über die Wahl-Grundlage. Der 
 | 5 | **Extraktions-Code** sha256 der vier F1-Skripte | im Freeze je Datei |
 | 6 | **Kontaminations-Vorgeschichte, wörtlich** (K3 Bed. 5, A16, A18) | im Freeze |
 
-> **F1-FREEZE-HASH: `615a34c891042242ef2f70aa7591c7258d6166d865ff01ac2dcb092b5ebc3b6a`**
+> **F1-FREEZE-HASH: `58b865592069254808348e0b6c0bbb69600dd74110613ac809050107ef7b9a66`**
 
 Der Extraktions-Code steht **mit im Hash**: eine Regel, deren Implementierung sich danach still ändern kann, ist nicht eingefroren. Der Freeze übernimmt keine gemeldeten Hashes, er rechnet sie nach und lehnt einen Bericht ab, dessen gemeldeter Hash nicht zu seinem Inhalt passt.
 
@@ -182,7 +182,24 @@ Der letzte kam aus einem echten Fehler dieser Stufe: der erste Freeze hashte Skr
 
 ---
 
-## 7. BLINDHEITS-ERKLÄRUNG
+## 7. NEUE FRAGEN UND HYPOTHESEN
+
+Aus F1 sind fünf Fragen entstanden, die vorher nicht auf dem Tisch lagen. Keine davon ist hier beantwortet, und keine ist eine Empfehlung.
+
+1. **Wie viele weitere Negativ-Befunde des Pakets ruhen auf einer einzigen Suchachse?** Der Trägerbefund war acht Stunden lang falsch, weil eine korrekt ausgeführte Suche auf der einen Achse suchte, auf der der Gegenstand unsichtbar ist. Auflage A13/W9 verlangt die Achsenliste bereits für jede „Quelle X trägt Y nicht"-Aussage — **die Trägerfrage war formal keine solche Aussage und fiel deshalb durch das Raster**. Hypothese: W9 muss auf jede Existenz-Negation ausgedehnt werden, nicht nur auf Quellen-Aussagen.
+   - VORSCHLAG: Sweep über die Negativ-Behauptungen der Akte, je Behauptung die geprüften Achsen nachtragen — 0,5 Tage.
+2. **Ist `EARLY_DETECTION_DATA_ROOT` reproduzierbar gesetzt, oder hängt es an der jeweiligen Sitzung?** Die Variable war auf dieser Maschine nicht gesetzt, obwohl der Speicher lag. Solange das so bleibt, wird derselbe Fehlschluss wieder passieren. Hypothese: die Wurzel gehört in eine Datei, die jeder Lauf liest, nicht in eine Shell-Umgebung — ohne den absoluten Pfad in ein Artefakt zu schreiben (R12a).
+   - VORSCHLAG: Entwurf für eine maschinenlokale, nicht versionierte Wurzel-Datei plus Fehlermeldung, die auf sie zeigt — 0,5 Tage.
+3. **Trägt der Alt-Jahrgang seine Dimensionszeilen wirklich nur über `coreg`?** Die gemessenen Verhältnisse roh/konsolidiert liegen im Archiv bei 1,02–1,53, in der heutigen Neuveröffentlichung bei bis zu 11,3. Das ist mit der fehlenden `segments`-Spalte erklärbar — **aber nicht gemessen**. Wenn der Alt-Jahrgang Segmentzeilen führt, die er nicht als solche kennzeichnet, zählte das Panel sie als Konzernzeilen, und zwar seit jeher.
+   - VORSCHLAG: Gegenüberstellung derselben Einreichung in beiden Jahrgängen, Zeile für Zeile, auf zwei Quartalen — 0,5 Tage.
+4. **Kann die Entity-Klasse überhaupt PIT-fest werden?** RR-4 verlangt eine Klasse zum Signalzeitpunkt. `sub.txt` trägt je Einreichung ein `sic`-Feld — das wäre eine filing-granulare, also zeitpunktfeste Quelle, die niemand bisher gegen den heutigen `submissions.zip`-SIC gehalten hat. Hypothese: die PIT-feste Klasse existiert bereits im Payload und muss nur gelesen werden.
+   - VORSCHLAG: Abgleich `sub.txt.sic` gegen den heutigen SIC über zwei Quartale, blind, nur Zählungen — 0,5 Tage.
+5. **Was kostet die Verbreiterung wirklich, jetzt ohne Neubezug?** Die K9-Preisspanne war für Ast (a-2) gerechnet. Ast (a-1) ist die Lage; die Spanne 8,5–14,5 Tage ist damit die einzige noch tragende, und auch sie ist nicht auf den heutigen Stand gerechnet.
+   - VORSCHLAG: Preisrechnung für Ast (a-1) neu aufstellen, nachdem F2/F3 die Form entschieden haben — 0,5 Tage.
+
+---
+
+## 8. BLINDHEITS-ERKLÄRUNG
 
 **Gelesen:** `_COURT-ZWEITQUELLE-2026-08-30.md` vollständig inkl. beider Orchestrator-Nachträge · `BAUPLAN-STUDIE-2.0-ENTWURF-2026-08-30.md` · `k1-restkanaele-messung-2026-08-30.md` · `k9-restschluss-2026-08-30.md` · `konzept-inventar-blind-2026-08-30.json` + `.md` · `protocol/early-detection/2.0.0/provenance-closure.json` · Kopfbereiche von `studie-panel-bau.py`, `studie-basisraten.py`, `preregistration.json` (Feld `umsatzQuellenAllowlist`) · `early-detection-sec-wayback.py`, `early-detection-foundation.py` · `lib/sec-pit.js` (eine Zeile) · `.gitattributes` · `scripts/test-gate.js` · die DERA-Payload-Bytes bis 2020q4 (öffentliche SEC-Daten) · `VIEW.json` des Sichtkastens.
 

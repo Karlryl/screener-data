@@ -143,18 +143,34 @@ def name(konzept):
     return str(konzept["taxonomy"]) + ":" + str(konzept["concept"])
 
 
+PFLICHTFELDER = ("ciksRettung", "ciksRettungMitQuartal", "qtrs1AnteilFakten")
+
+
 def schranken(konzept, klasse):
     """Alle Schranken einer Kennung in einer Klasse. Liste der GERISSENEN."""
     gerissen = []
-    rett = int(konzept.get("ciksRettung") or 0)
-    rettq = int(konzept.get("ciksRettungMitQuartal") or 0)
+    # `.get(x) or 0` wuerde "Feld fehlt" und "Feld ist gemessen null" gleich
+    # behandeln. Eine Kennung, deren Rettungszahl im Inventar gar nicht berechnet
+    # wurde, fiele dann lautlos aus der Auswahl — und die eingefrorene Liste
+    # saehe genauso aus wie eine, bei der alles gemessen war.
+    fehlend = [f for f in PFLICHTFELDER if konzept.get(f) is None]
+    if fehlend:
+        raise RegelFehler(
+            "Inventar-Eintrag " + name(konzept) + " ohne " + repr(fehlend)
+            + " — fehlende Messung ist NICHT dasselbe wie eine gemessene Null")
+    rett = int(konzept["ciksRettung"])
+    rettq = int(konzept["ciksRettungMitQuartal"])
+    if rettq > rett:
+        raise RegelFehler(
+            "Inventar-Eintrag " + name(konzept) + ": ciksRettungMitQuartal ("
+            + str(rettq) + ") > ciksRettung (" + str(rett) + ") — unmoeglich")
     if str(konzept.get("taxonomy")) not in Z4_TAXONOMIEN:
         gerissen.append("Z4")
     if rett < Z0_RETTUNGS_UNTERGRENZE:
         gerissen.append("Z0")
     if not rett or (rettq / rett) < Z1_QUARTALSFAEHIGKEIT:
         gerissen.append("Z1")
-    if float(konzept.get("qtrs1AnteilFakten") or 0.0) < Z2_QUARTALSANTEIL:
+    if float(konzept["qtrs1AnteilFakten"]) < Z2_QUARTALSANTEIL:
         gerissen.append("Z2")
     if Z3A_MUSTER.search(str(konzept["concept"])) and klasse != ZINS_STRATUM:
         gerissen.append("Z3a")
@@ -304,7 +320,12 @@ def bericht(inventar_pfad):
         "auftrag": "Studie 2.0 F1 — K7 (a) ist OFFEN (2:2). Regel UND Liste, in dieser "
                    "Reihenfolge gehasht (RR-1, Kanzlei-Empfehlung).",
         "inventar": {
-            "pfad": str(inventar_pfad),
+            # R12a: der Dateiname und der Hash identifizieren die Wahl-Grundlage
+            # eindeutig; der absolute Pfad wuerde sie an diese Maschine binden.
+            "datei": Path(inventar_pfad).name,
+            # Aus dem tatsaechlich gelesenen Pfad abgeleitet, nicht behauptet
+            # — und nach R12a nur der Ordnername, nie der absolute Pfad.
+            "ablage": Path(inventar_pfad).resolve().parent.name,
             "sha256": datei_sha256(inventar_pfad),
             "erzeugt": inventar.get("erzeugt"),
         },
@@ -411,6 +432,22 @@ def selbsttest():
     pruefe("Unterschreitung wird protokolliert",
            len(unter) == 1 and unter[0]["ciksRettung"] == 10)
 
+    # Ein Inventar-Eintrag ohne gemessene Rettungszahl darf nicht als Null
+    # durchgehen — und ein unmoegliches Verhaeltnis auch nicht.
+    for kaputt, kern in (
+        ({"taxonomy": "us-gaap", "concept": "Halb", "ciksRettungMitQuartal": 5,
+          "qtrs1AnteilFakten": 0.6, "rettungJeKlasse": {"operativ": 5}},
+         "fehlende Messung"),
+        ({"taxonomy": "us-gaap", "concept": "Unmoeglich", "ciksRettung": 10,
+          "ciksRettungMitQuartal": 11, "qtrs1AnteilFakten": 0.6,
+          "rettungJeKlasse": {"operativ": 5}}, "unmoeglich"),
+    ):
+        try:
+            wende_regel_an(inv([kaputt], klassen=("operativ",)))
+            pruefe("kaputter Inventar-Eintrag bricht ab (" + kern + ")", False)
+        except RegelFehler as exc:
+            pruefe("kaputter Inventar-Eintrag bricht ab (" + kern + ")", kern in str(exc))
+
     # Determinismus: derselbe Eingang, dieselben Bytes.
     daten = inv([k("OilAndGasRevenue", klassen={"operativ": 60})], klassen=("operativ",))
     a = kanonisch(wende_regel_an(daten)[1])
@@ -442,6 +479,10 @@ def main():
         inhalt = bericht(args.inventar)
     except RegelFehler as exc:
         print("ABBRUCH: " + str(exc), file=sys.stderr)
+        return 2
+    except (KeyError, TypeError, ValueError) as exc:
+        print("ABBRUCH: unbrauchbares Inventar (" + type(exc).__name__ + "): "
+              + str(exc), file=sys.stderr)
         return 2
 
     if args.bericht:

@@ -70,6 +70,8 @@ const PFLICHT = {
     'W-A4-b reisst, wenn der Filter nie feuert',
     'W-A4-c reisst bei zu hohem Verhaeltnis',
     'Naturschluessel mit segments trennt Dimensionszeilen',
+    'abgeschnittene Zeile fliegt auf',
+    'vollstaendige Zeile bleibt gruen',
   ],
   regel: [
     'hoechste Rettungszahl gewinnt',
@@ -81,6 +83,8 @@ const PFLICHT = {
     'leere Klasse wird als ehrlicher Ausschluss gefuehrt',
     'Unterschreitung wird protokolliert',
     'Liste ist bit-identisch reproduzierbar',
+    'kaputter Inventar-Eintrag bricht ab (fehlende Messung)',
+    'kaputter Inventar-Eintrag bricht ab (unmoeglich)',
   ],
   freeze: [
     'K7a-Koinzidenz wird festgestellt',
@@ -91,6 +95,7 @@ const PFLICHT = {
     'CRLF im Extraktions-Code fliegt auf',
     'Zweitlinie wird als deckungsgleich erkannt',
     'abweichende Zweitlinie faellt auf',
+    'fremdes Checkout fliegt auf',
     'gebrochener Vintage steht namentlich im Freeze',
   ],
 };

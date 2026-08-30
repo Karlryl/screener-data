@@ -188,14 +188,17 @@ def wiederherstellen(wurzel, herkunft_pfad, jahrgang, von, bis, user_agent,
             + von + ".." + bis)
     wurzel = Path(wurzel)
 
-    fehlend = [e for e in gewaehlt if not blob_pfad(wurzel, e["payloadSha256"]).exists()]
+    # --nur-pruefen ruft nichts ab. Das Plattenplatz-Gate darf deshalb NICHT
+    # ueber Bytes urteilen, die dieser Lauf nie schreiben wird — sonst bricht
+    # eine nebenwirkungsfreie Verifikation auf einer engen Platte ab, statt die
+    # fehlenden Payloads als FEHLT zu berichten.
+    fehlend = ([] if nur_pruefen
+               else [e for e in gewaehlt if not blob_pfad(wurzel, e["payloadSha256"]).exists()])
     gate = platz_gate(wurzel, sum(e["payloadBytes"] for e in fehlend))
     if fehlend and not gate["bestanden"]:
         raise WiederherstellungsFehler(
             "A7-Plattenplatz-Gate gerissen: frei " + str(gate["freieBytes"])
             + " Bytes, gefordert " + str(gate["geforderteBytes"]) + " Bytes")
-    if nur_pruefen:
-        fehlend = []
 
     foundation = lade_foundation() if fehlend else None
     zeilen = []
@@ -261,7 +264,12 @@ def wiederherstellen(wurzel, herkunft_pfad, jahrgang, von, bis, user_agent,
         "schema": SCHEMA,
         "erzeugt": jetzt(),
         "auftrag": "Studie 2.0 F1 — Auflage A2/A7 des Urteils _COURT-ZWEITQUELLE-2026-08-30",
-        "dataRoot": str(Path(wurzel).resolve()),
+        # R12a: der absolute Pfad ist maschinengebunden und gehoert NICHT ins
+        # Artefakt — sonst kann kein anderer Motor und keine andere Maschine
+        # damit weiterarbeiten. Benannt wird der Speicher, adressiert wird er
+        # ueber die Umgebung.
+        "datenwurzelName": Path(wurzel).name,
+        "datenwurzelHerkunft": DATENWURZEL_ENV + " bzw. --data-root",
         "herkunftsSchliessung": str(herkunft_pfad),
         "herkunftsSchliessungSha256": datei_sha256(herkunft_pfad),
         "jahrgang": jahrgang,
