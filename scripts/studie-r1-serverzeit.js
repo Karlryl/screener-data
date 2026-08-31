@@ -32,13 +32,28 @@ const {
   haengeEintragAn,
   pruefeZugriffsRegister,
   pruefeServerzeit,
+  ART_ZUGRIFF,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
 } = require('../lib/studie-verfassung');
 
 // Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
 // geschlossen: eine unbekannte Art bekommt keine Server-Bestaetigung.
-const BESTAETIGBAR = new Set([ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
+//
+// Geschuetzt ist die UNBEKANNTE Art, nicht die Zweizahl (_COURT-F6-VOLLZUG-
+// 2026-08-31, Frage (c), 3:0, Auflage F6-B16). Die Verfassung fuehrt
+// `confirmatory_execution_authorized` selbst als ART_ZUGRIFF in
+// ARTEN_MIT_ZUGRIFFSZEIT; dieses Werkzeug fuehrte davon bisher eine echte
+// Teilmenge und hinkte damit genau der Art hinterher, fuer die die
+// VB-A11-Zeitkette ueberhaupt geschrieben wurde. Die Erweiterung stellt
+// Gleichheit her - sie ist Vollendung, keine Aufweichung, und sie kann nichts
+// erlauben: dieses Skript entscheidet nicht, ob ein Lauf erlaubt ist (siehe
+// Kopf). Die Arten werden IMPORTIERT, nie als Zeichenkette getippt; zwei
+// Kopien derselben Regel driften. Wird die Menge je um eine Art erweitert, die
+// NICHT in ARTEN_MIT_ZUGRIFFSZEIT steht, ist die Schutzeigenschaft gebrochen
+// (Kipp-Bedingung KV-4) - der Gleichheits-Anker in
+// tests/studie-r1-bestaetigbar-zugriff.test.js ist ihre maschinelle Fassung.
+const BESTAETIGBAR = new Set([ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
 
 // Der EINE Appender aus protocol/early-detection/2.0.0/register-single-appender-rule.json
 // (`rule.singleAppender`). Steht hier als Konstante, damit der Server-Beweis nicht davon
@@ -291,4 +306,15 @@ if (require.main === module) {
   }
 }
 
-module.exports = { anmelden, bestaetigen, serverAntwort, allowlistAus };
+// Die bestaetigbaren Arten nach aussen: eine KOPIE, nie der lebende Handgriff
+// auf BESTAETIGBAR. Der Gleichheits-Anker (F6-B17a) soll die Menge am OBJEKT
+// pruefen statt sie abzutippen — aber ein exportiertes Set liesse sich von
+// jedem requirenden Modul per `.add()` erweitern, und das waere dieselbe
+// fail-closed-Schranke, nur von innen geoeffnet.
+function bestaetigbareArten() {
+  return new Set(BESTAETIGBAR);
+}
+
+module.exports = {
+  anmelden, bestaetigen, serverAntwort, allowlistAus, bestaetigbareArten,
+};
