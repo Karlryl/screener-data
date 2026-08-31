@@ -27,6 +27,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { norm, periodEnds } = require('../src/scoring/snapshot.js'); // das einzige Tor zu snapshot.annual.*
 
@@ -386,7 +387,11 @@ function main() {
   // Verankerungs-Commit gilt.
   if (process.argv.includes('--neu-aufnehmen')) {
     const neuerBestand = baueNeuenBestand(basis, funde, scan.gescannt);
-    fs.writeFileSync(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
+    // T204: atomar. Diese Datei IST die Sperrliste - ein abgerissener Schreibvorgang
+    // hinterliesse eine halbe oder leere Liste, und eine leere Sperrliste hebt jede
+    // Sperre lautlos auf. Genau davor schuetzt weiter oben schon baueNeuenBestand();
+    // hier wird der zweite Weg dorthin geschlossen.
+    writeFileAtomic(BASELINE_PATH, JSON.stringify(neuerBestand, null, 1) + '\n', 'utf8');
     if (neuerBestand.ausgeschlossen.length) {
       console.log(`::warning::${neuerBestand.ausgeschlossen.length} Fall/Faelle stehen auf der Ausschluss-Liste `
         + 'und wurden NICHT in den Bestand aufgenommen — sie bleiben rot-faehig, bis sie einzeln geklaert sind: '

@@ -39,6 +39,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const priceStore = require('../lib/price-history-store.js');
 
 function log(stufe, text) { console.log(`[merge-price-shards] ${stufe}: ${text}`); }
@@ -108,7 +109,8 @@ function main() {
   }
 
   const ziel = path.join(args.prices, `${args.date}.json`);
-  fs.writeFileSync(ziel, JSON.stringify(merged, null, 2));
+  // T204: atomar - die Tagesdatei des Kurs-Stores ist Publikationsstand.
+  writeFileAtomic(ziel, JSON.stringify(merged, null, 2));
   log('INFO', `${Object.keys(merged).length} Ticker aus ${args.expected} Ausschnitten -> ${ziel}`);
 
   // --- 3. Store pruefen + _meta ueber den GESAMTEN Store stempeln ------------
@@ -121,7 +123,9 @@ function main() {
     process.exit(1);
   }
   const tickerImStore = Object.keys(gesamt).length;
-  fs.writeFileSync(priceStore.metaPath(args.prices), JSON.stringify({
+  // T204: atomar - _meta stempelt den GESAMTEN Store; halb geschrieben behauptet es
+  // eine Ticker-Zahl, die zum Store nicht passt.
+  writeFileAtomic(priceStore.metaPath(args.prices), JSON.stringify({
     schema: 'price-history-store/1',
     updatedAt: new Date().toISOString(),
     tickerCount: tickerImStore,
