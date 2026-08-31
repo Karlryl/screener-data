@@ -585,30 +585,48 @@ function _ausfallEintrag(prev, ticker, cikInfo, grund, neueTransaktionen) {
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
-async function main() {
-  ensureDir(EXTERNAL_DIR);
+async function main(opts = {}) {
+  const externalDir = opts.externalDir || EXTERNAL_DIR;
+  const cachePath = opts.cachePath || FORM4_CACHE_PATH;
+  const cacheWriter = opts.writeFileAtomic || writeFileAtomic;
+  const pullTicker = opts.pullTickerForm4 || pullTickerForm4;
+  const exit = opts.exit || ((code) => process.exit(code));
+  const sampleLimit = Object.prototype.hasOwnProperty.call(opts, 'sampleLimit')
+    ? opts.sampleLimit : SAMPLE_LIMIT;
+  ensureDir(externalDir);
 
-  const watchlist = readJsonSafe(WATCHLIST_PATH);
+  const watchlist = Object.prototype.hasOwnProperty.call(opts, 'watchlist')
+    ? opts.watchlist : readJsonSafe(WATCHLIST_PATH);
   if (!watchlist || !Array.isArray(watchlist.stocks)) {
     console.error('watchlist.json missing or malformed (.stocks[] required) — aborting');
-    process.exit(1);
+    exit(1);
+    return null;
   }
 
-  const tickerCikMap = await loadTickerCikMap();
+  const tickerCikMap = Object.prototype.hasOwnProperty.call(opts, 'tickerCikMap')
+    ? opts.tickerCikMap : await loadTickerCikMap();
   let usTickers = selectUsTickers(watchlist, tickerCikMap);
   console.log('  [watchlist] ' + watchlist.stocks.length + ' total → ' +
     usTickers.length + ' US-listed (CIK known)');
 
-  if (SAMPLE_LIMIT) {
-    usTickers = usTickers.slice(0, SAMPLE_LIMIT);
-    console.log('  [sample] SAMPLE_LIMIT=' + SAMPLE_LIMIT + ' → processing first ' +
+  if (sampleLimit) {
+    usTickers = usTickers.slice(0, sampleLimit);
+    console.log('  [sample] SAMPLE_LIMIT=' + sampleLimit + ' → processing first ' +
       usTickers.length + ' tickers');
   }
 
   // Load existing cache so we can honour the per-ticker TTL.
-  const existing = ladeForm4Cache();
+  const existing = Object.prototype.hasOwnProperty.call(opts, 'existing')
+    ? opts.existing : ladeForm4Cache(cachePath);
   const byTicker = (existing && existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
+
+  const checkpoint = () => cacheWriter(cachePath, JSON.stringify({
+    updatedAt: new Date().toISOString(),
+    userAgentSource: 'process.env.SEC_CONTACT',
+    lookbackDays: FORM4_LOOKBACK_DAYS,
+    byTicker
+  }));
 
   let fetched = 0, skippedFresh = 0, errors = 0, totalTxns = 0;
   for (const { ticker, cikInfo } of usTickers) {
@@ -619,8 +637,9 @@ async function main() {
       totalTxns += Array.isArray(prev.transactions) ? prev.transactions.length : 0;
       continue;
     }
+    let shouldCheckpoint = true;
     try {
-      const result = await pullTickerForm4(ticker, cikInfo);
+      const result = await pullTicker(ticker, cikInfo);
       if (result.error) {
         // audit/fix: soft errors (submissions-404 / submissions-parse) returned
         // WITHOUT throwing must NOT get a fresh fetchedAt — otherwise the 24h
@@ -681,6 +700,7 @@ async function main() {
       // a 429 as an error would burn the abort budget (>25) on a transient
       // throttle and the normal cadence would keep hammering SEC into an IP block.
       if (e && (e.statusCode === 429 || e.statusCode === 503)) {
+        shouldCheckpoint = false;
         console.warn('  [' + ticker + '] rate-limited (HTTP ' + e.statusCode +
           ') — backing off ' + (RATE_LIMIT_BACKOFF_MS / 1000) + 's');
         await sleep(RATE_LIMIT_BACKOFF_MS);
@@ -709,24 +729,17 @@ async function main() {
         console.error('  too many errors (>25) — aborting early to be polite to SEC');
         break;
       }
+    } finally {
+      // Keep the single checkpoint outside the pull catch: a disk failure must
+      // reject the run, not be misclassified as another ticker/SEC failure.
+      if (shouldCheckpoint) checkpoint();
     }
-    // After every ticker, atomically re-write the full cache. This makes
-    // the script resumable — Ctrl-C at any point leaves a valid cache.
-    // Kompakt geschrieben wie writeCache() in pull-insider-form4-daily.js — Begruendung
-    // und Messwerte stehen im Kommentar dort. Beide Schreiber muessen dasselbe Format
-    // benutzen, sonst blaeht ein Lauf von hier die Datei wieder auf 58 MB auf.
-    writeFileAtomic(FORM4_CACHE_PATH, JSON.stringify({
-      updatedAt: new Date().toISOString(),
-      userAgentSource: 'process.env.SEC_CONTACT',
-      lookbackDays: FORM4_LOOKBACK_DAYS,
-      byTicker
-    }));
   }
 
   console.log('');
   console.log('Done. fetched=' + fetched + ' skipped(fresh)=' + skippedFresh +
     ' errors=' + errors + ' totalTxns=' + totalTxns);
-  console.log('Cache: ' + FORM4_CACHE_PATH);
+  console.log('Cache: ' + cachePath);
 
   // audit/fix: 403 silent exit-0. If NOTHING succeeded but errors occurred
   // (fetched === 0 && errors > 0) the run was a total failure — typically a
@@ -735,8 +748,9 @@ async function main() {
   if (fetched === 0 && errors > 0) {
     console.error('TOTAL FAILURE: 0 tickers fetched with ' + errors +
       ' error(s) — likely a systemic SEC outage / 403 / IP block. Exiting 1.');
-    process.exit(1);
+    exit(1);
   }
+  return { fetched, skippedFresh, errors, totalTxns, byTicker };
 }
 
 if (require.main === module) {
@@ -744,7 +758,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  parseForm4Xml, selectUsTickers, loadTickerCikMap, ladeForm4Cache,
+  main, parseForm4Xml, selectUsTickers, loadTickerCikMap, ladeForm4Cache,
   _internals: {
     httpGet, _normalizeSubmissions, _withinLookback, _isAllParseFailure,
     // F-CGPT-028: exportiert, damit der Ausfall-Pfad ohne echtes SEC-Netz fahrbar ist.

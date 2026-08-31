@@ -437,6 +437,151 @@ check('F-CGPT-028 Ausbau-Probe: jede fehlende Verdrahtung macht den Anker rot', 
   }
 });
 
+// HARDENING-H05: the object-level guards above prove the shape of a failure entry,
+// but they did not execute the persistence boundary in main(). Both soft-error
+// branches used `continue`, so the checkpoint below the try/catch was skipped and
+// the just-created failedAt/error/partial transactions disappeared at process exit.
+async function withQuietConsole(fn) {
+  const original = { log: console.log, warn: console.warn, error: console.error };
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  try { return await fn(); }
+  finally {
+    console.log = original.log;
+    console.warn = original.warn;
+    console.error = original.error;
+  }
+}
+
+function form4MainHarness({ tickers = ['TST'], existing = { byTicker: {} }, pull, writer } = {}) {
+  const writes = [];
+  const writePaths = [];
+  const exits = [];
+  const tickerCikMap = {};
+  for (let i = 0; i < tickers.length; i++) {
+    tickerCikMap[tickers[i]] = {
+      cik: String(i + 1).padStart(10, '0'),
+      name: 'Fixture ' + tickers[i],
+    };
+  }
+  return {
+    writes,
+    writePaths,
+    exits,
+    opts: {
+      externalDir: os.tmpdir(),
+      cachePath: path.join(os.tmpdir(), 'form4-h05-never-written-' + process.pid + '.json'),
+      watchlist: { stocks: tickers.map((ticker) => ({ ticker })) },
+      tickerCikMap,
+      existing,
+      sampleLimit: null,
+      pullTickerForm4: pull,
+      writeFileAtomic: writer || ((cachePath, body) => {
+        writePaths.push(cachePath);
+        writes.push(JSON.parse(body));
+      }),
+      exit: (code) => exits.push(code),
+    },
+  };
+}
+
+const H05_OLD_TXN = { accessionNumber: '0000000000-25-000009', transactionCode: 'S' };
+const H05_NEW_TXN = { accessionNumber: '0000000000-26-000001', transactionCode: 'P' };
+const h05Previous = () => ({
+  ticker: 'TST',
+  fetchedAt: '2000-01-01T00:00:00.000Z',
+  transactions: [H05_OLD_TXN],
+});
+
+check('H05: result.error is checkpointed before the soft continue', async () => {
+  const prev = h05Previous();
+  const h = form4MainHarness({
+    existing: { byTicker: { TST: prev } },
+    pull: async () => ({ error: 'submissions-parse' }),
+  });
+  const stats = await withQuietConsole(() => F4.main(h.opts));
+
+  assert.equal(h.writes.length, 1, 'the only/last soft-error ticker must still produce one cache checkpoint');
+  assert.deepEqual(h.writePaths, [h.opts.cachePath], 'the checkpoint must use the injected cache path');
+  const entry = h.writes[0].byTicker.TST;
+  assert.equal(entry.fetchedAt, prev.fetchedAt, 'the last good freshness stamp must survive');
+  assert.deepEqual(entry.transactions, prev.transactions, 'the last good transactions must survive');
+  assert.ok(entry.failedAt, 'the persisted entry must expose when the failure happened');
+  assert.equal(entry.error, 'submissions-parse');
+  assert.deepEqual(h.exits, [1], 'a total soft failure must retain the existing non-zero exit contract');
+  assert.equal(stats.errors, 1);
+  assert.equal(stats.fetched, 0);
+});
+
+check('H05: a partial-fetch soft failure checkpoints both old and fresh transactions', async () => {
+  const prev = h05Previous();
+  const h = form4MainHarness({
+    existing: { byTicker: { TST: prev } },
+    pull: async () => ({ transactions: [H05_NEW_TXN], filingsScanned: 1, fetchFailures: 1 }),
+  });
+  const stats = await withQuietConsole(() => F4.main(h.opts));
+
+  assert.equal(h.writes.length, 1, 'a partial result must reach the real checkpoint boundary exactly once');
+  const entry = h.writes[0].byTicker.TST;
+  assert.deepEqual(entry.transactions, [H05_NEW_TXN, H05_OLD_TXN],
+    'the checkpoint must contain the fresh partial result and the preserved history');
+  assert.equal(entry.fetchedAt, prev.fetchedAt, 'partial coverage must not claim fresh completeness');
+  assert.ok(entry.failedAt);
+  assert.equal(entry.error, 'fetch-failures(1)');
+  assert.deepEqual(h.exits, [1]);
+  assert.equal(stats.errors, 1);
+});
+
+check('H05 counterfixture: a healthy ticker still writes once and exits cleanly', async () => {
+  const h = form4MainHarness({
+    pull: async () => ({ transactions: [H05_NEW_TXN], filingsScanned: 1, fetchFailures: 0 }),
+  });
+  const stats = await withQuietConsole(() => F4.main(h.opts));
+
+  assert.equal(h.writes.length, 1);
+  assert.deepEqual(h.writes[0].byTicker.TST.transactions, [H05_NEW_TXN]);
+  assert.ok(h.writes[0].byTicker.TST.fetchedAt);
+  assert.deepEqual(h.exits, []);
+  assert.equal(stats.fetched, 1);
+  assert.equal(stats.errors, 0);
+});
+
+check('H05: the 26th thrown error is checkpointed before the defensive break', async () => {
+  const tickers = Array.from({ length: 27 }, (_, i) => 'T' + String(i + 1).padStart(2, '0'));
+  const pulled = [];
+  const h = form4MainHarness({
+    tickers,
+    pull: async (ticker) => { pulled.push(ticker); throw new Error('fixture-' + ticker); },
+  });
+  const stats = await withQuietConsole(() => F4.main(h.opts));
+
+  assert.equal(pulled.length, 26, 'the defensive budget must stop before ticker 27');
+  assert.equal(h.writes.length, 26, 'every processed generic error, including number 26, needs a checkpoint');
+  const finalCache = h.writes.at(-1).byTicker;
+  assert.equal(finalCache.T26.lastError, 'fixture-T26');
+  assert.ok(finalCache.T26.failedAt);
+  assert.ok(!Object.prototype.hasOwnProperty.call(finalCache, 'T27'));
+  assert.deepEqual(h.exits, [1]);
+  assert.equal(stats.errors, 26);
+});
+
+check('H05: a checkpoint write failure escapes instead of becoming an SEC ticker error', async () => {
+  let writeCalls = 0;
+  const h = form4MainHarness({
+    pull: async () => ({ error: 'submissions-parse' }),
+    writer: () => { writeCalls++; throw new Error('fixture-disk-full'); },
+  });
+
+  await assert.rejects(
+    () => withQuietConsole(() => F4.main(h.opts)),
+    /fixture-disk-full/,
+    'a disk failure at the checkpoint boundary must reject the run'
+  );
+  assert.equal(writeCalls, 1, 'the writer failure must not be caught and retried as a ticker/SEC failure');
+  assert.deepEqual(h.exits, [], 'the rejected write happens before aggregate SEC-failure handling');
+});
+
 // =========================================================================
 // F-CGPT-012 - Checkpoint-Schreibfehler muss zaehlbar sein (TASK 0.11)
 // =========================================================================
