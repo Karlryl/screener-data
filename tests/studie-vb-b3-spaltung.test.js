@@ -255,14 +255,50 @@ const anker = JSON.parse(fs.readFileSync(ankerZiel, 'utf8'));
 const ankerArtefakt = path.join(wurzel, 'reports', 'studie',
   'VB-A6-registeranker-2026-08-31.json');
 assert.ok(fs.existsSync(ankerArtefakt), `VB-A6-Artefakt fehlt: ${ankerArtefakt}`);
-assert.deepEqual(JSON.parse(fs.readFileSync(ankerArtefakt, 'utf8')), anker,
+// DREI FELDER HAENGEN AM REGISTER und aendern sich, sobald der F6-Freeze-Eintrag
+// landet: registerVerankert, zitierverbot und (seit Tag 1101) mechanismus. Ein
+// deepEqual ueber das GANZE Artefakt waere damit eine Aussage ueber einen
+// ZEITPUNKT - dieser Test wuerde in genau der Sekunde rot, in der der Vorgang
+// planmaessig gelingt. Dieselbe Bugklasse hat heute schon PR #176 gekostet und
+// den F6-Waechter-Test rot gefaerbt; hier ist sie das dritte Mal.
+//
+// Der Rest des Artefakts wird WEITER byte-genau verglichen - vor allem die
+// `nutzlast`, die der Register-Eintrag pinnt. Dass das Artefakt als GANZES nicht
+// von Hand veraendert wurde, faellt ohnehin an anderer Stelle auf: sein
+// Datei-sha256 ist Pin 4 des Eintrags und wird in
+// tests/studie-f6-register.test.js Probe (f) am Objekt geprueft.
+const ZUSTANDSFELDER = ['registerVerankert', 'zitierverbot', 'mechanismus'];
+const ohneZustand = (o) => {
+  const k = { ...o };
+  for (const f of ZUSTANDSFELDER) delete k[f];
+  return k;
+};
+assert.deepEqual(ohneZustand(JSON.parse(fs.readFileSync(ankerArtefakt, 'utf8'))),
+  ohneZustand(anker),
   'das committete VB-A6-Artefakt weicht vom frischen Lauf ab: '
   + '`python scripts/studie-rr9-nullpunkt.py register-anker --ziel '
   + 'reports/studie/VB-A6-registeranker-2026-08-31.json`');
-assert.equal(anker.registerVerankert, false,
-  'Steht der Sollwert im Register, ist VB-A6 vollzogen - dann gehoert dieser '
-  + 'Test auf true umgestellt und das Zitierverbot faellt.');
-assert.equal(anker.zitierverbot, 'OFFEN');
+
+// Und die drei zustandsabhaengigen Felder muessen zur GEMESSENEN Lage passen -
+// in beiden Welten. Gemessen wird am Register selbst, nicht an einem Datum: wenn
+// beide Werte der Nutzlast dort stehen, MUSS verankert=true und das Zitierverbot
+// gefallen sein; stehen sie nicht drin, MUSS es stehen bleiben. Damit prueft
+// dieser Block vor dem Eintrag dasselbe wie danach.
+const registerRoh = fs.readFileSync(path.join(wurzel, 'protocol', 'early-detection',
+  '2.0.0', 'outcome-access-ledger.json'), 'utf8');
+const nutzlastImRegister = registerRoh.includes(anker.nutzlast.registriertePraeregSha)
+  && registerRoh.includes(anker.nutzlast.waechterDateiSha256);
+assert.equal(anker.registerVerankert, nutzlastImRegister,
+  `registerVerankert=${anker.registerVerankert}, im Register gefunden=${nutzlastImRegister} `
+  + '- der Bericht widerspricht dem Register.');
+if (nutzlastImRegister) {
+  assert.ok(anker.zitierverbot.startsWith('AUFGEHOBEN'),
+    `Nutzlast steht im Register, Zitierverbot meldet aber "${anker.zitierverbot}"`);
+  assert.match(anker.mechanismus, /IST register-verankert/);
+} else {
+  assert.equal(anker.zitierverbot, 'OFFEN');
+  assert.match(anker.mechanismus, /steht in KEINEM Register-Eintrag/);
+}
 assert.equal(anker.nutzlast.registriertePraeregSha,
   '799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c');
 // Die mitzufuehrende Nutzlast muss den HEUTIGEN Waechter beschreiben. Wer das
