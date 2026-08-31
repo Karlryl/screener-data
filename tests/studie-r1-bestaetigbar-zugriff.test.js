@@ -58,6 +58,7 @@ const {
   ART_ZUGRIFF,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
+  ARTEN_MIT_ZUGRIFFSZEIT,
 } = require(path.join(ROOT, 'lib', 'studie-verfassung.js'));
 
 const echtRead = fs.readFileSync;
@@ -162,13 +163,24 @@ function freigabeZiel() {
 
 // ── (a) Gleichheits- und Kardinalitaets-Anker (F6-B17a, KV-4) ───────────────
 test('F6-B17(a): BESTAETIGBAR ist genau die Zugriffszeit-Menge der Verfassung', () => {
-  assert.equal(BESTAETIGBAR.size, 3,
-    'die Kardinalitaet ist gepinnt: eine vierte Art faellt hier auf');
+  // Der woertliche Anker: Gleichheit gegen die IMPORTIERTE Verfassungs-Menge,
+  // nicht gegen eine Abschrift ihrer Elemente. Er steht bewusst zuerst, weil er
+  // die schaerfste Aussage traegt - und er deckt die Richtung ab, die eine
+  // Abschrift nicht deckt: waechst ARTEN_MIT_ZUGRIFFSZEIT eines Tages um eine
+  // Art, wird HIER rot, statt dass das Werkzeug still nachhinkt. Genau dieses
+  // Nachhinken ist der Defekt, den dieser Akt beseitigt.
   assert.deepEqual(
     new Set([...BESTAETIGBAR]),
-    new Set([ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]),
-    'die Menge muss der Verfassungs-Menge ARTEN_MIT_ZUGRIFFSZEIT gleichen',
+    new Set([...ARTEN_MIT_ZUGRIFFSZEIT]),
+    'BESTAETIGBAR muss der Verfassungs-Menge ARTEN_MIT_ZUGRIFFSZEIT gleichen',
   );
+  assert.equal(BESTAETIGBAR.size, 3,
+    'die Kardinalitaet ist gepinnt: eine vierte Art faellt hier auf');
+  // Und die drei Arten sind die importierten Konstanten, nie abgetippte
+  // Zeichenketten.
+  for (const art of [ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]) {
+    assert.ok(BESTAETIGBAR.has(art), `${art} fehlt in BESTAETIGBAR`);
+  }
 
   // Objekt-Anker: jede bestaetigbare Art muss von der VERFASSUNG als
   // Zugriffsart getragen werden. Das ist die Bedingung, deren Bruch (c) kippt.
