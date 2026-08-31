@@ -13,6 +13,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const secPit = require('../lib/sec-pit.js');
 const detect = require('../lib/b1-detect.js');
 
@@ -60,7 +61,8 @@ function main() {
     events: { total: events, withTodayTicker: eventsTickered, tickerMappableRate: events ? +(eventsTickered / events).toFixed(3) : null, byCalQuarter: eventsByQ },
   };
   fs.mkdirSync(path.dirname(OUT_BASE), { recursive: true });
-  fs.writeFileSync(OUT_BASE + '.json', JSON.stringify(report, null, 2));
+  // T204: atomar - der Instrumentierungs-Report ist Studien-Beleg.
+  writeFileAtomic(OUT_BASE + '.json', JSON.stringify(report, null, 2));
   const clusterQs = Object.keys(eventsByQ).length;
   const md = [
     '# B1 Discovery-Instrumentierung (' + new Date().toISOString().slice(0, 10) + ')',
@@ -81,7 +83,8 @@ function main() {
     '', 'Kohorten-Detail (n, winsorisierte P90-Schwelle, belowMinN): siehe JSON.',
     '', 'Laufzeit: ' + runtimeSec + ' s.',
   ].join('\n');
-  fs.writeFileSync(OUT_BASE + '.md', md);
+  // T204: atomar - dito, menschenlesbare Fassung.
+  writeFileAtomic(OUT_BASE + '.md', md);
   console.log('[b1-instrument] evaluable=' + counters.evaluable + ' events=' + events
     + ' tickerMappable=' + (events ? Math.round(100 * eventsTickered / events) : 0) + '%'
     + ' clusterQs=' + clusterQs + ' runtime=' + runtimeSec + 's');
