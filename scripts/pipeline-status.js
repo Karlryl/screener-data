@@ -65,6 +65,7 @@
  */
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const SCHEMA = 'screener-pipeline-status/v1';
 
@@ -259,7 +260,10 @@ function run() {
   }
 
   fs.mkdirSync(path.dirname(ziel), { recursive: true });
-  fs.writeFileSync(ziel, JSON.stringify(marker, null, 2) + '\n');
+  // T204: atomar - dieser Marker ist die Quelle des Frische-Banners in findash.
+  // Halb geschrieben ist er entweder unlesbar (Banner faellt fail-closed aus) oder,
+  // schlimmer, plausibel falsch.
+  writeFileAtomic(ziel, JSON.stringify(marker, null, 2) + '\n');
   console.log(`Statusmarker geschrieben: ${ziel} — status=${marker.status}`
     + `${marker.failed_job ? ` failed_job=${marker.failed_job}` : ''}`
     + ` last_success_at=${marker.last_success_at || '<keiner>'}`);
