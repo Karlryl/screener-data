@@ -198,11 +198,15 @@ function waehrungsbelegFuer(ticker) { return snapAbleitungenFuer(ticker).beleg; 
 
 // Reine Entscheidung, exportiert — der Waechter tests/waehrung-ausliefer-waechter.test.js
 // FUEHRT sie aus, statt den Quelltext nach Schreibmustern abzusuchen.
+function isUsableFxRate(rate) {
+  return typeof rate === 'number' && Number.isFinite(rate) && rate > 0;
+}
+
 function beurteileWaehrungsbeleg(meta) {
   if (!meta || typeof meta !== 'object') return { ok: false, grund: 'kein-snapshot', rate: null };
   const rc = meta.reportingCurrencyOriginal || meta.reportingCurrency;
   const tc = meta.tradingCurrencyOriginal || meta.tradingCurrency;
-  const rate = Number.isFinite(meta.tradingFxRateApplied) ? meta.tradingFxRateApplied : null;
+  const rate = isUsableFxRate(meta.tradingFxRateApplied) ? meta.tradingFxRateApplied : null;
   // Die Handelswaehrung ist geraten (pull-yahoo Mapper: Yahoos price.currency fehlte und
   // wurde still durch die Berichtswaehrung ersetzt). Damit ist JEDER Handelskurs-Bezug
   // auf dieser Zeile unbelegt — auch wenn danach sauber gerechnet wurde.
@@ -228,7 +232,7 @@ function beurteileWaehrungsbeleg(meta) {
   if (identisch && meta.tradingCurrencyAssumed === undefined) {
     return { ok: false, grund: 'herkunft-unbekannt', rate };
   }
-  if (identisch && meta.fxConverted === true && Number.isFinite(meta.fxRateApplied)) {
+  if (identisch && meta.fxConverted === true && isUsableFxRate(meta.fxRateApplied)) {
     return { ok: true, grund: 'identitaet', rate: meta.fxRateApplied };
   }
   return { ok: false, grund: 'kein-handelskurs-nachweis', rate };
@@ -935,6 +939,14 @@ function checkOptionalNumOrNull(r, key, where, errs) {
   if (!(key in r)) return;
   if (r[key] !== null && !Number.isFinite(r[key])) errs.push(where + ": " + key + " not finite|null");
 }
+// FX evidence is multiplicative. Zero or a negative finite number has the right
+// JavaScript type but cannot prove a conversion and must never survive into Findash.
+function checkOptionalPositiveNumOrNull(r, key, where, errs) {
+  if (!(key in r)) return;
+  if (r[key] !== null && !isUsableFxRate(r[key])) {
+    errs.push(where + ": " + key + " not positive-finite|null");
+  }
+}
 // 29.08.: dasselbe Muster fuer einen ZAEHLER (qPunkte). Eine gebrochene Zahl oder ein
 // negativer Wert ist keine Anzahl von Datenpunkten, sondern ein kaputter Erzeuger — und
 // ein Beleg-Feld, das selbst Unsinn traegt, waere schlimmer als keins.
@@ -1101,7 +1113,7 @@ function validateGeo(r, where, errs) {
   // Felder nicht und duerfen Karls rotes X nicht ausloesen. Sind sie da, werden sie voll
   // geprueft: marketCap ist im v1-Vertrag IMMER USD, ein anderer Wert waere ein Bruch.
   checkOptionalEnumOrNull(r, 'marketCapCurrency', ['USD'], where, errs);
-  checkOptionalNumOrNull(r, 'tradingFxRateApplied', where, errs);
+  checkOptionalPositiveNumOrNull(r, 'tradingFxRateApplied', where, errs);
   // 29.08. (Abhilfe A, Coverage-Akte): Belegpunkte neben coverageAxes. Additiv OPTIONAL —
   // bereits ausgelieferte v1-Dateien tragen sie nicht und duerfen nicht rot werden.
   checkOptionalZaehlerOrNull(r, 'qPunkte', where, errs);

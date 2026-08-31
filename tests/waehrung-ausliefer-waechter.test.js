@@ -62,6 +62,54 @@ check('BELEGT: Handel = Bericht, vom heutigen Mapper BESTAETIGT', () => {
   assert.equal(u.ok, true); assert.equal(u.grund, 'identitaet');
 });
 
+check('UNBELEGT: Divergenz akzeptiert nur einen positiven endlichen Handelskurs-Stempel', () => {
+  const invalid = [0, -0.5, NaN, Infinity, -Infinity, '0.127', null, undefined, true, {}, []];
+  for (const tradingFxRateApplied of invalid) {
+    const u = B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'HKD', tradingCurrencyOriginal: 'HKD',
+      tradingFxRateApplied, fxConverted: true, fxRateApplied: 0.14853986 });
+    assert.equal(u.ok, false, 'ungueltiger Handelskurs-Stempel wurde akzeptiert: ' + String(tradingFxRateApplied));
+    assert.equal(u.grund, 'kein-handelskurs-nachweis');
+    assert.equal(u.rate, null, 'ungueltiger Stempel darf nicht in die Auslieferung gelangen');
+  }
+});
+
+check('UNBELEGT: bestaetigte Identitaet braucht ebenfalls einen positiven endlichen Kurs', () => {
+  const invalid = [0, -0.5, NaN, Infinity, -Infinity, '0.127', null, undefined, true, {}, []];
+  for (const fxRateApplied of invalid) {
+    const u = B({ reportingCurrencyOriginal: 'HKD', tradingCurrency: 'HKD', tradingCurrencyAssumed: false,
+      fxConverted: true, fxRateApplied });
+    assert.equal(u.ok, false, 'ungueltiger Identitaetskurs wurde akzeptiert: ' + String(fxRateApplied));
+    assert.equal(u.grund, 'kein-handelskurs-nachweis');
+    assert.equal(u.rate, null);
+  }
+});
+
+check('GEGENPROBE: USD-Handel braucht keinen FX-Kurs, ein unbrauchbarer Stempel wird nicht ausgeliefert', () => {
+  const u = B({ reportingCurrencyOriginal: 'USD', tradingCurrency: 'USD',
+    tradingFxRateApplied: 0, fxConverted: true, fxRateApplied: -1 });
+  assert.equal(u.ok, true);
+  assert.equal(u.grund, 'usd-gehandelt');
+  assert.equal(u.rate, null);
+});
+
+check('GEGENPROBE: ADR in USD braucht trotz fremder Berichtswährung keinen FX-Kurs', () => {
+  for (const tradingFxRateApplied of [undefined, 0]) {
+    const u = B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'USD',
+      tradingCurrencyAssumed: false, tradingFxRateApplied });
+    assert.equal(u.ok, true, 'USD-Handel ist bereits die Zieleinheit, unabhaengig von der Berichtswährung');
+    assert.equal(u.grund, 'usd-gehandelt');
+    assert.equal(u.rate, null);
+  }
+});
+
+check('UNBELEGT: ein nur geratener USD-Handel bleibt vor dem USD-Ausnahmepfad gesperrt', () => {
+  const u = B({ reportingCurrencyOriginal: 'CNY', tradingCurrency: 'USD',
+    tradingCurrencyAssumed: true, tradingFxRateApplied: 1 });
+  assert.equal(u.ok, false);
+  assert.equal(u.grund, 'handelswaehrung-geraten');
+  assert.equal(u.rate, 1);
+});
+
 check('UNBELEGT: Altbestand-Identitaet ohne Herkunfts-Feld (Review-Fix, KRITISCH)', () => {
   // DER Fall aus dem Bestand: vor Tag 938 setzte der Mapper die Handelswaehrung still gleich
   // der Berichtswaehrung, das Feld tradingCurrencyAssumed gab es noch nicht (undefined, NICHT
@@ -135,10 +183,17 @@ check('--check akzeptiert die neuen Felder und faengt einen falschen Wert', () =
   let e = [];
   wx.validateBoardRow({ ...basis, marketCapCurrency: 'USD', tradingFxRateApplied: 0.127 }, 'w', e);
   assert.equal(e.length, 0, 'saubere Zeile muss durchgehen: ' + e.join('; '));
+  e = []; wx.validateBoardRow({ ...basis, marketCapCurrency: 'USD', tradingFxRateApplied: null }, 'w', e);
+  assert.equal(e.length, 0, 'null bleibt fuer einen nicht gemessenen optionalen Stempel legitim: ' + e.join('; '));
+  e = []; wx.validateBoardRow({ ...basis, revGrowthYoYPct: -10 }, 'w', e);
+  assert.equal(e.length, 0, 'negative Wachstumsanzeigen bleiben legitim; die Positivregel gilt nur fuer FX-Belege');
   e = []; wx.validateBoardRow({ ...basis, marketCapCurrency: 'HKD' }, 'w', e);
   assert.ok(e.some((x) => /marketCapCurrency/.test(x)), 'eine Nicht-USD-Einheit muss auffliegen');
-  e = []; wx.validateBoardRow({ ...basis, tradingFxRateApplied: 'GARBAGE' }, 'w', e);
-  assert.ok(e.some((x) => /tradingFxRateApplied/.test(x)), 'ein kaputter Stempel muss auffliegen');
+  for (const bad of [0, -0.5, NaN, Infinity, -Infinity, 'GARBAGE', true, {}, []]) {
+    e = []; wx.validateBoardRow({ ...basis, tradingFxRateApplied: bad }, 'w', e);
+    assert.ok(e.some((x) => /tradingFxRateApplied/.test(x)),
+      'ein unbrauchbarer Stempel muss auffliegen: ' + String(bad));
+  }
   e = []; wx.validateBoardRow(basis, 'w', e);
   assert.equal(e.length, 0, 'Abwesenheit bleibt legitim (Altbestands-Export darf nicht rot werden)');
 });
