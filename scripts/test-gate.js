@@ -218,6 +218,28 @@ const NICHTS_GEPRUEFT = (out) => /(^|[^\d])0 ok\b/.test(out) && /(^|[^\d])0 fail
 // Pruefungen entfernt, bliebe still gruen. Wer nichts sagt, hat nichts belegt.
 const STUMM = (out) => out.trim() === '';
 
+// T170: DRITTE Auspraegung derselben Bugklasse, und die gefaehrlichste, weil sie
+// wie ein normaler Lauf aussieht. Eine node:test-Datei, deren Pruefungen ALLE
+// uebersprungen sind, laeuft, schreibt eine vollstaendige Bilanz und endet mit
+// Exit 0. NICHTS_GEPRUEFT sucht das EIGENFORMAT "0 ok"/"0 fail" und sieht sie
+// nicht; STUMM sieht sie auch nicht, weil sehr wohl Text kommt.
+// EMPIRISCH NACHGEFAHREN (node v24, spec-Reporter, zwei Tests mit { skip: ... }):
+//   "ℹ tests 2 / ℹ pass 0 / ℹ fail 0 / ℹ skipped 2", Exit 0, Gate-Urteil PASS.
+// Betroffen sind 32 der 165 Gate-Dateien (grep -l "node:test" tests/*test.js).
+//
+// POSITIV-BELEG STATT WORT-SUCHE (Vorlage T147): nicht nach dem Wort fuer "nichts
+// geprueft" suchen, sondern verlangen, DASS der Lauf etwas belegt hat. Die Bilanz
+// muss mindestens eine BESTANDENE Pruefung ausweisen. `^\W*` faengt das
+// Reporter-Praefix beider Familien ab (spec "ℹ ", TAP "# ") ohne es zu kennen.
+const bilanzZahl = (out, feld) => {
+  const m = new RegExp('^\\W*' + feld + '\\s+(\\d+)\\s*$', 'm').exec(out);
+  return m ? Number(m[1]) : null;
+};
+// Die `tests`-Zeile ist die Bedingung dafuer, dass ueberhaupt eine Bilanz vorliegt:
+// ohne sie wuerde eine beliebige Zeile "pass 0" irgendwo in fremder Ausgabe reichen.
+const NICHTS_BELEGT = (out) =>
+  bilanzZahl(out, 'tests') !== null && bilanzZahl(out, 'pass') === 0;
+
 // Beweislauf 33289964981 (ENTSCHIED 106): GitHub liest JEDE Zeile, die mit '::'
 // beginnt, als Workflow-Kommando und haengt eine Annotation an den Lauf. Das Gate
 // gab bisher zwei Sorten fremden Text unveraendert weiter:
@@ -281,6 +303,11 @@ function runFiles(files, cwd, log) {
     if (STUMM(ausgabe)) {
       skipped.push(t);
       log(`SKIP ${t} — keine Ausgabe bei Exit 0 (node:test ohne einen einzigen test(...)?), zaehlt NICHT als PASS`);
+      continue;
+    }
+    if (NICHTS_BELEGT(ausgabe)) {
+      skipped.push(t);
+      log(`SKIP ${t} — Bilanz weist 0 bestandene Pruefungen aus (alle uebersprungen?), zaehlt NICHT als PASS`);
       continue;
     }
     log(`PASS ${t}`);
@@ -377,6 +404,10 @@ function selftest() {
   // taucht nie auf, NICHTS_GEPRUEFT kann sie also gar nicht sehen.
   const stumm = 'tests/stumm.test.js';
   const nodetest = 'tests/nodetest.test.js';
+  // T170: eine node:test-Datei, deren Pruefungen ALLE uebersprungen sind. Sie
+  // schreibt eine vollstaendige Bilanz (tests 1 / pass 0 / skipped 1) und endet
+  // mit Exit 0 - an NICHTS_GEPRUEFT und an STUMM laeuft sie beide vorbei.
+  const uebersprungen = 'tests/uebersprungen.test.js';
   fs.writeFileSync(path.join(dir, green), 'console.log("3 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, red), 'process.exit(1);\n');
   fs.writeFileSync(path.join(dir, orphan), 'console.log("1 ok, 0 fail");process.exit(0);\n');
@@ -385,6 +416,12 @@ function selftest() {
   fs.writeFileSync(path.join(dir, stumm), "'use strict';\nrequire('node:test');\n");
   fs.writeFileSync(path.join(dir, nodetest),
     "'use strict';\nconst test=require('node:test');\ntest('echt', () => {});\n");
+
+  // T170: die Datei, die wie ein normaler Lauf AUSSIEHT - sie redet (also nicht
+  // STUMM), sie endet mit 0, und sie hat trotzdem nichts geprueft.
+  fs.writeFileSync(path.join(dir, uebersprungen),
+    "'use strict';\nconst test=require('node:test');\n"
+    + "test('nie', { skip: 'Voraussetzung fehlt' }, () => { throw new Error('x'); });\n");
 
   const summaryFile = path.join(dir, 'summary.txt');
   // emit: die Proben simulieren rote Gate-Laeufe. Deren '::error::'/'::warning::'
@@ -516,12 +553,40 @@ function selftest() {
     && r.lines.some(l => l.startsWith(`PASS ${nodetest}`)),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
+  // 6e. T170-Probe: alle Pruefungen uebersprungen -> SKIP, nicht PASS. Das ist die
+  //     Luecke, durch die eine Wache still gruen bleibt, aus der jemand die
+  //     Voraussetzung entfernt hat. Betrifft real 32 der 165 Gate-Dateien.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/uebersprungen*test.js'], reportFiles: [], repoFiles: [uebersprungen],
+  });
+  check('T170-Probe (node:test mit 0 bestandenen Pruefungen zaehlt als SKIP)',
+    r.code === 0
+    && r.skipped.length === 1
+    && !r.lines.some(l => l.startsWith(`PASS ${uebersprungen}`))
+    && r.lines.some(l => l.startsWith(`SKIP ${uebersprungen}`))
+    && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(uebersprungen)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6f. Gegenprobe, ohne die 6e jede node:test-Suite im Repo falsch faerben wuerde:
+  //     dieselbe Reporter-Familie MIT einer bestandenen Pruefung bleibt PASS. Die
+  //     Stumm-Gegenprobe deckt das nicht ab - sie prueft eine Datei OHNE Bilanz,
+  //     hier geht es um eine Bilanz mit pass >= 1.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/nodetest*test.js'], reportFiles: [], repoFiles: [nodetest],
+  });
+  check('T170-Gegenprobe (node:test mit bestandener Pruefung bleibt PASS)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${nodetest}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
   fs.rmSync(dir, { recursive: true, force: true });
   if (fails.length) {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (10 Proben).');
+  console.log('test-gate Selftest OK (12 Proben).');
   return 0;
 }
 
