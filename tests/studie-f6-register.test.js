@@ -92,9 +92,21 @@ function tempdir() {
 // die registrierte Konstante ERWARTETER_TAIL geprueft. Wer an Eintrag 22 dreht,
 // faellt hier genauso auf wie vorher — nur faellt jetzt nicht mehr auf, dass der
 // Vorgang funktioniert hat.
+//
+// NACHTRAG 2026-08-31 (beim Bau von Eintrag 24 aufgefallen): die erste Fassung
+// dieser Projektion FILTERTE den eigenen Eintrag heraus. Das ist dieselbe
+// Zeitpunkt-Aussage noch einmal, nur eine Ebene tiefer versteckt - sie behauptet
+// zusaetzlich, dass NACH Eintrag 23 nie etwas kommt. In dem Moment, in dem
+// Eintrag 24 planmaessig anhaengt, stehen im "Vor-Zustand" 23 Ereignisse statt
+// 22, und der komplette Waechter wird rot, obwohl nichts kaputt ist. Genau die
+// Bugklasse, gegen die der Absatz darueber geschrieben wurde.
+// Der Vor-Zustand ist deshalb: alles VOR dem eigenen Eintrag - abgeschnitten,
+// nicht gefiltert. Das bleibt richtig, solange das Register waechst.
 function registerVorEintrag() {
   const r = lies(LEDGER);
-  return { ...r, events: (r.events || []).filter((e) => e.runId !== RUN_ID) };
+  const events = r.events || [];
+  const i = events.findIndex((e) => e.runId === RUN_ID);
+  return { ...r, events: i === -1 ? events : events.slice(0, i) };
 }
 
 // Arbeitskopien. Die Originale werden gelesen, nie geschrieben.

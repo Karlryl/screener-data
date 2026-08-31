@@ -55,8 +55,26 @@ function baum() {
   }
   const register = path.join(wurzel, ...LEDGER_REL.split('/'));
   fs.mkdirSync(path.dirname(register), { recursive: true });
-  fs.copyFileSync(LEDGER, register);
+  fs.writeFileSync(register, `${JSON.stringify(registerVorEintrag(), null, 1)}\n`, 'utf8');
   return { wurzel, register };
+}
+
+// DER VOR-ZUSTAND, auf den Eintrag 24 gebaut ist: alles VOR dem eigenen Eintrag,
+// abgeschnitten statt gefiltert.
+//
+// Als INVARIANTE formuliert, nicht als Tagesaussage: eine 1:1-Kopie des lebenden
+// Registers wuerde in der Sekunde rot, in der Eintrag 24 planmaessig auf main
+// landet - dann traegt es 24 Ereignisse, und das Werkzeug erwartet 23. Ein
+// Waechter, der beim Gelingen des Vorgangs rot wird, wird abgeschaltet (die
+// Bugklasse VB-A6; im Nachbartest studie-f6-register.test.js ausfuehrlich
+// beschrieben und dort am selben Tag ein zweites Mal aufgetreten). Weicher ist
+// die Projektion nicht: das Kettenende des Vor-Zustands wird gegen die
+// registrierte Konstante ERWARTETER_TAIL geprueft.
+function registerVorEintrag() {
+  const r = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+  const events = r.events || [];
+  const i = events.findIndex((e) => e.runId === W.RUN_ID);
+  return { ...r, events: i === -1 ? events : events.slice(0, i) };
 }
 
 // Feste Zeiten: derselbe Eintrag muss bit-gleich reproduzierbar sein, sonst
