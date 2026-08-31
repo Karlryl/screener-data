@@ -40,7 +40,7 @@ const SCHWELLEN = path.join(
   REPO, 'protocol', 'early-detection', '2.1.0', 'e2-schwellen-satz-2026-08-30.json',
 );
 const BAND = path.join(REPO, 'protocol', 'early-detection', '2.1.0', 'b4-bandregel-2026-08-30.json');
-const ANKER = path.join(REPO, 'reports', 'studie', 'VB-A6-registeranker-2026-08-30.json');
+const ANKER = path.join(REPO, 'reports', 'studie', 'VB-A6-registeranker-2026-08-31.json');
 
 const {
   RUN_ID,

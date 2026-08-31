@@ -778,12 +778,17 @@ def zweig_rotproben(praereg=PRAEREG, manifest=MANIFEST, b1_modul=B1_MODUL,
 
 
 def register_anker(ledger=LEDGER, skript=None):
-    """VB-A6: der B3'-Sollwert ist heute in KEINEM Register-Eintrag verankert.
+    """VB-A6: ist der B3'-Sollwert im Register verankert? Gemessen, nicht datiert.
 
     Kein eigener Akt - die beiden Werte werden im NAECHSTEN Register-Eintrag
     jenseits F3 mitgefuehrt. Diese Funktion baut die mitzufuehrende Nutzlast
     und misst am Objekt, ob sie schon drinsteht. Solange nicht, darf B3' nicht
     als register-verankert zitiert werden - und genau das steht dann hier.
+
+    Die Antwort ist bewusst ZUSTANDSABHAENGIG und kein festgeschriebener Tag:
+    vor dem F6-Freeze-Eintrag lautet sie OFFEN, danach AUFGEHOBEN. Wer sie zu
+    einer Tagesaussage macht, baut einen Waechter, der genau in dem Moment rot
+    wird, in dem der Vorgang planmaessig gelingt.
     """
     skript = skript or os.path.abspath(__file__)
     rel = os.path.relpath(skript, WURZEL).replace(os.sep, "/")
@@ -814,10 +819,14 @@ def register_anker(ledger=LEDGER, skript=None):
             "Der Sollwert ist eine QUELL-KONSTANTE im Waechter selbst "
             "(REGISTRIERTE_PRAEREG_SHA), keine Manifest-Lesung. Wer Allowlist "
             "und Manifest im selben Commit aendert, macht B3' rot. Die Luecke "
-            "sitzt eine Ebene hoeher: " + rel + " steht in keinem "
-            "hash-manifest-Tripel und in keinem Register-Eintrag - ein Commit, "
-            "der Allowlist, Manifest UND die Waechter-Konstante zugleich "
-            "verstellt, macht B3' stumm. Kanzlei-Befund §0.3."),
+            "sitzt eine Ebene hoeher: ein Commit, der Allowlist, Manifest UND "
+            "die Waechter-Konstante zugleich verstellt, macht B3' stumm, "
+            "solange " + rel + " in keinem Register-Eintrag steht. "
+            "Kanzlei-Befund §0.3. Lage jetzt: "
+            + ("die Waechter-Datei IST register-verankert, die Luecke ist zu."
+               if verankert else
+               "die Waechter-Datei steht in KEINEM Register-Eintrag, "
+               "die Luecke ist offen.")),
         "vollzug": (
             "KEIN eigener Akt, kein zusaetzlicher Eintrag: die Nutzlast wird "
             "im naechsten Register-Eintrag jenseits F3 mitgefuehrt. Bis dahin "
@@ -1150,8 +1159,41 @@ def selbsttest():
         pruefe("ROT-PROBE VB-A8: eine fehlende Automatik macht die Lage ROT",
                w["rot"] is True and w["anzahlAutomatischerBeerdigungen"] == 1)
 
-    pruefe("VB-A6: der Sollwert ist heute NICHT register-verankert",
-           register_anker()["registerVerankert"] is False)
+    # VB-A6: die Selbstpruefung darf KEINEN Tag festschreiben. Frueher stand
+    # hier "der Sollwert ist heute NICHT register-verankert" - eine Aussage
+    # ueber einen ZEITPUNKT, die in dem Moment rot geworden waere, in dem der
+    # F6-Freeze-Eintrag die Nutzlast an das Register haengt. Ein Waechter, der
+    # bei intakten Daten rot wird, wird abgeschaltet - er ist schaedlicher als
+    # keiner. Geprueft wird deshalb die INVARIANTE, in beide Richtungen am
+    # Objekt: ein Register MIT der Nutzlast hebt das Zitierverbot auf, eines
+    # OHNE laesst es stehen. Der heutige Register-Stand geht in KEINE Erwartung
+    # ein - deshalb ueberlebt diese Probe den Eintrag, der sie frueher brach.
+    with tempfile.TemporaryDirectory() as tmp:
+        a6_nutzlast = register_anker()["nutzlast"]
+        a6_ohne_pfad = os.path.join(tmp, "ledger-ohne-nutzlast.json")
+        a6_mit_pfad = os.path.join(tmp, "ledger-mit-nutzlast.json")
+        with io.open(a6_ohne_pfad, "w", encoding="utf-8", newline="") as fh:
+            json.dump({"schema": "outcome-access-ledger/v1", "eintraege": []},
+                      fh, ensure_ascii=False)
+        with io.open(a6_mit_pfad, "w", encoding="utf-8", newline="") as fh:
+            json.dump({"schema": "outcome-access-ledger/v1",
+                       "eintraege": [{"vbA6Nutzlast": a6_nutzlast}]},
+                      fh, ensure_ascii=False)
+        a6_ohne = register_anker(ledger=a6_ohne_pfad)
+        a6_mit = register_anker(ledger=a6_mit_pfad)
+        pruefe("VB-A6: ohne Nutzlast im Register bleibt das Zitierverbot stehen",
+               a6_ohne["registerVerankert"] is False
+               and a6_ohne["zitierverbot"] == "OFFEN")
+        pruefe("ROT-PROBE VB-A6: mit Nutzlast im Register faellt das Zitierverbot",
+               a6_mit["registerVerankert"] is True
+               and a6_mit["zitierverbot"].startswith("AUFGEHOBEN"))
+    # Gegen das ECHTE Register wird nur gefordert, dass der Bericht ueberhaupt
+    # zustande kommt und eine der beiden Lagen meldet - nie ein dritter Zustand,
+    # nie ein bestimmter. Ein unlesbares Register faellt hier auf.
+    a6_echt = register_anker()
+    pruefe("VB-A6: der Bericht gegen das echte Register meldet eine der beiden Lagen",
+           a6_echt["registerVerankert"] in (True, False)
+           and a6_echt["registerStatus"] == "gelesen")
     pruefe("VB-A7: kein B3'-Ausloeser haengt an 326/365",
            all("326" not in p["beobachtetesVerhalten"] for p in rp["proben"]))
     # R12a: das Artefakt darf keinen maschinengebundenen Pfad tragen. Geprueft

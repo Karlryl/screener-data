@@ -56,13 +56,6 @@ const {
 
 const WURZEL = path.join(__dirname, '..');
 const LEDGER = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'outcome-access-ledger.json');
-const SCHWELLEN = path.join(
-  WURZEL, 'protocol', 'early-detection', '2.1.0', 'e2-schwellen-satz-2026-08-30.json',
-);
-const BAND = path.join(
-  WURZEL, 'protocol', 'early-detection', '2.1.0', 'b4-bandregel-2026-08-30.json',
-);
-const ANKER = path.join(WURZEL, 'reports', 'studie', 'VB-A6-registeranker-2026-08-30.json');
 
 // Sollwerte, hier UNABHAENGIG von den geprueften Dateien notiert. Ein Werkzeug,
 // das seine Sollwerte aus der Datei liest, die es pruefen soll, prueft nichts.
@@ -90,14 +83,34 @@ const BAND_INHALT_SHA256 = '1fd6a9f3ceb6dab0076c6812f57483889708345d6a87c6103a75
 const BAND_DATEI_SHA256 = 'd9c5990ad403b6baca2e3a4228218af0b73367e4f51ffd213ac654fc41cdc5da';
 const KLUMPUNGSEINHEIT = 'Klumpung nach Signal-Entitaet (Firma)';
 
+// WARUM PIN 4 AM 31.08. NEU GESETZT WURDE (und nicht "repariert" gehoert):
+// Eintrag 23 verankert die VB-A6-Nutzlast. Damit wurde die Selbstpruefung IM
+// verankerten Waechter (studie-rr9-nullpunkt.py, frueher: "der Sollwert ist
+// heute NICHT register-verankert") falsch - sie behauptete einen ZEITPUNKT
+// statt einer Invariante und waere in dem Moment rot geworden, in dem der
+// Eintrag planmaessig gelingt. Ein Ringschluss: der Eintrag pinnt die Datei,
+// deren Inhalt der Eintrag widerlegt. Der Waechter wurde deshalb VOR dem
+// Eintrag auf die Invariante umgestellt (beide Richtungen am Fixture-Register
+// geprueft), sein sha256 hat sich dadurch geaendert, und das Anker-Artefakt
+// wurde neu erzeugt statt ueberschrieben. Die 30.08.-Fassung bleibt liegen.
 // Pin 4 — die VB-A6-Nutzlast. Der Sollwert ist die registrierte Praeregistrierung;
 // die Luecke ist, dass die WAECHTER-DATEI in keinem Manifest-Tripel und in keinem
 // Register-Eintrag steht. Genau das holt dieser Eintrag nach.
-const ANKER_REL = 'reports/studie/VB-A6-registeranker-2026-08-30.json';
-const ANKER_DATEI_SHA256 = '4ae472cd9b6b473e6bba7c0cd3adb9d60d200da8a1dbeec3d1ec7a1e922cdd2f';
+const ANKER_REL = 'reports/studie/VB-A6-registeranker-2026-08-31.json';
+const ANKER_DATEI_SHA256 = '66583d81cd347069d6222e715f1e625d7d651e9ac90d909732aa509ee6970df6';
 const PRAEREG_SHA256 = '799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c';
 const WAECHTER_REL = 'scripts/studie-rr9-nullpunkt.py';
-const WAECHTER_SHA256 = '81d3193d13c4983f6afd183c6e340f7e271af8be3faa5718434fc743720b49d6';
+const WAECHTER_SHA256 = '74892dd01b0a0b019216cedbd9d183475a72d4fe70c4fe3bf87c39c5908c4338';
+
+// Die Vorgabe-Pfade werden AUS den registrierten Kennungen gebaut, nicht daneben
+// noch einmal getippt. Vorher standen beide Fassungen unabhaengig im Kopf der
+// Datei - und genau das ist am 31.08. auseinandergelaufen: der Pin zeigte auf das
+// neue Anker-Artefakt, der Vorgabe-Pfad noch auf das alte, und der Trockenlauf
+// meldete einen Hash-Widerspruch, den es gar nicht gab.
+const relPfad = (rel) => path.join(WURZEL, ...rel.split('/'));
+const SCHWELLEN = relPfad(SCHWELLEN_REL);
+const BAND = relPfad(BAND_REL);
+const ANKER = relPfad(ANKER_REL);
 
 // Vorlauf zwischen Anmeldung und Wirksamkeit. Dazwischen muessen Mini-PR und
 // Serverbeweis passen; zu knapp waere eine Anmeldung, die sich selbst ueberholt.

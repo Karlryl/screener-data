@@ -253,12 +253,12 @@ assert.equal(ankerLauf.status, 0, ankerLauf.stdout + ankerLauf.stderr);
 const anker = JSON.parse(fs.readFileSync(ankerZiel, 'utf8'));
 
 const ankerArtefakt = path.join(wurzel, 'reports', 'studie',
-  'VB-A6-registeranker-2026-08-30.json');
+  'VB-A6-registeranker-2026-08-31.json');
 assert.ok(fs.existsSync(ankerArtefakt), `VB-A6-Artefakt fehlt: ${ankerArtefakt}`);
 assert.deepEqual(JSON.parse(fs.readFileSync(ankerArtefakt, 'utf8')), anker,
   'das committete VB-A6-Artefakt weicht vom frischen Lauf ab: '
   + '`python scripts/studie-rr9-nullpunkt.py register-anker --ziel '
-  + 'reports/studie/VB-A6-registeranker-2026-08-30.json`');
+  + 'reports/studie/VB-A6-registeranker-2026-08-31.json`');
 assert.equal(anker.registerVerankert, false,
   'Steht der Sollwert im Register, ist VB-A6 vollzogen - dann gehoert dieser '
   + 'Test auf true umgestellt und das Zitierverbot faellt.');
@@ -271,7 +271,7 @@ assert.equal(anker.nutzlast.registriertePraeregSha,
 assert.equal(anker.nutzlast.waechterDateiSha256,
   crypto.createHash('sha256').update(fs.readFileSync(skript)).digest('hex'),
   'VB-A6-Nutzlast ist veraltet: `python scripts/studie-rr9-nullpunkt.py '
-  + 'register-anker --ziel reports/studie/VB-A6-registeranker-2026-08-30.json`');
+  + 'register-anker --ziel reports/studie/VB-A6-registeranker-2026-08-31.json`');
 
 // -- 7. VB-A7: 326/365 traegt KEINE Sanktion --------------------------------
 // Geprueft wird die Abwesenheit an den Ausloesern selbst, nicht an einem Text.
