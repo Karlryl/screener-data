@@ -299,6 +299,18 @@ def kanonisch_sha256(objekt):
     return hashlib.sha256(roh).hexdigest()
 
 
+def kurzpfad(voll):
+    """Elternverzeichnis + Dateiname. Genug zum Unterscheiden, ohne die
+    Benutzerkennung des Rechners in den Report zu schreiben (R12a).
+
+    Woertlich die Form aus scripts/studie-basisraten.py:251 - der Bericht
+    dieses Laufs wandert in die Akte, und ein voller Windows-Pfad traegt den
+    Kontonamen mit hinein.
+    """
+    return (os.path.basename(os.path.dirname(voll)) + "/"
+            + os.path.basename(voll))
+
+
 def lies_json(pfad, was):
     if not os.path.isfile(pfad):
         raise LaufAbbruch(was + " fehlt: " + str(pfad))
@@ -906,8 +918,8 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         "accessedAt": freigabe["accessedAt"],
         "ersterZugriffAm": erster_zugriff,
         "beendetAm": beendet,
-        "gelesenePfade": sorted(set(gelesene)),
-        "geschriebenePfade": sorted([bericht_pfad]),
+        "gelesenePfade": sorted({kurzpfad(p) for p in gelesene}),
+        "geschriebenePfade": sorted([kurzpfad(bericht_pfad)]),
         "ergebnisdatenBeruehrt": True,
         "siegelWache": "Endtest-Siegel unberuehrt und ZU. Kein Endtest-Fenster, "
                        "kein Schluesselmaterial, keine Lueckenliste geoeffnet "
@@ -919,7 +931,7 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
             {"pfad": "scripts/studie-f6-lauf.py", "art": "datei",
              "sha256": sha256_datei(os.path.abspath(__file__)),
              "eintrag": "zu binden in Eintrag 25 (F6-B7)"},
-            {"pfad": str(zaehlwerk_pfad), "art": "datei",
+            {"pfad": kurzpfad(str(zaehlwerk_pfad)), "art": "datei",
              "sha256": zaehlwerk_sha,
              "eintrag": "zu binden in Eintrag 25 (F6-B7)"},
         ],

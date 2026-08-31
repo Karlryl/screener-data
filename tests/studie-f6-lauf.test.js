@@ -488,6 +488,23 @@ test('5.5 Umschlag und Daten sind zwei getrennte Listen (F6-B10)', () => {
   assert.ok(Array.isArray(b.umschlag.manifestGeprueft));
 });
 
+test('5.5b R12a: kein voller Pfad und keine Benutzerkennung im Bericht', () => {
+  // Der Bericht wandert in die Akte. Ein voller Windows-Pfad traegt den
+  // Kontonamen des Rechners mit hinein - genau das, wogegen
+  // scripts/studie-basisraten.py::kurzpfad seit jeher schuetzt.
+  const w = welt('f6lauf-r12a-');
+  const b = bericht(w, gleichmaessig(230, 20));
+  const roh = fs.readFileSync(w.bericht, 'utf8');
+  assert.equal(roh.includes(w.dir), false,
+    'der volle Temp-Pfad steht im Bericht - mit ihm die Benutzerkennung');
+  assert.equal(roh.includes(os.homedir()), false, 'Heimatverzeichnis im Bericht');
+  for (const p of b.umschlag.gelesenePfade.concat(b.umschlag.geschriebenePfade)) {
+    assert.equal(p.split('/').length, 2,
+      `kein Kurzpfad (Elternverzeichnis/Datei): ${p}`);
+    assert.equal(p.includes('\\'), false, `roher Windows-Pfad: ${p}`);
+  }
+});
+
 test('5.6 differenz_punkte: je Variante GENAU EINER, armuebergreifend (F6-B11)', () => {
   const w = welt('f6lauf-differenz-');
   const daten = gleichmaessig(230, 20);
