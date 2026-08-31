@@ -24,6 +24,7 @@ const {
   pruefeZugriffsRegister,
   haengeEintragAn,
   VerfassungsBruch,
+  ARTEN_MIT_ZUGRIFFSZEIT,
 } = require('../lib/studie-verfassung');
 
 const WURZEL = path.join(__dirname, '..');
@@ -192,4 +193,16 @@ test('R1: jede committete Revision ist byte-identisches Praefix der aktuellen', 
       );
     });
   }
+});
+
+// Die Menge der Zugriffszeit-Arten ist die Referenz, gegen die
+// scripts/studie-r1-serverzeit.js seine BESTAETIGBAR-Liste misst (F6-B17a).
+// Ohne den Export koennte der dortige Gleichheits-Anker sie nur abschreiben —
+// zwei Kopien derselben Regel driften. Die Dreizahl steht mit im Anker: eine
+// vierte Zugriffsart aufzunehmen ist ein eigener, sichtbarer Verfassungsakt und
+// muss HIER auffallen, nicht erst im Werkzeug.
+test('ARTEN_MIT_ZUGRIFFSZEIT ist exportiert und fuehrt genau drei Arten', () => {
+  assert.ok(ARTEN_MIT_ZUGRIFFSZEIT instanceof Set,
+    'die Zugriffszeit-Arten muessen als Menge exportiert sein, nicht als Kopie');
+  assert.equal(ARTEN_MIT_ZUGRIFFSZEIT.size, 3);
 });
