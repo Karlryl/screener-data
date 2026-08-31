@@ -64,6 +64,12 @@ function abbruch(inhalt, n, zaehler, warum) {
   const r = ruf(inhalt, n, zaehler);
   assert.notEqual(r.status, 0, `${warum}: haette abbrechen muessen, lieferte ${r.stdout}`);
   assert.equal(r.stdout.trim(), '', `${warum}: ein Abbruch darf KEINEN Wert ausgeben`);
+  // Und der Abbruch muss BENANNT sein. Ohne diese Zeile zaehlte auch ein
+  // nackter Traceback als sauberer Abbruch - Exit != 0 und leeres stdout hat
+  // ein Absturz schliesslich auch. Das Modul verspricht auf jedem Pfad einen
+  // Grund; hier wird das Versprechen eingezogen.
+  assert.match(r.stderr, /^F6-SE-KLUMPEN-ABBRUCH:/m,
+    `${warum}: der Abbruch traegt keinen benannten Grund, sondern: ${r.stderr.slice(0, 300)}`);
   return r.stderr;
 }
 
@@ -73,7 +79,12 @@ const seBinomial = (p, n) => wurzelVon((p * (1 - p)) / n);
 // ── Selbsttest der Vorschrift (Hausmuster) ───────────────────────────────────
 const selbst = spawnSync(python, [skript, 'selbsttest'], { encoding: 'utf8' });
 assert.equal(selbst.status, 0, selbst.stdout + selbst.stderr);
-assert.match(selbst.stdout, /selbsttest: \d+ ok, 0 FAIL/);
+// Die Zahl steht LITERAL da, nicht als \d+. Ein Selbsttest, dem man Pruefungen
+// herausschneiden kann, ohne dass es auffaellt, ist kein Waechter: mit \d+
+// bliebe auch "3 ok, 0 FAIL" gruen. Kommt eine Probe dazu, wird diese Zeile
+// bewusst mitgezogen.
+assert.match(selbst.stdout, /^selbsttest: 26 ok, 0 FAIL$/m,
+  `der Selbsttest muss genau 26 gruene Proben melden:\n${selbst.stdout}`);
 for (const probe of [
   'Handfixture (2,3),(1,1),(0,2) -> se = 0,25 exakt',
   'Ausgabe traegt genau fuenf Schluessel, keinen sechsten',
@@ -84,8 +95,34 @@ for (const probe of [
   'G < 2 liefert KEINE Null, sondern gar nichts',
   'Abbruch: bool ist keine Zahl (True ginge sonst als 1 durch)',
   'Abbruch: NaN und inf werden POSITIV ausgeschlossen',
+  'Abbruch: m_g > n_g faellt an der KLUMPEN-Schranke, nicht am p-Gate',
+  'Abbruch: die leere Klumpen-Tafel',
+  'Ueberlauf in der Rechnung ist ein benannter Abbruch, kein Absturz',
+  'Abbruch: --n / --zaehler sind bool statt ganzer Zahl',
+  'Abbruchtext leckt keine Firmen-Kennung (weder Name noch CIK)',
 ]) {
   assert.ok(selbst.stdout.includes(`ok   ${probe}`), `Probe fehlt oder rot: ${probe}`);
+}
+
+// ── Quelltext-Anker: math.fsum steht namentlich in der Vorschrift ───────────
+// AUSNAHMSWEISE ein Text-Anker, und der Grund gehoert dazu, damit ihn niemand
+// spaeter als Schlamperei "aufraeumt":
+//   1. Der eingefrorene Wortlaut (Ziffer 4) schreibt `math.fsum` BEIM NAMEN
+//      vor - nicht "irgendeine exakte Summe". Gegenstand des Ankers ist also
+//      wirklich der Text der Vorschrift, nicht bloss ein Verhalten.
+//   2. Verhaltensmaessig ist der Unterschied hier NICHT feststellbar: CPython
+//      summiert seit 3.12 in `sum()` selbst kompensiert. Ein Austausch von
+//      fsum gegen sum bliebe bei jeder Tafel, die dieser Waechter fahren kann,
+//      gruen - er ist also nur am Quelltext zu fassen.
+// Die Reihenfolge-Invarianz (T6) prueft weiterhin die SACHE; dieser Anker
+// prueft die eingefrorene Benennung.
+{
+  const quelle = fs.readFileSync(skript, 'utf8');
+  const anfang = quelle.indexOf('def klumpen_se(');
+  assert.ok(anfang > 0, 'klumpen_se nicht gefunden');
+  const koerper = quelle.slice(anfang, quelle.indexOf('\ndef ', anfang + 1));
+  assert.ok(koerper.includes('math.fsum('),
+    'die Vorschrift schreibt math.fsum namentlich vor (Wortlaut Ziffer 4)');
 }
 
 // ── T1: Gleichheits-Anker im Entartungsfall ──────────────────────────────────
@@ -198,7 +235,17 @@ for (const probe of [
   abbruch([[-1, 2], [1, 1]], 3, 0, 'T6: negatives m_g');
   abbruch([[0, -2], [1, 1]], -1, 1, 'T6: negatives n_g');
   abbruch([[3, 2], [1, 1]], 3, 4, 'T6: m_g > n_g');
-  abbruch([[1.5, 3], [1, 1]], 4, 2.5, 'T6: m_g ist keine ganze Zahl');
+  // Die Schranke m_g <= n_g an einer Tafel, die OHNE sie durchginge: N = 3
+  // stimmt, M = 3 stimmt, p-Dach = 1,0 liegt in [0,1]. Ohne die Klumpen-
+  // Schranke kaeme hier ein Wert heraus statt eines Abbruchs.
+  assert.match(abbruch([[3, 1], [0, 2]], 3, 3, 'T6: m_g > n_g je Klumpen'),
+    /\[0, n_g = 1\]/, 'T6: der Abbruch muss die KLUMPEN-Schranke benennen');
+  // Die leere Tafel: ohne den N<1-Wachposten waere p-Dach = 0/0.
+  abbruch([], 0, 0, 'T6: leere Klumpen-Tafel');
+  // Ganzzahlig muss m_g sein, nicht bloss die Kreuzprobe: --zaehler bleibt
+  // hier ein sauberer int, damit wirklich der m_g-Wachposten des Moduls
+  // antwortet und nicht argparse.
+  abbruch([[1.5, 3], [1, 1]], 4, 2, 'T6: m_g ist keine ganze Zahl');
   // Eine Firmen-Kennung kann gar nicht erst hinein: das Modul nimmt Paare.
   abbruch([{ cik: 320193, m: 1, n: 1 }, [0, 1]], 2, 1, 'T6: Objekt statt Paar');
   abbruch([[1, 1, 320193], [0, 1]], 2, 1, 'T6: Tripel statt Paar');

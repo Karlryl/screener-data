@@ -57,18 +57,31 @@ Bandregel vergleicht gegen fixe 1*SE*, nicht gegen ein t-Quantil), kein
 Jackknife, kein Bootstrap, kein Seed, keine Replikate. Der Schaetzer ist
 geschlossen, deterministisch und aus den (m_g, n_g) von Hand nachrechenbar.
 
-OFFENLEGUNG DER RICHTUNG (F6-B21, Pflicht)
-------------------------------------------
-Der Faktor ist NICHT richtungsneutral: er vergroessert SE*, verbreitert das
-Band und macht NICHT UNTERSCHEIDBAR wahrscheinlicher. Seine Groesse ist
-beschraenkt - SE* hoechstens um Wurzel(N/(N-1)) groesser, bei der
-Gate-Mindestfallzahl also <= +0,25 %, monoton fallend - und er ist blind
-gewaehlt; er kann kein BESTANDEN erzeugen (er erschwert es strikt). Der Grund
-fuer ihn steht in der G=1-Kante: OHNE Faktor liefert der Schaetzer dort still
-eine Null und erzeugt damit genau den Rueckfall auf den kleineren SE, den die
-Bandregel 4:0 verbietet. Die Gegenposition CR0 (V1) steht als Dissens DV-2 im
-Urteil. Keine spaetere Instanz darf behaupten, die Wahl sei verborgen getroffen
-worden.
+OFFENLEGUNG DER RICHTUNG (F6-B21 in der berichtigten Fassung, Pflicht)
+----------------------------------------------------------------------
+Fassung nach ORCHESTRATOR-NACHTRAG 2 zu _COURT-F6-VOLLZUG-2026-08-31
+(2026-08-31 23:23 lokal). Die urspruengliche Klammer trug die falsche
+ALLGEMEINE Schranke: Wurzel(N/(N-1)) ist nur der Singleton-Fall.
+
+RICHTUNG. Der Faktor G/(G-1) wirkt ausschliesslich nach oben: er vergroessert
+SE*, verbreitert das Band, macht NICHT UNTERSCHEIDBAR wahrscheinlicher und kann
+ein BESTANDEN nie erzeugen - er erschwert es strikt.
+
+GROESSENORDNUNG. Der Aufschlag auf SE* ist allgemein durch Wurzel(G/(G-1))
+beschraenkt, im kleinstzulaessigen Fall G = 2 also durch Wurzel(2) (hoechstens
++41,4 %; G < 2 bricht ab), und faellt monoton mit der Klumpenzahl (+22,5 % bei
+G = 3, +5,4 % bei G = 10, +0,5 % bei G = 100); im Entartungsfall ausschliesslich
+einelementiger Klumpen (G = N - die nach PIN 3 erwartete Lage, deren Abweichung
+KV-6 benennt) betraegt er exakt Wurzel(N/(N-1)) und bei der
+Gate-Mindestfallzahl hoechstens +0,25 %.
+
+GRUND. Die Wahl ist blind getroffen und hat zwei Gruende: ohne Faktor liefert
+der Schaetzer bei G = 1 still eine Null und erzeugte damit genau den verbotenen
+Rueckfall auf den kleineren SE; und ohne Faktor wird die Klumpung untertrieben -
+die falschentdeckungs-anfaellige Richtung.
+
+Die Gegenposition CR0 (V1) steht als Dissens DV-2 im Urteil. Keine spaetere
+Instanz darf behaupten, die Wahl sei verborgen getroffen worden.
 
 ENTARTUNGSFALL - EIGENSCHAFT DES MESSGERAETS, KEINE PROGNOSE (Ziffer 7, F6-B25)
 ------------------------------------------------------------------------------
@@ -83,6 +96,17 @@ A16-Pflichtangabe "welcher entschied" ist in diesem Fall VORAB determiniert.
 Das ist vorab zu berichten, nie hinterher als Befund auszugeben. Echte Klumpen
 mit n_g > 1 deckt dieselbe Formel ohne Fallunterscheidung ab. Diese Ziffer sagt
 nichts ueber den Ausgang des Laufs.
+
+SE = 0 IST NICHT GLEICH SE = 0 (Abgrenzung, NACHTRAG 2)
+-------------------------------------------------------
+Zwei verschiedene Nullen, und nur eine ist ein Schaden:
+  * G = 1: die Residuen sind PER KONSTRUKTION 0, die Null traegt keine
+    Information. Sie waere der verbotene Rueckfall auf den kleineren SE und
+    wird deshalb im Korrekturfaktor abgefangen (Abbruch, nie ein Wert).
+  * G >= 2 und alle Klumpen exakt auf dem Mittel (z. B. p-Dach in {0,1}):
+    das ist eine ECHTE Schaetzung ohne Schadensmechanismus. max() nimmt dann
+    den binomialen SE - erlaubt, kein Rueckfall, kein Abbruchgrund. Ziffer 8
+    bleibt abschliessend wie ratifiziert.
 
 NICHT BERECHENBAR - FAIL-CLOSED, ABSCHLIESSEND (Ziffer 8)
 ---------------------------------------------------------
@@ -158,6 +182,25 @@ def _ganzzahl(x):
     return int(x) if float(x).is_integer() else None
 
 
+def _sicher(x):
+    """Ein Wert, der in eine Fehlermeldung darf.
+
+    Zahlen gehen als sie selbst hinaus: sie SIND der Grund des Abbruchs, sie
+    sind das ganze Eingabe-Vokabular dieses Moduls, und ohne sie waere kein
+    Abbruch diagnostizierbar. Alles andere - Zeichenketten, Listen, Objekte -
+    wird nur nach Art und Laenge beschrieben. Ein Eintrag wie
+    {"cik": 320193, "name": "APPLE INC"} landete sonst woertlich auf stderr,
+    und die Verbotsliste (F6-B14) verbietet jede Firmen-Kennung ueberall, nicht
+    bloss im Ausgabesatz. Ein Abbruchtext ist auch eine Ausgabeflaeche.
+    """
+    if isinstance(x, bool) or isinstance(x, (int, float)):
+        return repr(x)
+    try:
+        return type(x).__name__ + " der Laenge " + str(len(x))
+    except TypeError:
+        return type(x).__name__
+
+
 def _korrekturfaktor(klumpen_anzahl):
     """Die Klein-Klumpen-Korrektur G/(G-1) - und die G<2-Kante.
 
@@ -190,6 +233,17 @@ def klumpen_se(paare, n_berichtet, zaehler_berichtet):
             "F6-SE-KLUMPEN-ABBRUCH: die Klumpen-Datei traegt keine Liste von "
             "Paaren, sondern " + type(paare).__name__ + ".")
 
+    # Die Kreuzprobe-Sollwerte muessen selbst ganze Zahlen sein. bool ist in
+    # Python ein int: `True` verglich sich sonst still gleich mit einer Summe
+    # von 1 und machte die Kreuzprobe zur Attrappe. Ueber die CLI ist der Fall
+    # nicht erreichbar (argparse type=int), ueber den Funktionsaufruf schon -
+    # und die Funktion ist der Eintrittspunkt, den der F6-Laeufer benutzt.
+    for name, wert in (("--n", n_berichtet), ("--zaehler", zaehler_berichtet)):
+        if isinstance(wert, bool) or not isinstance(wert, int):
+            raise SeNichtBerechenbar(
+                "F6-SE-KLUMPEN-ABBRUCH: " + name + " ist keine ganze Zahl: "
+                + _sicher(wert) + ".")
+
     m_werte = []
     n_werte = []
     for i, eintrag in enumerate(paare):
@@ -200,20 +254,20 @@ def klumpen_se(paare, n_berichtet, zaehler_berichtet):
         if not isinstance(eintrag, (list, tuple)) or len(eintrag) != 2:
             raise SeNichtBerechenbar(
                 "F6-SE-KLUMPEN-ABBRUCH: Klumpen " + str(i) + " ist kein Paar "
-                "(m_g, n_g), sondern " + repr(eintrag) + ". Das Modul nimmt "
-                "keine Firmen-Kennung entgegen.")
+                "(m_g, n_g), sondern " + _sicher(eintrag) + ". Das Modul nimmt "
+                "keine Firmen-Kennung entgegen - auch nicht in dieser Meldung.")
         m_roh, n_roh = eintrag
         n_g = _ganzzahl(n_roh)
         if n_g is None or n_g < 1:
             raise SeNichtBerechenbar(
                 "F6-SE-KLUMPEN-ABBRUCH: n_g von Klumpen " + str(i) + " ist "
-                "keine ganze Zahl >= 1: " + repr(n_roh) + ".")
+                "keine ganze Zahl >= 1: " + _sicher(n_roh) + ".")
         m_g = _ganzzahl(m_roh)
         if m_g is None or m_g < 0 or m_g > n_g:
             raise SeNichtBerechenbar(
                 "F6-SE-KLUMPEN-ABBRUCH: m_g von Klumpen " + str(i) + " ist "
                 "keine ganze Zahl in [0, n_g = " + str(n_g) + "]: "
-                + repr(m_roh) + ".")
+                + _sicher(m_roh) + ".")
         m_werte.append(m_g)
         n_werte.append(n_g)
 
@@ -252,16 +306,40 @@ def klumpen_se(paare, n_berichtet, zaehler_berichtet):
     # Ziffer 4: math.fsum ueber die Residuenquadrate. fsum ist exakt gerundet
     # und damit reihenfolge-invariant - eine gemischte Klumpenliste liefert
     # bit-gleich dasselbe Ergebnis wie eine sortierte.
-    quadrate = [(m_g - anteil * n_g) ** 2
-                for m_g, n_g in zip(m_werte, n_werte)]
-    residuen_quadratsumme = math.fsum(quadrate)
-    if not _zahl(residuen_quadratsumme):
-        raise SeNichtBerechenbar(
-            "F6-SE-KLUMPEN-ABBRUCH: die Residuenquadratsumme ist nicht "
-            "endlich: " + repr(residuen_quadratsumme) + ".")
+    #
+    # `r * r` statt `r ** 2`: der Potenz-Operator routet fuer float ueber die
+    # pow() der libm, und pow ist von IEEE 754 NICHT bitgenau vorgeschrieben.
+    # Gemessen kippen 6 von 19998 Tafeln zwischen MSVC und glibc im letzten
+    # Bit. Diese Datei wird als fuenfter Pin GEHASHT und ihr Ergebnis geht in
+    # ein Tor mit geschlossener Bandkante - ein plattformabhaengiges letztes
+    # Bit waere dort ein Ergebnis, das je nach Maschine ein anderes ist. Eine
+    # einzelne Multiplikation ist IEEE-exakt vorgeschrieben und ausserdem
+    # naeher am eingefrorenen Wortlaut ("Residuenquadrate").
+    try:
+        quadrate = []
+        for m_g, n_g in zip(m_werte, n_werte):
+            r = m_g - anteil * n_g
+            quadrate.append(r * r)
+        residuen_quadratsumme = math.fsum(quadrate)
+        if not _zahl(residuen_quadratsumme):
+            raise SeNichtBerechenbar(
+                "F6-SE-KLUMPEN-ABBRUCH: die Residuenquadratsumme ist nicht "
+                "endlich: " + repr(residuen_quadratsumme) + ".")
 
-    # Ziffer 5, der Schaetzer. Der Faktor traegt die G<2-Kante mit sich.
-    se = math.sqrt(_korrekturfaktor(klumpen_anzahl) * residuen_quadratsumme) / n_summe
+        # Ziffer 5, der Schaetzer. Der Faktor traegt die G<2-Kante mit sich.
+        se = math.sqrt(
+            _korrekturfaktor(klumpen_anzahl) * residuen_quadratsumme) / n_summe
+    except ArithmeticError as fehler:
+        # Ein Ueberlauf (r*r bei Eingaben um 1e200, ein int ohne
+        # Groessengrenze im Produkt) ist "nicht berechenbar" wie jede andere
+        # Bedingung aus Ziffer 8 - er darf nicht als nackter Traceback
+        # herauskommen. Das Modul verspricht auf JEDEM Pfad einen benannten
+        # Grund; ein Traceback ist kein Grund, sondern ein Absturz.
+        raise SeNichtBerechenbar(
+            "F6-SE-KLUMPEN-ABBRUCH: die Rechnung ist nicht durchfuehrbar ("
+            + type(fehler).__name__ + "): " + str(fehler)
+            + ". Zu gross ist nicht endlich.") from fehler
+
     if not _zahl(se) or se < 0.0:
         raise SeNichtBerechenbar(
             "F6-SE-KLUMPEN-ABBRUCH: der Schaetzer ist nicht endlich: "
@@ -283,10 +361,14 @@ def lies_klumpen(pfad):
     try:
         with open(pfad, encoding="utf-8") as fh:
             return json.load(fh)
-    except (OSError, ValueError) as fehler:
+    except (OSError, ValueError, RecursionError) as fehler:
+        # RecursionError gehoert dazu: json.load laeuft auf tief verschachtelter
+        # Eingabe (eine Datei aus 60000 offenen Klammern) in die
+        # Rekursionsgrenze. Auch dieser Weg braucht einen benannten Grund statt
+        # eines Tracebacks.
         raise SeNichtBerechenbar(
             "F6-SE-KLUMPEN-ABBRUCH: Klumpen-Datei nicht lesbar (" + str(pfad)
-            + "): " + str(fehler))
+            + "): " + type(fehler).__name__ + ": " + str(fehler))
 
 
 def selbsttest():
@@ -302,11 +384,17 @@ def selbsttest():
             print("  FAIL " + name)
 
     def bricht_ab(paare, n, zaehler):
+        return grund(paare, n, zaehler) is not None
+
+    def grund(paare, n, zaehler):
+        """Der Abbruchtext, oder None wenn es keinen Abbruch gab. Nur
+        SeNichtBerechenbar zaehlt: ein durchgereichter Traceback ist kein
+        Abbruch mit Grund, sondern ein Absturz, und faellt hier durch."""
         try:
             klumpen_se(paare, n, zaehler)
-            return False
-        except SeNichtBerechenbar:
-            return True
+            return None
+        except SeNichtBerechenbar as fehler:
+            return str(fehler)
 
     # --- Handfixture gegen ein ausgeschriebenes Literal (T2) ---------------
     # (m,n) = (2,3), (1,1), (0,2) -> N = 6, G = 3, p-Dach = 0,5,
@@ -366,7 +454,15 @@ def selbsttest():
     pruefe("Abbruch: m_g keine ganze Zahl in [0, n_g]",
            bricht_ab([[3, 2], [1, 1]], 3, 4)
            and bricht_ab([[-1, 2], [1, 1]], 3, 0)
-           and bricht_ab([[0.5, 2], [1, 1]], 3, 1.5))
+           and bricht_ab([[0.5, 2], [1, 1]], 3, 1))
+    # Die Schranke m_g <= n_g braucht eine Tafel, die OHNE sie durchginge.
+    # (3,1),(0,2) hat N = 3 = Summe n_g, M = 3 = Summe m_g und p-Dach = 1,0 -
+    # beide Kreuzproben und der p-Gate lassen sie passieren. Die frueheren
+    # Fixtures starben am p-Gate, `or m_g > n_g` war damit ersatzlos loeschbar.
+    pruefe("Abbruch: m_g > n_g faellt an der KLUMPEN-Schranke, nicht am p-Gate",
+           (grund([[3, 1], [0, 2]], 3, 3) or "").find("[0, n_g = 1]") >= 0)
+    # Und die leere Tafel: ohne den N<1-Wachposten waere p-Dach = 0/0.
+    pruefe("Abbruch: die leere Klumpen-Tafel", bricht_ab([], 0, 0))
     pruefe("Abbruch: bool ist keine Zahl (True ginge sonst als 1 durch)",
            bricht_ab([[True, 1], [0, 1]], 2, 1)
            and bricht_ab([[1, True], [0, 1]], 2, 1))
@@ -385,6 +481,26 @@ def selbsttest():
            and bricht_ab([[1, 1, 320193], [0, 1]], 2, 1))
     pruefe("ein Klumpen mit 10**400 ist nicht endlich, also ein Abbruch",
            bricht_ab([[0, 10 ** 400], [1, 1]], 10 ** 400 + 1, 1))
+    # Ueberlauf im Quadrat: Eingaben um 1e200 sind ganzzahlig und endlich, ihr
+    # Produkt ist es nicht mehr. Er muss als BENANNTER Abbruch herauskommen,
+    # nicht als Traceback.
+    ueberlauf = grund([[0, int(1e200)], [int(1e200), int(1e200)]],
+                      2 * int(1e200), int(1e200))
+    pruefe("Ueberlauf in der Rechnung ist ein benannter Abbruch, kein Absturz",
+           ueberlauf is not None
+           and ueberlauf.startswith("F6-SE-KLUMPEN-ABBRUCH:"))
+    # Die Kreuzprobe-Sollwerte selbst: bool ist ein int.
+    pruefe("Abbruch: --n / --zaehler sind bool statt ganzer Zahl",
+           bricht_ab([[1, 1], [0, 1]], True, 1)
+           and bricht_ab([[1, 1], [0, 1]], 2, True)
+           and bricht_ab([[1, 1], [0, 1]], 2.0, 1))
+    # KANAL-PROBE: der Abbruchtext ist auch eine Ausgabeflaeche. Ein Eintrag
+    # mit Firmen-Feldern darf nur nach Art und Laenge beschrieben werden -
+    # sonst stuende die Kennung woertlich auf stderr (F6-B14 gilt ueberall).
+    kanal = grund([{"cik": 320193, "name": "APPLE INC"}, [0, 1]], 2, 1) or ""
+    pruefe("Abbruchtext leckt keine Firmen-Kennung (weder Name noch CIK)",
+           "APPLE" not in kanal and "320193" not in kanal
+           and "cik" not in kanal and "dict" in kanal)
 
     # --- Gegenprobe: saubere Eingaben gehen durch --------------------------
     pruefe("GEGENPROBE: eine saubere Tafel liefert einen endlichen SE > 0",
