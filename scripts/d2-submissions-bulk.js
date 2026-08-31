@@ -45,6 +45,7 @@ const https = require('https');
 const crypto = require('crypto');
 const secPit = require('../lib/sec-pit.js');
 const { assertSecContact } = require('../lib/sec-user-agent.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BULK_HOST = 'www.sec.gov';
@@ -102,19 +103,19 @@ function pct(a, b) { return (100 * a) / b; }
 // so fixtures can exercise the real publication call without a SEC request,
 // bulk download, ZIP scan, or fixed Vault destination.
 function writeProbeArtifact(target, payload) {
-  fs.writeFileSync(target, JSON.stringify(payload, null, 2));
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
 }
 function writeEntryStamp(target, payload) {
-  fs.writeFileSync(target, JSON.stringify(payload, null, 2));
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
 }
 function writeReportJson(target, payload) {
-  fs.writeFileSync(target, JSON.stringify(payload, null, 2));
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
 }
 function writeReportMarkdown(target, markdownText) {
-  fs.writeFileSync(target, markdownText);
+  writeFileAtomic(target, markdownText);
 }
 function writeScanStats(target, payload) {
-  fs.writeFileSync(target, JSON.stringify(payload, null, 2));
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
 }
 
 // ── D2.0 — Kostenprobe: EIN Request ─────────────────────────────────────────

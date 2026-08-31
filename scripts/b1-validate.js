@@ -33,6 +33,7 @@ const https = require('https');
 const secPit = require('../lib/sec-pit.js');
 const detect = require('../lib/b1-detect.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const rankIc = require('./rank-ic.js'); // invNormalCdf/stddev/nEff — Wiederverwendung
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -504,7 +505,7 @@ function decideVerdict(famResults, balanceDelta) {
 // synthetic reports. The confirmatory main path is never needed to prove that
 // either report publication site is reachable.
 function writeValidationReport(target, report) {
-  fs.writeFileSync(target, JSON.stringify(report, null, 2));
+  writeFileAtomic(target, JSON.stringify(report, null, 2));
 }
 
 module.exports = {

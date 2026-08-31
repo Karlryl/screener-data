@@ -13,6 +13,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { scoreUniverse, produceRankings } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 
@@ -35,7 +36,7 @@ function canonicalSha256(value) {
 // T204 measurement seam: the synthetic fixture reaches the exact output-byte
 // contract without invoking scoring or the producer-owned Python verifier.
 function writeShadowReport(target, report) {
-  fs.writeFileSync(target, JSON.stringify(report) + '\n', 'utf8');
+  writeFileAtomic(target, JSON.stringify(report) + '\n', 'utf8');
 }
 
 function sha256File(file) {
