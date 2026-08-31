@@ -1,0 +1,117 @@
+{
+ "inhalt": {
+  "akt": "Vollzug Zweig A - Registrierungs-Akte zu den Auflagen F6-A9, F6-A12, F6-A13, F6-A14",
+  "bWiderlegung": {
+   "auflage": "F6-A13 - die blinde Widerlegung von Zweig B wird MIT dem Ablehnungsbeschluss registriert",
+   "folge": "Zweig B ist nach dem Ergebnis NICHT als 'haetten wir mal' wiederbelebbar (K3, 4:0). Vor Register-Eintrag 24 ist er ausschliesslich unter Kipp-Bedingung K-2 des Urteils erneut zu pruefen: legt jemand ein Fenster vor, das den Nenner blind, ohne Bruch von R2, Entdeckungs-Mauer oder Siegel und ohne zweite Jahrgangswahl um Faktor groesser-gleich 5,67 hebt. Nach Eintrag 24 nie wieder.",
+   "guenstigesEndeGestrichen": {
+    "betrifft": "die Spalte '0,51 / 3,84x / guenstigstes Ende' der Vorlage",
+    "grund": "Sie ruht auf 329/365. Register-Eintrag 23 (eventHash 5def37b9ff21529761dfcd4f084cd9a61060603529d814167fd937b980cb0675) verbietet im Feld verboten woertlich: 'jede Verwendung von 329/365 als Entscheidungsgroesse (VB Paragraph 0.1 - Bezugspunkt ist genau der registrierte Anteil 0,90)'. Die Spalte ist damit unzulaessig und vor jeder weiteren Verwendung gestrichen (F6-A10)."
+   },
+   "kalender": {
+    "legalErreichbarerFaktor": 1.0,
+    "legalErreichbarerFaktorKlartext": "Aus dem Kalender allein ist LEGAL kein einziges zusaetzliches Quartal erreichbar. Noetig waeren 5,669; verfuegbar ist 1,0.",
+    "nach2024": "Eine zweite Jahrgangswahl und damit verboten. Woertlich aus outcome-access-ledger.json:650 (Eintrag 22, Feld verboten): 'Jede zweite Jahrgangswahl (RR9-A3 Ziffer 5: genau EINE; ein Bau unter dem anderen Jahrgang ist ausschliesslich als praeregistrierte R6-Sensitivitaet zulaessig, nie als zweiter Torlauf)'.",
+    "prueffenster": "'2017-01-01/2019-12-31 (Signalfenster) mit Pufferjahr 2020 fuer die Reife' - woertlich.",
+    "quelle": "protocol/early-detection/2.0.0/preregistration.json, splits (Zeilen 94-96) - drei nicht ueberlappende Fenster, das Prueffenster ist beidseitig eingekastet.",
+    "rueckwaerts2016": "Kalibrier-kontaminiert und damit gesperrt. Woertlich aus derselben Datei, splits.abweichungVonE2: 'E2 hat sein Kalibrierungsband auf 2012-2016 gelegt und damit das Pufferjahr 2016 in das SIGNALband genommen.' Ein Rueckgriff dorthin braeche zusaetzlich die Entdeckungs-Mauer.",
+    "vorwaerts2020": "Zensur-neutral fuer den Tor-Nenner. 2020 ist das registrierte PUFFERJAHR fuer die Reife, nicht Signalband ('Signalband = Fensterjahre OHNE Pufferjahr, Reife darf das Pufferjahr nutzen'). Dort angesetzte Signale fielen rechts-zensiert AUS dem Tor-Nenner heraus - sie vergroessern ihn nicht, sie fehlen ihm.",
+    "vorwaerts2021bis2023": "Versiegelt. Woertlich, in zwei Teilen zitiert, weil das Original zwischen ihnen einen Gedankenstrich fuehrt: '2021-01-01/2023-12-31 (Signalfenster) mit Pufferjahr 2024 fuer die Reife' und 'VERSCHLUESSELT (aes-256-gcm), Nachweis in endtest-versiegelung.json'. Unberuehrbar."
+   },
+   "noetigerFaktor": {
+    "nachgerechnet": "(1/0.42)**2 = 5.668934240362812",
+    "rechenweg": "noetiger Nenner-Faktor = (1 / d_alt)^2 mit d_alt = 0,42",
+    "warumDieUnguenstigsteKante": "Die eingefrorene SE-Vorschrift schreibt einen PUNKT vor, keine Spanne. Woertlich aus b4-bandregel-2026-08-30.json, vierGroessen.2_seRechenvorschrift: 'SE* = max(SE_binomial(p-Dach), SE_klumpen-robust)' und 'Beide aus DEMSELBEN Lauf, beide berichtet (A16); der groessere entscheidet.' Der groessere SE ist die unguenstigste Kante, also d_alt = 0,42.",
+    "wert": 5.669
+   },
+   "obergrenzeBeiBruchAllerMauern": {
+    "nachgerechnet": "0.42*sqrt(5) = 0.9391485505499116",
+    "rechenweg": "Selbst das Zusammenwerfen ALLER Fenster (2009-2023 = 15 Signaljahre gegen 3, also Faktor hoechstens rund 5) - was Entdeckungs-Mauer UND Endtest-Siegel zugleich braeche - ergaebe d = 0,42 * Wurzel(5) = 0,939.",
+    "schluss": "0,939 < 1. Das Tor bliebe SELBST DANN im Band. Zweig B kann seine eigene notwendige Bedingung auf keinem Weg erreichen - auch nicht auf einem verbotenen.",
+    "wert": 0.939
+   },
+   "ohneJedeZaehlung": "Diese Widerlegung ist BLIND und ohne eine einzige Zaehlung zustandegekommen: allein aus Kalender, Register und der eingefrorenen Regel. Es wurde keine Machbarkeits-Zaehlprobe gefahren, kein Fenster verlaengert, kein Nenner gemessen. Damit faellt die Vorlage in ihre EIGENE Kipp-Bedingung ('faellt die blinde Machbarkeits-Zaehlung negativ aus, kippt die Empfehlung sofort auf Zweig A') - nur eben blind, kostenlos und vorab.",
+   "sichtbareAnnahme": "K-4, offengelegt: die Kalender-Arithmetik unterstellt grob konstante Falldichte je Quartal. S3 selbst: 'selbst doppelte Dichte in 2020 schloesse die Luecke von 3,84x bei 4 ohnehin verbotenen Quartalen nicht.' Widerlegt jemand die Dichte-Annahme in einer Groessenordnung, die den Faktor 5,669 aus ERLAUBTEN Quartalen erreichbar macht, kippt diese Auflage - und mit ihr Q2.",
+   "woranBNICHTstirbt": "Ausdruecklich festgehalten, damit keine falsche Begruendung ins Protokoll wandert: Zweig B stirbt NICHT am Vorwurf der verkappten Ergebnis-Optimierung. S1, dessen Linse genau diesen Vorwurf pruefen sollte, meldet ihn als nicht gefunden: 'branch B is NOT result-optimization toward passing. With a realized rate below the threshold, a larger N makes NICHT BESTANDEN more likely, not BESTANDEN.' S2 unabhaengig: 'B optimiert also, wenn ueberhaupt, gegen die eigene Hoffnung.' Wer dieses Urteil als 'B als Ergebnis-Optimierung widerlegt' berichtet, berichtet es falsch. B stirbt an der MACHBARKEIT."
+  },
+  "beschlussSperre": "Kein Satz dieses Artefakts sagt etwas ueber die Richtung einer kuenftigen Messung. Alle genannten Wahrscheinlichkeiten sind bedingte Trennschaerfe-Rechnungen unter einer offen benannten Praemisse. Der einzige Satz, der gilt: 'Wir frieren eine Regel ein und messen ehrlich; die Richtung kennt heute niemand.'",
+  "erwartung": {
+   "alleZahlenBedingt": "Saemtliche Prozentangaben in diesem Block sind bedingte Trennschaerfe-Rechnungen unter der oben offen benannten Praemisse. Sie sagen etwas ueber die AUFLOESUNG des Messgeraets und nichts ueber die RICHTUNG der kuenftigen Messung. Keine von ihnen ist eine Ausgangsprognose.",
+   "auflage": "F6-A12 - die '~85 %' duerfen so nicht ins Protokoll",
+   "pBand": {
+    "binomial": "64 % mit binomialem SE* - der Wert, der ohne zusaetzliche Annahme traegt.",
+    "obereKante": "83 % erreicht die Rechnung erst unter einem NICHT REGISTRIERTEN Design-Effekt von rund 1,5. Dieser Effekt ist nirgends praeregistriert; die obere Kante der Spanne haengt an ihm und wird deshalb nie ohne diesen Zusatz zitiert.",
+    "punktVerboten": "Die '~85 %' der Vorlage sind als Punktprognose unzulaessig. Registrierbar ist ausschliesslich die Spanne.",
+    "spanne": "60-85 %"
+   },
+   "pNichtBestanden": {
+    "bedeutung": "Der wahrscheinlichste ZITIERFAEHIGE Ausgang. Nach Hausmassstab ein Erfolg und ein Eintrag in den Muster-Friedhof - ein sauberes Negativergebnis ist das Ziel der Methodik, nicht ihr Scheitern. Die Vorlage laesst diesen Ast weg und rechnet Zweig A dadurch um rund den Faktor zwei zu schlecht.",
+    "wert": "rund 28 % unter derselben Praemisse"
+   },
+   "pTorBestehenNachHausregel": {
+    "etikett": "Nicht 15 %, wie die Vorlage und die Minderheitsstimme ansetzen. Dieser Ast wird nach VB-A10 / F6-A15 als 'Tor-Bestehen nach Hausregel, nicht 95-%-gesicherte Ueberlegenheit' ausgewiesen, mit Wilson-Intervall daneben und OHNE jeden Automatismus zum Siegel. Er kann deshalb keinen Ueberlegenheitsbefund erzeugen.",
+    "wert": "rund 7,7 % unter derselben Praemisse"
+   },
+   "praemisse": "BEDINGT auf die angenommene Alternative: die LUECKE bleibt erhalten, also der Abstand d_alt = 0,42 SE in der Naehe des registrierten Vorbehalts. ACHTUNG, das ist die Korrektur aus F6-A11b: die Rechnung haelt NICHT 'solange der realisierte Anteil in der Naehe von 0,90 bleibt' - genau umgekehrt. Laege der Anteil bei 0,90, waere d = 0 und keine Fallzahl der Welt hilft.",
+   "praemisseFallzahl": "N in der Groessenordnung des Nenners, auf dem der Vorbehalt formuliert wurde (365). Der im F6-Lauf gueltige Nenner ist heute UNBEKANNT, gehoert ausdruecklich nicht zu den vier Pins aus Eintrag 23 und darf unbekannt bleiben."
+  },
+  "fensterSchluss": {
+   "auflage": "F6-A14 - das prospektive Designaenderungs-Fenster ist geschlossen",
+   "beurkundung": "Hiermit beurkundet, damit kein spaeterer Akt behaupten kann, das Fenster sei noch offen gewesen. Der Beschluss des Rates lautet: DAS DESIGN WIRD NICHT MEHR GEAENDERT. Ab hier ist jede Aenderung an Fenstergrenzen, Fallzahl-Design, Schwelle, Bandbreite, SE-Vorschrift oder Klumpungseinheit ein retrospektiver Reparaturakt und von K3 (4:0) verboten.",
+   "geschlossenMit": "dem ratifizierten Urteil vom 2026-08-31 (Ratifikation 20:44 lokal / 18:44 UTC).",
+   "wasDamitNICHTbeschlossenIst": [
+    "kein Start des F6-Laufs",
+    "kein Register-Eintrag 24",
+    "keine Siegel-Beruehrung",
+    "keine Aussage ueber den Ausgang"
+   ]
+  },
+  "geltungsbereichHash": "inhaltSha256 deckt den `inhalt`-TEILBAUM dieses Artefakts - derselbe Geltungsbereich wie beim Band-Artefakt b4-bandregel-2026-08-30.json, NICHT der des Schwellen-Satzes e2-schwellen-satz-2026-08-30.json (der alle Felder ausser dem Hash-Feld deckt). Wer den einen Geltungsbereich auf das andere Artefakt anwendet, bekommt eine saubere Abweichung, die nach Manipulation aussieht und keine ist. Nachrechnen: python scripts/studie-vb-b4-band.py hash --datei <diese Datei>",
+  "grundlage": "_COURT-F6-BAND-2026-08-31.md, ratifiziert im ORCHESTRATOR-NACHTRAG 1 am 2026-08-31 20:44 lokal / 18:44 UTC. Q1: JA MIT AUFLAGEN (3:0). Q2: ZWEIG A (2:1); Zweig B einstimmig verworfen (0:3). Vollzugsordnung Schritt 2.",
+  "provenienz": {
+   "anker": [
+    "protocol/early-detection/2.0.0/friedhof.json:71",
+    "protocol/early-detection/2.0.0/outcome-access-ledger.json:635 (Eintrag 21, eventHash 9f32e5928acf36d147b4179357a59665d5e05163c90199d2387232f795aa6ad2)"
+   ],
+   "auflage": "F6-A9 - Provenienz-Ehrlichkeit, VOR Eintrag 24 ins Protokoll",
+   "bandVerdiktVorabErwartet": "Das Band-Verdikt NICHT UNTERSCHEIDBAR ist hiermit VORAB als erwarteter Ausgang dokumentiert. Es darf nach dem Lauf unter keinen Umstaenden als Ueberraschung, als neue Erkenntnis oder als Grund fuer eine Designaenderung berichtet werden. Wer es hinterher so berichtet, widerspricht diesem Eintrag.",
+   "dissens": "D3, woertlich konserviert: S3 haelt d_alt fuer eine 'registrierte LEISTUNGS-Groesse ... eine Power-Aussage, kein Ergebnisblick' und traegt die Auflage nicht mit. Mehrheit 2:1. Der Dissens entscheidet NICHT die Zulaessigkeit von Zweig A - beide Zweige wurden im selben Wissensstand entschieden, S1: 'contamination is symmetric between the branches' -, sondern allein die Ehrlichkeit der Protokollierung.",
+   "feststellung": "Die Band-Erwartung ist NICHT blind. d_alt = 0,42 SE ist keine freistehende Power-Angabe, sondern eine deterministische Transformation eines REALISIERTEN, registrierten Prueffenster-Ergebnisses.",
+   "formvorbild": "Eintrag 21 fuehrt seine Kontaminations-Vorgeschichte als eigene SHA-256-Groesse samt Klartext-Feststellung, dass die Liste 'in Kenntnis eines gerissenen Tors' entsteht. Dieses Artefakt fuehrt die Provenienz in derselben Form - Anker plus benannte Beziehung -, zusaetzlich ohne Wiedergabe des Wertes.",
+   "transformation": "d_alt = (0,90 - realisierter Anteil) / SE_binomial(realisierter Anteil, N_alt). Die Beziehung ist geschlossen und ohne Rest umkehrbar - deshalb transportiert d_alt die realisierte Groesse, gleichgueltig unter welchem Namen sie gefuehrt wird. Genau das ist der Befund, den S1 und S2 unabhaengig voneinander nachgerechnet haben (Urteil, D3).",
+   "warumDieGroesseHierNichtSteht": "Dieses Artefakt nennt den ANKER und die BEZIEHUNG, nicht den WERT. F6-A9 verlangt, dass die Groesse unter ihrem Zitierverbot bleibt und nur zur Provenienz gefuehrt wird; der Anker leistet das vollstaendig, die Wiedergabe des Wertes traegt nichts bei und wuerde ihn ein weiteres Mal in Umlauf bringen. Das ist strenger als die Auflage verlangt und folgt der juengsten Hauspraxis: das Band-Artefakt b4-bandregel-2026-08-30.json fuehrt die Groesse ebenfalls nicht (sein Waechter erzwingt das ausdruecklich), und Eintrag 23 verbietet die zaehlerfoermige Verwandte als Entscheidungsgroesse. Bewusste Entscheidung des Bauenden, hier benannt statt stillschweigend vollzogen.",
+   "zitierverbot": "Die realisierte Groesse bleibt unter ihrem stehenden Zitierverbot (RR9-A3 A2 Satz 3, 'bleibt woertlich in Kraft'). Sie wird hier AUSSCHLIESSLICH zur Provenienz gefuehrt und ist NIE Entscheidungsgroesse."
+  },
+  "urteilsverweis": {
+   "datei": "agent-reports/_COURT-F6-BAND-2026-08-31.md (Vault growth-screener)",
+   "sha256AktuellGemessen": "be874c2e1d12ce20ab6eff81c3e4e7c4eb6a8a042995e1e6c910ab9d907804f2",
+   "sha256AktuellStand": "Stand MIT ORCHESTRATOR-NACHTRAG 1, vom Bauenden am 2026-08-31 selbst gemessen: 47.971 Bytes.",
+   "sha256VorRatifikation": "0017f6fdd04dde656bd86fb1ab9d7d7fdce453183331ed70387630690f70a1fb",
+   "sha256VorRatifikationStand": "Stand vor Ratifikations-Nachtrag, im Nachtrag 1 beurkundet (45.366 Bytes, beginnend '# COURT / RAT - F6-BANDPROBLEM').",
+   "vollzugsordnung": "Schritt 1 (Vorlage per append-only Nachtrag korrigieren) ist vollzogen: vorlage-rat-f6-bandproblem-2026-08-31.md traegt den 'NACHTRAG NACH RATSURTEIL' mit den vier korrigierten Stellen. Dieses Artefakt ist Schritt 2. Schritt 3 (Eintrag 24, confirmatory_execution_authorized) ist ein EIGENER Akt nach eigener Ordnung und mit diesem Artefakt ausdruecklich NICHT autorisiert.",
+   "warumZweiHashes": "Der ratifizierte Byte-Stand ist per Konstruktion nicht mehr herstellbar: der Nachtrag ist append-only an dieselbe Datei gehaengt worden, und ein blosses Abschneiden des Anhangs reproduziert die Bytes nicht verlaesslich. Der Vor-Hash wird deshalb als BEURKUNDETE Angabe des Nachtrags gefuehrt, nicht als vom Bauenden nachgerechnete; der aktuelle Hash ist nachgerechnet und macht jede spaetere Veraenderung der Urteilsdatei sichtbar."
+  },
+  "wasDiesesArtefaktNichtTut": [
+   "kein Register-Eintrag - Eintrag 24 bleibt ein eigener Akt nach eigener Ordnung",
+   "keine Autorisierung des F6-Laufs",
+   "keine Siegel-Beruehrung - das Endtest-Siegel bleibt zu und braucht in ALLEN Zweigen Karls ausdrueckliche Freigabe (F6-A16)",
+   "kein Datenzugriff - keine Lueckenliste, kein Prueffenster, kein Panel, keine data/lockbox",
+   "keine Aenderung an einer eingefrorenen Groesse (Bandbreite 1,0 SE, Schwelle 0,90, Klumpungseinheit, SE-Vorschrift)",
+   "keine Wiedergabe der realisierten Prueffenster-Groesse"
+  ]
+ },
+ "inhaltSha256": "792f4ff58687945167e273d08ca509544f4ad7fd7ecd9eaa60d5dac3118c99f7",
+ "kanonisierung": "JSON, Schluessel sortiert, separators ',' und ':', ensure_ascii=False, UTF-8 - identisch mit Register-Eintrag 22; Geltungsbereich: der inhalt-Teilbaum",
+ "schema": "studie-f6-vollzug-zweig-a/v1",
+ "vollzugsStatus": {
+  "auflagen": [
+   "F6-A9",
+   "F6-A12",
+   "F6-A13",
+   "F6-A14"
+  ],
+  "kettenendeBeimBau": "Eintrag 23 f6-tor-freeze-2026-08-31, eventHash 5def37b9ff21529761dfcd4f084cd9a61060603529d814167fd937b980cb0675, 23 Eintraege - gegen origin/main geprueft.",
+  "registriert": false,
+  "warumNochNichtRegistriert": "Dieses Artefakt ist der vorbereitete GEGENSTAND des Register-Akts, nicht der Akt. Es geht per PR gegen main und durch das Review-Tor (Vollzugsordnung Schritt 2). Der Register-Eintrag 24 der Art confirmatory_execution_authorized folgt danach als eigener Akt mit eigener Anmeldung, main-first Mini-PR und Serverbeweis (VB-A11-Zeitkette registeredAt < serverConfirmedAt < accessedAt)."
+ }
+}
