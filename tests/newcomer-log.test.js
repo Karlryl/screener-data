@@ -21,7 +21,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { diffMitglieder, mitgliederAus, bisherigeZeilen, newcomerLogDir } = require('../scripts/write-newcomer-log.js');
+const { run, diffMitglieder, mitgliederAus, bisherigeZeilen, newcomerLogDir } = require('../scripts/write-newcomer-log.js');
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -59,6 +59,68 @@ check('Mitglieder werden aus beiden Uebersichts-Formen gelesen', () => {
 
 check('Zeilen ohne brauchbaren Ticker fallen raus, statt als leerer Name zu zaehlen', () => {
   assert.deepEqual(mitgliederAus([{ ticker: 'A' }, {}, { ticker: null }, { ticker: 'B' }]), ['A', 'B']);
+});
+
+check('run() ersetzt den Zweitlauf eines Tages und rechnet weiter gegen den Vortag', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'newcomer-run-'));
+  try {
+    const overview = path.join(root, 'overview.json');
+    const logDir = path.join(root, 'newcomer-log');
+    const firstDate = '2026-08-29';
+    const priorDate = '2026-08-30';
+    const rerunDate = '2026-08-31';
+    const logFile = path.join(logDir, '2026-08.jsonl');
+
+    fs.writeFileSync(overview, JSON.stringify({ rows: [{ ticker: 'A' }, { ticker: 'B' }] }), 'utf8');
+    const first = run({ date: firstDate, overview, logDir });
+    assert.equal(first.status, 'geschrieben');
+    assert.equal(first.erstaufnahme, true);
+    assert.deepEqual(first.newcomers, []);
+    assert.deepEqual(first.departures, []);
+
+    let rows = fs.readFileSync(logFile, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
+    assert.equal(rows.length, 1, 'der erste Lauf schreibt genau eine Zeile');
+    assert.deepEqual(rows[0].members, ['A', 'B']);
+    assert.equal(rows[0].erstaufnahme, true);
+    assert.deepEqual(rows[0].newcomers, []);
+    assert.deepEqual(rows[0].departures, []);
+
+    fs.writeFileSync(overview, JSON.stringify({ rows: [{ ticker: 'B' }, { ticker: 'C' }] }), 'utf8');
+    const priorDay = run({ date: priorDate, overview, logDir });
+    assert.equal(priorDay.status, 'geschrieben');
+    assert.equal(priorDay.prior, firstDate);
+    assert.equal(priorDay.erstaufnahme, false);
+    assert.deepEqual(priorDay.newcomers, ['C']);
+    assert.deepEqual(priorDay.departures, ['A']);
+
+    fs.writeFileSync(overview, JSON.stringify({ rows: [{ ticker: 'A' }, { ticker: 'D' }] }), 'utf8');
+    const dayThreeFirst = run({ date: rerunDate, overview, logDir });
+    assert.equal(dayThreeFirst.status, 'geschrieben');
+    assert.equal(dayThreeFirst.prior, priorDate);
+    assert.deepEqual(dayThreeFirst.newcomers, ['A', 'D']);
+    assert.deepEqual(dayThreeFirst.departures, ['B', 'C']);
+
+    fs.writeFileSync(overview, JSON.stringify({ rows: [{ ticker: 'B' }, { ticker: 'D' }] }), 'utf8');
+    const second = run({ date: rerunDate, overview, logDir });
+    assert.equal(second.status, 'geschrieben');
+    assert.equal(second.prior, priorDate);
+    assert.equal(second.erstaufnahme, false);
+    assert.deepEqual(second.newcomers, ['D']);
+    assert.deepEqual(second.departures, ['C']);
+
+    rows = fs.readFileSync(logFile, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
+    assert.equal(rows.length, 3, 'zwei Vortage plus genau eine Zeile fuer den wiederholten Tag');
+    assert.equal(rows.filter((row) => row.date === rerunDate).length, 1, 'derselbe Tag darf nicht zweimal im JSONL stehen');
+    const updated = rows.find((row) => row.date === rerunDate);
+    assert.equal(updated.n, 2);
+    assert.deepEqual(updated.members, ['B', 'D'], 'der Zweitlauf ersetzt die alte Mitgliedschaft');
+    assert.equal(updated.prior, priorDate, 'Same-Day-Eintrag nutzt den juengsten echten Vortag');
+    assert.equal(updated.erstaufnahme, false);
+    assert.deepEqual(updated.newcomers, ['D']);
+    assert.deepEqual(updated.departures, ['C']);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
 
 check('das Log liest ALLE Monatsdateien, nicht nur die aktuelle', () => {
