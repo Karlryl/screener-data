@@ -19,14 +19,17 @@
  * BESTAETIGBAR je um eine Art erweitert, die die Verfassung nicht als
  * Zugriffsart fuehrt, wird dieser Test rot.
  *
- * OBJEKT-ANKER STATT ABSCHRIFT: die Arten werden importiert, nie getippt, und
- * die Zugehoerigkeit zur Verfassungs-Menge wird nicht abgeschrieben, sondern
- * bei der VERFASSUNG SELBST erfragt (`haengeEintragAn` + `pruefeZugriffsRegister`
- * klassifizieren eine Art als 'zugriff', 'vorab' oder unbekannt).
- * ARTEN_MIT_ZUGRIFFSZEIT ist nicht exportiert, und F6-B16 verbietet diesem PR,
- * `lib/` anzufassen - deshalb wird die Menge nicht importiert, sondern an ihrem
- * Verhalten gemessen. Das ist der schaerfere Anker: er faellt auch dann, wenn
- * jemand eine Art einbaut, die die Verfassung gar nicht kennt.
+ * OBJEKT-ANKER STATT ABSCHRIFT, zwei Lagen:
+ *   1. Die WOERTLICHE Gleichheit gegen die Verfassungs-Menge selbst, ueber
+ *      `artenMitZugriffszeit()` aus `lib/studie-verfassung.js` (PR #187).
+ *      Sie deckt beide Driftrichtungen ab - auch die, in der die VERFASSUNG
+ *      waechst und das Werkzeug still nachhinkt.
+ *   2. Zusaetzlich die Rueckfrage bei der Verfassung je Art (`haengeEintragAn`
+ *      + `pruefeZugriffsRegister` klassifizieren eine Art als 'zugriff',
+ *      'vorab' oder unbekannt). Sie faengt auch eine Art, die die Verfassung
+ *      ueberhaupt nicht kennt.
+ * Beide Mengen kommen als KOPIE herein; keiner der beiden Getter gibt einen
+ * Handgriff heraus, an dem sich die Schranke im Prozess aufziehen liesse.
  *
  * KEIN SCHREIBZUGRIFF AUF DAS REGISTER. Das Zugriffs-Register wird ausschliesslich
  * GELESEN; der atomare Schreiber ist abgefangen, und der Test beweist am
@@ -58,7 +61,7 @@ const {
   ART_ZUGRIFF,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
-  ARTEN_MIT_ZUGRIFFSZEIT,
+  artenMitZugriffszeit,
 } = require(path.join(ROOT, 'lib', 'studie-verfassung.js'));
 
 const echtRead = fs.readFileSync;
@@ -135,8 +138,9 @@ atomic.writeFileAtomic = (ziel, inhalt, kodierung) => {
 };
 
 const {
-  BESTAETIGBAR, bestaetigen, anmelden,
+  bestaetigbareArten, bestaetigen, anmelden,
 } = require(path.join(ROOT, 'scripts', 'studie-r1-serverzeit.js'));
+const BESTAETIGBAR = bestaetigbareArten();
 
 const LEER = {
   schema: 'early-detection-outcome-access-ledger/v2',
@@ -171,9 +175,14 @@ test('F6-B17(a): BESTAETIGBAR ist genau die Zugriffszeit-Menge der Verfassung', 
   // Nachhinken ist der Defekt, den dieser Akt beseitigt.
   assert.deepEqual(
     new Set([...BESTAETIGBAR]),
-    new Set([...ARTEN_MIT_ZUGRIFFSZEIT]),
+    new Set([...artenMitZugriffszeit()]),
     'BESTAETIGBAR muss der Verfassungs-Menge ARTEN_MIT_ZUGRIFFSZEIT gleichen',
   );
+  // Und keiner der beiden Getter gibt einen lebenden Handgriff heraus: wer die
+  // Kopie erweitert, erweitert die Schranke nicht.
+  bestaetigbareArten().add('eingeschmuggelte_art');
+  assert.equal(bestaetigbareArten().size, 3,
+    'BESTAETIGBAR darf sich von aussen nicht erweitern lassen');
   assert.equal(BESTAETIGBAR.size, 3,
     'die Kardinalitaet ist gepinnt: eine vierte Art faellt hier auf');
   // Und die drei Arten sind die importierten Konstanten, nie abgetippte

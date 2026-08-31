@@ -306,6 +306,15 @@ if (require.main === module) {
   }
 }
 
-// BESTAETIGBAR wird mit exportiert, damit der Gleichheits-Anker (F6-B17a) die
-// Menge am OBJEKT prueft und sie nicht abtippt.
-module.exports = { anmelden, bestaetigen, serverAntwort, allowlistAus, BESTAETIGBAR };
+// Die bestaetigbaren Arten nach aussen: eine KOPIE, nie der lebende Handgriff
+// auf BESTAETIGBAR. Der Gleichheits-Anker (F6-B17a) soll die Menge am OBJEKT
+// pruefen statt sie abzutippen — aber ein exportiertes Set liesse sich von
+// jedem requirenden Modul per `.add()` erweitern, und das waere dieselbe
+// fail-closed-Schranke, nur von innen geoeffnet.
+function bestaetigbareArten() {
+  return new Set(BESTAETIGBAR);
+}
+
+module.exports = {
+  anmelden, bestaetigen, serverAntwort, allowlistAus, bestaetigbareArten,
+};
