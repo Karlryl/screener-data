@@ -7,7 +7,8 @@
   "scripts": {
     "pull": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000",
     "pull:fast": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 500",
-    "pull:single": "node pull-yahoo.js --watchlist watchlist.json --output snapshots-single --rate-limit 100"
+    "pull:single": "node pull-yahoo.js --watchlist watchlist.json --output snapshots-single --rate-limit 100",
+    "test:offline": "node scripts/test-offline-fixtures.js"
   },
   "engines": {
     "node": ">=22"
