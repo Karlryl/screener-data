@@ -58,6 +58,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const store = require('../lib/price-history-store.js');
 const { classify } = require('../lib/forward-returns.js');
 const { buildPriceIndex, _usableClose } = require('./walk-forward-perf.js');
@@ -947,7 +948,8 @@ function main(options = {}) {
   const priceIndex = options.priceIndex || loadPriceIndexOrThrow(path.join(REPO_ROOT, 'prices'));
   const report = evaluate(historyDir, priceIndex, { families });
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, JSON.stringify(report, null, 2));
+  // T204: atomar - das Fitness-Messartefakt wird gegen frueher gehalten.
+  writeFileAtomic(outFile, JSON.stringify(report, null, 2));
   console.log('[rank-ic] Vintages: ' + report.vintagesTotal + ' (exkludiert: ' + (report.vintagesExcluded || []).join(',') + ')');
   for (const [board, b] of Object.entries(report.boards || {})) {
     const h = b.horizons && b.horizons[DECISION_HORIZON];
