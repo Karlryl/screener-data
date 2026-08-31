@@ -4,6 +4,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { assertAvailabilityContract, assertKnownAt, canonicalSha256, knownAt } = require('../lib/early-detection.js');
 
 const SCHEMA = 'early-detection-leakage-fixture-report/v1';
@@ -109,7 +110,8 @@ function main() {
   if (!args.selfTest) {
     const output = path.resolve(args.output);
     fs.mkdirSync(path.dirname(output), { recursive: true });
-    fs.writeFileSync(output, JSON.stringify(report, null, 2) + '\n', 'utf8');
+    // T204: atomar - Leckage-Fixtures sind Vertragsgrundlage, kein Zwischenstand.
+    writeFileAtomic(output, JSON.stringify(report, null, 2) + '\n', 'utf8');
   }
   process.stdout.write(JSON.stringify({
     status: report.status,

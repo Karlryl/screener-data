@@ -33,6 +33,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const VINTAGE_DIR_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Die Felder, die findash/data-layer/screener.js (computeMovement -> shapeTrack) liest.
@@ -40,7 +41,8 @@ const SLIM_FELDER = ['rank', 'ticker', 'score'];
 
 function schreibeJson(ziel, obj) {
   fs.mkdirSync(path.dirname(ziel), { recursive: true });
-  fs.writeFileSync(ziel, JSON.stringify(obj));
+  // T204: atomar - was hier landet, wird veroeffentlicht.
+  writeFileAtomic(ziel, JSON.stringify(obj));
 }
 
 /**
@@ -98,7 +100,8 @@ function stageEarnings(quelle, zielDir, heute) {
   }
   const ziel = path.join(zielDir, 'earnings-calendar.json');
   fs.mkdirSync(zielDir, { recursive: true });
-  fs.writeFileSync(ziel, text);
+  // T204: atomar - dito, und earnings-calendar.json steht auf der Schutzliste.
+  writeFileAtomic(ziel, text);
   return { datei: ziel, bytes: Buffer.byteLength(text) };
 }
 

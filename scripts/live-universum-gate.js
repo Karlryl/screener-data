@@ -39,6 +39,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -150,7 +151,9 @@ function main(argv = process.argv.slice(2)) {
     tests: ergebnisse,
   };
   fs.mkdirSync(path.dirname(ERGEBNIS_DATEI), { recursive: true });
-  fs.writeFileSync(ERGEBNIS_DATEI, JSON.stringify(bericht, null, 2) + '\n', 'utf8');
+  // T204: atomar - das Gate-Ergebnis entscheidet ueber den Lauf; ein Torso waere ein
+  // Urteil, das niemand gefaellt hat.
+  writeFileAtomic(ERGEBNIS_DATEI, JSON.stringify(bericht, null, 2) + '\n', 'utf8');
   console.log(`[live-universum-gate] Ergebnis nach ${path.relative(ROOT, ERGEBNIS_DATEI)}: ${bericht.status} `
     + `(${ergebnisse.length - schlecht.length}/${ergebnisse.length} ok, zusammen `
     + `${ergebnisse.reduce((n, r) => n + (r.ok || 0), 0)} bestandene Pruefungen)`);

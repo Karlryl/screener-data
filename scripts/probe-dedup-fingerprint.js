@@ -51,6 +51,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 // Aus der Aufgabenstellung, nicht frei gewaehlt — siehe PFLICHT-AUFLAGE oben.
 const MIN_UMSATZQUARTALE = 4;
@@ -310,7 +311,8 @@ function main(argv) {
     };
     const text = JSON.stringify(nutz, null, 2);
     const ziel = jsonArg.indexOf('--json=') === 0 ? jsonArg.slice('--json='.length) : null;
-    if (ziel) { fs.writeFileSync(ziel, text); console.log('\nJSON geschrieben: ' + ziel); }
+    // T204: atomar.
+    if (ziel) { writeFileAtomic(ziel, text); console.log('\nJSON geschrieben: ' + ziel); }
     else console.log('\n' + text);
   }
   // Exit 0 auch bei Funden: Messwerkzeug, kein Gate — genau wie probe-issuer-branchenkonflikt.js.
