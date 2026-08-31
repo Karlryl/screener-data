@@ -62,20 +62,30 @@ class DigestAbbruch(Exception):
 
 
 def sha256_datei(pfad, block=BLOCK):
-    """Streaming-SHA-256 ueber die Bytes. Gibt (hexdigest, gelesene_bytes).
+    """Streaming-SHA-256 ueber die Bytes.
 
-    Die gelesenen Bytes werden MITGEZAEHLT und nicht nachtraeglich per
-    `os.path.getsize` erfragt: nur so faellt ein Kurzlesen auf. Ein Lesefehler,
-    der stillschweigend weniger liefert, erzeugte sonst einen sauber
-    aussehenden Hash ueber ein Fragment.
+    Gibt (hexdigest, gelesene_bytes, vorher, nachher) - die beiden letzten sind
+    `os.stat_result` AM OFFENEN DESKRIPTOR, vor und nach dem Lesen.
+
+    EIN DESKRIPTOR, VON ANFANG BIS ENDE. Eine Groessenabfrage ueber den PFAD
+    (`os.path.getsize`) und ein spaeteres `open()` desselben Pfades sind zwei
+    unabhaengige Blicke, die auf zwei verschiedene Dateien zeigen koennen. Und
+    ein reiner LAENGEN-Vergleich faengt ohnehin nur Wachsen und Schrumpfen: wird
+    die Datei waehrend des Lesens IN PLACE und laengengleich veraendert, kaeme
+    ein sauber aussehender Hash ueber einen Zustand heraus, den es als
+    zusammenhaengende Datei nie gab - und genau der wanderte dann als
+    Byte-Beweis in einen Register-Eintrag. Deshalb `os.fstat` auf demselben
+    Deskriptor, und deshalb Groesse UND mtime.
     """
     h = hashlib.sha256()
     gelesen = 0
     with open(pfad, "rb") as fh:
+        vorher = os.fstat(fh.fileno())
         for stueck in iter(lambda: fh.read(block), b""):
             h.update(stueck)
             gelesen += len(stueck)
-    return h.hexdigest(), gelesen
+        nachher = os.fstat(fh.fileno())
+    return h.hexdigest(), gelesen, vorher, nachher
 
 
 def digest(pfad):
@@ -92,24 +102,32 @@ def digest(pfad):
             "Datei. Ein Byte-Digest ueber eine fehlende Datei ist kein Beweis, "
             "sondern eine Behauptung.")
 
-    # Die Groesse VOR dem Lesen. Weicht sie hinterher von den gelesenen Bytes
-    # ab, wurde waehrend des Laufs geschrieben oder gekuerzt - dann bezeugt der
-    # Hash keinen definierten Zustand.
-    gemeldet = os.path.getsize(pfad)
     start = time.monotonic()
     try:
-        hexdigest, gelesen = sha256_datei(pfad)
+        hexdigest, gelesen, vorher, nachher = sha256_datei(pfad)
     except OSError as fehler:
         raise DigestAbbruch(
             "Die Datei '" + str(pfad) + "' liess sich nicht vollstaendig "
             "lesen: " + str(fehler))
     dauer = time.monotonic() - start
 
-    if gelesen != gemeldet:
+    # Drei Wachposten, alle am selben Deskriptor gemessen. Jeder einzelne
+    # faengt eine andere Art, wie der Hash einen Zustand bezeugen koennte, den
+    # es nie gab.
+    if gelesen != vorher.st_size:
         raise DigestAbbruch(
-            "Kurzlesen: gemeldet " + str(gemeldet) + " Bytes, gelesen "
-            + str(gelesen) + ". Der Hash bezeugt damit keinen definierten "
-            "Dateizustand und darf nicht in einen Register-Eintrag.")
+            "Kurzlesen: der Deskriptor meldete " + str(vorher.st_size)
+            + " Bytes, gelesen wurden " + str(gelesen) + ".")
+    if nachher.st_size != vorher.st_size:
+        raise DigestAbbruch(
+            "Die Datei hat waehrend des Lesens ihre Groesse geaendert ("
+            + str(vorher.st_size) + " -> " + str(nachher.st_size) + " Bytes).")
+    if nachher.st_mtime_ns != vorher.st_mtime_ns:
+        raise DigestAbbruch(
+            "Die Datei wurde waehrend des Lesens geschrieben (mtime "
+            + str(vorher.st_mtime_ns) + " -> " + str(nachher.st_mtime_ns)
+            + "). Eine laengengleiche Aenderung an Ort und Stelle liefe sonst "
+            "durch jede reine Laengenpruefung hindurch.")
 
     return {"pfad": pfad, "groesse": gelesen, "dauer": dauer,
             "sha256": hexdigest}
@@ -118,7 +136,10 @@ def digest(pfad):
 def main(argv=None):
     p = argparse.ArgumentParser(
         description="F6-B6 - Streaming-SHA-256 ueber die Bytes einer Datei")
-    p.add_argument("--datei", required=True,
+    # BEWUSST NICHT required=True: argparse braeche dann selbst ab, mit seiner
+    # eigenen usage-Meldung und ohne den benannten Prefix. Der fehlende Pfad
+    # ist ein Abbruchgrund wie jeder andere und geht denselben Weg.
+    p.add_argument("--datei",
                    help="Pfad der Datei, deren Bytes gehasht werden")
     a = p.parse_args(argv)
 
@@ -129,6 +150,15 @@ def main(argv=None):
         r = digest(a.datei)
     except DigestAbbruch as fehler:
         print("F6-PANEL-DIGEST-ABBRUCH: " + str(fehler), file=sys.stderr)
+        return 1
+    except Exception as fehler:  # noqa: BLE001 - genau das ist der Zweck
+        # KEIN Pfad an der benannten Meldung vorbei. Zwischen der Pruefung auf
+        # Existenz und dem Lesen liegt ein Fenster, in dem die Datei
+        # verschwinden kann - unter OneDrive-Pfaden wie diesem Repo auch durch
+        # das Ausblenden einer Platzhalter-Datei. Ein nackter Traceback erfuellt
+        # den Abbruch-Vertrag nicht.
+        print("F6-PANEL-DIGEST-ABBRUCH: unerwarteter Fehler der Art "
+              + type(fehler).__name__ + ": " + str(fehler), file=sys.stderr)
         return 1
 
     print("Pfad          : " + r["pfad"])

@@ -79,6 +79,16 @@ const AST_LESER = [
   '            if isinstance(a, ast.Constant) and isinstance(a.value, str):',
   '                namen.add(a.value.split(".")[0])',
   '            else: namen.add("<dynamisch>")',
+  // Und die Schlupfloecher EINE Ebene darunter: exec("import sqlite3") ist
+  // kein Import-Knoten und auch kein __import__-Aufruf - der Scanner saehe
+  // gar nichts. Statt jede Verschleierung einzeln aufzuzaehlen (ein Spiel,
+  // das der Scanner verliert), wird dynamische Codeausfuehrung als solche
+  // gemeldet: sie hat in einem Werkzeug, dessen Importflaeche gepinnt ist,
+  // nichts zu suchen.
+  '    elif isinstance(k, ast.Call) and getattr(k.func, "id", None) in ("eval", "exec", "compile"):',
+  '        namen.add("<dynamische-ausfuehrung>")',
+  '    elif isinstance(k, ast.Attribute) and k.attr == "__import__":',
+  '        namen.add("<dynamisch>")',
   'print("\\n".join(sorted(namen)))',
 ].join('\n');
 
@@ -199,8 +209,59 @@ test('(e) fehlende Datei und Verzeichnis brechen benannt ab, ohne stdout', () =>
   abbruch(['--datei', tmp], 'Verzeichnis statt Datei');
 });
 
-test('(e2) ohne --datei laeuft gar nichts', () => {
-  const r = ruf([]);
-  assert.notEqual(r.status, 0);
-  assert.equal(r.stdout.trim(), '');
+test('(e2) ohne --datei laeuft gar nichts - MIT benanntem Grund', () => {
+  // Mit argparse-`required=True` braeche argparse selbst ab, mit seiner
+  // usage-Meldung und ohne den Prefix. Zwei von drei Vertragseigenschaften
+  // (Exit != 0, leeres stdout) haetten dann gehalten, die dritte nicht.
+  abbruch([], 'ohne --datei');
+});
+
+test('(e3) BRUCHPROBE dynamisch: exec("import sqlite3") entgeht dem Anker nicht', () => {
+  const kopie = path.join(tmp, 'gebrochen-exec.py');
+  fs.writeFileSync(kopie,
+    `exec("import sqlite3")\n${fs.readFileSync(SKRIPT, 'utf8')}`, 'utf8');
+  const gelesen = importe(kopie);
+  assert.ok(gelesen.includes('<dynamische-ausfuehrung>'),
+    'exec() versteckt einen Import vor einer reinen Knotensuche - der Scanner '
+    + 'muss dynamische Ausfuehrung als solche melden');
+  assert.notDeepEqual(gelesen.sort(), [...ERLAUBTE_IMPORTE].sort());
+});
+
+test('(f) die Datei aendert sich WAEHREND des Lesens -> ABBRUCH, kein Hash', () => {
+  // Der gefaehrlichste Fall: laengengleiche Aenderung an Ort und Stelle. Eine
+  // reine Laengenpruefung laesst sie durch und bezeugt dann einen Zustand,
+  // den es als zusammenhaengende Datei nie gab.
+  const datei = path.join(tmp, 'wandert.bin');
+  fs.writeFileSync(datei, Buffer.alloc(4096, 0x41));
+  const vorher = fs.statSync(datei);
+  // mtime zurueckdatieren, dann laengengleich ueberschreiben: Groesse
+  // identisch, Inhalt anders, mtime anders.
+  fs.writeFileSync(datei, Buffer.alloc(4096, 0x42));
+  fs.utimesSync(datei, vorher.atime, vorher.mtime);
+  // Gegenprobe zuerst: eine RUHENDE Datei geht sauber durch.
+  const gut = ruf(['--datei', datei]);
+  assert.equal(gut.status, 0, gut.stdout + gut.stderr);
+
+  // Und jetzt die Sache selbst, an der reinen Funktion gemessen: gleiche
+  // Groesse, andere mtime -> Abbruch.
+  const r = spawnSync(python, ['-c', [
+    'import importlib.util, os, sys',
+    `spec = importlib.util.spec_from_file_location("pd", r"${SKRIPT}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    'echt = m.sha256_datei',
+    'def wandernd(pfad, block=m.BLOCK):',
+    '    h, gelesen, vorher, nachher = echt(pfad)',
+    '    class Gefaelscht:',
+    '        st_size = vorher.st_size',
+    '        st_mtime_ns = vorher.st_mtime_ns + 1',
+    '    return h, gelesen, vorher, Gefaelscht',
+    'm.sha256_datei = wandernd',
+    'try:',
+    `    m.digest(r"${datei.replace(/\\/g, '\\\\')}")`,
+    '    print("KEIN ABBRUCH")',
+    'except m.DigestAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.match(r.stdout, /^ABBRUCH:/m,
+    'eine laengengleiche Aenderung waehrend des Lesens muss brechen');
+  assert.match(r.stdout, /waehrend des Lesens geschrieben/);
 });
