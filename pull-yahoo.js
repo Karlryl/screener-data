@@ -667,8 +667,8 @@ function _stampeHandelskurs(meta, tradingFx) {
   // Handelswaehrung selbst belegt ist. Drei Wege zaehlen:
   //   quote            — die heutige Quote nennt sie (belegt sie damit auch fuer morgen)
   //   assumed === false — ein frueherer Lauf hat sie bereits per Quote belegt
-  //   vorhandener Stempel — ein frueherer Lauf hat eine SICHTBARE Divergenz umgerechnet;
-  //                        hier wird nur der Kurs des heutigen Laufs nachgefuehrt
+  //   vorhandener brauchbarer Stempel - ein frueherer Lauf hat eine SICHTBARE Divergenz
+  //                        umgerechnet; hier wird nur der heutige Kurs nachgefuehrt
   // Fehlt alles drei, ist die Waehrung aus dem Snapshot geerbt und kann dieselbe stille
   // Gleichsetzung mitschleppen, die Tag 938 als Wurzelfehler beschreibt (Yahoo-Quote ohne
   // currency-Feld, meta.tradingCurrency vom alten Mapper = Berichtswaehrung). Ein Stempel
@@ -676,7 +676,7 @@ function _stampeHandelskurs(meta, tradingFx) {
   // ZERTIFIZIEREN und bis zum naechsten Voll-Pull verstetigen. Fail-closed: nicht stempeln.
   const herkunftBelegt = tradingFx.quelle === 'quote'
     || meta.tradingCurrencyAssumed === false
-    || Number.isFinite(meta.tradingFxRateApplied);
+    || _isValidFxRate(meta.tradingFxRateApplied);
   if (!herkunftBelegt) return meta;
   meta.tradingCurrencyOriginal = tradingFx.currency;
   meta.tradingFxRateApplied = tradingFx.factor;

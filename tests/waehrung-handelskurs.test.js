@@ -155,6 +155,28 @@ check('Altbestand ohne Herkunfts-Feld: kein Stempel, und der Waechter nullt die 
   assert.equal(u.grund, 'herkunft-unbekannt');
 });
 
+check('Ungueltiger Altstempel belegt keine Herkunft und wird nicht frisch gewaschen', () => {
+  for (const invalidRate of [0, -0.5]) {
+    const meta = {
+      tradingCurrency: 'CNY', reportingCurrencyOriginal: 'CNY', reportingCurrency: 'USD',
+      fxConverted: true, fxRateApplied: CNY, tradingFxRateApplied: invalidRate,
+    };
+    const fx = py._resolveTradingFx({ regularMarketPrice: 12.3, marketCap: 1e9 }, { meta });
+    assert.equal(fx.ok, true);
+    assert.equal(fx.quelle, 'meta');
+    assert.ok(fx.factor > 0, 'Testaufbau: der heutige Tabellenkurs ist brauchbar');
+
+    py._stampeHandelskurs(meta, fx);
+
+    assert.equal(meta.tradingFxRateApplied, invalidRate,
+      'der unbrauchbare Altstempel darf nicht zu einem frischen positiven Beweis werden');
+    assert.ok(!('tradingCurrencyOriginal' in meta),
+      'ohne Herkunftsbeleg darf die geerbte Waehrung nicht als Original zertifiziert werden');
+    assert.equal(meta.tradingCurrencyAssumed, undefined,
+      'ein Price-only-Rundlauf darf fehlende Herkunft nicht in bestaetigte Herkunft verwandeln');
+  }
+});
+
 check('Gegenprobe: belegte Herkunft wird weiter frisch gestempelt', () => {
   // (a) heutige Quote belegt sie
   const ausQuote = { tradingCurrency: 'CNY' };
