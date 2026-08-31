@@ -14,6 +14,7 @@
 //        node scripts/plan-check.js --selftest
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 // Vendor-/Quellen-Register (Masterplan Abschnitt 4). endpoint = oeffentlicher Health-Pfad (keyfrei);
@@ -134,9 +135,13 @@ async function run() {
 
   const status = buildStatus(vendorResults, detectors, manifest, snapCount, now.toISOString(), monthTag, measurementErrors);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, JSON.stringify(status, null, 2) + '\n');
+  // T204: atomar - diese Datei IST der Monats-Gate-Stand, den spaetere Laeufe als
+  // Vergleichsgrundlage lesen. Halb geschrieben waere sie ein Drift-Signal, das nie
+  // jemand gemessen hat.
+  writeFileAtomic(outPath, JSON.stringify(status, null, 2) + '\n');
   fs.mkdirSync(path.dirname(reportPath), { recursive: true });
-  fs.writeFileSync(reportPath, renderReport(status));
+  // T204: atomar - der Bericht ist die menschenlesbare Fassung desselben Stands.
+  writeFileAtomic(reportPath, renderReport(status));
 
   for (const f of status.drift_flags) console.log(`  drift: ${f}`);
   for (const v of status.vendor_status) console.log(`  vendor: ${v.name} -> ${v.ok ? 'ok' : 'WARN'}${v.code != null ? ' (' + v.code + ')' : ''}`);
