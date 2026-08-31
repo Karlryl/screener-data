@@ -267,6 +267,51 @@ test('0.8 Zeitkette: serverConfirmedAt vor registeredAt -> ABBRUCH', () => {
   assert.match(text, /nicht vor sich selbst server-bestaetigt/);
 });
 
+test('0.7b Zeitkette: serverConfirmedAt NACH accessedAt -> ABBRUCH', () => {
+  // Das mittlere Glied. Ohne diese Pruefung geht
+  // registriert < accessedAt < serverConfirmedAt < zugriff glatt durch alle
+  // uebrigen Schranken (zugriff >= accessedAt folgt aus der Transitivitaet) -
+  // und genau das heisst: zum angemeldeten Zugriffszeitpunkt war die
+  // Anmeldung noch nicht auf origin.
+  const w = welt('f6lauf-serverspaet-', { serverConfirmedAt: '2026-01-01T02:00:00.000Z' });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'serverConfirmedAt nach accessedAt');
+  assert.match(text, /liegt NACH der angemeldeten Zugriffszeit/);
+});
+
+test('0.6b ein Eintrag mit ZWEI Fenstern autorisiert diesen Lauf nicht', () => {
+  // Kein konstruierter Fall: e1b-abnahme-2026-08-16 fuehrt im echten Register
+  // ["pruefung 2017-2019", "endtest 2021-2023"] - das zweite ist das
+  // Endtest-Fenster. Ein Vergleich nur gegen fenster[0] liesse genau das durch.
+  const reg = JSON.parse(fs.readFileSync(ECHTES_REGISTER, 'utf8'));
+  assert.ok(reg.events.some((e) => (e.fenster || []).length > 1),
+    'die Praemisse dieser Probe steht nicht mehr im Register');
+
+  const w = welt('f6lauf-zweifenster-');
+  const r = JSON.parse(fs.readFileSync(w.registerPfad, 'utf8'));
+  r.events.find((e) => e.runId === RUN_ID).fenster = [FENSTER, 'endtest 2021-2023'];
+  fs.writeFileSync(w.registerPfad, `${JSON.stringify(r, null, 1)}\n`, 'utf8');
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'zwei Fenster im Eintrag');
+  assert.match(text, /zweites Fenster/);
+});
+
+test('2.6 ein abstuerzendes Zaehlwerk: benannter Abbruch, und der Ausnahmetext '
+  + 'wird UNTERDRUECKT (F6-B14 gilt auch auf der Fehlerflaeche)', () => {
+  // Das Zaehlwerk ist fremder Code und das einzige Glied, das Zeilen je Firma
+  // sieht. Ein durchgereichter Traceback druckte seinen Text ungeprueft.
+  const w = welt('f6lauf-absturz-');
+  const p = path.join(w.dir, 'kracht.py');
+  fs.writeFileSync(p,
+    'def zaehle(panel_pfad, variante, arm):\n'
+    + '    raise KeyError("cik=320193 APPLE INC")\n', 'utf8');
+  const text = abbruch(w, ['--zaehlwerk', p], 'abstuerzendes Zaehlwerk');
+  assert.match(text, /interner Fehler der Art KeyError/);
+  assert.doesNotMatch(text, /APPLE/, 'der Ausnahmetext ist nach stderr geleckt');
+  assert.doesNotMatch(text, /320193/, 'die CIK ist nach stderr geleckt');
+  assert.doesNotMatch(text, /Traceback/, 'ein nackter Traceback ist kein benannter Abbruch');
+});
+
 test('0.9 UNTAETIGKEIT: die ECHTE Eintrag-24-Freigabe gegen das ECHTE Register '
   + 'wird abgewiesen, und nichts wird geschrieben', () => {
   // Der Hauptbefund. Es gibt keinen Eintrag 25; Eintrag 24 ist ein

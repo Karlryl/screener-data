@@ -405,9 +405,21 @@ def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
             raise LaufAbbruch(
                 "Die Freigabe fuehrt " + feld + " = " + repr(freigabe[feld])
                 + ", das Register " + repr(eintrag.get(feld)) + ".")
-    if (eintrag.get("fenster") or [None])[0] != freigabe["fenster"]:
+    # Die GANZE Liste, nicht nur ihr erstes Element. Der Register-Eintrag
+    # e1b-abnahme-2026-08-16 fuehrt woertlich
+    # ["pruefung 2017-2019", "endtest 2021-2023"] - ein Eintrag mit ZWEI
+    # Fenstern ist in diesem Register real, und das zweite ist das
+    # Endtest-Fenster. Ein Vergleich nur gegen [0] liesse genau den Fall
+    # durch, in dem ein ungenanntes zweites Fenster mitreist. Die Hausform
+    # (scripts/studie-zaehlprobe.py:355) prueft nur [0]; hier gilt die
+    # strengere Fassung.
+    if eintrag.get("fenster") != [freigabe["fenster"]]:
         raise LaufAbbruch(
-            "Das Fenster der Freigabe passt nicht zum Register-Eintrag.")
+            "Das Fenster der Freigabe passt nicht zum Register-Eintrag: "
+            "angemeldet ist genau [" + repr(freigabe["fenster"]) + "], der "
+            "Eintrag fuehrt " + repr(eintrag.get("fenster")) + ". Ein "
+            "Eintrag, der ein zweites Fenster mitfuehrt, autorisiert diesen "
+            "Lauf nicht.")
 
     # ── DIE ZEITKETTE VB-A11 ──────────────────────────────────────────────
     # registeredAt < serverConfirmedAt <= accessedAt <= ersterZugriff
@@ -426,6 +438,17 @@ def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
             "accessedAt " + freigabe["accessedAt"] + " liegt nicht nach "
             "registeredAt " + freigabe["registeredAt"] + " (Register-Regel: "
             "registeredAt < accessedAt).")
+    # Das MITTLERE Glied der Kette. Ohne es geht die Anordnung
+    # registriert < accessedAt < serverConfirmedAt < zugriff glatt durch alle
+    # uebrigen Pruefungen (zugriff >= accessedAt folgt dann aus der
+    # Transitivitaet) - und genau die heisst: die Anmeldung war zum
+    # angemeldeten Zugriffszeitpunkt noch NICHT server-bestaetigt.
+    if not server <= geplant:
+        raise LaufAbbruch(
+            "Die Server-Bestaetigung " + freigabe["serverConfirmedAt"]
+            + " liegt NACH der angemeldeten Zugriffszeit "
+            + freigabe["accessedAt"] + ". Die Anmeldung war zum angemeldeten "
+            "Zugriffszeitpunkt nicht nachweislich auf origin.")
     if not zugriff > server:
         raise LaufAbbruch(
             "Erstzugriff " + erster_zugriff + " liegt nicht NACH der "
@@ -651,7 +674,16 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
             json.dump([[int(m), int(nn)] for m, nn in klumpen], fh)
         ruf = [sys.executable, se_skript, "se", "--klumpen", tally_pfad,
                "--n", str(n), "--zaehler", str(zaehler)]
-        fertig = subprocess.run(ruf, capture_output=True, text=True)
+        # Frist statt Ewigkeit (Muster scripts/studie-e2-verbreitert.py:598):
+        # der Lauf ist unbeaufsichtigt, und ein haengendes Kind blockierte
+        # sonst die ganze Nacht, ohne eine Zeile zu sagen.
+        try:
+            fertig = subprocess.run(ruf, capture_output=True, text=True,
+                                    timeout=600)
+        except subprocess.TimeoutExpired:
+            raise LaufAbbruch(
+                "Das SE-Modul hat fuer " + wo + " die Frist von 600 s "
+                "ueberschritten und wurde abgebrochen.")
     finally:
         # Auch auf dem Abbruchpfad. Ein liegengebliebener Tally waere eine
         # Firmen-nahe Datei ohne Besitzer.
@@ -690,8 +722,15 @@ def se_binomial(anteil, n):
     `scripts/studie-f6-klumpen-se.py::selbsttest` rechnet mit demselben
     Ausdruck (se_binom = math.sqrt(p * (1 - p) / 10) bei N = 10).
     """
-    if n <= 0:
+    # POSITIV geprueft, was gelten MUSS. Eine Schranke der Form `if n <= 0`
+    # feuert bei NaN NIE, weil jeder Vergleich mit NaN False ist - dieselbe
+    # Begruendung wie bei `_zahl` in scripts/studie-vb-b4-band.py.
+    if not _ganzzahl(n) or n <= 0:
         raise LaufAbbruch("SE_binomial ist bei N = " + repr(n) + " nicht definiert.")
+    if not (isinstance(anteil, float) and math.isfinite(anteil)
+            and 0.0 <= anteil <= 1.0):
+        raise LaufAbbruch("SE_binomial braucht einen Anteil in [0,1], nicht "
+                          + repr(anteil) + ".")
     return math.sqrt(anteil * (1.0 - anteil) / n)
 
 
@@ -863,6 +902,10 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
 
     # ── PHASE 1 ───────────────────────────────────────────────────────────
     gebundene = rehash(wurzel, register_pfad, protokoll)
+    # Was gehasht wurde, wurde GELESEN. Der Bericht ist ein pruefbarer
+    # Nachweis darueber, was der Lauf angefasst hat; eine unvollstaendige
+    # Liste ist eine falsche Auskunft, kein fehlender Komfort.
+    gelesene.extend(os.path.join(wurzel, *b["pfad"].split("/")) for b in BINDUNGEN)
 
     # ── PHASE 2 ───────────────────────────────────────────────────────────
     zaehlwerk, zaehlwerk_sha = lade_zaehlwerk(zaehlwerk_pfad)
@@ -873,7 +916,9 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
                      + " (sha256 " + zaehlwerk_sha + ").")
 
     se_skript = os.path.join(wurzel, "scripts", "studie-f6-klumpen-se.py")
+    band_pfad = os.path.join(wurzel, "scripts", "studie-vb-b4-band.py")
     band_modul = lade_bandmodul(wurzel)
+    gelesene.extend([band_pfad, se_skript, str(zaehlwerk_pfad)])
 
     daten = {}
     for variante in VARIANTEN:
@@ -948,6 +993,16 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
                 "schluessel": "differenz_punkte",
                 "maxDifferenzPunkte": MAX_DIFFERENZ_PUNKTE,
                 "quelle": "protocol/early-detection/2.0.0/preregistration.json:88",
+                "auswertung": (
+                    "NICHT AUSGEWERTET. Der Laeufer BERICHTET differenz_punkte "
+                    "(F6-B11) und vergleicht sie NICHT gegen "
+                    "maxDifferenzPunkte. Ob das 10-Punkte-Kriterium ein Tor "
+                    "ist, das dieser Lauf zieht, oder eine Groesse, die der "
+                    "Bericht nur ausweist, ist eine Methodikfrage: V2 fuehrt "
+                    "die Zweiarmigkeit ausdruecklich als 'Arbeitsteilung - die "
+                    "Bandregel je Arm, das 10-Punkte-Kriterium daneben' und "
+                    "hat 'nichts daran entschieden'. Der Bauende entscheidet "
+                    "sie nicht still mit. OFFEN."),
             },
             "zweigPflichtTeilmengen": {
                 z: sorted(s) for z, s in ZWEIG_PFLICHT.items()},
@@ -980,9 +1035,27 @@ def main(argv=None):
     except LaufAbbruch as fehler:
         print("F6-LAUF-ABBRUCH: " + str(fehler), file=sys.stderr)
         return 1
+    except Exception as fehler:  # noqa: BLE001 - genau das ist der Zweck
+        # DIE FEHLERFLAECHE IST AUCH EINE AUSGABEFLAECHE (F6-B14).
+        # Das Zaehlwerk ist FREMDER, per --zaehlwerk geladener Code und das
+        # einzige Glied dieser Kette, das Zeilen je Firma sieht. Ein
+        # durchgereichter Traceback traegt seinen Ausnahmetext ungeprueft nach
+        # stderr - ein KeyError ueber einer CIK-Schluesselung druckt die CIK,
+        # ein sqlite3-Fehler unter Umstaenden eine ganze Zeile. Ausserdem waere
+        # ein nackter Traceback kein BENANNTER Abbruch.
+        # Deshalb: die ART melden, den TEXT unterdruecken.
+        print("F6-LAUF-ABBRUCH: interner Fehler der Art "
+              + type(fehler).__name__ + ". Der Ausnahmetext wird "
+              "ABSICHTLICH unterdrueckt - er kann aus fremdem Code stammen "
+              "und eine Firmen-Kennung tragen (F6-B14). Zur Diagnose den "
+              "Lauf mit einem Fixture-Zaehlwerk wiederholen.", file=sys.stderr)
+        return 1
 
     with open(a.bericht, "w", encoding="utf-8") as fh:
-        json.dump(bericht, fh, ensure_ascii=False, indent=1)
+        # allow_nan=False: json.dump schreibt sonst STILL die nicht-normgerechten
+        # Literale NaN / Infinity und erzeugte damit einen Bericht, der wie eine
+        # Zahl aussieht und keine ist. Hier soll er lieber laut brechen.
+        json.dump(bericht, fh, ensure_ascii=False, indent=1, allow_nan=False)
         fh.write("\n")
     for zeile in bericht["protokoll"]:
         print(zeile)
