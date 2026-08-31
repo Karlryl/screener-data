@@ -44,6 +44,7 @@ const ANKER = path.join(REPO, 'reports', 'studie', 'VB-A6-registeranker-2026-08-
 
 const {
   RUN_ID,
+  ERWARTETER_TAIL,
   ERWARTETE_EVENTS,
   SCHWELLEN_INHALT_SHA256,
   SCHWELLEN_DATEI_SHA256,
@@ -58,6 +59,12 @@ const {
 
 const dateihash = (pfad) => crypto.createHash('sha256').update(fs.readFileSync(pfad)).digest('hex');
 const lies = (pfad) => JSON.parse(fs.readFileSync(pfad, 'utf8'));
+// Das echte Register beim START dieses Laufs. Die beiden Nicht-geschrieben-Proben
+// pruefen gegen DIESEN Wert, nicht gegen eine Ereigniszahl: "unveraendert" ist die
+// Eigenschaft, um die es geht, und sie gilt auch dann noch, wenn Eintrag 23
+// planmaessig auf main liegt. Die alte Fassung verlangte `events.length === 22`
+// und waere am Tag des Gelingens rot geworden - dieselbe Bugklasse wie VB-A6.
+const LEDGER_BEIM_START = dateihash(LEDGER);
 // Beide Artefakte liegen mit einem Leerzeichen Einrueckung auf der Platte. Die
 // Kopien werden mit derselben Formatierung geschrieben — nur so ist der
 // Datei-Hash der unversehrten Kopie identisch mit dem des Originals, und nur
@@ -70,6 +77,26 @@ function tempdir() {
   return dir;
 }
 
+// DER VOR-ZUSTAND, auf den Eintrag 23 gebaut ist: das Register OHNE genau diesen
+// Eintrag.
+//
+// WARUM DIESE PROJEKTION UEBERHAUPT NOETIG IST — und warum ihr Fehlen dieselbe
+// Bugklasse war, die heute frueh schon einmal zugeschlagen hat (VB-A6):
+// Die Proben unten arbeiteten auf einer 1:1-Kopie des LEBENDEN Registers und
+// verlangten `events.length === 22`. Das ist eine Aussage ueber einen ZEITPUNKT.
+// In der Sekunde, in der Eintrag 23 planmaessig auf main landet, steht dort 23 —
+// und der komplette Waechter wird rot, obwohl nichts kaputt ist. Ein Waechter,
+// der beim Gelingen des Vorgangs rot wird, wird abgeschaltet.
+//
+// Die Projektion ist NICHT weicher: der Kettenkopf des Vor-Zustands wird gegen
+// die registrierte Konstante ERWARTETER_TAIL geprueft. Wer an Eintrag 22 dreht,
+// faellt hier genauso auf wie vorher — nur faellt jetzt nicht mehr auf, dass der
+// Vorgang funktioniert hat.
+function registerVorEintrag() {
+  const r = lies(LEDGER);
+  return { ...r, events: (r.events || []).filter((e) => e.runId !== RUN_ID) };
+}
+
 // Arbeitskopien. Die Originale werden gelesen, nie geschrieben.
 function kopien(dir) {
   const ziel = {
@@ -78,7 +105,7 @@ function kopien(dir) {
     band: path.join(dir, 'band.json'),
     anker: path.join(dir, 'anker.json'),
   };
-  fs.copyFileSync(LEDGER, ziel.register);
+  schreib(ziel.register, registerVorEintrag());
   fs.copyFileSync(SCHWELLEN, ziel.schwellen);
   fs.copyFileSync(BAND, ziel.band);
   fs.copyFileSync(ANKER, ziel.anker);
@@ -111,8 +138,19 @@ test('F6 (f): die vier Artefakte und drei Dateien auf main tragen genau die regi
     lies(BAND).inhalt.vierGroessen['3_klumpungseinheit'].gilt,
     KLUMPUNGSEINHEIT,
   );
-  // Das Register steht noch auf dem Stand, auf den der Eintrag gebaut ist.
-  assert.equal(lies(LEDGER).events.length, ERWARTETE_EVENTS);
+  // Der Stand, auf den der Eintrag gebaut ist — als INVARIANTE formuliert, nicht
+  // als Tagesaussage: das Register OHNE Eintrag 23 hat 22 Ereignisse und endet auf
+  // dem registrierten Kettenkopf. Das gilt vor dem Landen genauso wie danach.
+  const vorher = registerVorEintrag();
+  assert.equal(vorher.events.length, ERWARTETE_EVENTS);
+  assert.equal(vorher.events[vorher.events.length - 1].eventHash, ERWARTETER_TAIL);
+
+  // Und falls der Eintrag schon auf main liegt: GENAU einmal, und er haengt an
+  // genau diesem Kettenkopf. Ein zweiter Eintrag derselben runId oder einer, der
+  // woanders anhaengt, faellt hier auf.
+  const meine = (lies(LEDGER).events || []).filter((e) => e.runId === RUN_ID);
+  assert.ok(meine.length <= 1, `runId ${RUN_ID} steht ${meine.length}x im Register`);
+  if (meine.length === 1) assert.equal(meine[0].previousHash, ERWARTETER_TAIL);
 });
 
 // ── (a) Trockenlauf schreibt nichts ──────────────────────────────────────────
@@ -128,8 +166,8 @@ test('F6 (a): der Trockenlauf laesst Register und Artefakte byte-identisch', () 
 
   const nachher = [z.register, z.schwellen, z.band, z.anker].map(dateihash);
   assert.deepEqual(nachher, vorher);
-  // Und das ECHTE Register erst recht nicht.
-  assert.equal(lies(LEDGER).events.length, ERWARTETE_EVENTS);
+  // Und das ECHTE Register erst recht nicht. Byte-identisch, nicht "hat N Ereignisse".
+  assert.equal(dateihash(LEDGER), LEDGER_BEIM_START);
 });
 
 // ── (b) verschobenes Kettenende ──────────────────────────────────────────────
@@ -230,8 +268,8 @@ test('F6 (e): der gebaute Eintrag autorisiert nichts und laesst das Siegel zu', 
       eintrag.begruendung.includes(wert),
       `der Eintrag fuehrt ${wert.slice(0, 20)}... nicht`,
     ));
-  // Und das ECHTE Register ist unberuehrt.
-  assert.equal(lies(LEDGER).events.length, ERWARTETE_EVENTS);
+  // Und das ECHTE Register ist unberuehrt. Byte-identisch, nicht "hat N Ereignisse".
+  assert.equal(dateihash(LEDGER), LEDGER_BEIM_START);
 });
 
 // ── (f) die Python-Dateien werden am Objekt gehasht ──────────────────────────
