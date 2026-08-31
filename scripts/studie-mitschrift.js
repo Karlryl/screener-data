@@ -25,6 +25,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO = path.join(__dirname, '..');
 const LOG_DIR = path.join(REPO, 'research', 'studie', 'vorwaerts-mitschrift');
@@ -76,8 +77,8 @@ function logDatei(datum) {
 
 // Liest die Mitschrift und trennt Lesbares von Unlesbarem.
 //
-// Warum nicht einfach JSON.parse ueber alles: appendFileSync ist bei einem gekillten
-// CI-Runner nicht atomar. Eine halbe Zeile aus einem abgebrochenen Lauf wuerde jeden
+// Warum nicht einfach JSON.parse ueber alles: fruehere appendFileSync-Laeufe waren bei
+// einem gekillten CI-Runner nicht atomar. Eine halbe Zeile aus einem abgebrochenen Lauf wuerde jeden
 // KUENFTIGEN Lauf an derselben Stelle toeten — dauerhaft und lautlos, weil der
 // Workflow-Schritt continue-on-error traegt. Eine kaputte Zeile ist deshalb ein
 // BEFUND (sie wandert in `unlesbar` und von dort als Luecke in den naechsten Eintrag),
@@ -117,8 +118,11 @@ function anhaengen(eintrag) {
   // Endet die Datei mitten in einer Zeile (abgebrochener Lauf), wuerde der neue Eintrag
   // an den Rumpf angeklebt und waere selbst unlesbar — aus einer kaputten Zeile wuerden
   // zwei. Ein Zeilenumbruch davor kostet nichts und rettet den neuen Eintrag.
-  const zeilenAnfang = fs.existsSync(datei) && !fs.readFileSync(datei, 'utf8').endsWith('\n') ? '\n' : '';
-  fs.appendFileSync(datei, `${zeilenAnfang}${JSON.stringify(eintrag)}\n`, 'utf8');
+  const vorhanden = fs.existsSync(datei);
+  const vorher = vorhanden ? fs.readFileSync(datei) : Buffer.alloc(0);
+  const zeilenAnfang = vorhanden && (vorher.length === 0 || vorher[vorher.length - 1] !== 0x0a) ? '\n' : '';
+  const neueZeile = Buffer.from(`${zeilenAnfang}${JSON.stringify(eintrag)}\n`, 'utf8');
+  writeFileAtomic(datei, Buffer.concat([vorher, neueZeile]), 'utf8');
 }
 
 function baueEintrag(datum) {
