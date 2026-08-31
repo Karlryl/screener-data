@@ -1,0 +1,13 @@
+{
+ "schema": "early-detection-zaehlprobe-freigabe/v1",
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "f6-tor-freeze-2026-08-31",
+ "fenster": "kein Studienfenster - Freeze-Akt ohne Datenzugriff",
+ "registerEventHash": "5def37b9ff21529761dfcd4f084cd9a61060603529d814167fd937b980cb0675",
+ "registerZweig": "main",
+ "registeredAt": "2026-08-31T05:41:15.887Z",
+ "accessedAt": "2026-08-31T07:41:15.887Z",
+ "serverConfirmedAt": "2026-08-31T06:12:35.000Z",
+ "quelle": "gh api -i repos/Karlryl/screener-data/contents/protocol/early-detection/2.0.0/outcome-access-ledger.json?ref=main — Date-Kopf der Antwort",
+ "bedeutung": "Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab."
+}
