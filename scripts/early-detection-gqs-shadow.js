@@ -32,6 +32,12 @@ function canonicalSha256(value) {
   return crypto.createHash('sha256').update(JSON.stringify(stable(value))).digest('hex');
 }
 
+// T204 measurement seam: the synthetic fixture reaches the exact output-byte
+// contract without invoking scoring or the producer-owned Python verifier.
+function writeShadowReport(target, report) {
+  fs.writeFileSync(target, JSON.stringify(report) + '\n', 'utf8');
+}
+
 function sha256File(file) {
   return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 }
@@ -225,7 +231,7 @@ function main() {
   const report = scoreBundle(bundle, verification);
   const output = path.resolve(args.output);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, JSON.stringify(report) + '\n', 'utf8');
+  writeShadowReport(output, report);
   process.stdout.write(JSON.stringify({
     evaluationAt: report.evaluationAt,
     summary: report.summary,
@@ -236,4 +242,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { canonicalSha256, researchClassify, rankMap, scoreBundle, verifyBundleWithProducer };
+module.exports = { canonicalSha256, researchClassify, rankMap, scoreBundle, verifyBundleWithProducer, writeShadowReport };
