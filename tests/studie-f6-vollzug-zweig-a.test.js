@@ -37,10 +37,23 @@ const HASH_WERKZEUG = p('scripts', 'studie-vb-b4-band.py');
 const BAND = p('protocol', 'early-detection', '2.1.0', 'b4-bandregel-2026-08-30.json');
 const PRAEREG = p('protocol', 'early-detection', '2.0.0', 'preregistration.json');
 const REGISTER = p('protocol', 'early-detection', '2.0.0', 'outcome-access-ledger.json');
+const FRIEDHOF = p('protocol', 'early-detection', '2.0.0', 'friedhof.json');
+
+// Der registrierte SOLLWERT, literal gepinnt. Ohne ihn vergliche dieser Test die
+// Datei nur mit sich selbst: `a.inhaltSha256` stammt aus der Datei unter Pruefung,
+// und das Haus-Werkzeug prueft ebenfalls nur die INNERE Konsistenz. Ein Commit,
+// der Inhalt UND Hash-Feld zugleich verstellt, kam damit gruen durch (im Review an
+// einer Kopie reproduziert). Register-Eintrag 24 wird genau diesen Wert zitieren.
+const INHALT_SHA256 = '792f4ff58687945167e273d08ca509544f4ad7fd7ecd9eaa60d5dac3118c99f7';
 
 const lies = (datei) => JSON.parse(fs.readFileSync(datei, 'utf8'));
 const a = lies(ARTEFAKT);
 const roh = fs.readFileSync(ARTEFAKT, 'utf8');
+
+// spawnSync liefert bei einem Startfehler stdout/stderr als undefined — die
+// naive Verkettung ergaebe dann "NaN" statt einer Diagnose.
+const diagnose = (r) => `${r.stdout || ''}${r.stderr || ''}`
+  + (r.error ? ` [spawn: ${r.error.code || r.error.message}]` : '');
 
 // Der Hash-Geltungsbereich ist der `inhalt`-Teilbaum (wie beim Band-Artefakt).
 // Nachgerechnet wird mit dem Haus-Werkzeug: die Kanonisierung ist
@@ -59,12 +72,26 @@ test('Grundform: das Artefakt meldet sich als vorbereiteter Gegenstand, nicht al
     assert.ok(a.inhalt[block] && typeof a.inhalt[block] === 'object',
       `Block ${block} fehlt`);
   }
+  // Felder AUSSERHALB des Hash-Geltungsbereichs. Der inhaltSha256 deckt nur den
+  // `inhalt`-Teilbaum — diese beiden liegen daneben und waren deshalb frei
+  // umschreibbar: im Review wurden sie auf "dieser Eintrag autorisiert den Lauf"
+  // umgeschrieben, und der Waechter blieb gruen. Sie werden hier einzeln gepinnt.
+  assert.match(a.kanonisierung, /der inhalt-Teilbaum/);
+  assert.match(a.vollzugsStatus.warumNochNichtRegistriert, /nicht der Akt|eigener Akt/);
 });
 
-test('inhaltSha256: vom Haus-Werkzeug nachgerechnet, nicht geglaubt', () => {
+test('inhaltSha256: gegen den registrierten Sollwert, nicht gegen sich selbst', () => {
+  assert.match(a.inhaltSha256, /^[0-9a-f]{64}$/,
+    'inhaltSha256 hat nicht die Form eines SHA-256 — als RegExp eingesetzt waere er unberechenbar');
+  assert.equal(a.inhaltSha256, INHALT_SHA256,
+    'Der inhaltSha256 weicht vom registrierten Sollwert ab. Eintrag 24 zitiert diesen Wert — '
+    + 'eine Aenderung am Artefakt ist hier NICHT durch Mitziehen des Hash-Feldes zu heilen.');
   const r = hashLauf(ARTEFAKT);
-  assert.equal(r.status, 0, r.stdout + r.stderr);
-  assert.match(r.stdout, new RegExp(`inhaltSha256 gerechnet: ${a.inhaltSha256}`));
+  assert.equal(r.status, 0, diagnose(r));
+  assert.match(r.stdout, new RegExp(`inhaltSha256 gerechnet: ${INHALT_SHA256}`));
+  // ponytail: diese Zeile pinnt NUR das Ausgabeformat des Werkzeugs, sie ist keine
+  // Manipulations-Sicherung — der Datei-Hash wird aus derselben Datei gerechnet, die
+  // geprueft wird. Die Beweislast traegt der literale Sollwert oben.
   assert.match(r.stdout, new RegExp('Datei-SHA-256\\s*:\\s*'
     + crypto.createHash('sha256').update(fs.readFileSync(ARTEFAKT)).digest('hex')));
 });
@@ -124,10 +151,18 @@ test('F6-A12: Erwartung ist bedingt, als Spanne, mit dem NICHT-BESTANDEN-Ast', (
 
 test('F6-A13: die B-Widerlegung rechnet nach — beide Faktoren am Objekt geprueft', () => {
   const b = a.inhalt.bWiderlegung;
-  // Nicht die Zahl im Text glauben, sondern sie herstellen.
-  assert.equal(Number((1 / 0.42) ** 2).toFixed(3), '5.669');
+  // d_alt wird aus dem Rechenweg GELESEN, nicht hier hartkodiert. Sonst bliebe ein
+  // verstellter Rechenweg (d_alt = 0,50 bei unveraendertem wert 5.669) gruen: die
+  // Rechnung wuerde dann gegen eine Konstante im Test pruefen statt gegen die
+  // Groesse, die das Artefakt behauptet.
+  const treffer = b.noetigerFaktor.rechenweg.match(/d_alt\s*=\s*(\d+[.,]\d+)/);
+  assert.ok(treffer, 'd_alt steht nicht im Rechenweg — die Herleitung ist nicht pruefbar');
+  const dAlt = Number(treffer[1].replace(',', '.'));
+  assert.ok(dAlt > 0 && dAlt < 1, `d_alt ausserhalb des plausiblen Bereichs: ${dAlt}`);
+  // Nicht die Zahl im Text glauben, sondern sie aus dem gelesenen d_alt herstellen.
+  assert.equal(Number((1 / dAlt) ** 2).toFixed(3), '5.669');
   assert.equal(b.noetigerFaktor.wert, 5.669);
-  assert.equal(Number(0.42 * Math.sqrt(5)).toFixed(3), '0.939');
+  assert.equal(Number(dAlt * Math.sqrt(5)).toFixed(3), '0.939');
   assert.equal(b.obergrenzeBeiBruchAllerMauern.wert, 0.939);
   assert.ok(b.obergrenzeBeiBruchAllerMauern.wert < 1,
     'Die Obergrenze muss unter 1 liegen — sonst faellt die ganze Widerlegung');
@@ -173,8 +208,16 @@ test('Zitate: jedes woertliche Zitat ist eine echte Teilzeichenkette seiner Quel
   const band = lies(BAND).inhalt;
   const splits = lies(PRAEREG).splits;
   const ereignisse = lies(REGISTER).events;
-  const verboten22 = ereignisse[21].verboten;
-  const verboten23 = ereignisse[22].verboten;
+  // Nach runId gesucht, nicht nach blankem Index (Hausmuster, vgl.
+  // studie-f6-register.test.js): ein vorgeschobener Eintrag wuerde die Indizes
+  // verschieben und den Test lautlos auf fremde Felder zeigen lassen.
+  const beiRunId = (id) => {
+    const e = ereignisse.find((x) => x.runId === id);
+    assert.ok(e, `Register-Eintrag ${id} nicht gefunden`);
+    return e;
+  };
+  const verboten22 = beiRunId('rr9-a3-jahrgang-registrierung-2026-08-30').verboten;
+  const verboten23 = beiRunId('f6-tor-freeze-2026-08-31').verboten;
 
   const paare = [
     // Die max(SE)-Regel, aus der der Faktor 5,669 folgt.
@@ -204,6 +247,10 @@ test('Zitate: jedes woertliche Zitat ist eine echte Teilzeichenkette seiner Quel
       + 'registrierte Anteil 0,90)'],
   ];
 
+  // Ohne diese Zeile liefe die Schleife ueber eine leere Liste gruen durch — ein
+  // geleertes `paare` war im Review ein stiller Durchgang.
+  assert.equal(paare.length, 9, 'Die Zitat-Liste ist nicht mehr vollstaendig');
+
   for (const [quelle, zitat] of paare) {
     assert.ok(quelle.includes(zitat),
       `Zitat steht so nicht in seiner Quelle: ${zitat.slice(0, 60)}...`);
@@ -213,35 +260,66 @@ test('Zitate: jedes woertliche Zitat ist eine echte Teilzeichenkette seiner Quel
 });
 
 // -- Absenz ------------------------------------------------------------------
-// Die realisierte Prueffenster-Groesse steht unter stehendem Zitierverbot. Sie
-// wird ausschliesslich ueber Anker gefuehrt, nie als Wert. Gesucht werden die
-// RATEN-FORMEN, nicht die blanke Ganzzahl: eine blanke Zahl kaeme in jedem
-// zweiten SHA-256 zufaellig vor und machte den Waechter falsch-rot.
-const GESPERRTE_FORMEN = ['89,32', '89.32', '90,4', '90.4', '326/365'];
+// Die realisierte Prueffenster-Groesse steht unter stehendem Zitierverbot und wird
+// ausschliesslich ueber Anker gefuehrt, nie als Wert.
+//
+// WAS DIESER WAECHTER LEISTET UND WAS NICHT: er haelt die SCHREIBWEISEN drausssen,
+// in denen das Haus die Groesse fuehrt. Er macht sie nicht unauffindbar — aus d_alt
+// ist sie arithmetisch rekonstruierbar, und genau das ist die vom Rat ratifizierte
+// Anker-und-Beziehung-Form (F6-A9), im Artefakt offengelegt. Der Test heisst
+// deshalb nach dem, was er wirklich prueft.
+//
+// Eine Literal-Liste liess "326 von 365", "89,3" und die Anteils-Schreibweise glatt
+// durch (im Review reproduziert); deshalb ein Muster statt einer Aufzaehlung. Die
+// BLANKE Ganzzahl bleibt bewusst ungesucht: sie kaeme in jedem zweiten SHA-256
+// zufaellig vor und machte den Waechter falsch-rot — und ein falsch-roter Waechter
+// wird abgeschaltet.
+const GESPERRT = /89[.,]3\d?|0[.,]893\d?|326\s*(\/|von)\s*365|0[.,]685\s*Prozentpunkte|90[.,]4/;
 
-test('Absenz: die realisierte Groesse steht nicht im Artefakt', () => {
-  for (const form of GESPERRTE_FORMEN) {
-    assert.ok(!roh.includes(form),
-      `Das Artefakt traegt die gesperrte Groesse ${form}`);
-  }
+test('Absenz: die gesperrten Schreibweisen stehen nicht im Artefakt', () => {
+  const fund = roh.match(GESPERRT);
+  assert.equal(fund, null,
+    `Das Artefakt traegt eine gesperrte Schreibweise: ${fund && fund[0]}`);
   assert.match(a.inhalt.provenienz.warumDieGroesseHierNichtSteht, /Anker/);
 });
 
-test('GEGENPROBE: der Absenz-Waechter wuerde die Groesse auch finden', () => {
+test('GEGENPROBE: der Absenz-Waechter findet jede Schreibweise — und schweigt sonst', () => {
+  // Eine Probe je Kodierung, die der Literal-Liste durchgerutscht ist.
   const boese = [
     '"realisiert": "89,32 %"',
     'Anteil 89.32 Prozent',
+    'ein gerissenes Tor bei 89,3 %',
+    'Anteil 0,8932 auf dem alten Nenner',
+    'p-Dach = 0.8932',
     'der Bruch 326/365 im Klartext',
+    '326 von 365 reifen Firmen',
+    'die Luecke betraegt 0,685 Prozentpunkte',
     'Punktschaetzung 90,4',
   ];
   for (const zeile of boese) {
-    assert.ok(GESPERRTE_FORMEN.some((form) => zeile.includes(form)),
-      `Der Absenz-Waechter uebersieht: ${zeile}`);
+    assert.ok(GESPERRT.test(zeile), `Der Absenz-Waechter uebersieht: ${zeile}`);
   }
   // Und er darf nicht bei harmlosem Text anschlagen — sonst wird er abgeschaltet.
-  for (const zeile of ['Faktor 5,669', 'd = 0,939 < 1', 'Spanne 60-85 %', a.inhaltSha256]) {
-    assert.ok(!GESPERRTE_FORMEN.some((form) => zeile.includes(form)),
+  for (const zeile of ['Faktor 5,669', 'd = 0,939 < 1', 'Spanne 60-85 %',
+    'rund 28 %', 'rund 7,7 %', 'Anteil 0,90', a.inhaltSha256]) {
+    assert.ok(!GESPERRT.test(zeile),
       `Der Absenz-Waechter schlaegt falsch an bei: ${zeile}`);
+  }
+});
+
+test('Zeilen-Anker: die zitierten Zeilen tragen noch, was das Artefakt behauptet', () => {
+  // Bewusst assert.ok mit EIGENER Meldung statt assert.match: eine
+  // Standard-Fehlermeldung schriebe die Zeile im Klartext ins CI-Protokoll — und
+  // ledger:635 wie friedhof:71 fuehren genau die Groesse, die unter Zitierverbot
+  // steht. Der Test liest sie, gibt sie aber unter keinen Umstaenden aus.
+  const zeile = (datei, nr) => (fs.readFileSync(datei, 'utf8').split('\n')[nr - 1] || '');
+  for (const [datei, nr, marke, name] of [
+    [REGISTER, 635, 'Kontaminations-Vorgeschichte', 'outcome-access-ledger.json:635'],
+    [REGISTER, 650, 'Jede zweite Jahrgangswahl', 'outcome-access-ledger.json:650'],
+    [FRIEDHOF, 71, 'Fehlbetrag', 'friedhof.json:71'],
+  ]) {
+    assert.ok(zeile(datei, nr).includes(marke),
+      `${name} traegt die erwartete Marke nicht mehr — der Anker im Artefakt zeigt ins Leere`);
   }
 });
 
