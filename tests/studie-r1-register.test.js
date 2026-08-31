@@ -24,6 +24,10 @@ const {
   pruefeZugriffsRegister,
   haengeEintragAn,
   VerfassungsBruch,
+  artenMitZugriffszeit,
+  ART_ZUGRIFF,
+  ART_ZAEHLPROBE,
+  ART_C0_REGELFREEZE,
 } = require('../lib/studie-verfassung');
 
 const WURZEL = path.join(__dirname, '..');
@@ -192,4 +196,32 @@ test('R1: jede committete Revision ist byte-identisches Praefix der aktuellen', 
       );
     });
   }
+});
+
+// Die Menge der Zugriffszeit-Arten ist die Referenz, gegen die
+// scripts/studie-r1-serverzeit.js seine BESTAETIGBAR-Liste misst (F6-B17a).
+// Ohne den Export koennte der dortige Gleichheits-Anker sie nur abschreiben —
+// zwei Kopien derselben Regel driften. Die Dreizahl steht mit im Anker: eine
+// vierte Zugriffsart aufzunehmen ist ein eigener, sichtbarer Verfassungsakt und
+// muss HIER auffallen, nicht erst im Werkzeug.
+test('artenMitZugriffszeit() fuehrt genau die drei Zugriffsarten', () => {
+  // Gleichheit gegen die IMPORTIERTEN Konstanten, nicht bloss die Anzahl: eine
+  // Ersetzung (eine Art raus, eine andere rein) haelt jede Kardinalitaets-
+  // Zusicherung aus und rutschte durch.
+  assert.deepEqual(
+    artenMitZugriffszeit(),
+    new Set([ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]),
+  );
+  assert.equal(artenMitZugriffszeit().size, 3);
+});
+
+test('artenMitZugriffszeit() gibt eine Kopie heraus, keinen Handgriff', () => {
+  // Wer die zurueckgegebene Menge veraendert, veraendert die Verfassung NICHT.
+  // Ohne diese Eigenschaft koennte ein beliebiges requirendes Modul die
+  // fail-closed-Schranke im laufenden Prozess aufziehen.
+  const kopie = artenMitZugriffszeit();
+  kopie.add('eingeschmuggelte_art');
+  assert.equal(artenMitZugriffszeit().size, 3,
+    'die Verfassungs-Menge darf sich von aussen nicht erweitern lassen');
+  assert.ok(!artenMitZugriffszeit().has('eingeschmuggelte_art'));
 });
