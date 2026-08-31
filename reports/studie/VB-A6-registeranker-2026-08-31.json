@@ -1,0 +1,15 @@
+{
+ "auflage": "VB-A6 - _COURT-VIERBANK-OFFEN23-2026-08-30",
+ "mechanismus": "Der Sollwert ist eine QUELL-KONSTANTE im Waechter selbst (REGISTRIERTE_PRAEREG_SHA), keine Manifest-Lesung. Wer Allowlist und Manifest im selben Commit aendert, macht B3' rot. Die Luecke sitzt eine Ebene hoeher: ein Commit, der Allowlist, Manifest UND die Waechter-Konstante zugleich verstellt, macht B3' stumm, solange scripts/studie-rr9-nullpunkt.py in keinem Register-Eintrag steht. Kanzlei-Befund §0.3. Lage jetzt: die Waechter-Datei steht in KEINEM Register-Eintrag, die Luecke ist offen.",
+ "nutzlast": {
+  "registriertePraeregSha": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c",
+  "waechterDatei": "scripts/studie-rr9-nullpunkt.py",
+  "waechterDateiSha256": "74892dd01b0a0b019216cedbd9d183475a72d4fe70c4fe3bf87c39c5908c4338"
+ },
+ "register": "outcome-access-ledger.json",
+ "registerStatus": "gelesen",
+ "registerVerankert": false,
+ "schema": "studie-vb-a6-registeranker/v1",
+ "vollzug": "KEIN eigener Akt, kein zusaetzlicher Eintrag: die Nutzlast wird im naechsten Register-Eintrag jenseits F3 mitgefuehrt. Bis dahin darf B3' NICHT als register-verankert zitiert werden.",
+ "zitierverbot": "OFFEN"
+}
