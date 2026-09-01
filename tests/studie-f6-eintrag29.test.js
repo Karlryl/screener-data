@@ -153,18 +153,27 @@ test('der Trockenlauf schreibt nichts - weder ins Fixture noch ins echte Registe
 });
 
 test('die Probe traegt auf BEIDEN Registerstaenden - mit und ohne eigenen Eintrag', () => {
-  // Positiv gegengeprueft statt behauptet: ein Register, dem der eigene Akt
-  // schon angehaengt ist, muss auf denselben Stand zurueckgeschnitten werden.
-  const d = tmpdir();
+  // Die INVARIANTE ist: beide Registerstaende schneiden auf DENSELBEN Stand
+  // zurueck - den, der auf ERWARTETER_TAIL endet. NICHT: der abgeschnittene
+  // Stand hat die Laenge des rohen Registers. Genau diese zweite, falsche
+  // Zusicherung stand hier und war nur auf main wahr: dort ist das Register
+  // 28 lang UND endet auf dem erwarteten Tail, auf dem Ledger-Zweig ist es 29
+  // lang und endet auf dem eigenen Eintrag. Die Probe, die die
+  // Beide-Staende-Klasse toeten sollte, ist selbst an ihr gestorben.
+  const kuerze = (reg) => {
+    const c = JSON.parse(JSON.stringify(reg));
+    while (c.events.length && c.events.at(-1).eventHash !== K.ERWARTETER_TAIL) c.events.pop();
+    return c.events.map((e) => e.eventHash);
+  };
   const echt = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
   const mitEintrag = JSON.parse(JSON.stringify(echt));
   mitEintrag.events.push({ runId: K.RUN_ID, eventHash: 'x'.repeat(64) });
-  const p = path.join(d, 'mit-eintrag.json');
-  fs.writeFileSync(p, JSON.stringify(mitEintrag, null, 1));
-  const gelesen = JSON.parse(fs.readFileSync(p, 'utf8'));
-  while (gelesen.events.length && gelesen.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
-    gelesen.events.pop();
-  }
-  assert.strictEqual(gelesen.events.at(-1).eventHash, K.ERWARTETER_TAIL);
-  assert.strictEqual(gelesen.events.length, echt.events.length);
+
+  const ohne = kuerze(echt);
+  const mit = kuerze(mitEintrag);
+  assert.deepStrictEqual(mit, ohne,
+    'beide Registerstaende muessen auf denselben Stand zurueckschneiden');
+  assert.strictEqual(ohne.at(-1), K.ERWARTETER_TAIL);
+  // Und der Stand ist nicht leer - ein leeres Ergebnis waere kein Beweis.
+  assert.ok(ohne.length > 20, `nur ${ohne.length} Ereignisse - Anker verfehlt?`);
 });
