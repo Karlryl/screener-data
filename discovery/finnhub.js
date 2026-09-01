@@ -113,6 +113,7 @@ async function fetchFinnhubUniverse() {
       firstExchange = false;
       const data = JSON.parse(body);
       if (!Array.isArray(data)) {
+        result.partial = true;
         console.log(`  [Finnhub] ${exchange}: unexpected response`);
         await sleep(1100);
         continue;
@@ -131,6 +132,7 @@ async function fetchFinnhubUniverse() {
       }
       console.log(`  [Finnhub] ${exchange}: ${data.length} entries, ${added} common stocks added`);
     } catch (e) {
+      result.partial = true;
       console.error(`  [Finnhub] ${exchange} failed: ` + e.message);
       // Tag 217g (audit F-217a-03 HIGH fix): short-circuit after first 401.
       // Without this, Run #107 cascaded 17 identical HTTP 401 errors (one
