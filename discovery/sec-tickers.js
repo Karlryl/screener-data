@@ -107,6 +107,9 @@ async function fetchSecTickers() {
     }
     console.log(`  [SEC] ${result.size} tickers loaded`);
   } catch (e) {
+    // Preserve the existing zero-result outage contract, but expose a loop
+    // failure after accepted rows so downstream cannot treat a prefix as full.
+    if (result.size > 0) result.partial = true;
     console.error('  [SEC] Failed: ' + e.message);
   }
   return result;
