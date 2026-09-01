@@ -103,6 +103,11 @@ function parseCsvLine(line) {
 
 // A well-formed ISIN: 2 country letters + 9 alnum + 1 check digit.
 const ISIN_RE = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
+const OSLO_MARKETS = new Set([
+  'Oslo Børs',
+  'Euronext Expand Oslo',
+  'Euronext Growth Oslo',
+]);
 
 function parseOsloCsv(csvText) {
   const result = new Map();
@@ -126,12 +131,14 @@ function parseOsloCsv(csvText) {
     if (!ISIN_RE.test(isin)) continue; // skips banner/blank/garbage rows
     const symbol = (f[iSymbol] || '').trim().toUpperCase();
     if (!symbol) continue;
+    const market = (f[iMarket] || '').trim();
+    if (!OSLO_MARKETS.has(market)) continue;
     const yahooTicker = symbol + '.OL';
     if (result.has(yahooTicker)) continue;
     result.set(yahooTicker, {
       ticker: yahooTicker,
       name: (f[iName] || '').trim(),
-      exchange: iMarket >= 0 ? (f[iMarket] || 'Oslo Børs').trim() : 'Oslo Børs',
+      exchange: market,
       source: 'oslo',
       country: 'Norway',
     });
@@ -139,11 +146,11 @@ function parseOsloCsv(csvText) {
   return result;
 }
 
-async function fetchOsloUniverse() {
+async function fetchOsloUniverse(fetchCsv = get) {
   const result = new Map();
   try {
     console.log('  [Oslo] Fetching Euronext Oslo register (XOSL,XOAS,MERK)...');
-    const csv = await get(CSV_URL);
+    const csv = await fetchCsv(CSV_URL);
     const parsed = parseOsloCsv(csv);
     for (const [k, v] of parsed) result.set(k, v);
     console.log(`  [Oslo] Total Oslo-listed stocks: ${result.size}`);
