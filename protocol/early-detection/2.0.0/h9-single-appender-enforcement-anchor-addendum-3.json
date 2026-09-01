@@ -1,0 +1,75 @@
+{
+ "schema": "early-detection-governance-rule-addendum/v1",
+ "recordId": "h9-single-appender-enforcement-anchor-g10-2026-09-02",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "mode": "ADDENDUM_NO_BASE_RECORD_EDIT",
+ "status": "BINDING",
+ "recordedAt": "2026-09-02",
+ "frozenNotice": "Dieses Addendum steht NEBEN dem Basis-Datensatz und neben den beiden vorherigen Addenda. Keines davon wird editiert, neu gesiegelt oder aufgehoben (LR-16). Es registriert ausschliesslich den durch die G10-Vollendung veraenderten Modul-SHA neu. Ein Hash-Bump durch Editieren waere die Erosion, die die Kette verhindern soll.",
+ "vorgaengerAddendum": {
+  "recordId": "h9-single-appender-enforcement-anchor-g7-2026-09-01",
+  "dateiSha256Lf": "77dd49eba62dac5f3fbed6f0983e58ef84f0dab5f8303d65e0f540e986bf59c3"
+ },
+ "authority": {
+  "source": "Ledger-Rollover-Urteil 2026-09-01 nebst Orchestrator-Nachtrag",
+  "decision": "LR-16 (Neuregistrierung), ausgeloest durch G10/LR-14",
+  "scope": "Den ausfuehrbaren Anker des Einzel-Appenders nach der G10-Vollendung neu registrieren. G10/LR-14 verlangt EINEN Aufloeser: die geordnete Menge der Registerdateien lebt jetzt als importierte Konstante in lib/studie-verfassung.js, und lib/ledger-single-appender.js tippt sie nicht mehr selbst, sondern importiert sie. Der Modul-SHA des vorherigen Ankers ist dadurch veraltet."
+ },
+ "whatChanged": {
+  "substanz": "KEINE. Das Urteil des Waechters ist unveraendert: geordnete Menge beider Registerdateien, Mitgliedschaft statt Gleichheit, foreignPaths = Diff minus Menge. Geaendert hat sich ausschliesslich die HERKUNFT der Menge - importiert statt getippt.",
+  "warum": "Zwei getippte Kopien derselben Regel driften. Die zweite Kopie stand in scripts/studie-r1-serverzeit.js; eine zurueckgebliebene Kopie faellt ihr Urteil nach der Naht ueber die falsche Datei. Die Regel des Skripts selbst benennt diese Fehlklasse woertlich.",
+  "gegenprobe": "Die Verdikte und die ausgefuehrte Sabotage-Probe sind unveraendert; ihr SHA steht unten und ist derselbe wie im vorherigen Addendum. Waere die Substanz beruehrt worden, muesste die Probe sich mitbewegt haben."
+ },
+ "executableEnforcementAnchor": {
+  "module": {
+   "path": "lib/ledger-single-appender.js",
+   "sha256": "b92bf11034662c2f0f2e7bc3a840bfd09eb47f469c3050f334d4230d812417ff",
+   "sha256Basis": "SHA-256 over the file bytes with CRLF normalised to LF; this path is not pinned to LF by .gitattributes, so a Windows checkout must not decide the verdict.",
+   "entryPoint": "checkSingleAppender({ repoDir, baseRef, headRef, ledgerRel, ledgerRels })",
+   "exports": [
+    "checkSingleAppender",
+    "resolveBaseRef",
+    "SingleAppenderViolation",
+    "LEDGER_REL"
+   ],
+   "registerMengeHerkunft": {
+    "path": "lib/studie-verfassung.js",
+    "export": "REGISTER_RELS",
+    "sha256": "fc9d3a439eb8d098adc7312e23aaaaa14f6a1fe0c66b066740b7640459501bb0",
+    "sha256Basis": "SHA-256 over the file bytes with CRLF normalised to LF.",
+    "bedeutung": "Die geordnete Menge der Registerdateien und der Ketten-Aufloeser registerPfadDerRunId leben hier, an EINER Stelle. Die Reihenfolge ist bedeutungstragend: [0] ist die geschlossene Datei, das letzte Element ist die aktive."
+   },
+   "decisionRule": "Look at what the head added since it forked off base (three-dot range). If none of the ledger files is among those paths there is nothing to judge. If one is, the range must contain ledger files and NOTHING else - the ledger-only mini-PR the base record's branchWorkSequence prescribes.",
+   "rangeWideNotPerCommit": "Deliberate. Splitting the append into its own commit inside a study branch is the obvious evasion; a per-commit check would wave it through. The probe executes that evasion and shows it caught.",
+   "verdicts": [
+    "NO_LEDGER_APPEND",
+    "LEDGER_ONLY_MINI_PR",
+    "throw SingleAppenderViolation"
+   ],
+   "failsClosed": "A guard that cannot run says so. resolveBaseRef rethrows anything that is not a plain 'ref does not exist' miss, and checkSingleAppender refuses a backslash-joined ledgerRel instead of returning a clean verdict for the wrong reason."
+  },
+  "probe": {
+   "path": "tests/studie-register-single-appender-rule.test.js",
+   "sha256": "b2e3f8d904dceebd38ec7c82805bdbfe7ba2b0216d6c3465fcff85bec7a79011",
+   "sha256Basis": "SHA-256 over the file bytes with CRLF normalised to LF.",
+   "unveraendert": "Byte-gleich zum vorherigen Addendum. Die G10-Vollendung hat die Herkunft der Menge geaendert, nicht das Verhalten - und genau das belegt eine Probe, die sich nicht mitbewegen musste.",
+   "kind": "executed sabotage probe on a hermetic temporary git repository; the real ledger on main is never touched and nothing is pushed from the sabotage branch",
+   "executedProbes": [
+    "T172 probe: an executed branch-side ledger append is CAUGHT",
+    "T172 probe: splitting the append into its own commit does not buy an escape",
+    "T172 probe: chain check and git-prefix anchor are BLIND to that same append",
+    "T172 probe: the clean branch and the prescribed mini-PR stay GREEN",
+    "T172 probe: the guard refuses to run blind",
+    "T172: the live checkout carries no branch-side ledger append"
+   ],
+   "bothDirections": "The probe pins red AND green: the violation is caught, and the two legitimate shapes (a branch that never touches the ledger, and the prescribed ledger-only mini-PR) stay green. A guard that only ever fires proves nothing about the route it is supposed to permit."
+  }
+ },
+ "preservation": {
+  "baseRecordEdited": false,
+  "vorherigeAddendaEdited": false,
+  "ledgerChangedByThisRecord": false,
+  "sealChanged": false,
+  "hashManifestChanged": false
+ }
+}
