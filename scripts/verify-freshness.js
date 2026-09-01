@@ -45,7 +45,11 @@ function checkFreshness(dir, now = Date.now()) {
       // 1024 statt 800 (Konvention wie sortByStaleness' Header-Read): asOf
       // folgt ~50 Bytes hinter fetchedAt; ein zu kurzes Fenster wuerde per
       // Fallback konservativ auf fetchedAt zurueckfallen (nie falsch-gruen).
-      const buf = fs.readFileSync(path.join(dir, f), 'utf8').slice(0, 1024);
+      const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+      // A fresh timestamp in the header cannot make a truncated/corrupt
+      // snapshot usable. Validate the whole document before classifying it.
+      JSON.parse(raw);
+      const buf = raw.slice(0, 1024);
       const m = buf.match(ASOF_RE) || buf.match(FETCHED_RE);
       if (!m) { unparseable++; continue; }
       const ts = new Date(m[1]).getTime();

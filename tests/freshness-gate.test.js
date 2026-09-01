@@ -106,5 +106,40 @@ check('_CON.json (Windows-reserved Ticker) zaehlt mit, nicht als Metadatei geski
   assert.deepStrictEqual({ total: r.total, fresh: r.fresh, ok: r.ok }, { total: 1, fresh: 1, ok: true });
 });
 
+// Fall 9: The freshness timestamp lives in the first kilobyte, but structural
+// integrity is a whole-document property. A valid long snapshot remains fresh;
+// truncating only its final byte must make it unparseable instead of false-green.
+function longSnapshot() {
+  return JSON.stringify({
+    identifier: { primary: 'ISIN', value: 'X' },
+    meta: { ticker: 'LONG', asOf: iso(1 * H) },
+    payload: 'x'.repeat(2048),
+  });
+}
+
+check('vollstaendiger langer Snapshot bleibt frisch', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fresh-'));
+  const raw = longSnapshot();
+  assert.ok(raw.length > 1024);
+  fs.writeFileSync(path.join(dir, 'LONG.json'), raw);
+  const r = checkFreshness(dir, NOW);
+  assert.deepStrictEqual(
+    { fresh: r.fresh, unparseable: r.unparseable, ok: r.ok },
+    { fresh: 1, unparseable: 0, ok: true },
+  );
+});
+
+check('erst nach dem ersten Kilobyte abgeschnittener Snapshot ist unparseable', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fresh-'));
+  const raw = longSnapshot();
+  assert.ok(raw.length > 1024);
+  fs.writeFileSync(path.join(dir, 'TRUNCATED.json'), raw.slice(0, -1));
+  const r = checkFreshness(dir, NOW);
+  assert.deepStrictEqual(
+    { fresh: r.fresh, stale: r.stale, unparseable: r.unparseable, ok: r.ok },
+    { fresh: 0, stale: 0, unparseable: 1, ok: false },
+  );
+});
+
 console.log(fail ? `${fail} FAILED` : 'all ok');
 process.exit(fail ? 1 : 0);
