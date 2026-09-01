@@ -54,8 +54,18 @@ function welt(prefix) {
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     fs.copyFileSync(path.join(REPO, ...rel.split('/')), ziel);
   }
+  // Der Fixture-Registerstand wird auf den Stand VOR diesem Akt gekuerzt.
+  // Ein blosses Kopieren waere nur so lange richtig, wie der Eintrag noch
+  // nicht im Baum liegt - sobald er es tut (eigener Ledger-PR, Merge), saehe
+  // das Werkzeug 25 Eintraege und eine belegte runId und braeche zu Recht ab.
+  // Dieselbe Form wie tests/studie-f6-freeze-eintrag24.test.js:74-77.
+  const roh = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+  const i = (roh.events || []).findIndex((e) => e.runId === werkzeug.RUN_ID);
+  const gekuerzt = i === -1 ? roh.events : roh.events.slice(0, i);
   const register = path.join(dir, 'register.json');
-  fs.copyFileSync(LEDGER, register);
+  fs.writeFileSync(register,
+    `${JSON.stringify({ ...roh, events: gekuerzt }, null, 1)}
+`, 'utf8');
   return { dir, wurzel, register };
 }
 
