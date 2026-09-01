@@ -81,6 +81,24 @@ const STALE_WARN_DAYS = 7;
  */
 const darfSchreiben = (anySuccess, existingFetchedAt) => Boolean(anySuccess) || existingFetchedAt != null;
 
+const isValidRefreshRate = (rate) => Number.isFinite(rate) && rate > 0;
+
+/** Split carried-forward rates without logging or mutating the source object. */
+function partitionExistingRates(existing) {
+  const valid = {};
+  const invalid = [];
+  for (const [currency, rate] of Object.entries(existing)) {
+    if (isValidRefreshRate(rate)) valid[currency] = rate;
+    else invalid.push([currency, rate]);
+  }
+  return { valid, invalid };
+}
+
+/** Preserve valid carry-forwards while keeping the USD identity rate authoritative. */
+function mergeExistingRates(validExisting) {
+  return Object.assign({ USD: 1.0 }, validExisting, { USD: 1.0 });
+}
+
 async function main() {
   const outPath = path.join(__dirname, '..', 'fx-rates.json');
   let existing = { USD: 1.0 };
@@ -121,12 +139,11 @@ async function main() {
   // Drop invalid old values here so a fetch failure degrades to "no rate for
   // this currency" (pull-yahoo falls back to its hardcoded table) instead of
   // silently perpetuating a corrupt one.
-  const validExisting = {};
-  for (const [c, r] of Object.entries(existing)) {
-    if (Number.isFinite(r) && r > 0) validExisting[c] = r;
-    else console.error('::error::fx-rates.json had invalid existing rate for ' + c + ' (' + r + ') — dropping, not carrying forward');
+  const { valid: validExisting, invalid: invalidExisting } = partitionExistingRates(existing);
+  for (const [c, r] of invalidExisting) {
+    console.error('::error::fx-rates.json had invalid existing rate for ' + c + ' (' + r + ') — dropping, not carrying forward');
   }
-  const rates = Object.assign({ USD: 1.0 }, validExisting);
+  const rates = mergeExistingRates(validExisting);
   const currencyMeta = Object.assign({}, existingMeta);
   const failed = [];
   const nowIso = new Date().toISOString();
@@ -137,7 +154,7 @@ async function main() {
     if (!currencyMeta[c]) currencyMeta[c] = {};
     currencyMeta[c].lastAttemptAt = nowIso;
 
-    if (rate != null && rate > 0) {
+    if (isValidRefreshRate(rate)) {
       rates[c] = rate;
       currencyMeta[c].lastSuccessAt = nowIso;
       console.log('  ' + c + 'USD = ' + rate.toFixed(5));
@@ -196,4 +213,10 @@ async function main() {
 if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
-module.exports = { fetchFXRate, darfSchreiben };
+module.exports = {
+  fetchFXRate,
+  darfSchreiben,
+  isValidRefreshRate,
+  partitionExistingRates,
+  mergeExistingRates,
+};

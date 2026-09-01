@@ -117,12 +117,70 @@ test('Wiring: ungueltiger Kurs faellt an ALLEN drei Wegen closed (ausgefuehrt, n
 });
 
 // ── refresh-fx.js: darf ungueltige Altwerte nicht ueber Fetch-Fehler hinweg tragen ──
+const {
+  isValidRefreshRate,
+  partitionExistingRates,
+  mergeExistingRates,
+} = require('../scripts/refresh-fx.js');
 const REFRESH_SRC = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'refresh-fx.js'), 'utf8');
-test('Wiring: refresh-fx.js validiert existing-Rates vor dem Merge (validExisting)', () => {
-  assert.match(REFRESH_SRC, /Number\.isFinite\(r\) && r > 0/,
-    'geladene Altwerte muessen vor Weitergabe geprueft werden');
-  assert.match(REFRESH_SRC, /Object\.assign\(\{ USD: 1\.0 \}, validExisting\)/,
-    'rates muss aus validExisting gebaut werden, nicht aus dem rohen existing');
+test('refresh-fx.js filtert bestehende Raten ausgefuehrt statt per Quelltext-RegEx', () => {
+  const existing = {
+    USD: 1,
+    EUR: 1.08,
+    JPY: 0.0067,
+    ZERO: 0,
+    NEGATIVE: -0.5,
+    NAN: NaN,
+    POSITIVE_INFINITY: Infinity,
+    NEGATIVE_INFINITY: -Infinity,
+    NUMERIC_STRING: '1.08',
+    NULL: null,
+    BOOLEAN: true,
+    OBJECT: { value: 1 },
+    ARRAY: [1],
+  };
+
+  const result = partitionExistingRates(existing);
+  assert.deepEqual(result.valid, { USD: 1, EUR: 1.08, JPY: 0.0067 });
+  assert.deepEqual(result.invalid, [
+    ['ZERO', 0],
+    ['NEGATIVE', -0.5],
+    ['NAN', NaN],
+    ['POSITIVE_INFINITY', Infinity],
+    ['NEGATIVE_INFINITY', -Infinity],
+    ['NUMERIC_STRING', '1.08'],
+    ['NULL', null],
+    ['BOOLEAN', true],
+    ['OBJECT', { value: 1 }],
+    ['ARRAY', [1]],
+  ]);
+  assert.deepEqual(existing.OBJECT, { value: 1 }, 'die reine Partition mutiert keine Objektwerte');
+  assert.deepEqual(existing.ARRAY, [1], 'die reine Partition mutiert keine Arraywerte');
+});
+
+test('refresh-fx.js nimmt auch FRISCHE Kurse nur als positive endliche Zahlen an', () => {
+  for (const good of [1, 1.08, 0.0067]) assert.equal(isValidRefreshRate(good), true);
+  for (const bad of [0, -0.5, NaN, Infinity, -Infinity, '1.08', null, undefined, true, {}]) {
+    assert.equal(isValidRefreshRate(bad), false, 'ungueltiger frischer Kurs: ' + String(bad));
+  }
+});
+
+test('refresh-fx.js laesst einen Altwert nie die USD-Identitaet ueberschreiben', () => {
+  const validExisting = { USD: 999, EUR: 1.08, JPY: 0.0067 };
+  assert.deepEqual(mergeExistingRates(validExisting), { USD: 1, EUR: 1.08, JPY: 0.0067 });
+  assert.deepEqual(Object.keys(mergeExistingRates({ EUR: 1.08 })), ['USD', 'EUR'],
+    'USD bleibt wie im bisherigen Ausgabeformat der erste Schluessel');
+  assert.deepEqual(validExisting, { USD: 999, EUR: 1.08, JPY: 0.0067 }, 'der Merge mutiert den Altbestand nicht');
+});
+
+test('Wiring: main() nutzt die getesteten Helfer fuer Altbestand und frische Kurse', () => {
+  assert.match(REFRESH_SRC,
+    /const \{ valid: validExisting, invalid: invalidExisting \} = partitionExistingRates\(existing\);/,
+    'main muss die getestete Partition auf die geladenen Altwerte anwenden');
+  assert.match(REFRESH_SRC, /const rates = mergeExistingRates\(validExisting\);/,
+    'main muss den getesteten Identitaets-Merge statt raw existing verwenden');
+  assert.match(REFRESH_SRC, /if \(isValidRefreshRate\(rate\)\) \{/,
+    'frisch geholte Kurse muessen dasselbe getestete Praedikat passieren');
 });
 
 console.log(`\nv-sk-001-fx-rate-validation.test.js: ${pass} ok, ${fail} fail`);
