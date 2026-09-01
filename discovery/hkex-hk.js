@@ -22,7 +22,8 @@
  * (SHK PPT-R, SENSETIME-WR, ...) which Yahoo does not list — dropped.
  *
  * Returns Map<yahooTicker, {ticker, name, exchange, source, country, isin}>.
- * NEVER throws — on any error returns an empty Map (fail-silent).
+ * NEVER throws - on a source failure returns an empty Map with `partial=true`
+ * so the discovery consumer can distinguish source loss from a healthy result.
  */
 'use strict';
 const https = require('https');
@@ -112,11 +113,20 @@ function parseRow(rowXml) {
 function parseSheet(sheetXml) {
   const result = new Map();
   const rows = String(sheetXml).split('<x:row ').slice(1);
+  if (rows.length === 0) {
+    throw new Error('sheet1.xml contains no x:row records');
+  }
+  let sawRequiredColumns = false;
   for (const r of rows) {
     const c = parseRow(r);
+    if (Object.hasOwn(c, 'A') && Object.hasOwn(c, 'B') && Object.hasOwn(c, 'C')) {
+      sawRequiredColumns = true;
+    }
     if (c['C'] !== 'Equity') continue;
-    const num = parseInt(c['A'], 10);
-    if (!Number.isFinite(num) || num < 1 || num > 9999) continue;
+    const code = String(c['A'] || '').trim();
+    if (!/^\d+$/.test(code)) continue;
+    const num = Number(code);
+    if (!Number.isSafeInteger(num) || num < 1 || num > 9999) continue;
     const yahoo = String(num).padStart(4, '0') + '.HK';
     if (result.has(yahoo)) continue;
     const isin = (c['F'] || '').trim();
@@ -124,30 +134,40 @@ function parseSheet(sheetXml) {
     if (isin) entry.isin = isin;
     result.set(yahoo, entry);
   }
+  if (!sawRequiredColumns) {
+    throw new Error('sheet1.xml contains no row with required A/B/C columns');
+  }
   return result;
 }
 
-async function fetchHkexUniverse() {
+function partialResult() {
   const result = new Map();
+  result.partial = true;
+  return result;
+}
+
+async function fetchHkexUniverse(options = {}) {
   try {
+    const getBufferFn = (options && options.getBufferFn) || getBuffer;
+    const extractZipEntryFn = (options && options.extractZipEntryFn) || extractZipEntry;
     console.log('  [HKEX] Fetching ListOfSecurities.xlsx...');
-    const xlsx = await getBuffer(XLSX_URL);
+    const xlsx = await getBufferFn(XLSX_URL);
     if (!xlsx || xlsx.length < 4 || xlsx.readUInt32LE(0) !== 0x04034b50) {
-      console.error('  [HKEX] not a ZIP/xlsx payload — skipping');
-      return result;
+      console.error('  [HKEX] not a ZIP/xlsx payload - skipping');
+      return partialResult();
     }
-    const sheet = extractZipEntry(xlsx, 'xl/worksheets/sheet1.xml');
+    const sheet = extractZipEntryFn(xlsx, 'xl/worksheets/sheet1.xml');
     if (!sheet) {
-      console.error('  [HKEX] sheet1.xml not found in xlsx — skipping');
-      return result;
+      console.error('  [HKEX] sheet1.xml not found in xlsx - skipping');
+      return partialResult();
     }
-    for (const [ticker, entry] of parseSheet(sheet.toString('utf8'))) result.set(ticker, entry);
+    const result = parseSheet(sheet.toString('utf8'));
     console.log(`  [HKEX] ${result.size} equity tickers`);
+    return result;
   } catch (e) {
     console.error('  [HKEX] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    return partialResult();
   }
-  return result;
 }
 
 module.exports = { fetchHkexUniverse, parseSheet };
