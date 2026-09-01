@@ -794,23 +794,46 @@ def lade_zaehlwerk(pfad):
     return modul, sha256_datei(pfad)
 
 
-def ruest_zaehlwerk(modul, arbeit_pfad):
+def _pfadgleich(a, b):
+    """Zwei Pfadangaben auf dieselbe Stelle. Gross-/Kleinschreibung und
+    Trennzeichen sind unter Windows nicht bedeutungstragend, der Pfad selbst
+    schon."""
+    norm = lambda p: os.path.normcase(os.path.abspath(str(p)))
+    return norm(a) == norm(b)
+
+
+def ruest_zaehlwerk(modul, arbeit_pfad, freigabe=None):
     """Der Arbeitspfad geht VOR der ersten Zaehlung an das Zaehlwerk.
 
     Der Vertrag `zaehle(panel_pfad, variante, arm)` ist eingefroren (F6-C1) und
     traegt den Arbeitspfad deshalb nicht. Ein Zaehlwerk, das eine Arbeitsdatei
     braucht, fuehrt dafuer `setze_arbeitspfad`; ein Fixture-Zaehlwerk ohne
     eigene E/A fuehrt sie nicht und braucht dann auch keinen Pfad.
+
+    RANGFOLGE (Ruling 2): nennt die FREIGABE einen Arbeitspfad, ist er
+    massgeblich - ein davon abweichendes --arbeit ist dann ein ABBRUCH, kein
+    Vorrang. Nennt sie keinen, gilt --arbeit, und ohne --arbeit die benannte
+    Vorgabe des Zaehlwerks. Der Pfad wird nie zur Laufzeit erfunden
+    (W-B / KZ-3).
     """
     if not hasattr(modul, "setze_arbeitspfad"):
         return None
-    if not arbeit_pfad:
+    angemeldet = (freigabe or {}).get("arbeitspfad")
+    if angemeldet and arbeit_pfad and not _pfadgleich(angemeldet, arbeit_pfad):
         raise LaufAbbruch(
-            "Das Zaehlwerk verlangt einen Arbeitspfad (setze_arbeitspfad), der "
-            "Lauf hat aber kein --arbeit bekommen. Der Arbeitspfad wird VOR "
-            "der Freigabe geprueft und im Eintrag genannt, nie zur Laufzeit "
-            "erfunden (W-B / KZ-3).")
-    return modul.setze_arbeitspfad(arbeit_pfad)
+            "ARBEITSPFAD WEICHT VON DER FREIGABE AB: angemeldet ist "
+            + repr(angemeldet) + ", uebergeben wurde " + repr(arbeit_pfad)
+            + ". Der im Eintrag genannte Pfad ist massgeblich; ein anderer "
+            "Pfad ist ein anderer Lauf.")
+    gewaehlt = angemeldet or arbeit_pfad or getattr(
+        modul, "ARBEITSPFAD_VORGABE", None)
+    if not gewaehlt:
+        raise LaufAbbruch(
+            "Das Zaehlwerk verlangt einen Arbeitspfad (setze_arbeitspfad), "
+            "fuehrt aber keine ARBEITSPFAD_VORGABE, und der Lauf hat kein "
+            "--arbeit bekommen. Der Arbeitspfad wird VOR der Freigabe geprueft "
+            "und im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
+    return modul.setze_arbeitspfad(gewaehlt)
 
 
 def _ganzzahl(x):
@@ -1294,7 +1317,7 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
 
     # ── PHASE 2 ───────────────────────────────────────────────────────────
     zaehlwerk, zaehlwerk_sha = lade_zaehlwerk(zaehlwerk_pfad)
-    geruesteter_arbeitspfad = ruest_zaehlwerk(zaehlwerk, arbeit_pfad)
+    geruesteter_arbeitspfad = ruest_zaehlwerk(zaehlwerk, arbeit_pfad, freigabe)
     if not panel_pfad or not os.path.isfile(panel_pfad):
         raise LaufAbbruch("Das Panel fehlt: " + str(panel_pfad))
     gelesene.append(panel_pfad)
@@ -1399,6 +1422,7 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         "stempel": {
             "abstandZu329Von365": STEMPEL_329,
             "vorabDeterminiertheit": VORAB_DETERMINIERTHEIT,
+            "identitaetA16": getattr(zaehlwerk, "IDENTITAET_A16", None),
             "kriteriumDifferenz": {
                 "schluessel": "differenz_punkte",
                 "maxDifferenzPunkte": MAX_DIFFERENZ_PUNKTE,
