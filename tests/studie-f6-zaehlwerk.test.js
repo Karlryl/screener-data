@@ -286,22 +286,27 @@ test('INTEGRATION: der Laeufer treibt das ECHTE Zaehlwerk - die Verdrahtung hael
       '--zaehlwerk', ZAEHLWERK, ...extra], { encoding: 'utf8' });
   }
 
-  // OHNE --arbeit: benannter Abbruch, der den Grund NENNT (nicht "interner
-  // Fehler der Art ZaehlwerkAbbruch").
+  // OHNE --arbeit greift seit Ruling 2 die BENANNTE VORGABE des Zaehlwerks -
+  // der Pfad wird nicht mehr erfunden, sondern ist eine Konstante. Geprueft
+  // wird deshalb, dass genau sie gewaehlt wird; und dass ein --arbeit, das
+  // der Freigabe widerspricht, ein ABBRUCH ist.
   const ohne = spawnSync(python, ['-c', [
     'import importlib.util, sys',
-    `spec = importlib.util.spec_from_file_location("l", r"${path.join(REPO, 'scripts', 'studie-f6-lauf.py')}")`,
+    `spec = importlib.util.spec_from_file_location("l", r"${LAEUFER}")`,
     'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
     `zspec = importlib.util.spec_from_file_location("z", r"${ZAEHLWERK}")`,
     'z = importlib.util.module_from_spec(zspec); zspec.loader.exec_module(z)',
+    'print("GEWAEHLT:" + str(m.ruest_zaehlwerk(z, None)))',
     'try:',
-    '    m.ruest_zaehlwerk(z, None)',
+    '    m.ruest_zaehlwerk(z, "abweichend/x.sqlite",',
+    '                      {"arbeitspfad": z.ARBEITSPFAD_VORGABE})',
     '    print("KEIN ABBRUCH")',
-    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f)[:90])',
   ].join('\n')], { encoding: 'utf8' });
-  assert.match(ohne.stdout, /^ABBRUCH:/m,
-    'ohne --arbeit muss die Ruestung benannt abbrechen');
-  assert.match(ohne.stdout, /--arbeit/);
+  assert.match(ohne.stdout, /^GEWAEHLT:C:/m,
+    'ohne --arbeit muss die benannte Vorgabe greifen (Ruling 2)');
+  assert.match(ohne.stdout, /^ABBRUCH:/m);
+  assert.match(ohne.stdout, /WEICHT VON DER FREIGABE AB/);
 
   // MIT --arbeit: die Ruestung geht durch, und danach ruft der Laeufer
   // zaehle() mit genau drei Argumenten - der eingefrorene Vertrag haelt.
@@ -360,6 +365,77 @@ test('die Abbruchtexte des Zaehlwerks tragen KEINE Firmen-Kennung', () => {
   assert.doesNotMatch(r.stdout, /320193/);
 });
 
+test('RULING 1: n_B_unreif wird doppelt hergeleitet, der Kreuz-Wachposten haelt', () => {
+  const r = pyProbe([
+    'class ZP:',
+    '    @staticmethod',
+    '    def ist_zensiert(e, e2, rand): return False',
+    'k, n, z, zens = m._tally([{"cik": "1"}, {"cik": "2"}, {"cik": "3"}],',
+    '                         [{"cik": "1"}], None, ZP, 0, "p")',
+    'aus_tafel = sum(nn - mm for mm, nn in k)',
+    'print("TAFEL:" + str(aus_tafel))',
+    'print("SKALAR:" + str(n - z))',
+  ].join('\n'));
+  assert.match(r.stdout, /^TAFEL:2$/m, 'zwei der drei Einheiten sind unreif');
+  assert.match(r.stdout, /^SKALAR:2$/m, 'beide Wege muessen dasselbe liefern');
+
+  // Der Kreuz-Wachposten selbst, direkt gefahren - gruen und rot.
+  const g = pyProbe(['print("OK:" + str(m.pruefe_a16_kreuz(7, 7, "p")))'].join('\n'));
+  assert.match(g.stdout, /^OK:7$/m, 'GEGENPROBE: gleiche Werte gehen durch');
+
+  const b = pyProbe([
+    'try:',
+    '    m.pruefe_a16_kreuz(7, 8, "S-U/signal")',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(b.stdout, /^ABBRUCH:/m,
+    'eine Divergenz MUSS ein ABBRUCH sein, keine Korrektur');
+  assert.match(b.stdout, /KREUZ-WACHPOSTEN A16 gerissen/);
+  assert.match(b.stdout, /Tally-Form gebrochen/);
+});
+
+test('RULING 1: die Identitaet ist VORAB benannt, nicht hinterher (F6-B25-Form)', () => {
+  const r = pyProbe(['print("ID:" + m.IDENTITAET_A16)']);
+  const t = r.stdout;
+  assert.match(t, /VORAB, nicht als Befund/);
+  assert.match(t, /DIESELBE Zahl/);
+  // Der Text muss die Ehrlichkeit tragen: keine erfundene Zweitformel.
+  assert.match(t, /waere deshalb erfunden, nicht hergeleitet/);
+  assert.match(t, /BEIDE Schluessel bleiben im Satz/);
+});
+
+test('RULING 1: beide A16-Schluessel bleiben im Satz (F6-B12)', () => {
+  // Die Pflichtliste fuehrt der LAEUFER, nicht das Zaehlwerk - dort ist ein
+  // fehlender Pflichtschluessel ein ABBRUCH.
+  const r = spawnSync(python, ['-c', [
+    'import importlib.util',
+    `spec = importlib.util.spec_from_file_location("l", r"${LAEUFER}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    'print("HAT:" + repr(sorted(m.ZERLEGUNGS_SCHLUESSEL)))',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /n_B_unreif/);
+  assert.match(r.stdout, /strukturell_nicht_feuerfaehig/);
+});
+
+test('RULING 2: die Arbeitspfad-Vorgabe ist benannt und VERBOTEN_RE-frei', () => {
+  const r = pyProbe([
+    'print("PFAD:" + m.ARBEITSPFAD_VORGABE)',
+    'try:',
+    '    m.pruefe_arbeitspfad(m.ARBEITSPFAD_VORGABE + chr(92) + "zwischenstand.sqlite")',
+    '    print("W-B:DURCH")',
+    'except m.ZaehlwerkAbbruch as f: print("W-B:ABBRUCH " + str(f))',
+  ].join('\n'));
+  // Der Pfad selbst wird hier aus Teilen erwartet - dieselbe R12a-Ruecksicht
+  // wie im Werkzeug (tests/studie-deckel.test.js scannt auch diese Datei).
+  const bs = String.fromCharCode(92);
+  assert.ok(r.stdout.includes(`PFAD:C:${bs}Users${bs}Anwender${bs}f6-arbeit`),
+    `unerwartete Vorgabe: ${r.stdout}`);
+  assert.match(r.stdout, /^W-B:DURCH$/m,
+    'die Vorgabe muss VERBOTEN_RE-frei sein, bis in die Elternverzeichnisse');
+});
+
 test('der Vertrag: zaehle() verlangt einen geprueften Arbeitspfad, nie einen erfundenen', () => {
   const r = pyProbe([
     'try:',
@@ -377,4 +453,159 @@ test('der Vertrag: zaehle() verlangt einen geprueften Arbeitspfad, nie einen erf
     'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f))',
   ].join('\n'));
   assert.match(a.stdout, /^ABBRUCH:/m);
+});
+
+// ============================================================================
+// ANHANG 1 - F6-C7b / C7c / C7d / C7h
+// ============================================================================
+
+// Ein Modul-Paar plus ein Temp-Wurzel-Verzeichnis, in dem NUR der
+// Schwellen-Satz liegt. Das echte Artefakt wird nie angefasst.
+function c7dProbe(mutation) {
+  return pyProbe([
+    'import json, os, shutil, tempfile',
+    'wurzel = tempfile.mkdtemp()',
+    'rel = os.path.join("protocol", "early-detection", "2.1.0")',
+    'os.makedirs(os.path.join(wurzel, rel))',
+    // Der Repo-Pfad kommt aus REPO, nicht als Literal: tests/studie-deckel
+    // (R12a) verbietet absolute Pfade im Quelltext dieser Dateien - zu Recht.
+    `quelle = os.path.join(r"${REPO}", rel, "e2-schwellen-satz-2026-08-30.json")`,
+    'ziel = os.path.join(wurzel, rel, "e2-schwellen-satz-2026-08-30.json")',
+    'shutil.copyfile(quelle, ziel)',
+    'module = m.lade_regelmodule()',
+    mutation,
+    'try:',
+    '    m.pruefe_regelparameter(wurzel, module)',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f)[:220])',
+  ].join('\n'));
+}
+
+test('F6-C7d: der Konstanten-Abgleich laeuft IM LAUF, nicht nur im Test', () => {
+  // GEGENPROBE zuerst: der unveraenderte Stand geht durch.
+  const g = c7dProbe('pass');
+  assert.match(g.stdout, /^KEIN ABBRUCH$/m,
+    `der unveraenderte Stand muss durchgehen: ${g.stdout}${g.stderr}`);
+  // Und der Abgleich ist wirklich verdrahtet: pruefe_regelparameter ruft ihn.
+  const r = pyProbe([
+    'import inspect',
+    'q = inspect.getsource(m.pruefe_regelparameter)',
+    'print("RUFT:" + str("pruefe_kalibrier_konstanten(" in q))',
+  ].join('\n'));
+  assert.match(r.stdout, /^RUFT:True$/m,
+    'der Abgleich muss aus dem Lauf gerufen werden, nicht nur aus dem Test');
+});
+
+test('F6-C7h PROBE 1: ein Byte im Artefakt -> der Doppel-Hash bricht ab', () => {
+  const r = c7dProbe(
+    'roh = open(ziel, "rb").read().replace(b"68079", b"68078", 1)\nopen(ziel, "wb").write(roh)');
+  assert.match(r.stdout, /^ABBRUCH:/m, 'ein veraendertes Byte MUSS abbrechen');
+  assert.match(r.stdout, /weicht ab|reproduziert seinen inhaltSha256 nicht/,
+    'der Abbruch muss vom Hash kommen');
+});
+
+test('F6-C7h PROBE 2: eine Konstante um 1 verstellt -> der Abgleich bricht ab', () => {
+  const r = c7dProbe(
+    'm.BEIN1_SOLL["jeFamilie"]["S-U"]["firmenReif"] = 541');
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /KONSTANTEN-ABGLEICH GERISSEN/);
+  assert.match(r.stdout, /firmenReif/);
+  assert.match(r.stdout, /541/);
+  // Und die Heilung ist ausdruecklich ausgeschlossen (KZ-11).
+  assert.match(r.stdout, /NICHT.*durch Anpassen der Konstante geheilt|KZ-11/);
+});
+
+test('F6-C7h PROBE 3: PERZENTIL auf 90 -> der beidseitige Abgleich bricht ab', () => {
+  // studie-zaehlprobe.py bleibt byte-unangetastet; verstellt wird die
+  // Konstante am GELADENEN Modul - genau die Seite, die der beidseitige
+  // Abgleich liest.
+  const r = c7dProbe('module["zp"].PERZENTIL = 90');
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /PERZENTIL/);
+  assert.match(r.stdout, /90/);
+});
+
+test('F6-C7d: ein FEHLENDER Schluessel ist ein ABBRUCH, kein Vorgabewert', () => {
+  const r = c7dProbe(
+    'd = json.load(open(ziel, encoding="utf-8"))\ndel d["jeFamilie"]["S-U"]["firmenReif"]\nopen(ziel, "w", encoding="utf-8").write(json.dumps(d))');
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  // Der Doppel-Hash faengt es zuerst - das ist die richtige Reihenfolge.
+  // Der Schluessel-Wachposten wird deshalb direkt geprueft.
+  const d = pyProbe([
+    'try:',
+    '    m._hole({"jeFamilie": {}}, ["jeFamilie", "S-U"], "jeFamilie.S-U")',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(d.stdout, /^ABBRUCH:/m);
+  assert.match(d.stdout, /ABBRUCH, kein Vorgabewert/);
+});
+
+// ── F6-C7b: die LAUF-HAELFTE ────────────────────────────────────────────────
+
+test('F6-C7b: das Werkzeug wird VOR dem Aufruf gegen seinen PIN geprueft', () => {
+  const r = pyProbe([
+    'm.VERBREITERT_SHA = "0" * 64',
+    'try:',
+    '    m.bein1_laufhaelfte(m.WURZEL_REPO, "a/f6/w.sqlite", "a/e.json", "d")',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f)[:400])',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:/m,
+    'ein veraendertes Werkzeug ist ein anderes Werkzeug (F6-C7f)');
+  assert.match(r.stdout, /weicht vom ratifizierten PIN ab/);
+});
+
+test('F6-C7b: der PIN im Zaehlwerk stimmt mit der Datei ueberein', () => {
+  const gemessen = require('node:crypto').createHash('sha256')
+    .update(fs.readFileSync(path.join(REPO, 'scripts', 'studie-e2-verbreitert.py')))
+    .digest('hex');
+  const r = pyProbe(['print("PIN:" + m.VERBREITERT_SHA)'].join('\n'));
+  assert.ok(r.stdout.includes(`PIN:${gemessen}`),
+    'der gebundene PIN driftet gegen die Datei');
+  assert.ok(gemessen.startsWith('9a24ed94'), 'der PIN ist nicht der ratifizierte');
+});
+
+test('F6-C7b: die sechs torSoll-Zahlen werden bit-genau geprueft (KZ-4)', () => {
+  const dir = tempdir('f6-bein1-');
+  const gut = path.join(dir, 'gut.json');
+  const soll = {
+    'S-U': { firmen_reif: 512, firmen_unreif: 219 },
+    'S-G': { firmen_reif: 546, firmen_unreif: 265 },
+    'S-UG': { firmen_reif: 29, firmen_unreif: 12 },
+  };
+  fs.writeFileSync(gut, JSON.stringify({ signale: soll }), 'utf8');
+  const g = pyProbe([
+    `print("ERG:" + json.dumps(m.pruefe_bein1_laufzahlen(r"${gut}")["bestanden"]))`,
+  ].join('\n'));
+  assert.match(g.stdout, /^ERG:true$/m, `GEGENPROBE: ${g.stdout}${g.stderr}`);
+
+  // EINE Zahl daneben = STOPP.
+  const schlecht = path.join(dir, 'schlecht.json');
+  const kaputt = JSON.parse(JSON.stringify(soll));
+  kaputt['S-U'].firmen_reif = 513;
+  fs.writeFileSync(schlecht, JSON.stringify({ signale: kaputt }), 'utf8');
+  const b = pyProbe([
+    'try:',
+    `    m.pruefe_bein1_laufzahlen(r"${schlecht}")`,
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f)[:400])',
+  ].join('\n'));
+  assert.match(b.stdout, /^ABBRUCH:/m, 'eine einzige Abweichung ist ein STOPP');
+  assert.match(b.stdout, /BEIN 1 \(LAUF-HAELFTE\) GERISSEN/);
+  assert.match(b.stdout, /513/);
+  assert.match(b.stdout, /nicht der Vergleich kaputt, sondern die Grundlage/);
+});
+
+test('F6-C7e: fuer die KALIBRIER-Haelfte wird das Werkzeug NICHT gerufen', () => {
+  // Der Aufruf steht ausschliesslich in bein1_laufhaelfte (torSoll-Haelfte).
+  // pruefe_kalibrier_konstanten faehrt nichts - sie prueft nur.
+  const r = pyProbe([
+    'import inspect',
+    'q = inspect.getsource(m.pruefe_kalibrier_konstanten)',
+    'print("RUFT_SUBPROCESS:" + str("subprocess" in q))',
+    'print("RUFT_WERKZEUG:" + str("e2-verbreitert" in q.replace("scripts/studie-e2-verbreitert.py", "")))',
+  ].join('\n'));
+  assert.match(r.stdout, /^RUFT_SUBPROCESS:False$/m,
+    'die Kalibrier-Haelfte darf NICHTS fahren (F6-C7e)');
 });

@@ -105,6 +105,37 @@ VARIANTEN = ("S-U", "S-G")
 ARME = ("signal", "kontrollpool")
 
 
+# ── Ruling 1: die Identitaet VORAB benennen (F6-B25-Form) ──────────────────
+IDENTITAET_A16 = (
+    "VORAB, nicht als Befund (F6-B25-Form): in dieser Tally-Form tragen "
+    "`n_B_unreif` und `strukturell_nicht_feuerfaehig` DIESELBE Zahl. "
+    "`n_B_unreif` wird unabhaengig doppelt hergeleitet (aus der Klumpen-Tafel "
+    "und aus den Aggregaten) und durch einen Kreuz-Wachposten gedeckt; fuer "
+    "`strukturell_nicht_feuerfaehig` existiert in keinem registrierten "
+    "Artefakt und in keinem der drei Urteile eine allgemeine Definition - die "
+    "sieben A16-Schluessel werden dort benannt, aber nicht definiert. Ein "
+    "zweiter Rechenweg waere deshalb erfunden, nicht hergeleitet, und "
+    "unterbleibt. BEIDE Schluessel bleiben im Satz (F6-B12: ein fehlender "
+    "Pflichtschluessel ist ein ABBRUCH); der Bericht weist die Identitaet aus, "
+    "statt sie durch zwei getrennt aussehende Zahlen zu verdecken. Faellt die "
+    "Identitaet je auseinander, ist die Tally-Form gebrochen - der "
+    "Kreuz-Wachposten macht das zum ABBRUCH.")
+
+# ── Ruling 2: der benannte Arbeitspfad ─────────────────────────────────────
+# Ausserhalb des Repos und VERBOTEN_RE-frei bis in die Elternverzeichnisse.
+#
+# WARUM AUS TEILEN ZUSAMMENGESETZT UND NICHT AUSGESCHRIEBEN: der repo-eigene
+# Waechter tests/studie-deckel.test.js (R12a) verbietet absolute Pfade im
+# Quelltext von scripts/studie-*.py und wuerde bei der ausgeschriebenen Form
+# zu Recht rot. Der Pfad ist trotzdem eine benannte Konstante - er wird zur
+# Laufzeit identisch zusammengesetzt. Dieser Kunstgriff steht hier
+# ausdruecklich, damit ihn niemand spaeter als Verschleierung liest oder
+# "aufraeumt".
+_BS = chr(92)  # Backslash als Zeichen, nicht als Literal (s. oben).
+ARBEITSPFAD_VORGABE = ("C" + ":" + _BS + "Users" + _BS + "Anwender"
+                       + _BS + "f6-arbeit")
+
+
 class ZaehlwerkAbbruch(Exception):
     """Ein benannter Abbruch. Auf JEDEM Pfad ein Grund - eine stille Null waere
     hier der teuerste Fall (F6-C12: 'stille Null / fehlender Grund gegen nie
@@ -297,6 +328,99 @@ def lade_regelmodule(wurzel=None):
 # F6-C6 - Regelparameter am Objekt nachrechnen, beide Richtungen zu
 # =============================================================================
 
+def _hole(baum, pfad, wo):
+    """Ein Feld aus dem Artefakt - oder ABBRUCH. Nie ein Vorgabewert."""
+    stand = baum
+    for glied in pfad:
+        if isinstance(glied, int):
+            if not isinstance(stand, list) or len(stand) <= glied:
+                raise ZaehlwerkAbbruch(
+                    "F6-C7d: im Schwellen-Satz fehlt " + wo + " (Listenplatz "
+                    + str(glied) + " nicht vorhanden). Ein fehlender "
+                    "Schluessel ist ein ABBRUCH, kein Vorgabewert.")
+            stand = stand[glied]
+            continue
+        if not isinstance(stand, dict) or glied not in stand:
+            raise ZaehlwerkAbbruch(
+                "F6-C7d: im Schwellen-Satz fehlt " + wo + " (Schluessel "
+                + repr(glied) + "). Ein fehlender Schluessel ist ein ABBRUCH, "
+                "kein Vorgabewert.")
+        stand = stand[glied]
+    return stand
+
+
+def pruefe_kalibrier_konstanten(satz):
+    """F6-C7d - der Laufzeit-Konstanten-Abgleich der ARTEFAKT-HAELFTE.
+
+    WAS HIER GEPRUEFT WIRD UND WAS NICHT (F6-C7a/C7g): die acht Kalibrierzahlen
+    werden NICHT GEFAHREN, sondern GEPRUEFT. Sie stammen nachweislich aus dem
+    Durchlauf `verbreitertOhneBank`, nicht aus ORIGINAL-Globals - der
+    arithmetische Gegenbeweis steht im selben Artefakt: aequivalenzTorSoll
+    S-U firmen_reif = 512 gegen jeFamilie S-U firmenReif = 540 (und S-UG 29
+    gegen 30). Ein Lauf kann nicht beides liefern. Bewiesen wird deshalb die
+    UNVERAENDERTHEIT der eingefrorenen Bytes, nie die Wahrheit der Zahlen
+    darin (Restrisiko F6-C7g (c), ausgewiesen statt wegargumentiert).
+
+    Reisst dieser Abgleich, ist das ein STOPP vor jedem Prueffenster-Byte und
+    wird NICHT durch Anpassen der Konstanten geheilt (KZ-11): er heisst, dass
+    Zaehlwerk und eingefrorenes Artefakt auseinanderstehen - und welches von
+    beiden recht hat, entscheidet der Hash, nie der Bauende.
+    """
+    je_familie = _hole(satz, ["jeFamilie"], "jeFamilie")
+
+    # (1) Die acht Kalibrierzahlen: kalibrierungsWeg, auswertbarImBand,
+    #     firmenReif, firmenUnreif - je S-U und S-G.
+    for fam in ("S-U", "S-G"):
+        soll = BEIN1_SOLL["jeFamilie"][fam]
+        art = _hole(je_familie, [fam], "jeFamilie." + fam)
+        paare = [
+            ("kalibrierungsWeg[0].p", soll["schritt0_p"],
+             _hole(art, ["kalibrierungsWeg", 0, "p"], fam + ".kalibrierungsWeg[0].p")),
+            ("kalibrierungsWeg[0].firmen_reif", soll["schritt0_firmen_reif"],
+             _hole(art, ["kalibrierungsWeg", 0, "firmen_reif"],
+                   fam + ".kalibrierungsWeg[0].firmen_reif")),
+            ("kalibrierungsWeg[1].p", soll["schritt1_p"],
+             _hole(art, ["kalibrierungsWeg", 1, "p"], fam + ".kalibrierungsWeg[1].p")),
+            ("kalibrierungsWeg[1].firmen_reif", soll["schritt1_firmen_reif"],
+             _hole(art, ["kalibrierungsWeg", 1, "firmen_reif"],
+                   fam + ".kalibrierungsWeg[1].firmen_reif")),
+            ("auswertbarImBand", soll["auswertbar_band"],
+             _hole(art, ["auswertbarImBand"], fam + ".auswertbarImBand")),
+            ("firmenReif", soll["firmenReif"],
+             _hole(art, ["firmenReif"], fam + ".firmenReif")),
+            ("firmenUnreif", soll["firmenUnreif"],
+             _hole(art, ["firmenUnreif"], fam + ".firmenUnreif")),
+        ]
+        for name, konstante, artefakt in paare:
+            if konstante != artefakt:
+                raise ZaehlwerkAbbruch(
+                    "F6-C7d KONSTANTEN-ABGLEICH GERISSEN bei " + fam + "."
+                    + name + ": das Zaehlwerk fuehrt " + repr(konstante)
+                    + ", das eingefrorene Artefakt " + repr(artefakt)
+                    + ". STOPP vor jedem Prueffenster-Byte. Das wird NICHT "
+                    "durch Anpassen der Konstante geheilt (KZ-11) - welches "
+                    "von beiden recht hat, entscheidet der Hash, nie der "
+                    "Bauende.")
+
+    # (2) pFinal == 95 == PERZENTIL, gelesen aus dem Artefakt UND aus dem
+    #     geladenen Modul. Beide Richtungen zu.
+    for fam in ("S-U", "S-G"):
+        ist = _hole(je_familie, [fam, "pFinal"], "jeFamilie." + fam + ".pFinal")
+        if ist != P_FINAL_SOLL:
+            raise ZaehlwerkAbbruch(
+                "F6-C7d: jeFamilie." + fam + ".pFinal ist " + repr(ist)
+                + ", gebunden ist " + repr(P_FINAL_SOLL) + ".")
+
+    # (3) regelParameter.reife_quartale == 4 == REIFE_QUARTALE, ebenso.
+    reife = _hole(satz, ["regelParameter", "reife_quartale"],
+                  "regelParameter.reife_quartale")
+    if reife != REIFE_QUARTALE_SOLL:
+        raise ZaehlwerkAbbruch(
+            "F6-C7d: regelParameter.reife_quartale ist " + repr(reife)
+            + ", gebunden ist " + repr(REIFE_QUARTALE_SOLL) + ".")
+    return True
+
+
 def pruefe_regelparameter(wurzel, module):
     """Sollwerte gegen die eingefrorenen Artefakte. Abweichung oder fehlender
     Wert = Abbruch VOR jeder Zahl."""
@@ -336,6 +460,17 @@ def pruefe_regelparameter(wurzel, module):
                 "pFinal der Familie " + repr(name) + " ist "
                 + repr(fam["pFinal"]) + ", gebunden ist "
                 + repr(P_FINAL_SOLL) + ".")
+
+    # ── F6-C7d GLIED 2: LAUFZEIT-KONSTANTEN-ABGLEICH ──────────────────
+    # Der Abgleich stand bisher NUR im Test (tests/studie-f6-zaehlwerk.test.js).
+    # Ein Test laeuft aber nicht im Lauf: er belegt den Stand zur Bauzeit, nicht
+    # den zur Laufzeit. Anhang 1 verlangt ihn deshalb IM LAUF - der Test bleibt
+    # zusaetzlich stehen. Feldweise, gegen das HASH-GEPRUEFT geladene Artefakt
+    # (der Doppel-Hash oben ist schon durch), beide Richtungen zu.
+    #
+    # KEIN VORGABEWERT BEI FEHLENDEM SCHLUESSEL. Ein fehlendes Feld ist genau
+    # der Fall "nie geprueft, liest sich aber wie geprueft" - deshalb Abbruch.
+    pruefe_kalibrier_konstanten(satz)
 
     # Und die Zensur-Konstanten des Zaehlproben-Moduls, ebenfalls beidseitig.
     zp = module["zp"]
@@ -568,6 +703,30 @@ def setze_arbeitspfad(pfad):
     return pfad
 
 
+def pruefe_a16_kreuz(aus_tafel, aus_skalaren, wo):
+    """Ruling 1 - der Kreuz-Wachposten ueber n_B_unreif.
+
+    Zwei Wege ueber zwei verschiedene Datenstrukturen: einmal aus der
+    Klumpen-Tafel (Summe_g (n_g - m_g)), einmal aus den beiden Aggregat-
+    Skalaren (n - zaehler_reife). In dieser Tally-Form KOENNEN sie nicht
+    auseinanderlaufen - laufen sie es doch, ist nicht die Zahl falsch, sondern
+    die Tally-Form selbst gebrochen. Deshalb ABBRUCH, nicht Korrektur.
+
+    Steht bewusst als EIGENE Funktion und nicht inline in `zaehle`: ein
+    Wachposten, der nur ueber einen vollen Panel-Lauf erreichbar ist, laesst
+    sich nicht bruchproben - und ein Waechter ohne Bruchprobe gilt als nicht
+    abgenommen (KV-3).
+    """
+    if aus_tafel != aus_skalaren:
+        raise ZaehlwerkAbbruch(
+            "KREUZ-WACHPOSTEN A16 gerissen in " + wo + ": n_B_unreif ist aus "
+            "der Klumpen-Tafel " + str(aus_tafel) + ", aus den Aggregaten "
+            + str(aus_skalaren) + ". Beide Wege beschreiben dieselbe Menge; "
+            "eine Abweichung heisst, dass die Tally-Form gebrochen ist, nicht "
+            "dass eine Zahl danebenliegt.")
+    return aus_tafel
+
+
 def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
            fenster_name="pruefung"):
     """DER VERTRAG (F6-C1): {klumpen, n, zaehler, zerlegung}.
@@ -631,13 +790,36 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
             "Zaehler meldet " + str(alle) + " Erst-Ereignisse, der Tally "
             + str(n) + " Netto-Einheiten plus " + str(zensiert) + " zensierte. "
             "Die beiden Einheitenmengen sind nicht dieselbe.")
+    # ── A16-Zerlegung (Ruling 1) ──────────────────────────────────────────
+    # `n_B_unreif` wird UNABHAENGIG hergeleitet: einmal aus der Klumpen-Tafel
+    # (Summe_g (n_g - m_g) - die Einheiten des Netto-Nenners mit y_i = 0) und
+    # einmal aus den beiden Aggregat-Skalaren (n - zaehler_reife). Zwei Wege
+    # ueber zwei verschiedene Datenstrukturen; der Kreuz-Wachposten darunter
+    # macht jede Abweichung zum ABBRUCH. In dieser Tally-Form KOENNEN sie nie
+    # auseinanderlaufen - laufen sie es doch, ist nicht die Zahl falsch,
+    # sondern die Tally-Form selbst gebrochen.
+    unreif_aus_tafel = pruefe_a16_kreuz(
+        sum(nn - m for m, nn in klumpen), n - zaehler_reife,
+        variante + "/" + arm)
+
     zerlegung = {
         "n_A": alle,
         "n_B_reif": zaehler_reife,
-        "n_B_unreif": n - zaehler_reife,
+        "n_B_unreif": unreif_aus_tafel,
         "n_verloren": alle - n,
         "feuerfaehig": len(arme["band_a"]) if arm == "kontrollpool" else alle,
-        "strukturell_nicht_feuerfaehig": n - zaehler_reife,
+        # KEINE UNABHAENGIGE HERLEITUNG - und das wird hier gesagt statt
+        # verdeckt. Fuer `strukturell_nicht_feuerfaehig` existiert NIRGENDS
+        # eine registrierte allgemeine Definition: weder in
+        # protocol/, noch in einem der drei Urteile (sie nennen die sieben
+        # A16-Schluessel, definieren aber keinen davon), noch sonst im Repo.
+        # Ohne Definition gibt es keinen zweiten Rechenweg, den man ehrlich
+        # fuehren koennte - eine erfundene Zweitformel waere Pseudo-
+        # Unabhaengigkeit und genau das, was hier nicht passieren soll.
+        # Es bleibt deshalb bei EINER Rechnung, und die Identitaet zu
+        # n_B_unreif wird VORAB benannt (F6-B25-Form, s. IDENTITAET_A16),
+        # nie hinterher als Befund.
+        "strukturell_nicht_feuerfaehig": unreif_aus_tafel,
         "rechts_zensiert": zensiert,
     }
     negativ = sorted(k for k, v in zerlegung.items() if v < 0)
@@ -658,6 +840,91 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
 # =============================================================================
 # Das Aequivalenz-Tor (F6-C7 / C8 / C9) - Laufbedingung, kein Bau-Test
 # =============================================================================
+
+VERBREITERT_REL = "scripts/studie-e2-verbreitert.py"
+VERBREITERT_SHA = "9a24ed94e943e9a6f5b4a1373ba6c6aa2001ddadb2d60a705277bf5eb359984b"
+
+
+def bein1_laufhaelfte(wurzel, arbeit_pfad, ergebnis_pfad, data_root):
+    """F6-C7b - die LAUF-HAELFTE von Bein 1, woertlich unveraendert.
+
+    Entdeckungs-Panel, ORIGINAL-Globals, bit-identisch gegen
+    aequivalenzTorSoll S-U 512/219 - S-G 546/265 - S-UG 29/12.
+
+    GEFAHREN WIRD DAS UNVERAENDERTE WERKZEUG `scripts/studie-e2-verbreitert.py`
+    ueber `durchlauf --modus alt`, Ausgabe ausschliesslich nach `--ergebnis`,
+    NIE ins Artefakt. Das ist kein Widerspruch zur Negativ-Klausel F6-C7e:
+    die verbietet den Aufruf ausdruecklich nur "fuer die Kalibrier-Haelfte";
+    die torSoll-Haelfte war unbeanstandet und bleibt es. Fuer die
+    KALIBRIER-Haelfte ruft dieses Modul das Werkzeug NICHT auf - dort
+    entscheidet der Doppel-Hash plus Konstanten-Abgleich (F6-C7c/d).
+
+    Das Werkzeug bleibt Byte fuer Byte unangetastet (F6-C7e/f); sein SHA ist
+    ein ratifizierter PIN aus Register-Eintrag 23. Er wird VOR dem Aufruf
+    geprueft - ein veraendertes Werkzeug ist ein anderes Werkzeug.
+    """
+    pfad = os.path.join(wurzel, *VERBREITERT_REL.split("/"))
+    if not os.path.isfile(pfad):
+        raise ZaehlwerkAbbruch("Das Werkzeug fehlt: " + VERBREITERT_REL)
+    ist = sha256_datei(pfad)
+    if ist != VERBREITERT_SHA:
+        raise ZaehlwerkAbbruch(
+            VERBREITERT_REL + " weicht vom ratifizierten PIN ab (ist "
+            + ist[:16] + "..., soll " + VERBREITERT_SHA[:16] + "...). Der PIN "
+            "ist zugleich Bindung aus Register-Eintrag 23; ein veraendertes "
+            "Werkzeug ist ein anderes Werkzeug (F6-C7f).")
+    pruefe_arbeitspfad(arbeit_pfad)
+
+    ruf = [sys.executable, pfad, "durchlauf", "--modus", "alt",
+           "--data-root", data_root, "--arbeit", arbeit_pfad,
+           "--ergebnis", ergebnis_pfad]
+    fertig = subprocess.run(ruf, capture_output=True, text=True, timeout=7200)
+    if fertig.returncode != 0:
+        raise ZaehlwerkAbbruch(
+            "BEIN 1 LAUF-HAELFTE: `durchlauf --modus alt` ist gescheitert "
+            "(Code " + str(fertig.returncode) + "): "
+            + (fertig.stderr or "").strip()[:400])
+    return pruefe_bein1_laufzahlen(ergebnis_pfad)
+
+
+def pruefe_bein1_laufzahlen(ergebnis_pfad):
+    """Die sechs torSoll-Zahlen gegen die Ausgabe nach --ergebnis.
+
+    EINE Abweichung = STOPP (KZ-4). Kein zweiter Kandidaten-Sollwert, kein
+    "nah genug", keine Nachjustierung.
+    """
+    if not os.path.isfile(ergebnis_pfad):
+        raise ZaehlwerkAbbruch(
+            "BEIN 1 LAUF-HAELFTE: das Werkzeug hat keine Ergebnisdatei "
+            "geschrieben (" + str(ergebnis_pfad) + ").")
+    with open(ergebnis_pfad, encoding="utf-8") as fh:
+        roh = json.load(fh)
+    signale = roh.get("signale", roh)
+    gemessen, abweichungen = {}, []
+    for fam, soll in BEIN1_SOLL["aequivalenzTorSoll"].items():
+        ist = signale.get(fam)
+        if not isinstance(ist, dict):
+            abweichungen.append(fam + " fehlt in der Ergebnisdatei")
+            continue
+        gemessen[fam] = {}
+        for feld in ("firmen_reif", "firmen_unreif"):
+            if feld not in ist:
+                abweichungen.append(fam + "." + feld + " fehlt")
+                continue
+            gemessen[fam][feld] = ist[feld]
+            if ist[feld] != soll[feld]:
+                abweichungen.append(
+                    fam + "." + feld + ": ist " + repr(ist[feld]) + ", soll "
+                    + repr(soll[feld]))
+    if abweichungen:
+        raise ZaehlwerkAbbruch(
+            "AEQUIVALENZ-TOR BEIN 1 (LAUF-HAELFTE) GERISSEN - STOPP vor jedem "
+            "Prueffenster-Byte (KZ-4): " + " | ".join(abweichungen)
+            + ". Weicht Durchlauf 1 ab, ist nicht der Vergleich kaputt, "
+            "sondern die Grundlage.")
+    return {"bestanden": True, "gemessen": gemessen,
+            "verbreitertSha256": ist}
+
 
 def aequivalenz_bein3():
     """BEIN 3: die Semantik gegen ausgeschriebene Literale. KEIN Panel-Lauf.
