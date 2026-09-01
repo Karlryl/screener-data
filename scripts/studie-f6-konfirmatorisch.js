@@ -633,8 +633,26 @@ function pruefeKeinNutzerpfad(obj) {
   }
 }
 
+// Das Schritt-8-Review hat Eintrag 27 aus DREI Spuren ROT gegeben. Er wird
+// durch einen vollstaendigen Eintrag 28 ERSETZT, und der ist ein EIGENER Akt
+// nach ANHANG 3 mit eigenem Werkzeug (F6-B8). Dieses Werkzeug hier hat seine
+// Aufgabe erfuellt und darf keinen zweiten Eintrag mehr bauen: seine
+// Bindungsliste beschreibt einen Stand, den PR G bewusst veraendert hat.
+// Es wird NICHT geloescht — es ist der Beleg dafuer, wie Eintrag 27 entstand.
+const UEBERHOLT = 'F6-K: UEBERHOLT. Eintrag 27 (f6-konfirmatorisch-2026-09-01) '
+  + 'ist durch das Schritt-8-Review ueberholt und wird durch Eintrag 28 ersetzt. '
+  + 'Dieses Werkzeug baut den ueberholten Eintrag und ist deshalb stillgelegt; '
+  + 'seine gebundenen SHAs beschreiben den Stand VOR PR G. Eintrag 28 ist ein '
+  + 'eigener Akt nach ANHANG 3 mit eigenem Werkzeug.';
+
 function haupt(argv) {
   if (argv.includes('--force')) throw new VerfassungsBruch('F6-K: --force gibt es nicht (F6-B8).');
+  // STILLGELEGT ZUM SCHREIBEN, NICHT ZUM PRUEFEN. Ein Register-Akt kommt hier
+  // nie wieder heraus - aber die Riegel bleiben fahrbar, damit sie bewiesen
+  // werden koennen statt uebersprungen zu werden. Uebersprungene Proben
+  // verrotten; ein stillgelegtes Werkzeug mit scharfen Waechtern gegen seine
+  // historischen Bytes bleibt ehrlich.
+  if (argv.includes('--schreiben')) throw new VerfassungsBruch(UEBERHOLT);
   const schreiben = argv.includes('--schreiben');
   const registerPfad = argument(argv, 'register') || LEDGER;
   const dateiWurzel = argument(argv, 'wurzel') || WURZEL;
@@ -680,6 +698,12 @@ function haupt(argv) {
     + `Eintraege nach dem Anhaengen: ${neu.events.length}\n\n`);
 
   if (!schreiben) {
+    // Nur-lesende Einsicht: der fertige Eintrag als JSON, ohne jeden
+    // Schreibweg. Kein Umgehungsschalter - er kann nichts anhaengen, er zeigt
+    // nur, was das Werkzeug gebaut haette. Die Inhalts-Waechter haengen daran.
+    if (argv.includes('--zeige-eintrag')) {
+      process.stdout.write(`EINTRAG:${JSON.stringify(fertig)}\n`);
+    }
     process.stdout.write('TROCKENLAUF - es wurde NICHTS geschrieben.\n');
     return 0;
   }

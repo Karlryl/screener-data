@@ -136,6 +136,53 @@ _BS = chr(92)  # Backslash als Zeichen, nicht als Literal (s. oben).
 ARBEITSPFAD_VORGABE = ("C" + ":" + _BS + "Users" + _BS + "Anwender"
                        + _BS + "f6-arbeit")
 
+# Die Vorgabe ist ein VERZEICHNIS. `eigener_zwischenstand` will eine DATEI -
+# sqlite3.connect auf ein Verzeichnis stirbt mit OperationalError, und zwar
+# NACH dem Panel-Zugriff, mit unterdruecktem Grund. Genau daran waere der eine
+# Lauf gestorben (Schritt-8-Review, Naht-B1). Deshalb bekommt JEDER Lauf sein
+# eigenes, frisch angelegtes, LEERES Unterverzeichnis - Altbestand aus einem
+# frueheren Lauf ist ein ABBRUCH, kein "wird schon passen".
+ARBEITSDATEI_NAME = "zwischenstand.sqlite"
+
+
+def arbeitsdatei_fuer_lauf(vorgabe, run_id):
+    """Der lauf-eigene Arbeitspfad: <vorgabe>/lauf-<runId>/zwischenstand.sqlite.
+
+    Das Verzeichnis wird FRISCH angelegt. Existiert es schon und ist es NICHT
+    leer, bricht der Lauf ab, statt in fremden Artefakten weiterzuarbeiten -
+    ein Zwischenstand aus einem frueheren Lauf ist eine andere Rechnung.
+    Geloescht wird hier NIE: unter derselben Vorgabe liegen die Beweise des
+    Aequivalenz-Tors.
+    """
+    if not vorgabe:
+        raise ZaehlwerkAbbruch("arbeitsdatei_fuer_lauf() ohne Vorgabe.")
+    if not run_id or not str(run_id).strip():
+        raise ZaehlwerkAbbruch(
+            "arbeitsdatei_fuer_lauf() ohne runId. Der Arbeitspfad dieses "
+            "Laufs traegt seine runId, damit zwei Laeufe nie dieselbe Datei "
+            "teilen.")
+    sauber = "".join(c for c in str(run_id) if c.isalnum() or c in "-_.")
+    if sauber != str(run_id):
+        raise ZaehlwerkAbbruch(
+            "runId " + repr(run_id) + " traegt Zeichen, die in einem "
+            "Verzeichnisnamen nichts zu suchen haben.")
+    ordner = os.path.join(vorgabe, "lauf-" + sauber)
+    if os.path.exists(ordner):
+        if not os.path.isdir(ordner):
+            raise ZaehlwerkAbbruch(
+                "ARBEITSVERZEICHNIS IST KEIN VERZEICHNIS: " + repr(ordner))
+        inhalt = os.listdir(ordner)
+        if inhalt:
+            raise ZaehlwerkAbbruch(
+                "ARBEITSVERZEICHNIS NICHT LEER: das Verzeichnis dieses Laufs "
+                "traegt bereits " + str(len(inhalt)) + " Eintrag/Eintraege. "
+                "Ein Lauf beginnt auf leerem Grund; ein Zwischenstand aus "
+                "einem frueheren Lauf ist eine andere Rechnung. Hier wird "
+                "NICHTS geloescht - das Verzeichnis wird von Hand geleert, "
+                "oder der Lauf bekommt eine andere runId.")
+    os.makedirs(ordner, exist_ok=True)
+    return os.path.join(ordner, ARBEITSDATEI_NAME)
+
 
 class ZaehlwerkAbbruch(Exception):
     """Ein benannter Abbruch. Auf JEDEM Pfad ein Grund - eine stille Null waere
@@ -150,8 +197,13 @@ class ZaehlwerkAbbruch(Exception):
 # JEDER WERT IST VOR DEM EINTRAGEN AN SEINEM ARTEFAKT NACHGERECHNET WORDEN:
 # Bein 1 gegen protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json
 # (provenienz.aequivalenzTorSoll und jeFamilie), Bein 2 gegen
-# reports/studie/E4d-kadenz-entdeckung-2026-08-19.json
-# (baender["2009-2015"].varianten[...].{signal,kontrolle}).
+# reports/studie/E4d-kadenz-entdeckung-2026-08-19.json, je Zelle bis auf die
+# SPALTE (F6-C8c verlangt Spaltentiefe, nicht Blocktiefe):
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.fallzahl
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.nenner_e3
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.zensiert_e3
+# Arm-Abbildung: kontrollpool -> kontrolle (ARM_ARTEFAKT weiter unten).
+# Die _kadenz-Spalten sind AUSDRUECKLICH NICHT die Quelle (F6-C8b).
 #
 # DER LAUF DES TORS IST NICHT DIESER AKT. Er braucht seinen eigenen
 # `count_only_probe_authorized`-Register-Eintrag auf dem ENTDECKUNGS-Panel
@@ -294,10 +346,130 @@ BEIN3_LITERALE = {
         "existieren."),
     "untergrenze_4x80": (
         "4 * 80 Tage ist die UNTERE Kante des Quartals-Paarungsfensters."),
+    # F6-C9c — BYTE-GENAU aus dem eingefrorenen Wortlaut, NICHT aus der
+    # frueheren Codefassung. Die alte Zeile war eine PARAPHRASE und kein
+    # Teilstring des Wortlauts; genau daran haette ein ehrlicher Test sofort
+    # abgebrochen, und genau deshalb wurde der Schluessel damals nach NAMEN
+    # ausgeschlossen statt die Herkunftsfrage zu eskalieren.
     "nie_stillschweigend": (
-        "eine Nennereinheit ohne genau eine Klumpen-Kennung wird NIE "
-        "stillschweigend fallengelassen"),
+        "eine Nennereinheit ohne genau eine Klumpen-Kennung \u2014 sie wird "
+        "**nie** stillschweigend fallengelassen"),
 }
+
+# =============================================================================
+# F6-C9b — QUELLENGEBUNDENE LITERALGRUPPEN MIT HASH-GATE
+# =============================================================================
+#
+# Jede Gruppe wird gegen IHRE EIGENE Quelle geprueft, und der SHA der Quelle
+# wird VOR dem Literalvergleich nachgerechnet. Fehlende Datei, fehlender
+# Registerdatensatz oder Hash-Drift sind ein ABBRUCH VOR JEDER ZAHL.
+#
+# Warum ueberhaupt Gruppen: die fruehere Fassung fuehrte alle Literale gegen
+# EINE Quelle (die Praeregistrierung) und schloss das eine, das dort nicht
+# steht, NACH NAMEN aus - still, im Inneren des Wachpostens, mit
+# zahlerhaltender Substitution. Die Zahl "fuenf" blieb dadurch wahr ueber
+# einer falschen Menge. Quellenbindung macht diesen Ausschluss unnoetig und
+# unmoeglich zugleich.
+PRAEREG_REL = "protocol/early-detection/2.0.0/preregistration.json"
+PRAEREG_SHA = "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c"
+WORTLAUT_REL = "protocol/early-detection/2.1.0/f6-se-klumpen-v1-wortlaut.json"
+WORTLAUT_DATEI_SHA = "10e812fa345bba545077f333de7d81edf18bb371e9e48ee7b697558c1bc944e8"
+# Der vom Gericht benannte wortlaut-sha256 (registriert in Eintrag 24).
+WORTLAUT_TEXT_SHA = "d4f8d4d79927c2b58e351074bb9b026b3e79915652d7cd5b1b9b51eccdbafda1"
+EINTRAG24_RUNID = "f6-se-klumpen-freeze-2026-08-31"
+LEDGER_REL = "protocol/early-detection/2.0.0/outcome-access-ledger.json"
+
+BEIN3_GRUPPEN = (
+    {
+        "name": "praeregistrierung",
+        "herkunft": PRAEREG_REL + " (Fundstellen :80, :81, :82, :87)",
+        "art": "praereg",
+        "zaehlt_als_f6c9_ziffer": True,
+        "literale": ("rechtsZensur_definition", "rechtsZensur_achse",
+                     "untergrenze_4x80", "auffindbarkeit_formel"),
+    },
+    {
+        "name": "eintrag24_wortlaut",
+        "herkunft": (WORTLAUT_REL + ", Feld wortlaut == Register-Eintrag 24 "
+                     "vorschriftWortlaut.text (F6-SE-KLUMPEN/v1, Ziffer 8)"),
+        "art": "wortlaut",
+        "zaehlt_als_f6c9_ziffer": True,
+        "literale": ("nie_stillschweigend",),
+    },
+    {
+        # F6-C9e: additiv, in der Praereg belegt, rein verschaerfend - und
+        # AUSDRUECKLICH keine der fuenf F6-C9-Ziffern.
+        "name": "bauseitig_ergaenzt",
+        "herkunft": PRAEREG_REL + " (bauseitige Zugabe, keine F6-C9-Ziffer)",
+        "art": "praereg",
+        "zaehlt_als_f6c9_ziffer": False,
+        "literale": ("reife_definition_anfang",),
+    },
+)
+
+
+def _bein3_quelltext(art, wurzel):
+    """Der hash-gepruefte Text EINER Gruppe. Beide Richtungen zu."""
+    if art == "praereg":
+        pfad = os.path.join(wurzel, *PRAEREG_REL.split("/"))
+        if not os.path.isfile(pfad):
+            raise ZaehlwerkAbbruch("BEIN 3: die Praeregistrierung fehlt: " + pfad)
+        ist = sha256_datei(pfad)
+        if ist != PRAEREG_SHA:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3 HASH-GATE: " + PRAEREG_REL + " ist " + ist + ", "
+                "gebunden ist " + PRAEREG_SHA + ". Eine andere Quelle ist eine "
+                "andere Semantik - hier wird VOR jeder Zahl angehalten.")
+        with open(pfad, encoding="utf-8") as fh:
+            return fh.read()
+
+    if art == "wortlaut":
+        pfad = os.path.join(wurzel, *WORTLAUT_REL.split("/"))
+        if not os.path.isfile(pfad):
+            raise ZaehlwerkAbbruch("BEIN 3: der eingefrorene Wortlaut fehlt: "
+                                   + pfad)
+        ist = sha256_datei(pfad)
+        if ist != WORTLAUT_DATEI_SHA:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3 HASH-GATE: " + WORTLAUT_REL + " ist " + ist + ", "
+                "gebunden ist " + WORTLAUT_DATEI_SHA + ".")
+        with open(pfad, encoding="utf-8") as fh:
+            text = json.load(fh).get("wortlaut")
+        if not isinstance(text, str):
+            raise ZaehlwerkAbbruch(
+                "BEIN 3: " + WORTLAUT_REL + " fuehrt kein Textfeld 'wortlaut'.")
+        text_sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        if text_sha != WORTLAUT_TEXT_SHA:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3 HASH-GATE: der Wortlaut-Text ist " + text_sha + ", "
+                "registriert ist " + WORTLAUT_TEXT_SHA + ".")
+
+        # F6-C9b: "Ein loser Lesezugriff auf die Registerdatei genuegt NICHT."
+        # Der Registerdatensatz selbst muss denselben Text fuehren.
+        ledger = os.path.join(wurzel, *LEDGER_REL.split("/"))
+        if not os.path.isfile(ledger):
+            raise ZaehlwerkAbbruch("BEIN 3: das Zugriffsregister fehlt: " + ledger)
+        with open(ledger, encoding="utf-8") as fh:
+            eintraege = json.load(fh).get("events") or []
+        treffer = [e for e in eintraege if e.get("runId") == EINTRAG24_RUNID]
+        if len(treffer) != 1:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3: das Register fuehrt " + str(len(treffer)) + " Eintraege "
+                "mit runId " + repr(EINTRAG24_RUNID) + ", erwartet genau einen. "
+                "Ohne Registerdatensatz gibt es fuer Ziffer 5 keine Herkunft.")
+        aus_register = ((treffer[0].get("vorschriftWortlaut") or {}).get("text"))
+        if not isinstance(aus_register, str):
+            raise ZaehlwerkAbbruch(
+                "BEIN 3: Register-Eintrag 24 fuehrt kein Feld "
+                "vorschriftWortlaut.text.")
+        if hashlib.sha256(aus_register.encode("utf-8")).hexdigest() != WORTLAUT_TEXT_SHA:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3: der Wortlaut im Register-Eintrag 24 weicht vom "
+                "Artefakt ab. Zwei Fassungen derselben eingefrorenen Vorschrift "
+                "sind ein ABBRUCH, keine Auslegungsfrage.")
+        return text
+
+    raise ZaehlwerkAbbruch("BEIN 3: unbekannte Gruppenart " + repr(art) + ".")
 
 
 # =============================================================================
@@ -574,6 +746,28 @@ def eigene_panel_verbindung(panel_pfad):
     return conn
 
 
+# Eintrag 22 (rr9-a3-jahrgang-registrierung-2026-08-30) haelt das
+# Prueffenster-Panel byte-genau fest. Der konfirmatorische Eintrag BEHAUPTET,
+# die Groesse sei "verriegelt" - bis PR G war das eine einmalige Messung und
+# kein Riegel (Schritt-8-Review, Quellspalten-F1).
+PANEL_BYTES_PIN_PRUEFUNG = 4447633408
+
+
+def pruefe_panel_bytes(panel_pfad):
+    """Positiv auf die EINE zugelassene Groesse. Ein anderes Panel ist ein
+    anderes Panel - auch wenn es genauso heisst."""
+    if not os.path.isfile(panel_pfad):
+        raise ZaehlwerkAbbruch("Panel-Datei nicht gefunden: " + str(panel_pfad))
+    with open(panel_pfad, "rb") as fh:
+        ist = os.fstat(fh.fileno()).st_size
+    if ist != PANEL_BYTES_PIN_PRUEFUNG:
+        raise ZaehlwerkAbbruch(
+            "PANEL-BYTE-PIN GERISSEN: die Datei misst " + str(ist)
+            + " B, der in Eintrag 22 registrierte Pin verlangt "
+            + str(PANEL_BYTES_PIN_PRUEFUNG) + " B. Ein anders grosses Panel "
+            "ist ein anderes Panel; der Lauf haelt VOR dem ersten Byte an.")
+
+
 def eigener_zwischenstand(pfad):
     """Die Arbeitsdatei, selbst geoeffnet (F6-C1) und selbst geprueft (W-B).
 
@@ -659,6 +853,35 @@ def _familie(variante, module):
     return familien[variante]
 
 
+def _pruefe_pufferjahr(eintraege, e2, von_jahr, bis_jahr, wo):
+    """Zaehlwerk-Gericht (D), woertlich: "Ein Erst-Ereignis mit accepted im
+    Pufferjahr 2020 ist ein ABBRUCH, kein Sonderfall."
+
+    Bis PR G war der Schutz ein stiller FILTER (`im_signalband` vor
+    `erst_ereignisse`): das Ergebnis stimmte, die angeordnete FORM nicht - ein
+    Ereignis am Panel-Rand wurde weggeworfen statt gemeldet. Der Riegel steht
+    jetzt HINTER der Erst-Ereignis-Bildung und benennt, was er findet.
+
+    Die Zensur darf den Panel-Rand referenzieren (rand_ordinal); ein
+    URSPRUNGS-Ereignis darf nicht von dort kommen.
+    """
+    for eintrag in eintraege:
+        jahr = e2.jahr_aus_accepted(eintrag["accepted"])
+        if jahr is None:
+            raise ZaehlwerkAbbruch(
+                "PUFFERJAHR-PRUEFUNG NICHT BERECHENBAR in " + wo + ": ein "
+                "Erst-Ereignis traegt kein lesbares accepted-Jahr. Nicht "
+                "berechenbar heisst ANHALTEN, nicht 'gilt als in Ordnung'.")
+        if not von_jahr <= jahr <= bis_jahr:
+            raise ZaehlwerkAbbruch(
+                "ERST-EREIGNIS AUSSERHALB DES SIGNALBANDES in " + wo + ": ein "
+                "Erst-Ereignis traegt das accepted-Jahr " + str(jahr)
+                + ", das Signalband ist " + str(von_jahr) + ".."
+                + str(bis_jahr) + ". Ein Erst-Ereignis aus einem Pufferjahr "
+                "ist ein ABBRUCH, kein Sonderfall - der Panel-Rand darf das "
+                "Signalband nicht still um ein Jahr verlaengern.")
+
+
 def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     """Beide Arme EINER Variante. Signal und Kontrollpool laufen durch
     denselben Code - `arm_zaehlen` -, wie die Praereg-Klausel
@@ -706,6 +929,11 @@ def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     # Einheitenmenge selbst nicht heraus, nur `reif` und ihre Anzahl.
     sig_reif, sig_unreif = e2.erst_ereignisse(band_f, gewaehlt)
     kon_reif, kon_unreif = e2.erst_ereignisse(kontroll_eintraege, gewaehlt)
+    # (D) Pufferjahr-Riegel - benannt, nicht gefiltert.
+    _pruefe_pufferjahr(sig_reif + sig_unreif, e2, von_jahr, bis_jahr,
+                       variante + "/signal")
+    _pruefe_pufferjahr(kon_reif + kon_unreif, e2, von_jahr, bis_jahr,
+                       variante + "/kontrollpool")
     return {"signal": (signal, sig_reif + sig_unreif),
             "kontrollpool": (kontrolle, kon_reif + kon_unreif),
             "band_a": band_a, "rand_ordinal": rand_ordinal}
@@ -778,6 +1006,28 @@ def _tally(eintraege, reif_rows, e2, zp, rand_ordinal, wo):
 _ARBEITSPFAD = None
 
 
+_FENSTER = None
+
+
+def setze_fenster(name):
+    """Wie `setze_arbeitspfad`: der Laeufer setzt das Fenster AUSDRUECKLICH.
+
+    Der Vertrag `zaehle(panel, variante, arm)` ist eingefroren (F6-C1) und kann
+    das Fenster nicht tragen. Ein Vorgabewert im Kopf von `zaehle` waere aber
+    genau die stille Kopie, die driften kann: der Umschlag meldete dann ein
+    Fenster und gezaehlt wuerde ein anderes (Naht-F2).
+    """
+    global _FENSTER
+    if not name:
+        raise ZaehlwerkAbbruch(
+            "setze_fenster() ohne Namen. Das Fenster ist eine Angabe des "
+            "Laufs, kein Vorgabewert.")
+    if name not in FENSTER_SOLL:
+        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(name) + ".")
+    _FENSTER = name
+    return name
+
+
 def setze_arbeitspfad(pfad):
     """Vom Laeufer EINMAL vor der Zaehlung zu rufen. Prueft sofort (W-B)."""
     global _ARBEITSPFAD
@@ -815,7 +1065,7 @@ def pruefe_a16_kreuz(aus_tafel, aus_skalaren, wo):
 
 
 def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
-           fenster_name="pruefung"):
+           fenster_name=None):
     """DER VERTRAG (F6-C1): {klumpen, n, zaehler, zerlegung}.
 
     Aufgerufen wird er mit GENAU DREI Argumenten; die weiteren sind
@@ -826,9 +1076,6 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
     if arm not in ARME:
         raise ZaehlwerkAbbruch("Unbekannter Arm " + repr(arm) + ".")
     wurzel = wurzel or WURZEL_REPO
-    fenster_soll = FENSTER_SOLL.get(fenster_name)
-    if not fenster_soll:
-        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(fenster_name) + ".")
     if arbeit_pfad is None:
         arbeit_pfad = _ARBEITSPFAD
     if arbeit_pfad is None:
@@ -836,6 +1083,25 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
             "Kein Arbeitspfad gesetzt. Der Laeufer ruft setze_arbeitspfad() "
             "VOR der ersten Zaehlung; der Pfad wird vor der Freigabe geprueft "
             "und im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
+    # Das Fenster wird NACH dem Arbeitspfad geprueft, damit der aeltere
+    # Wachposten seine Reihenfolge behaelt - sonst verdeckte der neue Riegel
+    # den, den er ergaenzen soll.
+    if fenster_name is None:
+        fenster_name = _FENSTER
+    if fenster_name is None:
+        raise ZaehlwerkAbbruch(
+            "Kein Fenster gesetzt. Der Laeufer ruft setze_fenster() VOR der "
+            "ersten Zaehlung; das Fenster wird AUSDRUECKLICH uebergeben und "
+            "nie aus einem Vorgabewert geerbt (Naht-F2).")
+    fenster_soll = FENSTER_SOLL.get(fenster_name)
+    if not fenster_soll:
+        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(fenster_name) + ".")
+
+    # (9) Quellspalten-F1: der Byte-Pin des Prueffenster-Panels wird zur
+    # LAUFZEIT erzwungen, nicht nur im Eintrag behauptet. Ohne ihn steht
+    # zwischen dem Eintrag und einem anders grossen Panel nichts.
+    if fenster_name == "pruefung":
+        pruefe_panel_bytes(panel_pfad)
 
     module = lade_regelmodule(wurzel)
     pruefe_regelparameter(wurzel, module)
@@ -1122,24 +1388,72 @@ def pruefe_bein2_basis(wurzel):
 def aequivalenz_bein3():
     """BEIN 3: die Semantik gegen ausgeschriebene Literale. KEIN Panel-Lauf.
 
-    Diese Pruefung braucht kein Fenster und keine Freigabe und laeuft deshalb
-    auch im Selbsttest.
+    F6-C9b..e: die Literale sind nach QUELLE gruppiert, jede Gruppe wird gegen
+    ihre eigene hash-gepruefte Quelle gehalten, und die Pruefung ist
+    ZWEISEITIG - kein Literal fehlt im Quelltext UND die geprueft Menge ist
+    gleich der deklarierten Menge. Es gibt KEINE Ausnahmeliste; der fruehere
+    Ausschluss nach Namen ist ersatzlos gefallen.
     """
-    pfad = os.path.join(WURZEL_REPO, "protocol", "early-detection", "2.0.0",
-                        "preregistration.json")
-    if not os.path.isfile(pfad):
-        raise ZaehlwerkAbbruch("Die Praeregistrierung fehlt: " + pfad)
-    with open(pfad, encoding="utf-8") as fh:
-        text = fh.read()
-    fehlend = [name for name, literal in BEIN3_LITERALE.items()
-               if name != "nie_stillschweigend" and literal not in text]
-    if fehlend:
+    # (1) ZWEISEITIG, Teil 2 - zuerst, weil eine Luecke hier jede weitere Zahl
+    #     wertlos macht: die Gruppen muessen GENAU die deklarierten Literale
+    #     abdecken. Ein Schluessel, den keine Gruppe fuehrt, waere wieder ein
+    #     stiller Ausschluss; einer, den es nicht gibt, eine leere Behauptung.
+    aus_gruppen = []
+    for gruppe in BEIN3_GRUPPEN:
+        aus_gruppen.extend(gruppe["literale"])
+    doppelt = sorted({n for n in aus_gruppen if aus_gruppen.count(n) > 1})
+    if doppelt:
         raise ZaehlwerkAbbruch(
-            "BEIN 3 gerissen: diese woertlichen Literale stehen nicht mehr in "
-            "der Praeregistrierung: " + ", ".join(fehlend) + ". Die Semantik, "
-            "gegen die dieses Zaehlwerk gebaut ist, hat sich bewegt.")
-    return {"bestanden": True, "geprueft": sorted(
-        k for k in BEIN3_LITERALE if k != "nie_stillschweigend")}
+            "BEIN 3: diese Literale stehen in mehr als einer Quellgruppe: "
+            + ", ".join(doppelt) + ". Ein Literal hat GENAU EINE Herkunft.")
+    ungeprueft = sorted(set(BEIN3_LITERALE) - set(aus_gruppen))
+    unbekannt = sorted(set(aus_gruppen) - set(BEIN3_LITERALE))
+    if ungeprueft or unbekannt:
+        raise ZaehlwerkAbbruch(
+            "BEIN 3 MENGENGLEICHHEIT GERISSEN: nicht geprueft "
+            + repr(ungeprueft) + ", ohne Literal deklariert " + repr(unbekannt)
+            + ". Die geprueft Menge MUSS die deklarierte Menge sein - ein "
+            "Schluessel, der aus der Pruefung faellt, ist genau der Befund, "
+            "den F6-C9d abstellt.")
+
+    # (2) ZWEISEITIG, Teil 1 - je Gruppe gegen die eigene, hash-gepruefte
+    #     Quelle. Das Hash-Gate steht VOR dem Vergleich.
+    geprueft = {}
+    for gruppe in BEIN3_GRUPPEN:
+        # Die Werte werden VOR dem Abbruchtext an lokale Namen gebunden: die
+        # Hausregel verbietet dict-Subscripts in Abbruchtexten, weil dort
+        # sonst irgendwann eine Datenzeile interpoliert wird.
+        gname = gruppe["name"]
+        gherkunft = gruppe["herkunft"]
+        gliterale = gruppe["literale"]
+        text = _bein3_quelltext(gruppe["art"], WURZEL_REPO)
+        fehlend = [n for n in gliterale if BEIN3_LITERALE[n] not in text]
+        if fehlend:
+            raise ZaehlwerkAbbruch(
+                "BEIN 3 gerissen in Gruppe " + gname + ": diese woertlichen "
+                "Literale stehen nicht mehr in " + gherkunft + ": "
+                + ", ".join(fehlend) + ". Die Semantik, gegen die dieses "
+                "Zaehlwerk gebaut ist, hat sich bewegt.")
+        geprueft[gname] = sorted(gliterale)
+
+    # (3) F6-C9e - SECHS Literale, GETRENNT gezaehlt. Die bauseitige Zugabe
+    #     zaehlt NIE als eine der fuenf F6-C9-Ziffern.
+    f6c9 = sum(len(g["literale"]) for g in BEIN3_GRUPPEN
+               if g["zaehlt_als_f6c9_ziffer"])
+    bauseitig = sum(len(g["literale"]) for g in BEIN3_GRUPPEN
+                    if not g["zaehlt_als_f6c9_ziffer"])
+    return {
+        "bestanden": True,
+        "geprueft": sorted(BEIN3_LITERALE),
+        "jeGruppe": geprueft,
+        "zaehlung": {
+            "f6c9_praereg": len(BEIN3_GRUPPEN[0]["literale"]),
+            "f6c9_eintrag24": len(BEIN3_GRUPPEN[1]["literale"]),
+            "f6c9_ziffern_gesamt": f6c9,
+            "bauseitig_ergaenzt": bauseitig,
+            "gesamt": f6c9 + bauseitig,
+        },
+    }
 
 
 def aequivalenz_tor(panel_pfad, wurzel=None, arbeit_pfad=None):
@@ -1266,10 +1580,21 @@ def selbsttest():
     # BEIN 3
     try:
         r3 = aequivalenz_bein3()
-        pruefe("BEIN 3: alle Wortlaut-Literale stehen in der Praereg",
-               r3["bestanden"] and len(r3["geprueft"]) == 5)
+        z3 = r3["zaehlung"]
+        # F6-C9e: SECHS geprueft Literale, davon FUENF F6-C9-Ziffern (vier aus
+        # der Praereg, eins aus dem Wortlaut von Eintrag 24) und EINE
+        # bauseitige Zugabe, die NIE als Ziffer zaehlt.
+        pruefe("BEIN 3: sechs Literale, quellengebunden und getrennt gezaehlt",
+               r3["bestanden"] and len(r3["geprueft"]) == 6
+               and z3["f6c9_praereg"] == 4 and z3["f6c9_eintrag24"] == 1
+               and z3["f6c9_ziffern_gesamt"] == 5
+               and z3["bauseitig_ergaenzt"] == 1 and z3["gesamt"] == 6)
+        # F6-C9f/2 haengt hier: faellt ein Schluessel aus der Pruefmenge, muss
+        # die Mengengleichheit ihn melden - nicht die Zahl still halten.
+        pruefe("BEIN 3: die geprueft Menge IST die deklarierte Menge",
+               set(r3["geprueft"]) == set(BEIN3_LITERALE))
     except ZaehlwerkAbbruch as f:
-        pruefe("BEIN 3: alle Wortlaut-Literale stehen in der Praereg (" + str(f)[:60] + ")",
+        pruefe("BEIN 3: sechs Literale, quellengebunden (" + str(f)[:60] + ")",
                False)
 
     # F6-C6 / F6-C2 am echten Repo

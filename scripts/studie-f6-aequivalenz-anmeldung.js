@@ -415,6 +415,12 @@ function haupt(argv) {
       + 'ist keine Schranke.',
     );
   }
+  // HINWEIS ZUR BINDUNGSLISTE (PR G): dieses Werkzeug hat seinen Akt
+  // (Eintrag 25) gebaut und bindet die SHAs, die DAMALS gebunden wurden.
+  // PR G hat scripts/studie-f6-zaehlwerk.py und scripts/studie-f6-lauf.py
+  // danach bewusst veraendert. Die Liste wird NICHT nachgezogen - sie ist
+  // Urkunde darueber, was der Akt gebunden hat, kein Abbild des heutigen
+  // Baums. Die Proben stellen den historischen Stand deshalb wieder her.
   const schreiben = argv.includes('--schreiben');
   const registerPfad = argument(argv, 'register') || LEDGER;
   const dateiWurzel = argument(argv, 'wurzel') || WURZEL;
