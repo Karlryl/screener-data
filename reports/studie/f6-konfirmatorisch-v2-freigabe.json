@@ -1,0 +1,13 @@
+{
+ "schema": "early-detection-zaehlprobe-freigabe/v1",
+ "protokoll": "FEM-SEC-US@2.0.0",
+ "runId": "f6-konfirmatorisch-v2-2026-09-01",
+ "fenster": "pruefung",
+ "registerEventHash": "51c235ebd79272f7cce976f3627816bc50c283f47c4f34dd2d630af3eca66938",
+ "registerZweig": "main",
+ "registeredAt": "2026-09-01T09:02:56.527Z",
+ "accessedAt": "2026-09-01T11:02:56.527Z",
+ "serverConfirmedAt": "2026-09-01T09:21:02.000Z",
+ "quelle": "gh api -i repos/Karlryl/screener-data/contents/protocol/early-detection/2.0.0/outcome-access-ledger.json?ref=main — Date-Kopf der Antwort",
+ "bedeutung": "Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab."
+}
