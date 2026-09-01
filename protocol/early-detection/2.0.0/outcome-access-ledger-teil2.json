@@ -1,0 +1,21 @@
+{
+ "schema": "early-detection-outcome-access-ledger/v2",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "lastSealedAncestor": "FEM-SEC-US@1.2.0",
+ "genesisSha256": "06662cbedf987c01e543d67cb6670b070b51c7cb4bd2a88de0dcf7d5b402f1ce",
+ "genesisHerkunft": "eventHash des Abschluss-Akts f6-register-abschluss-rollover-2026-09-01 und damit der TAIL-EVENT-HASH der Datei protocol/early-detection/2.0.0/outcome-access-ledger.json — ein KETTENGLIED, keine Dateieigenschaft: die neue Kette haengt am letzten Glied der alten, statt bei null anzufangen. Der Byte-sha jener Datei steht getrennt als vorgaengerDateiSha256; ein Zusammenlegen der beiden Werte ist verboten (LR-8). OB-1 ist im Orchestrator-Nachtrag zu _COURT-LEDGER-ROLLOVER-2026-09-01 zugunsten des Tail-Event-Hashes entschieden.",
+ "vorgaengerDatei": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
+ "vorgaengerEventCount": 31,
+ "vorgaengerTailHash": "06662cbedf987c01e543d67cb6670b070b51c7cb4bd2a88de0dcf7d5b402f1ce",
+ "vorgaengerDateiSha256": "ccdf9b3cc7824f563859bc93d40e1fffa11344bdcd83ac92b36b0d857a5907d5",
+ "vorgaengerCheckpointEventHash": "06662cbedf987c01e543d67cb6670b070b51c7cb4bd2a88de0dcf7d5b402f1ce",
+ "vorgaengerLetzteAnmeldung": "2026-09-01T22:22:17.255Z",
+ "bindungsIdentitaet": "vorgaengerTailHash, vorgaengerCheckpointEventHash und genesisSha256 tragen NOTWENDIG denselben Wert: der Abschluss-Akt IST der letzte Eintrag der geschlossenen Datei, also faellt sein eventHash mit deren Tail-Hash zusammen, und OB-1 legt genau diesen Wert auf genesisSha256. Das ist keine Doppelung aus Versehen und keine der drei Angaben darf \"aufgeraeumt\" werden - die Gerichtstafel fuehrt alle drei, und die Naht-Zusicherungen pruefen sie einzeln. Die ZWEITE, unabhaengige Bindung ist vorgaengerDateiSha256: sie siegelt die Bytes, nicht die Kette.",
+ "confirmatoryWindows": [
+  "2021-01-01/2023-12-31"
+ ],
+ "initialStatus": "R14A_ROLLOVER_FORTSETZUNG_OHNE_DESIGNAENDERUNG",
+ "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
+ "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4).",
+ "events": []
+}
