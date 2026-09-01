@@ -28,17 +28,61 @@ const SNAP_DIR = path.join(ROOT, 'snapshots');
 const BASELINE_PATH = path.join(ROOT, 'data-health', 'exchange-coverage-baseline.json');
 const WINDOW = 14;
 const DROP_THRESHOLD = 0.40;
+const BASELINE_SHAPE_ERROR = 'ERR_EXCHANGE_COVERAGE_BASELINE_SHAPE';
 
 function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
-function loadBaseline(p) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+function baselineShapeError(detail) {
+  const error = new Error(`Exchange-Coverage-Baseline ungueltig (${detail}) — Baseline wird NICHT ueberschrieben`);
+  error.code = BASELINE_SHAPE_ERROR;
+  return error;
+}
+
+function isPlainObject(value) {
+  return value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Object.prototype;
+}
+
+function isCanonicalDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const timestamp = Date.parse(`${value}T00:00:00Z`);
+  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
+function validateBaseline(value) {
+  if (!isPlainObject(value)) {
+    throw baselineShapeError('Wurzel muss ein einfaches Objekt sein');
+  }
+  if (Object.prototype.hasOwnProperty.call(value, '_lastUpdated') && !isCanonicalDate(value._lastUpdated)) {
+    throw baselineShapeError('_lastUpdated muss ein gueltiges Datum im Format YYYY-MM-DD sein');
+  }
+  for (const [exchange, history] of Object.entries(value)) {
+    if (exchange.startsWith('_')) continue;
+    if (!Array.isArray(history)) {
+      throw baselineShapeError(`${exchange}: Historie muss ein Array sein`);
+    }
+    if (history.length > WINDOW) {
+      throw baselineShapeError(`${exchange}: Historie enthaelt mehr als ${WINDOW} Werte`);
+    }
+    if (!history.every((count) => Number.isSafeInteger(count) && count >= 0)) {
+      throw baselineShapeError(`${exchange}: Historie enthaelt ungueltige Zaehler`);
+    }
+  }
+  return value;
+}
+
+function loadBaseline(p, readFileSync = fs.readFileSync) {
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(p, 'utf8')); }
   catch (e) {
     if (e.code === 'ENOENT') return {};
     throw new Error(`Exchange-Coverage-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
   }
+  return validateBaseline(parsed);
 }
 
 function median(values) {
@@ -142,26 +186,38 @@ function updateBaseline(baseline, today, dateStr) {
   return next;
 }
 
-function main() {
-  const today = countByExchange(SNAP_DIR);
-  const baseline = loadBaseline(BASELINE_PATH);
+function main(options = {}) {
+  const baselinePath = options.baselinePath || BASELINE_PATH;
+  const snapDir = options.snapDir || SNAP_DIR;
+  const readFileSync = options.readFileSync || fs.readFileSync;
+  const countByExchangeFn = options.countByExchange || countByExchange;
+  const mkdirSync = options.mkdirSync || fs.mkdirSync;
+  const writeBaseline = options.writeJsonAtomic || writeJsonAtomic;
+  const log = options.log || console.log;
+  const error = options.error || console.error;
+  const setExitCode = options.setExitCode || ((code) => { process.exitCode = code; });
 
-  console.log('Exchange coverage today: ' + JSON.stringify(today));
+  // Validate persisted state before scanning snapshots or performing any write.
+  // A malformed history must not silently look like an empty/healthy baseline.
+  const baseline = loadBaseline(baselinePath, readFileSync);
+  const today = countByExchangeFn(snapDir);
+
+  log('Exchange coverage today: ' + JSON.stringify(today));
 
   const alerts = checkDrift(today, baseline);
-  const dateStr = process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
-  const updated = updateBaseline(baseline, today, dateStr);
+  const dateStr = options.dateStr || process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10); // frozen run-date (prep) mit Wall-Clock-Fallback — Codex-Gegenreview Tag 353
+  const updated = validateBaseline(updateBaseline(baseline, today, dateStr));
 
-  fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
-  writeJsonAtomic(BASELINE_PATH, updated);
-  console.log('Baseline updated: ' + BASELINE_PATH);
+  mkdirSync(path.dirname(baselinePath), { recursive: true });
+  writeBaseline(baselinePath, updated);
+  log('Baseline updated: ' + baselinePath);
 
   if (alerts.length > 0) {
-    console.error('::error::Exchange coverage drop detected — ' + alerts.join('; '));
-    process.exitCode = 1;
+    error('::error::Exchange coverage drop detected — ' + alerts.join('; '));
+    setExitCode(1);
     return;
   }
-  console.log('No exchange coverage drift.');
+  log('No exchange coverage drift.');
 }
 
 if (require.main === module) {
@@ -169,4 +225,14 @@ if (require.main === module) {
   catch (e) { console.error('::error::watch-exchange-coverage hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
 }
 
-module.exports = { countByExchange, checkDrift, updateBaseline, median, activeMedian, isExchangeAlarming, loadBaseline };
+module.exports = {
+  countByExchange,
+  checkDrift,
+  updateBaseline,
+  median,
+  activeMedian,
+  isExchangeAlarming,
+  loadBaseline,
+  validateBaseline,
+  main
+};
