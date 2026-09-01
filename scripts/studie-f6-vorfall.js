@@ -145,6 +145,11 @@ function baueEintrag(registeredAt, wirksamAb) {
       fundstelle: 'scripts/studie-f6-lauf.py:1352-1356 (raise LaufAbbruch samt vollstaendiger '
         + 'Meldung), Rahmen scripts/studie-f6-lauf.py:1672-1674 (except LaufAbbruch -> '
         + 'stderr, return 1).',
+      ankerKontext: 'DIE ZEILENNUMMERN GELTEN GEGEN DEN LAEUFER-SHA '
+        + 'd04a0eaeeb05a17631122cb2f87ac587946d9e345705e348d265ba4dcd9fb688 - den '
+        + 'Stand, unter dem der Lauf gefeuert hat. Sie sind historisch verankert und '
+        + 'zeigen NICHT in den lebenden Baum: die F6-K13-Reparatur hat den Laeufer '
+        + 'danach veraendert. Wer sie prueft, prueft gegen diesen SHA.',
       hinweis: 'Das Urteil _COURT-F6-KONTINGENT-2026-09-01.md fuehrt diesen Text mit '
         + 'Auslassung nach dem zweiten Satz. DIE HIER STEHENDE FASSUNG IST DIE '
         + 'VOLLSTAENDIGE; kein Folgedokument darf die gekuerzte als den ganzen Wortlaut '

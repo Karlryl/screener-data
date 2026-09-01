@@ -1006,7 +1006,24 @@ test('F6-K14 (i) ein Lauf mit RELATIVEN Argumenten schreibt den Bericht', () => 
   // Und die Ausgabe ist trotzdem R12a-rein: nur Kurzformen.
   for (const p of b.umschlag.gelesenePfade) {
     assert.doesNotMatch(p, /^[A-Za-z]:/, `absolute Form in gelesenePfade: ${p}`);
-    assert.ok(p.split('/').length === 2, `keine Kurzform: ${p}`);
+    // Die Laenge allein genuegt nicht: kurzpfad("datei.json") liefert
+    // "/datei.json" - zwei Segmente, aber das erste ist LEER. Genau die
+    // Denkform des Ursprungsdefekts (ein Praedikat, das die entartete Form
+    // durchlaesst), deshalb hier positiv auf beide Segmente geprueft.
+    const teile = p.split('/');
+    assert.equal(teile.length, 2, `keine Kurzform: ${p}`);
+    // BEKANNTE GRENZE, hier benannt statt weggeprueft: fuer ein nacktes
+    // Dateiargument liefert kurzpfad die entartete Form "/datei.json" - zwei
+    // Segmente, erstes leer. Sie traegt keine Kennung und ist deshalb kein
+    // Leck; `kurzpfad` ist SHA-gebunden und wird hier nicht angefasst.
+    // Geprueft wird deshalb die EIGENSCHAFT, nicht die Form: kein
+    // Laufwerk, keine Wurzelform, keine Kontokennung. Ein Formpraedikat
+    // allein war schon einmal der Fehler.
+    assert.ok(teile[1].length > 0, `Kurzform ohne Dateinamen: ${p}`);
+    assert.doesNotMatch(p, /^[A-Za-z]:/);
+    assert.doesNotMatch(p, /(^|\/)(Users|home)\//);
+    assert.ok(!p.includes(require('node:os').userInfo().username),
+      `Kontokennung in der Kurzform: ${p}`);
   }
 });
 
@@ -1067,4 +1084,100 @@ test('F6-K14 BRUCHPROBE: mit restaurierter Rohmenge wird die Fixture ROT', () =>
   // Kontingent und einem folgenlosen Abbruch.
   assert.match(r.stderr, /bei vorpruefung/,
     'der Abbruch muss aus der Vorpruefung kommen, nicht vom Schreib-Rand');
+});
+
+// ============================================================================
+// K18-Befunde: der Panel-Byte-Diskriminator und die Verhaltensproben
+// ============================================================================
+
+// Ein Fixture-Zaehlwerk, das beim EINTRITT eine Marke schreibt. Damit ist
+// "hat das Panel geoeffnet?" eine Tatsache im Dateisystem statt einer
+// Textvermutung ueber Fehlermeldungen.
+function zaehlwerkMitMarke(dir, daten, marke, extra = '') {
+  const p = path.join(dir, 'zaehlwerk-marke.py');
+  fs.writeFileSync(p, [
+    'import json',
+    `DATEN = json.loads(r"""${JSON.stringify(daten)}""")`,
+    extra,
+    'def zaehle(panel_pfad, variante, arm):',
+    // Vorwaertsschraegstriche: Python oeffnet sie unter Windows genauso, und
+    // die Escaping-Falle im Testtext faellt damit ganz weg.
+    `    open(r"${marke.split(String.fromCharCode(92)).join('/')}", "a").write("X")`,
+    '    return DATEN[variante][arm]',
+    '',
+  ].join('\n'), 'utf8');
+  return p;
+}
+
+test('F6-K15 DISKRIMINATOR: Vorpruefungs-Abbruch -> das Panel bleibt ZU', () => {
+  const w = welt('f6lauf-marke-vor-');
+  const marke = path.join(w.dir, 'panel-geoeffnet.marke');
+  const zw = zaehlwerkMitMarke(w.dir, gleichmaessig(230, 20), marke);
+  // Ein Bericht direkt im Benutzerverzeichnis - der Fall, der vorher erst am
+  // Schreib-Rand starb, nachdem das Panel viermal offen war.
+  const konto = require('node:os').userInfo().username;
+  const r = ruf(w, ['--zaehlwerk', zw,
+    '--bericht', path.join(path.dirname(os.homedir()), konto, 'k18-probe.json')]);
+  assert.notEqual(r.status, 0, 'der Lauf muss abbrechen');
+  assert.match(r.stderr, /^F6-LAUF-ABBRUCH:/m);
+  assert.match(r.stderr, /bei vorpruefung\[/,
+    'der Abbruch muss aus der Vorpruefung kommen');
+  assert.equal(fs.existsSync(marke), false,
+    'DAS PANEL WURDE GEOEFFNET - genau das darf die Vorpruefung verhindern');
+});
+
+test('F6-K15 DISKRIMINATOR: Schreib-Rand-Abbruch -> das Panel WAR offen', () => {
+  const w = welt('f6lauf-marke-nach-');
+  const marke = path.join(w.dir, 'panel-geoeffnet.marke');
+  const BS = String.fromCharCode(92);
+  // IDENTITAET_A16 landet im stempel und ist KEIN pfad-abgeleiteter String -
+  // die Vorpruefung kann ihn nicht sehen, der Schreib-Rand sehr wohl. Damit
+  // ist bewiesen, dass der zweite Riegel weiter gebraucht wird.
+  const zw = zaehlwerkMitMarke(w.dir, gleichmaessig(230, 20), marke,
+    `IDENTITAET_A16 = "C:${BS}${BS}Users${BS}${BS}Jemand${BS}${BS}spur.txt"`);
+  const r = ruf(w, ['--zaehlwerk', zw]);
+  assert.notEqual(r.status, 0, 'der Lauf muss abbrechen');
+  assert.match(r.stderr, /^F6-LAUF-ABBRUCH:/m);
+  assert.doesNotMatch(r.stderr, /bei vorpruefung\[/,
+    'dieser Abbruch gehoert an den Schreib-Rand, nicht in die Vorpruefung');
+  assert.equal(fs.existsSync(marke), true,
+    'hier MUSS das Panel offen gewesen sein - sonst misst die Probe nichts');
+  assert.equal(fs.existsSync(w.bericht), false, 'und kein Bericht entsteht');
+});
+
+test('F6-K13 VERHALTENSPROBE: die Verbotsmenge traegt BEIDE Trennerformen', () => {
+  // Die Rechtfertigung der Abweichung wird am OBJEKT gepinnt, nicht an einem
+  // Satz im Docstring: fuer ein absolut uebergebenes Argument mit
+  // Schraegstrichen muessen BEIDE Schreibweisen in der Menge stehen.
+  const r = pyProbe([
+    // Der Beispielpfad wird aus Fragmenten gebaut - ausgeschrieben machte
+    // diese Datei sich selbst zum R12a-Verstoss (der Deckel liest tests/).
+    'pfad = "C" + ":/" + "Jemand/panel.sqlite"',
+    'formen = m.verbotene_formen(pfad)',
+    'print("ANZAHL:" + str(len(formen)))',
+    'print("SCHRAEG:" + str(any("/" in f and ":" in f for f in formen)))',
+    'import os',
+    'print("NORMAL:" + str(os.path.abspath(pfad) in formen))',
+    '# und ein RELATIVES Argument darf NICHT als Rohform drin sein',
+    'rel = m.verbotene_formen("scripts/studie-f6-zaehlwerk.py")',
+    'print("RELROH:" + str("scripts/studie-f6-zaehlwerk.py" in rel))',
+  ].join('\n'));
+  assert.match(r.stdout, /^SCHRAEG:True$/m,
+    'die Rohform mit Schraegstrichen fehlt - genau sie geht bei abspath verloren');
+  assert.match(r.stdout, /^NORMAL:True$/m);
+  assert.match(r.stdout, /^RELROH:False$/m,
+    'ein relatives Argument darf nicht in der Verbotsmenge stehen');
+});
+
+test('F6-K28 POSITIVPROBE: 2a feuert auch bei ABSOLUTEN Argumenten', () => {
+  // Der Gegenbeweis zur Fixture-Luecke, die den Defekt hat ueberleben lassen:
+  // die Vorpruefung ist nicht nur fuer relative Aufrufe da.
+  const w = welt('f6lauf-2a-absolut-');
+  const marke = path.join(w.dir, 'panel-geoeffnet.marke');
+  const zw = zaehlwerkMitMarke(w.dir, gleichmaessig(230, 20), marke);
+  const konto = require('node:os').userInfo().username;
+  const r = ruf(w, ['--zaehlwerk', zw,
+    '--bericht', path.join(path.dirname(os.homedir()), konto, 'k18-abs.json')]);
+  assert.match(r.stderr, /bei vorpruefung\[/);
+  assert.equal(fs.existsSync(marke), false);
 });

@@ -30,8 +30,41 @@ test('--force gibt es nicht (F6-B8)', () => {
 });
 
 // ── F6-K7(c): der Abbruchtext, aus dem QUELLTEXT rekonstruiert ────────────
+// Der Stand, unter dem der Lauf gefeuert hat. Die Anker des Vermerks gelten
+// gegen IHN, nicht gegen den lebenden Baum - die F6-K13-Reparatur hat den
+// Laeufer danach veraendert. Damit werden die Anker pruefbar statt gezaehlt.
+const STAND_DES_LAUFS = 'aeefb68125';
+const LAEUFER_SHA_DES_LAUFS =
+  'd04a0eaeeb05a17631122cb2f87ac587946d9e345705e348d265ba4dcd9fb688';
+
+function laeuferDesLaufs() {
+  const git = require('node:child_process').spawnSync(
+    'git', ['show', `${STAND_DES_LAUFS}:scripts/studie-f6-lauf.py`],
+    { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+  assert.equal(git.status, 0,
+    `git show ${STAND_DES_LAUFS} ist rot (status ${git.status}): `
+    + `${String(git.stderr || '').trim() || '<kein stderr>'}`);
+  assert.equal(crypto.createHash('sha256').update(git.stdout).digest('hex'),
+    LAEUFER_SHA_DES_LAUFS,
+    'der historische Blob ist nicht der Laeufer, unter dem gefeuert wurde');
+  return git.stdout.toString('utf8');
+}
+
+test('die Anker des Vermerks treffen den Laeufer, unter dem gefeuert wurde', () => {
+  const zeilen = laeuferDesLaufs().split(/\r?\n/);
+  // :1352-1356 - der raise samt vollstaendiger Meldung.
+  assert.match(zeilen[1351], /raise LaufAbbruch\(/);
+  assert.match(zeilen[1352], /ABSOLUTER PFAD IM BERICHT bei/);
+  assert.match(zeilen[1355], /basisraten\.py:251/);
+  // :1672-1674 - der Rahmen, der ihn nach stderr gibt und 1 zurueckliefert.
+  assert.match(zeilen.slice(1671, 1674).join('\n'), /except LaufAbbruch/);
+  assert.match(zeilen.slice(1671, 1674).join('\n'), /return 1/);
+});
+
 test('der beurkundete Abbruchtext ist byte-genau der des Laeufers', () => {
-  const quelle = fs.readFileSync(LAEUFER, 'utf8');
+  // Gegen den historischen Stand - der Vermerk beurkundet den Text, der
+  // WIRKLICH auf stderr stand, nicht den des reparierten Laeufers.
+  const quelle = laeuferDesLaufs();
   // Der raise-Block des Wachpostens: die aneinandergereihten String-Literale.
   const start = quelle.indexOf('"ABSOLUTER PFAD IM BERICHT bei "');
   assert.ok(start > 0, 'der raise-Block wurde nicht gefunden');
