@@ -1,0 +1,101 @@
+{
+  "fixtureSchema": "t204-synthetic-write-payloads/v1",
+  "synthetic": true,
+  "containsStudyInputs": false,
+  "containsOutcomes": false,
+  "containsSecData": false,
+  "scope": {
+    "coveredWriterCalls": {
+      "b1ValidationReports": 2,
+      "d2Artifacts": 5,
+      "gqsShadowReports": 1
+    },
+    "deferred": [
+      {
+        "script": "scripts/b1-validate.js",
+        "site": "submissions cache writer",
+        "reason": "Reaching this site requires the SEC-fetch path; the night handover requires an exported seam or a separate decision before it can be exercised safely."
+      }
+    ]
+  },
+  "b1": {
+    "dryRunReport": {
+      "fixtureSchema": "t204-synthetic-b1-report/v1",
+      "synthetic": true,
+      "writerMode": "DRY_RUN_WRITER_ONLY",
+      "containsStudyInputs": false,
+      "containsOutcomes": false,
+      "marker": {
+        "text": "synthetic dry report",
+        "ordinal": 1,
+        "flags": [
+          true,
+          false,
+          null
+        ]
+      }
+    },
+    "fullReport": {
+      "fixtureSchema": "t204-synthetic-b1-report/v1",
+      "synthetic": true,
+      "writerMode": "FULL_REPORT_WRITER_ONLY_NO_OUTCOMES",
+      "containsStudyInputs": false,
+      "containsOutcomes": false,
+      "marker": {
+        "text": "synthetic full-shape report",
+        "ordinal": 2,
+        "nested": {
+          "alpha": "A",
+          "beta": 2.5
+        }
+      }
+    }
+  },
+  "d2": {
+    "probe": {
+      "fixtureSchema": "t204-synthetic-d2-artifact/v1",
+      "synthetic": true,
+      "artifact": "probe",
+      "requestsMade": 0,
+      "secData": false
+    },
+    "entryStamp": {
+      "fixtureSchema": "t204-synthetic-d2-artifact/v1",
+      "synthetic": true,
+      "artifact": "entry-stamp",
+      "source": "fixture://no-network",
+      "bytes": 17,
+      "sha256": "synthetic-not-a-content-hash"
+    },
+    "reportJson": {
+      "fixtureSchema": "t204-synthetic-d2-artifact/v1",
+      "synthetic": true,
+      "artifact": "report-json",
+      "semantics": "writer bytes only; no label and no evidence",
+      "rows": []
+    },
+    "reportMarkdown": "# T204 synthetic D2 report\n\nWriter bytes only. No SEC data, evidence, labels, study inputs, or outcomes.\n",
+    "scanStats": {
+      "fixtureSchema": "t204-synthetic-d2-artifact/v1",
+      "synthetic": true,
+      "artifact": "scan-stats",
+      "entries": 0,
+      "parsed": 0,
+      "hits": 0
+    }
+  },
+  "gqs": {
+    "shadowReport": {
+      "fixtureSchema": "t204-synthetic-gqs-shadow-report/v1",
+      "synthetic": true,
+      "writerMode": "SHADOW_WRITER_ONLY",
+      "containsStudyInputs": false,
+      "containsOutcomes": false,
+      "results": [],
+      "summary": {
+        "rows": 0,
+        "note": "No scoring engine was called."
+      }
+    }
+  }
+}

@@ -45,6 +45,7 @@ const https = require('https');
 const crypto = require('crypto');
 const secPit = require('../lib/sec-pit.js');
 const { assertSecContact } = require('../lib/sec-user-agent.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BULK_HOST = 'www.sec.gov';
@@ -97,6 +98,25 @@ const ALL_BULK_ENTRIES = 988373;
 
 function nowIso() { return new Date().toISOString(); }
 function pct(a, b) { return (100 * a) / b; }
+
+// T204 measurement seams: each persisted artifact has its own exported writer,
+// so fixtures can exercise the real publication call without a SEC request,
+// bulk download, ZIP scan, or fixed Vault destination.
+function writeProbeArtifact(target, payload) {
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
+}
+function writeEntryStamp(target, payload) {
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
+}
+function writeReportJson(target, payload) {
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
+}
+function writeReportMarkdown(target, markdownText) {
+  writeFileAtomic(target, markdownText);
+}
+function writeScanStats(target, payload) {
+  writeFileAtomic(target, JSON.stringify(payload, null, 2));
+}
 
 // ── D2.0 — Kostenprobe: EIN Request ─────────────────────────────────────────
 function headBulk(ua) {
@@ -171,7 +191,7 @@ async function cmdProbe() {
   console.log(JSON.stringify(out, null, 2));
   if (head.statusCode !== 200) throw new Error('D2.0 ROT: HTTP ' + head.statusCode);
   fs.mkdirSync(STORE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(STORE_DIR, 'd2-0-probe.json'), JSON.stringify(out, null, 2));
+  writeProbeArtifact(path.join(STORE_DIR, 'd2-0-probe.json'), out);
   if (mass.verdict !== 'WEITER') {
     console.error('\nD2.0 VERDIKT: STRANG ABBLASEN — Fenster-Masse ' + mass.floorPct
       + ' % < Schwelle ' + ABORT_THRESHOLD_PCT + ' %. Kein Download, kein Bau.');
@@ -267,7 +287,7 @@ async function cmdDownload() {
     hinweis: 'Eingangsstempel nach Bauplan §4.4 — gitignored/ausserhalb des Checkouts liegende '
       + 'Eingaenge sind nur ueber diesen Stempel reproduzierbar belegbar.',
   };
-  fs.writeFileSync(STAMP_PATH, JSON.stringify(stamp, null, 2));
+  writeEntryStamp(STAMP_PATH, stamp);
   console.log(JSON.stringify(stamp, null, 2));
 }
 
@@ -708,7 +728,7 @@ function buildReport(scanStats) {
     ],
   };
   fs.mkdirSync(path.dirname(REPORT_JSON), { recursive: true });
-  fs.writeFileSync(REPORT_JSON, JSON.stringify(report, null, 2));
+  writeReportJson(REPORT_JSON, report);
   const q = fs.existsSync(STAMP_PATH) ? JSON.parse(fs.readFileSync(STAMP_PATH, 'utf8')) : {};
   const probe = fs.existsSync(path.join(STORE_DIR, 'd2-0-probe.json'))
     ? JSON.parse(fs.readFileSync(path.join(STORE_DIR, 'd2-0-probe.json'), 'utf8')) : null;
@@ -910,7 +930,7 @@ function buildReport(scanStats) {
   L.push('**Nicht ueberschrieben:** der Schlank-Cache `sec-xbrl-cache/submissions/` (B1-Sektor-Matching,');
   L.push('Stand 19.07.) und `companyfacts.zip` sind unberuehrt; der neue Store liegt getrennt in');
   L.push('`submissions-bulk/`. **Nichts gepusht, nichts committet, nichts geloescht.**');
-  fs.writeFileSync(REPORT_MD, L.join('\n') + '\n');
+  writeReportMarkdown(REPORT_MD, L.join('\n') + '\n');
   console.log(JSON.stringify(report.gesamt, null, 2));
   console.log('[d2.2] Report: ' + REPORT_JSON + ' + .md');
   return report;
@@ -926,7 +946,7 @@ async function cmdExtract() {
     console.log('[d2.2] Scan bereits gelaufen (' + stats.trefferZeilen + ' Treffer) — ueberspringe.');
   } else {
     stats = await scanZip();
-    fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
+    writeScanStats(statsPath, stats);
   }
   await fetchRuleProvisions(ua);
   buildReport(stats);
@@ -943,4 +963,9 @@ if (require.main === module) {
   fn().catch((e) => { console.error('[d2] ROT: ' + (e && e.message || e)); process.exit(1); });
 }
 
-module.exports = { extractForm25, classifyRuleProvision, rawDocName, istSelbstEinreichung, windowMass, scanZip, istPersistierbar, provisionKlasse, parseVerlustSatz, HTTP_TIMEOUT_MS, ABORT_THRESHOLD_PCT, WINDOW_FROM, WINDOW_TO };
+module.exports = {
+  extractForm25, classifyRuleProvision, rawDocName, istSelbstEinreichung, windowMass,
+  scanZip, istPersistierbar, provisionKlasse, parseVerlustSatz,
+  writeProbeArtifact, writeEntryStamp, writeReportJson, writeReportMarkdown, writeScanStats,
+  HTTP_TIMEOUT_MS, ABORT_THRESHOLD_PCT, WINDOW_FROM, WINDOW_TO,
+};
