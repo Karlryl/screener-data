@@ -168,7 +168,16 @@ function stelleGhBereit(baum, register) {
     '  const jetzt = new Date(Date.now() + 1000).toUTCString();',
     "  const roh = fs.readFileSync(process.env.SPION_REGISTER, 'utf8');",
     "  const rumpf = JSON.stringify({ content: Buffer.from(roh, 'utf8').toString('base64'), encoding: 'base64' });",
-    "  process.stdout.write('HTTP/2 200\\r\\ndate: ' + jetzt + '\\r\\n\\r\\n' + rumpf);",
+    // fs.writeSync statt process.stdout.write: auf eine PIPE schreibt Node
+    // asynchron, und ein direkt folgendes process.exit() schneidet den Rest ab.
+    // Der Rumpf ist base64 und waechst mit dem Register; ueberschreitet er den
+    // Pipe-Puffer, kam beim Werkzeug ein halber JSON-Text an und der Test war
+    // rot mit "Unterminated string in JSON" — an einer Stelle, an der das
+    // WERKZEUG nichts falsch gemacht hatte. fs.writeSync auf fd 1 blockiert,
+    // bis alles draussen ist.
+    "  const kopf = 'HTTP/2 200\\r\\ndate: ' + jetzt + '\\r\\n\\r\\n';",
+    '  const aus = Buffer.from(kopf + rumpf, \'utf8\');',
+    '  for (let ab = 0; ab < aus.length;) ab += fs.writeSync(1, aus, ab, aus.length - ab);',
     '  process.exit(0);',
     '}',
     'process.exit(9);',
@@ -389,4 +398,34 @@ test('Abwesenheit: der Zwilling mit direktem writeFileSync faellt durch BEIDE Wa
     () => JSON.parse(fs.readFileSync(fall2.register, 'utf8')),
     'Die halbe Datei des Zwillings laesst sich noch parsen - der Schaden ist nicht der behauptete',
   );
+});
+
+// -- (5) Die Werkbank selbst: das Stub-gh darf seinen Rumpf nicht abschneiden --
+
+// Der Spion-gh schreibt eine base64-Huelle des Registers auf stdout. Auf eine
+// PIPE schreibt Node asynchron; ein direkt folgendes process.exit() schnitt den
+// Rest ab, sobald der Rumpf den Pipe-Puffer ueberstieg. Das Werkzeug bekam dann
+// halbes JSON und die Probe war rot, ohne dass am Werkzeug etwas falsch war.
+// Diese Probe faehrt den Stub mit einem bewusst grossen Register.
+test('Werkbank: das Stub-gh liefert auch einen grossen Rumpf vollstaendig', () => {
+  const dir = tempdir('stub-gross');
+  const register = path.join(dir, 'gross.json');
+  // Deutlich ueber jedem ueblichen Pipe-Puffer (64 KiB), damit die Probe die
+  // Abschneide-Stelle wirklich erreicht und nicht zufaellig darunter bleibt.
+  const fuellung = 'x'.repeat(400 * 1024);
+  fs.writeFileSync(register, JSON.stringify({ events: [], fuellung }), 'utf8');
+
+  const { bin } = stelleGhBereit(dir, register);
+  const lauf = spawnSync(process.execPath, [path.join(bin, 'gh.js'), 'api', 'egal'], {
+    encoding: 'utf8', env: { ...process.env, SPION_REGISTER: register }, maxBuffer: 64 * 1024 * 1024,
+  });
+
+  assert.equal(lauf.status, 0, 'das Stub-gh ist rot: ' + (lauf.stderr || ''));
+  const trenner = lauf.stdout.indexOf('\r\n\r\n');
+  assert.ok(trenner > 0, 'der Stub hat keinen Kopf/Rumpf-Trenner geschrieben');
+  const rumpf = lauf.stdout.slice(trenner + 4);
+  const geparst = JSON.parse(rumpf);   // genau hier riss es vorher
+  const zurueck = Buffer.from(geparst.content, geparst.encoding).toString('utf8');
+  assert.equal(zurueck, fs.readFileSync(register, 'utf8'),
+    'der zurueckgelesene Inhalt ist nicht der des Registers - der Rumpf war unvollstaendig');
 });
