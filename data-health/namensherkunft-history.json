@@ -1,0 +1,29 @@
+{
+  "_doc": "M10/M1 (_COURT-M10-2026-08-30, Frist 20.09.2026) — taegliche Herkunftsreihe von meta.nameSource. REINE MESSUNG: kein Gate, keine rc-Semantik, kein Konsument im Scoring (Auflage M2). Bucket \"fehlt\" = die Zeile traegt den Schluessel nameSource gar nicht, wurde also seit PR #136 nicht neu gezogen; ohne ihn wird wachsender Deckungsgrad als schrumpfende Fehlerklasse fehlgelesen. Invariante: Summe aller Buckets === gelesen. Gemessen NACH den Umbenennungs-Stufen des Laufs (die Population, die der Dedup sieht); die Umbenennungen des Laufs stehen getrennt unter \"umbenennungen\" (Auflage M5).",
+  "byDate": {
+    "2026-09-01": {
+      "gelesen": 16070,
+      "verteilung": {
+        "longName": 323,
+        "shortName": 0,
+        "watchlist": 1,
+        "ticker": 0,
+        "null": 0,
+        "fehlt": 15746
+      },
+      "gruppen": 11332,
+      "mehrbeinGruppen": 3148,
+      "watchlistSieger": 0,
+      "unterdrueckteBeine": 0,
+      "unlesbar": 0,
+      "umbenennungen": {
+        "gesamt": 40,
+        "jeHerkunft": {
+          "fehlt": 39,
+          "longName": 1
+        },
+        "watchlistFaelle": []
+      }
+    }
+  }
+}
