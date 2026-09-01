@@ -12,6 +12,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { loadUniverse } = require('../src/scoring/run-screener.js');
 const { scoreUniverse } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
@@ -48,6 +49,11 @@ function spearman(x, y) {
   return pearson(rankAvg(x), rankAvg(y));
 }
 
+function writeOverlapArtifact(outPath, value) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  writeFileAtomic(outPath, JSON.stringify(value, null, 2));
+}
+
 function run() {
   const universe = loadUniverse();
   const hg = scoreUniverse(universe, formulas);
@@ -80,12 +86,11 @@ function run() {
     pooled: { n: pooledQ.length, rho: pooledRho === null ? null : Math.round(pooledRho * 1000) / 1000 },
     perSector,
   };
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
-  fs.writeFileSync(OUT, JSON.stringify(out, null, 2));
+  writeOverlapArtifact(OUT, out);
   console.log(`[qc-overlap] pooled rho=${out.pooled.rho} (n=${out.pooled.n} geteilte Compounder) -> ${OUT}`);
   for (const [key, v] of Object.entries(perSector).sort()) console.log(`  ${key.padEnd(34)} n=${String(v.n).padStart(4)}  rho=${v.rho}`);
   return out;
 }
 
 if (require.main === module) run();
-module.exports = { run, spearman, rankAvg, pearson };
+module.exports = { run, spearman, rankAvg, pearson, writeOverlapArtifact };
