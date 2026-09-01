@@ -625,9 +625,11 @@ test('5.6 differenz_punkte: je Variante GENAU EINER, jetzt als Objekt (F6-B11/F6
   assert.equal(d.erfuellt, true);
   assert.ok(typeof d.quelle === 'string' && d.quelle.includes('preregistration.json:88'));
   // F6-C15: die Objektform haelt F6-B11 buchstaeblich intakt - EIN
-  // armuebergreifender Schluessel, nicht zwei.
+  // armuebergreifender Schluessel, nicht zwei. Seit F6-C13b haengt das
+  // Tor-Verdikt als Unterobjekt darunter; die vier registrierten Unterfelder
+  // bleiben unveraendert daneben stehen.
   assert.deepEqual(Object.keys(d).sort(),
-    ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'wert']);
+    ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'tor', 'wert']);
   assert.equal(b.daten['S-G'].differenz_punkte.wert, 0);
 });
 
@@ -757,18 +759,27 @@ test('F6-C16 der Stempel ist ersetzt: AUSGEWERTET statt OFFEN', () => {
   assert.ok(k.richtung.includes('ERSCHWEREN'));
   assert.deepEqual(k.unterschluessel.slice().sort(),
     ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'wert']);
-  // UMGEDREHT SEIT PR G: `tor` war ein ZWEITER armuebergreifender Schluessel,
-  // der in KEINEM Register-Eintrag steht und den die Fremdschluessel-Pruefung
-  // per Literal durchliess (Schritt-8-Review, Blocker 2). Bis ANHANG 3 seinen
-  // Schluesselsatz registriert, wird er NICHT emittiert - und diese Probe
-  // pinnt die Abwesenheit, nicht die Anwesenheit.
+  // SEIT ANHANG 3 (F6-C13b): `tor` ist registriert - aber als UNTEROBJEKT des
+  // EINEN armuebergreifenden Schluessels. Auf der Variantenebene bleibt es
+  // damit bei GENAU EINEM Schluessel, und F6-B11 wie F6-C15 bleiben
+  // buchstaeblich wahr. Zwischenstand von PR G (gar keine Emission) ist
+  // ueberholt; die Abwesenheit war die geschlossene Stellung bis zur
+  // Registrierung, nicht das Ziel.
   for (const v of ['S-U', 'S-G']) {
-    assert.ok(!('tor' in b.daten[v]),
-      `\`tor\` ist nicht registriert und darf ${v} nicht verlassen`);
     assert.deepEqual(
       Object.keys(b.daten[v]).filter((k) => k !== 'signal' && k !== 'kontrollpool'),
       ['differenz_punkte'],
       'je Variante GENAU EIN armuebergreifender Schluessel (F6-B11)');
+    const d = b.daten[v].differenz_punkte;
+    assert.deepEqual(Object.keys(d).slice().sort(),
+      ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'tor', 'wert'],
+      'die vier registrierten Unterfelder plus das tor-Unterobjekt');
+    assert.deepEqual(Object.keys(d.tor).slice().sort(),
+      ['grund', 'verdikt', 'weiter'],
+      'F6-C13b: genau verdikt/weiter/grund');
+    // F6-C13c: eingefrorener Text verlaesst die Datenflaeche.
+    assert.ok(!('regeltext' in d.tor) && !('richtung' in d.tor),
+      'TOR_REGELTEXT/TOR_RICHTUNG duerfen nicht zweitkopiert werden');
   }
 });
 

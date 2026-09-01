@@ -269,19 +269,28 @@ test('(9) ein anders grosses Panel bricht VOR dem ersten Byte ab', () => {
 
 // ── (10) `tor` — keine Ausnahme per Literal mehr ───────────────────────────
 test('(10) der Varianten-Satz ist eine registrierte Konstante ohne Ausnahmen', () => {
+  // SEIT ANHANG 3 (F6-C13b): das Tor-Verdikt ist registriert - als
+  // UNTEROBJEKT des EINEN armuebergreifenden Schluessels. Die geschlossene
+  // Stellung von PR G (TOR_IN_DATEN) ist damit erledigt; die Registrierung
+  // hat sie abgeloest, nicht aufgeweicht.
   const aus = py([
     'print("SATZ:" + ",".join(sorted(m.VARIANTEN_SCHLUESSEL_REGISTRIERT)))',
-    'print("TOR_IN_DATEN:" + str(m.TOR_IN_DATEN))',
+    'print("DIFF:" + ",".join(sorted(m.DIFFERENZ_UNTERSCHLUESSEL_REGISTRIERT)))',
+    'print("TOR:" + ",".join(sorted(m.TOR_UNTERSCHLUESSEL_REGISTRIERT)))',
+    'print("ALT:" + str(hasattr(m, "TOR_IN_DATEN")))',
   ]);
   assert.match(aus, /^SATZ:differenz_punkte$/m,
-    'bis ANHANG 3 traegt der registrierte Satz genau den einen Schluessel');
-  assert.match(aus, /^TOR_IN_DATEN:False$/m,
-    'die Vorgabe ist die GESCHLOSSENE Stellung');
+    'auf der Variantenebene bleibt es bei GENAU EINEM Schluessel (F6-B11)');
+  assert.match(aus, /^DIFF:erfuellt,maxDifferenzPunkte,quelle,tor,wert$/m);
+  assert.match(aus, /^TOR:grund,verdikt,weiter$/m, 'F6-C13b: genau drei Pfade');
+  assert.match(aus, /^ALT:False$/m,
+    'die Uebergangs-Konstante ist mit der Registrierung gefallen');
   // Die Literal-Ausnahme ist strukturell weg — nicht nur unbenutzt.
   assert.doesNotMatch(QUELLE_LF, /- \{"tor"\}/,
     'die Fremdschluessel-Pruefung darf keinen Schluessel per Literal ausnehmen');
   assert.doesNotMatch(QUELLE_LF, /je_arm\["tor"\] = tor_verdikt/,
-    '`tor` wird nicht emittiert, solange sein Schluesselsatz nicht registriert ist');
-  // Und die Marke fuer ANHANG 3 steht da, wo der Rat sie braucht.
-  assert.match(QUELLE_LF, /TODO-pending-ANHANG3/);
+    '`tor` steht unter differenz_punkte, nicht als zweiter Variantenschluessel');
+  // Die ANHANG-3-Marke ist erledigt und darf nicht stehen bleiben.
+  assert.doesNotMatch(QUELLE_LF, /TODO-pending-ANHANG3/,
+    'ANHANG 3 ist ratifiziert - eine offene Marke waere jetzt eine Luege');
 });

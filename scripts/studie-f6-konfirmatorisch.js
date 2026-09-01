@@ -647,7 +647,12 @@ const UEBERHOLT = 'F6-K: UEBERHOLT. Eintrag 27 (f6-konfirmatorisch-2026-09-01) '
 
 function haupt(argv) {
   if (argv.includes('--force')) throw new VerfassungsBruch('F6-K: --force gibt es nicht (F6-B8).');
-  throw new VerfassungsBruch(UEBERHOLT);
+  // STILLGELEGT ZUM SCHREIBEN, NICHT ZUM PRUEFEN. Ein Register-Akt kommt hier
+  // nie wieder heraus - aber die Riegel bleiben fahrbar, damit sie bewiesen
+  // werden koennen statt uebersprungen zu werden. Uebersprungene Proben
+  // verrotten; ein stillgelegtes Werkzeug mit scharfen Waechtern gegen seine
+  // historischen Bytes bleibt ehrlich.
+  if (argv.includes('--schreiben')) throw new VerfassungsBruch(UEBERHOLT);
   const schreiben = argv.includes('--schreiben');
   const registerPfad = argument(argv, 'register') || LEDGER;
   const dateiWurzel = argument(argv, 'wurzel') || WURZEL;
@@ -693,6 +698,12 @@ function haupt(argv) {
     + `Eintraege nach dem Anhaengen: ${neu.events.length}\n\n`);
 
   if (!schreiben) {
+    // Nur-lesende Einsicht: der fertige Eintrag als JSON, ohne jeden
+    // Schreibweg. Kein Umgehungsschalter - er kann nichts anhaengen, er zeigt
+    // nur, was das Werkzeug gebaut haette. Die Inhalts-Waechter haengen daran.
+    if (argv.includes('--zeige-eintrag')) {
+      process.stdout.write(`EINTRAG:${JSON.stringify(fertig)}\n`);
+    }
     process.stdout.write('TROCKENLAUF - es wurde NICHTS geschrieben.\n');
     return 0;
   }

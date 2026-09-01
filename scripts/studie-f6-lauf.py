@@ -375,11 +375,19 @@ DATEN_SCHLUESSEL = {
 VARIANTEN_SCHLUESSEL_REGISTRIERT = {"differenz_punkte"}
 VARIANTEN_SCHLUESSEL = VARIANTEN_SCHLUESSEL_REGISTRIERT
 
-# TODO-pending-ANHANG3: ob und mit welchem Schluesselsatz das Tor-Verdikt in
-# `daten` gehoert, entscheidet das dritte Anhang-Gericht. Bis dahin wird es
-# NICHT emittiert, und ein trotzdem vorhandener Schluessel ist ein ABBRUCH -
-# nicht ein Filter. Der Vorgabewert ist die geschlossene Stellung.
-TOR_IN_DATEN = False
+# F6-C13b (ANHANG 3) - DIE SCHACHTELUNG. Das komponierte Tor-Verdikt steht als
+# UNTEROBJEKT des EINEN ratifizierten armuebergreifenden Schluessels. Damit
+# bleiben F6-B11 ("genau einen armuebergreifenden Schluessel") und F6-C15
+# ("Erweiterung von EINEM auf ZWEI ... nicht zulaessig") BUCHSTAEBLICH wahr.
+#
+# NAMENS-TRANSPARENZ (F6-C13b, zwingend, hier wie im Eintrag): unter dem Namen
+# `differenz_punkte` steht ab jetzt AUCH das komponierte TOR-Verdikt. Der Name
+# stammt historisch aus F6-B11 und beschreibt den Inhalt nicht mehr allein.
+# Diese Wahl ist ein RUECKFALL BEI STIMMENGLEICHSTAND, keine Entscheidung des
+# Gerichts; die Umbenennungsfrage geht als eigene Weiche zurueck (KZ-21).
+DIFFERENZ_UNTERSCHLUESSEL_REGISTRIERT = {
+    "wert", "maxDifferenzPunkte", "erfuellt", "quelle", "tor"}
+TOR_UNTERSCHLUESSEL_REGISTRIERT = {"verdikt", "weiter", "grund"}
 
 # F6-B10 - die EIGENE Umschlag-Allowlist. Sie wird nie mit DATEN_SCHLUESSEL
 # vermischt: "Vermischen ist der Mechanismus, durch den der Zaehlproben-Satz zu
@@ -1124,12 +1132,57 @@ def pruefe_verbotene(baum, wo):
             pruefe_verbotene(v, wo + "[" + str(i) + "]")
 
 
+def pruefe_variantensatz(je_arm, wo):
+    """F6-C13d - die Variantenebene, ZWEISEITIG, auf allen drei Stufen.
+
+    Muster von `pruefe_ausgabesatz`: (a) emittiert TEILMENGE VON registriert -
+    ein ungelisteter Schluessel ist ein ABBRUCH, kein Filter; (b) registriert
+    TEILMENGE VON emittiert - ein VERSCHWUNDENES Pflichtfeld faellt sonst nicht
+    auf. Die fruehere Fassung war einseitig UND nahm `tor` per Literal heraus;
+    beides ist hier ersatzlos gefallen. Es gibt an dieser Stelle KEINE
+    Ausnahme nach Namen.
+    """
+    def zweiseitig(ist, soll, stufe):
+        fremd = sorted(set(ist) - soll)
+        if fremd:
+            raise LaufAbbruch(
+                "UNGELISTETER SCHLUESSEL " + ", ".join(fremd) + " in " + stufe
+                + " (F6-C13d/a). Ein nicht gelisteter Schluessel ist ein "
+                "ABBRUCH, kein Filter (preregistration.json:232).")
+        fehlend = sorted(soll - set(ist))
+        if fehlend:
+            raise LaufAbbruch(
+                "PFLICHTSCHLUESSEL FEHLT: " + ", ".join(fehlend) + " in "
+                + stufe + " (F6-C13d/b). Ein verschwundenes Pflichtfeld faellt "
+                "einer einseitigen Pruefung nicht auf - genau deshalb ist "
+                "diese hier zweiseitig.")
+
+    zweiseitig(set(je_arm) - set(ARME), VARIANTEN_SCHLUESSEL_REGISTRIERT, wo)
+    differenz = je_arm.get("differenz_punkte")
+    if not isinstance(differenz, dict):
+        raise LaufAbbruch(
+            "differenz_punkte in " + wo + " ist kein Objekt ("
+            + type(differenz).__name__ + ").")
+    zweiseitig(differenz, DIFFERENZ_UNTERSCHLUESSEL_REGISTRIERT,
+               wo + ".differenz_punkte")
+    tor = differenz.get("tor")
+    if not isinstance(tor, dict):
+        raise LaufAbbruch(
+            "tor in " + wo + ".differenz_punkte ist kein Objekt ("
+            + type(tor).__name__ + ").")
+    zweiseitig(tor, TOR_UNTERSCHLUESSEL_REGISTRIERT,
+               wo + ".differenz_punkte.tor")
+
+
 def pruefe_ausgabesatz(werte, zweig, wo):
     """F6-B15 - zweiseitig UND zweig-bewusst."""
     emittiert = set(werte)
 
     # (1) emittiert TEILMENGE VON registriert. Ein ungelisteter Schluessel ist
-    #     ein ABBRUCH, kein Filter (preregistration.json:196).
+    #     ein ABBRUCH, kein Filter (preregistration.json:232).
+    #     BERICHTIGT (F6-C9g/3, Form F6-C18): der Satz stand nie in :196 -
+    #     das ist die Zeile `"ausgabeAllowlist": [`. Gemessen steht er in
+    #     :232, am Ende der "verboten"-Zeile.
     ungelistet = sorted(emittiert - DATEN_SCHLUESSEL)
     if ungelistet:
         raise LaufAbbruch(
@@ -1225,6 +1278,13 @@ def differenz_objekt(anteil_signal, anteil_kontrollpool):
 def tor_verdikt(verdikt_signal, verdikt_kontrollpool, differenz):
     """F6-C13: das Tor-Verdikt je Variante, vier konjunktive Bedingungen.
 
+    F6-C13c: das Ergebnis traegt GENAU verdikt/weiter/grund. TOR_REGELTEXT und
+    TOR_RICHTUNG sind eingefrorene Konstanten und KEINE Messungen; sie wurden
+    frueher in JEDES tor-Objekt mitgeschrieben und waren damit eine zweite,
+    driftfaehige Kopie eingefrorenen Textes auf der Datenflaeche. Sie gehen
+    woertlich in den Eintrag (Regeltext) bzw. in die Umschlag-Liste
+    (Richtungssatz) - nicht in die Laufausgabe.
+
     Die Reihenfolge ist die des Urteils und nicht beliebig: die Bandfolge
     DOMINIERT. Ein Arm, den das Messgeraet nicht getrennt hat, macht das
     Gesamtverdikt NICHT UNTERSCHEIDBAR - auch dann, wenn die Differenz haelt.
@@ -1243,12 +1303,10 @@ def tor_verdikt(verdikt_signal, verdikt_kontrollpool, differenz):
         return {"verdikt": "NICHT UNTERSCHEIDBAR", "weiter": 0,
                 "grund": ("Mindestens ein Arm ist NICHT UNTERSCHEIDBAR - das "
                           "Messgeraet hat dort nicht getrennt. Die Bandfolge "
-                          "dominiert die Differenz-Bedingung."),
-                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+                          "dominiert die Differenz-Bedingung.")}
     if "NICHT BESTANDEN" in verdikte:
         return {"verdikt": "TOR GERISSEN", "weiter": 0,
-                "grund": "Mindestens ein Arm ist NICHT BESTANDEN.",
-                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+                "grund": "Mindestens ein Arm ist NICHT BESTANDEN."}
     # Beide Arme BESTANDEN - jetzt, und nur jetzt, entscheidet die Differenz.
     if not differenz["erfuellt"]:
         return {"verdikt": "TOR GERISSEN", "weiter": 0,
@@ -1256,14 +1314,12 @@ def tor_verdikt(verdikt_signal, verdikt_kontrollpool, differenz):
                           + repr(differenz["wert"]) + " Punkte ueberschreitet "
                           + repr(MAX_DIFFERENZ_PUNKTE) + " Punkte: "
                           "INCONCLUSIVE_DATA nach preregistration.json:139, "
-                          "kein p-Wert wird berechnet (R9)."),
-                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+                          "kein p-Wert wird berechnet (R9).")}
     return {"verdikt": "TOR GEHALTEN", "weiter": 1,
             "grund": ("Beide Arm-Bandverdikte BESTANDEN und die Arm-Differenz "
                       + repr(differenz["wert"]) + " Punkte haelt die Schranke "
                       "von " + repr(MAX_DIFFERENZ_PUNKTE) + " Punkten "
-                      "(Gleichheit besteht)."),
-            "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+                      "(Gleichheit besteht).")}
 
 
 def pruefe_keine_absolutpfade(baum, absolut, wo="bericht"):
@@ -1454,20 +1510,18 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         a_sig = je_arm["signal"]["werte"]["anteil"]
         a_kon = je_arm["kontrollpool"]["werte"]["anteil"]
         je_arm["differenz_punkte"] = differenz_objekt(a_sig, a_kon)
-        if TOR_IN_DATEN:
-            raise LaufAbbruch(
-                "TOR-VERDIKT IN `daten` IST NICHT REGISTRIERT: TOR_IN_DATEN "
-                "steht offen, aber der Schluesselsatz von `tor` ist in keinem "
-                "Register-Eintrag beurkundet. Ein nicht gelisteter Schluessel "
-                "ist ein ABBRUCH, kein Filter (F6-B15). Erst die Registrierung "
-                "(ANHANG 3), dann die Ausgabe.")
-        fremd = sorted(set(je_arm) - set(ARME)
-                       - VARIANTEN_SCHLUESSEL_REGISTRIERT)
-        if fremd:
-            raise LaufAbbruch(
-                "Ungelisteter Variantenschluessel: " + ", ".join(fremd)
-                + ". Geprueft wird gegen den REGISTRIERTEN Satz; es gibt keine "
-                "Ausnahme per Literal.")
+        # F6-C13b - das Verdikt als Unterobjekt des EINEN Schluessels.
+        je_arm["differenz_punkte"]["tor"] = tor_verdikt(
+            je_arm["signal"]["werte"]["verdikt"],
+            je_arm["kontrollpool"]["werte"]["verdikt"],
+            je_arm["differenz_punkte"])
+        pruefe_variantensatz(je_arm, "daten." + variante)
+        # F6-C13e - der Wachposten lief NIE ueber das armuebergreifende
+        # Objekt: die Aufrufe standen an den Arm-`werte` und am Umschlag, das
+        # Objekt entsteht erst danach. Berichtigt wird die DECKUNGSBEHAUPTUNG,
+        # nicht die Schutzlage - ein Leck folgte nicht.
+        pruefe_verbotene(je_arm["differenz_punkte"], "daten." + variante
+                         + ".differenz_punkte")
         daten[variante] = je_arm
 
     beendet = jetzt_iso()

@@ -18,6 +18,8 @@ const WURZEL = path.join(__dirname, '..');
 const LEDGER = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0',
   'outcome-access-ledger.json');
 const BERICHT_REL = 'reports/studie/f6-aequivalenz-entdeckung-2026-09-01.json';
+// Der Stand, den Eintrag 27 gebunden hat (origin/main vor PR G).
+const STAND_DES_AKTES = '10e08e3746494ca7f064dc773fbdcf92e931ceea';
 
 const K = require(WERKZEUG);
 
@@ -31,9 +33,23 @@ function werkbank() {
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     if (fs.existsSync(quelle)) fs.copyFileSync(quelle, ziel);
   }
+  // PR G/H haben zwei gebundene Skripte bewusst veraendert. Die Bindungsliste
+  // dieses Werkzeugs ist URKUNDE ueber Eintrag 27 und wird NICHT nachgezogen -
+  // also stellt die Werkbank den Stand wieder her, den der Akt gebunden hat.
+  // Ohne das braeche jede Probe am SHA-Riegel ab und neun Waechter waeren
+  // still abgeschaltet (Ruling des Orchestrators: uebersprungene Proben
+  // verrotten).
+  for (const rel of ['scripts/studie-f6-zaehlwerk.py', 'scripts/studie-f6-lauf.py',
+    'scripts/studie-f6-aequivalenz-anmeldung.js']) {
+    const alt = require('node:child_process').spawnSync(
+      'git', ['show', `${STAND_DES_AKTES}:${rel}`],
+      { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(alt.status, 0, `historischer Stand von ${rel} fehlt`);
+    fs.writeFileSync(path.join(tmp, ...rel.split('/')), alt.stdout);
+  }
   return tmp;
 }
-const berichtDa = () => false;  // UEBERHOLT: das Werkzeug ist stillgelegt (s.u.)
+const berichtDa = () => fs.existsSync(path.join(WURZEL, ...BERICHT_REL.split('/')));
 
 // Der Akt wurde gegen einen Registerstand OHNE ihn selbst gebaut. Sobald er
 // angehaengt ist, weist das Werkzeug jeden zweiten Anlauf zu Recht ab — die
@@ -95,7 +111,7 @@ test('fehlender Aequivalenz-Bericht bricht den Akt ab', () => {
   const tmp = werkbank();
   const p = path.join(tmp, ...BERICHT_REL.split('/'));
   if (fs.existsSync(p)) fs.rmSync(p);
-  assert.throws(() => fahre([], tmp), /UEBERHOLT/);  // stillgelegt, s.u.
+  assert.throws(() => fahre([], tmp), /Aequivalenz-Bericht fehlt/);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -138,7 +154,7 @@ test('wirksam-ab vor der Anmeldung bricht ab', { skip: !berichtDa() }, () => {
 
 test('eine Anmeldezeit in der Zukunft bricht ab', () => {
   const morgen = new Date(Date.now() + 86400000).toISOString();
-  assert.throws(() => K.haupt(['--anmeldezeit', morgen]), /UEBERHOLT/);
+  assert.throws(() => K.haupt(['--anmeldezeit', morgen]), /liegt in der Zukunft/);
 });
 
 // ── Riegel 9: der Ausgabesatz ist genau der registrierte ──────────────────
@@ -189,9 +205,11 @@ test('der Eintrag sagt selbst, dass der Lauf erst nach gruenem Review feuert',
   { skip: !berichtDa() }, () => {
     const tmp = werkbank();
     // Den Eintrag wirklich anhaengen — aber in eine Kopie, nie ins Register.
+    // Der Eintrag kommt aus der NUR-LESENDEN Einsicht: das Werkzeug ist zum
+    // Schreiben stillgelegt, seine Inhalts-Waechter bleiben trotzdem scharf.
     const p = basisRegister(tmp);
-    fahre(['--schreiben'], tmp, p);
-    const e = JSON.parse(fs.readFileSync(p, 'utf8')).events.at(-1);
+    const ausgabe = fahre(['--zeige-eintrag'], tmp, p);
+    const e = JSON.parse(ausgabe.match(/^EINTRAG:(.*)$/m)[1]);
 
     assert.strictEqual(e.typ, 'confirmatory_execution_authorized');
     assert.deepStrictEqual(e.fenster, ['pruefung']);
@@ -278,7 +296,8 @@ test('ein Nutzerpfad im Eintrag bricht an der Schreib-Grenze ab', () => {
 
 // ── Nach dem Schritt-8-Review: das Werkzeug ist stillgelegt ───────────────
 test('das Werkzeug baut den ueberholten Eintrag 27 nicht mehr', () => {
-  assert.throws(() => K.haupt([]), /UEBERHOLT/);
+  // Der Trockenlauf bleibt fahrbar (die Riegel muessen beweisbar bleiben);
+  // GESCHRIEBEN wird nie wieder.
   assert.throws(() => K.haupt(['--schreiben']), /UEBERHOLT/);
   // --force bleibt der ERSTE Riegel: eine Reparatur-Betriebsart gibt es auch
   // an einem stillgelegten Werkzeug nicht.
