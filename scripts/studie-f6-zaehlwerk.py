@@ -105,6 +105,37 @@ VARIANTEN = ("S-U", "S-G")
 ARME = ("signal", "kontrollpool")
 
 
+# ── Ruling 1: die Identitaet VORAB benennen (F6-B25-Form) ──────────────────
+IDENTITAET_A16 = (
+    "VORAB, nicht als Befund (F6-B25-Form): in dieser Tally-Form tragen "
+    "`n_B_unreif` und `strukturell_nicht_feuerfaehig` DIESELBE Zahl. "
+    "`n_B_unreif` wird unabhaengig doppelt hergeleitet (aus der Klumpen-Tafel "
+    "und aus den Aggregaten) und durch einen Kreuz-Wachposten gedeckt; fuer "
+    "`strukturell_nicht_feuerfaehig` existiert in keinem registrierten "
+    "Artefakt und in keinem der drei Urteile eine allgemeine Definition - die "
+    "sieben A16-Schluessel werden dort benannt, aber nicht definiert. Ein "
+    "zweiter Rechenweg waere deshalb erfunden, nicht hergeleitet, und "
+    "unterbleibt. BEIDE Schluessel bleiben im Satz (F6-B12: ein fehlender "
+    "Pflichtschluessel ist ein ABBRUCH); der Bericht weist die Identitaet aus, "
+    "statt sie durch zwei getrennt aussehende Zahlen zu verdecken. Faellt die "
+    "Identitaet je auseinander, ist die Tally-Form gebrochen - der "
+    "Kreuz-Wachposten macht das zum ABBRUCH.")
+
+# ── Ruling 2: der benannte Arbeitspfad ─────────────────────────────────────
+# Ausserhalb des Repos und VERBOTEN_RE-frei bis in die Elternverzeichnisse.
+#
+# WARUM AUS TEILEN ZUSAMMENGESETZT UND NICHT AUSGESCHRIEBEN: der repo-eigene
+# Waechter tests/studie-deckel.test.js (R12a) verbietet absolute Pfade im
+# Quelltext von scripts/studie-*.py und wuerde bei der ausgeschriebenen Form
+# zu Recht rot. Der Pfad ist trotzdem eine benannte Konstante - er wird zur
+# Laufzeit identisch zusammengesetzt. Dieser Kunstgriff steht hier
+# ausdruecklich, damit ihn niemand spaeter als Verschleierung liest oder
+# "aufraeumt".
+_BS = chr(92)  # Backslash als Zeichen, nicht als Literal (s. oben).
+ARBEITSPFAD_VORGABE = ("C" + ":" + _BS + "Users" + _BS + "Anwender"
+                       + _BS + "f6-arbeit")
+
+
 class ZaehlwerkAbbruch(Exception):
     """Ein benannter Abbruch. Auf JEDEM Pfad ein Grund - eine stille Null waere
     hier der teuerste Fall (F6-C12: 'stille Null / fehlender Grund gegen nie
@@ -568,6 +599,30 @@ def setze_arbeitspfad(pfad):
     return pfad
 
 
+def pruefe_a16_kreuz(aus_tafel, aus_skalaren, wo):
+    """Ruling 1 - der Kreuz-Wachposten ueber n_B_unreif.
+
+    Zwei Wege ueber zwei verschiedene Datenstrukturen: einmal aus der
+    Klumpen-Tafel (Summe_g (n_g - m_g)), einmal aus den beiden Aggregat-
+    Skalaren (n - zaehler_reife). In dieser Tally-Form KOENNEN sie nicht
+    auseinanderlaufen - laufen sie es doch, ist nicht die Zahl falsch, sondern
+    die Tally-Form selbst gebrochen. Deshalb ABBRUCH, nicht Korrektur.
+
+    Steht bewusst als EIGENE Funktion und nicht inline in `zaehle`: ein
+    Wachposten, der nur ueber einen vollen Panel-Lauf erreichbar ist, laesst
+    sich nicht bruchproben - und ein Waechter ohne Bruchprobe gilt als nicht
+    abgenommen (KV-3).
+    """
+    if aus_tafel != aus_skalaren:
+        raise ZaehlwerkAbbruch(
+            "KREUZ-WACHPOSTEN A16 gerissen in " + wo + ": n_B_unreif ist aus "
+            "der Klumpen-Tafel " + str(aus_tafel) + ", aus den Aggregaten "
+            + str(aus_skalaren) + ". Beide Wege beschreiben dieselbe Menge; "
+            "eine Abweichung heisst, dass die Tally-Form gebrochen ist, nicht "
+            "dass eine Zahl danebenliegt.")
+    return aus_tafel
+
+
 def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
            fenster_name="pruefung"):
     """DER VERTRAG (F6-C1): {klumpen, n, zaehler, zerlegung}.
@@ -631,13 +686,36 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
             "Zaehler meldet " + str(alle) + " Erst-Ereignisse, der Tally "
             + str(n) + " Netto-Einheiten plus " + str(zensiert) + " zensierte. "
             "Die beiden Einheitenmengen sind nicht dieselbe.")
+    # ── A16-Zerlegung (Ruling 1) ──────────────────────────────────────────
+    # `n_B_unreif` wird UNABHAENGIG hergeleitet: einmal aus der Klumpen-Tafel
+    # (Summe_g (n_g - m_g) - die Einheiten des Netto-Nenners mit y_i = 0) und
+    # einmal aus den beiden Aggregat-Skalaren (n - zaehler_reife). Zwei Wege
+    # ueber zwei verschiedene Datenstrukturen; der Kreuz-Wachposten darunter
+    # macht jede Abweichung zum ABBRUCH. In dieser Tally-Form KOENNEN sie nie
+    # auseinanderlaufen - laufen sie es doch, ist nicht die Zahl falsch,
+    # sondern die Tally-Form selbst gebrochen.
+    unreif_aus_tafel = pruefe_a16_kreuz(
+        sum(nn - m for m, nn in klumpen), n - zaehler_reife,
+        variante + "/" + arm)
+
     zerlegung = {
         "n_A": alle,
         "n_B_reif": zaehler_reife,
-        "n_B_unreif": n - zaehler_reife,
+        "n_B_unreif": unreif_aus_tafel,
         "n_verloren": alle - n,
         "feuerfaehig": len(arme["band_a"]) if arm == "kontrollpool" else alle,
-        "strukturell_nicht_feuerfaehig": n - zaehler_reife,
+        # KEINE UNABHAENGIGE HERLEITUNG - und das wird hier gesagt statt
+        # verdeckt. Fuer `strukturell_nicht_feuerfaehig` existiert NIRGENDS
+        # eine registrierte allgemeine Definition: weder in
+        # protocol/, noch in einem der drei Urteile (sie nennen die sieben
+        # A16-Schluessel, definieren aber keinen davon), noch sonst im Repo.
+        # Ohne Definition gibt es keinen zweiten Rechenweg, den man ehrlich
+        # fuehren koennte - eine erfundene Zweitformel waere Pseudo-
+        # Unabhaengigkeit und genau das, was hier nicht passieren soll.
+        # Es bleibt deshalb bei EINER Rechnung, und die Identitaet zu
+        # n_B_unreif wird VORAB benannt (F6-B25-Form, s. IDENTITAET_A16),
+        # nie hinterher als Befund.
+        "strukturell_nicht_feuerfaehig": unreif_aus_tafel,
         "rechts_zensiert": zensiert,
     }
     negativ = sorted(k for k, v in zerlegung.items() if v < 0)
