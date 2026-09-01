@@ -34,6 +34,21 @@ function werkbank() {
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     if (fs.existsSync(quelle)) fs.copyFileSync(quelle, ziel);
   }
+  // Die Bindungsliste von Eintrag 28 ist URKUNDE ueber den Stand, den DIESER
+  // Akt gebunden hat - sie wird NICHT nachgezogen, wenn der Baum sich
+  // weiterbewegt. Die F6-K13-Reparatur aendert scripts/studie-f6-lauf.py
+  // notwendig; genau deshalb verlangt F6-K11/K12 einen ueberschreibenden Akt
+  // mit neuen SHA. Bis dahin stellt die Werkbank die Bytes wieder her, die
+  // Eintrag 28 gebunden hat - sonst braechen die sechs Waechter dahinter am
+  // SHA-Riegel ab und waeren still abgeschaltet.
+  const STAND_DES_AKTES = 'aeefb68125';
+  for (const rel of ['scripts/studie-f6-lauf.py', 'scripts/studie-f6-zaehlwerk.py']) {
+    const alt = require('node:child_process').spawnSync(
+      'git', ['show', `${STAND_DES_AKTES}:${rel}`],
+      { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(alt.status, 0, `historischer Stand von ${rel} fehlt`);
+    fs.writeFileSync(path.join(tmp, ...rel.split('/')), alt.stdout);
+  }
   return tmp;
 }
 

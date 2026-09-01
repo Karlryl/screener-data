@@ -974,3 +974,97 @@ test('5.13 die drei zweig-pflichtigen Teilmengen sind verschieden und '
   assert.match(r.stdout, /^DATEN:30$/m, 'der registrierte Satz zaehlt 30 Datenfelder');
   assert.match(r.stdout, /^UEBERSCHNEIDUNG:\[\]$/m, 'F6-B10: zwei getrennte Listen');
 });
+
+// ============================================================================
+// F6-K14 — DIE RELATIV-ARGUMENT-FIXTURE
+// ============================================================================
+//
+// Genau dieser Fixture-Typ fehlte, und deshalb ueberlebte der Defekt: JEDE
+// Fixture dieses Laeufers fuhr ABSOLUTE Temp-Pfade, und nur bei relativen
+// Argumenten ist ein Pfad byte-gleich seinem eigenen `kurzpfad`. Der eine
+// autorisierte Lauf starb daran - NACH dem Panel-Zugriff.
+
+const rel = (von, p) => path.relative(von, p).split(path.sep).join('/');
+
+function rufRelativ(w, extra = []) {
+  return spawnSync(python, [SKRIPT,
+    '--freigabe', rel(w.dir, w.freigabePfad), '--panel', rel(w.dir, w.panel),
+    '--bericht', rel(w.dir, w.bericht), '--wurzel', rel(w.dir, w.wurzel),
+    '--register', rel(w.dir, w.registerPfad), ...extra],
+  { encoding: 'utf8', cwd: w.dir });
+}
+
+test('F6-K14 (i) ein Lauf mit RELATIVEN Argumenten schreibt den Bericht', () => {
+  const w = welt('f6lauf-k14-relativ-');
+  const zw = zaehlwerk(w.dir, gleichmaessig(230, 20));
+  const r = rufRelativ(w, ['--zaehlwerk', rel(w.dir, zw)]);
+  assert.equal(r.status, 0,
+    `der relative Lauf ist rot: ${r.stderr.slice(0, 500)}`);
+  assert.ok(fs.existsSync(w.bericht),
+    'DER BERICHT MUSS GESCHRIEBEN WERDEN - genau das war der Schaden');
+  const b = JSON.parse(fs.readFileSync(w.bericht, 'utf8'));
+  // Und die Ausgabe ist trotzdem R12a-rein: nur Kurzformen.
+  for (const p of b.umschlag.gelesenePfade) {
+    assert.doesNotMatch(p, /^[A-Za-z]:/, `absolute Form in gelesenePfade: ${p}`);
+    assert.ok(p.split('/').length === 2, `keine Kurzform: ${p}`);
+  }
+});
+
+test('F6-K14 (ii) ein absoluter Pfad im Berichtsbaum bricht WEITERHIN ab', () => {
+  const BS = String.fromCharCode(92);
+  const r = pyProbe([
+    `voll = "C:" + "${BS}${BS}" + "Users" + "${BS}${BS}" + "Jemand" + "${BS}${BS}" + "x.json"`,
+    'try:',
+    '    m.pruefe_keine_absolutpfade({"a": voll}, {voll})',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f)[:40])',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:ABSOLUTER PFAD IM BERICHT/m);
+});
+
+test('F6-K14 (iii) eine Kontokennung als Pfadsegment bricht WEITERHIN ab', () => {
+  const r = pyProbe([
+    'import os',
+    'konto = os.path.basename(os.path.expanduser("~"))',
+    'try:',
+    '    m.pruefe_keine_absolutpfade({"a": konto + "/f6-arbeit"}, set())',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f)[:40])',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:KONTOKENNUNG ALS PFADSEGMENT/m);
+});
+
+test('F6-K14 BRUCHPROBE: mit restaurierter Rohmenge wird die Fixture ROT', () => {
+  // Der Riegel wird absichtlich auf den Stand VOR der Reparatur gesetzt - an
+  // einer KOPIE. Die Datei im Repo bleibt unberuehrt.
+  const w = welt('f6lauf-k14-bruch-');
+  const zw = zaehlwerk(w.dir, gleichmaessig(230, 20));
+  const kaputt = path.join(w.dir, 'laeufer-vor-der-reparatur.py');
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  const alt = '| {str(p) for p in genutzt if os.path.isabs(str(p))})';
+  assert.ok(quelle.includes(alt), 'der reparierte Ausdruck wurde nicht gefunden');
+  fs.writeFileSync(kaputt,
+    quelle.replace(alt, '| {str(p) for p in genutzt})'), 'utf8');
+
+  const r = spawnSync(python, [kaputt,
+    '--freigabe', rel(w.dir, w.freigabePfad), '--panel', rel(w.dir, w.panel),
+    '--bericht', rel(w.dir, w.bericht), '--wurzel', rel(w.dir, w.wurzel),
+    '--register', rel(w.dir, w.registerPfad), '--zaehlwerk', rel(w.dir, zw)],
+  { encoding: 'utf8', cwd: w.dir });
+
+  // F6-K14 verlangt die Ausgabe im PR-Text. Damit sie nicht abgeschrieben
+  // werden muss, gibt die Probe sie auf Wunsch woertlich heraus.
+  if (process.env.F6_BRUCH_ZEIGEN) process.stderr.write(`\nBRUCHPROBE:\n${r.stderr}\n`);
+  assert.notEqual(r.status, 0,
+    'mit der Rohmenge MUSS der relative Lauf abbrechen - sonst misst die Probe nichts');
+  assert.match(r.stderr, /ABSOLUTER PFAD IM BERICHT/,
+    `erwartet wurde genau der R12a-Fehlalarm, bekam: ${r.stderr.slice(0, 300)}`);
+  assert.equal(fs.existsSync(w.bericht), false,
+    'und wieder waere kein Bericht entstanden');
+  // F6-K15: der Fehlalarm faellt jetzt in der VORPRUEFUNG - also VOR dem
+  // ersten Panel-Byte, nicht mehr am Schreib-Rand nach der Messung. Genau
+  // diese Verschiebung ist der Unterschied zwischen einem verlorenen
+  // Kontingent und einem folgenlosen Abbruch.
+  assert.match(r.stderr, /bei vorpruefung/,
+    'der Abbruch muss aus der Vorpruefung kommen, nicht vom Schreib-Rand');
+});
