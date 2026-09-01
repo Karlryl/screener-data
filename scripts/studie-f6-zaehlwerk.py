@@ -608,10 +608,18 @@ def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     _g, a_saetze = e2.wachstum_und_beschleunigung(alle, zaehler, praefix)
     feuerungen, auswertbar, _grenzen = e2.signale(a_saetze, zp.PERZENTIL,
                                                   zaehler, praefix)
+    # `im_signalband` vergleicht das JAHR aus `accepted` gegen `von`/`bis` und
+    # erwartet deshalb JAHRESZAHLEN, so wie sie in der eigenen Fenster-Registry
+    # des Zaehlprobe-Moduls stehen (`FENSTER`: "von": 2009, "bis": 2015).
+    # FENSTER_SOLL hier fuehrt die ISO-Grenzen, weil F6-C22 das Signalband
+    # datumsgenau beurkundet (2017-01-01/2019-12-31) - die Umrechnung gehoert
+    # deshalb an die Uebergabestelle, nicht in die Konstante.
+    von_jahr = int(str(fenster["von"])[:4])
+    bis_jahr = int(str(fenster["bis"])[:4])
     band_f = [f for f in feuerungen
-              if zp.im_signalband(f, e2, fenster["von"], fenster["bis"])]
+              if zp.im_signalband(f, e2, von_jahr, bis_jahr)]
     band_a = [a for a in auswertbar
-              if zp.im_signalband(a, e2, fenster["von"], fenster["bis"])]
+              if zp.im_signalband(a, e2, von_jahr, bis_jahr)]
 
     rand_ordinal = e2.ordinal(fenster["rand"].replace("-", ""))
     signal = zp.arm_zaehlen(band_f, gewaehlt, e2, rand_ordinal)
