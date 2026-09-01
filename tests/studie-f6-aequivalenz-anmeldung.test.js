@@ -188,9 +188,9 @@ test('die Sollzahlen im Werkzeug stimmen mit BEIDEN Artefakten ueberein', () => 
 
 test('allowedOutputs ist EXAKT und abschliessend (Bauordnung Schritt 2)', () => {
   const erwartet = [
-    'bein1.S-U.firmen_reif', 'bein1.S-U.firmen_unreif',
-    'bein1.S-G.firmen_reif', 'bein1.S-G.firmen_unreif',
-    'bein1.S-UG.firmen_reif', 'bein1.S-UG.firmen_unreif',
+    'aequivalenzTorSoll.S-U.firmen_reif', 'aequivalenzTorSoll.S-U.firmen_unreif',
+    'aequivalenzTorSoll.S-G.firmen_reif', 'aequivalenzTorSoll.S-G.firmen_unreif',
+    'aequivalenzTorSoll.S-UG.firmen_reif', 'aequivalenzTorSoll.S-UG.firmen_unreif',
     'bein2.S-U/signal.zaehler', 'bein2.S-U/signal.nenner', 'bein2.S-U/signal.zensiert',
     'bein2.S-U/kontrollpool.zaehler', 'bein2.S-U/kontrollpool.nenner',
     'bein2.S-U/kontrollpool.zensiert',
@@ -198,9 +198,15 @@ test('allowedOutputs ist EXAKT und abschliessend (Bauordnung Schritt 2)', () => 
     'bein2.S-G/kontrollpool.zaehler', 'bein2.S-G/kontrollpool.nenner',
     'bein2.S-G/kontrollpool.zensiert',
     'bestanden', 'modulSha256', 'zaehlwerkSha256', 'zaehlprobeSha256',
+    'schwellenDateiSha256', 'schwellenInhaltSha256', 'kalibrierHaelfteGeprueft',
   ];
   assert.deepEqual(werkzeug.ALLOWED_OUTPUTS, erwartet);
-  assert.equal(werkzeug.ALLOWED_OUTPUTS.length, 22);
+  assert.equal(werkzeug.ALLOWED_OUTPUTS.length, 25);
+  // F6-C7i: KEINE Kalibrierzahl als gemessene Groesse dieses Akts.
+  for (const k of werkzeug.ALLOWED_OUTPUTS) {
+    assert.equal(/kalibrierungsWeg|auswertbarImBand|firmenReif|firmenUnreif|verbreitertSha/.test(k),
+      false, `Kalibrierzahl in der Allowlist: ${k}`);
+  }
   // Kein Ergebniswert, kein Anteil, kein SE, kein Band, kein p-Wert.
   for (const verboten of ['anteil', 'auffindbarkeit', 'se_', 'band', 'p_wert',
     'verdikt', 'weiter', 'feuerrate', 'ampel', 'cik', 'klumpen']) {
