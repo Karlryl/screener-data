@@ -58,7 +58,13 @@ const berichtDa = () => fs.existsSync(path.join(WURZEL, ...BERICHT_REL.split('/'
 // umgeschrieben: die Kette bleibt gueltig.
 function basisRegister(tmp) {
   const reg = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
-  while (reg.events.length && reg.events.at(-1).runId === K.RUN_ID) reg.events.pop();
+  // Abgeschnitten wird bis zum Kettenende, das DIESES Werkzeug erwartet - nicht
+  // bis zu einer festen Laenge. Ein Register waechst; eine Probe, die die
+  // Laenge festnagelt, wird beim naechsten Akt rot, ohne dass an ihrem
+  // Gegenstand etwas falsch waere (genau so ist sie an Eintrag 28 gerissen).
+  while (reg.events.length && reg.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
+    reg.events.pop();
+  }
   const p = path.join(tmp, 'basis-register.json');
   fs.writeFileSync(p, JSON.stringify(reg, null, 1));
   return p;
