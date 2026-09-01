@@ -330,9 +330,10 @@ const heute = () => new Date().toISOString().slice(0, 10);
 
 async function run(argv = process.argv.slice(2), opts = {}) {
   const trocken = argv.includes('--dry');
-  // opts.dir nur fuer Tests: sonst liesse sich der Quellenausfall-Pfad nur gegen das
-  // echte Archiv fahren — und genau der Pfad ist der, der still war.
+  // Test-Seams fuer Zielverzeichnis, Abruf und Datum: sonst liessen sich der
+  // Quellenausfall- und Wiederholungspfad nur gegen Netz und echtes Archiv fahren.
   const dir = opts.dir || DIR;
+  const fetchText = opts.fetchText || hole;
   const grundbildPfad = path.join(dir, '_grundbild.json');
   // Quellen EINZELN holen (Fund 29.07.2026): faellt eine aus, darf sie nicht den ganzen
   // Tag mitreissen. Am 29.07. lieferte www.sec.gov den GitHub-Laeufern zweimal HTTP 403,
@@ -344,7 +345,7 @@ async function run(argv = process.argv.slice(2), opts = {}) {
   const fehlend = [];
   for (const [k, u] of Object.entries(QUELLEN)) {
     try {
-      roh[k] = await hole(u);
+      roh[k] = await fetchText(u);
     } catch (e) {
       roh[k] = '';
       fehlend.push(k);
@@ -373,6 +374,9 @@ async function run(argv = process.argv.slice(2), opts = {}) {
 
   fs.mkdirSync(dir, { recursive: true });
   const grundbild = liesGrundbild(grundbildPfad);   // null = es gibt wirklich noch keins
+  // Einmal pro Lauf bestimmen: Erstanlage, Diff, Dateiname und Rotation muessen auch
+  // dann denselben Tag meinen, wenn der Lauf eine UTC-Mitternacht ueberschreitet.
+  const datum = opts.date || heute();
 
   if (!grundbild) {
     const obj = Object.fromEntries([...neu.entries()].sort((a, b) => a[0].localeCompare(b[0])));
@@ -380,15 +384,14 @@ async function run(argv = process.argv.slice(2), opts = {}) {
     // Seit BK-SK-001 in der Wickelform mit `ab` — sonst wuesste ein spaeterer Leser
     // nach der ersten Monats-Rotation nicht, welche Tageszeilen zu welchem Bild gehoeren.
     if (!trocken) writeFileAtomic(grundbildPfad, JSON.stringify({
-      ab: heute(),
+      ab: datum,
       erzeugt: new Date().toISOString(),
-      hinweis: 'Erstanlage. Tageszeilen ab ' + heute() + ' gehoeren auf dieses Bild.',
+      hinweis: 'Erstanlage. Tageszeilen ab ' + datum + ' gehoeren auf dieses Bild.',
       symbole: obj,
     }, null, 0));
     return { erstanlage: true, symbole: neu.size };
   }
 
-  const datum = heute();
   const zeilen = alleZeilen(dir);
   // Ein zweiter Lauf am selben Tag ersetzt seine Zeile, statt eine zweite anzuhaengen —
   // sonst haengt der Zustand davon ab, wie oft der Job lief.
