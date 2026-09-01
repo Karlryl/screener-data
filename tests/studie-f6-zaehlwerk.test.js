@@ -216,9 +216,14 @@ test('BEIN 2: die Sollwerte stimmen mit E4d-kadenz-entdeckung ueberein, samt SHA
     for (const arm of ['signal', 'kontrollpool']) {
       const soll = b2[`('${v}', '${arm}')`];
       const z = b[v][armname[arm]];
-      assert.equal(soll.zaehler, z.zaehler_kadenz, `${v}/${arm} Zaehler`);
-      assert.equal(soll.nenner, z.nenner_kadenz, `${v}/${arm} Nenner`);
-      assert.equal(soll.zensiert, z.zensiert_kadenz, `${v}/${arm} Zensur`);
+      // F6-C8a/b: die E3-Spalten. Diese Probe las bis Anhang 2 die
+      // _kadenz-Spalten und hat den Basisfehler damit MITGETRAGEN statt ihn
+      // zu fangen - sie war gegen dieselbe falsche Spalte gruen wie das Soll.
+      assert.equal(soll.zaehler, z.fallzahl, `${v}/${arm} Zaehler (.fallzahl)`);
+      assert.equal(soll.nenner, z.nenner_e3, `${v}/${arm} Nenner (.nenner_e3)`);
+      assert.equal(soll.zensiert, z.zensiert_e3, `${v}/${arm} Zensur (.zensiert_e3)`);
+      assert.equal(soll.zaehler / soll.nenner, z.auffindbarkeit_e3,
+        `${v}/${arm}: das Soll steht nicht auf der Basis, die es zu fuehren vorgibt`);
     }
   }
   assert.equal(rahmen.panelRand, d.panelRand);
@@ -669,6 +674,92 @@ test('VERTRAG: _arme liefert ERST-EREIGNISSE als Tally-Einheiten, nie Feuerungen
     + 'sonst zaehlt der Tally Feuerungen als Stichprobe (W-C, R3)');
   assert.match(r.stdout, /^TALLY:\[\[1, 1\]\]$/m,
     'die Tally-Invariante n_g == 1 muss halten');
+});
+
+// ============================================================================
+// ANHANG 2 - F6-C8a..e: die Zensur-Basis von Bein 2
+// ============================================================================
+
+function c8Probe(mutation) {
+  return pyProbe([
+    mutation,
+    'try:',
+    '    r = m.pruefe_bein2_basis(m.WURZEL_REPO)',
+    '    print("DURCH:" + str(r["bestanden"]))',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f)[:300])',
+  ].join('\n'));
+}
+
+test('F6-C8b: die berichtigte Zelle steht auf der E3-Basis', () => {
+  const r = pyProbe([
+    'import json',
+    'print("SOLL:" + json.dumps({str(k): v for k, v in m.BEIN2_SOLL.items()}, sort_keys=True))',
+    'print("SPALTEN:" + json.dumps(m.BEIN2_SPALTE, sort_keys=True))',
+    'print("ARM:" + json.dumps(m.ARM_ARTEFAKT, sort_keys=True))',
+  ].join('\n'));
+  const soll = JSON.parse(r.stdout.split('\n').find((z) => z.startsWith('SOLL:')).slice(5));
+  assert.deepEqual(soll["('S-U', 'kontrollpool')"],
+    { zaehler: 3761, nenner: 4514, zensiert: 0 },
+    'die Zelle S-U/kontrollpool muss auf 3761/4514/0 berichtigt sein (F6-C8b)');
+  // Die drei uebrigen bleiben woertlich.
+  assert.deepEqual(soll["('S-U', 'signal')"], { zaehler: 543, nenner: 651, zensiert: 0 });
+  assert.deepEqual(soll["('S-G', 'signal')"], { zaehler: 557, nenner: 647, zensiert: 0 });
+  assert.deepEqual(soll["('S-G', 'kontrollpool')"], { zaehler: 5000, nenner: 5768, zensiert: 0 });
+  // F6-C8c: Spaltenpfade und Arm-Abbildung ausgeschrieben.
+  const spalten = JSON.parse(r.stdout.split('\n').find((z) => z.startsWith('SPALTEN:')).slice(8));
+  assert.deepEqual(spalten, { nenner: 'nenner_e3', zaehler: 'fallzahl', zensiert: 'zensiert_e3' });
+  const arm = JSON.parse(r.stdout.split('\n').find((z) => z.startsWith('ARM:')).slice(4));
+  assert.equal(arm.kontrollpool, 'kontrolle',
+    'die Arm-Abbildung kontrollpool -> kontrolle muss ausgeschrieben sein (F6-C8c)');
+});
+
+test('F6-C8d: die drei Glieder laufen gruen gegen das gepinnte Artefakt', () => {
+  const r = c8Probe('pass');
+  assert.match(r.stdout, /^DURCH:True$/m, `${r.stdout}${r.stderr}`);
+});
+
+test('F6-C8e PROBE 1: Soll-Spaltenpfad auf .nenner_kadenz -> BASIS-ABBRUCH', () => {
+  // Genau der Fehler, der eingetreten ist.
+  const r = c8Probe("m.BEIN2_SPALTE['nenner'] = 'nenner_kadenz'");
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /BASIS-ABBRUCH/);
+  assert.match(r.stdout, /kadenz-Segment/);
+});
+
+test('F6-C8e PROBE 2: ein Soll-Literal um 1 verstellt -> ABBRUCH', () => {
+  const r = c8Probe("m.BEIN2_SOLL[('S-U', 'kontrollpool')]['zaehler'] = 3762");
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /KONSTANTEN-ABGLEICH GERISSEN/);
+  assert.match(r.stdout, /3762/);
+});
+
+test('F6-C8d Glied 2b: das alte Kadenz-Tripel als Soll -> BASIS-ABBRUCH', () => {
+  // Der positive Zweig MUSS erreichbar sein. Stuende Glied 1 davor, koennte
+  // er nie feuern - ein Wachtposten, der nur so aussieht.
+  const r = c8Probe(
+    "m.BEIN2_SOLL[('S-U', 'kontrollpool')] = "
+    + "{'zaehler': 3760, 'nenner': 4513, 'zensiert': 1}");
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /BASIS-ABBRUCH/,
+    'der positive Basis-Zweig ist unerreichbar - Glied 1 feuert davor');
+  assert.match(r.stdout, /3760, 4513, 1/);
+  assert.match(r.stdout, /3761, 4514, 0/);
+});
+
+test('F6-C8d Glied 3: die Identitaet haelt exakt, fuer alle vier Arme', () => {
+  const r = pyProbe([
+    'import json',
+    'd = json.load(open(m.os.path.join(m.WURZEL_REPO, *m.BEIN2_QUELLE_REL.split("/")), encoding="utf-8"))',
+    'aus = {}',
+    'for (v, arm), soll in m.BEIN2_SOLL.items():',
+    '    z = d["baender"][m.BEIN2_BAND]["varianten"][v][m.ARM_ARTEFAKT[arm]]',
+    '    aus[v + "/" + arm] = (soll["zaehler"] / soll["nenner"]) == z[m.BEIN2_IDENTITAETSSPALTE]',
+    'print("IDENT:" + json.dumps(aus, sort_keys=True))',
+  ].join('\n'));
+  const ident = JSON.parse(r.stdout.split('\n').find((z) => z.startsWith('IDENT:')).slice(6));
+  for (const [zelle, ok] of Object.entries(ident)) {
+    assert.equal(ok, true, `${zelle}: zaehler/nenner != auffindbarkeit_e3`);
+  }
 });
 
 test('F6-C7b: der PIN im Zaehlwerk stimmt mit der Datei ueberein', () => {
