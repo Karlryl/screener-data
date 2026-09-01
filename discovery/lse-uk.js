@@ -94,34 +94,72 @@ function toYahooTicker(tidm) {
   return base + '.L';
 }
 
+// The adapter historically accepted either a number or a decimal string. Keep
+// that compatibility, but never let coercible junk or
+// a runaway page count turn a partial register into an apparently complete one.
+function parseTotalPages(raw) {
+  if (raw == null) return 1;
+  if (typeof raw !== 'number' && typeof raw !== 'string') {
+    throw new Error('invalid totalPages ' + String(raw) + ' (expected 1..' + MAX_PAGES + ')');
+  }
+  if (typeof raw === 'string' && !/^[1-9]\d*$/.test(raw)) {
+    throw new Error('invalid totalPages ' + JSON.stringify(raw) + ' (expected 1..' + MAX_PAGES + ')');
+  }
+  const pages = Number(raw);
+  if (!Number.isSafeInteger(pages) || pages < 1 || pages > MAX_PAGES) {
+    throw new Error('invalid totalPages ' + String(raw) + ' (expected 1..' + MAX_PAGES + ')');
+  }
+  return pages;
+}
+
 // Pull the instrument array out of the gateway page response, defensively.
 function extractRows(body) {
   const j = JSON.parse(body);
   const comps = Array.isArray(j.components) ? j.components : [];
+  let metadataOnly = null;
   for (const comp of comps) {
     const content = comp && Array.isArray(comp.content) ? comp.content : [];
     for (const block of content) {
       const v = block && block.value;
-      if (v && Array.isArray(v.content) && v.content.length &&
-          v.content[0] && ('tidm' in v.content[0])) {
-        return { rows: v.content, totalPages: Number(v.totalPages) || 1 };
+      if (!v || !Array.isArray(v.content)) continue;
+      const hasMetadata = Object.hasOwn(v, 'totalPages');
+      const hasInstrumentRow = v.content.length > 0 && v.content[0] &&
+        Object.hasOwn(v.content[0], 'tidm');
+      if (hasInstrumentRow) {
+        const totalPages = parseTotalPages(v.totalPages);
+        return {
+          rows: v.content,
+          totalPages,
+          assertsTotalPages: v.totalPages != null,
+        };
       }
+      // CMS responses may contain another paginated block before the instrument
+      // table. Remember an unusable candidate, but keep looking for real rows.
+      if (hasMetadata && metadataOnly == null) metadataOnly = v;
     }
   }
-  return { rows: [], totalPages: 1 };
+  if (metadataOnly) {
+    parseTotalPages(metadataOnly.totalPages);
+    throw new Error('instrument page has no valid first row');
+  }
+  throw new Error('instrument pagination block missing');
 }
 
-async function fetchLseUniverse() {
+async function fetchLseUniverse(opts = {}) {
+  const fetchText = opts && typeof opts.fetchText === 'function' ? opts.fetchText : get;
   const result = new Map();
   for (const market of MARKETS) {
     try {
       let page = 0;
-      let totalPages = 1;
+      let totalPages = null;
       let added = 0;
       do {
-        const body = await get(pageUrl(market, page));
-        const { rows, totalPages: tp } = extractRows(body);
-        totalPages = tp;
+        const body = await fetchText(pageUrl(market, page));
+        const { rows, totalPages: tp, assertsTotalPages } = extractRows(body);
+        if (totalPages == null) totalPages = tp;
+        else if (assertsTotalPages && tp !== totalPages) {
+          throw new Error('totalPages changed from ' + totalPages + ' to ' + tp + ' on page ' + page);
+        }
         for (const r of rows) {
           if (!r || r.category !== 'EQUITY' || r.islse !== true) continue;
           const yt = toYahooTicker(r.tidm);
@@ -151,7 +189,7 @@ async function fetchLseUniverse() {
   return result;
 }
 
-module.exports = { fetchLseUniverse, toYahooTicker };
+module.exports = { fetchLseUniverse, toYahooTicker, parseTotalPages };
 
 if (require.main === module) {
   fetchLseUniverse().then(m => {
