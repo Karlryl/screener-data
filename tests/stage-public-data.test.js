@@ -218,6 +218,90 @@ check('(j) CLI: Erfolgsfall -> exit 0 und beide Quellen liegen im Ziel', () => {
 // Eigenschaft: ein Termin-Kalender ohne einen einzigen Zukunftstermin ist per
 // Konstruktion kaputt oder steinalt. Bewusst KEINE weitere Schwelle — Vollstaendigkeit
 // und Plausibilitaet entscheidet der Collapse-Guard in pull-earnings-dates.js.
+check('(n0) nur echte kanonische YYYY-MM-DD-Kalendertage gelten als Termine', () => {
+  for (const datum of ['2026-09-01', '2026-09-02', '2028-02-29']) {
+    assert.strictEqual(S.isIsoCalendarDate(datum), true, 'gueltiger Kalendertag abgelehnt: ' + datum);
+  }
+  for (const datum of [
+    null, undefined, 20260901, '', ' ', 'zzzz', '2027-2-03', '2027-02-03T00:00:00Z',
+    '2027-00-01', '2027-13-01', '2027-02-29', '2027-02-30', '2027-04-31',
+  ]) {
+    assert.strictEqual(S.isIsoCalendarDate(datum), false,
+      'ungueltiger oder nicht-kanonischer Kalendertag akzeptiert: ' + String(datum));
+  }
+});
+
+check('(n0b) ein kaputter Eintrag sperrt die GANZE Datei trotz gueltigem Zukunftstermin', () => {
+  const faelle = [
+    ['beliebiger Text', 'BAD', { date: 'zzzz' }],
+    ['formal falscher Monat/Tag', 'BAD', { date: '9999-99-99' }],
+    ['normalisierter Phantomtag', 'BAD', { date: '2027-02-30' }],
+    ['numerisches Datum', 'BAD', { date: 20270902 }],
+    ['leeres Datum', 'BAD', { date: '' }],
+    ['fehlendes Datum', 'BAD', {}],
+    ['kein Objekt', 'BAD', null],
+    ['Array statt Eintrag', 'BAD', []],
+    ['unmoegliches pulledAt', 'BAD', { date: '2026-09-03', pulledAt: '9999-99-99' }],
+    ['null-pulledAt', 'BAD', { date: '2026-09-03', pulledAt: null }],
+    ['leerer Ticker-Schluessel', '', { date: '2026-09-03' }],
+    ['Ticker mit Rand-Leerzeichen', ' BAD ', { date: '2026-09-03' }],
+  ];
+  for (let i = 0; i < faelle.length; i++) {
+    const [name, ticker, kaputt] = faelle[i];
+    const src = mkTmp();
+    const quelle = path.join(src, 'earnings-calendar.json');
+    const ziel = path.join(src, '_public');
+    const schlecht = { [ticker]: kaputt };
+    const daten = i % 2 === 0
+      ? { ...schlecht, GOOD: { date: '2026-09-02', pulledAt: '2026-09-01' } }
+      : { GOOD: { date: '2026-09-02' }, ...schlecht };
+    writeJson(quelle, daten);
+    assert.throws(() => S.stageEarnings(quelle, ziel, '2026-09-01'),
+      /YYYY-MM-DD|nicht publiziert/,
+      name + ' wurde neben einem gueltigen Zukunftstermin nur herausgefiltert statt fail-closed zu stoppen');
+    assert.strictEqual(fs.existsSync(path.join(ziel, 'earnings-calendar.json')), false,
+      name + ' hinterliess trotz Fehler eine publizierte Teildatei');
+  }
+});
+
+check('(n0c) nur ein Objekt darf an der Kalenderwurzel stehen', () => {
+  for (const wurzel of [[{ date: '2026-09-02' }], null, 'text', 42, true]) {
+    const src = mkTmp();
+    const quelle = path.join(src, 'earnings-calendar.json');
+    const ziel = path.join(src, '_public');
+    writeJson(quelle, wurzel);
+    assert.throws(() => S.stageEarnings(quelle, ziel, '2026-09-01'), /Feldname|Format|Wurzel/);
+    assert.strictEqual(fs.existsSync(path.join(ziel, 'earnings-calendar.json')), false);
+  }
+});
+
+check('(n0d) Doku-Schluessel bleiben erlaubt und gueltige Kalenderbytes bleiben exakt erhalten', () => {
+  const src = mkTmp();
+  const quelle = path.join(src, 'earnings-calendar.json');
+  const ziel = path.join(src, '_public');
+  const text = '{\n  "_doc": { "schema": "earnings/v1" },\n'
+    + '  "PAST": { "date": "2026-08-31" },\n'
+    + '  "TODAY": { "date": "2026-09-01", "pulledAt": "2026-09-01" },\n'
+    + '  "FUTURE": { "date": "2026-09-02" },\n'
+    + '  "LEAP": { "date": "2028-02-29" }\n}\n';
+  fs.writeFileSync(quelle, text);
+  S.stageEarnings(quelle, ziel, '2026-09-01');
+  assert.strictEqual(fs.readFileSync(path.join(ziel, 'earnings-calendar.json'), 'utf8'), text,
+    'der strukturelle Guard darf gueltige Quelldateien nicht neu serialisieren oder Doku-Schluessel entfernen');
+});
+
+check('(n0e) ein ungueltiger Lauf-Stichtag darf die Frische-Wache nicht oeffnen', () => {
+  for (const stichtag of ['0000-00-00', '2026-9-01', '2026-02-30', 'garbage']) {
+    const src = mkTmp();
+    const quelle = path.join(src, 'earnings-calendar.json');
+    const ziel = path.join(src, '_public');
+    writeJson(quelle, { GOOD: { date: '2026-09-02' } });
+    assert.throws(() => S.stageEarnings(quelle, ziel, stichtag), /Lauf-Stichtag|RUN_DATE_UTC/,
+      'ungueltiger Stichtag oeffnete die Zukunftspruefung: ' + stichtag);
+    assert.strictEqual(fs.existsSync(path.join(ziel, 'earnings-calendar.json')), false);
+  }
+});
+
 check('(n) Kalender OHNE Zukunftstermin -> wirft (steinalt/kaputt, nie still publizieren)', () => {
   const src = mkTmp();
   writeJson(path.join(src, 'earnings-calendar.json'),
