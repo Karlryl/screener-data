@@ -34,6 +34,53 @@ test('omitted expected count keeps a complete input complete', () => {
   assert.equal(merged.partial, false);
 });
 
+test('only explicit Boolean false proves a present shard complete', () => {
+  const cases = [
+    ['Boolean true', true],
+    ['string true', 'true'],
+    ['string false', 'false'],
+    ['number one', 1],
+    ['number zero', 0],
+    ['null', null],
+    ['undefined', undefined],
+    ['object', {}],
+    ['array', []],
+  ];
+
+  for (const [label, value] of cases) {
+    const manifest = shard();
+    manifest.partial = value;
+    const merged = mergeManifests([manifest], 100, 1);
+    assert.equal(merged.partial, true, label + ' must fail closed');
+    assert.equal(merged.n_shards_partial, 1, label + ' must count as a partial shard');
+    assert.equal(merged.n_shards_present, 1, label + ' must remain a present shard');
+    assert.equal(merged.n_ok, 1, label + ' must not discard otherwise usable counts');
+  }
+
+  const missing = shard();
+  delete missing.partial;
+  const mergedMissing = mergeManifests([missing], 100, 1);
+  assert.equal(mergedMissing.partial, true);
+  assert.equal(mergedMissing.n_shards_partial, 1);
+  assert.equal(mergedMissing.n_shards_present, 1);
+  assert.equal(mergedMissing.n_ok, 1);
+
+  const malformed = shard();
+  malformed.partial = 'true';
+  const mixed = mergeManifests([shard(), malformed], 100, 2);
+  assert.equal(mixed.partial, true);
+  assert.equal(mixed.n_shards_partial, 1);
+  assert.equal(mixed.n_shards_present, 2);
+  assert.equal(mixed.n_ok, 2);
+});
+
+test('non-object missing slots stay distinct from malformed present partial flags', () => {
+  const merged = mergeManifests([shard(), null], 100, 2);
+  assert.equal(merged.partial, true);
+  assert.equal(merged.n_shards_present, 1);
+  assert.equal(merged.n_shards_partial, 0);
+});
+
 test('explicit expected count still exposes completely absent shards', () => {
   const merged = mergeManifests([shard(), null], 100, 3);
   assert.equal(merged.n_shards_present, 1);

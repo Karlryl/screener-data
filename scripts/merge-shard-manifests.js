@@ -148,7 +148,13 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     }
     return next;
   }, 0);
-  const anyShardPartial = present.some(m => m.partial === true);
+  // Strenge Union der beiden Haertungen (Tag 1131 + Tag 1130), beide gelten unabhaengig:
+  // die Quarantaene entscheidet, WELCHE Shards ueberhaupt summiert werden; das
+  // partial-Flag entscheidet, ob ein summierter Shard vollstaendig ist. Nur das explizite
+  // Boolean false des Erzeugers beweist einen sauberen Shard — ein fehlendes oder
+  // kaputtes Flag degradiert das Manifest, statt zu false gewaschen zu werden.
+  const isShardPartial = (m) => m.partial !== false;
+  const anyShardPartial = present.some(isShardPartial);
   const missingShards = expected - observed.length;
   const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
@@ -181,7 +187,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_shards_valid: present.length,
     n_shards_invalid: invalidShards,
     n_shards_expected: expected,
-    n_shards_partial: present.filter(m => m.partial === true).length,
+    n_shards_partial: present.filter(isShardPartial).length,
   };
   return merged;
 }
