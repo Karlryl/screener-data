@@ -67,7 +67,7 @@ const VORLAUF_MINUTEN = 120;
 // Die ausfuehrenden Skripte, gemessen auf main NACH dem #192-Merge.
 const SKRIPTE = [
   ['scripts/studie-f6-zaehlwerk.py',
-    'f06a130adc7552d751ebc571a42c976c2b23d2f55092c917c758d0b1c69ed48b'],
+    '5ac7a2454e125996fc0f118b4642cec78549bfa5f1dbf861ea81177b68f07eed'],
   ['scripts/studie-f6-lauf.py',
     '36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0'],
   ['scripts/studie-zaehlprobe.py',

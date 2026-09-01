@@ -586,6 +586,48 @@ test('F6-C7b: der Aufruf-Pfad ist WIRKLICH erreichbar (kein NameError)', () => {
   assert.match(r.stdout, /durchlauf --modus alt` ist gescheitert|LAUF-HAELFTE/);
 });
 
+test('VERTRAG: _arme selbst uebergibt an im_signalband, was dessen Vertrag verlangt', () => {
+  // DIESE PROBE FEHLTE, UND GENAU DA IST ES ZUM ZWEITEN MAL DURCHGEFALLEN:
+  // _arme laeuft sonst nur mit echtem Panel, also hat nie ein Test die
+  // Uebergabe an die GELIEHENEN Funktionen des Zaehlprobe-Moduls gemessen.
+  // im_signalband vergleicht das JAHR aus `accepted` und erwartet
+  // Jahreszahlen (eigene FENSTER-Registry: "von": 2009); FENSTER_SOLL fuehrt
+  // ISO-Grenzen. Der TypeError kam erst im echten Lauf heraus.
+  //
+  // Hier wird _arme WIRKLICH gefahren - nur die Panel-Vorbereitung und die
+  // E2-Rechenschritte sind gestubbt. `im_signalband`, `arm_zaehlen` und die
+  // Uebergabe dazwischen sind die echten. Ein Rueckfall auf ISO-Grenzen
+  // macht diese Probe rot.
+  const r = pyProbe([
+    'module = m.lade_regelmodule()',
+    'e2, zp = module["e2"], module["zp"]',
+    'roh = [{"cik": "1", "accepted": "2012-05-04"},',
+    '       {"cik": "2", "accepted": "2017-05-04"}]',
+    'm._vorbereitung = lambda p, a, mo: ({}, {})',
+    'e2.firmenreihen = lambda *a, **k: ([], {})',
+    'e2.wachstum_und_beschleunigung = lambda *a, **k: (None, [])',
+    'e2.signale = lambda *a, **k: (list(roh), list(roh), None)',
+    'e2.ordinal = lambda s: 0',
+    'zp.ist_zensiert = lambda e, e2_, r: False',
+    'zp.arm_zaehlen = lambda eintraege, g, e2_, r: {',
+    '    "firmen_mit_erst_ereignis": len(eintraege), "zensierte_erst_ereignisse": 0,',
+    '    "fallzahl": len(eintraege), "auffindbarkeit": None, "reif": list(eintraege)}',
+    'f = m.FENSTER_SOLL["entdeckung"]',
+    'arme = m._arme("kein-panel", "a/f6/w.sqlite", "S-U", module, f)',
+    'sig, eintraege = arme["signal"]',
+    'print("IM_BAND:" + str(len(eintraege)))',
+    'print("REGISTRY:" + repr(zp.FENSTER["entdeckung"]["von"]))',
+  ].join('\n'));
+  assert.equal(r.status, 0, `_arme kracht bei der Uebergabe: ${r.stderr.slice(0, 400)}`);
+  assert.doesNotMatch(r.stderr, /TypeError|Traceback/,
+    'die Uebergabe an im_signalband passt nicht zu seinem Vertrag');
+  // Genau EIN Eintrag (2012) liegt im Entdeckungs-Signalband, 2017 nicht.
+  assert.match(r.stdout, /^IM_BAND:1$/m,
+    'das Signalband hat nicht gefiltert - die Uebergabe stimmt nicht');
+  assert.match(r.stdout, /^REGISTRY:2009$/m,
+    'die Fenster-Registry fuehrt keine Jahreszahl mehr - der Vertrag hat sich bewegt');
+});
+
 test('F6-C7b: der PIN im Zaehlwerk stimmt mit der Datei ueberein', () => {
   const gemessen = require('node:crypto').createHash('sha256')
     .update(fs.readFileSync(path.join(REPO, 'scripts', 'studie-e2-verbreitert.py')))
