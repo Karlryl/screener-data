@@ -171,6 +171,146 @@ test('corrupt shard throws with shardPath set', () => {
   assert.equal(err.shardPath, store.shardPath(dir, badN), 'err.shardPath points at the bad shard');
 });
 
+test('an empty stamped store keeps tickerCount zero valid', () => {
+  const dir = tmpDir();
+  store.saveAll(dir, {});
+  assert.equal(store.loadMeta(dir).tickerCount, 0, 'zero is the valid empty-store boundary');
+  assert.deepEqual(store.loadAll(dir), {}, 'a complete stamped empty store remains loadable');
+});
+
+test('present meta rejects an invalid tickerCount without becoming bootstrap', () => {
+  const history = sampleHistory(3);
+  const total = Object.keys(history).length;
+  const invalid = [
+    ['literal null', null],
+    ['missing tickerCount', { schema: 'price-history-store/1' }],
+    ['numeric string', { schema: 'price-history-store/1', tickerCount: String(total) }],
+    ['negative', { schema: 'price-history-store/1', tickerCount: -1 }],
+    ['fractional', { schema: 'price-history-store/1', tickerCount: 1.5 }],
+    ['unsafe integer', { schema: 'price-history-store/1', tickerCount: 9007199254740992 }],
+  ];
+
+  for (const [name, meta] of invalid) {
+    const dir = tmpDir();
+    store.saveAll(dir, history);
+    fs.writeFileSync(store.metaPath(dir), JSON.stringify(meta));
+    let err = null;
+    try { store.loadMeta(dir); } catch (e) { err = e; }
+    assert.ok(err, name + ' must throw instead of disabling the count guard');
+    assert.match(err.message, /invalid tickerCount|refusing to overwrite/);
+    assert.equal(err.metaPath, store.metaPath(dir), name + ' identifies the meta path');
+    assert.equal(err.shardPath, store.metaPath(dir), name + ' preserves the backup-path contract');
+  }
+});
+
+test('present meta with zero shard files never falls back to stale legacy data', () => {
+  for (const tickerCount of [0, 1]) {
+    const dir = tmpDir();
+    fs.mkdirSync(path.dirname(store.metaPath(dir)), { recursive: true });
+    fs.writeFileSync(store.metaPath(dir), JSON.stringify({
+      schema: 'price-history-store/1',
+      updatedAt: '2026-08-31T00:00:00.000Z',
+      tickerCount,
+      shardsWritten: store.SHARD_COUNT,
+    }));
+    fs.writeFileSync(store.legacyPath(dir), JSON.stringify({
+      STALE: [{ date: '2000-01-01', close: 1 }],
+    }));
+
+    let err = null;
+    try { store.loadAll(dir); } catch (e) { err = e; }
+    assert.ok(err, 'tickerCount ' + tickerCount + ' with no shards must fail');
+    assert.match(err.message, /32 shard\(s\) missing|partial store/);
+    assert.equal(err.missingShards.length, store.SHARD_COUNT);
+    assert.equal(err.metaPath, store.metaPath(dir));
+    assert.equal(err.shardPath, undefined, 'all shards are missing; no single one is the recovery target');
+  }
+});
+
+test('loadAll rejects a valid but truncated shard against the stamped ticker count', () => {
+  const dir = tmpDir();
+  const history = { SPY: [{ date: '2026-07-10', close: 500 }] };
+  const expected = Object.keys(history).length;
+  store.saveAll(dir, history);
+  const shardNumber = store.shardOf('SPY');
+  const removed = Object.keys(store.loadShard(dir, shardNumber)).length;
+  assert.equal(removed, 1, 'fixture removes its only ticker while all 32 shard files remain');
+  fs.writeFileSync(store.shardPath(dir, shardNumber), '{}');
+
+  let err = null;
+  try { store.loadAll(dir); } catch (e) { err = e; }
+  assert.ok(err, 'a valid empty replacement shard must not pass as complete');
+  assert.match(err.message, /partial\/inconsistent store, refusing to load/);
+  assert.equal(err.metaPath, store.metaPath(dir));
+  assert.equal(err.expectedTickerCount, expected);
+  assert.equal(err.actualTickerCount, 0, 'actual zero must not disable the mismatch guard');
+  assert.equal(err.shardPath, undefined, 'no individual shard can be blamed from a count mismatch alone');
+});
+
+test('loadAll rejects a stamped ticker count below the complete shard set', () => {
+  const dir = tmpDir();
+  const history = sampleHistory(50);
+  const actual = Object.keys(history).length;
+  store.saveAll(dir, history);
+  const meta = store.loadMeta(dir);
+  fs.writeFileSync(store.metaPath(dir), JSON.stringify({ ...meta, tickerCount: 0 }));
+
+  let err = null;
+  try { store.loadAll(dir); } catch (e) { err = e; }
+  assert.ok(err, 'extra shard content relative to meta must fail in the opposite direction too');
+  assert.match(err.message, /partial\/inconsistent store, refusing to load/);
+  assert.equal(err.metaPath, store.metaPath(dir));
+  assert.equal(err.expectedTickerCount, 0, 'expected zero must not disable the mismatch guard');
+  assert.equal(err.actualTickerCount, actual);
+  assert.equal(err.shardPath, undefined, 'mismatch recovery must not erase meta as if it were corrupt');
+});
+
+test('loadAll rejects a cross-shard duplicate even when unique tickerCount still matches meta', () => {
+  const dir = tmpDir();
+  const history = {
+    AZ: [{ date: '2026-07-10', close: 1 }],
+  };
+  store.saveAll(dir, history);
+  const ticker = 'AZ';
+  const source = store.shardOf(ticker);
+  assert.equal(source, 0, 'fixture pins a falsy first-shard identity');
+  const target = 1;
+  const targetShard = store.loadShard(dir, target);
+  targetShard[ticker] = [{ date: '2026-07-10', close: 999 }];
+  fs.writeFileSync(store.shardPath(dir, target), JSON.stringify(targetShard));
+
+  let err = null;
+  try { store.loadAll(dir); } catch (e) { err = e; }
+  assert.ok(err, 'a duplicate must fail before one shard silently overwrites the other');
+  assert.match(err.message, /appears in multiple shards|ambiguous store/);
+  assert.equal(err.duplicateTicker, ticker);
+  assert.deepEqual(
+    err.duplicateShards,
+    [source, target].sort((a, b) => a - b).map(store.shardFilename),
+  );
+  assert.equal(err.shardPath, undefined, 'both duplicate shards are suspects; neither is a safe backup target');
+});
+
+test('loadAll rejects a ticker moved to the wrong shard even when tickerCount still matches meta', () => {
+  const dir = tmpDir();
+  const ticker = 'MOVED';
+  const series = [{ date: '2026-07-10', close: 10 }];
+  store.saveAll(dir, { [ticker]: series });
+  const expected = store.shardOf(ticker);
+  const actual = (expected + 1) % store.SHARD_COUNT;
+  fs.writeFileSync(store.shardPath(dir, expected), '{}');
+  fs.writeFileSync(store.shardPath(dir, actual), JSON.stringify({ [ticker]: series }));
+
+  let err = null;
+  try { store.loadAll(dir); } catch (e) { err = e; }
+  assert.ok(err, 'an equal-count move must fail before direct shard readers lose the ticker');
+  assert.match(err.message, /misplaced ticker, refusing to load/);
+  assert.equal(err.misplacedTicker, ticker);
+  assert.equal(err.expectedShard, store.shardFilename(expected));
+  assert.equal(err.actualShard, store.shardFilename(actual));
+  assert.equal(err.shardPath, store.shardPath(dir, actual));
+});
+
 test('A7-b: saveAll/saveDirty stamp _meta.json (freshness proof), loadMeta reads it', () => {
   const dir = tmpDir();
   const h = sampleHistory(50);
