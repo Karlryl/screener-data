@@ -21,13 +21,14 @@
  *   twse → 2330.TW OK / 2330.TWO 404     tpex → 6488.TWO OK / 6488.TW 404
  *
  * Contract: Map<yahooTicker, {ticker, name, exchange, source, country}>.
- * marketCap NOT set (comes from Yahoo later). Node built-ins only. Never throws —
- * returns an empty Map on any failure (fail-silent, like finnhub.js).
+ * marketCap NOT set (comes from Yahoo later). Node built-ins only. Never throws -
+ * failures return an empty Map with partial=true so callers can expose degraded
+ * discovery instead of treating a provider failure as a healthy empty result.
  */
 'use strict';
 const https = require('https');
 
-const URL = 'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo';
+const ENDPOINT_URL = 'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo';
 
 // Non-common-stock security types keyed off industry_category. These slip past the
 // 4-digit filter (DRs like 9110, ETF 0050), so name them explicitly.
@@ -70,15 +71,22 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
   });
 }
 
-async function fetchTaiwanUniverse() {
+async function fetchTaiwanUniverse({ getFn = get } = {}) {
   const result = new Map();
   try {
-    const body = await get(URL);
+    const body = await getFn(ENDPOINT_URL);
     const json = JSON.parse(body);
-    const data = json && json.data;
+    const statusOk = json && (json.status === 200 || json.status === '200');
+    if (!statusOk) {
+      const hasStatus = json && Object.prototype.hasOwnProperty.call(json, 'status');
+      const status = hasStatus ? JSON.stringify(json.status) : '<missing>';
+      const message = json && typeof json.msg === 'string' && json.msg.trim();
+      throw new Error('provider status ' + status + (message ? ': ' + message : ''));
+    }
+
+    const data = json.data;
     if (!Array.isArray(data)) {
-      console.log('  [FinMind-TW] unexpected response shape');
-      return result;
+      throw new Error('unexpected response shape: data must be an array');
     }
     for (const s of data) {
       if (!s || !s.stock_id) continue;
@@ -103,7 +111,9 @@ async function fetchTaiwanUniverse() {
     console.log(`  [FinMind-TW] ${result.size} Taiwan common stocks (.TW/.TWO)`);
   } catch (e) {
     console.error('  [FinMind-TW] failed: ' + e.message);
-    return new Map(); // fail-silent
+    const partial = new Map();
+    partial.partial = true;
+    return partial;
   }
   return result;
 }
