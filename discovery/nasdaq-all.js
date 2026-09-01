@@ -20,6 +20,9 @@ const { isWhenIssuedSecurity } = require('./when-issued.js');
 const NASDAQ_LISTED = 'https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt';
 const OTHER_LISTED  = 'https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt';
 
+const NASDAQ_HEADER_FIELDS = [[0, 'Symbol'], [1, 'Security Name'], [3, 'Test Issue'], [6, 'ETF']];
+const OTHER_HEADER_FIELDS = [[0, 'ACT Symbol'], [1, 'Security Name'], [2, 'Exchange'], [4, 'ETF'], [6, 'Test Issue']];
+
 // Symbols with these *delimited* suffixes are almost always not common stock:
 // .WS/.WT/.WI = warrant, .RT = right, .UN/.U = unit.
 // We allow symbols with dots (e.g. BRK.B) but reject these multi-char junk suffixes.
@@ -51,6 +54,29 @@ function isJunkSecurity(symbol, name) {
   if (isWhenIssuedSecurity(name)) return true;
   if (name && JUNK_NAME_RE.test(name)) return true;
   return false;
+}
+
+function assertTableShape(text, expectedFields, label) {
+  if (typeof text !== 'string') throw new Error(label + ' response is not text');
+  const lines = text.split(/\r?\n/);
+  const headerLine = lines[0] || '';
+  const fields = headerLine.replace(/^\uFEFF/, '').split('|').map(field => field.trim());
+  for (const [index, expected] of expectedFields) {
+    if (fields[index] !== expected) {
+      throw new Error(label + ' header mismatch at column ' + (index + 1)
+        + ': expected ' + expected + ', got ' + (fields[index] || '(missing)'));
+    }
+  }
+  let footerLine = '';
+  for (let index = lines.length - 1; index >= 0; index--) {
+    if (lines[index].trim()) {
+      footerLine = lines[index].trim();
+      break;
+    }
+  }
+  if (!footerLine.startsWith('File Creation Time:')) {
+    throw new Error(label + ' is missing its File Creation Time footer');
+  }
 }
 
 // audit/fix: relative-Location ERR_INVALID_URL + uncapped recursion + 307/308 silently wiped this discovery source (mirror nasdaq-api hardening)
@@ -153,22 +179,28 @@ function parseOtherListed(text) {
   return result;
 }
 
-async function fetchNasdaqAll() {
+async function fetchNasdaqAll(opts = {}) {
+  const fetchText = opts && typeof opts.fetchText === 'function' ? opts.fetchText : get;
   const result = new Map();
   console.log('  [NASDAQ-Trader] Fetching nasdaqlisted.txt...');
   try {
-    const nasdaqText = await get(NASDAQ_LISTED);
+    const nasdaqText = await fetchText(NASDAQ_LISTED);
+    assertTableShape(nasdaqText, NASDAQ_HEADER_FIELDS, 'nasdaqlisted.txt');
     const nasdaqMap = parseNasdaqListed(nasdaqText);
+    if (nasdaqMap.size === 0) throw new Error('nasdaqlisted.txt contains no common-stock rows');
     for (const [sym, info] of nasdaqMap) result.set(sym, info);
     console.log(`  [NASDAQ-Trader] NASDAQ: ${nasdaqMap.size} common stocks`);
   } catch (e) {
     console.error('  [NASDAQ-Trader] nasdaqlisted.txt failed: ' + e.message);
+    result.partial = true;
   }
 
   console.log('  [NASDAQ-Trader] Fetching otherlisted.txt...');
   try {
-    const otherText = await get(OTHER_LISTED);
+    const otherText = await fetchText(OTHER_LISTED);
+    assertTableShape(otherText, OTHER_HEADER_FIELDS, 'otherlisted.txt');
     const otherMap = parseOtherListed(otherText);
+    if (otherMap.size === 0) throw new Error('otherlisted.txt contains no common-stock rows');
     let added = 0;
     for (const [sym, info] of otherMap) {
       if (!result.has(sym)) { result.set(sym, info); added++; }
@@ -176,6 +208,7 @@ async function fetchNasdaqAll() {
     console.log(`  [NASDAQ-Trader] NYSE/AMEX/Arca: ${otherMap.size} entries, ${added} not already in NASDAQ list`);
   } catch (e) {
     console.error('  [NASDAQ-Trader] otherlisted.txt failed: ' + e.message);
+    result.partial = true;
   }
 
   console.log(`  [NASDAQ-Trader] Total US stocks: ${result.size}`);
