@@ -1861,6 +1861,88 @@
    "laufFreigabe": "DER LAUF FEUERT NICHT MIT DIESEM VERMERK. Die Autorisierung steht in Eintrag 28 und bleibt unveraendert; sie wird erst wirksam, wenn ein fokussiertes Re-Review dieses Vermerks gruen ist und der accessedAt-Fussboden von Eintrag 28 (2026-09-01T11:02:56.527Z) ueberschritten ist.",
    "previousHash": "51c235ebd79272f7cce976f3627816bc50c283f47c4f34dd2d630af3eca66938",
    "eventHash": "0286419a727d63f271403793f3f29d8c5033f84aa631704888dedae048b12931"
+  },
+  {
+   "runId": "f6-vorfall-lauf-abbruch-2026-09-01",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-09-01T19:27:16.793Z",
+   "accessedAt": "2026-09-01T21:27:16.793Z",
+   "fenster": [
+    "kein Studienfenster - Vermerk ohne Datenzugriff"
+   ],
+   "allowedOutputs": [],
+   "erlaubt": "Nichts. Kein Datenzugriff.",
+   "verboten": "Jede Berufung auf diesen Vermerk als Autorisierung eines Laufs.",
+   "begruendung": "VORFALL-VERMERK nach F6-K6, sperrend und VOR jeder weiteren Handlung. Der unter Eintrag 28 autorisierte EINE konfirmatorische Lauf hat das Prueffenster-Panel gelesen und ist danach an einem Fehlalarm des eigenen R12a-Wachpostens abgebrochen. Niemand hat ein Ergebnis gesehen. Das Gericht hat am selben Tag entschieden, dass Kontingent EINS dadurch NICHT verbraucht ist - als Entscheidung einer REGELLUECKE, in der schwaechsten die Mehrheit stuetzenden Fassung, aufschiebend bedingt auf das Siegel (F6-K1/F6-K2) und aufloesend bedingt auf die fuenf kumulativen Bedingungen aus F6-K21. Ein nach einer Beruehrung unveraendertes Register waere selbst ein Aktenmangel; deshalb dieser Vermerk. Er autorisiert nichts.",
+   "a_lauf": {
+    "runId": "f6-konfirmatorisch-v2-2026-09-01",
+    "eventHash": "51c235ebd79272f7cce976f3627816bc50c283f47c4f34dd2d630af3eca66938",
+    "freigabegrundlage": "Eintrag 28, registeredAt 2026-09-01T09:02:56.527Z; Serverbeweis reports/studie/f6-konfirmatorisch-v2-freigabe.json, serverConfirmedAt 09:21:02.000Z, accessedAt 11:02:56.527Z, registerZweig main.",
+    "gestartet": "2026-09-01T18:16:53Z",
+    "panelGelesen": "2026-09-01T18:17:06Z",
+    "abgebrochen": "2026-09-01T18:17:13Z",
+    "exitCode": 1
+   },
+   "b_lesungVollzogen": "DIE EINE AUTORISIERTE LESUNG DES PRUEFFENSTER-PANELS WURDE VOLLZOGEN. Das Panel wurde geoeffnet und gelesen; die Zaehlung lief durch; der Abbruch liegt DANACH. Das ist die Kerntatsache dieses Vermerks und wird nicht kleingeschrieben. Was nicht geschah: irgendjemand hat ein Ergebnis gesehen.",
+   "c_abbruchtext": {
+    "woertlich": "F6-LAUF-ABBRUCH: ABSOLUTER PFAD IM BERICHT bei bericht.umschlag.gelesenePfade[10] (R12a). Ein voller Pfad traegt die Benutzerkennung des Rechners in die Akte. Es gilt die Kurzform Elternverzeichnis/Datei (Muster scripts/studie-basisraten.py:251).",
+    "sha256": "b42a12cef8b83c9044f3d52cce0c73b884bb9fdef4c148a1d8d2abc8b8af7ac9",
+    "zeichen": 246,
+    "fundstelle": "scripts/studie-f6-lauf.py:1352-1356 (raise LaufAbbruch samt vollstaendiger Meldung), Rahmen scripts/studie-f6-lauf.py:1672-1674 (except LaufAbbruch -> stderr, return 1).",
+    "hinweis": "Das Urteil _COURT-F6-KONTINGENT-2026-09-01.md fuehrt diesen Text mit Auslassung nach dem zweiten Satz. DIE HIER STEHENDE FASSUNG IST DIE VOLLSTAENDIGE; kein Folgedokument darf die gekuerzte als den ganzen Wortlaut fuehren."
+   },
+   "d_defekt": {
+    "art": "VORBESTEHEND UND LATENT",
+    "mechanismus": "Die Verbotsmenge des Wachpostens fuehrt neben den absoluten Formen auch die ROHEN CLI-Argumente (scripts/studie-f6-lauf.py:1644-1646). Ein RELATIV uebergebenes Argument ist byte-gleich seinem eigenen kurzpfad - der Wachposten feuert damit auf seine eigene legitime Ausgabe.",
+    "herkunft": "git log -S und git blame auf :1644-1646 zeigen beide 347f0e8e0815a016f8f8fdd4fb83b15ac6f81867 (PR #192, \"F6-Laeufer + Zaehlwerk: Bauordnung Schritt 1\"), dort urspruenglich Zeile 1463. Unveraendert durch PR #195 und PR #215.",
+    "alter": "AELTER als Eintrag 28 und aelter als das Lauf-Signal. Der Defekt wurde nicht durch die Reparaturen dieses Tors eingefuehrt.",
+    "warumKeineFixtureIhnErreichte": "JEDE Fixture des Laeufers fuehrt ABSOLUTE Temp-Pfade; dort sind rohe und absolute Form verschieden und die Kollision kann nicht entstehen. Der Defektpfad ist ausschliesslich ueber RELATIVE CLI-Aufrufe erreichbar - also genau ueber die Aufrufform, in der ein Mensch das Werkzeug aus der Repo-Wurzel startet.",
+    "reproduziert": "IN ISOLATION OHNE JEDES PANEL reproduziert: kurzpfad(\"scripts/studie-f6-zaehlwerk.py\") ist identisch mit dem rohen Argument, und der Wachposten feuert darauf."
+   },
+   "e_blindheit": {
+    "form": "BEURKUNDUNG MIT ANKERN, keine Zusicherung ueber Verhalten.",
+    "anker": [
+     "scripts/studie-f6-lauf.py:1664-1665 - \"Fail-closed bis in die Ausgabe: bei einem Abbruch wird KEIN Bericht geschrieben. Ein halber Bericht wanderte als Ergebnis in die Akte.\"",
+     "Der Wachposten steht bei :1640-1646 (Kommentar ab :1638) und damit STRIKT VOR dem Schreibvorgang.",
+     "Berichtschreiben (:1715) UND stdout-Ausgabe des Protokolls (:1717) liegen BEIDE hinter dem return des Abbruchpfades (:1674). Am Objekt nachgezaehlt; das Urteil weist eine +/-1-Divergenz der Stimmen aus, die Substanz ist unstreitig.",
+     "Der Abbruchtext ist wertfrei: er nennt einen Schluesselpfad und eine Regel, keine Zahl, keine Richtung, keine Firmenkennung.",
+     "KEIN Berichts-Artefakt in reports/studie/ - die Zieldatei existiert nicht.",
+     "Arbeitsbaum sauber, Register unveraendert.",
+     "Der Exit-Code ist abbruchklassen-invariant (1 fuer jeden LaufAbbruch) und traegt deshalb keine Information ueber den Inhalt."
+    ],
+    "siebenKanaele": "Alle sieben denkbaren Kanaele wurden einzeln geschlossen: Bericht, stdout, stderr, Exit-Code, Laufzeit, Dateisystem-Metadaten, Zwischenstand. Der einzige ueberlebende ist der Zwischenstand - und der ist versiegelt (unten)."
+   },
+   "f_beschlussSperre": "NICHTS IN DIESER AKTE ENTHAELT EINE AUSSAGE UEBER RICHTUNG, GROESSE ODER AUSGANG DER VERLORENEN MESSUNG - UND WIRD NIE EINE ENTHALTEN. Die Messung ist niemandem bekannt: sie existierte im Speicher eines abgebrochenen Prozesses und wurde nie geschrieben. Weder der Ausfuehrende noch der Orchestrator noch das Gericht kennt sie.",
+   "g_siegel": {
+    "objekt": "lauf-f6-konfirmatorisch-v2-2026-09-01/zwischenstand.sqlite",
+    "pfadform": "NUR KURZFORM (R12a/F6-K9). Der Arbeitspfad liegt im Nutzerverzeichnis ausserhalb des Repos; der volle Pfad steht in diesem Vermerk NICHT.",
+    "groesseBytes": 146812928,
+    "schreibzeit": "2026-09-01T18:17:06.152Z",
+    "sha256": "8608e12d110b96a056daffdab867e1573dd0fa5e54535ba027b77098ff8e437b",
+    "versiegeltAm": "2026-09-01T19:20:25.133Z",
+    "werkzeug": "scripts/studie-panel-digest.py, sha256 14414d2633f74b94662d503336db61be6825f3c7b89b6ebcf3275a841396f33f - byte-gleich zu seiner Bindung in Eintrag 28, vor dem Gebrauch nachgerechnet.",
+    "wasDerHashTUT": "DER HASH SIEGELT BYTES UND LIEST KEINEN INHALT. SQL-frei, blind, kein sqlite3, keine Abfrage, keine Spalte, keine Zeile. Groesse und Zugriffszeit sind vor und nach dem Siegel byte-gleich.",
+    "nieGeoeffnet": "DIE DATEI IST NIE GEOEFFNET WORDEN und wird es nicht - von niemandem, zu keinem Zweck, ohne Ablaufdatum (F6-K1). Auch nicht zur Diagnose: der Defekt ist ohne jedes Panel reproduziert, und der gebundene Laeufer schreibt die Diagnoseform selbst vor (Wiederholung mit Fixture-Zaehlwerk).",
+    "verwahrer": "Karl Viehrig (Auftraggeber). Vernichtung ist NICHT beschlossen und wird nicht empfohlen; sie ist allein Karls Entscheidung (F6-K3). Ordnet er sie an, ist die Reihenfolge fest: erst Siegel und Vermerk, dann Vernichtung, dann ein eigener Beurkundungs-Vermerk - die Akte ueberlebt das Objekt.",
+    "schemaDivergenzAufgeloest": "Das Urteil weist eine Fundstellen-Divergenz aus (studie-f6-zaehlwerk.py:786-790 gegen studie-basisraten.py:462-467). AM CODE aufgeloest, OHNE die Datei zu oeffnen: beide Stellen fuehren dieselbe CREATE-TABLE-Kette roh / lauf_stand / zaehler_stand; das Zaehlwerk baut das Gerippe des Hauses nach. KORROBORATION, kein Widerspruch."
+   },
+   "h_verlusteInEintrag28": {
+    "form": "MESSUNG OHNE ZAEHLENTSCHEID.",
+    "verlust1": "Der Verbrauchssatz aus Eintrag 27 (\"Nach diesem Lauf ist das Kontingent verbraucht; eine weitere Prueffenster-Beruehrung braucht einen eigenen, neuen Akt.\") ist in Eintrag 28 FALLENGELASSEN.",
+    "verlust2": "Das Zweitlauf-Verbot aus Eintrag 27 (\"Jeder zweite Lauf unter dieser runId; ...\") FEHLT im verboten-Feld von Eintrag 28.",
+    "keineErlaubnis": "BEIDES ERZEUGT KEINE ERLAUBNIS. \"und nur er\" in der begruendung und \"EIN Fenster, EIN Tor\" im scope binden weiter; K2, A10 und die Verfassung binden unabhaengig von der Glosse eines Eintrags.",
+    "ob1": "OB-1: Ob dies den fuenften Fall von KZ-25 ausloest, ist OHNE BESCHLUSS. Stimme W hat es dem Gericht verwiesen, die Stimmen K und V schweigen. Dieser Vermerk entscheidet es nicht.",
+    "klasse": "Es ist eine weitere gemessene Instanz derselben Verlustklasse, die Eintrag 29 als MESSBAR UNWAHR beurkundet hat: wer nur Hinzugefuegtes prueft, bezeugt nichts ueber Weggefallenes."
+   },
+   "i_verhaltenDesAusfuehrenden": "Der Ausfuehrende hat NICHT NEU GEFEUERT, NICHTS NACHJUSTIERT, DAS PANEL NICHT ERNEUT BERUEHRT UND DEN ZWISCHENSTAND NICHT GEOEFFNET. Nach dem Abbruch wurde ausschliesslich diagnostiziert - der Defekt in Isolation ohne Panel reproduziert - und berichtet. Aktenkonform nach dem Muster \"Anlauf 4 riss -> Forensik OHNE Eingriff\" (KZ-4). Kein Byte am Laeufer wurde bewegt: sein sha256 ist unveraendert d04a0eaeeb05a17631122cb2f87ac587946d9e345705e348d265ba4dcd9fb688, byte-gleich zur Bindung in Eintrag 28.",
+   "blindAttest": "BLIND-ATTEST (F6-K5): Der Ausfuehrende haelt KEINERLEI Information aus dem abgebrochenen Lauf - keine Zahl, keine Zwischengroesse, keine Richtung. Der Zwischenstand ist ungeoeffnet geblieben; die einzige Beruehrung war der blinde Byte-Digest nach F6-K2, der keinen Inhalt liest.",
+   "endtestSiegel": "unberuehrt und UNVERBRAUCHT in jedem Ausgang (F6-K27). Dieser Vermerk oeffnet nichts und zaehlt nichts.",
+   "actor": "Karl Viehrig (Auftraggeber, Freigabe-Inhaber) - ausgefuehrt durch den Nacht-Agenten der Session 07 unter dem Review-Tor des Orchestrators.",
+   "scope": "Beurkundung eines Vorfalls. KEIN Datenzugriff, KEIN Fenster, KEINE Ausgabe.",
+   "purpose": "Den Vorfall aktenfest machen, bevor irgendeine weitere Handlung erfolgt (F6-K6, sperrend).",
+   "laufFreigabe": "DIESER VERMERK AUTORISIERT KEINEN LAUF. Der zweite und nach F6-K19 LETZTE Anlauf braucht die reparierte Kette, den ueberschreibenden Akt, frische Aequivalenz-Beine unter eigenem Zaehlproben-Akt, das Delta-Review und das ausdrueckliche Signal des Orchestrators.",
+   "previousHash": "0286419a727d63f271403793f3f29d8c5033f84aa631704888dedae048b12931",
+   "eventHash": "5ed947d05e4f93ff6d7b485e81022b9ad1733238349932a009570b5b9c6dd15a"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
