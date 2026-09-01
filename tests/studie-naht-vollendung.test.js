@@ -20,7 +20,20 @@ const { execFileSync, spawnSync } = require('node:child_process');
 
 const WURZEL = path.join(__dirname, '..');
 // Der Stand VOR dieser Vollendung. Von ihm kommen die un-vollendeten Fassungen.
-const VOR_DER_VOLLENDUNG = 'origin/main';
+//
+// EIN COMMIT, KEIN ZWEIGNAME. Diese Konstante stand bis zum Merge von PR #230
+// auf `origin/main` und war damit ein WANDERNDER Anker: sie zeigte genau so
+// lange auf den un-vollendeten Stand, wie die Vollendung noch offen war. In der
+// Sekunde, in der PR #230 auf main landete, luden beide Proben den VOLLENDETEN
+// Code als "vorher" — und die Zusicherung "hier ist es noch gruen" wurde rot,
+// obwohl an G7 und G12 nichts falsch ist. Eine Bruchprobe, die ihr eigenes
+// Merge nicht ueberlebt, beweist nach dem Merge nichts mehr.
+//
+// f949cbc5f9 ist der Elternteil des PR-#230-Merges: dort fuehrt
+// lib/ledger-single-appender.js noch KEIN LEDGER_RELS und
+// lib/studie-verfassung.js noch KEIN vorgaengerDatei. Der Stand ist damit
+// unveraenderlich derselbe, gegen den die Proben geschrieben wurden.
+const VOR_DER_VOLLENDUNG = 'f949cbc5f9cd8e01fb781a5f3cb951036c69b35f';
 
 function tempdir(prefix) {
   const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -29,12 +42,23 @@ function tempdir(prefix) {
 }
 
 // Laedt die Fassung einer Bibliothek, wie sie VOR der Vollendung auf main lag.
-function unvollendet(rel, dir) {
+//
+// `verbotenerMarker` ist der Riegel gegen genau den Fehler, an dem diese Datei
+// nach dem Merge von PR #230 zerbrochen ist: der Anker zeigt auf einen Stand,
+// der die Vollendung SCHON traegt. Dann waere die "vorher gruen"-Zusicherung
+// eine Aussage ueber den vollendeten Code — und ihre Roetung saehe aus wie ein
+// Defekt an G7/G12, obwohl nur der Anker verrutscht ist. Geprueft wird die
+// Eigenschaft (der Marker fehlt), nicht die Kennung des Commits.
+function unvollendet(rel, dir, verbotenerMarker) {
   const git = spawnSync('git', ['show', `${VOR_DER_VOLLENDUNG}:${rel}`],
     { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
   assert.equal(git.status, 0,
     `git show ${VOR_DER_VOLLENDUNG}:${rel} ist rot (status ${git.status}): `
     + `${String(git.stderr || '').trim() || '<kein stderr>'}`);
+  assert.ok(!git.stdout.toString('utf8').includes(verbotenerMarker),
+    `${VOR_DER_VOLLENDUNG}:${rel} traegt bereits "${verbotenerMarker}" — der Anker `
+    + 'zeigt NICHT auf den un-vollendeten Stand. Die Probe wuerde den vollendeten '
+    + 'Code gegen sich selbst halten und nichts mehr beweisen.');
   fs.mkdirSync(dir, { recursive: true });
   const ziel = path.join(dir, path.basename(rel));
   fs.writeFileSync(ziel, git.stdout);
@@ -76,7 +100,7 @@ test('G7 VOLLENDUNG: Fortsetzung neben fremdem Code — vorher gruen, nachher ro
 
   // (1) ZUERST der un-vollendete Code. Er kennt nur Teil 1, sieht die
   //     Fortsetzung nicht als Register und meldet FALSCH-GRUEN.
-  const alt = unvollendet('lib/ledger-single-appender.js', path.join(d, 'alt'));
+  const alt = unvollendet('lib/ledger-single-appender.js', path.join(d, 'alt'), 'LEDGER_RELS');
   const vorher = alt.checkSingleAppender({ repoDir: repo, baseRef: 'main', headRef: 'zweig' });
   assert.equal(vorher.verdict, 'NO_LEDGER_APPEND',
     'der un-vollendete Waechter MUSS hier falsch-gruen sein - sonst ist die '
@@ -135,7 +159,7 @@ function fortsetzungMitRueckdatiertemErsten(lib) {
 
 test('G12 VOLLENDUNG: rueckdatierter erster Fortsetzungseintrag — vorher gruen, nachher rot', () => {
   const d = tempdir('naht-g12-');
-  const alt = unvollendet('lib/studie-verfassung.js', path.join(d, 'alt'));
+  const alt = unvollendet('lib/studie-verfassung.js', path.join(d, 'alt'), 'vorgaengerDatei');
   const reg = fortsetzungMitRueckdatiertemErsten(alt);
 
   // (1) ZUERST un-vollendet: die Monotonie startet bei null, der erste Eintrag
@@ -161,7 +185,7 @@ test('G12 FAIL-CLOSED: vorgaengerDatei ohne vorgesetzte Zeit ist ein Bruch', () 
 
 test('G12 UNVERAENDERT: ohne vorgaengerDatei bit-fuer-bit wie zuvor', () => {
   const d = tempdir('naht-g12c-');
-  const alt = unvollendet('lib/studie-verfassung.js', path.join(d, 'alt'));
+  const alt = unvollendet('lib/studie-verfassung.js', path.join(d, 'alt'), 'vorgaengerDatei');
   const neu = require(path.join(WURZEL, 'lib', 'studie-verfassung.js'));
   // Das ECHTE Register - der Normalfall, der sich nicht bewegen darf.
   const echt = JSON.parse(fs.readFileSync(
