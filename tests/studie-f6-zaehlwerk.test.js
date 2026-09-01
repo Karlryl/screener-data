@@ -556,6 +556,36 @@ test('F6-C7b: das Werkzeug wird VOR dem Aufruf gegen seinen PIN geprueft', () =>
   assert.match(r.stdout, /weicht vom ratifizierten PIN ab/);
 });
 
+test('F6-C7b: der Aufruf-Pfad ist WIRKLICH erreichbar (kein NameError)', () => {
+  // DIESE PROBE FEHLTE, UND GENAU DA IST ES DURCHGEFALLEN: die PIN-Probe
+  // oben verstellt den Sollwert und bricht damit VOR subprocess.run ab - die
+  // Zeile selbst wurde nie ausgefuehrt. `subprocess` war nicht importiert,
+  // und der Fehler kam erst im echten Lauf am Zeitboden heraus, als
+  // NameError statt als benannter Abbruch.
+  //
+  // Hier laeuft der PIN durch (echter Sollwert) und der Aufruf scheitert erst
+  // am unmoeglichen data-root - also NACH subprocess.run. Ein NameError oder
+  // irgendein anderer nackter Traceback macht die Probe rot.
+  const dir = tempdir('f6-c7b-erreichbar-');
+  const r = pyProbe([
+    `arbeit = r"${path.join(dir, 'f6', 'w.sqlite').replace(/\\/g, '\\\\')}"`,
+    `ergebnis = r"${path.join(dir, 'e.json').replace(/\\/g, '\\\\')}"`,
+    'try:',
+    '    m.bein1_laufhaelfte(m.WURZEL_REPO, arbeit, ergebnis, "kein-data-root")',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("ABBRUCH:" + str(f)[:160])',
+    'except NameError as f: print("NAMEERROR:" + str(f))',
+  ].join('\n'));
+  assert.equal(r.status, 0, r.stderr);
+  assert.doesNotMatch(r.stdout, /^NAMEERROR:/m,
+    'der Aufruf-Pfad kracht in einen NameError - ein Import fehlt');
+  assert.doesNotMatch(r.stderr, /NameError|Traceback/,
+    `nackter Traceback statt benanntem Abbruch: ${r.stderr.slice(0, 300)}`);
+  assert.match(r.stdout, /^ABBRUCH:/m,
+    'der Aufruf muss den benannten Abbruch des gescheiterten Durchlaufs liefern');
+  assert.match(r.stdout, /durchlauf --modus alt` ist gescheitert|LAUF-HAELFTE/);
+});
+
 test('F6-C7b: der PIN im Zaehlwerk stimmt mit der Datei ueberein', () => {
   const gemessen = require('node:crypto').createHash('sha256')
     .update(fs.readFileSync(path.join(REPO, 'scripts', 'studie-e2-verbreitert.py')))
