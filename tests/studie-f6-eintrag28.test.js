@@ -40,7 +40,15 @@ function werkbank() {
 // Das Register im Stand VOR diesem Akt.
 function basisRegister(tmp) {
   const reg = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
-  while (reg.events.length && reg.events.at(-1).runId === K.RUN_ID) reg.events.pop();
+  // Bis zum Kettenende abschneiden, das DIESES Werkzeug erwartet - nicht bis
+  // zu einer festen Laenge. Dieselbe Bruchstelle hatte der Waechter zu
+  // Eintrag 27; sie ist beim Bau dieses hier ungeprueft mitgewandert und an
+  // Eintrag 29 wieder gerissen. Ein Register waechst - eine Probe, die die
+  // Laenge festnagelt, wird beim naechsten Akt rot, ohne dass an ihrem
+  // Gegenstand etwas falsch waere.
+  while (reg.events.length && reg.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
+    reg.events.pop();
+  }
   const p = path.join(tmp, 'basis-register.json');
   fs.writeFileSync(p, JSON.stringify(reg, null, 1));
   return p;
