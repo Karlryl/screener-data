@@ -205,6 +205,17 @@ function baueEintrag(registeredAt, wirksamAb, wurzel) {
     scope: 'Dokumentation von Eintrag 28. KEIN Datenzugriff, KEIN Fenster, KEINE Ausgabe.',
     purpose: 'Die vom Delta-Review bewiesenen Blocker A und B heilen, ohne die '
       + 'Autorisierung von Eintrag 28 anzutasten.',
+    fensterVermerk: 'ZUM ZEITFENSTER DIESES VERMERKS, damit kein spaeterer Leser ueber die '
+      + 'Form raetselt: accessedAt ist hier ein gewoehnliches +2h-Fenster ab der Anmeldung. '
+      + 'Ein C0_REGELFREEZE-Vermerk autorisiert keinen Zugriff, und sein accessedAt ist '
+      + 'deshalb NIE ein Tor fuer den Lauf - es bezeichnet nur, ab wann der ergaenzte Stand '
+      + 'gilt. Der Fussboden des Laufs war und bleibt allein der accessedAt von Eintrag 28 '
+      + '(2026-09-01T11:02:56.527Z); er ist zum Zeitpunkt dieses Vermerks laengst '
+      + 'ueberschritten. EIN FRUEHERER ENTWURF dieses Vermerks trug accessedAt auf genau '
+      + 'diesen Fussboden gepinnt, um ihn nicht nach hinten zu schieben; sein Fenster lief '
+      + 'ab, bevor der Serverbeweis gefuehrt werden konnte, und der Entwurf wurde ohne '
+      + 'Eintragung verworfen. Die Pinnung ist damit gegenstandslos - nicht widerrufen, '
+      + 'sondern erledigt.',
     laufFreigabe: 'DER LAUF FEUERT NICHT MIT DIESEM VERMERK. Die Autorisierung steht in '
       + 'Eintrag 28 und bleibt unveraendert; sie wird erst wirksam, wenn ein fokussiertes '
       + 'Re-Review dieses Vermerks gruen ist und der accessedAt-Fussboden von Eintrag 28 '
