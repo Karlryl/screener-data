@@ -134,11 +134,17 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
   // audit/fix BH-060: range:[0,RANGE] was never checked against the endpoint's
   // own j.totalCount, so a market with more matches than RANGE truncated
   // silently (the mcap-desc sort means the truncated tail is the SMALLER —
-  // but still potentially >=$2B — names). Stamp partial on the returned Map.
-  if (Number.isFinite(totalCount) && totalCount > rows.length) {
-    out.partial = true;
-    out.totalCount = totalCount;
-  }
+  // but still potentially >=$2B — names). Completeness is proven only by an
+  // exact, non-negative safe-integer count. Missing/malformed counts and counts
+  // smaller than the delivered data fail closed without discarding any rows.
+  const totalCountValid = Number.isSafeInteger(totalCount) && totalCount >= 0;
+  let partialReason = null;
+  if (!totalCountValid) partialReason = 'invalid-total-count';
+  else if (totalCount < rows.length) partialReason = 'total-count-smaller-than-data';
+  else if (totalCount > rows.length) partialReason = 'range-truncated';
+  if (partialReason) out.partial = true;
+  out.totalCount = totalCountValid ? totalCount : null;
+  out.partialReason = partialReason;
   const seen = new Set();
   // Tag 642 (Ausschluss-Protokoll, Tor 1): wer hier an der Groessenschwelle stirbt, verschwand
   // bisher spurlos — es gab weder eine Zeile je Ticker noch eine Zahl je Markt.
@@ -170,7 +176,8 @@ function verarbeiteZeilen(key, cfg, rows, rates, totalCount, right) {
     markt: key, land: cfg.country || cfg.endpoint, waehrung: cfg.ccy,
     schwelleUsd: MIN_USD_PRECUT, schwelleLokal: right,
     geliefert: rows.length, aufgenommen: out.size,
-    truncated: out.partial === true, totalCount: Number.isFinite(totalCount) ? totalCount : null,
+    truncated: partialReason === 'range-truncated', partial: out.partial === true,
+    partialReason, totalCount: out.totalCount,
     unterSchwelle,
   };
   return out;
@@ -233,7 +240,7 @@ async function discoverTvScanner(opts = {}) {
   merged.protokoll = protokoll;
   console.log(`[tv-scanner] ${merged.size} Kandidaten aus ${keys.length} Maerkten (${summary.join(' ')})`);
   if (partialMarkets.length > 0) {
-    console.warn(`[tv-scanner] WARNING: truncated (rows < totalCount) in ${partialMarkets.length} market(s): ${partialMarkets.join(', ')} — some >=2B names may be missing.`);
+    console.warn(`[tv-scanner] WARNING: incomplete or unverifiable scan in ${partialMarkets.length} market(s): ${partialMarkets.join(', ')} — some >=2B names may be missing.`);
     merged.partial = true;
   }
   return merged;
