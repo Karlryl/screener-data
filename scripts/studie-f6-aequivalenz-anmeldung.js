@@ -67,9 +67,9 @@ const VORLAUF_MINUTEN = 120;
 // Die ausfuehrenden Skripte, gemessen auf main NACH dem #192-Merge.
 const SKRIPTE = [
   ['scripts/studie-f6-zaehlwerk.py',
-    '928369687a147d3c3e1e3da8eec66e14663e09cc7d26d78c062e8d1328a8b8ab'],
+    'dfca0dffc7eb19e43259745428e25a543ac160f58f6892cb035a2434ef263876'],
   ['scripts/studie-f6-lauf.py',
-    '1eb0c9692f89fda0aa20668487c18450a8ec368f9d0659fe6cc116e39fbe304d'],
+    '36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0'],
   ['scripts/studie-zaehlprobe.py',
     'a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b'],
   ['scripts/studie-basisraten.py',
@@ -86,6 +86,18 @@ const BEIN2_QUELLE_SHA = '46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e016227
 // ORCHESTRATOR-NACHTRAG 1 nennt (92.276 B, hier nachgerechnet).
 const URTEIL_SHA = '013c401c958bb502cc2149bc10d9081e5a1f3efc2d34a9100f178e25be116e4d';
 
+// ANHANG 1, im Stand VOR seiner Ratifikation - der Byte-Beweis aus seinem
+// ORCHESTRATOR-NACHTRAG 1. Er berichtigt F6-C7 (als F6-C7a..i) und ist die
+// Autoritaet fuer die Zweiteilung von Bein 1.
+const ANHANG_SHA = '78a3c758c1e21afcd62a5c5c7881cffbeadebc9ca1b6d361c1341326a958f591';
+const ANHANG_BYTES = 55840;
+
+// Der ERZEUGER des Schwellen-Satzes. Er ist AUSFUEHREND nur fuer die
+// torSoll-Haelfte (F6-C7b); fuer die Kalibrier-Haelfte wird er NICHT gerufen
+// (F6-C7e) und gilt dort ausschliesslich als Erzeuger-Bindung des Artefakts.
+const VERBREITERT_REL = 'scripts/studie-e2-verbreitert.py';
+const VERBREITERT_SHA = '9a24ed94e943e9a6f5b4a1373ba6c6aa2001ddadb2d60a705277bf5eb359984b';
+
 // ── Die Allowlist (Bauordnung Schritt 2), EXAKT und abschliessend ───────────
 // Die Aequivalenz-Zahlen der Beine 1 und 2, `bestanden` und die drei
 // Skript-Hashes. NICHTS SONST. Ein nicht gelisteter Schluessel ist ein
@@ -97,15 +109,27 @@ const BEIN1_ZELLEN = ['S-U', 'S-G', 'S-UG'];
 const BEIN2_ZELLEN = ['S-U/signal', 'S-U/kontrollpool', 'S-G/signal', 'S-G/kontrollpool'];
 
 const ALLOWED_OUTPUTS = [
+  // 1. Bein-1-LAUF-Haelfte: die sechs torSoll-Zahlen. NUR diese - die
+  //    Kalibrierzahlen sind KEINE gemessene Groesse dieses Akts (F6-C7i).
   ...BEIN1_ZELLEN.flatMap((v) => [
-    `bein1.${v}.firmen_reif`, `bein1.${v}.firmen_unreif`]),
+    `aequivalenzTorSoll.${v}.firmen_reif`, `aequivalenzTorSoll.${v}.firmen_unreif`]),
+  // 2. Bein 2: die vier (zaehler, nenner, zensiert)-Tripel aus F6-C8.
   ...BEIN2_ZELLEN.flatMap((z) => [
     `bein2.${z}.zaehler`, `bein2.${z}.nenner`, `bein2.${z}.zensiert`]),
+  // 3./4.
   'bestanden',
   'modulSha256',
   'zaehlwerkSha256',
   'zaehlprobeSha256',
+  // 5. STATT der Kalibrierzahlen: die zwei Hashes der Artefakt-Haelfte plus
+  //    das Feld, das ausspricht, dass dort NICHTS gefahren wurde.
+  'schwellenDateiSha256',
+  'schwellenInhaltSha256',
+  'kalibrierHaelfteGeprueft',
 ];
+
+// F6-C7i, woertlich: der Wert, den das Feld tragen MUSS.
+const KALIBRIER_HAELFTE_GEPRUEFT = 'ARTEFAKT-HASH + KONSTANTEN-ABGLEICH, KEIN LAUF';
 
 // Die Sollzahlen selbst gehen als eigenes Feld mit — sie sind der Gegenstand
 // des Laufs und muessen VOR ihm im Register stehen, sonst waere "bit-identisch"
@@ -280,6 +304,20 @@ function baueEintrag(runId, registeredAt, wirksamAb, gemessen) {
       + 'Der Lauf verwendet die dann gueltigen Skripte und weist ihre Hashes ueber die allowedOutputs '
       + 'zaehlwerkSha256 / zaehlprobeSha256 / modulSha256 selbst aus; die hier genannten Werte sind der '
       + 'Registrierungs-Stand und binden den Lauf nicht rueckwirkend. '
+      + 'ANHANG 1 (BERICHTIGUNG VON F6-C7, Auflagen F6-C7a..i), Urteilsstand VOR seiner '
+      + `Ratifikation, sha256 ${ANHANG_SHA}, ${ANHANG_BYTES} B, am Objekt nachgerechnet. `
+      + 'AKTENKETTE: ORCHESTRATOR-NACHTRAG 2 (Auslegung) -> NACHTRAG 3 (Kipp-Bedingung '
+      + 'gefeuert, Kalibrier-Haelfte der Auslegung zurueckgezogen, Weiche an einen Rat) -> '
+      + 'ANHANG 1 (Berichtigung). Der Beleg der Nicht-Erosion liegt darin, dass ZWEIMAL '
+      + 'nacheinander NICHT still weitergedeutet wurde. '
+      + `ERZEUGER-BINDUNG: ${VERBREITERT_REL}, sha256 ${VERBREITERT_SHA}. Es ist AUSFUEHRENDES `
+      + 'Skript ausschliesslich fuer die torSoll-Haelfte (F6-C7b, durchlauf --modus alt, '
+      + 'Ausgabe nur nach --ergebnis, nie ins Artefakt); fuer die KALIBRIER-Haelfte wird es '
+      + 'NICHT gerufen (F6-C7e) und ist dort allein die Erzeuger-Bindung des Artefakts. Es '
+      + 'bleibt Byte fuer Byte unangetastet - sein SHA ist zugleich PIN aus Register-Eintrag 23 '
+      + 'und Laufzeit-Bindung des Laeufers (F6-C7f: Option (i) ist gesperrt, nicht nur teuer). '
+      + 'KEINE KALIBRIERZAHL IST EINE GEMESSENE GROESSE DIESES AKTS (F6-C7i) - sie so zu '
+      + 'fuehren beurkundete einen Zustand, den der Akt nicht hat. '
       + 'SOLLZAHLEN VORAB: Bein 1 gegen ' + BEIN1_QUELLE_REL + ' (' + BEIN1_QUELLE_SHA + '), Bein 2 '
       + 'gegen ' + BEIN2_QUELLE_REL + ' (' + BEIN2_QUELLE_SHA + '), beide vom Werkzeug am Objekt '
       + 'nachgerechnet. Sie stehen VOR dem Lauf im Register, damit "bit-identisch" eine Vorfestlegung '
@@ -309,6 +347,28 @@ function baueEintrag(runId, registeredAt, wirksamAb, gemessen) {
         dateiSha256: BEIN2_QUELLE_SHA,
         rahmen: { panelRand: '2016-12-31', signalband: '2009-01-01/2015-12-31', perzentil: 95 },
         zellen: BEIN2_SOLL,
+      },
+      kalibrierHaelfte: {
+        form: KALIBRIER_HAELFTE_GEPRUEFT,
+        berichtigung:
+          'F6-C7a: die Kalibrier-Groessen (kalibrierungsWeg 1109->540 / 1309->546, '
+          + 'auswertbarImBand 68079 / 82642, firmenReif 540 / 546, firmenUnreif 226 / 265) sind '
+          + 'KEINE ORIGINAL-Globals-Groessen. Sie stammen aus dem Durchlauf verbreitertOhneBank. '
+          + 'Der arithmetische Gegenbeweis steht im SELBEN Artefakt: '
+          + 'provenienz.aequivalenzTorSoll["S-U"].firmen_reif = 512 gegen '
+          + 'jeFamilie["S-U"].firmenReif = 540, und S-UG 29 gegen 30 - ein Lauf kann nicht '
+          + 'beides liefern. Bein 1 zerfaellt deshalb nach BEWEISART in eine Lauf-Haelfte '
+          + '(F6-C7b) und eine Artefakt-Haelfte (F6-C7c/d).',
+        nachweis:
+          'Doppel-Hash (Datei-SHA ' + BEIN1_QUELLE_SHA + ' UND inhaltSha256, beide Richtungen '
+          + 'zu) plus Laufzeit-Konstanten-Abgleich feldweise gegen das hash-geprueft geladene '
+          + 'Artefakt. NICHT GEFAHREN, SONDERN GEPRUEFT.',
+        restrisiko:
+          'F6-C7g: bewiesen wird die UNVERAENDERTHEIT der eingefrorenen Bytes, NICHT die '
+          + 'Wahrheit der Zahlen darin (c); das Entdeckungs-Panel traegt keinen registrierten '
+          + 'Byte-Pin (d); und dass das E2-Artefakt aus einem echten Panel-Lauf stammt, traegt '
+          + 'sein eigenes bestandenes Tor plus BEIN 2, nicht dieses Bein (e). Ausgewiesen, '
+          + 'nicht wegargumentiert.',
       },
       bein3: {
         form: 'Wortlaut-Literale aus protocol/early-detection/2.0.0/preregistration.json, '
