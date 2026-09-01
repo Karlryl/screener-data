@@ -139,6 +139,30 @@ check('isUnpriceable trennt FX-Luecke von "kein Marktwert"', () => {
   assert.equal(isUnpriceable(2e9, 'XXX', { USD: 1 }), true);
   assert.equal(isUnpriceable(0, 'EUR', { EUR: 1 }), false);
 });
+check('jede nicht-positive, nicht-endliche oder typfalsche FX-Rate ist unbrauchbar', () => {
+  const invalid = [0, -0.5, NaN, Infinity, -Infinity, '1.2', null, true, {}, []];
+  for (const rate of invalid) {
+    const rates = { EUR: rate };
+    assert.equal(toUsd(5e9, 'EUR', rates), null, 'toUsd muss Rate abweisen: ' + String(rate));
+    assert.equal(isUnpriceable(5e9, 'EUR', rates), true,
+      'isUnpriceable muss dieselbe Rate abweisen: ' + String(rate));
+  }
+});
+check('FX-Rate 0/negativ bleibt answered, wird aber nur als unpriceable verbucht', async () => {
+  const rates = { USD: 1, EUR: 0, CHF: -0.5 };
+  const quotes = {
+    'ZERO.PA': { marketCap: 5e9, currency: 'EUR', quoteType: 'EQUITY' },
+    'NEG.SW': { marketCap: 5e9, currency: 'CHF', quoteType: 'EQUITY' },
+  };
+  const quoteBadFx = async (batch) => batch.map((symbol) => ({ symbol, ...quotes[symbol] }));
+  const r = await prefilterByMcap(Object.keys(quotes), {
+    minUsd: 2e9, quote: quoteBadFx, rates,
+  });
+  assert.deepEqual([...r.answered].sort(), ['NEG.SW', 'ZERO.PA']);
+  assert.deepEqual([...r.unpriceable].sort(), ['NEG.SW', 'ZERO.PA']);
+  assert.equal(r.kept.size, 0, 'ein unbrauchbarer FX-Kurs darf keinen Titel aufnehmen');
+  assert.equal(r.belowUsd.size, 0, 'ein unbrauchbarer FX-Kurs ist kein Unter-Schwelle-Befund');
+});
 check('kosdaqTarget schreibt nur .KS-Symbole mit KOSDAQ-Beleg um', () => {
   assert.equal(kosdaqTarget('005930.KS', { fullExchangeName: 'KOSDAQ' }), '005930.KQ');
   assert.equal(kosdaqTarget('005930.KS', { fullExchangeName: 'KSE' }), null);
