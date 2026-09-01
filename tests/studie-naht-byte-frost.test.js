@@ -149,22 +149,12 @@ test('LR-14: bestaetigen loest auf die Datei auf, die den Eintrag fuehrt', () =>
   } finally {
     fs.readFileSync = echt;
   }
-  // UND DIE VERDRAHTUNG. Ein Aufloeser, den bestaetigen nicht ruft, ist eine
-  // gepruefte Funktion neben einem ungeprueften Pfad. Ein Lauf-Beweis dafuer
-  // braeuchte einen echten Eintrag in der Fortsetzung und einen gh-Aufruf -
-  // beides gibt es erst mit dem count-only-Akt. Bis dahin wird die STELLE
-  // gepinnt, an der die Aufloesung passiert, und der aufgeloeste Pfad muss in
-  // die Abfrage UND in die Herkunftszeile des Beweises gehen.
-  const quelle = fs.readFileSync(
-    path.join(WURZEL, 'scripts', 'studie-r1-serverzeit.js'), 'utf8');
-  assert.match(quelle, /const \{ rel: registerRel, pfad: registerPfad \} = registerDerRunId\(runId\);/,
-    'bestaetigen loest den Registerpfad nicht mehr ueber die Kette auf');
-  assert.match(quelle, /contents\/\$\{registerRel\}\?ref=\$\{encodeURIComponent\(zweig\)\}/,
-    'die API-Abfrage laeuft nicht gegen den aufgeloesten Pfad');
-  assert.match(quelle, /quelle: `gh api -i repos\/\$\{nwo\}\/contents\/\$\{registerRel\}/,
-    'die Herkunftszeile des Beweises nennt nicht den aufgeloesten Pfad');
-  assert.doesNotMatch(quelle, /const register = lies\(LEDGER\);\s*\n\s*pruefeZugriffsRegister/,
-    'bestaetigen faellt auf den festen alten Pfad zurueck');
+  // Die VERDRAHTUNG wird nicht mehr hier gepinnt: Textmuster bezeugen, dass
+  // eine Zeile dasteht, nicht dass sie laeuft - der Review zu #238 hat an
+  // genau diesen vier Mustern vorbei echte Regressionen durchgelassen. Die
+  // Verdrahtung ist jetzt VERHALTENSGEPRUEFT in
+  // tests/studie-naht-beweisebene.test.js: welche URL abgesetzt, welche Datei
+  // gelesen, was in die Freigabe geschrieben wurde.
 });
 
 test('LR-14: eine unlesbare Registerdatei ist ein ABBRUCH, kein leeres Glied', () => {

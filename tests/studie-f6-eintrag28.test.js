@@ -61,11 +61,33 @@ function werkbank() {
   // Werkbank misst wieder den lebenden Baum.
   const STAND_DES_AKTES = 'aeefb68125';
   const wiederhergestellt = [];
+  // Die Abweichungen, zu denen dieser Bauabschnitt berechtigt ist, einzeln
+  // benannt und mit Grund. Sie schrumpft von selbst: sobald der
+  // ueberschreibende Akt die neuen SHA bindet, weicht keine dieser Dateien mehr
+  // ab und die ganze Schleife wird zur Nulloperation.
+  const ERLAUBTE_ABWEICHUNGEN = new Set([
+    'scripts/studie-f6-lauf.py',        // F6-K13-Reparatur des Wachpostens
+    'scripts/studie-r1-serverzeit.js',  // LR-14: EIN Ketten-Aufloeser (Naht)
+    'scripts/studie-zaehlprobe.py',     // ratifiziert fuer PR-F (Fortsetzung erreichbar)
+  ]);
   for (const [rel, bindung] of Object.entries(K.SKRIPTE)) {
     const imBaumPfad = path.join(WURZEL, ...rel.split('/'));
     if (!fs.existsSync(imBaumPfad)) continue;
     const imBaum = crypto.createHash('sha256').update(fs.readFileSync(imBaumPfad)).digest('hex');
     if (imBaum === bindung.sha) continue;   // nichts wiederherzustellen
+    // F4 - DIE ZWEITE BEDINGUNG IST HEUTE IMMER WAHR. "Die historischen Bytes
+    // treffen die Bindung" gilt fuer JEDE gebundene Datei per Konstruktion: der
+    // Akt hat genau diesen Stand gebunden. Damit war die Wiederherstellung
+    // faktisch bedingungslos - eine Aenderung an einer beliebigen gebundenen,
+    // sogar VERSIEGELTEN Datei waere lautlos maskiert worden.
+    //
+    // Die Liste nennt die Abweichungen, zu denen dieser Bauabschnitt berechtigt
+    // ist. Alles andere ist ein Befund und geht rot, nicht in die Maskierung.
+    assert.ok(ERLAUBTE_ABWEICHUNGEN.has(rel),
+      `${rel} weicht von seiner Bindung ab, steht aber nicht auf der Liste der fuer diesen `
+      + 'Bauabschnitt berechtigten Abweichungen. Die Werkbank maskiert das NICHT: entweder '
+      + 'gehoert die Datei auf die Liste (dann mit Grund), oder die Aenderung gehoert '
+      + 'rueckgaengig gemacht.');
     const git = require('node:child_process').spawnSync(
       'git', ['show', `${STAND_DES_AKTES}:${rel}`],
       { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
