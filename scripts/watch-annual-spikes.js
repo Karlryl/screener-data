@@ -47,7 +47,21 @@ const MIN_BETRAG = 50e6;
 const BASELINE_PATH = path.join(ROOT, 'data-health', 'annual-spikes-baseline.json');
 // Wie viele NEUE Faelle in einem Lauf noch als Rauschen durchgehen. Ein einzelner
 // Neuzugang kann ein echtes Sonderjahr sein; fuenf auf einmal sind ein Muster.
-const MAX_NEU = Number(process.env.ANNUAL_SPIKE_MAX_NEU || 5);
+const DEFAULT_MAX_NEU = 5;
+
+function parseMaxNeu(raw) {
+  if (raw === undefined || raw === '') return DEFAULT_MAX_NEU;
+  if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
+    throw new Error('ANNUAL_SPIKE_MAX_NEU muss eine nichtnegative ganze Dezimalzahl sein; '
+      + `erhalten: ${JSON.stringify(raw)}`);
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value)) {
+    throw new Error('ANNUAL_SPIKE_MAX_NEU liegt ausserhalb des sicheren Ganzzahlbereichs; '
+      + `erhalten: ${JSON.stringify(raw)}`);
+  }
+  return value;
+}
 
 const REIHEN = ['annualOpInc', 'annualRev', 'annualNetIncome'];
 
@@ -74,7 +88,7 @@ function positiveCapexJahre(s) {
 // glatt durch. Danach ist der Bestand leer, jeder laengst bekannte Fall gilt als neu, und
 // der Waechter meldet "163 neue Ausreisser" statt "die Bestandsdatei ist kaputt": die
 // falsche Diagnose schickt den Leser in die Funde statt in die Basis. Bei wenigen Funden
-// (<= MAX_NEU) rutscht es sogar still durch. Die Schwester-Waechter watch-exchange-coverage
+// (<= ANNUAL_SPIKE_MAX_NEU) rutscht es sogar still durch. Die Schwester-Waechter watch-exchange-coverage
 // und watch-fx-sanity wurden am 09.08. (P1-Welle 3) genau dafuer gehaertet; dieser hier
 // wurde damals nicht nachgezogen. Exportiert, damit die Sache pruefbar ist statt geglaubt
 // (tests/p1-welle3-waechter-wahrheit.test.js, Cluster A).
@@ -153,7 +167,7 @@ function istBekannt(x, bestand, heutigeFundeJeReihe = new Map()) {
   // nicht mehr Funde hat als der Bestand Alt-Eintraege, kann jeder Fund von einem
   // Alt-Eintrag stammen und die Toleranz ist plausibel. Kommt einer dazu, kann sie
   // nicht mehr alle decken — dann faellt sie fuer diese Reihe ganz weg und ALLE ihre
-  // Funde laufen als NEU auf. Das Falsch-Rot-Risiko puffert MAX_NEU=5.
+  // Funde laufen als NEU auf. Das Falsch-Rot-Risiko puffert DEFAULT_MAX_NEU=5.
   const alt = altIndexEintraege(bestand, x.ticker, x.reihe);
   if (alt === 0) return false;
   // Ohne Zaehlung (Direktaufruf mit zwei Argumenten) gilt der Einzelfund als Massstab —
@@ -330,6 +344,7 @@ function scanSnapshots(snapDir) {
 }
 
 function main() {
+  const maxNeu = parseMaxNeu(process.env.ANNUAL_SPIKE_MAX_NEU);
   if (!fs.existsSync(SNAP_DIR)) {
     console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
     return 1;
@@ -434,7 +449,7 @@ function main() {
   const heuteJeReihe = fundeJeReihe(funde, bestand);
   const neu = funde.filter((x) => !istBekannt(x, bestand, heuteJeReihe));
 
-  console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${MAX_NEU})`);
+  console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${maxNeu})`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   // Vom Bestand nur eine Kostprobe, aber die Zahl bleibt genannt — kein stilles Kappen.
@@ -442,14 +457,14 @@ function main() {
   for (const x of bekannt.slice(0, 15)) console.log(`  bek. ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   if (bekannt.length > 15) console.log(`  … und ${bekannt.length - 15} weitere bekannte`);
 
-  if (neu.length > MAX_NEU) {
-    console.error(`::error::${neu.length} NEUE Jahres-Ausreisser (erlaubt ${MAX_NEU}) — einzelne Jahre weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch eingefrorene Fehlabrufe; Liste oben.`);
+  if (neu.length > maxNeu) {
+    console.error(`::error::${neu.length} NEUE Jahres-Ausreisser (erlaubt ${maxNeu}) — einzelne Jahre weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch eingefrorene Fehlabrufe; Liste oben.`);
     return 1;
   }
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
 
 if (require.main === module) {
   try {
