@@ -117,14 +117,54 @@ test('der Vermerk autorisiert keinen Zugriff', () => {
 });
 
 // ── Der Trockenlauf schreibt nichts ───────────────────────────────────────
-test('der Trockenlauf laesst das echte Register byte-gleich', () => {
-  const vorher = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+// Der Fixture-Stand VOR diesem Akt - abgeschnitten bis zu dem Kettenende, das
+// das Werkzeug erwartet, NICHT auf eine feste Laenge. Ohne das ist die Probe
+// nur auf main gruen und wird rot, sobald der eigene Eintrag im Register
+// steht: dieselbe Klasse, die schon die Waechter zu Eintrag 27 und 28
+// gerissen hat. Beim dritten Mal steht sie jetzt hier.
+function basisRegister(tmp) {
+  const reg = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+  while (reg.events.length && reg.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
+    reg.events.pop();
+  }
+  const p = path.join(tmp, 'basis-register.json');
+  fs.writeFileSync(p, JSON.stringify(reg, null, 1));
+  return p;
+}
+
+test('der Trockenlauf schreibt nichts - weder ins Fixture noch ins echte Register', () => {
+  const d = tmpdir();
+  const fixture = basisRegister(d);
+  const vorherEcht = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+  const vorherFixture = crypto.createHash('sha256')
+    .update(fs.readFileSync(fixture)).digest('hex');
   const echt = process.stdout.write;
   let aus = '';
   process.stdout.write = (s) => { aus += s; return true; };
-  try { K.haupt([]); } finally { process.stdout.write = echt; }
+  try { K.haupt(['--register', fixture]); } finally { process.stdout.write = echt; }
   assert.strictEqual(
-    crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'), vorher);
+    crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'), vorherEcht,
+    'das echte Register wurde angefasst');
+  assert.strictEqual(
+    crypto.createHash('sha256').update(fs.readFileSync(fixture)).digest('hex'), vorherFixture,
+    'der Trockenlauf hat ins Fixture geschrieben');
   assert.match(aus, /TROCKENLAUF - es wurde NICHTS geschrieben/);
   assert.match(aus, new RegExp(`"previousHash": "${K.ERWARTETER_TAIL}"`));
+});
+
+test('die Probe traegt auf BEIDEN Registerstaenden - mit und ohne eigenen Eintrag', () => {
+  // Positiv gegengeprueft statt behauptet: ein Register, dem der eigene Akt
+  // schon angehaengt ist, muss auf denselben Stand zurueckgeschnitten werden.
+  const d = tmpdir();
+  const echt = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+  const mitEintrag = JSON.parse(JSON.stringify(echt));
+  mitEintrag.events.push({ runId: K.RUN_ID, eventHash: 'x'.repeat(64) });
+  const p = path.join(d, 'mit-eintrag.json');
+  fs.writeFileSync(p, JSON.stringify(mitEintrag, null, 1));
+  const gelesen = JSON.parse(fs.readFileSync(p, 'utf8'));
+  while (gelesen.events.length && gelesen.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
+    gelesen.events.pop();
+  }
+  assert.strictEqual(gelesen.events.at(-1).eventHash, K.ERWARTETER_TAIL);
+  assert.strictEqual(gelesen.events.length, echt.events.length);
 });
