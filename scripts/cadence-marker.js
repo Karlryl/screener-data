@@ -43,12 +43,17 @@ function writeMarker(file, field, nowIso, opts = {}) {
   let existing = null;
   let parseFailed = false;
   if (fs.existsSync(file)) {
-    try { existing = JSON.parse(fs.readFileSync(file, 'utf8')); }
+    try {
+      existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (existing === null || typeof existing !== 'object' || Array.isArray(existing)) {
+        throw new Error('cadence marker JSON root must be a plain object');
+      }
+    }
     catch (e) {
       const backup = file + '.corrupt-' + Date.now() + '.json';
       try { fs.copyFileSync(file, backup); } catch (_) { /* best effort */ }
       if (opts.annotate) {
-        console.log(`::warning::cadence-marker — ${file} nicht lesbar/parsebar (${e.message}); korrupte Datei gesichert nach ${backup}; Sibling-Feld wird explizit unbekannt`);
+        console.log(`::warning::cadence-marker - ${file} nicht als State-Objekt lesbar (${e.message}); korrupte Datei gesichert nach ${backup}; Sibling-Feld wird explizit unbekannt`);
       }
       parseFailed = true;
       existing = { last_weekly_run: 'unknown', last_monthly_run: 'unknown', state: 'partially-unknown' };
