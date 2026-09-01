@@ -13,7 +13,8 @@
  *
  * Run:
  *   node scripts/prune-watchlist.js [--watchlist watchlist.json] [--snapshots ./snapshots]
- *                                   [--max-age-days 60] [--dry-run]
+ *                                   [--max-age-days 60] [--prune-no-data-days 30]
+ *                                   [--prune-orphans] [--force] [--dry-run]
  */
 'use strict';
 const fs   = require('fs');
@@ -24,6 +25,32 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 // a private copy; lifted to lib/snapshot-fs.js so all callers (prune,
 // elliott-export, regional-oos-test, pull-yahoo) share one source of truth.
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+
+class CliArgumentError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'CliArgumentError';
+  }
+}
+
+function optionValue(argv, index, flag) {
+  const value = argv[index + 1];
+  if (typeof value !== 'string' || value.trim().length === 0 || value.startsWith('--')) {
+    throw new CliArgumentError(`${flag} requires a value`);
+  }
+  return value;
+}
+
+function nonNegativeSafeInteger(raw, flag) {
+  if (!/^(?:0|[1-9]\d*)$/.test(raw)) {
+    throw new CliArgumentError(`${flag} requires a canonical non-negative integer`);
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value)) {
+    throw new CliArgumentError(`${flag} exceeds the safe integer range`);
+  }
+  return value;
+}
 
 function parseArgs(argv) {
   const args = {
@@ -40,17 +67,38 @@ function parseArgs(argv) {
     force: false,
     dryRun: false
   };
+  const seen = new Set();
+  const markSeen = (flag) => {
+    if (seen.has(flag)) throw new CliArgumentError(`${flag} must not be repeated`);
+    seen.add(flag);
+  };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--watchlist' && argv[i+1])   args.watchlist  = argv[++i];
-    else if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
-    else if (argv[i] === '--max-age-days' && argv[i+1]) args.maxAgeDays = parseInt(argv[++i], 10);
+    const flag = argv[i];
+    markSeen(flag);
+    if (flag === '--watchlist') {
+      args.watchlist = optionValue(argv, i, flag);
+      i++;
+    } else if (flag === '--snapshots') {
+      args.snapshots = optionValue(argv, i, flag);
+      i++;
+    } else if (flag === '--max-age-days') {
+      args.maxAgeDays = nonNegativeSafeInteger(optionValue(argv, i, flag), flag);
+      i++;
     // F-DP-022: new flag to control how long no-snapshot tickers are tolerated
-    else if (argv[i] === '--prune-no-data-days' && argv[i+1]) args.pruneNoDataDays = parseInt(argv[++i], 10);
+    } else if (flag === '--prune-no-data-days') {
+      args.pruneNoDataDays = nonNegativeSafeInteger(optionValue(argv, i, flag), flag);
+      i++;
     // Tag 222b: hard-prune all orphans (tickers without a snapshot file).
-    else if (argv[i] === '--prune-orphans') args.pruneOrphans = true;
-    // audit/fix: over-prune floor — a mis-pathed --snapshots could atomically wipe the watchlist
-    else if (argv[i] === '--force') args.force = true;
-    else if (argv[i] === '--dry-run') args.dryRun = true;
+    } else if (flag === '--prune-orphans') {
+      args.pruneOrphans = true;
+    // audit/fix: over-prune floor - a mis-pathed --snapshots could atomically wipe the watchlist
+    } else if (flag === '--force') {
+      args.force = true;
+    } else if (flag === '--dry-run') {
+      args.dryRun = true;
+    } else {
+      throw new CliArgumentError(`unknown argument: ${flag}`);
+    }
   }
   return args;
 }
@@ -124,8 +172,8 @@ function isDeadSnapshot(snap, maxAgeDays) {
   return deadReason(snap, maxAgeDays) !== null;
 }
 
-function main() {
-  const args = parseArgs(process.argv);
+function main(argv = process.argv) {
+  const args = parseArgs(argv);
   console.log('Watchlist Auto-Prune (Tag 142)');
   console.log('  watchlist:          ' + args.watchlist);
   console.log('  snapshots:          ' + args.snapshots);
@@ -254,4 +302,16 @@ function main() {
   console.log('\nWritten: ' + args.watchlist);
 }
 
-main();
+function runCli(argv = process.argv, run = main) {
+  try {
+    run(argv);
+  } catch (e) {
+    if (!(e instanceof CliArgumentError)) throw e;
+    console.error('::error::prune-watchlist CLI: ' + e.message);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = { parseArgs, main, runCli };
+
+if (require.main === module) runCli();

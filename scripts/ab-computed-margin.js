@@ -42,6 +42,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { ladeUniversum } = require('./score-digest.js');
 const { scoreUniverse, produceRankings, signFlips, cycleSignal, cycleDamperFactor } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
@@ -54,6 +55,11 @@ const ROOT = path.join(__dirname, '..');
 const P99 = 0.99;                       // wie write-board-history.js (P99-Tagesdelta)
 const MARKE = 'computed-margin';
 const GATE_CALIB = path.join(ROOT, 'board-history', '_gate-calibration.json');
+
+function writeReportArtifact(outPath, contents) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  writeFileAtomic(outPath, contents, 'utf8');
+}
 
 const istMarkiert = (s) => !!(s && s.meta && s.meta.opIncSource === MARKE);
 
@@ -342,12 +348,11 @@ function main() {
     'erzeugt': new Date().toISOString(),
   };
   const txt = report(kopf, zeilen, sichA, sichB, trackWechsel, capEffDiff);
-  fs.mkdirSync(path.dirname(outPfad), { recursive: true });
-  fs.writeFileSync(outPfad, txt, 'utf8');
+  writeReportArtifact(outPfad, txt);
   console.log('\n' + txt);
   console.log(`Report geschrieben: ${outPfad}`);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, txt);
 }
 
 if (require.main === module) main();
-module.exports = { schalterAn, istMarkiert, lauf, vergleich, sicherungen };
+module.exports = { schalterAn, istMarkiert, lauf, vergleich, sicherungen, writeReportArtifact };

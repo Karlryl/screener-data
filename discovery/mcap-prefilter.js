@@ -29,23 +29,24 @@ function loadRates() {
 // Subunit-Waehrungen (Pence/Cents/Agorot) -> Basiswaehrung, /100. ILA = israelische Agorot (Yahoo
 // liefert TASE-marketCap in Agorot, nicht Shekel) — sonst faellt jeder israelische Name fail-closed raus.
 const SUBUNIT = { GBp: 'GBP', GBX: 'GBP', ZAc: 'ZAR', ILA: 'ILS' };
+const isUsableFxRate = (rate) => Number.isFinite(rate) && rate > 0;
 function toUsd(mcap, cur, rates) {
   if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return null;
   let c = cur, m = mcap;
   if (SUBUNIT[c]) { c = SUBUNIT[c]; m = m / 100; }
   const r = rates[c];
-  return Number.isFinite(r) ? m * r : null;
+  return isUsableFxRate(r) ? m * r : null;
 }
 
 // BH-041: reine Funktion (offline testbar) — unterscheidet, WARUM toUsd() null geliefert hat.
 // true nur, wenn ein echtes, positives marketCap + eine bekannte Waehrung vorlagen, aber genau
-// diese Waehrung in rates fehlt (FX-Artefakt-Luecke, z.B. eine einzelne fehlende Zeile in einer
-// sonst validen fx-rates.json). false bei echtem "kein/kein positives marketCap" (dann ist die
-// Zeile schlicht nicht bewertbar, unabhaengig von FX — kein 'unpriceable' im BH-041-Sinn).
+// deren Rate fehlt oder keine positive endliche Zahl ist (FX-Artefakt-Luecke bzw. korrupter
+// Eintrag). false bei echtem "kein/kein positives marketCap" (dann ist die Zeile schlicht nicht
+// bewertbar, unabhaengig von FX - kein 'unpriceable' im BH-041-Sinn).
 function isUnpriceable(mcap, cur, rates) {
   if (!Number.isFinite(mcap) || mcap <= 0 || !cur) return false;
   const c = SUBUNIT[cur] || cur;
-  return !Number.isFinite(rates[c]);
+  return !isUsableFxRate(rates[c]);
 }
 
 // Bug 5 (KOSDAQ-Suffix): Der KR-Adapter (opendart-kr.js) emittiert alle KR-Titel als
@@ -67,8 +68,8 @@ function kosdaqTarget(symbol, quote) {
  * prefilterByMcap(symbols) -> { kept: Map<yahooSymbol, marketCapUsd> nur fuer >= MIN_USD,
  *                               answered: Set<yahooSymbol> die Yahoo ueberhaupt beantwortet hat,
  *                               unpriceable: Set<yahooSymbol> beantwortet MIT positivem marketCap,
- *                                 aber fx-rates.json kennt die Handelswaehrung nicht (Artefakt-
- *                                 Luecke, nicht "unter Schwelle"),
+ *                                 aber ohne positive endliche Rate fuer die Handelswaehrung
+ *                                 (Artefakt-Luecke/-Defekt, nicht "unter Schwelle"),
  *                               belowUsd: Map<yahooSymbol, marketCapUsd> sauber bepreist, aber
  *                                 UNTER der Schwelle — die Begruendung des Ausschlusses,
  *                               nichtAktie: Set<yahooSymbol> Yahoo meldet quoteType != EQUITY
@@ -92,10 +93,10 @@ async function prefilterByMcap(symbols, opts = {}) {
   // -> answered = Menge der Symbole, fuer die Yahoo ueberhaupt eine Quote geliefert hat.
   const answered = new Set();
   // BH-041: answered heisst nur "Yahoo hat geantwortet", nicht "toUsd() konnte umrechnen".
-  // Fehlt in einer sonst validen fx-rates.json nur EINE Waehrung, liefert toUsd() fuer genau
-  // diese Zeilen still null, obwohl ein echtes, positives marketCap vorlag — das ist "nicht
-  // bewertbar", nicht "geprueft und < Schwelle". unpriceable markiert genau diesen Fall, damit
-  // der Caller ihn NICHT wie einen Unter-Cap-Befund loescht.
+  // Fehlt in einer sonst validen fx-rates.json nur EINE Waehrung oder ist ihre Rate unbrauchbar,
+  // liefert toUsd() fuer genau diese Zeilen null, obwohl ein echtes, positives marketCap vorlag -
+  // das ist "nicht bewertbar", nicht "geprueft und < Schwelle". unpriceable markiert genau diesen
+  // Fall, damit der Caller ihn NICHT wie einen Unter-Cap-Befund loescht.
   const unpriceable = new Set();
   // Tag 642 (Ausschluss-Protokoll): bis hierher wusste NIEMAND, WER an dieser Schwelle
   // gestorben ist — kept enthielt nur die Ueberlebenden, der Aufrufer loeschte den Rest

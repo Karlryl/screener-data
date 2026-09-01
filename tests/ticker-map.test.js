@@ -10,13 +10,18 @@
  * Usage:  node tests/ticker-map.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const T = require('../scripts/snapshot-ticker-map.js');
 
 let pass = 0, fail = 0;
+const asyncChecks = [];
 function check(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
 }
+function checkAsync(name, fn) { asyncChecks.push([name, fn]); }
 
 const NASDAQ_KOPF = 'Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares';
 const OTHER_KOPF = 'ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol';
@@ -112,14 +117,134 @@ check('Abspielen von Grundbild + Tageszeilen ergibt den Stand von damals', () =>
   assert.deepEqual([...heute.keys()].sort(), ['B', 'C', 'D']);
 });
 
-check('ein wiederholter Lauf am selben Tag darf den Stand nicht verdoppeln', () => {
-  // Der Job kann zweimal laufen (Nachlauf, workflow_dispatch). Haenge die Zeile blind an,
-  // haengt der rekonstruierte Stand davon ab, WIE OFT der Job lief.
-  const src = require('fs').readFileSync(require.resolve('../scripts/snapshot-ticker-map.js'), 'utf8');
-  assert.ok(/filter\(\(z\) => z\.trim\(\) && !z\.includes\('"datum":"' \+ datum \+ '"'\)\)/.test(src),
-    'die Tageszeile muss ersetzt statt angehaengt werden');
-  assert.ok(/z\.datum < datum/.test(src),
-    'der Vergleichsstand muss die HEUTIGE Zeile ausklammern, sonst diffed der zweite Lauf gegen sich selbst');
+checkAsync('ein wiederholter Lauf ersetzt den Tag und diffed erneut gegen den Vortagesstand', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ticker-map-rerun-'));
+  try {
+    const grundbildAb = '2026-09-01';
+    const priorDate = '2026-09-14';
+    const datum = '2026-09-15';
+    const base = new Map();
+    for (let i = 0; i < 5001; i++) {
+      const symbol = 'S' + String(i).padStart(4, '0');
+      base.set(symbol, { n: 'Base ' + symbol, b: 'NASDAQ:Q', e: 'N', t: 'N' });
+    }
+    // Die beiden anderen Quellen sind nicht leer gedummyt: otherlisted ueberschreibt
+    // die Boerse eines stabilen Symbols, die SEC ergaenzt bei einem anderen die CIK.
+    base.set('S4998', { n: 'Base S4998', b: 'N', e: 'N', t: 'N' });
+    base.set('S4999', { n: 'Base S4999', b: 'NASDAQ:Q', e: 'N', t: 'N', c: '0000004999' });
+    assert.equal(base.size, 5001, 'die Mengen-Untergrenze wird mit exakt 5.001 Symbolen geprueft');
+    assert.deepEqual([...base.keys()].slice(0, 2), ['S0000', 'S0001']);
+    assert.equal([...base.keys()].at(-1), 'S5000');
+
+    const wrappedBase = {
+      ab: grundbildAb,
+      erzeugt: '2026-09-01T00:00:00.000Z',
+      symbole: Object.fromEntries(base),
+    };
+    fs.writeFileSync(path.join(dir, '_grundbild.json'), JSON.stringify(wrappedBase), 'utf8');
+    const priorUniverse = new Map(base);
+    priorUniverse.delete('S0100');
+    priorUniverse.set('S0101', { n: 'Prior correction', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+    priorUniverse.set('PRIORX', { n: 'Prior-only addition', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+    assert.equal(priorUniverse.size, 5001);
+    const priorDiff = T.diff(base, priorUniverse);
+    const priorRow = {
+      datum: priorDate,
+      summe: priorUniverse.size,
+      quellenFehlend: [],
+      hinzu: priorDiff.hinzu,
+      weg: priorDiff.weg,
+      geaendert: priorDiff.geaendert,
+      pruefsumme: T.summeVon(priorUniverse.keys()),
+    };
+    assert.deepEqual(priorRow.hinzu, {
+      PRIORX: { n: 'Prior-only addition', b: 'NASDAQ:Q', e: 'N', t: 'N' },
+    });
+    assert.deepEqual(priorRow.weg, ['S0100']);
+    assert.deepEqual(priorRow.geaendert, {
+      S0101: { n: 'Prior correction', b: 'NASDAQ:Q', e: 'N', t: 'N' },
+    });
+    fs.writeFileSync(path.join(dir, '2026-09.jsonl'), JSON.stringify(priorRow) + '\n', 'utf8');
+
+    const firstUniverse = new Map(priorUniverse);
+    firstUniverse.delete('S0000');
+    firstUniverse.set('S0001', { n: 'First correction', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+    firstUniverse.set('FIRSTX', { n: 'First-only addition', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+
+    const finalUniverse = new Map(priorUniverse);
+    finalUniverse.delete('S0002');
+    finalUniverse.set('S0003', { n: 'Final correction', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+    finalUniverse.set('FINALX', { n: 'Final-only addition', b: 'NASDAQ:Q', e: 'N', t: 'N' });
+
+    const asNasdaqText = (universe) => [
+      NASDAQ_KOPF,
+      ...[...universe].map(([symbol, row]) => [
+        symbol, row.n, row.b.replace(/^NASDAQ:/, ''), row.t, 'N', '100', row.e, 'N',
+      ].join('|')),
+      'File Creation Time: 0915202600:00',
+    ].join('\n');
+
+    let nasdaqText = asNasdaqText(firstUniverse);
+    const otherText = [
+      OTHER_KOPF,
+      'S4998|Base S4998|N|S4998|N|100|N|S4998',
+      'File Creation Time: 0915202600:00',
+    ].join('\n');
+    const secText = JSON.stringify({
+      0: { ticker: 'S4999', cik_str: 4999, title: 'SEC name must not replace NASDAQ name' },
+    });
+    const fetchedUrls = [];
+    const fetchText = async (url) => {
+      fetchedUrls.push(url);
+      if (url === T.QUELLEN.nasdaq) return nasdaqText;
+      if (url === T.QUELLEN.other) return otherText;
+      if (url === T.QUELLEN.sec) return secText;
+      throw new Error('unerwartete Quelle: ' + url);
+    };
+
+    const first = await T.run([], { dir, date: datum, fetchText });
+    assert.deepEqual(Object.keys(first.hinzu), ['FIRSTX']);
+    assert.deepEqual(first.weg, ['S0000']);
+    assert.deepEqual(Object.keys(first.geaendert), ['S0001']);
+    const afterFirst = fs.readFileSync(path.join(dir, '2026-09.jsonl'), 'utf8')
+      .split(/\r?\n/).filter(Boolean).map(JSON.parse);
+    assert.deepEqual(afterFirst, [priorRow, first],
+      'der erste Lauf muss den Vortag bewahren und genau eine neue Tageszeile schreiben');
+
+    nasdaqText = asNasdaqText(finalUniverse);
+    const second = await T.run([], { dir, date: datum, fetchText });
+    assert.equal(second.summe, 5001);
+    assert.deepEqual(second.quellenFehlend, []);
+    assert.deepEqual(second.hinzu, {
+      FINALX: { n: 'Final-only addition', b: 'NASDAQ:Q', e: 'N', t: 'N' },
+    }, 'der zweite Diff muss gegen den Vortagesstand laufen, nicht gegen FIRSTX');
+    assert.deepEqual(second.weg, ['S0002']);
+    assert.deepEqual(second.geaendert, {
+      S0003: { n: 'Final correction', b: 'NASDAQ:Q', e: 'N', t: 'N' },
+    });
+    assert.equal(second.pruefsumme, T.summeVon(finalUniverse.keys()),
+      'die Tageszeile muss die exakte Schluesselmenge des zweiten Universums versiegeln');
+    assert.equal(fetchedUrls.length, Object.keys(T.QUELLEN).length * 2,
+      'beide Laeufe muessen je einen vollstaendigen Quellenzyklus ausfuehren');
+    for (const url of Object.values(T.QUELLEN)) {
+      assert.equal(fetchedUrls.filter((fetched) => fetched === url).length, 2,
+        'jede Quelle muss in jedem Lauf genau einmal gelesen werden: ' + url);
+    }
+
+    const rows = fs.readFileSync(path.join(dir, '2026-09.jsonl'), 'utf8')
+      .split(/\r?\n/).filter(Boolean).map(JSON.parse);
+    assert.equal(rows.length, 2, 'Vortag plus genau eine Zeile fuer den wiederholten Tag');
+    assert.deepEqual(rows[0], priorRow, 'der Zweitlauf darf den vorhandenen Monat nicht abschneiden');
+    assert.equal(rows.filter((row) => row.datum === datum).length, 1);
+    assert.deepEqual(rows[1], second, 'fuer den aktuellen Tag darf nur der korrigierte Zweitlauf stehen');
+
+    const replayed = T.zustandAus(wrappedBase, rows);
+    const bySymbol = (map) => [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    assert.deepEqual(bySymbol(replayed), bySymbol(finalUniverse),
+      'Grundbild plus ersetzte Tageszeile muss exakt den finalen Stand ergeben');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 check('eine kaputte Quelle schreibt KEINEN Tag, statt einen leeren zu schreiben', () => {
@@ -273,5 +398,11 @@ check('fallen ALLE Quellen aus, wird hart gestoppt statt leer geschrieben', () =
     'ohne diesen Riegel wuerde ein Totalausfall eine leere Karte schreiben');
 });
 
-console.log('\nticker-map: ' + pass + ' ok, ' + fail + ' fail');
-process.exit(fail ? 1 : 0);
+(async () => {
+  for (const [name, fn] of asyncChecks) {
+    try { await fn(); pass++; console.log('  ok   ' + name); }
+    catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.stack); }
+  }
+  console.log('\nticker-map: ' + pass + ' ok, ' + fail + ' fail');
+  process.exit(fail ? 1 : 0);
+})();

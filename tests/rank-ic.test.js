@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const ric = require('../scripts/rank-ic.js');
+const priceStore = require('../lib/price-history-store.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -282,14 +283,13 @@ test('deliveryIC F10: +1Q-Lücke (kein Quartal im Band) -> Ticker übersprungen 
 // pinnt den Store-Vertrag gegen ein Temp-Repo und wäre vor dem Fix rot gewesen.
 test('loadPriceIndexOrThrow: liest den Store aus dem prices-Verzeichnis (Vertrag: Store hängt "history" selbst an)', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'rank-ic-wiring-'));
-  const shardDir = path.join(tmp, 'prices', 'history');
-  fs.mkdirSync(shardDir, { recursive: true });
-  // Layout exakt wie price-history-store.loadAll es erwartet: <pricesDir>/history/history-NN.json
-  fs.writeFileSync(path.join(shardDir, 'history-00.json'), JSON.stringify({
+  const pricesDir = path.join(tmp, 'prices');
+  // Der Layout-Owner schreibt die Ticker in ihre deterministisch richtigen Shards.
+  priceStore.saveAll(pricesDir, {
     AAA: [{ date: '2026-01-02', close: 10 }, { date: '2026-01-03', close: 11 }],
     BBB: [{ date: '2026-01-02', close: 20 }],
-  }));
-  const idx = ric.loadPriceIndexOrThrow(path.join(tmp, 'prices'));
+  });
+  const idx = ric.loadPriceIndexOrThrow(pricesDir);
   assert.ok(Object.keys(idx).length >= 2, 'Index findet die Ticker aus dem Store: ' + Object.keys(idx).length);
   // Der alte (kaputte) Pfad muss jetzt LAUT scheitern statt still 0 Ticker zu liefern.
   assert.throws(() => ric.loadPriceIndexOrThrow(path.join(tmp, 'prices', 'history')),

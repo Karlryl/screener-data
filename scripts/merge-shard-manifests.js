@@ -101,15 +101,61 @@ function honestDenominator(fullUniverseSize, skippedMcap, skippedOwned, nOk) {
   return { n_addressable: kandidat, verworfen: 0, grund: null };
 }
 
-// Reine Merge-Funktion (TDD): summiert die Shard-Manifeste, setzt n_total = Voll-Universum,
-// partial = OR(alle Shards) OR (weniger Shards vorhanden als erwartet).
-// shardManifests: Array der geparsten Shard-Manifest-Objekte (null-Eintraege = fehlender Shard).
+const REQUIRED_SHARD_COUNTERS = ['n_ok', 'n_full', 'n_priceonly', 'n_failed'];
+const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_skipped_owned', 'n_ccy_missing_completely'];
+
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isNonNegativeSafeInteger(value) {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
+// A parsed file is not automatically a usable manifest. Quarantine the complete shard
+// when one of its summed counters cannot be trusted; accepting only the remaining fields
+// would make coverage look healthier than the source artifact proves.
+function hasValidShardCounters(manifest) {
+  if (!isPlainObject(manifest)) return false;
+  if (REQUIRED_SHARD_COUNTERS.some(field => !isNonNegativeSafeInteger(manifest[field]))) {
+    return false;
+  }
+  if (OPTIONAL_SHARD_COUNTERS.some(field => (
+    Object.prototype.hasOwnProperty.call(manifest, field)
+    && !isNonNegativeSafeInteger(manifest[field])
+  ))) {
+    return false;
+  }
+  const classified = manifest.n_full + manifest.n_priceonly;
+  return Number.isSafeInteger(classified) && classified === manifest.n_ok;
+}
+
+// Reine Merge-Funktion (TDD): summiert nur schema-gueltige Shard-Manifeste, setzt
+// n_total = Voll-Universum und partial=true, sobald ein Shard fehlt oder quarantiniert ist.
+// null/undefined-Eintraege = fehlender Shard; alle anderen ungueltigen Werte = beobachtet,
+// aber quarantiniert.
 function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const expected = resolveExpectedShards(shardManifests, expectedShards);
-  const present = shardManifests.filter(m => m && typeof m === 'object');
-  const sum = (f) => present.reduce((a, m) => a + (Number.isFinite(m[f]) ? m[f] : 0), 0);
-  const anyShardPartial = present.some(m => m.partial === true);
-  const missingShards = expected - present.length;
+  const observed = shardManifests.filter(m => m !== null && m !== undefined);
+  const present = observed.filter(hasValidShardCounters);
+  const invalidShards = observed.length - present.length;
+  const sum = (field) => present.reduce((total, manifest) => {
+    const next = total + (manifest[field] ?? 0);
+    if (!Number.isSafeInteger(next)) {
+      throw new RangeError(`merged shard counter ${field} exceeds the safe integer range`);
+    }
+    return next;
+  }, 0);
+  // Strenge Union der beiden Haertungen (Tag 1131 + Tag 1130), beide gelten unabhaengig:
+  // die Quarantaene entscheidet, WELCHE Shards ueberhaupt summiert werden; das
+  // partial-Flag entscheidet, ob ein summierter Shard vollstaendig ist. Nur das explizite
+  // Boolean false des Erzeugers beweist einen sauberen Shard — ein fehlendes oder
+  // kaputtes Flag degradiert das Manifest, statt zu false gewaschen zu werden.
+  const isShardPartial = (m) => m.partial !== false;
+  const anyShardPartial = present.some(isShardPartial);
+  const missingShards = expected - observed.length;
   const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
     pulled_at: new Date().toISOString(),
@@ -134,12 +180,14 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     // nur gesetzt, wenn der Abzug verworfen wurde — run() macht daraus ein ::warning::
     _addressable_warnung: hd.grund || undefined,
     n_failed: sum('n_failed'),
-    // partial=true wenn irgendein Shard mittendrin abbrach ODER ein Shard ganz fehlt.
-    partial: anyShardPartial || missingShards > 0,
+    // partial=true wenn irgendein Shard mittendrin abbrach, fehlt oder quarantiniert wurde.
+    partial: anyShardPartial || missingShards > 0 || invalidShards > 0,
     // Instrumentierung fuer den Merge-Log (nicht von coverage-gate gelesen, aber im Artefakt sichtbar):
-    n_shards_present: present.length,
+    n_shards_present: observed.length,
+    n_shards_valid: present.length,
+    n_shards_invalid: invalidShards,
     n_shards_expected: expected,
-    n_shards_partial: present.filter(m => m.partial === true).length,
+    n_shards_partial: present.filter(isShardPartial).length,
   };
   return merged;
 }
@@ -269,7 +317,7 @@ function run() {
   // einzigen Coverage-Alarm. Atomic write (tmp + rename) means the file is either
   // the complete previous version or the complete new one, never a half-written one.
   writeFileAtomic(path.join(snapDir, '_manifest.json'), JSON.stringify(merged));
-  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
+  console.log(`Merged manifest: n_ok=${merged.n_ok}/${merged.n_total} full=${merged.n_full} price-only=${merged.n_priceonly} failed=${merged.n_failed} partial=${merged.partial} shards=${merged.n_shards_present}/${merged.n_shards_expected} valid=${merged.n_shards_valid} invalid=${merged.n_shards_invalid} (on-disk snapshots=${onDisk}) adressierbar=${merged.n_addressable} (mcap-Skips ${merged.n_skipped_mcap}, Small-Cap-eigene ${merged.n_skipped_owned}, ccy-Skips ${merged.n_ccy_missing_completely}) unerklaert=${merged.n_addressable - merged.n_ok - merged.n_failed}`);
   // Tag 464, Plausibilitaets-Anker fuer den Nenner: adressierbar - n_ok sollte ungefaehr
   // n_failed sein. Am Lauf 30230485209 nachgerechnet: 12373-10672 = 1701 gegen 1678
   // Fehlschlaege -> 23 unerklaert. Vor dem Fix waren es 2284 gegen 1678, also 606 unerklaert.
@@ -420,7 +468,15 @@ function selftest() {
     assert.equal(honestDenominator(15212, 2256, 583, 10672).n_addressable, 12373);
   });
   t('Tag 464: der Warnpfad landet auch im gemergten Manifest', () => {
-    const kaputt = { n_ok: 10672, n_skipped_mcap: 2256, n_skipped_owned: 9000, n_failed: 0, partial: false };
+    const kaputt = {
+      n_ok: 10672,
+      n_full: 0,
+      n_priceonly: 10672,
+      n_skipped_mcap: 2256,
+      n_skipped_owned: 9000,
+      n_failed: 0,
+      partial: false,
+    };
     const m = mergeManifests([kaputt], 15212, 1);
     assert.equal(m.n_addressable, 12956);
     assert.ok(m._addressable_warnung, 'run() braucht die Warnung fuer das ::warning::');

@@ -36,8 +36,24 @@ const path = require('path');
 const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const VINTAGE_DIR_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Die Felder, die findash/data-layer/screener.js (computeMovement -> shapeTrack) liest.
 const SLIM_FELDER = ['rank', 'ticker', 'score'];
+
+function isIsoCalendarDate(value) {
+  if (typeof value !== 'string' || !ISO_DATE_RE.test(value)) return false;
+  const millis = Date.parse(value + 'T00:00:00.000Z');
+  return Number.isFinite(millis)
+    && new Date(millis).toISOString().slice(0, 10) === value;
+}
+
+function earningsFormatError(detail) {
+  return new Error('earnings-calendar.json hat einen ungueltigen Feldname/Format (' + detail
+    + '); erwartet wird {ticker:{date:"YYYY-MM-DD", pulledAt?:"YYYY-MM-DD"}} mit echten Kalendertagen. '
+    + 'Die Datei wird nicht publiziert. '
+    + 'MOEGLICHE URSACHE: pull-earnings-dates.js hat ungueltige Altdaten fortgeschrieben ODER Feldname/Format '
+    + 'des Kalenders hat sich geaendert.');
+}
 
 function schreibeJson(ziel, obj) {
   fs.mkdirSync(path.dirname(ziel), { recursive: true });
@@ -52,13 +68,14 @@ function schreibeJson(ziel, obj) {
  * T564-B6: Plausibilitaet und Vollstaendigkeit entscheidet weiterhin der Collapse-Guard
  * in pull-earnings-dates.js eine Stufe frueher - hier steht KEINE zweite Meinung dazu.
  *
- * KV571-1 (Review Tag 571): die einzige Ausnahme ist eine strukturelle. Der Deploy-cmp
- * in daily-pull.yml deckt "Quelle fehlt/weicht ab", NICHT "Quelle alt": der Pull traegt
+ * KV571-1 (Review Tag 571): diese Stufe erzwingt nur die strukturelle Form. Die Wurzel
+ * ist ein Ticker-Objekt, jeder Nicht-Doku-Eintrag traegt einen echten kanonischen
+ * Kalendertag (ebenso ein vorhandenes pulledAt), und mindestens ein Termin liegt heute
+ * oder spaeter. Der Deploy-cmp in
+ * daily-pull.yml deckt "Quelle fehlt/weicht ab", NICHT "Quelle alt": der Pull traegt
  * continue-on-error und earnings-calendar.json ist git-getrackt, also steht bei einem
- * Yahoo-Ausfall der gestrige Stand beidseitig identisch da und cmp wird gruen. Ein
- * Termin-Kalender ganz OHNE Zukunftstermin ist per Konstruktion kaputt oder steinalt -
- * das ist keine Plausibilitaets-Schwelle, sondern eine Form-Aussage, und sie darf nicht
- * still in den Datenkanal. Bewusst NUR diese eine Eigenschaft, keine weiteren Schwellen.
+ * Yahoo-Ausfall der gestrige Stand beidseitig identisch da und cmp wird gruen. Das sind
+ * Form-Aussagen, keine zweite Methoden- oder Plausibilitaets-Schwelle.
  * ponytail: Deckel dieser Stufe.
  * @returns {{datei: string, bytes: number}}
  */
@@ -75,15 +92,40 @@ function stageEarnings(quelle, zielDir, heute) {
   } catch (e) {
     throw new Error('earnings-calendar.json ist kein gueltiges JSON (' + quelle + '): ' + (e && e.message || e));
   }
-  // ISO-Datumsstrings sind lexikografisch sortierbar - kein Date.parse noetig.
+  if (!daten || typeof daten !== 'object' || Array.isArray(daten)) {
+    throw earningsFormatError('Wurzel muss ein Objekt mit Ticker-Schluesseln sein, kein '
+      + (Array.isArray(daten) ? 'Array' : daten === null ? 'null' : typeof daten));
+  }
+  const eintraege = Object.entries(daten).filter(([ticker]) => !ticker.startsWith('_'));
+  const ungueltig = eintraege.filter(([ticker, eintrag]) => ticker.trim() === '' || ticker !== ticker.trim()
+    || !eintrag || typeof eintrag !== 'object' || Array.isArray(eintrag)
+    || !isIsoCalendarDate(eintrag.date)
+    || (Object.prototype.hasOwnProperty.call(eintrag, 'pulledAt') && !isIsoCalendarDate(eintrag.pulledAt)));
+  if (ungueltig.length) {
+    const [ticker, eintrag] = ungueltig[0];
+    let detail;
+    if (ticker.trim() === '' || ticker !== ticker.trim()) {
+      detail = 'Ticker-Schluessel ist leer oder enthaelt Rand-Leerzeichen: ' + JSON.stringify(ticker);
+    } else if (!eintrag || typeof eintrag !== 'object' || Array.isArray(eintrag)) {
+      detail = 'Eintrag ' + JSON.stringify(ticker) + ' ist kein Objekt: ' + JSON.stringify(eintrag);
+    } else if (!isIsoCalendarDate(eintrag.date)) {
+      detail = 'Eintrag ' + JSON.stringify(ticker) + ' traegt date=' + JSON.stringify(eintrag.date);
+    } else {
+      detail = 'Eintrag ' + JSON.stringify(ticker) + ' traegt pulledAt=' + JSON.stringify(eintrag.pulledAt);
+    }
+    throw earningsFormatError(detail);
+  }
+  // Nach der Kalenderpruefung sind die kanonischen ISO-Datumsstrings lexikografisch vergleichbar.
   // Stichtag ist das im prep-Job eingefrorene Lauf-Datum (Muster wie in
   // archive-old-snapshots.js / watch-fx-sanity.js), mit Wanduhr-Fallback: ein Lauf
   // ueber UTC-Mitternacht wuerde sonst gegen einen anderen Tag messen als jeder
   // andere Schritt desselben Laufs (Klasse F-219b-01).
   const stichtag = heute || process.env.RUN_DATE_UTC || new Date().toISOString().slice(0, 10);
-  const termine = Object.values(daten || {})
-    .map((e) => (e && typeof e === 'object' ? e.date : null))
-    .filter((d) => typeof d === 'string' && d !== '');
+  if (!isIsoCalendarDate(stichtag)) {
+    throw new Error('ungueltiger Lauf-Stichtag ' + JSON.stringify(stichtag)
+      + '; erwartet wird YYYY-MM-DD (Parameter heute oder RUN_DATE_UTC). Die Datei wird nicht publiziert.');
+  }
+  const termine = eintraege.map(([, eintrag]) => eintrag.date);
   const kuenftig = termine.filter((d) => d >= stichtag).length;
   if (kuenftig === 0) {
     const juengster = termine.length ? termine.slice().sort().pop() : '(kein einziger Termin)';
@@ -268,4 +310,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { run, parseArgs, slimVintage, stageEarnings, stageBoardHistory };
+module.exports = { run, parseArgs, slimVintage, isIsoCalendarDate, stageEarnings, stageBoardHistory };

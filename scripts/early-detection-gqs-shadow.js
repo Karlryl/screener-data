@@ -13,6 +13,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { scoreUniverse, produceRankings } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 
@@ -30,6 +31,12 @@ function stable(value) {
 
 function canonicalSha256(value) {
   return crypto.createHash('sha256').update(JSON.stringify(stable(value))).digest('hex');
+}
+
+// T204 measurement seam: the synthetic fixture reaches the exact output-byte
+// contract without invoking scoring or the producer-owned Python verifier.
+function writeShadowReport(target, report) {
+  writeFileAtomic(target, JSON.stringify(report) + '\n', 'utf8');
 }
 
 function sha256File(file) {
@@ -225,7 +232,7 @@ function main() {
   const report = scoreBundle(bundle, verification);
   const output = path.resolve(args.output);
   fs.mkdirSync(path.dirname(output), { recursive: true });
-  fs.writeFileSync(output, JSON.stringify(report) + '\n', 'utf8');
+  writeShadowReport(output, report);
   process.stdout.write(JSON.stringify({
     evaluationAt: report.evaluationAt,
     summary: report.summary,
@@ -236,4 +243,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { canonicalSha256, researchClassify, rankMap, scoreBundle, verifyBundleWithProducer };
+module.exports = { canonicalSha256, researchClassify, rankMap, scoreBundle, verifyBundleWithProducer, writeShadowReport };

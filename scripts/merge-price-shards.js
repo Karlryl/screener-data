@@ -44,12 +44,43 @@ const priceStore = require('../lib/price-history-store.js');
 
 function log(stufe, text) { console.log(`[merge-price-shards] ${stufe}: ${text}`); }
 
+// A larger value is an operational misconfiguration: even an empty input would
+// allocate/probe one path per claimed runner before it can fail. 4096 stays far
+// above the documented 4/17-shard uses while bounding that failure path.
+const MAX_EXPECTED_SHARDS = 4096;
+
+function parseExpectedShards(argv) {
+  const indices = argv
+    .map((argument, index) => (argument === '--expected-shards' ? index : -1))
+    .filter(index => index >= 0);
+  if (indices.length === 0) return undefined;
+  if (indices.length > 1) {
+    throw new Error('--expected-shards must not be repeated');
+  }
+  const raw = argv[indices[0] + 1];
+  if (typeof raw !== 'string' || !/^[1-9]\d*$/.test(raw)) {
+    throw new Error('--expected-shards must be a positive integer');
+  }
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error('--expected-shards must be a safe positive integer');
+  }
+  if (parsed > MAX_EXPECTED_SHARDS) {
+    throw new Error(`--expected-shards must be a positive integer at most ${MAX_EXPECTED_SHARDS}`);
+  }
+  return parsed;
+}
+
 function parseArgs(argv) {
-  const args = { prices: './prices', date: process.env.RUN_DATE_UTC || null, expected: 4 };
+  const args = {
+    prices: './prices',
+    date: process.env.RUN_DATE_UTC || null,
+    expected: parseExpectedShards(argv) ?? 4,
+  };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === '--prices' && argv[i + 1]) args.prices = argv[++i];
     else if (argv[i] === '--date' && argv[i + 1]) args.date = argv[++i];
-    else if (argv[i] === '--expected-shards' && argv[i + 1]) args.expected = parseInt(argv[++i], 10);
+    else if (argv[i] === '--expected-shards') i++;
   }
   return args;
 }
@@ -77,7 +108,13 @@ function mergeAusschnitte(ausschnitte) {
 }
 
 function main() {
-  const args = parseArgs(process.argv);
+  let args;
+  try {
+    args = parseArgs(process.argv);
+  } catch (e) {
+    console.error(`::error::merge-price-shards - ${e.message}`);
+    process.exit(1);
+  }
   if (!args.date) {
     log('FEHLER', 'Kein --date und kein RUN_DATE_UTC — ohne Datum ist der Zieldateiname geraten.');
     process.exit(1);
@@ -184,7 +221,7 @@ function selftest() {
   process.exit(fail === 0 ? 0 : 1);
 }
 
-module.exports = { mergeAusschnitte };
+module.exports = { MAX_EXPECTED_SHARDS, mergeAusschnitte, parseArgs, parseExpectedShards };
 
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) main();

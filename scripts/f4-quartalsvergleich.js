@@ -28,6 +28,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const { scoreUniverse, produceRankings } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { periodEnds, jahresVergleichIdx, norm, JAHRESVERGLEICH_TOLERANZ_TAGE } = require('../src/scoring/snapshot.js');
@@ -275,12 +276,16 @@ function main() {
   const md = boards(dir);
   const outIdx = argv.indexOf('--out');
   if (outIdx >= 0 && argv[outIdx + 1]) {
-    fs.mkdirSync(path.dirname(argv[outIdx + 1]), { recursive: true });
-    fs.writeFileSync(argv[outIdx + 1], md + '\n');
+    writeReportArtifact(argv[outIdx + 1], md);
     console.log('Report -> ' + argv[outIdx + 1]);
   }
   console.log(md);
 }
 
+function writeReportArtifact(outPath, markdown) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  writeFileAtomic(outPath, markdown + '\n');
+}
+
 if (require.main === module) main();
-module.exports = { ladeUniversum, ursache };
+module.exports = { ladeUniversum, ursache, writeReportArtifact };

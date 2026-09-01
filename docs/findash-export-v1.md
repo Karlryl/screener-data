@@ -2,7 +2,8 @@
 
 > **Schema-String:** `findash-export/v1` (Feld `schema` auf JEDER Datei).
 > **Status:** 1.1 umgesetzt; **1.2 ergaenzt `profitTier` + `ipoYear`** (real emittiert); **2.13 #23 ergaenzt `coverageAxes` + `coverageWeight`** (optional additiv; die FELDER sind reine Ausgabe, die dahinterliegende Coverage-Groesse ist dagegen **score-wirksam und nicht monoton** — hier stand bis zum 30.08.2026 „score-inert", s. §3d); **2.10 ergaenzt `cohortN` + `cohortFallback`** (Pflicht, `--check`-geprueft, Tamper→exit1); **2.11 Stufe A ergaenzt `scoreBase` + `scoreShrunk` + `factors`** (optional additiv, Score-Herkunft); **2.7 ergaenzt `axisBreakdown`** (optional additiv, Achsen-Beitrag je Zeile). **Court-Auflage 27.07. ergaenzt `mcapBounds`** (optional additiv, auf Overview- und Board-DATEI-Ebene, nicht je Zeile: `[p20,p40,p60,p80]` in USD oder `null` — macht `mcapBand` lesbar, damit „mega" nicht nur „oberstes Fuenftel dieser Liste" heisst. Quelle sind die data-learned Quintil-Grenzen aus `outputs/calibration.json`, es wird NICHTS neu gerechnet. Fehlt die Datei oder ist das Feld unbrauchbar: `null`, und die Anzeige laesst die Spanne weg). **F-5 ergaenzt `revGrowthYoYPct`** (optional additiv, REINE ANZEIGE fuer die findash-Spalte "Umsatzwachstum": Quartals-Jahreswachstum in Prozent, aus den Rohreihen gerechnet wie die Achse `revGrowthLevel` — bewusst NICHT Yahoos `metrics.revenueGrowthYoY`, das wegen belegter Defekte am 14.07.2026 aus der Achse entfernt wurde; ungeklemmt, da Winsorisierung dem Ranking dient und in der Anzeige eine Verfaelschung waere. Kein Score-Input. Abdeckung auf dem Stand vom 26.07.2026: 418 von 421 Board-Zeilen = 99,3 %. ECHT optional: Abwesenheit des Feldes wird vom --check NICHT beanstandet, ein vorhandener Wert dagegen voll geprueft. Das ist bewusst so - Karls einziger Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden). Nur `currency` bleibt RESERVIERT.
-> **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` (score.js / run-screener.js). Der Writer kopiert NUR echte Engine-Felder + ein abgeleitetes `rank`. Kein erfundenes Feld.
+> **T194 ergaenzt `cohortDelivery`:** Jede produktive HG-Board-Datei sagt maschinenlesbar, wie viele Zeilen je Track geliefert wurden, wie gross die volle Kohorte laut `index.json.counts` ist und ob die schnelle Datei am 100er-Deckel gekappt wurde. `full/` weist sich spiegelbildlich als ungekappt und vollstaendig aus; `--check` prueft beide Richtungen.
+> **Quelle der Wahrheit:** Engine-Output `outputs/hypergrowth/*.json` samt `index.json.counts` (score.js / run-screener.js). Der Writer mappt echte Engine-Felder und leitet nur die ausdruecklich dokumentierten Export-Belege ab - darunter `rank` und `cohortDelivery`; im Produktionsbuild werden Kohortengroessen nie geraten.
 > **Publiziert:** ausschliesslich nach gh-pages (`outputs/` ist gitignored). Der Dashboard-Consumer liest von der gh-pages-URL, nie von main.
 
 ---
@@ -26,7 +27,7 @@ Bricht das Schema still (fehlendes Feld, falscher Typ, kaputter Enum), zeigt das
 
 | Datei | Inhalt | Laenge |
 | --- | --- | --- |
-| `<branche>.json` (13) | Ein Board je Branche: `{branch, profitable[], unprofitable[]}` | topN=100 je Track (score-desc) |
+| `<branche>.json` (13) | Ein Board je Branche: `{branch, cohortDelivery, profitable[], unprofitable[]}` | topN=100 je Track (score-desc); Vollstaendigkeit explizit |
 | `overview.json` | Flaches Cross-Branch-Top nach Score | ~200 (topN*2) |
 | `survival.json` | Flaches Pre-Revenue-Board nach Runway | 73 (ungekappt) |
 | `index.json` | Meta/Zaehlung + Coverage-Banner-Marker | 1 Objekt |
@@ -66,6 +67,7 @@ Zusaetzlich zur Huelle (§2):
 | --- | --- | --- | --- | --- |
 | `branch` | string (= Dateiname) | Pflicht | ja (Typ string UND `=== <dateiname>`) | Branchen-ID (= formulaId, = Dateiname). Implizit im Board, hier explizit gemacht. |
 | `boardStatus` | `'core'` \| `'diagnostic'` | Pflicht | ja (Enum) | **Court-Standing des Boards** (Quelle `src/scoring/board-status.js`, Vault-Ledger §2.1). `core` = Court-PASSED/bewiesen; `diagnostic` = gebaut, aber Court NICHT bestanden → laeuft sichtbar als „unbewiesen" mit, zaehlt nicht als geprueft (Board-NO-GO-Ausweg). Das Dashboard (1.3) MUSS `diagnostic`-Boards sichtbar als unbewiesen kennzeichnen. Aktuell `diagnostic`: consumer-staples, materials, real-estate, it-services. |
+| `cohortDelivery` | `{cap,fullBoard,profitable,unprofitable}` | Pflicht auf produktiven HG-Boards | ja (Form + Arrays + `index.counts`) | **T194 Vollstaendigkeitsbeleg.** Auf der schnellen Datei: `cap:100`, `fullBoard:"full/<branche>.json"`; je Track `{delivered,total,truncated}`. `delivered` muss der Array-Laenge entsprechen, `total` dem vollen Index-Count, `truncated` exakt `total > delivered`; geliefert werden exakt `min(total,100)` Zeilen. Auf `full/`: `cap:null`, `fullBoard:null`, `delivered===total`, `truncated:false`. |
 | `profitable` | Array\<BoardRow\> | Pflicht | ja (Array + jede Zeile) | Track `profitable`, score-desc, topN=100. |
 | `unprofitable` | Array\<BoardRow\> | Pflicht | ja (Array + jede Zeile) | Track `unprofitable`, score-desc, topN=100 (kann `[]`). |
 
@@ -89,7 +91,7 @@ Zusaetzlich zur Huelle (§2):
 | `sector` | string \| null | Pflicht (nullable) | ja (Praesenz + string\|null) | Yahoo-Sektor (≠ formulaId-Branche!), z.B. `"Technology"`. |
 | `marketCap` | number \| null | Pflicht (nullable) | ja (Praesenz + finite\|null) | Roh, ungerundet (z.B. `5457368842240` oder `26183936833.024`). **Immer USD** (seit 16.08. explizit ueber `marketCapCurrency`). **null auch dann, wenn die Umrechnung aus der Handelswaehrung nicht nachgewiesen ist** — Waehrungs-Waechter (Chunk 4a). |
 | `marketCapCurrency` | `"USD"` \| null | additiv OPTIONAL (seit 16.08.) | ja, wenn present (Enum) | Die Einheit des FELDES `marketCap`, nicht die des Werts — im v1-Vertrag immer `"USD"`. Ein anderer Wert ist ein Vertragsbruch und blockt den Deploy. Abwesenheit bleibt legitim (Altbestands-Export). |
-| `tradingFxRateApplied` | number \| null | additiv OPTIONAL (seit 16.08.) | ja, wenn present (finite\|null) | Der Kurs, mit dem die marketCap aus der HANDELS-Waehrung nach USD gebracht wurde (`meta.tradingFxRateApplied` des Snapshots). `null` = in USD gehandelt (nichts umzurechnen) oder Handel = Bericht. |
+| `tradingFxRateApplied` | number > 0 \| null | additiv OPTIONAL (seit 16.08.) | ja, wenn present (positive-finite\|null) | Der positive Kurs, mit dem die marketCap aus der HANDELS-Waehrung nach USD gebracht wurde (`meta.tradingFxRateApplied` bzw. bei bestaetigter Waehrungsidentitaet `meta.fxRateApplied` des Snapshots). `null` = in USD gehandelt (nichts umzurechnen) oder kein brauchbarer Kursnachweis; im zweiten Fall liefert der Waehrungs-Waechter `marketCap: null` aus. Die numerische `0` und negative Kurse sind kein Nachweis und blockieren den Deploy. |
 | `phase` | `"inflected"`\|`"established"`\|`"unprofitable"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Nur ueber Gewinn-Vorzeichen. **Real nullable** (3 Board-Rows null beobachtet). |
 | `mcapBand` | `"micro"`\|`"small"`\|`"mid"`\|`"large"`\|`"mega"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. |
 | `ipoRecency` | `"recent"`\|`"growth"`\|`"seasoned"`\|`"veteran"`\|`"mature"` \| null | Pflicht (nullable) | ja (Praesenz + Enum\|null) | Data-learned Quintil. **Real nullable** (8 Board-Rows null beobachtet). |
@@ -313,7 +315,7 @@ Huelle (§2) +:
 | `generatedFromSnapshots` | number (finite) | Pflicht | ja | z.B. `4681`. Wie viele Snapshots in den Lauf gingen. |
 | `branches` | string[] (Laenge 13) | Pflicht | ja (Array + Laenge===13) | Sortiert. **Haerte-Hinweis:** die Laenge-13-Pruefung ist an die Nebenannahme gekoppelt, dass alle 13 Branchen geroutete Zeilen haben (run-screener.js baut `branches` aus `Object.keys(ranked.branches)`). Real 13/13; faellt eine Branche komplett aus, schlaegt der Gate mit `index: branches` fehl — bewusste konservative Haerte, hier als Invariante dokumentiert. |
 | `boardStatus` | `{[branche]: 'core'\|'diagnostic'}` | Pflicht | ja (Map-Praesenz, Vollstaendigkeit gegen alle 13 Branchen UND jeder Wert Enum — BH-078) | Zentrale Court-Standing-Map aller 13 Boards (= das Board-Datei-Feld `boardStatus`, hier gebuendelt). Das Dashboard joint Overview-Zeilen per `formulaId` gegen diese Map, um `diagnostic`-Namen zu badgen. Quelle `src/scoring/board-status.js`, Ledger §2.1. |
-| `counts` | `{[branche]: {profitable:int, unprofitable:int}}` | Pflicht | ja (Objekt-Praesenz) | **ECHTE Kohorten-Counts** (ganze Population), NICHT die topN-Anzeigeliste. |
+| `counts` | `{[branche]: {profitable:int, unprofitable:int}}` | Pflicht | ja (alle 13 Branches, beide Tracks, non-negative Integers) | **ECHTE Kohorten-Counts** (ganze Population), NICHT die topN-Anzeigeliste. T194 bindet jeden Wert an `cohortDelivery.<track>.total` der schnellen UND der vollen Board-Datei. |
 | `survivalCount` | number (finite) | Pflicht | ja | z.B. `73`. |
 | `excluded` | `{[grund]: count}` | Pflicht | ja (Objekt-Praesenz) | Ausschluss-Gruende, z.B. `{"non-us":326,"balance-sheet-bank":305,...}`. Gruende: `balance-sheet-bank, data-suspect, dup-issuer, insurer, lender-gp0, mortgage-reit, no-axes, no-sector, non-operating-rev, non-us, telecom`. |
 
@@ -436,9 +438,11 @@ Das QC-Achsenset enthaelt eine **Dauerhaftigkeits-/Stabilitaets-Achse `roicStabi
 
 `src/scoring/run-screener.js` ruft `produceRankings(results, { topN: topN || 100 })`, und die CI ruft ohne `--topN`. Jede Board-Liste ist damit bei **100 Zeilen je Track** gekappt — die Zeilen dahinter waren im Export weder abrufbar noch erwaehnt. Gemessen am Vintage 03.08.2026: **1.512 von 3.042** gescorten Board-Zeilen erreichten die Oberflaeche, **50,3 % fehlten**. Bei `industrials` standen 100 von 516 Zeilen zur Verfuegung. Das bricht die Direktive „nichts verschwindet".
 
-Die vollen Kohorten liegen seit 2.3-A8 in `outputs/hypergrowth/full/`, wurden aber nie publiziert (der gh-pages-Deploy kopiert `hypergrowth` flach: `cp ../outputs/hypergrowth/*.json`). Sie werden jetzt **additiv** in denselben v1-Vertrag aufgenommen — als Unterordner `outputs/findash-export/v1/full/`. Kein v2-Bump: bestehende Dateien und Felder werden **nicht** angefasst.
+Die vollen Kohorten liegen seit 2.3-A8 in `outputs/hypergrowth/full/`, wurden aber nie publiziert (der gh-pages-Deploy kopiert `hypergrowth` flach: `cp ../outputs/hypergrowth/*.json`). Sie werden jetzt **additiv** in denselben v1-Vertrag aufgenommen - als Unterordner `outputs/findash-export/v1/full/`. Kein v2-Bump: Board-Mitgliedschaft, Zeilenform, Score und Rang bleiben unveraendert. T194 ergaenzt nun lediglich das additive Huellen-Feld `cohortDelivery`, das alte v1-Leser ignorieren koennen.
 
 ### Dateien (unter `outputs/findash-export/v1/full/`)
+
+T194 erweitert die nachfolgende Kurzform jeder Board-Huelle um das Pflichtfeld `cohortDelivery`.
 
 | Datei | Inhalt | Quelle |
 | --- | --- | --- |
@@ -446,13 +450,19 @@ Die vollen Kohorten liegen seit 2.3-A8 in `outputs/hypergrowth/full/`, wurden ab
 
 `survival` hat **kein** Vollboard und braucht keins: die Liste ist flach nach Runway sortiert und wird nie gekappt (§5). `overview.json` ebenfalls nicht — es ist per Definition ein Cross-Branch-Auszug, kein Board.
 
-### Verhaeltnis zur gekappten Datei — die tragende Zusage
+### Verhaeltnis zur gekappten Datei - die tragende Zusage
 
 **Die ersten `topN` Zeilen je Track sind mit `<branche>.json` TIEF gleich, inklusive `rank`.** Nicht „ungefaehr dieselben Namen" — dieselben Objekte, Feld fuer Feld. Danach laeuft die Rangfolge im Vollboard einfach weiter: Zeile 101 traegt `rank: 101`, bis zum Ende der Kohorte.
 
 Das ist **konstruktiv** garantiert, nicht gehofft. Das gekappte Board ist das byte-gleiche `topN`-Praefix der full-Liste (`tests/scoring/anchors.rank.test.js`, Pruefung A8), es laufen dieselben Mapper (`mapBoardRow`) und dieselbe Rangvergabe (`vergebeRaenge`, sequenziell-deterministisch je Zeile) darueber. Beides ist trotzdem festgenagelt statt vorausgesetzt: `tests/scoring/export-vollboard.test.js` (20 Pruefungen) vergleicht die ersten 100 Zeilen tief und pinnt den Deckel selbst.
 
 Das **Belegbarkeits-Gate** (§3, seit 18.08.) laeuft auf beiden Dateien identisch: eine Zeile mit zu duenner Achsen-Abdeckung traegt `rank: null` + `rankGrund` und **verbraucht keine Rangnummer**. Die uebrigen Raenge bleiben dadurch in beiden Dateien lueckenlos `1..k` — und deckungsgleich.
+
+Seit T194 traegt auch jede `full/<branche>.json` das Huellen-Feld `cohortDelivery`. Dort gilt zwingend `cap:null`, `fullBoard:null` und je Track `delivered===total`, `truncated:false`; die uebrige Datei- und Zeilenform bleibt identisch.
+
+**Der Deckel ist seit T194 keine Verbraucher-Heuristik mehr.** Beispiel `semiconductors.profitable`: Die schnelle Datei kann 100 Zeilen tragen, waehrend `index.json.counts` 292 meldet. Ihre Huelle sagt dann `cohortDelivery.profitable = {delivered:100,total:292,truncated:true}` und verweist mit `fullBoard:"full/semiconductors.json"` auf den Tail. Ein Track mit 78 von 78 Zeilen sagt `{delivered:78,total:78,truncated:false}`. Im Vollboard stehen `cap:null`, `fullBoard:null` und fuer jeden Track `delivered===total`, `truncated:false`. Damit bedeutet ein fehlender Ticker nicht mehr still "nicht im Board", solange der geladene Track als gekappt ausgewiesen ist.
+
+Der v1-Exportvertrag ist bewusst auf **100** festgelegt. Ein manueller Engine-Lauf mit einem anderen positiven `--topN` darf zwar intern entstehen, wird vom Export-Writer aber laut abgelehnt, statt mit einem falschen `cap:100` publiziert zu werden. Eine andere oeffentliche Kappung waere eine eigene Vertragsentscheidung.
 
 ### Ladeverhalten
 
@@ -464,11 +474,15 @@ Die Dateien sind deshalb **kompakt** geschrieben (`indent 0`, wie die Quelle in 
 
 Am Vintage 03.08.2026 gemessen (Dezimal-MB, wie `du -b` zaehlt): `full/` gesamt **3,63 MB** ueber 13 Dateien, von 54 kB (`it-services`) bis 651 kB (`industrials`). Der v1-Ordner waechst dadurch von **6,11 MB auf 9,74 MB** — die Differenz ist exakt `full/`, die 42 Bestandsdateien bleiben byte-identisch (sha256-Vergleich vor/nach dem Umbau). Der **Erstaufschlag waechst um 0 Byte** — das ist der Sinn der Trennung. §9 (latest-only, kein Jahres-Wachstum) gilt unveraendert.
 
+**T194-Korrektur zur vorstehenden Groessenmessung:** Die Aussage "42 Bestandsdateien byte-identisch / Erstaufschlag +0 Byte" beschreibt ausschliesslich den historischen full/-Ausbau vom 19.08. vor T194. Heute erhalten die 13 schnellen Branchen-Dateien jeweils ein kleines `cohortDelivery`-Objekt; der Erstaufschlag waechst daher geringfuegig. Ohne materialisierten Produktions-Export wird dafuer keine Scheingenauigkeit in Byte erfunden. Zeilen, Mitgliedschaft, Scores und Raenge bleiben unveraendert; auch `full/` waechst nur um dasselbe kleine Huellen-Objekt je Datei.
+
 ### Gate
 
 Anders als `quality/` ist `full/` **nicht** optional-wenn-abwesend. `run-screener.js` schreibt die Quelle bei jedem Lauf; zu jedem der 13 Branchen-Boards gehoert genau ein Vollboard. `--check` (`validateFullExport`) prueft alle 13 als **Pflicht** und validiert jede Datei mit derselben Board-Pruefung wie §3 (`branch` == Dateiname, `boardStatus`-Enum, jede Zeile, Rang- und Score-Folge). Alle Meldungen tragen ein `full/`-Praefix, damit der Alarm-Kanal ein Vollboard-Problem nie mit einem Board-Problem verwechselt.
 
 Zusaetzlich zaehlt `daily-pull.yml` nach dem Bau die Dateien: **13 oder `::error::` + Exit 1**. Grund: ein still fehlendes Vollboard sieht in findash aus wie ein Board ohne Nachruecker — stumm halb statt sichtbar rot, und das ist der teuerste Fehlerfall dieses Feeds. Fehlt das **Quell**verzeichnis `outputs/hypergrowth/full/`, bricht der Bau laut ab statt einen leeren Feed auszuliefern.
+
+T194 erweitert dieses Gate um die Liefermengen-Invariante: schnelle Datei = exakt `min(index.counts,100)`, Vollboard = exakt `index.counts`, jedes `delivered` = reale Array-Laenge und jedes `truncated` = mathematisch richtige Aussage. Ein faelschlich als vollstaendig markierter Deckel und ein gekapptes "Vollboard" werden beide rot. Der hermetische Richtungswaechter ist `tests/t194-v1-cap-contract.test.js`.
 
 ### Waehrungs-Waechter: eigene Bilanz, KEINE eigene Abbruchgrenze
 

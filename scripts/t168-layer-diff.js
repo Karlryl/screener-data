@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const { buildAnnual, waehleTaxonomie, TAXONOMIEN } = require(path.join(ROOT, 'merge-sec-xbrl.js'));
+const { writeFileAtomic } = require(path.join(ROOT, 'lib', 'atomic-write.js'));
 
 // Die ALTE Reihenfolge steht hier als LITERAL und wird nicht aus dem Modul abgeleitet —
 // sonst wuerde der Vergleich mit jeder kuenftigen Listen-Aenderung stillschweigend
@@ -366,6 +367,10 @@ function bericht(r) {
   return L.join('\n') + '\n';
 }
 
+function writeLayerDiffReport(outFile, contents) {
+  writeFileAtomic(outFile, contents, 'utf8');
+}
+
 if (require.main === module) {
   const r = run();
   // --snapshots "<largecapDir>;<smallcapDir>" schaltet den T174-Teil frei. Ohne die
@@ -373,10 +378,10 @@ if (require.main === module) {
   const snapArg = argOf('--snapshots', null);
   if (snapArg) r.t174 = t174Messung(r.vorhanden, snapArg.split(';'));
   const txt = bericht(r);
-  if (r.outFile) { fs.writeFileSync(r.outFile, txt, 'utf8'); console.log('geschrieben:', r.outFile); }
+  if (r.outFile) { writeLayerDiffReport(r.outFile, txt); console.log('geschrieben:', r.outFile); }
   else process.stdout.write(txt);
   console.error(`[t168-layer-diff] geprueft=${r.stat.geprueft} ohneCache=${r.stat.ohneCache} kaputt=${r.stat.kaputt} bewegt=${r.stat.bewegt} zellen=${r.stat.zellen}`);
 }
 
 module.exports = { run, bericht, besterVersatz, ALT_REV, NEU_REV, reiheMit,
-  VERSATZ_MIN_PAARE, VERSATZ_UNBESTIMMT };
+  VERSATZ_MIN_PAARE, VERSATZ_UNBESTIMMT, writeLayerDiffReport };

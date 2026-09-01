@@ -33,6 +33,7 @@ const https = require('https');
 const secPit = require('../lib/sec-pit.js');
 const detect = require('../lib/b1-detect.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const rankIc = require('./rank-ic.js'); // invNormalCdf/stddev/nEff — Wiederverwendung
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -500,11 +501,19 @@ function decideVerdict(famResults, balanceDelta) {
   return { verdict, powerOk, balanceOk, balance, shumwayGate, shumwayVeto, positivBlockedByGate };
 }
 
+// T204 measurement seam: tests call only this byte-preserving writer with
+// synthetic reports. The confirmatory main path is never needed to prove that
+// either report publication site is reachable.
+function writeValidationReport(target, report) {
+  writeFileAtomic(target, JSON.stringify(report, null, 2));
+}
+
 module.exports = {
   firstPassage, matchVarsAt, buildPairs, clusterBootstrap, evSales, idxOnOrAfter,
   buildEventDatedCandidatePools, selectViewRecords, matchDistance, bcaInterval,
   evaluatePairOutcomes, assessBalance, shumwayEstimableGate, decideVerdict,
   ensureSubmissions, sic2Of, loadPriceSeries,
+  writeValidationReport,
   _const: { VAL_START, VAL_END, DISC_END, K_SIGMA, TIMEOUT_TD, CALIPER, BALANCE_GATE_PP, MIN_NEFF_CLUSTERS, BY_Q },
 };
 
@@ -631,7 +640,7 @@ async function main() {
   };
 
   if (dryRun) {
-    fs.writeFileSync(OUT_BASE + '-dryrun.json', JSON.stringify(report, null, 2));
+    writeValidationReport(OUT_BASE + '-dryrun.json', report);
     console.log('[b1-validate] DRY-RUN-Report -> ' + OUT_BASE + '-dryrun.json (keine Outcomes gerechnet)');
     store.close(); return;
   }
@@ -726,7 +735,7 @@ async function main() {
   };
   report.verdict = verdict;
 
-  fs.writeFileSync(OUT_BASE + '.json', JSON.stringify(report, null, 2));
+  writeValidationReport(OUT_BASE + '.json', report);
   console.log('[b1-validate] VERDIKT: ' + verdict);
   console.log('[b1-validate] Haupttest: pairs=' + (H.pairsComplete || 0) + ' meanDiff=' + (H.mean != null ? H.mean : '—')
     + ' CI90=[' + (H.ci90 ? H.ci90.lo + ',' + H.ci90.hi : '—') + '] p=' + (H.p != null ? H.p : '—') + ' nEff=' + (H.nEff || '—'));

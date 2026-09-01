@@ -94,6 +94,16 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
 const RETRY_DELAYS = [10000, 30000];
 const istTimeout = (e) => /timeout fetching/i.test(String((e && e.message) || ''));
 
+function normalizeTotalRecords(raw) {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw === 'number' && Number.isSafeInteger(raw) && raw >= 0) return raw;
+  if (typeof raw === 'string' && /^(0|[1-9]\d*)$/.test(raw)) {
+    const parsed = Number(raw);
+    if (Number.isSafeInteger(parsed)) return parsed;
+  }
+  throw new Error('Unexpected OTC totalRecords - expected a canonical non-negative safe integer');
+}
+
 async function fetchOTCPage(markets, page, budget, holen) {
   const marketParams = markets.map(m => `market=${encodeURIComponent(m)}`).join('&');
   const url = `https://www.otcmarkets.com/research/stock-screener/api?${marketParams}&pageSize=${PAGE_SIZE}&page=${page}`;
@@ -123,13 +133,13 @@ async function fetchOTCPage(markets, page, budget, holen) {
     rows = data;
   } else if (data && Array.isArray(data.rows)) {
     rows = data.rows;
-    total = data.totalRecords || null;
+    total = normalizeTotalRecords(data.totalRecords);
   } else if (data && data.stocks) {
     if (Array.isArray(data.stocks)) {
       rows = data.stocks;
     } else if (Array.isArray(data.stocks.rows)) {
       rows = data.stocks.rows;
-      total = data.stocks.totalRecords || null;
+      total = normalizeTotalRecords(data.stocks.totalRecords);
     }
   }
 
@@ -149,9 +159,15 @@ async function fetchOTCMarkets(opts) {
   // DT-1: ein Budget fuer den GANZEN Adapter. `opts` nur, damit Waechter das Verhalten
   // ohne echte Wartezeit messen koennen — im Lauf ist es immer der Vorgabewert.
   const budget = (opts && opts.budget) || zeitbudget('OTC-Markets');
+  const wait = (opts && opts.schlafen) || sleep;
   console.log('  [OTC-Markets] Fetching OTCQX, OTCQB, Expert tiers (Tag 165)...');
 
   let totalRecords = null;
+  let lastReportedTotal = null;
+  let rawRowsFetched = 0;
+  let countMismatch = false;
+  let totalDrift = false;
+  let termination = 'max-pages';
   // audit F-A-2026-06-21: track per-page failures so a partial OTC pull is
   // detectable by the aggregator (mirrors refresh-universe.js F-DP-037
   // zero-quote alert) instead of being hidden behind a lone console.error.
@@ -165,15 +181,34 @@ async function fetchOTCMarkets(opts) {
     try {
       const { rows, total } = await fetchOTCPage(OTC_MARKETS, page, budget, opts && opts.holen);
 
-      if (total !== null && totalRecords === null) {
-        totalRecords = total;
-        console.log(`  [OTC-Markets] Total records reported: ${totalRecords}`);
+      if (total !== null) {
+        if (totalRecords === null) {
+          totalRecords = total;
+          lastReportedTotal = total;
+          console.log(`  [OTC-Markets] Total records reported: ${totalRecords}`);
+        } else if (total !== lastReportedTotal) {
+          const previousTotal = lastReportedTotal;
+          lastReportedTotal = total;
+          totalRecords = Math.max(totalRecords, total);
+          totalDrift = true;
+          console.warn(`  [OTC-Markets] totalRecords drift on page ${page}: changed from ${previousTotal} to ${total}; retaining rows and using conservative maximum ${totalRecords} - OTC universe is PARTIAL.`);
+        }
       }
 
       if (rows.length === 0) {
-        console.log(`  [OTC-Markets] Page ${page}: empty — stopping pagination`);
+        termination = 'empty';
+        if (totalRecords !== null && rawRowsFetched < totalRecords) {
+          console.warn(`  [OTC-Markets] Page ${page}: empty after ${rawRowsFetched} of ${totalRecords} reported rows - OTC universe is PARTIAL.`);
+        } else if (totalRecords !== null && rawRowsFetched > totalRecords) {
+          countMismatch = true;
+          console.warn(`  [OTC-Markets] Count mismatch on empty page ${page}: observed ${rawRowsFetched} raw rows, exceeding reported totalRecords ${totalRecords} - OTC universe is PARTIAL.`);
+        } else {
+          console.log(`  [OTC-Markets] Page ${page}: empty - stopping pagination`);
+        }
         break;
       }
+
+      rawRowsFetched += rows.length;
 
       let added = 0;
       for (const row of rows) {
@@ -213,19 +248,26 @@ async function fetchOTCMarkets(opts) {
       // F-DP-017: Stop pagination only when we get an EMPTY page, not a short page.
       // A short final page is normal for the last page of results and should not
       // terminate pagination early (which would miss data on the last page).
-      const fetched = (page - 1) * PAGE_SIZE + rows.length;
-      if (totalRecords !== null && fetched >= totalRecords) {
-        console.log(`  [OTC-Markets] Fetched ${fetched} of ${totalRecords} — done`);
+      if (totalRecords !== null && rawRowsFetched >= totalRecords) {
+        if (rawRowsFetched > totalRecords) {
+          countMismatch = true;
+          termination = 'count-mismatch';
+          console.warn(`  [OTC-Markets] Count mismatch: observed ${rawRowsFetched} raw rows, exceeding reported totalRecords ${totalRecords} - OTC universe is PARTIAL.`);
+        } else {
+          termination = 'complete';
+          console.log(`  [OTC-Markets] Fetched ${rawRowsFetched} of ${totalRecords} - done`);
+        }
         break;
       }
 
-      await sleep(PAGE_DELAY_MS);
+      if (page < MAX_PAGES) await wait(PAGE_DELAY_MS);
     } catch (e) {
       // DT-1: ein Budget-Riss ist kein Seitenfehler, den man ueberspringen kann — er
       // beendet den Adapter. Laut melden, Teilbestand zurueckgeben, Schleife verlassen.
       if (e && e.budgetRiss) {
         budgetRissMelden(result, budget, 'Seite ' + page + ' (' + e.message + ')');
         budgetGerissen = true;
+        termination = 'budget';
         break;
       }
       console.error(`  [OTC-Markets] Page ${page} failed: ${e.message}`);
@@ -236,18 +278,20 @@ async function fetchOTCMarkets(opts) {
       // other error, skip just the bad page and continue to the next so the
       // tail still gets fetched.
       pageErrors++;
-      await sleep(PAGE_DELAY_MS);
+      if (page < MAX_PAGES) await wait(PAGE_DELAY_MS);
       continue;
     }
   }
 
-  // Tag 218 (audit F-217a-07 fix): warn when MAX_PAGES cap was hit AND
-  // we know there's more data — Expert Market + OTCQX+OTCQB combined can
-  // exceed 5,000 tickers, and silently truncating discovery is invisible
-  // without this warning.
-  if (totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE) {
-    const missed = totalRecords - MAX_PAGES * PAGE_SIZE;
-    console.warn(`  [OTC-Markets] HIT MAX_PAGES (${MAX_PAGES}) — ${missed} tickers truncated. Bump MAX_PAGES if OTC totalRecords keeps growing.`);
+  // Reaching the configured cap without a proven count match is incomplete,
+  // independent of whether the upstream pages happened to contain PAGE_SIZE rows.
+  // Report raw rows here: result.size is smaller after filtering and deduplication.
+  const hitMaxPages = termination === 'max-pages';
+  if (hitMaxPages) {
+    const coverage = totalRecords === null
+      ? `${rawRowsFetched} raw rows observed; totalRecords was not reported`
+      : `${rawRowsFetched} of ${totalRecords} reported raw rows observed`;
+    console.warn(`  [OTC-Markets] HIT MAX_PAGES (${MAX_PAGES}) after ${coverage} - OTC universe is PARTIAL.`);
   }
   // audit F-A-2026-06-21: surface page failures so a partial OTC pull is
   // visible to the aggregator/operator rather than silently returning a Map
@@ -257,11 +301,12 @@ async function fetchOTCMarkets(opts) {
   // a plain "success". Stamp a partial flag + coverage denominator ON the Map
   // (Map is an object, extra props don't break size/iteration) so a future
   // consumer can distinguish a truncated/degraded pull from a complete one.
-  const truncated = totalRecords !== null && totalRecords > MAX_PAGES * PAGE_SIZE;
+  const knownShortfall = totalRecords !== null && rawRowsFetched < totalRecords;
   if (pageErrors > 0) {
     console.warn(`  [OTC-Markets] WARNING: ${pageErrors} page(s) failed and were skipped — OTC universe is PARTIAL (${result.size} tickers). Some symbols may be missing.`);
   }
-  if (pageErrors > 0 || truncated) {
+  if (result.partial === true || budgetGerissen || pageErrors > 0 || hitMaxPages ||
+      countMismatch || totalDrift || knownShortfall) {
     result.partial = true;
     if (totalRecords !== null) result.totalRecords = totalRecords;
   }
