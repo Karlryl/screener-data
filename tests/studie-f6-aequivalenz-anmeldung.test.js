@@ -54,6 +54,21 @@ function welt(prefix) {
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     fs.copyFileSync(path.join(REPO, ...rel.split('/')), ziel);
   }
+  // PR G hat zwei gebundene Skripte bewusst veraendert (Naht-Fixes aus dem
+  // Schritt-8-Review). Die Bindungsliste dieses Werkzeugs ist URKUNDE ueber
+  // den Akt und wird NICHT nachgezogen - also stellt die Fixture-Welt die
+  // Bytes wieder her, die der Akt wirklich gebunden hat. Ohne das braeche
+  // jede Probe schon am SHA-Riegel ab, und die sechs Waechter dahinter
+  // (Kette, runId, Sollwerte, Trockenlauf) waeren still abgeschaltet.
+  const STAND_DES_AKTES = '10e08e3746494ca7f064dc773fbdcf92e931ceea';
+  for (const rel of ['scripts/studie-f6-zaehlwerk.py', 'scripts/studie-f6-lauf.py']) {
+    if (!GEBUNDEN.includes(rel)) continue;
+    const alt = spawnSync('git', ['show', `${STAND_DES_AKTES}:${rel}`],
+      { cwd: REPO, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(alt.status, 0,
+      `historischer Stand von ${rel} nicht lesbar: ${alt.stderr}`);
+    fs.writeFileSync(path.join(wurzel, ...rel.split('/')), alt.stdout);
+  }
   // Der Fixture-Registerstand wird auf den Stand VOR diesem Akt gekuerzt.
   // Ein blosses Kopieren waere nur so lange richtig, wie der Eintrag noch
   // nicht im Baum liegt - sobald er es tut (eigener Ledger-PR, Merge), saehe

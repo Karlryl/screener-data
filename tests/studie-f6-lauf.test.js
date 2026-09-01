@@ -757,9 +757,18 @@ test('F6-C16 der Stempel ist ersetzt: AUSGEWERTET statt OFFEN', () => {
   assert.ok(k.richtung.includes('ERSCHWEREN'));
   assert.deepEqual(k.unterschluessel.slice().sort(),
     ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'wert']);
-  // Und das Tor-Verdikt steht je Variante wirklich im Bericht.
+  // UMGEDREHT SEIT PR G: `tor` war ein ZWEITER armuebergreifender Schluessel,
+  // der in KEINEM Register-Eintrag steht und den die Fremdschluessel-Pruefung
+  // per Literal durchliess (Schritt-8-Review, Blocker 2). Bis ANHANG 3 seinen
+  // Schluesselsatz registriert, wird er NICHT emittiert - und diese Probe
+  // pinnt die Abwesenheit, nicht die Anwesenheit.
   for (const v of ['S-U', 'S-G']) {
-    assert.ok(b.daten[v].tor.verdikt, `kein Tor-Verdikt fuer ${v}`);
+    assert.ok(!('tor' in b.daten[v]),
+      `\`tor\` ist nicht registriert und darf ${v} nicht verlassen`);
+    assert.deepEqual(
+      Object.keys(b.daten[v]).filter((k) => k !== 'signal' && k !== 'kontrollpool'),
+      ['differenz_punkte'],
+      'je Variante GENAU EIN armuebergreifender Schluessel (F6-B11)');
   }
 });
 

@@ -136,6 +136,53 @@ _BS = chr(92)  # Backslash als Zeichen, nicht als Literal (s. oben).
 ARBEITSPFAD_VORGABE = ("C" + ":" + _BS + "Users" + _BS + "Anwender"
                        + _BS + "f6-arbeit")
 
+# Die Vorgabe ist ein VERZEICHNIS. `eigener_zwischenstand` will eine DATEI -
+# sqlite3.connect auf ein Verzeichnis stirbt mit OperationalError, und zwar
+# NACH dem Panel-Zugriff, mit unterdruecktem Grund. Genau daran waere der eine
+# Lauf gestorben (Schritt-8-Review, Naht-B1). Deshalb bekommt JEDER Lauf sein
+# eigenes, frisch angelegtes, LEERES Unterverzeichnis - Altbestand aus einem
+# frueheren Lauf ist ein ABBRUCH, kein "wird schon passen".
+ARBEITSDATEI_NAME = "zwischenstand.sqlite"
+
+
+def arbeitsdatei_fuer_lauf(vorgabe, run_id):
+    """Der lauf-eigene Arbeitspfad: <vorgabe>/lauf-<runId>/zwischenstand.sqlite.
+
+    Das Verzeichnis wird FRISCH angelegt. Existiert es schon und ist es NICHT
+    leer, bricht der Lauf ab, statt in fremden Artefakten weiterzuarbeiten -
+    ein Zwischenstand aus einem frueheren Lauf ist eine andere Rechnung.
+    Geloescht wird hier NIE: unter derselben Vorgabe liegen die Beweise des
+    Aequivalenz-Tors.
+    """
+    if not vorgabe:
+        raise ZaehlwerkAbbruch("arbeitsdatei_fuer_lauf() ohne Vorgabe.")
+    if not run_id or not str(run_id).strip():
+        raise ZaehlwerkAbbruch(
+            "arbeitsdatei_fuer_lauf() ohne runId. Der Arbeitspfad dieses "
+            "Laufs traegt seine runId, damit zwei Laeufe nie dieselbe Datei "
+            "teilen.")
+    sauber = "".join(c for c in str(run_id) if c.isalnum() or c in "-_.")
+    if sauber != str(run_id):
+        raise ZaehlwerkAbbruch(
+            "runId " + repr(run_id) + " traegt Zeichen, die in einem "
+            "Verzeichnisnamen nichts zu suchen haben.")
+    ordner = os.path.join(vorgabe, "lauf-" + sauber)
+    if os.path.exists(ordner):
+        if not os.path.isdir(ordner):
+            raise ZaehlwerkAbbruch(
+                "ARBEITSVERZEICHNIS IST KEIN VERZEICHNIS: " + repr(ordner))
+        inhalt = os.listdir(ordner)
+        if inhalt:
+            raise ZaehlwerkAbbruch(
+                "ARBEITSVERZEICHNIS NICHT LEER: das Verzeichnis dieses Laufs "
+                "traegt bereits " + str(len(inhalt)) + " Eintrag/Eintraege. "
+                "Ein Lauf beginnt auf leerem Grund; ein Zwischenstand aus "
+                "einem frueheren Lauf ist eine andere Rechnung. Hier wird "
+                "NICHTS geloescht - das Verzeichnis wird von Hand geleert, "
+                "oder der Lauf bekommt eine andere runId.")
+    os.makedirs(ordner, exist_ok=True)
+    return os.path.join(ordner, ARBEITSDATEI_NAME)
+
 
 class ZaehlwerkAbbruch(Exception):
     """Ein benannter Abbruch. Auf JEDEM Pfad ein Grund - eine stille Null waere
@@ -150,8 +197,13 @@ class ZaehlwerkAbbruch(Exception):
 # JEDER WERT IST VOR DEM EINTRAGEN AN SEINEM ARTEFAKT NACHGERECHNET WORDEN:
 # Bein 1 gegen protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json
 # (provenienz.aequivalenzTorSoll und jeFamilie), Bein 2 gegen
-# reports/studie/E4d-kadenz-entdeckung-2026-08-19.json
-# (baender["2009-2015"].varianten[...].{signal,kontrolle}).
+# reports/studie/E4d-kadenz-entdeckung-2026-08-19.json, je Zelle bis auf die
+# SPALTE (F6-C8c verlangt Spaltentiefe, nicht Blocktiefe):
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.fallzahl
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.nenner_e3
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.zensiert_e3
+# Arm-Abbildung: kontrollpool -> kontrolle (ARM_ARTEFAKT weiter unten).
+# Die _kadenz-Spalten sind AUSDRUECKLICH NICHT die Quelle (F6-C8b).
 #
 # DER LAUF DES TORS IST NICHT DIESER AKT. Er braucht seinen eigenen
 # `count_only_probe_authorized`-Register-Eintrag auf dem ENTDECKUNGS-Panel
@@ -574,6 +626,28 @@ def eigene_panel_verbindung(panel_pfad):
     return conn
 
 
+# Eintrag 22 (rr9-a3-jahrgang-registrierung-2026-08-30) haelt das
+# Prueffenster-Panel byte-genau fest. Der konfirmatorische Eintrag BEHAUPTET,
+# die Groesse sei "verriegelt" - bis PR G war das eine einmalige Messung und
+# kein Riegel (Schritt-8-Review, Quellspalten-F1).
+PANEL_BYTES_PIN_PRUEFUNG = 4447633408
+
+
+def pruefe_panel_bytes(panel_pfad):
+    """Positiv auf die EINE zugelassene Groesse. Ein anderes Panel ist ein
+    anderes Panel - auch wenn es genauso heisst."""
+    if not os.path.isfile(panel_pfad):
+        raise ZaehlwerkAbbruch("Panel-Datei nicht gefunden: " + str(panel_pfad))
+    with open(panel_pfad, "rb") as fh:
+        ist = os.fstat(fh.fileno()).st_size
+    if ist != PANEL_BYTES_PIN_PRUEFUNG:
+        raise ZaehlwerkAbbruch(
+            "PANEL-BYTE-PIN GERISSEN: die Datei misst " + str(ist)
+            + " B, der in Eintrag 22 registrierte Pin verlangt "
+            + str(PANEL_BYTES_PIN_PRUEFUNG) + " B. Ein anders grosses Panel "
+            "ist ein anderes Panel; der Lauf haelt VOR dem ersten Byte an.")
+
+
 def eigener_zwischenstand(pfad):
     """Die Arbeitsdatei, selbst geoeffnet (F6-C1) und selbst geprueft (W-B).
 
@@ -659,6 +733,35 @@ def _familie(variante, module):
     return familien[variante]
 
 
+def _pruefe_pufferjahr(eintraege, e2, von_jahr, bis_jahr, wo):
+    """Zaehlwerk-Gericht (D), woertlich: "Ein Erst-Ereignis mit accepted im
+    Pufferjahr 2020 ist ein ABBRUCH, kein Sonderfall."
+
+    Bis PR G war der Schutz ein stiller FILTER (`im_signalband` vor
+    `erst_ereignisse`): das Ergebnis stimmte, die angeordnete FORM nicht - ein
+    Ereignis am Panel-Rand wurde weggeworfen statt gemeldet. Der Riegel steht
+    jetzt HINTER der Erst-Ereignis-Bildung und benennt, was er findet.
+
+    Die Zensur darf den Panel-Rand referenzieren (rand_ordinal); ein
+    URSPRUNGS-Ereignis darf nicht von dort kommen.
+    """
+    for eintrag in eintraege:
+        jahr = e2.jahr_aus_accepted(eintrag["accepted"])
+        if jahr is None:
+            raise ZaehlwerkAbbruch(
+                "PUFFERJAHR-PRUEFUNG NICHT BERECHENBAR in " + wo + ": ein "
+                "Erst-Ereignis traegt kein lesbares accepted-Jahr. Nicht "
+                "berechenbar heisst ANHALTEN, nicht 'gilt als in Ordnung'.")
+        if not von_jahr <= jahr <= bis_jahr:
+            raise ZaehlwerkAbbruch(
+                "ERST-EREIGNIS AUSSERHALB DES SIGNALBANDES in " + wo + ": ein "
+                "Erst-Ereignis traegt das accepted-Jahr " + str(jahr)
+                + ", das Signalband ist " + str(von_jahr) + ".."
+                + str(bis_jahr) + ". Ein Erst-Ereignis aus einem Pufferjahr "
+                "ist ein ABBRUCH, kein Sonderfall - der Panel-Rand darf das "
+                "Signalband nicht still um ein Jahr verlaengern.")
+
+
 def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     """Beide Arme EINER Variante. Signal und Kontrollpool laufen durch
     denselben Code - `arm_zaehlen` -, wie die Praereg-Klausel
@@ -706,6 +809,11 @@ def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     # Einheitenmenge selbst nicht heraus, nur `reif` und ihre Anzahl.
     sig_reif, sig_unreif = e2.erst_ereignisse(band_f, gewaehlt)
     kon_reif, kon_unreif = e2.erst_ereignisse(kontroll_eintraege, gewaehlt)
+    # (D) Pufferjahr-Riegel - benannt, nicht gefiltert.
+    _pruefe_pufferjahr(sig_reif + sig_unreif, e2, von_jahr, bis_jahr,
+                       variante + "/signal")
+    _pruefe_pufferjahr(kon_reif + kon_unreif, e2, von_jahr, bis_jahr,
+                       variante + "/kontrollpool")
     return {"signal": (signal, sig_reif + sig_unreif),
             "kontrollpool": (kontrolle, kon_reif + kon_unreif),
             "band_a": band_a, "rand_ordinal": rand_ordinal}
@@ -778,6 +886,28 @@ def _tally(eintraege, reif_rows, e2, zp, rand_ordinal, wo):
 _ARBEITSPFAD = None
 
 
+_FENSTER = None
+
+
+def setze_fenster(name):
+    """Wie `setze_arbeitspfad`: der Laeufer setzt das Fenster AUSDRUECKLICH.
+
+    Der Vertrag `zaehle(panel, variante, arm)` ist eingefroren (F6-C1) und kann
+    das Fenster nicht tragen. Ein Vorgabewert im Kopf von `zaehle` waere aber
+    genau die stille Kopie, die driften kann: der Umschlag meldete dann ein
+    Fenster und gezaehlt wuerde ein anderes (Naht-F2).
+    """
+    global _FENSTER
+    if not name:
+        raise ZaehlwerkAbbruch(
+            "setze_fenster() ohne Namen. Das Fenster ist eine Angabe des "
+            "Laufs, kein Vorgabewert.")
+    if name not in FENSTER_SOLL:
+        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(name) + ".")
+    _FENSTER = name
+    return name
+
+
 def setze_arbeitspfad(pfad):
     """Vom Laeufer EINMAL vor der Zaehlung zu rufen. Prueft sofort (W-B)."""
     global _ARBEITSPFAD
@@ -815,7 +945,7 @@ def pruefe_a16_kreuz(aus_tafel, aus_skalaren, wo):
 
 
 def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
-           fenster_name="pruefung"):
+           fenster_name=None):
     """DER VERTRAG (F6-C1): {klumpen, n, zaehler, zerlegung}.
 
     Aufgerufen wird er mit GENAU DREI Argumenten; die weiteren sind
@@ -826,9 +956,6 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
     if arm not in ARME:
         raise ZaehlwerkAbbruch("Unbekannter Arm " + repr(arm) + ".")
     wurzel = wurzel or WURZEL_REPO
-    fenster_soll = FENSTER_SOLL.get(fenster_name)
-    if not fenster_soll:
-        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(fenster_name) + ".")
     if arbeit_pfad is None:
         arbeit_pfad = _ARBEITSPFAD
     if arbeit_pfad is None:
@@ -836,6 +963,25 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
             "Kein Arbeitspfad gesetzt. Der Laeufer ruft setze_arbeitspfad() "
             "VOR der ersten Zaehlung; der Pfad wird vor der Freigabe geprueft "
             "und im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
+    # Das Fenster wird NACH dem Arbeitspfad geprueft, damit der aeltere
+    # Wachposten seine Reihenfolge behaelt - sonst verdeckte der neue Riegel
+    # den, den er ergaenzen soll.
+    if fenster_name is None:
+        fenster_name = _FENSTER
+    if fenster_name is None:
+        raise ZaehlwerkAbbruch(
+            "Kein Fenster gesetzt. Der Laeufer ruft setze_fenster() VOR der "
+            "ersten Zaehlung; das Fenster wird AUSDRUECKLICH uebergeben und "
+            "nie aus einem Vorgabewert geerbt (Naht-F2).")
+    fenster_soll = FENSTER_SOLL.get(fenster_name)
+    if not fenster_soll:
+        raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(fenster_name) + ".")
+
+    # (9) Quellspalten-F1: der Byte-Pin des Prueffenster-Panels wird zur
+    # LAUFZEIT erzwungen, nicht nur im Eintrag behauptet. Ohne ihn steht
+    # zwischen dem Eintrag und einem anders grossen Panel nichts.
+    if fenster_name == "pruefung":
+        pruefe_panel_bytes(panel_pfad)
 
     module = lade_regelmodule(wurzel)
     pruefe_regelparameter(wurzel, module)

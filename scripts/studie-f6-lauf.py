@@ -367,7 +367,19 @@ DATEN_SCHLUESSEL = {
 }
 
 # F6-B11 - je Variante GENAU EIN armuebergreifender Schluessel.
-VARIANTEN_SCHLUESSEL = {"differenz_punkte"}
+# F6-B11 / F6-C15 - der REGISTRIERTE Satz der armuebergreifenden Schluessel je
+# Variante. Er ist eine benannte Konstante und keine Aufzaehlung mit
+# Ausnahmen: bis PR G nahm die Fremdschluessel-Pruefung `tor` per Literal
+# heraus, und damit verliess ein ZWEITER, nicht registrierter Schluessel den
+# Lauf am eigens dafuer gebauten Waechter vorbei (Schritt-8-Review, Blocker 2).
+VARIANTEN_SCHLUESSEL_REGISTRIERT = {"differenz_punkte"}
+VARIANTEN_SCHLUESSEL = VARIANTEN_SCHLUESSEL_REGISTRIERT
+
+# TODO-pending-ANHANG3: ob und mit welchem Schluesselsatz das Tor-Verdikt in
+# `daten` gehoert, entscheidet das dritte Anhang-Gericht. Bis dahin wird es
+# NICHT emittiert, und ein trotzdem vorhandener Schluessel ist ein ABBRUCH -
+# nicht ein Filter. Der Vorgabewert ist die geschlossene Stellung.
+TOR_IN_DATEN = False
 
 # F6-B10 - die EIGENE Umschlag-Allowlist. Sie wird nie mit DATEN_SCHLUESSEL
 # vermischt: "Vermischen ist der Mechanismus, durch den der Zaehlproben-Satz zu
@@ -802,7 +814,7 @@ def _pfadgleich(a, b):
     return norm(a) == norm(b)
 
 
-def ruest_zaehlwerk(modul, arbeit_pfad, freigabe=None):
+def ruest_zaehlwerk(modul, arbeit_pfad, freigabe=None, eintrag=None):
     """Der Arbeitspfad geht VOR der ersten Zaehlung an das Zaehlwerk.
 
     Der Vertrag `zaehle(panel_pfad, variante, arm)` ist eingefroren (F6-C1) und
@@ -818,22 +830,66 @@ def ruest_zaehlwerk(modul, arbeit_pfad, freigabe=None):
     """
     if not hasattr(modul, "setze_arbeitspfad"):
         return None
+    vorgabe = getattr(modul, "ARBEITSPFAD_VORGABE", None)
+
+    # (2) MASSGEBLICH IST DIE BINDUNG, DIE DER REGISTER-EINTRAG ERKLAERT.
+    # Bis PR G las der Laeufer den angemeldeten Pfad aus der FREIGABE-Datei -
+    # die dieses Feld gar nicht fuehrt. `angemeldet` war deshalb immer None,
+    # der Abgleich toter Code, und ein beliebiges --arbeit schlug still die
+    # SHA-gebundene Konstante (Schritt-8-Review, Naht-F3 / Akt-F2).
+    if eintrag is not None:
+        gebunden = str((eintrag.get("arbeitspfad") or {}).get("gebundenAn")
+                       or "")
+        if not gebunden:
+            raise LaufAbbruch(
+                "Der Register-Eintrag erklaert keine Arbeitspfad-Bindung "
+                "(arbeitspfad.gebundenAn). Ohne erklaerte Bindung gibt es "
+                "keinen gepruefteren Pfad als einen erfundenen.")
+        if ("ARBEITSPFAD_VORGABE" not in gebunden
+                or "studie-f6-zaehlwerk.py" not in gebunden):
+            raise LaufAbbruch(
+                "Der Register-Eintrag bindet den Arbeitspfad an " + repr(gebunden)
+                + ". Dieser Laeufer kann nur die Bindung an "
+                "ARBEITSPFAD_VORGABE in scripts/studie-f6-zaehlwerk.py "
+                "vollziehen; eine andere Bindung ist ein anderer Lauf.")
+        if not vorgabe:
+            raise LaufAbbruch(
+                "Der Eintrag bindet an ARBEITSPFAD_VORGABE, das geladene "
+                "Zaehlwerk fuehrt diese Konstante aber nicht.")
+
+    # Die FREIGABE ist nur noch KREUZPROBE - sie darf der Bindung nicht
+    # widersprechen, ersetzt sie aber nicht.
     angemeldet = (freigabe or {}).get("arbeitspfad")
-    if angemeldet and arbeit_pfad and not _pfadgleich(angemeldet, arbeit_pfad):
+    if angemeldet and vorgabe and not _pfadgleich(angemeldet, vorgabe):
         raise LaufAbbruch(
-            "ARBEITSPFAD WEICHT VON DER FREIGABE AB: angemeldet ist "
-            + repr(angemeldet) + ", uebergeben wurde " + repr(arbeit_pfad)
-            + ". Der im Eintrag genannte Pfad ist massgeblich; ein anderer "
-            "Pfad ist ein anderer Lauf.")
-    gewaehlt = angemeldet or arbeit_pfad or getattr(
-        modul, "ARBEITSPFAD_VORGABE", None)
-    if not gewaehlt:
+            "FREIGABE WIDERSPRICHT DER BINDUNG: die Freigabe nennt "
+            + repr(angemeldet) + ", gebunden ist die Konstante des Zaehlwerks.")
+    if arbeit_pfad and vorgabe and not _pfadgleich(arbeit_pfad, vorgabe):
+        raise LaufAbbruch(
+            "--arbeit WEICHT VON DER GEBUNDENEN KONSTANTE AB: uebergeben "
+            "wurde " + repr(arbeit_pfad) + ". Der im Eintrag gebundene Pfad "
+            "ist massgeblich; ein anderer Pfad ist ein anderer Lauf.")
+
+    basis = vorgabe or arbeit_pfad
+    if not basis:
         raise LaufAbbruch(
             "Das Zaehlwerk verlangt einen Arbeitspfad (setze_arbeitspfad), "
             "fuehrt aber keine ARBEITSPFAD_VORGABE, und der Lauf hat kein "
             "--arbeit bekommen. Der Arbeitspfad wird VOR der Freigabe geprueft "
             "und im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
-    return modul.setze_arbeitspfad(gewaehlt)
+
+    # (1) JEDER LAUF BEKOMMT SEIN EIGENES, LEERES UNTERVERZEICHNIS.
+    # Die gebundene Konstante ist ein VERZEICHNIS; sqlite3.connect darauf
+    # stirbt NACH dem Panel-Zugriff mit unterdruecktem Grund (Naht-B1).
+    if hasattr(modul, "arbeitsdatei_fuer_lauf"):
+        run_id = (freigabe or {}).get("runId")
+        if not run_id:
+            raise LaufAbbruch(
+                "Das Zaehlwerk legt ein lauf-eigenes Arbeitsverzeichnis an, "
+                "die Freigabe fuehrt aber keine runId. Ohne runId teilten sich "
+                "zwei Laeufe dieselbe Arbeitsdatei.")
+        basis = modul.arbeitsdatei_fuer_lauf(basis, run_id)
+    return modul.setze_arbeitspfad(basis)
 
 
 def _ganzzahl(x):
@@ -1249,6 +1305,38 @@ def pruefe_keine_absolutpfade(baum, absolut, wo="bericht"):
             raise LaufAbbruch(
                 "PFAD-WURZEL " + repr(wurzelform) + " im Bericht bei " + wo
                 + " (R12a).")
+    # Die Kurzform "Elternverzeichnis/Datei" traegt die Kontokennung, sobald
+    # die Datei UNMITTELBAR im Benutzerverzeichnis liegt: kurzpfad auf den
+    # gebundenen Arbeitspfad lieferte genau so ein Elternsegment. Kein
+    # absoluter Pfad, keine Wurzelform - und trotzdem der Kontoname in der
+    # Akte (Schritt-8-Review, Naht-F4). Geprueft wird deshalb positiv gegen
+    # die Kennung dieses Rechners.
+    konto = os.path.basename(os.path.expanduser("~"))
+    if konto and (konto + "/" in baum or konto + "\\" in baum
+                  or "/" + konto in baum or "\\" + konto in baum):
+        raise LaufAbbruch(
+            "KONTOKENNUNG ALS PFADSEGMENT im Bericht bei " + wo + " (R12a). "
+            "Die Kurzform darf kein Elternverzeichnis tragen, das die "
+            "Benutzerkennung des Rechners ist.")
+
+
+def schruppe_text(text):
+    """Ein FREMDER Ausnahmetext, R12a-sicher gemacht.
+
+    Wortweise, positiv: was wie ein Pfad, eine Kennung oder eine lange
+    Zahlenkette aussieht, wird ersetzt; stehen bleibt Prosa. Lieber ein
+    zerloechertes Wort zu viel als eine Firmen-Kennung in der Akte.
+    """
+    konto = os.path.basename(os.path.expanduser("~"))
+    aus = []
+    for wort in str(text).split():
+        if ("/" in wort or chr(92) in wort or ":" in wort
+                or (konto and konto in wort)
+                or sum(c.isdigit() for c in wort) >= 4):
+            aus.append("<entfernt>")
+        else:
+            aus.append(wort)
+    return " ".join(aus)[:400]
 
 
 def pruefe_umschlag(umschlag):
@@ -1317,7 +1405,11 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
 
     # ── PHASE 2 ───────────────────────────────────────────────────────────
     zaehlwerk, zaehlwerk_sha = lade_zaehlwerk(zaehlwerk_pfad)
-    geruesteter_arbeitspfad = ruest_zaehlwerk(zaehlwerk, arbeit_pfad, freigabe)
+    geruesteter_arbeitspfad = ruest_zaehlwerk(zaehlwerk, arbeit_pfad, freigabe,
+                                              eintrag)
+    # (5) Naht-F2: das Fenster wird AUSDRUECKLICH gesetzt, nie geerbt.
+    if hasattr(zaehlwerk, "setze_fenster"):
+        zaehlwerk.setze_fenster(freigabe["fenster"])
     if not panel_pfad or not os.path.isfile(panel_pfad):
         raise LaufAbbruch("Das Panel fehlt: " + str(panel_pfad))
     gelesene.append(panel_pfad)
@@ -1362,14 +1454,20 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         a_sig = je_arm["signal"]["werte"]["anteil"]
         a_kon = je_arm["kontrollpool"]["werte"]["anteil"]
         je_arm["differenz_punkte"] = differenz_objekt(a_sig, a_kon)
-        je_arm["tor"] = tor_verdikt(
-            je_arm["signal"]["werte"]["verdikt"],
-            je_arm["kontrollpool"]["werte"]["verdikt"],
-            je_arm["differenz_punkte"])
-        fremd = sorted(set(je_arm) - set(ARME) - VARIANTEN_SCHLUESSEL
-                       - {"tor"})
+        if TOR_IN_DATEN:
+            raise LaufAbbruch(
+                "TOR-VERDIKT IN `daten` IST NICHT REGISTRIERT: TOR_IN_DATEN "
+                "steht offen, aber der Schluesselsatz von `tor` ist in keinem "
+                "Register-Eintrag beurkundet. Ein nicht gelisteter Schluessel "
+                "ist ein ABBRUCH, kein Filter (F6-B15). Erst die Registrierung "
+                "(ANHANG 3), dann die Ausgabe.")
+        fremd = sorted(set(je_arm) - set(ARME)
+                       - VARIANTEN_SCHLUESSEL_REGISTRIERT)
         if fremd:
-            raise LaufAbbruch("Ungelisteter Variantenschluessel: " + ", ".join(fremd))
+            raise LaufAbbruch(
+                "Ungelisteter Variantenschluessel: " + ", ".join(fremd)
+                + ". Geprueft wird gegen den REGISTRIERTEN Satz; es gibt keine "
+                "Ausnahme per Literal.")
         daten[variante] = je_arm
 
     beendet = jetzt_iso()
@@ -1478,6 +1576,11 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         },
         "protokoll": protokoll,
     }
+    # F6-B14 ueber den GANZEN Bericht. Bis PR G lief der Wachposten nur ueber
+    # die Arm-`werte` und den Umschlag - `stempel`, `protokoll` und die
+    # Varianten-Objekte blieben ungeprueft, also genau die Teilbaeume, in
+    # denen neue Schluessel entstehen (Schritt-8-Review, Naht-F5).
+    pruefe_verbotene(bericht, "bericht")
     # R12a am Schreib-Rand, gegen die Pfade dieses Laufs. Erst hier, damit
     # KEIN Weg daran vorbeifuehrt.
     pruefe_keine_absolutpfade(bericht, {
@@ -1522,6 +1625,16 @@ def main(argv=None):
         # tests/studie-f6-zaehlwerk.test.js), und ohne sie saehe der Bedienende
         # bei einem reinen Konfigurationsfehler nur "interner Fehler der Art
         # ZaehlwerkAbbruch" - eine Meldung, mit der niemand etwas anfangen kann.
+        # Das VERSIEGELTE Basisraten-Modul wirft einen diagnostisch wertvollen
+        # Text ("fast immer eine falsche Datenwurzel"). Anonym als "interner
+        # Fehler der Art BasisratenFehler" ist ein Bedienfehler auf dem EINEN
+        # Lauf nicht von einem Defekt zu unterscheiden. Der Text kommt deshalb
+        # BENANNT heraus - aber nur durch die R12a-Schrubbe, nie roh.
+        if type(fehler).__name__ == "BasisratenFehler":
+            print("F6-LAUF-ABBRUCH: das versiegelte Basisraten-Modul hat "
+                  "abgebrochen (geschruppt): " + schruppe_text(fehler),
+                  file=sys.stderr)
+            return 1
         if type(fehler).__name__ == "ZaehlwerkAbbruch":
             print("F6-LAUF-ABBRUCH: das Zaehlwerk hat abgebrochen: "
                   + str(fehler), file=sys.stderr)

@@ -301,17 +301,28 @@ test('INTEGRATION: der Laeufer treibt das ECHTE Zaehlwerk - die Verdrahtung hael
     'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
     `zspec = importlib.util.spec_from_file_location("z", r"${ZAEHLWERK}")`,
     'z = importlib.util.module_from_spec(zspec); zspec.loader.exec_module(z)',
-    'print("GEWAEHLT:" + str(m.ruest_zaehlwerk(z, None)))',
+    // SEIT PR G: die Vorgabe ist die BASIS, gewaehlt wird ein lauf-eigenes,
+    // leeres Unterverzeichnis darunter (Naht-B1). Die echte Vorgabe wird fuer
+    // die Probe umgebogen, damit der Test nichts im Benutzerverzeichnis anlegt.
+    `z.ARBEITSPFAD_VORGABE = r"${tmp.replace(/\\/g, '\\\\')}"`,
+    'print("GEWAEHLT:" + str(m.ruest_zaehlwerk(z, None, {"runId": "probe-1"})))',
     'try:',
-    '    m.ruest_zaehlwerk(z, "abweichend/x.sqlite",',
-    '                      {"arbeitspfad": z.ARBEITSPFAD_VORGABE})',
+    '    m.ruest_zaehlwerk(z, "abweichend/x.sqlite", {"runId": "probe-1"})',
     '    print("KEIN ABBRUCH")',
     'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f)[:90])',
+    'try:',
+    '    m.ruest_zaehlwerk(z, None, {})',
+    '    print("KEIN ABBRUCH OHNE RUNID")',
+    'except m.LaufAbbruch as f: print("OHNERUNID:" + str(f)[:60])',
   ].join('\n')], { encoding: 'utf8' });
-  assert.match(ohne.stdout, /^GEWAEHLT:C:/m,
-    'ohne --arbeit muss die benannte Vorgabe greifen (Ruling 2)');
+  assert.match(ohne.stdout, /^GEWAEHLT:.*lauf-probe-1/m,
+    'ohne --arbeit greift die benannte Vorgabe, aber im Lauf-Unterverzeichnis');
+  assert.match(ohne.stdout, /zwischenstand\.sqlite/,
+    'gewaehlt wird eine DATEI, nie das Verzeichnis (Naht-B1)');
   assert.match(ohne.stdout, /^ABBRUCH:/m);
-  assert.match(ohne.stdout, /WEICHT VON DER FREIGABE AB/);
+  assert.match(ohne.stdout, /WEICHT VON DER GEBUNDENEN KONSTANTE AB/);
+  assert.match(ohne.stdout, /^OHNERUNID:/m,
+    'ohne runId gibt es kein Arbeitsverzeichnis, sondern einen Abbruch');
 
   // MIT --arbeit: die Ruestung geht durch, und danach ruft der Laeufer
   // zaehle() mit genau drei Argumenten - der eingefrorene Vertrag haelt.
@@ -322,8 +333,14 @@ test('INTEGRATION: der Laeufer treibt das ECHTE Zaehlwerk - die Verdrahtung hael
     `zspec = importlib.util.spec_from_file_location("z", r"${ZAEHLWERK}")`,
     'z = importlib.util.module_from_spec(zspec); zspec.loader.exec_module(z)',
     'd = tempfile.mkdtemp()',
-    'p = m.ruest_zaehlwerk(z, os.path.join(d, "f6", "zwischenstand.sqlite"))',
+    // SEIT PR G ist die gebundene Konstante massgeblich; ein abweichendes
+    // --arbeit ist ein ABBRUCH. Fuer die Probe wird deshalb die Vorgabe
+    // umgebogen und derselbe Pfad uebergeben - die Ruestung muss durchgehen.
+    'z.ARBEITSPFAD_VORGABE = d',
+    'p = m.ruest_zaehlwerk(z, d, {"runId": "probe-2"})',
     'print("GERUESTET:" + str(p is not None))',
+    // Das Fenster wird jetzt AUSDRUECKLICH gesetzt (Naht-F2).
+    'z.setze_fenster("pruefung")',
     'try:',
     '    z.zaehle("kein-echtes-panel.sqlite", "S-U", "signal")',
     '    print("UNERWARTET DURCH")',

@@ -33,7 +33,7 @@ function werkbank() {
   }
   return tmp;
 }
-const berichtDa = () => fs.existsSync(path.join(WURZEL, ...BERICHT_REL.split('/')));
+const berichtDa = () => false;  // UEBERHOLT: das Werkzeug ist stillgelegt (s.u.)
 
 // Der Akt wurde gegen einen Registerstand OHNE ihn selbst gebaut. Sobald er
 // angehaengt ist, weist das Werkzeug jeden zweiten Anlauf zu Recht ab — die
@@ -95,7 +95,7 @@ test('fehlender Aequivalenz-Bericht bricht den Akt ab', () => {
   const tmp = werkbank();
   const p = path.join(tmp, ...BERICHT_REL.split('/'));
   if (fs.existsSync(p)) fs.rmSync(p);
-  assert.throws(() => fahre([], tmp), /Aequivalenz-Bericht fehlt/);
+  assert.throws(() => fahre([], tmp), /UEBERHOLT/);  // stillgelegt, s.u.
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -138,7 +138,7 @@ test('wirksam-ab vor der Anmeldung bricht ab', { skip: !berichtDa() }, () => {
 
 test('eine Anmeldezeit in der Zukunft bricht ab', () => {
   const morgen = new Date(Date.now() + 86400000).toISOString();
-  assert.throws(() => K.haupt(['--anmeldezeit', morgen]), /liegt in der Zukunft/);
+  assert.throws(() => K.haupt(['--anmeldezeit', morgen]), /UEBERHOLT/);
 });
 
 // ── Riegel 9: der Ausgabesatz ist genau der registrierte ──────────────────
@@ -274,4 +274,13 @@ test('ein Nutzerpfad im Eintrag bricht an der Schreib-Grenze ab', () => {
   assert.throws(() => K.pruefeKeinNutzerpfad({ a: heim }), /Unix-Heimverzeichnis/);
   assert.throws(() => K.pruefeKeinNutzerpfad({ a: `%${['USER', 'PROFILE'].join('')}%` }),
     /Umgebungs-Nutzerpfad/);
+});
+
+// ── Nach dem Schritt-8-Review: das Werkzeug ist stillgelegt ───────────────
+test('das Werkzeug baut den ueberholten Eintrag 27 nicht mehr', () => {
+  assert.throws(() => K.haupt([]), /UEBERHOLT/);
+  assert.throws(() => K.haupt(['--schreiben']), /UEBERHOLT/);
+  // --force bleibt der ERSTE Riegel: eine Reparatur-Betriebsart gibt es auch
+  // an einem stillgelegten Werkzeug nicht.
+  assert.throws(() => K.haupt(['--force']), /--force gibt es nicht/);
 });
