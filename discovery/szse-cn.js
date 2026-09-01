@@ -14,8 +14,9 @@
  *   agssrq  = listing date (YYYY-MM-DD) — informational, not stored (contract has no field)
  *   bk      = board (主板 / 创业板)
  *
- * Contract: Node built-ins only, MAX_REDIRECTS=5, 30s timeout, never throws —
- * returns an empty Map() on any failure (fail-silent). marketCap NOT set.
+ * Contract: Node built-ins only, MAX_REDIRECTS=5, 30s timeout, never throws.
+ * A first-page or unexpected total failure returns an empty Map(); later gaps
+ * preserve valid rows and set Map.partial=true. marketCap NOT set.
  *
  * Returns Map<yahooTicker, {ticker, name, exchange, source, country}>
  */
@@ -25,8 +26,9 @@ const https = require('https');
 const BASE = 'https://www.szse.cn/api/report/ShowReport/data'
   + '?SHOWTYPE=JSON&CATALOGID=1110&TABKEY=tab1&PAGENO=';
 const REFERER = 'https://www.szse.cn/';
-// Safety cap: metadata reports ~145 pages; cap higher so growth doesn't truncate,
-// but stop early once a page returns no rows. ponytail: hard ceiling, raise if SZSE > ~4000 listings.
+// Safety cap: metadata reports ~145 pages; cap higher so growth doesn't truncate.
+// Valid completeness counters normally stop the loop first. ponytail: hard ceiling,
+// raise if SZSE > ~4000 listings.
 const MAX_PAGES = 300;
 
 const MAX_REDIRECTS = 5;
@@ -71,6 +73,27 @@ function cleanName(raw) {
   return String(raw || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
+function readCount(metadata, key, allowZero) {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata) ||
+      !Object.prototype.hasOwnProperty.call(metadata, key) ||
+      metadata[key] === null || metadata[key] === undefined) {
+    return { present: false, value: null };
+  }
+
+  const raw = metadata[key];
+  let value = raw;
+  if (typeof raw === 'string') {
+    const text = raw.trim();
+    if (!/^\d+$/.test(text)) return { present: true, value: null };
+    value = Number(text);
+  }
+  const minimum = allowZero ? 0 : 1;
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < minimum) {
+    return { present: true, value: null };
+  }
+  return { present: true, value };
+}
+
 // One page, retried a few times on transient network blips (ECONNRESET/timeout
 // are common against this endpoint). Returns parsed JSON or throws after retries.
 async function getPage(page) {
@@ -89,8 +112,16 @@ async function getPage(page) {
 
 async function fetchSzseUniverse() {
   const result = new Map();
+  const firstSeenPageByTicker = new Map();
   console.log('  [SZSE] Fetching Shenzhen A-share list...');
   let expectedPages = null;
+  let expectedRecords = null;
+  let lastPageCount = null;
+  let lastRecordCount = null;
+  let rawRows = 0;
+  let invalidRows = 0;
+  let termination = 'page-cap';
+  const partialReasons = new Set();
   // audit/fix BH-059: a later page dying after retries used to just log+skip —
   // the accumulated Map still came back nonempty/green with no signal that a
   // page (and its ~20 tickers) was dropped from the register. Count skips and
@@ -110,22 +141,88 @@ async function fetchSzseUniverse() {
         // A later page died even after retries: skip it and keep going so a
         // single transient reset can't drop the entire tail (incl. ChiNext).
         skippedPages++;
-        if (expectedPages && page >= expectedPages) break;
+        partialReasons.add('page-fetch-failure');
+        if (expectedPages !== null && page >= expectedPages) {
+          termination = 'failed-final-page';
+          break;
+        }
+        if (expectedPages === null && expectedRecords === null) {
+          termination = 'unbounded-page-failure';
+          break;
+        }
         await sleep(200);
         continue;
       }
-      const block = Array.isArray(json) ? json[0] : null;
-      const rows = block && Array.isArray(block.data) ? block.data : [];
-      if (block && block.metadata && block.metadata.pagecount) {
-        expectedPages = Number(block.metadata.pagecount) || expectedPages;
+
+      const block = Array.isArray(json) && json.length > 0 && json[0] &&
+        typeof json[0] === 'object' && !Array.isArray(json[0]) ? json[0] : null;
+      const metadata = block && block.metadata && typeof block.metadata === 'object' &&
+        !Array.isArray(block.metadata) ? block.metadata : null;
+      const pageCount = readCount(metadata, 'pagecount', false);
+      const recordCount = readCount(metadata, 'recordcount', true);
+
+      if (pageCount.present && pageCount.value === null) {
+        partialReasons.add('invalid-pagecount');
+      } else if (pageCount.value !== null) {
+        if (lastPageCount !== null && pageCount.value !== lastPageCount) {
+          partialReasons.add('pagecount-drift');
+        }
+        lastPageCount = pageCount.value;
+        expectedPages = Math.max(expectedPages === null ? 0 : expectedPages, pageCount.value);
       }
-      if (rows.length === 0) break; // past the last page
+      if (recordCount.present && recordCount.value === null) {
+        partialReasons.add('invalid-recordcount');
+      } else if (recordCount.value !== null) {
+        if (lastRecordCount !== null && recordCount.value !== lastRecordCount) {
+          partialReasons.add('recordcount-drift');
+        }
+        lastRecordCount = recordCount.value;
+        expectedRecords = Math.max(expectedRecords === null ? 0 : expectedRecords, recordCount.value);
+      }
+
+      if (!block || !Array.isArray(block.data)) {
+        partialReasons.add('malformed-page');
+        if (expectedPages !== null && page < expectedPages) {
+          await sleep(200);
+          continue;
+        }
+        termination = 'malformed-page';
+        break;
+      }
+
+      const rows = block.data;
+      if (rows.length === 0) {
+        const provenZero = page === 1 && expectedPages === 1 && expectedRecords === 0;
+        if (expectedPages !== null && page <= expectedPages && !provenZero) {
+          partialReasons.add('empty-declared-page');
+        }
+        if (expectedPages !== null && page < expectedPages) {
+          partialReasons.add('early-empty-page');
+          await sleep(200);
+          continue;
+        }
+        if (expectedRecords !== null && rawRows < expectedRecords) {
+          partialReasons.add('early-empty-page');
+        }
+        termination = 'empty-page';
+        break;
+      }
+
+      rawRows += rows.length;
 
       for (const r of rows) {
         const code = String(r && r.agdm || '').trim();
-        if (!/^\d{6}$/.test(code)) continue;
+        if (!/^\d{6}$/.test(code)) {
+          invalidRows++;
+          continue;
+        }
         const yahooTicker = code + '.SZ';
-        if (result.has(yahooTicker)) continue;
+        const firstSeenPage = firstSeenPageByTicker.get(yahooTicker);
+        if (firstSeenPage !== undefined) {
+          if (firstSeenPage !== page) partialReasons.add('cross-page-duplicate-code');
+          continue;
+        }
+        firstSeenPageByTicker.set(yahooTicker, page);
         result.set(yahooTicker, {
           ticker: yahooTicker,
           name: cleanName(r.agjc),
@@ -135,7 +232,14 @@ async function fetchSzseUniverse() {
         });
       }
 
-      if (expectedPages && page >= expectedPages) break;
+      if (expectedPages !== null && page >= expectedPages) {
+        termination = 'pagecount';
+        break;
+      }
+      if (expectedPages === null && expectedRecords !== null && rawRows >= expectedRecords) {
+        termination = 'recordcount';
+        break;
+      }
       await sleep(200); // gentle on the official endpoint
     }
   } catch (e) {
@@ -143,8 +247,20 @@ async function fetchSzseUniverse() {
     return new Map();
   }
 
-  if (skippedPages > 0) {
-    console.warn(`  [SZSE] WARNING: ${skippedPages} page(s) failed after retries and were skipped — universe is PARTIAL (${result.size} tickers).`);
+  if (termination === 'page-cap') partialReasons.add('page-cap');
+  if (expectedPages === null && expectedRecords === null) {
+    partialReasons.add('missing-completeness-counts');
+  }
+  if (expectedRecords !== null && rawRows !== expectedRecords) {
+    partialReasons.add('recordcount-mismatch');
+  }
+  if (invalidRows > 0) partialReasons.add('invalid-code-row');
+
+  if (partialReasons.size > 0) {
+    console.warn(
+      `  [SZSE] WARNING: universe is PARTIAL (${result.size} tickers, ${rawRows} raw rows; ` +
+      `${[...partialReasons].join(', ')}${skippedPages > 0 ? `; ${skippedPages} page failure(s)` : ''}).`
+    );
     result.partial = true;
   }
   console.log(`  [SZSE] Total: ${result.size} A-share tickers`);
