@@ -184,12 +184,76 @@ BEIN1_SOLL = {
 
 BEIN2_QUELLE_REL = "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json"
 BEIN2_QUELLE_SHA = "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf"
+# ── F6-C8a/b/c: DIE BASIS, DIE BERICHTIGUNG UND DIE SPALTENPFADE ──────────
+#
+# BASIS (F6-C8a): fuer Bein 2 regiert die Zensur- und Quotientenbasis der
+# versiegelten Praeregistrierung 2.0.0 - Zensur nach `preregistration.json:80`
+# (ordinal(accepted) + 4 * 80 Tage > ordinal(Panel-Rand)), Netto-Nenner nach
+# `:87`. Implementiert durch `studie-zaehlprobe.py::ist_zensiert`/`arm_zaehlen`.
+# Die KADENZ-/E4e-Basis des Instruments `studie-e4d-kadenz.py` regiert Bein 2
+# NICHT und darf weder importiert noch nachgebaut noch als Sollquelle benutzt
+# werden.
+#
+# BERICHTIGUNG (F6-C8b, Form F6-C7a - KEINE Soll-Aenderung, sondern die
+# Berichtigung einer Spaltenverwechslung): die Zelle S-U/kontrollpool war aus
+# `zaehler_kadenz / nenner_kadenz / zensiert_kadenz` transkribiert (3760/4513/1)
+# und unter der registrierten Bedingung "F6-FORM je Arm" NICHT ERFUELLBAR. Sie
+# lautet ab jetzt 3761 / 4514 / 0 aus `.fallzahl / .nenner_e3 / .zensiert_e3`.
+# ARITHMETISCHER GEGENBEWEIS, im selben Artefakt:
+#   auffindbarkeit_e3     = 0.8331856446610545 = 3761/4514
+#   auffindbarkeit_kadenz = 0.8331486815865278 = 3760/4513
+# Eine Kette kann nicht beides liefern.
+#
+# ABLEITUNG VOR DEM LAUF (F6-C8f, Nicht-Zirkularitaet): der berichtigte Wert
+# stammt NICHT aus dem gerissenen Lauf, sondern aus dem am 19.08. eingefrorenen,
+# per SHA 46e191ec... gepinnten Artefakt. Drei laufunabhaengige Zeugen, alle
+# a priori ohne Panel ableitbar:
+#   (1) die Spaltensemantik des Artefakts allein - es fuehrt BEIDE Basen
+#       nebeneinander (_e3 und _kadenz) und benennt sie;
+#   (2) `studie-e4d-kadenz.py:522` - dort wird `zensiert_e3` von der
+#       F6-EIGENEN Funktion `zp.ist_zensiert` erzeugt;
+#   (3) die artefakteigene Identitaet auffindbarkeit_e3 = 3761/4514, auf die
+#       16. Stelle.
+# Der gerissene Lauf ist Anlass und Bestaetigung, NIE Quelle.
+#
+# SPALTENPFAD-PFLICHT (F6-C8c): jede Sollzahl traegt den VOLLSTAENDIGEN
+# JSON-Pfad ihrer Herkunftsspalte, nicht nur den Pfad bis zum Block. Die
+# Arm-Abbildung steht AUSGESCHRIEBEN, weil sie die zweite latente
+# Transkriptionsfalle ist:
+#
+#   F6-Arm "signal"        ->  Artefaktschluessel "signal"
+#   F6-Arm "kontrollpool"  ->  Artefaktschluessel "kontrolle"   (NICHT gleich!)
+#
+# Vollstaendiger Pfad je Zahl:
+#   baender["2009-2015"].varianten[<Variante>].<signal|kontrolle>.fallzahl
+#                                                               .nenner_e3
+#                                                               .zensiert_e3
+ARM_ARTEFAKT = {"signal": "signal", "kontrollpool": "kontrolle"}
+BEIN2_SPALTE = {"zaehler": "fallzahl", "nenner": "nenner_e3",
+                "zensiert": "zensiert_e3"}
+BEIN2_BAND = "2009-2015"
+BEIN2_IDENTITAETSSPALTE = "auffindbarkeit_e3"
+
+# Die Kadenz-Spalten - NUR fuer die Negativpruefung aus F6-C8d Glied 2.
+# Sie werden nie als Sollquelle gelesen.
+BEIN2_KADENZ_SPALTE = {"zaehler": "zaehler_kadenz", "nenner": "nenner_kadenz",
+                       "zensiert": "zensiert_kadenz"}
+
 BEIN2_SOLL = {
+    # baender["2009-2015"].varianten["S-U"].signal.{fallzahl,nenner_e3,zensiert_e3}
     ("S-U", "signal"): {"zaehler": 543, "nenner": 651, "zensiert": 0},
-    ("S-U", "kontrollpool"): {"zaehler": 3760, "nenner": 4513, "zensiert": 1},
+    # baender["2009-2015"].varianten["S-U"].kontrolle.{fallzahl,nenner_e3,zensiert_e3}
+    # BERICHTIGT durch F6-C8b (vorher 3760/4513/1 aus den _kadenz-Spalten).
+    ("S-U", "kontrollpool"): {"zaehler": 3761, "nenner": 4514, "zensiert": 0},
+    # baender["2009-2015"].varianten["S-G"].signal.{fallzahl,nenner_e3,zensiert_e3}
     ("S-G", "signal"): {"zaehler": 557, "nenner": 647, "zensiert": 0},
+    # baender["2009-2015"].varianten["S-G"].kontrolle.{fallzahl,nenner_e3,zensiert_e3}
     ("S-G", "kontrollpool"): {"zaehler": 5000, "nenner": 5768, "zensiert": 0},
 }
+
+# DREI DER VIER ZELLEN SIND BASISBLIND: bei ihnen gilt e3 == kadenz
+# (651/0, 647/0, 5768/0). Ihr Bestehen traegt deshalb KEINE Evidenz zur
+# Basisfrage - nur S-U/kontrollpool trennt die beiden Basen (F6-C8g(4)).
 BEIN2_RAHMEN = {"panelRand": "2016-12-31", "signalband_von": "2009-01-01",
                 "signalband_bis": "2015-12-31", "perzentil": 95}
 
@@ -949,6 +1013,112 @@ def pruefe_bein1_laufzahlen(ergebnis_pfad):
             "verbreitertSha256": ist}
 
 
+def pruefe_bein2_basis(wurzel):
+    """F6-C8d - Laufzeit-Basis-Reinheit, fail-closed VOR jeder Zahl.
+
+    Drei Glieder, jedes ohne Vorgabewert, nach der SHA-Pruefung des
+    Referenzartefakts:
+      1. Konstanten-Abgleich an den Spaltenpfaden (F6-C8c), beide Richtungen.
+      2. Basis-Reinheit, negativ UND positiv: kein `_kadenz`-Segment in einem
+         Soll-Pfad; BASIS-ABBRUCH, wenn ein Soll-Tripel das Kadenz-Tripel
+         trifft und zugleich vom E3-Tripel abweicht.
+      3. Identitaet je Arm, EXAKTE Float-Gleichheit gegen die artefakteigene
+         Rate `auffindbarkeit_e3`.
+
+    ZAUN-RANDBEDINGUNG: die Rate aus Glied 3 ist eine ENTDECKUNGSFENSTER-
+    Groesse aus einem committeten Artefakt. Sie ist hier zulaessig, gehoert
+    aber ausschliesslich in diesen Bein-2-Block und darf NIEMALS in die
+    Prueffenster-Ausgabemenge wandern, wo F6-A2 genau EINEN Schluessel zulaesst.
+    """
+    pfad = os.path.join(wurzel, *BEIN2_QUELLE_REL.split("/"))
+    if not os.path.isfile(pfad):
+        raise ZaehlwerkAbbruch("Das Referenzartefakt fehlt: " + BEIN2_QUELLE_REL)
+    ist_sha = sha256_datei(pfad)
+    if ist_sha != BEIN2_QUELLE_SHA:
+        raise ZaehlwerkAbbruch(
+            BEIN2_QUELLE_REL + " weicht von der Bindung ab (ist "
+            + ist_sha[:16] + "..., soll " + BEIN2_QUELLE_SHA[:16] + "...).")
+    with open(pfad, encoding="utf-8") as fh:
+        artefakt = json.load(fh)
+
+    # ── GLIED 2a: Basis-Reinheit NEGATIV, vor jedem Lesen ─────────────────
+    for name, spalte in list(BEIN2_SPALTE.items()):
+        if "kadenz" in spalte.lower():
+            raise ZaehlwerkAbbruch(
+                "BASIS-ABBRUCH: der Soll-Spaltenpfad fuer " + name + " ist "
+                + repr(spalte) + " und traegt ein kadenz-Segment. Die "
+                "Kadenz-Basis regiert Bein 2 NICHT (F6-C8a).")
+    for arm, schluessel in ARM_ARTEFAKT.items():
+        if "kadenz" in schluessel.lower():
+            raise ZaehlwerkAbbruch(
+                "BASIS-ABBRUCH: die Arm-Abbildung " + repr(arm) + " -> "
+                + repr(schluessel) + " traegt ein kadenz-Segment.")
+
+    gemessen = {}
+    for (variante, arm), soll in BEIN2_SOLL.items():
+        wo = variante + "/" + arm
+        art_arm = ARM_ARTEFAKT[arm]
+        zelle = _hole(artefakt,
+                      ["baender", BEIN2_BAND, "varianten", variante, art_arm],
+                      "baender[" + BEIN2_BAND + "].varianten." + variante
+                      + "." + art_arm)
+
+        # Beide Spaltensaetze werden GELESEN, bevor irgendetwas abbricht -
+        # sonst waere Glied 2b unerreichbar (s. u.).
+        e3 = {}
+        for feld, spalte in BEIN2_SPALTE.items():
+            e3[feld] = _hole(zelle, [spalte], wo + "." + spalte)
+        kadenz = {}
+        for feld, spalte in BEIN2_KADENZ_SPALTE.items():
+            kadenz[feld] = zelle.get(spalte)
+
+        # ── GLIED 2b: Basis-Reinheit POSITIV - VOR Glied 1 ────────────────
+        # REIHENFOLGE IST ABSICHT: Glied 1 bricht bei JEDER Abweichung vom
+        # E3-Tripel ab. Stuende es davor, koennte dieser Zweig nie feuern -
+        # er waere ein Wachtposten, der nur so aussieht (dieselbe Klasse wie
+        # der tote G-gegen-N-Vergleich, der frueher in diesem Modul stand).
+        # Er steht deshalb zuerst und liefert die SCHAERFERE Diagnose: nicht
+        # "irgendeine Abweichung", sondern "das Soll steht auf der falschen
+        # Basis".
+        trifft_kadenz = all(soll[f] == kadenz[f] for f in soll)
+        weicht_von_e3 = any(soll[f] != e3[f] for f in soll)
+        if trifft_kadenz and weicht_von_e3:
+            raise ZaehlwerkAbbruch(
+                "BASIS-ABBRUCH bei " + wo + ": das Soll-Tripel trifft "
+                "(zaehler_kadenz, nenner_kadenz, zensiert_kadenz) = "
+                + repr(tuple(kadenz[f] for f in ("zaehler", "nenner", "zensiert")))
+                + " und weicht zugleich von (fallzahl, nenner_e3, zensiert_e3) = "
+                + repr(tuple(e3[f] for f in ("zaehler", "nenner", "zensiert")))
+                + " ab. Genau diese Verwechslung hat den vierten Anlauf "
+                "gerissen; sie ist ab jetzt ein Abbruch, kein Befund.")
+
+        # ── GLIED 1: Konstanten-Abgleich an den Spaltenpfaden ─────────────
+        for feld, spalte in BEIN2_SPALTE.items():
+            if e3[feld] != soll[feld]:
+                raise ZaehlwerkAbbruch(
+                    "F6-C8d KONSTANTEN-ABGLEICH GERISSEN bei " + wo + "."
+                    + spalte + ": das Zaehlwerk fuehrt " + repr(soll[feld])
+                    + ", das gepinnte Artefakt " + repr(e3[feld]) + ". STOPP "
+                    "vor jeder Zahl. Kein Bein-2-Soll darf je aus einer "
+                    "Laufausgabe abgeleitet werden (F6-C8c).")
+
+        # ── GLIED 3: Identitaet, EXAKTE Float-Gleichheit ──────────────────
+        rate = _hole(zelle, [BEIN2_IDENTITAETSSPALTE],
+                     wo + "." + BEIN2_IDENTITAETSSPALTE)
+        if soll["nenner"] == 0:
+            raise ZaehlwerkAbbruch("Nenner 0 in " + wo + ".")
+        if soll["zaehler"] / soll["nenner"] != rate:
+            raise ZaehlwerkAbbruch(
+                "F6-C8d IDENTITAET GERISSEN bei " + wo + ": "
+                + repr(soll["zaehler"]) + "/" + repr(soll["nenner"]) + " = "
+                + repr(soll["zaehler"] / soll["nenner"]) + " != "
+                + BEIN2_IDENTITAETSSPALTE + " = " + repr(rate)
+                + ". Das Soll steht nicht auf der Basis, die es zu fuehren "
+                "vorgibt.")
+        gemessen[wo] = dict(e3)
+    return {"bestanden": True, "zellen": gemessen, "quelleSha256": ist_sha}
+
+
 def aequivalenz_bein3():
     """BEIN 3: die Semantik gegen ausgeschriebene Literale. KEIN Panel-Lauf.
 
@@ -996,6 +1166,8 @@ def aequivalenz_tor(panel_pfad, wurzel=None, arbeit_pfad=None):
             "Arbeitsdatei und braucht den vorab geprueften Pfad (W-B / KZ-3).")
     module = lade_regelmodule(wurzel)
     pruefe_regelparameter(wurzel, module)
+    # F6-C8d: die Basis-Reinheit steht VOR jeder gemessenen Zahl.
+    basis = pruefe_bein2_basis(wurzel)
     bein3 = aequivalenz_bein3()
 
     fenster = FENSTER_SOLL["entdeckung"]
@@ -1022,6 +1194,7 @@ def aequivalenz_tor(panel_pfad, wurzel=None, arbeit_pfad=None):
             + ". Weicht Durchlauf 1 ab, ist nicht der Vergleich kaputt, "
             "sondern die Grundlage.")
     return {"bestanden": True, "bein2Gemessen": gemessen, "bein3": bein3,
+            "bein2Basis": basis,
             "modulSha256": module["modulSha256"],
             "zaehlprobeSha256": module["zaehlprobeSha256"],
             "bein2QuelleSha256": BEIN2_QUELLE_SHA}

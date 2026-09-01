@@ -67,7 +67,7 @@ const VORLAUF_MINUTEN = 120;
 // Die ausfuehrenden Skripte, gemessen auf main NACH dem #192-Merge.
 const SKRIPTE = [
   ['scripts/studie-f6-zaehlwerk.py',
-    '826306e6cf72e02d0b1807db4e1d8aaa15436dbdccfc0e15d779c485cfd2a721'],
+    'f47f10d555c701c08e1282aa7e3b41424b836b0851edbdbb80f83839b9f99410'],
   ['scripts/studie-f6-lauf.py',
     '36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0'],
   ['scripts/studie-zaehlprobe.py',
@@ -139,12 +139,19 @@ const BEIN1_SOLL = {
   'S-G': { firmen_reif: 546, firmen_unreif: 265 },
   'S-UG': { firmen_reif: 29, firmen_unreif: 12 },
 };
+// F6-C8b: die Zelle S-U/kontrollpool ist berichtigt (vorher 3760/4513/1 aus
+// den _kadenz-Spalten). F6-C8c: jede Zahl traegt ihren vollstaendigen
+// JSON-Spaltenpfad; die Arm-Abbildung steht AUSGESCHRIEBEN.
+const BEIN2_ARM_ARTEFAKT = { signal: 'signal', kontrollpool: 'kontrolle' };
+const BEIN2_SPALTEN = { zaehler: 'fallzahl', nenner: 'nenner_e3', zensiert: 'zensiert_e3' };
 const BEIN2_SOLL = {
   'S-U/signal': { zaehler: 543, nenner: 651, zensiert: 0 },
-  'S-U/kontrollpool': { zaehler: 3760, nenner: 4513, zensiert: 1 },
+  'S-U/kontrollpool': { zaehler: 3761, nenner: 4514, zensiert: 0 },
   'S-G/signal': { zaehler: 557, nenner: 647, zensiert: 0 },
   'S-G/kontrollpool': { zaehler: 5000, nenner: 5768, zensiert: 0 },
 };
+const BEIN2_SPALTENPFAD = (v, arm) =>
+  `baender["2009-2015"].varianten["${v}"].${BEIN2_ARM_ARTEFAKT[arm]}`;
 
 // ── Werkzeug ────────────────────────────────────────────────────────────────
 
@@ -236,12 +243,12 @@ function pruefeBeinzahlen(wurzel) {
   const b2 = JSON.parse(fs.readFileSync(
     path.join(wurzel, ...BEIN2_QUELLE_REL.split('/')), 'utf8'));
   const baender = ((b2.baender || {})['2009-2015'] || {}).varianten || {};
-  const armname = { signal: 'signal', kontrollpool: 'kontrolle' };
   for (const zelle of BEIN2_ZELLEN) {
     const [v, arm] = zelle.split('/');
-    const q = (baender[v] || {})[armname[arm]] || {};
-    const paare = [['zaehler', q.zaehler_kadenz], ['nenner', q.nenner_kadenz],
-      ['zensiert', q.zensiert_kadenz]];
+    const q = (baender[v] || {})[BEIN2_ARM_ARTEFAKT[arm]] || {};
+    // F6-C8a/b: E3-Spalten, nie die _kadenz-Spalten.
+    const paare = [['zaehler', q[BEIN2_SPALTEN.zaehler]],
+      ['nenner', q[BEIN2_SPALTEN.nenner]], ['zensiert', q[BEIN2_SPALTEN.zensiert]]];
     for (const [feld, ist] of paare) {
       if (ist !== BEIN2_SOLL[zelle][feld]) {
         throw new VerfassungsBruch(
@@ -345,6 +352,27 @@ function baueEintrag(runId, registeredAt, wirksamAb, gemessen) {
       bein2: {
         quelle: BEIN2_QUELLE_REL,
         dateiSha256: BEIN2_QUELLE_SHA,
+        basis:
+          'E3 nach preregistration.json:80 (Zensur ordinal(accepted) + 4 * 80 Tage > '
+          + 'ordinal(Panel-Rand)) und :87 (Netto-Nenner). Die KADENZ-/E4e-Basis des '
+          + 'Instruments studie-e4d-kadenz.py regiert Bein 2 NICHT (F6-C8a).',
+        spaltenpfade: Object.fromEntries(BEIN2_ZELLEN.map((z) => {
+          const [v, arm] = z.split('/');
+          return [z, `${BEIN2_SPALTENPFAD(v, arm)}.{fallzahl,nenner_e3,zensiert_e3}`];
+        })),
+        armAbbildung: 'F6 "kontrollpool" -> Artefaktschluessel "kontrolle" (ausgeschrieben, '
+          + 'nicht erschlossen - zweite latente Transkriptionsfalle, F6-C8c)',
+        berichtigung:
+          'F6-C8b: die Zelle S-U/kontrollpool war aus zaehler_kadenz/nenner_kadenz/'
+          + 'zensiert_kadenz transkribiert (3760/4513/1) und unter der registrierten '
+          + 'Bedingung NICHT ERFUELLBAR. Sie lautet 3761/4514/0. Arithmetischer '
+          + 'Gegenbeweis im selben Artefakt: auffindbarkeit_e3 = 0.8331856446610545 = '
+          + '3761/4514 gegen auffindbarkeit_kadenz = 0.8331486815865278 = 3760/4513 - '
+          + 'eine Kette kann nicht beides liefern.',
+        basisblind:
+          'DREI der vier Zellen sind basisblind (e3 == kadenz: 651/0, 647/0, 5768/0). '
+          + 'Ihr Bestehen traegt KEINE Evidenz zur Basisfrage; nur S-U/kontrollpool '
+          + 'trennt die beiden Basen (F6-C8g(4)).',
         rahmen: { panelRand: '2016-12-31', signalband: '2009-01-01/2015-12-31', perzentil: 95 },
         zellen: BEIN2_SOLL,
       },

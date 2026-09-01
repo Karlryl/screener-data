@@ -186,9 +186,14 @@ test('die Sollzahlen im Werkzeug stimmen mit BEIDEN Artefakten ueberein', () => 
   for (const [zelle, soll] of Object.entries(werkzeug.BEIN2_SOLL)) {
     const [fam, arm] = zelle.split('/');
     const q = v[fam][armname[arm]];
-    assert.equal(soll.zaehler, q.zaehler_kadenz, `${zelle} zaehler`);
-    assert.equal(soll.nenner, q.nenner_kadenz, `${zelle} nenner`);
-    assert.equal(soll.zensiert, q.zensiert_kadenz, `${zelle} zensiert`);
+    // F6-C8a/b: die E3-Spalten. Die _kadenz-Spalten regieren Bein 2 NICHT -
+    // sie zu lesen war genau der Fehler, der den vierten Anlauf riss.
+    assert.equal(soll.zaehler, q.fallzahl, `${zelle} zaehler (.fallzahl)`);
+    assert.equal(soll.nenner, q.nenner_e3, `${zelle} nenner (.nenner_e3)`);
+    assert.equal(soll.zensiert, q.zensiert_e3, `${zelle} zensiert (.zensiert_e3)`);
+    // Identitaet, exakte Float-Gleichheit (F6-C8d Glied 3).
+    assert.equal(soll.zaehler / soll.nenner, q.auffindbarkeit_e3,
+      `${zelle}: das Soll steht nicht auf der Basis, die es zu fuehren vorgibt`);
   }
   assert.equal(b2.panelRand, '2016-12-31');
   assert.equal(b2.perzentil, 95);
