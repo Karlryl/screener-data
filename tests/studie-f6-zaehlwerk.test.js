@@ -270,6 +270,96 @@ test('F6-C2: ein verstellter Modul-Hash bricht VOR dem Laden ab', () => {
   assert.match(r.stdout, /weicht von der Bindung ab/);
 });
 
+test('INTEGRATION: der Laeufer treibt das ECHTE Zaehlwerk - die Verdrahtung haelt', () => {
+  // Diese Probe fehlte, und genau daran ist der Vertragsbruch vorbeigelaufen:
+  // der Laeufer ruft zaehle() mit DREI Argumenten, das echte Zaehlwerk
+  // brauchte aber einen Arbeitspfad. Beide Test-Suiten waren gruen, weil
+  // keine die zwei Dateien je GEMEINSAM gefahren hat.
+  const dir = tempdir('f6-integration-');
+  const freigabe = path.join(dir, 'freigabe.json');
+  fs.writeFileSync(freigabe, JSON.stringify({ runId: 'gibt-es-nicht' }), 'utf8');
+  const bericht = path.join(dir, 'bericht.json');
+
+  function ruf(extra) {
+    return spawnSync(python, [path.join(REPO, 'scripts', 'studie-f6-lauf.py'),
+      '--freigabe', freigabe, '--panel', freigabe, '--bericht', bericht,
+      '--zaehlwerk', ZAEHLWERK, ...extra], { encoding: 'utf8' });
+  }
+
+  // OHNE --arbeit: benannter Abbruch, der den Grund NENNT (nicht "interner
+  // Fehler der Art ZaehlwerkAbbruch").
+  const ohne = spawnSync(python, ['-c', [
+    'import importlib.util, sys',
+    `spec = importlib.util.spec_from_file_location("l", r"${path.join(REPO, 'scripts', 'studie-f6-lauf.py')}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    `zspec = importlib.util.spec_from_file_location("z", r"${ZAEHLWERK}")`,
+    'z = importlib.util.module_from_spec(zspec); zspec.loader.exec_module(z)',
+    'try:',
+    '    m.ruest_zaehlwerk(z, None)',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.match(ohne.stdout, /^ABBRUCH:/m,
+    'ohne --arbeit muss die Ruestung benannt abbrechen');
+  assert.match(ohne.stdout, /--arbeit/);
+
+  // MIT --arbeit: die Ruestung geht durch, und danach ruft der Laeufer
+  // zaehle() mit genau drei Argumenten - der eingefrorene Vertrag haelt.
+  const mit = spawnSync(python, ['-c', [
+    'import importlib.util, os, tempfile',
+    `spec = importlib.util.spec_from_file_location("l", r"${path.join(REPO, 'scripts', 'studie-f6-lauf.py')}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    `zspec = importlib.util.spec_from_file_location("z", r"${ZAEHLWERK}")`,
+    'z = importlib.util.module_from_spec(zspec); zspec.loader.exec_module(z)',
+    'd = tempfile.mkdtemp()',
+    'p = m.ruest_zaehlwerk(z, os.path.join(d, "f6", "zwischenstand.sqlite"))',
+    'print("GERUESTET:" + str(p is not None))',
+    'try:',
+    '    z.zaehle("kein-echtes-panel.sqlite", "S-U", "signal")',
+    '    print("UNERWARTET DURCH")',
+    'except z.ZaehlwerkAbbruch as f:',
+    '    print("ABBRUCH:" + str(f)[:120])',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.match(mit.stdout, /^GERUESTET:True$/m);
+  assert.match(mit.stdout, /^ABBRUCH:/m);
+  assert.doesNotMatch(mit.stdout, /Kein Arbeitspfad gesetzt/,
+    'der Arbeitspfad-Wachposten darf nach der Ruestung nicht mehr feuern - '
+    + 'sonst ist die Verdrahtung wieder gebrochen');
+  assert.match(mit.stdout, /Panel-Datei nicht gefunden/,
+    'der Lauf muss bis zur Panel-E/A kommen, also am Vertrag vorbei sein');
+});
+
+test('die Abbruchtexte des Zaehlwerks tragen KEINE Firmen-Kennung', () => {
+  // Der Laeufer reicht ZaehlwerkAbbruch-Texte jetzt woertlich durch (statt sie
+  // wie fremde Ausnahmen zu unterdruecken). Das ist nur zulaessig, solange
+  // diese Texte nachweislich kennungsfrei sind - hier wird es nachgewiesen.
+  const quelle = fs.readFileSync(ZAEHLWERK, 'utf8');
+  const raises = quelle.match(/raise ZaehlwerkAbbruch\([\s\S]*?\)\n/g) || [];
+  assert.ok(raises.length >= 15, `nur ${raises.length} raise-Stellen gefunden`);
+  for (const r of raises) {
+    // Keine Interpolation eines Eintrags, einer Zeile oder einer Kennung.
+    for (const verboten of ['cik', 'adsh', 'accession', 'e["', "e['", 'eintrag[']) {
+      assert.equal(r.includes(verboten), false,
+        `ein Abbruchtext interpoliert ${verboten}: ${r.slice(0, 160)}`);
+    }
+  }
+  // Und am laufenden Objekt: ein Tally mit sprechender Kennung, Abbruch
+  // erzwungen - die Kennung darf im Text nicht auftauchen.
+  const r = pyProbe([
+    'class ZP:',
+    '    @staticmethod',
+    '    def ist_zensiert(e, e2, rand): return False',
+    'try:',
+    '    m._tally([{"cik": "APPLE-320193"}, {"cik": "APPLE-320193"}],',
+    '             [{"cik": "APPLE-320193"}], None, ZP, 0, "S-U/signal")',
+    '    print("KEIN ABBRUCH")',
+    'except m.ZaehlwerkAbbruch as f: print("TEXT:" + str(f))',
+  ].join('\n'));
+  assert.match(r.stdout, /^TEXT:/m);
+  assert.doesNotMatch(r.stdout, /APPLE/);
+  assert.doesNotMatch(r.stdout, /320193/);
+});
+
 test('der Vertrag: zaehle() verlangt einen geprueften Arbeitspfad, nie einen erfundenen', () => {
   const r = pyProbe([
     'try:',

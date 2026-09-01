@@ -161,6 +161,22 @@ BEIN2_SOLL = {
 BEIN2_RAHMEN = {"panelRand": "2016-12-31", "signalband_von": "2009-01-01",
                 "signalband_bis": "2015-12-31", "perzentil": 95}
 
+# F6-C11: was das Tor NICHT beweist, wird BENANNT statt weggeredet. Der
+# konfirmatorische Eintrag schreibt diesen Text ab, statt ihn neu zu fassen.
+AEQUIVALENZ_GRENZEN = {
+    "a_tally": (
+        "Der (m_g, n_g)-Tally selbst ist NEUE Ausgabe ohne Vorgaenger - kein "
+        "Bein des Tors deckt ihn. Ersetzt wird das durch die fail-closed "
+        "laufenden Kreuzproben (Summe_g n_g == n, Summe_g m_g == zaehler, "
+        "scripts/studie-f6-lauf.py) und durch W-C (F6-C10). Mehr ist es nicht, "
+        "und mehr wird hier nicht behauptet."),
+    "b_prueffenster_formen": (
+        "Datenformen, die AUSSCHLIESSLICH im Prueffenster vorkommen, sind "
+        "durch einen Lauf auf dem Entdeckungs-Panel NICHT substituierbar. Das "
+        "ist ein Restrisiko und wird als solches ausgewiesen, nicht "
+        "weggeredet."),
+}
+
 # BEIN 3 (F6-C9): die Semantik, die kein Panel-Lauf deckt - gegen
 # AUSGESCHRIEBENE LITERALE, woertlich transkribiert aus
 # protocol/early-detection/2.0.0/preregistration.json. Nie gegen eine zweite
@@ -293,7 +309,8 @@ def pruefe_regelparameter(wurzel, module):
         raise ZaehlwerkAbbruch(
             "Der Schwellen-Satz weicht ab (Datei-SHA ist " + ist_datei[:16]
             + "..., soll " + SCHWELLEN_DATEI_SHA[:16] + "...).")
-    satz = json.load(io.open(pfad, encoding="utf-8"))
+    with open(pfad, encoding="utf-8") as fh:
+        satz = json.load(fh)
     ohne = {k: v for k, v in satz.items() if k != "inhaltSha256"}
     ist_inhalt = kanonisch_sha256(ohne)
     if ist_inhalt != SCHWELLEN_INHALT_SHA:
@@ -302,19 +319,23 @@ def pruefe_regelparameter(wurzel, module):
             + ist_inhalt[:16] + "..., soll " + SCHWELLEN_INHALT_SHA[:16] + "...).")
 
     # pFinal aus dem Artefakt LESEN, nie tippen - und gegen den Sollwert halten.
-    gefunden = set()
+    # JE FAMILIE EINZELN. Eine Pruefung ueber die VEREINIGUNG der gefundenen
+    # Werte laesst eine fehlende Familie durchgehen: fehlt S-U ganz, bleibt
+    # {95} aus S-G stehen, beide Schranken halten - und S-U waere NIE geprueft
+    # worden, obwohl der Bericht so liest, als waere es das. Genau die Klasse
+    # "nie geprueft gegen stille Null", gegen die diese Funktion existiert.
     for name in VARIANTEN:
-        fam = (satz.get("jeFamilie") or {}).get(name) or {}
-        if "pFinal" in fam:
-            gefunden.add(fam["pFinal"])
-    if not gefunden:
-        raise ZaehlwerkAbbruch(
-            "Der Schwellen-Satz fuehrt kein pFinal je Familie. Ein fehlender "
-            "Regelparameter ist ein Abbruch, kein Vorgabewert.")
-    if gefunden != {P_FINAL_SOLL}:
-        raise ZaehlwerkAbbruch(
-            "pFinal im Artefakt ist " + repr(sorted(gefunden)) + ", gebunden "
-            "ist " + repr(P_FINAL_SOLL) + ".")
+        fam = (satz.get("jeFamilie") or {}).get(name)
+        if not isinstance(fam, dict) or "pFinal" not in fam:
+            raise ZaehlwerkAbbruch(
+                "Der Schwellen-Satz fuehrt kein pFinal fuer die Familie "
+                + repr(name) + ". Ein fehlender Regelparameter ist ein "
+                "Abbruch, kein Vorgabewert.")
+        if fam["pFinal"] != P_FINAL_SOLL:
+            raise ZaehlwerkAbbruch(
+                "pFinal der Familie " + repr(name) + " ist "
+                + repr(fam["pFinal"]) + ", gebunden ist "
+                + repr(P_FINAL_SOLL) + ".")
 
     # Und die Zensur-Konstanten des Zaehlproben-Moduls, ebenfalls beidseitig.
     zp = module["zp"]
@@ -343,7 +364,13 @@ def eigene_panel_verbindung(panel_pfad):
     voll = os.path.abspath(panel_pfad)
     conn = sqlite3.connect("file:" + voll.replace("\\", "/") + "?mode=ro",
                            uri=True)
-    conn.execute("PRAGMA cache_size=-200000")
+    try:
+        conn.execute("PRAGMA cache_size=-200000")
+    except Exception:
+        # Scheitert das PRAGMA, ist die Verbindung offen und kommt nie beim
+        # Aufrufer an - er kann sie also auch nicht schliessen.
+        conn.close()
+        raise
     return conn
 
 
@@ -359,14 +386,18 @@ def eigener_zwischenstand(pfad):
         os.remove(pfad)
     os.makedirs(os.path.dirname(os.path.abspath(pfad)), exist_ok=True)
     conn = sqlite3.connect(pfad, isolation_level=None)
-    conn.execute("PRAGMA synchronous=OFF")
-    conn.execute("PRAGMA cache_size=-200000")
-    conn.execute("CREATE TABLE IF NOT EXISTS roh (cik TEXT, tag TEXT, ddate TEXT,"
-                 " qtrs TEXT, uom TEXT, accepted TEXT, adsh TEXT, value REAL)")
-    conn.execute("CREATE TABLE IF NOT EXISTS lauf_stand (block INTEGER PRIMARY KEY,"
-                 " zeilen INTEGER, fertig_am TEXT)")
-    conn.execute("CREATE TABLE IF NOT EXISTS zaehler_stand (name TEXT PRIMARY KEY,"
-                 " wert INTEGER)")
+    try:
+        conn.execute("PRAGMA synchronous=OFF")
+        conn.execute("PRAGMA cache_size=-200000")
+        conn.execute("CREATE TABLE IF NOT EXISTS roh (cik TEXT, tag TEXT, ddate TEXT,"
+                     " qtrs TEXT, uom TEXT, accepted TEXT, adsh TEXT, value REAL)")
+        conn.execute("CREATE TABLE IF NOT EXISTS lauf_stand (block INTEGER PRIMARY KEY,"
+                     " zeilen INTEGER, fertig_am TEXT)")
+        conn.execute("CREATE TABLE IF NOT EXISTS zaehler_stand (name TEXT PRIMARY KEY,"
+                     " wert INTEGER)")
+    except Exception:
+        conn.close()
+        raise
     return conn
 
 
@@ -382,7 +413,13 @@ _VORBEREITUNG = {}
 
 
 def _vorbereitung(panel_pfad, arbeit_pfad, module):
-    schluessel = os.path.abspath(panel_pfad)
+    # W-B UNBEDINGT, VOR dem Cache-Blick. Liefe die Pruefung erst im
+    # Cache-Miss-Zweig (in `eigener_zwischenstand`), bliebe ein zweiter Aufruf
+    # mit einem ANDEREN, moeglicherweise gesperrten Arbeitspfad ungeprueft -
+    # der Wachposten haette dann genau fuer die Aufrufe geschwiegen, die er
+    # decken soll. Der Cache-Schluessel traegt den Arbeitspfad deshalb mit.
+    pruefe_arbeitspfad(arbeit_pfad)
+    schluessel = (os.path.abspath(panel_pfad), os.path.abspath(arbeit_pfad))
     if schluessel in _VORBEREITUNG:
         return _VORBEREITUNG[schluessel]
     e2 = module["e2"]
@@ -463,6 +500,7 @@ def _tally(eintraege, reif_rows, e2, zp, rand_ordinal, wo):
     reife_ciks = set(e["cik"] for e in reif_rows)
     klumpen_je_firma = {}
     zensiert = 0
+    gesehen_netto = 0  # unabhaengig mitgezaehlt, fuer W-C
     for e in eintraege:
         cik = e.get("cik")
         if cik is None:
@@ -474,6 +512,7 @@ def _tally(eintraege, reif_rows, e2, zp, rand_ordinal, wo):
         if zp.ist_zensiert(e, e2, rand_ordinal):
             zensiert += 1
             continue
+        gesehen_netto += 1
         m, n = klumpen_je_firma.get(cik, (0, 0))
         klumpen_je_firma[cik] = (m + (1 if cik in reife_ciks else 0), n + 1)
 
@@ -490,18 +529,51 @@ def _tally(eintraege, reif_rows, e2, zp, rand_ordinal, wo):
     klumpen = sorted(klumpen_je_firma.values())
     n = sum(paar[1] for paar in klumpen)
     zaehler = sum(paar[0] for paar in klumpen)
-    G = len(klumpen)
-    if G != n:
+    # G gegen N - aber gegen eine UNABHAENGIG gezaehlte Menge, nicht gegen die
+    # Summe derselben Liste. Aus `klumpen` allein folgt G == N bereits aus der
+    # n_g-Schranke oben; ein Vergleich damit koennte nie feuern und waere ein
+    # Wachposten, der nur so aussieht.
+    if len(klumpen_je_firma) != gesehen_netto:
         raise ZaehlwerkAbbruch(
-            "W-C-ABBRUCH in " + wo + ": G = " + str(G) + " gegen N = " + str(n)
-            + ". Bei ausschliesslich einelementigen Klumpen muessen sie gleich "
-            "sein.")
+            "W-C-ABBRUCH in " + wo + ": " + str(len(klumpen_je_firma))
+            + " verschiedene Klumpen-Kennungen gegen " + str(gesehen_netto)
+            + " gezaehlte Netto-Einheiten. Eine Firma zaehlt nur mit ihrem "
+            "fruehesten Ereignis (R3).")
+    if n != gesehen_netto:
+        raise ZaehlwerkAbbruch(
+            "W-C-ABBRUCH in " + wo + ": Summe_g n_g = " + str(n) + " gegen "
+            + str(gesehen_netto) + " gezaehlte Netto-Einheiten.")
     return [[m, nn] for m, nn in klumpen], n, zaehler, zensiert
+
+
+# Der Arbeitspfad wird vom Laeufer GESETZT, nicht vom Zaehlwerk erfunden.
+# WARUM NICHT ALS ARGUMENT VON zaehle(): der Vertrag `zaehle(panel_pfad,
+# variante, arm)` ist eingefroren (F6-C1, `studie-f6-lauf.py:563-576`) - ihn um
+# ein viertes Pflichtargument zu erweitern waere eine Vertragsaenderung. Der
+# Pfad kommt deshalb VOR dem ersten Aufruf ueber diesen benannten Setzer, und
+# `zaehle` bricht ab, solange er nicht gesetzt ist (W-B / KZ-3: "vor der
+# Freigabe pruefen und im Eintrag nennen, nicht zur Laufzeit entdecken").
+_ARBEITSPFAD = None
+
+
+def setze_arbeitspfad(pfad):
+    """Vom Laeufer EINMAL vor der Zaehlung zu rufen. Prueft sofort (W-B)."""
+    global _ARBEITSPFAD
+    if not pfad:
+        raise ZaehlwerkAbbruch(
+            "setze_arbeitspfad() ohne Pfad. Der Arbeitspfad ist eine Angabe "
+            "des Laufs, kein Vorgabewert.")
+    pruefe_arbeitspfad(pfad)
+    _ARBEITSPFAD = pfad
+    return pfad
 
 
 def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
            fenster_name="pruefung"):
     """DER VERTRAG (F6-C1): {klumpen, n, zaehler, zerlegung}.
+
+    Aufgerufen wird er mit GENAU DREI Argumenten; die weiteren sind
+    Test-Einstiege mit Vorgabe aus dem gesetzten Arbeitspfad.
 
     Niemals eine Firmen-Kennung im Rueckgabewert.
     """
@@ -512,9 +584,12 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
     if not fenster_soll:
         raise ZaehlwerkAbbruch("Unbekanntes Fenster " + repr(fenster_name) + ".")
     if arbeit_pfad is None:
+        arbeit_pfad = _ARBEITSPFAD
+    if arbeit_pfad is None:
         raise ZaehlwerkAbbruch(
-            "Kein Arbeitspfad uebergeben. Er wird VOR der Freigabe geprueft und "
-            "im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
+            "Kein Arbeitspfad gesetzt. Der Laeufer ruft setze_arbeitspfad() "
+            "VOR der ersten Zaehlung; der Pfad wird vor der Freigabe geprueft "
+            "und im Eintrag genannt, nie zur Laufzeit erfunden (W-B / KZ-3).")
 
     module = lade_regelmodule(wurzel)
     pruefe_regelparameter(wurzel, module)
@@ -545,20 +620,38 @@ def zaehle(panel_pfad, variante, arm, wurzel=None, arbeit_pfad=None,
             + str(zensiert) + " gegen " + str(ergebnis["zensierte_erst_ereignisse"]))
 
     alle = ergebnis["firmen_mit_erst_ereignis"]
+    # DRITTE Kreuzprobe. `alle` kommt aus dem fremden `arm_zaehlen`, `n` und
+    # `zensiert` aus dem eigenen Tally ueber (nominell) dieselben Eintraege.
+    # Driften die beiden Vorstellungen auseinander, waere `n_verloren` falsch -
+    # und koennte sogar negativ werden - und liefe als plausible Zahl in den
+    # Bericht. Ohne diese Zeile waere das ein stiller Fehler.
+    if alle != n + zensiert:
+        raise ZaehlwerkAbbruch(
+            "Kreuzprobe gerissen in " + variante + "/" + arm + ": der Arm-"
+            "Zaehler meldet " + str(alle) + " Erst-Ereignisse, der Tally "
+            + str(n) + " Netto-Einheiten plus " + str(zensiert) + " zensierte. "
+            "Die beiden Einheitenmengen sind nicht dieselbe.")
+    zerlegung = {
+        "n_A": alle,
+        "n_B_reif": zaehler_reife,
+        "n_B_unreif": n - zaehler_reife,
+        "n_verloren": alle - n,
+        "feuerfaehig": len(arme["band_a"]) if arm == "kontrollpool" else alle,
+        "strukturell_nicht_feuerfaehig": n - zaehler_reife,
+        "rechts_zensiert": zensiert,
+    }
+    negativ = sorted(k for k, v in zerlegung.items() if v < 0)
+    if negativ:
+        raise ZaehlwerkAbbruch(
+            "Negative Zaehlung in der A16-Zerlegung (" + variante + "/" + arm
+            + "): " + ", ".join(negativ) + ". Eine Zaehlung ist nie negativ; "
+            "ein negativer Wert ist ein Rechenfehler, kein Messwert.")
     return {
         "klumpen": klumpen,
         "n": n,
         "zaehler": zaehler_reife,
         # A16-Zerlegungen als REINE Zaehlungen, keine Kennung.
-        "zerlegung": {
-            "n_A": alle,
-            "n_B_reif": zaehler_reife,
-            "n_B_unreif": n - zaehler_reife,
-            "n_verloren": alle - n,
-            "feuerfaehig": len(arme["band_a"]) if arm == "kontrollpool" else alle,
-            "strukturell_nicht_feuerfaehig": n - zaehler_reife,
-            "rechts_zensiert": zensiert,
-        },
+        "zerlegung": zerlegung,
     }
 
 
@@ -576,7 +669,8 @@ def aequivalenz_bein3():
                         "preregistration.json")
     if not os.path.isfile(pfad):
         raise ZaehlwerkAbbruch("Die Praeregistrierung fehlt: " + pfad)
-    text = io.open(pfad, encoding="utf-8").read()
+    with open(pfad, encoding="utf-8") as fh:
+        text = fh.read()
     fehlend = [name for name, literal in BEIN3_LITERALE.items()
                if name != "nie_stillschweigend" and literal not in text]
     if fehlend:
@@ -604,6 +698,12 @@ def aequivalenz_tor(panel_pfad, wurzel=None, arbeit_pfad=None):
     dem Prueffenster, sondern seine Vorbedingung.
     """
     wurzel = wurzel or WURZEL_REPO
+    if arbeit_pfad is None:
+        arbeit_pfad = _ARBEITSPFAD
+    if arbeit_pfad is None:
+        raise ZaehlwerkAbbruch(
+            "Kein Arbeitspfad gesetzt. Auch das Aequivalenz-Tor oeffnet eine "
+            "Arbeitsdatei und braucht den vorab geprueften Pfad (W-B / KZ-3).")
     module = lade_regelmodule(wurzel)
     pruefe_regelparameter(wurzel, module)
     bein3 = aequivalenz_bein3()
@@ -721,7 +821,8 @@ def selbsttest():
                p["schwellenDateiSha256"] == SCHWELLEN_DATEI_SHA
                and p["schwellenInhaltSha256"] == SCHWELLEN_INHALT_SHA)
         # W-A am Objekt: keiner der vier Einstiegspunkte steht im Quelltext.
-        quelle = io.open(os.path.abspath(__file__), encoding="utf-8").read()
+        with open(os.path.abspath(__file__), encoding="utf-8") as fh:
+            quelle = fh.read()
         import ast
         rufe = {k.func.attr for k in ast.walk(ast.parse(quelle))
                 if isinstance(k, ast.Call) and isinstance(k.func, ast.Attribute)}

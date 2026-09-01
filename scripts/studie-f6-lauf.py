@@ -115,9 +115,18 @@ MAX_DIFFERENZ_PUNKTE = 10
 RULES_FENSTER = {"pruefung": "validierung", "entdeckung": "entdeckung",
                  "endtest": "endtest"}
 
-FENSTER_VON_SOLL = "2017-01-01"
-FENSTER_BIS_SOLL = "2019-12-31"
-PANEL_RAND_SOLL = "2020-12-31"
+# JE FENSTER. Ein einziger globaler Sollwert-Satz haette jedes andere Fenster
+# mit "ABGELEITETER WERT WEICHT AB" quittiert - einer Meldung, die nach
+# Manipulation klingt, obwohl der Lauf schlicht ein anderes Fenster fuehrt.
+FENSTER_SOLL = {
+    "entdeckung": {"von": "2009-01-01", "bis": "2015-12-31",
+                   "rand": "2016-12-31"},
+    "pruefung": {"von": "2017-01-01", "bis": "2019-12-31",
+                 "rand": "2020-12-31"},
+}
+FENSTER_VON_SOLL = FENSTER_SOLL["pruefung"]["von"]
+FENSTER_BIS_SOLL = FENSTER_SOLL["pruefung"]["bis"]
+PANEL_RAND_SOLL = FENSTER_SOLL["pruefung"]["rand"]
 
 PANEL_RAND_HERKUNFT = (
     "ABGELEITET, NICHT GESETZT. rules.json (dc008723...) fenster.validierung "
@@ -156,6 +165,30 @@ ZWEIG_ANKER = {
 }
 
 
+def _quartalsgrenze(wert, feld, erwartetes_quartal):
+    """Eine Fenstergrenze der Form JJJJqQ - Jahr UND Quartal positiv geprueft.
+
+    `signal_von` wird als 1. Januar und `signal_bis`/`panelRand` als
+    31. Dezember gebildet. Das ist nur richtig, wenn das Fenster wirklich in
+    Q1 beginnt und in Q4 endet. Wer das nicht prueft, raet es.
+    """
+    roh = str(wert)
+    if (len(roh) != 6 or roh[4] != "q" or not roh[:4].isdigit()
+            or not roh[5].isdigit()):
+        raise LaufAbbruch(
+            "Die Fenstergrenze " + repr(wert) + " (" + feld + ") hat nicht die "
+            "erwartete Quartalsform JJJJqQ - der Panel-Rand ist daraus nicht "
+            "ableitbar.")
+    if roh[5] != erwartetes_quartal:
+        raise LaufAbbruch(
+            "Die Fenstergrenze " + repr(wert) + " (" + feld + ") liegt in "
+            "Quartal " + roh[5] + ", erwartet ist Quartal "
+            + erwartetes_quartal + ". Die Ableitung bildet Jahresgrenzen "
+            "(01-01 bzw. 12-31) und waere bei einem anderen Quartal schlicht "
+            "falsch - sie wird deshalb nicht geraten.")
+    return roh
+
+
 def leite_panelrand_ab(wurzel, fenster_name):
     """F6-C23: den Panel-Rand zur LAUFZEIT ableiten und gegen die gebundene
     Konstante halten. Abweichung = fail-closed-Abbruch, kein Ermessen.
@@ -183,11 +216,12 @@ def leite_panelrand_ab(wurzel, fenster_name):
         raise LaufAbbruch("rules.json fuehrt keine pufferjahre.")
 
     # "2019q4" -> 2019. Die Quartalsform wird positiv geprueft, nie geraten.
-    bis = str(fenster["bis"])
-    if len(bis) != 6 or bis[4] != "q" or not bis[:4].isdigit():
-        raise LaufAbbruch(
-            "Die Fenstergrenze " + repr(bis) + " hat nicht die erwartete "
-            "Quartalsform JJJJqQ - der Panel-Rand ist daraus nicht ableitbar.")
+    # Das QUARTAL wird mitgeprueft, nicht nur das Jahr. Ohne diese Zeile
+    # erzeugte "2019q2" still denselben Rand "2019-12-31" wie "2019q4" - der
+    # Sollwert-Vergleich haette gehalten, obwohl das Quellendokument etwas
+    # anderes sagt. Der Kommentar versprach eine positive Pruefung; hier steht
+    # sie jetzt auch.
+    bis = _quartalsgrenze(fenster["bis"], "bis", "4")
     signaljahr = int(bis[:4])
     pufferjahr = signaljahr + 1
     if pufferjahr not in puffer:
@@ -198,18 +232,20 @@ def leite_panelrand_ab(wurzel, fenster_name):
             "der Panel-Rand nicht abgeleitet, sondern geraten.")
 
     abgeleitet = str(pufferjahr) + "-12-31"
-    von = str(fenster["von"])
-    if len(von) != 6 or von[4] != "q" or not von[:4].isdigit():
-        raise LaufAbbruch("Die Fenstergrenze " + repr(von) + " hat nicht die "
-                          "erwartete Quartalsform JJJJqQ.")
+    von = _quartalsgrenze(fenster["von"], "von", "1")
     signal_von = von[:4] + "-01-01"
     signal_bis = str(signaljahr) + "-12-31"
 
     # Beide Richtungen zu (F6-B8): der abgeleitete Wert gegen die gebundene
     # Konstante, und die Konstante gegen das Objekt.
-    for name, ist, soll in (("panelRand", abgeleitet, PANEL_RAND_SOLL),
-                            ("fensterVon", signal_von, FENSTER_VON_SOLL),
-                            ("fensterBis", signal_bis, FENSTER_BIS_SOLL)):
+    soll_satz = FENSTER_SOLL.get(fenster_name)
+    if not soll_satz:
+        raise LaufAbbruch(
+            "Fuer das Fenster " + repr(fenster_name) + " fuehrt der Laeufer "
+            "keinen gebundenen Sollwert-Satz.")
+    for name, ist, soll in (("panelRand", abgeleitet, soll_satz["rand"]),
+                            ("fensterVon", signal_von, soll_satz["von"]),
+                            ("fensterBis", signal_bis, soll_satz["bis"])):
         if ist != soll:
             raise LaufAbbruch(
                 "ABGELEITETER WERT WEICHT AB: " + name + " ist " + repr(ist)
@@ -517,6 +553,10 @@ def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
 
     # Der Beweis muss gegen main gefuehrt sein. Ein Eintrag auf einem
     # Seitenzweig ist kein Eintrag (Ein-Appender-Regel, main-first).
+    if not isinstance(freigabe.get("fenster"), str):
+        raise LaufAbbruch(
+            "Das Feld 'fenster' der Freigabe ist keine Zeichenkette ("
+            + type(freigabe.get("fenster")).__name__ + ").")
     if freigabe["registerZweig"] != "main":
         raise LaufAbbruch(
             "Die Freigabe ist gegen den Zweig " + repr(freigabe["registerZweig"])
@@ -752,6 +792,25 @@ def lade_zaehlwerk(pfad):
             "Das Zaehlwerk " + str(pfad) + " fuehrt keine Funktion zaehle().\n\n"
             + ZAEHLWERK_VERTRAG)
     return modul, sha256_datei(pfad)
+
+
+def ruest_zaehlwerk(modul, arbeit_pfad):
+    """Der Arbeitspfad geht VOR der ersten Zaehlung an das Zaehlwerk.
+
+    Der Vertrag `zaehle(panel_pfad, variante, arm)` ist eingefroren (F6-C1) und
+    traegt den Arbeitspfad deshalb nicht. Ein Zaehlwerk, das eine Arbeitsdatei
+    braucht, fuehrt dafuer `setze_arbeitspfad`; ein Fixture-Zaehlwerk ohne
+    eigene E/A fuehrt sie nicht und braucht dann auch keinen Pfad.
+    """
+    if not hasattr(modul, "setze_arbeitspfad"):
+        return None
+    if not arbeit_pfad:
+        raise LaufAbbruch(
+            "Das Zaehlwerk verlangt einen Arbeitspfad (setze_arbeitspfad), der "
+            "Lauf hat aber kein --arbeit bekommen. Der Arbeitspfad wird VOR "
+            "der Freigabe geprueft und im Eintrag genannt, nie zur Laufzeit "
+            "erfunden (W-B / KZ-3).")
+    return modul.setze_arbeitspfad(arbeit_pfad)
 
 
 def _ganzzahl(x):
@@ -1201,7 +1260,7 @@ def pruefe_umschlag(umschlag):
 # =============================================================================
 
 def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
-         wurzel=None, register_pfad=None):
+         wurzel=None, register_pfad=None, arbeit_pfad=None):
     wurzel = wurzel or WURZEL_REPO
     register_pfad = register_pfad or os.path.join(wurzel, REGISTER_REL)
     protokoll = []
@@ -1235,11 +1294,15 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
 
     # ── PHASE 2 ───────────────────────────────────────────────────────────
     zaehlwerk, zaehlwerk_sha = lade_zaehlwerk(zaehlwerk_pfad)
+    geruesteter_arbeitspfad = ruest_zaehlwerk(zaehlwerk, arbeit_pfad)
     if not panel_pfad or not os.path.isfile(panel_pfad):
         raise LaufAbbruch("Das Panel fehlt: " + str(panel_pfad))
     gelesene.append(panel_pfad)
-    protokoll.append("Phase 2 ZAEHLUNG: Zaehlwerk " + kurzpfad(str(zaehlwerk_pfad))
-                     + " (sha256 " + zaehlwerk_sha + ").")
+    protokoll.append(
+        "Phase 2 ZAEHLUNG: Zaehlwerk " + kurzpfad(str(zaehlwerk_pfad))
+        + " (sha256 " + zaehlwerk_sha + ")"
+        + (", Arbeitspfad " + kurzpfad(str(geruesteter_arbeitspfad))
+           + " (W-B geprueft)" if geruesteter_arbeitspfad else "") + ".")
 
     se_skript = os.path.join(wurzel, "scripts", "studie-f6-klumpen-se.py")
     band_pfad = os.path.join(wurzel, "scripts", "studie-vb-b4-band.py")
@@ -1411,6 +1474,8 @@ def main(argv=None):
     p.add_argument("--panel", help="Pfad des Prueffenster-Panels")
     p.add_argument("--bericht", required=True, help="Zieldatei des Berichts")
     p.add_argument("--zaehlwerk", help="Python-Datei mit zaehle(panel, variante, arm)")
+    p.add_argument("--arbeit", help="Arbeitsdatei des Zaehlwerks (W-B-geprueft, "
+                                    "im Eintrag genannt)")
     p.add_argument("--wurzel", help="Repo-Wurzel (Vorgabe: die dieses Skripts)")
     p.add_argument("--register", help="Zugriffs-Register (Vorgabe: die Hausdatei)")
     a = p.parse_args(argv)
@@ -1419,7 +1484,7 @@ def main(argv=None):
     # geschrieben. Ein halber Bericht wanderte als Ergebnis in die Akte.
     try:
         bericht = lauf(a.freigabe, a.panel, a.bericht, a.zaehlwerk,
-                       a.wurzel, a.register)
+                       a.wurzel, a.register, a.arbeit)
     except EntscheidungNoetig as fehler:
         print("F6-LAUF-ENTSCHEIDUNG-NOETIG: " + str(fehler), file=sys.stderr)
         return 2
@@ -1427,6 +1492,16 @@ def main(argv=None):
         print("F6-LAUF-ABBRUCH: " + str(fehler), file=sys.stderr)
         return 1
     except Exception as fehler:  # noqa: BLE001 - genau das ist der Zweck
+        # EINE Ausnahme von der Unterdrueckung: der Abbruch des gebundenen
+        # Zaehlwerks. Seine Texte sind HAUSTEXTE aus einem per SHA gebundenen
+        # Modul, sie sind auf Kennungsfreiheit geprueft (Waechter in
+        # tests/studie-f6-zaehlwerk.test.js), und ohne sie saehe der Bedienende
+        # bei einem reinen Konfigurationsfehler nur "interner Fehler der Art
+        # ZaehlwerkAbbruch" - eine Meldung, mit der niemand etwas anfangen kann.
+        if type(fehler).__name__ == "ZaehlwerkAbbruch":
+            print("F6-LAUF-ABBRUCH: das Zaehlwerk hat abgebrochen: "
+                  + str(fehler), file=sys.stderr)
+            return 1
         # DIE FEHLERFLAECHE IST AUCH EINE AUSGABEFLAECHE (F6-B14).
         # Das Zaehlwerk ist FREMDER, per --zaehlwerk geladener Code und das
         # einzige Glied dieser Kette, das Zeilen je Firma sieht. Ein
