@@ -628,6 +628,49 @@ test('VERTRAG: _arme selbst uebergibt an im_signalband, was dessen Vertrag verla
     'die Fenster-Registry fuehrt keine Jahreszahl mehr - der Vertrag hat sich bewegt');
 });
 
+test('VERTRAG: _arme liefert ERST-EREIGNISSE als Tally-Einheiten, nie Feuerungen', () => {
+  // DER DRITTE DEFEKT DERSELBEN KLASSE - und der einzige, den erst das echte
+  // Panel zeigte: _arme reichte `band_f` (alle Feuerungen im Signalband) an
+  // _tally weiter. Eine Firma kann MEHRFACH feuern; die Einheiten des
+  // Netto-Tornenners sind aber die ERST-EREIGNISSE, eines je Firma
+  // (Wortlaut Ziffer 2). Auf dem echten Panel wurden daraus 106 Klumpen mit
+  // n_g > 1 (groesster 4) - W-C hat es gefangen, kein Test.
+  //
+  // Diese Probe faehrt _arme WIRKLICH: `signale` liefert ZWEI Feuerungen
+  // derselben Firma, `erst_ereignisse` reduziert auf eine. Kommen zwei
+  // Einheiten heraus, ist der Defekt zurueck.
+  const r = pyProbe([
+    'module = m.lade_regelmodule()',
+    'e2, zp = module["e2"], module["zp"]',
+    'feuer = [{"cik": "1", "accepted": "2012-05-04"},',
+    '         {"cik": "1", "accepted": "2013-06-05"}]',
+    'm._vorbereitung = lambda p, a, mo: ({}, {})',
+    'e2.firmenreihen = lambda *a, **k: ([], {})',
+    'e2.wachstum_und_beschleunigung = lambda *a, **k: (None, [])',
+    'e2.signale = lambda *a, **k: (list(feuer), list(feuer), None)',
+    'e2.ordinal = lambda s: 0',
+    // Genau die praeregistrierte Reduktion: eine Firma, ihr fruehestes Ereignis.
+    'e2.erst_ereignisse = lambda eintraege, g: ([eintraege[0]], []) if eintraege else ([], [])',
+    'zp.ist_zensiert = lambda e, e2_, r: False',
+    'zp.arm_zaehlen = lambda eintraege, g, e2_, r: {',
+    '    "firmen_mit_erst_ereignis": 1, "zensierte_erst_ereignisse": 0,',
+    '    "fallzahl": 1, "auffindbarkeit": None, "reif": list(eintraege[:1])}',
+    'arme = m._arme("kein-panel", "a/f6/w.sqlite", "S-U", module,',
+    '               m.FENSTER_SOLL["entdeckung"])',
+    'sig, einheiten = arme["signal"]',
+    'print("EINHEITEN:" + str(len(einheiten)))',
+    // Und die Tally-Invariante darueber: ein Klumpen, n_g == 1.
+    'k, n, z, zens = m._tally(einheiten, sig["reif"], e2, zp, 0, "S-U/signal")',
+    'print("TALLY:" + repr(k))',
+  ].join('\n'));
+  assert.equal(r.status, 0, `_arme kracht: ${r.stderr.slice(0, 400)}`);
+  assert.match(r.stdout, /^EINHEITEN:1$/m,
+    'zwei Feuerungen DERSELBEN Firma muessen zu EINEM Erst-Ereignis werden - '
+    + 'sonst zaehlt der Tally Feuerungen als Stichprobe (W-C, R3)');
+  assert.match(r.stdout, /^TALLY:\[\[1, 1\]\]$/m,
+    'die Tally-Invariante n_g == 1 muss halten');
+});
+
 test('F6-C7b: der PIN im Zaehlwerk stimmt mit der Datei ueberein', () => {
   const gemessen = require('node:crypto').createHash('sha256')
     .update(fs.readFileSync(path.join(REPO, 'scripts', 'studie-e2-verbreitert.py')))

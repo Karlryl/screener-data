@@ -629,7 +629,21 @@ def _arme(panel_pfad, arbeit_pfad, variante, module, fenster):
     signalfirmen = set(f["cik"] for f in band_f)
     kontroll_eintraege = [a for a in band_a if a["cik"] not in signalfirmen]
     kontrolle = zp.arm_zaehlen(kontroll_eintraege, gewaehlt, e2, rand_ordinal)
-    return {"signal": (signal, band_f), "kontrollpool": (kontrolle, kontroll_eintraege),
+    # DIE EINHEITEN DES TALLYS SIND DIE ERST-EREIGNISSE, NICHT DIE FEUERUNGEN.
+    # Wortlaut Ziffer 2: "i = 1..N sind genau die Einheiten des Netto-Tornenners:
+    # Erst-Ereignisse minus rechts-zensierte". Eine Firma kann im Signalband
+    # MEHRFACH feuern; `erst_ereignisse` reduziert auf ihr fruehestes Ereignis.
+    # Wer `band_f` weiterreicht, zaehlt Feuerungen als Stichprobe - genau der
+    # Befund, den W-C und der R3-ABBRUCH benennen.
+    #
+    # Gerufen wird DIESELBE praeregistrierte Funktion, die `arm_zaehlen`
+    # intern verwendet (F6-C2: exakt dieselbe Funktion, kein Nachbau); sie ist
+    # rein, ein zweiter Aufruf kann nicht driften. `arm_zaehlen` gibt die
+    # Einheitenmenge selbst nicht heraus, nur `reif` und ihre Anzahl.
+    sig_reif, sig_unreif = e2.erst_ereignisse(band_f, gewaehlt)
+    kon_reif, kon_unreif = e2.erst_ereignisse(kontroll_eintraege, gewaehlt)
+    return {"signal": (signal, sig_reif + sig_unreif),
+            "kontrollpool": (kontrolle, kon_reif + kon_unreif),
             "band_a": band_a, "rand_ordinal": rand_ordinal}
 
 
