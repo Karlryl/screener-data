@@ -131,13 +131,35 @@ test('das versiegelte Objekt ist unveraendert (nur Metadaten, nie geoeffnet)', (
 
 // ── Kettenende und Trockenlauf ────────────────────────────────────────────
 test('der Trockenlauf schreibt nichts und haengt an der richtigen Kette', () => {
-  const vorher = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+  // Das Fixture-Register wird bis zu dem Kettenende abgeschnitten, das DIESES
+  // Werkzeug erwartet - nie auf eine feste Laenge und nie das echte Register
+  // direkt. Sobald der eigene Vermerk gemergt ist, fuehrt main 30 statt 29
+  // Ereignisse, und ein Trockenlauf gegen das echte Register braeche zu Recht
+  // ab. Dieselbe Klasse hat schon die Waechter zu Eintrag 27, 28 und 29
+  // gerissen; hier ist sie zum fuenften Mal aufgetreten, weil ich das Muster
+  // beim Schreiben dieser Datei nicht angewandt habe.
+  const d = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'f6-vf-'));
+  test.after(() => fs.rmSync(d, { recursive: true, force: true }));
+  const reg = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+  while (reg.events.length && reg.events.at(-1).eventHash !== K.ERWARTETER_TAIL) {
+    reg.events.pop();
+  }
+  const fixture = path.join(d, 'basis-register.json');
+  fs.writeFileSync(fixture, JSON.stringify(reg, null, 1));
+
+  const vorherEcht = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+  const vorherFixture = crypto.createHash('sha256')
+    .update(fs.readFileSync(fixture)).digest('hex');
   const echt = process.stdout.write;
   let aus = '';
   process.stdout.write = (s) => { aus += s; return true; };
-  try { K.haupt([]); } finally { process.stdout.write = echt; }
+  try { K.haupt(['--register', fixture]); } finally { process.stdout.write = echt; }
   assert.strictEqual(
-    crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'), vorher);
+    crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex'), vorherEcht,
+    'das echte Register wurde angefasst');
+  assert.strictEqual(
+    crypto.createHash('sha256').update(fs.readFileSync(fixture)).digest('hex'), vorherFixture,
+    'der Trockenlauf hat ins Fixture geschrieben');
   assert.match(aus, /TROCKENLAUF - es wurde NICHTS geschrieben/);
   assert.match(aus, new RegExp(`"previousHash": "${K.ERWARTETER_TAIL}"`));
 });
