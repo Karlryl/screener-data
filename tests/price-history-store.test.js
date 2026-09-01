@@ -11,6 +11,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const store = require('../lib/price-history-store.js');
 
 let pass = 0, fail = 0;
@@ -240,14 +241,19 @@ test('loadAll rejects a valid but truncated shard against the stamped ticker cou
   let err = null;
   try { store.loadAll(dir); } catch (e) { err = e; }
   assert.ok(err, 'a valid empty replacement shard must not pass as complete');
-  assert.match(err.message, /partial\/inconsistent store, refusing to load/);
+  assert.match(err.message, /truncated\/incomplete, refusing to load/);
   assert.equal(err.metaPath, store.metaPath(dir));
   assert.equal(err.expectedTickerCount, expected);
   assert.equal(err.actualTickerCount, 0, 'actual zero must not disable the mismatch guard');
   assert.equal(err.shardPath, undefined, 'no individual shard can be blamed from a count mismatch alone');
 });
 
-test('loadAll rejects a stamped ticker count below the complete shard set', () => {
+// Tag 1140: DIESE Vorrichtung stand invertiert. Sie forderte, dass ein Shard-Satz
+// GROESSER als sein Stempel rot wird — und schrieb damit genau den Zustand fest, den
+// jeder wachsende Lauf erzeugt (merge-price-shards.js:157 laedt VOR dem Neustempeln
+// :165). Die Richtung ist umgedreht: Wachstum muss LADEN, Schrumpfen bleibt hart
+// (Gegenprobe im Test darueber und in der Wachstums-Sonde darunter).
+test('loadAll accepts a shard set that grew past its stamp (append-only Normalbetrieb)', () => {
   const dir = tmpDir();
   const history = sampleHistory(50);
   const actual = Object.keys(history).length;
@@ -255,14 +261,9 @@ test('loadAll rejects a stamped ticker count below the complete shard set', () =
   const meta = store.loadMeta(dir);
   fs.writeFileSync(store.metaPath(dir), JSON.stringify({ ...meta, tickerCount: 0 }));
 
-  let err = null;
-  try { store.loadAll(dir); } catch (e) { err = e; }
-  assert.ok(err, 'extra shard content relative to meta must fail in the opposite direction too');
-  assert.match(err.message, /partial\/inconsistent store, refusing to load/);
-  assert.equal(err.metaPath, store.metaPath(dir));
-  assert.equal(err.expectedTickerCount, 0, 'expected zero must not disable the mismatch guard');
-  assert.equal(err.actualTickerCount, actual);
-  assert.equal(err.shardPath, undefined, 'mismatch recovery must not erase meta as if it were corrupt');
+  const back = store.loadAll(dir);
+  assert.equal(Object.keys(back).length, actual, 'der gewachsene Shard-Satz muss laden');
+  assert.deepEqual(back, history, 'und zwar vollstaendig, nicht auf den Stempel gekuerzt');
 });
 
 test('loadAll rejects a cross-shard duplicate even when unique tickerCount still matches meta', () => {
@@ -309,6 +310,64 @@ test('loadAll rejects a ticker moved to the wrong shard even when tickerCount st
   assert.equal(err.expectedShard, store.shardFilename(expected));
   assert.equal(err.actualShard, store.shardFilename(actual));
   assert.equal(err.shardPath, store.shardPath(dir, actual));
+});
+
+// Tag 1140: die Ein-Ticker-Sonde aus der Diagnose — der kleinstmoegliche Fall des
+// Zustands, der den Tageslauf rot gemacht hat, mit seiner Gegenprobe im selben Test.
+// Beide Richtungen stehen hier bewusst zusammen: wer eine davon kippt, sieht sofort,
+// dass der Waechter nur EINE Richtung meinen darf.
+test('Wachstums-Sonde: Stempel N + Shards N+1 laedt, Stempel N + Shards N-1 wird benannt abgelehnt', () => {
+  const spy = [{ date: '2026-07-10', close: 500 }];
+  const nvda = [{ date: '2026-07-10', close: 120 }];
+  assert.notEqual(store.shardOf('NVDA'), store.shardOf('SPY'),
+    'Vorbedingung: die Sonde braucht zwei verschiedene Shards');
+
+  // (a) gewachsen — Stempel 1, Shard-Satz 2: MUSS laden.
+  const gewachsen = tmpDir();
+  store.saveAll(gewachsen, { SPY: spy });                    // stempelt tickerCount 1
+  const zielShard = store.shardOf('NVDA');
+  const shard = store.loadShard(gewachsen, zielShard);
+  shard['NVDA'] = nvda;                                      // Neuzugang im RICHTIGEN Shard
+  fs.writeFileSync(store.shardPath(gewachsen, zielShard), JSON.stringify(shard));
+  assert.equal(store.loadMeta(gewachsen).tickerCount, 1, 'der Stempel steht noch auf N');
+  assert.deepEqual(store.loadAll(gewachsen), { SPY: spy, NVDA: nvda },
+    'N+1 muss durchgehen — das ist jeder wachsende Lauf');
+
+  // (b) geschrumpft — Stempel 2, Shard-Satz 1: MUSS benannt abgelehnt werden.
+  const geschrumpft = tmpDir();
+  store.saveAll(geschrumpft, { SPY: spy, NVDA: nvda });      // stempelt tickerCount 2
+  fs.writeFileSync(store.shardPath(geschrumpft, store.shardOf('NVDA')), '{}');
+  let err = null;
+  try { store.loadAll(geschrumpft); } catch (e) { err = e; }
+  assert.ok(err, 'ein verlorener Ticker darf NICHT als vollstaendiger Store durchgehen');
+  assert.match(err.message, /truncated\/incomplete, refusing to load/);
+  assert.equal(err.expectedTickerCount, 2);
+  assert.equal(err.actualTickerCount, 1);
+  assert.equal(err.metaPath, store.metaPath(geschrumpft));
+});
+
+// Tag 1140: derselbe Wachstumszustand durch den ECHTEN Aufrufer. Der Store-Test allein
+// belegt nicht, dass die rote Stelle im Tageslauf wieder gruen ist: dort steht
+// loadAll (merge-price-shards.js:157) VOR dem Neustempeln (:165). Nur dieser Lauf
+// beweist beides — laedt UND stempelt danach auf N+1 nach.
+test('merge-price-shards laedt den gewachsenen Store und stempelt _meta auf N+1 nach', () => {
+  const dir = tmpDir();
+  store.saveAll(dir, { SPY: [{ date: '2026-07-10', close: 500 }] });   // Stempel 1
+  const zielShard = store.shardOf('NVDA');
+  const shard = store.loadShard(dir, zielShard);
+  shard['NVDA'] = [{ date: '2026-07-10', close: 120 }];
+  fs.writeFileSync(store.shardPath(dir, zielShard), JSON.stringify(shard));
+
+  const datum = '2026-09-01';
+  fs.writeFileSync(path.join(dir, datum + '.shard-0.json'), '{}');
+  const lauf = spawnSync(process.execPath, [
+    path.join(__dirname, '..', 'scripts', 'merge-price-shards.js'),
+    '--prices', dir, '--date', datum, '--expected-shards', '1',
+  ], { encoding: 'utf8' });
+
+  assert.equal(lauf.status, 0,
+    'der Merge muss den gewachsenen Store laden:\n' + (lauf.stdout || '') + (lauf.stderr || ''));
+  assert.equal(store.loadMeta(dir).tickerCount, 2, '_meta zieht auf den Gesamtstand N+1 nach');
 });
 
 test('A7-b: saveAll/saveDirty stamp _meta.json (freshness proof), loadMeta reads it', () => {
