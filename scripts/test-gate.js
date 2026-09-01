@@ -53,6 +53,16 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+// Eine node:test-Datei ohne registrierte Tests ist von einem beliebigen lauten
+// Eigenformat-Runner anhand stdout/stderr allein nicht unterscheidbar. Darum laedt
+// jeder Kindprozess ein eigenes, stummes Probe-Modul und meldet ueber FD 3, ob
+// node:test TATSAECHLICH geladen wurde. Das Gate selbst darf nicht Preload sein:
+// Worker erben die bereits geparste Preload-Liste und wuerden seinen spaeteren
+// Einstieg sonst aus dem Require-Cache ueberspringen. Kommentare/String-Koeder zaehlen nie.
+const NODE_TEST_PROBE_ENV = 'SCREENER_TEST_GATE_NODE_TEST_PROBE';
+const NODE_OPTIONS_RESTORE_ENV = 'SCREENER_TEST_GATE_NODE_OPTIONS_RESTORE';
+const NODE_TEST_PROBE_FILE = path.join(__dirname, 'test-gate-node-test-probe.js');
+
 // ── Spur 1: blockierend ───────────────────────────────────────────────────────
 // Unveraendert aus dem bisherigen GATE_GLOB. Was falsche Zahlen ausliefern
 // koennte, darf den Tageslauf weiter anhalten.
@@ -286,14 +296,136 @@ function ohneKommandos(text) {
  *  Marker-Zeilen um die Ausgabe jeder der ~200 Testdateien. */
 const fremdeAusgabe = (text) => (HAT_KOMMANDO.test(text) ? ohneKommandos(text) : text);
 
+// NODE_OPTIONS darf nicht pauschal entfallen: dort koennen notwendige Preloads,
+// Conditions, Speichergrenzen und Permission-Flags stehen. Nur Reporter-Optionen
+// werden entfernt, weil sie die maschinenlesbare TAP-Bilanz des Gates ersetzen
+// koennen. Die uebrigen Roh-Tokens bleiben bytegleich erhalten.
+function nodeOptionTokens(source) {
+  const tokens = [];
+  let i = 0;
+  while (i < source.length) {
+    while (i < source.length && source[i] === ' ') i++;
+    if (i >= source.length) break;
+    const start = i;
+    let value = '';
+    let quoted = false;
+    while (i < source.length) {
+      const char = source[i];
+      if (quoted && char === '\\') {
+        if (i + 1 >= source.length) {
+          throw new Error('NODE_OPTIONS endet in einem unvollstaendigen Quote-Escape');
+        }
+        value += source[i + 1];
+        i += 2;
+        continue;
+      }
+      if (char === '"') {
+        quoted = !quoted;
+        i++;
+        continue;
+      }
+      if (!quoted && char === ' ') break;
+      value += char;
+      i++;
+    }
+    if (quoted) throw new Error('NODE_OPTIONS enthaelt ein nicht geschlossenes Anfuehrungszeichen');
+    tokens.push({ raw: source.slice(start, i), value });
+  }
+  return tokens;
+}
+
+function withoutInheritedTestReporters(source) {
+  const tokens = nodeOptionTokens(source);
+  const drop = new Set();
+  const options = ['--test-reporter', '--test-reporter-destination'];
+  for (let i = 0; i < tokens.length; i++) {
+    const equalsAt = tokens[i].value.indexOf('=');
+    const rawName = equalsAt === -1 ? tokens[i].value : tokens[i].value.slice(0, equalsAt);
+    // Node behandelt Unterstriche in langen Optionsnamen wie Bindestriche.
+    const optionName = rawName.replace(/_/g, '-');
+    for (const option of options) {
+      if (optionName === option && equalsAt === -1) {
+        const argument = tokens[i + 1];
+        if (!argument || argument.value === '' || argument.value.startsWith('-')) {
+          throw new Error(`${option} in NODE_OPTIONS hat keinen sicheren Wert`);
+        }
+        drop.add(i);
+        drop.add(i + 1);
+        i++;
+        break;
+      }
+      if (optionName === option && equalsAt !== -1) {
+        if (tokens[i].value.length === equalsAt + 1) {
+          throw new Error(`${option} in NODE_OPTIONS hat keinen Wert`);
+        }
+        drop.add(i);
+        break;
+      }
+    }
+  }
+  return tokens.filter((_, index) => !drop.has(index)).map(token => token.raw).join(' ');
+}
+
+function testChildEnvironment() {
+  const childEnv = { ...process.env, [NODE_TEST_PROBE_ENV]: '1' };
+  // node:test setzt diesen internen Kontext bei Kindprozessen. Werte wie
+  // "child-v8" erzeugen ein binaeres Ereignisprotokoll statt Reportertext und
+  // duerfen deshalb nie in die eigenstaendig ausgewerteten Gate-Kinder lecken.
+  const nodeTestContextKeys = Object.keys(childEnv).filter(key =>
+    process.platform === 'win32' ? key.toUpperCase() === 'NODE_TEST_CONTEXT' : key === 'NODE_TEST_CONTEXT');
+  for (const key of nodeTestContextKeys) delete childEnv[key];
+  const nodeOptionsKeys = Object.keys(childEnv).filter(key =>
+    process.platform === 'win32' ? key.toUpperCase() === 'NODE_OPTIONS' : key === 'NODE_OPTIONS');
+  if (nodeOptionsKeys.length > 1) {
+    throw new Error('NODE_OPTIONS ist mit mehreren Schreibweisen gesetzt');
+  }
+  const inherited = nodeOptionsKeys.length ? String(childEnv[nodeOptionsKeys[0]] || '') : '';
+  for (const key of nodeOptionsKeys) delete childEnv[key];
+  const preserved = withoutInheritedTestReporters(inherited);
+  // Die Probe muss vor geerbten --require/--import-Preloads aktiv sein: auch dort
+  // kann node:test bereits geladen werden. NODE_OPTIONS wird vor dem Zielskript
+  // verarbeitet; der eigene Preload steht deshalb bewusst an erster Stelle.
+  const probePath = NODE_TEST_PROBE_FILE.replace(/\\/g, '/');
+  const probePreload = `--require="${probePath}"`;
+  childEnv[NODE_OPTIONS_RESTORE_ENV] = preserved;
+  childEnv.NODE_OPTIONS = preserved ? `${probePreload} ${preserved}` : probePreload;
+  return childEnv;
+}
+
 function runFiles(files, cwd, log) {
   const failed = [];
   const skipped = [];
+  const internalFailures = [];
+  let childEnv;
+  try {
+    childEnv = testChildEnvironment();
+  } catch (err) {
+    for (const t of files) {
+      internalFailures.push(t);
+      log(`FAIL ${t} - NODE_OPTIONS konnte nicht sicher fuer den TAP-Reporter isoliert werden (${err.message})`);
+    }
+    return { failed, skipped, internalFailures };
+  }
   for (const t of files) {
     log(`--- ${t} ---`);
-    const r = spawnSync(process.execPath, [t], { cwd, encoding: 'utf8' });
+    const r = spawnSync(process.execPath, ['--test-reporter=tap', t], {
+      cwd,
+      encoding: 'utf8',
+      env: childEnv,
+      stdio: ['pipe', 'pipe', 'pipe', 'pipe'],
+    });
     process.stdout.write(fremdeAusgabe((r.stdout || '') + (r.stderr || '')));
+    const probeOutput = r.output && r.output[3] !== null && r.output[3] !== undefined
+      ? String(r.output[3]).trim()
+      : '';
+    if (r.error || !/^[01]$/.test(probeOutput)) {
+      internalFailures.push(t);
+      const detail = r.error ? ` (${r.error.message})` : '';
+      log(`FAIL ${t} — interne node:test-Ladeprobe lieferte keinen eindeutigen Marker${detail}`);
+      continue;
+    }
     if (r.status !== 0) { failed.push(t); continue; }
+    const nodeTestLoaded = probeOutput === '1';
     const ausgabe = (r.stdout || '') + (r.stderr || '');
     if (NICHTS_GEPRUEFT(ausgabe)) {
       skipped.push(t);
@@ -305,6 +437,12 @@ function runFiles(files, cwd, log) {
       log(`SKIP ${t} — keine Ausgabe bei Exit 0 (node:test ohne einen einzigen test(...)?), zaehlt NICHT als PASS`);
       continue;
     }
+    if (nodeTestLoaded
+        && (bilanzZahl(ausgabe, 'tests') === null || bilanzZahl(ausgabe, 'pass') === null)) {
+      skipped.push(t);
+      log(`SKIP ${t} — node:test geladen, aber keine vollstaendige Testbilanz ausgegeben, zaehlt NICHT als PASS`);
+      continue;
+    }
     if (NICHTS_BELEGT(ausgabe)) {
       skipped.push(t);
       log(`SKIP ${t} — Bilanz weist 0 bestandene Pruefungen aus (alle uebersprungen?), zaehlt NICHT als PASS`);
@@ -312,7 +450,7 @@ function runFiles(files, cwd, log) {
     }
     log(`PASS ${t}`);
   }
-  return { failed, skipped };
+  return { failed, skipped, internalFailures };
 }
 
 /**
@@ -344,10 +482,11 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   const alleUebersprungen = [];
 
   if (mode === 'blocking' || mode === 'all') {
-    const { failed, skipped } = runFiles(blocking, cwd, log);
+    const { failed, skipped, internalFailures } = runFiles(blocking, cwd, log);
     alleUebersprungen.push(...skipped);
     for (const t of failed) log(`::error::Test failed: ${t} — blocking run before Yahoo pull`);
-    if (failed.length) {
+    for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
+    if (failed.length || internalFailures.length) {
       anyFailed = true;
       log('::error::One or more tests failed — engine/measurement is broken, aborting run.');
       code = 1;
@@ -355,9 +494,11 @@ function runGate({ mode, cwd, blockingGlobs, reportFiles, exemptPrefixes, blocki
   }
 
   if (mode === 'report' || mode === 'all') {
-    const { failed, skipped } = runFiles(report, cwd, log);
+    const { failed, skipped, internalFailures } = runFiles(report, cwd, log);
     alleUebersprungen.push(...skipped);
-    if (failed.length) anyFailed = true;
+    if (failed.length || internalFailures.length) anyFailed = true;
+    for (const t of internalFailures) log(`::error::Interner test-gate-Fehler: ${t} — node:test-Ladeprobe unbrauchbar`);
+    if (internalFailures.length) code = 1;
     if (mode === 'all') {
       // Im PR-Check blockt BEIDES: Zweck ist Sichtbarkeit vor dem Merge, und
       // mangels Merge-Sperre kann dieser Job niemanden aufhalten.
@@ -403,19 +544,79 @@ function selftest() {
   // test(...)-Aufruf schreibt GAR NICHTS und endet mit 0; das Eigenformat "N ok/N fail"
   // taucht nie auf, NICHTS_GEPRUEFT kann sie also gar nicht sehen.
   const stumm = 'tests/stumm.test.js';
+  // H49: node:test wird geladen, aber nur Setup-Ausgabe erzeugt. Ohne registrierte
+  // Pruefung fehlt die Bilanz; die Ausgabe darf den leeren Lauf nicht als PASS tarnen.
+  const lautOhneTests = 'tests/laut-ohne-tests.test.js';
+  const lautDynamisch = 'tests/laut-dynamisch.test.js';
+  const eigenformatKoeder = 'tests/eigenformat-koeder.test.js';
+  const aufloesungsKoeder = 'tests/aufloesungs-koeder.test.js';
+  const markerFehlt = 'tests/marker-fehlt.test.js';
+  const probeEnvLeak = 'tests/probe-env-leak.test.js';
   const nodetest = 'tests/nodetest.test.js';
+  const neutralPreload = 'neutral-preload.js';
+  const preload = 'preload.js';
+  const preloadNodetest = 'tests/preload-nodetest.test.js';
+  const preloadOnlyNodetest = 'tests/preload-only-nodetest.test.js';
   // T170: eine node:test-Datei, deren Pruefungen ALLE uebersprungen sind. Sie
   // schreibt eine vollstaendige Bilanz (tests 1 / pass 0 / skipped 1) und endet
   // mit Exit 0 - an NICHTS_GEPRUEFT und an STUMM laeuft sie beide vorbei.
   const uebersprungen = 'tests/uebersprungen.test.js';
+  const neutralPreloadPath = path.join(dir, neutralPreload).replace(/\\/g, '/');
+  const transitiveNodeOptions = `--require="${neutralPreloadPath}" --conditions="gate\\probe"`;
+  const gateEntryPath = __filename.replace(/\\/g, '/');
   fs.writeFileSync(path.join(dir, green), 'console.log("3 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, red), 'process.exit(1);\n');
   fs.writeFileSync(path.join(dir, orphan), 'console.log("1 ok, 0 fail");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, leer),
     'console.log("leer.test.js: 0 ok, 0 fail (skipped: kein Universum)");process.exit(0);\n');
   fs.writeFileSync(path.join(dir, stumm), "'use strict';\nrequire('node:test');\n");
+  fs.writeFileSync(path.join(dir, lautOhneTests),
+    "'use strict';\nconst test=require('node:test');\nconsole.log('setup noise');\n");
+  fs.writeFileSync(path.join(dir, lautDynamisch),
+    "'use strict';\n(async()=>{const id=['node','test'].join(':');await import(id);"
+    + "console.log('dynamic setup noise');})().catch(e=>{console.error(e);process.exitCode=1;});\n");
+  fs.writeFileSync(path.join(dir, eigenformatKoeder),
+    "'use strict';\nconst decoy=`\nconst test=require('node:test');\n`;\n"
+    + "console.log('custom: 1 ok, 0 fail');\n");
+  fs.writeFileSync(path.join(dir, aufloesungsKoeder),
+    "'use strict';\nrequire.resolve('node:test');\nconsole.log('custom: 1 ok, 0 fail');\n");
+  fs.writeFileSync(path.join(dir, markerFehlt),
+    "'use strict';\nrequire('fs').closeSync(3);\nconsole.log('custom: 1 ok, 0 fail');\n");
+  fs.writeFileSync(path.join(dir, neutralPreload),
+    "'use strict';\nprocess.env.TEST_GATE_NEUTRAL_PRELOAD_PID=String(process.pid);\n");
+  fs.writeFileSync(path.join(dir, probeEnvLeak), [
+    "'use strict';",
+    "const { spawnSync } = require('node:child_process');",
+    "const { Worker } = require('node:worker_threads');",
+    `const expectedOptions = ${JSON.stringify(transitiveNodeOptions)};`,
+    `const gateEntry = ${JSON.stringify(gateEntryPath)};`,
+    "const fail=(message)=>{console.error(message);process.exit(1);};",
+    "if(process.env.NODE_OPTIONS!==expectedOptions)fail('NODE_OPTIONS nicht wiederhergestellt: '+String(process.env.NODE_OPTIONS));",
+    `if(process.env[${JSON.stringify(NODE_TEST_PROBE_ENV)}]!==undefined)fail('Probe-Sentinel geleakt');`,
+    `if(process.env[${JSON.stringify(NODE_OPTIONS_RESTORE_ENV)}]!==undefined)fail('Restore-Sentinel geleakt');`,
+    "if(process.env.TEST_GATE_NEUTRAL_PRELOAD_PID!==String(process.pid))fail('Neutraler Preload lief im Ziel nicht');",
+    "const grandchild=spawnSync(process.execPath,['-e',"
+      + "'process.exit(process.env.TEST_GATE_NEUTRAL_PRELOAD_PID===String(process.pid)?0:1)'],{stdio:'pipe'});",
+    "if(grandchild.status!==0)fail('Bereinigte Optionen erreichten den Enkelprozess nicht');",
+    "const worker=new Worker(gateEntry,{stdout:true,stderr:true});",
+    "let workerOutput='';",
+    "worker.stdout.on('data',(chunk)=>{workerOutput+=String(chunk);});",
+    "worker.stderr.on('data',(chunk)=>{workerOutput+=String(chunk);});",
+    "worker.on('error',(err)=>{workerOutput+=String(err);});",
+    "worker.on('exit',(code)=>{",
+    "  if(code!==1||!workerOutput.includes('::error::Aufruf:'))fail('Gate-Einstieg im Worker war vorab gecacht: '+code+' '+workerOutput);",
+    "  console.log('custom: 1 ok, 0 fail');",
+    "});",
+  ].join('\n') + '\n');
   fs.writeFileSync(path.join(dir, nodetest),
-    "'use strict';\nconst test=require('node:test');\ntest('echt', () => {});\n");
+    "'use strict';\nconst test=require('node:test');\nconsole.log('setup noise');\ntest('echt', () => {});\n");
+  fs.writeFileSync(path.join(dir, preload),
+    "'use strict';\nrequire('node:test');\nglobal.__testGatePreloadPreserved = true;\n");
+  fs.writeFileSync(path.join(dir, preloadNodetest),
+    "'use strict';\nconst test=require('node:test');\nconst assert=require('node:assert/strict');\n"
+    + "test('preload bleibt erhalten',()=>assert.equal(global.__testGatePreloadPreserved,true));\n");
+  fs.writeFileSync(path.join(dir, preloadOnlyNodetest),
+    "'use strict';\nconsole.log('custom: 1 ok, 0 fail');\n");
 
   // T170: die Datei, die wie ein normaler Lauf AUSSIEHT - sie redet (also nicht
   // STUMM), sie endet mit 0, und sie hat trotzdem nichts geprueft.
@@ -542,18 +743,189 @@ function selftest() {
     && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(stumm)),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
-  // 6d. Gegenprobe dazu: eine ECHTE node:test-Datei mit ausgefuehrten Tests redet und
-  //     muss weiterhin PASS sein — sonst faerbt 6c jede node:test-Suite im Repo falsch.
+  // 6d. H49-Probe: Setup-Ausgabe macht die leere node:test-Datei zwar laut, belegt
+  //     aber weiterhin keine ausgefuehrte Pruefung. Sie muss als SKIP sichtbar sein.
   r = runGate({
     ...base, mode: 'blocking',
-    blockingGlobs: ['tests/nodetest*test.js'], reportFiles: [], repoFiles: [nodetest],
+    blockingGlobs: ['tests/laut-ohne-tests*test.js'], reportFiles: [], repoFiles: [lautOhneTests],
   });
-  check('Stumm-Gegenprobe (echte node:test-Datei bleibt PASS)',
+  check('Laut-null-Probe (node:test mit Setup-Ausgabe ohne Tests zaehlt als SKIP)',
+    r.code === 0
+    && r.skipped.length === 1
+    && !r.lines.some(l => l.startsWith(`PASS ${lautOhneTests}`))
+    && r.lines.some(l => l.startsWith(`SKIP ${lautOhneTests}`))
+    && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(lautOhneTests)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6e. Dieselbe Luecke ueber einen dynamisch berechneten Import: Quelltextsuche
+  //     reicht als Beleg nicht, entscheidend ist das wirkliche Laden zur Laufzeit.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/laut-dynamisch*test.js'], reportFiles: [], repoFiles: [lautDynamisch],
+  });
+  check('Laut-dynamisch-Probe (wirklich geladenes node:test ohne Tests zaehlt als SKIP)',
+    r.code === 0
+    && r.skipped.length === 1
+    && !r.lines.some(l => l.startsWith(`PASS ${lautDynamisch}`))
+    && r.lines.some(l => l.startsWith(`SKIP ${lautDynamisch}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6f. Gegenprobe gegen Regex-/String-Suche: derselbe Require-Text in einem
+  //     Template-Literal laedt node:test nicht; der Eigenformat-Runner bleibt PASS.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/eigenformat-koeder*test.js'], reportFiles: [], repoFiles: [eigenformatKoeder],
+  });
+  check('Laut-null-Gegenprobe (node:test-Text ohne Runtime-Load bleibt PASS)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${eigenformatKoeder}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6g. Aufloesen ist noch kein Laden: require.resolve darf einen Eigenformat-Runner
+  //     nicht zur node:test-Suite umetikettieren.
+  r = runGate({
+    ...base, mode: 'blocking',
+    blockingGlobs: ['tests/aufloesungs-koeder*test.js'], reportFiles: [], repoFiles: [aufloesungsKoeder],
+  });
+  check('Aufloesungs-Gegenprobe (require.resolve ohne Runtime-Load bleibt PASS)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${aufloesungsKoeder}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6h. Interner Protokollbruch bleibt auch in der bloss meldenden Forschungs-Spur
+  //     hart rot. Ein Testfehler darf dort warnen; ein kaputtes Gate niemals.
+  r = runGate({
+    ...base, mode: 'report',
+    blockingGlobs: [], reportFiles: [markerFehlt], repoFiles: [markerFehlt],
+  });
+  check('Ladeproben-Probe (fehlender Marker ist interner Fehler und blockt report)',
+    r.code === 1 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`FAIL ${markerFehlt}`) && l.includes('interne node:test-Ladeprobe'))
+    && r.lines.some(l => l.startsWith('::error::Interner test-gate-Fehler:') && l.includes(markerFehlt))
+    && !r.lines.some(l => l.startsWith(`PASS ${markerFehlt}`) || l.startsWith(`SKIP ${markerFehlt}`))
+    && !r.lines.some(l => l.startsWith('::warning::FORSCHUNGS-BESTAND ROT:') && l.includes(markerFehlt)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6i. Das eigene Probe-Modul darf weder Umgebungsdaten in Prozess-Enkel lecken
+  //     noch test-gate.js selbst in einem Worker vorab cachen. Gleichzeitig muss
+  //     die bereinigte fremde Laufzeitkonfiguration transitiv erhalten bleiben.
+  const transitiveOptionKeys = Object.keys(process.env).filter(key =>
+    process.platform === 'win32' ? key.toUpperCase() === 'NODE_OPTIONS' : key === 'NODE_OPTIONS');
+  const previousTransitiveOptions = transitiveOptionKeys.map(key => [key, process.env[key]]);
+  for (const key of transitiveOptionKeys) delete process.env[key];
+  const transitiveOptionKey = process.platform === 'win32' ? 'Node_Options' : 'NODE_OPTIONS';
+  process.env[transitiveOptionKey] = transitiveNodeOptions;
+  try {
+    r = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/probe-env-leak*test.js'], reportFiles: [], repoFiles: [probeEnvLeak],
+    });
+  } finally {
+    const currentTransitiveKeys = Object.keys(process.env).filter(key =>
+      process.platform === 'win32' ? key.toUpperCase() === 'NODE_OPTIONS' : key === 'NODE_OPTIONS');
+    for (const key of currentTransitiveKeys) delete process.env[key];
+    for (const [key, value] of previousTransitiveOptions) process.env[key] = value;
+  }
+  check('Probe-Umgebungs-Probe (Optionen bleiben transitiv; Gate-Worker ist nicht vorab gecacht)',
+    r.code === 0 && r.skipped.length === 0
+    && r.lines.some(l => l.startsWith(`PASS ${probeEnvLeak}`)),
+    `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
+
+  // 6j. Eine ECHTE node:test-Datei mit derselben Setup-Ausgabe bleibt PASS, selbst
+  //     wenn der Aufrufer per NODE_OPTIONS den beweislosen dot-Reporter verlangt.
+  const vorherigeNodeOptions = process.env.NODE_OPTIONS;
+  process.env.NODE_OPTIONS = '--test-reporter=dot';
+  try {
+    r = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/nodetest*test.js'], reportFiles: [], repoFiles: [nodetest],
+    });
+  } finally {
+    if (vorherigeNodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = vorherigeNodeOptions;
+  }
+  check('Reporter-Gegenprobe (echte node:test-Datei bleibt mit geerbtem dot-Wunsch PASS)',
     r.code === 0 && r.skipped.length === 0
     && r.lines.some(l => l.startsWith(`PASS ${nodetest}`)),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
-  // 6e. T170-Probe: alle Pruefungen uebersprungen -> SKIP, nicht PASS. Das ist die
+  // 6k. Reporter-Isolation darf nur Reporter-Flags entfernen. Ein geerbter
+  //      --require-Preload muss weiter laufen. Unter Windows verwendet die Probe
+  //      absichtlich gemischte Gross-/Kleinschreibung des Umgebungsnamens.
+  const nodeOptionsKeys = Object.keys(process.env).filter(key =>
+    process.platform === 'win32' ? key.toUpperCase() === 'NODE_OPTIONS' : key === 'NODE_OPTIONS');
+  const previousNodeOptions = nodeOptionsKeys.map(key => [key, process.env[key]]);
+  for (const key of nodeOptionsKeys) delete process.env[key];
+  const probeNodeOptionsKey = process.platform === 'win32' ? 'Node_Options' : 'NODE_OPTIONS';
+  const preloadOptionPath = path.join(dir, preload).replace(/\\/g, '/');
+  const inheritedOptionProbe = `--require="${preloadOptionPath}" "--test_reporter\\=dot"`
+    + ' "--test_reporter_destination\\=stderr" --conditions="gate\\probe"';
+  const expectedPreservedOptions = `--require="${preloadOptionPath}" --conditions="gate\\probe"`;
+  process.env[probeNodeOptionsKey] = inheritedOptionProbe;
+  let preloadResult;
+  let preloadOnlyResult;
+  try {
+    preloadResult = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/preload-nodetest*test.js'], reportFiles: [], repoFiles: [preloadNodetest],
+    });
+    preloadOnlyResult = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/preload-only-nodetest*test.js'], reportFiles: [], repoFiles: [preloadOnlyNodetest],
+    });
+  } finally {
+    const currentNodeOptionsKeys = Object.keys(process.env).filter(key =>
+      process.platform === 'win32' ? key.toUpperCase() === 'NODE_OPTIONS' : key === 'NODE_OPTIONS');
+    for (const key of currentNodeOptionsKeys) delete process.env[key];
+    for (const [key, value] of previousNodeOptions) process.env[key] = value;
+  }
+  check('Reporter-Erhalt-Probe (Preload bleibt trotz Reporter-Isolation aktiv)',
+    preloadResult.code === 0 && preloadResult.skipped.length === 0
+    && withoutInheritedTestReporters(inheritedOptionProbe) === expectedPreservedOptions
+    && preloadResult.lines.some(l => l.startsWith(`PASS ${preloadNodetest}`)),
+    `code=${preloadResult.code} skipped=${JSON.stringify(preloadResult.skipped)}`);
+
+  // 6l. Der geerbte Preload kann selbst node:test laden. Die Ladeprobe muss davor
+  //      aktiv sein; ein anschliessender Eigenformat-Runner darf sonst falsch PASSen.
+  check('Preload-Reihenfolge-Probe (node:test nur im geerbten Preload zaehlt als SKIP)',
+    preloadOnlyResult.code === 0 && preloadOnlyResult.skipped.length === 1
+    && !preloadOnlyResult.lines.some(l => l.startsWith(`PASS ${preloadOnlyNodetest}`))
+    && preloadOnlyResult.lines.some(l => l.startsWith(`SKIP ${preloadOnlyNodetest}`)),
+    `code=${preloadOnlyResult.code} skipped=${JSON.stringify(preloadOnlyResult.skipped)}`);
+
+  // 6m. Ein uebergeordneter node:test-Runner setzt NODE_TEST_CONTEXT. Der interne
+  //      child-v8-Wert darf weder die TAP-Bilanz noch rote Exitcodes veraendern.
+  const contextKeys = Object.keys(process.env).filter(key =>
+    process.platform === 'win32' ? key.toUpperCase() === 'NODE_TEST_CONTEXT' : key === 'NODE_TEST_CONTEXT');
+  const previousContexts = contextKeys.map(key => [key, process.env[key]]);
+  for (const key of contextKeys) delete process.env[key];
+  const contextProbeKey = process.platform === 'win32' ? 'Node_Test_Context' : 'NODE_TEST_CONTEXT';
+  process.env[contextProbeKey] = 'child-v8';
+  let contextPassResult;
+  let contextRedResult;
+  try {
+    contextPassResult = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/nodetest*test.js'], reportFiles: [], repoFiles: [nodetest],
+    });
+    contextRedResult = runGate({
+      ...base, mode: 'blocking',
+      blockingGlobs: ['tests/red*test.js'], reportFiles: [], repoFiles: [red],
+    });
+  } finally {
+    const currentContextKeys = Object.keys(process.env).filter(key =>
+      process.platform === 'win32' ? key.toUpperCase() === 'NODE_TEST_CONTEXT' : key === 'NODE_TEST_CONTEXT');
+    for (const key of currentContextKeys) delete process.env[key];
+    for (const [key, value] of previousContexts) process.env[key] = value;
+  }
+  check('Runner-Kontext-Probe (child-v8 wird isoliert; gruen PASS und rot bleibt rot)',
+    contextPassResult.code === 0 && contextPassResult.skipped.length === 0
+    && contextPassResult.lines.some(l => l.startsWith(`PASS ${nodetest}`))
+    && contextRedResult.code === 1
+    && contextRedResult.lines.some(l => l.startsWith('::error::Test failed:') && l.includes(red)),
+    `green=${contextPassResult.code}/${JSON.stringify(contextPassResult.skipped)} red=${contextRedResult.code}`);
+
+  // 6n. T170-Probe: alle Pruefungen uebersprungen -> SKIP, nicht PASS. Das ist die
   //     Luecke, durch die eine Wache still gruen bleibt, aus der jemand die
   //     Voraussetzung entfernt hat. Betrifft real 32 der 165 Gate-Dateien.
   r = runGate({
@@ -568,7 +940,7 @@ function selftest() {
     && r.lines.some(l => l.startsWith('UEBERSPRUNGEN') && l.includes(uebersprungen)),
     `code=${r.code} skipped=${JSON.stringify(r.skipped)}`);
 
-  // 6f. Gegenprobe, ohne die 6e jede node:test-Suite im Repo falsch faerben wuerde:
+  // 6o. Gegenprobe, ohne die 6n jede node:test-Suite im Repo falsch faerben wuerde:
   //     dieselbe Reporter-Familie MIT einer bestandenen Pruefung bleibt PASS. Die
   //     Stumm-Gegenprobe deckt das nicht ab - sie prueft eine Datei OHNE Bilanz,
   //     hier geht es um eine Bilanz mit pass >= 1.
@@ -586,7 +958,7 @@ function selftest() {
     console.log(`::error::test-gate Selftest FAILED: ${fails.join(', ')}`);
     return 1;
   }
-  console.log('test-gate Selftest OK (12 Proben).');
+  console.log('test-gate Selftest OK (21 Proben).');
   return 0;
 }
 
