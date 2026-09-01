@@ -34,6 +34,41 @@ function werkbank() {
     fs.mkdirSync(path.dirname(ziel), { recursive: true });
     if (fs.existsSync(quelle)) fs.copyFileSync(quelle, ziel);
   }
+  // Die Bindungsliste von Eintrag 28 ist URKUNDE ueber den Stand, den DIESER
+  // Akt gebunden hat - sie wird NICHT nachgezogen. Die F6-K13-Reparatur
+  // aendert scripts/studie-f6-lauf.py notwendig; genau deshalb verlangt
+  // F6-K11/K12 einen ueberschreibenden Akt mit neuen SHA.
+  //
+  // DIE WIEDERHERSTELLUNG ENTSCHAERFT SICH SELBST. Sie greift NUR, wenn
+  // BEIDES gilt: der Baum weicht von der Bindung ab UND die historischen
+  // Bytes treffen die Bindung. Sobald der ueberschreibende Akt den neuen SHA
+  // bindet, ist die erste Bedingung falsch - die Werkbank misst dann wieder
+  // den LEBENDEN Baum, ohne dass jemand daran denken muss. Eine bedingungslose
+  // Wiederherstellung waere ab diesem Moment eine Maskierung.
+  //
+  // studie-f6-zaehlwerk.py wird NICHT mehr wiederhergestellt: es ist heute
+  // byte-gleich zur Bindung, und eine Wiederherstellung, die nichts
+  // wiederherstellt, ist reine Maskierung fuer den Tag, an dem sie es taete.
+  const STAND_DES_AKTES = 'aeefb68125';
+  const gebunden = K.SKRIPTE['scripts/studie-f6-lauf.py'].sha;
+  const imBaum = crypto.createHash('sha256')
+    .update(fs.readFileSync(path.join(WURZEL, 'scripts', 'studie-f6-lauf.py')))
+    .digest('hex');
+  if (imBaum !== gebunden) {
+    const git = require('node:child_process').spawnSync(
+      'git', ['show', `${STAND_DES_AKTES}:scripts/studie-f6-lauf.py`],
+      { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+    // Der echte Grund muss sichtbar werden - ein nacktes status!=0 verschweigt,
+    // ob git fehlt, der Commit weg ist oder die Datei nie existierte.
+    assert.equal(git.status, 0,
+      `git show ${STAND_DES_AKTES}:scripts/studie-f6-lauf.py ist rot `
+      + `(status ${git.status}): ${String(git.stderr || '').trim() || '<kein stderr>'}`);
+    const historisch = crypto.createHash('sha256').update(git.stdout).digest('hex');
+    assert.equal(historisch, gebunden,
+      'die historischen Bytes treffen die Bindung nicht - dann ist die '
+      + 'Wiederherstellung keine Rekonstruktion, sondern eine Erfindung');
+    fs.writeFileSync(path.join(tmp, 'scripts', 'studie-f6-lauf.py'), git.stdout);
+  }
   return tmp;
 }
 
@@ -261,4 +296,45 @@ test('die F6-C18-Anker treffen die tatsaechlichen Zeilen', () => {
   }
   assert.strictEqual(lauf[von - 2].trim(), '', `Zeile ${von - 1} muss leer sein`);
   assert.doesNotMatch(lauf[bis], /^\s*#/, `Zeile ${bis + 1} darf kein Kommentar sein`);
+});
+
+// ============================================================================
+// UEBERGANGS-PIN — DATIERT, ZUM ENTFERNEN BESTIMMT
+// ============================================================================
+//
+// Zwischen der F6-K13-Reparatur und dem ueberschreibenden Akt ist der Laeufer
+// repo-weit UNGEPINNT: Eintrag 28 bindet den alten SHA, und die Werkbank oben
+// misst deshalb den historischen Stand. Der Drift-Melder fuer den LEBENDEN
+// Baum fehlt in genau diesem Fenster - und in diesem Fenster faellt der eine
+// verbleibende Lauf.
+//
+// Dieser Pin schliesst das Fenster. Er ist AUSDRUECKLICH TEMPORAER:
+//   gesetzt am 2026-09-01, gegen scripts/studie-f6-lauf.py nach PR #229.
+//   ZU ENTFERNEN, sobald der ueberschreibende Akt (F6-K11) den neuen SHA
+//   bindet - ab dann traegt der Eintrag selbst die Bindung, und dieser Pin
+//   waere eine zweite, driftfaehige Kopie derselben Zahl.
+const UEBERGANGS_PIN = {
+  datei: 'scripts/studie-f6-lauf.py',
+  sha256: '5c0f685ec61e437d420814db72ce4f2aaedf919415bb5484e64ff44633ad1681',
+  gesetztAm: '2026-09-01',
+  entfernenWenn: 'der ueberschreibende Akt nach F6-K11 diesen SHA bindet',
+};
+
+test('UEBERGANGS-PIN: der Laeufer im Baum ist der geprueft reparierte', () => {
+  const ist = crypto.createHash('sha256')
+    .update(fs.readFileSync(path.join(WURZEL, ...UEBERGANGS_PIN.datei.split('/'))))
+    .digest('hex');
+  assert.equal(ist, UEBERGANGS_PIN.sha256,
+    `${UEBERGANGS_PIN.datei} weicht vom Uebergangs-Pin ab. Entweder ist der `
+    + 'Laeufer unbeabsichtigt veraendert worden, oder der ueberschreibende Akt '
+    + 'ist da - dann bindet der Eintrag den neuen SHA und DIESER PIN GEHOERT '
+    + 'ENTFERNT, nicht nachgezogen.');
+});
+
+test('UEBERGANGS-PIN BRUCHPROBE: ein veraendertes Byte faellt auf', () => {
+  const echt = fs.readFileSync(path.join(WURZEL, ...UEBERGANGS_PIN.datei.split('/')));
+  const verstellt = Buffer.concat([echt, Buffer.from('\n# verstellt\n', 'utf8')]);
+  const ist = crypto.createHash('sha256').update(verstellt).digest('hex');
+  assert.notEqual(ist, UEBERGANGS_PIN.sha256,
+    'der Pin muesste hier anschlagen - sonst pinnt er nichts');
 });

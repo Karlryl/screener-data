@@ -990,7 +990,11 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
     if fertig.returncode != 0:
         raise LaufAbbruch(
             "Der klumpen-robuste SE ist fuer " + wo + " NICHT BERECHENBAR: "
-            + (fertig.stderr or "").strip()[:400]
+            # R12a auch auf der FEHLERFLAECHE: der stderr eines
+            # Subprozesses traegt Pfade. Bricht der EINE Lauf hier ab, stuende
+            # sonst ein absoluter Pfad im Vorfallstext (orchestrator-
+            # autorisierte Haertung ueber F6-K13 hinaus).
+            + schruppe_text((fertig.stderr or "").strip()[:400])
             + " | Folge ohne Ermessen: BandNichtAuswertbar -> "
             "Zulaessigkeits-Gate gerissen -> NICHT UNTERSCHEIDBAR, WEITER = 0. "
             "KEIN Rueckfall auf den kleineren SE.")
@@ -1322,6 +1326,30 @@ def tor_verdikt(verdikt_signal, verdikt_kontrollpool, differenz):
                       "(Gleichheit besteht).")}
 
 
+def verwendete_pfade(*pfade):
+    """Die Pfade, die dieser Lauf wirklich angefasst hat - EINE Quelle.
+
+    Vorpruefung (F6-K15) und Schreib-Rand fahren dieselbe Menge; zwei Kopien
+    derselben Liste waeren genau die Drift, gegen die dieses Tor gebaut ist.
+    """
+    return [p for p in pfade if p]
+
+
+def verbotene_formen(*pfade):
+    """Die Verbotsmenge: NUR ABSOLUTE Formen (F6-K13).
+
+    Die rohe CLI-Form bleibt fuer ABSOLUTE Argumente drin - `abspath`
+    normalisiert unter Windows die Trenner, ein absolut uebergebenes
+    "C:/…/x.sqlite" ist also nicht textgleich mit "C:\\…\\x.sqlite", und wer
+    die rohe Haelfte ganz streicht, verliert diesen Fall. RELATIVE Argumente
+    fliegen raus: sie sind byte-gleich ihrem eigenen `kurzpfad`, und der
+    Wachposten feuerte damit auf seine eigene legitime Ausgabe.
+    """
+    genutzt = verwendete_pfade(*pfade)
+    return ({os.path.abspath(str(p)) for p in genutzt}
+            | {str(p) for p in genutzt if os.path.isabs(str(p))})
+
+
 def pruefe_keine_absolutpfade(baum, absolut, wo="bericht"):
     """R12a am SCHREIB-RAND: kein absoluter Pfad verlaesst diesen Lauf.
 
@@ -1426,6 +1454,28 @@ def pruefe_umschlag(umschlag):
 # Der Lauf
 # =============================================================================
 
+INTERPRETER_SOLL = (3, 12)
+
+
+def pruefe_interpreter():
+    """Der `isabs`-Tisch dieses Laeufers ist gegen CPython 3.12 vermessen.
+
+    In 3.13 aendert `ntpath.isabs` seine Antwort fuer wurzelrelative Pfade
+    ("/foo" ist dort nicht mehr absolut). Das verschoebe eine Zeile der
+    Verbotsmengen-Tabelle - lautlos. CI und diese Maschine fahren 3.12; ein
+    anderer Interpreter ist deshalb ein benannter Abbruch und keine Fussnote.
+    """
+    if sys.version_info[:2] != INTERPRETER_SOLL:
+        raise LaufAbbruch(
+            "INTERPRETER-ABWEICHUNG: dieser Laeufer ist gegen CPython "
+            + ".".join(str(x) for x in INTERPRETER_SOLL) + " vermessen, laeuft "
+            "aber unter " + ".".join(str(x) for x in sys.version_info[:2])
+            + ". Die Verbotsmengen-Tabelle haengt an ntpath.isabs, und dessen "
+            "Antwort fuer wurzelrelative Pfade hat sich zwischen den Versionen "
+            "geaendert. Ein Lauf unter einem anderen Interpreter ist ein "
+            "anderer Lauf.")
+
+
 def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
          wurzel=None, register_pfad=None, arbeit_pfad=None):
     wurzel = wurzel or WURZEL_REPO
@@ -1435,6 +1485,7 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
 
     # ── PHASE 0 ───────────────────────────────────────────────────────────
     # VOR allem anderen. Ohne gueltige Freigabe wird nicht einmal gehasht.
+    pruefe_interpreter()
     erster_zugriff = jetzt_iso()
     freigabe, eintrag = lies_freigabe_konfirmatorisch(
         freigabe_pfad, register_pfad, erster_zugriff)
@@ -1479,6 +1530,51 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     band_pfad = os.path.join(wurzel, "scripts", "studie-vb-b4-band.py")
     band_modul = lade_bandmodul(wurzel)
     gelesene.extend([band_pfad, se_skript, str(zaehlwerk_pfad)])
+
+    # F6-K15 - KLASSENJAGD: DER PFAD-RIEGEL WIRD VOR DEN PANELZUGRIFF GEZOGEN.
+    #
+    # Die R12a-Pruefungen haengen AUSSCHLIESSLICH an Pfaden, und alle Pfade
+    # dieses Laufs sind HIER bereits bekannt - das Panel ist noch nicht
+    # geoeffnet (das geschieht erst in `zaehlung`). Bis hierher lief der Riegel
+    # ausschliesslich am Schreib-Rand, also NACH der Messung: der eine
+    # autorisierte Lauf hat das Panel gelesen und ist danach an einem
+    # Fehlalarm gestorben, ohne Bericht und ohne dass jemand das Ergebnis sah.
+    #
+    # Diese Vorpruefung faengt denselben Befund, bevor ein Byte des Panels
+    # gelesen ist. Sie ERSETZT den Riegel am Schreib-Rand NICHT - der bleibt
+    # stehen und deckt alles, was erst beim Bauen des Berichts entsteht.
+    #
+    # GEPRUEFT WIRD DIE AUSGABE-SEITE, NICHT NUR DIE LESE-SEITE. Die erste
+    # Fassung sah ausschliesslich `gelesene` und liess damit zwei
+    # pfad-abgeleitete Berichtsstrings ungedeckt: die Kurzform der
+    # Berichts-Zieldatei und die Arbeitspfad-Zeile des Protokolls. Beide sind
+    # am echten Aufrufer reproduziert worden - das Panel oeffnete VIER Mal und
+    # der Lauf starb erst danach. Genau die Klasse, die diese Phase schliessen
+    # soll. Deshalb bekommt sie jetzt exakt die Strings, die spaeter im
+    # Bericht stehen werden, samt des bereits gefuellten Protokolls.
+    #
+    # EHRLICH ZUR REICHWEITE: die Exaktform-Haelfte der Verbotsmenge ist HIER
+    # strukturell wirkungslos - ein absoluter Pfad kann kein Teilstring einer
+    # zweisegmentigen kurzpfad-Ausgabe sein. Was 2a wirklich traegt, sind die
+    # Wurzelform- und die Kontokennungs-Pruefung. Die Exaktform greift am
+    # Schreib-Rand, wo der ganze Berichtsbaum vorliegt.
+    #
+    # EINE QUELLE: die Verbotsmenge wird HIER einmal gerechnet und am
+    # Schreib-Rand wiederverwendet. Zwei getrennte Aufrufe koennten bei einem
+    # zwischenzeitlichen Verzeichniswechsel (fremdes Zaehlwerk!) verschiedene
+    # Mengen liefern - dieselbe Drift-Klasse, gegen die dieses Tor gebaut ist.
+    verbotene = verbotene_formen(freigabe_pfad, register_pfad, panel_pfad,
+                                 bericht_pfad, zaehlwerk_pfad, wurzel)
+    vorschau = {kurzpfad(p) for p in gelesene}
+    vorschau.add(kurzpfad(bericht_pfad))
+    if geruesteter_arbeitspfad:
+        vorschau.add(kurzpfad(str(geruesteter_arbeitspfad)))
+    pruefe_keine_absolutpfade(
+        sorted(vorschau) + list(protokoll), verbotene, "vorpruefung")
+    protokoll.append(
+        "Phase 2a PFAD-VORPRUEFUNG: die R12a-Riegel sind VOR dem ersten "
+        "Panel-Byte gefahren (F6-K15). Der Riegel am Schreib-Rand bleibt "
+        "zusaetzlich stehen.")
 
     daten = {}
     for variante in VARIANTEN:
@@ -1637,13 +1733,24 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     pruefe_verbotene(bericht, "bericht")
     # R12a am Schreib-Rand, gegen die Pfade dieses Laufs. Erst hier, damit
     # KEIN Weg daran vorbeifuehrt.
-    pruefe_keine_absolutpfade(bericht, {
-        os.path.abspath(str(p)) for p in
-        [freigabe_pfad, register_pfad, panel_pfad, bericht_pfad,
-         zaehlwerk_pfad, wurzel] if p
-    } | {str(p) for p in
-         [freigabe_pfad, register_pfad, panel_pfad, bericht_pfad,
-          zaehlwerk_pfad, wurzel] if p})
+    # F6-K13 - DIE VERBOTSMENGE FUEHRT NUR ABSOLUTE FORMEN.
+    #
+    # Bis hierher stand die ROHE CLI-Form ungefiltert daneben. Ein RELATIV
+    # uebergebenes Argument ist aber byte-gleich seinem eigenen `kurzpfad` -
+    # der Wachposten feuerte damit auf seine EIGENE legitime Ausgabe. Genau
+    # daran ist der eine autorisierte Lauf gestorben, NACH dem Panel-Zugriff.
+    #
+    # Die rohe Haelfte faellt NICHT ersatzlos, sondern wird auf absolute
+    # Formen gefiltert: `abspath` normalisiert unter Windows die Trenner, ein
+    # absolut uebergebenes "C:/…/panel.sqlite" ist also NICHT textgleich mit
+    # seiner abspath-Fassung "C:\\…\\panel.sqlite". Wer die rohe Haelfte ganz
+    # streicht, verliert genau diesen Fall. Relative Argumente koennen
+    # dagegen per Definition keine Kennung tragen.
+    #
+    # KEIN Sonderfall fuer --zaehlwerk: jeder relative CLI-Pfad trug denselben
+    # Defekt, der Fix gehoert dorthin, wo alle zusammenlaufen.
+    # Dieselbe Menge wie in Phase 2a - EINE Quelle, nicht zwei Rechnungen.
+    pruefe_keine_absolutpfade(bericht, verbotene)
     return bericht
 
 
@@ -1716,7 +1823,7 @@ def main(argv=None):
         fh.write("\n")
     for zeile in bericht["protokoll"]:
         print(zeile)
-    print("Bericht       : " + a.bericht)
+    print("Bericht       : " + kurzpfad(a.bericht))
     return 0
 
 
