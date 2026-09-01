@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-29T10:17:56.275Z",
+  "generated_at": "2026-09-01T10:59:39.620Z",
   "branch": "materials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 72.5
+    "coverage_pct": 73.4
   },
   "profitable": [
     {
@@ -87,6 +87,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -96,7 +98,9 @@
       "ticker": "WLKP",
       "score": 67.2,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
       "overview": {
         "kind": "gp",
         "value": -0.17,
@@ -167,6 +171,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -247,6 +253,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -259,7 +267,8 @@
       "lamps": [
         "peakMargin",
         "lowRoic",
-        "arDivergence"
+        "arDivergence",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -331,6 +340,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -341,7 +352,8 @@
       "score": 53.1,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -413,6 +425,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -427,7 +441,8 @@
         "burning",
         "lowRoic",
         "fcfArtefact",
-        "burnAccelerating"
+        "burnAccelerating",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -499,6 +514,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -584,6 +601,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -674,6 +693,8 @@
         "pctl": 0.846
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -688,7 +709,8 @@
         "burning",
         "shortRunway",
         "lowRoic",
-        "burnAccelerating"
+        "burnAccelerating",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -760,6 +782,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -846,6 +870,8 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -930,6 +956,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -941,6 +969,7 @@
       "track": "profitable",
       "lamps": [
         "lowRoic",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -1016,6 +1045,8 @@
         "pctl": 0.769
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }

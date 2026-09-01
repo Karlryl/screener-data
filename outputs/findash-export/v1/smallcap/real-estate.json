@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-29T10:17:56.277Z",
+  "generated_at": "2026-09-01T10:59:39.621Z",
   "branch": "real-estate",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 72.5
+    "coverage_pct": 73.4
   },
   "profitable": [
     {
@@ -19,6 +19,7 @@
       "lamps": [
         "unprofit",
         "lowRoic",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -94,6 +95,8 @@
         "pctl": 1
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -176,6 +179,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -186,7 +191,8 @@
       "score": 64.5,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -258,6 +264,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -270,6 +278,7 @@
       "lamps": [
         "lowRoic",
         "arDivergence",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -345,6 +354,8 @@
         "pctl": 0.889
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -425,6 +436,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -438,7 +451,8 @@
         "burning",
         "shortRunway",
         "lowRoic",
-        "fcfArtefact"
+        "fcfArtefact",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -510,6 +524,8 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -521,6 +537,7 @@
       "track": "profitable",
       "lamps": [
         "lowRoic",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -596,6 +613,8 @@
         "pctl": 0.833
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -608,6 +627,7 @@
       "lamps": [
         "unprofit",
         "lowRoic",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -683,6 +703,8 @@
         "pctl": 0.778
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -694,7 +716,8 @@
       "track": "profitable",
       "lamps": [
         "lowRoic",
-        "crashRisk"
+        "crashRisk",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -766,6 +789,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -850,6 +875,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -933,6 +960,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -943,7 +972,8 @@
       "score": 42.1,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -1015,6 +1045,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1024,7 +1056,9 @@
       "ticker": "RMR",
       "score": 39.2,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
       "overview": {
         "kind": "gp",
         "value": -0.045,
@@ -1095,6 +1129,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1108,6 +1144,7 @@
         "burning",
         "lowRoic",
         "fcfArtefact",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -1183,6 +1220,8 @@
         "pctl": 0.944
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1265,6 +1304,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1278,7 +1319,8 @@
         "unprofit",
         "burning",
         "lowRoic",
-        "arDivergence"
+        "arDivergence",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -1350,6 +1392,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1364,7 +1408,8 @@
         "burning",
         "shortRunway",
         "lowRoic",
-        "fcfArtefact"
+        "fcfArtefact",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -1436,6 +1481,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1450,7 +1497,8 @@
         "burning",
         "lowRoic",
         "arDivergence",
-        "burnAccelerating"
+        "burnAccelerating",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -1522,6 +1570,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }

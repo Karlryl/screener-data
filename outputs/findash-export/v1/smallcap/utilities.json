@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-29T10:17:56.283Z",
+  "generated_at": "2026-09-01T10:59:39.627Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 72.5
+    "coverage_pct": 73.4
   },
   "profitable": [
     {
@@ -91,6 +91,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -175,6 +177,8 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -185,7 +189,8 @@
       "score": 56.7,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -257,6 +262,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -339,6 +346,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -352,7 +361,8 @@
         "burning",
         "shortRunway",
         "lowRoic",
-        "arDivergence"
+        "arDivergence",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -424,6 +434,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }
@@ -443,7 +455,8 @@
         "lowRoic",
         "arDivergence",
         "crashRisk",
-        "burnAccelerating"
+        "burnAccelerating",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -515,6 +528,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }

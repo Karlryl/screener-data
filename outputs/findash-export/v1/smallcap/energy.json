@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-08-29T10:17:56.263Z",
+  "generated_at": "2026-09-01T10:59:39.605Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 72.5
+    "coverage_pct": 73.4
   },
   "profitable": [
     {
@@ -19,7 +19,8 @@
       "lamps": [
         "burning",
         "shortRunway",
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -91,6 +92,8 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -173,6 +176,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -183,7 +188,8 @@
       "score": 65.7,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -255,6 +261,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -265,7 +273,8 @@
       "score": 60.7,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -337,6 +346,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -348,6 +359,7 @@
       "track": "profitable",
       "lamps": [
         "lowRoic",
+        "opIncYahooAdjusted",
         "shareCountDilution"
       ],
       "overview": {
@@ -423,6 +435,8 @@
         "pctl": 1
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -435,7 +449,8 @@
       "lamps": [
         "burning",
         "lowRoic",
-        "fcfArtefact"
+        "fcfArtefact",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -507,6 +522,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -519,7 +536,8 @@
       "lamps": [
         "burning",
         "shortRunway",
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -591,18 +609,106 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
     {
       "rank": 8,
       "rankGrund": null,
+      "ticker": "RNGR",
+      "score": 48.6,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.188,
+        "companion": 58.7
+      },
+      "name": "Ranger Energy Services, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 12,
+      "cohortFallback": true,
+      "scoreBase": 48.3,
+      "scoreShrunk": 48.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 69.4,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 61.8,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 44.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.9,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 13.9,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 60.7,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 25.533428165007123,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 9,
+      "rankGrund": null,
       "ticker": "FTW",
       "score": 44.3,
       "track": "profitable",
       "lamps": [
         "peakMargin",
-        "arDivergence"
+        "arDivergence",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -674,11 +780,13 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 10,
       "rankGrund": null,
       "ticker": "NGS",
       "score": 31.1,
@@ -687,7 +795,8 @@
         "burning",
         "shortRunway",
         "peakMargin",
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -759,16 +868,20 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
     {
-      "rank": 10,
+      "rank": 11,
       "rankGrund": null,
       "ticker": "PNRG",
       "score": 27,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
       "overview": {
         "kind": "gp",
         "value": -0.446,
@@ -839,89 +952,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 11,
-      "rankGrund": null,
-      "ticker": "RNGR",
-      "score": 24.3,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.188,
-        "companion": 58.7
-      },
-      "name": "Ranger Energy Services, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 48.3,
-      "scoreShrunk": 48.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.5
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 69.4,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 61.8,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 63.9,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 55.9,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 13.9,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 60.7,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 25.533428165007123,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1004,6 +1036,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }
@@ -1095,6 +1129,8 @@
         "pctl": 1
       },
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1120,7 +1156,7 @@
       "sector": "Energy",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
@@ -1179,6 +1215,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1262,6 +1300,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1346,6 +1386,8 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1429,6 +1471,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     },
@@ -1523,6 +1567,8 @@
         "monthsAgo": 187,
         "lastDate": "2026-08-24"
       },
+      "qPunkte": null,
+      "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
     }
