@@ -108,7 +108,10 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
   const expected = resolveExpectedShards(shardManifests, expectedShards);
   const present = shardManifests.filter(m => m && typeof m === 'object');
   const sum = (f) => present.reduce((a, m) => a + (Number.isFinite(m[f]) ? m[f] : 0), 0);
-  const anyShardPartial = present.some(m => m.partial === true);
+  // Only the producer's explicit Boolean false proves a clean shard. A missing or
+  // malformed flag must degrade the merged manifest instead of being washed to false.
+  const isShardPartial = (m) => m.partial !== false;
+  const anyShardPartial = present.some(isShardPartial);
   const missingShards = expected - present.length;
   const hd = honestDenominator(fullUniverseSize, sum('n_skipped_mcap'), sum('n_skipped_owned'), sum('n_ok'));
   const merged = {
@@ -139,7 +142,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     // Instrumentierung fuer den Merge-Log (nicht von coverage-gate gelesen, aber im Artefakt sichtbar):
     n_shards_present: present.length,
     n_shards_expected: expected,
-    n_shards_partial: present.filter(m => m.partial === true).length,
+    n_shards_partial: present.filter(isShardPartial).length,
   };
   return merged;
 }
