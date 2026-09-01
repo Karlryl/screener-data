@@ -725,6 +725,117 @@
    },
    "previousHash": "5def37b9ff21529761dfcd4f084cd9a61060603529d814167fd937b980cb0675",
    "eventHash": "e9e0eeb3edcf5ac2af64bdd054ba6f2c28be9e82e30ec5eaff9e8c718e64ed8d"
+  },
+  {
+   "runId": "f6-aequivalenz-entdeckung-2026-09-01",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-09-01T02:30:16.868Z",
+   "accessedAt": "2026-09-01T04:30:16.868Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "aequivalenzTorSoll.S-U.firmen_reif",
+    "aequivalenzTorSoll.S-U.firmen_unreif",
+    "aequivalenzTorSoll.S-G.firmen_reif",
+    "aequivalenzTorSoll.S-G.firmen_unreif",
+    "aequivalenzTorSoll.S-UG.firmen_reif",
+    "aequivalenzTorSoll.S-UG.firmen_unreif",
+    "bein2.S-U/signal.zaehler",
+    "bein2.S-U/signal.nenner",
+    "bein2.S-U/signal.zensiert",
+    "bein2.S-U/kontrollpool.zaehler",
+    "bein2.S-U/kontrollpool.nenner",
+    "bein2.S-U/kontrollpool.zensiert",
+    "bein2.S-G/signal.zaehler",
+    "bein2.S-G/signal.nenner",
+    "bein2.S-G/signal.zensiert",
+    "bein2.S-G/kontrollpool.zaehler",
+    "bein2.S-G/kontrollpool.nenner",
+    "bein2.S-G/kontrollpool.zensiert",
+    "bestanden",
+    "modulSha256",
+    "zaehlwerkSha256",
+    "zaehlprobeSha256",
+    "schwellenDateiSha256",
+    "schwellenInhaltSha256",
+    "kalibrierHaelfteGeprueft"
+   ],
+   "erlaubt": "GENAU EINE Zaehlung auf dem ENTDECKUNGS-Fenster (rules.json fenster.entdeckung, 2009q1..2015q4, versiegelt: false): der dreibeinige Aequivalenz-Lauf nach F6-C7/C8/C9. Ausgegeben werden ausschliesslich die in allowedOutputs gelisteten Schluessel — die Aequivalenz-Zahlen der Beine 1 und 2, das Verdikt bestanden und die drei Skript-Hashes. Bein 3 prueft Wortlaut-Literale ohne Panel-Lauf und geht in bestanden ein. Kein Ergebniswert, kein Anteil, kein SE, kein Band, kein p-Wert.",
+   "verboten": "Jeder Blick ins Prueffenster oder in den Endtest unter dieser runId; jede Beruehrung von panel-validierung.sqlite oder panel-endtest.sqlite.enc oder Schluesselmaterial; jede Ausgabe ausserhalb von allowedOutputs (ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter); jede Firmen-Kennung in irgendeiner Ausgabe (F6-B14); jede Berufung auf diesen Eintrag als Autorisierung des konfirmatorischen Laufs — der braucht seinen EIGENEN Eintrag der Art confirmatory_execution_authorized; jedes Abfeuern des Endtests; jede Nachjustierung eines Sollwerts nach dem Lauf. Weicht EINE Zahl ab, ist der Lauf gerissen (KZ-4): kein zweiter Kandidaten-Sollwert, kein \"nah genug\".",
+   "begruendung": "Bauordnung Schritt 2 aus _COURT-F6-ZAEHLWERK-2026-09-01 (Urteilsstand VOR der Ratifikation, sha256 013c401c958bb502cc2149bc10d9081e5a1f3efc2d34a9100f178e25be116e4d, 92276 B, hier am Objekt nachgerechnet; ratifiziert durch ORCHESTRATOR-NACHTRAG 1, Session 07, 2026-09-01 02:22 lokal). ZWECK: das Aequivalenz-Tor ist LAUFBEDINGUNG, kein Bau-Test (Form studie-e2-verbreitert.py:26-30 - \"Durchlauf 1 faehrt mit den ORIGINAL-Globals und MUSS die publizierten V0-Zahlen liefern ... dann STOPP, und zwar vor jeder verbreiterten Zahl\"). Es laeuft auf dem Entdeckungs-Panel und muss bit-identisch reproduzieren, bevor irgendein Prueffenster-Byte gelesen wird. DZ-5 IN DER STRENGEREN FASSUNG: dieser Lauf bekommt einen EIGENEN count_only_probe_authorized-Akt und wird nicht unter dem konfirmatorischen Eintrag mitgefuehrt - Z3s Fassung, vom Gericht nach der Strenge-Regel uebernommen. WARUM F6-A1..A3 HIER NICHT BINDEN: sie zielen auf das Prueffenster; das Entdeckungsfenster steht offen in rules.json. F6-A8: dieser Akt verbraucht KEIN Kontingent - das K2-Kontingent EINS gilt der Prueffenster-Beruehrung, die hier nicht stattfindet. AUSFUEHRENDE SKRIPTE, auf main nach dem Merge von PR #192 (347f0e8e08) gemessen: scripts/studie-f6-zaehlwerk.py dfca0dffc7eb19e43259745428e25a543ac160f58f6892cb035a2434ef263876; scripts/studie-f6-lauf.py 36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0; scripts/studie-zaehlprobe.py a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b; scripts/studie-basisraten.py 997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d. STAND ZUM ZEITPUNKT DER ANMELDUNG, KEINE ZUSAGE FUER DEN LAUF: die Rulings zu den offenen DECISION-NEEDED-Punkten (A16-Doppelgroesse mit Kreuz-Wachposten; die benannte Vorgabe fuer den Arbeitspfad ausserhalb des Repos, VERBOTEN_RE-frei bis in die Elternverzeichnisse - der Pfad selbst gehoert in den konfirmatorischen Eintrag, nicht hierher) sind ENTSCHIEDEN, aber noch NICHT im Code. Der Lauf verwendet die dann gueltigen Skripte und weist ihre Hashes ueber die allowedOutputs zaehlwerkSha256 / zaehlprobeSha256 / modulSha256 selbst aus; die hier genannten Werte sind der Registrierungs-Stand und binden den Lauf nicht rueckwirkend. ANHANG 1 (BERICHTIGUNG VON F6-C7, Auflagen F6-C7a..i), Urteilsstand VOR seiner Ratifikation, sha256 78a3c758c1e21afcd62a5c5c7881cffbeadebc9ca1b6d361c1341326a958f591, 55840 B, am Objekt nachgerechnet. AKTENKETTE: ORCHESTRATOR-NACHTRAG 2 (Auslegung) -> NACHTRAG 3 (Kipp-Bedingung gefeuert, Kalibrier-Haelfte der Auslegung zurueckgezogen, Weiche an einen Rat) -> ANHANG 1 (Berichtigung). Der Beleg der Nicht-Erosion liegt darin, dass ZWEIMAL nacheinander NICHT still weitergedeutet wurde. ERZEUGER-BINDUNG: scripts/studie-e2-verbreitert.py, sha256 9a24ed94e943e9a6f5b4a1373ba6c6aa2001ddadb2d60a705277bf5eb359984b. Es ist AUSFUEHRENDES Skript ausschliesslich fuer die torSoll-Haelfte (F6-C7b, durchlauf --modus alt, Ausgabe nur nach --ergebnis, nie ins Artefakt); fuer die KALIBRIER-Haelfte wird es NICHT gerufen (F6-C7e) und ist dort allein die Erzeuger-Bindung des Artefakts. Es bleibt Byte fuer Byte unangetastet - sein SHA ist zugleich PIN aus Register-Eintrag 23 und Laufzeit-Bindung des Laeufers (F6-C7f: Option (i) ist gesperrt, nicht nur teuer). KEINE KALIBRIERZAHL IST EINE GEMESSENE GROESSE DIESES AKTS (F6-C7i) - sie so zu fuehren beurkundete einen Zustand, den der Akt nicht hat. SOLLZAHLEN VORAB: Bein 1 gegen protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json (80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5), Bein 2 gegen reports/studie/E4d-kadenz-entdeckung-2026-08-19.json (46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf), beide vom Werkzeug am Objekt nachgerechnet. Sie stehen VOR dem Lauf im Register, damit \"bit-identisch\" eine Vorfestlegung ist und keine nachtraegliche Behauptung. WAS DAS TOR NICHT BEWEIST (F6-C11, benannt statt weggeredet): (a) den (m_g, n_g)-Tally selbst - er ist neue Ausgabe ohne Vorgaenger und nur durch die Kreuzproben und W-C gedeckt; (b) Datenformen, die ausschliesslich im Prueffenster vorkommen - nicht substituierbar, Restrisiko. Erzeugt von scripts/studie-f6-aequivalenz-anmeldung.js (eigenes Werkzeug je Register-Akt, F6-B8; Trockenlauf als Standard, kein --force, keine Reparatur-Betriebsart). Alle Hashes gegen origin/main 347f0e8e08 nachgerechnet, nicht aus dem Urteilsdokument uebernommen - ein Urteil zitiert Hashes als Pruefauftrag, nie als Quelle. Ein-Appender-Regel: main-first per Mini-PR (nur die Registerdatei), danach Serverbeweis gegen main mit scripts/studie-r1-serverzeit.js.",
+   "endtestSiegel": "unberuehrt und in ALLEN Zweigen ZU. Dieser Eintrag autorisiert eine Zaehlung im ENTDECKUNGS-Fenster und oeffnet nichts sonst: weder Endtest-Fenster noch Prueffenster noch Lueckenliste noch Schluesselmaterial werden geoeffnet, gelesen oder gezaehlt. Das Abfeuern des Endtests bleibt ein eigener Akt und braucht Karls ausdrueckliche Freigabe (F6-A16).",
+   "aequivalenzSoll": {
+    "bein1": {
+     "quelle": "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json",
+     "dateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+     "zellen": {
+      "S-U": {
+       "firmen_reif": 512,
+       "firmen_unreif": 219
+      },
+      "S-G": {
+       "firmen_reif": 546,
+       "firmen_unreif": 265
+      },
+      "S-UG": {
+       "firmen_reif": 29,
+       "firmen_unreif": 12
+      }
+     }
+    },
+    "bein2": {
+     "quelle": "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json",
+     "dateiSha256": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf",
+     "rahmen": {
+      "panelRand": "2016-12-31",
+      "signalband": "2009-01-01/2015-12-31",
+      "perzentil": 95
+     },
+     "zellen": {
+      "S-U/signal": {
+       "zaehler": 543,
+       "nenner": 651,
+       "zensiert": 0
+      },
+      "S-U/kontrollpool": {
+       "zaehler": 3760,
+       "nenner": 4513,
+       "zensiert": 1
+      },
+      "S-G/signal": {
+       "zaehler": 557,
+       "nenner": 647,
+       "zensiert": 0
+      },
+      "S-G/kontrollpool": {
+       "zaehler": 5000,
+       "nenner": 5768,
+       "zensiert": 0
+      }
+     }
+    },
+    "kalibrierHaelfte": {
+     "form": "ARTEFAKT-HASH + KONSTANTEN-ABGLEICH, KEIN LAUF",
+     "berichtigung": "F6-C7a: die Kalibrier-Groessen (kalibrierungsWeg 1109->540 / 1309->546, auswertbarImBand 68079 / 82642, firmenReif 540 / 546, firmenUnreif 226 / 265) sind KEINE ORIGINAL-Globals-Groessen. Sie stammen aus dem Durchlauf verbreitertOhneBank. Der arithmetische Gegenbeweis steht im SELBEN Artefakt: provenienz.aequivalenzTorSoll[\"S-U\"].firmen_reif = 512 gegen jeFamilie[\"S-U\"].firmenReif = 540, und S-UG 29 gegen 30 - ein Lauf kann nicht beides liefern. Bein 1 zerfaellt deshalb nach BEWEISART in eine Lauf-Haelfte (F6-C7b) und eine Artefakt-Haelfte (F6-C7c/d).",
+     "nachweis": "Doppel-Hash (Datei-SHA 80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5 UND inhaltSha256, beide Richtungen zu) plus Laufzeit-Konstanten-Abgleich feldweise gegen das hash-geprueft geladene Artefakt. NICHT GEFAHREN, SONDERN GEPRUEFT.",
+     "restrisiko": "F6-C7g: bewiesen wird die UNVERAENDERTHEIT der eingefrorenen Bytes, NICHT die Wahrheit der Zahlen darin (c); das Entdeckungs-Panel traegt keinen registrierten Byte-Pin (d); und dass das E2-Artefakt aus einem echten Panel-Lauf stammt, traegt sein eigenes bestandenes Tor plus BEIN 2, nicht dieses Bein (e). Ausgewiesen, nicht wegargumentiert."
+    },
+    "bein3": {
+     "form": "Wortlaut-Literale aus protocol/early-detection/2.0.0/preregistration.json, ohne Panel-Lauf (F6-C9). Geht in bestanden ein, emittiert keine eigene Zahl."
+    },
+    "kippbedingung": "KZ-4 - eine einzige abweichende Zahl ist ein STOPP vor jedem Prueffenster-Byte."
+   },
+   "ausfuehrendeSkripte": {
+    "scripts/studie-f6-zaehlwerk.py": "dfca0dffc7eb19e43259745428e25a543ac160f58f6892cb035a2434ef263876",
+    "scripts/studie-f6-lauf.py": "36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0",
+    "scripts/studie-zaehlprobe.py": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+    "scripts/studie-basisraten.py": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+    "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+    "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf"
+   },
+   "previousHash": "e9e0eeb3edcf5ac2af64bdd054ba6f2c28be9e82e30ec5eaff9e8c718e64ed8d",
+   "eventHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
