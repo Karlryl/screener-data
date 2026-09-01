@@ -1798,6 +1798,69 @@
    "laufFreigabe": "DER LAUF FEUERT NICHT MIT DIESEM EINTRAG. Er startet erst nach dem GRUENEN DELTA-REVIEW, das der Orchestrator mit frischen Augen ansetzt und das jeden der elf Blocker sowie die gemeldeten Findings gegen den ENDSTAND prueft. Ein rotes oder unvollstaendiges Delta-Review heisst: kein Lauf. Nach diesem Eintrag ist F6-C24(3) unveraendert scharf - jede Aenderung an Laeufer, Zaehlwerk oder studie-zaehlprobe.py nach diesem Eintrag bricht die Bindung.",
    "previousHash": "5ad8a38a9f0cb6fcebb82878e944d691cdc76df66725cc6e63fb8ac8e75f16c3",
    "eventHash": "51c235ebd79272f7cce976f3627816bc50c283f47c4f34dd2d630af3eca66938"
+  },
+  {
+   "runId": "f6-eintrag28-ergaenzung-2026-09-01",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-09-01T17:10:12.112Z",
+   "accessedAt": "2026-09-01T19:10:12.112Z",
+   "fenster": [
+    "kein Studienfenster - Ergaenzungs-Vermerk ohne Datenzugriff"
+   ],
+   "allowedOutputs": [],
+   "erlaubt": "Nichts. Dieser Vermerk ergaenzt und berichtigt die DOKUMENTATION von Eintrag 28 und autorisiert KEINEN Datenzugriff. Die AUTORISIERUNG von Eintrag 28 bleibt unberuehrt. accessedAt bezeichnet hier keinen Zugriff, sondern den fruehesten Zeitpunkt, ab dem der ergaenzte Stand gilt; die Art C0_REGELFREEZE verlangt das Feld.",
+   "verboten": "Jede Berufung auf diesen Vermerk als Autorisierung eines Laufs; jede nachtraegliche Aenderung an Eintrag 28 selbst (append-only).",
+   "begruendung": "BERICHTIGUNG EINER DOKUMENTATIONS-BEHAUPTUNG (F6-C18 / KZ-7, Muster Eintrag 26). Eintrag 28 behauptet, er trage \"alles, was Eintrag 27 trug\". DAS IST MESSBAR UNWAHR: die F6-C8h/F6-C8i-Schicht fiel beim Bau weg - eine wahr klingende Aussage ueber einer falschen Menge, genau die Klasse, die derselbe Eintrag ruegt und an der Eintrag 27 gestorben ist. Der Satz ist hiermit als UNRICHTIG ausgewiesen; die Schicht steht unten. Unbemerkt blieb es, weil der Waechter nur die sieben benannten Luecken prueft: wer nur Hinzugefuegtes prueft, bezeugt nichts ueber Weggefallenes.",
+   "f6c8hSchicht": {
+    "1_einEreignisMechanismus": "genau ein Erst-Ereignis des Arms S-U/kontrollpool ist unter der Kadenzregel zensiert und unter 4 * 80 nicht, und es ist reif; unter der E4e-Quotientenregel verlaesst es Zaehler UND Nenner gemeinsam - daher +1/+1/-1. Keine Firmenkennung, kein Datum, keine Prueffenster-Groesse.",
+    "2_kadenzBasisWoertlich": {
+     "quelle": "scripts/studie-e4d-kadenz.py:21-32",
+     "siegel": "E4d/E4e-INSTRUMENTVARIANTE UNTER EIGENEM SIEGEL - ausdruecklich NICHT die von F6 vollstreckte 2.0.0-Regel.",
+     "text": "  E4d  ZENSUR NACH KADENZ. E3 zensiert mit 4 * 80 Tagen, also mit der\n       UNTEREN Kante des Quartals-Paarungsfensters. Das misst Unmoeglichkeit.\n       Hier zaehlt stattdessen der eigene Melderhythmus der Firma: der Median\n       der Abstaende zwischen den Bilanzstichtagen ihrer gewaehlten Reihe VOR\n       dem Signal, nach unten begrenzt durch ein dokumentiertes Fiskalquartal.\n       Richtung, hier vorab benannt: 4 * 91,25 > 4 * 80, das Kriterium zensiert\n       also NIE weniger als E3, meist mehr - und hebt die Quote damit.\n\n  E4e  KONSISTENTE QUOTE. E3 zaehlt im Zaehler ALLE reifen Firmen, laesst im\n       Nenner aber die zensierten weg. Eine zensierte Firma KANN reif sein; im\n       Pufferjahr 2016 kam deshalb 1,4 heraus. Hier fliegen die Zensierten aus\n       Zaehler UND Nenner. Richtung, hier vorab benannt: das drueckt die Quote.",
+     "vermerk": "Nach der Ueberschreibung stand diese Pflicht in KEINEM Eintrag mehr (25, 26, 28 geprueft) - ersatzlos untergegangen, hier wiederhergestellt."
+    },
+    "3_gerichtNichtBauender": "Die Bein-2-Basis hat DAS GERICHT berichtigt, nicht der Bauende. Aktenkette: Haupturteil (3:0) -> NACHTRAEGE 1-3 -> ANHANG 1 -> Anlauf 4 riss -> Forensik OHNE Eingriff (KZ-4 gewahrt) -> ANHANG 2 -> Eintrag 26 -> Eintrag 28 -> ANHANG 3 -> dieser Vermerk. Dreimal wurde nicht still weitergedeutet; den vierten Fall - diesen Verlust - fand das Delta-Review, nicht der Bau.",
+    "4_spaltentabelle": "Spaltenherkunft je Soll-Zahl: Eintrag 28, aequivalenzTor.bein2.spaltenpfad. Die von Eintrag 28 ebenfalls verlorene BASIS: \"E3 nach preregistration.json:80 (Zensur) und :87 (Netto-Nenner). Die KADENZ-/E4e-Basis regiert Bein 2 NICHT (F6-C8a).\" Referenz-Artefakt 46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf.",
+    "5_anhang1_144": "Die Zahlenzitierung in ANHANG1:144 ERBT die Berichtigung aus ANHANG 2."
+   },
+   "richtungsOffenlegungBerichtigung": {
+    "satz1": "Diese Berichtigung ENTFERNT an genau einer Zelle einen stehenden STOPP",
+    "satz2": "Die Unerfuellbarkeit wurde hier nicht vor, sondern DURCH einen Lauf entdeckt",
+    "vermerk": "Beide standen in Eintrag 27 und fehlten in 28. Sie gelten unveraendert; der Ausgleich (totes Tor, Netto-Bilanz +2) steht in Eintrag 26."
+   },
+   "torRegeltextWoertlich": {
+    "quelle": "scripts/studie-f6-lauf.py, Konstante TOR_REGELTEXT",
+    "text": "WEITER = 1 nur bei (beide Arm-Bandverdikte BESTANDEN) UND (differenz_punkte <= 10). Ein Arm NICHT UNTERSCHEIDBAR -> Gesamt NICHT UNTERSCHEIDBAR, WEITER = 0 (das Messgeraet hat nicht getrennt; die Bandfolge dominiert). Ein Arm NICHT BESTANDEN -> Tor gerissen, WEITER = 0. Beide BESTANDEN, aber differenz_punkte > 10 -> Tor gerissen nach preregistration.json:139 (INCONCLUSIVE_DATA, kein p-Wert), WEITER = 0. Kein Band, kein SE und kein Ermessen auf der Differenz.",
+    "zeichen": 462,
+    "sha256": "8cf3fdafda9acfdd7d99c254c188b46fc4e0ffe95985ca04022aba3863fab423",
+    "gleichheit": "Der hier stehende Text ist BYTE-GLEICH mit der Code-Konstante: das Werkzeug liest sie zur Laufzeit aus dem Quelltext und bricht ab, wenn der sha256 abweicht. Er wurde NICHT abgeschrieben.",
+    "berichtigt": "In Eintrag 28 fehlte die Klammer \"(das Messgeraet hat nicht getrennt; die Bandfolge dominiert)\" - nicht schmueckend, sondern die DOMINANZREGEL fuer den Fall \"ein Arm NICHT UNTERSCHEIDBAR bei haltender Differenz\", auf den F6-B25 verweist. Weisung: Byte-Identitaet mit der CODE-KONSTANTE, strengere Fassung gewinnt, kein Code geaendert."
+   },
+   "konservierteDissense": {
+    "ob2_umbenennung": "Beide Stimmen fuehren diese Form als konservierten Dissens - C1 als Zweit-Weg, den es fuer schlechter haelt; C2 als Selbstkritik, deren besseren Grund es einraeumt. Einzige zulaessige Alternative: Umbenennung des Containers auf tor, Preis eine Namens-Berichtigung in F6-B11 und F6-C15. Niemals zulaessig: das Verdikt verschweigen oder die Zwei-Schluessel-Form ohne vollen Rat (KZ-21).",
+    "ob1_korrekturform": "Korrekturform von Befund (a) offen (KZ-22); die Haertung ist in beiden Lesarten dieselbe und vollzogen, der Bauende gewinnt keine Entlastung."
+   },
+   "zitattreueC9e": {
+    "befund": "Der von Eintrag 28 als berichtigt zitierte Satz steht so NIRGENDS - er ist eine Verschmelzung der beiden Saetze, die Eintrag 27 wirklich trug.",
+    "original1": "Bein 3: fuenf Wortlaut-Literale ohne Panel-Lauf.",
+    "original1Ort": "Eintrag 27, begruendung",
+    "original2": "Fuenf Wortlaut-Literale aus preregistration.json, ohne Panel-Lauf (F6-C9).",
+    "original2Ort": "Eintrag 27, aequivalenzTor.bein3",
+    "gilt": "BEIDE Saetze sind berichtigt: Bein 3 fuehrt sechs quellengebundene Literale, davon fuenf F6-C9-Ziffern (vier Praereg + eines aus dem Wortlaut von Eintrag 24) und ein bauseitiges Zusatz-Literal, das nie als Ziffer zaehlt."
+   },
+   "weitereVermerke": {
+    "torRichtungAblage": "F6-C13c schickt den Richtungssatz \"in die Umschlag-Liste\"; gemessen liegt TOR_RICHTUNG in bericht.stempel.kriteriumDifferenz.richtung, und der Umschlag fuehrt \"richtung\" nicht. KEIN LECK - eingefrorene Konstante, Datenflaeche nachweislich frei davon (Bruchprobe gruen). Ablage-Frage, benannt statt still anders vollzogen.",
+    "mergedAtSekunde": "PR #186: Eintrag 28 fuehrt mergedAt 21:50:32Z, die Commit-Zeit ist 21:50:31Z - API-mergedAt gegen committer date, ohne Folge fuer die Zeitkette.",
+    "geviertstrich": "panelBauAbweichung.woertlich transliteriert zwei Geviertstriche zu Bindestrichen (ASCII-Hausform des Registers). Bei einem \"woertlich\" befohlenen Zitat gehoert das benannt; der Satzbestand ist unveraendert."
+   },
+   "endtestSiegel": "unberuehrt. Dieser Vermerk oeffnet nichts, zaehlt nichts und beruehrt das Endtest-Fenster in keiner Weise.",
+   "actor": "Karl Viehrig (Auftraggeber, Freigabe-Inhaber) - ausgefuehrt durch den Nacht-Agenten der Session 07 unter dem Review-Tor des Orchestrators.",
+   "scope": "Dokumentation von Eintrag 28. KEIN Datenzugriff, KEIN Fenster, KEINE Ausgabe.",
+   "purpose": "Die vom Delta-Review bewiesenen Blocker A und B heilen, ohne die Autorisierung von Eintrag 28 anzutasten.",
+   "fensterVermerk": "ZUM ZEITFENSTER DIESES VERMERKS, damit kein spaeterer Leser ueber die Form raetselt: accessedAt ist hier ein gewoehnliches +2h-Fenster ab der Anmeldung. Ein C0_REGELFREEZE-Vermerk autorisiert keinen Zugriff, und sein accessedAt ist deshalb NIE ein Tor fuer den Lauf - es bezeichnet nur, ab wann der ergaenzte Stand gilt. Der Fussboden des Laufs war und bleibt allein der accessedAt von Eintrag 28 (2026-09-01T11:02:56.527Z); er ist zum Zeitpunkt dieses Vermerks laengst ueberschritten. EIN FRUEHERER ENTWURF dieses Vermerks trug accessedAt auf genau diesen Fussboden gepinnt, um ihn nicht nach hinten zu schieben; sein Fenster lief ab, bevor der Serverbeweis gefuehrt werden konnte, und der Entwurf wurde ohne Eintragung verworfen. Die Pinnung ist damit gegenstandslos - nicht widerrufen, sondern erledigt.",
+   "laufFreigabe": "DER LAUF FEUERT NICHT MIT DIESEM VERMERK. Die Autorisierung steht in Eintrag 28 und bleibt unveraendert; sie wird erst wirksam, wenn ein fokussiertes Re-Review dieses Vermerks gruen ist und der accessedAt-Fussboden von Eintrag 28 (2026-09-01T11:02:56.527Z) ueberschritten ist.",
+   "previousHash": "51c235ebd79272f7cce976f3627816bc50c283f47c4f34dd2d630af3eca66938",
+   "eventHash": "0286419a727d63f271403793f3f29d8c5033f84aa631704888dedae048b12931"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
