@@ -83,8 +83,27 @@ test('H9: the addendum stands next to the base record without moving a byte of i
   assert.equal(addendum.preservation.hashManifestChanged, false);
 });
 
+// G13: der Anker wird als KETTE gelesen, nicht als Einzelpfad. Eine
+// Vollendung des Moduls (G7) veraltet den Basis-Anker notwendig; registriert
+// wird sie durch ein WEITERES Addendum, nie durch Editieren des vorherigen
+// (LR-16). Gueltig ist das juengste Glied der Kette.
+const ADDENDUM2_REL = 'protocol/early-detection/2.0.0/h9-single-appender-enforcement-anchor-addendum-2.json';
+function ankerKette() {
+  const glieder = [readJson(ADDENDUM_REL)];
+  if (fs.existsSync(path.join(ROOT, ADDENDUM2_REL))) {
+    const zwei = readJson(ADDENDUM2_REL);
+    assert.equal(zwei.mode, 'ADDENDUM_NO_BASE_RECORD_EDIT');
+    assert.equal(zwei.vorgaengerAddendum.recordId, glieder[0].recordId,
+      'das zweite Addendum muss auf das erste zeigen - sonst ist es keine Kette');
+    assert.equal(zwei.vorgaengerAddendum.dateiSha256Lf, sha256Lf(ADDENDUM_REL),
+      'das erste Addendum wurde bewegt - LR-16 verbietet genau das');
+    glieder.push(zwei);
+  }
+  return glieder[glieder.length - 1];
+}
+
 test('H9: the registered executable anchor is the code and the probe that actually exist', () => {
-  const { module: modul, probe } = readJson(ADDENDUM_REL).executableEnforcementAnchor;
+  const { module: modul, probe } = ankerKette().executableEnforcementAnchor;
 
   assert.equal(modul.path, 'lib/ledger-single-appender.js');
   assert.equal(sha256Lf(modul.path), modul.sha256, 'registered module hash is stale');

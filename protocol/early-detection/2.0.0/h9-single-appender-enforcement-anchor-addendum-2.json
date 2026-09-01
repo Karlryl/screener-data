@@ -1,0 +1,55 @@
+{
+ "schema": "early-detection-governance-rule-addendum/v1",
+ "recordId": "h9-single-appender-enforcement-anchor-g7-2026-09-01",
+ "protocol": "FEM-SEC-US@2.0.0",
+ "mode": "ADDENDUM_NO_BASE_RECORD_EDIT",
+ "status": "BINDING",
+ "recordedAt": "2026-09-01",
+ "frozenNotice": "Dieses Addendum steht NEBEN dem Basis-Datensatz UND neben dem ersten Addendum. Weder das eine noch das andere wird editiert, neu gesiegelt oder aufgehoben (LR-16). Es registriert ausschliesslich den durch die G7-Vollendung veraenderten Modul-SHA neu.",
+ "vorgaengerAddendum": {
+  "recordId": "h9-single-appender-enforcement-anchor-2026-08-30",
+  "dateiSha256Lf": "605f812f3de7e4621238967460e98d3821cccf72c173e778f4d818cac6b06fbc"
+ },
+ "authority": {
+  "source": "Ledger-Rollover-Urteil 2026-09-01",
+  "decision": "G13 (Vollendung, ausgeloest durch G7)",
+  "scope": "Den ausfuehrbaren Anker des Einzel-Appenders nach der G7-Vollendung neu registrieren. G7 fuehrt LEDGER_RELS als geordnete Menge und prueft Mitgliedschaft statt Gleichheit; der Modul-SHA des Basis-Ankers ist dadurch veraltet."
+ },
+ "executableEnforcementAnchor": {
+  "module": {
+   "path": "lib/ledger-single-appender.js",
+   "sha256": "78034f327bb365827a6f6dc775a6e0c9427c5d6db073a3255a595775fe7df210",
+   "sha256Basis": "SHA-256 over the file bytes with CRLF normalised to LF; this path is not pinned to LF by .gitattributes, so a Windows checkout must not decide the verdict.",
+   "entryPoint": "checkSingleAppender({ repoDir, baseRef, headRef, ledgerRel })",
+   "exports": [
+    "checkSingleAppender",
+    "resolveBaseRef",
+    "SingleAppenderViolation",
+    "LEDGER_REL"
+   ],
+   "decisionRule": "Look at what the head added since it forked off base (three-dot range). If the ledger is not among those paths there is nothing to judge. If it is, the range must contain the ledger and NOTHING else - the ledger-only mini-PR the base record's branchWorkSequence prescribes.",
+   "rangeWideNotPerCommit": "Deliberate. Splitting the append into its own commit inside a study branch is the obvious evasion; a per-commit check would wave it through. The probe executes that evasion and shows it caught.",
+   "verdicts": [
+    "NO_LEDGER_APPEND",
+    "LEDGER_ONLY_MINI_PR",
+    "throw SingleAppenderViolation"
+   ],
+   "failsClosed": "A guard that cannot run says so. resolveBaseRef rethrows anything that is not a plain 'ref does not exist' miss, and checkSingleAppender refuses a backslash-joined ledgerRel instead of returning a clean verdict for the wrong reason."
+  },
+  "probe": {
+   "path": "tests/studie-register-single-appender-rule.test.js",
+   "sha256": "b2e3f8d904dceebd38ec7c82805bdbfe7ba2b0216d6c3465fcff85bec7a79011",
+   "sha256Basis": "SHA-256 over the file bytes with CRLF normalised to LF.",
+   "kind": "executed sabotage probe on a hermetic temporary git repository; the real ledger on main is never touched and nothing is pushed from the sabotage branch",
+   "executedProbes": [
+    "T172 probe: an executed branch-side ledger append is CAUGHT",
+    "T172 probe: splitting the append into its own commit does not buy an escape",
+    "T172 probe: chain check and git-prefix anchor are BLIND to that same append",
+    "T172 probe: the clean branch and the prescribed mini-PR stay GREEN",
+    "T172 probe: the guard refuses to run blind",
+    "T172: the live checkout carries no branch-side ledger append"
+   ],
+   "bothDirections": "The probe pins red AND green: the violation is caught, and the two legitimate shapes (a branch that never touches the ledger, and the prescribed ledger-only mini-PR) stay green. A guard that only ever fires proves nothing about the route it is supposed to permit."
+  }
+ }
+}
