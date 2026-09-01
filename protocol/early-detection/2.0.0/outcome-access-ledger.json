@@ -917,6 +917,353 @@
    },
    "previousHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41",
    "eventHash": "f9fbaac79675c08cf9137b9c51d022c9b32003940de01435b4f260d2b928c2a9"
+  },
+  {
+   "runId": "f6-konfirmatorisch-2026-09-01",
+   "typ": "confirmatory_execution_authorized",
+   "registeredAt": "2026-09-01T06:42:46.701Z",
+   "accessedAt": "2026-09-01T08:42:46.701Z",
+   "fenster": [
+    "pruefung"
+   ],
+   "allowedOutputs": [
+    "zaehler_reife",
+    "nenner_tor",
+    "anteil",
+    "se_binomial",
+    "se_klumpen_robust",
+    "se_stern",
+    "se_entschied",
+    "klumpen_anzahl",
+    "wilson95_unten",
+    "wilson95_oben",
+    "abstand_zu_090",
+    "abstand_zu_329_von_365",
+    "bandbreite_absolut",
+    "bandbreite_in_se",
+    "schwelle",
+    "fallzahl_min",
+    "messgeraet_vollstaendig",
+    "verdikt",
+    "weiter",
+    "grund",
+    "etikett",
+    "pflichtsatz",
+    "zweitsatz",
+    "n_A",
+    "n_B_reif",
+    "n_B_unreif",
+    "n_verloren",
+    "feuerfaehig",
+    "strukturell_nicht_feuerfaehig",
+    "rechts_zensiert",
+    "differenz_punkte.wert",
+    "differenz_punkte.maxDifferenzPunkte",
+    "differenz_punkte.erfuellt",
+    "differenz_punkte.quelle"
+   ],
+   "erlaubt": "GENAU EIN konfirmatorischer Lauf des F6-Auffindbarkeits-Tors auf dem PRUEFFENSTER (panel-validierung.sqlite, Signalband 2017-01-01/2019-12-31, Panel-Rand 2020-12-31), je Signalvariante {S-U, S-G} x Arm {signal, kontrollpool}. Ausgegeben werden ausschliesslich die in allowedOutputs gelisteten DATEN-Felder je Variante x Arm plus die vier Unterschluessel des armuebergreifenden Objekts differenz_punkte (F6-C15). Die Umschlag-Felder fuehrt der Laeufer in einer EIGENEN Liste (F6-B10); Vermischen ist unzulaessig. DER LAUF FEUERT NICHT MIT DIESEM EINTRAG: er startet erst nach GRUENEM REVIEW dieses Eintrags-Akts (Bauordnung Schritt 8).",
+   "verboten": "Jeder zweite Lauf unter dieser runId; jede Beruehrung des Endtest-Fensters oder von Schluesselmaterial; jede Ausgabe ausserhalb von allowedOutputs (ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter); jede Firmen-Kennung in irgendeiner Ausgabe, auch auf der Fehlerflaeche (F6-B14); jede Verwendung von 329/365 als Entscheidungsgroesse (abstand_zu_329_von_365 ist BERICHTSANGABE, nie Verzweigungsgrundlage, F6-B13); jeder Rueckfall auf den kleineren SE, wenn eine der acht Nicht-berechenbar-Bedingungen reisst; jede nachtraegliche Aenderung an Laeufer, Zaehlwerk oder studie-zaehlprobe.py NACH diesem Eintrag (F6-C24(3)); jede Kalibrierzahl als gemessene Groesse; jedes Abfeuern des Endtests, auch bei BESTANDEN.",
+   "begruendung": "DER EINE KONFIRMATORISCHE AKT (Bauordnung Schritt 7). Der Akt wird nach ART benannt, nicht nach Ordinalzahl (F6-C22 / F6-C24(4)). AEQUIVALENZ-TOR BESTANDEN, VOR diesem Eintrag, unter eigenem Zaehlproben-Akt f6-aequivalenz-entdeckung-2026-09-01 (eventHash 847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41): alle drei Beine bit-identisch. Bein 1 LAUF-HAELFTE ueber das unveraenderte scripts/studie-e2-verbreitert.py (durchlauf --modus alt): S-U 512/219, S-G 546/265, S-UG 29/12. Bein 1 ARTEFAKT-HAELFTE: NICHT GEFAHREN, SONDERN GEPRUEFT (Doppel-Hash plus Laufzeit-Konstanten-Abgleich). Bein 2 auf E3-Basis: S-U/signal 543/651/0, S-U/kontrollpool 3761/4514/0, S-G/signal 557/647/0, S-G/kontrollpool 5000/5768/0. Bein 3: fuenf Wortlaut-Literale ohne Panel-Lauf. BERICHTIGUNGEN, VOM GERICHT ENTSCHIEDEN UND NICHT VOM BAUENDEN STILL MITENTSCHIEDEN (Form F6-C16): (I) F6-C7a — die Kalibrier-Groessen von Bein 1 sind KEINE ORIGINAL-Globals-Groessen; Beleg im selben Artefakt: aequivalenzTorSoll S-U firmen_reif 512 gegen jeFamilie S-U firmenReif 540 (und S-UG 29 gegen 30) — ein Lauf kann nicht beides liefern. (II) F6-C8b — die Zelle S-U/kontrollpool war aus den _kadenz-Spalten transkribiert; sie lautet 3761/4514/0 aus fallzahl/nenner_e3/zensiert_e3. Beleg: auffindbarkeit_e3 = 0.8331856446610545 = 3761/4514 gegen auffindbarkeit_kadenz = 0.8331486815865278 = 3760/4513. Beide Raten sind ENTDECKUNGSFENSTER-Groessen und stehen hier als Vermerk, nie als Ausgabewert. Berichtigt im eigenen Register-Akt f6-bein2-berichtigung-2026-09-01. EIN-EREIGNIS-MECHANISMUS (F6-C8h(1), ohne verbotene Groesse): genau ein Erst-Ereignis des Arms S-U/kontrollpool ist unter der Kadenzregel zensiert und unter 4 * 80 nicht, und es ist reif; unter der E4e-Quotientenregel verlaesst es Zaehler UND Nenner gemeinsam — daher +1/+1/-1. Keine Firmenkennung, kein Datum, keine Prueffenster-Groesse. DIE KADENZ-BASIS (F6-C8h(2)), woertlich aus scripts/studie-e4d-kadenz.py:21-32: sie misst den Melderhythmus statt 4 * 80, mit einer Untergrenze von einem Fiskalquartal (365/4), und zensiert deshalb NIE weniger als E3; Zensierte fliegen dort aus Zaehler UND Nenner. Sie ist eine E4d/E4e-INSTRUMENTVARIANTE UNTER EIGENEM SIEGEL und ausdruecklich NICHT die von F6 vollstreckte 2.0.0-Regel. AKTENKETTE: Haupturteil (3:0) -> ORCHESTRATOR-NACHTRAEGE 1-3 -> ANHANG 1 (Kalibrier-Haelfte) -> Anlauf 4 riss -> Forensik OHNE Eingriff (kein Sollwert angefasst, KZ-4 gewahrt) -> ANHANG 2 (Basis + Berichtigung) -> Berichtigungs-Vermerk -> dieser Akt. DREIMAL nacheinander wurde NICHT still weitergedeutet. Die Zahlenzitierung in ANHANG1:144 ERBT die Berichtigung aus ANHANG 2. NICHT BESCHLOSSEN und deshalb nicht vollzogen: A1s Glied c (Umformungs-Nachweis im Lauf) und die Aufnahme des Bericht-SHA 6ecf3ef2... in die Bindungsliste (ANHANG 1). F6-C6 bleibt Wort fuer Wort unangetastet; kalibriere(), im_band() und schwellen() werden nie gerufen. ERWARTUNGS-BLOCK: der Vorab-Erwartungsblock lebt im Vollzugs-Artefakt (inhaltSha256 792f4ff5...) und wird REFERENZIERT, nicht neu gerechnet (F6-B26). Erzeugt von scripts/studie-f6-konfirmatorisch.js (eigenes Werkzeug je Register-Akt, F6-B8; Trockenlauf als Standard, kein --force). Alle Hashes am Objekt nachgerechnet — ein Urteil zitiert Hashes als Pruefauftrag, nie als Quelle. Ein-Appender-Regel: main-first per Mini-PR, danach Serverbeweis gegen main.",
+   "endtestSiegel": "unberuehrt und in ALLEN Zweigen ZU. Dieser Eintrag autorisiert EINEN Lauf auf dem Prueffenster und oeffnet weder Endtest-Fenster noch Schluesselmaterial noch Lueckenliste. Das Abfeuern des Endtests bleibt ein eigener Akt und braucht Karls ausdrueckliche Freigabe (F6-A16) — auch bei BESTANDEN gibt es KEINEN Automatismus.",
+   "eingabenHashes": {
+    "skripte": {
+     "scripts/studie-f6-lauf.py": "36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0",
+     "scripts/studie-f6-zaehlwerk.py": "f47f10d555c701c08e1282aa7e3b41424b836b0851edbdbb80f83839b9f99410",
+     "scripts/studie-zaehlprobe.py": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+     "scripts/studie-basisraten.py": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+     "scripts/studie-f6-klumpen-se.py": "bf10becdfe2dc08a303d22a97dda3eb65988fb72a50f8811c23b2c377c11a1d3",
+     "scripts/studie-vb-b4-band.py": "c5ff07d3e2b5037e20073da0a7abb9b71443430efc63986d4ddbeb1a85ed76d8",
+     "scripts/studie-e2-verbreitert.py": "9a24ed94e943e9a6f5b4a1373ba6c6aa2001ddadb2d60a705277bf5eb359984b",
+     "scripts/studie-panel-digest.py": "14414d2633f74b94662d503336db61be6825f3c7b89b6ebcf3275a841396f33f",
+     "scripts/studie-r1-serverzeit.js": "21fba6882239d24ca70e6e3fd2f6610baa5d7bddfded0d0d030bbe4090ec5257",
+     "scripts/studie-f6-aequivalenz-anmeldung.js": "e00a055755ddbef6eee6cb9da391cf9b16a9515f9cb62e1c973f6245cf7469fd",
+     "scripts/studie-f6-berichtigung-bein2.js": "0a1bede8772b6ec30fc03becc79b12d4a1aff3f8af720848396db48ea79c7096"
+    },
+    "artefakte": {
+     "protocol/early-detection/2.0.0/preregistration.json": {
+      "dateiSha256": "799f925142860b4db97b5f18894b62c749aeb014872279aa6a7df8ee99ac5a6c"
+     },
+     "protocol/early-detection/2.0.0/rules.json": {
+      "dateiSha256": "dc008723798f58fdae3cc67b36817aebf88b090acd8472cedda141f1e4b021bc"
+     },
+     "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json": {
+      "dateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+      "inhaltSha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee",
+      "inhaltSha256Herkunft": "selbstdeklariert"
+     },
+     "protocol/early-detection/2.1.0/f6-vollzug-zweig-a-2026-08-31.json": {
+      "dateiSha256": "8c66818e80140b16a473c278a47327d726601e14de83450d2ed6d353e55e4427",
+      "inhaltSha256": "792f4ff58687945167e273d08ca509544f4ad7fd7ecd9eaa60d5dac3118c99f7",
+      "inhaltSha256Herkunft": "selbstdeklariert"
+     },
+     "protocol/early-detection/2.1.0/b4-bandregel-2026-08-30.json": {
+      "dateiSha256": "d9c5990ad403b6baca2e3a4228218af0b73367e4f51ffd213ac654fc41cdc5da",
+      "inhaltSha256": "1fd6a9f3ceb6dab0076c6812f57483889708345d6a87c6103a7515689cf8c46e",
+      "inhaltSha256Herkunft": "selbstdeklariert"
+     },
+     "protocol/early-detection/2.1.0/jahrgang-registrierung-2026-08-30.json": {
+      "dateiSha256": "aa4277fa9f39f38b3d1ffa4f9048d76f33e2515aa64afa021165d7895cb6074f",
+      "inhaltSha256": "0363702f5aa6fd486a6901aecaef3108f81828248657bcfb455b6a4ae413c567",
+      "inhaltSha256Herkunft": "selbstdeklariert"
+     },
+     "protocol/early-detection/2.1.0/konzeptliste.json": {
+      "dateiSha256": "f7a123f9f5fc5109c07e9c18754da4b785d45b2391a9417fe4150fb48798357b",
+      "inhaltSha256": "88ba14a298837bcc6287c4f52a3ba61296b6ba56d96ba78cba0470335df99247",
+      "inhaltSha256Herkunft": "nachgerechnet"
+     },
+     "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json": {
+      "dateiSha256": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf"
+     }
+    },
+    "aequivalenzBericht": {
+     "datei": "reports/studie/f6-aequivalenz-entdeckung-2026-09-01.json",
+     "dateiSha256": "e461dda396bc0401e24f12e9d4142e0d78f7445cf91ae1102ca8ea7eccb7b541"
+    }
+   },
+   "gateEvidenz": {
+    "b4Artefakt": "d9c5990ad403b6baca2e3a4228218af0b73367e4f51ffd213ac654fc41cdc5da",
+    "b4InhaltSha256": "1fd6a9f3ceb6dab0076c6812f57483889708345d6a87c6103a7515689cf8c46e",
+    "seFreezeEintrag": "f6-se-klumpen-freeze-2026-08-31 (Eintrag 24)",
+    "zaehlprobeEintrag": {
+     "runId": "f6-aequivalenz-entdeckung-2026-09-01",
+     "eventHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41"
+    },
+    "berichtigungsEintrag": {
+     "runId": "f6-bein2-berichtigung-2026-09-01",
+     "eventHash": "f9fbaac79675c08cf9137b9c51d022c9b32003940de01435b4f260d2b928c2a9"
+    }
+   },
+   "researchCorpus": "NICHT ANWENDBAR. Dieser Akt fuehrt keinen Literatur- oder Fremdkorpus; die Grundlage sind ausschliesslich die oben per SHA gebundenen Repo-Artefakte und das Prueffenster-Panel. Ein nicht anwendbares Pflichtfeld wird beantwortet, nie weggelassen (F6-B2).",
+   "protocolManifestSha256": "3eff89b487914f39c9a7317d56912506a77860cb37c63380310257cdb6091d26",
+   "analysisCutoffAt": {
+    "form": "JAHRGANGS-IDENTITAET, kein Zeitstempel. In keinem registrierten Artefakt existiert ein analysisCutoffAt-WERT; ihn zu setzen waere das von F6-B2 verbotene freie Setzen (F6-C21).",
+    "jahrgang": "legacy_earliest_archived",
+    "artefakt": "protocol/early-detection/2.1.0/jahrgang-registrierung-2026-08-30.json",
+    "inhaltSha256": "0363702f5aa6fd486a6901aecaef3108f81828248657bcfb455b6a4ae413c567",
+    "registerEintrag": "rr9-a3-jahrgang-registrierung-2026-08-30 (Eintrag 22)",
+    "panelDatei": "panel-validierung.sqlite",
+    "panelBytes": 4447633408
+   },
+   "actor": "Karl Viehrig (Auftraggeber, Freigabe-Inhaber) — ausgefuehrt durch den Nacht-Agenten der Session 07 unter dem Review-Tor des Orchestrators.",
+   "scope": "GENAU EIN Fenster (pruefung) und GENAU EIN Tor (das F6-Auffindbarkeits-Tor, Schwelle 0,90, Bandbreite 1,0 SE*, Mindestfallzahl 200, plus das 10-Punkte-Kriterium als vierte konjunktive Bedingung). AUSDRUECKLICH NICHT die acht Tests: keine p-Werte, keine Teststatistiken, keine Bootstrap-Verteilungen, keine Konfidenzintervalle der acht Tests.",
+   "purpose": "Der EINE konfirmatorische F6-Lauf unter Kontingent EINS (K2/A10). Nach diesem Lauf ist das Kontingent verbraucht; eine weitere Prueffenster-Beruehrung braucht einen eigenen, neuen Akt.",
+   "aequivalenzTor": {
+    "bestanden": true,
+    "laufAm": {
+     "ersterZugriffAm": "2026-09-01T06:18:58.534Z",
+     "beendetAm": "2026-09-01T06:19:45.963Z"
+    },
+    "registerEintragDerZaehlprobe": {
+     "runId": "f6-aequivalenz-entdeckung-2026-09-01",
+     "eventHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41"
+    },
+    "registerEintragDerBerichtigung": {
+     "runId": "f6-bein2-berichtigung-2026-09-01",
+     "eventHash": "f9fbaac79675c08cf9137b9c51d022c9b32003940de01435b4f260d2b928c2a9"
+    },
+    "laufHaelfte": {
+     "soll": {
+      "S-U": {
+       "firmen_reif": 512,
+       "firmen_unreif": 219
+      },
+      "S-G": {
+       "firmen_reif": 546,
+       "firmen_unreif": 265
+      },
+      "S-UG": {
+       "firmen_reif": 29,
+       "firmen_unreif": 12
+      }
+     },
+     "gemessen": {
+      "S-U": {
+       "firmen_reif": 512,
+       "firmen_unreif": 219
+      },
+      "S-G": {
+       "firmen_reif": 546,
+       "firmen_unreif": 265
+      },
+      "S-UG": {
+       "firmen_reif": 29,
+       "firmen_unreif": 12
+      }
+     },
+     "bestanden": true,
+     "werkzeug": "scripts/studie-e2-verbreitert.py, durchlauf --modus alt, Ausgabe nur nach --ergebnis, nie ins Artefakt (F6-C7b)"
+    },
+    "artefaktHaelfte": {
+     "form": "NICHT GEFAHREN, SONDERN GEPRUEFT",
+     "dateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+     "inhaltSha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee",
+     "konstantenAbgleichBestanden": true,
+     "kalibrierZahlen": {
+      "S-U": {
+       "kalibrierungsWeg": "1109 (P90) -> 540 (P95)",
+       "auswertbarImBand": 68079,
+       "firmenReif": 540,
+       "firmenUnreif": 226
+      },
+      "S-G": {
+       "kalibrierungsWeg": "1309 (P90) -> 546 (P95)",
+       "auswertbarImBand": 82642,
+       "firmenReif": 546,
+       "firmenUnreif": 265
+      }
+     },
+     "hinweis": "Die Kalibrier-Groessen stammen aus dem Durchlauf verbreitertOhneBank, NICHT aus ORIGINAL-Globals (F6-C7a). Sie sind KEINE gemessene Groesse dieses Akts."
+    },
+    "bein2": {
+     "basis": "E3 nach preregistration.json:80 (Zensur) und :87 (Netto-Nenner). Die KADENZ-/E4e-Basis regiert Bein 2 NICHT (F6-C8a).",
+     "armAbbildung": "F6 \"signal\" -> \"signal\"; F6 \"kontrollpool\" -> Artefaktschluessel \"kontrolle\" (ausgeschrieben, nicht erschlossen — F6-C8c)",
+     "spaltenpfad": "baender[\"2009-2015\"].varianten[<Variante>].<signal|kontrolle>.{fallzahl,nenner_e3,zensiert_e3}",
+     "zellen": {
+      "S-U/signal": {
+       "zaehler": 543,
+       "nenner": 651,
+       "zensiert": 0
+      },
+      "S-U/kontrollpool": {
+       "zaehler": 3761,
+       "nenner": 4514,
+       "zensiert": 0
+      },
+      "S-G/signal": {
+       "zaehler": 557,
+       "nenner": 647,
+       "zensiert": 0
+      },
+      "S-G/kontrollpool": {
+       "zaehler": 5000,
+       "nenner": 5768,
+       "zensiert": 0
+      }
+     },
+     "basisblind": "DREI der vier Zellen sind basisblind (e3 == kadenz). Ihr Bestehen traegt KEINE Evidenz zur Basisfrage; nur S-U/kontrollpool trennt die Basen (F6-C8g(4)).",
+     "referenz": {
+      "datei": "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json",
+      "dateiSha256": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf"
+     }
+    },
+    "bein3": "Fuenf Wortlaut-Literale aus preregistration.json, ohne Panel-Lauf (F6-C9)."
+   },
+   "fensterVon": "2017-01-01",
+   "fensterBis": "2019-12-31",
+   "panelRand": "2020-12-31",
+   "panelRandHerkunft": "ABGELEITET, NICHT GESETZT. preregistration.json:298 \"Fuer das Pruefenster heisst das: Signalband 2017-2019, Reife bis 2020-12-31.\" und :95 \"pruefung\": \"2017-01-01/2019-12-31 (Signalfenster) mit Pufferjahr 2020 fuer die Reife\"; rules.json (dc008723...) fenster.validierung 2017q1..2019q4 und pufferjahre [2016, 2020]; Reife = vier Folgequartale (preregistration.json:75-77); Schnitt realisiert in scripts/studie-panel-bau.py:99. scripts/studie-zaehlprobe.py:97 ist NUR Korroboration, nie Quelle (F6-C20). SIGNALBAND und PANEL-RAND sind getrennt gefuehrt und gegeneinander verriegelt (F6-C22): ein Erst-Ereignis mit accepted im Pufferjahr 2020 ist ein ABBRUCH, kein Sonderfall. Der Laeufer leitet den Rand zur Laufzeit ab und haelt ihn gegen die gebundene Konstante; Abweichung = fail-closed (F6-C23).",
+   "panelDigest": {
+    "datei": "panel/panel-validierung.sqlite",
+    "groesseBytes": 4447633408,
+    "sha256": "0330f8154608791cf3d56069b8219a67f0ea1084d55fcfb57b09fd1016418c4c",
+    "dauerSekunden": 5.672,
+    "werkzeug": "scripts/studie-panel-digest.py",
+    "werkzeugSha256": "14414d2633f74b94662d503336db61be6825f3c7b89b6ebcf3275a841396f33f",
+    "hinweis": "Streaming-SHA-256 ueber die BYTES, SQL-frei (F6-B6). Die Groesse ist gegen die 4.447.633.408 B aus Eintrag 22 verriegelt — die Kante haengt an Bytes, nicht an einem Datum in einer Datei (F6-C23)."
+   },
+   "arbeitspfad": {
+    "kurzform": "f6-arbeit",
+    "lage": "unmittelbar im Nutzerverzeichnis des Auftraggebers, AUSSERHALB des Repos",
+    "gebundenAn": "ARBEITSPFAD_VORGABE in scripts/studie-f6-zaehlwerk.py, dessen SHA dieser Eintrag oben bindet. Dort steht der vollstaendige Pfad — aus Fragmenten gebaut, weil der R12a-Deckel das Literal verbietet.",
+    "warumNichtAusgeschrieben": "R12a untersagt absolute Pfade und Nutzerverzeichnisse in einem 2.0.0-Artefakt. F6-C5 verlangt, dass der Pfad VORHER benannt und nicht zur Laufzeit entdeckt wird — beides ist erfuellt: benannt ist er in der Weisung und in der gehashten Konstante, und der Hash pinnt ihn genauer als ein abgeschriebenes Literal es koennte.",
+    "geprueft": "VERBOTEN_RE-frei bis in die Elternverzeichnisse, ausserhalb des Repos; vor der Freigabe geprueft und benannt, nicht zur Laufzeit entdeckt (F6-C5 / KZ-3)."
+   },
+   "ausgabesatz": {
+    "datenSchluesselJeVarianteUndArm": [
+     "zaehler_reife",
+     "nenner_tor",
+     "anteil",
+     "se_binomial",
+     "se_klumpen_robust",
+     "se_stern",
+     "se_entschied",
+     "klumpen_anzahl",
+     "wilson95_unten",
+     "wilson95_oben",
+     "abstand_zu_090",
+     "abstand_zu_329_von_365",
+     "bandbreite_absolut",
+     "bandbreite_in_se",
+     "schwelle",
+     "fallzahl_min",
+     "messgeraet_vollstaendig",
+     "verdikt",
+     "weiter",
+     "grund",
+     "etikett",
+     "pflichtsatz",
+     "zweitsatz",
+     "n_A",
+     "n_B_reif",
+     "n_B_unreif",
+     "n_verloren",
+     "feuerfaehig",
+     "strukturell_nicht_feuerfaehig",
+     "rechts_zensiert"
+    ],
+    "variantenSchluessel": [
+     "differenz_punkte"
+    ],
+    "differenzUnterschluessel": [
+     "wert",
+     "maxDifferenzPunkte",
+     "erfuellt",
+     "quelle"
+    ],
+    "umschlagIstEigeneListe": "Die Umschlag-Felder fuehrt der Laeufer in einer EIGENEN UMSCHLAG_ALLOWLIST (F6-B10). Vermischen ist der Mechanismus, durch den der Zaehlproben-Satz zu breit wurde.",
+    "zweigPflichtTeilmengen": {
+     "gate_gerissen": "DATEN_SCHLUESSEL minus {bandbreite_absolut, abstand_zu_329_von_365, etikett}",
+     "im_band": "DATEN_SCHLUESSEL minus {etikett}",
+     "ausserhalb_band": "DATEN_SCHLUESSEL minus {pflichtsatz, zweitsatz} — BESTANDEN und NICHT BESTANDEN tragen DIESELBE Schluesselmenge",
+     "warnung": "Die Prosa-Kurzform \"ohne abstand\" ist UNZULAESSIG: abstand_zu_090 IST im Zweig gate_gerissen (als None) und darf nicht fehlen; nicht gefuehrt wird abstand_zu_329_von_365 (F6-C17).",
+     "nullIstAnwesend": "Im Zweig gate_gerissen sind se_stern, se_entschied und abstand_zu_090 VORHANDEN, aber NULL; ebenso wilson95_unten/oben bei messbar = false. F6-B15 prueft ANWESENHEIT, nicht Wert. Weglassen statt None ist ein Pflichtschluessel-ABBRUCH (F6-C19).",
+     "differenzEbene": "differenz_punkte liegt auf VARIANTEN-Ebene und beruehrt die drei Zweig-Teilmengen NICHT (F6-C19). Ein Arm kennt die Differenz allein gar nicht."
+    },
+    "anker": {
+     "datei": "scripts/studie-vb-b4-band.py",
+     "funktion": "auswerten :145-227",
+     "konvention": "fuehrende Zeile (def bzw. das entscheidende `if`) plus die vollstaendige return-Anweisung",
+     "gate_gerissen": ":168-172",
+     "im_band": ":213-217",
+     "ausserhalb_band": ":218-227",
+     "laeuferKommentar": "scripts/studie-f6-lauf.py :395-426 (ZWEIG_PFLICHT-Zuweisung :432)"
+    }
+   },
+   "differenzRegeltext": {
+    "quelle": "protocol/early-detection/2.0.0/preregistration.json:88 — \"gate\": {\"minimum\": 0.9, \"gilt\": \"Signal-Arm UND Kontrollpool\", \"maxDifferenzPunkte\": 10}",
+    "zusammensetzung": [
+     "Beide Arm-Bandverdikte BESTANDEN UND differenz_punkte <= 10 -> Tor gehalten, WEITER = 1",
+     "Ein Arm NICHT UNTERSCHEIDBAR -> NICHT UNTERSCHEIDBAR, WEITER = 0 (das Messgeraet hat nicht getrennt; die Bandfolge dominiert)",
+     "Ein Arm NICHT BESTANDEN -> Tor gerissen, WEITER = 0",
+     "Beide BESTANDEN, aber differenz_punkte > 10 -> Tor gerissen nach preregistration.json:139 (INCONCLUSIVE_DATA, kein p-Wert), WEITER = 0"
+    ],
+    "gleichheitBesteht": "<= 10: exakt 10,0 Punkte reissen NICHT. Keine Rundung vor dem Vergleich (Hauskonvention studie-vb-b4-band.py:198-199).",
+    "einheit": "PUNKTE gegen 10, nie Anteile gegen 0,1 — der Laeufer rechnet abs(a_sig - a_kon) * 100.0. Ein Faktor-100-Fehler kippt hier das Verdikt.",
+    "keinBandKeinSE": "Kein Band, kein SE und kein Ermessen auf der Differenz — ein Band um die Differenz waere die von Eintrag 23 verbotene Neuableitung.",
+    "richtung": "RICHTUNGS-OFFENLEGUNG (Form F6-B21): die Zusammensetzung kann WEITER nur ERSCHWEREN, nie erzeugen. Aussage ueber die Richtung der REGEL, nicht ueber den Ausgang des Laufs.",
+    "entschiedenVom": "Gericht (_COURT-F6-ZAEHLWERK-2026-09-01, Frage (B), 3:0, F6-C13..C16) — nicht vom Bauenden still mitentschieden."
+   },
+   "richtungsOffenlegungBerichtigung": {
+    "satz1": "Diese Berichtigung ENTFERNT an genau einer Zelle einen stehenden STOPP",
+    "satz2": "Die Unerfuellbarkeit wurde hier nicht vor, sondern DURCH einen Lauf entdeckt",
+    "ausgleich": "Der entfernte STOPP war ein totes Tor (ein Soll, das die gebundene Kette nie erfuellen kann, prueft nichts); die Abbruchgruende aus F6-C8d sind zusaetzlich. Netto-Bilanz der Abbruchgruende: +2. Aussage ueber die Richtung der REGEL, nie ueber den Ausgang des Laufs (F6-C8i)."
+   },
+   "restrisiko": {
+    "F6-C7g(c)": "Die RICHTIGKEIT der eingefrorenen Ableitung selbst ist nicht bewiesen — kein Hash und kein Bein zeigt, dass kalibriere() am 30.08. richtig gerechnet hat. Bewiesen ist die UNVERAENDERTHEIT der eingefrorenen Bytes, nicht die Wahrheit der Zahlen darin.",
+    "F6-C7g(d)": "Das ENTDECKUNGS-Panel traegt KEINEN registrierten Byte-Pin; nur das Validierungs-Panel hat einen (4.447.633.408 B, Eintrag 22).",
+    "F6-C7g(e)": "Dass reports/studie/E2-verbreitert-2026-08-30.json aus einem echten Panel-Lauf stammt, traegt sein eigenes bestandenes Tor plus BEIN 2 — nicht dieses Bein.",
+    "F6-C8j(f)": "Bein 2 beweist die Reproduktion der E3-Basis-Zellen durch die F6-Kette — NICHT die Richtigkeit des E4d-Laufs vom 19.08. selbst.",
+    "F6-C8j(g)": "Bein 2 beweist NICHTS ueber das Kadenz-Instrument; dieses bleibt fuer F6 ausser Betracht.",
+    "F6-C8j(h)": "Das Entdeckungs-Panel traegt weiterhin keinen registrierten Byte-Pin — unveraendert als Restrisiko ausgewiesen, nicht wegargumentiert.",
+    "F6-C11(a)": "Der (m_g, n_g)-Tally selbst ist neue Ausgabe ohne Vorgaenger; gedeckt nur durch die Kreuzproben und W-C.",
+    "F6-C11(b)": "Datenformen, die ausschliesslich im Prueffenster vorkommen, sind durch einen Lauf auf dem Entdeckungs-Panel NICHT substituierbar."
+   },
+   "vorabDeterminiertheit": "F6-B25 (vorab, nicht als Befund): Gilt n_g = 1 fuer alle g — die nach PIN 3 erwartete Lage —, dann faellt se_entschied KONSTRUKTIV auf SE_klumpen-robust, und die A16-Pflicht \"welcher entschied\" ist dort formal, nicht materiell erfuellt. Tritt doch ein Klumpen mit n_g > 1 auf, entfaellt diese Feststellung (KV-6) und die Pflichtangabe wird materiell; das ist kein Anhalte-Grund, aber der Bericht fuehrt dann die andere Fassung. Ausserdem F6-B25-Form: n_B_unreif und strukturell_nicht_feuerfaehig tragen in dieser Tally-Form DIESELBE Zahl; fuer den zweiten existiert in keinem registrierten Artefakt eine allgemeine Definition, ein zweiter Rechenweg waere erfunden. Beide Schluessel bleiben im Satz; ein Kreuz-Wachposten macht jede Divergenz zum ABBRUCH.",
+   "erwartungsblock": "REFERENZIERT, NICHT NEU GERECHNET (F6-B26): der Vorab-Erwartungsblock (Spanne 60-85 %, NICHT-BESTANDEN-Ast) lebt im Vollzugs-Artefakt protocol/early-detection/2.1.0/f6-vollzug-zweig-a-2026-08-31.json, inhaltSha256 792f4ff58687945167e273d08ca509544f4ad7fd7ecd9eaa60d5dac3118c99f7. Kein Satz dieses Eintrags sagt etwas ueber die Richtung der kuenftigen Messung.",
+   "laufFreigabe": "DER LAUF FEUERT NICHT MIT DIESEM EINTRAG. Er startet erst nach GRUENEM REVIEW dieses Eintrags-Akts (Bauordnung Schritt 8) — Karls \"feuert nach gruenem Review\", angewandt auf den konfirmatorischen Eintrag. Nach der Anmeldung darf kein Byte mehr an Laeufer, Zaehlwerk oder studie-zaehlprobe.py geaendert werden (F6-C24(3)).",
+   "previousHash": "f9fbaac79675c08cf9137b9c51d022c9b32003940de01435b4f260d2b928c2a9",
+   "eventHash": "5ad8a38a9f0cb6fcebb82878e944d691cdc76df66725cc6e63fb8ac8e75f16c3"
   }
  ],
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
