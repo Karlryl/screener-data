@@ -1,0 +1,55 @@
+{
+ "umschlag": {
+  "schema": "early-detection-zaehlprobe-bericht/v1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "runId": "f6-aequivalenz-entdeckung-2026-09-01",
+  "fenster": "entdeckung",
+  "panelRand": "2016-12-31",
+  "perzentil": 95,
+  "serverConfirmedAt": "2026-09-01T02:52:07.000Z",
+  "accessedAt": "2026-09-01T04:30:16.868Z",
+  "ersterZugriffAm": "2026-09-01T06:18:58.534Z",
+  "beendetAm": "2026-09-01T06:19:45.963Z",
+  "gelesenePfade": [
+   "panel/panel-entdeckung.sqlite"
+  ],
+  "geschriebenePfade": [
+   "f6-arbeit/aequivalenz-zwischenstand.sqlite",
+   "f6-arbeit/bein1-ergebnis.json",
+   "studie/f6-aequivalenz-entdeckung-2026-09-01.json"
+  ],
+  "ergebnisdatenBeruehrt": false,
+  "siegelWache": "Endtest-Siegel unberuehrt und in ALLEN Zweigen ZU.",
+  "umgebung": {
+   "plattform": "win32",
+   "python": "3.12.10"
+  }
+ },
+ "daten": {
+  "aequivalenzTorSoll.S-U.firmen_reif": 512,
+  "aequivalenzTorSoll.S-U.firmen_unreif": 219,
+  "aequivalenzTorSoll.S-G.firmen_reif": 546,
+  "aequivalenzTorSoll.S-G.firmen_unreif": 265,
+  "aequivalenzTorSoll.S-UG.firmen_reif": 29,
+  "aequivalenzTorSoll.S-UG.firmen_unreif": 12,
+  "bein2.S-U/signal.zaehler": 543,
+  "bein2.S-U/signal.nenner": 651,
+  "bein2.S-U/signal.zensiert": 0,
+  "bein2.S-U/kontrollpool.zaehler": 3761,
+  "bein2.S-U/kontrollpool.nenner": 4514,
+  "bein2.S-U/kontrollpool.zensiert": 0,
+  "bein2.S-G/signal.zaehler": 557,
+  "bein2.S-G/signal.nenner": 647,
+  "bein2.S-G/signal.zensiert": 0,
+  "bein2.S-G/kontrollpool.zaehler": 5000,
+  "bein2.S-G/kontrollpool.nenner": 5768,
+  "bein2.S-G/kontrollpool.zensiert": 0,
+  "bestanden": true,
+  "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+  "zaehlwerkSha256": "f47f10d555c701c08e1282aa7e3b41424b836b0851edbdbb80f83839b9f99410",
+  "zaehlprobeSha256": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+  "schwellenDateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+  "schwellenInhaltSha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee",
+  "kalibrierHaelfteGeprueft": "ARTEFAKT-HASH + KONSTANTEN-ABGLEICH, KEIN LAUF"
+ }
+}
