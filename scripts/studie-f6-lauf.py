@@ -99,6 +99,133 @@ ARME = ("signal", "kontrollpool")
 # {"minimum": 0.9, "gilt": "Signal-Arm UND Kontrollpool", "maxDifferenzPunkte": 10}
 MAX_DIFFERENZ_PUNKTE = 10
 
+# =============================================================================
+# Panel-Rand und Signalband (F6-C20 bis F6-C23)
+# =============================================================================
+#
+# ABGELEITET, NIE GESETZT. `scripts/studie-zaehlprobe.py:97` fuehrt denselben
+# Wert, ist aber AUSDRUECKLICH NICHT die Quelle (F6-C20, 3:0): ein Instrument
+# der Art `count_only_probe_authorized` vererbt seine Konstanten nicht an ein
+# Instrument anderer Art. Es bleibt als Korroboration zitierfaehig, mehr nicht.
+#
+# SOLLWERTE als Konstanten UND zur Laufzeit am Objekt nachgerechnet - Form
+# F6-B8, beide Richtungen zu. Kein CLI-Argument, keine Vorbelegung.
+
+# Das Fenster heisst im Haus "pruefung", in `rules.json` "validierung".
+RULES_FENSTER = {"pruefung": "validierung", "entdeckung": "entdeckung",
+                 "endtest": "endtest"}
+
+FENSTER_VON_SOLL = "2017-01-01"
+FENSTER_BIS_SOLL = "2019-12-31"
+PANEL_RAND_SOLL = "2020-12-31"
+
+PANEL_RAND_HERKUNFT = (
+    "ABGELEITET, NICHT GESETZT. rules.json (dc008723...) fenster.validierung "
+    "von 2017q1 bis 2019q4 und pufferjahre [2016, 2020] mit pufferGrund "
+    "\"Reifebereinigung: jedes Ereignis braucht 4 Folgequartale ... kein "
+    "Folgequartal darf ueber eine Fenstergrenze reichen.\"; "
+    "preregistration.json /splits/pruefung \"2017-01-01/2019-12-31 "
+    "(Signalfenster) mit Pufferjahr 2020 fuer die Reife\" und /splits/"
+    "fensterAchse \"Jedes Fenster wird am `accepted`-Zeitstempel der "
+    "SEC-Einreichung geschnitten, nie am Bilanzstichtag.\"; Reife = vier "
+    "Folgequartale; Schnitt realisiert in scripts/studie-panel-bau.py:99. "
+    "scripts/studie-zaehlprobe.py:97 ist NUR Korroboration, nie Quelle "
+    "(F6-C20). SIGNALBAND und PANEL-RAND werden getrennt gefuehrt und "
+    "gegeneinander verriegelt (F6-C22): Erst-Ereignisse duerfen ausschliesslich "
+    "aus 2017-01-01/2019-12-31 stammen, die Zensur rechnet gegen 2020-12-31. "
+    "Ein Erst-Ereignis mit accepted im Pufferjahr 2020 ist ein ABBRUCH, kein "
+    "Sonderfall - sonst verlaengert der Panel-Rand still das Signalband um ein "
+    "Jahr.")
+
+# F6-C18/KZ-7 - die am Objekt gemessenen Anker, damit der konfirmatorische
+# Eintrag sie abschreiben kann statt sie neu abzuleiten.
+ZWEIG_ANKER = {
+    "datei": "scripts/studie-vb-b4-band.py",
+    "funktion": "auswerten :145-227",
+    "konvention": ("fuehrende Zeile (def bzw. das entscheidende `if`) plus die "
+                   "vollstaendige return-Anweisung"),
+    "gate_gerissen": ":168-172",
+    "im_band": ":213-217",
+    "ausserhalb_band": ":218-227",
+    "berichtigung": ("Die frueher im Laeufer gefuehrten Anker "
+                     "\":129-134 / :211-215 / :216-224\" sind falsch; "
+                     ":129-142 ist se_stern(). Der zwischen den Stimmen "
+                     "strittige Anker ausserhalb_band ist am Objekt gemessen "
+                     ":218-227 (Z2/Z3), nicht :218-226 (Z1) - :226-227 tragen "
+                     "die letzten zwei Zeilen der NICHT-BESTANDEN-Rueckgabe."),
+}
+
+
+def leite_panelrand_ab(wurzel, fenster_name):
+    """F6-C23: den Panel-Rand zur LAUFZEIT ableiten und gegen die gebundene
+    Konstante halten. Abweichung = fail-closed-Abbruch, kein Ermessen.
+
+    Die Kette, jedes Glied registriert:
+      rules.json  fenster.<fenster>.bis  ->  letztes Signaljahr
+      rules.json  pufferjahre            ->  das Pufferjahr = Signaljahr + 1
+      Panel-Rand  = 31.12. des Pufferjahres
+    """
+    schluessel = RULES_FENSTER.get(fenster_name)
+    if not schluessel:
+        raise LaufAbbruch(
+            "Unbekanntes Fenster " + repr(fenster_name) + " - der Panel-Rand "
+            "ist dafuer nicht ableitbar.")
+    regeln = lies_json(os.path.join(wurzel, "protocol", "early-detection",
+                                    "2.0.0", "rules.json"),
+                       "Das Regelwerk rules.json")
+    fenster = (regeln.get("fenster") or {}).get(schluessel)
+    if not fenster or not fenster.get("von") or not fenster.get("bis"):
+        raise LaufAbbruch(
+            "rules.json fuehrt kein vollstaendiges Fenster " + repr(schluessel)
+            + ". Ohne Fenstergrenzen gibt es keinen abgeleiteten Panel-Rand.")
+    puffer = regeln.get("pufferjahre")
+    if not isinstance(puffer, list) or not puffer:
+        raise LaufAbbruch("rules.json fuehrt keine pufferjahre.")
+
+    # "2019q4" -> 2019. Die Quartalsform wird positiv geprueft, nie geraten.
+    bis = str(fenster["bis"])
+    if len(bis) != 6 or bis[4] != "q" or not bis[:4].isdigit():
+        raise LaufAbbruch(
+            "Die Fenstergrenze " + repr(bis) + " hat nicht die erwartete "
+            "Quartalsform JJJJqQ - der Panel-Rand ist daraus nicht ableitbar.")
+    signaljahr = int(bis[:4])
+    pufferjahr = signaljahr + 1
+    if pufferjahr not in puffer:
+        raise LaufAbbruch(
+            "Das Pufferjahr " + str(pufferjahr) + " (Signaljahr " + str(signaljahr)
+            + " + 1) steht nicht in rules.json pufferjahre " + repr(puffer)
+            + ". Die Reifebereinigung braucht genau dieses Jahr; ohne es ist "
+            "der Panel-Rand nicht abgeleitet, sondern geraten.")
+
+    abgeleitet = str(pufferjahr) + "-12-31"
+    von = str(fenster["von"])
+    if len(von) != 6 or von[4] != "q" or not von[:4].isdigit():
+        raise LaufAbbruch("Die Fenstergrenze " + repr(von) + " hat nicht die "
+                          "erwartete Quartalsform JJJJqQ.")
+    signal_von = von[:4] + "-01-01"
+    signal_bis = str(signaljahr) + "-12-31"
+
+    # Beide Richtungen zu (F6-B8): der abgeleitete Wert gegen die gebundene
+    # Konstante, und die Konstante gegen das Objekt.
+    for name, ist, soll in (("panelRand", abgeleitet, PANEL_RAND_SOLL),
+                            ("fensterVon", signal_von, FENSTER_VON_SOLL),
+                            ("fensterBis", signal_bis, FENSTER_BIS_SOLL)):
+        if ist != soll:
+            raise LaufAbbruch(
+                "ABGELEITETER WERT WEICHT AB: " + name + " ist " + repr(ist)
+                + ", gebunden ist " + repr(soll) + ". Der Lauf bricht ab - "
+                "ein Bericht mit einem geratenen Fenster ist ein Bericht ohne "
+                "Fenster.")
+
+    # F6-C22: Signalband und Panel-Rand sind verriegelt - der Rand liegt genau
+    # ein Jahr hinter dem Signalband und darf es nie verlaengern.
+    if not signal_bis < abgeleitet:
+        raise LaufAbbruch(
+            "Der Panel-Rand " + abgeleitet + " liegt nicht nach dem Ende des "
+            "Signalbands " + signal_bis + ".")
+    return {"fensterVon": signal_von, "fensterBis": signal_bis,
+            "panelRand": abgeleitet}
+
 
 class LaufAbbruch(Exception):
     """Ein benannter Abbruch. Auf JEDEM Pfad ein Grund - ein durchgereichter
@@ -211,6 +338,7 @@ VARIANTEN_SCHLUESSEL = {"differenz_punkte"}
 # breit wurde."
 UMSCHLAG_ALLOWLIST = {
     "schema", "protokoll", "runId", "fenster", "variante", "arm", "panelRand",
+    "fensterVon", "fensterBis",
     "serverConfirmedAt", "accessedAt", "ersterZugriffAm", "beendetAm",
     "gelesenePfade", "geschriebenePfade", "ergebnisdatenBeruehrt",
     "siegelWache", "manifestGeprueft", "umgebung", "gebundeneHashes",
@@ -228,16 +356,37 @@ VERBOTENE_SCHLUESSEL = {
     "auswertbare_firmen_quartale",
 }
 
-# F6-B15 - die DREI zweig-pflichtigen Teilmengen. Sie sind nicht erfunden,
-# sondern an `scripts/studie-vb-b4-band.py::auswerten` ABGELESEN: die
-# eingefrorene Maschine hat genau drei unterscheidbare Schluesselmengen.
+# F6-B15 / F6-C17 / F6-C18 - die DREI zweig-pflichtigen Teilmengen. Sie sind
+# nicht erfunden, sondern an `scripts/studie-vb-b4-band.py::auswerten`
+# (:145-227) ABGELESEN: die eingefrorene Maschine hat genau drei
+# unterscheidbare Schluesselmengen.
 #
-#   gate_gerissen       :129-134  - ohne bandbreiteAbsolut, ohne
-#                                   abstandZu329Von365, ohne etikett
-#   im Band             :211-215  - vollstaendiger Bericht, ohne etikett
-#   ausserhalb des Band :216-224  - vollstaendiger Bericht, ohne pflichtsatz
-#                                   und ohne zweitsatz (BESTANDEN und NICHT
-#                                   BESTANDEN tragen dieselbe Menge)
+# ANKER, AM OBJEKT GEMESSEN (F6-C18/KZ-7 - der gemessene Wert gilt, nicht der
+# des Gerichts). Konvention: die fuehrende Zeile (def bzw. das entscheidende
+# `if`) plus die vollstaendige `return`-Anweisung.
+#
+#   gate_gerissen       :168-172  - def :168, return :169-172
+#   im_band             :213-217  - if  :213, return :214-217
+#   ausserhalb_band     :218-227  - if  :218, return BESTANDEN :219-222,
+#                                   return NICHT BESTANDEN :223-227
+#
+# Die frueher hier gefuehrten Anker ":129-134 / :211-215 / :216-224" waren
+# FALSCH: :129-142 ist `se_stern()`, nicht `gate_gerissen` (F6-C18, 2:0).
+# Der zwischen den Stimmen strittige Anker `ausserhalb_band` ist gemessen
+# :218-227 (Z2/Z3) und nicht :218-226 (Z1) - :226-227 tragen die letzten zwei
+# Zeilen der NICHT-BESTANDEN-Rueckgabe, die bei :218-226 abgeschnitten waeren.
+#
+# WAS DIE MENGEN UNTERSCHEIDET - ausgeschrieben, nie abgekuerzt (F6-C17):
+#   gate_gerissen fuehrt `abstand_zu_090` SEHR WOHL, naemlich als None; NICHT
+#   gefuehrt wird `abstand_zu_329_von_365`. Die Kurzform "ohne abstand" ist
+#   unzulaessig - sie verschluckt `_zu_329_von_365` und ist genau die Art
+#   Verkuerzung, gegen die F6-B13 den Stempel gesetzt hat.
+#
+# NULL IST ANWESEND (F6-C19): im Zweig gate_gerissen sind `se_stern`,
+# `se_entschied` und `abstand_zu_090` VORHANDEN mit Wert None, ebenso
+# `wilson95_unten`/`wilson95_oben` bei `messbar = false`. F6-B15 prueft
+# ANWESENHEIT, nicht Wert. Weglassen statt None ist ein Pflichtschluessel-
+# ABBRUCH.
 #
 # Strikte Gleichheit waere hier ein Fehlalarm - genau V3s Korrektur.
 ZWEIG_GATE_GERISSEN = "gate_gerissen"
@@ -863,7 +1012,176 @@ def pruefe_ausgabesatz(werte, zweig, wo):
     pruefe_verbotene(werte, wo)
 
 
+# =============================================================================
+# Das 10-Punkte-Kriterium (F6-C13 bis F6-C16)
+# =============================================================================
+#
+# AUSGEWERTET, NICHT NUR BERICHTET - als VIERTE KONJUNKTIVE Torbedingung,
+# gerechnet HIER im Laeufer und NIEMALS im eingefrorenen Bandmodul
+# (`scripts/studie-vb-b4-band.py` bleibt Byte fuer Byte unangetastet, F6-B22).
+#
+# Diese Frage hat das Gericht entschieden, nicht der Bauende: der frueher an
+# dieser Stelle gefuehrte Stempel "NICHT AUSGEWERTET ... OFFEN" ist durch
+# _COURT-F6-ZAEHLWERK-2026-09-01 (B), 3:0, erledigt. Belege im Urteil:
+# `preregistration.json:88` fuehrt die 10 Punkte INNERHALB des Objekts, das
+# woertlich `gate` heisst; `:89` sagt "R9 - Pass/Fail, nicht Fussnote.";
+# `:139` gibt die Folge (INCONCLUSIVE_DATA, kein p-Wert); und zwei
+# ratifizierte Vollstrecker rechnen es bereits als Tor
+# (`studie-zaehlprobe.py:529-530`, `studie-e4d-kadenz.py:612-632`).
+#
+# ZWEI WOERTLICHKEITS-FALLEN (F6-C14), beide gepinnt:
+#   (a) GLEICHHEIT BESTEHT. Verglichen wird `<= 10`; exakt 10,0 reisst NICHT.
+#       KEINE RUNDUNG VOR DEM VERGLEICH - Hauskonvention des Bandmoduls
+#       (`studie-vb-b4-band.py:198-199`).
+#   (b) EINHEIT. Verglichen wird in PUNKTEN gegen 10, nie in Anteilen gegen
+#       0,1. Ein Faktor-100-Fehler kippt hier das Verdikt.
+#
+# KEIN BAND, KEIN SE, KEIN ERMESSEN auf der Differenz: ein Band um die
+# Differenz waere eine neue Schaetzgroesse mit neuem SE und damit die von
+# Register-Eintrag 23 verbotene Neuableitung. Blanker Punktvergleich.
+
+DIFFERENZ_QUELLE = ("protocol/early-detection/2.0.0/preregistration.json:88 - "
+                    "\"gate\": {\"minimum\": 0.9, \"gilt\": \"Signal-Arm UND "
+                    "Kontrollpool\", \"maxDifferenzPunkte\": 10}")
+
+# Die Zusammensetzung als REGELTEXT (F6-C13), woertlich wie im Urteil.
+TOR_REGELTEXT = (
+    "WEITER = 1 nur bei (beide Arm-Bandverdikte BESTANDEN) UND "
+    "(differenz_punkte <= 10). "
+    "Ein Arm NICHT UNTERSCHEIDBAR -> Gesamt NICHT UNTERSCHEIDBAR, WEITER = 0 "
+    "(das Messgeraet hat nicht getrennt; die Bandfolge dominiert). "
+    "Ein Arm NICHT BESTANDEN -> Tor gerissen, WEITER = 0. "
+    "Beide BESTANDEN, aber differenz_punkte > 10 -> Tor gerissen nach "
+    "preregistration.json:139 (INCONCLUSIVE_DATA, kein p-Wert), WEITER = 0. "
+    "Kein Band, kein SE und kein Ermessen auf der Differenz.")
+
+TOR_RICHTUNG = (
+    "RICHTUNGS-OFFENLEGUNG (Form F6-B21): die Zusammensetzung kann WEITER nur "
+    "ERSCHWEREN, nie erzeugen - sie entfernt ein BESTANDEN, sie schafft "
+    "keines. Das ist eine Aussage ueber die Richtung der REGEL, nicht ueber "
+    "den Ausgang des Laufs.")
+
+
+def differenz_objekt(anteil_signal, anteil_kontrollpool):
+    """F6-C15: `differenz_punkte` ist ein Objekt, kein nackter Wert.
+
+    Gerechnet wird in PUNKTEN (`* 100.0`) und OHNE jede Rundung - der
+    Vergleich `<= 10` faellt sonst genau auf der Kante falsch aus.
+    """
+    for name, wert in (("signal", anteil_signal),
+                       ("kontrollpool", anteil_kontrollpool)):
+        if not (isinstance(wert, float) and math.isfinite(wert)):
+            raise LaufAbbruch(
+                "Der Anteil des Arms " + name + " ist keine endliche Zahl ("
+                + repr(wert) + ") - die Arm-Differenz ist nicht bildbar.")
+    wert = abs(anteil_signal - anteil_kontrollpool) * 100.0
+    return {
+        "wert": wert,
+        "maxDifferenzPunkte": MAX_DIFFERENZ_PUNKTE,
+        # Gleichheit besteht. KEINE Rundung vor dem Vergleich.
+        "erfuellt": wert <= MAX_DIFFERENZ_PUNKTE,
+        "quelle": DIFFERENZ_QUELLE,
+    }
+
+
+def tor_verdikt(verdikt_signal, verdikt_kontrollpool, differenz):
+    """F6-C13: das Tor-Verdikt je Variante, vier konjunktive Bedingungen.
+
+    Die Reihenfolge ist die des Urteils und nicht beliebig: die Bandfolge
+    DOMINIERT. Ein Arm, den das Messgeraet nicht getrennt hat, macht das
+    Gesamtverdikt NICHT UNTERSCHEIDBAR - auch dann, wenn die Differenz haelt.
+    """
+    verdikte = (verdikt_signal, verdikt_kontrollpool)
+    bekannt = {"BESTANDEN", "NICHT UNTERSCHEIDBAR", "NICHT BESTANDEN"}
+    unbekannt = [v for v in verdikte if v not in bekannt]
+    if unbekannt:
+        raise LaufAbbruch(
+            "Unbekanntes Arm-Verdikt: " + repr(unbekannt) + ". Die drei "
+            "Verdikte der eingefrorenen Maschine sind erschoepfend; ein "
+            "viertes heisst, dass die Maschine nicht mehr die ist, gegen die "
+            "geprueft wird.")
+
+    if "NICHT UNTERSCHEIDBAR" in verdikte:
+        return {"verdikt": "NICHT UNTERSCHEIDBAR", "weiter": 0,
+                "grund": ("Mindestens ein Arm ist NICHT UNTERSCHEIDBAR - das "
+                          "Messgeraet hat dort nicht getrennt. Die Bandfolge "
+                          "dominiert die Differenz-Bedingung."),
+                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+    if "NICHT BESTANDEN" in verdikte:
+        return {"verdikt": "TOR GERISSEN", "weiter": 0,
+                "grund": "Mindestens ein Arm ist NICHT BESTANDEN.",
+                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+    # Beide Arme BESTANDEN - jetzt, und nur jetzt, entscheidet die Differenz.
+    if not differenz["erfuellt"]:
+        return {"verdikt": "TOR GERISSEN", "weiter": 0,
+                "grund": ("Beide Arme BESTANDEN, aber die Arm-Differenz "
+                          + repr(differenz["wert"]) + " Punkte ueberschreitet "
+                          + repr(MAX_DIFFERENZ_PUNKTE) + " Punkte: "
+                          "INCONCLUSIVE_DATA nach preregistration.json:139, "
+                          "kein p-Wert wird berechnet (R9)."),
+                "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+    return {"verdikt": "TOR GEHALTEN", "weiter": 1,
+            "grund": ("Beide Arm-Bandverdikte BESTANDEN und die Arm-Differenz "
+                      + repr(differenz["wert"]) + " Punkte haelt die Schranke "
+                      "von " + repr(MAX_DIFFERENZ_PUNKTE) + " Punkten "
+                      "(Gleichheit besteht)."),
+            "regeltext": TOR_REGELTEXT, "richtung": TOR_RICHTUNG}
+
+
+def pruefe_keine_absolutpfade(baum, absolut, wo="bericht"):
+    """R12a am SCHREIB-RAND: kein absoluter Pfad verlaesst diesen Lauf.
+
+    WARUM HIER UND NICHT AN JEDER EINZELNEN STELLE: ein Kurzpfad-Aufruf, den
+    jemand kuenftig vergisst, macht dieselbe Wunde neu auf. Der Wachposten
+    steht deshalb dort, wo ALLE Wege zusammenlaufen - unmittelbar vor dem
+    Schreiben.
+
+    Geprueft wird gegen die Pfade, die dieser Lauf TATSAECHLICH angefasst hat
+    (exakt, keine Heuristik), plus die zwei Wurzelformen, die eine
+    Benutzerkennung tragen koennen. Der Vergleich laeuft ueber den GEPARSTEN
+    Baum, nicht ueber den JSON-Text: in JSON-Text sind Windows-Backslashes
+    verdoppelt, und genau daran ist die erste Fassung dieses Waechters auf
+    Windows still gruen geblieben, waehrend sie auf Linux zu Recht rot wurde.
+    """
+    if isinstance(baum, dict):
+        for k, v in baum.items():
+            pruefe_keine_absolutpfade(v, absolut, wo + "." + str(k))
+        return
+    if isinstance(baum, list):
+        for i, v in enumerate(baum):
+            pruefe_keine_absolutpfade(v, absolut, wo + "[" + str(i) + "]")
+        return
+    if not isinstance(baum, str):
+        return
+    for pfad in absolut:
+        if pfad and pfad in baum:
+            raise LaufAbbruch(
+                "ABSOLUTER PFAD IM BERICHT bei " + wo + " (R12a). Ein voller "
+                "Pfad traegt die Benutzerkennung des Rechners in die Akte. "
+                "Es gilt die Kurzform Elternverzeichnis/Datei (Muster "
+                "scripts/studie-basisraten.py:251).")
+    # Die beiden Wurzelformen, die eine Kennung tragen. Prosa enthaelt sie
+    # nicht; ein durchgerutschter Pfad schon.
+    for wurzelform in ("/home/", "/Users/", "C:\\", "c:\\"):
+        if wurzelform in baum:
+            raise LaufAbbruch(
+                "PFAD-WURZEL " + repr(wurzelform) + " im Bericht bei " + wo
+                + " (R12a).")
+
+
 def pruefe_umschlag(umschlag):
+    # F6-C23: bis hierher pruefte diese Funktion ausschliesslich
+    # Schluessel-MITGLIEDSCHAFT, nie den Wert - ein `panelRand: None` waere
+    # glatt durchgelaufen. "Ein Null-Rand im konfirmatorischen Bericht ist ein
+    # Bericht ohne Fenster." Die Pflichtfelder werden deshalb POSITIV auf
+    # einen Wert geprueft.
+    for feld in ("panelRand", "fensterVon", "fensterBis", "runId", "fenster",
+                 "serverConfirmedAt", "accessedAt", "ersterZugriffAm"):
+        wert = umschlag.get(feld)
+        if not isinstance(wert, str) or not wert.strip():
+            raise LaufAbbruch(
+                "UMSCHLAG-PFLICHTFELD OHNE WERT: " + feld + " = " + repr(wert)
+                + ". Schluessel-Mitgliedschaft allein ist keine Angabe.")
     ungelistet = sorted(set(umschlag) - UMSCHLAG_ALLOWLIST)
     if ungelistet:
         raise LaufAbbruch(
@@ -907,12 +1225,20 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     # Liste ist eine falsche Auskunft, kein fehlender Komfort.
     gelesene.extend(os.path.join(wurzel, *b["pfad"].split("/")) for b in BINDUNGEN)
 
+    # F6-C23 - direkt nach dem Rehash, weil die Ableitung auf rules.json steht
+    # und die Datei erst jetzt nachweislich die gebundene ist.
+    rand = leite_panelrand_ab(wurzel, freigabe["fenster"])
+    protokoll.append("Phase 1b PANEL-RAND: Signalband " + rand["fensterVon"]
+                     + " bis " + rand["fensterBis"] + ", Panel-Rand "
+                     + rand["panelRand"] + " - aus rules.json abgeleitet und "
+                     "gegen die gebundene Konstante gehalten.")
+
     # ── PHASE 2 ───────────────────────────────────────────────────────────
     zaehlwerk, zaehlwerk_sha = lade_zaehlwerk(zaehlwerk_pfad)
     if not panel_pfad or not os.path.isfile(panel_pfad):
         raise LaufAbbruch("Das Panel fehlt: " + str(panel_pfad))
     gelesene.append(panel_pfad)
-    protokoll.append("Phase 2 ZAEHLUNG: Zaehlwerk " + str(zaehlwerk_pfad)
+    protokoll.append("Phase 2 ZAEHLUNG: Zaehlwerk " + kurzpfad(str(zaehlwerk_pfad))
                      + " (sha256 " + zaehlwerk_sha + ").")
 
     se_skript = os.path.join(wurzel, "scripts", "studie-f6-klumpen-se.py")
@@ -943,11 +1269,19 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
             je_arm[arm] = {"umschlag": {"variante": variante, "arm": arm},
                            "werte": werte, "zweig": zweig}
 
-        # F6-B11 - je Variante GENAU EIN armuebergreifender Schluessel.
+        # F6-B11 / F6-C15 - je Variante GENAU EIN armuebergreifender
+        # Schluessel; er traegt jetzt ein OBJEKT statt einer nackten Zahl.
+        # VARIANTEN_SCHLUESSEL bleibt dadurch einelementig: eine Erweiterung
+        # von EINEM auf ZWEI Schluesseln waere eine Schwaechung von F6-B11.
         a_sig = je_arm["signal"]["werte"]["anteil"]
         a_kon = je_arm["kontrollpool"]["werte"]["anteil"]
-        je_arm["differenz_punkte"] = abs(a_sig - a_kon) * 100.0
-        fremd = sorted(set(je_arm) - set(ARME) - VARIANTEN_SCHLUESSEL)
+        je_arm["differenz_punkte"] = differenz_objekt(a_sig, a_kon)
+        je_arm["tor"] = tor_verdikt(
+            je_arm["signal"]["werte"]["verdikt"],
+            je_arm["kontrollpool"]["werte"]["verdikt"],
+            je_arm["differenz_punkte"])
+        fremd = sorted(set(je_arm) - set(ARME) - VARIANTEN_SCHLUESSEL
+                       - {"tor"})
         if fremd:
             raise LaufAbbruch("Ungelisteter Variantenschluessel: " + ", ".join(fremd))
         daten[variante] = je_arm
@@ -958,7 +1292,9 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         "protokoll": PROTOKOLL,
         "runId": freigabe["runId"],
         "fenster": freigabe["fenster"],
-        "panelRand": None,
+        "fensterVon": rand["fensterVon"],
+        "fensterBis": rand["fensterBis"],
+        "panelRand": rand["panelRand"],
         "serverConfirmedAt": freigabe["serverConfirmedAt"],
         "accessedAt": freigabe["accessedAt"],
         "ersterZugriffAm": erster_zugriff,
@@ -978,7 +1314,18 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
              "eintrag": "zu binden in Eintrag 25 (F6-B7)"},
             {"pfad": kurzpfad(str(zaehlwerk_pfad)), "art": "datei",
              "sha256": zaehlwerk_sha,
-             "eintrag": "zu binden in Eintrag 25 (F6-B7)"},
+             "eintrag": "zu binden im konfirmatorischen Eintrag (F6-B7)"},
+            # F6-C24: `studie-zaehlprobe.py` ist durch die Wiederverwendung von
+            # arm_zaehlen/ist_zensiert/im_signalband AUSFUEHRENDER REGELCODE
+            # geworden und deshalb zwingend mitzubinden - der mitbeurkundete
+            # Nebenpreis: jede spaetere Aenderung daran bricht ab sofort den
+            # F6-Vollzug. Es steht NICHT in BINDUNGEN, weil die Eintraege 23
+            # und 24 es nicht binden; gebunden wird es im konfirmatorischen
+            # Eintrag, und dafuer wird der Wert hier gemessen ausgewiesen.
+            {"pfad": "scripts/studie-zaehlprobe.py", "art": "datei",
+             "sha256": sha256_datei(os.path.join(
+                 wurzel, "scripts", "studie-zaehlprobe.py")),
+             "eintrag": "zu binden im konfirmatorischen Eintrag (F6-C24)"},
         ],
     }
     pruefe_umschlag(umschlag)
@@ -992,23 +1339,67 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
             "kriteriumDifferenz": {
                 "schluessel": "differenz_punkte",
                 "maxDifferenzPunkte": MAX_DIFFERENZ_PUNKTE,
-                "quelle": "protocol/early-detection/2.0.0/preregistration.json:88",
+                "quelle": DIFFERENZ_QUELLE,
+                # F6-C16: der Stempel "NICHT AUSGEWERTET ... OFFEN" ist
+                # ersetzt. Die Frage war eine Methodikfrage und ist vom
+                # GERICHT entschieden worden, nicht vom Bauenden still
+                # mitentschieden.
                 "auswertung": (
-                    "NICHT AUSGEWERTET. Der Laeufer BERICHTET differenz_punkte "
-                    "(F6-B11) und vergleicht sie NICHT gegen "
-                    "maxDifferenzPunkte. Ob das 10-Punkte-Kriterium ein Tor "
-                    "ist, das dieser Lauf zieht, oder eine Groesse, die der "
-                    "Bericht nur ausweist, ist eine Methodikfrage: V2 fuehrt "
-                    "die Zweiarmigkeit ausdruecklich als 'Arbeitsteilung - die "
-                    "Bandregel je Arm, das 10-Punkte-Kriterium daneben' und "
-                    "hat 'nichts daran entschieden'. Der Bauende entscheidet "
-                    "sie nicht still mit. OFFEN."),
+                    "AUSGEWERTET als VIERTE KONJUNKTIVE Torbedingung, im "
+                    "Laeufer gerechnet und niemals im Bandmodul "
+                    "(scripts/studie-vb-b4-band.py bleibt Byte fuer Byte "
+                    "unangetastet, F6-B22). Entschieden durch "
+                    "_COURT-F6-ZAEHLWERK-2026-09-01, Frage (B), 3:0, "
+                    "Auflagen F6-C13/C14/C15/C16 - nicht vom Bauenden."),
+                "belege": [
+                    "preregistration.json:88 - die 10 Punkte stehen INNERHALB "
+                    "des Objekts, das woertlich \"gate\" heisst",
+                    "preregistration.json:89 - \"regel\": \"R9 - Pass/Fail, "
+                    "nicht Fussnote.\"",
+                    "preregistration.json:134 - Wiederholung unter "
+                    "primarySuccessCriteria",
+                    "preregistration.json:139 - Folge des Reissens: "
+                    "INCONCLUSIVE_DATA, kein p-Wert wird berechnet (R9)",
+                    "scripts/studie-zaehlprobe.py:529-530 - rechnet es bereits "
+                    "als Tor (AMPEL_ROT)",
+                    "scripts/studie-e4d-kadenz.py:612-632 - \"Die Regel, "
+                    "WOERTLICH wie im Siegel - drei Bedingungen, kein "
+                    "Ermessen\"",
+                    "protocol/early-detection/2.0.0/e4d-freeze.json:45 - "
+                    "\"UNVERAENDERT aus der versiegelten Praeregistrierung "
+                    "2.0.0\", \"nicht gesenkt, nicht diskutiert, nicht "
+                    "kalibriert\"",
+                ],
+                "regeltext": TOR_REGELTEXT,
+                "richtung": TOR_RICHTUNG,
+                "gleichheitBesteht": (
+                    "<= 10: exakt 10,0 Punkte reissen NICHT. Keine Rundung vor "
+                    "dem Vergleich (Hauskonvention studie-vb-b4-band.py:198-199)."),
+                "einheit": ("PUNKTE gegen 10, nie Anteile gegen 0,1 - der "
+                            "Laeufer rechnet abs(a_sig - a_kon) * 100.0."),
+                "ebene": ("differenz_punkte liegt auf VARIANTEN-Ebene und "
+                          "beruehrt die drei zweig-pflichtigen Teilmengen "
+                          "NICHT (F6-C19). Ein Arm kennt die Differenz allein "
+                          "gar nicht."),
+                "unterschluessel": ["wert", "maxDifferenzPunkte", "erfuellt",
+                                    "quelle"],
             },
             "zweigPflichtTeilmengen": {
                 z: sorted(s) for z, s in ZWEIG_PFLICHT.items()},
+            "zweigAnker": ZWEIG_ANKER,
+            "panelRandHerkunft": PANEL_RAND_HERKUNFT,
         },
         "protokoll": protokoll,
     }
+    # R12a am Schreib-Rand, gegen die Pfade dieses Laufs. Erst hier, damit
+    # KEIN Weg daran vorbeifuehrt.
+    pruefe_keine_absolutpfade(bericht, {
+        os.path.abspath(str(p)) for p in
+        [freigabe_pfad, register_pfad, panel_pfad, bericht_pfad,
+         zaehlwerk_pfad, wurzel] if p
+    } | {str(p) for p in
+         [freigabe_pfad, register_pfad, panel_pfad, bericht_pfad,
+          zaehlwerk_pfad, wurzel] if p})
     return bericht
 
 

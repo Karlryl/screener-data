@@ -56,7 +56,12 @@ const GEBUNDEN = [
   'scripts/studie-e2-verbreitert.py',
   'scripts/studie-f6-klumpen-se.py',
 ];
-const MITKOPIERT = GEBUNDEN.concat(['scripts/studie-vb-b4-band.py']);
+// studie-zaehlprobe.py ist nicht in den Eintraegen 23/24 gebunden (steht also
+// nicht in GEBUNDEN), wird aber durch F6-C24 als ausfuehrender Regelcode im
+// konfirmatorischen Eintrag gebunden - der Laeufer misst seinen SHA und weist
+// ihn aus. Deshalb muss die Fixture-Wurzel ihn tragen.
+const MITKOPIERT = GEBUNDEN.concat(['scripts/studie-vb-b4-band.py',
+  'scripts/studie-zaehlprobe.py']);
 
 // Der Ledger-Hash beim Start. Die "nicht geschrieben"-Proben messen dagegen,
 // nicht gegen eine Ereigniszahl: eine Zaehlung ginge an dem Tag rot, an dem
@@ -539,10 +544,34 @@ test('5.5b R12a: kein voller Pfad und keine Benutzerkennung im Bericht', () => {
   // scripts/studie-basisraten.py::kurzpfad seit jeher schuetzt.
   const w = welt('f6lauf-r12a-');
   const b = bericht(w, gleichmaessig(230, 20));
-  const roh = fs.readFileSync(w.bericht, 'utf8');
-  assert.equal(roh.includes(w.dir), false,
-    'der volle Temp-Pfad steht im Bericht - mit ihm die Benutzerkennung');
-  assert.equal(roh.includes(os.homedir()), false, 'Heimatverzeichnis im Bericht');
+
+  // AM GEPARSTEN BAUM, NICHT AM JSON-TEXT.
+  // Die erste Fassung dieser Probe mass `rohtext.includes(w.dir)` und war
+  // damit auf Windows STILL GRUEN: JSON verdoppelt jeden Backslash, der
+  // gesuchte Pfad steht im Rohtext also in maskierter Form und die
+  // Teilstring-Suche findet ihn nie. Auf Linux, wo Trennzeichen nicht
+  // maskiert werden, wurde dieselbe Probe zu Recht rot (CI-Lauf 33450494912).
+  // Das Leck war auf BEIDEN Plattformen da; sehen konnte es die Probe nur auf
+  // einer. Ueber den geparsten Werten existiert die Maskierung nicht.
+  const strings = [];
+  (function sammle(k) {
+    if (typeof k === 'string') strings.push(k);
+    else if (Array.isArray(k)) k.forEach(sammle);
+    else if (k && typeof k === 'object') Object.values(k).forEach(sammle);
+  }(b));
+  assert.ok(strings.length > 20, 'die Sammlung hat den Baum nicht erfasst');
+
+  for (const s of strings) {
+    assert.equal(s.includes(w.dir), false,
+      `der volle Temp-Pfad steht im Bericht - mit ihm die Benutzerkennung: ${s}`);
+    assert.equal(s.includes(os.homedir()), false, `Heimatverzeichnis im Bericht: ${s}`);
+    // Plattformunabhaengig: beide Wurzelformen, die eine Kennung tragen.
+    assert.equal(/(^|[^A-Za-z0-9])[A-Za-z]:[\\/]/.test(s), false,
+      `absoluter Windows-Pfad im Bericht: ${s}`);
+    assert.equal(s.includes('/home/') || s.includes('/Users/'), false,
+      `absoluter POSIX-Nutzerpfad im Bericht: ${s}`);
+  }
+
   for (const p of b.umschlag.gelesenePfade.concat(b.umschlag.geschriebenePfade)) {
     assert.equal(p.split('/').length, 2,
       `kein Kurzpfad (Elternverzeichnis/Datei): ${p}`);
@@ -550,14 +579,279 @@ test('5.5b R12a: kein voller Pfad und keine Benutzerkennung im Bericht', () => {
   }
 });
 
-test('5.6 differenz_punkte: je Variante GENAU EINER, armuebergreifend (F6-B11)', () => {
+test('5.5c R12a: der Waechter steht am SCHREIB-RAND und faengt jeden Weg', () => {
+  // Der Wachposten haengt nicht an einer einzelnen Aufrufstelle, sondern dort,
+  // wo alle Wege zusammenlaufen. Ein kuenftig vergessener kurzpfad()-Aufruf
+  // faellt damit trotzdem auf.
+  // DIE PROBEPFADE WERDEN AUS TEILEN GEBAUT, NICHT AUSGESCHRIEBEN - und das
+  // ist Absicht, kein Umweg: `tests/studie-deckel.test.js` (R14a/R12a) scannt
+  // jede tests/studie-*test.js auf genau solche Literale und wird zu Recht rot,
+  // wenn eines drinsteht. Ein Test ueber Pfad-Lecks darf selbst keines
+  // ausliefern. Zusammengesetzt ist die Zeichenkette zur Laufzeit identisch.
+  const bs = String.fromCharCode(92); // Backslash
+  const winPfad = `C:${bs}${bs}Users${bs}${bs}wer${bs}${bs}a.json`;
+  const posixPfad = `${'/'}home${'/'}runner/w/a.json`;
+  const r = pyProbe([
+    'try:',
+    `    m.pruefe_keine_absolutpfade({"tief": {"x": ${JSON.stringify(winPfad)}}}, set())`,
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:/m, 'ein absoluter Windows-Pfad muss brechen');
+  const p = pyProbe([
+    'try:',
+    `    m.pruefe_keine_absolutpfade({"t": {"x": ${JSON.stringify(posixPfad)}}}, set())`,
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(p.stdout, /^ABBRUCH:/m, 'ein absoluter POSIX-Pfad muss brechen');
+  // GEGENPROBE: Kurzpfade und Prosa gehen durch.
+  const g = pyProbe([
+    'm.pruefe_keine_absolutpfade({"a": ["scripts/x.py", "Prosa mit / Schraegstrich"]}, set())',
+    'print("DURCH")',
+  ].join('\n'));
+  assert.match(g.stdout, /^DURCH$/m,
+    'ohne diese Gegenprobe belegte die Probe nur, dass immer etwas bricht');
+});
+
+test('5.6 differenz_punkte: je Variante GENAU EINER, jetzt als Objekt (F6-B11/F6-C15)', () => {
   const w = welt('f6lauf-differenz-');
   const daten = gleichmaessig(230, 20);
   daten['S-U'].kontrollpool = tally(220, 30); // 0,88 gegen 0,92 -> 4 Punkte
   const b = bericht(w, daten);
-  assert.ok(Math.abs(b.daten['S-U'].differenz_punkte - 4) < 1e-9);
-  assert.equal(b.daten['S-G'].differenz_punkte, 0);
-  assert.equal(b.stempel.kriteriumDifferenz.maxDifferenzPunkte, 10);
+  const d = b.daten['S-U'].differenz_punkte;
+  assert.ok(Math.abs(d.wert - 4) < 1e-9);
+  assert.equal(d.maxDifferenzPunkte, 10);
+  assert.equal(d.erfuellt, true);
+  assert.ok(typeof d.quelle === 'string' && d.quelle.includes('preregistration.json:88'));
+  // F6-C15: die Objektform haelt F6-B11 buchstaeblich intakt - EIN
+  // armuebergreifender Schluessel, nicht zwei.
+  assert.deepEqual(Object.keys(d).sort(),
+    ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'wert']);
+  assert.equal(b.daten['S-G'].differenz_punkte.wert, 0);
+});
+
+test('5.6b VARIANTEN_SCHLUESSEL bleibt EINELEMENTIG (F6-C15)', () => {
+  const r = pyProbe([
+    'print("ANZAHL:" + str(len(m.VARIANTEN_SCHLUESSEL)))',
+    'print("INHALT:" + repr(sorted(m.VARIANTEN_SCHLUESSEL)))',
+  ].join('\n'));
+  assert.match(r.stdout, /^ANZAHL:1$/m,
+    'eine Erweiterung von EINEM auf ZWEI armuebergreifende Schluessel waere '
+    + 'eine Schwaechung von F6-B11');
+  assert.match(r.stdout, /^INHALT:\['differenz_punkte'\]$/m);
+});
+
+// ============================================================================
+// W-D - das 10-Punkte-Kriterium (F6-C13 / F6-C14)
+// ============================================================================
+
+// Die Fixtures rechnen das Tor-Verdikt direkt, damit die Kante exakt
+// getroffen wird: ueber Klumpen-Tallies waere 10,0000001 nicht darstellbar.
+function torProbe(vSig, vKon, differenzWert) {
+  const r = pyProbe([
+    `d = m.differenz_objekt(0.0, ${differenzWert} / 100.0)`,
+    `t = m.tor_verdikt(${JSON.stringify(vSig)}, ${JSON.stringify(vKon)}, d)`,
+    'import json; print("ERG:" + json.dumps({"erfuellt": d["erfuellt"],'
+    + ' "wert": d["wert"], "verdikt": t["verdikt"], "weiter": t["weiter"]}))',
+  ].join('\n'));
+  assert.equal(r.status, 0, r.stderr);
+  const zeile = r.stdout.split('\n').find((z) => z.startsWith('ERG:'));
+  assert.ok(zeile, r.stdout + r.stderr);
+  return JSON.parse(zeile.slice(4));
+}
+
+test('W-D (a) GLEICHHEIT BESTEHT: exakt 10,0 Punkte reissen NICHT', () => {
+  const e = torProbe('BESTANDEN', 'BESTANDEN', 10.0);
+  assert.equal(e.erfuellt, true, 'Gleichheit zaehlt INS Kriterium, wie im Band');
+  assert.equal(e.verdikt, 'TOR GEHALTEN');
+  assert.equal(e.weiter, 1);
+});
+
+test('W-D (a) 10,0000001 Punkte reissen - keine Rundung vor dem Vergleich', () => {
+  const e = torProbe('BESTANDEN', 'BESTANDEN', 10.0000001);
+  assert.equal(e.erfuellt, false,
+    'wer vor dem Vergleich rundet, macht aus 10,0000001 eine 10,0');
+  assert.equal(e.verdikt, 'TOR GERISSEN');
+  assert.equal(e.weiter, 0);
+});
+
+test('W-D (b) EINHEIT: verglichen wird in PUNKTEN gegen 10, nie in Anteilen gegen 0,1', () => {
+  // Ein Faktor-100-Fehler kippt hier das Verdikt: 0,04 Anteil = 4 Punkte.
+  const r = pyProbe([
+    'd = m.differenz_objekt(0.92, 0.88)',
+    'print("WERT:" + repr(d["wert"]))',
+    'print("MAX:" + repr(d["maxDifferenzPunkte"]))',
+  ].join('\n'));
+  assert.match(r.stdout, /^WERT:4\.0/m,
+    '0,92 gegen 0,88 sind VIER PUNKTE, nicht 0,04');
+  assert.match(r.stdout, /^MAX:10$/m, 'die Schranke ist 10, nicht 0,1');
+  // Und die Kante liegt bei 10 Punkten, nicht bei 10 Prozentpunkten Anteil:
+  assert.equal(torProbe('BESTANDEN', 'BESTANDEN', 9.9).erfuellt, true);
+  assert.equal(torProbe('BESTANDEN', 'BESTANDEN', 10.1).erfuellt, false);
+});
+
+test('F6-C13 die Bandfolge DOMINIERT die Differenz-Bedingung', () => {
+  // Ein Arm NICHT UNTERSCHEIDBAR -> Gesamt NICHT UNTERSCHEIDBAR, auch wenn
+  // die Differenz haelt. Die Reihenfolge der Bedingungen ist nicht beliebig.
+  const a = torProbe('NICHT UNTERSCHEIDBAR', 'BESTANDEN', 0.0);
+  assert.equal(a.verdikt, 'NICHT UNTERSCHEIDBAR');
+  assert.equal(a.weiter, 0);
+  // ... und auch dann, wenn die Differenz zusaetzlich reisst.
+  const b = torProbe('NICHT UNTERSCHEIDBAR', 'BESTANDEN', 50.0);
+  assert.equal(b.verdikt, 'NICHT UNTERSCHEIDBAR');
+
+  const c = torProbe('NICHT BESTANDEN', 'BESTANDEN', 0.0);
+  assert.equal(c.verdikt, 'TOR GERISSEN');
+  assert.equal(c.weiter, 0);
+});
+
+test('F6-C13 WEITER = 1 gibt es NUR bei beiden BESTANDEN und gehaltener Differenz', () => {
+  const lagen = [
+    ['BESTANDEN', 'BESTANDEN', 0.0, 1],
+    ['BESTANDEN', 'BESTANDEN', 10.0, 1],
+    ['BESTANDEN', 'BESTANDEN', 10.0000001, 0],
+    ['BESTANDEN', 'NICHT UNTERSCHEIDBAR', 0.0, 0],
+    ['NICHT UNTERSCHEIDBAR', 'NICHT UNTERSCHEIDBAR', 0.0, 0],
+    ['BESTANDEN', 'NICHT BESTANDEN', 0.0, 0],
+    ['NICHT BESTANDEN', 'NICHT BESTANDEN', 0.0, 0],
+  ];
+  for (const [s, k, d, weiter] of lagen) {
+    assert.equal(torProbe(s, k, d).weiter, weiter, `Lage ${s}/${k}/${d}`);
+  }
+  // Richtungs-Offenlegung, am Objekt: die Bedingung kann WEITER nur
+  // ENTFERNEN, nie erzeugen. Ohne beide BESTANDEN gibt es kein weiter=1.
+  const r = pyProbe([
+    'd0 = m.differenz_objekt(0.0, 0.0)',
+    'aus = set()',
+    'for s in ("BESTANDEN", "NICHT UNTERSCHEIDBAR", "NICHT BESTANDEN"):',
+    '    for k in ("BESTANDEN", "NICHT UNTERSCHEIDBAR", "NICHT BESTANDEN"):',
+    '        if s != "BESTANDEN" or k != "BESTANDEN":',
+    '            aus.add(m.tor_verdikt(s, k, d0)["weiter"])',
+    'print("WEITER-OHNE-BEIDE-BESTANDEN:" + repr(sorted(aus)))',
+  ].join('\n'));
+  assert.match(r.stdout, /^WEITER-OHNE-BEIDE-BESTANDEN:\[0\]$/m);
+});
+
+test('F6-C13 ein unbekanntes Arm-Verdikt ist ein ABBRUCH', () => {
+  const r = pyProbe([
+    'd = m.differenz_objekt(0.0, 0.0)',
+    'try:',
+    '    m.tor_verdikt("VIELLEICHT", "BESTANDEN", d)',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /VIELLEICHT/);
+});
+
+test('F6-C16 der Stempel ist ersetzt: AUSGEWERTET statt OFFEN', () => {
+  const b = bericht(welt('f6lauf-c16-'), gleichmaessig(230, 20));
+  const k = b.stempel.kriteriumDifferenz;
+  assert.match(k.auswertung, /^AUSGEWERTET/);
+  assert.doesNotMatch(k.auswertung, /NICHT AUSGEWERTET/);
+  assert.doesNotMatch(k.auswertung, /OFFEN/);
+  assert.match(k.auswertung, /_COURT-F6-ZAEHLWERK-2026-09-01/);
+  assert.ok(k.belege.some((z) => z.includes('preregistration.json:139')));
+  assert.ok(k.regeltext.includes('differenz_punkte <= 10'));
+  assert.ok(k.richtung.includes('ERSCHWEREN'));
+  assert.deepEqual(k.unterschluessel.slice().sort(),
+    ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'wert']);
+  // Und das Tor-Verdikt steht je Variante wirklich im Bericht.
+  for (const v of ['S-U', 'S-G']) {
+    assert.ok(b.daten[v].tor.verdikt, `kein Tor-Verdikt fuer ${v}`);
+  }
+});
+
+// ============================================================================
+// F6-C18 / F6-C23 - Anker und Panel-Rand
+// ============================================================================
+
+test('F6-C18 die Anker im Bericht sind die am OBJEKT gemessenen', () => {
+  const b = bericht(welt('f6lauf-anker-'), gleichmaessig(230, 20));
+  const a = b.stempel.zweigAnker;
+  assert.equal(a.gate_gerissen, ':168-172');
+  assert.equal(a.im_band, ':213-217');
+  assert.equal(a.ausserhalb_band, ':218-227');
+
+  // Und sie stimmen mit der Datei ueberein - sonst beurkundet der Bericht
+  // einen Zustand, den die Datei nicht hat (KZ-7).
+  const band = fs.readFileSync(
+    path.join(REPO, 'scripts', 'studie-vb-b4-band.py'), 'utf8').split('\n');
+  assert.match(band[167], /def gate_gerissen\(grund\):/); // :168
+  assert.match(band[212], /if abs\(abstand\) <= breite_abs:/); // :213
+  assert.match(band[217], /if abstand > breite_abs:/); // :218
+  assert.match(band[226], /Muster-Friedhof/); // :227 - die letzte Zeile
+  // Der alte, falsche Anker :129-134 ist se_stern, nicht gate_gerissen.
+  assert.match(band[128], /def se_stern\(/); // :129
+});
+
+test('F6-C23 panelRand wird ABGELEITET und steht im Umschlag', () => {
+  const b = bericht(welt('f6lauf-rand-'), gleichmaessig(230, 20));
+  assert.equal(b.umschlag.panelRand, '2020-12-31');
+  assert.equal(b.umschlag.fensterVon, '2017-01-01');
+  assert.equal(b.umschlag.fensterBis, '2019-12-31');
+  assert.match(b.stempel.panelRandHerkunft, /ABGELEITET, NICHT GESETZT/);
+  assert.match(b.stempel.panelRandHerkunft, /nur Korroboration, nie Quelle|NUR Korroboration/);
+});
+
+test('F6-C23 ein verstelltes rules.json bricht den Lauf fail-closed ab', () => {
+  const w = welt('f6lauf-randbruch-');
+  const p = path.join(w.wurzel, 'protocol', 'early-detection', '2.0.0', 'rules.json');
+  const r = JSON.parse(fs.readFileSync(p, 'utf8'));
+  r.pufferjahre = [2016]; // 2020 entfernt -> der Rand ist nicht mehr abgeleitet
+  fs.writeFileSync(p, JSON.stringify(r, null, 1), 'utf8');
+  // Der Rehash schlaegt hier zuerst zu - das ist richtig und beweist die
+  // Reihenfolge. Geprueft wird deshalb die Ableitung direkt am Objekt.
+  const probe = pyProbe([
+    'import json, os, tempfile',
+    'd = tempfile.mkdtemp()',
+    'os.makedirs(os.path.join(d, "protocol", "early-detection", "2.0.0"))',
+    'regeln = {"fenster": {"validierung": {"von": "2017q1", "bis": "2019q4"}},',
+    '          "pufferjahre": [2016]}',
+    'p = os.path.join(d, "protocol", "early-detection", "2.0.0", "rules.json")',
+    'open(p, "w", encoding="utf-8").write(json.dumps(regeln))',
+    'try:',
+    '    m.leite_panelrand_ab(d, "pruefung")',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(probe.stdout, /^ABBRUCH:/m);
+  assert.match(probe.stdout, /Pufferjahr 2020/);
+  assert.ok(fs.existsSync(p), 'die Fixture-Datei blieb erhalten');
+});
+
+test('F6-C19 NULL-Werte sind VORHANDENE Schluessel, kein Weglassen', () => {
+  // Im Zweig gate_gerissen sind se_stern, se_entschied und abstand_zu_090
+  // vorhanden, aber None - F6-B15 prueft ANWESENHEIT, nicht Wert.
+  const b = bericht(welt('f6lauf-c19-'), gleichmaessig(140, 10));
+  const z = b.daten['S-U'].signal;
+  assert.equal(z.zweig, 'gate_gerissen');
+  for (const k of ['se_stern', 'se_entschied', 'abstand_zu_090']) {
+    assert.ok(k in z.werte, `${k} fehlt - im Zweig gate_gerissen muss er DA sein`);
+    assert.equal(z.werte[k], null, `${k} muss None sein, nicht ein Wert`);
+  }
+  // Und die Gegenrichtung, als eigener Testfall festgenagelt (F6-C19/Z1):
+  // Weglassen statt None ist ein Pflichtschluessel-ABBRUCH.
+  const r = pyProbe([
+    'werte = {k: None for k in m.ZWEIG_PFLICHT[m.ZWEIG_GATE_GERISSEN]}',
+    'del werte["abstand_zu_090"]',
+    'try:',
+    '    m.pruefe_ausgabesatz(werte, m.ZWEIG_GATE_GERISSEN, "probe")',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(r.stdout, /^ABBRUCH:/m);
+  assert.match(r.stdout, /PFLICHTSCHLUESSEL FEHLT/);
+  assert.match(r.stdout, /abstand_zu_090/);
+  // GEGENPROBE: mit None statt Weglassen geht derselbe Satz durch.
+  const g = pyProbe([
+    'werte = {k: None for k in m.ZWEIG_PFLICHT[m.ZWEIG_GATE_GERISSEN]}',
+    'm.pruefe_ausgabesatz(werte, m.ZWEIG_GATE_GERISSEN, "probe")',
+    'print("DURCH")',
+  ].join('\n'));
+  assert.match(g.stdout, /^DURCH$/m,
+    'None-Werte muessen als anwesende Schluessel durchgehen');
 });
 
 test('5.7 der 329/365-Stempel steht da, woertlich, als BERICHTSANGABE (F6-B13)', () => {
