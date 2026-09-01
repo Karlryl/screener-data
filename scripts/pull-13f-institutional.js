@@ -197,6 +197,82 @@ function readJsonSafe(p) {
   catch (e) { return null; }
 }
 
+function isJsonObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validatePositionArray(positions, context, cachePath) {
+  if (!Array.isArray(positions)) {
+    throw new Error('SEC 13F cache ' + context + ' positions must be an array: ' + cachePath);
+  }
+  for (let i = 0; i < positions.length; i++) {
+    const position = positions[i];
+    if (!isJsonObject(position)) {
+      throw new Error('SEC 13F cache ' + context + ' position ' + i +
+        ' must be an object: ' + cachePath);
+    }
+    for (const field of ['cusip', 'nameOfIssuer']) {
+      if (typeof position[field] !== 'string' || position[field].trim() === '') {
+        throw new Error('SEC 13F cache ' + context + ' position ' + i + ' ' + field +
+          ' must be a non-empty string: ' + cachePath);
+      }
+    }
+  }
+}
+
+function loadInstitutionCache(cachePath, { readFileSync = fs.readFileSync } = {}) {
+  let raw;
+  try {
+    raw = readFileSync(cachePath, 'utf8');
+  } catch (error) {
+    if (error && error.code === 'ENOENT') return { byInstitution: {} };
+    const detail = error && error.message ? error.message : String(error);
+    throw new Error('unable to read SEC 13F cache ' + cachePath + ': ' + detail);
+  }
+
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    throw new Error('SEC 13F cache is not valid JSON: ' + cachePath + ': ' + error.message);
+  }
+
+  if (!isJsonObject(parsed)) {
+    throw new Error('SEC 13F cache root must be an object: ' + cachePath);
+  }
+  if (!Object.prototype.hasOwnProperty.call(parsed, 'byInstitution')) {
+    throw new Error('SEC 13F cache must own an object-valued byInstitution: ' + cachePath);
+  }
+  if (!isJsonObject(parsed.byInstitution)) {
+    throw new Error('SEC 13F cache byInstitution must be an object: ' + cachePath);
+  }
+
+  for (const [cik, entry] of Object.entries(parsed.byInstitution)) {
+    if (!isJsonObject(entry)) {
+      throw new Error('SEC 13F cache institution ' + cik + ' must be an object: ' + cachePath);
+    }
+    if (Object.prototype.hasOwnProperty.call(entry, 'positions')) {
+      validatePositionArray(entry.positions, 'institution ' + cik, cachePath);
+    }
+    if (Object.prototype.hasOwnProperty.call(entry, 'quarters')) {
+      if (!isJsonObject(entry.quarters)) {
+        throw new Error('SEC 13F cache institution ' + cik +
+          ' quarters must be an object: ' + cachePath);
+      }
+      for (const [period, quarter] of Object.entries(entry.quarters)) {
+        if (!isJsonObject(quarter)) {
+          throw new Error('SEC 13F cache institution ' + cik + ' quarter ' + period +
+            ' must be an object: ' + cachePath);
+        }
+        validatePositionArray(quarter.positions,
+          'institution ' + cik + ' quarter ' + period, cachePath);
+      }
+    }
+  }
+
+  return parsed;
+}
+
 function ensureDir(p) {
   if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
 }
@@ -948,9 +1024,17 @@ function computeResearchStatus(byInstitution, now = Date.now(), maxAgeDays = DEF
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────
-async function main() {
-  ensureDir(EXTERNAL_DIR);
-  const args = parseArgs(process.argv);
+async function main({
+  argv = process.argv,
+  ensureDirFn = ensureDir,
+  pullInstitutionFn = pullInstitution13f,
+  writeFileAtomicFn = writeFileAtomic
+} = {}) {
+  const args = parseArgs(argv);
+  // Validate retained state before any filesystem setup, network access or write.
+  const existing = loadInstitutionCache(args.out);
+  const byInstitution = existing.byInstitution;
+  ensureDirFn(EXTERNAL_DIR);
   const maxAgeMs = args.maxAgeDays * 86400000;
 
   // Resolve target institution list.
@@ -972,11 +1056,6 @@ async function main() {
     }
     console.log('  [input] using bootstrap list (' + targets.length + ' unique CIKs)');
   }
-
-  // Load existing cache so per-institution TTL skips work.
-  const existing = readJsonSafe(args.out) || {};
-  const byInstitution = (existing && existing.byInstitution && typeof existing.byInstitution === 'object')
-    ? existing.byInstitution : {};
 
   let fetched = 0, skippedFresh = 0, errors = 0, totalPositions = 0;
   for (const t of targets) {
@@ -1001,7 +1080,7 @@ async function main() {
       continue;
     }
     try {
-      const r = await pullInstitution13f(cik, t.name);
+      const r = await pullInstitutionFn(cik, t.name);
       if (r.error) {
         // audit F-A-2026-06-22: prevents soft-error (return-not-throw) pulls
         // being cached fresh and starving the by-ticker view for a quarter.
@@ -1138,7 +1217,7 @@ async function main() {
     // keeps the on-disk status honest even if a run is Ctrl-C'd mid-loop.
     const runStatus = computeResearchStatus(byInstitution, Date.now(), args.maxAgeDays);
     // Re-write after every institution so a Ctrl-C leaves a valid cache.
-    writeFileAtomic(args.out, JSON.stringify({
+    writeFileAtomicFn(args.out, JSON.stringify({
       updatedAt: new Date().toISOString(),
       userAgentSource: 'process.env.SEC_CONTACT',
       maxAgeDays: args.maxAgeDays,
@@ -1160,7 +1239,7 @@ async function main() {
   const finalStatus = computeResearchStatus(byInstitution, Date.now(), args.maxAgeDays);
   const cache = { byInstitution };
   const derived = buildByTickerView(cache);
-  writeFileAtomic(byTickerPath, JSON.stringify({
+  writeFileAtomicFn(byTickerPath, JSON.stringify({
     updatedAt: new Date().toISOString(),
     source: 'derived from ' + args.out,
     // BH-033: same coverage-honesty stamp as the main cache.
@@ -1222,6 +1301,8 @@ module.exports = {
     _normalizeSubmissions,
     findInfoTableUrl,
     pullInstitution13f,
+    loadInstitutionCache,
+    main,
     _selectPeriodFilings,   // BH-029: exposed for test coverage
     _isFullBookAmendment,   // BH-030: exposed for test coverage
     _classifyNoBaseAmendment,
