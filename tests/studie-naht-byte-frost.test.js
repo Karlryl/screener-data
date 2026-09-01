@@ -103,6 +103,108 @@ test('LR-14: der Ketten-Aufloeser findet die runId in DER Datei, die sie fuehrt'
   const nurAlte = (rel) => (rel === GESCHLOSSEN_REL ? geschlossen : null);
   assert.equal(registerPfadDerRunId(ABSCHLUSS_RUN_ID, nurAlte), GESCHLOSSEN_REL);
   assert.equal(registerPfadDerRunId('nur-in-der-fortsetzung', nurAlte), null);
+  // (v) MEHRDEUTIG ist ein Abbruch, kein Ersttreffer. Ein Beweis gegen die
+  //     zufaellig erste Datei waere ein sauberes Verdikt aus dem falschen
+  //     Grund - die Fehlklasse, gegen die diese ganze Kette gebaut ist.
+  const doppelt = () => ({ events: [{ runId: 'zweimal-da' }] });
+  assert.throws(() => registerPfadDerRunId('zweimal-da', doppelt),
+    /steht in MEHREREN Registerdateien/);
+});
+
+test('LR-14: eine kaputte MESSUNG faellt durch, sie wird nie zu "nicht gefunden"', () => {
+  // Der stille Fehlschlag, den es hier zu verhindern gilt: eine unlesbare
+  // Registerdatei als "die runId steht eben nicht drin" zu verbuchen. Dann
+  // liefe der Aufloeser auf die andere Datei und der Beweis ginge gegen die
+  // falsche - gruen aus dem falschen Grund.
+  const kaputt = () => { const f = new Error('EACCES'); f.code = 'EACCES'; throw f; };
+  assert.throws(() => registerPfadDerRunId('egal', kaputt), /EACCES/);
+});
+
+// ── LR-14 am WERKZEUG, nicht nur an der Bibliothek ──────────────────────────
+//
+// Die beiden Fehlklassen, die hier toedlich waeren und die keine Probe der
+// Bibliothek erreicht, weil sie im Werkzeug selbst leben.
+
+test('LR-14: bestaetigen loest auf die Datei auf, die den Eintrag fuehrt', () => {
+  const W = require('../scripts/studie-r1-serverzeit.js');
+  const echt = fs.readFileSync;
+  const RUN_ID = 'nur-in-der-fortsetzung-probe';
+  const fortsetzung = JSON.stringify({ events: [{ runId: RUN_ID }] });
+  try {
+    fs.readFileSync = (p, ...rest) => {
+      if (typeof p === 'string' && p.endsWith('outcome-access-ledger-teil2.json')) {
+        return fortsetzung;
+      }
+      return echt(p, ...rest);
+    };
+    // Ein Eintrag der Fortsetzung wird IN der Fortsetzung aufgeloest - ein
+    // Rueckfall auf den festen alten Pfad faende ihn nicht und der Beweis
+    // liefe gegen die falsche Datei.
+    assert.strictEqual(W.registerDerRunId(RUN_ID).rel, AKTIVES_REGISTER_REL);
+    // Und ein Eintrag der geschlossenen Datei bleibt bei ihr.
+    assert.strictEqual(W.registerDerRunId(ABSCHLUSS_RUN_ID).rel, GESCHLOSSEN_REL);
+    // Was nirgends steht, bekommt keinen Beweis - nie ein leeres Verdikt.
+    assert.throws(() => W.registerDerRunId('gibt-es-nirgends'),
+      /steht in keiner der Registerdateien/);
+  } finally {
+    fs.readFileSync = echt;
+  }
+  // UND DIE VERDRAHTUNG. Ein Aufloeser, den bestaetigen nicht ruft, ist eine
+  // gepruefte Funktion neben einem ungeprueften Pfad. Ein Lauf-Beweis dafuer
+  // braeuchte einen echten Eintrag in der Fortsetzung und einen gh-Aufruf -
+  // beides gibt es erst mit dem count-only-Akt. Bis dahin wird die STELLE
+  // gepinnt, an der die Aufloesung passiert, und der aufgeloeste Pfad muss in
+  // die Abfrage UND in die Herkunftszeile des Beweises gehen.
+  const quelle = fs.readFileSync(
+    path.join(WURZEL, 'scripts', 'studie-r1-serverzeit.js'), 'utf8');
+  assert.match(quelle, /const \{ rel: registerRel, pfad: registerPfad \} = registerDerRunId\(runId\);/,
+    'bestaetigen loest den Registerpfad nicht mehr ueber die Kette auf');
+  assert.match(quelle, /contents\/\$\{registerRel\}\?ref=\$\{encodeURIComponent\(zweig\)\}/,
+    'die API-Abfrage laeuft nicht gegen den aufgeloesten Pfad');
+  assert.match(quelle, /quelle: `gh api -i repos\/\$\{nwo\}\/contents\/\$\{registerRel\}/,
+    'die Herkunftszeile des Beweises nennt nicht den aufgeloesten Pfad');
+  assert.doesNotMatch(quelle, /const register = lies\(LEDGER\);\s*\n\s*pruefeZugriffsRegister/,
+    'bestaetigen faellt auf den festen alten Pfad zurueck');
+});
+
+test('LR-14: eine unlesbare Registerdatei ist ein ABBRUCH, kein leeres Glied', () => {
+  // Der klassische stille Fehlschlag: jeden Lesefehler als "steht eben nicht
+  // drin" zu verbuchen. Der Aufloeser liefe dann auf die andere Datei und der
+  // Beweis ginge gegen den falschen Eintrag gruen durch. NUR ein fehlender
+  // Pfad ist ein leeres Glied - alles andere ist eine kaputte Messung.
+  const W = require('../scripts/studie-r1-serverzeit.js');
+  const echt = fs.readFileSync;
+  try {
+    fs.readFileSync = (p, ...rest) => {
+      if (typeof p === 'string' && p.endsWith('outcome-access-ledger-teil2.json')) {
+        const fehler = new Error('EACCES: permission denied');
+        fehler.code = 'EACCES';
+        throw fehler;
+      }
+      return echt(p, ...rest);
+    };
+    assert.throws(() => W.liesWennDa(AKTIVES_REGISTER_REL), /EACCES/);
+    assert.throws(() => W.registerDerRunId(ABSCHLUSS_RUN_ID), /EACCES/,
+      'ein Lesefehler darf nicht zu einem Treffer in der anderen Datei fuehren');
+  } finally {
+    fs.readFileSync = echt;
+  }
+  // Gegenrichtung: ein FEHLENDER Pfad ist wirklich ein leeres Glied.
+  const echt2 = fs.readFileSync;
+  try {
+    fs.readFileSync = (p, ...rest) => {
+      if (typeof p === 'string' && p.endsWith('outcome-access-ledger-teil2.json')) {
+        const fehler = new Error('ENOENT: no such file');
+        fehler.code = 'ENOENT';
+        throw fehler;
+      }
+      return echt2(p, ...rest);
+    };
+    assert.strictEqual(W.liesWennDa(AKTIVES_REGISTER_REL), null);
+    assert.strictEqual(W.registerDerRunId(ABSCHLUSS_RUN_ID).rel, GESCHLOSSEN_REL);
+  } finally {
+    fs.readFileSync = echt2;
+  }
 });
 
 // ── LR-13 / G14: die Registerpfad-Aufloesung steht VOR dem Panelzugriff ──────
@@ -150,6 +252,30 @@ test('LR-13/G14: Registerpfad und Register-Lesung liegen VOR jedem Panelzugriff'
       + 'der falschen Registerdatei faende dann nach der Paneloeffnung statt - die zweite '
       + 'Instanz der Klasse, an der der erste Anlauf gestorben ist (LR-13/F6-K15).');
   }
+});
+
+test('OFFEN: die Zaehlprobe kann die Fortsetzung NICHT erreichen — gemessen, nicht behauptet', () => {
+  // Diese Probe beurkundet eine LUECKE, damit sie nicht in Vergessenheit
+  // geraet. scripts/studie-zaehlprobe.py verdrahtet die geschlossene
+  // Registerdatei und kennt keinen Schalter dagegen. Der autorisierende
+  // count-only-Akt liegt ab jetzt in der Fortsetzung - die Zaehlprobe faende
+  // ihn also nicht und braeche ab (vor der Paneloeffnung, also fail-closed,
+  // aber unter dem EIN-MAL-Deckel trotzdem das Ende).
+  //
+  // Warum die Luecke hier steht statt geschlossen zu sein: die Datei ist in
+  // protocol/early-detection/2.0.0/hash-manifest.json GESIEGELT. Jede
+  // Byte-Aenderung macht ihren eigenen Selbsttest rot, und das Nachsiegeln ist
+  // ein Siegel-Akt, den dieser Bau nicht selbst setzt.
+  const quelle = fs.readFileSync(path.join(WURZEL, 'scripts', 'studie-zaehlprobe.py'), 'utf8');
+  assert.doesNotMatch(quelle, /p\.add_argument\("--register"/,
+    'die Zaehlprobe hat jetzt einen --register-Schalter - dann ist diese Luecke '
+    + 'geschlossen und DIESE Probe gehoert ersatzlos entfernt, nicht umgedreht');
+  const manifest = JSON.parse(fs.readFileSync(
+    path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'hash-manifest.json'), 'utf8'));
+  const dateien = manifest.files || manifest;
+  assert.ok(Object.keys(dateien).includes('scripts/studie-zaehlprobe.py'),
+    'die Zaehlprobe steht nicht mehr im Siegel - dann ist die Begruendung dieser '
+    + 'Luecke hinfaellig und der Schalter waere ohne Siegel-Akt nachrüstbar');
 });
 
 test('LR-13/G14: der Laeufer nimmt BEIDE Aufrufformen fuer den Registerpfad', () => {

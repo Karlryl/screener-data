@@ -35,6 +35,8 @@ const {
   ART_ZUGRIFF,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
+  REGISTER_RELS,
+  registerPfadDerRunId,
 } = require('../lib/studie-verfassung');
 
 // Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
@@ -61,8 +63,30 @@ const BESTAETIGBAR = new Set([ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
 const SINGLE_APPENDER_ZWEIG = 'main';
 
 const WURZEL = path.join(__dirname, '..');
-const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
-const LEDGER = path.join(WURZEL, ...LEDGER_REL.split('/'));
+
+// G10/LR-14 - EIN AUFLOESER, keine Flickerei je Aufrufer. Der Registerpfad stand
+// hier als zweite getippte Kopie neben der in lib/ledger-single-appender.js.
+// Nach der Naht ist das Register ZWEI Dateien, und eine zurueckgebliebene Kopie
+// faellt ihr Urteil ueber die falsche: `bestaetigen` faende die runId eines
+// Fortsetzungs-Eintrags nicht und liesse sich fuer ihn keinen Beweis fuehren.
+const absolut = (rel) => path.join(WURZEL, ...rel.split('/'));
+
+// DAS ANMELDEZIEL BLEIBT, WO ES WAR - offene Kollision, hier benannt statt
+// still entschieden. LR-14 sagt woertlich "`anmelden` schreibt in die AKTIVE
+// Datei"; LR-14/G15 sagen im selben Absatz, tests/studie-r1-bestaetigbar-
+// zugriff.test.js bleibe UNBERUEHRT, "wird sie beruehrt, ist der Schnitt
+// falsch". Beides zugleich ist nicht erfuellbar: jener Waechter spiegelt und
+// behauptet das Anmeldeziel als die ERSTE Registerdatei. Getroffen waere nicht
+// seine geschuetzte Eigenschaft (KV-4-Gleichheitsanker, Zaehlproben-Art),
+// sondern die Pfadannahme seiner Attrappe - und die reicht Schreibvorgaenge auf
+// jeden ANDEREN Pfad ans echte Dateisystem durch.
+//
+// Das Loch, das dieses Stehenlassen laesst - dieser Pfad zeigt auf eine Datei,
+// deren letzter Eintrag jeden weiteren verbietet -, ist gedeckt:
+// tests/studie-naht-byte-frost.test.js pinnt die geschlossene Datei auf ihre
+// Bytes. Ein versehentlicher Anhang wird dort rot, sofort und benannt.
+const LEDGER_REL = REGISTER_RELS[0];
+const LEDGER = absolut(LEDGER_REL);
 const PRAEREG = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'preregistration.json');
 
 function argument(argv, name, pflicht = true) {
@@ -76,6 +100,39 @@ function argument(argv, name, pflicht = true) {
 
 function lies(pfad) {
   return JSON.parse(fs.readFileSync(pfad, 'utf8'));
+}
+
+// Fuer den Ketten-Aufloeser: eine Registerdatei, die es (noch) nicht gibt, ist
+// ein LEERES GLIED, kein Fehler - vor dem Rollover existierte die Fortsetzung
+// nicht, und ein aelterer Checkout kennt sie nicht. Ein ENOENT wird deshalb zu
+// null. JEDER andere Fehler fliegt weiter: kaputtes JSON oder fehlende Rechte
+// sind eine kaputte MESSUNG, und eine kaputte Messung darf nie als "hier steht
+// die runId eben nicht" durchgehen. Genau diese Unterscheidung ist der
+// Unterschied zwischen fail-closed und einem stillen Fehlschlag.
+function liesWennDa(rel) {
+  try {
+    return lies(absolut(rel));
+  } catch (fehler) {
+    if (fehler.code === 'ENOENT') return null;
+    throw fehler;
+  }
+}
+
+// Der Ketten-Aufloeser aus LR-14, an EINER Stelle. Er wirft benannt, wenn keine
+// Registerdatei die runId fuehrt - "nicht gefunden" darf nie in ein leeres
+// Verdikt kippen, und ein Beweis ohne Eintrag ist wertlos.
+//
+// Mehrdeutigkeit wirft im Aufloeser selbst (siehe dort). Hier bleibt der Fall
+// "in keiner Datei" - "nicht gefunden" darf nie in ein leeres Verdikt kippen,
+// und ein Beweis ohne Eintrag ist wertlos.
+function registerDerRunId(runId) {
+  const rel = registerPfadDerRunId(runId, liesWennDa);
+  if (!rel) {
+    throw new VerfassungsBruch(
+      `R1: runId ${runId} steht in keiner der Registerdateien der Kette (${REGISTER_RELS.join(', ')})`,
+    );
+  }
+  return { rel, pfad: absolut(rel) };
 }
 
 // Das Register wird mit derselben Formatierung zurueckgeschrieben, mit der es
@@ -215,7 +272,11 @@ function bestaetigen(argv) {
   // Repo uebergibt --zweig, der stille Pfad war also der einzige benutzte.
   const zweig = argument(argv, 'zweig', false) || SINGLE_APPENDER_ZWEIG;
 
-  const register = lies(LEDGER);
+  // G10/LR-14: die Datei wird ueber die KETTE aufgeloest, nicht am aktiven Ende
+  // geraten. Ein Eintrag aus der Zeit vor der Naht liegt fuer immer in der
+  // geschlossenen Datei - und GEGEN DIESE muss sein Beweis laufen.
+  const { rel: registerRel, pfad: registerPfad } = registerDerRunId(runId);
+  const register = lies(registerPfad);
   pruefeZugriffsRegister(register);
   const eintrag = (register.events || []).find((e) => e.runId === runId);
   if (!eintrag) throw new VerfassungsBruch(`R1: runId ${runId} steht nicht im lokalen Register`);
@@ -230,7 +291,7 @@ function bestaetigen(argv) {
     encoding: 'utf8', cwd: WURZEL,
   }).trim();
   const { serverConfirmedAt, rumpf } = serverAntwort(
-    `repos/${nwo}/contents/${LEDGER_REL}?ref=${encodeURIComponent(zweig)}`,
+    `repos/${nwo}/contents/${registerRel}?ref=${encodeURIComponent(zweig)}`,
   );
   const inhalt = JSON.parse(rumpf);
   const entfernt = Buffer.from(inhalt.content || '', inhalt.encoding || 'base64').toString('utf8');
@@ -256,7 +317,7 @@ function bestaetigen(argv) {
     registeredAt: eintrag.registeredAt,
     accessedAt: eintrag.accessedAt,
     serverConfirmedAt,
-    quelle: `gh api -i repos/${nwo}/contents/${LEDGER_REL}?ref=${zweig} — Date-Kopf der Antwort`,
+    quelle: `gh api -i repos/${nwo}/contents/${registerRel}?ref=${zweig} — Date-Kopf der Antwort`,
     bedeutung:
       'Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder '
       + 'Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab.',
@@ -317,4 +378,8 @@ function bestaetigbareArten() {
 
 module.exports = {
   anmelden, bestaetigen, serverAntwort, allowlistAus, bestaetigbareArten,
+  // Der Ketten-Aufloeser nach aussen, damit seine Fehlklassen GEPRUEFT werden
+  // koennen statt nur behauptet: ein Aufloeser, der still auf die falsche Datei
+  // zeigt, laesst einen Beweis gegen den falschen Eintrag gruen durchgehen.
+  registerDerRunId, liesWennDa,
 };

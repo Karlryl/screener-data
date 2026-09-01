@@ -46,31 +46,53 @@ function werkbank() {
   // den LEBENDEN Baum, ohne dass jemand daran denken muss. Eine bedingungslose
   // Wiederherstellung waere ab diesem Moment eine Maskierung.
   //
-  // studie-f6-zaehlwerk.py wird NICHT mehr wiederhergestellt: es ist heute
-  // byte-gleich zur Bindung, und eine Wiederherstellung, die nichts
-  // wiederherstellt, ist reine Maskierung fuer den Tag, an dem sie es taete.
+  // DIE SCHLEIFE LAEUFT UEBER DIE GEBUNDENE MENGE, nicht ueber eine Datei.
+  // Sie war auf scripts/studie-f6-lauf.py hartverdrahtet, weil damals nur der
+  // Laeufer abwich. Inzwischen verlangt die Naht-Beweisebene Aenderungen an
+  // weiteren gebundenen Skripten (LR-14: EIN Ketten-Aufloeser; die Zaehlprobe
+  // muss die Fortsetzung erreichen koennen). Eine Schleife, die nur EINE Datei
+  // kennt, haette dieselbe Arbeit ein zweites und drittes Mal als Sonderfall
+  // verlangt - und beim vergessenen dritten Mal waere die Werkbank rot, ohne
+  // dass an ihrem Gegenstand etwas falsch waere.
+  //
+  // Die Bedingungen bleiben WOERTLICH dieselben, je Datei einzeln geprueft, und
+  // damit auch die Selbstentschaerfung: sobald der ueberschreibende Akt die
+  // neuen SHA bindet, ist die erste Bedingung fuer jede Datei falsch und die
+  // Werkbank misst wieder den lebenden Baum.
   const STAND_DES_AKTES = 'aeefb68125';
-  const gebunden = K.SKRIPTE['scripts/studie-f6-lauf.py'].sha;
-  const imBaum = crypto.createHash('sha256')
-    .update(fs.readFileSync(path.join(WURZEL, 'scripts', 'studie-f6-lauf.py')))
-    .digest('hex');
-  if (imBaum !== gebunden) {
+  const wiederhergestellt = [];
+  for (const [rel, bindung] of Object.entries(K.SKRIPTE)) {
+    const imBaumPfad = path.join(WURZEL, ...rel.split('/'));
+    if (!fs.existsSync(imBaumPfad)) continue;
+    const imBaum = crypto.createHash('sha256').update(fs.readFileSync(imBaumPfad)).digest('hex');
+    if (imBaum === bindung.sha) continue;   // nichts wiederherzustellen
     const git = require('node:child_process').spawnSync(
-      'git', ['show', `${STAND_DES_AKTES}:scripts/studie-f6-lauf.py`],
+      'git', ['show', `${STAND_DES_AKTES}:${rel}`],
       { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
     // Der echte Grund muss sichtbar werden - ein nacktes status!=0 verschweigt,
     // ob git fehlt, der Commit weg ist oder die Datei nie existierte.
     assert.equal(git.status, 0,
-      `git show ${STAND_DES_AKTES}:scripts/studie-f6-lauf.py ist rot `
+      `git show ${STAND_DES_AKTES}:${rel} ist rot `
       + `(status ${git.status}): ${String(git.stderr || '').trim() || '<kein stderr>'}`);
     const historisch = crypto.createHash('sha256').update(git.stdout).digest('hex');
-    assert.equal(historisch, gebunden,
-      'die historischen Bytes treffen die Bindung nicht - dann ist die '
+    assert.equal(historisch, bindung.sha,
+      `${rel}: die historischen Bytes treffen die Bindung nicht - dann ist die `
       + 'Wiederherstellung keine Rekonstruktion, sondern eine Erfindung');
-    fs.writeFileSync(path.join(tmp, 'scripts', 'studie-f6-lauf.py'), git.stdout);
+    const ziel = path.join(tmp, ...rel.split('/'));
+    fs.mkdirSync(path.dirname(ziel), { recursive: true });
+    fs.writeFileSync(ziel, git.stdout);
+    wiederhergestellt.push(rel);
   }
+  // Sichtbar machen, WORUEBER die Werkbank gerade urteilt. Eine stille
+  // Wiederherstellung ist eine Maskierung; eine benannte ist eine Messung.
+  tmpWiederhergestellt.set(tmp, wiederhergestellt);
   return tmp;
 }
+
+// Welche Dateien in DIESER Werkbank aus der Historie kamen. Die Probe unten
+// haelt das gegen die Wirklichkeit, damit die Schleife nicht unbemerkt zur
+// Nulloperation wird.
+const tmpWiederhergestellt = new Map();
 
 // Das Register im Stand VOR diesem Akt.
 function basisRegister(tmp) {
@@ -107,6 +129,35 @@ const eintragVon = (tmp) => JSON.parse(
 // ── Riegel 1: keine Reparatur-Betriebsart ─────────────────────────────────
 test('--force gibt es nicht (F6-B8)', () => {
   assert.throws(() => K.haupt(['--force']), /--force gibt es nicht/);
+});
+
+// ── Die Wiederherstellung selbst ist eine MESSUNG, keine Zusage ───────────
+test('die Werkbank stellt GENAU die abweichenden gebundenen Skripte her', () => {
+  const tmp = werkbank();
+  const gemeldet = new Set(tmpWiederhergestellt.get(tmp));
+  const abweichend = Object.entries(K.SKRIPTE)
+    .filter(([rel, b]) => {
+      const p = path.join(WURZEL, ...rel.split('/'));
+      return fs.existsSync(p)
+        && crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex') !== b.sha;
+    })
+    .map(([rel]) => rel);
+  assert.deepStrictEqual([...gemeldet].sort(), abweichend.sort(),
+    'die Wiederherstellung deckt nicht genau die abweichende Menge - entweder '
+    + 'maskiert sie etwas, das sie nicht maskieren darf, oder sie laesst etwas aus');
+  // Und im Spiegelbaum trifft jede wiederhergestellte Datei ihre Bindung -
+  // sonst waere die Wiederherstellung eine Erfindung.
+  for (const rel of gemeldet) {
+    const ist = crypto.createHash('sha256')
+      .update(fs.readFileSync(path.join(tmp, ...rel.split('/')))).digest('hex');
+    assert.strictEqual(ist, K.SKRIPTE[rel].sha, `${rel} im Spiegel trifft die Bindung nicht`);
+  }
+  // Solange der ueberschreibende Akt die neuen SHA nicht bindet, ist die Menge
+  // NICHT leer - eine Schleife, die nichts tut, belegt nichts.
+  assert.ok(gemeldet.size > 0,
+    'kein gebundenes Skript weicht ab - dann ist der ueberschreibende Akt gefahren '
+    + 'und diese Wiederherstellung gehoert ersatzlos entfernt (sie waere ab jetzt Maskierung)');
+  fs.rmSync(tmp, { recursive: true, force: true });
 });
 
 // ── Riegel 2: ein anderer Hash ist ein anderes Skript ─────────────────────

@@ -39,13 +39,33 @@ function werkbank() {
   // Ohne das braeche jede Probe am SHA-Riegel ab und neun Waechter waeren
   // still abgeschaltet (Ruling des Orchestrators: uebersprungene Proben
   // verrotten).
-  for (const rel of ['scripts/studie-f6-zaehlwerk.py', 'scripts/studie-f6-lauf.py',
-    'scripts/studie-f6-aequivalenz-anmeldung.js']) {
+  //
+  // UEBER DIE GEBUNDENE MENGE, UND BEDINGT. Die Liste war handgeschrieben und
+  // bedingungslos: jedes weitere gebundene Skript, das sich aendert, haette
+  // einen Eintrag von Hand verlangt - und beim vergessenen Eintrag waeren
+  // Waechter still abgeschaltet. Bedingungslos war sie ausserdem eine
+  // Maskierung fuer den Tag, an dem sie nichts mehr wiederherstellt.
+  //
+  // Zwei Bedingungen, je Datei einzeln, wie in der Werkbank zu Eintrag 28: der
+  // Baum weicht von der Bindung ab UND die historischen Bytes TREFFEN die
+  // Bindung. Damit entschaerft sich die Wiederherstellung selbst, sobald der
+  // ueberschreibende Akt die neuen SHA bindet.
+  for (const [rel, bindung] of Object.entries(K.SKRIPTE)) {
+    const sollSha = bindung.sha || bindung.sha256 || bindung;
+    const imBaumPfad = path.join(WURZEL, ...rel.split('/'));
+    if (!fs.existsSync(imBaumPfad)) continue;
+    const imBaum = crypto.createHash('sha256').update(fs.readFileSync(imBaumPfad)).digest('hex');
+    if (imBaum === sollSha) continue;
     const alt = require('node:child_process').spawnSync(
       'git', ['show', `${STAND_DES_AKTES}:${rel}`],
       { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
     assert.equal(alt.status, 0, `historischer Stand von ${rel} fehlt`);
-    fs.writeFileSync(path.join(tmp, ...rel.split('/')), alt.stdout);
+    assert.equal(crypto.createHash('sha256').update(alt.stdout).digest('hex'), sollSha,
+      `${rel}: die historischen Bytes treffen die Bindung nicht - dann ist die `
+      + 'Wiederherstellung keine Rekonstruktion, sondern eine Erfindung');
+    const ziel = path.join(tmp, ...rel.split('/'));
+    fs.mkdirSync(path.dirname(ziel), { recursive: true });
+    fs.writeFileSync(ziel, alt.stdout);
   }
   return tmp;
 }
