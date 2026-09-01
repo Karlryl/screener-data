@@ -1181,3 +1181,63 @@ test('F6-K28 POSITIVPROBE: 2a feuert auch bei ABSOLUTEN Argumenten', () => {
   assert.match(r.stderr, /bei vorpruefung\[/);
   assert.equal(fs.existsSync(marke), false);
 });
+
+
+test('R2-MAJOR-4 SE-SPLICE: fremder stderr wird GESCHRUPPT eingespleisst', () => {
+  // Die Haertung sitzt an der Stelle, an der ein SUBPROZESS-stderr in einen
+  // Abbruchtext wandert. Der gebundene SE laesst sich nicht ersetzen - der
+  // Phase-1-Rehash braeche vorher ab -, also wird die Spleissstelle DIREKT
+  // gefahren: `se_klumpen` nimmt den Skriptpfad als Argument.
+  const d = tempdir('f6lauf-se-schrubbe-');
+  const fake = path.join(d, 'se-faellt-aus.py');
+  // Ein SE, der mit einem ABSOLUTEN Pfad im stderr scheitert - genau die
+  // Form, die frueher ungeschruppt in die Akte gewandert waere.
+  fs.writeFileSync(fake, [
+    'import sys',
+    'sys.stderr.write("Traceback (most recent call last): File " + sys.argv[0]',
+    '                 + " line 1, in <module> RuntimeError: kaputt")',
+    'sys.exit(1)',
+    '',
+  ].join('\n'), 'utf8');
+
+  const r = pyProbe([
+    `fake = r"${fake.split(String.fromCharCode(92)).join('/')}"`,
+    'try:',
+    '    m.se_klumpen(fake, [[3, 1], [4, 2]], 7, 3, "S-U/signal")',
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f:',
+    '    print("ABBRUCH:" + str(f).replace(chr(10), " "))',
+  ].join('\n'));
+
+  const zeile = (r.stdout.match(/^ABBRUCH:(.*)$/m) || [])[1];
+  assert.ok(zeile, `kein benannter Abbruch: ${r.stdout}${r.stderr}`);
+  assert.match(zeile, /NICHT BERECHENBAR/);
+  // DER KERN: der fremde Text ist da, aber der Pfad darin ist fort.
+  assert.ok(zeile.includes('<entfernt>'),
+    `der fremde stderr wurde nicht geschruppt: ${zeile}`);
+  assert.ok(!zeile.includes(d), 'der absolute Temp-Pfad steht im Abbruchtext');
+  assert.ok(!zeile.includes(require('node:os').userInfo().username),
+    'die Kontokennung steht im Abbruchtext');
+  // Und die Prosa des Hauses bleibt lesbar - Schrubben heisst nicht schwaerzen.
+  assert.match(zeile, /Zulaessigkeits-Gate gerissen/);
+});
+
+test('R2-MAJOR-4 GEGENPROBE: ohne Schrubbe stuende der Pfad im Abbruchtext', () => {
+  // Die Bruchprobe zur Haertung: dieselbe Eingabe durch die ungeschruppte
+  // Fassung gejagt. Ohne sie waere "geschruppt" eine Behauptung.
+  const d = tempdir('f6lauf-se-roh-');
+  const r = pyProbe([
+    `roh = "Traceback File " + r"${d.split(String.fromCharCode(92)).join('/')}/se.py" + " kaputt"`,
+    'print("ROH:" + roh.replace(chr(10), " "))',
+    'print("GESCHRUPPT:" + m.schruppe_text(roh).replace(chr(10), " "))',
+  ].join('\n'));
+  const roh = (r.stdout.match(/^ROH:(.*)$/m) || [])[1];
+  const weg = (r.stdout.match(/^GESCHRUPPT:(.*)$/m) || [])[1];
+  assert.ok(roh && weg, `Probe unvollstaendig: ${r.stdout}${r.stderr}`);
+  // Der Pfad steht in der Sonde mit Vorwaertsschraegstrichen (Python oeffnet
+  // sie unter Windows genauso); verglichen wird deshalb gegen dieselbe Form.
+  const dSchraeg = d.split(String.fromCharCode(92)).join('/');
+  assert.ok(roh.includes(dSchraeg), 'die Rohfassung muss den Pfad tragen');
+  assert.ok(!weg.includes(dSchraeg), 'die geschruppte Fassung darf ihn nicht tragen');
+  assert.ok(weg.includes('<entfernt>'));
+});
