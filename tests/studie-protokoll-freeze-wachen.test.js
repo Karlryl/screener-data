@@ -87,18 +87,29 @@ test('H9: the addendum stands next to the base record without moving a byte of i
 // Vollendung des Moduls (G7) veraltet den Basis-Anker notwendig; registriert
 // wird sie durch ein WEITERES Addendum, nie durch Editieren des vorherigen
 // (LR-16). Gueltig ist das juengste Glied der Kette.
-const ADDENDUM2_REL = 'protocol/early-detection/2.0.0/h9-single-appender-enforcement-anchor-addendum-2.json';
+// Die Kette wird GELAUFEN, nicht Glied fuer Glied abgetippt: jedes weitere
+// Addendum haette sonst eine Aenderung an DIESER Datei erzwungen, und ein
+// Waechter, den jede Neuregistrierung anfasst, ist selbst die Drift. Gelaufen
+// wird, solange das naechste Glied existiert; gueltig ist das juengste.
+const ADDENDUM_N_REL = (n) =>
+  `protocol/early-detection/2.0.0/h9-single-appender-enforcement-anchor-addendum-${n}.json`;
 function ankerKette() {
   const glieder = [readJson(ADDENDUM_REL)];
-  if (fs.existsSync(path.join(ROOT, ADDENDUM2_REL))) {
-    const zwei = readJson(ADDENDUM2_REL);
-    assert.equal(zwei.mode, 'ADDENDUM_NO_BASE_RECORD_EDIT');
-    assert.equal(zwei.vorgaengerAddendum.recordId, glieder[0].recordId,
-      'das zweite Addendum muss auf das erste zeigen - sonst ist es keine Kette');
-    assert.equal(zwei.vorgaengerAddendum.dateiSha256Lf, sha256Lf(ADDENDUM_REL),
-      'das erste Addendum wurde bewegt - LR-16 verbietet genau das');
-    glieder.push(zwei);
+  const relVon = [ADDENDUM_REL];
+  for (let n = 2; fs.existsSync(path.join(ROOT, ADDENDUM_N_REL(n))); n += 1) {
+    const rel = ADDENDUM_N_REL(n);
+    const glied = readJson(rel);
+    const vorherRel = relVon[relVon.length - 1];
+    assert.equal(glied.mode, 'ADDENDUM_NO_BASE_RECORD_EDIT');
+    assert.equal(glied.vorgaengerAddendum.recordId, glieder[glieder.length - 1].recordId,
+      `${rel} muss auf sein Vorgaenger-Glied zeigen - sonst ist es keine Kette`);
+    assert.equal(glied.vorgaengerAddendum.dateiSha256Lf, sha256Lf(vorherRel),
+      `${vorherRel} wurde bewegt - LR-16 verbietet genau das`);
+    glieder.push(glied);
+    relVon.push(rel);
   }
+  // Ein Waechter ueber einer Kette, die er nie laeuft, belegt nichts.
+  assert.ok(glieder.length >= 2, 'die Anker-Kette muss mindestens ein Addendum fuehren');
   return glieder[glieder.length - 1];
 }
 

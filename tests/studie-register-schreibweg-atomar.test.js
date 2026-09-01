@@ -126,6 +126,16 @@ function fallR1(dir, marke) {
   fs.mkdirSync(protoZiel, { recursive: true });
   const register = path.join(protoZiel, 'outcome-access-ledger.json');
   fs.copyFileSync(LEDGER, register);
+  // G11: der Spiegel fuehrt BEIDE Registerdateien der Kette. Das Werkzeug loest
+  // seit G10 ueber die Kette auf; ein Spiegel, der nur eine Datei anlegt, laesst
+  // den Aufloeser auf eine Datei zeigen, die die Fixture nie anlegt - und ein
+  // Spion, der den falschen Pfad bewacht, ist genau der Fehler, gegen den er
+  // geschrieben wurde. Der Anhaenger schreibt hier weiter in die erste Datei;
+  // die zweite steht bereit, damit der Spiegel die Kette nicht halbiert.
+  fs.copyFileSync(
+    path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'outcome-access-ledger-teil2.json'),
+    path.join(protoZiel, 'outcome-access-ledger-teil2.json'),
+  );
   fs.copyFileSync(
     path.join(REPO, 'protocol', 'early-detection', '2.0.0', 'preregistration.json'),
     path.join(protoZiel, 'preregistration.json'),

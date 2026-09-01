@@ -34,8 +34,15 @@ const WURZEL = path.join(__dirname, '..');
 const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
 const LEDGER = path.join(WURZEL, ...LEDGER_REL.split('/'));
 const VORGAENGER = path.join(WURZEL, 'protocol', 'early-detection', '1.2.0', 'outcome-access-ledger.json');
+// Die Fortsetzung nach dem R14a-Rollover. Die Pfade werden IMPORTIERT statt
+// getippt (LR-14) - der Waechter soll ueber die Kette urteilen, die das Haus
+// fuehrt, nicht ueber die, die ich hier abschreibe.
+const { REGISTER_RELS } = require('../lib/studie-verfassung');
+const FORTSETZUNG_REL = REGISTER_RELS[REGISTER_RELS.length - 1];
+const FORTSETZUNG = path.join(WURZEL, ...FORTSETZUNG_REL.split('/'));
 
 const echtesRegister = () => JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
+const echteFortsetzung = () => JSON.parse(fs.readFileSync(FORTSETZUNG, 'utf8'));
 
 function vorabEintrag(runId, registeredAt) {
   return { runId, typ: 'R15b_NUR_ZAEHLEN', registeredAt, accessedAt: null };
@@ -72,6 +79,65 @@ test('R1: der Genesis-Hash ist an seine tatsaechliche Herkunft gebunden', () => 
     erwartet,
     'Genesis muss der sha256 von protocol/early-detection/1.2.0/outcome-access-ledger.json sein',
   );
+});
+
+// ── G9: die Naht von BEIDEN Seiten, mechanisch statt in Prosa ────────────────
+//
+// pruefeZugriffsRegister prueft am Genesis NUR die Laenge (64 Hex). Ein
+// erfundener Genesis verifiziert gruen - am fertigen Objekt nachgemessen. Die
+// Kontinuitaet ueber die Naht ist deshalb entweder GEMESSEN oder sie ist Prosa
+// (LR-8/LR-9). Zwei getrennte Zusicherungen, weil zwei getrennte Groessen
+// gebunden sind; ein Zusammenlegen waere ein Kettenbruch im Gewand eines
+// Kopffeldes.
+
+test('R1/G9: der Genesis der Fortsetzung IST der Tail-Event-Hash der geschlossenen Datei', () => {
+  const alt = echtesRegister();
+  const teil2 = echteFortsetzung();
+  assert.equal(
+    teil2.genesisSha256,
+    alt.events[alt.events.length - 1].eventHash,
+    'genesisSha256 muss das letzte KETTENGLIED der geschlossenen Datei sein (OB-1)',
+  );
+  // Und die Kette haengt daran wirklich: der Pruefer setzt previousHash aus dem
+  // Genesis vor. Ohne diese Zeile pruefte die Zusicherung nur ein Feld, nicht
+  // die Bindung.
+  assert.equal(pruefeZugriffsRegister(teil2).tailHash, teil2.genesisSha256);
+});
+
+test('R1/G9: vorgaengerDateiSha256 IST der Byte-sha der geschlossenen Datei', () => {
+  const teil2 = echteFortsetzung();
+  const erwartet = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+  assert.equal(
+    teil2.vorgaengerDateiSha256,
+    erwartet,
+    'vorgaengerDateiSha256 muss der sha256 der Bytes der geschlossenen Datei sein',
+  );
+  // Die beiden Bindungen sind VERSCHIEDENE Groessen und duerfen nie
+  // zusammenfallen - sonst waere eine von beiden ungeprueft.
+  assert.notEqual(teil2.vorgaengerDateiSha256, teil2.genesisSha256,
+    'Datei-sha und Kettenglied duerfen nicht derselbe Wert sein (LR-8)');
+});
+
+test('R1/G9 BRUCHPROBE: je ein gekipptes Hex-Zeichen faellt an SEINER Zusicherung', () => {
+  const alt = echtesRegister();
+  const teil2 = echteFortsetzung();
+  const kippe = (h) => (h[0] === '0' ? '1' : '0') + h.slice(1);
+  const dateiSha = crypto.createHash('sha256').update(fs.readFileSync(LEDGER)).digest('hex');
+  const tail = alt.events[alt.events.length - 1].eventHash;
+
+  // (i) Genesis gekippt -> die Tail-Hash-Zusicherung faellt, die Datei-sha-
+  //     Zusicherung bleibt stehen. Getrennte Felder, getrennte Proben.
+  const g = { ...teil2, genesisSha256: kippe(teil2.genesisSha256) };
+  assert.notEqual(g.genesisSha256, tail);
+  assert.equal(g.vorgaengerDateiSha256, dateiSha, 'die andere Bindung darf davon nicht beruehrt sein');
+  // Und der Verfassungspruefer selbst merkt davon NICHTS - genau deshalb steht
+  // die Zusicherung hier und nicht dort.
+  assert.equal(pruefeZugriffsRegister(g).tailHash, g.genesisSha256);
+
+  // (ii) Datei-sha gekippt -> die Datei-sha-Zusicherung faellt, der Genesis haelt.
+  const d = { ...teil2, vorgaengerDateiSha256: kippe(teil2.vorgaengerDateiSha256) };
+  assert.notEqual(d.vorgaengerDateiSha256, dateiSha);
+  assert.equal(d.genesisSha256, tail, 'die andere Bindung darf davon nicht beruehrt sein');
 });
 
 test('R1: eine gueltige Kette aus zwei angehaengten Eintraegen geht durch', () => {
@@ -177,24 +243,33 @@ test('R1: jede committete Revision ist byte-identisches Praefix der aktuellen', 
     'flacher Klon — die Historie kann den Praefix-Anker nicht belegen. Mit `git fetch --unshallow` holen.',
   );
 
-  const revisionen = git('log', '--format=%H', '--', LEDGER_REL).trim().split('\n').filter(Boolean);
-  assert.ok(revisionen.length > 0, 'das Register muss in der Git-Historie stehen');
-
-  const aktuell = echtesRegister().events;
+  // G8 - UEBER BEIDE DATEIEN. Auf EINE Datei gerichtet wird dieser Anker nach
+  // der Naht falsch-gruen: er bewacht dann die Datei, die sich nicht mehr
+  // bewegt, und ist blind fuer die, die waechst. Die geschlossene Datei bleibt
+  // trotzdem drin - ihre Praefix-Eigenschaft muss weiter halten, sonst waere
+  // "eingefroren" eine Behauptung statt einer Messung.
   const alsText = (e) => JSON.stringify(e);
-  for (const rev of revisionen) {
-    const alt = JSON.parse(git('show', `${rev}:${LEDGER_REL}`)).events || [];
-    assert.ok(
-      alt.length <= aktuell.length,
-      `Revision ${rev.slice(0, 10)} hat mehr Eintraege als der aktuelle Stand — es wurde geloescht`,
-    );
-    alt.forEach((event, i) => {
-      assert.equal(
-        alsText(event),
-        alsText(aktuell[i]),
-        `Revision ${rev.slice(0, 10)}: Eintrag ${i} weicht vom aktuellen Stand ab — nachtraeglich umgeschrieben`,
+  for (const rel of REGISTER_RELS) {
+    const jetzt = path.join(WURZEL, ...rel.split('/'));
+    if (!fs.existsSync(jetzt)) continue;   // vor der Naht gab es die Fortsetzung nicht
+    const revisionen = git('log', '--format=%H', '--', rel).trim().split('\n').filter(Boolean);
+    assert.ok(revisionen.length > 0, `${rel} muss in der Git-Historie stehen`);
+
+    const aktuell = JSON.parse(fs.readFileSync(jetzt, 'utf8')).events || [];
+    for (const rev of revisionen) {
+      const alt = JSON.parse(git('show', `${rev}:${rel}`)).events || [];
+      assert.ok(
+        alt.length <= aktuell.length,
+        `${rel} @ ${rev.slice(0, 10)} hat mehr Eintraege als der aktuelle Stand — es wurde geloescht`,
       );
-    });
+      alt.forEach((event, i) => {
+        assert.equal(
+          alsText(event),
+          alsText(aktuell[i]),
+          `${rel} @ ${rev.slice(0, 10)}: Eintrag ${i} weicht vom aktuellen Stand ab — nachtraeglich umgeschrieben`,
+        );
+      });
+    }
   }
 });
 
