@@ -24,7 +24,13 @@ const krannual = require('../scripts/build-krannual.js');
 const { liesGrundbild, rotiereGrundbild } = require('../scripts/snapshot-ticker-map.js');
 const { ladeForm4Cache } = require('../scripts/pull-insider-form4.js');
 const { _internals: f4d, main: form4DailyMain } = require('../scripts/pull-insider-form4-daily.js');
-const { ladeHistorie, runCli: pullStatsRunCli } = require('../scripts/check-pull-stats.js');
+const {
+  ladeHistorie,
+  main: pullStatsMain,
+  runCli: pullStatsRunCli,
+  HIST_DIR,
+  OUT_DIR,
+} = require('../scripts/check-pull-stats.js');
 
 const REPO = path.join(__dirname, '..');
 
@@ -299,6 +305,38 @@ async function mitKorrupterDatei(zielPfad, fn) {
   return { fehler, schreibVersuche };
 }
 
+async function mitGeblocktenProduktionspfaden(fn) {
+  const echt = {
+    writeFileSync: fs.writeFileSync, renameSync: fs.renameSync,
+    openSync: fs.openSync, mkdirSync: fs.mkdirSync,
+  };
+  const wurzeln = [HIST_DIR, OUT_DIR].map((p) => path.resolve(p));
+  const schreibVersuche = [];
+  const umbenennungen = [];
+  const trifft = (p) => {
+    const aufgeloest = path.resolve(String(p));
+    return wurzeln.some((wurzel) => aufgeloest === wurzel || aufgeloest.startsWith(wurzel + path.sep));
+  };
+  const blocken = (art, p) => {
+    schreibVersuche.push(art + ': ' + String(p));
+    throw new Error('TEST: Schreibversuch auf Produktionspfad ' + p + ' geblockt');
+  };
+  fs.writeFileSync = (p, ...r) => (trifft(p) ? blocken('writeFileSync', p) : echt.writeFileSync(p, ...r));
+  fs.openSync = (p, ...r) => (trifft(p) ? blocken('openSync', p) : echt.openSync(p, ...r));
+  fs.mkdirSync = (p, ...r) => (trifft(p) ? blocken('mkdirSync', p) : echt.mkdirSync(p, ...r));
+  fs.renameSync = (a, b) => {
+    if (trifft(a) || trifft(b)) return blocken('renameSync', trifft(a) ? a : b);
+    const ergebnis = echt.renameSync(a, b);
+    umbenennungen.push({ von: path.resolve(String(a)), nach: path.resolve(String(b)) });
+    return ergebnis;
+  };
+  let wert;
+  let fehler = null;
+  try { wert = await fn(); } catch (e) { fehler = e; }
+  finally { Object.assign(fs, echt); }
+  return { wert, fehler, schreibVersuche, umbenennungen };
+}
+
 function pruefeE2E(name, ziel, fehler, schreibVersuche) {
   assert.deepEqual(schreibVersuche, [],
     name + ': es wurde auf die Pflichtdatei geschrieben, obwohl sie unlesbar war — '
@@ -323,6 +361,84 @@ async function e2eTests() {
     const ziel = path.join(REPO, 'external-data', 'sec-form4-cache.json');
     const { fehler, schreibVersuche } = await mitKorrupterDatei(ziel, () => form4DailyMain());
     pruefeE2E('F-029', ziel, fehler, schreibVersuche);
+  });
+
+  await atest('H08 E2E: korrigierter Same-Day-Lauf ersetzt Historie und Tagesdatei exakt einmal', async () => {
+    const basis = fs.mkdtempSync(path.join(TMP, 'pull-stats-'));
+    const histDir = path.join(basis, 'history');
+    const outDir = path.join(basis, 'daily');
+    fs.mkdirSync(histDir, { recursive: true });
+    const zeile = (asOf, yahooOk) => ({
+      asOf,
+      yahooOk,
+      yahooFailed: 0,
+      yahooTotal: yahooOk,
+      yahooSuccessRate: 1,
+      fxRatesCount: 37,
+      fxFailed: 0,
+      earningsWithDate: 500,
+      priceTickerCount: 700,
+      universeSize: 800,
+      snapshotsCount: 900,
+    });
+    const vorher = Array.from({ length: 26 }, (_, i) =>
+      zeile('2026-08-' + String(i + 1).padStart(2, '0'), 100));
+    const erster = zeile('2026-08-31', 101);
+    const korrigiert = zeile('2026-08-31', 102);
+    fs.writeFileSync(path.join(histDir, 'history.json'), JSON.stringify(vorher));
+    const warteschlange = [erster, korrigiert];
+    const collectStats = () => {
+      assert.ok(warteschlange.length, 'collectStats wurde oefter als einmal pro Lauf aufgerufen');
+      return warteschlange.shift();
+    };
+
+    const lauf = await mitGeblocktenProduktionspfaden(async () => {
+      const codes = [];
+      codes.push(await pullStatsMain({ histDir, outDir, collectStats }));
+      const historieNachErstem = JSON.parse(fs.readFileSync(path.join(histDir, 'history.json'), 'utf8'));
+      const tagesdateiNachErstem = JSON.parse(fs.readFileSync(path.join(outDir, '2026-08-31.json'), 'utf8'));
+      codes.push(await pullStatsMain({ histDir, outDir, collectStats }));
+      return {
+        codes,
+        historieNachErstem,
+        tagesdateiNachErstem,
+        historieFinal: JSON.parse(fs.readFileSync(path.join(histDir, 'history.json'), 'utf8')),
+        tagesdateiFinal: JSON.parse(fs.readFileSync(path.join(outDir, '2026-08-31.json'), 'utf8')),
+        histDateien: fs.readdirSync(histDir).sort(),
+        outDateien: fs.readdirSync(outDir).sort(),
+      };
+    });
+
+    assert.equal(lauf.fehler, null,
+      'der hermetische Zwei-Lauf-Pfad fiel: ' + (lauf.fehler && lauf.fehler.stack));
+    assert.deepEqual(lauf.schreibVersuche, [],
+      'main() versuchte trotz injizierter Verzeichnisse auf echte Repo-Pfade zu schreiben');
+    const histPfad = path.resolve(histDir, 'history.json');
+    const tagesPfad = path.resolve(outDir, '2026-08-31.json');
+    assert.deepEqual(lauf.umbenennungen.map((u) => u.nach),
+      [histPfad, tagesPfad, histPfad, tagesPfad],
+      'beide Laeufe muessen Historie und Tagesdatei ueber den echten Atomic-Writer ersetzen');
+    for (const u of lauf.umbenennungen) {
+      assert.ok(u.von.startsWith(u.nach + '.tmp.'),
+        'Atomic-Rename kam nicht aus einer sibling tmp-Datei: ' + JSON.stringify(u));
+    }
+    assert.deepEqual(lauf.wert.codes, [0, 0]);
+    assert.deepEqual(warteschlange, [], 'jeder Lauf muss genau einen frischen Stand verbrauchen');
+    assert.deepEqual(lauf.wert.historieNachErstem, vorher.slice(1).concat([erster]),
+      'der erste Lauf muss nur den aeltesten der 26 echten Vortage verdraengen');
+    assert.deepEqual(lauf.wert.tagesdateiNachErstem, erster);
+    assert.deepEqual(lauf.wert.historieFinal, vorher.slice(1).concat([korrigiert]),
+      'der korrigierte Lauf muss nur den ersten Stand desselben Tages ersetzen');
+    assert.equal(lauf.wert.historieFinal[0].asOf, '2026-08-02',
+      'ein Same-Day-Rerun darf keinen weiteren echten Vortag verdraengen');
+    assert.equal(lauf.wert.historieFinal.filter((h) => h.asOf === '2026-08-31').length, 1,
+      'der aktuelle Tag darf in der Historie nur einmal stehen');
+    assert.equal(lauf.wert.historieFinal.some((h) => h.yahooOk === 101), false,
+      'der transiente erste Stand blieb in der Historie liegen');
+    assert.deepEqual(lauf.wert.tagesdateiFinal, korrigiert,
+      'die Tagesdatei muss denselben korrigierten Stand wie die Historie tragen');
+    assert.deepEqual(lauf.wert.histDateien, ['history.json'], 'Atomic-Tmp-Datei blieb im Historienverzeichnis');
+    assert.deepEqual(lauf.wert.outDateien, ['2026-08-31.json'], 'Atomic-Tmp-Datei blieb im Tagesverzeichnis');
   });
 
   await atest('F-033 E2E: korrupte Historie beendet runCli() mit Exit != 0', async () => {

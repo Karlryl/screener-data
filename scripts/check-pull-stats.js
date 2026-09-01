@@ -205,21 +205,24 @@ function fazitZeilen(alerts, unchecked) {
   return zeilen;
 }
 
-async function main() {
-  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-  if (!fs.existsSync(HIST_DIR)) fs.mkdirSync(HIST_DIR, { recursive: true });
-  const today = collectStats();
+async function main(opts = {}) {
+  const outDir = opts.outDir || OUT_DIR;
+  const histDir = opts.histDir || HIST_DIR;
+  const collect = opts.collectStats || collectStats;
+  if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+  if (!fs.existsSync(histDir)) fs.mkdirSync(histDir, { recursive: true });
+  const today = collect();
 
-  const histPath = path.join(HIST_DIR, 'history.json');
+  const histPath = path.join(histDir, 'history.json');
   let history = ladeHistorie(histPath);
   // Avoid duplicate entries for same date
   history = history.filter(h => h && h.asOf !== today.asOf);
   history.push(today);
-  // Keep last 26 weeks
+  // Keep the last 26 distinct run dates
   history = history.slice(-26);
   writeFileAtomic(histPath, JSON.stringify(history, null, 2));
 
-  writeFileAtomic(path.join(OUT_DIR, today.asOf + '.json'), JSON.stringify(today, null, 2));
+  writeFileAtomic(path.join(outDir, today.asOf + '.json'), JSON.stringify(today, null, 2));
 
   console.log('Pull-Stats ' + today.asOf + ':');
   for (const [k, v] of Object.entries(today)) {
@@ -268,7 +271,7 @@ async function runCli(mainImpl = main, io = {}) {
   }
 }
 
-module.exports = { collectStats, detectStatsDrift, uncheckedStats, fazitZeilen, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, runCli };
+module.exports = { collectStats, detectStatsDrift, uncheckedStats, fazitZeilen, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, main, runCli };
 
 if (require.main === module) {
   runCli();
