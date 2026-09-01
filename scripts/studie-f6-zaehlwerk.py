@@ -66,6 +66,7 @@ import math
 import os
 import re
 import sqlite3
+import subprocess
 import sys
 
 HIER = os.path.dirname(os.path.abspath(__file__))
