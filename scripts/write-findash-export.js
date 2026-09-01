@@ -88,6 +88,10 @@ const HG_FULL_DIR = path.join(HG_DIR, 'full');
 const FULL_OUT_DIR = path.join(OUT_DIR, 'full');
 
 const SCHEMA = 'findash-export/v1';
+// T194: the fast HG board is a top-100 view per track. Keep that delivery limit
+// explicit in the payload and cross-check it against index.json's full-cohort counts.
+const BOARD_TRACK_CAP = 100;
+const COHORT_TRACKS = Object.freeze(['profitable', 'unprofitable']);
 const BRANCHES = [
   'consumer-discretionary', 'consumer-staples', 'energy', 'financials',
   'health-care', 'industrials', 'it-services', 'materials', 'real-estate',
@@ -534,11 +538,51 @@ function mapSurvivalRow(r, i) {
 //                outputs/hypergrowth/full/ herein). Sonst ist alles identisch: dieselben
 //                Mapper, dieselbe Rangvergabe, dieselbe Schema-Huelle.
 // opts.rangOpts — an vergebeRaenge durchgereicht ({warn:false} fuer die Vollboards).
+// opts.deliveryMode / cohortCounts - T194 delivery disclosure for production HG boards.
+//                Generic callers can omit both and retain the legacy reusable seam.
+function isNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
+}
+
+function cohortDeliveryFor(id, board, mode, counts) {
+  if (!['topN', 'full'].includes(mode)) {
+    throw new Error(`[findash-export] ${id}: unsupported cohort delivery mode ${JSON.stringify(mode)}`);
+  }
+  const isFull = mode === 'full';
+  const delivery = {
+    cap: isFull ? null : BOARD_TRACK_CAP,
+    fullBoard: isFull ? null : `full/${id}.json`,
+  };
+  for (const track of COHORT_TRACKS) {
+    if (!Array.isArray(board && board[track])) {
+      throw new Error(`[findash-export] ${id}.${track}: board track is not an array`);
+    }
+    const delivered = board[track].length;
+    const suppliedTotal = counts && counts[track];
+    // The production build always supplies index.json counts. The fallback exists only
+    // for the established hermetic buildFullBoards seam, whose input is already the
+    // complete full/ source; it derives the descriptor from that complete fixture array.
+    const total = suppliedTotal === undefined && isFull ? delivered : suppliedTotal;
+    if (!isNonNegativeInteger(total)) {
+      throw new Error(`[findash-export] ${id}.${track}: invalid full-cohort count ${JSON.stringify(total)}`);
+    }
+    if (total < delivered) {
+      throw new Error(`[findash-export] ${id}.${track}: delivered ${delivered} exceeds full-cohort count ${total}`);
+    }
+    const expectedDelivered = isFull ? total : Math.min(total, BOARD_TRACK_CAP);
+    if (delivered !== expectedDelivered) {
+      throw new Error(`[findash-export] ${id}.${track}: delivered ${delivered}, expected ${expectedDelivered} for ${mode}`);
+    }
+    delivery[track] = { delivered, total, truncated: total > delivered };
+  }
+  return delivery;
+}
+
 function buildBoard(id, coverage, opts = {}) {
   const srcDir = opts.srcDir || HG_DIR;
   const rangOpts = opts.rangOpts;
   const b = readJSON(path.join(srcDir, id + '.json'));
-  return {
+  const board = {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
     branch: id,
@@ -548,6 +592,10 @@ function buildBoard(id, coverage, opts = {}) {
     profitable: vergebeRaenge((b.profitable || []).map(mapBoardRow), id + '.profitable', rangOpts),
     unprofitable: vergebeRaenge((b.unprofitable || []).map(mapBoardRow), id + '.unprofitable', rangOpts),
   };
+  if (opts.deliveryMode) {
+    board.cohortDelivery = cohortDeliveryFor(id, board, opts.deliveryMode, opts.cohortCounts);
+  }
+  return board;
 }
 
 // ---- Vollboards (19.08.2026) ---------------------------------------------------------
@@ -570,6 +618,7 @@ function buildBoard(id, coverage, opts = {}) {
 function buildFullBoards(coverage, opts = {}) {
   const hgFullDir = opts.hgFullDir || HG_FULL_DIR;
   const outFullDir = opts.outFullDir || FULL_OUT_DIR;
+  const cohortCounts = opts.cohortCounts;
   if (!fs.existsSync(hgFullDir)) {
     throw new Error('[findash-export] Vollkohorten-Quelle fehlt: ' + hgFullDir +
       ' — run-screener.js schreibt sie bei jedem Lauf (2.3-A8). Fehlt sie, ist der Scoring-Lauf ' +
@@ -594,8 +643,17 @@ function buildFullBoards(coverage, opts = {}) {
   let eigen = { geprueft: 0, genullt: 0 };
   try {
     for (const id of BRANCHES) {
+      if (cohortCounts !== undefined && (!cohortCounts || typeof cohortCounts !== 'object' ||
+          !Object.prototype.hasOwnProperty.call(cohortCounts, id))) {
+        throw new Error(`[findash-export] full/${id}: index.json cohort count missing`);
+      }
       writeJsonAtomic(path.join(outFullDir, id + '.json'),
-        buildBoard(id, coverage, { srcDir: hgFullDir, rangOpts: woptsRang }),
+        buildBoard(id, coverage, {
+          srcDir: hgFullDir,
+          rangOpts: woptsRang,
+          deliveryMode: 'full',
+          cohortCounts: cohortCounts === undefined ? undefined : cohortCounts[id],
+        }),
         { assertFinite: true, indent: 0 });
     }
   } finally {
@@ -629,8 +687,8 @@ function buildSurvival(coverage) {
   return { schema: SCHEMA, generated_at: new Date().toISOString(), coverage, rows: s.map(mapSurvivalRow) };
 }
 
-function buildIndex(coverage) {
-  const idx = readJSON(path.join(HG_DIR, 'index.json'));
+function buildIndex(coverage, sourceIndex) {
+  const idx = sourceIndex || readJSON(path.join(HG_DIR, 'index.json'));
   return {
     schema: SCHEMA,
     generated_at: new Date().toISOString(),
@@ -869,15 +927,20 @@ function loadCoverage() {
 
 function build() {
   const coverage = loadCoverage();
+  const sourceIndex = readJSON(path.join(HG_DIR, 'index.json'));
+  const cohortCounts = sourceIndex.counts;
   fs.mkdirSync(OUT_DIR, { recursive: true }); // writeJsonAtomic does NOT create the dir
   const opts = { assertFinite: true };         // fail loud on a NaN/Inf, never silent-null (A-lib-08)
   for (const id of BRANCHES) {
-    writeJsonAtomic(path.join(OUT_DIR, id + '.json'), buildBoard(id, coverage), opts);
+    writeJsonAtomic(path.join(OUT_DIR, id + '.json'), buildBoard(id, coverage, {
+      deliveryMode: 'topN',
+      cohortCounts: cohortCounts && cohortCounts[id],
+    }), opts);
   }
   writeJsonAtomic(path.join(OUT_DIR, 'overview.json'), buildOverview(coverage), opts);
   writeJsonAtomic(path.join(OUT_DIR, 'survival.json'), buildSurvival(coverage), opts);
-  writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage), opts);
-  const voll = buildFullBoards(coverage); // 19.08.: v1/full/ — die Kohorte hinter Rang 100
+  writeJsonAtomic(path.join(OUT_DIR, 'index.json'), buildIndex(coverage, sourceIndex), opts);
+  const voll = buildFullBoards(coverage, { cohortCounts }); // 19.08.: v1/full/ — die Kohorte hinter Rang 100
   const q = buildQuality(coverage); // 3.2: QC-Board subdir (optional-when-absent)
   const sc = buildSmallcap(coverage); // 5.2: Small-Cap-Board subdir (optional-when-absent)
   // Chunk 4a: Bilanz des Waehrungs-Waechters. Einzelne genullte Groessen sind der
@@ -1260,6 +1323,90 @@ function checkScoreDescending(rows, where, errs) {
   }
 }
 
+function validateCohortCounts(counts, kind, errs) {
+  if (!counts || typeof counts !== 'object' || Array.isArray(counts)) {
+    errs.push(`${kind}: counts not an object`);
+    return;
+  }
+  const keys = new Set(Object.keys(counts));
+  for (const id of BRANCHES) {
+    const perBoard = counts[id];
+    if (!perBoard || typeof perBoard !== 'object' || Array.isArray(perBoard)) {
+      errs.push(`${kind}: counts.${id} missing/not object`);
+      continue;
+    }
+    for (const track of COHORT_TRACKS) {
+      if (!isNonNegativeInteger(perBoard[track])) {
+        errs.push(`${kind}: counts.${id}.${track}=${JSON.stringify(perBoard[track])}`);
+      }
+    }
+  }
+  for (const key of keys) {
+    if (!BRANCHES.includes(key)) errs.push(`${kind}: counts unexpected key ${key}`);
+  }
+}
+
+function cohortCountsForValidation(counts, id) {
+  if (counts === undefined) return undefined;
+  return counts && Object.prototype.hasOwnProperty.call(counts, id) ? counts[id] : null;
+}
+
+// T194: a consumer must be able to distinguish a complete track from a capped
+// delivery without inferring it from array length. The validator ties that statement
+// to both the actual arrays and index.json's full-cohort counts.
+function validateCohortDelivery(mk, kind, errs, opts = {}) {
+  const mode = opts.mode;
+  const counts = opts.counts;
+  const delivery = mk && mk.cohortDelivery;
+  if (!delivery || typeof delivery !== 'object' || Array.isArray(delivery)) {
+    errs.push(`${kind}: cohortDelivery missing/not object`);
+    return;
+  }
+  const expectedCap = mode === 'full' ? null : BOARD_TRACK_CAP;
+  const expectedFullBoard = mode === 'full' ? null : `full/${kind}.json`;
+  if (delivery.cap !== expectedCap) {
+    errs.push(`${kind}: cohortDelivery.cap=${JSON.stringify(delivery.cap)}, expected ${JSON.stringify(expectedCap)}`);
+  }
+  if (delivery.fullBoard !== expectedFullBoard) {
+    errs.push(`${kind}: cohortDelivery.fullBoard=${JSON.stringify(delivery.fullBoard)}, expected ${JSON.stringify(expectedFullBoard)}`);
+  }
+  for (const track of COHORT_TRACKS) {
+    const descriptor = delivery[track];
+    const where = `${kind}: cohortDelivery.${track}`;
+    if (!descriptor || typeof descriptor !== 'object' || Array.isArray(descriptor)) {
+      errs.push(`${where} missing/not object`);
+      continue;
+    }
+    const delivered = descriptor.delivered;
+    const total = descriptor.total;
+    if (!isNonNegativeInteger(delivered)) errs.push(`${where}.delivered=${JSON.stringify(delivered)}`);
+    if (!isNonNegativeInteger(total)) errs.push(`${where}.total=${JSON.stringify(total)}`);
+    if (typeof descriptor.truncated !== 'boolean') errs.push(`${where}.truncated=${JSON.stringify(descriptor.truncated)}`);
+
+    if (Array.isArray(mk[track]) && isNonNegativeInteger(delivered) && delivered !== mk[track].length) {
+      errs.push(`${where}.delivered=${delivered}, array length=${mk[track].length}`);
+    }
+    if (counts !== undefined) {
+      const expectedTotal = counts && counts[track];
+      if (!isNonNegativeInteger(expectedTotal)) {
+        errs.push(`${where}: index count missing/invalid`);
+      } else if (isNonNegativeInteger(total) && total !== expectedTotal) {
+        errs.push(`${where}.total=${total}, index count=${expectedTotal}`);
+      }
+    }
+    if (isNonNegativeInteger(delivered) && isNonNegativeInteger(total)) {
+      const expectedTruncated = total > delivered;
+      if (descriptor.truncated !== expectedTruncated) {
+        errs.push(`${where}.truncated=${JSON.stringify(descriptor.truncated)}, expected ${expectedTruncated}`);
+      }
+      const expectedDelivered = mode === 'full' ? total : Math.min(total, BOARD_TRACK_CAP);
+      if (delivered !== expectedDelivered) {
+        errs.push(`${where}.delivered=${delivered}, expected ${expectedDelivered} for ${mode}`);
+      }
+    }
+  }
+}
+
 // opts.forceDiagnostic (BH-160): true when the caller KNOWS mk is a QC board (quality/*, only
 // reachable via validateQualityExport, which reads the file list off the QC index). QC boards
 // are 'diagnostic' by construction (board-status.js) and can never legitimately be 'core' — a
@@ -1286,6 +1433,7 @@ function validateFile(mk, kind, errs, opts = {}) {
       for (const k of bsKeys) if (!BRANCHES.includes(k)) errs.push(`index: boardStatus unexpected key ${k}`);
     }
     if (!mk.counts || typeof mk.counts !== 'object') errs.push('index: counts');
+    else if (opts.requireCohortCounts) validateCohortCounts(mk.counts, 'index', errs);
     if (!Number.isFinite(mk.survivalCount)) errs.push('index: survivalCount');
     if (!mk.excluded || typeof mk.excluded !== 'object') errs.push('index: excluded');
     return;
@@ -1311,6 +1459,9 @@ function validateFile(mk, kind, errs, opts = {}) {
   if (!allowedBoardStatus.includes(mk.boardStatus)) errs.push(`${kind}: boardStatus=${JSON.stringify(mk.boardStatus)}`);
   if (!Array.isArray(mk.profitable)) errs.push(`${kind}: profitable not array`);
   if (!Array.isArray(mk.unprofitable)) errs.push(`${kind}: unprofitable not array`);
+  if (opts.deliveryMode) {
+    validateCohortDelivery(mk, kind, errs, { mode: opts.deliveryMode, counts: opts.cohortCounts });
+  }
   (mk.profitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.profitable[${i}]`, errs));
   (mk.unprofitable || []).forEach((r, i) => validateBoardRow(r, `${kind}.unprofitable[${i}]`, errs));
   const alleZeilen = [].concat(mk.profitable || [], mk.unprofitable || []);
@@ -1328,17 +1479,25 @@ function validateFile(mk, kind, errs, opts = {}) {
 // Validate the ON-DISK export (what CI just wrote). Missing/unreadable file = breach.
 function validateExport(outDir = OUT_DIR) {
   const errs = [];
+  const indexPath = path.join(outDir, 'index.json');
+  const index = readJSONOrNull(indexPath);
+  if (!index) errs.push('index: missing/unreadable');
+  else validateFile(index, 'index', errs, { requireCohortCounts: true });
+  const counts = index && index.counts && typeof index.counts === 'object' ? index.counts : undefined;
   for (const id of BRANCHES) {
     const mk = readJSONOrNull(path.join(outDir, id + '.json'));
     if (!mk) { errs.push(`${id}: missing/unreadable`); continue; }
-    validateFile(mk, id, errs);
+    validateFile(mk, id, errs, {
+      deliveryMode: 'topN',
+      cohortCounts: cohortCountsForValidation(counts, id),
+    });
   }
-  for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival'], ['index.json', 'index']]) {
+  for (const [name, kind] of [['overview.json', 'overview'], ['survival.json', 'survival']]) {
     const mk = readJSONOrNull(path.join(outDir, name));
     if (!mk) { errs.push(`${kind}: missing/unreadable`); continue; }
     validateFile(mk, kind, errs);
   }
-  return errs.concat(validateFullExport(path.join(outDir, 'full')))     // 19.08.: Vollboards, PFLICHT
+  return errs.concat(validateFullExport(path.join(outDir, 'full'), counts)) // 19.08.: Vollboards, PFLICHT
              .concat(validateQualityExport(path.join(outDir, 'quality')))  // 3.2: QC-Board (empty when quality/ absent)
              .concat(validateSmallcapExport(path.join(outDir, 'smallcap'))); // 5.2: Small-Cap-Board (empty when smallcap/ absent)
 }
@@ -1351,12 +1510,15 @@ function validateExport(outDir = OUT_DIR) {
 // die teuerste in diesem Projekt, deshalb ein harter Verstoss statt eines Optional-Zweigs.
 // Labels tragen ein 'full/'-Praefix, damit der Alarmkanal ein Vollboard-Problem von einem
 // Board-Problem unterscheiden kann (dasselbe Muster wie quality/ und smallcap/).
-function validateFullExport(fullDir = FULL_OUT_DIR) {
+function validateFullExport(fullDir = FULL_OUT_DIR, countsByBoard) {
   const raw = [];
   for (const id of BRANCHES) {
     const mk = readJSONOrNull(path.join(fullDir, id + '.json'));
     if (!mk) { raw.push(`${id}: missing/unreadable`); continue; }
-    validateFile(mk, id, raw); // dieselbe Board-Datei-Pruefung: branch===id, boardStatus, jede Zeile, Rang- und Score-Folge
+    validateFile(mk, id, raw, {
+      deliveryMode: 'full',
+      cohortCounts: cohortCountsForValidation(countsByBoard, id),
+    }); // dieselbe Board-Datei-Pruefung + T194 Vollstaendigkeitsbeleg gegen index.counts
   }
   return raw.map((e) => (e.startsWith('full/') ? e : 'full/' + e));
 }
@@ -1710,6 +1872,8 @@ module.exports = {
   // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
   // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
   buildFullBoards, validateFullExport, buildBoard,
+  // T194: machine-readable top/full delivery contract and its two-way guard.
+  cohortDeliveryFor, validateCohortDelivery, BOARD_TRACK_CAP,
   validateQualityExport, validateQualityIndex, buildQuality, qualityExportMode,
   validateSmallcapExport, validateSmallcapIndex, buildSmallcap, smallcapExportMode,
   mapBoardRow, mapOverviewRow, mapSurvivalRow, SCHEMA, BRANCHES,
