@@ -39,6 +39,27 @@ const CHECKLIST = [
 
 // --- reine Kernlogik (TDD, kein I/O) ---
 
+function manifestShapeError(detail) {
+  const error = new Error(`Plan-check manifest has invalid structure (${detail})`);
+  error.code = 'ERR_PLAN_CHECK_MANIFEST_SHAPE';
+  return error;
+}
+
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function validateManifest(manifest) {
+  if (!isPlainObject(manifest)) throw manifestShapeError('root must be a plain object');
+  if (!Object.prototype.hasOwnProperty.call(manifest, 'n_total')) throw manifestShapeError('n_total is missing');
+  if (!Number.isSafeInteger(manifest.n_total) || manifest.n_total < 0) {
+    throw manifestShapeError('n_total must be a nonnegative safe integer');
+  }
+  return manifest;
+}
+
 // Prueft die deklarierten Detektoren je Vendor. existsFn(path)->bool injizierbar fuer Tests.
 // Ein FEHLENDER deklarierter Detektor = harte Register-Luege -> hard=true.
 function checkDetectors(vendors, existsFn) {
@@ -113,47 +134,52 @@ async function probe(vendor, timeoutMs) {
   finally { clearTimeout(to); }
 }
 
-async function run() {
-  const argv = process.argv;
+async function run(runtime = {}) {
+  const argv = runtime.argv || process.argv;
+  const fsImpl = runtime.fsImpl || fs;
+  const probeFn = runtime.probeFn || probe;
+  const writeAtomicFn = runtime.writeAtomicFn || writeFileAtomic;
+  const logger = runtime.logger || console;
+  const exitFn = runtime.exitFn || ((code) => process.exit(code));
   const get = (flag, def) => { const i = argv.indexOf(flag); return i >= 0 && argv[i + 1] ? argv[i + 1] : def; };
-  const now = new Date();
+  const now = runtime.now || new Date();
   const monthTag = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
   const outPath = get('--out', path.join('outputs', 'plan-check-status.json'));
   const reportPath = get('--report', path.join('reports', `plan-check-${monthTag}.md`));
 
-  const detectors = checkDetectors(VENDORS, (p) => fs.existsSync(p));
+  const detectors = checkDetectors(VENDORS, (p) => fsImpl.existsSync(p));
   const measurementErrors = [];
   // fehlend = ENOENT. snapshots/ ist gitignored und der Monats-Workflow macht einen bare
   // checkout ohne Restore — die Dateien FEHLEN dort planmaessig. Nur ein Lesefehler an
   // vorhandenen Daten faerbt den Lauf rot (siehe buildStatus).
   const messfehler = (was, e) => measurementErrors.push({ text: `${was}: ${e.message}`, fehlend: e.code === 'ENOENT' });
-  let manifest = null; try { manifest = JSON.parse(fs.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8')); } catch (e) { messfehler('Manifest snapshots/_manifest.json', e); }
-  let snapCount = null; try { snapCount = fs.readdirSync('snapshots').filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length; } catch (e) { messfehler('Snapshot-Zahl', e); }
+  let manifest = null; try { manifest = validateManifest(JSON.parse(fsImpl.readFileSync(path.join('snapshots', '_manifest.json'), 'utf8'))); } catch (e) { messfehler('Manifest snapshots/_manifest.json', e); }
+  let snapCount = null; try { snapCount = fsImpl.readdirSync('snapshots').filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length; } catch (e) { messfehler('Snapshot-Zahl', e); }
 
   const vendorResults = [];
-  for (const v of VENDORS) vendorResults.push(await probe(v, 20000));
+  for (const v of VENDORS) vendorResults.push(await probeFn(v, 20000));
 
   const status = buildStatus(vendorResults, detectors, manifest, snapCount, now.toISOString(), monthTag, measurementErrors);
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fsImpl.mkdirSync(path.dirname(outPath), { recursive: true });
   // T204: atomar - diese Datei IST der Monats-Gate-Stand, den spaetere Laeufe als
   // Vergleichsgrundlage lesen. Halb geschrieben waere sie ein Drift-Signal, das nie
   // jemand gemessen hat.
-  writeFileAtomic(outPath, JSON.stringify(status, null, 2) + '\n');
-  fs.mkdirSync(path.dirname(reportPath), { recursive: true });
+  writeAtomicFn(outPath, JSON.stringify(status, null, 2) + '\n');
+  fsImpl.mkdirSync(path.dirname(reportPath), { recursive: true });
   // T204: atomar - der Bericht ist die menschenlesbare Fassung desselben Stands.
-  writeFileAtomic(reportPath, renderReport(status));
+  writeAtomicFn(reportPath, renderReport(status));
 
-  for (const f of status.drift_flags) console.log(`  drift: ${f}`);
-  for (const v of status.vendor_status) console.log(`  vendor: ${v.name} -> ${v.ok ? 'ok' : 'WARN'}${v.code != null ? ' (' + v.code + ')' : ''}`);
-  console.log(`plan-check: report=${reportPath} status=${outPath} needs_human_review=true blocked=${status.blocked}`);
+  for (const f of status.drift_flags) logger.log(`  drift: ${f}`);
+  for (const v of status.vendor_status) logger.log(`  vendor: ${v.name} -> ${v.ok ? 'ok' : 'WARN'}${v.code != null ? ' (' + v.code + ')' : ''}`);
+  logger.log(`plan-check: report=${reportPath} status=${outPath} needs_human_review=true blocked=${status.blocked}`);
   if (status.blocked) {
-    if (detectors.hard) console.error(`::error::MONATS-PLAN-CHECK ROT — deklarierter Detektor fehlt (Register-Luege): ${detectors.missing.map(m => m.detector).join(', ')}. Register vs. Repo divergiert.`);
+    if (detectors.hard) logger.error(`::error::MONATS-PLAN-CHECK ROT — deklarierter Detektor fehlt (Register-Luege): ${detectors.missing.map(m => m.detector).join(', ')}. Register vs. Repo divergiert.`);
     const hart = measurementErrors.filter(e => !e.fehlend);
-    if (hart.length) console.error(`::error::MONATS-PLAN-CHECK ROT — der Check konnte nicht messen, obwohl die Daten da waren: ${hart.map(e => e.text).join('; ')}. Das ist kein fehlender Restore (ENOENT waere nur eine Warnung), sondern ein Lesefehler — die Befunde unten gelten fuer eine unvollstaendige Grundlage.`);
-    process.exit(1);
+    if (hart.length) logger.error(`::error::MONATS-PLAN-CHECK ROT — der Check konnte nicht messen, obwohl die Daten da waren: ${hart.map(e => e.text).join('; ')}. Das ist kein fehlender Restore (ENOENT waere nur eine Warnung), sondern ein Lesefehler — die Befunde unten gelten fuer eine unvollstaendige Grundlage.`);
+    return exitFn(1);
   }
-  console.log(`::warning::Monats-Plan-Review offen (needs_human_review) — ${status.drift_flags.length} Drift-Flag(s), ${status.vendor_warnings.length} Vendor-Warnung(en). Report: ${reportPath}. Kein rotes X (kein Detektor fehlt), aber Banner zeigt es.`);
-  process.exit(0);
+  logger.log(`::warning::Monats-Plan-Review offen (needs_human_review) — ${status.drift_flags.length} Drift-Flag(s), ${status.vendor_warnings.length} Vendor-Warnung(en). Report: ${reportPath}. Kein rotes X (kein Detektor fehlt), aber Banner zeigt es.`);
+  return exitFn(0);
 }
 
 // --- runnable self-check: node scripts/plan-check.js --selftest ---
@@ -238,6 +264,6 @@ function selftest() {
   process.exit(fail ? 1 : 0);
 }
 
-module.exports = { checkDetectors, buildStatus, renderReport, VENDORS, CHECKLIST };
+module.exports = { checkDetectors, buildStatus, renderReport, validateManifest, run, VENDORS, CHECKLIST };
 if (process.argv.includes('--selftest')) selftest();
 else if (require.main === module) run().catch(e => { console.error(`::error::plan-check crashed: ${e && e.stack || e}`); process.exit(1); });
