@@ -137,10 +137,15 @@ test('der Akt zitiert beide Gerichtsakten und F6-K26 woertlich', () => {
   assert.match(g.auflagen, /LR-1 bis LR-22/);
   assert.match(g.einordnung, /F6-K11/);
   assert.match(g.einordnung, /F6-K17/);
-  assert.strictEqual(g.k26Woertlich,
-    'DAS DESIGN WIRD NICHT MEHR GEAENDERT. Ab hier ist jede Aenderung an '
-    + 'Fenstergrenzen, Fallzahl-Design, Schwelle, Bandbreite, SE-Vorschrift oder '
-    + 'Klumpungseinheit ein retrospektiver Reparaturakt und von K3 (4:0) verboten.');
+  // Nicht gegen meine Abschrift, sondern gegen die QUELLE. Ein "woertlich"
+  // befohlenes Zitat, das nur mit sich selbst verglichen wird, ist keins.
+  const quelle = fs.readFileSync(path.join(WURZEL, 'protocol', 'early-detection',
+    '2.1.0', 'f6-vollzug-zweig-a-2026-08-31.json'), 'utf8');
+  const anfang = quelle.indexOf('DAS DESIGN WIRD NICHT MEHR GEAENDERT');
+  assert.ok(anfang > 0, 'der F6-K26-Wortlaut steht nicht mehr in seiner Quelle');
+  assert.ok(quelle.startsWith(g.k26Woertlich, anfang),
+    'das Zitat weicht von der Quelle ab - genau das darf bei einem woertlich '
+    + 'befohlenen Zitat nie passieren');
   assert.match(g.k26Anwendung, /KEINES dieser sechs Dinge/);
   assert.match(g.keinRoutineRollover, /DRITTE Registerdatei/);
 });
