@@ -35,7 +35,7 @@ const { test } = require('node:test');
 
 const WURZEL = path.join(__dirname, '..');
 const K = require(path.join(WURZEL, 'scripts', 'studie-f6-konfirmatorisch-v3.js'));
-const { REGISTER_RELS, haengeEintragAn } = require(path.join(WURZEL, 'lib', 'studie-verfassung.js'));
+const { REGISTER_RELS, haengeEintragAn, ART_ZUGRIFF } = require(path.join(WURZEL, 'lib', 'studie-verfassung.js'));
 
 const ZIEL = path.join(WURZEL, ...K.ZIEL_REL.split('/'));
 const GESCHLOSSEN = path.join(WURZEL, ...REGISTER_RELS[0].split('/'));
@@ -357,24 +357,142 @@ test('nach dem eigenen Merge ist das Werkzeug inert (Einweg-Anhaenger)', () => {
 // gebundene Datei nach dem Akt veraendert worden (F6-C24(3) gebrochen) oder der
 // Akt ist nicht mehr der, unter dem gelaufen wird.
 
+// KETTEN-AKTUELL, nicht konstant. Die runId stand hier fest verdrahtet - und
+// eine fest verdrahtete runId ist genau das, was das LIVE-BINDUNGS-Prinzip
+// verbietet ("aus dem Register, nie aus Konstanten"). Ein Pin auf einen
+// benannten Akt geht mit jeder Ueberschreibung dauerhaft rot und laedt zum
+// Aufraeumen ein - dieselbe Klasse wie der abgeloeste UEBERGANGS-PIN.
+// Gebunden wird deshalb der LETZTE confirmatory_execution_authorized-Akt der
+// KETTE. Erlauben kann das nichts: kein Akt -> rot; Akt mit Drift -> rot; eine
+// Ueberschreibung wird automatisch mitgenommen.
+function letzterKonfirmatorischer(alleEreignisse) {
+  const akte = alleEreignisse.filter((e) => (e.typ || e.type) === ART_ZUGRIFF);
+  return akte.length ? akte[akte.length - 1] : null;
+}
+
+const ketteEreignisse = () => {
+  const alle = [];
+  for (const rel of REGISTER_RELS) {
+    const reg = JSON.parse(fs.readFileSync(abs(rel), 'utf8'));
+    alle.push(...(reg.events || []));
+  }
+  return alle;
+};
+
 const aktAusDemRegister = () => {
-  const teil2 = JSON.parse(fs.readFileSync(ZIEL, 'utf8'));
-  const akt = (teil2.events || []).find((e) => e.runId === K.RUN_ID);
-  assert.ok(akt, `der Akt ${K.RUN_ID} steht nicht in ${K.ZIEL_REL} - das Register ist `
-    + 'append-only, er kann nicht verschwinden');
+  const akt = letzterKonfirmatorischer(ketteEreignisse());
+  assert.ok(akt, 'die Kette fuehrt keinen konfirmatorischen Akt - dann bindet nichts den Baum');
   return akt;
 };
 
+// ── UEBERGANGS-BRUECKE — DATIERT, ZUM ENTFERNEN BESTIMMT ──────────────────
+//
+// Die F6-K13-Folgereparaturen aendern den Laeufer. Der aktuell registrierte
+// Akt bindet den Stand DAVOR; bis der v4-Akt den neuen bindet, waere jede
+// Zwischen-PR rot - und "Waechter weich machen" waere die Erosion, gegen die
+// die ganze Registerordnung gebaut ist.
+//
+// Die Bruecke ist die ratifizierte Hausform dafuer: fuer GENAU DIE DATEIEN,
+// die die Reparatur anfasst, gilt der registrierte ODER der hier ERKLAERTE
+// Zwischenstand. Fuer jede andere Datei bleibt allein der registrierte Wert.
+// Ein DRITTER Wert ist auch fuer eine erklaerte Datei rot.
+//
+// SIE HEBT SICH SELBST AUF: sobald der registrierte Akt den Zwischenstand
+// bindet, verlangt eine Probe ihre Entfernung. Ohne diese Probe bliebe sie als
+// stille Zweitwahrheit stehen.
+const UEBERGANGS_BRUECKE = {
+  gesetztAm: '2026-09-02',
+  entfernenWenn: 'v4 act registered',
+  grund: 'F6-K13-Folgereparaturen: Phase-2a-Schreibprobe (HIGH-2) und '
+    + 'R12a-Schrubbe des ZaehlwerkAbbruch-Texts (MEDIUM-1).',
+  dateien: {
+    'scripts/studie-f6-lauf.py':
+      '945ee6f5d52350be9169915d6fb65694d5888b67dc347feac2345c762124500b',
+  },
+};
+
+// Die Entscheidung als reine Funktion - nur so ist sie zweiseitig pruefbar,
+// ohne den Baum zu veraendern.
+function bindungTraegt(rel, istSha, registriertSha) {
+  if (istSha === registriertSha) return true;
+  const brueckenWert = UEBERGANGS_BRUECKE.dateien[rel];
+  return Boolean(brueckenWert) && istSha === brueckenWert;
+}
+
 test('LIVE-BINDUNG: der Baum traegt genau die Bytes, die der registrierte Akt bindet', () => {
   const akt = aktAusDemRegister();
-  const gebunden = Object.entries(akt.eingabenHashes.skripte);
-  assert.ok(gebunden.length > 0,
-    'der Akt bindet kein Skript - eine Pruefung ueber null Pfaden ist stumm gruen');
+  // BEIDE Karten. Die erste Fassung sah nur `skripte` und liess damit die
+  // Artefakt-Bindungen ungedeckt - darunter reports/studie/E4d-kadenz-*.json,
+  // die Bein-2-Basis, die auf dem Laufweg von NICHTS geprueft wird. Eine
+  // halbe Bindungspruefung ist eine Zusicherung ueber die falsche Menge.
+  const gebunden = [
+    ...Object.entries(akt.eingabenHashes.skripte),
+    ...Object.entries(akt.eingabenHashes.artefakte),
+  ];
+  assert.ok(gebunden.length > Object.keys(akt.eingabenHashes.skripte).length,
+    'die Artefakt-Karte wird nicht mitgeprueft - genau die halbe Menge');
   for (const [rel, wert] of gebunden) {
-    assert.strictEqual(sha256(fs.readFileSync(abs(rel))), wert.dateiSha256,
-      `${rel} weicht von der Bindung des REGISTRIERTEN Akts ab. Entweder wurde die Datei nach `
-      + 'dem Akt veraendert - dann ist F6-C24(3) gebrochen und der Lauf darf nicht starten -, '
-      + 'oder der Akt ist nicht mehr der, unter dem gelaufen wird.');
+    const ist = sha256(fs.readFileSync(abs(rel)));
+    assert.ok(bindungTraegt(rel, ist, wert.dateiSha256),
+      `${rel} weicht von der Bindung des REGISTRIERTEN Akts ab und ist auch nicht als `
+      + 'Uebergang erklaert. Entweder wurde die Datei nach dem Akt veraendert - dann ist '
+      + 'F6-C24(3) gebrochen und der Lauf darf nicht starten -, oder der Akt ist nicht '
+      + 'mehr der, unter dem gelaufen wird.');
+  }
+});
+
+test('KETTEN-BINDUNG: kein Akt -> nichts gebunden, mehrere -> der letzte', () => {
+  // (i) Ohne konfirmatorischen Akt darf NICHTS als gebunden gelten - fail-closed.
+  assert.equal(letzterKonfirmatorischer([]), null,
+    'ohne Akt gilt etwas als gebunden - dann erlaubt die Bindung mehr als vorher');
+  assert.equal(letzterKonfirmatorischer([{ typ: 'C0_REGELFREEZE' }]), null,
+    'ein Vermerk wird als konfirmatorischer Akt gelesen');
+  // (ii) Der LETZTE gewinnt, Vermerke dazwischen stoeren nicht.
+  const alt = { typ: ART_ZUGRIFF, runId: 'alt' };
+  const neu = { typ: ART_ZUGRIFF, runId: 'neu' };
+  assert.equal(
+    letzterKonfirmatorischer([alt, { typ: 'C0_REGELFREEZE' }, neu]).runId, 'neu');
+  // (iii) Eine Ueberschreibung wird AUTOMATISCH mitgenommen - genau der Punkt
+  // dieser Umstellung: kein Waechter muss beim naechsten Akt nachgezogen werden.
+  assert.equal(letzterKonfirmatorischer([alt, neu, { typ: ART_ZUGRIFF, runId: 'v4' }]).runId,
+    'v4');
+  // (iv) Am echten Objekt, OHNE eine runId zu nennen: nach dem gewaehlten Akt
+  // steht kein weiterer konfirmatorischer in der Kette.
+  // BEIDE aus DERSELBEN Lesung - zwei Lesungen liefern zwei Objektidentitaeten,
+  // indexOf faende dann -1 und die Probe waere stumm gruen bzw. falsch rot.
+  const alle = ketteEreignisse();
+  const echt = letzterKonfirmatorischer(alle);
+  const nach = alle.slice(alle.indexOf(echt) + 1);
+  assert.equal(nach.some((e) => (e.typ || e.type) === ART_ZUGRIFF), false,
+    'ein spaeterer konfirmatorischer Akt wurde uebergangen');
+});
+
+test('BRUECKE: erklaerte Datei ja, dritter Wert nein, fremde Datei nie', () => {
+  const registriert = 'a'.repeat(64);
+  const erklaert = UEBERGANGS_BRUECKE.dateien['scripts/studie-f6-lauf.py'];
+  const dritter = 'c'.repeat(64);
+  // (i) der registrierte Wert traegt immer.
+  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', registriert, registriert), true);
+  // (ii) der ERKLAERTE Zwischenstand traegt - genau dafuer gibt es die Bruecke.
+  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', erklaert, registriert), true);
+  // (iii) ein DRITTER Wert ist auch fuer eine erklaerte Datei rot.
+  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', dritter, registriert), false,
+    'die Bruecke laesst einen beliebigen Wert durch - dann ist sie keine Bruecke, sondern ein Loch');
+  // (iv) eine NICHT erklaerte Datei bekommt keine Nachsicht.
+  assert.equal(bindungTraegt('scripts/studie-basisraten.py', erklaert, registriert), false,
+    'undeklarierte Drift wird durchgelassen');
+});
+
+test('BRUECKE hebt sich selbst auf: bindet der Akt den Zwischenstand, muss sie weg', () => {
+  const akt = aktAusDemRegister();
+  for (const [rel, brueckenWert] of Object.entries(UEBERGANGS_BRUECKE.dateien)) {
+    const registriert = (akt.eingabenHashes.skripte[rel]
+      || akt.eingabenHashes.artefakte[rel] || {}).dateiSha256;
+    assert.notEqual(brueckenWert, registriert,
+      `${rel}: der registrierte Akt bindet bereits den erklaerten Zwischenstand. Die Bruecke `
+      + `ist damit gegenstandslos und GEHOERT ENTFERNT (entfernenWenn: `
+      + `"${UEBERGANGS_BRUECKE.entfernenWenn}") - eine stehengebliebene Bruecke ist eine `
+      + 'stille Zweitwahrheit.');
   }
 });
 

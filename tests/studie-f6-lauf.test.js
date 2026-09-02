@@ -1241,3 +1241,80 @@ test('R2-MAJOR-4 GEGENPROBE: ohne Schrubbe stuende der Pfad im Abbruchtext', () 
   assert.ok(!weg.includes(dSchraeg), 'die geschruppte Fassung darf ihn nicht tragen');
   assert.ok(weg.includes('<entfernt>'));
 });
+
+// ============================================================================
+// PHASE 2a — SCHREIBPROBE (F6-K15, zweite Instanz der Klasse)
+// ============================================================================
+
+test('2a SCHREIBPROBE ROT: ein unbeschreibbares Arbeitsverzeichnis bricht benannt ab', () => {
+  // Ein Verzeichnis unter einer DATEI laesst sich auf keinem Betriebssystem
+  // anlegen - portabler als ein Rechte-Entzug, den Windows ignoriert.
+  const d = tempdir('f6lauf-schreibprobe-rot-');
+  const blocker = path.join(d, 'blocker').split(String.fromCharCode(92)).join('/');
+  fs.writeFileSync(blocker, 'eine Datei, kein Verzeichnis', 'utf8');
+  const r = pyProbe([
+    'try:',
+    `    m.pruefe_arbeit_beschreibbar(r"${blocker}/unter/x.sqlite")`,
+    '    print("KEIN ABBRUCH")',
+    'except m.LaufAbbruch as f: print("ABBRUCH:" + str(f))',
+  ].join('\n'));
+  assert.match(r.stdout, /ABBRUCH:ARBEITSPFAD NICHT BESCHREIBBAR \(Phase 2a\)/,
+    `kein benannter Abbruch, sondern: ${r.stdout}${r.stderr}`);
+  // R12a: der OSError traegt den vollen Pfad - er darf nicht roh herauskommen.
+  const konto = path.basename(os.homedir());
+  assert.ok(!r.stdout.includes(konto), `die Kontokennung steht im Text: ${r.stdout}`);
+  assert.match(r.stdout, /<entfernt>/, 'der Pfad im Fehlertext wurde nicht geschruppt');
+});
+
+test('2a SCHREIBPROBE GRUEN: ein beschreibbares Verzeichnis passiert und bleibt sauber', () => {
+  const d = tempdir('f6lauf-schreibprobe-gruen-');
+  const ziel = path.join(d, 'arbeit', 'zwischenstand.sqlite');
+  const zielPy = ziel.split(String.fromCharCode(92)).join('/');
+  const r = pyProbe([
+    `m.pruefe_arbeit_beschreibbar(r"${zielPy}")`,
+    'print("DURCH")',
+  ].join('\n'));
+  assert.match(r.stdout, /DURCH/, `${r.stdout}${r.stderr}`);
+  // Die Probe raeumt hinter sich auf und legt den Arbeitspfad NICHT an -
+  // das Zaehlwerk ist der einzige Schreiber auf dieser Datei.
+  assert.equal(fs.existsSync(path.join(d, 'arbeit', '.f6-schreibprobe')), false,
+    'die Probedatei ist liegen geblieben');
+  assert.equal(fs.existsSync(ziel), false,
+    'die Probe hat den Arbeitspfad selbst angelegt - zweiter Schreiber');
+});
+
+test('2a SCHREIBPROBE: das Protokoll behauptet keine Probe, die nicht lief', () => {
+  // Ein Fixture-Zaehlwerk ohne setze_arbeitspfad bekommt von ruest_zaehlwerk
+  // None - es gibt dann gar keine Arbeitsdatei. Die Protokollzeile muss das
+  // sagen statt "nachgewiesen" zu melden.
+  const w = welt('f6lauf-arbeit-entfaellt-');
+  const r = ruf(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))]);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /Phase 2a SCHREIBPROBE: ENTFAELLT/);
+  assert.doesNotMatch(r.stdout, /als beschreibbar nachgewiesen/,
+    'das Protokoll behauptet eine Schreibprobe, die mangels Arbeitspfad nie lief');
+});
+
+test('MEDIUM-1: ein ZaehlwerkAbbruch-Text verlaesst den Lauf GESCHRUPPT', () => {
+  const w = welt('f6lauf-zwabbruch-');
+  const konto = path.basename(os.homedir());
+  const p = path.join(w.dir, 'zaehlwerk-abbruch.py');
+  // Der Waechter in studie-f6-zaehlwerk.test.js beweist Freiheit von
+  // FIRMEN-Kennungen. Er sagt nichts ueber PFADE - und ein Abbruchtext, der
+  // einen Arbeitspfad fuehrt, traegt die Kontokennung des Rechners.
+  fs.writeFileSync(p, [
+    'class ZaehlwerkAbbruch(Exception):',
+    '    pass',
+    'def zaehle(panel_pfad, variante, arm):',
+    `    raise ZaehlwerkAbbruch("Arbeitspfad unbrauchbar: C:/Users/${konto}/f6/zwischenstand.sqlite")`,
+    '',
+  ].join('\n'), 'utf8');
+
+  const r = ruf(w, ['--zaehlwerk', p]);
+  assert.notEqual(r.status, 0, 'ein ZaehlwerkAbbruch muss den Lauf anhalten');
+  assert.match(r.stderr, /das Zaehlwerk hat abgebrochen \(geschruppt\)/);
+  assert.ok(!r.stderr.includes(konto),
+    `die Kontokennung steht im stderr: ${r.stderr.slice(0, 300)}`);
+  assert.match(r.stderr, /<entfernt>/,
+    'nichts wurde ersetzt - dann hat die Schrubbe nicht gegriffen');
+});

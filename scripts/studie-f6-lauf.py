@@ -1423,6 +1423,46 @@ def schruppe_text(text):
     return " ".join(aus)[:400]
 
 
+def pruefe_arbeit_beschreibbar(arbeit_pfad):
+    """F6-K15, zweite Instanz derselben Klasse: STIRBT DAS NACH DEM PANEL?
+
+    Die Arbeitsdatei entsteht in `studie-f6-zaehlwerk.py::_vorbereitung` ERST,
+    nachdem `eigene_panel_verbindung` das Panel geoeffnet hat. Ein nicht
+    beschreibbares Arbeitsverzeichnis - volle Platte, fehlendes Recht,
+    Tippfehler im Pfad - toetet den Lauf also HINTER dem Panelzugriff. Genau
+    diese Klasse hat den einen autorisierten Lauf gekostet.
+
+    Hier wird sie vorgezogen: Verzeichnis anlegen, eine Probedatei schreiben,
+    wieder entfernen. DER ARBEITSPFAD SELBST WIRD NICHT ANGEFASST - das
+    Zaehlwerk loescht und legt ihn ohnehin selbst an, und ein Vorgriff darauf
+    waere ein zweiter Schreiber auf derselben Datei.
+
+    Die Probe ist notwendig, nicht hinreichend: sie beweist Schreibrecht im
+    Verzeichnis, nicht genug Platz fuer ein Mehr-GB-Zwischenprodukt. Ein
+    spaeterer Platzfehler bleibt moeglich - er faellt dann in dieselbe Klasse
+    wie jeder E/A-Fehler waehrend der Messung und ist nicht vorziehbar.
+    """
+    if not arbeit_pfad:
+        return
+    ordner = os.path.dirname(os.path.abspath(str(arbeit_pfad)))
+    probe = os.path.join(ordner, ".f6-schreibprobe")
+    try:
+        os.makedirs(ordner, exist_ok=True)
+        with open(probe, "wb") as fh:
+            fh.write(b"0")
+    except OSError as fehler:
+        raise LaufAbbruch(
+            "ARBEITSPFAD NICHT BESCHREIBBAR (Phase 2a): " + schruppe_text(fehler)
+            + ". Die Arbeitsdatei entsteht erst NACH der Paneloeffnung; ohne "
+            "diese Vorpruefung waere der Lauf hinter dem Panel gestorben. Es "
+            "ist KEIN Panel-Byte gelesen worden.")
+    finally:
+        try:
+            os.remove(probe)
+        except OSError:
+            pass
+
+
 def pruefe_umschlag(umschlag):
     # F6-C23: bis hierher pruefte diese Funktion ausschliesslich
     # Schluessel-MITGLIEDSCHAFT, nie den Wert - ein `panelRand: None` waere
@@ -1575,6 +1615,26 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
         "Phase 2a PFAD-VORPRUEFUNG: die R12a-Riegel sind VOR dem ersten "
         "Panel-Byte gefahren (F6-K15). Der Riegel am Schreib-Rand bleibt "
         "zusaetzlich stehen.")
+
+    # Dieselbe Klassenjagd, zweiter Fund: die Arbeitsdatei entsteht erst NACH
+    # der Paneloeffnung. Ein nicht beschreibbares Arbeitsverzeichnis stirbt
+    # deshalb hinter dem Panel - vorziehbar, also vorgezogen.
+    # Die Zeile ist BEDINGT, nicht unbedingt. Ein Zaehlwerk ohne
+    # `setze_arbeitspfad` bekommt von `ruest_zaehlwerk` None und legt gar keine
+    # Arbeitsdatei an - dort waere "nachgewiesen" eine Behauptung ueber eine
+    # Probe, die nie lief. Genau diese Klasse steht in diesem Lauf schon einmal
+    # im Protokoll.
+    if geruesteter_arbeitspfad:
+        pruefe_arbeit_beschreibbar(geruesteter_arbeitspfad)
+        protokoll.append(
+            "Phase 2a SCHREIBPROBE: das Arbeitsverzeichnis ist VOR dem ersten "
+            "Panel-Byte als beschreibbar nachgewiesen (F6-K15). Die Probedatei "
+            "ist wieder entfernt; der Arbeitspfad selbst wurde nicht angefasst.")
+    else:
+        protokoll.append(
+            "Phase 2a SCHREIBPROBE: ENTFAELLT - dieses Zaehlwerk fuehrt keinen "
+            "Arbeitspfad (kein setze_arbeitspfad). Es gibt keine Arbeitsdatei, "
+            "die hinter dem Panel entstehen koennte.")
 
     daten = {}
     for variante in VARIANTEN:
@@ -1782,10 +1842,23 @@ def main(argv=None):
     except Exception as fehler:  # noqa: BLE001 - genau das ist der Zweck
         # EINE Ausnahme von der Unterdrueckung: der Abbruch des gebundenen
         # Zaehlwerks. Seine Texte sind HAUSTEXTE aus einem per SHA gebundenen
-        # Modul, sie sind auf Kennungsfreiheit geprueft (Waechter in
-        # tests/studie-f6-zaehlwerk.test.js), und ohne sie saehe der Bedienende
-        # bei einem reinen Konfigurationsfehler nur "interner Fehler der Art
-        # ZaehlwerkAbbruch" - eine Meldung, mit der niemand etwas anfangen kann.
+        # Modul, und ohne sie saehe der Bedienende bei einem reinen
+        # Konfigurationsfehler nur "interner Fehler der Art ZaehlwerkAbbruch" -
+        # eine Meldung, mit der niemand etwas anfangen kann.
+        #
+        # WAS DER BESTEHENDE WAECHTER WIRKLICH DECKT - und was nicht.
+        # tests/studie-f6-zaehlwerk.test.js:359 beweist, dass die
+        # `raise ZaehlwerkAbbruch`-Stellen KEINE FIRMEN-KENNUNG interpolieren
+        # (kein cik, adsh, accession, kein Eintrags-Zugriff), am Quelltext und
+        # am laufenden Objekt. Das ist F6-B14 und es haelt.
+        # Es ist aber NICHT R12a: ein Abbruchtext, der einen PFAD fuehrt -
+        # `pruefe_arbeitspfad` tut das - traegt die Kontokennung des Rechners
+        # nach stderr, und der Waechter oben sieht davon nichts. Die frueher
+        # hier stehende Zusicherung "auf Kennungsfreiheit geprueft" hat diese
+        # zwei Klassen zu einer verschmolzen und damit mehr behauptet, als
+        # irgendein Waechter zeigt.
+        # Deshalb geht auch dieser Text durch dieselbe R12a-Schrubbe wie der
+        # des Basisraten-Moduls: benannt heraus, nie roh.
         # Das VERSIEGELTE Basisraten-Modul wirft einen diagnostisch wertvollen
         # Text ("fast immer eine falsche Datenwurzel"). Anonym als "interner
         # Fehler der Art BasisratenFehler" ist ein Bedienfehler auf dem EINEN
@@ -1797,8 +1870,8 @@ def main(argv=None):
                   file=sys.stderr)
             return 1
         if type(fehler).__name__ == "ZaehlwerkAbbruch":
-            print("F6-LAUF-ABBRUCH: das Zaehlwerk hat abgebrochen: "
-                  + str(fehler), file=sys.stderr)
+            print("F6-LAUF-ABBRUCH: das Zaehlwerk hat abgebrochen (geschruppt): "
+                  + schruppe_text(fehler), file=sys.stderr)
             return 1
         # DIE FEHLERFLAECHE IST AUCH EINE AUSGABEFLAECHE (F6-B14).
         # Das Zaehlwerk ist FREMDER, per --zaehlwerk geladener Code und das
