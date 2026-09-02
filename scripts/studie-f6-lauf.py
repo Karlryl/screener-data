@@ -517,13 +517,31 @@ def kurzpfad(voll):
 
 
 def lies_json(pfad, was):
+    """R12a AUF DER FEHLERFLAECHE, in der GETEILTEN Funktion.
+
+    Bis hierher wurde `str(pfad)` roh interpoliert. Unter einem relativen
+    `--wurzel` traegt der aufgeloeste Kettenpfad die Kontokennung des Rechners,
+    und die ging damit nach stderr - die F6-K13-Klasse auf der Fehlerflaeche
+    des EINEN Laufs. Der Riegel sitzt HIER und nicht an den Aufrufstellen: alle
+    Leser (Freigabe, Register, jede Kettendatei, jede gebundene Datei) laufen
+    durch diese eine Funktion, und ein Aufrufer, den jemand kuenftig vergisst,
+    macht dieselbe Wunde neu auf.
+    """
     if not os.path.isfile(pfad):
-        raise LaufAbbruch(was + " fehlt: " + str(pfad))
+        raise LaufAbbruch(was + " fehlt: " + kurzpfad(pfad))
     try:
         with open(pfad, encoding="utf-8") as fh:
             return json.load(fh)
+    except OSError as fehler:
+        # Eine VORHANDENE, aber unlesbare Datei (Rechte, Sperre, E/A-Fehler)
+        # starb hier bisher anonym als durchgereichter Traceback. `str()` eines
+        # OSError fuehrt den Dateinamen - deshalb geschruppt, nie roh.
+        raise LaufAbbruch(was + " ist nicht lesbar (" + kurzpfad(pfad) + "): "
+                          + schruppe_text(fehler))
     except ValueError as fehler:
-        raise LaufAbbruch(was + " ist kein lesbares JSON (" + str(pfad)
+        # Der Text von json stammt aus json und fuehrt keinen Pfad
+        # (\"Expecting value: line 1 column 1\") - er bleibt diagnostisch roh.
+        raise LaufAbbruch(was + " ist kein lesbares JSON (" + kurzpfad(pfad)
                           + "): " + str(fehler))
 
 
@@ -945,16 +963,24 @@ def rehash(wurzel, kette, protokoll):
     for rel, _abs, register in kette:
         for e in (register.get("events") or []):
             run_id = e.get("runId")
-            # LF-15 - EINE runId IN ZWEI KETTENDATEIEN IST EIN ABBRUCH, KEIN
-            # UEBERSCHREIBEN. Bis hierher war dies ein flaches dict ueber EINE
-            # Datei: ein doppelter runId ueberschrieb still, letzter gewinnt.
-            # Ueber die Kette waere daraus ein Rehash gegen die zufaellig
-            # zuletzt gelesene Datei geworden - ein sauberes Verdikt aus dem
-            # falschen Grund.
-            if run_id in je_eintrag and je_eintrag[run_id][0] != rel:
+            # LF-15 - EIN DOPPELTER runId IST EIN ABBRUCH, KEIN UEBERSCHREIBEN.
+            # Bis hierher war dies ein flaches dict: "ein doppelter runId
+            # ueberschreibt still, letzter gewinnt" - und daraus waere ein
+            # Rehash gegen den zufaellig zuletzt gelesenen Eintrag geworden,
+            # also ein sauberes Verdikt aus dem falschen Grund.
+            #
+            # UNEINGESCHRAENKT, und das ist der Punkt: das Urteil sagt schlicht
+            # "kuenftig: ABBRUCH". Ein Duplikat INNERHALB einer Datei ist
+            # genauso unentscheidbar wie eines ueber zwei Dateien - der
+            # Schaden haengt nicht daran, in welcher Datei die Kopie liegt.
+            # Eine Fassung, die nur den datei-uebergreifenden Fall faengt,
+            # liesse den in-Datei-Fall still weiterlaufen.
+            if run_id in je_eintrag:
+                andere = je_eintrag[run_id][0]
                 raise LaufAbbruch(
-                    "MEHRDEUTIG: runId " + repr(run_id) + " steht in MEHREREN "
-                    "Kettendateien (" + je_eintrag[run_id][0] + ", " + rel
+                    "MEHRDEUTIG: runId " + repr(run_id) + " steht MEHRFACH in "
+                    "der Kette (" + andere
+                    + (", " + rel if andere != rel else ", derselben Datei")
                     + "). Welcher Eintrag gemeint ist, ist damit nicht "
                     "entscheidbar. Mehrdeutigkeit ist ein ABBRUCH, kein "
                     "Ersttreffer.")
@@ -1352,18 +1378,24 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
     """
     fd, tally_pfad = tempfile.mkstemp(suffix=".json", prefix="f6-tally-")
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump([[int(m), int(nn)] for m, nn in klumpen], fh)
-            # LF-3 - DIE EIGENE KLEMPNEREI STIRBT VOR DEM FANG.
-            # Ohne `fsync` steht die Tafel u. U. nur im Seiten-Cache, und ein
-            # voller Datentraeger meldet sich erst beim Schliessen - oder gar
-            # nicht, sondern erst dem LESENDEN Subprozess. Der meldete ihn dann
-            # als "Klumpen-Datei nicht lesbar", also mit genau dem Marker, den
-            # Merkmal f aussortiert. Merkmal f allein genuegt aber nicht: der
-            # Defekt soll gar nicht erst bis zum Fang kommen.
-            fh.flush()
-            os.fsync(fh.fileno())
+        # LF-3 - DIE EIGENE KLEMPNEREI STIRBT VOR DEM FANG.
+        # Ohne `fsync` steht die Tafel u. U. nur im Seiten-Cache, und ein
+        # voller Datentraeger meldet sich erst beim Schliessen - oder gar
+        # nicht, sondern erst dem LESENDEN Subprozess. Der meldete ihn dann
+        # als "Klumpen-Datei nicht lesbar", also mit genau dem Marker, den
+        # Merkmal f aussortiert. Merkmal f allein genuegt aber nicht: der
+        # Defekt soll gar nicht erst bis zum Fang kommen.
+        #
+        # SCHREIBEN UND RUECKLESEN STEHEN UNTER DEMSELBEN BENANNTEN FANG.
+        # Vorher lag nur das Ruecklesen darunter - und ausgerechnet der Fall,
+        # den LF-3 benennt (voller Datentraeger), meldet sich bei `flush`
+        # bzw. `fsync`, also im ungedeckten Teil. Er waere als anonymer
+        # Traceback gestorben statt mit dem Grund, der ihn erklaert.
         try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump([[int(m), int(nn)] for m, nn in klumpen], fh)
+                fh.flush()
+                os.fsync(fh.fileno())
             with open(tally_pfad, encoding="utf-8") as fh:
                 json.load(fh)
         except (OSError, ValueError, RecursionError) as fehler:
@@ -1881,11 +1913,19 @@ def pruefe_arbeit_beschreibbar(arbeit_pfad):
     Verzeichnis, nicht genug Platz fuer ein Mehr-GB-Zwischenprodukt. Ein
     spaeterer Platzfehler bleibt moeglich - er faellt dann in dieselbe Klasse
     wie jeder E/A-Fehler waehrend der Messung und ist nicht vorziehbar.
+
+    RUECKGABE: ob KEIN RUECKSTAND geblieben ist. Das Entfernen der Probedatei
+    darf nicht scheitern duerfen UND gleichzeitig im Protokoll als geschehen
+    behauptet werden - genau diese Verschmelzung hat dieser Lauf schon einmal
+    berichtigt. Ein liegengebliebener Rueckstand ist kein Abbruchgrund (die
+    Schreibprobe ist ja BESTANDEN), aber er wird gesagt.
     """
     if not arbeit_pfad:
-        return
+        # Nichts geschrieben, also nichts liegengeblieben.
+        return True
     ordner = os.path.dirname(os.path.abspath(str(arbeit_pfad)))
     probe = os.path.join(ordner, ".f6-schreibprobe")
+    entfernt = False
     try:
         os.makedirs(ordner, exist_ok=True)
         with open(probe, "wb") as fh:
@@ -1899,8 +1939,10 @@ def pruefe_arbeit_beschreibbar(arbeit_pfad):
     finally:
         try:
             os.remove(probe)
+            entfernt = True
         except OSError:
-            pass
+            entfernt = False
+    return entfernt
 
 
 def pruefe_umschlag(umschlag):
@@ -2088,11 +2130,18 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     # Probe, die nie lief. Genau diese Klasse steht in diesem Lauf schon einmal
     # im Protokoll.
     if geruesteter_arbeitspfad:
-        pruefe_arbeit_beschreibbar(geruesteter_arbeitspfad)
+        # Die Aussage ueber die Probedatei folgt der MESSUNG, nicht der
+        # Absicht: `os.remove` kann scheitern (Sperre, Rechte), und das wurde
+        # geschluckt, waehrend das Protokoll die Entfernung behauptete.
+        ohne_rueckstand = pruefe_arbeit_beschreibbar(geruesteter_arbeitspfad)
         protokoll.append(
             "Phase 2a SCHREIBPROBE: das Arbeitsverzeichnis ist VOR dem ersten "
-            "Panel-Byte als beschreibbar nachgewiesen (F6-K15). Die Probedatei "
-            "ist wieder entfernt; der Arbeitspfad selbst wurde nicht angefasst.")
+            "Panel-Byte als beschreibbar nachgewiesen (F6-K15). "
+            + ("Die Probedatei ist wieder entfernt; "
+               if ohne_rueckstand else
+               "Die Probedatei liess sich NICHT wieder entfernen und blieb "
+               "als Rueckstand liegen; ")
+            + "der Arbeitspfad selbst wurde nicht angefasst.")
     else:
         protokoll.append(
             "Phase 2a SCHREIBPROBE: ENTFAELLT - dieses Zaehlwerk fuehrt keinen "
