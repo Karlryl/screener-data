@@ -45,6 +45,24 @@ const priceStore = require('../lib/price-history-store.js');
 
 const DRIFT_THRESHOLD = 0.25;
 const MIN_HISTORY_RUNS = 4;
+const COUNT_FIELDS = Object.freeze([
+  'yahooOk',
+  'yahooFailed',
+  'yahooTotal',
+  'fxRatesCount',
+  'fxFailed',
+  'earningsWithDate',
+  'priceTickerCount',
+  'universeSize',
+  'snapshotsCount',
+]);
+const WATCHED_METRICS = Object.freeze([
+  'yahooOk',
+  'fxRatesCount',
+  'earningsWithDate',
+  'priceTickerCount',
+  'snapshotsCount',
+]);
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'outputs', 'pull-stats');
 // BH-120: history.json getrennt vom gh-pages-only outputs/ — dieses Verzeichnis
@@ -104,25 +122,129 @@ function median(values) {
   return sorted.length % 2 ? sorted[m] : (sorted[m - 1] + sorted[m]) / 2;
 }
 
-function collectStats() {
-  const today = new Date().toISOString().slice(0, 10);
+function isValidCount(value) {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
+function isCanonicalDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const timestamp = Date.parse(value + 'T00:00:00Z');
+  return Number.isFinite(timestamp) && new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
+function yahooStatsFromManifest(manifest) {
+  if (manifest === null) {
+    return { yahooOk: null, yahooFailed: null, yahooTotal: null, yahooSuccessRate: null };
+  }
+  if (typeof manifest !== 'object' || Array.isArray(manifest)) {
+    throw new TypeError('snapshots/_manifest.json manifest must be an object when present');
+  }
+  const fields = [
+    ['n_ok', 'yahooOk'],
+    ['n_failed', 'yahooFailed'],
+    ['n_total', 'yahooTotal'],
+  ];
+  const stats = {};
+  for (const [manifestField, statsField] of fields) {
+    if (!Object.prototype.hasOwnProperty.call(manifest, manifestField)
+        || !isValidCount(manifest[manifestField])) {
+      throw new TypeError(`snapshots/_manifest.json ${manifestField} must be a non-negative safe integer`);
+    }
+    stats[statsField] = manifest[manifestField];
+  }
+  stats.yahooSuccessRate = stats.yahooTotal > 0
+    ? Math.round(stats.yahooOk / stats.yahooTotal * 1000) / 1000
+    : null;
+  return stats;
+}
+
+function validateStatsRow(stats) {
+  if (stats === null || typeof stats !== 'object' || Array.isArray(stats)) {
+    throw new TypeError('Pull-Stats telemetry row must be an object');
+  }
+  if (!Object.prototype.hasOwnProperty.call(stats, 'asOf')) {
+    throw new TypeError('Pull-Stats telemetry field asOf must be an own canonical YYYY-MM-DD date');
+  }
+  const asOf = stats.asOf;
+  if (!isCanonicalDate(asOf)) {
+    throw new TypeError('Pull-Stats telemetry field asOf must be an own canonical YYYY-MM-DD date');
+  }
+  // Project each allowed field exactly once. This prevents an inherited field,
+  // stateful getter, toJSON hook, or unrelated additive property from changing
+  // the bytes after validation but before persistence.
+  const counts = {};
+  for (const field of COUNT_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(stats, field)) {
+      throw new TypeError(`Pull-Stats telemetry field ${field} must be null or a non-negative safe integer`);
+    }
+    const value = stats[field];
+    if (value !== null && !isValidCount(value)) {
+      throw new TypeError(`Pull-Stats telemetry field ${field} must be null or a non-negative safe integer`);
+    }
+    counts[field] = value;
+  }
+  if (!Object.prototype.hasOwnProperty.call(stats, 'yahooSuccessRate')) {
+    throw new TypeError('Pull-Stats telemetry field yahooSuccessRate must be null or a finite number from 0 to 1');
+  }
+  const successRate = stats.yahooSuccessRate;
+  if (successRate !== null
+      && (!Number.isFinite(successRate) || successRate < 0 || successRate > 1)) {
+    throw new TypeError('Pull-Stats telemetry field yahooSuccessRate must be null or a finite number from 0 to 1');
+  }
+  // Keep the established artifact key order so projecting the 26 retained rows
+  // does not create a noisy order-only history rewrite.
+  return {
+    asOf,
+    yahooOk: counts.yahooOk,
+    yahooFailed: counts.yahooFailed,
+    yahooTotal: counts.yahooTotal,
+    yahooSuccessRate: successRate,
+    fxRatesCount: counts.fxRatesCount,
+    fxFailed: counts.fxFailed,
+    earningsWithDate: counts.earningsWithDate,
+    priceTickerCount: counts.priceTickerCount,
+    universeSize: counts.universeSize,
+    snapshotsCount: counts.snapshotsCount,
+  };
+}
+
+function validateStatsHistory(history, source) {
+  return history.map((row, index) => {
+    try {
+      return validateStatsRow(row);
+    } catch (error) {
+      throw new TypeError(`${source} row ${index} is malformed: ${error.message}`, { cause: error });
+    }
+  });
+}
+
+function historyMetric(row, metric) {
+  if (row === null || typeof row !== 'object' || Array.isArray(row)
+      || !Object.prototype.hasOwnProperty.call(row, metric)) return undefined;
+  return row[metric];
+}
+
+function collectStats(opts = {}) {
+  const root = opts.root || ROOT;
+  const fileSystem = opts.fs || fs;
+  const readJson = opts.loadJson || loadJson;
+  const loadPrices = opts.loadPrices || ((dir) => priceStore.loadAll(dir));
+  const readWatchlist = opts.loadWatchlist || loadWatchlist;
+  const now = opts.now || (() => new Date());
+  const today = now().toISOString().slice(0, 10);
   const stats = { asOf: today };
 
   // Yahoo pull
-  const manifest = loadJson(path.join(ROOT, 'snapshots', '_manifest.json'));
-  stats.yahooOk = manifest ? (manifest.n_ok || 0) : null;
-  stats.yahooFailed = manifest ? (manifest.n_failed || 0) : null;
-  stats.yahooTotal = manifest ? (manifest.n_total || 0) : null;
-  stats.yahooSuccessRate = (stats.yahooTotal && stats.yahooOk != null)
-    ? Math.round(stats.yahooOk / stats.yahooTotal * 1000) / 1000 : null;
+  const manifest = readJson(path.join(root, 'snapshots', '_manifest.json'));
+  Object.assign(stats, yahooStatsFromManifest(manifest));
 
   // FX
-  const fx = loadJson(path.join(ROOT, 'fx-rates.json'));
+  const fx = readJson(path.join(root, 'fx-rates.json'));
   stats.fxRatesCount = fx && fx.rates ? Object.keys(fx.rates).length : null;
   stats.fxFailed = fx && fx.failed ? fx.failed.length : null;
 
   // Earnings
-  const earnings = loadJson(path.join(ROOT, 'earnings-calendar.json'));
+  const earnings = readJson(path.join(root, 'earnings-calendar.json'));
   stats.earningsWithDate = earnings ? Object.keys(earnings).length : null;
 
   // Historical prices (Tag 294: sharded → count across shards; null on load error)
@@ -132,20 +254,21 @@ function collectStats() {
   // die die Haertung gebaut wurde — und detectStatsDrift ueberspringt null-Metriken (s. u.),
   // der Drift-Waechter waere fuer die eigene Bugklasse blind geworden. Der Wert bleibt null
   // (unbekannt ist ehrlicher als 0), aber der Grund steht jetzt im Lauf.
-  try { priceTickerCount = Object.keys(priceStore.loadAll(path.join(ROOT, 'prices'))).length; }
+  try { priceTickerCount = Object.keys(loadPrices(path.join(root, 'prices'))).length; }
   catch (e) { console.log('::warning::priceTickerCount nicht messbar: Preis-Store nicht ladbar (' + e.message + ')'); }
   stats.priceTickerCount = priceTickerCount;
 
   // Universe
   // Tag 220c (audit F-219b-03): use shared schema-aware loader so all three
   // historical shapes (array / wrapped / bare-object) are recognised.
-  const wl = loadWatchlist(path.join(ROOT, 'watchlist.json'));
+  const wl = readWatchlist(path.join(root, 'watchlist.json'));
   stats.universeSize = wl.shape === 'invalid' ? null : wl.size;
 
   // Snapshots dir count
-  const snapDir = path.join(ROOT, 'snapshots');
-  if (fs.existsSync(snapDir)) {
-    stats.snapshotsCount = fs.readdirSync(snapDir).filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length;
+  const snapDir = path.join(root, 'snapshots');
+  if (fileSystem.existsSync(snapDir)) {
+    stats.snapshotsCount = fileSystem.readdirSync(snapDir)
+      .filter(f => f.endsWith('.json') && !isMetadataSnapshot(f)).length;
   } else {
     stats.snapshotsCount = null;
   }
@@ -159,11 +282,10 @@ function detectStatsDrift(today, history, threshold) {
   const alerts = [];
   const recent = history.slice(-MIN_HISTORY_RUNS);
   // Watch these metrics for downward drift only (loss of coverage)
-  const watched = ['yahooOk', 'fxRatesCount', 'earningsWithDate', 'priceTickerCount', 'snapshotsCount'];
-  for (const metric of watched) {
+  for (const metric of WATCHED_METRICS) {
     const todayVal = today[metric];
-    if (todayVal == null) continue;
-    const priorVals = recent.map(r => r[metric]).filter(v => v != null && Number.isFinite(v));
+    if (!isValidCount(todayVal)) continue;
+    const priorVals = recent.map(r => historyMetric(r, metric)).filter(isValidCount);
     if (priorVals.length < MIN_HISTORY_RUNS) continue;
     const med = median(priorVals);
     if (med == null || med <= 0) continue;
@@ -176,11 +298,10 @@ function detectStatsDrift(today, history, threshold) {
 }
 
 function uncheckedStats(today, history) {
-  const watched = ['yahooOk', 'fxRatesCount', 'earningsWithDate', 'priceTickerCount', 'snapshotsCount'];
   if (!Array.isArray(history) || history.length < MIN_HISTORY_RUNS) return [];
   const recent = history.slice(-MIN_HISTORY_RUNS);
-  return watched.filter((metric) => today[metric] == null
-    || recent.filter((r) => Number.isFinite(r && r[metric])).length < MIN_HISTORY_RUNS);
+  return WATCHED_METRICS.filter((metric) => !isValidCount(today[metric])
+    || recent.filter((r) => isValidCount(historyMetric(r, metric))).length < MIN_HISTORY_RUNS);
 }
 
 // Die Ergebniszeilen eines Laufs — rein, damit die Sichtbarkeit pruefbar ist.
@@ -209,12 +330,11 @@ async function main(opts = {}) {
   const outDir = opts.outDir || OUT_DIR;
   const histDir = opts.histDir || HIST_DIR;
   const collect = opts.collectStats || collectStats;
+  const today = validateStatsRow(collect());
+  const histPath = path.join(histDir, 'history.json');
+  let history = validateStatsHistory(ladeHistorie(histPath), histPath);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
   if (!fs.existsSync(histDir)) fs.mkdirSync(histDir, { recursive: true });
-  const today = collect();
-
-  const histPath = path.join(histDir, 'history.json');
-  let history = ladeHistorie(histPath);
   // Avoid duplicate entries for same date
   history = history.filter(h => h && h.asOf !== today.asOf);
   history.push(today);
@@ -271,7 +391,24 @@ async function runCli(mainImpl = main, io = {}) {
   }
 }
 
-module.exports = { collectStats, detectStatsDrift, uncheckedStats, fazitZeilen, loadJson, ladeHistorie, median, HIST_DIR, OUT_DIR, main, runCli };
+module.exports = {
+  collectStats,
+  detectStatsDrift,
+  uncheckedStats,
+  fazitZeilen,
+  loadJson,
+  ladeHistorie,
+  median,
+  isValidCount,
+  isCanonicalDate,
+  yahooStatsFromManifest,
+  validateStatsRow,
+  validateStatsHistory,
+  HIST_DIR,
+  OUT_DIR,
+  main,
+  runCli,
+};
 
 if (require.main === module) {
   runCli();
