@@ -37,6 +37,7 @@ const {
   ART_C0_REGELFREEZE,
   REGISTER_RELS,
   registerPfadDerRunId,
+  istGeschlossen,
 } = require('../lib/studie-verfassung');
 
 // Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
@@ -86,6 +87,8 @@ const absolut = (rel) => path.join(WURZEL, ...rel.split('/'));
 // tests/studie-naht-byte-frost.test.js pinnt die geschlossene Datei auf ihre
 // Bytes. Ein versehentlicher Anhang wird dort rot, sofort und benannt.
 const LEDGER_REL = REGISTER_RELS[0];
+// Nur fuer die Meldung des Riegels: welche Datei `anmelden` ansteuert.
+const ANMELDEZIEL_REL = LEDGER_REL;
 const LEDGER = absolut(LEDGER_REL);
 const PRAEREG = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'preregistration.json');
 
@@ -173,6 +176,24 @@ function registerDerRunId(runId) {
 // EPERM/EBUSY (OneDrive/AV halten Handles), fsync des Verzeichnisses, Schleife
 // ueber Teilschreibvorgaenge. Zwei Kopien derselben Regel driften; eine nicht.
 function schreibeRegister(register) {
+  // LRA-2: DER SCHREIB-RAND. Genau hier, vor dem writeFileAtomic, und
+  // nirgends sonst. Im Speicher anhaengen bleibt erlaubt - persistieren in
+  // eine geschlossene Datei nicht.
+  //
+  // GEPRUEFT WIRD DIE DATEI, NICHT DAS UEBERGEBENE OBJEKT. Die erste Fassung
+  // dieses Riegels prueft `register` - und das traegt den NEUEN Eintrag bereits
+  // am Ende, nicht mehr den Abschluss-Akt. Der Riegel fiel damit lautlos durch
+  // und die Probe schrieb in die geschlossene Datei (Eintrag 32, 198.510 B),
+  // bevor sie ihn stellte. Die Eigenschaft haengt am ZIEL: ist die Datei, in
+  // die geschrieben werden soll, mit ihrem Abschluss-Akt geschlossen?
+  const zielStand = liesWennDa(ANMELDEZIEL_REL);
+  if (zielStand && istGeschlossen(zielStand)) {
+    throw new VerfassungsBruch(
+      `R1: ${ANMELDEZIEL_REL} ist mit ihrem Abschluss-Akt GESCHLOSSEN - ihr letzter Eintrag `
+      + 'verbietet jeden weiteren. Es wird nichts geschrieben. Ein Akt fuer die Fortsetzung '
+      + 'braucht seinen eigenen Einzweck-Anhaenger mit --register.',
+    );
+  }
   writeFileAtomic(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
