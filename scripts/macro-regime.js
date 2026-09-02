@@ -152,8 +152,10 @@ function main() {
   const dates = Object.keys(regimes);
   if (dates.length === 0) {
     writeEmptyFallback(args, 'insufficient_price_history');
+    // Der Schritt laeuft mit continue-on-error und outputs/ ist gitignored: ohne
+    // ::warning:: bliebe der Tag mit altem Regime-Stand im gruenen Lauf unsichtbar.
     console.log(
-      'Insufficient price history for ' + args.ticker + ': ' + sorted.length
+      '::warning::Insufficient price history for ' + args.ticker + ': ' + sorted.length
       + ' price points, need at least ' + (MA_PERIOD + 1)
       + ' - wrote error sidecar ' + errorSidecarPath(args.out)
       + ' and preserved last-known-good output when present'

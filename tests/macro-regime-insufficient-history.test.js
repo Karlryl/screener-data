@@ -90,6 +90,11 @@ check('200 rows preserve an existing output byte-for-byte and write a truthful s
   assert.strictEqual(sidecar.ticker, 'SPY');
   assert.strictEqual(sidecar.error, 'insufficient_price_history');
   assert.ok(!/Written:/.test(result.output), 'degraded path must not report a healthy publication');
+  assert.match(
+    result.output,
+    /::warning::Insufficient price history/,
+    'the stale-regime day must raise a CI annotation, not a silent console.log',
+  );
 });
 
 check('a first-ever 200-row run writes an honest empty placeholder', () => {
