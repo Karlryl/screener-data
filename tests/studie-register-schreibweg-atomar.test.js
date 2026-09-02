@@ -180,7 +180,12 @@ function stelleGhBereit(baum, register) {
     // der Sache.
     '  const jetzt = new Date(Date.now() + 1000).toUTCString();',
     "  const roh = fs.readFileSync(process.env.SPION_REGISTER, 'utf8');",
-    "  const rumpf = JSON.stringify({ content: Buffer.from(roh, 'utf8').toString('base64'), encoding: 'base64' });",
+    // `path` gehoert in die Antwort, weil die echte API ihn liefert und der
+    // Beweis ihn seit F2 gegen den ANGEFRAGTEN Pfad haelt. Abgeleitet aus der
+    // Anfrage, nicht getippt - eine Attrappe, die ihn erfindet, pruefte den
+    // Vergleich nicht, sondern umginge ihn.
+    "  const rel = String(argv[argv.length - 1]).replace(/^repos\\/[^/]+\\/[^/]+\\/contents\\//, '').split('?')[0];",
+    "  const rumpf = JSON.stringify({ path: rel, content: Buffer.from(roh, 'utf8').toString('base64'), encoding: 'base64' });",
     // fs.writeSync statt process.stdout.write: auf eine PIPE schreibt Node
     // asynchron, und ein direkt folgendes process.exit() schneidet den Rest ab.
     // Der Rumpf ist base64 und waechst mit dem Register; ueberschreitet er den
