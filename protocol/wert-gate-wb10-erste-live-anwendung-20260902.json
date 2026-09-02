@@ -1,0 +1,154 @@
+{
+  "schema": "wert-gate-governance-addendum/v1",
+  "recordId": "wb10-erste-live-anwendung-2026-09-02",
+  "mode": "ADDENDUM_NO_BASE_RECORD_EDIT",
+  "status": "BINDING",
+  "recordedAt": "2026-09-02",
+  "chainSeparation": "This record is NOT part of the Studie-2.0 / early-detection chain and deliberately does not live under protocol/early-detection/. Both rulings of 2026-09-02 keep the study lanes untouched (_COURT-WERTGATE-BEWEGUNG §10 'Nicht beruehrt: Studien-Bahnen jeder Art', _COURT-FTI-NULLWERTE §10 likewise). What is borrowed from protocol/early-detection/2.0.0/h9-single-appender-enforcement-anchor-addendum.json is the FORM only - the ADDENDUM_NO_BASE_RECORD_EDIT pattern: a separate file that amends a record without moving one byte of it. No study ledger, seal, hash-manifest or friedhof entry is touched, read or referenced as authority. outcome-access-ledger*.json is a different, closed chain and is not involved.",
+  "frozenNotice": "This addendum stands NEXT to register entry Tag 1204 (#261) in board-history/_excluded.json and takes nothing away from it. The entry is not edited, not re-bound and not superseded. WB-11 forbids any change to letztes_altes_vintage, boards, tag or typ; this record changes none of them and is not read by massstabBruchFuer.",
+
+  "authority": {
+    "source": "_COURT-WERTGATE-BEWEGUNG-2026-09-02.md (Vault: Jarvis/Knowledge/Trading/growth-screener/agent-reports/)",
+    "ratifiedAt": "2026-09-02T13:23:01Z",
+    "auflage": "WB-10 - Erste Live-Anwendung als falsifizierbare Vorhersage",
+    "auflageWortlaut": "Vor dem ersten Lauf unter der neuen Mechanik wird schriftlich vorhergesagt: welche Boards passieren, welcher Fan-out-Anteil erwartet wird, welche Zeilen der Integritaets-Vorrang fassen soll. Nach dem Lauf wird das Ist dagegen gestellt und die Differenz veroeffentlicht.",
+    "zusatzDesKanzlers": "Eintrag #261 wird durch den Fix nachtraeglich wirksam, obwohl er geschrieben wurde, als die Mechanik nicht existierte. Er darf nicht still wirksam werden - vor dem ersten Lauf ist er datiert zu bestaetigen (Vermerk: 'unter der am ... eingefuehrten Mechanik wissentlich aktiv').",
+    "mechanicsLandedAs": "PR #269, commit f24243537054b6c8acd07cd0e307c35992360b34, 'Wert-Gate: dritte Bruch-Klasse daten-schub als Zuschlag, mit Faecherungs-Tor und Integritaets-Vorrang'"
+  },
+
+  "amends": {
+    "path": "board-history/_excluded.json",
+    "entry": "_massstab_brueche[6] - tag 'Tag 1204', datum '2026-09-02', typ 'daten-schub'",
+    "editedByThisAddendum": false,
+    "changed": false,
+    "sha256AtAddendumTime": "e2abdb5a9350262e08e6d7cef2a72f805d7615c8d856c839337b7148f5eb436f",
+    "gitBlobAtAddendumTime": "dd105e70e43c3b3c115f4d7f42a8e49215612895",
+    "sha256Basis": "SHA-256 over the blob bytes as stored in git at origin/main f242435370. This path is not LF-pinned by .gitattributes; the git blob id above is the unambiguous second reference.",
+    "whatIsAmended": "The entry itself says nothing about being knowingly activated. WB-10 requires a dated confirmation and a written, falsifiable prediction BEFORE the first run under the new mechanics. Both live here, outside the register, because massstabBruchFuer reads exactly four fields (tag, typ, letztes_altes_vintage, boards, plus erklaerende_lampe) and any further field in the register is inert by construction."
+  },
+
+  "teilA_datierteBestaetigung": {
+    "erklaerung": "Eintrag Tag 1204 (#261) ist ab dem Merge von PR #269 (2026-09-02, commit f242435370) unter der dort eingefuehrten Zuschlags-Mechanik WISSENTLICH AKTIV.",
+    "bestaetigtAm": "2026-09-02",
+    "bestaetigtDurch": "Register-Step-Executor unter Orchestrator-Auftrag; Ratifikation des Beschlusses 2026-09-02T13:23:01Z",
+    "wasDieAktivierungBedeutet": "Der Eintrag war bei seiner Aufnahme mechanisch wirkungslos (Bedingung 3 verlangte eine geschrumpfte Kohorte; die drei Kohorten wuchsen +34 / +5 / +31, und typ wurde nirgends ausgewertet). Ab #269 oeffnet typ 'daten-schub' den ZUSCHLAGS-Arm in evaluateGate: die Tagesschwelle der drei benannten Boards wird einmalig auf den bestehenden Deckel THRESHOLD_MULTIPLIER x basisSchwelle gehoben, gebunden an das Faecherungs-Tor GATE_FANOUT_CAP = 0,08 und ueberstimmt vom Integritaets-Vorrang.",
+    "keineStilleWirksamkeit": "Damit ist die nachtraegliche Wirksamkeit datiert, benannt und vor dem ersten Lauf niedergelegt - nicht still eingetreten.",
+    "bindungsfelderUnveraendert": {
+      "letztes_altes_vintage": "2026-09-01",
+      "boards": ["energy", "it-services", "utilities"],
+      "tag": "Tag 1204",
+      "typ": "daten-schub"
+    },
+    "bindungGeprueft": {
+      "gemessenAm": "2026-09-02",
+      "gegen": "origin/main f242435370",
+      "juengstesCommittetesVintage": "board-history/2026-09-01",
+      "einVintage_2026_09_02": "existiert nicht und wird nicht erzeugt (WB-12: das Loch bleibt ein Loch)",
+      "folge": "priorVintageDate liefert beim naechsten Lauf 2026-09-01; die Bindung greift, 'GATE-BINDUNG VERFEHLT' darf NICHT erscheinen.",
+      "falle": "Landet vor dem naechsten Lauf doch noch ein Vintage nach dem 2026-09-01, ist der Vorgaenger ein anderer, die Bindung falsch und die Ausnahme greift nicht (fail-closed). Dann MUSS letztes_altes_vintage nachgezogen werden (WB-11), bevor der Lauf startet."
+    }
+  },
+
+  "teilB_schriftlicheVorhersage": {
+    "gilt_fuer": "den ersten veroeffentlichenden Lauf unter #269 - erwartet der naechste Cron-Lauf (Di-Sa), Vintage 2026-09-03 gegen Vorgaenger 2026-09-01",
+    "abgeleiteteGerichtsvorhersage": "energy faellt (FTI), it-services und utilities passieren. Ausdruecklich als ABLEITUNG aus den Messungen beider Stimmen gefuehrt, nicht als eigene Messung des Kanzlers (Anmerkung 4 zu den Dissenten) - und damit selbst Gegenstand der Pruefung.",
+    "rechnerischeGroessen": {
+      "basisSchwelle": 11.5,
+      "basisSchwelleHerkunft": "MIN_GATE_THRESHOLD; alle 13 Boards sind in Kalibrierphase, es gibt keine board-eigene eingefrorene Schwelle",
+      "deckel": 23.0,
+      "deckelHerkunft": "THRESHOLD_MULTIPLIER (2) x basisSchwelle - keine neue Zahl, keine Zahl aus dem Register",
+      "allowance": 11.5,
+      "gapDaysErwartet": 2,
+      "gapDaysBegruendung": "2026-09-03 gegen 2026-09-01; das Vintage 2026-09-02 fehlt (dokumentiertes Loch)",
+      "wirksameSchwelleErwartet": 34.5,
+      "wirksameSchwelleFormel": "basisSchwelle * gapDays + allowance = 11,5 * 2 + 11,5 (write-board-history.js: die Bruch-Allowance wird bewusst NICHT mit gapDays skaliert)",
+      "wirksameSchwelleOhneEintrag": 23.0,
+      "abstandZuGross": false,
+      "abstandZuGrossGrenze": "GATE_MAX_ABSTAND_TAGE = 7"
+    },
+    "boards": [
+      {
+        "board": "energy",
+        "vorhersage": "FAELLT (SUSPECT)",
+        "ueberWelchenAst": "Integritaets-Vorrang WB-4, NICHT ueber |D| gegen die Schwelle",
+        "begruendung": "FTIs Snapshot traegt den Schaden des 02.09.-Voll-Pulls (annualOpInc leer, annualGP [0,0,0,0], coverageAxes 6/7 -> 4/7, Lampen-Wechsel). PR #268 repariert ihn in diesem Lauf NICHT: die Schema-Melder-Regel _existingSnapshotMissingTag211lFields prueft ausschliesslich !hasCA (Bilanz-Schluessel currentAssets) und wurde von #268 nicht angefasst, und FTIs fundamentalsAsOf wurde am 02.09. erneuert - der naechste erzwungene Voll-Pull steht erst nach FUNDAMENTALS_REFRESH_DAYS (30) an, also um den 2026-10-02.",
+        "erwartetesAusloesendesFeld": "coverageAxes 6/7 -> 4/7, alternativ 'Lampe opIncYahooAdjusted verloren' (meta.opIncSource kippt yahoo-adjusted -> computed-margin; welches Feld zuerst greift, entscheidet die Reihenfolge in integritaetsVerfall: coverageAxes wird vor den Lampen geprueft)",
+        "erwartetesP99": "Groessenordnung 17,4 (aus dem 02.09.-Lauf); fuer die 03.09.-Transition NICHT punktgenau vorhergesagt",
+        "erwarteterFanOut": "Groessenordnung 1,85 %, weit unter cap 8 %",
+        "hinweis": "Der Zuschlag waere hier gewaehrt worden (p99 17,4 < 34,5) - genau deshalb ist WB-4 die tragende Auflage und nicht der Deckel."
+      },
+      {
+        "board": "it-services",
+        "vorhersage": "PASSIERT",
+        "begruendung": "p99 der Groessenordnung 12,5 liegt ueber der normalen Tagesschwelle, aber unter der wirksamen Schwelle mit Zuschlag; kein Integritaets-Verfall erwartet. Das Gericht misst it-services ausdruecklich als von der FTI-Umstellung NICHT betroffen (_COURT-FTI-NULLWERTE §2.5: 'Nicht betroffen sind consumer-staples, it-services und utilities').",
+        "erwarteterFanOut": "Groessenordnung 1,50 %, unter cap 8 %",
+        "erwarteteVerfallsZeilen": 0
+      },
+      {
+        "board": "utilities",
+        "vorhersage": "PASSIERT",
+        "begruendung": "p99 der Groessenordnung 14,4 unter der wirksamen Schwelle; kein Integritaets-Verfall erwartet; von der FTI-Umstellung nicht betroffen (s. o.).",
+        "erwarteterFanOut": "Groessenordnung 2,27 %, unter cap 8 %",
+        "erwarteteVerfallsZeilen": 0
+      }
+    ],
+    "zeilenDieDerIntegritaetsVorrangFassenSoll": [
+      {
+        "ticker": "FTI",
+        "board": "energy",
+        "erwartetesFeld": "coverageAxes 6/7 -> 4/7 (bzw. Lampen-Verlust)",
+        "istDasEinDatenschaden": true,
+        "bemerkung": "Der einzige echte Datenschaden dieser Nacht. Sein |D| von 12,00 liegt UNTER dem Deckel 23,00 - ohne WB-4 liefe er durch."
+      }
+    ],
+    "erwarteteZeilenSonst": "Auf it-services und utilities wird KEINE Zeile vom Integritaets-Vorrang erwartet. Faellt dort eine, ist die Vorhersage falsifiziert und der erste Verdaechtige steht unter 'benanntesRisiko' unten.",
+    "weitereErwartungen": {
+      "gateBindungVerfehlt": "darf NICHT im Lauf-Protokoll erscheinen",
+      "kanalB": "data-health/p99-delta-history.json fuehrt fuer genau die drei Boards einen datenSchub-Block mit zuschlagGewaehrt, angewandteSchwelle, normaleSchwelle, fanOut{zaehler,nenner,anteil,cap}, breiteZeilen (namentlich) und integritaetsVerfall (namentlich)",
+      "alarmkanalWB7": "nur Boards mit bruchGrenze.allowance > 0 zaehlen als erhoehte Tagesschwelle; der Datenschub-Arm meldet mit eigener, unverwechselbarer Zeile",
+      "kalibrierSampleWB6": "an diesem Ausnahmetag waechst dailyP99Samples fuer die drei Boards NICHT",
+      "eintragStirbtDanach": "Landet das Vintage 2026-09-03, ist der Vorgaenger ab dem Folgelauf ein anderer; Eintrag #261 ist damit verbraucht und wirkt nie wieder."
+    },
+    "benanntesRisiko_dasDieVorhersageKippenKann": {
+      "titel": "Lampen-Verlust durch eine DATENVERBESSERUNG kann WB-4 ausloesen",
+      "mechanik": "Der 03.09.-Pull ist der erste Voll-Pull unter #268. Jeder dort voll gezogene Ticker durchlaeuft Fix 1 / Fix 2. Gewinnt unter Fix 1 das FTS-Buendel und traegt es OpInc, setzt pull-yahoo.js meta.opIncSource auf 'yahoo-adjusted'. Stand die Zeile vorher auf 'computed-margin', VERLIERT sie damit die Lampe opIncSynthetisch (src/scoring/lamps.js:812). integritaetsVerfall wertet JEDE verlorene Lampe als Verfall - ausdruecklich 'strenger als nur Quell-Lampen' - und macht das Board SUSPECT, obwohl die Daten besser geworden sind.",
+      "warumTrotzdemPASSIERT_vorhergesagt": "Das FTI-Gericht misst die 94 Zeilen mit geaendertem Score-Eingang ueber zehn Boards und nennt consumer-staples, it-services und utilities ausdruecklich als NICHT betroffen; energy traegt 2 dieser Zeilen. Auf den beiden Pass-Boards ist der Mechanismus also nicht bestueckt.",
+      "wasZuerstZuPruefenIst": "Faellt it-services oder utilities entgegen der Vorhersage, ist im Kanal-B-Block das Feld integritaetsVerfall die erste Adresse. Steht dort 'Lampe opIncSynthetisch verloren', ist nicht die Vorhersage falsch, sondern die Trennschaerfe von WB-4 - das waere ein eigener Befund fuer das Wert-Gate-Gericht (K2-Nachbarschaft), keine Nachverhandlung auf Ausfuehrungsebene.",
+      "zweitesRisiko": "Der Faecherungs-Zaehler misst deltas[i] > basisSchwelle, also gegen 11,50 - NICHT gegen basisSchwelle * gapDays. Bei gapDays 2 zaehlen dadurch mehr Zeilen als 'breit', und das 8-%-Tor ist leichter zu reissen als an einem 1-Tages-Uebergang. Reisst es, gilt unveraendert die normale Schwelle und alle drei Boards fallen."
+    }
+  },
+
+  "bekannteBeobachtungspunkte": [
+    {
+      "id": "WB-4-FALSCHPOSITIV-LAMPENVERLUST",
+      "titel": "Der Integritaets-Vorrang fasst auch Datenverbesserungen",
+      "status": "REGISTRIERT als gemessene Falschpositiv-Klasse (Orchestrator, 2026-09-02). NICHT entschieden, NICHT gelockert.",
+      "mechanik": "Fix 1 aus PR #268 setzt meta.opIncSource von 'computed-margin' auf 'yahoo-adjusted', wenn das FTS-Buendel gewinnt und OpInc traegt. Damit VERLIERT die Zeile die Lampe opIncSynthetisch (src/scoring/lamps.js:812). integritaetsVerfall wertet JEDE zuvor getragene und jetzt fehlende Lampe als Verfall - ausdruecklich 'strenger als nur Quell-Lampen' - und macht das Board SUSPECT, obwohl die Daten besser geworden sind.",
+      "wegDerBehandlung": "Beim ERSTEN Auftreten geht der Fall in die WB-14-Ueberpruefung oder als ANHANG an das Wert-Gate-Gericht. Keine Nachverhandlung auf Ausfuehrungsebene: WB-4 zu lockern loescht den Beschluss (K5).",
+      "wasImIstAbgleichZuPruefenIst": "Steht im Kanal-B-Block eines Boards unter integritaetsVerfall der Text 'Lampe opIncSynthetisch verloren', ist dieser Beobachtungspunkt eingetreten - dann ist nicht die Vorhersage falsch, sondern die Trennschaerfe von WB-4.",
+      "auchGefuehrtIn": "protocol/wert-gate-wb15-blinder-fleck-20260902.json, derBlindeFleck.dritterResidualbefund"
+    }
+  ],
+
+  "teilC_istAbgleich": {
+    "status": "OFFEN",
+    "faelligNach": "dem ersten veroeffentlichenden Lauf unter #269",
+    "pflicht": "Das Ist wird gegen jede Zeile von teilB gestellt und die DIFFERENZ veroeffentlicht - nicht nur die Uebereinstimmung. Quelle des Ist: das Lauf-Protokoll (Kanal A) und data-health/p99-delta-history.json byDate[<datum>] (Kanal B).",
+    "abnahmeklausel": "Der Umsetzungs-PR gilt ohne diesen Ist-Abgleich als nicht abgenommen (_COURT-WERTGATE-BEWEGUNG §6, Zusatz ausserhalb der Test-Tafel).",
+    "einzutragenNachDemLauf": ["laufId", "vintageDatum", "priorDate", "gapDaysIst", "jeBoard: suspect, p99Delta, wirksameSchwelle, fanOut, verfallsZeilen", "Differenzen zur Vorhersage mit Begruendung", "ob GATE-BINDUNG VERFEHLT erschien"]
+  },
+
+  "messgrenzen": {
+    "nichtSelbstGemessen": [
+      "FTIs Snapshot-Zustand nach dem 02.09.-Voll-Pull. snapshots/ ist NICHT committet (nur snapshots/_manifest.json liegt im Baum); der lokale Checkout traegt den Vor-Schadens-Stand (fetchedAt 2026-08-02T15:14:47.503Z, annualOpInc [1.393,0 / 982,6 / 529,2 / 212,5 Mio] vollstaendig). Die FTI-Vorhersage stuetzt sich deshalb auf die Diagnose und beide Gerichtsakten, nicht auf eine eigene Messung.",
+      "Die p99-Werte 17,40 / 12,50 / 14,40 und die Faecherungs-Anteile 1,85 / 1,50 / 2,27 % stammen aus dem Lauf 33623850297 bzw. dessen Harness-Rekonstruktion. Dieses Vintage ist nie committet worden (WB-12). Stimme 1 fuehrt denselben Vorbehalt in ihrem Dissent. Sie sind hier als GROESSENORDNUNG gefuehrt, nicht als Punktvorhersage - der 03.09.-Uebergang ist ein anderer Uebergang mit anderem Datenstand und gapDays 2."
+    ],
+    "selbstGemessen": [
+      "board-history/ endet bei 2026-09-01 (git ls-tree origin/main f242435370); kein Verzeichnis 2026-09-02.",
+      "_massstab_brueche traegt genau 7 Eintraege; genau EINER nennt letztes_altes_vintage 2026-09-01 (Tag 1204).",
+      "massstabBruchFuer wirft HART bei zwei Eintraegen mit demselben letztes_altes_vintage; der Wurf ist nicht gefangen und endet in process.exit(1) - kein Vintage wird an dem Tag geschrieben.",
+      "Der Schema-Melder prueft ausschliesslich !hasCA und wurde von #268 nicht beruehrt - es gibt keinen erzwungenen Massen-Neuabruf.",
+      "opIncSynthetisch haengt an meta.opIncSource; Fix 1 setzt dieses Feld auf 'yahoo-adjusted', wenn das FTS-Buendel gewinnt und OpInc traegt."
+    ]
+  }
+}
