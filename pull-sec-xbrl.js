@@ -134,7 +134,47 @@ function get(url, ifModifiedSince, _redirectDepth) {
   });
 }
 
-function readJson(p) { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return null; } }
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function manifestCorruption(manifestPath, detail) {
+  return new Error(`SEC XBRL manifest is corrupt at ${manifestPath}: ${detail}`);
+}
+
+function validateManifest(manifest, manifestPath = MANIFEST_PATH) {
+  if (!isRecord(manifest)) {
+    throw manifestCorruption(manifestPath, 'root must be an object');
+  }
+  if (!Object.prototype.hasOwnProperty.call(manifest, 'entries') || !isRecord(manifest.entries)) {
+    throw manifestCorruption(manifestPath, 'expected an own entries object');
+  }
+  for (const [cik, entry] of Object.entries(manifest.entries)) {
+    if (!isRecord(entry)) {
+      throw manifestCorruption(manifestPath, `entry ${JSON.stringify(cik)} must be an object`);
+    }
+  }
+  return manifest;
+}
+
+function loadManifest(manifestPath = MANIFEST_PATH, fsApi = fs) {
+  let raw;
+  try {
+    raw = fsApi.readFileSync(manifestPath, 'utf8');
+  } catch (e) {
+    if (e && e.code === 'ENOENT') return { entries: {} };
+    const detail = e && e.message ? e.message : String(e);
+    throw new Error(`Cannot read SEC XBRL manifest at ${manifestPath}: ${detail}`);
+  }
+
+  let manifest;
+  try {
+    manifest = JSON.parse(raw);
+  } catch (e) {
+    throw manifestCorruption(manifestPath, `invalid JSON: ${e.message}`);
+  }
+  return validateManifest(manifest, manifestPath);
+}
 
 function validateCompanyfactsBody(body) {
   try { return JSON.parse(body); }
@@ -143,13 +183,20 @@ function validateCompanyfactsBody(body) {
   }
 }
 
-async function main() {
-  const args = parseArgs(process.argv);
-  if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
-  const manifest = readJson(MANIFEST_PATH) || { entries: {} };
+async function main(dependencies = {}) {
+  const fsApi = dependencies.fs || fs;
+  const cacheDir = dependencies.cacheDir || CACHE_DIR;
+  const manifestPath = dependencies.manifestPath || path.join(cacheDir, '_manifest.json');
+  const fetchTickers = dependencies.fetchSecTickers || fetchSecTickers;
+  const getFn = dependencies.get || get;
+  const sleepFn = dependencies.sleep || sleep;
+  const writeAtomic = dependencies.writeFileAtomic || writeFileAtomic;
+  const args = parseArgs(dependencies.argv || process.argv);
+  const manifest = loadManifest(manifestPath, fsApi);
+  if (!fsApi.existsSync(cacheDir)) fsApi.mkdirSync(cacheDir, { recursive: true });
 
   console.log('Fetching SEC ticker list...');
-  const tickers = await fetchSecTickers();
+  const tickers = await fetchTickers();
   if (tickers.size === 0) {
     console.error('No SEC tickers loaded — aborting.');
     process.exit(1);
@@ -187,9 +234,9 @@ async function main() {
 
   for (const t of todo) {
     if (!t.cik) continue;
-    const filePath = path.join(CACHE_DIR, t.cik + '.json');
+    const filePath = path.join(cacheDir, t.cik + '.json');
     const prior = manifest.entries[t.cik];
-    if (prior && prior.fetchedAt && prior.fetchedAt > staleCutoff && fs.existsSync(filePath)) {
+    if (prior && prior.fetchedAt && prior.fetchedAt > staleCutoff && fsApi.existsSync(filePath)) {
       skippedFresh++;
       continue;
     }
@@ -202,8 +249,8 @@ async function main() {
     }
     const url = `https://data.sec.gov/api/xbrl/companyfacts/CIK${t.cik}.json`;
     try {
-      const res = await get(url, prior && prior.lastModified);
-      if (res.notModified && fs.existsSync(filePath)) {
+      const res = await getFn(url, prior && prior.lastModified);
+      if (res.notModified && fsApi.existsSync(filePath)) {
         manifest.entries[t.cik] = Object.assign({}, prior, { fetchedAt: new Date().toISOString() });
         skipped304++;
       } else if (res.notModified) {
@@ -233,13 +280,20 @@ async function main() {
         // replacing the last known-good companyfacts body; the catch below counts
         // the failure and keeps the old cache file untouched/retry-eligible.
         validateCompanyfactsBody(res.body);
-        writeFileAtomic(filePath, res.body);
-        manifest.entries[t.cik] = {
+        writeAtomic(filePath, res.body);
+        const refreshed = Object.assign({}, prior, {
           ticker: t.ticker,
           fetchedAt: new Date().toISOString(),
           lastModified: res.lastModified,
           bytes: Buffer.byteLength(res.body, 'utf8')
-        };
+        });
+        // A successful body supersedes known retry/negative-cache state, but
+        // forward-compatible fields owned by newer producers must survive.
+        delete refreshed.notFound;
+        delete refreshed.notFoundStreak;
+        delete refreshed.lastNotFoundAt;
+        delete refreshed.lastError;
+        manifest.entries[t.cik] = refreshed;
         pulled++;
       }
     } catch (e) {
@@ -252,7 +306,7 @@ async function main() {
         rateLimited++;
         console.warn(`  429 rate-limited on CIK${t.cik} — backing off ${RATE_LIMIT_BACKOFF_MS / 1000}s (${rateLimited} so far)`);
         manifest.entries[t.cik] = Object.assign({}, prior, { lastError: 'HTTP 429 (rate-limited, will retry next run)' });
-        await sleep(RATE_LIMIT_BACKOFF_MS);
+        await sleepFn(RATE_LIMIT_BACKOFF_MS);
         if (rateLimited > 200) {
           console.error('Persistent 429s (>200) — aborting run, SEC is throttling us.');
           aborted = true;
@@ -278,14 +332,14 @@ async function main() {
     if ((pulled + skipped304) % 100 === 0 && (pulled + skipped304) > 0) {
       console.log(`  progress: pulled=${pulled} 304=${skipped304} fresh=${skippedFresh} 404=${notFound} 404-pausiert=${skippedNotFound} err=${errors}`);
       // F-SM-023 (Tag 189): atomic — every 100-success flush, and final.
-      writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+      writeAtomic(manifestPath, JSON.stringify(manifest, null, 2));
     }
-    await sleep(RATE_DELAY_MS);
+    await sleepFn(RATE_DELAY_MS);
   }
 
   manifest.lastRun = today;
   manifest.summary = { pulled, skipped304, skippedFresh, notFound, skippedNotFound, errors, rateLimited, totalKnown: tickers.size, aborted };
-  writeFileAtomic(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+  writeAtomic(manifestPath, JSON.stringify(manifest, null, 2));
   console.log('Done. pulled=' + pulled + ' 304=' + skipped304 + ' fresh=' + skippedFresh + ' 404=' + notFound + ' 404-pausiert=' + skippedNotFound + ' err=' + errors + ' 429=' + rateLimited + (aborted ? ' ABORTED' : ''));
   // BH-005 fix: an aborted run must fail the CI step, not exit 0 — the
   // Verify-SEC-Coverage gate only looks at the error *rate*, which an early
@@ -297,4 +351,13 @@ if (require.main === module) {
   main().catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { main, istNegativGesperrt, validateCompanyfactsBody, NOTFOUND_STREAK, NOTFOUND_PAUSE_DAYS, _secRateLimit: SEC_RATE_LIMIT };
+module.exports = {
+  main,
+  loadManifest,
+  validateManifest,
+  istNegativGesperrt,
+  validateCompanyfactsBody,
+  NOTFOUND_STREAK,
+  NOTFOUND_PAUSE_DAYS,
+  _secRateLimit: SEC_RATE_LIMIT,
+};
