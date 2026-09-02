@@ -44,7 +44,7 @@ Die 13 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, 
 | --- | --- | --- | --- | --- |
 | `schema` | `"findash-export/v1"` | Pflicht | ja (String-Gleichheit) | Versions-Pin. Aenderung nur per v2-Bump (§7). |
 | `generated_at` | string (ISO-8601) | Pflicht | ja (Typ string) | Build-Zeit des Writers. |
-| `coverage` | `{status,degraded,blocked,coverage_pct}` \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz + Objekt-Typen) | Durchgereicht aus `outputs/coverage-status.json`. `null` = Marker fehlte (Consumer liest als "unbekannt"). |
+| `coverage` | `{status,degraded,blocked,coverage_pct,generated_at}` \| null | Pflicht (Wert nullable) | ja (Schluessel-Praesenz + Objekt-Typen; `generated_at` NICHT geprueft, s.u.) | Durchgereicht aus `outputs/coverage-status.json`. `null` = Marker fehlte (Consumer liest als "unbekannt"). |
 
 `coverage`-Objekt (wenn nicht null), alle Felder geprueft:
 
@@ -54,6 +54,9 @@ Die 13 Branchen (formulaId): `consumer-discretionary, consumer-staples, energy, 
 | `degraded` | boolean | Pflicht |
 | `blocked` | boolean | Pflicht |
 | `coverage_pct` | number (finite) | Pflicht |
+| `generated_at` | string (ISO-8601) \| undefined | **OPTIONAL (additiv)**, NICHT im `--check` |
+
+**`coverage.generated_at` (Rat Q2-2, 02.09.2026) — additiv, kein v2-Bump (§7 erlaubt neue optionale Felder in v1).** Zeitstempel des Markers SELBST, nicht des Exports: Marker (merge-Job) und Index (scoring-Job) entstehen in ZWEI verschiedenen CI-Jobs, am Stand vom 29.07. ~29 Minuten auseinander. Ohne diesen Wert traegt die eingebettete Marker-Kopie keine eigene Zeit, und der Ruecksetz-Pfad des Consumers (`env.coverage = index.coverage`, findash `data-layer/screener.js:602`) kann einen Marker aus einem FRUEHEREN Lauf nicht von dem dieses Laufs unterscheiden. findash fuehrt genau diesen Vergleich heute schon — aber nur auf der eigenstaendigen `coverage-status.json` (`COVERAGE_STALE_MS` = 6 h, `screener.js:641-648`); die eingebettete Kopie hatte das Feld bisher nicht. **Bewusst NICHT im `--check`:** Karls einziger Alarmkanal darf nicht an einem additiven Anzeigefeld rot werden (dieselbe Begruendung wie bei `revGrowthYoYPct` in §3). Quelle `scripts/write-findash-export.js loadCoverage()`; Waechter `tests/coverage-gate-truth-table.test.js`.
 
 Treibt das Degradiert-Banner im Dashboard. **Faellt `coverage` still weg oder wird `status` kaputt** (real relevant: aktuell `status='degradiert'`, `coverage_pct` 20.1), blockt der Check den Deploy — genau der stille Datenbruch, gegen den §0 den Gate positioniert.
 
