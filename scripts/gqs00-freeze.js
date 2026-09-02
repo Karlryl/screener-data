@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO = path.resolve(__dirname, '..');
 
@@ -237,7 +238,7 @@ function walkFiles(dir) {
 
 function writeJson(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', 'utf8');
+  writeFileAtomic(file, JSON.stringify(value, null, 2) + '\n', 'utf8');
 }
 
 function formulaShape(formula) {

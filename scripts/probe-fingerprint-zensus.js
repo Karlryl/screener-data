@@ -63,6 +63,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 const {
   milanReihe, milanEndlicheQuartale, milanFingerabdruck, MILAN_MIN_QUARTALE, MILAN_SHARES_BAND, MILAN_SPIEGEL,
 } = require('./filter-snapshot-merge.js');
@@ -299,7 +300,7 @@ function main(argv) {
       zensus: z,
     }, null, 2);
     const ziel = jsonArg.indexOf('--json=') === 0 ? jsonArg.slice('--json='.length) : null;
-    if (ziel) { fs.writeFileSync(ziel, text); console.log('\nJSON geschrieben: ' + ziel); }
+    if (ziel) { writeFileAtomic(ziel, text); console.log('\nJSON geschrieben: ' + ziel); }
     else console.log('\n' + text);
   }
   return 0;

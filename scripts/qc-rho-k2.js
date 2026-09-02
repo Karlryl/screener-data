@@ -16,6 +16,7 @@ const { loadUniverse } = require('../src/scoring/run-screener.js');
 const { scoreUniverse } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { spearman } = require('./qc-overlap.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'outputs', 'quality', '_rho-k2.json');
@@ -117,7 +118,7 @@ function run() {
         : 'NICHT orthogonal (Gate verletzt) -> K2 Muster-Friedhof, weiter zu K3'),
   };
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
-  fs.writeFileSync(OUT, JSON.stringify(out, null, 2));
+  writeFileAtomic(OUT, JSON.stringify(out, null, 2));
   console.log(`[qc-rho-k2] K2 auswertbar auf ${k2Eval} Namen; geteilte Menge n=${out.pooled.n}`);
   console.log(`[qc-rho-k2] pooled |rho|=${out.pooled.absRho} -> ${out.verdict}`);
   for (const [k, v] of Object.entries(perSector).sort((a, b) => b[1].n - a[1].n)) {
