@@ -17,5 +17,144 @@
  "initialStatus": "R14A_ROLLOVER_FORTSETZUNG_OHNE_DESIGNAENDERUNG",
  "chainAlgorithm": "Fuer Eintrag n ist eventHash der SHA-256 ueber das kanonische JSON aus previousHash und allen Eintragsfeldern ausser eventHash. previousHash des ersten Eintrags ist genesisSha256.",
  "rule": "Nur-Anhaengen. Jeder Zugriff auf Ergebnisdaten wird VOR dem Zugriff angemeldet (registeredAt < accessedAt) und auf den geschuetzten Server gepusht; bestehende Eintraege werden nie editiert oder entfernt. Ein Lauf, der Ergebnisdaten liest, ohne unter seiner runId als confirmatory_execution_authorized eingetragen zu sein, bricht ab (R4).",
- "events": []
+ "events": [
+  {
+   "runId": "f6-aequivalenz-entdeckung-v2-2026-09-02",
+   "typ": "count_only_probe_authorized",
+   "registeredAt": "2026-09-02T02:41:55.835Z",
+   "accessedAt": "2026-09-02T04:41:55.835Z",
+   "fenster": [
+    "entdeckung"
+   ],
+   "allowedOutputs": [
+    "aequivalenzTorSoll.S-U.firmen_reif",
+    "aequivalenzTorSoll.S-U.firmen_unreif",
+    "aequivalenzTorSoll.S-G.firmen_reif",
+    "aequivalenzTorSoll.S-G.firmen_unreif",
+    "aequivalenzTorSoll.S-UG.firmen_reif",
+    "aequivalenzTorSoll.S-UG.firmen_unreif",
+    "bein2.S-U/signal.zaehler",
+    "bein2.S-U/signal.nenner",
+    "bein2.S-U/signal.zensiert",
+    "bein2.S-U/kontrollpool.zaehler",
+    "bein2.S-U/kontrollpool.nenner",
+    "bein2.S-U/kontrollpool.zensiert",
+    "bein2.S-G/signal.zaehler",
+    "bein2.S-G/signal.nenner",
+    "bein2.S-G/signal.zensiert",
+    "bein2.S-G/kontrollpool.zaehler",
+    "bein2.S-G/kontrollpool.nenner",
+    "bein2.S-G/kontrollpool.zensiert",
+    "bestanden",
+    "modulSha256",
+    "zaehlwerkSha256",
+    "zaehlprobeSha256",
+    "schwellenDateiSha256",
+    "schwellenInhaltSha256",
+    "kalibrierHaelfteGeprueft"
+   ],
+   "erlaubt": "GENAU EINE Zaehlung auf dem ENTDECKUNGS-Fenster (rules.json fenster.entdeckung, 2009q1..2015q4, versiegelt: false): der dreibeinige Aequivalenz-Lauf nach F6-C7/C8/C9. Ausgegeben werden ausschliesslich die in allowedOutputs gelisteten Schluessel — die Aequivalenz-Zahlen der Beine 1 und 2, das Verdikt bestanden und die drei Skript-Hashes. Bein 3 prueft Wortlaut-Literale ohne Panel-Lauf und geht in bestanden ein. Kein Ergebniswert, kein Anteil, kein SE, kein Band, kein p-Wert.",
+   "verboten": "Jeder Blick ins Prueffenster oder in den Endtest unter dieser runId; jede Beruehrung von panel-validierung.sqlite oder panel-endtest.sqlite.enc oder Schluesselmaterial; jede Ausgabe ausserhalb von allowedOutputs (ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter); jede Firmen-Kennung in irgendeiner Ausgabe (F6-B14); jede Berufung auf diesen Eintrag als Autorisierung des konfirmatorischen Laufs — der braucht seinen EIGENEN Eintrag der Art confirmatory_execution_authorized; jedes Abfeuern des Endtests; jede Nachjustierung eines Sollwerts nach dem Lauf. Weicht EINE Zahl ab, ist der Lauf gerissen (KZ-4): kein zweiter Kandidaten-Sollwert, kein \"nah genug\".",
+   "begruendung": "F6-K17 Schritt 2 / F6-K16: die Aequivalenz-Beine sind KEINE Prueffenster-Beruehrung und verbrauchen KEIN Kontingent (F6-A8) - sie muessen aber vollstaendig NEU gefahren werden, weil sie Laufbedingung in jedem Lauf sind und der Laeufer-SHA sich seit der F6-K13-Reparatur geaendert hat. Der Vorgaenger-Akt autorisierte \"GENAU EINE Zaehlung\"; die ist verbraucht. Deshalb dieser EIGENE Akt in der strengeren DZ-5-Fassung.",
+   "quellAkt": {
+    "hinweis": "Erlaubnistext, Verbotstext, Fenster, allowedOutputs und die SOLLWERTE sind aus diesem Akt KOPIERT, nicht abgetippt. KZ-4 ist scharf: eine einzige abweichende Zahl reisst den Lauf, es gibt keinen zweiten Kandidaten-Sollwert und kein \"nah genug\". Ein von Hand uebertragener Sollwert waere genau die Gelegenheit dazu.",
+    "datei": "protocol/early-detection/2.0.0/outcome-access-ledger.json",
+    "runId": "f6-aequivalenz-entdeckung-2026-09-01",
+    "eventHash": "847084648a7fa5d7d8535c7eec3285de44ac94c02cce1e94f204528f34358d41",
+    "adressform": "DATEI + eventHash, nie eine Ordnungszahl - nach der Teilung des Registers ist eine Ordnungszahl keine eindeutige Adresse mehr (LR-21)."
+   },
+   "aequivalenzSoll": {
+    "bein1": {
+     "quelle": "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json",
+     "dateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+     "zellen": {
+      "S-U": {
+       "firmen_reif": 512,
+       "firmen_unreif": 219
+      },
+      "S-G": {
+       "firmen_reif": 546,
+       "firmen_unreif": 265
+      },
+      "S-UG": {
+       "firmen_reif": 29,
+       "firmen_unreif": 12
+      }
+     }
+    },
+    "bein2": {
+     "quelle": "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json",
+     "dateiSha256": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf",
+     "rahmen": {
+      "panelRand": "2016-12-31",
+      "signalband": "2009-01-01/2015-12-31",
+      "perzentil": 95
+     },
+     "zellen": {
+      "S-U/signal": {
+       "zaehler": 543,
+       "nenner": 651,
+       "zensiert": 0
+      },
+      "S-U/kontrollpool": {
+       "zaehler": 3760,
+       "nenner": 4513,
+       "zensiert": 1
+      },
+      "S-G/signal": {
+       "zaehler": 557,
+       "nenner": 647,
+       "zensiert": 0
+      },
+      "S-G/kontrollpool": {
+       "zaehler": 5000,
+       "nenner": 5768,
+       "zensiert": 0
+      }
+     }
+    },
+    "kalibrierHaelfte": {
+     "form": "ARTEFAKT-HASH + KONSTANTEN-ABGLEICH, KEIN LAUF",
+     "berichtigung": "F6-C7a: die Kalibrier-Groessen (kalibrierungsWeg 1109->540 / 1309->546, auswertbarImBand 68079 / 82642, firmenReif 540 / 546, firmenUnreif 226 / 265) sind KEINE ORIGINAL-Globals-Groessen. Sie stammen aus dem Durchlauf verbreitertOhneBank. Der arithmetische Gegenbeweis steht im SELBEN Artefakt: provenienz.aequivalenzTorSoll[\"S-U\"].firmen_reif = 512 gegen jeFamilie[\"S-U\"].firmenReif = 540, und S-UG 29 gegen 30 - ein Lauf kann nicht beides liefern. Bein 1 zerfaellt deshalb nach BEWEISART in eine Lauf-Haelfte (F6-C7b) und eine Artefakt-Haelfte (F6-C7c/d).",
+     "nachweis": "Doppel-Hash (Datei-SHA 80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5 UND inhaltSha256, beide Richtungen zu) plus Laufzeit-Konstanten-Abgleich feldweise gegen das hash-geprueft geladene Artefakt. NICHT GEFAHREN, SONDERN GEPRUEFT.",
+     "restrisiko": "F6-C7g: bewiesen wird die UNVERAENDERTHEIT der eingefrorenen Bytes, NICHT die Wahrheit der Zahlen darin (c); das Entdeckungs-Panel traegt keinen registrierten Byte-Pin (d); und dass das E2-Artefakt aus einem echten Panel-Lauf stammt, traegt sein eigenes bestandenes Tor plus BEIN 2, nicht dieses Bein (e). Ausgewiesen, nicht wegargumentiert."
+    },
+    "bein3": {
+     "form": "Wortlaut-Literale aus protocol/early-detection/2.0.0/preregistration.json, ohne Panel-Lauf (F6-C9). Geht in bestanden ein, emittiert keine eigene Zahl."
+    },
+    "kippbedingung": "KZ-4 - eine einzige abweichende Zahl ist ein STOPP vor jedem Prueffenster-Byte."
+   },
+   "ausfuehrendeSkripte": {
+    "scripts/studie-f6-zaehlwerk.py": "3f21cd0aaa68028ae51945d3b51d7bd74e005de98204015bc5874eb352fc780a",
+    "scripts/studie-f6-lauf.py": "5c0f685ec61e437d420814db72ce4f2aaedf919415bb5484e64ff44633ad1681",
+    "scripts/studie-zaehlprobe.py": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+    "scripts/studie-basisraten.py": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+    "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+    "reports/studie/E4d-kadenz-entdeckung-2026-08-19.json": "46e191ec68e0480a336fd287dc548c8b6a975b8d50a07c6e0162274c6dbd8fdf"
+   },
+   "skriptDrift": {
+    "form": "VORHER/NACHHER je Pfad, am Objekt gemessen.",
+    "geaendertSeitDemQuellAkt": [
+     "scripts/studie-f6-zaehlwerk.py",
+     "scripts/studie-f6-lauf.py"
+    ],
+    "vorher": {
+     "scripts/studie-f6-zaehlwerk.py": "dfca0dffc7eb19e43259745428e25a543ac160f58f6892cb035a2434ef263876",
+     "scripts/studie-f6-lauf.py": "36664e70128fe02c114e5cdaa81c394091bb8fae809940f109dbc6abe7a168d0"
+    },
+    "nachher": {
+     "scripts/studie-f6-zaehlwerk.py": "3f21cd0aaa68028ae51945d3b51d7bd74e005de98204015bc5874eb352fc780a",
+     "scripts/studie-f6-lauf.py": "5c0f685ec61e437d420814db72ce4f2aaedf919415bb5484e64ff44633ad1681"
+    },
+    "bedeutung": "Genau diese Drift ist der Grund, warum der Vorgaenger-Akt den neuen Lauf nicht mehr deckt. Der ueberschreibende konfirmatorische Akt (F6-K11, Eintrag 2 dieser Datei) bindet dieselben Werte erneut samt PR-Nummer."
+   },
+   "fortsetzungsHinweis": "ERSTER Eintrag der Fortsetzungsdatei. Die erste Registerdatei ist mit ihrem Abschluss-Akt geschlossen (R14a-Rollover); ihr letzter Eintrag verbietet jeden weiteren. Die Kette laeuft ueber genesisSha256 = Tail-Event-Hash der geschlossenen Datei ungebrochen weiter.",
+   "laufFreigabe": "DIESER AKT AUTORISIERT KEINEN KONFIRMATORISCHEN LAUF. Er deckt ausschliesslich die Aequivalenz-Beine auf dem ENTDECKUNGS-Panel. Der konfirmatorische Lauf braucht seinen eigenen Eintrag der Art confirmatory_execution_authorized (F6-K11) und danach das gruene Delta-Review (F6-K17 Schritt 8).",
+   "blindAttest": "BLIND-ATTEST (F6-K5): der Ausfuehrende haelt KEINERLEI Information aus dem abgebrochenen Lauf. Der versiegelte Zwischenstand ist ungeoeffnet geblieben (F6-K1). Die Sollwerte dieses Akts sind aus dem Vorgaenger-Akt kopiert und wurden nicht gelesen.",
+   "endtestSiegel": "unberuehrt und in ALLEN Zweigen ZU. Dieser Eintrag autorisiert eine Zaehlung im ENTDECKUNGS-Fenster und oeffnet nichts sonst: weder Endtest-Fenster noch Prueffenster noch Lueckenliste noch Schluesselmaterial werden geoeffnet, gelesen oder gezaehlt. Das Abfeuern des Endtests bleibt ein eigener Akt und braucht Karls ausdrueckliche Freigabe (F6-A16).",
+   "actor": "Karl Viehrig (Auftraggeber, Freigabe-Inhaber) - ausgefuehrt unter dem Review-Tor des Orchestrators.",
+   "previousHash": "06662cbedf987c01e543d67cb6670b070b51c7cb4bd2a88de0dcf7d5b402f1ce",
+   "eventHash": "0a1925e33a5243f329812358efd47b497368df78fcaa9b546d5094874138c7a3"
+  }
+ ]
 }
