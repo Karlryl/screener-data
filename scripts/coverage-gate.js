@@ -28,6 +28,8 @@ const MARKER = './outputs/coverage-status.json';
 const HARD_ABS = 2500, HARD_PCT = 0.13;   // katastrophal floor = max(2500, 13%)
 const SOFT_ABS = 4600, SOFT_PCT = 0.18;   // full-pull target  = max(4600, 18%)
 const FAIL_MASS_MAX = 0.35;               // n_failed/(n_ok+n_failed) above this = degraded
+// merge-shard-manifests.js refuses to publish a larger reconciliation gap.
+const SHARD_COLLISION_ABS = 25, SHARD_COLLISION_PCT = 0.005;
 // Task 0.12: die 90%-Latte der 0.2-Akzeptanz, PRÄZISIERT auf den ehrlichen Nenner
 // (adressierbar = n_total − mcap-Skips; belegt-tote Ticker sind per
 // data-health/dead-tickers.json bereits aus der Watchlist ausgetragen).
@@ -54,21 +56,122 @@ function fileCount() {
 // passed straight through to finishGood() and came out coverage_pct:500000, status:'ok'.
 // A manifest whose own numbers are logically impossible is exactly as untrustworthy as
 // a missing one — route it through the same fallback path instead of trusting it raw.
-function manifestNumbersSane(m) {
-  if (!m || typeof m !== 'object') return false;
-  if (!Number.isFinite(m.n_ok) || m.n_ok < 0) return false;
-  if (m.n_total !== undefined && m.n_total !== null) {
-    if (!Number.isFinite(m.n_total) || m.n_total <= 0) return false;
-    if (m.n_ok > m.n_total) return false;
+function isCount(value) {
+  return Number.isSafeInteger(value) && value >= 0;
+}
+
+function hasValue(value) {
+  return value !== undefined && value !== null;
+}
+
+function optionalCountSane(value) {
+  return !hasValue(value) || isCount(value);
+}
+
+function hasAddressableWarning(m) {
+  return !!(m && typeof m._addressable_warnung === 'string' && m._addressable_warnung.trim());
+}
+
+function producerAddressable(m, total, warned) {
+  if (!m || !isCount(total) || !isCount(m.n_skipped_mcap)) return null;
+  let expected = total - m.n_skipped_mcap;
+  if (!isCount(expected)) return null;
+  // n_shard_collisions is the producer discriminator: merge manifests always
+  // carry it (including zero), while direct pull-yahoo manifests omit it.
+  if (!warned && hasValue(m.n_shard_collisions)) {
+    if (!isCount(m.n_shard_collisions)) return null;
+    const owned = hasValue(m.n_skipped_owned) ? m.n_skipped_owned : 0;
+    if (!isCount(owned)) return null;
+    expected -= owned;
   }
-  if (m.n_failed !== undefined && m.n_failed !== null && (!Number.isFinite(m.n_failed) || m.n_failed < 0)) return false;
+  return isCount(expected) ? expected : null;
+}
+
+function shardCollisionLimit(total) {
+  return Math.max(SHARD_COLLISION_ABS, Math.floor(total * SHARD_COLLISION_PCT));
+}
+
+function manifestNumbersSane(m, fallbackTotal = null) {
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return false;
+  if (!isCount(m.n_ok)) return false;
+
+  const hasTotal = hasValue(m.n_total);
+  if (hasTotal && (!isCount(m.n_total) || m.n_total === 0 || m.n_ok > m.n_total)) return false;
+  const contextualTotal = hasTotal
+    ? m.n_total
+    : (isCount(fallbackTotal) && fallbackTotal > 0 ? fallbackTotal : null);
+
+  const optionalFields = [
+    'n_failed',
+    'n_full',
+    'n_priceonly',
+    'n_addressable',
+    'n_skipped_mcap',
+    'n_skipped_owned',
+    'n_shard_collisions',
+  ];
+  if (optionalFields.some(field => !optionalCountSane(m[field]))) return false;
+  // The producer emits a boolean. A truthy string/object must not be laundered
+  // into manifest_partial=false and silently clear the degradation banner.
+  if (hasValue(m.partial) && typeof m.partial !== 'boolean') return false;
+
+  const warningPresent = hasValue(m._addressable_warnung);
+  const addressableWarning = hasAddressableWarning(m);
+  if (warningPresent && !addressableWarning) return false;
+
+  const hasAddressable = hasValue(m.n_addressable);
+  const hasSkippedMcap = hasValue(m.n_skipped_mcap);
+  const hasCollisions = hasValue(m.n_shard_collisions);
+  const hasSkippedOwned = hasValue(m.n_skipped_owned);
+  if (addressableWarning &&
+      (!hasSkippedMcap || !hasCollisions || !hasSkippedOwned)) return false;
+  // Every owned-aware merge producer also emits its exact denominator. Older
+  // collision-bearing manifests predate both fields and remain compatible.
+  if (hasCollisions && hasSkippedOwned && !hasAddressable) return false;
+
+  let effectiveDenominator = contextualTotal;
+  if (contextualTotal !== null && hasSkippedMcap) {
+    effectiveDenominator = contextualTotal - m.n_skipped_mcap;
+  }
+  if (hasAddressable) {
+    const expectedAddressable = producerAddressable(m, contextualTotal, addressableWarning);
+    if (expectedAddressable === null || m.n_addressable !== expectedAddressable) return false;
+    effectiveDenominator = m.n_addressable;
+  }
+  // A producer warning is explicit evidence that its conservative denominator could
+  // not be reconciled with distinct files. Preserve the other counters, but never let
+  // the warned denominator certify coverage; finishGood() degrades and suppresses it.
+  if (effectiveDenominator !== null && m.n_ok > effectiveDenominator && !addressableWarning) return false;
+  if (hasValue(m.n_failed) && !Number.isSafeInteger(m.n_ok + m.n_failed)) return false;
+
+  const collisions = hasValue(m.n_shard_collisions) ? m.n_shard_collisions : 0;
+  const classifiedTotal = m.n_ok + collisions;
+  if (!Number.isSafeInteger(classifiedTotal)) return false;
+  if (hasValue(m.n_shard_collisions) && contextualTotal !== null) {
+    if (collisions > shardCollisionLimit(contextualTotal)) return false;
+  }
+  const hasFull = hasValue(m.n_full);
+  const hasPriceOnly = hasValue(m.n_priceonly);
+  if (hasFull && m.n_full > classifiedTotal) return false;
+  if (hasPriceOnly && m.n_priceonly > classifiedTotal) return false;
+  if (hasFull && hasPriceOnly) {
+    const mixTotal = m.n_full + m.n_priceonly;
+    if (!Number.isSafeInteger(mixTotal) || mixTotal !== classifiedTotal) return false;
+  }
   return true;
 }
 
 // Pure classifier — unit-testable. Returns {status, reasons[], n_ok, n_total, source}.
 function classify(m, wlSize, fCount) {
   const reasons = [];
-  const manifestUsable = m && m.n_ok > 0 && manifestNumbersSane(m);
+  // A legacy manifest may omit n_total, but only the independently measured
+  // watchlist size can replace it. File count is the numerator and cannot certify
+  // itself as a denominator.
+  const hasManifestTotal = !!(m && hasValue(m.n_total));
+  const externalManifestTotal = isCount(wlSize) && wlSize > 0 ? wlSize : null;
+  const resolvedManifestTotal = hasManifestTotal ? m.n_total : externalManifestTotal;
+  const manifestUsable = resolvedManifestTotal !== null &&
+    manifestNumbersSane(m, resolvedManifestTotal) && m.n_ok > 0;
   if (!manifestUsable) {
     // schema-broken / internally-inconsistent / no usable manifest: fall back to
     // on-disk file count (as old step did).
@@ -85,7 +188,9 @@ function classify(m, wlSize, fCount) {
     // this branch return a bare 'ok' — it always carries a reason.
     const brokenReason = !m
       ? 'manifest-unreadable-or-missing (schema-broken)'
-      : (!(m.n_ok > 0) ? 'n_ok==0 in manifest' : 'manifest-internally-inconsistent (n_ok/n_total/n_failed impossible)');
+      : (!isCount(m.n_ok)
+        ? 'n_ok invalid in manifest'
+        : (m.n_ok === 0 ? 'n_ok==0 in manifest' : 'manifest-internally-inconsistent (coverage counters impossible)'));
     if (!(ok > 0) || ok < hard) {
       reasons.push(brokenReason);
       if (ok < hard) reasons.push(`n_ok ${ok} < HARD_FLOOR ${hard}`);
@@ -96,7 +201,7 @@ function classify(m, wlSize, fCount) {
     out.status = 'degradiert'; // file-count fallback can never certify a clean 'ok'
     return out;
   }
-  return finishGood(m.n_ok, m.n_total || wlSize || fCount, 'manifest', m, reasons);
+  return finishGood(m.n_ok, resolvedManifestTotal, 'manifest', m, reasons);
 }
 function finishGood(ok, total, source, m, reasons) {
   const hard = Math.max(HARD_ABS, Math.floor(total * HARD_PCT));
@@ -115,10 +220,17 @@ function finishGood(ok, total, source, m, reasons) {
   // Task 0.12: ehrliche Coverage gegen den adressierbaren Nenner. Fallback auf
   // n_total − n_skipped_mcap für Manifeste, die n_addressable noch nicht tragen;
   // Legacy-Manifeste ganz ohne mcap-Zählung => Latte nicht messbar => kein Reason.
+  const addressableWarning = hasAddressableWarning(m);
+  if (addressableWarning) {
+    reasons.push(`manifest _addressable_warnung: ${m._addressable_warnung}`);
+  }
   let addressable = null;
-  if (m && Number.isFinite(m.n_addressable) && m.n_addressable > 0) addressable = m.n_addressable;
-  else if (m && Number.isFinite(m.n_skipped_mcap) && Number.isFinite(m.n_total) && m.n_total - m.n_skipped_mcap > 0)
-    addressable = m.n_total - m.n_skipped_mcap;
+  if (!addressableWarning && m && isCount(m.n_addressable) && m.n_addressable > 0) {
+    addressable = m.n_addressable;
+  } else if (!addressableWarning && m && isCount(m.n_skipped_mcap) && isCount(total) &&
+             total - m.n_skipped_mcap > 0) {
+    addressable = total - m.n_skipped_mcap;
+  }
   let honestPct = null;
   if (addressable !== null) {
     honestPct = +(ok / addressable * 100).toFixed(1);
@@ -136,6 +248,12 @@ function finishGood(ok, total, source, m, reasons) {
 // through to the dashboard consumer.
 function buildMarker(res, m) {
   const coveragePct = res.n_total > 0 ? +(res.n_ok / res.n_total * 100).toFixed(1) : 0;
+  // Invalid manifests are classified through a visible file-count fallback. Never
+  // launder their optional counters or flags into the marker emitted by that fallback.
+  const trustedManifest = res.source === 'manifest' && manifestNumbersSane(m, res.n_total) ? m : null;
+  const markerCount = (field) => trustedManifest && isCount(trustedManifest[field])
+    ? trustedManifest[field]
+    : null;
   return {
     schema: 'coverage-status/v1',
     generated_at: new Date().toISOString(),
@@ -145,20 +263,22 @@ function buildMarker(res, m) {
     blocked: res.status === 'katastrophal',
     n_ok: res.n_ok,
     n_total: res.n_total,
-    n_full: (m && Number.isFinite(m.n_full)) ? m.n_full : null,              // 0.9 instrumentation
-    n_priceonly: (m && Number.isFinite(m.n_priceonly)) ? m.n_priceonly : null,
+    n_full: markerCount('n_full'),              // 0.9 instrumentation
+    n_priceonly: markerCount('n_priceonly'),
+    n_shard_collisions: markerCount('n_shard_collisions'),
     coverage_pct: coveragePct,
     // Task 0.12: ehrlicher Nenner + ehrliche Coverage (null bei Legacy-Manifest ohne mcap-Zählung)
-    n_addressable: Number.isFinite(res.n_addressable) ? res.n_addressable : null,
+    n_addressable: isCount(res.n_addressable) ? res.n_addressable : null,
     honest_coverage_pct: Number.isFinite(res.honest_coverage_pct) ? res.honest_coverage_pct : null,
+    manifest_addressable_warning: !!(trustedManifest && hasAddressableWarning(trustedManifest)),
     // Tag 464: sichtbar machen, WARUM der Nenner kleiner ist als das Universum. Ohne diese
     // Zahl sieht man im Marker nur ein geschrumpftes n_addressable und kann nicht pruefen,
     // ob der Abzug stimmt. Nur Anzeige — die Klassifizierung liest sie nicht.
-    n_skipped_mcap: (m && Number.isFinite(m.n_skipped_mcap)) ? m.n_skipped_mcap : null,
-    n_skipped_owned: (m && Number.isFinite(m.n_skipped_owned)) ? m.n_skipped_owned : null,
+    n_skipped_mcap: markerCount('n_skipped_mcap'),
+    n_skipped_owned: markerCount('n_skipped_owned'),
     source: res.source,
     reasons: res.reasons,
-    manifest_partial: !!(m && m.partial === true)
+    manifest_partial: !!(trustedManifest && trustedManifest.partial === true)
   };
 }
 
@@ -168,22 +288,110 @@ function buildMarker(res, m) {
 // lautlos abschalten -> Fail-silent statt Fail-loud. validateMarker liefert die Liste der
 // Vertragsverletzungen (leer = ok); im Selftest hart gepinnt.
 const VALID_STATUS = ['ok', 'degradiert', 'katastrophal'];
+function printable(value) {
+  try { return String(value); } catch (e) { return '<unprintable>'; }
+}
 function validateMarker(mk) {
-  if (!mk || typeof mk !== 'object') return ['marker not an object'];
+  if (!mk || typeof mk !== 'object' || Array.isArray(mk)) return ['marker not an object'];
   const errs = [];
-  if (mk.schema !== 'coverage-status/v1') errs.push(`schema=${mk.schema}`);
-  if (!VALID_STATUS.includes(mk.status)) errs.push(`status=${mk.status}`);
+  if (mk.schema !== 'coverage-status/v1') errs.push(`schema=${printable(mk.schema)}`);
+  if (!VALID_STATUS.includes(mk.status)) errs.push(`status=${printable(mk.status)}`);
   if (typeof mk.degraded !== 'boolean') errs.push('degraded not boolean');
   if (typeof mk.blocked !== 'boolean') errs.push('blocked not boolean');
   if (mk.degraded !== (mk.status !== 'ok')) errs.push('degraded inconsistent with status');
   if (mk.blocked !== (mk.status === 'katastrophal')) errs.push('blocked inconsistent with status');
-  for (const f of ['n_ok', 'n_total', 'coverage_pct']) {
-    if (!Number.isFinite(mk[f])) errs.push(`${f} not finite`);
+  for (const f of ['n_ok', 'n_total']) {
+    if (!isCount(mk[f])) errs.push(`${f} not a non-negative safe integer`);
   }
+  if (!Number.isFinite(mk.coverage_pct) || mk.coverage_pct < 0 || mk.coverage_pct > 100)
+    errs.push('coverage_pct outside 0..100');
   if (!Array.isArray(mk.reasons)) errs.push('reasons not array');
-  // n_full/n_priceonly/n_addressable/honest_coverage_pct nullable (legacy manifests) but if present must be finite
-  for (const f of ['n_full', 'n_priceonly', 'n_addressable', 'honest_coverage_pct', 'n_skipped_mcap', 'n_skipped_owned']) {
-    if (mk[f] !== null && !Number.isFinite(mk[f])) errs.push(`${f} present but not finite`);
+  if (typeof mk.manifest_addressable_warning !== 'boolean')
+    errs.push('manifest_addressable_warning not boolean');
+  // Manifest counters are nullable for legacy/fallback markers; derived percentages
+  // may carry one decimal but must stay inside their physical range.
+  for (const f of ['n_full', 'n_priceonly', 'n_shard_collisions', 'n_addressable', 'n_skipped_mcap', 'n_skipped_owned']) {
+    if (mk[f] !== null && !isCount(mk[f])) errs.push(`${f} present but not a non-negative safe integer`);
+  }
+  if (mk.honest_coverage_pct !== null &&
+      (!Number.isFinite(mk.honest_coverage_pct) || mk.honest_coverage_pct < 0 || mk.honest_coverage_pct > 100)) {
+    errs.push('honest_coverage_pct outside 0..100');
+  }
+
+  const primaryCountsValid = isCount(mk.n_ok) && isCount(mk.n_total);
+  if (primaryCountsValid) {
+    if (mk.n_ok > mk.n_total) errs.push('n_ok exceeds n_total');
+    const expectedCoverage = mk.n_total > 0 ? +(mk.n_ok / mk.n_total * 100).toFixed(1) : 0;
+    if (mk.coverage_pct !== expectedCoverage) errs.push('coverage_pct inconsistent with counts');
+  }
+
+  const optionalCountValid = field => mk[field] === null || isCount(mk[field]);
+  if (optionalCountValid('n_addressable') && mk.n_addressable !== null &&
+      (!optionalCountValid('n_skipped_mcap') || mk.n_skipped_mcap === null)) {
+    errs.push('n_addressable present without n_skipped_mcap');
+  }
+  if (primaryCountsValid && optionalCountValid('n_skipped_mcap') && mk.n_skipped_mcap !== null) {
+    if (mk.n_skipped_mcap > mk.n_total) errs.push('n_skipped_mcap exceeds n_total');
+    if (mk.status !== 'katastrophal' && mk.manifest_addressable_warning === false &&
+        mk.n_addressable === null &&
+        mk.n_total - mk.n_skipped_mcap > 0) {
+      errs.push('n_addressable missing despite measurable mcap denominator');
+    }
+    if (optionalCountValid('n_addressable') && mk.n_addressable !== null &&
+        mk.manifest_addressable_warning === false) {
+      const expectedAddressable = producerAddressable(mk, mk.n_total, false);
+      if (expectedAddressable === null || mk.n_addressable !== expectedAddressable)
+        errs.push('n_addressable inconsistent with producer formula');
+    }
+    if (mk.n_addressable === null && !mk.manifest_addressable_warning &&
+        mk.n_ok > mk.n_total - mk.n_skipped_mcap) {
+      errs.push('n_ok exceeds n_total minus n_skipped_mcap');
+    }
+  }
+
+  const collisions = optionalCountValid('n_shard_collisions') && mk.n_shard_collisions !== null
+    ? mk.n_shard_collisions
+    : 0;
+  const classifiedTotal = primaryCountsValid ? mk.n_ok + collisions : null;
+  const classifiedTotalValid = classifiedTotal !== null && Number.isSafeInteger(classifiedTotal);
+  if (classifiedTotal !== null && !classifiedTotalValid) errs.push('n_ok+n_shard_collisions exceeds safe integer range');
+  if (primaryCountsValid && optionalCountValid('n_shard_collisions') && mk.n_shard_collisions !== null) {
+    if (mk.n_shard_collisions > shardCollisionLimit(mk.n_total))
+      errs.push('n_shard_collisions exceeds producer hard limit');
+  }
+  if (classifiedTotalValid && optionalCountValid('n_full') && mk.n_full !== null && mk.n_full > classifiedTotal)
+    errs.push('n_full exceeds collision-adjusted n_ok');
+  if (classifiedTotalValid && optionalCountValid('n_priceonly') && mk.n_priceonly !== null && mk.n_priceonly > classifiedTotal)
+    errs.push('n_priceonly exceeds collision-adjusted n_ok');
+  if (classifiedTotalValid && optionalCountValid('n_full') && optionalCountValid('n_priceonly') &&
+      mk.n_full !== null && mk.n_priceonly !== null) {
+    const mixTotal = mk.n_full + mk.n_priceonly;
+    if (!Number.isSafeInteger(mixTotal) || mixTotal !== classifiedTotal)
+      errs.push('n_full+n_priceonly inconsistent with n_ok+n_shard_collisions');
+  }
+
+  if (mk.manifest_addressable_warning === true) {
+    if (mk.status === 'ok') errs.push('addressable warning inconsistent with ok status');
+    if (!optionalCountValid('n_skipped_mcap') || mk.n_skipped_mcap === null)
+      errs.push('addressable warning missing n_skipped_mcap');
+    if (!optionalCountValid('n_skipped_owned') || mk.n_skipped_owned === null)
+      errs.push('addressable warning missing n_skipped_owned');
+    if (!optionalCountValid('n_shard_collisions') || mk.n_shard_collisions === null)
+      errs.push('addressable warning missing merge discriminator');
+    if (mk.n_addressable !== null) errs.push('warned n_addressable must be suppressed');
+    if (mk.honest_coverage_pct !== null) errs.push('warned honest_coverage_pct must be suppressed');
+  } else if (mk.n_addressable === null) {
+    if (mk.honest_coverage_pct !== null) errs.push('honest_coverage_pct present without n_addressable');
+  } else if (isCount(mk.n_addressable)) {
+    if (mk.n_addressable === 0) {
+      if (mk.honest_coverage_pct !== null) errs.push('honest_coverage_pct present for zero n_addressable');
+    } else if (primaryCountsValid && Number.isFinite(mk.honest_coverage_pct)) {
+      const expectedHonest = +(mk.n_ok / mk.n_addressable * 100).toFixed(1);
+      if (mk.honest_coverage_pct !== expectedHonest)
+        errs.push('honest_coverage_pct inconsistent with counts');
+    } else if (primaryCountsValid) {
+      errs.push('honest_coverage_pct missing for n_addressable');
+    }
   }
   return errs;
 }
@@ -215,8 +423,8 @@ function run() {
   // TASK 0.9c: surface the full/price-only split so a Voll-Universum-Lauf reports the mix
   // in the coverage-step log even on a partial (timeout) run — the number
   // FUNDAMENTALS_REFRESH_BUDGET is tuned against.
-  const mix = (m && (Number.isFinite(m.n_full) || Number.isFinite(m.n_priceonly)))
-    ? ` full=${m.n_full == null ? '?' : m.n_full} price-only=${m.n_priceonly == null ? '?' : m.n_priceonly}`
+  const mix = marker.n_full !== null || marker.n_priceonly !== null
+    ? ` full=${marker.n_full == null ? '?' : marker.n_full} price-only=${marker.n_priceonly == null ? '?' : marker.n_priceonly}`
     : '';
   // Task 0.12: ehrliche Coverage sichtbar machen (n_ok / adressierbar)
   const honest = Number.isFinite(marker.honest_coverage_pct)
@@ -262,9 +470,9 @@ function selftest() {
     // 10672/12373 = 86.3% — ehrlicher als die alten 82.4%, aber weiter UNTER der 90er-Latte.
     // Der Banner bleibt also an, und das ist richtig: die Luecke sind 1678 echte Fehlschlaege.
     // Diese Zeile haelt fest, dass der Fix den Alarm NICHT stillstellt.
-    [{ n_ok: 10672, n_total: 15212, partial: false, n_failed: 1678, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'degradiert'],
+    [{ n_ok: 10672, n_total: 15212, partial: false, n_failed: 1678, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373, n_shard_collisions: 0 }, 'degradiert'],
     // Und die Gegenrichtung: waeren die 1678 Fehlschlaege behoben, geht der Banner aus.
-    [{ n_ok: 12000, n_total: 15212, partial: false, n_failed: 350, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373 }, 'ok'],
+    [{ n_ok: 12000, n_total: 15212, partial: false, n_failed: 350, n_skipped_mcap: 2256, n_skipped_owned: 583, n_addressable: 12373, n_shard_collisions: 0 }, 'ok'],
     // ⚠ DER GEFAEHRLICHSTE PFAD, von der unabhaengigen Pruefung am 27.07. als Testluecke
     // gemeldet: genau DIESE Manifest-Form schreibt pull-yahoo.js beim inkrementellen (partial)
     // und beim Einzellauf — n_skipped_mcap UND n_skipped_owned gesetzt, n_addressable FEHLT.
