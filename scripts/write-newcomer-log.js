@@ -41,6 +41,13 @@ function isoHeute(now = Date.now()) {
   return new Date(now).toISOString().slice(0, 10);
 }
 
+function isCanonicalCalendarDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const timestamp = Date.parse(value + 'T00:00:00Z');
+  return Number.isFinite(timestamp)
+    && new Date(timestamp).toISOString().slice(0, 10) === value;
+}
+
 /** Mitglieder der Uebersicht als Ticker-Liste. Reihenfolge = Rang. */
 function mitgliederAus(raw) {
   const liste = Array.isArray(raw) ? raw : (raw && Array.isArray(raw.rows) ? raw.rows : []);
@@ -129,9 +136,22 @@ function schreibeMonatszeile(logDir, datum, eintrag, dryRun, zeilen) {
 
 function run(opts = {}) {
   const dryRun = Boolean(opts.dryRun);
-  const datum = opts.date || isoHeute();
+  const datum = opts.date == null ? isoHeute() : opts.date;
   const overview = opts.overview || OVERVIEW;
   const logDir = opts.logDir || LOG_DIR;
+
+  // The date becomes both evidence provenance and part of the monthly filename.
+  // Reject traversal, non-canonical forms and impossible calendar days before
+  // reading the overview or creating a directory. Otherwise "../evil" escapes
+  // logDir, while "undefined" creates a file the reader never discovers.
+  if (!isCanonicalCalendarDate(datum)) {
+    return {
+      status: 'datum-ungueltig',
+      date: datum,
+      error: 'expected a real YYYY-MM-DD calendar date, got ' + JSON.stringify(datum),
+      exitCode: 1,
+    };
+  }
 
   if (!fs.existsSync(overview)) {
     return { status: 'keine-uebersicht', date: datum, exitCode: 0 };
@@ -187,12 +207,17 @@ function run(opts = {}) {
 if (require.main === module) {
   const argv = process.argv;
   const flag = (name) => { const i = argv.indexOf(name); return i >= 0 && argv[i + 1] ? argv[i + 1] : null; };
+  const dateIndex = argv.indexOf('--date');
+  // Absence means "use today"; a present flag without a value is invalid input.
+  const date = dateIndex < 0 ? null : (argv[dateIndex + 1] ?? '');
   const dryRun = argv.includes('--dry-run');
   // --overview/--log-dir existieren, damit der CLI-Pfad (und nur der annotiert) in
   // einem Temp-Verzeichnis verhaltensgetestet werden kann statt per Quelltext-Regex.
-  const res = run({ dryRun, overview: flag('--overview'), logDir: flag('--log-dir'), date: flag('--date') });
+  const res = run({ dryRun, overview: flag('--overview'), logDir: flag('--log-dir'), date });
   const tag = res.dryRun ? '[dry-run] ' : '';
-  if (res.status === 'keine-uebersicht') {
+  if (res.status === 'datum-ungueltig') {
+    console.error('::error::newcomer-log: invalid date - ' + res.error);
+  } else if (res.status === 'keine-uebersicht') {
     console.log('newcomer-log: keine outputs/hypergrowth/overview.json — nichts zu tun.');
   } else if (res.status === 'uebersicht-leer') {
     console.log('::warning::newcomer-log: Uebersicht hat null Zeilen — Tag als nicht messbar mitgeschrieben.');
