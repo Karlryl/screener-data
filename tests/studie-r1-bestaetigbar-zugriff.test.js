@@ -117,7 +117,16 @@ cp.execFileSync = (datei, args, optionen) => {
     const server = new Date(
       (Date.parse(imBlick.registeredAt) + Date.parse(imBlick.accessedAt)) / 2,
     ).toUTCString();
+    // LRA-1: DIE AMPEL REPARIEREN, BEVOR SIE GELESEN WIRD. Die echte
+    // GitHub-Antwort traegt `path` immer; diese Attrappe liess ihn weg. Seit der
+    // F2-Haertung vergleicht der Serverbeweis den ausgelieferten Pfad mit dem
+    // angefragten - und dieser Waechter fuhr dadurch rot aus einem Grund, der
+    // mit seinem eigenen Gegenstand (dem KV-4-Gleichheitsanker) nichts zu tun
+    // hat. Ein Urteil ueber einen Waechter, dessen Ampel aus fremdem Grund rot
+    // ist, misst nichts.
+    const angefragt = String(args[2]).replace(/^repos\/[^/]+\/[^/]+\/contents\//, '').split('?')[0];
     const rumpf = JSON.stringify({
+      path: angefragt,
       encoding: 'base64',
       content: Buffer.from(JSON.stringify(sicht), 'utf8').toString('base64'),
     });
@@ -261,7 +270,14 @@ test('F6-B17(d): anmelden() meldet weiterhin als ZAEHLPROBE an, nie konfirmatori
   // konfirmatorischer Eintrag unter dem Zaehlproben-Erlaubnistext - eine
   // Falschanmeldung (V3). Der Erlaubnistext verbietet Firmen-Kennungen; genau
   // die sind das Ergebnis eines konfirmatorischen Laufs.
-  sicht = echtesRegister;
+  // LRA-2: die Sicht ist eine OFFENE Registerdatei. Das echte Original ist mit
+  // seinem Abschluss-Akt geschlossen; der Schliessungsriegel verweigert dorthin
+  // jeden Schreibvorgang. Diese Probe misst nicht, OB angemeldet werden darf,
+  // sondern UNTER WELCHER ART - ihre Eigenschaft (ZAEHLPROBE, nie
+  // konfirmatorisch, Erlaubnistext der Zaehlprobe) bleibt Wort fuer Wort
+  // dieselbe. Nur ihr Gegenstand ist jetzt eine Datei, in die ueberhaupt
+  // geschrieben werden darf.
+  sicht = { ...echtesRegister, events: echtesRegister.events.slice(0, -1) };
   geschrieben.length = 0;
   const zugriffAb = new Date(jetzt + 24 * 3600000).toISOString();
   assert.equal(anmelden(['anmelden', '--runid', 'f6-b17-anmeldeprobe',
