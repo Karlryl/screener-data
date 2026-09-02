@@ -161,7 +161,9 @@ async function fetchOsloUniverse(fetchCsv = get) {
     console.log(`  [Oslo] Total Oslo-listed stocks: ${result.size}`);
   } catch (e) {
     console.error('  [Oslo] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    const failed = new Map();
+    failed.partial = true;
+    return failed; // fail-silent per contract
   }
   return result;
 }
