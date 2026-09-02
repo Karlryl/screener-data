@@ -47,7 +47,14 @@ const MIN_SMALLCAP_ANTEIL = 0.5;
 // Vorbestand ist KEINE Erstanlage (lib/read-json.js) -> Wurf statt stiller Neuanlage.
 function pruefeMindestbestand(anzahlNeu, outPfad) {
   const alt = readJsonExistingOrThrow(outPfad);
-  const vorher = alt === FEHLT ? 0 : (Array.isArray(alt.stocks) ? alt.stocks.length : 0);
+  if (alt !== FEHLT && !Array.isArray(alt.stocks)) {
+    const error = new Error(`${outPfad} ist vorhanden, aber unlesbar (stocks ist kein Array) `
+      + '- kein Erstanlage-Fall, refusing to overwrite');
+    error.jsonPath = outPfad;
+    error.corrupt = true;
+    throw error;
+  }
+  const vorher = alt === FEHLT ? 0 : alt.stocks.length;
   const noetig = Math.max(MIN_SMALLCAP_ABSOLUT, Math.round(MIN_SMALLCAP_ANTEIL * vorher));
   if (anzahlNeu < noetig) {
     throw new Error(`Mindestzahl verfehlt: ${anzahlNeu} Namen < ${noetig} noetig `
