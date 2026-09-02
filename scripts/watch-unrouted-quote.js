@@ -32,12 +32,38 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
-function loadBaseline(p) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+function baselineShapeError(detail) {
+  const error = new Error(`Unrouted-Label-Baseline hat eine ungueltige Struktur (${detail}) — Baseline wird NICHT ueberschrieben`);
+  error.code = 'ERR_UNROUTED_LABEL_BASELINE_SHAPE';
+  return error;
+}
+
+function isPlainObject(value) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function validateBaseline(value) {
+  if (!isPlainObject(value)) throw baselineShapeError('root must be a plain object');
+  if (!Object.prototype.hasOwnProperty.call(value, 'labels')) throw baselineShapeError('labels is missing');
+  if (!Array.isArray(value.labels)) throw baselineShapeError('labels must be an array');
+  for (let index = 0; index < value.labels.length; index++) {
+    if (typeof value.labels[index] !== 'string') {
+      throw baselineShapeError(`labels[${index}] must be a string`);
+    }
+  }
+  return value;
+}
+
+function loadBaseline(p, readFileSync = fs.readFileSync) {
+  let parsed;
+  try { parsed = JSON.parse(readFileSync(p, 'utf8')); }
   catch (e) {
     if (e.code === 'ENOENT') return null;
     throw new Error(`Unrouted-Label-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
   }
+  return validateBaseline(parsed);
 }
 
 function scanSnapshots(snapDir) {
@@ -103,26 +129,39 @@ function befundeFuer(scan, baseline) {
   return { problems, darfSchreiben: scan.routable > 0, share, todayLabels, baselineLabels };
 }
 
-function main() {
-  const scan = scanSnapshots(SNAP_DIR);
-  console.log(`Routable: ${scan.routable}, no-sector: ${scan.noSector} (${(noSectorAnteil(scan) * 100).toFixed(1)}%)`);
+function main(options = {}) {
+  const baselinePath = options.baselinePath || BASELINE_PATH;
+  const snapDir = options.snapDir || SNAP_DIR;
+  const readFileSync = options.readFileSync || fs.readFileSync;
+  const scanSnapshotsFn = options.scanSnapshots || scanSnapshots;
+  const mkdirSync = options.mkdirSync || fs.mkdirSync;
+  const writeJsonAtomicFn = options.writeJsonAtomic || writeJsonAtomic;
+  const nowIso = options.nowIso || (() => new Date().toISOString());
+  const log = options.log || ((message) => console.log(message));
+  const error = options.error || ((message) => console.error(message));
+  const setExitCode = options.setExitCode || ((code) => { process.exitCode = code; });
 
-  const baseline = loadBaseline(BASELINE_PATH);
+  // Validate persistent state before scanning or authorizing any replacement.
+  // Only a genuine ENOENT is first-run bootstrap state.
+  const baseline = loadBaseline(baselinePath, readFileSync);
+  const scan = scanSnapshotsFn(snapDir);
+  log(`Routable: ${scan.routable}, no-sector: ${scan.noSector} (${(noSectorAnteil(scan) * 100).toFixed(1)}%)`);
+
   const { problems, darfSchreiben, todayLabels, baselineLabels } = befundeFuer(scan, baseline);
 
   if (darfSchreiben) {
     const mergedLabels = mergeLabels(baselineLabels, todayLabels, !!baseline);
-    fs.mkdirSync(path.dirname(BASELINE_PATH), { recursive: true });
-    writeJsonAtomic(BASELINE_PATH, { labels: mergedLabels, updatedAt: new Date().toISOString() });
-    console.log('Baseline updated: ' + BASELINE_PATH + ' (' + mergedLabels.length + ' known labels)');
-  } else console.error('::warning::Unrouted-Baseline nicht aktualisiert: Scan hat nichts gesehen.');
+    mkdirSync(path.dirname(baselinePath), { recursive: true });
+    writeJsonAtomicFn(baselinePath, { labels: mergedLabels, updatedAt: nowIso() });
+    log('Baseline updated: ' + baselinePath + ' (' + mergedLabels.length + ' known labels)');
+  } else error('::warning::Unrouted-Baseline nicht aktualisiert: Scan hat nichts gesehen.');
 
   if (problems.length > 0) {
-    console.error('::error::Unrouted-quote canary — ' + problems.join('; '));
-    process.exitCode = 1;
+    error('::error::Unrouted-quote canary — ' + problems.join('; '));
+    setExitCode(1);
     return;
   }
-  console.log('No unrouted/taxonomy drift.');
+  log('No unrouted/taxonomy drift.');
 }
 
 if (require.main === module) {
@@ -130,4 +169,4 @@ if (require.main === module) {
   catch (e) { console.error('::error::watch-unrouted-quote hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
 }
 
-module.exports = { scanSnapshots, mergeLabels, loadBaseline, befundeFuer, noSectorAnteil };
+module.exports = { scanSnapshots, mergeLabels, loadBaseline, validateBaseline, befundeFuer, noSectorAnteil, main };
