@@ -426,7 +426,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   // ── Ein echter Lauf von main() gegen eine Fixture-Population ────────────────────────
   // Das Tor sitzt in main(); nur hier ist beweisbar, dass GEDRUCKT und GEZAEHLT
   // auseinanderfallen (JA-1). Die Mock-Technik ist dieselbe wie im H20-Block oben.
-  function laufMain(snapshots, baseline, maxNeu) {
+  function laufMain(snapshots, baseline, maxNeu, jetzt) {
     const originals = { e: fsT.existsSync, r: fsT.readdirSync, f: fsT.readFileSync,
       l: console.log, x: console.error, a: process.argv, v: process.env.ANNUAL_SPIKE_MAX_NEU };
     const logs = [], errors = [];
@@ -443,7 +443,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     process.argv = originals.a.filter((x) => x !== '--neu-aufnehmen');
     if (maxNeu === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
     else process.env.ANNUAL_SPIKE_MAX_NEU = String(maxNeu);
-    try { return { code: w.main(), log: logs.join('\n'), err: errors.join('\n') }; }
+    try { return { code: jetzt ? w.main(jetzt) : w.main(), log: logs.join('\n'), err: errors.join('\n') }; }
     finally {
       fsT.existsSync = originals.e; fsT.readdirSync = originals.r; fsT.readFileSync = originals.f;
       console.log = originals.l; console.error = originals.x; process.argv = originals.a;
@@ -563,6 +563,57 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
         /Ausschluss-Liste kaputt/, 'offenSeit=' + JSON.stringify(mist) + ' muss werfen');
     }
   });
+
+  // ── BP-5b (JA-5): das ALTERS-TOR selbst ─────────────────────────────────
+  // Das Tor war gebaut und hatte keinen Waechter: kein Test hat es je rot gefahren.
+  // Seit JA-1 kosten Sperren keinen Budgetplatz mehr, also ist diese Uhr der GESAMTE
+  // verbliebene Druck auf einen offenen Fall — ein ungetestetes Tor waere hier genau
+  // die stille Erosion, gegen die dieser Beschluss ergangen ist.
+  {
+    // Fester Zeitpunkt statt Kalender-Zufall: sonst ist das Tor nur an genau einem Tag
+    // pruefbar. Die Naht ist der jetzt-Parameter von main().
+    const JETZT = new Date('2026-09-02T12:00:00Z');
+    const snaps5b = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+    // Die Sperre TRIFFT den Fund (sonst faengt ihn der Tote-Sperre-Melder ab) und der
+    // Fund steht NICHT im Bestand (sonst faengt ihn sperrenOhneWirkung ab). Damit ist
+    // das Alters-Tor das EINZIGE, was diesen Lauf noch rot machen kann.
+    const sperre5b = (offenSeit, seit) => ({
+      schluessel: 'AAA|annualRev|werte:100000000|900000000|110000000',
+      sperrschluessel: 'AAA|annualRev|1',
+      seit: seit || '2026-08-02', offenSeit, hinweis: 'UNGEPRUEFT',
+    });
+    const lauf5b = (offenSeit, seit) => laufMain(snaps5b,
+      { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre5b(offenSeit, seit)] }, 5, JETZT);
+
+    check('BP-5b: exakt 30 Tage offen ist gruen, 31 Tage ist rot', () => {
+      // Abwesenheits-Richtung, genau auf der Kante: auf der Schwelle feuert NICHTS.
+      const gruen = lauf5b('2026-08-03');
+      assert.equal(gruen.code, 0, '30 Tage liegen auf der Schwelle und duerfen nicht feuern');
+      assert.match(gruen.log, /offen seit 30 Tag\(en\)/);
+      assert.doesNotMatch(gruen.err, /laenger als 30 Tage/);
+
+      // Anwesenheits-Richtung: einen Tag darueber MUSS der Lauf rot werden.
+      const rot = lauf5b('2026-08-02');
+      assert.equal(rot.code, 1, '31 Tage MUESSEN den Lauf rot machen');
+      assert.match(rot.log, /offen seit 31 Tag\(en\)/);
+      assert.match(rot.err, /::error::1 Ausschluss\/Ausschluesse laenger als 30 Tage offen/);
+      assert.match(rot.err, /AAA\|annualRev\|1 \(31 Tage\)/);
+    });
+
+    check('BP-5b: eine Neu-Listung stellt die Altersuhr NICHT zurueck', () => {
+      // Das ist der ganze Grund fuer offenSeit. seit wandert auf heute (wie bei jeder
+      // Neu-Eintragung), offenSeit bleibt stehen -- die Uhr laeuft weiter.
+      const r = lauf5b('2026-08-02', '2026-09-02');
+      assert.equal(r.code, 1, 'ein frisches seit darf die Altersuhr nicht zuruecksetzen');
+      assert.match(r.log, /offen seit 31 Tag\(en\)/);
+      assert.match(r.err, /laenger als 30 Tage offen/);
+      // Gegenprobe, dass die Uhr wirklich an offenSeit haengt und nicht an seit:
+      // dasselbe frische seit, aber junges offenSeit => gruen.
+      const r2 = lauf5b('2026-08-30', '2026-09-02');
+      assert.equal(r2.code, 0);
+      assert.match(r2.log, /offen seit 3 Tag\(en\)/);
+    });
+  }
 
   // ── BP-6 (JA-6 + JA-7): der gedriftete Schluessel wird NICHT absorbiert ─────────────
   check('BP-6: eine um 0,024 % gedriftete Signatur wird NICHT in faelle absorbiert', () => {

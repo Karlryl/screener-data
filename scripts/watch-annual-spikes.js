@@ -549,7 +549,7 @@ function scanSnapshots(snapDir) {
   return { funde, capexPositiv, capexWerte, gescannt, parseFehler, reihenUngleich };
 }
 
-function main() {
+function main(jetzt = new Date()) {
   const maxNeu = parseMaxNeu(process.env.ANNUAL_SPIKE_MAX_NEU);
   if (!fs.existsSync(SNAP_DIR)) {
     console.error('::error::watch-annual-spikes: snapshots/ fehlt — Snapshot-Restore kaputt?');
@@ -673,7 +673,6 @@ function main() {
   // ── Die Ausschluss-Liste: Zustand, Alter und WIRKUNG, in jedem Lauf sichtbar ──
   const ausgeschlossen = pruefeAusschluesse(basis);
   const gesperrt = new Set(ausgeschlossen.map((a) => a.sperrschluessel));
-  const jetzt = new Date();
   console.log(`Ausschluss-Liste: ${ausgeschlossen.length} Sperre(n), Alters-Tor bei ${AUSSCHLUSS_MAX_TAGE} Tagen`);
   const ueberfaellig = [];
   for (const a of ausgeschlossen) {
