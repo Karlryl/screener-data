@@ -1462,11 +1462,19 @@ test('MEDIUM-1: ein ZaehlwerkAbbruch-Text verlaesst den Lauf GESCHRUPPT', () => 
   // Der Waechter in studie-f6-zaehlwerk.test.js beweist Freiheit von
   // FIRMEN-Kennungen. Er sagt nichts ueber PFADE - und ein Abbruchtext, der
   // einen Arbeitspfad fuehrt, traegt die Kontokennung des Rechners.
+  //
+  // DIE PFADFORM IST BEWUSST RELATIV. Eine ausgeschriebene Windows-Form stand
+  // hier bis zum Familien-Schluss und liess `tests/studie-deckel.test.js`
+  // (R12a, Muster "Windows-Laufwerkspfad") rot werden: dieser Waechter scannt
+  // `tests/studie-*test.js` mit genau EINER Ausnahme, sich selbst. Gemessen
+  // wird ohnehin die KONTOKENNUNG, nicht der Laufwerksbuchstabe - `schruppe_text`
+  // ersetzt jedes Wort mit Trenner, Doppelpunkt oder Kontokennung. Die Probe
+  // verliert dadurch nichts und die Datei bleibt maschinen-unabhaengig.
   fs.writeFileSync(p, [
     'class ZaehlwerkAbbruch(Exception):',
     '    pass',
     'def zaehle(panel_pfad, variante, arm):',
-    `    raise ZaehlwerkAbbruch("Arbeitspfad unbrauchbar: C:/Users/${konto}/f6/zwischenstand.sqlite")`,
+    `    raise ZaehlwerkAbbruch("Arbeitspfad unbrauchbar: arbeit/${konto}/f6/zwischenprodukt.sqlite")`,
     '',
   ].join('\n'), 'utf8');
 
