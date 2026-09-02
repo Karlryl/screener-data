@@ -29,7 +29,8 @@
  * marketCap intentionally NOT set (Yahoo fills it later), per the contract.
  *
  * Returns Map<yahooTicker, {ticker, name, exchange, source, country, ipoDate?}>.
- * Fail-silent: any error -> empty Map (never throws), per the discovery contract.
+ * Fail-silent: any error -> empty Map marked partial (never throws), per the
+ * discovery contract.
  */
 'use strict';
 const https = require('https');
@@ -356,7 +357,9 @@ async function fetchTsxCanada(options = {}) {
     }
   } catch (e) {
     console.error('  [TSX-CA] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    const failed = new Map();
+    failed.partial = true;
+    return failed; // fail-silent per contract; refresh-universe sees degradation
   }
   return result;
 }
