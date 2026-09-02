@@ -39,16 +39,56 @@ function werkbank() {
   // Ohne das braeche jede Probe am SHA-Riegel ab und neun Waechter waeren
   // still abgeschaltet (Ruling des Orchestrators: uebersprungene Proben
   // verrotten).
-  for (const rel of ['scripts/studie-f6-zaehlwerk.py', 'scripts/studie-f6-lauf.py',
-    'scripts/studie-f6-aequivalenz-anmeldung.js']) {
+  //
+  // UEBER DIE GEBUNDENE MENGE, UND BEDINGT. Die Liste war handgeschrieben und
+  // bedingungslos: jedes weitere gebundene Skript, das sich aendert, haette
+  // einen Eintrag von Hand verlangt - und beim vergessenen Eintrag waeren
+  // Waechter still abgeschaltet. Bedingungslos war sie ausserdem eine
+  // Maskierung fuer den Tag, an dem sie nichts mehr wiederherstellt.
+  //
+  // Zwei Bedingungen, je Datei einzeln, wie in der Werkbank zu Eintrag 28: der
+  // Baum weicht von der Bindung ab UND die historischen Bytes TREFFEN die
+  // Bindung. Damit entschaerft sich die Wiederherstellung selbst, sobald der
+  // ueberschreibende Akt die neuen SHA bindet.
+  const ERLAUBTE_ABWEICHUNGEN = new Set([
+    'scripts/studie-f6-lauf.py',
+    'scripts/studie-f6-zaehlwerk.py',
+    'scripts/studie-f6-aequivalenz-anmeldung.js',
+    'scripts/studie-r1-serverzeit.js',
+    'scripts/studie-zaehlprobe.py',
+  ]);
+  const abgewichen = [];
+  for (const [rel, bindung] of Object.entries(K.SKRIPTE)) {
+    const sollSha = bindung.sha || bindung.sha256 || bindung;
+    const imBaumPfad = path.join(WURZEL, ...rel.split('/'));
+    if (!fs.existsSync(imBaumPfad)) continue;
+    const imBaum = crypto.createHash('sha256').update(fs.readFileSync(imBaumPfad)).digest('hex');
+    if (imBaum === sollSha) continue;
+    // F4: die zweite Bedingung ist per Konstruktion immer wahr - der Akt hat
+    // genau diesen Stand gebunden. Ohne diese Liste waere die Wiederherstellung
+    // faktisch bedingungslos und maskierte eine Aenderung an einer beliebigen,
+    // sogar versiegelten gebundenen Datei.
+    assert.ok(ERLAUBTE_ABWEICHUNGEN.has(rel),
+      `${rel} weicht von seiner Bindung ab, steht aber nicht auf der Liste der fuer diesen `
+      + 'Bauabschnitt berechtigten Abweichungen.');
+    abgewichen.push(rel);
     const alt = require('node:child_process').spawnSync(
       'git', ['show', `${STAND_DES_AKTES}:${rel}`],
       { cwd: WURZEL, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
     assert.equal(alt.status, 0, `historischer Stand von ${rel} fehlt`);
-    fs.writeFileSync(path.join(tmp, ...rel.split('/')), alt.stdout);
+    assert.equal(crypto.createHash('sha256').update(alt.stdout).digest('hex'), sollSha,
+      `${rel}: die historischen Bytes treffen die Bindung nicht - dann ist die `
+      + 'Wiederherstellung keine Rekonstruktion, sondern eine Erfindung');
+    const ziel = path.join(tmp, ...rel.split('/'));
+    fs.mkdirSync(path.dirname(ziel), { recursive: true });
+    fs.writeFileSync(ziel, alt.stdout);
   }
+  konfWiederhergestellt.set(tmp, abgewichen);
   return tmp;
 }
+// F5: welche Dateien in DIESER Werkbank aus der Historie kamen - damit die
+// Bedingung eine eigene Probe bekommt statt nur eine Zusage zu sein.
+const konfWiederhergestellt = new Map();
 const berichtDa = () => fs.existsSync(path.join(WURZEL, ...BERICHT_REL.split('/')));
 
 // Der Akt wurde gegen einen Registerstand OHNE ihn selbst gebaut. Sobald er
@@ -85,6 +125,32 @@ const bricht = (argv, wurzel, register) => assert.throws(
   () => fahre(argv, wurzel, register), /F6-K/);
 
 // ── Riegel 1: --force existiert nicht (F6-B8) ─────────────────────────────
+// ── F5: die bedingte Wiederherstellung bekommt ihre eigene Probe ───────────
+test('die Werkbank stellt GENAU die abweichenden gebundenen Skripte her', () => {
+  const tmp = werkbank();
+  const gemeldet = new Set(konfWiederhergestellt.get(tmp));
+  const abweichend = Object.entries(K.SKRIPTE)
+    .filter(([rel, b]) => {
+      const p = path.join(WURZEL, ...rel.split('/'));
+      const soll = b.sha || b.sha256 || b;
+      return fs.existsSync(p)
+        && crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex') !== soll;
+    })
+    .map(([rel]) => rel);
+  assert.deepStrictEqual([...gemeldet].sort(), abweichend.sort(),
+    'die Wiederherstellung deckt nicht genau die abweichende Menge - sie maskiert etwas '
+    + 'oder sie laesst etwas aus');
+  for (const rel of gemeldet) {
+    const b = K.SKRIPTE[rel];
+    const ist = crypto.createHash('sha256')
+      .update(fs.readFileSync(path.join(tmp, ...rel.split('/')))).digest('hex');
+    assert.strictEqual(ist, b.sha || b.sha256 || b, `${rel} im Spiegel trifft die Bindung nicht`);
+  }
+  assert.ok(gemeldet.size > 0,
+    'kein gebundenes Skript weicht ab - dann gehoert diese Wiederherstellung ersatzlos entfernt');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 test('--force wird abgewiesen, es gibt keine Reparatur-Betriebsart', () => {
   assert.throws(() => K.haupt(['--force']), /--force gibt es nicht/);
 });

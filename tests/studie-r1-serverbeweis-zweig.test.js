@@ -53,7 +53,11 @@ cp.execFileSync = (datei, args) => {
     const server = new Date(
       (Date.parse(eintrag.registeredAt) + Date.parse(eintrag.accessedAt)) / 2,
     ).toUTCString();
+    // `path` gehoert in die Attrappe, weil die echte API ihn liefert und der
+    // Beweis ihn seit F2 gegen den angefragten Pfad haelt. Eine Attrappe, die
+    // ihn weglaesst, pruefte eine Antwortform, die es nicht gibt.
     const rumpf = JSON.stringify({
+      path: LEDGER_REL,
       encoding: 'base64',
       content: Buffer.from(JSON.stringify(register), 'utf8').toString('base64'),
     });

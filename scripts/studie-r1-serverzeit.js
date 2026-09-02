@@ -35,6 +35,8 @@ const {
   ART_ZUGRIFF,
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
+  REGISTER_RELS,
+  registerPfadDerRunId,
 } = require('../lib/studie-verfassung');
 
 // Welche Anmeldungs-Arten dieses Skript bestaetigen darf. Die Liste ist bewusst
@@ -61,8 +63,30 @@ const BESTAETIGBAR = new Set([ART_ZUGRIFF, ART_ZAEHLPROBE, ART_C0_REGELFREEZE]);
 const SINGLE_APPENDER_ZWEIG = 'main';
 
 const WURZEL = path.join(__dirname, '..');
-const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
-const LEDGER = path.join(WURZEL, ...LEDGER_REL.split('/'));
+
+// G10/LR-14 - EIN AUFLOESER, keine Flickerei je Aufrufer. Der Registerpfad stand
+// hier als zweite getippte Kopie neben der in lib/ledger-single-appender.js.
+// Nach der Naht ist das Register ZWEI Dateien, und eine zurueckgebliebene Kopie
+// faellt ihr Urteil ueber die falsche: `bestaetigen` faende die runId eines
+// Fortsetzungs-Eintrags nicht und liesse sich fuer ihn keinen Beweis fuehren.
+const absolut = (rel) => path.join(WURZEL, ...rel.split('/'));
+
+// DAS ANMELDEZIEL BLEIBT, WO ES WAR - offene Kollision, hier benannt statt
+// still entschieden. LR-14 sagt woertlich "`anmelden` schreibt in die AKTIVE
+// Datei"; LR-14/G15 sagen im selben Absatz, tests/studie-r1-bestaetigbar-
+// zugriff.test.js bleibe UNBERUEHRT, "wird sie beruehrt, ist der Schnitt
+// falsch". Beides zugleich ist nicht erfuellbar: jener Waechter spiegelt und
+// behauptet das Anmeldeziel als die ERSTE Registerdatei. Getroffen waere nicht
+// seine geschuetzte Eigenschaft (KV-4-Gleichheitsanker, Zaehlproben-Art),
+// sondern die Pfadannahme seiner Attrappe - und die reicht Schreibvorgaenge auf
+// jeden ANDEREN Pfad ans echte Dateisystem durch.
+//
+// Das Loch, das dieses Stehenlassen laesst - dieser Pfad zeigt auf eine Datei,
+// deren letzter Eintrag jeden weiteren verbietet -, ist gedeckt:
+// tests/studie-naht-byte-frost.test.js pinnt die geschlossene Datei auf ihre
+// Bytes. Ein versehentlicher Anhang wird dort rot, sofort und benannt.
+const LEDGER_REL = REGISTER_RELS[0];
+const LEDGER = absolut(LEDGER_REL);
 const PRAEREG = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'preregistration.json');
 
 function argument(argv, name, pflicht = true) {
@@ -76,6 +100,62 @@ function argument(argv, name, pflicht = true) {
 
 function lies(pfad) {
   return JSON.parse(fs.readFileSync(pfad, 'utf8'));
+}
+
+// Fuer den Ketten-Aufloeser: eine Registerdatei, die es (noch) nicht gibt, ist
+// ein LEERES GLIED, kein Fehler - vor dem Rollover existierte die Fortsetzung
+// nicht, und ein aelterer Checkout kennt sie nicht. Ein ENOENT wird deshalb zu
+// null. JEDER andere Fehler fliegt weiter: kaputtes JSON oder fehlende Rechte
+// sind eine kaputte MESSUNG, und eine kaputte Messung darf nie als "hier steht
+// die runId eben nicht" durchgehen. Genau diese Unterscheidung ist der
+// Unterschied zwischen fail-closed und einem stillen Fehlschlag.
+function liesWennDa(rel) {
+  let roh;
+  try {
+    roh = lies(absolut(rel));
+  } catch (fehler) {
+    if (fehler.code === 'ENOENT') return null;
+    throw fehler;
+  }
+  // F6: EINE DATEI, DIE ES GIBT, IST NICHT "NICHT DA". `null`, `""`, `[]` und
+  // `{}` parsen alle sauber und rutschten als leeres Glied durch - womit sich
+  // die Mehrdeutigkeits-Sperre aushebeln liesse, indem man eine Registerdatei
+  // auf `null` setzt. Ein Register ist ein Objekt mit einer events-Liste;
+  // alles andere ist eine kaputte Datei und damit eine kaputte MESSUNG.
+  if (roh === null || typeof roh !== 'object' || Array.isArray(roh) || !Array.isArray(roh.events)) {
+    throw new VerfassungsBruch(
+      `R1: ${rel} ist keine Registerdatei (kein Objekt mit events-Liste). Eine vorhandene, `
+      + 'aber unbrauchbare Datei ist ein Abbruch, kein leeres Glied.',
+    );
+  }
+  return roh;
+}
+
+// Der Ketten-Aufloeser aus LR-14, an EINER Stelle. Er wirft benannt, wenn keine
+// Registerdatei die runId fuehrt - "nicht gefunden" darf nie in ein leeres
+// Verdikt kippen, und ein Beweis ohne Eintrag ist wertlos.
+//
+// Mehrdeutigkeit wirft im Aufloeser selbst (siehe dort). Hier bleibt der Fall
+// "in keiner Datei" - "nicht gefunden" darf nie in ein leeres Verdikt kippen,
+// und ein Beweis ohne Eintrag ist wertlos.
+function registerDerRunId(runId) {
+  // F7: EINE Lesung je Datei, und der gelesene Stand wird herausgegeben. Vorher
+  // las der Aufloeser, dann las der Aufrufer noch einmal, und spaeter ein
+  // drittes Mal - drei Zeitpunkte auf derselben Datei. Zwischen ihnen konnte
+  // der Eintrag ein anderer werden, und bewiesen wuerde dann etwas, das beim
+  // Aufloesen nicht dastand.
+  const gelesen = new Map();
+  const einmal = (rel) => {
+    if (!gelesen.has(rel)) gelesen.set(rel, liesWennDa(rel));
+    return gelesen.get(rel);
+  };
+  const rel = registerPfadDerRunId(runId, einmal);
+  if (!rel) {
+    throw new VerfassungsBruch(
+      `R1: runId ${runId} steht in keiner der Registerdateien der Kette (${REGISTER_RELS.join(', ')})`,
+    );
+  }
+  return { rel, pfad: absolut(rel), register: gelesen.get(rel) };
 }
 
 // Das Register wird mit derselben Formatierung zurueckgeschrieben, mit der es
@@ -215,7 +295,13 @@ function bestaetigen(argv) {
   // Repo uebergibt --zweig, der stille Pfad war also der einzige benutzte.
   const zweig = argument(argv, 'zweig', false) || SINGLE_APPENDER_ZWEIG;
 
-  const register = lies(LEDGER);
+  // G10/LR-14: die Datei wird ueber die KETTE aufgeloest, nicht am aktiven Ende
+  // geraten. Ein Eintrag aus der Zeit vor der Naht liegt fuer immer in der
+  // geschlossenen Datei - und GEGEN DIESE muss sein Beweis laufen.
+  // F7: der Aufloeser gibt das BEREITS GELESENE Register heraus. Vorher wurde
+  // dieselbe Datei dreimal gelesen (Aufloeser, hier, spaeter) - drei Lesungen,
+  // drei Zeitpunkte, und der Eintrag konnte zwischen ihnen ein anderer werden.
+  const { rel: registerRel, register } = registerDerRunId(runId);
   pruefeZugriffsRegister(register);
   const eintrag = (register.events || []).find((e) => e.runId === runId);
   if (!eintrag) throw new VerfassungsBruch(`R1: runId ${runId} steht nicht im lokalen Register`);
@@ -230,21 +316,58 @@ function bestaetigen(argv) {
     encoding: 'utf8', cwd: WURZEL,
   }).trim();
   const { serverConfirmedAt, rumpf } = serverAntwort(
-    `repos/${nwo}/contents/${LEDGER_REL}?ref=${encodeURIComponent(zweig)}`,
+    `repos/${nwo}/contents/${registerRel}?ref=${encodeURIComponent(zweig)}`,
   );
   const inhalt = JSON.parse(rumpf);
-  const entfernt = Buffer.from(inhalt.content || '', inhalt.encoding || 'base64').toString('utf8');
-  if (!entfernt.includes(eintrag.eventHash)) {
+  // F2: DIE ANTWORT WIRD GEPRUEFT, NICHT NUR GELESEN. Die API liefert `path`
+  // und `sha` mit; beides wurde bisher weggeworfen. Ein Beweis, der nicht
+  // nachsieht, WELCHE Datei er bekommen hat, beweist nichts ueber die Datei,
+  // die er nennt.
+  // ABSICHTLICH `!== undefined` UND NICHT STRIKT-IMMER, mit Grund:
+  // die echte GitHub-Antwort traegt `path` immer. Ein strikter Zwang machte
+  // aber tests/studie-r1-bestaetigbar-zugriff.test.js rot - dessen Attrappe
+  // laesst das Feld weg -, und LR-14/G15 erklaeren genau diese Datei fuer
+  // UNBERUEHRBAR ("wird sie beruehrt, ist der Schnitt falsch"). Dieselbe
+  // Klausel, die schon das Anmeldeziel blockiert, blockiert hier die letzte
+  // Haerte. Gemeldet, nicht umgangen: sobald der ANHANG-Rat die Klausel
+  // aufloest, wird aus `!== undefined` ein unbedingtes Muss.
+  // Die tragende Haelfte von F2 haengt NICHT hieran - sie steht unten und
+  // sucht den Eintrag ueber seine runId statt in den Rohbytes.
+  if (inhalt.path !== undefined && inhalt.path !== registerRel) {
     throw new VerfassungsBruch(
-      `R1: der Register-Eintrag ${runId} (eventHash ${eintrag.eventHash.slice(0, 16)}...) liegt NICHT auf `
-      + `origin/${zweig}. Ein Zaehllauf ohne bestaetigte Vorab-Anmeldung ist wertlos und beschaedigt die `
-      + 'Studie — es wird nicht gezaehlt.',
+      `R1: die API-Antwort traegt den Pfad ${inhalt.path}, angefragt war ${registerRel}. `
+      + 'Ein Beweis gegen eine andere Datei als die, die den Eintrag fuehrt, ist kein Beweis.',
     );
   }
+  const entfernt = Buffer.from(inhalt.content || '', inhalt.encoding || 'base64').toString('utf8');
   // Gegenprobe an der eigenen Kette: das, was auf dem Server liegt, muss dieselbe
   // gueltige Kette sein wie lokal. Ein Server-Stand mit gebrochener Kette waere ein
   // gepushter Nachher-Eintrag.
-  pruefeZugriffsRegister(JSON.parse(entfernt));
+  const fern = JSON.parse(entfernt);
+  pruefeZugriffsRegister(fern);
+  // F2, DER KERN: frueher stand hier `entfernt.includes(eintrag.eventHash)` -
+  // eine Textsuche in den ROHEN BYTES. Die Naht STELLT DIESE KOLLISION SELBST
+  // HER: der eventHash des Abschluss-Akts steht dreimal im KOPF der
+  // Fortsetzung (genesisSha256, vorgaengerTailHash,
+  // vorgaengerCheckpointEventHash). Eine Fortsetzung mit NULL Eintraegen
+  // liefert damit einen vollstaendig gruenen Beweis. Gesucht wird deshalb der
+  // EINTRAG - ueber seine runId - und sein eventHash wird verglichen. Das
+  // Python-Gegenstueck (scripts/studie-zaehlprobe.py) macht es seit jeher so.
+  const fernEintraege = (fern.events || []).filter((e) => e.runId === runId);
+  if (fernEintraege.length !== 1) {
+    throw new VerfassungsBruch(
+      `R1: der Register-Eintrag ${runId} steht ${fernEintraege.length}-mal in ${registerRel} auf `
+      + `origin/${zweig}, erwartet genau einmal. Ein Zaehllauf ohne eindeutige, bestaetigte `
+      + 'Vorab-Anmeldung ist wertlos und beschaedigt die Studie — es wird nicht gezaehlt.',
+    );
+  }
+  if (fernEintraege[0].eventHash !== eintrag.eventHash) {
+    throw new VerfassungsBruch(
+      `R1: der Eintrag ${runId} traegt auf origin/${zweig} den eventHash `
+      + `${String(fernEintraege[0].eventHash).slice(0, 16)}..., lokal ${eintrag.eventHash.slice(0, 16)}.... `
+      + 'Der Stand auf dem Server ist ein anderer als der, der hier bewiesen werden soll.',
+    );
+  }
 
   const freigabe = {
     schema: 'early-detection-zaehlprobe-freigabe/v1',
@@ -252,11 +375,15 @@ function bestaetigen(argv) {
     runId,
     fenster: (eintrag.fenster || [])[0],
     registerEventHash: eintrag.eventHash,
+    // F9: WELCHE Registerdatei den Eintrag fuehrt, gehoert in den Beweis. Ohne
+    // dieses Feld muss der Leser (und scripts/studie-zaehlprobe.py) raten, und
+    // nach der Naht ist Raten falsch.
+    registerDatei: registerRel,
     registerZweig: zweig,
     registeredAt: eintrag.registeredAt,
     accessedAt: eintrag.accessedAt,
     serverConfirmedAt,
-    quelle: `gh api -i repos/${nwo}/contents/${LEDGER_REL}?ref=${zweig} — Date-Kopf der Antwort`,
+    quelle: `gh api -i repos/${nwo}/contents/${registerRel}?ref=${zweig} — Date-Kopf der Antwort`,
     bedeutung:
       'Ab serverConfirmedAt ist maschinell belegt, dass die Vorab-Anmeldung auf origin liegt. Jeder '
       + 'Datenzugriff dieses Laufs muss SPAETER liegen; scripts/studie-zaehlprobe.py bricht sonst ab.',
@@ -317,4 +444,8 @@ function bestaetigbareArten() {
 
 module.exports = {
   anmelden, bestaetigen, serverAntwort, allowlistAus, bestaetigbareArten,
+  // Der Ketten-Aufloeser nach aussen, damit seine Fehlklassen GEPRUEFT werden
+  // koennen statt nur behauptet: ein Aufloeser, der still auf die falsche Datei
+  // zeigt, laesst einen Beweis gegen den falschen Eintrag gruen durchgehen.
+  registerDerRunId, liesWennDa,
 };
