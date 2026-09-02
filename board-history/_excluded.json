@@ -153,6 +153,22 @@
    "_bindung_doc": "Gebunden an den EXAKTEN Vorgaenger 2026-08-29, nicht an einen Kalendertag. VERIFIZIERT vor dem Registrierungs-Commit (30.08., ENTSCHIED 108): origin/main traegt kein board-history/2026-08-30; juengster Vintage-Commit ist 2604eebc2a 'chore: board-history vintage 2026-08-29'. Beide Dispatches des 30.08. liefen mit nur_rechnen=true und veroeffentlichen nichts — 33289964981 (03:18 UTC, VEROEFFENTLICHEN=false) und 33293687092 (04:59 UTC, im Lauf-Protokoll als VEROEFFENTLICHEN=false / NUR_RECHNEN=true gelesen). Zusaetzlich strukturell abgesichert: daily-pull.yml:2068 nimmt ein SUSPECT-Vintage (rc=2) auch im veroeffentlichenden Lauf per :(exclude) vom Commit aus. FALLE (Tag-938-Erfahrung): schreibt IRGENDEIN Lauf vor dem Dienstag doch noch ein Vintage, ist der Vorgaenger ein anderer, die Bindung falsch und die Ausnahme greift NICHT (fail-closed) — dann MUSS letztes_altes_vintage vor dem naechsten Lauf nachgezogen werden. Ein Verfehlen ist seit Tag 951 nicht mehr still: write-board-history.js meldet 'GATE-BINDUNG VERFEHLT' mit beiden Daten.",
    "nachpruefen": "Meldet das Wert-Gate financials im Lauf NACH dem naechsten erneut SUSPECT, obwohl die Ausnahme greift und die Lampen-Zeilen aus dem p99 fallen, ist die Umstellung NICHT mehr die Ursache — dann echter Defekt, eigener Befund.",
    "entscheid": "Gerichtsurteil T164/165/166 vom 29.08.2026, K2 EINSTIMMIG 3:0 'zulaessig-mit-Kennzeichnung mit hartem Gate', ratifiziert als ENTSCHIED 15, Karl-Freigabe 29.08.2026 20:10 (ENTSCHIED 18). Doppel-Autorisierung in protocol/gqs-00/1.2.0-pending/. Registrierung dieses Bruchs: ENTSCHIED 99 (Registrierung vor dem ersten Post-Fix-PUBLISH), Messung ENTSCHIED 107, Eintragung ENTSCHIED 108. Waechter: tests/board-history-score-definitions-bruch.test.js (Block 'Tag 1085', mit Ausbau-Probe)."
+  },
+  {
+   "ab_commit": "Dispatch-Lauf 33613948152 auf 2a28b1dcc2",
+   "tag": "Tag 1204",
+   "datum": "2026-09-02",
+   "typ": "daten-schub",
+   "was": "Kein Massstab-Bruch: einmaliger Datenschub durch 1.136 Voll-Pulls (833 aus der 30-Tage-Frist der 02.08.-Kohorte, frische Quartalszahlen) plus 21 SEC-XBRL-Neuzugaenge im Pull-Commit. p99-Delta in drei Boards ueber dem Boden 11,50 (energy 17,40 / it-services 12,50 / utilities 14,40), jeweils von 2-4 grossen Einzelzeilen getragen (BYAN.JK, CVX, EPD, PBR-A, FET; 7203.SR, DTL.AX; ENEL.SW, RENE.LS, 1VER.MI, POR, WTRG); Median der Bewegungen 0,3-0,4 Punkte.",
+   "wirkung": "Vintages bleiben vergleichbar - die Bewegungen sind echte Fundamentaldaten-Aktualisierungen, kein Skalen- oder Definitionswechsel. Ohne Ausnahme misst der Folgelauf dieselben Spruenge erneut gegen den Boden (Dauersperren-Klasse aus dem Gate-Kommentar).",
+   "beleg": "agent-reports/p99-suspect-boards-2026-09-02.md im Vault (Harness-Reproduktion der drei p99-Werte, Top-Bewegungen je Board vollstaendig erklaert, unerklaerter Rest: keiner; LSE-Heilungs- und Milan-Hypothesen gemessen widerlegt).",
+   "entscheid": "Orchestrator-Entscheid unter delegierter Tor-Entscheidungsgewalt (29.08.), 2026-09-02: Ausnahme fuer genau diesen einen Uebergang, drei benannte Boards; Karl informiert.",
+   "letztes_altes_vintage": "2026-09-01",
+   "boards": [
+    "energy",
+    "it-services",
+    "utilities"
+   ]
   }
  ]
 }
