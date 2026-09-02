@@ -30,35 +30,27 @@ const { writeFileAtomic } = require('../lib/atomic-write.js');
 const ROOT = path.join(__dirname, '..');
 const ARCHIVE_BASE = path.join(ROOT, 'external-data');
 
+function parseKeepDaysValue(name, raw) {
+  // Validate the raw token before conversion. parseInt accepts dangerous
+  // prefixes such as "0junk", "1e3" and "3.5" as 0, 1 and 3.
+  const value = typeof raw === 'string' && /^[0-9]+$/.test(raw) ? Number(raw) : NaN;
+  if (!Number.isSafeInteger(value) || value < 0) {
+    const shown = raw === undefined ? '<missing>' : JSON.stringify(raw);
+    console.error(`::error::archive-old-snapshots: invalid ${name} value (${shown} — must be a non-negative safe integer) — aborting before retention arithmetic`);
+    process.exit(1);
+  }
+  return value;
+}
+
 function parseArgs(argv) {
   const args = { keepDays: 14, methodsKeepDays: null, picksKeepDays: null, dryRun: false };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--keep-days' && argv[i+1]) args.keepDays = parseInt(argv[++i], 10);
+    if (argv[i] === '--keep-days') args.keepDays = parseKeepDaysValue(argv[i], argv[++i]);
     // Tag 153: per-directory overrides — methods-history is large (14 MB/file), picks-history
     // is small (65 KB) but walk-forward-perf needs 84+ days of vintages.
-    else if (argv[i] === '--methods-keep-days' && argv[i+1]) args.methodsKeepDays = parseInt(argv[++i], 10);
-    else if (argv[i] === '--picks-keep-days' && argv[i+1]) args.picksKeepDays = parseInt(argv[++i], 10);
+    else if (argv[i] === '--methods-keep-days') args.methodsKeepDays = parseKeepDaysValue(argv[i], argv[++i]);
+    else if (argv[i] === '--picks-keep-days') args.picksKeepDays = parseKeepDaysValue(argv[i], argv[++i]);
     else if (argv[i] === '--dry-run') args.dryRun = true;
-  }
-  // audit/fix: validate keep-days args up front. A non-numeric flag value
-  // (e.g. `--keep-days foo`) → parseInt→NaN → later `new Date(...NaN...).toISOString()`
-  // throws, gets caught at the bottom, and process.exit(0) fires SAFE but GREEN
-  // under the workflow's continue-on-error — so a typo'd flag silently disables
-  // archiving forever with a passing check. Fail LOUD instead so the misconfig is visible.
-  for (const [name, val] of [
-    ['--keep-days', args.keepDays],
-    ['--methods-keep-days', args.methodsKeepDays],
-    ['--picks-keep-days', args.picksKeepDays],
-  ]) {
-    // NRC-SK-003 (Hard Review 2026-07-31): finite-only check let `--keep-days -1`
-    // through — the cutoff computation below (`d.setUTCDate(d.getUTCDate() - keepDays)`)
-    // then moves the cutoff into the FUTURE, so every file (even today's) reads
-    // `date < cutoff` and gets archived out of the tracked directory. A retention
-    // window can't be negative — reject it the same way a non-numeric value already is.
-    if (val !== null && (!Number.isFinite(val) || val < 0)) {
-      console.error(`::error::archive-old-snapshots: invalid ${name} value (${val} — must be a finite number >= 0) — aborting to avoid silently disabling archiving`);
-      process.exit(1);
-    }
   }
   return args;
 }
