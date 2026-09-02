@@ -29,9 +29,8 @@ function appendGuardRequire(existingNodeOptions, guardPath = GUARD_PATH) {
   const existing = String(existingNodeOptions || '').trim();
   const nativePath = path.resolve(guardPath);
   const optionPath = nativePath.replace(/\\/g, '/');
-  if (existing.includes(nativePath) || existing.includes(optionPath)) return existing;
   const requireOption = `--require=${JSON.stringify(optionPath)}`;
-  return existing ? `${existing} ${requireOption}` : requireOption;
+  return existing ? `${requireOption} ${existing}` : requireOption;
 }
 
 function guardedEnvironment(baseEnvironment = process.env, markerPath) {
