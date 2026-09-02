@@ -119,8 +119,10 @@ function field(block, tag) {
 
 function parseCorpCodeXml(xml) {
   const result = new Map();
+  let sawList = false;
   let m;
   while ((m = LIST_RE.exec(xml)) !== null) {
+    sawList = true;
     const block = m[1];
     const stockCode = field(block, 'stock_code');
     // Unlisted filers carry an empty stock_code (OpenDART emits a single space);
@@ -141,24 +143,33 @@ function parseCorpCodeXml(xml) {
       suffixUnsure: true
     });
   }
+  if (!sawList) {
+    throw new Error('corpCode XML contains no <list> records');
+  }
   return result;
 }
 
-async function fetchOpenDartKr() {
+async function fetchOpenDartKr({
+  key = process.env.OPENDART_KEY,
+  getBufferFn = getBuffer
+} = {}) {
   const result = new Map();
-  const key = process.env.OPENDART_KEY;
   if (!key) {
     console.log('  [OpenDART] OPENDART_KEY not set — skipping');
     return result;
   }
   try {
     console.log('  [OpenDART] Fetching corpCode.xml...');
-    const zip = await getBuffer(CORPCODE_URL + encodeURIComponent(key));
+    const zip = await getBufferFn(CORPCODE_URL + encodeURIComponent(key));
     const xml = unzipFirstEntry(zip).toString('utf8');
     const parsed = parseCorpCodeXml(xml);
+    if (parsed.size === 0) {
+      throw new Error('corpCode full register contains no listed stock records');
+    }
     for (const [t, info] of parsed) result.set(t, info);
     console.log(`  [OpenDART] ${result.size} listed KR stocks (stock_code set)`);
   } catch (e) {
+    result.partial = true;
     console.error('  [OpenDART] Failed: ' + e.message);
   }
   return result;
