@@ -103,22 +103,81 @@ test('LRA-2: anmelden persistiert NICHT in die geschlossene Datei', () => {
   // versuchsweise entfernte, schrieb genau diese Probe einen Eintrag 32 in die
   // geschlossene Datei (198.510 B), den ich aus main zurueckholen musste. Eine
   // Probe ueber einem Schreibverbot darf selbst nichts schreiben koennen.
+  // SEIT DER UMHAENGUNG zielt `anmelden` auf die AKTIVE Datei, und die ist
+  // offen - der Riegel schweigt dort zu Recht. Geprueft wird deshalb die
+  // Eigenschaft, die ueberlebt und die allein zaehlt: zeigt das Anmeldeziel je
+  // wieder auf eine GESCHLOSSENE Datei, wird nicht geschrieben. Die Zieldatei
+  // wird dafuer als geschlossen vorgetaeuscht.
   const atomic = require('../lib/atomic-write.js');
-  const echt = atomic.writeFileAtomic;
+  const echtWrite = atomic.writeFileAtomic;
+  const echtRead = fs.readFileSync;
   const versuche = [];
+  // DER SCHREIBER WIRD ABGEFANGEN UND NICHT DURCHGEREICHT. Die erste Fassung
+  // rief den echten Schreiber weiter - und als eine Bruchprobe den Riegel
+  // versuchsweise entfernte, schrieb genau diese Probe einen Eintrag 32 in die
+  // geschlossene Datei (198.510 B), den ich aus main zurueckholen musste. Eine
+  // Probe ueber einem Schreibverbot darf selbst nichts schreiben koennen.
   atomic.writeFileAtomic = (ziel) => { versuche.push(path.resolve(ziel)); };
+  const aktiv = path.resolve(path.join(WURZEL, ...REGISTER_RELS[REGISTER_RELS.length - 1].split('/')));
+  fs.readFileSync = (p, ...rest) => {
+    if (typeof p === 'string' && path.resolve(p) === aktiv) return JSON.stringify(GESCHLOSSEN, null, 1);
+    return echtRead(p, ...rest);
+  };
   const W = require('../scripts/studie-r1-serverzeit.js');
   try {
     assert.throws(
       () => W.anmelden(['anmelden', '--runid', 'riegel-probe-2026-09-02',
         '--fenster', 'riegel-probe', '--zugriff-ab', new Date(Date.now() + 3600e3).toISOString()]),
       /GESCHLOSSEN/,
-      'anmelden schreibt weiterhin in die geschlossene Datei - rc=0 und Erfolgs-JSON inklusive');
-    const ziel = path.resolve(path.join(WURZEL, ...REGISTER_RELS[0].split('/')));
-    assert.ok(!versuche.includes(ziel),
+      'anmelden schreibt in eine geschlossene Datei - rc=0 und Erfolgs-JSON inklusive');
+    assert.equal(versuche.length, 0,
       'der Schreibvorgang auf die geschlossene Datei wurde ueberhaupt versucht');
   } finally {
-    atomic.writeFileAtomic = echt;
+    atomic.writeFileAtomic = echtWrite;
+    fs.readFileSync = echtRead;
+  }
+});
+
+// ── LRA-3: nur per Import, nie getippt ──────────────────────────────────────
+
+test('LRA-3: der Registerpfad wird IMPORTIERT, nie als Zeichenkette getippt', () => {
+  // Eine zweite getippte Kopie ist ein LR-14-Bruch am eigenen Wortlaut: beim
+  // naechsten Rollover zeigte sie auf die dann falsche Datei, waehrend die
+  // importierte Menge weiterwandert. Geprueft wird die EIGENSCHAFT - im
+  // Werkzeug steht kein Registerpfad als Literal.
+  const quelle = fs.readFileSync(
+    path.join(WURZEL, 'scripts', 'studie-r1-serverzeit.js'), 'utf8');
+  const literale = quelle.match(/['"`][^'"`]*outcome-access-ledger[^'"`]*['"`]/g) || [];
+  assert.deepStrictEqual(literale, [],
+    `getippte Registerpfade im Werkzeug: ${literale.join(', ')} - der Pfad kommt aus `
+    + 'REGISTER_RELS/AKTIVES_REGISTER_REL, sonst driften zwei Kopien derselben Regel');
+  assert.match(quelle, /const ANMELDEZIEL_REL = AKTIVES_REGISTER_REL;/,
+    'das Anmeldeziel ist nicht die importierte aktive Datei');
+});
+
+// ── LRA-4: die Dubletten-Pruefung ueber die KETTE ───────────────────────────
+
+test('LRA-4: eine runId aus der GESCHLOSSENEN Datei ist nicht wieder anmeldbar', () => {
+  // Ohne diese Pruefung naehme die Umhaengung einen bestehenden Fang weg: eine
+  // runId, die nur in der geschlossenen Datei steht, waere wieder anmeldbar -
+  // und der spaetere Beweis fuer sie braeche an der Mehrdeutigkeits-Sperre ab.
+  // Das waere Erosion, nicht Vollendung.
+  const alt = GESCHLOSSEN.events[GESCHLOSSEN.events.length - 1].runId;
+  const atomic = require('../lib/atomic-write.js');
+  const echtWrite = atomic.writeFileAtomic;
+  const versuche = [];
+  atomic.writeFileAtomic = (ziel) => { versuche.push(path.resolve(ziel)); };
+  const W = require('../scripts/studie-r1-serverzeit.js');
+  try {
+    assert.throws(
+      () => W.anmelden(['anmelden', '--runid', alt, '--fenster', 'lra4-probe',
+        '--zugriff-ab', new Date(Date.now() + 3600e3).toISOString()]),
+      /steht schon im Register/,
+      'eine runId der geschlossenen Datei liess sich erneut anmelden - die '
+      + 'Eindeutigkeit gilt ueber die KETTE, nicht je Datei');
+    assert.equal(versuche.length, 0, 'es wurde trotzdem ein Schreibvorgang versucht');
+  } finally {
+    atomic.writeFileAtomic = echtWrite;
   }
 });
 

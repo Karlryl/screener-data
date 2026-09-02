@@ -51,8 +51,9 @@ const test = require('node:test');
 const { spawnSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
-const LEDGER_REL = 'protocol/early-detection/2.0.0/outcome-access-ledger.json';
-const LEDGER = path.join(ROOT, ...LEDGER_REL.split('/'));
+const { REGISTER_RELS, AKTIVES_REGISTER_REL } = require(path.join(ROOT, 'lib', 'studie-verfassung.js'));
+const LEDGER_PFADE = REGISTER_RELS.map((rel) => path.join(ROOT, ...rel.split('/')));
+const LEDGER = path.join(ROOT, ...AKTIVES_REGISTER_REL.split('/'));
 
 const {
   VerfassungsBruch,
@@ -65,7 +66,8 @@ const {
 } = require(path.join(ROOT, 'lib', 'studie-verfassung.js'));
 
 const echtRead = fs.readFileSync;
-const ledgerSha = () => crypto.createHash('sha256').update(echtRead(LEDGER)).digest('hex');
+const ledgerSha = () => LEDGER_PFADE
+  .map((p) => crypto.createHash('sha256').update(echtRead(p)).digest('hex')).join(':');
 const SHA_VORHER = ledgerSha();
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
@@ -99,8 +101,8 @@ let sicht = null;
 let imBlick = null;
 
 fs.readFileSync = (pfad, ...rest) => {
-  if (sicht && typeof pfad === 'string' && path.resolve(pfad) === LEDGER) {
-    return JSON.stringify(sicht, null, 1);
+  if (sicht && typeof pfad === 'string' && LEDGER_PFADE.includes(path.resolve(pfad))) {
+    return JSON.stringify(path.resolve(pfad) === LEDGER ? sicht : { ...sicht, events: [] }, null, 1);
   }
   return echtRead(pfad, ...rest);
 };
@@ -142,7 +144,7 @@ const echtWrite = atomic.writeFileAtomic;
 const geschrieben = [];
 atomic.writeFileAtomic = (ziel, inhalt, kodierung) => {
   geschrieben.push({ ziel: path.resolve(ziel), inhalt });
-  if (path.resolve(ziel) === LEDGER) return undefined;
+  if (LEDGER_PFADE.includes(path.resolve(ziel))) return undefined;
   return echtWrite(ziel, inhalt, kodierung);
 };
 
@@ -270,20 +272,16 @@ test('F6-B17(d): anmelden() meldet weiterhin als ZAEHLPROBE an, nie konfirmatori
   // konfirmatorischer Eintrag unter dem Zaehlproben-Erlaubnistext - eine
   // Falschanmeldung (V3). Der Erlaubnistext verbietet Firmen-Kennungen; genau
   // die sind das Ergebnis eines konfirmatorischen Laufs.
-  // LRA-2: die Sicht ist eine OFFENE Registerdatei. Das echte Original ist mit
-  // seinem Abschluss-Akt geschlossen; der Schliessungsriegel verweigert dorthin
-  // jeden Schreibvorgang. Diese Probe misst nicht, OB angemeldet werden darf,
-  // sondern UNTER WELCHER ART - ihre Eigenschaft (ZAEHLPROBE, nie
-  // konfirmatorisch, Erlaubnistext der Zaehlprobe) bleibt Wort fuer Wort
-  // dieselbe. Nur ihr Gegenstand ist jetzt eine Datei, in die ueberhaupt
-  // geschrieben werden darf.
-  sicht = { ...echtesRegister, events: echtesRegister.events.slice(0, -1) };
+  // LRA-8: geaendert wird das WOHIN, nie das WAS. Seit der Umhaengung zielt
+  // anmelden auf die AKTIVE Datei - und die ist offen, also braucht es die
+  // LRA-2-Notmassnahme (den Abschluss-Akt abschneiden) nicht mehr.
+  sicht = echtesRegister;
   geschrieben.length = 0;
   const zugriffAb = new Date(jetzt + 24 * 3600000).toISOString();
   assert.equal(anmelden(['anmelden', '--runid', 'f6-b17-anmeldeprobe',
     '--fenster', 'f6-b17-fixture', '--zugriff-ab', zugriffAb]), 0);
 
-  const aufsRegister = geschrieben.filter((g) => g.ziel === LEDGER);
+  const aufsRegister = geschrieben.filter((g) => g.ziel === path.join(ROOT, ...AKTIVES_REGISTER_REL.split('/')));
   assert.equal(aufsRegister.length, 1, 'anmelden() schreibt genau einmal ans Register');
   const neu = JSON.parse(aufsRegister[0].inhalt);
   const letzter = neu.events[neu.events.length - 1];
