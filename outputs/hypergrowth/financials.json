@@ -1,8 +1,87 @@
 {
   "profitable": [
     {
+      "ticker": "TSFINV.NS",
+      "score": 84.9,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.99,
+        "companion": 569.5
+      },
+      "name": "TSF Investments Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 936940953.532416,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2018,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.9,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 756.1150801932987,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "scoreBase": 84.5,
+      "scoreShrunk": 81,
+      "factors": {
+        "burn": 1,
+        "growth": 1.049,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 98.8,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.4,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 98.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 98.5,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 1.1,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 61.6,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "8313.SR",
-      "score": 84.8,
+      "score": 84.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -17,7 +96,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Financial Services",
-      "marketCap": 2766190426.5413427,
+      "marketCap": 2757933188.9052877,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -63,7 +142,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 44.6,
+          "pct": 45.3,
           "weight": 0.6
         },
         {
@@ -74,85 +153,6 @@
         {
           "key": "dilution",
           "pct": 31.6,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "TSFINV.NS",
-      "score": 84.5,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.99,
-        "companion": 571
-      },
-      "name": "TSF Investments Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 934916318.2840217,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2018,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.9,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 756.1150801932987,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "scoreBase": 84,
-      "scoreShrunk": 80.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.049,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 98.8,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 97.4,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 96.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 98.5,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 1.1,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 61.6,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
           "weight": 0.9
         }
       ]
@@ -171,7 +171,7 @@
       "overview": {
         "kind": "revenue-badge",
         "value": 49.792,
-        "companion": 571
+        "companion": 569.5
       },
       "name": "Galaxy Digital",
       "country": "United States",
@@ -254,7 +254,7 @@
       "overview": {
         "kind": "revenue-badge",
         "value": 6.295,
-        "companion": 571
+        "companion": 569.5
       },
       "name": "GAMCO Global Gold, Natural Resources & Income Trust",
       "country": "United States",
@@ -354,7 +354,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 98.4,
-      "scoreShrunk": 73,
+      "scoreShrunk": 72.9,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -400,7 +400,7 @@
     },
     {
       "ticker": "2127.T",
-      "score": 76.4,
+      "score": 76.3,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -408,13 +408,13 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 571
+        "companion": 569.5
       },
       "name": "Nihon M&A Center Holdings Inc.",
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1310484701.4961152,
+      "marketCap": 1310927653.993267,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -492,7 +492,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Financial Services",
-      "marketCap": 1457941515.0275586,
+      "marketCap": 1460856453.0427904,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -570,7 +570,7 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 7927742397.297669,
+      "marketCap": 7944205135.575913,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -611,7 +611,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.1,
+          "pct": 91.4,
           "weight": 0.7
         },
         {
@@ -647,7 +647,7 @@
       "country": "Jersey",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 1851082383.9475713,
+      "marketCap": 1847779570.8521984,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -710,7 +710,7 @@
     },
     {
       "ticker": "LIFE",
-      "score": 73.5,
+      "score": 73.6,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -773,7 +773,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 90.2,
+          "pct": 90.5,
           "weight": 0.7
         },
         {
@@ -893,7 +893,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 6733960190.650368,
+      "marketCap": 6734662888.727347,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -955,87 +955,6 @@
       ]
     },
     {
-      "ticker": "JIOFIN.NS",
-      "score": 72.9,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 1.457,
-        "companion": 571
-      },
-      "name": "Jio Financial Services Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 16405468880.710403,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.9,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 330.9648448756124,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 71.8,
-      "scoreShrunk": 69.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.048,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 98.8,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 64,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 98.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 98.5,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 4,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 50,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "601066.SS",
       "score": 72.6,
       "track": "profitable",
@@ -1051,7 +970,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 24015019907.387394,
+      "marketCap": 24017525907.991756,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1068,7 +987,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 91.7,
-      "scoreShrunk": 69.7,
+      "scoreShrunk": 69.8,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -1092,7 +1011,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 88.7,
+          "pct": 89,
           "weight": 0.7
         },
         {
@@ -1130,7 +1049,7 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1323274759.557179,
+      "marketCap": 1326022669.989312,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1171,7 +1090,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 86.9,
+          "pct": 87.2,
           "weight": 0.7
         },
         {
@@ -1192,8 +1111,89 @@
       ]
     },
     {
+      "ticker": "JIOFIN.BO",
+      "score": 72.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 1.303,
+        "companion": 569.5
+      },
+      "name": "Jio Financial Services Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 16480040659.84512,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.9,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 330.9648448756123,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 71.1,
+      "scoreShrunk": 68.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.048,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 98.8,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 63.4,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 96.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 98.5,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 4,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "NMR",
-      "score": 72.3,
+      "score": 72.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1224,8 +1224,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 83.4,
-      "scoreShrunk": 69.1,
+      "scoreBase": 83.3,
+      "scoreShrunk": 69,
       "factors": {
         "burn": 1,
         "growth": 1.046,
@@ -1234,7 +1234,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 72.7,
+          "pct": 72.4,
           "weight": 1
         },
         {
@@ -1249,7 +1249,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 63.6,
+          "pct": 63.3,
           "weight": 0.7
         },
         {
@@ -1271,7 +1271,7 @@
     },
     {
       "ticker": "601456.SS",
-      "score": 71.3,
+      "score": 71.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1288,7 +1288,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 7491506251.580416,
+      "marketCap": 7492288000.638567,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1351,7 +1351,7 @@
     },
     {
       "ticker": "319A.T",
-      "score": 71,
+      "score": 70.9,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -1366,7 +1366,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1112007369.3675847,
+      "marketCap": 1112383235.2136724,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1428,6 +1428,84 @@
       ]
     },
     {
+      "ticker": "603093.SS",
+      "score": 70.7,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 140.2
+      },
+      "name": "Nanhua Futures Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 2093307851.424768,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 60.95861413763068,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 93.7,
+      "scoreShrunk": 70.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 88.7,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.1,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.8,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "PEUG.PA",
       "score": 70.7,
       "track": "profitable",
@@ -1446,7 +1524,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 1600715156.4656,
+      "marketCap": 1603403360.221824,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1508,86 +1586,8 @@
       ]
     },
     {
-      "ticker": "603093.SS",
-      "score": 70.7,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 140.2
-      },
-      "name": "Nanhua Futures Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 2093089434.64192,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 60.95861413763068,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 93.7,
-      "scoreShrunk": 70.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.7,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 97.1,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 87.5,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "600999.SS",
-      "score": 70.7,
+      "score": 70.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1602,7 +1602,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 23624611116.793858,
+      "marketCap": 23627076377.699944,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1619,7 +1619,7 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "scoreBase": 88.6,
-      "scoreShrunk": 68.3,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1.035,
@@ -1702,8 +1702,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 77.5,
-      "scoreShrunk": 67.5,
+      "scoreBase": 77.4,
+      "scoreShrunk": 67.4,
       "factors": {
         "burn": 1,
         "growth": 1.047,
@@ -1717,7 +1717,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 68.5,
+          "pct": 68.2,
           "weight": 2.7
         },
         {
@@ -1732,7 +1732,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 47.5,
+          "pct": 48.2,
           "weight": 0.6
         },
         {
@@ -1764,7 +1764,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 44585183411.37203,
+      "marketCap": 44589835937.04161,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -1780,7 +1780,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 78.5,
+      "scoreBase": 78.4,
       "scoreShrunk": 68.1,
       "factors": {
         "burn": 1,
@@ -1805,7 +1805,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 78.4,
+          "pct": 78.1,
           "weight": 0.7
         },
         {
@@ -1905,7 +1905,7 @@
     },
     {
       "ticker": "MRX",
-      "score": 70.1,
+      "score": 70,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -1942,8 +1942,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 67.8,
-      "scoreShrunk": 67.7,
+      "scoreBase": 67.7,
+      "scoreShrunk": 67.6,
       "factors": {
         "burn": 1,
         "growth": 1.035,
@@ -1957,7 +1957,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 56.7,
+          "pct": 56.4,
           "weight": 2.7
         },
         {
@@ -2003,7 +2003,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 6145599736.087552,
+      "marketCap": 6146338096.656384,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2083,7 +2083,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1588039167.6895487,
+      "marketCap": 1588363429.628915,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2124,7 +2124,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 89.9,
+          "pct": 90.2,
           "weight": 0.7
         },
         {
@@ -2160,7 +2160,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 16865683191.791616,
+      "marketCap": 16867443149.203047,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2176,8 +2176,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 85.7,
-      "scoreShrunk": 66.9,
+      "scoreBase": 85.6,
+      "scoreShrunk": 66.8,
       "factors": {
         "burn": 1,
         "growth": 1.033,
@@ -2201,7 +2201,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 76.9,
+          "pct": 76.6,
           "weight": 0.7
         },
         {
@@ -2217,84 +2217,6 @@
         {
           "key": "dilution",
           "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "601211.SS",
-      "score": 68,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 54.9
-      },
-      "name": "Guotai Haitong Securities Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 46135641505.554436,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2015,
-      "coverageAxes": "4/7",
-      "coverageWeight": 0.58,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 23.885847783407588,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 79.1,
-      "scoreShrunk": 66.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.021,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 65.7,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 86.2,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 55.7,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 91.1,
           "weight": 0.9
         }
       ]
@@ -2316,7 +2238,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 7317723959.949312,
+      "marketCap": 7318487574.584525,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2357,7 +2279,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 86.3,
+          "pct": 86.6,
           "weight": 0.7
         },
         {
@@ -2373,6 +2295,84 @@
         {
           "key": "dilution",
           "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "601211.SS",
+      "score": 67.9,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 54.9
+      },
+      "name": "Guotai Haitong Securities Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 46265867899.28632,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "4/7",
+      "coverageWeight": 0.58,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 23.885847783407588,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 79,
+      "scoreShrunk": 66.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1.021,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 65.4,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 86.2,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 55.1,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 91.1,
           "weight": 0.9
         }
       ]
@@ -2415,8 +2415,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 74.4,
-      "scoreShrunk": 65.5,
+      "scoreBase": 74.3,
+      "scoreShrunk": 65.4,
       "factors": {
         "burn": 1,
         "growth": 1.037,
@@ -2425,7 +2425,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 66.9,
+          "pct": 66.6,
           "weight": 1
         },
         {
@@ -2440,7 +2440,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 56.6,
+          "pct": 56,
           "weight": 0.7
         },
         {
@@ -2495,7 +2495,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 83.5,
-      "scoreShrunk": 65.9,
+      "scoreShrunk": 65.8,
       "factors": {
         "burn": 1,
         "growth": 1.03,
@@ -2555,7 +2555,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 24248859408.756737,
+      "marketCap": 24251389810.837097,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2633,7 +2633,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1495163362.448081,
+      "marketCap": 1495668737.55417,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2674,7 +2674,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 88.1,
+          "pct": 88.4,
           "weight": 0.7
         },
         {
@@ -2711,7 +2711,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1906808102.1275997,
+      "marketCap": 1907452615.8784757,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2728,7 +2728,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "scoreBase": 81.8,
-      "scoreShrunk": 65.1,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -2752,84 +2752,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 74.2,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "KYN",
-      "score": 67.1,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "revenue-badge",
-        "value": 0.218,
-        "companion": 64.4
-      },
-      "name": "Kayne Anderson Energy Infrastructure Fund, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": 2548729344,
-      "phase": "inflected",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 21.846522781774592,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 83.8,
-      "scoreShrunk": 66,
-      "factors": {
-        "burn": 1,
-        "growth": 1.017,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 63,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 96.2,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 65.4,
+          "pct": 73.9,
           "weight": 0.7
         },
         {
@@ -2851,7 +2774,7 @@
     },
     {
       "ticker": "VCTR",
-      "score": 67.1,
+      "score": 67,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -2934,6 +2857,83 @@
       ]
     },
     {
+      "ticker": "KYN",
+      "score": 67,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "revenue-badge",
+        "value": 0.218,
+        "companion": 64.4
+      },
+      "name": "Kayne Anderson Energy Infrastructure Fund, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 2548729344,
+      "phase": "inflected",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2004,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 21.846522781774592,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 83.6,
+      "scoreShrunk": 65.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.017,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.7,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.2,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.1,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "6080.T",
       "score": 67,
       "track": "profitable",
@@ -2949,7 +2949,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 819250787.6322018,
+      "marketCap": 819527699.817259,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3011,85 +3011,6 @@
       ]
     },
     {
-      "ticker": "PGF.AX",
-      "score": 66.9,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 79.5
-      },
-      "name": "PM Capital Global Opportunities Fund Limited",
-      "country": "Australia",
-      "region": "Oceania",
-      "sector": "Financial Services",
-      "marketCap": 1271790871.8159232,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 34.56301926364218,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 81.4,
-      "scoreShrunk": 64.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1.032,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 79.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 83.7,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 74.5,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "CORD.L",
       "score": 66.9,
       "track": "profitable",
@@ -3108,7 +3029,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 1271115987.5292673,
+      "marketCap": 1280292415.1121023,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3125,7 +3046,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 80.6,
-      "scoreShrunk": 64.5,
+      "scoreShrunk": 64.4,
       "factors": {
         "burn": 1,
         "growth": 1.038,
@@ -3170,6 +3091,85 @@
       ]
     },
     {
+      "ticker": "PGF.AX",
+      "score": 66.9,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 79.5
+      },
+      "name": "PM Capital Global Opportunities Fund Limited",
+      "country": "Australia",
+      "region": "Oceania",
+      "sector": "Financial Services",
+      "marketCap": 1274333629.2046592,
+      "phase": "inflected",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 34.56301926364218,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 81.3,
+      "scoreShrunk": 64.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1.032,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 79.9,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 83.7,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 74.2,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "0388.HK",
       "score": 66.5,
       "track": "profitable",
@@ -3185,7 +3185,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 65179160601.822495,
+      "marketCap": 65181660179.47272,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3202,7 +3202,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "scoreBase": 75.5,
-      "scoreShrunk": 64.6,
+      "scoreShrunk": 64.5,
       "factors": {
         "burn": 1,
         "growth": 1.03,
@@ -3248,7 +3248,7 @@
     },
     {
       "ticker": "LPLA",
-      "score": 66.2,
+      "score": 66,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3286,8 +3286,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 72.2,
-      "scoreShrunk": 64.1,
+      "scoreBase": 72,
+      "scoreShrunk": 64,
       "factors": {
         "burn": 1,
         "growth": 1.032,
@@ -3301,7 +3301,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 74,
+          "pct": 73.7,
           "weight": 2.7
         },
         {
@@ -3311,7 +3311,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 75.1,
+          "pct": 74.8,
           "weight": 0.7
         },
         {
@@ -3349,7 +3349,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 1511049549.0803711,
+      "marketCap": 1511358090.4987648,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3411,6 +3411,83 @@
       ]
     },
     {
+      "ticker": "ROKO-B.ST",
+      "score": 65.8,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.093,
+        "companion": 86.8
+      },
+      "name": "Röko AB (publ)",
+      "country": "Sweden",
+      "region": "Europe",
+      "sector": "Financial Services",
+      "marketCap": 2860960186.5312667,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.9,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 30.921895006402057,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 66.9,
+      "scoreShrunk": 65.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.011,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 76.6,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 78.6,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 44,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 78.7,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 36.6,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 73.3,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "INVEX/A.MX",
       "score": 65.8,
       "track": "profitable",
@@ -3428,7 +3505,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 1002322636.4080741,
+      "marketCap": 1003083297.9593103,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3490,85 +3567,8 @@
       ]
     },
     {
-      "ticker": "ROKO-B.ST",
-      "score": 65.8,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.093,
-        "companion": 86.8
-      },
-      "name": "Röko AB (publ)",
-      "country": "Sweden",
-      "region": "Europe",
-      "sector": "Financial Services",
-      "marketCap": 2842937704.3752756,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.9,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 30.921895006402057,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 66.9,
-      "scoreShrunk": 65.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.01,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 76.6,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 78.6,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 79,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 36.6,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 73.3,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "POLICYBZR.NS",
-      "score": 65.2,
+      "score": 65.1,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -3584,7 +3584,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 9025303939.141075,
+      "marketCap": 9010695685.521408,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3600,8 +3600,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 70.5,
-      "scoreShrunk": 63,
+      "scoreBase": 70.4,
+      "scoreShrunk": 62.9,
       "factors": {
         "burn": 1,
         "growth": 1.034,
@@ -3615,7 +3615,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 59.7,
+          "pct": 59.4,
           "weight": 2.7
         },
         {
@@ -3625,12 +3625,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 80.8,
+          "pct": 80.5,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 42.4,
+          "pct": 43.1,
           "weight": 0.6
         },
         {
@@ -3641,83 +3641,6 @@
         {
           "key": "dilution",
           "pct": 98.2,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "600109.SS",
-      "score": 64.7,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 61.9
-      },
-      "name": "Sinolink Securities Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 4698277745.667584,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1997,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 26.90096145485348,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 77.7,
-      "scoreShrunk": 63.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.026,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 71.1,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 84.3,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 61.2,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
           "weight": 0.9
         }
       ]
@@ -3738,7 +3661,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 6162597278.409728,
+      "marketCap": 6163240353.975091,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3755,10 +3678,10 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "scoreBase": 79.9,
-      "scoreShrunk": 64.2,
+      "scoreShrunk": 64.1,
       "factors": {
         "burn": 1,
-        "growth": 1.008,
+        "growth": 1.009,
         "cycle": 1
       },
       "axisBreakdown": [
@@ -3800,8 +3723,85 @@
       ]
     },
     {
-      "ticker": "GPW.WA",
+      "ticker": "600109.SS",
       "score": 64.6,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 61.9
+      },
+      "name": "Sinolink Securities Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 4698768017.460634,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1997,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 26.90096145485348,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 77.5,
+      "scoreShrunk": 63,
+      "factors": {
+        "burn": 1,
+        "growth": 1.026,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 70.8,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 84.3,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 60.6,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "GPW.WA",
+      "score": 64.5,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -3815,7 +3815,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 1062461630.6294272,
+      "marketCap": 1073520187.3969972,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3831,8 +3831,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 74.9,
-      "scoreShrunk": 63.4,
+      "scoreBase": 74.6,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1.019,
@@ -3841,12 +3841,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 71.8,
+          "pct": 71.5,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 74.3,
+          "pct": 74,
           "weight": 2.7
         },
         {
@@ -3856,7 +3856,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 77.8,
+          "pct": 77.5,
           "weight": 0.7
         },
         {
@@ -3878,7 +3878,7 @@
     },
     {
       "ticker": "TIGR",
-      "score": 64.2,
+      "score": 64,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -3914,8 +3914,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 68.9,
-      "scoreShrunk": 62,
+      "scoreBase": 68.7,
+      "scoreShrunk": 61.8,
       "factors": {
         "burn": 1,
         "growth": 1.035,
@@ -3924,12 +3924,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.5,
+          "pct": 70.2,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 72.2,
+          "pct": 71.9,
           "weight": 2.7
         },
         {
@@ -3939,7 +3939,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 60.3,
+          "pct": 59.7,
           "weight": 0.7
         },
         {
@@ -3978,7 +3978,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 14660784534.00064,
+      "marketCap": 14659087952.83968,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4041,7 +4041,7 @@
     },
     {
       "ticker": "600369.SS",
-      "score": 63.8,
+      "score": 63.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4056,7 +4056,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 4030219643.387392,
+      "marketCap": 4030640202.391757,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4072,8 +4072,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 76,
-      "scoreShrunk": 62.3,
+      "scoreBase": 75.9,
+      "scoreShrunk": 62.2,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -4082,7 +4082,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69,
+          "pct": 68.7,
           "weight": 1
         },
         {
@@ -4097,7 +4097,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.8,
+          "pct": 58.2,
           "weight": 0.7
         },
         {
@@ -4118,8 +4118,88 @@
       ]
     },
     {
+      "ticker": "ABCAPITAL.NS",
+      "score": 63.5,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "arDivergence",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 67.8
+      },
+      "name": "Aditya Birla Capital Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 11446179404.660736,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "4/7",
+      "coverageWeight": 0.58,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 29.488462521933112,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 73.8,
+      "scoreShrunk": 63.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 73.3,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 77.4,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 65.7,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 69.9,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "7177.T",
-      "score": 63.6,
+      "score": 63.5,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -4134,7 +4214,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 860110164.5287588,
+      "marketCap": 860400887.4534665,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4150,8 +4230,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 78.8,
-      "scoreShrunk": 63.6,
+      "scoreBase": 78.7,
+      "scoreShrunk": 63.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4160,7 +4240,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 68.1,
+          "pct": 67.8,
           "weight": 1
         },
         {
@@ -4175,7 +4255,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 57.6,
+          "pct": 56.9,
           "weight": 0.7
         },
         {
@@ -4197,7 +4277,7 @@
     },
     {
       "ticker": "JCAP",
-      "score": 63.6,
+      "score": 63.4,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -4233,8 +4313,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 61.9,
-      "scoreShrunk": 61.9,
+      "scoreBase": 61.8,
+      "scoreShrunk": 61.7,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -4243,12 +4323,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47.6,
+          "pct": 47.3,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 66.4,
+          "pct": 66.1,
           "weight": 2.7
         },
         {
@@ -4258,7 +4338,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 35.8,
+          "pct": 35.5,
           "weight": 0.7
         },
         {
@@ -4280,7 +4360,7 @@
     },
     {
       "ticker": "BPAC3.SA",
-      "score": 62.7,
+      "score": 62.6,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4296,7 +4376,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Financial Services",
-      "marketCap": 51088576949.84504,
+      "marketCap": 51082626990.41882,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4312,8 +4392,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 73.3,
-      "scoreShrunk": 61,
+      "scoreBase": 73,
+      "scoreShrunk": 60.8,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -4322,12 +4402,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73.3,
+          "pct": 73,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 75.5,
+          "pct": 75.2,
           "weight": 2.7
         },
         {
@@ -4337,7 +4417,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 64.5,
+          "pct": 64.2,
           "weight": 0.7
         },
         {
@@ -4373,7 +4453,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 3616234148.2808323,
+      "marketCap": 3616611507.325133,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -4436,7 +4516,7 @@
     },
     {
       "ticker": "BRO",
-      "score": 62.2,
+      "score": 62.1,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -4472,8 +4552,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 66.6,
-      "scoreShrunk": 60.5,
+      "scoreBase": 66.5,
+      "scoreShrunk": 60.4,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -4487,7 +4567,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 69.5,
+          "pct": 69.1,
           "weight": 2.7
         },
         {
@@ -4519,7 +4599,7 @@
     },
     {
       "ticker": "GCI.AX",
-      "score": 62.1,
+      "score": 61.9,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4535,7 +4615,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Financial Services",
-      "marketCap": 929023442.0759937,
+      "marketCap": 930880886.7817216,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4551,8 +4631,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 71.1,
-      "scoreShrunk": 59.9,
+      "scoreBase": 70.8,
+      "scoreShrunk": 59.8,
       "factors": {
         "burn": 1,
         "growth": 1.036,
@@ -4566,7 +4646,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 63.4,
+          "pct": 63.1,
           "weight": 2.7
         },
         {
@@ -4576,7 +4656,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 81.1,
+          "pct": 80.8,
           "weight": 0.7
         },
         {
@@ -4597,8 +4677,85 @@
       ]
     },
     {
+      "ticker": "SBIFUNDS.BO",
+      "score": 61.9,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.241,
+        "companion": 94.8
+      },
+      "name": "SBI Funds Management Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 12115649396.146175,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 19.145428086294135,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 61,
+      "scoreShrunk": 61,
+      "factors": {
+        "burn": 1,
+        "growth": 1.015,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 57.6,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 26.3,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 63.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 82.3,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 66.3,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 94.2,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 89.7,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "601901.SS",
-      "score": 61.8,
+      "score": 61.7,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -4612,7 +4769,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 8415249554.642944,
+      "marketCap": 8416127697.594778,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4628,8 +4785,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 72,
-      "scoreShrunk": 60.4,
+      "scoreBase": 71.9,
+      "scoreShrunk": 60.3,
       "factors": {
         "burn": 1,
         "growth": 1.023,
@@ -4638,7 +4795,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47,
+          "pct": 46.7,
           "weight": 1
         },
         {
@@ -4653,7 +4810,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 35.5,
+          "pct": 35.2,
           "weight": 0.7
         },
         {
@@ -4675,7 +4832,7 @@
     },
     {
       "ticker": "SCHW",
-      "score": 61.6,
+      "score": 61.5,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -4711,8 +4868,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 68.7,
-      "scoreShrunk": 60.6,
+      "scoreBase": 68.4,
+      "scoreShrunk": 60.4,
       "factors": {
         "burn": 1,
         "growth": 1.017,
@@ -4721,12 +4878,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 61.2,
+          "pct": 60.9,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 76.7,
+          "pct": 76.4,
           "weight": 2.7
         },
         {
@@ -4736,7 +4893,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50.3,
+          "pct": 49.7,
           "weight": 0.7
         },
         {
@@ -4757,85 +4914,8 @@
       ]
     },
     {
-      "ticker": "1SAVE.MI",
-      "score": 61.2,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 60.1
-      },
-      "name": "Nordnet AB (publ)",
-      "country": "Sweden",
-      "region": "Europe",
-      "sector": "Financial Services",
-      "marketCap": 9271712372.448513,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 26.13026819923372,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 73.1,
-      "scoreShrunk": 60.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.005,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 69.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 77.7,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 60,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "002736.SZ",
-      "score": 61.2,
+      "score": 61.1,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -4849,7 +4929,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 15536522746.793983,
+      "marketCap": 15538144004.471193,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4865,8 +4945,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 71.9,
-      "scoreShrunk": 60.3,
+      "scoreBase": 71.7,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1.014,
@@ -4875,7 +4955,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 59.4,
+          "pct": 59.1,
           "weight": 1
         },
         {
@@ -4890,7 +4970,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 48.8,
+          "pct": 48.2,
           "weight": 0.7
         },
         {
@@ -4911,54 +4991,53 @@
       ]
     },
     {
-      "ticker": "XTB.WA",
-      "score": 61,
+      "ticker": "1SAVE.MI",
+      "score": 61.1,
       "track": "profitable",
       "lamps": [
-        "arDivergence",
         "opIncSynthetisch"
       ],
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 207.4
+        "companion": 60.1
       },
-      "name": "XTB S.A.",
-      "country": "Poland",
+      "name": "Nordnet AB (publ)",
+      "country": "Sweden",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 5555858013.730407,
+      "marketCap": 9270639427.647743,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "4/7",
-      "coverageWeight": 0.54,
+      "ipoYear": 2020,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
       "cohortN": 341,
       "cohortFallback": false,
-      "revGrowthYoYPct": 90.18574200988816,
+      "revGrowthYoYPct": 26.13026819923372,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 66.3,
-      "scoreShrunk": 58.7,
+      "scoreBase": 72.9,
+      "scoreShrunk": 60.8,
       "factors": {
         "burn": 1,
-        "growth": 1.039,
+        "growth": 1.004,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.9,
+          "pct": 69.6,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 45.4,
+          "pct": 77.7,
           "weight": 2.7
         },
         {
@@ -4968,12 +5047,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 92.3,
+          "pct": 59.4,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 85.1,
+          "pct": null,
           "weight": 0.6
         },
         {
@@ -5005,7 +5084,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 4575681567.821312,
+      "marketCap": 4576159046.533325,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5067,8 +5146,86 @@
       ]
     },
     {
+      "ticker": "XTB.WA",
+      "score": 60.9,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 207.4
+      },
+      "name": "XTB S.A.",
+      "country": "Poland",
+      "region": "Europe",
+      "sector": "Financial Services",
+      "marketCap": 5492429483.439555,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "4/7",
+      "coverageWeight": 0.54,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 90.18574200988816,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "scoreBase": 66.1,
+      "scoreShrunk": 58.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.039,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 92.9,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 45.1,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 92.3,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 85.1,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "601696.SS",
-      "score": 61,
+      "score": 60.9,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5082,7 +5239,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 4888935505.918464,
+      "marketCap": 4889445673.112986,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5098,8 +5255,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 71.3,
-      "scoreShrunk": 60,
+      "scoreBase": 71.1,
+      "scoreShrunk": 59.9,
       "factors": {
         "burn": 1,
         "growth": 1.016,
@@ -5108,7 +5265,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.7,
+          "pct": 62.4,
           "weight": 1
         },
         {
@@ -5123,161 +5280,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 51.8,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "601059.SS",
-      "score": 60.7,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "revenue-badge",
-        "value": 0.231,
-        "companion": 59.1
-      },
-      "name": "Cinda Securities Co., Ltd.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 8186392491.437057,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2023,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 25.695215675681695,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 69.8,
-      "scoreShrunk": 59.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.022,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 69.3,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 72.8,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 59.1,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "8697.T",
-      "score": 60.5,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 51.8
-      },
-      "name": "Japan Exchange Group, Inc.",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 13672554545.213867,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2008,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 22.502003328607522,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "scoreBase": 70,
-      "scoreShrunk": 59.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.019,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 64.5,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 76.1,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 53.9,
+          "pct": 51.2,
           "weight": 0.7
         },
         {
@@ -5313,7 +5316,7 @@
       "country": "Norway",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 9005388840.1408,
+      "marketCap": 9025160672.953959,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5375,8 +5378,241 @@
       ]
     },
     {
-      "ticker": "1PGHN.MI",
+      "ticker": "601059.SS",
+      "score": 60.5,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "revenue-badge",
+        "value": 0.231,
+        "companion": 59.1
+      },
+      "name": "Cinda Securities Co., Ltd.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 8187246752.837223,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2023,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 25.695215675681695,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 69.5,
+      "scoreShrunk": 59.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.022,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 69,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 72.5,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 58.5,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "8697.T",
       "score": 60.3,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 51.8
+      },
+      "name": "Japan Exchange Group, Inc.",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 13677175959.085646,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 22.502003328607522,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "scoreBase": 69.6,
+      "scoreShrunk": 59.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.019,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 64.2,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 75.8,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 53.3,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "360ONE.BO",
+      "score": 60.2,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 81.7
+      },
+      "name": "360 One Wam Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 5107432249.073664,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.64,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 35.53818763390566,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 63.6,
+      "scoreShrunk": 58.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.027,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 80.8,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 79.2,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 75.1,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 22.1,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 16.7,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "1PGHN.MI",
+      "score": 60.2,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5390,7 +5626,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 21685296521.075714,
+      "marketCap": 21682787046.53414,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5406,8 +5642,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 66.6,
-      "scoreShrunk": 59.4,
+      "scoreBase": 66.4,
+      "scoreShrunk": 59.3,
       "factors": {
         "burn": 1,
         "growth": 1.015,
@@ -5416,12 +5652,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 59.7,
+          "pct": 59.4,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 70.4,
+          "pct": 70.1,
           "weight": 2.7
         },
         {
@@ -5453,7 +5689,7 @@
     },
     {
       "ticker": "CF.TO",
-      "score": 60.3,
+      "score": 60.1,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5467,7 +5703,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 1032854112.6683905,
+      "marketCap": 1033358429.9218177,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5483,8 +5719,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 63.9,
-      "scoreShrunk": 58.8,
+      "scoreBase": 63.7,
+      "scoreShrunk": 58.7,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -5493,12 +5729,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 72.4,
+          "pct": 72.1,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 61.9,
+          "pct": 61.6,
           "weight": 2.7
         },
         {
@@ -5508,7 +5744,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 62.4,
+          "pct": 62.1,
           "weight": 0.7
         },
         {
@@ -5529,87 +5765,8 @@
       ]
     },
     {
-      "ticker": "360ONE.NS",
-      "score": 60.2,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 81.7
-      },
-      "name": "360 One Wam Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 5002874254.532542,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.64,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 35.53818763390566,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 63.7,
-      "scoreShrunk": 58.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1.027,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 80.8,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 79.2,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 75.4,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 22.1,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 16.7,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "601377.SS",
-      "score": 59.9,
+      "score": 59.8,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5623,7 +5780,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 7541222597.988352,
+      "marketCap": 7542009535.016141,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5639,8 +5796,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 71,
-      "scoreShrunk": 59.9,
+      "scoreBase": 70.9,
+      "scoreShrunk": 59.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5649,7 +5806,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 48.8,
+          "pct": 48.5,
           "weight": 1
         },
         {
@@ -5664,7 +5821,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 37.3,
+          "pct": 37,
           "weight": 0.7
         },
         {
@@ -5686,7 +5843,7 @@
     },
     {
       "ticker": "CBOE",
-      "score": 59.9,
+      "score": 59.8,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5722,8 +5879,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 64.3,
-      "scoreShrunk": 59,
+      "scoreBase": 64.1,
+      "scoreShrunk": 58.9,
       "factors": {
         "burn": 1,
         "growth": 1.015,
@@ -5732,12 +5889,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 65.1,
+          "pct": 64.8,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 68.8,
+          "pct": 68.5,
           "weight": 2.7
         },
         {
@@ -5768,8 +5925,86 @@
       ]
     },
     {
+      "ticker": "600030.SS",
+      "score": 59.7,
+      "track": "profitable",
+      "lamps": [
+        "arDivergence",
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 39.9
+      },
+      "name": "CITIC Securities Company Limited",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Financial Services",
+      "marketCap": 63964045794.27287,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 17.346828371662816,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 69.4,
+      "scoreShrunk": 59.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.01,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 54.8,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 81.9,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 42.1,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "BGC",
-      "score": 59.8,
+      "score": 59.7,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -5806,8 +6041,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 64.3,
-      "scoreShrunk": 58.1,
+      "scoreBase": 64.2,
+      "scoreShrunk": 58,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -5821,7 +6056,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 77.1,
+          "pct": 76.7,
           "weight": 2.7
         },
         {
@@ -5852,86 +6087,8 @@
       ]
     },
     {
-      "ticker": "600030.SS",
-      "score": 59.8,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 39.9
-      },
-      "name": "CITIC Securities Company Limited",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 63957371753.90617,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 17.346828371662816,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 69.5,
-      "scoreShrunk": 59.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.01,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 55.1,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 81.9,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 42.4,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
       "ticker": "CRBG",
-      "score": 59.8,
+      "score": 59.6,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -5945,7 +6102,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 14340375552,
+      "marketCap": 14340500480,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5967,8 +6124,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 70.1,
-      "scoreShrunk": 59.5,
+      "scoreBase": 69.8,
+      "scoreShrunk": 59.3,
       "factors": {
         "burn": 1,
         "growth": 1.005,
@@ -5977,12 +6134,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.2,
+          "pct": 69.9,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 71.9,
+          "pct": 71.6,
           "weight": 2.7
         },
         {
@@ -5992,7 +6149,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 63.3,
+          "pct": 63,
           "weight": 0.7
         },
         {
@@ -6014,7 +6171,7 @@
     },
     {
       "ticker": "SDR.L",
-      "score": 59.8,
+      "score": 59.6,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -6028,7 +6185,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 12290214592.140902,
+      "marketCap": 12273855030.151577,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6044,8 +6201,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 67.2,
-      "scoreShrunk": 59.8,
+      "scoreBase": 66.9,
+      "scoreShrunk": 59.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6054,12 +6211,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 56.9,
+          "pct": 56.6,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 64.9,
+          "pct": 64.6,
           "weight": 2.7
         },
         {
@@ -6069,7 +6226,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 60.9,
+          "pct": 60.3,
           "weight": 0.7
         },
         {
@@ -6107,7 +6264,7 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 886447849.8854405,
+      "marketCap": 888288646.1952387,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6123,7 +6280,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 89.7,
+      "scoreBase": 89.8,
       "scoreShrunk": 57.2,
       "factors": {
         "burn": 1,
@@ -6148,7 +6305,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 89,
+          "pct": 89.3,
           "weight": 0.7
         },
         {
@@ -6170,7 +6327,7 @@
     },
     {
       "ticker": "030610.KS",
-      "score": 59.5,
+      "score": 59.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6187,7 +6344,7 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 826469995.2023602,
+      "marketCap": 828186241.5867629,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6203,8 +6360,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 66.8,
-      "scoreShrunk": 57.9,
+      "scoreBase": 66.5,
+      "scoreShrunk": 57.8,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -6218,7 +6375,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 60.3,
+          "pct": 60,
           "weight": 2.7
         },
         {
@@ -6228,7 +6385,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 73.6,
+          "pct": 73.3,
           "weight": 0.7
         },
         {
@@ -6250,7 +6407,7 @@
     },
     {
       "ticker": "HTGC",
-      "score": 59.5,
+      "score": 59.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6289,8 +6446,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 66.6,
-      "scoreShrunk": 57.8,
+      "scoreBase": 66.4,
+      "scoreShrunk": 57.7,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -6304,7 +6461,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 54.9,
+          "pct": 54.6,
           "weight": 2.7
         },
         {
@@ -6351,7 +6508,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 9962660078.844929,
+      "marketCap": 9963699696.229172,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mid",
@@ -6367,7 +6524,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 69.8,
+      "scoreBase": 69.7,
       "scoreShrunk": 59.3,
       "factors": {
         "burn": 1,
@@ -6377,7 +6534,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 46.1,
+          "pct": 45.8,
           "weight": 1
         },
         {
@@ -6392,161 +6549,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 34.6,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "SBIFUNDS.NS",
-      "score": 59.3,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.241,
-        "companion": 44
-      },
-      "name": "SBI Funds Management Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 12124663853.467829,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 19.14542808629416,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 58.4,
-      "scoreShrunk": 58.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.015,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 57.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 26.6,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 63.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 46.7,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 66.3,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 94.2,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 89.7,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "JHG",
-      "score": 58.9,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 58
-      },
-      "name": "Janus Henderson Group PLC",
-      "country": "United Kingdom",
-      "region": "Europe",
-      "sector": "Financial Services",
-      "marketCap": 8004228608,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": null,
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": null,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 25.234513989972495,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "scoreBase": 66,
-      "scoreShrunk": 57.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.024,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 68.7,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 67,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 58.5,
+          "pct": 34.3,
           "weight": 0.7
         },
         {
@@ -6568,7 +6571,7 @@
     },
     {
       "ticker": "601108.SS",
-      "score": 58.9,
+      "score": 58.8,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -6583,7 +6586,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 5992673736.511488,
+      "marketCap": 5993299080.319796,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6600,7 +6603,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 68.8,
-      "scoreShrunk": 58.9,
+      "scoreShrunk": 58.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6645,8 +6648,85 @@
       ]
     },
     {
-      "ticker": "601990.SS",
+      "ticker": "JHG",
       "score": 58.8,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 58
+      },
+      "name": "Janus Henderson Group PLC",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Financial Services",
+      "marketCap": 8004228608,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": null,
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": null,
+      "coverageAxes": "3/7",
+      "coverageWeight": 0.48,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 25.234513989972495,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "scoreBase": 65.7,
+      "scoreShrunk": 57.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.024,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 68.4,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 66.7,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 57.9,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
+      "ticker": "601990.SS",
+      "score": 58.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -6661,7 +6741,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 4412281034.210816,
+      "marketCap": 4412741461.850726,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6678,7 +6758,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 80.4,
-      "scoreShrunk": 58.8,
+      "scoreShrunk": 58.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6738,7 +6818,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 2118415302.718208,
+      "marketCap": 2118636362.2904832,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6815,7 +6895,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 13008561084.362654,
+      "marketCap": 13009245472.653313,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6878,7 +6958,7 @@
     },
     {
       "ticker": "R4.MC",
-      "score": 58.2,
+      "score": 58.1,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -6892,7 +6972,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 909424295.024896,
+      "marketCap": 909319054.263552,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6908,8 +6988,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 64.4,
-      "scoreShrunk": 56.8,
+      "scoreBase": 64.2,
+      "scoreShrunk": 56.7,
       "factors": {
         "burn": 1,
         "growth": 1.025,
@@ -6923,7 +7003,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 55.2,
+          "pct": 54.9,
           "weight": 2.7
         },
         {
@@ -6933,7 +7013,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 76.3,
+          "pct": 76,
           "weight": 0.7
         },
         {
@@ -6949,168 +7029,6 @@
         {
           "key": "dilution",
           "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "AJG",
-      "score": 58.1,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 69.5
-      },
-      "name": "Arthur J. Gallagher & Co.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": 67161341952,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1984,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.64,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 24.239602731222853,
-      "profitStreak": {
-        "jahre": 16,
-        "basis": "netIncome",
-        "tiefe": 16,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "scoreBase": 61.1,
-      "scoreShrunk": 57,
-      "factors": {
-        "burn": 1,
-        "growth": 1.018,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 66.6,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 62.5,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 69,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 17.8,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 73.4,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "AADHARHFC.BO",
-      "score": 58,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.194,
-        "companion": 39.6
-      },
-      "name": "Aadhar Housing Finance Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Financial Services",
-      "marketCap": 2194840563.243942,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 17.220870505542017,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "scoreBase": 57.3,
-      "scoreShrunk": 57.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.012,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 54.5,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50.3,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 53.6,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 41.8,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 58.3,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 77.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 66.3,
           "weight": 0.9
         }
       ]
@@ -7157,13 +7075,13 @@
       "scoreShrunk": 57.3,
       "factors": {
         "burn": 1,
-        "growth": 1.011,
+        "growth": 1.012,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 49.4,
+          "pct": 49.1,
           "weight": 1
         },
         {
@@ -7178,12 +7096,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 81.7,
+          "pct": 81.4,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": 50.4,
+          "pct": 51.1,
           "weight": 0.6
         },
         {
@@ -7214,7 +7132,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 4089241362.945024,
+      "marketCap": 4089668080.94761,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7276,6 +7194,89 @@
       ]
     },
     {
+      "ticker": "AJG",
+      "score": 57.9,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 69.5
+      },
+      "name": "Arthur J. Gallagher & Co.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 67161341952,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1984,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.64,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 24.239602731222853,
+      "profitStreak": {
+        "jahre": 16,
+        "basis": "netIncome",
+        "tiefe": 16,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "scoreBase": 60.9,
+      "scoreShrunk": 56.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.018,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 66.3,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 62.2,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 69,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 17.8,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 73.4,
+          "weight": 0.9
+        }
+      ]
+    },
+    {
       "ticker": "601688.SS",
       "score": 57.8,
       "track": "profitable",
@@ -7293,7 +7294,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 25853684247.04,
+      "marketCap": 25856382114.816,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7356,7 +7357,7 @@
     },
     {
       "ticker": "1BLK.MI",
-      "score": 57.8,
+      "score": 57.6,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -7370,7 +7371,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 183923947040.6697,
+      "marketCap": 183902662920.24115,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7386,8 +7387,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 60.2,
-      "scoreShrunk": 56.5,
+      "scoreBase": 60.1,
+      "scoreShrunk": 56.3,
       "factors": {
         "burn": 1,
         "growth": 1.023,
@@ -7401,7 +7402,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 61.1,
+          "pct": 60.8,
           "weight": 2.7
         },
         {
@@ -7411,7 +7412,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 82.2,
+          "pct": 81.9,
           "weight": 0.7
         },
         {
@@ -7447,7 +7448,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 3364030489.490944,
+      "marketCap": 3364381530.733978,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7509,7 +7510,7 @@
       ]
     },
     {
-      "ticker": "HDBFS.BO",
+      "ticker": "HDBFS.NS",
       "score": 57.2,
       "track": "profitable",
       "lamps": [
@@ -7527,7 +7528,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 5894228090.752598,
+      "marketCap": 5890612654.964736,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7538,12 +7539,12 @@
       "coverageWeight": 1,
       "cohortN": 341,
       "cohortFallback": false,
-      "revGrowthYoYPct": 12.834374920318448,
+      "revGrowthYoYPct": 12.834374920318425,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 57.3,
+      "scoreBase": 57.2,
       "scoreShrunk": 57.2,
       "factors": {
         "burn": 1,
@@ -7553,12 +7554,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.6,
+          "pct": 44.3,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 52.1,
+          "pct": 51.8,
           "weight": 2.7
         },
         {
@@ -7568,7 +7569,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 34.3,
+          "pct": 34,
           "weight": 0.7
         },
         {
@@ -7583,7 +7584,7 @@
         },
         {
           "key": "dilution",
-          "pct": 81.2,
+          "pct": 81.9,
           "weight": 0.9
         }
       ]
@@ -7605,7 +7606,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1630675564.109693,
+      "marketCap": 1631964964.737024,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7621,7 +7622,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 55.2,
+      "scoreBase": 55.3,
       "scoreShrunk": 54.7,
       "factors": {
         "burn": 1,
@@ -7646,7 +7647,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 90.8,
+          "pct": 91.1,
           "weight": 0.7
         },
         {
@@ -7668,7 +7669,7 @@
     },
     {
       "ticker": "600909.SS",
-      "score": 57,
+      "score": 56.9,
       "track": "profitable",
       "lamps": [
         "opIncSynthetisch"
@@ -7682,7 +7683,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 5967029713.84832,
+      "marketCap": 5967652381.667328,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7698,8 +7699,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 64.8,
-      "scoreShrunk": 57,
+      "scoreBase": 64.7,
+      "scoreShrunk": 56.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7708,7 +7709,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 43.4,
+          "pct": 43.1,
           "weight": 1
         },
         {
@@ -7723,7 +7724,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 33.1,
+          "pct": 32.8,
           "weight": 0.7
         },
         {
@@ -7739,83 +7740,6 @@
         {
           "key": "dilution",
           "pct": null,
-          "weight": 0.9
-        }
-      ]
-    },
-    {
-      "ticker": "X.TO",
-      "score": 56.9,
-      "track": "profitable",
-      "lamps": [
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 67.2
-      },
-      "name": "TMX Group Limited",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": 10608745824.866919,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.64,
-      "cohortN": 341,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 15.603509603983866,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 60.3,
-      "scoreShrunk": 56.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.008,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 50.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50.6,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 69.3,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 69.9,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 86.2,
           "weight": 0.9
         }
       ]
@@ -7838,7 +7762,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 11597786661.906433,
+      "marketCap": 11598996907.015373,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7898,6 +7822,83 @@
           "weight": 0.9
         }
       ]
+    },
+    {
+      "ticker": "X.TO",
+      "score": 56.8,
+      "track": "profitable",
+      "lamps": [
+        "opIncSynthetisch"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 67.2
+      },
+      "name": "TMX Group Limited",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Financial Services",
+      "marketCap": 10613925814.46185,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2003,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.64,
+      "cohortN": 341,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 15.603509603983866,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 60.1,
+      "scoreShrunk": 56.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.008,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50.9,
+          "weight": 1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 50.3,
+          "weight": 2.7
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 69.3,
+          "weight": 0.7
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 69.9,
+          "weight": 0.6
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": null,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": 86.2,
+          "weight": 0.9
+        }
+      ]
     }
   ],
   "unprofitable": [
@@ -7917,7 +7918,7 @@
       "overview": {
         "kind": "gp",
         "value": 27.866,
-        "companion": 571
+        "companion": 569.5
       },
       "name": "Sharplink, Inc.",
       "country": "United States",
@@ -8008,7 +8009,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Financial Services",
-      "marketCap": 872049809.6565249,
+      "marketCap": 873793344.0268288,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -8083,13 +8084,13 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 571
+        "companion": 569.5
       },
       "name": "Compagnie du Cambodge",
       "country": "France",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 7240585948.667904,
+      "marketCap": 7239748050.690047,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -8588,13 +8589,13 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": -117.1
+        "companion": -117.3
       },
       "name": "Shanghai Aj Group Co.,Ltd",
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 992363525.247744,
+      "marketCap": 992467079.7566977,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -8674,7 +8675,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Financial Services",
-      "marketCap": 1572109077.1917617,
+      "marketCap": 1573302149.0489979,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -8753,7 +8754,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1247814363.2627711,
+      "marketCap": 1247735647.0520914,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -8832,7 +8833,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 2082987524.113285,
+      "marketCap": 2083067405.3055694,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -9082,7 +9083,7 @@
       "country": "South Korea",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1750176925.9386144,
+      "marketCap": 1753811340.7856674,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -9421,7 +9422,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 2327507228.5752935,
+      "marketCap": 2342208094.738268,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -9499,7 +9500,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 5689481112.966145,
+      "marketCap": 5690074818.204058,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9580,7 +9581,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1291174574.2974565,
+      "marketCap": 1291224089.9874203,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -9659,7 +9660,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 5719383066.369024,
+      "marketCap": 5719979891.91721,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -9738,7 +9739,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Financial Services",
-      "marketCap": 2547316218.7576323,
+      "marketCap": 2547021437.213184,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -9903,7 +9904,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1757098353.92,
+      "marketCap": 1757281709.568,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -10595,7 +10596,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 973948336.3517439,
+      "marketCap": 973985686.6255361,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -10672,13 +10673,13 @@
       "overview": {
         "kind": "gp",
         "value": -0.935,
-        "companion": -117.1
+        "companion": -117.3
       },
       "name": "Pacific Century Regional Developments Limited",
       "country": "Singapore",
       "region": "Asia",
       "sector": "Financial Services",
-      "marketCap": 1028393080.9096704,
+      "marketCap": 1028603068.6364416,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
