@@ -101,7 +101,19 @@ test('R1/G9: der Genesis der Fortsetzung IST der Tail-Event-Hash der geschlossen
   // Und die Kette haengt daran wirklich: der Pruefer setzt previousHash aus dem
   // Genesis vor. Ohne diese Zeile pruefte die Zusicherung nur ein Feld, nicht
   // die Bindung.
-  assert.equal(pruefeZugriffsRegister(teil2).tailHash, teil2.genesisSha256);
+  // DIE EIGENSCHAFT, DIE DAS WACHSEN UEBERLEBT. Die erste Fassung verglich
+  // tailHash mit dem Genesis - das galt nur, SOLANGE die Fortsetzung leer war,
+  // und ging mit ihrem ersten Eintrag rot, ohne dass an der Bindung etwas
+  // falsch gewesen waere. Dieselbe Klasse wie ein Fixture auf feste Laenge.
+  // Die Kette haengt am Genesis ueber previousHash des ERSTEN Eintrags; ist
+  // die Datei noch leer, ist der Tail der Genesis.
+  const kette = pruefeZugriffsRegister(teil2);
+  if (teil2.events.length === 0) {
+    assert.equal(kette.tailHash, teil2.genesisSha256);
+  } else {
+    assert.equal(teil2.events[0].previousHash, teil2.genesisSha256,
+      'der erste Eintrag der Fortsetzung haengt nicht am Genesis');
+  }
 });
 
 test('R1/G9: vorgaengerDateiSha256 IST der Byte-sha der geschlossenen Datei', () => {
@@ -127,7 +139,11 @@ test('R1/G9 BRUCHPROBE: je ein gekipptes Hex-Zeichen faellt an SEINER Zusicherun
 
   // (i) Genesis gekippt -> die Tail-Hash-Zusicherung faellt, die Datei-sha-
   //     Zusicherung bleibt stehen. Getrennte Felder, getrennte Proben.
-  const g = { ...teil2, genesisSha256: kippe(teil2.genesisSha256) };
+  // Der gekippte Genesis wird an einem LEEREN Stand gefahren: dort verifiziert
+  // ein erfundener Genesis gruen, und genau das ist der Befund. An einem
+  // gewachsenen Stand braeche die Kette aus einem anderen Grund - dann pruefte
+  // die Probe nicht mehr die Laengen-Blindheit, sondern die Kettenpruefung.
+  const g = { ...teil2, events: [], genesisSha256: kippe(teil2.genesisSha256) };
   assert.notEqual(g.genesisSha256, tail);
   assert.equal(g.vorgaengerDateiSha256, dateiSha, 'die andere Bindung darf davon nicht beruehrt sein');
   // Und der Verfassungspruefer selbst merkt davon NICHTS - genau deshalb steht
