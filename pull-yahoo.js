@@ -164,6 +164,41 @@ let _ftsFailedSeries = 0;
 // aber LEER" wirft nicht und hat failedSeries === 0 — er loeste das
 // fundamentalsIncomplete-Verhalten aus, wurde aber nirgends gezaehlt oder gemeldet.
 let _ftsAllEmptyTickers = 0;
+// FN-2 (_COURT-FTI-NULLWERTE-2026-09-02, blockierend): der Null-GP-Guard zaehlt, was er
+// loescht — je Lauf, aufgeschluesselt nach Boersen-Suffix und Sektor. Grundlinie zum
+// Vergleichen (gemessen 02.09.2026): 2.014 von 15.040 Snapshots = 13,4 %, diffus ueber
+// 20+ Boersen, keine ueber 50 % (US 17,1 · AX 25,6 · MI 15,8 · DE 15,0 · T 12,4 · SZ 2,1).
+// Ein Delta von mehreren hundert in EINEM Vintage ist die Ausfall-Signatur (Anbieter-
+// Ausfall oder Mapper-Regression, Kipp-Bedingung K2) und muss am Lauf sichtbar sein —
+// nicht als Stille. Ohne diesen Zaehler waere Fix 2 genau die Verbergung, gegen die er
+// gebaut ist: vorher erzeugte ein Massenausfall sichtbare Score-Krater (GM=0 →
+// marginLevel 0,0), nachher nur noch einen leisen Achsen-Drop mit renorm.
+let _gpZeroCodingRows = 0;
+let _gpZeroCodingBySuffix = Object.create(null);
+let _gpZeroCodingBySector = Object.create(null);
+// Boersen-Suffix aus dem Yahoo-Symbol: alles nach dem letzten Punkt, sonst 'US' (die
+// US-Notierungen tragen kein Suffix). Bewusst hier und nicht in normalizeRegion: die
+// Grundlinie oben ist ueber SUFFIXE gemessen, nicht ueber Waehrungsregionen.
+function _boersenSuffix(ticker) {
+  const t = String(ticker || '');
+  const i = t.lastIndexOf('.');
+  return i > 0 ? t.slice(i + 1) : 'US';
+}
+// FN-3: WELCHER Zaehler fuer die gespeicherte Zeile gilt — der des Gewinners, nie der des
+// Verlierers. Eigene Funktion, damit der Waechter genau diesen Zweig AUSFUEHRT statt ihn
+// als Schreibmuster im Quelltext zu suchen. FTI ist der Lehrfall in die eine Richtung
+// (QS genullt, FTS gewinnt, FTS-GP beim Anbieter echt leer -> KEIN Marker), UMAC in die
+// andere (QS gewinnt mit der genullten Reihe -> Marker).
+function _gpZeroCodingOfWinner(winnerIsFts, ftsYears, qsYears) {
+  return (winnerIsFts ? (ftsYears || 0) : (qsYears || 0));
+}
+function _recordGpZeroCoding(ticker, sector) {
+  _gpZeroCodingRows++;
+  const suf = _boersenSuffix(ticker);
+  _gpZeroCodingBySuffix[suf] = (_gpZeroCodingBySuffix[suf] || 0) + 1;
+  const sec = sector || 'unbekannt';
+  _gpZeroCodingBySector[sec] = (_gpZeroCodingBySector[sec] || 0) + 1;
+}
 
 // Nachzug Tag 622 (Review-Fund HOCH): meta.fundamentalsIncomplete schlaegt die
 // ganze Anker-Kette. Ein Vollabruf, dessen vier FTS-Serien alle LEER kamen, hat
@@ -1253,6 +1288,100 @@ function _nonZeroCount(arr) {
   }).length;
 }
 
+// ─── Beschluss _COURT-FTI-NULLWERTE-2026-09-02 (Q1, ratifiziert 12:20:22Z) ──────
+// Zwei Fixe, EIN untrennbares Paket, unbedingt (keine Umgebungsschalter — FN-1).
+//
+// FIX 2 — _nullOutAllZeroGrossProfit: der symmetrische Partner zu
+// _nullOutImpossibleZeroRevenue (NRB-SK-001). Dort war der Satz: ein 0-Umsatz-Jahr mit
+// positivem GP/OpInc ist unmoeglich. Hier die Gegenrichtung: GP = Umsatz − COGS, also ist
+// eine Bruttomarge von exakt 0,000 % ueber die GANZE Historie bei irgendwo positivem
+// Umsatz kein Geschaeftsbetrieb, sondern die Fehlwert-Kodierung des Anbieters. Yahoo
+// sendet den fehlenden Bruttogewinn in incomeStatementHistory als literale 0, nicht als
+// null (Rohbefund FTI 2026-09-02); die Pipeline schrieb sie woertlich fort und
+// marginLevel las daraus eine Bruttomarge von 0 % statt eines Fehlwerts.
+//
+// Drei Bedingungen, ALLE noetig:
+//   (a) mindestens ZWEI belegte GP-Eintraege sind exakt 0
+//   (b) KEIN GP-Eintrag ist von 0 verschieden  (ein einziges echtes Jahr rettet die Reihe)
+//   (c) irgendein Umsatzjahr ist > 0           (Pre-Revenue-Faelle bleiben unberuehrt)
+//
+// (a) traegt die Verschaerfung aus FN-4 (Gericht, Stimme 2, strikt strengere Fassung):
+// bei GENAU EINEM Datenpunkt ist die Fehlwert-Lesart eine Behauptung, keine
+// Schlussfolgerung. Gemessener Preis der Verschaerfung: 1 Zeile von 2.014 (2923.TW,
+// gp=[0] als einziger Eintrag der Historie).
+//
+// EINGESTANDENE KONZESSION (Gericht §2.2, Kipp-Bedingung K3, Waechter-Fall BP-8): eine
+// ECHTE Null-Marge bei positivem Umsatz kann dieser Guard nicht von der Fehlwert-Kodierung
+// unterscheiden. Im heutigen Bestand ist die Falsifikator-Population gemessen LEER — 0
+// Zeilen, in denen BEIDE Quellen GP=0 bei positivem Umsatz melden. Taucht so ein Fall auf,
+// geht die Frage zurueck ans Gericht; sie wird hier nicht selbst gelockert.
+//
+// Gibt die Zahl der genullten Eintraege zurueck (FN-2: der Guard ZAEHLT, was er loescht —
+// ein Guard, der loescht ohne zu zaehlen, senkt die Alarm-Amplitude eines Massenausfalls,
+// ohne einen Ersatzkanal zu stellen). Mutiert annualGP an Ort und Stelle, index-aligned zu
+// annualRev per Konstruktion — dieselbe Zeile je Index wie bei _nullOutImpossibleZeroRevenue.
+function _nullOutAllZeroGrossProfit(annualRev, annualGP) {
+  if (!Array.isArray(annualGP) || annualGP.length === 0) return 0;
+  let zeroYears = 0;
+  for (const g of annualGP) {
+    const x = (g == null) ? null : (typeof g === 'number' ? g : g.value);
+    if (x == null || !Number.isFinite(x)) continue;
+    if (x === 0) { zeroYears++; continue; }
+    return 0; // (b) ein echter Wert -> keine Fehlwert-Kodierung
+  }
+  if (zeroYears < 2) return 0; // (a) FN-4: >= 2 dokumentierte Nulljahre
+  const revPositive = (annualRev || []).some(r => {
+    const x = (r == null) ? null : (typeof r === 'number' ? r : r.value);
+    return Number.isFinite(x) && x > 0;
+  });
+  if (!revPositive) return 0; // (c)
+  for (let i = 0; i < annualGP.length; i++) annualGP[i] = null;
+  return zeroYears;
+}
+
+// FIX 1 / Seam — die Jahres-Entscheidungsregel steht jetzt auf MODUL-Ebene statt als
+// Closure in pullAll, damit der Waechter sie AUSFUEHRT statt sie nachzubauen
+// (Fehlerklasse F1334, dieselbe Begruendung wie beim _mergeQuarterBundle-Seam Tag 559).
+//
+// Die eigentliche Reparatur ist ein Wort: die Buendel-Dichte zaehlt mit _nonZeroCount
+// statt _nonNullCount. Der QUARTALS-Zwilling tut das seit Tag 559 (_quarterBundleDensity,
+// oben) mit der Begruendung, die dort woertlich steht: eine literale 0 ist kein Beleg
+// dafuer, dass diese Quelle die Periode FUEHRT, sie ist genau die Polsterung, die den
+// Defekt erzeugt. Der Fix wurde damals nur auf die Quartalsseite ausgerollt; die
+// Jahresseite zaehlte weiter null-blind. Genau diese Asymmetrie hat FTI seine echte
+// OpInc-Reihe gekostet: quoteSummary 4 Umsatz + 0 OpInc + 4 SCHEIN-Bruttogewinne + 4 NI
+// = 12 gegen fundamentalsTimeSeries 4+4+0+4 = 12, Gleichstand, und bei Gleichstand
+// behaelt quoteSummary. Mit _nonZeroCount steht es 8:12 und die echte Reihe kommt zurueck.
+//
+// Die UMSATZ-Vorabentscheidung bleibt bewusst bei _nonNullCount: ein echtes 0-Umsatz-Jahr
+// (Pre-Revenue-Biotech) IST ein valides Datum — pull-yahoo.js:1246-1247 haelt genau das
+// fest. Sie mitzuziehen ist Variante 1b, und die ist vom Gericht 2:0 fuer ein EIGENES
+// Verfahren RESERVIERT (Beschluss Q3), nicht angenommen. Der Waechter pinnt das
+// (UMAC-Abwesenheitsprobe, revNN [3,2] muss bei QS bleiben): eine stille Ausweitung nach
+// 1b faellt dort rot auf.
+//
+// `opts` ist AUSSCHLIESSLICH Test-Naht (FN-1 gestattet sie ausdruecklich — der Waechter
+// braucht beide Zaehlungen, um die Bruch-Probe fahren zu koennen). Produktion ruft ohne
+// opts auf und zaehlt damit unbedingt nicht-null-blind.
+function _incomeBundleDensity(b, counter) {
+  const c = counter || _nonZeroCount;
+  return c(b.annualRev) + c(b.annualOpInc) + c(b.annualGP) + c(b.annualNetIncome);
+}
+function mergeAnnualIncomeBundle(qsB, ftsB, opts) {
+  // Genau EINE Stelle traegt die Produktions-Zaehlung: der Default von
+  // _incomeBundleDensity. `undefined` heisst hier "nimm sie" — eine zweite Kopie der
+  // Wahl waere die Drift-Klasse, die diesen Bug ueberhaupt erzeugt hat (Tag 559 wurde
+  // auf einer Seite ausgerollt und auf der anderen nicht).
+  const counter = (opts && opts.densityNonZero === false) ? _nonNullCount : undefined;
+  const revCounter = (opts && opts.revNonZero) ? _nonZeroCount : _nonNullCount;
+  const qsRev = revCounter(qsB.annualRev);
+  const ftsRev = revCounter(ftsB.annualRev);
+  if (ftsRev !== qsRev) return ftsRev > qsRev ? ftsB : qsB;
+  // Umsatz-Gleichstand → Buendel-Dichte; FTS gewinnt nur strikt reicher (erhaelt das
+  // bisherige "QS behaelt es bei Gleichstand"-Vorverhalten).
+  return _incomeBundleDensity(ftsB, counter) > _incomeBundleDensity(qsB, counter) ? ftsB : qsB;
+}
+
 // Tag 559: das QUARTALS-Buendel (revenueQ/opIncQ/grossProfitQ/netIncomeQ + die drei
 // Ends) kommt aus EINER Quelle, entschieden von EINER Regel — die Quartals-Spiegelung
 // des Jahres-Fixes F2 (mergeAnnualIncomeBundle, fba7f69f3f vom 2026-06-25).
@@ -1497,6 +1626,11 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   // native GP/OpInc in the same year, BEFORE it can feed the sector-OpInc
   // derivation below (which multiplies annualRev × operatingMargin).
   _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
+  // FTI-Beschluss 02.09.2026, Fix 2 (unbedingt): die Gegenrichtung desselben
+  // Kohaerenz-Gedankens. Muss VOR der Sektor-OpInc-Ableitung stehen, aus demselben Grund
+  // wie NRB-SK-001 — und vor dem Buendel-Merge in pullAll, damit die Schein-Dichte der
+  // Nullreihe die Quellenwahl nicht mehr kauft.
+  const _gpZeroYearsQS = _nullOutAllZeroGrossProfit(annualRev, annualGP);
 
   // Tag 203: sector-aware OpInc fallback for Financial Services.
   // Yahoo's incomeStatementHistory.operatingIncome is null for banks (JPM,
@@ -1873,6 +2007,22 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
       //                          for Financial Services when line-items absent).
       //   null                 = no OpInc at all.
       opIncSource,
+      // FN-3 (_COURT-FTI-NULLWERTE-2026-09-02, blockierend): PER-ZEILE-MARKER an genau den
+      // Zeilen, deren GP-Reihe von Fix 2 genullt wurde. Drei Pflichten in EINEM Feld:
+      //   (i)   die Loeschung ist sichtbar statt still — eine Zeile mit annualGP=[null…]
+      //         sagt jetzt selbst, ob WIR eine Null-Kodierung verworfen haben oder ob der
+      //         Anbieter nie geliefert hat;
+      //   (ii)  es ist der Griff, den scripts/write-board-history.js fuer die
+      //         Bruch-Ausnahme braucht — ohne einen solchen Marker ist der Registereintrag
+      //         operativ inert (write-board-history.js:686 schliesst ohne Lampe keine Zeile
+      //         aus, und der Schrumpfungs-Zweig :732 oeffnet nur bei geschrumpfter Kohorte,
+      //         die es hier nicht gibt: 0 verlorene Zeilen);
+      //   (iii) er trennt kuenftig "Anbieter hat nie geliefert" von "wir haben eine
+      //         Null-Kodierung verworfen" — die Unterscheidung, die Fix 2 sonst zerstoert.
+      // Wird in pullAll auf den GEWINNER des Buendel-Merges korrigiert: nur wenn die
+      // gespeicherte GP-Reihe die von uns genullte IST, traegt die Zeile den Marker.
+      gpZeroCodingNulled: _gpZeroYearsQS > 0,
+      gpZeroCodingYears: _gpZeroYearsQS,
       // Tag 206b: fcfMarginTTM was suppressed because |raw value| > 200%.
       // Downstream methods (rule-of-40 etc.) will use the annual-FCF fallback
       // path or report computable:false. Flag preserved so audit pipeline can
@@ -2303,6 +2453,11 @@ function mapFTSToAnnual(annualRows, cashRows) {
   // NRB-SK-001 (Hard Review 2026-07-31): same coherence guard as the QS build path —
   // a literal 0 revenue year that also reports positive GP/OpInc is impossible.
   _nullOutImpossibleZeroRevenue(annualRev, annualOpInc, annualGP);
+  // FTI-Beschluss 02.09.2026: derselbe Guard auch auf der FTS-Seite. Gemessener No-op
+  // (0 Buendel im Bestand), aber EINE Zeile Symmetrie zu NRB-SK-001 — genau die
+  // Asymmetrie zwischen den beiden Bau-Pfaden hat diesen Bug erzeugt (der Tag-559-Fix
+  // wurde nur auf einer Seite ausgerollt). Der Beschluss haelt den Aufruf ausdruecklich.
+  const _gpZeroYearsFTS = _nullOutAllZeroGrossProfit(annualRev, annualGP);
   // audit/fix F1 (2026-06-25): trim trailing all-null income rows (oldest) — no
   // information to contribute; mirrors mapFTSToQuarterly's trailing-null trim so
   // the arrays stay tight while interior nulls (which carry alignment) are kept.
@@ -2339,7 +2494,11 @@ function mapFTSToAnnual(annualRows, cashRows) {
     annualOCF.push(op != null ? { value: op } : null);
     annualFCF.push(fcf != null ? { value: fcf } : null);
   }
-  return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF };
+  // FN-3: die Trefferzahl reist mit dem Buendel, damit pullAll den Marker auf den
+  // GEWINNER setzen kann. Gewinnt dieses Buendel, ist SEINE genullte Reihe die
+  // gespeicherte — dann traegt die Zeile den Marker, sonst nicht.
+  return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF,
+    _gpZeroCodingYears: _gpZeroYearsFTS };
 }
 
 function mapFTSToBalance(bsRows) {
@@ -2786,6 +2945,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _ftsPartialTickers = 0;
   _ftsFailedSeries = 0;
   _ftsAllEmptyTickers = 0;
+  // FN-2: der Null-GP-Zaehler ist eine LAUF-Groesse — die Grundlinie 13,4 % ist je Vintage
+  // gemessen, ein Sprung nur gegen den Vorlauf lesbar. Ohne Reset addierte ein zweiter
+  // pullAll im selben Prozess (Tests, Shards) zwei Laeufe zu einem Scheinausschlag.
+  _gpZeroCodingRows = 0;
+  _gpZeroCodingBySuffix = Object.create(null);
+  _gpZeroCodingBySector = Object.create(null);
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
   // processOne and the staleness sort. Format { ticker: { date, pulledAt } }.
   // READ ONLY — never written here. A failure remains non-fatal, but must be visible.
@@ -3459,6 +3624,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       let ftsQuarterlyNI;
       if (useCache && cached.payload) {
         ftsAnnual = cached.payload.ftsAnnual;
+        // FTI-Beschluss 02.09.2026: der Guard laeuft in mapFTSToAnnual — ein Buendel aus
+        // dem Cache kommt daran vorbei. Ohne diese Zeile haette ein vor dem Merge
+        // gecachtes Buendel bis zu CACHE_TTL_MS (28 Tage) eine ungepruefte Null-Reihe
+        // durchgereicht, und der Marker haette sie nicht getragen — genau die stille
+        // Luecke, gegen die FN-2/FN-3 gebaut sind. Gemessen ist der FTS-Zweig heute ein
+        // No-op (0 Buendel im Bestand); die Zusicherung soll trotzdem unbedingt gelten.
+        if (ftsAnnual && ftsAnnual._gpZeroCodingYears == null) {
+          ftsAnnual._gpZeroCodingYears = _nullOutAllZeroGrossProfit(ftsAnnual.annualRev, ftsAnnual.annualGP);
+        }
         ftsQuarterly = cached.payload.ftsQuarterly;
         ftsBalance = cached.payload.ftsBalance;
         ftsAnnualSBC = cached.payload.ftsAnnualSBC;
@@ -3605,17 +3779,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // resolves deterministically toward the richer overall source), then move all
       // four arrays from the SAME source together. Null placeholders within each
       // array are preserved (no filtering) so positional year-alignment survives.
-      const _incomeBundleDensity = b =>
-        _nonNullCount(b.annualRev) + _nonNullCount(b.annualOpInc) +
-        _nonNullCount(b.annualGP) + _nonNullCount(b.annualNetIncome);
-      const mergeAnnualIncomeBundle = (qsB, ftsB) => {
-        const qsRev = _nonNullCount(qsB.annualRev);
-        const ftsRev = _nonNullCount(ftsB.annualRev);
-        if (ftsRev !== qsRev) return ftsRev > qsRev ? ftsB : qsB;
-        // revenue tie → fall back to total bundle density; FTS only wins on strictly
-        // richer (preserves the prior "QS keeps it on a tie" default).
-        return _incomeBundleDensity(ftsB) > _incomeBundleDensity(qsB) ? ftsB : qsB;
-      };
+      // FTI-Beschluss 02.09.2026 (FN-1/FN-6): die Regel steht als _incomeBundleDensity /
+      // mergeAnnualIncomeBundle auf MODUL-Ebene (oben bei _nonZeroCount) — der Waechter
+      // fuehrt sie aus, statt sie nachzubauen. Verhalten hier unveraendert bis auf den
+      // Zaehler: Dichte jetzt _nonZeroCount, wie auf der Quartalsseite seit Tag 559.
 
       // Override leere annual-Arrays aus quoteSummary mit FTS-Daten wenn FTS welche hat.
       // audit/fix F2 (2026-06-25): single-source the whole income bundle.
@@ -3667,6 +3834,20 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         if (_winner === _ftsIncome &&
             (ftsAnnual.annualOpInc || []).some(v => v != null && (typeof v !== 'object' || v.value != null))) {
           if (canonical.meta) canonical.meta.opIncSource = 'yahoo-adjusted';
+        }
+        // FN-3 + FN-2: Marker auf den GEWINNER korrigieren und erst DANN zaehlen. Der
+        // Mapper hat den Marker aus der QS-Sicht gesetzt; gewinnt das FTS-Buendel, ist
+        // dessen (ggf. genullte) Reihe die gespeicherte. FTI ist der Lehrfall: QS wurde
+        // genullt, FTS gewinnt, und FTS' annualGP ist beim Anbieter ECHT leer — die Zeile
+        // darf den Marker also NICHT tragen, sonst behauptete sie eine Loeschung, die
+        // nicht im Snapshot steht. UMAC/ASTS umgekehrt: QS gewinnt (revNN entscheidet vor
+        // der Dichte), die genullte QS-Reihe wird gespeichert -> Marker.
+        if (canonical.meta) {
+          const _gpZeroYears = _gpZeroCodingOfWinner(
+            _winner === _ftsIncome, ftsAnnual._gpZeroCodingYears, canonical.meta.gpZeroCodingYears);
+          canonical.meta.gpZeroCodingYears = _gpZeroYears;
+          canonical.meta.gpZeroCodingNulled = _gpZeroYears > 0;
+          if (_gpZeroYears > 0) _recordGpZeroCoding(stock.ticker, canonical.meta.sector);
         }
       }
       // Bug 21 (audit 2026-07-03): when QS won the income bundle with a newer FY
@@ -4222,6 +4403,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   if (_unparseableTimeAnchors > 0) console.warn(`::warning::${_unparseableTimeAnchors} Snapshots mit unparsbarem Zeitanker (${_unparseableTimeAnchorsDue} davon als faellig markiert)`);
   if (_ftsFailedSeries > 0) console.warn(`::warning::FTS-Teilausfaelle: ${_ftsPartialTickers} Ticker / ${_ftsFailedSeries} Serien`);
   if (_ftsAllEmptyTickers > 0) console.warn(`::warning::FTS leer ohne Fehler: ${_ftsAllEmptyTickers} Ticker (als fundamentalsIncomplete markiert, naechster Lauf zieht sie erneut voll)`);
+  // FN-2 (_COURT-FTI-NULLWERTE-2026-09-02, blockierend): der Null-GP-Guard meldet je Lauf,
+  // WAS er geloescht hat — aufgeschluesselt nach Boersen-Suffix und Sektor. Die Zeile steht
+  // IMMER im Protokoll, auch bei 0: nur eine Zahl, die jeden Lauf da ist, macht einen
+  // Sprung sichtbar. Grundlinie 02.09.2026: 2.014/15.040 = 13,4 %, diffus, keine Boerse
+  // ueber 50 %. Ein Delta von mehreren hundert in EINEM Vintage ist nach K2/FN-15 NICHT
+  // diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall / Mapper-Regression).
+  const _gpTop = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(' ');
+  _log('INFO', `Null-GP-Guard (Fix 2): ${_gpZeroCodingRows} Zeilen mit verworfener GP-Null-Kodierung`
+    + ` | Suffix: ${_gpTop(_gpZeroCodingBySuffix) || '-'}`
+    + ` | Sektor: ${_gpTop(_gpZeroCodingBySector) || '-'}`);
   const _ccyMissingResults = results.filter(r => r && r.status === 'ccy-missing-completely');
   const nCcyMissingCompletely = _ccyMissingResults.length;
   // Review-Nachzug (h), Tag 629: das je Ticker berechnete preserved-Feld wird hier genutzt —
@@ -4246,6 +4437,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     n_skipped_mcap: skippedMcapFinal,
     n_failed: failures.length,
     _silentErrors,
+    // FN-2: derselbe Zaehler maschinenlesbar. Das Protokoll ist die Sichtspur, das
+    // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
+    // Feld, nicht als Logzeile.
+    _gpZeroCoding: { rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } },
     results,
     failures
   };
@@ -4615,4 +4810,15 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _convertSnapshotToUSDGuarded, _stampTradingFxSource, _fxMarkerFor,
   FX_MARKER_HARDCODED, FX_PROVENANCE_HARDCODED,
   // NRB-SK-001 (Hard Review 2026-07-31): fuer TDD.
-  _nullOutImpossibleZeroRevenue };
+  _nullOutImpossibleZeroRevenue,
+  // _COURT-FTI-NULLWERTE-2026-09-02 (FN-6): die Jahres-Buendel-Entscheidung, der
+  // Null-GP-Guard und der Lauf-Zaehler als Seams — der Waechter
+  // (tests/fti-jahresbuendel-nullwerte.test.js) FUEHRT sie aus, statt sie nachzubauen
+  // (Fehlerklasse F1334, dieselbe Begruendung wie beim Quartals-Seam Tag 559).
+  // _deriveOpIncForFinancials liegt dabei, weil BP-9 am Objekt zeigen muss, dass das
+  // Nullen der GP-Reihe der Financials-Ableitung nichts entzieht — die Entlastung fuer
+  // die groesste genullte Teilmenge (271 Banken).
+  mergeAnnualIncomeBundle, _incomeBundleDensity, _nullOutAllZeroGrossProfit,
+  _deriveOpIncForFinancials, _boersenSuffix, _recordGpZeroCoding, _gpZeroCodingOfWinner,
+  _gpZeroCodingTally: () => ({ rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } }),
+  _resetGpZeroCodingTally: () => { _gpZeroCodingRows = 0; _gpZeroCodingBySuffix = Object.create(null); _gpZeroCodingBySector = Object.create(null); } };
