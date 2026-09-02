@@ -43,6 +43,24 @@ test('Oslo parser accepts only rows with an explicit allowed venue', async t => 
       'Growth;NO0000000036;GRWT;Euronext Growth Oslo;NOK',
     ]));
     assert.deepEqual([...result.keys()], ['EQNR.OL', 'EXPD.OL', 'GRWT.OL']);
+    assert.equal(result.partial, undefined, 'a healthy register must not be marked partial');
+  });
+
+  await t.test('an unknown venue label in every row marks the source partial', async () => {
+    const result = await fetchFixture(csv(header, [
+      'Drifted A;NO0000000010;EQNR;Oslo Bors Renamed;NOK',
+      'Drifted B;NO0000000028;EXPD;Oslo Bors Renamed;NOK',
+    ]));
+    assert.equal(result.size, 0);
+    assert.equal(result.partial, true, 'venue drift must surface as degradation, not as a silent empty source');
+  });
+
+  await t.test('a missing Market column marks the source partial', async () => {
+    const result = await fetchFixture(csv('Name;ISIN;Symbol;Currency', [
+      'Missing market;NO0000000051;MISS;NOK',
+    ]));
+    assert.equal(result.size, 0);
+    assert.equal(result.partial, true);
   });
 
   await t.test('a foreign venue cannot receive an Oslo ticker', async () => {

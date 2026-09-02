@@ -122,7 +122,9 @@ function parseOsloCsv(csvText) {
   const iIsin   = header.indexOf('ISIN');
   const iSymbol = header.indexOf('Symbol');
   const iMarket = header.indexOf('Market');
-  if (iName < 0 || iIsin < 0 || iSymbol < 0) return result;
+  // Market is mandatory too: the venue allow-list below decides every row, so a
+  // missing column would drop the whole register instead of a single line.
+  if (iName < 0 || iIsin < 0 || iSymbol < 0 || iMarket < 0) return result;
 
   for (let i = headerIdx + 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
@@ -153,6 +155,9 @@ async function fetchOsloUniverse(fetchCsv = get) {
     const csv = await fetchCsv(CSV_URL);
     const parsed = parseOsloCsv(csv);
     for (const [k, v] of parsed) result.set(k, v);
+    // Venue drift upstream would silently empty the allow-list; mark it so
+    // refresh-universe.js:1567 sees the degradation (pattern: tsx-ca.js:356).
+    if (parsed.size === 0) result.partial = true;
     console.log(`  [Oslo] Total Oslo-listed stocks: ${result.size}`);
   } catch (e) {
     console.error('  [Oslo] failed: ' + e.message);
