@@ -145,7 +145,13 @@ function fetchSubmissions(cik, contact) {
           const j = JSON.parse(Buffer.concat(chunks).toString('utf8'));
           const lean = { cik, sic: j.sic || null, sicDescription: j.sicDescription || null, tickers: j.tickers || [] };
           fs.mkdirSync(SUBMISSIONS_DIR, { recursive: true });
-          fs.writeFileSync(submissionsPath(cik), JSON.stringify(lean));
+          // T204 Welle 5: atomar, weil ein zerrissener Cache-Eintrag hier STILL wirkt und
+          // DAUERHAFT bleibt. readSubmissionsCached faengt den Parse-Fehler ab und liefert
+          // null (catch (_) { return null; }), sic2Of macht daraus null, enrich() steigt
+          // aus — die Firma faellt lautlos aus dem SIC2-Matching-Pool des EINEN
+          // konfirmatorischen B1-Laufs. Und ensureSubmissions holt sie nie nach: der
+          // Nachlade-Filter fragt nur `!fs.existsSync(...)`, und ein Bruchstueck existiert.
+          writeFileAtomic(submissionsPath(cik), JSON.stringify(lean));
           resolve(lean);
         } catch (_) { resolve(null); }
       });
