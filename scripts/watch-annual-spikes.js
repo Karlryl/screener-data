@@ -124,6 +124,33 @@ function stabilerSchluessel(x) {
   const periode = x.periode || `werte:${x.links}|${x.wert}|${x.rechts}`;
   return `${x.ticker}|${x.reihe}|${periode}`;
 }
+
+/**
+ * JA-7 (Gerichtsbeschluss 02.09.2026) — der SPERR-Schluessel hoert auf, eine
+ * Fliesskomma-Zahl zu sein.
+ *
+ * stabilerSchluessel() traegt fuer 141 von 141 Funden den `werte:`-Fallback, also eine
+ * reine Wert-Signatur. Gemessen: eine FX-Bewegung von 0,024 % (der echte GCP.L-Faktor
+ * 1,0002436793) macht aus
+ *   BANPU.BK|annualOpInc|werte:-28259000|6003496000|524803000
+ *   BANPU.BK|annualOpInc|werte:-28265886.1333387|6004958927.702833|524930883.6276779
+ * — die Sperre trifft nicht mehr, und bei der naechsten Verankerung wird der Fall in
+ * `faelle` absorbiert: dauerhaft "bekannt" und FUER IMMER still. Das ist der leise,
+ * echte Verlust, gegen den dieses Tor gebaut ist.
+ *
+ * Gewaehlt wurde die billigere der beiden vom Gericht zugelassenen Varianten:
+ * `ticker|reihe|index` statt eines FX-invarianten Perioden-Schluessels. Grund, gemessen:
+ * ein Perioden-Schluessel ist auf diesem Weg strukturell unerreichbar — periodEnds()
+ * liefert fuer 100 % der Jahresfunde null, und selbst der Container-Fix (JA-10) heilte
+ * nur 5 von 141 Funden, waehrend annualNetIncome NIRGENDS eine Enden-Reihe hat. Genau
+ * die Drift-Klasse (GCP.L, HMT-Zwillinge) ist annualNetIncome.
+ *
+ * PREIS, ausdruecklich benannt: kommt ein Geschaeftsjahr dazu, verschiebt sich der Index
+ * und die Sperre trifft nicht mehr. Aber sie faellt dann LAUT aus — der Fall laeuft als
+ * NEU auf und sperrenOhneTreffer() meldet die tote Sperre im Tageslauf (JA-6) — statt
+ * still zu verschwinden. Die Fehlerrichtung ist damit umgedreht, und das war der Zweck.
+ */
+function sperrSchluessel(x) { return `${x.ticker}|${x.reihe}|${x.index}`; }
 // Zaehlt die heutigen Funde je "ticker|reihe" — der Massstab, an dem unten entschieden
 // wird, ob die Legacy-Index-Toleranz ueberhaupt noch tragen kann.
 // Funde, die die stabile Signatur exakt trifft, bleiben AUSSEN VOR: sie verlassen
@@ -243,6 +270,54 @@ function basisGueltig(basis, anzahlSnapshots) {
   return { ok: true, grund: '' };
 }
 
+// Wie lange ein Ausschluss offen stehen darf, bevor der Waechter ihn selbst anmahnt.
+// 30 Tage, und die Zahl ist die einzige, die dieses Tor ueberhaupt hat: seit JA-1 kosten
+// Sperren keinen Budgetplatz mehr, also ist diese Uhr der GESAMTE verbliebene Druck auf
+// einen offenen Fall. Ein Tor, das jeden Tag gleich feuert, traegt keine Information —
+// dieses feuert genau dann, wenn 30 Tage lang nichts geschehen ist.
+const AUSSCHLUSS_MAX_TAGE = 30;
+const istTag = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+  && !Number.isNaN(Date.parse(v + 'T00:00:00Z'));
+const tageSeit = (tag, jetzt) => Math.floor((jetzt.getTime() - Date.parse(tag + 'T00:00:00Z')) / 86400000);
+
+/**
+ * EINE Stelle, an der die Ausschluss-Liste geprueft wird — und zwar auf BEIDEN Wegen.
+ * Vorher sah nur baueNeuenBestand() sie an; im Tageslauf konnte eine kaputte Liste still
+ * zu "keine Sperren" werden. Seit JA-1 haengt an ihr nicht mehr ein Budgetplatz, sondern
+ * die Sperre selbst — eine still kaputte Liste ist jetzt teurer als vorher.
+ *
+ * JA-5: `seit` UND `offenSeit` sind Wurf-Bedingungen wie `hinweis`. Gemessen (Stimme 2,
+ * V7): ein Eintrag OHNE `seit` wurde bis heute klaglos angenommen. `offenSeit` ist der
+ * Tag, an dem der FALL offen wurde, nicht der Tag der Eintragung — alle vier Eintraege
+ * trugen `seit: 2026-08-29`, obwohl BANPU seit dem Entscheid vom 19.08. offen ist. Eine
+ * Altersuhr auf `seit` startete bei jeder Neu-Listung still neu.
+ * JA-7: `sperrschluessel` (ticker|reihe|index) ist Pflicht und ist das, WORAUF gematcht
+ * wird. `schluessel` (die Wert-Signatur) bleibt als Herkunfts-Nachweis und fuer die
+ * Widerspruchs-Wache in basisGueltig() erhalten.
+ */
+function pruefeAusschluesse(basis) {
+  // Review-Befund HIGH (29.08.): "Feld fehlt" (Alt-Bestand vor Weg C) und "Feld da, aber
+  // falscher Typ" (kaputter Merge, versehentliches null) sind zwei verschiedene Faelle.
+  // Nur der erste darf still zu [] werden — der zweite hoebe ALLE Sperren lautlos auf.
+  const roh = basis ? basis.ausgeschlossen : undefined;
+  if (roh !== undefined && !Array.isArray(roh)) {
+    throw new Error(`Ausschluss-Liste kaputt: ausgeschlossen ist ${JSON.stringify(roh)} statt einer Liste — `
+      + 'eine still zu [] degradierte Sperrliste hoebe alle Sperren lautlos auf.');
+  }
+  const ausgeschlossen = roh || [];
+  for (const a of ausgeschlossen) {
+    if (!a || typeof a.schluessel !== 'string' || !a.schluessel
+      || typeof a.sperrschluessel !== 'string' || !/^[^|]+\|[^|]+\|\d+$/.test(a.sperrschluessel)
+      || typeof a.hinweis !== 'string' || !a.hinweis.trim()
+      || !istTag(a.seit) || !istTag(a.offenSeit)) {
+      throw new Error('Ausschluss-Liste kaputt: jeder Eintrag braucht schluessel, sperrschluessel '
+        + '(ticker|reihe|index), seit UND offenSeit (beide YYYY-MM-DD) UND schriftlichen hinweis — '
+        + `gefunden: ${JSON.stringify(a)}. Eine unbegruendete oder undatierte Sperre wird nicht geschrieben.`);
+    }
+  }
+  return ausgeschlossen;
+}
+
 /**
  * WEG C (Gerichts-/Rat-Strecke Ausreisser-Bestand, 29.08.2026) — die Ausschluss-Liste.
  *
@@ -265,21 +340,13 @@ function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()
   // aber falscher Typ" (kaputter Merge, versehentliches null) sind zwei verschiedene
   // Faelle. Nur der erste darf still zu [] werden — der zweite wuerde sonst ALLE
   // Sperren lautlos aufheben: genau die Fehlerklasse, die Weg C schliesst.
-  const roh = basis ? basis.ausgeschlossen : undefined;
-  if (roh !== undefined && !Array.isArray(roh)) {
-    throw new Error(`Ausschluss-Liste kaputt: ausgeschlossen ist ${JSON.stringify(roh)} statt einer Liste — `
-      + 'eine still zu [] degradierte Sperrliste hoebe alle Sperren lautlos auf.');
-  }
-  const ausgeschlossen = roh || [];
-  for (const a of ausgeschlossen) {
-    if (!a || typeof a.schluessel !== 'string' || !a.schluessel
-      || typeof a.hinweis !== 'string' || !a.hinweis.trim()) {
-      throw new Error('Ausschluss-Liste kaputt: jeder Eintrag braucht schluessel UND schriftlichen hinweis — '
-        + `gefunden: ${JSON.stringify(a)}. Eine unbegruendete Sperre wird nicht geschrieben.`);
-    }
-  }
-  const gesperrt = new Set(ausgeschlossen.map((a) => a.schluessel));
-  const faelle = [...new Set(funde.map(stabilerSchluessel))].filter((k) => !gesperrt.has(k)).sort();
+  const ausgeschlossen = pruefeAusschluesse(basis);
+  const gesperrt = new Set(ausgeschlossen.map((a) => a.sperrschluessel));
+  // JA-7 (Gericht 02.09.2026): gefiltert wird ueber den FX-festen Sperr-Schluessel, NICHT
+  // ueber die Wert-Signatur. Genau diese Zeile war der gemessene Verlust-Weg: eine
+  // FX-Bewegung von 0,024 % verschiebt die Signatur, die Sperre trifft nicht mehr, und
+  // der Fall wird hier in `faelle` absorbiert — dauerhaft bekannt und fuer immer still.
+  const faelle = [...new Set(funde.filter((x) => !gesperrt.has(sperrSchluessel(x))).map(stabilerSchluessel))].sort();
   return {
     hinweis: (basis && basis.hinweis)
       || 'Bestand der bekannten Jahres-Ausreisser. Der Waechter meldet nur, was DAZUKOMMT.',
@@ -301,8 +368,136 @@ function baueNeuenBestand(basis, funde, snapshotsBeiAufnahme, jetzt = new Date()
  * entfernen" oder "Schluessel kaputt -> reparieren". Rein, fuer den Waechter.
  */
 function sperrenOhneTreffer(ausgeschlossen, funde) {
-  const heutig = new Set(funde.map(stabilerSchluessel));
-  return (ausgeschlossen || []).filter((a) => a && !heutig.has(a.schluessel)).map((a) => a.schluessel);
+  const heutig = new Set(funde.map(sperrSchluessel));
+  return (ausgeschlossen || []).filter((a) => a && !heutig.has(a.sperrschluessel)).map((a) => a.sperrschluessel);
+}
+
+/**
+ * Die zweite Art toter Sperre, die JA-7 ueberhaupt erst sichtbar macht: der Schluessel
+ * TRIFFT einen heutigen Fund, aber derselbe Fund steht laengst in `faelle` — dann gewinnt
+ * istBekannt() still und die Sperre unterdrueckt nichts mehr, obwohl sie intakt aussieht.
+ * basisGueltig() faengt nur den Fall, in dem BEIDE Seiten dieselbe Wert-Signatur tragen;
+ * seit die Sperre auf `ticker|reihe|index` matcht, gibt es den Weg daran vorbei.
+ */
+function sperrenOhneWirkung(ausgeschlossen, funde, bestand) {
+  const gesperrt = new Set((ausgeschlossen || []).map((a) => a && a.sperrschluessel));
+  return [...new Set(funde
+    .filter((x) => gesperrt.has(sperrSchluessel(x)) && bestand.has(stabilerSchluessel(x)))
+    .map(sperrSchluessel))];
+}
+
+// == EREIGNIS-ZAEHLUNG (Gerichtsbeschluss 02.09.2026, Option 1) =======================
+// Gezaehlt wird ab hier in EREIGNISSEN, nicht in Funden. Zwei Relationen, beide am
+// echten Bestand nachgemessen:
+//
+//   R1 — byte-gleiche Wert-Signatur ueber verschiedene Ticker ist EIN Ereignis
+//        (dieselbe Firma, mehrfach gelistet). Belegt: SESG.PA und SGBAF tragen denselben
+//        FX-Stempel 1,1527377 und exakt dieselben drei Werte. Die GEGENPROBE, die nicht
+//        verschmelzen darf, ist ebenso gemessen: VIV.PA gegen VIV.VI — dieselbe Firma,
+//        beide EUR, aber die FX-Stempel stehen im Verhaeltnis 0,9907503642039275, also
+//        zwei verschiedene Signaturen und zwei Ereignisse. Gemessene Fehlquote dieser
+//        Relation: ~27 % (52 byte-gleiche Paare gegen 19 FX-proportionale, aber
+//        ungleiche). Sie verschmilzt bewusst zu WENIG statt zu viel: eine Quantisierung,
+//        die den Rest einfinge, verschmoelze auch zwei echte, verschiedene Ausreisser.
+//
+//   R2 — derselbe Ticker am selben INDEX ist EIN Ereignis.
+//        JA-3 verlangt, dass das hier ausdruecklich steht: "selbes Geschaeftsjahr" ist
+//        aus den Daten NICHT lesbar — periodEnds() liefert fuer 100 % der Jahresfunde
+//        null (Container-Fehlgriff, siehe JA-10; annualNetIncome hat nirgends eine
+//        Enden-Reihe). Einziger verfuegbarer Proxy ist x.index. Die Praemisse dahinter —
+//        die Jahresreihen eines Tickers sind gleich lang, sonst zeigt derselbe Index auf
+//        verschiedene Geschaeftsjahre — wird nicht geglaubt, sondern in scanSnapshots()
+//        gemessen und hier durchgesetzt: bei ungleich langen Reihen verschmilzt R2 NICHT.
+//        Grundlast der Verletzung: 0 von 15.028 Snapshots => JEDES Auftreten ist ein
+//        Ereignis, dieselbe Praezedenz wie beim Capex-Vorzeichen weiter oben.
+//
+// Beide Relationen zusammen bilden die TRANSITIVE Huelle (Union-Find): laeuft eine Kette
+// ueber R1 und R2, ist sie EIN Ereignis. Getrennt gezaehlt waere sie zwei.
+// ponytail: Union-Find ohne Rang-Heuristik — bei ~150 Funden je Lauf reicht das.
+const r1Schluessel = (x) => `${x.reihe}|${x.links}|${x.wert}|${x.rechts}`;
+const r2Schluessel = (x) => `${x.ticker}|${x.index}`;
+
+function ereignisse(funde, reihenGleichLang = () => true) {
+  const eltern = funde.map((_, i) => i);
+  const wurzel = (i) => { while (eltern[i] !== i) { eltern[i] = eltern[eltern[i]]; i = eltern[i]; } return i; };
+  const vereinen = (a, b) => {
+    const ra = wurzel(a), rb = wurzel(b);
+    if (ra !== rb) eltern[Math.max(ra, rb)] = Math.min(ra, rb);
+  };
+  const ersteR1 = new Map(), ersteR2 = new Map();
+  funde.forEach((x, i) => {
+    const k1 = r1Schluessel(x);
+    if (ersteR1.has(k1)) vereinen(ersteR1.get(k1), i); else ersteR1.set(k1, i);
+    if (!reihenGleichLang(x.ticker)) return;  // JA-3: Praemisse verletzt => R2 gilt hier nicht
+    const k2 = r2Schluessel(x);
+    if (ersteR2.has(k2)) vereinen(ersteR2.get(k2), i); else ersteR2.set(k2, i);
+  });
+  const gruppen = new Map();
+  funde.forEach((x, i) => {
+    const w = wurzel(i);
+    if (!gruppen.has(w)) gruppen.set(w, []);
+    gruppen.get(w).push(x);
+  });
+  return [...gruppen.values()];
+}
+
+// Die Faecherung eines Ereignisses: ueber wie viele Ticker es sich spannt.
+const faecher = (ereignis) => new Set(ereignis.map((x) => x.ticker)).size;
+
+/**
+ * JA-2 — HART-TOR auf die Cigna-Form: ein Ticker, dessen ALLE Jahresreihen am selben
+ * Index feuern. Grund, gemessen: R2 entschaerft genau die Fehlerklasse, fuer die dieser
+ * Waechter ueberhaupt gebaut wurde. Eine Firma mit einem vollstaendig korrumpierten
+ * Geschaeftsjahr faellt heute als 3 Funde auf, nach R2 als 1 Ereignis mit Faecher 1;
+ * zwei solche Brueche waren heute 6 Funde = ROT und waeren nachher 2 Ereignisse = GRUEN.
+ * Das Faecher-Tor zaehlt Ticker und sieht 1, das Alters-Tor betrifft nur Ausschluesse —
+ * beide sind blind dafuer. Deshalb ist diese Form IMMER rot, unabhaengig vom Budget und
+ * unabhaengig von der Ereigniszaehlung.
+ * Grundlast im echten Bestand: 2, beide bereits verankert und damit nicht in `neu` —
+ * das Tor kostet heute nichts. Steigt sie (Kipp-Bedingung K4), braucht es eine
+ * differenzierte Form; das ist eine Gerichtsfrage, keine Lockerung an dieser Stelle.
+ */
+function cignaFaelle(funde) {
+  const reihenJeJahr = new Map();
+  for (const x of funde) {
+    const k = `${x.ticker}|${x.index}`;
+    if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Set());
+    reihenJeJahr.get(k).add(x.reihe);
+  }
+  return [...reihenJeJahr.entries()].filter(([, r]) => r.size === REIHEN.length).map(([k]) => k);
+}
+
+/**
+ * JA-4 — das Faecher-Tor misst WACHSTUM, nicht Breite.
+ * Die Wortfassung der Vorlage ("ein Ereignis mit > 5 Tickern ist immer rot") feuert auf
+ * einen LEGITIMEN Fall: eine einzige echte Intel-Abschreibung steht im Bestand als
+ * 7er-Faecher (1INTC.MI · 4335.HK · INL.DE · INTC · INTC.SW · INTC.VI · INTL.WA).
+ * Unabhaengig nachgemessen: breitester Faecher im Bestand = 7, und es ist der einzige
+ * ueber 5. Gebraucht wird das Tor auch gar nicht gegen Skalierungsfehler — die
+ * kollabieren nie (acht Ticker mit je eigener falscher Zahl sind acht Ereignisse) —
+ * sondern gegen den KONSTANTEN Sentinel-Wert, der ueber viele Ticker identisch
+ * gestempelt wird. Der zeigt sich als Faecher breiter als alles Bekannte.
+ * ponytail: nur der erste Arm der Auflage. Der zweite ("gewachsen seit dem letzten
+ * Lauf") braucht mitgefuehrten Zustand zwischen zwei Laeufen, und dieser Job darf nichts
+ * schreiben (kein Commit-Schritt, ENTSCHIED 12:40 vom 29.08.). Der committete Bestand
+ * IST die vorhandene Referenz. Aufruestpfad, falls je gebraucht: Faecherbreite je
+ * Signatur in den Bestand schreiben und gegen die Vorlauf-Zahl vergleichen.
+ */
+function breitesterFaecherImBestand(faelle) {
+  const jeSignatur = new Map();
+  for (const k of faelle || []) {
+    const i = k.indexOf('|');
+    if (i < 0) continue;
+    const ticker = k.slice(0, i), signatur = k.slice(i + 1);
+    // Alt-Eintraege im Index-Format ("reihe|<zahl>") tragen KEINE Wert-Signatur; ueber
+    // sie zu gruppieren verschmoelze fremde Ticker am selben Index zu einem Faecher.
+    if (/^[^|]+\|\d+$/.test(signatur)) continue;
+    if (!jeSignatur.has(signatur)) jeSignatur.set(signatur, new Set());
+    jeSignatur.get(signatur).add(ticker);
+  }
+  let breitester = 0;
+  for (const t of jeSignatur.values()) if (t.size > breitester) breitester = t.size;
+  return breitester;
 }
 
 /**
@@ -320,6 +515,11 @@ function sperrenOhneTreffer(ausgeschlossen, funde) {
 function scanSnapshots(snapDir) {
   const funde = [];
   const capexPositiv = [];
+  // JA-3: die Ticker, bei denen die vorhandenen Jahresreihen NICHT gleich lang sind.
+  // Bei ihnen zeigt derselbe Index nicht auf dasselbe Geschaeftsjahr, also darf
+  // Relation 2 dort nicht verschmelzen. Gemessen statt geglaubt — die Praemisse war
+  // heute in 15.028 von 15.028 Snapshots sauber, Grundlast der Verletzung also 0.
+  const reihenUngleich = new Set();
   let capexWerte = 0, gescannt = 0, parseFehler = 0;
   const dateien = fs.existsSync(snapDir)
     ? fs.readdirSync(snapDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f))
@@ -331,6 +531,12 @@ function scanSnapshots(snapDir) {
     const annual = s && s.annual;
     if (!annual) continue;
     const ticker = (s.meta && s.meta.ticker) || f.replace(/\.json$/, '');
+    // Eine FEHLENDE Reihe ist keine Praemissenverletzung — nur zwei VORHANDENE Reihen
+    // verschiedener Laenge sind eine.
+    const laengen = new Set(REIHEN
+      .map((n) => (Array.isArray(annual[n]) ? annual[n].length : 0))
+      .filter((l) => l > 0));
+    if (laengen.size > 1) reihenUngleich.add(ticker);
     for (const name of REIHEN) {
       const enden = periodEnds(s, name);
       for (const t of findeAusreisser(annual[name])) {
@@ -340,7 +546,7 @@ function scanSnapshots(snapDir) {
     capexWerte += norm(s, 'annualCapex').filter(Number.isFinite).length;
     for (const t of positiveCapexJahre(s)) capexPositiv.push({ ticker, ...t });
   }
-  return { funde, capexPositiv, capexWerte, gescannt, parseFehler };
+  return { funde, capexPositiv, capexWerte, gescannt, parseFehler, reihenUngleich };
 }
 
 function main() {
@@ -449,7 +655,14 @@ function main() {
   const heuteJeReihe = fundeJeReihe(funde, bestand);
   const neu = funde.filter((x) => !istBekannt(x, bestand, heuteJeReihe));
 
-  console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length} (erlaubt ${maxNeu})`);
+  // ── JA-1 (Gerichtsbeschluss 02.09.2026): AUSSCHLUESSE VERLASSEN DAS GEZAEHLTE SET,
+  // NIEMALS DAS GEDRUCKTE. Die naechsten beiden Zeilen sind unveraendert und muessen es
+  // bleiben. Wird der Sperr-Filter VOR diesen Block gezogen, verschwinden die gesperrten
+  // Faelle aus dem Log — und das WAERE die Erosion, gegen die dieser Beschluss ergangen
+  // ist ("ihr nehmt den einzigen Druck weg, den ihr habt"). Der Filter steht deshalb
+  // ausschliesslich unten am Tor, auf `gezaehlt`. Bruchprobe BP-7 zieht ihn absichtlich
+  // hierher und muss dabei rot werden.
+  console.log(`Jahres-Ausreisser: ${funde.length} in ${gelesen} gelesenen Snapshots · davon NEU: ${neu.length}`);
   // Immer die NEUEN vollstaendig zeigen — sie sind der Grund fuer diesen Lauf.
   for (const x of neu) console.log(`  NEU  ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   // Vom Bestand nur eine Kostprobe, aber die Zahl bleibt genannt — kein stilles Kappen.
@@ -457,14 +670,109 @@ function main() {
   for (const x of bekannt.slice(0, 15)) console.log(`  bek. ${x.ticker} · ${x.reihe}[${x.index}] = ${mio(x.wert)} Mio, Nachbarn ${mio(x.links)} / ${mio(x.rechts)}`);
   if (bekannt.length > 15) console.log(`  … und ${bekannt.length - 15} weitere bekannte`);
 
-  if (neu.length > maxNeu) {
-    console.error(`::error::${neu.length} NEUE Jahres-Ausreisser (erlaubt ${maxNeu}) — einzelne Jahre weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch eingefrorene Fehlabrufe; Liste oben.`);
-    return 1;
+  // ── Die Ausschluss-Liste: Zustand, Alter und WIRKUNG, in jedem Lauf sichtbar ──
+  const ausgeschlossen = pruefeAusschluesse(basis);
+  const gesperrt = new Set(ausgeschlossen.map((a) => a.sperrschluessel));
+  const jetzt = new Date();
+  console.log(`Ausschluss-Liste: ${ausgeschlossen.length} Sperre(n), Alters-Tor bei ${AUSSCHLUSS_MAX_TAGE} Tagen`);
+  const ueberfaellig = [];
+  for (const a of ausgeschlossen) {
+    const tage = tageSeit(a.offenSeit, jetzt);
+    console.log(`  SPERRE ${a.sperrschluessel} · offen seit ${tage} Tag(en) (offenSeit ${a.offenSeit})`);
+    if (tage > AUSSCHLUSS_MAX_TAGE) ueberfaellig.push(`${a.sperrschluessel} (${tage} Tage)`);
+  }
+  // JA-5: die Altersuhr laeuft ausschliesslich auf offenSeit.
+  if (ueberfaellig.length) {
+    datenExit = 1;
+    console.error(`::error::${ueberfaellig.length} Ausschluss/Ausschluesse laenger als ${AUSSCHLUSS_MAX_TAGE} Tage `
+      + `offen: ${ueberfaellig.join(' · ')}. Seit der Ausschluss-Trennung kosten Sperren keinen Budgetplatz `
+      + 'mehr — diese Uhr IST der verbliebene Druck. Entweder den Fall klaeren und die Sperre AKTIV entfernen, '
+      + 'oder den Entscheid erneuern (offenSeit hochsetzen ist eine begruendete Handlung, kein Automatismus).');
+  }
+  // JA-6: der Tote-Sperre-Melder lief bisher NUR im --neu-aufnehmen-Zweig, hinter dessen
+  // `return`. Zwischen zwei Verankerungen war eine tote Sperre damit unsichtbar — genau
+  // der Zustand, den eine Schluessel-Drift erzeugt.
+  // BEWUSST ::warning:: und nicht ::error::, und der Unterschied zur Zeile darunter ist
+  // die SICHTBARKEIT: eine Sperre ohne Treffer unterdrueckt nichts, also laeuft ihr Fall
+  // — wenn es ihn noch gibt — in derselben Ausgabe als NEU auf und wird ohnehin gezaehlt.
+  // Ein zweites Rot dafuer waere Doppelzaehlung. Bleibt sie unbearbeitet, macht das
+  // Alters-Tor sie nach AUSSCHLUSS_MAX_TAGE Tagen sowieso rot. Die Sperre EINE Zeile
+  // tiefer ist der andere Fall: die trifft, wirkt aber nicht — und die geht still, also rot.
+  const tot = sperrenOhneTreffer(ausgeschlossen, funde);
+  if (tot.length) {
+    console.log(`::warning::${tot.length} Sperre(n) treffen HEUTE keinen Fund mehr — entweder hat sich der `
+      + 'Fall aufgeloest (Sperre AKTIV entfernen) oder der Schluessel ist kaputt (reparieren): ' + tot.join(' · '));
+  }
+  const wirkungslos = sperrenOhneWirkung(ausgeschlossen, funde, bestand);
+  if (wirkungslos.length) {
+    datenExit = 1;
+    console.error(`::error::${wirkungslos.length} Sperre(n) treffen einen Fund, der bereits im Bestand steht — `
+      + `istBekannt() gewinnt still und die Sperre unterdrueckt nichts mehr: ${wirkungslos.join(' · ')}. `
+      + 'Der Schluessel gehoert auf GENAU eine Seite.');
+  }
+
+  // ── JA-11: die Ereigniszahl in ALLEN VIER Zaehlvarianten, in JEDEM Lauf ──
+  // Damit werden die Kipp-Bedingungen K1/K2 aus dem Log ABGELESEN statt neu verhandelt.
+  const gleichLang = (t) => !scan.reihenUngleich.has(t);
+  const neuOhneSperren = neu.filter((x) => !gesperrt.has(sperrSchluessel(x)));
+  const ereignisseNeu = ereignisse(neu, gleichLang);
+  const gezaehlt = ereignisse(neuOhneSperren, gleichLang).length;
+  console.log(`Zaehlwerk: roh ${neu.length} · naiver Set-Key ${new Set(neu.map(r1Schluessel)).size}`
+    + ` · zwei Relationen ${ereignisseNeu.length} · zwei Relationen ohne Sperren ${gezaehlt} (erlaubt ${maxNeu})`);
+  if (scan.reihenUngleich.size) {
+    console.log(`::warning::${scan.reihenUngleich.size} Ticker mit ungleich langen Jahresreihen — dort zeigt `
+      + 'derselbe Index NICHT auf dasselbe Geschaeftsjahr, Relation 2 verschmilzt bei ihnen nicht (JA-3). '
+      + 'Grundlast dieser Verletzung war 0 von 15.028: ' + [...scan.reihenUngleich].slice(0, 10).join(' · '));
+  }
+
+  // ── JA-4a: die Faecherung JE EREIGNIS, unbedingt — nicht nur beim Ausloesen ──
+  // Untergrenze 1: ein "Faecher" ueber einen einzigen Ticker ist keiner. Ohne sie feuerte
+  // das Tor auf einem leeren Bestand (Erstlauf) auf jeden Einzelfund.
+  const bekannterFaecher = Math.max(breitesterFaecherImBestand(basis.faelle), 1);
+  console.log(`Faecherung je Ereignis (breitester Faecher im Bestand: ${bekannterFaecher}):`);
+  const zuBreit = [];
+  for (const e of ereignisseNeu) {
+    const ticker = [...new Set(e.map((x) => x.ticker))];
+    console.log(`  Ereignis · ${e.length} Fund(e), ${ticker.length} Ticker · ${e[0].reihe}[${e[0].index}] · ${ticker.join(', ')}`);
+    if (ticker.length > bekannterFaecher) zuBreit.push(`${e[0].reihe}[${e[0].index}] mit ${ticker.length} Tickern`);
+  }
+  // JA-4b: das Tor misst WACHSTUM gegen den breitesten bekannten Faecher, nicht Breite.
+  if (zuBreit.length) {
+    datenExit = 1;
+    console.error(`::error::${zuBreit.length} Ereignis(se) spannen einen breiteren Faecher als alles im Bestand `
+      + `(${bekannterFaecher}): ${zuBreit.join(' · ')}. Ein Skalierungsfehler ueber eine ganze Boerse kollabiert `
+      + 'NIE zu einem Ereignis (acht eigene falsche Zahlen sind acht Ereignisse) — ein Faecher, der ueber das '
+      + 'Bekannte hinauswaechst, ist der Fingerabdruck eines KONSTANTEN Sentinel-Werts, der ueber viele Ticker '
+      + 'identisch gestempelt wurde. Waechst hier ein LEGITIMER Faecher (Kipp-Bedingung K3): Schwelle ueber den '
+      + 'Bestand nachziehen, nicht das Tor abschalten.');
+  }
+
+  // ── JA-2: Hart-Tor auf die Cigna-Form, unabhaengig von Budget UND Ereigniszaehlung ──
+  const cigna = cignaFaelle(neu);
+  if (cigna.length) {
+    datenExit = 1;
+    console.error(`::error::${cigna.length} Ticker mit ALLEN ${REIHEN.length} Jahresreihen am selben Index: `
+      + `${cigna.join(' · ')}. Das ist die Gruendungs-Fehlerklasse dieses Waechters (Cigna 2022), und sie ist `
+      + 'IMMER rot: die Ereigniszaehlung zoege sie zu EINEM Ereignis mit Faecher 1 zusammen, wo drei Funde '
+      + 'stehen — Faecher-Tor und Alters-Tor sind beide blind dafuer. Grundlast im Bestand: 2, beide verankert.');
+  }
+
+  // ── Das Rausch-Budget, ab jetzt in Ereignissen und ohne die Sperren (JA-1) ──
+  if (gezaehlt > maxNeu) {
+    datenExit = 1;
+    console.error(`::error::${gezaehlt} NEUE Jahres-Ausreisser-EREIGNISSE (erlaubt ${maxNeu}) — einzelne Jahre `
+      + `weichen um Faktor ${FAKTOR}+ von BEIDEN Nachbarn ab. Entweder echte Sonderjahre oder frisch `
+      + `eingefrorene Fehlabrufe; Liste oben. Gezaehlt wird in EREIGNISSEN (zwei Relationen) und ohne die `
+      + `${ausgeschlossen.length} Sperre(n) — gedruckt werden unveraendert alle ${neu.length} Funde.`);
   }
   return datenExit;
 }
 
-module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ };
+module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
+  // Gerichtsbeschluss 02.09.2026 (JA-1..JA-7): exportiert, damit die Bruchproben die
+  // SACHE pinnen koennen und nicht ein Textmuster im Log.
+  sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, ereignisse, faecher, cignaFaelle,
+  breitesterFaecherImBestand, r1Schluessel, r2Schluessel, tageSeit, AUSSCHLUSS_MAX_TAGE };
 
 if (require.main === module) {
   try {
