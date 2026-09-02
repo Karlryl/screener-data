@@ -67,8 +67,11 @@ function schlafe(ms) { return new Promise((r) => setTimeout(r, ms)); }
  */
 function zeitbudget(name, budgetMs, jetzt) {
   const uhr = jetzt || Date.now;
-  const start = uhr();
   const b = budgetMs == null ? ADAPTER_BUDGET_MS : budgetMs;
+  if (!Number.isFinite(Number(b))) {
+    throw new TypeError('zeitbudget budgetMs must resolve to a finite number');
+  }
+  const start = uhr();
   return {
     name,
     budgetMs: b,
