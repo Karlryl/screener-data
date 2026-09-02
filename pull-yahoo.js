@@ -551,11 +551,22 @@ function _fxFactorFor(ccyRaw) {
   // audit/fix GBP-pence (2026-06-25): case-SENSITIVE. 'GBp'/'GBX' sind Pence, 'GBP' nicht.
   const isPence = s === 'GBp' || s === 'GBX' || s.toUpperCase() === 'GBPENCE';
   const key = isPence ? 'GBP' : s.toUpperCase();
-  if (key === 'USD') return { factor: 1, provenance: 'identity', key };
+  if (key === 'USD') return { factor: 1, factorMajorUnit: 1, provenance: 'identity', key };
   const rate = FX_TO_USD[key];
   if (!_isValidFxRate(rate)) return null;   // V-SK-001: 0/negativ/NaN ist kein Kurs
   return {
+    // STUECK-KURS-Faktor: fuer alles, was Yahoo in der NOTIERUNGS-Einheit liefert —
+    // regularMarketPrice und die Analysten-Kursziele. Bei GBp ist das Pence.
     factor: isPence ? rate / 100 : rate,
+    // AGGREGAT-Faktor: fuer alles, was Yahoo in der HAUPT-Einheit derselben Waehrung
+    // liefert — marketCap und enterpriseValue. Belegt 02.09.2026 am eigenen Bestand:
+    // RIO.L roh 1.2481e11 x GBP-Kurs = 169 Mrd USD = exakt das XETRA-Bein RIO1.DE
+    // (169.29 Mrd); als Pence gelesen waeren es 1.69 Mrd. Gegenprobe auf der Kurs-Seite:
+    // RIO.L 103.89 USD gegen RIO1.DE 104.09 USD — der Kurs BRAUCHT den Pence-Teiler,
+    // die Groesse darf ihn nicht bekommen. Ausserhalb von Pence sind beide Faktoren
+    // identisch, d. h. fuer JEDE andere Waehrung (ADR-Klasse inklusive) ist die
+    // Unterscheidung ein No-op.
+    factorMajorUnit: rate,
     provenance: FX_PROVENANCE[key] || FX_PROVENANCE_HARDCODED,
     key,
   };
@@ -648,7 +659,9 @@ function _resolveTradingFx(q, existing) {
   if (!fx) {
     return { ok: false, reason: 'kein brauchbarer USD-Kurs fuer Handelswaehrung ' + ccy };
   }
-  return { ok: true, factor: fx.factor, provenance: fx.provenance, currency: String(ccy), quelle };
+  // factor = Stueck-Kurs (Preis, Kursziele), factorMajorUnit = Groessen (marketCap).
+  // Ausserhalb von Pence sind beide gleich; siehe _fxFactorFor.
+  return { ok: true, factor: fx.factor, factorMajorUnit: fx.factorMajorUnit, provenance: fx.provenance, currency: String(ccy), quelle };
 }
 
 // Waehrungs-Chunk 1/4 (16.08.2026): den KURS selbst mitstempeln, nicht nur seine Herkunft.
@@ -756,7 +769,17 @@ function normalizeRegion(currency, exchangeName) {
 //            NICHT in CNY (Bericht). Damit ist auch die Gegenrichtung belegt, fuer die der
 //            alte Kommentar hier noch den Beleg vermisste (nicht-USD Bericht UND nicht-USD
 //            Handel) — enterpriseValue gehoert IMMER an den Handelsfaktor.
-const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice', 'enterpriseValue'];
+// Pence-Trennung 02.09.2026: die Liste zerfaellt in ZWEI Einheiten-Klassen. Yahoo liefert
+// fuer LSE-Titel den Kurs in GBp (Pence), die Groessen derselben Antwort aber in GBP.
+// Solange beide Klassen denselben Faktor bekamen, war genau eine von beiden falsch.
+//   STUECK-KURSE (Notierungs-Einheit, brauchen den Pence-Teiler): die Kursziele.
+const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice'];
+//   AGGREGATE (Haupt-Einheit, duerfen den Pence-Teiler NICHT bekommen): enterpriseValue —
+//   dieselbe Klasse wie marketCap, gegen das es stromabwaerts verhaeltnismaessig gelesen
+//   wird (evSales, ev/ebitda). Waere nur marketCap korrigiert worden, stuenden die 6 Beine,
+//   deren EV heute konsistent zur mcap ist (BNC/GLEN/AZN/ITRK/RIO/GFTU), danach 100x
+//   auseinander — ein neuer Defekt statt eines behobenen.
+const HANDELS_AGGREGAT_METRIKEN = ['enterpriseValue'];
 // Yahoos priceToSalesTrailing12Months ist ein MISCH-Verhaeltnis: Zaehler in Handels-,
 // Nenner in Berichtswaehrung. Es ist deshalb NICHT einheitenlos, sondern um genau
 // Handelsfaktor/Berichtsfaktor verzerrt — und lief bisher voellig unskaliert durch, weil
@@ -778,10 +801,13 @@ const HANDELS_METRIKEN = ['targetMeanPrice', 'targetMedianPrice', 'enterpriseVal
 // einen Konsumenten hat es derzeit nicht.
 const MISCH_VERHAELTNIS_METRIKEN = ['priceSales', 'enterpriseToRevenue', 'enterpriseToEbitda'];
 // EIN Anwender fuer beide Umrechner-Zweige — zwei Kopien derselben Regel laufen auseinander.
-function _skaliereHandelsMetriken(snap, scaleTrading, mischFaktor) {
+function _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, mischFaktor) {
   if (!snap || !snap.metrics) return;
   for (const k of HANDELS_METRIKEN) {
     if (snap.metrics[k]) snap.metrics[k] = scaleTrading(snap.metrics[k]);
+  }
+  for (const k of HANDELS_AGGREGAT_METRIKEN) {
+    if (snap.metrics[k]) snap.metrics[k] = scaleAggregat(snap.metrics[k]);
   }
   if (!Number.isFinite(mischFaktor)) return;
   // Spur der Korrektur (Review-Fix 16.08.): der price-only-Schnellweg fasst metrics NIE an,
@@ -808,6 +834,10 @@ function _applyTradingScale(snap, financialFactor) {
     ? String(snap.price.currency)
     : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
   let tradingFactor = financialFactor; // default: no divergence → identity vs financial factor
+  // Pence-Trennung: Stueck-Kurse und Aggregate koennen in derselben Yahoo-Antwort in
+  // VERSCHIEDENEN Einheiten derselben Waehrung stehen (GBp vs GBP). Ausserhalb von Pence
+  // sind beide Faktoren identisch — fuer die ADR-Klasse ist das ein reiner No-op.
+  let tradingAggFactor = financialFactor;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
     // P0-Haertung 2 (F-CGPT-001): Kurs UND Herkunft aus einer Hand (_fxFactorFor).
     // Pence-Sonderfall und V-SK-001-Validierung stecken dort; neu ist der Stempel:
@@ -816,6 +846,7 @@ function _applyTradingScale(snap, financialFactor) {
     const tfx = _fxFactorFor(tradingCcyRaw);
     if (tfx) {
       tradingFactor = tfx.factor;
+      tradingAggFactor = tfx.factorMajorUnit;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
       _stampFxSource(snap, tfx.provenance);
@@ -830,26 +861,30 @@ function _applyTradingScale(snap, financialFactor) {
       return { ok: false };
     }
   }
-  const scaleTrading = (item) => {
+  const scaleBy = (item, f) => {
     if (item == null) return item;
-    if (typeof item === 'number') return Number.isFinite(item) ? item * tradingFactor : item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * f : item;
     if (typeof item !== 'object') return item;
     if ('value' in item) {
       const out = Object.assign({}, item);
-      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * tradingFactor;
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * f;
       return out;
     }
     const out = {};
     for (const [k, v] of Object.entries(item)) {
-      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * tradingFactor : v;
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * f : v;
     }
     return out;
   };
-  if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
+  const scaleTrading = (item) => scaleBy(item, tradingFactor);      // Stueck-Kurse
+  const scaleAggregat = (item) => scaleBy(item, tradingAggFactor);  // Groessen
+  if (snap.marketCap) snap.marketCap = scaleAggregat(snap.marketCap);
   // Waehrungs-Chunk 3: enterpriseValue + Kurs-Ziele an den Handelsfaktor, priceSales um das
   // Misch-Verhaeltnis korrigieren. Das ist der .JK-Fall (Bericht USD, Handel IDR): hier ist
   // financialFactor = 1, EV blieb deshalb voellig unumgerechnet in IDR stehen.
-  _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / financialFactor);
+  // Misch-Verhaeltnisse (priceSales, enterpriseToRevenue, ...) haben eine GROESSE im
+  // Zaehler (mcap bzw. EV) und eine Berichtsgroesse im Nenner — also der Aggregat-Faktor.
+  _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / financialFactor);
   return { ok: true };
 }
 
@@ -954,6 +989,10 @@ function _convertSnapshotToUSD(snap) {
     ? String(snap.price.currency)
     : ((snap.meta && snap.meta.tradingCurrency) ? String(snap.meta.tradingCurrency) : null);
   let tradingFactor = factor;  // default: equals financial factor (no special handling)
+  // Pence-Trennung: siehe _fxFactorFor. Dieser Zweig traegt die Nicht-USD-Melder, die in
+  // GBp notieren (BNC.L, ULVR.L — EUR-Melder an der LSE); ohne die Trennung bekaeme ihre
+  // marketCap hier denselben Pence-Teiler wie der Kurs.
+  let tradingAggFactor = factor;
   let tradingOverride = false;
   if (tradingCcyRaw && tradingCcyRaw.toUpperCase() !== origCurrency.toUpperCase()) {
     // P0-Haertung 2 (F-CGPT-001): Pence-Sonderfall + V-SK-001-Validierung stecken in
@@ -963,6 +1002,7 @@ function _convertSnapshotToUSD(snap) {
     const tfx = _fxFactorFor(tradingCcyRaw);
     if (tfx) {
       tradingFactor = tfx.factor;
+      tradingAggFactor = tfx.factorMajorUnit;
       tradingOverride = true;
       snap.meta.tradingCurrencyOriginal = tradingCcyRaw;
       snap.meta.tradingFxRateApplied = tradingFactor;
@@ -1006,21 +1046,23 @@ function _convertSnapshotToUSD(snap) {
   // Tag 232c-8: dedicated scaler for trading-currency values (mcap, price).
   // Identical math to scale() but uses tradingFactor; identity when
   // tradingFactor === factor (the non-ADR common case, zero overhead).
-  function scaleTrading(item) {
+  function scaleTradingBy(item, f) {
     if (item == null) return item;
-    if (typeof item === 'number') return Number.isFinite(item) ? item * tradingFactor : item;
+    if (typeof item === 'number') return Number.isFinite(item) ? item * f : item;
     if (typeof item !== 'object') return item;
     if ('value' in item) {
       const out = Object.assign({}, item);
-      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * tradingFactor;
+      if (typeof item.value === 'number' && Number.isFinite(item.value)) out.value = item.value * f;
       return out;
     }
     const out = {};
     for (const [k, v] of Object.entries(item)) {
-      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * tradingFactor : v;
+      out[k] = (typeof v === 'number' && Number.isFinite(v)) ? v * f : v;
     }
     return out;
   }
+  const scaleTrading = (item) => scaleTradingBy(item, tradingFactor);      // Stueck-Kurse
+  const scaleAggregat = (item) => scaleTradingBy(item, tradingAggFactor);  // Groessen
 
   // Tag 232c-8: route marketCap through the trading scaler. Equivalent to
   // scale() when ticker is not ADR-class (tradingFactor === factor, no-op).
@@ -1028,7 +1070,8 @@ function _convertSnapshotToUSD(snap) {
   // never scaled price either (price stays in trading currency by design,
   // consumed by callers that know how to combine it with the converted mcap).
   // Changing that invariant is out of scope for an HIGH-severity targeted fix.
-  if (snap.marketCap) snap.marketCap = scaleTrading(snap.marketCap);
+  // Pence-Trennung 02.09.2026: marketCap ist eine GROESSE, kein Stueck-Kurs.
+  if (snap.marketCap) snap.marketCap = scaleAggregat(snap.marketCap);
   // Tag 204 (Bug #2 — architectural, LOW severity): explicit metrics.* allow-list.
   // The previous code only scaled `metrics.revenueTTM` ad-hoc; any future
   // currency-denominated metrics field (e.g. fcfTTM, ebitda, enterpriseValue,
@@ -1064,7 +1107,7 @@ function _convertSnapshotToUSD(snap) {
     // so this is a no-op; the analyst-upside ratio vs currentPrice stays correct.)
     // Waehrungs-Chunk 3: derselbe Anwender wie im USD-Zweig (enterpriseValue kam dazu,
     // priceSales wird um das Misch-Verhaeltnis korrigiert).
-    _skaliereHandelsMetriken(snap, scaleTrading, tradingFactor / factor);
+    _skaliereHandelsMetriken(snap, scaleTrading, scaleAggregat, tradingAggFactor / factor);
   }
   if (snap.annual) {
     for (const key of Object.keys(snap.annual)) {
@@ -3034,6 +3077,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     const tradingFx = _resolveTradingFx(q, existing);
     if (!tradingFx.ok) throw new Error('price-only refused: ' + tradingFx.reason);
     const tradingFactor = tradingFx.factor;
+    const tradingAggFactor = tradingFx.factorMajorUnit; // Pence-Trennung, s. marketCap unten
     // Befund B (Review-Nachzug 09.08.2026): FRISCH stempeln, nicht nur abwaerts. Dieses
     // `existing` kommt von PLATTE — ein abwaerts-Stempel haette den Hartkodiert-Marker
     // eines frueheren Laufs bis zum naechsten Voll-Pull konserviert, obwohl heute live
@@ -3083,7 +3127,13 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     }
     if (q.marketCap != null) {
       existing.marketCap = existing.marketCap || {};
-      existing.marketCap.value = q.marketCap * tradingFactor;
+      // Pence-Trennung 02.09.2026: q.regularMarketPrice kommt in der NOTIERUNGS-Einheit
+      // (LSE: Pence), q.marketCap derselben Antwort in der HAUPT-Einheit (GBP). Ein
+      // gemeinsamer Faktor macht zwangslaeufig eines von beiden um 100 falsch — bis
+      // hierher war es die Groesse (16 Beine im Bestand, alle zuletzt von diesem Weg
+      // geschrieben). Ausserhalb von Pence sind beide Faktoren identisch, die ADR-Klasse
+      // rechnet also unveraendert. Waechter: tests/waehrung-pence-aggregat.test.js.
+      existing.marketCap.value = q.marketCap * tradingAggFactor;
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
@@ -4554,6 +4604,10 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // baut sie fuer die Ausbau-Probe wirklich aus und sieht den Waechter rot werden, statt sich
   // auf ein Schreibmuster im Quelltext zu verlassen.
   MISCH_VERHAELTNIS_METRIKEN,
+  // Pence-Trennung 02.09.2026: die beiden Einheiten-Klassen als Seam — der Waechter
+  // (tests/waehrung-pence-aggregat.test.js) prueft an der LEBENDEN Liste, dass Kursziele
+  // und Groessen nicht wieder in denselben Topf wandern.
+  HANDELS_METRIKEN, HANDELS_AGGREGAT_METRIKEN,
   _FX_TO_USD: FX_TO_USD, _FX_PROVENANCE: FX_PROVENANCE,
   // Review-Nachzug (09.08.2026): Befund A (fail-closed bei werfender Umrechnung),
   // Befund B (Zwei-Bein-Stempel), Befund C (EINE Marker-Konstante — der Waechter
