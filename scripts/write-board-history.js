@@ -199,6 +199,19 @@ const MIN_GATE_THRESHOLD = 11.5;
 // Lücke Sa→Di = 3 Tage, plus Feiertags-/Ausfallpuffer).
 const GATE_MAX_ABSTAND_TAGE = 7;
 const P99 = 0.99;
+// ── Fächerungs-Tor der Bruch-Klasse „daten-schub" (Court 02.09.2026, WB-3) ───
+// Anteil der GEMESSENEN Zeilen, die sich um mehr als die normale Tagesschwelle bewegen.
+// Der Zuschlag des Datenschub-Arms wird nur gewährt, solange die Bewegung SCHMAL ist:
+// ein benigner Voll-Pull bewegt wenige Zeilen weit, ein echter Maßstab- oder Wertbruch
+// bewegt einen spürbaren Teil der Kohorte. GEMESSEN über alle 20 realen Board-Übergänge
+// in board-history/, nicht gesetzt:
+//   benigne Frisch-Pull-Wellen: 1,50 / 1,85 / 2,27 % (02.09.) · 3,15 / 5,16 / 5,28 % (25.→28.08.)
+//   Bruch-Klasse:              10,53 / 10,68 / 11,74 % (03.→05.08.) · 25,00 / 29,46 % (Tag 437)
+// 8 % liegt zwischen beiden Klassen mit Faktor >2 Luft nach jeder Seite. Reißt der Anteil
+// den Cap, gilt UNVERÄNDERT die normale Schwelle — der Cap wird dann NICHT nachjustiert
+// (K1: die Kipp-Bedingung fällt zugunsten der Strenge aus). Nach drei protokollierten
+// Ausnahmetagen ist er gegen das Kanal-B-Log aus WB-5 zu überprüfen (WB-14).
+const GATE_FANOUT_CAP = 0.08;
 // Coverage-Absturz: fällt der present-Anteil eines Kontroll-Felds gegenüber dem
 // Vortag um mehr als das → suspect. Heuristik-Decke (kein Ledger-Wert); 0.25 = ein
 // Viertel der Kohorte verliert ein Kontroll-Feld über Nacht = unplausibel.
@@ -621,6 +634,53 @@ function buildBoardVintage(board, boardData, date, calibMeta, universeHash = nul
   };
 }
 
+// ── Integritäts-Vorrang (Court 02.09.2026, WB-4 — die FTI-Regel) ─────────────
+// Der Zuschlag des Datenschub-Arms deckt BEWEGUNG, niemals VERFALL. Eine Zeile, deren
+// Integrität über den Übergang abbaut, ist NIEMALS gedeckt — was auch immer das Register
+// sagt und wie klein ihr |D| ist. Der Anlass ist gemessen, nicht erfunden: FTI verlor im
+// Übergang 01.→02.09. annualOpInc ([1.393,0 · 982,6 · 529,2 · 212,5 Mio] → []), bekam
+// annualGP [0,0,0,0], fiel coverageAxes 6/7 → 4/7 und verlor beide Lampen — bei einem
+// Delta von 12,00, also UNTER dem Deckel 23,00. Ohne diese Regel ließe der Zuschlag genau
+// den einzigen echten Datenschaden derselben Nacht durch, für die er geschrieben wurde.
+//
+// GEMESSEN WIRD AN DER VINTAGE-ZEILE, WEIL DORT BEIDE STÄNDE STEHEN (Auflösung der
+// K2-Messvorbedingung): priorMap/nowMap führen vollständige Vintage-Zeilen, erreichbar
+// sind coverageAxes, lamps und die PIT-Quellreihen (revenueQ/revenueQEnds/grossProfitQ/
+// grossProfitQEnds). NICHT erreichbar ist meta.opIncSource — es steht im Snapshot, nicht
+// in der Vintage-Zeile (buildPit übernimmt es nicht), ebenso wenig die Jahresreihen
+// annualOpInc/annualGP. Blind ist die Regel dadurch nicht: derselbe FTI-Fall fällt über
+// den coverageAxes-Zähler UND über den Lampen-Verlust auf, beides gemessen. Wer
+// meta.opIncSource selbst prüfen will, muss es zuerst in buildPit aufnehmen — das wäre ein
+// Schema-Zusatz an der Messreihe und gehört nicht in diesen Beschluss (Sperre §10).
+function axenZaehler(v) {
+  const m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(typeof v === 'string' ? v : '');
+  return m ? Number(m[1]) : null;
+}
+// „gefüllt" = Array mit mindestens EINEM nicht-null Wert. Leer, komplett null oder ganz
+// weg ist Verfall — dieselbe Semantik wie validEnds() in buildPit (T2/bh-null-ends).
+function reiheGefuellt(a) { return Array.isArray(a) && a.some((x) => x != null); }
+// Liefert das auslösende Feld als Klartext oder null. Die erste Fundstelle genügt: die
+// Zeile ist damit ungedeckt, weitere Felder ändern das Urteil nicht mehr.
+function integritaetsVerfall(vorher, nachher) {
+  if (!vorher || !nachher) return null;
+  const a = axenZaehler(vorher.coverageAxes);
+  const b = axenZaehler(nachher.coverageAxes);
+  if (a != null && b != null && b < a) return 'coverageAxes ' + vorher.coverageAxes + ' -> ' + nachher.coverageAxes;
+  const pv = vorher.pit || {};
+  const pn = nachher.pit || {};
+  for (const f of ['revenueQ', 'revenueQEnds', 'grossProfitQ', 'grossProfitQEnds']) {
+    if (reiheGefuellt(pv[f]) && !reiheGefuellt(pn[f])) return f + ' gefuellt -> leer/null';
+  }
+  // Lampen-Verlust: JEDE zuvor getragene Lampe, die fehlt — strenger als „nur Quell-Lampen".
+  // Bewusst so: ob eine Lampe eine QUELLE benennt, steht nicht in der Vintage-Zeile, und die
+  // Vereinigung der jeweils strengeren Fassung ist die Konvention dieses Beschlusses.
+  if (Array.isArray(vorher.lamps) && vorher.lamps.length) {
+    const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
+    for (const l of vorher.lamps) if (!jetzt.has(l)) return 'Lampe ' + l + ' verloren';
+  }
+  return null;
+}
+
 // ── Wert-Plausibilitäts-Gate ─────────────────────────────────────────────────
 // Vergleicht das neue Board-Vintage gegen das Vortags-Vintage. Liefert
 // { calibrating, p99Delta, threshold, suspect, reasons }.
@@ -677,6 +737,10 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   const erklaerendeLampe = (bruch && board && bruch.boards.has(board)) ? bruch.erklaerendeLampe : null;
   const traegtLampe = (row) => !!row && Array.isArray(row.lamps) && row.lamps.includes(erklaerendeLampe);
   const deltas = [];
+  // WB-5 verlangt JEDE breite Zeile NAMENTLICH. deltas bleibt ein reines number[] (quantile
+  // kopiert und sortiert, die Reihenfolge hier bleibt also unberührt) und bekommt daneben
+  // ein index-gleiches Ticker-Array — dieselbe Bauart wie dailyP99Samples/sampleDates.
+  const deltaTicker = [];
   let erklaerteZeilen = 0;
   for (const [tk, r] of nowMap) {
     const p = priorMap.get(tk);
@@ -685,6 +749,7 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
     // demselben Grund wie eine, die sie bekommt.
     if (erklaerendeLampe && (traegtLampe(r) || traegtLampe(p))) { erklaerteZeilen++; continue; }
     deltas.push(Math.abs(r.score - p.score));
+    deltaTicker.push(tk);
   }
   const p99Delta = deltas.length ? quantile(deltas, P99) : null;
 
@@ -729,18 +794,67 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   // genau die Dauersperre, die Tag 513 beheben soll. Erfunden ist der Deckel dabei nicht:
   // basisSchwelle ist in der Kalibrierphase der an 26 echten Tagesbewegungen GEMESSENE
   // Boden (Herleitung an MIN_GATE_THRESHOLD), keine gesetzte Zahl.
+  //
+  // ZWEITER ARM: „daten-schub" (Court-Beschluss 02.09.2026, WB-2). Ein benigner
+  // Datenschub (Voll-Pull mit frischen Quartalszahlen) ändert die Score-DEFINITION nicht
+  // und verliert keine Zeile — die Kohorte WÄCHST sogar. Bedingung 3 oben fällt damit, der
+  // Registereintrag ist inhaltlich richtig und mechanisch wirkungslos, und der Folgetag
+  // misst dieselben Sprünge erneut: die Dauersperren-Klasse, gegen die dieses ganze
+  // Konstrukt gebaut ist. Die Alternative „aushalten" verbirgt MEHR, nicht weniger — der
+  // gapDays-Faktor unten verteilt bei jedem ausgefallenen Vintage 23,00 / 34,50 / 57,50
+  // ohne Board-Nennung und ohne Log, und ab GATE_MAX_ABSTAND_TAGE urteilt die Wert-Achse
+  // gar nicht mehr.
+  //
+  // DIE FORM IST ZUSCHLAG, NICHT AUSSCHLUSS: keine einzige Zeile verlässt das p99 (anders
+  // als im Lampen-Pfad, der 44–99 % der Messfläche blendet). Gewährt wird ausschließlich
+  // der BEREITS BESTEHENDE Deckel THRESHOLD_MULTIPLIER × basisSchwelle — keine neue Zahl,
+  // kein neuer Multiplikator, nichts aus dem Register. Drei Schranken hängen daran:
+  //   • das Fächerungs-Tor (WB-3, GATE_FANOUT_CAP): schmale Bewegung ja, breite Welle nein,
+  //   • der Integritäts-Vorrang (WB-4): abbauende Zeilen sind nie gedeckt,
+  //   • WB-9/BP-9: ein daten-schub-Eintrag darf NIE zusätzlich eine Lampe blenden
+  //     (harter Abbruch in massstabBruchFuer).
+  // Was der Zuschlag weiterhin verbirgt, steht benannt in der WB-15-Zeile am Dateikopf des
+  // Wächters (tests/board-history-datenschub-zuschlag.test.js) — nicht wegerklärt.
   let bruchGrenze = null;
-  if (bruch && board && bruch.boards.has(board) && priorMap.size > 0 && nowMap.size < priorMap.size) {
-    const schrumpfung = (priorMap.size - nowMap.size) / priorMap.size;
+  const registriert = !!(bruch && board && bruch.boards.has(board));
+  const istDatenSchub = registriert && bruch.typ === 'daten-schub';
+  // Fächerung: Anteil der gemessenen Zeilen ÜBER der normalen Tagesschwelle. deltas liegt
+  // hier bereits vor; gezählt wird gegen dieselbe Zahl, gegen die auch geurteilt wird.
+  const breiteZeilen = [];
+  for (let i = 0; i < deltas.length; i++) {
+    if (deltas[i] > basisSchwelle) breiteZeilen.push({ ticker: deltaTicker[i], delta: deltas[i] });
+  }
+  const fanOut = deltas.length ? breiteZeilen.length / deltas.length : 0;
+  const fanOutHaelt = deltas.length > 0 && fanOut <= GATE_FANOUT_CAP;
+  // WB-4: an einem Datenschub-Übergang wird JEDE gematchte Zeile auf Integritäts-Verfall
+  // geprüft, auch die mit winzigem |D|. Nur dort, nicht auf fremden Boards und nicht an
+  // gewöhnlichen Tagen: die Ausnahme färbt nicht ab (BP-6), ihre Auflage ebenso wenig.
+  const verfallsZeilen = [];
+  if (istDatenSchub) {
+    for (const [tk, r] of nowMap) {
+      const p = priorMap.get(tk);
+      if (!p) continue;
+      const feld = integritaetsVerfall(p, r);
+      if (feld) verfallsZeilen.push({ ticker: tk, feld });
+    }
+  }
+  const geschrumpft = registriert && priorMap.size > 0 && nowMap.size < priorMap.size;
+  const zuschlagsArm = istDatenSchub && fanOutHaelt && verfallsZeilen.length === 0;
+  if (geschrumpft || zuschlagsArm) {
+    const schrumpfung = priorMap.size > 0 ? (priorMap.size - nowMap.size) / priorMap.size : 0;
     const strukturgrenze = SCORE_SKALA * schrumpfung;
     const deckel = THRESHOLD_MULTIPLIER * basisSchwelle;
     // max(): die Grenze wird nie STRENGER als die normale Schwelle (sonst erzeugte eine
     // Mini-Schrumpfung Fehlalarme). min(): sie wird nie weiter als das Doppelte —
     // derselbe Multiplikator, mit dem das System aus einer gemessenen Spitze ohnehin
     // eine Schwelle macht.
-    const tagesschwelle = Math.max(basisSchwelle, Math.min(strukturgrenze, deckel));
+    // Im Datenschub-Arm ist die Höhe GENAU dieser Deckel: eine Schrumpfung, aus der sich
+    // eine Strukturgrenze ableiten ließe, gibt es dort per Definition nicht (die Kohorte
+    // wächst, strukturgrenze wäre negativ). Höher als der Deckel wird es dadurch nie.
+    const tagesschwelle = zuschlagsArm ? deckel : Math.max(basisSchwelle, Math.min(strukturgrenze, deckel));
     bruchGrenze = {
       tag: bruch.tag,
+      typ: zuschlagsArm ? 'daten-schub' : 'schrumpfung',
       zeilenVorher: priorMap.size,
       zeilenNachher: nowMap.size,
       strukturgrenze,
@@ -772,6 +886,13 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   if (!abstandZuGross && p99Delta != null && p99Delta > wirksameSchwelle) {
     reasons.push('p99-delta-exceeds-threshold');
   }
+  // WB-4, eigenständig: der Verfall urteilt UNGEACHTET des Eintrags und UNGEACHTET des
+  // Deckels. Die Zeile vom Zuschlag auszunehmen genügt nicht — ein Verfall unter der
+  // normalen Schwelle (FTI: |D| 12,00 gegen Boden 11,50 und Deckel 23,00) käme sonst
+  // durch, sobald die übrige Nacht ruhig ist. Das Board wird deshalb suspect, nicht bloß
+  // ungedeckt. Der abstandZuGross-Zweig ändert daran nichts: ein Datenschaden ist kein
+  // Tages-Maßstab-Thema.
+  if (verfallsZeilen.length) reasons.push('integritaets-verfall:' + verfallsZeilen.length);
 
   return {
     calibrating, p99Delta, threshold, bruchGrenze,
@@ -779,6 +900,11 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
     // Sichtbar machen, was herausgerechnet wurde — eine stille Ausnahme waere schlimmer
     // als keine. Ohne registrierten Definitions-Bruch: null / 0.
     erklaerendeLampe: erklaerendeLampe || null, erklaerteZeilen,
+    // Kanal B (WB-5): die zählbare Spur des Ausnahmetags. basisSchwelle steht mit dabei,
+    // weil „angewandte Schwelle" ohne „normale Schwelle" nicht nachprüfbar ist.
+    datenSchub: istDatenSchub, basisSchwelle,
+    fanOut, fanOutZaehler: breiteZeilen.length, fanOutNenner: deltas.length,
+    breiteZeilen, verfallsZeilen,
     suspect: reasons.length > 0, reasons,
   };
 }
@@ -849,6 +975,20 @@ function updateP99DeltaHistory(existing, date, results) {
   const day = {};
   for (const b of results) {
     day[b.board] = { p99Delta: b.p99Delta, thr: b.wirksameSchwelle, betaCov: b.pitCoverage.beta, suspect: b.suspect };
+    // Kanal B (Court 02.09.2026, WB-5): ein Ausnahmetag hinterlässt eine ZÄHLBARE Spur,
+    // sonst ist er von einem abgeschalteten Gate nicht zu unterscheiden. Geschrieben wird
+    // ausschließlich am Datenschub-Übergang — an jedem anderen Tag bliebe der Block leer
+    // und blähte die Messreihe ohne Aussage auf.
+    if (b.datenSchub) {
+      day[b.board].datenSchub = {
+        zuschlagGewaehrt: !!(b.bruchGrenze && b.bruchGrenze.typ === 'daten-schub'),
+        angewandteSchwelle: b.wirksameSchwelle,
+        normaleSchwelle: b.basisSchwelle,
+        fanOut: { zaehler: b.fanOutZaehler, nenner: b.fanOutNenner, anteil: b.fanOut, cap: GATE_FANOUT_CAP },
+        breiteZeilen: b.breiteZeilen,          // JEDE Zeile |D| > normaler Schwelle, namentlich
+        integritaetsVerfall: b.verfallsZeilen, // je gefasster Zeile das auslösende Feld
+      };
+    }
   }
   out.byDate[date] = day;
   return out;
@@ -1006,7 +1146,24 @@ function massstabBruchFuer(priorDate) {
   // in das p99. Alles andere wird unveraendert streng gemessen — eine unabhaengige Drift
   // in derselben Nacht faellt weiterhin auf. Auch hier steht keine Zahl im Register.
   const erklaerendeLampe = (typeof b.erklaerende_lampe === 'string' && b.erklaerende_lampe) ? b.erklaerende_lampe : null;
-  return { tag: b.tag || null, letztesAltesVintage: priorDate, boards: new Set(boards), erklaerendeLampe };
+  // Typ 3 (Court 02.09.2026): DATENSCHUB. Bis heute wurde `typ` nirgends ausgewertet (der
+  // einzige Treffer im Modul war ein Fallback-Label im VERFEHLT-Warntext) — genau deshalb
+  // war Eintrag Tag 1204 inhaltlich richtig und mechanisch wirkungslos. Ab hier ist das
+  // Feld verhaltensrelevant: es öffnet in evaluateGate den ZUSCHLAGS-Arm, der die
+  // Tagesschwelle einmalig auf den bestehenden Deckel hebt. Eine ZAHL kommt weiterhin
+  // nicht aus dem Register.
+  const typ = (typeof b.typ === 'string' && b.typ) ? b.typ : null;
+  // WB-9/BP-9: Zuschlag UND Blendung zugleich sind ausgeschlossen. Ein Eintrag, der die
+  // Schwelle auf den Deckel hebt UND zusätzlich die Lampen-Zeilen aus dem p99 nimmt, wäre
+  // in dieser Nacht ein praktisch abgeschaltetes Gate. Harter Abbruch wie beim
+  // mehrdeutigen Doppeleintrag — kein stilles Ignorieren eines der beiden Felder.
+  if (typ === 'daten-schub' && erklaerendeLampe) {
+    throw new Error('write-board-history: Register-Eintrag ' + (b.tag || priorDate) + ' traegt typ "daten-schub" '
+      + 'UND erklaerende_lampe "' + erklaerendeLampe + '" — Zuschlag (Deckel auf der Tagesschwelle) und '
+      + 'Blendung (Zeilen aus dem p99) zugleich sind ausgeschlossen (Court 02.09.2026, WB-9). '
+      + 'Register bereinigen: entweder der eine Typ oder der andere.');
+  }
+  return { tag: b.tag || null, typ, letztesAltesVintage: priorDate, boards: new Set(boards), erklaerendeLampe };
 }
 
 // ── Retention/Kompaktierung (A12) ────────────────────────────────────────────
@@ -1210,7 +1367,11 @@ function run(opts) {
       fs.mkdirSync(dateDir, { recursive: true });
       writeJsonAtomic(assertNoPicksHistory(path.join(dateDir, board + '.json')), vintage);
     }
-    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage });
+    results.push({ board, suspect: gate.suspect, calibrating: gate.calibrating, p99Delta: gate.p99Delta, threshold: gate.threshold, wirksameSchwelle: gate.wirksameSchwelle, gapDays: gate.gapDays, abstandZuGross: gate.abstandZuGross, bruchGrenze: gate.bruchGrenze || null, rows: vintage.cohort.profitable.length + vintage.cohort.unprofitable.length, pitCoverage: vintage.pitCoverage,
+      // Kanal B (WB-5): nur am Datenschub-Übergang gefüllt, an jedem anderen Tag inert.
+      datenSchub: gate.datenSchub, basisSchwelle: gate.basisSchwelle,
+      fanOut: gate.fanOut, fanOutZaehler: gate.fanOutZaehler, fanOutNenner: gate.fanOutNenner,
+      breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen });
   }
 
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
@@ -1248,6 +1409,59 @@ function run(opts) {
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────
+// ── Bruch-Kanal im Lauf-Protokoll (Kanal B, WB-5/WB-7) ───────────────────────
+// Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte Grenze
+// MUSS im Klartext dort stehen, sonst ist „gruen" nicht von „Gate uebergangen" zu
+// unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
+//
+// EIGENE FUNKTION STATT INLINE IM CLI-BLOCK (Court 02.09.2026, WB-8): der Wächter muss
+// diese Zeilen am ECHTEN Lauf-Ergebnis prüfen können. Inline unter `require.main === module`
+// wäre nur eine Text-Kopie im Test prüfbar gewesen — und ein Wächter, der eine Kopie prüft,
+// hält seine eigene Formulierung fest, nicht die Sache.
+function bruchProtokollZeilen(res) {
+  if (!res || !res.bruch || !Array.isArray(res.boards)) return [];
+  const zeilen = [];
+  // Q2 / WB-7: NUR eine Bindung mit echtem Zuschlag ist eine ERHOEHTE Tagesschwelle.
+  // Gezählt wurde bisher jede gesetzte bruchGrenze — auch die mit allowance 0, bei der die
+  // Strukturgrenze unter dem Boden liegt und von Math.max() geklemmt wird (gemessen:
+  // 4,42 / 6,34 / 7,21 gegen Boden 11,50). Der einzige Alarmkanal behauptete damit eine
+  // Anhebung, die nie stattgefunden hat; genau diese Verwechslung hat den Vorgang vom
+  // 02.09. gekostet. Gebundene Boards ohne Wirkung verschwinden nicht — sie bekommen eine
+  // eigene, ehrliche Klausel statt eines falschen Etiketts.
+  const erhoeht = res.boards.filter((b) => b.bruchGrenze && b.bruchGrenze.allowance > 0).length;
+  const inert = res.boards.filter((b) => b.bruchGrenze && !(b.bruchGrenze.allowance > 0)).length;
+  // 30.07.: ::warning:: ERGAENZT. Der Kanal war asymmetrisch — der BLINDE Tag meldete im
+  // Warnkanal, die AKTIVE Ausnahme schrieb nur eine stille Zeile. Damit war ausgerechnet
+  // der Fall, in dem die Grenze bewusst angehoben wurde, schlechter sichtbar als der, in
+  // dem gar nicht verglichen wurde. Alle drei Richter des Gate-Urteils vom 30.07. haben
+  // dieselbe Ein-Zeilen-Korrektur gefordert.
+  zeilen.push('::warning::GATE: Massstab-Bruch aktiv fuer ' + res.date
+    + (res.bruch.tag ? ' (' + res.bruch.tag + ')' : '')
+    + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
+    + (inert ? inert + ' gebunden, ohne Wirkung (Allowance 0), ' : '')
+    + (res.boards.length - erhoeht - inert) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
+  // WB-5/WB-7: der Datenschub-Arm meldet mit EIGENER, unverwechselbarer Zeile je Board —
+  // nicht unter derselben Formulierung wie der Schrumpfungs-Arm. Mitgeführt werden die
+  // Größen, an denen die Ausnahme nachprüfbar ist: angewandte Schwelle, normale Schwelle,
+  // p99, Fächerungs-Anteil mit Zähler/Nenner, JEDE breite Zeile namentlich mit ihrem Delta
+  // und jede vom Integritäts-Vorrang gefasste Zeile mit ihrem auslösenden Feld.
+  for (const b of res.boards.filter((x) => x.datenSchub)) {
+    const gewaehrt = !!(b.bruchGrenze && b.bruchGrenze.typ === 'daten-schub');
+    zeilen.push('::warning::GATE DATENSCHUB-ZUSCHLAG ' + (gewaehrt ? 'GEWAEHRT' : 'VERWEIGERT')
+      + ' fuer ' + res.date + ' / ' + b.board
+      + ': Tagesschwelle ' + (b.wirksameSchwelle == null ? '—' : b.wirksameSchwelle.toFixed(2))
+      + ' statt ' + b.basisSchwelle.toFixed(2)
+      + ', p99D=' + (b.p99Delta == null ? '—' : b.p99Delta.toFixed(2))
+      + ', Faecherung ' + b.fanOutZaehler + '/' + b.fanOutNenner + ' = '
+      + (100 * b.fanOut).toFixed(2) + '% (Cap ' + (100 * GATE_FANOUT_CAP).toFixed(0) + '%)'
+      + '; breite Zeilen: ' + (b.breiteZeilen.length
+        ? b.breiteZeilen.map((z) => z.ticker + ' ' + z.delta.toFixed(2)).join(', ') : 'keine')
+      + '; Integritaets-Vorrang: ' + (b.verfallsZeilen.length
+        ? b.verfallsZeilen.map((z) => z.ticker + ' (' + z.feld + ')').join(', ') : 'keine Zeile'));
+  }
+  return zeilen;
+}
+
 function parseArgs(argv) {
   const o = { dryRun: false, compact: false, date: null, allowBackfill: false };
   for (let i = 0; i < argv.length; i++) {
@@ -1292,19 +1506,7 @@ if (require.main === module) {
       // Karls einziger Alarmkanal ist das Lauf-Protokoll: eine ausgesetzte oder erhöhte
       // Grenze MUSS im Klartext dort stehen, sonst ist "gruen" nicht von "Gate uebergangen"
       // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
-      if (res.bruch) {
-        const erhoeht = res.boards.filter((b) => b.bruchGrenze).length;
-        // 30.07.: ::warning:: ERGAENZT. Der Kanal war asymmetrisch — der BLINDE Tag (Z. 850)
-        // meldete im Warnkanal, die AKTIVE Ausnahme schrieb nur eine stille Zeile. Damit war
-        // ausgerechnet der Fall, in dem die Grenze bewusst angehoben wurde, schlechter
-        // sichtbar als der, in dem gar nicht verglichen wurde. Alle drei Richter des
-        // Gate-Urteils vom 30.07. haben dieselbe Ein-Zeilen-Korrektur gefordert; der
-        // Kommentar zwei Zeilen darueber verlangt sie eigentlich schon selbst.
-        console.log('::warning::GATE: Massstab-Bruch aktiv fuer ' + res.date
-          + (res.bruch.tag ? ' (' + res.bruch.tag + ')' : '')
-          + ' — ' + erhoeht + ' Board(s) mit erhoehter Tagesschwelle, '
-          + (res.boards.length - erhoeht) + ' unveraendert; uebrige Integritaetspruefungen AKTIV');
-      }
+      for (const z of bruchProtokollZeilen(res)) console.log(z);
       // Dritter Fall im selben Alarmkanal wie GATE BLIND und Massstab-Bruch: der Vergleich
       // spannt mehr als GATE_MAX_ABSTAND_TAGE. Dann urteilt die Wert-Achse bewusst nicht —
       // das MUSS im Klartext stehen, sonst sieht ein ungeprueftes Vintage aus wie ein
@@ -1328,7 +1530,17 @@ if (require.main === module) {
         const g = b.bruchGrenze;
         // Alle Bestandteile getrennt: gemessene Schrumpfung → Strukturgrenze → Deckel →
         // angelegte Grenze. Wer die Zeile liest, kann die Rechnung nachvollziehen.
-        const bruchText = g
+        // Der Datenschub-Arm bekommt seine eigene Zerlegung: „Kohorte X von Y = -Z %" wäre
+        // dort sinnlos (die Kohorte WÄCHST, die Prozentzahl stünde negativ da) und die
+        // Strukturgrenze geht in seine Höhe gar nicht ein.
+        const bruchText = g && g.typ === 'daten-schub'
+          ? ' [Datenschub: Kohorte ' + g.zeilenVorher + ' -> ' + g.zeilenNachher
+            + ', Deckel ' + g.deckel.toFixed(2)
+            + ' -> Tagesschwelle ' + g.tagesschwelle.toFixed(2)
+            + ' statt ' + g.normaleSchwelle.toFixed(2)
+            + ', Faecherung ' + b.fanOutZaehler + '/' + b.fanOutNenner
+            + ' = ' + (100 * b.fanOut).toFixed(2) + '%]'
+          : g
           ? ' [Bruch: Kohorte ' + g.zeilenNachher + ' von ' + g.zeilenVorher
             + ' = -' + (100 * (g.zeilenVorher - g.zeilenNachher) / g.zeilenVorher).toFixed(1) + '%'
             + ' -> Strukturgrenze ' + g.strukturgrenze.toFixed(2)
@@ -1365,10 +1577,10 @@ module.exports = {
   updateP99DeltaHistory,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
-  priorVintageDate, excludedDates, massstabBruchFuer,
+  priorVintageDate, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
   _setPaths, resolvePaths,
   frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE },
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP },
 };
