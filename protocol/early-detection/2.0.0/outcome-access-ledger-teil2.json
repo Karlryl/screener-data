@@ -1659,6 +1659,129 @@
    },
    "previousHash": "78a46b0369cec5d993a93c5ef74427b45a812ce79fc9a85490a54a776e781d9e",
    "eventHash": "3375d736ffa742a65e045565b4a12a336472feab48e4a95a63caccccf9b3c18c"
+  },
+  {
+   "runId": "f6-ergebnis-v4-2026-09-02",
+   "typ": "C0_REGELFREEZE",
+   "registeredAt": "2026-09-02T11:56:08.411Z",
+   "accessedAt": "2026-09-02T13:56:08.411Z",
+   "fenster": [
+    "kein Studienfenster - Ergebnis-Beurkundung ohne Datenzugriff"
+   ],
+   "allowedOutputs": [],
+   "erlaubt": "Nichts. Kein Datenzugriff.",
+   "verboten": "Jeder weitere konfirmatorische Akt dieser Studienfamilie - das Kontingent nach F6-K19 ist mit dem hier beurkundeten Lauf VOLLZOGEN. Jede Berufung auf diesen Eintrag als Autorisierung eines Laufs. Jede Aenderung an den bisherigen Eintraegen dieser Kette.",
+   "beurkundet": "DAS ERGEBNIS des konfirmatorischen F6-Laufs. Dieser Eintrag AUTORISIERT NICHTS - er stellt fest, was gemessen wurde.",
+   "typDeutung": "ZUR ART, offen statt stillschweigend: dieser Eintrag traegt C0_REGELFREEZE, obwohl er kein Regelfreeze im woertlichen Sinn ist. Das ist KEINE Umetikettierung, sondern die Hausform fuer ZUGRIFFSLOSE BEURKUNDUNGEN, und die Praezedenzlinie ist drei Akte tief: der SE-Freeze (Eintrag 24), der Ergaenzungs-Vermerk (29) und der VORFALL-Vermerk (30) - letzterer ein Vorfallsbericht, ebenfalls kein Regelfreeze, in der vom Kontingent-Rat selbst angeordneten Form. Der Rollover-Rat hat den Grundsatz entschieden: eine NEUE Eintragsart waere eine Aenderung an der Artenmenge der Verfassung - ein Verfassungsakt, den Speichermechanik nicht kaufen darf. WAS DIESER AKT EINFRIERT, ist der ENDZUSTAND DER FAMILIE als Aktenlage. Er AUTORISIERT NICHTS. Und er traegt bewusst NICHT confirmatory_execution_authorized: sonst griffe die LIVE-BINDUNG des Baums auf IHN statt auf den autorisierenden Akt und pruefte gegen einen Eintrag, der gar keine Bindungen fuehrt.",
+   "fensterVermerk": "ZUM ZEITFENSTER DIESES VERMERKS, damit kein spaeterer Leser ueber die Form raetselt: accessedAt ist hier ein gewoehnliches +2h-Fenster ab der Anmeldung - die Hausform der Vermerke, an allen drei Praezedenzakten nachgemessen. Ein C0_REGELFREEZE-Vermerk autorisiert keinen Zugriff, und sein accessedAt ist deshalb NIE ein Tor fuer einen Lauf; es bezeichnet nur, ab wann der beurkundete Stand gilt. Der 20-Minuten-Fussboden gehoert dem Akt, der einen LAUF autorisiert - dort ist derselbe Wert ein echter Startblock. Eintrag 29 haelt fest, dass ein frueherer Entwurf mit eng gesetztem Fenster ablief, bevor der Serverbeweis gefuehrt werden konnte; diese Lehre ist hier angewandt.",
+   "autorisierenderAkt": {
+    "datei": "protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json",
+    "runId": "f6-konfirmatorisch-v4-2026-09-02",
+    "eventHash": "3375d736ffa742a65e045565b4a12a336472feab48e4a95a63caccccf9b3c18c"
+   },
+   "lauf": {
+    "exitCode": 0,
+    "ersterZugriffAm": "2026-09-02T11:29:40.290Z",
+    "beendetAm": "2026-09-02T11:29:57.703Z",
+    "fenster": "pruefung",
+    "panelRand": "2020-12-31",
+    "geschriebenePfade": [
+     "studie/f6-konfirmatorisch-v4-2026-09-02.json"
+    ],
+    "gelesenePfadeAnzahl": 14,
+    "siegelWache": "Endtest-Siegel unberuehrt und ZU. Kein Endtest-Fenster, kein Schluesselmaterial, keine Lueckenliste geoeffnet (F6-A16)."
+   },
+   "ergebnis": {
+    "gesamt": "BEIDE VARIANTEN WEITER = 0. Das Tor ist in keiner Variante gehalten worden.",
+    "S-U": {
+     "signal": {
+      "zweig": "ausserhalb_band",
+      "verdikt": "NICHT BESTANDEN",
+      "weiter": 0,
+      "messgeraetVollstaendig": true
+     },
+     "kontrollpool": {
+      "zweig": "ausserhalb_band",
+      "verdikt": "NICHT BESTANDEN",
+      "weiter": 0,
+      "messgeraetVollstaendig": true
+     },
+     "tor": {
+      "verdikt": "TOR GERISSEN",
+      "weiter": 0
+     },
+     "differenzbedingungErfuellt": true
+    },
+    "S-G": {
+     "signal": {
+      "zweig": "im_band",
+      "verdikt": "NICHT UNTERSCHEIDBAR",
+      "weiter": 0,
+      "messgeraetVollstaendig": true
+     },
+     "kontrollpool": {
+      "zweig": "ausserhalb_band",
+      "verdikt": "BESTANDEN",
+      "weiter": 1,
+      "messgeraetVollstaendig": true
+     },
+     "tor": {
+      "verdikt": "NICHT UNTERSCHEIDBAR",
+      "weiter": 0
+     },
+     "differenzbedingungErfuellt": true
+    },
+    "alleZellenGemessen": "ALLE VIER ZELLEN sind NORMAL gemessen - messgeraetVollstaendig ueberall true, KEINE gate_gerissen-Zelle. Der Q1-Fang war gebaut und blieb ungenutzt; fuer ihn ist das der beste der moeglichen Ausgaenge. Die Ersatz-Zelle nach OB-1 ist NICHT eingetreten und hat folglich kein Verdikt erzeugt."
+   },
+   "sgPflichtsaetze": {
+    "auflage": "Die Bandregel schreibt fuer den Zweig im_band ZWEI Saetze vor, und sie werden WOERTLICH gefuehrt - nicht paraphrasiert. Der zweite ist die nie-Effekt-abwesend-Regel; ihn umzuformulieren waere genau die Fehldeutung, gegen die er gebaut ist.",
+    "betrifft": "S-G / signal (im_band, NICHT UNTERSCHEIDBAR)",
+    "pflichtsatz": "Das Tor konnte bei dieser Fallzahl zwischen Bestehen und Nichtbestehen nicht unterscheiden.",
+    "zweitsatz": "Nicht die Hypothese ist widerlegt, sondern das Messgeraet hat nicht getrennt. NIE: 'der Effekt ist abwesend'.",
+    "lesehilfe": "NICHT UNTERSCHEIDBAR ist KEIN Negativbefund. Die Fallzahl hat nicht getrennt; ueber die Hypothese ist damit nichts gesagt. Wer diesen Ausgang als \"kein Effekt\" liest, liest ihn falsch."
+   },
+   "musterFriedhof": {
+    "auflage": "Ein sauberes Negativergebnis wird EINGETRAGEN, nicht weggelegt. Der Friedhof ist der Ort, an dem Negatives seinen Wert behaelt.",
+    "betrifft": "S-U, beide Arme",
+    "torVerdikt": "TOR GERISSEN",
+    "etikettDesBandmoduls": "Gerissenes Tor. Sauberes Negativergebnis - nach Hausmethodik ein Erfolg. Dokumentiertes Negativ im Muster-Friedhof.",
+    "etikettHerkunft": "WOERTLICH aus scripts/studie-vb-b4-band.py uebernommen - das eingefrorene Modul etikettiert seinen eigenen Ausgang. Der Laeufer und dieser Eintrag erfinden dafuer keinen Text.",
+    "beideArme": "Beide Arme tragen ausserhalb_band / NICHT BESTANDEN. Das ist ein GEMESSENES Negativ mit vollstaendigem Messgeraet - nicht ein Nicht-Unterscheiden-Koennen. Der Unterschied zu S-G ist der ganze Punkt und wird hier festgehalten, damit ihn niemand einebnet."
+   },
+   "a16Pin3": {
+    "befund": "In ALLEN VIER Zellen gilt klumpen_anzahl == nenner_tor, also n_g = 1 fuer jeden Klumpen - die nach PIN 3 ERWARTETE Lage.",
+    "folge": "Damit faellt se_entschied KONSTRUKTIV auf SE_klumpen-robust, und die A16-Pflichtangabe \"welcher SE entschied\" ist FORMAL, nicht materiell erfuellt. Das ist kein Mangel: die Feststellung stand VORAB im Bericht (F6-B25-Form), nicht nachtraeglich als Befund.",
+    "wennEsAndersKaeme": "Traete im Tor-Nenner je ein Klumpen mit n_g > 1 auf, entfiele diese Feststellung (KV-6) und die Pflichtangabe wuerde materiell. Das ist hier NICHT eingetreten.",
+    "identitaetA16": "VORAB, nicht als Befund (F6-B25-Form): in dieser Tally-Form tragen `n_B_unreif` und `strukturell_nicht_feuerfaehig` DIESELBE Zahl. `n_B_unreif` wird unabhaengig doppelt hergeleitet (aus der Klumpen-Tafel und aus den Aggregaten) und durch einen Kreuz-Wachposten gedeckt; fuer `strukturell_nicht_feuerfaehig` existiert in keinem registrierten Artefakt und in keinem der drei Urteile eine allgemeine Definition - die sieben A16-Schluessel werden dort benannt, aber nicht definiert. Ein zweiter Rechenweg waere deshalb erfunden, nicht hergeleitet, und unterbleibt. BEIDE Schluessel bleiben im Satz (F6-B12: ein fehlender Pflichtschluessel ist ein ABBRUCH); der Bericht weist die Identitaet aus, statt sie durch zwei getrennt aussehende Zahlen zu verdecken. Faellt die Identitaet je auseinander, ist die Tally-Form gebrochen - der Kreuz-Wachposten macht das zum ABBRUCH."
+   },
+   "dokumentationsbefund": {
+    "auflage": "PROTOKOLLIERT, NIE STILL GEFIXT - dieselbe Behandlung wie die Doku-Drift LFA2-12.",
+    "befund": "Drei Eintraege in umschlag.gebundeneHashes des Berichts tragen VORLAEUFIGE Etiketten aus der Zeit vor dem v4-Akt: \"zu binden in Eintrag 25 (F6-B7)\" fuer scripts/studie-f6-lauf.py, \"zu binden im konfirmatorischen Eintrag (F6-B7)\" fuer scripts/studie-f6-zaehlwerk.py und \"zu binden im konfirmatorischen Eintrag (F6-C24)\" fuer scripts/studie-zaehlprobe.py.",
+    "wasFALSCH_ist": "AUSSCHLIESSLICH die Etiketten. Die BINDUNGEN selbst sind richtig und im v4-Akt gefuehrt; die SHA im Bericht stimmen mit den gebundenen ueberein. Es ist ein Beschriftungs-, kein Bindungsfehler.",
+    "warumNichtGEFIXT": "Der Laeufer ist AKT-GEBUNDEN: sein SHA steht im v4-Akt. Eine Etiketten-Korrektur waere ein Byte am gebundenen Laeufer und braeche F6-C24(3) - fuer eine Beschriftung. Der Befund gehoert damit in die NAECHSTE Familie, nicht in diesen Zug."
+   },
+   "bericht": {
+    "pfad": "reports/studie/f6-konfirmatorisch-v4-2026-09-02.json",
+    "dateiSha256": "c1a0d87f2e74ee61a061501be6eb9c8325418db9c2e852c62e9dbdce4be3efc0",
+    "groesseBytes": 20523,
+    "messebene": "COMMITTETER BLOB (LF), nicht die Arbeitskopie. .gitattributes pinnt /reports/studie/** auf eol=lf; der Laeufer schreibt unter Windows CRLF, und git normalisiert beim Commit. Die Arbeitskopie mass 20984 B / cbb00408..., der kanonische Blob misst 20523 B / c1a0d87f2e74ee61... - eine Differenz von 461 Zeilenenden. Gebunden wird, was auf origin liegt und auf jeder anderen Maschine wieder entsteht.",
+    "korrektur": "Die Commit-Nachricht des Bericht-PR fuehrt den CRLF-Wert. Sie ist unveraenderlich; berichtigt wird auf der richtigen Schicht - hier. Dasselbe Muster wie die C24A-Korrektur im v4-Akt. Es ist die ZWEITE Windows-Kodierungsfalle dieser Familie nach der PowerShell-UTF-16-Umleitung."
+   },
+   "wandLR19": {
+    "deckelBytes": 204800,
+    "vorherBytes": 157033,
+    "nachherBytes": 168181,
+    "zuwachsBytes": 11148,
+    "restluftBytes": 36619,
+    "messform": "FIXPUNKT-MESSUNG wie im v4-Akt: iterativ gebaut, bis die eingesetzten Zahlen mit den erzeugten zusammenfallen. Ohne Konvergenz wird nicht geschrieben.",
+    "einordnung": "Der v4-Akt hat beurkundet, dass die Restluft fuer KEINEN weiteren vollen Ueberschreibungs-Akt mehr reicht - wohl aber fuer Ergebnis-Eintraege, die eine Groessenordnung kleiner sind. Dieser Eintrag ist der Beleg dafuer, dass diese Einordnung getragen hat."
+   },
+   "laufFreigabe": "DIESER EINTRAG AUTORISIERT NICHTS. Er beurkundet ein Ergebnis. Das Kontingent nach F6-K19 ist mit dem Lauf, den er beurkundet, VERBRAUCHT; ein weiterer Lauf braucht einen neuen Akt und eine neue Gerichtsentscheidung.",
+   "endtestSiegel": "Das Endtest-Siegel bleibt ZU und UNVERBRAUCHT - in diesem wie in jedem anderen Ausgang. Nur Karls ausdrueckliche Freigabe oeffnet es (F6-A16/K27). Dieser Eintrag beruehrt es nicht.",
+   "blindAttest": "BLIND-ATTEST (F6-K5): der Ausfuehrende dieser Beurkundung haelt keinerlei Information aus dem ABGEBROCHENEN Lauf; der versiegelte zwischenstand.sqlite ist ungeoeffnet geblieben (F6-K1). Die hier beurkundeten Zahlen stammen ausschliesslich aus dem Bericht des autorisierten Laufs.",
+   "fortsetzungsHinweis": "VIERTER Eintrag der Fortsetzungsdatei: count-only-Akt (1), v3 (2), v4 (3), dieses Ergebnis (4).",
+   "previousHash": "3375d736ffa742a65e045565b4a12a336472feab48e4a95a63caccccf9b3c18c",
+   "eventHash": "4c4634ddf567b1955e7514bb47cb93c39506208b33bc3b2c0ffd2f71d70ea211"
   }
  ]
 }
