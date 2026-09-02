@@ -340,3 +340,51 @@ test('nach dem eigenen Merge ist das Werkzeug inert (Einweg-Anhaenger)', () => {
   assert.throws(() => stillLaufen(['--register', ziel]),
     /Eintraege, erwartet 1|runId .* ist bereits belegt/);
 });
+
+// ── Der Drift-Melder fuer den LEBENDEN Baum ────────────────────────────────
+//
+// Er loest den UEBERGANGS-PIN aus tests/studie-f6-eintrag28.test.js ab. Jener
+// Pin trug eine HANDKOPIE eines einzelnen SHA und war ausdruecklich temporaer:
+// "zu entfernen, sobald der ueberschreibende Akt den neuen SHA bindet - ab dann
+// traegt der Eintrag die Bindung". Der Eintrag traegt sie jetzt. Damit "traegt"
+// aber auch bewacht heisst, braucht es diese Probe: die Werkbank in
+// studie-f6-eintrag28.test.js misst den HISTORISCHEN Stand gegen Eintrag 28,
+// nicht den lebenden Baum.
+//
+// Diese Probe pinnt die SACHE statt einer Zahl: sie haelt JEDEN Pfad, den der
+// REGISTRIERTE Akt bindet, gegen die Datei im Baum - zwoelf statt einem, und
+// ohne eine einzige abgeschriebene Konstante. Faellt sie, ist entweder eine
+// gebundene Datei nach dem Akt veraendert worden (F6-C24(3) gebrochen) oder der
+// Akt ist nicht mehr der, unter dem gelaufen wird.
+
+const aktAusDemRegister = () => {
+  const teil2 = JSON.parse(fs.readFileSync(ZIEL, 'utf8'));
+  const akt = (teil2.events || []).find((e) => e.runId === K.RUN_ID);
+  assert.ok(akt, `der Akt ${K.RUN_ID} steht nicht in ${K.ZIEL_REL} - das Register ist `
+    + 'append-only, er kann nicht verschwinden');
+  return akt;
+};
+
+test('LIVE-BINDUNG: der Baum traegt genau die Bytes, die der registrierte Akt bindet', () => {
+  const akt = aktAusDemRegister();
+  const gebunden = Object.entries(akt.eingabenHashes.skripte);
+  assert.ok(gebunden.length > 0,
+    'der Akt bindet kein Skript - eine Pruefung ueber null Pfaden ist stumm gruen');
+  for (const [rel, wert] of gebunden) {
+    assert.strictEqual(sha256(fs.readFileSync(abs(rel))), wert.dateiSha256,
+      `${rel} weicht von der Bindung des REGISTRIERTEN Akts ab. Entweder wurde die Datei nach `
+      + 'dem Akt veraendert - dann ist F6-C24(3) gebrochen und der Lauf darf nicht starten -, '
+      + 'oder der Akt ist nicht mehr der, unter dem gelaufen wird.');
+  }
+});
+
+test('LIVE-BINDUNG BRUCHPROBE: ein veraendertes Byte faellt auf', () => {
+  const akt = aktAusDemRegister();
+  const rel = 'scripts/studie-f6-lauf.py';
+  assert.ok(akt.eingabenHashes.skripte[rel], 'der Laeufer ist nicht gebunden');
+  const verstellt = Buffer.concat([
+    fs.readFileSync(abs(rel)), Buffer.from('\n# verstellt\n', 'utf8'),
+  ]);
+  assert.notStrictEqual(sha256(verstellt), akt.eingabenHashes.skripte[rel].dateiSha256,
+    'die Live-Bindung muesste hier anschlagen - sonst bewacht sie nichts');
+});
