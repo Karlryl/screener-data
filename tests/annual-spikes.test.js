@@ -525,11 +525,33 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     assert.equal(r.code, 1, 'das Hart-Tor ist unabhaengig vom Budget');
     assert.match(r.err, /ALLEN 3 Jahresreihen am selben Index/);
     assert.match(r.err, /CI\|1/);
-    // Abwesenheits-Richtung: nimmt man EINE Reihe weg, ist derselbe Lauf gruen.
+    // Abwesenheits-Richtung: nimmt man EINE Reihe weg, schweigt das HART-TOR JA-2.
+    //
+    // ANGEPASST 03.09.2026 (Rat Q1, Akte _COURT-NACHTLAUF-FRAGEN-2026-09-03.md §5).
+    // Die Zusicherung stand als `r2.code === 0` — als STELLVERTRETER fuer "JA-2
+    // schweigt". Der Stellvertreter traegt nicht mehr, seit ein zweites, ADDITIVES Tor
+    // auf der 2-von-3-Form sitzt: diese Fixture ist selbst faktorgleich (OpInc -9000
+    // gegen Rev -9100 bei Nachbarn 100/110 => Faktoren 81,8182 und 82,7273,
+    // Verhaeltnis 1,011111 <= 1,02). Der Beschluss verlangt JA-2 unveraendert, nicht
+    // die Fixture: die Fixture bleibt BYTE-GLEICH und wird jetzt an der SACHE gepinnt —
+    // JA-2 schweigt, das neue Tor spricht. Die Gruen-Richtung steht unmittelbar
+    // darunter mit einer nicht faktorgleichen Fixture; beide Richtungen von BP-3
+    // bleiben damit erhalten.
     const zwei = { 'CI.json': { meta: { ticker: 'CI' }, annual: {
       annualOpInc: snaps['CI.json'].annual.annualOpInc, annualRev: snaps['CI.json'].annual.annualRev } } };
     const r2 = laufMain(zwei, basis0, 9007199254740991);
-    assert.equal(r2.code, 0, 'zwei Reihen duerfen das Hart-Tor NICHT ausloesen');
+    assert.doesNotMatch(r2.err, /ALLEN 3 Jahresreihen am selben Index/,
+      'zwei Reihen duerfen das Hart-Tor JA-2 NICHT ausloesen');
+    assert.match(r2.err, /ZWEI Jahresreihen am selben Index/,
+      'stattdessen spricht das additive Faktor-Gleichheits-Tor (Rat Q1)');
+
+    // Gruen-Richtung, in der Sache unveraendert: zwei Reihen, die NICHT faktorgleich
+    // sind (Faktoren 81,8182 gegen 10,9091), lassen denselben Lauf gruen.
+    const zweiUngleich = { 'CI.json': { meta: { ticker: 'CI' }, annual: {
+      annualOpInc: snaps['CI.json'].annual.annualOpInc,
+      annualRev: [{ value: 100e6 }, { value: -1200e6 }, { value: 110e6 }] } } };
+    assert.equal(laufMain(zweiUngleich, basis0, 9007199254740991).code, 0,
+      'zwei nicht faktorgleiche Reihen lassen den Lauf gruen');
   });
 
   // ── BP-4 (JA-4): Faecher 8 feuert, der echte 7er-Intel-Faecher feuert nicht ─────────
@@ -854,6 +876,186 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
         laufMain({ 'AAA.json': snap('AAA', 'annualRev', 900e6) },
           { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: liste9(9) }, 5, JETZT9);
       } finally { fsT.writeFileSync = origW; fsT.appendFileSync = origA; }
+      assert.deepEqual(schreib, [], 'der Tageslauf darf keine Datei anfassen');
+    });
+  }
+
+  // == Q1 (Ratsbeschluss 03.09.2026) — FAKTOR-GLEICHHEITS-TOR AUF DIE 2-VON-3-FORM ====
+  // Akte: agent-reports/_COURT-NACHTLAUF-FRAGEN-2026-09-03.md §5 Q1 (2:0 mit Auflagen).
+  // Jede Probe hier war beim Bau einmal absichtlich rot und prueft beide Richtungen.
+  {
+    const { faktorGleicheFaelle, ausreisserFaktor, FAKTOR_GLEICH_TOL, parseMaxNeu } = w;
+
+    // -- Q1-1: DAS ETIKETT AN DER SACHE ---------------------------------------------
+    // Realwerte 001450.KS|1, am echten Baum gemessen (nicht gerundet, nicht erfunden):
+    // Umsatz 279,6 Mio -> 9.934,7 Mio -> 371,7 Mio und Betriebsergebnis 4,09 -> 145,1
+    // -> 5,43 Mio, beide Faktor 26,728480093892 — waehrend das Nettoergebnis ruhig
+    // bleibt. Ein Umsatzsprung um Faktor 27 bei unveraendertem Nettoergebnis ist
+    // betriebswirtschaftlich unmoeglich.
+    const ks = [
+      fnd('001450.KS', 'annualOpInc', 1, 4085611.0168801122, 145145887.4848816, 5430383.133459464),
+      fnd('001450.KS', 'annualRev', 1, 279644833.46202, 9934694557.486763, 371689468.409272),
+    ];
+    const verh = (f) => {
+      const [a, b] = f.map(ausreisserFaktor);
+      return Math.max(a, b) / Math.min(a, b);
+    };
+    check('Q1-1: das Tor misst MARGEN-STABILITAET, nicht gemeinsame Ursache — x10 auf beide Werte laesst das Verhaeltnis unveraendert', () => {
+      assert.deepEqual(faktorGleicheFaelle(ks).gleich, ['001450.KS|1'], 'der Realfall muss feuern');
+      // DIE PROBE: beide korrumpierten Werte mit demselben k — k kuerzt sich vollstaendig
+      // weg. Das Tor ist BLIND gegen die Korruptionsstaerke; wer "Fingerabdruck
+      // gemeinsamer Ursache" hineinliest, liest die Zusicherung zu breit.
+      const malZehn = ks.map((x) => ({ ...x, wert: x.wert * 10 }));
+      assert.equal(verh(malZehn), verh(ks), 'x10 auf beide Ausreisserwerte darf das Verhaeltnis nicht bewegen');
+      assert.deepEqual(faktorGleicheFaelle(malZehn).gleich, ['001450.KS|1'], 'und das Tor feuert weiter');
+      assert.ok(ausreisserFaktor(malZehn[0]) > ausreisserFaktor(ks[0]) * 9.9,
+        'Gegenprobe: die FAKTOREN selbst sind sehr wohl zehnmal so gross — nur ihr Verhaeltnis nicht');
+      // Zweite Richtung, ebenfalls von Stimme 2 gemessen: bewegt man die MARGE des
+      // unkorrumpierten Nachbarjahres, wandert das Verhaeltnis und das Tor verstummt.
+      const margeBewegt = [ks[0], { ...ks[1], links: ks[1].links * 1.37 }];
+      assert.ok(verh(margeBewegt) > FAKTOR_GLEICH_TOL, 'eine bewegte Nachbar-Marge muss das Verhaeltnis heben');
+      assert.deepEqual(faktorGleicheFaelle(margeBewegt).gleich, [], 'und derselbe Bruch laeuft durch');
+    });
+
+    // -- Q1-3: NAMENTLICHE PIN-LISTE AM COMMITTETEN BESTAND --------------------------
+    // Fixture-Quelle ist der committete Bestand (wie bei BP-4), damit die Probe ohne
+    // snapshots/ im CI laeuft. Seine Schluessel tragen die ROHWERTE
+    // (`ticker|reihe|werte:links|wert|rechts`), aber KEINEN Index — die Gruppierung
+    // laeuft deshalb ueber den Ticker, was hier deckungsgleich ist: kein Ticker im
+    // Bestand traegt Ausreisser an zwei verschiedenen Indizes.
+    //
+    // MESSUNG (echter Baum, 15.044 Snapshots / 141 Funde) gegen die Bestands-Fixture,
+    // ehrlich ausgewiesen:
+    //   echter Baum       22 Formen -> 8 feuern / 14 nicht
+    //   Bestands-Fixture  23 Formen -> 8 feuern / 15 nicht
+    // Die Differenz ist restlos aufgeklaert und beruehrt die Klassentrennung nicht:
+    // CMHC.SW und COPN.VI stehen als Zweitnotierungen von CMOPF im Bestand, im lokalen
+    // Baum aber nicht (alle drei bei 3,7235, also ohnehin in der NICHT feuernden
+    // Klasse); umgekehrt traegt der Baum die eine bestandsfremde Form 300715.SZ|1 bei
+    // 1,6300 — ebenfalls nicht feuernd. 23 - 2 + 1 = 22, und die FEUERNDE Klasse ist
+    // auf beiden Ebenen dieselben acht.
+    const bestandFormen = () => {
+      const echt = JSON.parse(fsT.readFileSync(
+        pathT.join(__dirname, '..', 'data-health', 'annual-spikes-baseline.json'), 'utf8'));
+      // Alle Ausreisser eines Tickers auf denselben Index legen — der Bestands-
+      // Schluessel traegt keinen, und die Gruppierung ist genau "ein Ticker, ein Jahr".
+      return echt.faelle.map((k) => {
+        const teile = k.split('|');
+        return fnd(teile[0], teile[1], 1, Number(teile[2].slice('werte:'.length)),
+          Number(teile[3]), Number(teile[4]));
+      });
+    };
+    const ohneIndex = (l) => l.map((k) => k.replace(/\|1$/, '')).sort();
+
+    const FEUERN_8 = ['001450.KS', '8795.T', 'KINV-A.ST', 'KINV-B.ST', 'KYN',
+      'MFSL.BO', 'MFSL.NS', 'TDHOF'];
+    const STILL_15 = ['002446.SZ', '002759.SZ', '600166.SS', '600975.SS', '601068.SS',
+      '601606.SS', '601718.SS', 'CMHC.SW', 'CMOPF', 'COPN.VI', 'DIGIS.MC', 'NEOG',
+      'VOGL.BO', 'VOGL.NS', 'VPLAY-A.ST'];
+    const ZUSATZ_BEI_125 = ['002446.SZ', '600166.SS', '600975.SS', '601718.SS'];
+
+    check('Q1-3: die acht OpInc+Rev-Formen des Bestands feuern NAMENTLICH, keine der 15 anderen', () => {
+      const r = faktorGleicheFaelle(bestandFormen());
+      assert.equal(r.zweiVonDrei.length, 23,
+        'die Fixture traegt 23 2-von-3-Formen — sonst ist die Eichung veraltet');
+      assert.deepEqual(ohneIndex(r.gleich), [...FEUERN_8].sort(), 'exakt diese acht Formen feuern');
+      // Abwesenheits-Richtung NAMENTLICH, nicht nur als Zahl.
+      const feuernd = new Set(ohneIndex(r.gleich));
+      for (const t of STILL_15) {
+        assert.ok(!feuernd.has(t), t + ' ist ein echtes Abschreibungsjahr und darf NICHT feuern');
+      }
+      assert.deepEqual(ohneIndex(r.zweiVonDrei), [...FEUERN_8, ...STILL_15].sort(),
+        'die Pin-Liste muss die Fixture vollstaendig und namentlich abdecken');
+    });
+
+    check('Q1-3: bei Toleranz 1,25 kommen GENAU die vier gemessenen Klasse-B-Formen dazu', () => {
+      // Der Preis, den der Beschluss ausdruecklich NICHT zahlen wollte: 1,25 laege
+      // mitten in Klasse B (1,0375 - 6,4162) und schluckte vier Formen, die als echte
+      // Abschreibungsjahre eingestuft sind.
+      const r125 = faktorGleicheFaelle(bestandFormen(), 1.25);
+      assert.deepEqual(ohneIndex(r125.gleich), [...FEUERN_8, ...ZUSATZ_BEI_125].sort(),
+        'bei 1,25 feuern die acht plus genau 002446.SZ, 601718.SS, 600975.SS, 600166.SS');
+      // Und die Herleitung selbst: das Intervall 1,0000|1,0375 MUSS leer sein. An genau
+      // dieser Zeile haengt die Kipp-Bedingung Q1-5 (neu herleiten, nicht nachziehen).
+      const jeTicker = new Map(), verhaeltnisse = [];
+      for (const x of bestandFormen()) jeTicker.set(x.ticker, [...(jeTicker.get(x.ticker) || []), x]);
+      for (const [, a] of jeTicker) {
+        const u = [...new Map(a.map((x) => [x.reihe, x])).values()];
+        if (u.length !== 2) continue;
+        verhaeltnisse.push(verh(u));
+      }
+      assert.equal(verhaeltnisse.filter((v) => v > 1.0000000001 && v < 1.0375).length, 0,
+        'das Intervall 1,0000|1,0375 MUSS leer sein — sonst ist 1,02 NEU herzuleiten');
+      assert.ok(FAKTOR_GLEICH_TOL > 1 && FAKTOR_GLEICH_TOL < 1.0375, 'und 1,02 liegt darin');
+    });
+
+    // -- Q1-2 (blockierende Auflage): DIE ZAEHLERZEILE -------------------------------
+    // Ein Tor, das nur beim Feuern spricht, verschweigt seine eigene Deckungsluecke.
+    const snapsZ = {
+      'GLEICH2.json': { meta: { ticker: 'GLEICH2' }, annual: {
+        annualOpInc: [{ value: 100e6 }, { value: -9000e6 }, { value: 110e6 }],
+        annualRev: [{ value: 200e6 }, { value: -18000e6 }, { value: 220e6 }],
+      } },
+      'UNGLEICH2.json': { meta: { ticker: 'UNGLEICH2' }, annual: {
+        annualOpInc: [{ value: 300e6 }, { value: -30000e6 }, { value: 330e6 }],
+        annualNetIncome: [{ value: 400e6 }, { value: -8000e6 }, { value: 440e6 }],
+      } },
+    };
+    check('Q1-2: die Zaehlerzeile nennt in JEDEM Lauf beide Seiten — erfasst UND nicht erfasst', () => {
+      // snapshotsBeiAufnahme MUSS zur Fixture-Population passen, sonst schlaegt die
+      // Populations-Wache VOR den Toren zu und die Probe bestuende vakuum.
+      const basisZ = (n) => ({ faelle: [], snapshotsBeiAufnahme: n, ausgeschlossen: [] });
+      const r = laufMain(snapsZ, basisZ(2), 9007199254740991);
+      assert.match(r.log, /^2-von-3: 2 · faktorgleich \(Tol 1,02\): 1 · NICHT erfasst: 1$/m,
+        'die Zeile muss den nicht erfassten Rest ausweisen');
+      assert.equal(r.code, 1, 'und die faktorgleiche Form ist rot');
+      assert.match(r.err, /GLEICH2\|1/);
+      assert.doesNotMatch(r.err, /UNGLEICH2/,
+        'die nicht faktorgleiche Form bleibt ungefangen — genau das zaehlt die Zeile mit');
+
+      // ANWESENHEIT AUCH BEI NULL: ohne diese Richtung waere "kein Rest" von "keine
+      // Zeile" nicht zu unterscheiden.
+      const leer = laufMain({ 'AAA.json': snap('AAA', 'annualRev', 900e6) }, basisZ(1), 5);
+      assert.match(leer.log, /^2-von-3: 0 · faktorgleich \(Tol 1,02\): 0 · NICHT erfasst: 0$/m);
+      assert.equal(leer.code, 0);
+    });
+
+    check('Q1-2 Bruchprobe: mit Toleranz 10 faellt der NICHT erfasste Rest auf 0', () => {
+      const funde = [
+        fnd('GLEICH2', 'annualOpInc', 1, 100e6, -9000e6, 110e6),
+        fnd('GLEICH2', 'annualRev', 1, 200e6, -18000e6, 220e6),
+        fnd('UNGLEICH2', 'annualOpInc', 1, 300e6, -30000e6, 330e6),
+        fnd('UNGLEICH2', 'annualNetIncome', 1, 400e6, -8000e6, 440e6),
+      ];
+      const eng = faktorGleicheFaelle(funde);
+      assert.equal(eng.zweiVonDrei.length - eng.gleich.length, 1, 'bei 1,02 bleibt genau eine Form liegen');
+      const weit = faktorGleicheFaelle(funde, 10);
+      assert.equal(weit.zweiVonDrei.length, 2, 'die Grundmenge haengt NICHT an der Toleranz');
+      assert.equal(weit.zweiVonDrei.length - weit.gleich.length, 0, 'bei Toleranz 10 bleibt nichts liegen');
+    });
+
+    // -- Q1-4: WAS DAS TOR NICHT ANFASSEN DARF ---------------------------------------
+    check('Q1-4: JA-2 bleibt bei DREI Reihen, die Schwelle bei 5, und ein feuernder Lauf schreibt nichts (JA-12)', () => {
+      const drei4 = ['annualOpInc', 'annualRev', 'annualNetIncome']
+        .map((r, i) => fnd('CI', r, 2, 100e6 + i, -9000e6 - i, 110e6 + i));
+      assert.deepEqual(cignaFaelle(drei4), ['CI|2']);
+      assert.deepEqual(cignaFaelle(drei4.slice(0, 2)), []);
+      // Und das neue Tor greift NICHT in die Cigna-Form hinein: drei Reihen gehoeren
+      // JA-2, sonst zaehlte derselbe Fall doppelt.
+      assert.deepEqual(faktorGleicheFaelle(drei4).zweiVonDrei, []);
+      assert.equal(parseMaxNeu(undefined), 5, 'DEFAULT_MAX_NEU bleibt 5');
+      // JA-12 auf dem NEUEN Pfad: auch ein Lauf, in dem das neue Tor FEUERT, fasst
+      // keine Datei an. Der bestehende JA-12-Test sitzt auf einem Lauf ohne 2-von-3-Form.
+      const schreib = [];
+      const origW = fsT.writeFileSync, origA = fsT.appendFileSync;
+      fsT.writeFileSync = (f) => { schreib.push(String(f)); };
+      fsT.appendFileSync = (f) => { schreib.push(String(f)); };
+      let code;
+      try {
+        code = laufMain(snapsZ, { faelle: [], snapshotsBeiAufnahme: 2, ausgeschlossen: [] },
+          9007199254740991).code;
+      } finally { fsT.writeFileSync = origW; fsT.appendFileSync = origA; }
+      assert.equal(code, 1, 'die Probe muss auf einem FEUERNDEN Lauf sitzen, sonst prueft sie nichts');
       assert.deepEqual(schreib, [], 'der Tageslauf darf keine Datei anfassen');
     });
   }
