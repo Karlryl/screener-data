@@ -385,47 +385,22 @@ const aktAusDemRegister = () => {
   return akt;
 };
 
-// ── UEBERGANGS-BRUECKE — DATIERT, ZUM ENTFERNEN BESTIMMT ──────────────────
+// ── DIE UEBERGANGS-BRUECKE IST ENTFERNT ──────────────────────────────
 //
-// Die F6-K13-Folgereparaturen aendern den Laeufer. Der aktuell registrierte
-// Akt bindet den Stand DAVOR; bis der v4-Akt den neuen bindet, waere jede
-// Zwischen-PR rot - und "Waechter weich machen" waere die Erosion, gegen die
-// die ganze Registerordnung gebaut ist.
+// Sie war datiert und trug ihr eigenes Ablaufdatum:
+// `entfernenWenn: 'v4 act registered'`. Der v4-Akt ist registriert und
+// bindet den Laeufer auf den Stand, den sie erklaert hat; damit ist der
+// erklaerte Zwischenstand der REGISTRIERTE Stand geworden.
 //
-// Die Bruecke ist die ratifizierte Hausform dafuer: fuer GENAU DIE DATEIEN,
-// die die Reparatur anfasst, gilt der registrierte ODER der hier ERKLAERTE
-// Zwischenstand. Fuer jede andere Datei bleibt allein der registrierte Wert.
-// Ein DRITTER Wert ist auch fuer eine erklaerte Datei rot.
+// IHRE SELBSTAUFHEBENDE PROBE HAT DAS SELBST VERLANGT - sie wurde rot,
+// sobald der Akt lag, mit genau dem Satz, fuer den sie gebaut war: "eine
+// stehengebliebene Bruecke ist eine stille Zweitwahrheit". Der
+// Mechanismus hat funktioniert; das rote Fenster war die angekuendigte
+// Kopplung, kein Defekt.
 //
-// SIE HEBT SICH SELBST AUF: sobald der registrierte Akt den Zwischenstand
-// bindet, verlangt eine Probe ihre Entfernung. Ohne diese Probe bliebe sie als
-// stille Zweitwahrheit stehen.
-const UEBERGANGS_BRUECKE = {
-  gesetztAm: '2026-09-02',
-  entfernenWenn: 'v4 act registered',
-  grund: 'F6-K13-Folgereparaturen (Phase-2a-Schreibprobe HIGH-2, R12a-Schrubbe '
-    + 'des ZaehlwerkAbbruch-Texts MEDIUM-1) PLUS die Reparatur-Familie aus '
-    + '_COURT-F6-LAUFFAEHIGKEIT-2026-09-02: Q1 (SE-Fang an den drei '
-    + 'Sterbestellen) und Q2 (Ketten-Aufloesung in beiden Phasen).',
-  dateien: {
-    // BEWEGLICHES ZIEL, bei Familien-Schluss NEU GEMESSEN. Jede weitere Zeile
-    // am Laeufer aendert diesen Wert; ein stehengebliebener alter Wert zeigt
-    // auf einen toten Stand und faerbt LIVE-BINDUNG rot. Gemessen am
-    // 2026-09-02 nach der letzten Runner-Zeile - zuletzt nach der LF-K7-
-    // Neumessung (ANHANG1: Weisslisten-Inversion von Merkmal f, Byte-Riegel,
-    // LF-3 als Gleichheitsprobe), die den Laeufer erneut angefasst hat.
-    'scripts/studie-f6-lauf.py':
-      'ce4561b750a3915e3906aa6ed13f775e976c1e63109b1e7c739f8f18ac729c7e',
-  },
-};
-
-// Die Entscheidung als reine Funktion - nur so ist sie zweiseitig pruefbar,
-// ohne den Baum zu veraendern.
-function bindungTraegt(rel, istSha, registriertSha) {
-  if (istSha === registriertSha) return true;
-  const brueckenWert = UEBERGANGS_BRUECKE.dateien[rel];
-  return Boolean(brueckenWert) && istSha === brueckenWert;
-}
+// LIVE-BINDUNG prueft ab hier wieder auf GLEICHHEIT - ohne Nachsicht fuer
+// irgendeine Datei. Ein neuer Uebergang braucht eine NEUE, neu datierte
+// Bruecke mit eigener Ratifikation; diese hier wird nicht wiederbelebt.
 
 test('LIVE-BINDUNG: der Baum traegt genau die Bytes, die der registrierte Akt bindet', () => {
   const akt = aktAusDemRegister();
@@ -441,7 +416,7 @@ test('LIVE-BINDUNG: der Baum traegt genau die Bytes, die der registrierte Akt bi
     'die Artefakt-Karte wird nicht mitgeprueft - genau die halbe Menge');
   for (const [rel, wert] of gebunden) {
     const ist = sha256(fs.readFileSync(abs(rel)));
-    assert.ok(bindungTraegt(rel, ist, wert.dateiSha256),
+    assert.equal(ist, wert.dateiSha256,
       `${rel} weicht von der Bindung des REGISTRIERTEN Akts ab und ist auch nicht als `
       + 'Uebergang erklaert. Entweder wurde die Datei nach dem Akt veraendert - dann ist '
       + 'F6-C24(3) gebrochen und der Lauf darf nicht starten -, oder der Akt ist nicht '
@@ -473,35 +448,6 @@ test('KETTEN-BINDUNG: kein Akt -> nichts gebunden, mehrere -> der letzte', () =>
   const nach = alle.slice(alle.indexOf(echt) + 1);
   assert.equal(nach.some((e) => (e.typ || e.type) === ART_ZUGRIFF), false,
     'ein spaeterer konfirmatorischer Akt wurde uebergangen');
-});
-
-test('BRUECKE: erklaerte Datei ja, dritter Wert nein, fremde Datei nie', () => {
-  const registriert = 'a'.repeat(64);
-  const erklaert = UEBERGANGS_BRUECKE.dateien['scripts/studie-f6-lauf.py'];
-  const dritter = 'c'.repeat(64);
-  // (i) der registrierte Wert traegt immer.
-  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', registriert, registriert), true);
-  // (ii) der ERKLAERTE Zwischenstand traegt - genau dafuer gibt es die Bruecke.
-  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', erklaert, registriert), true);
-  // (iii) ein DRITTER Wert ist auch fuer eine erklaerte Datei rot.
-  assert.equal(bindungTraegt('scripts/studie-f6-lauf.py', dritter, registriert), false,
-    'die Bruecke laesst einen beliebigen Wert durch - dann ist sie keine Bruecke, sondern ein Loch');
-  // (iv) eine NICHT erklaerte Datei bekommt keine Nachsicht.
-  assert.equal(bindungTraegt('scripts/studie-basisraten.py', erklaert, registriert), false,
-    'undeklarierte Drift wird durchgelassen');
-});
-
-test('BRUECKE hebt sich selbst auf: bindet der Akt den Zwischenstand, muss sie weg', () => {
-  const akt = aktAusDemRegister();
-  for (const [rel, brueckenWert] of Object.entries(UEBERGANGS_BRUECKE.dateien)) {
-    const registriert = (akt.eingabenHashes.skripte[rel]
-      || akt.eingabenHashes.artefakte[rel] || {}).dateiSha256;
-    assert.notEqual(brueckenWert, registriert,
-      `${rel}: der registrierte Akt bindet bereits den erklaerten Zwischenstand. Die Bruecke `
-      + `ist damit gegenstandslos und GEHOERT ENTFERNT (entfernenWenn: `
-      + `"${UEBERGANGS_BRUECKE.entfernenWenn}") - eine stehengebliebene Bruecke ist eine `
-      + 'stille Zweitwahrheit.');
-  }
 });
 
 test('LIVE-BINDUNG BRUCHPROBE: ein veraendertes Byte faellt auf', () => {
