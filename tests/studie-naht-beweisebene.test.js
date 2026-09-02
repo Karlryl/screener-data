@@ -158,7 +158,11 @@ test('F2 REPRO: der Kopf-Hash der Naht darf keinen Beweis tragen', () => {
 
 test('F2: ein abweichender eventHash auf dem Server faellt auf', () => {
   const verbogen = JSON.parse(JSON.stringify(fortsetzungMitEintrag));
-  verbogen.events[0].eventHash = `0${verbogen.events[0].eventHash.slice(1)}`;
+  // Verbogen wird DER Eintrag, der hier bewiesen werden soll - nicht der
+  // erste der Datei. Die Fortsetzung waechst; ein fester Index prueft nach
+  // ihrem ersten echten Eintrag das falsche Objekt.
+  const ziel = verbogen.events[verbogen.events.length - 1];
+  ziel.eventHash = `0${ziel.eventHash.slice(1)}`;
   lokalerStand = { [GESCHLOSSEN_REL]: geschlossen, [FORTSETZUNG_REL]: fortsetzungMitEintrag };
   serverStand = { [FORTSETZUNG_REL]: verbogen };
   assert.throws(() => fahre(NEU_RUN_ID), /R1: Eintrag \d+ wurde nachtraeglich veraendert|traegt auf origin/);
