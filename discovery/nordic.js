@@ -45,6 +45,7 @@ const zlib = require('zlib');
 
 const REMOTE = 'https://api.nasdaq.com/api/nordic/screener/shares?category=';
 const CATEGORIES = ['MAIN_MARKET', 'FIRST_NORTH', 'OTHERS'];
+const REQUIRED_NONEMPTY_CATEGORIES = new Set(['MAIN_MARKET', 'FIRST_NORTH']);
 
 // Nasdaq Nordic trades each venue in its national currency; the four are
 // disjoint, so currency is a reliable per-row venue key. → { suffix, exchange, country }
@@ -145,6 +146,10 @@ async function fetchNordicUniverse() {
         console.error(`  [Nordic] ${category}: unexpected response shape`);
         result.partial = true; // S4-DISC-001: eine verlorene Kategorie ist ein Teilausfall
         continue;
+      }
+      if (rows.length === 0 && REQUIRED_NONEMPTY_CATEGORIES.has(category)) {
+        console.error(`  [Nordic] ${category}: empty required category`);
+        result.partial = true;
       }
       const added = addRows(rows, result);
       console.log(`  [Nordic] ${category}: ${rows.length} rows, ${added} shares added`);

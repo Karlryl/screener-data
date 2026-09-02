@@ -69,6 +69,29 @@ function netzAntwortetMit(koerper) {
   };
 }
 
+function stubNordicCategories(rowsByCategory, requestedCategories) {
+  https.get = (url, opts, cb) => {
+    const fn = typeof opts === 'function' ? opts : cb;
+    const category = new URL(url).searchParams.get('category');
+    requestedCategories.push(category);
+    const body = JSON.stringify({ data: { instrumentListing: { rows: rowsByCategory[category] } } });
+    const res = Readable.from([Buffer.from(body, 'utf8')]);
+    res.statusCode = 200;
+    res.headers = {};
+    setImmediate(() => fn(res));
+    const req = { on() { return req; }, once() { return req; }, setTimeout() { return req; }, destroy() {}, end() {} };
+    return req;
+  };
+}
+
+function captureConsole(fn) {
+  const original = { log: console.log, warn: console.warn, error: console.error };
+  const messages = { log: [], warn: [], error: [] };
+  for (const level of Object.keys(original)) console[level] = (...parts) => messages[level].push(parts.join(' '));
+  return Promise.resolve().then(fn).then(value => ({ value, messages }))
+    .finally(() => Object.assign(console, original));
+}
+
 function stumm(fn) {
   const echt = { log: console.log, warn: console.warn, error: console.error };
   for (const k of Object.keys(echt)) console[k] = () => {};
@@ -106,6 +129,76 @@ function stumm(fn) {
   });
 
   // ── (a) refresh-universe macht den Stempel sichtbar ───────────────────────
+  const validRows = {
+    MAIN_MARKET: [{ symbol: 'MAIN', fullName: 'Main Market', currency: 'SEK' }],
+    FIRST_NORTH: [{ symbol: 'FIRST', fullName: 'First North', currency: 'DKK' }],
+    OTHERS: [{ symbol: 'OTHER', fullName: 'Other Instrument', currency: 'EUR' }],
+  };
+  const expectedCategories = ['MAIN_MARKET', 'FIRST_NORTH', 'OTHERS'];
+
+  await check('Nordic: an empty MAIN_MARKET slice marks a nonempty aggregate partial', async () => {
+    const requested = [];
+    stubNordicCategories({ ...validRows, MAIN_MARKET: [] }, requested);
+    try {
+      const { value: result, messages } = await captureConsole(
+        () => require('../discovery/nordic.js').fetchNordicUniverse());
+      assert.equal(result.size, 2, 'later slices must remain available');
+      assert.equal(result.partial, true);
+      assert.deepEqual(requested, expectedCategories, 'all categories must still be requested in order');
+      assert.ok(result.has('FIRST.CO') && result.has('OTHER.HE'));
+      assert.ok(messages.error.some(message => message.includes('MAIN_MARKET')),
+        'the diagnostic must identify the empty core category');
+      assert.ok(messages.log.some(message => message.includes('MAIN_MARKET: 0 rows')),
+        'the ordinary category count must remain observable');
+    } finally { https.get = echtesGet; }
+  });
+
+  await check('Nordic: an empty FIRST_NORTH slice marks the aggregate partial', async () => {
+    const requested = [];
+    stubNordicCategories({ ...validRows, FIRST_NORTH: [] }, requested);
+    try {
+      const { value: result, messages } = await captureConsole(
+        () => require('../discovery/nordic.js').fetchNordicUniverse());
+      assert.equal(result.size, 2);
+      assert.equal(result.partial, true);
+      assert.deepEqual(requested, expectedCategories);
+      assert.ok(messages.error.some(message => message.includes('FIRST_NORTH')),
+        'the diagnostic must identify the empty core category');
+      assert.ok(messages.log.some(message => message.includes('FIRST_NORTH: 0 rows')),
+        'the ordinary category count must remain observable');
+    } finally { https.get = echtesGet; }
+  });
+
+  await check('Nordic: two empty core slices cannot hide behind a populated OTHERS tail', async () => {
+    const requested = [];
+    stubNordicCategories({ ...validRows, MAIN_MARKET: [], FIRST_NORTH: [] }, requested);
+    try {
+      const { value: result, messages } = await captureConsole(
+        () => require('../discovery/nordic.js').fetchNordicUniverse());
+      assert.deepEqual([...result.keys()], ['OTHER.HE']);
+      assert.equal(result.partial, true);
+      assert.deepEqual(requested, expectedCategories);
+      assert.ok(messages.error.some(message => message.includes('MAIN_MARKET')));
+      assert.ok(messages.error.some(message => message.includes('FIRST_NORTH')));
+    } finally { https.get = echtesGet; }
+  });
+
+  await check('Nordic: an empty optional OTHERS slice remains healthy', async () => {
+    const requested = [];
+    stubNordicCategories({ ...validRows, OTHERS: [] }, requested);
+    try {
+      const { value: result, messages } = await captureConsole(
+        () => require('../discovery/nordic.js').fetchNordicUniverse());
+      assert.equal(result.size, 2);
+      assert.ok(!result.partial, 'optional temporary instruments must not create a permanent warning');
+      assert.deepEqual(requested, expectedCategories);
+      assert.ok(!messages.error.some(message => message.includes('OTHERS')),
+        'an empty optional tail is not an adapter error');
+      assert.ok(messages.log.some(message => message.includes('OTHERS: 0 rows')),
+        'the optional zero-row observation must remain visible');
+    } finally { https.get = echtesGet; }
+  });
+
   await check('die Ertragszeile markiert Teilausfaelle mit ! und laesst gesunde Quellen in Ruhe', () => {
     assert.equal(typeof discoveryErtragsZeile, 'function', 'die Ertragszeile ist nicht einzeln pruefbar');
     const zeile = discoveryErtragsZeile(
