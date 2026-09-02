@@ -36,6 +36,7 @@ const { spawnSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
 const SKRIPT_QUELLE = path.join(ROOT, 'scripts', 'heartbeat-preis-abdeckung.js');
+const M = require(SKRIPT_QUELLE);
 
 let pass = 0, fail = 0;
 function check(name, fn) {
@@ -149,6 +150,11 @@ check('(d) gesunde Daten: Exit 0, kein ::error::', () => {
 });
 
 // ── (e) Die SCHWELLE selbst, nicht nur "irgendwo rot" ───────────────────────
+check('(e0) die exportierte Kern-Schwelle bleibt exakt 5 %', () => {
+  assert.equal(M.KERN_ALARM_ANTEIL, 0.05,
+    '4,99 % wuerde dieselben gerundeten Texte liefern, aber eine andere Entscheidung treffen');
+});
+
 check('(e1) 4 von 100 Kern-Titeln leer (4 %) bleibt gruen', () => {
   const g = gruppe('K', 100, 4, 'NYSE');
   const r = lauf(g.zeilen, g.kurse);
@@ -256,9 +262,98 @@ check('(h2) GEGENPROBE: mit Grundmenge steht der Hinweis NICHT da', () => {
   assert.ok(!/Kern-Gate heute ohne Pruefmenge/.test(r.out), 'ein Dauer-Hinweis waere Deko, kein Signal');
 });
 
+// (i) Ein added_at aus einem spaeteren UTC-Tag ist kein Neuzugangsnachweis.
+check('(i1) spaeterer UTC-Tag bleibt in der Messbasis; fehlend, unlesbar, frisch und alt bleiben stabil', () => {
+  const jetzt = Date.parse('2026-09-01T12:00:00.000Z');
+  const zeilen = [
+    { ticker: 'ZUKUNFT', added_at: '2026-09-02T00:00:00.000Z' },
+    { ticker: 'UNLESBAR', added_at: 'neulich' },
+    { ticker: 'OHNE_STEMPEL' },
+    { ticker: 'FRISCH', added_at: '2026-08-31T12:00:00.000Z' },
+    { ticker: 'ALT', added_at: ALT },
+  ];
+  const m = M.messePreisAbdeckung(zeilen, {}, { jetzt });
+  assert.equal(m.ventil, 1, 'nur der echte frische Vergangenheitswert darf ins Ventil');
+  assert.equal(m.basis, 4, 'Zukunft, unlesbar, fehlend und alt muessen messbar bleiben');
+  assert.equal(m.leer, 4);
+  assert.equal(m.addedAtZukunft, 1, 'die Eingabe-Anomalie muss separat sichtbar sein');
+  assert.deepEqual(m.addedAtZukunftBeispiele, ['ZUKUNFT']);
+});
+
+check('(i2) spaetere Uhrzeit am selben UTC-Tag bleibt trotz kleiner Laufzeit-Schieflage im Ventil', () => {
+  const jetzt = Date.parse('2026-09-01T00:01:00.000Z');
+  const m = M.messePreisAbdeckung([
+    { ticker: 'HEUTE', added_at: '2026-09-01T23:59:00.000Z' },
+  ], {}, { jetzt });
+  assert.equal(m.ventil, 1, 'reale Historie belegt bis zu 18m56s Vorlauf am selben UTC-Tag');
+  assert.equal(m.basis, 0);
+  assert.equal(m.leer, 0);
+});
+
+check('(i3) fuenf leere Zukunftstitel koennen das bestehende 5-Prozent-Kerngate nicht umgehen', () => {
+  const alt = gruppe('K', 95, 0, 'NYSE');
+  const zukunft = gruppe('Z', 5, 5, 'NYSE', '2099-01-01T00:00:00.000Z');
+  const r = lauf(alt.zeilen.concat(zukunft.zeilen), Object.assign({}, alt.kurse, zukunft.kurse));
+  assert.equal(r.code, 1, '5 von 100 leer muessen an der unveraenderten 5-Prozent-Schwelle alarmieren');
+  assert.match(r.out, /^::warning::PREIS-ABDECKUNG INPUT: 5 added_at-Werte liegen nach dem heutigen UTC-Tag/m);
+  assert.match(r.out, /Neuzugangs-Ventil:\s+0 Titel/);
+  assert.match(r.out, /Kern[^\n]*5 von 100 leer \(5\.0 %\)[^\n]*Status: ALARM/);
+  assert.match(r.out, /^::error::PREIS-ABDECKUNG KERN: 5 von 100/m);
+});
+
+check('(i4) bepreiste Zukunftstitel aus Kern und Ausland bleiben gruen und werden global einmal gewarnt', () => {
+  const alt = gruppe('K', 19, 0, 'NYSE');
+  const kernZukunft = gruppe('Z', 1, 0, 'NYSE', '2099-01-01T00:00:00.000Z');
+  const auslandZukunft = gruppe('A', 1, 0, 'TSX', '2099-01-01T00:00:00.000Z');
+  const r = lauf(alt.zeilen.concat(kernZukunft.zeilen, auslandZukunft.zeilen),
+    Object.assign({}, alt.kurse, kernZukunft.kurse, auslandZukunft.kurse));
+  assert.equal(r.code, 0, 'der Zukunftsstempel allein ist kein neuer Kursabdeckungs-Alarm');
+  assert.ok(!ROT.test(r.alles));
+  assert.equal((r.out.match(/^::warning::PREIS-ABDECKUNG INPUT:/gm) || []).length, 1,
+    'die Anomalie soll genau einmal sichtbar werden, nicht je Teilgruppe');
+  assert.match(r.out, /^::warning::PREIS-ABDECKUNG INPUT: 2 .*Beispiele: Z0 A0$/m,
+    'die globale Warnung muss Kern und Ausland gemeinsam zaehlen und belegen');
+  assert.match(r.out, /Neuzugangs-Ventil:\s+0 Titel/);
+  assert.match(r.out, /Kern[^\n]*0 von 20 leer/);
+  assert.match(r.out, /Ausland[^\n]*0 von 1 leer/);
+});
+
+check('(i5) UTC-Mitternacht kann Gesamtmessung und Kerngate nicht auf zwei Kalendertage teilen', () => {
+  const alt = gruppe('K', 95, 0, 'NYSE');
+  const zukunft = gruppe('Z', 5, 5, 'NYSE', '2026-09-02T00:00:00.000Z');
+  const zeilen = alt.zeilen.concat(zukunft.zeilen);
+  const kurse = Object.assign({}, alt.kurse, zukunft.kurse);
+  const zeitpunkte = [
+    Date.parse('2026-09-01T23:59:59.999Z'),
+    Date.parse('2026-09-02T00:00:00.001Z'),
+  ];
+  const echtesJetzt = Date.now;
+  const echtesLog = console.log;
+  const ausgabe = [];
+  let aufrufe = 0;
+  let rc;
+  try {
+    Date.now = () => zeitpunkte[Math.min(aufrufe++, zeitpunkte.length - 1)];
+    console.log = (...a) => ausgabe.push(a.join(' '));
+    rc = M.main({
+      fs: { readFileSync: () => JSON.stringify(zeilen) },
+      store: { loadAll: () => kurse },
+      log: (zeile) => ausgabe.push(String(zeile)),
+    });
+  } finally {
+    Date.now = echtesJetzt;
+    console.log = echtesLog;
+  }
+  const out = ausgabe.join('\n');
+  assert.equal(aufrufe, 1, 'ein Lauf braucht einen eingefrorenen Zeitpunkt fuer alle drei Teilmessungen');
+  assert.equal(rc, 1, 'die Kernmessung muss dieselben 5 von 100 sehen wie die Gesamtmessung vor Mitternacht');
+  assert.match(out, /^::warning::PREIS-ABDECKUNG INPUT: 5 /m);
+  assert.match(out, /Kern[^\n]*5 von 100 leer \(5\.0 %\)[^\n]*Status: ALARM/);
+});
+
 console.log('\nGeprueft: die Alarmschwelle aus Karl-Entscheid F-29c (Kern rot ab 5 %, Ausland reine Messung) '
-  + 'an 16 CLI-Laeufen gegen gebaute Wegwerf-Repos — inkl. Grenzfall 4 %/5 %/4,95 %, Gruppierungs-'
+  + 'an 18 CLI-Laeufen gegen gebaute Wegwerf-Repos plus drei Messungen mit fester Uhr und dem exakten Schwellenwert — inkl. Grenzfall 4 %/5 %/4,95 %, Gruppierungs-'
   + 'Gegenprobe, Nasdaq-Stockholm-Falle, kaputter Hint-Typen, beider Messausfall-Wege, des '
-  + 'Neuzugangs-Ventils und der leer laufenden Gruppe (Kern-Basis 0).');
+  + 'Neuzugangs-Ventils, spaeterem/gleichem UTC-Tag und der leer laufenden Gruppe (Kern-Basis 0).');
 console.log('f29-heartbeat-schwelle: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
