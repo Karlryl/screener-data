@@ -33,6 +33,10 @@ catch (e) {
   console.error('✗ earnings-calendar.json unreadable: ' + e.message);
   process.exit(1);
 }
+if (!cal || typeof cal !== 'object' || Array.isArray(cal)) {
+  console.error('✗ earnings-calendar.json must contain a JSON object keyed by ticker.');
+  process.exit(1);
+}
 // audit/fix: anchor `today` at UTC midnight to match info.date (a bare YYYY-MM-DD that
 // `new Date()` parses as UTC midnight). The previous local setHours(0,0,0,0) made `today`
 // a LOCAL-midnight instant — 1-2h off in Europe/Berlin — which shifted the upper window
