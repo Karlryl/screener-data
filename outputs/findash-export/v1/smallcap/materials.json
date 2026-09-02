@@ -1,22 +1,24 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.620Z",
+  "generated_at": "2026-09-02T10:36:04.699Z",
   "branch": "materials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "GAU",
-      "score": 69.1,
+      "score": 73,
       "track": "profitable",
-      "lamps": [],
+      "lamps": [
+        "lowRoic"
+      ],
       "overview": {
         "kind": "gp",
         "value": null,
@@ -33,12 +35,12 @@
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
       "ipoYear": 2008,
-      "coverageAxes": "4/7",
-      "coverageWeight": 0.49,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.77,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 90.4,
-      "scoreShrunk": 69.1,
+      "scoreBase": 83.2,
+      "scoreShrunk": 73,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -72,7 +74,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": null,
+          "pct": 70.8,
           "weight": 2
         },
         {
@@ -121,7 +123,7 @@
       "coverageWeight": 0.89,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 71.7,
+      "scoreBase": 71.8,
       "scoreShrunk": 67.2,
       "factors": {
         "burn": 1,
@@ -156,7 +158,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 95.5,
+          "pct": 95.8,
           "weight": 2
         },
         {
@@ -179,8 +181,97 @@
     {
       "rank": 3,
       "rankGrund": null,
+      "ticker": "ALTO",
+      "score": 60.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 2.591,
+        "companion": 31.1
+      },
+      "name": "Alto Ingredients, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2005,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 14,
+      "cohortFallback": true,
+      "scoreBase": 61.6,
+      "scoreShrunk": 60.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 88.5,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70.8,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.4,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 80.8,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 73.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 29.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 59.1,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 12.480543500155662,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 6.3,
+        "pctl": 0.769
+      },
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 4,
+      "rankGrund": null,
       "ticker": "OEC",
-      "score": 58.4,
+      "score": 58.7,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -203,8 +294,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 59.6,
-      "scoreShrunk": 58.4,
+      "scoreBase": 59.9,
+      "scoreShrunk": 58.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -238,7 +329,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.4,
+          "pct": 87.5,
           "weight": 2
         },
         {
@@ -259,10 +350,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 4,
+      "rank": 5,
       "rankGrund": null,
       "ticker": "IPI",
-      "score": 54.5,
+      "score": 53.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -281,7 +372,7 @@
       "sector": "Basic Materials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "seit-kurzem-profitabel",
@@ -290,8 +381,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 55.1,
-      "scoreShrunk": 54.5,
+      "scoreBase": 54.2,
+      "scoreShrunk": 53.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -325,7 +416,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 40.9,
+          "pct": 37.5,
           "weight": 2
         },
         {
@@ -346,95 +437,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 5,
-      "rankGrund": null,
-      "ticker": "ASIX",
-      "score": 53.1,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.078,
-        "companion": 6.3
-      },
-      "name": "AdvanSix Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 14,
-      "cohortFallback": true,
-      "scoreBase": 53.6,
-      "scoreShrunk": 53.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 42.3,
-          "weight": 0.5
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 54.2,
-          "weight": 1.9
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 68.2,
-          "weight": 0.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 26.9,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 19.2,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 59.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 68.2,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 2.7466818853622454,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 6,
       "rankGrund": null,
       "ticker": "VHI",
-      "score": 52.9,
+      "score": 53.3,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -455,7 +461,7 @@
       "sector": "Basic Materials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "kurz-vor-profitabel",
@@ -464,8 +470,8 @@
       "coverageWeight": 0.89,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 55.8,
-      "scoreShrunk": 54.9,
+      "scoreBase": 56.4,
+      "scoreShrunk": 55.3,
       "factors": {
         "burn": 0.964,
         "growth": 1,
@@ -499,7 +505,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 77.3,
+          "pct": 79.2,
           "weight": 2
         },
         {
@@ -522,8 +528,93 @@
     {
       "rank": 7,
       "rankGrund": null,
+      "ticker": "ASIX",
+      "score": 51.9,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.078,
+        "companion": 6.3
+      },
+      "name": "AdvanSix Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Basic Materials",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 14,
+      "cohortFallback": true,
+      "scoreBase": 52.2,
+      "scoreShrunk": 51.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 42.3,
+          "weight": 0.5
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 54.2,
+          "weight": 1.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 68.2,
+          "weight": 0.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 26.9,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 19.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 68.2,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 2.7466818853622454,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 8,
+      "rankGrund": null,
       "ticker": "RYAM",
-      "score": 51.4,
+      "score": 50.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -551,8 +642,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 51.7,
-      "scoreShrunk": 51.4,
+      "scoreBase": 50.5,
+      "scoreShrunk": 50.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -586,7 +677,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 45.8,
           "weight": 2
         },
         {
@@ -607,10 +698,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 8,
+      "rank": 9,
       "rankGrund": null,
       "ticker": "GEVO",
-      "score": 49.2,
+      "score": 49,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -640,8 +731,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 49.1,
-      "scoreShrunk": 49.2,
+      "scoreBase": 48.8,
+      "scoreShrunk": 49,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -675,7 +766,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 13.6,
+          "pct": 12.5,
           "weight": 2
         },
         {
@@ -699,10 +790,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 10,
       "rankGrund": null,
       "ticker": "ASTL",
-      "score": 32.3,
+      "score": 31,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -732,8 +823,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 34.5,
-      "scoreShrunk": 36.5,
+      "scoreBase": 32.9,
+      "scoreShrunk": 35,
       "factors": {
         "burn": 0.886,
         "growth": 1,
@@ -767,7 +858,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 68.2,
+          "pct": 62.5,
           "weight": 2
         },
         {
@@ -788,10 +879,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 10,
+      "rank": 11,
       "rankGrund": null,
       "ticker": "ASPN",
-      "score": 23.6,
+      "score": 23.1,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -820,8 +911,8 @@
       "coverageWeight": 0.94,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 17.7,
-      "scoreShrunk": 23.6,
+      "scoreBase": 17.1,
+      "scoreShrunk": 23.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -855,7 +946,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 22.7,
+          "pct": 20.8,
           "weight": 2
         },
         {
@@ -876,10 +967,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 11,
+      "rank": 12,
       "rankGrund": null,
       "ticker": "METCB",
-      "score": 20,
+      "score": 19.9,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -906,8 +997,8 @@
       "coverageWeight": 1,
       "cohortN": 14,
       "cohortFallback": true,
-      "scoreBase": 15.7,
-      "scoreShrunk": 20,
+      "scoreBase": 15.6,
+      "scoreShrunk": 19.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -941,7 +1032,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 4.5,
+          "pct": 4.2,
           "weight": 2
         },
         {
@@ -955,95 +1046,6 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 12,
-      "rankGrund": null,
-      "ticker": "ALTO",
-      "score": 13.5,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 2.591,
-        "companion": 31.1
-      },
-      "name": "Alto Ingredients, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Basic Materials",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2005,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 14,
-      "cohortFallback": true,
-      "scoreBase": 62.4,
-      "scoreShrunk": 60.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.222
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.5,
-          "weight": 0.5
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 70.8,
-          "weight": 1.9
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.4,
-          "weight": 0.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 80.8,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 73.1,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 31.8,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 59.1,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 12.480543500155662,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 6.3,
-        "pctl": 0.769
-      },
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,

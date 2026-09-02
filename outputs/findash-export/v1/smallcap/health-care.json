@@ -1,20 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.610Z",
+  "generated_at": "2026-09-02T10:36:04.690Z",
   "branch": "health-care",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "CRMD",
-      "score": 71,
+      "score": 71.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -41,7 +41,7 @@
       "cohortN": 22,
       "cohortFallback": false,
       "scoreBase": 78.4,
-      "scoreShrunk": 71,
+      "scoreShrunk": 71.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -101,35 +101,35 @@
     {
       "rank": 2,
       "rankGrund": null,
-      "ticker": "BWAY",
-      "score": 67.7,
+      "ticker": "TCMD",
+      "score": 65.5,
       "track": "profitable",
       "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
+        "peakMargin",
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.288,
-        "companion": 79.7
+        "value": 0.154,
+        "companion": 56.7
       },
-      "name": "BrainsWay Ltd.",
-      "country": "Israel",
-      "region": "Middle East",
+      "name": "Tactile Systems Technology, Inc.",
+      "country": "United States",
+      "region": "North America",
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "growth",
+      "ipoRecency": "seasoned",
       "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2019,
+      "ipoYear": 2016,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 69.3,
-      "scoreShrunk": 67.7,
+      "scoreBase": 66.9,
+      "scoreShrunk": 65.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -138,41 +138,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.1,
+          "pct": 70.5,
           "weight": 1.7
         },
         {
           "key": "revAcceleration",
-          "pct": 43.2,
+          "pct": 79.5,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 82.5,
+          "pct": 57.5,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 79.5,
+          "pct": 65.9,
           "weight": 1.1
         },
         {
           "key": "marginTrajectory",
-          "pct": 78.6,
+          "pct": 69,
           "weight": 0.7
         },
         {
           "key": "capitalEfficiency",
-          "pct": 61.4,
+          "pct": 56.8,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 92.9,
+          "pct": 73.8,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 34.630721220527036,
+      "revGrowthYoYPct": 22.848795456029247,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -190,7 +190,8 @@
       "score": 65.3,
       "track": "profitable",
       "lamps": [
-        "peakMargin"
+        "peakMargin",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -270,35 +271,35 @@
     {
       "rank": 4,
       "rankGrund": null,
-      "ticker": "TCMD",
-      "score": 64.6,
+      "ticker": "BWAY",
+      "score": 60.6,
       "track": "profitable",
       "lamps": [
-        "peakMargin",
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.154,
-        "companion": 56.7
+        "value": 0.288,
+        "companion": 79.7
       },
-      "name": "Tactile Systems Technology, Inc.",
-      "country": "United States",
-      "region": "North America",
+      "name": "BrainsWay Ltd.",
+      "country": "Israel",
+      "region": "Middle East",
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "growth",
       "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2016,
+      "ipoYear": 2019,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 66,
-      "scoreShrunk": 64.6,
+      "scoreBase": 61.6,
+      "scoreShrunk": 60.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -307,41 +308,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 70.5,
+          "pct": 84.1,
           "weight": 1.7
         },
         {
           "key": "revAcceleration",
-          "pct": 79.5,
+          "pct": 43.2,
           "weight": 2.5
         },
         {
           "key": "gpGrowth",
-          "pct": 57.5,
+          "pct": 82.5,
           "weight": 2
         },
         {
           "key": "ruleOfX",
-          "pct": 65.9,
+          "pct": 79.5,
           "weight": 1.1
         },
         {
           "key": "marginTrajectory",
-          "pct": 69,
+          "pct": 78.6,
           "weight": 0.7
         },
         {
           "key": "capitalEfficiency",
-          "pct": 52.3,
+          "pct": 25,
           "weight": 2.3
         },
         {
           "key": "dilution",
-          "pct": 73.8,
+          "pct": 92.9,
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 22.848795456029247,
+      "revGrowthYoYPct": 34.630721220527036,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -609,7 +610,7 @@
       "rank": 8,
       "rankGrund": null,
       "ticker": "AKBA",
-      "score": 51,
+      "score": 51.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -635,8 +636,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 51.1,
-      "scoreShrunk": 51,
+      "scoreBase": 52.1,
+      "scoreShrunk": 51.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -670,7 +671,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 25,
+          "pct": 29.5,
           "weight": 2.3
         },
         {
@@ -697,7 +698,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "ANGO",
-      "score": 48.7,
+      "score": 49.6,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -723,8 +724,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 48.6,
-      "scoreShrunk": 48.7,
+      "scoreBase": 49.6,
+      "scoreShrunk": 49.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -758,7 +759,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 38.6,
+          "pct": 43.2,
           "weight": 2.3
         },
         {
@@ -782,7 +783,7 @@
       "rank": 10,
       "rankGrund": null,
       "ticker": "DCTH",
-      "score": 48.6,
+      "score": 49.5,
       "track": "profitable",
       "lamps": [
         "highDilution",
@@ -809,8 +810,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 48.4,
-      "scoreShrunk": 48.6,
+      "scoreBase": 49.4,
+      "scoreShrunk": 49.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -844,7 +845,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47.7,
+          "pct": 52.3,
           "weight": 2.3
         },
         {
@@ -875,9 +876,7 @@
       "track": "profitable",
       "lamps": [
         "peakMargin",
-        "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
@@ -892,7 +891,7 @@
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "7/7",
@@ -947,10 +946,7 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 7.8,
-        "pctl": 0.81
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -977,7 +973,7 @@
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "7/7",
@@ -1047,7 +1043,8 @@
       "track": "profitable",
       "lamps": [
         "unprofit",
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -1117,7 +1114,10 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
+      "shareDilution": {
+        "ratePct": 5.3,
+        "pctl": 0.762
+      },
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -1127,8 +1127,98 @@
     {
       "rank": 14,
       "rankGrund": null,
+      "ticker": "EVH",
+      "score": 44.1,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.089,
+        "companion": 116.6
+      },
+      "name": "Evolent Health, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2015,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 22,
+      "cohortFallback": false,
+      "scoreBase": 43.6,
+      "scoreShrunk": 44.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 88.6,
+          "weight": 1.7
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 6.8,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 27.5,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 88.6,
+          "weight": 1.1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 34.1,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 69,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 46.8554761347473,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 8.7,
+        "pctl": 0.857
+      },
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 15,
+      "rankGrund": null,
       "ticker": "CUVL",
-      "score": 43.3,
+      "score": 43.4,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -1154,7 +1244,7 @@
       "cohortN": 22,
       "cohortFallback": false,
       "scoreBase": 42,
-      "scoreShrunk": 43.3,
+      "scoreShrunk": 43.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1209,100 +1299,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 15,
-      "rankGrund": null,
-      "ticker": "EVH",
-      "score": 43.2,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.089,
-        "companion": 116.6
-      },
-      "name": "Evolent Health, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2015,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 42.6,
-      "scoreShrunk": 43.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.6,
-          "weight": 1.7
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 6.8,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 27.5,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 88.6,
-          "weight": 1.1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 50,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 29.5,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 69,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 46.8554761347473,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 8.7,
-        "pctl": 0.857
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 16,
       "rankGrund": null,
       "ticker": "MDXG",
-      "score": 42.4,
+      "score": 43.3,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1330,8 +1330,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 41.7,
-      "scoreShrunk": 42.4,
+      "scoreBase": 42.7,
+      "scoreShrunk": 43.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1365,7 +1365,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 34.1,
+          "pct": 38.6,
           "weight": 2.3
         },
         {
@@ -1475,6 +1475,91 @@
     {
       "rank": 18,
       "rankGrund": null,
+      "ticker": "SLP",
+      "score": 37.1,
+      "track": "profitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.071,
+        "companion": 39.6
+      },
+      "name": "Simulations Plus, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1997,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 22,
+      "cohortFallback": false,
+      "scoreBase": 35.9,
+      "scoreShrunk": 37.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 29.5,
+          "weight": 1.7
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 25,
+          "weight": 2.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 7.5,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 43.2,
+          "weight": 1.1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 97.6,
+          "weight": 0.7
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 61.4,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 11.9,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 7.479251583754842,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 19,
+      "rankGrund": null,
       "ticker": "CERS",
       "score": 36.9,
       "track": "profitable",
@@ -1554,93 +1639,8 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 6.5,
-        "pctl": 0.762
+        "pctl": 0.81
       },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 19,
-      "rankGrund": null,
-      "ticker": "SLP",
-      "score": 36.2,
-      "track": "profitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.071,
-        "companion": 39.6
-      },
-      "name": "Simulations Plus, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1997,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 22,
-      "cohortFallback": false,
-      "scoreBase": 35,
-      "scoreShrunk": 36.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 29.5,
-          "weight": 1.7
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 25,
-          "weight": 2.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 7.5,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 43.2,
-          "weight": 1.1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 97.6,
-          "weight": 0.7
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 56.8,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 11.9,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 7.479251583754842,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -1736,7 +1736,7 @@
       "rank": 21,
       "rankGrund": null,
       "ticker": "IRWD",
-      "score": 28.8,
+      "score": 28.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1763,7 +1763,7 @@
       "cohortN": 22,
       "cohortFallback": false,
       "scoreBase": 60.5,
-      "scoreShrunk": 57.6,
+      "scoreShrunk": 57.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1821,7 +1821,7 @@
       "rank": 22,
       "rankGrund": null,
       "ticker": "AIRS",
-      "score": 27.1,
+      "score": 28,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1847,8 +1847,8 @@
       "coverageWeight": 1,
       "cohortN": 22,
       "cohortFallback": false,
-      "scoreBase": 25,
-      "scoreShrunk": 27.1,
+      "scoreBase": 26,
+      "scoreShrunk": 28,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1882,7 +1882,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.2,
+          "pct": 47.7,
           "weight": 2.3
         },
         {
@@ -1908,7 +1908,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "ZVRA",
-      "score": 80.7,
+      "score": 80.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1938,7 +1938,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 81.7,
-      "scoreShrunk": 80.7,
+      "scoreShrunk": 80.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1967,12 +1967,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 77.9,
+          "pct": 77.5,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.5,
+          "pct": 45.4,
           "weight": 0.4
         },
         {
@@ -2076,7 +2076,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": {
         "ratePct": 21.7,
-        "pctl": 0.871
+        "pctl": 0.902
       },
       "ath": null,
       "qPunkte": null,
@@ -2098,7 +2098,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2422.6
+        "companion": 2425.4
       },
       "name": "Century Therapeutics, Inc.",
       "country": "United States",
@@ -2174,7 +2174,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "OVID",
-      "score": 76.4,
+      "score": 76.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2185,7 +2185,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2422.6
+        "companion": 2425.4
       },
       "name": "Ovid Therapeutics Inc.",
       "country": "United States",
@@ -2203,7 +2203,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 91.1,
-      "scoreShrunk": 76.4,
+      "scoreShrunk": 76.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2291,7 +2291,7 @@
       "coverageWeight": 0.81,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 81.1,
+      "scoreBase": 81,
       "scoreShrunk": 73.9,
       "factors": {
         "burn": 1,
@@ -2321,7 +2321,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 76,
+          "pct": 75.5,
           "weight": 0.8
         },
         {
@@ -2350,7 +2350,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "SRTA",
-      "score": 72.8,
+      "score": 72.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2371,7 +2371,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -2380,8 +2380,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 73.5,
-      "scoreShrunk": 72.8,
+      "scoreBase": 73.6,
+      "scoreShrunk": 72.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2410,7 +2410,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 47.1,
+          "pct": 48,
           "weight": 0.8
         },
         {
@@ -2439,7 +2439,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "ALT",
-      "score": 67.9,
+      "score": 67.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2471,7 +2471,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 76.4,
-      "scoreShrunk": 67.9,
+      "scoreShrunk": 67.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2520,7 +2520,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": {
         "ratePct": 14.7,
-        "pctl": 0.774
+        "pctl": 0.787
       },
       "ath": null,
       "qPunkte": null,
@@ -2605,13 +2605,13 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 74.78134110787171,
+      "revGrowthYoYPct": 74.78134110787174,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 29.3,
-        "pctl": 0.919
+        "pctl": 0.934
       },
       "ath": null,
       "qPunkte": null,
@@ -2623,7 +2623,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "TOI",
-      "score": 63.3,
+      "score": 63.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2651,8 +2651,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 63.7,
-      "scoreShrunk": 63.3,
+      "scoreBase": 63.8,
+      "scoreShrunk": 63.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2681,7 +2681,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 52.9,
+          "pct": 53.9,
           "weight": 0.8
         },
         {
@@ -2741,7 +2741,7 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 61.8,
+      "scoreBase": 61.9,
       "scoreShrunk": 61.5,
       "factors": {
         "burn": 1,
@@ -2771,7 +2771,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 60.6,
+          "pct": 61.8,
           "weight": 0.8
         },
         {
@@ -2859,7 +2859,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 87.5,
+          "pct": 87.3,
           "weight": 0.8
         },
         {
@@ -2879,7 +2879,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 24.7,
-        "pctl": 0.887
+        "pctl": 0.918
       },
       "ath": null,
       "qPunkte": null,
@@ -2891,7 +2891,7 @@
       "rank": 12,
       "rankGrund": null,
       "ticker": "SSII",
-      "score": 56.2,
+      "score": 56.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2922,8 +2922,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 56.4,
-      "scoreShrunk": 56.2,
+      "scoreBase": 56.5,
+      "scoreShrunk": 56.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2952,7 +2952,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 64.4,
+          "pct": 65.7,
           "weight": 0.8
         },
         {
@@ -3011,7 +3011,7 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 55.4,
+      "scoreBase": 55.5,
       "scoreShrunk": 55.3,
       "factors": {
         "burn": 1,
@@ -3041,7 +3041,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 37.5,
+          "pct": 38.2,
           "weight": 0.8
         },
         {
@@ -3070,7 +3070,7 @@
       "rank": 14,
       "rankGrund": null,
       "ticker": "ENTA",
-      "score": 55,
+      "score": 55.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3092,15 +3092,15 @@
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "6/7",
       "coverageWeight": 0.81,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 57,
-      "scoreShrunk": 55,
+      "scoreBase": 57.1,
+      "scoreShrunk": 55.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3129,7 +3129,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 66.3,
+          "pct": 67.6,
           "weight": 0.8
         },
         {
@@ -3170,7 +3170,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 2422.6
+        "companion": 2425.4
       },
       "name": "Verastem, Inc.",
       "country": "United States",
@@ -3246,7 +3246,7 @@
       "rank": 16,
       "rankGrund": null,
       "ticker": "PACB",
-      "score": 53.7,
+      "score": 53.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3269,7 +3269,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
@@ -3278,8 +3278,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 53.8,
-      "scoreShrunk": 53.7,
+      "scoreBase": 53.3,
+      "scoreShrunk": 53.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3288,7 +3288,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 29.2,
+          "pct": 27.4,
           "weight": 2
         },
         {
@@ -3303,12 +3303,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 29.2,
+          "pct": 27.4,
           "weight": 1
         },
         {
           "key": "marginTrajectory",
-          "pct": 41.3,
+          "pct": 42.2,
           "weight": 0.8
         },
         {
@@ -3328,7 +3328,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 14,
-        "pctl": 0.758
+        "pctl": 0.77
       },
       "ath": null,
       "qPunkte": null,
@@ -3400,7 +3400,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 81.7,
+          "pct": 81.4,
           "weight": 0.8
         },
         {
@@ -3489,7 +3489,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 12.5,
+          "pct": 12.7,
           "weight": 0.8
         },
         {
@@ -3509,7 +3509,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": {
         "ratePct": 17.2,
-        "pctl": 0.839
+        "pctl": 0.869
       },
       "ath": null,
       "qPunkte": null,
@@ -3521,7 +3521,7 @@
       "rank": 19,
       "rankGrund": null,
       "ticker": "AUTL",
-      "score": 49.7,
+      "score": 49.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3554,8 +3554,8 @@
       "coverageWeight": 0.81,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 67.5,
-      "scoreShrunk": 63.3,
+      "scoreBase": 67.3,
+      "scoreShrunk": 63.1,
       "factors": {
         "burn": 0.786,
         "growth": 1,
@@ -3584,12 +3584,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 85.6,
+          "pct": 85.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47.2,
+          "pct": 43.5,
           "weight": 0.4
         },
         {
@@ -3603,8 +3603,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
-        "ratePct": 26.5,
-        "pctl": 0.903
+        "ratePct": 16.4,
+        "pctl": 0.852
       },
       "ath": null,
       "qPunkte": null,
@@ -3614,93 +3614,6 @@
     },
     {
       "rank": 20,
-      "rankGrund": null,
-      "ticker": "NPCE",
-      "score": 49.5,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.307,
-        "companion": -4.7
-      },
-      "name": "NeuroPace, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 66,
-      "cohortFallback": false,
-      "scoreBase": 49.4,
-      "scoreShrunk": 49.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 27.4,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 80.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 27.4,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 39.4,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 67.6,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 69.2,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -2.0245071923281843,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 21,
       "rankGrund": null,
       "ticker": "CARL",
       "score": 49.2,
@@ -3733,7 +3646,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 55.3,
-      "scoreShrunk": 55.1,
+      "scoreShrunk": 55.2,
       "factors": {
         "burn": 0.892,
         "growth": 1,
@@ -3762,7 +3675,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 35.6,
+          "pct": 36.3,
           "weight": 0.8
         },
         {
@@ -3788,41 +3701,39 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 22,
+      "rank": 21,
       "rankGrund": null,
-      "ticker": "GYRE",
-      "score": 47.9,
+      "ticker": "NPCE",
+      "score": 48.9,
       "track": "unprofitable",
       "lamps": [
+        "unprofit",
         "burning",
-        "lowRoic",
-        "arDivergence",
-        "crashRisk",
-        "fcfArtefact",
-        "opIncYahooAdjusted"
+        "shortRunway",
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.091,
-        "companion": -4.9
+        "value": 0.307,
+        "companion": -4.7
       },
-      "name": "Gyre Therapeutics, Inc.",
+      "name": "NeuroPace, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Healthcare",
       "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mega",
+      "phase": "unprofitable",
+      "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2006,
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 47.8,
-      "scoreShrunk": 47.9,
+      "scoreBase": 48.9,
+      "scoreShrunk": 48.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3836,12 +3747,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 70.4,
+          "pct": 50,
           "weight": 2.8
         },
         {
           "key": "gpGrowth",
-          "pct": 43.9,
+          "pct": 80.3,
           "weight": 1.8
         },
         {
@@ -3851,21 +3762,21 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 24,
+          "pct": 40.2,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.7,
+          "pct": 67.6,
           "weight": 0.4
         },
         {
           "key": "dilution",
-          "pct": 82.5,
+          "pct": 69.2,
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -2.1154234209995293,
+      "revGrowthYoYPct": -2.0245071923281843,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -3877,10 +3788,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 23,
+      "rank": 22,
       "rankGrund": null,
       "ticker": "CGC",
-      "score": 47.8,
+      "score": 47.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -3910,8 +3821,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 47.8,
-      "scoreShrunk": 47.8,
+      "scoreBase": 47.9,
+      "scoreShrunk": 47.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3940,7 +3851,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 51,
+          "pct": 52,
           "weight": 0.8
         },
         {
@@ -3969,10 +3880,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 24,
+      "rank": 23,
       "rankGrund": null,
       "ticker": "KIDS",
-      "score": 47.5,
+      "score": 47.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4001,8 +3912,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 47.5,
-      "scoreShrunk": 47.5,
+      "scoreBase": 47.6,
+      "scoreShrunk": 47.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4031,7 +3942,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 58.7,
+          "pct": 59.8,
           "weight": 0.8
         },
         {
@@ -4057,6 +3968,95 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 24,
+      "rankGrund": null,
+      "ticker": "GYRE",
+      "score": 47.3,
+      "track": "unprofitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "arDivergence",
+        "crashRisk",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.091,
+        "companion": -4.9
+      },
+      "name": "Gyre Therapeutics, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 66,
+      "cohortFallback": false,
+      "scoreBase": 47.2,
+      "scoreShrunk": 47.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 23.6,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70.4,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 43.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 23.6,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 24.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.7,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 82.5,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -2.1154234209995293,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 25,
       "rankGrund": null,
       "ticker": "NNNN",
@@ -4067,8 +4067,7 @@
         "shortRunway",
         "peakMargin",
         "arDivergence",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -4138,10 +4137,7 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 37.2,
-        "pctl": 0.968
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -4152,7 +4148,7 @@
       "rank": 26,
       "rankGrund": null,
       "ticker": "EOLS",
-      "score": 46.1,
+      "score": 46.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4180,8 +4176,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 45.9,
-      "scoreShrunk": 46.1,
+      "scoreBase": 46.1,
+      "scoreShrunk": 46.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4210,12 +4206,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 56.7,
+          "pct": 57.8,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 45.4,
+          "pct": 47.2,
           "weight": 0.4
         },
         {
@@ -4239,7 +4235,7 @@
       "rank": 27,
       "rankGrund": null,
       "ticker": "MOBI",
-      "score": 45.9,
+      "score": 46,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4269,8 +4265,8 @@
       "coverageWeight": 0.7,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 76.6,
-      "scoreShrunk": 67.4,
+      "scoreBase": 76.8,
+      "scoreShrunk": 67.5,
       "factors": {
         "burn": 0.681,
         "growth": 1,
@@ -4299,7 +4295,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 62.5,
+          "pct": 63.7,
           "weight": 0.8
         },
         {
@@ -4388,7 +4384,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.4,
+          "pct": 89.2,
           "weight": 0.8
         },
         {
@@ -4408,7 +4404,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 34.8,
-        "pctl": 0.952
+        "pctl": 0.967
       },
       "ath": null,
       "qPunkte": null,
@@ -4420,7 +4416,7 @@
       "rank": 29,
       "rankGrund": null,
       "ticker": "OFIX",
-      "score": 43,
+      "score": 43.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4448,8 +4444,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 42.8,
-      "scoreShrunk": 43,
+      "scoreBase": 42.9,
+      "scoreShrunk": 43.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4478,7 +4474,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 49,
+          "pct": 50,
           "weight": 0.8
         },
         {
@@ -4568,7 +4564,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 95.2,
+          "pct": 95.1,
           "weight": 0.8
         },
         {
@@ -4621,14 +4617,14 @@
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "nicht-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "6/7",
       "coverageWeight": 0.81,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 41.1,
+      "scoreBase": 41.2,
       "scoreShrunk": 42.7,
       "factors": {
         "burn": 1,
@@ -4658,7 +4654,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 33.7,
+          "pct": 34.3,
           "weight": 0.8
         },
         {
@@ -4678,7 +4674,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 15.5,
-        "pctl": 0.806
+        "pctl": 0.82
       },
       "ath": null,
       "qPunkte": null,
@@ -4689,98 +4685,8 @@
     {
       "rank": 32,
       "rankGrund": null,
-      "ticker": "LAB",
-      "score": 39.9,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "fcfArtefact",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.052,
-        "companion": -17.5
-      },
-      "name": "Standard BioTools Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2011,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 66,
-      "cohortFallback": false,
-      "scoreBase": 39.6,
-      "scoreShrunk": 39.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 21.7,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 60.2,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 37.9,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 21.7,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 31.7,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 73.1,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 24.2,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -7.618785038139874,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 33,
-      "rankGrund": null,
       "ticker": "VCRE",
-      "score": 39.8,
+      "score": 39.7,
       "track": "unprofitable",
       "lamps": [
         "burning",
@@ -4808,7 +4714,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 36,
-      "scoreShrunk": 39.8,
+      "scoreShrunk": 39.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4866,7 +4772,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 34,
+      "rank": 33,
       "rankGrund": null,
       "ticker": "ORGO",
       "score": 39.5,
@@ -4928,7 +4834,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 8.7,
+          "pct": 8.8,
           "weight": 0.8
         },
         {
@@ -4954,10 +4860,100 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 34,
+      "rankGrund": null,
+      "ticker": "LAB",
+      "score": 39.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.052,
+        "companion": -17.5
+      },
+      "name": "Standard BioTools Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2011,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 66,
+      "cohortFallback": false,
+      "scoreBase": 39.1,
+      "scoreShrunk": 39.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 19.8,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 60.2,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 37.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 19.8,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 32.4,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 73.1,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 24.2,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -7.618785038139874,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 35,
       "rankGrund": null,
       "ticker": "ABEO",
-      "score": 38.6,
+      "score": 38.5,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -4987,7 +4983,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 28,
-      "scoreShrunk": 38.6,
+      "scoreShrunk": 38.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5044,8 +5040,94 @@
     {
       "rank": 36,
       "rankGrund": null,
+      "ticker": "MYGN",
+      "score": 37.7,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.015,
+        "companion": -3.6
+      },
+      "name": "Myriad Genetics, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 1995,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.91,
+      "cohortN": 66,
+      "cohortFallback": false,
+      "scoreBase": 36.4,
+      "scoreShrunk": 37.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 31.1,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 31.6,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 28.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 31.1,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 93.5,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 75.8,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -1.5639923591213023,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 37,
+      "rankGrund": null,
       "ticker": "PROK",
-      "score": 37.4,
+      "score": 36.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5074,8 +5156,8 @@
       "coverageWeight": 0.51,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 26.4,
-      "scoreShrunk": 37.4,
+      "scoreBase": 25.2,
+      "scoreShrunk": 36.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5084,7 +5166,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 31.1,
+          "pct": 29.2,
           "weight": 2
         },
         {
@@ -5099,7 +5181,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 31.1,
+          "pct": 29.2,
           "weight": 1
         },
         {
@@ -5130,96 +5212,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 37,
-      "rankGrund": null,
-      "ticker": "MYGN",
-      "score": 35.9,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.015,
-        "companion": -24.2
-      },
-      "name": "Myriad Genetics, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 1995,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 66,
-      "cohortFallback": false,
-      "scoreBase": 35.5,
-      "scoreShrunk": 35.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 19.8,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 31.6,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 28.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 19.8,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 68.3,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 93.5,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 75.8,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -10.511496949788835,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 38,
       "rankGrund": null,
       "ticker": "CTKB",
-      "score": 34.2,
+      "score": 34.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5248,8 +5244,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 39,
-      "scoreShrunk": 39.3,
+      "scoreBase": 39.1,
+      "scoreShrunk": 39.4,
       "factors": {
         "burn": 0.87,
         "growth": 1,
@@ -5278,7 +5274,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 43.3,
+          "pct": 44.1,
           "weight": 0.8
         },
         {
@@ -5336,7 +5332,7 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 32.2,
+      "scoreBase": 32.3,
       "scoreShrunk": 32.8,
       "factors": {
         "burn": 1,
@@ -5366,7 +5362,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 14.4,
+          "pct": 14.7,
           "weight": 0.8
         },
         {
@@ -5380,7 +5376,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -21.669383632199548,
+      "revGrowthYoYPct": -21.669383632199533,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -5395,7 +5391,7 @@
       "rank": 40,
       "rankGrund": null,
       "ticker": "CV",
-      "score": 31.9,
+      "score": 32,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -5426,7 +5422,7 @@
       "cohortN": 66,
       "cohortFallback": false,
       "scoreBase": 35.4,
-      "scoreShrunk": 35.8,
+      "scoreShrunk": 35.9,
       "factors": {
         "burn": 0.892,
         "growth": 1,
@@ -5455,7 +5451,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 18.3,
+          "pct": 18.6,
           "weight": 0.8
         },
         {
@@ -5482,94 +5478,6 @@
     },
     {
       "rank": 41,
-      "rankGrund": null,
-      "ticker": "VNDA",
-      "score": 29.5,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "burnAccelerating"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.083,
-        "companion": -9
-      },
-      "name": "Vanda Pharmaceuticals Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 66,
-      "cohortFallback": false,
-      "scoreBase": 43.2,
-      "scoreShrunk": 43.4,
-      "factors": {
-        "burn": 0.68,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 23.6,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 54.1,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 23.6,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 20.2,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 86.1,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 77.5,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -3.91899600684541,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 42,
       "rankGrund": null,
       "ticker": "CLPT",
       "score": 29.1,
@@ -5603,8 +5511,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 42.7,
-      "scoreShrunk": 42.9,
+      "scoreBase": 42.8,
+      "scoreShrunk": 43,
       "factors": {
         "burn": 0.677,
         "growth": 1,
@@ -5633,7 +5541,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 27.9,
+          "pct": 28.4,
           "weight": 0.8
         },
         {
@@ -5648,6 +5556,94 @@
         }
       ],
       "revGrowthYoYPct": 18.06836679327184,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 42,
+      "rankGrund": null,
+      "ticker": "VNDA",
+      "score": 29.1,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "burnAccelerating"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.083,
+        "companion": -9
+      },
+      "name": "Vanda Pharmaceuticals Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 66,
+      "cohortFallback": false,
+      "scoreBase": 42.6,
+      "scoreShrunk": 42.8,
+      "factors": {
+        "burn": 0.68,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 21.7,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 54.1,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 21.7,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 20.6,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 86.1,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 77.5,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -3.91899600684541,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -5693,8 +5689,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 35.9,
-      "scoreShrunk": 36.3,
+      "scoreBase": 35.8,
+      "scoreShrunk": 36.2,
       "factors": {
         "burn": 0.775,
         "growth": 1,
@@ -5723,7 +5719,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 72.1,
+          "pct": 71.6,
           "weight": 0.8
         },
         {
@@ -5743,7 +5739,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 33.8,
-        "pctl": 0.935
+        "pctl": 0.951
       },
       "ath": null,
       "qPunkte": null,
@@ -5785,7 +5781,7 @@
       "coverageWeight": 0.81,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 21.4,
+      "scoreBase": 21.5,
       "scoreShrunk": 27.2,
       "factors": {
         "burn": 1,
@@ -5815,7 +5811,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 22.1,
+          "pct": 22.5,
           "weight": 0.8
         },
         {
@@ -5953,7 +5949,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -5962,8 +5958,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 36.6,
-      "scoreShrunk": 37,
+      "scoreBase": 36.7,
+      "scoreShrunk": 37.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -5992,7 +5988,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 16.3,
+          "pct": 16.7,
           "weight": 0.8
         },
         {
@@ -6012,7 +6008,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 15.4,
-        "pctl": 0.79
+        "pctl": 0.803
       },
       "ath": null,
       "qPunkte": null,
@@ -6024,7 +6020,7 @@
       "rank": 47,
       "rankGrund": null,
       "ticker": "FENC",
-      "score": 20.2,
+      "score": 20.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -6056,8 +6052,8 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 36.6,
-      "scoreShrunk": 37,
+      "scoreBase": 36.7,
+      "scoreShrunk": 37.1,
       "factors": {
         "burn": 0.546,
         "growth": 1,
@@ -6086,7 +6082,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 54.8,
+          "pct": 55.9,
           "weight": 0.8
         },
         {
@@ -6115,7 +6111,7 @@
       "rank": 48,
       "rankGrund": null,
       "ticker": "SPRY",
-      "score": 19.1,
+      "score": 19,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -6177,7 +6173,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 74,
+          "pct": 73.5,
           "weight": 0.8
         },
         {
@@ -6441,7 +6437,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 10.6,
+          "pct": 10.8,
           "weight": 0.8
         },
         {
@@ -6498,7 +6494,7 @@
       "coverageWeight": 1,
       "cohortN": 66,
       "cohortFallback": false,
-      "scoreBase": 48.7,
+      "scoreBase": 48.8,
       "scoreShrunk": 48.8,
       "factors": {
         "burn": 0.698,
@@ -6528,7 +6524,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 29.8,
+          "pct": 30.4,
           "weight": 0.8
         },
         {

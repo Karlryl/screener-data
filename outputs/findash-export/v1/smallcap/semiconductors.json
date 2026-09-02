@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.623Z",
+  "generated_at": "2026-09-02T10:36:04.701Z",
   "branch": "semiconductors",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
@@ -108,8 +108,7 @@
         "highDilution",
         "lowRoic",
         "arDivergence",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -179,10 +178,7 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 20.4,
-        "pctl": 1
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -287,7 +283,8 @@
         "lowRoic",
         "arDivergence",
         "burnAccelerating",
-        "opIncYahooAdjusted"
+        "opIncYahooAdjusted",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -357,12 +354,15 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
+      "shareDilution": {
+        "ratePct": 91.4,
+        "pctl": 1
+      },
       "ath": {
-        "distancePct": -88.7,
+        "distancePct": -89.1,
         "athDate": "2023-05-24",
         "monthsAgo": 39,
-        "lastDate": "2026-08-31"
+        "lastDate": "2026-09-01"
       },
       "qPunkte": null,
       "qSpanTage": null,

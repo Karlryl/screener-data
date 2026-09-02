@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.601Z",
+  "generated_at": "2026-09-02T10:36:04.682Z",
   "branch": "consumer-discretionary",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
@@ -533,7 +533,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -783,7 +783,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -1109,8 +1109,7 @@
       "lamps": [
         "peakMargin",
         "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
+        "arDivergence"
       ],
       "overview": {
         "kind": "gp",
@@ -1454,7 +1453,8 @@
       "track": "profitable",
       "lamps": [
         "peakMargin",
-        "lowRoic"
+        "lowRoic",
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -1899,7 +1899,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -2397,10 +2397,10 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": {
-        "distancePct": -38.2,
+        "distancePct": -45.2,
         "athDate": "2025-10-16",
-        "monthsAgo": 10,
-        "lastDate": "2026-08-31"
+        "monthsAgo": 11,
+        "lastDate": "2026-09-01"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -2490,7 +2490,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 6.4,
-        "pctl": 0.929
+        "pctl": 1
       },
       "ath": null,
       "qPunkte": null,
@@ -2867,7 +2867,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "kurz-vor-profitabel",
@@ -2941,8 +2941,7 @@
         "unprofit",
         "burning",
         "shortRunway",
-        "lowRoic",
-        "opIncYahooAdjusted"
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
@@ -3109,8 +3108,8 @@
       "ath": {
         "distancePct": -83.6,
         "athDate": "2021-11-15",
-        "monthsAgo": 57,
-        "lastDate": "2026-08-31"
+        "monthsAgo": 58,
+        "lastDate": "2026-09-01"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -3235,7 +3234,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -3293,8 +3292,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": {
-        "ratePct": 8.1,
-        "pctl": 1
+        "ratePct": 5,
+        "pctl": 0.929
       },
       "ath": null,
       "qPunkte": null,

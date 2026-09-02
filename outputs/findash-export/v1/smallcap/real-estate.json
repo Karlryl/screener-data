@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.621Z",
+  "generated_at": "2026-09-02T10:36:04.700Z",
   "branch": "real-estate",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
@@ -107,7 +107,8 @@
       "score": 72,
       "track": "profitable",
       "lamps": [
-        "lowRoic"
+        "lowRoic",
+        "shareCountDilution"
       ],
       "overview": {
         "kind": "gp",
@@ -120,7 +121,7 @@
       "sector": "Real Estate",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
@@ -177,7 +178,10 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
+      "shareDilution": {
+        "ratePct": 5.4,
+        "pctl": 0.778
+      },
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -294,7 +298,7 @@
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "7/7",
@@ -627,8 +631,7 @@
       "lamps": [
         "unprofit",
         "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -641,7 +644,7 @@
       "sector": "Real Estate",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -698,10 +701,7 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 7.3,
-        "pctl": 0.778
-      },
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -901,7 +901,7 @@
       "sector": "Real Estate",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -1160,7 +1160,7 @@
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "6/7",
@@ -1247,7 +1247,7 @@
       "phase": "inflected",
       "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
+      "ipoRecency": "mature",
       "profitTier": "seit-kurzem-profitabel",
       "ipoYear": 2013,
       "coverageAxes": "7/7",

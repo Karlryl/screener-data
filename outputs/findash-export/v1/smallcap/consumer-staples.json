@@ -1,13 +1,13 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-01T10:59:39.603Z",
+  "generated_at": "2026-09-02T10:36:04.685Z",
   "branch": "consumer-staples",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 73.4
+    "coverage_pct": 73.3
   },
   "profitable": [
     {
@@ -32,7 +32,7 @@
       "sector": "Consumer Defensive",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -85,7 +85,7 @@
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 195.17607945280898,
+      "revGrowthYoYPct": 195.176079452809,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -100,7 +100,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "YSG",
-      "score": 72.2,
+      "score": 71.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -128,8 +128,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 74.1,
-      "scoreShrunk": 72.2,
+      "scoreBase": 73.3,
+      "scoreShrunk": 71.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -163,7 +163,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 26.2,
+          "pct": 21.4,
           "weight": 2
         },
         {
@@ -187,7 +187,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "LWAY",
-      "score": 67.5,
+      "score": 68.2,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -213,8 +213,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 69,
-      "scoreShrunk": 67.5,
+      "scoreBase": 69.8,
+      "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -248,7 +248,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 64.3,
+          "pct": 69,
           "weight": 2
         },
         {
@@ -272,7 +272,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "PRE",
-      "score": 64.7,
+      "score": 65.5,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -302,8 +302,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 66,
-      "scoreShrunk": 64.7,
+      "scoreBase": 66.8,
+      "scoreShrunk": 65.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -337,7 +337,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 21.4,
+          "pct": 26.2,
           "weight": 2
         },
         {
@@ -352,7 +352,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 11.8,
-        "pctl": 0.905
+        "pctl": 0.947
       },
       "ath": null,
       "qPunkte": null,
@@ -364,7 +364,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "SUJA",
-      "score": 64.1,
+      "score": 64.8,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -392,8 +392,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 65.3,
-      "scoreShrunk": 64.1,
+      "scoreBase": 66.1,
+      "scoreShrunk": 64.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -427,7 +427,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 59.5,
+          "pct": 64.3,
           "weight": 2
         },
         {
@@ -451,7 +451,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "LND",
-      "score": 64,
+      "score": 63.2,
       "track": "profitable",
       "lamps": [
         "unprofit"
@@ -477,7 +477,7 @@
       "cohortN": 23,
       "cohortFallback": false,
       "scoreBase": 70.7,
-      "scoreShrunk": 64,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -535,13 +535,12 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "AGCC",
-      "score": 61.8,
+      "score": 61.3,
       "track": "profitable",
       "lamps": [
         "burning",
         "arDivergence",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
@@ -564,7 +563,7 @@
       "cohortN": 23,
       "cohortFallback": false,
       "scoreBase": 65.6,
-      "scoreShrunk": 61.8,
+      "scoreShrunk": 61.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -611,93 +610,6 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 56.6,
-        "pctl": 1
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 8,
-      "rankGrund": null,
-      "ticker": "VLGEA",
-      "score": 59.7,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 4.9
-      },
-      "name": "Village Super Market, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.85,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 61.8,
-      "scoreShrunk": 59.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 50,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 45.2,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 50,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 37.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 83.3,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 73.8,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 1.5821341957780177,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -706,7 +618,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 8,
       "rankGrund": null,
       "ticker": "NGVC",
       "score": 59.4,
@@ -792,6 +704,90 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 9,
+      "rankGrund": null,
+      "ticker": "VLGEA",
+      "score": 59.3,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 4.9
+      },
+      "name": "Village Super Market, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.85,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 61.8,
+      "scoreShrunk": 59.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 45.2,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37.5,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 83.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 73.8,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 1.5821341957780177,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 10,
       "rankGrund": null,
       "ticker": "NATR",
@@ -809,7 +805,7 @@
       "sector": "Consumer Defensive",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -961,92 +957,6 @@
     {
       "rank": 12,
       "rankGrund": null,
-      "ticker": "WILC",
-      "score": 53.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.084,
-        "companion": 0.1
-      },
-      "name": "G. Willi-Food International Ltd.",
-      "country": "Israel",
-      "region": "Middle East",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1997,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 53.6,
-      "scoreShrunk": 53.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 40.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 73.8,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44.7,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 35.7,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 67.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 69,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 69,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 0.034272824143033453,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 13,
-      "rankGrund": null,
       "ticker": "USNA",
       "score": 51,
       "track": "profitable",
@@ -1064,7 +974,7 @@
       "sector": "Consumer Defensive",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -1129,10 +1039,96 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 13,
+      "rankGrund": null,
+      "ticker": "WILC",
+      "score": 49.6,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.084,
+        "companion": 0.1
+      },
+      "name": "G. Willi-Food International Ltd.",
+      "country": "Israel",
+      "region": "Middle East",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1997,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 49.6,
+      "scoreShrunk": 49.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 40.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 73.8,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 44.7,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 35.7,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 67.5,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 45.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 69,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 0.03427282414301125,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 14,
       "rankGrund": null,
       "ticker": "MAGN",
-      "score": 42.1,
+      "score": 42.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1161,8 +1157,8 @@
       "coverageWeight": 0.97,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 41.1,
-      "scoreShrunk": 42.1,
+      "scoreBase": 41.9,
+      "scoreShrunk": 42.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1196,7 +1192,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 45.2,
+          "pct": 50,
           "weight": 2
         },
         {
@@ -1291,7 +1287,7 @@
           "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": -3.6781618587321097,
+      "revGrowthYoYPct": -3.6781618587320986,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -1384,7 +1380,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 2.2,
-        "pctl": 0.81
+        "pctl": 0.842
       },
       "ath": null,
       "qPunkte": null,
@@ -1396,7 +1392,7 @@
       "rank": 17,
       "rankGrund": null,
       "ticker": "DNUT",
-      "score": 37,
+      "score": 37.7,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -1425,8 +1421,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 35.8,
-      "scoreShrunk": 37,
+      "scoreBase": 36.7,
+      "scoreShrunk": 37.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1460,7 +1456,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50,
+          "pct": 54.8,
           "weight": 2
         },
         {
@@ -1561,7 +1557,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": {
         "ratePct": 4.4,
-        "pctl": 0.857
+        "pctl": 0.895
       },
       "ath": null,
       "qPunkte": null,
@@ -1658,7 +1654,7 @@
       "rank": 20,
       "rankGrund": null,
       "ticker": "MGPI",
-      "score": 14.2,
+      "score": 14.6,
       "track": "profitable",
       "lamps": [
         "unprofit"
@@ -1674,7 +1670,7 @@
       "sector": "Consumer Defensive",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "kurz-vor-profitabel",
@@ -1683,8 +1679,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 26.5,
-      "scoreShrunk": 28.4,
+      "scoreBase": 27.3,
+      "scoreShrunk": 29.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1718,7 +1714,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 54.8,
+          "pct": 59.5,
           "weight": 2
         },
         {
