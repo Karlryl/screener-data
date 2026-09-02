@@ -505,6 +505,67 @@ function cignaFaelle(funde) {
 }
 
 /**
+ * Q1 (Ratsbeschluss 03.09.2026, Akte agent-reports/_COURT-NACHTLAUF-FRAGEN-2026-09-03.md
+ * §5 Q1) — FAKTOR-GLEICHHEITS-TOR auf die 2-von-3-Form, ADDITIV zu JA-2.
+ * cignaFaelle() bleibt unveraendert bei r.size === 3; dieses Tor sitzt DANEBEN und
+ * ersetzt es nicht. Es ist auch KEINE Obermenge von JA-2: der verankerte Cigna-Fall NVG
+ * traegt Verhaeltnis 1,21 und faellt bei dieser Toleranz durch — deshalb Ergaenzung.
+ *
+ * ── Q1-1: WAS DIESES TOR MISST (Etikett an der Sache) ──────────────────────────────
+ * MARGEN-STABILITAET gegen den dominanten Nachbarn — NICHT den Fingerabdruck einer
+ * gemeinsamen Ursache. Der Faktor ist |Wert| / max(|links|, |rechts|), wie
+ * findeAusreisser ihn misst. Werden die Ausreisserwerte BEIDER Reihen mit demselben k
+ * multipliziert, kuerzt k sich im Verhaeltnis vollstaendig weg: am echten 001450.KS
+ * reproduziert liefern k=1 und k=10 beide exakt 1,0000. Das Tor ist damit BLIND gegen
+ * die Korruptionsstaerke und empfindlich fuer die Marge des unkorrumpierten
+ * Nachbarjahres — bewegt sich die Marge, passiert derselbe Skalierungs-Fehlabruf das
+ * Tor. Wer hier "gemeinsame Ursache" liest, liest die Zusicherung zu breit.
+ *
+ * ── WOHER DIE TOLERANZ KOMMT: gemessener Schnitt, kein gesetztes Niveau ────────────
+ * Ueber die 22 realen 2-von-3-Formen des Snapshot-Baums (15.044 Snapshots, 141 Funde)
+ * zerfaellt das Faktor-Verhaeltnis in zwei Klassen OHNE Ueberlappung:
+ *   Klasse A   n =  8   OpInc+Rev         Verhaeltnis exakt 1,0000
+ *   Klasse B   n = 14   NetIncome+OpInc   Verhaeltnis 1,0375 - 6,4162
+ * Das Intervall 1,0000|1,0375 ist LEER. 1,02 ist ein Schnitt DARIN — er trennt die
+ * gemessenen Klassen und ist keine gesetzte Zahl. Der urspruengliche Vorschlag 1,25
+ * laege mitten in Klasse B und schluckte vier Formen, die als echte Abschreibungsjahre
+ * eingestuft sind (002446.SZ 1,0375 · 601718.SS 1,0396 · 600975.SS 1,1388 ·
+ * 600166.SS 1,2182); er faellt deshalb.
+ *
+ * ── Q1-5, KIPP-BEDINGUNG ───────────────────────────────────────────────────────────
+ * Tritt ein ECHTES Verhaeltnis in das Intervall 1,0000|1,0375 ein, ist die Klassen-
+ * trennung widerlegt: 1,02 wird dann NEU HERGELEITET, nicht nachgezogen.
+ *
+ * Grundlast in NEU am Tag des Beschlusses: 0 bei jeder gemessenen Toleranz von 1,01
+ * bis 1,50 — das Tor kostet heute nichts, genau wie JA-2 bei seiner Einfuehrung.
+ */
+const FAKTOR_GLEICH_TOL = 1.02;
+
+// Der Faktor, wie findeAusreisser ihn misst. findeAusreisser SPEICHERT ihn bewusst
+// nicht (und wird hier auch nicht geaendert) — die Definition steht deshalb genau
+// einmal hier, aus denselben Feldern gerechnet, die der Fund ohnehin traegt.
+const ausreisserFaktor = (x) => Math.abs(x.wert) / Math.max(Math.abs(x.links), Math.abs(x.rechts));
+
+function faktorGleicheFaelle(funde, toleranz = FAKTOR_GLEICH_TOL) {
+  const reihenJeJahr = new Map();
+  for (const x of funde) {
+    const k = `${x.ticker}|${x.index}`;
+    if (!reihenJeJahr.has(k)) reihenJeJahr.set(k, new Map());
+    reihenJeJahr.get(k).set(x.reihe, x);
+  }
+  const zweiVonDrei = [], gleich = [];
+  for (const [k, reihen] of reihenJeJahr) {
+    if (reihen.size !== 2) continue;   // 1 ist kein Paar, 3 ist JA-2 und gehoert dort hin
+    zweiVonDrei.push(k);
+    const [a, b] = [...reihen.values()].map(ausreisserFaktor);
+    // findeAusreisser garantiert nachbar !== 0 und |Wert|/nachbar >= FAKTOR: beide
+    // Faktoren sind endlich und > 0, ein Division-durch-null-Zweig waere toter Code.
+    if (Math.max(a, b) / Math.min(a, b) <= toleranz) gleich.push(k);
+  }
+  return { zweiVonDrei, gleich };
+}
+
+/**
  * JA-4 — das Faecher-Tor misst WACHSTUM, nicht Breite.
  * Die Wortfassung der Vorlage ("ein Ereignis mit > 5 Tickern ist immer rot") feuert auf
  * einen LEGITIMEN Fall: eine einzige echte Intel-Abschreibung steht im Bestand als
@@ -810,6 +871,27 @@ function main(jetzt = new Date()) {
       + 'stehen — Faecher-Tor und Alters-Tor sind beide blind dafuer. Grundlast im Bestand: 2, beide verankert.');
   }
 
+  // ── Q1 (Rat 03.09.2026): Faktor-Gleichheits-Tor auf die 2-von-3-Form, ADDITIV ──────
+  // Q1-2 (blockierende Auflage): die Zaehlerzeile steht in JEDEM Lauf, auch bei 0. Ein
+  // Tor, das nur beim Feuern spricht, verschweigt seine eigene Deckungsluecke — es
+  // muss beide Seiten nennen: was es ERFASST und was es LIEGEN LAESST.
+  const fgl = faktorGleicheFaelle(neu);
+  const tolText = String(FAKTOR_GLEICH_TOL).replace('.', ',');
+  console.log(`2-von-3: ${fgl.zweiVonDrei.length} · faktorgleich (Tol ${tolText}): ${fgl.gleich.length}`
+    + ` · NICHT erfasst: ${fgl.zweiVonDrei.length - fgl.gleich.length}`);
+  if (fgl.gleich.length) {
+    datenExit = 1;
+    console.error(`::error::${fgl.gleich.length} Ticker mit ZWEI Jahresreihen am selben Index, deren `
+      + `Ausreisser-Faktoren sich um hoechstens ${tolText} unterscheiden: ${fgl.gleich.join(' · ')}. `
+      + 'Gemessen wird MARGEN-STABILITAET gegen den dominanten Nachbarn, NICHT eine gemeinsame Ursache — '
+      + 'eine Skalierung beider Werte um denselben Faktor laesst das Verhaeltnis unveraendert. Ein Umsatz, '
+      + 'der um exakt denselben Faktor springt wie das Betriebsergebnis, waehrend das Nettoergebnis ruhig '
+      + 'bleibt, ist betriebswirtschaftlich unmoeglich: das ist die Gruendungs-Fehlerklasse dieses Waechters '
+      + '(Cigna 2022), eine Reihe zu kurz fuer JA-2. Die Toleranz ist der gemessene Schnitt im LEEREN '
+      + 'Intervall 1,0000|1,0375 (Klassen 8 / 14); tritt ein echtes Verhaeltnis hinein, wird sie NEU '
+      + 'hergeleitet, nicht nachgezogen.');
+  }
+
   // ── Das Rausch-Budget, ab jetzt in Ereignissen und ohne die Sperren (JA-1) ──
   if (gezaehlt > maxNeu) {
     datenExit = 1;
@@ -828,7 +910,11 @@ module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJah
   breitesterFaecherImBestand, r1Schluessel, r2Schluessel, tageSeit, AUSSCHLUSS_MAX_TAGE,
   // JA-9 (Folge-PR): dieselbe Regel — die Telemetrie wird an der SACHE gepinnt, nicht
   // an einer Textzeile im Log.
-  ausschlussTelemetrie, AUSSCHLUSS_REFERENZ };
+  ausschlussTelemetrie, AUSSCHLUSS_REFERENZ,
+  // Q1 (Ratsbeschluss 03.09.2026): exportiert aus demselben Grund wie JA-1..JA-7 —
+  // die Bruchproben pinnen die SACHE (Faktoren, Verhaeltnis, Toleranz), nicht eine
+  // Textzeile im Log.
+  faktorGleicheFaelle, ausreisserFaktor, FAKTOR_GLEICH_TOL };
 
 if (require.main === module) {
   try {
