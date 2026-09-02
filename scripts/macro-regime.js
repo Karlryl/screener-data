@@ -86,19 +86,19 @@ function errorSidecarPath(outPath) {
   return path.join(dir, base + '-error.json');
 }
 
-function writeEmptyFallback(args) {
+function writeEmptyFallback(args, error = 'no_price_data') {
   const outDir = path.dirname(args.out);
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
   writeFileAtomic(errorSidecarPath(args.out), JSON.stringify({
     asOf: new Date().toISOString(),
     ticker: args.ticker,
-    error: 'no_price_data',
+    error,
   }, null, 2));
   if (!fs.existsSync(args.out)) {
     writeFileAtomic(args.out, JSON.stringify({
       asOf: new Date().toISOString(),
       ticker: args.ticker,
-      error: 'no_price_data',
+      error,
       regimes: {},
       summary: { total: 0, BULL: 0, BEAR: 0, SIDEWAYS: 0 },
       current: null
@@ -150,6 +150,16 @@ function main() {
 
   const regimes = computeRegimes(sorted, MA_PERIOD);
   const dates = Object.keys(regimes);
+  if (dates.length === 0) {
+    writeEmptyFallback(args, 'insufficient_price_history');
+    console.log(
+      'Insufficient price history for ' + args.ticker + ': ' + sorted.length
+      + ' price points, need at least ' + (MA_PERIOD + 1)
+      + ' - wrote error sidecar ' + errorSidecarPath(args.out)
+      + ' and preserved last-known-good output when present'
+    );
+    process.exit(0);
+  }
   const counts = { BULL: 0, BEAR: 0, SIDEWAYS: 0 };
   for (const v of Object.values(regimes)) counts[v.regime]++;
 
