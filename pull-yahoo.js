@@ -3459,11 +3459,17 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const staleEarnings = (youngEnough && _parsedSnapshot)
         ? (needsFullPull(_parsedSnapshot.meta, _earningsCalendar[stock.ticker], _today) === 'full')
         : false;
-      let forceFundamentalsFull = staleFundamentals || staleEarnings;
+      // Gezielter Voll-Pull (Orchestrator 02.09.2026): dieselbe Freifahrt wie schema-,
+      // currency- und earnings-stale. Die Liste ist auf VOLL_PULL_CAP gedeckelt und in
+      // main() gegen die volle watchlist geprueft; sie kann das Budget also nicht leeren.
+      // Wichtig: KEIN youngEnough-Vorbehalt — genau der Fall, den die Eingabe heilt, ist
+      // ein junger Snapshot (asOf wird taeglich neu gestempelt), der trotzdem falsch ist.
+      const vollPullAngefordert = _vollPullTicker.has(stock.ticker);
+      let forceFundamentalsFull = staleFundamentals || staleEarnings || vollPullAngefordert;
       // Budget applies ONLY when time-staleness is the SOLE reason. If the ticker
       // is also schema-, currency-, or earnings-stale it takes the full pull for
       // correctness (free ride) and must not consume the time budget.
-      if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings) {
+      if (staleFundamentals && !staleSchema && !staleCurrency && !staleEarnings && !vollPullAngefordert) {
         if (_fundamentalsRefreshUsed < FUNDAMENTALS_REFRESH_BUDGET) {
           _fundamentalsRefreshUsed++;
         } else {
@@ -3487,6 +3493,8 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         _log('INFO', `  ${stock.ticker} [currency-stale]: forcing full pull to normalize pre-Tag-219c FX envelope`);
       } else if (staleEarnings) {
         _log('INFO', `  ${stock.ticker} [earnings-stale]: forcing unbudgeted full pull (reported since last full pull)`);
+      } else if (vollPullAngefordert) {
+        _log('INFO', `  ${stock.ticker} [voll-pull-angefordert]: erzwungener Voll-Pull aus der Eingabe voll_pull_ticker (nur dieser Lauf)`);
       } else if (forceFundamentalsFull) {
         _log('INFO', `  ${stock.ticker} [fundamentals-stale]: forcing full pull (fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d)`);
       }
@@ -4549,6 +4557,17 @@ async function main() {
     _log('ERROR', 'Watchlist must have .stocks array');
     process.exit(1);
   }
+  // Gezielter Voll-Pull: VOR dem Sharding pruefen. shardStocks schneidet die Liste gleich
+  // auf ~1/17; gegen die Scheibe geprueft waere derselbe gueltige Ticker in 16 von 17
+  // Shards "unbekannt" und braechte 16 Laeufe grundlos ab. Herleitung an der Funktion.
+  _vollPullTicker = parseVollPullTicker(
+    process.env.VOLL_PULL_TICKER,
+    new Set(watchlist.stocks.map((s) => s && s.ticker).filter(Boolean)),
+  );
+  if (_vollPullTicker.size) {
+    _log('INFO', `Gezielter Voll-Pull angefordert fuer ${_vollPullTicker.size} Ticker: `
+      + `${[..._vollPullTicker].join(', ')} (gilt nur fuer DIESEN Lauf)`);
+  }
   // 0.2/0.9 Sharding: nur die Ticker DIESES Shards ziehen (parallele Matrix-Jobs decken je eine Scheibe ab;
   // zusammen das volle Universum). n_total im Manifest ist dann die SHARD-Groesse — der Merge-/Coverage-Gate
   // im Sammel-Job zaehlt das zusammengefuehrte Universum.
@@ -4733,6 +4752,66 @@ function needsFullPull(snapshotMeta, earningsEntry, today) {
   }
 }
 
+// ── Gezielter Voll-Pull fuer benannte Ticker (Orchestrator-Beschluss 02.09.2026) ──
+// WOFUER. Ein Snapshot kann Daten VERLIEREN und danach unerreichbar feststecken. Belegter
+// Fall: FTI verlor im Voll-Pull vom 02.09. seine annualOpInc-Reihe an ein nullgepolstertes
+// Buendel (coverageAxes 6/7 -> 4/7, beide Lampen weg). PR #268 repariert die Ursache, aber
+// die Reparatur greift erst beim NAECHSTEN Voll-Pull dieses Tickers — und der steht erst
+// nach FUNDAMENTALS_REFRESH_DAYS (30) an, also um den 2026-10-02. Bis dahin faellt das
+// Board energy in jedem Lauf ueber den Integritaets-Vorrang (Wert-Gate WB-4), das
+// Tagesverzeichnis wird komplett vom Commit ausgenommen (daily-pull.yml), der Vorgaenger
+// rueckt nie vor — und derselbe Verfall wird am naechsten Tag erneut gegen denselben
+// eingefrorenen Stand gemessen. Eine sich selbst verstaerkende Dauersperre ueber ~30 Tage,
+// die ALLE 13 Boards trifft, nicht nur das eine.
+//
+// WARUM KEIN BESTEHENDER WEG REICHT (alle vier am Objekt geprueft):
+//   • !youngEnough  — liest "asOf" aus dem Snapshot, und _priceOnlyUpdate stempelt asOf
+//                     taeglich neu; fuer einen gepflegten Ticker also nie wahr.
+//   • staleSchema   — Inhalts-Praedikat (!hasCA), keine Namensliste.
+//   • staleCurrency — nur die Pre-Tag-219c-FX-Huelle.
+//   • staleEarnings — FTIs Bericht liegt am 2026-07-30, der Voll-Pull vom 02.09. ist
+//                     juenger -> needsFullPull liefert 'price-only'.
+// Die globalen Schrauben FUNDAMENTALS_REFRESH_DAYS / _MAX_AGE_DAYS wirken auf das GANZE
+// Universum und wuerden gegen Budget und Coverage-Gate laufen. Es fehlte also genau ein
+// Weg: EINEN benannten Ticker einmalig voll ziehen.
+//
+// FORM. Eine workflow_dispatch-Eingabe, kein committetes Dauerregister. Der Bedarf ist
+// gemessen einmalig (ueber alle 1.152 am 02.09. voll gezogenen Ticker verliert GENAU EINER
+// Daten), und stehende Mechanik fuer einen Einzelfall waere die Bauform, gegen die dieses
+// Modul an drei Stellen bereits eine Bug-13-Dauerschleife dokumentiert.
+//
+// SELBST-ABLAUF, und zwar strukturell statt per Verfallsdatum: die Liste kommt aus der
+// Umgebung DIESES Laufs. Der erzwungene Voll-Pull hinterlaesst KEINEN Marker im Snapshot,
+// der ihn wiederholen koennte — der naechste Lauf ohne die Eingabe sieht eine leere Menge.
+// Genau das trennt ihn von der Bug-13-Klasse (Melder feuert, Wache unterdrueckt das Feld,
+// Melder feuert wieder).
+//
+// FAIL LOUD, NIE STILL: ein Tippfehler im Ticker ist der wahrscheinlichste Bedienfehler und
+// die gefaehrlichste Stille — der Lauf saehe aus wie ein Erfolg und die Heilung waere nicht
+// passiert. Unbekannter Ticker und Ueberschreitung der Obergrenze brechen deshalb ab und
+// NENNEN, was sie gefunden haben. Geprueft wird gegen die VOLLE watchlist, vor dem
+// Sharding — sonst waere derselbe Name in 16 von 17 Scheiben "unbekannt".
+const VOLL_PULL_CAP = 50;
+function parseVollPullTicker(raw, bekannteTicker) {
+  const liste = String(raw == null ? '' : raw).split(',').map((s) => s.trim()).filter(Boolean);
+  if (liste.length === 0) return new Set();
+  if (liste.length > VOLL_PULL_CAP) {
+    throw new Error('voll_pull_ticker: ' + liste.length + ' Ticker uebergeben, Obergrenze ist '
+      + VOLL_PULL_CAP + '. Die Eingabe heilt EINZELNE beschaedigte Snapshots; eine Massen-'
+      + 'Anforderung gehoert nicht hierher (sie liefe am Budget und am Coverage-Gate vorbei). '
+      + 'Abbruch VOR dem Pull.');
+  }
+  const unbekannt = liste.filter((t) => !bekannteTicker.has(t));
+  if (unbekannt.length) {
+    throw new Error('voll_pull_ticker: unbekannte Ticker ' + unbekannt.join(', ')
+      + ' — nicht in der watchlist. Ein stiller Skip liesse den Lauf wie einen Erfolg aussehen, '
+      + 'waehrend die angeforderte Heilung nie stattfindet. Abbruch VOR dem Pull.');
+  }
+  return new Set(liste);
+}
+// Aus main() gesetzt (volle watchlist, vor dem Sharding), von pullAll gelesen.
+let _vollPullTicker = new Set();
+
 if (require.main === module) {
   main().catch(e => {
     _log('FATAL', e.stack || e.message);
@@ -4742,6 +4821,10 @@ if (require.main === module) {
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   fundamentalsStaleness, ftsFailureSummary,
+  // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
+  // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
+  // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
+  parseVollPullTicker, VOLL_PULL_CAP,
   // T142: Inhalts-Zaehler der FTS-Reihen. Exportiert, damit die Ausschuettungs-Wache
   // (tests/t142-ausschuettungsreihen-inhalt.test.js) die ECHTE Regel misst statt sie
   // nachzubauen (Fehler F1334).

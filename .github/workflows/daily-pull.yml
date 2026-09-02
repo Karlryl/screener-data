@@ -50,6 +50,27 @@ on:
         description: 'Nur rechnen, NICHTS veroeffentlichen (kein Push nach main, kein gh-pages-Deploy)'
         type: boolean
         default: false
+      # GEZIELTER VOLL-PULL (Orchestrator-Beschluss 02.09.2026). Ein Snapshot kann Daten
+      # VERLIEREN und danach unerreichbar feststecken: der Kurs-Schnellweg stempelt asOf
+      # taeglich neu, also ist er nie "alt", und der naechste Voll-Pull steht erst nach
+      # FUNDAMENTALS_REFRESH_DAYS (30) an. Belegter Fall FTI (02.09.): annualOpInc weg,
+      # coverageAxes 6/7 -> 4/7 — das Wert-Gate nimmt daraufhin JEDEN Tag das ganze
+      # Tagesverzeichnis vom Commit aus, der Vorgaenger rueckt nie vor, und derselbe
+      # Verfall wird morgen erneut gemessen. ~30 Tage Dauersperre fuer alle 13 Boards.
+      #
+      # Diese Eingabe zieht die BENANNTEN Ticker einmalig voll — unbudgetiert, wie
+      # schema-/currency-/earnings-stale. Sie gilt ausschliesslich fuer DIESEN Lauf: die
+      # Liste steht in der Umgebung, nicht im Repo, und der erzwungene Voll-Pull
+      # hinterlaesst keinen Marker, der sich selbst wiederholen koennte.
+      #
+      # Obergrenze 50, gegen die volle watchlist geprueft, beides mit HARTEM ABBRUCH vor
+      # dem Pull: ein Tippfehler im Ticker ist der wahrscheinlichste Bedienfehler und
+      # zugleich die gefaehrlichste Stille — der Lauf saehe aus wie ein Erfolg, waehrend
+      # die angeforderte Heilung nie stattgefunden haette. Kein stiller Skip.
+      voll_pull_ticker:
+        description: 'Gezielter Voll-Pull: Komma-Liste benannter Ticker (max 50), einmalig fuer DIESEN Lauf. Leer = aus.'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -678,6 +699,10 @@ jobs:
           # 2026-06: market-cap floor $1B → $800M (broader US small/mid-cap set).
           MIN_MCAP_USD: '800000000'
           FUNDAMENTALS_REFRESH_BUDGET: '3000'
+          # Leer bei jedem Cron-Lauf (inputs existiert dort nicht) -> parseVollPullTicker
+          # liefert eine leere Menge und niemand wird erzwungen. Jeder Shard bekommt
+          # dieselbe Liste; geprueft wird gegen die VOLLE watchlist vor dem Sharding.
+          VOLL_PULL_TICKER: ${{ inputs.voll_pull_ticker }}
         run: node --max-old-space-size=6144 pull-yahoo.js --shard ${{ matrix.shard }}/${{ env.SHARD_COUNT }} --watchlist watchlist.json --output snapshots --rate-limit 2000
         continue-on-error: true
         timeout-minutes: 165
