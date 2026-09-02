@@ -1,0 +1,72 @@
+{
+ "umschlag": {
+  "schema": "early-detection-zaehlprobe-bericht/v1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "runId": "f6-aequivalenz-entdeckung-v2-2026-09-02",
+  "fenster": "entdeckung",
+  "panelRand": "2016-12-31",
+  "perzentil": 95,
+  "serverConfirmedAt": "2026-09-02T02:59:26.000Z",
+  "accessedAt": "2026-09-02T04:41:55.835Z",
+  "ersterZugriffAm": "2026-09-02T05:51:20.343Z",
+  "beendetAm": "2026-09-02T05:52:17.625Z",
+  "gelesenePfade": [
+   "panel/panel-entdeckung.sqlite"
+  ],
+  "geschriebenePfade": [
+   "k17-3-arbeit/aequivalenz-zwischenstand.sqlite",
+   "k17-3-arbeit/bein1-ergebnis.json",
+   "studie/f6-aequivalenz-entdeckung-v2-2026-09-02.json"
+  ],
+  "ergebnisdatenBeruehrt": false,
+  "siegelWache": {
+   "klartextKopie": false,
+   "siegelDatei": "panel/panel-endtest.sqlite.enc",
+   "bytes": 5025230848,
+   "sha256Geprueft": true,
+   "schluesselAngefasst": false
+  },
+  "registerDatei": "protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json",
+  "registerEventHash": "0a1925e33a5243f329812358efd47b497368df78fcaa9b546d5094874138c7a3",
+  "treiber": "f6_aequivalenz_treiber_v2.py (GLUE, ausserhalb des Repos)",
+  "treiberSha256": "a10676c7f3154d8b1e8aa7321bdf64cb456dae35b4e22fe18904e86721753496",
+  "treiberHerkunft": "abgeleitet von f6_aequivalenz_treiber.py (v1, PR #208)",
+  "v1zuV2Anpassungen": {
+   "A1-freigabe": "FREIGABE auf reports/studie/f6-aequivalenz-entdeckung-v2-freigabe.json (v1: reports/studie/f6-aequivalenz-freigabe.json)",
+   "A2-allowlist": "die registrierten Schluessel kommen aus protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json (v1: aus der inzwischen geschlossenen outcome-access-ledger.json, in der der v2-Akt nicht steht); Pfad als AKTIVES_REGISTER_REL importiert, nicht abgetippt",
+   "A3-redirect": "Register-Umlenkung vor Phase 0 ueber den ratifizierten Option-A-Aufrufer scripts/studie-f6-zaehlprobe-fortsetzung.py (SHA-Pin vor dem Patch plus Manifest-Gegenprobe, fail-closed, genau eine umgelenkte Funktion); v1 hatte keine",
+   "A4-siegelwache": "zp.siegel_wache(voll=True) laeuft VOR jedem Panel-Byte und ihr ERGEBNIS steht im Umschlag. v1 trug hier einen festen Satz, ohne die Wache je zu rufen - eine Behauptung ohne Messung (LR-22). Auf Anordnung des Orchestrators mit vollem Hash, ohne --ohne-siegel-hash."
+  },
+  "umgebung": {
+   "plattform": "win32",
+   "python": "3.12.10"
+  }
+ },
+ "daten": {
+  "aequivalenzTorSoll.S-U.firmen_reif": 512,
+  "aequivalenzTorSoll.S-U.firmen_unreif": 219,
+  "aequivalenzTorSoll.S-G.firmen_reif": 546,
+  "aequivalenzTorSoll.S-G.firmen_unreif": 265,
+  "aequivalenzTorSoll.S-UG.firmen_reif": 29,
+  "aequivalenzTorSoll.S-UG.firmen_unreif": 12,
+  "bein2.S-U/signal.zaehler": 543,
+  "bein2.S-U/signal.nenner": 651,
+  "bein2.S-U/signal.zensiert": 0,
+  "bein2.S-U/kontrollpool.zaehler": 3761,
+  "bein2.S-U/kontrollpool.nenner": 4514,
+  "bein2.S-U/kontrollpool.zensiert": 0,
+  "bein2.S-G/signal.zaehler": 557,
+  "bein2.S-G/signal.nenner": 647,
+  "bein2.S-G/signal.zensiert": 0,
+  "bein2.S-G/kontrollpool.zaehler": 5000,
+  "bein2.S-G/kontrollpool.nenner": 5768,
+  "bein2.S-G/kontrollpool.zensiert": 0,
+  "bestanden": true,
+  "modulSha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+  "zaehlwerkSha256": "3f21cd0aaa68028ae51945d3b51d7bd74e005de98204015bc5874eb352fc780a",
+  "zaehlprobeSha256": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+  "schwellenDateiSha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+  "schwellenInhaltSha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee",
+  "kalibrierHaelfteGeprueft": "ARTEFAKT-HASH + KONSTANTEN-ABGLEICH, KEIN LAUF"
+ }
+}
