@@ -26,6 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const secPit = require('../lib/sec-pit.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const FULL_DIR = path.join(REPO_ROOT, 'outputs', 'hypergrowth', 'full');
@@ -62,7 +63,14 @@ function downloadTickers(dest) {
           const buf = Buffer.concat(chunks);
           JSON.parse(buf.toString('utf8')); // Parse-Gate VOR dem Schreiben
           fs.mkdirSync(path.dirname(dest), { recursive: true });
-          fs.writeFileSync(dest, buf);
+          // T204 Welle 5: das Parse-Gate oben prueft den EMPFANGENEN Puffer — es sagt
+          // nichts darueber, was nach einem Abbruch mitten im Schreiben auf Platte liegt.
+          // Ein Bruchstueck hier vergiftet den Cache DAUERHAFT: main() laedt nur nach,
+          // wenn `!fs.existsSync(TICKER_INDEX_PATH)`, und ein Bruchstueck existiert. Jeder
+          // spaetere Lauf faellt dann in loadTickerMap() auf JSON.parse — bis jemand die
+          // Datei von Hand loescht. Der Ticker->CIK-Index entscheidet, welche Firmen
+          // ueberhaupt in den B1-Pool kommen.
+          writeFileAtomic(dest, buf);
           resolve(buf.length);
         } catch (e) { reject(e); }
       });
