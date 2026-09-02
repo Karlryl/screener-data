@@ -991,7 +991,7 @@ function predefinedKanalEingebrochen(nonEmpty, attempted, minAnteil = MIN_PREDEF
 }
 
 // S4-DISC-001: die Ertragszeile des Discovery-Merges. `quelle=1234` wie bisher,
-// `quelle=1234!` wenn die Quelle nur einen TEIL ihrer Scheiben geliefert hat,
+// `quelle=1234!` wenn die Vollstaendigkeit der Quelle nicht zertifiziert ist,
 // `quelle=FAIL` bei komplettem Ausfall. Einzeln pruefbar, weil sie sonst nur im
 // Rumpf von main() lebte und kein Waechter an sie herankaeme.
 function discoveryErtragsZeile(namen, ertrag, degradiert) {
@@ -999,6 +999,50 @@ function discoveryErtragsZeile(namen, ertrag, degradiert) {
   return namen
     .map(n => n + '=' + (ertrag[n] === -1 ? 'FAIL' : (ertrag[n] || 0)) + (d.has(n) ? '!' : ''))
     .join(' ');
+}
+
+function recordDiscoveryCompleteness(degradedSources, degradedSourceDetails, source, sourceMap) {
+  if (!sourceMap || sourceMap.partial !== true) return false;
+  const reason = typeof sourceMap.partialReason === 'string' && sourceMap.partialReason
+    ? sourceMap.partialReason : null;
+  degradedSources.push(source);
+  degradedSourceDetails.push({ source, reason });
+  return true;
+}
+
+function discoveryVollstaendigkeitsHinweis(details, sourceCount) {
+  const rows = Array.isArray(details)
+    ? details.filter((d) => d && typeof d.source === 'string' && d.source)
+    : [];
+  if (!rows.length) return '';
+
+  const lowerBounds = [];
+  const openDirection = [];
+  for (const row of rows) {
+    const reason = typeof row.reason === 'string' && row.reason ? row.reason : null;
+    const label = row.source + (reason ? ` (${reason})` : '');
+    if (reason === 'range-truncated') lowerBounds.push(label);
+    else openDirection.push(label);
+  }
+
+  let message = '  Discovery-Vollstaendigkeit nicht belegt: ' + rows.length + ' von ' +
+    sourceCount + ' Quellen sind im Ertrag mit ! markiert.';
+  if (lowerBounds.length) {
+    message += ' Belegt unvollstaendig; die Zahl vor ! ist eine Untergrenze: ' +
+      lowerBounds.join(', ') + '.';
+  }
+  if (openDirection.length) {
+    message += ' Zaehler-Metadaten unverifizierbar; Richtung offen: ' +
+      openDirection.join(', ') + '. Die Zahl vor ! ist geliefert, aber kein bestaetigter Vollbestand.';
+  }
+  return message;
+}
+
+function logDiscoveryCompleteness(details, sourceCount, log = console.log) {
+  const message = discoveryVollstaendigkeitsHinweis(details, sourceCount);
+  if (!message) return false;
+  log(message);
+  return true;
 }
 
 // F-11 (Karl-Entscheid 2026-08-04): Untergrenze des Entdeckungs-Kanals $1 Mrd -> $800 Mio.
@@ -1533,13 +1577,11 @@ async function main() {
   // Track, per source, whether it contributed a NON-EMPTY map and how many raw
   // candidate rows it yielded, so a degraded run can be detected after the merge.
   const discoveryYield = {};   // sourceName -> raw candidate count (-1 = rejected/failed)
-  // S4-DISC-001 (Block-5-Verifikation 2026-08-03): fuenf Adapter stempeln seit jeher
-  // `partial` auf die zurueckgegebene Map, wenn sie nur einen TEIL ihrer Scheiben
-  // (Seiten/Maerkte/Kategorien/Indizes) bekommen haben. Gelesen wurde das Feld hier
-  // nirgends — die Zeile unten zeigte nur .size, und eine halbierte Quelle war von
-  // einer gesunden nicht zu unterscheiden. KEINE Rot-Schwelle: ab welchem Anteil das
-  // den Lauf kippen soll, ist eine Schwellen-Frage und gehoert vor den Rat.
+  // S4-DISC-001: adapters stamp `partial` whenever completeness is not certified.
+  // A reason can prove missing slices/range truncation or only expose inconsistent
+  // metadata. Keep both classes visible without inventing a new red threshold.
   const degradedSources = [];
+  const degradedSourceDetails = [];
   let tvProtokoll = [];        // Tag 642: Tor 1 (tv-scanner) — je Markt Schwelle + Ertrag
   let nonEmptySources = 0;
   let totalDiscoveryCandidates = 0;
@@ -1564,7 +1606,8 @@ async function main() {
       continue;
     }
     discoveryYield[srcName] = srcMap.size;
-    if (srcMap.partial) degradedSources.push(srcName);   // S4-DISC-001
+    recordDiscoveryCompleteness(
+      degradedSources, degradedSourceDetails, srcName, srcMap); // S4-DISC-001
     // Tag 642: das Tor-1-Protokoll des TV-Scanners hierher durchreichen (der Adapter
     // stempelt es auf die zurueckgegebene Map, genau wie `partial` daneben).
     if (Array.isArray(srcMap.protokoll)) tvProtokoll = srcMap.protokoll;
@@ -1655,12 +1698,8 @@ async function main() {
   console.log('  Discovery per-source yield: ' + yieldSummary +
     '  (non-empty sources: ' + nonEmptySources + '/' + DISCOVERY_SOURCE_NAMES.length +
     ', total raw candidates: ' + totalDiscoveryCandidates + ')');
-  if (degradedSources.length) {
-    console.log('  Discovery Teilausfaelle (im Ertrag mit ! markiert): ' + degradedSources.length +
-      ' von ' + DISCOVERY_SOURCE_NAMES.length + ' Quellen lieferten nur einen TEIL ihrer Scheiben — ' +
-      degradedSources.join(', ') + '. Die Zahl vor dem ! ist damit eine Untergrenze, nicht der Bestand: ' +
-      'was diese Quellen heute nicht mitgebracht haben, fehlt im Universum, ohne dass irgendwo etwas rot wird.');
-  }
+  logDiscoveryCompleteness(
+    degradedSourceDetails, DISCOVERY_SOURCE_NAMES.length, console.log);
 
   // audit/fix (BUG HIGH — fail-loud on silent total-discovery-outage):
   // because all six sources return an empty Map() rather than rejecting, a day when
@@ -1985,7 +2024,9 @@ module.exports = {
   exchangeDefektIstDerBekannte,                                 // T569-F3: nur der BELEGTE Fall
   kanalLeerlaufAlarm,     // T562-M1: Kanal holt Quotes ab und behaelt keine einzige
   nullQuotenOhneFehler,   // DT-3: "0 Quotes und kein Fehler" — nur noch echte STILLE Faelle
-  discoveryErtragsZeile,  // S4-DISC-001: Teilausfaelle sichtbar machen, einzeln pruefbar
+  discoveryErtragsZeile, recordDiscoveryCompleteness, discoveryVollstaendigkeitsHinweis,
+  logDiscoveryCompleteness,
+  // S4-DISC-001: completeness is visible
   inDiscoveryMcapBand, MIN_MCAP_DISCOVERY, MAX_MCAP_DISCOVERY, // F-11: $800M-$500B-Band
   // ── T576: der neu aufgesetzte Exchange-Kanal, Stueck fuer Stueck einzeln pruefbar ──
   EXCHANGE_KANAELE, EXCHANGE_CODES, EXCHANGE_SCREENER_URL, EXCHANGE_SEITE, EXCHANGE_BUDGET_MS,

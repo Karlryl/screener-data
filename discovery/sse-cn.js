@@ -83,6 +83,22 @@ function toIpoDate(raw) {
   return s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6, 8);
 }
 
+function assessReportedTotal(pageHelp, deliveredRows) {
+  const hasOwnTotal = pageHelp !== null && typeof pageHelp === 'object' &&
+    !Array.isArray(pageHelp) && Object.prototype.hasOwnProperty.call(pageHelp, 'total');
+  const total = hasOwnTotal ? pageHelp.total : undefined;
+  if (!Number.isSafeInteger(total) || total < 0) {
+    return { partial: true, reason: 'invalid-total-count', total, hasOwnTotal };
+  }
+  if (total < deliveredRows) {
+    return { partial: true, reason: 'total-count-smaller-than-data', total, hasOwnTotal };
+  }
+  if (total > deliveredRows) {
+    return { partial: true, reason: 'range-truncated', total, hasOwnTotal };
+  }
+  return { partial: false, reason: null, total, hasOwnTotal };
+}
+
 async function fetchSseUniverse() {
   const result = new Map();
   console.log('  [SSE-CN] Fetching Shanghai A-share register...');
@@ -109,13 +125,21 @@ async function fetchSseUniverse() {
     console.error('  [SSE-CN] unexpected response shape (no result[] / pageHelp.data[])');
     return result;
   }
-  // audit/fix BH-062: pageSize alone is not a completeness guarantee if the
-  // register ever outgrows it again — check the endpoint's own reported total
-  // (pageHelp.total) against the rows we actually got back.
-  const reportedTotal = j.pageHelp && Number.isFinite(j.pageHelp.total) ? j.pageHelp.total : null;
-  const truncated = reportedTotal !== null && data.length < reportedTotal;
-  if (truncated) {
-    console.warn(`  [SSE-CN] WARNING: got ${data.length} rows but endpoint reports total=${reportedTotal} — register is PARTIAL, raise pageHelp.pageSize.`);
+  // audit/fix BH-062: pageSize alone is not a completeness guarantee. Only an
+  // own, non-negative safe-integer total equal to the raw delivered row count
+  // can certify completeness; local filtering below must not affect this check.
+  const totalState = assessReportedTotal(j.pageHelp, data.length);
+  if (totalState.reason === 'range-truncated') {
+    console.warn(`  [SSE-CN] WARNING: got ${data.length} rows but endpoint reports total=${totalState.total} - register is PARTIAL, raise pageHelp.pageSize.`);
+  } else if (totalState.reason === 'total-count-smaller-than-data') {
+    console.warn(`  [SSE-CN] WARNING: got ${data.length} rows but endpoint reports total=${totalState.total} - count is inconsistent, register is PARTIAL.`);
+  } else if (totalState.reason === 'invalid-total-count') {
+    const shown = totalState.hasOwnTotal ? JSON.stringify(totalState.total) : 'missing';
+    console.warn(`  [SSE-CN] WARNING: pageHelp.total is missing or invalid (${shown}) for ${data.length} delivered rows - completeness is UNVERIFIABLE, register is PARTIAL.`);
+  }
+  if (totalState.partial) {
+    result.partial = true;
+    result.partialReason = totalState.reason;
   }
 
   let delisted = 0;
@@ -140,7 +164,6 @@ async function fetchSseUniverse() {
     result.set(yahooTicker, info);
   }
 
-  if (truncated) result.partial = true;
   console.log(`  [SSE-CN] ${data.length} rows, ${delisted} delisted dropped, ${result.size} live A-shares`);
   return result;
 }

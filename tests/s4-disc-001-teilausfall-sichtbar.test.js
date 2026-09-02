@@ -29,7 +29,9 @@ const https = require('node:https');
 const { Readable } = require('node:stream');
 
 const ROOT = path.join(__dirname, '..');
-const ru = require('../refresh-universe.js');
+const { discoveryErtragsZeile, recordDiscoveryCompleteness,
+  discoveryVollstaendigkeitsHinweis, logDiscoveryCompleteness } =
+  require('../refresh-universe.js');
 
 let pass = 0, fail = 0;
 async function check(name, fn) {
@@ -105,33 +107,91 @@ function stumm(fn) {
 
   // ── (a) refresh-universe macht den Stempel sichtbar ───────────────────────
   await check('die Ertragszeile markiert Teilausfaelle mit ! und laesst gesunde Quellen in Ruhe', () => {
-    assert.equal(typeof ru.discoveryErtragsZeile, 'function', 'die Ertragszeile ist nicht einzeln pruefbar');
-    const zeile = ru.discoveryErtragsZeile(
+    assert.equal(typeof discoveryErtragsZeile, 'function', 'die Ertragszeile ist nicht einzeln pruefbar');
+    const zeile = discoveryErtragsZeile(
       ['a', 'b', 'c', 'd'], { a: 1234, b: 99, c: -1, d: 0 }, ['b']);
     assert.equal(zeile, 'a=1234 b=99! c=FAIL d=0');
   });
 
   await check('ohne Teilausfall sieht die Zeile exakt aus wie bisher (kein neues Rauschen)', () => {
-    assert.equal(ru.discoveryErtragsZeile(['a', 'b'], { a: 5, b: -1 }, []), 'a=5 b=FAIL');
-    assert.equal(ru.discoveryErtragsZeile(['a', 'b'], { a: 5, b: -1 }), 'a=5 b=FAIL',
+    assert.equal(discoveryErtragsZeile(['a', 'b'], { a: 5, b: -1 }, []), 'a=5 b=FAIL');
+    assert.equal(discoveryErtragsZeile(['a', 'b'], { a: 5, b: -1 }), 'a=5 b=FAIL',
       'die Degradiert-Liste muss weglassbar bleiben');
   });
 
   const SRC = fs.readFileSync(path.join(ROOT, 'refresh-universe.js'), 'utf8');
 
   await check('der Merge-Lauf LIEST das partial-Feld der Quelle (sonst ist der Stempel weiter tot)', () => {
-    assert.match(SRC, /srcMap\.partial/,
-      'refresh-universe liest partial nicht — genau der Befund');
-    assert.match(SRC, /degradedSources/,
-      'ohne Sammelliste kann die Zusammenfassung die betroffenen Quellen nicht nennen');
+    assert.equal(typeof recordDiscoveryCompleteness, 'function');
+    const degraded = [];
+    const details = [];
+    assert.equal(recordDiscoveryCompleteness(degraded, details, 'healthy', new Map()), false);
+    const truthyOnly = new Map();
+    truthyOnly.partial = 'yes';
+    assert.equal(recordDiscoveryCompleteness(degraded, details, 'truthy-only', truthyOnly), false,
+      'nur der boolesche Adapter-Stempel gilt');
+    const invalid = new Map();
+    invalid.partial = true;
+    invalid.partialReason = 'invalid-total-count';
+    assert.equal(recordDiscoveryCompleteness(degraded, details, 'sse-invalid', invalid), true);
+    const legacy = new Map();
+    legacy.partial = true;
+    assert.equal(recordDiscoveryCompleteness(degraded, details, 'legacy', legacy), true);
+    assert.deepEqual(degraded, ['sse-invalid', 'legacy']);
+    assert.deepEqual(details, [
+      { source: 'sse-invalid', reason: 'invalid-total-count' },
+      { source: 'legacy', reason: null }
+    ]);
+    assert.match(SRC, /recordDiscoveryCompleteness\(\s*degradedSources,\s*degradedSourceDetails,\s*srcName,\s*srcMap\)/,
+      'der getestete Erfasser muss den echten Merge-Pfad speisen');
   });
 
-  await check('die Zusammenfassung nennt Anzahl UND Namen der teil-ausgefallenen Quellen', () => {
-    const i = SRC.indexOf('degradedSources.length');
-    assert.ok(i > 0, 'es gibt keine eigene Meldung fuer Teilausfaelle');
-    const stelle = SRC.slice(i, i + 700);
-    assert.match(stelle, /degradedSources\.join/, 'die Namen fehlen — "3 Quellen degradiert" ist nicht handhabbar');
-    assert.match(stelle, /Untergrenze/, 'die Meldung muss sagen, WARUM die Zahl davor nicht mehr der Bestand ist');
+  await check('die Zusammenfassung trennt belegte Untergrenzen von offener Richtung', () => {
+    assert.equal(typeof discoveryVollstaendigkeitsHinweis, 'function',
+      'der Vollstaendigkeitsbefund ist nicht einzeln pruefbar');
+    const belegt = discoveryVollstaendigkeitsHinweis([
+      { source: 'sse-range', reason: 'range-truncated' }
+    ], 13);
+    assert.match(belegt, /1 von 13/);
+    assert.match(belegt, /sse-range \(range-truncated\)/);
+    assert.match(belegt, /Untergrenze/);
+
+    const offen = discoveryVollstaendigkeitsHinweis([
+      { source: 'legacy-no-reason', reason: null },
+      { source: 'sse-invalid', reason: 'invalid-total-count' },
+      { source: 'sse-smaller', reason: 'total-count-smaller-than-data' }
+    ], 13);
+    assert.match(offen, /3 von 13/);
+    assert.match(offen, /Vollstaendigkeit nicht belegt/);
+    assert.match(offen, /Richtung offen/);
+    assert.match(offen, /legacy-no-reason/);
+    assert.match(offen, /sse-invalid \(invalid-total-count\)/);
+    assert.match(offen, /sse-smaller \(total-count-smaller-than-data\)/);
+    assert.doesNotMatch(offen, /Untergrenze|fehlt im Universum/,
+      'ungueltige oder widerspruechliche Zaehler beweisen keine fehlenden Zeilen');
+
+    const gemischt = discoveryVollstaendigkeitsHinweis([
+      { source: 'sse-range', reason: 'range-truncated' },
+      { source: 'otc-unknown', reason: null }
+    ], 13);
+    assert.equal(gemischt,
+      '  Discovery-Vollstaendigkeit nicht belegt: 2 von 13 Quellen sind im Ertrag mit ! markiert. ' +
+      'Belegt unvollstaendig; die Zahl vor ! ist eine Untergrenze: sse-range (range-truncated). ' +
+      'Zaehler-Metadaten unverifizierbar; Richtung offen: otc-unknown. ' +
+      'Die Zahl vor ! ist geliefert, aber kein bestaetigter Vollbestand.');
+    assert.equal(discoveryVollstaendigkeitsHinweis([], 13), '');
+
+    const lines = [];
+    assert.equal(logDiscoveryCompleteness([], 13, (line) => lines.push(line)), false);
+    assert.deepEqual(lines, [], 'gesunde Laeufe bleiben ohne Zusatzrauschen');
+    assert.equal(logDiscoveryCompleteness([
+      { source: 'sse-range', reason: 'range-truncated' },
+      { source: 'otc-unknown', reason: null }
+    ], 13, (line) => lines.push(line)), true);
+    assert.deepEqual(lines, [gemischt], 'der vollstaendige Befund muss den Logger erreichen');
+
+    assert.match(SRC, /logDiscoveryCompleteness\(\s*degradedSourceDetails,\s*DISCOVERY_SOURCE_NAMES\.length,\s*console\.log\)/,
+      'der getestete Ausgabepfad muss den echten Merge-Pfad speisen');
   });
 
   await check('KEINE Rot-Schwelle mitgebaut: das Gate haengt weiter nur an leeren Quellen und Kandidaten', () => {
