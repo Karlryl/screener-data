@@ -159,6 +159,9 @@ async function fetchExchange(exchangeCode, exchangeLabel, budget, holen) {
   if (!rows) {
     throw new Error(`Unexpected NASDAQ API response shape for exchange=${exchangeCode}`);
   }
+  if (rows.length === 0) {
+    throw new Error(`NASDAQ API returned zero rows for exchange=${exchangeCode}`);
+  }
 
   return rows;
 }

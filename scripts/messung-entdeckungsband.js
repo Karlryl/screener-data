@@ -43,6 +43,67 @@ function schreib(name, obj) {
 }
 function lies(name) { return JSON.parse(fs.readFileSync(P(name), 'utf8')); }
 
+function classifyRegisterCompleteness(register) {
+  const result = { unvollstaendigeRegister: [], unverifizierbareRegister: [] };
+  for (const [source, value] of Object.entries(register || {})) {
+    if (!value || value.partial !== true) continue;
+    const reason = typeof value.partialReason === 'string' && value.partialReason
+      ? value.partialReason : null;
+    const label = source + (reason ? ' (' + reason + ')' : '');
+    if (reason === 'range-truncated') {
+      result.unvollstaendigeRegister.push(label);
+    } else {
+      result.unverifizierbareRegister.push(label);
+    }
+  }
+  return result;
+}
+
+function formatRegisterPartialNotice(partial, reason) {
+  if (partial !== true) return '';
+  if (typeof reason !== 'string' || !reason) return ' (VOLLSTAENDIGKEIT NICHT BELEGT)';
+  if (reason === 'range-truncated') return ' (ABGESCHNITTEN)';
+  return ' (VOLLSTAENDIGKEIT UNVERIFIZIERBAR: ' + reason + ')';
+}
+
+function buildRegisterCompletenessWarnings(result) {
+  const warnings = [];
+  const incomplete = result.unvollstaendigeRegister || [];
+  const unverifiable = result.unverifizierbareRegister || [];
+  if (incomplete.length) {
+    warnings.push('- **Unvollstaendige Registerquellen:** ' + incomplete.join(', ') +
+      '. Deren gelieferte Zahlen sind eine **Untergrenze**.');
+  }
+  if (unverifiable.length) {
+    warnings.push('- **Register-Vollstaendigkeit nicht verifizierbar:** ' +
+      unverifiable.join(', ') + '. Gelieferte Zeilen bleiben enthalten; ob weitere Zeilen fehlen, ' +
+      'ist nicht belegt und die Richtung offen.');
+  }
+  return warnings;
+}
+
+function serializeRegisterSnapshot(land, sourceMap) {
+  const partial = sourceMap.partial === true;
+  const partialReason = partial && typeof sourceMap.partialReason === 'string' && sourceMap.partialReason
+    ? sourceMap.partialReason : null;
+  return { land, tickers: [...sourceMap.keys()], partial, partialReason };
+}
+
+function formatRegisterStatusLine(name, snapshot) {
+  return '  ' + name.padEnd(9) + String(snapshot.tickers.length).padStart(6) + ' Ticker' +
+    formatRegisterPartialNotice(snapshot.partial, snapshot.partialReason);
+}
+
+function addRegisterCompletenessToResult(result, register) {
+  return { ...result, ...classifyRegisterCompleteness(register) };
+}
+
+function appendRegisterCompletenessWarnings(lines, result) {
+  const warnings = buildRegisterCompletenessWarnings(result);
+  lines.push(...warnings);
+  return warnings.length;
+}
+
 // ── Stufe 1: Tor 1 (TradingView) bei beiden Schwellen ────────────────────────────
 // TV_PRECUT_USD wird beim Laden von tv-scanner.js gelesen -> ein Kindprozess je Schwelle.
 // Bewusst der PRODUKTIONSPFAD (scanMarket inkl. Server-Filter, Zeilendeckel TV_SCAN_RANGE,
@@ -146,8 +207,8 @@ async function stufeRegister() {
   for (const [name, modul, fn, land] of REGISTER) {
     try {
       const m = await require(path.join(ROOT, modul))[fn]();
-      je[name] = { land, tickers: [...m.keys()], partial: m.partial === true };
-      console.log('  ' + name.padEnd(9) + String(m.size).padStart(6) + ' Ticker' + (m.partial ? ' (TEILBESTAND)' : ''));
+      je[name] = serializeRegisterSnapshot(land, m);
+      console.log(formatRegisterStatusLine(name, je[name]));
     } catch (e) {
       je[name] = { land, tickers: [], fehler: String((e && e.message) || e).slice(0, 200) };
       console.log('  ' + name.padEnd(9) + '  AUSFALL: ' + je[name].fehler);
@@ -313,7 +374,7 @@ function rechnen() {
   const bandQuote = quoten.bandGesamt.quote || 0;
   const erwartetOptimistisch = { a: summe.a * bandQuote, b: summe.b * bandQuote, c: summe.c * bandQuote };
 
-  const ergebnis = {
+  const ergebnis = addRegisterCompletenessToResult({
     erzeugtAm: new Date().toISOString(),
     schwellen: { tor1Heute: parseFloat(TOR1_HEUTE), tor2Heute: TOR2_HEUTE, boden: BODEN },
     kandidatenGesamt: zeilen.length,
@@ -332,7 +393,7 @@ function rechnen() {
     registerAusfaelle: Object.entries(reg)
       .filter(([, v]) => v.fehler || v.tickers.length === 0)
       .map(([k, v]) => k + ': ' + (v.fehler || 'lieferte 0 Ticker (kein Fehler gemeldet — z.B. fehlender API-Schluessel)')),
-  };
+  }, reg);
   schreib('ergebnis', ergebnis);
   console.log('\nZusatz-Ticker  (a) nur Tor 2: ' + summe.a + '   (b) nur Tor 1: ' + summe.b + '   (c) beide: ' + summe.c);
   console.log('Erwartete Firmen mit Score (c): konservativ ' + erwartet.c.toFixed(0) +
@@ -421,6 +482,7 @@ function bericht() {
   }
   for (const a of e.tvAusfaelle || []) z.push('- **TradingView-Markt ausgefallen** (leere Antwort, nicht "keine Firmen"): ' + a);
   for (const a of e.tvSchrumpfung || []) z.push('- **Markt lieferte bei der TIEFEREN Schwelle WENIGER als bei der hoeheren** — das ist unmoeglich und heisst Teilausfall: ' + a);
+  appendRegisterCompletenessWarnings(z, e);
   for (const a of e.registerAusfaelle) z.push('- **Quelle ausgefallen:** ' + a);
   z.push('- Alle drei Schaetzungen unterstellen, dass die Datenverfuegbarkeit der neuen Namen der der ' +
     'heutigen Bestandszeilen entspricht. Fuer Firmen, die noch nie im Universum waren, ist das nicht bewiesen.');
@@ -437,12 +499,24 @@ function bericht() {
   console.log('-> ' + ziel);
 }
 
-const stufe = process.argv[2];
-(async () => {
-  if (stufe === 'tv') await stufeTv();
-  else if (stufe === 'register') await stufeRegister();
-  else if (stufe === 'preise') await stufePreise();
-  else if (stufe === 'rechnen') rechnen();
-  else if (stufe === 'bericht') bericht();
-  else { console.error('Stufe fehlt: tv | register | preise | rechnen | bericht'); process.exit(2); }
-})().catch((e) => { console.error(e); process.exit(1); });
+if (require.main === module) {
+  const stufe = process.argv[2];
+  (async () => {
+    if (stufe === 'tv') await stufeTv();
+    else if (stufe === 'register') await stufeRegister();
+    else if (stufe === 'preise') await stufePreise();
+    else if (stufe === 'rechnen') rechnen();
+    else if (stufe === 'bericht') bericht();
+    else { console.error('Stufe fehlt: tv | register | preise | rechnen | bericht'); process.exit(2); }
+  })().catch((e) => { console.error(e); process.exit(1); });
+}
+
+module.exports = {
+  classifyRegisterCompleteness,
+  formatRegisterPartialNotice,
+  buildRegisterCompletenessWarnings,
+  serializeRegisterSnapshot,
+  formatRegisterStatusLine,
+  addRegisterCompletenessToResult,
+  appendRegisterCompletenessWarnings
+};

@@ -9,6 +9,9 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const RUNNER_PATH = path.join(ROOT, 'scripts', 'test-offline-fixtures.js');
 const runner = require(RUNNER_PATH);
+const GUARD_OPTION_PATH = path.resolve(runner.GUARD_PATH).replace(/\\/g, '/');
+const GUARD_REQUIRE_OPTION = `--require=${JSON.stringify(GUARD_OPTION_PATH)}`;
+const GUARD_PATH_DECOY = `--conditions=${JSON.stringify(GUARD_OPTION_PATH)}`;
 
 const EXPECTED_FILES = [
   'tests/cn-jahresreihen.test.js',
@@ -47,6 +50,35 @@ test('runner allowlist is exact and every pinned fixture suite exists', () => {
   for (const relativeFile of EXPECTED_FILES) {
     assert.equal(fs.statSync(path.join(ROOT, relativeFile)).isFile(), true, relativeFile);
   }
+});
+
+test('guard path text outside --require cannot suppress the real preload', () => {
+  const combined = runner.appendGuardRequire(GUARD_PATH_DECOY);
+  assert.equal(combined, `${GUARD_REQUIRE_OPTION} ${GUARD_PATH_DECOY}`);
+});
+
+test('guard path decoy cannot hide a caught direct network attempt', () => {
+  const source = [
+    "(async () => {",
+    "  try { await fetch('data:text/plain,t064-decoy-direct'); } catch {}",
+    "  process.exit(0);",
+    "})();",
+  ].join('\n');
+  const result = runGuardedInline(source, { NODE_OPTIONS: GUARD_PATH_DECOY });
+  assert.equal(result.status, 1, `stdout=${result.stdout}\nstderr=${result.stderr}`);
+  assert.match(result.stderr, /offline-network-guard.*fetch/);
+  assert.match(runner.networkAttempts(result.markerPath).join('\n'), /:fetch$/m);
+});
+
+test('guard path decoy cannot hide a caught descendant network attempt', () => {
+  const source = [
+    "const { spawnSync } = require('node:child_process');",
+    "const child = spawnSync(process.execPath, ['-e', \"(async () => { try { await fetch('data:text/plain,t064-decoy-child'); } catch {} process.exit(0); })();\"], { env: process.env, stdio: 'ignore' });",
+    "process.exit(child.status === null ? 2 : child.status);",
+  ].join('\n');
+  const result = runGuardedInline(source, { NODE_OPTIONS: GUARD_PATH_DECOY });
+  assert.equal(result.status, 1, `stdout=${result.stdout}\nstderr=${result.stderr}`);
+  assert.match(runner.networkAttempts(result.markerPath).join('\n'), /:fetch$/m);
 });
 
 test('guard preserves NODE_OPTIONS and is active in descendant Node processes', () => {

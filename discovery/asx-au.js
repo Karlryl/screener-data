@@ -121,13 +121,13 @@ function parseCsvLine(line) {
 
 // Locate the header row by name ("ASX code") rather than a fixed index, so the
 // banner-line count changing doesn't corrupt the parse. Returns {iName, iCode,
-// dataStart} or null if the header can't be found.
+// width, dataStart} or null if the header can't be found.
 function locateColumns(lines) {
   for (let i = 0; i < lines.length && i < 10; i++) {
     const f = parseCsvLine(lines[i]);
     const iCode = f.findIndex(h => h.trim().toLowerCase() === 'asx code');
     const iName = f.findIndex(h => h.trim().toLowerCase() === 'company name');
-    if (iCode >= 0 && iName >= 0) return { iName, iCode, dataStart: i + 1 };
+    if (iCode >= 0 && iName >= 0) return { iName, iCode, width: f.length, dataStart: i + 1 };
   }
   return null;
 }
@@ -153,6 +153,10 @@ async function fetchAsxUniverse() {
   for (let i = cols.dataStart; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     const f = parseCsvLine(lines[i]);
+    if (f.length !== cols.width) {
+      result.partial = true;
+      continue;
+    }
     const code = (f[cols.iCode] || '').trim().toUpperCase();
     // ASX codes are 3-char alphanumeric. Reject anything else (stray footer text,
     // instrument codes) rather than emitting a broken Yahoo ticker.

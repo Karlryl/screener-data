@@ -83,14 +83,30 @@ const KEY_FIELDS = [
   { label: 'insiderOwner',      get: s => _hasMetric(s.metrics && s.metrics.insidersOwnership) }, // Tag 232c-9: was insiderOwnerPercent (typo); canonical = insidersOwnership
 ];
 
+const PATH_FLAGS = new Set(['--snapshots', '--out']);
+
+function requirePathValue(argv, index) {
+  const flag = argv[index];
+  const value = argv[index + 1];
+  if (typeof value !== 'string' || value.trim() === '' || PATH_FLAGS.has(value)) {
+    throw new Error(flag + ' requires a nonblank path value');
+  }
+  return value;
+}
+
 function parseArgs(argv) {
   const args = {
     snapshots: path.join(__dirname, '..', 'snapshots'),
     out:       path.join(__dirname, '..', 'outputs', 'data-quality-report.md'),
   };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--snapshots' && argv[i+1]) args.snapshots = argv[++i];
-    else if (argv[i] === '--out' && argv[i+1]) args.out = argv[++i];
+    if (argv[i] === '--snapshots') {
+      args.snapshots = requirePathValue(argv, i);
+      i++;
+    } else if (argv[i] === '--out') {
+      args.out = requirePathValue(argv, i);
+      i++;
+    }
   }
   return args;
 }
@@ -241,4 +257,4 @@ function main() {
 if (require.main === module) {
   main();
 }
-module.exports = { main };
+module.exports = { main, parseArgs };

@@ -81,7 +81,9 @@ const SUBMISSION_TXT_URL = (cik, accDotted) =>
   `https://www.sec.gov/Archives/edgar/data/${cik}/${accDotted}.txt`;
 
 const DAYS = process.env.DAYS ? Math.max(1, parseInt(process.env.DAYS, 10)) : 5;
-const SINGLE_DATE = process.env.DATE ? String(process.env.DATE).trim() : null;
+const SINGLE_DATE = Object.prototype.hasOwnProperty.call(process.env, 'DATE')
+  ? String(process.env.DATE).trim()
+  : null;
 const SAMPLE_LIMIT = process.env.SAMPLE_LIMIT
   ? Math.max(1, parseInt(process.env.SAMPLE_LIMIT, 10))
   : null;
@@ -163,6 +165,16 @@ function parseYmd(s) {
   const d = parseInt(s.slice(6, 8), 10);
   return new Date(Date.UTC(y, m - 1, d));
 }
+function assertCanonicalYmd(value, label) {
+  const parsed = typeof value === 'string' && /^[0-9]{8}$/.test(value)
+    ? parseYmd(value)
+    : null;
+  if (!parsed || !Number.isFinite(parsed.getTime()) || ymd(parsed) !== value) {
+    throw new Error(label + ' must be a real YYYYMMDD calendar date, got: ' +
+      JSON.stringify(value));
+  }
+  return value;
+}
 function isWeekend(d) { const wd = d.getUTCDay(); return wd === 0 || wd === 6; }
 // audit/fix BH-020: string-compare is safe for zero-padded YYYYMMDD.
 function maxYmd(a, b) {
@@ -214,10 +226,11 @@ function cursorDarfVor({ contiguous, notFound, date, jetzt, tagesFehler = 0, tag
 // no cursor (first run / fresh cache) we fall back to the old fixed-DAYS
 // behaviour.
 function targetDates(lastIndexedDate) {
-  if (SINGLE_DATE) {
-    if (!/^\d{8}$/.test(SINGLE_DATE)) {
-      throw new Error('DATE must be YYYYMMDD, got: ' + SINGLE_DATE);
-    }
+  if (lastIndexedDate !== null && lastIndexedDate !== undefined) {
+    assertCanonicalYmd(lastIndexedDate, 'lastIndexedDate');
+  }
+  if (SINGLE_DATE !== null) {
+    assertCanonicalYmd(SINGLE_DATE, 'DATE');
     return [SINGLE_DATE];
   }
   const yesterday = new Date();
@@ -225,7 +238,7 @@ function targetDates(lastIndexedDate) {
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
 
   let wanted = DAYS;
-  if (lastIndexedDate && /^\d{8}$/.test(lastIndexedDate)) {
+  if (lastIndexedDate !== null && lastIndexedDate !== undefined) {
     const since = parseYmd(lastIndexedDate);
     let gapDays = 0;
     const probe = new Date(yesterday);
@@ -440,6 +453,7 @@ function writeCache(byTicker, lastIndexedDate) {
 
 // ─── Main ───────────────────────────────────────────────────────────────
 async function main() {
+  if (SINGLE_DATE !== null) assertCanonicalYmd(SINGLE_DATE, 'DATE');
   ensureDir(EXTERNAL_DIR);
 
   const { watchlistCiks, cikToTicker, watchlistTickers, byTicker: tickerCikMap } = buildMaps();
@@ -452,7 +466,7 @@ async function main() {
   const byTicker = (existing.byTicker && typeof existing.byTicker === 'object')
     ? existing.byTicker : {};
 
-  const dates = targetDates(existing.lastIndexedDate || null);
+  const dates = targetDates(existing.lastIndexedDate);
   console.log('[dates] targeting ' + dates.length + ' date(s): ' + dates.join(', '));
 
   let grandFetched = 0, grandHits = 0, grandAdded = 0, grandPBuys = 0, grandErrors = 0;
@@ -463,7 +477,7 @@ async function main() {
   // cursor only ever advances contiguously — if an older date's index fetch
   // fails, the cursor stops there instead of jumping ahead to a later date
   // that happened to succeed, which would silently paper over the gap.
-  let lastIndexedDate = existing.lastIndexedDate || null;
+  let lastIndexedDate = existing.lastIndexedDate ?? null;
   let cursorContiguous = true;
   const processDates = dates.slice().reverse();
 

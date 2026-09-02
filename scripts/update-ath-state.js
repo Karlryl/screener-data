@@ -39,6 +39,10 @@ const DEFAULT_PRICES = path.join(REPO_ROOT, 'prices');
 // echte Splits springen um Faktoren (2x/4x/10x). 5 % trennt beides sauber.
 const REF_DRIFT_TOLERANCE = 0.05;
 
+function isJsonObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function monthsBetween(fromIso, toIso) {
   const a = new Date(fromIso + 'T00:00:00Z'), b = new Date(toIso + 'T00:00:00Z');
   return Math.max(0, Math.round((b - a) / 86400000 / 30.44));
@@ -134,14 +138,16 @@ function loadHistoryOrDie(pricesDir) {
   return history;
 }
 
-function main() {
-  const args = process.argv.slice(2);
-  const getArg = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
-  const stateFile = path.resolve(getArg('--state', DEFAULT_STATE));
-  const pricesDir = path.resolve(getArg('--prices-dir', DEFAULT_PRICES));
+function runUpdateAthState(stateFile, pricesDir, deps = {}) {
+  const existsSync = deps.existsSync || fs.existsSync;
+  const readFileSync = deps.readFileSync || fs.readFileSync;
+  const loadHistory = deps.loadHistory || loadHistoryOrDie;
+  const writeState = deps.writeFileAtomic || writeFileAtomic;
+  const today = deps.today || (() => new Date().toISOString().slice(0, 10));
+  const log = deps.log || console.log;
   let state;
-  if (!fs.existsSync(stateFile)) {
-    console.log('[ath] kein ath-state.json — No-op (Seeding via backfill-prices-max.js)');
+  if (!existsSync(stateFile)) {
+    log('[ath] kein ath-state.json — No-op (Seeding via backfill-prices-max.js)');
     return;
   }
   // BH-137: ENOENT (Bootstrap, legitimes No-op) und ein EXISTIERENDER, aber
@@ -149,14 +155,29 @@ function main() {
   // No-op-Pfad nehmen — sonst friert ein korrupter Vertrag lautlos ein statt
   // aufzufallen. existsSync trennt beide Faelle; ein Parse-Fehler auf einer
   // vorhandenen Datei ist jetzt fail-loud (wie loadHistoryOrDie unten).
-  try { state = JSON.parse(fs.readFileSync(stateFile, 'utf8')); }
+  try { state = JSON.parse(readFileSync(stateFile, 'utf8')); }
   catch (e) {
     throw new Error('[ath] ' + stateFile + ' existiert, ist aber nicht lesbar/parsebar (' + e.message + ') — fail-loud statt stillem No-op auf einem korrupten committeten Vertrag.');
   }
-  const entries = state.entries || {};
+  // A parseable non-object must not collapse through `state.entries || {}` into
+  // a healthy empty-state no-op. Every committed artifact revision and the
+  // producer use an own JSON object at both the root and entries boundaries.
+  if (!isJsonObject(state)) {
+    throw new Error('[ath] ATH state root must be a non-null, non-array object: ' + stateFile);
+  }
+  if (!Object.prototype.hasOwnProperty.call(state, 'entries') || !isJsonObject(state.entries)) {
+    throw new Error('[ath] ATH state entries must be a non-null, non-array object: ' + stateFile);
+  }
+  const entries = state.entries;
+  for (const [ticker, entry] of Object.entries(entries)) {
+    if (!isJsonObject(entry)) {
+      throw new Error('[ath] ATH state entry ' + JSON.stringify(ticker)
+        + ' must be a non-null, non-array object: ' + stateFile);
+    }
+  }
   const tickers = Object.keys(entries);
-  if (!tickers.length) { console.log('[ath] ath-state leer — No-op'); return; }
-  const history = loadHistoryOrDie(pricesDir);
+  if (!tickers.length) { log('[ath] ath-state leer — No-op'); return; }
+  const history = loadHistory(pricesDir);
   let bumped = 0, reseed = 0, touched = 0;
   for (const t of tickers) {
     const before = entries[t];
@@ -166,10 +187,18 @@ function main() {
     if (JSON.stringify(after) !== JSON.stringify(before)) touched++;
     entries[t] = after;
   }
-  state.asOf = new Date().toISOString().slice(0, 10);
-  writeFileAtomic(stateFile, JSON.stringify(state, null, 1));
-  console.log(`[ath] ${tickers.length} Ticker · ${touched} aktualisiert · ${bumped} neue ATHs · ${reseed} needsReseed (Split-Wächter)`);
+  state.asOf = today();
+  writeState(stateFile, JSON.stringify(state, null, 1));
+  log(`[ath] ${tickers.length} Ticker · ${touched} aktualisiert · ${bumped} neue ATHs · ${reseed} needsReseed (Split-Wächter)`);
 }
 
-module.exports = { advanceEntry, displayFor, monthsBetween, loadHistoryOrDie, REF_DRIFT_TOLERANCE };
+function main() {
+  const args = process.argv.slice(2);
+  const getArg = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
+  const stateFile = path.resolve(getArg('--state', DEFAULT_STATE));
+  const pricesDir = path.resolve(getArg('--prices-dir', DEFAULT_PRICES));
+  return runUpdateAthState(stateFile, pricesDir);
+}
+
+module.exports = { advanceEntry, displayFor, monthsBetween, loadHistoryOrDie, runUpdateAthState, REF_DRIFT_TOLERANCE };
 if (require.main === module) main();

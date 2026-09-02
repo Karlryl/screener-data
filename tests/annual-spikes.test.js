@@ -264,5 +264,153 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   });
 }
 
+// --- ANNUAL_SPIKE_MAX_NEU fail-closed boundary (H20) -----------------------
+// A malformed threshold used to become NaN. Every comparison `count > NaN` is
+// false, so an operator typo disabled precisely the anomaly gate it configured.
+{
+  const watcher = require('../scripts/watch-annual-spikes.js');
+
+  check('ANNUAL_SPIKE_MAX_NEU accepts only the documented safe integer domain', () => {
+    assert.equal(watcher.parseMaxNeu(undefined), 5, 'unset keeps the documented default');
+    assert.equal(watcher.parseMaxNeu(''), 5, 'empty keeps the established default');
+    assert.equal(watcher.parseMaxNeu('0'), 0, 'zero remains a valid strict threshold');
+    assert.equal(watcher.parseMaxNeu('5'), 5);
+    assert.equal(watcher.parseMaxNeu('9007199254740991'), Number.MAX_SAFE_INTEGER);
+
+    for (const bad of [
+      null, 5, true, ' ', '-1', '+5', '1.5', '1e2', '0x10', 'Infinity',
+      'NaN', '5x', '9007199254740992', {},
+    ]) {
+      assert.throws(() => watcher.parseMaxNeu(bad), /ANNUAL_SPIKE_MAX_NEU/,
+        `must reject ${JSON.stringify(bad)}`);
+    }
+  });
+
+  check('invalid threshold is rejected before snapshot filesystem access', () => {
+    const originalExistsSync = fsT.existsSync;
+    const previous = process.env.ANNUAL_SPIKE_MAX_NEU;
+    let filesystemCalls = 0;
+    fsT.existsSync = () => {
+      filesystemCalls++;
+      throw new Error('annual-spike filesystem tripwire');
+    };
+    try {
+      process.env.ANNUAL_SPIKE_MAX_NEU = 'not-a-number';
+      assert.throws(() => watcher.main(), /ANNUAL_SPIKE_MAX_NEU/);
+      assert.equal(filesystemCalls, 0, 'invalid configuration must fail before snapshot access');
+
+      process.env.ANNUAL_SPIKE_MAX_NEU = '0';
+      assert.throws(() => watcher.main(), /annual-spike filesystem tripwire/,
+        'valid control must reach the filesystem tripwire');
+      assert.equal(filesystemCalls, 1, 'the valid control proves the tripwire is live');
+    } finally {
+      fsT.existsSync = originalExistsSync;
+      if (previous === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
+      else process.env.ANNUAL_SPIKE_MAX_NEU = previous;
+    }
+    assert.equal(fsT.existsSync, originalExistsSync, 'filesystem stub must be restored');
+  });
+
+  check('the parsed threshold controls the real anomaly comparison', () => {
+    const originalExistsSync = fsT.existsSync;
+    const originalReaddirSync = fsT.readdirSync;
+    const originalReadFileSync = fsT.readFileSync;
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalArgv = process.argv;
+    const previous = process.env.ANNUAL_SPIKE_MAX_NEU;
+    const snapshot = JSON.stringify({
+      meta: { ticker: 'AAA' },
+      annual: {
+        annualRev: [{ value: 100e6 }, { value: 900e6 }, { value: 100e6 }],
+        annualCapex: [-1],
+      },
+    });
+    const baseline = JSON.stringify({
+      faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [],
+    });
+    let logs = [];
+    let errors = [];
+
+    fsT.existsSync = () => true;
+    fsT.readdirSync = () => ['AAA.json'];
+    fsT.readFileSync = (file) => {
+      const name = pathT.basename(String(file));
+      if (name === 'AAA.json') return snapshot;
+      if (name === 'annual-spikes-baseline.json') return baseline;
+      throw new Error(`unexpected annual-spike read: ${file}`);
+    };
+    console.log = (...args) => { logs.push(args.join(' ')); };
+    console.error = (...args) => { errors.push(args.join(' ')); };
+    process.argv = originalArgv.filter((arg) => arg !== '--neu-aufnehmen');
+    try {
+      process.env.ANNUAL_SPIKE_MAX_NEU = '0';
+      assert.equal(watcher.main(), 1, 'one new anomaly must exceed a zero threshold');
+      assert.match(errors.join('\n'), /1 NEUE Jahres-Ausreisser \(erlaubt 0\)/,
+        'the strict threshold must be visible in the production error');
+
+      logs = [];
+      errors = [];
+      process.env.ANNUAL_SPIKE_MAX_NEU = '1';
+      assert.equal(watcher.main(), 0, 'the same anomaly must fit a threshold of one');
+      assert.equal(errors.length, 0, 'the relaxed control must remain healthy');
+      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 1\)/,
+        'the relaxed threshold must be visible in the production summary');
+
+      logs = [];
+      errors = [];
+      process.env.ANNUAL_SPIKE_MAX_NEU = '2';
+      assert.equal(watcher.main(), 0, 'a non-fixed-point threshold must remain healthy');
+      assert.equal(errors.length, 0, 'the non-fixed-point control must remain healthy');
+      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 2\)/,
+        'main must use the parsed threshold unchanged, not transform it');
+
+      logs = [];
+      errors = [];
+      delete process.env.ANNUAL_SPIKE_MAX_NEU;
+      assert.equal(watcher.main(), 0, 'the default threshold must remain healthy');
+      assert.equal(errors.length, 0, 'the default control must remain healthy');
+      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 5\)/,
+        'main must use the documented default unchanged');
+
+      logs = [];
+      errors = [];
+      process.env.ANNUAL_SPIKE_MAX_NEU = '9007199254740991';
+      assert.equal(watcher.main(), 0, 'the maximum safe threshold must remain healthy');
+      assert.equal(errors.length, 0, 'the maximum-safe control must remain healthy');
+      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 9007199254740991\)/,
+        'main must neither truncate nor cap the validated safe-integer domain');
+    } finally {
+      fsT.existsSync = originalExistsSync;
+      fsT.readdirSync = originalReaddirSync;
+      fsT.readFileSync = originalReadFileSync;
+      console.log = originalLog;
+      console.error = originalError;
+      process.argv = originalArgv;
+      if (previous === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
+      else process.env.ANNUAL_SPIKE_MAX_NEU = previous;
+    }
+    assert.equal(fsT.existsSync, originalExistsSync, 'existsSync stub must be restored');
+    assert.equal(fsT.readdirSync, originalReaddirSync, 'readdirSync stub must be restored');
+    assert.equal(fsT.readFileSync, originalReadFileSync, 'readFileSync stub must be restored');
+    assert.equal(console.log, originalLog, 'console.log stub must be restored');
+    assert.equal(console.error, originalError, 'console.error stub must be restored');
+    assert.equal(process.argv, originalArgv, 'process.argv identity must be restored');
+  });
+
+  check('the real CLI reports malformed threshold configuration instead of scanning', () => {
+    const { spawnSync } = require('node:child_process');
+    const script = pathT.join(__dirname, '..', 'scripts', 'watch-annual-spikes.js');
+    const run = spawnSync(process.execPath, [script], {
+      encoding: 'utf8',
+      env: { ...process.env, ANNUAL_SPIKE_MAX_NEU: 'not-a-number' },
+    });
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /::error::watch-annual-spikes.*ANNUAL_SPIKE_MAX_NEU/s);
+    assert.doesNotMatch(run.stderr, /snapshots\/ fehlt/,
+      'configuration must fail before the snapshot-directory branch');
+  });
+}
+
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

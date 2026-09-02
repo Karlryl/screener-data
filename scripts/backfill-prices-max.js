@@ -36,15 +36,62 @@ const BATCH = 8;            // gedrosselt (Yahoo-schonend, Muster backfill-price
 const SLEEP_MS = 1500;
 const REF_LOOKBACK_BARS = 40; // Split-Wächter-Anker: ~40 Handelstage vor newest (sicher im 400d-Store)
 
-let yf;
-try {
-  const YF = require('yahoo-finance2').default;
-  yf = (typeof YF === 'function') ? new YF({ validation: { logErrors: false, logOptionsErrors: false } }) : YF;
-} catch (e) { console.error('yahoo-finance2 not installed'); process.exit(1); }
+let yf = null;
+function yahooFinanceClient() {
+  if (yf) return yf;
+  try {
+    const YF = require('yahoo-finance2').default;
+    yf = (typeof YF === 'function') ? new YF({ validation: { logErrors: false, logOptionsErrors: false } }) : YF;
+  } catch (_) {
+    throw new Error('yahoo-finance2 not installed');
+  }
+  if (!yf || typeof yf.chart !== 'function') {
+    throw new Error('yahoo-finance2 chart client unavailable');
+  }
+  return yf;
+}
 
 const log = (m) => console.log(`[${new Date().toISOString()}] ${m}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function readJsonOrNull(f) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (_) { return null; } }
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+// A parseable but structurally wrong manifest must not be checkpointed as if it
+// were healthy. In particular, named properties assigned to [] disappear during
+// JSON.stringify(), so an empty legacy array is canonicalized before mutation.
+// A non-empty array is ambiguous and therefore fails closed instead of guessing
+// which serialized values represent completed tickers.
+function normalizeProgressManifest(manifest, sourceLabel = MANIFEST) {
+  if (!isRecord(manifest)) {
+    throw new Error(`progress manifest ${sourceLabel} must be an object`);
+  }
+  if (Array.isArray(manifest.done) && manifest.done.length === 0) {
+    return { ...manifest, done: {} };
+  }
+  if (!isRecord(manifest.done)) {
+    throw new Error(`progress manifest ${sourceLabel}.done must be an object`);
+  }
+  return manifest;
+}
+
+function parseProgressManifest(raw, sourceLabel = MANIFEST) {
+  let parsed;
+  try { parsed = JSON.parse(raw); }
+  catch (e) {
+    throw new Error(`Corrupt progress manifest ${sourceLabel}: ${e.message} — refusing to overwrite resume state`);
+  }
+  return normalizeProgressManifest(parsed, sourceLabel);
+}
+
+function readProgressManifestOrThrow(f) {
+  let raw;
+  try { raw = fs.readFileSync(f, 'utf8'); }
+  catch (e) { if (e.code === 'ENOENT') return { done: {} }; throw e; }
+  return parseProgressManifest(raw, f);
+}
 
 // BH-144: STATE_FILE is committed and covers the WHOLE history (all boards ever
 // seeded), not just today's board universe. readJsonOrNull() would turn an
@@ -103,6 +150,32 @@ function pendingTickers(universe, manifest, state, opts = {}) {
   });
 }
 
+function rotateAfterTicker(tickers, lastAttemptedTicker) {
+  const ordered = tickers.slice();
+  if (typeof lastAttemptedTicker !== 'string' || ordered.length < 2) return ordered;
+  const index = ordered.indexOf(lastAttemptedTicker);
+  if (index < 0) return ordered;
+  return ordered.slice(index + 1).concat(ordered.slice(0, index + 1));
+}
+
+// Capped local runs are fair across restarts: a persistent failure remains
+// pending, but cannot occupy the first limited slot forever. Unlimited runs keep
+// their historical deterministic order and ignore the capped-run cursor.
+function selectPendingTickers(universe, manifest, state, opts = {}, limit = 0) {
+  const capped = Number.isInteger(limit) && limit > 0;
+  const ordered = capped
+    ? rotateAfterTicker(Array.from(new Set(universe)), manifest && manifest.lastAttemptedTicker)
+    : universe;
+  const pending = pendingTickers(ordered, manifest, state, opts);
+  return capped ? pending.slice(0, limit) : pending;
+}
+
+function recordAttemptCursor(manifest, attempted, limit) {
+  if (limit > 0 && attempted.length > 0) {
+    manifest.lastAttemptedTicker = attempted[attempted.length - 1];
+  }
+}
+
 // BH-145: pure predicate (testbar ohne Netz) — 0 Erfolge bei >=1 versuchtem Ticker
 // ist kein Teil-Fehler mehr, sondern ein Totalausfall.
 function allFailed(todoLen, ok, failedLen) {
@@ -127,7 +200,7 @@ function seedEntry(bars, seededAt) {
 }
 
 async function fetchMax(ticker) {
-  const result = await yf.chart(ticker, { period1: new Date('1950-01-01'), period2: new Date(), interval: '1d' });
+  const result = await yahooFinanceClient().chart(ticker, { period1: new Date('1950-01-01'), period2: new Date(), interval: '1d' });
   const bars = [];
   for (const q of (result.quotes || [])) {
     const close = q.adjclose != null ? q.adjclose : q.close;
@@ -147,13 +220,22 @@ async function main() {
     : boardUniverse();
   if (!universe.length) { console.error('Kein Board-Universum (outputs/findash-export/v1/ fehlt?) und keine --tickers.'); process.exit(1); }
   fs.mkdirSync(MAX_DIR, { recursive: true });
-  const manifest = readJsonOrNull(MANIFEST) || { done: {} };
+  const manifest = readProgressManifestOrThrow(MANIFEST);
   const state = readStateFileOrThrow(STATE_FILE);
-  let todo = pendingTickers(universe, manifest, state, { force: has('--force'), onlyStale: has('--only-stale') });
   const limit = parseInt(getArg('--limit', '0'), 10);
-  if (limit > 0) todo = todo.slice(0, limit);
+  const todo = selectPendingTickers(
+    universe,
+    manifest,
+    state,
+    { force: has('--force'), onlyStale: has('--only-stale') },
+    limit,
+  );
   log(`Board-Universum ${universe.length} Ticker · zu ziehen: ${todo.length} (Resume via _manifest)`);
   if (has('--dry-run')) { console.log(todo.join(',')); return; }
+  if (todo.length > 0) {
+    try { yahooFinanceClient(); }
+    catch (e) { console.error(e.message); process.exitCode = 1; return; }
+  }
   const seededAt = new Date().toISOString().slice(0, 10);
   let ok = 0; const failed = [];
   for (let i = 0; i < todo.length; i += BATCH) {
@@ -170,6 +252,7 @@ async function main() {
       } catch (e) { failed.push(t); }
     }));
     // Fortschritt nach JEDEM Batch persistieren (Kill+Resume — Muster A7-Checkpoint-Write).
+    recordAttemptCursor(manifest, batch, limit);
     writeFileAtomic(MANIFEST, JSON.stringify(manifest, null, 1));
     state.asOf = seededAt;
     writeFileAtomic(STATE_FILE, JSON.stringify(state, null, 1));
@@ -186,5 +269,19 @@ async function main() {
   }
 }
 
-module.exports = { pendingTickers, seedEntry, boardUniverse, readStateFileOrThrow, allFailed, TOP_N, REF_LOOKBACK_BARS };
+module.exports = {
+  pendingTickers,
+  selectPendingTickers,
+  recordAttemptCursor,
+  normalizeProgressManifest,
+  parseProgressManifest,
+  readProgressManifestOrThrow,
+  seedEntry,
+  boardUniverse,
+  readStateFileOrThrow,
+  allFailed,
+  main,
+  TOP_N,
+  REF_LOOKBACK_BARS,
+};
 if (require.main === module) main();

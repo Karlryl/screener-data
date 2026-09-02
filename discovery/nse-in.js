@@ -26,7 +26,8 @@
  * M&M → M&M.NS. marketCap is intentionally NOT set (Yahoo fills it later).
  *
  * Returns Map<yahooTicker, {ticker, name, exchange, source, country}>.
- * Fail-silent: any error → empty Map (never throws), per the discovery contract.
+ * Transport/schema failure → empty Map with own `partial === true`, so the
+ * discovery consumer can distinguish source loss from a healthy empty register.
  */
 'use strict';
 const https = require('https');
@@ -96,31 +97,46 @@ function parseCsvLine(line) {
       else cur += c;
     }
   }
+  if (inQuotes) throw new Error('unterminated quoted CSV field');
   out.push(cur);
   return out;
 }
 
 function parseEquityCsv(csvText) {
   const result = new Map();
+  if (typeof csvText !== 'string') {
+    throw new Error('required NSE headers missing: SYMBOL, NAME OF COMPANY');
+  }
   const lines = csvText.split(/\r?\n/);
-  if (lines.length < 2) return result; // header + >=1 row expected
 
-  const header = parseCsvLine(lines[0]).map(h => h.trim().toUpperCase());
+  const header = parseCsvLine(lines[0]).map((h, i) => {
+    const normalized = i === 0 ? h.replace(/^\uFEFF/, '') : h;
+    return normalized.trim().toUpperCase();
+  });
   const iSym  = header.indexOf('SYMBOL');
   const iName = header.indexOf('NAME OF COMPANY');
-  if (iSym < 0 || iName < 0) return result; // layout changed → bail silently
+  if (iSym < 0 || iName < 0) {
+    throw new Error('required NSE headers missing: SYMBOL, NAME OF COMPANY');
+  }
 
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     const f = parseCsvLine(lines[i]);
+    if (iSym >= f.length || iName >= f.length) {
+      throw new Error(`NSE row ${i + 1} is missing required columns`);
+    }
     const sym = (f[iSym] || '').trim().toUpperCase();
+    const name = (f[iName] || '').trim();
+    if (!sym || !name) {
+      throw new Error(`NSE row ${i + 1} has an empty required field`);
+    }
     // NSE symbols: A-Z, 0-9, '&' and '-' only (e.g. M&M, BAJAJ-AUTO).
     if (!/^[A-Z0-9&-]+$/.test(sym)) continue;
     const yahooTicker = sym + '.NS';
     if (result.has(yahooTicker)) continue;
     result.set(yahooTicker, {
       ticker: yahooTicker,
-      name: (f[iName] || '').trim(),
+      name,
       exchange: 'NSE',
       source: 'nse-in',
       country: 'India',
@@ -129,22 +145,23 @@ function parseEquityCsv(csvText) {
   return result;
 }
 
-async function fetchNseIndia() {
-  const result = new Map();
+async function fetchNseIndia(dependencies = {}) {
+  const getFn = dependencies.getFn || get;
   try {
     console.log('  [NSE-IN] Fetching NSE equity list...');
-    const csv = await get(EQUITY_URL);
-    const parsed = parseEquityCsv(csv);
-    for (const [k, v] of parsed) result.set(k, v);
+    const csv = await getFn(EQUITY_URL);
+    const result = parseEquityCsv(csv);
     console.log(`  [NSE-IN] Total listed NSE stocks: ${result.size}`);
+    return result;
   } catch (e) {
     console.error('  [NSE-IN] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    const partial = new Map();
+    partial.partial = true;
+    return partial;
   }
-  return result;
 }
 
-module.exports = { fetchNseIndia };
+module.exports = { fetchNseIndia, parseEquityCsv };
 
 if (require.main === module) {
   fetchNseIndia().then(m => {

@@ -62,10 +62,10 @@ async function main() {
   fs.mkdirSync(MAX_DIR, { recursive: true });
   const manifest = JSON.parse(fs.existsSync(MANIFEST) ? fs.readFileSync(MANIFEST, 'utf8') : '{"done":{}}');
   let todo = wanted.filter((t) => has('--force')
-    || (!manifest.done[t] && !fs.existsSync(path.join(MAX_DIR, safeSnapshotFilename(t)))));
+    || !fs.existsSync(path.join(MAX_DIR, safeSnapshotFilename(t))));
   const limit = parseInt(getArg('--limit', '0'), 10);
   if (limit > 0) todo = todo.slice(0, limit);
-  log(`Forschungs-Backfill: ${wanted.length} gewünscht · zu ziehen: ${todo.length} (Rest existiert/Manifest)`);
+  log(`Forschungs-Backfill: ${wanted.length} gewünscht · zu ziehen: ${todo.length}`);
   if (has('--dry-run')) { console.log(todo.join(',')); return; }
   const at = new Date().toISOString().slice(0, 10);
   let ok = 0; const failed = [];

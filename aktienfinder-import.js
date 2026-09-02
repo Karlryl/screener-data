@@ -49,7 +49,11 @@ function main() {
   let existing = {};
   if (fs.existsSync(outPath)) {
     try {
-      existing = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      const parsed = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new TypeError('aktienfinder.json root must be a JSON object');
+      }
+      existing = parsed;
     } catch (e) {
       const backup = outPath + '.corrupt.' + Date.now();
       try { fs.copyFileSync(outPath, backup); } catch (_) {}

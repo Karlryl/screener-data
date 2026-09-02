@@ -13,9 +13,9 @@
  * 証券コード (securities code).
  *
  * Only rows with 上場区分 == "上場" (listed) are kept. The securities code is a
- * 4-char JPX code plus a trailing padding digit (13770 → 1377). Since 2024 new
- * IPOs use an alphanumeric 4-char code (285A0 → 285A = Kioxia), so we take the
- * first 4 chars verbatim rather than assuming digits. yahooTicker = code4 + '.T'.
+ * 4-char JPX code plus a reserved security-type character (13770 → 1377).
+ * Since 2024 new IPOs use an alphanumeric 4-char code (285A0 → 285A = Kioxia),
+ * and the fifth position is not assumed to be numeric. yahooTicker = code4 + '.T'.
  *
  * This source has no ISIN/currency; only the EDINET code + corporate number.
  * marketCap is intentionally NOT set (Yahoo fills it later).
@@ -122,8 +122,8 @@ function parseCodeList(csvText) {
     const f = parseCsvLine(lines[i]);
     if ((f[iListing] || '').trim() !== '上場') continue; // listed only
     const code = (f[iCode] || '').trim();
-    // 5-char code = 4-char JPX code + trailing padding digit. Accept digits or
-    // the 2024+ alphanumeric IPO format (e.g. 285A0 → 285A = Kioxia).
+    // 5-char code = 4-char JPX code + reserved security-type character. Keep
+    // every position alphanumeric; the fifth position is not numeric-only.
     if (!/^[0-9A-Z]{5}$/i.test(code)) continue;
     const yahooTicker = code.slice(0, 4).toUpperCase() + '.T';
     if (result.has(yahooTicker)) continue;
@@ -138,18 +138,24 @@ function parseCodeList(csvText) {
   return result;
 }
 
-async function fetchEdinetJapan() {
+async function fetchEdinetJapan(options = {}) {
   const result = new Map();
+  const download = options.get || get;
+  const unzip = options.unzip || unzipSingleEntry;
+  const decode = options.decode || (payload => new TextDecoder('shift_jis').decode(payload));
   try {
     console.log('  [EDINET-JP] Fetching EDINET code list...');
-    const zip = await get(CODELIST_URL);
-    const csv = new TextDecoder('shift_jis').decode(unzipSingleEntry(zip));
+    const zip = await download(CODELIST_URL);
+    const csv = decode(unzip(zip));
     const parsed = parseCodeList(csv);
     for (const [k, v] of parsed) result.set(k, v);
+    if (result.size === 0) result.partial = true;
     console.log(`  [EDINET-JP] Total listed TSE stocks: ${result.size}`);
   } catch (e) {
     console.error('  [EDINET-JP] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    const failed = new Map();
+    failed.partial = true;
+    return failed; // fail-silent per contract
   }
   return result;
 }
