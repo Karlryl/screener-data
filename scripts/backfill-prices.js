@@ -46,11 +46,29 @@ function _log(lvl, msg)  { console.log(`[${_ts()}] [${lvl}] ${msg}`); }
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── arg parsing ────────────────────────────────────────────────────────────
+function requiredArgValue(argv, index, flag) {
+  const value = argv[index + 1];
+  const isSourceFlag = value === '--tickers' || value === '--ticker-file';
+  if (typeof value !== 'string' || value.trim() === '' || isSourceFlag) {
+    throw new Error(`${flag} requires a non-empty value that is not another source flag`);
+  }
+  return value;
+}
+
 function parseArgs(argv) {
   const args = { tickers: [], tickerFile: null };
   for (let i = 2; i < argv.length; i++) {
-    if (argv[i] === '--tickers' && argv[i + 1])      args.tickers = argv[++i].split(',').map(t => t.trim()).filter(Boolean);
-    else if (argv[i] === '--ticker-file' && argv[i + 1]) args.tickerFile = argv[++i];
+    if (argv[i] === '--tickers') {
+      const value = requiredArgValue(argv, i, '--tickers');
+      const tickers = value.split(',').map(t => t.trim()).filter(Boolean);
+      if (tickers.length === 0) throw new Error('--tickers requires at least one ticker');
+      args.tickers = tickers;
+      i++;
+    }
+    else if (argv[i] === '--ticker-file') {
+      args.tickerFile = requiredArgValue(argv, i, '--ticker-file');
+      i++;
+    }
   }
   return args;
 }
