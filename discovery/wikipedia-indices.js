@@ -206,6 +206,9 @@ function extractTickersFromWikitext(wikitext, suffix) {
   if (!matchedAny) {
     throw new Error('no ticker-column header found in any wikitable (wikitext dialect changed?)');
   }
+  if (tickers.size === 0) {
+    throw new Error('ticker-column header found but no valid tickers parsed');
+  }
   return tickers;
 }
 
