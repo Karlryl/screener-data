@@ -305,13 +305,22 @@ test('SIEGER: alle Beine Platzhalter -> nichts zu uebertragen, keine Umbenennung
   assert.equal(umbenennungen.size, 0);
 });
 
-test('A6/A7: die eingefrorene Kandidatenliste traegt genau 17 Gruppen und 18 Verlierer-Beine', () => {
-  assert.equal(MILAN_KANDIDATEN.length, MILAN_ERWARTETE_GRUPPEN);
-  // 16 Zweibein-Klassen + ein Dreibein = 18 moegliche Verlierer. Die Arithmetik des Mengen-
+test('A6/A7: die eingefrorene Kandidatenliste traegt genau 17 Gruppen und 18 Partner-Beine', () => {
+  // ⚠ HIER STEHEN DIE LITERALE, NICHT MEHR IN DER PRODUKTION (Aenderung vom 02.09.2026).
+  // Der Riegel LEITET seine Erwartung seit dem A7-Umbau aus dieser Liste ab
+  // (`MILAN_ERWARTETE_GRUPPEN = MILAN_KANDIDATEN.length`) — das ist genau der Punkt, damit eine
+  // abgeschlossene Umbenennung ihn nicht mehr reisst. Der Preis dieser Ableitung waere, dass
+  // eine stille KUERZUNG der Liste die Erwartung lautlos mitzoege und niemand es saehe. Deshalb
+  // wandern die gemessenen Zahlen hierher: wer die Liste anfasst, aendert im selben Diff diese
+  // beiden Literale und legt die Wiedervorlage samt Messbeleg vor (A7).
+  assert.equal(MILAN_KANDIDATEN.length, 17, 'die eingefrorene Liste traegt 17 Klassen');
+  assert.equal(MILAN_ERWARTETE_GRUPPEN, 17, 'der Riegel erwartet genau diese 17 Klassen am Tor');
+  // 16 Zweibein-Klassen + ein Dreibein = 18 Partner-Beine. Die Arithmetik des Mengen-
   // Riegels ist damit ueberhaupt erreichbar — eine Liste, die 19 hergibt, koennte den Riegel nie
   // erfuellen und der Lauf braeche jeden Tag ab, ohne dass jemand die Ursache saehe.
   const moeglich = MILAN_KANDIDATEN.reduce((s, k) => s + k.partner.length, 0);
-  assert.equal(moeglich, MILAN_ERWARTETE_BEINE);
+  assert.equal(moeglich, 18, '16 Zweibein-Klassen + 1 Dreibein');
+  assert.equal(MILAN_ERWARTETE_BEINE, 18, 'der Riegel erwartet genau diese 18 Partner-Beine am Tor');
   for (const k of MILAN_KANDIDATEN) {
     assert.ok(MILAN_SPIEGEL.test(k.anker), `${k.anker}: jeder Anker ist ein Mailaender Spiegel (A11)`);
     assert.ok(k.beleg && k.beleg.trim(), `${k.anker}: jeder Eintrag traegt seinen Board-Beleg`);
@@ -774,7 +783,10 @@ test('A7 am Prozess: EIN vorhandener Anker mit falscher Menge bricht den Lauf HA
     ['ANE.MC', 'Corporación Acciona Energías Renovables, S.A.', { country: 'Spain', shares: 324323262, exchangeName: 'Madrid' }],
   ]);
   assert.equal(r.code, 1, 'Mengen-Riegel muss hart abbrechen. Ausgabe:\n' + r.ausgabe);
-  assert.match(r.ausgabe, /::error::U3-Milan — Mengen-Riegel gerissen: 1 umbenannte Beine \/ 1 kollabierte Gruppen, erwartet 18\/17/);
+  assert.match(r.ausgabe, /::error::U3-Milan — Mengen-Riegel gerissen: 1 von 17 Kandidatenklassen und 1 von 18 Partner-Beinen passieren das Tor/);
+  // Der Grund gehoert in die Zeile: 16 Klassen fehlen komplett, das ist 'beine-unvollstaendig'
+  // und NICHT dasselbe wie eine gerissene Fingerabdruck- oder Mehrdeutigkeits-Probe.
+  assert.match(r.ausgabe, /Gescheitert: .*1CRCL\.MI \(beine-unvollstaendig\)/);
   assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
 });
 
@@ -807,19 +819,108 @@ test('A7 am Prozess: alle Anker-Dateien DA, aber unlesbar -> Riegel feuert (FEHL
 });
 
 /**
- * Baut ALLE 17 eingefrorenen Klassen so, dass der Mengen-Riegel bei genau 18/17 GRUEN ist.
+ * Baut ALLE 17 eingefrorenen Klassen so, dass der Mengen-Riegel GRUEN ist.
  * Jede Klasse bekommt eine eigene Basis, damit kein Abdruck doppelt vorkommt (sonst 'mehrdeutig').
  * Das Partner-Bein traegt einen Platzhalternamen, damit das Mailaender Bein den Namen stellt.
+ *
+ * Die drei Schalter bauen genau die Lagen, an denen der A7-Umbau vom 02.09.2026 haengt:
+ *   `vereint: n`    die ersten n Klassen sind FERTIG umbenannt (Partner traegt schon den
+ *                   Emittenten-Namen) — der Fall, an dem der alte Riegel riss.
+ *   `dreibeinHalb`  im Dreibein `1BEI.MI` ist EIN Partner-Bein fertig, das andere nicht —
+ *                   dieselbe Lage eine Ebene feiner, die die Gruppenzahl allein nicht sieht.
+ *   `weglassen`     ein Partner-Bein fehlt im Bestand — die Bruchrichtung, die rot bleiben MUSS.
  */
-function alleKandidatenDateien() {
+function alleKandidatenDateien(o = {}) {
+  const vereint = o.vereint === undefined ? 0 : o.vereint;
+  const weglassen = new Set(o.weglassen || []);
   const aus = [];
   MILAN_KANDIDATEN.forEach((k, i) => {
     const opt = { shares: 1000000, basis: 1000 + i * 7 };
-    aus.push([k.anker, `Emittent ${i} AG`, opt]);
-    for (const p of k.partner) aus.push([p, p, opt]);
+    const name = `Emittent ${i} AG`;
+    aus.push([k.anker, name, opt]);
+    k.partner.forEach((p, j) => {
+      if (weglassen.has(p)) return;
+      const fertig = i < vereint || (o.dreibeinHalb && k.partner.length > 1 && j === 0);
+      aus.push([p, fertig ? name : p, opt]);
+    });
   });
   return aus;
 }
+
+// ─── 6b. A7-UMBAU (02.09.2026): der Riegel zaehlt das Tor, nicht die offene Arbeit ───────
+//
+// Bis zum 02.09.2026 verlangte der Riegel 18 umbenannte Beine in 17 Gruppen — also, dass ALLE
+// 17 Klassen noch Arbeit brauchen. Am 02.09. lief fuer die Voll-Pull-Kohorte vom 02.08. die
+// 30-Tage-Frist ab (`pull-yahoo.js:97`); Yahoo lieferte fuer acht Partner-Beine erstmals
+// `longName` statt des Ticker-Platzhalters, acht Klassen fielen auf 'schon-vereint', die Zahl
+// auf 10/9 — und der Lauf brach ab, obwohl der Zensus Byte fuer Byte der des letzten gruenen
+// Laufs war (901 Mailaender Beine, 6 mehrdeutige Abdruecke, 0 unlesbar). Der Riegel zaehlt
+// seither die ERHALTENE Groesse: wie viele der 17 eingefrorenen Klassen das Tor passieren.
+//
+// Die vier Proben unten sind zweiseitig gebaut: zwei Lagen, die GRUEN sein muessen (sonst waere
+// der Bug nicht behoben), und zwei, die ROT bleiben muessen (sonst waere der Riegel abgeschaltet
+// statt korrigiert).
+
+test('A7-UMBAU gruen: acht fertige Umbenennungen sind der Erfolgsfall, kein Abbruch (02.09.2026)', () => {
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ vereint: 8 })]);
+  assert.equal(r.code, 0, 'eine abgeschlossene Umbenennung darf keinen Board-Tag kosten. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /A7-Tor: 17\/17 Kandidatenklassen und 18\/18 Partner-Beine passieren, davon 8 Klassen schon vereint/);
+  // Exakt die Produktionszahlen des roten Laufs 33601800213 — die offene Arbeit IST gefallen,
+  // nur ist sie nicht mehr die Groesse, an der der Riegel haengt.
+  assert.match(r.ausgabe, /10 Beine in 9 Gruppen auf den Emittenten-Namen gesetzt/);
+  assert.doesNotMatch(r.ausgabe, /Mengen-Riegel gerissen/);
+});
+
+test('A7-UMBAU gruen: sind ALLE 17 Klassen fertig, laeuft der Filter weiter durch', () => {
+  // Die Endlage, auf die die Population zulaeuft: je besser Yahoos Namensdeckung, desto weniger
+  // Umbenennungen, perspektivisch keine. Der alte Riegel waere dort bei 0/0 gegen 18/17
+  // gefahren und haette den Screener dauerhaft ohne Board gelassen.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ vereint: MILAN_KANDIDATEN.length })]);
+  assert.equal(r.code, 0, 'eine vollstaendig geheilte Population ist kein Mengenfehler. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /A7-Tor: 17\/17 Kandidatenklassen und 18\/18 Partner-Beine passieren, davon 17 Klassen schon vereint/);
+  assert.match(r.ausgabe, /0 Beine in 0 Gruppen auf den Emittenten-Namen gesetzt/);
+});
+
+test('A7-UMBAU gruen, Bein-Ebene: im Dreibein zaehlt jedes Partner-Bein einzeln', () => {
+  // `1BEI.MI` steht auf 'umbenennen', aber nur EIN Verlierer-Bein bleibt — die Gruppenzahl
+  // merkt davon nichts, die alte Beinzahl fiel auf 17 und riss. Der Bein-Zaehler ist der Grund,
+  // warum der Riegel weiterhin ZWEI Zahlen fuehrt: er haengt jetzt an der Klassen-Geometrie
+  // (`beine.length - 1`), nicht an der Zahl der noch offenen Verlierer.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ dreibeinHalb: true })]);
+  assert.equal(r.code, 0, 'ein halb fertiges Dreibein ist derselbe Erfolgsfall. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /A7-Tor: 17\/17 Kandidatenklassen und 18\/18 Partner-Beine passieren, davon 0 Klassen schon vereint/);
+  assert.match(r.ausgabe, /17 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
+});
+
+test('A7-UMBAU rot: ein verschlucktes Kandidaten-Bein bricht weiterhin HART ab', () => {
+  // Die Bruchrichtung, um die es dem Urteil geht. Ohne diese Probe waere der Umbau nicht von
+  // einem Abschalten des Riegels zu unterscheiden. Zwei Faelle in einem Test, weil sie die
+  // beiden Zaehler getrennt treffen:
+  //   RSG    fehlt   -> Zweibein-Klasse faellt ganz weg: 16/17 Klassen, 17/18 Beine
+  //   BEI.SW fehlt   -> Dreibein-Klasse faellt ganz weg: 16/17 Klassen, 16/18 Beine
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ vereint: 8, weglassen: ['RSG'] })]);
+  assert.equal(r.code, 1, 'ein fehlendes Kandidaten-Bein MUSS abbrechen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /Mengen-Riegel gerissen: 16 von 17 Kandidatenklassen und 17 von 18 Partner-Beinen passieren das Tor/);
+  assert.match(r.ausgabe, /Gescheitert: 1RSG\.MI \(beine-unvollstaendig\)/);
+  assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
+
+  const drei = lauf([...fueller(120), ...alleKandidatenDateien({ weglassen: ['BEI.SW'] })]);
+  assert.equal(drei.code, 1, 'auch im Dreibein. Ausgabe:\n' + drei.ausgabe);
+  assert.match(drei.ausgabe, /Mengen-Riegel gerissen: 16 von 17 Kandidatenklassen und 16 von 18 Partner-Beinen passieren das Tor/);
+});
+
+test('A7-UMBAU rot: eine NEUE mehrdeutige Abdruck-Klasse bricht weiterhin HART ab', () => {
+  // Die zweite Bruchrichtung und die gefaehrlichere: 'mehrdeutig' und 'schon-vereint' sehen von
+  // aussen gleich aus — beide Klassen werden NICHT umbenannt. Nur eine davon ist harmlos. Ein
+  // Riegel, der beide durchlaesst, waere genau die Fehlverschmelzungs-Luecke, die A5 schliesst.
+  // `1ZZZ.MI` teilt die Basis der Klasse 0 und macht deren Abdruck damit mehrdeutig.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ vereint: 8 }),
+    ['1ZZZ.MI', 'Zwilling AG', { shares: 1000000, basis: 1000 }],
+  ]);
+  assert.equal(r.code, 1, 'ein mehrdeutiger Abdruck MUSS abbrechen. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /Mengen-Riegel gerissen: 16 von 17 Kandidatenklassen und 17 von 18 Partner-Beinen passieren das Tor/);
+  assert.match(r.ausgabe, new RegExp('Gescheitert: ' + MILAN_KANDIDATEN[0].anker.replace('.', '\\.') + ' \\(mehrdeutig\\)'));
+});
 
 test('A5-INTEGRITAET am Prozess: ein unlesbares Mailaender Bein bricht HART ab, obwohl A7 gruen ist', () => {
   // Die Luecke, die A7 STRUKTURELL nicht sehen kann: das kaputte Bein ist KEIN Kandidat, also
