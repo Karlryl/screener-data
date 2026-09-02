@@ -34,8 +34,8 @@
  * ('Germany'), mirroring how the other venue adapters set country.
  *
  * marketCap is intentionally NOT set (Yahoo fills it later). Node built-ins
- * only. Never throws — returns an empty Map() on any failure (fail-silent,
- * mirroring finnhub.js / sse-cn.js).
+ * only. Never throws — returns an empty Map with `partial === true` when the
+ * transport, venue identity, or documented schema is unusable.
  *
  * Returns Map<yahooTicker, {ticker, name, exchange, source, country, ipoDate?}>
  */
@@ -86,30 +86,102 @@ function get(url, redirectsLeft = MAX_REDIRECTS) {
   });
 }
 
-// First Trading Date is already 'YYYY-MM-DD'; pass through if well-formed.
+function validCalendarDate(year, month, day) {
+  if (year < 1 || month < 1 || month > 12) return false;
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= days[month - 1];
+}
+
+// First Trading Date is already 'YYYY-MM-DD'; pass through if calendar-valid.
 function toIpoDate(raw) {
   const s = String(raw || '').trim();
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : undefined;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (!match) return undefined;
+  return validCalendarDate(Number(match[1]), Number(match[2]), Number(match[3]))
+    ? s
+    : undefined;
+}
+
+function parseSemicolonRow(line) {
+  const fields = [];
+  let field = '';
+  let inQuotes = false;
+  let afterQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (line[i + 1] === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+          afterQuote = true;
+        }
+      } else {
+        field += char;
+      }
+    } else if (afterQuote) {
+      if (char === ';') {
+        fields.push(field);
+        field = '';
+        afterQuote = false;
+      } else if (!/\s/.test(char)) {
+        throw new Error('invalid characters after quoted Xetra field');
+      }
+    } else if (char === ';') {
+      fields.push(field);
+      field = '';
+    } else if (char === '"' && field.trim() === '') {
+      field = '';
+      inQuotes = true;
+    } else {
+      field += char;
+    }
+  }
+  if (inQuotes) throw new Error('unterminated quoted Xetra field');
+  fields.push(field);
+  return fields;
+}
+
+function validUpdateRow(line) {
+  const fields = parseSemicolonRow(line).map(value => value.trim());
+  if (fields.length !== 2 || fields[0] !== 'Date Last Update:') return false;
+  const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(fields[1]);
+  if (!match) return false;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  return validCalendarDate(year, month, day);
 }
 
 function parseXetra(csvText) {
   const result = new Map();
-  const lines = csvText.split(/\r?\n/);
+  if (typeof csvText !== 'string') throw new Error('Xetra response is not text');
+  const lines = csvText.replace(/^\uFEFF/, '').split(/\r?\n/);
   // line 0/1 banner, line 2 header, line 3+ data.
-  if (lines.length < 4) return result;
+  if (lines.length < 3) throw new Error('missing Xetra venue/header rows');
 
-  const header = lines[2].split(';').map(h => h.trim());
+  const market = parseSemicolonRow(lines[0]).map(value => value.trim());
+  if (market.length !== 2 || market[0] !== 'Market:' || market[1] !== 'XETR') {
+    throw new Error('invalid Xetra venue identity');
+  }
+  if (!validUpdateRow(lines[1])) throw new Error('invalid Xetra update metadata');
+
+  const header = parseSemicolonRow(lines[2]).map(h => h.trim());
   const iName = header.indexOf('Instrument');
   const iMnem = header.indexOf('Mnemonic');
   const iType = header.indexOf('Instrument Type');
   const iFTD  = header.indexOf('First Trading Date');
-  if (iName < 0 || iMnem < 0 || iType < 0) return result; // layout changed → bail silently
+  if (iName < 0 || iMnem < 0 || iType < 0) {
+    throw new Error('missing required Xetra headers');
+  }
 
   for (let i = 3; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
-    // ponytail: leading columns we read carry no quoted/embedded ';', so a plain
-    // split is safe. Swap in a CSV parser only if those columns ever gain quotes.
-    const f = lines[i].split(';');
+    const f = parseSemicolonRow(lines[i]);
+    if (f.length !== header.length) throw new Error('wrong-width Xetra row ' + (i + 1));
     if ((f[iType] || '').trim() !== 'CS') continue; // common shares only
     const mnem = (f[iMnem] || '').trim().toUpperCase();
     if (!/^[A-Z0-9]{1,6}$/.test(mnem)) continue; // skip empty / malformed mnemonics
@@ -129,17 +201,20 @@ function parseXetra(csvText) {
   return result;
 }
 
-async function fetchXetraUniverse() {
+async function fetchXetraUniverse(dependencies = {}) {
   const result = new Map();
+  const getFn = dependencies.getFn || get;
   try {
     console.log('  [XETRA] Fetching Xetra all-tradable-instruments register...');
-    const csv = await get(XETRA_URL);
+    const csv = await getFn(XETRA_URL);
     const parsed = parseXetra(csv);
     for (const [k, v] of parsed) result.set(k, v);
     console.log(`  [XETRA] Total listed Xetra shares: ${result.size}`);
   } catch (e) {
     console.error('  [XETRA] failed: ' + e.message);
-    return new Map(); // fail-silent per contract
+    const failed = new Map();
+    failed.partial = true;
+    return failed;
   }
   return result;
 }

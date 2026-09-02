@@ -21,6 +21,7 @@
  *   (f) 302 mit Location wird verfolgt und das Ziel liefert die Daten
  *   (g) 302 ohne Location bricht ab, statt "undefined" abzurufen
  *   (h) Umleitungsschleife endet bei MAX_REDIRECTS=5 (genau 6 Abrufe)
+ *   (i) eine falsch breite Datenzeile markiert den erhaltenen Teilbestand
  *
  * Hermetisch: kein Netz, keine Dateien. Laeuft im pre-pull-Gate (tests/*test.js);
  * tests/discovery/asx-au.test.js bleibt der Live-Check und ist gate-exempt.
@@ -42,6 +43,16 @@ const CSV_NEU = [
   '"CSL","CSL LIMITED","Pharmaceuticals, Biotechnology & Life Sciences","1994-06-03",""',
   '"A2M","THE A2 MILK COMPANY LIMITED","Food, Beverage & Tobacco","2015-03-31",""',
   '"BHPPA","BHP GROUP LIMITED SECOND LINE","Materials","2022-01-31",""',
+  '',
+].join('\r\n');
+
+// Reordered header with the code last: the middle record is one field short,
+// while both surrounding records remain structurally complete.
+const CSV_WRONG_WIDTH = [
+  '"Company name","GICs industry group","Listing date","Market Cap","ASX code"',
+  '"BHP GROUP LIMITED","Materials","1885-08-13","","BHP"',
+  '"BROKEN COMPANY","Software & Services","2020-01-01",""',
+  '"COMMONWEALTH BANK OF AUSTRALIA","Banks","1991-09-12","","CBA"',
   '',
 ].join('\r\n');
 
@@ -104,6 +115,8 @@ async function check(name, fn) {
       const { map } = await mitschnitt(() => fetchAsxUniverse());
       assert.deepStrictEqual([...map.keys()].sort(), ['A2M.AX', 'BHP.AX', 'CBA.AX', 'CSL.AX'],
         'Kopfzeile in Zeile 0 / Code-Spalte zuerst muss gelesen werden, BHPPA (Zweitlinie) muss fliegen');
+      assert.strictEqual(map.partial, undefined,
+        'ein vollstaendiger Abruf darf nicht als Teilbestand markiert werden');
       assert.strictEqual(map.get('CSL.AX').name, 'CSL LIMITED',
         'Namensspalte falsch zugeordnet — die Komma-in-Anfuehrungszeichen-Zeile ist der Stresstest');
       for (const [k, info] of map) {
@@ -123,6 +136,17 @@ async function check(name, fn) {
       'der alte Host liefert 404 bzw. die WAF-Seite — Abruf ging an: ' + angefragt[0]);
     assert.ok(u.pathname.includes('/companies/directory/file'),
       'Directory-Pfad erwartet, sah: ' + u.pathname);
+  });
+
+  await check('falsch breite Datenzeile markiert den erhaltenen Teilbestand', async () => {
+    netzAntwortetMit(CSV_WRONG_WIDTH, { 'content-type': 'text/csv' });
+    try {
+      const { map } = await mitschnitt(() => fetchAsxUniverse());
+      assert.deepStrictEqual([...map.keys()], ['BHP.AX', 'CBA.AX'],
+        'gueltige Geschwister muessen die kaputte Mittelzeile ueberleben');
+      assert.strictEqual(map.partial, true,
+        'eine verlorene Registerzeile darf neben einem nichtleeren Teilbestand nicht gesund aussehen');
+    } finally { https.get = echtesGet; }
   });
 
   // ── (c) Der Kern: 200 + text/html ist eine Abweisung, kein Layoutwechsel ──
@@ -218,9 +242,9 @@ async function check(name, fn) {
     } finally { https.get = echtesGet; }
   });
 
-  console.log('\nGeprueft: discovery/asx-au.js wirklich ausgefuehrt (8 Laeufe, https abgeklemmt) — '
-    + 'neues markitdigital-Layout, Endpunkt-Host, WAF-Abweisung (200+text/html), text/plain-Gegenprobe, '
+  console.log('\nGeprueft: 9 Pruefungen / 8 Adapterlaeufe (https abgeklemmt) — '
+    + 'neues markitdigital-Layout, Zeilenbreite, Endpunkt-Host, WAF-Abweisung (200+text/html), text/plain-Gegenprobe, '
     + 'fehlender Content-Type und die drei Umleitungsfaelle (verfolgt / ohne Location / Schleife).');
-  console.log('asx-au-waf-statt-layout: ' + (8 - fails) + ' ok, ' + fails + ' fail');
+  console.log('asx-au-waf-statt-layout: ' + (9 - fails) + ' ok, ' + fails + ' fail');
   process.exit(fails ? 1 : 0);
 })();

@@ -2,6 +2,7 @@
 /** tests/ath-state.test.js — Standalone-Runner (node tests/ath-state.test.js, Exit 0/1).
  * Pinnt die 2.2-Kernlogik: ATH-Fortschrieb, Split-Wächter, Kill+Resume, Seed, Anzeige. */
 const assert = require('node:assert/strict');
+const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -13,6 +14,202 @@ let pass = 0, fail = 0;
 function test(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
+}
+
+const UPDATE_ATH_CLI = path.join(__dirname, '..', 'scripts', 'update-ath-state.js');
+
+function runStateFixture(stateValue, options = {}) {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ath-state-shape-'));
+  const stateFile = path.join(tmp, 'ath-state.json');
+  const pricesDir = path.join(tmp, 'missing-prices');
+  const statePresent = options.statePresent !== false;
+  if (statePresent) fs.writeFileSync(stateFile, JSON.stringify(stateValue));
+  const before = statePresent ? fs.readFileSync(stateFile, 'utf8') : null;
+  const result = childProcess.spawnSync(process.execPath, [
+    UPDATE_ATH_CLI,
+    '--state', stateFile,
+    '--prices-dir', pricesDir,
+  ], { encoding: 'utf8', env: process.env });
+  const after = fs.existsSync(stateFile) ? fs.readFileSync(stateFile, 'utf8') : null;
+  const pricesDirCreated = fs.existsSync(pricesDir);
+  fs.rmSync(tmp, { recursive: true, force: true });
+  if (result.error) throw result.error;
+  return {
+    status: result.status,
+    output: String(result.stdout || '') + String(result.stderr || ''),
+    before,
+    after,
+    pricesDirCreated,
+  };
+}
+
+function assertShapeFailure(stateValue, messagePattern) {
+  const result = runStateFixture(stateValue);
+  assert.notEqual(result.status, 0, 'parseable malformed state must fail');
+  assert.match(result.output, messagePattern, 'failure must name the malformed state boundary');
+  assert.doesNotMatch(result.output, /Preis-Store LEER|ungestempelt/, 'shape must fail before price-store access');
+  assert.equal(result.after, result.before, 'shape failure must not rewrite the state file');
+  assert.equal(result.pricesDirCreated, false, 'shape failure must not create the price-store path');
+}
+
+for (const [label, value] of [
+  ['array', []],
+  ['null', null],
+  ['string', 'not-an-object'],
+  ['number', 0],
+  ['boolean', false],
+]) {
+  test(`CLI rejects a parseable ${label} ATH-state root before store access`, () => {
+    assertShapeFailure(value, /ATH state root must be a non-null, non-array object/);
+  });
+}
+
+for (const [label, value] of [
+  ['empty root', {}],
+  ['asOf-only root', { asOf: '2026-09-01' }],
+  ['misspelled entries key', { entires: {} }],
+]) {
+  test(`CLI rejects ${label} without an own entries object`, () => {
+    assertShapeFailure(value, /ATH state entries must be a non-null, non-array object/);
+  });
+}
+
+for (const [label, value] of [
+  ['null', null],
+  ['empty array', []],
+  ['populated array', [{}]],
+  ['empty string', ''],
+  ['non-empty string', 'ticker'],
+  ['number', 0],
+  ['boolean', false],
+]) {
+  test(`CLI rejects parseable ATH-state entries as ${label} before store access`, () => {
+    assertShapeFailure({ entries: value }, /ATH state entries must be a non-null, non-array object/);
+  });
+}
+
+for (const [label, value] of [
+  ['null', null],
+  ['empty array', []],
+  ['populated array', [{}]],
+  ['empty string', ''],
+  ['non-empty string', 'ticker'],
+  ['number', 0],
+  ['boolean', false],
+]) {
+  test(`CLI rejects an ATH-state ticker entry as ${label} before store access`, () => {
+    assertShapeFailure(
+      { entries: { BROKEN: value } },
+      /ATH state entry "BROKEN" must be a non-null, non-array object/,
+    );
+  });
+}
+
+test('CLI validates the complete entry map before store access', () => {
+  assertShapeFailure(
+    { entries: { GOOD: {}, BROKEN: [] } },
+    /ATH state entry "BROKEN" must be a non-null, non-array object/,
+  );
+});
+
+test('runner stops malformed structure before injected store and writer I/O', () => {
+  const trace = [];
+  assert.throws(() => upd.runUpdateAthState('state.json', 'prices', {
+    existsSync() { trace.push('exists'); return true; },
+    readFileSync() {
+      trace.push('read');
+      return JSON.stringify({ entries: { GOOD: {}, BROKEN: [] } });
+    },
+    loadHistory() { trace.push('load'); return {}; },
+    writeFileAtomic() { trace.push('write'); },
+    today() { trace.push('today'); return '2026-09-01'; },
+    log() { trace.push('log'); },
+  }), /ATH state entry "BROKEN" must be a non-null, non-array object/);
+  assert.deepEqual(trace, ['exists', 'read']);
+});
+
+test('runner calibration reaches loader, writer and log while preserving unknown fields', () => {
+  const trace = [];
+  let written = null;
+  const state = {
+    rootExtra: { retained: true },
+    entries: {
+      GOOD: {
+        ath: 9,
+        athDate: '2025-01-02',
+        lastClose: 9,
+        lastDate: '2025-01-02',
+        needsReseed: false,
+        entryExtra: 'retained',
+      },
+    },
+  };
+  upd.runUpdateAthState('state.json', 'prices', {
+    existsSync() { trace.push('exists'); return true; },
+    readFileSync() { trace.push('read'); return JSON.stringify(state); },
+    loadHistory() {
+      trace.push('load');
+      return { GOOD: [{ date: '2026-09-01', close: 10 }] };
+    },
+    writeFileAtomic(file, content) {
+      trace.push('write');
+      written = { file, content };
+    },
+    today() { trace.push('today'); return '2026-09-01'; },
+    log() { trace.push('log'); },
+  });
+  assert.deepEqual(trace, ['exists', 'read', 'load', 'today', 'write', 'log']);
+  assert.equal(written.file, 'state.json');
+  const next = JSON.parse(written.content);
+  assert.deepEqual(next.rootExtra, { retained: true });
+  assert.equal(next.asOf, '2026-09-01');
+  assert.equal(next.entries.GOOD.entryExtra, 'retained');
+  assert.equal(next.entries.GOOD.ath, 10);
+  assert.equal(next.entries.GOOD.athDate, '2026-09-01');
+  assert.equal(next.entries.GOOD.lastClose, 10);
+  assert.equal(next.entries.GOOD.lastDate, '2026-09-01');
+});
+
+test('runner propagates an atomic-writer failure without a success log', () => {
+  const trace = [];
+  const sentinel = new Error('writer-sentinel');
+  assert.throws(() => upd.runUpdateAthState('state.json', 'prices', {
+    existsSync() { trace.push('exists'); return true; },
+    readFileSync() {
+      trace.push('read');
+      return JSON.stringify({ entries: { GOOD: { ath: 9, needsReseed: false } } });
+    },
+    loadHistory() {
+      trace.push('load');
+      return { GOOD: [{ date: '2026-09-01', close: 10 }] };
+    },
+    writeFileAtomic() { trace.push('write'); throw sentinel; },
+    today() { trace.push('today'); return '2026-09-01'; },
+    log() { trace.push('log'); },
+  }), (error) => error === sentinel);
+  assert.deepEqual(trace, ['exists', 'read', 'load', 'today', 'write']);
+});
+
+test('CLI admits an object-valued entry and reaches the calibrated store boundary', () => {
+  const result = runStateFixture({ entries: { GOOD: {} } });
+  assert.notEqual(result.status, 0, 'the deliberately missing store must stop the control');
+  assert.match(result.output, /Preis-Store LEER|ungestempelt/);
+  assert.doesNotMatch(result.output, /ATH state (?:root|entries|entry).*must be/);
+  assert.equal(result.after, result.before);
+  assert.equal(result.pricesDirCreated, false);
+});
+
+for (const control of [
+  { label: 'missing state file', statePresent: false, value: null, output: /kein ath-state\.json/ },
+  { label: 'empty entries object', value: { entries: {} }, output: /ath-state leer/ },
+]) {
+  test(`CLI preserves ${control.label} as a no-op`, () => {
+    const result = runStateFixture(control.value, { statePresent: control.statePresent });
+    assert.equal(result.status, 0);
+    assert.match(result.output, control.output);
+    assert.equal(result.after, result.before);
+    assert.equal(result.pricesDirCreated, false);
+  });
 }
 
 test('seedEntry: ATH + Referenzanker + lastClose aus Max-Serie', () => {

@@ -19,16 +19,20 @@ function mapped(price, financialData) {
 }
 const MCAP = 5e9;
 const GATE = path.join(__dirname, '..', 'scripts', 'ccy-alarm-gate.js');
-function runGate(manifestInhalt) {
+const NO_MANIFEST = Symbol('NO_MANIFEST');
+function runGateRaw(manifestInhalt) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'f-neu-gate-'));
   try {
-    if (manifestInhalt !== null) {
+    if (manifestInhalt !== NO_MANIFEST) {
       fs.mkdirSync(path.join(tmp, 'snapshots'));
-      fs.writeFileSync(path.join(tmp, 'snapshots', '_manifest.json'), JSON.stringify(manifestInhalt));
+      fs.writeFileSync(path.join(tmp, 'snapshots', '_manifest.json'), manifestInhalt);
     }
     const r = cp.spawnSync(process.execPath, [GATE], { cwd: tmp, encoding: 'utf8' });
     return { status: r.status, out: (r.stdout || '') + (r.stderr || '') };
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+}
+function runGate(manifestInhalt) {
+  return runGateRaw(manifestInhalt === NO_MANIFEST ? NO_MANIFEST : JSON.stringify(manifestInhalt));
 }
 
 (async () => {
@@ -115,23 +119,75 @@ function runGate(manifestInhalt) {
   });
 
   await test('(f) Sammel-Alarm-Gate: Feld >0 endet mit ::error:: am Zeilenanfang und Exit != 0', () => {
-    const r = runGate({ n_ok: 1, n_total: 1, n_failed: 0, n_ccy_missing_completely: 2 });
+    const r = runGate({ n_ok: 1, n_total: 1, n_failed: 0, n_ccy_missing_completely: 1 });
     assert.notEqual(r.status, 0, r.out);
-    assert.match(r.out, /^::error::2 Ticker ohne jede Waehrungsangabe/m);
+    assert.match(r.out, /^::error::1 Ticker ohne jede Waehrungsangabe/m);
     assert.match(r.out, /Snapshots NICHT ueberschrieben, Altbestand bleibt/);
+    assert.equal((r.out.match(/^::error::/gm) || []).length, 1);
+  });
+
+  await test('(f1) Groesster sicherer Ganzzahlwert bleibt schema-gueltig und nutzt den bestehenden Alarm', () => {
+    const r = runGate({ n_ok: 1, n_total: 1, n_failed: 0, n_ccy_missing_completely: Number.MAX_SAFE_INTEGER });
+    assert.notEqual(r.status, 0, r.out);
+    assert.match(r.out, new RegExp(`^::error::${Number.MAX_SAFE_INTEGER} Ticker ohne jede Waehrungsangabe`, 'm'));
+    assert.doesNotMatch(r.out, /Invalid n_ccy_missing_completely/);
+    assert.equal((r.out.match(/^::error::/gm) || []).length, 1);
   });
 
   await test('(f2) Negativ-Kontrollen: Feld 0, Feld fehlt, Datei fehlt -> Exit 0 und kein ::error::', () => {
     for (const [name, inhalt] of [
       ['Feld 0', { n_ok: 1, n_total: 1, n_failed: 0, n_ccy_missing_completely: 0 }],
       ['Feld fehlt', { n_ok: 1, n_total: 1, n_failed: 0 }],
-      ['Datei fehlt', null],
+      ['Datei fehlt', NO_MANIFEST],
     ]) {
       const r = runGate(inhalt);
       assert.equal(r.status, 0, `${name}: ${r.out}`);
       assert.doesNotMatch(r.out, /::error::/, name);
     }
   });
+
+  await test('(f2a) Syntaxfehler und parsebare Wurzeln ohne eigenes Feld bleiben beim bestehenden Gate', () => {
+    for (const [name, r] of [
+      ['Syntaxfehler', runGateRaw('{"n_ccy_missing_completely":')],
+      ['null-Wurzel', runGate(null)],
+      ['Array-Wurzel', runGate([])],
+      ['Zahl-Wurzel', runGate(7)],
+      ['String-Wurzel', runGate('root')],
+    ]) {
+      assert.equal(r.status, 0, `${name}: ${r.out}`);
+      assert.doesNotMatch(r.out, /::error::/, name);
+    }
+  });
+
+  await test('(f2b) Ein gleichnamiges hasOwnProperty-Geschwister kann die Feldpruefung nicht kapern', () => {
+    const zero = runGate({ hasOwnProperty: null, n_ccy_missing_completely: 0 });
+    assert.equal(zero.status, 0, zero.out);
+    assert.doesNotMatch(zero.out, /::error::/);
+
+    const one = runGate({ hasOwnProperty: null, n_ccy_missing_completely: 1 });
+    assert.notEqual(one.status, 0, one.out);
+    assert.match(one.out, /^::error::1 Ticker ohne jede Waehrungsangabe/m);
+    assert.doesNotMatch(one.out, /Invalid n_ccy_missing_completely/);
+    assert.equal((one.out.match(/^::error::/gm) || []).length, 1);
+  });
+
+  for (const [id, name, wert] of [
+    ['a', 'null', null],
+    ['b', 'String', '2'],
+    ['c', 'negativ', -1],
+    ['d', 'gebrochen', 0.5],
+    ['e', 'unsicher gross', Number.MAX_SAFE_INTEGER + 1],
+    ['f', 'Boolean', true],
+    ['g', 'Array', []],
+    ['h', 'Objekt', {}],
+  ]) {
+    await test(`(f3${id}) Vorhandener CCY-Zaehler ist ungueltig: ${name}`, () => {
+      const r = runGate({ n_ok: 1, n_total: 1, n_failed: 0, n_ccy_missing_completely: wert });
+      assert.notEqual(r.status, 0, `${name}: ${r.out}`);
+      assert.match(r.out, /^::error::Invalid n_ccy_missing_completely\b/m, name);
+      assert.equal((r.out.match(/^::error::/gm) || []).length, 1, `${name}: genau ein Sammel-Alarm`);
+    });
+  }
 
   await test('(g) Verdrahtung: Skip liegt im echten processOne vor Konverter und Loeschpfaden', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');

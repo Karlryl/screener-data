@@ -46,10 +46,40 @@ function loadJson(p, fallback) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch (e) { return fallback; }
 }
 
-function loadBaseline(p) {
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+function invalidBaseline(reason) {
+  const error = new Error(`FX-Baseline ungueltig (${reason}) — Baseline wird NICHT ueberschrieben`);
+  error.code = 'ERR_FX_BASELINE_SHAPE';
+  return error;
+}
+
+function validateCountPair(value, label) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw invalidBaseline(`${label} muss ein Zaehlerobjekt sein`);
+  }
+  for (const bucket of BUCKETS) {
+    if (!Number.isSafeInteger(value[bucket]) || value[bucket] < 0) {
+      throw invalidBaseline(`${label}.${bucket} muss eine nichtnegative sichere Ganzzahl sein`);
+    }
+  }
+}
+
+function validateBaseline(baseline) {
+  if (!baseline || typeof baseline !== 'object' || Array.isArray(baseline)) {
+    throw invalidBaseline('Wurzel muss ein Objekt sein');
+  }
+  if (!Object.prototype.hasOwnProperty.call(baseline, 'prev')) {
+    throw invalidBaseline('prev fehlt');
+  }
+  validateCountPair(baseline.last, 'last');
+  if (baseline.prev !== null) validateCountPair(baseline.prev, 'prev');
+  return baseline;
+}
+
+function loadBaseline(p, readFileSync = fs.readFileSync) {
+  try { return validateBaseline(JSON.parse(readFileSync(p, 'utf8'))); }
   catch (e) {
     if (e.code === 'ENOENT') return null;
+    if (e.code === 'ERR_FX_BASELINE_SHAPE') throw e;
     throw new Error(`FX-Baseline nicht lesbar (${e.message}) — Baseline wird NICHT ueberschrieben`);
   }
 }
@@ -262,4 +292,4 @@ if (require.main === module) {
   catch (e) { console.error('::error::watch-fx-sanity hat NICHT geprueft: ' + e.message); process.exitCode = 1; }
 }
 
-module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor, istHartkodiert, HARDCODED_MARKER, MARKER_FELDER, loadBaseline };
+module.exports = { scanSnapshots, countOverCap, checkJump, updateBaseline, isBucketJump, countHardcodedFallback, befunde, exitCodeFor, istHartkodiert, HARDCODED_MARKER, MARKER_FELDER, loadBaseline, validateBaseline };

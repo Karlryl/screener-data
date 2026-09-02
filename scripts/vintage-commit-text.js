@@ -50,7 +50,13 @@ function done(rc, datum) {
     : `✓ board-history vintage ${datum} committet`;
 }
 
-module.exports = { vintageBlockiert, subject, done };
+function isCanonicalIsoDate(datum) {
+  if (typeof datum !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(datum)) return false;
+  const instant = new Date(datum + 'T00:00:00.000Z');
+  return !Number.isNaN(instant.getTime()) && instant.toISOString().slice(0, 10) === datum;
+}
+
+module.exports = { vintageBlockiert, subject, done, isCanonicalIsoDate };
 
 if (require.main === module) {
   const [rc, datum, was] = process.argv.slice(2);
@@ -58,7 +64,7 @@ if (require.main === module) {
     console.error('usage: node scripts/vintage-commit-text.js <rc> <vintage-date> --subject|--done');
     process.exit(1);
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(datum)) {
+  if (!isCanonicalIsoDate(datum)) {
     console.error(`vintage-commit-text: "${datum}" ist kein ISO-Datum (yyyy-mm-dd)`);
     process.exit(1);
   }

@@ -16,7 +16,9 @@
  *
  * NEUZUGANGS-VENTIL: Ein Titel, der gestern ins Universum kam, KANN noch keine
  * Kurshistorie haben. Titel mit `added_at` juenger als NEU_TAGE bleiben deshalb aus
- * der Messung. Die Zahl der so ausgenommenen Titel wird IMMER mitgedruckt: am
+ * der Messung. Ein `added_at` aus einem spaeteren UTC-Kalendertag ist dagegen kein
+ * Altersbeleg und bleibt in der Messbasis; kleine Uhrzeit-Schieflagen am selben Tag
+ * bleiben erlaubt. Die Zahl der ausgenommenen Titel wird IMMER mitgedruckt: am
  * 21.07.2026 kamen 9.736 Titel auf einen Schlag dazu (globaler Universums-Ausbau),
  * wer nur die Restquote liest, haelt sie sonst fuer die ganze Wahrheit.
  *
@@ -82,6 +84,7 @@ function watchlistZeilen(w) {
 }
 
 const tage = (von, bis) => (bis - von) / 86400000;
+const utcTag = (zeit) => Math.floor(zeit / 86400000);
 
 /**
  * Reine Messung — kein Dateisystem, damit sie einzeln pruefbar ist.
@@ -92,10 +95,11 @@ function messePreisAbdeckung(zeilen, alle, opts = {}) {
   const neuTage = opts.neuTage != null ? opts.neuTage : NEU_TAGE;
   const altTage = opts.altTage != null ? opts.altTage : ALT_TAGE;
 
-  let ventil = 0, leer = 0, alt = 0;
+  let ventil = 0, leer = 0, alt = 0, addedAtZukunft = 0;
   let basis = 0;
   let aeltester = null;   // { ticker, datum, tage } — der schlimmste Fall, zum Anfassen
   const leerBeispiele = [];
+  const addedAtZukunftBeispiele = [];
 
   for (const r of zeilen) {
     const t = r && (r.ticker || r.yahoo_symbol);
@@ -103,7 +107,15 @@ function messePreisAbdeckung(zeilen, alle, opts = {}) {
     // Kein added_at = Altbestand aus der Zeit vor dem Feld, also NICHT neu.
     if (r.added_at) {
       const d = Date.parse(r.added_at);
-      if (Number.isFinite(d) && tage(d, jetzt) < neuTage) { ventil++; continue; }
+      if (Number.isFinite(d)) {
+        if (utcTag(d) > utcTag(jetzt)) {
+          addedAtZukunft++;
+          if (addedAtZukunftBeispiele.length < 8) addedAtZukunftBeispiele.push(t);
+        } else if (tage(d, jetzt) < neuTage) {
+          ventil++;
+          continue;
+        }
+      }
     }
     basis++;
     const serie = alle[t] || alle[r.yahoo_symbol];
@@ -125,6 +137,7 @@ function messePreisAbdeckung(zeilen, alle, opts = {}) {
   return {
     gesamt: zeilen.length,
     ventil, basis, leer, alt, aeltester, leerBeispiele,
+    addedAtZukunft, addedAtZukunftBeispiele,
     leerAnteil: basis > 0 ? leer / basis : null,
     neuTage, altTage,
   };
@@ -151,13 +164,16 @@ function main(opts = {}) {
     return 0;
   }
 
+  // Ein gemeinsamer Zeitpunkt verhindert, dass Gesamt- und Teilmessung beim
+  // UTC-Tageswechsel dieselbe Watchlist-Zeile verschieden klassifizieren.
+  const jetzt = Date.now();
   let m, kern, ausland;
   try {
-    m = messePreisAbdeckung(zeilen, alle);
-    // Dieselbe Messfunktion auf beiden Haelften — die Ventil- und Leer-Regeln sind
+    m = messePreisAbdeckung(zeilen, alle, { jetzt });
+    // Dieselbe Messfunktion auf beiden Haelften - die Ventil- und Leer-Regeln sind
     // damit garantiert identisch zur Gesamtzahl, statt zweimal formuliert zu sein.
-    kern = messePreisAbdeckung(zeilen.filter(istKern), alle);
-    ausland = messePreisAbdeckung(zeilen.filter((r) => !istKern(r)), alle);
+    kern = messePreisAbdeckung(zeilen.filter(istKern), alle, { jetzt });
+    ausland = messePreisAbdeckung(zeilen.filter((r) => !istKern(r)), alle, { jetzt });
   }
   catch (e) {
     // Ohne diesen Fang haengt die Garantie "wird nie rot" daran, dass die Messung NIE
@@ -171,6 +187,12 @@ function main(opts = {}) {
   const quote = (x) => (x.leerAnteil == null ? 'n/a' : (x.leerAnteil * 100).toFixed(1) + ' %');
   const anteil = quote(m);
   const schwelleText = (KERN_ALARM_ANTEIL * 100).toFixed(0) + ' %';
+
+  if (m.addedAtZukunft > 0) {
+    console.log('::warning::PREIS-ABDECKUNG INPUT: ' + m.addedAtZukunft
+      + ' added_at-Werte liegen nach dem heutigen UTC-Tag; diese Titel bleiben in der Messbasis.'
+      + (m.addedAtZukunftBeispiele.length ? ' Beispiele: ' + m.addedAtZukunftBeispiele.join(' ') : ''));
+  }
 
   // Tag-520-Lehre: beide Kennzahlen IMMER drucken, auch wenn sie unauffaellig sind.
   // Eine Zahl, die nur im Alarmfall erscheint, ist keine Messreihe.

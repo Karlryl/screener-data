@@ -186,6 +186,21 @@ function main() {
   const entries = wrapped ? wl.stocks : (Array.isArray(wl) ? wl : null);
   if (!entries) { console.error('::error::Unbekanntes Watchlist-Format: ' + args.watchlist); process.exit(1); }
 
+  // Auflage 6 promises a measured overlap on every run. An unavailable or
+  // unknown-shape measurement input is not the same thing as a measured zero,
+  // so reject it before snapshot work, reporting, or a destructive write.
+  // Both supported empty-list forms remain valid and truthfully measure zero.
+  const mainWatchlist = readJson(args.mainWatchlist);
+  const mainEntries = Array.isArray(mainWatchlist)
+    ? mainWatchlist
+    : (mainWatchlist && typeof mainWatchlist === 'object' && Array.isArray(mainWatchlist.stocks)
+      ? mainWatchlist.stocks
+      : null);
+  if (!mainEntries) {
+    console.error('::error::Haupt-Watchlist nicht lesbar oder unbekanntes Format: ' + args.mainWatchlist);
+    process.exit(1);
+  }
+
   const vorher = entries.length;
   const behalten = [];
   const entfernt = [];
@@ -203,7 +218,7 @@ function main() {
   }
 
   // Auflage 6 — NUR MESSEN: Ueberschneidung mit dem Hauptuniversum.
-  const mainTickers = new Set(tickersOf(readJson(args.mainWatchlist)));
+  const mainTickers = new Set(tickersOf(mainEntries));
   const ueberschneidung = behalten
     .map((e) => (typeof e === 'string' ? e : e && e.ticker))
     .filter((t) => t && mainTickers.has(t));
