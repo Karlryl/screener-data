@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const SNAP_DIR = './snapshots';
 const MANIFEST = path.join(SNAP_DIR, '_manifest.json');
@@ -414,7 +415,7 @@ function run() {
   let markerWriteFailed = false;
   try {
     fs.mkdirSync(path.dirname(MARKER), { recursive: true });
-    fs.writeFileSync(MARKER, JSON.stringify(marker, null, 2));
+    writeFileAtomic(MARKER, JSON.stringify(marker, null, 2));
   } catch (e) {
     markerWriteFailed = true;
     console.error(`::warning::could not write ${MARKER}: ${e.message}`);

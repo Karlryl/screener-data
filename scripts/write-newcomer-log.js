@@ -28,7 +28,7 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const OVERVIEW = path.join(REPO_ROOT, 'outputs', 'hypergrowth', 'overview.json');
@@ -124,12 +124,16 @@ function schreibeMonatszeile(logDir, datum, eintrag, dryRun, zeilen) {
     .join('\n') + '\n';
   if (!dryRun) {
     fs.mkdirSync(logDir, { recursive: true });
-    // writeJsonAtomic erwartet ein Objekt; JSONL wird deshalb direkt geschrieben —
-    // aber ueber eine Temp-Datei plus rename, damit ein abgebrochener Lauf keine halbe
-    // Datei hinterlaesst (dasselbe Versprechen, anderes Format).
-    const tmp = datei + '.tmp';
-    fs.writeFileSync(tmp, inhalt, 'utf8');
-    fs.renameSync(tmp, datei);
+    // writeJsonAtomic erwartet ein Objekt; JSONL wird deshalb als String geschrieben —
+    // aber ueber writeFileAtomic, damit ein abgebrochener Lauf keine halbe Datei
+    // hinterlaesst (dasselbe Versprechen, anderes Format). Der frueher hier von Hand
+    // gebaute tmp+rename hatte drei Luecken, die der Helfer schliesst: kein fsync (ein
+    // Stromausfall nach dem rename konnte eine leere Datei hinterlassen), kein Retry
+    // gegen Windows-EPERM/EBUSY (OneDrive/AV-Handle = stiller Schreibverlust) und einen
+    // FESTEN tmp-Namen, den zwei parallele Laeufe geteilt haetten — der zweite Lauf
+    // haette die tmp-Datei des ersten mitten im Schreiben ueberschrieben und beide
+    // haetten dieselbe Datei ins Ziel umbenannt.
+    writeFileAtomic(datei, inhalt, 'utf8');
   }
   return path.relative(REPO_ROOT, datei);
 }
