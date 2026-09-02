@@ -36,6 +36,7 @@ const {
   ART_ZAEHLPROBE,
   ART_C0_REGELFREEZE,
   REGISTER_RELS,
+  AKTIVES_REGISTER_REL,
   registerPfadDerRunId,
   istGeschlossen,
 } = require('../lib/studie-verfassung');
@@ -72,24 +73,17 @@ const WURZEL = path.join(__dirname, '..');
 // Fortsetzungs-Eintrags nicht und liesse sich fuer ihn keinen Beweis fuehren.
 const absolut = (rel) => path.join(WURZEL, ...rel.split('/'));
 
-// DAS ANMELDEZIEL BLEIBT, WO ES WAR - offene Kollision, hier benannt statt
-// still entschieden. LR-14 sagt woertlich "`anmelden` schreibt in die AKTIVE
-// Datei"; LR-14/G15 sagen im selben Absatz, tests/studie-r1-bestaetigbar-
-// zugriff.test.js bleibe UNBERUEHRT, "wird sie beruehrt, ist der Schnitt
-// falsch". Beides zugleich ist nicht erfuellbar: jener Waechter spiegelt und
-// behauptet das Anmeldeziel als die ERSTE Registerdatei. Getroffen waere nicht
-// seine geschuetzte Eigenschaft (KV-4-Gleichheitsanker, Zaehlproben-Art),
-// sondern die Pfadannahme seiner Attrappe - und die reicht Schreibvorgaenge auf
-// jeden ANDEREN Pfad ans echte Dateisystem durch.
-//
-// Das Loch, das dieses Stehenlassen laesst - dieser Pfad zeigt auf eine Datei,
-// deren letzter Eintrag jeden weiteren verbietet -, ist gedeckt:
-// tests/studie-naht-byte-frost.test.js pinnt die geschlossene Datei auf ihre
-// Bytes. Ein versehentlicher Anhang wird dort rot, sofort und benannt.
+// LRA-3: DAS ANMELDEZIEL IST DIE AKTIVE DATEI - importiert, nie getippt.
+// Bis zum ANHANG stand hier die ERSTE Registerdatei, weil LR-14s Wortlaut-
+// Haelfte (ii) den KV-4-Waechter fuer unberuehrbar erklaerte und jede Bewegung
+// des Anmeldeziels ihn rot machte. Diese Haelfte ist gefallen; ihre geschuetzte
+// EIGENSCHAFT (der KV-4-Gleichheitsanker) steht unveraendert und wird nach der
+// Attrappen-Vollendung neu abgenommen (LRA-11).
+const ANMELDEZIEL_REL = AKTIVES_REGISTER_REL;
+// Fuer die Geschichtsleser: die zuerst beschriebene Datei behaelt ihren Namen.
 const LEDGER_REL = REGISTER_RELS[0];
-// Nur fuer die Meldung des Riegels: welche Datei `anmelden` ansteuert.
-const ANMELDEZIEL_REL = LEDGER_REL;
 const LEDGER = absolut(LEDGER_REL);
+const ANMELDEN_ZIEL = absolut(ANMELDEZIEL_REL);
 const PRAEREG = path.join(WURZEL, 'protocol', 'early-detection', '2.0.0', 'preregistration.json');
 
 function argument(argv, name, pflicht = true) {
@@ -194,7 +188,7 @@ function schreibeRegister(register) {
       + 'braucht seinen eigenen Einzweck-Anhaenger mit --register.',
     );
   }
-  writeFileAtomic(LEDGER, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+  writeFileAtomic(ANMELDEN_ZIEL, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
 }
 
 // Die Ausgabe-Allowlist des Laufs. Ohne `--allowlist` ist es die der versiegelten
@@ -228,13 +222,18 @@ function anmelden(argv) {
   const erlaubt = allowlistAus(argument(argv, 'allowlist', false), praereg);
   const begruendung = argument(argv, 'begruendung', false);
 
-  const register = lies(LEDGER);
-  if ((register.events || []).some((e) => e.runId === runId)) {
+  // LRA-4: die Eindeutigkeit der runId gilt ueber die GANZE Kette, nicht je
+  // Datei. Ohne diese Umstellung naehme die Umhaengung einen bestehenden Fang
+  // weg: eine runId, die nur in der geschlossenen Datei steht, waere wieder
+  // anmeldbar - und der spaetere Beweis fuer sie braeche an der
+  // Mehrdeutigkeits-Sperre ab. Das waere Erosion, nicht Vollendung.
+  if (registerPfadDerRunId(runId, liesWennDa)) {
     throw new VerfassungsBruch(
       `R1: runId ${runId} steht schon im Register. Nur-Anhaengen heisst auch: keine zweite Anmeldung `
       + 'unter demselben Namen — sonst waere hinterher nicht entscheidbar, welcher Lauf gemeint war.',
     );
   }
+  const register = lies(ANMELDEN_ZIEL);
   const jetzt = new Date();
   const registeredAt = jetzt.toISOString();
   if (Date.parse(zugriffAb) <= Date.parse(registeredAt)) {
@@ -344,19 +343,13 @@ function bestaetigen(argv) {
   // und `sha` mit; beides wurde bisher weggeworfen. Ein Beweis, der nicht
   // nachsieht, WELCHE Datei er bekommen hat, beweist nichts ueber die Datei,
   // die er nennt.
-  // ABSICHTLICH `!== undefined` UND NICHT STRIKT-IMMER, mit Grund:
-  // die echte GitHub-Antwort traegt `path` immer. Ein strikter Zwang machte
-  // aber tests/studie-r1-bestaetigbar-zugriff.test.js rot - dessen Attrappe
-  // laesst das Feld weg -, und LR-14/G15 erklaeren genau diese Datei fuer
-  // UNBERUEHRBAR ("wird sie beruehrt, ist der Schnitt falsch"). Dieselbe
-  // Klausel, die schon das Anmeldeziel blockiert, blockiert hier die letzte
-  // Haerte. Gemeldet, nicht umgangen: sobald der ANHANG-Rat die Klausel
-  // aufloest, wird aus `!== undefined` ein unbedingtes Muss.
-  // Die tragende Haelfte von F2 haengt NICHT hieran - sie steht unten und
-  // sucht den Eintrag ueber seine runId statt in den Rohbytes.
-  if (inhalt.path !== undefined && inhalt.path !== registerRel) {
+  // UNBEDINGT, seit die Attrappe den Pfad liefert (LRA-1). Die Toleranz
+  // `!== undefined` war die Kollisionsnarbe der gefallenen UNBERUEHRT-Klausel;
+  // sie ist mit dem ANHANG gegenstandslos. Die echte GitHub-Antwort traegt
+  // `path` immer - eine Antwort ohne ihn ist keine.
+  if (inhalt.path !== registerRel) {
     throw new VerfassungsBruch(
-      `R1: die API-Antwort traegt den Pfad ${inhalt.path}, angefragt war ${registerRel}. `
+      `R1: die API-Antwort traegt den Pfad ${inhalt.path || '<keiner>'}, angefragt war ${registerRel}. `
       + 'Ein Beweis gegen eine andere Datei als die, die den Eintrag fuehrt, ist kein Beweis.',
     );
   }

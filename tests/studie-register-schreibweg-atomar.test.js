@@ -125,16 +125,7 @@ function fallR1(dir, marke) {
   const protoZiel = path.join(baum, 'protocol', 'early-detection', '2.0.0');
   fs.mkdirSync(protoZiel, { recursive: true });
   const register = path.join(protoZiel, 'outcome-access-ledger.json');
-  // LRA-2: der Spiegel fuehrt eine OFFENE Registerdatei. Das echte Original ist
-  // mit seinem Abschluss-Akt geschlossen, und der Schliessungsriegel verweigert
-  // seit LRA-2 jeden Schreibvorgang dorthin - zu Recht. Diese Probe misst aber
-  // nicht, OB geschrieben werden darf, sondern WIE geschrieben wird (rename
-  // statt direktem Schreiben; ein Abbruch laesst die Datei byte-identisch).
-  // Ihre Eigenschaft bleibt damit unveraendert; nur ihr Gegenstand ist eine
-  // Datei, in die ueberhaupt geschrieben werden darf.
-  const offen = JSON.parse(fs.readFileSync(LEDGER, 'utf8'));
-  offen.events.pop();          // der Abschluss-Akt, und nur er
-  fs.writeFileSync(register, `${JSON.stringify(offen, null, 1)}\n`);
+  fs.copyFileSync(LEDGER, register);
   // G11: der Spiegel fuehrt BEIDE Registerdateien der Kette. Das Werkzeug loest
   // seit G10 ueber die Kette auf; ein Spiegel, der nur eine Datei anlegt, laesst
   // den Aufloeser auf eine Datei zeigen, die die Fixture nie anlegt - und ein
@@ -157,7 +148,10 @@ function fallR1(dir, marke) {
       '--fenster', 'schreibweg-probe',
       '--zugriff-ab', new Date(Date.now() + 3600 * 1000).toISOString(),
     ],
-    register,
+    // LRA-3: beobachtet wird die AKTIVE Registerdatei - dorthin schreibt
+    // `anmelden` seit der Umhaengung. Die geschlossene liegt im Spiegel
+    // daneben und bleibt unberuehrt; genau das prueft die Byte-Gleichheit.
+    register: path.join(protoZiel, 'outcome-access-ledger-teil2.json'),
     cwd: baum,
   };
 }
