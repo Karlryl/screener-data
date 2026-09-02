@@ -372,42 +372,28 @@ test('die F6-C18-Anker treffen die tatsaechlichen Zeilen', () => {
 });
 
 // ============================================================================
-// UEBERGANGS-PIN — DATIERT, ZUM ENTFERNEN BESTIMMT
+// UEBERGANGS-PIN — ABGELOEST AM 2026-09-02, NICHT NACHGEZOGEN
 // ============================================================================
 //
-// Zwischen der F6-K13-Reparatur und dem ueberschreibenden Akt ist der Laeufer
-// repo-weit UNGEPINNT: Eintrag 28 bindet den alten SHA, und die Werkbank oben
-// misst deshalb den historischen Stand. Der Drift-Melder fuer den LEBENDEN
-// Baum fehlt in genau diesem Fenster - und in diesem Fenster faellt der eine
-// verbleibende Lauf.
+// Hier stand ein datierter Pin auf scripts/studie-f6-lauf.py. Er schloss das
+// Fenster zwischen der F6-K13-Reparatur und dem ueberschreibenden Akt: Eintrag
+// 28 band den alten SHA, die Werkbank oben misst deshalb den HISTORISCHEN
+// Stand, und fuer den lebenden Baum gab es keinen Drift-Melder.
 //
-// Dieser Pin schliesst das Fenster. Er ist AUSDRUECKLICH TEMPORAER:
-//   gesetzt am 2026-09-01, gegen scripts/studie-f6-lauf.py nach PR #229.
-//   ZU ENTFERNEN, sobald der ueberschreibende Akt (F6-K11) den neuen SHA
-//   bindet - ab dann traegt der Eintrag selbst die Bindung, und dieser Pin
-//   waere eine zweite, driftfaehige Kopie derselben Zahl.
-const UEBERGANGS_PIN = {
-  datei: 'scripts/studie-f6-lauf.py',
-  sha256: '5c0f685ec61e437d420814db72ce4f2aaedf919415bb5484e64ff44633ad1681',
-  gesetztAm: '2026-09-01',
-  entfernenWenn: 'der ueberschreibende Akt nach F6-K11 diesen SHA bindet',
-};
-
-test('UEBERGANGS-PIN: der Laeufer im Baum ist der geprueft reparierte', () => {
-  const ist = crypto.createHash('sha256')
-    .update(fs.readFileSync(path.join(WURZEL, ...UEBERGANGS_PIN.datei.split('/'))))
-    .digest('hex');
-  assert.equal(ist, UEBERGANGS_PIN.sha256,
-    `${UEBERGANGS_PIN.datei} weicht vom Uebergangs-Pin ab. Entweder ist der `
-    + 'Laeufer unbeabsichtigt veraendert worden, oder der ueberschreibende Akt '
-    + 'ist da - dann bindet der Eintrag den neuen SHA und DIESER PIN GEHOERT '
-    + 'ENTFERNT, nicht nachgezogen.');
-});
-
-test('UEBERGANGS-PIN BRUCHPROBE: ein veraendertes Byte faellt auf', () => {
-  const echt = fs.readFileSync(path.join(WURZEL, ...UEBERGANGS_PIN.datei.split('/')));
-  const verstellt = Buffer.concat([echt, Buffer.from('\n# verstellt\n', 'utf8')]);
-  const ist = crypto.createHash('sha256').update(verstellt).digest('hex');
-  assert.notEqual(ist, UEBERGANGS_PIN.sha256,
-    'der Pin muesste hier anschlagen - sonst pinnt er nichts');
-});
+// Seine Entfernungsbedingung lautete woertlich: "zu entfernen, sobald der
+// ueberschreibende Akt (F6-K11) den neuen SHA bindet - ab dann traegt der
+// Eintrag selbst die Bindung, und dieser Pin waere eine zweite, driftfaehige
+// Kopie derselben Zahl." Der Akt f6-konfirmatorisch-v3-2026-09-02 liegt als
+// Eintrag 2 von outcome-access-ledger-teil2.json auf main und bindet ihn.
+//
+// ABGELOEST, NICHT ERSATZLOS GESTRICHEN. "Der Eintrag traegt die Bindung" ist
+// eine Aussage ueber eine Akte, keine ueber einen Waechter. Den lebenden Baum
+// bewacht ab jetzt die LIVE-BINDUNGS-Probe in
+// tests/studie-f6-konfirmatorisch-v3.test.js: sie haelt JEDEN Pfad, den der
+// REGISTRIERTE Akt bindet, gegen die Datei im Baum - zwoelf statt einem, ohne
+// eine einzige abgeschriebene Konstante, mit eigener Bruchprobe. Sie pinnt die
+// SACHE statt einer Zahl und ist damit strikt mehr Fang als dieser Pin.
+//
+// Diese Notiz bleibt stehen, damit ein spaeterer Leser die Ablosung findet und
+// nicht einen ersatzlosen Wegfall vermutet (LR-15-Geist: nichts wird
+// stillschweigend aufgeraeumt).
