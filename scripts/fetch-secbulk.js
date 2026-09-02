@@ -164,10 +164,20 @@ function cikKarte(ticker, tmap) {
   return { proCik, ohneCik };
 }
 
+function parseLimit(argv) {
+  const limitIdx = argv.indexOf('--limit');
+  if (limitIdx < 0) return Infinity;
+  const raw = argv[limitIdx + 1];
+  const limit = Number(raw);
+  if (!Number.isSafeInteger(limit) || limit <= 0) {
+    throw new Error('--limit must be a positive safe integer, got: ' + JSON.stringify(raw));
+  }
+  return limit;
+}
+
 async function run() {
   const argv = process.argv.slice(2);
-  const limitIdx = argv.indexOf('--limit');
-  const limit = limitIdx >= 0 ? Number(argv[limitIdx + 1]) : Infinity;
+  const limit = parseLimit(argv);
   const outIdx = argv.indexOf('--out');
   const OUT = outIdx >= 0 ? argv[outIdx + 1] : OUT_DEFAULT;
 
@@ -260,6 +270,6 @@ function veroeffentliche(tmpPfad, outPfad, geschrieben, kaputt) {
   fs.renameSync(tmpPfad, outPfad);
 }
 
-module.exports = { baueBloecke, cikKarte, usTicker, veroeffentliche, BULK_URL };
+module.exports = { baueBloecke, cikKarte, usTicker, veroeffentliche, parseLimit, BULK_URL };
 
 if (require.main === module) run().catch((e) => { console.error('::error::' + e.message); process.exit(1); });
