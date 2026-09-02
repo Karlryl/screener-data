@@ -270,8 +270,16 @@ test('LR-19 FIXPUNKT: die Zahlen im Akt sind die, die der Akt erzeugt', () => {
   assert.strictEqual(e.wandLR19.nachherBytes, danach);
   assert.strictEqual(e.wandLR19.zuwachsBytes, zuwachs);
   assert.strictEqual(e.wandLR19.restluftBytes, restluft);
-  // Und die Arithmetik stimmt in sich.
-  assert.strictEqual(e.wandLR19.vorherBytes + zuwachs, danach);
+  // Und die Arithmetik stimmt in sich. GEMESSEN WIRD GEGEN DAS FIXTURE, gegen
+  // das der Lauf gefahren ist - nicht gegen `wandLR19.vorherBytes`. Der Wert
+  // dort stammt aus einer Messung beim `require` an der ECHTEN Datei und ist,
+  // sobald der Akt geschrieben IST, deren NEUE Groesse; die Probe verglich
+  // damit zwei verschiedene Dateien und waere in genau dem Moment rot
+  // geworden, in dem sie gruen bleiben muss. Dieselbe Klasse wie der
+  // getippte Stempel in studie-naht-beweisebene: eine Zusicherung ueber den
+  // Stand der echten Registerdatei statt ueber den eigenen Gegenstand.
+  const fixtureBytes = fs.statSync(fixture).size;
+  assert.strictEqual(fixtureBytes + zuwachs, danach);
   assert.strictEqual(e.wandLR19.deckelBytes - danach, restluft);
   // Die Nullreserve ist eine MESSUNG, keine Behauptung.
   assert.ok(restluft < zuwachs,

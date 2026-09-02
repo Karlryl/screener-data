@@ -41,11 +41,23 @@ const ALT_EINTRAG = geschlossen.events.find((e) => e.typ === 'count_only_probe_a
 // anderen Grund ablehnt als dem, der hier geprueft wird.
 const { haengeEintragAn } = require('../lib/studie-verfassung');
 const NEU_RUN_ID = 'naht-beweisprobe-fortsetzung';
+// DIE STEMPEL WERDEN VOM KETTENSCHWANZ ABGELEITET, NIE GETIPPT.
+// Ein fester Wert war eine Zusicherung ueber den Stand der ECHTEN
+// Registerdatei: sobald ein spaeter angemeldeter Akt ans Kettenende trat, war
+// dieser Fixture-Eintrag rueckdatiert, `pruefeZugriffsRegister` wies ihn zu
+// Recht ab, und der Wurf im Setup riss fuenf Proben mit - die dann auf die
+// falsche Meldung prueften. Die Probe war damit an den Kalender gebunden statt
+// an ihren Gegenstand. Abgeleitet haelt sie in BEIDEN Zustaenden: mit und ohne
+// Akt am Kettenende (Fixture-Checkliste, Beide-Zustaende-Disziplin).
+const _schwanz = fortsetzungKopf.events[fortsetzungKopf.events.length - 1];
+const _nachDemSchwanz = (ms) => new Date(
+  (_schwanz ? new Date(_schwanz.registeredAt).getTime() : Date.parse('2026-09-02T08:00:00.000Z'))
+  + ms).toISOString();
 const fortsetzungMitEintrag = haengeEintragAn(fortsetzungKopf, {
   runId: NEU_RUN_ID,
   typ: 'count_only_probe_authorized',
-  registeredAt: '2026-09-02T08:00:00.000Z',
-  accessedAt: '2026-09-02T12:00:00.000Z',
+  registeredAt: _nachDemSchwanz(60 * 1000),
+  accessedAt: _nachDemSchwanz(4 * 60 * 60 * 1000),
   fenster: ['entdeckung'],
   allowedOutputs: ['n'],
 });
