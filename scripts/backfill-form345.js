@@ -74,6 +74,63 @@ function readJsonSafe(p) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
   catch (e) { return null; }
 }
+function isJsonObject(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+function readHistoryFileOrThrow(filePath, readFile = fs.readFileSync) {
+  let raw;
+  try {
+    raw = readFile(filePath, 'utf8');
+  } catch (e) {
+    if (e && e.code === 'ENOENT') return { byTicker: {} };
+    const detail = e && (e.code || e.message) ? (e.code || e.message) : String(e);
+    throw new Error(
+      '[form345] history cache ' + filePath + ' cannot be read (' + detail +
+      ') - refusing to replace retained history.'
+    );
+  }
+
+  let history;
+  try {
+    history = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(
+      '[form345] history cache ' + filePath + ' cannot be parsed (' + e.message +
+      ') - refusing to replace retained history.'
+    );
+  }
+
+  if (!isJsonObject(history)) {
+    throw new Error('[form345] history root must be a non-null, non-array object: ' + filePath);
+  }
+  if (!Object.prototype.hasOwnProperty.call(history, 'byTicker') ||
+      !isJsonObject(history.byTicker)) {
+    throw new Error('[form345] history byTicker must be a non-null, non-array object: ' + filePath);
+  }
+  for (const [ticker, entry] of Object.entries(history.byTicker)) {
+    if (!isJsonObject(entry)) {
+      throw new Error(
+        '[form345] history entry ' + JSON.stringify(ticker) +
+        ' must be a non-null, non-array object: ' + filePath
+      );
+    }
+    if (!Array.isArray(entry.transactions)) {
+      throw new Error(
+        '[form345] history entry ' + JSON.stringify(ticker) +
+        ' transactions must be an array: ' + filePath
+      );
+    }
+    for (let index = 0; index < entry.transactions.length; index++) {
+      if (!isJsonObject(entry.transactions[index])) {
+        throw new Error(
+          '[form345] history entry ' + JSON.stringify(ticker) + ' transaction ' + index +
+          ' must be a non-null, non-array object: ' + filePath
+        );
+      }
+    }
+  }
+  return history;
+}
 function ensureDir(p) { if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true }); }
 
 function hasUnzip() {
@@ -388,9 +445,8 @@ async function main() {
   }
   console.log('[quarters] ' + quarters.map(x => x.y + 'q' + x.q).join(', '));
 
-  const existing = readJsonSafe(HISTORY_CACHE_PATH) || {};
-  const byTicker = (existing.byTicker && typeof existing.byTicker === 'object')
-    ? existing.byTicker : {};
+  const existing = readHistoryFileOrThrow(HISTORY_CACHE_PATH);
+  const byTicker = existing.byTicker;
 
   let grandAdded = 0, grandPBuys = 0;
   for (const { y, q } of quarters) {
@@ -422,5 +478,5 @@ if (require.main === module) {
 
 module.exports = {
   recentCompletedQuarters, parseTsv, normDate, txnKey,
-  _internals: { hasUnzip, num, findTsv }
+  _internals: { hasUnzip, num, findTsv, readHistoryFileOrThrow }
 };
