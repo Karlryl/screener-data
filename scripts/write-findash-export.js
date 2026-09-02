@@ -923,10 +923,21 @@ function buildSmallcap(coverage, opts = {}) {
 
 // coverage marker is a diagnostic passenger, not a hard input. Absent (fresh runner,
 // marker not yet written) -> export still builds; consumers read coverage:null as "unknown".
-function loadCoverage() {
-  const m = readJSONOrNull(COVERAGE);
+//
+// Rat Q2-2 (2026-09-02): generated_at is carried through as well. The marker and the
+// index are written by two different CI jobs, so the marker's own timestamp is the only
+// way a consumer can tell a marker from an EARLIER run apart from this run's marker.
+// findash already does that comparison on the standalone coverage-status.json
+// (data-layer/screener.js, COVERAGE_STALE_MS); until now the copy embedded in the export
+// silently lost the field, so the fallback path (env.coverage = index.coverage) had no
+// timestamp at all. Additive, optional, no schema bump (docs/findash-export-v1.md §5).
+// The file argument is a test seam (tests/coverage-gate-truth-table.test.js EXECUTES this
+// against a fixture instead of grepping the source for the key).
+function loadCoverage(file = COVERAGE) {
+  const m = readJSONOrNull(file);
   if (!m) return null;
-  return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct };
+  return { status: m.status, degraded: m.degraded, blocked: m.blocked, coverage_pct: m.coverage_pct,
+    generated_at: m.generated_at };
 }
 
 function build() {
@@ -1880,6 +1891,9 @@ if (require.main === module) {
 }
 
 module.exports = {
+  // Rat Q2-2 (2026-09-02): loadCoverage as a Seam — tests/coverage-gate-truth-table.test.js
+  // RUNS it against a fixture marker instead of searching the source for generated_at.
+  loadCoverage,
   build, validateExport, validateFile, validateBoardRow, validateOverviewRow, validateSurvivalRow,
   // Vollboards (19.08.) als Seam: tests/scoring/export-vollboard.test.js FUEHRT Bau und
   // Pruefung auf Tmp-Verzeichnissen aus, statt den Quelltext nach Schreibmustern abzusuchen.
