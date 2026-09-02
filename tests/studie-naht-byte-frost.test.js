@@ -215,9 +215,23 @@ test('LR-14: eine unlesbare Registerdatei ist ein ABBRUCH, kein leeres Glied', (
 const REIHENFOLGE = [
   {
     datei: 'scripts/studie-f6-lauf.py',
-    // Phase 0 liest Freigabe UND Register, bevor irgendetwas anderes passiert.
-    aufloesung: /register_pfad = register_pfad or os\.path\.join\(wurzel, REGISTER_REL\)/,
-    registerLesung: /lies_freigabe_konfirmatorisch\(\s*\n?\s*freigabe_pfad, register_pfad/,
+    // Phase 0 loest die KETTE auf und liest Freigabe UND Register, bevor
+    // irgendetwas anderes passiert.
+    //
+    // NACHGEZOGEN AM 2026-09-02 (Q2, LF-10/LF-11/LF-14): der Laeufer fuehrte
+    // bis dahin `register_pfad or os.path.join(wurzel, REGISTER_REL)` - eine
+    // getippte Kettenkonstante auf die GESCHLOSSENE Datei. Genau die ist vom
+    // Urteil entfernt worden; sie war der Grund, warum v3 unausfuehrbar war.
+    // Die GEPRUEFTE EIGENSCHAFT ist unveraendert und jetzt staerker: aufgeloest
+    // wird die ganze Kette, und ALLE Kettendateien sind gelesen, bevor ein
+    // Panel-Handle existiert. Nur das Muster folgt dem neuen Ausdruck.
+    aufloesung: /kette = loese_kette_auf\(wurzel, register_pfad\)/,
+    // AUF DIE AUFRUFSTELLE ANKERN, nicht auf den Namen: `def
+    // lies_freigabe_konfirmatorisch(freigabe_pfad, kette, ...)` steht als
+    // DEFINITION weit vor `lauf()`. Ein Muster ohne die Zuweisung faende die
+    // Signatur und verglich damit Definitions- gegen Aufrufreihenfolge - also
+    // gar nichts. (Dieselbe Falle trug schon das Vorgaengermuster.)
+    registerLesung: /freigabe, eintrag = lies_freigabe_konfirmatorisch\(\s*\n?\s*freigabe_pfad, kette/,
     panelZugriff: /os\.path\.isfile\(panel_pfad\)/,
   },
   {
@@ -241,6 +255,11 @@ test('LR-13/G14: Registerpfad und Register-Lesung liegen VOR jedem Panelzugriff'
       `${fall.datei}: die Register-Lesung liegt HINTER dem Panelzugriff. Ein Abbruch wegen `
       + 'der falschen Registerdatei faende dann nach der Paneloeffnung statt - die zweite '
       + 'Instanz der Klasse, an der der erste Anlauf gestorben ist (LR-13/F6-K15).');
+    // Und die AUFLOESUNG vor der Lesung - bisher ungeprueft, obwohl sie die
+    // eigentliche Behauptung dieses Riegels ist: erst steht fest, WELCHE
+    // Datei(en) gelten, dann wird gelesen.
+    assert.ok(aufloesung < lesung,
+      `${fall.datei}: die Registerpfad-Aufloesung liegt HINTER der Register-Lesung.`);
   }
 });
 
