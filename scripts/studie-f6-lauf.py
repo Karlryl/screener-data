@@ -89,8 +89,8 @@ ART_ZUGRIFF = "confirmatory_execution_authorized"
 ART_ZAEHLPROBE = "count_only_probe_authorized"
 ART_C0_REGELFREEZE = "C0_REGELFREEZE"
 
-REGISTER_REL = os.path.join("protocol", "early-detection", "2.0.0",
-                            "outcome-access-ledger.json")
+REGISTER_VERZEICHNIS = os.path.join("protocol", "early-detection", "2.0.0")
+REGISTER_PRAEFIX = "outcome-access-ledger"
 
 VARIANTEN = ("S-U", "S-G")
 ARME = ("signal", "kontrollpool")
@@ -550,10 +550,230 @@ def jetzt_iso():
 
 
 # =============================================================================
+# DIE KETTE - EINE Aufloesung fuer Phase 0 UND Phase 1 (Q2, LF-10 bis LF-17)
+# =============================================================================
+#
+# Nach dem R14a-Rollover ist das Zugriffs-Register ZWEI Dateien: die
+# geschlossene und ihre Fortsetzung. Der Laeufer kannte bis hierher genau EINEN
+# Registerpfad - und deshalb war der Akt v3 im Moment seiner Registrierung
+# nicht ausfuehrbar: Phase 0 braucht den Akt aus der Fortsetzung, Phase 1
+# rehasht Eintraege aus der geschlossenen Datei, und KEIN einzelner
+# `--register`-Wert bedient beides.
+#
+# ZWEI AUFLOESER WAEREN ZWEI KOPIEN DERSELBEN REGEL (LR-14). Deshalb gibt es
+# hier genau einen, und beide Phasen bekommen dieselbe aufgeloeste Kette.
+
+
+def _register_pfadfeld(text, wurzel, verzeichnis, wo):
+    """LF-16 - R12a auf JEDEM Pfad, der aus einer Registerdatei kommt, BEVOR er
+    geoeffnet wird. Ein Ledger-Feld ist eine Pfad-Injektionsflaeche.
+
+    Verlangt: repo-relativ, kein leeres Segment, kein '.', kein '..',
+    aufgeloest UNTER `wurzel` und im SELBEN Verzeichnis wie die Kette. Der
+    Kettenkopf verlangt das Verzeichnis selbst ("Gleiches Verzeichnis - sonst
+    stiller Ausfall aus R14a, R12a und R12b").
+    """
+    if not isinstance(text, str) or not text.strip():
+        raise LaufAbbruch(
+            "REGISTER-PFADFELD OHNE WERT (" + wo + "): " + repr(text)
+            + ". Ein Kettenglied ohne Pfad ist kein Kettenglied.")
+    if os.path.isabs(text) or text.startswith("/") or text.startswith(chr(92)):
+        raise LaufAbbruch(
+            "ABSOLUTER PFAD IM REGISTER (" + wo + "). Register-Pfade sind "
+            "repo-relativ; ein absoluter Pfad aus einem Ledger-Feld ist eine "
+            "Pfad-Injektion (R12a, LF-16).")
+    teile = text.replace(chr(92), "/").split("/")
+    if any(t in ("", ".", "..") for t in teile):
+        raise LaufAbbruch(
+            "UNSAUBERES PFADSEGMENT IM REGISTER (" + wo + "): " + repr(text)
+            + ". Kein leeres Segment, kein '.', kein '..' (R12a, LF-16).")
+    ziel = os.path.abspath(os.path.join(wurzel, *teile))
+    if os.path.dirname(ziel) != verzeichnis:
+        raise LaufAbbruch(
+            "DAS REGISTER VERWEIST AUS SEINEM VERZEICHNIS HERAUS (" + wo
+            + "): " + repr(text) + ". Die Kette liegt in genau einem "
+            "Verzeichnis; ein Verweis daraus hinaus ist kein Kettenglied "
+            "(R12a, LF-16).")
+    return ziel
+
+
+def loese_kette_auf(wurzel, register_pfad=None):
+    """DIE KETTE, AUS DEN DATEN BEWIESEN - nicht aus einer getippten Liste.
+
+    Herleitung nach dem OB-2-Rueckfall (LF-11):
+      1. GLOB ueber `outcome-access-ledger*.json` in EINEM Verzeichnis.
+      2. ZWEISEITIGER KETTENBEWEIS - `fortsetzung.dateiname` des Vorgaengers
+         gegen `vorgaengerDatei` des Nachfolgers, UND `genesisSha256` des
+         Nachfolgers gegen den `eventHash` des LETZTEN Ereignisses des
+         Vorgaengers.
+      3. JEDE geglobte Datei muss im Beweis vorkommen. Eine untergeschobene
+         Doppelgaenger-Datei wird damit NICHT allein wegen ihres Namens
+         Kettenglied - das ist die Eigenschaft, die eine getippte Kettenliste
+         nicht hat (BP-L13).
+
+    KEINE GETIPPTE KETTENKONSTANTE, KEIN JS-PARSER ZUR LAUFZEIT auf dem
+    fail-closed-Pfad. Dass diese Kette dieselbe ist wie `REGISTER_RELS` in
+    lib/studie-verfassung.js, beweist ein Gleichheits-Waechter auf der
+    JS-Seite, wo der Import moeglich ist (LF-11).
+
+    EINMAL-MAP (Form scripts/studie-r1-serverzeit.js:144-148): jede Datei wird
+    GENAU EINMAL gelesen und der gelesene Stand herausgegeben. Zwei Lesungen
+    waeren zwei Zeitpunkte auf derselben Datei - bewiesen wuerde dann etwas,
+    das beim Aufloesen nicht dastand.
+
+    `--register` benennt NUR die Kettenwurzel (LF-14): sein VERZEICHNIS
+    bestimmt, wo geglobt wird, und die Datei selbst muss ein BEWIESENES
+    Kettenglied sein. Eine Eintrags-Aufloesung ueberschreibt er nie. Eine
+    Fixture-Kettenwurzel ist damit ein zulaessiger Wert.
+
+    Rueckgabe: Liste von (rel, abs, register) in KETTENREIHENFOLGE.
+    """
+    wurzel = os.path.abspath(wurzel)
+    if register_pfad:
+        verzeichnis = os.path.dirname(os.path.abspath(register_pfad))
+    else:
+        verzeichnis = os.path.abspath(
+            os.path.join(wurzel, REGISTER_VERZEICHNIS))
+
+    # Der "Glob" von Hand - `os.listdir` statt eines neuen Imports. Ein Import
+    # oben haette den registrierten Anker :415-447 um eine Zeile verschoben,
+    # und das ist eine beurkundete Messung (siehe die Notiz vor SE_MARKER).
+    try:
+        namen = sorted(os.listdir(verzeichnis))
+    except OSError as fehler:
+        raise LaufAbbruch(
+            "DAS KETTENVERZEICHNIS IST NICHT LESBAR: " + schruppe_text(fehler))
+    kandidaten = [os.path.join(verzeichnis, n) for n in namen
+                  if n.startswith(REGISTER_PRAEFIX) and n.endswith(".json")
+                  and os.path.isfile(os.path.join(verzeichnis, n))]
+    if not kandidaten:
+        raise LaufAbbruch(
+            "KEINE REGISTERDATEI: im Kettenverzeichnis liegt keine Datei "
+            + REGISTER_PRAEFIX + "*.json. Ohne Register gibt es keinen "
+            "Zugriff.")
+
+    gelesen = {}
+    for p in kandidaten:
+        gelesen[os.path.abspath(p)] = lies_json(p, "Das Zugriffs-Register")
+
+    def rel_von(abs_pfad):
+        return os.path.relpath(abs_pfad, wurzel).replace(os.sep, "/")
+
+    koepfe = sorted(p for p in gelesen if not gelesen[p].get("vorgaengerDatei"))
+    if len(koepfe) != 1:
+        raise LaufAbbruch(
+            "DER KETTENBEWEIS REISST: " + str(len(koepfe)) + " von "
+            + str(len(gelesen)) + " Registerdateien fuehren kein Feld "
+            "'vorgaengerDatei' (" + ", ".join(rel_von(p) for p in koepfe)
+            + "). Genau EIN Kettenkopf ist richtig; eine zweite kopflose Datei "
+            "ist eine untergeschobene Doppelgaenger-Datei und kein "
+            "Kettenglied.")
+
+    kette = []
+    gesehen = set()
+    aktuell = koepfe[0]
+    while True:
+        if aktuell in gesehen:
+            raise LaufAbbruch(
+                "DIE KETTE LAEUFT IM KREIS bei " + rel_von(aktuell) + ".")
+        gesehen.add(aktuell)
+        kette.append((rel_von(aktuell), aktuell, gelesen[aktuell]))
+
+        ereignisse = gelesen[aktuell].get("events") or []
+        letzter = ereignisse[-1] if ereignisse else {}
+        naechster_text = ((letzter.get("fortsetzung") or {}).get("dateiname")
+                          if isinstance(letzter, dict) else None)
+        if not naechster_text:
+            break
+
+        naechster = _register_pfadfeld(
+            naechster_text, wurzel, verzeichnis,
+            "fortsetzung.dateiname in " + rel_von(aktuell))
+        if naechster not in gelesen:
+            raise LaufAbbruch(
+                "DIE KETTE ZEIGT INS LEERE: " + rel_von(aktuell) + " nennt als "
+                "Fortsetzung " + repr(naechster_text) + ", diese Datei liegt "
+                "aber nicht im Kettenverzeichnis.")
+
+        # Bein 1 - der Nachfolger nennt GENAU DIESEN Vorgaenger.
+        rueck_text = gelesen[naechster].get("vorgaengerDatei")
+        rueck = _register_pfadfeld(
+            rueck_text, wurzel, verzeichnis,
+            "vorgaengerDatei in " + rel_von(naechster))
+        if rueck != aktuell:
+            raise LaufAbbruch(
+                "DER KETTENBEWEIS REISST (Rueckrichtung): " + rel_von(naechster)
+                + " nennt als Vorgaenger " + repr(rueck_text) + ", verwiesen "
+                "hat aber " + rel_von(aktuell) + ". Ein einseitiger Verweis "
+                "ist kein Beweis.")
+
+        # Bein 2 - genesisSha256 IST der TAIL-EVENT-HASH des Vorgaengers.
+        soll = letzter.get("eventHash") if isinstance(letzter, dict) else None
+        ist = gelesen[naechster].get("genesisSha256")
+        if not soll or ist != soll:
+            raise LaufAbbruch(
+                "DER KETTENBEWEIS REISST (genesisSha256): " + rel_von(naechster)
+                + " fuehrt " + repr(ist) + ", der letzte eventHash von "
+                + rel_von(aktuell) + " ist " + repr(soll) + ". Der Kopf der "
+                "Fortsetzung traegt den TAIL-EVENT-HASH des Vorgaengers, und "
+                "ein Datei-sha ist kein Kettenglied.")
+        aktuell = naechster
+
+    unerreicht = sorted(rel_von(p) for p in gelesen if p not in gesehen)
+    if unerreicht:
+        raise LaufAbbruch(
+            "NICHT BEWIESENE REGISTERDATEI(EN) im Kettenverzeichnis: "
+            + ", ".join(unerreicht) + ". Eine Datei wird NIE allein wegen "
+            "ihres Namens Kettenglied - sie muss im zweiseitigen Kettenbeweis "
+            "vorkommen (LF-11).")
+
+    if register_pfad and os.path.abspath(register_pfad) not in gesehen:
+        raise LaufAbbruch(
+            "--register benennt eine Datei, die KEIN bewiesenes Kettenglied "
+            "ist. Der Schalter benennt nur die Kettenwurzel (LF-14); bewiesen "
+            "ist die Kette " + ", ".join(r for r, _a, _g in kette) + ".")
+    return kette
+
+
+def eintrag_der_kette(kette, run_id):
+    """LF-10 - GENAU EIN TREFFER UEBER DIE GANZE KETTE.
+
+    Gesucht wird ueber ALLE Kettendateien, in Reihenfolge: ein Eintrag aus der
+    Zeit vor der Naht liegt fuer immer in der geschlossenen Datei
+    (lib/studie-verfassung.js:25-28). Der bestehende Satz "Genau einmal ist
+    richtig" bleibt Wort fuer Wort - nur sein SUCHRAUM ist jetzt die Kette.
+
+    MEHRDEUTIGKEIT IST EIN ABBRUCH, KEIN ERSTTREFFER: traegt mehr als eine
+    Kettendatei dieselbe runId, ist nicht entscheidbar, welcher Eintrag gemeint
+    ist - und ein Beweis gegen die zufaellig erste waere ein sauberes Verdikt
+    aus dem falschen Grund. Die Anmeldung soll das verhindern, aber ein
+    Aufloeser, der sich auf eine Zusage ueber kuenftiges Verhalten verlaesst,
+    misst nichts (lib/studie-verfassung.js:74-79).
+    """
+    treffer = [(rel, e) for rel, _abs, register in kette
+               for e in (register.get("events") or [])
+               if e.get("runId") == run_id]
+    dateien = sorted({rel for rel, _e in treffer})
+    if len(dateien) > 1:
+        raise LaufAbbruch(
+            "MEHRDEUTIG: runId " + repr(run_id) + " steht in MEHREREN "
+            "Kettendateien (" + ", ".join(dateien) + "). Welcher Eintrag "
+            "gemeint ist, ist damit nicht entscheidbar. Mehrdeutigkeit ist ein "
+            "ABBRUCH, kein Ersttreffer.")
+    if len(treffer) != 1:
+        raise LaufAbbruch(
+            "runId " + repr(run_id) + " steht " + str(len(treffer))
+            + "-mal im Zugriffs-Register. Genau einmal ist richtig. Gesucht "
+            "wurde ueber die GANZE Kette: "
+            + ", ".join(r for r, _a, _g in kette) + ".")
+    return treffer[0]
+
+
+# =============================================================================
 # PHASE 0 - Der Freigabe-Leser (F6-B19)
 # =============================================================================
 
-def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
+def lies_freigabe_konfirmatorisch(freigabe_pfad, kette, erster_zugriff):
     """Der EIGENE Leser des F6-Laeufers. POSITIV auf ART_ZUGRIFF.
 
     `scripts/studie-zaehlprobe.py::pruefe_freigabe_gegen_register` wird
@@ -563,8 +783,12 @@ def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
     """
     freigabe = lies_json(freigabe_pfad, "Das Freigabe-Protokoll")
 
+    # LF-13 - `registerDatei` IST PFLICHT. Ohne die Angabe, WELCHE Kettendatei
+    # den Akt fuehrt, muesste der Leser nach der Naht raten, und Raten ist
+    # falsch. Das Feld wird GEPRUEFT, nie befolgt (siehe unten).
     pflicht = ("runId", "fenster", "serverConfirmedAt", "accessedAt",
-               "registeredAt", "registerEventHash", "registerZweig")
+               "registeredAt", "registerEventHash", "registerZweig",
+               "registerDatei")
     fehlend = [f for f in pflicht if not freigabe.get(f)]
     if fehlend:
         raise LaufAbbruch(
@@ -582,14 +806,20 @@ def lies_freigabe_konfirmatorisch(freigabe_pfad, register_pfad, erster_zugriff):
             "Die Freigabe ist gegen den Zweig " + repr(freigabe["registerZweig"])
             + " gefuehrt, nicht gegen 'main'. Der Serverbeweis gilt nur gegen main.")
 
-    register = lies_json(register_pfad, "Das Zugriffs-Register")
-    treffer = [e for e in (register.get("events") or [])
-               if e.get("runId") == freigabe["runId"]]
-    if len(treffer) != 1:
+    gefunden_rel, eintrag = eintrag_der_kette(kette, freigabe["runId"])
+
+    # LF-13 - DIE RICHTUNG IST TRAGEND. Das Feld wird GEGEN die Datei
+    # geprueft, IN DER der Akt gefunden wurde; es steuert die Suche NIE.
+    # Ein aufrufer- oder aktgelieferter String als EINGABE eines fail-closed-
+    # Tors ist genau die Klasse, gegen die F6-B19 gebaut ist: eine gefaelschte
+    # oder veraltete Freigabe darf den Leser nicht auf die Datei ihrer Wahl
+    # lenken. Deshalb erst aufloesen, dann vergleichen - nie umgekehrt.
+    if freigabe["registerDatei"] != gefunden_rel:
         raise LaufAbbruch(
-            "runId " + repr(freigabe["runId"]) + " steht " + str(len(treffer))
-            + "-mal im Zugriffs-Register. Genau einmal ist richtig.")
-    eintrag = treffer[0]
+            "Die Freigabe fuehrt registerDatei = "
+            + repr(freigabe["registerDatei"]) + ", der Akt steht aber in "
+            + repr(gefunden_rel) + ". Das Feld wird geprueft, nie befolgt - "
+            "eine veraltete oder gefaelschte Freigabe lenkt den Leser nicht.")
 
     # ── DAS TOR (F6-B19): POSITIV auf genau eine Art ──────────────────────
     art = eintrag.get("typ") or eintrag.get("type")
@@ -699,19 +929,37 @@ def _ist_hash(bindung, wurzel):
     raise LaufAbbruch("Unbekannte Bindungsart: " + repr(bindung["art"]))
 
 
-def rehash(wurzel, register_pfad, protokoll):
+def rehash(wurzel, kette, protokoll):
     """F6-B7: die ERSTE Handlung nach der Freigabe. Jede Abweichung bricht ab,
     unter Nennung der Datei.
 
     Zweiseitig: der Sollwert wird gegen die DATEI im Arbeitsbaum gehalten UND
     gegen den REGISTER-EINTRAG, der ihn bindet. Faellt eine der beiden Seiten,
     ist die Bindung nicht mehr das, was sie zu sein behauptet.
+
+    LF-15: `je_eintrag` wird ueber die GANZE Kette gebaut - genau deshalb, weil
+    die Freeze-Eintraege der Bindungen fuer immer in der geschlossenen Datei
+    liegen, waehrend der Akt in der Fortsetzung steht.
     """
-    register = lies_json(register_pfad, "Das Zugriffs-Register")
     je_eintrag = {}
-    for e in (register.get("events") or []):
-        je_eintrag[e.get("runId")] = json.dumps(e, ensure_ascii=False,
-                                                sort_keys=True)
+    for rel, _abs, register in kette:
+        for e in (register.get("events") or []):
+            run_id = e.get("runId")
+            # LF-15 - EINE runId IN ZWEI KETTENDATEIEN IST EIN ABBRUCH, KEIN
+            # UEBERSCHREIBEN. Bis hierher war dies ein flaches dict ueber EINE
+            # Datei: ein doppelter runId ueberschrieb still, letzter gewinnt.
+            # Ueber die Kette waere daraus ein Rehash gegen die zufaellig
+            # zuletzt gelesene Datei geworden - ein sauberes Verdikt aus dem
+            # falschen Grund.
+            if run_id in je_eintrag and je_eintrag[run_id][0] != rel:
+                raise LaufAbbruch(
+                    "MEHRDEUTIG: runId " + repr(run_id) + " steht in MEHREREN "
+                    "Kettendateien (" + je_eintrag[run_id][0] + ", " + rel
+                    + "). Welcher Eintrag gemeint ist, ist damit nicht "
+                    "entscheidbar. Mehrdeutigkeit ist ein ABBRUCH, kein "
+                    "Ersttreffer.")
+            je_eintrag[run_id] = (rel, json.dumps(e, ensure_ascii=False,
+                                                  sort_keys=True))
 
     gepruefte = []
     for b in BINDUNGEN:
@@ -725,7 +973,8 @@ def rehash(wurzel, register_pfad, protokoll):
 
         # Gegenrichtung: steht der Sollwert wirklich in dem Eintrag, auf den
         # sich diese Bindung beruft?
-        text = je_eintrag.get(b["eintrag"])
+        gefunden = je_eintrag.get(b["eintrag"])
+        text = gefunden[1] if gefunden else None
         if text is None:
             raise LaufAbbruch(
                 "Die Bindung fuer " + b["pfad"] + " beruft sich auf den "
@@ -741,7 +990,9 @@ def rehash(wurzel, register_pfad, protokoll):
 
     protokoll.append("Phase 1 REHASH: " + str(len(gepruefte))
                      + " Bindungen aus den Eintraegen 23 und 24 nachgerechnet, "
-                     "alle deckungsgleich (Datei UND Register).")
+                     "alle deckungsgleich (Datei UND Register). Gesucht wurde "
+                     "ueber die GANZE Kette: "
+                     + ", ".join(r for r, _a, _g in kette) + ".")
     return gepruefte
 
 
@@ -957,16 +1208,171 @@ def zaehlung(modul, panel_pfad, variante, arm):
 # PHASE 3 - Klumpen-Tally -> SE (das eingefrorene Modul, per CLI)
 # =============================================================================
 
+# WARUM DIESE KONSTANTEN HIER STEHEN UND NICHT OBEN BEI DEN UEBRIGEN:
+# `scripts/studie-f6-eintrag28.js` bindet - und Register-Eintrag 28 sowie der
+# v3-Akt BEURKUNDEN - den Anker
+# "scripts/studie-f6-lauf.py :415-447 (ZWEIG_PFLICHT-Zuweisung :452)".
+# Das ist eine registrierte ZEILENNUMMER. Jede Zeile, die oberhalb davon
+# eingefuegt wird, macht eine beurkundete Messung falsch, und der Weg dahin
+# fuehrte ueber eine protocol/-Datei. Also stehen alle neuen Modul-Bytes
+# UNTERHALB des Ankers; der Bereich bis :460 ist gegenueber origin/main
+# byte-gleich bis auf den Zwei-Zeilen-Tausch in :92-93, der die Zeilenzahl
+# haelt. Naehe zur Verwendung ist hier ohnehin kein Verlust: alles hier gehoert
+# zu Phase 3.
+
+# LF-4 - DER MARKER ALS EINE MODUL-KONSTANTE, plus `pruefe_se_marker` als
+# Praesenz-Anker am Objekt. Beide Zeichenketten stehen woertlich in
+# scripts/studie-f6-klumpen-se.py (Abbruchtext bzw. der eingefrorene Folgesatz
+# aus main()). Ohne den Anker waere die getippte Kopie hier eine stille
+# Drift-Quelle: ein Fang, der nach einer Umformulierung nie mehr greift, ist
+# schlimmer als kein Fang, weil er Sicherheit behauptet.
+SE_MARKER = "F6-SE-KLUMPEN-ABBRUCH: "
+SE_FOLGESATZ = "Folge: BandNichtAuswertbar ->"
+SE_TRACEBACK = "Traceback (most recent call last)"
+# MERKMAL f - DIE WASCH-RINNE, und sie ist der Grund fuer die Sieben-Merkmal-
+# Form. `studie-f6-klumpen-se.py:367-370` wirft SeNichtBerechenbar AUCH bei
+# OSError/ValueError/RecursionError auf der TEMP-TAFEL DES AUFRUFERS. Vier
+# verschiedene Ursachen erzeugen denselben Draht-Fingerabdruck (G = 1, N = 0,
+# Klumpen-Datei FEHLT, Klumpen-Datei KORRUPT) - und die letzten beiden stehen
+# NICHT in der Achterliste der Ziffer 8. Ein formblinder Fang verwandelte einen
+# vollen Datentraeger in ein ratifiziertes "NICHT UNTERSCHEIDBAR, WEITER = 0".
+SE_WASCHRINNE = "Klumpen-Datei nicht lesbar"
+
+# LF-7 / OB-1-Rueckfall - DIE ERSATZ-ZELLE IN DER AM WENIGSTEN BEHAUPTENDEN
+# FORM. Dieselbe Schluesselmenge, die das eingefrorene Modul im Erfolgsfall
+# emittiert - alles None. WEGLASSEN STATT None WAERE EIN PFLICHTSCHLUESSEL-
+# ABBRUCH: `ZWEIG_PFLICHT`/F6-B15 prueft ANWESENHEIT, nicht Wert (F6-C19), und
+# `uebersetze` liest `klumpen_anzahl` unbedingt (die zweite Sterbestelle).
+#
+# WARUM NICHTS DURCHGEREICHT WIRD: eine BERECHNETE Zahl unter einem Verdikt,
+# das NICHT GEMESSEN wurde, ist die Fehlklasse "wahre Zahl ueber falscher
+# Menge" (F6-K22) - die Klasse, an der Eintrag 27 gestorben ist. Die wahre
+# Ursache steht ohnehin im `protokoll` (LF-9), nicht auf der Datenflaeche.
+SE_ERSATZ = {"se_klumpen_robust": None, "klumpen_anzahl": None, "n": None,
+             "zaehler": None, "anteil": None}
+
+
+class SeNichtAuswertbar(Exception):
+    """KEIN ABBRUCH - das eingefrorene SE-Modul hat auf seiner EIGENEN
+    Fehleroberflaeche die Klasse `BandNichtAuswertbar` erklaert.
+
+    ABSICHTLICH NICHT von LaufAbbruch abgeleitet: ein Abbruch ist genau die
+    eine Antwort, die `studie-vb-b4-band.py:150-152` ausschliesst ("auch der
+    gerissene Zulaessigkeits-Gate ist ein Verdikt, kein Fehler") und die
+    _COURT-F6-VOLLZUG:190 / KV-2:330 als Ermessen ausschliessen ("ohne
+    Ermessen"). Diese Ausnahme wird an EINER Stelle gefangen - in der
+    Zellschleife - und dort in das Verdikt des UNVERAENDERTEN Band-Moduls
+    uebersetzt. Entkommt sie doch, faengt sie der Auffang-Block in `main()`
+    und der Lauf stirbt fail-closed; sie kann keinen Bericht erzeugen.
+
+    Traegt den bereits GESCHRUPPTEN Grund (R12a) - der stderr eines
+    Subprozesses fuehrt Pfade.
+    """
+
+    def __init__(self, grund):
+        super().__init__(grund)
+        self.grund = grund
+
+
+def pruefe_se_marker(se_skript):
+    """LF-4 - DER PRAESENZ-ANKER. Am Objekt, nicht im Kopf des Bauenden.
+
+    Die Unterscheidungsregel stuetzt sich auf zwei Zeichenketten, die in einem
+    ANDEREN, eingefrorenen Modul stehen. Getippte Kopien driften. Hier wird
+    belegt, dass genau diese Zeichenketten in der Datei vorkommen, die der Lauf
+    gleich aufruft - und zwar VOR dem ersten Panel-Byte, damit die Drift einen
+    folgenlosen Abbruch kostet und nicht das Kontingent.
+    """
+    try:
+        with open(se_skript, encoding="utf-8") as fh:
+            quelle = fh.read()
+    except OSError as fehler:
+        raise LaufAbbruch("Das SE-Modul ist nicht lesbar: "
+                          + schruppe_text(fehler))
+    fehlend = [t for t in (SE_MARKER, SE_FOLGESATZ) if t not in quelle]
+    if fehlend:
+        raise LaufAbbruch(
+            "MARKER-DRIFT (LF-4): die Unterscheidungsregel des Laeufers stuetzt "
+            "sich auf Zeichenketten, die in " + kurzpfad(se_skript) + " NICHT "
+            "vorkommen: " + ", ".join(repr(t) for t in fehlend) + ". Ein Fang, "
+            "der nach einer Umformulierung nie mehr greifen kann, ist "
+            "schlimmer als kein Fang - er behauptet Sicherheit. Der Lauf "
+            "bricht ab, bevor ein Panel-Byte gelesen ist.")
+
+
+def se_ausgang_ist_verdikt(fertig):
+    """DIE UNTERSCHEIDUNGSREGEL - SIEBEN KONJUNKTIVE MERKMALE a-g (LF-2).
+
+    Ein Subprozess-Ausgang wird NUR dann ein VERDIKT, wenn das EINGEFRORENE
+    MODUL SELBST die Klasse `BandNichtAuswertbar` auf seiner EIGENEN
+    Fehleroberflaeche erklaert (c + d) UND der Aufrufer seine EIGENE Klempnerei
+    ausgeschlossen hat (b, e, f, g). Alles andere - Absturz, Signal, rc != 1,
+    Muell auf stdout, unlesbare Temp-Tafel, Timeout - bleibt `LaufAbbruch`.
+
+    FEHLT EIN MERKMAL: kein Verdikt. Jede Weitung ist verboten, insbesondere
+    `rc != 0` und ein blosser Teilstring-Test ueber ganz stderr - beide stellen
+    die Wasch-Rinne wieder her, gegen die Merkmal f gebaut ist (BP-L6).
+
+    DIE ASYMMETRIE, die die Strenge traegt: unter F6-K19 beendet ein Abbruch
+    die Studienfamilie ohne falschen Eintrag; ein GEWASCHENES "NICHT
+    UNTERSCHEIDBAR" sperrt zusaetzlich die Frage und schreibt eine
+    Falschbeurkundung. Waschen ist strikt schlimmer als Abbrechen.
+
+    Merkmal g (kein Timeout) haelt STRUKTURELL: ein `subprocess.TimeoutExpired`
+    wird oben gefangen und ist ein `LaufAbbruch`, bevor `fertig` ueberhaupt
+    existiert. Diese Funktion ist auf dem Timeout-Pfad nicht erreichbar.
+    """
+    if fertig.returncode != 1:                                        # a
+        return False
+    if (fertig.stdout or "").strip() != "":                           # b
+        return False
+    text = fertig.stderr or ""
+    zeilen = text.strip().splitlines()
+    if not zeilen:
+        return False
+    if not zeilen[0].startswith(SE_MARKER):                           # c
+        return False
+    if not zeilen[-1].startswith(SE_FOLGESATZ):                       # d
+        return False
+    if SE_TRACEBACK in text:                                          # e
+        return False
+    if zeilen[0][len(SE_MARKER):].startswith(SE_WASCHRINNE):          # f
+        return False
+    return True
+
+
 def se_klumpen(se_skript, klumpen, n, zaehler, wo):
     """Ruft scripts/studie-f6-klumpen-se.py ueber seine eingefrorene CLI auf.
 
     Der Tally verlaesst den Prozess NUR als Zahlenpaare in eine Temp-Datei, die
     unmittelbar danach geloescht wird. Er steht in keiner Ausgabe (F6-B14).
+
+    Wirft `SeNichtAuswertbar`, wenn alle sieben Merkmale zutreffen - das ist
+    kein Fehler, sondern der Vollzug einer ohne Ermessen geurteilten Folge.
     """
     fd, tally_pfad = tempfile.mkstemp(suffix=".json", prefix="f6-tally-")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             json.dump([[int(m), int(nn)] for m, nn in klumpen], fh)
+            # LF-3 - DIE EIGENE KLEMPNEREI STIRBT VOR DEM FANG.
+            # Ohne `fsync` steht die Tafel u. U. nur im Seiten-Cache, und ein
+            # voller Datentraeger meldet sich erst beim Schliessen - oder gar
+            # nicht, sondern erst dem LESENDEN Subprozess. Der meldete ihn dann
+            # als "Klumpen-Datei nicht lesbar", also mit genau dem Marker, den
+            # Merkmal f aussortiert. Merkmal f allein genuegt aber nicht: der
+            # Defekt soll gar nicht erst bis zum Fang kommen.
+            fh.flush()
+            os.fsync(fh.fileno())
+        try:
+            with open(tally_pfad, encoding="utf-8") as fh:
+                json.load(fh)
+        except (OSError, ValueError, RecursionError) as fehler:
+            raise LaufAbbruch(
+                "DIE TEMP-TAFEL DES LAEUFERS IST NICHT RUECKLESBAR fuer " + wo
+                + ": " + schruppe_text(fehler) + ". Das ist ein Defekt des "
+                "AUFRUFERS und KEINE der acht Nicht-berechenbar-Bedingungen "
+                "der Ziffer 8 (LF-3). Er stirbt hier - vor dem Aufruf und "
+                "damit ausserhalb der Reichweite des Fangs.")
         ruf = [sys.executable, se_skript, "se", "--klumpen", tally_pfad,
                "--n", str(n), "--zaehler", str(zaehler)]
         # Frist statt Ewigkeit (Muster scripts/studie-e2-verbreitert.py:598):
@@ -988,6 +1394,16 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
             pass
 
     if fertig.returncode != 0:
+        # ── DER FANG (Q1) - HIER UND NUR HIER (LF-2) ──────────────────────
+        # Der Abbruchtext unten REZITIERT die Anordnung des Gerichts seit
+        # jeher woertlich ("Folge ohne Ermessen: ... WEITER = 0") und vollzog
+        # sie dann nicht. Ein Laeufer, der die Anordnung zitiert und abbricht,
+        # vollzieht sie nicht. Das Band-Modul wird dafuer UNVERAENDERT
+        # aufgerufen; der Laeufer baut NIE selbst ein `gate_gerissen`-dict
+        # (LF-5).
+        if se_ausgang_ist_verdikt(fertig):
+            raise SeNichtAuswertbar(
+                schruppe_text((fertig.stderr or "").strip()[:400]))
         raise LaufAbbruch(
             "Der klumpen-robuste SE ist fuer " + wo + " NICHT BERECHENBAR: "
             # R12a auch auf der FEHLERFLAECHE: der stderr eines
@@ -1263,6 +1679,30 @@ def differenz_objekt(anteil_signal, anteil_kontrollpool):
     Gerechnet wird in PUNKTEN (`* 100.0`) und OHNE jede Rundung - der
     Vergleich `<= 10` faellt sonst genau auf der Kante falsch aus.
     """
+    # LF-8 - DIE DRITTE STERBESTELLE. Ohne diesen Zweig stirbt die VARIANTE
+    # trotzdem, obwohl nur EINE Zelle nicht auswertbar war (LF-6).
+    #
+    # `wert = None`, `erfuellt = None` - NIE True, NIE False. Die
+    # Schluesselmenge bleibt unveraendert. Sicher ist das NUR, weil
+    # `tor_verdikt` bei "NICHT UNTERSCHEIDBAR" kurzschliesst, BEVOR `erfuellt`
+    # gelesen wird ("Die Bandfolge DOMINIERT") - und die Ersatz-Zelle liefert
+    # genau dieses Verdikt aus dem unveraenderten Band-Modul.
+    #
+    # ENG GEFASST, UND DAS IST ABSICHT: nur `None` - der ausgewiesene Ausgang
+    # der Ersatz-Zelle - nimmt diesen Weg. NaN, inf und jeder Nicht-Float
+    # bleiben der unveraenderte Abbruch darunter. Eine Weitung auf "alles
+    # Nicht-Endliche" schwaechte eine bestehende Schranke, und das ist keine
+    # Reparatur (F6-K26).
+    #
+    # DIESE STELLE HAT ALS EINZIGE KEINEN RATIFIZIERTEN TEXT und wird im
+    # v4-Akt namentlich beurkundet, nicht stillschweigend gebaut (LF-8).
+    if anteil_signal is None or anteil_kontrollpool is None:
+        return {
+            "wert": None,
+            "maxDifferenzPunkte": MAX_DIFFERENZ_PUNKTE,
+            "erfuellt": None,
+            "quelle": DIFFERENZ_QUELLE,
+        }
     for name, wert in (("signal", anteil_signal),
                        ("kontrollpool", anteil_kontrollpool)):
         if not (isinstance(wert, float) and math.isfinite(wert)):
@@ -1519,24 +1959,34 @@ def pruefe_interpreter():
 def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
          wurzel=None, register_pfad=None, arbeit_pfad=None):
     wurzel = wurzel or WURZEL_REPO
-    register_pfad = register_pfad or os.path.join(wurzel, REGISTER_REL)
     protokoll = []
     gelesene = []
 
     # ── PHASE 0 ───────────────────────────────────────────────────────────
     # VOR allem anderen. Ohne gueltige Freigabe wird nicht einmal gehasht.
     pruefe_interpreter()
+    # LF-10 - EINE Aufloesung, von Phase 0 UND Phase 1 benutzt. Sie faellt
+    # HIER, einmal; beide Phasen bekommen dieselbe bewiesene Kette und lesen
+    # jede Datei genau einmal.
+    kette = loese_kette_auf(wurzel, register_pfad)
+    register_pfade = [p for _rel, p, _reg in kette]
     erster_zugriff = jetzt_iso()
     freigabe, eintrag = lies_freigabe_konfirmatorisch(
-        freigabe_pfad, register_pfad, erster_zugriff)
-    gelesene.extend([freigabe_pfad, register_pfad])
+        freigabe_pfad, kette, erster_zugriff)
+    # LF-17 - BEIDE (alle) Kettendateien in `gelesene`. Sonst waere die
+    # Deckungsbehauptung der Phase 2a fuer eine von ihnen schlicht falsch.
+    gelesene.append(freigabe_pfad)
+    gelesene.extend(register_pfade)
     protokoll.append("Phase 0 FREIGABE: runId " + freigabe["runId"]
                      + ", Art " + ART_ZUGRIFF + ", Zweig main, Zeitkette "
                      "registeredAt < serverConfirmedAt <= accessedAt <= "
-                     "ersterZugriff eingehalten.")
+                     "ersterZugriff eingehalten. Aufgeloest ueber die "
+                     "bewiesene Kette (" + ", ".join(r for r, _a, _g in kette)
+                     + "); der Akt steht in " + freigabe["registerDatei"]
+                     + " (geprueft, nicht befolgt).")
 
     # ── PHASE 1 ───────────────────────────────────────────────────────────
-    gebundene = rehash(wurzel, register_pfad, protokoll)
+    gebundene = rehash(wurzel, kette, protokoll)
     # Was gehasht wurde, wurde GELESEN. Der Bericht ist ein pruefbarer
     # Nachweis darueber, was der Lauf angefasst hat; eine unvollstaendige
     # Liste ist eine falsche Auskunft, kein fehlender Komfort.
@@ -1571,6 +2021,17 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     band_modul = lade_bandmodul(wurzel)
     gelesene.extend([band_pfad, se_skript, str(zaehlwerk_pfad)])
 
+    # LF-4 - DER PRAESENZ-ANKER, und er steht VOR dem ersten Panel-Byte.
+    # Die Unterscheidungsregel der Phase 3 zitiert zwei Zeichenketten aus dem
+    # eingefrorenen SE-Modul. Sind sie dort nicht mehr, kann der Fang nie
+    # greifen - und ein Lauf, der das erst in der Zellschleife merkte, haette
+    # das Panel schon gelesen. Dieselbe Klassenjagd wie F6-K15.
+    pruefe_se_marker(se_skript)
+    protokoll.append(
+        "Phase 2a MARKER-ANKER: die zwei Zeichenketten der "
+        "Unterscheidungsregel (Abbruch-Marker und Folgesatz) sind in "
+        + kurzpfad(se_skript) + " am Objekt nachgewiesen (LF-4).")
+
     # F6-K15 - KLASSENJAGD: DER PFAD-RIEGEL WIRD VOR DEN PANELZUGRIFF GEZOGEN.
     #
     # Die R12a-Pruefungen haengen AUSSCHLIESSLICH an Pfaden, und alle Pfade
@@ -1603,7 +2064,9 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
     # Schreib-Rand wiederverwendet. Zwei getrennte Aufrufe koennten bei einem
     # zwischenzeitlichen Verzeichniswechsel (fremdes Zaehlwerk!) verschiedene
     # Mengen liefern - dieselbe Drift-Klasse, gegen die dieses Tor gebaut ist.
-    verbotene = verbotene_formen(freigabe_pfad, register_pfad, panel_pfad,
+    # LF-17 - ALLE Kettendateien, nicht nur eine. Die Verbotsmenge deckt sonst
+    # genau die Datei nicht ab, aus der der Akt stammt.
+    verbotene = verbotene_formen(freigabe_pfad, *register_pfade, panel_pfad,
                                  bericht_pfad, zaehlwerk_pfad, wurzel)
     vorschau = {kurzpfad(p) for p in gelesene}
     vorschau.add(kurzpfad(bericht_pfad))
@@ -1644,13 +2107,45 @@ def lauf(freigabe_pfad, panel_pfad, bericht_pfad, zaehlwerk_pfad=None,
             roh = zaehlung(zaehlwerk, panel_pfad, variante, arm)
 
             # ── PHASE 3 ───────────────────────────────────────────────────
-            se = se_klumpen(se_skript, roh["klumpen"], roh["n"], roh["zaehler"], wo)
-            anteil = se["anteil"]
-            binom = se_binomial(anteil, se["n"])
+            try:
+                se = se_klumpen(se_skript, roh["klumpen"], roh["n"],
+                                roh["zaehler"], wo)
+            except SeNichtAuswertbar as nicht_auswertbar:
+                # ── PHASE 4, ERSATZ-ZELLE ────────────────────────────────
+                # VOLLZUG, KEIN ERMESSEN. Das Verdikt erzeugt das
+                # EINGEFRORENE Modul (LF-5) - `auswerten` in der am wenigsten
+                # behauptenden Form (OB-1-Rueckfall: alles None). Der Laeufer
+                # baut hier NICHTS selbst; er reicht None hinein und nimmt,
+                # was die unveraenderte Maschine zurueckgibt.
+                #
+                # LF-6 - ZELLEN-REICHWEITE: dieser Zweig sitzt INNERHALB der
+                # Arm-Schleife. Nur die Zelle, deren Aufruf scheiterte, traegt
+                # das Ersatzverdikt; die anderen drei werden normal gezaehlt
+                # und ausgewertet. Ein Ausfall in einer Zelle wird NIE auf das
+                # Panel verallgemeinert.
+                se = dict(SE_ERSATZ)
+                band = band_modul.auswerten(None, None, None, None)
+                # LF-9 - KEIN 38. SCHLUESSEL. Der geschruppte Grund und das
+                # gescheiterte `wo` gehen ins Protokoll, nie auf die
+                # Datenflaeche. Die 37 allowedOutputs bleiben geschlossen.
+                protokoll.append(
+                    "Phase 3 SE NICHT BERECHENBAR in " + wo + ": das "
+                    "eingefrorene Modul hat BandNichtAuswertbar auf seiner "
+                    "EIGENEN Fehleroberflaeche erklaert - alle sieben Merkmale "
+                    "a-g. Die Ersatz-Zelle ruft "
+                    "scripts/studie-vb-b4-band.py::auswerten UNVERAENDERT in "
+                    "der am wenigsten behauptenden Form (alles None); Verdikt "
+                    "und weiter stammen aus dem Modul, nicht aus dem Laeufer "
+                    "(Folge ohne Ermessen: Zulaessigkeits-Gate gerissen -> "
+                    "NICHT UNTERSCHEIDBAR, WEITER = 0). Grund des Moduls, "
+                    "geschruppt: " + nicht_auswertbar.grund)
+            else:
+                anteil = se["anteil"]
+                binom = se_binomial(anteil, se["n"])
 
-            # ── PHASE 4 ───────────────────────────────────────────────────
-            band = band_modul.auswerten(anteil, se["n"], binom,
-                                        se["se_klumpen_robust"])
+                # ── PHASE 4 ───────────────────────────────────────────────
+                band = band_modul.auswerten(anteil, se["n"], binom,
+                                            se["se_klumpen_robust"])
 
             # ── PHASE 5 ───────────────────────────────────────────────────
             werte = uebersetze(band, roh, se)
@@ -1825,7 +2320,11 @@ def main(argv=None):
     p.add_argument("--arbeit", help="Arbeitsdatei des Zaehlwerks (W-B-geprueft, "
                                     "im Eintrag genannt)")
     p.add_argument("--wurzel", help="Repo-Wurzel (Vorgabe: die dieses Skripts)")
-    p.add_argument("--register", help="Zugriffs-Register (Vorgabe: die Hausdatei)")
+    p.add_argument("--register",
+                   help="KETTENWURZEL des Zugriffs-Registers (Vorgabe: die "
+                        "Hauskette). Benennt nur, WO die Kette liegt - "
+                        "aufgeloest wird immer ueber die ganze bewiesene "
+                        "Kette, nie ueber diesen Wert allein (LF-14)")
     a = p.parse_args(argv)
 
     # Fail-closed bis in die Ausgabe: bei einem Abbruch wird KEIN Bericht

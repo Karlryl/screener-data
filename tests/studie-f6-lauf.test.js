@@ -38,9 +38,21 @@ const { spawnSync } = require('node:child_process');
 
 const python = process.env.PYTHON || 'python';
 const REPO = path.join(__dirname, '..');
-const SKRIPT = path.join(REPO, 'scripts', 'studie-f6-lauf.py');
-const ECHTES_REGISTER = path.join(
-  REPO, 'protocol', 'early-detection', '2.0.0', 'outcome-access-ledger.json');
+// LF-21 - JEDE BRUCHPROBE ZUERST ROT GEGEN DEN UNREPARIERTEN LAEUFER.
+// Damit das nicht abgeschrieben werden muss, ist der Laeufer austauschbar:
+//   git show <stand-vor-der-reparatur>:scripts/studie-f6-lauf.py > alt.py
+//   F6_LAEUFER=alt.py node --test tests/studie-f6-lauf.test.js
+// Ohne die Variable laeuft alles gegen den Baum - der Normalfall in CI.
+const SKRIPT = process.env.F6_LAEUFER
+  || path.join(REPO, 'scripts', 'studie-f6-lauf.py');
+// LF-11/LF-12 - der Gleichheits-Waechter lebt HIER, wo der Import moeglich
+// ist. Der Laeufer selbst tippt die Kette nicht ab und parst kein JS.
+const { REGISTER_RELS } = require(path.join(__dirname, '..', 'lib', 'studie-verfassung.js'));
+
+const REG_DIR = 'protocol/early-detection/2.0.0';
+const REG_GESCHLOSSEN = `${REG_DIR}/outcome-access-ledger.json`;
+const REG_TEIL2 = `${REG_DIR}/outcome-access-ledger-teil2.json`;
+const ECHTES_REGISTER = path.join(REPO, ...REG_GESCHLOSSEN.split('/'));
 const ECHTE_FREIGABE_24 = path.join(
   REPO, 'reports', 'studie', 'f6-eintrag24-freigabe.json');
 
@@ -97,10 +109,10 @@ function welt(prefix, opt = {}) {
     fs.copyFileSync(path.join(REPO, ...rel.split('/')), ziel);
   }
 
-  // Register = echte Kopie (Eintraege 23/24 bleiben intakt, sonst schluege die
-  // Gegenrichtung des Rehash an) + ein synthetischer konfirmatorischer Eintrag.
-  const register = JSON.parse(fs.readFileSync(ECHTES_REGISTER, 'utf8'));
-  register.events.push({
+  // Der synthetische konfirmatorische Akt. Er steht je nach Fixture in der
+  // geschlossenen Datei oder in der Fortsetzung - die Kette entscheidet, nicht
+  // der Aufrufer.
+  const akt = {
     runId: RUN_ID,
     typ: opt.art || 'confirmatory_execution_authorized',
     registeredAt: T_REG,
@@ -113,22 +125,70 @@ function welt(prefix, opt = {}) {
     endtestSiegel: 'Fixture - unberuehrt.',
     previousHash: '0'.repeat(64),
     eventHash: EVENT_HASH,
-  });
-  const registerPfad = path.join(dir, 'register.json');
-  fs.writeFileSync(registerPfad, `${JSON.stringify(register, null, 1)}\n`, 'utf8');
+  };
+
+  // Register = echte Kopie (Eintraege 23/24 bleiben intakt, sonst schluege die
+  // Gegenrichtung des Rehash an) + der synthetische Akt.
+  //
+  // DIE KETTE LEBT UNTER DER FIXTURE-WURZEL, am echten repo-relativen Ort. Vor
+  // der Q2-Reparatur lag sie als `register.json` neben der Wurzel; danach ist
+  // ein Register ausserhalb des Verzeichnisses kein Kettenglied mehr (der
+  // Aufloeser globt das Verzeichnis, und LF-16 verlangt einen repo-relativen
+  // Pfad UNTER `wurzel`). Die Verlegung ist verhaltensneutral fuer den
+  // unreparierten Laeufer - er nimmt `--register` weiterhin, wie er ihn bekommt.
+  const echt = JSON.parse(fs.readFileSync(ECHTES_REGISTER, 'utf8'));
+  const schreibe = (rel, inhalt) => {
+    const p = path.join(wurzel, ...rel.split('/'));
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, `${JSON.stringify(inhalt, null, 1)}\n`, 'utf8');
+    return p;
+  };
+
+  let registerPfad;
+  let aktRel = REG_GESCHLOSSEN;
+  if (opt.kette) {
+    // BP-L9 - DAS SPIEGELBILD VON HEUTE: der AKT steht in der GESCHLOSSENEN
+    // Datei, die Rehash-Eintraege (23/24) stehen in der FORTSETZUNG. Kein
+    // einzelner `--register`-Wert bedient beide Phasen; genau das ist TATSACHE A.
+    const geschlossen = { ...echt, events: [{ ...akt, fortsetzung: { dateiname: REG_TEIL2 } }] };
+    const teil2 = {
+      ...echt,
+      vorgaengerDatei: REG_GESCHLOSSEN,
+      genesisSha256: EVENT_HASH,
+      // Das LETZTE Kettenglied fuehrt keine `fortsetzung` - der echte
+      // Abschluss-Akt bringt sie mit, und stehengelassen zeigte sie auf die
+      // eigene Datei. Der Kettenbeweis hat genau das gemeldet.
+      events: echt.events.map((e) => {
+        const kopie = { ...e };
+        delete kopie.fortsetzung;
+        return kopie;
+      }),
+    };
+    registerPfad = schreibe(REG_GESCHLOSSEN, geschlossen);
+    schreibe(REG_TEIL2, opt.teil2 ? opt.teil2(teil2) : teil2);
+  } else {
+    registerPfad = schreibe(REG_GESCHLOSSEN,
+      { ...echt, events: echt.events.concat([akt]) });
+  }
+  if (opt.aktRel) aktRel = opt.aktRel;
 
   const freigabePfad = path.join(dir, 'freigabe.json');
-  fs.writeFileSync(freigabePfad, `${JSON.stringify({
+  const freigabe = {
     schema: 'early-detection-zaehlprobe-freigabe/v1',
     protokoll: 'FEM-SEC-US@2.0.0',
     runId: RUN_ID,
     fenster: FENSTER,
     registerEventHash: opt.eventHash || EVENT_HASH,
+    // LF-13 - WELCHE Kettendatei den Akt fuehrt, gehoert in den Beweis. Das
+    // Feld wird GEPRUEFT, nie befolgt: es steuert die Suche nie.
+    registerDatei: aktRel,
     registerZweig: opt.zweig || 'main',
     registeredAt: opt.registeredAt || T_REG,
     accessedAt: opt.accessedAt || T_ACC,
     serverConfirmedAt: opt.serverConfirmedAt || T_SRV,
-  }, null, 1)}\n`, 'utf8');
+  };
+  if (opt.ohneRegisterDatei) delete freigabe.registerDatei;
+  fs.writeFileSync(freigabePfad, `${JSON.stringify(freigabe, null, 1)}\n`, 'utf8');
 
   // Ein Fixture-"Panel". Der Laeufer prueft nur, dass es existiert; geoeffnet
   // wird es ausschliesslich vom Zaehlwerk, und das Fixture-Zaehlwerk fasst es
@@ -136,7 +196,7 @@ function welt(prefix, opt = {}) {
   const panel = path.join(dir, 'panel-validierung.sqlite');
   fs.writeFileSync(panel, 'FIXTURE - kein Panel', 'utf8');
 
-  return { dir, wurzel, registerPfad, freigabePfad, panel,
+  return { dir, wurzel, registerPfad, freigabePfad, panel, schreibe,
     bericht: path.join(dir, 'bericht.json') };
 }
 
@@ -198,10 +258,10 @@ function abbruch(w, extra, warum, muster = /^F6-LAUF-ABBRUCH:/m) {
 
 // Direkte Proben an den reinen Funktionen - fuer die Faelle, die ueber die CLI
 // nicht erreichbar sind, weil der Laeufer sie gar nicht erst erzeugen kann.
-function pyProbe(code) {
+function pyProbe(code, skript = SKRIPT) {
   return spawnSync(python, ['-c', [
     'import importlib.util, json, sys',
-    `spec = importlib.util.spec_from_file_location("f6lauf", r"${SKRIPT}")`,
+    `spec = importlib.util.spec_from_file_location("f6lauf", r"${skript}")`,
     'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
     code,
   ].join('\n')], { encoding: 'utf8' });
@@ -330,10 +390,32 @@ test('0.9 UNTAETIGKEIT: die ECHTE Eintrag-24-Freigabe gegen das ECHTE Register '
 
   assert.notEqual(r.status, 0, 'der Laeufer ist heute untaetig');
   assert.match(r.stderr, /^F6-LAUF-ABBRUCH:/m);
-  assert.match(r.stderr, /C0_REGELFREEZE/);
   assert.equal(fs.existsSync(bericht), false, 'kein Bericht');
   assert.equal(dateihash(ECHTES_REGISTER), REGISTER_BEIM_START,
     'das echte Register wurde nicht angefasst');
+
+  // Diese Freigabe stammt von VOR der R14a-Naht und fuehrt deshalb noch kein
+  // `registerDatei`. Seit LF-13 ist das ein Pflichtfeld, und das Tor davor
+  // greift zuerst - der Abbruch faellt also eine Schranke frueher als bisher.
+  assert.match(r.stderr, /Pflichtfeld\(er\): registerDatei/);
+
+  // DER BEFUND SELBST BLEIBT GEMESSEN, nicht bloss behauptet: mit ergaenztem
+  // registerDatei laeuft dieselbe ECHTE Freigabe bis ans Art-Tor und wird
+  // dort als C0_REGELFREEZE abgewiesen. Eintrag 24 autorisiert keinen Lauf,
+  // und es gibt keinen Eintrag 25.
+  const nachgereicht = path.join(dir, 'freigabe-mit-registerdatei.json');
+  const echt = JSON.parse(fs.readFileSync(ECHTE_FREIGABE_24, 'utf8'));
+  echt.registerDatei = REG_GESCHLOSSEN;
+  fs.writeFileSync(nachgereicht, `${JSON.stringify(echt, null, 1)}\n`, 'utf8');
+  const r2 = spawnSync(python, [SKRIPT,
+    '--freigabe', nachgereicht, '--panel', ECHTES_REGISTER,
+    '--bericht', bericht, '--zaehlwerk', zaehlwerk(dir, gleichmaessig(230, 20))],
+  { encoding: 'utf8' });
+  assert.notEqual(r2.status, 0, 'auch mit registerDatei bleibt der Laeufer untaetig');
+  assert.match(r2.stderr, /C0_REGELFREEZE/);
+  assert.equal(fs.existsSync(bericht), false, 'und wieder kein Bericht');
+  assert.equal(dateihash(ECHTES_REGISTER), REGISTER_BEIM_START,
+    'das echte Register wurde auch dabei nicht angefasst');
 });
 
 // ============================================================================
@@ -449,25 +531,103 @@ test('2.5 ein ZUSAETZLICHER Zerlegungs-Schluessel ist ein ABBRUCH, KEIN Filter',
 // PHASE 3 - Klumpen -> SE
 // ============================================================================
 
-test('3.1 gerissene Kreuzprobe -> ABBRUCH mit NICHT UNTERSCHEIDBAR, kein Rueckfall', () => {
+// ── Q1 - DER VOLLZUG AM ECHTEN EINGEFRORENEN MODUL ─────────────────────────
+//
+// 3.1 und 3.2 pruefen die ZWEI Ausgaenge der Achterliste, die sich ohne Stub
+// erzeugen lassen: die gerissene Kreuzprobe (Summe n_g != N) und G = 1. Beide
+// haben bis zu dieser Reparatur den LAUF GETOETET - der Laeufer rezitierte den
+// Folgesatz des Gerichts in seinem eigenen Abbruchtext und vollzog ihn nicht.
+//
+// ROT VOR GRUEN (LF-21): mit F6_LAEUFER auf dem Stand vor der Reparatur
+// brechen beide Proben mit `F6-LAUF-ABBRUCH: ... NICHT BERECHENBAR` ab und
+// schreiben keinen Bericht. Der Nachweis steht im PR-Text.
+//
+// KEIN STUB: hier ruft der Laeufer scripts/studie-f6-klumpen-se.py
+// unveraendert, und das Verdikt kommt aus scripts/studie-vb-b4-band.py -
+// ebenfalls unveraendert. Geprueft wird der Vollzug, nicht eine Nachbildung.
+
+function zelleGateGerissen(b, variante, arm) {
+  const zelle = b.daten[variante][arm];
+  assert.equal(zelle.zweig, 'gate_gerissen',
+    `${variante}/${arm} traegt den Zweig ${zelle.zweig}`);
+  assert.equal(zelle.werte.verdikt, 'NICHT UNTERSCHEIDBAR');
+  assert.equal(zelle.werte.weiter, 0);
+  assert.equal(zelle.werte.messgeraet_vollstaendig, false);
+  // OB-1 - DIE AM WENIGSTEN BEHAUPTENDE FORM. Keine berechnete Zahl unter
+  // einem Verdikt, das nicht gemessen wurde (F6-K22).
+  for (const feld of ['anteil', 'nenner_tor', 'se_binomial', 'se_klumpen_robust',
+    'klumpen_anzahl']) {
+    assert.equal(zelle.werte[feld], null,
+      `${feld} behauptet einen Wert, den niemand gemessen hat: ${zelle.werte[feld]}`);
+  }
+  // LF-7 - WEGLASSEN WAERE EIN PFLICHTSCHLUESSEL-ABBRUCH. Der Schluessel ist
+  // ANWESEND und null, nicht abwesend.
+  assert.ok('klumpen_anzahl' in zelle.werte,
+    'klumpen_anzahl fehlt - weggelassen statt None (F6-C19)');
+  return zelle;
+}
+
+function zelleEchtGemessen(b, variante, arm) {
+  const zelle = b.daten[variante][arm];
+  assert.notEqual(zelle.zweig, 'gate_gerissen',
+    `${variante}/${arm} haette normal ausgewertet werden muessen (LF-6)`);
+  assert.equal(typeof zelle.werte.anteil, 'number');
+  return zelle;
+}
+
+test('3.1 gerissene Kreuzprobe -> VOLLZUG: die ZELLE traegt das Verdikt, '
+  + 'der Lauf laeuft zu Ende', () => {
   const w = welt('f6lauf-kreuz-');
   const daten = gleichmaessig(230, 20);
   const kaputt = JSON.parse(JSON.stringify(daten['S-U'].signal));
-  kaputt.n = 999; // Summe n_g weicht ab
+  kaputt.n = 999; // Summe n_g weicht ab -> Kreuzprobe reisst im SE-Modul
   daten['S-U'].signal = kaputt;
-  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, daten)], 'Kreuzprobe');
-  assert.match(text, /NICHT UNTERSCHEIDBAR/);
-  assert.match(text, /KEIN Rueckfall auf den kleineren SE/);
+
+  const r = ruf(w, ['--zaehlwerk', zaehlwerk(w.dir, daten)]);
+  assert.equal(r.status, 0, `der Lauf muss ZU ENDE laufen:\n${r.stderr}`);
+  const b = JSON.parse(fs.readFileSync(w.bericht, 'utf8'));
+
+  zelleGateGerissen(b, 'S-U', 'signal');
+  // LF-6 - ZELLEN-REICHWEITE: die anderen DREI werden normal gezaehlt.
+  zelleEchtGemessen(b, 'S-U', 'kontrollpool');
+  zelleEchtGemessen(b, 'S-G', 'signal');
+  zelleEchtGemessen(b, 'S-G', 'kontrollpool');
+
+  // LF-8 - die dritte Sterbestelle: die VARIANTE stirbt nicht mit.
+  const d = b.daten['S-U'].differenz_punkte;
+  assert.equal(d.wert, null, 'differenz_punkte.wert behauptet eine Zahl');
+  assert.equal(d.erfuellt, null, 'erfuellt ist nie True und nie False');
+  assert.deepEqual(Object.keys(d).sort(),
+    ['erfuellt', 'maxDifferenzPunkte', 'quelle', 'tor', 'wert'],
+    'die Schluesselmenge von differenz_punkte hat sich veraendert');
+  // Die Bandfolge DOMINIERT - tor_verdikt schliesst kurz, BEVOR erfuellt
+  // gelesen wird. Nur deshalb ist erfuellt = null ueberhaupt sicher.
+  assert.equal(d.tor.verdikt, 'NICHT UNTERSCHEIDBAR');
+  assert.equal(d.tor.weiter, 0);
+
+  // LF-9 - die wahre Ursache steht im PROTOKOLL, nicht auf der Datenflaeche.
+  const zeile = b.protokoll.find((z) => z.startsWith('Phase 3 SE NICHT BERECHENBAR'));
+  assert.ok(zeile, 'der Bericht schweigt ueber die nicht berechenbare Zelle');
+  assert.ok(zeile.includes('S-U/signal'), 'das gescheiterte `wo` fehlt');
+  assert.match(zeile, /sieben Merkmale a-g/);
 });
 
-test('3.2 G = 1 -> ABBRUCH, nie eine stille Null', () => {
+test('3.2 G = 1 -> VOLLZUG statt stiller Null, und die Zelle bleibt allein', () => {
   const w = welt('f6lauf-g1-');
   const daten = gleichmaessig(230, 20);
   daten['S-U'].signal = {
     klumpen: [[230, 250]], n: 250, zaehler: 230,
     zerlegung: daten['S-U'].signal.zerlegung,
   };
-  abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, daten)], 'G = 1');
+  const r = ruf(w, ['--zaehlwerk', zaehlwerk(w.dir, daten)]);
+  assert.equal(r.status, 0, `der Lauf muss ZU ENDE laufen:\n${r.stderr}`);
+  const b = JSON.parse(fs.readFileSync(w.bericht, 'utf8'));
+  zelleGateGerissen(b, 'S-U', 'signal');
+  zelleEchtGemessen(b, 'S-G', 'signal');
+  // Der Grund des MODULS steht geschruppt im Protokoll - G = 1 ist eine der
+  // acht Bedingungen der Ziffer 8.
+  const zeile = b.protokoll.find((z) => z.startsWith('Phase 3 SE NICHT BERECHENBAR'));
+  assert.match(zeile, /G = 1/);
 });
 
 // ============================================================================
@@ -1317,4 +1477,472 @@ test('MEDIUM-1: ein ZaehlwerkAbbruch-Text verlaesst den Lauf GESCHRUPPT', () => 
     `die Kontokennung steht im stderr: ${r.stderr.slice(0, 300)}`);
   assert.match(r.stderr, /<entfernt>/,
     'nichts wurde ersetzt - dann hat die Schrubbe nicht gegriffen');
+});
+
+// ============================================================================
+// BRUCHPROBEN BP-L1 .. BP-L15 - _COURT-F6-LAUFFAEHIGKEIT-2026-09-02
+// ============================================================================
+//
+// ALLES FIXTURE-BAEUME. KEIN PANEL-BYTE. Jede Probe wurde zuerst ROT gegen den
+// unreparierten Laeufer gefahren (LF-21, ueber F6_LAEUFER); die Ausgaben stehen
+// im PR-Text. Ohne protokollierte Bruchprobe gilt ein Waechter als NICHT
+// ABGENOMMEN.
+//
+// DREI PROBEN BRECHEN ABSICHTLICH (BP-L6, BP-L8, BP-L14): sie setzen den
+// Waechter an einer KOPIE auf den Stand vor der Reparatur zurueck und
+// verlangen, dass genau die zugehoerige Probe rot wird. Ein Waechter, den man
+// nicht feuern sehen hat, ist eine Behauptung.
+
+// ── Q1 - DIE UNTERSCHEIDUNGSREGEL, AN IHRER EIGENEN EBENE GEMESSEN ─────────
+//
+// WARUM HIER KEIN STUB AN DER STELLE DES SE-MODULS STEHT - gemessen, nicht
+// entschieden: `scripts/studie-f6-klumpen-se.py` ist in Eintrag 24 per SHA
+// GEBUNDEN (FUENFTER PIN). Ein Stub in der Fixture-Wurzel stirbt deshalb in
+// PHASE 1 mit `HASH-ABWEICHUNG`, lange vor Phase 3 - der Fang ist ueber einen
+// untergeschobenen Draht gar nicht erreichbar. Das ist keine Luecke, sondern
+// eine STAERKERE Zusicherung als jede Stub-Probe: die Fehleroberflaeche, gegen
+// die die sieben Merkmale messen, kann im Lauf nur die des gebundenen Moduls
+// sein.
+//
+// Die Proben stehen deshalb auf den ZWEI Ebenen, auf denen es sie wirklich
+// gibt:
+//   (1) END-TO-END am ECHTEN eingefrorenen Modul - Proben 3.1 (gerissene
+//       Kreuzprobe) und 3.2 (G = 1). Das ist BP-L1, und zwar ohne Nachbildung.
+//   (2) DIE REGEL SELBST als reine Funktion, gefuettert mit den exakten
+//       Draht-Fingerabdruecken - BP-L2 bis BP-L7. Genau hier lebt die
+//       Nicht-Injektivitaet, um die es geht.
+
+// Der eingefrorene Fingerabdruck, woertlich wie ihn `main()` des SE-Moduls
+// erzeugt (:534-543).
+const SE_M = 'F6-SE-KLUMPEN-ABBRUCH: ';
+const SE_F = 'Folge: BandNichtAuswertbar -> Zulaessigkeits-Gate gerissen -> '
+  + 'NICHT UNTERSCHEIDBAR, WEITER = 0. Kein Rueckfall auf den kleineren SE.';
+
+// `fertig` ist ein subprocess.CompletedProcess - hier als Klasse mit genau den
+// drei Feldern, die die Regel liest.
+function regelSagt(rc, stdout, stderr, skript = SKRIPT) {
+  const r = pyProbe([
+    'class F:',
+    `    returncode = ${rc}`,
+    `    stdout = ${JSON.stringify(stdout)}`,
+    `    stderr = ${JSON.stringify(stderr)}`,
+    'print("REGEL:", m.se_ausgang_ist_verdikt(F))',
+  ].join('\n'), skript);
+  assert.equal(r.status, 0, `die Regel ist abgestuerzt:\n${r.stderr}`);
+  const treffer = /REGEL: (True|False)/.exec(r.stdout);
+  assert.ok(treffer, `keine Antwort der Regel: ${r.stdout}${r.stderr}`);
+  return treffer[1] === 'True';
+}
+
+// Der EINE Ausgang, der ein Verdikt ist: alle sieben Merkmale halten.
+const VERDIKT_DRAHT = [1, '', `${SE_M}G = 1 < 2 - mindestens zwei Klumpen noetig.\n${SE_F}`];
+
+// Die Ausgaenge, die KEINE sind - je einer pro Merkmal.
+const KEIN_VERDIKT = [
+  ['BP-L2 rc=2 (argparse-Form, Merkmal a)',
+    [2, '', 'usage: studie-f6-klumpen-se.py [-h] {se,selbsttest}\nerror: unrecognized arguments']],
+  ['BP-L2b rc=0 (Merkmal a - der Fang ist nie ein Erfolgspfad)',
+    [0, '', `${SE_M}x\n${SE_F}`]],
+  ['BP-L2c rc=-9 (Signal, Merkmal a)',
+    [-9, '', `${SE_M}x\n${SE_F}`]],
+  ['BP-L3 rc=1, blosser Traceback ohne Marker (Merkmal c)',
+    [1, '', 'Traceback (most recent call last):\n  File "se.py", line 1\nValueError: kaputt']],
+  ['BP-L4 rc=1, Marker UND JSON auf stdout (Merkmal b)',
+    [1, '{"se_klumpen_robust": 0.01}', `${SE_M}G = 1 < 2.\n${SE_F}`]],
+  ['BP-L4b rc=1, Muell auf stdout (Merkmal b)',
+    [1, 'teilausgabe', `${SE_M}G = 1 < 2.\n${SE_F}`]],
+  ['BP-L5 Traceback, Marker in der LETZTEN Zeile (Merkmale c, d, e)',
+    [1, '', `Traceback (most recent call last):\n  File "se.py", line 9\n${SE_M}entkommen.`]],
+  ['BP-L5b Traceback, Marker in der MITTE, Folgesatz korrekt am Ende '
+    + '(nur c und e retten)',
+  [1, '', `Traceback (most recent call last):\n${SE_M}entkommen.\n${SE_F}`]],
+  ['BP-L5c Marker erst in Zeile 2, sonst tadellos (Merkmal c)',
+    [1, '', `irgendetwas voran\n${SE_M}G = 1 < 2.\n${SE_F}`]],
+  ['BP-L7 DIE WASCH-RINNE: die eigene Temp-Tafel (nur Merkmal f rettet)',
+    [1, '', `${SE_M}Klumpen-Datei nicht lesbar (tally.json): OSError: `
+      + `[Errno 28] No space left on device\n${SE_F}`]],
+  ['BP-L7b dieselbe Rinne mit ValueError (korrupte Tafel)',
+    [1, '', `${SE_M}Klumpen-Datei nicht lesbar (tally.json): ValueError: `
+      + `Expecting value\n${SE_F}`]],
+  ['BP-L6-Vorwand: Folgesatz fehlt ganz (Merkmal d)',
+    [1, '', `${SE_M}G = 1 < 2.`]],
+  ['leerer stderr (Merkmale c und d)', [1, '', '']],
+];
+
+test('BP-L1 der EINE Draht, der ein Verdikt ist - alle sieben Merkmale halten', () => {
+  assert.equal(regelSagt(...VERDIKT_DRAHT), true,
+    'der eingefrorene Fingerabdruck wird nicht als Verdikt erkannt - dann '
+    + 'vollzieht der Laeufer die Anordnung nie');
+});
+
+test('BP-L2..BP-L7 jeder andere Ausgang bleibt ABBRUCH - Merkmal fuer Merkmal', () => {
+  for (const [name, draht] of KEIN_VERDIKT) {
+    assert.equal(regelSagt(...draht), false,
+      `${name}: dieser Ausgang wuerde zu einem ratifizierten Verdikt gewaschen`);
+  }
+});
+
+test('BP-L6 ABSICHTLICHER BRUCH: die Regel geweitet -> die Wasch-Rinne steht '
+  + 'wieder offen und ALLE Gegenproben fallen', () => {
+  // Wer das Fangkriterium auf `rc != 0` oder auf einen blossen Teilstring-Test
+  // ueber ganz stderr weitet, stellt genau die Rinne wieder her, gegen die die
+  // Sieben-Merkmal-Form gebaut ist. Gebrochen wird an einer KOPIE.
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  const ersetzungen = [
+    ['    if fertig.returncode != 1:                                        # a',
+      '    if fertig.returncode == 0:                                       # a'],
+    ['    if (fertig.stdout or "").strip() != "":                           # b',
+      '    if False:                                                        # b'],
+    ['    if not zeilen[0].startswith(SE_MARKER):                           # c',
+      '    if SE_MARKER not in text:                                        # c'],
+    ['    if not zeilen[-1].startswith(SE_FOLGESATZ):                       # d',
+      '    if False:                                                        # d'],
+    ['    if SE_TRACEBACK in text:                                          # e',
+      '    if False:                                                        # e'],
+    ['    if zeilen[0][len(SE_MARKER):].startswith(SE_WASCHRINNE):          # f',
+      '    if False:                                                        # f'],
+  ];
+  let geweitet = quelle;
+  for (const [alt, neu] of ersetzungen) {
+    assert.ok(geweitet.includes(alt), `Merkmal nicht gefunden: ${alt.trim()}`);
+    geweitet = geweitet.replace(alt, neu);
+  }
+  const kaputt = path.join(tempdir('f6bp6-'), 'laeufer-geweitet.py');
+  fs.writeFileSync(kaputt, geweitet, 'utf8');
+
+  // Der eine echte Verdikt-Draht bleibt selbstverstaendlich True - er soll ja.
+  assert.equal(regelSagt(...VERDIKT_DRAHT, kaputt), true);
+
+  // DER SCHADEN, genau benannt: gewaschen wird jeder Ausgang, der den Marker
+  // IRGENDWO traegt - Muell auf stdout, entkommener Traceback, rc != 1 und vor
+  // allem DIE EIGENE TEMP-TAFEL. Das sind (iii) und (iv) der nicht-injektiven
+  // Fehleroberflaeche, und sie stehen nicht in der Achterliste.
+  let gewaschen = 0;
+  for (const [name, draht] of KEIN_VERDIKT) {
+    const [rc, , stderr] = draht;
+    if (rc === 0 || !stderr.includes(SE_M)) {
+      // Ohne Marker greift auch die geweitete Regel nicht - diese Ausgaenge
+      // sind nicht der Schaden, den BP-L6 zeigt.
+      continue;
+    }
+    assert.equal(regelSagt(...draht, kaputt), true,
+      `${name}: die Weitung muss ihn waschen, sonst misst BP-L6 nichts`);
+    gewaschen += 1;
+  }
+  assert.ok(gewaschen >= 5,
+    `nur ${gewaschen} Ausgaenge wurden gewaschen - die Probe misst zu wenig`);
+  // Und die Rinne selbst, namentlich.
+  assert.equal(regelSagt(1, '',
+    `${SE_M}Klumpen-Datei nicht lesbar (t.json): OSError: [Errno 28] `
+    + `No space left on device\n${SE_F}`, kaputt), true,
+  'die Wasch-Rinne muss durch die Weitung wieder offen stehen');
+});
+
+test('BP-L8 ABSICHTLICHER BRUCH: Marker im SE-Modul entfernt -> '
+  + 'der Praesenz-Waechter LF-4 feuert', () => {
+  // Der Anker sichert eine ANDERE Achse als die SHA-Bindung: die Bindung pinnt
+  // den Stand von HEUTE, der Anker faengt die Umbenennung bei einem KUENFTIGEN
+  // Re-Freeze. Ohne ihn liefe der Fang danach lautlos ins Leere.
+  const dir = tempdir('f6bp8-');
+  const echt = fs.readFileSync(
+    path.join(REPO, 'scripts', 'studie-f6-klumpen-se.py'), 'utf8');
+
+  const heil = path.join(dir, 'se-heil.py');
+  fs.writeFileSync(heil, echt, 'utf8');
+  const gruen = pyProbe(`m.pruefe_se_marker(r"${heil}"); print("ANKER: haelt")`);
+  assert.equal(gruen.status, 0, `am unveraenderten Modul darf nichts feuern:\n${gruen.stderr}`);
+  assert.match(gruen.stdout, /ANKER: haelt/);
+
+  for (const [was, weg] of [['Marker', 'F6-SE-KLUMPEN-ABBRUCH: '],
+    ['Folgesatz', 'Folge: BandNichtAuswertbar ->']]) {
+    assert.ok(echt.includes(weg), `${was} steht nicht im echten Modul`);
+    const kaputt = path.join(dir, `se-ohne-${was}.py`);
+    fs.writeFileSync(kaputt, echt.replaceAll(weg, 'F6-SE-UMBENANNT: '), 'utf8');
+    const r = pyProbe([
+      'try:',
+      `    m.pruefe_se_marker(r"${kaputt}")`,
+      '    print("ANKER: STILL")',
+      'except m.LaufAbbruch as fehler:',
+      '    print("ANKER FEUERT:", fehler)',
+    ].join('\n'));
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /ANKER FEUERT: MARKER-DRIFT \(LF-4\)/,
+      `ohne ${was} bleibt der Anker still: ${r.stdout}`);
+  }
+});
+
+// ── Q2 - DIE KETTE ─────────────────────────────────────────────────────────
+
+test('BP-L9 Akt in der GESCHLOSSENEN, Rehash-Eintraege in der FORTSETZUNG '
+  + '-> laeuft durch (das Spiegelbild von heute)', () => {
+  // DER BEWEIS VON TATSACHE A. Vor der Reparatur ist diese Lage fuer JEDEN
+  // --register-Wert rot: mit der geschlossenen Datei fehlen die Rehash-
+  // Eintraege, mit der Fortsetzung fehlt der Akt. Genau deshalb war der Akt v3
+  // im Moment seiner Registrierung nicht ausfuehrbar.
+  const w = welt('f6bp9-', { kette: true });
+  const r = ruf(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))]);
+  assert.equal(r.status, 0, `beide Phasen muessen bedient sein:\n${r.stderr}`);
+  assert.match(r.stdout, /Phase 0 FREIGABE/);
+  assert.match(r.stdout, /Phase 1 REHASH/);
+  // Beide Kettendateien stehen im Bericht als gelesen (LF-17).
+  const b = JSON.parse(fs.readFileSync(w.bericht, 'utf8'));
+  const gelesen = b.umschlag.gelesenePfade.join(' ');
+  assert.ok(gelesen.includes('outcome-access-ledger.json'), gelesen);
+  assert.ok(gelesen.includes('outcome-access-ledger-teil2.json'), gelesen);
+});
+
+test('BP-L9b dieselbe Kette, aber --register auf die FORTSETZUNG -> '
+  + 'derselbe gruene Lauf (der Schalter benennt nur die Wurzel)', () => {
+  const w = welt('f6bp9b-', { kette: true });
+  const teil2 = path.join(w.wurzel, ...REG_TEIL2.split('/'));
+  const r = spawnSync(python, [SKRIPT,
+    '--freigabe', w.freigabePfad, '--panel', w.panel, '--bericht', w.bericht,
+    '--wurzel', w.wurzel, '--register', teil2,
+    '--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+});
+
+test('BP-L10 dieselbe runId in BEIDEN Kettendateien -> ABBRUCH "mehrdeutig"', () => {
+  const w = welt('f6bp10-', {
+    kette: true,
+    teil2: (t) => ({ ...t, events: t.events.concat([{
+      runId: RUN_ID, typ: 'confirmatory_execution_authorized',
+      registeredAt: T_REG, accessedAt: T_ACC, fenster: [FENSTER],
+      erlaubt: 'Doppelgaenger.', previousHash: '0'.repeat(64),
+      eventHash: EVENT_HASH,
+    }]) }),
+  });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'runId in zwei Kettendateien');
+  assert.match(text, /MEHRDEUTIG/);
+  assert.match(text, /kein Ersttreffer/);
+});
+
+test('BP-L11 registerDatei zeigt auf die FALSCHE Kettendatei -> ABBRUCH', () => {
+  const w = welt('f6bp11-', { kette: true, aktRel: REG_TEIL2 });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'registerDatei falsch');
+  assert.match(text, /registerDatei/);
+  assert.match(text, /geprueft, nie befolgt/);
+});
+
+test('BP-L12 Freigabe OHNE registerDatei -> ABBRUCH (Pflichtfeld)', () => {
+  const w = welt('f6bp12-', { kette: true, ohneRegisterDatei: true });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'registerDatei fehlt');
+  assert.match(text, /Pflichtfeld\(er\): registerDatei/);
+});
+
+test('BP-L13 Doppelgaenger-Datei mit gefaelschtem Akt derselben runId -> '
+  + 'ABBRUCH, der Kettenbeweis reisst', () => {
+  // Eine Datei wird NIE allein wegen ihres Namens Kettenglied. Das ist die
+  // Eigenschaft, die eine getippte Kettenliste nicht haette.
+  const w = welt('f6bp13-');
+  const echt = JSON.parse(fs.readFileSync(w.registerPfad, 'utf8'));
+  w.schreibe(`${REG_DIR}/outcome-access-ledger-fremd.json`, {
+    ...echt,
+    events: [{
+      runId: RUN_ID, typ: 'confirmatory_execution_authorized',
+      registeredAt: T_REG, accessedAt: T_ACC, fenster: [FENSTER],
+      erlaubt: 'GEFAELSCHT.', previousHash: '0'.repeat(64),
+      eventHash: EVENT_HASH,
+    }],
+  });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'untergeschobene Doppelgaenger-Datei');
+  assert.match(text, /KETTENBEWEIS REISST|NICHT BEWIESENE REGISTERDATEI/);
+});
+
+test('BP-L13b Doppelgaenger MIT vorgaengerDatei -> ABBRUCH, weil unerreichbar', () => {
+  // Der zweite Kopf desselben Angriffs: die Doppelgaenger-Datei taeuscht einen
+  // Vorgaenger vor und ist damit kein KettenKOPF mehr. Sie bleibt trotzdem
+  // ausserhalb des Beweises - kein Vorgaenger verweist auf sie.
+  const w = welt('f6bp13b-');
+  const echt = JSON.parse(fs.readFileSync(w.registerPfad, 'utf8'));
+  w.schreibe(`${REG_DIR}/outcome-access-ledger-fremd.json`, {
+    ...echt,
+    vorgaengerDatei: REG_GESCHLOSSEN,
+    genesisSha256: EVENT_HASH,
+    events: [{ runId: 'gefaelscht', typ: 'confirmatory_execution_authorized' }],
+  });
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'Doppelgaenger mit vorgetaeuschtem Vorgaenger');
+  assert.match(text, /NICHT BEWIESENE REGISTERDATEI/);
+});
+
+test('BP-L14 ABSICHTLICHE BRUECHE: jede Weglassung faerbt GENAU ihre Probe', () => {
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+
+  // (i) Der Kettenbeweis - ohne ihn wird die Doppelgaenger-Datei geschluckt.
+  const beweis = '    unerreicht = sorted(rel_von(p) for p in gelesen if p not in gesehen)';
+  assert.ok(quelle.includes(beweis), 'der Erreichbarkeits-Beweis fehlt');
+  const ohneBeweis = path.join(tempdir('f6bp14a-'), 'ohne-kettenbeweis.py');
+  fs.writeFileSync(ohneBeweis, quelle.replace(beweis, '    unerreicht = []'), 'utf8');
+  const w1 = welt('f6bp14a-w-');
+  const echt = JSON.parse(fs.readFileSync(w1.registerPfad, 'utf8'));
+  w1.schreibe(`${REG_DIR}/outcome-access-ledger-fremd.json`, {
+    ...echt,
+    vorgaengerDatei: REG_GESCHLOSSEN,
+    genesisSha256: EVENT_HASH,
+    events: [{ runId: 'gefaelscht', typ: 'confirmatory_execution_authorized' }],
+  });
+  const r1 = spawnSync(python, [ohneBeweis,
+    '--freigabe', w1.freigabePfad, '--panel', w1.panel, '--bericht', w1.bericht,
+    '--wurzel', w1.wurzel, '--register', w1.registerPfad,
+    '--zaehlwerk', zaehlwerk(w1.dir, gleichmaessig(230, 20))], { encoding: 'utf8' });
+  assert.equal(r1.status, 0,
+    `ohne den Beweis MUSS die Doppelgaenger-Datei durchgehen, sonst misst BP-L13 nichts:\n${r1.stderr}`);
+
+  // (ii) Die Mehrdeutigkeits-Sperre - ohne sie gewinnt still der letzte.
+  const sperre = '    if len(dateien) > 1:';
+  assert.ok(quelle.includes(sperre), 'die Mehrdeutigkeits-Sperre fehlt');
+  const ohneSperre = path.join(tempdir('f6bp14b-'), 'ohne-mehrdeutigkeit.py');
+  fs.writeFileSync(ohneSperre, quelle
+    .replace(sperre, '    if False:')
+    // und die zweite Sperre in Phase 1
+    .replace('            if run_id in je_eintrag and je_eintrag[run_id][0] != rel:',
+      '            if False:'), 'utf8');
+  const w2 = welt('f6bp14b-w-', {
+    kette: true,
+    teil2: (t) => ({ ...t, events: t.events.concat([{
+      runId: RUN_ID, typ: 'confirmatory_execution_authorized',
+      registeredAt: T_REG, accessedAt: T_ACC, fenster: [FENSTER],
+      erlaubt: 'Doppelgaenger.', previousHash: '0'.repeat(64),
+      eventHash: EVENT_HASH,
+    }]) }),
+  });
+  const r2 = spawnSync(python, [ohneSperre,
+    '--freigabe', w2.freigabePfad, '--panel', w2.panel, '--bericht', w2.bericht,
+    '--wurzel', w2.wurzel, '--register', w2.registerPfad,
+    '--zaehlwerk', zaehlwerk(w2.dir, gleichmaessig(230, 20))], { encoding: 'utf8' });
+  assert.doesNotMatch(r2.stderr || '', /MEHRDEUTIG/,
+    'ohne die Sperre darf kein Mehrdeutigkeits-Abbruch mehr fallen - sonst misst BP-L10 nichts');
+
+  // (iii) Der Gleichheits-Waechter auf der JS-Seite: ein veraendertes letztes
+  // Element von REGISTER_RELS muss auffallen.
+  const verstellt = REGISTER_RELS.slice(0, -1)
+    .concat([`${REG_DIR}/outcome-access-ledger-teil3.json`]);
+  assert.notDeepEqual(verstellt, ketteDesLaeufers(REPO),
+    'ein verstelltes REGISTER_RELS faellt dem Gleichheits-Waechter nicht auf');
+});
+
+test('BP-L15 NICHT-REGRESSION: ein Rehash-Eintrag in KEINER Kettendatei -> '
+  + 'der bestehende Abbruchtext ueberlebt unveraendert', () => {
+  const w = welt('f6bp15-');
+  const reg = JSON.parse(fs.readFileSync(w.registerPfad, 'utf8'));
+  reg.events = reg.events.filter((e) => e.runId !== 'f6-tor-freeze-2026-08-31');
+  fs.writeFileSync(w.registerPfad, `${JSON.stringify(reg, null, 1)}\n`, 'utf8');
+  const text = abbruch(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))],
+    'Rehash-Eintrag fehlt in der ganzen Kette');
+  assert.match(text, /beruft sich auf den Register-Eintrag 'f6-tor-freeze-2026-08-31', den es nicht gibt/);
+});
+
+// ── LF-11 / LF-12 - DER GLEICHHEITS-WAECHTER AUF DER JS-SEITE ──────────────
+//
+// Der Laeufer fuehrt KEINE getippte Kettenkonstante (LRA-3: importiert, nie
+// getippt) und keinen JS-Parser auf dem fail-closed-Pfad. Beide Eigenschaften
+// zugleich gibt es nur so: die Kette wird in Python aus den DATEN bewiesen,
+// und HIER - wo `require` moeglich ist - wird sie gegen die Verfassung
+// gehalten.
+
+function ketteDesLaeufers(wurzel) {
+  const r = spawnSync(python, ['-c', [
+    'import importlib.util, json, sys',
+    `spec = importlib.util.spec_from_file_location("f6lauf", r"${SKRIPT}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    `print(json.dumps([rel for rel, _a, _g in m.loese_kette_auf(r"${wurzel}")]))`,
+  ].join('\n')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, `die Kettenaufloesung ist gescheitert:\n${r.stderr}`);
+  return JSON.parse(r.stdout);
+}
+
+test('LF-11 GLEICHHEITS-WAECHTER: die vom Laeufer BEWIESENE Kette ist genau '
+  + 'REGISTER_RELS aus lib/studie-verfassung.js', () => {
+  assert.deepEqual(ketteDesLaeufers(REPO), Array.from(REGISTER_RELS),
+    'Python und die Verfassung fuehren verschiedene Ketten - eine zweite, '
+    + 'driftende Autoritaet (LR-14/LRA-3)');
+});
+
+test('LF-11 der Laeufer traegt KEINE getippte Kettenkonstante', () => {
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  for (const rel of REGISTER_RELS) {
+    assert.ok(!quelle.includes(rel),
+      `der Laeufer tippt den Kettenpfad ${rel} ab statt ihn zu beweisen (LRA-3)`);
+    // Und die BASISNAME-Form, denn genau so stand sie hier: der unreparierte
+    // Laeufer fuehrte `os.path.join("protocol", ..., "outcome-access-ledger.json")`
+    // - segmentweise getippt, als voller Pfad im Quelltext also unsichtbar.
+    // Ohne diese Zeile ginge der Waechter am alten Stand gruen durch und
+    // haette nie etwas gemessen.
+    const basis = rel.split('/').pop();
+    assert.ok(!quelle.includes(basis),
+      `der Laeufer nennt die Kettendatei ${basis} beim Namen (LRA-3). `
+      + 'Erlaubt ist nur der PRAEFIX - welche Datei Kettenglied ist, '
+      + 'entscheidet der Kettenbeweis.');
+  }
+  // Und er parst kein JS zur Laufzeit. Geprueft wird der CODE, nicht die
+  // Kommentare: eine Zeile, die lib/studie-verfassung.js als Quelle ZITIERT,
+  // ist erwuenscht - ein Zugriff darauf im fail-closed-Pfad waere L1s
+  // ausdrueckliches Verbot.
+  // KEIN JS-PARSER ZUR LAUFZEIT (L1s ausdrueckliches Verbot). Geprueft wird
+  // der MECHANISMUS, nicht das Wort: der Laeufer ZITIERT lib/studie-
+  // verfassung.js in Prosa als Quelle, und das ist erwuenscht. Verboten ist,
+  // eine .js-Datei zu OEFFNEN oder node zu starten.
+  assert.ok(!/open\s*\([^)]*\.js\b/.test(quelle),
+    'der Laeufer oeffnet eine .js-Datei');
+  assert.ok(!/\bjoin\s*\([^)]*\.js["']/.test(quelle),
+    'der Laeufer baut einen .js-Pfad zusammen');
+  assert.ok(!/["']node["']|\bnode\s+/.test(quelle.replace(/#.*/g, '')),
+    'der Laeufer startet node');
+});
+
+test('LF-12 die zweite Python-Kopie in studie-f6-zaehlprobe-fortsetzung.py '
+  + 'steht unter demselben Gleichheits-Waechter', () => {
+  // Bis hierher war sie UNGEDECKT: kein tests/*-Treffer verband sie mit
+  // REGISTER_RELS. Nichts zu tun war keine Option (LF-12).
+  const r = spawnSync(python, ['-c', [
+    'import importlib.util, json',
+    `spec = importlib.util.spec_from_file_location("forts", r"${path.join(REPO, 'scripts', 'studie-f6-zaehlprobe-fortsetzung.py')}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    'print(json.dumps([list(m.REGISTER_RELS), m.AKTIVES_REGISTER_REL]))',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stderr);
+  const [rels, aktiv] = JSON.parse(r.stdout);
+  assert.deepEqual(rels, Array.from(REGISTER_RELS),
+    'die getippte Kopie ist von der Verfassung abgedriftet');
+  assert.equal(aktiv, REGISTER_RELS[REGISTER_RELS.length - 1],
+    'die aktive Datei der Kopie ist nicht das Kettenende');
+});
+
+// ── LF-18 - DIE VIER UNBERUEHRTEN, byte-genau ──────────────────────────────
+
+test('LF-18 die vier eingefrorenen Dateien sind BYTE-UNBERUEHRT', () => {
+  // GEMESSEN WIRD GEGEN origin/main, nicht gegen einen abgeschriebenen
+  // Praefix. Die Auflage sagt "unberuehrt, Byte fuer Byte" - das ist eine
+  // Aussage ueber den DIFF dieses Zweigs, und genau die wird hier gefahren.
+  // (Der im Urteil zitierte `inhaltSha 1fd6a9f3...` des Band-Moduls liegt auf
+  // einer ANDEREN Messebene als der Datei-sha; ihn hier zu vergleichen haette
+  // zwei Ebenen verwechselt.)
+  const vier = [
+    'scripts/studie-vb-b4-band.py',
+    'scripts/studie-f6-klumpen-se.py',
+    'scripts/studie-zaehlprobe.py',
+    'scripts/studie-f6-zaehlwerk.py',
+  ];
+  for (const rel of vier) {
+    const p = path.join(REPO, ...rel.split('/'));
+    assert.ok(fs.existsSync(p), `${rel} fehlt`);
+    const auf_main = spawnSync('git', ['show', `origin/main:${rel}`],
+      { cwd: REPO, encoding: 'buffer', maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(auf_main.status, 0, `git show ${rel}: ${auf_main.stderr}`);
+    assert.equal(
+      crypto.createHash('sha256').update(auf_main.stdout).digest('hex'),
+      dateihash(p),
+      `${rel} ist gegenueber origin/main veraendert - LF-18 verlangt null Bytes`);
+  }
+  // Und der Anker selbst: die zwei Zeichenketten stehen woertlich im echten
+  // Modul (LF-4, die Repo-Haelfte des Praesenz-Ankers).
+  const se = fs.readFileSync(
+    path.join(REPO, 'scripts', 'studie-f6-klumpen-se.py'), 'utf8');
+  assert.ok(se.includes('F6-SE-KLUMPEN-ABBRUCH: '), 'der Marker fehlt');
+  assert.ok(se.includes('Folge: BandNichtAuswertbar ->'), 'der Folgesatz fehlt');
 });

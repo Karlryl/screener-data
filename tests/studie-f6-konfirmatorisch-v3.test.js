@@ -403,11 +403,17 @@ const aktAusDemRegister = () => {
 const UEBERGANGS_BRUECKE = {
   gesetztAm: '2026-09-02',
   entfernenWenn: 'v4 act registered',
-  grund: 'F6-K13-Folgereparaturen: Phase-2a-Schreibprobe (HIGH-2) und '
-    + 'R12a-Schrubbe des ZaehlwerkAbbruch-Texts (MEDIUM-1).',
+  grund: 'F6-K13-Folgereparaturen (Phase-2a-Schreibprobe HIGH-2, R12a-Schrubbe '
+    + 'des ZaehlwerkAbbruch-Texts MEDIUM-1) PLUS die Reparatur-Familie aus '
+    + '_COURT-F6-LAUFFAEHIGKEIT-2026-09-02: Q1 (SE-Fang an den drei '
+    + 'Sterbestellen) und Q2 (Ketten-Aufloesung in beiden Phasen).',
   dateien: {
+    // BEWEGLICHES ZIEL, bei Familien-Schluss NEU GEMESSEN. Jede weitere Zeile
+    // am Laeufer aendert diesen Wert; ein stehengebliebener alter Wert zeigt
+    // auf einen toten Stand und faerbt LIVE-BINDUNG rot. Gemessen am
+    // 2026-09-02 nach der letzten Runner-Zeile der Familie.
     'scripts/studie-f6-lauf.py':
-      '945ee6f5d52350be9169915d6fb65694d5888b67dc347feac2345c762124500b',
+      '143065394fc8216695d634535e14160d8cc27b1e88228049250429fa87c51dd5',
   },
 };
 
