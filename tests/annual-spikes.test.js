@@ -183,7 +183,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   ];
   const basis = {
     hinweis: 'x',
-    ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'NICHT ENTSCHEIDBAR (19.08.): Reihe widerspricht sich selbst und dem Emittenten; Verdacht eher auf Nachbarjahr 2022.', seit: '2026-08-29' }],
+    ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', sperrschluessel: 'BANPU.BK|annualOpInc|1', hinweis: 'NICHT ENTSCHEIDBAR (19.08.): Reihe widerspricht sich selbst und dem Emittenten; Verdacht eher auf Nachbarjahr 2022.', seit: '2026-08-29', offenSeit: '2026-08-19' }],
   };
 
   check('Weg C: der Ausschluss haelt — ein gesperrter Fall wird NIE in den Bestand aufgenommen', () => {
@@ -215,7 +215,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       [null],
     ]) {
       assert.throws(() => baueNeuenBestand({ ...basis, ausgeschlossen: kaputt }, funde, 15045),
-        /schluessel UND schriftlichen hinweis/, JSON.stringify(kaputt));
+        /schriftlichen hinweis/, JSON.stringify(kaputt));
     }
   });
 
@@ -241,7 +241,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     const widerspruch = {
       faelle: ['BANPU.BK|annualOpInc|2023-12-31'],
       snapshotsBeiAufnahme: 15045,
-      ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'x', seit: '2026-08-29' }],
+      ausgeschlossen: [{ schluessel: 'BANPU.BK|annualOpInc|2023-12-31', sperrschluessel: 'BANPU.BK|annualOpInc|1', hinweis: 'x', seit: '2026-08-29', offenSeit: '2026-08-29' }],
     };
     const g = basisGueltig(widerspruch, 15045);
     assert.equal(g.ok, false);
@@ -256,10 +256,10 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   check('Weg C: Sperren ohne heutigen Treffer werden benannt, treffende nicht', () => {
     const { sperrenOhneTreffer } = require('../scripts/watch-annual-spikes.js');
     const sperren = [
-      { schluessel: 'BANPU.BK|annualOpInc|2023-12-31', hinweis: 'x' },
-      { schluessel: 'WEG.GE|annualRev|2019-12-31', hinweis: 'Tippfehler-Kandidat' },
+      { schluessel: 'BANPU.BK|annualOpInc|2023-12-31', sperrschluessel: 'BANPU.BK|annualOpInc|1', hinweis: 'x' },
+      { schluessel: 'WEG.GE|annualRev|2019-12-31', sperrschluessel: 'WEG.GE|annualRev|1', hinweis: 'Tippfehler-Kandidat' },
     ];
-    assert.deepEqual(sperrenOhneTreffer(sperren, funde), ['WEG.GE|annualRev|2019-12-31']);
+    assert.deepEqual(sperrenOhneTreffer(sperren, funde), ['WEG.GE|annualRev|1']);
     assert.deepEqual(sperrenOhneTreffer([], funde), []);
   });
 }
@@ -346,7 +346,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     try {
       process.env.ANNUAL_SPIKE_MAX_NEU = '0';
       assert.equal(watcher.main(), 1, 'one new anomaly must exceed a zero threshold');
-      assert.match(errors.join('\n'), /1 NEUE Jahres-Ausreisser \(erlaubt 0\)/,
+      assert.match(errors.join('\n'), /1 NEUE Jahres-Ausreisser-EREIGNISSE \(erlaubt 0\)/,
         'the strict threshold must be visible in the production error');
 
       logs = [];
@@ -354,7 +354,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       process.env.ANNUAL_SPIKE_MAX_NEU = '1';
       assert.equal(watcher.main(), 0, 'the same anomaly must fit a threshold of one');
       assert.equal(errors.length, 0, 'the relaxed control must remain healthy');
-      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 1\)/,
+      assert.match(logs.join('\n'), /zwei Relationen ohne Sperren 1 \(erlaubt 1\)/,
         'the relaxed threshold must be visible in the production summary');
 
       logs = [];
@@ -362,7 +362,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       process.env.ANNUAL_SPIKE_MAX_NEU = '2';
       assert.equal(watcher.main(), 0, 'a non-fixed-point threshold must remain healthy');
       assert.equal(errors.length, 0, 'the non-fixed-point control must remain healthy');
-      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 2\)/,
+      assert.match(logs.join('\n'), /zwei Relationen ohne Sperren 1 \(erlaubt 2\)/,
         'main must use the parsed threshold unchanged, not transform it');
 
       logs = [];
@@ -370,7 +370,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       delete process.env.ANNUAL_SPIKE_MAX_NEU;
       assert.equal(watcher.main(), 0, 'the default threshold must remain healthy');
       assert.equal(errors.length, 0, 'the default control must remain healthy');
-      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 5\)/,
+      assert.match(logs.join('\n'), /zwei Relationen ohne Sperren 1 \(erlaubt 5\)/,
         'main must use the documented default unchanged');
 
       logs = [];
@@ -378,7 +378,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       process.env.ANNUAL_SPIKE_MAX_NEU = '9007199254740991';
       assert.equal(watcher.main(), 0, 'the maximum safe threshold must remain healthy');
       assert.equal(errors.length, 0, 'the maximum-safe control must remain healthy');
-      assert.match(logs.join('\n'), /davon NEU: 1 \(erlaubt 9007199254740991\)/,
+      assert.match(logs.join('\n'), /zwei Relationen ohne Sperren 1 \(erlaubt 9007199254740991\)/,
         'main must neither truncate nor cap the validated safe-integer domain');
     } finally {
       fsT.existsSync = originalExistsSync;
@@ -409,6 +409,362 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     assert.match(run.stderr, /::error::watch-annual-spikes.*ANNUAL_SPIKE_MAX_NEU/s);
     assert.doesNotMatch(run.stderr, /snapshots\/ fehlt/,
       'configuration must fail before the snapshot-directory branch');
+  });
+}
+
+// ══ BRUCHPROBEN BP-1 .. BP-8 (Gerichtsbeschluss 02.09.2026, §6) ═══════════════════════
+// Hausregel: ein Waechter pinnt die SACHE, nicht ein Textmuster. Jede Probe prueft
+// Anwesenheit UND Abwesenheit, und jede war beim Bau einmal absichtlich rot.
+{
+  const w = require('../scripts/watch-annual-spikes.js');
+  const { ereignisse, faecher, cignaFaelle, breitesterFaecherImBestand, sperrSchluessel,
+    stabilerSchluessel, baueNeuenBestand, scanSnapshots: scan2 } = w;
+
+  // Ein Fund, wie ihn scanSnapshots() baut.
+  const fnd = (ticker, reihe, index, links, wert, rechts) => ({ ticker, reihe, index, links, wert, rechts });
+
+  // ── Ein echter Lauf von main() gegen eine Fixture-Population ────────────────────────
+  // Das Tor sitzt in main(); nur hier ist beweisbar, dass GEDRUCKT und GEZAEHLT
+  // auseinanderfallen (JA-1). Die Mock-Technik ist dieselbe wie im H20-Block oben.
+  function laufMain(snapshots, baseline, maxNeu, jetzt) {
+    const originals = { e: fsT.existsSync, r: fsT.readdirSync, f: fsT.readFileSync,
+      l: console.log, x: console.error, a: process.argv, v: process.env.ANNUAL_SPIKE_MAX_NEU };
+    const logs = [], errors = [];
+    fsT.existsSync = () => true;
+    fsT.readdirSync = () => Object.keys(snapshots);
+    fsT.readFileSync = (file) => {
+      const name = pathT.basename(String(file));
+      if (snapshots[name]) return JSON.stringify(snapshots[name]);
+      if (name === 'annual-spikes-baseline.json') return JSON.stringify(baseline);
+      throw new Error('unerwarteter Lesezugriff: ' + file);
+    };
+    console.log = (...a) => logs.push(a.join(' '));
+    console.error = (...a) => errors.push(a.join(' '));
+    process.argv = originals.a.filter((x) => x !== '--neu-aufnehmen');
+    if (maxNeu === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
+    else process.env.ANNUAL_SPIKE_MAX_NEU = String(maxNeu);
+    try { return { code: jetzt ? w.main(jetzt) : w.main(), log: logs.join('\n'), err: errors.join('\n') }; }
+    finally {
+      fsT.existsSync = originals.e; fsT.readdirSync = originals.r; fsT.readFileSync = originals.f;
+      console.log = originals.l; console.error = originals.x; process.argv = originals.a;
+      if (originals.v === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
+      else process.env.ANNUAL_SPIKE_MAX_NEU = originals.v;
+    }
+  }
+  // Ein Snapshot mit genau einem Ausreisser in der genannten Reihe (Index 1).
+  const snap = (ticker, reihe, mitte) => ({
+    meta: { ticker }, annual: { [reihe]: [{ value: 100e6 }, { value: mitte }, { value: 110e6 }] },
+  });
+
+  // ── BP-1 (JA-8a): byte-gleiche Signaturen auf zwei Tickern sind EIN Ereignis ────────
+  // Realwerte: SESG.PA und SGBAF tragen denselben FX-Stempel 1,1527377 und exakt
+  // dieselben drei Zahlen — am echten lokalen Baum gemessen, nicht erfunden.
+  check('BP-1: zwei byte-gleiche Signaturen auf zwei Tickern kollabieren zu EINEM Ereignis', () => {
+    const f = [
+      fnd('SESG.PA', 'annualNetIncome', 2, 17291065.5, -1043227618.5000001, -39193081.800000004),
+      fnd('SGBAF', 'annualNetIncome', 2, 17291065.5, -1043227618.5000001, -39193081.800000004),
+    ];
+    const e = ereignisse(f);
+    assert.equal(e.length, 1, 'Relation 1 muss byte-gleiche Signaturen verschmelzen');
+    assert.equal(faecher(e[0]), 2, 'und das eine Ereignis spannt zwei Ticker');
+  });
+
+  // ── BP-2 (JA-8b): FX-proportional, aber ungleich — kollabiert NICHT ─────────────────
+  // Realwerte VIV.PA gegen VIV.VI, dieselbe Firma, beide EUR, FX-Stempel 1,156203 gegen
+  // 1,1669973. Ohne diese Probe bleibt die gemessene ~27-%-Fehlquote der Relation 1
+  // unsichtbar, und jemand "repariert" sie spaeter mit einer Quantisierung, die zwei
+  // echte, verschiedene Ausreisser verschmilzt.
+  check('BP-2: FX-proportionale, aber ungleiche Signaturen kollabieren NICHT', () => {
+    const vivVI = fnd('VIV.VI', 'annualNetIncome', 1, 23339946, -7006651789.2, 472633906.5);
+    const vivPA = fnd('VIV.PA', 'annualNetIncome', 1, 23124060, -6941842812.000001, 468262215.00000006);
+    assert.equal(vivPA.links / vivVI.links, 0.9907503642039275,
+      'die Fixture muss den ECHTEN gemessenen Faktor tragen, nicht einen gerundeten');
+    const e = ereignisse([vivVI, vivPA]);
+    assert.equal(e.length, 2, 'zwei verschiedene Signaturen sind zwei Ereignisse — keine Quantisierung');
+    // Gegenrichtung im selben Test: byte-gleich verschmilzt sehr wohl.
+    assert.equal(ereignisse([vivVI, { ...vivVI, ticker: '1VIV.MI' }]).length, 1);
+  });
+
+  // ── BP-3 (JA-2): ein Ticker, alle drei Jahresreihen am selben Index ─────────────────
+  check('BP-3: alle drei Jahresreihen am selben Index sind IMMER rot — zwei reichen nicht', () => {
+    const drei = ['annualOpInc', 'annualRev', 'annualNetIncome']
+      .map((r, i) => fnd('CI', r, 2, 100e6 + i, -9000e6 - i, 110e6 + i));
+    assert.deepEqual(cignaFaelle(drei), ['CI|2'], 'die Cigna-Form muss erkannt werden');
+    assert.deepEqual(cignaFaelle(drei.slice(0, 2)), [],
+      'Gegenprobe: zwei Reihen sind NICHT die Cigna-Form, sonst faengt das Tor den halben Bestand');
+    // Und das ist der GRUND fuer das Hart-Tor: die Ereigniszaehlung zieht genau diese
+    // drei Funde auf ein einziges Ereignis mit Faecher 1 zusammen. Beide anderen Tore
+    // sehen dort nichts.
+    assert.equal(ereignisse(drei).length, 1);
+    assert.equal(faecher(ereignisse(drei)[0]), 1);
+  });
+
+  check('BP-3 (Ende zu Ende): die Cigna-Form ist rot, auch bei riesigem Budget', () => {
+    const snaps = {
+      'CI.json': { meta: { ticker: 'CI' }, annual: {
+        annualOpInc: [{ value: 100e6 }, { value: -9000e6 }, { value: 110e6 }],
+        annualRev: [{ value: 100e6 }, { value: -9100e6 }, { value: 110e6 }],
+        annualNetIncome: [{ value: 100e6 }, { value: -9200e6 }, { value: 110e6 }],
+      } },
+    };
+    const basis0 = { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [] };
+    const r = laufMain(snaps, basis0, 9007199254740991);
+    assert.equal(r.code, 1, 'das Hart-Tor ist unabhaengig vom Budget');
+    assert.match(r.err, /ALLEN 3 Jahresreihen am selben Index/);
+    assert.match(r.err, /CI\|1/);
+    // Abwesenheits-Richtung: nimmt man EINE Reihe weg, ist derselbe Lauf gruen.
+    const zwei = { 'CI.json': { meta: { ticker: 'CI' }, annual: {
+      annualOpInc: snaps['CI.json'].annual.annualOpInc, annualRev: snaps['CI.json'].annual.annualRev } } };
+    const r2 = laufMain(zwei, basis0, 9007199254740991);
+    assert.equal(r2.code, 0, 'zwei Reihen duerfen das Hart-Tor NICHT ausloesen');
+  });
+
+  // ── BP-4 (JA-4): Faecher 8 feuert, der echte 7er-Intel-Faecher feuert nicht ─────────
+  check('BP-4: Faecher 8 feuert, der legitime 7er-Intel-Faecher feuert nicht', () => {
+    // MESSUNG, kein Glaube: der breiteste Faecher im echten committeten Bestand ist 7 —
+    // die eine echte Intel-Abschreibung. Wird der Bestand je neu verankert, muss diese
+    // Zahl neu gemessen werden (Kipp-Bedingung K3: Schwelle nachziehen, nicht abschalten).
+    const echt = JSON.parse(fsT.readFileSync(
+      pathT.join(__dirname, '..', 'data-health', 'annual-spikes-baseline.json'), 'utf8'));
+    assert.equal(breitesterFaecherImBestand(echt.faelle), 7,
+      'der breiteste bekannte Faecher ist der 7er-Intel-Fall — sonst ist die Eichung veraltet');
+
+    const intel = ['1INTC.MI', '4335.HK', 'INL.DE', 'INTC', 'INTC.SW', 'INTC.VI', 'INTL.WA']
+      .map((t) => fnd(t, 'annualNetIncome', 1, -267e6, -18756e6, 1689e6));
+    const e7 = ereignisse(intel);
+    assert.equal(e7.length, 1, 'der Intel-Fall ist EIN Ereignis');
+    assert.equal(faecher(e7[0]), 7);
+    assert.ok(!(faecher(e7[0]) > 7), 'Faecher 7 darf gegen den bekannten Faecher 7 NICHT feuern');
+
+    const e8 = ereignisse([...intel, fnd('SENTINEL.XX', 'annualNetIncome', 1, -267e6, -18756e6, 1689e6)]);
+    assert.equal(e8.length, 1);
+    assert.equal(faecher(e8[0]), 8);
+    assert.ok(faecher(e8[0]) > 7, 'Faecher 8 MUSS gegen den bekannten Faecher 7 feuern');
+  });
+
+  // ── BP-5 (JA-5): beide Datumsfelder sind Pflicht ────────────────────────────────────
+  // Gemessen (Stimme 2, V7): ein Ausschluss OHNE seit wurde bis heute klaglos
+  // angenommen, und offenSeit gab es gar nicht.
+  check('BP-5: ein Ausschluss ohne offenSeit bzw. ohne seit laesst baueNeuenBestand werfen', () => {
+    const gut = {
+      schluessel: 'X|annualRev|werte:1|2|3', sperrschluessel: 'X|annualRev|1',
+      seit: '2026-08-29', offenSeit: '2026-08-19', hinweis: 'begruendet',
+    };
+    const funde5 = [fnd('X', 'annualRev', 1, 1, 2, 3)];
+    // Anwesenheits-Richtung zuerst: der vollstaendige Eintrag geht durch.
+    assert.doesNotThrow(() => baueNeuenBestand({ hinweis: 'x', ausgeschlossen: [gut] }, funde5, 15045));
+    for (const feld of ['seit', 'offenSeit', 'sperrschluessel']) {
+      const kaputt = { ...gut }; delete kaputt[feld];
+      assert.throws(() => baueNeuenBestand({ hinweis: 'x', ausgeschlossen: [kaputt] }, funde5, 15045),
+        /Ausschluss-Liste kaputt/, 'fehlendes ' + feld + ' muss werfen');
+    }
+    for (const mist of ['29.08.2026', '2026-8-29', '', 'gestern', '2026-13-45']) {
+      assert.throws(() => baueNeuenBestand({ hinweis: 'x', ausgeschlossen: [{ ...gut, offenSeit: mist }] }, funde5, 15045),
+        /Ausschluss-Liste kaputt/, 'offenSeit=' + JSON.stringify(mist) + ' muss werfen');
+    }
+  });
+
+  // ── BP-5b (JA-5): das ALTERS-TOR selbst ─────────────────────────────────
+  // Das Tor war gebaut und hatte keinen Waechter: kein Test hat es je rot gefahren.
+  // Seit JA-1 kosten Sperren keinen Budgetplatz mehr, also ist diese Uhr der GESAMTE
+  // verbliebene Druck auf einen offenen Fall — ein ungetestetes Tor waere hier genau
+  // die stille Erosion, gegen die dieser Beschluss ergangen ist.
+  {
+    // Fester Zeitpunkt statt Kalender-Zufall: sonst ist das Tor nur an genau einem Tag
+    // pruefbar. Die Naht ist der jetzt-Parameter von main().
+    const JETZT = new Date('2026-09-02T12:00:00Z');
+    const snaps5b = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+    // Die Sperre TRIFFT den Fund (sonst faengt ihn der Tote-Sperre-Melder ab) und der
+    // Fund steht NICHT im Bestand (sonst faengt ihn sperrenOhneWirkung ab). Damit ist
+    // das Alters-Tor das EINZIGE, was diesen Lauf noch rot machen kann.
+    const sperre5b = (offenSeit, seit) => ({
+      schluessel: 'AAA|annualRev|werte:100000000|900000000|110000000',
+      sperrschluessel: 'AAA|annualRev|1',
+      seit: seit || '2026-08-02', offenSeit, hinweis: 'UNGEPRUEFT',
+    });
+    const lauf5b = (offenSeit, seit) => laufMain(snaps5b,
+      { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre5b(offenSeit, seit)] }, 5, JETZT);
+
+    check('BP-5b: exakt 30 Tage offen ist gruen, 31 Tage ist rot', () => {
+      // Abwesenheits-Richtung, genau auf der Kante: auf der Schwelle feuert NICHTS.
+      const gruen = lauf5b('2026-08-03');
+      assert.equal(gruen.code, 0, '30 Tage liegen auf der Schwelle und duerfen nicht feuern');
+      assert.match(gruen.log, /offen seit 30 Tag\(en\)/);
+      assert.doesNotMatch(gruen.err, /laenger als 30 Tage/);
+
+      // Anwesenheits-Richtung: einen Tag darueber MUSS der Lauf rot werden.
+      const rot = lauf5b('2026-08-02');
+      assert.equal(rot.code, 1, '31 Tage MUESSEN den Lauf rot machen');
+      assert.match(rot.log, /offen seit 31 Tag\(en\)/);
+      assert.match(rot.err, /::error::1 Ausschluss\/Ausschluesse laenger als 30 Tage offen/);
+      assert.match(rot.err, /AAA\|annualRev\|1 \(31 Tage\)/);
+    });
+
+    check('BP-5b: eine Neu-Listung stellt die Altersuhr NICHT zurueck', () => {
+      // Das ist der ganze Grund fuer offenSeit. seit wandert auf heute (wie bei jeder
+      // Neu-Eintragung), offenSeit bleibt stehen -- die Uhr laeuft weiter.
+      const r = lauf5b('2026-08-02', '2026-09-02');
+      assert.equal(r.code, 1, 'ein frisches seit darf die Altersuhr nicht zuruecksetzen');
+      assert.match(r.log, /offen seit 31 Tag\(en\)/);
+      assert.match(r.err, /laenger als 30 Tage offen/);
+      // Gegenprobe, dass die Uhr wirklich an offenSeit haengt und nicht an seit:
+      // dasselbe frische seit, aber junges offenSeit => gruen.
+      const r2 = lauf5b('2026-08-30', '2026-09-02');
+      assert.equal(r2.code, 0);
+      assert.match(r2.log, /offen seit 3 Tag\(en\)/);
+    });
+  }
+
+  // ── BP-6 (JA-6 + JA-7): der gedriftete Schluessel wird NICHT absorbiert ─────────────
+  check('BP-6: eine um 0,024 % gedriftete Signatur wird NICHT in faelle absorbiert', () => {
+    const FX = 1.0002436793;  // der am echten Baum gemessene GCP.L-Driftfaktor
+    const orig = fnd('BANPU.BK', 'annualOpInc', 2, -28259000, 6003496000, 524803000);
+    const drift = fnd('BANPU.BK', 'annualOpInc', 2, orig.links * FX, orig.wert * FX, orig.rechts * FX);
+    const sperre = {
+      schluessel: stabilerSchluessel(orig), sperrschluessel: sperrSchluessel(orig),
+      seit: '2026-08-29', offenSeit: '2026-08-19', hinweis: 'NICHT ENTSCHEIDBAR (19.08.)',
+    };
+    // Der ALTE Mechanismus haette hier verloren — das ist der gemessene Schaden, gegen
+    // den JA-7 gebaut ist: die Wert-Signatur bewegt sich mit dem Wechselkurs.
+    assert.notEqual(stabilerSchluessel(drift), sperre.schluessel,
+      'die Wert-Signatur MUSS unter FX-Drift wandern, sonst prueft diese Probe nichts');
+    // Der NEUE Mechanismus haelt: ticker|reihe|index bewegt sich nicht.
+    assert.equal(sperrSchluessel(drift), sperre.sperrschluessel);
+    const b = baueNeuenBestand({ hinweis: 'x', ausgeschlossen: [sperre] }, [drift], 15045);
+    assert.deepEqual(b.faelle, [], 'der gedriftete Fall darf NICHT in den Bestand rutschen');
+    assert.deepEqual(b.ausgeschlossen, [sperre], 'und die Sperre ueberlebt die Verankerung');
+  });
+
+  check('BP-6: eine tote Sperre wird im NORMALEN Tageslauf gemeldet, nicht erst beim Verankern', () => {
+    const snaps = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+    const tot = {
+      schluessel: 'WEG.GE|annualRev|werte:1|2|3', sperrschluessel: 'WEG.GE|annualRev|1',
+      seit: '2026-08-29', offenSeit: '2026-08-29', hinweis: 'Tippfehler-Kandidat',
+    };
+    const r = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [tot] }, 5);
+    assert.match(r.log, /treffen HEUTE keinen Fund mehr/,
+      'der Melder lief bisher NUR im --neu-aufnehmen-Zweig');
+    assert.match(r.log, /WEG\.GE\|annualRev\|1/);
+    // Abwesenheits-Richtung: eine TREFFENDE Sperre darf nicht als tot gemeldet werden.
+    const treffend = { ...tot, sperrschluessel: 'AAA|annualRev|1' };
+    const r2 = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [treffend] }, 5);
+    assert.doesNotMatch(r2.log, /treffen HEUTE keinen Fund mehr/);
+  });
+
+  // ── BP-6c (JA-6/JA-7): die WIRKUNGSLOSE Sperre — trifft, unterdrueckt aber nichts ──
+  // Die zweite Art toter Sperre, die JA-7 erst moeglich macht: seit auf ticker|reihe|index
+  // gematcht wird, kann ein Schluessel einen Fund treffen, der laengst in `faelle` steht.
+  // Dann gewinnt istBekannt() still, die Sperre sieht intakt aus und wirkt nicht mehr —
+  // und basisGueltig() sieht es nicht, weil dort Wert-Signaturen verglichen werden.
+  // Das ist ein HARTES Tor (datenExit = 1) und hatte als einziges keine Bruchprobe.
+  check('BP-6c: eine treffende, aber wirkungslose Sperre wird rot gemeldet', () => {
+    const { sperrenOhneWirkung } = w;
+    const fund = fnd('AAA', 'annualRev', 1, 100e6, 900e6, 110e6);
+    const sperre = {
+      schluessel: stabilerSchluessel(fund), sperrschluessel: 'AAA|annualRev|1',
+      seit: '2026-08-29', offenSeit: '2026-08-29', hinweis: 'UNGEPRUEFT',
+    };
+    // Anwesenheit: der getroffene Fund steht bereits im Bestand => die Sperre ist wirkungslos.
+    assert.deepEqual(
+      sperrenOhneWirkung([sperre], [fund], new Set([stabilerSchluessel(fund)])),
+      ['AAA|annualRev|1']);
+    // Abwesenheit, beide Richtungen einzeln: Fund NICHT im Bestand => die Sperre wirkt.
+    assert.deepEqual(sperrenOhneWirkung([sperre], [fund], new Set()), []);
+    // und: Bestand enthaelt den Fund, aber es gibt gar keine Sperre darauf.
+    assert.deepEqual(
+      sperrenOhneWirkung([{ ...sperre, sperrschluessel: 'ZZZ|annualRev|9' }], [fund],
+        new Set([stabilerSchluessel(fund)])), []);
+  });
+
+  check('BP-6c (Ende zu Ende): die wirkungslose Sperre macht den Tageslauf ROT', () => {
+    const snaps = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+    // WICHTIG: der schluessel ist hier die ALTE, weggedriftete Wert-Signatur (899 statt
+    // 900). Genau deshalb sieht basisGueltig() KEINEN Widerspruch — jener Waechter
+    // vergleicht Wert-Signaturen, und die stimmt nicht mehr ueberein. Der sperrschluessel
+    // trifft trotzdem. Das ist die Luecke, die JA-7 erst aufmacht, und der einzige Grund,
+    // warum sperrenOhneWirkung() existiert.
+    const sperre = {
+      schluessel: 'AAA|annualRev|werte:100000000|899000000|110000000',
+      sperrschluessel: 'AAA|annualRev|1',
+      seit: '2026-08-29', offenSeit: '2026-08-29', hinweis: 'UNGEPRUEFT',
+    };
+    // Der Fund steht im Bestand UND ist gesperrt: istBekannt() gewinnt still.
+    const r = laufMain(snaps, {
+      faelle: ['AAA|annualRev|werte:100000000|900000000|110000000'],
+      snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre],
+    }, 5);
+    assert.equal(r.code, 1, 'eine Sperre, die nichts mehr unterdrueckt, MUSS rot sein');
+    assert.match(r.err, /treffen einen Fund, der bereits im Bestand steht/);
+    assert.match(r.err, /AAA\|annualRev\|1/);
+    // Gegenprobe: derselbe Lauf mit LEEREM Bestand ist gruen — dann wirkt die Sperre.
+    const r2 = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre] }, 5);
+    assert.equal(r2.code, 0, 'eine wirksame Sperre darf NICHT rot machen');
+    assert.doesNotMatch(r2.err, /bereits im Bestand/);
+  });
+
+  // ── BP-7 (JA-1): Ausschluesse verlassen das GEZAEHLTE Set, nie das GEDRUCKTE ────────
+  // Diese Probe ist der Waechter ueber der eigentlichen Erosionsgefahr. Zieht jemand den
+  // Sperr-Filter vor die Druckschleife in main(), verschwindet die gesperrte Zeile aus
+  // dem Log und diese Probe faellt.
+  check('BP-7: eine gesperrte Zeile steht im GEDRUCKTEN Set und fehlt im GEZAEHLTEN', () => {
+    const snaps = {
+      'AAA.json': snap('AAA', 'annualRev', 900e6),
+      'BANPU.BK.json': snap('BANPU.BK', 'annualOpInc', -900e6),
+    };
+    const sperre = {
+      schluessel: 'BANPU.BK|annualOpInc|werte:100000000|-900000000|110000000',
+      sperrschluessel: 'BANPU.BK|annualOpInc|1',
+      seit: '2026-08-29', offenSeit: '2026-08-19', hinweis: 'NICHT ENTSCHEIDBAR (19.08.)',
+    };
+    const r = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 2, ausgeschlossen: [sperre] }, 1);
+    // GEDRUCKT: beide Funde, der gesperrte ausdruecklich mit.
+    assert.match(r.log, /davon NEU: 2/, 'der gedruckte Zaehler nennt BEIDE Funde');
+    assert.match(r.log, /NEU {2}BANPU\.BK · annualOpInc\[1\]/,
+      'DIE EROSIONSPROBE: die gesperrte Zeile MUSS im Log stehen');
+    assert.match(r.log, /NEU {2}AAA · annualRev\[1\]/);
+    // GEZAEHLT: nur der ungesperrte. Und die Sperre steht mit ihrem Alter da.
+    assert.match(r.log, /zwei Relationen ohne Sperren 1 \(erlaubt 1\)/);
+    assert.match(r.log, /SPERRE BANPU\.BK\|annualOpInc\|1 · offen seit \d+ Tag\(en\)/);
+    assert.equal(r.code, 0, 'zwei Funde, aber ein gezaehltes Ereignis — das Budget von 1 haelt');
+    // Gegenrichtung: ohne die Sperre zaehlen beide und dasselbe Budget reisst.
+    const r2 = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 2, ausgeschlossen: [] }, 1);
+    assert.equal(r2.code, 1, 'ohne Sperre muessen zwei Ereignisse das Budget von 1 sprengen');
+    assert.match(r2.err, /2 NEUE Jahres-Ausreisser-EREIGNISSE \(erlaubt 1\)/);
+  });
+
+  // ── BP-8 (JA-3): ungleich lange Jahresreihen => Relation 2 verschmilzt NICHT ────────
+  check('BP-8: bei ungleich langen Jahresreihen verschmilzt Relation 2 nicht', () => {
+    const zwei = [
+      fnd('U', 'annualOpInc', 1, 100e6, -900e6, 110e6),
+      fnd('U', 'annualNetIncome', 1, 100e6, -950e6, 110e6),
+    ];
+    // Anwesenheits-Richtung: gleich lange Reihen verschmelzen (das ist Relation 2).
+    assert.equal(ereignisse(zwei, () => true).length, 1);
+    // Abwesenheits-Richtung: bei ungleich langen Reihen zeigt derselbe Index NICHT auf
+    // dasselbe Geschaeftsjahr — dann sind es zwei Ereignisse.
+    assert.equal(ereignisse(zwei, () => false).length, 2);
+  });
+
+  check('BP-8: scanSnapshots MISST die Praemisse, statt sie zu glauben', () => {
+    const dir = fsT.mkdtempSync(pathT.join(osT.tmpdir(), 'annual-spikes-ja3-'));
+    try {
+      fsT.writeFileSync(pathT.join(dir, 'GLEICH.json'), JSON.stringify({ meta: { ticker: 'GLEICH' }, annual: {
+        annualOpInc: [{ value: 1 }, { value: 2 }, { value: 3 }],
+        annualNetIncome: [{ value: 1 }, { value: 2 }, { value: 3 }],
+      } }));
+      fsT.writeFileSync(pathT.join(dir, 'UNGLEICH.json'), JSON.stringify({ meta: { ticker: 'UNGLEICH' }, annual: {
+        annualOpInc: [{ value: 1 }, { value: 2 }, { value: 3 }],
+        annualNetIncome: [{ value: 1 }, { value: 2 }, { value: 3 }, { value: 4 }],
+      } }));
+      // Eine FEHLENDE Reihe ist keine Verletzung — nur zwei VORHANDENE ungleicher Laenge.
+      fsT.writeFileSync(pathT.join(dir, 'FEHLT.json'), JSON.stringify({ meta: { ticker: 'FEHLT' }, annual: {
+        annualOpInc: [{ value: 1 }, { value: 2 }, { value: 3 }],
+      } }));
+      const r = scan2(dir);
+      assert.ok(r.reihenUngleich.has('UNGLEICH'), 'die Verletzung MUSS gemessen werden');
+      assert.ok(!r.reihenUngleich.has('GLEICH'), 'ein Zaehler, der immer feuert, waere wertlos');
+      assert.ok(!r.reihenUngleich.has('FEHLT'), 'eine fehlende Reihe ist keine Praemissenverletzung');
+    } finally { fsT.rmSync(dir, { recursive: true, force: true }); }
   });
 }
 
