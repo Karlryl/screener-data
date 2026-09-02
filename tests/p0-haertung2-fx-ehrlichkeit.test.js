@@ -41,7 +41,8 @@ _FX_TO_USD.XLV = 0.25; _FX_PROVENANCE.XLV = 'live';
 // ── F-CGPT-001: Herkunft des Kurses ist an JEDEM Umrechnungs-Bein ablesbar ──────────
 
 test('F-001 _fxFactorFor: hartkodierte Waehrung meldet ihre Herkunft', () => {
-  assert.deepEqual(_fxFactorFor('XHC'), { factor: 0.5, provenance: 'fallback-hardcoded', key: 'XHC' });
+  // factorMajorUnit (Pence-Trennung 02.09.2026): ausserhalb von Pence identisch zu factor.
+  assert.deepEqual(_fxFactorFor('XHC'), { factor: 0.5, factorMajorUnit: 0.5, provenance: 'fallback-hardcoded', key: 'XHC' });
 });
 
 test('F-001 _fxFactorFor: USD ist Identitaet, NIE "hartkodiert" (sonst Falsch-Rot ueber das halbe US-Universum)', () => {
