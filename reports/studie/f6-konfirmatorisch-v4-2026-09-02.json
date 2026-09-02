@@ -1,0 +1,461 @@
+{
+ "umschlag": {
+  "schema": "early-detection-f6-lauf/v1",
+  "protokoll": "FEM-SEC-US@2.0.0",
+  "runId": "f6-konfirmatorisch-v4-2026-09-02",
+  "fenster": "pruefung",
+  "fensterVon": "2017-01-01",
+  "fensterBis": "2019-12-31",
+  "panelRand": "2020-12-31",
+  "serverConfirmedAt": "2026-09-02T10:58:01.000Z",
+  "accessedAt": "2026-09-02T11:10:55.788Z",
+  "ersterZugriffAm": "2026-09-02T11:29:40.290Z",
+  "beendetAm": "2026-09-02T11:29:57.703Z",
+  "gelesenePfade": [
+   "2.0.0/outcome-access-ledger-teil2.json",
+   "2.0.0/outcome-access-ledger.json",
+   "2.0.0/rules.json",
+   "2.1.0/b4-bandregel-2026-08-30.json",
+   "2.1.0/e2-schwellen-satz-2026-08-30.json",
+   "2.1.0/f6-se-klumpen-v1-wortlaut.json",
+   "2.1.0/f6-vollzug-zweig-a-2026-08-31.json",
+   "panel/panel-validierung.sqlite",
+   "scripts/studie-basisraten.py",
+   "scripts/studie-e2-verbreitert.py",
+   "scripts/studie-f6-klumpen-se.py",
+   "scripts/studie-f6-zaehlwerk.py",
+   "scripts/studie-vb-b4-band.py",
+   "studie/f6-konfirmatorisch-v4-freigabe.json"
+  ],
+  "geschriebenePfade": [
+   "studie/f6-konfirmatorisch-v4-2026-09-02.json"
+  ],
+  "ergebnisdatenBeruehrt": true,
+  "siegelWache": "Endtest-Siegel unberuehrt und ZU. Kein Endtest-Fenster, kein Schluesselmaterial, keine Lueckenliste geoeffnet (F6-A16).",
+  "manifestGeprueft": [
+   "protocol/early-detection/2.0.0/rules.json",
+   "protocol/early-detection/2.1.0/b4-bandregel-2026-08-30.json",
+   "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json",
+   "protocol/early-detection/2.1.0/f6-se-klumpen-v1-wortlaut.json",
+   "protocol/early-detection/2.1.0/f6-vollzug-zweig-a-2026-08-31.json",
+   "scripts/studie-basisraten.py",
+   "scripts/studie-e2-verbreitert.py",
+   "scripts/studie-f6-klumpen-se.py"
+  ],
+  "umgebung": {
+   "plattform": "win32",
+   "python": "3.12.10"
+  },
+  "gebundeneHashes": [
+   {
+    "pfad": "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json",
+    "art": "datei",
+    "sha256": "80798025d2ad6387b3ed72048227112426369ec8392ae633a92df58f0cf4d1e5",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/e2-schwellen-satz-2026-08-30.json",
+    "art": "inhalt_ohne_hashfeld",
+    "sha256": "c4a888906e4cb26a1a4994c54fc34b89c068e40646a800d3d07c7051308b2bee",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "scripts/studie-basisraten.py",
+    "art": "datei",
+    "sha256": "997a80d26871937f848b3eea76a9b4ba1a4e1c76f1cc3c30db98d7888ec2601d",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "scripts/studie-e2-verbreitert.py",
+    "art": "datei",
+    "sha256": "9a24ed94e943e9a6f5b4a1373ba6c6aa2001ddadb2d60a705277bf5eb359984b",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/b4-bandregel-2026-08-30.json",
+    "art": "datei",
+    "sha256": "d9c5990ad403b6baca2e3a4228218af0b73367e4f51ffd213ac654fc41cdc5da",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/b4-bandregel-2026-08-30.json",
+    "art": "inhalt",
+    "sha256": "1fd6a9f3ceb6dab0076c6812f57483889708345d6a87c6103a7515689cf8c46e",
+    "eintrag": "f6-tor-freeze-2026-08-31"
+   },
+   {
+    "pfad": "scripts/studie-f6-klumpen-se.py",
+    "art": "datei",
+    "sha256": "bf10becdfe2dc08a303d22a97dda3eb65988fb72a50f8811c23b2c377c11a1d3",
+    "eintrag": "f6-se-klumpen-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/f6-vollzug-zweig-a-2026-08-31.json",
+    "art": "datei",
+    "sha256": "8c66818e80140b16a473c278a47327d726601e14de83450d2ed6d353e55e4427",
+    "eintrag": "f6-se-klumpen-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/f6-vollzug-zweig-a-2026-08-31.json",
+    "art": "inhalt",
+    "sha256": "792f4ff58687945167e273d08ca509544f4ad7fd7ecd9eaa60d5dac3118c99f7",
+    "eintrag": "f6-se-klumpen-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.0.0/rules.json",
+    "art": "datei",
+    "sha256": "dc008723798f58fdae3cc67b36817aebf88b090acd8472cedda141f1e4b021bc",
+    "eintrag": "f6-se-klumpen-freeze-2026-08-31"
+   },
+   {
+    "pfad": "protocol/early-detection/2.1.0/f6-se-klumpen-v1-wortlaut.json",
+    "art": "datei",
+    "sha256": "10e812fa345bba545077f333de7d81edf18bb371e9e48ee7b697558c1bc944e8",
+    "eintrag": "f6-se-klumpen-freeze-2026-08-31"
+   },
+   {
+    "pfad": "scripts/studie-f6-lauf.py",
+    "art": "datei",
+    "sha256": "ce4561b750a3915e3906aa6ed13f775e976c1e63109b1e7c739f8f18ac729c7e",
+    "eintrag": "zu binden in Eintrag 25 (F6-B7)"
+   },
+   {
+    "pfad": "scripts/studie-f6-zaehlwerk.py",
+    "art": "datei",
+    "sha256": "3f21cd0aaa68028ae51945d3b51d7bd74e005de98204015bc5874eb352fc780a",
+    "eintrag": "zu binden im konfirmatorischen Eintrag (F6-B7)"
+   },
+   {
+    "pfad": "scripts/studie-zaehlprobe.py",
+    "art": "datei",
+    "sha256": "a3fce5a1672e231fe12d7d7ffc8a3655ad8e3ef9b3bd2a2195e1af5fcbdbf17b",
+    "eintrag": "zu binden im konfirmatorischen Eintrag (F6-C24)"
+   }
+  ]
+ },
+ "daten": {
+  "S-U": {
+   "signal": {
+    "umschlag": {
+     "variante": "S-U",
+     "arm": "signal"
+    },
+    "werte": {
+     "zaehler_reife": 292,
+     "nenner_tor": 438,
+     "anteil": 0.6666666666666666,
+     "se_binomial": 0.022524579279982866,
+     "se_klumpen_robust": 0.022550336383057947,
+     "klumpen_anzahl": 438,
+     "wilson95_unten": 0.6212387227411253,
+     "wilson95_oben": 0.7091965433149034,
+     "schwelle": 0.9,
+     "bandbreite_in_se": 1.0,
+     "fallzahl_min": 200,
+     "messgeraet_vollstaendig": true,
+     "verdikt": "NICHT BESTANDEN",
+     "weiter": 0,
+     "grund": "0.9 - Ergebnis > SE*.",
+     "se_stern": 0.022550336383057947,
+     "se_entschied": "SE_klumpen-robust",
+     "abstand_zu_090": -0.2333333333333334,
+     "bandbreite_absolut": 0.022550336383057947,
+     "abstand_zu_329_von_365": -0.23470319634703196,
+     "etikett": "Gerissenes Tor. Sauberes Negativergebnis - nach Hausmethodik ein Erfolg. Dokumentiertes Negativ im Muster-Friedhof.",
+     "n_A": 438,
+     "n_B_reif": 292,
+     "n_B_unreif": 146,
+     "n_verloren": 0,
+     "feuerfaehig": 438,
+     "strukturell_nicht_feuerfaehig": 146,
+     "rechts_zensiert": 0
+    },
+    "zweig": "ausserhalb_band"
+   },
+   "kontrollpool": {
+    "umschlag": {
+     "variante": "S-U",
+     "arm": "kontrollpool"
+    },
+    "werte": {
+     "zaehler_reife": 3085,
+     "nenner_tor": 4163,
+     "anteil": 0.7410521258707663,
+     "se_binomial": 0.006789336720851326,
+     "se_klumpen_robust": 0.006790152305780791,
+     "klumpen_anzahl": 4163,
+     "wilson95_unten": 0.7275273206199211,
+     "wilson95_oben": 0.7541324736953692,
+     "schwelle": 0.9,
+     "bandbreite_in_se": 1.0,
+     "fallzahl_min": 200,
+     "messgeraet_vollstaendig": true,
+     "verdikt": "NICHT BESTANDEN",
+     "weiter": 0,
+     "grund": "0.9 - Ergebnis > SE*.",
+     "se_stern": 0.006790152305780791,
+     "se_entschied": "SE_klumpen-robust",
+     "abstand_zu_090": -0.15894787412923372,
+     "bandbreite_absolut": 0.006790152305780791,
+     "abstand_zu_329_von_365": -0.1603177371429323,
+     "etikett": "Gerissenes Tor. Sauberes Negativergebnis - nach Hausmethodik ein Erfolg. Dokumentiertes Negativ im Muster-Friedhof.",
+     "n_A": 4163,
+     "n_B_reif": 3085,
+     "n_B_unreif": 1078,
+     "n_verloren": 0,
+     "feuerfaehig": 33413,
+     "strukturell_nicht_feuerfaehig": 1078,
+     "rechts_zensiert": 0
+    },
+    "zweig": "ausserhalb_band"
+   },
+   "differenz_punkte": {
+    "wert": 7.438545920409966,
+    "maxDifferenzPunkte": 10,
+    "erfuellt": true,
+    "quelle": "protocol/early-detection/2.0.0/preregistration.json:88 - \"gate\": {\"minimum\": 0.9, \"gilt\": \"Signal-Arm UND Kontrollpool\", \"maxDifferenzPunkte\": 10}",
+    "tor": {
+     "verdikt": "TOR GERISSEN",
+     "weiter": 0,
+     "grund": "Mindestens ein Arm ist NICHT BESTANDEN."
+    }
+   }
+  },
+  "S-G": {
+   "signal": {
+    "umschlag": {
+     "variante": "S-G",
+     "arm": "signal"
+    },
+    "werte": {
+     "zaehler_reife": 326,
+     "nenner_tor": 365,
+     "anteil": 0.8931506849315068,
+     "se_binomial": 0.016169694208262926,
+     "se_klumpen_robust": 0.016191890092710454,
+     "klumpen_anzahl": 365,
+     "wilson95_unten": 0.8572647041616264,
+     "wilson95_oben": 0.9208473901718905,
+     "schwelle": 0.9,
+     "bandbreite_in_se": 1.0,
+     "fallzahl_min": 200,
+     "messgeraet_vollstaendig": true,
+     "verdikt": "NICHT UNTERSCHEIDBAR",
+     "weiter": 0,
+     "grund": "|Ergebnis - 0.9| <= SE* - das Ergebnis liegt im geschlossenen Band.",
+     "se_stern": 0.016191890092710454,
+     "se_entschied": "SE_klumpen-robust",
+     "abstand_zu_090": -0.006849315068493178,
+     "bandbreite_absolut": 0.016191890092710454,
+     "abstand_zu_329_von_365": -0.008219178082191747,
+     "pflichtsatz": "Das Tor konnte bei dieser Fallzahl zwischen Bestehen und Nichtbestehen nicht unterscheiden.",
+     "zweitsatz": "Nicht die Hypothese ist widerlegt, sondern das Messgeraet hat nicht getrennt. NIE: 'der Effekt ist abwesend'.",
+     "n_A": 365,
+     "n_B_reif": 326,
+     "n_B_unreif": 39,
+     "n_verloren": 0,
+     "feuerfaehig": 365,
+     "strukturell_nicht_feuerfaehig": 39,
+     "rechts_zensiert": 0
+    },
+    "zweig": "im_band"
+   },
+   "kontrollpool": {
+    "umschlag": {
+     "variante": "S-G",
+     "arm": "kontrollpool"
+    },
+    "werte": {
+     "zaehler_reife": 4285,
+     "nenner_tor": 4733,
+     "anteil": 0.9053454468624551,
+     "se_binomial": 0.004255098946158194,
+     "se_klumpen_robust": 0.00425554853134051,
+     "klumpen_anzahl": 4733,
+     "wilson95_unten": 0.8966737849840233,
+     "wilson95_oben": 0.9133596588955356,
+     "schwelle": 0.9,
+     "bandbreite_in_se": 1.0,
+     "fallzahl_min": 200,
+     "messgeraet_vollstaendig": true,
+     "verdikt": "BESTANDEN",
+     "weiter": 1,
+     "grund": "Ergebnis - 0.9 > SE*.",
+     "se_stern": 0.00425554853134051,
+     "se_entschied": "SE_klumpen-robust",
+     "abstand_zu_090": 0.005345446862455083,
+     "bandbreite_absolut": 0.00425554853134051,
+     "abstand_zu_329_von_365": 0.003975583848756514,
+     "etikett": "Tor-Bestehen nach HAUSREGEL, nicht 95-%-gesicherte Ueberlegenheit.",
+     "n_A": 4733,
+     "n_B_reif": 4285,
+     "n_B_unreif": 448,
+     "n_verloren": 0,
+     "feuerfaehig": 42202,
+     "strukturell_nicht_feuerfaehig": 448,
+     "rechts_zensiert": 0
+    },
+    "zweig": "ausserhalb_band"
+   },
+   "differenz_punkte": {
+    "wert": 1.2194761930948261,
+    "maxDifferenzPunkte": 10,
+    "erfuellt": true,
+    "quelle": "protocol/early-detection/2.0.0/preregistration.json:88 - \"gate\": {\"minimum\": 0.9, \"gilt\": \"Signal-Arm UND Kontrollpool\", \"maxDifferenzPunkte\": 10}",
+    "tor": {
+     "verdikt": "NICHT UNTERSCHEIDBAR",
+     "weiter": 0,
+     "grund": "Mindestens ein Arm ist NICHT UNTERSCHEIDBAR - das Messgeraet hat dort nicht getrennt. Die Bandfolge dominiert die Differenz-Bedingung."
+    }
+   }
+  }
+ },
+ "stempel": {
+  "abstandZu329Von365": {
+   "schluessel": "abstand_zu_329_von_365",
+   "stempel": "BERICHTSANGABE",
+   "bedeutung": "Diese Groesse ist eine reine Berichtsangabe. Sie ist NIE Entscheidungsgroesse und nirgends Verzweigungsgrundlage. Die eingefrorene Maschine emittiert den Schluessel (scripts/studie-vb-b4-band.py, auswerten), und ein nicht gelisteter Schluessel ist ein ABBRUCH, kein Filter - deshalb wird er registriert statt gefiltert.",
+   "verbotWoertlichAusEintrag23": "jede Verwendung von 329/365 als Entscheidungsgroesse",
+   "auflage": "F6-B13"
+  },
+  "vorabDeterminiertheit": "F6-B25 (vorab, nicht als Befund): Gilt n_g = 1 fuer alle g - die nach PIN 3 erwartete Lage -, dann faellt se_entschied KONSTRUKTIV auf SE_klumpen-robust, und die A16-Pflicht 'welcher entschied' ist dort formal, nicht materiell erfuellt. Tritt im Tor-Nenner doch ein Klumpen mit n_g > 1 auf, entfaellt diese Feststellung (KV-6) und die Pflichtangabe wird materiell; das ist kein Anhalte-Grund, aber der Bericht fuehrt dann die andere Fassung.",
+  "identitaetA16": "VORAB, nicht als Befund (F6-B25-Form): in dieser Tally-Form tragen `n_B_unreif` und `strukturell_nicht_feuerfaehig` DIESELBE Zahl. `n_B_unreif` wird unabhaengig doppelt hergeleitet (aus der Klumpen-Tafel und aus den Aggregaten) und durch einen Kreuz-Wachposten gedeckt; fuer `strukturell_nicht_feuerfaehig` existiert in keinem registrierten Artefakt und in keinem der drei Urteile eine allgemeine Definition - die sieben A16-Schluessel werden dort benannt, aber nicht definiert. Ein zweiter Rechenweg waere deshalb erfunden, nicht hergeleitet, und unterbleibt. BEIDE Schluessel bleiben im Satz (F6-B12: ein fehlender Pflichtschluessel ist ein ABBRUCH); der Bericht weist die Identitaet aus, statt sie durch zwei getrennt aussehende Zahlen zu verdecken. Faellt die Identitaet je auseinander, ist die Tally-Form gebrochen - der Kreuz-Wachposten macht das zum ABBRUCH.",
+  "kriteriumDifferenz": {
+   "schluessel": "differenz_punkte",
+   "maxDifferenzPunkte": 10,
+   "quelle": "protocol/early-detection/2.0.0/preregistration.json:88 - \"gate\": {\"minimum\": 0.9, \"gilt\": \"Signal-Arm UND Kontrollpool\", \"maxDifferenzPunkte\": 10}",
+   "auswertung": "AUSGEWERTET als VIERTE KONJUNKTIVE Torbedingung, im Laeufer gerechnet und niemals im Bandmodul (scripts/studie-vb-b4-band.py bleibt Byte fuer Byte unangetastet, F6-B22). Entschieden durch _COURT-F6-ZAEHLWERK-2026-09-01, Frage (B), 3:0, Auflagen F6-C13/C14/C15/C16 - nicht vom Bauenden.",
+   "belege": [
+    "preregistration.json:88 - die 10 Punkte stehen INNERHALB des Objekts, das woertlich \"gate\" heisst",
+    "preregistration.json:89 - \"regel\": \"R9 - Pass/Fail, nicht Fussnote.\"",
+    "preregistration.json:134 - Wiederholung unter primarySuccessCriteria",
+    "preregistration.json:139 - Folge des Reissens: INCONCLUSIVE_DATA, kein p-Wert wird berechnet (R9)",
+    "scripts/studie-zaehlprobe.py:529-530 - rechnet es bereits als Tor (AMPEL_ROT)",
+    "scripts/studie-e4d-kadenz.py:612-632 - \"Die Regel, WOERTLICH wie im Siegel - drei Bedingungen, kein Ermessen\"",
+    "protocol/early-detection/2.0.0/e4d-freeze.json:45 - \"UNVERAENDERT aus der versiegelten Praeregistrierung 2.0.0\", \"nicht gesenkt, nicht diskutiert, nicht kalibriert\""
+   ],
+   "regeltext": "WEITER = 1 nur bei (beide Arm-Bandverdikte BESTANDEN) UND (differenz_punkte <= 10). Ein Arm NICHT UNTERSCHEIDBAR -> Gesamt NICHT UNTERSCHEIDBAR, WEITER = 0 (das Messgeraet hat nicht getrennt; die Bandfolge dominiert). Ein Arm NICHT BESTANDEN -> Tor gerissen, WEITER = 0. Beide BESTANDEN, aber differenz_punkte > 10 -> Tor gerissen nach preregistration.json:139 (INCONCLUSIVE_DATA, kein p-Wert), WEITER = 0. Kein Band, kein SE und kein Ermessen auf der Differenz.",
+   "richtung": "RICHTUNGS-OFFENLEGUNG (Form F6-B21): die Zusammensetzung kann WEITER nur ERSCHWEREN, nie erzeugen - sie entfernt ein BESTANDEN, sie schafft keines. Das ist eine Aussage ueber die Richtung der REGEL, nicht ueber den Ausgang des Laufs.",
+   "gleichheitBesteht": "<= 10: exakt 10,0 Punkte reissen NICHT. Keine Rundung vor dem Vergleich (Hauskonvention studie-vb-b4-band.py:198-199).",
+   "einheit": "PUNKTE gegen 10, nie Anteile gegen 0,1 - der Laeufer rechnet abs(a_sig - a_kon) * 100.0.",
+   "ebene": "differenz_punkte liegt auf VARIANTEN-Ebene und beruehrt die drei zweig-pflichtigen Teilmengen NICHT (F6-C19). Ein Arm kennt die Differenz allein gar nicht.",
+   "unterschluessel": [
+    "wert",
+    "maxDifferenzPunkte",
+    "erfuellt",
+    "quelle"
+   ]
+  },
+  "zweigPflichtTeilmengen": {
+   "gate_gerissen": [
+    "abstand_zu_090",
+    "anteil",
+    "bandbreite_in_se",
+    "fallzahl_min",
+    "feuerfaehig",
+    "grund",
+    "klumpen_anzahl",
+    "messgeraet_vollstaendig",
+    "n_A",
+    "n_B_reif",
+    "n_B_unreif",
+    "n_verloren",
+    "nenner_tor",
+    "pflichtsatz",
+    "rechts_zensiert",
+    "schwelle",
+    "se_binomial",
+    "se_entschied",
+    "se_klumpen_robust",
+    "se_stern",
+    "strukturell_nicht_feuerfaehig",
+    "verdikt",
+    "weiter",
+    "wilson95_oben",
+    "wilson95_unten",
+    "zaehler_reife",
+    "zweitsatz"
+   ],
+   "im_band": [
+    "abstand_zu_090",
+    "abstand_zu_329_von_365",
+    "anteil",
+    "bandbreite_absolut",
+    "bandbreite_in_se",
+    "fallzahl_min",
+    "feuerfaehig",
+    "grund",
+    "klumpen_anzahl",
+    "messgeraet_vollstaendig",
+    "n_A",
+    "n_B_reif",
+    "n_B_unreif",
+    "n_verloren",
+    "nenner_tor",
+    "pflichtsatz",
+    "rechts_zensiert",
+    "schwelle",
+    "se_binomial",
+    "se_entschied",
+    "se_klumpen_robust",
+    "se_stern",
+    "strukturell_nicht_feuerfaehig",
+    "verdikt",
+    "weiter",
+    "wilson95_oben",
+    "wilson95_unten",
+    "zaehler_reife",
+    "zweitsatz"
+   ],
+   "ausserhalb_band": [
+    "abstand_zu_090",
+    "abstand_zu_329_von_365",
+    "anteil",
+    "bandbreite_absolut",
+    "bandbreite_in_se",
+    "etikett",
+    "fallzahl_min",
+    "feuerfaehig",
+    "grund",
+    "klumpen_anzahl",
+    "messgeraet_vollstaendig",
+    "n_A",
+    "n_B_reif",
+    "n_B_unreif",
+    "n_verloren",
+    "nenner_tor",
+    "rechts_zensiert",
+    "schwelle",
+    "se_binomial",
+    "se_entschied",
+    "se_klumpen_robust",
+    "se_stern",
+    "strukturell_nicht_feuerfaehig",
+    "verdikt",
+    "weiter",
+    "wilson95_oben",
+    "wilson95_unten",
+    "zaehler_reife"
+   ]
+  },
+  "zweigAnker": {
+   "datei": "scripts/studie-vb-b4-band.py",
+   "funktion": "auswerten :145-227",
+   "konvention": "fuehrende Zeile (def bzw. das entscheidende `if`) plus die vollstaendige return-Anweisung",
+   "gate_gerissen": ":168-172",
+   "im_band": ":213-217",
+   "ausserhalb_band": ":218-227",
+   "berichtigung": "Die frueher im Laeufer gefuehrten Anker \":129-134 / :211-215 / :216-224\" sind falsch; :129-142 ist se_stern(). Der zwischen den Stimmen strittige Anker ausserhalb_band ist am Objekt gemessen :218-227 (Z2/Z3), nicht :218-226 (Z1) - :226-227 tragen die letzten zwei Zeilen der NICHT-BESTANDEN-Rueckgabe."
+  },
+  "panelRandHerkunft": "ABGELEITET, NICHT GESETZT. rules.json (dc008723...) fenster.validierung von 2017q1 bis 2019q4 und pufferjahre [2016, 2020] mit pufferGrund \"Reifebereinigung: jedes Ereignis braucht 4 Folgequartale ... kein Folgequartal darf ueber eine Fenstergrenze reichen.\"; preregistration.json /splits/pruefung \"2017-01-01/2019-12-31 (Signalfenster) mit Pufferjahr 2020 fuer die Reife\" und /splits/fensterAchse \"Jedes Fenster wird am `accepted`-Zeitstempel der SEC-Einreichung geschnitten, nie am Bilanzstichtag.\"; Reife = vier Folgequartale; Schnitt realisiert in scripts/studie-panel-bau.py:99. scripts/studie-zaehlprobe.py:97 ist NUR Korroboration, nie Quelle (F6-C20). SIGNALBAND und PANEL-RAND werden getrennt gefuehrt und gegeneinander verriegelt (F6-C22): Erst-Ereignisse duerfen ausschliesslich aus 2017-01-01/2019-12-31 stammen, die Zensur rechnet gegen 2020-12-31. Ein Erst-Ereignis mit accepted im Pufferjahr 2020 ist ein ABBRUCH, kein Sonderfall - sonst verlaengert der Panel-Rand still das Signalband um ein Jahr."
+ },
+ "protokoll": [
+  "Phase 0 FREIGABE: runId f6-konfirmatorisch-v4-2026-09-02, Art confirmatory_execution_authorized, Zweig main, Zeitkette registeredAt < serverConfirmedAt <= accessedAt <= ersterZugriff eingehalten. Aufgeloest ueber die bewiesene Kette (protocol/early-detection/2.0.0/outcome-access-ledger.json, protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json); der Akt steht in protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json (geprueft, nicht befolgt).",
+  "Phase 1 REHASH: 11 Bindungen aus den Eintraegen 23 und 24 nachgerechnet, alle deckungsgleich (Datei UND Register). Gesucht wurde ueber die GANZE Kette: protocol/early-detection/2.0.0/outcome-access-ledger.json, protocol/early-detection/2.0.0/outcome-access-ledger-teil2.json.",
+  "Phase 1b PANEL-RAND: Signalband 2017-01-01 bis 2019-12-31, Panel-Rand 2020-12-31 - aus rules.json abgeleitet und gegen die gebundene Konstante gehalten.",
+  "Phase 2 ZAEHLUNG: Zaehlwerk scripts/studie-f6-zaehlwerk.py (sha256 3f21cd0aaa68028ae51945d3b51d7bd74e005de98204015bc5874eb352fc780a), Arbeitspfad lauf-f6-konfirmatorisch-v4-2026-09-02/zwischenstand.sqlite (W-B geprueft).",
+  "Phase 2a MARKER-ANKER: die zwei Zeichenketten der Unterscheidungsregel (Abbruch-Marker und Folgesatz) sind in scripts/studie-f6-klumpen-se.py am Objekt nachgewiesen (LF-4).",
+  "Phase 2a PFAD-VORPRUEFUNG: die R12a-Riegel sind VOR dem ersten Panel-Byte gefahren (F6-K15). Der Riegel am Schreib-Rand bleibt zusaetzlich stehen.",
+  "Phase 2a SCHREIBPROBE: das Arbeitsverzeichnis ist VOR dem ersten Panel-Byte als beschreibbar nachgewiesen (F6-K15). Die Probedatei ist wieder entfernt; der Arbeitspfad selbst wurde nicht angefasst."
+ ]
+}
