@@ -456,10 +456,23 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     meta: { ticker }, annual: { [reihe]: [{ value: 100e6 }, { value: mitte }, { value: 110e6 }] },
   });
 
+  // ══ JA-8 — DIE ZWILLINGS-PRAEMISSE, BEIDSEITIG FESTGENAGELT ════════════════════════
+  // Relation 1 verschmilzt zwei Ticker GENAU DANN, wenn ihre Wert-Signatur byte-gleich
+  // ist. Beide Seiten dieser Praemisse muessen stehen, sonst ist sie keine:
+  //   (a) byte-gleich  => EIN Ereignis   (BP-1)
+  //   (b) FX-proportional, aber ungleich => ZWEI Ereignisse   (BP-2)
+  // Ohne (b) bleibt die am echten Bestand gemessene ~27-%-Fehlquote der Relation
+  // unsichtbar (52 byte-gleiche Paare gegen 19 FX-proportionale, aber ungleiche) — und
+  // der naechste Leser "repariert" sie mit einer Quantisierung, die zwei ECHTE,
+  // verschiedene Ausreisser verschmilzt. Genau davor warnt die Vorlage in ihrem Punkt
+  // d)-3. Ohne (a) faellt die Relation als Ganzes still aus.
+  // Die beiden Proben tragen die am echten Baum gemessenen Realwerte; sie sind
+  // ABSICHTLICH nicht dupliziert — die Bruchproben BP-1/BP-2 SIND dieser Block.
+  //
   // ── BP-1 (JA-8a): byte-gleiche Signaturen auf zwei Tickern sind EIN Ereignis ────────
   // Realwerte: SESG.PA und SGBAF tragen denselben FX-Stempel 1,1527377 und exakt
   // dieselben drei Zahlen — am echten lokalen Baum gemessen, nicht erfunden.
-  check('BP-1: zwei byte-gleiche Signaturen auf zwei Tickern kollabieren zu EINEM Ereignis', () => {
+  check('JA-8 (a) / BP-1: zwei byte-gleiche Signaturen auf zwei Tickern kollabieren zu EINEM Ereignis', () => {
     const f = [
       fnd('SESG.PA', 'annualNetIncome', 2, 17291065.5, -1043227618.5000001, -39193081.800000004),
       fnd('SGBAF', 'annualNetIncome', 2, 17291065.5, -1043227618.5000001, -39193081.800000004),
@@ -474,7 +487,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   // 1,1669973. Ohne diese Probe bleibt die gemessene ~27-%-Fehlquote der Relation 1
   // unsichtbar, und jemand "repariert" sie spaeter mit einer Quantisierung, die zwei
   // echte, verschiedene Ausreisser verschmilzt.
-  check('BP-2: FX-proportionale, aber ungleiche Signaturen kollabieren NICHT', () => {
+  check('JA-8 (b) / BP-2: FX-proportionale, aber ungleiche Signaturen kollabieren NICHT', () => {
     const vivVI = fnd('VIV.VI', 'annualNetIncome', 1, 23339946, -7006651789.2, 472633906.5);
     const vivPA = fnd('VIV.PA', 'annualNetIncome', 1, 23124060, -6941842812.000001, 468262215.00000006);
     assert.equal(vivPA.links / vivVI.links, 0.9907503642039275,
@@ -766,6 +779,84 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       assert.ok(!r.reihenUngleich.has('FEHLT'), 'eine fehlende Reihe ist keine Praemissenverletzung');
     } finally { fsT.rmSync(dir, { recursive: true, force: true }); }
   });
+
+  // ══ JA-9 — GROESSE UND ALTERSVERTEILUNG DER AUSSCHLUSS-LISTE, IN JEDEM LAUF ═════════
+  // Der Befund hinter der Auflage: 500 fabrizierte Ausschluesse passieren
+  // baueNeuenBestand() und basisGueltig() unbeanstandet. Bis JA-1 war die Liste nur
+  // deshalb selbstbegrenzend, weil JEDER Eintrag einen Budgetplatz kostete — genau diese
+  // Kosten hat JA-1 abgeschafft. Uebrig bleibt als Bremse allein die SICHTBARKEIT, und
+  // eine Bremse ohne Waechter ist keine.
+  {
+    const { ausschlussTelemetrie, AUSSCHLUSS_REFERENZ } = w;
+    const JETZT9 = new Date('2026-09-02T12:00:00Z');
+    const sperre9 = (ticker, offenSeit) => ({
+      schluessel: `${ticker}|annualRev|werte:100000000|900000000|110000000`,
+      sperrschluessel: `${ticker}|annualRev|1`,
+      seit: '2026-08-29', offenSeit, hinweis: 'UNGEPRUEFT',
+    });
+    const liste9 = (n, offenSeit) => Array.from({ length: n }, (_, i) => sperre9('T' + i, offenSeit || '2026-08-31'));
+
+    check('JA-9: die Altersverteilung ist min/median/max ueber offenSeit', () => {
+      // Ungerade Anzahl: der Median ist der mittlere Wert.
+      const drei = ausschlussTelemetrie(
+        [sperre9('A', '2026-09-01'), sperre9('B', '2026-08-23'), sperre9('C', '2026-08-31')], JETZT9);
+      assert.deepEqual([drei.min, drei.median, drei.max], [1, 2, 10], 'min/median/max ueber [1,2,10]');
+      // Gerade Anzahl: Mittel der beiden mittleren — sonst kippt der Median still auf
+      // einen der Nachbarn und die Zeile behauptet mehr Genauigkeit, als sie hat.
+      const vier = ausschlussTelemetrie([...[sperre9('A', '2026-09-01'), sperre9('B', '2026-08-23'),
+        sperre9('C', '2026-08-31'), sperre9('D', '2026-08-29')]], JETZT9);
+      assert.deepEqual([vier.min, vier.median, vier.max], [1, 3, 10], 'min/median/max ueber [1,2,4,10]');
+      // Leere Liste: keine Verteilung — aber auch kein Absturz und keine erfundene 0.
+      const leer = ausschlussTelemetrie([], JETZT9);
+      assert.deepEqual([leer.anzahl, leer.min, leer.median, leer.max], [0, null, null, null]);
+      // Die Uhr haengt an offenSeit, nicht an seit — dieselbe Naht wie beim Alters-Tor
+      // (JA-5). Gleiches seit, verschiedenes offenSeit muss verschiedene Zahlen geben.
+      const a = ausschlussTelemetrie([sperre9('A', '2026-08-23')], JETZT9);
+      const b = ausschlussTelemetrie([sperre9('A', '2026-09-01')], JETZT9);
+      assert.notDeepEqual([a.min, a.max], [b.min, b.max], 'seit ist bei beiden 2026-08-29');
+    });
+
+    check('JA-9: Wachstum ueber die Referenz meldet, Nicht-Wachstum schweigt', () => {
+      assert.equal(ausschlussTelemetrie(liste9(AUSSCHLUSS_REFERENZ), JETZT9).gewachsen, false,
+        'AUF der Referenz darf nichts feuern — sonst ist der Melder ab Tag eins Rauschen');
+      assert.equal(ausschlussTelemetrie(liste9(AUSSCHLUSS_REFERENZ + 1), JETZT9).gewachsen, true,
+        'eine Sperre MEHR als die Referenz muss gemeldet werden');
+      assert.equal(ausschlussTelemetrie(liste9(AUSSCHLUSS_REFERENZ - 1), JETZT9).gewachsen, false);
+    });
+
+    check('JA-9 (Ende zu Ende): der Tageslauf druckt Groesse und Verteilung und warnt bei Wachstum', () => {
+      const snaps9 = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+      const mitListe = (n) => laufMain(snaps9,
+        { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: liste9(n) }, 5, JETZT9);
+      // Abwesenheits-Richtung: auf der Referenzgroesse steht die Zeile da, die Warnung nicht.
+      const ruhig = mitListe(AUSSCHLUSS_REFERENZ);
+      assert.match(ruhig.log, /Ausschluss-Liste: 4 Sperre\(n\)/, 'die GROESSE steht in jedem Lauf');
+      assert.match(ruhig.log, /Ausschluss-Alter \(Tage\): min 2 · median 2 · max 2/,
+        'die VERTEILUNG steht in jedem Lauf, nicht nur beim Ausloesen');
+      assert.doesNotMatch(ruhig.log, /::warning::Die Ausschluss-Liste ist auf/,
+        'ohne Wachstum darf keine Warnung stehen');
+      // Anwesenheits-Richtung: eine Sperre mehr => ::warning::.
+      const laut = mitListe(AUSSCHLUSS_REFERENZ + 1);
+      assert.match(laut.log, /::warning::Die Ausschluss-Liste ist auf 5 Sperren gewachsen \(Referenz 4\)/);
+      // Und bewusst KEIN Rot: JA-1 hat die Sperren aus dem Budget genommen, rot wird
+      // eine Sperre erst ueber das Alters-Tor (JA-5). Ein zweites Rot waere Doppelzaehlung.
+      assert.equal(laut.code, 0, 'JA-9 warnt — es macht den Lauf nicht rot');
+    });
+
+    check('JA-9: der Job schreibt dabei nichts (JA-12)', () => {
+      // Die Telemetrie darf keinen Schreibpfad brauchen. Die Referenz steht committet im
+      // Skript, nicht in einem mitgefuehrten Zustand zwischen zwei Laeufen.
+      const schreib = [];
+      const origW = fsT.writeFileSync, origA = fsT.appendFileSync;
+      fsT.writeFileSync = (f) => { schreib.push(String(f)); };
+      fsT.appendFileSync = (f) => { schreib.push(String(f)); };
+      try {
+        laufMain({ 'AAA.json': snap('AAA', 'annualRev', 900e6) },
+          { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: liste9(9) }, 5, JETZT9);
+      } finally { fsT.writeFileSync = origW; fsT.appendFileSync = origA; }
+      assert.deepEqual(schreib, [], 'der Tageslauf darf keine Datei anfassen');
+    });
+  }
 }
 
 console.log('\nannual-spikes: ' + pass + ' ok, ' + fail + ' fail');

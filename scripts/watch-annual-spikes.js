@@ -280,6 +280,43 @@ const istTag = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
   && !Number.isNaN(Date.parse(v + 'T00:00:00Z'));
 const tageSeit = (tag, jetzt) => Math.floor((jetzt.getTime() - Date.parse(tag + 'T00:00:00Z')) / 86400000);
 
+// JA-9 (Gerichtsbeschluss 02.09.2026): So gross war die Ausschluss-Liste am Tag des
+// Beschlusses. Gemessen wurde der Befund dahinter: 500 fabrizierte Ausschluesse passieren
+// baueNeuenBestand() und basisGueltig() unbeanstandet. Selbstbegrenzend war die Liste
+// bis JA-1 nur deshalb, weil JEDER Eintrag einen Budgetplatz kostete — und genau diese
+// Kosten hat JA-1 abgeschafft. Uebrig bleibt als Bremse allein die SICHTBARKEIT ihres
+// Wachstums.
+// WARUM DIE ZAHL HIER STEHT und nicht als Feld in der Bestandsdatei: laege sie dort,
+// hoebe derselbe Handgriff, der eine Sperre eintraegt, auch die Referenz an — eine
+// Bremse, die mitfaehrt, ist keine. So ist ein Anheben ein eigener, im Review sichtbarer
+// Commit in dieser Datei. Der Waechter selbst schreibt nichts (JA-12), also kann die
+// Referenz auch nicht aus einem mitgefuehrten Zustand kommen; sie ist committet oder
+// gar nicht.
+const AUSSCHLUSS_REFERENZ = 4;
+
+/**
+ * JA-9 — Groesse UND Altersverteilung der Ausschluss-Liste, je Lauf.
+ * Die Verteilung laeuft wie das Alters-Tor ausschliesslich auf `offenSeit` (JA-5): auf
+ * `seit` gerechnet stellte jede Neu-Eintragung die Uhr still zurueck und die Zeile
+ * meldete eine junge Liste, wo eine alte steht.
+ * Rein und ohne I/O, damit beide Richtungen ohne den echten Bestand pruefbar sind.
+ */
+function ausschlussTelemetrie(ausgeschlossen, jetzt = new Date(), referenz = AUSSCHLUSS_REFERENZ) {
+  const liste = ausgeschlossen || [];
+  const tage = liste.map((a) => tageSeit(a.offenSeit, jetzt)).sort((x, y) => x - y);
+  const m = tage.length >> 1;
+  return {
+    anzahl: liste.length,
+    referenz,
+    gewachsen: liste.length > referenz,
+    // null statt 0 bei leerer Liste: eine erfundene 0 laese sich als "brandneue Sperre"
+    // lesen, wo gar keine steht.
+    min: tage.length ? tage[0] : null,
+    median: tage.length ? (tage.length % 2 ? tage[m] : (tage[m - 1] + tage[m]) / 2) : null,
+    max: tage.length ? tage[tage.length - 1] : null,
+  };
+}
+
 /**
  * EINE Stelle, an der die Ausschluss-Liste geprueft wird — und zwar auf BEIDEN Wegen.
  * Vorher sah nur baueNeuenBestand() sie an; im Tageslauf konnte eine kaputte Liste still
@@ -680,6 +717,23 @@ function main(jetzt = new Date()) {
     console.log(`  SPERRE ${a.sperrschluessel} · offen seit ${tage} Tag(en) (offenSeit ${a.offenSeit})`);
     if (tage > AUSSCHLUSS_MAX_TAGE) ueberfaellig.push(`${a.sperrschluessel} (${tage} Tage)`);
   }
+  // ── JA-9: die Verteilung als EINE aggregierte Zeile, unbedingt — und die
+  // Wachstums-Warnung. Die Einzelzeilen darueber sind bei vier Sperren lesbar und bei
+  // vierzig nicht mehr; genau dann traegt nur noch diese Zeile.
+  const tele = ausschlussTelemetrie(ausgeschlossen, jetzt);
+  const z = (v) => (v === null ? '—' : String(v));
+  console.log(`Ausschluss-Alter (Tage): min ${z(tele.min)} · median ${z(tele.median)} · max ${z(tele.max)}`
+    + ` · Referenzgroesse ${tele.referenz}`);
+  // BEWUSST ::warning:: und nicht ::error::: das Wachstum SELBST ist keine Stoerung,
+  // sondern der Verlust an Empfindlichkeit, den es bedeutet. Rot wird eine Sperre ueber
+  // das Alters-Tor (JA-5) — ein zweites Rot hier waere Doppelzaehlung derselben Sache.
+  if (tele.gewachsen) {
+    console.log(`::warning::Die Ausschluss-Liste ist auf ${tele.anzahl} Sperren gewachsen (Referenz `
+      + `${tele.referenz}). Seit JA-1 kostet eine Sperre keinen Budgetplatz mehr — jede zusaetzliche `
+      + 'macht diesen Waechter also ein Stueck blinder, ohne dass es irgendwo weh tut. Entweder die Faelle '
+      + 'klaeren und die Sperren AKTIV entfernen, oder AUSSCHLUSS_REFERENZ in scripts/watch-annual-spikes.js '
+      + 'begruendet nachziehen — als eigener Commit, damit das Nachziehen im Review sichtbar ist.');
+  }
   // JA-5: die Altersuhr laeuft ausschliesslich auf offenSeit.
   if (ueberfaellig.length) {
     datenExit = 1;
@@ -771,7 +825,10 @@ module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJah
   // Gerichtsbeschluss 02.09.2026 (JA-1..JA-7): exportiert, damit die Bruchproben die
   // SACHE pinnen koennen und nicht ein Textmuster im Log.
   sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, ereignisse, faecher, cignaFaelle,
-  breitesterFaecherImBestand, r1Schluessel, r2Schluessel, tageSeit, AUSSCHLUSS_MAX_TAGE };
+  breitesterFaecherImBestand, r1Schluessel, r2Schluessel, tageSeit, AUSSCHLUSS_MAX_TAGE,
+  // JA-9 (Folge-PR): dieselbe Regel — die Telemetrie wird an der SACHE gepinnt, nicht
+  // an einer Textzeile im Log.
+  ausschlussTelemetrie, AUSSCHLUSS_REFERENZ };
 
 if (require.main === module) {
   try {
