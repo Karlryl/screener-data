@@ -22,6 +22,8 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const { serverFloor, verarbeiteZeilen } = require('../discovery/tv-scanner.js');
 const { applyForeignPrefilterOutcome, baueAusschlussProtokoll } = require('../refresh-universe.js');
+const { classifyTvCompleteness, formatTvPartialNotice, buildTvCompletenessWarnings } =
+  require('../scripts/messung-entdeckungsband.js');
 
 let fail = 0;
 function check(name, fn) {
@@ -40,6 +42,54 @@ function serverFloorMitEnv(wert, ccy, rate) {
     { env: Object.assign({}, process.env, { TV_PRECUT_USD: wert }), encoding: 'utf8' });
   assert.equal(r.status, 0, 'Kindprozess fehlgeschlagen: ' + (r.stderr || '').slice(0, 300));
   return parseFloat(String(r.stdout).trim());
+}
+
+// Echte Produktions-Verkabelung ohne Netz: https.request liefert eine kontrollierte
+// TradingView-Antwort. Damit beweist der Test nicht nur die reine Zeilenfunktion, sondern
+// j.totalCount -> scanMarket -> m.partial -> discoverTvScanner -> merged.partial.
+function scannerProduktionspfad(antwort) {
+  const skript = `
+    const { EventEmitter } = require('node:events');
+    const https = require('node:https');
+    const antwort = JSON.parse(process.argv[2]);
+    https.request = (_url, _opts, callback) => {
+      const req = new EventEmitter();
+      req.setTimeout = () => req;
+      req.write = () => true;
+      req.destroy = () => {};
+      req.end = () => {
+        const res = new EventEmitter();
+        res.statusCode = 200;
+        callback(res);
+        process.nextTick(() => {
+          res.emit('data', Buffer.from(JSON.stringify(antwort)));
+          res.emit('end');
+        });
+      };
+      return req;
+    };
+    const tv = require(process.argv[1]);
+    const warnungen = [];
+    console.log = () => {};
+    console.warn = (meldung) => warnungen.push(String(meldung));
+    (async () => {
+      const einzel = await tv.scanMarket('tv-milan', tv.MARKETS['tv-milan'], { EUR: 1, USD: 1 });
+      const gesamt = await tv.discoverTvScanner({ markets: ['tv-milan'] });
+      process.stdout.write('###' + JSON.stringify({
+        einzelPartial: einzel.partial === true,
+        einzelGrund: einzel.partialReason,
+        einzelCount: einzel.totalCount,
+        einzelTorPartial: einzel.tor && einzel.tor.partial,
+        gesamtPartial: gesamt.partial === true,
+        warnungen,
+      }));
+    })().catch((error) => { process.stderr.write(String(error.stack || error)); process.exit(1); });`;
+  const r = spawnSync(process.execPath, ['-e', skript, TV, JSON.stringify(antwort)],
+    { env: process.env, encoding: 'utf8', timeout: 10000 });
+  assert.equal(r.status, 0, 'hermetischer Produktionspfad fehlgeschlagen: ' + (r.stderr || '').slice(0, 500));
+  const marker = String(r.stdout).indexOf('###');
+  assert.ok(marker >= 0, 'Produktionspfad lieferte keine Ergebnisnutzlast');
+  return JSON.parse(String(r.stdout).slice(marker + 3));
 }
 
 // Hinweis: dass serverFloor() TV_PRECUT_USD ueberhaupt LIEST, prueft schon
@@ -95,6 +145,8 @@ check('Client-Nachcut: 1,2-Mrd-Titel faellt bei 1,5-Mrd-Schwelle und steht im Pr
   assert.equal(band.mcapUsd, 1.2e9, 'der gemessene Marktwert ist die Begruendung');
   assert.equal(m.tor.geliefert, 3);
   assert.equal(m.tor.aufgenommen, 1);
+  assert.notEqual(m.partial, true, 'Vollstaendigkeit richtet sich nach gelieferten, nicht aufgenommenen Zeilen');
+  assert.equal(m.tor.partial, false);
 });
 
 check('Client-Nachcut protokolliert NUR Groessen-Ausschluesse, nicht ETF/Vorzuege/Fremddomizil', () => {
@@ -129,13 +181,163 @@ check('Fremdwaehrung: verglichen wird der USD-Wert, NICHT die lokale Server-Schw
 
 check('abgeschnittener Markt wird als truncated gemeldet (stiller Verlust sichtbar)', () => {
   const m = verarbeiteZeilen('tv-japan', CFG_IT, [zeile('A', 3e9)], RATEN, 3100, 1.5e9);
+  assert.equal(m.partial, true);
+  assert.equal(m.partialReason, 'range-truncated');
+  assert.equal(m.tor.partial, true);
   assert.equal(m.tor.truncated, true);
   assert.equal(m.tor.totalCount, 3100);
 });
 
+check('kleinste Abschneide-Differenz wird erkannt (Grenze ohne blinden Eintrag)', () => {
+  const m = verarbeiteZeilen('tv-japan', CFG_IT, [zeile('A', 3e9)], RATEN, 2, 1.5e9);
+  assert.equal(m.partial, true);
+  assert.equal(m.partialReason, 'range-truncated');
+  assert.equal(m.tor.truncated, true);
+  assert.equal(m.tor.totalCount, 2);
+});
+
 check('vollstaendiger Markt ist NICHT truncated (Gegenprobe)', () => {
   const m = verarbeiteZeilen('tv-milan', CFG_IT, [zeile('A', 3e9)], RATEN, 1, 1.5e9);
+  assert.notEqual(m.partial, true);
+  assert.equal(m.partialReason, null);
+  assert.equal(m.totalCount, 1, 'auch ein vollstaendiger gueltiger Zaehler bleibt erhalten');
+  assert.equal(m.tor.partial, false);
   assert.equal(m.tor.truncated, false);
+  assert.equal(m.tor.totalCount, 1);
+});
+
+check('fehlende oder ungueltige totalCount-Werte scheitern geschlossen', () => {
+  const ungueltig = [undefined, null, '1', true, NaN, Infinity, -1, 0.5, Number.MAX_SAFE_INTEGER + 1];
+  for (const totalCount of ungueltig) {
+    const m = verarbeiteZeilen('tv-milan', CFG_IT, [zeile('A', 3e9)], RATEN, totalCount, 1.5e9);
+    const fall = `${typeof totalCount}:${String(totalCount)}`;
+    assert.deepEqual([...m.keys()], ['A.MI'], `${fall}: gelieferte Zeilen duerfen nicht verloren gehen`);
+    assert.equal(m.partial, true, `${fall}: Vollstaendigkeit ist nicht belegt`);
+    assert.equal(m.partialReason, 'invalid-total-count', fall);
+    assert.equal(m.totalCount, null, `${fall}: ungueltiger Rohwert darf nicht weitergereicht werden`);
+    assert.equal(m.tor.partial, true, fall);
+    assert.equal(m.tor.truncated, false, `${fall}: unbekannt ist nicht bewiesen abgeschnitten`);
+    assert.equal(m.tor.partialReason, 'invalid-total-count', fall);
+    assert.equal(m.tor.totalCount, null, fall);
+  }
+
+  const leerOhneZaehler = verarbeiteZeilen('tv-milan', CFG_IT, [], RATEN, undefined, 1.5e9);
+  assert.equal(leerOhneZaehler.size, 0);
+  assert.equal(leerOhneZaehler.partial, true,
+    'eine leere Datenliste beweist ohne Rohzaehler keine echte Markt-Leere');
+  assert.equal(leerOhneZaehler.partialReason, 'invalid-total-count');
+  assert.equal(leerOhneZaehler.totalCount, null);
+  assert.equal(leerOhneZaehler.tor.partial, true);
+  assert.equal(leerOhneZaehler.tor.truncated, false);
+});
+
+check('totalCount kleiner als gelieferte Daten ist partiell, aber nicht truncated', () => {
+  const m = verarbeiteZeilen('tv-milan', CFG_IT,
+    [zeile('A', 3e9), zeile('B', 3e9)], RATEN, 1, 1.5e9);
+  assert.deepEqual([...m.keys()], ['A.MI', 'B.MI'], 'beide gelieferten Zeilen bleiben erhalten');
+  assert.equal(m.partial, true);
+  assert.equal(m.partialReason, 'total-count-smaller-than-data');
+  assert.equal(m.totalCount, 1, 'der gueltige, aber widerspruechliche Rohwert bleibt auditierbar');
+  assert.equal(m.tor.partial, true);
+  assert.equal(m.tor.truncated, false);
+  assert.equal(m.tor.partialReason, 'total-count-smaller-than-data');
+  assert.equal(m.tor.totalCount, 1);
+
+  const nullGrenze = verarbeiteZeilen('tv-milan', CFG_IT, [zeile('A', 3e9)], RATEN, 0, 1.5e9);
+  assert.deepEqual([...nullGrenze.keys()], ['A.MI']);
+  assert.equal(nullGrenze.partial, true, '0 darf in Wahrheitspruefungen nicht als fehlend gelten');
+  assert.equal(nullGrenze.partialReason, 'total-count-smaller-than-data');
+  assert.equal(nullGrenze.totalCount, 0, 'der widerspruechliche Nullwert bleibt auditierbar');
+  assert.equal(nullGrenze.tor.truncated, false);
+});
+
+check('leerer Markt mit totalCount 0 bleibt vollstaendig; sichere Obergrenze bleibt gueltig', () => {
+  const leer = verarbeiteZeilen('tv-milan', CFG_IT, [], RATEN, 0, 1.5e9);
+  assert.notEqual(leer.partial, true);
+  assert.equal(leer.partialReason, null);
+  assert.equal(leer.totalCount, 0);
+  assert.equal(leer.tor.partial, false);
+  assert.equal(leer.tor.truncated, false);
+
+  const gross = verarbeiteZeilen('tv-milan', CFG_IT, [], RATEN, Number.MAX_SAFE_INTEGER, 1.5e9);
+  assert.equal(gross.partial, true);
+  assert.equal(gross.partialReason, 'range-truncated');
+  assert.equal(gross.totalCount, Number.MAX_SAFE_INTEGER, 'kein erfundener operativer Hoechstwert');
+  assert.equal(gross.tor.truncated, true);
+});
+
+check('Produktionspfad reicht fehlenden Rohzaehler bis zum Gesamtmarkt-Alarm durch', () => {
+  const ergebnis = scannerProduktionspfad({
+    data: [{ d: ['A', 3e9, 'EUR', 'A SpA', 'stock', 'common', 'MIL', 'Italy'] }],
+    // totalCount fehlt absichtlich: j.data.length waere 1 und wuerde den Fehler verstecken.
+  });
+  assert.equal(ergebnis.einzelPartial, true);
+  assert.equal(ergebnis.einzelGrund, 'invalid-total-count');
+  assert.equal(ergebnis.einzelCount, null);
+  assert.equal(ergebnis.einzelTorPartial, true);
+  assert.equal(ergebnis.gesamtPartial, true, 'm.partial muss bis merged.partial hochgereicht werden');
+  assert.equal(ergebnis.warnungen.length, 1);
+  assert.match(ergebnis.warnungen[0], /incomplete or unverifiable scan/);
+  assert.match(ergebnis.warnungen[0], /milan/);
+
+  const leer = scannerProduktionspfad({ data: [] });
+  assert.equal(leer.einzelPartial, true,
+    'data:[] ohne totalCount darf nicht als bewiesen leer gelten');
+  assert.equal(leer.einzelGrund, 'invalid-total-count');
+  assert.equal(leer.einzelCount, null);
+  assert.equal(leer.einzelTorPartial, true);
+  assert.equal(leer.gesamtPartial, true);
+  assert.equal(leer.warnungen.length, 1);
+});
+
+check('Mess-Serializer trennt beide Laeufe und bleibt zu alten Artefakten kompatibel', () => {
+  const status = classifyTvCompleteness({
+    gesund: { partialHeute: false, partialTief: false },
+    alt: { partialHeute: true, partialTief: true },
+    abgeschnittenHeute: { partialHeute: true, partialReasonHeute: 'range-truncated', partialTief: false },
+    abgeschnittenTief: { partialHeute: false, partialTief: true, partialReasonTief: 'range-truncated' },
+    ungueltigHeute: { partialHeute: true, partialReasonHeute: 'invalid-total-count', partialTief: false },
+    widerspruchTief: { partialHeute: false, partialTief: true, partialReasonTief: 'total-count-smaller-than-data' },
+  });
+  assert.deepEqual(status.truncierteMaerkteHeute, ['alt', 'abgeschnittenHeute']);
+  assert.deepEqual(status.truncierteMaerkteTief, ['alt', 'abgeschnittenTief']);
+  assert.deepEqual(status.unverifizierbareMaerkteHeute, ['ungueltigHeute (invalid-total-count)']);
+  assert.deepEqual(status.unverifizierbareMaerkteTief,
+    ['widerspruchTief (total-count-smaller-than-data)']);
+
+  assert.equal(formatTvPartialNotice(false, null, 'HEUTE'), '');
+  assert.equal(formatTvPartialNotice(true, null, 'HEUTE'), '  HEUTE ABGESCHNITTEN');
+  assert.equal(formatTvPartialNotice(true, 'range-truncated', 'TIEF'), '  TIEF ABGESCHNITTEN');
+  assert.equal(formatTvPartialNotice(true, 'invalid-total-count', 'HEUTE'),
+    '  HEUTE UNVERIFIZIERBAR (invalid-total-count)');
+  assert.equal(formatTvPartialNotice(true, 'total-count-smaller-than-data', 'TIEF'),
+    '  TIEF UNVERIFIZIERBAR (total-count-smaller-than-data)');
+
+  const warnungen = buildTvCompletenessWarnings(status);
+  assert.equal(warnungen.length, 4, 'Heute/Tief und abgeschnitten/unverifizierbar bleiben getrennt');
+  assert.match(warnungen[0], /alt, abgeschnittenHeute/);
+  assert.match(warnungen[0], /neu.*zu hoch/);
+  assert.match(warnungen[1], /ungueltigHeute \(invalid-total-count\)/);
+  assert.match(warnungen[1], /Richtung offen/);
+  assert.match(warnungen[2], /alt, abgeschnittenTief/);
+  assert.match(warnungen[2], /zu niedrig/);
+  assert.match(warnungen[3], /widerspruchTief \(total-count-smaller-than-data\)/);
+  assert.match(warnungen[3], /Richtung offen/);
+  assert.deepEqual(buildTvCompletenessWarnings({}), [], 'alte gesunde Ergebnisartefakte bleiben lesbar');
+
+  const quelle = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'scripts', 'messung-entdeckungsband.js'), 'utf8');
+  assert.match(quelle, /partialReason:\s*m\.partialReason\s*\?\?\s*null/,
+    'der Kindprozess muss den Grund aus dem Produktions-Map erhalten');
+  assert.match(quelle, /totalCount:\s*m\.totalCount\s*\?\?\s*null/,
+    'ein gueltiger Zaehler 0 darf nicht per Wahrheitspruefung verschwinden');
+  assert.doesNotMatch(quelle, /totalCount:\s*m\.totalCount\s*\|\|\s*null/);
+  assert.match(quelle, /partialReasonHeute:\s*h\.partialReason\s*\?\?\s*null/);
+  assert.match(quelle, /partialReasonTief:\s*tief\[k\]\.partialReason\s*\?\?\s*null/);
+  assert.match(quelle, /const tvVollstaendigkeit = classifyTvCompleteness\(tv\)/,
+    'die getestete Klassifikation muss den Ergebnis-Pfad speisen');
+  assert.match(quelle, /z\.push\(\.\.\.buildTvCompletenessWarnings\(e\)\)/,
+    'die getesteten Warnungen muessen den Berichtspfad speisen');
 });
 
 check('die wirksame Server-Schwelle steht im Protokoll (die Namen darunter kann niemand kennen)', () => {

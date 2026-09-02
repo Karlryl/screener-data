@@ -59,6 +59,29 @@ function classifyRegisterCompleteness(register) {
   return result;
 }
 
+// A partial scan has two materially different meanings. `range-truncated` is
+// proven truncation; malformed or contradictory counts make completeness
+// unverifiable. Saved pre-H21 artifacts have no reason, but at that time the
+// only producer of partial=true was the proven range-truncation branch.
+function classifyTvCompleteness(tv) {
+  const result = {
+    truncierteMaerkteHeute: [], unverifizierbareMaerkteHeute: [],
+    truncierteMaerkteTief: [], unverifizierbareMaerkteTief: [],
+  };
+  for (const [market, value] of Object.entries(tv || {})) {
+    for (const run of ['Heute', 'Tief']) {
+      if (value['partial' + run] !== true) continue;
+      const reason = value['partialReason' + run];
+      if (reason == null || reason === 'range-truncated') {
+        result['truncierteMaerkte' + run].push(market);
+      } else {
+        result['unverifizierbareMaerkte' + run].push(market + ' (' + reason + ')');
+      }
+    }
+  }
+  return result;
+}
+
 function formatRegisterPartialNotice(partial, reason) {
   if (partial !== true) return '';
   if (typeof reason !== 'string' || !reason) return ' (VOLLSTAENDIGKEIT NICHT BELEGT)';
@@ -78,6 +101,39 @@ function buildRegisterCompletenessWarnings(result) {
     warnings.push('- **Register-Vollstaendigkeit nicht verifizierbar:** ' +
       unverifiable.join(', ') + '. Gelieferte Zeilen bleiben enthalten; ob weitere Zeilen fehlen, ' +
       'ist nicht belegt und die Richtung offen.');
+  }
+  return warnings;
+}
+
+function formatTvPartialNotice(partial, reason, runLabel) {
+  if (partial !== true) return '';
+  if (reason == null || reason === 'range-truncated') return '  ' + runLabel + ' ABGESCHNITTEN';
+  return '  ' + runLabel + ' UNVERIFIZIERBAR (' + reason + ')';
+}
+
+function buildTvCompletenessWarnings(result) {
+  const warnings = [];
+  const truncatedToday = result.truncierteMaerkteHeute || [];
+  const unverifiableToday = result.unverifizierbareMaerkteHeute || [];
+  const truncatedDeep = result.truncierteMaerkteTief || [];
+  const unverifiableDeep = result.unverifizierbareMaerkteTief || [];
+  if (truncatedToday.length) {
+    warnings.push('- **Abgeschnittene Maerkte bei der heutigen Tor-1-Schwelle:** ' +
+      truncatedToday.join(', ') + '. Die Differenz `neu` kann dadurch zu hoch sein; ' +
+      'bei gleichzeitig unvollstaendigem 800-Mio-Lauf ist die Richtung offen.');
+  }
+  for (const item of unverifiableToday) {
+    warnings.push('- **TradingView-Vollstaendigkeit bei der heutigen Tor-1-Schwelle nicht verifizierbar:** ' + item +
+      '. Die Differenz `neu` kann zu hoch sein; bei gleichzeitig unvollstaendigem 800-Mio-Lauf ist die Richtung offen.');
+  }
+  if (truncatedDeep.length) {
+    warnings.push('- **Abgeschnittene Maerkte bei 800 Mio** (Zeilendeckel `TV_SCAN_RANGE`, Vorgabe 2500): ' +
+      truncatedDeep.join(', ') + '. Die (b)/(c)-Zahlen koennen dadurch zu niedrig sein; ' +
+      'bei gleichzeitig unvollstaendigem Heute-Lauf ist die Richtung offen.');
+  }
+  for (const item of unverifiableDeep) {
+    warnings.push('- **TradingView-Vollstaendigkeit bei 800 Mio nicht verifizierbar:** ' + item +
+      '. Die (b)/(c)-Zahlen koennen zu niedrig sein; bei gleichzeitig unvollstaendigem Heute-Lauf ist die Richtung offen.');
   }
   return warnings;
 }
@@ -118,7 +174,8 @@ function tvLauf(schwelle) {
       for (const k of Object.keys(MARKETS)) {
         const m = await scanMarket(k, MARKETS[k], rates);
         out[k] = { land: MARKETS[k].country, tickers: [...m.keys()],
-                   partial: m.partial === true, totalCount: m.totalCount || null,
+                   partial: m.partial === true, partialReason: m.partialReason ?? null,
+                   totalCount: m.totalCount ?? null,
                    schwelleLokal: m.tor ? m.tor.schwelleLokal : null,
                    geliefert: m.tor ? m.tor.geliefert : null };
         await new Promise((r) => setTimeout(r, 1200));   // schonende Abrufrate: 1 Markt / 1,2 s
@@ -161,6 +218,8 @@ async function stufeTv() {
       neu: tief[k].tickers.filter((t) => !a.has(t)),
       partialHeute: h.partial === true,
       partialTief: tief[k].partial === true,
+      partialReasonHeute: h.partialReason ?? null,
+      partialReasonTief: tief[k].partialReason ?? null,
       totalCountTief: tief[k].totalCount,
       schwelleLokalHeute: h.schwelleLokal || null,
       schwelleLokalTief: tief[k].schwelleLokal || null,
@@ -177,8 +236,10 @@ async function stufeTv() {
   }
   schreib('tv', { erzeugtAm: new Date().toISOString(), je });
   for (const [k, v] of Object.entries(je)) {
+    const partialHeuteHinweis = formatTvPartialNotice(v.partialHeute, v.partialReasonHeute, 'HEUTE');
+    const partialTiefHinweis = formatTvPartialNotice(v.partialTief, v.partialReasonTief, 'TIEF');
     console.log('  ' + k.padEnd(15) + 'heute ' + String(v.heute.length).padStart(5) +
-      '   +neu ' + String(v.neu.length).padStart(5) + (v.partialTief ? '  ABGESCHNITTEN' : '') +
+      partialHeuteHinweis + '   +neu ' + String(v.neu.length).padStart(5) + partialTiefHinweis +
       (v.ausfallHeute || v.ausfallTief ? '  MARKT AUSGEFALLEN' : ''));
   }
 }
@@ -373,6 +434,7 @@ function rechnen() {
   }
   const bandQuote = quoten.bandGesamt.quote || 0;
   const erwartetOptimistisch = { a: summe.a * bandQuote, b: summe.b * bandQuote, c: summe.c * bandQuote };
+  const tvVollstaendigkeit = classifyTvCompleteness(tv);
 
   const ergebnis = addRegisterCompletenessToResult({
     erzeugtAm: new Date().toISOString(),
@@ -385,7 +447,7 @@ function rechnen() {
     erwarteteFirmenMitScoreOptimistisch: erwartetOptimistisch,
     nichtHochgerechnet: ohneQuote,
     jeLand, jeQuelle, scoreQuoten: quoten,
-    truncierteMaerkteTief: Object.entries(tv).filter(([, v]) => v.partialTief).map(([k]) => k),
+    ...tvVollstaendigkeit,
     tvAusfaelle: Object.entries(tv).filter(([, v]) => v.ausfallHeute || v.ausfallTief)
       .map(([k, v]) => k + (v.ausfallHeute ? ' (Lauf 1,5 Mrd)' : '') + (v.ausfallTief ? ' (Lauf 800 Mio)' : '')),
     tvSchrumpfung: Object.entries(tv).filter(([, v]) => v.tiefAnzahl != null && v.tiefAnzahl < v.heute.length)
@@ -476,10 +538,7 @@ function bericht() {
   z.push('');
   z.push('## Was diese Messung NICHT abdeckt');
   z.push('');
-  if (e.truncierteMaerkteTief.length) {
-    z.push('- **Abgeschnittene Maerkte bei 800 Mio** (Zeilendeckel `TV_SCAN_RANGE`, Vorgabe 2500): ' +
-      e.truncierteMaerkteTief.join(', ') + '. Deren (b)/(c)-Zahlen sind eine **Untergrenze**.');
-  }
+  z.push(...buildTvCompletenessWarnings(e));
   for (const a of e.tvAusfaelle || []) z.push('- **TradingView-Markt ausgefallen** (leere Antwort, nicht "keine Firmen"): ' + a);
   for (const a of e.tvSchrumpfung || []) z.push('- **Markt lieferte bei der TIEFEREN Schwelle WENIGER als bei der hoeheren** — das ist unmoeglich und heisst Teilausfall: ' + a);
   appendRegisterCompletenessWarnings(z, e);
@@ -518,5 +577,8 @@ module.exports = {
   serializeRegisterSnapshot,
   formatRegisterStatusLine,
   addRegisterCompletenessToResult,
-  appendRegisterCompletenessWarnings
+  appendRegisterCompletenessWarnings,
+  classifyTvCompleteness,
+  formatTvPartialNotice,
+  buildTvCompletenessWarnings
 };
