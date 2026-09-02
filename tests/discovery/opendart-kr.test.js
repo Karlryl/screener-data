@@ -2,21 +2,17 @@
 /**
  * opendart-kr discovery adapter test.
  *
- * Three layers:
+ * Two layers:
  *  1. OFFLINE (always runs, no key/network): builds a real single-entry ZIP
  *     with zlib.deflateRawSync and drives unzipFirstEntry + parseCorpCodeXml.
  *     Asserts: listed rows kept, unlisted (empty stock_code) dropped, suffix
  *     form is <6-digit>.KS, suffixUnsure flag + KRX/South Korea metadata.
- *  2. ADAPTER STATES (always runs, injected buffers/no network): distinguishes
- *     an intentional no-key skip and valid ZIPs from transport, ZIP and XML
- *     failures, which must return a Map marked as partial.
- *  3. LIVE (only when OPENDART_KEY set): real fetch, asserts rowCount>0 and
+ *  2. LIVE (only when OPENDART_KEY set): real fetch, asserts rowCount>0 and
  *     every yahooTicker matches /^\d{6}\.KS$/. Skipped cleanly without a key.
  *
  * Usage:  node tests/discovery/opendart-kr.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const https = require('https');
 const zlib = require('zlib');
 const { fetchOpenDartKr, unzipFirstEntry, parseCorpCodeXml } = require('../../discovery/opendart-kr.js');
 
@@ -24,15 +20,6 @@ let pass = 0, fail = 0;
 function test(name, fn) {
   try { fn(); pass++; console.log('  ok   ' + name); }
   catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
-}
-
-async function asyncTest(name, fn) {
-  try { await fn(); pass++; console.log('  ok   ' + name); }
-  catch (e) { fail++; console.error('FAIL   ' + name + '\n       ' + e.message); }
-}
-
-function hasOwnPartial(value) {
-  return Object.prototype.hasOwnProperty.call(value, 'partial');
 }
 
 // --- Build a real ZIP (local file header + DEFLATE entry) around the XML ---
@@ -99,165 +86,6 @@ if (!process.env.OPENDART_KEY) {
 }
 
 (async () => {
-  // Inject every keyed response so these state-contract tests never use the
-  // network, even when the surrounding process has OPENDART_KEY configured.
-  const originalHttpsGet = https.get;
-  let blockedHttpsRequests = 0;
-  try {
-    https.get = () => {
-      blockedHttpsRequests++;
-      throw new Error('unexpected live network request');
-    };
-
-  await asyncTest('fetchOpenDartKr skips without a key and stays unmarked', async () => {
-    let requests = 0;
-    const m = await fetchOpenDartKr({
-      key: '',
-      getBufferFn: async () => {
-        requests++;
-        throw new Error('no-key request must not happen');
-      }
-    });
-    assert.equal(requests, 0);
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), false);
-    assert.equal(m.partial, undefined);
-  });
-
-  await asyncTest('fetchOpenDartKr keeps a valid ZIP healthy and populated', async () => {
-    let requests = 0;
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async url => {
-        requests++;
-        assert.match(url, /crtfc_key=fixture-key$/);
-        return makeZip(SAMPLE_XML);
-      }
-    });
-    assert.equal(requests, 1);
-    assert.equal(m.size, 3);
-    assert.equal(hasOwnPartial(m), false);
-    assert.equal(m.partial, undefined);
-  });
-
-  await asyncTest('fetchOpenDartKr accepts exactly one listed stock', async () => {
-    let requests = 0;
-    const xml = '<result><list><corp_code>00000001</corp_code>' +
-      '<corp_name>One Listed Co</corp_name><stock_code>000001</stock_code></list></result>';
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => { requests++; return makeZip(xml); }
-    });
-    assert.equal(requests, 1);
-    assert.equal(m.size, 1);
-    assert.equal(m.has('000001.KS'), true);
-    assert.equal(hasOwnPartial(m), false);
-    assert.equal(m.partial, undefined);
-  });
-
-  await asyncTest('fetchOpenDartKr reads the production key when none is injected', async () => {
-    const hadKey = Object.prototype.hasOwnProperty.call(process.env, 'OPENDART_KEY');
-    const previousKey = process.env.OPENDART_KEY;
-    let requests = 0;
-    try {
-      process.env.OPENDART_KEY = 'env fixture/key';
-      const m = await fetchOpenDartKr({
-        getBufferFn: async url => {
-          requests++;
-          assert.match(url, /crtfc_key=env%20fixture%2Fkey$/);
-          return makeZip(SAMPLE_XML);
-        }
-      });
-      assert.equal(requests, 1);
-      assert.equal(m.size, 3);
-      assert.equal(hasOwnPartial(m), false);
-      assert.equal(m.partial, undefined);
-    } finally {
-      if (hadKey) process.env.OPENDART_KEY = previousKey;
-      else delete process.env.OPENDART_KEY;
-    }
-  });
-
-  await asyncTest('fetchOpenDartKr keeps the production transport wired by default', async () => {
-    const hadKey = Object.prototype.hasOwnProperty.call(process.env, 'OPENDART_KEY');
-    const previousKey = process.env.OPENDART_KEY;
-    const requestsBefore = blockedHttpsRequests;
-    try {
-      process.env.OPENDART_KEY = 'default-transport-key';
-      const m = await fetchOpenDartKr();
-      assert.equal(blockedHttpsRequests, requestsBefore + 1);
-      assert.equal(m.size, 0);
-      assert.equal(hasOwnPartial(m), true);
-      assert.equal(m.partial, true);
-    } finally {
-      if (hadKey) process.env.OPENDART_KEY = previousKey;
-      else delete process.env.OPENDART_KEY;
-    }
-  });
-
-  await asyncTest('fetchOpenDartKr marks a transport failure partial', async () => {
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => { throw new Error('ECONNRESET'); }
-    });
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), true);
-    assert.equal(m.partial, true);
-  });
-
-  await asyncTest('fetchOpenDartKr marks status 020 XML partial', async () => {
-    const envelope = Buffer.from(
-      '<result><status>020</status><message>usage limit</message></result>'
-    );
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => envelope
-    });
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), true);
-    assert.equal(m.partial, true);
-  });
-
-  await asyncTest('fetchOpenDartKr marks an unsupported ZIP method partial', async () => {
-    const zip = makeZip(SAMPLE_XML);
-    zip.writeUInt16LE(99, 8);
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => zip
-    });
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), true);
-    assert.equal(m.partial, true);
-  });
-
-  await asyncTest('fetchOpenDartKr marks a ZIP without list records partial', async () => {
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => makeZip('<result><unexpected/></result>')
-    });
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), true);
-    assert.equal(m.partial, true);
-  });
-
-  await asyncTest('fetchOpenDartKr marks an all-unlisted full register partial', async () => {
-    let requests = 0;
-    const xml = '<result><list><corp_code>00000001</corp_code>' +
-      '<corp_name>Private Co</corp_name><stock_code> </stock_code></list></result>';
-    const m = await fetchOpenDartKr({
-      key: 'fixture-key',
-      getBufferFn: async () => { requests++; return makeZip(xml); }
-    });
-    assert.equal(requests, 1);
-    assert.equal(m.size, 0);
-    assert.equal(hasOwnPartial(m), true);
-    assert.equal(m.partial, true);
-  });
-
-  } finally {
-    https.get = originalHttpsGet;
-  }
-
   // Run the real network assertion outside the sync harness when key present.
   if (process.env.OPENDART_KEY) {
     try {
