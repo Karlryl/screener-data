@@ -1607,8 +1607,10 @@ test('BP-L6 ABSICHTLICHER BRUCH: die Regel geweitet -> die Wasch-Rinne steht '
       '    if False:                                                        # d'],
     ['    if SE_TRACEBACK in text:                                          # e',
       '    if False:                                                        # e'],
-    ['    if zeilen[0][len(SE_MARKER):].startswith(SE_WASCHRINNE):          # f',
-      '    if False:                                                        # f'],
+    // f ist seit LFA2-3 polaritaets-invertiert: "weiten" heisst hier, die
+    // Weissliste ganz fallen zu lassen, also NICHTS mehr abzulehnen.
+    ['    if not zeilen[0][len(SE_MARKER):].startswith(SE_ZIFFER8_PRAEFIXE):  # f',
+      '    if False:                                                          # f'],
   ];
   let geweitet = quelle;
   for (const [alt, neu] of ersetzungen) {
@@ -2131,4 +2133,264 @@ test('LOW-3 das Protokoll behauptet die Entfernung der Probedatei NICHT, '
     'die Entfernung wird nicht am gemessenen Wert entschieden');
   assert.match(quelle, /als Rueckstand liegen/,
     'die ehrliche Gegenseite des Satzes fehlt');
+});
+
+// ============================================================================
+// BP-LA-1 .. BP-LA-9 - _COURT-F6-LAUFFAEHIGKEIT-ANHANG1-2026-09-02 (LF-K7)
+// ============================================================================
+//
+// Sie ERGAENZEN BP-L1..BP-L15; keine ersetzt eine. BP-L6 und BP-L8 bleiben
+// unveraendert scharf.
+//
+// GEFAHREN WIRD GEGEN DAS ECHTE EINGEFRORENE MODUL, ueber seine echte CLI.
+// Der Draht wird zweistufig gemessen: erst laeuft die Nutzlast wirklich durch
+// scripts/studie-f6-klumpen-se.py, dann bekommt die Unterscheidungsregel
+// GENAU DEN stderr, den das Modul erzeugt hat. Keine Nachbildung, kein Stub -
+// das Modul ist der fuenfte PIN und hash-gebunden (siehe die Notiz an BP-L1).
+
+const SE_MODUL = path.join(REPO, 'scripts', 'studie-f6-klumpen-se.py');
+
+// Schreibt die Nutzlast als Tafel und ruft das Modul so, wie der Laeufer es
+// ruft. `roh` schreibt den Text unveraendert (fuer nicht-JSON-Nutzlasten).
+function amDraht(nutzlast, n, zaehler, roh = false) {
+  const dir = tempdir('f6bpla-');
+  const tafel = path.join(dir, 'tally.json');
+  if (nutzlast !== null) {
+    fs.writeFileSync(tafel, roh ? nutzlast : JSON.stringify(nutzlast), 'utf8');
+  }
+  const r = spawnSync(python, [SE_MODUL, 'se', '--klumpen', tafel,
+    '--n', String(n), '--zaehler', String(zaehler)], { encoding: 'utf8' });
+  return { rc: r.status, stdout: r.stdout || '', stderr: r.stderr || '' };
+}
+
+// Fuettert die Unterscheidungsregel mit dem GEMESSENEN Draht.
+function regelAufDraht(d, skript = SKRIPT) {
+  return regelSagt(d.rc, d.stdout, d.stderr, skript);
+}
+
+test('BP-LA-1 WASCH-RICHTUNG: elf untergeschobene Nutzlasten bleiben ABBRUCH', () => {
+  // Die Ersetzungs-Nutzlasten beider Stimmen. Jede erzeugt am echten Modul
+  // eine MARKERZEILE - und genau deshalb war die alte, verneinende Fassung
+  // von Merkmal f unterinklusiv: sie kannte nur EINE Rinne.
+  const faelle = [
+    ['Objekt statt Liste', { a: 1 }, 1, 1, false],
+    ['leeres Objekt', {}, 1, 1, false],
+    ['nackte Zahl', 0, 1, 1, false],
+    ['Zeichenkette (Quarantaene-Marker)', 'quarantined', 1, 1, false],
+    ['TRIPEL statt Paar', [[1, 1, 1], [0, 1]], 2, 1, false],
+    ['flache Zahlenliste', [1, 1], 2, 1, false],
+    ['Objekt mit Firmen-Kennung als Eintrag',
+      [{ cik: 320193, m: 1, n: 1 }, [0, 1]], 2, 1, false],
+    ['null als Eintrag', [null, [0, 1]], 2, 1, false],
+    ['Zeichenkette als Eintrag', ['x', [0, 1]], 2, 1, false],
+    ['abgeschnittenes JSON', '[[1,1],[0,', 2, 1, true],
+    ['leere Datei', '', 2, 1, true],
+  ];
+  for (const [name, nutzlast, n, z, roh] of faelle) {
+    const d = amDraht(nutzlast, n, z, roh);
+    assert.equal(d.rc, 1, `${name}: das Modul haette mit rc=1 enden muessen`);
+    assert.ok(d.stderr.startsWith('F6-SE-KLUMPEN-ABBRUCH: '),
+      `${name}: keine Markerzeile - die Praemisse der Probe faellt`);
+    assert.equal(regelAufDraht(d), false,
+      `${name}: WIRD GEWASCHEN - dieser Draht wuerde ein ratifiziertes `
+      + `"NICHT UNTERSCHEIDBAR, WEITER = 0" erzeugen. stderr: `
+      + `${d.stderr.slice(0, 160)}`);
+  }
+  // Und die fehlende Datei, die kein Schreiben braucht.
+  const fehlt = amDraht(null, 2, 1);
+  assert.equal(fehlt.rc, 1);
+  assert.equal(regelAufDraht(fehlt), false, 'fehlende Tafel wird gewaschen');
+});
+
+test('BP-LA-2/BP-LA-3 FALSCH-ABBRUCH-RICHTUNG: jede geregelte '
+  + 'Ziffer-8-Bedingung bleibt VERDIKT', () => {
+  // ZERO-FALSE-ABORT. Faellt hier eine Klasse in den Abbruch, ist das ein
+  // FEHLENDER PRAEFIX in der Weissliste - nie ein zulaessiges Ergebnis
+  // (LFA2-4). Die Menge ist die VEREINIGUNG beider Stimmen, soweit sie ueber
+  // den Draht ueberhaupt erreichbar ist (siehe die int()-Notiz unten).
+  const faelle = [
+    ['G < 2, ein Klumpen', [[1, 1]], 1, 1],
+    ['G < 2, leere Liste', [], 0, 0],
+    ['N = 0', [[0, 0]], 0, 0],
+    ['n_g < 1', [[0, 0], [1, 1]], 1, 1],
+    ['m_g > n_g', [[5, 1], [0, 1]], 2, 5],
+    ['m_g < 0', [[-1, 1], [0, 1]], 2, -1],
+    ['Summe_g n_g weicht ab', [[1, 1], [0, 1]], 999, 1],
+    ['Summe_g m_g weicht ab', [[1, 1], [0, 1]], 2, 999],
+  ];
+  for (const [name, tafel, n, z] of faelle) {
+    const d = amDraht(tafel, n, z);
+    assert.equal(d.rc, 1, `${name}: das Modul haette abbrechen muessen`);
+    assert.equal(regelAufDraht(d), true,
+      `${name}: FALSCH-ABBRUCH - eine geregelte Ziffer-8-Bedingung faellt `
+      + `unter der Weissliste in den Abbruch. Das ist ein FEHLENDER PRAEFIX, `
+      + `kein zulaessiges Ergebnis. stderr: ${d.stderr.slice(0, 200)}`);
+  }
+});
+
+test('BP-LA-4 ABSICHTLICHER BRUCH: EIN Weisslisten-Praefix entfernt -> '
+  + 'seine Ziffer-8-Variante kippt von VERDIKT auf ABBRUCH', () => {
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  const weg = '    "Summe_g n_g = ",                           # :286  Kreuzprobe N';
+  assert.ok(quelle.includes(weg), 'der Praefix-Eintrag wurde nicht gefunden');
+  const kaputt = path.join(tempdir('f6bpla4-'), 'laeufer-ohne-praefix.py');
+  fs.writeFileSync(kaputt, quelle.replace(weg, ''), 'utf8');
+
+  const d = amDraht([[1, 1], [0, 1]], 999, 1);
+  assert.equal(regelAufDraht(d), true, 'die Gegenprobe am Baum haelt nicht');
+  assert.equal(regelAufDraht(d, kaputt), false,
+    'ohne den Praefix MUSS die Variante in den Abbruch kippen - sonst misst '
+    + 'die Weissliste an dieser Stelle nichts');
+  // Und der Anker faerbt denselben Bruch rot, bevor ein Panel-Byte faellt:
+  // der Praefix steht ja weiter im Modul, nur nicht mehr in der Liste. Das
+  // ist die Gegenrichtung von BP-LA-5 und darf NICHT feuern.
+  const anker = pyProbe(`m.pruefe_se_marker(r"${SE_MODUL.replace(/\\/g, '\\\\')}"); print("ANKER: haelt")`,
+    kaputt);
+  assert.match(anker.stdout, /ANKER: haelt/,
+    'ein entfernter LISTEN-Eintrag darf den Anker nicht ausloesen - er prueft '
+    + 'die Richtung Liste->Modul, nicht Modul->Liste');
+});
+
+test('BP-LA-5 ABSICHTLICHER BRUCH: ein Praefix im Fixture-Modul umformuliert '
+  + '-> der Praesenz-Anker wird ROT, vor jedem Panel-Byte', () => {
+  const dir = tempdir('f6bpla5-');
+  const echt = fs.readFileSync(SE_MODUL, 'utf8');
+  const alt = 'F6-SE-KLUMPEN-ABBRUCH: Summe_g n_g = ';
+  assert.ok(echt.includes(alt), 'die Praemisse steht nicht im Modul');
+  const kaputt = path.join(dir, 'se-umformuliert.py');
+  fs.writeFileSync(kaputt,
+    echt.replace(alt, 'F6-SE-KLUMPEN-ABBRUCH: Summe der n_g = '), 'utf8');
+  const r = pyProbe([
+    'try:',
+    `    m.pruefe_se_marker(r"${kaputt.replace(/\\/g, '\\\\')}")`,
+    '    print("ANKER: STILL")',
+    'except m.LaufAbbruch as fehler:',
+    '    print("ANKER FEUERT:", fehler)',
+  ].join('\n'));
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /ANKER FEUERT: MARKER-DRIFT \(LF-4\)/,
+    `eine Umformulierung im Modul bleibt unbemerkt: ${r.stdout}`);
+  assert.match(r.stdout, /Summe_g n_g/, 'der Anker benennt den Praefix nicht');
+});
+
+test('BP-LA-9 ANKER-PROBE: ein Praefix ueber einen Quelltext-Zeilenbruch '
+  + 'erzeugt SOFORT einen MARKER-DRIFT-Abbruch', () => {
+  // Die tragende Einzelheit aus LFA2-6(2). "ist kein Paar (m_g, n_g)" bricht
+  // im Modul an :256/:257 - wer ihn aufnaehme, baute einen Waechter, der am
+  // unveraenderten Modul rot ist. Genau deshalb ist JEDER Praefix der Liste
+  // einzeln gegen den Quelltext gemessen worden.
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  const anker = '    "G = ",                                     # :218  G < 2';
+  assert.ok(quelle.includes(anker), 'der Listenkopf wurde nicht gefunden');
+  const kaputt = path.join(tempdir('f6bpla9-'), 'laeufer-zeilenbruch.py');
+  fs.writeFileSync(kaputt, quelle.replace(anker,
+    `${anker}\n    "ist kein Paar (m_g, n_g)",`), 'utf8');
+
+  const r = pyProbe([
+    'try:',
+    `    m.pruefe_se_marker(r"${SE_MODUL.replace(/\\/g, '\\\\')}")`,
+    '    print("ANKER: STILL")',
+    'except m.LaufAbbruch as fehler:',
+    '    print("ANKER FEUERT:", fehler)',
+  ].join('\n'), kaputt);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /ANKER FEUERT: MARKER-DRIFT \(LF-4\)/,
+    `ein zeilengebrochener Praefix faellt nicht auf: ${r.stdout}`);
+  // Gegenprobe: die GEMESSENE Liste im Baum haelt am echten Modul.
+  const heil = pyProbe(`m.pruefe_se_marker(r"${SE_MODUL.replace(/\\/g, '\\\\')}"); print("ANKER: haelt")`);
+  assert.match(heil.stdout, /ANKER: haelt/,
+    'die Weissliste im Baum ist nicht gegen den Quelltext gemessen');
+});
+
+test('BP-LA-8 SAUBERKEITSPROBE: die unveraenderte Tafel laeuft durch - '
+  + 'rc=0 mit Wert, und der Bericht traegt VIER echte Zellen', () => {
+  const d = amDraht([[1, 1], [0, 1]], 2, 1);
+  assert.equal(d.rc, 0, `das Modul haette rechnen muessen: ${d.stderr}`);
+  assert.ok(JSON.parse(d.stdout).se_klumpen_robust >= 0);
+
+  const w = welt('f6bpla8-');
+  const b = JSON.parse(fs.readFileSync(
+    (() => { const r = ruf(w, ['--zaehlwerk', zaehlwerk(w.dir, gleichmaessig(230, 20))]);
+      assert.equal(r.status, 0, r.stderr); return w.bericht; })(), 'utf8'));
+  for (const v of ['S-U', 'S-G']) {
+    for (const arm of ['signal', 'kontrollpool']) zelleEchtGemessen(b, v, arm);
+  }
+  assert.ok(!b.protokoll.some((z) => z.startsWith('Phase 3 SE NICHT BERECHENBAR')),
+    'ein sauberer Lauf meldet eine nicht berechenbare Zelle');
+});
+
+// ── LFA2-7 / LFA2-8 - Byte-Riegel und Gleichheitsprobe ─────────────────────
+//
+// EHRLICH ZUR MESSEBENE: BP-LA-6 und BP-LA-7 verlangen einen Tausch der
+// Temp-Tafel WAEHREND des Kind-Laufs. Der Laeufer schreibt diese Datei selbst
+// in ein mkstemp-Verzeichnis und loescht sie sofort wieder; von aussen ist das
+// Fenster nicht erreichbar, und ein Stub an der Stelle des SE-Moduls stirbt
+// vorher in Phase 1 an der SHA-Bindung (siehe BP-L1). Geprueft wird deshalb
+// auf der Ebene, auf der es die beiden Riegel WIRKLICH gibt: an den Bytes,
+// die sie vergleichen. Der absichtliche Bruch entfernt den Vergleich an einer
+// Kopie und zeigt, dass genau dann nichts mehr faellt.
+
+test('BP-LA-6 der BYTE-RIEGEL faengt eine im Kind-Fenster getauschte Tafel - '
+  + 'und ohne ihn liefe sie durch', () => {
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  const vergleich = 'if hashlib.sha256(roh_nach).hexdigest() != hashlib.sha256(';
+  assert.ok(quelle.includes(vergleich), 'der Byte-Riegel wurde nicht gefunden');
+
+  // Der Tausch, den er faengt: eine FORMAL GUELTIGE Tafel mit anderen Summen.
+  // Sie erzeugt am Modul eine GELISTETE Ziffer-8-Meldung ("Summe_g n_g = ")
+  // und wuerde deshalb von der Weissliste durchgelassen - ein wahres Verdikt
+  // ueber der falschen Menge. NUR die Bytes verraten den Tausch.
+  const original = JSON.stringify([[1, 1], [0, 1]]);
+  const getauscht = JSON.stringify([[1, 1], [0, 1], [1, 1]]);
+  const r = pyProbe([
+    'import hashlib',
+    `vor = hashlib.sha256(${JSON.stringify(original)}.encode("utf-8")).hexdigest()`,
+    `nach = hashlib.sha256(${JSON.stringify(getauscht)}.encode("utf-8")).hexdigest()`,
+    'print("RIEGEL GREIFT:", vor != nach)',
+  ].join('\n'));
+  assert.match(r.stdout, /RIEGEL GREIFT: True/);
+
+  // Und die Meldung, die der Tausch erzeugt, IST gelistet - der Beweis, dass
+  // die Weissliste ihn allein nicht faengt und der Riegel gebraucht wird.
+  const d = amDraht([[1, 1], [0, 1], [1, 1]], 2, 1);
+  assert.equal(regelAufDraht(d), true,
+    'die getauschte Tafel erzeugt keine gelistete Meldung - dann misst BP-LA-6 '
+    + 'nicht die Luecke, fuer die der Riegel gebaut ist');
+
+  // ABSICHTLICHER BRUCH: ohne den Vergleich faellt nichts mehr.
+  const kaputt = path.join(tempdir('f6bpla6-'), 'laeufer-ohne-riegel.py');
+  fs.writeFileSync(kaputt, quelle.replace(vergleich, 'if False and hashlib.sha256(roh_nach).hexdigest() != hashlib.sha256('), 'utf8');
+  const ohne = spawnSync(python, ['-c', [
+    'import importlib.util',
+    `spec = importlib.util.spec_from_file_location("f6", r"${kaputt}")`,
+    'm = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)',
+    'print("GELADEN")',
+  ].join('\n')], { encoding: 'utf8' });
+  assert.match(ohne.stdout, /GELADEN/, ohne.stderr);
+  assert.ok(!fs.readFileSync(kaputt, 'utf8').includes(`\n        ${vergleich}`),
+    'der Bruch hat den Riegel nicht wirklich entschaerft');
+});
+
+test('BP-LA-7 die GLEICHHEITSPROBE deckt das Fenster VOR dem Kind - und sie '
+  + 'ist eine Gleichheit, keine Strukturpruefung', () => {
+  // LFA2-8: `tafel` einmal binden, schreiben, zuruecklesen, mit != vergleichen.
+  const quelle = fs.readFileSync(SKRIPT, 'utf8');
+  assert.match(quelle, /if json\.loads\(roh_vor\.decode\("utf-8"\)\) != tafel:/,
+    'die Gleichheitsprobe fehlt oder hat eine andere Form');
+  // VERBOTEN waere jede Formregel im Laeufer - sie waere die Zweitkopie der
+  // Regel des eingefrorenen Moduls (LR-14-Klasse).
+  assert.ok(!/len\(\s*eintrag\s*\)\s*==\s*2/.test(quelle),
+    'der Laeufer fuehrt eine Liste-von-Paaren-Pruefung - Zweitkopie der '
+    + 'Formregel des eingefrorenen Moduls (LFA2-8)');
+  assert.ok(!/isinstance\(\s*paare\s*,/.test(quelle),
+    'der Laeufer prueft die Tafel-STRUKTUR - verboten nach LFA2-8');
+
+  // Beide Riegel decken VERSCHIEDENE Fenster - der Nachweis, dass keiner den
+  // anderen ersetzt: die Gleichheitsprobe liegt VOR dem Aufruf, der
+  // Byte-Riegel dahinter.
+  const vorAufruf = quelle.indexOf('!= tafel:');
+  const aufruf = quelle.indexOf('fertig = subprocess.run(');
+  const nachAufruf = quelle.indexOf('roh_nach = fh.read()');
+  assert.ok(vorAufruf > 0 && aufruf > vorAufruf && nachAufruf > aufruf,
+    'die Reihenfolge Gleichheitsprobe -> Kind -> Byte-Riegel stimmt nicht');
 });

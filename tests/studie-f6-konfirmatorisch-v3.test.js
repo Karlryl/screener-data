@@ -411,11 +411,11 @@ const UEBERGANGS_BRUECKE = {
     // BEWEGLICHES ZIEL, bei Familien-Schluss NEU GEMESSEN. Jede weitere Zeile
     // am Laeufer aendert diesen Wert; ein stehengebliebener alter Wert zeigt
     // auf einen toten Stand und faerbt LIVE-BINDUNG rot. Gemessen am
-    // 2026-09-02 nach der letzten Runner-Zeile - zuletzt nach der Fix-Welle
-    // des Fokus-Reviews (MEDIUM-1, MEDIUM-3, LOW-1..LOW-3), die den Laeufer
-    // erneut angefasst hat.
+    // 2026-09-02 nach der letzten Runner-Zeile - zuletzt nach der LF-K7-
+    // Neumessung (ANHANG1: Weisslisten-Inversion von Merkmal f, Byte-Riegel,
+    // LF-3 als Gleichheitsprobe), die den Laeufer erneut angefasst hat.
     'scripts/studie-f6-lauf.py':
-      '6baa88cb00a5e1639dcafb6db1bfc7b99065434310a4c67b84cc34614f92e722',
+      'ce4561b750a3915e3906aa6ed13f775e976c1e63109b1e7c739f8f18ac729c7e',
   },
 };
 

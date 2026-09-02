@@ -1255,14 +1255,54 @@ def zaehlung(modul, panel_pfad, variante, arm):
 SE_MARKER = "F6-SE-KLUMPEN-ABBRUCH: "
 SE_FOLGESATZ = "Folge: BandNichtAuswertbar ->"
 SE_TRACEBACK = "Traceback (most recent call last)"
-# MERKMAL f - DIE WASCH-RINNE, und sie ist der Grund fuer die Sieben-Merkmal-
-# Form. `studie-f6-klumpen-se.py:367-370` wirft SeNichtBerechenbar AUCH bei
-# OSError/ValueError/RecursionError auf der TEMP-TAFEL DES AUFRUFERS. Vier
-# verschiedene Ursachen erzeugen denselben Draht-Fingerabdruck (G = 1, N = 0,
-# Klumpen-Datei FEHLT, Klumpen-Datei KORRUPT) - und die letzten beiden stehen
-# NICHT in der Achterliste der Ziffer 8. Ein formblinder Fang verwandelte einen
-# vollen Datentraeger in ein ratifiziertes "NICHT UNTERSCHEIDBAR, WEITER = 0".
-SE_WASCHRINNE = "Klumpen-Datei nicht lesbar"
+# MERKMAL f - DIE WEISSLISTE (LFA2-3, polaritaets-invertiert).
+#
+# Die erste Fassung VERNEINTE eine einzelne Rinne ("Klumpen-Datei nicht
+# lesbar"). Die Neumessung nach LF-K7 hat gezeigt, dass das UNTERINKLUSIV ist:
+# die Eintrags-Formklasse des Moduls (`:232` "keine Liste von Paaren", `:255`
+# "Klumpen i ist kein Paar") traegt denselben Marker, ist aber KEINE der
+# Ziffer-8-Datenbedingungen - eine untergeschobene Tafel wie [[1,1,1],[0,1]]
+# waere so in ein ratifiziertes Verdikt gewaschen worden.
+#
+# Deshalb ist f jetzt POSITIV: die Markerzeile passiert NUR, wenn sie nach dem
+# Marker mit einem GELISTETEN Ziffer-8-Praefix weitergeht. Alles andere -
+# Eintrags-Form, Wasch-Rinne, jede kuenftige neue Klasse - ist LaufAbbruch.
+# Die Richtung ist die sichere: eine Verengung kann ein Verdikt nur zu einem
+# Abbruch machen, eine Weitung koennte die Rinne wiederherstellen.
+#
+# DER PREIS, BENANNT: wird das eingefrorene Modul je umformuliert, bricht eine
+# LEGITIME Zeile ab. Tragbar aus zwei Gruenden: das Modul ist der fuenfte PIN
+# und hash-gebunden (eine Umformulierung ist ein Freeze-Akt, kein Bauer-Fix),
+# und der Praesenz-Anker unten faerbt genau diesen Fall ROT VOR dem ersten
+# Panel-Byte - ein lauter Abbruch vor dem Panel, nie eine stille Beurkundung.
+#
+# DIE RESTLUECKE, AUSGEWIESEN STATT WEGDOKUMENTIERT (LFA2-9(1)):
+# eine Tafel, die von Anfang an FORMAL GUELTIG, aber inhaltlich falsch ist
+# (richtige Paar-Form, falsche Summen), erzeugt eine ECHTE, gelistete
+# Ziffer-8-Meldung und bleibt damit VERDIKT. Sie ist am Draht von einer
+# echten Klasse d/e nicht unterscheidbar und durch KEINE Markerzeilen-Regel
+# schliessbar. Der Byte-Riegel unten faengt nur den TAUSCH einer korrekt
+# geschriebenen Tafel, nicht eine von Beginn an falsche. Das steht hier, weil
+# eine Luecke, die niemand aufschreibt, spaeter als Zusicherung gelesen wird.
+#
+# AM OBJEKT GEMESSEN, NICHT ABGESCHRIEBEN (LFA2-11): jeder Praefix steht
+# zusammenhaengend im Quelltext des Moduls, zusammen mit dem Marker davor - der
+# Anker unten beweist es. Der Ratstext fuehrt
+# "die Residuenquadratsumme ist nicht endlich"; im Quelltext bricht die Zeile
+# nach "nicht " (`:326/:327`), und die zusammenhaengende Form ist deshalb
+# kuerzer. Genau diese Falle benennt LFA2-6(2).
+SE_ZIFFER8_PRAEFIXE = (
+    "G = ",                                     # :218  G < 2
+    "n_g von Klumpen ",                         # :263  n_g keine ganze Zahl >= 1
+    "m_g von Klumpen ",                         # :268  m_g nicht in [0, n_g]
+    "Summe_g n_g = ",                           # :286  Kreuzprobe N
+    "Summe_g m_g = ",                           # :292  Kreuzprobe Zaehler
+    "N = ",                                     # :297  keine Einheiten
+    "p-Dach = ",                                # :303  Anteil ausserhalb [0,1]
+    "die Residuenquadratsumme ist nicht ",      # :326  nicht endlich
+    "der Schaetzer ist nicht endlich: ",        # :345  nicht endlich
+    "die Rechnung ist nicht durchfuehrbar (",   # :339  Ueberlauf
+)
 
 # LF-7 / OB-1-Rueckfall - DIE ERSATZ-ZELLE IN DER AM WENIGSTEN BEHAUPTENDEN
 # FORM. Dieselbe Schluesselmenge, die das eingefrorene Modul im Erfolgsfall
@@ -1308,6 +1348,20 @@ def pruefe_se_marker(se_skript):
     belegt, dass genau diese Zeichenketten in der Datei vorkommen, die der Lauf
     gleich aufruft - und zwar VOR dem ersten Panel-Byte, damit die Drift einen
     folgenlosen Abbruch kostet und nicht das Kontingent.
+
+    LFA2-6 - DIE WEISSLISTE GEHT MIT IN DEN ANKER. Ohne ihn waere sie eine
+    getippte Kopie mit stiller Drift, und eine Umformulierung im Modul
+    verwandelte ein Verdikt lautlos in einen Abbruch.
+
+    ZWEI TRAGENDE EINZELHEITEN:
+    (1) Geankert wird `SE_MARKER + praefix`, nicht der Praefix allein. Damit
+        ist bewiesen, dass die Zeichenkette dort wirklich als MARKERZEILE
+        beginnt und nicht zufaellig irgendwo im Modul vorkommt.
+    (2) Geprueft wird gegen den QUELLTEXT, und dessen Meldungen sind ueber
+        Zeilen gebrochen. Zulaessig sind nur ZUSAMMENHAENGEND im Quelltext
+        stehende Stuecke. Ein Praefix ueber einen Zeilenbruch hinweg - etwa
+        "ist kein Paar (m_g, n_g)" (`:256/:257`) - erzeugt hier sofort einen
+        falschen MARKER-DRIFT-Abbruch. Jeder Praefix ist einzeln gemessen.
     """
     try:
         with open(se_skript, encoding="utf-8") as fh:
@@ -1315,7 +1369,10 @@ def pruefe_se_marker(se_skript):
     except OSError as fehler:
         raise LaufAbbruch("Das SE-Modul ist nicht lesbar: "
                           + schruppe_text(fehler))
-    fehlend = [t for t in (SE_MARKER, SE_FOLGESATZ) if t not in quelle]
+    fehlend = [t for t in
+               (SE_MARKER, SE_FOLGESATZ)
+               + tuple(SE_MARKER + p for p in SE_ZIFFER8_PRAEFIXE)
+               if t not in quelle]
     if fehlend:
         raise LaufAbbruch(
             "MARKER-DRIFT (LF-4): die Unterscheidungsregel des Laeufers stuetzt "
@@ -1362,7 +1419,9 @@ def se_ausgang_ist_verdikt(fertig):
         return False
     if SE_TRACEBACK in text:                                          # e
         return False
-    if zeilen[0][len(SE_MARKER):].startswith(SE_WASCHRINNE):          # f
+    # f - DIE WEISSLISTE, ausschliesslich auf zeilen[0] (LFA2-5). Ein
+    # Enthaltensein-Test ueber ganz stderr bleibt durch BP-L6 verboten.
+    if not zeilen[0][len(SE_MARKER):].startswith(SE_ZIFFER8_PRAEFIXE):  # f
         return False
     return True
 
@@ -1391,13 +1450,27 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
         # den LF-3 benennt (voller Datentraeger), meldet sich bei `flush`
         # bzw. `fsync`, also im ungedeckten Teil. Er waere als anonymer
         # Traceback gestorben statt mit dem Grund, der ihn erklaert.
+        #
+        # LFA2-8 - LF-3 IST EINE GLEICHHEITSPROBE, NIEMALS EINE STRUKTUR-
+        # PRUEFUNG. `tafel` wird EINMAL gebunden, geschrieben, gefsynct,
+        # zurueckgelesen und mit `!=` gegen DASSELBE Objekt gehalten. Eine
+        # Liste-von-Paaren-Pruefung hier waere die Zweitkopie der Formregel des
+        # eingefrorenen Moduls (`klumpen-se.py:125-127`) - LR-14-Klasse. Die
+        # Formregel bleibt bei dem Modul, das sie besitzt.
+        tafel = [[int(m), int(nn)] for m, nn in klumpen]
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
-                json.dump([[int(m), int(nn)] for m, nn in klumpen], fh)
+                json.dump(tafel, fh)
                 fh.flush()
                 os.fsync(fh.fileno())
-            with open(tally_pfad, encoding="utf-8") as fh:
-                json.load(fh)
+            with open(tally_pfad, "rb") as fh:
+                roh_vor = fh.read()
+            if json.loads(roh_vor.decode("utf-8")) != tafel:
+                raise LaufAbbruch(
+                    "DIE TEMP-TAFEL DES LAEUFERS KOMMT ANDERS ZURUECK, ALS SIE "
+                    "GESCHRIEBEN WURDE (" + wo + "). Das ist ein Defekt des "
+                    "AUFRUFERS im Fenster VOR dem Kind-open (LF-3/LFA2-8) und "
+                    "keine Nicht-berechenbar-Bedingung der Ziffer 8.")
         except (OSError, ValueError, RecursionError) as fehler:
             raise LaufAbbruch(
                 "DIE TEMP-TAFEL DES LAEUFERS IST NICHT RUECKLESBAR fuer " + wo
@@ -1417,6 +1490,43 @@ def se_klumpen(se_skript, klumpen, n, zaehler, wo):
             raise LaufAbbruch(
                 "Das SE-Modul hat fuer " + wo + " die Frist von 600 s "
                 "ueberschritten und wurde abgebrochen.")
+
+        # ── LFA2-7 - DER BYTE-RIEGEL ─────────────────────────────────────
+        # KLEMPNEREI-RIEGEL DES AUFRUFERS, in der LF-3-Familie, und er feuert
+        # VOR dem Fang. AUSDRUECKLICH KEIN ACHTES MERKMAL: die
+        # Sieben-Merkmal-Klausel bleibt buchstabengetreu, sieben bleiben
+        # sieben (LF-2 unveraendert).
+        #
+        # WARUM ER GEBRAUCHT WIRD: die Weissliste liest, was das Kind SAGT.
+        # Sie kann nicht sehen, ob das Kind ueberhaupt noch UNSERE Tafel
+        # gelesen hat. Eine zwischen Schreiben und Lesen ausgetauschte Tafel
+        # erzeugt eine echte, gelistete Ziffer-8-Meldung ueber FREMDEN Daten -
+        # ein wahres Verdikt ueber der falschen Menge (F6-K22).
+        #
+        # Rollenteilung, ausdruecklich: die Gleichheitsprobe oben deckt das
+        # Fenster VOR dem Kind-`open`, dieser Riegel das Fenster DANACH.
+        # KEINE ERSETZT DIE ANDERE.
+        #
+        # SEINE DECKE, BENANNT (LFA2-9): einen Tausch, der die Original-Bytes
+        # vor diesem Nach-Hash wiederherstellt, faengt er nicht (TOCTOU). Das
+        # ist seine dokumentierte Grenze, kein Grund gegen ihn.
+        try:
+            with open(tally_pfad, "rb") as fh:
+                roh_nach = fh.read()
+        except OSError as fehler:
+            raise LaufAbbruch(
+                "DIE TEMP-TAFEL DES LAEUFERS IST NACH DEM SE-AUFRUF NICHT "
+                "MEHR LESBAR (" + wo + "): " + schruppe_text(fehler)
+                + ". Ob das Kind ueberhaupt unsere Tafel gelesen hat, ist "
+                "damit nicht mehr feststellbar - das ist ein Abbruch, nie ein "
+                "Verdikt (LFA2-7).")
+        if hashlib.sha256(roh_nach).hexdigest() != hashlib.sha256(
+                roh_vor).hexdigest():
+            raise LaufAbbruch(
+                "DIE TEMP-TAFEL DES LAEUFERS HAT SICH WAEHREND DES "
+                "SE-AUFRUFS GEAENDERT (" + wo + "). Die Meldung des Moduls "
+                "spraeche dann ueber FREMDE Daten - ein wahres Verdikt ueber "
+                "der falschen Menge. Abbruch, nie ein Verdikt (LFA2-7).")
     finally:
         # Auch auf dem Abbruchpfad. Ein liegengebliebener Tally waere eine
         # Firmen-nahe Datei ohne Besitzer.
