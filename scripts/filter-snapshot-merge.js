@@ -395,20 +395,46 @@ const MILAN_KANDIDATEN = [
 
 /**
  * A7 — DER MENGEN-RIEGEL (2:1-Mehrheitsentscheid; J2s Sondervotum "nur ::warning::" ist
- * ueberstimmt). Am Live-Bestand vom 29.08. gemessen: 16 Klassen mit je einem Verlierer-Bein plus
- * `1BEI.MI` mit zweien = 18 umbenannte Beine, 17 kollabierte Gruppen.
+ * ueberstimmt). Die Zahlen kommen seit dem 02.09.2026 AUS DER EINGEFRORENEN LISTE, nicht mehr
+ * aus einer Momentaufnahme des Bestands: 17 Klassen, 18 Partner-Beine.
  *
- * ⚠ DIESE ZAHL IST EIN STOLPERDRAHT, KEIN GLEICHGEWICHT. Die Population ist Wetter (Urteil T19:
- * 133 → 53 Doppelgaenger-Gruppen in zwei Wochen ohne einen einzigen Fix). Liefert Yahoo fuer
- * eines der elf Platzhalter-Beine (`GEN`, `EXC`, `SO`, `MO`, `MDT`, `EIX`, `MTZ`, `BEI.DE`,
- * `HII`, `JCI`, `RSG`) beim naechsten Zug einen Klarnamen, faellt die Zahl auf 17 und DIESER
- * LAUF BRICHT AB. Das ist die vom Gericht gewollte Wirkung: die Kandidatenliste soll neu
- * vorgelegt werden, statt still zu driften. Wer den Abbruch sieht, misst nach
- * (`node scripts/probe-fingerprint-zensus.js`) und legt die Liste neu vor — er dreht NICHT die
- * Zahl hoch. Das Ventil ist die Wiedervorlage, nicht eine Repo-Variable.
+ * ── WARUM DIE ALTE FASSUNG STERBEN MUSSTE (Beleg, kein Gefuehl) ────────────────────────────
+ * Bis zum 02.09. standen hier die Literale 18/17, und gezaehlt wurde die NOCH ZU LEISTENDE
+ * ARBEIT: `verlierer.length` je Klasse plus die Zahl der Klassen mit Urteil `umbenennen`. Eine
+ * Klasse zaehlte also nur, SOLANGE das Partner-Bein einen anderen `issuerKeyLoose` trug. Am
+ * 02.09.2026 lief fuer die Voll-Pull-Kohorte vom 02.08. die 30-Tage-Frist ab
+ * (`pull-yahoo.js:97`, FUNDAMENTALS_REFRESH_DAYS); Yahoo lieferte fuer acht Partner-Beine
+ * erstmals `longName` statt des Ticker-Platzhalters (EXC, SO, MO, EIX, MTZ, HII, 472.DE, ANE.MC),
+ * ihre Klassen fielen auf `schon-vereint`, die Zahl auf 10/9 — und der Lauf brach ab, OHNE dass
+ * sich irgendetwas verschlechtert haette. Der Zensus war Byte fuer Byte der des letzten gruenen
+ * Laufs (901 Mailaender Beine, 6 mehrdeutige Abdruecke, 0 unlesbar). Der Riegel verlangte damit
+ * taeglich, dass sich Yahoos Namensdeckung NICHT verbessert — eine Groesse, die nur in EINE
+ * Richtung driften kann und perspektivisch auf 0 laeuft.
+ *
+ * ── DIE ERHALTENE GROESSE ─────────────────────────────────────────────────────────────────
+ * Stabil ist nicht "wie viele Klassen brauchen noch Arbeit", sondern "wie viele der 17
+ * eingefrorenen Klassen PASSIEREN DAS TOR" — also `umbenennen` PLUS `schon-vereint`. Am 01.09.
+ * wie am 02.09. gemessen: 17 Klassen / 18 Partner-Beine. Diese Zahl haengt an der Liste
+ * (Erzeuger-Semantik), nicht an einer Momentaufnahme, und driftet deshalb nicht mit Yahoos
+ * Namenspflege mit. Deshalb sind die Konstanten hier ABGELEITET und keine Literale mehr: eine
+ * Liste zu kuerzen und die Zahl "nachzuziehen" ist ab jetzt derselbe Handgriff, nicht mehr zwei.
+ *
+ * ⚠ DER STOLPERDRAHT-CHARAKTER BLEIBT VOLLSTAENDIG. Was der alte Riegel fing, faengt der neue
+ * weiter — die Belegkette steht am Riegel selbst (s. `torGruppen`/`torBeine` in `run()`). Die
+ * EINZIGE Lage, die von rot auf gruen wechselt, ist die abgeschlossene Umbenennung. Die
+ * Population bleibt Wetter (Urteil T19: 133 → 53 Doppelgaenger-Gruppen in zwei Wochen ohne einen
+ * einzigen Fix); wer diese Liste anfasst, misst vorher nach
+ * (`node scripts/probe-fingerprint-zensus.js`) und legt sie neu vor.
+ *
+ * WIEDERVORLAGE-MESSBELEG ZU DIESER AENDERUNG (A7-Auflage, gegen die echten Shard-Artefakte der
+ * Laeufe 33493908237 / 33601800213 gemessen, Ebene Melde-Waehrung):
+ *   01.09.: 17.417 Snapshots · 851 Fingerabdruck-Klassen mit Mailaender Bein · davon 55 divergent
+ *   02.09.: 17.378 Snapshots · 842 Fingerabdruck-Klassen mit Mailaender Bein · davon 42 divergent
+ * Die Kontamination ist GESUNKEN, die Population unveraendert — genau die Lage, in der die
+ * Kandidatenliste NICHT gekuerzt gehoert. Sie bleibt deshalb unveraendert bei 17 Eintraegen.
  */
-const MILAN_ERWARTETE_BEINE = 18;
-const MILAN_ERWARTETE_GRUPPEN = 17;
+const MILAN_ERWARTETE_GRUPPEN = MILAN_KANDIDATEN.length;
+const MILAN_ERWARTETE_BEINE = MILAN_KANDIDATEN.reduce((s, k) => s + k.partner.length, 0);
 
 const IDENTITAETS_REGISTER_STANDARDPFAD = path.join(__dirname, '..', 'data-health', 'issuer-identity.json');
 
@@ -739,7 +765,8 @@ const IST_ISO_DATUM = (s) => {
  * Eintrags. Ein Riegel mit eingebautem Verfallsdatum ist keine Absicherung, sondern ein
  * Countdown (Urteil §2 zu G6).
  *
- * Gleiche Bauform wie MILAN_ERWARTETE_BEINE/-GRUPPEN (A7): die Zusage lautet nicht mehr
+ * Gleiche Bauform wie der Listen-Anker des A7-Riegels (`tests/u3-milan-spiegel.test.js`, wo seit
+ * dem 02.09.2026 die Literale 17/18 stehen): die Zusage lautet nicht mehr
  * "leer", sondern "GENAU DIESE Zahl". 0 ist heute der Sollwert; ein erster Eintrag hebt ihn —
  * aber nur zusammen mit einer bewussten Aenderung DIESER Zeile, in demselben Diff, unter
  * denselben Augen. Genau das ist der Unterschied zu einem Riegel, der sich selbst aufloest.
@@ -2043,6 +2070,15 @@ function run(argv) {
   const ausRegister = urteile.filter((u) => u.quelle === 'identitaets-register');
   const geplanteBeine = ausListe.reduce((s, u) => s + u.verlierer.length, 0);
   const geplanteGruppen = ausListe.filter((u) => u.grund === 'umbenennen').length;
+  // A7 — DIE ERHALTENE GROESSE (s. Konstanten-Block): eine Kandidatenklasse hat das Tor
+  // bestanden, wenn sie umbenannt WIRD oder wenn nichts mehr umzubenennen ist. `schon-vereint`
+  // ist der Erfolgsfall dieses Moduls, kein Ausfall — er darf den Riegel nicht senken.
+  // `beine.length - 1` ist die Zahl der Partner-Beine der Klasse (der Sieger ist genau eines der
+  // Beine, egal welches): fuer eine Zweibein-Klasse 1, fuer `1BEI.MI` 2. Damit zaehlt der
+  // Riegel dieselbe Groesse, die MILAN_ERWARTETE_BEINE aus der Liste ableitet.
+  const durchsTor = ausListe.filter((u) => u.grund === 'umbenennen' || u.grund === 'schon-vereint');
+  const torGruppen = durchsTor.length;
+  const torBeine = durchsTor.reduce((s, u) => s + u.beine.length - 1, 0);
 
   // A10 — Laufzeit-Ausweis: JEDE Umbenennung mit beiden Tickern, keine stille Wirkung. Auch die
   // Nein-Faelle stehen hier, sonst waere "hat das Tor gehalten oder gar nicht erst gegriffen?"
@@ -2082,14 +2118,38 @@ function run(argv) {
   // ein Bestand, aus dem die Haelfte der Anker verschwunden ist, bricht also ab.
   // Gezaehlt werden DATEIEN, nicht auswertbare Beine: sonst schaltet ein systemischer Lesefehler
   // ueber alle Anker den Riegel ab und die Log-Zeile sieht aus wie der harmlose Fall.
+  //
+  // WAS DER ALTE RIEGEL FING UND DER NEUE WEITER FAENGT (vollstaendige Aufzaehlung ueber die
+  // Urteile, die `milanTor` + `milanUmbenennungen` ueberhaupt vergeben koennen). Der alte Riegel
+  // war rot, sobald eine Kandidatenklasse NICHT auf `umbenennen` stand; der neue ist rot, sobald
+  // eine NICHT auf `umbenennen` ODER `schon-vereint` steht:
+  //   beine-unvollstaendig  ein Kandidaten-Bein fehlt oder ist unlesbar  -> alt rot, neu rot
+  //   fingerabdruck         Reihen divergieren (auch der FX-Desync-Fall) -> alt rot, neu rot
+  //   umsatzquartale        < 4 endliche Umsatzquartale                  -> alt rot, neu rot
+  //   land                  `meta.country` divergiert oder fehlt         -> alt rot, neu rot
+  //   aktienzahl            ausserhalb des 20-%-Bands / fehlt            -> alt rot, neu rot
+  //   us-primaerlisting     >= 2 US-Primaerlistings (AVB/VMRK-Riegel)    -> alt rot, neu rot
+  //   mehrdeutig            NEUE mehrdeutige Abdruck-Klasse (A5)         -> alt rot, neu rot
+  //   nur-platzhalter       alle Beine tragen Platzhalter                -> alt rot, neu rot
+  //   kollision             zwei Klassen, ein Bein, zwei Namen           -> bricht schon oben ab
+  //   schon-vereint         nichts mehr umzubenennen                     -> alt ROT, neu GRUEN
+  // Genau EIN Uebergang von rot auf gruen, und er ist der Erfolgsfall. Der Leg-Zaehler traegt
+  // denselben Beweis eine Ebene feiner: er faellt, sobald ein PARTNER-Bein aus einer bestehenden
+  // Klasse verschwindet (Dreibein `1BEI.MI`), und steigt nie — `verlierer` ist immer eine
+  // Teilmenge der Beine ohne den Sieger, `durchsTor` immer eine Teilmenge der 17 Listeneintraege.
+  // Ein "unerwarteter Extra-Treffer" kann den Riegel deshalb nach wie vor nicht unterlaufen: die
+  // Obergrenze ist beidseitig die Liste selbst, und `!==` prueft beide Richtungen.
   if (zuPruefen < MIN_GESCANNT_FUER_ANTEIL || milan.kandidatenDateien === 0) {
     console.log(`[u3-milan] Mengen-Riegel uebersprungen: ${zuPruefen} zu pruefende Snapshots, ${milan.kandidatenDateien} Dateien der Kandidatenliste im Bestand, ${milan.lesefehler.length} nicht auswertbar. Geplant waren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen.`);
-  } else if (geplanteBeine !== MILAN_ERWARTETE_BEINE || geplanteGruppen !== MILAN_ERWARTETE_GRUPPEN) {
+  } else if (torGruppen !== MILAN_ERWARTETE_GRUPPEN || torBeine !== MILAN_ERWARTETE_BEINE) {
     // FX5 — ZENSUS IN DIE ABBRUCHZEILE: `milanBeine` und die Zahl der mehrdeutigen Abdruecke
     // beantworten die erste Triage-Frage — "hat sich die EBENE bewegt oder die MENGE?" — ohne
     // Nachmessung. FX6 — DIE FX-URSACHENKLASSE: bei FX-Desync ist die Population unveraendert,
-    // und die Kandidatenliste neu vorzulegen waere exakt der falsche Griff.
-    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${geplanteBeine} umbenannte Beine / ${geplanteGruppen} kollabierte Gruppen, erwartet ${MILAN_ERWARTETE_BEINE}/${MILAN_ERWARTETE_GRUPPEN}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Erst \`meta.fxRateApplied\` der Beine paarweise vergleichen; Kandidatenliste nur bei tatsaechlicher Mengenaenderung neu vorlegen. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    // und die Kandidatenliste neu vorzulegen waere exakt der falsche Griff. Seit der Riegel die
+    // Tor-Menge zaehlt, steht der GRUND jeder gescheiterten Klasse mit in der Zeile — ein
+    // FX-Desync ist ab sofort als `fingerabdruck` benannt und nicht mehr zu erraten.
+    const gescheitert = ausListe.filter((u) => u.grund !== 'umbenennen' && u.grund !== 'schon-vereint');
+    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${torGruppen} von ${MILAN_ERWARTETE_GRUPPEN} Kandidatenklassen und ${torBeine} von ${MILAN_ERWARTETE_BEINE} Partner-Beinen passieren das Tor (offen umzubenennen waeren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen; der Rest ist schon vereint und ist KEIN Fehler). Gescheitert: ${gescheitert.length ? gescheitert.map((u) => `${u.anker} (${u.grund})`).join(', ') : 'keine Klasse — die Beinzahl einer bestehenden Klasse ist gefallen'}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Bei Grund \`fingerabdruck\` zuerst \`meta.fxRateApplied\` der Beine paarweise vergleichen. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen — die Erwartung 18/17 leitet sich seit dem 02.09.2026 AUS der Liste ab und laesst sich gar nicht mehr einzeln hochdrehen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
     return 1;
   }
 
@@ -2099,7 +2159,8 @@ function run(argv) {
   // Abbruch auf die A5-MENGE — auf eine Zahl also, die in einer Wetter-Population driftet und zum
   // Hochdrehen einlaedt. Dieser Riegel haengt an keiner Zahl, sondern an der Datenintegritaet des
   // A5-Index, und er deckt genau die Luecke, die A7 STRUKTURELL NICHT SEHEN KANN:
-  //   - Ist ein KANDIDATEN-Bein unlesbar, faellt `geplanteBeine` unter 18 und A7 oben bricht
+  //   - Ist ein KANDIDATEN-Bein unlesbar, faellt seine Klasse auf 'beine-unvollstaendig',
+  //     `torGruppen`/`torBeine` fallen unter 17/18 und A7 oben bricht
   //     bereits ab. Dieser Fall kommt hier gar nicht mehr an.
   //   - Ist eines der ~857 uebrigen Mailaender Beine unlesbar, bewegt sich KEINE Zaehlgroesse:
   //     das Bein faellt per `if (!b || …) continue` (fail-OPEN) aus dem Mehrdeutigkeits-Index,
@@ -2131,7 +2192,7 @@ function run(argv) {
   // Kurs". Weil `lies()` seine Nicht-ENOENT-Fehler in dieselbe `lesefehler`-Liste schreibt,
   // schliesst der Ausweis hier die Luecke mechanisch, nicht kosmetisch: ein stiller Erfolgslauf
   // mit Lesefehlern ist ab sofort nicht mehr still.
-  console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, ${milan.lesefehler.length} nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
+  console.log(`[u3-milan] ${milanGeschrieben.geschrieben.length} Beine in ${geplanteGruppen} Gruppen auf den Emittenten-Namen gesetzt (${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke, ${milan.lesefehler.length} nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}, Identitaets-Register: ${identitaetsEintraege.length} Eintraege / ${ausRegister.filter((u) => u.grund === 'umbenennen').length} wirksam). A7-Tor: ${torGruppen}/${MILAN_ERWARTETE_GRUPPEN} Kandidatenklassen und ${torBeine}/${MILAN_ERWARTETE_BEINE} Partner-Beine passieren, davon ${torGruppen - geplanteGruppen} Klassen schon vereint. Zusammengefuehrt wird weiterhin ausschliesslich im Dedup; hier wird kein Bein entfernt.`);
 
   // T179-Nennwert: NACH U3-Milan, und die Reihenfolge ist SICHERHEIT, nicht Geschmack.
   //
