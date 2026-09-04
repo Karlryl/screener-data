@@ -37,6 +37,7 @@ const path = require('node:path');
 
 const {
   milanTor, milanSieger, milanUmbenennungen, milanKlassenLesen, milanSchreiben, milanFingerabdruck,
+  milanAusgerichtet,
   ladeIdentitaetsRegister, MILAN_KANDIDATEN, MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   MILAN_SHARES_BAND, MILAN_MIN_QUARTALE, MILAN_SPIEGEL,
   IDENTITAETS_REGISTER_ANKER, IDENTITAETS_REGISTER_STANDARDPFAD,
@@ -64,17 +65,51 @@ function test(name, fn) {
 // dann zu 'OHNE-FX:<ticker>', die Reihe kollabiert auf eine Konstante, und eine
 // Trennschaerfe-Zusicherung waere GRUEN AUS DEM FALSCHEN GRUND. Wer hier ein Bein von Hand baut,
 // gibt ihm ein `fx`.
-const reihe = (basis, n = 5) => Array.from({ length: n }, (_, i) => basis * (i + 1));
+const reihe = (basis, n = 5, ab = 0) => Array.from({ length: n }, (_, i) => basis * (i + 1 + ab));
+
+// ─── Perioden-Enden (A1-Ausrichtung, Rat 04.09.2026) ────────────────────────────────────
+//
+// Seit dem 04.09.2026 vergleicht Stufe 2 des Tors nicht mehr Index gegen Index, sondern
+// QUARTAL gegen QUARTAL (`milanAusgerichtet`). Ein Bein ohne `revenueQEnds`/`grossProfitQEnds`
+// faellt fail-closed durch — jedes Fixture-Bein braucht sie deshalb, und zwar LAENGENGLEICH zu
+// seinen Werten. Wer hier eine Reihe von Hand ueberschreibt (`{...bein(...), revenueQ: [...] }`),
+// setzt `quartale` auf die neue Laenge oder gibt die Enden mit.
+const QUARTALS_MONATSENDE = ['-03-31', '-06-30', '-09-30', '-12-31'];
+/** `n` Quartalsenden, ABSTEIGEND (neuestes zuerst), Basis 2026-03-31.
+ *  `versatz` schiebt das neueste Ende um so viele Quartale NACH VORN — genau der Versatz, den
+ *  ein gestaffelter Shard-Lauf erzeugt (CRCL 03.09. gegen 1CRCL.MI 06.08.). */
+function quartalsEnden(n, versatz = 0) {
+  let jahr = 2026, q = 0; // q = Index in QUARTALS_MONATSENDE, 0 == Maerz
+  for (let i = 0; i < versatz; i++) { q++; if (q > 3) { q = 0; jahr++; } }
+  const aus = [];
+  for (let i = 0; i < n; i++) {
+    aus.push(jahr + QUARTALS_MONATSENDE[q]);
+    q--; if (q < 0) { q = 3; jahr--; }
+  }
+  return aus;
+}
+
 /** Ein Bein in der Form, in der `milanKlassenLesen` es an `milanTor` uebergibt. */
 function bein(ticker, name, opt = {}) {
   const basis = opt.basis === undefined ? 1000 : opt.basis;
   const n = opt.quartale === undefined ? 5 : opt.quartale;
+  const versatz = opt.versatz === undefined ? 0 : opt.versatz;
+  // `gpVersatz` erlaubt es, die Bruttogewinn-Reihe GEGEN ihr eigenes Ends-Array auszurichten,
+  // unabhaengig vom Umsatz — der Fall, den A1 ausdruecklich getrennt behandelt.
+  const gpVersatz = opt.gpVersatz === undefined ? versatz : opt.gpVersatz;
+  // `wertVersatz` verschiebt die WERTE gegen die Position, `versatz` die ENDEN. Zwei Beine
+  // desselben Emittenten, von denen eines ein Quartal weiter ist, tragen `versatz: v` und
+  // `wertVersatz: maxV - v` — dann steht auf JEDEM gemeinsamen Perioden-Ende derselbe Wert.
+  const wertVersatz = opt.wertVersatz === undefined ? 0 : opt.wertVersatz;
   return {
     datei: ticker + '.json', ticker, metaTicker: ticker, name,
     country: opt.country === undefined ? 'United States' : opt.country,
     shares: opt.shares === undefined ? 1000000 : opt.shares,
     fx: opt.fx === undefined ? 1 : opt.fx,
-    revenueQ: reihe(basis, n), grossProfitQ: reihe(basis * 0.7, n),
+    fetchedAt: opt.fetchedAt,
+    revenueQ: reihe(basis, n, wertVersatz), grossProfitQ: reihe(basis * 0.7, n, wertVersatz),
+    revenueQEnds: opt.revenueQEnds === undefined ? quartalsEnden(n, versatz) : opt.revenueQEnds,
+    grossProfitQEnds: opt.grossProfitQEnds === undefined ? quartalsEnden(n, gpVersatz) : opt.grossProfitQEnds,
     usPrimaerlisting: !!opt.usPrimaer,
     schluessel: issuerKeyLoose({ meta: { name } }),
     strengerSchluessel: String(name).toLowerCase(),
@@ -91,23 +126,32 @@ function snapshot(ticker, name, opt = {}) {
   const basis = opt.basis === undefined ? 1000 : opt.basis;
   const n = opt.quartale === undefined ? 5 : opt.quartale;
   const fx = opt.fx === undefined ? 1 : opt.fx;
+  const versatz = opt.versatz === undefined ? 0 : opt.versatz;
+  const gpVersatz = opt.gpVersatz === undefined ? versatz : opt.gpVersatz;
+  const wertVersatz = opt.wertVersatz === undefined ? 0 : opt.wertVersatz;
   const meta = {
     ticker, name, country: opt.country === undefined ? 'United States' : opt.country,
     sharesOutstanding: opt.shares === undefined ? 1000000 : opt.shares,
     exchangeName: opt.exchangeName || 'Milan',
     marketCap: opt.marketCap,
+    fetchedAt: opt.fetchedAt,
   };
   // Die gespeicherten Reihen sind die KONVERTIERTEN — genau wie im Bestand, wo
   // `pull-yahoo.js:1083` jede Reihe mit `fx` multipliziert und den Kurs bei `:1090` stempelt.
   // Die Melde-Ebene ist `basis`, die gespeicherte ist `basis * fx`.
   if (!opt.ohneFx) meta.fxRateApplied = fx;
-  return {
-    meta,
-    timeseries: {
-      revenueQ: reihe(basis, n).map((v) => ({ value: v * fx })),
-      grossProfitQ: reihe(basis * 0.7, n).map((v) => ({ value: v * fx })),
-    },
+  const ts = {
+    revenueQ: reihe(basis, n, wertVersatz).map((v) => ({ value: v * fx })),
+    grossProfitQ: reihe(basis * 0.7, n, wertVersatz).map((v) => ({ value: v * fx })),
   };
+  // A1-Ausrichtung: die Enden liegen als flache ISO-Strings neben den Werten, index-aligned
+  // (`pull-yahoo.js`, A10). `opt.ohneEnds` laesst sie absichtlich weg — das braucht der
+  // FAIL-CLOSED-Waechter.
+  if (!opt.ohneEnds) {
+    ts.revenueQEnds = quartalsEnden(n, versatz);
+    ts.grossProfitQEnds = quartalsEnden(n, gpVersatz);
+  }
+  return { meta, timeseries: ts };
 }
 
 // ─── 1. VORWAERTS: die vom Urteil namentlich verlangten MUSS-Faelle ──────────────────────
@@ -547,7 +591,9 @@ test('A7-FX VORWAERTS: gleiche Melde-Reihen, VERSCHIEDENE Kurse — die Klasse h
   const A = 1.1550012, B = 1.1511453;
   const roh = [2468000000, 4936000000, 7404000000, 9872000000];
   const mkBein = (t, n, fx) => ({
-    ...bein(t, n, { country: 'Germany', shares: 218072613, fx }),
+    // `quartale: 4` haelt die Ends-Arrays laengengleich zu der von Hand gesetzten Reihe
+    // (A1-Ausrichtung, fail-closed bei Laengen-Ungleichheit).
+    ...bein(t, n, { country: 'Germany', shares: 218072613, fx, quartale: 4 }),
     revenueQ: roh.map((x) => x * fx),
     grossProfitQ: roh.map((x) => x * 0.7 * fx),
   });
@@ -575,7 +621,7 @@ test('A7-FX RUECKWAERTS: eine Melde-Einheit Abstand trennt weiterhin (Band 1e9..
   const fx = 1.1550012;
   const roh = 2468000000;              // 10 signifikante Stellen, mitten im Band
   const mkBein = (t, n, wert) => ({
-    ...bein(t, n, { fx }),
+    ...bein(t, n, { fx, quartale: 4 }),
     revenueQ: [wert * fx, wert * 2 * fx, wert * 3 * fx, wert * 4 * fx],
     grossProfitQ: [wert * 0.7 * fx, wert * 1.4 * fx, wert * 2.1 * fx, wert * 2.8 * fx],
   });
@@ -597,7 +643,7 @@ test('A7-FX FX3: ein nicht-endlicher QUOTIENT faltet nicht auf null', () => {
     'Vorbedingung: und zwar fuer BEIDE verschiedenen Werte gleich');
   const fx = 5e-324;
   const mk = (t, n, x) => ({
-    ...bein(t, n, { fx }),
+    ...bein(t, n, { fx, quartale: 4 }),
     revenueQ: [x, x * 2, x * 3, x * 4], grossProfitQ: [x, x * 2, x * 3, x * 4],
   });
   const beine = [mk('1INF.MI', 'Erste AG', 1e300), mk('INF', 'Zweite AG', 2e300)];
@@ -662,6 +708,180 @@ test('A7-FX / A5: ein unlesbares Mailaender Bein laesst eine Klasse NICHT aus "m
   assert.equal(milanUmbenennungen(blind.klassen, blind.mehrfachAbdruecke).urteile[0].grund, 'umbenennen',
     'die Luecke ist real: ohne Riegel wuerde die vorher blockierte Klasse umbenannt');
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// ─── 4c. A1-AUSRICHTUNG — der Perioden-Schnitt (Rat 04.09.2026) ─────────────────────────
+//
+// WAS AUF DEM SPIEL STAND: der positionale Vergleich unterstellt, dass Index i auf beiden Beinen
+// dieselbe PERIODE meint. Am 04.09.2026 stimmte das nicht mehr — CRCL war am 03.09. gezogen und
+// trug das Quartal 2026-06-30 auf Index 0, 1CRCL.MI war vom 06.08. und endete bei 2026-03-31.
+// Wertgleiche Reihen, um EINEN Index verschoben: Stufe 2 gab 'fingerabdruck', A7 fiel auf 16/17
+// und der ganze Tageslauf brach ab. Verglichen wird seither auf dem SCHNITT der Perioden-Enden,
+// exakt und ohne Toleranz — A1 ist AUSGERICHTET, nicht gelockert.
+//
+// Alle Zahlen unten sind die ECHTEN aus den Shard-Artefakten des roten Laufs.
+
+/** Die gemessenen Reihen der Klasse `1CRCL.MI`/`CRCL` vom 04.09.2026, Melde-Waehrung USD. */
+const CRCL_REV = [694133000, 770232000, 739759000, 658078000, 578573000];
+const CRCL_GP = [149225000, 172211000, 162852000, -252256000, 155306000];
+const CRCL_ENDS = ['2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31'];
+/** Dasselbe Bein, einen Abruf spaeter: ein NEUES Quartal vorne, das aelteste faellt hinten raus. */
+const CRCL_REV_NEU = [701315000, ...CRCL_REV.slice(0, 4)];
+const CRCL_GP_NEU = [154846000, ...CRCL_GP.slice(0, 4)];
+const CRCL_ENDS_NEU = ['2026-06-30', ...CRCL_ENDS.slice(0, 4)];
+
+test('A1-AUSRICHTUNG (i, ROT VORHER): der CRCL-Fall vom 04.09.2026 passiert Stufe 2', () => {
+  // ROT VORHER: mit dem positionalen Vergleich gab diese Klasse 'fingerabdruck' und riss A7.
+  const beine = [
+    { ...bein('1CRCL.MI', 'Circle Internet Group, Inc. Class A', { shares: 229857799, quartale: 5 }),
+      revenueQ: CRCL_REV, grossProfitQ: CRCL_GP, revenueQEnds: CRCL_ENDS, grossProfitQEnds: CRCL_ENDS },
+    { ...bein('CRCL', 'Circle Internet Group', { shares: 234685190, quartale: 5, usPrimaer: true }),
+      revenueQ: CRCL_REV_NEU, grossProfitQ: CRCL_GP_NEU, revenueQEnds: CRCL_ENDS_NEU, grossProfitQEnds: CRCL_ENDS_NEU },
+  ];
+  // Die Vorbedingung IST der Bug: positional sind die beiden Abdruecke verschieden.
+  assert.notEqual(milanFingerabdruck(beine[0]), milanFingerabdruck(beine[1]),
+    'Vorbedingung: positional reissen die Reihen — genau daran starb der Lauf vom 04.09.');
+  assert.equal(milanAusgerichtet(beine), 'ok', 'auf dem Perioden-Schnitt ist es dieselbe Firma');
+  // Vier gemeinsame Quartale bei je fuenf Eintraegen — die Untergrenze min(4, 5-1) ist erfuellt.
+  assert.equal(CRCL_ENDS.filter((e) => CRCL_ENDS_NEU.includes(e)).length, 4, 'Vorbedingung: 4 gemeinsame Enden');
+  assert.equal(milanTor(beine, new Set()), 'umbenennen');
+  // Und die zweite Achse traegt unabhaengig: 229.857.799 gegen 234.685.190 sind 2,1 % — im Band.
+  assert.ok(Math.abs(229857799 - 234685190) / 234685190 < MILAN_SHARES_BAND, 'A4 haelt unabhaengig');
+});
+
+test('A1-AUSRICHTUNG (ii): ein RESTATEMENT auf gleichem Datum bleibt "fingerabdruck"', () => {
+  // Der Fall, der NICHT durchrutschen darf: dieselben Perioden, EIN Wert anders. Genau die
+  // Wertgleichheit, die A1 verlangt — die Ausrichtung darf sie nicht zur Toleranz machen.
+  const revAnders = [...CRCL_REV];
+  revAnders[2] = CRCL_REV[2] + 1;   // eine einzige Melde-Einheit
+  const beine = [
+    { ...bein('1CRCL.MI', 'Circle Internet Group, Inc. Class A', { shares: 229857799, quartale: 5 }),
+      revenueQ: CRCL_REV, grossProfitQ: CRCL_GP, revenueQEnds: CRCL_ENDS, grossProfitQEnds: CRCL_ENDS },
+    { ...bein('CRCL', 'Circle Internet Group', { shares: 234685190, quartale: 5 }),
+      revenueQ: revAnders, grossProfitQ: CRCL_GP, revenueQEnds: CRCL_ENDS, grossProfitQEnds: CRCL_ENDS },
+  ];
+  assert.equal(milanAusgerichtet(beine), 'fingerabdruck');
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck');
+});
+
+test('A1-AUSRICHTUNG (iii): ein LOCH in der Mitte ist kein Versatz — "fingerabdruck"', () => {
+  // Die Lage, gegen die die Kontiguitaets-Auflage (d) steht: zwei Reihen, die sich auf einigen
+  // Quartalen treffen, aber nicht auf einem zusammenhaengenden Block. Ohne (d) zaehlte der
+  // Schnitt hier 4 und die Klasse ginge durch.
+  const ends = quartalsEnden(5);                          // q0 q-1 q-2 q-3 q-4
+  const ohneMitte = [ends[0], ends[1], ends[3], ends[4]]; // q-2 fehlt
+  const werte = reihe(1000, 5), gp = reihe(700, 5);
+  const beine = [
+    { ...bein('1LOCH.MI', 'Loch Erste AG', { quartale: 5 }), revenueQ: werte, grossProfitQ: gp,
+      revenueQEnds: ends, grossProfitQEnds: ends },
+    { ...bein('LOCH', 'Loch Zweite AG', { quartale: 4 }),
+      revenueQ: [werte[0], werte[1], werte[3], werte[4]], grossProfitQ: [gp[0], gp[1], gp[3], gp[4]],
+      revenueQEnds: ohneMitte, grossProfitQEnds: ohneMitte },
+  ];
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck');
+  // ABWESENHEIT: dieselben Beine OHNE Loch (nur das aelteste Quartal fehlt, reiner Rand) passieren.
+  const nurRand = ends.slice(0, 4);
+  const heil = [beine[0], { ...beine[1], revenueQ: werte.slice(0, 4), grossProfitQ: gp.slice(0, 4),
+    revenueQEnds: nurRand, grossProfitQEnds: nurRand }];
+  assert.equal(milanTor(heil, new Set()), 'umbenennen', 'ein Rand-Versatz ist erlaubt, ein Loch nicht');
+});
+
+test('A1-AUSRICHTUNG (iv): ein Bein OHNE Perioden-Enden faellt fail-closed durch', () => {
+  const ohne = bein('OHNE', 'Beispiel Zweite AG');
+  delete ohne.revenueQEnds;
+  assert.equal(milanTor([bein('1OHNE.MI', 'Beispiel AG'), ohne], new Set()), 'fingerabdruck',
+    'kein Ends-Array -> nicht vergleichbar, nicht "zufaellig gleich"');
+  // Dieselbe Haltung fuer jede kaputte Form: falscher Typ, falsche Laenge, Nicht-String,
+  // doppeltes Datum. Ohne diese vier waere das Ends-Array eine Einladung.
+  const kaputt = [
+    'nicht-array',
+    quartalsEnden(4),                                     // Laenge 4 gegen 5 Werte
+    [...quartalsEnden(4), null],                          // Nicht-String
+    [...quartalsEnden(4), quartalsEnden(4)[0]],           // Dublette
+  ];
+  for (const enden of kaputt) {
+    assert.equal(milanTor([bein('1OHNE.MI', 'Beispiel AG'),
+      { ...bein('OHNE', 'Beispiel Zweite AG'), revenueQEnds: enden }], new Set()),
+    'fingerabdruck', `kaputte Enden ${JSON.stringify(enden)} muessen fail-closed sein`);
+  }
+  // Und auch das ZWEITE Ends-Array zaehlt: `grossProfitQEnds` wird nicht mitgeschleift.
+  const ohneGp = bein('OHNE', 'Beispiel Zweite AG');
+  delete ohneGp.grossProfitQEnds;
+  assert.equal(milanTor([bein('1OHNE.MI', 'Beispiel AG'), ohneGp], new Set()), 'fingerabdruck');
+});
+
+test('A1-AUSRICHTUNG (v/vi): EIN Quartal Versatz haelt, ZWEI reissen (Untergrenze min(4, n-1))', () => {
+  // Die Untergrenze ist die Stelle, an der die Ausrichtung aufhoert. Bei vier Quartalen je Bein
+  // liegt sie bei min(4, 4-1) = 3: ein Versatz laesst 3 gemeinsame uebrig (haelt), zwei nur
+  // noch 2 (reisst). Damit bleibt die Pflicht-Auflage A1 wirksam und der Schnitt kann nicht auf
+  // ein einzelnes zufaellig gleiches Quartal zusammenschrumpfen.
+  const mk = (t, n, versatz, wertVersatz) => bein(t, n, { quartale: 4, versatz, wertVersatz, basis: 1000 });
+  const eins = [mk('1VER.MI', 'Versatz Telecom S.A.', 0, 1), mk('VER', 'VER', 1, 0)];
+  assert.equal(eins[0].revenueQEnds.filter((e) => eins[1].revenueQEnds.includes(e)).length, 3,
+    'Vorbedingung: ein Quartal Versatz laesst 3 gemeinsame Enden');
+  assert.equal(milanTor(eins, new Set()), 'umbenennen');
+
+  const zwei = [mk('1VER.MI', 'Versatz Telecom S.A.', 0, 2), mk('VER', 'VER', 2, 0)];
+  assert.equal(zwei[0].revenueQEnds.filter((e) => zwei[1].revenueQEnds.includes(e)).length, 2,
+    'Vorbedingung: zwei Quartale Versatz lassen nur 2 gemeinsame Enden');
+  assert.equal(milanTor(zwei, new Set()), 'fingerabdruck', 'unter der Untergrenze faellt die Klasse');
+});
+
+test('A1-AUSRICHTUNG (vii): grossProfitQ wird gegen SEIN EIGENES Ends-Array ausgerichtet', () => {
+  // `grossProfitQEnds` ist in `pull-yahoo.js` ein eigenes Array und wird getrennt getrimmt — es
+  // als Kopie von `revenueQEnds` zu unterstellen waere genau die Annahme, die A10 verbietet.
+  // Hier laeuft der UMSATZ um ein Quartal versetzt, der BRUTTOGEWINN nicht. Wuerde der
+  // Bruttogewinn gegen `revenueQEnds` ausgerichtet, bekaeme das zweite Bein seine gp-Werte um
+  // eine Position falsch datiert und diese Zusicherung waere ROT.
+  const revEndsA = quartalsEnden(5, 0), revEndsB = quartalsEnden(5, 1);
+  const gpEnds = quartalsEnden(5, 0);                         // auf BEIDEN Beinen dieselbe gp-Historie
+  const revA = reihe(1000, 5, 1), revB = reihe(1000, 5, 0);   // wertgleich auf dem Schnitt
+  const gp = reihe(700, 5);
+  const beine = [
+    { ...bein('1GP.MI', 'Bruttogewinn Telecom S.A.', { quartale: 5 }),
+      revenueQ: revA, revenueQEnds: revEndsA, grossProfitQ: gp, grossProfitQEnds: gpEnds },
+    { ...bein('GP', 'GP', { quartale: 5 }),
+      revenueQ: revB, revenueQEnds: revEndsB, grossProfitQ: gp, grossProfitQEnds: gpEnds },
+  ];
+  assert.notEqual(JSON.stringify(revEndsA), JSON.stringify(revEndsB),
+    'Vorbedingung: die Umsatz-Enden der beiden Beine sind verschieden');
+  assert.deepEqual(beine[0].grossProfitQEnds, beine[1].grossProfitQEnds,
+    'Vorbedingung: die Bruttogewinn-Enden sind identisch — der Versatz betrifft NUR den Umsatz');
+  assert.equal(milanAusgerichtet(beine), 'ok');
+  assert.equal(milanTor(beine, new Set()), 'umbenennen');
+  // Gegenprobe: verschiebt sich der Bruttogewinn gegen SEINE Enden, faellt die Klasse.
+  const schief = [beine[0], { ...beine[1], grossProfitQ: reihe(700, 5, 1) }];
+  assert.equal(milanTor(schief, new Set()), 'fingerabdruck');
+});
+
+test('A1-AUSRICHTUNG (viii): die fuenf Fremdpaare scheitern weiterhin AN STUFE 2 selbst', () => {
+  // Der "erster Riegel"-Vertrag aus Abschnitt 2, eine Ebene tiefer gepinnt: es muss die
+  // AUSRICHTUNG sein, die sie blockt, nicht ein spaeterer Riegel. Ohne diese Zusicherung koennte
+  // `milanAusgerichtet` still auf 'ok' fallen und der Fremdpaar-Test bliebe trotzdem gruen,
+  // weil Land oder Aktienzahl danach ohnehin greifen.
+  const paare = [['1SAN.MI', 'SAN'], ['1DGX.MI', 'DGX'], ['1MRK.MI', 'MRK'], ['1AIR.MI', 'AIR'], ['1EL.MI', 'EL']];
+  for (const [ta, tb] of paare) {
+    const beine = [bein(ta, ta + ' Erste AG', { basis: 1000 }), bein(tb, tb + ' Zweite AG', { basis: 7777 })];
+    assert.deepEqual(beine[0].revenueQEnds, beine[1].revenueQEnds, 'Vorbedingung: gleiche Perioden');
+    assert.equal(milanAusgerichtet(beine), 'fingerabdruck', `${ta}/${tb}: gleiche Perioden, andere Werte`);
+  }
+});
+
+test('A1-AUSRICHTUNG: milanFingerabdruck bleibt POSITIONAL und byte-identisch (Jahres-Aufrufer)', () => {
+  // Der M10-Tripwire-Anker B und die Drift-Spur `probe-fingerprint-zensus.js` rufen
+  // `milanFingerabdruck` direkt auf — der Jahres-Aufrufer in `filter-snapshot-merge.js` sogar mit
+  // `grossProfitQ: null`, weil `annual.annualRev` gar keine Perioden-Enden hat. Baute jemand die
+  // Ausrichtung DORT ein, braeche der Tripwire und die ueber Monate verglichene Zensus-Zeitreihe.
+  // Deshalb wird die alte Ausgabe hier woertlich festgenagelt.
+  assert.equal(milanFingerabdruck({ ticker: 'JAHR', fx: 1, revenueQ: [100, 200, 300], grossProfitQ: null }),
+    '[100,200,300]|null', 'der perioden-lose Jahres-Aufruf liefert unveraendert dieselben Bytes');
+  assert.equal(milanFingerabdruck({ ticker: 'JAHR', fx: 2, revenueQ: [100, 200], grossProfitQ: [70] }),
+    '[50,100]|[35]', 'die Melde-Waehrungs-Ruecknahme ist unveraendert');
+  // Und die Enden aendern daran NICHTS — dieselben Werte, zwei verschiedene Ends-Arrays, EIN
+  // Abdruck. Genau diese Eigenschaft haelt den A5-Index tragfaehig.
+  const mitEnden = (enden) => milanFingerabdruck({ ticker: 'JAHR', fx: 1, revenueQ: [100, 200, 300], grossProfitQ: null, revenueQEnds: enden });
+  assert.equal(mitEnden(quartalsEnden(3, 0)), mitEnden(quartalsEnden(3, 5)),
+    'milanFingerabdruck liest keine Enden — sonst zerrisse der A5-Index bei jedem Abruf-Versatz');
 });
 
 test('KOLLISION: ein Ticker als Verlierer in Klasse A und Sieger in Klasse B faellt auf', () => {
@@ -833,15 +1053,25 @@ test('A7 am Prozess: alle Anker-Dateien DA, aber unlesbar -> Riegel feuert (FEHL
 function alleKandidatenDateien(o = {}) {
   const vereint = o.vereint === undefined ? 0 : o.vereint;
   const weglassen = new Set(o.weglassen || []);
+  // `versetzt` + `versatzQuartale`: die Lage vom 04.09.2026 — ein Partner-Bein ist juenger
+  // gezogen und traegt deshalb n Quartale MEHR am vorderen Rand. Das Anker-Bein bekommt dazu
+  // `wertVersatz`, damit auf jedem GEMEINSAMEN Perioden-Ende derselbe Wert steht; die Reihen
+  // sind also wertgleich und NUR verschoben. Genau das darf A7 nicht mehr reissen.
+  const versetzt = new Set(o.versetzt || []);
+  const vq = o.versatzQuartale === undefined ? 1 : o.versatzQuartale;
   const aus = [];
   MILAN_KANDIDATEN.forEach((k, i) => {
-    const opt = { shares: 1000000, basis: 1000 + i * 7 };
+    const klasseVersetzt = k.partner.some((p) => versetzt.has(p));
+    const opt = { shares: 1000000, basis: 1000 + i * 7, wertVersatz: klasseVersetzt ? vq : 0 };
     const name = `Emittent ${i} AG`;
-    aus.push([k.anker, name, opt]);
+    aus.push([k.anker, name, klasseVersetzt ? { ...opt, fetchedAt: '2026-08-06T05:53:58.804Z' } : opt]);
     k.partner.forEach((p, j) => {
       if (weglassen.has(p)) return;
       const fertig = i < vereint || (o.dreibeinHalb && k.partner.length > 1 && j === 0);
-      aus.push([p, fertig ? name : p, opt]);
+      const pOpt = versetzt.has(p)
+        ? { ...opt, versatz: vq, wertVersatz: 0, fetchedAt: '2026-09-03T07:42:05.261Z' }
+        : opt;
+      aus.push([p, fertig ? name : p, pOpt]);
     });
   });
   return aus;
@@ -920,6 +1150,36 @@ test('A7-UMBAU rot: eine NEUE mehrdeutige Abdruck-Klasse bricht weiterhin HART a
   assert.equal(r.code, 1, 'ein mehrdeutiger Abdruck MUSS abbrechen. Ausgabe:\n' + r.ausgabe);
   assert.match(r.ausgabe, /Mengen-Riegel gerissen: 16 von 17 Kandidatenklassen und 17 von 18 Partner-Beinen passieren das Tor/);
   assert.match(r.ausgabe, new RegExp('Gescheitert: ' + MILAN_KANDIDATEN[0].anker.replace('.', '\\.') + ' \\(mehrdeutig\\)'));
+});
+
+test('A1-AUSRICHTUNG am Prozess (ROT VORHER): ein um EIN Quartal juengeres Partner-Bein kostet keinen Board-Tag', () => {
+  // DER LAUF VOM 04.09.2026, nachgebaut: CRCL war am 03.09. gezogen und trug ein Quartal mehr
+  // als das am 06.08. gezogene 1CRCL.MI. Positional verglichen gab das 'fingerabdruck', A7 fiel
+  // auf 16/17 und der GANZE Tageslauf brach ab — ohne dass sich an den Daten etwas
+  // verschlechtert haette. Genau dieser Exit-Code ist die Zusicherung.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ versetzt: ['CRCL'] })]);
+  assert.equal(r.code, 0, 'ein Abruf-Versatz ist kein Identitaets-Befund. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /A7-Tor: 17\/17 Kandidatenklassen und 18\/18 Partner-Beine passieren/);
+  assert.doesNotMatch(r.ausgabe, /Mengen-Riegel gerissen/);
+  assert.match(r.ausgabe, /18 Beine in 17 Gruppen auf den Emittenten-Namen gesetzt/);
+});
+
+test('A1-AUSRICHTUNG am Prozess: ZWEI Quartale Versatz reissen weiterhin — mit Perioden-Ausweis', () => {
+  // Die Gegenrichtung, ohne die der Umbau nicht von einem Abschalten zu unterscheiden waere:
+  // bei fuenf Quartalen je Bein liegt die Untergrenze bei min(4, 5-1) = 4, zwei Quartale Versatz
+  // lassen nur 3 gemeinsame uebrig. UND: der neue Bein-Ausweis muss in der Abbruch-Ausgabe
+  // stehen — am 04.09. war aus dem Log nicht zu sehen, dass die Beine verschieden alt waren,
+  // und die Diagnose kostete einen eigenen Lauf mit den Shard-Artefakten.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ versetzt: ['CRCL'], versatzQuartale: 2 })]);
+  assert.equal(r.code, 1, 'unter der Untergrenze bricht der Riegel weiter ab. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /Mengen-Riegel gerissen: 16 von 17 Kandidatenklassen und 17 von 18 Partner-Beinen passieren das Tor/);
+  assert.match(r.ausgabe, /Gescheitert: 1CRCL\.MI \(fingerabdruck\)/);
+  assert.match(r.ausgabe, /Klasse 1CRCL\.MI \(fingerabdruck\), Beine im Einzelnen:/);
+  assert.match(r.ausgabe, /1CRCL\.MI: fetchedAt=2026-08-06T05:53:58\.804Z revenueQEnds=\[2026-03-31, /,
+    'der Ausweis nennt Abrufzeitpunkt UND Perioden-Enden des Anker-Beins');
+  assert.match(r.ausgabe, /\s CRCL: fetchedAt=2026-09-03T07:42:05\.261Z revenueQEnds=\[2026-09-30, /,
+    'und dieselben zwei Groessen des Partner-Beins — der Versatz ist damit aus dem Log ablesbar');
+  assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
 });
 
 test('A5-INTEGRITAET am Prozess: ein unlesbares Mailaender Bein bricht HART ab, obwohl A7 gruen ist', () => {
