@@ -30,25 +30,25 @@
     "BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein",
     "Gericht, nicht in eine Meldeform."
   ],
-  "stand": "2026-09-02",
-  "gelesen": 16040,
+  "stand": "2026-09-04",
+  "gelesen": 16075,
   "unlesbar": 0,
   "messebene": "vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs",
   "zaehlung": {
-    "ankerA": 1546,
+    "ankerA": 1551,
     "ankerA_ausgenommen": 16,
-    "ankerA_ohneBasis": 1159,
+    "ankerA_ohneBasis": 971,
     "ankerA_klassen": 9,
-    "ankerB": 174,
+    "ankerB": 137,
     "ankerB_klassen": 2
   },
   "ankerA": {
     "ausgefallen": false,
-    "gemeldet": 1546,
+    "gemeldet": 1551,
     "klassen": [
       {
         "klasse": "Groessenordnung 1e0",
-        "gemeldet": 1109,
+        "gemeldet": 1113,
         "gelistet": 5,
         "beispiele": [
           {
@@ -66,19 +66,6 @@
           },
           {
             "anker": "A",
-            "wert": 0.3168614879803474,
-            "ticker": "NWS",
-            "name": "News Corporation",
-            "nameSource": "fehlt",
-            "schluessel": "newscorp",
-            "fingerabdruck": "[8452000000,10085000000,9879000000,10385000000]|null",
-            "shares": 180579362,
-            "jahresAktien": 569900000,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
             "wert": 0.3179852152808117,
             "ticker": "688981.SS",
             "name": "Semiconductor Manufacturing International Corporation",
@@ -87,6 +74,19 @@
             "fingerabdruck": "[9326799000,8029921000,6321560000,7273284000]|null",
             "shares": 2546744622,
             "jahresAktien": 8009003248,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 0.31807351540114615,
+            "ticker": "NWS",
+            "name": "News Corporation",
+            "nameSource": "longName",
+            "schluessel": "newscorp",
+            "fingerabdruck": "[9028000000,8452000000,8252000000,8012000000]|null",
+            "shares": 177612251,
+            "jahresAktien": 558400000,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           },
@@ -120,7 +120,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-1",
-        "gemeldet": 346,
+        "gemeldet": 347,
         "gelistet": 5,
         "beispiele": [
           {
@@ -128,7 +128,7 @@
             "wert": 0.032945033706868625,
             "ticker": "010955.KS",
             "name": "S-Oil Corporation",
-            "nameSource": "fehlt",
+            "nameSource": "longName",
             "schluessel": "soilcorp",
             "fingerabdruck": "[34246957000000,36637031000000,35726694000000,42446028000000]|null",
             "shares": 3837847,
@@ -141,7 +141,7 @@
             "wert": 0.03776513958060988,
             "ticker": "009155.KS",
             "name": "Samsung Electro-Mechanics Co., Ltd.",
-            "nameSource": "fehlt",
+            "nameSource": "longName",
             "schluessel": "samsungelectromechanicscoltd",
             "fingerabdruck": "[11314459238100,10294102976430,8892411942800,9424551868020]|null",
             "shares": 2853554,
@@ -200,7 +200,7 @@
             "wert": 0.0033155145530602407,
             "ticker": "MTG-A.ST",
             "name": "Modern Times Group MTG AB",
-            "nameSource": "fehlt",
+            "nameSource": "longName",
             "schluessel": "moderntimesgroupmtgab",
             "fingerabdruck": "[11579000000,6015000000,5829000000,5537000000]|null",
             "shares": 388495,
@@ -252,7 +252,7 @@
             "wert": 0.007184385359922,
             "ticker": "096775.KS",
             "name": "SK Innovation Co., Ltd.",
-            "nameSource": "fehlt",
+            "nameSource": "longName",
             "schluessel": "skinnovationcoltd",
             "fingerabdruck": "[80296054243000,74269646737000,77288485864000,78056939448000]|null",
             "shares": 1118605,
@@ -264,7 +264,7 @@
       },
       {
         "klasse": "Groessenordnung 1e+1",
-        "gemeldet": 36,
+        "gemeldet": 34,
         "gelistet": 5,
         "beispiele": [
           {
@@ -308,6 +308,19 @@
           },
           {
             "anker": "A",
+            "wert": 16.413761391672868,
+            "ticker": "TOP",
+            "name": "TOP Financial Group Limited",
+            "nameSource": "longName",
+            "schluessel": "topfinancialgroupltd",
+            "fingerabdruck": "[4723765,3329256,8037105,9695402]|null",
+            "shares": 121705513,
+            "jahresAktien": 7414846,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
             "wert": 10.743603786805101,
             "ticker": "EUZ.DE",
             "name": "Eckert & Ziegler SE",
@@ -318,27 +331,40 @@
             "jahresAktien": 62797000,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 10.098498466462194,
-            "ticker": "IRLCF",
-            "name": "Israel Corporation Ltd",
-            "nameSource": "fehlt",
-            "schluessel": "israelcorpltd",
-            "fingerabdruck": "[7153000000,6841000000,7536000000,10015000000]|null",
-            "shares": 757286400,
-            "jahresAktien": 74990000,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
         ]
       },
       {
         "klasse": "Groessenordnung 1e+3",
-        "gemeldet": 7,
+        "gemeldet": 9,
         "gelistet": 5,
         "beispiele": [
+          {
+            "anker": "A",
+            "wert": 1803.303828516583,
+            "ticker": "IDREAM.BO",
+            "name": "IDream Film Infrastructure Company Limited",
+            "nameSource": "longName",
+            "schluessel": "idreamfilminfrastructurecoltd",
+            "fingerabdruck": "[\"null\",\"null\",\"null\",\"null\"]|null",
+            "shares": 270553280,
+            "jahresAktien": 150032,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 1008.9444820582262,
+            "ticker": "6371.T",
+            "name": "Tsubakimoto Chain Co.",
+            "nameSource": "longName",
+            "schluessel": "tsubakimotochainco",
+            "fingerabdruck": "[295878000000,279193000000,266812000000,251574000000]|null",
+            "shares": 101334348,
+            "jahresAktien": 100436,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
           {
             "anker": "A",
             "wert": 1000.001198387624,
@@ -349,19 +375,6 @@
             "fingerabdruck": "[\"null\",5000,\"null\",519443]|null",
             "shares": 27537033,
             "jahresAktien": 27537,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 999.9961445402525,
-            "ticker": "7189.T",
-            "name": "Nishi-Nippon Financial Holdings, Inc.",
-            "nameSource": "fehlt",
-            "schluessel": "nishinipponfinancialholdingsinc",
-            "fingerabdruck": "[16459000000,196415000000,185595000000,160448000000]|null",
-            "shares": 139282463,
-            "jahresAktien": 139283,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           },
@@ -380,27 +393,14 @@
           },
           {
             "anker": "A",
-            "wert": 942.7824536615152,
-            "ticker": "JPHLF",
-            "name": "Japan Post Holdings Co., Ltd.",
-            "nameSource": "fehlt",
-            "schluessel": "japanpostholdingscoltd",
-            "fingerabdruck": "[11440586000000,207244000000,219644000000,257559000000]|null",
-            "shares": 2734392490,
-            "jahresAktien": 2900343,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 920.7182202012687,
-            "ticker": "6902.T",
-            "name": "DENSO Corporation",
+            "wert": 972.725658815747,
+            "ticker": "7981.T",
+            "name": "Takara Standard Co.,Ltd.",
             "nameSource": "longName",
-            "schluessel": "densocorp",
-            "fingerabdruck": "[7539975000000,7161777000000,7144733000000,6401320000000]|null",
-            "shares": 2507140573,
-            "jahresAktien": 2723027,
+            "schluessel": "takarastandardcoltd",
+            "fingerabdruck": "[252756000000,243380000000,234738000000,227423000000]|null",
+            "shares": 63230086,
+            "jahresAktien": 65003,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -408,7 +408,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-3",
-        "gemeldet": 6,
+        "gemeldet": 5,
         "gelistet": 5,
         "beispiele": [
           {
@@ -439,19 +439,6 @@
           },
           {
             "anker": "A",
-            "wert": 0.00251021208563347,
-            "ticker": "2002A.TW",
-            "name": "China Steel Corporation",
-            "nameSource": "fehlt",
-            "schluessel": "chinasteelcorp",
-            "fingerabdruck": "[317155264000,360535714000,363326498000,449567488000]|null",
-            "shares": 38268000,
-            "jahresAktien": 15244927000,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
             "wert": 0.00270620979020979,
             "ticker": "LBRDB",
             "name": "Liberty Broadband Corp",
@@ -473,6 +460,19 @@
             "fingerabdruck": "[19435688000000,18917536000000,18785520000000,18865721000000]|null",
             "shares": 71853936,
             "jahresAktien": 25140136000,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 0.0030388572784163822,
+            "ticker": "003495.KS",
+            "name": "Korean Airlines Co.,Ltd.",
+            "nameSource": "longName",
+            "schluessel": "koreanairlinescoltd",
+            "fingerabdruck": "[25225542379500,17870718495800,16111796106140,14096094819140]|null",
+            "shares": 1110791,
+            "jahresAktien": 365529177,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -512,29 +512,9 @@
         ]
       },
       {
-        "klasse": "Groessenordnung 1e-4",
-        "gemeldet": 1,
-        "gelistet": 1,
-        "beispiele": [
-          {
-            "anker": "A",
-            "wert": 0.00009027475584185968,
-            "ticker": "VPLAY-A.ST",
-            "name": "Viaplay Group AB (publ)",
-            "nameSource": "fehlt",
-            "schluessel": "viaplaygroupabpubl",
-            "fingerabdruck": "[17682000000,18490000000,18567000000,15691000000]|null",
-            "shares": 411528,
-            "jahresAktien": 4558616594,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          }
-        ]
-      },
-      {
         "klasse": "Groessenordnung 1e-6",
-        "gemeldet": 1,
-        "gelistet": 1,
+        "gemeldet": 2,
+        "gelistet": 2,
         "beispiele": [
           {
             "anker": "A",
@@ -546,6 +526,39 @@
             "fingerabdruck": "[230267000000,141051751000,135386343000,101992096000]|null",
             "shares": 29000,
             "jahresAktien": 25000000000,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 0.00000251021208563347,
+            "ticker": "2002A.TW",
+            "name": "China Steel Corporation",
+            "nameSource": "longName",
+            "schluessel": "chinasteelcorp",
+            "fingerabdruck": "[317155264000,360535714000,363326498000,449567488000]|null",
+            "shares": 38268,
+            "jahresAktien": 15244927000,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          }
+        ]
+      },
+      {
+        "klasse": "Groessenordnung 1e-4",
+        "gemeldet": 1,
+        "gelistet": 1,
+        "beispiele": [
+          {
+            "anker": "A",
+            "wert": 0.00009027475584185968,
+            "ticker": "VPLAY-A.ST",
+            "name": "Viaplay Group AB (publ)",
+            "nameSource": "longName",
+            "schluessel": "viaplaygroupabpubl",
+            "fingerabdruck": "[17682000000,18490000000,18567000000,15691000000]|null",
+            "shares": 411528,
+            "jahresAktien": 4558616594,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -562,26 +575,26 @@
           "beispiele": [
             {
               "anker": "A-ausgenommen",
-              "wert": 0.008048811287216708,
+              "wert": 0.007956299066804918,
               "ticker": "FISK",
               "name": "Empire State Realty OP, L.P.",
-              "nameSource": "fehlt",
+              "nameSource": "longName",
               "grund": "M12"
             },
             {
               "anker": "A-ausgenommen",
-              "wert": 0.015438783143238039,
+              "wert": 0.015087142645533996,
               "ticker": "OGCP",
               "name": "Empire State Realty OP, L.P.",
-              "nameSource": "fehlt",
+              "nameSource": "longName",
               "grund": "M12"
             },
             {
               "anker": "A-ausgenommen",
-              "wert": 0.060337383350614726,
+              "wert": 0.05954526736779736,
               "ticker": "ESBA",
               "name": "Empire State Realty OP, L.P.",
-              "nameSource": "fehlt",
+              "nameSource": "longName",
               "grund": "M12"
             },
             {
@@ -607,11 +620,11 @@
   },
   "ankerB": {
     "ausgefallen": false,
-    "gemeldet": 174,
+    "gemeldet": 137,
     "klassen": [
       {
         "klasse": "2 Emittentengruppen",
-        "gemeldet": 170,
+        "gemeldet": 133,
         "gelistet": 5,
         "beispiele": [
           {
