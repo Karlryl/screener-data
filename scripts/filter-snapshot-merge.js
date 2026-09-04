@@ -504,15 +504,61 @@ function milanReihe(arr) {
   if (!Array.isArray(arr)) return null;
   return arr.map((x) => (x && typeof x === 'object' && 'value' in x ? x.value : x));
 }
+/**
+ * PERIODEN-ENDEN FUER DEN BEIN-AUSWEIS (Review #283). Ein LOCH (`null`) ist kein Rand-Fall:
+ * `mapFTSToQuarterly` schreibt fuer eine FTS-Row ohne Datum ausdruecklich `null`, statt eines zu
+ * fabrizieren (`pull-yahoo.js:2598`), und `milanReihe` reicht es unveraendert durch. Ein blosses
+ * `.join(', ')` loest genau dieses Loch in eine unsichtbare Leerstelle auf — und das Loch ist der
+ * Grund, aus dem Riegel (a) in `milanAusgerichtet` fail-closed greift. Es gehoert ins Log.
+ */
+function milanEndenAusweis(enden) {
+  return Array.isArray(enden) ? enden.map((e) => e ?? '∅').join(', ') : String(enden);
+}
 function milanEndlicheQuartale(reihe) {
   if (!Array.isArray(reihe)) return 0;
   let n = 0;
   for (const x of reihe) if (Number.isFinite(x) && x !== 0) n++;
   return n;
 }
+/**
+ * DIE KANONISIERUNG EINES EINZELWERTS — die gemeinsame Wurzel von `milanFingerabdruck`
+ * (positional) und `milanAusgerichtet` (nach Perioden-Ende). Beide MUESSEN denselben Wert
+ * gleich behandeln; stuenden die Regeln zweimal da, koennten sie auseinanderlaufen und A1
+ * ("Wertgleichheit, keine Toleranz") haette zwei verschiedene Bedeutungen an zwei Stellen
+ * desselben Tors. Deshalb eine Funktion, zwei Aufrufer (Nachbau-Fehler F1334).
+ */
+function milanMeldeWert(bein, x) {
+  const fx = bein.fx;
+  if (typeof x !== 'number' || !Number.isFinite(x)) return String(x);
+  // Fail-closed: OHNE Kurs ist der Wert nicht vergleichbar. Nie stillschweigend auf die
+  // konvertierte Ebene zurueckfallen — das waere genau die Bombe. Der Fall kann hier
+  // strukturell nicht auftreten (milanKlassenLesen laesst ein Bein ohne Kurs gar nicht erst
+  // entstehen, s. u.); die Schranke steht als zweite Verteidigungslinie und macht ein Bein
+  // ohne Kurs zu einem, das mit NICHTS uebereinstimmt.
+  if (!Number.isFinite(fx) || fx <= 0) return 'OHNE-FX:' + bein.ticker;
+  // FX3 — QUOTIENTEN-FINITHEIT, PFLICHT. `Number.isFinite` auf dem EINGANG und `fx > 0`
+  // genuegen nicht: der QUOTIENT kann ueberlaufen. Reproduziert (Urteil §3 K-1):
+  //   Infinity.toPrecision(15) -> "Infinity" -> Number(…) -> Infinity -> JSON.stringify -> null
+  //   JSON.stringify([Number((1e300/5e-324).toPrecision(15))]) -> [null]
+  //   JSON.stringify([Number((2e300/5e-324).toPrecision(15))]) -> [null]
+  // Zwei Beine mit VERSCHIEDENEN Werten werden bytegleich — dieselbe Nullen-Faltung, die der
+  // Kommentar oben fuer den Eingangspfad bereits einmal repariert hat, nur eine Rechnung
+  // spaeter. Ein nicht-endlicher Quotient matcht ab hier mit NICHTS.
+  const y = x / fx;
+  if (!Number.isFinite(y)) return 'UNENDLICH:' + bein.ticker;
+  return Number(y.toPrecision(FINGERABDRUCK_STELLEN));
+}
+
 /** A1: Umsatz- UND Bruttogewinn-Reihe zusammen, Wert fuer Wert, ohne Toleranz. Beide, weil eine
  *  einzelne Reihe zufaellig uebereinstimmen kann (runde Zahlen, kurze Reihen); beide zusammen
- *  nicht. Wortgleich zu `probe-dedup-fingerprint.js:82-84`, nur eine Datenebene frueher. */
+ *  nicht. Wortgleich zu `probe-dedup-fingerprint.js:82-84`, nur eine Datenebene frueher.
+ *
+ *  ⚠ POSITIONAL UND ABSICHTLICH UNVERAENDERT. Diese Funktion vergleicht Index gegen Index und
+ *  weiss nichts von Perioden-Enden. Sie hat drei Aufrufer, die genau das brauchen: den
+ *  A5-Mehrdeutigkeits-Index (`milanKlassenLesen`), den perioden-losen JAHRES-Aufrufer des
+ *  M10-Tripwire-Ankers B (`annual.annualRev`, dort gibt es keine Ends) und die Drift-Spur
+ *  `scripts/probe-fingerprint-zensus.js`. Der PERIODEN-AUSGERICHTETE Vergleich fuer A1 steht in
+ *  `milanAusgerichtet` — wer hier Ends einbaut, bricht den Tripwire und die Zensus-Zeitreihe. */
 function milanFingerabdruck(bein) {
   // `JSON.stringify` schreibt NaN, Infinity, -Infinity und undefined ALLE als `null` — zwei
   // Reihen, die sich nur in nicht-endlichen Feldern unterscheiden, bekaemen denselben
@@ -531,29 +577,101 @@ function milanFingerabdruck(bein) {
   // 52 Faellen. Die Melde-Waehrung ist die einzige Ebene, auf der dieselben Fundamentaldaten
   // dieselbe Zahl ergeben, egal wann sie geholt wurden. Zur Pflicht-Kanonisierung siehe
   // FINGERABDRUCK_STELLEN: die nackte Division allein repariert nur 57,7 % der Faelle.
-  const fx = bein.fx;
-  const melde = (x) => {
-    if (typeof x !== 'number' || !Number.isFinite(x)) return String(x);
-    // Fail-closed: OHNE Kurs ist der Wert nicht vergleichbar. Nie stillschweigend auf die
-    // konvertierte Ebene zurueckfallen — das waere genau die Bombe. Der Fall kann hier
-    // strukturell nicht auftreten (milanKlassenLesen laesst ein Bein ohne Kurs gar nicht erst
-    // entstehen, s. u.); die Schranke steht als zweite Verteidigungslinie und macht ein Bein
-    // ohne Kurs zu einem, das mit NICHTS uebereinstimmt.
-    if (!Number.isFinite(fx) || fx <= 0) return 'OHNE-FX:' + bein.ticker;
-    // FX3 — QUOTIENTEN-FINITHEIT, PFLICHT. `Number.isFinite` auf dem EINGANG und `fx > 0`
-    // genuegen nicht: der QUOTIENT kann ueberlaufen. Reproduziert (Urteil §3 K-1):
-    //   Infinity.toPrecision(15) -> "Infinity" -> Number(…) -> Infinity -> JSON.stringify -> null
-    //   JSON.stringify([Number((1e300/5e-324).toPrecision(15))]) -> [null]
-    //   JSON.stringify([Number((2e300/5e-324).toPrecision(15))]) -> [null]
-    // Zwei Beine mit VERSCHIEDENEN Werten werden bytegleich — dieselbe Nullen-Faltung, die der
-    // Kommentar oben fuer den Eingangspfad bereits einmal repariert hat, nur eine Rechnung
-    // spaeter. Ein nicht-endlicher Quotient matcht ab hier mit NICHTS.
-    const y = x / fx;
-    if (!Number.isFinite(y)) return 'UNENDLICH:' + bein.ticker;
-    return Number(y.toPrecision(FINGERABDRUCK_STELLEN));
-  };
+  const melde = (x) => milanMeldeWert(bein, x);
   const fest = (reihe) => JSON.stringify(Array.isArray(reihe) ? reihe.map(melde) : reihe);
   return fest(bein.revenueQ) + '|' + fest(bein.grossProfitQ);
+}
+
+/**
+ * A1, AUSGERICHTET — der Wertvergleich auf dem SCHNITT der Perioden-Enden.
+ * Ratifiziert vom Rat am 04.09.2026: "A1 wird nicht gelockert, sondern AUSGERICHTET: verglichen
+ * wird exakt und ohne Toleranz auf dem Schnitt der Perioden-Enden, jede Reihe gegen ihr EIGENES
+ * Ends-Array, fail-closed ohne Ends, die nicht-gemeinsamen Enden nur an den RAENDERN (reiner
+ * Versatz)."
+ *
+ * ── DER MECHANISMUS, DER DEN 04.09. GEKOSTET HAT ────────────────────────────────────────
+ * Der positionale Vergleich unterstellt, dass Index i beider Beine dieselbe PERIODE meint. Das
+ * hielt, solange beide Beine gleich alt waren. Gemessen am roten Lauf vom 04.09.2026:
+ *   CRCL      (gezogen 03.09.) revenueQEnds[0] = 2026-06-30, Wert 701.315.000
+ *   1CRCL.MI  (gezogen 06.08.) revenueQEnds[0] = 2026-03-31, Wert 694.133.000
+ * Dieselben vier Quartale, um EINEN Index verschoben — der positionale Vergleich sah vier
+ * Ungleichheiten, das Tor gab 'fingerabdruck', A7 fiel auf 16/17 und der Tageslauf brach ab.
+ * Ein neues Quartal auf EINEM Bein ist aber der Normalfall eines gestaffelten Shard-Laufs und
+ * kein Identitaets-Befund. Dieselbe Ursachenklasse wie A7-FX (ENTSCHIED 72), nur auf der
+ * ZEIT-Achse statt auf der Waehrungs-Achse: der Abrufzeitpunkt verschiebt die Messung.
+ *
+ * ── WARUM DAS KEINE TOLERANZ IST ────────────────────────────────────────────────────────
+ * Auf jedem gemeinsamen Perioden-Ende wird weiterhin EXAKT verglichen, mit derselben
+ * Kanonisierung (`milanMeldeWert`). Gelockert wird nichts; es wird nur aufgehoert, verschiedene
+ * Quartale miteinander zu vergleichen. Vier Riegel halten die Reichweite:
+ *   (a) FAIL-CLOSED OHNE ENDS. Kein Ends-Array, kein Array, Laenge != Werte-Laenge, ein
+ *       Nicht-String oder ein doppeltes Datum -> 'fingerabdruck'. Ohne diesen Riegel waere ein
+ *       Bein ohne Ends plotzlich mit jedem anderen vergleichbar. Dazu (Review #283) die
+ *       STRIKTE MONOTONIE jedes Ends-Arrays in EINER Richtung — sie ist die Vorbedingung, unter
+ *       der (d) ueberhaupt etwas misst.
+ *   (b) MINDEST-SCHNITT. `min(MILAN_MIN_QUARTALE, kuerzeste Reihe - 1)`, mindestens 1. Damit
+ *       traegt die Pflicht-Auflage A1 (>= 4 Quartale) weiter, ohne dass ein Bein mit kurzer
+ *       Reihe strukturell unerreichbar wird; das '-1' ist genau der eine Versatz, den ein
+ *       gestaffelter Lauf erzeugt.
+ *   (c) EXAKTE WERTGLEICHHEIT auf JEDEM gemeinsamen Ende, ohne Toleranz.
+ *   (d) KONTIGUITAET. Die gemeinsamen Enden muessen in JEDEM Bein einen zusammenhaengenden
+ *       Block bilden — die nicht-gemeinsamen liegen also nur an den Raendern. Ein LOCH in der
+ *       Mitte ist kein Versatz, sondern eine andere Reihe: zwei fremde Firmen, die sich
+ *       zufaellig auf jedem zweiten Quartal treffen, kommen so nicht durch.
+ * Jede Reihe wird gegen IHR EIGENES Ends-Array ausgerichtet (`grossProfitQEnds` ist ein eigenes
+ * Array und ist NICHT als Kopie von `revenueQEnds` zu unterstellen — `pull-yahoo.js:2612` fuehrt
+ * sie getrennt und trimmt sie getrennt).
+ *
+ * Reine Funktion. Gibt 'ok' oder den Verwerfungsgrund 'fingerabdruck' zurueck — denselben
+ * Grund wie vorher, damit der Waechter weiterhin den ERSTEN greifenden Riegel je Fremdpaar
+ * pinnen kann und der A7-Abbruchtext unveraendert triagierbar bleibt.
+ */
+function milanAusgerichtet(beine) {
+  for (const [werteFeld, endenFeld] of [['revenueQ', 'revenueQEnds'], ['grossProfitQ', 'grossProfitQEnds']]) {
+    // (a) fail-closed: erst jede Reihe in eine Karte Perioden-Ende -> {Index, kanonischer Wert}.
+    const karten = [];
+    for (const b of beine) {
+      const werte = b[werteFeld];
+      const enden = b[endenFeld];
+      if (!Array.isArray(werte) || !Array.isArray(enden) || enden.length !== werte.length) return 'fingerabdruck';
+      const karte = new Map();
+      for (let i = 0; i < enden.length; i++) {
+        const e = enden[i];
+        if (typeof e !== 'string' || !e) return 'fingerabdruck';
+        if (karte.has(e)) return 'fingerabdruck';
+        karte.set(e, { i, wert: milanMeldeWert(b, werte[i]) });
+      }
+      // (a2) STRIKTE MONOTONIE JE BEIN (Review #283). Riegel (d) unten misst Kontiguitaet ueber
+      // INDIZES und unterstellt damit still, dass die Indexfolge eines Beins der Datumsfolge
+      // entspricht. Stimmt das nicht, ist die Annahme lautlos falsch: bei durcheinander
+      // sortierten Enden bilden die gemeinsamen Perioden einen Index-Block, obwohl in der
+      // ZEIT ein Loch klafft — (d) waere abgeschaltet, ohne dass eine Zeile davon erzaehlt.
+      // Der Bestand laeuft absteigend (neuestes zuerst, `pull-yahoo.js:2573` reversed die
+      // FTS-Rows); erlaubt sind beide Richtungen, aber nur EINE je Bein. Alles andere ist keine
+      // Reihe, die sich ausrichten laesst -> fail-closed, derselbe Grund wie (a).
+      const abwaerts = enden.length < 2 || enden[0] > enden[1];
+      for (let i = 1; i < enden.length; i++) {
+        if (abwaerts ? !(enden[i - 1] > enden[i]) : !(enden[i - 1] < enden[i])) return 'fingerabdruck';
+      }
+      karten.push(karte);
+    }
+    // (b) der Schnitt und seine Untergrenze.
+    const gemeinsam = [...karten[0].keys()].filter((e) => karten.every((k) => k.has(e)));
+    const kuerzeste = Math.min(...karten.map((k) => k.size));
+    const mindest = Math.max(1, Math.min(MILAN_MIN_QUARTALE, kuerzeste - 1));
+    if (gemeinsam.length < mindest) return 'fingerabdruck';
+    // (c) Wertgleichheit auf jedem gemeinsamen Ende, ohne Toleranz.
+    for (const e of gemeinsam) {
+      const ref = karten[0].get(e).wert;
+      for (const k of karten) if (k.get(e).wert !== ref) return 'fingerabdruck';
+    }
+    // (d) Kontiguitaet: die gemeinsamen Enden liegen in jedem Bein in EINEM Block.
+    for (const k of karten) {
+      const idx = gemeinsam.map((e) => k.get(e).i).sort((x, y) => x - y);
+      if (idx[idx.length - 1] - idx[0] !== idx.length - 1) return 'fingerabdruck';
+    }
+  }
+  return 'ok';
 }
 
 /**
@@ -570,8 +688,11 @@ function milanFingerabdruck(bein) {
  */
 function milanTor(beine, mehrfachAbdruecke) {
   if (!Array.isArray(beine) || beine.length < 2 || beine.some((b) => !b)) return 'beine-unvollstaendig';
-  const abdruck = milanFingerabdruck(beine[0]);
-  if (beine.some((b) => milanFingerabdruck(b) !== abdruck)) return 'fingerabdruck';
+  // A1, Stufe 2: seit dem 04.09.2026 PERIODEN-AUSGERICHTET statt positional (s.
+  // `milanAusgerichtet`). Der Grund-String bleibt 'fingerabdruck' — der Riegel ist derselbe,
+  // nur vergleicht er nicht mehr Index gegen Index, sondern Quartal gegen Quartal.
+  const ausgerichtet = milanAusgerichtet(beine);
+  if (ausgerichtet !== 'ok') return ausgerichtet;
   if (beine.some((b) => milanEndlicheQuartale(b.revenueQ) < MILAN_MIN_QUARTALE)) return 'umsatzquartale';
   const land = beine[0].country;
   if (typeof land !== 'string' || !land.trim() || beine.some((b) => b.country !== land)) return 'land';
@@ -590,6 +711,12 @@ function milanTor(beine, mehrfachAbdruecke) {
   // dasselbe Modul die Klassen T179/T180 erben wird.
   const usPrimaer = beine.filter((b) => b.usPrimaerlisting);
   if (usPrimaer.length >= 2 && new Set(usPrimaer.map((b) => b.strengerSchluessel)).size >= 2) return 'us-primaerlisting';
+  // A5 bleibt POSITIONAL und haengt am Anker-Bein: `mehrfachAbdruecke` ist der Index ueber die
+  // Abdruecke ALLER Mailaender Beine (`milanKlassenLesen`), und der wird mit derselben
+  // positionalen Funktion gebaut. Die Frage lautet hier "traegt noch ein zweites Mailaender Bein
+  // exakt diese Reihe?" — eine Frage ueber den Bestand, nicht ueber diese Klasse. Der Abdruck
+  // wird deshalb erst hier gerechnet, wo er noch gebraucht wird.
+  const abdruck = milanFingerabdruck(beine[0]);
   if (mehrfachAbdruecke && mehrfachAbdruecke.has(abdruck)) return 'mehrdeutig';
   if (new Set(beine.map((b) => b.schluessel)).size === 1) return 'schon-vereint';
   return 'umbenennen';
@@ -894,7 +1021,16 @@ function milanKlassenLesen(ziel, kandidaten, registerEintraege) {
       bein = {
         datei, ticker, metaTicker: meta.ticker, name: meta.name, country: meta.country,
         shares: meta.sharesOutstanding, fx: meta.fxRateApplied,
+        // Der Abrufzeitpunkt gehoert ans Bein, nicht nur in die Datei: er ist die erste
+        // Triage-Frage bei einem gerissenen A7-Riegel ("sind die Beine verschieden alt?") und
+        // steht deshalb im Abbruch-Ausweis (s. run()).
+        fetchedAt: meta.fetchedAt,
         revenueQ: milanReihe(ts.revenueQ), grossProfitQ: milanReihe(ts.grossProfitQ),
+        // A1-Ausrichtung (Rat 04.09.2026): die Perioden-Enden, index-aligned zu den Werten.
+        // JEDE Reihe bekommt IHR EIGENES Ends-Array — `grossProfitQEnds` ist in `pull-yahoo.js`
+        // getrennt gefuehrt und getrennt getrimmt, es ist keine Kopie von `revenueQEnds`.
+        // Gleiche Entpackung wie die Werte: `milanReihe` laesst Strings unveraendert durch.
+        revenueQEnds: milanReihe(ts.revenueQEnds), grossProfitQEnds: milanReihe(ts.grossProfitQEnds),
         usPrimaerlisting: isUsPrimaryListing(meta),
         schluessel: issuerKeyLoose(j), strengerSchluessel: issuerKeyStrengOhneGattung(j),
       };
@@ -2149,7 +2285,26 @@ function run(argv) {
     // Tor-Menge zaehlt, steht der GRUND jeder gescheiterten Klasse mit in der Zeile — ein
     // FX-Desync ist ab sofort als `fingerabdruck` benannt und nicht mehr zu erraten.
     const gescheitert = ausListe.filter((u) => u.grund !== 'umbenennen' && u.grund !== 'schon-vereint');
-    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${torGruppen} von ${MILAN_ERWARTETE_GRUPPEN} Kandidatenklassen und ${torBeine} von ${MILAN_ERWARTETE_BEINE} Partner-Beinen passieren das Tor (offen umzubenennen waeren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen; der Rest ist schon vereint und ist KEIN Fehler). Gescheitert: ${gescheitert.length ? gescheitert.map((u) => `${u.anker} (${u.grund})`).join(', ') : 'keine Klasse — die Beinzahl einer bestehenden Klasse ist gefallen'}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Bei Grund \`fingerabdruck\` zuerst \`meta.fxRateApplied\` der Beine paarweise vergleichen. Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen — die Erwartung 18/17 leitet sich seit dem 02.09.2026 AUS der Liste ab und laesst sich gar nicht mehr einzeln hochdrehen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
+    // PERIODEN-AUSWEIS JE GESCHEITERTEM BEIN (Rat 04.09.2026). Am 04.09. stand in der
+    // Abbruchzeile nur `1CRCL.MI (fingerabdruck)`; dass die beiden Beine 28 Tage auseinander
+    // gezogen waren und deshalb um EIN Quartal versetzte Reihen trugen, war aus dem Log nicht
+    // zu sehen — die Diagnose kostete einen eigenen Lauf mit den Shard-Artefakten. Ab jetzt
+    // stehen Abrufzeitpunkt und Perioden-Enden JEDES beteiligten Beins in derselben Ausgabe.
+    // BEIDE Ends-Arrays (Review #283): `milanAusgerichtet` prueft Umsatz und Bruttogewinn
+    // getrennt gegen IHR EIGENES Array. Stand hier nur `revenueQEnds`, erzeugte eine Klasse,
+    // die allein an den Bruttogewinn-Enden scheitert, zwei byte-gleiche Zeilen — der Abbruch
+    // war dann nicht mehr aus dem Log heraus zu diagnostizieren.
+    const beinNachTicker = new Map();
+    for (const k of milan.klassen) for (const b of k.beine) if (b) beinNachTicker.set(b.ticker, b);
+    for (const u of gescheitert) {
+      console.error(`::error::U3-Milan — Klasse ${u.anker} (${u.grund}), Beine im Einzelnen:`);
+      for (const t of u.beine) {
+        const b = t && beinNachTicker.get(t);
+        if (!b) { console.error(`::error::U3-Milan —   ${t || '(kein Ticker)'}: kein auswertbares Bein (fehlt oder unlesbar)`); continue; }
+        console.error(`::error::U3-Milan —   ${b.ticker}: fetchedAt=${b.fetchedAt || 'unbekannt'} revenueQEnds=[${milanEndenAusweis(b.revenueQEnds)}] grossProfitQEnds=[${milanEndenAusweis(b.grossProfitQEnds)}]`);
+      }
+    }
+    console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${torGruppen} von ${MILAN_ERWARTETE_GRUPPEN} Kandidatenklassen und ${torBeine} von ${MILAN_ERWARTETE_BEINE} Partner-Beinen passieren das Tor (offen umzubenennen waeren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen; der Rest ist schon vereint und ist KEIN Fehler). Gescheitert: ${gescheitert.length ? gescheitert.map((u) => `${u.anker} (${u.grund})`).join(', ') : 'keine Klasse — die Beinzahl einer bestehenden Klasse ist gefallen'}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Bei Grund \`fingerabdruck\` zuerst die Perioden-Enden und \`meta.fxRateApplied\` der Beine paarweise vergleichen (der Bein-Ausweis dazu steht in den Zeilen direkt darueber). Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen — die Erwartung 18/17 leitet sich seit dem 02.09.2026 AUS der Liste ab und laesst sich gar nicht mehr einzeln hochdrehen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
     return 1;
   }
 
@@ -2349,7 +2504,8 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   // U2-BO/NS (ENTSCHIED 21) — fuer TDD. Waechter: tests/u2-wurzelzwillinge.test.js
   istPlatzhalter, besseresBein, wurzelZwillingsUmbenennungen, wendeWurzelZwillingeAn, WURZEL_ZWILLING,
   // U3-Milan (ENTSCHIED 31) — fuer TDD. Waechter: tests/u3-milan-spiegel.test.js
-  milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanTor, milanSieger, milanUmbenennungen,
+  milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanMeldeWert, milanAusgerichtet, milanEndenAusweis,
+  milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
   // M10/M17 (_COURT-M10-2026-08-30) — Aufnahmeschwelle. Waechter: tests/u3-milan-spiegel.test.js
   IDENTITAETS_REGISTER_ANKER, IDENTITAETS_BELEG_PFLICHTFELDER, IDENTITAETS_REGISTER_STANDARDPFAD,

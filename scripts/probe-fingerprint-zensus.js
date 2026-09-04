@@ -146,6 +146,12 @@ function liesStore(store) {
       ticker: f.slice(0, -'.json'.length), name: meta.name, country: meta.country,
       shares: meta.sharesOutstanding, schluessel: issuerKeyLoose(j), fx: meta.fxRateApplied,
       revenueQ: milanReihe(ts.revenueQ), grossProfitQ: milanReihe(ts.grossProfitQ),
+      // A1-AUSRICHTUNG (Rat 04.09.2026): die Beine tragen dieselben Felder, die das Tor liest —
+      // `milanAusgerichtet` braucht je Reihe IHR eigenes Ends-Array. Der Zensus selbst misst
+      // weiter POSITIONAL (`milanFingerabdruck`), weil seine Zeitreihe genau diese Groesse
+      // ueber Monate fortschreibt (s. Kopf, Ebenen-Wechsel-Warnung); die Felder stehen hier,
+      // damit ein spaeterer Aufruf des Tors nicht auf halben Beinen misst (F1334).
+      revenueQEnds: milanReihe(ts.revenueQEnds), grossProfitQEnds: milanReihe(ts.grossProfitQEnds),
     });
   }
   return { beine, unlesbar, ohneKurs };
