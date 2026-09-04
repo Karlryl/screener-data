@@ -504,6 +504,16 @@ function milanReihe(arr) {
   if (!Array.isArray(arr)) return null;
   return arr.map((x) => (x && typeof x === 'object' && 'value' in x ? x.value : x));
 }
+/**
+ * PERIODEN-ENDEN FUER DEN BEIN-AUSWEIS (Review #283). Ein LOCH (`null`) ist kein Rand-Fall:
+ * `mapFTSToQuarterly` schreibt fuer eine FTS-Row ohne Datum ausdruecklich `null`, statt eines zu
+ * fabrizieren (`pull-yahoo.js:2598`), und `milanReihe` reicht es unveraendert durch. Ein blosses
+ * `.join(', ')` loest genau dieses Loch in eine unsichtbare Leerstelle auf — und das Loch ist der
+ * Grund, aus dem Riegel (a) in `milanAusgerichtet` fail-closed greift. Es gehoert ins Log.
+ */
+function milanEndenAusweis(enden) {
+  return Array.isArray(enden) ? enden.map((e) => e ?? '∅').join(', ') : String(enden);
+}
 function milanEndlicheQuartale(reihe) {
   if (!Array.isArray(reihe)) return 0;
   let n = 0;
@@ -596,7 +606,9 @@ function milanFingerabdruck(bein) {
  * Quartale miteinander zu vergleichen. Vier Riegel halten die Reichweite:
  *   (a) FAIL-CLOSED OHNE ENDS. Kein Ends-Array, kein Array, Laenge != Werte-Laenge, ein
  *       Nicht-String oder ein doppeltes Datum -> 'fingerabdruck'. Ohne diesen Riegel waere ein
- *       Bein ohne Ends plotzlich mit jedem anderen vergleichbar.
+ *       Bein ohne Ends plotzlich mit jedem anderen vergleichbar. Dazu (Review #283) die
+ *       STRIKTE MONOTONIE jedes Ends-Arrays in EINER Richtung — sie ist die Vorbedingung, unter
+ *       der (d) ueberhaupt etwas misst.
  *   (b) MINDEST-SCHNITT. `min(MILAN_MIN_QUARTALE, kuerzeste Reihe - 1)`, mindestens 1. Damit
  *       traegt die Pflicht-Auflage A1 (>= 4 Quartale) weiter, ohne dass ein Bein mit kurzer
  *       Reihe strukturell unerreichbar wird; das '-1' ist genau der eine Versatz, den ein
@@ -628,6 +640,18 @@ function milanAusgerichtet(beine) {
         if (typeof e !== 'string' || !e) return 'fingerabdruck';
         if (karte.has(e)) return 'fingerabdruck';
         karte.set(e, { i, wert: milanMeldeWert(b, werte[i]) });
+      }
+      // (a2) STRIKTE MONOTONIE JE BEIN (Review #283). Riegel (d) unten misst Kontiguitaet ueber
+      // INDIZES und unterstellt damit still, dass die Indexfolge eines Beins der Datumsfolge
+      // entspricht. Stimmt das nicht, ist die Annahme lautlos falsch: bei durcheinander
+      // sortierten Enden bilden die gemeinsamen Perioden einen Index-Block, obwohl in der
+      // ZEIT ein Loch klafft — (d) waere abgeschaltet, ohne dass eine Zeile davon erzaehlt.
+      // Der Bestand laeuft absteigend (neuestes zuerst, `pull-yahoo.js:2573` reversed die
+      // FTS-Rows); erlaubt sind beide Richtungen, aber nur EINE je Bein. Alles andere ist keine
+      // Reihe, die sich ausrichten laesst -> fail-closed, derselbe Grund wie (a).
+      const abwaerts = enden.length < 2 || enden[0] > enden[1];
+      for (let i = 1; i < enden.length; i++) {
+        if (abwaerts ? !(enden[i - 1] > enden[i]) : !(enden[i - 1] < enden[i])) return 'fingerabdruck';
       }
       karten.push(karte);
     }
@@ -2266,6 +2290,10 @@ function run(argv) {
     // gezogen waren und deshalb um EIN Quartal versetzte Reihen trugen, war aus dem Log nicht
     // zu sehen — die Diagnose kostete einen eigenen Lauf mit den Shard-Artefakten. Ab jetzt
     // stehen Abrufzeitpunkt und Perioden-Enden JEDES beteiligten Beins in derselben Ausgabe.
+    // BEIDE Ends-Arrays (Review #283): `milanAusgerichtet` prueft Umsatz und Bruttogewinn
+    // getrennt gegen IHR EIGENES Array. Stand hier nur `revenueQEnds`, erzeugte eine Klasse,
+    // die allein an den Bruttogewinn-Enden scheitert, zwei byte-gleiche Zeilen — der Abbruch
+    // war dann nicht mehr aus dem Log heraus zu diagnostizieren.
     const beinNachTicker = new Map();
     for (const k of milan.klassen) for (const b of k.beine) if (b) beinNachTicker.set(b.ticker, b);
     for (const u of gescheitert) {
@@ -2273,8 +2301,7 @@ function run(argv) {
       for (const t of u.beine) {
         const b = t && beinNachTicker.get(t);
         if (!b) { console.error(`::error::U3-Milan —   ${t || '(kein Ticker)'}: kein auswertbares Bein (fehlt oder unlesbar)`); continue; }
-        const enden = Array.isArray(b.revenueQEnds) ? b.revenueQEnds.join(', ') : String(b.revenueQEnds);
-        console.error(`::error::U3-Milan —   ${b.ticker}: fetchedAt=${b.fetchedAt || 'unbekannt'} revenueQEnds=[${enden}]`);
+        console.error(`::error::U3-Milan —   ${b.ticker}: fetchedAt=${b.fetchedAt || 'unbekannt'} revenueQEnds=[${milanEndenAusweis(b.revenueQEnds)}] grossProfitQEnds=[${milanEndenAusweis(b.grossProfitQEnds)}]`);
       }
     }
     console.error(`::error::U3-Milan — Mengen-Riegel gerissen: ${torGruppen} von ${MILAN_ERWARTETE_GRUPPEN} Kandidatenklassen und ${torBeine} von ${MILAN_ERWARTETE_BEINE} Partner-Beinen passieren das Tor (offen umzubenennen waeren ${geplanteBeine} Beine in ${geplanteGruppen} Gruppen; der Rest ist schon vereint und ist KEIN Fehler). Gescheitert: ${gescheitert.length ? gescheitert.map((u) => `${u.anker} (${u.grund})`).join(', ') : 'keine Klasse — die Beinzahl einer bestehenden Klasse ist gefallen'}. Kein Bein wurde angefasst. Zensus dieses Laufs: ${milan.milanBeine} Mailaender Beine geprueft, ${milan.mehrfachAbdruecke.size} mehrdeutige Fingerabdruecke. ${milan.lesefehler.length} Kandidaten-Datei(en) waren nicht auswertbar${milan.lesefehler.length ? ` (${milan.lesefehler.map((f) => f.ticker).join(', ')})` : ''}. Bei Grund \`fingerabdruck\` zuerst die Perioden-Enden und \`meta.fxRateApplied\` der Beine paarweise vergleichen (der Bein-Ausweis dazu steht in den Zeilen direkt darueber). Auflage A7 des Milan-Urteils (ENTSCHIED 31): die eingefrorene Kandidatenliste gehoert neu vorgelegt, NICHT die Zahl nachgezogen — die Erwartung 18/17 leitet sich seit dem 02.09.2026 AUS der Liste ab und laesst sich gar nicht mehr einzeln hochdrehen. Nachmessen: node scripts/probe-fingerprint-zensus.js`);
@@ -2477,7 +2504,7 @@ module.exports = { autorisierteDateinamen, ladeNavRegister, teileEingang, run, M
   // U2-BO/NS (ENTSCHIED 21) — fuer TDD. Waechter: tests/u2-wurzelzwillinge.test.js
   istPlatzhalter, besseresBein, wurzelZwillingsUmbenennungen, wendeWurzelZwillingeAn, WURZEL_ZWILLING,
   // U3-Milan (ENTSCHIED 31) — fuer TDD. Waechter: tests/u3-milan-spiegel.test.js
-  milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanMeldeWert, milanAusgerichtet,
+  milanReihe, milanEndlicheQuartale, milanFingerabdruck, milanMeldeWert, milanAusgerichtet, milanEndenAusweis,
   milanTor, milanSieger, milanUmbenennungen,
   milanKlassenLesen, milanSchreiben, ladeIdentitaetsRegister,
   // M10/M17 (_COURT-M10-2026-08-30) — Aufnahmeschwelle. Waechter: tests/u3-milan-spiegel.test.js

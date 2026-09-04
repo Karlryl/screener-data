@@ -37,7 +37,7 @@ const path = require('node:path');
 
 const {
   milanTor, milanSieger, milanUmbenennungen, milanKlassenLesen, milanSchreiben, milanFingerabdruck,
-  milanAusgerichtet,
+  milanAusgerichtet, milanEndenAusweis,
   ladeIdentitaetsRegister, MILAN_KANDIDATEN, MILAN_ERWARTETE_BEINE, MILAN_ERWARTETE_GRUPPEN,
   MILAN_SHARES_BAND, MILAN_MIN_QUARTALE, MILAN_SPIEGEL,
   IDENTITAETS_REGISTER_ANKER, IDENTITAETS_REGISTER_STANDARDPFAD,
@@ -854,6 +854,55 @@ test('A1-AUSRICHTUNG (vii): grossProfitQ wird gegen SEIN EIGENES Ends-Array ausg
   assert.equal(milanTor(schief, new Set()), 'fingerabdruck');
 });
 
+test('A1-AUSRICHTUNG (ix, ROT VORHER): ein durcheinander sortiertes Ends-Array faellt fail-closed durch', () => {
+  // Riegel (d) misst Kontiguitaet ueber INDIZES. Das traegt nur, solange die Indexfolge eines
+  // Beins der Datumsfolge entspricht — eine Annahme, die der Riegel bis Review #283 NIRGENDS
+  // geprueft hat. Hier ist sie verletzt: Bein 2 traegt dieselben fuenf Perioden mit denselben
+  // Werten, nur stehen zwei davon vertauscht. Die gemeinsamen Enden belegen dadurch die Indizes
+  // 0..4 und bilden fuer (d) einen tadellosen Block — VOR dem Fix lief die Klasse als
+  // 'umbenennen' durch, obwohl die Reihe in der ZEIT gar keine Reihe mehr ist.
+  const ends = quartalsEnden(5);                                    // 2026-03-31 … 2025-03-31, absteigend
+  const gemischt = [ends[0], ends[2], ends[1], ends[3], ends[4]];   // 2026-03-31, 2025-09-30, 2025-12-31, …
+  const werte = reihe(1000, 5), gp = reihe(700, 5);
+  // Die Werte werden MITGETAUSCHT: auf jedem Perioden-Ende steht damit beidseitig derselbe Wert,
+  // und Riegel (c) kann nicht der sein, der greift. Sonst waere die Probe wertlos.
+  const misch = (a) => [a[0], a[2], a[1], a[3], a[4]];
+  const beine = [
+    { ...bein('1MIX.MI', 'Misch Holding AG', { quartale: 5 }), revenueQ: werte, grossProfitQ: gp,
+      revenueQEnds: ends, grossProfitQEnds: ends },
+    // NUR die Umsatz-Reihe ist umsortiert; der Bruttogewinn bleibt beidseitig unangetastet,
+    // sonst risse Riegel (c) auf der zweiten Reihe und die Probe waere auch ohne den Fix gruen.
+    { ...bein('MIX', 'MIX', { quartale: 5 }), revenueQ: misch(werte), grossProfitQ: gp,
+      revenueQEnds: gemischt, grossProfitQEnds: ends },
+  ];
+  assert.equal(beine[0].revenueQEnds.filter((e) => beine[1].revenueQEnds.includes(e)).length, 5,
+    'Vorbedingung: dieselben fuenf Perioden — es fehlt keine, es ist nur die Ordnung kaputt');
+  assert.equal(milanAusgerichtet(beine), 'fingerabdruck', 'keine Reihe -> nicht ausrichtbar');
+  assert.equal(milanTor(beine, new Set()), 'fingerabdruck');
+
+  // ABWESENHEIT, damit der Riegel nicht "irgendetwas ausser absteigend" verbietet: dieselben
+  // zwei Beine STRIKT AUFSTEIGEND (aeltestes zuerst) sind eine saubere Reihe und passieren.
+  const auf = (a) => [...a].reverse();
+  const aufsteigend = [
+    { ...beine[0], revenueQ: auf(werte), grossProfitQ: auf(gp),
+      revenueQEnds: auf(ends), grossProfitQEnds: auf(ends) },
+    { ...beine[1], revenueQ: auf(werte), grossProfitQ: auf(gp),
+      revenueQEnds: auf(ends), grossProfitQEnds: auf(ends) },
+  ];
+  assert.equal(milanTor(aufsteigend, new Set()), 'umbenennen',
+    'die Richtung ist frei, nur wechseln darf sie innerhalb eines Beins nicht');
+});
+
+test('BEIN-AUSWEIS: ein Loch im Ends-Array steht als ∅ im Log, nicht als Leerstelle', () => {
+  // `mapFTSToQuarterly` schreibt fuer eine FTS-Row ohne Datum bewusst `null` statt eines
+  // fabrizierten Datums (`pull-yahoo.js:2598`), und `milanReihe` reicht es durch. Genau dieses
+  // Loch loest Riegel (a) aus — mit einem blossen `.join(', ')` waere es im Abbruch-Log als
+  // leeres Feld unsichtbar und die Ursache nicht zu benennen.
+  assert.equal(milanEndenAusweis(['2026-03-31', null, '2025-09-30']), '2026-03-31, ∅, 2025-09-30');
+  assert.equal(milanEndenAusweis(['2026-03-31', undefined]), '2026-03-31, ∅');
+  assert.equal(milanEndenAusweis(undefined), 'undefined', 'ein FEHLENDES Array bleibt als solches erkennbar');
+});
+
 test('A1-AUSRICHTUNG (viii): die fuenf Fremdpaare scheitern weiterhin AN STUFE 2 selbst', () => {
   // Der "erster Riegel"-Vertrag aus Abschnitt 2, eine Ebene tiefer gepinnt: es muss die
   // AUSRICHTUNG sein, die sie blockt, nicht ein spaeterer Riegel. Ohne diese Zusicherung koennte
@@ -1059,17 +1108,23 @@ function alleKandidatenDateien(o = {}) {
   // sind also wertgleich und NUR verschoben. Genau das darf A7 nicht mehr reissen.
   const versetzt = new Set(o.versetzt || []);
   const vq = o.versatzQuartale === undefined ? 1 : o.versatzQuartale;
+  // `nurGp`: der Versatz liegt AUSSCHLIESSLICH auf der Bruttogewinn-Reihe. Die Umsatz-Enden
+  // bleiben Bein fuer Bein identisch — die Lage, in der der Bein-Ausweis vor Review #283 zwei
+  // byte-gleiche Zeilen druckte, weil er nur `revenueQEnds` kannte.
+  const nurGp = !!o.nurGp;
   const aus = [];
   MILAN_KANDIDATEN.forEach((k, i) => {
     const klasseVersetzt = k.partner.some((p) => versetzt.has(p));
-    const opt = { shares: 1000000, basis: 1000 + i * 7, wertVersatz: klasseVersetzt ? vq : 0 };
+    const opt = { shares: 1000000, basis: 1000 + i * 7, wertVersatz: klasseVersetzt && !nurGp ? vq : 0 };
     const name = `Emittent ${i} AG`;
     aus.push([k.anker, name, klasseVersetzt ? { ...opt, fetchedAt: '2026-08-06T05:53:58.804Z' } : opt]);
     k.partner.forEach((p, j) => {
       if (weglassen.has(p)) return;
       const fertig = i < vereint || (o.dreibeinHalb && k.partner.length > 1 && j === 0);
       const pOpt = versetzt.has(p)
-        ? { ...opt, versatz: vq, wertVersatz: 0, fetchedAt: '2026-09-03T07:42:05.261Z' }
+        ? (nurGp
+          ? { ...opt, gpVersatz: vq, fetchedAt: '2026-09-03T07:42:05.261Z' }
+          : { ...opt, versatz: vq, wertVersatz: 0, fetchedAt: '2026-09-03T07:42:05.261Z' })
         : opt;
       aus.push([p, fertig ? name : p, pOpt]);
     });
@@ -1179,6 +1234,23 @@ test('A1-AUSRICHTUNG am Prozess: ZWEI Quartale Versatz reissen weiterhin — mit
     'der Ausweis nennt Abrufzeitpunkt UND Perioden-Enden des Anker-Beins');
   assert.match(r.ausgabe, /\s CRCL: fetchedAt=2026-09-03T07:42:05\.261Z revenueQEnds=\[2026-09-30, /,
     'und dieselben zwei Groessen des Partner-Beins — der Versatz ist damit aus dem Log ablesbar');
+  assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
+});
+
+test('A1-AUSRICHTUNG am Prozess (ROT VORHER): ein NUR im Bruttogewinn versetztes Bein ist am Log diagnostizierbar', () => {
+  // Die Luecke aus Review #283: `milanAusgerichtet` prueft Umsatz UND Bruttogewinn getrennt,
+  // der Bein-Ausweis druckte aber nur `revenueQEnds`. Hier sind die Umsatz-Enden beider Beine
+  // ZEICHENGLEICH und allein die Bruttogewinn-Enden um drei Quartale versetzt (min(4, 5-1) = 4
+  // gemeinsame noetig, es bleiben 2) — vor dem Fix waren die beiden Ausweis-Zeilen bis aufs
+  // Byte identisch und der Abbruch aus dem Log heraus nicht mehr zu erklaeren.
+  const r = lauf([...fueller(120), ...alleKandidatenDateien({ versetzt: ['CRCL'], versatzQuartale: 3, nurGp: true })]);
+  assert.equal(r.code, 1, 'unter der Untergrenze bricht der Riegel ab — auch wenn nur der Bruttogewinn versetzt ist. Ausgabe:\n' + r.ausgabe);
+  assert.match(r.ausgabe, /Gescheitert: 1CRCL\.MI \(fingerabdruck\)/);
+  const REV = '2026-03-31, 2025-12-31, 2025-09-30, 2025-06-30, 2025-03-31';
+  assert.match(r.ausgabe, new RegExp(`1CRCL\\.MI: fetchedAt=\\S+ revenueQEnds=\\[${REV}\\] grossProfitQEnds=\\[${REV}\\]`),
+    'das Anker-Bein weist BEIDE Arrays aus');
+  assert.match(r.ausgabe, new RegExp(`\\sCRCL: fetchedAt=\\S+ revenueQEnds=\\[${REV}\\] grossProfitQEnds=\\[2026-12-31, `),
+    'und am Partner-Bein ist genau EIN Array verschoben — ohne diese Spalte waeren beide Zeilen gleich');
   assert.match(r.ausgabe, /Kein Bein wurde angefasst/);
 });
 
