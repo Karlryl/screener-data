@@ -1366,7 +1366,7 @@
     },
     "2026-09-05": {
       "consumer-discretionary": {
-        "p99Delta": 15,
+        "p99Delta": 15.2,
         "thr": 46,
         "betaCov": 0.806930693069307,
         "suspect": false
@@ -1374,7 +1374,7 @@
       "consumer-staples": {
         "p99Delta": 21,
         "thr": 46,
-        "betaCov": 0.8366606170598911,
+        "betaCov": 0.8375451263537906,
         "suspect": false
       },
       "energy": {
@@ -1388,8 +1388,8 @@
           "normaleSchwelle": 11.5,
           "fanOut": {
             "zaehler": 20,
-            "nenner": 322,
-            "anteil": 0.062111801242236024,
+            "nenner": 323,
+            "anteil": 0.06191950464396285,
             "cap": 0.08
           },
           "breiteZeilen": [
@@ -1519,27 +1519,27 @@
         }
       },
       "financials": {
-        "p99Delta": 20,
+        "p99Delta": 20.200000000000003,
         "thr": 46,
-        "betaCov": 0.8707317073170732,
+        "betaCov": 0.8710462287104623,
         "suspect": false
       },
       "health-care": {
-        "p99Delta": 21.300000000000004,
+        "p99Delta": 24.3,
         "thr": 46,
-        "betaCov": 0.7855731225296443,
+        "betaCov": 0.7859960552268245,
         "suspect": false
       },
       "industrials": {
-        "p99Delta": 19.10000000000001,
+        "p99Delta": 19.199999999999996,
         "thr": 46,
         "betaCov": 0.7855166051660517,
         "suspect": false
       },
       "it-services": {
-        "p99Delta": 14.600000000000001,
+        "p99Delta": 14.800000000000004,
         "thr": 46,
-        "betaCov": 0.8187919463087249,
+        "betaCov": 0.82,
         "suspect": true,
         "datenSchub": {
           "zuschlagGewaehrt": false,
@@ -1547,26 +1547,26 @@
           "normaleSchwelle": 11.5,
           "fanOut": {
             "zaehler": 4,
-            "nenner": 129,
-            "anteil": 0.031007751937984496,
+            "nenner": 127,
+            "anteil": 0.031496062992125984,
             "cap": 0.08
           },
           "breiteZeilen": [
             {
               "ticker": "6214.TW",
-              "delta": 12.799999999999997
+              "delta": 13
             },
             {
               "ticker": "WSE",
-              "delta": 14.600000000000001
+              "delta": 14.800000000000004
             },
             {
               "ticker": "7203.SR",
-              "delta": 18.6
+              "delta": 18.5
             },
             {
               "ticker": "DTL.AX",
-              "delta": 12.200000000000003
+              "delta": 12.000000000000007
             }
           ],
           "integritaetsVerfall": [
@@ -1582,9 +1582,9 @@
         }
       },
       "materials": {
-        "p99Delta": 20.099999999999994,
+        "p99Delta": 19.000000000000004,
         "thr": 46,
-        "betaCov": 0.772937905468026,
+        "betaCov": 0.7727272727272727,
         "suspect": false
       },
       "real-estate": {
@@ -1600,9 +1600,9 @@
         "suspect": false
       },
       "software-comm-services": {
-        "p99Delta": 20.5,
+        "p99Delta": 24.5,
         "thr": 46,
-        "betaCov": 0.7772727272727272,
+        "betaCov": 0.7769347496206374,
         "suspect": false
       },
       "survival": {
@@ -1612,15 +1612,15 @@
         "suspect": false
       },
       "tech-hardware": {
-        "p99Delta": 12.199999999999996,
+        "p99Delta": 12.100000000000001,
         "thr": 46,
-        "betaCov": 0.7439198855507868,
+        "betaCov": 0.7453505007153076,
         "suspect": false
       },
       "utilities": {
         "p99Delta": 29.5,
         "thr": 46,
-        "betaCov": 0.8583333333333333,
+        "betaCov": 0.8587257617728532,
         "suspect": true,
         "datenSchub": {
           "zuschlagGewaehrt": false,
@@ -1628,8 +1628,8 @@
           "normaleSchwelle": 11.5,
           "fanOut": {
             "zaehler": 17,
-            "nenner": 295,
-            "anteil": 0.0576271186440678,
+            "nenner": 296,
+            "anteil": 0.057432432432432436,
             "cap": 0.08
           },
           "breiteZeilen": [
@@ -1639,7 +1639,7 @@
             },
             {
               "ticker": "NJR",
-              "delta": 27.799999999999997
+              "delta": 27.60000000000001
             },
             {
               "ticker": "RENE.LS",
@@ -1647,59 +1647,59 @@
             },
             {
               "ticker": "AES",
-              "delta": 14.900000000000006
-            },
-            {
-              "ticker": "SR",
-              "delta": 22.900000000000006
-            },
-            {
-              "ticker": "ORA",
-              "delta": 21.200000000000003
-            },
-            {
-              "ticker": "WTRG",
-              "delta": 14
-            },
-            {
-              "ticker": "CPK",
-              "delta": 22.599999999999994
-            },
-            {
-              "ticker": "AQN",
-              "delta": 19.199999999999996
-            },
-            {
-              "ticker": "MGEE",
-              "delta": 20.9
-            },
-            {
-              "ticker": "POWERGRID.BO",
-              "delta": 18.099999999999998
-            },
-            {
-              "ticker": "AVA",
               "delta": 14.700000000000003
             },
             {
+              "ticker": "SR",
+              "delta": 22.799999999999997
+            },
+            {
+              "ticker": "ORA",
+              "delta": 21.300000000000004
+            },
+            {
+              "ticker": "WTRG",
+              "delta": 14.100000000000001
+            },
+            {
+              "ticker": "CPK",
+              "delta": 22.699999999999996
+            },
+            {
+              "ticker": "AQN",
+              "delta": 19.299999999999997
+            },
+            {
+              "ticker": "MGEE",
+              "delta": 21
+            },
+            {
+              "ticker": "POWERGRID.BO",
+              "delta": 18.000000000000004
+            },
+            {
+              "ticker": "AVA",
+              "delta": 14.600000000000001
+            },
+            {
               "ticker": "OGS",
-              "delta": 13.500000000000004
+              "delta": 13.400000000000002
             },
             {
               "ticker": "600635.SS",
-              "delta": 12.100000000000001
+              "delta": 12.200000000000003
             },
             {
               "ticker": "POR",
-              "delta": 13.800000000000004
+              "delta": 13.700000000000003
             },
             {
               "ticker": "BEP",
-              "delta": 20.200000000000003
+              "delta": 20.299999999999997
             },
             {
               "ticker": "PEG",
-              "delta": 52.49999999999999
+              "delta": 52.599999999999994
             }
           ],
           "integritaetsVerfall": [
