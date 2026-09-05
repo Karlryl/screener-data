@@ -1,12 +1,12 @@
 {
   "schema": "screener-pipeline-status/v1",
   "status": "failure",
-  "attempt_run_id": "33963865924",
+  "attempt_run_id": "33967836117",
   "run_attempt": 1,
-  "head_sha": "e90ce32e50ba9fc921ea75754dacf200ae310698",
-  "started_at": "2026-09-05T11:38:18Z",
-  "completed_at": "2026-09-05T12:52:16Z",
-  "failed_job": "scoring",
-  "reason": "prep=success,pull=success,prices=success,merge=success,scoring=failure,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=failure",
+  "head_sha": "748e58ed8f1a312ea293fdf95b20da1f891b61d8",
+  "started_at": "2026-09-05T13:04:34Z",
+  "completed_at": "2026-09-05T14:21:09Z",
+  "failed_job": "jahres-ausreisser-waechter",
+  "reason": "prep=success,pull=success,prices=success,merge=success,scoring=success,entdeckungs-waechter=success,earnings-transport-waechter=success,jahres-ausreisser-waechter=failure",
   "last_success_at": "2026-08-25T04:26:59Z"
 }
