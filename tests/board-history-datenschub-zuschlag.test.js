@@ -341,7 +341,7 @@ check('REGISTER: Eintrag #261 traegt typ daten-schub, KEINE Zahl, Wirkungs-Verme
   assert.ok(typeof e.wirkung_gemessen === 'string' && e.wirkung_gemessen.length > 0,
     'dokumentarisches Feld wirkung_gemessen fehlt (Q3)');
   // Verdrahtung am Objekt: ohne Bindung darf der Eintrag NICHT am Gate ankommen.
-  assert.strictEqual(W.massstabBruchFuer('2026-09-01'), null, 'entbundener Eintrag kommt noch am Gate an');
+  assert.strictEqual(W.massstabBruchFuer('2026-09-01'), null, 'entbundener Eintrag kommt NICHT mehr am Gate an');
 });
 
 check('REGISTER: kein einziger Eintrag kombiniert daten-schub mit einer Lampe', () => {
