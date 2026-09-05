@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-05T11:13:22.156Z",
+  "generated_at": "2026-09-05T12:50:25.342Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.4,
-    "generated_at": "2026-09-05T11:07:06.359Z"
+    "coverage_pct": 75.2,
+    "generated_at": "2026-09-05T12:44:05.306Z"
   },
-  "generatedFromSnapshots": 16078,
+  "generatedFromSnapshots": 16083,
   "branches": [
     "consumer-discretionary",
     "consumer-staples",
@@ -57,7 +57,7 @@
       "unprofitable": 33
     },
     "health-care": {
-      "profitable": 700,
+      "profitable": 701,
       "unprofitable": 314
     },
     "industrials": {
@@ -86,25 +86,25 @@
     },
     "tech-hardware": {
       "profitable": 567,
-      "unprofitable": 132
+      "unprofitable": 133
     },
     "utilities": {
-      "profitable": 352,
+      "profitable": 351,
       "unprofitable": 9
     }
   },
-  "survivalCount": 118,
+  "survivalCount": 117,
   "excluded": {
-    "balance-sheet-bank": 730,
+    "balance-sheet-bank": 731,
     "data-suspect": 46,
-    "dup-issuer": 3148,
+    "dup-issuer": 3151,
     "insurer": 298,
     "lender-gp0": 102,
     "mortgage-reit": 17,
     "no-axes": 28,
     "no-sector": 86,
-    "non-operating-rev": 137,
-    "non-us": 1590,
+    "non-operating-rev": 139,
+    "non-us": 1589,
     "telecom": 194
   }
 }
