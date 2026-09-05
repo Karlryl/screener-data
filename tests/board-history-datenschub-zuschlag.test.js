@@ -321,24 +321,27 @@ check('BP-9b: eine Lampe OHNE daten-schub bleibt unveraendert erlaubt (Tag-938-F
 });
 
 // ── Register: der ECHTE Eintrag Tag 1204, aus der Datei gelesen ─────────────
-check('REGISTER: Eintrag #261 traegt typ daten-schub, drei Boards, KEINE Zahl, Wirkungs-Vermerk', () => {
+// ENTBUNDEN 2026-09-05 (Master-Ratifikation, Anker orchestrator-2026-09-05-tag.md N3/N6): der
+// Eintrag bleibt als Dokumentation, bindet aber keine Boards mehr (boards: null, Praezedenz
+// Tag 579) — 14 von 15 Verfallszeilen am ersten Live-Tag waren falsch-positiv, die Bindung
+// haette nie verbraucht werden koennen (Dauersperre). Die Bindungs-Waechter leben jetzt in
+// tests/wertgate-261-entbunden.test.js; hier bleibt die FORM des Eintrags gepinnt.
+check('REGISTER: Eintrag #261 traegt typ daten-schub, KEINE Zahl, Wirkungs-Vermerk — und seit 05.09. KEINE aktive Bindung', () => {
   const reg = require('../board-history/_excluded.json')._massstab_brueche;
   const e = reg.find((x) => x && x.tag === 'Tag 1204');
   assert.ok(e, 'kein Eintrag Tag 1204 im Register');
   assert.strictEqual(e.typ, 'daten-schub');
-  assert.strictEqual(e.letztes_altes_vintage, '2026-09-01', 'Bindung an den exakten Vorgaenger');
-  assert.deepStrictEqual(e.boards, ['energy', 'it-services', 'utilities'], 'namentliche Board-Liste');
+  assert.strictEqual(e.letztes_altes_vintage, '2026-09-01', 'Bindung an den exakten Vorgaenger (dokumentarisch)');
+  assert.strictEqual(e.boards, null, 'seit 05.09. entbunden: boards muss null sein');
+  assert.deepStrictEqual(e['boards_bis_2026-09-05'], ['energy', 'it-services', 'utilities'], 'die frueher gebundenen Boards bleiben nachlesbar');
   assert.ok(!('erklaerende_lampe' in e), 'ein daten-schub-Eintrag darf nie zusaetzlich blenden (WB-9)');
   for (const k of ['allowance', 'tagesschwelle', 'schwelle', 'grenze', 'hoehe', 'deckel']) {
     assert.ok(!(k in e), 'Register traegt eine Zahl (' + k + ') — die Hoehe kommt aus dem Code, nie von Hand');
   }
   assert.ok(typeof e.wirkung_gemessen === 'string' && e.wirkung_gemessen.length > 0,
     'dokumentarisches Feld wirkung_gemessen fehlt (Q3)');
-  // Verdrahtung am Objekt: der echte Eintrag muss am Gate mit seinem typ ankommen.
-  const b = W.massstabBruchFuer('2026-09-01');
-  assert.ok(b, 'massstabBruchFuer findet den Eintrag nicht');
-  assert.strictEqual(b.typ, 'daten-schub', 'typ kommt nicht am Gate an');
-  assert.ok(b.boards.has('energy') && b.boards.has('it-services') && b.boards.has('utilities'));
+  // Verdrahtung am Objekt: ohne Bindung darf der Eintrag NICHT am Gate ankommen.
+  assert.strictEqual(W.massstabBruchFuer('2026-09-01'), null, 'entbundener Eintrag kommt noch am Gate an');
 });
 
 check('REGISTER: kein einziger Eintrag kombiniert daten-schub mit einer Lampe', () => {
