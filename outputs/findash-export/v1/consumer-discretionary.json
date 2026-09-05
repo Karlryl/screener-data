@@ -1,6 +1,6 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-05T08:08:00.293Z",
+  "generated_at": "2026-09-05T11:13:21.671Z",
   "branch": "consumer-discretionary",
   "boardStatus": "core",
   "coverage": {
@@ -8,13 +8,13 @@
     "degraded": false,
     "blocked": false,
     "coverage_pct": 75.4,
-    "generated_at": "2026-09-05T08:01:41.579Z"
+    "generated_at": "2026-09-05T11:07:06.359Z"
   },
   "mcapBounds": [
-    1205328142.3491073,
-    1923354858.541302,
-    3631827815.2108445,
-    9379459089.668835
+    1204867376.5020092,
+    1921100574.015099,
+    3629377374.5903,
+    9365679845.451202
   ],
   "profitable": [
     {
@@ -529,7 +529,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "6181.HK",
-      "score": 91.7,
+      "score": 91.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -572,7 +572,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 85.1,
+          "pct": 85.3,
           "weight": 2.65
         },
         {
@@ -954,7 +954,7 @@
     {
       "rank": 12,
       "rankGrund": null,
-      "ticker": "CRAFTSMAN.NS",
+      "ticker": "CRAFTSMAN.BO",
       "score": 88.1,
       "track": "profitable",
       "lamps": [
@@ -971,7 +971,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 3154918381.350781,
+      "marketCap": 3149936077.6288342,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1055,7 +1055,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1407948244.7142994,
+      "marketCap": 1409967938.2395046,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1123,96 +1123,6 @@
     },
     {
       "rank": 14,
-      "rankGrund": null,
-      "ticker": "ATZ.TO",
-      "score": 86.9,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.407,
-        "companion": 111
-      },
-      "name": "Aritzia Inc.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": 10654803888.5376,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 1100,
-      "cohortFallback": false,
-      "scoreBase": 83.2,
-      "scoreShrunk": 83.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.045,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 95.4,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 85.3,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 94,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 95.5,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 74.8,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 84.7,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 6.3,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 43.37193735715705,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -25.7,
-        "athDate": "2026-06-15",
-        "monthsAgo": 3,
-        "lastDate": "2026-09-04"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 457,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7227
-    },
-    {
-      "rank": 15,
       "rankGrund": null,
       "ticker": "6015.SR",
       "score": 86.9,
@@ -1294,6 +1204,96 @@
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": 0.26632577
+    },
+    {
+      "rank": 15,
+      "rankGrund": null,
+      "ticker": "ATZ.TO",
+      "score": 86.9,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.407,
+        "companion": 111
+      },
+      "name": "Aritzia Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": 10654803888.5376,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 1100,
+      "cohortFallback": false,
+      "scoreBase": 83.2,
+      "scoreShrunk": 83.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.045,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 95.4,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 85.2,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 94,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 95.5,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 74.8,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 84.7,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 6.3,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 43.37193735715705,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -25.7,
+        "athDate": "2026-06-15",
+        "monthsAgo": 3,
+        "lastDate": "2026-09-04"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.7227
     },
     {
       "rank": 16,
@@ -1806,7 +1806,7 @@
     {
       "rank": 22,
       "rankGrund": null,
-      "ticker": "ENDURANCE.NS",
+      "ticker": "ENDURANCE.BO",
       "score": 84.7,
       "track": "profitable",
       "lamps": [
@@ -1821,7 +1821,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 4142624461.7560396,
+      "marketCap": 4140763943.9396377,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1876,7 +1876,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 37.87675300660034,
+      "revGrowthYoYPct": 37.87675300660036,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -2431,7 +2431,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 815724789.8653902,
+      "marketCap": 816811970.3601562,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2947,7 +2947,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 943843375.8679779,
+      "marketCap": 947627787.0144718,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3100,7 +3100,7 @@
     {
       "rank": 37,
       "rankGrund": null,
-      "ticker": "MINDACORP.NS",
+      "ticker": "MINDACORP.BO",
       "score": 82.4,
       "track": "profitable",
       "lamps": [
@@ -3115,7 +3115,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1750573177.6398296,
+      "marketCap": 1744096911.0561752,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3288,7 +3288,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 948817269.9800372,
+      "marketCap": 949985598.8753695,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3893,7 +3893,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 2563110551.9637465,
+      "marketCap": 2566619700.106183,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -4233,7 +4233,7 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Consumer Cyclical",
-      "marketCap": 1061225282.1277901,
+      "marketCap": 1061473775.1158016,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4297,7 +4297,7 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.19512576
+      "tradingFxRateApplied": 0.19517145
     },
     {
       "rank": 51,
@@ -4320,7 +4320,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1402247296,
+      "marketCap": 1404310912,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4581,7 +4581,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 2695932277.318812,
+      "marketCap": 2684145992.318616,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5455,7 +5455,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 2875704421.1921062,
+      "marketCap": 2884407587.1528387,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5610,7 +5610,7 @@
     {
       "rank": 66,
       "rankGrund": null,
-      "ticker": "ARVIND.BO",
+      "ticker": "ARVIND.NS",
       "score": 76.3,
       "track": "profitable",
       "lamps": [
@@ -5625,7 +5625,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1542063055.960867,
+      "marketCap": 1592110118.251987,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5713,7 +5713,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 835474975.4292798,
+      "marketCap": 834317223.569064,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5882,7 +5882,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1720163716.9138894,
+      "marketCap": 1720362563.8275974,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5967,7 +5967,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1908640898.665939,
+      "marketCap": 1897452823.0288918,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -6052,7 +6052,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 74000990208,
+      "marketCap": 73694642176,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6301,7 +6301,7 @@
     {
       "rank": 74,
       "rankGrund": null,
-      "ticker": "THELEELA.BO",
+      "ticker": "THELEELA.NS",
       "score": 75.4,
       "track": "profitable",
       "lamps": [
@@ -6317,7 +6317,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1962784568.0335095,
+      "marketCap": 1965082038.7760375,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "small",
@@ -6573,7 +6573,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 2498124207.8435903,
+      "marketCap": 2491123597.7485847,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7196,7 +7196,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 1408526551.805517,
+      "marketCap": 1401956268.9730177,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -8234,7 +8234,7 @@
     {
       "rank": 96,
       "rankGrund": null,
-      "ticker": "TMCV.NS",
+      "ticker": "TMCV.BO",
       "score": 73.5,
       "track": "profitable",
       "lamps": [
@@ -8251,7 +8251,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 17858116278.341076,
+      "marketCap": 17854218380.8096,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -9670,7 +9670,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 2092327182.9504,
+      "marketCap": 2091724231.4496,
       "phase": "unprofitable",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -9740,7 +9740,7 @@
       "rank": 13,
       "rankGrund": null,
       "ticker": "DKNG",
-      "score": 65.5,
+      "score": 65.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -9768,8 +9768,8 @@
       "coverageWeight": 1,
       "cohortN": 114,
       "cohortFallback": false,
-      "scoreBase": 63.9,
-      "scoreShrunk": 63.7,
+      "scoreBase": 64.1,
+      "scoreShrunk": 63.8,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -9788,7 +9788,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 86.1,
+          "pct": 87.1,
           "weight": 1.4
         },
         {
@@ -9838,7 +9838,7 @@
       "rank": 14,
       "rankGrund": null,
       "ticker": "8279.HK",
-      "score": 65.1,
+      "score": 65.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -9865,8 +9865,8 @@
       "coverageWeight": 0.91,
       "cohortN": 114,
       "cohortFallback": false,
-      "scoreBase": 64.8,
-      "scoreShrunk": 63.3,
+      "scoreBase": 65,
+      "scoreShrunk": 63.4,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -9885,7 +9885,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 83,
+          "pct": 84,
           "weight": 1.4
         },
         {
@@ -10385,93 +10385,6 @@
     {
       "rank": 20,
       "rankGrund": null,
-      "ticker": "PWL.BO",
-      "score": 62.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.476,
-        "companion": 116.7
-      },
-      "name": "Physicswallah Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": 3885161740.8294916,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2025,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 114,
-      "cohortFallback": false,
-      "scoreBase": 60.1,
-      "scoreShrunk": 59.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.036,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 88.6,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 71.4,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 87.1,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 88.6,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 6.2,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 10.7,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 13.8,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": 50.72178477690288,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 455,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010583131
-    },
-    {
-      "rank": 21,
-      "rankGrund": null,
       "ticker": "PSNY",
       "score": 61.9,
       "track": "unprofitable",
@@ -10564,7 +10477,7 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 22,
+      "rank": 21,
       "rankGrund": null,
       "ticker": "MBLY",
       "score": 61.8,
@@ -10661,7 +10574,7 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 23,
+      "rank": 22,
       "rankGrund": null,
       "ticker": "REAL",
       "score": 61.6,
@@ -10760,7 +10673,7 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 24,
+      "rank": 23,
       "rankGrund": null,
       "ticker": "BC",
       "score": 61.6,
@@ -10849,6 +10762,93 @@
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": 1
+    },
+    {
+      "rank": 24,
+      "rankGrund": null,
+      "ticker": "PWL.NS",
+      "score": 61.5,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.447,
+        "companion": 116.7
+      },
+      "name": "Physicswallah Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": 3890994715.605238,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2025,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 114,
+      "cohortFallback": false,
+      "scoreBase": 59.5,
+      "scoreShrunk": 59.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.036,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 88.6,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 71.4,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 83,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 88.6,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 6.2,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 10.7,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 13.8,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": 50.72178477690288,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 455,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.010583131
     },
     {
       "rank": 25,
@@ -11755,7 +11755,7 @@
     {
       "rank": 32,
       "rankGrund": null,
-      "ticker": "FIRSTCRY.NS",
+      "ticker": "FIRSTCRY.BO",
       "score": 54.4,
       "track": "unprofitable",
       "lamps": [
@@ -11773,7 +11773,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 925174822.1902685,
+      "marketCap": 924866787.7167515,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -11945,7 +11945,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Defensive",
-      "marketCap": 1533520000,
+      "marketCap": 1660880128,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -12646,7 +12646,7 @@
     {
       "rank": 42,
       "rankGrund": null,
-      "ticker": "STLAM.MI",
+      "ticker": "8TI.DE",
       "score": 52.3,
       "track": "unprofitable",
       "lamps": [
@@ -12665,7 +12665,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Consumer Cyclical",
-      "marketCap": 20955603394.894234,
+      "marketCap": 20946847331.758698,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -12735,7 +12735,7 @@
       "rank": null,
       "rankGrund": "zuWenigBelegteAchsen",
       "ticker": "BXBL",
-      "score": 52,
+      "score": 52.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -12749,7 +12749,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 577.9
+        "companion": 579.1
       },
       "name": "Boxabl Inc.",
       "country": "United States",
@@ -12766,8 +12766,8 @@
       "coverageWeight": 0.21,
       "cohortN": 114,
       "cohortFallback": false,
-      "scoreBase": 93.3,
-      "scoreShrunk": 59,
+      "scoreBase": 93.8,
+      "scoreShrunk": 59.1,
       "factors": {
         "burn": 0.843,
         "growth": 1.046,
@@ -12796,7 +12796,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 91.6,
+          "pct": 92.7,
           "weight": 0.9
         },
         {
@@ -12831,7 +12831,7 @@
       "rank": 43,
       "rankGrund": null,
       "ticker": "SWIGGY.BO",
-      "score": 51.9,
+      "score": 52.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -12861,8 +12861,8 @@
       "coverageWeight": 1,
       "cohortN": 114,
       "cohortFallback": false,
-      "scoreBase": 52.4,
-      "scoreShrunk": 52.4,
+      "scoreBase": 52.6,
+      "scoreShrunk": 52.5,
       "factors": {
         "burn": 0.954,
         "growth": 1.039,
@@ -12881,7 +12881,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 84,
+          "pct": 85.1,
           "weight": 1.4
         },
         {
@@ -12936,7 +12936,7 @@
       "country": "Isle of Man",
       "region": "Europe",
       "sector": "Consumer Cyclical",
-      "marketCap": 4589788945.963161,
+      "marketCap": 4590068002.337894,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -13467,7 +13467,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 42276662773.930786,
+      "marketCap": 42271927364.72839,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -14180,7 +14180,7 @@
       "overview": {
         "kind": "gp",
         "value": -0.682,
-        "companion": 577.9
+        "companion": 579.1
       },
       "name": "PT Abadi Nusantara Hijau Investama Tbk",
       "country": "Indonesia",
@@ -14622,9 +14622,9 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 1185259776,
+      "marketCap": 1218602624,
       "phase": "unprofitable",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -15175,7 +15175,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 42390196224,
+      "marketCap": 42394947584,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -15351,7 +15351,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Consumer Cyclical",
-      "marketCap": 10232618416.530327,
+      "marketCap": 10280599315.699335,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -15765,7 +15765,7 @@
       "rank": 73,
       "rankGrund": null,
       "ticker": "601718.SS",
-      "score": 39.3,
+      "score": 39.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -15794,8 +15794,8 @@
       "coverageWeight": 0.88,
       "cohortN": 114,
       "cohortFallback": false,
-      "scoreBase": 37.6,
-      "scoreShrunk": 39.3,
+      "scoreBase": 37.8,
+      "scoreShrunk": 39.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -15814,7 +15814,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 85.1,
+          "pct": 86.1,
           "weight": 1.4
         },
         {
@@ -16141,7 +16141,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Consumer Cyclical",
-      "marketCap": 1771210752,
+      "marketCap": 1770200448,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -17206,93 +17206,6 @@
     {
       "rank": 89,
       "rankGrund": null,
-      "ticker": "600960.SS",
-      "score": 33.6,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -1.37,
-        "companion": -76.7
-      },
-      "name": "Bohai Automotive Systems CO., LTD.",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Cyclical",
-      "marketCap": 975404564.2699162,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2004,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.74,
-      "cohortN": 114,
-      "cohortFallback": false,
-      "scoreBase": 27.4,
-      "scoreShrunk": 33.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 8.6,
-          "weight": 1.9
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 16.8,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.4
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 7.7,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 92.7,
-          "weight": 0.9
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 54.7,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        }
-      ],
-      "revGrowthYoYPct": -32.071091999908596,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 455,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14901352
-    },
-    {
-      "rank": 90,
-      "rankGrund": null,
       "ticker": "600400.SS",
       "score": 33.5,
       "track": "unprofitable",
@@ -17372,6 +17285,93 @@
       "shareDilution": null,
       "ath": null,
       "qPunkte": 5,
+      "qSpanTage": 455,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.14901352
+    },
+    {
+      "rank": 90,
+      "rankGrund": null,
+      "ticker": "600960.SS",
+      "score": 33.5,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -1.37,
+        "companion": -76.7
+      },
+      "name": "Bohai Automotive Systems CO., LTD.",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Cyclical",
+      "marketCap": 975404564.2699162,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2004,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.74,
+      "cohortN": 114,
+      "cohortFallback": false,
+      "scoreBase": 27.3,
+      "scoreShrunk": 33.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 8.6,
+          "weight": 1.9
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 16.8,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.4
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 7.7,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 91.6,
+          "weight": 0.9
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.7,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        }
+      ],
+      "revGrowthYoYPct": -32.071091999908596,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": 0.14901352
