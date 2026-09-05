@@ -213,6 +213,7 @@ function _recordGpZeroCoding(ticker, sector) {
 const GP_DERIVED_SOURCE = 'derived_rev_minus_cogs';
 let _gpDerivedRows = 0;
 let _gpDerivedRejected = 0;
+let _gpDerivedSkipped = 0;   // Laengen-Mismatch (Cache-Treffer ohne COGS o. ae.) — gezaehlt, nie still
 function _deriveGrossProfitFromCogs(annualRev, annualGP, annualCogs) {
   const out = { derived: 0, rejected: 0 };
   if (!Array.isArray(annualRev) || !Array.isArray(annualGP) || !Array.isArray(annualCogs)) return out;
@@ -1655,6 +1656,12 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   const annualGP = _arr(isHist, 'grossProfit');
   // A' (05.09.2026): COGS derselben Zeilen — Eingang fuer die GP-Ableitung im Buendel-Seam.
   const annualCostOfRevenue = _arr(isHist, 'costOfRevenue');
+  // _arr trimmt nachlaufende Nullen JE FELD (Review 05.09., HIGH): fehlt COGS nur im aeltesten
+  // Jahr, waere die Reihe kuerzer als annualRev und die Ableitung liefe fuer den GANZEN Ticker
+  // ins Leere. Deshalb an annualRev ausrichten — dieselben isHist-Zeilen, newest-first, also nur
+  // am Ende auffuellen bzw. kappen; die Indizes bleiben Jahr fuer Jahr identisch.
+  while (annualCostOfRevenue.length < annualRev.length) annualCostOfRevenue.push(null);
+  annualCostOfRevenue.length = annualRev.length;
   // NRB-SK-001: null out any literal 0 revenue year that contradicts positive
   // native GP/OpInc in the same year, BEFORE it can feed the sector-OpInc
   // derivation below (which multiplies annualRev × operatingMargin).
@@ -2987,7 +2994,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // gemessen, ein Sprung nur gegen den Vorlauf lesbar. Ohne Reset addierte ein zweiter
   // pullAll im selben Prozess (Tests, Shards) zwei Laeufe zu einem Scheinausschlag.
   _gpZeroCodingRows = 0;
-  _gpDerivedRows = 0; _gpDerivedRejected = 0;   // A'
+  _gpDerivedRows = 0; _gpDerivedRejected = 0; _gpDerivedSkipped = 0;   // A'
   _gpZeroCodingBySuffix = Object.create(null);
   _gpZeroCodingBySector = Object.create(null);
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
@@ -3902,6 +3909,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         const _cogsWinner = (_winner === _ftsIncome) ? ftsAnnual.annualCostOfRevenue : canonical.annual.annualCostOfRevenue;
         canonical.annual.annualCostOfRevenue = Array.isArray(_cogsWinner) ? _cogsWinner : [];
         const _gpAbl = _deriveGrossProfitFromCogs(canonical.annual.annualRev, canonical.annual.annualGP, canonical.annual.annualCostOfRevenue);
+        // Ein Laengen-Mismatch ist ab hier nur noch ueber einen Cache-Treffer ohne COGS oder eine
+        // fremde Reihe moeglich — sichtbar machen, statt "0 abgeleitet" mit "nichts zu tun" zu verwechseln.
+        if (canonical.annual.annualCostOfRevenue.length !== canonical.annual.annualRev.length) {
+          _gpDerivedSkipped++;
+          _log('INFO', `  ${stock.ticker}: GP-Ableitung uebersprungen — COGS-Reihe (${canonical.annual.annualCostOfRevenue.length}) und Umsatz-Reihe (${canonical.annual.annualRev.length}) ungleich lang`);
+        }
         if (canonical.meta) {
           if (_gpAbl.derived > 0) {
             canonical.meta.gpSource = GP_DERIVED_SOURCE;
@@ -4475,7 +4488,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // ueber 50 %. Ein Delta von mehreren hundert in EINEM Vintage ist nach K2/FN-15 NICHT
   // diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall / Mapper-Regression).
   const _gpTop = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(' ');
-  _log('INFO', `GP-Ableitung (A' 05.09.): ${_gpDerivedRows} Zeilen mit annualGP = Umsatz − COGS (source ${GP_DERIVED_SOURCE}), ${_gpDerivedRejected} Zeilen mit abgelehnten Jahren (COGS > Umsatz)`);
+  _log('INFO', `GP-Ableitung (A' 05.09.): ${_gpDerivedRows} Zeilen mit annualGP = Umsatz − COGS (source ${GP_DERIVED_SOURCE}), ${_gpDerivedRejected} Zeilen mit abgelehnten Jahren (COGS > Umsatz), ${_gpDerivedSkipped} Zeilen uebersprungen (Laengen-Mismatch)`);
   _log('INFO', `Null-GP-Guard (Fix 2): ${_gpZeroCodingRows} Zeilen mit verworfener GP-Null-Kodierung`
     + ` | Suffix: ${_gpTop(_gpZeroCodingBySuffix) || '-'}`
     + ` | Sektor: ${_gpTop(_gpZeroCodingBySector) || '-'}`);
@@ -4507,7 +4520,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
     // Feld, nicht als Logzeile.
     _gpZeroCoding: { rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } },
-    _gpDerived: { rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, source: GP_DERIVED_SOURCE },   // A'
+    _gpDerived: { rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, skippedRows: _gpDerivedSkipped, source: GP_DERIVED_SOURCE },   // A'
     results,
     failures
   };
@@ -4964,6 +4977,6 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _deriveOpIncForFinancials, _boersenSuffix, _recordGpZeroCoding, _gpZeroCodingOfWinner,
   // A' (05.09.2026): die Ableitungsregel und ihr Zaehler, exportiert fuer tests/gp-derived-cogs.test.js.
   _deriveGrossProfitFromCogs, GP_DERIVED_SOURCE, mapFTSToAnnual,
-  _gpDerivedTally: () => ({ rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected }),
+  _gpDerivedTally: () => ({ rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, skippedRows: _gpDerivedSkipped }),
   _gpZeroCodingTally: () => ({ rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } }),
   _resetGpZeroCodingTally: () => { _gpZeroCodingRows = 0; _gpZeroCodingBySuffix = Object.create(null); _gpZeroCodingBySector = Object.create(null); } };

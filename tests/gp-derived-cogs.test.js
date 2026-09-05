@@ -96,6 +96,22 @@ check('R7 QS-Mapper: annualCostOfRevenue steht im canonical.annual, index-aligne
   assert.deepStrictEqual(c.annual.annualCostOfRevenue.map((x) => x && x.value), [180, 160]);
   assert.strictEqual(c.annual.annualCostOfRevenue.length, c.annual.annualRev.length);
 });
+check('R8 (Review HIGH) QS-Mapper: COGS fehlt nur im aeltesten Jahr -> Reihe an annualRev ausgerichtet, die juengeren Jahre werden abgeleitet', () => {
+  const isHist = [
+    { endDate: '2025-12-31', totalRevenue: 300, grossProfit: 0, costOfRevenue: 180 },
+    { endDate: '2024-12-31', totalRevenue: 250, grossProfit: 0, costOfRevenue: 160 },
+    { endDate: '2023-12-31', totalRevenue: 200, grossProfit: 90, costOfRevenue: 110 },
+    { endDate: '2022-12-31', totalRevenue: 150, grossProfit: 60 },                       // kein COGS
+  ];
+  const c = mapYahooToCanonical({ incomeStatementHistory: { incomeStatementHistory: isHist }, summaryDetail: { marketCap: 1 } }, { ticker: 'GPY' }, '2026-09-05T00:00:00Z');
+  assert.strictEqual(c.annual.annualCostOfRevenue.length, c.annual.annualRev.length, 'COGS-Reihe nicht an annualRev ausgerichtet: ' + c.annual.annualCostOfRevenue.length + ' vs ' + c.annual.annualRev.length);
+  assert.strictEqual(c.annual.annualCostOfRevenue[3], null, 'fehlendes COGS-Jahr muss null bleiben');
+  const gp = c.annual.annualGP.slice();
+  const r = ableiten(c.annual.annualRev, gp, c.annual.annualCostOfRevenue);
+  assert.deepStrictEqual(r, { derived: 2, rejected: 0 }, JSON.stringify(r));
+  assert.deepStrictEqual(gp.map((x) => x && x.value), [120, 90, 90, 60]);
+  assert.strictEqual(gp[0].source, SRC); assert.strictEqual(gp[2].source, undefined, 'berichteter Wert bleibt ohne Tag');
+});
 check('Zaehler: _gpDerivedTally existiert und startet bei 0 rows / 0 rejectedRows', () => {
   const t = M._gpDerivedTally();
   assert.ok(Number.isFinite(t.rows) && Number.isFinite(t.rejectedRows), JSON.stringify(t));
