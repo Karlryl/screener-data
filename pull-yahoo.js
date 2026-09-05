@@ -200,6 +200,37 @@ function _recordGpZeroCoding(ticker, sector) {
   _gpZeroCodingBySector[sec] = (_gpZeroCodingBySector[sec] || 0) + 1;
 }
 
+// ─── A' (Master-Ratifikation 05.09.2026): Bruttogewinn = Umsatz − COGS, wo Yahoo ihn nicht liefert ───
+// Anlass FTI (Anker orchestrator-2026-09-05-tag N13): quoteSummary kodiert grossProfit UND
+// costOfRevenue als 0, fundamentalsTimeSeries liefert keinen grossProfit, aber costOfRevenue —
+// rev − COGS reproduziert FTIs alte GP-Werte exakt (2.181,4 / 1.723,1 / 1.274,1 / 896,3 Mio).
+// Abnahme 05.09.: 30 Ticker, 120 Jahre mit berichtetem GP, 120/120 innerhalb 0,5 % (max 0,003 %).
+// REGELN, alle Pflicht (Ratifikationstext): nur wenn annualGP[i] null ODER literal 0 (0-kodiert);
+// Umsatz UND COGS am selben Index (= dieselbe Zeile derselben Quelle) vorhanden und > 0; COGS <=
+// Umsatz, sonst bleibt null und wird gezaehlt; ein berichteter Wert != 0 wird NIE ueberschrieben;
+// jeder abgeleitete Wert traegt source GP_DERIVED_SOURCE; Laengen-Mismatch = keine Ableitung
+// (fail-closed). Die Funktion ZAEHLT, was sie tut (FN-2-Muster), exportiert fuer den Waechter.
+const GP_DERIVED_SOURCE = 'derived_rev_minus_cogs';
+let _gpDerivedRows = 0;
+let _gpDerivedRejected = 0;
+function _deriveGrossProfitFromCogs(annualRev, annualGP, annualCogs) {
+  const out = { derived: 0, rejected: 0 };
+  if (!Array.isArray(annualRev) || !Array.isArray(annualGP) || !Array.isArray(annualCogs)) return out;
+  if (annualRev.length !== annualGP.length || annualCogs.length !== annualRev.length) return out;
+  const v = (x) => (x == null ? null : (typeof x === 'number' ? x : x.value));
+  for (let i = 0; i < annualGP.length; i++) {
+    const gp = v(annualGP[i]);
+    if (Number.isFinite(gp) && gp !== 0) continue;                      // berichtet: nie ueberschreiben
+    const rev = v(annualRev[i]);
+    const cogs = v(annualCogs[i]);
+    if (!(Number.isFinite(rev) && rev > 0 && Number.isFinite(cogs) && cogs > 0)) continue;
+    if (cogs > rev) { out.rejected++; continue; }                        // Identitaet verletzt: bleibt null
+    annualGP[i] = { value: rev - cogs, source: GP_DERIVED_SOURCE };
+    out.derived++;
+  }
+  return out;
+}
+
 // Nachzug Tag 622 (Review-Fund HOCH): meta.fundamentalsIncomplete schlaegt die
 // ganze Anker-Kette. Ein Vollabruf, dessen vier FTS-Serien alle LEER kamen, hat
 // keine frischen Fundamentaldaten geschrieben — aber er hat meta.fetchedAt/asOf
@@ -1622,6 +1653,8 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
   let annualOpInc = _arr(isHist, 'operatingIncome');
   const annualNetIncome = _arr(isHist, 'netIncome');
   const annualGP = _arr(isHist, 'grossProfit');
+  // A' (05.09.2026): COGS derselben Zeilen — Eingang fuer die GP-Ableitung im Buendel-Seam.
+  const annualCostOfRevenue = _arr(isHist, 'costOfRevenue');
   // NRB-SK-001: null out any literal 0 revenue year that contradicts positive
   // native GP/OpInc in the same year, BEFORE it can feed the sector-OpInc
   // derivation below (which multiplies annualRev × operatingMargin).
@@ -2245,6 +2278,7 @@ function mapYahooToCanonical(yahoo, watchlistEntry, asOf) {
     },
     annual: {
       annualRev, annualOpInc, annualNetIncome, annualGP, annualFCF, annualOCF, annualBalance,
+      annualCostOfRevenue,   // A' (05.09.2026): index-aligned zu annualRev (dieselben isHist-Zeilen)
       // Tag 202: quoteSummary-derived RnD (primary). FTS path may overwrite below
       // when FTS has strictly more non-null entries (see post-FTS merge in main pull).
       annualRnD: annualRnDFromQS,
@@ -2416,6 +2450,7 @@ function mapFTSToAnnual(annualRows, cashRows) {
   const annualOpInc = [];
   const annualGP = [];
   const annualNetIncome = [];
+  const annualCostOfRevenue = [];   // A' (05.09.2026): dieselbe Zeile, dieselbe Periode wie annualRev
   for (const r of sorted) {
     const rev = _ftsValue(r, 'totalRevenue', 'TotalRevenue');
     // 28.07.: REIHENFOLGE GEDREHT. Yahoo liefert in DERSELBEN Antwort zwei verschiedene
@@ -2448,6 +2483,8 @@ function mapFTSToAnnual(annualRows, cashRows) {
     annualRev.push(rev != null ? { value: rev } : null);
     annualOpInc.push(oi != null ? { value: oi } : null);
     annualGP.push(gp != null ? { value: gp } : null);
+    const cogs = _ftsValue(r, 'costOfRevenue', 'CostOfRevenue');
+    annualCostOfRevenue.push(cogs != null ? { value: cogs } : null);
     annualNetIncome.push(ni != null ? { value: ni } : null);
   }
   // NRB-SK-001 (Hard Review 2026-07-31): same coherence guard as the QS build path —
@@ -2466,7 +2503,7 @@ function mapFTSToAnnual(annualRows, cashRows) {
          annualOpInc[annualOpInc.length - 1] == null &&
          annualGP[annualGP.length - 1] == null &&
          annualNetIncome[annualNetIncome.length - 1] == null) {
-    annualRev.pop(); annualOpInc.pop(); annualGP.pop(); annualNetIncome.pop();
+    annualRev.pop(); annualOpInc.pop(); annualGP.pop(); annualNetIncome.pop(); annualCostOfRevenue.pop();
   }
   // FCF + OCF aus cash-flow-Module.
   // F-DP-101 (audit 2026-06-11): the old `continue` on pure-empty rows COMPACTED
@@ -2498,6 +2535,7 @@ function mapFTSToAnnual(annualRows, cashRows) {
   // GEWINNER setzen kann. Gewinnt dieses Buendel, ist SEINE genullte Reihe die
   // gespeicherte — dann traegt die Zeile den Marker, sonst nicht.
   return { annualRev, annualOpInc, annualGP, annualNetIncome, annualFCF, annualOCF,
+    annualCostOfRevenue,
     _gpZeroCodingYears: _gpZeroYearsFTS };
 }
 
@@ -2949,6 +2987,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // gemessen, ein Sprung nur gegen den Vorlauf lesbar. Ohne Reset addierte ein zweiter
   // pullAll im selben Prozess (Tests, Shards) zwei Laeufe zu einem Scheinausschlag.
   _gpZeroCodingRows = 0;
+  _gpDerivedRows = 0; _gpDerivedRejected = 0;   // A'
   _gpZeroCodingBySuffix = Object.create(null);
   _gpZeroCodingBySector = Object.create(null);
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
@@ -3857,6 +3896,24 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           canonical.meta.gpZeroCodingNulled = _gpZeroYears > 0;
           if (_gpZeroYears > 0) _recordGpZeroCoding(stock.ticker, canonical.meta.sector);
         }
+        // A' (05.09.2026): Bruttogewinn aus Umsatz − COGS des GEWINNER-Buendels, nur wo er fehlt
+        // oder 0-kodiert ist. COGS reist mit dem Buendel (dieselben Zeilen wie annualRev), ein
+        // Cache-Treffer ohne annualCostOfRevenue liefert [] und damit keine Ableitung (fail-closed).
+        const _cogsWinner = (_winner === _ftsIncome) ? ftsAnnual.annualCostOfRevenue : canonical.annual.annualCostOfRevenue;
+        canonical.annual.annualCostOfRevenue = Array.isArray(_cogsWinner) ? _cogsWinner : [];
+        const _gpAbl = _deriveGrossProfitFromCogs(canonical.annual.annualRev, canonical.annual.annualGP, canonical.annual.annualCostOfRevenue);
+        if (canonical.meta) {
+          if (_gpAbl.derived > 0) {
+            canonical.meta.gpSource = GP_DERIVED_SOURCE;
+            canonical.meta.gpDerivedYears = _gpAbl.derived;
+            _gpDerivedRows++;
+          }
+          if (_gpAbl.rejected > 0) {
+            canonical.meta.gpDerivedRejected = _gpAbl.rejected;
+            _gpDerivedRejected++;
+            _log('WARN', `  ${stock.ticker}: GP-Ableitung abgelehnt in ${_gpAbl.rejected} Jahr(en) — COGS > Umsatz, annualGP bleibt null`);
+          }
+        }
       }
       // Bug 21 (audit 2026-07-03): when QS won the income bundle with a newer FY
       // anchor, shift every FTS-anchored series by one leading null so their
@@ -4418,6 +4475,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // ueber 50 %. Ein Delta von mehreren hundert in EINEM Vintage ist nach K2/FN-15 NICHT
   // diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall / Mapper-Regression).
   const _gpTop = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(' ');
+  _log('INFO', `GP-Ableitung (A' 05.09.): ${_gpDerivedRows} Zeilen mit annualGP = Umsatz − COGS (source ${GP_DERIVED_SOURCE}), ${_gpDerivedRejected} Zeilen mit abgelehnten Jahren (COGS > Umsatz)`);
   _log('INFO', `Null-GP-Guard (Fix 2): ${_gpZeroCodingRows} Zeilen mit verworfener GP-Null-Kodierung`
     + ` | Suffix: ${_gpTop(_gpZeroCodingBySuffix) || '-'}`
     + ` | Sektor: ${_gpTop(_gpZeroCodingBySector) || '-'}`);
@@ -4449,6 +4507,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Manifest der Vergleichspunkt — ein Vintage-gegen-Vintage-Diff braucht die Zahl als
     // Feld, nicht als Logzeile.
     _gpZeroCoding: { rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } },
+    _gpDerived: { rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, source: GP_DERIVED_SOURCE },   // A'
     results,
     failures
   };
@@ -4903,5 +4962,8 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // die groesste genullte Teilmenge (271 Banken).
   mergeAnnualIncomeBundle, _incomeBundleDensity, _nullOutAllZeroGrossProfit,
   _deriveOpIncForFinancials, _boersenSuffix, _recordGpZeroCoding, _gpZeroCodingOfWinner,
+  // A' (05.09.2026): die Ableitungsregel und ihr Zaehler, exportiert fuer tests/gp-derived-cogs.test.js.
+  _deriveGrossProfitFromCogs, GP_DERIVED_SOURCE, mapFTSToAnnual,
+  _gpDerivedTally: () => ({ rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected }),
   _gpZeroCodingTally: () => ({ rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } }),
   _resetGpZeroCodingTally: () => { _gpZeroCodingRows = 0; _gpZeroCodingBySuffix = Object.create(null); _gpZeroCodingBySector = Object.create(null); } };
