@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 505,
+    "count": 502,
     "partial": false
   },
   "stocks": [
@@ -105,14 +105,6 @@
       "yahoo_symbol": "ODD",
       "name": "ODDITY Tech Ltd. - Class A Ordinary Shares",
       "marketCapUsd": 748140224,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "CTMX",
-      "yahoo_symbol": "CTMX",
-      "name": "CytomX Therapeutics, Inc. - Common Stock",
-      "marketCapUsd": 744544000,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -1893,14 +1885,6 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     },
     {
-      "ticker": "PROK",
-      "yahoo_symbol": "PROK",
-      "name": "ProKidney Corp. - Class A Ordinary Shares",
-      "marketCapUsd": 481785088,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
       "ticker": "OWLS",
       "yahoo_symbol": "OWLS",
       "name": "OBOOK Holdings Inc. - Class A Common Shares",
@@ -2609,14 +2593,6 @@
       "yahoo_symbol": "CRNC",
       "name": "Cerence Inc. - Common Stock",
       "marketCapUsd": 416179712,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "PSNYW",
-      "yahoo_symbol": "PSNYW",
-      "name": "Polestar Automotive Holding UK Limited - Class C-1 ADS (ADW)",
-      "marketCapUsd": 414425248,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -4053,27 +4029,22 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-08-29T12:12:16.662Z",
+  "lastReconcile": "2026-09-05T09:52:43.036Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "METC",
+      "ticker": "CTMX",
       "grund": "band-austritt-oben",
-      "mcap": 843063616
+      "mcap": 808406336
     },
     {
-      "ticker": "TXO",
+      "ticker": "PROK",
       "grund": "band-austritt-oben",
-      "mcap": 803972928
+      "mcap": 802356928
     },
     {
-      "ticker": "LOT",
+      "ticker": "PSNYW",
       "grund": "band-austritt-oben",
-      "mcap": 803686656
-    },
-    {
-      "ticker": "SMWB",
-      "grund": "band-austritt-oben",
-      "mcap": 801298240
+      "mcap": 821400640
     }
   ]
 }

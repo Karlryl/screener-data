@@ -1363,6 +1363,357 @@
           ]
         }
       }
+    },
+    "2026-09-05": {
+      "consumer-discretionary": {
+        "p99Delta": 15.2,
+        "thr": 46,
+        "betaCov": 0.806930693069307,
+        "suspect": false
+      },
+      "consumer-staples": {
+        "p99Delta": 21,
+        "thr": 46,
+        "betaCov": 0.8375451263537906,
+        "suspect": false
+      },
+      "energy": {
+        "p99Delta": 23.200000000000003,
+        "thr": 46,
+        "betaCov": 0.876010781671159,
+        "suspect": true,
+        "datenSchub": {
+          "zuschlagGewaehrt": false,
+          "angewandteSchwelle": 46,
+          "normaleSchwelle": 11.5,
+          "fanOut": {
+            "zaehler": 19,
+            "nenner": 323,
+            "anteil": 0.058823529411764705,
+            "cap": 0.08
+          },
+          "breiteZeilen": [
+            {
+              "ticker": "CASTROLIND.NS",
+              "delta": 11.699999999999989
+            },
+            {
+              "ticker": "300191.SZ",
+              "delta": 26.4
+            },
+            {
+              "ticker": "PARR",
+              "delta": 12.699999999999996
+            },
+            {
+              "ticker": "DVN",
+              "delta": 22.4
+            },
+            {
+              "ticker": "BYAN.JK",
+              "delta": 27.099999999999994
+            },
+            {
+              "ticker": "INVX",
+              "delta": 17.900000000000006
+            },
+            {
+              "ticker": "NGL",
+              "delta": 16.9
+            },
+            {
+              "ticker": "FANG",
+              "delta": 13.400000000000006
+            },
+            {
+              "ticker": "OIL.BO",
+              "delta": 12.899999999999999
+            },
+            {
+              "ticker": "MGY",
+              "delta": 12.600000000000001
+            },
+            {
+              "ticker": "XOM",
+              "delta": 11.599999999999994
+            },
+            {
+              "ticker": "IMO",
+              "delta": 13.200000000000003
+            },
+            {
+              "ticker": "ELPE.AT",
+              "delta": 15.200000000000003
+            },
+            {
+              "ticker": "EPD",
+              "delta": 15.899999999999999
+            },
+            {
+              "ticker": "CVX",
+              "delta": 15.700000000000003
+            },
+            {
+              "ticker": "PR",
+              "delta": 15.8
+            },
+            {
+              "ticker": "PBR-A",
+              "delta": 23.200000000000003
+            },
+            {
+              "ticker": "FET",
+              "delta": 22.2
+            },
+            {
+              "ticker": "TALO",
+              "delta": 24.1
+            }
+          ],
+          "integritaetsVerfall": [
+            {
+              "ticker": "PDN.TO",
+              "feld": "Lampe unprofit verloren"
+            },
+            {
+              "ticker": "ONGC.BO",
+              "feld": "Lampe peakMargin verloren"
+            },
+            {
+              "ticker": "096770.KS",
+              "feld": "Lampe fcfArtefact verloren"
+            },
+            {
+              "ticker": "ENB",
+              "feld": "coverageAxes 6/7 -> 5/7"
+            },
+            {
+              "ticker": "BKV",
+              "feld": "Lampe shortRunway verloren"
+            },
+            {
+              "ticker": "FTI",
+              "feld": "coverageAxes 6/7 -> 5/7"
+            },
+            {
+              "ticker": "DEWA.JK",
+              "feld": "Lampe fcfArtefact verloren"
+            },
+            {
+              "ticker": "FET",
+              "feld": "Lampe opIncYahooAdjusted verloren"
+            },
+            {
+              "ticker": "WKC",
+              "feld": "Lampe opIncYahooAdjusted verloren"
+            },
+            {
+              "ticker": "AESI",
+              "feld": "Lampe fcfArtefact verloren"
+            }
+          ]
+        }
+      },
+      "financials": {
+        "p99Delta": 20.200000000000003,
+        "thr": 46,
+        "betaCov": 0.8710462287104623,
+        "suspect": false
+      },
+      "health-care": {
+        "p99Delta": 24.3,
+        "thr": 46,
+        "betaCov": 0.7852216748768472,
+        "suspect": false
+      },
+      "industrials": {
+        "p99Delta": 19.199999999999996,
+        "thr": 46,
+        "betaCov": 0.7855166051660517,
+        "suspect": false
+      },
+      "it-services": {
+        "p99Delta": 14.800000000000004,
+        "thr": 46,
+        "betaCov": 0.82,
+        "suspect": true,
+        "datenSchub": {
+          "zuschlagGewaehrt": false,
+          "angewandteSchwelle": 46,
+          "normaleSchwelle": 11.5,
+          "fanOut": {
+            "zaehler": 4,
+            "nenner": 126,
+            "anteil": 0.031746031746031744,
+            "cap": 0.08
+          },
+          "breiteZeilen": [
+            {
+              "ticker": "6214.TW",
+              "delta": 13
+            },
+            {
+              "ticker": "WSE",
+              "delta": 14.800000000000004
+            },
+            {
+              "ticker": "7203.SR",
+              "delta": 18.5
+            },
+            {
+              "ticker": "DTL.AX",
+              "delta": 12.000000000000007
+            }
+          ],
+          "integritaetsVerfall": [
+            {
+              "ticker": "WSE",
+              "feld": "Lampe peakMargin verloren"
+            },
+            {
+              "ticker": "300872.SZ",
+              "feld": "Lampe fcfArtefact verloren"
+            }
+          ]
+        }
+      },
+      "materials": {
+        "p99Delta": 19.000000000000004,
+        "thr": 46,
+        "betaCov": 0.7727272727272727,
+        "suspect": false
+      },
+      "real-estate": {
+        "p99Delta": 12.3,
+        "thr": 46,
+        "betaCov": 0.8793103448275862,
+        "suspect": false
+      },
+      "semiconductors": {
+        "p99Delta": 15.399999999999999,
+        "thr": 46,
+        "betaCov": 0.787012987012987,
+        "suspect": false
+      },
+      "software-comm-services": {
+        "p99Delta": 24.5,
+        "thr": 46,
+        "betaCov": 0.7769347496206374,
+        "suspect": false
+      },
+      "survival": {
+        "p99Delta": null,
+        "thr": 46,
+        "betaCov": 0.6923076923076923,
+        "suspect": false
+      },
+      "tech-hardware": {
+        "p99Delta": 12.100000000000001,
+        "thr": 46,
+        "betaCov": 0.7442857142857143,
+        "suspect": false
+      },
+      "utilities": {
+        "p99Delta": 29.5,
+        "thr": 46,
+        "betaCov": 0.8583333333333333,
+        "suspect": true,
+        "datenSchub": {
+          "zuschlagGewaehrt": false,
+          "angewandteSchwelle": 46,
+          "normaleSchwelle": 11.5,
+          "fanOut": {
+            "zaehler": 17,
+            "nenner": 295,
+            "anteil": 0.0576271186440678,
+            "cap": 0.08
+          },
+          "breiteZeilen": [
+            {
+              "ticker": "ENEL.SW",
+              "delta": 39.1
+            },
+            {
+              "ticker": "NJR",
+              "delta": 27.799999999999997
+            },
+            {
+              "ticker": "RENE.LS",
+              "delta": 29.5
+            },
+            {
+              "ticker": "AES",
+              "delta": 14.900000000000006
+            },
+            {
+              "ticker": "SR",
+              "delta": 22.900000000000006
+            },
+            {
+              "ticker": "ORA",
+              "delta": 21.200000000000003
+            },
+            {
+              "ticker": "WTRG",
+              "delta": 14
+            },
+            {
+              "ticker": "CPK",
+              "delta": 22.599999999999994
+            },
+            {
+              "ticker": "AQN",
+              "delta": 19.199999999999996
+            },
+            {
+              "ticker": "MGEE",
+              "delta": 20.9
+            },
+            {
+              "ticker": "POWERGRID.BO",
+              "delta": 18.099999999999998
+            },
+            {
+              "ticker": "AVA",
+              "delta": 14.700000000000003
+            },
+            {
+              "ticker": "OGS",
+              "delta": 13.500000000000004
+            },
+            {
+              "ticker": "600635.SS",
+              "delta": 12.100000000000001
+            },
+            {
+              "ticker": "POR",
+              "delta": 13.800000000000004
+            },
+            {
+              "ticker": "BEP",
+              "delta": 20.200000000000003
+            },
+            {
+              "ticker": "PEG",
+              "delta": 52.49999999999999
+            }
+          ],
+          "integritaetsVerfall": [
+            {
+              "ticker": "DUK",
+              "feld": "coverageAxes 6/7 -> 5/7"
+            },
+            {
+              "ticker": "PPL",
+              "feld": "coverageAxes 7/7 -> 6/7"
+            },
+            {
+              "ticker": "AVA",
+              "feld": "coverageAxes 7/7 -> 6/7"
+            }
+          ]
+        }
+      }
     }
   }
 }
