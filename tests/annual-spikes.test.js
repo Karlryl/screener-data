@@ -677,13 +677,17 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       seit: '2026-08-29', offenSeit: '2026-08-29', hinweis: 'Tippfehler-Kandidat',
     };
     const r = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [tot] }, 5);
-    assert.match(r.log, /treffen HEUTE keinen Fund mehr/,
-      'der Melder lief bisher NUR im --neu-aufnehmen-Zweig');
-    assert.match(r.log, /WEG\.GE\|annualRev\|1/);
+    // Master-Auflage 05.09.2026 (Weg C): tote Sperre = ::error:: auf stderr + Exit 1 (war ::warning:: im Log).
+    assert.match(r.err, /::error::1 Sperre\(n\) treffen HEUTE keinen Fund mehr/,
+      'der Melder lief bisher NUR im --neu-aufnehmen-Zweig und nur als Warnung');
+    assert.match(r.err, /WEG\.GE\|annualRev\|1/);
+    assert.equal(r.code, 1, 'eine tote Sperre macht den Lauf rot');
     // Abwesenheits-Richtung: eine TREFFENDE Sperre darf nicht als tot gemeldet werden.
     const treffend = { ...tot, sperrschluessel: 'AAA|annualRev|1' };
     const r2 = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [treffend] }, 5);
+    assert.doesNotMatch(r2.err, /treffen HEUTE keinen Fund mehr/);
     assert.doesNotMatch(r2.log, /treffen HEUTE keinen Fund mehr/);
+    assert.equal(r2.code, 0, 'eine treffende Sperre ist kein Fehler');
   });
 
   // ── BP-6c (JA-6/JA-7): die WIRKUNGSLOSE Sperre — trifft, unterdrueckt aber nichts ──
@@ -847,9 +851,14 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     });
 
     check('JA-9 (Ende zu Ende): der Tageslauf druckt Groesse und Verteilung und warnt bei Wachstum', () => {
+      // Seit 05.09.2026 ist eine Sperre ohne Treffer ein Fehler — jede Fixture-Sperre bekommt hier
+      // einen Fund, damit diese Probe weiterhin NUR das Wachstum der Liste misst.
       const snaps9 = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+      // Verschiedene Werte je Ticker: identische Werte wuerden zu EINEM Ereignis mit breitem Faecher
+      // verschmelzen (JA-11-Faecher-Tor) — hier geht es nur um treffende Sperren.
+      for (let i = 0; i < AUSSCHLUSS_REFERENZ + 1; i++) snaps9['T' + i + '.json'] = snap('T' + i, 'annualRev', 900e6 + (i + 1) * 7e6);
       const mitListe = (n) => laufMain(snaps9,
-        { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: liste9(n) }, 5, JETZT9);
+        { faelle: [], snapshotsBeiAufnahme: Object.keys(snaps9).length, ausgeschlossen: liste9(n) }, 5, JETZT9);
       // Abwesenheits-Richtung: auf der Referenzgroesse steht die Zeile da, die Warnung nicht.
       const ruhig = mitListe(AUSSCHLUSS_REFERENZ);
       assert.match(ruhig.log, /Ausschluss-Liste: 4 Sperre\(n\)/, 'die GROESSE steht in jedem Lauf');
