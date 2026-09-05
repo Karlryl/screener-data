@@ -702,7 +702,11 @@ function fuehrenderNullSlot(pv, pn, quartale) {
   const kopfRev = Array.isArray(pn.revenueQEnds) ? pn.revenueQEnds[0] : null;
   const kopfOp = Array.isArray(q.opIncQEnds) ? q.opIncQEnds[0] : null;
   const revSlot = typeof kopfRev === 'string' && kopfRev > kopfVorher && Array.isArray(pn.revenueQ) && pn.revenueQ[0] == null;
-  const opSlot = typeof kopfOp === 'string' && kopfOp > kopfVorher && Array.isArray(q.opIncQ) && q.opIncQ[0] == null;
+  // opIncQ hat KEINEN Vorher-Stand in der Zeile (nur der aktuelle Snapshot ist lesbar). Ein
+  // historischer Verlust ist deshalb nicht per Zaehler-Vergleich zu erkennen — fail-closed: der
+  // opIncQ-Slot gilt nur, wenn ausser dem Kopf KEIN Wert der Reihe fehlt (Review 05.09., HIGH).
+  const opSlot = typeof kopfOp === 'string' && kopfOp > kopfVorher && Array.isArray(q.opIncQ) && q.opIncQ.length > 1
+    && q.opIncQ[0] == null && q.opIncQ.slice(1).every((x) => x != null);
   if (!revSlot && !opSlot) return false;
   for (const f of ['revenueQ', 'grossProfitQ']) if (anzahlGefuellt(pn[f]) < anzahlGefuellt(pv[f])) return false;
   return true;
@@ -760,7 +764,8 @@ function secTickerLesen(dir) {
   const s = new Set();
   for (const f of SECANNUAL_FILES) {
     const j = readJsonOrNull(path.join(dir, f));
-    if (!j || typeof j !== 'object') continue;
+    if (!j || typeof j !== 'object' || Array.isArray(j)) continue;   // Array-Form = kein Beweis (Indizes sind keine Ticker)
+    if (Array.isArray(j.tickers)) continue;                           // unbekannte Form = kein Beweis
     const m = (j.tickers && typeof j.tickers === 'object') ? j.tickers : j;
     for (const k of Object.keys(m)) if (!k.startsWith('_')) s.add(k);
   }

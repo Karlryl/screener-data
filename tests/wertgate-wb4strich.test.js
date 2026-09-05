@@ -86,6 +86,15 @@ check('A6: Slot, aber ein historischer Wert ging verloren -> Verfall', () => {
   assert.ok(/^coverageAxes/.test(verfallVon(g) || ''), 'Feld: ' + verfallVon(g));
 });
 
+check('A7 (Review HIGH): opIncQ-Slot mit einer Luecke MITTEN in der Reihe -> kein Slot, Verfall (fail-closed ohne Vorher-Stand)', () => {
+  const felder = { coverageAxes: '6/7', axisBreakdown: achsen(['marginTrajectory']),
+    pit: { revenueQ: [125, 120, 110, 100, 95, 90], revenueQEnds: ENDS_NEU.slice(), grossProfitQ: [62, 60, 55, 50, 48, 45], grossProfitQEnds: ENDS_NEU.slice() } };
+  const quartale = (t) => (t === 'T0' ? { opIncQ: [null, 30, 28, null, 24, 22], opIncQEnds: ENDS_NEU.slice() } : null);
+  const g = gate(lage({}, felder), { quartale });
+  assert.ok(/^coverageAxes 7\/7 -> 6\/7 \[marginTrajectory\]/.test(verfallVon(g) || ''), 'Feld: ' + verfallVon(g));
+  assert.ok(g.suspect);
+});
+
 // ── (b) Reihen ──────────────────────────────────────────────────────────────
 check('B1: PIT-Reihe gefuellt -> leer bleibt Verfall (unveraendert)', () => {
   const g = gate(lage({}, { pit: { revenueQ: [120, 110, 100, 95, 90], revenueQEnds: ENDS.slice(), grossProfitQ: [], grossProfitQEnds: [] } }));
@@ -159,6 +168,15 @@ check('K3: secTickerLesen liest die fuenf SEC-Dateien des Repos und kennt FET/WK
   assert.ok(s.size > 200, 'nur ' + s.size + ' SEC-Ticker');
   assert.ok(s.has('FET') && s.has('WKC'), 'FET/WKC fehlen — Klasse 3 waere Verfall');
   assert.strictEqual(W.secTickerLesen('/pfad/den/es/nicht/gibt').size, 0, 'fehlende Dateien = kein Beweis');
+});
+check('K4 (Review LOW): eine Array-foermige SEC-Datei liefert KEINE Ticker (Indizes sind kein Beweis)', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wb4s-sec-'));
+  fs.writeFileSync(path.join(dir, 'sec-secannual.json'), JSON.stringify([{ ticker: 'FET' }, { ticker: 'WKC' }]));
+  fs.writeFileSync(path.join(dir, 'kr-secannual.json'), JSON.stringify({ tickers: ['005930.KS'] }));
+  fs.writeFileSync(path.join(dir, 'jp-secannual.json'), JSON.stringify({ _doc: 'x', '7203.T': {} }));
+  const s = W.secTickerLesen(dir);
+  assert.deepStrictEqual(Array.from(s), ['7203.T'], 'gelesen: ' + Array.from(s).join(','));
 });
 
 if (fail) { console.log('\nFAIL: wertgate-wb4strich (' + fail + ')'); process.exit(1); }
