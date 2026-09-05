@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-05T12:50:26.338Z",
+  "generated_at": "2026-09-05T14:19:09.850Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.2,
-    "generated_at": "2026-09-05T12:44:05.306Z"
+    "coverage_pct": 75.1,
+    "generated_at": "2026-09-05T14:12:25.995Z"
   },
   "profitable": [
     {
@@ -814,7 +814,7 @@
       "overview": {
         "kind": "gp",
         "value": 1.304,
-        "companion": 317.5
+        "companion": 317.4
       },
       "name": "DNO ASA",
       "country": "Norway",
@@ -1662,7 +1662,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1163676416,
+      "marketCap": 1155709696,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3980,6 +3980,86 @@
     {
       "rank": 48,
       "rankGrund": null,
+      "ticker": "1KMI.MI",
+      "score": 65.4,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.065,
+        "companion": 30.7
+      },
+      "name": "Kinder Morgan, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 70025880692.85765,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "4/5",
+      "coverageWeight": 0.86,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 67.9,
+      "scoreShrunk": 65.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.5,
+          "weight": 2.6
+        },
+        {
+          "key": "marginLevel",
+          "pct": 86.3,
+          "weight": 2.2
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 72.9,
+          "weight": 1.5
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1.2
+        },
+        {
+          "key": "revGrowthLevel",
+          "pct": 51.2,
+          "weight": 0.8
+        },
+        {
+          "key": "roicStability",
+          "pct": null,
+          "weight": 0
+        }
+      ],
+      "revGrowthYoYPct": 10.761999010390898,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1.1621151
+    },
+    {
+      "rank": 49,
+      "rankGrund": null,
       "ticker": "KMI",
       "score": 65.4,
       "track": "profitable",
@@ -4067,86 +4147,6 @@
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 49,
-      "rankGrund": null,
-      "ticker": "KMI.VI",
-      "score": 65.4,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.065,
-        "companion": 30.7
-      },
-      "name": "Kinder Morgan, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 70025880692.85765,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "4/5",
-      "coverageWeight": 0.86,
-      "cohortN": 338,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 65.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "capitalEfficiency",
-          "pct": 54.5,
-          "weight": 2.6
-        },
-        {
-          "key": "marginLevel",
-          "pct": 86.3,
-          "weight": 2.2
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 72.9,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "revGrowthLevel",
-          "pct": 51.2,
-          "weight": 0.8
-        },
-        {
-          "key": "roicStability",
-          "pct": null,
-          "weight": 0
-        }
-      ],
-      "revGrowthYoYPct": 10.761999010390898,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1621151
     },
     {
       "rank": 50,
@@ -6518,7 +6518,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 77332340736,
+      "marketCap": 76156395520,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6603,7 +6603,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 2099499136,
+      "marketCap": 2102970240,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -7772,7 +7772,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 112825753600,
+      "marketCap": 112828473344,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8110,7 +8110,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 6366384398.1159935,
+      "marketCap": 6330442651.053926,
       "phase": "inflected",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -8277,7 +8277,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 60549156864,
+      "marketCap": 60496920576,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",

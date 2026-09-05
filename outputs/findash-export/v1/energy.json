@@ -1,20 +1,20 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-05T12:50:24.936Z",
+  "generated_at": "2026-09-05T14:19:08.484Z",
   "branch": "energy",
   "boardStatus": "core",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.2,
-    "generated_at": "2026-09-05T12:44:05.306Z"
+    "coverage_pct": 75.1,
+    "generated_at": "2026-09-05T14:12:25.995Z"
   },
   "mcapBounds": [
-    1204524162.2275686,
-    1920375690.813653,
-    3628659728.031671,
-    9365679845.451202
+    1203719926.7262547,
+    1919740227.3469162,
+    3627520102.4,
+    9366796295.728802
   ],
   "profitable": [
     {
@@ -1213,7 +1213,7 @@
       "overview": {
         "kind": "gp",
         "value": 3.682,
-        "companion": 510.1
+        "companion": 510
       },
       "name": "Tenaz Energy Corp.",
       "country": "Canada",
@@ -3502,7 +3502,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 112825753600,
+      "marketCap": 112828473344,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -4745,7 +4745,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 2099499136,
+      "marketCap": 2102970240,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5361,7 +5361,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1506692267.9424,
+      "marketCap": 1506462114.0096,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7993,6 +7993,91 @@
     {
       "rank": 89,
       "rankGrund": null,
+      "ticker": "1KMI.MI",
+      "score": 60.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.065,
+        "companion": 30.7
+      },
+      "name": "Kinder Morgan, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": 70025880692.85765,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2016,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 338,
+      "cohortFallback": false,
+      "scoreBase": 61.2,
+      "scoreShrunk": 60.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1.004,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 51.2,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 70.1,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 72.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 48.2,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 49.8,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 54.5,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 10.761999010390898,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1.1621151
+    },
+    {
+      "rank": 90,
+      "rankGrund": null,
       "ticker": "KMI",
       "score": 60.8,
       "track": "profitable",
@@ -8085,91 +8170,6 @@
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 90,
-      "rankGrund": null,
-      "ticker": "KMI.VI",
-      "score": 60.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.065,
-        "companion": 30.7
-      },
-      "name": "Kinder Morgan, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": 70025880692.85765,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2016,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 338,
-      "cohortFallback": false,
-      "scoreBase": 61.2,
-      "scoreShrunk": 60.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.004,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 51.2,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 70.1,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 72.9,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 48.2,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 49.8,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 54.5,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 10.761999010390898,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.1621151
     },
     {
       "rank": 91,
@@ -9251,7 +9251,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": 579.1
+        "companion": 579
       },
       "name": "Rabigh Refining and Petrochemical Company",
       "country": "Saudi Arabia",
@@ -9425,7 +9425,7 @@
       "overview": {
         "kind": "gp",
         "value": 660.541,
-        "companion": 579.1
+        "companion": 579
       },
       "name": "Uranium Energy Corp.",
       "country": "United States",

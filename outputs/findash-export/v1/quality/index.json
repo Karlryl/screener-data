@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-05T12:50:26.382Z",
+  "generated_at": "2026-09-05T14:19:09.889Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.2,
-    "generated_at": "2026-09-05T12:44:05.306Z"
+    "coverage_pct": 75.1,
+    "generated_at": "2026-09-05T14:12:25.995Z"
   },
-  "generatedFromSnapshots": 16083,
+  "generatedFromSnapshots": 16090,
   "boards": [
     "quality-consumer-discretionary",
     "quality-consumer-staples",
@@ -61,7 +61,7 @@
       "unprofitable": 0
     },
     "quality-materials": {
-      "profitable": 923,
+      "profitable": 924,
       "unprofitable": 0
     },
     "quality-semiconductors": {
@@ -77,24 +77,24 @@
       "unprofitable": 0
     },
     "quality-utilities": {
-      "profitable": 351,
+      "profitable": 352,
       "unprofitable": 0
     }
   },
   "excluded": {
     "balance-sheet-bank": 731,
     "data-suspect": 25,
-    "dup-issuer": 2598,
+    "dup-issuer": 2599,
     "insurer": 298,
     "lender-gp0": 102,
     "mortgage-reit": 17,
-    "no-axes": 4,
-    "no-revenue": 138,
+    "no-axes": 5,
+    "no-revenue": 136,
     "no-sector": 86,
     "non-operating-rev": 139,
     "non-us": 1589,
-    "qc-not-compounder": 1549,
-    "qc-sector-unsupported": 1178,
+    "qc-not-compounder": 1552,
+    "qc-sector-unsupported": 1180,
     "telecom": 194
   }
 }
