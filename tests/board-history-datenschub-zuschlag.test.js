@@ -194,8 +194,10 @@ const FTI_FAELLE = [
   ['coverageAxes 6/7 -> 4/7', { coverageAxes: '4/7' }],
   ['annualOpInc-Form: gefuellte Quellreihe wird LEER', { pit: { revenueQ: [], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }],
   ['annualGP-Form: Quellreihe wird komplett null', { pit: { revenueQ: [null, null, null], revenueQEnds: ['2026-06-30'], grossProfitQ: [60], grossProfitQEnds: ['2026-06-30'] } }],
-  ['Quell-Lampe geht verloren', { lamps: ['peakMargin'] }],
-  ['beide Lampen weg', { lamps: [] }],
+  // WB-4' (05.09.2026): Quell-Lampen-Verlust OHNE SEC-Beweis bleibt Verfall (Arm c); Diagnose-Lampen
+  // sind seit WB-4' Beobachtung ohne Veto (Arm d) — deren Freigabe pinnt tests/wertgate-wb4strich.test.js.
+  ['Quell-Lampe opIncYahooAdjusted geht verloren (ohne SEC-Beweis, WB-4-Strich Arm c)', { lamps: ['peakMargin'] }],
+  ['beide Lampen weg (darunter die Quell-Lampe, ohne SEC-Beweis)', { lamps: [] }],
   ['PIT-Block ganz weg (Snapshot verloren)', { pit: null }],
 ];
 for (const [was, felder] of FTI_FAELLE) {

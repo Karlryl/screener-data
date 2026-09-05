@@ -81,6 +81,9 @@ function resolvePaths(base) {
     // T155/W3: Träger des Universums-Hashes, geschrieben von scripts/write-excluded-list.js.
     UNIVERSE_HASH_FILE: path.join(base, 'outputs', 'universe-hash.json'),
     SNAP_DIR: path.join(base, 'snapshots'),
+    // WB-4' (c): der Beweis eines Quell-Upgrades Yahoo -> SEC-GAAP ist die Anwesenheit des
+    // Tickers in den SEC-Jahresreihen, die opinc-source-migrate.js im Scoring-Job liest.
+    EXTERNAL_DIR: path.join(base, 'external-data'),
     HISTORY_DIR: path.join(base, 'board-history'),          // GG7b: committet, Messgrundlage
     get ARCHIVE_DIR() {                                      // GG7c: gitignored, außerhalb CI-Checkout
       if (!isDefaultBase) return path.join(base, 'board-history-archive');
@@ -212,6 +215,9 @@ const P99 = 0.99;
 // (K1: die Kipp-Bedingung fällt zugunsten der Strenge aus). Nach drei protokollierten
 // Ausnahmetagen ist er gegen das Kanal-B-Log aus WB-5 zu überprüfen (WB-14).
 const GATE_FANOUT_CAP = 0.08;
+// WB-4' Betreiber-Auflage (05.09.2026): mehr als so viele Tage ohne gelandetes Vintage sind ein
+// Alarm im Kanal-B-Protokoll — dieselbe Zahl wie WB-14s „nach drei Ausnahmetagen ueberpruefen".
+const GATE_SERIE_ALARM_TAGE = 3;
 // Coverage-Absturz: fällt der present-Anteil eines Kontroll-Felds gegenüber dem
 // Vortag um mehr als das → suspect. Heuristik-Decke (kein Ledger-Wert); 0.25 = ein
 // Viertel der Kohorte verliert ein Kontroll-Feld über Nacht = unplausibel.
@@ -659,33 +665,119 @@ function axenZaehler(v) {
 // „gefüllt" = Array mit mindestens EINEM nicht-null Wert. Leer, komplett null oder ganz
 // weg ist Verfall — dieselbe Semantik wie validEnds() in buildPit (T2/bh-null-ends).
 function reiheGefuellt(a) { return Array.isArray(a) && a.some((x) => x != null); }
+// ── WB-4' (Master-Ratifikation 05.09.2026 als AMENDMENT zu WB-4, Council 05.09.) ────────
+// Gemessen am ersten Live-Tag der Regel (Vintage 2026-09-04 gegen 2026-09-01): 15 Treffer,
+// davon 14 Fehlalarme — Diagnose-Lampen, die frische Daten zu Recht loeschen (8), Quell-
+// Upgrades Yahoo -> SEC-GAAP (FET, WKC), fuehrende Null-Quartalsslots, die marginTrajectory
+// ehrlich auf null setzen (DUK, PPL, AVA, ENB). Der einzige echte Schaden (FTI) faellt ueber
+// (a) UND (b). Die vier Arme, in der Reihenfolge des Urteils:
+//   (a) coverageAxes-Rueckgang = Verfall, AUSSER er ist vollstaendig durch einen fuehrenden
+//       Null-Slot erklaert: laut axisBreakdown geht genau KOPF_ACHSE verloren, der Kopf der
+//       Eingangsreihe rueckt vor (revenueQEnds[0] bzw. opIncQEnds[0] juenger als vorher), die
+//       Null sitzt in Slot [0] (revenueQ[0] und/oder opIncQ[0]), kein historischer Wert geht
+//       verloren (Anzahl gefuellter Werte >= vorher). Ohne axisBreakdown: Verfall (fail-closed).
+//   (b) PIT-Reihe gefuellt -> leer/null = Verfall, unveraendert.
+//   (c) Lampen-Verlust zaehlt nur fuer QUELL_LAMPEN; ein Quell-Lampen-Verlust ist freigegeben,
+//       wenn der Ticker in den SEC-Jahresreihen (opts.secTicker) steht — Beweis des Upgrades —,
+//       sonst Verfall. meta.opIncSource steht nicht in der Zeile; ein toter Diskriminator
+//       (Ticker in SEC, Quelle auf null) zeigt sich als Reihen-Leerung/Achsenverlust in (a)/(b),
+//       die die Freigabe NIE ueberstimmt (Waechter-Arm C3).
+//   (d) jeder andere Lampen-Uebergang (true -> false/null) ist Beobachtung: gezaehlt und
+//       namentlich im Kanal-B-Protokoll und im Sidecar, ohne Veto (lampenBeobachtung).
+// opts.quartale(ticker) liefert { opIncQ, opIncQEnds } aus dem AKTUELLEN Snapshot (kein
+// Schema-Zusatz an der Messreihe); fehlt es, wird der opIncQ-Slot nicht angenommen.
+const QUELL_LAMPEN = new Set(['opIncSynthetisch', 'opIncYahooAdjusted']);
+const KOPF_ACHSE = 'marginTrajectory';   // einzige Achse mit Kopf-Null-Guard (src/scoring/axes.js:288-301)
+const anzahlGefuellt = (a) => (Array.isArray(a) ? a.filter((x) => x != null).length : 0);
+// Achsen, die vorher einen Wert hatten und nachher keinen; null wenn axisBreakdown fehlt.
+function verloreneAchsen(vorher, nachher) {
+  if (!Array.isArray(vorher.axisBreakdown) || !Array.isArray(nachher.axisBreakdown)) return null;
+  const nach = new Map(nachher.axisBreakdown.map((x) => [x.key, x.pct]));
+  return vorher.axisBreakdown.filter((x) => x.pct != null && nach.get(x.key) == null).map((x) => x.key);
+}
+function fuehrenderNullSlot(pv, pn, quartale) {
+  const kopfVorher = Array.isArray(pv.revenueQEnds) ? pv.revenueQEnds[0] : null;
+  if (typeof kopfVorher !== 'string') return false;
+  const q = quartale || {};
+  const kopfRev = Array.isArray(pn.revenueQEnds) ? pn.revenueQEnds[0] : null;
+  const kopfOp = Array.isArray(q.opIncQEnds) ? q.opIncQEnds[0] : null;
+  const revSlot = typeof kopfRev === 'string' && kopfRev > kopfVorher && Array.isArray(pn.revenueQ) && pn.revenueQ[0] == null;
+  // opIncQ hat KEINEN Vorher-Stand in der Zeile (nur der aktuelle Snapshot ist lesbar). Ein
+  // historischer Verlust ist deshalb nicht per Zaehler-Vergleich zu erkennen — fail-closed: der
+  // opIncQ-Slot gilt nur, wenn ausser dem Kopf KEIN Wert der Reihe fehlt (Review 05.09., HIGH).
+  const opSlot = typeof kopfOp === 'string' && kopfOp > kopfVorher && Array.isArray(q.opIncQ) && q.opIncQ.length > 1
+    && q.opIncQ[0] == null && q.opIncQ.slice(1).every((x) => x != null);
+  if (!revSlot && !opSlot) return false;
+  for (const f of ['revenueQ', 'grossProfitQ']) if (anzahlGefuellt(pn[f]) < anzahlGefuellt(pv[f])) return false;
+  return true;
+}
 // Liefert das auslösende Feld als Klartext oder null. Die erste Fundstelle genügt: die
 // Zeile ist damit ungedeckt, weitere Felder ändern das Urteil nicht mehr.
-function integritaetsVerfall(vorher, nachher) {
+function integritaetsVerfall(vorher, nachher, opts) {
   if (!vorher || !nachher) return null;
-  const a = axenZaehler(vorher.coverageAxes);
-  const b = axenZaehler(nachher.coverageAxes);
-  if (a != null && b != null && b < a) return 'coverageAxes ' + vorher.coverageAxes + ' -> ' + nachher.coverageAxes;
+  opts = opts || {};
   const pv = vorher.pit || {};
   const pn = nachher.pit || {};
-  for (const f of ['revenueQ', 'revenueQEnds', 'grossProfitQ', 'grossProfitQEnds']) {
+  for (const f of ['revenueQ', 'revenueQEnds', 'grossProfitQ', 'grossProfitQEnds']) {          // (b)
     if (reiheGefuellt(pv[f]) && !reiheGefuellt(pn[f])) return f + ' gefuellt -> leer/null';
   }
-  // Lampen-Verlust: JEDE zuvor getragene Lampe, die fehlt — strenger als „nur Quell-Lampen".
-  // Bewusst so: ob eine Lampe eine QUELLE benennt, steht nicht in der Vintage-Zeile, und die
-  // Vereinigung der jeweils strengeren Fassung ist die Konvention dieses Beschlusses.
-  if (Array.isArray(vorher.lamps) && vorher.lamps.length) {
+  const a = axenZaehler(vorher.coverageAxes);                                                     // (a)
+  const b = axenZaehler(nachher.coverageAxes);
+  if (a != null && b != null && b < a) {
+    const verloren = verloreneAchsen(vorher, nachher);
+    const quartale = typeof opts.quartale === 'function' ? opts.quartale(nachher.ticker) : null;
+    const slot = !!(verloren && verloren.length === 1 && verloren[0] === KOPF_ACHSE && fuehrenderNullSlot(pv, pn, quartale));
+    if (!slot) {
+      return 'coverageAxes ' + vorher.coverageAxes + ' -> ' + nachher.coverageAxes
+        + (verloren ? ' [' + (verloren.length ? verloren.join(',') : 'Achse unbenannt') + ']' : '');
+    }
+  }
+  if (Array.isArray(vorher.lamps) && vorher.lamps.length) {                                       // (c)
     const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
-    for (const l of vorher.lamps) if (!jetzt.has(l)) return 'Lampe ' + l + ' verloren';
+    const sec = opts.secTicker instanceof Set ? opts.secTicker : null;
+    for (const l of vorher.lamps) {
+      if (jetzt.has(l) || !QUELL_LAMPEN.has(l)) continue;
+      if (sec && sec.has(nachher.ticker)) continue;   // Quell-Upgrade, am Objekt bewiesen
+      return 'Lampe ' + l + ' verloren';
+    }
   }
   return null;
+}
+// (d)/(c): Beobachtung ohne Veto — verlorene Diagnose-Lampen und freigegebene Quell-Upgrades,
+// namentlich, damit die K7-Beweisbasis waechst statt dunkel zu werden.
+function lampenBeobachtung(vorher, nachher, opts) {
+  const out = { verloren: [], quellUpgrade: [] };
+  if (!vorher || !nachher || !Array.isArray(vorher.lamps)) return out;
+  const jetzt = new Set(Array.isArray(nachher.lamps) ? nachher.lamps : []);
+  const sec = opts && opts.secTicker instanceof Set ? opts.secTicker : null;
+  for (const l of vorher.lamps) {
+    if (jetzt.has(l)) continue;
+    if (QUELL_LAMPEN.has(l)) { if (sec && sec.has(nachher.ticker)) out.quellUpgrade.push(l); }
+    else out.verloren.push(l);
+  }
+  return out;
+}
+// Ticker mit SEC-GAAP-Jahresreihe: dieselben Dateien wie scripts/opinc-source-migrate.js
+// (SECANNUAL_FILES). Fehlende Dateien = kein Beweis = fail-closed (Quell-Verlust bleibt Verfall).
+const SECANNUAL_FILES = ['sec-secannual.json', 'sec-secannual-smallcap.json', 'kr-secannual.json', 'jp-secannual.json', 'tw-secannual.json'];
+function secTickerLesen(dir) {
+  const s = new Set();
+  for (const f of SECANNUAL_FILES) {
+    const j = readJsonOrNull(path.join(dir, f));
+    if (!j || typeof j !== 'object' || Array.isArray(j)) continue;   // Array-Form = kein Beweis (Indizes sind keine Ticker)
+    if (Array.isArray(j.tickers)) continue;                           // unbekannte Form = kein Beweis
+    const m = (j.tickers && typeof j.tickers === 'object') ? j.tickers : j;
+    for (const k of Object.keys(m)) if (!k.startsWith('_')) s.add(k);
+  }
+  return s;
 }
 
 // ── Wert-Plausibilitäts-Gate ─────────────────────────────────────────────────
 // Vergleicht das neue Board-Vintage gegen das Vortags-Vintage. Liefert
 // { calibrating, p99Delta, threshold, suspect, reasons }.
-function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
+function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
   const reasons = [];
+  opts = opts || {};
   const rowsByTicker = (v) => {
     const m = new Map();
     if (!v) return m;
@@ -830,12 +922,17 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
   // geprüft, auch die mit winzigem |D|. Nur dort, nicht auf fremden Boards und nicht an
   // gewöhnlichen Tagen: die Ausnahme färbt nicht ab (BP-6), ihre Auflage ebenso wenig.
   const verfallsZeilen = [];
+  const beobachteteLampen = [];   // WB-4' (d): verlorene Diagnose-Lampen, namentlich, ohne Veto
+  const quellUpgrades = [];       // WB-4' (c): freigegebene Quell-Lampen-Verluste (Ticker in SEC)
   if (istDatenSchub) {
     for (const [tk, r] of nowMap) {
       const p = priorMap.get(tk);
       if (!p) continue;
-      const feld = integritaetsVerfall(p, r);
+      const feld = integritaetsVerfall(p, r, opts);
       if (feld) verfallsZeilen.push({ ticker: tk, feld });
+      const beob = lampenBeobachtung(p, r, opts);
+      if (beob.verloren.length) beobachteteLampen.push({ ticker: tk, lampen: beob.verloren });
+      if (beob.quellUpgrade.length) quellUpgrades.push({ ticker: tk, lampen: beob.quellUpgrade });
     }
   }
   const geschrumpft = registriert && priorMap.size > 0 && nowMap.size < priorMap.size;
@@ -904,7 +1001,7 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board) {
     // weil „angewandte Schwelle" ohne „normale Schwelle" nicht nachprüfbar ist.
     datenSchub: istDatenSchub, basisSchwelle,
     fanOut, fanOutZaehler: breiteZeilen.length, fanOutNenner: deltas.length,
-    breiteZeilen, verfallsZeilen,
+    breiteZeilen, verfallsZeilen, beobachteteLampen, quellUpgrades,
     suspect: reasons.length > 0, reasons,
   };
 }
@@ -987,6 +1084,8 @@ function updateP99DeltaHistory(existing, date, results) {
         fanOut: { zaehler: b.fanOutZaehler, nenner: b.fanOutNenner, anteil: b.fanOut, cap: GATE_FANOUT_CAP },
         breiteZeilen: b.breiteZeilen,          // JEDE Zeile |D| > normaler Schwelle, namentlich
         integritaetsVerfall: b.verfallsZeilen, // je gefasster Zeile das auslösende Feld
+        beobachteteLampen: b.beobachteteLampen || [],   // WB-4' (d): ohne Veto, namentlich
+        quellUpgrades: b.quellUpgrades || [],           // WB-4' (c): freigegeben, Ticker in SEC
       };
     }
   }
@@ -1314,6 +1413,12 @@ function run(opts) {
   // T155/W3: einmal je Lauf lesen, nicht je Board — 13 identische Lesevorgänge derselben
   // Datei wären 13 Gelegenheiten, unterschiedliche Werte in ein Vintage zu schreiben.
   const universeHash = readUniverseHash(P.UNIVERSE_HASH_FILE);
+  // WB-4': einmal je Lauf — SEC-Ticker als Upgrade-Beweis (c) und der Quartals-Kopf des
+  // AKTUELLEN Snapshots fuer den Null-Slot (a); beides nur am Datenschub-Uebergang gelesen.
+  const gateOpts = bruch && bruch.typ === 'daten-schub' ? {
+    secTicker: secTickerLesen(P.EXTERNAL_DIR),
+    quartale: (ticker) => { const s = readSnapshot(ticker); const ts = (s && s.timeseries) || {}; return { opIncQ: ts.opIncQ, opIncQEnds: ts.opIncQEnds }; },
+  } : {};
   for (const board of boards) {
     const boardPath = path.join(P.FULL_DIR, board + '.json');
     const boardData = readJsonOrNull(boardPath);
@@ -1326,7 +1431,7 @@ function run(opts) {
     if (!boardData) throw new Error('unreadable full-cohort board file: ' + boardPath);
     const vintage = buildBoardVintage(board, boardData, date, calibMeta, universeHash);
     const priorVintage = priorDate ? readJsonOrNull(path.join(P.HISTORY_DIR, priorDate, board + '.json')) : null;
-    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board);
+    const gate = evaluateGate(vintage, priorVintage, gateCalib.boards[board], bruch, board, gateOpts);
     // Kalibrier-Sample nachziehen (frozen erst NACH Auswertung, damit die aktuelle
     // Auswertung noch in der Kalibrierphase mit calibrating:true läuft).
     // BH-111: ein bereits als suspect erkannter Tag darf die eingefrorene Schwelle
@@ -1371,7 +1476,8 @@ function run(opts) {
       // Kanal B (WB-5): nur am Datenschub-Übergang gefüllt, an jedem anderen Tag inert.
       datenSchub: gate.datenSchub, basisSchwelle: gate.basisSchwelle,
       fanOut: gate.fanOut, fanOutZaehler: gate.fanOutZaehler, fanOutNenner: gate.fanOutNenner,
-      breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen });
+      breiteZeilen: gate.breiteZeilen, verfallsZeilen: gate.verfallsZeilen,
+      beobachteteLampen: gate.beobachteteLampen, quellUpgrades: gate.quellUpgrades });
   }
 
   // Seiten-Artefakte je Datum: calibration.json-Kopie + regime.json.
@@ -1457,7 +1563,35 @@ function bruchProtokollZeilen(res) {
       + '; breite Zeilen: ' + (b.breiteZeilen.length
         ? b.breiteZeilen.map((z) => z.ticker + ' ' + z.delta.toFixed(2)).join(', ') : 'keine')
       + '; Integritaets-Vorrang: ' + (b.verfallsZeilen.length
-        ? b.verfallsZeilen.map((z) => z.ticker + ' (' + z.feld + ')').join(', ') : 'keine Zeile'));
+        ? b.verfallsZeilen.map((z) => z.ticker + ' (' + z.feld + ')').join(', ') : 'keine Zeile')
+      // WB-4' (d)/(c): Beobachtung ohne Veto, gezaehlt UND namentlich — die K7-Beweisbasis.
+      + '; beobachtete Lampen ohne Veto: ' + ((b.beobachteteLampen || []).length
+        ? (b.beobachteteLampen.length + ' — ' + b.beobachteteLampen.map((z) => z.ticker + ' (' + z.lampen.join('+') + ')').join(', ')) : '0')
+      + '; Quell-Upgrades (SEC): ' + ((b.quellUpgrades || []).length
+        ? b.quellUpgrades.map((z) => z.ticker).join(', ') : 'keine'));
+  }
+  return zeilen;
+}
+
+// WB-4' Betreiber-Auflage (ratifiziert 05.09.2026): die Kopplung „ein SUSPECT-Board nimmt das
+// ganze Tagesverzeichnis mit" (daily-pull.yml :(exclude)) wird SICHTBAR gemacht, nicht
+// geaendert. Laeuft UNABHAENGIG vom Register (auch ohne Bruch-Eintrag): Boards ohne eigenen
+// SUSPECT, die trotzdem kein Vintage bekommen, werden namentlich genannt; und ein Vorgaenger,
+// der laenger als GATE_SERIE_ALARM_TAGE zurueckliegt, ist ein Alarm im selben Kanal.
+function kopplungProtokollZeilen(res) {
+  if (!res || !Array.isArray(res.boards)) return [];
+  const zeilen = [];
+  const eigene = res.boards.filter((x) => x.suspect).map((x) => x.board);
+  if (eigene.length) {
+    const mitgesperrt = res.boards.filter((x) => !x.suspect).map((x) => x.board);
+    zeilen.push('::warning::GATE KOPPLUNG fuer ' + res.date + ': gesperrt durch eigenen SUSPECT: '
+      + eigene.join(', ') + '; mitgesperrt durch Geschwister-Kopplung (Tagesverzeichnis-Ausschluss): '
+      + (mitgesperrt.length ? mitgesperrt.length + ' Board(s) — ' + mitgesperrt.join(', ') : 'keines'));
+  }
+  const gap = res.boards.map((x) => x.gapDays).find((g) => Number.isFinite(g));
+  if (Number.isFinite(gap) && gap > GATE_SERIE_ALARM_TAGE) {
+    zeilen.push('::warning::GATE SERIE: ' + gap + ' Tage ohne gelandetes Vintage (Vorgaenger '
+      + res.priorDate + ', Schwelle ' + GATE_SERIE_ALARM_TAGE + ' Tage, WB-14) — jede weitere SUSPECT-Nacht verlaengert die Luecke.');
   }
   return zeilen;
 }
@@ -1507,6 +1641,7 @@ if (require.main === module) {
       // Grenze MUSS im Klartext dort stehen, sonst ist "gruen" nicht von "Gate uebergangen"
       // zu unterscheiden. Kopfzeile vor der Board-Liste, damit sie ohne Scrollen sichtbar ist.
       for (const z of bruchProtokollZeilen(res)) console.log(z);
+      for (const z of kopplungProtokollZeilen(res)) console.log(z);   // WB-4': auch ohne Register-Eintrag
       // Dritter Fall im selben Alarmkanal wie GATE BLIND und Massstab-Bruch: der Vergleich
       // spannt mehr als GATE_MAX_ABSTAND_TAGE. Dann urteilt die Wert-Achse bewusst nicht —
       // das MUSS im Klartext stehen, sonst sieht ein ungeprueftes Vintage aus wie ein
@@ -1578,9 +1713,10 @@ module.exports = {
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
   priorVintageDate, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
+  integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP },
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE },
 };
