@@ -1836,6 +1836,11 @@ jobs:
       # unbelegt). Eine Liste, die nur im Skript lebt, waere fuer ihn unsichtbar.
       # Die Sentinel-Pruefung darunter laeuft auf der EINMAL erzeugten Ausgabe des
       # Skripts — die Tests werden nicht zweimal gefahren.
+      # 06.09.2026 (Worker 3, Master-Entscheid): vier weitere Suiten, die seit Tag 948 (11.08.) in
+      # KEINEM Job mit echtem Universum liefen (pre-pull-Gate/PR-Check skippen sie bewusst):
+      # calib-parity, calibration, fairness-guards, rev-growth-anzeige (+~45 s; gemessen 4/4/5/4 ok).
+      # calibration-ref bleibt DRAUSSEN: R2.9 Test B faellt auf dem heutigen Universum an seiner
+      # Vorbedingung (Kohorte utilities|unprofitable ist da) - Ratspunkt, nicht Nachtlauf-Patch.
       - name: Live-Universum-Gate (score.integration/quality-board/phase/score-breakdown/acceleration-invariance/anchors.rank)
         run: |
           fail=0
@@ -1846,7 +1851,11 @@ jobs:
             tests/scoring/phase.test.js \
             tests/scoring/score-breakdown.test.js \
             tests/scoring/acceleration-invariance.test.js \
-            tests/scoring/anchors.rank.test.js 2>&1)
+            tests/scoring/anchors.rank.test.js \
+            tests/scoring/calib-parity.test.js \
+            tests/scoring/calibration.test.js \
+            tests/scoring/fairness-guards.test.js \
+            tests/scoring/rev-growth-anzeige.test.js 2>&1)
           rc=$?
           set -e
           echo "$out"
