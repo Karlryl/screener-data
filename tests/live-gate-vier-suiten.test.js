@@ -35,8 +35,13 @@ const VIER = ['calib-parity.test.js', 'calibration.test.js', 'fairness-guards.te
 
 check('L1: die vier Suiten stehen im Aufruf des Live-Universum-Gate-Steps (scoring-Job)', () => {
   const s = section('name: Live-Universum-Gate', 'name: Gate-Ergebnis belegen');
-  const aufruf = s.slice(s.indexOf('live-universum-gate.js'), s.indexOf('2>&1)'));
-  assert.ok(aufruf.length > 0, 'Aufruf von live-universum-gate.js nicht gefunden');
+  // Das Ende des Aufrufs wird AB dem Aufruf gesucht (Review 06.09., typescript MEDIUM): ein
+  // frueheres "2>&1)" im Step-Text wuerde die Scheibe sonst still verkuerzen und L1 falsch-gruen lassen.
+  const a = s.indexOf('live-universum-gate.js');
+  assert.ok(a >= 0, 'Aufruf von live-universum-gate.js nicht gefunden');
+  const e = s.indexOf('2>&1)', a);
+  assert.ok(e > a, 'Ende des Aufrufs (2>&1)) nicht nach dem Aufruf gefunden');
+  const aufruf = s.slice(a, e);
   for (const t of VIER) assert.ok(aufruf.includes('tests/scoring/' + t), t + ' fehlt im Live-Universum-Gate-Aufruf');
 });
 check('L2: die vier Dateien existieren und tragen den Universums-Seam (SCREENER_SNAPSHOTS_DIR), sonst kann das Gate sie nicht gegen echte Snapshots fahren', () => {
