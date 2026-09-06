@@ -55,7 +55,10 @@ check('P4: mehrere fuehrende leere Zeilen fallen alle; eine komplett leere Reihe
   const leer = P.mapFTSToQuarterly([row('2026-03-31', null, null, null), row('2026-06-30', null, null, null)]);
   assert.strictEqual(leer.revenueQ.length, 0);   // hinterer Trim (bestehend) raeumt komplett leere Reihen
 });
-check('P5: WB-4\' sieht im Vintage-Vergleich KEINEN Verfall — Kopf zurueck auf das letzte gemeldete Quartal, Achse marginTrajectory kommt wieder', () => {
+// Review 06.09. (silent-failure): P5 pinnt NICHT fuehrenderNullSlot (das tun wertgate-wb4strich A1-A7),
+// sondern nur, dass der Uebergang „leerer Kopf -> Kopf verworfen" in KEINEM Arm von integritaetsVerfall
+// als Verfall gilt — Arm (b) sieht zwei gefuellte Reihen, Arm (a) einen Achsen-Zuwachs, Arm (c) keine Lampe.
+check('P5: der Uebergang leerer Kopf -> Kopf verworfen loest in integritaetsVerfall keinen Arm aus (Arm (b) bleibt scharf, Gegenprobe)', () => {
   // Vorher (Vintage 05.09.): Slot 2026-06-30 leer, marginTrajectory null (6/7). Nachher: Slot weg, 7/7.
   const vorher = { ticker: 'CVCO', coverageAxes: '6/7', lamps: [], axisBreakdown: { marginTrajectory: null, gpGrowth: 1 },
     pit: { revenueQ: [null, { value: 550 }, { value: 580 }], revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'], grossProfitQ: [null, { value: 127 }, { value: 135 }], grossProfitQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'] } };
@@ -65,6 +68,28 @@ check('P5: WB-4\' sieht im Vintage-Vergleich KEINEN Verfall — Kopf zurueck auf
   // Gegenprobe: dieselbe Funktion feuert weiterhin, wenn eine gefuellte Reihe wirklich leer wird.
   const kaputt = { ...nachher, pit: { ...nachher.pit, revenueQ: [null, null] } };
   assert.strictEqual(W.integritaetsVerfall(vorher, kaputt, {}), 'revenueQ gefuellt -> leer/null');
+});
+
+check('P6: ein gecachtes Buendel (vor dem Merge gemappt, mit und ohne Enden-Arrays) verliert seinen leeren Kopf ueber den Helfer — Zahl = verworfene Zeilen', () => {
+  const mitEnden = { revenueQ: [null, { value: 550 }, { value: 580 }], opIncQ: [null, { value: 51 }, { value: 54 }], grossProfitQ: [null, { value: 127 }, { value: 135 }],
+    revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'], grossProfitQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'], opIncQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'] };
+  assert.strictEqual(P._dropLeadingEmptyQuarters(mitEnden), 1);
+  assert.deepStrictEqual(vals(mitEnden.revenueQ), [550, 580]);
+  assert.deepStrictEqual(mitEnden.revenueQEnds, ['2026-03-31', '2025-12-31']);
+  assert.deepStrictEqual(mitEnden.opIncQEnds, ['2026-03-31', '2025-12-31']);
+  const ohneEnden = { revenueQ: [null, { value: 550 }], opIncQ: [null, { value: 51 }], grossProfitQ: [null, { value: 127 }] };   // Cache vor A10
+  assert.strictEqual(P._dropLeadingEmptyQuarters(ohneEnden), 1);
+  assert.deepStrictEqual(vals(ohneEnden.revenueQ), [550]);
+  assert.strictEqual(P._dropLeadingEmptyQuarters(ohneEnden), 0);   // idempotent
+  assert.strictEqual(P._dropLeadingEmptyQuarters(null), 0);
+  assert.strictEqual(P._dropLeadingEmptyQuarters({ revenueQ: [null] }), 0);   // Laenge 1 bleibt (hinterer Trim ist zustaendig)
+});
+check('P7: der Helfer ist im Cache-Treffer-Zweig verdrahtet (sonst traegt ein Cache-Buendel den leeren Kopf 28 Tage weiter)', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+  const i = src.indexOf('ftsQuarterly = cached.payload.ftsQuarterly;');
+  assert.ok(i > 0, 'Cache-Treffer-Zuweisung nicht gefunden');
+  const danach = src.slice(i, i + 600);
+  assert.ok(/_ftsLeadingEmptyDropped \+= _dropLeadingEmptyQuarters\(ftsQuarterly\)/.test(danach), 'Helfer im Cache-Zweig nicht aufgerufen');
 });
 
 if (fail) { console.log('FAIL: fts-leading-empty-quarter (' + fail + ')'); process.exit(1); }

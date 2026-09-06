@@ -2665,11 +2665,27 @@ function mapFTSToQuarterly(quarterlyRows) {
   // so it fed BH-080 an honest null (marginTrajectory) and the WB-4' class-4 carve-out. Dropping
   // it restores the pre-row state ("not yet reported"), nothing is fabricated. Counted per run
   // (FN-2 pattern). Partial rows (any of the three present) stay — they are data.
-  while (revenueQ.length > 1 && revenueQ[0] == null && opIncQ[0] == null && grossProfitQ[0] == null) {
-    revenueQ.shift(); opIncQ.shift(); grossProfitQ.shift(); revenueQEnds.shift(); grossProfitQEnds.shift(); opIncQEnds.shift();
-    _ftsLeadingEmptyDropped++;
+  const out = { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
+  _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(out);
+  return out;
+}
+
+// 06.09.2026: der vordere Trim als reine Funktion auf dem Buendel — sie laeuft im Mapper UND auf
+// jedem Cache-Treffer (Review silent-failure HIGH: ein vor dem Merge gecachtes Buendel haette den
+// leeren Kopf bis zu CACHE_TTL_MS = 28 Tage weitergereicht; dieselbe Luecke wie beim Null-GP-Guard,
+// FTI-Beschluss 02.09.). Toleriert Buendel ohne Enden-Arrays (Cache vor A10). Gibt die Zahl der
+// verworfenen Kopfzeilen zurueck, mutiert das Buendel in place.
+function _dropLeadingEmptyQuarters(b) {
+  if (!b || !Array.isArray(b.revenueQ)) return 0;
+  const reihen = ['revenueQ', 'opIncQ', 'grossProfitQ', 'revenueQEnds', 'grossProfitQEnds', 'opIncQEnds'].filter((k) => Array.isArray(b[k]));
+  let n = 0;
+  while (b.revenueQ.length > 1 && b.revenueQ[0] == null
+         && (!Array.isArray(b.opIncQ) || b.opIncQ[0] == null)
+         && (!Array.isArray(b.grossProfitQ) || b.grossProfitQ[0] == null)) {
+    for (const k of reihen) b[k].shift();
+    n++;
   }
-  return { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
+  return n;
 }
 
 // Tag 561: Laengengleichheit der drei Quartals-Kernreihen ist seit F-002 eine
@@ -3704,6 +3720,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           ftsAnnual._gpZeroCodingYears = _nullOutAllZeroGrossProfit(ftsAnnual.annualRev, ftsAnnual.annualGP);
         }
         ftsQuarterly = cached.payload.ftsQuarterly;
+        // 06.09.2026: fuehrende leere Quartale auch aus dem Cache-Buendel entfernen — sonst traegt
+        // ein vor dem Merge gecachtes Buendel den leeren Kopf bis zum Cache-Ablauf (28 Tage) weiter.
+        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly);
         ftsBalance = cached.payload.ftsBalance;
         ftsAnnualSBC = cached.payload.ftsAnnualSBC;
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
@@ -4998,6 +5017,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   _gpDerivedTally: () => ({ rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, skippedRows: _gpDerivedSkipped }),
   // 06.09.2026: Zaehler der verworfenen fuehrenden leeren FTS-Quartale, exportiert fuer tests/fts-leading-empty-quarter.test.js.
   _ftsLeadingEmptyTally: () => ({ dropped: _ftsLeadingEmptyDropped }),
+  _dropLeadingEmptyQuarters,
   _resetFtsLeadingEmptyTally: () => { _ftsLeadingEmptyDropped = 0; },
   _gpZeroCodingTally: () => ({ rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } }),
   _resetGpZeroCodingTally: () => { _gpZeroCodingRows = 0; _gpZeroCodingBySuffix = Object.create(null); _gpZeroCodingBySector = Object.create(null); } };
