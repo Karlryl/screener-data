@@ -57,6 +57,19 @@ function bashMitGhStub(block, ghAusgabe, ghRc) {
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
 
+// G0 (06.09., nach dem roten Lauf 34028130277): ein einzeiliges `run: echo "::warning::A2: …"` mit ": " im
+// Text war fuer YAML eine Zuordnung — die Datei parste nicht, der Lauf hatte keinen einzigen Job. Kein
+// JS-YAML-Parser im Repo; PyYAML ist auf dem Runner (setup-python) und lokal da. Fehlt es: SICHTBAR
+// uebersprungen, nicht still gruen.
+check('G0: pr-check.yml parst als YAML (PyYAML), die A2-Schritte sind echte Step-Objekte', () => {
+  const r = spawnSync('python', ['-c', 'import sys,yaml; d=yaml.safe_load(open(sys.argv[1],encoding="utf-8")); s=[x.get("name") for x in d["jobs"]["test-gate"]["steps"]]; print("|".join(str(n) for n in s))', path.join(ROOT, '.github', 'workflows', 'pr-check.yml')], { encoding: 'utf8' });
+  if (r.error || /No module named/.test(r.stderr || '')) { console.log('       (G0 uebersprungen: python/PyYAML nicht verfuegbar — ' + ((r.error && r.error.message) || 'kein yaml-Modul') + ')'); return; }
+  assert.strictEqual(r.status, 0, 'YAML parst nicht: ' + (r.stderr || '').slice(0, 300));
+  const namen = (r.stdout || '').trim().split('|');
+  for (const n of ['Letztes Tages-Snapshot-Artefakt suchen (A2)', 'Snapshots des letzten Tageslaufs laden (A2)', 'Snapshot-Download fehlgeschlagen (A2, sichtbar uebersprungen)', 'Live-Universum-Gate (PR-Check, Universum von gestern, A2)']) {
+    assert.ok(namen.includes(n), 'Step fehlt im geparsten YAML: ' + n);
+  }
+});
 check('G1: die Suiten-Menge des PR-Live-Gates ist IDENTISCH mit dem scoring-Job (zehn Suiten)', () => {
   const prS = suiten(pr, GATE_PR, null);
   const dailyS = suiten(daily, GATE_DAILY, 'name: Gate-Ergebnis belegen');
