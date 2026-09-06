@@ -77,9 +77,17 @@ check('G3: der download-artifact-Schritt ist auf denselben SHA gepinnt wie daily
   assert.ok(/run-id: \$\{\{ steps\.artefakt\.outputs\.rid \}\}/.test(block), 'run-id fehlt');
   assert.ok(/github-token: \$\{\{ github\.token \}\}/.test(block), 'github-token fehlt');
   assert.ok(/if: steps\.artefakt\.outputs\.rid != ''/.test(block), 'nicht auf rid gated');
+  // Review 06.09. (silent-failure MEDIUM): der Download darf den PR nicht rot faerben; das Gate laeuft nur bei Erfolg.
+  assert.ok(/\n\s+continue-on-error: true\n/.test(block), 'Download ohne continue-on-error');
+  assert.ok(/\n\s+id: laden\n/.test(block), 'Download-Schritt ohne id: laden');
   const g = pr.slice(pr.indexOf(GATE_PR));
-  assert.ok(/if: steps\.artefakt\.outputs\.rid != ''/.test(g.slice(0, 200)), 'Gate-Schritt nicht auf rid gated');
+  assert.ok(/if: steps\.artefakt\.outputs\.rid != '' && steps\.laden\.outcome == 'success'/.test(g.slice(0, 260)), 'Gate-Schritt nicht auf rid UND Download-Erfolg gated');
+  assert.ok(pr.includes("steps.laden.outcome != 'success'") && /::warning::A2: Download des snapshots-Artefakts/.test(pr), 'kein sichtbarer Warn-Schritt fuer den Download-Fehlschlag');
 });
+// Hinweis zur Reichweite (Review 06.09., LOW): der gh-Stub in bashMitGhStub ersetzt den GANZEN
+// `gh api … --jq`-Aufruf durch eine feste Ausgabe. G4/G5 pruefen die Shell-Steuerung (Exit-Codes,
+// Warnung, rid-Ausgabe), NICHT den jq-Filter selbst — der ist Standard-jq und steht in der
+// Sichtpruefung; ein jq-Fixture-Test braeuchte jq auf dem Pruefstand.
 check('G4: kein Artefakt (gh liefert leer) -> ::warning:: + Exit 0 + rid leer (Shell-Block ausgefuehrt)', () => {
   const r = bashMitGhStub(runBlock(pr, SUCHE), '', 0);
   assert.strictEqual(r.code, 0, 'Exit ' + r.code + '\n' + r.out);

@@ -97,15 +97,23 @@ jobs:
           echo "A2: Snapshot-Artefakt aus Lauf $RID"
           echo "rid=$RID" >> "$GITHUB_OUTPUT"
       - name: Snapshots des letzten Tageslaufs laden (A2)
+        id: laden
         if: steps.artefakt.outputs.rid != ''
+        # Review 06.09. (silent-failure MEDIUM): ein transienter Download-Fehler (API-Schluckauf, Artefakt
+        # laeuft zwischen Suche und Laden ab) darf den PR nicht rot faerben — derselbe Grundsatz wie beim
+        # Such-Schritt: nie rot aus Infrastruktur-Gruenden. Das Gate unten laeuft nur bei Erfolg.
+        continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0 — derselbe Pin wie daily-pull.yml
         with:
           name: snapshots
           path: snapshots
           run-id: ${{ steps.artefakt.outputs.rid }}
           github-token: ${{ github.token }}
+      - name: Snapshot-Download fehlgeschlagen (A2, sichtbar uebersprungen)
+        if: steps.artefakt.outputs.rid != '' && steps.laden.outcome != 'success'
+        run: echo "::warning::A2: Download des snapshots-Artefakts aus Lauf ${{ steps.artefakt.outputs.rid }} fehlgeschlagen (outcome ${{ steps.laden.outcome }}) — Live-Universum-Gate im PR-Check UEBERSPRUNGEN, kein Code-Defekt."
       - name: Live-Universum-Gate (PR-Check, Universum von gestern, A2)
-        if: steps.artefakt.outputs.rid != ''
+        if: steps.artefakt.outputs.rid != '' && steps.laden.outcome == 'success'
         run: |
           n=$(ls snapshots/*.json 2>/dev/null | wc -l)
           echo "A2: $n Snapshots aus dem Artefakt"
