@@ -214,6 +214,7 @@ const GP_DERIVED_SOURCE = 'derived_rev_minus_cogs';
 let _gpDerivedRows = 0;
 let _gpDerivedRejected = 0;
 let _gpDerivedSkipped = 0;   // Laengen-Mismatch (Cache-Treffer ohne COGS o. ae.) — gezaehlt, nie still
+let _ftsLeadingEmptyDropped = 0;   // 06.09.: fuehrende leere FTS-Quartale (Ende ohne Werte), je Lauf gezaehlt
 function _deriveGrossProfitFromCogs(annualRev, annualGP, annualCogs) {
   const out = { derived: 0, rejected: 0 };
   if (!Array.isArray(annualRev) || !Array.isArray(annualGP) || !Array.isArray(annualCogs)) return out;
@@ -2654,7 +2655,45 @@ function mapFTSToQuarterly(quarterlyRows) {
          grossProfitQ[grossProfitQ.length - 1] == null) {
     revenueQ.pop(); opIncQ.pop(); grossProfitQ.pop(); revenueQEnds.pop(); grossProfitQEnds.pop(); opIncQEnds.pop(); // A10: Ends in Lockstep
   }
+  // 06.09.2026 (Worker 3, Master-Entscheid): LEADING all-null quarters (newest) are dropped too.
+  // Measured on the CI artifact 33967836117: 305 snapshots (141 board rows) carry a newest slot
+  // with a period end but no revenue/GP/OpInc — Yahoo FTS serves the quarter as a row with only
+  // share counts and EPS (CVCO 2026-06-30: 8 non-null keys vs 39 for the quarter before) while
+  // the values arrive weeks later or, for 85 of 226 rows since 25.08., not at all. F-002 keeps
+  // INNER null rows as calendar placeholders (same-quarter YoY index math) — a leading empty row
+  // is no placeholder for anything: revenueQ[0] is "newest reported quarter" for every consumer,
+  // so it fed BH-080 an honest null (marginTrajectory) and the WB-4' class-4 carve-out. Dropping
+  // it restores the pre-row state ("not yet reported"), nothing is fabricated. Counted per run
+  // (FN-2 pattern). Partial rows (any of the three present) stay — they are data.
+  // Der vordere Trim laeuft NICHT hier, sondern an den zwei Stellen, an denen auch die
+  // Nettoergebnis-Quartale (ftsQuarterlyNI, eigener Mapper, index-aligned) vorliegen —
+  // s. _dropLeadingEmptyQuarters.
   return { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
+}
+
+// 06.09.2026: der vordere Trim als reine Funktion auf dem Buendel PLUS der Nettoergebnis-Reihe.
+// Laeuft nach dem Mapper UND auf jedem Cache-Treffer (Review silent-failure HIGH: ein vor dem Merge
+// gecachtes Buendel haette den leeren Kopf bis zu CACHE_TTL_MS = 28 Tage weitergereicht; dieselbe
+// Luecke wie beim Null-GP-Guard, FTI-Beschluss 02.09.). Re-Review HIGH: ftsQuarterlyNI wird in
+// _mergeQuarterBundle index-aligned zu revenueQ gezippt — wird nur das Buendel gekuerzt, rutscht
+// das Nettoergebnis um ein Quartal. Deshalb: die NI-Reihe ist Teil der Leer-Bedingung (eine
+// Kopfzeile MIT Nettoergebnis ist Datum, kein Platzhalter) und wird im Gleichschritt geschoben.
+// Toleriert Buendel ohne Enden-Arrays (Cache vor A10) und fehlende NI-Reihe. Gibt die Zahl der
+// verworfenen Kopfzeilen zurueck, mutiert Buendel und NI-Reihe in place.
+function _dropLeadingEmptyQuarters(b, ni) {
+  if (!b || !Array.isArray(b.revenueQ)) return 0;
+  const reihen = ['revenueQ', 'opIncQ', 'grossProfitQ', 'revenueQEnds', 'grossProfitQEnds', 'opIncQEnds'].filter((k) => Array.isArray(b[k]));
+  const niArr = Array.isArray(ni) ? ni : null;
+  let n = 0;
+  while (b.revenueQ.length > 1 && b.revenueQ[0] == null
+         && (!Array.isArray(b.opIncQ) || b.opIncQ[0] == null)
+         && (!Array.isArray(b.grossProfitQ) || b.grossProfitQ[0] == null)
+         && (!niArr || niArr.length === 0 || niArr[0] == null)) {
+    for (const k of reihen) b[k].shift();
+    if (niArr && niArr.length) niArr.shift();
+    n++;
+  }
+  return n;
 }
 
 // Tag 561: Laengengleichheit der drei Quartals-Kernreihen ist seit F-002 eine
@@ -2995,6 +3034,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // pullAll im selben Prozess (Tests, Shards) zwei Laeufe zu einem Scheinausschlag.
   _gpZeroCodingRows = 0;
   _gpDerivedRows = 0; _gpDerivedRejected = 0; _gpDerivedSkipped = 0;   // A'
+  _ftsLeadingEmptyDropped = 0;   // 06.09.
   _gpZeroCodingBySuffix = Object.create(null);
   _gpZeroCodingBySector = Object.create(null);
   // TASK 0.9 (Pull-Diät): load the earnings calendar ONCE, in scope for
@@ -3693,6 +3733,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
         ftsAnnualRnD = cached.payload.ftsAnnualRnD || [];  // Bug #25: added in cache v2
         ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
+        // 06.09.2026: fuehrende leere Quartale auch aus dem Cache-Buendel entfernen (Buendel + NI im
+        // Gleichschritt) — sonst traegt ein vor dem Merge gecachtes Buendel den leeren Kopf bis zum
+        // Cache-Ablauf (28 Tage) weiter. Der Cache wird hier nicht zurueckgeschrieben (nur im Fetch-Zweig).
+        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
         // Tag 211l: SGA + Depreciation added without FTS_CACHE_VERSION bump.
         // Old caches will return undefined → default to empty array. Stocks get
         // these fields after their cache expires (CACHE_TTL_MS) and re-pulls.
@@ -3777,6 +3821,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         // Tag 561: Drei-Schluessel-Lesung wie die Jahres-Seite — Volltext an _mapFTSQuarterlyNI.
         ftsQuarterlyNI = _mapFTSQuarterlyNI(fts.quarterlyFin);
+        // 06.09.2026: fuehrende leere Quartale (Ende ohne Umsatz/GP/OpInc/NI) verwerfen — Buendel und
+        // NI-Reihe im Gleichschritt, VOR dem Cache-Write, damit der Cache den getrimmten Stand traegt.
+        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
           (fts.annualFin || []).length === 0 ||
@@ -4489,6 +4536,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diese Umstellung, sondern ein eigener Befund (Anbieter-Ausfall / Mapper-Regression).
   const _gpTop = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}=${n}`).join(' ');
   _log('INFO', `GP-Ableitung (A' 05.09.): ${_gpDerivedRows} Zeilen mit annualGP = Umsatz − COGS (source ${GP_DERIVED_SOURCE}), ${_gpDerivedRejected} Zeilen mit abgelehnten Jahren (COGS > Umsatz), ${_gpDerivedSkipped} Zeilen uebersprungen (Laengen-Mismatch)`);
+  _log('INFO', `Fuehrende leere FTS-Quartale (06.09.): ${_ftsLeadingEmptyDropped} Slot(s) mit Perioden-Ende ohne Umsatz/GP/OpInc verworfen (Reihe beginnt beim letzten gemeldeten Quartal)`);
   _log('INFO', `Null-GP-Guard (Fix 2): ${_gpZeroCodingRows} Zeilen mit verworfener GP-Null-Kodierung`
     + ` | Suffix: ${_gpTop(_gpZeroCodingBySuffix) || '-'}`
     + ` | Sektor: ${_gpTop(_gpZeroCodingBySector) || '-'}`);
@@ -4521,6 +4569,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     // Feld, nicht als Logzeile.
     _gpZeroCoding: { rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } },
     _gpDerived: { rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, skippedRows: _gpDerivedSkipped, source: GP_DERIVED_SOURCE },   // A'
+    _ftsLeadingEmpty: { dropped: _ftsLeadingEmptyDropped },   // 06.09.: fuehrende leere FTS-Quartale
     results,
     failures
   };
@@ -4978,5 +5027,9 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // A' (05.09.2026): die Ableitungsregel und ihr Zaehler, exportiert fuer tests/gp-derived-cogs.test.js.
   _deriveGrossProfitFromCogs, GP_DERIVED_SOURCE, mapFTSToAnnual,
   _gpDerivedTally: () => ({ rows: _gpDerivedRows, rejectedRows: _gpDerivedRejected, skippedRows: _gpDerivedSkipped }),
+  // 06.09.2026: Zaehler der verworfenen fuehrenden leeren FTS-Quartale, exportiert fuer tests/fts-leading-empty-quarter.test.js.
+  _ftsLeadingEmptyTally: () => ({ dropped: _ftsLeadingEmptyDropped }),
+  _dropLeadingEmptyQuarters,
+  _resetFtsLeadingEmptyTally: () => { _ftsLeadingEmptyDropped = 0; },
   _gpZeroCodingTally: () => ({ rows: _gpZeroCodingRows, bySuffix: { ..._gpZeroCodingBySuffix }, bySector: { ..._gpZeroCodingBySector } }),
   _resetGpZeroCodingTally: () => { _gpZeroCodingRows = 0; _gpZeroCodingBySuffix = Object.create(null); _gpZeroCodingBySector = Object.create(null); } };
