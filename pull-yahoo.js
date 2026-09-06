@@ -2665,24 +2665,32 @@ function mapFTSToQuarterly(quarterlyRows) {
   // so it fed BH-080 an honest null (marginTrajectory) and the WB-4' class-4 carve-out. Dropping
   // it restores the pre-row state ("not yet reported"), nothing is fabricated. Counted per run
   // (FN-2 pattern). Partial rows (any of the three present) stay — they are data.
-  const out = { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
-  _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(out);
-  return out;
+  // Der vordere Trim laeuft NICHT hier, sondern an den zwei Stellen, an denen auch die
+  // Nettoergebnis-Quartale (ftsQuarterlyNI, eigener Mapper, index-aligned) vorliegen —
+  // s. _dropLeadingEmptyQuarters.
+  return { revenueQ, opIncQ, grossProfitQ, revenueQEnds, grossProfitQEnds, opIncQEnds };
 }
 
-// 06.09.2026: der vordere Trim als reine Funktion auf dem Buendel — sie laeuft im Mapper UND auf
-// jedem Cache-Treffer (Review silent-failure HIGH: ein vor dem Merge gecachtes Buendel haette den
-// leeren Kopf bis zu CACHE_TTL_MS = 28 Tage weitergereicht; dieselbe Luecke wie beim Null-GP-Guard,
-// FTI-Beschluss 02.09.). Toleriert Buendel ohne Enden-Arrays (Cache vor A10). Gibt die Zahl der
-// verworfenen Kopfzeilen zurueck, mutiert das Buendel in place.
-function _dropLeadingEmptyQuarters(b) {
+// 06.09.2026: der vordere Trim als reine Funktion auf dem Buendel PLUS der Nettoergebnis-Reihe.
+// Laeuft nach dem Mapper UND auf jedem Cache-Treffer (Review silent-failure HIGH: ein vor dem Merge
+// gecachtes Buendel haette den leeren Kopf bis zu CACHE_TTL_MS = 28 Tage weitergereicht; dieselbe
+// Luecke wie beim Null-GP-Guard, FTI-Beschluss 02.09.). Re-Review HIGH: ftsQuarterlyNI wird in
+// _mergeQuarterBundle index-aligned zu revenueQ gezippt — wird nur das Buendel gekuerzt, rutscht
+// das Nettoergebnis um ein Quartal. Deshalb: die NI-Reihe ist Teil der Leer-Bedingung (eine
+// Kopfzeile MIT Nettoergebnis ist Datum, kein Platzhalter) und wird im Gleichschritt geschoben.
+// Toleriert Buendel ohne Enden-Arrays (Cache vor A10) und fehlende NI-Reihe. Gibt die Zahl der
+// verworfenen Kopfzeilen zurueck, mutiert Buendel und NI-Reihe in place.
+function _dropLeadingEmptyQuarters(b, ni) {
   if (!b || !Array.isArray(b.revenueQ)) return 0;
   const reihen = ['revenueQ', 'opIncQ', 'grossProfitQ', 'revenueQEnds', 'grossProfitQEnds', 'opIncQEnds'].filter((k) => Array.isArray(b[k]));
+  const niArr = Array.isArray(ni) ? ni : null;
   let n = 0;
   while (b.revenueQ.length > 1 && b.revenueQ[0] == null
          && (!Array.isArray(b.opIncQ) || b.opIncQ[0] == null)
-         && (!Array.isArray(b.grossProfitQ) || b.grossProfitQ[0] == null)) {
+         && (!Array.isArray(b.grossProfitQ) || b.grossProfitQ[0] == null)
+         && (!niArr || niArr.length === 0 || niArr[0] == null)) {
     for (const k of reihen) b[k].shift();
+    if (niArr && niArr.length) niArr.shift();
     n++;
   }
   return n;
@@ -3720,14 +3728,15 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
           ftsAnnual._gpZeroCodingYears = _nullOutAllZeroGrossProfit(ftsAnnual.annualRev, ftsAnnual.annualGP);
         }
         ftsQuarterly = cached.payload.ftsQuarterly;
-        // 06.09.2026: fuehrende leere Quartale auch aus dem Cache-Buendel entfernen — sonst traegt
-        // ein vor dem Merge gecachtes Buendel den leeren Kopf bis zum Cache-Ablauf (28 Tage) weiter.
-        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly);
         ftsBalance = cached.payload.ftsBalance;
         ftsAnnualSBC = cached.payload.ftsAnnualSBC;
         ftsAnnualCapex = cached.payload.ftsAnnualCapex;
         ftsAnnualRnD = cached.payload.ftsAnnualRnD || [];  // Bug #25: added in cache v2
         ftsQuarterlyNI = cached.payload.ftsQuarterlyNI || [];
+        // 06.09.2026: fuehrende leere Quartale auch aus dem Cache-Buendel entfernen (Buendel + NI im
+        // Gleichschritt) — sonst traegt ein vor dem Merge gecachtes Buendel den leeren Kopf bis zum
+        // Cache-Ablauf (28 Tage) weiter. Der Cache wird hier nicht zurueckgeschrieben (nur im Fetch-Zweig).
+        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
         // Tag 211l: SGA + Depreciation added without FTS_CACHE_VERSION bump.
         // Old caches will return undefined → default to empty array. Stocks get
         // these fields after their cache expires (CACHE_TTL_MS) and re-pulls.
@@ -3812,6 +3821,9 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         // Tag-90: Quarterly NetIncome (8-Quarter-Earnings-Stability)
         // Tag 561: Drei-Schluessel-Lesung wie die Jahres-Seite — Volltext an _mapFTSQuarterlyNI.
         ftsQuarterlyNI = _mapFTSQuarterlyNI(fts.quarterlyFin);
+        // 06.09.2026: fuehrende leere Quartale (Ende ohne Umsatz/GP/OpInc/NI) verwerfen — Buendel und
+        // NI-Reihe im Gleichschritt, VOR dem Cache-Write, damit der Cache den getrimmten Stand traegt.
+        _ftsLeadingEmptyDropped += _dropLeadingEmptyQuarters(ftsQuarterly, ftsQuarterlyNI);
         // F-DP-005: detect partial FTS result — any module that returned empty array
         const ftsPartial = (
           (fts.annualFin || []).length === 0 ||
