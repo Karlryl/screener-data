@@ -40,7 +40,16 @@ function runBlock(stepName) {
 function bashLauf(block, cwd, env) {
   const script = block.replace('${{ steps.vintage.outputs.rc }}', '$VINTAGE_RC_STUB');
   const r = spawnSync('bash', ['-c', script], { cwd, env: { ...process.env, ...env }, encoding: 'utf8' });
-  return { code: r.status, out: (r.stdout || '') + (r.stderr || ''), error: r.error };
+  assert.ok(!r.error, 'bash nicht ausfuehrbar: ' + (r.error && r.error.message));   // laut, nie still
+  return { code: r.status, out: (r.stdout || '') + (r.stderr || '') };
+}
+// Temp-Verzeichnis je Probe, danach weg (Review 06.09., LOW: 22 Reste im %TEMP% nach lokalen Laeufen).
+function mitTempDir(vintages, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rankic-'));
+  try {
+    for (const v of vintages) fs.mkdirSync(path.join(dir, 'board-history', v), { recursive: true });
+    return fn(dir);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 }
 
 check('R1: der Erzeuger-Schritt liegt im scoring-Job NACH dem Vintage-Commit und VOR dem F-17a-Publish, genau einmal', () => {
@@ -51,21 +60,20 @@ check('R1: der Erzeuger-Schritt liegt im scoring-Job NACH dem Vintage-Commit und
   assert.ok(/node scripts\/rank-ic\.js --history-dir board-history --out _public\/rank-ic-report\.json/.test(runBlock(STEP)), 'rank-ic-Aufruf mit Ziel _public fehlt');
 });
 check('R2: < 2 Vintages -> ::error:: + Exit 1, kein Report (Shell-Block ausgefuehrt)', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rankic-'));
-  fs.mkdirSync(path.join(dir, 'board-history', '2026-09-01'), { recursive: true });
-  const r = bashLauf(runBlock(STEP), dir, { VINTAGE_RC_STUB: '0' });
-  assert.ok(!r.error, 'bash nicht ausfuehrbar: ' + (r.error && r.error.message));
-  assert.strictEqual(r.code, 1, 'Exit ' + r.code + '\n' + r.out);
-  assert.ok(/::error::rank-ic: nur 1 Vintage-Verzeichnis/.test(r.out), r.out);
-  assert.ok(!fs.existsSync(path.join(dir, '_public', 'rank-ic-report.json')), 'Report trotz Fehler geschrieben');
+  mitTempDir(['2026-09-01'], (dir) => {
+    const r = bashLauf(runBlock(STEP), dir, { VINTAGE_RC_STUB: '0' });
+    assert.strictEqual(r.code, 1, 'Exit ' + r.code + '\n' + r.out);
+    assert.ok(/::error::rank-ic: nur 1 Vintage-Verzeichnis/.test(r.out), r.out);
+    assert.ok(!fs.existsSync(path.join(dir, '_public', 'rank-ic-report.json')), 'Report trotz Fehler geschrieben');
+  });
 });
 check('R3: SUSPECT-Tag (rc != 0) -> ::warning:: + Exit 0, kein Report, rank-ic wird NICHT aufgerufen', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rankic-'));
-  for (const v of ['2026-09-01', '2026-09-05']) fs.mkdirSync(path.join(dir, 'board-history', v), { recursive: true });
-  const r = bashLauf(runBlock(STEP), dir, { VINTAGE_RC_STUB: '2' });
-  assert.strictEqual(r.code, 0, 'Exit ' + r.code + '\n' + r.out);
-  assert.ok(/::warning::rank-ic uebersprungen: Vintage-rc=2/.test(r.out), r.out);
-  assert.ok(!fs.existsSync(path.join(dir, '_public')), '_public angelegt, obwohl uebersprungen');
+  mitTempDir(['2026-09-01', '2026-09-05'], (dir) => {
+    const r = bashLauf(runBlock(STEP), dir, { VINTAGE_RC_STUB: '2' });
+    assert.strictEqual(r.code, 0, 'Exit ' + r.code + '\n' + r.out);
+    assert.ok(/::warning::rank-ic uebersprungen: Vintage-rc=2/.test(r.out), r.out);
+    assert.ok(!fs.existsSync(path.join(dir, '_public')), '_public angelegt, obwohl uebersprungen');
+  });
 });
 check('R4: der F-17a-Schleifenkoerper kopiert den Report NACH der board-history-Kopie und VOR git add -A, und meldet sein Fehlen sichtbar', () => {
   const b = runBlock(F17A);
@@ -79,12 +87,11 @@ check('R4: der F-17a-Schleifenkoerper kopiert den Report NACH der board-history-
 check('R5: der Erzeuger traegt continue-on-error: true — ein rank-ic-Fehler darf den F-17a-Publish der board-history nicht blocken (Review 06.09.)', () => {
   const i = yml.indexOf(STEP);
   const kopf = yml.slice(i, yml.indexOf('run: |', i));
-  assert.ok(/
-s+continue-on-error: true
-/.test(kopf), 'continue-on-error fehlt am Erzeuger-Schritt');
+  const zeilen = kopf.split('\n').map((z) => z.trim());
+  assert.ok(zeilen.includes('continue-on-error: true'), 'continue-on-error fehlt am Erzeuger-Schritt');
   const p = yml.indexOf(F17A);
-  const kopfP = yml.slice(p, yml.indexOf('run: |', p));
-  assert.ok(/if: success()/.test(kopfP), 'F-17a haengt nicht mehr an if: success() — dann waere diese Probe gegenstandslos');
+  const kopfP = yml.slice(p, yml.indexOf('run: |', p)).split('\n').map((z) => z.trim());
+  assert.ok(kopfP.includes('if: success()'), 'F-17a haengt nicht mehr an if: success() — dann waere diese Probe gegenstandslos');
 });
 
 if (fail) { console.log('FAIL: rank-ic-publish (' + fail + ')'); process.exit(1); }
