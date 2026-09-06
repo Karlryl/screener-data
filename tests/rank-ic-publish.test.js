@@ -9,7 +9,8 @@
 // ::error:: + Exit 1; R3: SUSPECT-Tag = ::warning:: + Exit 0 ohne Report), und die Kopie im
 // Publish-Schleifenkoerper zwischen board-history-Kopie und git add (R4). rank-ic.js selbst bleibt
 // unveraendert (tests/rank-ic.test.js).
-// Sabotage-Nachweis (Anker 06.09. N21): Guard `-lt 2` auf `-lt 0` -> R2 rot; Kopie-Zeile entfernt -> R4 rot.
+// Sabotage-Nachweis (Anker 06.09. N21): Guard `-lt 2` auf `-lt 0` -> R2 rot; Kopie-Zeile entfernt -> R4 rot;
+// continue-on-error entfernt -> R5 rot.
 'use strict';
 const assert = require('assert');
 const fs = require('fs');
@@ -73,6 +74,17 @@ check('R4: der F-17a-Schleifenkoerper kopiert den Report NACH der board-history-
   const iAdd = b.indexOf('git add -A');
   assert.ok(iCp > 0 && iRic > iCp && iAdd > iRic, 'Kopie-Reihenfolge board-history -> rank-ic -> git add verletzt');
   assert.ok(/nicht erzeugt .* Vortags-Report/.test(b), 'Fehlen des Reports wird nicht gemeldet');
+});
+
+check('R5: der Erzeuger traegt continue-on-error: true — ein rank-ic-Fehler darf den F-17a-Publish der board-history nicht blocken (Review 06.09.)', () => {
+  const i = yml.indexOf(STEP);
+  const kopf = yml.slice(i, yml.indexOf('run: |', i));
+  assert.ok(/
+s+continue-on-error: true
+/.test(kopf), 'continue-on-error fehlt am Erzeuger-Schritt');
+  const p = yml.indexOf(F17A);
+  const kopfP = yml.slice(p, yml.indexOf('run: |', p));
+  assert.ok(/if: success()/.test(kopfP), 'F-17a haengt nicht mehr an if: success() — dann waere diese Probe gegenstandslos');
 });
 
 if (fail) { console.log('FAIL: rank-ic-publish (' + fail + ')'); process.exit(1); }
