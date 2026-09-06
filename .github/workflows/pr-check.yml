@@ -14,6 +14,8 @@ on:
 
 permissions:
   contents: read
+  # A2 (Master-Ratifikation 06.09., Ratsbrief): das Snapshot-Artefakt des letzten Tageslaufs lesen.
+  actions: read
 
 # Wie in daily-pull.yml (AS-SK-001): tests/sec-user-agent-test.js prueft im CI, dass
 # ein kontakttragender User-Agent gesetzt ist — SEC 403t sonst still. Ohne diese
@@ -68,3 +70,59 @@ jobs:
 
       - name: Test-Gate (beide Spuren)
         run: node scripts/test-gate.js --mode=all
+
+      # ── A2 (Ratsbrief 06.09., Master ~75 %): Live-Universum-Gate im PR-Check ─────────────────
+      # Sieben tests/scoring-Suiten skippen im Test-Gate oben BEWUSST (kein Universum; test-gate.js
+      # :205-219). Die scharfe Stufe lief bisher nur im scoring-Job des Tageslaufs — ein Scoring-PR
+      # sah seine Wirkung erst am naechsten Morgen. Jetzt: das Snapshot-Artefakt des juengsten
+      # Tageslaufs (echte Daten von gestern, KEIN eingefrorenes Repo-Fixture — L38: ein Fixture
+      # bestaetigt sich selbst) wird geladen und dieselben zehn Suiten laufen dagegen. Fehlt es
+      # (Retention abgelaufen, noch kein Lauf): sichtbarer SKIP mit ::warning::, nie rot — Retention
+      # ist kein Code-Defekt. Die Suiten-Liste ist DIESELBE MENGE wie im scoring-Job
+      # (tests/pr-check-live-gate.test.js pinnt die Gleichheit; Register 6.0 06.09.).
+      - name: Letztes Tages-Snapshot-Artefakt suchen (A2)
+        id: artefakt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=snapshots&per_page=30" --jq '[.artifacts[] | select(.expired == false and .workflow_run != null)] | sort_by(.created_at) | last | .workflow_run.id // empty')
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ] || [ -z "$RID" ]; then
+            echo "::warning::A2: kein nicht-abgelaufenes snapshots-Artefakt eines Tageslaufs gefunden (gh rc=$rc) — Live-Universum-Gate im PR-Check UEBERSPRUNGEN. Das ist Retention/Timing, kein Code-Defekt; die scharfe Stufe bleibt der scoring-Job."
+            echo "rid=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "A2: Snapshot-Artefakt aus Lauf $RID"
+          echo "rid=$RID" >> "$GITHUB_OUTPUT"
+      - name: Snapshots des letzten Tageslaufs laden (A2)
+        id: laden
+        if: steps.artefakt.outputs.rid != ''
+        # Review 06.09. (silent-failure MEDIUM): ein transienter Download-Fehler (API-Schluckauf, Artefakt
+        # laeuft zwischen Suche und Laden ab) darf den PR nicht rot faerben — derselbe Grundsatz wie beim
+        # Such-Schritt: nie rot aus Infrastruktur-Gruenden. Das Gate unten laeuft nur bei Erfolg.
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0 — derselbe Pin wie daily-pull.yml
+        with:
+          name: snapshots
+          path: snapshots
+          run-id: ${{ steps.artefakt.outputs.rid }}
+          github-token: ${{ github.token }}
+      - name: Snapshot-Download fehlgeschlagen (A2, sichtbar uebersprungen)
+        if: steps.artefakt.outputs.rid != '' && steps.laden.outcome != 'success'
+        run: |
+          echo "::warning::A2: Download des snapshots-Artefakts aus Lauf ${{ steps.artefakt.outputs.rid }} fehlgeschlagen (outcome ${{ steps.laden.outcome }}) — Live-Universum-Gate im PR-Check UEBERSPRUNGEN, kein Code-Defekt."
+      - name: Live-Universum-Gate (PR-Check, Universum von gestern, A2)
+        if: steps.artefakt.outputs.rid != '' && steps.laden.outcome == 'success'
+        run: |
+          n=$(ls snapshots/*.json 2>/dev/null | wc -l)
+          echo "A2: $n Snapshots aus dem Artefakt"
+          if [ "$n" -lt 1000 ]; then
+            echo "::warning::A2: Artefakt enthaelt nur $n Snapshots — zu wenig fuer ein Universum, Gate UEBERSPRUNGEN"
+            exit 0
+          fi
+          node scripts/live-universum-gate.js tests/scoring/score.integration.test.js tests/scoring/quality-board.test.js tests/scoring/phase.test.js tests/scoring/score-breakdown.test.js tests/scoring/acceleration-invariance.test.js tests/scoring/anchors.rank.test.js tests/scoring/calib-parity.test.js tests/scoring/calibration.test.js tests/scoring/fairness-guards.test.js tests/scoring/rev-growth-anzeige.test.js
+          status=$(node -p "require('./outputs/live-universum-gate.json').status")
+          echo "A2: Live-Universum-Gate status=$status"
+          [ "$status" = "ok" ] || { echo "::error::A2: Live-Universum-Gate meldet status=$status auf dem Universum von gestern — ein Scoring-PR hat eine Zusicherung gebrochen (Details oben)."; exit 1; }
