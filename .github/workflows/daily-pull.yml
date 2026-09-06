@@ -2285,6 +2285,41 @@ jobs:
       # Kein eigener Klon: _ghp ist der gh-pages-Klon aus "Deploy Scoring Output to GitHub
       # Pages" — derselbe Job, dasselbe Arbeitsverzeichnis, und der Schritt lief bereits.
       # Fehlt er, ist das ein Defekt und kein Grund, still nichts zu publizieren.
+      # 06.09.2026 (Worker 3, Master-Entscheid): rank-ic hatte KEINEN automatisierten Erzeuger —
+      # scripts/rank-ic.js lief nur von Hand (letzter Lauf 27.07.), outputs/ ist gitignored. Hier
+      # laeuft er nach dem Vintage-Commit auf dem committeten board-history (+ prices/history aus
+      # dem Checkout) und legt den Report nach _public; der F-17a-Publish unten traegt ihn in den
+      # Datenkanal (outputs/rank-ic/rank-ic-report.json auf gh-pages). rank-ic.js selbst unveraendert.
+      # Laut statt still: < 2 Vintages = ::error:: + exit 1 (kein IC ohne zwei Staende). Ein SUSPECT-
+      # Tag (rc != 0) wird uebersprungen, weil das nicht committete Tagesverzeichnis auf dem Runner
+      # liegt und rank-ic suspect nicht selbst ausschliesst (Kommentar oben) — als ::warning::, der
+      # Vortags-Report bleibt im Kanal stehen (generatedAt im Report datiert ihn). Im Veroeffentlichungs-
+      # Pfad endet der Commit-Schritt bei SUSPECT selbst mit exit 2, `if: success()` ueberspringt diesen
+      # Schritt dann ganz (Log: skipped, keine Warnung); der rc-Guard greift im Nur-rechnen-Pfad, wo der
+      # Commit-Schritt mit rc=2 auf exit 0 endet und das SUSPECT-Verzeichnis trotzdem auf der Platte liegt.
+      - name: Rank-IC-Report erzeugen (2.8, Datenkanal)
+        if: success()
+        # Review 06.09. (silent-failure HIGH): der F-17a-Publish darunter traegt `if: success()` und
+        # wuerde sonst den Exit-Code DIESES Schritts erben — ein rank-ic-Fehler (z. B. Familien-
+        # Protokoll-Drift in loadFamiliesOrThrow) hielte dann die board-history-Bewegung aus dem
+        # Datenkanal fern, obwohl das Vintage laengst auf main liegt. Entkoppelt: der Schritt bleibt
+        # laut (::error::, roter Schritt), blockt aber nichts hinter sich.
+        continue-on-error: true
+        run: |
+          VINTAGE_RC="${{ steps.vintage.outputs.rc }}"
+          if [ "$VINTAGE_RC" != "0" ]; then
+            echo "::warning::rank-ic uebersprungen: Vintage-rc=$VINTAGE_RC (SUSPECT/rot) — der heutige Stand ist nicht committet und wuerde den IC verfaelschen; der Vortags-Report bleibt im Datenkanal."
+            exit 0
+          fi
+          n=$(ls -d board-history/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] 2>/dev/null | wc -l)
+          if [ "$n" -lt 2 ]; then
+            echo "::error::rank-ic: nur $n Vintage-Verzeichnis(se) in board-history — ohne zwei Staende gibt es keinen Rang-IC. Kein Report geschrieben."
+            exit 1
+          fi
+          mkdir -p _public
+          node scripts/rank-ic.js --history-dir board-history --out _public/rank-ic-report.json
+          test -s _public/rank-ic-report.json || { echo "::error::rank-ic: Report-Datei fehlt oder leer nach Exit 0"; exit 1; }
+          echo "rank-ic: Report auf $n Vintages erzeugt ($(wc -c < _public/rank-ic-report.json) Bytes)"
       - name: Publish board-history vintages to public data channel (F-17a)
         if: success()
         run: |
@@ -2333,6 +2368,9 @@ jobs:
             rm -rf outputs/board-history
             mkdir -p outputs
             cp -r ../_public/board-history outputs/board-history
+            # 06.09.2026: Rank-IC-Report mitnehmen (Erzeuger-Schritt oben); fehlt er (SUSPECT-Tag), bleibt
+            # der bisherige Stand im Kanal — sichtbar gemeldet, nicht still.
+            if [ -f ../_public/rank-ic-report.json ]; then mkdir -p outputs/rank-ic && cp ../_public/rank-ic-report.json outputs/rank-ic/rank-ic-report.json; else echo "rank-ic-report.json nicht erzeugt (s. Erzeuger-Schritt) — Kanal behaelt den Vortags-Report"; fi
             git add -A
             # Wie in den beiden Deploys oben: ab Versuch 2 heisst "kein Diff" nicht "nichts
             # zu tun", sondern "unser Commit steht noch unveroeffentlicht auf HEAD".
