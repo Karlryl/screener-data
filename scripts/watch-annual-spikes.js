@@ -409,6 +409,16 @@ function sperrenOhneTreffer(ausgeschlossen, funde) {
   return (ausgeschlossen || []).filter((a) => a && !heutig.has(a.sperrschluessel)).map((a) => a.sperrschluessel);
 }
 
+// Master-Auflage 05.09.2026: das Urteil ueber tote Sperren als reine Funktion — { tot, exit, zeile }.
+// exit 1, sobald mindestens eine Sperre keinen heutigen Fund trifft; die Zeile nennt jede tote Sperre.
+function toteSperrenUrteil(ausgeschlossen, funde) {
+  const tot = sperrenOhneTreffer(ausgeschlossen, funde);
+  if (!tot.length) return { tot, exit: 0, zeile: null };
+  return { tot, exit: 1, zeile: `::error::${tot.length} Sperre(n) treffen HEUTE keinen Fund mehr — entweder hat sich der `
+    + 'Fall aufgeloest (Sperre AKTIV entfernen) oder der Schluessel ist kaputt (reparieren): ' + tot.join(' · ')
+    + '. Eine Sperre ohne Treffer ist seit 05.09.2026 ein Fehler, keine Warnung (Master-Auflage, Weg C).' };
+}
+
 /**
  * Die zweite Art toter Sperre, die JA-7 ueberhaupt erst sichtbar macht: der Schluessel
  * TRIFFT einen heutigen Fund, aber derselbe Fund steht laengst in `faelle` — dann gewinnt
@@ -812,10 +822,17 @@ function main(jetzt = new Date()) {
   // Ein zweites Rot dafuer waere Doppelzaehlung. Bleibt sie unbearbeitet, macht das
   // Alters-Tor sie nach AUSSCHLUSS_MAX_TAGE Tagen sowieso rot. Die Sperre EINE Zeile
   // tiefer ist der andere Fall: die trifft, wirkt aber nicht — und die geht still, also rot.
-  const tot = sperrenOhneTreffer(ausgeschlossen, funde);
-  if (tot.length) {
-    console.log(`::warning::${tot.length} Sperre(n) treffen HEUTE keinen Fund mehr — entweder hat sich der `
-      + 'Fall aufgeloest (Sperre AKTIV entfernen) oder der Schluessel ist kaputt (reparieren): ' + tot.join(' · '));
+  // Master-Auflage 05.09.2026 (Weg C, Delegation 29.08.): eine Sperre, die KEINEN Fund mehr trifft,
+  // ist ab jetzt LAUT (::error::, Exit 1) statt nur eine Warnung. Begruendung: das ::warning::-Argument
+  // ("der Fall laeuft ohnehin als NEU auf") gilt nur, solange der Fall noch existiert — eine Sperre auf
+  // einen aufgeloesten Fall oder einen gedrifteten Schluessel unterdrueckt zwar nichts, aber sie
+  // verfaelscht die Sperren-Telemetrie (Alter, Referenzgroesse) und liegt monatelang unbemerkt: genau
+  // 300715.SZ (2 Sperren, seit 29.08. ohne Treffer). toteSperrenUrteil() ist exportiert und wird vom
+  // Waechter tests/annual-spikes-tote-sperre.test.js AUSGEFUEHRT, nicht nachgebaut (F1334).
+  const totUrteil = toteSperrenUrteil(ausgeschlossen, funde);
+  if (totUrteil.exit) {
+    datenExit = 1;
+    console.error(totUrteil.zeile);
   }
   const wirkungslos = sperrenOhneWirkung(ausgeschlossen, funde, bestand);
   if (wirkungslos.length) {
@@ -906,7 +923,7 @@ function main(jetzt = new Date()) {
 module.exports = { findeAusreisser, basisGueltig, loadBaseline, positiveCapexJahre, scanSnapshots, stabilerSchluessel, istBekannt, fundeJeReihe, altIndexEintraege, baueNeuenBestand, sperrenOhneTreffer, parseMaxNeu, main, FAKTOR, MIN_BETRAG, POP_TOLERANZ,
   // Gerichtsbeschluss 02.09.2026 (JA-1..JA-7): exportiert, damit die Bruchproben die
   // SACHE pinnen koennen und nicht ein Textmuster im Log.
-  sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, ereignisse, faecher, cignaFaelle,
+  sperrSchluessel, pruefeAusschluesse, sperrenOhneWirkung, toteSperrenUrteil, ereignisse, faecher, cignaFaelle,
   breitesterFaecherImBestand, r1Schluessel, r2Schluessel, tageSeit, AUSSCHLUSS_MAX_TAGE,
   // JA-9 (Folge-PR): dieselbe Regel — die Telemetrie wird an der SACHE gepinnt, nicht
   // an einer Textzeile im Log.
