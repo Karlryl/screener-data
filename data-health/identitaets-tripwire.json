@@ -30,16 +30,16 @@
     "BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein",
     "Gericht, nicht in eine Meldeform."
   ],
-  "stand": "2026-09-05",
-  "gelesen": 16091,
+  "stand": "2026-09-08",
+  "gelesen": 16119,
   "unlesbar": 0,
   "messebene": "vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs",
   "zaehlung": {
     "ankerA": 1559,
-    "ankerA_ausgenommen": 16,
-    "ankerA_ohneBasis": 965,
+    "ankerA_ausgenommen": 19,
+    "ankerA_ohneBasis": 911,
     "ankerA_klassen": 9,
-    "ankerB": 134,
+    "ankerB": 44,
     "ankerB_klassen": 2
   },
   "ankerA": {
@@ -48,7 +48,7 @@
     "klassen": [
       {
         "klasse": "Groessenordnung 1e0",
-        "gemeldet": 1121,
+        "gemeldet": 1122,
         "gelistet": 5,
         "beispiele": [
           {
@@ -120,7 +120,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-1",
-        "gemeldet": 345,
+        "gemeldet": 346,
         "gelistet": 5,
         "beispiele": [
           {
@@ -179,9 +179,9 @@
             "anker": "A",
             "wert": 0.03951121803794204,
             "ticker": "JHPCY",
-            "name": "Jiangsu Hengrui Pharmaceuticals Co., Ltd./ADR",
-            "nameSource": "fehlt",
-            "schluessel": "jiangsuhengruipharmaceuticalscoltdadr",
+            "name": "Jiangsu Hengrui Pharmaceuticals Co.,Ltd",
+            "nameSource": "longName",
+            "schluessel": "jiangsuhengruipharmaceuticalscoltd",
             "fingerabdruck": "[31629416193.83,27984605342.06,22819784741.31,21275270681.52]|null",
             "shares": 129098800,
             "jahresAktien": 3267396107,
@@ -264,7 +264,7 @@
       },
       {
         "klasse": "Groessenordnung 1e+1",
-        "gemeldet": 34,
+        "gemeldet": 31,
         "gelistet": 5,
         "beispiele": [
           {
@@ -336,7 +336,7 @@
       },
       {
         "klasse": "Groessenordnung 1e+3",
-        "gemeldet": 11,
+        "gemeldet": 12,
         "gelistet": 5,
         "beispiele": [
           {
@@ -380,6 +380,19 @@
           },
           {
             "anker": "A",
+            "wert": 1000.2694143117852,
+            "ticker": "3101.T",
+            "name": "Toyobo Co., Ltd.",
+            "nameSource": "longName",
+            "schluessel": "toyobocoltd",
+            "fingerabdruck": "[421563000000,422032000000,414265000000,399921000000]|null",
+            "shares": 88244768,
+            "jahresAktien": 88221,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
             "wert": 1000.063242052376,
             "ticker": "GYUAF",
             "name": "GS Yuasa Corporation",
@@ -388,19 +401,6 @@
             "fingerabdruck": "[608995000000,580340000000,562897000000,517735000000]|null",
             "shares": 100319344,
             "jahresAktien": 100313,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 1000.001198387624,
-            "ticker": "RTEZ",
-            "name": "REST EZ Inc.",
-            "nameSource": "fehlt",
-            "schluessel": "restezinc",
-            "fingerabdruck": "[\"null\",5000,\"null\",519443]|null",
-            "shares": 27537033,
-            "jahresAktien": 27537,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -566,11 +566,11 @@
       }
     ],
     "ausgenommen": {
-      "gemeldet": 16,
+      "gemeldet": 19,
       "klassen": [
         {
           "klasse": "M12-Ausnahme (Komplementaer-/Partnership-Struktur)",
-          "gemeldet": 16,
+          "gemeldet": 19,
           "gelistet": 5,
           "beispiele": [
             {
@@ -602,7 +602,7 @@
               "wert": 0.2811138125,
               "ticker": "PAGP",
               "name": "Plains GP Holdings, L.P.",
-              "nameSource": "fehlt",
+              "nameSource": "longName",
               "grund": "M12"
             },
             {
@@ -610,7 +610,7 @@
               "wert": 0.29726041397166025,
               "ticker": "1MRK.MI",
               "name": "Merck KGaA",
-              "nameSource": "fehlt",
+              "nameSource": "longName",
               "grund": "M12"
             }
           ]
@@ -620,11 +620,11 @@
   },
   "ankerB": {
     "ausgefallen": false,
-    "gemeldet": 134,
+    "gemeldet": 44,
     "klassen": [
       {
         "klasse": "2 Emittentengruppen",
-        "gemeldet": 131,
+        "gemeldet": 43,
         "gelistet": 5,
         "beispiele": [
           {
@@ -665,13 +665,13 @@
               {
                 "ticker": "LVMUY",
                 "name": "LVMH Moët Hennessy - Louis Vuitton, Société Européenne",
-                "nameSource": "fehlt",
+                "nameSource": "longName",
                 "schluessel": "lvmhmoëthennessylouisvuittonsociétéeuropéenne"
               },
               {
                 "ticker": "MC.PA",
                 "name": "LVMH Moët Hennessy - Louis Vuitton, Société Européenne",
-                "nameSource": "fehlt",
+                "nameSource": "longName",
                 "schluessel": "lvmhmoëthennessylouisvuittonsociétéeuropéenne"
               },
               {
@@ -698,43 +698,43 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[133453000000,142380000000,155498000000,142610000000]|null",
+            "fingerabdruck": "[28753000000,29821000000,30362000000,28719000000]|null",
             "beine": [
               {
-                "ticker": "1BMW.MI",
-                "name": "Bayerische Motoren Werke Aktiengesellschaft",
+                "ticker": "HEIA.AS",
+                "name": "Heineken N.V.",
                 "nameSource": "longName",
-                "schluessel": "bayerischemotorenwerkeaktiengesellschaft"
+                "schluessel": "heinekennv"
               },
               {
-                "ticker": "BMW.DE",
-                "name": "Bayerische Motoren Werke Aktiengesellschaft",
-                "nameSource": "longName",
-                "schluessel": "bayerischemotorenwerkeaktiengesellschaft"
-              },
-              {
-                "ticker": "BMW.SW",
-                "name": "Bayerische Motoren Werke Aktiengesellschaft",
-                "nameSource": "longName",
-                "schluessel": "bayerischemotorenwerkeaktiengesellschaft"
-              },
-              {
-                "ticker": "BMW.VI",
-                "name": "Bayerische Motoren Werke Aktiengesellschaft",
-                "nameSource": "longName",
-                "schluessel": "bayerischemotorenwerkeaktiengesellschaft"
-              },
-              {
-                "ticker": "BMW.WA",
-                "name": "Bayerische Motoren Werke Aktiengesellschaft",
-                "nameSource": "longName",
-                "schluessel": "bayerischemotorenwerkeaktiengesellschaft"
-              },
-              {
-                "ticker": "BMWKY",
-                "name": "Bayerische Motoren Werke AG/ADR",
+                "ticker": "HEIA.VI",
+                "name": "Heineken N.V.",
                 "nameSource": "fehlt",
-                "schluessel": "bayerischemotorenwerkeagadr"
+                "schluessel": "heinekennv"
+              },
+              {
+                "ticker": "HEIO.AS",
+                "name": "Heineken Holding N.V.",
+                "nameSource": "fehlt",
+                "schluessel": "heinekenholdingnv"
+              },
+              {
+                "ticker": "HEIO.VI",
+                "name": "Heineken Holding N.V.",
+                "nameSource": "fehlt",
+                "schluessel": "heinekenholdingnv"
+              },
+              {
+                "ticker": "HKHHY",
+                "name": "Heineken Holding N.V.",
+                "nameSource": "longName",
+                "schluessel": "heinekenholdingnv"
+              },
+              {
+                "ticker": "HNK1.DE",
+                "name": "Heineken N.V.",
+                "nameSource": "fehlt",
+                "schluessel": "heinekennv"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -742,43 +742,37 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[39077000000,34465000000,31119000000,29005000000]|null",
+            "fingerabdruck": "[82855000000,84188000000,81758000000,94436000000]|null",
             "beine": [
               {
-                "ticker": "1ENR.MI",
-                "name": "Siemens Energy AG",
+                "ticker": "1DHL.MI",
+                "name": "DHL AG",
                 "nameSource": "longName",
-                "schluessel": "siemensenergyag"
+                "schluessel": "dhlag"
               },
               {
-                "ticker": "ENR.DE",
-                "name": "Siemens Energy AG",
+                "ticker": "DHL.DE",
+                "name": "DHL AG",
                 "nameSource": "longName",
-                "schluessel": "siemensenergyag"
+                "schluessel": "dhlag"
               },
               {
-                "ticker": "ENR.SW",
-                "name": "Siemens Energy AG",
-                "nameSource": "longName",
-                "schluessel": "siemensenergyag"
-              },
-              {
-                "ticker": "ENR.VI",
-                "name": "Siemens Energy AG",
-                "nameSource": "longName",
-                "schluessel": "siemensenergyag"
-              },
-              {
-                "ticker": "SMEGF",
-                "name": "Siemens Energy AG",
-                "nameSource": "longName",
-                "schluessel": "siemensenergyag"
-              },
-              {
-                "ticker": "SMERY",
-                "name": "Siemens Energy AG/ADR",
+                "ticker": "DHL.SW",
+                "name": "Deutsche Post AG",
                 "nameSource": "fehlt",
-                "schluessel": "siemensenergyagadr"
+                "schluessel": "deutschepostag"
+              },
+              {
+                "ticker": "DHL.VI",
+                "name": "DHL AG",
+                "nameSource": "longName",
+                "schluessel": "dhlag"
+              },
+              {
+                "ticker": "DPSTF",
+                "name": "DHL AG",
+                "nameSource": "longName",
+                "schluessel": "dhlag"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -786,43 +780,37 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[65179000000,45043000000,34124000000,28541400000]|null",
+            "fingerabdruck": "[65011000000,64168000000,60115000000,59283000000]|null",
             "beine": [
               {
-                "ticker": "1LLY.MI",
-                "name": "Eli Lilly and Company",
+                "ticker": "1MRKX.MI",
+                "name": "Merck & Co., Inc.",
                 "nameSource": "longName",
-                "schluessel": "elilillyandco"
+                "schluessel": "merckcoinc"
               },
               {
-                "ticker": "LILY.WA",
-                "name": "Eli Lilly and Company",
-                "nameSource": "fehlt",
-                "schluessel": "elilillyandco"
+                "ticker": "6MK.DE",
+                "name": "Merck & Co., Inc.",
+                "nameSource": "longName",
+                "schluessel": "merckcoinc"
               },
               {
-                "ticker": "LLY",
-                "name": "Eli Lilly",
-                "nameSource": "fehlt",
-                "schluessel": "elililly"
+                "ticker": "MRK",
+                "name": "Merck & Co., Inc.",
+                "nameSource": "longName",
+                "schluessel": "merckcoinc"
               },
               {
-                "ticker": "LLY.DE",
-                "name": "Eli Lilly and Company",
+                "ticker": "MRK.SW",
+                "name": "Merck KGaA",
                 "nameSource": "fehlt",
-                "schluessel": "elilillyandco"
+                "schluessel": "merckkgaa"
               },
               {
-                "ticker": "LLY.SW",
-                "name": "Eli Lilly and Company",
+                "ticker": "MRK.VI",
+                "name": "Merck & Co., Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "elilillyandco"
-              },
-              {
-                "ticker": "LLYC.VI",
-                "name": "Eli Lilly and Company",
-                "nameSource": "fehlt",
-                "schluessel": "elilillyandco"
+                "schluessel": "merckcoinc"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -830,43 +818,37 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[22669000000,18682000000,11812000000,11915000000]|null",
+            "fingerabdruck": "[44052000000,43486800000,41182500000,38260600000]|null",
             "beine": [
               {
-                "ticker": "1NEM.MI",
-                "name": "Newmont Corporation",
+                "ticker": "LOR.DE",
+                "name": "L'Oréal S.A.",
                 "nameSource": "fehlt",
-                "schluessel": "newmontcorp"
+                "schluessel": "loréalsa"
               },
               {
-                "ticker": "NEM",
-                "name": "Newmont Corporation",
-                "nameSource": "fehlt",
-                "schluessel": "newmontcorp"
+                "ticker": "LRLCF",
+                "name": "L'Oréal S.A.",
+                "nameSource": "longName",
+                "schluessel": "loréalsa"
               },
               {
-                "ticker": "NEM.AX",
-                "name": "Newmont Corporation",
-                "nameSource": "fehlt",
-                "schluessel": "newmontcorp"
+                "ticker": "OR.PA",
+                "name": "L'Oréal S.A.",
+                "nameSource": "longName",
+                "schluessel": "loréalsa"
               },
               {
-                "ticker": "NEMCL",
-                "name": "NEWMONT Corp /DE/",
+                "ticker": "OR.SW",
+                "name": "L'Oreal S.A.",
                 "nameSource": "fehlt",
-                "schluessel": "newmontcorpde"
+                "schluessel": "lorealsa"
               },
               {
-                "ticker": "NEWM.VI",
-                "name": "Newmont Corporation",
+                "ticker": "OR.VI",
+                "name": "L'Oréal S.A.",
                 "nameSource": "fehlt",
-                "schluessel": "newmontcorp"
-              },
-              {
-                "ticker": "NMM.DE",
-                "name": "Newmont Corporation",
-                "nameSource": "fehlt",
-                "schluessel": "newmontcorp"
+                "schluessel": "loréalsa"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -875,89 +857,31 @@
       },
       {
         "klasse": "3 Emittentengruppen",
-        "gemeldet": 3,
-        "gelistet": 3,
+        "gemeldet": 1,
+        "gelistet": 1,
         "beispiele": [
           {
             "anker": "B",
             "wert": 3,
-            "fingerabdruck": "[32549000000,31680000000,28136000000,26463000000]|null",
+            "fingerabdruck": "[1017555000000,0,1781420000000,1629182000000]|null",
             "beine": [
               {
-                "ticker": "3P7.DE",
-                "name": "PANDORA A/S         DK 1",
+                "ticker": "8729.T",
+                "name": "8729.T",
                 "nameSource": "fehlt",
-                "schluessel": "pandoraasdk1"
+                "schluessel": "8729t"
               },
               {
-                "ticker": "PNDO.VI",
-                "name": "Pandora A/S",
+                "ticker": "SFGRF",
+                "name": "Sony Financial Group Inc./ADR",
                 "nameSource": "fehlt",
-                "schluessel": "pandoraas"
+                "schluessel": "sonyfinancialgroupincadr"
               },
               {
-                "ticker": "PNDORA.CO",
-                "name": "Pandora A/S",
-                "nameSource": "fehlt",
-                "schluessel": "pandoraas"
-              },
-              {
-                "ticker": "PNDRY",
-                "name": "Pandora A/S / ADR",
-                "nameSource": "fehlt",
-                "schluessel": "pandoraasadr"
-              }
-            ],
-            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
-          },
-          {
-            "anker": "B",
-            "wert": 3,
-            "fingerabdruck": "[69858532000,67026656000,68916447000,82412210000]|null",
-            "beine": [
-              {
-                "ticker": "GGB",
-                "name": "GGB",
-                "nameSource": "fehlt",
-                "schluessel": "ggb"
-              },
-              {
-                "ticker": "GGBR3.SA",
-                "name": "Gerdau S.A.",
-                "nameSource": "fehlt",
-                "schluessel": "gerdausa"
-              },
-              {
-                "ticker": "GOAU3.SA",
-                "name": "Metalurgica Gerdau S.A.",
-                "nameSource": "fehlt",
-                "schluessel": "metalurgicagerdausa"
-              }
-            ],
-            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
-          },
-          {
-            "anker": "B",
-            "wert": 3,
-            "fingerabdruck": "[9434000000,8406000000,7022000000,6505000000]|null",
-            "beine": [
-              {
-                "ticker": "QSR",
-                "name": "QSR",
-                "nameSource": "fehlt",
-                "schluessel": "qsr"
-              },
-              {
-                "ticker": "QSR.TO",
-                "name": "Restaurant Brands International Inc.",
-                "nameSource": "fehlt",
-                "schluessel": "restaurantbrandsinternationalinc"
-              },
-              {
-                "ticker": "RSTRF",
-                "name": "Restaurant Brands International Limited Partnership",
-                "nameSource": "fehlt",
-                "schluessel": "restaurantbrandsinternationalltdpartnership"
+                "ticker": "SFGYY",
+                "name": "Sony Financial Group Inc.",
+                "nameSource": "longName",
+                "schluessel": "sonyfinancialgroupinc"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
