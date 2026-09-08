@@ -1,0 +1,1526 @@
+{
+  "generatedAt": "2026-09-08T08:31:41.690Z",
+  "spec": "Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration",
+  "vintagesTotal": 23,
+  "vintagesExcluded": [
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-16",
+    "2026-07-17",
+    "2026-07-18",
+    "2026-07-26",
+    "2026-07-27",
+    "2026-07-28",
+    "2026-07-29",
+    "2026-08-03"
+  ],
+  "boardVintagesExcluded": [],
+  "boards": {
+    "consumer-discretionary": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 1090,
+              "icRaw": -0.06914749178090487,
+              "icResid": -0.050663827253192,
+              "nResid": 997,
+              "quota": {
+                "ok": 1090,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 11,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": -0.0691,
+          "meanICResid": -0.0507,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": -0.0691,
+            "hi": -0.0691
+          },
+          "ci90Resid": {
+            "lo": -0.0507,
+            "hi": -0.0507
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.01
+      },
+      "datesExcluded": []
+    },
+    "consumer-staples": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 478,
+              "icRaw": -0.03138350170073482,
+              "icResid": -0.00003244938070392883,
+              "nResid": 442,
+              "quota": {
+                "ok": 477,
+                "delisted": 0,
+                "shortened": 1,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 5,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": -0.0314,
+          "meanICResid": 0,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": -0.0314,
+            "hi": -0.0314
+          },
+          "ci90Resid": {
+            "lo": 0,
+            "hi": 0
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.002
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.01
+      },
+      "datesExcluded": []
+    },
+    "energy": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 311,
+              "icRaw": -0.07405307427990324,
+              "icResid": -0.10012292696101366,
+              "nResid": 283,
+              "quota": {
+                "ok": 311,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 7,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": -0.0741,
+          "meanICResid": -0.1001,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": -0.0741,
+            "hi": -0.0741
+          },
+          "ci90Resid": {
+            "lo": -0.1001,
+            "hi": -0.1001
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.022
+      },
+      "datesExcluded": []
+    },
+    "financials": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 346,
+              "icRaw": 0.05345396988440911,
+              "icResid": 0.07143199999826447,
+              "nResid": 281,
+              "quota": {
+                "ok": 345,
+                "delisted": 0,
+                "shortened": 1,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 3,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0535,
+          "meanICResid": 0.0714,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0535,
+            "hi": 0.0535
+          },
+          "ci90Resid": {
+            "lo": 0.0714,
+            "hi": 0.0714
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.003
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.009
+      },
+      "datesExcluded": []
+    },
+    "health-care": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 920,
+              "icRaw": 0.04968467045084169,
+              "icResid": 0.0428509159863119,
+              "nResid": 808,
+              "quota": {
+                "ok": 920,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 9,
+                "excluded_stale_window": 1
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0497,
+          "meanICResid": 0.0429,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0497,
+            "hi": 0.0497
+          },
+          "ci90Resid": {
+            "lo": 0.0429,
+            "hi": 0.0429
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.011
+      },
+      "datesExcluded": []
+    },
+    "industrials": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 2032,
+              "icRaw": -0.11556795951998845,
+              "icResid": -0.07343718113032299,
+              "nResid": 1863,
+              "quota": {
+                "ok": 2030,
+                "delisted": 0,
+                "shortened": 2,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 15,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": -0.1156,
+          "meanICResid": -0.0734,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": -0.1156,
+            "hi": -0.1156
+          },
+          "ci90Resid": {
+            "lo": -0.0734,
+            "hi": -0.0734
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.001
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.007
+      },
+      "datesExcluded": []
+    },
+    "it-services": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 140,
+              "icRaw": 0.18035823235893447,
+              "icResid": 0.18548842987918557,
+              "nResid": 125,
+              "quota": {
+                "ok": 140,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 1,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.1804,
+          "meanICResid": 0.1855,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.1804,
+            "hi": 0.1804
+          },
+          "ci90Resid": {
+            "lo": 0.1855,
+            "hi": 0.1855
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.007
+      },
+      "datesExcluded": []
+    },
+    "materials": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 957,
+              "icRaw": 0.03210322536410469,
+              "icResid": 0.03545846269979855,
+              "nResid": 876,
+              "quota": {
+                "ok": 956,
+                "delisted": 0,
+                "shortened": 1,
+                "excluded_no_series": 1,
+                "excluded_no_entry": 10,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0321,
+          "meanICResid": 0.0355,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0321,
+            "hi": 0.0321
+          },
+          "ci90Resid": {
+            "lo": 0.0355,
+            "hi": 0.0355
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.002
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.011
+      },
+      "datesExcluded": []
+    },
+    "real-estate": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 436,
+              "icRaw": 0.060886443249815604,
+              "icResid": 0.07211113854829637,
+              "nResid": 399,
+              "quota": {
+                "ok": 434,
+                "delisted": 0,
+                "shortened": 2,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 3,
+                "excluded_stale_window": 1
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0609,
+          "meanICResid": 0.0721,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0609,
+            "hi": 0.0609
+          },
+          "ci90Resid": {
+            "lo": 0.0721,
+            "hi": 0.0721
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.005
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.009
+      },
+      "datesExcluded": []
+    },
+    "semiconductors": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 361,
+              "icRaw": 0.03831784598823843,
+              "icResid": 0.029131856151409445,
+              "nResid": 324,
+              "quota": {
+                "ok": 360,
+                "delisted": 0,
+                "shortened": 1,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 0,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0383,
+          "meanICResid": 0.0291,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0383,
+            "hi": 0.0383
+          },
+          "ci90Resid": {
+            "lo": 0.0291,
+            "hi": 0.0291
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.003
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0
+      },
+      "datesExcluded": []
+    },
+    "software-comm-services": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 614,
+              "icRaw": 0.03392657246614861,
+              "icResid": 0.032315327533893774,
+              "nResid": 541,
+              "quota": {
+                "ok": 613,
+                "delisted": 0,
+                "shortened": 1,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 4,
+                "excluded_stale_window": 1
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0339,
+          "meanICResid": 0.0323,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0339,
+            "hi": 0.0339
+          },
+          "ci90Resid": {
+            "lo": 0.0323,
+            "hi": 0.0323
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0.002
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.008
+      },
+      "datesExcluded": []
+    },
+    "survival": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 0,
+              "icRaw": null,
+              "icResid": null,
+              "nResid": 0,
+              "quota": {
+                "ok": 0,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 0,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0
+      },
+      "datesExcluded": []
+    },
+    "tech-hardware": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 673,
+              "icRaw": 0.024603278209357322,
+              "icResid": 0.07740110241239863,
+              "nResid": 607,
+              "quota": {
+                "ok": 673,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 0,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": 0.0246,
+          "meanICResid": 0.0774,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": 0.0246,
+            "hi": 0.0246
+          },
+          "ci90Resid": {
+            "lo": 0.0774,
+            "hi": 0.0774
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0
+      },
+      "datesExcluded": []
+    },
+    "utilities": {
+      "horizons": {
+        "28": {
+          "decisions": [
+            {
+              "date": "2026-08-05",
+              "n": 329,
+              "icRaw": -0.036964002877351895,
+              "icResid": 0.03553155228539447,
+              "nResid": 307,
+              "quota": {
+                "ok": 329,
+                "delisted": 0,
+                "shortened": 0,
+                "excluded_no_series": 0,
+                "excluded_no_entry": 3,
+                "excluded_stale_window": 0
+              }
+            }
+          ],
+          "nPoints": 1,
+          "pendingWindows": 1,
+          "nEff": 1,
+          "mde": null,
+          "meanICRaw": -0.037,
+          "meanICResid": 0.0355,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": {
+            "lo": -0.037,
+            "hi": -0.037
+          },
+          "ci90Resid": {
+            "lo": 0.0355,
+            "hi": 0.0355
+          },
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        },
+        "84": {
+          "decisions": [],
+          "nPoints": 0,
+          "pendingWindows": 1,
+          "nEff": 0,
+          "mde": null,
+          "meanICRaw": null,
+          "meanICResid": null,
+          "icResidLabel": "semi-partial (nur Return residualisiert)",
+          "ci90": null,
+          "ci90Resid": null,
+          "verdict": "unterpowert — kein Urteil (N_eff<8)"
+        }
+      },
+      "delivery": {
+        "note": "noch nicht scharf — braucht Vintage >= t0+180d (§4b/A12)"
+      },
+      "exitRates": {
+        "2026-08-05/28": 0
+      },
+      "unusableRates": {
+        "2026-08-05/28": 0.009
+      },
+      "datesExcluded": []
+    }
+  },
+  "newestPriceDate": "2026-09-04",
+  "schemaVersion": 2,
+  "families": [
+    {
+      "familyId": "rank-ic-confirmatory-g1",
+      "generation": 1,
+      "hypothesisId": "ledger-2.8-rank-ic-v1",
+      "artifactCreatedAt": "2026-07-19",
+      "firstEligibleVintage": "2026-07-14",
+      "provenance": {
+        "registration": {
+          "specifiedAt": "2026-07-08",
+          "confirmedAt": "2026-07-10",
+          "source": "screener-formel-ledger.md, Abschnitt 2.8 §3c"
+        },
+        "thresholdFreeze": {
+          "frozenAt": "2026-07-14",
+          "source": "rank-ic.js:4-6; Report-Spezifikation Z.596"
+        }
+      },
+      "methodContract": {
+        "protocolVersion": "rank-ic-confirmatory-v1",
+        "horizonsDays": [
+          28,
+          84
+        ],
+        "decisionHorizonDays": 84,
+        "testDefinition": "28d=max(raw,residual)-IUT; 84d=max(raw,residual)-IUT; underpowered=1",
+        "correction": {
+          "method": "benjamini-yekutieli",
+          "q": 0.1
+        },
+        "minimumNeff": 8,
+        "ciLevel": 0.9,
+        "bootstrapIterations": 10000,
+        "bootstrapBlockLength": 2,
+        "threshold28": 0.03,
+        "threshold84": 0.05
+      },
+      "payloadHash": "sha256:5e8400500e6cab05a42a5a3c69175845528e03707837b0e5397ccb946d228a67",
+      "m": 28,
+      "slots": [
+        {
+          "board": "consumer-discretionary",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "consumer-discretionary",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "consumer-staples",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "consumer-staples",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "energy",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "energy",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "financials",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "financials",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "health-care",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "health-care",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "industrials",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "industrials",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "it-services",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "it-services",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "materials",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "materials",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "real-estate",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "real-estate",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "semiconductors",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "semiconductors",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "software-comm-services",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "software-comm-services",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "survival",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "survival",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "tech-hardware",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "tech-hardware",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        },
+        {
+          "board": "utilities",
+          "horizon": 28,
+          "p": 1,
+          "bySignificant": false,
+          "status": "UNDERPOWERED"
+        },
+        {
+          "board": "utilities",
+          "horizon": 84,
+          "p": 1,
+          "bySignificant": false,
+          "status": "WINDOW_PENDING"
+        }
+      ]
+    }
+  ],
+  "family": [
+    {
+      "board": "consumer-discretionary",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "consumer-discretionary",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "consumer-staples",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "consumer-staples",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "energy",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "energy",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "financials",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "financials",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "health-care",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "health-care",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "industrials",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "industrials",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "it-services",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "it-services",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "materials",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "materials",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "real-estate",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "real-estate",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "semiconductors",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "semiconductors",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "software-comm-services",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "software-comm-services",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "survival",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "survival",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "tech-hardware",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "tech-hardware",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "utilities",
+      "horizon": 28,
+      "p": 1,
+      "bySignificant": false
+    },
+    {
+      "board": "utilities",
+      "horizon": 84,
+      "p": 1,
+      "bySignificant": false
+    }
+  ],
+  "familyNote": "Familienmessung wartet: kein Slot ist bereits vollstaendig gemessen und gepowert",
+  "unregisteredBoards": [],
+  "familyHealth": {
+    "missingBoards": [],
+    "exclusions": [
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "consumer-discretionary",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "consumer-staples",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "energy",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "financials",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "health-care",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "industrials",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "it-services",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "materials",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "real-estate",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "semiconductors",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "software-comm-services",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "survival",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "tech-hardware",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      },
+      {
+        "familyId": "rank-ic-confirmatory-g1",
+        "board": "utilities",
+        "dates": [
+          "2026-07-14",
+          "2026-07-15",
+          "2026-07-16",
+          "2026-07-17",
+          "2026-07-18",
+          "2026-07-26",
+          "2026-07-27",
+          "2026-07-28",
+          "2026-07-29",
+          "2026-08-03"
+        ]
+      }
+    ],
+    "renameWarnings": [],
+    "warnings": []
+  }
+}
