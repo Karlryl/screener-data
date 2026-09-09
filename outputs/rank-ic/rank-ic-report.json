@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-08T08:31:41.690Z",
+  "generatedAt": "2026-09-09T08:38:07.726Z",
   "spec": "Ledger 2.8 §1–§4/§8; raw∧residual je Board×Horizont; Schwellen 28d>0,03 und 84d>0,05; BY je eingefrorener Manifestgeneration",
-  "vintagesTotal": 23,
+  "vintagesTotal": 24,
   "vintagesExcluded": [
     "2026-07-14",
     "2026-07-15",
@@ -146,16 +146,16 @@
           "decisions": [
             {
               "date": "2026-08-05",
-              "n": 311,
-              "icRaw": -0.07405307427990324,
-              "icResid": -0.10012292696101366,
-              "nResid": 283,
+              "n": 310,
+              "icRaw": -0.07111771413001793,
+              "icResid": -0.09608851375725169,
+              "nResid": 282,
               "quota": {
-                "ok": 311,
+                "ok": 310,
                 "delisted": 0,
                 "shortened": 0,
                 "excluded_no_series": 0,
-                "excluded_no_entry": 7,
+                "excluded_no_entry": 8,
                 "excluded_stale_window": 0
               }
             }
@@ -164,16 +164,16 @@
           "pendingWindows": 1,
           "nEff": 1,
           "mde": null,
-          "meanICRaw": -0.0741,
-          "meanICResid": -0.1001,
+          "meanICRaw": -0.0711,
+          "meanICResid": -0.0961,
           "icResidLabel": "semi-partial (nur Return residualisiert)",
           "ci90": {
-            "lo": -0.0741,
-            "hi": -0.0741
+            "lo": -0.0711,
+            "hi": -0.0711
           },
           "ci90Resid": {
-            "lo": -0.1001,
-            "hi": -0.1001
+            "lo": -0.0961,
+            "hi": -0.0961
           },
           "verdict": "unterpowert — kein Urteil (N_eff<8)"
         },
@@ -198,7 +198,7 @@
         "2026-08-05/28": 0
       },
       "unusableRates": {
-        "2026-08-05/28": 0.022
+        "2026-08-05/28": 0.025
       },
       "datesExcluded": []
     },
@@ -831,8 +831,8 @@
                 "delisted": 0,
                 "shortened": 0,
                 "excluded_no_series": 0,
-                "excluded_no_entry": 3,
-                "excluded_stale_window": 0
+                "excluded_no_entry": 2,
+                "excluded_stale_window": 1
               }
             }
           ],
@@ -879,7 +879,7 @@
       "datesExcluded": []
     }
   },
-  "newestPriceDate": "2026-09-04",
+  "newestPriceDate": "2026-09-08",
   "schemaVersion": 2,
   "families": [
     {
