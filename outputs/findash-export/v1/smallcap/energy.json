@@ -1,50 +1,49 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-08T08:31:10.103Z",
+  "generated_at": "2026-09-09T08:37:39.130Z",
   "branch": "energy",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.2,
-    "generated_at": "2026-09-08T08:22:42.220Z"
+    "coverage_pct": 75,
+    "generated_at": "2026-09-09T08:28:56.043Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
-      "ticker": "WHK",
-      "score": 81,
+      "ticker": "FTW",
+      "score": 71,
       "track": "profitable",
       "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
+        "peakMargin",
+        "arDivergence",
         "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 11.079,
-        "companion": 517.5
+        "value": -0.222,
+        "companion": 153.3
       },
-      "name": "WhiteHawk Minerals Corp.",
+      "name": "Presidio Production Company",
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
       "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mega",
+      "phase": "established",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
+      "ipoYear": 2024,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 86.1,
-      "scoreShrunk": 81,
+      "scoreBase": 75.4,
+      "scoreShrunk": 71,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -53,44 +52,44 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.2,
+          "pct": 86.1,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 97.1,
+          "pct": 97.2,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 97.1,
+          "pct": 32.4,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 97.2,
+          "pct": 86.1,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 97.1,
+          "pct": 13.9,
           "weight": 0.4
         },
         {
           "key": "capitalEfficiency",
-          "pct": 52.8,
+          "pct": 80.6,
           "weight": 2.4
         },
         {
           "key": "dilution",
-          "pct": 82.1,
+          "pct": null,
           "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": 224.9968909339634,
+      "revGrowthYoYPct": 62.69385073786453,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -102,7 +101,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "SGU",
-      "score": 69.6,
+      "score": 64.5,
       "track": "profitable",
       "lamps": [
         "peakMargin"
@@ -127,8 +126,8 @@
       "coverageWeight": 0.95,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 73.9,
-      "scoreShrunk": 69.6,
+      "scoreBase": 67.5,
+      "scoreShrunk": 64.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -137,12 +136,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 63.9,
+          "pct": 36.1,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 79.4,
+          "pct": 80.6,
           "weight": 3
         },
         {
@@ -152,12 +151,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.3,
+          "pct": 30.6,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 26.5,
+          "pct": 19.4,
           "weight": 0.4
         },
         {
@@ -186,7 +185,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "SMC",
-      "score": 65.7,
+      "score": 62.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -195,7 +194,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.324,
-        "companion": 11.2
+        "companion": 24.3
       },
       "name": "Summit Midstream Corporation",
       "country": "United States",
@@ -212,8 +211,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 68.3,
-      "scoreShrunk": 65.7,
+      "scoreBase": 64.2,
+      "scoreShrunk": 62.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -222,12 +221,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 41.7,
+          "pct": 25,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 85.3,
+          "pct": 86.1,
           "weight": 3
         },
         {
@@ -237,12 +236,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 41.7,
+          "pct": 19.4,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 44.1,
+          "pct": 47.2,
           "weight": 0.4
         },
         {
@@ -256,7 +255,7 @@
           "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": 4.85692969697884,
+      "revGrowthYoYPct": 10.552215494554872,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -271,7 +270,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "KNOP",
-      "score": 61.8,
+      "score": 58.2,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -296,8 +295,8 @@
       "coverageWeight": 0.95,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 64.3,
-      "scoreShrunk": 61.8,
+      "scoreBase": 59.7,
+      "scoreShrunk": 58.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -306,12 +305,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 47.2,
+          "pct": 19.4,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 55.9,
+          "pct": 58.3,
           "weight": 3
         },
         {
@@ -321,12 +320,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 75,
+          "pct": 58.3,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 14.7,
+          "pct": 2.8,
           "weight": 0.4
         },
         {
@@ -354,8 +353,182 @@
     {
       "rank": 5,
       "rankGrund": null,
+      "ticker": "WHK",
+      "score": 56.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 11.079,
+        "companion": 170.5
+      },
+      "name": "WhiteHawk Minerals Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 12,
+      "cohortFallback": true,
+      "scoreBase": 57.9,
+      "scoreShrunk": 56.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 91.7,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.8,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 97.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 91.7,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 97.2,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 52.8,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 82.1,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 74.12183620440767,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 6,
+      "rankGrund": null,
+      "ticker": "NOA",
+      "score": 54.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.227,
+        "companion": 57.6
+      },
+      "name": "North American Construction Group Ltd.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 12,
+      "cohortFallback": true,
+      "scoreBase": 55.4,
+      "scoreShrunk": 54.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 47.2,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 41.7,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 38.2,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 41.7,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 30.6,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.7,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 96.4,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 25.053175895257507,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 7,
+      "rankGrund": null,
       "ticker": "VTS",
-      "score": 56.4,
+      "score": 52.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -382,8 +555,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 57.5,
-      "scoreShrunk": 56.4,
+      "scoreBase": 52.5,
+      "scoreShrunk": 52.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -392,12 +565,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 52.8,
+          "pct": 30.6,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 73.5,
+          "pct": 75,
           "weight": 3
         },
         {
@@ -407,12 +580,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 47.2,
+          "pct": 25,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 36.1,
           "weight": 0.4
         },
         {
@@ -441,97 +614,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 6,
-      "rankGrund": null,
-      "ticker": "NOA",
-      "score": 50.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "lowRoic",
-        "fcfArtefact",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.227,
-        "companion": -14.6
-      },
-      "name": "North American Construction Group Ltd.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 50.7,
-      "scoreShrunk": 50.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 25,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 38.2,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 25,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 38.2,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.7,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 96.4,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": -6.341522094398133,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 7,
+      "rank": 8,
       "rankGrund": null,
       "ticker": "OBE",
-      "score": 50.5,
+      "score": 49.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -559,8 +645,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 50.6,
-      "scoreShrunk": 50.5,
+      "scoreBase": 49.3,
+      "scoreShrunk": 49.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -569,12 +655,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 86.1,
+          "pct": 75,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 14.7,
+          "pct": 19.4,
           "weight": 3
         },
         {
@@ -584,12 +670,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 80.6,
+          "pct": 69.4,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 79.4,
+          "pct": 75,
           "weight": 0.4
         },
         {
@@ -615,10 +701,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 8,
+      "rank": 9,
       "rankGrund": null,
       "ticker": "RNGR",
-      "score": 48.6,
+      "score": 45.5,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -644,8 +730,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 48.3,
-      "scoreShrunk": 48.6,
+      "scoreBase": 44.7,
+      "scoreShrunk": 45.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -654,12 +740,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 69.4,
+          "pct": 52.8,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 61.8,
+          "pct": 63.9,
           "weight": 3
         },
         {
@@ -669,12 +755,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 63.9,
+          "pct": 47.2,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 55.9,
+          "pct": 41.7,
           "weight": 0.4
         },
         {
@@ -700,96 +786,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
-      "rankGrund": null,
-      "ticker": "FTW",
-      "score": 44.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.222,
-        "companion": -152.9
-      },
-      "name": "Presidio Production Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.66,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 37.9,
-      "scoreShrunk": 44.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 2.8,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": null,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 32.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 2.8,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 8.8,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 80.6,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": -70.45550806668976,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 10,
       "rankGrund": null,
       "ticker": "NGS",
-      "score": 31.1,
+      "score": 28.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -801,7 +801,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.128,
-        "companion": 8.3
+        "companion": 24.6
       },
       "name": "Natural Gas Services Group, Inc.",
       "country": "United States",
@@ -818,8 +818,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 46.1,
-      "scoreShrunk": 46.7,
+      "scoreBase": 41.6,
+      "scoreShrunk": 42.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -828,12 +828,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.3,
+          "pct": 41.7,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 26.5,
+          "pct": 30.6,
           "weight": 3
         },
         {
@@ -843,12 +843,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 52.8,
+          "pct": 36.1,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 61.8,
+          "pct": 8.3,
           "weight": 0.4
         },
         {
@@ -862,7 +862,7 @@
           "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": 17.118140299156657,
+      "revGrowthYoYPct": 24.21100961770819,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -877,7 +877,7 @@
       "rank": 11,
       "rankGrund": null,
       "ticker": "PNRG",
-      "score": 27,
+      "score": 27.4,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -885,7 +885,7 @@
       "overview": {
         "kind": "gp",
         "value": -0.446,
-        "companion": -24
+        "companion": 4.9
       },
       "name": "PrimeEnergy Resources Corporation",
       "country": "United States",
@@ -902,8 +902,8 @@
       "coverageWeight": 0.95,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 21.4,
-      "scoreShrunk": 27,
+      "scoreBase": 21.8,
+      "scoreShrunk": 27.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -912,12 +912,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 19.4,
+          "pct": 8.3,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 2.9,
+          "pct": 8.3,
           "weight": 3
         },
         {
@@ -927,12 +927,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 19.4,
+          "pct": 8.3,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 20.6,
+          "pct": 52.8,
           "weight": 0.4
         },
         {
@@ -946,7 +946,7 @@
           "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": -16.317932305697912,
+      "revGrowthYoYPct": -3.738071891516992,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -961,7 +961,7 @@
       "rank": 12,
       "rankGrund": null,
       "ticker": "SD",
-      "score": 15.8,
+      "score": 15.2,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -986,8 +986,8 @@
       "coverageWeight": 1,
       "cohortN": 12,
       "cohortFallback": true,
-      "scoreBase": 65.4,
-      "scoreShrunk": 63.2,
+      "scoreBase": 62.8,
+      "scoreShrunk": 61,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -996,12 +996,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.7,
+          "pct": 80.6,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 91.2,
+          "pct": 91.7,
           "weight": 3
         },
         {
@@ -1011,12 +1011,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.7,
+          "pct": 80.6,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.4,
+          "pct": 25,
           "weight": 0.4
         },
         {
@@ -1046,8 +1046,94 @@
     {
       "rank": 1,
       "rankGrund": null,
+      "ticker": "EGY",
+      "score": 51.4,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.472,
+        "companion": 164.7
+      },
+      "name": "VAALCO Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1993,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 6,
+      "cohortFallback": true,
+      "scoreBase": 51.9,
+      "scoreShrunk": 51.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.2,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 25,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 8.8,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.2,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 69.4,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 41.7,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 39.3,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 83.61904368736649,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 2,
+      "rankGrund": null,
       "ticker": "REI",
-      "score": 50.4,
+      "score": 47.1,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1076,8 +1162,8 @@
       "coverageWeight": 1,
       "cohortN": 6,
       "cohortFallback": true,
-      "scoreBase": 50.6,
-      "scoreShrunk": 50.4,
+      "scoreBase": 46.2,
+      "scoreShrunk": 47.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1086,12 +1172,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
+          "pct": 58.3,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 32.4,
+          "pct": 36.1,
           "weight": 3
         },
         {
@@ -1101,12 +1187,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 69.4,
+          "pct": 52.8,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 85.3,
+          "pct": 80.6,
           "weight": 1.2
         },
         {
@@ -1135,10 +1221,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 2,
+      "rank": 3,
       "rankGrund": null,
       "ticker": "CLNE",
-      "score": 41.2,
+      "score": 36,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1165,8 +1251,8 @@
       "coverageWeight": 1,
       "cohortN": 6,
       "cohortFallback": true,
-      "scoreBase": 38.3,
-      "scoreShrunk": 41.2,
+      "scoreBase": 31.3,
+      "scoreShrunk": 36,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1175,12 +1261,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 36.1,
+          "pct": 13.9,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 50,
+          "pct": 52.8,
           "weight": 3
         },
         {
@@ -1190,12 +1276,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 36.1,
+          "pct": 13.9,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 67.6,
+          "pct": 58.3,
           "weight": 1.2
         },
         {
@@ -1221,10 +1307,106 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 3,
+      "rank": 4,
+      "rankGrund": null,
+      "ticker": "URG",
+      "score": 29.9,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "shareCountDilution"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": null,
+        "companion": 86.8
+      },
+      "name": "Ur-Energy Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.86,
+      "cohortN": 6,
+      "cohortFallback": true,
+      "scoreBase": 42.7,
+      "scoreShrunk": 44.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.667
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 69.4,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 13.9,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.9,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 86.1,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 2.8,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 10.7,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 37.73838045040729,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 6.3,
+        "pctl": 0.8
+      },
+      "ath": {
+        "distancePct": -56.3,
+        "athDate": "2011-02-01",
+        "monthsAgo": 187,
+        "lastDate": "2026-08-24"
+      },
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 5,
       "rankGrund": null,
       "ticker": "WTI",
-      "score": 29.7,
+      "score": 28.4,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1250,8 +1432,8 @@
       "coverageWeight": 1,
       "cohortN": 6,
       "cohortFallback": true,
-      "scoreBase": 62.6,
-      "scoreShrunk": 59.5,
+      "scoreBase": 59.2,
+      "scoreShrunk": 56.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1260,12 +1442,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.6,
+          "pct": 63.9,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 44.1,
+          "pct": 47.2,
           "weight": 3
         },
         {
@@ -1275,12 +1457,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 86.1,
+          "pct": 75,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 91.2,
+          "pct": 91.7,
           "weight": 1.2
         },
         {
@@ -1306,96 +1488,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 4,
-      "rankGrund": null,
-      "ticker": "EGY",
-      "score": 27.9,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.472,
-        "companion": -85.1
-      },
-      "name": "VAALCO Energy, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1993,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.87,
-      "cohortN": 6,
-      "cohortFallback": true,
-      "scoreBase": 16.9,
-      "scoreShrunk": 27.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 8.3,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 20.6,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 8.8,
-          "weight": 1.3
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 8.3,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 1.2
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 41.7,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": 39.3,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -24.993528021578825,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 5,
+      "rank": 6,
       "rankGrund": null,
       "ticker": "OIS",
-      "score": 27,
+      "score": 23.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1421,8 +1517,8 @@
       "coverageWeight": 1,
       "cohortN": 6,
       "cohortFallback": true,
-      "scoreBase": 55.3,
-      "scoreShrunk": 53.9,
+      "scoreBase": 46.2,
+      "scoreShrunk": 47.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1431,12 +1527,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 30.6,
+          "pct": 2.8,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 67.6,
+          "pct": 69.4,
           "weight": 3
         },
         {
@@ -1446,12 +1542,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 30.6,
+          "pct": 2.8,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 73.5,
+          "pct": 63.9,
           "weight": 1.2
         },
         {
@@ -1471,102 +1567,6 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 6,
-      "rankGrund": null,
-      "ticker": "URG",
-      "score": 15.5,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -44.3
-      },
-      "name": "Ur-Energy Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2008,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.86,
-      "cohortN": 6,
-      "cohortFallback": true,
-      "scoreBase": 9.5,
-      "scoreShrunk": 23.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 0.667
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 13.9,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 8.8,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.3
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 13.9,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 2.9,
-          "weight": 1.2
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 2.8,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": 10.7,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -19.28143357265769,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 6.3,
-        "pctl": 0.8
-      },
-      "ath": {
-        "distancePct": -56.3,
-        "athDate": "2011-02-01",
-        "monthsAgo": 187,
-        "lastDate": "2026-08-24"
-      },
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",

@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-08T08:31:10.162Z",
+  "generated_at": "2026-09-09T08:37:39.152Z",
   "branch": "utilities",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75.2,
-    "generated_at": "2026-09-08T08:22:42.220Z"
+    "coverage_pct": 75,
+    "generated_at": "2026-09-09T08:28:56.043Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "YORW",
-      "score": 70.7,
+      "score": 71,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -42,8 +42,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 81,
-      "scoreShrunk": 70.7,
+      "scoreBase": 81.4,
+      "scoreShrunk": 71,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -72,7 +72,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 70,
+          "pct": 75,
           "weight": 0.6
         },
         {
@@ -101,7 +101,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "ARTNA",
-      "score": 59.7,
+      "score": 55.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -111,7 +111,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.045,
-        "companion": -5.2
+        "companion": 1
       },
       "name": "Artesian Resources Corporation",
       "country": "United States",
@@ -124,12 +124,12 @@
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 1994,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.91,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 65.2,
-      "scoreShrunk": 59.7,
+      "scoreBase": 58.2,
+      "scoreShrunk": 55.5,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -153,12 +153,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 70,
+          "pct": 50,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": null,
+          "pct": 58.3,
           "weight": 0.6
         },
         {
@@ -172,10 +172,10 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 4.6214984437527695,
+      "revGrowthYoYPct": 7.293517731592369,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -187,7 +187,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "CWCO",
-      "score": 51.9,
+      "score": 51.4,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -196,7 +196,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.06,
-        "companion": -7.5
+        "companion": 13.1
       },
       "name": "Consolidated Water Co. Ltd.",
       "country": "Cayman Islands",
@@ -213,8 +213,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 52.8,
-      "scoreShrunk": 51.9,
+      "scoreBase": 52.1,
+      "scoreShrunk": 51.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -223,7 +223,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 30,
           "weight": 2.2
         },
         {
@@ -238,12 +238,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 70,
           "weight": 2.2
         },
         {
           "key": "marginTrajectory",
-          "pct": 50,
+          "pct": 41.7,
           "weight": 0.6
         },
         {
@@ -257,7 +257,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -11.097856364386761,
+      "revGrowthYoYPct": -2.1455607305737368,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -272,7 +272,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "HNRG",
-      "score": 42.4,
+      "score": 46.3,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -280,7 +280,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.133,
-        "companion": -31.1
+        "companion": -3
       },
       "name": "Hallador Energy Company",
       "country": "United States",
@@ -297,8 +297,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 38.5,
-      "scoreShrunk": 42.4,
+      "scoreBase": 44.5,
+      "scoreShrunk": 46.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -307,7 +307,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 30,
+          "pct": 50,
           "weight": 2.2
         },
         {
@@ -327,7 +327,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 30,
+          "pct": 25,
           "weight": 0.6
         },
         {
@@ -341,7 +341,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": -13.520607522680173,
+      "revGrowthYoYPct": -1.2837345003646972,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -358,7 +358,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "DGXX",
-      "score": 26.8,
+      "score": 26.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -374,7 +374,7 @@
       "overview": {
         "kind": "gp",
         "value": null,
-        "companion": -61.6
+        "companion": -42
       },
       "name": "Digi Power X Inc.",
       "country": "United States",
@@ -385,14 +385,14 @@
       "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
-      "profitTier": "kurz-vor-profitabel",
+      "profitTier": "nicht-profitabel",
       "ipoYear": 2021,
       "coverageAxes": "6/7",
       "coverageWeight": 0.83,
       "cohortN": 2,
       "cohortFallback": true,
-      "scoreBase": 9.9,
-      "scoreShrunk": 32.6,
+      "scoreBase": 9.7,
+      "scoreShrunk": 32.5,
       "factors": {
         "burn": 0.822,
         "growth": 1,
@@ -421,7 +421,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 10,
+          "pct": 8.3,
           "weight": 0.9
         },
         {
@@ -435,7 +435,7 @@
           "weight": 0.4
         }
       ],
-      "revGrowthYoYPct": -26.790467226793645,
+      "revGrowthYoYPct": -18.280872312487617,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
