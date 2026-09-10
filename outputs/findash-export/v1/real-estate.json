@@ -1,27 +1,27 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-09T08:37:37.910Z",
+  "generated_at": "2026-09-10T08:30:07.789Z",
   "branch": "real-estate",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 75,
-    "generated_at": "2026-09-09T08:28:56.043Z"
+    "coverage_pct": 74.6,
+    "generated_at": "2026-09-10T08:22:31.773Z"
   },
   "mcapBounds": [
-    1208314454.1606176,
-    1929870120.153334,
-    3633231759.312803,
-    9316000031.511356
+    1204830976,
+    1921435959.6321998,
+    3626281677.4484134,
+    9291334656
   ],
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "2548.TW",
-      "score": 92.5,
+      "score": 92.4,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -35,7 +35,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1020334172.3324621,
+      "marketCap": 1004809659.0455377,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -46,8 +46,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 93.4,
-      "scoreShrunk": 88.2,
+      "scoreBase": 93.3,
+      "scoreShrunk": 88.1,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -56,12 +56,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.4,
+          "pct": 97.2,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 49.6,
+          "pct": 49.4,
           "weight": 0.6
         },
         {
@@ -71,7 +71,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 97.8,
+          "pct": 97.6,
           "weight": 1.6
         },
         {
@@ -96,21 +96,21 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -33.3,
+        "distancePct": -34.1,
         "athDate": "2024-07-30",
         "monthsAgo": 25,
-        "lastDate": "2026-09-09"
+        "lastDate": "2026-09-10"
       },
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.031812686
+      "tradingFxRateApplied": 0.031726897
     },
     {
       "rank": 2,
       "rankGrund": null,
-      "ticker": "LODHA.NS",
-      "score": 92,
+      "ticker": "LODHA.BO",
+      "score": 91.9,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -125,7 +125,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 12415705437.617783,
+      "marketCap": 12185201474.18415,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -136,8 +136,8 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 88.7,
-      "scoreShrunk": 88.6,
+      "scoreBase": 88.6,
+      "scoreShrunk": 88.5,
       "factors": {
         "burn": 1,
         "growth": 1.038,
@@ -146,27 +146,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.5,
+          "pct": 92.3,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 92,
+          "pct": 91.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 83.8,
+          "pct": 84.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 86.7,
+          "pct": 86.5,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 81.9,
+          "pct": 81.6,
           "weight": 0.8
         },
         {
@@ -180,7 +180,7 @@
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 43.10221382134778,
+      "revGrowthYoYPct": 43.10221382134776,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
@@ -189,13 +189,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 3,
       "rankGrund": null,
       "ticker": "DAR.L",
-      "score": 89.7,
+      "score": 89.6,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -211,7 +211,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1350162176,
+      "marketCap": 1305156736,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -222,17 +222,17 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 95.2,
-      "scoreShrunk": 85.6,
+      "scoreBase": 95.1,
+      "scoreShrunk": 85.5,
       "factors": {
         "burn": 1,
-        "growth": 1.047,
+        "growth": 1.048,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.2,
+          "pct": 97,
           "weight": 1.3
         },
         {
@@ -247,7 +247,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 97,
+          "pct": 96.8,
           "weight": 1.6
         },
         {
@@ -257,7 +257,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 87.1,
+          "pct": 86.8,
           "weight": 1.6
         },
         {
@@ -281,7 +281,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "OYY.SI",
-      "score": 88.3,
+      "score": 88.2,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -295,7 +295,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1047909818.6886911,
+      "marketCap": 1042096773.568,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -306,8 +306,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 94,
-      "scoreShrunk": 84.7,
+      "scoreBase": 93.9,
+      "scoreShrunk": 84.6,
       "factors": {
         "burn": 1,
         "growth": 1.042,
@@ -316,12 +316,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.1,
+          "pct": 91.9,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 95.3,
+          "pct": 95.1,
           "weight": 0.6
         },
         {
@@ -331,7 +331,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 87.6,
+          "pct": 87.5,
           "weight": 1.6
         },
         {
@@ -359,13 +359,13 @@
       "qPunkte": 1,
       "qSpanTage": 0,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
+      "tradingFxRateApplied": 0.79114544
     },
     {
       "rank": 5,
       "rankGrund": null,
       "ticker": "SKYH",
-      "score": 88,
+      "score": 87.9,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -384,7 +384,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 845681664,
+      "marketCap": 841600192,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -395,8 +395,8 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 84.4,
-      "scoreShrunk": 84.2,
+      "scoreBase": 84.2,
+      "scoreShrunk": 84.1,
       "factors": {
         "burn": 1,
         "growth": 1.045,
@@ -405,12 +405,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.5,
+          "pct": 94.3,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 24.3,
+          "pct": 24.1,
           "weight": 0.6
         },
         {
@@ -420,12 +420,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 92.1,
+          "pct": 91.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 92.9,
+          "pct": 92.5,
           "weight": 0.8
         },
         {
@@ -459,7 +459,7 @@
     {
       "rank": 6,
       "rankGrund": null,
-      "ticker": "MAHLIFE.BO",
+      "ticker": "MAHLIFE.NS",
       "score": 86.5,
       "track": "profitable",
       "lamps": [
@@ -472,13 +472,13 @@
       "overview": {
         "kind": "ffo-badge",
         "value": 3.071,
-        "companion": 611.4
+        "companion": 606.7
       },
       "name": "Mahindra Lifespace Developers Limited",
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 827324983.4951639,
+      "marketCap": 816456484.5684983,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -490,7 +490,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 82.6,
-      "scoreShrunk": 82.5,
+      "scoreShrunk": 82.4,
       "factors": {
         "burn": 1,
         "growth": 1.05,
@@ -499,12 +499,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 99.3,
+          "pct": 99.2,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 49.6,
+          "pct": 49.4,
           "weight": 0.6
         },
         {
@@ -514,7 +514,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 99.2,
+          "pct": 99,
           "weight": 1.6
         },
         {
@@ -529,7 +529,7 @@
         },
         {
           "key": "dilution",
-          "pct": 44.8,
+          "pct": 45.3,
           "weight": 1
         }
       ],
@@ -542,13 +542,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 7,
       "rankGrund": null,
       "ticker": "600064.SS",
-      "score": 86.5,
+      "score": 86.3,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -563,7 +563,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 2001943491.9754753,
+      "marketCap": 2023034539.2570164,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -574,17 +574,17 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 87.1,
-      "scoreShrunk": 82.7,
+      "scoreBase": 87,
+      "scoreShrunk": 82.6,
       "factors": {
         "burn": 1,
-        "growth": 1.046,
+        "growth": 1.045,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95.8,
+          "pct": 95.6,
           "weight": 1.3
         },
         {
@@ -599,7 +599,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 96.8,
+          "pct": 96.6,
           "weight": 1.6
         },
         {
@@ -609,7 +609,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 87.7,
+          "pct": 87.5,
           "weight": 1.6
         },
         {
@@ -627,7 +627,7 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
       "rank": 8,
@@ -648,7 +648,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 3656073728,
+      "marketCap": 3635009280,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -659,8 +659,8 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 82.6,
-      "scoreShrunk": 82.5,
+      "scoreBase": 82.5,
+      "scoreShrunk": 82.4,
       "factors": {
         "burn": 1,
         "growth": 1.036,
@@ -674,27 +674,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 88.9,
+          "pct": 88.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 88.4,
+          "pct": 88.6,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 77.9,
+          "pct": 77.7,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 75.2,
+          "pct": 75,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.8,
+          "pct": 86.6,
           "weight": 1.6
         },
         {
@@ -723,8 +723,93 @@
     {
       "rank": 9,
       "rankGrund": null,
+      "ticker": "ARH.WA",
+      "score": 84.7,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": -0.186,
+        "companion": 606.7
+      },
+      "name": "Archicom S.A.",
+      "country": "Poland",
+      "region": "Europe",
+      "sector": "Real Estate",
+      "marketCap": 817155653.7343564,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 81,
+      "scoreShrunk": 80.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.048,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 99.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 96.2,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 61,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 99,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 96.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 90.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 21.7,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 1608.27393431167,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.26967987
+    },
+    {
+      "rank": 10,
+      "rankGrund": null,
       "ticker": "CURY3.SA",
-      "score": 84.4,
+      "score": 84.3,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -738,10 +823,10 @@
       "country": "Brazil",
       "region": "South America",
       "sector": "Real Estate",
-      "marketCap": 2027337944.4591103,
+      "marketCap": 1945417779.1744716,
       "phase": "established",
       "mcapBand": "mid",
-      "mcapKlasse": "mid",
+      "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2020,
@@ -749,8 +834,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 85.4,
-      "scoreShrunk": 81.2,
+      "scoreBase": 85.3,
+      "scoreShrunk": 81.1,
       "factors": {
         "burn": 1,
         "growth": 1.039,
@@ -759,27 +844,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.4,
+          "pct": 89.2,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 58.9,
+          "pct": 58.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 93.1,
+          "pct": 93.3,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 84.1,
+          "pct": 83.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 59.6,
+          "pct": 59.4,
           "weight": 0.8
         },
         {
@@ -802,10 +887,10 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.19651385
+      "tradingFxRateApplied": 0.19570237
     },
     {
-      "rank": 10,
+      "rank": 11,
       "rankGrund": null,
       "ticker": "DVL.WA",
       "score": 84.3,
@@ -823,7 +908,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1325296868.7800832,
+      "marketCap": 1299505500.7041485,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -835,7 +920,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 80.6,
-      "scoreShrunk": 80.5,
+      "scoreShrunk": 80.4,
       "factors": {
         "burn": 1,
         "growth": 1.048,
@@ -844,7 +929,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 98.5,
+          "pct": 98.3,
           "weight": 1.3
         },
         {
@@ -854,17 +939,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 85.9,
+          "pct": 86.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 98.5,
+          "pct": 98.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.7,
+          "pct": 32.6,
           "weight": 0.8
         },
         {
@@ -887,13 +972,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.2698429
+      "tradingFxRateApplied": 0.26967987
     },
     {
-      "rank": 11,
+      "rank": 12,
       "rankGrund": null,
       "ticker": "DCII.JK",
-      "score": 83.9,
+      "score": 83.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -909,7 +994,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 27421577439.23789,
+      "marketCap": 27496132781.981728,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -930,27 +1015,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95.2,
+          "pct": 95,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 95.6,
+          "pct": 95.5,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 85.1,
+          "pct": 85.3,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 93.3,
+          "pct": 93.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 12.5,
+          "pct": 12.4,
           "weight": 0.8
         },
         {
@@ -973,13 +1058,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.00005706134
+      "tradingFxRateApplied": 0.000057025547
     },
     {
-      "rank": 12,
+      "rank": 13,
       "rankGrund": null,
       "ticker": "002314.SZ",
-      "score": 83.8,
+      "score": 83.7,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -995,7 +1080,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 920465105.5495323,
+      "marketCap": 908556916.8369869,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1006,8 +1091,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 84.4,
-      "scoreShrunk": 80.3,
+      "scoreBase": 84.3,
+      "scoreShrunk": 80.2,
       "factors": {
         "burn": 1,
         "growth": 1.044,
@@ -1016,7 +1101,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.3,
+          "pct": 94.1,
           "weight": 1.3
         },
         {
@@ -1031,12 +1116,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.5,
+          "pct": 91.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 85.5,
+          "pct": 85.3,
           "weight": 0.8
         },
         {
@@ -1059,13 +1144,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 13,
+      "rank": 14,
       "rankGrund": null,
       "ticker": "HMSO.L",
-      "score": 83.8,
+      "score": 83.7,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1083,7 +1168,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 2815655396.8608,
+      "marketCap": 2735414164.7698174,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1095,7 +1180,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 88.1,
-      "scoreShrunk": 80.1,
+      "scoreShrunk": 80,
       "factors": {
         "burn": 1,
         "growth": 1.046,
@@ -1104,7 +1189,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96,
+          "pct": 95.8,
           "weight": 1.3
         },
         {
@@ -1119,7 +1204,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 1.6
         },
         {
@@ -1144,21 +1229,21 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -93.4,
+        "distancePct": -93.6,
         "athDate": "2007-03-26",
-        "monthsAgo": 233,
-        "lastDate": "2026-09-09"
+        "monthsAgo": 234,
+        "lastDate": "2026-09-10"
       },
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.01355877
+      "tradingFxRateApplied": 0.013553073
     },
     {
-      "rank": 14,
+      "rank": 15,
       "rankGrund": null,
       "ticker": "YCPS.MC",
-      "score": 83.7,
+      "score": 83.6,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1173,7 +1258,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1625552688.4156032,
+      "marketCap": 1634108273.5840895,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1184,8 +1269,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 88.3,
-      "scoreShrunk": 80.2,
+      "scoreBase": 88.2,
+      "scoreShrunk": 80.1,
       "factors": {
         "burn": 1,
         "growth": 1.044,
@@ -1194,12 +1279,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.8,
+          "pct": 94.6,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 94.1,
+          "pct": 93.9,
           "weight": 0.6
         },
         {
@@ -1209,7 +1294,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 92.5,
+          "pct": 92.3,
           "weight": 1.6
         },
         {
@@ -1240,10 +1325,10 @@
       "tradingFxRateApplied": 1.1641443
     },
     {
-      "rank": 15,
+      "rank": 16,
       "rankGrund": null,
       "ticker": "2501.TW",
-      "score": 82.4,
+      "score": 82.3,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1259,7 +1344,7 @@
       "country": "Taiwan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 826307971.2907838,
+      "marketCap": 818561268.72124,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1270,17 +1355,17 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 82.8,
-      "scoreShrunk": 78.9,
+      "scoreBase": 82.7,
+      "scoreShrunk": 78.8,
       "factors": {
         "burn": 1,
-        "growth": 1.045,
+        "growth": 1.044,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97,
+          "pct": 96.8,
           "weight": 1.3
         },
         {
@@ -1290,22 +1375,22 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 91.5,
+          "pct": 91.7,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 97.2,
+          "pct": 97,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 82.6,
+          "pct": 82.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.2,
+          "pct": 78,
           "weight": 1.6
         },
         {
@@ -1323,13 +1408,13 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.031812686
+      "tradingFxRateApplied": 0.031726897
     },
     {
-      "rank": 16,
+      "rank": 17,
       "rankGrund": null,
       "ticker": "MALLPLAZA.SN",
-      "score": 81.9,
+      "score": 81.8,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1344,7 +1429,7 @@
       "country": "Chile",
       "region": "South America",
       "sector": "Real Estate",
-      "marketCap": 9555822609.929287,
+      "marketCap": 9424078939.303288,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mid",
@@ -1355,8 +1440,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 83.2,
-      "scoreShrunk": 79.3,
+      "scoreBase": 83.1,
+      "scoreShrunk": 79.2,
       "factors": {
         "burn": 1,
         "growth": 1.033,
@@ -1370,22 +1455,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 64.5,
+          "pct": 64.3,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 92.9,
+          "pct": 93.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 82.2,
+          "pct": 82,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 88.2,
+          "pct": 87.9,
           "weight": 0.8
         },
         {
@@ -1408,10 +1493,10 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0010813851
+      "tradingFxRateApplied": 0.0010785043
     },
     {
-      "rank": 17,
+      "rank": 18,
       "rankGrund": null,
       "ticker": "600376.SS",
       "score": 81.8,
@@ -1430,7 +1515,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1265322277.7672808,
+      "marketCap": 1242524424.8728576,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -1456,7 +1541,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 95.8,
+          "pct": 95.6,
           "weight": 0.6
         },
         {
@@ -1471,7 +1556,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 90.5,
+          "pct": 90.2,
           "weight": 0.8
         },
         {
@@ -1494,10 +1579,10 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 18,
+      "rank": 19,
       "rankGrund": null,
       "ticker": "HMC.AX",
       "score": 81.5,
@@ -1516,7 +1601,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Real Estate",
-      "marketCap": 1033256375.2172979,
+      "marketCap": 1027296170.9388288,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -1527,8 +1612,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 85.1,
-      "scoreShrunk": 77.7,
+      "scoreBase": 85,
+      "scoreShrunk": 77.6,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -1537,7 +1622,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 98,
+          "pct": 97.8,
           "weight": 1.3
         },
         {
@@ -1552,7 +1637,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 98,
+          "pct": 97.8,
           "weight": 1.6
         },
         {
@@ -1580,13 +1665,13 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.72374606
+      "tradingFxRateApplied": 0.7216569
     },
     {
-      "rank": 19,
+      "rank": 20,
       "rankGrund": null,
       "ticker": "NHI",
-      "score": 80.9,
+      "score": 80.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -1601,7 +1686,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 3507467008,
+      "marketCap": 3447061248,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1612,7 +1697,7 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 78.3,
+      "scoreBase": 78.2,
       "scoreShrunk": 78.1,
       "factors": {
         "burn": 1,
@@ -1622,32 +1707,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 89.6,
+          "pct": 89.4,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 75,
+          "pct": 74.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 67.6,
+          "pct": 67.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 91.7,
+          "pct": 91.5,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 14.8,
+          "pct": 14.7,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 88.4,
+          "pct": 88.2,
           "weight": 1.6
         },
         {
@@ -1668,10 +1753,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -19.7,
+        "distancePct": -21.1,
         "athDate": "2026-02-17",
         "monthsAgo": 7,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -1679,7 +1764,7 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 20,
+      "rank": 21,
       "rankGrund": null,
       "ticker": "002077.SZ",
       "score": 80.5,
@@ -1697,9 +1782,9 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1188869988.4346728,
+      "marketCap": 1215965050.4083457,
       "phase": "established",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
@@ -1709,16 +1794,16 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 81.2,
-      "scoreShrunk": 77.6,
+      "scoreShrunk": 77.5,
       "factors": {
         "burn": 1,
-        "growth": 1.039,
+        "growth": 1.038,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95,
+          "pct": 94.8,
           "weight": 1.3
         },
         {
@@ -1728,17 +1813,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 93.3,
+          "pct": 93.5,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 94.3,
+          "pct": 94.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 93.5,
+          "pct": 93.2,
           "weight": 0.8
         },
         {
@@ -1761,10 +1846,10 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 21,
+      "rank": 22,
       "rankGrund": null,
       "ticker": "CATE.ST",
       "score": 80,
@@ -1782,7 +1867,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 2638146999.861801,
+      "marketCap": 2611564462.9413395,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -1794,7 +1879,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 80.9,
-      "scoreShrunk": 77.3,
+      "scoreShrunk": 77.2,
       "factors": {
         "burn": 1,
         "growth": 1.035,
@@ -1808,22 +1893,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 85.6,
+          "pct": 85.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 85.3,
+          "pct": 85.5,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 91,
+          "pct": 90.8,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 66.6,
+          "pct": 66.4,
           "weight": 0.8
         },
         {
@@ -1846,13 +1931,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.10439689
+      "tradingFxRateApplied": 0.104276486
     },
     {
-      "rank": 22,
+      "rank": 23,
       "rankGrund": null,
       "ticker": "HBNB",
-      "score": 79.5,
+      "score": 79.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1865,15 +1950,15 @@
       "overview": {
         "kind": "ffo-badge",
         "value": null,
-        "companion": 611.4
+        "companion": 606.7
       },
       "name": "Hotel101 Global Holdings Corp.",
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1219308672,
+      "marketCap": 1111677312,
       "phase": "inflected",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -1882,8 +1967,8 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 78.4,
-      "scoreShrunk": 75.7,
+      "scoreBase": 78.3,
+      "scoreShrunk": 75.6,
       "factors": {
         "burn": 1,
         "growth": 1.05,
@@ -1892,12 +1977,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 99.3,
+          "pct": 99.2,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 49.6,
+          "pct": 49.4,
           "weight": 0.6
         },
         {
@@ -1907,7 +1992,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 99.2,
+          "pct": 99,
           "weight": 1.6
         },
         {
@@ -1917,7 +2002,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 79.8,
+          "pct": 79.5,
           "weight": 1.6
         },
         {
@@ -1932,10 +2017,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -58.2,
+        "distancePct": -61.9,
         "athDate": "2025-06-24",
-        "monthsAgo": 14,
-        "lastDate": "2026-09-08"
+        "monthsAgo": 15,
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 0,
       "qSpanTage": null,
@@ -1943,10 +2028,10 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 23,
+      "rank": 24,
       "rankGrund": null,
       "ticker": "PANI.JK",
-      "score": 79.2,
+      "score": 79,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1963,7 +2048,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 6071816533.785696,
+      "marketCap": 5990213271.301407,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -1974,8 +2059,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 79.3,
-      "scoreShrunk": 75.8,
+      "scoreBase": 79.2,
+      "scoreShrunk": 75.7,
       "factors": {
         "burn": 1,
         "growth": 1.044,
@@ -1984,12 +2069,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.9,
+          "pct": 93.7,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 27.8,
+          "pct": 27.6,
           "weight": 0.6
         },
         {
@@ -1999,12 +2084,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.1,
+          "pct": 91,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.2,
+          "pct": 88.9,
           "weight": 0.8
         },
         {
@@ -2027,10 +2112,10 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.00005706134
+      "tradingFxRateApplied": 0.000057025547
     },
     {
-      "rank": 24,
+      "rank": 25,
       "rankGrund": null,
       "ticker": "UOS.AX",
       "score": 78,
@@ -2049,7 +2134,7 @@
       "country": "Malaysia",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 849920126.7212032,
+      "marketCap": 847466753.597568,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2061,7 +2146,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 81.7,
-      "scoreShrunk": 75.1,
+      "scoreShrunk": 75,
       "factors": {
         "burn": 1,
         "growth": 1.039,
@@ -2070,22 +2155,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90,
+          "pct": 89.8,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 81.5,
+          "pct": 81.3,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 89.6,
+          "pct": 89.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 93.9,
+          "pct": 93.7,
           "weight": 1.6
         },
         {
@@ -2113,13 +2198,13 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.72374606
+      "tradingFxRateApplied": 0.7216569
     },
     {
-      "rank": 25,
+      "rank": 26,
       "rankGrund": null,
       "ticker": "MVC.MC",
-      "score": 77.3,
+      "score": 77.2,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2135,7 +2220,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1828574089.958669,
+      "marketCap": 1832511989.6599295,
       "phase": "inflected",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2146,8 +2231,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 80.7,
-      "scoreShrunk": 74.3,
+      "scoreBase": 80.6,
+      "scoreShrunk": 74.2,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -2156,7 +2241,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 95.6,
+          "pct": 95.4,
           "weight": 1.3
         },
         {
@@ -2171,7 +2256,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 95.4,
+          "pct": 95.2,
           "weight": 1.6
         },
         {
@@ -2202,10 +2287,95 @@
       "tradingFxRateApplied": 1.1641443
     },
     {
-      "rank": 26,
+      "rank": 27,
+      "rankGrund": null,
+      "ticker": "9A4U.SI",
+      "score": 77,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 77.8
+      },
+      "name": "ESR-REIT",
+      "country": "Singapore",
+      "region": "Asia",
+      "sector": "Real Estate",
+      "marketCap": 1425619373.8256178,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.79,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 81.1,
+      "scoreShrunk": 74.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.033,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 82.4,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 89.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.9,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 81.4,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 71.3,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 20.372249692311016,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
+      "qSpanTage": 275,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.79114544
+    },
+    {
+      "rank": 28,
       "rankGrund": null,
       "ticker": "600683.SS",
-      "score": 77.1,
+      "score": 77,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -2223,7 +2393,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1074631058.248279,
+      "marketCap": 1073766839.066624,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2234,8 +2404,8 @@
       "coverageWeight": 0.7,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 83.1,
-      "scoreShrunk": 73.5,
+      "scoreBase": 82.9,
+      "scoreShrunk": 73.4,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -2244,7 +2414,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 98.3,
+          "pct": 98.2,
           "weight": 1.3
         },
         {
@@ -2259,12 +2429,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 98.3,
+          "pct": 98.2,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 95.8,
+          "pct": 95.5,
           "weight": 0.8
         },
         {
@@ -2287,13 +2457,13 @@
       "qPunkte": 4,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 27,
+      "rank": 29,
       "rankGrund": null,
       "ticker": "VGP.BR",
-      "score": 77.1,
+      "score": 77,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -2310,7 +2480,7 @@
       "country": "Belgium",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 2773320290.687232,
+      "marketCap": 2610807385.5224066,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2321,8 +2491,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 80.4,
-      "scoreShrunk": 74.1,
+      "scoreBase": 80.3,
+      "scoreShrunk": 74,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -2331,12 +2501,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.5,
+          "pct": 91.3,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 92.6,
+          "pct": 92.4,
           "weight": 0.6
         },
         {
@@ -2346,7 +2516,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 95.8,
+          "pct": 95.6,
           "weight": 1.6
         },
         {
@@ -2377,92 +2547,7 @@
       "tradingFxRateApplied": 1.1641443
     },
     {
-      "rank": 28,
-      "rankGrund": null,
-      "ticker": "9A4U.SI",
-      "score": 77.1,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 77.8
-      },
-      "name": "ESR-REIT",
-      "country": "Singapore",
-      "region": "Asia",
-      "sector": "Real Estate",
-      "marketCap": 1419170371.2722175,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2007,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.79,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 81.1,
-      "scoreShrunk": 74.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.033,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 82.4,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 89.3,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.7,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 81.6,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 71.3,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 20.372249692311016,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 275,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
-    },
-    {
-      "rank": 29,
+      "rank": 30,
       "rankGrund": null,
       "ticker": "SLP-B.ST",
       "score": 76.9,
@@ -2481,7 +2566,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1048495575.8760039,
+      "marketCap": 1026693641.1774731,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2492,8 +2577,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 77.3,
-      "scoreShrunk": 74.1,
+      "scoreBase": 77.2,
+      "scoreShrunk": 74,
       "factors": {
         "burn": 1,
         "growth": 1.039,
@@ -2507,7 +2592,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 36.8,
+          "pct": 36.7,
           "weight": 0.6
         },
         {
@@ -2517,12 +2602,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 87.3,
+          "pct": 87.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 68.9,
+          "pct": 68.7,
           "weight": 0.8
         },
         {
@@ -2545,13 +2630,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.10439689
+      "tradingFxRateApplied": 0.104276486
     },
     {
-      "rank": 30,
+      "rank": 31,
       "rankGrund": null,
       "ticker": "000036.SZ",
-      "score": 76.2,
+      "score": 76.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2566,7 +2651,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 830922052.9854926,
+      "marketCap": 820640615.2999321,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -2577,8 +2662,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 76.2,
-      "scoreShrunk": 73.1,
+      "scoreBase": 76.1,
+      "scoreShrunk": 73,
       "factors": {
         "burn": 1,
         "growth": 1.043,
@@ -2587,7 +2672,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.1,
+          "pct": 92.9,
           "weight": 1.3
         },
         {
@@ -2602,12 +2687,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 88.8,
+          "pct": 88.6,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 62.3,
+          "pct": 62.1,
           "weight": 0.8
         },
         {
@@ -2630,13 +2715,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 31,
+      "rank": 32,
       "rankGrund": null,
       "ticker": "8985.T",
-      "score": 76.1,
+      "score": 76,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -2655,7 +2740,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 3238183709.8592505,
+      "marketCap": 3213341990.2900634,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2666,8 +2751,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 79.4,
-      "scoreShrunk": 73.2,
+      "scoreBase": 79.3,
+      "scoreShrunk": 73.1,
       "factors": {
         "burn": 1,
         "growth": 1.04,
@@ -2676,12 +2761,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.6,
+          "pct": 90.4,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 78.8,
+          "pct": 78.6,
           "weight": 0.6
         },
         {
@@ -2691,7 +2776,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 79.5,
+          "pct": 79.3,
           "weight": 1.6
         },
         {
@@ -2716,18 +2801,18 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -3.3,
+        "distancePct": -4,
         "athDate": "2026-02-20",
         "monthsAgo": 7,
-        "lastDate": "2026-09-09"
+        "lastDate": "2026-09-10"
       },
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
     },
     {
-      "rank": 32,
+      "rank": 33,
       "rankGrund": null,
       "ticker": "MINDSPACE.BO",
       "score": 75.9,
@@ -2745,7 +2830,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 3465861522.1060896,
+      "marketCap": 3449348060.071854,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -2771,12 +2856,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 35.1,
+          "pct": 34.9,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 88.6,
+          "pct": 88.8,
           "weight": 1.5
         },
         {
@@ -2786,12 +2871,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 74.9,
+          "pct": 74.7,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 83.5,
+          "pct": 83.3,
           "weight": 1.6
         },
         {
@@ -2809,13 +2894,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
-      "rank": 33,
+      "rank": 34,
       "rankGrund": null,
       "ticker": "MONT.BR",
-      "score": 75.9,
+      "score": 75.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -2830,7 +2915,7 @@
       "country": "Belgium",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1771402795.7488897,
+      "marketCap": 1749700910.8398337,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -2841,8 +2926,8 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 73.9,
-      "scoreShrunk": 73.8,
+      "scoreBase": 73.8,
+      "scoreShrunk": 73.7,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -2856,27 +2941,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 85.4,
+          "pct": 85.2,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 77.7,
+          "pct": 77.9,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 72.5,
+          "pct": 72.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 44.4,
+          "pct": 44.2,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.5,
+          "pct": 85.3,
           "weight": 1.6
         },
         {
@@ -2897,7 +2982,7 @@
       "tradingFxRateApplied": 1.1641443
     },
     {
-      "rank": 34,
+      "rank": 35,
       "rankGrund": null,
       "ticker": "PARAUCO.SN",
       "score": 75.7,
@@ -2915,7 +3000,7 @@
       "country": "Chile",
       "region": "South America",
       "sector": "Real Estate",
-      "marketCap": 4171419295.480834,
+      "marketCap": 4123254636.136392,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2926,8 +3011,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 76.4,
-      "scoreShrunk": 73.3,
+      "scoreBase": 76.3,
+      "scoreShrunk": 73.2,
       "factors": {
         "burn": 1,
         "growth": 1.034,
@@ -2941,27 +3026,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 37.6,
+          "pct": 37.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 76,
+          "pct": 76.2,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 84.9,
+          "pct": 84.7,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 50.7,
+          "pct": 50.5,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 90.2,
+          "pct": 89.9,
           "weight": 1.6
         },
         {
@@ -2979,13 +3064,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0010813851
+      "tradingFxRateApplied": 0.0010785043
     },
     {
-      "rank": 35,
+      "rank": 36,
       "rankGrund": null,
       "ticker": "CTRE",
-      "score": 75.6,
+      "score": 75.5,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3001,7 +3086,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 9291048960,
+      "marketCap": 9224886272,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3012,22 +3097,22 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 72.6,
-      "scoreShrunk": 72.5,
+      "scoreBase": 72.5,
+      "scoreShrunk": 72.4,
       "factors": {
         "burn": 1,
-        "growth": 1.044,
+        "growth": 1.043,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.3,
+          "pct": 92.1,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 94.7,
+          "pct": 94.5,
           "weight": 0.6
         },
         {
@@ -3037,12 +3122,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 86.5,
+          "pct": 86.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 26.1,
+          "pct": 26,
           "weight": 0.8
         },
         {
@@ -3068,10 +3153,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -9.4,
+        "distancePct": -10,
         "athDate": "2026-07-21",
         "monthsAgo": 2,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -3079,7 +3164,7 @@
       "tradingFxRateApplied": 1
     },
     {
-      "rank": 36,
+      "rank": 37,
       "rankGrund": null,
       "ticker": "AJBU.SI",
       "score": 75.4,
@@ -3098,7 +3183,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 4201847761.760256,
+      "marketCap": 4202013686.887219,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3124,12 +3209,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 92.2,
+          "pct": 92,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 93.5,
+          "pct": 93.7,
           "weight": 1.5
         },
         {
@@ -3144,7 +3229,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.2,
+          "pct": 74,
           "weight": 1.6
         },
         {
@@ -3162,13 +3247,13 @@
       "qPunkte": 4,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
+      "tradingFxRateApplied": 0.79114544
     },
     {
-      "rank": 37,
+      "rank": 38,
       "rankGrund": null,
       "ticker": "EDUCA/18.MX",
-      "score": 75.2,
+      "score": 75.1,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -3182,7 +3267,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 3777896396.308537,
+      "marketCap": 3780408624.6570554,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3193,8 +3278,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 75.7,
-      "scoreShrunk": 72.7,
+      "scoreBase": 75.6,
+      "scoreShrunk": 72.6,
       "factors": {
         "burn": 1,
         "growth": 1.034,
@@ -3203,22 +3288,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.4,
+          "pct": 88.2,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 45.9,
+          "pct": 45.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 70.9,
+          "pct": 71.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 91.9,
+          "pct": 91.7,
           "weight": 1.6
         },
         {
@@ -3246,13 +3331,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.059174646
+      "tradingFxRateApplied": 0.059213996
     },
     {
-      "rank": 38,
+      "rank": 39,
       "rankGrund": null,
       "ticker": "W05.SI",
-      "score": 75.1,
+      "score": 75,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3267,7 +3352,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 936703110.7777536,
+      "marketCap": 936740099.8814515,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3278,8 +3363,8 @@
       "coverageWeight": 0.73,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 79.4,
-      "scoreShrunk": 71.6,
+      "scoreBase": 79.3,
+      "scoreShrunk": 71.5,
       "factors": {
         "burn": 1,
         "growth": 1.049,
@@ -3288,7 +3373,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.8,
+          "pct": 97.6,
           "weight": 1.3
         },
         {
@@ -3303,7 +3388,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 97.6,
+          "pct": 97.4,
           "weight": 1.6
         },
         {
@@ -3331,10 +3416,10 @@
       "qPunkte": 4,
       "qSpanTage": 274,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
+      "tradingFxRateApplied": 0.79114544
     },
     {
-      "rank": 39,
+      "rank": 40,
       "rankGrund": null,
       "ticker": "GMG.AX",
       "score": 74.5,
@@ -3352,7 +3437,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Real Estate",
-      "marketCap": 40405064365.335754,
+      "marketCap": 40273601622.98757,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3378,17 +3463,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 85,
+          "pct": 84.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 92.3,
+          "pct": 92.5,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 93.5,
+          "pct": 93.3,
           "weight": 1.6
         },
         {
@@ -3416,92 +3501,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.72374606
-    },
-    {
-      "rank": 40,
-      "rankGrund": null,
-      "ticker": "FIBRAPL/14.MX",
-      "score": 74.2,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 69.8
-      },
-      "name": "FIBRA Prologis",
-      "country": "Mexico",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 7319746815.016993,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2014,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 74.1,
-      "scoreShrunk": 71.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1.041,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 67.6,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 94.5,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 98.5,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 78.7,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 35.4,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 63.6,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 10.810404638755644,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.059174646
+      "tradingFxRateApplied": 0.7216569
     },
     {
       "rank": 41,
@@ -3522,7 +3522,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 6940628140.7924795,
+      "marketCap": 6825782054.041682,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3543,7 +3543,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 88.6,
+          "pct": 88.4,
           "weight": 1.3
         },
         {
@@ -3553,17 +3553,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 72.7,
+          "pct": 72.9,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 73.1,
+          "pct": 72.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 60.6,
+          "pct": 60.4,
           "weight": 0.8
         },
         {
@@ -3586,10 +3586,95 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 42,
+      "rankGrund": null,
+      "ticker": "FIBRAPL/14.MX",
+      "score": 74.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 69.8
+      },
+      "name": "FIBRA Prologis",
+      "country": "Mexico",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 7428333851.833368,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2014,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 74,
+      "scoreShrunk": 71.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.041,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.6,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 94.3,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 98.5,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 78.5,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 35.3,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 63.6,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 10.810404638755644,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.059213996
+    },
+    {
+      "rank": 43,
       "rankGrund": null,
       "ticker": "600748.SS",
       "score": 73.5,
@@ -3609,7 +3694,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1078048462.7951872,
+      "marketCap": 1072788146.9237863,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -3620,7 +3705,7 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 73.5,
+      "scoreBase": 73.4,
       "scoreShrunk": 70.7,
       "factors": {
         "burn": 1,
@@ -3630,7 +3715,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.4,
+          "pct": 90.2,
           "weight": 1.3
         },
         {
@@ -3645,7 +3730,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 79.1,
+          "pct": 78.9,
           "weight": 1.6
         },
         {
@@ -3673,13 +3758,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
-      "rank": 43,
+      "rank": 44,
       "rankGrund": null,
-      "ticker": "SOBHA.BO",
-      "score": 73.3,
+      "ticker": "SOBHA.NS",
+      "score": 73.2,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3695,7 +3780,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1391906556.4759982,
+      "marketCap": 1369143764.4679742,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -3706,8 +3791,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 73.2,
-      "scoreShrunk": 70.5,
+      "scoreBase": 73.1,
+      "scoreShrunk": 70.4,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -3716,32 +3801,32 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.5,
+          "pct": 93.3,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 21,
+          "pct": 20.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 74.4,
+          "pct": 74.6,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 90.4,
+          "pct": 90.2,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 32.1,
+          "pct": 32,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.4,
+          "pct": 78.2,
           "weight": 1.6
         },
         {
@@ -3759,100 +3844,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
-    },
-    {
-      "rank": 44,
-      "rankGrund": null,
-      "ticker": "DIRR3.SA",
-      "score": 73.3,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 0.228,
-        "companion": 68.3
-      },
-      "name": "Direcional Engenharia S.A.",
-      "country": "Brazil",
-      "region": "South America",
-      "sector": "Real Estate",
-      "marketCap": 1168008195.6814334,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2009,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.9,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 72.8,
-      "scoreShrunk": 70.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1.038,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 87.6,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 18.3,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 93.7,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 69.7,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.5,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 59.9,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 29.70126654860279,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.19651385
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 45,
       "rankGrund": null,
       "ticker": "MOBN.VI",
-      "score": 73.2,
+      "score": 73.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3867,7 +3865,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 3206543795.6580863,
+      "marketCap": 3171878595.866112,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -3878,8 +3876,8 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 72.4,
-      "scoreShrunk": 70.3,
+      "scoreBase": 72.3,
+      "scoreShrunk": 70.2,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -3888,12 +3886,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.7,
+          "pct": 91.5,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 91.4,
+          "pct": 91.2,
           "weight": 0.6
         },
         {
@@ -3903,7 +3901,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 87.8,
+          "pct": 87.6,
           "weight": 1.6
         },
         {
@@ -3937,7 +3935,7 @@
       "rank": 46,
       "rankGrund": null,
       "ticker": "EPRT",
-      "score": 72.8,
+      "score": 72.7,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -3952,7 +3950,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 6481520640,
+      "marketCap": 6413498368,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3978,32 +3976,32 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 47.5,
+          "pct": 47.3,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 82.6,
+          "pct": 82.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 88.6,
+          "pct": 88.4,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 50.3,
+          "pct": 50.2,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73.6,
+          "pct": 73.3,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 35.3,
+          "pct": 35.9,
           "weight": 1
         }
       ],
@@ -4019,10 +4017,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -11.8,
+        "distancePct": -12.7,
         "athDate": "2026-03-02",
         "monthsAgo": 6,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -4048,7 +4046,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 963300094.3967273,
+      "marketCap": 968744236.7814043,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4059,8 +4057,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 76.4,
-      "scoreShrunk": 70.9,
+      "scoreBase": 76.3,
+      "scoreShrunk": 70.8,
       "factors": {
         "burn": 1,
         "growth": 1.026,
@@ -4074,17 +4072,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 63,
+          "pct": 62.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 89.2,
+          "pct": 89.4,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 80.6,
+          "pct": 80.4,
           "weight": 1.6
         },
         {
@@ -4112,7 +4110,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
     },
     {
       "rank": 48,
@@ -4133,7 +4131,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1826221150.8567166,
+      "marketCap": 1794851197.2332032,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4159,17 +4157,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 94.9,
+          "pct": 94.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 69.9,
+          "pct": 70.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 71.3,
+          "pct": 71.1,
           "weight": 1.6
         },
         {
@@ -4197,106 +4195,10 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.2364761
+      "tradingFxRateApplied": 1.2352847
     },
     {
       "rank": 49,
-      "rankGrund": null,
-      "ticker": "CURB",
-      "score": 72.5,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 1.151,
-        "companion": 189.5
-      },
-      "name": "Curbline Properties Corp.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 3414328576,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 69.6,
-      "scoreShrunk": 69.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.043,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 94.1,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 88.3,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 92.5,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 95.2,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 68.6,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 38.2,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 2.4,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 52.88150330901888,
-      "profitStreak": {
-        "jahre": 2,
-        "basis": "netIncome",
-        "tiefe": 2,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -6.5,
-        "athDate": "2026-07-21",
-        "monthsAgo": 2,
-        "lastDate": "2026-09-08"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 50,
       "rankGrund": null,
       "ticker": "8975.T",
       "score": 72.5,
@@ -4314,7 +4216,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 918604424.3871663,
+      "marketCap": 922090663.7062963,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4340,17 +4242,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 90.6,
+          "pct": 90.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 80.6,
+          "pct": 80.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 76.2,
+          "pct": 76,
           "weight": 1.6
         },
         {
@@ -4378,7 +4280,103 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
+    },
+    {
+      "rank": 50,
+      "rankGrund": null,
+      "ticker": "CURB",
+      "score": 72.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": 1.151,
+        "companion": 189.5
+      },
+      "name": "Curbline Properties Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 3371764480,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 69.5,
+      "scoreShrunk": 69.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1.043,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 93.9,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 88.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 92.7,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 95,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 68.4,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 38.2,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 2.4,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 52.88150330901888,
+      "profitStreak": {
+        "jahre": 2,
+        "basis": "netIncome",
+        "tiefe": 2,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -7.7,
+        "athDate": "2026-07-21",
+        "monthsAgo": 2,
+        "lastDate": "2026-09-09"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1
     },
     {
       "rank": 51,
@@ -4399,7 +4397,7 @@
       "country": "Indonesia",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1304104466.1275826,
+      "marketCap": 1277542509.6161888,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4410,8 +4408,8 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 73.7,
-      "scoreShrunk": 70.9,
+      "scoreBase": 73.6,
+      "scoreShrunk": 70.8,
       "factors": {
         "burn": 1,
         "growth": 1.022,
@@ -4425,12 +4423,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 84.6,
+          "pct": 84.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 85.5,
+          "pct": 85.7,
           "weight": 1.5
         },
         {
@@ -4440,12 +4438,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 89.9,
+          "pct": 89.6,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.3,
+          "pct": 89,
           "weight": 1.6
         },
         {
@@ -4463,13 +4461,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.00005706134
+      "tradingFxRateApplied": 0.000057025547
     },
     {
       "rank": 52,
       "rankGrund": null,
       "ticker": "8C8U.SI",
-      "score": 72.2,
+      "score": 72.1,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -4485,7 +4483,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1558414368.9563904,
+      "marketCap": 1517463435.2968907,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4511,17 +4509,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 67.2,
+          "pct": 67,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 87.3,
+          "pct": 87.6,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 89,
+          "pct": 88.8,
           "weight": 1.6
         },
         {
@@ -4549,95 +4547,10 @@
       "qPunkte": 1,
       "qSpanTage": 0,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
+      "tradingFxRateApplied": 0.79114544
     },
     {
       "rank": 53,
-      "rankGrund": null,
-      "ticker": "C2PU.SI",
-      "score": 71.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 93.1
-      },
-      "name": "Parkway Life Real Estate Investment Trust",
-      "country": "Singapore",
-      "region": "Asia",
-      "sector": "Real Estate",
-      "marketCap": 2101544418.2007809,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2007,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.79,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 75.5,
-      "scoreShrunk": 70.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.023,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 77.7,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 77.7,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 60.6,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 89.4,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.9,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 16.104278890131084,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 4,
-      "qSpanTage": 549,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
-    },
-    {
-      "rank": 54,
       "rankGrund": null,
       "ticker": "PRESTIGE.BO",
       "score": 71.8,
@@ -4654,7 +4567,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 7027894642.367791,
+      "marketCap": 6961297056.771605,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4669,7 +4582,7 @@
       "scoreShrunk": 68.9,
       "factors": {
         "burn": 1,
-        "growth": 1.043,
+        "growth": 1.042,
         "cycle": 1
       },
       "axisBreakdown": [
@@ -4685,7 +4598,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 90,
+          "pct": 90.2,
           "weight": 1.5
         },
         {
@@ -4718,10 +4631,10 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
-      "rank": 55,
+      "rank": 54,
       "rankGrund": null,
       "ticker": "3231.T",
       "score": 71.8,
@@ -4741,7 +4654,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 5107373065.481224,
+      "marketCap": 5052829115.55027,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -4767,12 +4680,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 87.9,
+          "pct": 87.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 64.7,
+          "pct": 64.9,
           "weight": 1.5
         },
         {
@@ -4787,7 +4700,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 81.3,
+          "pct": 81.1,
           "weight": 1.6
         },
         {
@@ -4805,7 +4718,92 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
+    },
+    {
+      "rank": 55,
+      "rankGrund": null,
+      "ticker": "C2PU.SI",
+      "score": 71.7,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 93.1
+      },
+      "name": "Parkway Life Real Estate Investment Trust",
+      "country": "Singapore",
+      "region": "Asia",
+      "sector": "Real Estate",
+      "marketCap": 2080864508.3910964,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.79,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 75.4,
+      "scoreShrunk": 70.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1.023,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 77.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 77.5,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 60.6,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 89.2,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.7,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 16.104278890131084,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 4,
+      "qSpanTage": 549,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.79114544
     },
     {
       "rank": 56,
@@ -4828,7 +4826,7 @@
       "country": "Switzerland",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1098027890.8666177,
+      "marketCap": 1094412832.812,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -4854,17 +4852,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 68.4,
+          "pct": 68.2,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 84.7,
+          "pct": 84.9,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 88,
+          "pct": 87.8,
           "weight": 1.6
         },
         {
@@ -4892,13 +4890,13 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1.2364761
+      "tradingFxRateApplied": 1.2352847
     },
     {
       "rank": 57,
       "rankGrund": null,
       "ticker": "0041.HK",
-      "score": 71.6,
+      "score": 71.5,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -4913,7 +4911,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1449322106.2858138,
+      "marketCap": 1445811314.9218814,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -4924,8 +4922,8 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 70.4,
-      "scoreShrunk": 68.5,
+      "scoreBase": 70.3,
+      "scoreShrunk": 68.4,
       "factors": {
         "burn": 1,
         "growth": 1.046,
@@ -4934,7 +4932,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.2,
+          "pct": 96,
           "weight": 1.3
         },
         {
@@ -4949,7 +4947,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 94.8,
+          "pct": 94.6,
           "weight": 1.6
         },
         {
@@ -4977,13 +4975,13 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.12751362
+      "tradingFxRateApplied": 0.12754126
     },
     {
       "rank": 58,
       "rankGrund": null,
       "ticker": "NP3.ST",
-      "score": 71.5,
+      "score": 71.4,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -4998,7 +4996,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1621484290.7196212,
+      "marketCap": 1609973632.2549782,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5024,12 +5022,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 51.2,
+          "pct": 51,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 74,
+          "pct": 74.2,
           "weight": 1.5
         },
         {
@@ -5039,12 +5037,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 79.9,
+          "pct": 79.6,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 85.1,
+          "pct": 84.8,
           "weight": 1.6
         },
         {
@@ -5062,7 +5060,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.10439689
+      "tradingFxRateApplied": 0.104276486
     },
     {
       "rank": 59,
@@ -5083,7 +5081,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 7176495039.70132,
+      "marketCap": 7109451231.248515,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5109,12 +5107,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 22.9,
+          "pct": 22.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 72.9,
+          "pct": 73.1,
           "weight": 1.5
         },
         {
@@ -5124,7 +5122,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 72.3,
+          "pct": 72,
           "weight": 0.8
         },
         {
@@ -5147,7 +5145,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 60,
@@ -5169,7 +5167,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 12293695488,
+      "marketCap": 11985744896,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -5195,12 +5193,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 74.8,
+          "pct": 74.6,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 71.5,
+          "pct": 71.7,
           "weight": 1.5
         },
         {
@@ -5210,7 +5208,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 83.2,
+          "pct": 82.9,
           "weight": 0.8
         },
         {
@@ -5236,10 +5234,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -69.6,
+        "distancePct": -70.3,
         "athDate": "2021-10-26",
         "monthsAgo": 58,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -5250,7 +5248,7 @@
       "rank": 61,
       "rankGrund": null,
       "ticker": "YVIV.MC",
-      "score": 71,
+      "score": 70.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -5278,7 +5276,7 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 73,
+      "scoreBase": 72.9,
       "scoreShrunk": 68.2,
       "factors": {
         "burn": 1,
@@ -5288,22 +5286,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91,
+          "pct": 90.8,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 69.1,
+          "pct": 69,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 91.3,
+          "pct": 91.5,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 80.4,
+          "pct": 80.3,
           "weight": 1.6
         },
         {
@@ -5352,7 +5350,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 995825723.3926848,
+      "marketCap": 991481919.1700544,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5363,7 +5361,7 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 74.3,
+      "scoreBase": 74.2,
       "scoreShrunk": 69.2,
       "factors": {
         "burn": 1,
@@ -5378,17 +5376,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 76.3,
+          "pct": 76.1,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 66.6,
+          "pct": 66.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 71.7,
+          "pct": 71.5,
           "weight": 1.6
         },
         {
@@ -5398,7 +5396,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 84.6,
+          "pct": 84.4,
           "weight": 1.6
         },
         {
@@ -5422,7 +5420,7 @@
       "rank": 63,
       "rankGrund": null,
       "ticker": "INTEA-B.ST",
-      "score": 70.4,
+      "score": 70.3,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5439,7 +5437,7 @@
       "country": "Sweden",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 2171572049.4375734,
+      "marketCap": 2172084235.3461084,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -5465,12 +5463,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 41.3,
+          "pct": 41.1,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 90.4,
+          "pct": 90.6,
           "weight": 1.5
         },
         {
@@ -5480,12 +5478,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 29.4,
+          "pct": 29.3,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 73.3,
+          "pct": 73.1,
           "weight": 1.6
         },
         {
@@ -5503,7 +5501,7 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.10439689
+      "tradingFxRateApplied": 0.104276486
     },
     {
       "rank": 64,
@@ -5525,7 +5523,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 8252179456,
+      "marketCap": 8198444544,
       "phase": "unprofitable",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5546,27 +5544,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.6,
+          "pct": 96.4,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 76.9,
+          "pct": 76.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 86.5,
+          "pct": 86.7,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 96.6,
+          "pct": 96.4,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 53.3,
+          "pct": 53.1,
           "weight": 0.8
         },
         {
@@ -5576,7 +5574,7 @@
         },
         {
           "key": "dilution",
-          "pct": 25.4,
+          "pct": 25.9,
           "weight": 1
         }
       ],
@@ -5592,10 +5590,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -46.7,
+        "distancePct": -47,
         "athDate": "2021-04-01",
         "monthsAgo": 65,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -5624,7 +5622,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 8675959113.139093,
+      "marketCap": 8611873314.483732,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5635,7 +5633,7 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 72.4,
+      "scoreBase": 72.3,
       "scoreShrunk": 67.7,
       "factors": {
         "burn": 1,
@@ -5650,12 +5648,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 21.6,
+          "pct": 21.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 83.6,
+          "pct": 83.8,
           "weight": 1.5
         },
         {
@@ -5670,7 +5668,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 84.2,
+          "pct": 84,
           "weight": 1.6
         },
         {
@@ -5685,15 +5683,15 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -21.9,
+        "distancePct": -22.5,
         "athDate": "2006-10-23",
         "monthsAgo": 239,
-        "lastDate": "2026-09-09"
+        "lastDate": "2026-09-10"
       },
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
     },
     {
       "rank": 66,
@@ -5713,7 +5711,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1733418703.4440703,
+      "marketCap": 1721935500.9744844,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -5744,17 +5742,17 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 67.8,
+          "pct": 68,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 70.9,
+          "pct": 70.7,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 35.7,
+          "pct": 35.6,
           "weight": 0.8
         },
         {
@@ -5777,13 +5775,13 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.2698429
+      "tradingFxRateApplied": 0.26967987
     },
     {
       "rank": 67,
       "rankGrund": null,
       "ticker": "600895.SS",
-      "score": 69.6,
+      "score": 69.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -5800,7 +5798,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 6733031384.88275,
+      "marketCap": 6674489837.184532,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -5812,7 +5810,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 68.6,
-      "scoreShrunk": 66.5,
+      "scoreShrunk": 66.4,
       "factors": {
         "burn": 1,
         "growth": 1.047,
@@ -5821,7 +5819,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.8,
+          "pct": 96.6,
           "weight": 1.3
         },
         {
@@ -5836,7 +5834,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 96.4,
+          "pct": 96.2,
           "weight": 1.6
         },
         {
@@ -5864,13 +5862,13 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
     },
     {
       "rank": null,
       "rankGrund": "zuWenigBelegteAchsen",
       "ticker": "DGT.AX",
-      "score": 69.6,
+      "score": 69.5,
       "track": "profitable",
       "lamps": [
         "unprofit"
@@ -5884,7 +5882,7 @@
       "country": "Australia",
       "region": "Oceania",
       "sector": "Real Estate",
-      "marketCap": 1108659829.5285554,
+      "marketCap": 1073183388.8496768,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -5895,7 +5893,7 @@
       "coverageWeight": 0.35,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 96,
+      "scoreBase": 95.8,
       "scoreShrunk": 66.5,
       "factors": {
         "burn": 1,
@@ -5905,7 +5903,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 96.4,
+          "pct": 96.2,
           "weight": 1.3
         },
         {
@@ -5920,7 +5918,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 95.6,
+          "pct": 95.4,
           "weight": 1.6
         },
         {
@@ -5939,7 +5937,7 @@
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 95.62737642585553,
+      "revGrowthYoYPct": 95.6273764258555,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
@@ -5948,106 +5946,10 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.72374606
+      "tradingFxRateApplied": 0.7216569
     },
     {
       "rank": 68,
-      "rankGrund": null,
-      "ticker": "GTY",
-      "score": 69.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 0.085,
-        "companion": 71.6
-      },
-      "name": "Getty Realty Corp.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 2019625344,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 68.5,
-      "scoreShrunk": 68.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.017,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 68,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 46.9,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 81,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 80.8,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 83.6,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 78.9,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 14.9,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 10.879321028221645,
-      "profitStreak": {
-        "jahre": 15,
-        "basis": "opInc",
-        "tiefe": 15,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -10.9,
-        "athDate": "2026-07-21",
-        "monthsAgo": 2,
-        "lastDate": "2026-09-08"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 69,
       "rankGrund": null,
       "ticker": "3287.T",
       "score": 69.5,
@@ -6066,7 +5968,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 899372738.7691255,
+      "marketCap": 899268101.2897383,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6092,17 +5994,17 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 67.4,
+          "pct": 67.2,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 85.7,
+          "pct": 85.9,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 86.1,
+          "pct": 85.9,
           "weight": 1.6
         },
         {
@@ -6130,96 +6032,10 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
     },
     {
-      "rank": 70,
-      "rankGrund": null,
-      "ticker": "8923.T",
-      "score": 69.5,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 0.21,
-        "companion": 62.9
-      },
-      "name": "Tosei Corporation",
-      "country": "Japan",
-      "region": "Asia",
-      "sector": "Real Estate",
-      "marketCap": 1072327444.2500998,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 69.5,
-      "scoreShrunk": 67.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1.034,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 87.1,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 31.4,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 78.1,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 67.2,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 22.1,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 87.3,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 27.34484086914413,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 457,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
-    },
-    {
-      "rank": 71,
+      "rank": 69,
       "rankGrund": null,
       "ticker": "U14.SI",
       "score": 69.5,
@@ -6237,7 +6053,7 @@
       "country": "Singapore",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 5892806289.83255,
+      "marketCap": 5839404948.026327,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6248,8 +6064,8 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 69.3,
-      "scoreShrunk": 67.5,
+      "scoreBase": 69.4,
+      "scoreShrunk": 67.6,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -6263,12 +6079,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 80.2,
+          "pct": 80,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 79.1,
+          "pct": 79.3,
           "weight": 1.5
         },
         {
@@ -6301,7 +6117,189 @@
       "qPunkte": 4,
       "qSpanTage": 640,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.7911142
+      "tradingFxRateApplied": 0.79114544
+    },
+    {
+      "rank": 70,
+      "rankGrund": null,
+      "ticker": "GTY",
+      "score": 69.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": 0.085,
+        "companion": 71.6
+      },
+      "name": "Getty Realty Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 2028915200,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 68.4,
+      "scoreShrunk": 68.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1.017,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 68,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 46.7,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 81.2,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 80.6,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 83.3,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.7,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 14.9,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 10.879321028221645,
+      "profitStreak": {
+        "jahre": 15,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -10.5,
+        "athDate": "2026-07-21",
+        "monthsAgo": 2,
+        "lastDate": "2026-09-09"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1
+    },
+    {
+      "rank": 71,
+      "rankGrund": null,
+      "ticker": "8923.T",
+      "score": 69.5,
+      "track": "profitable",
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": 0.21,
+        "companion": 62.9
+      },
+      "name": "Tosei Corporation",
+      "country": "Japan",
+      "region": "Asia",
+      "sector": "Real Estate",
+      "marketCap": 1062262833.4790246,
+      "phase": "established",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 69.4,
+      "scoreShrunk": 67.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.034,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.1,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 31.2,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 78.3,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.2,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 22,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 87.1,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 27.34484086914413,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 457,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.00651814
     },
     {
       "rank": 72,
@@ -6323,10 +6321,10 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 2061028096,
+      "marketCap": 1957362048,
       "phase": "established",
       "mcapBand": "mid",
-      "mcapKlasse": "mid",
+      "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
       "ipoYear": 2020,
@@ -6335,7 +6333,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 66.6,
-      "scoreShrunk": 66.5,
+      "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
         "growth": 1.036,
@@ -6349,22 +6347,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 44.4,
+          "pct": 44.2,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 82,
+          "pct": 82.2,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 93.1,
+          "pct": 92.9,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 73.9,
+          "pct": 73.7,
           "weight": 0.8
         },
         {
@@ -6374,7 +6372,7 @@
         },
         {
           "key": "dilution",
-          "pct": 36.9,
+          "pct": 37.4,
           "weight": 1
         }
       ],
@@ -6390,10 +6388,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -9.2,
+        "distancePct": -10,
         "athDate": "2026-07-17",
         "monthsAgo": 2,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -6419,7 +6417,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 7197489664,
+      "marketCap": 7104864256,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6431,7 +6429,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 66.9,
-      "scoreShrunk": 66.9,
+      "scoreShrunk": 66.8,
       "factors": {
         "burn": 1,
         "growth": 1.031,
@@ -6445,22 +6443,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 74.2,
+          "pct": 74,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 86.1,
+          "pct": 86.3,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 89.2,
+          "pct": 89,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 65.3,
+          "pct": 65.1,
           "weight": 0.8
         },
         {
@@ -6486,10 +6484,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -12,
+        "distancePct": -13.2,
         "athDate": "2026-07-16",
         "monthsAgo": 2,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -6516,7 +6514,7 @@
       "country": "India",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 2975077707.4298387,
+      "marketCap": 2930221092.7790656,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6527,37 +6525,37 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 68.1,
-      "scoreShrunk": 66,
+      "scoreBase": 68,
+      "scoreShrunk": 65.9,
       "factors": {
         "burn": 1,
-        "growth": 1.042,
+        "growth": 1.041,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 94.6,
+          "pct": 94.5,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 93.7,
+          "pct": 93.5,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 81.4,
+          "pct": 81.6,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 92.3,
+          "pct": 92.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 56.6,
+          "pct": 56.5,
           "weight": 0.8
         },
         {
@@ -6580,12 +6578,12 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.010513036
+      "tradingFxRateApplied": 0.010494556
     },
     {
       "rank": 75,
       "rankGrund": null,
-      "ticker": "AED.VI",
+      "ticker": "AED.BR",
       "score": 68.4,
       "track": "profitable",
       "lamps": [
@@ -6602,7 +6600,7 @@
       "country": "Belgium",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 6544450453.6857605,
+      "marketCap": 6466714671.487488,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -6613,7 +6611,7 @@
       "coverageWeight": 0.88,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 68.8,
+      "scoreBase": 68.7,
       "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
@@ -6628,7 +6626,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 88.1,
+          "pct": 87.9,
           "weight": 0.6
         },
         {
@@ -6643,7 +6641,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 91.9,
+          "pct": 91.6,
           "weight": 0.8
         },
         {
@@ -6672,7 +6670,7 @@
       "rank": 76,
       "rankGrund": null,
       "ticker": "DLN.L",
-      "score": 68.4,
+      "score": 68.3,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -6687,7 +6685,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 2852949173.39136,
+      "marketCap": 2790408675.0886273,
       "phase": "inflected",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6698,8 +6696,8 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 67.3,
-      "scoreShrunk": 65.7,
+      "scoreBase": 67.2,
+      "scoreShrunk": 65.6,
       "factors": {
         "burn": 1,
         "growth": 1.041,
@@ -6708,12 +6706,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.9,
+          "pct": 91.7,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 92.7,
+          "pct": 92.6,
           "weight": 0.6
         },
         {
@@ -6723,7 +6721,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 90.2,
+          "pct": 90,
           "weight": 1.6
         },
         {
@@ -6751,7 +6749,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.01355877
+      "tradingFxRateApplied": 0.013553073
     },
     {
       "rank": 77,
@@ -6773,7 +6771,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 942872832,
+      "marketCap": 940484736,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -6799,22 +6797,22 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 72.1,
+          "pct": 71.9,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 88,
+          "pct": 88.2,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 86.3,
+          "pct": 86.1,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 61.6,
+          "pct": 61.4,
           "weight": 0.8
         },
         {
@@ -6848,6 +6846,93 @@
     {
       "rank": 78,
       "rankGrund": null,
+      "ticker": "PUBLI.ST",
+      "score": 68.1,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 719.8
+      },
+      "name": "PPI Public Property Invest AB (publ)",
+      "country": "Sweden",
+      "region": "Europe",
+      "sector": "Real Estate",
+      "marketCap": 1890877574.3955846,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 66.8,
+      "scoreShrunk": 64.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1.049,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 99.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.9,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 94.5,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 99.9,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 10.1,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 0.1,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 304.0358744394619,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 456,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.104276486
+    },
+    {
+      "rank": 79,
+      "rankGrund": null,
       "ticker": "DANHOS/13.MX",
       "score": 68.1,
       "track": "profitable",
@@ -6864,7 +6949,7 @@
       "country": "Mexico",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 2822979928.289501,
+      "marketCap": 2804727504.4871535,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -6890,27 +6975,27 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 49,
+          "pct": 48.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 73.6,
+          "pct": 73.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 74.4,
+          "pct": 74.2,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 48.3,
+          "pct": 48.2,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 81.7,
+          "pct": 81.5,
           "weight": 1.6
         },
         {
@@ -6928,100 +7013,13 @@
       "qPunkte": 5,
       "qSpanTage": 456,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.059174646
-    },
-    {
-      "rank": 79,
-      "rankGrund": null,
-      "ticker": "PUBLI.OL",
-      "score": 68,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 611.4
-      },
-      "name": "PPI Public Property Invest AB (publ)",
-      "country": "Sweden",
-      "region": "Europe",
-      "sector": "Real Estate",
-      "marketCap": 1909141307.2794318,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 66.7,
-      "scoreShrunk": 64.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1.049,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 99.3,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 93.1,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 94.5,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 99.2,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 10.1,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 0.1,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 304.03587443946185,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 456,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.108679935
+      "tradingFxRateApplied": 0.059213996
     },
     {
       "rank": 80,
       "rankGrund": null,
       "ticker": "4150.SR",
-      "score": 67.8,
+      "score": 67.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -7037,7 +7035,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Real Estate",
-      "marketCap": 982473319.2741683,
+      "marketCap": 984394750.306683,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -7049,7 +7047,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 67.2,
-      "scoreShrunk": 65.3,
+      "scoreShrunk": 65.2,
       "factors": {
         "burn": 1,
         "growth": 1.039,
@@ -7058,27 +7056,27 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.3,
+          "pct": 93.1,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 89.5,
+          "pct": 89.3,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 90.8,
+          "pct": 91,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 94.5,
+          "pct": 94.3,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 38,
+          "pct": 37.9,
           "weight": 0.8
         },
         {
@@ -7101,7 +7099,7 @@
       "qPunkte": 5,
       "qSpanTage": 365,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.26631868
+      "tradingFxRateApplied": 0.26633286
     },
     {
       "rank": 81,
@@ -7123,7 +7121,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 1741215211.5819647,
+      "marketCap": 1736718820.6376448,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -7135,7 +7133,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 68.8,
-      "scoreShrunk": 65,
+      "scoreShrunk": 64.9,
       "factors": {
         "burn": 1,
         "growth": 1.042,
@@ -7144,7 +7142,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.7,
+          "pct": 92.5,
           "weight": 1.3
         },
         {
@@ -7154,12 +7152,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 90.6,
+          "pct": 90.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 87.1,
+          "pct": 86.9,
           "weight": 1.6
         },
         {
@@ -7220,7 +7218,7 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 66.7,
+      "scoreBase": 66.6,
       "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
@@ -7235,7 +7233,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 70.4,
+          "pct": 70.2,
           "weight": 0.6
         },
         {
@@ -7245,12 +7243,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 85.8,
+          "pct": 85.6,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 80.7,
+          "pct": 80.5,
           "weight": 0.8
         },
         {
@@ -7260,7 +7258,7 @@
         },
         {
           "key": "dilution",
-          "pct": 40.3,
+          "pct": 40.8,
           "weight": 1
         }
       ],
@@ -7295,7 +7293,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 134615212032,
+      "marketCap": 131873923072,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7306,7 +7304,7 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 66.7,
+      "scoreBase": 66.6,
       "scoreShrunk": 66.6,
       "factors": {
         "burn": 1,
@@ -7321,7 +7319,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 70.4,
+          "pct": 70.2,
           "weight": 0.6
         },
         {
@@ -7331,12 +7329,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 85.8,
+          "pct": 85.6,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 80.7,
+          "pct": 80.5,
           "weight": 0.8
         },
         {
@@ -7346,7 +7344,7 @@
         },
         {
           "key": "dilution",
-          "pct": 40.3,
+          "pct": 40.8,
           "weight": 1
         }
       ],
@@ -7386,7 +7384,7 @@
       "country": "Canada",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 4870194176,
+      "marketCap": 4846175232,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -7398,7 +7396,7 @@
       "cohortN": 524,
       "cohortFallback": false,
       "scoreBase": 65.6,
-      "scoreShrunk": 65.5,
+      "scoreShrunk": 65.6,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -7412,12 +7410,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 69,
+          "pct": 68.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 75.6,
+          "pct": 75.8,
           "weight": 1.5
         },
         {
@@ -7427,17 +7425,17 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 39,
+          "pct": 38.9,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 89.7,
+          "pct": 89.5,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 33.2,
+          "pct": 33.8,
           "weight": 1
         }
       ],
@@ -7453,10 +7451,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -43.6,
+        "distancePct": -43.8,
         "athDate": "2025-10-23",
         "monthsAgo": 11,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -7467,7 +7465,7 @@
       "rank": 85,
       "rankGrund": null,
       "ticker": "WELL",
-      "score": 67.4,
+      "score": 67.3,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -7482,7 +7480,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 170955718656,
+      "marketCap": 169982935040,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7497,28 +7495,28 @@
       "scoreShrunk": 64.8,
       "factors": {
         "burn": 1,
-        "growth": 1.04,
+        "growth": 1.039,
         "cycle": 1
       },
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 90.2,
+          "pct": 90,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 83.7,
+          "pct": 83.5,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 91.9,
+          "pct": 92.1,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 89.6,
+          "pct": 89.4,
           "weight": 1.6
         },
         {
@@ -7549,10 +7547,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -5.9,
+        "distancePct": -6.4,
         "athDate": "2026-07-24",
         "monthsAgo": 2,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 456,
@@ -7561,91 +7559,6 @@
     },
     {
       "rank": 86,
-      "rankGrund": null,
-      "ticker": "BLND.L",
-      "score": 67.3,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 70.4
-      },
-      "name": "British Land Company PLC",
-      "country": "United Kingdom",
-      "region": "Europe",
-      "sector": "Real Estate",
-      "marketCap": 5739408163.475712,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1988,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.79,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 69.4,
-      "scoreShrunk": 65.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1.028,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 76.4,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 92.9,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 59.4,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 77.7,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 56.1,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 15.19823788546255,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 0,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.01355877
-    },
-    {
-      "rank": 87,
       "rankGrund": null,
       "ticker": "MMI",
       "score": 67.2,
@@ -7662,7 +7575,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 1186498560,
+      "marketCap": 1175894656,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -7673,7 +7586,7 @@
       "coverageWeight": 1,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 65.7,
+      "scoreBase": 65.6,
       "scoreShrunk": 65.6,
       "factors": {
         "burn": 1,
@@ -7688,12 +7601,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 56.2,
+          "pct": 56,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 63.3,
+          "pct": 63.5,
           "weight": 1.5
         },
         {
@@ -7703,7 +7616,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 76.2,
+          "pct": 76,
           "weight": 0.8
         },
         {
@@ -7735,6 +7648,91 @@
       "tradingFxRateApplied": 1
     },
     {
+      "rank": 87,
+      "rankGrund": null,
+      "ticker": "BLND.L",
+      "score": 67.2,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 70.4
+      },
+      "name": "British Land Company PLC",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Real Estate",
+      "marketCap": 5639759382.750336,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1988,
+      "coverageAxes": "5/7",
+      "coverageWeight": 0.79,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 69.4,
+      "scoreShrunk": 65.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1.028,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 76.4,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.7,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 59.4,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 77.5,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 56.1,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 15.19823788546255,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 0,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.013553073
+    },
+    {
       "rank": 88,
       "rankGrund": null,
       "ticker": "0016.HK",
@@ -7750,7 +7748,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 43527859338.107285,
+      "marketCap": 43278585012.23448,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -7761,7 +7759,7 @@
       "coverageWeight": 0.54,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 78.5,
+      "scoreBase": 78.4,
       "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
@@ -7776,7 +7774,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 80,
+          "pct": 79.8,
           "weight": 0.6
         },
         {
@@ -7786,7 +7784,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 77.3,
+          "pct": 77.1,
           "weight": 1.6
         },
         {
@@ -7805,7 +7803,7 @@
           "weight": 1
         }
       ],
-      "revGrowthYoYPct": 11.48854641568542,
+      "revGrowthYoYPct": 11.488546415685397,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
@@ -7814,7 +7812,7 @@
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.12751362
+      "tradingFxRateApplied": 0.12754126
     },
     {
       "rank": 89,
@@ -7839,7 +7837,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1143450894.7479594,
+      "marketCap": 1141956622.5181901,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -7865,12 +7863,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 79.6,
+          "pct": 79.4,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 84.9,
+          "pct": 85.1,
           "weight": 1.5
         },
         {
@@ -7903,18 +7901,18 @@
         "distancePct": -17.4,
         "athDate": "2026-01-16",
         "monthsAgo": 8,
-        "lastDate": "2026-09-09"
+        "lastDate": "2026-09-10"
       },
       "qPunkte": 0,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
     },
     {
       "rank": 90,
       "rankGrund": null,
-      "ticker": "MRL.LS",
-      "score": 67,
+      "ticker": "MRL.MC",
+      "score": 66.9,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -7931,7 +7929,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Real Estate",
-      "marketCap": 9478758676.383743,
+      "marketCap": 9413885477.9904,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mid",
@@ -7942,8 +7940,8 @@
       "coverageWeight": 0.7,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 71.1,
-      "scoreShrunk": 65.1,
+      "scoreBase": 71,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1.029,
@@ -7957,7 +7955,7 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 83.3,
+          "pct": 83.1,
           "weight": 0.6
         },
         {
@@ -7967,12 +7965,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 89.8,
+          "pct": 89.6,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 67.6,
+          "pct": 67.4,
           "weight": 0.8
         },
         {
@@ -8016,7 +8014,7 @@
       "country": "Hong Kong",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1706972446.304686,
+      "marketCap": 1699807877.2111359,
       "phase": "established",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -8027,7 +8025,7 @@
       "coverageWeight": 0.9,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 67.4,
+      "scoreBase": 67.3,
       "scoreShrunk": 65.7,
       "factors": {
         "burn": 1,
@@ -8042,12 +8040,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 31.2,
+          "pct": 31,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 74.8,
+          "pct": 75,
           "weight": 1.5
         },
         {
@@ -8062,7 +8060,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.2,
+          "pct": 86,
           "weight": 1.6
         },
         {
@@ -8080,99 +8078,13 @@
       "qPunkte": 3,
       "qSpanTage": 182,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.12751362
+      "tradingFxRateApplied": 0.12754126
     },
     {
       "rank": 92,
       "rankGrund": null,
-      "ticker": "CENCOMALLS.SN",
-      "score": 66.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": null,
-        "companion": 79.1
-      },
-      "name": "Cencosud Shopping S.A.",
-      "country": "Chile",
-      "region": "South America",
-      "sector": "Real Estate",
-      "marketCap": 4556495513.071308,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2019,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.88,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 65.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1.012,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 62.7,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 29.9,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 59,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 84.3,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 46.7,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 88.8,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 9.25324704231032,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.0010813851
-    },
-    {
-      "rank": 93,
-      "rankGrund": null,
       "ticker": "600675.SS",
-      "score": 66.6,
+      "score": 66.5,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -8189,7 +8101,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 2082325323.2545896,
+      "marketCap": 2064758220.8758988,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -8210,22 +8122,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 93.7,
+          "pct": 93.5,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 31,
+          "pct": 30.9,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 87.6,
+          "pct": 87.8,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 90.8,
+          "pct": 90.6,
           "weight": 1.6
         },
         {
@@ -8253,7 +8165,93 @@
       "qPunkte": 5,
       "qSpanTage": 455,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.14909351
+      "tradingFxRateApplied": 0.14912686
+    },
+    {
+      "rank": 93,
+      "rankGrund": null,
+      "ticker": "CENCOMALLS.SN",
+      "score": 66.5,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": null,
+        "companion": 79.1
+      },
+      "name": "Cencosud Shopping S.A.",
+      "country": "Chile",
+      "region": "South America",
+      "sector": "Real Estate",
+      "marketCap": 4525407512.7883625,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "growth",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.88,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 67.8,
+      "scoreShrunk": 65.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1.012,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 62.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 29.7,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 59,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 84.1,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 46.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 88.6,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 9.25324704231032,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 0.0010785043
     },
     {
       "rank": 94,
@@ -8277,7 +8275,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 2487932672,
+      "marketCap": 2436960256,
       "phase": "established",
       "mcapBand": "mid",
       "mcapKlasse": "mid",
@@ -8298,7 +8296,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 98.2,
+          "pct": 98,
           "weight": 1.3
         },
         {
@@ -8308,12 +8306,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 82.8,
+          "pct": 83,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 98.2,
+          "pct": 98,
           "weight": 1.6
         },
         {
@@ -8328,7 +8326,7 @@
         },
         {
           "key": "dilution",
-          "pct": 53.1,
+          "pct": 53.7,
           "weight": 1
         }
       ],
@@ -8344,10 +8342,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -60.5,
+        "distancePct": -61.3,
         "athDate": "2016-09-26",
         "monthsAgo": 119,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -8358,7 +8356,7 @@
       "rank": 95,
       "rankGrund": null,
       "ticker": "JAN",
-      "score": 66,
+      "score": 65.9,
       "track": "profitable",
       "lamps": [
         "unprofit",
@@ -8374,7 +8372,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 9609705472,
+      "marketCap": 9619014656,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "mid",
@@ -8385,8 +8383,8 @@
       "coverageWeight": 0.7,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 68.6,
-      "scoreShrunk": 63.4,
+      "scoreBase": 68.5,
+      "scoreShrunk": 63.3,
       "factors": {
         "burn": 1,
         "growth": 1.042,
@@ -8395,12 +8393,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 92.9,
+          "pct": 92.7,
           "weight": 1.3
         },
         {
           "key": "revAcceleration",
-          "pct": 79.8,
+          "pct": 79.6,
           "weight": 0.6
         },
         {
@@ -8410,12 +8408,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 88.2,
+          "pct": 88,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 28.4,
+          "pct": 28.3,
           "weight": 0.8
         },
         {
@@ -8443,6 +8441,102 @@
     {
       "rank": 96,
       "rankGrund": null,
+      "ticker": "ADC",
+      "score": 65.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": 0.118,
+        "companion": 96.2
+      },
+      "name": "Agree Realty Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 9054065664,
+      "phase": "established",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 64,
+      "scoreShrunk": 64,
+      "factors": {
+        "burn": 1,
+        "growth": 1.029,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 78.7,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 60.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 73.4,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 89.8,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 43.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 55,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 22.8,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 16.84812023221498,
+      "profitStreak": {
+        "jahre": 15,
+        "basis": "opInc",
+        "tiefe": 15,
+        "mindestens": true,
+        "letzterVerlust": null
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -10.5,
+        "athDate": "2026-07-17",
+        "monthsAgo": 2,
+        "lastDate": "2026-09-09"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1
+    },
+    {
+      "rank": 97,
+      "rankGrund": null,
       "ticker": "EGP",
       "score": 65.8,
       "track": "profitable",
@@ -8459,7 +8553,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Real Estate",
-      "marketCap": 10767568896,
+      "marketCap": 10642277376,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8485,32 +8579,32 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 53.9,
+          "pct": 53.7,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 70.1,
+          "pct": 70.3,
           "weight": 1.5
         },
         {
           "key": "ruleOfX",
-          "pct": 81.4,
+          "pct": 81.2,
           "weight": 1.6
         },
         {
           "key": "marginTrajectory",
-          "pct": 54,
+          "pct": 53.8,
           "weight": 0.8
         },
         {
           "key": "capitalEfficiency",
-          "pct": 74.9,
+          "pct": 74.7,
           "weight": 1.6
         },
         {
           "key": "dilution",
-          "pct": 30.6,
+          "pct": 31.2,
           "weight": 1
         }
       ],
@@ -8526,106 +8620,10 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": {
-        "distancePct": -10.4,
+        "distancePct": -11.4,
         "athDate": "2026-07-16",
         "monthsAgo": 2,
-        "lastDate": "2026-09-08"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 97,
-      "rankGrund": null,
-      "ticker": "ADC",
-      "score": 65.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 0.118,
-        "companion": 96.2
-      },
-      "name": "Agree Realty Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 9077625856,
-      "phase": "established",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1994,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 64,
-      "scoreShrunk": 63.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1.029,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 78.7,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 60.3,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 73.1,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 90,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 44,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 55,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 22.3,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 16.84812023221498,
-      "profitStreak": {
-        "jahre": 15,
-        "basis": "opInc",
-        "tiefe": 15,
-        "mindestens": true,
-        "letzterVerlust": null
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -10.3,
-        "athDate": "2026-07-17",
-        "monthsAgo": 2,
-        "lastDate": "2026-09-08"
+        "lastDate": "2026-09-09"
       },
       "qPunkte": 5,
       "qSpanTage": 365,
@@ -8635,104 +8633,8 @@
     {
       "rank": 98,
       "rankGrund": null,
-      "ticker": "VTR",
-      "score": 65.8,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "ffo-badge",
-        "value": 0.219,
-        "companion": 73.1
-      },
-      "name": "Ventas, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Real Estate",
-      "marketCap": 46098493440,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1997,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 524,
-      "cohortFallback": false,
-      "scoreBase": 63.7,
-      "scoreShrunk": 63.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1.033,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 83.2,
-          "weight": 1.3
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 77.3,
-          "weight": 0.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 65.1,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 76.9,
-          "weight": 1.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 40,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 39.3,
-          "weight": 1.6
-        },
-        {
-          "key": "dilution",
-          "pct": 65.2,
-          "weight": 1
-        }
-      ],
-      "revGrowthYoYPct": 21.72725180573063,
-      "profitStreak": {
-        "jahre": 0,
-        "basis": "netIncome",
-        "tiefe": 16,
-        "mindestens": false,
-        "letzterVerlust": 2025
-      },
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": {
-        "distancePct": -10.6,
-        "athDate": "2026-07-24",
-        "monthsAgo": 2,
-        "lastDate": "2026-09-08"
-      },
-      "qPunkte": 5,
-      "qSpanTage": 365,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 1
-    },
-    {
-      "rank": 99,
-      "rankGrund": null,
       "ticker": "8803.T",
-      "score": 65.7,
+      "score": 65.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -8748,7 +8650,7 @@
       "country": "Japan",
       "region": "Asia",
       "sector": "Real Estate",
-      "marketCap": 1011294789.2940965,
+      "marketCap": 1001273340.4626944,
       "phase": "established",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -8759,8 +8661,8 @@
       "coverageWeight": 0.79,
       "cohortN": 524,
       "cohortFallback": false,
-      "scoreBase": 67.1,
-      "scoreShrunk": 63.6,
+      "scoreBase": 67.2,
+      "scoreShrunk": 63.7,
       "factors": {
         "burn": 1,
         "growth": 1.033,
@@ -8774,12 +8676,12 @@
         },
         {
           "key": "revAcceleration",
-          "pct": 90,
+          "pct": 89.8,
           "weight": 0.6
         },
         {
           "key": "gpGrowth",
-          "pct": 75.4,
+          "pct": 75.6,
           "weight": 1.5
         },
         {
@@ -8812,7 +8714,103 @@
       "qPunkte": 4,
       "qSpanTage": 273,
       "marketCapCurrency": "USD",
-      "tradingFxRateApplied": 0.006521668
+      "tradingFxRateApplied": 0.00651814
+    },
+    {
+      "rank": 99,
+      "rankGrund": null,
+      "ticker": "VTR",
+      "score": 65.7,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "ffo-badge",
+        "value": 0.219,
+        "companion": 73.1
+      },
+      "name": "Ventas, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Real Estate",
+      "marketCap": 45847146496,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1997,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 524,
+      "cohortFallback": false,
+      "scoreBase": 63.7,
+      "scoreShrunk": 63.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1.033,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 83.2,
+          "weight": 1.3
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 77.1,
+          "weight": 0.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.3,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 76.8,
+          "weight": 1.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 39.9,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 39.3,
+          "weight": 1.6
+        },
+        {
+          "key": "dilution",
+          "pct": 65.2,
+          "weight": 1
+        }
+      ],
+      "revGrowthYoYPct": 21.72725180573063,
+      "profitStreak": {
+        "jahre": 0,
+        "basis": "netIncome",
+        "tiefe": 16,
+        "mindestens": false,
+        "letzterVerlust": 2025
+      },
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": {
+        "distancePct": -11.1,
+        "athDate": "2026-07-24",
+        "monthsAgo": 2,
+        "lastDate": "2026-09-09"
+      },
+      "qPunkte": 5,
+      "qSpanTage": 365,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": 1
     }
   ],
   "unprofitable": [],
