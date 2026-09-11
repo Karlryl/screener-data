@@ -30,25 +30,25 @@
     "BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein",
     "Gericht, nicht in eine Meldeform."
   ],
-  "stand": "2026-09-10",
-  "gelesen": 16061,
+  "stand": "2026-09-11",
+  "gelesen": 15983,
   "unlesbar": 0,
   "messebene": "vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs",
   "zaehlung": {
-    "ankerA": 1553,
+    "ankerA": 1562,
     "ankerA_ausgenommen": 19,
-    "ankerA_ohneBasis": 918,
+    "ankerA_ohneBasis": 899,
     "ankerA_klassen": 9,
-    "ankerB": 43,
-    "ankerB_klassen": 2
+    "ankerB": 35,
+    "ankerB_klassen": 1
   },
   "ankerA": {
     "ausgefallen": false,
-    "gemeldet": 1553,
+    "gemeldet": 1562,
     "klassen": [
       {
         "klasse": "Groessenordnung 1e0",
-        "gemeldet": 1116,
+        "gemeldet": 1125,
         "gelistet": 5,
         "beispiele": [
           {
@@ -120,7 +120,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-1",
-        "gemeldet": 347,
+        "gemeldet": 348,
         "gelistet": 5,
         "beispiele": [
           {
@@ -192,7 +192,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-2",
-        "gemeldet": 38,
+        "gemeldet": 37,
         "gelistet": 5,
         "beispiele": [
           {
@@ -282,6 +282,19 @@
           },
           {
             "anker": "A",
+            "wert": 22.354884371375945,
+            "ticker": "6949.TW",
+            "name": "Pell Bio-Med Technology Co., Ltd.",
+            "nameSource": "longName",
+            "schluessel": "pellbiomedtechnologycoltd",
+            "fingerabdruck": "[31424000,19631000,18033000,17157000]|null",
+            "shares": 1310801000,
+            "jahresAktien": 58636000,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
             "wert": 21.71056371441803,
             "ticker": "PACK.JK",
             "name": "PT Abadi Nusantara Hijau Investama Tbk",
@@ -316,19 +329,6 @@
             "fingerabdruck": "[4723765,3329256,8037105,9695402]|null",
             "shares": 121705513,
             "jahresAktien": 7414846,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 10.743603786805101,
-            "ticker": "EUZ.DE",
-            "name": "Eckert & Ziegler SE",
-            "nameSource": "fehlt",
-            "schluessel": "eckertzieglerse",
-            "fingerabdruck": "[311960000,295850000,246092000,222229000]|null",
-            "shares": 674666087,
-            "jahresAktien": 62797000,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -488,7 +488,7 @@
             "wert": 45.293684909446405,
             "ticker": "DMRA",
             "name": "Damora Therapeutics, Inc.",
-            "nameSource": "fehlt",
+            "nameSource": "longName",
             "schluessel": "damoratherapeuticsinc",
             "fingerabdruck": "[0,0,0,0]|null",
             "shares": 61735519,
@@ -620,11 +620,11 @@
   },
   "ankerB": {
     "ausgefallen": false,
-    "gemeldet": 43,
+    "gemeldet": 35,
     "klassen": [
       {
         "klasse": "2 Emittentengruppen",
-        "gemeldet": 42,
+        "gemeldet": 35,
         "gelistet": 5,
         "beispiele": [
           {
@@ -780,37 +780,31 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[65011000000,64168000000,60115000000,59283000000]|null",
+            "fingerabdruck": "[11019707000,9427157000,12305539000,12013953000]|null",
             "beine": [
               {
-                "ticker": "1MRKX.MI",
-                "name": "Merck & Co., Inc.",
-                "nameSource": "longName",
-                "schluessel": "merckcoinc"
-              },
-              {
-                "ticker": "6MK.DE",
-                "name": "Merck & Co., Inc.",
-                "nameSource": "longName",
-                "schluessel": "merckcoinc"
-              },
-              {
-                "ticker": "MRK",
-                "name": "Merck & Co., Inc.",
-                "nameSource": "longName",
-                "schluessel": "merckcoinc"
-              },
-              {
-                "ticker": "MRK.SW",
-                "name": "Merck KGaA",
+                "ticker": "1ADI.MI",
+                "name": "Analog Devices, Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "merckkgaa"
+                "schluessel": "analogdevicesinc"
               },
               {
-                "ticker": "MRK.VI",
-                "name": "Merck & Co., Inc.",
+                "ticker": "ADI",
+                "name": "Analog Devices, Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "merckcoinc"
+                "schluessel": "analogdevicesinc"
+              },
+              {
+                "ticker": "ADI.VI",
+                "name": "Analog Devices, Inc.",
+                "nameSource": "fehlt",
+                "schluessel": "analogdevicesinc"
+              },
+              {
+                "ticker": "ANL.DE",
+                "name": "ANALOG DEVICES INC.DL-166",
+                "nameSource": "fehlt",
+                "schluessel": "analogdevicesincdl166"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -818,70 +812,31 @@
           {
             "anker": "B",
             "wert": 2,
-            "fingerabdruck": "[44052000000,43486800000,41182500000,38260600000]|null",
+            "fingerabdruck": "[24216000000,20407000000,17859000000,17873000000]|null",
             "beine": [
               {
-                "ticker": "LOR.DE",
-                "name": "L'Oréal S.A.",
+                "ticker": "1BLK.MI",
+                "name": "BlackRock, Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "loréalsa"
+                "schluessel": "blackrockinc"
               },
               {
-                "ticker": "LRLCF",
-                "name": "L'Oréal S.A.",
-                "nameSource": "longName",
-                "schluessel": "loréalsa"
-              },
-              {
-                "ticker": "OR.PA",
-                "name": "L'Oréal S.A.",
-                "nameSource": "longName",
-                "schluessel": "loréalsa"
-              },
-              {
-                "ticker": "OR.SW",
-                "name": "L'Oreal S.A.",
+                "ticker": "BLK",
+                "name": "BLK",
                 "nameSource": "fehlt",
-                "schluessel": "lorealsa"
+                "schluessel": "blk"
               },
               {
-                "ticker": "OR.VI",
-                "name": "L'Oréal S.A.",
+                "ticker": "BLK2.VI",
+                "name": "BlackRock, Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "loréalsa"
-              }
-            ],
-            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
-          }
-        ]
-      },
-      {
-        "klasse": "3 Emittentengruppen",
-        "gemeldet": 1,
-        "gelistet": 1,
-        "beispiele": [
-          {
-            "anker": "B",
-            "wert": 3,
-            "fingerabdruck": "[1017555000000,0,1781420000000,1629182000000]|null",
-            "beine": [
-              {
-                "ticker": "8729.T",
-                "name": "8729.T",
-                "nameSource": "fehlt",
-                "schluessel": "8729t"
+                "schluessel": "blackrockinc"
               },
               {
-                "ticker": "SFGRF",
-                "name": "Sony Financial Group Inc./ADR",
+                "ticker": "UU2.DE",
+                "name": "BlackRock, Inc.",
                 "nameSource": "fehlt",
-                "schluessel": "sonyfinancialgroupincadr"
-              },
-              {
-                "ticker": "SFGYY",
-                "name": "Sony Financial Group Inc.",
-                "nameSource": "longName",
-                "schluessel": "sonyfinancialgroupinc"
+                "schluessel": "blackrockinc"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
