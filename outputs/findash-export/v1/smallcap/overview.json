@@ -1,12 +1,12 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-10T08:30:09.031Z",
+  "generated_at": "2026-09-11T08:32:54.777Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74.6,
-    "generated_at": "2026-09-10T08:22:31.773Z"
+    "coverage_pct": 74.5,
+    "generated_at": "2026-09-11T08:25:45.605Z"
   },
   "rows": [
     {
@@ -15,7 +15,7 @@
       "ticker": "ZVRA",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 82.8,
+      "score": 82.7,
       "overviewKind": "gp",
       "overviewValue": 4.557,
       "overviewCompanion": 122.5,
@@ -41,8 +41,8 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 83.8,
-      "scoreShrunk": 82.8,
+      "scoreBase": 83.7,
+      "scoreShrunk": 82.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -76,7 +76,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 45.4,
+          "pct": 44.5,
           "weight": 0.4
         },
         {
@@ -365,7 +365,7 @@
       "ticker": "SCYX",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 79.2,
+      "score": 79.1,
       "overviewKind": "gp",
       "overviewValue": -0.97,
       "overviewCompanion": 1034.9,
@@ -383,7 +383,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "nicht-profitabel",
@@ -392,8 +392,8 @@
       "coverageWeight": 0.72,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 93,
-      "scoreShrunk": 79.2,
+      "scoreBase": 92.9,
+      "scoreShrunk": 79.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -427,7 +427,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 41.7,
+          "pct": 40.9,
           "weight": 0.4
         },
         {
@@ -456,10 +456,10 @@
       "ticker": "IPSC",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 77.5,
+      "score": 77.6,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": 2472.8,
+      "overviewCompanion": 2475.9,
       "lamps": [
         "unprofit",
         "burning",
@@ -482,7 +482,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 90.7,
-      "scoreShrunk": 77.5,
+      "scoreShrunk": 77.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -516,7 +516,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 58.3,
+          "pct": 59.1,
           "weight": 0.4
         },
         {
@@ -779,7 +779,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 16.052265892357156,
+      "revGrowthYoYPct": 16.052265892357177,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -883,7 +883,7 @@
       "ticker": "FHTX",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 74.9,
+      "score": 74.8,
       "overviewKind": "gp",
       "overviewValue": null,
       "overviewCompanion": 259.2,
@@ -910,8 +910,8 @@
       "coverageWeight": 0.81,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 82.6,
-      "scoreShrunk": 74.9,
+      "scoreBase": 82.5,
+      "scoreShrunk": 74.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -945,7 +945,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.5,
+          "pct": 55.5,
           "weight": 0.4
         },
         {
@@ -1033,7 +1033,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 80.6,
+          "pct": 80.9,
           "weight": 0.4
         },
         {
@@ -1055,92 +1055,6 @@
     },
     {
       "rank": 13,
-      "rankGrund": null,
-      "ticker": "YSG",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 73.2,
-      "overviewKind": "gp",
-      "overviewValue": 0.284,
-      "overviewCompanion": 51.7,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Yatsen Holding Limited",
-      "country": "China",
-      "region": "Asia",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 75.2,
-      "scoreShrunk": 73.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 82.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 92.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 82.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 37.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 22.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 97.6,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 22.488971642394496,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 14,
       "rankGrund": null,
       "ticker": "GAU",
       "formulaId": "smallcap-materials",
@@ -1212,6 +1126,92 @@
         }
       ],
       "revGrowthYoYPct": 60.9060264737318,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 14,
+      "rankGrund": null,
+      "ticker": "YSG",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 73.1,
+      "overviewKind": "gp",
+      "overviewValue": 0.284,
+      "overviewCompanion": 51.7,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "Yatsen Holding Limited",
+      "country": "China",
+      "region": "Asia",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2020,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 75.1,
+      "scoreShrunk": 73.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 82.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 92.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 82.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 35.7,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 21.4,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 97.6,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 22.488971642394496,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -1312,10 +1312,10 @@
       "ticker": "OVID",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 72.4,
+      "score": 72.3,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": 2472.8,
+      "overviewCompanion": 2475.9,
       "lamps": [
         "unprofit",
         "burning",
@@ -1340,7 +1340,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 79.3,
-      "scoreShrunk": 72.4,
+      "scoreShrunk": 72.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1374,7 +1374,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 49.1,
+          "pct": 48.2,
           "weight": 0.4
         },
         {
@@ -1414,7 +1414,7 @@
       "sector": "Real Estate",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "langfristig-profitabel",
@@ -1652,91 +1652,6 @@
     {
       "rank": 20,
       "rankGrund": null,
-      "ticker": "FTW",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 71,
-      "overviewKind": "gp",
-      "overviewValue": -0.222,
-      "overviewCompanion": 153.3,
-      "lamps": [
-        "peakMargin",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Presidio Production Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "micro",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2024,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 75.4,
-      "scoreShrunk": 71,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 86.1,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 97.2,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 32.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 86.1,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 13.9,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 80.6,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 62.69385073786453,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 21,
-      "rankGrund": null,
       "ticker": "YORW",
       "formulaId": "smallcap-utilities",
       "track": "profitable",
@@ -1812,6 +1727,91 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 21,
+      "rankGrund": null,
+      "ticker": "FTW",
+      "formulaId": "smallcap-energy",
+      "track": "profitable",
+      "score": 70.6,
+      "overviewKind": "gp",
+      "overviewValue": -0.222,
+      "overviewCompanion": 153.3,
+      "lamps": [
+        "peakMargin",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "name": "Presidio Production Company",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2024,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 75.3,
+      "scoreShrunk": 70.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 85.3,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 97.1,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 34.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 85.3,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 14.7,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.4,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 62.69385073786453,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -2078,94 +2078,10 @@
     {
       "rank": 25,
       "rankGrund": null,
-      "ticker": "LWAY",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 69,
-      "overviewKind": "gp",
-      "overviewValue": 0.198,
-      "overviewCompanion": 42.2,
-      "lamps": [
-        "burning",
-        "shortRunway"
-      ],
-      "name": "Lifeway Foods, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1988,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 70.6,
-      "scoreShrunk": 69,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 87.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 52.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 69.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 87.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 27.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 45.2,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 24.10344891560454,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 26,
-      "rankGrund": null,
       "ticker": "ALT",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 68.9,
+      "score": 68.8,
       "overviewKind": "gp",
       "overviewValue": null,
       "overviewCompanion": 241.5,
@@ -2194,7 +2110,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 78.2,
-      "scoreShrunk": 68.9,
+      "scoreShrunk": 68.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2228,7 +2144,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 39.8,
+          "pct": 39.1,
           "weight": 0.4
         },
         {
@@ -2252,7 +2168,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 27,
+      "rank": 26,
       "rankGrund": null,
       "ticker": "CTRN",
       "formulaId": "smallcap-consumer-discretionary",
@@ -2335,7 +2251,177 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 27,
+      "rankGrund": null,
+      "ticker": "LWAY",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 68.4,
+      "overviewKind": "gp",
+      "overviewValue": 0.198,
+      "overviewCompanion": 42.2,
+      "lamps": [
+        "burning",
+        "shortRunway"
+      ],
+      "name": "Lifeway Foods, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1988,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 70,
+      "scoreShrunk": 68.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 87.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 47.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 71.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 87.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 26.2,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 69,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 45.2,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 24.10344891560454,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 28,
+      "rankGrund": null,
+      "ticker": "SUJA",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 67.9,
+      "overviewKind": "gp",
+      "overviewValue": 0.226,
+      "overviewCompanion": 26.6,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "Suja Life, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 69.5,
+      "scoreShrunk": 67.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 77.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 17.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 65.8,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 77.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 11.9,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 64.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 78.6,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 11.562716193922618,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 29,
       "rankGrund": null,
       "ticker": "NRDS",
       "formulaId": "smallcap-software-comm-services",
@@ -2353,7 +2439,7 @@
       "sector": "Communication Services",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -2418,7 +2504,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 29,
+      "rank": 30,
       "rankGrund": null,
       "ticker": "WLKP",
       "formulaId": "smallcap-materials",
@@ -2493,92 +2579,6 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 30,
-      "rankGrund": null,
-      "ticker": "SUJA",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 66.5,
-      "overviewKind": "gp",
-      "overviewValue": 0.226,
-      "overviewCompanion": 26.6,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Suja Life, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 67.9,
-      "scoreShrunk": 66.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 72.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 22.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 63.9,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 72.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 12.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 67.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 78.6,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 11.562716193922618,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -2662,7 +2662,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 74.78134110787174,
+      "revGrowthYoYPct": 74.78134110787171,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -2682,7 +2682,7 @@
       "ticker": "PRE",
       "formulaId": "smallcap-consumer-staples",
       "track": "profitable",
-      "score": 65.6,
+      "score": 65.3,
       "overviewKind": "gp",
       "overviewValue": 4.259,
       "overviewCompanion": 663.7,
@@ -2700,7 +2700,7 @@
       "sector": "Consumer Defensive",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -2709,8 +2709,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 67,
-      "scoreShrunk": 65.6,
+      "scoreBase": 66.7,
+      "scoreShrunk": 65.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2729,7 +2729,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 97.2,
+          "pct": 97.4,
           "weight": 1.8
         },
         {
@@ -2739,12 +2739,12 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 87.5,
+          "pct": 83.3,
           "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 27.5,
+          "pct": 26.2,
           "weight": 2
         },
         {
@@ -2946,33 +2946,33 @@
     {
       "rank": 35,
       "rankGrund": null,
-      "ticker": "LND",
-      "formulaId": "smallcap-consumer-staples",
+      "ticker": "SGU",
+      "formulaId": "smallcap-energy",
       "track": "profitable",
-      "score": 64.9,
+      "score": 65,
       "overviewKind": "gp",
-      "overviewValue": null,
-      "overviewCompanion": 37.9,
+      "overviewValue": 0.122,
+      "overviewCompanion": 41.5,
       "lamps": [
-        "unprofit"
+        "peakMargin"
       ],
-      "name": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
-      "country": "Brazil",
-      "region": "South America",
-      "sector": "Consumer Defensive",
+      "name": "Star Group, L.P.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
-      "ipoRecency": "mature",
+      "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "5/7",
-      "coverageWeight": 0.68,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 73.1,
-      "scoreShrunk": 64.9,
+      "ipoYear": 1995,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 68.3,
+      "scoreShrunk": 65,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -2981,44 +2981,44 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 77.5,
-          "weight": 4.2
+          "pct": 38.2,
+          "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 12.5,
-          "weight": 0.5
+          "pct": 79.4,
+          "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": null,
+          "pct": 65.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 77.5,
-          "weight": 0.6
+          "pct": 32.4,
+          "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 22.5,
-          "weight": 0.3
+          "pct": 20.6,
+          "weight": 0.4
         },
         {
           "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 2
+          "pct": 97.1,
+          "weight": 2.4
         },
         {
           "key": "dilution",
-          "pct": 83.3,
-          "weight": 2.4
+          "pct": null,
+          "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": 16.47308692248344,
+      "revGrowthYoYPct": 17.162928885078756,
       "profitStreak": null,
       "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -3057,7 +3057,7 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 65.1,
+      "scoreBase": 65.2,
       "scoreShrunk": 64.7,
       "factors": {
         "burn": 1,
@@ -3092,7 +3092,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 63.9,
+          "pct": 64.5,
           "weight": 0.4
         },
         {
@@ -3114,89 +3114,6 @@
     },
     {
       "rank": 37,
-      "rankGrund": null,
-      "ticker": "SGU",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 64.5,
-      "overviewKind": "gp",
-      "overviewValue": 0.122,
-      "overviewCompanion": 41.5,
-      "lamps": [
-        "peakMargin"
-      ],
-      "name": "Star Group, L.P.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1995,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 67.5,
-      "scoreShrunk": 64.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 36.1,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 80.6,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 61.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 30.6,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 19.4,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 97.2,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 17.162928885078756,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 38,
       "rankGrund": null,
       "ticker": "JOUT",
       "formulaId": "smallcap-consumer-discretionary",
@@ -3280,7 +3197,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 39,
+      "rank": 38,
       "rankGrund": null,
       "ticker": "OLP",
       "formulaId": "smallcap-real-estate",
@@ -3364,7 +3281,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 40,
+      "rank": 39,
       "rankGrund": null,
       "ticker": "KRNT",
       "formulaId": "smallcap-industrials",
@@ -3449,7 +3366,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 41,
+      "rank": 40,
       "rankGrund": null,
       "ticker": "PANL",
       "formulaId": "smallcap-industrials",
@@ -3532,7 +3449,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 42,
+      "rank": 41,
       "rankGrund": null,
       "ticker": "ELMT",
       "formulaId": "smallcap-industrials",
@@ -3552,7 +3469,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -3617,7 +3534,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 43,
+      "rank": 42,
       "rankGrund": null,
       "ticker": "PESI",
       "formulaId": "smallcap-industrials",
@@ -3704,12 +3621,105 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 43,
+      "rankGrund": null,
+      "ticker": "CGNT",
+      "formulaId": "smallcap-software-comm-services",
+      "track": "profitable",
+      "score": 63.8,
+      "overviewKind": "gp",
+      "overviewValue": 0.173,
+      "overviewCompanion": 36.9,
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted",
+        "shareCountDilution"
+      ],
+      "name": "Cognyte Software Ltd.",
+      "country": "Israel",
+      "region": "Middle East",
+      "sector": "Technology",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 35,
+      "cohortFallback": false,
+      "scoreBase": 64.6,
+      "scoreShrunk": 63.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 72.9,
+          "weight": 1.1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 64.3,
+          "weight": 2.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.1,
+          "weight": 2.2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 61.4,
+          "weight": 1.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 55.7,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 47.1,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 47,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 12.023012316306536,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 2.7,
+        "pctl": 0.844
+      },
+      "ath": {
+        "distancePct": -74.8,
+        "athDate": "2021-03-11",
+        "monthsAgo": 66,
+        "lastDate": "2026-09-10"
+      },
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 44,
       "rankGrund": null,
       "ticker": "AGCC",
       "formulaId": "smallcap-consumer-staples",
       "track": "profitable",
-      "score": 63.1,
+      "score": 63.2,
       "overviewKind": "gp",
       "overviewValue": 0.493,
       "overviewCompanion": 332.5,
@@ -3734,7 +3744,7 @@
       "cohortN": 23,
       "cohortFallback": false,
       "scoreBase": 67.9,
-      "scoreShrunk": 63.1,
+      "scoreShrunk": 63.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -3753,7 +3763,7 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 91.7,
+          "pct": 92.1,
           "weight": 1.8
         },
         {
@@ -3768,7 +3778,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 2.5,
+          "pct": 2.4,
           "weight": 2
         },
         {
@@ -4079,7 +4089,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
@@ -4231,35 +4241,35 @@
     {
       "rank": 50,
       "rankGrund": null,
-      "ticker": "CGNT",
-      "formulaId": "smallcap-software-comm-services",
+      "ticker": "NGVC",
+      "formulaId": "smallcap-consumer-staples",
       "track": "profitable",
-      "score": 62.3,
+      "score": 62.2,
       "overviewKind": "gp",
-      "overviewValue": 0.173,
-      "overviewCompanion": 33.2,
+      "overviewValue": 0.091,
+      "overviewCompanion": 5.4,
       "lamps": [
+        "peakMargin",
         "lowRoic",
-        "opIncYahooAdjusted",
-        "shareCountDilution"
+        "opIncYahooAdjusted"
       ],
-      "name": "Cognyte Software Ltd.",
-      "country": "Israel",
-      "region": "Middle East",
-      "sector": "Technology",
+      "name": "Natural Grocers by Vitamin Cottage, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
       "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "large",
+      "phase": "established",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2021,
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 35,
+      "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 63,
-      "scoreShrunk": 62.3,
+      "scoreBase": 63.3,
+      "scoreShrunk": 62.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -4268,54 +4278,46 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 61.4,
-          "weight": 1.1
+          "pct": 62.5,
+          "weight": 4.2
         },
         {
           "key": "revAcceleration",
-          "pct": 64.3,
-          "weight": 2.9
+          "pct": 57.5,
+          "weight": 0.5
         },
         {
           "key": "gpGrowth",
-          "pct": 87.1,
-          "weight": 2.2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 58.6,
+          "pct": 55.3,
           "weight": 1.8
         },
         {
+          "key": "ruleOfX",
+          "pct": 62.5,
+          "weight": 0.6
+        },
+        {
           "key": "marginTrajectory",
-          "pct": 55.7,
-          "weight": 0.4
+          "pct": 54.8,
+          "weight": 0.3
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47.1,
+          "pct": 73.8,
           "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 47,
-          "weight": 0.8
+          "pct": 64.3,
+          "weight": 2.4
         }
       ],
-      "revGrowthYoYPct": 10.409427722191978,
+      "revGrowthYoYPct": 1.8356885353128183,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 2.7,
-        "pctl": 0.844
-      },
-      "ath": {
-        "distancePct": -74.5,
-        "athDate": "2021-03-11",
-        "monthsAgo": 66,
-        "lastDate": "2026-09-09"
-      },
+      "shareDilution": null,
+      "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
       "marketCapCurrency": "USD",
@@ -4323,6 +4325,173 @@
     },
     {
       "rank": 51,
+      "rankGrund": null,
+      "ticker": "VLGEA",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 62.2,
+      "overviewKind": "gp",
+      "overviewValue": null,
+      "overviewCompanion": 4.9,
+      "lamps": [
+        "lowRoic"
+      ],
+      "name": "Village Super Market, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.85,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 65.2,
+      "scoreShrunk": 62.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 57.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 37.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": null,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 57.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 45.2,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 83.3,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 73.8,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 1.5821341957780177,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 52,
+      "rankGrund": null,
+      "ticker": "SMC",
+      "formulaId": "smallcap-energy",
+      "track": "profitable",
+      "score": 62,
+      "overviewKind": "gp",
+      "overviewValue": 0.324,
+      "overviewCompanion": 24.3,
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "Summit Midstream Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 64.2,
+      "scoreShrunk": 62,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 20.6,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 85.3,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 90.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 20.6,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 61.8,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 65.4,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 10.552215494554872,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 53,
       "rankGrund": null,
       "ticker": "LDI",
       "formulaId": "smallcap-financials",
@@ -4345,7 +4514,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -4407,10 +4576,10 @@
         "pctl": 0.75
       },
       "ath": {
-        "distancePct": -97.3,
+        "distancePct": -97.1,
         "athDate": "2021-02-12",
         "monthsAgo": 67,
-        "lastDate": "2026-09-09"
+        "lastDate": "2026-09-10"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -4418,91 +4587,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 52,
-      "rankGrund": null,
-      "ticker": "SMC",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 61.8,
-      "overviewKind": "gp",
-      "overviewValue": 0.324,
-      "overviewCompanion": 24.3,
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Summit Midstream Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 63.7,
-      "scoreShrunk": 61.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 19.4,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 86.1,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 85.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 19.4,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 47.2,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 63.9,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 67.9,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 10.552215494554872,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 53,
+      "rank": 54,
       "rankGrund": null,
       "ticker": "TLRY",
       "formulaId": "smallcap-health-care",
@@ -4568,7 +4653,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 75,
+          "pct": 75.5,
           "weight": 0.4
         },
         {
@@ -4592,7 +4677,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 54,
+      "rank": 55,
       "rankGrund": null,
       "ticker": "SOPH",
       "formulaId": "smallcap-health-care",
@@ -4625,7 +4710,7 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 62,
+      "scoreBase": 61.9,
       "scoreShrunk": 61.6,
       "factors": {
         "burn": 1,
@@ -4660,7 +4745,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 38,
+          "pct": 37.3,
           "weight": 0.4
         },
         {
@@ -4681,7 +4766,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 55,
+      "rank": 56,
       "rankGrund": null,
       "ticker": "NOAH",
       "formulaId": "smallcap-financials",
@@ -4764,7 +4849,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 56,
+      "rank": 57,
       "rankGrund": null,
       "ticker": "BBW",
       "formulaId": "smallcap-consumer-discretionary",
@@ -4848,7 +4933,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 57,
+      "rank": 58,
       "rankGrund": null,
       "ticker": "TREE",
       "formulaId": "smallcap-financials",
@@ -4931,7 +5016,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 58,
+      "rank": 59,
       "rankGrund": null,
       "ticker": "BETR",
       "formulaId": "smallcap-financials",
@@ -5019,175 +5104,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 59,
-      "rankGrund": null,
-      "ticker": "VLGEA",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 61.1,
-      "overviewKind": "gp",
-      "overviewValue": null,
-      "overviewCompanion": 4.9,
-      "lamps": [
-        "lowRoic"
-      ],
-      "name": "Village Super Market, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.85,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 64,
-      "scoreShrunk": 61.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 52.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 42.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 52.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 47.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 87.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 73.8,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 1.5821341957780177,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 60,
-      "rankGrund": null,
-      "ticker": "NGVC",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 60.8,
-      "overviewKind": "gp",
-      "overviewValue": 0.091,
-      "overviewCompanion": 5.4,
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Natural Grocers by Vitamin Cottage, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2012,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 61.8,
-      "scoreShrunk": 60.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 57.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 62.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 52.8,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 57.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 57.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 77.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 64.3,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 1.8356885353128183,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 61,
       "rankGrund": null,
       "ticker": "ZUMZ",
       "formulaId": "smallcap-consumer-discretionary",
@@ -5268,7 +5185,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 62,
+      "rank": 61,
       "rankGrund": null,
       "ticker": "BWAY",
       "formulaId": "smallcap-health-care",
@@ -5352,7 +5269,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 63,
+      "rank": 62,
       "rankGrund": null,
       "ticker": "KMDA",
       "formulaId": "smallcap-health-care",
@@ -5436,91 +5353,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 64,
-      "rankGrund": null,
-      "ticker": "DDI",
-      "formulaId": "smallcap-software-comm-services",
-      "track": "profitable",
-      "score": 60.6,
-      "overviewKind": "gp",
-      "overviewValue": 0.087,
-      "overviewCompanion": 51.3,
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "DoubleDown Interactive Co., Ltd.",
-      "country": "South Korea",
-      "region": "Asia",
-      "sector": "Communication Services",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 35,
-      "cohortFallback": false,
-      "scoreBase": 62.1,
-      "scoreShrunk": 60.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 70,
-          "weight": 1.1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 38.6,
-          "weight": 2.9
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 67.1,
-          "weight": 2.2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 75.7,
-          "weight": 1.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 52.9,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 75.7,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 11.171636423661457,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 65,
+      "rank": 63,
       "rankGrund": null,
       "ticker": "CMCO",
       "formulaId": "smallcap-industrials",
@@ -5608,7 +5441,91 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 66,
+      "rank": 64,
+      "rankGrund": null,
+      "ticker": "HELE",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 60.4,
+      "overviewKind": "gp",
+      "overviewValue": -0.108,
+      "overviewCompanion": 23.5,
+      "lamps": [
+        "unprofit",
+        "lowRoic"
+      ],
+      "name": "Helen of Troy Limited",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1976,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 61.3,
+      "scoreShrunk": 60.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 62.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 28.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 67.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 92.9,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 78.6,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 54.8,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 8.195772961483105,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 65,
       "rankGrund": null,
       "ticker": "RGR",
       "formulaId": "smallcap-industrials",
@@ -5626,7 +5543,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "kurz-vor-profitabel",
@@ -5680,6 +5597,90 @@
         }
       ],
       "revGrowthYoYPct": 19.297159807081243,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 66,
+      "rankGrund": null,
+      "ticker": "DDI",
+      "formulaId": "smallcap-software-comm-services",
+      "track": "profitable",
+      "score": 60.3,
+      "overviewKind": "gp",
+      "overviewValue": 0.087,
+      "overviewCompanion": 51.3,
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "DoubleDown Interactive Co., Ltd.",
+      "country": "South Korea",
+      "region": "Asia",
+      "sector": "Communication Services",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.93,
+      "cohortN": 35,
+      "cohortFallback": false,
+      "scoreBase": 61.8,
+      "scoreShrunk": 60.3,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 67.1,
+          "weight": 1.1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 38.6,
+          "weight": 2.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 67.1,
+          "weight": 2.2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 75.7,
+          "weight": 1.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 52.9,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 75.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 11.171636423661457,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -6127,7 +6128,7 @@
       "ticker": "MASS",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 59.7,
+      "score": 59.8,
       "overviewKind": "gp",
       "overviewValue": 0.16,
       "overviewCompanion": 53.6,
@@ -6154,8 +6155,8 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 60,
-      "scoreShrunk": 59.7,
+      "scoreBase": 60.1,
+      "scoreShrunk": 59.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6189,7 +6190,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 71.3,
+          "pct": 71.8,
           "weight": 0.4
         },
         {
@@ -6300,6 +6301,87 @@
     {
       "rank": 74,
       "rankGrund": null,
+      "ticker": "NATR",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 59.5,
+      "overviewKind": "gp",
+      "overviewValue": 0.071,
+      "overviewCompanion": 24.3,
+      "lamps": [],
+      "name": "Nature's Sunshine Products, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2009,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 60.4,
+      "scoreShrunk": 59.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 72.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 77.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 72.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 64.3,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 88.1,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 16.7,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 8.515823679005363,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 75,
+      "rankGrund": null,
       "ticker": "KELYA",
       "formulaId": "smallcap-industrials",
       "track": "unprofitable",
@@ -6382,36 +6464,35 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 75,
+      "rank": 76,
       "rankGrund": null,
-      "ticker": "HELE",
-      "formulaId": "smallcap-consumer-staples",
+      "ticker": "KNOP",
+      "formulaId": "smallcap-energy",
       "track": "profitable",
-      "score": 58.9,
+      "score": 58.8,
       "overviewKind": "gp",
-      "overviewValue": -0.108,
-      "overviewCompanion": 23.5,
+      "overviewValue": 0.172,
+      "overviewCompanion": 68.2,
       "lamps": [
-        "unprofit",
         "lowRoic"
       ],
-      "name": "Helen of Troy Limited",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
+      "name": "KNOT Offshore Partners LP",
+      "country": "United Kingdom",
+      "region": "Europe",
+      "sector": "Energy",
       "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
+      "phase": "established",
+      "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1976,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 59.7,
-      "scoreShrunk": 58.9,
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2013,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 60.6,
+      "scoreShrunk": 58.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -6420,41 +6501,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
-          "weight": 4.2
+          "pct": 26.5,
+          "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 67.5,
-          "weight": 0.5
+          "pct": 55.9,
+          "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 25,
+          "pct": 78.1,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 62.5,
-          "weight": 0.6
+          "pct": 61.8,
+          "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 97.5,
-          "weight": 0.3
+          "pct": 2.9,
+          "weight": 0.4
         },
         {
           "key": "capitalEfficiency",
-          "pct": 82.5,
-          "weight": 2
+          "pct": 73.5,
+          "weight": 2.4
         },
         {
           "key": "dilution",
-          "pct": 54.8,
-          "weight": 2.4
+          "pct": null,
+          "weight": 0.55
         }
       ],
-      "revGrowthYoYPct": 8.195772961483105,
+      "revGrowthYoYPct": 11.160119457845163,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -6466,7 +6547,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 76,
+      "rank": 77,
       "rankGrund": null,
       "ticker": "OEC",
       "formulaId": "smallcap-materials",
@@ -6547,7 +6628,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 77,
+      "rank": 78,
       "rankGrund": null,
       "ticker": "DIN",
       "formulaId": "smallcap-consumer-discretionary",
@@ -6619,89 +6700,6 @@
         }
       ],
       "revGrowthYoYPct": 4.376083188908142,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 78,
-      "rankGrund": null,
-      "ticker": "KNOP",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 58.6,
-      "overviewKind": "gp",
-      "overviewValue": 0.172,
-      "overviewCompanion": 68.2,
-      "lamps": [
-        "lowRoic"
-      ],
-      "name": "KNOT Offshore Partners LP",
-      "country": "United Kingdom",
-      "region": "Europe",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 60.2,
-      "scoreShrunk": 58.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 25,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 58.3,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 73.5,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 58.3,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 2.8,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 75,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 11.160119457845163,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -6827,7 +6825,7 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 58.7,
+      "scoreBase": 58.8,
       "scoreShrunk": 58.5,
       "factors": {
         "burn": 1,
@@ -6862,7 +6860,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 67.6,
+          "pct": 68.2,
           "weight": 0.4
         },
         {
@@ -6884,87 +6882,6 @@
     },
     {
       "rank": 81,
-      "rankGrund": null,
-      "ticker": "NATR",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 58.2,
-      "overviewKind": "gp",
-      "overviewValue": 0.071,
-      "overviewCompanion": 24.3,
-      "lamps": [],
-      "name": "Nature's Sunshine Products, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2009,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 58.9,
-      "scoreShrunk": 58.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 67.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 82.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 47.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 67.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 67.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 92.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 16.7,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 8.515823679005363,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 82,
       "rankGrund": null,
       "ticker": "VREX",
       "formulaId": "smallcap-health-care",
@@ -7048,7 +6965,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 83,
+      "rank": 82,
       "rankGrund": null,
       "ticker": "ECX",
       "formulaId": "smallcap-consumer-discretionary",
@@ -7069,7 +6986,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -7142,7 +7059,7 @@
       "score": 57.7,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": 200.6,
+      "overviewCompanion": 248.4,
       "lamps": [
         "burning",
         "arDivergence",
@@ -7208,7 +7125,7 @@
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 87.20793630074404,
+      "revGrowthYoYPct": 107.98105387803436,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -7220,7 +7137,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 84,
+      "rank": 83,
       "rankGrund": null,
       "ticker": "ELVA",
       "formulaId": "smallcap-industrials",
@@ -7305,93 +7222,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 85,
-      "rankGrund": null,
-      "ticker": "WHK",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 56.7,
-      "overviewKind": "gp",
-      "overviewValue": 11.079,
-      "overviewCompanion": 170.5,
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "WhiteHawk Minerals Corp.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 57.9,
-      "scoreShrunk": 56.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 91.7,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.8,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 97.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 91.7,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 97.2,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 52.8,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 82.1,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 74.12183620440767,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 86,
+      "rank": 84,
       "rankGrund": null,
       "ticker": "NATH",
       "formulaId": "smallcap-consumer-discretionary",
@@ -7474,7 +7305,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 87,
+      "rank": 85,
       "rankGrund": null,
       "ticker": "VMD",
       "formulaId": "smallcap-health-care",
@@ -7555,7 +7386,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 88,
+      "rank": 86,
       "rankGrund": null,
       "ticker": "RLGT",
       "formulaId": "smallcap-industrials",
@@ -7636,7 +7467,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 89,
+      "rank": 87,
       "rankGrund": null,
       "ticker": "GDOT",
       "formulaId": "smallcap-financials",
@@ -7720,7 +7551,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 90,
+      "rank": 88,
       "rankGrund": null,
       "ticker": "PRAA",
       "formulaId": "smallcap-financials",
@@ -7807,7 +7638,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 91,
+      "rank": 89,
       "rankGrund": null,
       "ticker": "WEYS",
       "formulaId": "smallcap-consumer-discretionary",
@@ -7888,7 +7719,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 92,
+      "rank": 90,
       "rankGrund": null,
       "ticker": "TWIN",
       "formulaId": "smallcap-industrials",
@@ -7972,7 +7803,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 93,
+      "rank": 91,
       "rankGrund": null,
       "ticker": "ALTI",
       "formulaId": "smallcap-financials",
@@ -8062,7 +7893,93 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 94,
+      "rank": 92,
+      "rankGrund": null,
+      "ticker": "WHK",
+      "formulaId": "smallcap-energy",
+      "track": "profitable",
+      "score": 56,
+      "overviewKind": "gp",
+      "overviewValue": 11.079,
+      "overviewCompanion": 170.5,
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "WhiteHawk Minerals Corp.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2026,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 57,
+      "scoreShrunk": 56,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 91.2,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.9,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 96.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 91.2,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 97.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 80.8,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 74.12183620440767,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 93,
       "rankGrund": null,
       "ticker": "EBF",
       "formulaId": "smallcap-industrials",
@@ -8143,7 +8060,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 95,
+      "rank": 94,
       "rankGrund": null,
       "ticker": "MOVE",
       "formulaId": "smallcap-software-comm-services",
@@ -8151,7 +8068,7 @@
       "score": 55.6,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": 2472.8,
+      "overviewCompanion": 2475.9,
       "lamps": [
         "unprofit",
         "burning",
@@ -8235,91 +8152,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 96,
-      "rankGrund": null,
-      "ticker": "VTEX",
-      "formulaId": "smallcap-software-comm-services",
-      "track": "profitable",
-      "score": 55.5,
-      "overviewKind": "gp",
-      "overviewValue": 0.116,
-      "overviewCompanion": 38.2,
-      "lamps": [
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "VTEX",
-      "country": "Cayman Islands",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 35,
-      "cohortFallback": false,
-      "scoreBase": 55.9,
-      "scoreShrunk": 55.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 58.6,
-          "weight": 1.1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 27.1,
-          "weight": 2.9
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 81.4,
-          "weight": 2.2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 61.4,
-          "weight": 1.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 84.3,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 72.9,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 16.7,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 9.5237285252594,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 97,
+      "rank": 95,
       "rankGrund": null,
       "ticker": "ARTNA",
       "formulaId": "smallcap-utilities",
@@ -8404,7 +8237,91 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 98,
+      "rank": 96,
+      "rankGrund": null,
+      "ticker": "VTEX",
+      "formulaId": "smallcap-software-comm-services",
+      "track": "profitable",
+      "score": 55.1,
+      "overviewKind": "gp",
+      "overviewValue": 0.116,
+      "overviewCompanion": 38.2,
+      "lamps": [
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "VTEX",
+      "country": "Cayman Islands",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 35,
+      "cohortFallback": false,
+      "scoreBase": 55.4,
+      "scoreShrunk": 55.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 58.6,
+          "weight": 1.1
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 27.1,
+          "weight": 2.9
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 81.4,
+          "weight": 2.2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 58.6,
+          "weight": 1.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 84.3,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 72.9,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 16.7,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 9.5237285252594,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 97,
       "rankGrund": null,
       "ticker": "PRLD",
       "formulaId": "smallcap-health-care",
@@ -8426,7 +8343,7 @@
       "sector": "Healthcare",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "mid",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -8435,7 +8352,7 @@
       "coverageWeight": 0.51,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 63.4,
+      "scoreBase": 63.3,
       "scoreShrunk": 55,
       "factors": {
         "burn": 1,
@@ -8470,7 +8387,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30.6,
+          "pct": 30,
           "weight": 0.4
         },
         {
@@ -8491,7 +8408,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 99,
+      "rank": 98,
       "rankGrund": null,
       "ticker": "CCSI",
       "formulaId": "smallcap-software-comm-services",
@@ -8572,7 +8489,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 100,
+      "rank": 99,
       "rankGrund": null,
       "ticker": "PBYI",
       "formulaId": "smallcap-health-care",
@@ -8657,7 +8574,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 101,
+      "rank": 100,
       "rankGrund": null,
       "ticker": "REAX",
       "formulaId": "smallcap-real-estate",
@@ -8742,93 +8659,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 102,
-      "rankGrund": null,
-      "ticker": "NOA",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 54.7,
-      "overviewKind": "gp",
-      "overviewValue": -0.227,
-      "overviewCompanion": 57.6,
-      "lamps": [
-        "burning",
-        "lowRoic",
-        "fcfArtefact",
-        "opIncYahooAdjusted"
-      ],
-      "name": "North American Construction Group Ltd.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2006,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 55.4,
-      "scoreShrunk": 54.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 47.2,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 41.7,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 38.2,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 41.7,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 30.6,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.7,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 96.4,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 25.053175895257507,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 103,
+      "rank": 101,
       "rankGrund": null,
       "ticker": "XRN",
       "formulaId": "smallcap-real-estate",
@@ -8915,12 +8746,98 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 104,
+      "rank": 102,
+      "rankGrund": null,
+      "ticker": "NOA",
+      "formulaId": "smallcap-energy",
+      "track": "profitable",
+      "score": 54.5,
+      "overviewKind": "gp",
+      "overviewValue": -0.227,
+      "overviewCompanion": 57.6,
+      "lamps": [
+        "burning",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "name": "North American Construction Group Ltd.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2006,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 55.4,
+      "scoreShrunk": 54.5,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 50,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 38.2,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 40.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 44.1,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 32.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 91.2,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 96.2,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 25.053175895257507,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 103,
       "rankGrund": null,
       "ticker": "GRVY",
       "formulaId": "smallcap-software-comm-services",
       "track": "profitable",
-      "score": 54.5,
+      "score": 54.4,
       "overviewKind": "gp",
       "overviewValue": 0.012,
       "overviewCompanion": -11.9,
@@ -8933,7 +8850,7 @@
       "sector": "Communication Services",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -8943,7 +8860,7 @@
       "cohortN": 35,
       "cohortFallback": false,
       "scoreBase": 55.1,
-      "scoreShrunk": 54.5,
+      "scoreShrunk": 54.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -8998,7 +8915,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 105,
+      "rank": 104,
       "rankGrund": null,
       "ticker": "TMS",
       "formulaId": "smallcap-financials",
@@ -9085,7 +9002,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 106,
+      "rank": 105,
       "rankGrund": null,
       "ticker": "VSTM",
       "formulaId": "smallcap-health-care",
@@ -9093,7 +9010,7 @@
       "score": 54.4,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": 2472.8,
+      "overviewCompanion": 2475.9,
       "lamps": [
         "unprofit",
         "burning",
@@ -9116,7 +9033,7 @@
       "coverageWeight": 0.81,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 56.4,
+      "scoreBase": 56.3,
       "scoreShrunk": 54.4,
       "factors": {
         "burn": 1,
@@ -9151,7 +9068,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 25,
+          "pct": 24.5,
           "weight": 0.4
         },
         {
@@ -9261,7 +9178,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 107,
+      "rank": 106,
       "rankGrund": null,
       "ticker": "KE",
       "formulaId": "smallcap-industrials",
@@ -9279,7 +9196,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
@@ -9344,7 +9261,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 108,
+      "rank": 107,
       "rankGrund": null,
       "ticker": "BRBI",
       "formulaId": "smallcap-financials",
@@ -9429,6 +9346,89 @@
       "tradingFxRateApplied": null
     },
     {
+      "rank": 108,
+      "rankGrund": null,
+      "ticker": "USNA",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 53.9,
+      "overviewKind": "gp",
+      "overviewValue": 0.045,
+      "overviewCompanion": 3.8,
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "name": "USANA Health Sciences, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1994,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 54.2,
+      "scoreShrunk": 53.9,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 52.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 87.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 39.5,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 52.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 50,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 97.6,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 26.2,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 0.27210175563738837,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
       "rank": 109,
       "rankGrund": null,
       "ticker": "YB",
@@ -9502,7 +9502,7 @@
           "weight": 0.8
         }
       ],
-      "revGrowthYoYPct": 35.647941974483956,
+      "revGrowthYoYPct": 35.647941974483935,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -9515,6 +9515,99 @@
     },
     {
       "rank": 110,
+      "rankGrund": null,
+      "ticker": "PACB",
+      "formulaId": "smallcap-health-care",
+      "track": "unprofitable",
+      "score": 53.7,
+      "overviewKind": "gp",
+      "overviewValue": 0.228,
+      "overviewCompanion": -4.4,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence",
+        "fcfArtefact",
+        "shareCountDilution"
+      ],
+      "name": "Pacific Biosciences of California, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2010,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 64,
+      "cohortFallback": false,
+      "scoreBase": 53.8,
+      "scoreShrunk": 53.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 31.1,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 75.5,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 53,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 31.1,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 37.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 62.7,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 90.7,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": -1.9086656943117286,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": {
+        "ratePct": 14,
+        "pctl": 0.763
+      },
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 111,
       "rankGrund": null,
       "ticker": "BWMN",
       "formulaId": "smallcap-industrials",
@@ -9594,99 +9687,6 @@
       "shareDilution": {
         "ratePct": 13.9,
         "pctl": 0.969
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 111,
-      "rankGrund": null,
-      "ticker": "PACB",
-      "formulaId": "smallcap-health-care",
-      "track": "unprofitable",
-      "score": 53.7,
-      "overviewKind": "gp",
-      "overviewValue": 0.228,
-      "overviewCompanion": -4.4,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence",
-        "fcfArtefact",
-        "shareCountDilution"
-      ],
-      "name": "Pacific Biosciences of California, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 64,
-      "cohortFallback": false,
-      "scoreBase": 53.8,
-      "scoreShrunk": 53.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 31.1,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 75.5,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 53,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 31.1,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 37.5,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 62,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 90.7,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": -1.9086656943117286,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 14,
-        "pctl": 0.763
       },
       "ath": null,
       "qPunkte": null,
@@ -10473,7 +10473,7 @@
       "ticker": "VTS",
       "formulaId": "smallcap-energy",
       "track": "profitable",
-      "score": 52.1,
+      "score": 52.2,
       "overviewKind": "gp",
       "overviewValue": -0.288,
       "overviewCompanion": 35.8,
@@ -10495,10 +10495,10 @@
       "ipoYear": 2023,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 12,
+      "cohortN": 11,
       "cohortFallback": true,
       "scoreBase": 52.5,
-      "scoreShrunk": 52.1,
+      "scoreShrunk": 52.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -10507,37 +10507,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 30.6,
+          "pct": 32.4,
           "weight": 0.8
         },
         {
           "key": "revAcceleration",
-          "pct": 75,
+          "pct": 73.5,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 14.7,
+          "pct": 15.6,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 25,
+          "pct": 26.5,
           "weight": 1.5
         },
         {
           "key": "marginTrajectory",
-          "pct": 36.1,
+          "pct": 38.2,
           "weight": 0.4
         },
         {
           "key": "capitalEfficiency",
-          "pct": 86.1,
+          "pct": 85.3,
           "weight": 2.4
         },
         {
           "key": "dilution",
-          "pct": 25,
+          "pct": 26.9,
           "weight": 0.55
         }
       ],
@@ -10557,6 +10557,91 @@
     },
     {
       "rank": 121,
+      "rankGrund": null,
+      "ticker": "WILC",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 52,
+      "overviewKind": "gp",
+      "overviewValue": 0.084,
+      "overviewCompanion": 0.1,
+      "lamps": [
+        "peakMargin",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "G. Willi-Food International Ltd",
+      "country": "Israel",
+      "region": "Middle East",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1997,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 52.2,
+      "scoreShrunk": 52,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 47.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 67.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 44.7,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 42.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 69,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 45.2,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 69,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": 0.03427282414301125,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 122,
       "rankGrund": null,
       "ticker": "AKBA",
       "formulaId": "smallcap-health-care",
@@ -10643,7 +10728,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 122,
+      "rank": 123,
       "rankGrund": null,
       "ticker": "SFIX",
       "formulaId": "smallcap-consumer-discretionary",
@@ -10728,7 +10813,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 123,
+      "rank": 124,
       "rankGrund": null,
       "ticker": "IIIV",
       "formulaId": "smallcap-software-comm-services",
@@ -10813,7 +10898,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 124,
+      "rank": 125,
       "rankGrund": null,
       "ticker": "CSHR",
       "formulaId": "smallcap-financials",
@@ -10886,89 +10971,6 @@
         }
       ],
       "revGrowthYoYPct": 7.248100733419216,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 125,
-      "rankGrund": null,
-      "ticker": "USNA",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 51.6,
-      "overviewKind": "gp",
-      "overviewValue": 0.045,
-      "overviewCompanion": 3.8,
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "name": "USANA Health Sciences, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1994,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 51.7,
-      "scoreShrunk": 51.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 47.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 87.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 36.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 47.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 52.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 97.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 26.2,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 0.27210175563738837,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -11067,179 +11069,6 @@
     {
       "rank": 127,
       "rankGrund": null,
-      "ticker": "OABI",
-      "formulaId": "smallcap-health-care",
-      "track": "unprofitable",
-      "score": 51.4,
-      "overviewKind": "gp",
-      "overviewValue": -0.304,
-      "overviewCompanion": 561.8,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway",
-        "highDilution",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "name": "OmniAb, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Healthcare",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 64,
-      "cohortFallback": false,
-      "scoreBase": 51.5,
-      "scoreShrunk": 51.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 89.6,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 38.2,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 7.6,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 89.6,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 83.7,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 52.8,
-          "weight": 0.4
-        },
-        {
-          "key": "dilution",
-          "pct": 2.5,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": 244.23915832691816,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 128,
-      "rankGrund": null,
-      "ticker": "EGY",
-      "formulaId": "smallcap-energy",
-      "track": "unprofitable",
-      "score": 51.4,
-      "overviewKind": "gp",
-      "overviewValue": -0.472,
-      "overviewCompanion": 164.7,
-      "lamps": [
-        "unprofit",
-        "burning",
-        "shortRunway"
-      ],
-      "name": "VAALCO Energy, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 1993,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 6,
-      "cohortFallback": true,
-      "scoreBase": 51.9,
-      "scoreShrunk": 51.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 97.2,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 25,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 8.8,
-          "weight": 1.3
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 97.2,
-          "weight": 0.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 69.4,
-          "weight": 1.2
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 41.7,
-          "weight": 0.5
-        },
-        {
-          "key": "dilution",
-          "pct": 39.3,
-          "weight": 0.5
-        }
-      ],
-      "revGrowthYoYPct": 83.61904368736649,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 129,
-      "rankGrund": null,
       "ticker": "ESEA",
       "formulaId": "smallcap-industrials",
       "track": "profitable",
@@ -11325,7 +11154,95 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 130,
+      "rank": 128,
+      "rankGrund": null,
+      "ticker": "OABI",
+      "formulaId": "smallcap-health-care",
+      "track": "unprofitable",
+      "score": 51.4,
+      "overviewKind": "gp",
+      "overviewValue": -0.304,
+      "overviewCompanion": 561.8,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway",
+        "highDilution",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "name": "OmniAb, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Healthcare",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 64,
+      "cohortFallback": false,
+      "scoreBase": 51.4,
+      "scoreShrunk": 51.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 89.6,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 38.2,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 7.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 89.6,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 83.7,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 51.8,
+          "weight": 0.4
+        },
+        {
+          "key": "dilution",
+          "pct": 2.5,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 244.23915832691816,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 129,
       "rankGrund": null,
       "ticker": "CWCO",
       "formulaId": "smallcap-utilities",
@@ -11409,7 +11326,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 131,
+      "rank": 130,
       "rankGrund": null,
       "ticker": "KRUS",
       "formulaId": "smallcap-consumer-discretionary",
@@ -11499,7 +11416,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 132,
+      "rank": 131,
       "rankGrund": null,
       "ticker": "ILPT",
       "formulaId": "smallcap-real-estate",
@@ -11583,7 +11500,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 133,
+      "rank": 132,
       "rankGrund": null,
       "ticker": "MBUU",
       "formulaId": "smallcap-consumer-discretionary",
@@ -11658,6 +11575,90 @@
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 133,
+      "rankGrund": null,
+      "ticker": "LND",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 51,
+      "overviewKind": "gp",
+      "overviewValue": -0.715,
+      "overviewCompanion": -21.1,
+      "lamps": [
+        "unprofit",
+        "opIncYahooAdjusted"
+      ],
+      "name": "BrasilAgro - Companhia Brasileira de Propriedades Agrícolas",
+      "country": "Brazil",
+      "region": "South America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2012,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 51.1,
+      "scoreShrunk": 51,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 32.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 82.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 2.6,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 27.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 21.4,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 92.9,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 88.1,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": -9.170038530475566,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "ath": null,
       "qPunkte": null,
@@ -11918,6 +11919,91 @@
     {
       "rank": 137,
       "rankGrund": null,
+      "ticker": "EGY",
+      "formulaId": "smallcap-energy",
+      "track": "unprofitable",
+      "score": 50.7,
+      "overviewKind": "gp",
+      "overviewValue": -0.472,
+      "overviewCompanion": 164.7,
+      "lamps": [
+        "unprofit",
+        "burning",
+        "shortRunway"
+      ],
+      "name": "VAALCO Energy, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 1993,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 6,
+      "cohortFallback": true,
+      "scoreBase": 51,
+      "scoreShrunk": 50.7,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 97.1,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 20.6,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 9.4,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 97.1,
+          "weight": 0.8
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 73.5,
+          "weight": 1.2
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 38.2,
+          "weight": 0.5
+        },
+        {
+          "key": "dilution",
+          "pct": 42.3,
+          "weight": 0.5
+        }
+      ],
+      "revGrowthYoYPct": 83.61904368736649,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 138,
+      "rankGrund": null,
       "ticker": "TATT",
       "formulaId": "smallcap-industrials",
       "track": "profitable",
@@ -12000,7 +12086,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 138,
+      "rank": 139,
       "rankGrund": null,
       "ticker": "ELA",
       "formulaId": "smallcap-consumer-discretionary",
@@ -12085,7 +12171,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 139,
+      "rank": 140,
       "rankGrund": null,
       "ticker": "GCO",
       "formulaId": "smallcap-consumer-discretionary",
@@ -12168,7 +12254,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 140,
+      "rank": 141,
       "rankGrund": null,
       "ticker": "CARL",
       "formulaId": "smallcap-health-care",
@@ -12199,8 +12285,8 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 56.8,
-      "scoreShrunk": 56.6,
+      "scoreBase": 56.7,
+      "scoreShrunk": 56.5,
       "factors": {
         "burn": 0.892,
         "growth": 1,
@@ -12234,7 +12320,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 13.9,
+          "pct": 13.6,
           "weight": 0.4
         },
         {
@@ -12244,91 +12330,6 @@
         }
       ],
       "revGrowthYoYPct": 56.749151700736576,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 141,
-      "rankGrund": null,
-      "ticker": "WILC",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 50.4,
-      "overviewKind": "gp",
-      "overviewValue": 0.084,
-      "overviewCompanion": 0.1,
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "opIncYahooAdjusted"
-      ],
-      "name": "G. Willi-Food International Ltd",
-      "country": "Israel",
-      "region": "Middle East",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1997,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 50.4,
-      "scoreShrunk": 50.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 42.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 72.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 41.7,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 37.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 72.5,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 47.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 69,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": 0.03427282414301125,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -12690,91 +12691,6 @@
     {
       "rank": 146,
       "rankGrund": null,
-      "ticker": "NEXN",
-      "formulaId": "smallcap-software-comm-services",
-      "track": "profitable",
-      "score": 49.6,
-      "overviewKind": "gp",
-      "overviewValue": 0.018,
-      "overviewCompanion": 40.1,
-      "lamps": [
-        "peakMargin",
-        "lowRoic",
-        "cyclePeak"
-      ],
-      "name": "Nexxen International Ltd.",
-      "country": "Israel",
-      "region": "Middle East",
-      "sector": "Communication Services",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 35,
-      "cohortFallback": false,
-      "scoreBase": 49.6,
-      "scoreShrunk": 49.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 64.3,
-          "weight": 1.1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 12.9,
-          "weight": 2.9
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 52.9,
-          "weight": 2.2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 64.3,
-          "weight": 1.8
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 18.6,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 67.1,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 92.4,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 10.52249637155298,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 147,
-      "rankGrund": null,
       "ticker": "AGNT",
       "formulaId": "smallcap-real-estate",
       "track": "profitable",
@@ -12858,7 +12774,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 148,
+      "rank": 147,
       "rankGrund": null,
       "ticker": "DCTH",
       "formulaId": "smallcap-health-care",
@@ -12946,36 +12862,35 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 149,
+      "rank": 148,
       "rankGrund": null,
-      "ticker": "OBE",
-      "formulaId": "smallcap-energy",
+      "ticker": "NEXN",
+      "formulaId": "smallcap-software-comm-services",
       "track": "profitable",
       "score": 49.4,
       "overviewKind": "gp",
-      "overviewValue": 4.364,
-      "overviewCompanion": 89.2,
+      "overviewValue": 0.018,
+      "overviewCompanion": 40.1,
       "lamps": [
-        "burning",
-        "shortRunway",
+        "peakMargin",
         "lowRoic",
-        "opIncYahooAdjusted"
+        "cyclePeak"
       ],
-      "name": "Obsidian Energy Ltd.",
-      "country": "Canada",
-      "region": "North America",
-      "sector": "Energy",
+      "name": "Nexxen International Ltd.",
+      "country": "Israel",
+      "region": "Middle East",
+      "sector": "Communication Services",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mega",
+      "mcapBand": "large",
       "mcapKlasse": "small",
-      "ipoRecency": "mature",
+      "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2005,
+      "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
+      "cohortN": 35,
+      "cohortFallback": false,
       "scoreBase": 49.3,
       "scoreShrunk": 49.4,
       "factors": {
@@ -12986,41 +12901,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 75,
-          "weight": 0.8
+          "pct": 61.4,
+          "weight": 1.1
         },
         {
           "key": "revAcceleration",
-          "pct": 19.4,
-          "weight": 3
+          "pct": 12.9,
+          "weight": 2.9
         },
         {
           "key": "gpGrowth",
-          "pct": 91.2,
-          "weight": 1.8
+          "pct": 52.9,
+          "weight": 2.2
         },
         {
           "key": "ruleOfX",
-          "pct": 69.4,
-          "weight": 1.5
+          "pct": 64.3,
+          "weight": 1.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 75,
+          "pct": 18.6,
           "weight": 0.4
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30.6,
-          "weight": 2.4
+          "pct": 67.1,
+          "weight": 2
         },
         {
           "key": "dilution",
-          "pct": 46.4,
-          "weight": 0.55
+          "pct": 92.4,
+          "weight": 0.8
         }
       ],
-      "revGrowthYoYPct": 43.72325249643365,
+      "revGrowthYoYPct": 10.52249637155298,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -13032,7 +12947,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 150,
+      "rank": 149,
       "rankGrund": null,
       "ticker": "ULH",
       "formulaId": "smallcap-industrials",
@@ -13118,7 +13033,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 151,
+      "rank": 150,
       "rankGrund": null,
       "ticker": "ADV",
       "formulaId": "smallcap-software-comm-services",
@@ -13138,7 +13053,7 @@
       "sector": "Communication Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
@@ -13203,7 +13118,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 152,
+      "rank": 151,
       "rankGrund": null,
       "ticker": "MTLS",
       "formulaId": "smallcap-software-comm-services",
@@ -13289,7 +13204,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 153,
+      "rank": 152,
       "rankGrund": null,
       "ticker": "PKOH",
       "formulaId": "smallcap-industrials",
@@ -13372,7 +13287,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 154,
+      "rank": 153,
       "rankGrund": null,
       "ticker": "GEVO",
       "formulaId": "smallcap-materials",
@@ -13463,12 +13378,12 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 155,
+      "rank": 154,
       "rankGrund": null,
       "ticker": "AUTL",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 48.9,
+      "score": 48.8,
       "overviewKind": "gp",
       "overviewValue": null,
       "overviewCompanion": 272.2,
@@ -13499,7 +13414,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 66.3,
-      "scoreShrunk": 62.2,
+      "scoreShrunk": 62.1,
       "factors": {
         "burn": 0.786,
         "growth": 1,
@@ -13533,7 +13448,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.5,
+          "pct": 42.7,
           "weight": 0.4
         },
         {
@@ -13557,7 +13472,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 156,
+      "rank": 155,
       "rankGrund": null,
       "ticker": "ANGO",
       "formulaId": "smallcap-health-care",
@@ -13641,7 +13556,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 157,
+      "rank": 156,
       "rankGrund": null,
       "ticker": "BALY",
       "formulaId": "smallcap-consumer-discretionary",
@@ -13728,7 +13643,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 158,
+      "rank": 157,
       "rankGrund": null,
       "ticker": "GYRE",
       "formulaId": "smallcap-health-care",
@@ -13795,7 +13710,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 78.7,
+          "pct": 79.1,
           "weight": 0.4
         },
         {
@@ -13816,7 +13731,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 159,
+      "rank": 158,
       "rankGrund": null,
       "ticker": "AMCX",
       "formulaId": "smallcap-software-comm-services",
@@ -13897,7 +13812,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 160,
+      "rank": 159,
       "rankGrund": null,
       "ticker": "YEXT",
       "formulaId": "smallcap-software-comm-services",
@@ -14070,7 +13985,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 161,
+      "rank": 160,
       "rankGrund": null,
       "ticker": "CGC",
       "formulaId": "smallcap-health-care",
@@ -14137,7 +14052,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 17.6,
+          "pct": 17.3,
           "weight": 0.4
         },
         {
@@ -14146,7 +14061,7 @@
           "weight": 0.5
         }
       ],
-      "revGrowthYoYPct": 12.519754900601644,
+      "revGrowthYoYPct": 12.519754900601665,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -14161,7 +14076,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 162,
+      "rank": 161,
       "rankGrund": null,
       "ticker": "CDRO",
       "formulaId": "smallcap-consumer-discretionary",
@@ -14245,7 +14160,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 163,
+      "rank": 162,
       "rankGrund": null,
       "ticker": "GDYN",
       "formulaId": "smallcap-it-services",
@@ -14333,7 +14248,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 164,
+      "rank": 163,
       "rankGrund": null,
       "ticker": "NRC",
       "formulaId": "smallcap-health-care",
@@ -14414,7 +14329,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 165,
+      "rank": 164,
       "rankGrund": null,
       "ticker": "OFLX",
       "formulaId": "smallcap-industrials",
@@ -14495,7 +14410,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 166,
+      "rank": 165,
       "rankGrund": null,
       "ticker": "SSII",
       "formulaId": "smallcap-health-care",
@@ -14528,7 +14443,7 @@
       "coverageWeight": 1,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 47.2,
+      "scoreBase": 47.1,
       "scoreShrunk": 47.2,
       "factors": {
         "burn": 1,
@@ -14563,7 +14478,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 32.4,
+          "pct": 31.8,
           "weight": 0.4
         },
         {
@@ -14584,7 +14499,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 167,
+      "rank": 166,
       "rankGrund": null,
       "ticker": "LE",
       "formulaId": "smallcap-consumer-discretionary",
@@ -14669,7 +14584,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 168,
+      "rank": 167,
       "rankGrund": null,
       "ticker": "OXM",
       "formulaId": "smallcap-consumer-discretionary",
@@ -14752,15 +14667,15 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 169,
+      "rank": 168,
       "rankGrund": null,
       "ticker": "VCRE",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 47.1,
+      "score": 47.2,
       "overviewKind": "gp",
       "overviewValue": null,
-      "overviewCompanion": -202.3,
+      "overviewCompanion": -202.5,
       "lamps": [
         "burning",
         "shortRunway",
@@ -14782,7 +14697,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 47.2,
-      "scoreShrunk": 47.1,
+      "scoreShrunk": 47.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -14840,12 +14755,12 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 170,
+      "rank": 169,
       "rankGrund": null,
       "ticker": "REI",
       "formulaId": "smallcap-energy",
       "track": "unprofitable",
-      "score": 47.1,
+      "score": 46.9,
       "overviewKind": "gp",
       "overviewValue": -0.342,
       "overviewCompanion": 60.5,
@@ -14871,8 +14786,8 @@
       "coverageWeight": 1,
       "cohortN": 6,
       "cohortFallback": true,
-      "scoreBase": 46.2,
-      "scoreShrunk": 47.1,
+      "scoreBase": 45.9,
+      "scoreShrunk": 46.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -14881,37 +14796,37 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.3,
+          "pct": 61.8,
           "weight": 2
         },
         {
           "key": "revAcceleration",
-          "pct": 36.1,
+          "pct": 32.4,
           "weight": 3
         },
         {
           "key": "gpGrowth",
-          "pct": 26.5,
+          "pct": 28.1,
           "weight": 1.3
         },
         {
           "key": "ruleOfX",
-          "pct": 52.8,
+          "pct": 55.9,
           "weight": 0.8
         },
         {
           "key": "marginTrajectory",
-          "pct": 80.6,
+          "pct": 79.4,
           "weight": 1.2
         },
         {
           "key": "capitalEfficiency",
-          "pct": 8.3,
+          "pct": 8.8,
           "weight": 0.5
         },
         {
           "key": "dilution",
-          "pct": 53.6,
+          "pct": 50,
           "weight": 0.5
         }
       ],
@@ -14930,7 +14845,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 171,
+      "rank": 170,
       "rankGrund": null,
       "ticker": "LXFR",
       "formulaId": "smallcap-industrials",
@@ -15013,7 +14928,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 172,
+      "rank": 171,
       "rankGrund": null,
       "ticker": "NNNN",
       "formulaId": "smallcap-health-care",
@@ -15044,7 +14959,7 @@
       "coverageWeight": 0.86,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 46.5,
+      "scoreBase": 46.6,
       "scoreShrunk": 46.7,
       "factors": {
         "burn": 1,
@@ -15079,7 +14994,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 65.7,
+          "pct": 66.4,
           "weight": 0.4
         },
         {
@@ -15100,7 +15015,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 173,
+      "rank": 172,
       "rankGrund": null,
       "ticker": "LOCO",
       "formulaId": "smallcap-consumer-discretionary",
@@ -15183,7 +15098,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 174,
+      "rank": 173,
       "rankGrund": null,
       "ticker": "HNRG",
       "formulaId": "smallcap-utilities",
@@ -15266,7 +15181,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 175,
+      "rank": 174,
       "rankGrund": null,
       "ticker": "KIDS",
       "formulaId": "smallcap-health-care",
@@ -15332,7 +15247,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 82.4,
+          "pct": 82.7,
           "weight": 0.4
         },
         {
@@ -15342,6 +15257,90 @@
         }
       ],
       "revGrowthYoYPct": 15.431714744114466,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 175,
+      "rankGrund": null,
+      "ticker": "RNGR",
+      "formulaId": "smallcap-energy",
+      "track": "profitable",
+      "score": 46.1,
+      "overviewKind": "gp",
+      "overviewValue": -0.188,
+      "overviewCompanion": 58.7,
+      "lamps": [
+        "lowRoic",
+        "arDivergence"
+      ],
+      "name": "Ranger Energy Services, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Energy",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "seasoned",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2017,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 11,
+      "cohortFallback": true,
+      "scoreBase": 45.4,
+      "scoreShrunk": 46.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 55.9,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 61.8,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 46.9,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 44.1,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 14.7,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": 57.7,
+          "weight": 0.55
+        }
+      ],
+      "revGrowthYoYPct": 25.533428165007123,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -15693,90 +15692,6 @@
     {
       "rank": 180,
       "rankGrund": null,
-      "ticker": "RNGR",
-      "formulaId": "smallcap-energy",
-      "track": "profitable",
-      "score": 45.5,
-      "overviewKind": "gp",
-      "overviewValue": -0.188,
-      "overviewCompanion": 58.7,
-      "lamps": [
-        "lowRoic",
-        "arDivergence"
-      ],
-      "name": "Ranger Energy Services, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Energy",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2017,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 12,
-      "cohortFallback": true,
-      "scoreBase": 44.7,
-      "scoreShrunk": 45.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 52.8,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 63.9,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 44.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 47.2,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 41.7,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 13.9,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": 60.7,
-          "weight": 0.55
-        }
-      ],
-      "revGrowthYoYPct": 25.533428165007123,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 181,
-      "rankGrund": null,
       "ticker": "FVRR",
       "formulaId": "smallcap-software-comm-services",
       "track": "profitable",
@@ -15863,12 +15778,12 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 182,
+      "rank": 181,
       "rankGrund": null,
       "ticker": "EOLS",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 45.5,
+      "score": 45.4,
       "overviewKind": "gp",
       "overviewValue": 0.081,
       "overviewCompanion": 48.7,
@@ -15894,7 +15809,7 @@
       "cohortN": 64,
       "cohortFallback": false,
       "scoreBase": 45.3,
-      "scoreShrunk": 45.5,
+      "scoreShrunk": 45.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -15928,7 +15843,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 47.2,
+          "pct": 46.4,
           "weight": 0.4
         },
         {
@@ -15949,7 +15864,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 183,
+      "rank": 182,
       "rankGrund": null,
       "ticker": "WEAV",
       "formulaId": "smallcap-health-care",
@@ -16037,12 +15952,12 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 184,
+      "rank": 183,
       "rankGrund": null,
       "ticker": "STRO",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
-      "score": 45.2,
+      "score": 45.1,
       "overviewKind": "gp",
       "overviewValue": null,
       "overviewCompanion": -194.5,
@@ -16068,8 +15983,8 @@
       "coverageWeight": 0.81,
       "cohortN": 64,
       "cohortFallback": false,
-      "scoreBase": 44.6,
-      "scoreShrunk": 45.2,
+      "scoreBase": 44.5,
+      "scoreShrunk": 45.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -16103,7 +16018,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 50.9,
+          "pct": 50,
           "weight": 0.4
         },
         {
@@ -16120,6 +16035,93 @@
         "ratePct": 19.9,
         "pctl": 0.881
       },
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 184,
+      "rankGrund": null,
+      "ticker": "MAGN",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 45.1,
+      "overviewKind": "gp",
+      "overviewValue": -0.128,
+      "overviewCompanion": -16.3,
+      "lamps": [
+        "burning",
+        "shortRunway",
+        "lowRoic",
+        "fcfArtefact",
+        "opIncYahooAdjusted"
+      ],
+      "name": "Magnera Corporation",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "mid",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1980,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.97,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 44.5,
+      "scoreShrunk": 45.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 37.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 2.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 18.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 32.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": null,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 83.3,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": -7.09502818297274,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
@@ -16150,9 +16152,9 @@
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": null,
+      "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
-      "ipoYear": null,
+      "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
       "cohortN": 11,
@@ -16201,7 +16203,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 36.12735001012035,
+      "revGrowthYoYPct": 36.127350010120374,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -16383,6 +16385,91 @@
     {
       "rank": 188,
       "rankGrund": null,
+      "ticker": "SNDL",
+      "formulaId": "smallcap-consumer-staples",
+      "track": "profitable",
+      "score": 44.2,
+      "overviewKind": "gp",
+      "overviewValue": 0.076,
+      "overviewCompanion": -4.7,
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "opIncYahooAdjusted"
+      ],
+      "name": "SNDL Inc.",
+      "country": "Canada",
+      "region": "North America",
+      "sector": "Consumer Defensive",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "micro",
+      "mcapKlasse": "small",
+      "ipoRecency": "growth",
+      "profitTier": "nicht-profitabel",
+      "ipoYear": 2019,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 43.7,
+      "scoreShrunk": 44.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 42.5,
+          "weight": 4.2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 72.5,
+          "weight": 0.5
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 60.5,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 37.5,
+          "weight": 0.6
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 40.5,
+          "weight": 0.3
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 35.7,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 35.7,
+          "weight": 2.4
+        }
+      ],
+      "revGrowthYoYPct": -3.6781618587321097,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 189,
+      "rankGrund": null,
       "ticker": "PRME",
       "formulaId": "smallcap-health-care",
       "track": "unprofitable",
@@ -16448,7 +16535,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 26.9,
+          "pct": 26.4,
           "weight": 0.4
         },
         {
@@ -16472,7 +16559,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 189,
+      "rank": 190,
       "rankGrund": null,
       "ticker": "TWI",
       "formulaId": "smallcap-industrials",
@@ -16492,7 +16579,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -16557,93 +16644,6 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 190,
-      "rankGrund": null,
-      "ticker": "MAGN",
-      "formulaId": "smallcap-consumer-staples",
-      "track": "profitable",
-      "score": 43.9,
-      "overviewKind": "gp",
-      "overviewValue": -0.128,
-      "overviewCompanion": -16.3,
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "lowRoic",
-        "fcfArtefact",
-        "opIncYahooAdjusted"
-      ],
-      "name": "Magnera Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Defensive",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1980,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.97,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 43.1,
-      "scoreShrunk": 43.9,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 32.5,
-          "weight": 4.2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.5,
-          "weight": 0.5
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 13.9,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 27.5,
-          "weight": 0.6
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.3
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 52.5,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 88.1,
-          "weight": 2.4
-        }
-      ],
-      "revGrowthYoYPct": -7.09502818297274,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 191,
       "rankGrund": null,
       "ticker": "LAND",
@@ -16666,7 +16666,7 @@
       "sector": "Real Estate",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "langfristig-profitabel",
