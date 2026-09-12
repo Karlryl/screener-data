@@ -8,7 +8,7 @@
     "source": "NASDAQ-Trader nasdaqlisted+otherlisted (full US listing) + Batch-MCap-Vorfilter",
     "note": "Operating-Filterung (R1-R6-artig) erfolgt zur Score-Zeit via smallcapRoute, nicht hier.",
     "builtAt": "2026-07-22T13:08:04.551Z",
-    "count": 502,
+    "count": 500,
     "partial": false
   },
   "stocks": [
@@ -97,14 +97,6 @@
       "yahoo_symbol": "WASH",
       "name": "Washington Trust Bancorp, Inc. - Common Stock",
       "marketCapUsd": 748896448,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "ODD",
-      "yahoo_symbol": "ODD",
-      "name": "ODDITY Tech Ltd. - Class A Ordinary Shares",
-      "marketCapUsd": 748140224,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -361,14 +353,6 @@
       "yahoo_symbol": "TRTX",
       "name": "TPG RE Finance Trust, Inc. Common Stock",
       "marketCapUsd": 671035264,
-      "added_via": "smallcap-builder",
-      "added_at": "2026-07-22T13:08:04.551Z"
-    },
-    {
-      "ticker": "OBE",
-      "yahoo_symbol": "OBE",
-      "name": "Obsidian Energy Ltd. Common Shares",
-      "marketCapUsd": 668435456,
       "added_via": "smallcap-builder",
       "added_at": "2026-07-22T13:08:04.551Z"
     },
@@ -4029,22 +4013,17 @@
       "added_at": "2026-07-22T13:08:04.551Z"
     }
   ],
-  "lastReconcile": "2026-09-05T09:52:43.036Z",
+  "lastReconcile": "2026-09-12T09:59:59.305Z",
   "lastReconcileRemoved": [
     {
-      "ticker": "CTMX",
+      "ticker": "ODD",
       "grund": "band-austritt-oben",
-      "mcap": 808406336
+      "mcap": 843156864
     },
     {
-      "ticker": "PROK",
+      "ticker": "OBE",
       "grund": "band-austritt-oben",
-      "mcap": 802356928
-    },
-    {
-      "ticker": "PSNYW",
-      "grund": "band-austritt-oben",
-      "mcap": 821400640
+      "mcap": 865430656
     }
   ]
 }
