@@ -1,6 +1,6 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-11T08:32:54.749Z",
+  "generated_at": "2026-09-12T08:25:58.816Z",
   "branch": "consumer-discretionary",
   "boardStatus": "diagnostic",
   "coverage": {
@@ -8,14 +8,14 @@
     "degraded": false,
     "blocked": false,
     "coverage_pct": 74.5,
-    "generated_at": "2026-09-11T08:25:45.605Z"
+    "generated_at": "2026-09-12T08:19:01.333Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "RCKY",
-      "score": 71.6,
+      "score": 72.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -40,8 +40,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 73.4,
-      "scoreShrunk": 71.6,
+      "scoreBase": 74.4,
+      "scoreShrunk": 72.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -50,7 +50,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.4,
+          "pct": 84.8,
           "weight": 1.45
         },
         {
@@ -65,7 +65,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 76.1,
+          "pct": 80.4,
           "weight": 0.55
         },
         {
@@ -99,7 +99,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "CTRN",
-      "score": 68.7,
+      "score": 66.4,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -107,7 +107,7 @@
       "overview": {
         "kind": "gp",
         "value": 0.151,
-        "companion": 33.2
+        "companion": 25.5
       },
       "name": "Citi Trends, Inc.",
       "country": "United States",
@@ -124,8 +124,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 70.3,
-      "scoreShrunk": 68.7,
+      "scoreBase": 67.8,
+      "scoreShrunk": 66.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -134,7 +134,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 84.8,
+          "pct": 80.4,
           "weight": 1.45
         },
         {
@@ -149,12 +149,12 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 84.8,
+          "pct": 76.1,
           "weight": 0.55
         },
         {
           "key": "marginTrajectory",
-          "pct": 61.4,
+          "pct": 25,
           "weight": 0.35
         },
         {
@@ -168,7 +168,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": 14.44023635786802,
+      "revGrowthYoYPct": 10.94731323722149,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -268,7 +268,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "ZUMZ",
-      "score": 60.8,
+      "score": 61,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -291,8 +291,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 61.7,
-      "scoreShrunk": 60.8,
+      "scoreBase": 61.9,
+      "scoreShrunk": 61,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -321,7 +321,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 56.8,
+          "pct": 61.4,
           "weight": 0.35
         },
         {
@@ -518,7 +518,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "WEYS",
-      "score": 56.1,
+      "score": 56.3,
       "track": "profitable",
       "lamps": [],
       "overview": {
@@ -541,8 +541,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 56.6,
-      "scoreShrunk": 56.1,
+      "scoreBase": 56.9,
+      "scoreShrunk": 56.3,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -566,7 +566,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 80.4,
+          "pct": 84.8,
           "weight": 0.55
         },
         {
@@ -600,7 +600,7 @@
       "rank": 8,
       "rankGrund": null,
       "ticker": "MBUU",
-      "score": 51.1,
+      "score": 51.2,
       "track": "profitable",
       "lamps": [
         "arDivergence"
@@ -616,7 +616,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "seasoned",
       "profitTier": "seit-kurzem-profitabel",
@@ -625,8 +625,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 51.1,
-      "scoreShrunk": 51.1,
+      "scoreBase": 51.3,
+      "scoreShrunk": 51.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -655,7 +655,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 34.1,
+          "pct": 38.6,
           "weight": 0.35
         },
         {
@@ -682,6 +682,90 @@
     },
     {
       "rank": 9,
+      "rankGrund": null,
+      "ticker": "GCO",
+      "score": 50.8,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.027,
+        "companion": 6.3
+      },
+      "name": "Genesco Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Consumer Cyclical",
+      "marketCap": null,
+      "phase": "inflected",
+      "mcapBand": "small",
+      "mcapKlasse": "small",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1973,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 23,
+      "cohortFallback": false,
+      "scoreBase": 50.8,
+      "scoreShrunk": 50.8,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 41.3,
+          "weight": 1.45
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 67.4,
+          "weight": 2.65
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 50,
+          "weight": 1.5
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 32.6,
+          "weight": 0.55
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 56.8,
+          "weight": 0.35
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 37,
+          "weight": 2.3
+        },
+        {
+          "key": "dilution",
+          "pct": 69,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": 2.753743356689098,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 10,
       "rankGrund": null,
       "ticker": "ELA",
       "score": 50.6,
@@ -756,90 +840,6 @@
         }
       ],
       "revGrowthYoYPct": 3.458304527158118,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 10,
-      "rankGrund": null,
-      "ticker": "GCO",
-      "score": 50.6,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.027,
-        "companion": 6.3
-      },
-      "name": "Genesco Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Consumer Cyclical",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1973,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 23,
-      "cohortFallback": false,
-      "scoreBase": 50.7,
-      "scoreShrunk": 50.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 41.3,
-          "weight": 1.45
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 67.4,
-          "weight": 2.65
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 50,
-          "weight": 1.5
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 32.6,
-          "weight": 0.55
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 52.3,
-          "weight": 0.35
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 37,
-          "weight": 2.3
-        },
-        {
-          "key": "dilution",
-          "pct": 69,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": 2.753743356689098,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -939,7 +939,7 @@
       "rank": 12,
       "rankGrund": null,
       "ticker": "LE",
-      "score": 47.2,
+      "score": 47.4,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -966,8 +966,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 47,
-      "scoreShrunk": 47.2,
+      "scoreBase": 47.1,
+      "scoreShrunk": 47.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -996,7 +996,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 43.2,
+          "pct": 47.7,
           "weight": 0.35
         },
         {
@@ -1193,7 +1193,7 @@
       "rank": 15,
       "rankGrund": null,
       "ticker": "FLXS",
-      "score": 42.8,
+      "score": 43,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1220,8 +1220,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 42.2,
-      "scoreShrunk": 42.8,
+      "scoreBase": 42.4,
+      "scoreShrunk": 43,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1250,7 +1250,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 47.7,
+          "pct": 52.3,
           "weight": 0.35
         },
         {
@@ -1363,7 +1363,7 @@
       "rank": 17,
       "rankGrund": null,
       "ticker": "PTLO",
-      "score": 40.2,
+      "score": 40.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -1392,8 +1392,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 39.4,
-      "scoreShrunk": 40.2,
+      "scoreBase": 39.5,
+      "scoreShrunk": 40.4,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1422,7 +1422,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 25,
+          "pct": 29.5,
           "weight": 0.35
         },
         {
@@ -1454,7 +1454,7 @@
       "rank": 18,
       "rankGrund": null,
       "ticker": "ETD",
-      "score": 40.1,
+      "score": 40.2,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -1479,8 +1479,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 39.2,
-      "scoreShrunk": 40.1,
+      "scoreBase": 39.4,
+      "scoreShrunk": 40.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1509,7 +1509,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 38.6,
+          "pct": 43.2,
           "weight": 0.35
         },
         {
@@ -1538,7 +1538,7 @@
       "rank": 19,
       "rankGrund": null,
       "ticker": "STRT",
-      "score": 39.5,
+      "score": 39.7,
       "track": "profitable",
       "lamps": [
         "peakMargin",
@@ -1564,8 +1564,8 @@
       "coverageWeight": 1,
       "cohortN": 23,
       "cohortFallback": false,
-      "scoreBase": 38.6,
-      "scoreShrunk": 39.5,
+      "scoreBase": 38.8,
+      "scoreShrunk": 39.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1594,7 +1594,7 @@
         },
         {
           "key": "marginTrajectory",
-          "pct": 29.5,
+          "pct": 34.1,
           "weight": 0.35
         },
         {
@@ -1901,7 +1901,7 @@
       "sector": "Consumer Cyclical",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -2305,7 +2305,7 @@
           "weight": 1.2
         }
       ],
-      "revGrowthYoYPct": 12.782874448373494,
+      "revGrowthYoYPct": 12.782874448373471,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -3015,10 +3015,10 @@
         "pctl": 0.769
       },
       "ath": {
-        "distancePct": -82.6,
+        "distancePct": -82.1,
         "athDate": "2021-11-15",
         "monthsAgo": 58,
-        "lastDate": "2026-09-10"
+        "lastDate": "2026-09-11"
       },
       "qPunkte": null,
       "qSpanTage": null,
