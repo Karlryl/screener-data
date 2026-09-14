@@ -20,9 +20,17 @@ const path = require('node:path');
 
 const REPO = path.resolve(__dirname, '..', '..');
 const MODUL_DIR = path.join(REPO, 'lib', 'druckenmiller');
+// [REV7-4]: der Scan laeuft auf BEIDEN Seiten des Moduls. Hier die screener-data-Seite:
+// lib/druckenmiller/** UND scripts/*druckenmiller* — als GLOB, nicht als Namensliste. Eine
+// Liste haette den Schreiber aus Chunk 1 stillschweigend nicht gesehen (die findash-Seite,
+// data-layer/druckenmiller.js und web/src/components/druckenmiller.tsx, prueft Chunk 5/6
+// im eigenen Repo).
+const SKRIPTE = fs.readdirSync(path.join(REPO, 'scripts'))
+  .filter((f) => f.includes('druckenmiller') && f.endsWith('.js'))
+  .map((f) => path.join(REPO, 'scripts', f));
 const DATEIEN = fs.readdirSync(MODUL_DIR).filter((f) => f.endsWith('.js'))
   .map((f) => path.join(MODUL_DIR, f))
-  .concat([path.join(REPO, 'scripts', 'druckenmiller-log-internals.js')]);
+  .concat(SKRIPTE);
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -40,7 +48,11 @@ const VERBOTEN = [
 // Name einer bestehenden Daten-Verdachts-LAMPE (pull-yahoo.js:4237), die D4 als
 // Ausschluss-Kriterium nennt. Das Modul LIEST das Flag, es rechnet nichts um. Die
 // Ausnahme ist genau dieser eine String — jede andere Schreibweise faellt weiter durch.
-const AUSNAHMEN = ['_annualCurrencyLeakSuspect', 'annualCurrencyLeak'];
+// Zweite Ausnahme (Chunk 1, gefunden beim ersten Lauf des erweiterten Globs): der
+// stumpfe Teilstring-Test sieht in `Number.isInteger` das Wertpapier-Kennzeichen ISIN.
+// Der Test bleibt bewusst stumpf — statt ihn mit Wortgrenzen zu verfeinern (was die
+// echten Treffer aufweichen wuerde) wird genau dieser eine Bezeichner benannt.
+const AUSNAHMEN = ['_annualCurrencyLeakSuspect', 'annualCurrencyLeak', 'Number.isInteger'];
 
 function gesaeubert(quelle) {
   let s = quelle;
@@ -55,7 +67,8 @@ test('F1 kein Waehrungs-, FX- oder Boersen-Identitaets-Bezeichner im ganzen Modu
     for (const w of VERBOTEN) if (s.includes(w)) treffer.push(path.basename(datei) + ' -> ' + w);
   }
   assert.deepEqual(treffer, [], 'gesperrte F-16-Klasse beruehrt: ' + treffer.join(' · '));
-  assert.ok(DATEIEN.length >= 4, 'der Waechter hat kaum Dateien gesehen — dann prueft er nichts');
+  assert.ok(DATEIEN.length >= 5, 'der Waechter hat kaum Dateien gesehen — dann prueft er nichts');
+  assert.ok(SKRIPTE.length >= 2, 'der Glob findet den Export-Schreiber nicht — dann ist er ungeprueft');
 });
 
 test('F2 BRUCHPROBE: derselbe Waechter faengt einen eingeschmuggelten Bezeichner', () => {
@@ -66,6 +79,10 @@ test('F2 BRUCHPROBE: derselbe Waechter faengt einen eingeschmuggelten Bezeichner
   // und die Ausnahme rettet NUR sich selbst, nicht ihre Nachbarschaft:
   assert.ok(!VERBOTEN.some((w) => gesaeubert('if (meta._annualCurrencyLeakSuspect) return "suspect";').includes(w)));
   assert.ok(VERBOTEN.some((w) => gesaeubert('const c = meta.reportingCurrency;').includes(w)));
+  // Dasselbe fuer die zweite Ausnahme: sie rettet Number.isInteger, nicht die ISIN.
+  assert.ok(!VERBOTEN.some((w) => gesaeubert('if (Number.isInteger(n)) return n;').includes(w)));
+  assert.ok(VERBOTEN.some((w) => gesaeubert('const x = row.isinCode;').includes(w)),
+    'eine echte ISIN laeuft durch — die Ausnahme ist zu breit');
 });
 
 test('F3 der Suffix-Test bleibt ein String-Test — kein Zerlegen, kein Suffix-Katalog', () => {

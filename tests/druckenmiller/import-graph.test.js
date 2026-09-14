@@ -104,7 +104,8 @@ test('G3 nur der Logger und die eigenen Tests importieren lib/druckenmiller', ()
   const importeure = alle.filter((f) => !f.includes(path.join('lib', 'druckenmiller'))
     && /require\(\s*['"][^'"]*druckenmiller[^'"]*['"]\s*\)/.test(fs.readFileSync(f, 'utf8')));
   const erlaubt = importeure.every((f) => f.includes(path.join('tests', 'druckenmiller'))
-    || f.endsWith(path.join('scripts', 'druckenmiller-log-internals.js')));
+    || f.endsWith(path.join('scripts', 'druckenmiller-log-internals.js'))
+    || f.endsWith(path.join('scripts', 'write-druckenmiller-export.js')));
   assert.ok(erlaubt, 'unerwarteter Importeur: ' + importeure.join(', '));
   assert.ok(importeure.length >= 2, 'der Waechter findet gar keine Importeure — dann prueft er nichts');
 });
@@ -168,14 +169,35 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
     console.log('       (keine Auslieferung auf der Platte — nur der Waechter selbst geprueft)');
     return;
   }
+  // AUSGENOMMEN: v1/druckenmiller/ (Chunk 1). Der Unterordner traegt eine EIGENE
+  // Schema-Id (findash-druckenmiller/v1), einen eigenen --check und eine eigene weisse
+  // Liste (scripts/write-druckenmiller-export.js, tests/druckenmiller/write-export.test.js);
+  // BUILD-SPEC §1 verlangt genau diese Trennung ("shared fixture untouched"). Seine ~35
+  // Schluessel in DIESE Fixture zu ziehen waere die Umkehrung des Waechters: `l1`, `asOf`
+  // oder `freshShare` waeren danach auch in einer BOARD-Zeile erlaubt. Der Ausschluss ist
+  // eng — er nennt genau ein Verzeichnis, und der Gegen-Test unten prueft das.
+  const AUSGENOMMEN = 'druckenmiller';
   const dateien = [];
+  const uebersprungen = [];
   const sammle = (d) => {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const f = path.join(d, e.name);
-      if (e.isDirectory()) sammle(f); else if (e.name.endsWith('.json')) dateien.push(f);
+      if (e.isDirectory()) {
+        if (e.name === AUSGENOMMEN) { uebersprungen.push(f); continue; }
+        sammle(f);
+      } else if (e.name.endsWith('.json')) dateien.push(f);
     }
   };
   sammle(wurzel);
+  // Gegen-Test zum Ausschluss: er darf NUR diesen einen Ordner treffen. Liegt er da,
+  // muss er auch wirklich uebersprungen worden sein — und nichts sonst.
+  assert.ok(uebersprungen.length <= 1, 'der Ausschluss trifft mehr als einen Ordner: ' + uebersprungen);
+  if (fs.existsSync(path.join(wurzel, AUSGENOMMEN))) {
+    assert.equal(uebersprungen.length, 1, 'der Druckenmiller-Ordner liegt da, wurde aber mitgezaehlt');
+    assert.ok(dateien.every((f) => !f.includes(path.sep + AUSGENOMMEN + path.sep)));
+    assert.ok(dateien.some((f) => f.includes('overview.json') || f.includes('index.json')),
+      'nach dem Ausschluss sieht der Waechter die Board-Auslieferung nicht mehr — dann prueft er nichts');
+  }
   for (const f of dateien) {
     let j; try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { continue; }
     lauf(j);
