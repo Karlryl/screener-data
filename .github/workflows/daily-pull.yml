@@ -1160,6 +1160,23 @@ jobs:
         run: node scripts/update-ath-state.js
         continue-on-error: true
 
+      # DRUCKENMILLER-MODUL, CHUNK 0 (Rat-Verdikt D2 vom 14.09.2026, einstimmig 90 %):
+      # taeglicher Mitschrieb der Marktinnereien (Breite ueber SMA200/50, neue Hochs minus
+      # neue Tiefs, zyklisch minus defensiv, Sektor-RS, Fuehrungs-Verengung) in eine
+      # append-only-Reihe mit Hash-Kette. ZEITKRITISCH und nicht nachholbar: der Preis-Store
+      # ist ein rollendes ~400-Tage-Fenster — was heute nicht gerechnet wird, ist weg,
+      # sobald seine Balken herausfallen. Genau deshalb startet dieser Chunk vor dem Urteil.
+      # HIER, weil update-ath-state.js daneben denselben Store bereits geladen hat und
+      # snapshots/ nach dem F-12-Filter vollstaendig vorliegt. Das Skript beruehrt
+      # src/scoring/** nicht (Waechter tests/druckenmiller/import-graph.test.js) und schreibt
+      # nur nach druckenmiller-history/ — das faehrt im git add -A des Commit-Schritts mit.
+      # continue-on-error: ein Mitschrieb darf Karls Datenlauf nie anhalten. Dass dieses
+      # Ventil den Ausfall verschluckt, ist NICHT hingenommen — dafuer steht der scharfe
+      # Pruefschritt nach dem Commit (Anklage A1, Gericht 14.09.2026).
+      - name: Druckenmiller-Innereien mitschreiben (Chunk 0)
+        run: node scripts/druckenmiller-log-internals.js
+        continue-on-error: true
+
       # Vorwaerts-Mitschrift der Early-Detection-Studie (Verfassung 2.0.0, E0).
       # Ereignisgetrieben an den bestehenden Lauf gehaengt: sie fasst NUR an, was der
       # Lauf ohnehin schon geholt hat (external-data/sec-*), rechnet nichts, liest keine
@@ -1299,6 +1316,27 @@ jobs:
             fi
           done
           exit $rot
+
+      # Der Ledger faehrt als EIGENES Artefakt weiter — zum Waechter-Job unten und (ab
+      # Chunk 1) zum Export im scoring-Job. BEWUSST NICHT im Schritt "Upload merge→scoring
+      # handoff": dessen `if-no-files-found: warn` traegt die fail-soft-Semantik seiner
+      # drei optionalen Dateien (:1384). Eine gemeinsame Einstellung wuerde entweder die
+      # drei scharf stellen (Aenderung ausserhalb dieses Moduls) oder den Ledger stumm
+      # schalten — Anklage A1, Punkt 4. Darum ein zweiter Schritt mit `error`.
+      # KEIN scharfer --check HIER: ein roter merge-Job wuerde den scoring-Job (needs:
+      # merge, ohne always()) mitnehmen und damit Karls Boards nicht mehr deployen. Der
+      # scharfe Teil steht im eigenen Job `druckenmiller-guard` hinter scoring, wo sein
+      # Ausfall den LAUF rot faerbt, ohne die Boards anzufassen (Gericht Runde 1).
+      - name: Upload Druckenmiller-Ledger
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: druckenmiller-ledger
+          path: |
+            druckenmiller-history/internals-ledger.jsonl
+            druckenmiller-history/internals-ledger.jsonl.meta.json
+          if-no-files-found: error
+          retention-days: 7
 
       # Task 0.3: upload the final merged snapshots/ so the scoring job scores them on
       # a fresh runner. Runs after Commit so it captures the complete post-pull set.
@@ -2028,6 +2066,21 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # Der Druckenmiller-Teil der Auslieferung faehrt als eigenes Artefakt zum
+      # Waechter-Job (Gericht, Wiederaufnahme 14.09.2026: der Waechter sieht BEIDE
+      # Seiten — die Reihe und das, was daraus veroeffentlicht wurde, inklusive eines
+      # eventuellen _FAILED.json). `if: hashFiles(...)` statt eines unbedingten
+      # Schritts mit `warn`: Chunk 0 schreibt diesen Ordner noch nicht, und eine
+      # Warnung in jedem gruenen Lauf wird nach einer Woche weggeschaut.
+      - name: Upload Druckenmiller-Export (Waechter-Eingang)
+        if: hashFiles('outputs/findash-export/v1/druckenmiller/**') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: druckenmiller-export
+          path: outputs/findash-export/v1/druckenmiller
+          if-no-files-found: error
+          retention-days: 7
+
       # audit BH-114: frueher fing `|| { git init -b gh-pages }` JEDEN Clone-Fehler ab
       # — auch transiente DNS/Auth/Netz-Aussetzer, nicht nur einen tatsaechlich
       # fehlenden Branch. Ein transienter Fehler fuehrte dann zum Force-Push eines
@@ -2223,6 +2276,13 @@ jobs:
           # sie nie erfasst; gezieltes add auf die Datei (nie -A), NIE das ganze
           # data-health/ (das traegt bereits anderswo committete Baseline-Dateien).
           if [ -f data-health/p99-delta-history.json ]; then git add data-health/p99-delta-history.json; fi
+          # Druckenmiller-Ledger (Chunk 0): der merge-Job schreibt und committet ihn per
+          # `git add -A` schon selbst — dieser Pfad ist der ZWEITE Weg fuer den Fall, dass
+          # der scoring-Job die Reihe aus dem Artefakt bezieht (ab Chunk 1) und dabei Zeilen
+          # ergaenzt. Gleiche Existenzpruefung statt `|| true` wie oben, gleicher Grund:
+          # ein unterdruecktes git-add verschluckt auch echte Fehler. Liegt nichts vor
+          # oder ist der Inhalt identisch, faellt der Commit-Vergleich unten leer aus.
+          if [ -d druckenmiller-history ]; then git add druckenmiller-history/; fi
           if git diff --staged --quiet; then
             echo "No vintage changes to commit."
           else
@@ -2422,8 +2482,78 @@ jobs:
   # KEIN board-history-Vintage: dieser Job schreibt ausschliesslich nach
   # outputs/pipeline-status/v1/ und fasst weder board-history/ noch main an.
   # ============================================================================
+
+  # ============================================================================
+  # DRUCKENMILLER-WAECHTER (Gericht Runde 1, 14.09.2026 — Anklage A1)
+  #
+  # DER BEFUND: die Modul-Spezifikation gab BEIDEN neuen Schritten
+  # `continue-on-error: true`. Die Schlussfolgerung eines solchen Schritts ist
+  # "success" — Hash-Kette, never-shrink und Luecken-Waechter haetten also nie einen
+  # Lauf rot machen koennen, und der Ausfall waere ausgerechnet von dem Feld gemeldet
+  # worden, das der abgestuerzte Schritt selbst schreibt.
+  #
+  # WARUM EIN EIGENER JOB und nicht ein scharfer Schritt in merge oder scoring: ein
+  # roter merge-Job nimmt scoring mit (needs: merge, ohne always()) und damit Karls
+  # Board-Deploy — eine Messreihe darf die Auslieferung nicht anhalten. Hier haengt
+  # der Waechter HINTER scoring: die Boards sind zu diesem Zeitpunkt deployed, sein
+  # exit 1 faerbt nur noch den LAUF rot. Das ist genau der Kanal, den Karl liest.
+  #
+  # OHNE continue-on-error, mit Absicht. Geprueft wird der ZUSTAND der transportierten
+  # Datei: kein Ledger · gebrochene Kette · geschrumpfte Reihe · Loch INNERHALB der
+  # Reihe (ledgerGapDays) · stehengebliebene Reihe (staleSessions) · zu wenig frische
+  # Ticker in der neuesten Zeile (freshShare < 0.95).
+  #
+  # BEKANNTE DECKE (ponytail): der Checkout steht auf github.sha und kennt den
+  # Merge-Commit dieses Laufs nicht; der Sitzungskalender kommt daher aus dem Preis-
+  # Store des Trigger-Commits. Der ist hoechstens AELTER als der Ledger — das kann den
+  # Waechter still machen, nie falsch laut. Die Frische-Zahl der Tageszeile stammt aus
+  # der Zeile selbst und ist davon unberuehrt.
+  # Waechter dieses Jobs: tests/druckenmiller/ci-wiring.test.js.
+  # ============================================================================
+  druckenmiller-guard:
+    needs: scoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      # KEIN continue-on-error: faellt der Abruf aus, prueft der Schritt darunter den
+      # committeten (also aelteren) Stand und wird ueber staleSessions von selbst laut.
+      - name: Download Druckenmiller-Ledger
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: druckenmiller-ledger
+          path: druckenmiller-history
+
+      # Zweite Seite: was der scoring-Job tatsaechlich veroeffentlicht hat. Fehlt das
+      # Artefakt (Chunk 0 schreibt den Ordner noch nicht, oder scoring kam nicht so weit),
+      # ist das KEIN Befund — der Waechter prueft dann nur die Reihe. Ein vorhandenes
+      # _FAILED.json dagegen ist ROT: dann hat ein frueherer Schritt den Export selbst
+      # fuer ungueltig erklaert.
+      - name: Download Druckenmiller-Export (falls vorhanden)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: druckenmiller-export
+          path: outputs/findash-export/v1/druckenmiller
+
+      # ROT nur bei Integritaet (Loch, Schrumpfen, Kettenbruch, NaN, fehlendes Feld,
+      # _FAILED.json). Die Frische (freshShare < 0.95) ist GELB: sie steht als
+      # ::warning:: in der Annotation, die Zeile traegt lowFreshness und speist kein
+      # Quantil — aber der Lauf bleibt gruen. Ein unvollstaendiger Kursabruf ist ein
+      # bekannter Zustand des Tageslaufs; ihn rot zu faerben hiesse, Karls Lauf an einer
+      # Sache anzuhalten, die die Reihe selbst korrekt behandelt.
+      - name: Ledger pruefen (Kette, never-shrink, Luecken, Frische)
+        run: node scripts/druckenmiller-log-internals.js --check
+
   laufstatus:
-    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter]
+    needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10

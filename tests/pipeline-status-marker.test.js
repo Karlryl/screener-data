@@ -319,11 +319,15 @@ test('JOB_REIHENFOLGE ist GENAU diese Prioritaet (sie bestimmt failed_job)', () 
   // im merge-Job zum eigenen Job geworden, damit sein rotes X nicht mehr den Scoring-Tag
   // kostet. Er steht ganz HINTEN bei den anderen nicht-blockierenden Diagnose-Waechtern;
   // die Regel "Kettenglieder vor Diagnose-Waechtern" bleibt unberuehrt.
+  // 14.09.2026 (Gericht Runde 1): 'druckenmiller-guard' dazu. Auch hier hat sich die SACHE
+  // geaendert — der Ledger-Waechter des Druckenmiller-Moduls ist ein eigener Job hinter
+  // scoring, damit sein rotes X den Board-Deploy nicht anhaelt. Er steht ganz HINTEN bei
+  // den nicht-blockierenden Diagnose-Waechtern; die Regel bleibt unberuehrt.
   assert.deepEqual(JOB_REIHENFOLGE,
     ['prep', 'pull', 'prices', 'merge', 'scoring', 'entdeckungs-waechter', 'earnings-transport-waechter',
-      'jahres-ausreisser-waechter'],
+      'jahres-ausreisser-waechter', 'druckenmiller-guard'],
     'die Prioritaets-Reihenfolge hat sich geaendert. Sie entscheidet, welcher Job im Banner als '
-    + 'Ursache steht: die fuenf Kettenglieder zuerst, die drei nicht-blockierenden Diagnose-'
+    + 'Ursache steht: die fuenf Kettenglieder zuerst, die vier nicht-blockierenden Diagnose-'
     + 'Waechter dahinter. Steht ein Waechter vorn, meldet der Marker bei einem Doppelausfall den '
     + 'Diagnose-Job statt des Datenschritts — Karl sucht am falschen Job.');
 });

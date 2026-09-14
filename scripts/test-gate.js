@@ -66,7 +66,11 @@ const NODE_TEST_PROBE_FILE = path.join(__dirname, 'test-gate-node-test-probe.js'
 // ── Spur 1: blockierend ───────────────────────────────────────────────────────
 // Unveraendert aus dem bisherigen GATE_GLOB. Was falsche Zahlen ausliefern
 // koennte, darf den Tageslauf weiter anhalten.
-const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js'];
+// tests/druckenmiller/ ist BLOCKIEREND (Chunk 0, 14.09.2026): dort haengen die Grenzen des
+// Moduls — Import-Graph gegen src/scoring/**, die gesperrte F-16-Klasse, Hash-Kette und
+// never-shrink der Messreihe. Alle Dateien sind hermetisch (Temp-Fixtures, kein Netz, kein
+// Universum) und damit pre-pull voll aussagekraeftig.
+const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js', 'tests/druckenmiller/*test.js'];
 
 // ── Spur 2: meldend (Forschungs-Bestand) ──────────────────────────────────────
 // Diese Tests zaehlen den Bestand der Studien-Ablage (SEC-Archive, Wayback,
