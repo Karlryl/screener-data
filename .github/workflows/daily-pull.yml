@@ -1342,6 +1342,7 @@ jobs:
           path: |
             druckenmiller-history/internals-ledger.jsonl
             druckenmiller-history/internals-ledger.jsonl.meta.json
+            druckenmiller-history/raw/
           if-no-files-found: error
           retention-days: 7
 
@@ -2073,6 +2074,35 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # ------------------------------------------------------------------
+      # Druckenmiller Chunk 1: Auslieferung schreiben und pruefen.
+      #
+      # WARUM DAS LEDGER-ARTEFAKT HIER GEHOLT WIRD: dieser Job checkt den
+      # TRIGGER-Commit aus. Die Zeile von heute entsteht aber erst im merge-Job und
+      # ist im Checkout noch nicht da — der Schreiber wuerde jeden Tag den Stand von
+      # gestern veroeffentlichen, still und mit gruenem Haken. Der Abruf ist
+      # fail-soft (Karls Boards duerfen nie an dieser Messreihe haengen); faellt er
+      # aus, faellt es im Waechter-Job auf: dort liegt das Artefakt von heute, und
+      # `--check` vergleicht asOf gegen die letzte Ledger-Zeile (Schlepp-Kante).
+      - name: Download Druckenmiller-Ledger (Schreiber-Eingang)
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: druckenmiller-ledger
+          path: druckenmiller-history
+
+      # FAIL-SOFT, beide Schritte: ein roter Schritt hier wuerde ueber `if: success()`
+      # den Pages-Deploy darunter ueberspringen und Karls Boards zurueckhalten. Der
+      # Vertrag wird trotzdem gehalten — der Pruefschritt ersetzt bei einem Befund den
+      # Ordner durch EINEN _FAILED.json, der mit deployt wird; findashs Leser sieht
+      # damit "heute gilt nichts" statt gestern als heute. Scharf gelesen wird
+      # derselbe Befund im Job `druckenmiller-guard` hinter diesem Job.
+      - name: Druckenmiller-Export schreiben (fail-soft)
+        run: node scripts/write-druckenmiller-export.js || true
+
+      - name: Druckenmiller-Export pruefen (fail-soft, schreibt _FAILED.json)
+        run: node scripts/write-druckenmiller-export.js --check || true
+
       # Der Druckenmiller-Teil der Auslieferung faehrt als eigenes Artefakt zum
       # Waechter-Job (Gericht, Wiederaufnahme 14.09.2026: der Waechter sieht BEIDE
       # Seiten — die Reihe und das, was daraus veroeffentlicht wurde, inklusive eines
@@ -2558,6 +2588,14 @@ jobs:
       # Sache anzuhalten, die die Reihe selbst korrekt behandelt.
       - name: Ledger pruefen (Kette, never-shrink, Luecken, Frische)
         run: node scripts/druckenmiller-log-internals.js --check
+
+      # ZWEITE SEITE, SCHARF (Chunk 1): dieselbe Pruefung wie im scoring-Job, aber hier
+      # OHNE `|| true` — und gegen das Ledger-Artefakt von HEUTE. Damit faellt genau der
+      # Fall auf, den der scoring-Job strukturell nicht sehen kann: eine Auslieferung,
+      # die auf dem Stand von gestern steht (asOf != letzte Ledger-Zeile), ein
+      # _FAILED.json im Deploy, ein fehlender Ordner, ein anderer paramsHash.
+      - name: Druckenmiller-Export pruefen (scharf)
+        run: node scripts/write-druckenmiller-export.js --check
 
       # PERSISTENZ-WACHE (Review-Fund, Muster: "M1/M9-Persistenz pruefen" im merge-Job).
       # DER BEFUND: der Schritt darueber prueft das ARTEFAKT dieses Laufs — nicht, ob die

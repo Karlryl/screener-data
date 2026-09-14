@@ -197,5 +197,62 @@ test('C11 REVIEW-FUND: der Waechter prueft auch, ob die Zeile auf main angekomme
   'die Persistenz-Wache muss NACH der Integritaets-Pruefung stehen');
 });
 
+test('C12 Chunk 1: schreiben und pruefen stehen hinter dem Vertrags-Tor und VOR dem Deploy', () => {
+  const gate = schrittZeile('Verify findash-export v1 schema (contract gate)');
+  const schreiben = schrittZeile('Druckenmiller-Export schreiben (fail-soft)');
+  const pruefen = schrittZeile('Druckenmiller-Export pruefen (fail-soft, schreibt _FAILED.json)');
+  const upload = schrittZeile('Upload Druckenmiller-Export (Waechter-Eingang)');
+  const deploy = schrittZeile('Deploy Scoring Output to GitHub Pages');
+  assert.ok(gate < schreiben && schreiben < pruefen,
+    'geprueft wird vor dem Schreiben — dann prueft der Schritt den Stand von gestern');
+  assert.ok(pruefen < upload,
+    'der Waechter-Eingang wird hochgeladen, BEVOR der Pruefschritt laeuft — der Waechter bekaeme '
+    + 'dann die Datendateien statt des _FAILED.json, das der Deploy tatsaechlich veroeffentlicht');
+  assert.ok(upload < deploy, 'der Deploy laeuft vor dem Upload');
+});
+
+test('C13 KERN: beide Export-Schritte sind fail-soft — Karls Boards haengen nie an der Messreihe', () => {
+  // `if: success()` am Deploy: ein roter Schritt hier wuerde die Boards zurueckhalten.
+  // Der Vertrag wird trotzdem gehalten, weil der Pruefschritt selbst den _FAILED.json
+  // schreibt, bevor er (weich) faellt.
+  for (const name of ['Druckenmiller-Export schreiben (fail-soft)',
+    'Druckenmiller-Export pruefen (fail-soft, schreibt _FAILED.json)']) {
+    const b = ohneKommentarzeilen(block(name));
+    assert.match(b, /\|\| true/, name + ' kann den scoring-Job rot machen und damit den Board-Deploy '
+      + 'ueberspringen (Deploy traegt if: success())');
+  }
+  assert.match(block('Deploy Scoring Output to GitHub Pages'), /if:\s*success\(\)/,
+    'die Annahme hinter dem fail-soft ist weg — dann duerfen die Schritte scharf sein');
+});
+
+test('C14 der Schreiber bekommt die Zeile von HEUTE (sonst veroeffentlicht er ewig gestern)', () => {
+  // Der scoring-Job checkt den Trigger-Commit aus; die heutige Ledger-Zeile entsteht
+  // erst im merge-Job. Ohne diesen Abruf stuende asOf jeden Tag auf gestern — gruen.
+  const abruf = ohneKommentarzeilen(block('Download Druckenmiller-Ledger (Schreiber-Eingang)'));
+  assert.match(abruf, /name:\s*druckenmiller-ledger/);
+  assert.match(abruf, /path:\s*druckenmiller-history/);
+  assert.match(abruf, /continue-on-error:\s*true/,
+    'ein fehlgeschlagener Abruf wuerde den scoring-Job rot machen und die Boards anhalten');
+  assert.ok(schrittZeile('Download Druckenmiller-Ledger (Schreiber-Eingang)')
+    < schrittZeile('Druckenmiller-Export schreiben (fail-soft)'), 'der Abruf steht hinter dem Schreiben');
+  // Und die Roh-Zeilen reisen mit: ohne die Datei von heute ist das 5-%-Churn-Tor
+  // fuer genau die Sitzung blind, fuer die es gilt.
+  assert.match(ohneKommentarzeilen(block(ARTEFAKT)), /druckenmiller-history\/raw\//,
+    'das Ledger-Artefakt traegt die Roh-Zeilen des Tages nicht');
+});
+
+test('C15 der scharfe Export-Check im Waechter-Job traegt KEIN continue-on-error', () => {
+  const b = ohneKommentarzeilen(block('Druckenmiller-Export pruefen (scharf)'));
+  assert.match(b, /write-druckenmiller-export\.js --check/);
+  assert.ok(!/continue-on-error/.test(b), 'der scharfe Check faellt weich aus — dann prueft er nichts');
+  assert.ok(!/\|\| true/.test(b), 'der scharfe Check schluckt seinen eigenen Exit-Code');
+  // Er steht im Waechter-Job, nicht irgendwo — sonst faerbt sein Befund den falschen Job.
+  const jobStart = ZEILEN.findIndex((l) => l.trim() === 'druckenmiller-guard:');
+  const jobEnde = ZEILEN.findIndex((l, i) => i > jobStart && /^  [a-z-]+:$/.test(l));
+  const zeile = schrittZeile('Druckenmiller-Export pruefen (scharf)');
+  assert.ok(zeile > jobStart && zeile < jobEnde,
+    'der scharfe Check steht ausserhalb des Waechter-Jobs');
+});
+
 console.log('\nci-wiring.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
