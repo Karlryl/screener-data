@@ -116,6 +116,14 @@ test('C6 eigenes Artefakt mit if-no-files-found: error, ohne den fail-soft-Hando
     'die fail-soft-Semantik der drei fremden Dateien wurde mitverschaerft — das waere eine '
     + 'Aenderung ausserhalb dieses Moduls (Anklage A1, Punkt 4)');
   assert.ok(!/druckenmiller/.test(handoff), 'der Ledger haengt im gemeinsamen, stummen Artefakt');
+  // Der Upload darf den merge-Job NICHT rot machen (er naehme ueber needs: merge den
+  // Board-Deploy mit). Laut wird ein fehlender Ledger im Waechter-Job, dessen Abruf
+  // nicht fail-soft ist — dort gehoert der Alarm hin.
+  assert.match(b, /continue-on-error:\s*true/,
+    'ein fehlender Ledger wuerde den merge-Job und damit Karls Board-Deploy anhalten');
+  const abruf = block('Download Druckenmiller-Ledger');
+  assert.ok(!/continue-on-error/.test(abruf.split('#').join('')),
+    'faellt auch der Abruf im Waechter-Job weich aus, meldet ein fehlender Ledger nirgends mehr');
 });
 
 test('C7 der Vintage-Commit meldet druckenmiller-history/ mit an', () => {

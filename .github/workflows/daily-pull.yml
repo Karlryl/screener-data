@@ -1327,8 +1327,15 @@ jobs:
       # merge, ohne always()) mitnehmen und damit Karls Boards nicht mehr deployen. Der
       # scharfe Teil steht im eigenen Job `druckenmiller-guard` hinter scoring, wo sein
       # Ausfall den LAUF rot faerbt, ohne die Boards anzufassen (Gericht Runde 1).
+      # continue-on-error trotz `error` unten, und das ist kein Widerspruch: `error` macht
+      # den SCHRITT laut, wenn der Ledger fehlt (Annotation im Lauf), aber ein fehlender
+      # Ledger darf den merge-Job nicht rot machen — der nimmt ueber `needs: merge` den
+      # ganzen scoring-Job und damit Karls Board-Deploy mit. Laut wird der Fall trotzdem:
+      # ohne Artefakt scheitert im Waechter-Job der Abruf (dort NICHT fail-soft), und der
+      # Lauf ist rot, ohne dass die Boards etwas davon haben.
       - name: Upload Druckenmiller-Ledger
         if: success()
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: druckenmiller-ledger
