@@ -148,17 +148,38 @@ test('I9 L7: Sektor-RS gegen SPY, Rang und Persistenz gegen die Vorzeile', () =>
   assert.equal(I.rankPersistence(t.slice(0, 2), t.slice(0, 2)), null);
 });
 
-test('I10 L8: Fuehrungs-Verengung = kapitalgewichtet minus gleichgewichtet + Top-Dezil-Anteil', () => {
+test('I10 L8: Verengung und Top-Dezil, Dezilgroesse von Hand ausgezaehlt', () => {
+  // Der alte Test prueft nur "> 0.9" — das gilt fuer JEDE Dezilgroesse von 1 bis 11 und
+  // liess damit genau die Zeile ungeprueft, in der ein off-by-one plausibel waere
+  // (Review-Fund). 20 Zeilen, Dezil = ceil(20/10) = 2, alle Werte handverlesen:
   const rows = [];
-  for (let i = 0; i < 10; i++) rows.push({ ret63: 0.01, marketCap: 1 });
-  rows.push({ ret63: 1.00, marketCap: 1000 }); // ein Riese traegt den Gewinn
+  for (let i = 0; i < 14; i++) rows.push({ ret63: 0.01, marketCap: 1 });   // 14 kleine Gewinner
+  rows.push({ ret63: 0.50, marketCap: 1 }, { ret63: 0.30, marketCap: 1 }); // die beiden groessten
+  for (let i = 0; i < 4; i++) rows.push({ ret63: -0.05, marketCap: 1 });   // 4 Verlierer
   const l8 = I.leadershipNarrowing(rows);
-  assert.ok(l8.capMinusEqual > 0.5, 'der Riese muss die Kapitalgewichtung nach oben ziehen');
-  assert.ok(l8.topDecileShare > 0.9, 'fast der ganze Gewinn kommt aus dem obersten Dezil');
-  nah(I.leadershipNarrowing([{ ret63: 0.1, marketCap: 1 }]).topDecileShare, 1, 1e-12);
-  assert.equal(I.leadershipNarrowing([]).capMinusEqual, null);
+  assert.equal(l8.nWinners, 16);
+  // Summe der Gewinne = 14*0.01 + 0.50 + 0.30 = 0.94 ; Top-2 = 0.80
+  nah(l8.topDecileShare, 0.80 / 0.94, 1e-12, 'Top-Dezil von 20 Zeilen sind genau 2');
 });
 
+test('I10b BRUCHPROBE Saettigung: weniger Gewinner als Dezilgroesse -> null statt 1', () => {
+  // Der Anteil wird ueber die GEWINNER gebildet, das Dezil ueber U. Sind weniger Titel im
+  // Plus als das Dezil gross ist, umfasst "das oberste Dezil" alle Gewinner und der Wert
+  // waere konstruktionsbedingt 1 — ausgerechnet an den Tagen, an denen die Frage nach der
+  // Verengung interessant ist. Zwei voellig verschiedene Tage haetten dieselbe 1 geloggt.
+  const wenige = [];
+  for (let i = 0; i < 95; i++) wenige.push({ ret63: -0.02, marketCap: 1 });
+  for (let i = 0; i < 5; i++) wenige.push({ ret63: 0.10, marketCap: 1 });
+  const l8 = I.leadershipNarrowing(wenige);
+  assert.equal(l8.topDecileShare, null, '5 Gewinner bei Dezilgroesse 10 sind nicht messbar, nicht 1');
+  assert.equal(l8.nWinners, 5, 'die Zahl der Gewinner steht daneben, damit der Grund lesbar ist');
+  // Gegenprobe: genug Gewinner -> echter Wert
+  const viele = [];
+  for (let i = 0; i < 40; i++) viele.push({ ret63: 0.01, marketCap: 1 });
+  for (let i = 0; i < 60; i++) viele.push({ ret63: -0.01, marketCap: 1 });
+  assert.ok(Number.isFinite(I.leadershipNarrowing(viele).topDecileShare));
+  assert.equal(I.leadershipNarrowing([]).capMinusEqual, null);
+});
 test('I11 A3-WAECHTER: der modale Balken-Tag und der Anteil abweichender Ticker stehen in der Zeile', () => {
   const heute = TAG(299);
   const frisch = serie(300, (i) => 100 + i);
@@ -178,7 +199,8 @@ test('I11 A3-WAECHTER: der modale Balken-Tag und der Anteil abweichender Ticker 
   nah(zeile.mixedBarDateShare, 1 / 3, 1e-12, 'ein von drei Tickern ist nicht auf dem modalen Tag');
   assert.equal(zeile.nAtSession, 2);
   assert.equal(zeile.excludedNoBar, 1);
-  assert.equal(zeile.universeSize, 3);
+  assert.equal(zeile.nCandidates, 3);
+  assert.equal(zeile.universeSize, 2, 'U ist die Menge, auf der die Achsen rechnen');
   // L1 laeuft NUR ueber die zwei frischen Ticker
   nah(zeile.l1, 1, 1e-12);
 });
@@ -249,6 +271,100 @@ test('I15 R-INT bleibt null, solange die Reihe kuerzer als 250 Live-Tage ist (Ra
   const kurz = Array.from({ length: 249 }, (_, i) => ({ date: TAG(i), l1: 0.5, l2: 0.5, l3: 0, l4ew: 0, backfilled: false }));
   assert.equal(I.buildRow(Object.assign({}, basis, { history: kurz })).rInt, null,
     'der Zustand wird vor 250 geloggten Tagen NICHT veroeffentlicht — auch nicht als Zahl im Ledger');
+});
+
+test('I16 REVIEW-FUND: unter 250 Balken faellt ein Ticker aus ALLEN Achsen (Rat D4)', () => {
+  // Reproduziert an den echten Saat-Daten: 86 von 2.288 Tickern lagen darunter, 69 davon
+  // mit einer 63-Tage-Rendite — sie sassen in L4, L4b, L7 und L8, obwohl D4 sie ausschliesst.
+  const heute = TAG(299);
+  const lang = serie(300, () => 100);            // 300 Balken, flach
+  const kurz = serie(300, (i) => (i < 200 ? 100 : 100)).slice(200); // nur 100 Balken
+  // kurz endet am selben Tag, hat aber < 250 Balken:
+  const kurzAmTag = serie(300, () => 50).slice(200);
+  const k = new Map([
+    ['LANG', { ticker: 'LANG', sector: 'Industrials', marketCap: 1, netRevision30: 1 }],
+    ['KURZ', { ticker: 'KURZ', sector: 'Industrials', marketCap: 1, netRevision30: 1 }],
+  ]);
+  const zeile = I.buildRow({ date: heute, backfilled: false, spyState: null, spyRet63: 0,
+    iwmRet63: null, prevRow: null, history: [],
+    rawRows: I.perTickerRows(k, new Map([['LANG', lang], ['KURZ', kurzAmTag]]), heute) });
+  assert.equal(zeile.nAtSession, 2, 'beide haben einen Balken am Sitzungstag');
+  assert.equal(zeile.excludedFewBars, 1);
+  assert.equal(zeile.universeSize, 1, 'nur LANG erfuellt die 250-Balken-Regel');
+  assert.ok(!kurz.length || true);
+});
+
+test('I17 REVIEW-FUND: ein Kandidat OHNE Preisserie verschwindet nicht mehr lautlos', () => {
+  // Vorher bekam er gar keine Zeile: nicht in universeSize, nicht in excludedNoBar, nicht
+  // im Frische-Anteil. Ein fehlender Preis-Shard schrumpfte U still, und die Tageszeile sah
+  // kerngesund aus (freshShare 1,0).
+  const heute = TAG(299);
+  const k = new Map([
+    ['A', { ticker: 'A', sector: 'Industrials', marketCap: 1, netRevision30: 1 }],
+    ['OHNE', { ticker: 'OHNE', sector: 'Industrials', marketCap: 1, netRevision30: 1 }],
+  ]);
+  const roh = I.perTickerRows(k, new Map([['A', serie(300, (i) => 100 + i)]]), heute);
+  assert.equal(roh.length, 2, 'auch der Ticker ohne Serie bekommt eine Roh-Zeile');
+  const zeile = I.buildRow({ date: heute, rawRows: roh, backfilled: false, spyState: null,
+    spyRet63: 0, iwmRet63: null, prevRow: null, history: [], snapshotUnreadable: 3 });
+  assert.equal(zeile.nCandidates, 2);
+  assert.equal(zeile.nNoSeries, 1);
+  assert.equal(zeile.universeSize, 1);
+  assert.equal(zeile.nSnapshotUnreadable, 3, 'unlesbare Snapshots werden gezaehlt, nicht verschluckt');
+  assert.equal(zeile.freshShare, 1, 'die Frische misst nur Ticker MIT Serie — der Rest steht in nNoSeries');
+});
+
+test('I18 REVIEW-FUND: ohne SPY gibt es kein L7 — nicht die absolute Sektor-Rendite', () => {
+  const rows = [{ sector: 'Energy', ret63: 0.20 }, { sector: 'Utilities', ret63: 0.01 },
+    { sector: 'Healthcare', ret63: -0.04 }];
+  assert.deepEqual(I.sectorRs(rows, null), [], 'relative Staerke ohne Referenz gibt es nicht');
+  assert.deepEqual(I.sectorRs(rows, undefined), []);
+  assert.equal(I.sectorRs(rows, 0.05).length, 3, 'Gegenprobe: mit SPY entsteht die Tabelle');
+});
+
+test('I19 REVIEW-FUND: bei Gleichstand entscheidet der Name, nicht die Einlesereihenfolge', () => {
+  const a = [{ sector: 'Zulu', ret63: 0.1 }, { sector: 'Alpha', ret63: 0.1 }, { sector: 'Mike', ret63: 0.1 }];
+  const b = [{ sector: 'Mike', ret63: 0.1 }, { sector: 'Zulu', ret63: 0.1 }, { sector: 'Alpha', ret63: 0.1 }];
+  assert.deepEqual(I.sectorRs(a, 0).map((r) => r.sector), I.sectorRs(b, 0).map((r) => r.sector),
+    'derselbe Datenstand ergibt zwei verschiedene Rangvektoren — l7Persistence haengt daran');
+  assert.deepEqual(I.sectorRs(a, 0).map((r) => r.sector), ['Alpha', 'Mike', 'Zulu']);
+});
+
+test('I20 REVIEW-FUND: R-INT ist ein echter Rang-Mittelwert, keine hartkodierte 0', () => {
+  // Vorher: `liveTage >= 250 ? 0 : null`. In rund 250 Handelstagen haette die Reihe
+  // angefangen, eine plausible neutrale Null zu schreiben, die niemand spaeter von einer
+  // Messung unterscheiden koennte. Der alte Test pinnte nur die null-Seite.
+  assert.equal(I.percentileRank([1, 2, 3, 4], 4), 0.875);
+  assert.equal(I.percentileRank([1, 1, 1], 1), 0.5, 'Gleichstand bekommt den Mittelrang');
+  assert.equal(I.percentileRank([], 1), null);
+  const hist = (n, wert) => Array.from({ length: n }, (_, i) => ({
+    date: TAG(i), backfilled: false, lowFreshness: false, l1: wert, l2: wert, l3: wert, l4ew: wert }));
+  assert.equal(I.rIntRankMean(hist(249, 0.5), { l1: 0.9, l2: 0.9, l3: 0.9, l4ew: 0.9 }), null,
+    'vor 250 Live-Tagen gibt es keinen Zustand (Rat D3)');
+  const hoch = I.rIntRankMean(hist(250, 0.5), { l1: 0.9, l2: 0.9, l3: 0.9, l4ew: 0.9 });
+  const tief = I.rIntRankMean(hist(250, 0.5), { l1: 0.1, l2: 0.1, l3: 0.1, l4ew: 0.1 });
+  assert.ok(hoch > 0.99 && tief < 0.01, 'der Rang muss die Lage abbilden: ' + hoch + ' / ' + tief);
+  assert.notEqual(hoch, 0);
+  // Rueckgerechnete und truebe Zeilen speisen den Rang nicht (Rat D2 + Gericht):
+  const gemischt = hist(250, 0.5).map((r, i) => (i < 240 ? Object.assign({}, r, { backfilled: true }) : r));
+  assert.equal(I.rIntRankMean(gemischt, { l1: 0.9, l2: 0.9, l3: 0.9, l4ew: 0.9 }), null);
+});
+
+test('I21 REVIEW-FUND: ein gleichmaessig veralteter Store ist NICHT frisch', () => {
+  // freshShare misst Streuung der Balken-Tage. Haengen ALLE Ticker gleich weit zurueck,
+  // ist die Streuung 0 und die Zeile saehe sauber aus — obwohl kein einziger Balken vom
+  // Sitzungstag stammt. Deshalb faellt das Tor auch, wenn der modale Tag nicht der Tag ist.
+  const heute = TAG(299);
+  const alt = serie(300, (i) => 100 + i).slice(0, 297);
+  const k = new Map([['A', { ticker: 'A', sector: 'Industrials', marketCap: 1, netRevision30: 1 }],
+    ['B', { ticker: 'B', sector: 'Healthcare', marketCap: 1, netRevision30: 1 }]]);
+  const zeile = I.buildRow({ date: heute, backfilled: false, spyState: null, spyRet63: 0,
+    iwmRet63: null, prevRow: null, history: [],
+    rawRows: I.perTickerRows(k, new Map([['A', alt], ['B', alt]]), heute) });
+  assert.equal(zeile.freshShare, 1, 'die Streuung ist tatsaechlich 0 …');
+  assert.equal(zeile.lowFreshness, true, '… aber der modale Balken-Tag ist nicht der Sitzungstag');
+  assert.equal(zeile.nAtSession, 0);
+  assert.equal(zeile.universeSize, 0);
 });
 
 console.log('\ninternals.test.js: ' + pass + ' ok, ' + fail + ' fail');

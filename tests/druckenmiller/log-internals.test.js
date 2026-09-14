@@ -89,6 +89,8 @@ test('S1 ein Lauf schreibt GENAU eine Zeile fuer die neueste Sitzung', () => {
   assert.equal(rows[0].date, s.daten[N_BALKEN - 1]);
   assert.equal(rows[0].backfilled, false);
   assert.equal(rows[0].universeSize, N_TICKER, 'FOREIGN und GS.VI duerfen nicht in U sein');
+  assert.equal(rows[0].nNoSeries, 0);
+  assert.equal(rows[0].nSnapshotUnreadable, 0);
   assert.match(rows[0].universeHash, /^[0-9a-f]{64}$/);
   assert.ok(Number.isFinite(rows[0].l1) && Number.isFinite(rows[0].l2));
 });
@@ -148,8 +150,9 @@ test('S6 Anklage A3: ein zurueckhaengender Ticker faellt aus L1–L4 und wird GE
   const s = sandkasten({ fehlendeBalken: true });
   fahre(s);
   const row = L.readRows(ledgerVon(s))[0];
-  assert.equal(row.universeSize, N_TICKER);
+  assert.equal(row.nCandidates, N_TICKER);
   assert.equal(row.nAtSession, N_TICKER - 1);
+  assert.equal(row.universeSize, N_TICKER - 1, 'U ist die Menge, auf der die Achsen rechnen');
   assert.equal(row.excludedNoBar, 1);
   assert.ok(row.mixedBarDateShare > 0, 'der Anteil abweichender Balken-Tage steht in der Zeile');
   assert.equal(row.barDateMode, s.daten[N_BALKEN - 1]);
@@ -192,7 +195,9 @@ test('S10 BRUCHPROBE --check: eine geschrumpfte Reihe macht den Lauf ROT', () =>
   fs.writeFileSync(ledgerVon(s), zeilen.slice(0, 2).join('\n') + '\n');
   const r = fahre(s, ['--check']);
   assert.equal(r.status, 1, 'eine geschrumpfte Reihe MUSS rot sein:\n' + r.stdout + r.stderr);
-  assert.match(r.stdout + r.stderr, /schrumpf/i);
+  // Der Sidecar-Beweis der LETZTEN Zeile schlaegt bei einer Kuerzung frueher an als der
+  // Zeilenzaehler — beide sind derselbe Befund, und beide sind rot.
+  assert.match(r.stdout + r.stderr, /schrumpf|LETZTE Zeile/i);
 });
 
 test('S11 BRUCHPROBE --check: ein stehengebliebener Logger macht den Lauf ROT', () => {
@@ -261,7 +266,7 @@ test('S12d N1: ein ROTER Befund hinterlaesst _FAILED.json im Export-Ordner', () 
   assert.ok(fs.existsSync(marker), 'kein Fehlermarker — der Konsument haelt gestern fuer heute');
   const j = JSON.parse(fs.readFileSync(marker, 'utf8'));
   assert.equal(j.schema, 'findash-druckenmiller/v1');
-  assert.match(j.reason, /schrumpf/i);
+  assert.match(j.reason, /schrumpf|LETZTE Zeile/i);
   assert.ok(j.generated_at && j.failedAt);
   assert.ok(!fs.existsSync(path.join(s.exportDir, 'regime.json')),
     'die alte Ausliefer-Datei steht noch daneben — dann gilt sie weiter');
@@ -306,6 +311,32 @@ test('S12g rueckgerechnete Zeilen tragen keine Frische-Zahl und sind vom Tor aus
     && r.mixedBarDateShare === null && r.nExcludedStale === null && r.lowFreshness === false),
   'eine Backfill-Zeile behauptet eine Frische, die niemand an jenem Tag gemessen hat');
   assert.equal(rows[rows.length - 1].barDateMode, s.daten[N_BALKEN - 1]);
+});
+
+test('S12h REVIEW-FUND: ein Tag ohne einen einzigen Ticker-Balken wird LEER geschrieben', () => {
+  // Vorher stand hier ein `continue`. Der Lauf schrieb danach spaetere Tage weiter, das Loch
+  // war fuer immer unfuellbar (appendRow verbietet Rueckdatierung), der Waechter jeden Tag
+  // rot — und nach ~19 Monaten faellt der Tag aus dem rollenden Fenster und alles ist wieder
+  // gruen, mit dem Loch drin. Eine leere Zeile ist eine ehrliche Aussage und haelt die Reihe
+  // zusammenhaengend.
+  const s = sandkasten();
+  // Alle Kandidaten enden eine Sitzung frueher als SPY (SPY definiert den Kalender):
+  const voll = store.loadAll(s.prices);
+  const gekuerzt = {};
+  for (const [t, serie] of Object.entries(voll)) {
+    gekuerzt[t] = (t === 'SPY' || t === 'IWM') ? serie : serie.slice(0, N_BALKEN - 1);
+  }
+  store.saveAll(s.prices, gekuerzt);
+  const r = fahre(s);
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const rows = L.readRows(ledgerVon(s));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].date, s.daten[N_BALKEN - 1], 'die Reihe bleibt am Sitzungskalender');
+  assert.equal(rows[0].nAtSession, 0);
+  assert.equal(rows[0].universeSize, 0);
+  assert.equal(rows[0].l1, null, 'alle Achsen sind null — nicht 0');
+  assert.match(r.stdout + r.stderr, /::warning::.*kein einziger Ticker/);
+  assert.equal(L.ledgerGapDays(rows, s.daten), 0, 'kein Loch');
 });
 
 test('S13 GEGENPROBE zu S8–S12: die unangetastete Reihe bleibt gruen', () => {

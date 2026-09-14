@@ -160,5 +160,60 @@ test('L13 eine unlesbare Zeile ist ROT, nicht still uebersprungen', () => {
   assert.throws(() => L.readRows(ledger), /lesbar|parse|JSON/i);
 });
 
+test('L14 REVIEW-FUND: auch die LETZTE Zeile ist gedeckt (Sidecar-Beweis)', () => {
+  // Die Kette prueft Zeile i gegen i-1 — die letzte hat keinen Nachfolger und war damit
+  // frei editierbar. appendRow haette es MORGEN gemerkt, --check meldete HEUTE gruen.
+  // Der Beweis lag ungenutzt daneben: appendRow schreibt lastHash in den Sidecar.
+  const { ledger } = sandkasten();
+  L.appendRow(ledger, zeile('2026-09-01'));
+  L.appendRow(ledger, zeile('2026-09-02'));
+  const z = fs.readFileSync(ledger, 'utf8').split('\n').filter(Boolean);
+  const o = JSON.parse(z[1]); o.l1 = 0.88; z[1] = JSON.stringify(o);
+  fs.writeFileSync(ledger, z.join('\n') + '\n');
+  const v = L.verifyChain(ledger);
+  assert.equal(v.ok, false, 'die letzte Zeile wurde manipuliert und niemand merkt es');
+  assert.match(v.error, /LETZTE Zeile/);
+  assert.throws(() => L.appendRow(ledger, zeile('2026-09-03')), /LETZTE Zeile/);
+});
+
+test('L15 GEGENPROBE zu L14: ein ausgetauschtes letztes DATUM faellt ebenfalls auf', () => {
+  const { ledger } = sandkasten();
+  L.appendRow(ledger, zeile('2026-09-01'));
+  L.appendRow(ledger, zeile('2026-09-02'));
+  assert.equal(L.verifyChain(ledger).ok, true, 'die unangetastete Datei bleibt gruen');
+  const m = L.readMeta(ledger);
+  assert.equal(m.lastDate, '2026-09-02');
+  assert.equal(m.rows, 2);
+});
+
+test('L16 REVIEW-FUND: ein CRLF-Checkout toetet die Kette nicht', () => {
+  // Gehasht wird der Zeilentext. Mit core.autocrlf=true haengt an jeder Zeile ein CR;
+  // JSON.parse schluckt es, sha256 nicht — die Kette waere auf so einer Maschine tot und
+  // der Waechter wuerde faelschlich eine Manipulation melden. Haupt-Schutz ist der LF-Pin
+  // in .gitattributes, das hier deckt Kopien ausserhalb von git.
+  const { ledger } = sandkasten();
+  L.appendRow(ledger, zeile('2026-09-01'));
+  L.appendRow(ledger, zeile('2026-09-02'));
+  fs.writeFileSync(ledger, fs.readFileSync(ledger, 'utf8').split('\n').join('\r\n'));
+  assert.equal(L.verifyChain(ledger).ok, true, 'ein CRLF-Checkout darf die Kette nicht brechen');
+  assert.equal(L.readRows(ledger).length, 2);
+});
+
+test('L17 REVIEW-FUND: ein unlesbarer Sidecar ist ein Befund, kein stilles null', () => {
+  const { ledger } = sandkasten();
+  L.appendRow(ledger, zeile('2026-09-01'));
+  fs.writeFileSync(L.metaPath(ledger), '{kaputt');
+  assert.throws(() => L.readMeta(ledger), /nicht lesbar/,
+    'ohne Sidecar gibt es weder never-shrink noch den Beweis der letzten Zeile — das darf '
+    + 'nicht wie "gibt es halt nicht" aussehen');
+});
+
+test('L18 der LF-Pin fuer druckenmiller-history steht in .gitattributes', () => {
+  // Der eigentliche Schutz gegen CRLF liegt in git, nicht im Code. Ohne den Pin haengt die
+  // Integritaet der Reihe an der lokalen core.autocrlf-Einstellung jeder Maschine.
+  const ga = fs.readFileSync(path.join(__dirname, '..', '..', '.gitattributes'), 'utf8');
+  assert.match(ga, /^\/druckenmiller-history\/\*\* -text$/m);
+});
+
 console.log('\nledger.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

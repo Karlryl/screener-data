@@ -36,3 +36,9 @@
 # on a Windows checkout (index stat size from the pre-normalisation blob).
 /protocol/early-detection/2.0.0/provenance-closure.json -text
 /protocol/early-detection/2.0.0/data-contract.json -text
+
+# Druckenmiller-Messreihe (Chunk 0, 14.09.2026): der Ledger kettet per sha256 ueber den
+# ZEILENTEXT, wie er auf der Platte steht. Ein Checkout mit core.autocrlf=true haengt an
+# jede Zeile ein CR-Zeichen und die Kette waere tot — derselbe Grund, aus dem oben
+# src/scoring/** und protocol/strang-c/** gepinnt sind. Die gz-Rohdateien sind ohnehin binaer.
+/druckenmiller-history/** -text

@@ -69,13 +69,35 @@ function sitzungen(pricesDir) {
   return serie.map((b) => b.date).sort();
 }
 
-/** L6: der SPY-Zustand des Tages, kopiert aus outputs/macro-regime.json (fehlt -> null). */
-function spyZustand(macroFile, datum) {
-  try {
-    const j = JSON.parse(fs.readFileSync(macroFile, 'utf8'));
-    const r = j && j.regimes && j.regimes[datum];
-    return (r && r.regime) || null;
-  } catch { return null; }
+/**
+ * L6: der SPY-Zustand des Tages, kopiert aus outputs/macro-regime.json.
+ *
+ * REVIEW-FUND: hier stand ein leeres catch. Eine fehlende, kaputte oder umbenannte Datei
+ * haette L6 jahrelang auf null gehalten, ohne einen Laut. "Kein Regime FUER DIESEN TAG"
+ * (legitim null) und "Datei unlesbar" (Defekt) sind verschiedene Dinge; der zweite Fall
+ * meldet sich jetzt einmal je Lauf.
+ */
+function spyZustand(macroFile, datum, log) {
+  if (!fs.existsSync(macroFile)) {
+    if (log && !spyZustand._gemeldet) {
+      spyZustand._gemeldet = true;
+      log('::warning::[druckenmiller] ' + macroFile + ' fehlt — L6 (SPY-Zustand) bleibt fuer diesen '
+        + 'Lauf leer. Die Datei entsteht im selben Job; fehlt sie dauerhaft, ist die Achse tot.');
+    }
+    return null;
+  }
+  let j;
+  try { j = JSON.parse(fs.readFileSync(macroFile, 'utf8')); }
+  catch (e) {
+    if (log && !spyZustand._gemeldet) {
+      spyZustand._gemeldet = true;
+      log('::warning::[druckenmiller] ' + macroFile + ' ist nicht lesbar (' + e.message + ') — L6 '
+        + 'bleibt leer. Das ist ein Defekt, kein fehlender Handelstag.');
+    }
+    return null;
+  }
+  const r = j && j.regimes && j.regimes[datum];
+  return (r && r.regime) || null;
 }
 
 /**
@@ -155,8 +177,18 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, backfill, l
 
   for (const d of ziele) {
     const roh = jeZiel.get(d);
+    // REVIEW-FUND (reproduziert): hier stand ein `continue`. Der Lauf schrieb danach
+    // SPAETERE Tage weiter — das Loch war damit fuer immer unfuellbar (appendRow verbietet
+    // Rueckdatierung), der Waechter jeden Tag rot, und nach ~19 Monaten faellt der Tag aus
+    // dem rollenden Fenster und alles ist wieder gruen, mit dem Loch drin. Eine Zeile ohne
+    // Ticker ist eine ehrliche Aussage (alle Achsen null, nAtSession 0) und haelt die Reihe
+    // zusammenhaengend. buildRow ist fuer den leeren Fall NaN-frei (Test I14).
     const imTag = roh.filter((z) => z.atSession);
-    if (!imTag.length) { log(`[druckenmiller] ${d}: kein Ticker mit Balken an diesem Tag — uebersprungen.`); continue; }
+    if (!imTag.length) {
+      log(`::warning::[druckenmiller] ${d}: kein einziger Ticker hat einen Balken an diesem Tag. `
+        + 'Die Zeile wird LEER geschrieben (alle Achsen null) statt uebersprungen — ein '
+        + 'uebersprungener Tag waere ein Loch, das nie mehr zu fuellen ist.');
+    }
     const refMetrik = (t) => {
       const s = referenz[t];
       if (!s) return null;
@@ -167,15 +199,20 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, backfill, l
       date: d,
       rawRows: roh,
       backfilled: d !== neueste,
-      spyState: spyZustand(macroFile, d),
+      spyState: spyZustand(macroFile, d, log),
       spyRet63: refMetrik(REFERENZ_TICKER),
       iwmRet63: refMetrik(KLEIN_TICKER),
       prevRow: history.length ? history[history.length - 1] : null,
       history,
-      universeHash: universe.universeHash(roh.map((z) => z.ticker)),
+      snapshotUnreadable: kandidaten.unreadable,
     });
-    ledgerLib.appendRow(ledgerFile, row);
+    // REVIEW-FUND: die Reihenfolge war umgekehrt. Scheiterte das Schreiben der Roh-Datei
+    // (Platte voll, Pfad), stand die Ledger-Zeile schon und wurde nie wiederholt — die
+    // Nachrechenbarkeit dieses Tages waere fuer immer weg. Andersherum ist der Ausfall
+    // harmlos: eine verwaiste Roh-Datei ohne Ledger-Zeile schadet nichts und wird beim
+    // naechsten Lauf ueberschrieben.
     schreibeRoh(outDir, d, roh);
+    ledgerLib.appendRow(ledgerFile, row);
     history.push(row);
     geschrieben++;
   }
@@ -214,6 +251,11 @@ function schreibeFehlermarker(exportDir, grund, log) {
 function pruefeZeilenForm(rows) {
   const pflicht = internals.LEDGER_ROW_FIELDS;
   for (const r of rows) {
+    if (r.schema !== internals.SCHEMA) {
+      return `Zeile ${r.date}: schema ist ${JSON.stringify(r.schema)}, erwartet `
+        + `${JSON.stringify(internals.SCHEMA)} — zwei Schema-Staende in einer Reihe sind spaeter `
+        + 'nicht mehr auseinanderzuhalten.';
+    }
     for (const k of pflicht) {
       if (!Object.prototype.hasOwnProperty.call(r, k)) {
         return `Zeile ${r.date}: Feld ${k} fehlt — die Reihe ist spaeter nicht mehr auswertbar.`;
@@ -261,8 +303,10 @@ function pruefModus({ pricesDir, outDir, exportDir, log }) {
   const stehen = ledgerLib.staleSessions(rows, alle);
   const letzteZeile = rows.length ? rows[rows.length - 1] : null;
   const trueb = rows.filter((r) => r.lowFreshness === true).length;
+  const zurueck = rows.filter((r) => r.backfilled === true).length;
   log(`[druckenmiller] rows=${rows.length} · ledgerGapDays=${luecken} · staleSessions=${stehen}`
-    + ` · lowFreshnessRows=${trueb} · freshShare=${letzteZeile ? letzteZeile.freshShare : '-'}`
+    + ` · backfilledRows=${zurueck} · lowFreshnessRows=${trueb}`
+    + ` · freshShare=${letzteZeile ? letzteZeile.freshShare : '-'}`
     + ` · letzte=${letzteZeile ? letzteZeile.date : '-'}`);
   if (luecken > 0) {
     return rot(`[druckenmiller] ${luecken} Handelstag(e) fehlen INNERHALB der Reihe. Sie sind nicht `

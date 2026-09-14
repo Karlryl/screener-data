@@ -48,6 +48,10 @@ function block(name) {
   return ZEILEN.slice(start, ende).join('\n');
 }
 
+/** Kommentarzeilen raus — ein Kommentar, der eine Eigenschaft BESCHREIBT, ist kein Beleg. */
+const ohneKommentarzeilen = (text) => text.split(String.fromCharCode(10))
+  .filter((l) => !l.trim().startsWith(String.fromCharCode(35))).join(String.fromCharCode(10));
+
 const LOGGER = 'Druckenmiller-Innereien mitschreiben (Chunk 0)';
 const ARTEFAKT = 'Upload Druckenmiller-Ledger';
 
@@ -111,8 +115,7 @@ test('C6 eigenes Artefakt mit if-no-files-found: error, ohne den fail-soft-Hando
   // Kommentarzeilen raus: der Nachbarschritt BESCHREIBT in seinem Kommentar ein altes
   // continue-on-error-Muster. Ohne diesen Filter war die Zusicherung unten von genau
   // diesem Fremdtext erfuellt — aufgefallen beim absichtlichen Bruch von C10.
-  const b = block(ARTEFAKT).split(String.fromCharCode(10))
-    .filter((l) => !l.trim().startsWith(String.fromCharCode(35))).join(String.fromCharCode(10));
+  const b = ohneKommentarzeilen(block(ARTEFAKT));
   assert.match(b, /if-no-files-found:\s*error/);
   assert.match(b, /druckenmiller-history\/internals-ledger\.jsonl/);
   const handoff = block('Upload merge→scoring handoff (ath-state + macro-regime + coverage-status)');
@@ -125,8 +128,10 @@ test('C6 eigenes Artefakt mit if-no-files-found: error, ohne den fail-soft-Hando
   // nicht fail-soft ist — dort gehoert der Alarm hin.
   assert.match(b, /continue-on-error:\s*true/,
     'ein fehlender Ledger wuerde den merge-Job und damit Karls Board-Deploy anhalten');
-  const abruf = block('Download Druckenmiller-Ledger');
-  assert.ok(!/continue-on-error/.test(abruf.split('#').join('')),
+  // Zeilenweise filtern, nicht das '#' wegwerfen: der Nachbarschritt begruendet in
+  // seinem Kommentar, warum ER weich ausfaellt — der Text allein wuerde hier treffen.
+  const abruf = ohneKommentarzeilen(block('Download Druckenmiller-Ledger'));
+  assert.ok(!/continue-on-error/.test(abruf),
     'faellt auch der Abruf im Waechter-Job weich aus, meldet ein fehlender Ledger nirgends mehr');
 });
 
@@ -174,6 +179,22 @@ test('C10 KEIN Druckenmiller-Schritt im merge-Job kann den Lauf dort rot machen'
       'Schritt "' + x.name + '" kann den merge-Job rot machen — und nimmt damit scoring und '
       + 'Karls Board-Deploy mit. Der harte Ausfall gehoert in den Job druckenmiller-guard.');
   }
+});
+
+test('C11 REVIEW-FUND: der Waechter prueft auch, ob die Zeile auf main angekommen ist', () => {
+  // Ohne diese Wache prueft der Job nur sein eigenes Artefakt. Ein Lauf ohne
+  // Veroeffentlichung meldet dann gruen, waehrend der Handelstag nur im 7-Tage-Artefakt
+  // existiert — und der naechste Lauf traegt ihn als backfilled nach, womit er dauerhaft
+  // aus jedem Quantil faellt. Muster und Begruendung wie bei der M1/M9-Persistenz-Wache.
+  const b = ohneKommentarzeilen(block('Ledger-Persistenz auf main pruefen'));
+  assert.match(b, /VEROEFFENTLICHEN/, 'ohne das Ventil waere jeder Trockenlauf rot');
+  assert.match(b, /origin\/main:druckenmiller-history\/internals-ledger\.jsonl/);
+  assert.match(b, /::error::/);
+  assert.ok(!/continue-on-error/.test(b),
+    'eine Persistenz-Wache unter continue-on-error meldet nichts');
+  assert.ok(schrittZeile('Ledger-Persistenz auf main pruefen')
+    > schrittZeile('Ledger pruefen (Kette, never-shrink, Luecken, Frische)'),
+  'die Persistenz-Wache muss NACH der Integritaets-Pruefung stehen');
 });
 
 console.log('\nci-wiring.test.js: ' + pass + ' ok, ' + fail + ' fail');

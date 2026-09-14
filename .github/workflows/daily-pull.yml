@@ -2540,9 +2540,9 @@ jobs:
 
       # Zweite Seite: was der scoring-Job tatsaechlich veroeffentlicht hat. Fehlt das
       # Artefakt (Chunk 0 schreibt den Ordner noch nicht, oder scoring kam nicht so weit),
-      # ist das KEIN Befund — der Waechter prueft dann nur die Reihe. Ein vorhandenes
-      # _FAILED.json dagegen ist ROT: dann hat ein frueherer Schritt den Export selbst
-      # fuer ungueltig erklaert.
+      # ist das KEIN Befund — der Waechter prueft dann nur die Reihe; deshalb hier
+      # continue-on-error, im Gegensatz zum Ledger-Abruf darueber, dessen Ausfall den Job
+      # bewusst abbricht.
       - name: Download Druckenmiller-Export (falls vorhanden)
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -2558,6 +2558,34 @@ jobs:
       # Sache anzuhalten, die die Reihe selbst korrekt behandelt.
       - name: Ledger pruefen (Kette, never-shrink, Luecken, Frische)
         run: node scripts/druckenmiller-log-internals.js --check
+
+      # PERSISTENZ-WACHE (Review-Fund, Muster: "M1/M9-Persistenz pruefen" im merge-Job).
+      # DER BEFUND: der Schritt darueber prueft das ARTEFAKT dieses Laufs — nicht, ob die
+      # Zeile auf main angekommen ist. Ein Lauf mit VEROEFFENTLICHEN != true rechnet die
+      # Zeile, laedt sie hoch und meldet gruen, waehrend der Commit-Schritt nichts pusht.
+      # Die Zeile lebt dann nur im 7-Tage-Artefakt; der naechste veroeffentlichende Lauf
+      # traegt denselben Handelstag als `backfilled` nach und schliesst ihn damit
+      # DAUERHAFT aus jedem Quantil und aus H-INT aus. Gruener Haken, verlorener Tag.
+      # Geprueft wird der ZUSTAND auf main, nicht der Wortlaut des Commit-Schritts.
+      - name: Ledger-Persistenz auf main pruefen
+        run: |
+          if [ "$VEROEFFENTLICHEN" != "true" ]; then
+            echo "Kein veroeffentlichender Lauf — auf main wurde nichts committet, also ist hier nichts zu pruefen."
+            exit 0
+          fi
+          git fetch --depth=1 origin main
+          if ! git show origin/main:druckenmiller-history/internals-ledger.jsonl > _main-ledger.jsonl; then
+            echo "::error::Auf main liegt kein Ledger. Die Reihe dieses Laufs lebt nur im Artefakt und stirbt mit ihm."
+            exit 1
+          fi
+          artefakt=$(tail -n 1 druckenmiller-history/internals-ledger.jsonl | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).date))")
+          aufmain=$(tail -n 1 _main-ledger.jsonl | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).date))")
+          echo "letzter Tag im Artefakt: $artefakt · auf main: $aufmain"
+          if [ "$artefakt" != "$aufmain" ]; then
+            echo "::error::Der heutige Stand ($artefakt) steht NICHT auf main (dort: $aufmain). Er lebt nur im 7-Tage-Artefakt; der naechste Lauf traegt den Tag als backfilled nach und schliesst ihn dauerhaft aus jedem Quantil aus."
+            exit 1
+          fi
+          echo "ok: der heutige Stand ist auf main."
 
   laufstatus:
     needs: [prep, entdeckungs-waechter, pull, prices, merge, earnings-transport-waechter, scoring, jahres-ausreisser-waechter, druckenmiller-guard]
