@@ -83,5 +83,15 @@ test('U7 Kandidaten-Sammler ueberspringt Mehrpunkt-Dateinamen, ohne sie zu parse
   assert.equal(U.filenameMayBeCandidate('AAPL.txt'), false);
 });
 
+test('U8 marketCap wird aus BEIDEN Formen gelesen (Snapshot-Objekt und blanke Zahl)', () => {
+  // Gefunden beim ersten echten Lauf: der Snapshot fuehrt marketCap als Objekt. Ein
+  // blanker Zahl-Test liess L4cw und L8 still auf null stehen — kein Fehler, kein Wert.
+  assert.equal(U.marketCapValue({ value: 4665759498240, source: 'yahoo', confidence: 0.9 }), 4665759498240);
+  assert.equal(U.marketCapValue(2093783616), 2093783616);
+  assert.equal(U.marketCapValue({ value: null }), null);
+  assert.equal(U.marketCapValue(undefined), null);
+  assert.equal(U.marketCapValue({ wert: 5 }), null, 'ein fremdes Feld wird nicht erraten');
+});
+
 console.log('\nuniverse.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -183,6 +183,28 @@ test('I11 A3-WAECHTER: der modale Balken-Tag und der Anteil abweichender Ticker 
   nah(zeile.l1, 1, 1e-12);
 });
 
+test('I11b Frische-Tor: freshShare, nExcludedStale und lowFreshness stehen in der Zeile', () => {
+  const heute = TAG(299);
+  const frisch = serie(300, (i) => 100 + i);
+  const alt = serie(300, (i) => 100 + i).slice(0, 297);
+  const bauen = (nAlt, nGesamt) => {
+    const k = new Map(), ser = new Map();
+    for (let i = 0; i < nGesamt; i++) {
+      k.set('T' + i, { ticker: 'T' + i, sector: 'Industrials', marketCap: 1, netRevision30: 1 });
+      ser.set('T' + i, i < nAlt ? alt : frisch);
+    }
+    return I.buildRow({ date: heute, rawRows: I.perTickerRows(k, ser, heute), backfilled: false,
+      spyState: null, spyRet63: null, iwmRet63: null, prevRow: null, history: [] });
+  };
+  const knappDrueber = bauen(1, 100);   // 99 % frisch
+  assert.equal(knappDrueber.lowFreshness, false);
+  nah(knappDrueber.freshShare, 0.99, 1e-12);
+  assert.equal(knappDrueber.nExcludedStale, 1);
+  const knappDrunter = bauen(6, 100);   // 94 % frisch
+  assert.equal(knappDrunter.lowFreshness, true, 'unter 95 % ist die Zeile eine Aussage ueber den Runner');
+  nah(knappDrunter.freshShare, 0.94, 1e-12);
+});
+
 test('I12 GEGENPROBE zu I11: ohne veraltete Ticker ist der Anteil 0 und nichts wird ausgeschlossen', () => {
   const heute = TAG(299);
   const frisch = serie(300, (i) => 100 + i);

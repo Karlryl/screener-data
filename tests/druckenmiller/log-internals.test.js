@@ -68,12 +68,14 @@ function sandkasten({ fehlendeBalken } = {}) {
   // Ein Nicht-US-Ticker und ein Suffix-Ticker: beide duerfen nie in U landen.
   fs.writeFileSync(path.join(snaps, 'FOREIGN.json'), JSON.stringify({ meta: { ticker: 'FOREIGN', country: 'Germany', sector: 'Energy' } }));
   fs.writeFileSync(path.join(snaps, 'GS.VI.json'), JSON.stringify({ meta: { ticker: 'GS.VI', country: 'United States', sector: 'Energy' } }));
-  return { dir, prices, snaps, out: path.join(dir, 'druckenmiller-history'), daten };
+  return { dir, prices, snaps, out: path.join(dir, 'druckenmiller-history'),
+    exportDir: path.join(dir, 'export'), daten };
 }
 
 function fahre(s, args) {
   return spawnSync(process.execPath, [SKRIPT,
-    '--prices-dir', s.prices, '--snapshots', s.snaps, '--out', s.out].concat(args || []),
+    '--prices-dir', s.prices, '--snapshots', s.snaps, '--out', s.out,
+    '--export-dir', s.exportDir].concat(args || []),
   { encoding: 'utf8' });
 }
 const ledgerVon = (s) => path.join(s.out, 'internals-ledger.jsonl');
@@ -213,6 +215,97 @@ test('S12 BRUCHPROBE --check: gar kein Ledger ist ROT, nicht "nichts zu tun"', (
   const r = fahre(s, ['--check']);
   assert.equal(r.status, 1, 'ein fehlender Ledger ist der lauteste Fall, nicht der leiseste');
   assert.match(r.stdout + r.stderr, /kein Ledger|fehlt/i);
+});
+
+test('S12b Frische-Tor ist GELB: markiert, aus Quantilen raus, Lauf bleibt gruen', () => {
+  // Gericht, Wiederaufnahme 14.09.2026: freshShare < 0.95 -> lowFreshness, Zeile bleibt
+  // stehen, speist kein Quantil, ::warning:: statt Exit 1. Ein unvollstaendiger Kursabruf
+  // ist ein bekannter, haeufiger Zustand — rot hiesse, den Lauf an einer Sache anzuhalten,
+  // die die Reihe selbst korrekt behandelt. Hier haengt 1 von 10 Tickern zurueck -> 0.9.
+  const s = sandkasten({ fehlendeBalken: true });
+  fahre(s);
+  const row = L.readRows(ledgerVon(s))[0];
+  assert.equal(row.lowFreshness, true);
+  assert.ok(Math.abs(row.freshShare - 0.9) < 1e-9);
+  assert.equal(row.nExcludedStale, 1);
+  assert.deepEqual(L.quantileInput([row]), [], 'eine truebe Zeile darf kein Quantil speisen');
+  const r = fahre(s, ['--check']);
+  assert.equal(r.status, 0, 'Frische ist gelb, nicht rot: ' + r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /::warning::.*frischen Tickern/s);
+  assert.ok(!fs.existsSync(path.join(s.exportDir, '_FAILED.json')),
+    'ein gelber Befund darf den Export NICHT als ungueltig markieren');
+});
+
+test('S12c GEGENPROBE zu S12b: bei vollstaendigem Kursabruf ist freshShare 1 und --check gruen', () => {
+  const s = sandkasten();
+  fahre(s);
+  const row = L.readRows(ledgerVon(s))[0];
+  assert.equal(row.lowFreshness, false);
+  assert.equal(row.freshShare, 1);
+  assert.equal(fahre(s, ['--check']).status, 0);
+});
+
+test('S12d N1: ein ROTER Befund hinterlaesst _FAILED.json im Export-Ordner', () => {
+  // Nicht loeschen, sondern markieren: findash schreibt bei 404 nicht
+  // (data-layer/screener-sync.js:164-166) und zeigte sonst den Stand von gestern als
+  // heutigen an. Ein fehlender Ordner ist unsichtbar, ein Marker ist eine Aussage.
+  const s = sandkasten();
+  fahre(s, ['--backfill']);
+  fs.mkdirSync(s.exportDir, { recursive: true });
+  fs.writeFileSync(path.join(s.exportDir, 'regime.json'), '{"schema":"findash-druckenmiller/v1"}');
+  const zeilen = fs.readFileSync(ledgerVon(s), 'utf8').split('\n').filter(Boolean);
+  fs.writeFileSync(ledgerVon(s), zeilen.slice(0, 2).join('\n') + '\n');
+  const r = fahre(s, ['--check']);
+  assert.equal(r.status, 1);
+  const marker = path.join(s.exportDir, '_FAILED.json');
+  assert.ok(fs.existsSync(marker), 'kein Fehlermarker — der Konsument haelt gestern fuer heute');
+  const j = JSON.parse(fs.readFileSync(marker, 'utf8'));
+  assert.equal(j.schema, 'findash-druckenmiller/v1');
+  assert.match(j.reason, /schrumpf/i);
+  assert.ok(j.generated_at && j.failedAt);
+  assert.ok(!fs.existsSync(path.join(s.exportDir, 'regime.json')),
+    'die alte Ausliefer-Datei steht noch daneben — dann gilt sie weiter');
+});
+
+test('S12e ein vorhandener _FAILED.json aus einem frueheren Schritt ist selbst ROT', () => {
+  const s = sandkasten();
+  fahre(s, ['--backfill']);
+  fs.mkdirSync(s.exportDir, { recursive: true });
+  fs.writeFileSync(path.join(s.exportDir, '_FAILED.json'), '{"reason":"Vorlauf"}');
+  const r = fahre(s, ['--check']);
+  assert.equal(r.status, 1, 'ein markierter Export darf nicht gruen durchlaufen');
+});
+
+test('S12f BRUCHPROBE Zeilenform: ein fehlendes Pflichtfeld ist ROT', () => {
+  const s = sandkasten();
+  fahre(s, ['--backfill']);
+  const crypto = require('node:crypto');
+  let z = fs.readFileSync(ledgerVon(s), 'utf8').split('\n').filter(Boolean);
+  const o = JSON.parse(z[3]); delete o.l1; z[3] = JSON.stringify(o);
+  let prev = 'GENESIS';
+  z = z.map((l) => {
+    const q = JSON.parse(l); q.prevHash = prev;
+    const t = JSON.stringify(q);
+    prev = crypto.createHash('sha256').update(t, 'utf8').digest('hex');
+    return t;
+  });
+  fs.writeFileSync(ledgerVon(s), z.join('\n') + '\n');
+  fs.writeFileSync(ledgerVon(s) + '.meta.json', JSON.stringify({ rows: z.length }));
+  const r = fahre(s, ['--check']);
+  assert.equal(r.status, 1, 'eine Zeile ohne l1 ist spaeter nicht auswertbar: ' + r.stdout + r.stderr);
+  assert.match(r.stdout + r.stderr, /Feld l1 fehlt/);
+});
+
+test('S12g rueckgerechnete Zeilen tragen keine Frische-Zahl und sind vom Tor ausgenommen', () => {
+  const s = sandkasten({ fehlendeBalken: true });
+  fahre(s, ['--backfill']);
+  const rows = L.readRows(ledgerVon(s));
+  const zurueck = rows.slice(0, -1);
+  assert.ok(zurueck.length > 5);
+  assert.ok(zurueck.every((r) => r.freshShare === null && r.barDateMode === null
+    && r.mixedBarDateShare === null && r.nExcludedStale === null && r.lowFreshness === false),
+  'eine Backfill-Zeile behauptet eine Frische, die niemand an jenem Tag gemessen hat');
+  assert.equal(rows[rows.length - 1].barDateMode, s.daten[N_BALKEN - 1]);
 });
 
 test('S13 GEGENPROBE zu S8–S12: die unangetastete Reihe bleibt gruen', () => {

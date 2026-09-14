@@ -142,6 +142,9 @@ test('L11 BRUCHPROBE backfilled: rueckgerechnete Zeilen speisen keine Quantile',
   // Gegenprobe: ohne die Regel waeren es drei Zeilen - dann wuerde ein Rueckrechnungs-
   // Block die Verteilung stellen, gegen die die Live-Tage gemessen werden.
   assert.notEqual(L.quantileInput(rows).length, rows.length);
+  // Zweiter Ausschlussgrund (Gericht Runde 1): zu wenig frische Ticker an diesem Tag.
+  const trueb = rows.concat([{ date: '2026-09-04', l1: 0.5, backfilled: false, lowFreshness: true }]);
+  assert.deepEqual(L.quantileInput(trueb).map((r) => r.date), ['2026-09-03']);
 });
 
 test('L12 readRows auf einer nicht existierenden Datei ist [] (Bootstrap, kein Fehler)', () => {

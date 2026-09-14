@@ -42,6 +42,14 @@ const DEFAULT_SNAPSHOTS = path.join(REPO_ROOT, 'snapshots');
 const DEFAULT_OUT = path.join(REPO_ROOT, 'druckenmiller-history');
 const DEFAULT_MACRO = path.join(REPO_ROOT, 'outputs', 'macro-regime.json');
 const LEDGER_NAME = 'internals-ledger.jsonl';
+// Chunk-1-Vertrag, hier schon erfuellt: faellt eine INTEGRITAETS-Pruefung, wird der
+// Export-Ordner nicht geloescht, sondern durch EINEN Marker ersetzt. Grund (Gericht,
+// Wiederaufnahme): findash schreibt bei 404 nicht (data-layer/screener-sync.js:164-166)
+// und zeigte sonst den Stand von gestern als heutigen an. Ein fehlender Ordner ist
+// unsichtbar; ein Marker ist eine Aussage.
+const DEFAULT_EXPORT = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1', 'druckenmiller');
+const EXPORT_SCHEMA = 'findash-druckenmiller/v1';
+const FAILED_NAME = '_FAILED.json';
 const REFERENZ_TICKER = 'SPY';   // Sitzungskalender + L6/L7-Referenz
 const KLEIN_TICKER = 'IWM';      // L4b Small-Cap-Bein [A-TEC-015]
 
@@ -178,35 +186,103 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, backfill, l
   return 0;
 }
 
-function pruefModus({ pricesDir, outDir, log }) {
+/**
+ * Den Export-Ordner auf EINEN Fehlermarker zusammenziehen. Bewusst kein Loeschen: eine
+ * verschwundene Datei ist beim Konsumenten ein 404, und ein 404 laesst dort den alten
+ * Stand stehen. Der Marker faehrt mit dem Deploy und sagt, dass heute nichts gilt.
+ */
+function schreibeFehlermarker(exportDir, grund, log) {
+  try {
+    fs.mkdirSync(exportDir, { recursive: true });
+    for (const f of fs.readdirSync(exportDir)) {
+      if (f !== FAILED_NAME) fs.rmSync(path.join(exportDir, f), { recursive: true, force: true });
+    }
+    fs.writeFileSync(path.join(exportDir, FAILED_NAME), JSON.stringify({
+      schema: EXPORT_SCHEMA,
+      generated_at: new Date().toISOString(),
+      reason: grund,
+      failedAt: 'druckenmiller-log-internals --check',
+    }, null, 1) + '\n');
+    log('[druckenmiller] ' + path.join(exportDir, FAILED_NAME) + ' geschrieben — der Konsument sieht '
+      + 'damit, dass heute nichts gilt, statt den Stand von gestern fuer aktuell zu halten.');
+  } catch (e) {
+    log('::error::[druckenmiller] Fehlermarker nicht schreibbar: ' + e.message);
+  }
+}
+
+/** Jede Zeile traegt genau die eingefrorenen Felder, und keine Zahl ist nicht-endlich. */
+function pruefeZeilenForm(rows) {
+  const pflicht = internals.LEDGER_ROW_FIELDS;
+  for (const r of rows) {
+    for (const k of pflicht) {
+      if (!Object.prototype.hasOwnProperty.call(r, k)) {
+        return `Zeile ${r.date}: Feld ${k} fehlt — die Reihe ist spaeter nicht mehr auswertbar.`;
+      }
+    }
+    let fund = null;
+    (function walk(v, p) {
+      if (fund) return;
+      if (typeof v === 'number' && !Number.isFinite(v)) { fund = p; return; }
+      if (Array.isArray(v)) { v.forEach((x, i) => walk(x, p + '[' + i + ']')); return; }
+      if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, p + '.' + k);
+    })(r, 'row');
+    if (fund) return `Zeile ${r.date}: ${fund} ist keine endliche Zahl.`;
+  }
+  return null;
+}
+
+function pruefModus({ pricesDir, outDir, exportDir, log }) {
   const ledgerFile = ledgerPfad(outDir);
-  if (!fs.existsSync(ledgerFile)) {
-    log('::error::[druckenmiller] kein Ledger unter ' + ledgerFile + ' — der Logger hat in diesem Lauf '
-      + 'nichts hinterlassen (fehlt auch der committete Stand, ist die Reihe gerissen).');
+  const rot = (grund) => {
+    log('::error::' + grund);
+    schreibeFehlermarker(exportDir, grund, log);
     return 1;
+  };
+  if (!fs.existsSync(ledgerFile)) {
+    return rot('[druckenmiller] kein Ledger unter ' + ledgerFile + ' — der Logger hat in diesem Lauf '
+      + 'nichts hinterlassen (fehlt auch der committete Stand, ist die Reihe gerissen).');
   }
   const chain = ledgerLib.verifyChain(ledgerFile);
-  if (!chain.ok) { log('::error::' + chain.error); return 1; }
+  if (!chain.ok) return rot(chain.error);
   const meta = ledgerLib.readMeta(ledgerFile);
   const rows = chain.rows;
   if (meta && rows.length < meta.rows) {
-    log(`::error::[druckenmiller] Die Reihe ist von ${meta.rows} auf ${rows.length} Zeilen geschrumpft — `
+    return rot(`[druckenmiller] Die Reihe ist von ${meta.rows} auf ${rows.length} Zeilen geschrumpft — `
       + 'eine append-only-Reihe schrumpft nie.');
-    return 1;
+  }
+  const formFehler = pruefeZeilenForm(rows);
+  if (formFehler) return rot('[druckenmiller] ' + formFehler);
+  if (fs.existsSync(path.join(exportDir, FAILED_NAME))) {
+    return rot('[druckenmiller] ' + path.join(exportDir, FAILED_NAME) + ' liegt vor — ein frueherer '
+      + 'Schritt dieses Laufs hat den Export als ungueltig markiert.');
   }
   const alle = sitzungen(pricesDir);
   const luecken = ledgerLib.ledgerGapDays(rows, alle);
   const stehen = ledgerLib.staleSessions(rows, alle);
-  log(`[druckenmiller] rows=${rows.length} · ledgerGapDays=${luecken} · staleSessions=${stehen} · letzte=${rows.length ? rows[rows.length - 1].date : '-'}`);
+  const letzteZeile = rows.length ? rows[rows.length - 1] : null;
+  const trueb = rows.filter((r) => r.lowFreshness === true).length;
+  log(`[druckenmiller] rows=${rows.length} · ledgerGapDays=${luecken} · staleSessions=${stehen}`
+    + ` · lowFreshnessRows=${trueb} · freshShare=${letzteZeile ? letzteZeile.freshShare : '-'}`
+    + ` · letzte=${letzteZeile ? letzteZeile.date : '-'}`);
   if (luecken > 0) {
-    log(`::error::[druckenmiller] ${luecken} Handelstag(e) fehlen INNERHALB der Reihe. Sie sind nicht `
+    return rot(`[druckenmiller] ${luecken} Handelstag(e) fehlen INNERHALB der Reihe. Sie sind nicht `
       + 'nachtragbar, sobald ihre Balken aus dem rollenden Fenster gefallen sind.');
-    return 1;
   }
   if (stehen > 0) {
-    log(`::error::[druckenmiller] Die Reihe steht: ${stehen} Sitzung(en) mit Kursen im Store haben keine `
+    return rot(`[druckenmiller] Die Reihe steht: ${stehen} Sitzung(en) mit Kursen im Store haben keine `
       + 'Zeile. Der Logger-Schritt ist fail-soft — genau dieser stille Ausfall wird hier laut.');
-    return 1;
+  }
+  // FRISCHE-TOR ist GELB, nicht rot (Gericht, Wiederaufnahme 14.09.2026): ein
+  // unvollstaendiger Kursabruf ist ein bekannter, haeufiger Zustand des Tageslaufs. Rot
+  // hiesse, den ganzen Lauf an einer Sache anzuhalten, die die Reihe selbst schon
+  // korrekt behandelt — die Zeile ist per lowFreshness aus jedem Quantil ausgeschlossen
+  // und bleibt als ehrlicher Eintrag stehen. Sichtbar bleibt sie trotzdem: ::warning::
+  // steht in der Job-Annotation und faehrt ueber den laufstatus-Marker mit.
+  if (letzteZeile && letzteZeile.lowFreshness === true) {
+    log(`::warning::[druckenmiller] Die Zeile vom ${letzteZeile.date} steht auf nur `
+      + `${letzteZeile.freshShare} frischen Tickern (Schwelle ${internals.FRESH_MIN}). Sie ist als `
+      + 'lowFreshness markiert und speist kein Quantil; der Kursabruf dieses Laufs war '
+      + 'unvollstaendig. Die Reihe selbst ist in Ordnung — deshalb gelb, nicht rot.');
   }
   return 0;
 }
@@ -219,6 +295,7 @@ function main(argv, log) {
     pricesDir: path.resolve(get('--prices-dir', DEFAULT_PRICES)),
     snapshotsDir: path.resolve(get('--snapshots', DEFAULT_SNAPSHOTS)),
     outDir: path.resolve(get('--out', DEFAULT_OUT)),
+    exportDir: path.resolve(get('--export-dir', DEFAULT_EXPORT)),
     macroFile: path.resolve(get('--macro', DEFAULT_MACRO)),
     backfill: args.includes('--backfill'),
     log: say,
@@ -226,7 +303,10 @@ function main(argv, log) {
   return args.includes('--check') ? pruefModus(opts) : schreibeModus(opts);
 }
 
-module.exports = { main, schreibeModus, pruefModus, sitzungen, spyZustand, LEDGER_NAME };
+module.exports = {
+  main, schreibeModus, pruefModus, sitzungen, spyZustand, schreibeFehlermarker, pruefeZeilenForm,
+  LEDGER_NAME, FAILED_NAME, EXPORT_SCHEMA,
+};
 
 if (require.main === module) {
   try { process.exit(main()); }
