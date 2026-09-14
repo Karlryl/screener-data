@@ -228,7 +228,7 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, backfill, l
  * verschwundene Datei ist beim Konsumenten ein 404, und ein 404 laesst dort den alten
  * Stand stehen. Der Marker faehrt mit dem Deploy und sagt, dass heute nichts gilt.
  */
-function schreibeFehlermarker(exportDir, grund, log) {
+function schreibeFehlermarker(exportDir, grund, log, failedAt) {
   try {
     fs.mkdirSync(exportDir, { recursive: true });
     for (const f of fs.readdirSync(exportDir)) {
@@ -238,7 +238,10 @@ function schreibeFehlermarker(exportDir, grund, log) {
       schema: EXPORT_SCHEMA,
       generated_at: new Date().toISOString(),
       reason: grund,
-      failedAt: 'druckenmiller-log-internals --check',
+      // Wer den Marker geschrieben hat, steht DRIN: seit Chunk 1 kommen zwei Schritte in
+      // Frage (Logger und Export-Schreiber), und ein Marker, der immer denselben Namen
+      // nennt, schickt die Suche in die falsche Datei.
+      failedAt: failedAt || 'druckenmiller-log-internals --check',
     }, null, 1) + '\n');
     log('[druckenmiller] ' + path.join(exportDir, FAILED_NAME) + ' geschrieben — der Konsument sieht '
       + 'damit, dass heute nichts gilt, statt den Stand von gestern fuer aktuell zu halten.');

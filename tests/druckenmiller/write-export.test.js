@@ -257,6 +257,9 @@ function rotErwartet(w, was) {
   assert.equal(m.schema, 'findash-druckenmiller/v1');
   assert.ok(m.reason && m.reason.length > 10, was + ': der Marker nennt keinen Grund');
   assert.ok(m.generated_at && m.failedAt, was + ': dem Marker fehlt generated_at/failedAt');
+  assert.match(m.failedAt, /write-druckenmiller-export/,
+    was + ': der Marker nennt den falschen Verursacher — seit Chunk 1 schreiben ihn zwei '
+    + 'verschiedene Schritte, und der Name schickt die Suche in die richtige Datei');
   assert.deepEqual(fs.readdirSync(w.exportDir), ['_FAILED.json'],
     was + ': neben dem Marker liegen noch Datendateien — genau die Mischung, die der Vertrag verbietet');
   return m;

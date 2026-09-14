@@ -388,7 +388,7 @@ function checkExport({ outDir, exportDir, pricesDir, protocolDir, log }) {
   const say = log || console.log;
   const rot = (grund) => {
     say('::error::' + grund);
-    logger.schreibeFehlermarker(exportDir, grund, say);
+    logger.schreibeFehlermarker(exportDir, grund, say, 'write-druckenmiller-export --check');
     return 1;
   };
   const marker = path.join(exportDir, FAILED_NAME);
