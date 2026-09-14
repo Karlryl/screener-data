@@ -42,3 +42,10 @@
 # jede Zeile ein CR-Zeichen und die Kette waere tot — derselbe Grund, aus dem oben
 # src/scoring/** und protocol/strang-c/** gepinnt sind. Die gz-Rohdateien sind ohnehin binaer.
 /druckenmiller-history/** -text
+# Chunk 1: die Registrierungs-Dateien werden GEHASHT (protocol/druckenmiller_*.sha256,
+# paramsHash in meta.json). Ein CRLF-Checkout wuerde denselben Inhalt mit einem anderen
+# Hash tragen — der Registrierungs-Test waere auf der einen Maschine gruen, auf der
+# anderen rot, und keiner der beiden Staende waere falsch.
+/protocol/druckenmiller_*.json text eol=lf
+/protocol/druckenmiller_*.sha256 text eol=lf
+/tests/druckenmiller/fixtures/** text eol=lf

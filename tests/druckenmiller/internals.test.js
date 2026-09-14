@@ -106,16 +106,36 @@ test('I6 L4: zyklisch minus defensiv, gleich- UND kapitalgewichtet, mit sichtbar
 });
 
 test('I7 L4b: sein namentlicher Korb minus dem defensiven Korb, mit n', () => {
-  const rows = [
-    { sector: 'Industrials', industry: 'Trucking', ret63: 0.12, marketCap: 1 },
-    { sector: 'Consumer Cyclical', industry: 'Residential Construction', ret63: 0.08, marketCap: 1 },
-    { sector: 'Healthcare', industry: 'Biotechnology', ret63: 0.02, marketCap: 1 },
-  ];
+  // Der Korb muss die registrierte Mindestgroesse erreichen (Datei A: l4bMinBasketN = 20),
+  // sonst ist der "Branchen-Spread" eine Handvoll Einzelaktien. Deshalb hier 20 Korb-Zeilen.
+  const korb = [];
+  for (let i = 0; i < I.L4B_MIN_BASKET; i++) {
+    korb.push({ sector: 'Industrials', industry: i % 2 ? 'Trucking' : 'Residential Construction',
+      ret63: i % 2 ? 0.12 : 0.08, marketCap: 1 });
+  }
+  const rows = korb.concat([{ sector: 'Healthcare', industry: 'Biotechnology', ret63: 0.02, marketCap: 1 }]);
   const b = I.namedBasketSpread(rows);
   nah(b.value, (0.12 + 0.08) / 2 - 0.02, 1e-12);
-  assert.equal(b.n, 2);
+  assert.equal(b.n, I.L4B_MIN_BASKET);
   assert.equal(I.namedBasketSpread([{ sector: 'Healthcare', ret63: 0.02 }]).value, null,
     'ohne einen einzigen Korb-Namen gibt es keinen Spread');
+});
+
+test('I7b Chunk 1: der registrierte Mindestkorb wird ERZWUNGEN, nicht nur registriert', () => {
+  // Klasse des Chunk-0-Befunds H1: eine eingefrorene Zahl, die nirgends greift, ist keine
+  // Regel. Ein Korb knapp unter der Schwelle liefert KEINEN Wert — aber sein n bleibt
+  // sichtbar, damit ein Leser "zu klein" von "gibt es nicht" unterscheiden kann.
+  const def = { sector: 'Healthcare', industry: 'Biotechnology', ret63: 0.02, marketCap: 1 };
+  const mach = (n) => {
+    const rows = [def];
+    for (let i = 0; i < n; i++) rows.push({ sector: 'Industrials', industry: 'Trucking', ret63: 0.12, marketCap: 1 });
+    return I.namedBasketSpread(rows);
+  };
+  const knappDrunter = mach(I.L4B_MIN_BASKET - 1);
+  assert.equal(knappDrunter.value, null, 'ein Korb unter der Mindestgroesse liefert trotzdem einen Wert');
+  assert.equal(knappDrunter.n, I.L4B_MIN_BASKET - 1, 'die Korbgroesse muss sichtbar bleiben');
+  assert.ok(Number.isFinite(mach(I.L4B_MIN_BASKET).value), 'genau auf der Schwelle muss es einen Wert geben');
+  assert.equal(I.L4B_MIN_BASKET, 20, 'die Schwelle ist Datei A (councilD3.l4bMinBasketN) — nicht frei waehlbar');
 });
 
 test('I8 L5: Revisions-Breite mit ausgewiesener Abdeckung', () => {

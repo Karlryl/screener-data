@@ -215,5 +215,24 @@ test('L18 der LF-Pin fuer druckenmiller-history steht in .gitattributes', () => 
   assert.match(ga, /^\/druckenmiller-history\/\*\* -text$/m);
 });
 
+test('L19 Chunk 1: highChurn faellt aus dem Quantil wie lowFreshness (Datei A, courtGates)', () => {
+  // [REV6-4]/[REV10-4]: eine Sitzung, in der U um mehr als 5 % umgeschlagen ist, vergleicht
+  // zwei Grundgesamtheiten. Zeilen OHNE das Feld bleiben unberuehrt — der Churn wird heute
+  // schreiber-seitig gefuehrt, die Regel steht trotzdem schon hier.
+  const rows = [
+    { date: '2026-01-02', l1: 0.1 },
+    { date: '2026-01-03', l1: 0.2, backfilled: true },
+    { date: '2026-01-04', l1: 0.3, lowFreshness: true },
+    { date: '2026-01-05', l1: 0.4, highChurn: true },
+    { date: '2026-01-06', l1: 0.5, highChurn: false },
+  ];
+  const drin = L.quantileInput(rows).map((r) => r.date);
+  assert.deepEqual(drin, ['2026-01-02', '2026-01-06'],
+    'entweder faellt highChurn nicht raus, oder eine unbeteiligte Zeile faellt mit');
+  // BRUCHPROBE der Regel selbst: ohne das Flag waere die Zeile drin.
+  assert.equal(L.quantileInput([{ date: '2026-01-05', l1: 0.4 }]).length, 1,
+    'eine Zeile ohne das Feld darf NICHT stillschweigend ausgeschlossen werden');
+});
+
 console.log('\nledger.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
