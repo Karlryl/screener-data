@@ -108,7 +108,11 @@ test('C5 der Waechter-Job steht im laufstatus-Marker (sonst ist sein Ausfall uns
 });
 
 test('C6 eigenes Artefakt mit if-no-files-found: error, ohne den fail-soft-Handoff anzufassen', () => {
-  const b = block(ARTEFAKT);
+  // Kommentarzeilen raus: der Nachbarschritt BESCHREIBT in seinem Kommentar ein altes
+  // continue-on-error-Muster. Ohne diesen Filter war die Zusicherung unten von genau
+  // diesem Fremdtext erfuellt — aufgefallen beim absichtlichen Bruch von C10.
+  const b = block(ARTEFAKT).split(String.fromCharCode(10))
+    .filter((l) => !l.trim().startsWith(String.fromCharCode(35))).join(String.fromCharCode(10));
   assert.match(b, /if-no-files-found:\s*error/);
   assert.match(b, /druckenmiller-history\/internals-ledger\.jsonl/);
   const handoff = block('Upload merge→scoring handoff (ath-state + macro-regime + coverage-status)');
@@ -145,6 +149,31 @@ test('C9 kein Ignore-Muster verschluckt druckenmiller-history/', () => {
   const treffer = ig.split('\n').map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#') && /druckenmiller/.test(l));
   assert.deepEqual(treffer, [], 'die Reihe waere gitignored und stuerbe mit dem Runner');
+});
+
+test('C10 KEIN Druckenmiller-Schritt im merge-Job kann den Lauf dort rot machen', () => {
+  // Der teuerste Fehler waere nicht ein stiller Waechter, sondern ein lauter an der
+  // falschen Stelle: merge rot -> scoring faellt aus (needs: merge, ohne always()) ->
+  // Karls Boards werden nicht deployed. Eine Messreihe darf die Auslieferung nie anhalten.
+  // Deshalb traegt JEDER Schritt dieses Moduls im merge-Job continue-on-error; der harte
+  // Ausfall gehoert ausschliesslich in den Job druckenmiller-guard hinter scoring.
+  const anfang = ZEILEN.findIndex((l) => l.trim() === 'merge:');
+  const ende = ZEILEN.findIndex((l, k) => k > anfang && /^  [a-z0-9-]+:$/.test(l));
+  const schritte = [];
+  for (let i = anfang; i < ende; i++) {
+    const t = ZEILEN[i].trim();
+    if (t.startsWith('- name:')) schritte.push({ name: t.slice('- name:'.length).trim(), i });
+  }
+  const meine = schritte.filter((x) => /druckenmiller/i.test(x.name));
+  assert.ok(meine.length >= 2, 'der Waechter findet die Schritte des Moduls nicht mehr: '
+    + meine.map((x) => x.name).join(', '));
+  for (const x of meine) {
+    const b = block(x.name).split(String.fromCharCode(10))
+      .filter((l) => !l.trim().startsWith('#')).join(String.fromCharCode(10));
+    assert.match(b, /continue-on-error:\s*true/,
+      'Schritt "' + x.name + '" kann den merge-Job rot machen — und nimmt damit scoring und '
+      + 'Karls Board-Deploy mit. Der harte Ausfall gehoert in den Job druckenmiller-guard.');
+  }
 });
 
 console.log('\nci-wiring.test.js: ' + pass + ' ok, ' + fail + ' fail');
