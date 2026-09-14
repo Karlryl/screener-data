@@ -353,15 +353,74 @@ test('W16 --check ROT: der Export ist aelter als die Reihe (Schlepp-Kante)', () 
   assert.match(m.reason, /asOf|letzte/i);
 });
 
-test('W17 --check ROT: ein vorgefundener Marker ist selbst der Befund', () => {
+test('W17 --check ROT: ein vorgefundener Marker ist selbst der Befund — und bleibt WOERTLICH stehen', () => {
+  // REVIEW-FUND: der Pruefer schrieb den Marker neu und ersetzte damit den urspruenglichen
+  // `reason` durch "es liegt ein Marker". Die Annotation des Waechter-Jobs nannte danach
+  // nicht mehr die Ursache, sondern nur noch ihre Folge.
   const w = welt();
   W.writeExport(opts(w));
-  fs.writeFileSync(path.join(w.exportDir, '_FAILED.json'), JSON.stringify({
-    schema: 'findash-druckenmiller/v1', generated_at: new Date().toISOString(),
-    reason: 'ein frueherer Schritt', failedAt: 'test',
-  }));
-  const m = rotErwartet(w, 'Marker vorhanden');
-  assert.match(m.reason, /_FAILED/);
+  const original = {
+    schema: 'findash-druckenmiller/v1', generated_at: '2026-09-13T02:20:00.000Z',
+    reason: 'die Reihe ist von 87 auf 10 Zeilen geschrumpft', failedAt: 'druckenmiller-log-internals --check',
+  };
+  fs.writeFileSync(path.join(w.exportDir, '_FAILED.json'), JSON.stringify(original));
+  assert.equal(W.checkExport(opts(w)), 1, 'ein liegender Marker meldet gruen');
+  assert.deepEqual(fs.readdirSync(w.exportDir), ['_FAILED.json'],
+    'neben dem Marker liegen noch Datendateien');
+  assert.deepEqual(liesJson(path.join(w.exportDir, '_FAILED.json')), original,
+    'der urspruengliche Grund wurde ueberschrieben — die Spur zur Ursache ist weg');
+});
+
+test('W17b --check ROT: eine strukturfremde Datei wirft NICHT am Marker-Vertrag vorbei', () => {
+  // REVIEW-FUND (beide Reviewer, reproduziert): jede Pruefung fuehrte ueber rot() zum Marker,
+  // der RUMPF von checkExport aber nicht. Gueltiges JSON in fremder Form (null, falsch
+  // verschachtelt) warf eine TypeError vorbei am Vertrag: Exit 1, kein Marker — und im
+  // scoring-Job schluckt `|| true` den Exit-Code, der Deploy nimmt den kaputten Stand mit.
+  for (const [was, mach] of [
+    ['regime.json ist null', (w) => fs.writeFileSync(path.join(w.exportDir, 'regime.json'), 'null')],
+    ['meta.json ist null', (w) => fs.writeFileSync(path.join(w.exportDir, 'meta.json'), 'null')],
+    ['eine Serien-Zeile ist null', (w) => {
+      const f = path.join(w.exportDir, 'regime.json');
+      const j = liesJson(f); j.series[0] = null; fs.writeFileSync(f, JSON.stringify(j));
+    }],
+    ['ledgerRows ist null', (w) => {
+      const f = path.join(w.exportDir, 'meta.json');
+      const j = liesJson(f); j.ledgerRows = null; fs.writeFileSync(f, JSON.stringify(j));
+    }],
+  ]) {
+    const w = welt();
+    W.writeExport(opts(w));
+    mach(w);
+    assert.equal(W.checkExport(opts(w)), 1, was + ': --check meldet gruen');
+    assert.deepEqual(fs.readdirSync(w.exportDir), ['_FAILED.json'],
+      was + ': kein Marker — der Vertrag ist an dieser Stelle offen');
+    const m = liesJson(path.join(w.exportDir, '_FAILED.json'));
+    assert.ok(m.reason && m.reason.length > 10, was + ': der Marker nennt keinen Grund');
+  }
+});
+
+test('W17c --check ROT: eine unlesbare Chunk-2/3-Datei wird nicht uebersprungen', () => {
+  // REVIEW-FUND: `catch { continue; }` in der generated_at-Schleife. Eine kaputte
+  // candidates.json waere still uebersprungen worden und mit dem Deploy gefahren.
+  const w = welt();
+  W.writeExport(opts(w));
+  fs.writeFileSync(path.join(w.exportDir, 'candidates.json'), '{kaputt');
+  assert.equal(W.checkExport(opts(w)), 1, 'eine unlesbare Vertragsdatei laeuft durch');
+  const m = liesJson(path.join(w.exportDir, '_FAILED.json'));
+  assert.match(m.reason, /candidates\.json/);
+});
+
+test('W17d --check ROT: zwei Dateien mit demselben null-Stempel', () => {
+  // REVIEW-FUND: geprueft wurde nur die GLEICHHEIT der Stempel. Zwei Dateien mit
+  // generated_at: null haben denselben Stempel — und liefen gruen durch.
+  const w = welt();
+  W.writeExport(opts(w));
+  for (const f of ['regime.json', 'meta.json']) {
+    const p = path.join(w.exportDir, f);
+    const j = liesJson(p); j.generated_at = null; fs.writeFileSync(p, JSON.stringify(j));
+  }
+  assert.equal(W.checkExport(opts(w)), 1, 'null als Stempel laeuft durch');
+  assert.match(liesJson(path.join(w.exportDir, '_FAILED.json')).reason, /generated_at/);
 });
 
 test('W18 --check ROT: gar kein Export (der Schreiber ist gar nicht gelaufen)', () => {
@@ -403,6 +462,141 @@ test('W19b --check ROT: l6 traegt etwas anderes als einen Zustandsnamen', () => 
   fs.writeFileSync(p, JSON.stringify(j));
   const m = rotErwartet(w, 'l6-Typ');
   assert.match(m.reason, /l6/);
+});
+
+test('W21 REVIEW-FUND H1: Churn wird NIE ueber ein Loch hinweg gerechnet', () => {
+  // Faellt die Roh-Datei eines mittleren Tages aus, verglich der Folgetag gegen eine zwei
+  // Sitzungen alte Menge — und das Ergebnis stand als Tagesdifferenz in der Auslieferung.
+  // Beide Fehlrichtungen waren teuer: ein ruhiger Tag wurde als highChurn ausgeschlossen,
+  // ein Hin-und-Zurueck-Tausch als ruhig durchgelassen (der speist dann Quantile).
+  const w = welt({ mitglieder: {
+    '2026-09-07': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    '2026-09-08': [1, 2, 3, 4, 5, 6, 7, 8, 9, 11],   // 20 % Umschlag
+    '2026-09-09': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],   // und wieder zurueck: auch 20 %
+    '2026-09-10': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  } });
+  fs.rmSync(path.join(w.rawDir, '2026-09-08.jsonl.gz'));   // der mittlere Tag faellt aus
+  W.writeExport(opts(w));
+  const s2 = liesJson(path.join(w.exportDir, 'regime.json')).series;
+  const nach = (d) => s2.find((r) => r.date === d);
+  assert.equal(nach('2026-09-08').highChurn, null, 'der Tag ohne Roh-Datei bekommt trotzdem einen Churn');
+  assert.equal(nach('2026-09-09').nEntered, null,
+    'der FOLGETAG wurde gegen eine zwei Sitzungen alte Menge verglichen — 09-09 gegen 09-07 ist '
+    + 'identisch (0 Umschlag) und haette den echten 20-%-Tausch als ruhig durchgelassen');
+  assert.equal(nach('2026-09-09').highChurn, null);
+  assert.equal(nach('2026-09-10').nEntered, 0, 'ab dem naechsten vollstaendigen Paar zaehlt es wieder');
+  const meta = liesJson(path.join(w.exportDir, 'meta.json'));
+  assert.equal(meta.churnUnavailableDays, 2,
+    'gezaehlt gehoeren BEIDE: der Tag ohne Roh-Datei und der, dem dadurch der Vortag fehlt');
+});
+
+test('W22 REVIEW-FUND: ein 1:1-Tausch ist groessengleich — verglichen wird der Mengen-Hash', () => {
+  const w = welt();
+  // Ein Ticker wird in der Roh-Datei des juengsten Tages ausgetauscht: gleiche Anzahl,
+  // andere Menge. Ein reiner Groessenvergleich haette das nie gesehen.
+  const f = path.join(w.rawDir, w.tage[w.tage.length - 1] + '.jsonl.gz');
+  const zeilen = zlib.gunzipSync(fs.readFileSync(f)).toString('utf8').trim().split('\n');
+  const erste = JSON.parse(zeilen[0]); erste.ticker = 'TAUSCH';
+  zeilen[0] = JSON.stringify(erste);
+  fs.writeFileSync(f, zlib.gzipSync(Buffer.from(zeilen.join('\n') + '\n', 'utf8')));
+  assert.throws(() => W.writeExport(opts(w)), /verschiedene Mengen/,
+    'ein groessengleicher Tausch zwischen Roh-Datei und Reihe laeuft durch');
+});
+
+test('W23 die Abdeckung eines Widerspruchs wird nicht mehr weggewarnt', () => {
+  // Dieselbe Beweislage wie beim Churn (dort wirft der Lauf) hatte eine andere Konsequenz:
+  // eine Warnung, und veroeffentlicht wurde die Zahl der Reihe. Unter 0,6 wird die Achse
+  // ausgegraut — eine falsche Abdeckung gibt einer kaputten Achse still eine Stimme.
+  const w = welt();
+  const letzterTag = w.tage[w.tage.length - 1];
+  const f = path.join(w.rawDir, letzterTag + '.jsonl.gz');
+  const zeilen = zlib.gunzipSync(fs.readFileSync(f)).toString('utf8').trim().split('\n')
+    .map((l) => JSON.parse(l));
+  zeilen[0].sma200 = null;                       // dieselbe Menge, andere Abdeckung
+  fs.writeFileSync(f, zlib.gzipSync(Buffer.from(
+    zeilen.map((z) => JSON.stringify(z)).join('\n') + '\n', 'utf8')));
+  assert.throws(() => W.writeExport(opts(w)), /Abdeckung l1/,
+    'ein Widerspruch zwischen Roh-Datei und Reihe wird nur gewarnt statt geworfen');
+});
+
+test('W24 null heisst "nicht gemessen": l6 ohne Zustand ist keine Abdeckung von 0', () => {
+  const w = welt({ });
+  // Eine Welt ohne SPY-Zustand: buildRow bekommt spyState null.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-l6-'));
+  const outDir = path.join(dir, 'druckenmiller-history');
+  const rawDir = path.join(outDir, 'raw');
+  const zeilen = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => tickerZeile(i, { lastBarDate: '2026-09-07' }));
+  schreibeRoh(rawDir, '2026-09-07', zeilen);
+  const row = internals.buildRow({
+    date: '2026-09-07', rawRows: zeilen, backfilled: false, spyState: null, spyRet63: 0.01,
+    iwmRet63: 0.02, prevRow: null, history: [], snapshotUnreadable: 0, now: new Date('2026-09-14T02:17:00Z'),
+  });
+  ledgerLib.appendRow(path.join(outDir, 'internals-ledger.jsonl'), row);
+  const shard = { SPY: [{ date: '2026-09-07', close: 500 }] };
+  fs.mkdirSync(path.join(dir, 'prices', 'history'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'prices', 'history',
+    'history-' + String(store.shardOf('SPY')).padStart(2, '0') + '.json'), JSON.stringify(shard));
+  const exportDir = path.join(dir, 'ex');
+  W.writeExport({ outDir, exportDir, pricesDir: path.join(dir, 'prices'), protocolDir: PROTOCOL, log: still });
+  const meta = liesJson(path.join(exportDir, 'meta.json'));
+  assert.equal(meta.coverage.l6, null,
+    'ein fehlendes L6 ist "nicht gemessen" (null), keine Abdeckung von null Prozent — '
+    + 'die 60-%-Regel wuerde sonst eine nie gemessene Achse als schlecht abgedeckt ausweisen');
+  assert.equal(meta.coverage.l1, 1);
+  void w;
+});
+
+test('W25 ein kaputtes l7 wird nicht als leere Sektor-Tabelle ausgeliefert', () => {
+  assert.throws(() => W.pruefeSectorRs({ date: '2026-09-11', l7: null }), /kein Array/);
+  assert.throws(() => W.pruefeSectorRs({ date: '2026-09-11', l7: 'kaputt' }), /kein Array/);
+  assert.deepEqual(W.pruefeSectorRs({ date: '2026-09-11', l7: [] }), [],
+    'eine leere Tabelle ist ein BEFUND (kein Sektor messbar) und muss durchgehen');
+});
+
+test('W26 SERIES_FIELDS haengt an LEDGER_ROW_FIELDS — ein Tippfehler waere sonst still', () => {
+  // baueRegime macht aus einem unbekannten Namen null. Ein umbenanntes Ledger-Feld haette
+  // die Achse fuer immer als "nicht gemessen" veroeffentlicht, und --check haette null
+  // akzeptiert (es ist ja ein erlaubter Wert).
+  const eigene = ['nUniverse', 'nEntered', 'nLeft', 'highChurn'];   // entstehen im Schreiber
+  const fehlend = W.SERIES_FIELDS.filter((f) => !eigene.includes(f)
+    && !internals.LEDGER_ROW_FIELDS.includes(f));
+  assert.deepEqual(fehlend, [],
+    'diese Serien-Felder gibt es in der Ledger-Zeile nicht (mehr) und wuerden dauerhaft als '
+    + 'null ausgeliefert: ' + fehlend.join(', '));
+  assert.ok(W.SERIES_FIELDS.length > 20, 'die Feldliste wurde nicht wirklich gelesen');
+});
+
+test('W27 der Cron-Slot wird AUS dem Cron gelesen, nicht daneben nochmal hingeschrieben', () => {
+  // Vorher standen Stunde, Minute und Wochentage ein zweites Mal als Literale in
+  // nextRunAfter. Cron aendern + Konstante nachziehen waere gruen geblieben, und
+  // expectedNextRun (und mit ihm findashs "missed run"-Flag) dauerhaft falsch.
+  assert.equal(W.nextRunAfter('2026-09-14T03:00:00Z', '17 3 * * 2-6'), '2026-09-15T03:17:00.000Z');
+  assert.equal(W.nextRunAfter('2026-09-14T03:00:00Z', '0 6 * * 1-5'), '2026-09-14T06:00:00.000Z');
+  assert.throws(() => W.nextRunAfter('2026-09-14T03:00:00Z', '*/5 * * * *'), /Form/,
+    'ein Cron, den diese Funktion nicht lesen kann, muss laut werden statt zu raten');
+  assert.deepEqual(W.cronSlot(W.CRON), { minute: 17, stunde: 2, vonTag: 2, bisTag: 6 });
+});
+
+test('W28 ein Flag ohne Wert arbeitet nicht im falschen Ordner', () => {
+  // `--out --check` machte aus dem Flag einen Pfad und zog danach den ECHTEN
+  // Default-Export-Ordner auf einen Marker zusammen.
+  assert.throws(() => W.main(['--out', '--check'], still), /ohne Wert/);
+  assert.throws(() => W.main(['--check', '--export-dir'], still), /ohne Wert/);
+});
+
+test('W29 eine kaputte HISTORISCHE Roh-Datei haelt die Auslieferung nicht an', () => {
+  // Eine halb geschriebene gz-Datei von vor einem Jahr riss vorher jede weitere
+  // Auslieferung mit. Der Tag steht laengst in der Reihe — der Churn ist unbekannt, mehr nicht.
+  const w = welt();
+  fs.writeFileSync(path.join(w.rawDir, w.tage[1] + '.jsonl.gz'), Buffer.from('kein gzip', 'utf8'));
+  assert.equal(W.writeExport(opts(w)), 0, 'eine kaputte Datei von damals haelt heute an');
+  const meta = liesJson(path.join(w.exportDir, 'meta.json'));
+  assert.ok(meta.churnUnavailableDays >= 2, 'der Ausfall wird nicht gezaehlt');
+  assert.equal(W.checkExport(opts(w)), 0);
+  // Aber am juengsten Tag ist dieselbe Datei ein Wurf — dort ist das Tor sonst blind.
+  const w2 = welt();
+  fs.writeFileSync(path.join(w2.rawDir, w2.tage[w2.tage.length - 1] + '.jsonl.gz'), Buffer.from('x', 'utf8'));
+  assert.throws(() => W.writeExport(opts(w2)), /juengsten Tag/);
 });
 
 test('W20 stale-by-design: der Vertrag nennt vier Dateien und Chunk 1 sagt, warum zwei fehlen', () => {

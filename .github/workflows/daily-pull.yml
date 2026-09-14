@@ -2568,11 +2568,12 @@ jobs:
           name: druckenmiller-ledger
           path: druckenmiller-history
 
-      # Zweite Seite: was der scoring-Job tatsaechlich veroeffentlicht hat. Fehlt das
-      # Artefakt (Chunk 0 schreibt den Ordner noch nicht, oder scoring kam nicht so weit),
-      # ist das KEIN Befund — der Waechter prueft dann nur die Reihe; deshalb hier
-      # continue-on-error, im Gegensatz zum Ledger-Abruf darueber, dessen Ausfall den Job
-      # bewusst abbricht.
+      # Zweite Seite: was der scoring-Job tatsaechlich veroeffentlicht hat. Der ABRUF darf
+      # weich ausfallen (ein transienter Artefakt-Aussetzer soll nicht als Integritaets-
+      # Befund erscheinen), im Gegensatz zum Ledger-Abruf darueber. Seit Chunk 1 gilt aber:
+      # ein FEHLENDER Export-Ordner ist sehr wohl ein Befund — der Pruefschritt unten meldet
+      # dann "regime.json fehlt" und faerbt den Waechter rot. Das ist gewollt: ab Chunk 1
+      # schreibt jeder erfolgreiche scoring-Job diesen Ordner.
       - name: Download Druckenmiller-Export (falls vorhanden)
         continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0

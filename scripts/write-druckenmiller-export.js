@@ -33,7 +33,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 
 const internals = require('../lib/druckenmiller/internals.js');
-const { MIN_BARS } = require('../lib/druckenmiller/universe.js');
+const { MIN_BARS, universeHash } = require('../lib/druckenmiller/universe.js');
 const ledgerLib = require('../lib/druckenmiller/ledger.js');
 const logger = require('./druckenmiller-log-internals.js');
 
@@ -57,11 +57,6 @@ const LABEL = 'Rekonstruktion aus öffentlichen Aussagen und 13F-Filings — nic
   + 'Empfehlung. Ohne Positionsgrößen, Hebel, Währungen, Anleihen. Vorlauf-These ungeprüft: erste '
   + 'belastbare Aussage frühestens in rund zehn Jahren. Trefferbilanz noch nicht lesbar.';
 const MANDATE = 'separate module, not quality, never in the score';
-/** Rat D1: der gerissene Kipp-Schwellen-Override faehrt als gehashter Vermerk mit. */
-const OVERRIDE_TEXT = 'Kipp-Schwelle (< 5 Prinzipien) gerissen: strenge Zaehlung 4, nach Advocatus '
-  + 'Diaboli 3. Die Konsequenz wurde nach der vorgegebenen Eskalation (prinzipien-katalog.md:27-28) '
-  + 'bewusst auf "kein eigenes Ranking" verengt — Rat-Entscheid D1 vom 2026-09-14, 68 %.';
-
 /** Die Legs, die die Serie traegt. Alles Weitere bleibt in der Reihe (§0.2: rohe Legs). */
 const SERIES_FIELDS = [
   'date', 'backfilled', 'barDateMode', 'mixedBarDateShare', 'freshShare', 'lowFreshness',
@@ -76,7 +71,6 @@ const META_FIELDS = ['schema', 'generated_at', 'mandate', 'label', 'paramsHash',
   'overrideNote', 'expectedNextRun', 'duquesne13fCoverage'];
 /** Felder, die eine echte Zahl tragen MUESSEN — alle anderen duerfen number|null sein. */
 const PFLICHT_ZAHL = { series: ['nUniverse'], meta: ['ledgerGapDays', 'churnUnavailableDays'] };
-const ACHSEN = ['l1', 'l2', 'l3', 'l4ew', 'l4cw', 'l4b', 'l5', 'l6', 'l7', 'l8'];
 
 const sha256 = (text) => crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 const istZahlOderNull = (v) => v === null || (typeof v === 'number' && Number.isFinite(v));
@@ -114,21 +108,65 @@ function leseRegistrierung(protocolDir) {
       + imSidecar.slice(0, 12) + '…, die Datei ist ' + hash.slice(0, 12) + '… — sie wurde nach dem '
       + 'Hashen angefasst.');
   }
-  return { datei: treffer[0], hash, json: JSON.parse(text) };
+  let json;
+  try { json = JSON.parse(text); }
+  catch (e) {
+    throw new Error('[druckenmiller] Registrierung ' + treffer[0] + ' ist kein gueltiges JSON ('
+      + e.message + ') — der Dateiname gehoert in die Meldung, sonst sucht der naechste Leser '
+      + 'in der falschen Datei.');
+  }
+  // Was der Schreiber aus ihr LIEST, muss sie auch tragen — sonst faellt es erst als
+  // undefined mitten in der Rechnung auf.
+  const churnMax = json.courtGates && json.courtGates.churnMaxShare;
+  if (!Number.isFinite(churnMax)) {
+    throw new Error('[druckenmiller] ' + treffer[0] + ' nennt kein courtGates.churnMaxShare — '
+      + 'das Churn-Tor haette keine registrierte Schwelle.');
+  }
+  if (!(json.overrideNoteD1 && typeof json.overrideNoteD1.text === 'string' && json.overrideNoteD1._origin)) {
+    throw new Error('[druckenmiller] ' + treffer[0] + ' nennt keinen overrideNoteD1 mit text und '
+      + '_origin — der gehashte Override-Vermerk (Rat D1) haette keine Quelle.');
+  }
+  return { datei: treffer[0], hash, json };
 }
 
 // ---------------------------------------------------------------------------
 // U-Mitglieder je Tag aus den Roh-Zeilen (Churn und Abdeckung)
 // ---------------------------------------------------------------------------
-/** Die Roh-Zeilen eines Tages, oder null wenn es die Datei nicht (mehr) gibt. */
-function leseRoh(rawDir, datum) {
+/**
+ * Die Roh-Zeilen eines Tages, oder null wenn es die Datei nicht (mehr) gibt ODER sie
+ * unlesbar ist.
+ *
+ * REVIEW-FUND: hier stand ein nacktes gunzip+JSON.parse. Eine halb geschriebene Datei von
+ * vor einem Jahr riss damit JEDE weitere Auslieferung mit ("incorrect header check", ohne
+ * Dateinamen, ohne Tag) — eine Nebenwirkung, die groesser ist als der Schaden: der Tag
+ * steht laengst in der Reihe. Jetzt entscheidet der AUFRUFER: fuer den juengsten Tag ist
+ * null ein Wurf, fuer die Historie ein Zaehler. Und die Meldung traegt ihre Herkunft, wie
+ * lib/druckenmiller/ledger.js:62 es im selben Repo vormacht.
+ */
+function leseRoh(rawDir, datum, log) {
   const p = path.join(rawDir, datum + '.jsonl.gz');
   if (!fs.existsSync(p)) return null;
-  const text = zlib.gunzipSync(fs.readFileSync(p)).toString('utf8');
+  let text;
+  try { text = zlib.gunzipSync(fs.readFileSync(p)).toString('utf8'); }
+  catch (e) {
+    if (log) {
+      log('::warning::[druckenmiller] ' + p + ' laesst sich nicht entpacken (' + e.message
+        + ') — halb geschrieben oder kein gzip. Der Churn dieses Tages bleibt leer.');
+    }
+    return null;
+  }
   const out = [];
-  for (const zeile of text.split('\n')) {
-    if (!zeile.trim()) continue;
-    out.push(JSON.parse(zeile));
+  const zeilen = text.split('\n');
+  for (let i = 0; i < zeilen.length; i++) {
+    if (!zeilen[i].trim()) continue;
+    try { out.push(JSON.parse(zeilen[i])); }
+    catch (e) {
+      if (log) {
+        log('::warning::[druckenmiller] ' + p + ' Zeile ' + (i + 1) + ' ist kein gueltiges JSON ('
+          + e.message + ') — die Datei gilt als unlesbar und wird NICHT teilweise ausgewertet.');
+      }
+      return null;
+    }
   }
   return out;
 }
@@ -155,33 +193,55 @@ function uMitglieder(rohZeilen) {
  * es null und einen Zaehler in meta.json; sie stillschweigend als 0 auszuweisen waere
  * eine Behauptung ueber eine Menge, die niemand mehr sehen kann.
  */
-function churnSerie(rawDir, rows, log) {
+function churnSerie(rawDir, rows, churnMax, log) {
+  if (!(Number.isFinite(churnMax) && churnMax > 0 && churnMax < 1)) {
+    throw new Error('[druckenmiller] churnMaxShare aus der Registrierung ist ' + churnMax
+      + ' — ohne die registrierte Schwelle wird kein Churn-Tor gerechnet. Eine hier hartkodierte '
+      + 'Zahl waere genau die Klasse Fehler, gegen die Datei A steht.');
+  }
   const out = new Map();
+  let letzteRoh = null;
   let unbekannt = 0;
-  let vorher = null;
+  let vorher = null, vorherDatum = null;
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const istLetzte = i === rows.length - 1;
     let jetzt = null;
-    const roh = leseRoh(rawDir, row.date);
+    const roh = leseRoh(rawDir, row.date, log);
+    if (istLetzte) letzteRoh = roh;
     if (roh) {
       jetzt = uMitglieder(roh);
-      if (jetzt.size !== row.universeSize) {
-        const msg = '[druckenmiller] ' + row.date + ': aus den Roh-Zeilen ergeben sich ' + jetzt.size
-          + ' U-Mitglieder, die Ledger-Zeile nennt ' + row.universeSize + ' — Roh-Datei und Reihe '
-          + 'sprechen ueber verschiedene Mengen.';
+      // REVIEW-FUND: verglichen wurde nur die GROESSE. Ein 1:1-Tausch (einer rein, einer
+      // raus) ist groessengleich und lief unsichtbar durch — ausgerechnet der Fall, den das
+      // Churn-Tor messen soll. Der Tages-Hash der Mitgliederliste faengt ihn.
+      const hash = universeHash([...jetzt]);
+      if (jetzt.size !== row.universeSize || hash !== row.universeHash) {
+        const msg = '[druckenmiller] ' + row.date + ': Roh-Datei und Ledger-Zeile sprechen ueber '
+          + 'verschiedene Mengen (Roh ' + jetzt.size + '/' + hash.slice(0, 12) + '…, Reihe '
+          + row.universeSize + '/' + String(row.universeHash).slice(0, 12) + '…).';
         if (istLetzte) throw new Error(msg);
         log('::warning::' + msg + ' Der Churn dieses Tages bleibt leer.');
         jetzt = null;
       }
     } else if (istLetzte) {
-      throw new Error('[druckenmiller] keine Roh-Datei fuer den juengsten Tag (' + row.date + ') unter '
-        + rawDir + ' — ohne sie ist das 5-%-Churn-Tor fuer genau die Sitzung blind, fuer die es gilt.');
+      throw new Error('[druckenmiller] keine (lesbare) Roh-Datei fuer den juengsten Tag ('
+        + row.date + ') unter ' + rawDir + ' — ohne sie ist das Churn-Tor fuer genau die '
+        + 'Sitzung blind, fuer die es gilt.');
     }
+    // REVIEW-FUND H1 (reproduziert): `vorher` wurde nur fortgeschrieben, wenn ein Tag lesbar
+    // war. Fiel ein Tag in der Mitte aus, verglich der FOLGETAG gegen eine zwei Sitzungen
+    // alte Menge — und das Ergebnis stand als Tagesdifferenz in der Auslieferung. Beide
+    // Fehlrichtungen sind teuer: ein ruhiger Tag wurde als highChurn ausgeschlossen, ein
+    // Hin-und-Zurueck-Tausch als ruhig durchgelassen. Verglichen wird nur noch gegen den
+    // UNMITTELBAREN Vortag der Reihe; sonst gibt es keinen Churn, sondern null.
+    const vortagDerReihe = i > 0 ? rows[i - 1].date : null;
+    const vergleichbar = !!(jetzt && vorher && vorherDatum === vortagDerReihe);
     let eintrag;
-    if (!jetzt || !vorher) {
+    if (!vergleichbar) {
       eintrag = { nUniverse: row.universeSize, nEntered: null, nLeft: null, highChurn: null };
-      if (i > 0 && !jetzt) unbekannt++;
+      // Gezaehlt wird JEDER Tag ohne Churn ausser dem ersten (der hat per Definition keinen
+      // Vortag) — auch der, dem der VORTAG fehlt. Genau den zaehlte der Zaehler vorher nicht.
+      if (i > 0) unbekannt++;
     } else {
       let rein = 0, raus = 0;
       for (const t of jetzt) if (!vorher.has(t)) rein++;
@@ -191,13 +251,13 @@ function churnSerie(rawDir, rows, log) {
         nUniverse: n,
         nEntered: rein,
         nLeft: raus,
-        highChurn: n > 0 ? (rein + raus) / n > 0.05 : null,
+        highChurn: n > 0 ? (rein + raus) / n > churnMax : null,
       };
     }
     out.set(row.date, eintrag);
-    if (jetzt) vorher = jetzt;
+    if (jetzt) { vorher = jetzt; vorherDatum = row.date; }
   }
-  return { churn: out, unbekannt };
+  return { churn: out, unbekannt, letzteRoh };
 }
 
 /**
@@ -218,17 +278,25 @@ function abdeckung(rohZeilen, row, log) {
     l4cw: anteil((z) => Number.isFinite(z.ret63) && Number.isFinite(z.marketCap) && z.marketCap > 0),
     l4b: anteil((z) => Number.isFinite(z.ret63)),
     l5: anteil((z) => Number.isFinite(z.netRevision30)),
-    l6: row.l6 ? 1 : 0,
+    // null heisst "nicht gemessen", nie 0 — dieselbe Regel wie ueberall sonst im Modul.
+    // Ein fehlendes L6 (macro-regime.json noch nicht da) ist KEINE Abdeckung von null Prozent.
+    l6: row.l6 === null || row.l6 === undefined ? null : 1,
     l7: anteil((z) => Number.isFinite(z.ret63) && !!z.sector),
     l8: anteil((z) => Number.isFinite(z.ret63)),
   };
+  // REVIEW-FUND: hier stand eine Warnung, und veroeffentlicht wurde dann die Zahl der Reihe.
+  // Das ist DIESELBE Beweislage wie im Churn (dort wirft der Lauf) mit einer anderen
+  // Konsequenz: ein Widerspruch am juengsten Tag heisst, dass eine der beiden Mess-Strecken
+  // kaputt ist. Unter 0,6 wird die Achse ausgegraut — eine falsche Abdeckung gibt also einer
+  // kaputten Achse still eine Stimme. Und --check rechnet die Abdeckung nie nach, der scharfe
+  // Waechter kann es also gar nicht sehen. Deshalb: ein Wurf, wie beim Churn.
   for (const [achse, ausDerReihe] of [['l1', row.l1Coverage], ['l3', row.l3Coverage], ['l5', row.l5Coverage]]) {
     if (ausDerReihe === null || cov[achse] === null) continue;
     if (Math.abs(cov[achse] - ausDerReihe) > 1e-9) {
-      log('::warning::[druckenmiller] Abdeckung ' + achse + ' aus den Roh-Zeilen (' + cov[achse]
-        + ') weicht von der Ledger-Zeile ab (' + ausDerReihe + ') — eine der beiden Mengen ist falsch. '
-        + 'Veroeffentlicht wird die Zahl der REIHE, weil die Achse auf ihr gerechnet wurde.');
-      cov[achse] = ausDerReihe;
+      throw new Error('[druckenmiller] ' + row.date + ': Abdeckung ' + achse + ' aus den Roh-Zeilen ('
+        + cov[achse] + ') weicht von der Ledger-Zeile ab (' + ausDerReihe + ') — eine der beiden '
+        + 'Mess-Strecken ist kaputt. Unter 0,6 wuerde die Achse ausgegraut; eine falsche Abdeckung '
+        + 'gaebe einer kaputten Achse eine Stimme.');
     }
   }
   return cov;
@@ -240,6 +308,14 @@ function abdeckung(rohZeilen, row, log) {
 /** Letzte SERIES_MAX Zeilen — gekappt wird vorne, die juengste bleibt immer. */
 function begrenze(reihen) {
   return reihen.length > SERIES_MAX ? reihen.slice(reihen.length - SERIES_MAX) : reihen;
+}
+
+function pruefeSectorRs(letzte) {
+  if (!Array.isArray(letzte.l7)) {
+    throw new Error('[druckenmiller] die Ledger-Zeile ' + letzte.date + ' traegt in l7 kein Array ('
+      + JSON.stringify(letzte.l7) + ') — das ist eine kaputte Zeile, keine leere Sektor-Tabelle.');
+  }
+  return letzte.l7;
 }
 
 function baueRegime({ rows, churn, now }) {
@@ -258,7 +334,10 @@ function baueRegime({ rows, churn, now }) {
     generated_at: now.toISOString(),
     asOf: letzte.date,
     series,
-    sectorRs: Array.isArray(letzte.l7) ? letzte.l7 : [],
+    // Ein leeres Array ist ein Befund ("kein Sektor hatte eine messbare RS", z. B. ohne SPY);
+    // ein l7, das gar kein Array ist, ist eine kaputte Zeile. Die zweite Lage still als die
+    // erste auszuliefern hiesse, einen Defekt als Messung zu veroeffentlichen.
+    sectorRs: pruefeSectorRs(letzte),
     rankPersistence: letzte.l7Persistence === undefined ? null : letzte.l7Persistence,
   };
 }
@@ -288,20 +367,44 @@ function baueMeta({ rows, sidecar, gapDays, churnUnbekannt, registrierung, cover
     ledgerGapDays: gapDays,
     churnUnavailableDays: churnUnbekannt,
     universeHash: letzte.universeHash,
-    overrideNote: { text: OVERRIDE_TEXT, sha256: sha256(OVERRIDE_TEXT), source: 'Rat-Entscheid D1, 2026-09-14' },
+    // Der Vermerk kommt aus der GEHASHTEN Registrierung, nicht aus einer Konstante 200 Zeilen
+    // weiter oben: ein Hash ueber einen Text, den derselbe Autor daneben aendern kann, belegt
+    // nichts. So haengt er am .sha256-Sidecar und am Changelog-Tor von Datei A.
+    overrideNote: {
+      text: registrierung.json.overrideNoteD1.text,
+      sha256: sha256(registrierung.json.overrideNoteD1.text),
+      source: registrierung.json.overrideNoteD1._origin,
+    },
     expectedNextRun: nextRunAfter(now),
     duquesne13fCoverage: null,
     _sidecarRows: sidecar && Number.isFinite(sidecar.rows) ? sidecar.rows : null,
   };
 }
 
-/** Naechster CI-Slot nach <now> (daily-pull.yml: 17 2 * * 2-6, also Di-Sa 02:17 UTC). */
-function nextRunAfter(now) {
+/**
+ * Minute, Stunde und Wochentage AUS dem Cron-Ausdruck. Vorher standen sie ein zweites Mal
+ * als Literale in nextRunAfter — der Test verglich nur Workflow gegen Konstante, nie
+ * Konstante gegen Funktion. Eine Cron-Aenderung samt nachgezogener Konstante waere gruen
+ * durchgelaufen und expectedNextRun ab dann dauerhaft falsch (und mit ihm findashs
+ * "missed run"-Flag). Nur die Form dieses einen Cron wird gelesen, kein Cron-Parser.
+ */
+function cronSlot(cron) {
+  const m = /^(\d{1,2}) (\d{1,2}) \* \* (\d)-(\d)$/.exec(String(cron).trim());
+  if (!m) {
+    throw new Error('[druckenmiller] der CI-Cron "' + cron + '" hat nicht mehr die Form '
+      + '"<Minute> <Stunde> * * <WT>-<WT>" — expectedNextRun wuerde ab jetzt raten.');
+  }
+  return { minute: +m[1], stunde: +m[2], vonTag: +m[3], bisTag: +m[4] };
+}
+
+/** Naechster CI-Slot nach <now>, gelesen aus CRON (daily-pull.yml). */
+function nextRunAfter(now, cron) {
+  const { minute, stunde, vonTag, bisTag } = cronSlot(cron || CRON);
   const d = new Date(now);
   for (let i = 0; i < 9; i++) {
-    const c = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + i, 2, 17, 0, 0));
+    const c = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + i, stunde, minute, 0, 0));
     const wt = c.getUTCDay();
-    if (wt >= 2 && wt <= 6 && c.getTime() > d.getTime()) return c.toISOString();
+    if (wt >= vonTag && wt <= bisTag && c.getTime() > d.getTime()) return c.toISOString();
   }
   return null;
 }
@@ -321,9 +424,14 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
       + 'veroeffentlichen, und eine leere Auslieferung saehe aus wie ein gemessenes Nichts.');
   }
   const registrierung = leseRegistrierung(protocolDir);
-  const { churn, unbekannt } = churnSerie(path.join(outDir, 'raw'), rows, say);
+  // Churn nur ueber das Fenster, das auch veroeffentlicht wird — plus EINEN Tag davor, weil
+  // die erste veroeffentlichte Zeile ihren Vortag zum Vergleich braucht. Ohne den Schnitt
+  // entpackt der Lauf nach zehn Jahren 2.500 gz-Dateien fuer 504 Zeilen.
+  const fenster = rows.length > SERIES_MAX + 1 ? rows.slice(rows.length - SERIES_MAX - 1) : rows;
+  const { churn, unbekannt, letzteRoh } = churnSerie(
+    path.join(outDir, 'raw'), fenster, registrierung.json.courtGates.churnMaxShare, say);
   const letzte = rows[rows.length - 1];
-  const cov = abdeckung(leseRoh(path.join(outDir, 'raw'), letzte.date), letzte, say);
+  const cov = abdeckung(letzteRoh, letzte, say);
   const gapDays = ledgerLib.ledgerGapDays(rows, logger.sitzungen(pricesDir));
 
   const regime = baueRegime({ rows, churn, now: jetzt });
@@ -384,11 +492,59 @@ function nichtEndlich(v, pfad) {
   return null;
 }
 
-function checkExport({ outDir, exportDir, pricesDir, protocolDir, log }) {
-  const say = log || console.log;
+/**
+ * Der Mantel um die Pruefung. REVIEW-FUND (von beiden Reviewern, reproduziert): jede
+ * Pruefung fuehrte ueber rot() zum Marker — der RUMPF selbst aber nicht. Eine Datei, die
+ * gueltiges JSON, aber strukturfremd ist (`regime.json` = `null`, `meta.ledgerRows` = null,
+ * eine `series`-Zeile null), warf eine TypeError am Vertrag vorbei: Exit 1, KEIN Marker,
+ * und die kaputten Dateien blieben liegen. Im scoring-Job schluckt `|| true` den Exit-Code —
+ * der Deploy haette Muell mit heutigem generated_at ausgeliefert statt "heute gilt nichts".
+ * Genau diese Dateien kommen ab Chunk 2/3 von einem anderen Erzeuger.
+ */
+function checkExport(opts) {
+  const say = opts.log || console.log;
+  try {
+    return checkExportRumpf(opts, say);
+  } catch (e) {
+    const grund = '[druckenmiller] die Pruefung selbst ist gescheitert: '
+      + (e && e.message ? e.message : String(e))
+      + ' — eine Auslieferung, die ihren eigenen Pruefer wirft, gilt als ungueltig.';
+    say('::error::' + grund);
+    schreibeMarkerEinmal(opts.exportDir, grund, say);
+    return 1;
+  }
+}
+
+/**
+ * Einen vorgefundenen Marker NICHT ueberschreiben: sein `reason` nennt die urspruengliche
+ * Ursache, und die ist wertvoller als "es liegt ein Marker".
+ */
+function schreibeMarkerEinmal(exportDir, grund, say) {
+  const marker = path.join(exportDir, FAILED_NAME);
+  let alt = null;
+  if (fs.existsSync(marker)) {
+    try { alt = fs.readFileSync(marker, 'utf8'); } catch { alt = null; }
+  }
+  logger.schreibeFehlermarker(exportDir, grund, say, 'write-druckenmiller-export --check');
+  // Der Ordner MUSS auf einen Marker zusammenschrumpfen (das erledigt der Aufruf oben) —
+  // aber der Grund des ERSTEN Markers bleibt stehen: er nennt die Ursache, dieser hier nur
+  // ihre Folge. Beides zusammen gibt es nicht: eine Mischung aus Marker und Datendateien ist
+  // genau der Zustand, den der Vertrag ausschliesst.
+  if (alt !== null) {
+    try {
+      fs.writeFileSync(marker, alt);
+      say('[druckenmiller] der bereits vorhandene ' + FAILED_NAME + ' bleibt woertlich stehen — '
+        + 'sein Grund nennt die Ursache, dieser Lauf nur ihre Folge.');
+    } catch (e) {
+      say('::warning::[druckenmiller] der urspruengliche Marker liess sich nicht erhalten: ' + e.message);
+    }
+  }
+}
+
+function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
   const rot = (grund) => {
     say('::error::' + grund);
-    logger.schreibeFehlermarker(exportDir, grund, say, 'write-druckenmiller-export --check');
+    schreibeMarkerEinmal(exportDir, grund, say);
     return 1;
   };
   const marker = path.join(exportDir, FAILED_NAME);
@@ -416,7 +572,19 @@ function checkExport({ outDir, exportDir, pricesDir, protocolDir, log }) {
   for (const name of ALLE_DATEIEN) {
     const p = path.join(exportDir, name);
     if (!fs.existsSync(p)) continue;
-    let j; try { j = JSON.parse(fs.readFileSync(p, 'utf8')); } catch { continue; }
+    let j;
+    // REVIEW-FUND: hier stand `catch { continue; }`. Eine kaputte candidates.json (Chunk 2)
+    // waere still uebersprungen worden, gruen geblieben und mit dem Deploy gefahren — genau
+    // die Mischung aus gueltigen und ungueltigen Dateien, die der Vertrag ausschliesst.
+    try { j = JSON.parse(fs.readFileSync(p, 'utf8')); }
+    catch (e) {
+      return rot('[druckenmiller] ' + name + ' im Export-Ordner ist nicht lesbar (' + e.message
+        + ') — eine unlesbare Vertragsdatei ist ein Befund, kein Grund zum Weitergehen.');
+    }
+    if (typeof j.generated_at !== 'string' || !/^\d{4}-\d{2}-\d{2}T/.test(j.generated_at)) {
+      return rot('[druckenmiller] ' + name + ' traegt kein ISO-generated_at (' + JSON.stringify(j.generated_at)
+        + ') — zwei Dateien mit demselben `null` haben denselben Stempel und waeren durchgelaufen.');
+    }
     stempel.add(j.generated_at);
   }
   if (stempel.size !== 1) {
@@ -563,7 +731,19 @@ function checkExport({ outDir, exportDir, pricesDir, protocolDir, log }) {
 function main(argv, log) {
   const args = argv || process.argv.slice(2);
   const say = log || console.log;
-  const get = (k, dflt) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : dflt; };
+  // `--out --check` machte aus dem Flag einen Pfad und zog danach den ECHTEN Default-Ordner
+  // auf einen Marker zusammen; `--check --out` (Flag am Ende) warf in path.resolve(undefined).
+  const get = (k, dflt) => {
+    const i = args.indexOf(k);
+    if (i < 0) return dflt;
+    const wert = args[i + 1];
+    if (wert === undefined || wert.startsWith('--')) {
+      throw new Error('[druckenmiller] ' + k + ' steht ohne Wert da (gefolgt von '
+        + JSON.stringify(wert === undefined ? null : wert) + ') — ein Flag als Pfad zu nehmen '
+        + 'haette in einem ganz anderen Ordner gearbeitet.');
+    }
+    return wert;
+  };
   const opts = {
     outDir: path.resolve(get('--out', DEFAULT_OUT)),
     exportDir: path.resolve(get('--export-dir', DEFAULT_EXPORT)),
@@ -578,7 +758,7 @@ module.exports = {
   main, writeExport, checkExport, baueRegime, baueMeta, begrenze, nextRunAfter,
   leseRegistrierung, leseRoh, uMitglieder, churnSerie, abdeckung,
   SCHEMA, FAILED_NAME, ALLE_DATEIEN, DATEIEN_CHUNK1, SERIES_MAX, SERIES_FIELDS, REGIME_FIELDS,
-  META_FIELDS, CRON, LABEL, MANDATE, ACHSEN,
+  META_FIELDS, CRON, LABEL, MANDATE, pruefeSectorRs, cronSlot,
 };
 
 if (require.main === module) {

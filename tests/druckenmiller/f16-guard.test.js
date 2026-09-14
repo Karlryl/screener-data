@@ -39,8 +39,15 @@ function test(name, fn) {
 }
 
 // Verbotene Bezeichner der gesperrten Klasse.
+//
+// REVIEW-FUND (Chunk 1): die Liste hatte vier Loecher, die ein Reviewer einzeln durch den
+// Waechter geschickt hat — `row.waehrung` mit UMLAUT ("währung" stand nicht drin), `fx.rate`
+// (nur 'fxrate' ohne Punkt stand drin), `row.exchange` und `row.exchangeTimezoneName` (nur
+// 'exchangename'/'exchanges'). Seit [REV7-4] deckt dieser Waechter beide Skripte ab, also
+// zaehlt jedes Loch doppelt. Ergaenzt: der Umlaut, 'exchange' als Stamm (schluckt
+// exchangeName/exchanges/exchangeTimezoneName) und 'fx.'.
 const VERBOTEN = [
-  'currency', 'waehrung', 'fxrate', 'fxconverted', 'exchangename', 'exchanges',
+  'currency', 'waehrung', 'w\u00e4hrung', 'fxrate', 'fx.', 'fxconverted', 'exchange',
   'listing', 'crossnotiz', 'kreuznotiz', 'isin', 'mic ',
 ];
 
@@ -52,7 +59,12 @@ const VERBOTEN = [
 // stumpfe Teilstring-Test sieht in `Number.isInteger` das Wertpapier-Kennzeichen ISIN.
 // Der Test bleibt bewusst stumpf — statt ihn mit Wortgrenzen zu verfeinern (was die
 // echten Treffer aufweichen wuerde) wird genau dieser eine Bezeichner benannt.
-const AUSNAHMEN = ['_annualCurrencyLeakSuspect', 'annualCurrencyLeak', 'Number.isInteger'];
+// DRITTE Ausnahme, und die einzige, die inhaltlich etwas zu sagen hat: das Rats-Etikett
+// (D7, woertlich) nennt "Währungen" — als AUSSAGE, dass dieses Modul sie NICHT behandelt.
+// Genau der Satz, den F-16 verlangt, faellt sonst durch den F-16-Waechter. Ausgenommen ist
+// die woertliche Wendung, nicht das Wort: `row.währungsKurs` faellt weiter durch (Test F2).
+const AUSNAHMEN = ['_annualCurrencyLeakSuspect', 'annualCurrencyLeak', 'Number.isInteger',
+  'Positionsgr\u00f6\u00dfen, Hebel, W\u00e4hrungen, Anleihen'];
 
 function gesaeubert(quelle) {
   let s = quelle;
@@ -83,6 +95,21 @@ test('F2 BRUCHPROBE: derselbe Waechter faengt einen eingeschmuggelten Bezeichner
   assert.ok(!VERBOTEN.some((w) => gesaeubert('if (Number.isInteger(n)) return n;').includes(w)));
   assert.ok(VERBOTEN.some((w) => gesaeubert('const x = row.isinCode;').includes(w)),
     'eine echte ISIN laeuft durch — die Ausnahme ist zu breit');
+  // Die vier Loecher, die ein Reviewer einzeln durch den alten Waechter geschickt hat:
+  for (const sabotage of [
+    'const w\u00e4hrung = row.fx;',
+    'const w = row.w\u00e4hrungsKurs * x;',
+    'const r = fx.rate;',
+    'const e = row.exchange;',
+    'const s = row.exchangeTimezoneName;',
+  ]) {
+    assert.ok(VERBOTEN.some((w) => gesaeubert(sabotage).includes(w)),
+      'laeuft durch: ' + sabotage);
+  }
+  // Und das Rats-Etikett bleibt erlaubt — es sagt ja gerade, dass es KEINE Waehrungen gibt.
+  const etikett = 'Ohne Positionsgr\u00f6\u00dfen, Hebel, W\u00e4hrungen, Anleihen.';
+  assert.ok(!VERBOTEN.some((w) => gesaeubert(etikett).includes(w)),
+    'das woertliche Rats-Etikett faellt durch den eigenen Waechter');
 });
 
 test('F3 der Suffix-Test bleibt ein String-Test — kein Zerlegen, kein Suffix-Katalog', () => {

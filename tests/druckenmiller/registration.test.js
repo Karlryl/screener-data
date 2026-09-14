@@ -73,7 +73,7 @@ test('R2 RESIDUAL 4: eine Aenderung an Datei A ohne Changelog-Zeile ist rot', ()
 });
 
 test('R3 KERN [REV7-3]: Datei A ist byte-gleich mit den D3-Konstanten', () => {
-  for (const sektion of ['councilD3', 'courtGates', 'rIntLoggedOnly']) {
+  for (const sektion of ['councilD3', 'courtGates', 'rIntLoggedOnly', 'overrideNoteD1']) {
     assert.ok(spec[sektion], 'spec-constants.json hat keine Sektion ' + sektion);
     assert.ok(fileA[sektion], 'Datei A hat keine Sektion ' + sektion);
     assert.equal(kanonisch(fileA[sektion]), kanonisch(spec[sektion]),
@@ -119,6 +119,17 @@ test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei 
       'registriert ist der Ausschluss von ' + flag + ', erzwungen wird er nicht');
   }
   assert.equal(internals.FRESH_MIN, fileA.courtGates.freshnessMinShare, 'Frische-Tor im Code weicht ab');
+  // REVIEW-FUND: churnMaxShare war die EINZIGE registrierte Zahl ohne Code-Waechter — im
+  // Schreiber stand `> 0.05` als nackter Literal mitten in einem Ausdruck, und R7 prueft nur,
+  // dass das WORT in Datei A vorkommt. Jede Schwelle zwischen 0 und 0,2 waere gruen geblieben.
+  // Der Schreiber liest die Zahl jetzt aus der Registrierung; hier wird das gemessen, nicht
+  // geglaubt: dieselbe Menge, einmal knapp unter und einmal knapp ueber der Schwelle.
+  const W = require('../../scripts/write-druckenmiller-export.js');
+  const schwelle = fileA.courtGates.churnMaxShare;
+  assert.equal(schwelle, 0.05, 'die registrierte Churn-Schwelle ist nicht mehr 5 %');
+  assert.throws(() => W.churnSerie('egal', [], 0, () => {}), /churnMaxShare/,
+    'ohne gueltige Schwelle rechnet der Schreiber trotzdem ein Churn-Tor');
+  assert.throws(() => W.churnSerie('egal', [], undefined, () => {}), /churnMaxShare/);
   assert.equal(internals.MIN_LIVE_TAGE_FUER_ZUSTAND, fileA.rIntLoggedOnly.minLoggedLiveSessions);
   assert.equal(U.MIN_BARS, d3.universe.minBars);
   assert.deepEqual(U.CYCLICAL_SECTORS, d3.l4.cyclicalSectors);
@@ -162,11 +173,45 @@ test('R7 Datei A registriert genau das, wofuer sie zustaendig ist — und nichts
       + 'VOR der Messung eingefroren, obwohl der Rat es dort verortet hat');
   }
   for (const pflicht of ['l3Band', 'l4bNamedIndustries', 'greyOutMinCoverage', 'freshnessMinShare',
-    'churnMaxShare', 'rIntLoggedOnly', 'minBars']) {
+    'churnMaxShare', 'rIntLoggedOnly', 'minBars', 'overrideNoteD1']) {
     assert.ok(text.includes(pflicht), 'Datei A registriert ' + pflicht + ' nicht');
   }
   assert.equal(fileA.schema, 'druckenmiller-loggers-registered/1');
   assert.equal(fileA.hashedInChunk, 1);
+});
+
+test('R8 WAECHTER am Ding: der highChurn-Ausschluss braucht einen Produzenten, bevor R-INT liest', () => {
+  // REVIEW-FUND (beide Reviewer, uebereinstimmend): quantileInput und rIntRankMean filtern
+  // highChurn — aber KEIN Produzent schreibt das Feld je in eine Ledger-Zeile. Der Churn
+  // entsteht schreiber-seitig in regime.json; LEDGER_ROW_FIELDS kennt das Feld nicht (und ein
+  // neues Pflichtfeld haette alle Bestandszeilen im --check rot gemacht: "Feld … fehlt").
+  // Folgenlos, solange R-INT null ist — R-INT braucht 250 quantilfaehige Live-Tage. Dieser
+  // Waechter haengt deshalb an genau dieser Bedingung: er wird rot, BEVOR die erste
+  // R-INT-Zahl aus Sitzungen entstehen kann, deren Churn niemand kennt.
+  const internals = require('../../lib/druckenmiller/internals.js');
+  const ledger = require('../../lib/druckenmiller/ledger.js');
+  const hatFeld = internals.LEDGER_ROW_FIELDS.includes('highChurn');
+  if (!fs.existsSync(LEDGER)) { assert.ok(false, 'kein Ledger — nicht pruefbar'); }
+  const rows = lies(LEDGER).trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const quantilfaehig = ledger.quantileInput(rows).length;
+  const grenze = internals.MIN_LIVE_TAGE_FUER_ZUSTAND;
+  if (!hatFeld) {
+    assert.ok(quantilfaehig < grenze,
+      'die Reihe hat ' + quantilfaehig + ' quantilfaehige Zeilen (Grenze ' + grenze + '), aber '
+      + 'LEDGER_ROW_FIELDS traegt kein highChurn. Ab jetzt speisen umgeschlagene Sitzungen R-INT, '
+      + 'obwohl Datei A (rIntLoggedOnly.quantileWindowExcludes) sie ausschliesst. Chunk 2 muss '
+      + 'entweder das Feld in die Ledger-Zeile schreiben (mit Changelog-Zeile fuer den '
+      + 'ROW_FIELDS-Schnappschuss) oder die Flagge aus regime.json lesen.');
+    assert.ok(rows.every((r) => !Object.prototype.hasOwnProperty.call(r, 'highChurn')),
+      'eine Ledger-Zeile traegt highChurn, die eingefrorene Feldliste aber nicht — die beiden '
+      + 'sind auseinandergelaufen');
+  } else {
+    // Sobald es das Feld gibt, wird der Ausschluss auf ECHTEN Daten gemessen, nicht mehr an
+    // einer selbstgebauten Zeile.
+    const markiert = rows.filter((r) => r.highChurn === true);
+    assert.equal(ledger.quantileInput(rows).filter((r) => r.highChurn === true).length, 0,
+      'es gibt ' + markiert.length + ' highChurn-Zeilen, und der Ausschluss laesst sie durch');
+  }
 });
 
 console.log('\nregistration.test.js: ' + pass + ' ok, ' + fail + ' fail');
