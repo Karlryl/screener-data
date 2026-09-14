@@ -392,6 +392,19 @@ test('W19 der Schreiber schreibt NIE eine nicht endliche Zahl', () => {
   }
 });
 
+test('W19b --check ROT: l6 traegt etwas anderes als einen Zustandsnamen', () => {
+  // L6 ist eine Kopie aus einer FREMDEN Datei. Ohne eigene Typpruefung waere es das
+  // einzige Serien-Feld, in das eine Zahl oder ein Objekt unbemerkt durchliefe.
+  const w = welt();
+  W.writeExport(opts(w));
+  const p = path.join(w.exportDir, 'regime.json');
+  const j = liesJson(p);
+  j.series[1].l6 = 3;
+  fs.writeFileSync(p, JSON.stringify(j));
+  const m = rotErwartet(w, 'l6-Typ');
+  assert.match(m.reason, /l6/);
+});
+
 test('W20 stale-by-design: der Vertrag nennt vier Dateien und Chunk 1 sagt, warum zwei fehlen', () => {
   const doc = fs.readFileSync(path.join(REPO, 'docs', 'findash-export-v1.md'), 'utf8');
   assert.ok(doc.includes('druckenmiller/'), 'der Vertrag hat keinen Druckenmiller-Abschnitt');

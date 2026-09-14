@@ -447,7 +447,16 @@ function checkExport({ outDir, exportDir, pricesDir, protocolDir, log }) {
         }
         continue;
       }
-      if (k === 'l6') continue;                      // Zustandsname des SPY oder null
+      if (k === 'l6') {
+        // L6 ist eine FREMDE Groesse (Kopie aus outputs/macro-regime.json): ein Zustandsname
+        // oder null. Ohne diese Zeile waere l6 das einzige Feld ganz ohne Typpruefung —
+        // eine Zahl oder ein Objekt liefe durch und stuende so im Tab.
+        if (!(typeof z[k] === 'string' || z[k] === null)) {
+          return rot('[druckenmiller] l6 in ' + z.date + ' ist ' + JSON.stringify(z[k])
+            + ' — erwartet den Zustandsnamen des SPY (Text) oder null.');
+        }
+        continue;
+      }
       if (!istZahlOderNull(z[k])) {
         return rot('[druckenmiller] Feld ' + k + ' in der Serie (' + z.date + ') ist '
           + JSON.stringify(z[k]) + ' — erwartet eine endliche Zahl oder null.');
