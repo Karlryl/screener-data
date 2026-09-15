@@ -1,29 +1,29 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-12T08:25:58.833Z",
+  "generated_at": "2026-09-15T09:00:14.819Z",
   "branch": "it-services",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74.5,
-    "generated_at": "2026-09-12T08:19:01.333Z"
+    "coverage_pct": 74.1,
+    "generated_at": "2026-09-15T08:52:07.666Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "IBEX",
-      "score": 69.8,
+      "score": 59.9,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
       ],
       "overview": {
         "kind": "gp",
-        "value": 0.135,
-        "companion": 43.7
+        "value": 0.089,
+        "companion": 31.8
       },
       "name": "IBEX Limited",
       "country": "United States",
@@ -40,8 +40,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 79.7,
-      "scoreShrunk": 69.8,
+      "scoreBase": 64.9,
+      "scoreShrunk": 59.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -50,17 +50,17 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.5,
+          "pct": 62.5,
           "weight": 2.8
         },
         {
           "key": "revAcceleration",
-          "pct": 87.5,
+          "pct": 62.5,
           "weight": 2.6
         },
         {
           "key": "gpGrowth",
-          "pct": 87.5,
+          "pct": 62.5,
           "weight": 1.3
         },
         {
@@ -84,7 +84,7 @@
           "weight": 0.8
         }
       ],
-      "revGrowthYoYPct": 16.819434970441115,
+      "revGrowthYoYPct": 11.642811510282858,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -97,6 +97,88 @@
     },
     {
       "rank": 2,
+      "rankGrund": null,
+      "ticker": "TASK",
+      "score": 51.4,
+      "track": "profitable",
+      "lamps": [],
+      "overview": {
+        "kind": "gp",
+        "value": 0.141,
+        "companion": 19.7
+      },
+      "name": "TaskUs, Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Technology",
+      "marketCap": null,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "small",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2021,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 4,
+      "cohortFallback": true,
+      "scoreBase": 52.1,
+      "scoreShrunk": 51.4,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 12.5,
+          "weight": 2.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 87.5,
+          "weight": 2.6
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 87.5,
+          "weight": 1.3
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 12.5,
+          "weight": 1
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 62.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 50,
+          "weight": 2
+        },
+        {
+          "key": "dilution",
+          "pct": 62.5,
+          "weight": 0.8
+        }
+      ],
+      "revGrowthYoYPct": 5.022000367239521,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 3,
       "rankGrund": null,
       "ticker": "GDYN",
       "score": 47.9,
@@ -185,92 +267,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 3,
-      "rankGrund": null,
-      "ticker": "TASK",
-      "score": 45.6,
-      "track": "profitable",
-      "lamps": [],
-      "overview": {
-        "kind": "gp",
-        "value": 0.141,
-        "companion": 19.7
-      },
-      "name": "TaskUs, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Technology",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2021,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 4,
-      "cohortFallback": true,
-      "scoreBase": 43.5,
-      "scoreShrunk": 45.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 12.5,
-          "weight": 2.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 62.5,
-          "weight": 2.6
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 62.5,
-          "weight": 1.3
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 12.5,
-          "weight": 1
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 62.5,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 50,
-          "weight": 2
-        },
-        {
-          "key": "dilution",
-          "pct": 62.5,
-          "weight": 0.8
-        }
-      ],
-      "revGrowthYoYPct": 5.022000367239521,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 4,
       "rankGrund": null,
       "ticker": "VRRM",
-      "score": 36.7,
+      "score": 40.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -296,8 +296,8 @@
       "coverageWeight": 1,
       "cohortN": 4,
       "cohortFallback": true,
-      "scoreBase": 30.1,
-      "scoreShrunk": 36.7,
+      "scoreBase": 36.2,
+      "scoreShrunk": 40.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -306,7 +306,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
+          "pct": 87.5,
           "weight": 2.8
         },
         {
