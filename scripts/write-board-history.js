@@ -1014,8 +1014,30 @@ function evaluateGate(vintage, priorVintage, gateState, bruch, board, opts) {
 // Ein solches Fenster sammelt weiter (Gate bleibt im Log-Modus), bis echte Bewegung da war.
 function updateGateCalibration(gateCalib, board, p99Delta, date) {
   const b = gateCalib.boards[board] || (gateCalib.boards[board] = { dailyP99Samples: [], sampleDates: [], threshold: null, frozen: false });
+  // Court 05.08.2026 (Tag 589, _COURT-GATE-NEUANKER): global ausgeschlossene Vintages
+  // (board-history/_excluded.json, board:null) zaehlen NIE zur Kalibrierung — auch dann
+  // nicht, wenn der Ausschluss erst NACH der Stichprobe kam. Genau so riss Run 35069668890
+  // (16.09.2026): 2026-08-03 stand seit dem 03.08. in jeder Messreihe, der Ausschluss kam
+  // am 05.08., sechs Boards froren am 15.09. damit ein, Test (6) fiel am naechsten Morgen.
+  // Eine eingefrorene Schwelle, in die ein solches Datum eingeht, ist unbrauchbar: die
+  // Stichprobe faellt heraus, die Schwelle geht wieder auf, das Board kalibriert neu — das
+  // ist der Hand-Reset, den das _doc der Datei erlaubt, nur mechanisch und rueckwirkend.
+  // Vor dem Frozen-Return, sonst waere eine bereits eingefrorene Reihe nie mehr erreichbar.
+  const ausgeschlossen = excludedDates();
+  if (ausgeschlossen.size > 0 && Array.isArray(b.sampleDates)) {
+    let entfernt = 0;
+    for (let i = b.sampleDates.length - 1; i >= 0; i--) {
+      if (!ausgeschlossen.has(b.sampleDates[i])) continue;
+      b.sampleDates.splice(i, 1);
+      if (i < b.dailyP99Samples.length) b.dailyP99Samples.splice(i, 1);   // index-gleiche Arrays (F8)
+      entfernt++;
+    }
+    if (entfernt > 0 && b.frozen) { b.threshold = null; b.frozen = false; }
+  }
   if (frozenThresholdOf(b) != null) return b;   // echt eingefroren → Messreihe ist abgeschlossen
-  if (p99Delta != null) {
+  // Ein heute ausgeschlossenes Vintage-Datum liefert auch keine NEUE Stichprobe — sonst
+  // kaeme dieselbe Zeile im naechsten Lauf wieder heraus und nie zur Ruhe.
+  if (p99Delta != null && !(date != null && ausgeschlossen.has(date))) {
     // F8: je Vintage-Datum genau EIN Sample. dailyP99Samples[i] gehört zu sampleDates[i]
     // (Map Datum→Sample als zwei index-gleiche Arrays — hält dailyP99Samples ein reines
     // number[], sodass Schwellen-Mathematik, .length und alle Leser unverändert bleiben).
