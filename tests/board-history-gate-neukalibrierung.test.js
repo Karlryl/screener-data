@@ -263,6 +263,37 @@ check('(6b) der naechste Lauf ueberschreibt die Herleitung nicht', () => {
     'die verworfenen Rohmessungen bleiben unveraendert erhalten');
 });
 
+check('(6c) Waechter: eine rueckwirkend ausgeschlossene Stichprobe faellt aus der Messreihe, eine damit eingefrorene Schwelle geht wieder auf', () => {
+  // Run 35069668890 (16.09.2026): 2026-08-03 stand seit dem 03.08. in jeder Messreihe, der
+  // globale Ausschluss kam erst am 05.08. (Tag 589); sechs Boards froren am 15.09. damit
+  // ein und (6) riss am naechsten Morgen. updateGateCalibration muss excludedDates()
+  // respektieren — dieser Test feuert, sobald der Aufruf dort fehlt (einmal absichtlich
+  // gebrochen am 16.09.2026, Beleg im Vault-Report daily-pull-gate-fix-2026-09-16.md).
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bh-gate6c-'));
+  fs.mkdirSync(path.join(base, 'outputs', 'hypergrowth', 'full'), { recursive: true });
+  fs.mkdirSync(path.join(base, 'snapshots'), { recursive: true });
+  fs.mkdirSync(path.join(base, 'board-history'), { recursive: true });
+  fs.writeFileSync(path.join(base, 'outputs', 'calibration.json'), JSON.stringify({ schema: 'calibration/v4', generated_at: 'x' }));
+  fs.writeFileSync(path.join(base, 'outputs', 'hypergrowth', 'full', 'utilities.json'),
+    JSON.stringify({ profitable: [{ ticker: 'AAA', score: 50 }], unprofitable: [] }));
+  // 18 saubere Stichproben + EINE aus dem ausgeschlossenen Vintage, damit eingefroren.
+  const N = W._const.CALIBRATION_SAMPLES;
+  const sauber = [];
+  for (let i = 0; i < N - 2; i++) sauber.push('2026-06-' + String(i + 1).padStart(2, '0'));
+  fs.writeFileSync(path.join(base, 'board-history', '_gate-calibration.json'), JSON.stringify({ boards: { utilities: {
+    dailyP99Samples: sauber.map(() => 1).concat([9]), sampleDates: sauber.concat(['2026-05-01']), threshold: 18, frozen: true,
+  } } }));
+  fs.writeFileSync(path.join(base, 'board-history', '_excluded.json'),
+    JSON.stringify({ excluded: [{ date: '2026-05-01', board: null, reason: 'Testfixture: rueckwirkend ausgeschlossen' }] }));
+  W.run({ baseDir: base, date: '2026-08-03' });   // erster Lauf im Fixture: kein Vorgaenger, keine neue Stichprobe
+  const st = JSON.parse(fs.readFileSync(path.join(base, 'board-history', '_gate-calibration.json'), 'utf8')).boards.utilities;
+  assert.ok(!st.sampleDates.includes('2026-05-01'), 'die ausgeschlossene Stichprobe muss aus der Messreihe fallen: ' + st.sampleDates.join(','));
+  assert.strictEqual(st.dailyP99Samples.length, N - 2, 'genau die eine Stichprobe faellt, die 18 sauberen bleiben');
+  assert.strictEqual(st.sampleDates.length, st.dailyP99Samples.length, 'Datum und Wert bleiben index-gleich (F8)');
+  assert.strictEqual(st.frozen, false, 'eine Schwelle aus einem ausgeschlossenen Vintage darf nicht eingefroren bleiben');
+  assert.strictEqual(st.threshold, null, 'die Schwelle wird zurueckgesetzt, nicht neu aus 18 Stichproben geraten');
+});
+
 // ── 7. Einfrieren erst nach N echten Stichproben, robust gegen einen Ausreisser ──
 check('(7) N Stichproben noetig — und EINE Ausreisser-Stichprobe setzt die Schwelle nicht mehr allein', () => {
   const N = W._const.CALIBRATION_SAMPLES;
