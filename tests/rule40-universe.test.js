@@ -162,6 +162,78 @@ test('ein fabriziertes juengstes Quartal fliegt raus — dasselbe Gate wie im Sc
   assert.ok(ticker.includes('REAL'));
 });
 
+// --- Marktkap ohne Vollboard-Zeile ------------------------------------------
+test('ein in USD gehandelter Name OHNE Brett-Zeile traegt seine Marktkap — es gibt nichts umzurechnen', () => {
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60, marketCap: 5e9 }), snap: snapshot({ fcfMarginTTM: 30 }) },
+  ]);
+  const usd = snapshot({ fcfMarginTTM: 28, ticker: 'USDX', name: 'Usd Listing Inc', marketCap: 4e9 });
+  usd.meta.tradingCurrency = 'USD';
+  setzeWachstum(usd, 55);
+  usd.meta.ticker = 'USDX';
+  fs.writeFileSync(path.join(f.snapshotsDir, 'USDX.json'), JSON.stringify(usd));
+
+  W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const overview = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8'));
+  const index = JSON.parse(fs.readFileSync(path.join(f.outDir, 'index.json'), 'utf8'));
+  const row = overview.rows.find((r) => r.ticker === 'USDX');
+  f.aufraeumen();
+  assert.ok(row, 'die Zeile muss im Brett stehen');
+  assert.equal(row.marketCap, 4e9, 'in USD gehandelt = die Zahl IST USD');
+  assert.equal(row.marketCapCurrency, 'USD');
+  assert.equal(index.rule40.counts.offBoardMcapUsdDirect, 1);
+  assert.equal(index.rule40.counts.exportedLargeCap, 2, 'beide zaehlen zur oberen Gruppe');
+});
+
+test('ein NICHT-USD-Name ohne Brett-Zeile bleibt ohne Marktkap — hier wird kein FX erfunden', () => {
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60, marketCap: 5e9 }), snap: snapshot({ fcfMarginTTM: 30 }) },
+  ]);
+  const eur = snapshot({ fcfMarginTTM: 28, ticker: 'EURX', name: 'Euro Listing AG', marketCap: 4e9 });
+  eur.meta.tradingCurrency = 'EUR';
+  eur.meta.reportingCurrency = 'EUR';
+  setzeWachstum(eur, 55);
+  eur.meta.ticker = 'EURX';
+  fs.writeFileSync(path.join(f.snapshotsDir, 'EURX.json'), JSON.stringify(eur));
+
+  W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const overview = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8'));
+  const index = JSON.parse(fs.readFileSync(path.join(f.outDir, 'index.json'), 'utf8'));
+  const row = overview.rows.find((r) => r.ticker === 'EURX');
+  f.aufraeumen();
+  assert.ok(row, 'die Zeile bleibt im Brett — sichtbar unter "alle", nur ohne Groessen-Behauptung');
+  assert.equal(row.marketCap, null);
+  assert.equal(index.rule40.counts.offBoardMcapNull, 1);
+  assert.equal(index.rule40.counts.exportedSmallCap, 1);
+});
+
+test('eine GERATENE Handelswaehrung traegt nicht, auch wenn sie USD sagt', () => {
+  // pull-yahoo ersetzt eine fehlende price.currency still durch die Berichtswaehrung.
+  // Dann ist jeder Handelskurs-Bezug unbelegt — das entscheidet der Haupt-Schreiber, nicht ich.
+  const s = snapshot({ ticker: 'GUESS', name: 'Guess Inc', marketCap: 4e9 });
+  s.meta.tradingCurrency = 'USD';
+  s.meta.tradingCurrencyAssumed = true;
+  const zaehler = { offBoardMcapUsdDirect: 0, offBoardMcapNull: 0 };
+  assert.equal(W.mcapBelegt(null, s, s.meta, zaehler), null);
+  assert.equal(zaehler.offBoardMcapNull, 1);
+});
+
+test('die obere Gruppe wird bei TOP_N_LARGE je Gruppe gekappt, und die Zahl davor steht im Export', () => {
+  const eintraege = [];
+  for (let i = 0; i < W.TOP_N_LARGE + 25; i++) {
+    const s = snapshot({ fcfMarginTTM: 30, name: 'Gross ' + i + ' Inc' });
+    setzeWachstum(s, 30 + (i % 50));
+    eintraege.push({ row: boardZeile({ ticker: 'G' + i, revGrowthYoYPct: 30 + (i % 50), marketCap: 5e9 }), snap: s });
+  }
+  const { f, overview, index } = baue(eintraege);
+  assert.equal(overview.rows.length, W.TOP_N_LARGE, 'die obere Gruppe muss gekappt sein');
+  assert.equal(index.rule40.counts.exportedLargeCap, W.TOP_N_LARGE);
+  assert.equal(index.rule40.counts.largeCapBeforeCap, W.TOP_N_LARGE + 25,
+    'ohne die Vor-Kappungs-Zahl kappt das Brett stillschweigend');
+  assert.equal(index.rule40.topNLarge, W.TOP_N_LARGE);
+  f.aufraeumen();
+});
+
 // --- Zaehler ---------------------------------------------------------------
 test('index.json traegt den Erklaer-Kasten: Universumsbasis, Schranken und jeden Ausschlussgrund', () => {
   const { f, index } = baue([
@@ -173,8 +245,10 @@ test('index.json traegt den Erklaer-Kasten: Universumsbasis, Schranken und jeden
   assert.equal(index.rule40.universeBasis, 'routed');
   for (const feld of ['universe', 'onBoard', 'computable', 'above40', 'exported', 'excludedNotRouted',
     'excludedSector', 'excludedOutlier', 'excludedStale', 'excludedTinyBase', 'excludedFcfAboveRevenue',
-    'excludedDuplicateIssuer', 'excludedDataSuspect', 'freshnessUnknown', 'noValidMargin',
-    'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard']) {
+    'excludedDuplicateIssuer', 'excludedDataSuspect', 'excludedNoPeriod', 'noValidMargin',
+    'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard',
+    'exportedLargeCap', 'exportedSmallCap', 'largeCapBeforeCap', 'smallCapBeforeCap',
+    'offBoardMcapUsdDirect', 'offBoardMcapNull']) {
     assert.equal(typeof c[feld], 'number', 'Zaehler ' + feld + ' fehlt');
   }
   assert.equal(c.exported, 2);
