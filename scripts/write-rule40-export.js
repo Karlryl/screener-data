@@ -4,10 +4,18 @@
  * scripts/write-rule40-export.js — das Rule-of-40-Brett als eigenes Neben-Board.
  *
  * WO ER LAEUFT: im scoring-Job, NACH write-findash-export.js (er liest dessen Ergebnis)
- * und VOR dem Pages-Deploy. Er rechnet KEINE Achse und KEINEN Score neu — er liest die
- * fertigen Vollboards, holt sich den einen fehlenden Term (die FCF-Marge) aus den
- * Snapshots und schreibt outputs/findash-export/v1/rule40/{index.json,overview.json}
- * in derselben Huelle und Zeilenform wie quality/ und smallcap/.
+ * und VOR dem Pages-Deploy. Er rechnet KEINE Achse und KEINEN Score neu — er laeuft ueber
+ * snapshots/, laesst jeden Namen durch src/scoring/router.js route(), holt sich Wachstum
+ * und FCF-Marge aus denselben Funktionen wie das Scoring und schreibt
+ * outputs/findash-export/v1/rule40/{index.json,overview.json} in derselben Huelle und
+ * Zeilenform wie quality/ und smallcap/.
+ *
+ * WARUM DAS GEROUTETE UNIVERSUM UND NICHT DIE BRETT-ZEILEN: die Vollboards sind die besten
+ * 150 je Branche NACH ENGINE-SCORE. Eine Rule-of-40-Liste, die durch genau die Formel
+ * vorgefiltert ist, gegen die sie die Gegenprobe sein soll, waere keine — und reife Namen
+ * mit hoher Marge und massvollem Wachstum fehlten darin. Wer zusaetzlich auf einem Vollboard
+ * steht, erbt von dort score/lamps/axisBreakdown/Kohorte und das geprueft umgerechnete
+ * marketCap; alle anderen tragen onBoard:false, score:null und marketCap:null.
  *
  * R40 = Umsatzwachstum (%) + FCF-Marge TTM (%). Das ist ruleOfX mit alpha = 1
  * (src/scoring/axes.js:257). Der Unterschied zur Achse: hier steht die ZAHL im Brett,
@@ -15,10 +23,11 @@
  * durchsichtige Arithmetik neben dem Score, nie im Score.
  *
  * FUENF REGELN, DIE DIESE DATEI TRAEGT
- *  1. NICHTS NEU RECHNEN, WAS ES SCHON GIBT. Wachstum kommt aus revGrowthYoYPct des
- *     Exports (quartals-YoY mit Jahres-Fallback, F-4), die FCF-Marge laeuft durch
- *     fcfMarginValid() (engine.js:106-131) statt roh aus metrics. Beide Quellen sind
- *     read-only; diese Datei fasst src/scoring/ nicht an.
+ *  1. NICHTS NEU RECHNEN, WAS ES SCHON GIBT. Wachstum kommt aus revGrowthLevel (axes.js,
+ *     derselbe Aufruf wie score.js:1348), die FCF-Marge laeuft durch die Datentore G0-G2
+ *     von fcfMarginValid (engine.js:106-131) statt roh aus metrics, der Emittenten-Dedup
+ *     durch issuerDedupGroups/-Comparator (score.js). Alles read-only; diese Datei fasst
+ *     src/scoring/ nicht an.
  *  2. DER EXPORTIERTE WACHSTUMSWERT IST NICHT WINSORISIERT. score.js:1348 ruft
  *     revGrowthLevel(snapshot) ABSICHTLICH ohne growthBounds auf: fuer die ANZEIGE
  *     waere ein geklemmter Wert eine stille Verfaelschung. Fuer eine RANGLISTE ist er
@@ -48,7 +57,9 @@ const path = require('node:path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
-const { winsorTailBounds } = require('../src/scoring/score.js');
+const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator } = require('../src/scoring/score.js');
+const { route } = require('../src/scoring/router.js');
+const axesFns = require('../src/scoring/axes.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
@@ -82,11 +93,20 @@ const TOP_N = 150;
  */
 const MIN_BASE_QUARTER_SHARE = 0.25;
 /**
- * Aelter als das darf der Fundamentalstand einer Zeile gegenueber generated_at nicht sein —
- * eine TTM-Marge aus einem halbjahresalten Snapshot ist keine Aussage ueber heute. Gemessen
- * am selben Stand: p99 = 27 Tage, Maximum 52 Tage, also rund doppelter Abstand zum Normalfall.
+ * Das juengste Quartalsende einer Zeile darf gegenueber generated_at nicht aelter sein als das.
+ *
+ * Der Anker ist das Ende der Quartalsreihe (neuestesQuartalsEnde), NICHT der Abrufzeitpunkt —
+ * die Begruendung steht dort. Deshalb ist der Wert auch kein Abruf-Mass mehr: gemessen ueber
+ * die 11.210 gerouteten Namen des Stands 2026-08-29 liegt der gesunde Koerper bei p50 = 151
+ * und p95 = 151 Tagen (ein Quartalsmelder haengt hoechstens ein Quartal plus Meldefrist
+ * zurueck). Danach kommt eine Luecke, und der Schwanz aendert sich kaum noch: 4,1 % liegen
+ * ueber 180, 2,4 % ueber 550, 2,2 % ueber 730 Tagen — es sind weitgehend DIESELBEN Namen,
+ * bis hinauf zu 8.003 Tagen (LTC: juengstes Quartal laut mostRecentQuarter 2020-09-30).
+ * 550 Tage (rund 18 Monate) laesst jeden Jahres- und Halbjahresmelder samt spaeter Einreichung
+ * durch — die 241-Tage-Faelle, die N5/E2 als normal eingestuft hat, bleiben drin — und faellt
+ * erst dort, wo keine Meldekadenz den Abstand mehr erklaert und die Abdeckung tot ist.
  */
-const MAX_FUNDAMENTALS_AGE_DAYS = 120;
+const MAX_FISCAL_AGE_DAYS = 550;
 /**
  * Oekonomischer Deckel des Margen-Terms, in Reihe mit OPMARGIN_CAP = 1.0 (score.js:457,
  * "opInc-Kern <= Umsatz"): freier Cashflow UEBER dem Umsatz ist keine operative Marge,
@@ -105,6 +125,15 @@ const MAX_FCF_MARGIN_PCT = 100;
  * und dann steht growthWinsorBounds: null sichtbar in der index.json.
  */
 const MIN_WINSOR_SAMPLE = 200;
+/**
+ * Sektoren, in denen eine FCF-Marge nichts ueber das operative Geschaeft sagt (Mieterloese,
+ * Zinsertrag, Beteiligungsverkaeufe) — und die Karls Ansage „alle Branchen ohne Finanzwerte"
+ * ohnehin ausschliesst. Der Ausschluss gehoert in den SCHREIBER und nicht in die Oberflaeche:
+ * sonst verbrauchen diese Zeilen die Top-150-Plaetze und der Gesamt-Blick liefe leer.
+ * Der Router nimmt nur Bilanz-Banken, Versicherer und mREITs heraus; Immobilien-REITs,
+ * Vermoegensverwalter und Boersenbetreiber bleiben und fuehrten die Liste an.
+ */
+const SEKTOR_AUSSCHLUSS = Object.freeze(['Financial Services', 'Real Estate']);
 
 /** Zeilenfelder, die 1:1 aus der Vollboard-Zeile uebernommen werden (Reihenfolge = quality/-Zeile). */
 const PASSTHROUGH_FIELDS = Object.freeze([
@@ -159,6 +188,52 @@ function einheitenVerdacht(growth, fcfMargin) {
 }
 
 /**
+ * Das Ende des JUENGSTEN Quartals der Reihe, aus der der Wachstumsterm gerechnet wird.
+ *
+ * Das ist der einzige ehrliche Frische-Anker dieses Bretts. `meta.fundamentalsAsOf` ist es
+ * NICHT: es ist auf jedem geprueften Snapshot byte-gleich mit `meta.fetchedAt`, misst also den
+ * Zeitpunkt des ABRUFS und nicht den Zeitraum, ueber den die Zahl etwas sagt — ein Waechter
+ * darauf feuerte nie (Befund N5/E2, 17.09.2026, an LTC/PLTR/CRM/RYN/SII nachgemessen).
+ * `meta.mostRecentQuarter` ist es auch nicht: bei LTC steht dort 2020-09-30, waehrend
+ * `revenueQEnds[0]` desselben Snapshots 2026-03-31 nennt und die Quartalsreihe frisch ist —
+ * ein Waechter darauf wuerde Zeilen wegwerfen, deren Zahlen stimmen.
+ * revenueQEnds[0] kann der Rechnung per Konstruktion nicht widersprechen: es IST ihr Zeitraum.
+ */
+function neuestesQuartalsEnde(snapshot) {
+  const ends = snapshot && snapshot.timeseries && snapshot.timeseries.revenueQEnds;
+  if (!Array.isArray(ends) || !ends.length) return null;
+  const t = Date.parse(ends[0]);
+  return Number.isFinite(t) ? t : null;
+}
+
+/**
+ * Datenvertrauens-Tore der FCF-Marge: G0-G2 von fcfMarginValid (engine.js:106-131),
+ * BEWUSST OHNE G3.
+ *
+ * G0 (Marge fehlt/nicht endlich), G1 (weder FCF- noch OCF-Reihe vorhanden) und G2 (Vorzeichen
+ * der TTM-Marge widerspricht dem juengsten present FCF-Jahr) sind Aussagen ueber die DATEN:
+ * fallen sie, ist die Zahl nicht vertrauenswuerdig. G3 (Summe der zwei juengsten Jahre >= 0)
+ * ist dagegen ein WIRTSCHAFTLICHES Urteil — es wirft profitable-Track-Kandidaten mit
+ * juengstem Cash-Burn heraus. Genau die will dieses Brett zeigen: hohes Wachstum bei
+ * negativer Marge ist ein voellig regulaerer Rule-of-40-Fall, und ihn stillschweigend
+ * wegzufiltern waere eine Meinung, keine Datenpruefung.
+ *
+ * Die Kopie ist Absicht (engine.js exportiert die Tore nicht einzeln) und wird von
+ * tests/rule40/gate-parity.test.js an das Original gehalten: jede von der Engine
+ * akzeptierte Zeile muss auch hier akzeptiert sein, und die Differenz ist exakt G3.
+ */
+function fcfMargeVertrauenswuerdig(fcfMarginTTM, normFCF, normOCF) {
+  if (!istZahl(fcfMarginTTM)) return false;                                   // G0
+  const present = (a) => Array.isArray(a) && a.some((v) => istZahl(v));
+  const ersterPresent = (a) => (Array.isArray(a) ? a.find((v) => istZahl(v)) : undefined);
+  if (!present(normFCF) && !present(normOCF)) return false;                   // G1
+  if (!present(normFCF)) return false;                                        // G2 braucht ein FCF-Jahr
+  const vz = (x) => (x > 0 ? 1 : (x < 0 ? -1 : 0));
+  if (vz(fcfMarginTTM) !== vz(ersterPresent(normFCF))) return false;          // G2
+  return true;
+}
+
+/**
  * ebitdaMargins in PROZENT. Nachgemessen am 17.09.2026 auf sieben Namen (CRM 30,1 /
  * NOW 19,7 / PLTR 38,6 / MSFT 58,5 / ADBE 38,6 / SNOW -22,4 / NVDA 65,3) — dieselbe
  * Einheit wie grossMargin/operatingMargin/fcfMarginTTM. NICHT skalieren.
@@ -205,73 +280,128 @@ function sammleKandidaten(opts = {}) {
   }
 
   const generatedMs = Date.parse(index.generated_at);
-  const kandidaten = [];
-  const abgewiesen = {
-    keinVollboard: 0, keinWachstum: 0, keinSnapshot: 0, fcfUnterdrueckt: 0,
-    fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0, basisQuartalStub: 0,
-    veraltet: 0, ohneRang: 0,
-  };
-  let gelesen = 0;
 
+  // Die Vollboard-Zeilen, nach Ticker greifbar. Sie sind hier NICHT das Universum, sondern
+  // die Quelle der Engine-Beigaben (score, lamps, axisBreakdown, Kohorte, geprueftes marketCap)
+  // fuer die Namen, die es auf ein Brett geschafft haben.
+  const boardZeilen = new Map();
+  let keinVollboard = 0;
   for (const branch of branches) {
-    const boardPfad = path.join(v1Dir, 'full', branch + '.json');
-    const board = readJsonOrNull(boardPfad);
-    if (!board) { abgewiesen.keinVollboard++; continue; }
-
+    const board = readJsonOrNull(path.join(v1Dir, 'full', branch + '.json'));
+    if (!board) { keinVollboard++; continue; }
     for (const track of ['profitable', 'unprofitable']) {
-      const zeilen = Array.isArray(board[track]) ? board[track] : [];
-      for (const row of zeilen) {
-        gelesen++;
-        // Das Belegbarkeits-Gate (18.08.2026) hat dieser Zeile den Rang verweigert. Wer nicht
-        // genug belegte Achsen hat, bekommt auch hier keine Rangnummer — sonst waere das Brett
-        // die Hintertuer um ein Gate herum.
-        if (row.rankGrund !== null && row.rankGrund !== undefined) { abgewiesen.ohneRang++; continue; }
-
-        const wachstumRoh = row.revGrowthYoYPct;
-        if (!istZahl(wachstumRoh)) { abgewiesen.keinWachstum++; continue; }
-
-        const snapshot = readJsonOrNull(path.join(snapshotsDir, row.ticker + '.json'));
-        if (!snapshot) { abgewiesen.keinSnapshot++; continue; }
-        const meta = snapshot.meta || {};
-
-        if (meta.fcfMarginTTMSuppressed) { abgewiesen.fcfUnterdrueckt++; continue; }
-        const fcf = metricVal(snapshot, 'fcfMarginTTM');
-        if (!fcfMarginValid(fcf, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF'))) {
-          abgewiesen.fcfUngueltig++; continue;
+      for (const row of (Array.isArray(board[track]) ? board[track] : [])) {
+        if (row && typeof row.ticker === 'string' && !boardZeilen.has(row.ticker)) {
+          boardZeilen.set(row.ticker, { row, branch, track });
         }
-        if (einheitenVerdacht(wachstumRoh, fcf)) { abgewiesen.einheitenVerdacht++; continue; }
-        if (fcf > MAX_FCF_MARGIN_PCT) { abgewiesen.fcfUeberUmsatz++; continue; }
-
-        const revenueTTM = metricVal(snapshot, 'revenueTTM');
-        const basis = basisQuartal(snapshot);
-        if (basis !== null && istZahl(revenueTTM) && revenueTTM > 0
-            && basis < MIN_BASE_QUARTER_SHARE * (revenueTTM / 4)) {
-          abgewiesen.basisQuartalStub++; continue;
-        }
-
-        const asOf = typeof meta.fundamentalsAsOf === 'string' ? meta.fundamentalsAsOf : null;
-        if (asOf !== null) {
-          const alterTage = (generatedMs - Date.parse(asOf)) / 86400000;
-          if (Number.isFinite(alterTage) && alterTage > MAX_FUNDAMENTALS_AGE_DAYS) {
-            abgewiesen.veraltet++; continue;
-          }
-        }
-
-        kandidaten.push({
-          row,
-          branch,
-          track,
-          wachstumRoh,
-          fcfMarginPct: fcf,
-          ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
-          industry: typeof meta.industry === 'string' ? meta.industry : null,
-          fundamentalsAsOf: asOf,
-        });
       }
     }
   }
 
-  return { index, kandidaten, abgewiesen, gelesen };
+  const kandidaten = [];
+  const abgewiesen = {
+    keinVollboard, nichtGeroutet: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
+    fcfUnterdrueckt: 0, fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0,
+    basisQuartalStub: 0, veraltet: 0, ohneRang: 0, snapshotUnlesbar: 0, dupEmittent: 0,
+  };
+  let gelesen = 0;
+
+  const dateien = fs.readdirSync(snapshotsDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  for (const datei of dateien) {
+    gelesen++;
+    const ticker = datei.slice(0, -5);
+    const snapshot = readJsonOrNull(path.join(snapshotsDir, datei));
+    // Ein UNLESBARER Snapshot ist etwas anderes als ein fehlender: er wird gezaehlt, damit
+    // ein kaputter Pull nicht als "kleines Universum" durchgeht.
+    if (!snapshot) { abgewiesen.snapshotUnlesbar++; continue; }
+    const meta = snapshot.meta || {};
+
+    // Universum = das GEROUTETE Universum, nicht die Brett-Zeilen. Die Vollboards sind die
+    // besten 150 je Branche NACH ENGINE-SCORE — eine R40-Liste, die durch genau die Formel
+    // vorgefiltert ist, an der Karl zweifelt, waere keine Gegenprobe, und reife Namen mit
+    // hoher Marge und massvollem Wachstum fehlten.
+    const r = route(snapshot);
+    if (!r || r.action !== 'route') { abgewiesen.nichtGeroutet++; continue; }
+
+    const sector = typeof meta.sector === 'string' ? meta.sector : null;
+    if (sector !== null && SEKTOR_AUSSCHLUSS.includes(sector)) {
+      abgewiesen.sektorAusgeschlossen++; continue;
+    }
+
+    const auchAufBrett = boardZeilen.get(ticker) || null;
+    // Das Belegbarkeits-Gate (18.08.2026) hat dieser Zeile den Rang verweigert. Wer nicht
+    // genug belegte Achsen hat, bekommt auch hier keinen Rang — das Brett ist keine
+    // Hintertuer um dieses Gate herum. Fuer Namen OHNE Brett-Zeile gibt es kein Urteil,
+    // also auch keinen Ausschluss.
+    if (auchAufBrett && auchAufBrett.row.rankGrund !== null && auchAufBrett.row.rankGrund !== undefined) {
+      abgewiesen.ohneRang++; continue;
+    }
+
+    // EIN Wachstumsbegriff fuer alle: derselbe Aufruf wie score.js:1348 (ohne growthBounds).
+    // Fuer Brett-Namen ist das per Konstruktion dieselbe Zahl wie ihr revGrowthYoYPct.
+    const wachstumRoh = axesFns.revGrowthLevel(snapshot);
+    if (!istZahl(wachstumRoh)) { abgewiesen.keinWachstum++; continue; }
+
+    if (meta.fcfMarginTTMSuppressed) { abgewiesen.fcfUnterdrueckt++; continue; }
+    const fcf = metricVal(snapshot, 'fcfMarginTTM');
+    if (!fcfMargeVertrauenswuerdig(fcf, norm(snapshot, 'annualFCF'), norm(snapshot, 'annualOCF'))) {
+      abgewiesen.fcfUngueltig++; continue;
+    }
+    if (einheitenVerdacht(wachstumRoh, fcf)) { abgewiesen.einheitenVerdacht++; continue; }
+    if (fcf > MAX_FCF_MARGIN_PCT) { abgewiesen.fcfUeberUmsatz++; continue; }
+
+    const revenueTTM = metricVal(snapshot, 'revenueTTM');
+    const basis = basisQuartal(snapshot);
+    if (basis !== null && istZahl(revenueTTM) && revenueTTM > 0
+        && basis < MIN_BASE_QUARTER_SHARE * (revenueTTM / 4)) {
+      abgewiesen.basisQuartalStub++; continue;
+    }
+
+    const quartalsEndeMs = neuestesQuartalsEnde(snapshot);
+    if (quartalsEndeMs !== null
+        && (generatedMs - quartalsEndeMs) / 86400000 > MAX_FISCAL_AGE_DAYS) {
+      abgewiesen.veraltet++; continue;
+    }
+
+    kandidaten.push({
+      ticker,
+      // Nur was der Emittenten-Dedup braucht: meta (Name, Boerse, Domizil, Waehrungen) und
+      // marketCap. Die vollen Snapshots von 7.500 Namen im Speicher zu halten waere teuer
+      // und unnoetig — issuerKeyLoose/isUS/isUsPrimaryListing/fxSuspect lesen meta,
+      // mcapOf liest s.marketCap.
+      snapshot: { meta, marketCap: snapshot.marketCap },
+      row: auchAufBrett ? auchAufBrett.row : null,
+      branch: auchAufBrett ? auchAufBrett.branch : r.formulaId,
+      // Track ohne Brett-Zeile aus dem Vorzeichen der (hier per G0-G2 belegten) Marge —
+      // genau die Regel, die fcfTrack bei gueltiger Marge anwendet.
+      track: auchAufBrett ? auchAufBrett.track : (fcf >= 0 ? 'profitable' : 'unprofitable'),
+      onBoard: !!auchAufBrett,
+      meta,
+      wachstumRoh,
+      fcfMarginPct: fcf,
+      ebitdaMarginPct: ebitdaMargePct(snapshot, wachstumRoh),
+      industry: typeof meta.industry === 'string' ? meta.industry : null,
+      quartalsEnde: quartalsEndeMs === null ? null : new Date(quartalsEndeMs).toISOString(),
+    });
+  }
+
+  // EMITTENTEN-DEDUP, mit der Funktion der Produktion (score.js) statt einer zweiten Regel.
+  // Das geroutete Universum enthaelt jede NOTIERUNG; die Vollboards waren bereits dedupliziert,
+  // dieser Weg ist es nicht. Ohne das stand Palantir am Stand 2026-08-29 sechsmal im Brett
+  // (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und zwar mit ZWEI verschiedenen
+  // r40-Werten (127,9 und 118,3), weil die Beine unterschiedlich gute Daten tragen.
+  // Gewinner-Regel wie im Scoring: US-Primaerlisting, dann US-Domizil, dann FX-Vertrauen,
+  // dann groesste marketCap, dann Ticker.
+  const verloren = new Set();
+  for (const gruppe of issuerDedupGroups(kandidaten)) {
+    if (gruppe.length < 2) continue;
+    gruppe.sort(issuerDedupComparator);
+    for (const k of gruppe.slice(1)) verloren.add(k.ticker);
+  }
+  abgewiesen.dupEmittent = verloren.size;
+  const entdoppelt = kandidaten.filter((k) => !verloren.has(k.ticker));
+
+  return { index, kandidaten: entdoppelt, abgewiesen, gelesen, aufBrett: boardZeilen.size };
 }
 
 // ---------------------------------------------------------------------------
@@ -294,7 +424,7 @@ function baueZeilen(kandidaten) {
     return Object.assign({}, k, { wachstum, r40, r40Ebitda, gruppe: r40GruppeVon(k.industry) });
   }).filter((k) => k.r40 >= R40_MIN);
 
-  const nachR40 = (a, b) => b.r40 - a.r40 || a.row.ticker.localeCompare(b.row.ticker);
+  const nachR40 = (a, b) => b.r40 - a.r40 || a.ticker.localeCompare(b.ticker);
   mitR40.sort(nachR40);
   // JE GRUPPE die besten TOP_N, dann die Vereinigung. Vorher bekam nur 'software' eine
   // eigene Liste und 'other' musste sich ueber die Gesamtliste qualifizieren — dominiert
@@ -312,40 +442,57 @@ function baueZeilen(kandidaten) {
 
   const gewaehlt = new Map();
   // Beide Listen sind nach r40 fallend: der ERSTE Treffer eines Tickers ist der beste.
-  // set() wuerde ihn durch den schlechteren ueberschreiben, falls derselbe Ticker aus zwei
-  // Branchen-Dateien kaeme (Sektor-Umhaengung, halb geschriebene Datei).
+  // set() wuerde ihn durch den schlechteren ueberschreiben.
   for (const k of Array.from(jeGruppe.values()).flat()) {
-    if (!gewaehlt.has(k.row.ticker)) gewaehlt.set(k.row.ticker, k);
+    if (!gewaehlt.has(k.ticker)) gewaehlt.set(k.ticker, k);
   }
   const ausgewaehlt = Array.from(gewaehlt.values()).sort(nachR40);
 
   return {
     bounds,
+    ueber40: mitR40.length,
     rows: ausgewaehlt.map((k, i) => {
-      const row = k.row;
+      const row = k.row || {};
       const ov = row.overview || {};
       const zeile = {
         rank: i + 1,
         rankGrund: null,               // das Brett fuehrt nur Zeilen, die die Achsenbelege haben
-        ticker: row.ticker,
-        formulaId: k.branch,           // Herkunftsbrett; traegt den boardStatus-Schluessel
-        track: row.track,
-        score: row.score,              // Engine-Score, unveraendert
+        ticker: k.ticker,
+        formulaId: k.branch,           // Herkunftsbrett bzw. Router-Formel; traegt den boardStatus-Schluessel
+        track: k.track,
+        // Engine-Score, unveraendert — und NULL fuer Namen, die auf keinem Brett stehen.
+        // Eine 0 waere dort eine Behauptung ueber die Firma, die niemand aufgestellt hat.
+        score: k.onBoard && istZahl(row.score) ? row.score : null,
         overviewKind: typeof ov.kind === 'string' ? ov.kind : null,
         overviewValue: istZahl(ov.value) ? ov.value : null,
         overviewCompanion: istZahl(ov.companion) ? ov.companion : null,
         lamps: Array.isArray(row.lamps) ? row.lamps : [],
       };
       for (const f of PASSTHROUGH_FIELDS) zeile[f] = (f in row) ? row[f] : null;
+      if (!k.onBoard) {
+        // Ohne Brett-Zeile kommen die Stammdaten aus dem Snapshot. marketCap bleibt
+        // BEWUSST null: der v1-Vertrag sagt marketCap ist IMMER USD, und der Beleg fuer die
+        // Handelskurs-Umrechnung liegt im Haupt-Schreiber (write-findash-export.js:298-311),
+        // nicht hier. Eine ungeprueft durchgereichte Lokalwaehrungs-Zahl saehe aus wie USD.
+        zeile.name = typeof k.meta.longName === 'string' ? k.meta.longName
+          : (typeof k.meta.shortName === 'string' ? k.meta.shortName : null);
+        zeile.country = typeof k.meta.country === 'string' ? k.meta.country : null;
+        zeile.sector = typeof k.meta.sector === 'string' ? k.meta.sector : null;
+        zeile.marketCap = null;
+        zeile.marketCapCurrency = 'USD';
+        zeile.tradingFxRateApplied = null;
+      }
       // Additiv, nur dieses Brett:
       zeile.r40 = round1(k.r40);
       zeile.revGrowthPctUsed = round1(k.wachstum);   // geklemmt; r40 = dieser Wert + fcfMarginPct
+      zeile.revGrowthYoYPct = round1(k.wachstumRoh); // roh, EIN Begriff fuer Brett- und Nicht-Brett-Namen
       zeile.fcfMarginPct = round1(k.fcfMarginPct);
       zeile.ebitdaMarginPct = k.ebitdaMarginPct === null ? null : round1(k.ebitdaMarginPct);
       zeile.r40Ebitda = k.r40Ebitda === null ? null : round1(k.r40Ebitda);
       zeile.industry = k.industry;
       zeile.r40Group = k.gruppe;
-      zeile.fundamentalsAsOf = k.fundamentalsAsOf;
+      zeile.onBoard = k.onBoard;
+      zeile.quartalsEnde = k.quartalsEnde;
       return zeile;
     }),
   };
@@ -380,17 +527,40 @@ function buildIndex(index, rows, meta) {
     boardStatus,
     counts: { [BOARD_ID]: counts },
     rule40: {
+      universeBasis: meta.universeBasis,     // 'routed' = geroutetes Universum, 'boards' = nur Brett-Zeilen
       r40Min: R40_MIN,
       topN: TOP_N,
       minBaseQuarterShare: MIN_BASE_QUARTER_SHARE,
-      maxFundamentalsAgeDays: MAX_FUNDAMENTALS_AGE_DAYS,
+      maxFiscalAgeDays: MAX_FISCAL_AGE_DAYS,
       maxFcfMarginPct: MAX_FCF_MARGIN_PCT,
       minWinsorSample: MIN_WINSOR_SAMPLE,
-      growthWinsorBounds: meta.bounds,       // p1/p99 des eigenen Universums, oder null
-      candidates: meta.kandidaten,
-      rowsRead: meta.gelesen,
-      rejected: meta.abgewiesen,
+      sectorExclusions: SEKTOR_AUSSCHLUSS,
       softwareIndustries: SOFTWARE_INDUSTRIES,
+      // p1/p99 des eigenen Kandidaten-Universums — damit die Oberflaeche sagen kann, wo
+      // der Deckel sitzt, statt ihn zu verschweigen. null = nicht geklemmt.
+      growthBounds: meta.bounds ? { p1: meta.bounds[0], p99: meta.bounds[1] } : null,
+      // Zaehler fuer den Erklaer-Kasten. Ohne sie sieht "kleines Brett" aus wie "Daten fehlen".
+      counts: {
+        universeBasis: meta.universeBasis,
+        universe: meta.gelesen,
+        onBoard: meta.aufBrett,
+        computable: meta.kandidaten,
+        above40: meta.ueber40,
+        exported: rows.length,
+        excludedNotRouted: meta.abgewiesen.nichtGeroutet,
+        excludedSector: meta.abgewiesen.sektorAusgeschlossen,
+        excludedOutlier: meta.abgewiesen.einheitenVerdacht,
+        excludedStale: meta.abgewiesen.veraltet,
+        excludedTinyBase: meta.abgewiesen.basisQuartalStub,
+        excludedFcfAboveRevenue: meta.abgewiesen.fcfUeberUmsatz,
+        excludedDuplicateIssuer: meta.abgewiesen.dupEmittent,
+        noValidMargin: meta.abgewiesen.fcfUngueltig + meta.abgewiesen.fcfUnterdrueckt,
+        noGrowth: meta.abgewiesen.keinWachstum,
+        noRank: meta.abgewiesen.ohneRang,
+        unreadableSnapshot: meta.abgewiesen.snapshotUnlesbar,
+        missingFullBoard: meta.abgewiesen.keinVollboard,
+      },
+      rejected: meta.abgewiesen,
     },
   };
 }
@@ -401,20 +571,18 @@ function buildIndex(index, rows, meta) {
 /**
  * Vor jedem rmSync: der Zielordner MUSS der rule40-Ordner unter dem v1-Verzeichnis sein.
  * leereVerzeichnis loescht rekursiv und wird auch auf dem FEHLER-Weg aufgerufen — ein
- * falsch gesetztes RULE40_OUT_DIR (z. B. auf v1 selbst) wuerde den ganzen Haupt-Export
- * loeschen, und `|| true` im Workflow hielte den Lauf dabei gruen (Befund F10).
+ * falsch gesetztes RULE40_OUT_DIR (z. B. auf v1 selbst oder die Repo-Wurzel) wuerde den
+ * ganzen Haupt-Export loeschen, und `|| true` im Workflow hielte den Lauf dabei gruen
+ * (Befund F10). Geprueft wird NUR der Ordnername: ein eigener Ausgabe-Ort (Fixture-Lauf,
+ * Schattenlauf) ist legitim, ein Loeschen ausserhalb eines rule40-Ordners nie. Eine
+ * strengere Regel (muss unter v1 liegen) hat im Versuch genau das Gegenteil bewirkt —
+ * sie verhinderte auf dem FEHLER-Weg das Schreiben des Markers.
  */
-function pruefeZielordner(dir, v1Dir) {
+function pruefeZielordner(dir) {
   const ziel = path.resolve(dir);
   if (path.basename(ziel) !== BOARD_ID) {
     throw new Error('[rule40] Zielordner "' + ziel + '" heisst nicht "' + BOARD_ID
       + '" — hier wird rekursiv geloescht, das passiert nur im eigenen Ordner.');
-  }
-  if (v1Dir) {
-    const wurzel = path.resolve(v1Dir);
-    if (path.dirname(ziel) !== wurzel) {
-      throw new Error('[rule40] Zielordner "' + ziel + '" liegt nicht direkt unter "' + wurzel + '".');
-    }
   }
   return ziel;
 }
@@ -424,8 +592,8 @@ function leereVerzeichnis(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function schreibeBrett(outDir, overview, indexDatei, v1Dir) {
-  pruefeZielordner(outDir, v1Dir);
+function schreibeBrett(outDir, overview, indexDatei) {
+  pruefeZielordner(outDir);
   leereVerzeichnis(outDir);
   writeJsonAtomic(path.join(outDir, 'overview.json'), overview);
   writeJsonAtomic(path.join(outDir, 'index.json'), indexDatei);
@@ -436,8 +604,8 @@ function schreibeBrett(outDir, overview, indexDatei, v1Dir) {
  * findash ersetzt seinen lokalen Spiegel dann durch den Ausfall-Stub, statt das Brett von
  * gestern als das von heute zu servieren (screener-sync.js:203-213).
  */
-function schreibeFehlmarker(outDir, grund, v1Dir) {
-  pruefeZielordner(outDir, v1Dir);
+function schreibeFehlmarker(outDir, grund) {
+  pruefeZielordner(outDir);
   leereVerzeichnis(outDir);
   writeJsonAtomic(path.join(outDir, FAILED_NAME), {
     schema: SCHEMA,
@@ -451,12 +619,12 @@ function schreibeFehlmarker(outDir, grund, v1Dir) {
 function build(opts = {}) {
   const v1Dir = opts.v1Dir || DEFAULT_V1_DIR;
   const outDir = opts.outDir || path.join(v1Dir, BOARD_ID);
-  const { index, kandidaten, abgewiesen, gelesen } = sammleKandidaten(opts);
+  const { index, kandidaten, abgewiesen, gelesen, aufBrett } = sammleKandidaten(opts);
   if (!kandidaten.length) {
     throw new Error('[rule40] kein einziger rechenbarer Kandidat aus ' + gelesen + ' Zeilen ('
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
-  const { rows, bounds } = baueZeilen(kandidaten);
+  const { rows, bounds, ueber40 } = baueZeilen(kandidaten);
   // Die Leer-Pruefung sitzt HINTER der Auswahl, nicht davor: Kandidaten zu haben und trotzdem
   // keine Zeile ueber der Schwelle ist derselbe unbelegte Zustand wie gar keine Kandidaten —
   // er wuerde sonst als leeres, gueltiges Brett mit Exit 0 veroeffentlicht (Befund F6).
@@ -467,10 +635,11 @@ function build(opts = {}) {
   }
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
-    bounds, kandidaten: kandidaten.length, gelesen, abgewiesen,
+    bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
+    universeBasis: 'routed',
   });
-  schreibeBrett(outDir, overview, indexDatei, v1Dir);
-  return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds };
+  schreibeBrett(outDir, overview, indexDatei);
+  return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
 }
 
 // ---------------------------------------------------------------------------
@@ -591,7 +760,7 @@ function main(argv) {
     // (`|| true`). Der Marker macht aus "durchgewunken" ein sichtbares "ausgefallen".
     if (!res.failedMarker) {
       try {
-        schreibeFehlmarker(outDir, 'check failed: ' + res.errors.join(' | '), v1Dir);
+        schreibeFehlmarker(outDir, 'check failed: ' + res.errors.join(' | '));
         console.error('::warning::[rule40] ' + FAILED_NAME + ' geschrieben — das Brett faellt sichtbar aus, statt fehlerhaft ausgeliefert zu werden.');
       } catch (e) {
         console.error('::error::[rule40] konnte nach dem gescheiterten --check keinen Fehl-Marker schreiben: ' + (e && e.message ? e.message : e));
@@ -610,7 +779,7 @@ function main(argv) {
   } catch (e) {
     console.error('::error::[rule40] Build gescheitert: ' + (e && e.message ? e.message : e));
     try {
-      schreibeFehlmarker(outDir, (e && e.message) || e, v1Dir);
+      schreibeFehlmarker(outDir, (e && e.message) || e);
       console.error('::warning::[rule40] ' + FAILED_NAME + ' geschrieben — findash zeigt das Brett als ausgefallen statt den Stand von gestern.');
     } catch (e2) {
       console.error('::error::[rule40] konnte nicht einmal den Fehl-Marker schreiben: ' + (e2 && e2.message ? e2.message : e2));
@@ -625,10 +794,11 @@ if (require.main === module) {
 
 module.exports = {
   SCHEMA, BOARD_ID, BOARD_STATUS, FAILED_NAME, SOFTWARE_INDUSTRIES,
-  R40_MIN, TOP_N, MIN_BASE_QUARTER_SHARE, MAX_FUNDAMENTALS_AGE_DAYS, MAX_FCF_MARGIN_PCT,
-  MIN_WINSOR_SAMPLE,
+  R40_MIN, TOP_N, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
+  MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon,
+  neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
 };

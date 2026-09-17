@@ -1,6 +1,6 @@
 'use strict';
 /**
- * tests/rule40/fixture.js — hermetischer Mini-Export fuer die rule40-Tests.
+ * tests/rule40-fixture.js — hermetischer Mini-Export fuer die rule40-Tests.
  *
  * KEIN Netz, KEIN Universum, KEIN echter Snapshot-Ordner: jeder Test baut sich in einem
  * Temp-Verzeichnis genau die Dateien, die der Schreiber liest (v1/index.json, v1/full/<branch>.json,
@@ -30,23 +30,37 @@ function snapshot(over = {}) {
   const basisQ = over.basisQ !== undefined ? over.basisQ : 95e6;   // ~0,95 eines Durchschnittsquartals
   return {
     meta: {
+      // Der Schreiber laeuft ueber das GEROUTETE Universum: jeder Snapshot muss
+      // src/scoring/router.js route() passieren, sonst zaehlt er als 'nichtGeroutet'.
+      // Diese Felder sind genau die, die der Router liest (nachgesehen an snapshots/CRM.json).
+      ticker: over.ticker || 'AAA',
+      name: over.name !== undefined ? over.name : null,   // baueExport stempelt den Ticker ein
+      exchangeName: over.exchangeName !== undefined ? over.exchangeName : 'NYSE',
+      country: over.country !== undefined ? over.country : 'United States',
+      region: over.region !== undefined ? over.region : 'US',
+      sector: over.sector !== undefined ? over.sector : 'Technology',
       industry: over.industry !== undefined ? over.industry : 'Software - Application',
       fundamentalsAsOf: over.fundamentalsAsOf !== undefined ? over.fundamentalsAsOf : '2026-09-01T00:00:00.000Z',
       fcfMarginTTMSuppressed: !!over.fcfMarginTTMSuppressed,
     },
+    marketCap: { value: over.marketCap !== undefined ? over.marketCap : 5e9 },
     metrics: {
       fcfMarginTTM: { value: fcfMarginTTM },
       ebitdaMargins: { value: over.ebitdaMargins !== undefined ? over.ebitdaMargins : 25 },
       revenueTTM: { value: revenueTTM },
     },
     annual: {
-      // fcfMarginValid: G1/G2 brauchen ein present FCF-Jahr mit gleichem Vorzeichen,
-      // G3 eine nicht-negative Summe der zwei juengsten Jahre.
+      // fcfMarginValid/G0-G2 brauchen ein present FCF-Jahr mit gleichem Vorzeichen.
       annualFCF: (over.annualFCF || [120e6, 100e6, 80e6]).map((value) => ({ value })),
       annualOCF: (over.annualOCF || [150e6, 130e6, 110e6]).map((value) => ({ value })),
+      // Der Router braucht Umsatz (sonst pre-revenue) und einen Bruttogewinn != 0.
+      annualRev: (over.annualRev || [revenueTTM, revenueTTM * 0.8, revenueTTM * 0.6]).map((value) => ({ value })),
+      annualGP: (over.annualGP || [revenueTTM * 0.7, revenueTTM * 0.55, revenueTTM * 0.4]).map((value) => ({ value })),
     },
     timeseries: {
       revenueQ: over.revenueQ || quartalsreihe(110e6, basisQ),
+      revenueQEnds: over.revenueQEnds !== undefined ? over.revenueQEnds
+        : ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
     },
   };
 }
@@ -112,8 +126,22 @@ function baueExport(eintraege, opts = {}) {
     if (!nachBranch.has(branch)) nachBranch.set(branch, []);
     nachBranch.get(branch).push(e.row);
     if (e.snap !== null) {
-      fs.writeFileSync(path.join(snapshotsDir, e.row.ticker + '.json'),
-        JSON.stringify(e.snap || snapshot()));
+      const snap = e.snap || snapshot({ ticker: e.row.ticker });
+      // Der Schreiber rechnet das Wachstum aus der QUARTALSREIHE des Snapshots
+      // (revGrowthLevel, derselbe Aufruf wie score.js:1348) und nicht aus dem Feld der
+      // Brett-Zeile. Damit ein Test weiter "diese Zeile waechst um X %" sagen kann, wird
+      // die Reihe hier aus row.revGrowthYoYPct gebaut — ein Ort statt in jedem Test.
+      // `reihe: false` laesst die Reihe unangetastet (Tests, die genau sie pruefen).
+      if (e.reihe !== false && Number.isFinite(e.row.revGrowthYoYPct)) {
+        setzeWachstum(snap, e.row.revGrowthYoYPct);
+      }
+      // Identitaet aus der Zeile, nicht aus der Vorgabe: der Emittenten-Dedup (score.js)
+      // gruppiert ueber den FIRMENNAMEN. Traegt jeder Test-Snapshot denselben Vorgabe-Namen,
+      // verschmelzen alle Zeilen zu einem Emittenten und das Brett hat genau eine Zeile —
+      // ein Fixture-Artefakt, das wie ein Fehler des Schreibers aussieht.
+      snap.meta.ticker = e.row.ticker;
+      if (snap.meta.name === null || snap.meta.name === undefined) snap.meta.name = e.row.ticker + ' Inc';
+      fs.writeFileSync(path.join(snapshotsDir, e.row.ticker + '.json'), JSON.stringify(snap));
     }
   }
 
@@ -154,6 +182,18 @@ function baueExport(eintraege, opts = {}) {
   };
 }
 
+/**
+ * Die Quartalsreihe so setzen, dass revGrowthLevel genau `pct` Prozent liefert:
+ * juengstes Quartal = Basisquartal * (1 + pct/100). Das Basisquartal bleibt gesund
+ * (rund ein Durchschnittsquartal), damit der Stub-Waechter nicht dazwischenfunkt.
+ */
+function setzeWachstum(snap, pct) {
+  const basis = (snap.metrics.revenueTTM.value / 4) * 0.95;
+  const neu = basis * (1 + pct / 100);
+  snap.timeseries.revenueQ = [neu, neu * 0.98, neu * 0.96, neu * 0.94, basis].map((value) => ({ value }));
+  return snap;
+}
+
 /** Minimaler Testlaeufer, gleiche Form wie tests/druckenmiller/*. */
 function laeufer() {
   const zustand = { pass: 0, fail: 0 };
@@ -168,4 +208,4 @@ function laeufer() {
   return { test, bilanz, zustand };
 }
 
-module.exports = { snapshot, boardZeile, baueExport, quartalsreihe, laeufer, GENERATED_AT };
+module.exports = { snapshot, boardZeile, baueExport, quartalsreihe, setzeWachstum, laeufer, GENERATED_AT };

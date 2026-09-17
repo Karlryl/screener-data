@@ -1,5 +1,5 @@
 'use strict';
-/** tests/rule40/ci-wiring.test.js — Standalone-Runner.
+/** tests/rule40-ci-wiring.test.js — Standalone-Runner.
  *
  * DIE ZUSICHERUNG: das Brett ist verdrahtet — im Tageslauf UND im Test-Gate — und zwar so,
  * wie §14 es behauptet. Ein Schreiber, den kein Workflow aufruft, ist ein Skript im Ordner;
@@ -17,12 +17,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const REPO = path.resolve(__dirname, '..', '..');
-const { laeufer } = require('./fixture.js');
+const REPO = path.resolve(__dirname, '..');
+const { laeufer } = require('./rule40-fixture.js');
 const { test, bilanz } = laeufer();
 
 const daily = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
-const prCheck = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'pr-check.yml'), 'utf8');
 const gate = fs.readFileSync(path.join(REPO, 'scripts', 'test-gate.js'), 'utf8');
 
 test('daily-pull ruft den Schreiber auf', () => {
@@ -54,20 +53,26 @@ test('die Datei-Zaehler-Tore zaehlen nur v1/*.json und v1/full/*.json', () => {
     'ein rekursives Zaehl-Tor wuerde am neuen Unterordner anschlagen');
 });
 
-test('der PR-Check faehrt die Tests dieses Bretts SCHARF (kein || true)', () => {
-  assert.match(prCheck, /name: rule40-Tests/, 'ohne den Schritt laeuft hier nichts');
-  const block = prCheck.slice(prCheck.indexOf('name: rule40-Tests'));
-  const ende = block.indexOf('\n      - name:', 1);
-  const schritt = ende > -1 ? block.slice(0, ende) : block;
-  assert.match(schritt, /tests\/rule40\/\*test\.js/);
-  assert.match(schritt, /node "\$f"/);
-  assert.ok(!/\|\| true/.test(schritt), 'der Testschritt darf NICHT fail-soft sein');
-  assert.match(schritt, /::error::keine tests\/rule40/, 'ein leerer Treffer muss laut sein, nicht still gruen');
+test('die Tests dieses Bretts liegen im Pfad, den die blockierende Spur einsammelt', () => {
+  // Der Test-Gate hat einen eigenen Waechter: JEDE von git gefuehrte *test.js, die in KEINER
+  // Spur laeuft, bricht den Lauf ab ("Ungegatete Testdatei(en) gefunden"). Ein eigener
+  // Unterordner tests/rule40/ waere also nur mit einem vierten Eintrag in BLOCKING_GLOBS
+  // moeglich gewesen — und diese Liste nagelt tests/scoring/bh-b09-dailyyml.test.js (BH-035)
+  // auf drei Globs fest, in einer Sperrzone. Deshalb liegen die Dateien flach in tests/ und
+  // heissen rule40-*: 'tests/*test.js' sammelt sie ein, ohne dass ein Waechter angefasst wird.
+  const dateien = fs.readdirSync(path.join(REPO, 'tests'))
+    .filter((f) => f.startsWith('rule40-') && f.endsWith('test.js'));
+  assert.ok(dateien.length >= 4, 'erwartet mindestens vier rule40-Testdateien, gefunden ' + dateien.length);
+  assert.match(gate, /BLOCKING_GLOBS = \['tests\/\*test\.js'/,
+    "die blockierende Spur muss 'tests/*test.js' fuehren, sonst laufen diese Dateien nirgends");
+  const fixture = path.join(REPO, 'tests', 'rule40-fixture.js');
+  assert.ok(fs.existsSync(fixture), 'die Hilfsdatei fehlt');
+  assert.ok(!fixture.endsWith('test.js'), 'die Hilfsdatei darf nicht wie eine Testdatei heissen');
 });
 
 test('BLOCKING_GLOBS bleibt unberuehrt (tests/scoring ist Sperrzone, BH-035 nagelt die Liste fest)', () => {
   assert.match(gate, /BLOCKING_GLOBS = \['tests\/\*test\.js', 'tests\/scoring\/\*test\.js', 'lib\/\*test\.js'\];/,
-    'ein vierter Glob braeche tests/scoring/bh-b09-dailyyml.test.js (BH-035) — ein gesperrter Waechter');
+    'ein vierter Glob braeche tests/scoring/bh-b09-dailyyml.test.js (BH-035)');
 });
 
-bilanz('tests/rule40/ci-wiring.test.js');
+bilanz('tests/rule40-ci-wiring.test.js');

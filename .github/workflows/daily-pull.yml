@@ -2040,9 +2040,9 @@ jobs:
       # Die Datei-Zaehler-Tore oben zaehlen `v1/*.json` und `v1/full/*.json` — ein neuer
       # Unterordner loest sie nicht aus (nachgesehen, nicht angenommen). Der Pages-Deploy kopiert
       # `../outputs/findash-export/v1/.` komplett, rule40/ faehrt also automatisch mit.
-      # Die Tests des Bretts laufen im PR-Check als eigener scharfer Schritt (pr-check.yml).
-      # Hier steht bewusst KEIN zweiter Testlauf: der Tageslauf soll Daten liefern, nicht
-      # Code pruefen — und ein roter Test duerfte den Haupt-Export ohnehin nicht anhalten.
+      # Die Tests des Bretts (tests/rule40-*test.js) laufen im Test-Gate der blockierenden
+      # Spur, in beiden Workflows. Hier steht bewusst KEIN zweiter Testlauf: der Tageslauf
+      # soll Daten liefern, nicht Code pruefen.
       - name: Build rule40 board (additive, fail-soft)
         run: node scripts/write-rule40-export.js || true
 

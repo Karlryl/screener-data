@@ -1,5 +1,5 @@
 'use strict';
-/** tests/rule40/failsafe.test.js — Standalone-Runner.
+/** tests/rule40-failsafe.test.js — Standalone-Runner.
  *
  * DIE ZUSICHERUNG: wenn dieses Brett scheitert, sagt es das — statt den Stand von gestern
  * als den von heute zu servieren. Das ist keine Kosmetik: findash fasst einen 404 als
@@ -15,8 +15,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const W = require('../../scripts/write-rule40-export.js');
-const { snapshot, boardZeile, baueExport, laeufer } = require('./fixture.js');
+const W = require('../scripts/write-rule40-export.js');
+const { snapshot, boardZeile, baueExport, laeufer } = require('./rule40-fixture.js');
 
 const { test, bilanz } = laeufer();
 
@@ -143,4 +143,4 @@ test('ein gescheiterter --check ueber die CLI setzt den Marker (der CI-Schritt l
     'ein Brett, das sein Tor nicht besteht, darf nicht als gueltiges Brett liegen bleiben');
 });
 
-bilanz('tests/rule40/failsafe.test.js');
+bilanz('tests/rule40-failsafe.test.js');

@@ -1,5 +1,5 @@
 'use strict';
-/** tests/rule40/guards.test.js — Standalone-Runner.
+/** tests/rule40-guards.test.js — Standalone-Runner.
  *
  * DIE ZUSICHERUNG: jeder Waechter dieses Bretts schlaegt an, wenn er soll, UND schweigt,
  * wenn er nicht soll. Nur die erste Haelfte zu pruefen erzeugt Waechter, die alles
@@ -12,16 +12,19 @@
  */
 const assert = require('node:assert/strict');
 
-const W = require('../../scripts/write-rule40-export.js');
-const { snapshot, boardZeile, baueExport, quartalsreihe, laeufer } = require('./fixture.js');
+const W = require('../scripts/write-rule40-export.js');
+const { snapshot, boardZeile, baueExport, quartalsreihe, laeufer } = require('./rule40-fixture.js');
 
 const { test, bilanz } = laeufer();
 
 /** Baut EIN Brett aus genau einer Zeile und sagt, ob sie es hineingeschafft hat. */
-function laufMitEinerZeile(rowOver, snapOver, snapErsatz) {
+function laufMitEinerZeile(rowOver, snapOver, snapErsatz, reihe) {
   const f = baueExport([{
     row: boardZeile(Object.assign({ ticker: 'AAA', revGrowthYoYPct: 60 }, rowOver)),
     snap: snapErsatz !== undefined ? snapErsatz : snapshot(Object.assign({ fcfMarginTTM: 30 }, snapOver)),
+    // reihe:false laesst die Quartalsreihe des Snapshots stehen, statt sie aus
+    // revGrowthYoYPct neu zu bauen — noetig fuer jeden Test, der genau sie prueft.
+    reihe,
   }]);
   let res = null, fehler = null;
   try {
@@ -32,8 +35,8 @@ function laufMitEinerZeile(rowOver, snapOver, snapErsatz) {
 }
 
 /** Die Zeile muss durchkommen. */
-function drin(rowOver, snapOver, snapErsatz) {
-  const { res, fehler } = laufMitEinerZeile(rowOver, snapOver, snapErsatz);
+function drin(rowOver, snapOver, snapErsatz, reihe) {
+  const { res, fehler } = laufMitEinerZeile(rowOver, snapOver, snapErsatz, reihe);
   assert.equal(fehler, null, 'Build warf: ' + (fehler && fehler.message));
   assert.equal(res.rows, 1, 'Zeile fehlt im Brett, abgewiesen: ' + JSON.stringify(res.abgewiesen));
   return res;
@@ -43,8 +46,8 @@ function drin(rowOver, snapOver, snapErsatz) {
  * Die Zeile muss abgewiesen werden, und zwar mit GENAU diesem Grund. Ohne den Grund
  * bestuende der Test auch, wenn ein ganz anderer Waechter zufaellig zuerst greift.
  */
-function abgewiesenWegen(grund, rowOver, snapOver, snapErsatz) {
-  const { res, fehler } = laufMitEinerZeile(rowOver, snapOver, snapErsatz);
+function abgewiesenWegen(grund, rowOver, snapOver, snapErsatz, reihe) {
+  const { res, fehler } = laufMitEinerZeile(rowOver, snapOver, snapErsatz, reihe);
   // Kein Kandidat -> der Schreiber wirft (ein leeres Brett ist eine unbelegte Aussage).
   assert.ok(fehler, 'erwartet: Abweisung, bekommen: ein Brett');
   const zaehler = JSON.parse(fehler.message.slice(fehler.message.indexOf('{'), fehler.message.lastIndexOf('}') + 1));
@@ -53,22 +56,22 @@ function abgewiesenWegen(grund, rowOver, snapOver, snapErsatz) {
 
 // --- Basisquartal ----------------------------------------------------------
 test('gesundes Basisquartal (0,95 eines Durchschnittsquartals) bleibt drin', () => {
-  drin({}, { revenueTTM: 400e6, basisQ: 95e6 });
+  drin({}, { revenueTTM: 400e6, basisQ: 95e6 }, undefined, false);
 });
 
 test('Stub-Basisquartal (0,01 eines Durchschnittsquartals) fliegt raus', () => {
   // 2548.TW-Muster: 1,42 Mio. Basisquartal gegen 693 Mio. TTM.
-  abgewiesenWegen('basisQuartalStub', {}, { revenueTTM: 400e6, basisQ: 1e6 });
+  abgewiesenWegen('basisQuartalStub', {}, { revenueTTM: 400e6, basisQ: 1e6 }, undefined, false);
 });
 
 test('knapp ueber der Schwelle (0,26) bleibt drin, knapp darunter (0,24) nicht', () => {
   const avg = 400e6 / 4;
-  drin({}, { revenueTTM: 400e6, basisQ: 0.26 * avg });
-  abgewiesenWegen('basisQuartalStub', {}, { revenueTTM: 400e6, basisQ: 0.24 * avg });
+  drin({}, { revenueTTM: 400e6, basisQ: 0.26 * avg }, undefined, false);
+  abgewiesenWegen('basisQuartalStub', {}, { revenueTTM: 400e6, basisQ: 0.24 * avg }, undefined, false);
 });
 
 test('ohne Quartalsreihe greift der Waechter nicht (der Jahres-Fallback hat kein Basisquartal)', () => {
-  drin({}, { revenueQ: [] });
+  drin({}, { revenueQ: [] }, undefined, false);
 });
 
 // --- FCF-Marge -------------------------------------------------------------
@@ -112,13 +115,26 @@ test('sieht ebitdaMargins wie ein BRUCHTEIL aus, faellt nur die Zusatzspalte auf
 });
 
 // --- Frische ---------------------------------------------------------------
-test('frischer Fundamentalstand bleibt drin, ein halbes Jahr alter fliegt raus', () => {
-  drin({}, { fundamentalsAsOf: '2026-09-01T00:00:00.000Z' });     // 16 Tage vor generated_at
-  abgewiesenWegen('veraltet', {}, { fundamentalsAsOf: '2026-01-01T00:00:00.000Z' });
+test('frisches Quartalsende bleibt drin, ein jahrealtes fliegt raus', () => {
+  // Der Anker ist revenueQEnds[0], NICHT fundamentalsAsOf: letzteres ist auf jedem
+  // geprueften Snapshot byte-gleich mit fetchedAt und misst den ABRUF, nicht den Zeitraum
+  // (Befund N5/E2 an LTC/PLTR/CRM/RYN/SII).
+  drin({}, { revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'] });
+  abgewiesenWegen('veraltet', {}, { revenueQEnds: ['2020-09-30', '2020-06-30', '2020-03-31', '2019-12-31', '2019-09-30'] });
 });
 
-test('fehlender fundamentalsAsOf wirft die Zeile NICHT raus (nur ein NACHWEISLICH alter Stand)', () => {
-  drin({}, { fundamentalsAsOf: null });
+test('ein Jahresmelder mit 241 Tagen Abstand bleibt drin (Meldekadenz, kein toter Datenstand)', () => {
+  // Die neun Auslandsmelder, die N5/E2 als normal eingestuft hat: Geschaeftsjahresende
+  // 2025-12-31 gegen generated_at 2026-09-17. MAX_FISCAL_AGE_DAYS darf sie nicht treffen.
+  drin({}, { revenueQEnds: ['2025-12-31', '2025-09-30', '2025-06-30', '2025-03-31', '2024-12-31'] });
+});
+
+test('fundamentalsAsOf ist KEIN Waechter mehr (es misst den Abruf, nicht den Zeitraum)', () => {
+  drin({}, { fundamentalsAsOf: '2019-01-01T00:00:00.000Z' });
+});
+
+test('ohne revenueQEnds greift der Frische-Waechter nicht, statt blind zu verwerfen', () => {
+  drin({}, { revenueQEnds: [] });
 });
 
 // --- Belegbarkeit ----------------------------------------------------------
@@ -128,9 +144,30 @@ test('Zeile ohne Rang (Belegbarkeits-Gate) kommt nicht ins Brett', () => {
 });
 
 // --- Fehlende Quellen ------------------------------------------------------
-test('fehlender Snapshot und fehlendes Wachstum werden gezaehlt, nicht geraten', () => {
-  abgewiesenWegen('keinSnapshot', {}, undefined, null);
-  abgewiesenWegen('keinWachstum', { revGrowthYoYPct: null });
+test('eine Zeile ohne bildbares Wachstum wird gezaehlt, nicht geraten', () => {
+  // Umsatz JA (sonst routet der Router sie als pre-revenue weg), aber nur EIN Jahr und
+  // keine Quartale — revGrowthLevel hat dann kein Vorjahr und liefert null.
+  abgewiesenWegen('keinWachstum', {}, { revenueQ: [], annualRev: [400e6] }, undefined, false);
+});
+
+test('ein Snapshot ohne Brett-Zeile ist trotzdem im Universum (der Sinn des gerouteten Wegs)', () => {
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60 }), snap: snapshot({ fcfMarginTTM: 30 }) },
+  ]);
+  // Ein zweiter Snapshot OHNE Zeile in irgendeinem Vollboard.
+  const ohneBrett = snapshot({ fcfMarginTTM: 28, ticker: 'ZZZ', name: 'Zeta Inc' });
+  require('./rule40-fixture.js').setzeWachstum(ohneBrett, 55);
+  ohneBrett.meta.ticker = 'ZZZ';
+  require('node:fs').writeFileSync(require('node:path').join(f.snapshotsDir, 'ZZZ.json'), JSON.stringify(ohneBrett));
+  const res = W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const o = JSON.parse(require('node:fs').readFileSync(require('node:path').join(f.outDir, 'overview.json'), 'utf8'));
+  const zzz = o.rows.find((r) => r.ticker === 'ZZZ');
+  f.aufraeumen();
+  assert.equal(res.rows, 2, 'der Name ohne Brett-Zeile fehlt');
+  assert.equal(zzz.onBoard, false);
+  assert.equal(zzz.score, null, 'ohne Brett-Zeile gibt es keinen Engine-Score — eine 0 waere eine Behauptung');
+  assert.equal(zzz.marketCap, null, 'ohne geprueften FX-Beleg bleibt marketCap null');
+  assert.deepEqual(zzz.lamps, []);
 });
 
 // --- Winsorisierung --------------------------------------------------------
@@ -165,4 +202,4 @@ test('ueber MIN_WINSOR_SAMPLE klemmt der Wachstumsterm den Ausreisser, r40 bleib
   f.aufraeumen();
 });
 
-bilanz('tests/rule40/guards.test.js');
+bilanz('tests/rule40-guards.test.js');

@@ -71,27 +71,6 @@ jobs:
       - name: Test-Gate (beide Spuren)
         run: node scripts/test-gate.js --mode=all
 
-      # ── rule40-Brett (Vertrag §14) ────────────────────────────────────────────────────────
-      # EIGENER Schritt statt eines vierten Eintrags in BLOCKING_GLOBS: diese Liste ist in
-      # tests/scoring/bh-b09-dailyyml.test.js (BH-035) auf genau drei Globs festgenagelt, und
-      # tests/scoring/ ist Sperrzone — ein Brett darf sich seinen Platz nicht dadurch nehmen,
-      # dass es einen gesperrten Waechter umschreibt. Der Schritt ist scharf (kein `|| true`):
-      # die Dateien sind hermetisch (Temp-Fixturen, kein Netz, kein Universum), koennen also
-      # nur rot werden, wenn der Code kaputt ist. Das ist der Unterschied zum BAU-Schritt im
-      # Tageslauf, der an Live-Daten haengt und deshalb fail-soft laeuft.
-      - name: rule40-Tests
-        run: |
-          set -e
-          shopt -s nullglob
-          dateien=(tests/rule40/*test.js)
-          if [ ${#dateien[@]} -eq 0 ]; then
-            echo "::error::keine tests/rule40/*test.js gefunden — der Schritt haette still nichts geprueft."
-            exit 1
-          fi
-          for f in "${dateien[@]}"; do
-            echo "--- $f"
-            node "$f"
-          done
 
       # ── A2 (Ratsbrief 06.09., Master ~75 %): Live-Universum-Gate im PR-Check ─────────────────
       # Sieben tests/scoring-Suiten skippen im Test-Gate oben BEWUSST (kein Universum; test-gate.js

@@ -1,5 +1,5 @@
 'use strict';
-/** tests/rule40/contract.test.js — Standalone-Runner.
+/** tests/rule40-contract.test.js — Standalone-Runner.
  *
  * DIE ZUSICHERUNG: was write-rule40-export.js schreibt, kann findash lesen. Nicht
  * "sieht aus wie", sondern: genau die Felder, die data-layer/screener-contract.js
@@ -16,8 +16,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const W = require('../../scripts/write-rule40-export.js');
-const { snapshot, boardZeile, baueExport, laeufer } = require('./fixture.js');
+const W = require('../scripts/write-rule40-export.js');
+const { snapshot, boardZeile, baueExport, laeufer } = require('./rule40-fixture.js');
 
 const { test, bilanz } = laeufer();
 
@@ -190,4 +190,4 @@ test('JEDE Gruppe bekommt ihre eigenen TOP_N — Software darf die Rest-Gruppe n
   f.aufraeumen();
 });
 
-bilanz('tests/rule40/contract.test.js');
+bilanz('tests/rule40-contract.test.js');
