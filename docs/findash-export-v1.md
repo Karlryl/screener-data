@@ -587,18 +587,28 @@ Rest-Gruppe).
 
 Innerhalb einer Gruppe gilt eine **ANZEIGE-Konvention**, kein Waechter: oberhalb von
 `DISPLAY_LARGE_MCAP_USD` (1 Mrd. USD, belegte USD-Marktkap) wird jede Zeile exportiert,
-unterhalb nur die besten `TOP_N` (100). Grund: der Tab oeffnet mit einem sichtbaren,
+unterhalb nur die besten `TOP_N` (100); oberhalb gilt `TOP_N_LARGE` (300). Grund: der Tab oeffnet mit einem sichtbaren,
 umstellbaren Vorfilter „Marktkap. >= 1 Mrd." — waere die Export-Kappe EINE Liste, fuellten
 die kleinen Werte sie auf und genau die Standard-Ansicht liefe leer. Die Grenze entscheidet
 also ueber die VOLLSTAENDIGKEIT einer Ansicht, nie ueber die Aufnahme einer einzelnen Zeile.
 Zaehler: `counts.exportedLargeCap` / `counts.exportedSmallCap`.
 
-Zeilen **ohne belegte USD-Marktkap** zaehlen zur unteren Gruppe. Das betrifft jeden Namen
-ohne Vollboard-Zeile: der Beleg der Handelskurs-Umrechnung entsteht im Haupt-Schreiber
-(`write-findash-export.js:298-311`), nicht hier, und ohne Beleg gibt es keine
-Groessen-Behauptung. Folge, die man kennen muss: die Standard-Ansicht enthaelt damit nur
-Namen, die auch auf einem Vollboard stehen. Sie zu weiten ist eine Aufgabe des
-Haupt-Exports, nicht dieses Bretts.
+**Marktkap ohne Vollboard-Zeile.** Namen mit Vollboard-Zeile erben deren geprueftes
+`marketCap`. Fuer die uebrigen entscheidet `beurteileWaehrungsbeleg(meta)` — dieselbe reine
+Funktion, mit der der Haupt-Schreiber entscheidet, ob eine Zeile ihre Marktkap behalten darf
+(`write-findash-export.js:209`, dort exportiert). Kein zweites FX-Regelwerk: ein zweites
+liefe frueher oder spaeter anders. Traegt der Beleg nicht, bleibt `marketCap` null und die
+Zeile faellt in die untere Gruppe — sie bleibt sichtbar, macht aber keine Groessen-Aussage.
+Zaehler: `counts.offBoardMcapUsdDirect` / `counts.offBoardMcapNull`, damit der Erklaer-Kasten
+sagen kann, was der Groessen-Filter sehen kann und was nicht.
+
+NACHGEMESSEN, weil die Zahl sonst erschreckt: der Beleg traegt auf diesem Bestand fuer ALLE
+geprueften Snapshots (4.000/4.000, darunter CNY, EUR, HKD, JPY, KRW, TWD). Das ist kein
+blinder Waechter, sondern die Arbeitsteilung: `snapshots/<T>.json` fuehrt `marketCap` bereits
+in USD — an 601 nicht in USD gehandelten Namen nachgeprueft, deren Snapshot-Wert mit dem
+(vertraglich USD-)Wert der Vollboard-Zeile uebereinstimmt. Der Beleg prueft, ob die
+Umrechnung DOKUMENTIERT ist, nicht ob sie stattgefunden hat. Eine geratene Handelswaehrung
+(`tradingCurrencyAssumed`) faellt weiterhin durch — Waechter in `tests/rule40-universe.test.js`.
 
 **Waechter** (alle als benannte Konstanten im Schreiber, jeder mit Begruendung im Quelltext):
 
@@ -608,6 +618,7 @@ Haupt-Exports, nicht dieses Bretts.
 | `MAX_FCF_MARGIN_PCT` | 100 | Freier Cashflow ueber dem Umsatz ist Bilanz-/Einheiten-Artefakt; Zeile wird VERWORFEN, nicht geklemmt (in Reihe mit `OPMARGIN_CAP = 1.0`) |
 | `MAX_FISCAL_AGE_DAYS` | 550 | Abstand von `generated_at` zum juengsten Quartalsende. Gesunder Koerper p50 = p95 = 151 Tage; 4,1 % liegen ueber 180, 2,4 % ueber 550, 2,2 % ueber 730 — weitgehend DIESELBEN Namen, bis hinauf zu 8.003 Tagen. 18 Monate lassen jeden Jahres- und Halbjahresmelder durch und fallen erst dort, wo keine Meldekadenz den Abstand mehr erklaert |
 | `DISPLAY_LARGE_MCAP_USD` | 1e9 | ANZEIGE-Konvention (s. Auswahl): oberhalb ungekappt, unterhalb `TOP_N` je Gruppe. Kein Scoring-Niveau, kein Waechter |
+| `TOP_N_LARGE` | 300 | Kappe je Gruppe OBERHALB der Anzeige-Grenze. Ungekappt waren es 754 grosse Werte in einem Brett, das alle 75 s geholt wird; Rang 700 einer Rule-of-40-Liste ist Fuellmaterial. Vor-Kappungs-Zahl als `counts.largeCapBeforeCap` |
 | `TOP_N` | 100 | Kappe je Gruppe UNTERHALB der Anzeige-Grenze |
 | `MIN_WINSOR_SAMPLE` | 200 | Unter so vielen Kandidaten IST die p99-Schranke die oberste Beobachtung — dann wird nicht geklemmt und `growthBounds` steht sichtbar auf `null` |
 | `SEKTOR_AUSSCHLUSS` | Financial Services, Real Estate | Eine FCF-Marge sagt dort nichts ueber das operative Geschaeft; Karls Ansage lautet "alle Branchen ohne Finanzwerte". Der Ausschluss gehoert in den SCHREIBER: sonst verbrauchen diese Zeilen die Top-150-Plaetze. Der Router nimmt nur Bilanz-Banken, Versicherer und mREITs heraus — Immobilien-REITs und Vermoegensverwalter blieben und fuehrten die Liste an |

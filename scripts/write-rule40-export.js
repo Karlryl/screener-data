@@ -56,6 +56,10 @@ const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
+// Der Waehrungs-Beleg des HAUPT-Schreibers, als reine Funktion von meta (dort exportiert,
+// damit genau das hier moeglich ist): sie entscheidet, ob eine marketCap als USD
+// ausgeliefert werden darf. Kein zweites FX-Regelwerk — ein zweites liefe irgendwann anders.
+const { beurteileWaehrungsbeleg } = require('./write-findash-export.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -89,7 +93,14 @@ const SOFTWARE_INDUSTRIES = Object.freeze([
 /** Aufnahme-Schwelle des Bretts. Karls Ansicht schaltet darueber (40/50/60) — das Brett liefert ab 40. */
 const R40_MIN = 40;
 /**
- * Je Gruppe die besten TOP_N UNTERHALB der Anzeige-Grenze; oberhalb wird nicht gekappt.
+ * Kappe der OBEREN Gruppe, je r40-Gruppe. Ungekappt waren es 738 grosse Werte in einem
+ * Brett, das alle 75 s geholt wird — Rang 700 einer Rule-of-40-Liste ist kein Kandidat,
+ * sondern Fuellmaterial. Die Zahl VOR der Kappung steht als `largeCapBeforeCap` in counts,
+ * damit die Oberflaeche "Top 300 je Gruppe von N" sagen kann statt still zu kappen.
+ */
+const TOP_N_LARGE = 300;
+/**
+ * Je Gruppe die besten TOP_N UNTERHALB der Anzeige-Grenze (oberhalb gilt TOP_N_LARGE).
  * Warum zweigeteilt: der Tab oeffnet mit einem sichtbaren, umstellbaren Vorfilter
  * "Marktkap. >= 1 Mrd. USD" — ein Investmentmanager liest einen 11-Mio.-Wert neben
  * Palantir als Rauschen. Waere die Export-Kappe eine einzige Liste, fuellten die kleinen
@@ -299,6 +310,20 @@ function datenSuspekt(snapshot) {
   return isDataSuspect(snapshot, lampen, 'route');
 }
 
+/**
+ * Die belegte USD-Marktkap einer Zeile, oder null.
+ * Zaehlt mit, wie oft der Nicht-Brett-Weg getragen hat — die Oberflaeche muss sagen koennen,
+ * was der Groessen-Filter sehen kann und was nicht.
+ */
+function mcapBelegt(auchAufBrett, snapshot, meta, zaehler) {
+  if (auchAufBrett) return istZahl(auchAufBrett.row.marketCap) ? auchAufBrett.row.marketCap : null;
+  const roh = snapshot && snapshot.marketCap && snapshot.marketCap.value;
+  const beleg = beurteileWaehrungsbeleg(meta);
+  if (beleg.ok && istZahl(roh)) { zaehler.offBoardMcapUsdDirect++; return roh; }
+  zaehler.offBoardMcapNull++;
+  return null;
+}
+
 function r40GruppeVon(industry) {
   return SOFTWARE_INDUSTRIES.includes(industry) ? 'software' : 'other';
 }
@@ -353,7 +378,7 @@ function sammleKandidaten(opts = {}) {
     keinVollboard, nichtGeroutet: 0, datenSuspekt: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
     fcfUnterdrueckt: 0, fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0,
     basisQuartalStub: 0, veraltet: 0, frischeUnbekannt: 0, ohneRang: 0, snapshotUnlesbar: 0,
-    dupEmittent: 0,
+    dupEmittent: 0, offBoardMcapUsdDirect: 0, offBoardMcapNull: 0,
   };
   let gelesen = 0;
 
@@ -440,10 +465,12 @@ function sammleKandidaten(opts = {}) {
       // genau die Regel, die fcfTrack bei gueltiger Marge anwendet.
       track: auchAufBrett ? auchAufBrett.track : (fcf >= 0 ? 'profitable' : 'unprofitable'),
       onBoard: !!auchAufBrett,
-      // NUR die belegte USD-Marktkap der Vollboard-Zeile. Ohne Vollboard-Zeile gibt es
-      // keinen Handelskurs-Beleg (write-findash-export.js:298-311) und damit keine
-      // Groessen-Behauptung — die Zeile faellt in die untere Gruppe.
-      marketCap: auchAufBrett && istZahl(auchAufBrett.row.marketCap) ? auchAufBrett.row.marketCap : null,
+      // Marktkap: von der Vollboard-Zeile, wenn es eine gibt (dort ist der Beleg schon
+      // gefuehrt). Sonst NUR, wenn der Waehrungs-Beleg des Haupt-Schreibers sie traegt —
+      // in USD gehandelt heisst: es gibt nichts umzurechnen, die Zahl IST USD. Ohne Beleg
+      // bleibt sie null, und die Zeile faellt in die untere Gruppe: ohne Beleg keine
+      // Groessen-Behauptung. Ein eigenes FX-Regelwerk entsteht hier NICHT.
+      marketCap: mcapBelegt(auchAufBrett, snapshot, meta, abgewiesen),
       meta,
       wachstumRoh,
       fcfMarginPct: fcf,
@@ -501,12 +528,17 @@ function baueZeilen(kandidaten) {
   // Zeilen, davon 0 'other' (Befund JS-Review 17.09., nachgestellt).
   const grossGenug = (k) => istZahl(k.marketCap) && k.marketCap >= DISPLAY_LARGE_MCAP_USD;
   const jeGruppe = new Map();
-  let gross = 0, klein = 0;
+  let gross = 0, klein = 0, grossVorKappung = 0, kleinVorKappung = 0;
   for (const k of mitR40) {
     if (!jeGruppe.has(k.gruppe)) jeGruppe.set(k.gruppe, { gross: [], klein: [] });
     const toepfe = jeGruppe.get(k.gruppe);
-    if (grossGenug(k)) { toepfe.gross.push(k); gross++; }
-    else if (toepfe.klein.length < TOP_N) { toepfe.klein.push(k); klein++; }
+    if (grossGenug(k)) {
+      grossVorKappung++;
+      if (toepfe.gross.length < TOP_N_LARGE) { toepfe.gross.push(k); gross++; }
+    } else {
+      kleinVorKappung++;
+      if (toepfe.klein.length < TOP_N) { toepfe.klein.push(k); klein++; }
+    }
   }
 
   const gewaehlt = new Map();
@@ -524,6 +556,8 @@ function baueZeilen(kandidaten) {
     ueber40: mitR40.length,
     grossExportiert: gross,
     kleinExportiert: klein,
+    grossVorKappung,
+    kleinVorKappung,
     rows: ausgewaehlt.map((k, i) => {
       const row = k.row || {};
       const ov = row.overview || {};
@@ -551,7 +585,11 @@ function baueZeilen(kandidaten) {
           : (typeof k.meta.shortName === 'string' ? k.meta.shortName : null);
         zeile.country = typeof k.meta.country === 'string' ? k.meta.country : null;
         zeile.sector = typeof k.meta.sector === 'string' ? k.meta.sector : null;
-        zeile.marketCap = null;
+        // Die belegte Groesse, oder null. marketCapCurrency ist die EINHEIT des Feldes und
+        // im v1-Vertrag immer USD — auch wenn der Wert null ist. tradingFxRateApplied bleibt
+        // null: auf diesem Weg wurde nichts umgerechnet (in USD gehandelt), und ein Faktor,
+        // den niemand angewandt hat, waere eine erfundene Herkunft.
+        zeile.marketCap = istZahl(k.marketCap) ? k.marketCap : null;
         zeile.marketCapCurrency = 'USD';
         zeile.tradingFxRateApplied = null;
       }
@@ -608,6 +646,7 @@ function buildIndex(index, rows, meta) {
       maxFcfMarginPct: MAX_FCF_MARGIN_PCT,
       minWinsorSample: MIN_WINSOR_SAMPLE,
       displayLargeMcapUsd: DISPLAY_LARGE_MCAP_USD,
+      topNLarge: TOP_N_LARGE,
       sectorExclusions: SEKTOR_AUSSCHLUSS,
       softwareIndustries: SOFTWARE_INDUSTRIES,
       // p1/p99 des eigenen Kandidaten-Universums — damit die Oberflaeche sagen kann, wo
@@ -623,6 +662,10 @@ function buildIndex(index, rows, meta) {
         exported: rows.length,
         exportedLargeCap: meta.grossExportiert,
         exportedSmallCap: meta.kleinExportiert,
+        largeCapBeforeCap: meta.grossVorKappung,
+        smallCapBeforeCap: meta.kleinVorKappung,
+        offBoardMcapUsdDirect: meta.abgewiesen.offBoardMcapUsdDirect,
+        offBoardMcapNull: meta.abgewiesen.offBoardMcapNull,
         excludedNotRouted: meta.abgewiesen.nichtGeroutet,
         excludedDataSuspect: meta.abgewiesen.datenSuspekt,
         excludedSector: meta.abgewiesen.sektorAusgeschlossen,
@@ -702,7 +745,7 @@ function build(opts = {}) {
     throw new Error('[rule40] kein einziger rechenbarer Kandidat aus ' + gelesen + ' Zeilen ('
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
-  const { rows, bounds, ueber40, grossExportiert, kleinExportiert } = baueZeilen(kandidaten);
+  const { rows, bounds, ueber40, grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung } = baueZeilen(kandidaten);
   // Die Leer-Pruefung sitzt HINTER der Auswahl, nicht davor: Kandidaten zu haben und trotzdem
   // keine Zeile ueber der Schwelle ist derselbe unbelegte Zustand wie gar keine Kandidaten —
   // er wuerde sonst als leeres, gueltiges Brett mit Exit 0 veroeffentlicht (Befund F6).
@@ -714,7 +757,7 @@ function build(opts = {}) {
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
-    grossExportiert, kleinExportiert, universeBasis: 'routed',
+    grossExportiert, kleinExportiert, grossVorKappung, kleinVorKappung, universeBasis: 'routed',
   });
   schreibeBrett(outDir, overview, indexDatei);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
@@ -872,10 +915,10 @@ if (require.main === module) {
 
 module.exports = {
   SCHEMA, BOARD_ID, BOARD_STATUS, FAILED_NAME, SOFTWARE_INDUSTRIES,
-  R40_MIN, TOP_N, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
+  R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
-  basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt,
+  basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
