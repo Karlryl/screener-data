@@ -518,3 +518,81 @@ Diese Pfade sind **bewusst ausserhalb** von `outputs/findash-export/v1/`: sie fo
 **Frische.** Der Kalender wird im merge-Job publiziert (dort ist er frisch; der scoring-Job checkt den Trigger-Commit aus und saehe den Vortagsstand). Die Vintages werden **nach** dem Vintage-Commit publiziert — vorher existiert das Vintage von heute noch nicht, und die Anzeige vergleicht die zwei juengsten Staende. Ein **SUSPECT**-Vintage (Wert-Gate, rc=2) geht weder nach `main` noch in den Kanal.
 
 **Fail-loud.** Fehlt eine Quelle, endet der Publish mit `::error::` + Exit 1 statt sie still wegzulassen — sonst zeigte findash nach der Umstellung wortlos nichts. Waechter: `tests/stage-public-data.test.js`.
+
+---
+
+## 14. `rule40/` (Rule-of-40-Brett, DIAGNOSTIC) — additiver Feed (17.09.2026)
+
+**Dateien:** `outputs/findash-export/v1/rule40/index.json` + `rule40/overview.json`, exakt die
+Huelle und Zeilenform von §10 (`quality/`). findash braucht dafuer nur zwei Registrierungen
+(`data-layer/screener-sync.js` SUB_BOARDS, `data-layer/screener.js` UNTER_BOARDS) plus die
+Oberflaeche — keinen neuen Leser.
+
+**Schreiber:** `scripts/write-rule40-export.js`, im scoring-Job NACH `write-findash-export.js`
+und VOR dem Pages-Deploy. Er rechnet **keine Achse und keinen Score** neu: er liest die fertigen
+Vollboards aus §11, holt den einen fehlenden Term aus `snapshots/<TICKER>.json` und waehlt aus.
+`score` bleibt in jeder Zeile der unveraenderte Engine-Score.
+
+**Die Groesse.** `r40 = revGrowthPctUsed + fcfMarginPct`, beides Prozentpunkte. Das ist
+`ruleOfX` mit alpha = 1 (`src/scoring/axes.js:257`) — der Unterschied zur Achse ist, dass hier
+die ZAHL im Brett steht und nicht ihr Kohorten-Perzentil. Deshalb `boardStatus: 'diagnostic'`:
+eine durchsichtige Arithmetik neben dem Score, nie im Score, kein Gauntlet.
+
+**Warum `revGrowthPctUsed` und nicht `revGrowthYoYPct`.** Das exportierte `revGrowthYoYPct` ist
+**nicht winsorisiert** — `score.js:1348` ruft `revGrowthLevel(snapshot)` absichtlich ohne
+`growthBounds` auf, weil ein geklemmter Wert in der ANZEIGE eine stille Verfaelschung waere. Fuer
+eine RANGLISTE ist er es nicht: am Stand 2026-08-29 fuehrte 2548.TW die Liste mit +29.049 %
+gegen ein p99 von +117,7 % an, erzeugt aus einem Basisquartal von 1,42 Mio. gegen 693 Mio. TTM.
+Das Brett klemmt den Wachstumsterm deshalb mit den p1/p99-Schranken des eigenen Kandidaten-
+Universums (`winsorTailBounds`, dieselbe Funktion wie die Achse; data-gelernt, keine gesetzte
+Zahl) und liefert BEIDE Werte: `revGrowthYoYPct` roh wie ueberall sonst im Export,
+`revGrowthPctUsed` geklemmt. Wer nachrechnet, sieht welchen.
+
+**Zeile.** Jeder Schluessel der `quality/`-Zeile (§10/§4), dazu additiv:
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
+| `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
+| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur wenn `fcfMarginValid()` ihn traegt |
+| `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
+| `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
+| `industry` | string \| null | `meta.industry` aus dem Snapshot (im uebrigen Export nicht enthalten) |
+| `r40Group` | `'software'` \| `'other'` | Software/SaaS/Internet nach `industry` |
+| `fundamentalsAsOf` | ISO \| null | Stand der Fundamentaldaten dieser Zeile |
+
+`formulaId` traegt die HERKUNFTS-Branche (z. B. `software-comm-services`), und `index.boardStatus`
+fuehrt jeden vorkommenden `formulaId` als `diagnostic` — `shapeOverviewRow` sucht den Status genau
+darueber. `rank` ist der Rang nach `r40` INNERHALB des Bretts, `generated_at` die Kopie aus dem
+`index.json` desselben Laufs (findash prueft das, `screener.js:364`).
+
+**Auswahl.** Universum = jede Zeile der Vollboards (also bereits router-gefiltert: keine
+Bilanz-Banken, Versicherer, mREITs) mit endlichem Wachstum und gueltiger FCF-Marge. Aufgenommen
+wird `r40 >= 40`, als Vereinigung der besten 150 der Software-Gruppe und der besten 150 gesamt.
+
+**Waechter** (alle als benannte Konstanten im Schreiber, jeder mit Begruendung im Quelltext):
+
+| Konstante | Wert | Warum |
+| --------- | ---- | ----- |
+| `MIN_BASE_QUARTER_SHARE` | 0,25 | Vorjahresquartal unter einem Viertel eines Durchschnittsquartals ist eine Teilmeldung, keine Vervielfachung (`revQuartalsYoY` prueft nur `b > 0`). Gesunder Koerper: p5 = 0,59, p50 = 0,92 |
+| `MAX_FCF_MARGIN_PCT` | 100 | Freier Cashflow ueber dem Umsatz ist Bilanz-/Einheiten-Artefakt; Zeile wird VERWORFEN, nicht geklemmt (in Reihe mit `OPMARGIN_CAP = 1.0`) |
+| `MAX_FUNDAMENTALS_AGE_DAYS` | 120 | Eine TTM-Marge aus einem halbjahresalten Snapshot ist keine Aussage ueber heute. Gemessen: p99 = 27 Tage, Maximum 52 |
+| `MIN_WINSOR_SAMPLE` | 200 | Unter so vielen Kandidaten IST die p99-Schranke die oberste Beobachtung — dann wird nicht geklemmt und `growthWinsorBounds` steht sichtbar auf `null` |
+
+Dazu, ohne eigene Konstante: `meta.fcfMarginTTMSuppressed`, der Vorzeichen-Waechter
+`fcfMarginValid()` (G0-G3, `engine.js:106-131`), die Dezimal-statt-Prozent-Signatur aus Commit
+`98290452c7`, und der Ausschluss jeder Zeile mit einem `rankGrund` (das Belegbarkeits-Gate hat
+ihr den Rang verweigert — das Brett ist keine Hintertuer darum herum).
+
+**`index.json`** traegt zusaetzlich einen Block `rule40` mit allen Konstanten, den gelernten
+`growthWinsorBounds`, der Kandidatenzahl und den Abweisungs-Zaehlern je Grund. Ohne diese Zaehler
+sieht „kleines Brett" genauso aus wie „Snapshots fehlen".
+
+**Ausfall.** Scheitert der Schreiber, wird der Ordner geleert und traegt danach NUR `_failed`
+(dieselbe Konvention, die `screener-sync.js` probt) — findash ersetzt seinen Spiegel dann durch
+den Ausfall-Stub, statt das Brett von gestern als das von heute zu zeigen. Der Ordner wird nie
+geloescht: bei 404 schreibt findash nicht.
+
+**Fail-soft in CI.** Der Bau- und der `--check`-Schritt in `daily-pull.yml` laufen mit `|| true`:
+ein Ausfall dieses Bretts darf den Haupt-Export und den Deploy nie anhalten. Die Tests dagegen
+(`tests/rule40/*test.js`) sind hermetisch und stehen in der BLOCKIERENDEN Spur des Test-Gates.

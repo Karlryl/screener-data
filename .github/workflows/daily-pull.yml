@@ -2028,6 +2028,24 @@ jobs:
       - name: Verify findash-export v1 schema (contract gate)
         run: node scripts/write-findash-export.js --check
 
+      # Rule-of-40-Brett (Vertrag §14). Es liest den FERTIGEN v1-Export und die Snapshots und
+      # schreibt NUR den Unterordner v1/rule40/ — der Haupt-Export ist zu diesem Zeitpunkt schon
+      # geschrieben UND durch das Vertragstor oben gegangen.
+      #
+      # FAIL-SOFT mit Absicht (`|| true`): faellt dieses Brett aus, darf weder der Haupt-Export
+      # noch der Deploy stehen bleiben. Der Schreiber legt in dem Fall selbst den _failed-Marker
+      # (Vertrag §14, screener-sync.js probt ihn), also zeigt findash das Brett als ausgefallen
+      # statt den Stand von gestern. Ein stiller Altstand waere der schlimmere Ausgang.
+      #
+      # Die Datei-Zaehler-Tore oben zaehlen `v1/*.json` und `v1/full/*.json` — ein neuer
+      # Unterordner loest sie nicht aus (nachgesehen, nicht angenommen). Der Pages-Deploy kopiert
+      # `../outputs/findash-export/v1/.` komplett, rule40/ faehrt also automatisch mit.
+      - name: Build rule40 board (additive, fail-soft)
+        run: node scripts/write-rule40-export.js || true
+
+      - name: Verify rule40 board (additive, fail-soft)
+        run: node scripts/write-rule40-export.js --check || true
+
       # audit BH-114: frueher fing `|| { git init -b gh-pages }` JEDEN Clone-Fehler ab
       # — auch transiente DNS/Auth/Netz-Aussetzer, nicht nur einen tatsaechlich
       # fehlenden Branch. Ein transienter Fehler fuehrte dann zum Force-Push eines
