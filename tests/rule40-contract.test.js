@@ -166,17 +166,18 @@ test('JEDE Gruppe bekommt ihre eigenen TOP_N — Software darf die Rest-Gruppe n
   // Rueckfall-Waechter zum Befund vom 17.09.: 'other' musste sich ueber die GESAMT-Liste
   // qualifizieren. Weil Software das Mass dominiert, fiel die ganze Rest-Gruppe heraus,
   // obwohl jede ihrer Zeilen ueber der Aufnahmeschwelle lag — Karls zweite Ansicht waere
-  // leer gewesen. Der Test baut genau diese Konstellation.
+  // leer gewesen. Gemessen wird hier UNTERHALB der Anzeige-Grenze, wo die Kappe gilt.
+  const klein = 5e8;   // unter DISPLAY_LARGE_MCAP_USD
   const eintraege = [];
   for (let i = 0; i < W.TOP_N + 50; i++) {
     eintraege.push({
-      row: boardZeile({ ticker: 'SW' + i, revGrowthYoYPct: 50 + (i % 40) }),
+      row: boardZeile({ ticker: 'SW' + i, revGrowthYoYPct: 50 + (i % 40), marketCap: klein }),
       snap: snapshot({ fcfMarginTTM: 30 }),
     });
   }
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 60; i++) {
     eintraege.push({
-      row: boardZeile({ ticker: 'IN' + i, revGrowthYoYPct: 15 + (i % 10), sector: 'Industrials' }),
+      row: boardZeile({ ticker: 'IN' + i, revGrowthYoYPct: 15 + (i % 10), sector: 'Industrials', marketCap: klein }),
       snap: snapshot({ fcfMarginTTM: 28, industry: 'Specialty Industrial Machinery' }),
       branch: 'industrials',
     });
@@ -185,9 +186,49 @@ test('JEDE Gruppe bekommt ihre eigenen TOP_N — Software darf die Rest-Gruppe n
   const software = overview.rows.filter((r) => r.r40Group === 'software');
   const other = overview.rows.filter((r) => r.r40Group === 'other');
   assert.equal(software.length, W.TOP_N, 'die Software-Gruppe muss ihre vollen TOP_N bekommen');
-  assert.equal(other.length, 100, 'jede zulaessige Zeile der Rest-Gruppe muss im Brett stehen, hier ' + other.length);
+  assert.equal(other.length, 60, 'jede zulaessige Zeile der Rest-Gruppe muss im Brett stehen, hier ' + other.length);
   for (const r of other) assert.ok(r.r40 >= 40);
   f.aufraeumen();
+});
+
+test('oberhalb der Anzeige-Grenze wird NICHT gekappt — sonst laeuft die Standard-Ansicht leer', () => {
+  // Der Tab oeffnet mit "Marktkap. >= 1 Mrd. USD". Waere die Export-Kappe eine einzige
+  // Liste, fuellten die kleinen Werte sie auf und genau die Zeilen, die Karl standardmaessig
+  // sieht, fehlten.
+  const eintraege = [];
+  for (let i = 0; i < W.TOP_N + 40; i++) {
+    eintraege.push({
+      row: boardZeile({ ticker: 'BIG' + i, revGrowthYoYPct: 50 + (i % 30), marketCap: 5e9 }),
+      snap: snapshot({ fcfMarginTTM: 30 }),
+    });
+  }
+  const { f, overview, index } = baue(eintraege);
+  assert.equal(overview.rows.length, W.TOP_N + 40, 'grosse Werte duerfen nicht gekappt werden');
+  assert.equal(index.rule40.counts.exportedLargeCap, W.TOP_N + 40);
+  assert.equal(index.rule40.counts.exportedSmallCap, 0);
+  assert.equal(index.rule40.displayLargeMcapUsd, W.DISPLAY_LARGE_MCAP_USD);
+  f.aufraeumen();
+});
+
+test('ohne belegte USD-Marktkap zaehlt eine Zeile zur unteren Gruppe, nie zur oberen', () => {
+  // Ohne Vollboard-Zeile gibt es keinen Handelskurs-Beleg — und ohne Beleg keine
+  // Groessen-Behauptung. Eine solche Zeile darf die Standard-Ansicht nicht betreten.
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'AAA', revGrowthYoYPct: 60, marketCap: 5e9 }), snap: snapshot({ fcfMarginTTM: 30 }) },
+  ]);
+  const ohneBrett = snapshot({ fcfMarginTTM: 28, ticker: 'ZZZ', name: 'Zeta Inc' });
+  require('./rule40-fixture.js').setzeWachstum(ohneBrett, 55);
+  ohneBrett.meta.ticker = 'ZZZ';
+  fs.writeFileSync(path.join(f.snapshotsDir, 'ZZZ.json'), JSON.stringify(ohneBrett));
+  W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const index = JSON.parse(fs.readFileSync(path.join(f.outDir, 'index.json'), 'utf8'));
+  const overview = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8'));
+  const zzz = overview.rows.find((r) => r.ticker === 'ZZZ');
+  f.aufraeumen();
+  assert.ok(zzz, 'die Zeile gehoert ins Brett');
+  assert.equal(zzz.marketCap, null);
+  assert.equal(index.rule40.counts.exportedLargeCap, 1, 'nur AAA hat eine belegte Groesse');
+  assert.equal(index.rule40.counts.exportedSmallCap, 1);
 });
 
 bilanz('tests/rule40-contract.test.js');

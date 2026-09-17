@@ -88,8 +88,24 @@ const SOFTWARE_INDUSTRIES = Object.freeze([
 
 /** Aufnahme-Schwelle des Bretts. Karls Ansicht schaltet darueber (40/50/60) — das Brett liefert ab 40. */
 const R40_MIN = 40;
-/** Je Gruppe die besten TOP_N; das Brett ist die Vereinigung beider Listen. */
-const TOP_N = 150;
+/**
+ * Je Gruppe die besten TOP_N UNTERHALB der Anzeige-Grenze; oberhalb wird nicht gekappt.
+ * Warum zweigeteilt: der Tab oeffnet mit einem sichtbaren, umstellbaren Vorfilter
+ * "Marktkap. >= 1 Mrd. USD" — ein Investmentmanager liest einen 11-Mio.-Wert neben
+ * Palantir als Rauschen. Waere die Export-Kappe eine einzige Liste, fuellten die kleinen
+ * Werte sie auf und die Standard-Ansicht liefe leer.
+ */
+const TOP_N = 100;
+/**
+ * ANZEIGE-Konvention dieses Bretts, kein Scoring-Niveau und kein Waechter: oberhalb dieser
+ * Marktkapitalisierung wird jede Zeile mit r40 >= R40_MIN exportiert, unterhalb nur die
+ * besten TOP_N je Gruppe. Die Zahl entscheidet ueber die VOLLSTAENDIGKEIT der
+ * Standard-Ansicht, nicht ueber die Aufnahme einer einzelnen Zeile — jede Zeile unterhalb
+ * kann weiterhin ins Brett kommen, sie konkurriert nur um die 100 Plaetze.
+ * Zeilen ohne belegte USD-Marktkap (alle Namen ohne Vollboard-Zeile, siehe unten) zaehlen
+ * zur unteren Gruppe: ohne Beleg gibt es keine Groessen-Behauptung.
+ */
+const DISPLAY_LARGE_MCAP_USD = 1e9;
 /**
  * Das Vorjahresquartal muss mindestens dieser Anteil eines Durchschnittsquartals (revenueTTM/4)
  * sein — darunter ist es eine Teilmeldung/Umstellung und die YoY-Zahl ein Meldeartefakt.
@@ -400,11 +416,14 @@ function sammleKandidaten(opts = {}) {
 
     const quartalsEndeMs = neuestesQuartalsEnde(snapshot);
     if (quartalsEndeMs === null) {
-      // KEIN Ausschluss — aber sichtbar. Ohne Zaehler sieht "der Waechter hat nichts
-      // gefunden" genauso aus wie "der Waechter hat geprueft und nichts beanstandet",
-      // und die Zeile traegt dann ein quartalsEnde: null, das niemand einordnen kann.
-      abgewiesen.frischeUnbekannt++;
-    } else if ((generatedMs - quartalsEndeMs) / 86400000 > MAX_FISCAL_AGE_DAYS) {
+      // ANZEIGE-Regel, keine Waechter-Logik: "unbekannt" ist nach wie vor nicht "veraltet",
+      // und der Frische-Waechter faellt hier ausdruecklich KEIN Urteil. Aber wenn niemand
+      // sagen kann, ueber welchen Zeitraum eine Zahl spricht, gehoert sie nicht in eine
+      // Rangliste, die einem Profi gezeigt wird — er kann sie nicht nachpruefen.
+      // Weiterhin gezaehlt, damit der Unterschied zu "geprueft und in Ordnung" sichtbar ist.
+      abgewiesen.frischeUnbekannt++; continue;
+    }
+    if ((generatedMs - quartalsEndeMs) / 86400000 > MAX_FISCAL_AGE_DAYS) {
       abgewiesen.veraltet++; continue;
     }
 
@@ -421,6 +440,10 @@ function sammleKandidaten(opts = {}) {
       // genau die Regel, die fcfTrack bei gueltiger Marge anwendet.
       track: auchAufBrett ? auchAufBrett.track : (fcf >= 0 ? 'profitable' : 'unprofitable'),
       onBoard: !!auchAufBrett,
+      // NUR die belegte USD-Marktkap der Vollboard-Zeile. Ohne Vollboard-Zeile gibt es
+      // keinen Handelskurs-Beleg (write-findash-export.js:298-311) und damit keine
+      // Groessen-Behauptung — die Zeile faellt in die untere Gruppe.
+      marketCap: auchAufBrett && istZahl(auchAufBrett.row.marketCap) ? auchAufBrett.row.marketCap : null,
       meta,
       wachstumRoh,
       fcfMarginPct: fcf,
@@ -471,31 +494,36 @@ function baueZeilen(kandidaten) {
 
   const nachR40 = (a, b) => b.r40 - a.r40 || a.ticker.localeCompare(b.ticker);
   mitR40.sort(nachR40);
-  // JE GRUPPE die besten TOP_N, dann die Vereinigung. Vorher bekam nur 'software' eine
-  // eigene Liste und 'other' musste sich ueber die Gesamtliste qualifizieren — dominiert
-  // Software das Mass (und das tut es), fiel die ganze Rest-Gruppe heraus: 200 Software-
-  // Zeilen und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen, davon 0 'other',
-  // obwohl alle 100 ueber der Aufnahmeschwelle lagen. Karls zweite Ansicht waere leer
-  // gewesen (Befund JS-Review 17.09., nachgestellt). Die Gesamt-Top-150 ist in dieser
-  // Vereinigung enthalten: wer gesamt vorne liegt, liegt auch in seiner Gruppe vorne.
+  // JE GRUPPE zwei Toepfe: oberhalb der Anzeige-Grenze ALLES, unterhalb die besten TOP_N.
+  // Vorher bekam nur 'software' eine eigene Liste und 'other' musste sich ueber die
+  // Gesamtliste qualifizieren — dominiert Software das Mass (und das tut es), fiel die ganze
+  // Rest-Gruppe heraus: 200 Software-Zeilen und 100 zulaessige Industrie-Zeilen ergaben 150
+  // Zeilen, davon 0 'other' (Befund JS-Review 17.09., nachgestellt).
+  const grossGenug = (k) => istZahl(k.marketCap) && k.marketCap >= DISPLAY_LARGE_MCAP_USD;
   const jeGruppe = new Map();
+  let gross = 0, klein = 0;
   for (const k of mitR40) {
-    if (!jeGruppe.has(k.gruppe)) jeGruppe.set(k.gruppe, []);
-    const liste = jeGruppe.get(k.gruppe);
-    if (liste.length < TOP_N) liste.push(k);
+    if (!jeGruppe.has(k.gruppe)) jeGruppe.set(k.gruppe, { gross: [], klein: [] });
+    const toepfe = jeGruppe.get(k.gruppe);
+    if (grossGenug(k)) { toepfe.gross.push(k); gross++; }
+    else if (toepfe.klein.length < TOP_N) { toepfe.klein.push(k); klein++; }
   }
 
   const gewaehlt = new Map();
   // Beide Listen sind nach r40 fallend: der ERSTE Treffer eines Tickers ist der beste.
   // set() wuerde ihn durch den schlechteren ueberschreiben.
-  for (const k of Array.from(jeGruppe.values()).flat()) {
-    if (!gewaehlt.has(k.ticker)) gewaehlt.set(k.ticker, k);
+  for (const t of jeGruppe.values()) {
+    for (const k of t.gross.concat(t.klein)) {
+      if (!gewaehlt.has(k.ticker)) gewaehlt.set(k.ticker, k);
+    }
   }
   const ausgewaehlt = Array.from(gewaehlt.values()).sort(nachR40);
 
   return {
     bounds,
     ueber40: mitR40.length,
+    grossExportiert: gross,
+    kleinExportiert: klein,
     rows: ausgewaehlt.map((k, i) => {
       const row = k.row || {};
       const ov = row.overview || {};
@@ -579,6 +607,7 @@ function buildIndex(index, rows, meta) {
       maxFiscalAgeDays: MAX_FISCAL_AGE_DAYS,
       maxFcfMarginPct: MAX_FCF_MARGIN_PCT,
       minWinsorSample: MIN_WINSOR_SAMPLE,
+      displayLargeMcapUsd: DISPLAY_LARGE_MCAP_USD,
       sectorExclusions: SEKTOR_AUSSCHLUSS,
       softwareIndustries: SOFTWARE_INDUSTRIES,
       // p1/p99 des eigenen Kandidaten-Universums — damit die Oberflaeche sagen kann, wo
@@ -592,12 +621,14 @@ function buildIndex(index, rows, meta) {
         computable: meta.kandidaten,
         above40: meta.ueber40,
         exported: rows.length,
+        exportedLargeCap: meta.grossExportiert,
+        exportedSmallCap: meta.kleinExportiert,
         excludedNotRouted: meta.abgewiesen.nichtGeroutet,
         excludedDataSuspect: meta.abgewiesen.datenSuspekt,
         excludedSector: meta.abgewiesen.sektorAusgeschlossen,
         excludedOutlier: meta.abgewiesen.einheitenVerdacht,
         excludedStale: meta.abgewiesen.veraltet,
-        freshnessUnknown: meta.abgewiesen.frischeUnbekannt,
+        excludedNoPeriod: meta.abgewiesen.frischeUnbekannt,
         excludedTinyBase: meta.abgewiesen.basisQuartalStub,
         excludedFcfAboveRevenue: meta.abgewiesen.fcfUeberUmsatz,
         excludedDuplicateIssuer: meta.abgewiesen.dupEmittent,
@@ -671,7 +702,7 @@ function build(opts = {}) {
     throw new Error('[rule40] kein einziger rechenbarer Kandidat aus ' + gelesen + ' Zeilen ('
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
-  const { rows, bounds, ueber40 } = baueZeilen(kandidaten);
+  const { rows, bounds, ueber40, grossExportiert, kleinExportiert } = baueZeilen(kandidaten);
   // Die Leer-Pruefung sitzt HINTER der Auswahl, nicht davor: Kandidaten zu haben und trotzdem
   // keine Zeile ueber der Schwelle ist derselbe unbelegte Zustand wie gar keine Kandidaten —
   // er wuerde sonst als leeres, gueltiges Brett mit Exit 0 veroeffentlicht (Befund F6).
@@ -683,7 +714,7 @@ function build(opts = {}) {
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen, aufBrett, ueber40,
-    universeBasis: 'routed',
+    grossExportiert, kleinExportiert, universeBasis: 'routed',
   });
   schreibeBrett(outDir, overview, indexDatei);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds, ueber40, aufBrett };
@@ -841,7 +872,7 @@ if (require.main === module) {
 
 module.exports = {
   SCHEMA, BOARD_ID, BOARD_STATUS, FAILED_NAME, SOFTWARE_INDUSTRIES,
-  R40_MIN, TOP_N, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
+  R40_MIN, TOP_N, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt,

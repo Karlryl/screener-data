@@ -173,8 +173,9 @@ test('index.json traegt den Erklaer-Kasten: Universumsbasis, Schranken und jeden
   assert.equal(index.rule40.universeBasis, 'routed');
   for (const feld of ['universe', 'onBoard', 'computable', 'above40', 'exported', 'excludedNotRouted',
     'excludedSector', 'excludedOutlier', 'excludedStale', 'excludedTinyBase', 'excludedFcfAboveRevenue',
-    'excludedDuplicateIssuer', 'excludedDataSuspect', 'freshnessUnknown', 'noValidMargin',
-    'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard']) {
+    'excludedDuplicateIssuer', 'excludedDataSuspect', 'excludedNoPeriod', 'noValidMargin',
+    'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard',
+    'exportedLargeCap', 'exportedSmallCap']) {
     assert.equal(typeof c[feld], 'number', 'Zaehler ' + feld + ' fehlt');
   }
   assert.equal(c.exported, 2);

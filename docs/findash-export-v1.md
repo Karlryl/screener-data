@@ -579,11 +579,26 @@ fuehrt jeden vorkommenden `formulaId` als `diagnostic` — `shapeOverviewRow` su
 genau darueber. `rank` ist der Rang nach `r40` INNERHALB des Bretts, `generated_at` die Kopie
 aus dem `index.json` desselben Laufs (findash prueft das, `screener.js:364`).
 
-**Auswahl.** Aufgenommen wird `r40 >= 40`; **jede Gruppe** (`software`, `other`) bekommt ihre
-eigenen besten 150, das Brett ist deren Vereinigung. Nicht "150 Software plus 150 gesamt":
-Software dominiert das Mass, und eine Gesamt-Liste als zweites Bein liess die ganze Rest-Gruppe
-herausfallen (gemessen: 200 Software- und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen,
-davon 0 aus der Rest-Gruppe). Die Gesamt-Top-150 ist in der Vereinigung enthalten.
+**Auswahl.** Aufgenommen wird `r40 >= 40`. **Jede Gruppe** (`software`, `other`) hat ihre
+eigene Auswahl — nicht "Software plus Gesamtliste": Software dominiert das Mass, und eine
+Gesamt-Liste als zweites Bein liess die ganze Rest-Gruppe herausfallen (gemessen: 200
+Software- und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen, davon 0 aus der
+Rest-Gruppe).
+
+Innerhalb einer Gruppe gilt eine **ANZEIGE-Konvention**, kein Waechter: oberhalb von
+`DISPLAY_LARGE_MCAP_USD` (1 Mrd. USD, belegte USD-Marktkap) wird jede Zeile exportiert,
+unterhalb nur die besten `TOP_N` (100). Grund: der Tab oeffnet mit einem sichtbaren,
+umstellbaren Vorfilter „Marktkap. >= 1 Mrd." — waere die Export-Kappe EINE Liste, fuellten
+die kleinen Werte sie auf und genau die Standard-Ansicht liefe leer. Die Grenze entscheidet
+also ueber die VOLLSTAENDIGKEIT einer Ansicht, nie ueber die Aufnahme einer einzelnen Zeile.
+Zaehler: `counts.exportedLargeCap` / `counts.exportedSmallCap`.
+
+Zeilen **ohne belegte USD-Marktkap** zaehlen zur unteren Gruppe. Das betrifft jeden Namen
+ohne Vollboard-Zeile: der Beleg der Handelskurs-Umrechnung entsteht im Haupt-Schreiber
+(`write-findash-export.js:298-311`), nicht hier, und ohne Beleg gibt es keine
+Groessen-Behauptung. Folge, die man kennen muss: die Standard-Ansicht enthaelt damit nur
+Namen, die auch auf einem Vollboard stehen. Sie zu weiten ist eine Aufgabe des
+Haupt-Exports, nicht dieses Bretts.
 
 **Waechter** (alle als benannte Konstanten im Schreiber, jeder mit Begruendung im Quelltext):
 
@@ -592,6 +607,8 @@ davon 0 aus der Rest-Gruppe). Die Gesamt-Top-150 ist in der Vereinigung enthalte
 | `MIN_BASE_QUARTER_SHARE` | 0,25 | Vorjahresquartal unter einem Viertel eines Durchschnittsquartals ist eine Teilmeldung, keine Vervielfachung (`revQuartalsYoY` prueft nur `b > 0`). Gesunder Koerper: p5 = 0,59, p50 = 0,92 |
 | `MAX_FCF_MARGIN_PCT` | 100 | Freier Cashflow ueber dem Umsatz ist Bilanz-/Einheiten-Artefakt; Zeile wird VERWORFEN, nicht geklemmt (in Reihe mit `OPMARGIN_CAP = 1.0`) |
 | `MAX_FISCAL_AGE_DAYS` | 550 | Abstand von `generated_at` zum juengsten Quartalsende. Gesunder Koerper p50 = p95 = 151 Tage; 4,1 % liegen ueber 180, 2,4 % ueber 550, 2,2 % ueber 730 — weitgehend DIESELBEN Namen, bis hinauf zu 8.003 Tagen. 18 Monate lassen jeden Jahres- und Halbjahresmelder durch und fallen erst dort, wo keine Meldekadenz den Abstand mehr erklaert |
+| `DISPLAY_LARGE_MCAP_USD` | 1e9 | ANZEIGE-Konvention (s. Auswahl): oberhalb ungekappt, unterhalb `TOP_N` je Gruppe. Kein Scoring-Niveau, kein Waechter |
+| `TOP_N` | 100 | Kappe je Gruppe UNTERHALB der Anzeige-Grenze |
 | `MIN_WINSOR_SAMPLE` | 200 | Unter so vielen Kandidaten IST die p99-Schranke die oberste Beobachtung — dann wird nicht geklemmt und `growthBounds` steht sichtbar auf `null` |
 | `SEKTOR_AUSSCHLUSS` | Financial Services, Real Estate | Eine FCF-Marge sagt dort nichts ueber das operative Geschaeft; Karls Ansage lautet "alle Branchen ohne Finanzwerte". Der Ausschluss gehoert in den SCHREIBER: sonst verbrauchen diese Zeilen die Top-150-Plaetze. Der Router nimmt nur Bilanz-Banken, Versicherer und mREITs heraus — Immobilien-REITs und Vermoegensverwalter blieben und fuehrten die Liste an |
 
@@ -630,6 +647,15 @@ verschiedenen r40-Werten, weil die Beine unterschiedlich gute Daten tragen.
 `excludedTinyBase`, `excludedFcfAboveRevenue`, `noValidMargin`, `noGrowth`, `noRank`,
 `unreadableSnapshot`, `missingFullBoard`). Ohne diese Zaehler sieht "kleines Brett" genauso aus
 wie "Snapshots fehlen".
+
+**Kein lesbarer Zeitraum, kein Platz im Brett.** Zeilen, fuer die weder
+`timeseries.revenueQEnds[0]` noch `annual.annualRevEnds[0]` lesbar sind, werden
+ausgeschlossen (`counts.excludedNoPeriod`, 336 am Stand 2026-08-29). Das ist ausdruecklich
+eine ANZEIGE-Regel und keine Waechter-Logik: „unbekannt" bleibt fuer den Frische-Waechter
+etwas anderes als „veraltet", und er faellt hier kein Urteil. Aber eine Zahl, deren Zeitraum
+niemand benennen kann, gehoert nicht in eine Rangliste, die einem Profi vorgelegt wird — er
+kann sie nicht nachpruefen. Ergebnis: jede Zeile im Brett traegt einen pruefbaren
+`quartalsEnde`.
 
 **Ausfall.** Scheitert der Schreiber ODER faellt sein eigener `--check`, wird der Ordner geleert
 und traegt danach NUR `_failed` (dieselbe Konvention, die `screener-sync.js` probt) — findash

@@ -140,11 +140,11 @@ test('ohne Quartalsenden zieht der Waechter die JAHRESreihe heran', () => {
   abgewiesenWegen('veraltet', {}, { revenueQEnds: [], annualRevEnds: ['2020-03-31', '2019-03-31'] });
 });
 
-test('ohne JEDEN Zeitraum wird nicht blind verworfen, aber gezaehlt', () => {
-  const { res } = laufMitEinerZeile({}, { revenueQEnds: [] });
-  assert.equal(res.rows, 1, 'die Zeile darf bleiben');
-  assert.equal(res.abgewiesen.frischeUnbekannt, 1,
-    'ohne Zaehler sieht "nicht pruefbar" aus wie "geprueft und in Ordnung"');
+test('ohne JEDEN lesbaren Zeitraum fliegt die Zeile raus — Anzeige-Regel, nicht Waechter-Logik', () => {
+  // "Unbekannt" ist nach wie vor nicht "veraltet"; der Frische-Waechter faellt hier kein
+  // Urteil. Aber wer nicht sagen kann, ueber welchen Zeitraum eine Zahl spricht, gehoert
+  // nicht in eine Rangliste, die einem Profi gezeigt wird — er kann sie nicht nachpruefen.
+  abgewiesenWegen('frischeUnbekannt', {}, { revenueQEnds: [], annualRevEnds: [] });
 });
 
 // --- Belegbarkeit ----------------------------------------------------------
