@@ -55,6 +55,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
 const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
@@ -340,7 +341,11 @@ function sammleKandidaten(opts = {}) {
   };
   let gelesen = 0;
 
-  const dateien = fs.readdirSync(snapshotsDir).filter((f) => f.endsWith('.json') && !f.startsWith('_'));
+  // NICHT `!f.startsWith('_')`: Ticker, deren Name unter Windows reserviert ist (CON, PRN,
+  // AUX ...), liegen als `_CON.json` auf der Platte. Der Blanket-Filter warf sie still aus
+  // dem Universum; isMetadataSnapshot (lib/snapshot-fs.js) kennt genau die zwei echten
+  // Metadaten-Dateien. Waechter: tests/p1-welle8-metadata-filter.test.js.
+  const dateien = fs.readdirSync(snapshotsDir).filter((f) => f.endsWith('.json') && !isMetadataSnapshot(f));
   for (const datei of dateien) {
     gelesen++;
     const ticker = datei.slice(0, -5);
