@@ -162,4 +162,32 @@ test('ein v2-Bump des Haupt-Index haelt das Brett an, statt es still weiterzubau
   f.aufraeumen();
 });
 
+test('JEDE Gruppe bekommt ihre eigenen TOP_N — Software darf die Rest-Gruppe nicht verdraengen', () => {
+  // Rueckfall-Waechter zum Befund vom 17.09.: 'other' musste sich ueber die GESAMT-Liste
+  // qualifizieren. Weil Software das Mass dominiert, fiel die ganze Rest-Gruppe heraus,
+  // obwohl jede ihrer Zeilen ueber der Aufnahmeschwelle lag — Karls zweite Ansicht waere
+  // leer gewesen. Der Test baut genau diese Konstellation.
+  const eintraege = [];
+  for (let i = 0; i < W.TOP_N + 50; i++) {
+    eintraege.push({
+      row: boardZeile({ ticker: 'SW' + i, revGrowthYoYPct: 50 + (i % 40) }),
+      snap: snapshot({ fcfMarginTTM: 30 }),
+    });
+  }
+  for (let i = 0; i < 100; i++) {
+    eintraege.push({
+      row: boardZeile({ ticker: 'IN' + i, revGrowthYoYPct: 15 + (i % 10), sector: 'Industrials' }),
+      snap: snapshot({ fcfMarginTTM: 28, industry: 'Specialty Industrial Machinery' }),
+      branch: 'industrials',
+    });
+  }
+  const { f, overview } = baue(eintraege);
+  const software = overview.rows.filter((r) => r.r40Group === 'software');
+  const other = overview.rows.filter((r) => r.r40Group === 'other');
+  assert.equal(software.length, W.TOP_N, 'die Software-Gruppe muss ihre vollen TOP_N bekommen');
+  assert.equal(other.length, 100, 'jede zulaessige Zeile der Rest-Gruppe muss im Brett stehen, hier ' + other.length);
+  for (const r of other) assert.ok(r.r40 >= 40);
+  f.aufraeumen();
+});
+
 bilanz('tests/rule40/contract.test.js');

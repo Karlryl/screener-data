@@ -296,11 +296,27 @@ function baueZeilen(kandidaten) {
 
   const nachR40 = (a, b) => b.r40 - a.r40 || a.row.ticker.localeCompare(b.row.ticker);
   mitR40.sort(nachR40);
-  const software = mitR40.filter((k) => k.gruppe === 'software').slice(0, TOP_N);
-  const gesamt = mitR40.slice(0, TOP_N);
+  // JE GRUPPE die besten TOP_N, dann die Vereinigung. Vorher bekam nur 'software' eine
+  // eigene Liste und 'other' musste sich ueber die Gesamtliste qualifizieren — dominiert
+  // Software das Mass (und das tut es), fiel die ganze Rest-Gruppe heraus: 200 Software-
+  // Zeilen und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen, davon 0 'other',
+  // obwohl alle 100 ueber der Aufnahmeschwelle lagen. Karls zweite Ansicht waere leer
+  // gewesen (Befund JS-Review 17.09., nachgestellt). Die Gesamt-Top-150 ist in dieser
+  // Vereinigung enthalten: wer gesamt vorne liegt, liegt auch in seiner Gruppe vorne.
+  const jeGruppe = new Map();
+  for (const k of mitR40) {
+    if (!jeGruppe.has(k.gruppe)) jeGruppe.set(k.gruppe, []);
+    const liste = jeGruppe.get(k.gruppe);
+    if (liste.length < TOP_N) liste.push(k);
+  }
 
   const gewaehlt = new Map();
-  for (const k of software.concat(gesamt)) gewaehlt.set(k.row.ticker, k);
+  // Beide Listen sind nach r40 fallend: der ERSTE Treffer eines Tickers ist der beste.
+  // set() wuerde ihn durch den schlechteren ueberschreiben, falls derselbe Ticker aus zwei
+  // Branchen-Dateien kaeme (Sektor-Umhaengung, halb geschriebene Datei).
+  for (const k of Array.from(jeGruppe.values()).flat()) {
+    if (!gewaehlt.has(k.row.ticker)) gewaehlt.set(k.row.ticker, k);
+  }
   const ausgewaehlt = Array.from(gewaehlt.values()).sort(nachR40);
 
   return {
@@ -382,12 +398,34 @@ function buildIndex(index, rows, meta) {
 // ---------------------------------------------------------------------------
 // Schreiben
 // ---------------------------------------------------------------------------
+/**
+ * Vor jedem rmSync: der Zielordner MUSS der rule40-Ordner unter dem v1-Verzeichnis sein.
+ * leereVerzeichnis loescht rekursiv und wird auch auf dem FEHLER-Weg aufgerufen — ein
+ * falsch gesetztes RULE40_OUT_DIR (z. B. auf v1 selbst) wuerde den ganzen Haupt-Export
+ * loeschen, und `|| true` im Workflow hielte den Lauf dabei gruen (Befund F10).
+ */
+function pruefeZielordner(dir, v1Dir) {
+  const ziel = path.resolve(dir);
+  if (path.basename(ziel) !== BOARD_ID) {
+    throw new Error('[rule40] Zielordner "' + ziel + '" heisst nicht "' + BOARD_ID
+      + '" — hier wird rekursiv geloescht, das passiert nur im eigenen Ordner.');
+  }
+  if (v1Dir) {
+    const wurzel = path.resolve(v1Dir);
+    if (path.dirname(ziel) !== wurzel) {
+      throw new Error('[rule40] Zielordner "' + ziel + '" liegt nicht direkt unter "' + wurzel + '".');
+    }
+  }
+  return ziel;
+}
+
 function leereVerzeichnis(dir) {
   fs.rmSync(dir, { recursive: true, force: true });
   fs.mkdirSync(dir, { recursive: true });
 }
 
-function schreibeBrett(outDir, overview, indexDatei) {
+function schreibeBrett(outDir, overview, indexDatei, v1Dir) {
+  pruefeZielordner(outDir, v1Dir);
   leereVerzeichnis(outDir);
   writeJsonAtomic(path.join(outDir, 'overview.json'), overview);
   writeJsonAtomic(path.join(outDir, 'index.json'), indexDatei);
@@ -398,7 +436,8 @@ function schreibeBrett(outDir, overview, indexDatei) {
  * findash ersetzt seinen lokalen Spiegel dann durch den Ausfall-Stub, statt das Brett von
  * gestern als das von heute zu servieren (screener-sync.js:203-213).
  */
-function schreibeFehlmarker(outDir, grund) {
+function schreibeFehlmarker(outDir, grund, v1Dir) {
+  pruefeZielordner(outDir, v1Dir);
   leereVerzeichnis(outDir);
   writeJsonAtomic(path.join(outDir, FAILED_NAME), {
     schema: SCHEMA,
@@ -418,11 +457,19 @@ function build(opts = {}) {
       + JSON.stringify(abgewiesen) + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
   }
   const { rows, bounds } = baueZeilen(kandidaten);
+  // Die Leer-Pruefung sitzt HINTER der Auswahl, nicht davor: Kandidaten zu haben und trotzdem
+  // keine Zeile ueber der Schwelle ist derselbe unbelegte Zustand wie gar keine Kandidaten —
+  // er wuerde sonst als leeres, gueltiges Brett mit Exit 0 veroeffentlicht (Befund F6).
+  if (!rows.length) {
+    throw new Error('[rule40] kein einziger Kandidat ueber r40 >= ' + R40_MIN + ' (' + kandidaten.length
+      + ' rechenbar aus ' + gelesen + ' gelesen, ' + JSON.stringify(abgewiesen)
+      + ') — ein leeres Brett waere eine Aussage, die niemand belegt hat.');
+  }
   const overview = buildOverview(index, rows);
   const indexDatei = buildIndex(index, rows, {
     bounds, kandidaten: kandidaten.length, gelesen, abgewiesen,
   });
-  schreibeBrett(outDir, overview, indexDatei);
+  schreibeBrett(outDir, overview, indexDatei, v1Dir);
   return { outDir, rows: rows.length, kandidaten: kandidaten.length, gelesen, abgewiesen, bounds };
 }
 
@@ -505,6 +552,16 @@ function check(opts = {}) {
         }
       } else melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): revGrowthPctUsed/fcfMarginPct fehlen — r40 waere nicht nachrechenbar.');
     }
+    // Die EBITDA-Spalte ist eine Nebenspalte, aber sie behauptet dieselbe Arithmetik.
+    // Ohne diese Zeile koennte ein Rechenfehler in ihr unbemerkt ausgeliefert werden.
+    if (istZahl(r.r40Ebitda) && istZahl(r.revGrowthPctUsed) && istZahl(r.ebitdaMarginPct)) {
+      const summeE = round1(r.revGrowthPctUsed + r.ebitdaMarginPct);
+      if (Math.abs(summeE - r.r40Ebitda) > 0.11) {
+        melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): r40Ebitda ' + r.r40Ebitda
+          + ' != revGrowthPctUsed ' + r.revGrowthPctUsed + ' + ebitdaMarginPct '
+          + r.ebitdaMarginPct + ' (= ' + summeE + ').');
+      }
+    }
     if (r.r40Group !== 'software' && r.r40Group !== 'other') {
       melde('[rule40] Zeile ' + i + ' (' + r.ticker + '): r40Group "' + r.r40Group + '" ist kein erlaubter Wert.');
     }
@@ -534,7 +591,7 @@ function main(argv) {
     // (`|| true`). Der Marker macht aus "durchgewunken" ein sichtbares "ausgefallen".
     if (!res.failedMarker) {
       try {
-        schreibeFehlmarker(outDir, 'check failed: ' + res.errors.join(' | '));
+        schreibeFehlmarker(outDir, 'check failed: ' + res.errors.join(' | '), v1Dir);
         console.error('::warning::[rule40] ' + FAILED_NAME + ' geschrieben — das Brett faellt sichtbar aus, statt fehlerhaft ausgeliefert zu werden.');
       } catch (e) {
         console.error('::error::[rule40] konnte nach dem gescheiterten --check keinen Fehl-Marker schreiben: ' + (e && e.message ? e.message : e));
@@ -553,7 +610,7 @@ function main(argv) {
   } catch (e) {
     console.error('::error::[rule40] Build gescheitert: ' + (e && e.message ? e.message : e));
     try {
-      schreibeFehlmarker(outDir, (e && e.message) || e);
+      schreibeFehlmarker(outDir, (e && e.message) || e, v1Dir);
       console.error('::warning::[rule40] ' + FAILED_NAME + ' geschrieben — findash zeigt das Brett als ausgefallen statt den Stand von gestern.');
     } catch (e2) {
       console.error('::error::[rule40] konnte nicht einmal den Fehl-Marker schreiben: ' + (e2 && e2.message ? e2.message : e2));
@@ -573,5 +630,5 @@ module.exports = {
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
-  schreibeBrett, schreibeFehlmarker, build, check, main,
+  schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,
 };

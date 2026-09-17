@@ -22,6 +22,7 @@ const { laeufer } = require('./fixture.js');
 const { test, bilanz } = laeufer();
 
 const daily = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'daily-pull.yml'), 'utf8');
+const prCheck = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'pr-check.yml'), 'utf8');
 const gate = fs.readFileSync(path.join(REPO, 'scripts', 'test-gate.js'), 'utf8');
 
 test('daily-pull ruft den Schreiber auf', () => {
@@ -53,9 +54,20 @@ test('die Datei-Zaehler-Tore zaehlen nur v1/*.json und v1/full/*.json', () => {
     'ein rekursives Zaehl-Tor wuerde am neuen Unterordner anschlagen');
 });
 
-test('das Test-Gate sammelt tests/rule40/ in der blockierenden Spur ein', () => {
-  assert.match(gate, /BLOCKING_GLOBS = \[[^\]]*'tests\/rule40\/\*test\.js'/,
-    'ohne den Glob laufen diese Tests in keinem der beiden Workflows');
+test('der PR-Check faehrt die Tests dieses Bretts SCHARF (kein || true)', () => {
+  assert.match(prCheck, /name: rule40-Tests/, 'ohne den Schritt laeuft hier nichts');
+  const block = prCheck.slice(prCheck.indexOf('name: rule40-Tests'));
+  const ende = block.indexOf('\n      - name:', 1);
+  const schritt = ende > -1 ? block.slice(0, ende) : block;
+  assert.match(schritt, /tests\/rule40\/\*test\.js/);
+  assert.match(schritt, /node "\$f"/);
+  assert.ok(!/\|\| true/.test(schritt), 'der Testschritt darf NICHT fail-soft sein');
+  assert.match(schritt, /::error::keine tests\/rule40/, 'ein leerer Treffer muss laut sein, nicht still gruen');
+});
+
+test('BLOCKING_GLOBS bleibt unberuehrt (tests/scoring ist Sperrzone, BH-035 nagelt die Liste fest)', () => {
+  assert.match(gate, /BLOCKING_GLOBS = \['tests\/\*test\.js', 'tests\/scoring\/\*test\.js', 'lib\/\*test\.js'\];/,
+    'ein vierter Glob braeche tests/scoring/bh-b09-dailyyml.test.js (BH-035) — ein gesperrter Waechter');
 });
 
 bilanz('tests/rule40/ci-wiring.test.js');
