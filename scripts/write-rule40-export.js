@@ -63,7 +63,10 @@ const axesFns = require('../src/scoring/axes.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_V1_DIR = path.join(REPO_ROOT, 'outputs', 'findash-export', 'v1');
-const DEFAULT_SNAPSHOTS_DIR = path.join(REPO_ROOT, 'snapshots');
+// FINDASH_SNAPSHOTS_DIR ist die Naht, die write-findash-export.js:175 benutzt. Beide
+// Schreiber MUESSEN dieselbe Snapshot-Menge sehen: laufen sie auseinander, rechnet dieses
+// Brett gegen eine andere Population als der Export, und das faellt niemandem auf.
+const DEFAULT_SNAPSHOTS_DIR = process.env.FINDASH_SNAPSHOTS_DIR || path.join(REPO_ROOT, 'snapshots');
 
 const SCHEMA = 'findash-export/v1';        // Schema-Pin des Konsumenten (screener-contract.js:53)
 const BOARD_ID = 'rule40';

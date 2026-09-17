@@ -75,4 +75,14 @@ test('BLOCKING_GLOBS bleibt unberuehrt (tests/scoring ist Sperrzone, BH-035 nage
     'ein vierter Glob braeche tests/scoring/bh-b09-dailyyml.test.js (BH-035)');
 });
 
+test('der Schreiber liest dieselbe Snapshot-Naht wie der Haupt-Export', () => {
+  // write-findash-export.js:175 loest den Snapshot-Ordner ueber FINDASH_SNAPSHOTS_DIR auf.
+  // Wuerde dieses Brett die Naht nicht kennen, rechnete es nach einer Verlegung gegen eine
+  // ANDERE Population als der Export — und niemand saehe es.
+  const schreiber = fs.readFileSync(path.join(REPO, 'scripts', 'write-rule40-export.js'), 'utf8');
+  const haupt = fs.readFileSync(path.join(REPO, 'scripts', 'write-findash-export.js'), 'utf8');
+  assert.match(haupt, /FINDASH_SNAPSHOTS_DIR/, 'der Haupt-Export kennt die Naht nicht mehr — dann stimmt dieser Test nicht mehr');
+  assert.match(schreiber, /process\.env\.FINDASH_SNAPSHOTS_DIR/);
+});
+
 bilanz('tests/rule40-ci-wiring.test.js');
