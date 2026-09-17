@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-15T09:00:14.802Z",
+  "generated_at": "2026-09-17T08:58:32.020Z",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74.1,
-    "generated_at": "2026-09-15T08:52:07.666Z"
+    "coverage_pct": 74.2,
+    "generated_at": "2026-09-17T08:51:34.251Z"
   },
-  "generatedFromSnapshots": 15884,
+  "generatedFromSnapshots": 15900,
   "boards": [
     "quality-consumer-discretionary",
     "quality-consumer-staples",
@@ -41,11 +41,11 @@
       "unprofitable": 0
     },
     "quality-consumer-staples": {
-      "profitable": 512,
+      "profitable": 510,
       "unprofitable": 0
     },
     "quality-energy": {
-      "profitable": 336,
+      "profitable": 339,
       "unprofitable": 0
     },
     "quality-health-care": {
@@ -53,7 +53,7 @@
       "unprofitable": 0
     },
     "quality-industrials": {
-      "profitable": 1931,
+      "profitable": 1938,
       "unprofitable": 0
     },
     "quality-it-services": {
@@ -61,11 +61,11 @@
       "unprofitable": 0
     },
     "quality-materials": {
-      "profitable": 908,
+      "profitable": 909,
       "unprofitable": 0
     },
     "quality-semiconductors": {
-      "profitable": 297,
+      "profitable": 299,
       "unprofitable": 0
     },
     "quality-software-comm-services": {
@@ -73,28 +73,28 @@
       "unprofitable": 0
     },
     "quality-tech-hardware": {
-      "profitable": 563,
+      "profitable": 566,
       "unprofitable": 0
     },
     "quality-utilities": {
-      "profitable": 349,
+      "profitable": 348,
       "unprofitable": 0
     }
   },
   "excluded": {
-    "balance-sheet-bank": 725,
+    "balance-sheet-bank": 721,
     "data-suspect": 24,
     "dup-issuer": 2631,
     "insurer": 299,
     "lender-gp0": 85,
     "mortgage-reit": 16,
-    "no-axes": 5,
-    "no-revenue": 132,
-    "no-sector": 84,
+    "no-axes": 6,
+    "no-revenue": 130,
+    "no-sector": 85,
     "non-operating-rev": 133,
-    "non-us": 1580,
-    "qc-not-compounder": 1504,
-    "qc-sector-unsupported": 1185,
+    "non-us": 1577,
+    "qc-not-compounder": 1517,
+    "qc-sector-unsupported": 1182,
     "telecom": 193
   }
 }
