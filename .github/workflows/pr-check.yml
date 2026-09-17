@@ -71,6 +71,7 @@ jobs:
       - name: Test-Gate (beide Spuren)
         run: node scripts/test-gate.js --mode=all
 
+
       # ── A2 (Ratsbrief 06.09., Master ~75 %): Live-Universum-Gate im PR-Check ─────────────────
       # Sieben tests/scoring-Suiten skippen im Test-Gate oben BEWUSST (kein Universum; test-gate.js
       # :205-219). Die scharfe Stufe lief bisher nur im scoring-Job des Tageslaufs — ein Scoring-PR

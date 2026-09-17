@@ -66,6 +66,10 @@ const NODE_TEST_PROBE_FILE = path.join(__dirname, 'test-gate-node-test-probe.js'
 // ── Spur 1: blockierend ───────────────────────────────────────────────────────
 // Unveraendert aus dem bisherigen GATE_GLOB. Was falsche Zahlen ausliefern
 // koennte, darf den Tageslauf weiter anhalten.
+// Diese Liste ist in tests/scoring/bh-b09-dailyyml.test.js (BH-035) auf genau diese drei
+// Globs festgenagelt, und tests/scoring/ ist Sperrzone. Ein neues Testverzeichnis holt sich
+// seinen Platz deshalb ueber einen EIGENEN Workflow-Schritt (siehe tests/rule40/ in
+// .github/workflows/pr-check.yml), nicht durch das Umschreiben eines gesperrten Waechters.
 const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js'];
 
 // ── Spur 2: meldend (Forschungs-Bestand) ──────────────────────────────────────
