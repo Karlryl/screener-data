@@ -57,7 +57,8 @@ const path = require('node:path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { norm, metricVal, jahresVergleichIdx } = require('../src/scoring/snapshot.js');
 const { fcfMarginValid } = require('../src/scoring/engine.js');
-const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator } = require('../src/scoring/score.js');
+const { winsorTailBounds, issuerDedupGroups, issuerDedupComparator, isDataSuspect } = require('../src/scoring/score.js');
+const { newestQtrSuspect, annualCurrencyLeak } = require('../src/scoring/lamps.js');
 const { route } = require('../src/scoring/router.js');
 const axesFns = require('../src/scoring/axes.js');
 
@@ -259,6 +260,28 @@ function ebitdaMargePct(snapshot, wachstumRoh) {
   return e;
 }
 
+/**
+ * Disqualifizierende Datenqualitaets-Signale — mit der Entscheidung der Produktion.
+ *
+ * scoreUniverse() wirft Namen mit einer FABRIKATIONS-Lampe (erfundenes juengstes Quartal,
+ * annual-currency-Leak) oder Grade D aus dem Ranking; sonst koennte ein Auslandsname auf
+ * fabriziertem Wachstum die Liste anfuehren. Dieses Brett ruft scoreUniverse() nicht auf —
+ * es routet nur — und sah diese Signale deshalb fuer Namen OHNE Brett-Zeile nie
+ * (Befund N5/E2 Runde 2: alle Nicht-Brett-Zeilen trugen lamps:[], was nicht "sauber"
+ * hiess, sondern "nie geprueft"). Heute ist das folgenlos (0 von 8 betroffen), mit
+ * wachsendem Nicht-Brett-Anteil waere es genau die Luecke, die das Gate schliessen soll.
+ *
+ * Reimplementiert wird nichts: die beiden Lampen sind reine Funktionen des Snapshots
+ * (lamps.js), und ueber Ausschluss oder Nicht-Ausschluss entscheidet isDataSuspect
+ * (score.js) mit allen dort ausgeurteilten Ausnahmen.
+ */
+function datenSuspekt(snapshot) {
+  const lampen = [];
+  if (newestQtrSuspect(snapshot)) lampen.push('newestQtrSuspect');
+  if (annualCurrencyLeak(snapshot)) lampen.push('annualCurrencyLeak');
+  return isDataSuspect(snapshot, lampen, 'route');
+}
+
 function r40GruppeVon(industry) {
   return SOFTWARE_INDUSTRIES.includes(industry) ? 'software' : 'other';
 }
@@ -310,7 +333,7 @@ function sammleKandidaten(opts = {}) {
 
   const kandidaten = [];
   const abgewiesen = {
-    keinVollboard, nichtGeroutet: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
+    keinVollboard, nichtGeroutet: 0, datenSuspekt: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
     fcfUnterdrueckt: 0, fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0,
     basisQuartalStub: 0, veraltet: 0, frischeUnbekannt: 0, ohneRang: 0, snapshotUnlesbar: 0,
     dupEmittent: 0,
@@ -333,6 +356,8 @@ function sammleKandidaten(opts = {}) {
     // hoher Marge und massvollem Wachstum fehlten.
     const r = route(snapshot);
     if (!r || r.action !== 'route') { abgewiesen.nichtGeroutet++; continue; }
+
+    if (datenSuspekt(snapshot)) { abgewiesen.datenSuspekt++; continue; }
 
     const sector = typeof meta.sector === 'string' ? meta.sector : null;
     if (sector !== null && SEKTOR_AUSSCHLUSS.includes(sector)) {
@@ -563,6 +588,7 @@ function buildIndex(index, rows, meta) {
         above40: meta.ueber40,
         exported: rows.length,
         excludedNotRouted: meta.abgewiesen.nichtGeroutet,
+        excludedDataSuspect: meta.abgewiesen.datenSuspekt,
         excludedSector: meta.abgewiesen.sektorAusgeschlossen,
         excludedOutlier: meta.abgewiesen.einheitenVerdacht,
         excludedStale: meta.abgewiesen.veraltet,
@@ -813,7 +839,7 @@ module.exports = {
   R40_MIN, TOP_N, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
-  basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon,
+  basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt,
   neuestesQuartalsEnde, fcfMargeVertrauenswuerdig,
   sammleKandidaten, baueZeilen, buildOverview, buildIndex,
   schreibeBrett, schreibeFehlmarker, pruefeZielordner, build, check, main,

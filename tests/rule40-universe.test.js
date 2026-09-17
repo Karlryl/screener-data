@@ -135,6 +135,33 @@ test('zwei verschiedene Firmen werden NICHT verschmolzen', () => {
   f.aufraeumen();
 });
 
+// --- Datenqualitaets-Gate ----------------------------------------------------
+test('ein fabriziertes juengstes Quartal fliegt raus — dasselbe Gate wie im Scoring', () => {
+  // Die vier Beine des D1-Triggers (lib/newest-qtr-guard.js, getunt an 2715 Snapshots):
+  // Sprung der operativen Marge, physikalische Bruttomargen-Schranke, Umsatzsprung,
+  // Spitze-statt-Rampe. Das Samsung-Muster (005930.KS), das genau dafuer da ist.
+  const s = snapshot({ fcfMarginTTM: 30, name: 'Fabrik Inc' });
+  s.timeseries.revenueQ = [200e6, 100e6, 100e6, 100e6, 100e6].map((value) => ({ value }));
+  s.timeseries.opIncQ = [100e6, 10e6, 10e6, 10e6, 10e6].map((value) => ({ value }));
+  s.timeseries.grossProfitQ = [140e6, 40e6, 40e6, 40e6, 40e6].map((value) => ({ value }));
+  assert.equal(W.datenSuspekt(s), true, 'der Waechter muss dieses Quartal als fabriziert erkennen');
+
+  const sauber = snapshot({ fcfMarginTTM: 30, name: 'Sauber Inc' });
+  assert.equal(W.datenSuspekt(sauber), false, 'eine gesunde Reihe darf nicht anschlagen');
+
+  const f = baueExport([
+    { row: boardZeile({ ticker: 'FAKE', revGrowthYoYPct: 100 }), snap: s, reihe: false },
+    { row: boardZeile({ ticker: 'REAL', revGrowthYoYPct: 60 }), snap: sauber },
+  ]);
+  const res = W.build({ v1Dir: f.v1Dir, snapshotsDir: f.snapshotsDir, outDir: f.outDir });
+  const o = JSON.parse(fs.readFileSync(path.join(f.outDir, 'overview.json'), 'utf8'));
+  const ticker = o.rows.map((r) => r.ticker);
+  f.aufraeumen();
+  assert.equal(res.abgewiesen.datenSuspekt, 1);
+  assert.ok(!ticker.includes('FAKE'), 'ein fabriziertes Quartal darf kein Wachstum begruenden');
+  assert.ok(ticker.includes('REAL'));
+});
+
 // --- Zaehler ---------------------------------------------------------------
 test('index.json traegt den Erklaer-Kasten: Universumsbasis, Schranken und jeden Ausschlussgrund', () => {
   const { f, index } = baue([
@@ -146,7 +173,8 @@ test('index.json traegt den Erklaer-Kasten: Universumsbasis, Schranken und jeden
   assert.equal(index.rule40.universeBasis, 'routed');
   for (const feld of ['universe', 'onBoard', 'computable', 'above40', 'exported', 'excludedNotRouted',
     'excludedSector', 'excludedOutlier', 'excludedStale', 'excludedTinyBase', 'excludedFcfAboveRevenue',
-    'excludedDuplicateIssuer', 'noValidMargin', 'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard']) {
+    'excludedDuplicateIssuer', 'excludedDataSuspect', 'freshnessUnknown', 'noValidMargin',
+    'noGrowth', 'noRank', 'unreadableSnapshot', 'missingFullBoard']) {
     assert.equal(typeof c[feld], 'number', 'Zaehler ' + feld + ' fehlt');
   }
   assert.equal(c.exported, 2);

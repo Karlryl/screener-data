@@ -610,6 +610,14 @@ Rule-of-40-Fall, den Karl sehen will. Die Kopie im Schreiber wird von
 `tests/rule40-universe.test.js` an das Original gehalten: jede von der Engine akzeptierte
 Kombination muss auch hier akzeptiert sein, und jeder Unterschied muss G3 sein.
 
+**Datenqualitaets-Gate mit der Entscheidung der Produktion.** `scoreUniverse()` wirft Namen
+mit einer FABRIKATIONS-Lampe (erfundenes juengstes Quartal, annual-currency-Leak) oder Grade D
+aus dem Ranking. Dieses Brett ruft `scoreUniverse()` nicht auf und sah diese Signale fuer Namen
+ohne Brett-Zeile deshalb nie — ihre `lamps: []` hiessen nicht "sauber", sondern "nie geprueft".
+Die beiden Lampen sind reine Funktionen des Snapshots (`src/scoring/lamps.js`), ueber Ausschluss
+entscheidet `isDataSuspect` (`score.js`) mit allen dort ausgeurteilten Ausnahmen. 42 Namen am
+Stand 2026-08-29.
+
 **Emittenten-Dedup mit der Funktion der Produktion** (`issuerDedupGroups` /
 `issuerDedupComparator` aus `score.js`). Das geroutete Universum enthaelt jede NOTIERUNG; die
 Vollboards waren bereits dedupliziert, dieser Weg ist es nicht. Ohne den Dedup stand Palantir
