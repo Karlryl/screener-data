@@ -56,6 +56,7 @@ function snapshot(over = {}) {
       // Der Router braucht Umsatz (sonst pre-revenue) und einen Bruttogewinn != 0.
       annualRev: (over.annualRev || [revenueTTM, revenueTTM * 0.8, revenueTTM * 0.6]).map((value) => ({ value })),
       annualGP: (over.annualGP || [revenueTTM * 0.7, revenueTTM * 0.55, revenueTTM * 0.4]).map((value) => ({ value })),
+      annualRevEnds: over.annualRevEnds !== undefined ? over.annualRevEnds : undefined,
     },
     timeseries: {
       revenueQ: over.revenueQ || quartalsreihe(110e6, basisQ),

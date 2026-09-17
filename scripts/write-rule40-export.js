@@ -203,10 +203,17 @@ function einheitenVerdacht(growth, fcfMargin) {
  * revenueQEnds[0] kann der Rechnung per Konstruktion nicht widersprechen: es IST ihr Zeitraum.
  */
 function neuestesQuartalsEnde(snapshot) {
-  const ends = snapshot && snapshot.timeseries && snapshot.timeseries.revenueQEnds;
-  if (!Array.isArray(ends) || !ends.length) return null;
-  const t = Date.parse(ends[0]);
-  return Number.isFinite(t) ? t : null;
+  const ts = (snapshot && snapshot.timeseries) || {};
+  const an = (snapshot && snapshot.annual) || {};
+  // Quartalsreihe zuerst, sonst die Jahresreihe: wer nur jaehrlich meldet (annualRev-Fallback
+  // in revGrowthLevel), hat trotzdem einen Zeitraum — er stand nur bisher nicht zur Verfuegung,
+  // und der Waechter uebersprang die Zeile stillschweigend.
+  for (const reihe of [ts.revenueQEnds, an.annualRevEnds]) {
+    if (!Array.isArray(reihe) || !reihe.length) continue;
+    const t = Date.parse(reihe[0]);
+    if (Number.isFinite(t)) return t;
+  }
+  return null;
 }
 
 /**
@@ -305,7 +312,8 @@ function sammleKandidaten(opts = {}) {
   const abgewiesen = {
     keinVollboard, nichtGeroutet: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
     fcfUnterdrueckt: 0, fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0,
-    basisQuartalStub: 0, veraltet: 0, ohneRang: 0, snapshotUnlesbar: 0, dupEmittent: 0,
+    basisQuartalStub: 0, veraltet: 0, frischeUnbekannt: 0, ohneRang: 0, snapshotUnlesbar: 0,
+    dupEmittent: 0,
   };
   let gelesen = 0;
 
@@ -361,8 +369,12 @@ function sammleKandidaten(opts = {}) {
     }
 
     const quartalsEndeMs = neuestesQuartalsEnde(snapshot);
-    if (quartalsEndeMs !== null
-        && (generatedMs - quartalsEndeMs) / 86400000 > MAX_FISCAL_AGE_DAYS) {
+    if (quartalsEndeMs === null) {
+      // KEIN Ausschluss — aber sichtbar. Ohne Zaehler sieht "der Waechter hat nichts
+      // gefunden" genauso aus wie "der Waechter hat geprueft und nichts beanstandet",
+      // und die Zeile traegt dann ein quartalsEnde: null, das niemand einordnen kann.
+      abgewiesen.frischeUnbekannt++;
+    } else if ((generatedMs - quartalsEndeMs) / 86400000 > MAX_FISCAL_AGE_DAYS) {
       abgewiesen.veraltet++; continue;
     }
 
@@ -554,6 +566,7 @@ function buildIndex(index, rows, meta) {
         excludedSector: meta.abgewiesen.sektorAusgeschlossen,
         excludedOutlier: meta.abgewiesen.einheitenVerdacht,
         excludedStale: meta.abgewiesen.veraltet,
+        freshnessUnknown: meta.abgewiesen.frischeUnbekannt,
         excludedTinyBase: meta.abgewiesen.basisQuartalStub,
         excludedFcfAboveRevenue: meta.abgewiesen.fcfUeberUmsatz,
         excludedDuplicateIssuer: meta.abgewiesen.dupEmittent,

@@ -133,8 +133,18 @@ test('fundamentalsAsOf ist KEIN Waechter mehr (es misst den Abruf, nicht den Zei
   drin({}, { fundamentalsAsOf: '2019-01-01T00:00:00.000Z' });
 });
 
-test('ohne revenueQEnds greift der Frische-Waechter nicht, statt blind zu verwerfen', () => {
-  drin({}, { revenueQEnds: [] });
+test('ohne Quartalsenden zieht der Waechter die JAHRESreihe heran', () => {
+  // Jahresmelder (revenueQ leer -> revGrowthLevel nimmt den Jahres-Fallback) haben trotzdem
+  // einen Zeitraum. Frueher uebersprang der Waechter sie stillschweigend.
+  drin({}, { revenueQEnds: [], annualRevEnds: ['2026-03-31', '2025-03-31', '2024-03-31'] });
+  abgewiesenWegen('veraltet', {}, { revenueQEnds: [], annualRevEnds: ['2020-03-31', '2019-03-31'] });
+});
+
+test('ohne JEDEN Zeitraum wird nicht blind verworfen, aber gezaehlt', () => {
+  const { res } = laufMitEinerZeile({}, { revenueQEnds: [] });
+  assert.equal(res.rows, 1, 'die Zeile darf bleiben');
+  assert.equal(res.abgewiesen.frischeUnbekannt, 1,
+    'ohne Zaehler sieht "nicht pruefbar" aus wie "geprueft und in Ordnung"');
 });
 
 // --- Belegbarkeit ----------------------------------------------------------
