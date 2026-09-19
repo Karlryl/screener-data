@@ -56,7 +56,10 @@ const REG_A_GLOB = /^druckenmiller_loggers_registered_\d{8}\.json$/;
 const REG_B_GLOB = /^druckenmiller_scoreboard_registered_\d{8}\.json$/;
 // Wie viele Balken hinter einem Eintritt der Logger im Speicher haelt, um ihn aufzuloesen:
 // der laengste Arm plus Luft. Gesammelt wird nur fuer Ticker mit OFFENEN Eintraegen.
-const AUFLOESE_SCHWANZ = 140;
+// (126 = laengster Arm, plus rund drei Monate Luft. Review-Fund: bei 140 reichte ein
+// Betriebsausfall von drei Wochen, damit ein faelliger Eintrag aus dem Fenster fiel und NIE
+// wieder hineinkam - der Schwanz wandert mit "heute" mit.)
+const AUFLOESE_SCHWANZ = 190;
 // Chunk-1-Vertrag, hier schon erfuellt: faellt eine INTEGRITAETS-Pruefung, wird der
 // Export-Ordner nicht geloescht, sondern durch EINEN Marker ersetzt. Grund (Gericht,
 // Wiederaufnahme): findash schreibt bei 404 nicht (data-layer/screener-sync.js:164-166)
@@ -234,17 +237,49 @@ function kandidatenZeile(opts) {
   const offen = scoreboard.openEntriesFrom(histK);
   const aufloesungen = [];
   let faelligOhneRegel = 0;
+  // REVIEW-FUND (js-Reviewer, reproduziert): zwei Wege liessen einen offenen Eintrag STILL
+  // verschwinden - der Ticker war nicht mehr im Shard (Handel eingestellt, aus dem Universum gefallen)
+  // oder sein Eintrittsdatum lag hinter dem Aufloese-Fenster. Beides ist endgueltig: der
+  // Schwanz wandert mit "heute" mit, der Tag kommt nie wieder. Und die Zaehler in
+  // candidates.json meldeten den Eintrag weiter als "offen". Jetzt bekommt jeder dieser Faelle
+  // eine TERMINALE Aufloesungszeile mit Grund (outcome UNRESOLVABLE, nie gewertet, nie als
+  // zensiert gezaehlt), einen Zaehler und eine Warnung.
+  let ohneSchwanz = 0, ausserhalbFenster = 0;
+  const aelterAls = (datum) => alleSitzungen.indexOf(datum) >= 0
+    && alleSitzungen.length - alleSitzungen.indexOf(datum) > AUFLOESE_SCHWANZ;
   for (const e of offen) {
     const schwanz = schwaenze.get(e.ticker);
-    if (!schwanz) continue;
+    if (!schwanz) {
+      ohneSchwanz++;
+      aufloesungen.push(Object.assign(
+        scoreboard.resolutionRow(e, { outcome: 'UNRESOLVABLE', bars: null, date: datum,
+          barrierUp: null, barrierDown: null, scaling: skalierung || null }, internalsRow.generatedAt),
+        { unresolvableReason: 'ticker-not-in-store' }));
+      continue;
+    }
     const ab = schwanz.findIndex((b) => b.date === e.date);
-    if (ab < 0) continue;
+    if (ab < 0) {
+      if (!aelterAls(e.date)) continue;                 // noch im Fenster, nur heute nicht getroffen
+      ausserhalbFenster++;
+      aufloesungen.push(Object.assign(
+        scoreboard.resolutionRow(e, { outcome: 'UNRESOLVABLE', bars: null, date: datum,
+          barrierUp: null, barrierDown: null, scaling: skalierung || null }, internalsRow.generatedAt),
+        { unresolvableReason: 'entry-date-outside-resolution-window' }));
+      continue;
+    }
     const vorwaerts = schwanz.slice(ab + 1);
     if (!vorwaerts.length) continue;
     if (!skalierung) { faelligOhneRegel++; continue; }
     const res = scoreboard.resolveEntry(e, vorwaerts, skalierung);
     if (res.outcome === null) continue;                 // noch offen, nicht zensiert
     aufloesungen.push(scoreboard.resolutionRow(e, res, internalsRow.generatedAt));
+  }
+  if ((ohneSchwanz || ausserhalbFenster) && log) {
+    log('::warning::[druckenmiller] ' + (ohneSchwanz + ausserhalbFenster) + ' offene(r) Eintrag/Eintraege '
+      + 'ist/sind nicht mehr aufloesbar (' + ohneSchwanz + ' ohne Kursserie im Store, '
+      + ausserhalbFenster + ' ausserhalb des ' + AUFLOESE_SCHWANZ + '-Balken-Fensters). Sie werden als '
+      + 'UNRESOLVABLE geschlossen: nie gewertet, nie als zensiert gezaehlt, aber auch nicht still '
+      + 'als "offen" weitergefuehrt.');
   }
   if (faelligOhneRegel && log) {
     log('::warning::[druckenmiller] ' + faelligOhneRegel + ' Eintrag/Eintraege waeren faellig, aber '
@@ -287,6 +322,8 @@ function kandidatenZeile(opts) {
     transitions: eintraege.transitions,
     armedFirstObservation: eintraege.armedFirstObservation === undefined ? 0 : eintraege.armedFirstObservation,
     dueWithoutScalingRule: faelligOhneRegel,
+    unresolvableNoSeries: ohneSchwanz,
+    unresolvableOutsideWindow: ausserhalbFenster,
     stateChanges: wechsel,
     entries: eintraege.rows,
     resolutions: aufloesungen,
@@ -309,6 +346,13 @@ function registrierungenLesen(protocolDir, log) {
         + ' — Zustaende und Eintraege werden geloggt (Warm-up), aber nichts aufgeloest und nichts gewertet.');
     }
   }
+  // WAECHTER 1 (Rat 9 Teil 2a) EAGER: die in Datei B genannte Skalierung muss ein
+  // implementierter Zweig sein, und zwar JETZT - nicht erst, wenn Monate spaeter der erste
+  // Eintrag faellig wird. Review-Fund (reproduziert 2026-09-19): lag der Wurf in
+  // kandidatenZeile, war die Innereien-Zeile des Tages schon geschrieben und die
+  // Kandidaten-Zeile fuer immer unnachtragbar (appendRow verbietet Rueckdatierung) -
+  // gemessen: Innereien bei 2026-09-14, Kandidaten bei 2026-09-11.
+  if (chunk2 && chunk2.barrier) scoreboard.assertScalingBranch(chunk2.barrier.sigmaScaling);
   return { churnMax, chunk2 };
 }
 
@@ -345,6 +389,38 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
   const kChain = ledgerLib.verifyChain(kandidatenLedgerFile);
   if (!kChain.ok) throw new Error(kChain.error);
   const histK = kChain.rows.slice();
+  // Divergenz-Waechter (Review-Fund): die Kandidaten-Reihe darf der Innereien-Reihe nicht
+  // hinterherhaengen. Passiert es doch (ein Lauf ist zwischen den Anhaengen gestorben), wird
+  // die Luecke mit einer missing-Zeile je fehlendem Tag geschlossen - keine Zustaende, keine
+  // Eintraege, aber auch keine unfuellbare Luecke (Muster [REV5-3] fuer die Innereien-Reihe).
+  if (histK.length) {
+    const kLetzte = histK[histK.length - 1].date;
+    if (letzte && kLetzte < letzte) {
+      const fehlend = vorhandene.map((r) => r.date).filter((x) => x > kLetzte && x <= letzte);
+      log('::warning::[druckenmiller] die Kandidaten-Reihe endet auf ' + kLetzte + ', die '
+        + 'Innereien-Reihe auf ' + letzte + ' - ' + fehlend.length + ' Tag(e) fehlen. Sie werden '
+        + 'als missing-Zeilen geschlossen (keine Zustaende, keine Eintraege); ein Lauf ist zwischen '
+        + 'den beiden Anhaengen gestorben.');
+      for (const tag of fehlend) {
+        const zeile = {
+          schema: scoreboard.SCHEMA, kind: 'SESSION', date: tag, generatedAt: new Date().toISOString(),
+          missing: true, reason: 'kein Kandidaten-Lauf an diesem Tag (Divergenz-Reparatur)',
+          backfilled: true, lowFreshness: false, highChurn: false, raw: true, rawReason: 'missing',
+          warmup: false, warmupLiveSessionsBefore: scoreboard.liveSessionCount(histK),
+          nUniverse: null, nEntered: null, nLeft: null, nStated: null, nDegenerateCut: null,
+          confirmsShare: null, cutsM1: null, cutsM2: null, nConfirms: null, nNeutral: null, nWeak: null,
+          statesPublished: false, skipped: 'missing', transitions: 0, armedFirstObservation: 0,
+          dueWithoutScalingRule: 0, stateChanges: {}, entries: [], resolutions: [],
+        };
+        ledgerLib.appendRow(kandidatenLedgerFile, zeile);
+        histK.push(zeile);
+      }
+    } else if (letzte && kLetzte > letzte) {
+      throw new Error('[druckenmiller] die Kandidaten-Reihe endet auf ' + kLetzte + ', die '
+        + 'Innereien-Reihe erst auf ' + letzte + ' - die Kandidaten-Reihe kann der Messreihe nicht '
+        + 'vorauslaufen. Kein Anhang, bis das geklaert ist.');
+    }
+  }
   const offeneTicker = new Set(scoreboard.openEntriesFrom(histK).map((e) => e.ticker));
 
   const { jeZiel, referenz, schwaenze } = metrikenSammeln(pricesDir, kandidaten, ziele, {
@@ -392,8 +468,11 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
     // harmlos: eine verwaiste Roh-Datei ohne Ledger-Zeile schadet nichts und wird beim
     // naechsten Lauf ueberschrieben.
     schreibeRoh(outDir, d, roh);
-    ledgerLib.appendRow(ledgerFile, row);
-    history.push(row);
+    // Chunk 2, Review-Fund (reproduziert): die Kandidaten-Zeile wird GEBAUT, BEVOR die
+    // Innereien-Zeile geschrieben wird. Vorher lag zwischen den beiden appendRow-Aufrufen die
+    // ganze Rechnung, und ein Wurf darin liess die eine Reihe vorlaufen und die andere fuer
+    // immer zurueck (appendRow verbietet Rueckdatierung; gemessen 2026-09-19: Innereien bei
+    // 2026-09-14, Kandidaten bei 2026-09-11).
     // Chunk 2: die Kandidaten-Zeile NACH der Innereien-Zeile. Faellt sie aus, steht die
     // Messreihe der Innereien trotzdem; nachgeholt wird sie NICHT (appendRow verbietet
     // Rueckdatierung) — genau deshalb steht sie im selben Lauf und nicht in einem zweiten
@@ -406,7 +485,9 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
       rawDir: path.join(outDir, 'raw'),
       histK, churnMax, chunk2, schwaenze, log,
     });
+    ledgerLib.appendRow(ledgerFile, row);
     ledgerLib.appendRow(kandidatenLedgerFile, kZeile);
+    history.push(row);
     histK.push(kZeile);
     geschrieben++;
   }
@@ -478,6 +559,37 @@ function pruefeZeilenForm(rows) {
   return null;
 }
 
+/**
+ * Der Kandidaten-Ledger wird mit derselben Schaerfe geprueft wie die Messreihe: Kette,
+ * Sidecar, never-shrink. Review-Fund (reproduziert 2026-09-19): eine veraenderte historische
+ * Zeile in candidates-ledger.jsonl lief durch BEIDE scharfen Tore gruen, weil keines die
+ * Datei ueberhaupt aufmachte.
+ */
+function pruefeKandidatenLedger(outDir) {
+  const p = path.join(outDir, KANDIDATEN_LEDGER);
+  if (!fs.existsSync(p)) return null;
+  const meta = ledgerLib.readMeta(p);
+  const zeilen = ledgerLib.readLines(p);
+  if (meta && zeilen.length < meta.rows) {
+    return '[druckenmiller] Der Kandidaten-Ledger ist von ' + meta.rows + ' auf ' + zeilen.length
+      + ' Zeilen geschrumpft - eine append-only-Reihe schrumpft nie.';
+  }
+  const kette = ledgerLib.verifyChain(p);
+  if (!kette.ok) return kette.error;
+  const rows = kette.rows;
+  for (const r of rows) {
+    if (r.schema !== scoreboard.SCHEMA) {
+      return '[druckenmiller] Kandidaten-Zeile ' + r.date + ': schema ist ' + JSON.stringify(r.schema)
+        + ', erwartet ' + JSON.stringify(scoreboard.SCHEMA) + '.';
+    }
+    if (!Array.isArray(r.entries) || !Array.isArray(r.resolutions) || !r.stateChanges) {
+      return '[druckenmiller] Kandidaten-Zeile ' + r.date + ' traegt keine vollstaendige Form '
+        + '(entries/resolutions/stateChanges).';
+    }
+  }
+  return null;
+}
+
 function pruefModus({ pricesDir, outDir, exportDir, log }) {
   const ledgerFile = ledgerPfad(outDir);
   const rot = (grund) => {
@@ -499,6 +611,8 @@ function pruefModus({ pricesDir, outDir, exportDir, log }) {
   }
   const formFehler = pruefeZeilenForm(rows);
   if (formFehler) return rot('[druckenmiller] ' + formFehler);
+  const kFehler = pruefeKandidatenLedger(outDir);
+  if (kFehler) return rot(kFehler);
   if (fs.existsSync(path.join(exportDir, FAILED_NAME))) {
     return rot('[druckenmiller] ' + path.join(exportDir, FAILED_NAME) + ' liegt vor — ein frueherer '
       + 'Schritt dieses Laufs hat den Export als ungueltig markiert.');
@@ -555,7 +669,8 @@ function main(argv, log) {
 
 module.exports = {
   main, schreibeModus, pruefModus, sitzungen, spyZustand, schreibeFehlermarker, pruefeZeilenForm,
-  LEDGER_NAME, FAILED_NAME, EXPORT_SCHEMA,
+  LEDGER_NAME, KANDIDATEN_LEDGER, FAILED_NAME, EXPORT_SCHEMA, pruefeKandidatenLedger,
+  registrierungenLesen,
 };
 
 if (require.main === module) {

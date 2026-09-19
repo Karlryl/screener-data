@@ -779,6 +779,12 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
   // ---- candidates.json (Chunk 2) -------------------------------------------------------
   const kandidatenPfad = path.join(exportDir, 'candidates.json');
   if (fs.existsSync(kandidatenPfad)) {
+    // Zuerst die REIHE, dann die Datei: eine Auslieferung aus einer manipulierten Reihe ist
+    // wertlos, egal wie sauber die Datei aussieht (Review-Fund, reproduziert 2026-09-19).
+    const kFehler = logger.pruefeKandidatenLedger(outDir);
+    if (kFehler) return rot(kFehler);
+    const kRows = ledgerLib.verifyChain(path.join(outDir, 'candidates-ledger.jsonl')).rows;
+    const kLetzte = kRows.length ? kRows[kRows.length - 1].date : null;
     let cand;
     try { cand = JSON.parse(fs.readFileSync(kandidatenPfad, 'utf8')); }
     catch (e) { return rot('[druckenmiller] candidates.json ist nicht lesbar: ' + e.message); }
@@ -815,6 +821,10 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
         return rot('[druckenmiller] candidates.json: ' + z.ticker + ' steht zweimal - ein Ticker traegt genau einen Zustand.');
       }
       gesehen.add(z.ticker);
+    }
+    if (kLetzte !== null && cand.asOf !== kLetzte) {
+      return rot('[druckenmiller] candidates.json steht auf asOf ' + cand.asOf + ', die letzte '
+        + 'Kandidaten-Zeile auf ' + kLetzte + ' - die Auslieferung gehoert zu einem anderen Stand.');
     }
     if (cand.asOf !== regime.asOf) {
       return rot('[druckenmiller] candidates.json steht auf asOf ' + cand.asOf + ', regime.json auf '

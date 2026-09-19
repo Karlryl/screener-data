@@ -134,5 +134,31 @@ test('B9 mehr Bloecke, engere Streuung (die Blockzahl ist die Waehrung, nicht n)
   assert.ok(weit.MDE < eng.MDE);
 });
 
+test('B10 die Lese-Vorbedingungen sind verbindlich: Arm-Kollaps und Armzahl blockieren', () => {
+  const stichprobe = require('./fixtures/arm-collapse-sample.json');
+  const t = require('./fixtures/spec-constants.json').scoreboardB.armCollapseGuard;
+  const ok = R.assertReadPreconditions({
+    armsRead: [63, 126], sampleBars63: stichprobe.resolvedBars['63'],
+    sampleBars126: stichprobe.resolvedBars['126'], thresholds: t, alphaStar: 0.0083,
+  });
+  assert.equal(ok.armCollapse.differ, true);
+  assert.equal(ok.arms.arms, 2);
+  // BRUCHPROBE 1: kollabierte Arme
+  assert.throws(() => R.assertReadPreconditions({
+    armsRead: [63, 126], sampleBars63: stichprobe.resolvedBars['63'],
+    sampleBars126: stichprobe.resolvedBars['63'], thresholds: t, alphaStar: 0.0083,
+  }), /Arm-Kollaps/);
+  // BRUCHPROBE 2: ein Arm gestrichen, alpha* passt nicht mehr
+  assert.throws(() => R.assertReadPreconditions({
+    armsRead: [63], sampleBars63: stichprobe.resolvedBars['63'],
+    sampleBars126: stichprobe.resolvedBars['126'], thresholds: t, alphaStar: 0.0083,
+  }), /Arme/);
+  // BRUCHPROBE 3: nicht endliche Zahl wird nicht veroeffentlicht
+  assert.throws(() => R.readArm({ entries: [
+    { ticker: 'A', arm: 63, state: 'CONFIRMS', outcome: 'UP', block: 0 },
+    { ticker: 'B', arm: 63, state: 'WEAK', outcome: 'DOWN', block: 0 },
+  ], alphaStar: 0, beta: 0.2, B: 50 }), /nicht endliche Zahl/);
+});
+
 console.log('\nscoreboard-read.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

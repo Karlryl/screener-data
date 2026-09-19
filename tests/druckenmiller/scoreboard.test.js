@@ -258,5 +258,24 @@ test('S13 die Reduktionen ueber den Kandidaten-Ledger (EINE Zeile je Sitzung)', 
   assert.equal(S.WARMUP_SESSIONS, 20);
 });
 
+test('S11b der Lese-Plan schleppt den Tag im Monat NICHT mit (Review-Fund, Schaltjahr)', () => {
+  // js-Reviewer, reproduziert: Date.UTC(jahr, monat + m, tag) rollt still in den Folgemonat,
+  // wenn der Tag dort nicht existiert. T0 = 2028-02-29 ergab R2 = 2030-03-31 statt 2030-02-28,
+  // also eine vorregistrierte Lesung einen Monat zu spaet, ohne einen Laut.
+  const schalt = S.readSchedule('2028-02-29', null);
+  assert.equal(schalt.R2, '2030-02-28');
+  assert.equal(schalt.R3, '2031-02-28');
+  const letzterTag = S.readSchedule('2026-01-31', null);
+  assert.equal(letzterTag.R2, '2028-01-31');
+  assert.equal(letzterTag.R3, '2029-01-31');
+  const dreissig = S.readSchedule('2026-08-31', null);
+  assert.equal(dreissig.R2, '2028-08-31');
+  // Und der echte T0 dieses Moduls bleibt, was Datei B registriert hat.
+  const echt = S.readSchedule('2026-09-19', null);
+  assert.equal(echt.R2, '2028-09-30');
+  assert.equal(echt.R3, '2029-09-30');
+  assert.equal(S.monatsEndeNach('2026-09-19', 0), '2026-09-30');
+});
+
 console.log('\nscoreboard.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
