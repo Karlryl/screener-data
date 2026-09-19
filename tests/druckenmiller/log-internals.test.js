@@ -358,5 +358,69 @@ test('S14 fehlende SPY-Serie ist ein LAUTER Abbruch, keine leere Zeile', () => {
   assert.equal(fs.existsSync(ledgerVon(s)), false);
 });
 
+test('S15 der KANDIDATEN-Ledger wird mit derselben Schaerfe geprueft wie die Messreihe', () => {
+  // Review-Fund (silent-failure-hunter, reproduziert 2026-09-19): eine veraenderte historische
+  // Zeile in candidates-ledger.jsonl lief durch BEIDE scharfen Tore gruen, weil keines die
+  // Datei ueberhaupt aufmachte.
+  const LOGGER = require(SKRIPT);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-kledger-'));
+  const datei = path.join(dir, 'candidates-ledger.jsonl');
+  const zeile = (datum, extra) => Object.assign({
+    schema: 'druckenmiller-candidates/1', kind: 'SESSION', date: datum,
+    generatedAt: '2026-09-14T02:17:00.000Z', backfilled: false, stateChanges: {},
+    entries: [], resolutions: [],
+  }, extra || {});
+  L.appendRow(datei, zeile('2026-09-10'));
+  L.appendRow(datei, zeile('2026-09-11'));
+  assert.equal(LOGGER.pruefeKandidatenLedger(dir), null, 'die saubere Reihe muss durchgehen');
+  // (a) eine missing-Reparaturzeile ist erlaubt (Muster [REV5-3])
+  L.appendRow(datei, zeile('2026-09-14', { missing: true, reason: 'kein Lauf', backfilled: true }));
+  assert.equal(LOGGER.pruefeKandidatenLedger(dir), null, 'eine missing-Zeile ist eine gueltige Aussage');
+  // (b) BRUCHPROBE Kette: eine historische Zeile nachtraeglich veraendern
+  const zeilen = fs.readFileSync(datei, 'utf8').split('\n').filter((z) => z);
+  const kaputt = JSON.parse(zeilen[1]); kaputt.nConfirms = 9999;
+  fs.writeFileSync(datei, [zeilen[0], JSON.stringify(kaputt), zeilen[2]].join('\n') + '\n');
+  assert.match(String(LOGGER.pruefeKandidatenLedger(dir)), /Kette gebrochen/,
+    'eine veraenderte historische Zeile muss auffallen');
+  // (c) BRUCHPROBE Schrumpfen: Sidecar sagt drei, die Datei traegt eine
+  fs.writeFileSync(datei, zeilen[0] + '\n');
+  assert.match(String(LOGGER.pruefeKandidatenLedger(dir)), /geschrumpft/);
+  // (d) BRUCHPROBE Form: keine Listen
+  fs.rmSync(datei); fs.rmSync(datei + '.meta.json');
+  L.appendRow(datei, { schema: 'druckenmiller-candidates/1', kind: 'SESSION',
+    date: '2026-09-10', generatedAt: 'x', stateChanges: {} });
+  assert.match(String(LOGGER.pruefeKandidatenLedger(dir)), /vollstaendige Form/);
+  // (e) BRUCHPROBE Schema: ein fremder Schema-Stand in derselben Reihe
+  fs.rmSync(datei); fs.rmSync(datei + '.meta.json');
+  L.appendRow(datei, zeile('2026-09-10', { schema: 'druckenmiller-candidates/2' }));
+  assert.match(String(LOGGER.pruefeKandidatenLedger(dir)), /schema ist/);
+  // (f) keine Datei = kein Befund (Chunk 0/1 laeuft ohne Kandidaten-Ledger weiter)
+  assert.equal(LOGGER.pruefeKandidatenLedger(fs.mkdtempSync(path.join(os.tmpdir(), 'dm-leer-'))), null);
+});
+
+test('S16 eine unsinnige Barrieren-Skalierung in Datei B wirft SOFORT beim Lesen', () => {
+  // Review-Fund (reproduziert): lag der Wurf erst in der Aufloesung, war die Innereien-Zeile
+  // des Tages schon geschrieben und die Kandidaten-Zeile fuer immer unnachtragbar - gemessen
+  // Innereien bei 2026-09-14, Kandidaten bei 2026-09-11.
+  const LOGGER = require(SKRIPT);
+  const proto = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-proto-'));
+  const REPO = path.resolve(__dirname, '..', '..');
+  for (const f of fs.readdirSync(path.join(REPO, 'protocol'))) {
+    if (/^druckenmiller_/.test(f)) fs.copyFileSync(path.join(REPO, 'protocol', f), path.join(proto, f));
+  }
+  const still2 = () => {};
+  assert.ok(LOGGER.registrierungenLesen(proto, still2).chunk2, 'die echte Datei B muss lesbar sein');
+  const pB = path.join(proto, 'druckenmiller_scoreboard_registered_20260919.json');
+  const j = JSON.parse(fs.readFileSync(pB, 'utf8'));
+  j.barrier.sigmaScaling = 'annualized';
+  fs.writeFileSync(pB, JSON.stringify(j, null, 2) + '\n');
+  fs.writeFileSync(pB + '.sha256',
+    require('node:crypto').createHash('sha256').update(fs.readFileSync(pB, 'utf8'), 'utf8').digest('hex')
+    + '  druckenmiller_scoreboard_registered_20260919.json\n');
+  assert.throws(() => LOGGER.registrierungenLesen(proto, still2), /Barrieren-Skalierung/,
+    'eine nicht implementierte Skalierung muss beim LESEN auffallen, nicht Monate spaeter');
+});
+
+
 console.log('\nlog-internals.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -827,3 +827,33 @@ Sie liegen flach in `tests/` und nicht in einem eigenen Unterordner, weil der Ga
 jede ungegatete `*test.js` abbricht und `BLOCKING_GLOBS` von
 `tests/scoring/bh-b09-dailyyml.test.js` (BH-035) auf drei Globs festgenagelt ist — in einer
 Sperrzone.
+
+### 13.4 `candidates.json` (Chunk 2, additiv)
+
+Das **Etikett** je Ticker, nie eine Rangfolge: `rows[]` mit `ticker`, `confirmation`
+(`CONFIRMS | NEUTRAL | WEAK | null`), `m1`, `m2`, `evidenceIds`, `evidenceGrade`, `duquesne13f`
+(dreiwertig `HELD | NOT_IN_MAPPED | UNMAPPED`, bis Chunk 3 `null`). Dazu im Kopf: `counts`
+(stated/confirms/neutral/weak, `armedFirstObservation`, `warmupLiveSessions`/`warmupTarget`,
+`degenerateCut`), `separation` (Anteil, `raw`, Grund), `sessionExcluded`, `scoreboard`,
+`evidence`, `scopeSentence`, `multiplicityNote`.
+
+Regeln, die der Leser voraussetzen darf:
+
+- **Sortierung ist alphabetisch.** Die Reihenfolge der Board-Zeilen kommt NICHT von hier; das
+  Etikett darf nie filtern und nie sortieren (Rat D1).
+- **Ein Ticker traegt genau einen Zustand**, und der Zustand ist `null`, solange der Ticker nicht
+  am modalen Balken-Tag haengt — `null` heisst "kein Etikett", nicht "neutral".
+- **`m1`/`m2` stehen fuer den asOf-Tag** und kommen aus derselben Roh-Zeile, aus der die
+  Zustaende gerechnet wurden.
+- **`scoreboard.frozen` traegt vor der ersten Lesung ausschliesslich `null`** (Etikett "noch
+  nicht lesbar"); `scoreboard.live` sind Zaehler und ausdruecklich als solche markiert
+  (`countersAreNotEvidence: true`). Eine Zahl auf der Tafel ohne Lesung macht `--check` rot.
+- **`asOf` ist identisch mit `regime.json`**; alle Dateien tragen EINEN `generated_at`.
+- Es gibt **keinen Platzhalter**: ohne Kandidaten-Ledger wird die Datei nicht geschrieben (und
+  findash sieht das Modul weiter als stale, weil der Vertrag vier Dateien kennt). Existiert der
+  Ledger, ist die Datei Pflicht — ein halber Ordner ist schlimmer als keiner.
+
+Zustands-Regel und Barrieren-Skalierung sind in
+`protocol/druckenmiller_scoreboard_registered_<Datum>.json` (Datei B) registriert, die
+Skalierung zusaetzlich in `protocol/BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md`. Beide sind
+gehasht; `meta.json.paramsHash` deckt weiter Datei A (die Logger-Parameter).

@@ -214,5 +214,124 @@ test('R8 WAECHTER am Ding: der highChurn-Ausschluss braucht einen Produzenten, b
   }
 });
 
+// ---------------------------------------------------------------------------
+// Datei B und Datei C (Chunk 2). Fuer sie ist der Test STRENG ([REV7-3]): sie werden
+// gehasht, BEVOR die erste gewertete Zeile existiert - also darf keine gewertete Zeile vor
+// dem Hash-Datum liegen, und jede Zahl muss dem Vergleichsmassstab entsprechen.
+// ---------------------------------------------------------------------------
+const FILE_B = path.join(REPO, 'protocol', 'druckenmiller_scoreboard_registered_20260919.json');
+const FILE_C = path.join(REPO, 'protocol', 'druckenmiller_alfred_registered_20260919.json');
+const AMENDMENT = path.join(REPO, 'protocol', 'BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md');
+const K_LEDGER = path.join(REPO, 'druckenmiller-history', 'candidates-ledger.jsonl');
+const scoreboard = require('../../lib/druckenmiller/scoreboard.js');
+const confirmation = require('../../lib/druckenmiller/confirmation.js');
+const scoreboardRead = require('../../lib/druckenmiller/scoreboard-read.js');
+
+test('R9 Datei B und Datei C: Hash = Sidecar = Changelog-Zeile (Residuum 4, jetzt fuer drei Dateien)', () => {
+  for (const [datei, name] of [[FILE_B, 'Datei B'], [FILE_C, 'Datei C'], [AMENDMENT, 'AMENDMENT 01']]) {
+    assert.ok(fs.existsSync(datei), name + ' fehlt');
+    const hash = sha256(lies(datei));
+    const sidecar = lies(datei + '.sha256').trim().split(/\s+/)[0];
+    assert.equal(hash, sidecar, name + ': Sidecar und Datei stimmen nicht ueberein');
+    if (datei !== AMENDMENT) {
+      assert.ok(lies(CHANGELOG).includes(hash),
+        name + ': der Hash steht in keiner Changelog-Zeile - eine Registrierung ohne Eintrag ist eine stille');
+    }
+  }
+  // Und das Amendment ist in BEIDEN Registrierungen mit demselben Hash genannt.
+  const hA = sha256(lies(AMENDMENT));
+  assert.equal(JSON.parse(lies(FILE_B))._amendment01.sha256, hA);
+  assert.equal(JSON.parse(lies(FILE_C))._amendment01.sha256, hA);
+});
+
+test('R10 jede Zahl aus Datei B und C steht so im Vergleichsmassstab (kanonisch)', () => {
+  const b = JSON.parse(lies(FILE_B));
+  const c = JSON.parse(lies(FILE_C));
+  const soll = JSON.parse(lies(SPEC_CONSTANTS));
+  const sb = soll.scoreboardB, sc = soll.alfredC;
+  const paare = [
+    [b.m1.lookbackBars, sb.m1.lookbackBars], [b.m1.lagBars, sb.m1.lagBars],
+    [b.m1.volWindowBars, sb.m1.volWindowBars], [b.m2.windowBars, sb.m2.windowBars],
+    [kanonisch(b.terciles.quantiles), kanonisch(sb.terciles.quantiles)],
+    [b.terciles.minStatedN, sb.terciles.minStatedN],
+    [b.barrier.k, sb.barrier.k], [b.barrier.sigmaWindowBars, sb.barrier.sigmaWindowBars],
+    [b.barrier.sigmaScaling, sb.barrier.sigmaScaling],
+    [kanonisch(b.horizons), kanonisch(sb.horizons)], [b.decisiveArm, sb.decisiveArm],
+    [kanonisch(b.entryRule.coolOffBars), kanonisch(sb.coolOffBars)],
+    [kanonisch(b.blockFloor), kanonisch(sb.blockFloor)],
+    [b.bootstrap.B, sb.bootstrap.B], [b.bootstrap.seed, sb.bootstrap.seed],
+    [b.bootstrap.wildBelowBlocks, sb.bootstrap.wildBelowBlocks],
+    [kanonisch(b.bootstrap.blockLengthBars), kanonisch(sb.bootstrap.blockLengthBars)],
+    [b.alphaRead, sb.alphaRead], [kanonisch(b.alphaStar), kanonisch(sb.alphaStar)],
+    [b.beta, sb.beta], [b.intervalDirection, sb.intervalDirection],
+    [kanonisch(b.labelBounds), kanonisch(sb.labelBounds)],
+    [b.retirement.mdeBoundPp, sb.retirement.mdeBoundPp],
+    [kanonisch(b.retirement.evaluatedAt), kanonisch(sb.retirement.evaluatedAt)],
+    [b.separationGate.maxConfirmsShare, sb.separationGate.maxConfirmsShare],
+    [b.separationGate.minConfirmsShare, sb.separationGate.minConfirmsShare],
+    [b.warmup.liveSessions, sb.warmup.liveSessions],
+    [kanonisch(b.armCollapseGuard.ksScaledMin), kanonisch(sb.armCollapseGuard.ksScaledMin)],
+    [kanonisch(b.armCollapseGuard.medianRatioMin), kanonisch(sb.armCollapseGuard.medianRatioMin)],
+    [kanonisch(b.panelDisplay.frozen), kanonisch(sb.panelDisplay.frozen)],
+    [kanonisch(b.panelDisplay.live), kanonisch(sb.panelDisplay.live)],
+    [b.powerProjection, sb.powerProjection],
+    [c.vintages.spanEnd, sc.spanEnd], [c.inference.blockLengthWeeks, sc.blockLengthWeeks],
+    [c.inference.B, sc.B], [c.inference.seed, sc.seed], [c.inference.alpha, sc.alpha],
+    [c.inference.minBlocks, sc.minBlocks],
+  ];
+  for (let i = 0; i < paare.length; i++) {
+    assert.deepEqual(paare[i][0], paare[i][1], 'Paar ' + i + ' weicht ab: '
+      + JSON.stringify(paare[i][0]) + ' vs ' + JSON.stringify(paare[i][1]));
+  }
+  assert.equal(b.powerProjection, null, 'powerProjection MUSS der NULL-Platzhalter sein ([REV4-3])');
+});
+
+test('R11 der laufende Code traegt genau die Werte aus Datei B (Muster R5)', () => {
+  const b = JSON.parse(lies(FILE_B));
+  assert.equal(scoreboard.K, b.barrier.k);
+  assert.equal(scoreboard.SIGMA_WINDOW, b.barrier.sigmaWindowBars);
+  assert.deepEqual(scoreboard.HORIZONS, b.horizons);
+  assert.equal(scoreboard.DECISIVE_ARM, b.decisiveArm);
+  assert.equal(scoreboard.BLOCK_FLOOR[63], b.blockFloor['63']);
+  assert.equal(scoreboard.BLOCK_FLOOR[126], b.blockFloor['126']);
+  assert.equal(scoreboard.WARMUP_SESSIONS, b.warmup.liveSessions);
+  assert.equal(scoreboard.ALPHA_STAR_TWO_ARM, b.alphaStar.twoArm);
+  assert.equal(scoreboard.ALPHA_STAR_ONE_ARM, b.alphaStar.singleArm);
+  assert.equal(scoreboard.BETA, b.beta);
+  assert.equal(scoreboard.KNOWLEDGE_BAR_PP, b.labelBounds.knowledgeBarPp);
+  assert.equal(scoreboard.TRADE_BAR_PP, b.labelBounds.tradeBarPp);
+  assert.equal(scoreboard.RETIRE_MDE_PP, b.retirement.mdeBoundPp);
+  assert.deepEqual(scoreboard.PANEL_FROZEN_FIELDS, b.panelDisplay.frozen);
+  assert.deepEqual(scoreboard.PANEL_LIVE_FIELDS, b.panelDisplay.live);
+  assert.equal(confirmation.M1_LOOKBACK, b.m1.lookbackBars);
+  assert.equal(confirmation.M1_LAG, b.m1.lagBars);
+  assert.equal(confirmation.VOL_WINDOW, b.m1.volWindowBars);
+  assert.equal(confirmation.HIGH_WINDOW, b.m2.windowBars);
+  assert.equal(confirmation.SIGMA_WINDOW, b.barrier.sigmaWindowBars);
+  assert.equal(confirmation.SEPARATION_MAX, b.separationGate.maxConfirmsShare);
+  assert.equal(confirmation.SEPARATION_MIN, b.separationGate.minConfirmsShare);
+  assert.equal(scoreboardRead.B_DEFAULT, b.bootstrap.B);
+  assert.equal(scoreboardRead.SEED_DEFAULT, b.bootstrap.seed);
+  assert.equal(scoreboardRead.WILD_MAX_BLOCKS, b.bootstrap.wildBelowBlocks);
+  // Die vier Etiketten woertlich, in der registrierten Reihenfolge.
+  assert.deepEqual(scoreboard.LABELS.map((l) => l.text), b.labels.map((l) => l.text));
+  assert.deepEqual(scoreboard.LABELS.map((l) => l.id), b.labels.map((l) => l.id));
+});
+
+test('R12 STRENG: vor dem Hash von Datei B gibt es keine GEWERTETE Zeile, und T0 steht', () => {
+  const b = JSON.parse(lies(FILE_B));
+  assert.equal(b.T0, '2026-09-19', 'T0 ist das Hash-Datum');
+  assert.ok(lies(CHANGELOG).includes(b.T0), 'das Hash-Datum steht in der Changelog-Zeile');
+  if (!fs.existsSync(K_LEDGER)) return;               // noch kein Kandidaten-Ledger im Repo
+  const zeilen = lies(K_LEDGER).split('\n').filter((z) => z.trim()).map((z) => JSON.parse(z));
+  const gewertet = [];
+  for (const r of zeilen) {
+    for (const e of r.entries || []) if (e.warmup !== true) gewertet.push(e);
+  }
+  const vorT0 = gewertet.filter((e) => e.date < b.T0);
+  assert.deepEqual(vorT0, [], 'es gibt gewertete Eintraege VOR dem Registrierungs-Hash: '
+    + vorT0.map((e) => e.ticker + '@' + e.date).join(', '));
+});
+
 console.log('\nregistration.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
