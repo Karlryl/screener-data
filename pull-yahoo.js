@@ -301,18 +301,39 @@ function fundamentalsStaleness(meta, now = Date.now()) {
 // ausdruecklich "nicht lesbar", nie "nicht faellig": der Aufrufer verbucht das in einem eigenen
 // Eimer. Steht NICHT im Entscheidungspfad; kein Voll-Abruf haengt an dieser Zahl.
 function fundamentalsAsOfAgeFromFile(fp, now = Date.now()) {
+  const head = readFileHead(fp, 4096);
+  if (head == null) return null;
+  const m = head.match(/"fundamentalsAsOf"\s*:\s*"([^"]+)"/);
+  if (!m) return null;
+  const ms = new Date(m[1]).getTime();
+  if (!Number.isFinite(ms)) return null;
+  return now - ms;
+}
+
+// T325 (Merge-Desk-Fund an PR #323, 19.09.2026): der Dateikopf-Leser. Das alte Muster
+// openSync -> readSync -> closeSync INNERHALB eines try/catch LECKT den Handle, sobald readSync
+// wirft: der catch kehrt zurueck, ohne zu schliessen. Auf OneDrive ist das der Normalfall und
+// nicht die Ausnahme — eine Cloud-Platzhalter-Datei scheitert genau beim Lesen. In der
+// Ticker-Schleife ist das ein Handle pro Ticker, bis EMFILE den Lauf killt. Eine DIAGNOSE darf
+// den Lauf niemals umbringen, deshalb steht das Schliessen in einem finally.
+// Derselbe Fehler stand seit Tag 166 im Produktionspfad `_getExistingSnapshotAge` (jeder Ticker,
+// jeder Lauf) — beide Aufrufer gehen jetzt durch DIESE Funktion, damit es nur eine Stelle gibt.
+// `null` heisst durchgehend "nicht lesbar", nie 0 und nie "nicht faellig".
+function readFileHead(fp, bytes) {
+  let fd = null;
   try {
     if (!fs.existsSync(fp)) return null;
-    const buf = Buffer.alloc(4096);
-    const fd = fs.openSync(fp, 'r');
-    const read = fs.readSync(fd, buf, 0, 4096, 0);
-    fs.closeSync(fd);
-    const m = buf.toString('utf8', 0, read).match(/"fundamentalsAsOf"\s*:\s*"([^"]+)"/);
-    if (!m) return null;
-    const ms = new Date(m[1]).getTime();
-    if (!Number.isFinite(ms)) return null;
-    return now - ms;
-  } catch { return null; }
+    const buf = Buffer.alloc(bytes);
+    fd = fs.openSync(fp, 'r');
+    const read = fs.readSync(fd, buf, 0, bytes, 0);
+    return buf.toString('utf8', 0, read);
+  } catch {
+    return null;
+  } finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch { /* ein zweites Scheitern darf den Lauf nicht kippen */ }
+    }
+  }
 }
 
 // Welcher Diagnose-Eimer eine Zeile trifft. Rein, damit die Zuordnung pruefbar ist, ohne den
@@ -2921,11 +2942,12 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
       const fp = path.join(outputDir, safeSnapshotFilename(ticker));
       if (fs.existsSync(fp)) {
         age = 0; // hat einen Snapshot: default "aeltester" (refresh), bis ein echter Timestamp gelesen wird
-        const buf = Buffer.alloc(1024);
-        const fd = fs.openSync(fp, 'r');
-        fs.readSync(fd, buf, 0, 1024, 0);
-        fs.closeSync(fd);
-        const hdr = buf.toString('utf8');
+        // T325: auch dieser Kopf-Leser lief als openSync -> readSync -> closeSync in einem
+        // try/catch und leckte den Handle bei einem werfenden readSync. Er ist der TEUERSTE
+        // der drei: die Sortier-Vorrunde beruehrt JEDEN Ticker der Scheibe, bevor der Abruf
+        // ueberhaupt beginnt (~1.280 pro Shard). Verhalten unveraendert: ein vorhandener,
+        // aber unlesbarer Snapshot behaelt age = 0 und wird zuerst aufgefrischt.
+        const hdr = readFileHead(fp, 1024) || '';
         const m = hdr.match(asOfRegex) || hdr.match(fetchedAtRegex);
         if (m) {
           const t = new Date(m[1]).getTime();
@@ -3289,18 +3311,16 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
   // Tag 166: read existing snapshot's asOf to decide price-only vs full pull
   function _getExistingSnapshotAge(ticker) {
-    try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return null;
-      const buf = Buffer.alloc(500);
-      const fd = fs.openSync(fp, 'r');
-      fs.readSync(fd, buf, 0, 500, 0);
-      fs.closeSync(fd);
-      const m = buf.toString('utf8').match(/"asOf"\s*:\s*"([^"]+)"/);
-      if (!m) return null;
-      const age = Date.now() - new Date(m[1]).getTime();
-      return age;
-    } catch { return null; }
+    // T325: liest ueber readFileHead, damit der Handle auch bei einem werfenden readSync
+    // geschlossen wird (OneDrive-Platzhalter). Leseweite 500 Byte wie seit Tag 166 —
+    // `asOf` steht im meta-Kopf, die Weite ist hier NICHT die Aenderung.
+    const head = readFileHead(path.join(outputDir, safeSnapshotFilename(ticker)), 500);
+    if (head == null) return null;
+    const m = head.match(/"asOf"\s*:\s*"([^"]+)"/);
+    if (!m) return null;
+    const ms = new Date(m[1]).getTime();
+    if (!Number.isFinite(ms)) return null;
+    return Date.now() - ms;
   }
 
   // Durchsatz-Diagnose: der SEPARATE Voll-Abruf-Stempel eines vorhandenen Snapshots. Die Arbeit
@@ -5080,6 +5100,7 @@ if (require.main === module) {
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   fundamentalsStaleness, ftsFailureSummary,
   fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
+  readFileHead,                                 // T325 (Handle-Leck)
   // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
   // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
   // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
