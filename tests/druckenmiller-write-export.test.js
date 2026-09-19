@@ -17,12 +17,12 @@ const os = require('node:os');
 const path = require('node:path');
 const zlib = require('node:zlib');
 
-const W = require('../../scripts/write-druckenmiller-export.js');
-const internals = require('../../lib/druckenmiller/internals.js');
-const ledgerLib = require('../../lib/druckenmiller/ledger.js');
-const store = require('../../lib/price-history-store.js');
+const W = require('../scripts/write-druckenmiller-export.js');
+const internals = require('../lib/druckenmiller/internals.js');
+const ledgerLib = require('../lib/druckenmiller/ledger.js');
+const store = require('../lib/price-history-store.js');
 
-const REPO = path.resolve(__dirname, '..', '..');
+const REPO = path.resolve(__dirname, '..');
 const PROTOCOL = path.join(REPO, 'protocol');
 
 let pass = 0, fail = 0;

@@ -20,11 +20,11 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const REPO = path.resolve(__dirname, '..', '..');
+const REPO = path.resolve(__dirname, '..');
 const FILE_A = path.join(REPO, 'protocol', 'druckenmiller_loggers_registered_20260914.json');
 const SIDECAR = FILE_A + '.sha256';
-const SPEC_CONSTANTS = path.join(__dirname, 'fixtures', 'spec-constants.json');
-const CHANGELOG = path.join(__dirname, 'fixtures', 'registration.CHANGELOG.md');
+const SPEC_CONSTANTS = path.join(__dirname, 'druckenmiller', 'fixtures', 'spec-constants.json');
+const CHANGELOG = path.join(__dirname, 'druckenmiller', 'fixtures', 'registration.CHANGELOG.md');
 const LEDGER = path.join(REPO, 'druckenmiller-history', 'internals-ledger.jsonl');
 
 let pass = 0, fail = 0;
@@ -101,8 +101,8 @@ test('R4 BRUCHPROBE: derselbe Vergleich faengt eine verstellte Konstante', () =>
 });
 
 test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei sagt es)', () => {
-  const internals = require('../../lib/druckenmiller/internals.js');
-  const U = require('../../lib/druckenmiller/universe.js');
+  const internals = require('../lib/druckenmiller/internals.js');
+  const U = require('../lib/druckenmiller/universe.js');
   const d3 = fileA.councilD3;
   assert.equal(internals.BAND, d3.l3Band, 'L3-Band im Code weicht von der Registrierung ab');
   assert.deepEqual(internals.BAND_SENSITIV, d3.l3BandSensitivities);
@@ -112,7 +112,7 @@ test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei 
   assert.equal(internals.FENSTER_252, d3.axisWindows.highLowWindow);
   assert.equal(internals.L4B_MIN_BASKET, d3.l4bMinBasketN, 'der L4b-Mindestkorb im Code weicht ab');
   // Und die registrierte Quantil-Ausschlussliste ist im Code auch WIRKSAM, nicht nur notiert.
-  const ledger = require('../../lib/druckenmiller/ledger.js');
+  const ledger = require('../lib/druckenmiller/ledger.js');
   for (const flag of fileA.rIntLoggedOnly.quantileWindowExcludes) {
     const zeile = { date: '2026-01-02' }; zeile[flag] = true;
     assert.equal(ledger.quantileInput([zeile]).length, 0,
@@ -124,7 +124,7 @@ test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei 
   // dass das WORT in Datei A vorkommt. Jede Schwelle zwischen 0 und 0,2 waere gruen geblieben.
   // Der Schreiber liest die Zahl jetzt aus der Registrierung; hier wird das gemessen, nicht
   // geglaubt: dieselbe Menge, einmal knapp unter und einmal knapp ueber der Schwelle.
-  const W = require('../../scripts/write-druckenmiller-export.js');
+  const W = require('../scripts/write-druckenmiller-export.js');
   const schwelle = fileA.courtGates.churnMaxShare;
   assert.equal(schwelle, 0.05, 'die registrierte Churn-Schwelle ist nicht mehr 5 %');
   assert.throws(() => W.churnSerie('egal', [], 0, () => {}), /churnMaxShare/,
@@ -188,8 +188,8 @@ test('R8 WAECHTER am Ding: der highChurn-Ausschluss braucht einen Produzenten, b
   // Folgenlos, solange R-INT null ist — R-INT braucht 250 quantilfaehige Live-Tage. Dieser
   // Waechter haengt deshalb an genau dieser Bedingung: er wird rot, BEVOR die erste
   // R-INT-Zahl aus Sitzungen entstehen kann, deren Churn niemand kennt.
-  const internals = require('../../lib/druckenmiller/internals.js');
-  const ledger = require('../../lib/druckenmiller/ledger.js');
+  const internals = require('../lib/druckenmiller/internals.js');
+  const ledger = require('../lib/druckenmiller/ledger.js');
   const hatFeld = internals.LEDGER_ROW_FIELDS.includes('highChurn');
   if (!fs.existsSync(LEDGER)) { assert.ok(false, 'kein Ledger — nicht pruefbar'); }
   const rows = lies(LEDGER).trim().split('\n').filter(Boolean).map((l) => JSON.parse(l));

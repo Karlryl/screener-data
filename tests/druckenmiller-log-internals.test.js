@@ -16,7 +16,7 @@ const path = require('node:path');
 const zlib = require('node:zlib');
 const { spawnSync } = require('node:child_process');
 
-const REPO = path.resolve(__dirname, '..', '..');
+const REPO = path.resolve(__dirname, '..');
 const SKRIPT = path.join(REPO, 'scripts', 'druckenmiller-log-internals.js');
 const store = require(path.join(REPO, 'lib', 'price-history-store.js'));
 const L = require(path.join(REPO, 'lib', 'druckenmiller', 'ledger.js'));

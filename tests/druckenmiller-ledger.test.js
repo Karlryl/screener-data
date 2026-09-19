@@ -19,7 +19,7 @@ const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const L = require('../../lib/druckenmiller/ledger.js');
+const L = require('../lib/druckenmiller/ledger.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -211,7 +211,7 @@ test('L17 REVIEW-FUND: ein unlesbarer Sidecar ist ein Befund, kein stilles null'
 test('L18 der LF-Pin fuer druckenmiller-history steht in .gitattributes', () => {
   // Der eigentliche Schutz gegen CRLF liegt in git, nicht im Code. Ohne den Pin haengt die
   // Integritaet der Reihe an der lokalen core.autocrlf-Einstellung jeder Maschine.
-  const ga = fs.readFileSync(path.join(__dirname, '..', '..', '.gitattributes'), 'utf8');
+  const ga = fs.readFileSync(path.join(__dirname, '..', '.gitattributes'), 'utf8');
   assert.match(ga, /^\/druckenmiller-history\/\*\* -text$/m);
 });
 

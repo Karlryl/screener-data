@@ -535,6 +535,18 @@ und **eigenem `--check`** (`scripts/write-druckenmiller-export.js --check`). Das
 der Boards (`scripts/write-findash-export.js --check`) fasst diesen Ordner **nicht** an; der
 gemeinsame Fixture-Stand bleibt unberuehrt. Additiv nach §7 → **kein v2-Bump**.
 
+> **Wo die Tests des Moduls liegen (19.09.2026, nur Pfad — Logger-Semantik unverändert).**
+> Chunk 0 legte sie unter `tests/druckenmiller/` ab und trug dafür einen vierten Glob in
+> `scripts/test-gate.js` ein. Das geht seit dem 17.09. nicht mehr: `tests/rule40-ci-wiring.test.js`
+> sichert zu, dass `BLOCKING_GLOBS` unberührt bleibt, und `tests/scoring/bh-b09-dailyyml.test.js`
+> (BH-035) nagelt dieselbe Liste in der Sperrzone fest — beide Wächter gleichzeitig zu halten
+> geht nur ohne vierten Eintrag. Die Testdateien heißen deshalb **flach**
+> `tests/druckenmiller-*test.js` und werden vom bestehenden ersten Glob `tests/*test.js`
+> gefangen; blockierend laufen sie unverändert. Die Fixtures bleiben unter
+> `tests/druckenmiller/fixtures/` (dort hält `.gitattributes` ihre Zeilenenden fest), und die
+> Enumeration im Gate wirft alles unter `/fixtures/` ohnehin weg. Geändert hat sich **kein**
+> Vertrag, kein Schwellwert und keine Logger-Semantik — nur der Dateiname.
+
 ### 13.1 Die Vierer-Regel (und warum das Modul heute absichtlich „stale" ist)
 
 Der Ordner traegt im Endzustand **genau vier** Dateien: `regime.json`, `meta.json`,
