@@ -74,6 +74,21 @@ test('ohne Quartalsreihe greift der Waechter nicht (der Jahres-Fallback hat kein
   drin({}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], }, undefined, false);
 });
 
+// DIE GEGENRICHTUNG DES QUARTALS-TORS (19.09.2026, silent-failure-hunter, nachgestellt):
+// ein winziges Vorjahresquartal darf eine Zeile NICHT toeten, wenn der angezeigte
+// Wachstumswert gar nicht aus dem Quartalsbein stammt. Hier traegt das Quartalsbein nicht
+// (juengstes Quartal ohne Wert), das Jahres-Wachstum ist mit 0,8 Basisanteil gesund.
+// Vor dem Fix fiel genau diese Zeile als 'basisQuartalStub' heraus — benannt nach einem
+// Bein, das an der Zahl keinen Anteil hatte. Am Bestand: 19 solcher Zeilen.
+test('winziges Vorjahresquartal toetet keine Zeile, deren Wachstum aus dem Jahresbein kommt', () => {
+  drin({ revGrowthYoYPct: 25 }, {
+    revenueTTM: 400e6,
+    revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 1e6 }],
+    revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
+    annualRev: [400e6, 320e6, 240e6],
+  }, undefined, false);
+});
+
 // --- FCF-Marge -------------------------------------------------------------
 test('gueltige FCF-Marge bleibt drin, unterdrueckte fliegt raus', () => {
   drin({}, { fcfMarginTTM: 30 });

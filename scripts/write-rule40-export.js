@@ -210,26 +210,45 @@ function readJsonOrNull(p) {
 }
 
 /**
- * Das Vorjahresquartal, gegen das revQuartalsYoY rechnet (axes.js:95-105) — dieselbe
- * Index-Wahl, damit der Waechter genau die Zahl prueft, die in den Wachstumswert eingeht.
- * null, wenn dieser Name gar kein Quartalsbein hat (dann traegt der Jahres-Fallback).
+ * WELCHES BEIN TRAEGT DEN WACHSTUMSWERT. revGrowthLevel nimmt das Quartalsbein, wenn
+ * revQuartalsYoY eine Zahl liefert, sonst die Jahresreihe (axes.js:127-128). Beide
+ * Basis-Tore haengen an dieser einen Frage, und sie muessen dieselbe Antwort benutzen —
+ * sonst prueft ein Tor eine Zahl, die gar nicht angezeigt wird. Genau EIN Aufrufpunkt,
+ * damit die Zwillinge nicht wieder auseinanderlaufen.
  */
+function quartalsBeinTraegt(snapshot) {
+  return axesFns.revQuartalsYoY(snapshot) !== null;
+}
+
 /**
  * Basisjahr und aktuelles Jahr der Jahresreihe — NUR wenn das Quartalsbein NICHT traegt.
- * Sonst waere dieses Tor fuer eine Zahl zustaendig, die es gar nicht erzeugt hat: bei
- * vorhandenem Quartals-YoY nimmt revGrowthLevel das Quartalsbein (axes.js:127-128), und dort
- * wacht bereits MIN_BASE_QUARTER_SHARE. Die Paarbildung spiegelt adjacentTwoPresent
- * (axes.js:52-56): Index 0 gegen Index 1, beide muessen da sein.
+ * Sonst waere dieses Tor fuer eine Zahl zustaendig, die es gar nicht erzeugt hat; bei
+ * tragendem Quartalsbein wacht MIN_BASE_QUARTER_SHARE. Die Paarbildung spiegelt
+ * adjacentTwoPresent (axes.js:52-56): Index 0 gegen Index 1, beide muessen da sein.
  */
 function basisJahr(snapshot) {
-  if (axesFns.revQuartalsYoY(snapshot) !== null) return null;
+  if (quartalsBeinTraegt(snapshot)) return null;
   const ar = norm(snapshot, 'annualRev');
   const aktuell = ar[0], basis = ar[1];
   if (!istZahl(aktuell) || !istZahl(basis) || aktuell <= 0 || basis <= 0) return null;
   return { basis, aktuell };
 }
 
+/**
+ * Das Vorjahresquartal, gegen das revQuartalsYoY rechnet (axes.js:95-105) — dieselbe
+ * Index-Wahl, damit der Waechter genau die Zahl prueft, die in den Wachstumswert eingeht.
+ * null, wenn dieser Name gar kein Quartalsbein hat (dann traegt der Jahres-Fallback).
+ *
+ * DIE ERSTE ZEILE IST EIN FIX (19.09.2026, silent-failure-hunter, nachgestellt): ohne sie
+ * loeste jahresVergleichIdx auch dann ein Vorjahresquartal auf, wenn revQuartalsYoY gar
+ * nichts geliefert hat — etwa weil das juengste Quartal keinen Wert traegt (479 von 13.916
+ * Snapshots). Dann fiel eine Zeile mit gesundem JAHRES-Wachstum unter dem Zaehler
+ * basisQuartalStub heraus, benannt nach einem Bein, das an der angezeigten Zahl keinen
+ * Anteil hatte. Gemessen am Bestand: 126 Zeilen loesen das Quartals-Tor aus, 19 davon
+ * ohne tragendes Quartalsbein — mit Basisjahr-Anteilen von 49 bis 80 %, also gesund.
+ */
 function basisQuartal(snapshot) {
+  if (!quartalsBeinTraegt(snapshot)) return null;
   const v = jahresVergleichIdx(snapshot, 'revenueQ', 0);
   if (v === null) return null;
   const rq = norm(snapshot, 'revenueQ');
