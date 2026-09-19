@@ -22,11 +22,19 @@
  *     (Innen-Inkonsistenz der PIT-Zeile, T160)
  * Zusaetzlich: aendert sich sonst etwas an der ZEILE (score, rank, axisBreakdown)?
  *
+ * ABWESENHEIT IST NIE STABILITAET (Hausregel dieses Repos, von der Codex-Gegenpruefung
+ * zweimal eingefordert): eine Zeile ohne `pit`, ein `marketCap`, der fehlt oder nicht endlich
+ * ist, eine Kohorten-Liste, die kein Array ist, ein doppelter Schluessel - all das wird
+ * GEZAEHLT und macht `pruefeErgebnis()` laut, statt als "unveraendert" durchzugehen. In den
+ * Vintages 07./09.08. ist jeder dieser Zaehler 0; die Wachen sind fuer den Tag, an dem er es
+ * nicht ist.
+ *
  * mcapKlasseOf wird aus src/scoring/score.js IMPORTIERT, nicht nachgebaut - ein Nachbau
  * wuerde stillschweigend von der Produktionsschwelle abdriften. src/scoring wird nur gelesen.
  *
  * Run: node scripts/t139-marketcap-herkunft.js [--a 2026-08-07] [--b 2026-08-09]
  *        [--mit-survival] [--out <datei.json>]
+ *      T139_BOARD_ROOT=<dir> setzt das Wurzelverzeichnis der Vintages (fuer den Waechter).
  */
 const fs = require('fs');
 const path = require('path');
@@ -38,7 +46,7 @@ const { mcapKlasseOf } = require(path.join(ROOT, 'src', 'scoring', 'score.js'));
 // survival.json DAGEGEN traegt echte Kohorten-Zeilen mit pit-Block (97 bzw. 103 am
 // 07./09.08.): die Pre-Revenue-/Biotech-Spur, die nie auf Wachstum gescort wird. Sie ist
 // per Default AUSGESCHLOSSEN, damit die Zahl mit dem Ursprungsbefund (8.313 gemeinsame
-// Zeilen) vergleichbar bleibt — und nur deshalb. `--mit-survival` nimmt sie hinzu; die
+// Zeilen) vergleichbar bleibt - und nur deshalb. `--mit-survival` nimmt sie hinzu; die
 // Ausgabe fuehrt die Weiche als `survivalEnthalten` mit, damit keine Quote ohne ihren
 // Geltungsbereich weiterwandert. (Fund der read-only Codex-Gegenpruefung, 19.09.)
 const NICHT_BOARD = new Set(['calibration.json', 'regime.json', 'survival.json']);
@@ -49,9 +57,15 @@ function argOf(flag, dflt) {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : dflt;
 }
 
-/** Alle Board-Zeilen eines Vintage, Schluessel sektor|kohorte|ticker. */
+/**
+ * Alle Board-Zeilen eines Vintage, Schluessel sektor|kohorte|ticker.
+ * Rueckgabe: { rows, kaputt } - `kaputt` zaehlt jede Kohorte, die kein Array ist, und jede
+ * Zeile ohne Ticker. Ein doppelter Schluessel WIRFT: stilles Ueberschreiben machte das
+ * Ergebnis von der Reihenfolge widerspruechlicher Duplikate abhaengig.
+ */
 function ladeVintage(dir, mitSurvival) {
   const rows = new Map();
+  let kaputt = 0;
   for (const f of fs.readdirSync(dir).sort()) {
     if (!f.endsWith('.json')) continue;
     if (NICHT_BOARD.has(f) && !(mitSurvival && f === 'survival.json')) continue;
@@ -60,19 +74,24 @@ function ladeVintage(dir, mitSurvival) {
     const sektor = f.replace(/\.json$/, '');
     for (const kohorte of Object.keys(d.cohort)) {
       const liste = d.cohort[kohorte];
-      if (!Array.isArray(liste)) continue;
+      if (!Array.isArray(liste)) { kaputt++; continue; }
       for (const r of liste) {
-        if (!r || !r.ticker) continue;
-        rows.set(`${sektor}|${kohorte}|${r.ticker}`, r);
+        if (!r || !r.ticker) { kaputt++; continue; }
+        const k = `${sektor}|${kohorte}|${r.ticker}`;
+        if (rows.has(k)) {
+          throw new Error(`Doppelter Schluessel ${k} in ${dir} - welche der beiden Zeilen `
+            + 'gemessen wird, haenge sonst an der Dateireihenfolge.');
+        }
+        rows.set(k, r);
       }
     }
   }
-  return rows;
+  return { rows, kaputt };
 }
 
 // Vergleich ueber ANWESENHEIT + isDeepStrictEqual, NICHT ueber JSON.stringify: stringify
-// macht `undefined`/fehlenden Schluessel zu `null`, `-0` zu `0` und `NaN` zu `null` — drei
-// Wege, auf denen zwei ungleiche pit-Bloecke als gleich durchgehen — und erzeugt umgekehrt
+// macht `undefined`/fehlenden Schluessel zu `null`, `-0` zu `0` und `NaN` zu `null` - drei
+// Wege, auf denen zwei ungleiche pit-Bloecke als gleich durchgehen - und erzeugt umgekehrt
 // Scheindifferenzen bei geaenderter Schluesselreihenfolge. In den Vintages 07./09.08. macht
 // es keinen Unterschied (nachgerechnet), aber eine Zaehlung, die auf Gleichheit BESTEHT,
 // darf die Gleichheit nicht der Serialisierung ueberlassen.
@@ -95,28 +114,38 @@ function zeilenDiff(a, b) {
   return feldDiff(a, b, 'pit');
 }
 
+/** Ein Feld, das auf BEIDEN Seiten fehlt, ist unmessbar - nicht "unveraendert". */
+const inBeiden = (a, b, f) => Object.hasOwn(a.pit || {}, f) && Object.hasOwn(b.pit || {}, f);
+
+const quote = (zaehler, nenner) => (nenner > 0 ? zaehler / nenner : null);
+
 function mess(dirA, dirB, opts) {
   const mitSurvival = !!(opts && opts.mitSurvival);
   const A = ladeVintage(dirA, mitSurvival);
   const B = ladeVintage(dirB, mitSurvival);
-  const gemeinsam = [...A.keys()].filter((k) => B.has(k));
+  const gemeinsam = [...A.rows.keys()].filter((k) => B.rows.has(k));
 
   const out = {
     vintageA: path.basename(dirA),
-    survivalEnthalten: mitSurvival,
     vintageB: path.basename(dirB),
-    zeilenA: A.size,
-    zeilenB: B.size,
+    survivalEnthalten: mitSurvival,
+    zeilenA: A.rows.size,
+    zeilenB: B.rows.size,
     gemeinsam: gemeinsam.length,
+    // Wachen gegen "Abwesenheit sieht aus wie Stabilitaet". Alle vier sind am 07./09.08. 0.
+    kaputteEintraege: A.kaputt + B.kaputt,
+    paareOhnePit: 0,
+    mcapUnbrauchbar: 0,
+    paareOhneKursfeld: 0,
     mcapGeaendert: 0,
     nurMcapImPit: 0,
+    nurMcapUndZeileSonstIdentisch: 0,
     mcapGeaendertKursfelderIdentisch: 0,
     mcapGeaendertFetchedAtIdentisch: 0,
     mcapUnveraendert: 0,
     zeilePitUndRestIdentisch: 0,
     klasseGekippt: 0,
     klasseGekipptNurMcap: 0,
-    nurMcapUndZeileSonstIdentisch: 0,
     klasseKippBeispiele: [],
     verhaeltnis: { n: 0, min: null, max: null },
     // T160-Kern: marketCap bewegt sich, priceSales steht - die Zeile ist innen inkonsistent.
@@ -125,12 +154,24 @@ function mess(dirA, dirB, opts) {
   };
 
   for (const k of gemeinsam) {
-    const a = A.get(k);
-    const b = B.get(k);
+    const a = A.rows.get(k);
+    const b = B.rows.get(k);
+    if (!a.pit || !b.pit) { out.paareOhnePit++; continue; }
     const dPit = pitDiff(a, b);
     const dRest = zeilenDiff(a, b);
     if (dPit.length === 0 && dRest.length === 0) out.zeilePitUndRestIdentisch++;
-    for (const f of dPit) if (f !== 'marketCap') out.andereFelderImPit[f] = (out.andereFelderImPit[f] || 0) + 1;
+    for (const f of dPit) {
+      if (f !== 'marketCap') out.andereFelderImPit[f] = (out.andereFelderImPit[f] || 0) + 1;
+    }
+    // Brauchbarkeit VOR jeder Zaehlung: ein fehlender, nicht endlicher oder nicht positiver
+    // Marktwert ist weder "unveraendert" noch "geaendert" — er ist nicht gemessen.
+    // mcapKlasseOf(null) waere `null` und `Number(null)` waere 0; beides saehe wie eine
+    // Messung aus. (Fund der Codex-Code-Review, 19.09.)
+    const ma = a.pit.marketCap;
+    const mb = b.pit.marketCap;
+    const brauchbar = inBeiden(a, b, 'marketCap')
+      && Number.isFinite(ma) && Number.isFinite(mb) && ma > 0 && mb > 0;
+    if (!brauchbar) { out.mcapUnbrauchbar++; continue; }
     if (!dPit.includes('marketCap')) { out.mcapUnveraendert++; continue; }
     out.mcapGeaendert++;
     const nurMcap = dPit.length === 1;
@@ -138,41 +179,54 @@ function mess(dirA, dirB, opts) {
       out.nurMcapImPit++;
       if (dRest.length === 0) out.nurMcapUndZeileSonstIdentisch++;
     }
-    if (!dPit.some((f) => KURSFELDER.includes(f))) out.mcapGeaendertKursfelderIdentisch++;
-    if (!dPit.includes('fetchedAt')) out.mcapGeaendertFetchedAtIdentisch++;
-    if (!dPit.includes('priceSales')) out.mcapOhnePriceSales++;
+    // "Kursfeld/fetchedAt identisch" darf nur zaehlen, was ueberhaupt da ist.
+    const kursfelderDa = KURSFELDER.some((f) => inBeiden(a, b, f));
+    const stempelDa = inBeiden(a, b, 'fetchedAt');
+    if (!kursfelderDa || !stempelDa) out.paareOhneKursfeld++;
+    if (kursfelderDa && !dPit.some((f) => KURSFELDER.includes(f))) out.mcapGeaendertKursfelderIdentisch++;
+    if (stempelDa && !dPit.includes('fetchedAt')) out.mcapGeaendertFetchedAtIdentisch++;
+    if (inBeiden(a, b, 'priceSales') && !dPit.includes('priceSales')) out.mcapOhnePriceSales++;
 
-    const ka = mcapKlasseOf(a.pit && a.pit.marketCap);
-    const kb = mcapKlasseOf(b.pit && b.pit.marketCap);
+    const ka = mcapKlasseOf(ma);
+    const kb = mcapKlasseOf(mb);
     if (ka !== kb) {
       out.klasseGekippt++;
       if (nurMcap) out.klasseGekipptNurMcap++;
       if (out.klasseKippBeispiele.length < 10) out.klasseKippBeispiele.push({ zeile: k, von: ka, nach: kb });
     }
-    const ma = Number(a.pit && a.pit.marketCap);
-    const mb = Number(b.pit && b.pit.marketCap);
-    if (Number.isFinite(ma) && Number.isFinite(mb) && ma > 0) {
-      const q = mb / ma;
+    const q = mb / ma;
+    if (Number.isFinite(q)) {   // 1e-308 -> 1e308 sind beide endlich, der Quotient nicht
       out.verhaeltnis.n++;
       if (out.verhaeltnis.min === null || q < out.verhaeltnis.min) out.verhaeltnis.min = q;
       if (out.verhaeltnis.max === null || q > out.verhaeltnis.max) out.verhaeltnis.max = q;
+    } else {
+      out.mcapUnbrauchbar++;
     }
   }
-  out.anteilMcapGeaendert = out.gemeinsam ? out.mcapGeaendert / out.gemeinsam : 0;
-  out.anteilKlasseGekippt = out.mcapGeaendert ? out.klasseGekippt / out.mcapGeaendert : 0;
+  // Nenner 0 heisst "nicht bestimmbar", nicht "0 %".
+  out.anteilMcapGeaendert = quote(out.mcapGeaendert, out.gemeinsam);
+  out.anteilKlasseGekippt = quote(out.klasseGekippt, out.mcapGeaendert);
   return out;
 }
 
 /**
  * "0 von 0" ist in diesem Repo die Hausform der stillen Panne: ein leeres Ergebnis liest sich
- * wie ein sauberes. Kein gemeinsames Zeilenpaar heisst, dass die Vintages nicht zueinander
- * passen (oder der Schluessel nicht greift) — ein Messausfall, kein Befund, und er muss laut
- * sein. Eigene Funktion, damit der Waechter GENAU diese Regel prueft statt eines Textmusters.
+ * wie ein sauberes. Kein gemeinsames Zeilenpaar, eine kaputte Kohorten-Liste oder ein Paar
+ * ohne pit-Block heisst Messausfall, nicht Befund - und das muss laut sein. Eigene Funktion,
+ * damit der Waechter GENAU diese Regel prueft statt eines Textmusters.
  */
 function pruefeErgebnis(r) {
   if (r.gemeinsam === 0) {
     throw new Error(`Messausfall: 0 gemeinsame Zeilen zwischen ${r.vintageA} (${r.zeilenA} Zeilen) `
-      + `und ${r.vintageB} (${r.zeilenB} Zeilen) — ohne Paare ist jede Quote bedeutungslos.`);
+      + `und ${r.vintageB} (${r.zeilenB} Zeilen) - ohne Paare ist jede Quote bedeutungslos.`);
+  }
+  if (r.kaputteEintraege > 0) {
+    throw new Error(`Messausfall: ${r.kaputteEintraege} Kohorten-Eintraege sind keine Zeilenliste `
+      + '- stillschweigend uebersprungen waeren sie eine zu kleine Grundgesamtheit.');
+  }
+  if (r.paareOhnePit > 0) {
+    throw new Error(`Messausfall: ${r.paareOhnePit} Paare ohne pit-Block - ohne den Block ist `
+      + 'weder "nur marketCap" noch "sonst nichts" messbar.');
   }
   return r;
 }
@@ -180,8 +234,9 @@ function pruefeErgebnis(r) {
 function main() {
   const a = argOf('--a', '2026-08-07');
   const b = argOf('--b', '2026-08-09');
-  const dirA = path.join(ROOT, 'board-history', a);
-  const dirB = path.join(ROOT, 'board-history', b);
+  const wurzel = process.env.T139_BOARD_ROOT || path.join(ROOT, 'board-history');
+  const dirA = path.join(wurzel, a);
+  const dirB = path.join(wurzel, b);
   for (const d of [dirA, dirB]) {
     if (!fs.existsSync(d)) { console.error(`[t139] Vintage fehlt: ${d}`); process.exit(2); }
   }

@@ -148,9 +148,28 @@ Jetzt ist es eine sichtbare Weiche (`--mit-survival`), und die Ausgabe fuehrt si
 der engere Bereich, weil nur er mit der Zahl des Ursprungsbefunds vergleichbar ist — aber die
 Zahl traegt ihren Geltungsbereich ab jetzt bei sich.
 
+### Zweiter Lauf: Code-Review (stille Fehler + JavaScript)
+
+Derselbe Motor, zweiter Brief, auf den fertigen Commit: **sieben reproduzierte Befunde, einer
+hoch.** Gemeinsamer Kern: **Abwesenheit sah aus wie Stabilitaet.** In den Vintages 07./09.08.
+aendert keiner davon eine Zahl — nachgemessen: `paareOhnePit` 0, `mcapUnbrauchbar` 0,
+`kaputteEintraege` 0, `paareOhneKursfeld` 0, und alle Ergebnisse (8.313 / 7.226 / 57 /
+0,377–3,173) stehen unveraendert. Gehaertet wurde trotzdem, weil genau diese Klasse in diesem
+Repo schon zweimal eine Aussage gekippt hat:
+
+| Befund | Fall | Behandlung |
+| --- | --- | --- |
+| **hoch:** fehlende Felder galten als unveraendert | Zeile ohne `pit`; `marketCap` auf beiden Seiten abwesend | eigene Zaehler `paareOhnePit` / `mcapUnbrauchbar`, aus jeder Quote heraus; `pruefeErgebnis` wirft |
+| kaputte Kohorten-Liste still uebersprungen | `cohort.profitable` ist ein Objekt statt Array | `kaputteEintraege` gezaehlt, `pruefeErgebnis` wirft |
+| doppelter Schluessel still ueberschrieben | zweimal derselbe Ticker in Sektor+Kohorte | `ladeVintage` **wirft** — sonst haengt das Ergebnis an der Zeilenreihenfolge |
+| `null`-Marktwert wurde Klassenwechsel + Verhaeltnis 0 | `1e9 → null` | Brauchbarkeit VOR jeder Zaehlung geprueft |
+| Quote mit Nenner 0 wurde als „0 %" ausgegeben | keine bewegte Zeile | Quote ist dann `null` = nicht bestimmbar |
+| zwei Mutationen ueberlebten die Tests | Verhaeltnis `ma/mb` statt `mb/ma`; `pruefeErgebnis`-Aufruf aus `main()` entfernt | Verhaeltniswert wird geprueft; neue CLI-Pruefung misst den **Prozess-Exit** (`T139_BOARD_ROOT`) |
+| endliche Eingaben, unendlicher Quotient | `1e-308 → 1e308` | `Number.isFinite(q)` am Quotienten |
+
 ## 6. Waechter
 
-`tests/t139-marketcap-herkunft.test.js`, 7 Pruefungen, hermetisch (Temp-Vintages, kein
+`tests/t139-marketcap-herkunft.test.js`, 10 Pruefungen, hermetisch (Temp-Vintages, kein
 Substrat, kein Netz). Gepinnt wird die Sache: die Klassenschwelle wird aus
 `src/scoring/score.js` **importiert** statt nachgebaut (F1334), der Zaehler muss „nur
 `marketCap` bewegt" von „ein Kursfeld bewegt sich mit" in **beide** Richtungen trennen, und
@@ -161,10 +180,12 @@ Dazu eine Wache gegen die Hausform der stillen Panne: **0 gemeinsame Zeilen = Ex
 „0 von 0 ok" (`pruefeErgebnis()`, als eigene Funktion, damit der Waechter die Regel prueft und
 kein Textmuster).
 
-**Vier Sabotagen gefahren und rot gesehen** (alle Exit 1, danach zurueckgesetzt, wieder gruen):
+**Neun Sabotagen gefahren, alle neun rot** (Exit 1, danach zurueckgesetzt, wieder gruen):
 Kursfeld-Liste geleert · `nurMcap` als „`priceSales` steht still" umdefiniert · Zeilen-Diff
-weggelassen · Null-Wache entschaerft. Die zweite und dritte ueberlebten die erste Fassung —
-sie sind der Grund fuer die Fixture-Haertung aus Abschnitt 5.
+weggelassen · Null-Wache entschaerft · Verhaeltnis umgedreht · `pruefeErgebnis`-Aufruf aus
+`main()` entfernt · Duplikat-Wache entschaerft · Kaputt-Zaehler entschaerft ·
+Brauchbarkeits-Pruefung entschaerft. **Vier davon ueberlebten eine fruehere Fassung** — sie
+sind der Grund fuer die Haertungen aus Abschnitt 5.
 
 ## 7. Grenzen, ehrlich
 

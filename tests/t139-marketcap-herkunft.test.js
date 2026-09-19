@@ -24,7 +24,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { mess, pitDiff, pruefeErgebnis } = require('../scripts/t139-marketcap-herkunft.js');
+const { mess, pitDiff, pruefeErgebnis, ladeVintage } = require('../scripts/t139-marketcap-herkunft.js');
+const { spawnSync } = require('node:child_process');
 const { mcapKlasseOf, MCAP_KLASSEN_USD } = require('../src/scoring/score.js');
 
 let pass = 0, fail = 0;
@@ -86,6 +87,10 @@ test('2. Zaehler unterscheidet "nur marketCap" von "Kursfeld bewegt sich mit"', 
   // Zeilen-Ebene: von den zwei nur-marketCap-Zeilen bleibt nur KIPP auch sonst gleich.
   // Ohne diese Erwartung ueberlebt eine Mutation, die den Zeilen-Diff ganz weglaesst.
   assert.equal(r.nurMcapUndZeileSonstIdentisch, 1, 'NUR_MCAP wandert im rank');
+  // Das Verhaeltnis ist NEU/ALT, nicht ALT/NEU — ohne diese Erwartung ueberlebt ein
+  // vertauschter Quotient (1,1 wuerde still zu 0,909).
+  assert.ok(Math.abs(r.verhaeltnis.max - 1.1) < 1e-9, `max muss 1,1 sein, ist ${r.verhaeltnis.max}`);
+  assert.equal(r.verhaeltnis.n, 4);
 });
 
 test('3. Klassen-Kipp haengt am WERT, nicht an der Bewegung', () => {
@@ -150,6 +155,71 @@ test('7. "0 von 0" ist ein lauter Messausfall, kein gruener Lauf', () => {
     'ein Lauf ohne gemeinsame Zeilen darf NIE stumm durchgehen');
   // Gegenrichtung: ein Paar MIT gemeinsamen Zeilen darf die Wache nicht ausloesen.
   assert.equal(pruefeErgebnis(r).gemeinsam, 5);
+});
+
+test('8. die Wache haengt am CLI, nicht nur an der Funktion', () => {
+  // Ohne diesen Test ueberlebt eine Mutation, die NUR den Aufruf von pruefeErgebnis() in
+  // main() entfernt: Pruefung 7 wuerde weiter gruen bleiben und die CLI wieder Null-Quoten
+  // mit Exit 0 ausgeben. Gemessen wird deshalb der Prozess-Exit, nicht die Funktion.
+  const r2 = spawnSync(process.execPath,
+    [path.join(__dirname, '..', 'scripts', 't139-marketcap-herkunft.js'), '--a', '2026-03-01', '--b', '2026-03-02'],
+    { env: { ...process.env, T139_BOARD_ROOT: tmp }, encoding: 'utf8' });
+  assert.equal(r2.status, 1, `die CLI muss bei 0 gemeinsamen Zeilen Exit 1 liefern (war ${r2.status})`);
+  assert.match(r2.stderr, /Messausfall/);
+  // Gegenrichtung: ein gueltiges Paar laeuft durch und gibt die Messung aus.
+  const ok = spawnSync(process.execPath,
+    [path.join(__dirname, '..', 'scripts', 't139-marketcap-herkunft.js'), '--a', '2026-01-01', '--b', '2026-01-02'],
+    { env: { ...process.env, T139_BOARD_ROOT: tmp }, encoding: 'utf8' });
+  assert.equal(ok.status, 0, ok.stderr);
+  assert.equal(JSON.parse(ok.stdout).gemeinsam, 5);
+});
+
+test('9. Abwesenheit wird nie als Stabilitaet gezaehlt', () => {
+  const ohnePitA = path.join(tmp, '2026-04-01');
+  const ohnePitB = path.join(tmp, '2026-04-02');
+  for (const [d, mc] of [[ohnePitA, 1e9], [ohnePitB, 1.1e9]]) {
+    fs.mkdirSync(d, { recursive: true });
+    fs.writeFileSync(path.join(d, 'energy.json'), JSON.stringify({
+      cohort: {
+        profitable: [
+          { rank: 1, ticker: 'OHNE_PIT', score: 1 },                       // gar kein pit
+          { rank: 2, ticker: 'OHNE_MCAP', score: 1, pit: { priceSales: 2 } }, // pit ohne Marktwert
+          { rank: 3, ticker: 'NULL_MCAP', score: 1, pit: { marketCap: mc === 1e9 ? 1e9 : null, priceSales: 2 } },
+        ],
+      },
+    }));
+  }
+  const x = mess(ohnePitA, ohnePitB);
+  assert.equal(x.gemeinsam, 3);
+  assert.equal(x.paareOhnePit, 1, 'die Zeile ohne pit ist unmessbar, nicht unveraendert');
+  assert.equal(x.mcapUnbrauchbar, 2, 'fehlender und null-Marktwert zaehlen beide als unbrauchbar');
+  assert.equal(x.mcapGeaendert, 0, 'null ist kein neuer Marktwert');
+  assert.equal(x.klasseGekippt, 0, 'small -> null ist kein Klassenwechsel');
+  assert.equal(x.verhaeltnis.n, 0, 'ohne gueltiges Paar gibt es kein Verhaeltnis');
+  assert.equal(x.anteilKlasseGekippt, null, '0/0 ist nicht bestimmbar, nicht 0 %');
+  assert.throws(() => pruefeErgebnis(x), /ohne pit-Block/);
+});
+
+test('10. kaputte Kohorten-Liste und doppelter Schluessel gehen nie still durch', () => {
+  const kaputtA = path.join(tmp, '2026-05-01');
+  fs.mkdirSync(kaputtA, { recursive: true });
+  fs.writeFileSync(path.join(kaputtA, 'energy.json'), JSON.stringify({ cohort: { profitable: [zeile('X', 1e9, 2, 1)] } }));
+  fs.writeFileSync(path.join(kaputtA, 'tech.json'), JSON.stringify({ cohort: { profitable: { ticker: 'Y' } } }));
+  const kaputtB = path.join(tmp, '2026-05-02');
+  fs.mkdirSync(kaputtB, { recursive: true });
+  fs.writeFileSync(path.join(kaputtB, 'energy.json'), JSON.stringify({ cohort: { profitable: [zeile('X', 1e9, 2, 1)] } }));
+  fs.writeFileSync(path.join(kaputtB, 'tech.json'), JSON.stringify({ cohort: { profitable: { ticker: 'Y' } } }));
+  const k = mess(kaputtA, kaputtB);
+  assert.equal(k.kaputteEintraege, 2, 'eine Kohorte, die kein Array ist, wird gezaehlt');
+  assert.throws(() => pruefeErgebnis(k), /keine Zeilenliste/);
+
+  const doppelA = path.join(tmp, '2026-06-01');
+  fs.mkdirSync(doppelA, { recursive: true });
+  fs.writeFileSync(path.join(doppelA, 'energy.json'), JSON.stringify({
+    cohort: { profitable: [zeile('X', 1e9, 2, 1), zeile('X', 2e9, 2, 2)] },
+  }));
+  assert.throws(() => ladeVintage(doppelA, false), /Doppelter Schluessel/,
+    'stilles Ueberschreiben machte das Ergebnis von der Zeilenreihenfolge abhaengig');
 });
 
 fs.rmSync(tmp, { recursive: true, force: true });
