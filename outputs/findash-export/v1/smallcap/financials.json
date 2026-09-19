@@ -1,21 +1,21 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-18T08:53:06.873Z",
+  "generated_at": "2026-09-19T12:06:24.923Z",
   "branch": "financials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74.3,
-    "generated_at": "2026-09-18T08:46:10.418Z"
+    "coverage_pct": 73.8,
+    "generated_at": "2026-09-19T11:58:56.194Z"
   },
   "profitable": [
     {
       "rank": 1,
       "rankGrund": null,
       "ticker": "VINP",
-      "score": 75.4,
+      "score": 76.8,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -39,10 +39,10 @@
       "ipoYear": 2021,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 78.3,
-      "scoreShrunk": 75.4,
+      "scoreBase": 80.2,
+      "scoreShrunk": 76.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -51,22 +51,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73.5,
+          "pct": 71.9,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 97.1,
+          "pct": 96.9,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 91.7,
+          "pct": 90,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 79.4,
+          "pct": 78.1,
           "weight": 0.7
         },
         {
@@ -76,12 +76,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 58.3,
+          "pct": 70,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 35.7,
+          "pct": 41.7,
           "weight": 0.9
         }
       ],
@@ -100,7 +100,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "NOAH",
-      "score": 62,
+      "score": 66.1,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -123,10 +123,10 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 63.4,
-      "scoreShrunk": 62,
+      "scoreBase": 68.1,
+      "scoreShrunk": 66.1,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -135,22 +135,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.1,
+          "pct": 46.9,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 91.2,
+          "pct": 90.6,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 41.7,
+          "pct": 50,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 44.1,
+          "pct": 46.9,
           "weight": 0.7
         },
         {
@@ -160,16 +160,16 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 75,
+          "pct": 90,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 21.4,
+          "pct": 25,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": -1.5253351464096232,
+      "revGrowthYoYPct": -1.525335146409612,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -183,92 +183,8 @@
     {
       "rank": 3,
       "rankGrund": null,
-      "ticker": "TREE",
-      "score": 61.4,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.244,
-        "companion": 63.2
-      },
-      "name": "LendingTree, Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2008,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 62.7,
-      "scoreShrunk": 61.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 85.3,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 55.9,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 75,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 85.3,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 41.7,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 25,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 92.9,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 25.310655855682974,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 4,
-      "rankGrund": null,
       "ticker": "RM",
-      "score": 60.2,
+      "score": 60.8,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -292,10 +208,10 @@
       "ipoYear": 2012,
       "coverageAxes": "4/7",
       "coverageWeight": 0.58,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 66.9,
-      "scoreShrunk": 60.2,
+      "scoreBase": 68.7,
+      "scoreShrunk": 60.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -304,12 +220,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 55.9,
+          "pct": 59.4,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 79.4,
+          "pct": 78.1,
           "weight": 2.7
         },
         {
@@ -319,7 +235,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 55.9,
+          "pct": 59.4,
           "weight": 0.7
         },
         {
@@ -334,7 +250,7 @@
         },
         {
           "key": "dilution",
-          "pct": 50,
+          "pct": 58.3,
           "weight": 0.9
         }
       ],
@@ -350,39 +266,36 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "GLAD",
-      "score": 58.1,
+      "rank": 4,
+      "rankGrund": null,
+      "ticker": "TREE",
+      "score": 60.2,
       "track": "profitable",
       "lamps": [
-        "burning",
-        "arDivergence",
-        "fcfArtefact",
-        "opIncSynthetisch"
+        "lowRoic"
       ],
       "overview": {
         "kind": "gp",
-        "value": null,
-        "companion": 200.6
+        "value": 0.244,
+        "companion": 63.2
       },
-      "name": "Gladstone Capital Corporation",
+      "name": "LendingTree, Inc.",
       "country": "United States",
       "region": "North America",
       "sector": "Financial Services",
       "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
+      "phase": "inflected",
+      "mcapBand": "small",
       "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2002,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
+      "ipoRecency": "mature",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 2008,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 64.6,
-      "scoreShrunk": 58.1,
+      "scoreBase": 61.5,
+      "scoreShrunk": 60.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -391,41 +304,41 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 97.1,
+          "pct": 84.4,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 44.1,
+          "pct": 53.1,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": null,
+          "pct": 70,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 97.1,
+          "pct": 84.4,
           "weight": 0.7
         },
         {
           "key": "marginTrajectory",
-          "pct": null,
+          "pct": 41.7,
           "weight": 0.6
         },
         {
           "key": "capitalEfficiency",
-          "pct": null,
+          "pct": 30,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": null,
+          "pct": 91.7,
           "weight": 0.9
         }
       ],
-      "revGrowthYoYPct": 87.20793630074404,
+      "revGrowthYoYPct": 25.310655855682974,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
@@ -440,7 +353,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "GDOT",
-      "score": 56.3,
+      "score": 56.9,
       "track": "profitable",
       "lamps": [
         "lowRoic",
@@ -464,10 +377,10 @@
       "ipoYear": 2010,
       "coverageAxes": "7/7",
       "coverageWeight": 1,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 57,
-      "scoreShrunk": 56.3,
+      "scoreBase": 57.8,
+      "scoreShrunk": 56.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -476,22 +389,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 79.4,
+          "pct": 78.1,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 85.3,
+          "pct": 84.4,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 8.3,
+          "pct": 10,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 73.5,
+          "pct": 71.9,
           "weight": 0.7
         },
         {
@@ -501,12 +414,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 41.7,
+          "pct": 50,
           "weight": 1.5
         },
         {
           "key": "dilution",
-          "pct": 78.6,
+          "pct": 75,
           "weight": 0.9
         }
       ],
@@ -522,100 +435,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "ECC",
-      "score": 54.8,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "fcfArtefact",
-        "opIncSynthetisch",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": 31
-      },
-      "name": "Eagle Point Credit Company",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "nicht-profitabel",
-      "ipoYear": 2014,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 56.8,
-      "scoreShrunk": 54.8,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 67.6,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 50,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 67.6,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 13.471458751674525,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 43.3,
-        "pctl": 1
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 6,
       "rankGrund": null,
       "ticker": "BRBI",
-      "score": 54.3,
+      "score": 52.8,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -640,10 +463,10 @@
       "ipoYear": 2025,
       "coverageAxes": "4/7",
       "coverageWeight": 0.54,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 55.5,
-      "scoreShrunk": 54.3,
+      "scoreBase": 53,
+      "scoreShrunk": 52.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -652,12 +475,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 91.2,
+          "pct": 90.6,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 32.4,
+          "pct": 28.1,
           "weight": 2.7
         },
         {
@@ -667,7 +490,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 91.2,
+          "pct": 90.6,
           "weight": 0.7
         },
         {
@@ -698,359 +521,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "FDUS",
-      "score": 53.6,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "shortRunway",
-        "arDivergence",
-        "fcfArtefact",
-        "opIncSynthetisch",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -35.6
-      },
-      "name": "Fidus Investment Corporation",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2011,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 54,
-      "scoreShrunk": 53.6,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 32.4,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 67.6,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 32.4,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -15.472507382927859,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": {
-        "ratePct": 16.4,
-        "pctl": 0.933
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
       "rank": 7,
       "rankGrund": null,
-      "ticker": "CSHR",
-      "score": 51.7,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.06,
-        "companion": 16.7
-      },
-      "name": "CoinShares PLC",
-      "country": "Jersey",
-      "region": "Europe",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2026,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.93,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 51.8,
-      "scoreShrunk": 51.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 61.8,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 14.7,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 58.3,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 61.8,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 91.7,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": 64.3,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": 7.248100733419216,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "SLRC",
-      "score": 48.7,
-      "track": "profitable",
-      "lamps": [
-        "burning",
-        "arDivergence",
-        "fcfArtefact",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -135.6
-      },
-      "name": "SLR Investment Corp.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2010,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 42.6,
-      "scoreShrunk": 48.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 14.7,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 61.8,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 8.8,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -58.95558809175208,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "VVR",
-      "score": 42.4,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -119.8
-      },
-      "name": "Invesco Senior Income Trust",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mid",
-      "mcapKlasse": "small",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1998,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 27.8,
-      "scoreShrunk": 42.4,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 8.8,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 38.2,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 14.7,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -62.158160191554565,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 8,
-      "rankGrund": null,
       "ticker": "VALU",
-      "score": 41.7,
+      "score": 42.8,
       "track": "profitable",
       "lamps": [
         "lowRoic"
@@ -1073,10 +547,10 @@
       "ipoYear": 1983,
       "coverageAxes": "6/7",
       "coverageWeight": 0.9,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 39.3,
-      "scoreShrunk": 41.7,
+      "scoreBase": 40.6,
+      "scoreShrunk": 42.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1085,22 +559,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 38.2,
+          "pct": 40.6,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 73.5,
+          "pct": 71.9,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 25,
+          "pct": 30,
           "weight": 1.8
         },
         {
           "key": "ruleOfX",
-          "pct": 38.2,
+          "pct": 40.6,
           "weight": 0.7
         },
         {
@@ -1110,7 +584,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 8.3,
+          "pct": 10,
           "weight": 1.5
         },
         {
@@ -1131,10 +605,10 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 9,
+      "rank": 8,
       "rankGrund": null,
       "ticker": "VEL",
-      "score": 41.6,
+      "score": 40.8,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -1158,10 +632,10 @@
       "ipoYear": 2020,
       "coverageAxes": "4/7",
       "coverageWeight": 0.58,
-      "cohortN": 17,
+      "cohortN": 16,
       "cohortFallback": false,
-      "scoreBase": 30.7,
-      "scoreShrunk": 41.6,
+      "scoreBase": 29.6,
+      "scoreShrunk": 40.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1170,12 +644,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 50,
+          "pct": 53.1,
           "weight": 1
         },
         {
           "key": "revAcceleration",
-          "pct": 26.5,
+          "pct": 21.9,
           "weight": 2.7
         },
         {
@@ -1185,7 +659,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 50,
+          "pct": 53.1,
           "weight": 0.7
         },
         {
@@ -1200,7 +674,7 @@
         },
         {
           "key": "dilution",
-          "pct": 7.1,
+          "pct": 8.3,
           "weight": 0.9
         }
       ],
@@ -1214,269 +688,6 @@
       "qSpanTage": null,
       "marketCapCurrency": "USD",
       "tradingFxRateApplied": null
-    },
-    {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "PFL",
-      "score": 39.3,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -63.4
-      },
-      "name": "PIMCO Income Strategy Fund",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "small",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2003,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 20.6,
-      "scoreShrunk": 39.3,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 20.6,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 20.6,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 20.6,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -40.86695804564937,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 9.3,
-        "pctl": 0.867
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "ASGI",
-      "score": 37.2,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch",
-        "shareCountDilution"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -41.9
-      },
-      "name": "Abrdn Global Infrastructure Income Fund",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "growth",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2020,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 15.6,
-      "scoreShrunk": 37.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 26.5,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 8.8,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 26.5,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -18.231339890710807,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": {
-        "ratePct": 7.4,
-        "pctl": 0.8
-      },
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": null,
-      "rankGrund": "zuWenigBelegteAchsen",
-      "ticker": "NML",
-      "score": 31.7,
-      "track": "profitable",
-      "lamps": [
-        "arDivergence",
-        "opIncSynthetisch"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": null,
-        "companion": -202.8
-      },
-      "name": "Neuberger Berman Income Funds - Neuberger Energy Infrastructure and Income Fund Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Financial Services",
-      "marketCap": null,
-      "phase": "inflected",
-      "mcapBand": "mega",
-      "mcapKlasse": "small",
-      "ipoRecency": "seasoned",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 2013,
-      "coverageAxes": "3/7",
-      "coverageWeight": 0.48,
-      "cohortN": 17,
-      "cohortFallback": false,
-      "scoreBase": 2.9,
-      "scoreShrunk": 31.7,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 2.9,
-          "weight": 1
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 2.9,
-          "weight": 2.7
-        },
-        {
-          "key": "gpGrowth",
-          "pct": null,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 2.9,
-          "weight": 0.7
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": null,
-          "weight": 0.6
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": null,
-          "weight": 1.5
-        },
-        {
-          "key": "dilution",
-          "pct": null,
-          "weight": 0.9
-        }
-      ],
-      "revGrowthYoYPct": -94.07426357018652,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
     }
   ],
   "unprofitable": [
@@ -1484,7 +695,7 @@
       "rank": 1,
       "rankGrund": null,
       "ticker": "LDI",
-      "score": 61.9,
+      "score": 61.8,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1514,8 +725,8 @@
       "coverageWeight": 0.51,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 70.8,
-      "scoreShrunk": 61.9,
+      "scoreBase": 69.6,
+      "scoreShrunk": 61.8,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1524,12 +735,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 62.5,
+          "pct": 61.1,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 75.9,
+          "pct": 75,
           "weight": 2.7
         },
         {
@@ -1539,7 +750,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.9,
+          "pct": 57.4,
           "weight": 0.4
         },
         {
@@ -1554,7 +765,7 @@
         },
         {
           "key": "dilution",
-          "pct": 71.9,
+          "pct": 70,
           "weight": 0.6
         }
       ],
@@ -1567,10 +778,10 @@
         "pctl": 0.75
       },
       "ath": {
-        "distancePct": -97.5,
+        "distancePct": -97.6,
         "athDate": "2021-02-12",
         "monthsAgo": 67,
-        "lastDate": "2026-09-17"
+        "lastDate": "2026-09-18"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -1581,7 +792,7 @@
       "rank": 2,
       "rankGrund": null,
       "ticker": "BETR",
-      "score": 61.3,
+      "score": 61.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1611,8 +822,8 @@
       "coverageWeight": 0.69,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 66.1,
-      "scoreShrunk": 61.3,
+      "scoreBase": 66.4,
+      "scoreShrunk": 61.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1621,12 +832,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 87.5,
+          "pct": 87,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 94.4,
+          "pct": 94.2,
           "weight": 2.7
         },
         {
@@ -1636,7 +847,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 87.5,
+          "pct": 87,
           "weight": 0.4
         },
         {
@@ -1646,12 +857,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 16.7,
+          "pct": 17.9,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 21.9,
+          "pct": 23.3,
           "weight": 0.6
         }
       ],
@@ -1670,7 +881,7 @@
       "rank": 3,
       "rankGrund": null,
       "ticker": "PRAA",
-      "score": 56.1,
+      "score": 56.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1699,8 +910,8 @@
       "coverageWeight": 1,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 57.2,
-      "scoreShrunk": 56.1,
+      "scoreBase": 58.2,
+      "scoreShrunk": 56.9,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1709,22 +920,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 73.2,
+          "pct": 72.2,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 35.2,
+          "pct": 32.7,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 42.3,
+          "pct": 45.8,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 73.2,
+          "pct": 72.2,
           "weight": 0.4
         },
         {
@@ -1734,12 +945,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 76.7,
+          "pct": 82.1,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 53.1,
+          "pct": 56.7,
           "weight": 0.6
         }
       ],
@@ -1758,7 +969,7 @@
       "rank": 4,
       "rankGrund": null,
       "ticker": "ALTI",
-      "score": 56,
+      "score": 55.9,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1790,8 +1001,8 @@
       "coverageWeight": 1,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 68.9,
-      "scoreShrunk": 66,
+      "scoreBase": 68.8,
+      "scoreShrunk": 65.9,
       "factors": {
         "burn": 0.849,
         "growth": 1,
@@ -1800,22 +1011,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 44.6,
+          "pct": 42.6,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 90.7,
+          "pct": 90.4,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 80.8,
+          "pct": 79.2,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 44.6,
+          "pct": 42.6,
           "weight": 0.4
         },
         {
@@ -1825,12 +1036,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 43.3,
+          "pct": 46.4,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 15.6,
+          "pct": 16.7,
           "weight": 0.6
         }
       ],
@@ -1849,7 +1060,7 @@
       "rank": 5,
       "rankGrund": null,
       "ticker": "TMS",
-      "score": 54.4,
+      "score": 54.2,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1869,7 +1080,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "kurz-vor-profitabel",
@@ -1878,8 +1089,8 @@
       "coverageWeight": 0.72,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 54.4,
-      "scoreShrunk": 54.4,
+      "scoreBase": 53.7,
+      "scoreShrunk": 54.2,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1888,7 +1099,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 58.9,
+          "pct": 57.4,
           "weight": 1.2
         },
         {
@@ -1898,12 +1109,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 65.4,
+          "pct": 62.5,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 55.4,
+          "pct": 53.7,
           "weight": 0.4
         },
         {
@@ -1913,12 +1124,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 30,
+          "pct": 32.1,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 65.6,
+          "pct": 63.3,
           "weight": 0.6
         }
       ],
@@ -1937,7 +1148,7 @@
       "rank": 6,
       "rankGrund": null,
       "ticker": "CNCK",
-      "score": 44.7,
+      "score": 44.6,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -1965,8 +1176,8 @@
       "coverageWeight": 1,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 43.8,
-      "scoreShrunk": 44.7,
+      "scoreBase": 43.6,
+      "scoreShrunk": 44.6,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -1975,22 +1186,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 76.8,
+          "pct": 75.9,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 27.8,
+          "pct": 25,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 11.5,
+          "pct": 12.5,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 76.8,
+          "pct": 75.9,
           "weight": 0.4
         },
         {
@@ -2000,12 +1211,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 56.7,
+          "pct": 60.7,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 78.1,
+          "pct": 76.7,
           "weight": 0.6
         }
       ],
@@ -2024,7 +1235,7 @@
       "rank": 7,
       "rankGrund": null,
       "ticker": "AXG",
-      "score": 38.6,
+      "score": 38.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2055,8 +1266,8 @@
       "coverageWeight": 0.86,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 82.3,
-      "scoreShrunk": 74.5,
+      "scoreBase": 82.6,
+      "scoreShrunk": 74.8,
       "factors": {
         "burn": 0.518,
         "growth": 1,
@@ -2065,7 +1276,7 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 98.2,
+          "pct": 98.1,
           "weight": 1.2
         },
         {
@@ -2075,12 +1286,12 @@
         },
         {
           "key": "gpGrowth",
-          "pct": 96.2,
+          "pct": 95.8,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 98.2,
+          "pct": 98.1,
           "weight": 0.4
         },
         {
@@ -2090,12 +1301,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 23.3,
+          "pct": 25,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 96.9,
+          "pct": 96.7,
           "weight": 0.6
         }
       ],
@@ -2114,7 +1325,7 @@
       "rank": 8,
       "rankGrund": null,
       "ticker": "GEMI",
-      "score": 33.5,
+      "score": 33.3,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2137,7 +1348,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -2146,8 +1357,8 @@
       "coverageWeight": 0.82,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 48.9,
-      "scoreShrunk": 50.3,
+      "scoreBase": 48.2,
+      "scoreShrunk": 50,
       "factors": {
         "burn": 0.666,
         "growth": 1,
@@ -2156,12 +1367,12 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 80.4,
+          "pct": 79.6,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 46.3,
+          "pct": 44.2,
           "weight": 2.7
         },
         {
@@ -2171,7 +1382,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 80.4,
+          "pct": 79.6,
           "weight": 0.4
         },
         {
@@ -2181,12 +1392,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 10,
+          "pct": 10.7,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 3.1,
+          "pct": 3.3,
           "weight": 0.6
         }
       ],
@@ -2205,7 +1416,7 @@
       "rank": 9,
       "rankGrund": null,
       "ticker": "MTC",
-      "score": 12.4,
+      "score": 12.7,
       "track": "unprofitable",
       "lamps": [
         "unprofit",
@@ -2227,7 +1438,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "nicht-profitabel",
@@ -2236,8 +1447,8 @@
       "coverageWeight": 0.8,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 14.6,
-      "scoreShrunk": 27.2,
+      "scoreBase": 15.5,
+      "scoreShrunk": 27.9,
       "factors": {
         "burn": 0.455,
         "growth": 1,
@@ -2246,22 +1457,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 12.5,
+          "pct": 13,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 9.3,
+          "pct": 9.6,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 3.8,
+          "pct": 4.2,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 8.9,
+          "pct": 9.3,
           "weight": 0.4
         },
         {
@@ -2271,7 +1482,7 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 36.7,
+          "pct": 39.3,
           "weight": 1.7
         },
         {
@@ -2322,7 +1533,7 @@
       "sector": "Financial Services",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "growth",
       "profitTier": "kurz-vor-profitabel",
@@ -2331,8 +1542,8 @@
       "coverageWeight": 1,
       "cohortN": 11,
       "cohortFallback": true,
-      "scoreBase": 32.1,
-      "scoreShrunk": 34.8,
+      "scoreBase": 31.9,
+      "scoreShrunk": 34.7,
       "factors": {
         "burn": 0.511,
         "growth": 1,
@@ -2341,22 +1552,22 @@
       "axisBreakdown": [
         {
           "key": "revGrowthLevel",
-          "pct": 66.1,
+          "pct": 64.8,
           "weight": 1.2
         },
         {
           "key": "revAcceleration",
-          "pct": 13,
+          "pct": 13.5,
           "weight": 2.7
         },
         {
           "key": "gpGrowth",
-          "pct": 88.5,
+          "pct": 87.5,
           "weight": 1.7
         },
         {
           "key": "ruleOfX",
-          "pct": 66.1,
+          "pct": 64.8,
           "weight": 0.4
         },
         {
@@ -2366,12 +1577,12 @@
         },
         {
           "key": "capitalEfficiency",
-          "pct": 3.3,
+          "pct": 3.6,
           "weight": 1.7
         },
         {
           "key": "dilution",
-          "pct": 9.4,
+          "pct": 10,
           "weight": 0.6
         }
       ],

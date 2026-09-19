@@ -1,14 +1,14 @@
 {
   "schema": "findash-export/v1",
-  "generated_at": "2026-09-18T08:53:06.878Z",
+  "generated_at": "2026-09-19T12:06:24.929Z",
   "branch": "industrials",
   "boardStatus": "diagnostic",
   "coverage": {
     "status": "ok",
     "degraded": false,
     "blocked": false,
-    "coverage_pct": 74.3,
-    "generated_at": "2026-09-18T08:46:10.418Z"
+    "coverage_pct": 73.8,
+    "generated_at": "2026-09-19T11:58:56.194Z"
   },
   "profitable": [
     {
@@ -37,7 +37,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "micro",
+      "mcapBand": "small",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "seit-kurzem-profitabel",
@@ -804,7 +804,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "large",
+      "mcapBand": "mega",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "langfristig-profitabel",
@@ -2089,7 +2089,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "langfristig-profitabel",
@@ -2178,7 +2178,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "inflected",
-      "mcapBand": "mid",
+      "mcapBand": "large",
       "mcapKlasse": "small",
       "ipoRecency": "veteran",
       "profitTier": "seit-kurzem-profitabel",
@@ -2686,7 +2686,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "established",
-      "mcapBand": "small",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "langfristig-profitabel",
@@ -2862,7 +2862,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "small",
+      "mcapBand": "micro",
       "mcapKlasse": "small",
       "ipoRecency": "recent",
       "profitTier": "nicht-profitabel",
@@ -3715,92 +3715,6 @@
     {
       "rank": 11,
       "rankGrund": null,
-      "ticker": "TITN",
-      "score": 52.1,
-      "track": "unprofitable",
-      "lamps": [
-        "unprofit",
-        "lowRoic",
-        "arDivergence"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.033,
-        "companion": -10.7
-      },
-      "name": "Titan Machinery Inc.",
-      "country": "United States",
-      "region": "North America",
-      "sector": "Industrials",
-      "marketCap": null,
-      "phase": "unprofitable",
-      "mcapBand": "large",
-      "mcapKlasse": "small",
-      "ipoRecency": "mature",
-      "profitTier": "kurz-vor-profitabel",
-      "ipoYear": 2007,
-      "coverageAxes": "7/7",
-      "coverageWeight": 1,
-      "cohortN": 27,
-      "cohortFallback": false,
-      "scoreBase": 52.3,
-      "scoreShrunk": 52.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 35.2,
-          "weight": 2
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 46,
-          "weight": 2.8
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 56.8,
-          "weight": 2
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 46.3,
-          "weight": 0.9
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 40.5,
-          "weight": 0.8
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 94.2,
-          "weight": 0.9
-        },
-        {
-          "key": "dilution",
-          "pct": 84.8,
-          "weight": 0.6
-        }
-      ],
-      "revGrowthYoYPct": -9.158056168630335,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": null,
-      "shareDilution": null,
-      "ath": null,
-      "qPunkte": null,
-      "qSpanTage": null,
-      "marketCapCurrency": "USD",
-      "tradingFxRateApplied": null
-    },
-    {
-      "rank": 12,
-      "rankGrund": null,
       "ticker": "ULH",
       "score": 48.9,
       "track": "unprofitable",
@@ -3821,7 +3735,7 @@
       "sector": "Industrials",
       "marketCap": null,
       "phase": "unprofitable",
-      "mcapBand": "large",
+      "mcapBand": "mid",
       "mcapKlasse": "small",
       "ipoRecency": "mature",
       "profitTier": "kurz-vor-profitabel",
@@ -3886,7 +3800,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 13,
+      "rank": 12,
       "rankGrund": null,
       "ticker": "OIO",
       "score": 44.1,
@@ -3980,7 +3894,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 14,
+      "rank": 13,
       "rankGrund": null,
       "ticker": "PAMT",
       "score": 42.9,
@@ -4067,7 +3981,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 15,
+      "rank": 14,
       "rankGrund": null,
       "ticker": "ADUR",
       "score": 37,
@@ -4145,7 +4059,7 @@
           "weight": 0.6
         }
       ],
-      "revGrowthYoYPct": -27.682819230835776,
+      "revGrowthYoYPct": -27.682819230835765,
       "profitStreak": null,
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
@@ -4160,7 +4074,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 16,
+      "rank": 15,
       "rankGrund": null,
       "ticker": "NVRI",
       "score": 32.6,
@@ -4247,7 +4161,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 17,
+      "rank": 16,
       "rankGrund": null,
       "ticker": "MTRX",
       "score": 32.2,
@@ -4333,7 +4247,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 18,
+      "rank": 17,
       "rankGrund": null,
       "ticker": "AIAI",
       "score": 31.5,
@@ -4347,7 +4261,7 @@
       "overview": {
         "kind": "gp",
         "value": -0.992,
-        "companion": -202.8
+        "companion": -203.7
       },
       "name": "AIAI Holdings Corporation",
       "country": "United States",
@@ -4414,10 +4328,10 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "ath": {
-        "distancePct": -82,
+        "distancePct": -80.6,
         "athDate": "2026-06-23",
         "monthsAgo": 3,
-        "lastDate": "2026-09-17"
+        "lastDate": "2026-09-18"
       },
       "qPunkte": null,
       "qSpanTage": null,
@@ -4425,7 +4339,7 @@
       "tradingFxRateApplied": null
     },
     {
-      "rank": 19,
+      "rank": 18,
       "rankGrund": null,
       "ticker": "SERV",
       "score": 29,
@@ -4513,6 +4427,92 @@
         "ratePct": 34.1,
         "pctl": 0.917
       },
+      "ath": null,
+      "qPunkte": null,
+      "qSpanTage": null,
+      "marketCapCurrency": "USD",
+      "tradingFxRateApplied": null
+    },
+    {
+      "rank": 19,
+      "rankGrund": null,
+      "ticker": "TITN",
+      "score": 26,
+      "track": "unprofitable",
+      "lamps": [
+        "unprofit",
+        "lowRoic",
+        "arDivergence"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.033,
+        "companion": -10.7
+      },
+      "name": "Titan Machinery Inc.",
+      "country": "United States",
+      "region": "North America",
+      "sector": "Industrials",
+      "marketCap": null,
+      "phase": "unprofitable",
+      "mcapBand": "large",
+      "mcapKlasse": "small",
+      "ipoRecency": "mature",
+      "profitTier": "kurz-vor-profitabel",
+      "ipoYear": 2007,
+      "coverageAxes": "7/7",
+      "coverageWeight": 1,
+      "cohortN": 27,
+      "cohortFallback": false,
+      "scoreBase": 52.3,
+      "scoreShrunk": 52.1,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 0.5
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 35.2,
+          "weight": 2
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 46,
+          "weight": 2.8
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 56.8,
+          "weight": 2
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 46.3,
+          "weight": 0.9
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 40.5,
+          "weight": 0.8
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 94.2,
+          "weight": 0.9
+        },
+        {
+          "key": "dilution",
+          "pct": 84.8,
+          "weight": 0.6
+        }
+      ],
+      "revGrowthYoYPct": -9.158056168630335,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": null,
+      "shareDilution": null,
       "ath": null,
       "qPunkte": null,
       "qSpanTage": null,
