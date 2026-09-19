@@ -3037,6 +3037,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _fundamentalsRefreshDeferred = 0;
   // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
   _lampErrors = 0;
+  // JS-Review 19.09.: geteilten Zustand hier aufraeumen wie die Zaehler daneben. (Beim ersten
+  // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
+  // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
+  _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _schemaProbeErrors = 0;
@@ -3409,7 +3413,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Stempel, der nicht mitgefuehrt wird, luegt: die 16 GBp-Beine trugen asOf aus dem
       // August, obwohl ihr Wert von diesem Weg stammte — und die Alters-Diagnose lief
       // deshalb in die falsche Richtung. Wer den Wert schreibt, schreibt den Stempel.
-      existing.marketCap.asOf = new Date().toISOString();
+      // JS-Review 19.09.: derselbe Durchgang hat oben schon `newAsOf` gebildet und stempelt
+      // meta.asOf damit. Ein zweiter Date()-Aufruf liesse die beiden Stempel desselben
+      // Vorgangs um Millisekunden auseinanderlaufen — zwei Wahrheiten fuer einen Schreibakt.
+      existing.marketCap.asOf = newAsOf;
       // Review 19.09.: das `||` liess die alte Herkunft `yahoo_quoteSummary` auf einem Wert
       // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
       // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
@@ -4626,7 +4633,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
     _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
   }
   writeFileAtomic(slimPath, JSON.stringify(slim));
-  const fullPath = path.join(outputDir, '_manifest-full.json');
+  // JS-Review 19.09.: dieselbe Fehlerklasse stand auf der Schwesterdatei noch offen. Heute liest
+  // sie niemand als Wahrheit (coverage-gate nimmt nur das schlanke Manifest, der Shard-Upload
+  // schliesst sie aus) — aber wer sie morgen als Wahrheit liest, erbt den Fehler lautlos.
+  const fullPath = path.join(outputDir, _manifestSubsetTag
+    ? '_manifest-full.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest-full.json');
   writeFileAtomic(fullPath, JSON.stringify(manifest));
   _log('INFO', `Pull complete: ${okResultsFinal.length}/${watchlist.stocks.length} ok (${skippedMcapFinal} skipped-mcap), ${failures.length} failed`);
   return manifest;

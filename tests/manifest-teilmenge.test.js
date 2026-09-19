@@ -74,7 +74,7 @@ check('unlesbares Altmanifest hinterlaesst eine WARN-Spur, nicht nur ein INFO', 
 check('Schnellpfad: wer marketCap.value schreibt, schreibt auch die Herkunft neu', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
   const i = src.indexOf('existing.marketCap.value = q.marketCap * tradingAggFactor;');
-  const danach = src.slice(i, i + 900);
+  const danach = src.slice(i, i + 1400);
   assert.ok(/existing\.marketCap\.source = 'yahoo_quote';/.test(danach),
     'die Herkunft wird nicht neu gesetzt');
   assert.ok(!/existing\.marketCap\.source = existing\.marketCap\.source \|\|/.test(danach),
@@ -88,7 +88,7 @@ check('Schnellpfad: wer marketCap.value schreibt, schreibt marketCap.asOf', () =
   const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
   const i = src.indexOf('existing.marketCap.value = q.marketCap * tradingAggFactor;');
   assert.ok(i > 0, 'die Schreibstelle des Schnellpfads existiert noch — sonst ist dieser Test blind');
-  const danach = src.slice(i, i + 800);
+  const danach = src.slice(i, i + 1400);
   assert.ok(/existing\.marketCap\.asOf\s*=/.test(danach),
     'marketCap.value wird geschrieben, marketCap.asOf nicht — genau der luegende Stempel vom 19.09.');
   assert.ok(src.indexOf('existing.marketCap.value = q.marketCap * tradingAggFactor;', i + 1) === -1,
