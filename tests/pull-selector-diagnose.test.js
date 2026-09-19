@@ -150,5 +150,61 @@ check('(i) die Diagnose steht NICHT im Entscheidungspfad (kein Voll-Abruf hängt
     'ein Zweig entscheidet anhand eines Diagnose-Zaehlers');
 });
 
+// ---------------------------------------------------------------- T325: der Datei-Handle
+// Merge-Desk-Fund an PR #323: openSync -> readSync -> closeSync INNERHALB eines try/catch leckt
+// den Handle, sobald readSync wirft. Auf OneDrive ist das der Normalfall, nicht die Ausnahme:
+// eine Cloud-Platzhalter-Datei scheitert genau beim Lesen. In der Ticker-Schleife ist das ein
+// Handle pro Ticker, bis EMFILE den Lauf killt - eine Diagnose darf den Lauf nie umbringen.
+
+check('(j) T325: wirft readSync, wird der Handle trotzdem geschlossen und null geliefert', () => {
+  const dir = fixture();
+  const fp = path.join(dir, 'OVERDUE.json');
+  const echtRead = fs.readSync, echtClose = fs.closeSync;
+  const geschlossen = [];
+  try {
+    fs.readSync = () => { throw new Error('EIO: simulierter OneDrive-Platzhalter'); };
+    fs.closeSync = (fd) => { geschlossen.push(fd); return echtClose.call(fs, fd); };
+    assert.strictEqual(P.readFileHead(fp, 4096), null, 'ein Lesefehler muss null liefern');
+    assert.strictEqual(geschlossen.length, 1,
+      'der Handle wurde NICHT geschlossen (Leck): closeSync-Aufrufe = ' + geschlossen.length);
+    geschlossen.length = 0;
+    assert.strictEqual(P.fundamentalsAsOfAgeFromFile(fp), null, 'der Aufrufer muss null liefern');
+    assert.strictEqual(geschlossen.length, 1, 'auch ueber den Aufrufer leckt der Handle');
+  } finally {
+    fs.readSync = echtRead; fs.closeSync = echtClose;
+  }
+});
+
+check('(k) T325 Gegenprobe: im Normalfall genau ein close, ohne open kein close', () => {
+  const dir = fixture();
+  const echtClose = fs.closeSync;
+  const geschlossen = [];
+  try {
+    fs.closeSync = (fd) => { geschlossen.push(fd); return echtClose.call(fs, fd); };
+    const head = P.readFileHead(path.join(dir, 'OVERDUE.json'), 4096);
+    assert.ok(head && head.includes('fundamentalsAsOf'), 'der Kopf wurde nicht gelesen');
+    assert.strictEqual(geschlossen.length, 1, 'closeSync-Aufrufe = ' + geschlossen.length);
+    geschlossen.length = 0;
+    assert.strictEqual(P.readFileHead(path.join(dir, 'gibtesnicht.json'), 100), null);
+    assert.strictEqual(geschlossen.length, 0, 'ohne open darf kein close stehen');
+  } finally {
+    fs.closeSync = echtClose;
+  }
+});
+
+check('(l) T325 Wurzel: beide Kopf-Leser gehen durch readFileHead, keiner liest selbst', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+  const defStart = src.indexOf('function readFileHead');
+  const defEnd = src.indexOf('\n}', defStart);
+  assert.ok(defStart > 0 && defEnd > defStart, 'readFileHead fehlt');
+  const def = src.slice(defStart, defEnd + 2);
+  assert.ok(/finally/.test(def), 'readFileHead schliesst nicht in einem finally');
+  // ausserhalb dieser einen Funktion darf es kein fs.readSync mehr geben, sonst kommt das
+  // Leck durch die naechste Kopf-Lese-Stelle zurueck
+  const ohneDef = src.slice(0, defStart) + src.slice(defEnd);
+  assert.ok(!/fs\.readSync\(/.test(ohneDef),
+    'ausserhalb von readFileHead steht wieder ein fs.readSync - das Leck kann zurueckkommen');
+});
+
 console.log('pull-selector-diagnose.test.js: ' + ok + ' ok, ' + fail + ' fail');
 if (fail) process.exit(1);
