@@ -11,6 +11,12 @@ name: PR Check
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  # Lane A 19.09.: bis hierher lief das Tor NUR am PR. Ein PR-Check prueft den
+  # Merge MIT der Basis, nicht die Basis selbst — deshalb konnte main rot werden,
+  # ohne dass ein einziger PR rot war (gemessen am 19.09.: zwei Rote auf main,
+  # beide schon bei #314 vorhanden, kein PR hat sie je gezeigt).
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -26,7 +32,10 @@ env:
   SEC_CONTACT: ${{ secrets.SEC_CONTACT }}
 
 concurrency:
-  group: pr-check-${{ github.event.pull_request.number }}
+  # Auf push hat das Event keine PR-Nummer; ohne den sha-Zweig teilten sich ALLE
+  # main-Pushes eine Gruppe und cancel-in-progress haette den Vorgaenger abgeraeumt —
+  # der Lauf fuer den dazwischenliegenden Commit waere nie zu Ende gelaufen.
+  group: pr-check-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
