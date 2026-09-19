@@ -191,7 +191,52 @@ test('D11 die Schwellen des Betrachters stehen im Vergleichsmassstab (Muster R11
   assert.deepEqual(T.TRI_STATE, soll.triState);
   // Und der Satz, der diese Sektion von einer Vorregistrierung unterscheidet, steht da.
   assert.match(soll._origin, /DATENQUALITAETS-Schwellen|keine Ergebnis-Parameter/);
-  assert.equal(soll.measuredCoverage2026_09_19.matched, 322, 'die gemessene Abdeckung ist festgehalten');
+  assert.equal(soll.measuredCoverage2026_09_19.matched, 308, 'die gemessene Abdeckung ist festgehalten');
+});
+
+test('D12 eine QUARANTAENE nullt die Aussagen, nicht nur ein Flag (Review-Fund)', () => {
+  // silent-failure-hunter: bei implied-price-fail-share war die Einheit gewaehlt, also wurden
+  // Gesamtwert, Positionen, Top-10 und Abdeckung normal gerechnet und VEROEFFENTLICHT - mit
+  // einem Flag daneben, das niemand lesen musste.
+  const zeilen = [];
+  for (let i = 0; i < 20; i++) {
+    zeilen.push('<infoTable><nameOfIssuer>Firma ' + i + '</nameOfIssuer><cusip>0000'
+      + (10 + i) + '101</cusip><value>100</value><shrsOrPrnAmt><sshPrnamt>1</sshPrnamt>'
+      + '<sshPrnamtType>SH</sshPrnamtType></shrsOrPrnAmt></infoTable>');
+  }
+  const xml = '<informationTable>' + zeilen.join('\n') + '</informationTable>';
+  const karte = new Map();
+  for (let i = 0; i < 20; i++) karte.set('T' + i, 'Firma ' + i);
+  const kurse = new Map();
+  for (let i = 0; i < 20; i++) kurse.set('T' + i, i < 10 ? 100 : 5);   // 50 % scheitern
+  const q = T.buildQuarter({ period: '2026-06-30', xml, nameIndex: T.buildNameIndex(karte), closes: kurse });
+  assert.equal(q.quarantined, true, 'ueber 10 % Fehlerquote muss die Quarantaene greifen');
+  assert.equal(q.quarantineReason, 'implied-price-fail-share');
+  for (const feld of ['totalValueUSD', 'positions', 'top10Share', 'coverage']) {
+    assert.equal(q[feld], null, feld + ' darf aus einer Quarantaene nicht veroeffentlicht werden');
+  }
+  assert.equal(q.rows.length, 20, 'die ZEILEN bleiben zum Nachsehen da - nur die Aussagen fallen');
+  assert.equal(q.new, null);
+  assert.equal(q.exited, null);
+});
+
+test('D13 der Praefix-Treffer ist gebunden: Rauschen und Trunkierung ja, ein neues Wort nein', () => {
+  // js-Reviewer, reproduziert: "Apple Hospitality REIT Inc" lief als AAPL durch, und identityOk
+  // bestaetigte es mit derselben Logik. Gemessen an den echten 697 Emittenten kostet die
+  // Verschaerfung 14 Treffer (322 -> 308) und nimmt die falschen mit.
+  const nurApple = T.buildNameIndex(new Map([['AAPL', 'Apple Inc.']]));
+  assert.equal(T.mapIssuer('Apple Hospitality REIT Inc', nurApple).ticker, null);
+  assert.equal(T.identityOk('Apple Hospitality REIT Inc', 'Apple Inc.'), false);
+  const nurCabot = T.buildNameIndex(new Map([['CBT', 'Cabot Corporation']]));
+  assert.equal(T.mapIssuer('Cabot Oil & Gas Corp', nurCabot).ticker, null, 'zwei verschiedene Firmen');
+  // Was weiter gelten MUSS: die SEC-Feldform kuerzt ab, und Abkuerzungen sind kein Unterschied.
+  const adobe = T.buildNameIndex(new Map([['ADBE', 'Adobe Inc.']]));
+  assert.equal(T.mapIssuer('Adobe Sys Inc', adobe).ticker, 'ADBE');
+  const booz = T.buildNameIndex(new Map([['BAH', 'Booz Allen Hamilton Holding Corporation']]));
+  assert.equal(T.mapIssuer('Booz Allen Hamilton Hldg Cor', booz).ticker, 'BAH', 'trunkiert bei 28 Zeichen');
+  assert.equal(T.praefixErlaubt('General Dynamics Corp', 'General Electric Co'), false,
+    'ein gemeinsames erstes Wort ist keine Identitaet');
+  assert.equal(T.TRUNKIERUNG_AB, 28);
 });
 
 console.log('\nthirteenf.test.js: ' + pass + ' ok, ' + fail + ' fail');

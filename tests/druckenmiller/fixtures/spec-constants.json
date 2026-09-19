@@ -238,12 +238,12 @@
     "identityGuard": "ein Namens-Treffer wird nur uebernommen, wenn der Name in der Karte zum Filing-Namen passt (Lane-B-Red-Team: Barrick -> ABX zeigte auf Abacus)",
     "measuredCoverage2026_09_19": {
       "issuers": 697,
-      "matched": 322,
-      "share": 0.462,
+      "matched": 308,
+      "share": 0.442,
       "nameMapSize": 2337,
-      "ambiguous": 12,
+      "ambiguous": 9,
       "identityRejected": 0,
-      "note": "Lane B kam mit OpenFIGI auf 492 von 697 (70,6 %); ohne OpenFIGI sind es 46,2 %. Wertgewichtet ueber die letzten acht Quartale: 55-63 %."
+      "note": "Lane B kam mit OpenFIGI auf 492 von 697 (70,6 %); ohne OpenFIGI und mit der verschaerften Praefix-Regel (Review-Fund) sind es 308 = 44,2 % (vor der Verschaerfung 322 = 46,2 %, darunter falsche Firmen wie Cabot Oil & Gas -> CBT). Wertgewichtet ueber die letzten acht Quartale: 55-63 %."
     },
     "noCiStep": "manueller Quartals-Lauf (arch-spec \u00a73.3 Punkt 4) - der Tageslauf bleibt unberuehrt"
   }

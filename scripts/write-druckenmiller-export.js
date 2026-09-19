@@ -81,6 +81,7 @@ const CANDIDATES_FIELDS = ['schema', 'generated_at', 'asOf', 'rows', 'counts', '
   'scoreboard', 'evidence', 'scopeSentence', 'multiplicityNote', 'sessionExcluded'];
 /** duquesne13f.json (Chunk 3): Kopf-Weisse-Liste. */
 const DREIZEHNF_FIELDS = ['schema', 'generated_at', 'cik', 'quarters', 'quarantined', 'coverage',
+  'coveragePeriod',
   'triStateRender', 'matcherCoverage', 'scopeSentence'];
 /** [REV4-6]: die deutsche Anzeige des dreiwertigen Joins - NIE "nicht gehalten". */
 const TRI_STATE_RENDER = {
@@ -424,8 +425,9 @@ function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now, drei
   // Chunk 3: der dreiwertige Join. Die gehaltenen Ticker kommen aus dem JUENGSTEN Quartal,
   // und die Abdeckung entscheidet mit: ohne brauchbare Zuordnung ist jede Zeile UNMAPPED -
   // nie "nicht gehalten" ([REV1-A4]/[REV4-6]).
-  const jueng = dreizehn && dreizehn.quarters && dreizehn.quarters.length
-    ? dreizehn.quarters[dreizehn.quarters.length - 1] : null;
+  const brauchbar13f = ((dreizehn && dreizehn.quarters) || []).filter((q) => !q.quarantined
+    && Number.isFinite(q.coverage));
+  const jueng = brauchbar13f.length ? brauchbar13f[brauchbar13f.length - 1] : null;
   const gehalten = new Set((jueng && jueng.rows ? jueng.rows : [])
     .filter((r) => r.ticker && r.putCall === null).map((r) => r.ticker));
   const abdeckung13f = jueng ? jueng.coverage : null;
@@ -532,6 +534,8 @@ function baue13f({ gelesen, now }) {
     units: q.units, unitMode: q.unitCheck ? q.unitCheck.mode : null,
     totalValueUSD: q.totalValueUSD, positions: q.positions, top10Share: q.top10Share,
     coverage: q.coverage,
+    quarantined: q.quarantined === true,
+    quarantineReason: q.quarantineReason || null,
     rows: (q.rows || []).map((r) => ({
       cusip: r.cusip, ticker: r.ticker, issuer: r.issuer, valueUSD: r.valueUSD, shares: r.shares,
       putCall: r.putCall, impliedPriceOk: r.impliedPriceOk,
@@ -541,11 +545,15 @@ function baue13f({ gelesen, now }) {
   const quarantaene = gelesen.quartale
     .filter((q) => q.quarantined)
     .map((q) => ({ period: q.period, reason: q.quarantineReason }));
-  const jueng = gelesen.quartale[gelesen.quartale.length - 1];
+  // REVIEW-FUND: hier stand das juengste Quartal, auch wenn es in Quarantaene war - seine
+  // Abdeckung ging dann in meta.json und in den Join. Gilt das juengste NICHT-quarantaenisierte.
+  const brauchbar = gelesen.quartale.filter((q) => !q.quarantined);
+  const jueng = brauchbar.length ? brauchbar[brauchbar.length - 1] : null;
   return {
     schema: SCHEMA, generated_at: now.toISOString(), cik: '0001536411',
     quarters: quartale, quarantined: quarantaene,
     coverage: jueng ? jueng.coverage : null,
+    coveragePeriod: jueng ? jueng.period : null,
     triStateRender: TRI_STATE_RENDER,
     matcherCoverage: gelesen.matcherCoverage
       ? { issuers: gelesen.matcherCoverage.issuers, matched: gelesen.matcherCoverage.matched,
@@ -995,6 +1003,16 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
           + vorher + ' -> ' + q.period + ').');
       }
       vorher = q.period;
+      if (q.quarantined === true) {
+        for (const feld of ['totalValueUSD', 'positions', 'top10Share', 'coverage']) {
+          if (q[feld] !== null) {
+            return rot('[druckenmiller] duquesne13f.json ' + q.period + ': in Quarantaene, traegt aber '
+              + feld + ' = ' + JSON.stringify(q[feld]) + ' - eine Quarantaene, die ihre Zahlen weiter '
+              + 'veroeffentlicht, ist keine.');
+          }
+        }
+        continue;
+      }
       if (q.units !== 'thousands' && q.units !== 'dollars') {
         return rot('[druckenmiller] duquesne13f.json ' + q.period + ': Einheit ' + JSON.stringify(q.units)
           + ' - der Vertrag kennt thousands und dollars, und eine unerkannte Einheit gehoert in die Quarantaene.');

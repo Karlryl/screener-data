@@ -36,6 +36,10 @@ const CIK = '0001536411';                    // Duquesne Family Office LLC
 const SEC_HOST = 'data.sec.gov';
 const ARCHIVE_HOST = 'www.sec.gov';
 const ABRUF_PAUSE_MS = 150;                  // SEC: hoechstens 10 Abrufe je Sekunde
+// SECURITY-REVIEW-FUND: es gab keine Obergrenze - weder fuer die Antwort noch fuer das
+// Entpacken. Eine manipulierte Antwort oder eine gzip-Bombe haette den Speicher genommen.
+// Echte 13F-Dateien liegen bei Kilobytes, die Einreichungsliste bei wenigen MB.
+const MAX_ANTWORT_BYTES = 50 * 1024 * 1024;
 
 /**
  * Die lokale Namenskarte: Ticker -> Firmenname aus den Snapshots. GELESEN WIRD NUR
@@ -44,6 +48,7 @@ const ABRUF_PAUSE_MS = 150;                  // SEC: hoechstens 10 Abrufe je Sek
  */
 function ladeNamenskarte(snapshotsDir, log) {
   const karte = new Map();
+  const uebersprungen = [];
   if (!fs.existsSync(snapshotsDir)) {
     if (log) {
       log('::warning::[druckenmiller] 13F: kein Snapshot-Ordner unter ' + snapshotsDir
@@ -55,14 +60,26 @@ function ladeNamenskarte(snapshotsDir, log) {
   for (const datei of fs.readdirSync(snapshotsDir)) {
     if (!datei.endsWith('.json') || datei.startsWith('_')) continue;
     let j;
+    // REVIEW-FUND: hier stand ein nacktes `catch { continue; }`. Ein halb geschriebener
+    // Snapshot verschwand damit lautlos aus der Namenskarte - und mit ihm ein Stueck
+    // Abdeckung, das niemand vermisst hat.
     try { j = JSON.parse(fs.readFileSync(path.join(snapshotsDir, datei), 'utf8')); }
-    catch { continue; }
+    catch (e) {
+      uebersprungen.push(datei + ': ' + e.message);
+      continue;
+    }
     const meta = j && j.meta;
     if (!meta || !meta.ticker || !meta.name) continue;
     if (meta.country !== 'United States') continue;      // Lane B: nur US-Notierungen
     if (universe.hasSuffix(meta.ticker)) continue;        // reiner String-Test, F-16-frei
     karte.set(meta.ticker, meta.name);
   }
+  if (uebersprungen.length && log) {
+    log('::warning::[druckenmiller] 13F: ' + uebersprungen.length + ' Snapshot-Datei(en) waren nicht '
+      + 'lesbar und fehlen in der Namenskarte (' + uebersprungen.slice(0, 3).join('; ')
+      + (uebersprungen.length > 3 ? '; ...' : '') + '). Die Abdeckung ist damit UNTERSCHAETZT.');
+  }
+  karte._skipped = uebersprungen.length;
   return karte;
 }
 
@@ -79,7 +96,14 @@ function ladeSchlusskurse(pricesDir, periodEnd, karte, log) {
   }
   for (const [n, tickers] of perShard) {
     let shard;
-    try { shard = store.loadShard(pricesDir, n); } catch { continue; }
+    try { shard = store.loadShard(pricesDir, n); }
+    catch (e) {
+      if (log) {
+        log('::warning::[druckenmiller] 13F: Preis-Shard ' + n + ' ist nicht lesbar (' + e.message
+          + ') - die Preisprobe laeuft ohne diese Ticker.');
+      }
+      continue;
+    }
     if (!shard) continue;
     for (const t of tickers) {
       const serie = shard[t];
@@ -97,12 +121,46 @@ function ladeSchlusskurse(pricesDir, periodEnd, karte, log) {
   return kurse;
 }
 
-/** Ein Quartal schreiben (eine Datei je Periode, damit Aenderungen im Diff sichtbar sind). */
+/**
+ * Ein Quartal schreiben (eine Datei je Periode, damit Aenderungen im Diff sichtbar sind).
+ *
+ * SECURITY-REVIEW-FUND: im --fetch-Pfad kam die Periode UNGEPRUEFT aus der SEC-Antwort
+ * (`recent.reportDate`) und wurde direkt zum Dateinamen. Eine manipulierte Antwort
+ * (TLS-Proxy, kompromittierter Endpunkt) haette damit ausserhalb des Ordners schreiben
+ * koennen. Die Pruefung steht jetzt an der EINEN Stelle, durch die jeder Schreibvorgang geht -
+ * der Offline-Pfad prueft die Form schon beim Dateinamen (periodeAus).
+ */
+const PERIODE_FORM = /^\d{4}-\d{2}-\d{2}$/;
 function schreibeQuartal(outDir, quartal) {
+  if (!PERIODE_FORM.test(String(quartal && quartal.period))) {
+    throw new Error('[druckenmiller] 13F: die Periode ' + JSON.stringify(quartal && quartal.period)
+      + ' hat nicht die Form YYYY-MM-DD - daraus wird kein Dateiname gebaut.');
+  }
   fs.mkdirSync(outDir, { recursive: true });
   const p = path.join(outDir, quartal.period + '.json');
+  if (path.dirname(path.resolve(p)) !== path.resolve(outDir)) {
+    throw new Error('[druckenmiller] 13F: der Zielpfad ' + p + ' liegt nicht in ' + outDir + '.');
+  }
   fs.writeFileSync(p, JSON.stringify(quartal, null, 1) + '\n');
   return p;
+}
+
+/** Ein CSV-Datensatz in Felder, mit Anfuehrungszeichen und doppelten Quotes. */
+function csvFelder(zeile) {
+  const out = [];
+  let feld = '', inQuote = false;
+  for (let i = 0; i < zeile.length; i++) {
+    const c = zeile[i];
+    if (inQuote) {
+      if (c === '"' && zeile[i + 1] === '"') { feld += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else feld += c;
+    } else if (c === '"') inQuote = true;
+    else if (c === ',') { out.push(feld); feld = ''; }
+    else feld += c;
+  }
+  out.push(feld);
+  return out;
 }
 
 const periodeAus = (dateiname) => {
@@ -170,14 +228,25 @@ function hole(host, pfad) {
         return;
       }
       const teile = [];
-      res.on('data', (d) => teile.push(d));
+      let gelesen = 0;
+      res.on('data', (d) => {
+        gelesen += d.length;
+        if (gelesen > MAX_ANTWORT_BYTES) {
+          req.destroy(new Error('[druckenmiller] 13F: die Antwort von ' + host + pfad
+            + ' ist groesser als ' + (MAX_ANTWORT_BYTES / 1e6) + ' MB - abgebrochen.'));
+          return;
+        }
+        teile.push(d);
+      });
       res.on('end', () => {
+        if (req.destroyed) return;
         const buf = Buffer.concat(teile);
         const enc = res.headers['content-encoding'];
         if (!enc) return resolve(buf.toString('utf8'));
         const zlib = require('node:zlib');
         try {
-          resolve((enc === 'gzip' ? zlib.gunzipSync(buf) : zlib.inflateSync(buf)).toString('utf8'));
+          const opt = { maxOutputLength: MAX_ANTWORT_BYTES };
+          resolve((enc === 'gzip' ? zlib.gunzipSync(buf, opt) : zlib.inflateSync(buf, opt)).toString('utf8'));
         } catch (e) { reject(e); }
       });
     });
@@ -253,10 +322,20 @@ function abdeckungMessen({ csvPfad, outDir, snapshotsDir, log }) {
   if (iCusip < 0 || iIssuer < 0) {
     throw new Error('[druckenmiller] 13F: die Emittentenliste braucht die Spalten cusip und issuer.');
   }
-  const issuers = zeilen.slice(1).map((z) => {
-    const teile = z.split(',');
-    return { cusip: teile[iCusip], issuer: teile.slice(iIssuer).join(',').replace(/^"|"$/g, '') };
+  // REVIEW-FUND (js-Reviewer): `split(',')` plus "alles ab issuer wieder zusammenkleben" nahm
+  // an, dass issuer die LETZTE Spalte ist. Ein Emittentenname mit Komma ("Berkshire Hathaway,
+  // Inc.") schluckte dann die Folgespalte und behielt ein Anfuehrungszeichen. Jetzt ein
+  // richtiger Feldsplitter - zwoelf Zeilen, keine neue Abhaengigkeit.
+  const rohZeilen = zeilen.slice(1);
+  const issuers = rohZeilen.map((z) => {
+    const felder = csvFelder(z);
+    return { cusip: (felder[iCusip] || '').trim(), issuer: (felder[iIssuer] || '').trim() };
   }).filter((x) => x.cusip && x.issuer);
+  const verworfen = rohZeilen.length - issuers.length;
+  if (verworfen && log) {
+    log('::warning::[druckenmiller] 13F: ' + verworfen + ' von ' + rohZeilen.length + ' CSV-Zeilen '
+      + 'ohne cusip/issuer verworfen - der Nenner der Abdeckung ist damit kleiner als die Liste.');
+  }
   const karte = ladeNamenskarte(snapshotsDir, log);
   const ergebnis = T.matcherCoverage(issuers, T.buildNameIndex(karte));
   const bericht = {
@@ -266,6 +345,9 @@ function abdeckungMessen({ csvPfad, outDir, snapshotsDir, log }) {
     quelleListe: path.basename(csvPfad),
     nameMapSize: karte.size,
     issuers: ergebnis.n,
+    csvRows: rohZeilen.length,
+    csvDropped: verworfen,
+    snapshotsSkipped: karte._skipped || 0,
     matched: ergebnis.matched,
     share: ergebnis.share,
     ambiguous: ergebnis.ambiguous,
@@ -303,7 +385,8 @@ async function main(argv, log) {
   return 1;
 }
 
-module.exports = { main, ladeNamenskarte, ladeSchlusskurse, offlineEinlesen, abdeckungMessen, CIK };
+module.exports = { main, ladeNamenskarte, ladeSchlusskurse, offlineEinlesen, abdeckungMessen, csvFelder,
+  schreibeQuartal, PERIODE_FORM, MAX_ANTWORT_BYTES, CIK };
 
 if (require.main === module) {
   main().then((rc) => process.exit(rc)).catch((e) => {
