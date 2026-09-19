@@ -162,7 +162,9 @@ function cmdExport(csvPath) {
   for (const s of wl.stocks) {
     lines.push([s.ticker, s.name, s.yahoo_symbol, s.isin || '', s.track_hint || 'A'].map(csvField).join(','));
   }
-  fs.writeFileSync(target, lines.join('\n'));
+  // T204 Welle 6: atomar (tmp+rename) statt nackt - ein abgebrochener Export
+  // hinterliess bisher eine gekuerzte CSV, die wie eine vollstaendige aussieht.
+  writeFileAtomic(target, lines.join('\n'));
   console.log('✓ Exported ' + wl.stocks.length + ' stocks → ' + target);
 }
 

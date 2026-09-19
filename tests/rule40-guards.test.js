@@ -71,7 +71,22 @@ test('knapp ueber der Schwelle (0,26) bleibt drin, knapp darunter (0,24) nicht',
 });
 
 test('ohne Quartalsreihe greift der Waechter nicht (der Jahres-Fallback hat kein Basisquartal)', () => {
-  drin({}, { revenueQ: [] }, undefined, false);
+  drin({}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], }, undefined, false);
+});
+
+// DIE GEGENRICHTUNG DES QUARTALS-TORS (19.09.2026, silent-failure-hunter, nachgestellt):
+// ein winziges Vorjahresquartal darf eine Zeile NICHT toeten, wenn der angezeigte
+// Wachstumswert gar nicht aus dem Quartalsbein stammt. Hier traegt das Quartalsbein nicht
+// (juengstes Quartal ohne Wert), das Jahres-Wachstum ist mit 0,8 Basisanteil gesund.
+// Vor dem Fix fiel genau diese Zeile als 'basisQuartalStub' heraus — benannt nach einem
+// Bein, das an der Zahl keinen Anteil hatte. Am Bestand: 19 solcher Zeilen.
+test('winziges Vorjahresquartal toetet keine Zeile, deren Wachstum aus dem Jahresbein kommt', () => {
+  drin({ revGrowthYoYPct: 25 }, {
+    revenueTTM: 400e6,
+    revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 1e6 }],
+    revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
+    annualRev: [400e6, 320e6, 240e6],
+  }, undefined, false);
 });
 
 // --- FCF-Marge -------------------------------------------------------------
@@ -210,6 +225,67 @@ test('ueber MIN_WINSOR_SAMPLE klemmt der Wachstumsterm den Ausreisser, r40 bleib
   assert.ok(p.revGrowthPctUsed < 200, 'der verwendete Term muss geklemmt sein, ist ' + p.revGrowthPctUsed);
   assert.ok(Math.abs((p.revGrowthPctUsed + p.fcfMarginPct) - p.r40) <= 0.11, 'r40 muss aufgehen');
   f.aufraeumen();
+});
+
+// --- Basisjahr (Jahres-Zwilling des Basisquartal-Tors) ----------------------
+// Wo keine Quartalsreihe traegt, rechnet revGrowthLevel ueber annualRev[0]/annualRev[1]
+// und prueft dort ebenfalls nur b > 0. RZLV stand am 19.09.2026 mit +2.224 % im Brett:
+// 2,0 Mio. Vorjahr gegen 46,8 Mio. heute. Das ist kein Wachstum, sondern ein Unternehmen,
+// das gerade erst anfaengt, Umsatz zu melden.
+test('gesundes Basisjahr (0,8 des aktuellen Jahres) bleibt drin, auch ohne Quartalsreihe', () => {
+  drin({}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], annualRev: [400e6, 320e6, 240e6] }, undefined, false);
+});
+
+test('Stub-Basisjahr (RZLV-Muster, 4,3 % des aktuellen Jahres) fliegt raus', () => {
+  abgewiesenWegen('basisJahrStub', {}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], annualRev: [46.8e6, 2.01e6, 0.145e6] },
+    undefined, false);
+});
+
+test('Basisjahr: knapp ueber der Schwelle (0,26) bleibt drin, knapp darunter (0,24) nicht', () => {
+  drin({}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], annualRev: [400e6, 0.26 * 400e6, 50e6] }, undefined, false);
+  abgewiesenWegen('basisJahrStub', {}, { revenueQ: [], revenueQEnds: [], annualRevEnds: ['2026-06-30', '2025-06-30', '2024-06-30'], annualRev: [400e6, 0.24 * 400e6, 50e6] },
+    undefined, false);
+});
+
+// DIE ABWESENHEITS-RICHTUNG: traegt das Quartalsbein, ist dieses Tor NICHT zustaendig —
+// dort wacht MIN_BASE_QUARTER_SHARE. Ohne diese Probe koennte das Jahres-Tor stillschweigend
+// Zeilen wegwerfen, deren Wachstum gar nicht aus der Jahresreihe stammt.
+test('bei tragendem Quartalsbein greift das Jahres-Tor nicht, auch bei winzigem Basisjahr', () => {
+  drin({}, { revenueTTM: 400e6, basisQ: 95e6, annualRev: [400e6, 4e6, 2e6] }, undefined, false);
+});
+
+// --- Frische-Anker: das juengste Quartal MIT WERT --------------------------
+// Ein Quartalsende ohne Zahl dahinter ist ein Platzhalter. Verankerte der Waechter darauf,
+// behauptete die Zeile eine Frische, die ihre Zahlen nicht haben (479 von 13.916 Snapshots
+// am Stand 2026-09-19).
+test('leeres juengstes Quartal: der Anker rutscht auf das naechste Quartal MIT Wert', () => {
+  drin({}, {
+    revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 95e6 }],
+    revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31', '2025-09-30', '2025-06-30'],
+  }, undefined, false);
+});
+
+// DIE BRUCHPROBE: frisches leeres Ende ueber einer uralten Zahl. Vor dem Fix verankerte
+// der Waechter auf 2026-06-30 und liess die Zeile durch — die Zahl war da schon sechs
+// Jahre alt. Jetzt zaehlt das Quartal, das wirklich einen Wert traegt.
+test('leeres juengstes Quartal ueber veralteten Werten wird als veraltet erkannt', () => {
+  abgewiesenWegen('veraltet', {}, {
+    revenueQ: [{ value: null }, { value: 110e6 }, { value: 105e6 }, { value: 100e6 }, { value: 95e6 }],
+    revenueQEnds: ['2026-06-30', '2020-06-30', '2020-03-31', '2019-12-31', '2019-09-30'],
+  }, undefined, false);
+});
+
+// DIE DRITTE RICHTUNG: eine Periodenliste OHNE jeden Wert ist kein Frische-Beleg.
+// Am echten Bestand (19.09.2026) tragen 112 Snapshots Quartalsenden, aber keinen einzigen
+// Quartalswert. Der alte Anker las dort revenueQEnds[0] und meldete Frische fuer Zahlen,
+// die es nicht gibt. Erwartet ist jetzt "unbekannt" — nicht "veraltet", und vor allem
+// nicht "frisch".
+test('Quartalsenden ohne jeden Wert belegen keine Frische (frischeUnbekannt)', () => {
+  abgewiesenWegen('frischeUnbekannt', {}, {
+    revenueQ: [],
+    revenueQEnds: ['2026-06-30', '2026-03-31', '2025-12-31'],
+    annualRevEnds: undefined,
+  }, undefined, false);
 });
 
 bilanz('tests/rule40-guards.test.js');
