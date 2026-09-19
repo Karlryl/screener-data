@@ -49,3 +49,8 @@
 /protocol/druckenmiller_*.json text eol=lf
 /protocol/druckenmiller_*.sha256 text eol=lf
 /tests/druckenmiller/fixtures/** text eol=lf
+
+# Chunk 3: die 13F-Fixtures sind ORIGINALE der SEC. Sie werden byte-gleich aufbewahrt, damit
+# ihr sha256 dem Original entspricht - eine normalisierte Zeilenende-Variante waere eine andere
+# Datei als die, die die SEC ausgeliefert hat.
+/tests/druckenmiller/fixtures/13f/*.xml -text
