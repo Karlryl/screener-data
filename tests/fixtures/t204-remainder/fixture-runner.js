@@ -33,6 +33,11 @@ switch (action) {
     writeLayerDiffReport(target, input);
     break;
   }
+  case 'gqs': {
+    const { writeEvidenceArtifact } = require(path.join(repoRoot, 'scripts', 'gqs00-equivalence.js'));
+    writeEvidenceArtifact(target, input);
+    break;
+  }
   case 'direct':
     fs.writeFileSync(target, input, 'utf8');
     break;
