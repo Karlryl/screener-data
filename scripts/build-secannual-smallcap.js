@@ -34,7 +34,7 @@ const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 // `catch (_) { out = {} }` machte eine VORHANDENE, aber unlesbare
 // external-data/sec-secannual-smallcap.json von "gibt es noch nicht" ununterscheidbar —
 // der Lauf schrieb seinen Teilbestand darueber und ging mit Exit 0 raus.
-const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity, yahooOpIncOf, ladeMergeBasis } = require('./build-secannual.js');
+const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity, besterVersatz, yahooOpIncOf, ladeMergeBasis } = require('./build-secannual.js');
 
 // T569-F4: derselbe blanke `catch (_) { continue; }` wie in build-secannual.js, nur auf der
 // KLEINEREN Population (watchlist-smallcap.json fuehrt 596 Namen, on-disk liegen ~100) — die
@@ -117,7 +117,13 @@ async function run() {
     // A1/K1 (ENTSCHIED 15): yahooOpIncOf statt annualOpInc direkt — auf einem migrierten Store
     // ist annualOpInc bereits die SEC-Reihe und looseSanity verglichen SEC gegen SEC.
     // Begruendung vollstaendig an der Funktion in build-secannual.js.
-    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
+    // T174: der Zaehler allein sagt nicht, WER stehen bleibt. Ein abgewiesener Name behaelt
+    // via Merge-Basis seinen Altstand — das ist genau die Sorte Stillstand, die man im Log sehen
+    // muss, seit die Wache ueber die ganze Reihe zieht (mehr Abweisungen als newest-only).
+    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
+      console.log('  divergent (behaelt Altstand)', tk, 'Versatz', JSON.stringify(besterVersatz(snap && snap.annual && snap.annual.annualRev, sec.annual.annualRev)));
+      divergent++; continue;
+    }
     // taxonomie = HERKUNFT der Reihen (us-gaap|ifrs-full), gleiche Ebene wie cik/nfy.
     out[tk] = { cik, taxonomie: sec.taxonomie, nfy: sec.annual._fys[0], annualOpInc: sec.annual.annualOpInc, annualRev: sec.annual.annualRev,
       annualNetIncome: sec.annual.annualNetIncome, annualFCF: sec.annual.annualFCF, annualOCF: sec.annual.annualOCF,
