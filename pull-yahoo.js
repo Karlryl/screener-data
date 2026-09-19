@@ -94,6 +94,21 @@ const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 // again → fundamentals freeze indefinitely while asOf shows "today". Fix: stamp
 // meta.fundamentalsAsOf ONLY on a successful full pull, NEVER touch it in
 // _priceOnlyUpdate, and force a full pull when it ages past FUNDAMENTALS_REFRESH_DAYS.
+// Lane A 19.09.: ein Ziel-Pull ueber eine Teilliste loeschte das committete _manifest.json
+// und schrieb seine eigene Bilanz hinein (n_total 21728 -> 16). Jeder nachgelagerte Job
+// — coverage-gate, Merge, Scoring — haette 16 fuer die Tageswahrheit gehalten. Unterhalb
+// dieses Anteils am zuletzt bekannten Universum bleibt _manifest.json unberuehrt und die
+// Bilanz geht nach _manifest.subset-<version>.json.
+const MANIFEST_SUBSET_MIN_SHARE = 0.5;
+// Die Regel steht hier und wird exportiert, damit der Waechter sie ausfuehrt statt sie
+// nachzubauen (dasselbe Muster wie parseVollPullTicker).
+function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
+  const n = Number(anzahlListe), bekannt = Number(bekanntesNTotal);
+  if (!Number.isFinite(n) || n <= 0) return false;
+  if (!Number.isFinite(bekannt) || bekannt <= 0) return false;   // ohne Nenner nichts zu schuetzen
+  return n < MANIFEST_SUBSET_MIN_SHARE * bekannt;
+}
+let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
 const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
 const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 
@@ -3385,6 +3400,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // geschrieben). Ausserhalb von Pence sind beide Faktoren identisch, die ADR-Klasse
       // rechnet also unveraendert. Waechter: tests/waehrung-pence-aggregat.test.js.
       existing.marketCap.value = q.marketCap * tradingAggFactor;
+      // Lane A 19.09.: der Schnellpfad schrieb den WERT und liess den STEMPEL stehen. Ein
+      // Stempel, der nicht mitgefuehrt wird, luegt: die 16 GBp-Beine trugen asOf aus dem
+      // August, obwohl ihr Wert von diesem Weg stammte — und die Alters-Diagnose lief
+      // deshalb in die falsche Richtung. Wer den Wert schreibt, schreibt den Stempel.
+      existing.marketCap.asOf = new Date().toISOString();
+      existing.marketCap.source = existing.marketCap.source || 'yahoo_quote';
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
@@ -4590,7 +4611,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
   const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
-  const slimPath = path.join(outputDir, '_manifest.json');
+  const slimPath = path.join(outputDir, _manifestSubsetTag
+    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest.json');
+  if (_manifestSubsetTag) {
+    _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
+  }
   writeFileAtomic(slimPath, JSON.stringify(slim));
   const fullPath = path.join(outputDir, '_manifest-full.json');
   writeFileAtomic(fullPath, JSON.stringify(manifest));
@@ -4666,17 +4692,33 @@ async function main() {
   // Lauf bricht danach vor dem ersten Checkpoint ab, steht das ALTE Erfolgs-Manifest
   // unveraendert auf Platte und jeder nachgelagerte Job (coverage-gate, Merge, Scoring)
   // haelt den Altstand fuer frisch — bei Exit 0. Fail-loud VOR dem Pull statt Warnung.
+  const watchlist = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
+  if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {
+    _log('ERROR', 'Watchlist must have .stocks array');
+    process.exit(1);
+  }
+  // Lane A 19.09.: erst entscheiden, ob dieser Lauf ueberhaupt fuer das Tagesmanifest
+  // spricht. Eine Teilliste spricht nicht fuer das Universum — sie darf es weder
+  // loeschen noch ueberschreiben. Nenner ist das n_total des zuletzt bekannten
+  // Manifests; ohne Manifest gibt es nichts zu schuetzen.
   if (fs.existsSync(manifestPath)) {
+    try {
+      const vorher = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const bekannt = Number(vorher && vorher.n_total);
+      if (istTeilmengenLauf(watchlist.stocks.length, bekannt)) {
+        _manifestSubsetTag = String((watchlist._meta && watchlist._meta.version) || 'teilmenge')
+          .replace(/[^A-Za-z0-9._-]/g, '-');
+        _log('WARN', 'Teilmengen-Lauf erkannt (' + watchlist.stocks.length + ' von zuletzt '
+          + bekannt + '): _manifest.json wird NICHT geloescht.');
+      }
+    } catch (e) { /* unlesbares Manifest schuetzt nichts — der Normalpfad unten raeumt es weg */ }
+  }
+  if (!_manifestSubsetTag && fs.existsSync(manifestPath)) {
     try { fs.unlinkSync(manifestPath); _log('INFO', 'Deleted stale _manifest.json'); }
     catch (e) {
       throw new Error('Stale _manifest.json konnte nicht geloescht werden (' + e.message
         + ') — Abbruch VOR dem Pull, sonst gilt der Altstand nachgelagert als frisch');
     }
-  }
-  const watchlist = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
-  if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {
-    _log('ERROR', 'Watchlist must have .stocks array');
-    process.exit(1);
   }
   // Gezielter Voll-Pull: VOR dem Sharding pruefen. shardStocks schneidet die Liste gleich
   // auf ~1/17; gegen die Scheibe geprueft waere derselbe gueltige Ticker in 16 von 17
@@ -4946,6 +4988,7 @@ module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapsh
   // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
   // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
   parseVollPullTicker, VOLL_PULL_CAP,
+  istTeilmengenLauf, MANIFEST_SUBSET_MIN_SHARE,
   // T142: Inhalts-Zaehler der FTS-Reihen. Exportiert, damit die Ausschuettungs-Wache
   // (tests/t142-ausschuettungsreihen-inhalt.test.js) die ECHTE Regel misst statt sie
   // nachzubauen (Fehler F1334).
