@@ -26,6 +26,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 const { scoreUniverse } = require('../src/scoring/score.js');
 const formulas = require('../src/scoring/formulas/index.js');
 const { einmalertragBewertbarkeit } = require('../src/scoring/lamps.js');
@@ -159,6 +161,22 @@ function messen(universum) {
   };
 }
 
+// Bindet die NICHT-Snapshot-Eingaben an eine nachpruefbare Version. Faellt git aus,
+// wird nicht geraten: das Feld sagt dann 'unbekannt' statt eine Zahl zu erfinden.
+function eingabenStand() {
+  const g = (args) => {
+    try { return execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim(); }
+    catch (_) { return null; }
+  };
+  const wl = path.join(ROOT, 'watchlist.json');
+  return {
+    repoCommit: g(['rev-parse', 'HEAD']) || 'unbekannt',
+    arbeitsbaumSauber: g(['status', '--porcelain']) === '' ? true : (g(['status', '--porcelain']) === null ? 'unbekannt' : false),
+    watchlistSha256: fs.existsSync(wl) ? crypto.createHash('sha256').update(fs.readFileSync(wl)).digest('hex').slice(0, 16) : null,
+    hinweis: 'watchlist.json und external-data/** sind git-versioniert; repoCommit bindet sie.',
+  };
+}
+
 function main() {
   const dir = process.argv[2];
   if (!dir) { console.error('Aufruf: node scripts/t156-einmalertrag-bonus-schnittmenge.js <snapdir> [--json <datei>]'); process.exit(2); }
@@ -168,6 +186,12 @@ function main() {
   bericht.snapdir = path.resolve(dir);
   bericht.snapshotDateien = alleJsonDateien(dir).length;
   bericht.universumNachWatchlist = universum.length;
+  // Der Snapshot-Baum ist nicht die einzige Eingabe: watchlist.json (Universums-Filter) und
+  // external-data/** (SEC-Merge) werden LIVE gelesen und veraendern Universum bzw. Scores,
+  // ohne dass sich der Baum bewegt. Beide sind git-versioniert - der Commit bindet sie also,
+  // solange er im Bericht steht. Zusaetzlich der Hash der Watchlist, damit ein Lauf aus einem
+  // schmutzigen Arbeitsbaum auffaellt. (Codex-Kreuzreview 19.09., P2)
+  bericht.codeStand = eingabenStand();
   if (jsonIdx > 0 && process.argv[jsonIdx + 1]) {
     fs.writeFileSync(process.argv[jsonIdx + 1], JSON.stringify(bericht, null, 2) + '\n');
   }

@@ -3,6 +3,10 @@
 **Datum:** 2026-09-19 · **Lane D (Daylauf 19.09.)** · **Klasse:** Diagnose, kein Bau
 **Messstand:** CI-Artefakt `snapshots` des Daily-Yahoo-Pull-Laufs **35319115201** (2026-09-18T07:22Z),
 16.027 Dateien, 16.022 nach Watchlist-Filter, 9.520 gescorte Zeilen.
+**Die uebrigen Eingaben** (Engine, `watchlist.json`, `external-data/**`) sind git-versioniert und
+ueber den Commit gebunden: `repoCommit 27fb7a90a2`, `watchlistSha256 8ba42d06949b265a` — beides
+steht im JSON unter `codeStand`, damit der Lauf wiederholbar ist. Zweitlauf mit denselben Eingaben:
+Zahlen identisch (27 / 8 / 33 / 1.139 / 2.569).
 **Skript:** `scripts/t156-einmalertrag-bonus-schnittmenge.js` · **Rohdaten:** `reports/t156-einmalertrag-bonus-2026-09-19.json`
 **Waechter:** `tests/t156-schnittmenge.test.js` (6/6, Sabotage einmal rot gesehen)
 
@@ -24,8 +28,9 @@ Damit ist **W1 (a) nach dem eigenen Kriterium des Rats heute nicht festzuzurren*
   auf EINEM Lauf gemessen. Die Rangwechsel-Haelfte ("19 von 20") ist **nicht** nachgemessen.
 - **Teil 3 (nie gezaehlte Gegenrichtung):** erstmals gezaehlt. Bonus feuert, Spitze >= 50 % ist da,
   Lampe schweigt: **8 Zeilen** durch den Anlauf-Schutz, **33 Zeilen** wegen ungleicher Kadenz,
-  dazu **1.139 Bonus-Zeilen**, ueber die die Lampe gar nicht urteilen kann (zu wenige Quartale).
-  Die Population ist also **groesser als die Schnittmenge**, genau wie der Advocatus vermutete.
+  und darueber hinaus kann die Lampe ueber **2.569 der 4.720 bonus-tragenden Zeilen (54,4 %)
+  ueberhaupt nicht urteilen**. Die Population ist also **groesser als die Schnittmenge**, genau wie
+  der Advocatus vermutete.
 - **Sprungbrett:** §1 Messanordnung · §2 Teil 1 · §3 Teil 2 · §4 Teil 3 · §5 Was offen bleibt.
 
 ---
@@ -152,10 +157,16 @@ der Lampe (Spitzenquartal >= 50 % der letzten vier) **erfuellt** ist, die Lampe 
 | **zu wenige Quartale** | **1.139** | Bonus feuert, die Lampe hat nicht einmal vier verwertbare Quartale. Nicht urteilbar, aber die Groesse der blinden Flaeche. |
 
 **Der Befund:** die Schnittmenge (27) ist **kleiner** als die Menge der Bonus-Zeilen mit
-vorhandener Spitze und schweigender Lampe (41), und beide verschwinden neben den 1.139 Bonus-Zeilen,
-ueber die die Lampe gar nichts sagen kann. Wer die Score-Semantik an der Lampe festzurrt, zurrt sie
-an einem Detektor fest, der auf **4.720 bonus-tragenden Zeilen** in 24,1 % der Faelle
-(1.139 + 33 von 4.720) strukturell blind ist.
+vorhandener Spitze und schweigender Lampe (41). Und beide verschwinden neben der vollen blinden
+Flaeche: von den **4.720 bonus-tragenden Zeilen** kann die Lampe ueber **2.569 gar nicht urteilen
+= 54,4 %** (`zellen.lampeNull_bonusAn` im JSON). Die drei Klassen oben sind nur der Ausschnitt mit
+messbarer Spitze; wer sie fuer das Ganze haelt, unterschaetzt die Blindheit um mehr als das Doppelte.
+Wer die Score-Semantik an diesem Detektor festzurrt, zurrt sie an einem fest, der auf gut der
+Haelfte der betroffenen Zeilen schweigt, weil er nicht urteilen kann.
+
+> Korrektur nach dem Codex-Kreuzreview (19.09.): hier stand zuerst "24,1 % (1.139 + 33 von 4.720)".
+> Das war doppelt falsch — die Rechnung ergibt 24,8 %, und die richtige Bezugsgroesse ist die
+> vollstaendige Null-Zelle (2.569), nicht die auf Konzentration >= 50 % eingeschraenkte Teilmenge.
 
 Zwei der acht Anlauf-Faelle (**CRNX**, **KYMR**) sind in der Juli-Handpruefung als **FEHLALARM**
 gefuehrt — der Anlauf-Schutz hat dort also das Richtige getan. Das ist kein Freispruch fuer die
