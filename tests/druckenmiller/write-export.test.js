@@ -675,7 +675,10 @@ test('K2 die Tafel zeigt ohne Lesung KEINE Zahl', () => {
   kandidatenLedger(w, { mitEintrag: true });
   W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
   const c = liesJson(path.join(w.exportDir, 'candidates.json'));
-  assert.equal(c.scoreboard.registrationHashed, false, 'Datei B ist noch nicht gehasht');
+  // Datei B IST seit Chunk-2-Ende gehasht, also gibt es einen Lese-Plan - aber keine Lesung.
+  assert.equal(c.scoreboard.registrationHashed, true, 'Datei B ist gehasht, T0 steht');
+  assert.ok(c.scoreboard.readSchedule.R2 && c.scoreboard.readSchedule.R3, 'der Lese-Plan fehlt');
+  assert.equal(c.scoreboard.readSchedule.R1, null, 'R1 haengt an 12 Monaten UND der Blockuntergrenze');
   assert.equal(c.scoreboard.frozen.label, 'noch nicht lesbar');
   for (const f of ['L', 'MDE', 'level', 'readId', 'readDate', 'nextReadDate', 'L126', 'MDE126', 'level126']) {
     assert.equal(c.scoreboard.frozen[f], null, 'Tafel-Feld ' + f + ' ist nicht null');
@@ -733,6 +736,7 @@ test('K7 BRUCHPROBE: eine Zahl auf der Tafel ohne Lesung -> rot', () => {
   W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
   const p = path.join(w.exportDir, 'candidates.json');
   const c = liesJson(p);
+  // readId bleibt null - die Zahl waere also aus dem Nichts.
   c.scoreboard.frozen.L = 4.2;
   fs.writeFileSync(p, JSON.stringify(c) + '\n');
   rotErwartet(w, 'L auf der Tafel ohne Lesung');

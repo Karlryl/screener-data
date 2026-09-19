@@ -1,5 +1,5 @@
 {
-  "_was": "Datei C - das Design des rueckblickenden Top-down-Tests auf ALFRED-Vintages (BUILD-SPEC v1 §0.5, [REV4-4], [REV5-5], [REV6-2], [REV6-3]; gehasht am Ende von Chunk 2, UNBEDINGT vor Chunk 4). ENTWURF bis zum Hash; die Endung .DRAFT haelt den Registrierungs-Glob fern.",
+  "_was": "Datei C - das Design des rueckblickenden Top-down-Tests auf ALFRED-Vintages (BUILD-SPEC v1 \u00a70.5, [REV4-4], [REV5-5], [REV6-2], [REV6-3]; gehasht am Ende von Chunk 2, UNBEDINGT vor Chunk 4). GEHASHT am Ende von Chunk 2 (2026-09-19), unbedingt vor Chunk 4.",
   "_specHash": "af483fae6a1676476894fab05c1863a6a757e439c60ad8d6ccfd9bf5326a961a",
   "_specFile": "Jarvis/Knowledge/Trading/druckenmiller/research-2026-09-13/BUILD-SPEC-v1.md",
   "_amendment01": {
@@ -7,13 +7,25 @@
     "sha256": "61d4c8ef4d89785128db1c0115c3ad52797e347087fccad1a71054c6df9503c1",
     "appliesHere": "Die Barriere dieses Tests ist eine SPY-Erstpassage ueber 63 Balken. Sie folgt demselben Skalierungsgesetz wie das Scoreboard: sigma_h = sigma_daily(63 Tage) * sqrt(63), k = 1. Zwei verschiedene Barrieren-Gesetze in einem Modul waeren eine zweite, unregistrierte Messentscheidung."
   },
-  "_origin": "BUILD-SPEC v1 §0.5 (frozen 2026-09-14), laneB/liquiditaet-indikatoren.md, laneC/h-int-messplan.md v2",
+  "_origin": "BUILD-SPEC v1 \u00a70.5 (frozen 2026-09-14), laneB/liquiditaet-indikatoren.md, laneC/h-int-messplan.md v2",
   "_date": "2026-09-19",
   "purpose": "Vorregistrierter Rueckblick-Test: fuegt das VORZEICHEN von T1/T2/T3 dem SPY-Erstpassage-Ergebnis Information hinzu, die der SPY-Zustand nicht schon traegt? Nur ein Test, der besteht, darf seine Transformation je in der Anzeige erscheinen.",
   "tests": {
-    "T1": { "series": "WALCL - WDTGAL - RRPONTSYD", "provenance": "unsere Konstruktion (das RRP-Bein ist nicht sein Begriff)", "displayedBeforePass": false },
-    "T2": { "series": "Aenderung von DGS10 und DGS30", "provenance": "FRED-Rohreihe", "displayedBeforePass": false },
-    "T3": { "series": "Aenderung von DTWEXBGS", "provenance": "FRED-Rohreihe", "displayedBeforePass": false }
+    "T1": {
+      "series": "WALCL - WDTGAL - RRPONTSYD",
+      "provenance": "unsere Konstruktion (das RRP-Bein ist nicht sein Begriff)",
+      "displayedBeforePass": false
+    },
+    "T2": {
+      "series": "Aenderung von DGS10 und DGS30",
+      "provenance": "FRED-Rohreihe",
+      "displayedBeforePass": false
+    },
+    "T3": {
+      "series": "Aenderung von DTWEXBGS",
+      "provenance": "FRED-Rohreihe",
+      "displayedBeforePass": false
+    }
   },
   "vintages": {
     "source": "ALFRED (point-in-time Vintages, gratis)",
@@ -53,7 +65,7 @@
   "chunk4Contract": {
     "refusesWithoutHash": "Das Chunk-4-Skript laeuft nicht, wenn Datei C und ihr .sha256 fehlen oder nicht zusammenpassen.",
     "embedsHash": "Der Hash von Datei C steht im Ergebnis-Datei-Kopf.",
-    "orderRule": "Chunk 4 darf nicht vor diesem Hash starten, was die Reihenfolge in §3 auch suggeriert."
+    "orderRule": "Chunk 4 darf nicht vor diesem Hash starten, was die Reihenfolge in \u00a73 auch suggeriert."
   },
   "displayRule": {
     "failedTest": "Die Transformation wird NICHT angezeigt (die Roh-Reihe bleibt als 'FRED-Rohreihe, Referenz' sichtbar).",

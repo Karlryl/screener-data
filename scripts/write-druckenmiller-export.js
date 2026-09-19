@@ -831,12 +831,19 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
     // Die Tafel darf ohne Lesung keine Zahl zeigen.
     const tafel = cand.scoreboard && cand.scoreboard.frozen;
     if (!tafel) return rot('[druckenmiller] candidates.json traegt keine Tafel.');
-    if (!cand.scoreboard.registrationHashed) {
-      for (const feld of ['L', 'MDE', 'L126', 'MDE126', 'readId', 'readDate']) {
+    // Die Bedingung haengt an der LESUNG, nicht an der Registrierung: sobald Datei B gehasht
+    // ist, gibt es einen Lese-Plan - aber noch keine Lesung. Ohne readId darf keine
+    // Lese-Zahl auf der Tafel stehen ([REV10-3]/[REV10-5]).
+    if (tafel.readId === null) {
+      for (const feld of ['L', 'MDE', 'level', 'L126', 'MDE126', 'level126', 'readDate', 'nextReadDate']) {
         if (tafel[feld] !== null) {
           return rot('[druckenmiller] candidates.json: die Tafel zeigt ' + feld + ' = '
-            + JSON.stringify(tafel[feld]) + ', obwohl keine Lesung stattgefunden hat.');
+            + JSON.stringify(tafel[feld]) + ', obwohl keine Lesung stattgefunden hat (readId ist null).');
         }
+      }
+      if (tafel.label !== 'noch nicht lesbar') {
+        return rot('[druckenmiller] candidates.json: ohne Lesung ist das Etikett "noch nicht lesbar", '
+          + 'nicht ' + JSON.stringify(tafel.label) + '.');
       }
     }
     const nfk = nichtEndlich(cand, 'candidates');
