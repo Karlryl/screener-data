@@ -666,3 +666,163 @@ Auslieferung anhalten.
 Sitzung. Beides ist ein bekannter Zustand des Tageslaufs, den die Reihe selbst korrekt behandelt
 (Flag gesetzt, kein Quantil) — den ganzen Lauf dafuer anzuhalten wuerde die Glaubwuerdigkeit des
 Waechters verbrauchen.
+## 14. `rule40/` (Rule-of-40-Brett, DIAGNOSTIC) — additiver Feed (17.09.2026)
+
+**Dateien:** `outputs/findash-export/v1/rule40/index.json` + `rule40/overview.json`, exakt die
+Huelle und Zeilenform von §10 (`quality/`). findash braucht dafuer nur zwei Registrierungen
+(`data-layer/screener-sync.js` SUB_BOARDS, `data-layer/screener.js` UNTER_BOARDS) plus die
+Oberflaeche — keinen neuen Leser.
+
+**Schreiber:** `scripts/write-rule40-export.js`, im scoring-Job NACH `write-findash-export.js`
+und VOR dem Pages-Deploy. Er rechnet **keine Achse und keinen Score** neu. `score` bleibt in
+jeder Zeile der unveraenderte Engine-Score — und ist `null` fuer Namen, die auf keinem Brett
+stehen (eine 0 waere dort eine Behauptung, die niemand aufgestellt hat).
+
+**Universum: das GEROUTETE Universum, nicht die Brett-Zeilen.** Der Schreiber laeuft ueber
+`snapshots/` und laesst jeden Namen durch `src/scoring/router.js route()` (read-only). Grund:
+die Vollboards aus §11 sind die besten 150 je Branche **nach Engine-Score** — eine
+Rule-of-40-Liste, die durch genau die Formel vorgefiltert ist, gegen die sie die Gegenprobe
+sein soll, waere keine; und reife Namen mit hoher Marge und massvollem Wachstum fehlten darin.
+Namen, die zusaetzlich auf einem Vollboard stehen, erben von dort `score`, `lamps`,
+`axisBreakdown`, Kohorte und das gepruefte `marketCap`; die uebrigen tragen `onBoard: false`,
+`score: null`, `lamps: []` und `marketCap: null` — der Beleg der Handelskurs-Umrechnung liegt
+im Haupt-Schreiber, und eine ungeprueft durchgereichte Lokalwaehrungs-Zahl saehe aus wie USD.
+
+**Die Groesse.** `r40 = revGrowthPctUsed + fcfMarginPct`, beides Prozentpunkte. Das ist
+`ruleOfX` mit alpha = 1 (`src/scoring/axes.js:257`) — der Unterschied zur Achse ist, dass hier
+die ZAHL im Brett steht und nicht ihr Kohorten-Perzentil. Deshalb `boardStatus: 'diagnostic'`:
+eine durchsichtige Arithmetik neben dem Score, nie im Score, kein Gauntlet.
+
+**Warum `revGrowthPctUsed` und nicht `revGrowthYoYPct`.** Das exportierte `revGrowthYoYPct` ist
+**nicht winsorisiert** — `score.js:1348` ruft `revGrowthLevel(snapshot)` absichtlich ohne
+`growthBounds` auf, weil ein geklemmter Wert in der ANZEIGE eine stille Verfaelschung waere. Fuer
+eine RANGLISTE ist er es nicht: am Stand 2026-08-29 fuehrte 2548.TW die Liste mit +29.049 %
+gegen ein p99 von +117,7 % an, erzeugt aus einem Basisquartal von 1,42 Mio. gegen 693 Mio. TTM.
+Das Brett klemmt den Wachstumsterm deshalb mit den p1/p99-Schranken des eigenen Kandidaten-
+Universums (`winsorTailBounds`, dieselbe Funktion wie die Achse; data-gelernt, keine gesetzte
+Zahl) und liefert BEIDE Werte: `revGrowthYoYPct` roh wie ueberall sonst im Export,
+`revGrowthPctUsed` geklemmt. Wer nachrechnet, sieht welchen. Die Schranken stehen als
+`index.rule40.growthBounds` `{p1, p99}` im Export, damit die Oberflaeche sagen kann, wo der
+Deckel sitzt, statt ihn zu verschweigen.
+
+**Zeile.** Jeder Schluessel der `quality/`-Zeile (§10/§4), dazu additiv:
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `r40` | number | `revGrowthPctUsed + fcfMarginPct`, auf 1 Stelle gerundet |
+| `revGrowthPctUsed` | number | der geklemmte Wachstumsterm, der in `r40` eingeht |
+| `fcfMarginPct` | number | `metrics.fcfMarginTTM`, nur durch die Datentore G0-G2 |
+| `ebitdaMarginPct` | number \| null | `metrics.ebitdaMargins` (PROZENT), null bei Bruchteil-Verdacht |
+| `r40Ebitda` | number \| null | `revGrowthPctUsed + ebitdaMarginPct`, die EBITDA-Variante |
+| `industry` | string \| null | `meta.industry` (im uebrigen Export nicht enthalten) |
+| `r40Group` | `'software'` \| `'other'` | Software/SaaS/Internet nach `industry` |
+| `onBoard` | boolean | steht der Name auch auf einem Vollboard? |
+| `quartalsEnde` | ISO \| null | Ende des juengsten Quartals der Reihe hinter dem Wachstum |
+
+`formulaId` traegt die Herkunfts-Branche bzw. die Router-Formel, und `index.boardStatus`
+fuehrt jeden vorkommenden `formulaId` als `diagnostic` — `shapeOverviewRow` sucht den Status
+genau darueber. `rank` ist der Rang nach `r40` INNERHALB des Bretts, `generated_at` die Kopie
+aus dem `index.json` desselben Laufs (findash prueft das, `screener.js:364`).
+
+**Auswahl.** Aufgenommen wird `r40 >= 40`. **Jede Gruppe** (`software`, `other`) hat ihre
+eigene Auswahl — nicht "Software plus Gesamtliste": Software dominiert das Mass, und eine
+Gesamt-Liste als zweites Bein liess die ganze Rest-Gruppe herausfallen (gemessen: 200
+Software- und 100 zulaessige Industrie-Zeilen ergaben 150 Zeilen, davon 0 aus der
+Rest-Gruppe).
+
+Innerhalb einer Gruppe gilt eine **ANZEIGE-Konvention**, kein Waechter: oberhalb von
+`DISPLAY_LARGE_MCAP_USD` (1 Mrd. USD, belegte USD-Marktkap) wird jede Zeile exportiert,
+unterhalb nur die besten `TOP_N` (100); oberhalb gilt `TOP_N_LARGE` (300). Grund: der Tab oeffnet mit einem sichtbaren,
+umstellbaren Vorfilter „Marktkap. >= 1 Mrd." — waere die Export-Kappe EINE Liste, fuellten
+die kleinen Werte sie auf und genau die Standard-Ansicht liefe leer. Die Grenze entscheidet
+also ueber die VOLLSTAENDIGKEIT einer Ansicht, nie ueber die Aufnahme einer einzelnen Zeile.
+Zaehler: `counts.exportedLargeCap` / `counts.exportedSmallCap`.
+
+**Marktkap ohne Vollboard-Zeile.** Namen mit Vollboard-Zeile erben deren geprueftes
+`marketCap`. Fuer die uebrigen entscheidet `beurteileWaehrungsbeleg(meta)` — dieselbe reine
+Funktion, mit der der Haupt-Schreiber entscheidet, ob eine Zeile ihre Marktkap behalten darf
+(`write-findash-export.js:209`, dort exportiert). Kein zweites FX-Regelwerk: ein zweites
+liefe frueher oder spaeter anders. Traegt der Beleg nicht, bleibt `marketCap` null und die
+Zeile faellt in die untere Gruppe — sie bleibt sichtbar, macht aber keine Groessen-Aussage.
+Zaehler: `counts.offBoardMcapUsdDirect` / `counts.offBoardMcapNull`, damit der Erklaer-Kasten
+sagen kann, was der Groessen-Filter sehen kann und was nicht.
+
+NACHGEMESSEN, weil die Zahl sonst erschreckt: der Beleg traegt auf diesem Bestand fuer ALLE
+geprueften Snapshots (4.000/4.000, darunter CNY, EUR, HKD, JPY, KRW, TWD). Das ist kein
+blinder Waechter, sondern die Arbeitsteilung: `snapshots/<T>.json` fuehrt `marketCap` bereits
+in USD — an 601 nicht in USD gehandelten Namen nachgeprueft, deren Snapshot-Wert mit dem
+(vertraglich USD-)Wert der Vollboard-Zeile uebereinstimmt. Der Beleg prueft, ob die
+Umrechnung DOKUMENTIERT ist, nicht ob sie stattgefunden hat. Eine geratene Handelswaehrung
+(`tradingCurrencyAssumed`) faellt weiterhin durch — Waechter in `tests/rule40-universe.test.js`.
+
+**Waechter** (alle als benannte Konstanten im Schreiber, jeder mit Begruendung im Quelltext):
+
+| Konstante | Wert | Warum |
+| --------- | ---- | ----- |
+| `MIN_BASE_QUARTER_SHARE` | 0,25 | Vorjahresquartal unter einem Viertel eines Durchschnittsquartals ist eine Teilmeldung, keine Vervielfachung (`revQuartalsYoY` prueft nur `b > 0`). Gesunder Koerper: p5 = 0,59, p50 = 0,92 |
+| `MAX_FCF_MARGIN_PCT` | 100 | Freier Cashflow ueber dem Umsatz ist Bilanz-/Einheiten-Artefakt; Zeile wird VERWORFEN, nicht geklemmt (in Reihe mit `OPMARGIN_CAP = 1.0`) |
+| `MAX_FISCAL_AGE_DAYS` | 550 | Abstand von `generated_at` zum juengsten Quartalsende. Gesunder Koerper p50 = p95 = 151 Tage; 4,1 % liegen ueber 180, 2,4 % ueber 550, 2,2 % ueber 730 — weitgehend DIESELBEN Namen, bis hinauf zu 8.003 Tagen. 18 Monate lassen jeden Jahres- und Halbjahresmelder durch und fallen erst dort, wo keine Meldekadenz den Abstand mehr erklaert |
+| `DISPLAY_LARGE_MCAP_USD` | 1e9 | ANZEIGE-Konvention (s. Auswahl): oberhalb ungekappt, unterhalb `TOP_N` je Gruppe. Kein Scoring-Niveau, kein Waechter |
+| `TOP_N_LARGE` | 300 | Kappe je Gruppe OBERHALB der Anzeige-Grenze. Ungekappt waren es 754 grosse Werte in einem Brett, das alle 75 s geholt wird; Rang 700 einer Rule-of-40-Liste ist Fuellmaterial. Vor-Kappungs-Zahl als `counts.largeCapBeforeCap` |
+| `TOP_N` | 100 | Kappe je Gruppe UNTERHALB der Anzeige-Grenze |
+| `MIN_WINSOR_SAMPLE` | 200 | Unter so vielen Kandidaten IST die p99-Schranke die oberste Beobachtung — dann wird nicht geklemmt und `growthBounds` steht sichtbar auf `null` |
+| `SEKTOR_AUSSCHLUSS` | Financial Services, Real Estate | Eine FCF-Marge sagt dort nichts ueber das operative Geschaeft; Karls Ansage lautet "alle Branchen ohne Finanzwerte". Der Ausschluss gehoert in den SCHREIBER: sonst verbrauchen diese Zeilen die Top-150-Plaetze. Der Router nimmt nur Bilanz-Banken, Versicherer und mREITs heraus — Immobilien-REITs und Vermoegensverwalter blieben und fuehrten die Liste an |
+
+**Der Frische-Anker ist `timeseries.revenueQEnds[0]`**, nicht `meta.fundamentalsAsOf` und nicht
+`meta.mostRecentQuarter`. `fundamentalsAsOf` ist auf jedem geprueften Snapshot byte-gleich mit
+`fetchedAt`, misst also den ABRUF und nicht den Zeitraum — ein Waechter darauf feuerte nie.
+`mostRecentQuarter` widerspricht der eigenen Quartalsreihe (LTC: dort 2020-09-30, in
+`revenueQEnds[0]` 2026-03-31) und wuerde Zeilen wegwerfen, deren Zahlen stimmen.
+`revenueQEnds[0]` kann der Rechnung per Konstruktion nicht widersprechen: es IST ihr Zeitraum.
+
+**Das Margen-Tor sind G0-G2 von `fcfMarginValid`, bewusst OHNE G3.** G0 (Marge fehlt), G1
+(keine FCF-/OCF-Reihe) und G2 (Vorzeichenkonflikt mit dem juengsten FCF-Jahr) sind Aussagen
+ueber die DATEN. G3 (Summe der zwei juengsten Jahre >= 0) ist ein WIRTSCHAFTLICHES Urteil und
+wuerde wachsende Namen mit juengstem Cash-Burn herauswerfen — genau den regulaeren
+Rule-of-40-Fall, den Karl sehen will. Die Kopie im Schreiber wird von
+`tests/rule40-universe.test.js` an das Original gehalten: jede von der Engine akzeptierte
+Kombination muss auch hier akzeptiert sein, und jeder Unterschied muss G3 sein.
+
+**Datenqualitaets-Gate mit der Entscheidung der Produktion.** `scoreUniverse()` wirft Namen
+mit einer FABRIKATIONS-Lampe (erfundenes juengstes Quartal, annual-currency-Leak) oder Grade D
+aus dem Ranking. Dieses Brett ruft `scoreUniverse()` nicht auf und sah diese Signale fuer Namen
+ohne Brett-Zeile deshalb nie — ihre `lamps: []` hiessen nicht "sauber", sondern "nie geprueft".
+Die beiden Lampen sind reine Funktionen des Snapshots (`src/scoring/lamps.js`), ueber Ausschluss
+entscheidet `isDataSuspect` (`score.js`) mit allen dort ausgeurteilten Ausnahmen. 42 Namen am
+Stand 2026-08-29.
+
+**Emittenten-Dedup mit der Funktion der Produktion** (`issuerDedupGroups` /
+`issuerDedupComparator` aus `score.js`). Das geroutete Universum enthaelt jede NOTIERUNG; die
+Vollboards waren bereits dedupliziert, dieser Weg ist es nicht. Ohne den Dedup stand Palantir
+sechsmal im Brett (PLTR, PLTR.SW, PLTR.VI, PLTR.WA, PTX.DE, 1PLTR.MI) — und mit zwei
+verschiedenen r40-Werten, weil die Beine unterschiedlich gute Daten tragen.
+
+**`index.json`** traegt zusaetzlich `rule40` mit allen Konstanten, den gelernten
+`growthBounds`, `universeBasis` und einem `counts`-Block je Ausschlussgrund
+(`excludedNotRouted`, `excludedSector`, `excludedDuplicateIssuer`, `excludedStale`,
+`excludedTinyBase`, `excludedFcfAboveRevenue`, `noValidMargin`, `noGrowth`, `noRank`,
+`unreadableSnapshot`, `missingFullBoard`). Ohne diese Zaehler sieht "kleines Brett" genauso aus
+wie "Snapshots fehlen".
+
+**Kein lesbarer Zeitraum, kein Platz im Brett.** Zeilen, fuer die weder
+`timeseries.revenueQEnds[0]` noch `annual.annualRevEnds[0]` lesbar sind, werden
+ausgeschlossen (`counts.excludedNoPeriod`, 336 am Stand 2026-08-29). Das ist ausdruecklich
+eine ANZEIGE-Regel und keine Waechter-Logik: „unbekannt" bleibt fuer den Frische-Waechter
+etwas anderes als „veraltet", und er faellt hier kein Urteil. Aber eine Zahl, deren Zeitraum
+niemand benennen kann, gehoert nicht in eine Rangliste, die einem Profi vorgelegt wird — er
+kann sie nicht nachpruefen. Ergebnis: jede Zeile im Brett traegt einen pruefbaren
+`quartalsEnde`.
+
+**Ausfall.** Scheitert der Schreiber ODER faellt sein eigener `--check`, wird der Ordner geleert
+und traegt danach NUR `_failed` (dieselbe Konvention, die `screener-sync.js` probt) — findash
+ersetzt seinen Spiegel dann durch den Ausfall-Stub, statt das Brett von gestern als das von
+heute zu zeigen. Der Ordner wird nie geloescht: bei 404 schreibt findash nicht. Ein leeres
+Brett ist ebenfalls ein Ausfall, kein Ergebnis.
+
+**Fail-soft in CI.** Der Bau- und der `--check`-Schritt in `daily-pull.yml` laufen mit `|| true`:
+ein Ausfall dieses Bretts darf den Haupt-Export und den Deploy nie anhalten. Die Tests dagegen
+(`tests/rule40-*test.js`) sind hermetisch und laufen in der BLOCKIERENDEN Spur des Test-Gates.
+Sie liegen flach in `tests/` und nicht in einem eigenen Unterordner, weil der Gate-Waechter
+jede ungegatete `*test.js` abbricht und `BLOCKING_GLOBS` von
+`tests/scoring/bh-b09-dailyyml.test.js` (BH-035) auf drei Globs festgenagelt ist — in einer
+Sperrzone.
