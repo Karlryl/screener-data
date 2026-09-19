@@ -69,7 +69,9 @@ test('S4 Eintraege: je Arm eine Zeile, warmup markiert, NEUTRAL wird nicht gewer
       { ticker: 'BBB', state: 'NEUTRAL', m1: 0, m2: 0.9, close: 100, sigma63: sig },
       { ticker: 'CCC', state: 'WEAK', m1: -2, m2: 0.5, close: 90, sigma63: null },
     ],
-    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, warmup: true,
+    // Vorzustaende, weil die erste Beobachtung bewusst kein Eintritt ist (S4b).
+    lastStates: new Map([['AAA', 'WEAK'], ['BBB', 'CONFIRMS'], ['CCC', 'NEUTRAL']]),
+    lastEntryIndex: new Map(), sessionIndex: 500, warmup: true,
   });
   assert.deepEqual(r.rows.map((x) => x.ticker + ':' + x.arm), ['AAA:63', 'AAA:126'], 'nur AAA hat Zustand UND sigma');
   assert.equal(r.rows.every((x) => x.warmup === true), true);
@@ -79,10 +81,35 @@ test('S4 Eintraege: je Arm eine Zeile, warmup markiert, NEUTRAL wird nicht gewer
   const gesperrt = S.buildEntries({
     session: sitzung({ highChurn: true }),
     stated: [{ ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1, close: 120, sigma63: sig }],
-    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, warmup: false,
+    lastStates: new Map([['AAA', 'WEAK']]), lastEntryIndex: new Map(), sessionIndex: 500, warmup: false,
   });
   assert.deepEqual(gesperrt.rows, [], 'eine highChurn-Sitzung schreibt keinen Eintrag');
   assert.equal(gesperrt.skipped, 'highChurn');
+});
+
+test('S4b die ERSTE Beobachtung eines Tickers ist kein Eintritt, sie bewaffnet ihn nur', () => {
+  // Am echten Lauf gemessen (2026-09-19): ohne diese Regel schreibt die erste Sitzung 2.794
+  // Eintraege in EINEN Block, und die Abkuehlzeit sperrt danach 63 bzw. 126 Sitzungen lang
+  // fast alles. Ein Ticker ohne Vorzustand hat keinen Wechsel.
+  const sig = S.sigmaAtEntry(closes(200));
+  const stated = [
+    { ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1, close: 120, sigma63: sig },
+    { ticker: 'BBB', state: 'WEAK', m1: -2, m2: 0.4, close: 80, sigma63: sig },
+  ];
+  const erst = S.buildEntries({
+    session: sitzung(), stated, lastStates: new Map(),
+    lastEntryIndex: new Map(), sessionIndex: 500, warmup: false,
+  });
+  assert.deepEqual(erst.rows, [], 'die erste Beobachtung schreibt nichts');
+  assert.equal(erst.armedFirstObservation, 2, 'beide Ticker sind bewaffnet, nicht eingetreten');
+  assert.equal(erst.transitions, 0);
+  const zweit = S.buildEntries({
+    session: sitzung({ date: '2026-09-14' }), stated,
+    lastStates: new Map([['AAA', 'NEUTRAL'], ['BBB', 'NEUTRAL']]),
+    lastEntryIndex: new Map(), sessionIndex: 501, warmup: false,
+  });
+  assert.equal(zweit.rows.length, 4, 'beim ECHTEN Wechsel gibt es je Arm einen Eintrag');
+  assert.equal(zweit.armedFirstObservation, 0);
 });
 
 test('S5 ohne benannte Barrieren-Skalierung wird geworfen — kein Default', () => {
