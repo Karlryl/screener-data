@@ -51,6 +51,12 @@ zweiten Auswertung.
 > `tests/t156-schnittmenge.test.js` nagelt genau diesen Ausgang fest (einmal absichtlich gebrochen,
 > rot gesehen).
 
+**Gegenprobe aus einer zweiten, unabhaengigen Quelle:** der Produktions-Vintage
+`board-history/2026-09-18/` (vom Lauf selbst geschrieben, nicht von diesem Skript) traegt in seinen
+Board-Zeilen **genau 35 Zeilen mit der Lampe `einmalertrag`** — dieselbe Zahl wie der Zaehl-Lauf,
+und **keine** davon fehlt in meiner Lampen-Menge. Die Zaehlung misst also das, was auch im Produkt
+steht.
+
 **Vorbefund, der die Weiche mitbestimmt:** die Lampe ist heute **kein reines Anzeigefeld mehr**.
 `src/scoring/score.js:374` blendet fuer eine brennende Zeile fuenf Achsen
 (`revGrowthLevel`, `revAcceleration`, `gpGrowth`, `ruleOfX`, `capitalEfficiency`) auf `null`.
