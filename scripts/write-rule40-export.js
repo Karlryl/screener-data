@@ -125,6 +125,21 @@ const DISPLAY_LARGE_MCAP_USD = 1e9;
  */
 const MIN_BASE_QUARTER_SHARE = 0.25;
 /**
+ * Dasselbe Tor fuer das JAHRES-Bein. Wo keine Quartalsreihe traegt, rechnet revGrowthLevel
+ * ueber annualRev[0]/annualRev[1] (axes.js:69-75) — und prueft dort ebenfalls nur b > 0.
+ * Ein Vorjahr von 2,0 Mio. gegen 46,8 Mio. heute (RZLV, +2.224 %) ist kein Wachstum, sondern
+ * ein Unternehmen, das gerade erst anfaengt, Umsatz zu melden.
+ * Gemessen am Stand 2026-09-19 ueber 3.893 Zeilen im Jahres-Pfad: der gesunde Koerper liegt
+ * bei p5 = 0,63 / p50 = 0,95, die Phantomzeilen bei 0,0025-0,10 — dieselbe Form wie beim
+ * Quartals-Zwilling (p5 = 0,59 / p50 = 0,92), deshalb dieselbe Schwelle.
+ * Wirkung bei 0,25: 57 von 3.893 Zeilen (1,5 %) fallen, 50 davon trugen > 100 % Wachstum;
+ * das hoechste verbleibende Jahres-Wachstum sinkt von 39.183 % auf 289 %.
+ * WICHTIG: das Tor haengt am ANTEIL, nicht an der absoluten Groesse. GLXY traegt ein
+ * Basisjahr von 1.652 Mio. und trotzdem +4.979 % — eine absolute Untergrenze uebersaehe das
+ * und wuerfe dafuer gesunde kleine Firmen hinaus.
+ */
+const MIN_BASE_YEAR_SHARE = 0.25;
+/**
  * Das juengste Quartalsende einer Zeile darf gegenueber generated_at nicht aelter sein als das.
  *
  * Der Anker ist das Ende der Quartalsreihe (neuestesQuartalsEnde), NICHT der Abrufzeitpunkt —
@@ -195,11 +210,45 @@ function readJsonOrNull(p) {
 }
 
 /**
+ * WELCHES BEIN TRAEGT DEN WACHSTUMSWERT. revGrowthLevel nimmt das Quartalsbein, wenn
+ * revQuartalsYoY eine Zahl liefert, sonst die Jahresreihe (axes.js:127-128). Beide
+ * Basis-Tore haengen an dieser einen Frage, und sie muessen dieselbe Antwort benutzen —
+ * sonst prueft ein Tor eine Zahl, die gar nicht angezeigt wird. Genau EIN Aufrufpunkt,
+ * damit die Zwillinge nicht wieder auseinanderlaufen.
+ */
+function quartalsBeinTraegt(snapshot) {
+  return axesFns.revQuartalsYoY(snapshot) !== null;
+}
+
+/**
+ * Basisjahr und aktuelles Jahr der Jahresreihe — NUR wenn das Quartalsbein NICHT traegt.
+ * Sonst waere dieses Tor fuer eine Zahl zustaendig, die es gar nicht erzeugt hat; bei
+ * tragendem Quartalsbein wacht MIN_BASE_QUARTER_SHARE. Die Paarbildung spiegelt
+ * adjacentTwoPresent (axes.js:52-56): Index 0 gegen Index 1, beide muessen da sein.
+ */
+function basisJahr(snapshot) {
+  if (quartalsBeinTraegt(snapshot)) return null;
+  const ar = norm(snapshot, 'annualRev');
+  const aktuell = ar[0], basis = ar[1];
+  if (!istZahl(aktuell) || !istZahl(basis) || aktuell <= 0 || basis <= 0) return null;
+  return { basis, aktuell };
+}
+
+/**
  * Das Vorjahresquartal, gegen das revQuartalsYoY rechnet (axes.js:95-105) — dieselbe
  * Index-Wahl, damit der Waechter genau die Zahl prueft, die in den Wachstumswert eingeht.
  * null, wenn dieser Name gar kein Quartalsbein hat (dann traegt der Jahres-Fallback).
+ *
+ * DIE ERSTE ZEILE IST EIN FIX (19.09.2026, silent-failure-hunter, nachgestellt): ohne sie
+ * loeste jahresVergleichIdx auch dann ein Vorjahresquartal auf, wenn revQuartalsYoY gar
+ * nichts geliefert hat — etwa weil das juengste Quartal keinen Wert traegt (479 von 13.916
+ * Snapshots). Dann fiel eine Zeile mit gesundem JAHRES-Wachstum unter dem Zaehler
+ * basisQuartalStub heraus, benannt nach einem Bein, das an der angezeigten Zahl keinen
+ * Anteil hatte. Gemessen am Bestand: 126 Zeilen loesen das Quartals-Tor aus, 19 davon
+ * ohne tragendes Quartalsbein — mit Basisjahr-Anteilen von 49 bis 80 %, also gesund.
  */
 function basisQuartal(snapshot) {
+  if (!quartalsBeinTraegt(snapshot)) return null;
   const v = jahresVergleichIdx(snapshot, 'revenueQ', 0);
   if (v === null) return null;
   const rq = norm(snapshot, 'revenueQ');
@@ -237,10 +286,21 @@ function neuestesQuartalsEnde(snapshot) {
   // Quartalsreihe zuerst, sonst die Jahresreihe: wer nur jaehrlich meldet (annualRev-Fallback
   // in revGrowthLevel), hat trotzdem einen Zeitraum — er stand nur bisher nicht zur Verfuegung,
   // und der Waechter uebersprang die Zeile stillschweigend.
-  for (const reihe of [ts.revenueQEnds, an.annualRevEnds]) {
-    if (!Array.isArray(reihe) || !reihe.length) continue;
-    const t = Date.parse(reihe[0]);
-    if (Number.isFinite(t)) return t;
+  // Das juengste Quartal MIT WERT, nicht das juengste Quartalsende. Ein Ende ohne Zahl
+  // dahinter ist ein Platzhalter fuer eine noch nicht gemeldete Periode: die Reihe
+  // BEHAUPTET dann eine Frische, die die Zahlen nicht haben. Gemessen am Stand
+  // 2026-09-19: 479 von 13.916 Snapshots mit Quartalsreihe tragen ein leeres juengstes
+  // Quartal, fast alle genau eines zu weit. Die Pruefung haengt am VORHANDENSEIN des
+  // Wertes, nie am Wert selbst — ein Rueckfall auf 0 waere hier genau die Luege, die
+  // dieser Anker verhindern soll.
+  for (const [enden, feld] of [[ts.revenueQEnds, 'revenueQ'], [an.annualRevEnds, 'annualRev']]) {
+    if (!Array.isArray(enden) || !enden.length) continue;
+    const werte = norm(snapshot, feld);
+    for (let i = 0; i < enden.length; i++) {
+      if (!istZahl(werte[i])) continue;
+      const t = Date.parse(enden[i]);
+      if (Number.isFinite(t)) return t;
+    }
   }
   return null;
 }
@@ -377,7 +437,7 @@ function sammleKandidaten(opts = {}) {
   const abgewiesen = {
     keinVollboard, nichtGeroutet: 0, datenSuspekt: 0, sektorAusgeschlossen: 0, keinWachstum: 0,
     fcfUnterdrueckt: 0, fcfUngueltig: 0, fcfUeberUmsatz: 0, einheitenVerdacht: 0,
-    basisQuartalStub: 0, veraltet: 0, frischeUnbekannt: 0, ohneRang: 0, snapshotUnlesbar: 0,
+    basisQuartalStub: 0, basisJahrStub: 0, veraltet: 0, frischeUnbekannt: 0, ohneRang: 0, snapshotUnlesbar: 0,
     dupEmittent: 0, offBoardMcapUsdDirect: 0, offBoardMcapNull: 0,
   };
   let gelesen = 0;
@@ -437,6 +497,11 @@ function sammleKandidaten(opts = {}) {
     if (basis !== null && istZahl(revenueTTM) && revenueTTM > 0
         && basis < MIN_BASE_QUARTER_SHARE * (revenueTTM / 4)) {
       abgewiesen.basisQuartalStub++; continue;
+    }
+
+    const jahr = basisJahr(snapshot);
+    if (jahr !== null && jahr.basis < MIN_BASE_YEAR_SHARE * jahr.aktuell) {
+      abgewiesen.basisJahrStub++; continue;
     }
 
     const quartalsEndeMs = neuestesQuartalsEnde(snapshot);
@@ -642,6 +707,7 @@ function buildIndex(index, rows, meta) {
       r40Min: R40_MIN,
       topN: TOP_N,
       minBaseQuarterShare: MIN_BASE_QUARTER_SHARE,
+      minBaseYearShare: MIN_BASE_YEAR_SHARE,
       maxFiscalAgeDays: MAX_FISCAL_AGE_DAYS,
       maxFcfMarginPct: MAX_FCF_MARGIN_PCT,
       minWinsorSample: MIN_WINSOR_SAMPLE,
@@ -915,7 +981,7 @@ if (require.main === module) {
 
 module.exports = {
   SCHEMA, BOARD_ID, BOARD_STATUS, FAILED_NAME, SOFTWARE_INDUSTRIES,
-  R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
+  R40_MIN, TOP_N, TOP_N_LARGE, DISPLAY_LARGE_MCAP_USD, MIN_BASE_QUARTER_SHARE, MIN_BASE_YEAR_SHARE, MAX_FISCAL_AGE_DAYS, MAX_FCF_MARGIN_PCT,
   MIN_WINSOR_SAMPLE, SEKTOR_AUSSCHLUSS,
   REQUIRED_OVERVIEW_ROW, PASSTHROUGH_FIELDS,
   basisQuartal, einheitenVerdacht, ebitdaMargePct, r40GruppeVon, datenSuspekt, mcapBelegt,
