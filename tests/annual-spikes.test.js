@@ -796,7 +796,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
       seit: '2026-08-29', offenSeit: '2026-08-19', hinweis: 'NICHT ENTSCHEIDBAR (19.08.)',
     };
     const r = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre] }, 5);
-    assert.ok(r.log.includes('offen seit 14 Tag(en)'),
+    assert.match(r.log, /offen seit 14 Tag[(]en[)]/,
       'DIE ZEITBOMBEN-PROBE: 14 Tage stimmt nur gegen die gepinnte Uhr; gegen die Wanduhr waechst die Zahl taeglich');
     assert.doesNotMatch(r.err, /laenger als 30 Tage/, 'das Alters-Tor darf hier NIE feuern');
     assert.equal(r.code, 0, 'ein Lauf ohne eigene Uhr darf nicht vom Kalendertag abhaengen');
