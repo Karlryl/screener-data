@@ -271,7 +271,13 @@ async function run() {
     // echter Abdeckung. Kein Wert ist ehrlicher als ein leeres Geruest, das wie Abdeckung aussieht.
     if (!sec.taxonomie) { ohneReihe++; continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
-    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
+    // T174: der Zaehler allein sagt nicht, WER stehen bleibt. Ein abgewiesener Name behaelt
+    // via Merge-Basis seinen Altstand — das ist genau die Sorte Stillstand, die man im Log sehen
+    // muss, seit die Wache ueber die ganze Reihe zieht (mehr Abweisungen als newest-only).
+    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
+      console.log('  divergent (behaelt Altstand)', tk, 'Versatz', JSON.stringify(besterVersatz(snap && snap.annual && snap.annual.annualRev, sec.annual.annualRev)));
+      divergent++; continue;
+    }
     // taxonomie = HERKUNFT der Reihen, gleiche Ebene wie cik/nfy. Ohne sie waeren us-gaap-
     // und ifrs-full-Werte im Store nicht auseinanderzuhalten — und dieselbe Firma kann sich
     // unter zwei Standards um Prozente unterscheiden.
