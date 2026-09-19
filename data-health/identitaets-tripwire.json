@@ -30,25 +30,25 @@
     "BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein",
     "Gericht, nicht in eine Meldeform."
   ],
-  "stand": "2026-09-18",
-  "gelesen": 16027,
+  "stand": "2026-09-19",
+  "gelesen": 16046,
   "unlesbar": 0,
   "messebene": "vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs",
   "zaehlung": {
-    "ankerA": 1545,
+    "ankerA": 1553,
     "ankerA_ausgenommen": 19,
-    "ankerA_ohneBasis": 879,
+    "ankerA_ohneBasis": 881,
     "ankerA_klassen": 9,
-    "ankerB": 22,
+    "ankerB": 19,
     "ankerB_klassen": 1
   },
   "ankerA": {
     "ausgefallen": false,
-    "gemeldet": 1545,
+    "gemeldet": 1553,
     "klassen": [
       {
         "klasse": "Groessenordnung 1e0",
-        "gemeldet": 1116,
+        "gemeldet": 1119,
         "gelistet": 5,
         "beispiele": [
           {
@@ -120,7 +120,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-1",
-        "gemeldet": 344,
+        "gemeldet": 345,
         "gelistet": 5,
         "beispiele": [
           {
@@ -192,7 +192,7 @@
       },
       {
         "klasse": "Groessenordnung 1e-2",
-        "gemeldet": 36,
+        "gemeldet": 37,
         "gelistet": 5,
         "beispiele": [
           {
@@ -264,9 +264,22 @@
       },
       {
         "klasse": "Groessenordnung 1e+1",
-        "gemeldet": 28,
+        "gemeldet": 30,
         "gelistet": 5,
         "beispiele": [
+          {
+            "anker": "A",
+            "wert": 30.998986473659063,
+            "ticker": "SGLD",
+            "name": "Scorpio Gold Corporation",
+            "nameSource": "longName",
+            "schluessel": "scorpiogoldcorp",
+            "fingerabdruck": "[52026000,54646000,52615320,0]|null",
+            "shares": 346164194,
+            "jahresAktien": 11166952,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
           {
             "anker": "A",
             "wert": 24.60619347339486,
@@ -318,25 +331,12 @@
             "jahresAktien": 1260772,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 16.413761391672868,
-            "ticker": "TOP",
-            "name": "TOP Financial Group Limited",
-            "nameSource": "longName",
-            "schluessel": "topfinancialgroupltd",
-            "fingerabdruck": "[4723765,3329256,8037105,9695402]|null",
-            "shares": 121705513,
-            "jahresAktien": 7414846,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
         ]
       },
       {
         "klasse": "Groessenordnung 1e+3",
-        "gemeldet": 11,
+        "gemeldet": 12,
         "gelistet": 5,
         "beispiele": [
           {
@@ -349,6 +349,19 @@
             "fingerabdruck": "[\"null\",\"null\",\"null\",\"null\"]|null",
             "shares": 270553280,
             "jahresAktien": 150032,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 1017.8200194442194,
+            "ticker": "3018.TW",
+            "name": "Lung Ming Green Energy Technology Engineering Co., Ltd.",
+            "nameSource": "longName",
+            "schluessel": "lungminggreenenergytechnologyengineeringcoltd",
+            "fingerabdruck": "[462654000,851422000,599882000,1283006000]|null",
+            "shares": 75377715000,
+            "jahresAktien": 74058000,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           },
@@ -388,19 +401,6 @@
             "fingerabdruck": "[608995000000,580340000000,562897000000,517735000000]|null",
             "shares": 100319344,
             "jahresAktien": 100313,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
-          {
-            "anker": "A",
-            "wert": 1000.0492917326721,
-            "ticker": "5711.T",
-            "name": "Mitsubishi Materials Corporation",
-            "nameSource": "longName",
-            "schluessel": "mitsubishimaterialscorp",
-            "fingerabdruck": "[1844053000000,1962076000000,1540642000000,1625933000000]|null",
-            "shares": 130677441,
-            "jahresAktien": 130671,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -620,11 +620,11 @@
   },
   "ankerB": {
     "ausgefallen": false,
-    "gemeldet": 22,
+    "gemeldet": 19,
     "klassen": [
       {
         "klasse": "2 Emittentengruppen",
-        "gemeldet": 22,
+        "gemeldet": 19,
         "gelistet": 5,
         "beispiele": [
           {
@@ -742,6 +742,44 @@
           {
             "anker": "B",
             "wert": 2,
+            "fingerabdruck": "[36751000000,33424000000,28190000000,26323000000]|null",
+            "beine": [
+              {
+                "ticker": "1AMGN.MI",
+                "name": "Amgen Inc.",
+                "nameSource": "longName",
+                "schluessel": "amgeninc"
+              },
+              {
+                "ticker": "4332.HK",
+                "name": "AMGEN-T",
+                "nameSource": "longName",
+                "schluessel": "amgent"
+              },
+              {
+                "ticker": "AMG.DE",
+                "name": "Amgen Inc.",
+                "nameSource": "longName",
+                "schluessel": "amgeninc"
+              },
+              {
+                "ticker": "AMGN",
+                "name": "Amgen Inc.",
+                "nameSource": "longName",
+                "schluessel": "amgeninc"
+              },
+              {
+                "ticker": "AMGN.VI",
+                "name": "Amgen Inc.",
+                "nameSource": "longName",
+                "schluessel": "amgeninc"
+              }
+            ],
+            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
+          },
+          {
+            "anker": "B",
+            "wert": 2,
             "fingerabdruck": "[82855000000,84188000000,81758000000,94436000000]|null",
             "beine": [
               {
@@ -773,38 +811,6 @@
                 "name": "DHL AG",
                 "nameSource": "longName",
                 "schluessel": "dhlag"
-              }
-            ],
-            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
-          },
-          {
-            "anker": "B",
-            "wert": 2,
-            "fingerabdruck": "[11019707000,9427157000,12305539000,12013953000]|null",
-            "beine": [
-              {
-                "ticker": "1ADI.MI",
-                "name": "Analog Devices, Inc.",
-                "nameSource": "fehlt",
-                "schluessel": "analogdevicesinc"
-              },
-              {
-                "ticker": "ADI",
-                "name": "Analog Devices, Inc.",
-                "nameSource": "fehlt",
-                "schluessel": "analogdevicesinc"
-              },
-              {
-                "ticker": "ADI.VI",
-                "name": "Analog Devices, Inc.",
-                "nameSource": "fehlt",
-                "schluessel": "analogdevicesinc"
-              },
-              {
-                "ticker": "ANL.DE",
-                "name": "ANALOG DEVICES INC.DL-166",
-                "nameSource": "fehlt",
-                "schluessel": "analogdevicesincdl166"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"

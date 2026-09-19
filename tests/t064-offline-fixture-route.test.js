@@ -13,7 +13,10 @@ const GUARD_OPTION_PATH = path.resolve(runner.GUARD_PATH).replace(/\\/g, '/');
 const GUARD_REQUIRE_OPTION = `--require=${JSON.stringify(GUARD_OPTION_PATH)}`;
 const GUARD_PATH_DECOY = `--conditions=${JSON.stringify(GUARD_OPTION_PATH)}`;
 
-const EXPECTED_FILES = [
+// Die sieben Urgesteine der Intake-Bahn. Sie duerfen nie still aus dem Netz
+// fallen; die VOLLSTAENDIGE Bahnen-Tabelle (intake/preis/earnings) nagelt
+// tests/offline-vertragsnetz-lanes.test.js mit Sabotage-Gegenproben fest.
+const EXPECTED_INTAKE_FILES = [
   'tests/cn-jahresreihen.test.js',
   'tests/exit-event-resolver.test.js',
   'tests/in-nse-adapter.test.js',
@@ -46,8 +49,8 @@ test('package route is pinned to the dedicated runner', () => {
 });
 
 test('runner allowlist is exact and every pinned fixture suite exists', () => {
-  assert.deepEqual(runner.OFFLINE_TEST_FILES, EXPECTED_FILES);
-  for (const relativeFile of EXPECTED_FILES) {
+  assert.deepEqual(runner.OFFLINE_LANES.intake.slice(0, EXPECTED_INTAKE_FILES.length), EXPECTED_INTAKE_FILES);
+  for (const relativeFile of runner.OFFLINE_TEST_FILES) {
     assert.equal(fs.statSync(path.join(ROOT, relativeFile)).isFile(), true, relativeFile);
   }
 });
@@ -129,7 +132,7 @@ test('production adjudication rejects a zero-status suite with a descendant mark
   assert.equal(runner.suiteFailed({ error: null, status: 1 }, []), true);
 });
 
-test('the real seven-suite route passes under the network guard', () => {
+test('the real full route passes under the network guard', () => {
   const result = spawnSync(process.execPath, [RUNNER_PATH], {
     cwd: ROOT,
     encoding: 'utf8',
@@ -138,8 +141,9 @@ test('the real seven-suite route passes under the network guard', () => {
     timeout: 120_000,
   });
   assert.equal(result.status, 0, `stdout=${result.stdout}\nstderr=${result.stderr}`);
-  assert.match(result.stdout, /7\/7 suites passed with the network guard active/);
-  for (const relativeFile of EXPECTED_FILES) assert.match(result.stdout, new RegExp(relativeFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  const n = runner.OFFLINE_TEST_FILES.length;
+  assert.match(result.stdout, new RegExp(`${n}/${n} suites passed with the network guard active`));
+  for (const relativeFile of runner.OFFLINE_TEST_FILES) assert.match(result.stdout, new RegExp(relativeFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });
 
 let passed = 0;

@@ -59,13 +59,22 @@ const SUSPECT = [
   ['VPLAY-A.ST', 'annualNetIncome', [-132148436.68, 11047109.06, -1015812943.47, 33662417.23]],
   ['VPLAY-A.ST', 'annualOpInc', [-50649952.86, -58153649.58, 1070944270.76, 43042038.13]],
 ];
-check('A3: die SUSPECT-Funde vom 05.09. sind NICHT verankert (istBekannt false); BANPU.BK bleibt gesperrt, nicht bekannt', () => {
+check('A3: die SUSPECT-Funde vom 05.09. sind NICHT verankert (istBekannt false) und KEINER von ihnen gesperrt', () => {
   const gesperrt = new Set((b.ausgeschlossen || []).map((a) => a && a.sperrschluessel));
   for (const [t, r, werte] of SUSPECT) {
     const f = W.findeAusreisser(reihe(werte)).map((h) => ({ ticker: t, reihe: r, ...h }));
     assert.strictEqual(f.length, 1, t + '|' + r + ': ' + f.length + ' Funde');
+    // DIE EIGENTLICHE ZUSICHERUNG, unveraendert: kein SUSPECT-Fund wird als bekannt
+    // verankert. Ohne A-Beleg bleibt er rot-faehig, egal was mit einer Sperre passiert.
     assert.strictEqual(W.istBekannt(f[0], bestand, W.fundeJeReihe(f, bestand)), false, t + '|' + r + ' verankert');
-    assert.strictEqual(gesperrt.has(W.sperrSchluessel(f[0])), t === 'BANPU.BK', t + '|' + r + ' Sperre');
+    // Bis zum 19.09.2026 stand hier `t === 'BANPU.BK'`: BANPU war als einziger SUSPECT
+    // zusaetzlich gesperrt. Diese Sperre ist am 19.09. AM FALL geschlossen worden (nicht
+    // wegen des Alters-Tors verlaengert) — die Quelle hat die Jahresreihe revidiert, keiner
+    // der drei Sperrwerte steht noch darin (Beleg: CI-Population des Laufs 35319115201, im
+    // hinweis des Bestands protokolliert). Die Erwartung war eine Aussage ueber den Stand
+    // vom 06.09., nicht ueber eine Invariante; dass die Sperre weg ist UND warum, pinnt
+    // jetzt tests/annual-spikes-tote-sperre.test.js.
+    assert.strictEqual(gesperrt.has(W.sperrSchluessel(f[0])), false, t + '|' + r + ' Sperre');
   }
 });
 check('A4: Bestand konsistent - anzahl == faelle.length, keine Duplikate, sortiert, hinweis nennt den 06.09.-Beleg', () => {
