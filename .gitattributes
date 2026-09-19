@@ -48,6 +48,11 @@
 # anderen rot, und keiner der beiden Staende waere falsch.
 /protocol/druckenmiller_*.json text eol=lf
 /protocol/druckenmiller_*.sha256 text eol=lf
+# AMENDMENT 02 (19.09.2026): dieselbe Falle galt unbemerkt fuer die gehashten Amendment-Dateien -
+# sie sind .md und fielen durch beide Muster oben. Ein Checkout mit autocrlf haette ihren sha256
+# gekippt und R9 auf der einen Maschine gruen, auf der anderen rot gemacht.
+/protocol/BUILD-SPEC-v1-AMENDMENT-*.md text eol=lf
+/protocol/BUILD-SPEC-v1-AMENDMENT-*.md.sha256 text eol=lf
 /tests/druckenmiller/fixtures/** text eol=lf
 
 # Chunk 3: die 13F-Fixtures sind ORIGINALE der SEC. Sie werden byte-gleich aufbewahrt, damit

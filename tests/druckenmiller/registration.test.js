@@ -222,18 +222,20 @@ test('R8 WAECHTER am Ding: der highChurn-Ausschluss braucht einen Produzenten, b
 const FILE_B = path.join(REPO, 'protocol', 'druckenmiller_scoreboard_registered_20260919.json');
 const FILE_C = path.join(REPO, 'protocol', 'druckenmiller_alfred_registered_20260919.json');
 const AMENDMENT = path.join(REPO, 'protocol', 'BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md');
+const AMENDMENT_02 = path.join(REPO, 'protocol', 'BUILD-SPEC-v1-AMENDMENT-02-chunk4-power-policy.md');
 const K_LEDGER = path.join(REPO, 'druckenmiller-history', 'candidates-ledger.jsonl');
 const scoreboard = require('../../lib/druckenmiller/scoreboard.js');
 const confirmation = require('../../lib/druckenmiller/confirmation.js');
 const scoreboardRead = require('../../lib/druckenmiller/scoreboard-read.js');
 
 test('R9 Datei B und Datei C: Hash = Sidecar = Changelog-Zeile (Residuum 4, jetzt fuer drei Dateien)', () => {
-  for (const [datei, name] of [[FILE_B, 'Datei B'], [FILE_C, 'Datei C'], [AMENDMENT, 'AMENDMENT 01']]) {
+  for (const [datei, name] of [[FILE_B, 'Datei B'], [FILE_C, 'Datei C'], [AMENDMENT, 'AMENDMENT 01'],
+                               [AMENDMENT_02, 'AMENDMENT 02']]) {
     assert.ok(fs.existsSync(datei), name + ' fehlt');
     const hash = sha256(lies(datei));
     const sidecar = lies(datei + '.sha256').trim().split(/\s+/)[0];
     assert.equal(hash, sidecar, name + ': Sidecar und Datei stimmen nicht ueberein');
-    if (datei !== AMENDMENT) {
+    if (datei !== AMENDMENT) {   // AMENDMENT 01 predates the changelog convention; 02 carries its own line
       assert.ok(lies(CHANGELOG).includes(hash),
         name + ': der Hash steht in keiner Changelog-Zeile - eine Registrierung ohne Eintrag ist eine stille');
     }
