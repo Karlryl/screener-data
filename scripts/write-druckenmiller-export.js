@@ -35,6 +35,9 @@ const zlib = require('node:zlib');
 const internals = require('../lib/druckenmiller/internals.js');
 const { MIN_BARS, universeHash } = require('../lib/druckenmiller/universe.js');
 const ledgerLib = require('../lib/druckenmiller/ledger.js');
+const churnLib = require('../lib/druckenmiller/churn.js');
+const rawLib = require('../lib/druckenmiller/raw.js');
+const registrierungLib = require('../lib/druckenmiller/registration.js');
 const logger = require('./druckenmiller-log-internals.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -83,50 +86,21 @@ const istZahlOderNull = (v) => v === null || (typeof v === 'number' && Number.is
  * paramsHash — und ein Export ohne paramsHash waere eine Messung ohne Parameter-Stand.
  */
 function leseRegistrierung(protocolDir) {
-  const treffer = fs.readdirSync(protocolDir).filter((f) => REGISTRIERUNG_GLOB.test(f)).sort();
-  if (!treffer.length) {
-    throw new Error('[druckenmiller] keine Registrierungs-Datei A in ' + protocolDir
-      + ' — ohne den eingefrorenen Parameter-Stand darf nichts veroeffentlicht werden (BUILD-SPEC [REV6-1]).');
-  }
-  // Mehrere Staende: der juengste gilt, aber es MUSS auffallen (eine Registrierung wird
-  // ersetzt, nicht ergaenzt — sonst weiss niemand, welche gilt).
-  if (treffer.length > 1) {
-    throw new Error('[druckenmiller] ' + treffer.length + ' Registrierungs-Dateien A in ' + protocolDir
-      + ' (' + treffer.join(', ') + ') — welche gilt? Eine Registrierung wird ersetzt, nie ergaenzt.');
-  }
-  const datei = path.join(protocolDir, treffer[0]);
-  const text = fs.readFileSync(datei, 'utf8');
-  const hash = sha256(text);
-  const sidecarPfad = datei + '.sha256';
-  if (!fs.existsSync(sidecarPfad)) {
-    throw new Error('[druckenmiller] ' + treffer[0] + ' hat keinen .sha256-Sidecar — ein ungehashtes '
-      + 'Protokoll ist kein Protokoll.');
-  }
-  const imSidecar = fs.readFileSync(sidecarPfad, 'utf8').trim().split(/\s+/)[0];
-  if (imSidecar !== hash) {
-    throw new Error('[druckenmiller] Registrierung ' + treffer[0] + ': der Sidecar nennt '
-      + imSidecar.slice(0, 12) + '…, die Datei ist ' + hash.slice(0, 12) + '… — sie wurde nach dem '
-      + 'Hashen angefasst.');
-  }
-  let json;
-  try { json = JSON.parse(text); }
-  catch (e) {
-    throw new Error('[druckenmiller] Registrierung ' + treffer[0] + ' ist kein gueltiges JSON ('
-      + e.message + ') — der Dateiname gehoert in die Meldung, sonst sucht der naechste Leser '
-      + 'in der falschen Datei.');
-  }
-  // Was der Schreiber aus ihr LIEST, muss sie auch tragen — sonst faellt es erst als
-  // undefined mitten in der Rechnung auf.
+  // Finden, Sidecar, Hash, JSON: eine Prueffolge fuer alle Registrierungs-Leser
+  // (lib/druckenmiller/registration.js). Was der SCHREIBER daraus braucht, prueft er selbst
+  // — sonst faellt es erst als undefined mitten in der Rechnung auf.
+  const gelesen = registrierungLib.readHashed(protocolDir, REGISTRIERUNG_GLOB, 'Registrierungs-Datei A');
+  const json = gelesen.json;
   const churnMax = json.courtGates && json.courtGates.churnMaxShare;
   if (!Number.isFinite(churnMax)) {
-    throw new Error('[druckenmiller] ' + treffer[0] + ' nennt kein courtGates.churnMaxShare — '
+    throw new Error('[druckenmiller] ' + gelesen.datei + ' nennt kein courtGates.churnMaxShare — '
       + 'das Churn-Tor haette keine registrierte Schwelle.');
   }
   if (!(json.overrideNoteD1 && typeof json.overrideNoteD1.text === 'string' && json.overrideNoteD1._origin)) {
-    throw new Error('[druckenmiller] ' + treffer[0] + ' nennt keinen overrideNoteD1 mit text und '
+    throw new Error('[druckenmiller] ' + gelesen.datei + ' nennt keinen overrideNoteD1 mit text und '
       + '_origin — der gehashte Override-Vermerk (Rat D1) haette keine Quelle.');
   }
-  return { datei: treffer[0], hash, json };
+  return gelesen;
 }
 
 // ---------------------------------------------------------------------------
@@ -144,31 +118,9 @@ function leseRegistrierung(protocolDir) {
  * lib/druckenmiller/ledger.js:62 es im selben Repo vormacht.
  */
 function leseRoh(rawDir, datum, log) {
-  const p = path.join(rawDir, datum + '.jsonl.gz');
-  if (!fs.existsSync(p)) return null;
-  let text;
-  try { text = zlib.gunzipSync(fs.readFileSync(p)).toString('utf8'); }
-  catch (e) {
-    if (log) {
-      log('::warning::[druckenmiller] ' + p + ' laesst sich nicht entpacken (' + e.message
-        + ') — halb geschrieben oder kein gzip. Der Churn dieses Tages bleibt leer.');
-    }
-    return null;
-  }
-  const out = [];
-  const zeilen = text.split('\n');
-  for (let i = 0; i < zeilen.length; i++) {
-    if (!zeilen[i].trim()) continue;
-    try { out.push(JSON.parse(zeilen[i])); }
-    catch (e) {
-      if (log) {
-        log('::warning::[druckenmiller] ' + p + ' Zeile ' + (i + 1) + ' ist kein gueltiges JSON ('
-          + e.message + ') — die Datei gilt als unlesbar und wird NICHT teilweise ausgewertet.');
-      }
-      return null;
-    }
-  }
-  return out;
+  // Die Leseregel liegt seit Chunk 2 in lib/druckenmiller/raw.js, weil der Logger die
+  // Roh-Datei des Vortags mit derselben Regel lesen muss (Ein- und Austritte von heute).
+  return rawLib.readRaw(rawDir, datum, log);
 }
 
 /**
@@ -179,9 +131,7 @@ function leseRoh(rawDir, datum, log) {
  * der Ledger-Zeile faengt jede Abweichung (siehe churnSerie).
  */
 function uMitglieder(rohZeilen) {
-  const s = new Set();
-  for (const z of rohZeilen) if (z.atSession && Number.isFinite(z.bars) && z.bars >= MIN_BARS) s.add(z.ticker);
-  return s;
+  return rawLib.membersOf(rohZeilen);
 }
 
 /**
@@ -243,15 +193,16 @@ function churnSerie(rawDir, rows, churnMax, log) {
       // Vortag) — auch der, dem der VORTAG fehlt. Genau den zaehlte der Zaehler vorher nicht.
       if (i > 0) unbekannt++;
     } else {
-      let rein = 0, raus = 0;
-      for (const t of jetzt) if (!vorher.has(t)) rein++;
-      for (const t of vorher) if (!jetzt.has(t)) raus++;
+      // Die REGEL liegt in lib/druckenmiller/churn.js, weil der Logger sie ab Chunk 2 fuer
+      // seine Eintritts-Sperre genauso braucht — zwei Rechnungen derselben registrierten
+      // Schwelle waeren die Fehlerklasse, gegen die Datei A steht.
+      const { nEntered: rein, nLeft: raus } = churnLib.membershipDelta(vorher, jetzt);
       const n = row.universeSize;
       eintrag = {
         nUniverse: n,
         nEntered: rein,
         nLeft: raus,
-        highChurn: n > 0 ? (rein + raus) / n > churnMax : null,
+        highChurn: churnLib.highChurnFlag(n, rein, raus, churnMax),
       };
     }
     out.set(row.date, eintrag);

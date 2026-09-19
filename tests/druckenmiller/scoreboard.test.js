@@ -62,14 +62,14 @@ test('S3 Abkuehlzeit gilt je Arm', () => {
 });
 
 test('S4 Eintraege: je Arm eine Zeile, warmup markiert, NEUTRAL wird nicht gewertet', () => {
-  const c = new Map([['AAA', closes(200)], ['BBB', closes(200)], ['CCC', closes(10)]]);
+  const sig = S.sigmaAtEntry(closes(200));
   const r = S.buildEntries({
     session: sitzung(), stated: [
-      { ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1 },
-      { ticker: 'BBB', state: 'NEUTRAL', m1: 0, m2: 0.9 },
-      { ticker: 'CCC', state: 'WEAK', m1: -2, m2: 0.5 },
+      { ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1, close: 120, sigma63: sig },
+      { ticker: 'BBB', state: 'NEUTRAL', m1: 0, m2: 0.9, close: 100, sigma63: sig },
+      { ticker: 'CCC', state: 'WEAK', m1: -2, m2: 0.5, close: 90, sigma63: null },
     ],
-    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, closesByTicker: c, warmup: true,
+    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, warmup: true,
   });
   assert.deepEqual(r.rows.map((x) => x.ticker + ':' + x.arm), ['AAA:63', 'AAA:126'], 'nur AAA hat Zustand UND sigma');
   assert.equal(r.rows.every((x) => x.warmup === true), true);
@@ -77,8 +77,9 @@ test('S4 Eintraege: je Arm eine Zeile, warmup markiert, NEUTRAL wird nicht gewer
   assert.ok(r.rows[0].sigma63 > 0);
   assert.equal(r.transitions, 2, 'NEUTRAL zaehlt als Wechsel, wird aber nicht gewertet');
   const gesperrt = S.buildEntries({
-    session: sitzung({ highChurn: true }), stated: [{ ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1 }],
-    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, closesByTicker: c, warmup: false,
+    session: sitzung({ highChurn: true }),
+    stated: [{ ticker: 'AAA', state: 'CONFIRMS', m1: 2, m2: 1, close: 120, sigma63: sig }],
+    lastStates: new Map(), lastEntryIndex: new Map(), sessionIndex: 500, warmup: false,
   });
   assert.deepEqual(gesperrt.rows, [], 'eine highChurn-Sitzung schreibt keinen Eintrag');
   assert.equal(gesperrt.skipped, 'highChurn');
@@ -190,6 +191,44 @@ test('S12 die Tafel: eingefroren nur aus der Lesung, Zaehler nie eingefroren', (
   const spaeter = S.panelDisplay(lesung, { entries: 500, resolved: 470, blocks: 11, lastSessionDate: '2028-06-30' }, plan);
   assert.deepEqual(spaeter.frozen, t.frozen, 'die eingefrorene Zeile aendert sich zwischen Lesungen nicht');
   assert.notDeepEqual(spaeter.live, t.live);
+});
+
+test('S13 die Reduktionen ueber den Kandidaten-Ledger (EINE Zeile je Sitzung)', () => {
+  // Warum eine Zeile je Sitzung: appendRow (Chunk 0) laesst nur streng vorwaerts laufende
+  // Daten zu — drei Zeilen mit demselben Datum sind unmoeglich. Also traegt die Sitzung
+  // ihre Eintraege und Aufloesungen als Listen.
+  const ledger = [
+    {
+      kind: 'SESSION', date: '2026-01-05', backfilled: false,
+      stateChanges: { AAA: 'CONFIRMS', BBB: 'WEAK' },
+      entries: [
+        { ticker: 'AAA', date: '2026-01-05', arm: 63, state: 'CONFIRMS', sessionIndex: 10 },
+        { ticker: 'AAA', date: '2026-01-05', arm: 126, state: 'CONFIRMS', sessionIndex: 10 },
+        { ticker: 'BBB', date: '2026-01-05', arm: 63, state: 'WEAK', sessionIndex: 10 },
+      ],
+      resolutions: [],
+    },
+    {
+      kind: 'SESSION', date: '2026-01-06', backfilled: false,
+      stateChanges: { AAA: 'NEUTRAL', CCC: 'CONFIRMS' },
+      entries: [{ ticker: 'CCC', date: '2026-01-06', arm: 63, state: 'CONFIRMS', sessionIndex: 11 }],
+      resolutions: [{ entryId: 'AAA|2026-01-05|63', ticker: 'AAA', arm: 63, outcome: 'UP' }],
+    },
+    { kind: 'SESSION', date: '2026-01-07', backfilled: true, stateChanges: {}, entries: [], resolutions: [] },
+  ];
+  const zust = S.lastStateByTicker(ledger);
+  assert.equal(zust.get('AAA'), 'NEUTRAL', 'der ZULETZT beobachtete Zustand gilt, nicht der erste');
+  assert.equal(zust.get('BBB'), 'WEAK');
+  assert.equal(zust.get('CCC'), 'CONFIRMS');
+  const letzte = S.lastEntryIndexFrom(ledger);
+  assert.equal(letzte.get('AAA|63'), 10);
+  assert.equal(letzte.get('CCC|63'), 11);
+  assert.equal(letzte.get('CCC|126'), undefined);
+  const offen = S.openEntriesFrom(ledger).map(S.entryIdOf).sort();
+  assert.deepEqual(offen, ['AAA|2026-01-05|126', 'BBB|2026-01-05|63', 'CCC|2026-01-06|63'],
+    'nur der aufgeloeste Eintrag faellt raus');
+  assert.equal(S.liveSessionCount(ledger), 2, 'rueckgerechnete Sitzungen zaehlen nicht ins Warm-up');
+  assert.equal(S.WARMUP_SESSIONS, 20);
 });
 
 console.log('\nscoreboard.test.js: ' + pass + ' ok, ' + fail + ' fail');

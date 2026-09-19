@@ -122,13 +122,14 @@ test('C8 Trennungs-Tor: > 60 % und < 10 % CONFIRMS machen die Sitzung RAW', () =
 
 test('C9 wer nicht in U ist oder keinen Balken hat, bekommt null — nie NEUTRAL', () => {
   const s = serie(300, (i) => 100 + i);
-  const serien = new Map([['AAA', s], ['BBB', s]]);
+  const extra = C.rowExtra(s, s[299].date);
+  assert.ok(Number.isFinite(extra.sigma63), 'die Zeilen-Beilage traegt sigma63');
   const rows = [
-    { ticker: 'AAA', inUniverse: true, atSession: true },
-    { ticker: 'BBB', inUniverse: true, atSession: false },
-    { ticker: 'CCC', inUniverse: false, atSession: true },
+    Object.assign({ ticker: 'AAA', inUniverse: true, atSession: true, close: s[299].close }, extra),
+    Object.assign({ ticker: 'BBB', inUniverse: true, atSession: false, close: s[299].close }, extra),
+    Object.assign({ ticker: 'CCC', inUniverse: false, atSession: true, close: s[299].close }, extra),
   ];
-  const st = C.sessionStates(rows, serien, s[299].date, 1);
+  const st = C.sessionStates(rows, 1);
   const byT = new Map(st.rows.map((r) => [r.ticker, r]));
   assert.equal(byT.get('BBB').state, null);
   assert.equal(byT.get('BBB').reason, 'not-in-universe');
