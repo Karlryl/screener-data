@@ -521,6 +521,151 @@ Diese Pfade sind **bewusst ausserhalb** von `outputs/findash-export/v1/`: sie fo
 
 ---
 
+## 13. `druckenmiller/` — Marktinnereien-Modul (additiv, KEIN v2-Bump)
+
+> **Warum §13 und nicht §12.** BUILD-SPEC v1 (§2) und `laneC/architektur-spec.md` §3.1 nennen
+> „§12" — die Nummer war zu diesem Zeitpunkt schon vom Datenkanal-Beipack (F-17a) belegt. Zwei
+> Abschnitte mit derselben Nummer waeren fuer jeden Leser eine Falle; der Abschnitt bekommt
+> deshalb die naechste freie Nummer. Inhaltlich ist es der dort gemeinte Abschnitt.
+
+**Was das ist.** Ein eigenstaendiges Mess-Modul (Rekonstruktion nach oeffentlichen Aussagen +
+13F-Filings), **kein Teil des Qualitaets-Scores** und nie ein Board-Signal. Es liegt unter
+`outputs/findash-export/v1/druckenmiller/` mit **eigener Schema-Id** `findash-druckenmiller/v1`
+und **eigenem `--check`** (`scripts/write-druckenmiller-export.js --check`). Das v1-Vertragsgate
+der Boards (`scripts/write-findash-export.js --check`) fasst diesen Ordner **nicht** an; der
+gemeinsame Fixture-Stand bleibt unberuehrt. Additiv nach §7 → **kein v2-Bump**.
+
+### 13.1 Die Vierer-Regel (und warum das Modul heute absichtlich „stale" ist)
+
+Der Ordner traegt im Endzustand **genau vier** Dateien: `regime.json`, `meta.json`,
+`candidates.json`, `duquesne13f.json`. Sie tragen **denselben `generated_at`-Wert**. Der Leser auf
+findash-Seite wertet als `stale: true`, wenn (a) weniger als vier Dateien da sind, (b) ihre
+`generated_at` auseinandergehen, (c) `_FAILED.json` existiert, oder (d) die bestehenden
+Alters-Flaggen (`STALE_MS`, `DISPLAY_HINT_MS`, `DISPLAY_MAX_AGE_DAYS`) auf `generated_at`
+anschlagen bzw. `now > expectedNextRun + 6 h` ist („missed run").
+
+**Stand Chunk 1: nur `regime.json` und `meta.json` existieren.** `candidates.json` kommt mit
+Chunk 2, `duquesne13f.json` mit Chunk 3. Das Modul ist damit **bis zum Ende von Chunk 3
+stale-by-design** — gewollt: lieber ein sichtbares „noch nicht vollstaendig" als ein Tab, der
+Vollstaendigkeit vortaeuscht. Der Schreiber erzeugt **keine** Platzhalter-Dateien; eine leere
+`candidates.json` waere eine Aussage ueber Kandidaten, die es noch nicht gibt.
+
+### 13.2 `_FAILED.json` — der Fehler-Vertrag
+
+Faellt `--check`, wird der Ordner **nicht geloescht**, sondern sein Inhalt durch **eine einzige**
+Datei ersetzt (liegt bereits ein Marker, **bleibt sein `reason` woertlich stehen** — er nennt
+die Ursache, ein zweiter Lauf nur noch ihre Folge):
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `schema` | string | `findash-druckenmiller/v1` |
+| `generated_at` | ISO-String | Zeitpunkt des Markers |
+| `reason` | string | der Befund im Klartext (dieselbe Zeile wie die `::error::`-Annotation) |
+| `failedAt` | string | welcher Schritt ihn geschrieben hat |
+
+**Warum kein Loeschen:** findash schreibt bei einem 404 nicht in den Cache
+(`data-layer/screener-sync.js:164-166`) und zeigte sonst den Stand von gestern als heutigen. Eine
+verschwundene Datei ist unsichtbar, ein Marker ist eine Aussage. Der Sync benennt beim Fund eines
+Markers die vier gecachten Dateien in `*.superseded` um, damit kein alter Vierer-Satz neben dem
+Marker ueberlebt. Der Marker verschwindet erst, wenn ein spaeterer Sync im selben Durchgang
+`markerAbsent` (404) meldet **und** vier Dateien mit identischem, gegenueber `failedAt` neuerem
+`generated_at` geholt hat.
+
+### 13.3 `regime.json`
+
+Rohe Legs, **kein veroeffentlichter Zustand** (Rat-Entscheid D3 vom 2026-09-14): es gibt kein
+`state`, keine RISK-ON/OFF-Ampel, keine Crash-Warnung und kein `rInt` in der Auslieferung. R-INT
+wird berechnet und geloggt, aber nicht ausgeliefert.
+
+| Feld | Typ | Einheit / Wertebereich | Bedeutung |
+| ---- | --- | ---------------------- | --------- |
+| `schema` | string | fix | `findash-druckenmiller/v1` |
+| `generated_at` | string | ISO-8601 | identisch in allen vorhandenen Dateien |
+| `asOf` | string | `YYYY-MM-DD` | letzter Publikationstag der Reihe = letzte Serien-Zeile |
+| `series` | array | max. **504** Zeilen, streng aufsteigend | die Tageszeilen, aelteste zuerst |
+| `sectorRs` | array | `[{sector: string, rs63: number, rank: int}]` | Median-63-Tage-Rendite je Sektor **minus SPY**, Rang 1 = staerkster; leer, wenn SPY fehlt |
+| `rankPersistence` | number \| null | Spearman −1…1 | Rang-Korrelation der Sektor-Tabelle gegen die Vorzeile; `null` bei < 3 gemeinsamen Sektoren |
+
+**Eine Serien-Zeile** (`series[i]`) — jedes Zahlenfeld ist `number | null`; `null` heisst
+**nicht gemessen**, nie 0:
+
+| Feld | Typ | Einheit | Bedeutung |
+| ---- | --- | ------- | --------- |
+| `date` | string | `YYYY-MM-DD` | Handelstag |
+| `backfilled` | boolean | — | rueckgerechnete Saat-Zeile; aus jedem Quantil und aus H-INT ausgeschlossen |
+| `barDateMode` | string \| null | `YYYY-MM-DD` | haeufigster letzter Balken-Tag ueber alle Kandidaten; `null` bei `backfilled` |
+| `mixedBarDateShare` | number \| null | Anteil 0…1 | Anteil der Ticker, deren letzter Balken **nicht** der modale Tag ist |
+| `freshShare` | number \| null | Anteil 0…1 | `1 − mixedBarDateShare`; `null` bei `backfilled` (der rollende Speicher kann deren Frische nicht bezeugen) |
+| `lowFreshness` | boolean \| null | — | `true` bei `freshShare < 0,95` **oder** wenn der modale Balken-Tag nicht der Zeilentag ist. Die Zeile bleibt stehen, speist aber kein Quantil. **Gelb, nie rot.** |
+| `nUniverse` | int | Stueck | Groesse von U an diesem Tag (Balken am Sitzungstag **und** ≥ 250 Balken) |
+| `nEntered` / `nLeft` | int \| null | Stueck | Ein-/Austritte gegenueber dem **unmittelbar vorigen Publikationstag**. `null` fuer die erste Zeile, fuer Tage ohne (lesbare) Roh-Datei **und fuer den Tag, dem dadurch der Vortag fehlt** — ueber ein Loch hinweg wird nie gerechnet (das Ergebnis waere ein Zwei-Tages-Vergleich unter dem Etikett eines Tages). Alle drei Faelle zaehlt `meta.churnUnavailableDays` |
+| `highChurn` | boolean \| null | — | `(nEntered + nLeft) / nUniverse > 0,05`. Wie `lowFreshness`: aus den Quantilen raus, und die Sitzung schreibt keine Scoreboard-Eintraege |
+| `l1` | number \| null | Anteil 0…1 | Breite: Anteil von U ueber der 200-Tage-Linie |
+| `l1Coverage` | number \| null | Anteil 0…1 | Anteil von U mit einer 200-Tage-Linie |
+| `l2` | number \| null | Anteil 0…1 | Breite ueber der 50-Tage-Linie |
+| `l3` | number \| null | Anteil −1…1 | Anteil innerhalb **3 %** des 252-Tage-Hochs **minus** Anteil innerhalb 3 % des Tiefs |
+| `l3Band1` / `l3Band5` | number \| null | Anteil −1…1 | dasselbe mit 1 % bzw. 5 % Band (registrierte Sensitivitaet) |
+| `l3Coverage` | number \| null | Anteil 0…1 | Anteil von U mit 252-Tage-Hoch/Tief |
+| `l4ew` | number \| null | Rendite-Differenz | 63-Tage-Rendite zyklisch **minus** defensiv, gleichgewichtet |
+| `l4cw` | number \| null | Rendite-Differenz | dasselbe kapitalgewichtet |
+| `l4Unassigned` | int | Stueck | **sichtbarer** Eimer „nicht zugeordnet" (Rat D3): Sektoren ausserhalb beider Koerbe |
+| `l4nCyclical` / `l4nDefensive` | int | Stueck | Besetzung der beiden Koerbe |
+| `l4b` | number \| null | Rendite-Differenz | sein namentlicher Branchenkorb minus dem defensiven Korb; `null`, solange der Korb < 20 Titel hat |
+| `l4bN` | int | Stueck | Groesse des namentlichen Korbs (bleibt sichtbar, auch wenn `l4b` null ist) |
+| `l4bSmall` | number \| null | Rendite-Differenz | IWM minus SPY ueber 63 Tage |
+| `l5` | number \| null | Anteil 0…1 | Revisions-Breite (+1y, 30 Tage). **Logger, keine Bewertung** — Etikett „Analysten-Konsens (Breite), keine Bewertung" |
+| `l5Coverage` | number \| null | Anteil 0…1 | Anteil von U mit Revisions-Daten |
+| `l6` | string \| null | Zustandsname | Kopie des SPY-Zustands aus `outputs/macro-regime.json` — **fremde Groesse**, keine Aussage dieses Moduls. `--check` prueft den Typ (Text oder `null`), nicht den Inhalt |
+| `l7Persistence` | number \| null | Spearman −1…1 | Persistenz der Sektor-Raenge gegen die Vorzeile |
+| `l8CapMinusEqual` | number \| null | Rendite-Differenz | kapitalgewichtet minus gleichgewichtet ueber U |
+| `l8TopDecileShare` | number \| null | Anteil 0…1 | Anteil des obersten Dezils an der Summe aller Gewinne; `null`, wenn weniger Gewinner als Dezil-Plaetze (dort saettigt das Mass konstruktionsbedingt auf 1) |
+| `l8Winners` | int | Stueck | Zahl der Titel mit positiver 63-Tage-Rendite |
+
+### 13.4 `meta.json`
+
+| Feld | Typ | Bedeutung |
+| ---- | --- | --------- |
+| `schema` | string | `findash-druckenmiller/v1` |
+| `generated_at` | string | ISO; **identisch** mit `regime.json` |
+| `mandate` | string | fix: `separate module, not quality, never in the score` |
+| `label` | string | das Etikett (Rat D7, 29 Woerter) — woertlich zu rendern, nie gekuerzt |
+| `paramsHash` | string | sha256 der Registrierungs-Datei A (`protocol/druckenmiller_loggers_registered_<datum>.json`); `--check` rechnet ihn nach |
+| `universe` | `{size: int, withBars250: int, asOf: string}` | `size` = Ticker mit einem Balken am Sitzungstag, `withBars250` = davon mit ≥ 250 Balken (= U) |
+| `coverage` | `{[achse]: number \| null}` | Abdeckung 0…1 je Achse (`l1`,`l2`,`l3`,`l4ew`,`l4cw`,`l4b`,`l5`,`l6`,`l7`,`l8`). **Unter 0,6 wird die Achse im Tab ausgegraut und hat keine Stimme** (Rat D3); `null` heisst **nie gemessen** (z. B. `l6`, wenn es an diesem Tag keinen SPY-Zustand gibt) und ist etwas anderes als eine Abdeckung von 0 — beides fuehrt zum Ausgrauen, aber die Begruendung im Tab unterscheidet sich. `l1`/`l3`/`l5` werden gegen die Ledger-Zeile gegengeprueft; **ein Widerspruch am `asOf`-Tag bricht den Schreib-Lauf ab** (eine der beiden Mess-Strecken ist dann kaputt) |
+| `cuts` | `{[achse]: {q: number, value: number \| null}}` | gelernte Quantile, die tatsaechlich benutzt werden. Chunk 1: nur die registrierten R-INT-Schnitte `rIntLow` (q 0,3) und `rIntHigh` (q 0,7), beide `value: null` — R-INT braucht 250 geloggte Live-Tage. Die Terzile kommen mit Chunk 2 |
+| `ledgerRows` | `{internals: int, candidates: int}` | Zeilenzahl der Reihen. **Schrumpft nie** — `--check` haelt sie gegen den mitcommitteten Sidecar-Zaehler |
+| `ledgerGapDays` | int | fehlende Handelstage **innerhalb** der Reihe. `> 0` ist rot |
+| `churnUnavailableDays` | int | Tage **im veroeffentlichten Fenster**, deren Churn `null` ist: keine, unlesbare oder widerspruechliche Roh-Datei — **und** der jeweilige Folgetag, dem damit der Vortag fehlt. Die erste Serien-Zeile zaehlt nicht mit (sie hat per Definition keinen Vortag) |
+| `universeHash` | string | sha256 der sortierten U-Mitgliederliste des `asOf`-Tages. Jede Umdefinition von U ist eine **neue Serien-Id** und faellt hier auf |
+| `overrideNote` | `{text, sha256, source}` | gehashter Vermerk zur gerissenen Kipp-Schwelle (Rat D1) |
+| `expectedNextRun` | string | ISO des naechsten CI-Slots (`17 2 * * 2-6`, Di–Sa 02:17 UTC). Der Leser flaggt `stale` mit Grund „missed run", sobald `now > expectedNextRun + 6 h` |
+| `duquesne13fCoverage` | number \| null | Anteil des 13F-Long-Werts mit zugeordneter CUSIP. **Chunk 3** — bis dahin `null`, nie 0 |
+| `_sidecarRows` | int \| null | interner Zeugenwert des Sidecar-Zaehlers fuer die never-shrink-Pruefung (Unterstrich = kein Anzeige-Feld) |
+
+### 13.5 Wann `--check` rot wird
+
+Exit 1 **und** `_FAILED.json` bei: fehlender Datei · **unlesbarer** Datei (auch bei
+`candidates.json`/`duquesne13f.json`, sobald es sie gibt) · fehlendem oder unbekanntem Feld
+(weisse Liste, auch je Serien-Zeile) · falschem Feld-Typ (inkl. `l6`) · nicht endlicher Zahl
+· falschem Schema · fehlendem oder nicht-ISO `generated_at` · zwei verschiedenen
+`generated_at` · nicht aufsteigender Serie · `asOf` ≠ letzte Serien-Zeile · `asOf` ≠ letzte
+Ledger-Zeile (Schlepp-Kante) · `ledgerGapDays > 0` · geschrumpfter Reihe · gebrochener
+Hash-Kette · `universeHash`-Abweichung · `paramsHash` ≠ Hash der Registrierung · bereits
+vorhandenem `_FAILED.json` · **und bei jedem Fehler in der Pruefung selbst** (eine
+Auslieferung, die ihren eigenen Pruefer wirft, gilt als ungueltig — sonst waere der
+Marker-Vertrag genau dort offen, wo eine fremd erzeugte Datei ihn braucht).
+
+**Der SCHREIB-Lauf bricht ab** (und liefert damit gar nichts aus), wenn die Roh-Datei des
+`asOf`-Tages fehlt, unlesbar ist oder eine andere U-Menge nennt als die Ledger-Zeile (Groesse
+**und** `universeHash`), oder wenn die Abdeckung aus den Roh-Zeilen der Ledger-Zeile
+widerspricht. Fuer aeltere Tage ist dieselbe Lage ein `null` plus Zaehler — deren Zahlen
+stehen laengst in der Reihe, und eine kaputte Datei von damals darf nicht jede kuenftige
+Auslieferung anhalten.
+
+**Gelb (Warnung, Lauf bleibt gruen):** `lowFreshness` oder `highChurn` auf der juengsten
+Sitzung. Beides ist ein bekannter Zustand des Tageslaufs, den die Reihe selbst korrekt behandelt
+(Flag gesetzt, kein Quantil) — den ganzen Lauf dafuer anzuhalten wuerde die Glaubwuerdigkeit des
+Waechters verbrauchen.
 ## 14. `rule40/` (Rule-of-40-Brett, DIAGNOSTIC) — additiver Feed (17.09.2026)
 
 **Dateien:** `outputs/findash-export/v1/rule40/index.json` + `rule40/overview.json`, exakt die
