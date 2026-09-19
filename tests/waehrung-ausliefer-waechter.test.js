@@ -330,8 +330,61 @@ if (!beine || beine.length === 0) {
   // Nach der Haertung ist "belegt" = "wird ausgeliefert": die Pruefmenge ist damit exakt die
   // Menge, die Karl zu sehen bekommt. Am eingefrorenen Bestand (17.05.-08.06.) sind das
   // 1 668 Beine mit 0 Verstoessen — das Gate ist an echten Daten gruen, nicht per Zuschnitt.
+  // A/H-Ausnahme (Vorsitz-Entscheid 19.09.2026, ~75 %, revidierbar im Sonntags-Brief):
+  // Die Gleichheits-Annahme "ein Emittent, eine Groesse" ist fuer chinesische A/H-Doppel-
+  // notierungen SACHLICH falsch. A-Aktien (Festland, CNY, .SS/.SZ) und H-Aktien (Hongkong,
+  // HKD) sind durch Kapitalverkehrskontrollen getrennte Maerkte; der A/H-Aufschlag ist ein
+  // reales Marktphaenomen, kein Umrechnungsfehler. Gemessen am Bestand vom 19.09.: von 384
+  // Gruppen waren 13 ein echter Defekt (GBp-Altwerte, 100x) und der Rest ganz ueberwiegend
+  // genau dieser Aufschlag.
+  //
+  // Der Schnitt sitzt BEWUSST hier am Live-Aufruf und NICHT in kreuznotizVerstoesse(): die
+  // Fixture-Positivkontrolle oben ("korrekt umgerechnete Beine stimmen ueberein", Z. 255) ist
+  // selbst als HK/SS-Paar gebaut. Ein Filter in der Funktion haette genau diese Kontrolle
+  // entwertet — ein gruener Test, der nichts mehr feststellen kann.
+  //
+  // Entfernt wird NUR das A-Bein, und nur wenn der Emittent ueberhaupt ein Nicht-CNY-Bein hat.
+  // Alles andere bleibt in der Gleichheits-Annahme: ADR-Beine (nach Verhaeltnis), EUR-, USD-,
+  // GBp-Beine. Bei ZTE etwa bleiben 0763.HK/HKD und FZM.VI/EUR gegeneinander geprueft — nur
+  // 000063.SZ/CNY faellt heraus.
+  const istABein = (b) => /^\d{6}\.(SS|SZ)$/.test(String(b.ticker || '')) &&
+    String(b.tradingCurrency || '').toUpperCase() === 'CNY';
+  const nachEmittent = new Map();
+  for (const b of beine) {
+    const k = emittentSchluessel(b.name);
+    if (!k) continue;
+    if (!nachEmittent.has(k)) nachEmittent.set(k, []);
+    nachEmittent.get(k).push(b);
+  }
+  const ahAufschlaege = [];
+  const beineOhneA = beine.filter((b) => {
+    if (!istABein(b)) return true;
+    const gruppe = nachEmittent.get(emittentSchluessel(b.name)) || [];
+    const fremd = gruppe.filter((x) => String(x.tradingCurrency || '').toUpperCase() !== 'CNY' &&
+      Number.isFinite(x.marketCap) && x.marketCap > 0);
+    if (!fremd.length) return true;   // kein Gegenbein -> nichts auszunehmen
+    const h = Math.max(...fremd.map((x) => x.marketCap));
+    ahAufschlaege.push({ emittent: emittentSchluessel(b.name), aufschlag: (b.marketCap - h) / h });
+    return false;
+  });
+
+  // Schwaechere Zusicherung fuer die ausgenommenen Paare: der Aufschlag wird als ZAHL
+  // berichtet, nicht behauptet. Geprueft wird nur, dass beide Beine ueberhaupt eine
+  // brauchbare, gleich normalisierte Groesse tragen — faellt ein Bein auf 0 oder NaN,
+  // ist das kein Aufschlag mehr, sondern ein Datenfehler, und der bleibt rot.
+  check('A/H-Doppelnotierungen: Aufschlag wird berichtet, beide Beine bleiben brauchbar', () => {
+    const kaputt = ahAufschlaege.filter((x) => !Number.isFinite(x.aufschlag) || x.aufschlag <= -1);
+    const sortiert = [...ahAufschlaege].sort((a, b) => b.aufschlag - a.aufschlag);
+    console.log('       (' + ahAufschlaege.length + ' A/H-Paare ausgenommen; Aufschlag Median ' +
+      (sortiert.length ? (sortiert[Math.floor(sortiert.length / 2)].aufschlag * 100).toFixed(1) : 'n/a') +
+      ' %, Spanne ' + (sortiert.length ? (sortiert[sortiert.length - 1].aufschlag * 100).toFixed(1) +
+      ' bis ' + (sortiert[0].aufschlag * 100).toFixed(1) : 'n/a') + ' %)');
+    assert.equal(kaputt.length, 0, 'A/H-Bein ohne brauchbare Groesse: ' +
+      kaputt.map((x) => x.emittent + ' ' + x.aufschlag).join(', '));
+  });
+
   check('LIVE: unter ALLEN ausgelieferten (belegten) Beinen kein Kreuznotiz-Verstoss', () => {
-    const v = kreuznotizVerstoesse(beine);
+    const v = kreuznotizVerstoesse(beineOhneA);
     console.log('       (' + beine.length + ' belegte Beine, davon ' +
       beine.filter((b) => b.gestempelt).length + ' mit Handelskurs-Stempel)');
     assert.equal(v.length, 0, v.map((x) => x.emittent + ' ' + (x.abweichung * 100).toFixed(1) + '% [' +
