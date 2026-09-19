@@ -18,7 +18,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const REPO = path.resolve(__dirname, '..');
+const REPO = path.resolve(__dirname, '..', '..');
 const MODUL_DIR = path.join(REPO, 'lib', 'druckenmiller');
 // [REV7-4]: der Scan laeuft auf BEIDEN Seiten des Moduls. Hier die screener-data-Seite:
 // lib/druckenmiller/** UND scripts/*druckenmiller* — als GLOB, nicht als Namensliste. Eine
@@ -120,7 +120,7 @@ test('F3 der Suffix-Test bleibt ein String-Test — kein Zerlegen, kein Suffix-K
     for (const rx of zerlegung) if (rx.test(s)) treffer.push(path.basename(datei) + ' -> ' + rx);
   }
   assert.deepEqual(treffer, [], 'hier wird ein Ticker-Suffix zerlegt statt nur getestet: ' + treffer.join(' · '));
-  const U = require('../lib/druckenmiller/universe.js');
+  const U = require('../../lib/druckenmiller/universe.js');
   // Verhaltens-Gegenprobe: ein Suffix wird NICHT interpretiert, nur bemerkt.
   assert.equal(U.hasSuffix('GS.VI'), true);
   assert.equal(U.hasSuffix('GS.TO'), true);
@@ -128,7 +128,7 @@ test('F3 der Suffix-Test bleibt ein String-Test — kein Zerlegen, kein Suffix-K
 });
 
 test('F4 U haengt am Vertragsfeld country und an nichts sonst', () => {
-  const U = require('../lib/druckenmiller/universe.js');
+  const U = require('../../lib/druckenmiller/universe.js');
   assert.equal(U.candidateReason({ ticker: 'AAA', country: 'United States' }, 300), null);
   assert.equal(U.candidateReason({ ticker: 'AAA', country: 'USA' }, 300), 'country',
     'kein Alias-Mapping: der Vertrag schreibt "United States", und nur das gilt');

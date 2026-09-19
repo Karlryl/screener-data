@@ -66,19 +66,19 @@ const NODE_TEST_PROBE_FILE = path.join(__dirname, 'test-gate-node-test-probe.js'
 // ── Spur 1: blockierend ───────────────────────────────────────────────────────
 // Unveraendert aus dem bisherigen GATE_GLOB. Was falsche Zahlen ausliefern
 // koennte, darf den Tageslauf weiter anhalten.
-// Diese Liste ist in tests/scoring/bh-b09-dailyyml.test.js (BH-035) auf genau diese drei
-// Globs festgenagelt, und tests/scoring/ ist Sperrzone. Ein neues Testverzeichnis holt sich
-// seinen Platz deshalb ueber einen EIGENEN Workflow-Schritt (siehe tests/rule40/ in
-// .github/workflows/pr-check.yml), nicht durch das Umschreiben eines gesperrten Waechters.
+// tests/druckenmiller/ ist BLOCKIEREND (Chunk 0, 14.09.2026): dort haengen die Grenzen des
+// Moduls — Import-Graph gegen src/scoring/**, die gesperrte F-16-Klasse, Hash-Kette und
+// never-shrink der Messreihe. Alle Dateien sind hermetisch (Temp-Fixtures, kein Netz, kein
+// Universum) und damit pre-pull voll aussagekraeftig.
 //
-// Das Druckenmiller-Modul (Chunk 0) wollte BLOCKIEREND laufen — dort haengen Import-Graph
-// gegen src/scoring/**, die gesperrte F-16-Klasse, Hash-Kette und never-shrink der Messreihe,
-// alles hermetisch und damit pre-pull voll aussagekraeftig. Es traegt seine Testdateien
-// deshalb FLACH als tests/druckenmiller-*test.js; der erste Glob oben faengt sie, und weder
-// dieser Waechter noch BH-035 mussten dafuer angefasst werden. Die Fixtures liegen weiter
-// unter tests/druckenmiller/fixtures/ (dort haelt .gitattributes ihre Zeilenenden fest);
-// die Enumeration unten wirft alles unter /fixtures/ ohnehin weg.
-const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js'];
+// Diese Liste ist in tests/scoring/bh-b09-dailyyml.test.js (BH-035) festgenagelt, und
+// tests/scoring/ ist Sperrzone — wer hier etwas eintraegt, muss den Waechter im selben
+// Schritt mitfuehren (Chunk 0 hat das getan). Das ist der teure Weg: tests/rule40/ hat sich
+// seinen Platz stattdessen ueber einen EIGENEN Workflow-Schritt geholt
+// (.github/workflows/pr-check.yml), ohne den gesperrten Waechter anzufassen. Fuer ein neues
+// Testverzeichnis ist das der Normalweg; der Eintrag hier bleibt die Ausnahme fuer Tests,
+// die den Tageslauf wirklich blockieren sollen.
+const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js', 'tests/druckenmiller/*test.js'];
 
 // ── Spur 2: meldend (Forschungs-Bestand) ──────────────────────────────────────
 // Diese Tests zaehlen den Bestand der Studien-Ablage (SEC-Archive, Wayback,

@@ -11,7 +11,7 @@
  * Erwartung dem Code hinterherzieht.
  */
 const assert = require('node:assert/strict');
-const I = require('../lib/druckenmiller/internals.js');
+const I = require('../../lib/druckenmiller/internals.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {

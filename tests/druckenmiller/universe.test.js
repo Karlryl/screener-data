@@ -11,7 +11,7 @@
  * f16-guard.test.js und liest den Quelltext selbst.
  */
 const assert = require('node:assert/strict');
-const U = require('../lib/druckenmiller/universe.js');
+const U = require('../../lib/druckenmiller/universe.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {

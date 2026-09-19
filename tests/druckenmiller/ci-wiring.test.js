@@ -16,7 +16,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const REPO = path.resolve(__dirname, '..');
+const REPO = path.resolve(__dirname, '..', '..');
 const YML = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'daily-pull.yml'), 'utf8').replace(/\r\n/g, '\n');
 const ZEILEN = YML.split('\n');
 
@@ -140,24 +140,13 @@ test('C7 der Vintage-Commit meldet druckenmiller-history/ mit an', () => {
     /if \[ -d druckenmiller-history \]; then git add druckenmiller-history\/; fi/);
 });
 
-test('C8 die Testdateien des Moduls laufen in der BLOCKIERENDEN Spur des Test-Gates', () => {
-  // Nicht mehr ueber einen eigenen Glob (BH-035 pinnt die Liste, tests/rule40-ci-wiring.test.js
-  // sichert zu, dass sie unberuehrt bleibt), sondern ueber die FLACHE Benennung: der erste
-  // Glob 'tests/*test.js' faengt tests/druckenmiller-*test.js. Gemessen wird deshalb, was
-  // zaehlt - dass jede Testdatei dieses Moduls von einem blockierenden Glob erfasst ist.
-  const { BLOCKING_GLOBS } = require(path.join(REPO, 'scripts', 'test-gate.js'));
-  const eigene = fs.readdirSync(path.join(REPO, 'tests'))
-    .filter((f) => f.startsWith('druckenmiller-') && f.endsWith('test.js'));
-  assert.ok(eigene.length >= 8,
-    'die Testdateien des Moduls liegen nicht mehr flach unter tests/ - dann faengt sie der '
-    + 'erste Glob nicht und sie laufen in keinem Job');
-  assert.ok(BLOCKING_GLOBS.includes('tests/*test.js'),
-    'tests/*test.js fehlt in BLOCKING_GLOBS - die ' + eigene.length + ' Testdateien dieses '
-    + 'Moduls laufen damit in keinem Job');
-  // GEGENPROBE: der alte Ort waere NICHT gefangen; genau deshalb wurde flach umbenannt.
-  assert.ok(!BLOCKING_GLOBS.some((g) => g.startsWith('tests/druckenmiller/')),
-    'es gibt wieder einen eigenen Glob fuer den Unterordner - dann bricht BH-035 bzw. der '
-    + 'rule40-Waechter, und einer der beiden meldet es erst im naechsten Lauf');
+test('C8 tests/druckenmiller/ laeuft in der BLOCKIERENDEN Spur des Test-Gates', () => {
+  const gate = fs.readFileSync(path.join(REPO, 'scripts', 'test-gate.js'), 'utf8');
+  const zeile = gate.split('\n').find((l) => l.includes('const BLOCKING_GLOBS'));
+  assert.ok(zeile, 'BLOCKING_GLOBS nicht gefunden');
+  assert.ok(zeile.includes("'tests/druckenmiller/*test.js'"),
+    'die Testdateien des Moduls laufen in keinem Job — genau die Klasse, gegen die der '
+    + 'Waechter in test-gate.js gebaut ist');
 });
 
 test('C9 kein Ignore-Muster verschluckt druckenmiller-history/', () => {

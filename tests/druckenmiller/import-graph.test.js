@@ -27,7 +27,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const REPO = path.resolve(__dirname, '..');
+const REPO = path.resolve(__dirname, '..', '..');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -137,7 +137,7 @@ test('G6 ROW_FIELDS ist byte-identisch mit dem eingefrorenen Stand', () => {
   const zeile = quelle.split('\n').find((l) => l.includes('const ROW_FIELDS'));
   const felder = (zeile.match(/'([^']+)'/g) || []).map((x) => x.slice(1, -1));
   const eingefroren = JSON.parse(fs.readFileSync(
-    path.join(__dirname, 'druckenmiller', 'fixtures', 'row-fields.snapshot.json'), 'utf8'));
+    path.join(__dirname, 'fixtures', 'row-fields.snapshot.json'), 'utf8'));
   assert.deepEqual(felder, eingefroren,
     'ROW_FIELDS hat sich geaendert. Das ist der Vertrag der Board-Zeilen — jede Aenderung '
     + 'gehoert bewusst in tests/druckenmiller/fixtures/row-fields.snapshot.json nachgezogen.');
@@ -150,7 +150,7 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
   // Schluesselmenge der ganzen Auslieferung wird gegen einen eingefrorenen Stand
   // gehalten, und JEDER neue Schluessel ist rot, bis ihn jemand bewusst eintraegt.
   const eingefroren = new Set(JSON.parse(fs.readFileSync(
-    path.join(__dirname, 'druckenmiller', 'fixtures', 'v1-row-keys.snapshot.json'), 'utf8')));
+    path.join(__dirname, 'fixtures', 'v1-row-keys.snapshot.json'), 'utf8')));
   const fremd = new Set();
   const lauf = (v) => {
     if (Array.isArray(v)) return v.forEach(lauf);
