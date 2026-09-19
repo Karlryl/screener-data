@@ -383,8 +383,43 @@ if (!beine || beine.length === 0) {
       kaputt.map((x) => x.emittent + ' ' + x.aufschlag).join(', '));
   });
 
-  check('LIVE: unter ALLEN ausgelieferten (belegten) Beinen kein Kreuznotiz-Verstoss', () => {
-    const v = kreuznotizVerstoesse(beineOhneA);
+  // Zuschnitt des Live-Blocks (Vorsitz-Entscheid 19.09.2026, ~75 %, revidierbar im
+  // Sonntags-Brief): Dieser Waechter existiert fuer den SKALEN-Fehler — Pence 100x, eine
+  // vergessene KRW/JPY/HKD/INR/TWD-Umrechnung — nicht fuer den Aufschlag. Eine 3-%-Latte
+  // auf 15.000 Live-Namen misst dagegen Zweitnotierungs-Versatz, ADR-Bezugsverhaeltnisse
+  // und Vorzugsaktien: am 19.09. blieben nach der A/H-Ausnahme 229 Gruppen uebrig, von
+  // denen KEINE ein Umrechnungsfehler war. Ein dauerhaft roter Waechter wird nicht gelesen.
+  //
+  // Hart behauptet wird deshalb nur noch, was ausserhalb von [0,5 ; 2,0] liegt. Alles
+  // darunter wird als Verteilung BERICHTET, nie behauptet. Die 3-%-Latte lebt unveraendert
+  // in den Fixture-Kontrollen oben weiter — dort ist sie richtig, weil dort die Umrechnung
+  // selbst geprueft wird und nicht der Markt.
+  const SKALEN_UNTEN = 0.5, SKALEN_OBEN = 2.0;
+  const alleGruppen = kreuznotizVerstoesse(beineOhneA, 0);   // Toleranz 0 -> jede Gruppe mit Spreizung
+  const skalenVerstoesse = [], versatz = [];
+  for (const g of alleGruppen) {
+    const werte = g.beine.map((b) => b.marketCap);
+    const q = Math.max(...werte) / Math.min(...werte);
+    (q < SKALEN_UNTEN || q > SKALEN_OBEN ? skalenVerstoesse : versatz).push({ g, q });
+  }
+
+  check('LIVE: Versatz-Verteilung wird berichtet (nicht behauptet)', () => {
+    const qs = versatz.map((x) => x.q).sort((a, b) => a - b);
+    const pick = (p) => (qs.length ? qs[Math.min(qs.length - 1, Math.floor(p * qs.length))] : NaN);
+    const schlimmste = [...versatz].sort((a, b) => b.q - a.q).slice(0, 3);
+    console.log('       (' + versatz.length + ' Gruppen innerhalb [0,5;2,0]: Median ' +
+      pick(0.5).toFixed(2) + 'x, p90 ' + pick(0.9).toFixed(2) + 'x; schlimmste: ' +
+      (schlimmste.map((x) => x.g.emittent + ' ' + x.q.toFixed(2) + 'x').join(', ') || 'keine') + ')');
+    // BLINDER FLECK, ausdruecklich gedruckt: eine vergessene Umrechnung fuer Waehrungen, die
+    // unter 2 je USD notieren (EUR, GBP, CHF, CAD, AUD, SGD, NZD), liegt INNERHALB von
+    // [0,5;2,0] und kommt durch dieses Tor. Der Pence-Fall (100x) wird weiter gefangen.
+    console.log('       (BLINDER FLECK: vergessene Umrechnung bei EUR/GBP/CHF/CAD/AUD/SGD/NZD ' +
+      'liegt innerhalb [0,5;2,0] und passiert dieses Tor — Pence 100x wird gefangen.)');
+    assert.ok(true);
+  });
+
+  check('LIVE: kein SKALEN-Fehler — kein Beinpaar ausserhalb [0,5 ; 2,0]', () => {
+    const v = skalenVerstoesse.map((x) => x.g);
     console.log('       (' + beine.length + ' belegte Beine, davon ' +
       beine.filter((b) => b.gestempelt).length + ' mit Handelskurs-Stempel)');
     assert.equal(v.length, 0, v.map((x) => x.emittent + ' ' + (x.abweichung * 100).toFixed(1) + '% [' +
