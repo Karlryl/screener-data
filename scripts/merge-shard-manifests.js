@@ -102,7 +102,13 @@ function honestDenominator(fullUniverseSize, skippedMcap, skippedOwned, nOk) {
 }
 
 const REQUIRED_SHARD_COUNTERS = ['n_ok', 'n_full', 'n_priceonly', 'n_failed'];
-const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_skipped_owned', 'n_ccy_missing_completely'];
+// Die Selector-Diagnose-Zaehler (19.09.2026) sind OPTIONAL, nicht REQUIRED: ein Shard-Manifest
+// aus einem aelteren Commit traegt sie nicht, und ein fehlendes Diagnose-Feld darf keinen
+// ganzen Shard quarantaenisieren. Vorhanden werden sie aber geprueft wie jeder andere Zaehler.
+const SELECTOR_COUNTERS = ['n_sel_young_enough', 'n_sel_young_and_stale',
+  'n_sel_not_young_but_stale', 'n_sel_not_young_unknown'];
+const OPTIONAL_SHARD_COUNTERS = ['n_skipped_mcap', 'n_skipped_owned', 'n_ccy_missing_completely',
+  ...SELECTOR_COUNTERS];
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -166,6 +172,7 @@ function mergeManifests(shardManifests, fullUniverseSize, expectedShards) {
     n_priceonly: sum('n_priceonly'),
     n_skipped_mcap: sum('n_skipped_mcap'),
     n_ccy_missing_completely: sum('n_ccy_missing_completely'),
+    ...Object.fromEntries(SELECTOR_COUNTERS.map(k => [k, sum(k)])),
     // Tag 464: Ticker, die der Hauptlauf vor dem Abruf uebersprungen hat, weil die
     // Small-Cap-Liste sie besitzt (Eigentumsgrenze, Karl-Entscheid A). Sie stehen weiter in
     // watchlist.json — also im Voll-Universum unten — wurden aber nie versucht und koennen
