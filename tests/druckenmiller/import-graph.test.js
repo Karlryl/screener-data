@@ -208,5 +208,38 @@ test('G7 A1.3 WEISSE LISTE: kein Schluessel in den ausgelieferten Zeilen, der ni
   assert.ok(dateien.length > 5, 'der Tiefen-Lauf hat kaum Dateien gesehen: ' + dateien.length);
 });
 
+test('G8 der TAGESLAUF erreicht die Rechenwege der Lesung nicht ([REV10-5], Chunk 2)', () => {
+  // Warum das ein Waechter ist und keine Stilfrage: eine MDE, die taeglich berechnet werden
+  // KANN, wird irgendwann taeglich angesehen — und eine Vorregistrierung, die man taeglich
+  // ansieht, ist keine. Deshalb darf kein Weg von den beiden Tages-Skripten nach
+  // scoreboard-read.js fuehren; nur der Lese-Job darf das Modul laden.
+  const TAGESPFAD = [
+    path.join(REPO, 'scripts', 'druckenmiller-log-internals.js'),
+    path.join(REPO, 'scripts', 'write-druckenmiller-export.js'),
+  ];
+  const leseModul = path.join(REPO, 'lib', 'druckenmiller', 'scoreboard-read.js');
+  assert.ok(fs.existsSync(leseModul), 'das Lese-Modul fehlt — dann prueft dieser Waechter nichts');
+  const erreicht = [...erreichbar(TAGESPFAD)].filter((f) => f === leseModul);
+  assert.deepEqual(erreicht, [], 'ein Tages-Skript erreicht scoreboard-read.js');
+  // Gegenprobe, dass der Waechter ueberhaupt etwas sieht: der Tagespfad MUSS die anderen
+  // Modul-Dateien erreichen, sonst laeuft der Graph ins Leere.
+  const andere = [...erreichbar(TAGESPFAD)].filter((f) => f.includes(path.join('lib', 'druckenmiller')));
+  assert.ok(andere.length >= 3, 'der Graph sieht den Tagespfad nicht: ' + andere.length);
+});
+
+test('G9 BRUCHPROBE: derselbe Waechter feuert, wenn der Tageslauf das Lese-Modul zieht', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-callpath-'));
+  fs.mkdirSync(path.join(dir, 'lib', 'druckenmiller'), { recursive: true });
+  fs.mkdirSync(path.join(dir, 'scripts'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'lib', 'druckenmiller', 'scoreboard-read.js'), 'module.exports = {};\n');
+  fs.writeFileSync(path.join(dir, 'lib', 'druckenmiller', 'tafel.js'),
+    "module.exports = require('./scoreboard-read.js');\n");
+  fs.writeFileSync(path.join(dir, 'scripts', 'write-druckenmiller-export.js'),
+    "module.exports = require('../lib/druckenmiller/tafel.js');\n");
+  const erreicht = [...erreichbar([path.join(dir, 'scripts', 'write-druckenmiller-export.js')])]
+    .filter((f) => f.endsWith('scoreboard-read.js'));
+  assert.equal(erreicht.length, 1, 'der Call-Path-Waechter sieht einen zweistufigen Weg nicht');
+});
+
 console.log('\nimport-graph.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);
