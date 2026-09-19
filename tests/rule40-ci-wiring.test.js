@@ -70,9 +70,50 @@ test('die Tests dieses Bretts liegen im Pfad, den die blockierende Spur einsamme
   assert.ok(!fixture.endsWith('test.js'), 'die Hilfsdatei darf nicht wie eine Testdatei heissen');
 });
 
-test('BLOCKING_GLOBS bleibt unberuehrt (tests/scoring ist Sperrzone, BH-035 nagelt die Liste fest)', () => {
-  assert.match(gate, /BLOCKING_GLOBS = \['tests\/\*test\.js', 'tests\/scoring\/\*test\.js', 'lib\/\*test\.js'\];/,
-    'ein vierter Glob braeche tests/scoring/bh-b09-dailyyml.test.js (BH-035)');
+// 19.09.2026: aus "unberuehrt" wird eine ERLAUBNISLISTE. Der Waechter stand seit dem 17.09.
+// auf "genau diese drei Globs" — als Schutz der Sperrzone tests/scoring/, nicht als Verbot
+// jeder Ausnahme. Das Druckenmiller-Modul hat seinen vierten Glob aber nicht still genommen:
+// BUILD-SPEC v1 Paragraf 2 ("Files, CI, tests") schreibt ihn woertlich vor, und Chunk 0 hat
+// BH-035 im selben Schritt mitgezogen, wie es dieser Waechter verlangt. Ein Wortlaut-Vergleich
+// haette hier also eine spec-konforme, offengelegte Ausnahme rot gemeldet und die echte Frage
+// verdeckt: kommt ein Eintrag OHNE Herkunft dazu? Genau das misst die Liste unten.
+const BASIS_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js'];
+// Jede Ausnahme nennt ihr Dokument. Wer hier etwas ergaenzt, ergaenzt auch die Herkunft.
+const ERLAUBTE_AUSNAHMEN = {
+  'tests/druckenmiller/*test.js':
+    'BUILD-SPEC v1 Paragraf 2 (Files, CI, tests), sha256 '
+    + 'af483fae6a1676476894fab05c1863a6a757e439c60ad8d6ccfd9bf5326a961a',
+};
+
+test('BLOCKING_GLOBS: die drei Basis-Globs stehen unveraendert vorn', () => {
+  const { BLOCKING_GLOBS } = require(path.join(REPO, 'scripts', 'test-gate.js'));
+  assert.deepEqual(BLOCKING_GLOBS.slice(0, 3), BASIS_GLOBS,
+    'die Basis-Globs wurden veraendert oder umsortiert — tests/scoring/ ist Sperrzone und '
+    + 'tests/scoring/bh-b09-dailyyml.test.js (BH-035) nagelt genau diese Liste fest');
+});
+
+test('BLOCKING_GLOBS: jeder weitere Glob nennt das Dokument, das ihn vorschreibt', () => {
+  const { BLOCKING_GLOBS } = require(path.join(REPO, 'scripts', 'test-gate.js'));
+  for (const glob of BLOCKING_GLOBS.slice(3)) {
+    assert.ok(Object.prototype.hasOwnProperty.call(ERLAUBTE_AUSNAHMEN, glob),
+      'unangemeldeter vierter Glob ' + JSON.stringify(glob) + ' in BLOCKING_GLOBS. Ein neues '
+      + 'Testverzeichnis holt sich seinen Platz ueber einen EIGENEN Workflow-Schritt (siehe '
+      + 'tests/rule40/ in .github/workflows/pr-check.yml) ODER ueber ein eingefrorenes Dokument, '
+      + 'das ihn vorschreibt — dann steht es hier in ERLAUBTE_AUSNAHMEN und BH-035 wird im '
+      + 'selben Schritt mitgefuehrt. Zugelassen sind heute: '
+      + Object.entries(ERLAUBTE_AUSNAHMEN).map(([g, q]) => g + ' (' + q + ')').join('; '));
+  }
+});
+
+test('BLOCKING_GLOBS: BH-035 fuehrt dieselbe Liste (sonst ist einer der beiden blind)', () => {
+  // Der eigentliche Zweck des 17.09.-Waechters: die beiden Orte duerfen nie auseinanderlaufen.
+  // Das bleibt auch mit Ausnahmen wahr — nur wird jetzt die LISTE verglichen, nicht ein Wortlaut.
+  const { BLOCKING_GLOBS } = require(path.join(REPO, 'scripts', 'test-gate.js'));
+  const bh = fs.readFileSync(path.join(REPO, 'tests', 'scoring', 'bh-b09-dailyyml.test.js'), 'utf8');
+  for (const glob of BLOCKING_GLOBS) {
+    assert.ok(bh.includes("'" + glob + "'"),
+      'BH-035 kennt ' + glob + ' nicht — der Anker in der Sperrzone wurde nicht mitgefuehrt');
+  }
 });
 
 test('der Schreiber liest dieselbe Snapshot-Naht wie der Haupt-Export', () => {
