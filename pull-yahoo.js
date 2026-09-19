@@ -4725,6 +4725,12 @@ async function main() {
     try {
       const vorher = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
       const bekannt = Number(vorher && vorher.n_total);
+      // SCOPE (Rats-Entscheid 19.09., nach Widerspruch zweier Reviewer): verglichen wird die
+      // VOLLE Watchlist-Laenge gegen das n_total des VOLLEN Manifests — beide Seiten also im
+      // selben Bezugsrahmen. Das ist Absicht, kein Versehen: jeder der 17 Shard-Prozesse liest
+      // dieselbe volle Liste und schneidet sie ERST danach auf ~1/17. Wuerde hier stattdessen
+      // das gemessen, was der Shard am Ende schreibt, feuerte die Regel an jedem normalen
+      // Tageslauf 17 Mal — ein Schutz, der taeglich falsch ausloest, wird abgeschaltet.
       if (istTeilmengenLauf(watchlist.stocks.length, bekannt)) {
         _manifestSubsetTag = String((watchlist._meta && watchlist._meta.version) || 'teilmenge')
           .replace(/[^A-Za-z0-9._-]/g, '-');

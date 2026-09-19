@@ -63,7 +63,7 @@ check('unlesbares Altmanifest hinterlaesst eine WARN-Spur, nicht nur ein INFO', 
   const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
   const i = src.indexOf('const vorher = JSON.parse(fs.readFileSync(manifestPath');
   assert.ok(i > 0, 'die Lesestelle des Altmanifests existiert noch — sonst ist dieser Test blind');
-  const block = src.slice(i, i + 1200);
+  const block = src.slice(i, i + 2400);
   assert.ok(/catch \(e\) \{[\s\S]{0,800}?_log\('WARN'/.test(block),
     'der catch um das Altmanifest schluckt ohne jede Log-Spur — genau der Befund vom 19.09.');
   assert.ok(/UMGANGEN/.test(block), 'die WARN-Zeile benennt die Umgehung nicht');
@@ -93,6 +93,21 @@ check('Schnellpfad: wer marketCap.value schreibt, schreibt marketCap.asOf', () =
     'marketCap.value wird geschrieben, marketCap.asOf nicht — genau der luegende Stempel vom 19.09.');
   assert.ok(src.indexOf('existing.marketCap.value = q.marketCap * tradingAggFactor;', i + 1) === -1,
     'mehr als eine Schreibstelle: der Anker ist mehrdeutig geworden, Test nachziehen');
+});
+
+// Scope-Waechter (Rats-Entscheid 19.09., nach Widerspruch zweier Reviewer): die Pruefung
+// vergleicht die VOLLE Watchlist gegen das n_total des VOLLEN Manifests. Jeder der 17
+// Shard-Prozesse liest dieselbe volle Liste und schneidet sie erst danach. Wuerde stattdessen
+// das geschriebene n_total des Shards verglichen, feuerte die Regel an jedem normalen
+// Tageslauf 17 Mal. Dieser Test haelt die Richtung fest.
+check('ein Shard-Lauf ueber die volle Watchlist feuert NICHT', () => {
+  const UNIVERSUM = 21728;
+  assert.strictEqual(istTeilmengenLauf(UNIVERSUM, UNIVERSUM), false,
+    'die volle Liste gegen das volle Manifest ist nie eine Teilmenge - sonst waeren alle 17 Shards taeglich rot');
+  // Gegenprobe zur falschen Variante: WAERE der Zaehler das, was ein Shard schreibt (~1/17),
+  // dann feuerte die Regel - genau die Fehlausloesung, die der jetzige Zuschnitt meidet.
+  assert.strictEqual(istTeilmengenLauf(Math.round(UNIVERSUM / 17), UNIVERSUM), true,
+    'die Shard-Scheibe gegen das volle Manifest WUERDE feuern - deshalb steht die Pruefung vor dem Sharding');
 });
 
 console.log('\nmanifest-teilmenge: ' + pass + ' ok, ' + fail + ' fail');
