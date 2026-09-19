@@ -239,5 +239,36 @@ test('D13 der Praefix-Treffer ist gebunden: Rauschen und Trunkierung ja, ein neu
   assert.equal(T.TRUNKIERUNG_AB, 28);
 });
 
+test('D14 die Namenskarte nimmt Windows-reservierte Ticker mit und nur die Metadaten nicht', () => {
+  // MERGE-DESK-FUND (Lane A): `datei.startsWith('_')` war die Blanket-Form, die
+  // lib/snapshot-fs.js ersetzt. Sie haette echte Snapshots wie _CON.json (ein Ticker, den
+  // Windows nicht als Dateinamen erlaubt - safeSnapshotFilename baut ihn mit Unterstrich)
+  // still aus der Karte geworfen und die 13F-Abdeckung nach unten verfaelscht.
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dm-snap-'));
+  const schreibe = (datei, ticker, name) => fs.writeFileSync(path.join(dir, datei),
+    JSON.stringify({ meta: { ticker, name, country: 'United States' } }) + '\n');
+  schreibe('AAPL.json', 'AAPL', 'Apple Inc.');
+  schreibe('_CON.json', 'CON', 'Continental Resources Inc');   // echter Ticker, reservierter Name
+  schreibe('_manifest.json', 'X', 'Metadaten');                 // Metadaten, muss raus
+  fs.writeFileSync(path.join(dir, '_last_good_disk.json'), '{}\n');
+  const S = require(path.join(__dirname, '..', '..', 'scripts', 'druckenmiller-13f.js'));
+  const karte = S.ladeNamenskarte(dir, null);
+  assert.equal(karte.get('AAPL'), 'Apple Inc.');
+  assert.equal(karte.get('CON'), 'Continental Resources Inc',
+    'ein Windows-reservierter Ticker gehoert in die Karte - sonst fehlt er still in der Abdeckung');
+  assert.equal(karte.has('X'), false, 'die Metadaten-Datei bleibt draussen');
+  assert.equal(karte.size, 2);
+  // Und der geteilte Helfer ist der Maßstab, nicht eine eigene Regel.
+  const { isMetadataSnapshot } = require(path.join(__dirname, '..', '..', 'lib', 'snapshot-fs.js'));
+  assert.equal(isMetadataSnapshot('_CON.json'), false);
+  assert.equal(isMetadataSnapshot('_manifest.json'), true);
+  assert.equal(isMetadataSnapshot('_last_good_disk.json'), true);
+  // BRUCHPROBE am Quelltext: die Blanket-Form darf in diesem Skript nicht zurueckkehren.
+  const quelle = fs.readFileSync(path.join(__dirname, '..', '..', 'scripts', 'druckenmiller-13f.js'), 'utf8');
+  const blanket = quelle.split('\n').filter((z) => /startsWith\('_'\)/.test(z) && !z.trim().startsWith('//'));
+  assert.deepEqual(blanket, [], 'die Blanket-Form steht wieder im Code: ' + blanket.join(' | '));
+});
+
 console.log('\nthirteenf.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

@@ -28,6 +28,7 @@ const https = require('node:https');
 
 const T = require('../lib/druckenmiller/thirteenf.js');
 const universe = require('../lib/druckenmiller/universe.js');
+const { isMetadataSnapshot } = require('../lib/snapshot-fs.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_OUT = path.join(REPO_ROOT, 'druckenmiller-history', '13f');
@@ -58,7 +59,13 @@ function ladeNamenskarte(snapshotsDir, log) {
     return karte;
   }
   for (const datei of fs.readdirSync(snapshotsDir)) {
-    if (!datei.endsWith('.json') || datei.startsWith('_')) continue;
+    // MERGE-DESK-FUND (Lane A, 19.09.): hier stand `datei.startsWith('_')`. Das ist die
+    // Blanket-Form, die lib/snapshot-fs.js ausdruecklich ersetzt: sie schluckt nicht nur die
+    // Metadaten-Dateien, sondern auch ECHTE Snapshots von Windows-reservierten Tickern
+    // (_CON.json, siehe safeSnapshotFilename) - die waeren still aus der Namenskarte
+    // gefallen und haetten die 13F-Abdeckung nach unten verfaelscht. Ein Repo-Test
+    // (tests/p1-welle8-metadata-filter.test.js) misst genau die Abwesenheit dieses Musters.
+    if (!datei.endsWith('.json') || isMetadataSnapshot(datei)) continue;
     let j;
     // REVIEW-FUND: hier stand ein nacktes `catch { continue; }`. Ein halb geschriebener
     // Snapshot verschwand damit lautlos aus der Namenskarte - und mit ihm ein Stueck
