@@ -63,19 +63,29 @@ test('D3 QUARANTAENE, wenn keine oder beide Lesungen plausibel sind', () => {
 });
 
 test('D4 die Preisprobe: ueber 10 % Fehlerquote geht das Filing in Quarantaene', () => {
+  // Die Kurskarte ist nach TICKER gebaut, wie das Skript sie liefert — genau daran scheiterte
+  // die Probe vorher (Review-Fund: die Roh-Zeile kennt nur ihre CUSIP).
   const rows = [];
-  for (let i = 0; i < 20; i++) rows.push({ valueRaw: 100, shares: 1, cusip: 'C' + i, putCall: null });
+  for (let i = 0; i < 20; i++) {
+    rows.push({ valueRaw: 100, shares: 1, cusip: 'C' + i, ticker: 'T' + i, putCall: null });
+  }
   const kurse = new Map();
-  for (let i = 0; i < 20; i++) kurse.set('C' + i, i < 18 ? 100 : 5);   // 2 von 20 = 10 %
+  for (let i = 0; i < 20; i++) kurse.set('T' + i, i < 18 ? 100 : 5);   // 2 von 20 = 10 %
   const knapp = T.detectUnits(rows, kurse);
   assert.equal(knapp.mode, 'price-checked');
   assert.ok(Math.abs(knapp.failShare - 0.1) < 1e-9, 'Fehlerquote: ' + knapp.failShare);
   assert.equal(knapp.quarantine, false, 'genau 10 % ist noch nicht "ueber 10 %"');
-  kurse.set('C17', 5);                                                  // 3 von 20 = 15 %
+  kurse.set('T17', 5);                                                  // 3 von 20 = 15 %
   const drueber = T.detectUnits(rows, kurse);
   assert.equal(drueber.quarantine, true);
   assert.equal(drueber.reason, 'implied-price-fail-share');
   assert.equal(T.QUARANTINE_FAIL_SHARE, 0.1);
+  // Und eine Kurskarte OHNE einen einzigen Treffer ist keine Preisprobe, sondern ein Ausfall —
+  // sie darf nicht als bewusste Bandentscheidung durchgehen.
+  const ohneTreffer = T.detectUnits(rows, new Map([['XYZ', 100]]));
+  assert.equal(ohneTreffer.mode, 'band-only-no-price-match');
+  assert.equal(ohneTreffer.nChecked, 0);
+  assert.equal(ohneTreffer.failShare, null);
 });
 
 test('D5 eine Optionszeile ohne putCall-Tag erkennt man an der CUSIP (Lane-B-Fall GLD 907)', () => {
