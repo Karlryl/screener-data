@@ -122,19 +122,10 @@ Schluesselreihenfolge Scheindifferenzen. In diesen Vintages macht es **keinen** 
 besteht, darf die Gleichheit nicht der Serialisierung ueberlassen. Jetzt Anwesenheits-Test +
 `isDeepStrictEqual`, vier neue Waechter-Erwartungen.
 
-**(3) `survival.json`** — **`survival.json`
-traegt echte Kohorten-Zeilen** (97 am 07.08., 103 am 09.08., mit vollem `pit`-Block) — die
+**(3) `survival.json` traegt echte Kohorten-Zeilen** (97 am 07.08., 103 am 09.08., mit vollem `pit`-Block) — die
 Pre-Revenue-/Biotech-Spur, die nie auf Wachstum gescort wird. Sie stand in der
 Ausschlussliste neben `calibration.json`/`regime.json`, die gar keinen `cohort`-Block haben.
 Das war ein **stiller** Ausschluss.
-
-**Nicht uebernommen, aber notiert** (Praezisierungen ohne Fehler in der Sache): `mcapKlasse`
-wird hier aus `pit.marketCap` **nachgerechnet**, nicht als gespeichertes Feld beobachtet — und
-ein Klassenwechsel ist **nicht** identisch mit einem Wechsel der Scoring-Kohorte, die ueber
-das gelernte `mcapBand` laeuft (die fuenf findash-Reiter haengen an `mcapKlasse`). Ausserdem:
-`pit` fuehrt nicht alle Score-Eingaenge (`annualRev`, `annualGP`, `annualFCF`, `opIncQ`,
-Bilanzreihen fehlen) — pit-Gleichheit ist also **nicht** Eingangs-Gleichheit. Beides steht
-unter „Grenzen".
 
 Jetzt ist es eine sichtbare Weiche (`--mit-survival`), und die Ausgabe fuehrt sie als
 `survivalEnthalten` mit. Beide Zahlen:
@@ -147,6 +138,14 @@ Jetzt ist es eine sichtbare Weiche (`--mit-survival`), und die Ausgabe fuehrt si
 **Die Quote aendert sich nicht (86,9 % vs. 86,5 %), die Aussage bleibt.** Der Default bleibt
 der engere Bereich, weil nur er mit der Zahl des Ursprungsbefunds vergleichbar ist — aber die
 Zahl traegt ihren Geltungsbereich ab jetzt bei sich.
+
+**Nicht uebernommen, aber notiert** (Praezisierungen ohne Fehler in der Sache): `mcapKlasse`
+wird hier aus `pit.marketCap` **nachgerechnet**, nicht als gespeichertes Feld beobachtet — und
+ein Klassenwechsel ist **nicht** identisch mit einem Wechsel der Scoring-Kohorte, die ueber
+das gelernte `mcapBand` laeuft (die fuenf findash-Reiter haengen an `mcapKlasse`). Ausserdem:
+`pit` fuehrt nicht alle Score-Eingaenge (`annualRev`, `annualGP`, `annualFCF`, `opIncQ`,
+Bilanzreihen fehlen) — pit-Gleichheit ist also **nicht** Eingangs-Gleichheit. Beides steht
+unter „Grenzen".
 
 ### Zweiter Lauf: Code-Review (stille Fehler + JavaScript)
 
