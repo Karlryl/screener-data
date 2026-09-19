@@ -36,6 +36,7 @@ const internals = require('../lib/druckenmiller/internals.js');
 const { MIN_BARS, universeHash } = require('../lib/druckenmiller/universe.js');
 const ledgerLib = require('../lib/druckenmiller/ledger.js');
 const churnLib = require('../lib/druckenmiller/churn.js');
+const scoreboard = require('../lib/druckenmiller/scoreboard.js');
 const rawLib = require('../lib/druckenmiller/raw.js');
 const registrierungLib = require('../lib/druckenmiller/registration.js');
 const logger = require('./druckenmiller-log-internals.js');
@@ -51,6 +52,8 @@ const FAILED_NAME = logger.FAILED_NAME;           // '_FAILED.json'
 /** Der Vertrag kennt vier Dateien; Chunk 1 schreibt die ersten zwei (§0.1). */
 const ALLE_DATEIEN = ['regime.json', 'meta.json', 'candidates.json', 'duquesne13f.json'];
 const DATEIEN_CHUNK1 = ['regime.json', 'meta.json'];
+const DATEIEN_CHUNK2 = ['regime.json', 'meta.json', 'candidates.json'];
+const REGISTRIERUNG_B_GLOB = /^druckenmiller_scoreboard_registered_\d{8}\.json$/;
 const SERIES_MAX = 504;                           // arch-spec §3.2
 const CRON = '17 2 * * 2-6';                      // daily-pull.yml, Di-Sa 02:17 UTC
 const REGISTRIERUNG_GLOB = /^druckenmiller_loggers_registered_\d{8}\.json$/;
@@ -69,6 +72,20 @@ const SERIES_FIELDS = [
   'l5', 'l5Coverage', 'l6', 'l7Persistence', 'l8CapMinusEqual', 'l8TopDecileShare', 'l8Winners',
 ];
 const REGIME_FIELDS = ['schema', 'generated_at', 'asOf', 'series', 'sectorRs', 'rankPersistence'];
+/** candidates.json (Chunk 2): Zeilen-Weisse-Liste und Kopf-Weisse-Liste. */
+const CANDIDATE_ROW_FIELDS = ['ticker', 'confirmation', 'm1', 'm2', 'evidenceIds', 'evidenceGrade',
+  'duquesne13f'];
+const CANDIDATES_FIELDS = ['schema', 'generated_at', 'asOf', 'rows', 'counts', 'separation',
+  'scoreboard', 'evidence', 'scopeSentence', 'multiplicityNote', 'sessionExcluded'];
+/** [REV1-A2]: die Regel selbst haengt an einer Einzelkopie von 2009 - das steht auf dem Chip. */
+const EVIDENCE = {
+  ids: ['A-TEC-002', 'A-TEC-001'],
+  grade: 'SINGLE_COPY',
+  legend: 'Quelle: Einzelkopie 2009',
+  supporting: ['A-TEC-006', 'A-NBIM-007'],
+  erosionWarning: 'A-TEC-008',
+  laneBNull: 'ATH-Perzentil 0,498 [0,461; 0,546] - 13F zeigt keine Kauf-Signatur nahe dem Hoch',
+};
 const META_FIELDS = ['schema', 'generated_at', 'mandate', 'label', 'paramsHash', 'universe',
   'coverage', 'cuts', 'ledgerRows', 'ledgerGapDays', 'churnUnavailableDays', 'universeHash',
   'overrideNote', 'expectedNextRun', 'duquesne13fCoverage'];
@@ -85,6 +102,22 @@ const istZahlOderNull = (v) => v === null || (typeof v === 'number' && Number.is
  * Datei A lesen und ihren Hash gegen den .sha256-Sidecar halten. Ohne sie gibt es keinen
  * paramsHash — und ein Export ohne paramsHash waere eine Messung ohne Parameter-Stand.
  */
+/**
+ * Datei B, wenn sie GEHASHT vorliegt. Fehlt sie (Chunk 2 laeuft noch), gibt es kein T0 und
+ * damit keinen Lese-Plan - die Tafel sagt dann "noch nicht lesbar" und zeigt nur Zaehler.
+ * Ein halb fertiger Entwurf (.DRAFT) wird vom Glob NICHT gefunden, und das ist der Zweck.
+ */
+function leseDateiB(protocolDir, log) {
+  try { return registrierungLib.readHashed(protocolDir, REGISTRIERUNG_B_GLOB, 'Registrierungs-Datei B').json; }
+  catch (e) {
+    if (log) {
+      log('::warning::[druckenmiller] Datei B ist nicht (gueltig) vorhanden: ' + e.message
+        + ' - candidates.json zeigt Zaehler ohne Lese-Plan.');
+    }
+    return null;
+  }
+}
+
 function leseRegistrierung(protocolDir) {
   // Finden, Sidecar, Hash, JSON: eine Prueffolge fuer alle Registrierungs-Leser
   // (lib/druckenmiller/registration.js). Was der SCHREIBER daraus braucht, prueft er selbst
@@ -363,6 +396,80 @@ function nextRunAfter(now, cron) {
 // ---------------------------------------------------------------------------
 // Schreiben
 // ---------------------------------------------------------------------------
+/**
+ * candidates.json (Chunk 2) - das ETIKETT je Board-Zeile, nie ein Ranking, nie ein Filter,
+ * nie eine Sortierung (Rat D1). Die Zustaende kommen aus dem Kandidaten-Ledger des
+ * merge-Jobs, die Kennzahlen aus der Roh-Datei desselben Tages.
+ *
+ * WAS HIER NICHT ENTSTEHT: keine Lesung. Die Tafel zeigt vor R1 "noch nicht lesbar" und
+ * darunter die Zaehler, ausdruecklich als Zaehler markiert - L und MDE gibt es nur aus einer
+ * Lesung (kein Bootstrap-Import in diesem Pfad, Waechter G8).
+ */
+function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now }) {
+  const letzte = kandidatenRows.length ? kandidatenRows[kandidatenRows.length - 1] : null;
+  const zustaende = scoreboard.lastStateByTicker(kandidatenRows);
+  const rohNach = new Map((letzteRoh || []).map((z) => [z.ticker, z]));
+  const rows = [];
+  for (const [ticker, confirmation] of zustaende) {
+    const roh = rohNach.get(ticker);
+    rows.push({
+      ticker,
+      confirmation: confirmation === undefined ? null : confirmation,
+      m1: roh && Number.isFinite(roh.m1) ? roh.m1 : null,
+      m2: roh && Number.isFinite(roh.m2) ? roh.m2 : null,
+      evidenceIds: EVIDENCE.ids,
+      evidenceGrade: EVIDENCE.grade,
+      duquesne13f: null,
+    });
+  }
+  rows.sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
+  const alleEintraege = [];
+  let aufgeloest = 0;
+  for (const r of kandidatenRows) {
+    for (const e of r.entries || []) alleEintraege.push(e);
+    aufgeloest += (r.resolutions || []).length;
+  }
+  const entscheidend = alleEintraege.filter((e) => e.arm === scoreboard.DECISIVE_ARM);
+  const plan = dateiB && dateiB.T0
+    ? scoreboard.readSchedule(dateiB.T0, null)
+    : { T0: null, R1: null, R2: null, R3: null };
+  const tafel = scoreboard.panelDisplay(null, {
+    entries: alleEintraege.length,
+    resolved: aufgeloest,
+    blocks: scoreboard.blockCount(entscheidend.map((e) => e.date), sessions, scoreboard.DECISIVE_ARM),
+    lastSessionDate: letzte ? letzte.date : null,
+  }, plan);
+  return {
+    schema: SCHEMA,
+    generated_at: now.toISOString(),
+    asOf: letzte ? letzte.date : null,
+    rows,
+    counts: {
+      stated: letzte ? letzte.nStated : null,
+      confirms: letzte ? letzte.nConfirms : null,
+      neutral: letzte ? letzte.nNeutral : null,
+      weak: letzte ? letzte.nWeak : null,
+      armedFirstObservation: letzte ? letzte.armedFirstObservation : null,
+      warmupLiveSessions: scoreboard.liveSessionCount(kandidatenRows),
+      warmupTarget: scoreboard.WARMUP_SESSIONS,
+      degenerateCut: letzte ? letzte.nDegenerateCut : null,
+    },
+    separation: letzte
+      ? { confirmsShare: letzte.confirmsShare, raw: letzte.raw, reason: letzte.rawReason }
+      : { confirmsShare: null, raw: true, reason: 'no-session' },
+    sessionExcluded: letzte && letzte.skipped ? letzte.skipped : null,
+    scoreboard: {
+      frozen: tafel.frozen, live: tafel.live, stamp: tafel.stamp,
+      countersAreNotEvidence: true,
+      registrationHashed: !!(dateiB && dateiB.T0),
+      readSchedule: plan,
+    },
+    evidence: EVIDENCE,
+    scopeSentence: (dateiB && dateiB.scopeSentence) || null,
+    multiplicityNote: scoreboard.MULTIPLICITY_NOTE,
+  };
+}
+
 function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   const say = log || console.log;
   const jetzt = now || new Date();
@@ -400,10 +507,28 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   if (fs.existsSync(alterMarker)) fs.rmSync(alterMarker);
   fs.writeFileSync(path.join(exportDir, 'regime.json'), JSON.stringify(regime) + '\n');
   fs.writeFileSync(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
+  // Chunk 2: candidates.json, wenn der Kandidaten-Ledger existiert. Es gibt KEINEN
+  // Platzhalter - eine leere candidates.json waere eine Aussage ueber Kandidaten, die es
+  // noch nicht gibt (dieselbe Regel wie in Chunk 1 fuer die fehlenden zwei Dateien).
+  let kandidatenZahl = null;
+  const kLedger = path.join(outDir, 'candidates-ledger.jsonl');
+  if (fs.existsSync(kLedger)) {
+    const kKette = ledgerLib.verifyChain(kLedger);
+    if (!kKette.ok) throw new Error(kKette.error);
+    const candidates = baueCandidates({
+      kandidatenRows: kKette.rows, letzteRoh, sessions: logger.sitzungen(pricesDir),
+      dateiB: leseDateiB(protocolDir, say), now: jetzt,
+    });
+    ledgerLib.assertFinite(candidates, 'candidates.json');
+    fs.writeFileSync(path.join(exportDir, 'candidates.json'), JSON.stringify(candidates) + '\n');
+    kandidatenZahl = candidates.rows.length;
+  }
   say('[druckenmiller] Export geschrieben: asOf=' + regime.asOf + ' · Serie=' + regime.series.length
     + ' Zeilen · U=' + meta.universe.withBars250 + ' · paramsHash=' + meta.paramsHash.slice(0, 12) + '…'
     + ' · Churn ohne Roh-Datei: ' + unbekannt + ' Tag(e)'
-    + ' · noch ohne candidates.json/duquesne13f.json (Chunk 2/3) — findash sieht das Modul bis dahin als stale.');
+    + (kandidatenZahl === null
+      ? ' · noch ohne candidates.json/duquesne13f.json (Chunk 2/3) — findash sieht das Modul bis dahin als stale.'
+      : ' candidates.json=' + kandidatenZahl + ' Zeilen, noch ohne duquesne13f.json (Chunk 3)'));
   return 0;
 }
 
@@ -506,7 +631,12 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
   // 1. Die Dateien dieses Chunks muessen da sein. Die beiden anderen fehlen bis Chunk 3
   //    ABSICHTLICH; findashs Leser wertet "weniger als vier" als stale (docs §13).
   const dateien = {};
-  for (const name of DATEIEN_CHUNK1) {
+  // Chunk 2: candidates.json ist Pflicht, SOBALD der Kandidaten-Ledger existiert - sonst
+  // haette ein ausgefallener Schreiber einen halben Ordner hinterlassen, und "halb" ist
+  // schlimmer als "gar nicht" (dieselbe Regel wie in Chunk 1).
+  const kLedgerPfad = path.join(outDir, 'candidates-ledger.jsonl');
+  const pflichtDateien = fs.existsSync(kLedgerPfad) ? DATEIEN_CHUNK2 : DATEIEN_CHUNK1;
+  for (const name of pflichtDateien) {
     const p = path.join(exportDir, name);
     if (!fs.existsSync(p)) {
       return rot('[druckenmiller] ' + name + ' fehlt in ' + exportDir + ' — der Schreiber ist nicht '
@@ -646,6 +776,73 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
     return rot('[druckenmiller] universeHash in meta.json passt nicht zur letzten Ledger-Zeile — '
       + 'die Grundgesamtheit der Auslieferung ist eine andere als die gemessene.');
   }
+  // ---- candidates.json (Chunk 2) -------------------------------------------------------
+  const kandidatenPfad = path.join(exportDir, 'candidates.json');
+  if (fs.existsSync(kandidatenPfad)) {
+    let cand;
+    try { cand = JSON.parse(fs.readFileSync(kandidatenPfad, 'utf8')); }
+    catch (e) { return rot('[druckenmiller] candidates.json ist nicht lesbar: ' + e.message); }
+    if (!cand || typeof cand !== 'object') {
+      return rot('[druckenmiller] candidates.json ist kein Objekt - eine gueltige JSON-Null ist keine Auslieferung.');
+    }
+    const fk = typFehler(cand, 'candidates.json', CANDIDATES_FIELDS, []);
+    if (fk) return rot('[druckenmiller] ' + fk);
+    if (cand.schema !== SCHEMA) {
+      return rot('[druckenmiller] candidates.json traegt das Schema ' + JSON.stringify(cand.schema)
+        + ', erwartet ' + JSON.stringify(SCHEMA) + '.');
+    }
+    if (!Array.isArray(cand.rows)) {
+      return rot('[druckenmiller] candidates.json traegt keine Zeilen-Liste.');
+    }
+    const erlaubteZustaende = ['CONFIRMS', 'NEUTRAL', 'WEAK', null];
+    const gesehen = new Set();
+    for (const z of cand.rows) {
+      if (!z || typeof z !== 'object') return rot('[druckenmiller] candidates.json: eine Zeile ist kein Objekt.');
+      const fz = typFehler(z, 'candidates.json rows[' + z.ticker + ']', CANDIDATE_ROW_FIELDS, []);
+      if (fz) return rot('[druckenmiller] ' + fz);
+      if (!erlaubteZustaende.includes(z.confirmation)) {
+        return rot('[druckenmiller] candidates.json: ' + z.ticker + ' traegt confirmation '
+          + JSON.stringify(z.confirmation) + ' - der Vertrag kennt CONFIRMS|NEUTRAL|WEAK|null.');
+      }
+      if (!istZahlOderNull(z.m1) || !istZahlOderNull(z.m2)) {
+        return rot('[druckenmiller] candidates.json: m1/m2 von ' + z.ticker + ' sind weder Zahl noch null.');
+      }
+      if (z.duquesne13f !== null && !['HELD', 'NOT_IN_MAPPED', 'UNMAPPED'].includes(z.duquesne13f)) {
+        return rot('[druckenmiller] candidates.json: duquesne13f von ' + z.ticker + ' ist '
+          + JSON.stringify(z.duquesne13f) + ' - dreiwertig oder null (Chunk 3).');
+      }
+      if (gesehen.has(z.ticker)) {
+        return rot('[druckenmiller] candidates.json: ' + z.ticker + ' steht zweimal - ein Ticker traegt genau einen Zustand.');
+      }
+      gesehen.add(z.ticker);
+    }
+    if (cand.asOf !== regime.asOf) {
+      return rot('[druckenmiller] candidates.json steht auf asOf ' + cand.asOf + ', regime.json auf '
+        + regime.asOf + ' - die Auslieferung gehoert zu einem anderen Stand.');
+    }
+    // Rat D3 gilt auch hier: kein veroeffentlichter Zustand, keine Ampel, kein rInt.
+    const text = fs.readFileSync(kandidatenPfad, 'utf8');
+    for (const verboten of ['RISK_ON', 'RISK_OFF', 'crashWarning', '"rInt"']) {
+      if (text.includes(verboten)) {
+        return rot('[druckenmiller] candidates.json enthaelt ' + verboten
+          + ' - Rat D3 verbietet einen veroeffentlichten Regime-Zustand.');
+      }
+    }
+    // Die Tafel darf ohne Lesung keine Zahl zeigen.
+    const tafel = cand.scoreboard && cand.scoreboard.frozen;
+    if (!tafel) return rot('[druckenmiller] candidates.json traegt keine Tafel.');
+    if (!cand.scoreboard.registrationHashed) {
+      for (const feld of ['L', 'MDE', 'L126', 'MDE126', 'readId', 'readDate']) {
+        if (tafel[feld] !== null) {
+          return rot('[druckenmiller] candidates.json: die Tafel zeigt ' + feld + ' = '
+            + JSON.stringify(tafel[feld]) + ', obwohl keine Lesung stattgefunden hat.');
+        }
+      }
+    }
+    const nfk = nichtEndlich(cand, 'candidates');
+    if (nfk) return rot('[druckenmiller] ' + nfk + ' - nicht endliche Zahlen gehoeren nicht in die Auslieferung.');
+  }
+
   // 5. Die Registrierung: derselbe Parameter-Stand wie beim Schreiben.
   let registrierung;
   try { registrierung = leseRegistrierung(protocolDir); }
@@ -707,9 +904,10 @@ function main(argv, log) {
 
 module.exports = {
   main, writeExport, checkExport, baueRegime, baueMeta, begrenze, nextRunAfter,
-  leseRegistrierung, leseRoh, uMitglieder, churnSerie, abdeckung,
+  leseRegistrierung, leseDateiB, leseRoh, uMitglieder, churnSerie, abdeckung, baueCandidates,
   SCHEMA, FAILED_NAME, ALLE_DATEIEN, DATEIEN_CHUNK1, SERIES_MAX, SERIES_FIELDS, REGIME_FIELDS,
-  META_FIELDS, CRON, LABEL, MANDATE, pruefeSectorRs, cronSlot,
+  META_FIELDS, CANDIDATES_FIELDS, CANDIDATE_ROW_FIELDS, EVIDENCE, DATEIEN_CHUNK2,
+  CRON, LABEL, MANDATE, pruefeSectorRs, cronSlot,
 };
 
 if (require.main === module) {

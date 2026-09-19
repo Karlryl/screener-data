@@ -57,6 +57,9 @@ function tickerZeile(i, opts) {
     high252: 120 + i,
     low252: 80 + i,
     ret63: (i % 7) / 100 - 0.03,
+    m1: (i % 9) - 4,
+    m2: 0.7 + (i % 4) / 10,
+    sigma63: 0.01 + (i % 5) / 1000,
   };
 }
 
@@ -68,6 +71,8 @@ function schreibeRoh(dir, datum, zeilen) {
     netRevision30: z.netRevision30, atSession: z.atSession, lastBarDate: z.lastBarDate,
     bars: z.bars, close: z.close, sma50: z.sma50, sma200: z.sma200,
     high252: z.high252, low252: z.low252, ret63: z.ret63,
+    m1: z.m1 === undefined ? null : z.m1, m2: z.m2 === undefined ? null : z.m2,
+    sigma63: z.sigma63 === undefined ? null : z.sigma63,
   })).join('\n') + '\n';
   fs.writeFileSync(path.join(dir, datum + '.jsonl.gz'), zlib.gzipSync(Buffer.from(text, 'utf8')));
 }
@@ -607,6 +612,149 @@ test('W20 stale-by-design: der Vertrag nennt vier Dateien und Chunk 1 sagt, waru
   for (const f of W.ALLE_DATEIEN) {
     assert.ok(doc.includes(f), 'die Doku nennt ' + f + ' nicht — der Leser kann die Vierer-Regel nicht pruefen');
   }
+});
+
+/** Ein Kandidaten-Ledger neben dem Innereien-Ledger: eine Zeile je Sitzung. */
+function kandidatenLedger(w, opt) {
+  const o = opt || {};
+  const datei = path.join(w.outDir, 'candidates-ledger.jsonl');
+  let idx = 0;
+  for (const d of w.tage) {
+    const letzter = d === w.tage[w.tage.length - 1];
+    const wechsel = {};
+    if (letzter || o.alleTage) {
+      wechsel.T1 = 'CONFIRMS'; wechsel.T2 = 'WEAK'; wechsel.T3 = 'NEUTRAL';
+    }
+    ledgerLib.appendRow(datei, {
+      schema: 'druckenmiller-candidates/1', kind: 'SESSION', date: d,
+      generatedAt: '2026-09-14T02:17:00.000Z',
+      backfilled: !letzter, lowFreshness: false, highChurn: false, raw: false, rawReason: null,
+      warmup: true, warmupLiveSessionsBefore: 0, statesPublished: letzter,
+      nUniverse: 10, nEntered: 0, nLeft: 0, nStated: 3, nDegenerateCut: 0,
+      confirmsShare: 0.33, nConfirms: 1, nNeutral: 1, nWeak: 1,
+      skipped: null, transitions: letzter ? 3 : 0, armedFirstObservation: letzter ? 3 : 0,
+      dueWithoutScalingRule: 0, stateChanges: wechsel,
+      entries: o.mitEintrag && letzter
+        ? [{ schema: 'druckenmiller-candidates/1', kind: 'ENTRY', date: d,
+             generatedAt: '2026-09-14T02:17:00.000Z', ticker: 'T1', arm: 63, state: 'CONFIRMS',
+             fromState: 'NEUTRAL', entryClose: 101, sigma63: 0.02, k: 1, m1: 1, m2: 0.9,
+             sessionIndex: idx, warmup: true }]
+        : [],
+      resolutions: [],
+    });
+    idx++;
+  }
+  return datei;
+}
+
+test('K1 candidates.json: ein Etikett je Ticker, Terzil-Kennzahlen aus der Roh-Datei, kein Ranking', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  assert.equal(W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') })), 0);
+  const c = liesJson(path.join(w.exportDir, 'candidates.json'));
+  assert.equal(c.schema, 'findash-druckenmiller/v1');
+  assert.equal(c.asOf, w.tage[w.tage.length - 1]);
+  assert.deepEqual(c.rows.map((r) => r.ticker), ['T1', 'T2', 'T3'], 'alphabetisch, keine Rangfolge');
+  assert.deepEqual(c.rows.map((r) => r.confirmation), ['CONFIRMS', 'WEAK', 'NEUTRAL']);
+  assert.ok(Number.isFinite(c.rows[0].m1) && Number.isFinite(c.rows[0].m2),
+    'die Kennzahlen kommen aus der Roh-Datei des Tages — sonst zeigt der Tab ein Etikett ohne Zahl');
+  assert.deepEqual(c.rows[0].evidenceIds, ['A-TEC-002', 'A-TEC-001']);
+  assert.equal(c.rows[0].evidenceGrade, 'SINGLE_COPY');
+  assert.equal(c.rows[0].duquesne13f, null, 'dreiwertig kommt erst in Chunk 3');
+  assert.equal(c.counts.confirms, 1);
+  assert.equal(c.counts.warmupTarget, 20);
+  assert.ok(c.multiplicityNote.indexOf('Mehrfachtestung') > 0, 'Residuum 2 fehlt');
+  // Ein zweiter Lauf ist identisch bis auf den Stempel (keine versteckte Zufallsquelle).
+  const vorher = c.rows.length;
+  assert.equal(W.writeExport(opts(w, { now: new Date('2026-09-14T03:17:00Z') })), 0);
+  assert.equal(liesJson(path.join(w.exportDir, 'candidates.json')).rows.length, vorher);
+});
+
+test('K2 die Tafel zeigt ohne Lesung KEINE Zahl', () => {
+  const w = welt();
+  kandidatenLedger(w, { mitEintrag: true });
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const c = liesJson(path.join(w.exportDir, 'candidates.json'));
+  assert.equal(c.scoreboard.registrationHashed, false, 'Datei B ist noch nicht gehasht');
+  assert.equal(c.scoreboard.frozen.label, 'noch nicht lesbar');
+  for (const f of ['L', 'MDE', 'level', 'readId', 'readDate', 'nextReadDate', 'L126', 'MDE126', 'level126']) {
+    assert.equal(c.scoreboard.frozen[f], null, 'Tafel-Feld ' + f + ' ist nicht null');
+  }
+  assert.equal(c.scoreboard.live.entries, 1, 'die Zaehler laufen trotzdem');
+  assert.equal(c.scoreboard.live.blocks, 1);
+  assert.equal(c.scoreboard.countersAreNotEvidence, true);
+  assert.equal(W.checkExport(opts(w)), 0, 'der Vertrag ist erfuellt');
+});
+
+test('K3 BRUCHPROBE: Ledger da, candidates.json fehlt -> rot (halb ist schlimmer als gar nicht)', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  fs.rmSync(path.join(w.exportDir, 'candidates.json'));
+  rotErwartet(w, 'fehlende candidates.json bei vorhandenem Kandidaten-Ledger');
+});
+
+test('K4 BRUCHPROBE: ein unbekanntes Feld in einer Kandidaten-Zeile -> rot (weisse Liste)', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'candidates.json');
+  const c = liesJson(p);
+  c.rows[0].tempo = 3;
+  fs.writeFileSync(p, JSON.stringify(c) + '\n');
+  rotErwartet(w, 'unbekanntes Feld in einer Kandidaten-Zeile');
+});
+
+test('K5 BRUCHPROBE: ein Zustand ausserhalb des Vertrags -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'candidates.json');
+  const c = liesJson(p);
+  c.rows[0].confirmation = 'STRONG';
+  fs.writeFileSync(p, JSON.stringify(c) + '\n');
+  rotErwartet(w, 'Zustand STRONG');
+});
+
+test('K6 BRUCHPROBE: candidates.json aus einem anderen Stand -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'candidates.json');
+  const c = liesJson(p);
+  c.asOf = w.tage[0];
+  fs.writeFileSync(p, JSON.stringify(c) + '\n');
+  rotErwartet(w, 'asOf-Widerspruch zwischen candidates.json und regime.json');
+});
+
+test('K7 BRUCHPROBE: eine Zahl auf der Tafel ohne Lesung -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'candidates.json');
+  const c = liesJson(p);
+  c.scoreboard.frozen.L = 4.2;
+  fs.writeFileSync(p, JSON.stringify(c) + '\n');
+  rotErwartet(w, 'L auf der Tafel ohne Lesung');
+});
+
+test('K8 die Roh-Datei auf der PLATTE traegt m1/m2/sigma63 — nicht nur der Speicher', () => {
+  // Gefunden 2026-09-19 am echten Lauf: die Kennzahlen entstanden im Durchgang, aber
+  // schreibeRoh im Logger hatte eine eigene Feldliste und liess sie fallen. Folge:
+  // candidates.json lieferte 2.197 Etiketten mit m1 = null, und kein alter Tag waere je
+  // nachrechenbar gewesen. Der Waechter haengt am Quelltext des Loggers, nicht am Text
+  // dieses Tests.
+  const quelle = fs.readFileSync(path.join(__dirname, '..', '..', 'scripts', 'druckenmiller-log-internals.js'), 'utf8');
+  const block = quelle.slice(quelle.indexOf('function schreibeRoh'), quelle.indexOf('function schreibeModus'));
+  for (const feld of ['m1:', 'm2:', 'sigma63:']) {
+    assert.ok(block.includes(feld), 'schreibeRoh schreibt ' + feld + ' nicht auf die Platte');
+  }
+  // Und die Fixture dieses Tests fuehrt dieselben Felder, sonst prueft K1 etwas Erfundenes.
+  const w = welt();
+  const roh = zlib.gunzipSync(fs.readFileSync(path.join(w.rawDir, w.tage[w.tage.length - 1] + '.jsonl.gz')))
+    .toString('utf8').split('\n').filter((z) => z).map((z) => JSON.parse(z));
+  assert.ok(Number.isFinite(roh[0].m1) && Number.isFinite(roh[0].m2) && Number.isFinite(roh[0].sigma63),
+    'die Test-Roh-Datei traegt die Chunk-2-Felder nicht');
 });
 
 console.log('\nwrite-export.test.js: ' + pass + ' ok, ' + fail + ' fail');

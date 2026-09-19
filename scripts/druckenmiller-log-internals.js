@@ -170,6 +170,11 @@ function schreibeRoh(outDir, datum, zeilen) {
     atSession: z.atSession, lastBarDate: z.lastBarDate, bars: z.bars,
     close: r6(z.close), sma50: r6(z.sma50), sma200: r6(z.sma200),
     high252: r6(z.high252), low252: r6(z.low252), ret63: r6(z.ret63),
+    // Chunk 2: die Kennzahlen des Kursbestaetigungs-Zustands. Sie MUESSEN auf die Platte,
+    // nicht nur in den Speicher — sonst kann niemand den Zustand eines alten Tages
+    // nachrechnen, und candidates.json liefert m1/m2 als null (genau so gemessen
+    // 2026-09-19: 2.197 Zeilen mit Zustand, alle ohne Kennzahl). Test L22.
+    m1: r6(z.m1), m2: r6(z.m2), sigma63: r6(z.sigma63),
   })).join('\n') + '\n';
   fs.writeFileSync(path.join(dir, datum + '.jsonl.gz'), zlib.gzipSync(Buffer.from(text, 'utf8')));
 }
