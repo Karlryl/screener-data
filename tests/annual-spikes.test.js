@@ -423,10 +423,19 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   // Ein Fund, wie ihn scanSnapshots() baut.
   const fnd = (ticker, reihe, index, links, wert, rechts) => ({ ticker, reihe, index, links, wert, rechts });
 
+  // Die gepinnte Uhr aller Fixture-Laeufe. Die Sperr-Fixtures unten tragen ABSOLUTE
+  // offenSeit-Daten; liefe main() dagegen mit der Wanduhr, wanderte jede dieser Sperren
+  // nach AUSSCHLUSS_MAX_TAGE Tagen von selbst ueber das Alters-Tor und faerbte den
+  // blockierenden Test-Gate rot — ohne dass jemand etwas geaendert haette. Genau das ist
+  // am 19.09.2026 passiert (BP-7, offenSeit 2026-08-19 = 31 Tage, Lauf 35428969634: der
+  // Tages-Pull starb vor dem Yahoo-Zug, die Boards standen still). Der Zeitpunkt ist
+  // derselbe, den die Alters-Bloecke unten schon einzeln pinnten.
+  const JETZT_FIX = new Date('2026-09-02T12:00:00Z');
+
   // ── Ein echter Lauf von main() gegen eine Fixture-Population ────────────────────────
   // Das Tor sitzt in main(); nur hier ist beweisbar, dass GEDRUCKT und GEZAEHLT
   // auseinanderfallen (JA-1). Die Mock-Technik ist dieselbe wie im H20-Block oben.
-  function laufMain(snapshots, baseline, maxNeu, jetzt) {
+  function laufMain(snapshots, baseline, maxNeu, jetzt = JETZT_FIX) {
     const originals = { e: fsT.existsSync, r: fsT.readdirSync, f: fsT.readFileSync,
       l: console.log, x: console.error, a: process.argv, v: process.env.ANNUAL_SPIKE_MAX_NEU };
     const logs = [], errors = [];
@@ -443,7 +452,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     process.argv = originals.a.filter((x) => x !== '--neu-aufnehmen');
     if (maxNeu === undefined) delete process.env.ANNUAL_SPIKE_MAX_NEU;
     else process.env.ANNUAL_SPIKE_MAX_NEU = String(maxNeu);
-    try { return { code: jetzt ? w.main(jetzt) : w.main(), log: logs.join('\n'), err: errors.join('\n') }; }
+    try { return { code: w.main(jetzt), log: logs.join('\n'), err: errors.join('\n') }; }
     finally {
       fsT.existsSync = originals.e; fsT.readdirSync = originals.r; fsT.readFileSync = originals.f;
       console.log = originals.l; console.error = originals.x; process.argv = originals.a;
@@ -607,7 +616,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   {
     // Fester Zeitpunkt statt Kalender-Zufall: sonst ist das Tor nur an genau einem Tag
     // pruefbar. Die Naht ist der jetzt-Parameter von main().
-    const JETZT = new Date('2026-09-02T12:00:00Z');
+    const JETZT = JETZT_FIX;
     const snaps5b = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
     // Die Sperre TRIFFT den Fund (sonst faengt ihn der Tote-Sperre-Melder ab) und der
     // Fund steht NICHT im Bestand (sonst faengt ihn sperrenOhneWirkung ab). Damit ist
@@ -771,6 +780,28 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
     assert.match(r2.err, /2 NEUE Jahres-Ausreisser-EREIGNISSE \(erlaubt 1\)/);
   });
 
+  // ── ZEITBOMBEN-WAECHTER (19.09.2026) ───────────────────────────────────────────────
+  // Diese Probe haengt an der UHR, die laufMain benutzt, nicht an einem Textmuster.
+  // Sie faellt, sobald die gepinnte Default-Uhr verschwindet: dann rechnet main() wieder
+  // gegen heute, die Fixture-Sperre unten ist real laengst ueber AUSSCHLUSS_MAX_TAGE,
+  // und der blockierende Test-Gate wird an einem beliebigen Kalendertag rot, ohne dass
+  // jemand Code angefasst hat. Genau dieser Riss hat am 19.09.2026 den Tages-Pull
+  // (Lauf 35428969634) vor dem Yahoo-Zug getoetet und die Boards eingefroren.
+  check('ZEITBOMBE: ein Lauf ohne eigene Uhr rechnet gegen die gepinnte Uhr, nicht gegen heute', () => {
+    const snaps = { 'AAA.json': snap('AAA', 'annualRev', 900e6) };
+    const sperre = {
+      schluessel: 'AAA|annualRev|werte:100000000|900000000|110000000',
+      sperrschluessel: 'AAA|annualRev|1',
+      // Dasselbe absolute Datum wie in BP-7 — am 19.09.2026 real 31 Tage alt.
+      seit: '2026-08-29', offenSeit: '2026-08-19', hinweis: 'NICHT ENTSCHEIDBAR (19.08.)',
+    };
+    const r = laufMain(snaps, { faelle: [], snapshotsBeiAufnahme: 1, ausgeschlossen: [sperre] }, 5);
+    assert.ok(r.log.includes('offen seit 14 Tag(en)'),
+      'DIE ZEITBOMBEN-PROBE: 14 Tage stimmt nur gegen die gepinnte Uhr; gegen die Wanduhr waechst die Zahl taeglich');
+    assert.doesNotMatch(r.err, /laenger als 30 Tage/, 'das Alters-Tor darf hier NIE feuern');
+    assert.equal(r.code, 0, 'ein Lauf ohne eigene Uhr darf nicht vom Kalendertag abhaengen');
+  });
+
   // ── BP-8 (JA-3): ungleich lange Jahresreihen => Relation 2 verschmilzt NICHT ────────
   check('BP-8: bei ungleich langen Jahresreihen verschmilzt Relation 2 nicht', () => {
     const zwei = [
@@ -814,7 +845,7 @@ check('scanSnapshots: ein sauberes Verzeichnis meldet 0 Parse-Fehler (Gegenprobe
   // eine Bremse ohne Waechter ist keine.
   {
     const { ausschlussTelemetrie, AUSSCHLUSS_REFERENZ } = w;
-    const JETZT9 = new Date('2026-09-02T12:00:00Z');
+    const JETZT9 = JETZT_FIX;
     const sperre9 = (ticker, offenSeit) => ({
       schluessel: `${ticker}|annualRev|werte:100000000|900000000|110000000`,
       sperrschluessel: `${ticker}|annualRev|1`,
