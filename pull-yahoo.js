@@ -104,11 +104,16 @@ const MANIFEST_SUBSET_MIN_SHARE = 0.5;
 // nachzubauen (dasselbe Muster wie parseVollPullTicker).
 function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
   const n = Number(anzahlListe), bekannt = Number(bekanntesNTotal);
-  if (!Number.isFinite(n) || n <= 0) return false;
+  if (!Number.isFinite(n) || n < 0) return false;
+  // Review 19.09. (KRITISCH): n === 0 gab hier bis eben `false` zurueck und lief damit in den
+  // Loeschpfad — die leere Liste ist aber der MAXIMALE Schadensfall, nicht die Ausnahme. Eine
+  // abgeschnittene oder leer gefilterte Watchlist haette das Tagesmanifest geloescht und mit
+  // n_total 0 ueberschrieben. Kein Lauf ueber null Ticker spricht je fuer das Universum.
   if (!Number.isFinite(bekannt) || bekannt <= 0) return false;   // ohne Nenner nichts zu schuetzen
   return n < MANIFEST_SUBSET_MIN_SHARE * bekannt;
 }
 let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
+let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
 const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
 const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 
@@ -3405,7 +3410,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // August, obwohl ihr Wert von diesem Weg stammte — und die Alters-Diagnose lief
       // deshalb in die falsche Richtung. Wer den Wert schreibt, schreibt den Stempel.
       existing.marketCap.asOf = new Date().toISOString();
-      existing.marketCap.source = existing.marketCap.source || 'yahoo_quote';
+      // Review 19.09.: das `||` liess die alte Herkunft `yahoo_quoteSummary` auf einem Wert
+      // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
+      // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
+      existing.marketCap.source = 'yahoo_quote';
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
@@ -4711,10 +4719,24 @@ async function main() {
         _log('WARN', 'Teilmengen-Lauf erkannt (' + watchlist.stocks.length + ' von zuletzt '
           + bekannt + '): _manifest.json wird NICHT geloescht.');
       }
-    } catch (e) { /* unlesbares Manifest schuetzt nichts — der Normalpfad unten raeumt es weg */ }
+    } catch (e) {
+      // Review 19.09. (HOCH): schlucken ist hier richtig — ein unlesbares Manifest kann die
+      // Entscheidung nicht tragen, und der Altcode loeschte es ohnehin. Lautlos schlucken ist
+      // es NICHT: seit dieser Aenderung ist der Manifest-Inhalt die einzige Eingabe der
+      // Schutzentscheidung. Faellt sie aus, wird der Schutz umgangen, und das darf im Log
+      // nicht wie ein gewoehnlicher Loeschvorgang aussehen.
+      _manifestSchutzUmgangen = e && e.message ? e.message : String(e);
+      _log('WARN', 'Teilmengen-Schutz UMGANGEN: _manifest.json nicht lesbar (' +
+        _manifestSchutzUmgangen + ') — der Lauf darf es ueberschreiben, obwohl niemand geprueft hat, '
+        + 'ob er fuer das Universum spricht.');
+    }
   }
   if (!_manifestSubsetTag && fs.existsSync(manifestPath)) {
-    try { fs.unlinkSync(manifestPath); _log('INFO', 'Deleted stale _manifest.json'); }
+    try {
+      fs.unlinkSync(manifestPath);
+      _log('INFO', 'Deleted stale _manifest.json'
+        + (_manifestSchutzUmgangen ? ' (OHNE Teilmengen-Pruefung, s. WARN oben)' : ''));
+    }
     catch (e) {
       throw new Error('Stale _manifest.json konnte nicht geloescht werden (' + e.message
         + ') — Abbruch VOR dem Pull, sonst gilt der Altstand nachgelagert als frisch');

@@ -41,7 +41,44 @@ check('ohne brauchbaren Nenner schuetzt die Regel nichts (kein/kaputtes Manifest
   for (const bekannt of [undefined, null, 0, -5, NaN, 'viele']) {
     assert.strictEqual(istTeilmengenLauf(16, bekannt), false, 'Nenner ' + String(bekannt));
   }
-  assert.strictEqual(istTeilmengenLauf(0, 16046), false, 'leere Liste ist kein Teilmengen-Lauf');
+});
+
+// Review 19.09. (KRITISCH), und der Test hatte den Fehler VORGESCHRIEBEN: hier stand
+// `istTeilmengenLauf(0, 16046) === false`, also "die leere Liste ist kein Teilmengen-Lauf".
+// Damit war der Maximalschaden — Watchlist abgeschnitten oder leer gefiltert, Tagesmanifest
+// geloescht und mit n_total 0 ueberschrieben — als richtiges Verhalten festgeschrieben.
+check('die LEERE Liste ist der Maximalschaden, nicht die Ausnahme', () => {
+  assert.strictEqual(istTeilmengenLauf(0, 16046), true,
+    'null Ticker sprechen nie fuer ein Universum von 16046');
+  assert.strictEqual(istTeilmengenLauf(0, 0), false,
+    'ohne Nenner gibt es nichts zu schuetzen — auch bei leerer Liste nicht');
+  assert.strictEqual(istTeilmengenLauf(-1, 16046), false,
+    'eine negative Anzahl ist kein Lauf, sondern ein Aufrufer-Fehler');
+});
+
+// Review 19.09. (HOCH): der Umgehungsfall braucht eine eigene Spur. Faellt das Altmanifest
+// als Eingabe aus, wird der Schutz uebersprungen — das darf im Log nicht aussehen wie ein
+// gewoehnlicher Loeschvorgang.
+check('unlesbares Altmanifest hinterlaesst eine WARN-Spur, nicht nur ein INFO', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+  const i = src.indexOf('const vorher = JSON.parse(fs.readFileSync(manifestPath');
+  assert.ok(i > 0, 'die Lesestelle des Altmanifests existiert noch — sonst ist dieser Test blind');
+  const block = src.slice(i, i + 1200);
+  assert.ok(/catch \(e\) \{[\s\S]{0,800}?_log\('WARN'/.test(block),
+    'der catch um das Altmanifest schluckt ohne jede Log-Spur — genau der Befund vom 19.09.');
+  assert.ok(/UMGANGEN/.test(block), 'die WARN-Zeile benennt die Umgehung nicht');
+});
+
+// Review 19.09. (NIEDRIG, umgedreht): das `||` liess die alte Herkunft auf einem Wert stehen,
+// den gerade der Quote-Weg geschrieben hatte.
+check('Schnellpfad: wer marketCap.value schreibt, schreibt auch die Herkunft neu', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'pull-yahoo.js'), 'utf8');
+  const i = src.indexOf('existing.marketCap.value = q.marketCap * tradingAggFactor;');
+  const danach = src.slice(i, i + 900);
+  assert.ok(/existing\.marketCap\.source = 'yahoo_quote';/.test(danach),
+    'die Herkunft wird nicht neu gesetzt');
+  assert.ok(!/existing\.marketCap\.source = existing\.marketCap\.source \|\|/.test(danach),
+    'das || ist zurueck — es haelt die Herkunft des Voll-Pulls auf einem Quote-Wert fest');
 });
 
 // (2) Der Stempel: die Schreibstelle fuehrt value UND asOf. Geprueft wird die Stelle selbst,
