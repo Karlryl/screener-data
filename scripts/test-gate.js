@@ -70,6 +70,14 @@ const NODE_TEST_PROBE_FILE = path.join(__dirname, 'test-gate-node-test-probe.js'
 // Moduls — Import-Graph gegen src/scoring/**, die gesperrte F-16-Klasse, Hash-Kette und
 // never-shrink der Messreihe. Alle Dateien sind hermetisch (Temp-Fixtures, kein Netz, kein
 // Universum) und damit pre-pull voll aussagekraeftig.
+//
+// Diese Liste ist in tests/scoring/bh-b09-dailyyml.test.js (BH-035) festgenagelt, und
+// tests/scoring/ ist Sperrzone — wer hier etwas eintraegt, muss den Waechter im selben
+// Schritt mitfuehren (Chunk 0 hat das getan). Das ist der teure Weg: tests/rule40/ hat sich
+// seinen Platz stattdessen ueber einen EIGENEN Workflow-Schritt geholt
+// (.github/workflows/pr-check.yml), ohne den gesperrten Waechter anzufassen. Fuer ein neues
+// Testverzeichnis ist das der Normalweg; der Eintrag hier bleibt die Ausnahme fuer Tests,
+// die den Tageslauf wirklich blockieren sollen.
 const BLOCKING_GLOBS = ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js', 'tests/druckenmiller/*test.js'];
 
 // ── Spur 2: meldend (Forschungs-Bestand) ──────────────────────────────────────
