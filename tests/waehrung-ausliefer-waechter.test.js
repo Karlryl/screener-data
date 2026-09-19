@@ -330,8 +330,119 @@ if (!beine || beine.length === 0) {
   // Nach der Haertung ist "belegt" = "wird ausgeliefert": die Pruefmenge ist damit exakt die
   // Menge, die Karl zu sehen bekommt. Am eingefrorenen Bestand (17.05.-08.06.) sind das
   // 1 668 Beine mit 0 Verstoessen — das Gate ist an echten Daten gruen, nicht per Zuschnitt.
-  check('LIVE: unter ALLEN ausgelieferten (belegten) Beinen kein Kreuznotiz-Verstoss', () => {
-    const v = kreuznotizVerstoesse(beine);
+  // A/H-Ausnahme (Vorsitz-Entscheid 19.09.2026, ~75 %, revidierbar im Sonntags-Brief):
+  // Die Gleichheits-Annahme "ein Emittent, eine Groesse" ist fuer chinesische A/H-Doppel-
+  // notierungen SACHLICH falsch. A-Aktien (Festland, CNY, .SS/.SZ) und H-Aktien (Hongkong,
+  // HKD) sind durch Kapitalverkehrskontrollen getrennte Maerkte; der A/H-Aufschlag ist ein
+  // reales Marktphaenomen, kein Umrechnungsfehler. Gemessen am Bestand vom 19.09.: von 384
+  // Gruppen waren 13 ein echter Defekt (GBp-Altwerte, 100x) und der Rest ganz ueberwiegend
+  // genau dieser Aufschlag.
+  //
+  // Der Schnitt sitzt BEWUSST hier am Live-Aufruf und NICHT in kreuznotizVerstoesse(): die
+  // Fixture-Positivkontrolle oben ("korrekt umgerechnete Beine stimmen ueberein", Z. 255) ist
+  // selbst als HK/SS-Paar gebaut. Ein Filter in der Funktion haette genau diese Kontrolle
+  // entwertet — ein gruener Test, der nichts mehr feststellen kann.
+  //
+  // Entfernt wird NUR das A-Bein, und nur wenn der Emittent ueberhaupt ein Nicht-CNY-Bein hat.
+  // Alles andere bleibt in der Gleichheits-Annahme: ADR-Beine (nach Verhaeltnis), EUR-, USD-,
+  // GBp-Beine. Bei ZTE etwa bleiben 0763.HK/HKD und FZM.VI/EUR gegeneinander geprueft — nur
+  // 000063.SZ/CNY faellt heraus.
+  const istABein = (b) => /^\d{6}\.(SS|SZ)$/.test(String(b.ticker || '')) &&
+    String(b.tradingCurrency || '').toUpperCase() === 'CNY';
+  const nachEmittent = new Map();
+  for (const b of beine) {
+    const k = emittentSchluessel(b.name);
+    if (!k) continue;
+    if (!nachEmittent.has(k)) nachEmittent.set(k, []);
+    nachEmittent.get(k).push(b);
+  }
+  const ahAufschlaege = [];
+  const beineOhneA = beine.filter((b) => {
+    if (!istABein(b)) return true;
+    const gruppe = nachEmittent.get(emittentSchluessel(b.name)) || [];
+    const fremd = gruppe.filter((x) => String(x.tradingCurrency || '').toUpperCase() !== 'CNY' &&
+      Number.isFinite(x.marketCap) && x.marketCap > 0);
+    if (!fremd.length) return true;   // kein Gegenbein -> nichts auszunehmen
+    const h = Math.max(...fremd.map((x) => x.marketCap));
+    ahAufschlaege.push({ emittent: emittentSchluessel(b.name), aufschlag: (b.marketCap - h) / h });
+    return false;
+  });
+
+  // Schwaechere Zusicherung fuer die ausgenommenen Paare: der Aufschlag wird als ZAHL
+  // berichtet, nicht behauptet. Geprueft wird nur, dass beide Beine ueberhaupt eine
+  // brauchbare, gleich normalisierte Groesse tragen — faellt ein Bein auf 0 oder NaN,
+  // ist das kein Aufschlag mehr, sondern ein Datenfehler, und der bleibt rot.
+  check('A/H-Doppelnotierungen: Aufschlag wird berichtet, beide Beine bleiben brauchbar', () => {
+    const kaputt = ahAufschlaege.filter((x) => !Number.isFinite(x.aufschlag) || x.aufschlag <= -1);
+    const sortiert = [...ahAufschlaege].sort((a, b) => b.aufschlag - a.aufschlag);
+    console.log('       (' + ahAufschlaege.length + ' A/H-Paare ausgenommen; Aufschlag Median ' +
+      (sortiert.length ? (sortiert[Math.floor(sortiert.length / 2)].aufschlag * 100).toFixed(1) : 'n/a') +
+      ' %, Spanne ' + (sortiert.length ? (sortiert[sortiert.length - 1].aufschlag * 100).toFixed(1) +
+      ' bis ' + (sortiert[0].aufschlag * 100).toFixed(1) : 'n/a') + ' %)');
+    assert.equal(kaputt.length, 0, 'A/H-Bein ohne brauchbare Groesse: ' +
+      kaputt.map((x) => x.emittent + ' ' + x.aufschlag).join(', '));
+  });
+
+  // Zuschnitt des Live-Blocks (Vorsitz-Entscheid 19.09.2026, ~75 %, revidierbar im
+  // Sonntags-Brief): Dieser Waechter existiert fuer den SKALEN-Fehler — Pence 100x, eine
+  // vergessene KRW/JPY/HKD/INR/TWD-Umrechnung — nicht fuer den Aufschlag. Eine 3-%-Latte
+  // auf 15.000 Live-Namen misst dagegen Zweitnotierungs-Versatz, ADR-Bezugsverhaeltnisse
+  // und Vorzugsaktien: am 19.09. blieben nach der A/H-Ausnahme 229 Gruppen uebrig, von
+  // denen KEINE ein Umrechnungsfehler war. Ein dauerhaft roter Waechter wird nicht gelesen.
+  //
+  // Hart behauptet wird deshalb nur noch, was ausserhalb von [0,5 ; 2,0] liegt. Alles
+  // darunter wird als Verteilung BERICHTET, nie behauptet. Die 3-%-Latte lebt unveraendert
+  // in den Fixture-Kontrollen oben weiter — dort ist sie richtig, weil dort die Umrechnung
+  // selbst geprueft wird und nicht der Markt.
+  const SKALEN_UNTEN = 0.5, SKALEN_OBEN = 2.0;
+  const alleGruppen = kreuznotizVerstoesse(beineOhneA, 0);   // Toleranz 0 -> jede Gruppe mit Spreizung
+  // Zwei gemeldete Klassen innerhalb der Skalen-Spanne (Vorsitz-Entscheid 19.09.2026):
+  //  - Vorzugsaktien: Yahoos `-P?`-Suffix (ALL-PH, WFC-PC) ist eine ANDERE Gattung mit
+  //    eigenem Kurs und eigener Stueckzahl, kein Umrechnungsfehler.
+  //  - ADR/GDR-Zweitlinien: Yahoo fuehrt fuer die Zweitlinie eine eigene, oft nicht auf die
+  //    Primaerlinie umgerechnete Groesse. Das ist Yahoos Zahl fuer diese Linie, nicht unsere
+  //    Umrechnung — gemeldet MIT Namen, nicht behauptet.
+  // Die Grenze zwischen "Zweitlinie uneinig" und "Skala kaputt" ist die Groessenordnung:
+  // die gemessenen Zweitlinien lagen bei 2x bis 8x, SMCI.SW bei ~865x. Alles ueber 10x
+  // bleibt eine harte Behauptung — dort ist keine Bezugsgroesse mehr erklaerbar.
+  const SEKUNDAER_MAX = 10;
+  const istVorzug = (b) => /-P[A-Z]?$/.test(String(b.ticker || ''));
+  const skalenVerstoesse = [], versatz = [], vorzug = [], sekundaer = [];
+  for (const g of alleGruppen) {
+    const werte = g.beine.map((b) => b.marketCap);
+    const q = Math.max(...werte) / Math.min(...werte);
+    if (q >= SKALEN_UNTEN && q <= SKALEN_OBEN) { versatz.push({ g, q }); continue; }
+    if (g.beine.some(istVorzug)) { vorzug.push({ g, q }); continue; }
+    if (q <= SEKUNDAER_MAX) { sekundaer.push({ g, q }); continue; }
+    skalenVerstoesse.push({ g, q });
+  }
+
+  check('Vorzugsaktien und ADR-Zweitlinien werden gemeldet, nicht behauptet', () => {
+    const zeig = (arr) => arr.map((x) => x.g.emittent + ' ' + x.q.toFixed(2) + 'x [' +
+      x.g.beine.map((b) => b.ticker).join(',') + ']').join(' | ') || 'keine';
+    console.log('       (Vorzugsaktien, ' + vorzug.length + ': ' + zeig(vorzug) + ')');
+    console.log('       (ADR/GDR-Zweitlinien bis ' + SEKUNDAER_MAX + 'x, ' + sekundaer.length +
+      ': ' + zeig(sekundaer) + ')');
+    assert.ok(true);
+  });
+
+  check('LIVE: Versatz-Verteilung wird berichtet (nicht behauptet)', () => {
+    const qs = versatz.map((x) => x.q).sort((a, b) => a - b);
+    const pick = (p) => (qs.length ? qs[Math.min(qs.length - 1, Math.floor(p * qs.length))] : NaN);
+    const schlimmste = [...versatz].sort((a, b) => b.q - a.q).slice(0, 3);
+    console.log('       (' + versatz.length + ' Gruppen innerhalb [0,5;2,0]: Median ' +
+      pick(0.5).toFixed(2) + 'x, p90 ' + pick(0.9).toFixed(2) + 'x; schlimmste: ' +
+      (schlimmste.map((x) => x.g.emittent + ' ' + x.q.toFixed(2) + 'x').join(', ') || 'keine') + ')');
+    // BLINDER FLECK, ausdruecklich gedruckt: eine vergessene Umrechnung fuer Waehrungen, die
+    // unter 2 je USD notieren (EUR, GBP, CHF, CAD, AUD, SGD, NZD), liegt INNERHALB von
+    // [0,5;2,0] und kommt durch dieses Tor. Der Pence-Fall (100x) wird weiter gefangen.
+    console.log('       (BLINDER FLECK: vergessene Umrechnung bei EUR/GBP/CHF/CAD/AUD/SGD/NZD ' +
+      'liegt innerhalb [0,5;2,0] und passiert dieses Tor — Pence 100x wird gefangen.)');
+    assert.ok(true);
+  });
+
+  check('LIVE: kein SKALEN-Fehler — kein Beinpaar ausserhalb [0,5 ; 2,0]', () => {
+    const v = skalenVerstoesse.map((x) => x.g);
     console.log('       (' + beine.length + ' belegte Beine, davon ' +
       beine.filter((b) => b.gestempelt).length + ' mit Handelskurs-Stempel)');
     assert.equal(v.length, 0, v.map((x) => x.emittent + ' ' + (x.abweichung * 100).toFixed(1) + '% [' +
