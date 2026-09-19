@@ -50,5 +50,18 @@ check('REGISTER: die zwei toten 300715.SZ-Sperren sind entfernt; jede verbleiben
   assert.ok(/300715\.SZ/.test(String(b.hinweis)) && /ja-klassifikation-2026-09-05/.test(String(b.hinweis)), 'Bereinigung + Klassifikation muessen im hinweis stehen');
 });
 
+check('REGISTER: die tote BANPU.BK-Sperre ist entfernt, und der Grund steht belegt im hinweis', () => {
+  const b = require(path.join('..', 'data-health', 'annual-spikes-baseline.json'));
+  const tot = (b.ausgeschlossen || []).filter((a) => a && String(a.sperrschluessel).startsWith('BANPU.BK|'));
+  assert.strictEqual(tot.length, 0, 'BANPU.BK-Sperre noch da: ' + tot.map((a) => a.sperrschluessel).join(','));
+  // Die Sperre wurde am Fall geschlossen, nicht wegen des Alters-Tors verlaengert. Ohne den
+  // Beleg im hinweis waere das Entfernen von einem stillen Zumachen nicht zu unterscheiden —
+  // und genau das verbietet Weg C.
+  const h = String(b.hinweis);
+  assert.ok(/BANPU\.BK\|annualOpInc\|2 ENTFERNT/.test(h), 'Entfernung nicht im hinweis protokolliert');
+  assert.ok(/35319115201/.test(h), 'der CI-Lauf als Beleg fehlt im hinweis');
+  assert.ok(/6003496000/.test(h), 'der verschwundene Sperrwert gehoert in den Beleg');
+});
+
 if (fail) { console.log('\nFAIL: annual-spikes-tote-sperre (' + fail + ')'); process.exit(1); }
 console.log('\nOK: annual-spikes-tote-sperre (Master-Auflage 05.09.2026)');
