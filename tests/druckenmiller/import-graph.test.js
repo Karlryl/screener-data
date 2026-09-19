@@ -105,9 +105,15 @@ test('G3 nur der Logger und die eigenen Tests importieren lib/druckenmiller', ()
     && /require\(\s*['"][^'"]*druckenmiller[^'"]*['"]\s*\)/.test(fs.readFileSync(f, 'utf8')));
   const erlaubt = importeure.every((f) => f.includes(path.join('tests', 'druckenmiller'))
     || f.endsWith(path.join('scripts', 'druckenmiller-log-internals.js'))
-    || f.endsWith(path.join('scripts', 'write-druckenmiller-export.js')));
+    || f.endsWith(path.join('scripts', 'write-druckenmiller-export.js'))
+    // Chunk 3: der MANUELLE 13F-Quartals-Lauf. Er steht bewusst mit auf dieser Liste und
+    // nicht in einem Glob — ein neues Skript soll hier nachgezogen werden, nicht still
+    // dazukommen (dieselbe Regel wie bei BLOCKING_GLOBS).
+    || f.endsWith(path.join('scripts', 'druckenmiller-13f.js')));
   assert.ok(erlaubt, 'unerwarteter Importeur: ' + importeure.join(', '));
-  assert.ok(importeure.length >= 2, 'der Waechter findet gar keine Importeure — dann prueft er nichts');
+  assert.ok(importeure.length >= 3, 'der Waechter findet gar keine Importeure — dann prueft er nichts');
+  assert.ok(importeure.some((f) => f.endsWith('druckenmiller-13f.js')),
+    'der 13F-Lauf ist kein Importeur mehr — dann ist diese Zeile toter Buchstabe');
 });
 
 test('G4 ROW_FIELDS bekommt kein Preis-/Momentum-Feld', () => {

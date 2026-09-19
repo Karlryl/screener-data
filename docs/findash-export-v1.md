@@ -856,3 +856,34 @@ Zustands-Regel und Barrieren-Skalierung sind in
 `protocol/druckenmiller_scoreboard_registered_<Datum>.json` (Datei B) registriert, die
 Skalierung zusaetzlich in `protocol/BUILD-SPEC-v1-AMENDMENT-01-barrier-scaling.md`. Beide sind
 gehasht; `meta.json.paramsHash` deckt weiter Datei A (die Logger-Parameter).
+
+### 13.5 `duquesne13f.json` (Chunk 3, additiv)
+
+Der 13F-Betrachter: `quarters[]` (die letzten **acht** XML-Quartale, streng aufsteigend) mit
+`period`, `filedAt`, `acceptedAt`, `ageDays`, `units` (`thousands | dollars`, je Filing erkannt),
+`unitMode` (`band-only | price-checked`), `totalValueUSD`, `positions`, `top10Share`, `coverage`
+und `rows[]` (`cusip`, `ticker | null`, `issuer`, `valueUSD`, `shares`, `putCall | null`,
+`impliedPriceOk`), dazu `new[]`/`exited[]`. Im Kopf: `cik`, `quarantined[]`, `coverage` (des
+juengsten Quartals), `triStateRender`, `matcherCoverage`, `scopeSentence`.
+
+Regeln, die der Leser voraussetzen darf:
+
+- **`meta.json.duquesne13fCoverage` ist dieselbe Zahl wie `coverage`** hier; zwei Zahlen fuer
+  dieselbe Sache machen `--check` rot.
+- **Die Einheit wird je Filing erkannt, nicht geraten.** Passt keine oder passen beide Lesungen
+  (Dollar/Tausende) ins Plausibilitaetsband, ist das Quartal in `quarantined[]` und traegt
+  `units: null` — ein ausgeliefertes Quartal mit unerkannter Einheit macht `--check` rot.
+- **Optionen stehen getrennt:** `putCall` ist gesetzt, wenn der Tag da ist ODER die
+  CUSIP-Emissionsnummer 90/95 es sagt (Lane-B-Fall GLD `78463V907`). Optionszeilen zaehlen nicht
+  in `positions`, `totalValueUSD`, `top10Share` oder `coverage`.
+- **Die Zuordnung ist LOKAL** (Snapshot-Namenskarte, nur `meta.name`, US ohne Suffix) mit
+  Identitaets-Wache; OpenFIGI ist ausgeschlossen. `matcherCoverage` nennt die gemessene Abdeckung
+  ueber die Emittentenliste des Bestands — am 19.09.2026: **322 von 697 (46,2 %)**, wertgewichtet
+  ueber die letzten acht Quartale 55–63 %.
+- **`duquesne13f` in `candidates.json` ist dreiwertig** (`HELD | NOT_IN_MAPPED | UNMAPPED`) und
+  heisst NIE "nicht gehalten": die deutschen Texte stehen in `triStateRender`, und `--check` wird
+  rot, sobald die verbotene Wendung in der Auslieferung auftaucht ([REV4-6]).
+- **Der 13F-Lauf ist manuell** (`node scripts/druckenmiller-13f.js --from-dir <ordner> | --fetch`)
+  und commitet `druckenmiller-history/13f/<period>.json`; der Tageslauf hat keinen 13F-Schritt
+  (arch-spec §3.3 Punkt 4). `--fetch` verlangt `SEC_CONTACT` im User-Agent und haelt 150 ms
+  Abstand je Abruf; es gibt keinen Schluessel und keine Kosten.

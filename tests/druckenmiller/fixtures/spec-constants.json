@@ -210,5 +210,41 @@
       "2002-02-19",
       "2006-02-08"
     ]
+  },
+  "thirteenF": {
+    "_origin": "BUILD-SPEC v1 \u00a70.6 + laneC/architektur-spec.md \u00a73.2/\u00a73.3.4 + Lane-B-Befund v2 und dessen Red Team. DATENQUALITAETS-Schwellen eines BESCHREIBENDEN Betrachters - keine Ergebnis-Parameter: der 13F-Teil schreibt keinen Scoreboard-Eintrag, speist keine Schaetzgroesse und aendert kein Etikett.",
+    "_date": "2026-09-19",
+    "quartersPublished": 8,
+    "impliedPriceBandUSD": [
+      1,
+      5000
+    ],
+    "quarantineFailShare": 0.1,
+    "priceRatioBand": [
+      0.5,
+      2.0
+    ],
+    "optionIssueNumbers": [
+      "90",
+      "95"
+    ],
+    "triState": [
+      "HELD",
+      "NOT_IN_MAPPED",
+      "UNMAPPED"
+    ],
+    "cik": "0001536411",
+    "mapping": "ausschliesslich LOKALE Namenskarte (Snapshots, nur meta.name, US-Notierungen ohne Suffix); OpenFIGI ist ausgeschlossen (neue Abhaengigkeit = Stop-Bedingung)",
+    "identityGuard": "ein Namens-Treffer wird nur uebernommen, wenn der Name in der Karte zum Filing-Namen passt (Lane-B-Red-Team: Barrick -> ABX zeigte auf Abacus)",
+    "measuredCoverage2026_09_19": {
+      "issuers": 697,
+      "matched": 322,
+      "share": 0.462,
+      "nameMapSize": 2337,
+      "ambiguous": 12,
+      "identityRejected": 0,
+      "note": "Lane B kam mit OpenFIGI auf 492 von 697 (70,6 %); ohne OpenFIGI sind es 46,2 %. Wertgewichtet ueber die letzten acht Quartale: 55-63 %."
+    },
+    "noCiStep": "manueller Quartals-Lauf (arch-spec \u00a73.3 Punkt 4) - der Tageslauf bleibt unberuehrt"
   }
 }

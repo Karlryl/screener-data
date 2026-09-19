@@ -761,5 +761,140 @@ test('K8 die Roh-Datei auf der PLATTE traegt m1/m2/sigma63 — nicht nur der Spe
     'die Test-Roh-Datei traegt die Chunk-2-Felder nicht');
 });
 
+/** Zwei committete 13F-Quartale neben den Ledgern (wie der manuelle Quartals-Lauf sie legt). */
+function dreizehnFBestand(w, opt) {
+  const o = opt || {};
+  const dir = path.join(w.outDir, '13f');
+  fs.mkdirSync(dir, { recursive: true });
+  const quartal = (period, rows, extra) => Object.assign({
+    period, filedAt: period, acceptedAt: period + 'T21:30:00.000Z', ageDays: 10,
+    units: 'thousands', unitCheck: { units: 'thousands', mode: 'band-only', quarantine: false, reason: null },
+    totalValueUSD: rows.reduce((a, r) => a + (r.putCall ? 0 : r.valueUSD), 0),
+    positions: rows.filter((r) => !r.putCall).length,
+    top10Share: 0.6, coverage: o.coverage === undefined ? 0.5 : o.coverage,
+    rows, new: [], exited: [], quarantined: false, quarantineReason: null,
+  }, extra || {});
+  const zeile = (cusip, ticker, wert, putCall) => ({
+    cusip, ticker, issuer: ticker ? ticker + ' Inc' : 'Unbekannt Inc',
+    valueUSD: wert, shares: 1000, putCall: putCall || null, optionReason: putCall ? 'putCall-tag' : null,
+    mapReason: ticker ? 'exact' : 'no-match', impliedPriceOk: true,
+  });
+  fs.writeFileSync(path.join(dir, '2026-03-31.json'), JSON.stringify(quartal('2026-03-31', [
+    zeile('00000A101', 'T1', 5e8), zeile('00000B102', null, 3e8),
+  ])) + '\n');
+  fs.writeFileSync(path.join(dir, '2026-06-30.json'), JSON.stringify(quartal('2026-06-30', [
+    zeile('00000A101', 'T1', 6e8), zeile('00000C103', 'T9', 2e8), zeile('78463V907', null, 1e8, 'Call'),
+  ], o.letztesExtra)) + '\n');
+  fs.writeFileSync(path.join(dir, '_coverage.json'), JSON.stringify({
+    _was: 'Testbestand', gemessenAm: '2026-09-19T00:00:00.000Z', quelleListe: 'issuers-697.csv',
+    nameMapSize: 2337, issuers: 697, matched: 322, share: 0.4619799139167862,
+    ambiguous: 12, identityRejected: 0,
+  }) + '\n');
+  return dir;
+}
+
+test('K9 duquesne13f.json: acht Quartale hoechstens, Abdeckung in meta, dreiwertiger Join in den Zeilen', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  dreizehnFBestand(w);
+  assert.equal(W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') })), 0);
+  const d = liesJson(path.join(w.exportDir, 'duquesne13f.json'));
+  assert.equal(d.cik, '0001536411');
+  assert.equal(d.quarters.length, 2);
+  assert.equal(d.quarters[1].period, '2026-06-30');
+  assert.equal(d.coverage, 0.5, 'die Abdeckung des juengsten Quartals');
+  assert.deepEqual(Object.keys(d.triStateRender).sort(), ['HELD', 'NOT_IN_MAPPED', 'UNMAPPED']);
+  assert.match(d.triStateRender.NOT_IN_MAPPED, /nicht unter den zugeordneten Positionen/);
+  assert.equal(d.matcherCoverage.matched, 322, 'die gemessene Matcher-Abdeckung reist mit');
+  const m = liesJson(path.join(w.exportDir, 'meta.json'));
+  assert.equal(m.duquesne13fCoverage, d.coverage, 'zwei Zahlen fuer dieselbe Sache waeren eine zu viel');
+  const c = liesJson(path.join(w.exportDir, 'candidates.json'));
+  const nach = new Map(c.rows.map((r) => [r.ticker, r.duquesne13f]));
+  assert.equal(nach.get('T1'), 'HELD', 'T1 steht im juengsten Quartal');
+  assert.equal(nach.get('T2'), 'NOT_IN_MAPPED', 'T2 nicht — aber die Zuordnung ist unvollstaendig');
+  assert.equal(W.checkExport(opts(w)), 0);
+  // Und die verbotene Aussage steht nirgends in der Auslieferung.
+  for (const datei of ['duquesne13f.json', 'candidates.json', 'meta.json']) {
+    assert.ok(!/nicht gehalten/i.test(fs.readFileSync(path.join(w.exportDir, datei), 'utf8')),
+      datei + ' enthaelt "nicht gehalten" — [REV4-6] verbietet das');
+  }
+});
+
+test('K10 BRUCHPROBE: ohne Abdeckung ist jede Zeile UNMAPPED, nie "nicht gehalten"', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  dreizehnFBestand(w, { coverage: 0 });
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const c = liesJson(path.join(w.exportDir, 'candidates.json'));
+  assert.equal(c.rows.every((r) => r.duquesne13f === 'UNMAPPED'), true);
+  assert.equal(W.checkExport(opts(w)), 0, 'das ist ein gueltiger Stand, kein Befund');
+});
+
+test('K11 BRUCHPROBE: fremde CIK, zu viele Quartale, falsche Reihenfolge -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  dreizehnFBestand(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'duquesne13f.json');
+  const d = liesJson(p);
+  const original = JSON.stringify(d);
+  d.cik = '0000000000';
+  fs.writeFileSync(p, JSON.stringify(d) + '\n');
+  rotErwartet(w, 'fremde CIK in duquesne13f.json');
+  // Reihenfolge
+  fs.writeFileSync(p, original + '\n');
+  fs.rmSync(path.join(w.exportDir, '_FAILED.json'));
+  const d2 = liesJson(p);
+  d2.quarters = [d2.quarters[1], d2.quarters[0]];
+  fs.writeFileSync(p, JSON.stringify(d2) + '\n');
+  rotErwartet(w, 'Quartale nicht streng aufsteigend');
+  // Zu viele Quartale
+  fs.writeFileSync(p, original + '\n');
+  fs.rmSync(path.join(w.exportDir, '_FAILED.json'));
+  const d3 = liesJson(p);
+  while (d3.quarters.length <= 8) {
+    const letztes = d3.quarters[d3.quarters.length - 1];
+    d3.quarters.push(Object.assign({}, letztes, { period: '2027-0' + (d3.quarters.length) + '-30' }));
+  }
+  fs.writeFileSync(p, JSON.stringify(d3) + '\n');
+  rotErwartet(w, 'mehr als acht Quartale');
+});
+
+test('K12 BRUCHPROBE: unerkannte Einheit und "nicht gehalten" -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  dreizehnFBestand(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const p = path.join(w.exportDir, 'duquesne13f.json');
+  const original = fs.readFileSync(p, 'utf8');
+  const d = liesJson(p);
+  d.quarters[1].units = null;
+  fs.writeFileSync(p, JSON.stringify(d) + '\n');
+  rotErwartet(w, 'Einheit null in einem ausgelieferten Quartal');
+  fs.writeFileSync(p, original);
+  fs.rmSync(path.join(w.exportDir, '_FAILED.json'));
+  const d2 = liesJson(p);
+  d2.triStateRender.NOT_IN_MAPPED = 'nicht gehalten';
+  fs.writeFileSync(p, JSON.stringify(d2) + '\n');
+  rotErwartet(w, 'die verbotene Aussage "nicht gehalten"');
+});
+
+test('K13 BRUCHPROBE: zwei Zahlen fuer dieselbe Abdeckung, und die fehlende Datei -> rot', () => {
+  const w = welt();
+  kandidatenLedger(w);
+  dreizehnFBestand(w);
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  const pm = path.join(w.exportDir, 'meta.json');
+  const m = liesJson(pm);
+  m.duquesne13fCoverage = 0.9;
+  fs.writeFileSync(pm, JSON.stringify(m) + '\n');
+  rotErwartet(w, 'Abdeckung in meta.json weicht von duquesne13f.json ab');
+  // Und: liegt ein 13F-Bestand, ist die Datei Pflicht.
+  fs.rmSync(path.join(w.exportDir, '_FAILED.json'));
+  W.writeExport(opts(w, { now: new Date('2026-09-14T02:17:00Z') }));
+  fs.rmSync(path.join(w.exportDir, 'duquesne13f.json'));
+  rotErwartet(w, 'fehlende duquesne13f.json bei vorhandenem 13F-Bestand');
+});
+
 console.log('\nwrite-export.test.js: ' + pass + ' ok, ' + fail + ' fail');
 process.exit(fail ? 1 : 0);

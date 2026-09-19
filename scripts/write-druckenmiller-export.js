@@ -37,6 +37,7 @@ const { MIN_BARS, universeHash } = require('../lib/druckenmiller/universe.js');
 const ledgerLib = require('../lib/druckenmiller/ledger.js');
 const churnLib = require('../lib/druckenmiller/churn.js');
 const scoreboard = require('../lib/druckenmiller/scoreboard.js');
+const dreizehnFLib = require('../lib/druckenmiller/thirteenf.js');
 const rawLib = require('../lib/druckenmiller/raw.js');
 const registrierungLib = require('../lib/druckenmiller/registration.js');
 const logger = require('./druckenmiller-log-internals.js');
@@ -53,6 +54,7 @@ const FAILED_NAME = logger.FAILED_NAME;           // '_FAILED.json'
 const ALLE_DATEIEN = ['regime.json', 'meta.json', 'candidates.json', 'duquesne13f.json'];
 const DATEIEN_CHUNK1 = ['regime.json', 'meta.json'];
 const DATEIEN_CHUNK2 = ['regime.json', 'meta.json', 'candidates.json'];
+const DATEIEN_CHUNK3 = ['regime.json', 'meta.json', 'candidates.json', 'duquesne13f.json'];
 const REGISTRIERUNG_B_GLOB = /^druckenmiller_scoreboard_registered_\d{8}\.json$/;
 const SERIES_MAX = 504;                           // arch-spec §3.2
 const CRON = '17 2 * * 2-6';                      // daily-pull.yml, Di-Sa 02:17 UTC
@@ -77,6 +79,19 @@ const CANDIDATE_ROW_FIELDS = ['ticker', 'confirmation', 'm1', 'm2', 'evidenceIds
   'duquesne13f'];
 const CANDIDATES_FIELDS = ['schema', 'generated_at', 'asOf', 'rows', 'counts', 'separation',
   'scoreboard', 'evidence', 'scopeSentence', 'multiplicityNote', 'sessionExcluded'];
+/** duquesne13f.json (Chunk 3): Kopf-Weisse-Liste. */
+const DREIZEHNF_FIELDS = ['schema', 'generated_at', 'cik', 'quarters', 'quarantined', 'coverage',
+  'triStateRender', 'matcherCoverage', 'scopeSentence'];
+/** [REV4-6]: die deutsche Anzeige des dreiwertigen Joins - NIE "nicht gehalten". */
+const TRI_STATE_RENDER = {
+  HELD: 'unter den zugeordneten Positionen',
+  NOT_IN_MAPPED: 'nicht unter den zugeordneten Positionen',
+  UNMAPPED: 'keine Zuordnung fuer dieses Quartal',
+};
+const DREIZEHNF_SCOPE = 'Rekonstruktion aus 13F-Filings: nur Long-Positionen in US-Papieren zum '
+  + 'Quartalsende, Einheiten je Filing erkannt, Optionen getrennt, Zuordnung ueber eine LOKALE '
+  + 'Namenskarte mit gemessener Abdeckung. Eine Zeile ohne Treffer sagt nichts darueber, ob die '
+  + 'Position bestand - sie sagt, dass die Zuordnung sie nicht kennt (Abdeckung < 1).';
 /** [REV1-A2]: die Regel selbst haengt an einer Einzelkopie von 2009 - das steht auf dem Chip. */
 const EVIDENCE = {
   ids: ['A-TEC-002', 'A-TEC-001'],
@@ -405,7 +420,15 @@ function nextRunAfter(now, cron) {
  * darunter die Zaehler, ausdruecklich als Zaehler markiert - L und MDE gibt es nur aus einer
  * Lesung (kein Bootstrap-Import in diesem Pfad, Waechter G8).
  */
-function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now }) {
+function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now, dreizehnF: dreizehn }) {
+  // Chunk 3: der dreiwertige Join. Die gehaltenen Ticker kommen aus dem JUENGSTEN Quartal,
+  // und die Abdeckung entscheidet mit: ohne brauchbare Zuordnung ist jede Zeile UNMAPPED -
+  // nie "nicht gehalten" ([REV1-A4]/[REV4-6]).
+  const jueng = dreizehn && dreizehn.quarters && dreizehn.quarters.length
+    ? dreizehn.quarters[dreizehn.quarters.length - 1] : null;
+  const gehalten = new Set((jueng && jueng.rows ? jueng.rows : [])
+    .filter((r) => r.ticker && r.putCall === null).map((r) => r.ticker));
+  const abdeckung13f = jueng ? jueng.coverage : null;
   const letzte = kandidatenRows.length ? kandidatenRows[kandidatenRows.length - 1] : null;
   const zustaende = scoreboard.lastStateByTicker(kandidatenRows);
   const rohNach = new Map((letzteRoh || []).map((z) => [z.ticker, z]));
@@ -419,7 +442,7 @@ function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now }) {
       m2: roh && Number.isFinite(roh.m2) ? roh.m2 : null,
       evidenceIds: EVIDENCE.ids,
       evidenceGrade: EVIDENCE.grade,
-      duquesne13f: null,
+      duquesne13f: dreizehn ? dreizehnFLib.triStateFor(ticker, gehalten, abdeckung13f) : null,
     });
   }
   rows.sort((a, b) => (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
@@ -470,6 +493,69 @@ function baueCandidates({ kandidatenRows, letzteRoh, sessions, dateiB, now }) {
   };
 }
 
+/**
+ * Die committeten Quartals-Dateien des manuellen 13F-Laufs (Chunk 3). Fehlt der Ordner, gibt
+ * es keine duquesne13f.json - und findash sieht das Modul weiter als stale, weil der Vertrag
+ * vier Dateien kennt. Ein Platzhalter waere eine Aussage ueber ein Portfolio, das wir nicht
+ * gelesen haben.
+ */
+function lese13f(outDir, log) {
+  const dir = path.join(outDir, '13f');
+  if (!fs.existsSync(dir)) return null;
+  const dateien = fs.readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+  if (!dateien.length) return null;
+  const quartale = [];
+  for (const f of dateien.slice(-dreizehnFLib.QUARTERS_PUBLISHED)) {
+    let j;
+    try { j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); }
+    catch (e) {
+      throw new Error('[druckenmiller] 13F-Quartal ' + f + ' ist nicht lesbar (' + e.message
+        + ') - eine halbe 13F-Reihe wird nicht ausgeliefert.');
+    }
+    quartale.push(j);
+  }
+  let abdeckung = null;
+  try {
+    const cov = path.join(dir, '_coverage.json');
+    if (fs.existsSync(cov)) abdeckung = JSON.parse(fs.readFileSync(cov, 'utf8'));
+  } catch (e) {
+    if (log) log('::warning::[druckenmiller] 13F: _coverage.json ist nicht lesbar (' + e.message + ').');
+  }
+  return { quartale, matcherCoverage: abdeckung };
+}
+
+/** duquesne13f.json in Vertragsform (arch-spec §3.2). */
+function baue13f({ gelesen, now }) {
+  const quartale = gelesen.quartale.map((q) => ({
+    period: q.period, filedAt: q.filedAt || null, acceptedAt: q.acceptedAt || null,
+    ageDays: q.ageDays === undefined ? null : q.ageDays,
+    units: q.units, unitMode: q.unitCheck ? q.unitCheck.mode : null,
+    totalValueUSD: q.totalValueUSD, positions: q.positions, top10Share: q.top10Share,
+    coverage: q.coverage,
+    rows: (q.rows || []).map((r) => ({
+      cusip: r.cusip, ticker: r.ticker, issuer: r.issuer, valueUSD: r.valueUSD, shares: r.shares,
+      putCall: r.putCall, impliedPriceOk: r.impliedPriceOk,
+    })),
+    new: q.new, exited: q.exited,
+  }));
+  const quarantaene = gelesen.quartale
+    .filter((q) => q.quarantined)
+    .map((q) => ({ period: q.period, reason: q.quarantineReason }));
+  const jueng = gelesen.quartale[gelesen.quartale.length - 1];
+  return {
+    schema: SCHEMA, generated_at: now.toISOString(), cik: '0001536411',
+    quarters: quartale, quarantined: quarantaene,
+    coverage: jueng ? jueng.coverage : null,
+    triStateRender: TRI_STATE_RENDER,
+    matcherCoverage: gelesen.matcherCoverage
+      ? { issuers: gelesen.matcherCoverage.issuers, matched: gelesen.matcherCoverage.matched,
+          share: gelesen.matcherCoverage.share, nameMapSize: gelesen.matcherCoverage.nameMapSize,
+          gemessenAm: gelesen.matcherCoverage.gemessenAm }
+      : null,
+    scopeSentence: DREIZEHNF_SCOPE,
+  };
+}
+
 function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   const say = log || console.log;
   const jetzt = now || new Date();
@@ -510,6 +596,16 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   // Chunk 2: candidates.json, wenn der Kandidaten-Ledger existiert. Es gibt KEINEN
   // Platzhalter - eine leere candidates.json waere eine Aussage ueber Kandidaten, die es
   // noch nicht gibt (dieselbe Regel wie in Chunk 1 fuer die fehlenden zwei Dateien).
+  // Chunk 3: der 13F-Bestand, falls der manuelle Quartals-Lauf welchen hinterlassen hat.
+  const gelesen13f = lese13f(outDir, say);
+  const dreizehn = gelesen13f ? baue13f({ gelesen: gelesen13f, now: jetzt }) : null;
+  if (dreizehn) {
+    ledgerLib.assertFinite(dreizehn, 'duquesne13f.json');
+    fs.writeFileSync(path.join(exportDir, 'duquesne13f.json'), JSON.stringify(dreizehn) + '\n');
+    // Die Abdeckung gehoert auch in meta.json (arch-spec: auf der Tafel UND je Zeile).
+    meta.duquesne13fCoverage = dreizehn.coverage;
+    fs.writeFileSync(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
+  }
   let kandidatenZahl = null;
   const kLedger = path.join(outDir, 'candidates-ledger.jsonl');
   if (fs.existsSync(kLedger)) {
@@ -518,6 +614,7 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
     const candidates = baueCandidates({
       kandidatenRows: kKette.rows, letzteRoh, sessions: logger.sitzungen(pricesDir),
       dateiB: leseDateiB(protocolDir, say), now: jetzt,
+      dreizehnF: dreizehn,
     });
     ledgerLib.assertFinite(candidates, 'candidates.json');
     fs.writeFileSync(path.join(exportDir, 'candidates.json'), JSON.stringify(candidates) + '\n');
@@ -528,7 +625,10 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
     + ' · Churn ohne Roh-Datei: ' + unbekannt + ' Tag(e)'
     + (kandidatenZahl === null
       ? ' · noch ohne candidates.json/duquesne13f.json (Chunk 2/3) — findash sieht das Modul bis dahin als stale.'
-      : ' candidates.json=' + kandidatenZahl + ' Zeilen, noch ohne duquesne13f.json (Chunk 3)'));
+      : ' candidates.json=' + kandidatenZahl + ' Zeilen'
+        + (dreizehn ? ' · duquesne13f.json=' + dreizehn.quarters.length + ' Quartale, Abdeckung '
+            + (dreizehn.coverage === null ? 'n/a' : (dreizehn.coverage * 100).toFixed(1) + ' %')
+          : ' · noch ohne duquesne13f.json (Chunk 3)')));
   return 0;
 }
 
@@ -635,7 +735,10 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
   // haette ein ausgefallener Schreiber einen halben Ordner hinterlassen, und "halb" ist
   // schlimmer als "gar nicht" (dieselbe Regel wie in Chunk 1).
   const kLedgerPfad = path.join(outDir, 'candidates-ledger.jsonl');
-  const pflichtDateien = fs.existsSync(kLedgerPfad) ? DATEIEN_CHUNK2 : DATEIEN_CHUNK1;
+  const hat13f = fs.existsSync(path.join(outDir, '13f'))
+    && fs.readdirSync(path.join(outDir, '13f')).some((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f));
+  const pflichtDateien = hat13f ? DATEIEN_CHUNK3
+    : (fs.existsSync(kLedgerPfad) ? DATEIEN_CHUNK2 : DATEIEN_CHUNK1);
   for (const name of pflichtDateien) {
     const p = path.join(exportDir, name);
     if (!fs.existsSync(p)) {
@@ -860,6 +963,75 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
     if (nfk) return rot('[druckenmiller] ' + nfk + ' - nicht endliche Zahlen gehoeren nicht in die Auslieferung.');
   }
 
+  // ---- duquesne13f.json (Chunk 3) ------------------------------------------------------
+  const dreizehnPfad = path.join(exportDir, 'duquesne13f.json');
+  if (fs.existsSync(dreizehnPfad)) {
+    let d13;
+    try { d13 = JSON.parse(fs.readFileSync(dreizehnPfad, 'utf8')); }
+    catch (e) { return rot('[druckenmiller] duquesne13f.json ist nicht lesbar: ' + e.message); }
+    if (!d13 || typeof d13 !== 'object') {
+      return rot('[druckenmiller] duquesne13f.json ist kein Objekt.');
+    }
+    const f13 = typFehler(d13, 'duquesne13f.json', DREIZEHNF_FIELDS, []);
+    if (f13) return rot('[druckenmiller] ' + f13);
+    if (d13.cik !== '0001536411') {
+      return rot('[druckenmiller] duquesne13f.json nennt die CIK ' + JSON.stringify(d13.cik)
+        + ' - erwartet ist 0001536411 (Duquesne Family Office).');
+    }
+    if (!Array.isArray(d13.quarters) || !d13.quarters.length) {
+      return rot('[druckenmiller] duquesne13f.json traegt keine Quartale.');
+    }
+    if (d13.quarters.length > dreizehnFLib.QUARTERS_PUBLISHED) {
+      return rot('[druckenmiller] duquesne13f.json traegt ' + d13.quarters.length + ' Quartale, der '
+        + 'Vertrag deckelt bei ' + dreizehnFLib.QUARTERS_PUBLISHED + '.');
+    }
+    let vorher = null;
+    for (const q of d13.quarters) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(q.period))) {
+        return rot('[druckenmiller] duquesne13f.json: Quartal ohne gueltige Periode: ' + JSON.stringify(q.period));
+      }
+      if (vorher && !(q.period > vorher)) {
+        return rot('[druckenmiller] duquesne13f.json: die Quartale laufen nicht streng aufsteigend ('
+          + vorher + ' -> ' + q.period + ').');
+      }
+      vorher = q.period;
+      if (q.units !== 'thousands' && q.units !== 'dollars') {
+        return rot('[druckenmiller] duquesne13f.json ' + q.period + ': Einheit ' + JSON.stringify(q.units)
+          + ' - der Vertrag kennt thousands und dollars, und eine unerkannte Einheit gehoert in die Quarantaene.');
+      }
+      for (const r of q.rows || []) {
+        if (!r.cusip || typeof r.cusip !== 'string') {
+          return rot('[druckenmiller] duquesne13f.json ' + q.period + ': eine Zeile ohne CUSIP.');
+        }
+        if (!istZahlOderNull(r.valueUSD) || !istZahlOderNull(r.shares)) {
+          return rot('[druckenmiller] duquesne13f.json ' + q.period + ' (' + r.cusip
+            + '): valueUSD/shares sind weder Zahl noch null.');
+        }
+      }
+    }
+    for (const zustand of Object.keys(d13.triStateRender || {})) {
+      if (!dreizehnFLib.TRI_STATE.includes(zustand)) {
+        return rot('[druckenmiller] duquesne13f.json: triStateRender kennt den Zustand ' + zustand
+          + ', den der Vertrag nicht hat.');
+      }
+    }
+    if (dreizehnFLib.TRI_STATE.some((z) => !d13.triStateRender || !d13.triStateRender[z])) {
+      return rot('[druckenmiller] duquesne13f.json: triStateRender deckt nicht alle drei Zustaende ab - '
+        + 'dann erfindet die Anzeige einen Text, und der lautet irgendwann "nicht gehalten".');
+    }
+    const textD13 = fs.readFileSync(dreizehnPfad, 'utf8');
+    if (/nicht gehalten/i.test(textD13)) {
+      return rot('[druckenmiller] duquesne13f.json enthaelt "nicht gehalten" - [REV4-6] verbietet '
+        + 'genau diese Aussage, weil die Abdeckung kleiner als eins ist.');
+    }
+    if (meta.duquesne13fCoverage !== d13.coverage) {
+      return rot('[druckenmiller] meta.json meldet die 13F-Abdeckung ' + JSON.stringify(meta.duquesne13fCoverage)
+        + ', duquesne13f.json ' + JSON.stringify(d13.coverage) + ' - zwei Zahlen fuer dieselbe Sache.');
+    }
+    const nf13 = nichtEndlich(d13, 'duquesne13f');
+    if (nf13) return rot('[druckenmiller] ' + nf13 + ' - nicht endliche Zahlen gehoeren nicht in die Auslieferung.');
+  }
+
   // 5. Die Registrierung: derselbe Parameter-Stand wie beim Schreiben.
   let registrierung;
   try { registrierung = leseRegistrierung(protocolDir); }
@@ -924,6 +1096,7 @@ module.exports = {
   leseRegistrierung, leseDateiB, leseRoh, uMitglieder, churnSerie, abdeckung, baueCandidates,
   SCHEMA, FAILED_NAME, ALLE_DATEIEN, DATEIEN_CHUNK1, SERIES_MAX, SERIES_FIELDS, REGIME_FIELDS,
   META_FIELDS, CANDIDATES_FIELDS, CANDIDATE_ROW_FIELDS, EVIDENCE, DATEIEN_CHUNK2,
+  DATEIEN_CHUNK3, DREIZEHNF_FIELDS, TRI_STATE_RENDER, lese13f, baue13f,
   CRON, LABEL, MANDATE, pruefeSectorRs, cronSlot,
 };
 
