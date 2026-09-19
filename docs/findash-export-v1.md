@@ -884,6 +884,7 @@ Regeln, die der Leser voraussetzen darf:
 - **`duquesne13f` in `candidates.json` ist dreiwertig** (`HELD | NOT_IN_MAPPED | UNMAPPED`) und
   heisst NIE "nicht gehalten": die deutschen Texte stehen in `triStateRender`, und `--check` wird
   rot, sobald die verbotene Wendung in der Auslieferung auftaucht ([REV4-6]).
+- **Die Schwellen dieses Betrachters sind registriert, aber nicht gehasht** (Entscheid Rat/Master 2026-09-19, Option b): sie stehen in `tests/druckenmiller/fixtures/spec-constants.json`, Sektion `thirteenF`, unter dem bestehenden Changelog-Tor, und ein Test pinnt den Code gegen die Datei (Muster R11). Begruendung: der 13F-Teil ist beschreibend - er schreibt keinen Scoreboard-Eintrag, speist keine Schaetzgroesse, aendert kein Etikett, und nichts, was bei R1-R3 gelesen wird, haengt an ihm; eine gehashte Vorregistrierung wuerde eine Behauptung nahelegen, die der Betrachter nie aufstellt. [REV6-1] (genau drei Registrierungs-Dateien) bleibt unberuehrt. Es sind Datenqualitaets-Schwellen eines beschreibenden Betrachters, keine Ergebnis-Parameter; eine Aenderung braucht eine Changelog-Zeile, niemals eine stille Bearbeitung.
 - **Der 13F-Lauf ist manuell** (`node scripts/druckenmiller-13f.js --from-dir <ordner> | --fetch`)
   und commitet `druckenmiller-history/13f/<period>.json`; der Tageslauf hat keinen 13F-Schritt
   (arch-spec §3.3 Punkt 4). `--fetch` verlangt `SEC_CONTACT` im User-Agent und haelt 150 ms
