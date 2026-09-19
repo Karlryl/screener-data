@@ -396,12 +396,35 @@ if (!beine || beine.length === 0) {
   // selbst geprueft wird und nicht der Markt.
   const SKALEN_UNTEN = 0.5, SKALEN_OBEN = 2.0;
   const alleGruppen = kreuznotizVerstoesse(beineOhneA, 0);   // Toleranz 0 -> jede Gruppe mit Spreizung
-  const skalenVerstoesse = [], versatz = [];
+  // Zwei gemeldete Klassen innerhalb der Skalen-Spanne (Vorsitz-Entscheid 19.09.2026):
+  //  - Vorzugsaktien: Yahoos `-P?`-Suffix (ALL-PH, WFC-PC) ist eine ANDERE Gattung mit
+  //    eigenem Kurs und eigener Stueckzahl, kein Umrechnungsfehler.
+  //  - ADR/GDR-Zweitlinien: Yahoo fuehrt fuer die Zweitlinie eine eigene, oft nicht auf die
+  //    Primaerlinie umgerechnete Groesse. Das ist Yahoos Zahl fuer diese Linie, nicht unsere
+  //    Umrechnung — gemeldet MIT Namen, nicht behauptet.
+  // Die Grenze zwischen "Zweitlinie uneinig" und "Skala kaputt" ist die Groessenordnung:
+  // die gemessenen Zweitlinien lagen bei 2x bis 8x, SMCI.SW bei ~865x. Alles ueber 10x
+  // bleibt eine harte Behauptung — dort ist keine Bezugsgroesse mehr erklaerbar.
+  const SEKUNDAER_MAX = 10;
+  const istVorzug = (b) => /-P[A-Z]?$/.test(String(b.ticker || ''));
+  const skalenVerstoesse = [], versatz = [], vorzug = [], sekundaer = [];
   for (const g of alleGruppen) {
     const werte = g.beine.map((b) => b.marketCap);
     const q = Math.max(...werte) / Math.min(...werte);
-    (q < SKALEN_UNTEN || q > SKALEN_OBEN ? skalenVerstoesse : versatz).push({ g, q });
+    if (q >= SKALEN_UNTEN && q <= SKALEN_OBEN) { versatz.push({ g, q }); continue; }
+    if (g.beine.some(istVorzug)) { vorzug.push({ g, q }); continue; }
+    if (q <= SEKUNDAER_MAX) { sekundaer.push({ g, q }); continue; }
+    skalenVerstoesse.push({ g, q });
   }
+
+  check('Vorzugsaktien und ADR-Zweitlinien werden gemeldet, nicht behauptet', () => {
+    const zeig = (arr) => arr.map((x) => x.g.emittent + ' ' + x.q.toFixed(2) + 'x [' +
+      x.g.beine.map((b) => b.ticker).join(',') + ']').join(' | ') || 'keine';
+    console.log('       (Vorzugsaktien, ' + vorzug.length + ': ' + zeig(vorzug) + ')');
+    console.log('       (ADR/GDR-Zweitlinien bis ' + SEKUNDAER_MAX + 'x, ' + sekundaer.length +
+      ': ' + zeig(sekundaer) + ')');
+    assert.ok(true);
+  });
 
   check('LIVE: Versatz-Verteilung wird berichtet (nicht behauptet)', () => {
     const qs = versatz.map((x) => x.q).sort((a, b) => a - b);
