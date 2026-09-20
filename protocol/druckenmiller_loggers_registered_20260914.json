@@ -11,6 +11,20 @@
     "throughDate": "2026-09-11",
     "why": "Chunk 0's seed backfill (Council D2: every day expires) ran under exactly these values BEFORE any output was inspected. BUILD-SPEC v1 [REV7-3] therefore scopes the registration test for File A: instead of 'hash commit precedes the first row it governs' it asserts that File A equals the Council-D3 constants byte-for-byte and that no row after the hash commit uses different constants."
   },
+  "verifiedPostHashRows": [
+    {
+      "date": "2026-09-18",
+      "producingCommit": "6469832823b37981ec5b30ca6cb301baf082cee1",
+      "fileADigestAtCommit": "316e73c85f9727e1a9c26801054966648fd1ad2a9a324ce29ed71ad20a50bb06",
+      "proof": {
+        "i": "Der Logger liest Datei A zur Laufzeit ueber registration.js (fail-closed, genau eine Registrierungsdatei) fuer das Churn-Tor (courtGates.churnMaxShare) und den paramsHash; die L1-L8-Konstanten sind Modulkonstanten in lib/druckenmiller/internals.js und wurden vor der Reproduktion 15/15 gegen die Werte der gehashten Datei A geprueft (identisch; Bericht reports/t-r6-reproduktion-20260918-2026-09-20.md). Die Gleichheit Code<->Datei A prueft heute kein Tageslauf-Waechter (offener Punkt).",
+        "ii": "Der sha256 der Datei A am Erzeuger-Commit ist identisch mit dem registrierten Sidecar-Digest, und der Lauf hat ihn selbst ausgewiesen: die CI-Zeile des Exports lautet woertlich 'paramsHash=316e73c85f97...'.",
+        "iii": "Numerische Reproduktion der Zeile 2026-09-18 auf dem gemergten Snapshot-Stand des Laufs 35500025507 (16.048 Dateien) unter genau dieser Datei A: Gueltigkeits-Tor universeHash gleich (nCandidates 2310 = 2310), Vergleich rekursiv exakt ohne jede Toleranz, einzige benannte Ausnahme generatedAt; erzeugte Zeile sha256 91384df6aae5a4b14d164c8cf8a0d56c6446b9c8ef01c052bd08b7c0703da6ae; Bericht reports/t-r6-reproduktion-20260918-2026-09-20.md, Commit e462a149a8. Der vorher versuchte Konstruktionsbeweis war NICHT tragfaehig (6 von 21 Hunks beruehren einen Konstanten-Pfad, darunter der Datei-A-Leser selbst, Bericht reports/t-r6-konstanten-pfad-messung-2026-09-20.md) - er wurde durch diesen numerischen Beweis ersetzt, nicht ergaenzt."
+      },
+      "verifiedOn": "2026-09-20",
+      "verifiedBy": "Lane A measurement + master review"
+    }
+  ],
   "changelogGate": "tests/druckenmiller/fixtures/registration.CHANGELOG.md — a change to this file without a changelog line fails tests/druckenmiller/registration.test.js (BUILD-SPEC v1 residual 4, pattern [REV3-5])",
   "councilD3": {
     "_origin": "Council verdict 2026-09-14 03:53, decision D3 (logger constants) and D4 (universe U) — COUNCIL-VERDICT-2026-09-14.md",

@@ -9,6 +9,8 @@ const { isMetadataSnapshot, safeSnapshotFilename } = require('../lib/snapshot-fs
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_POPULATION = 'C:/Users/Anwender/AppData/Local/Temp/claude/C--Users-Anwender-Market-Structure-research/754a849d-444e-4e77-98cd-1d62ad581fad/scratchpad/ci-pop-35438100627';
 const OUTPUT = path.join(ROOT, 'reports/t322-ads-verhaeltnis-optionen-2026-09-20');
+// Der Messstand, auf den der Bericht sich bezieht — nicht "der neueste".
+const MEASURED_VINTAGE = '2026-09-19';
 const OPTIONS = ['A', 'B', 'C-100', 'C-50', 'C-nur-die-7'];
 // Evaluation labels from the brief, never used by A/B to select a correction.
 const CORRECT = ['UEC', 'INTC', 'JBS', 'MGNI', 'WSC'];
@@ -81,11 +83,18 @@ function readPopulation(directory) {
   }
   return { root, legs, snapshots, delisted, missing, hash: hash.digest('hex') };
 }
-function readBoards(directory = path.join(ROOT, 'board-history')) {
+// Der Vintage ist ein ANGEGEBENER Messstand, kein "der neueste". Ohne Pin misst derselbe
+// Aufruf morgen ein anderes Brett, die berichteten Raenge stimmen nicht mehr zu ihrem Bericht,
+// und der Waechter faellt an einem Tageslauf statt an einem Fehler (passiert am 20.09., als
+// der Vintage 2026-09-20 landete).
+function readBoards(directory = path.join(ROOT, 'board-history'), vintageWunsch = MEASURED_VINTAGE) {
   const dates = fs.readdirSync(directory, { withFileTypes: true })
     .filter(x => x.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(x.name)).map(x => x.name).sort(compare);
-  const vintage = dates.at(-1);
+  const vintage = vintageWunsch || dates.at(-1);
   if (!vintage) throw new Error('No board vintage');
+  if (vintageWunsch && !dates.includes(vintageWunsch)) {
+    throw new Error(`Gemessener Vintage ${vintageWunsch} fehlt in ${directory} — vorhanden: ${dates.join(', ')}`);
+  }
   const ranks = new Map(), hash = crypto.createHash('sha256');
   for (const f of fs.readdirSync(path.join(directory, vintage)).sort(compare)) {
     if (!f.endsWith('.json')) continue;
@@ -290,7 +299,7 @@ function run(directory = DEFAULT_POPULATION) {
   return { population, boards, scanned, rows };
 }
 module.exports = { DEFAULT_POPULATION, OUTPUT, OPTIONS, SEVEN, CORRECT, POSITIVE, loadGrouping,
-  asLeg, isUSLine, readPopulation, readBoards, scan, estimate, measure, summarize, csv, report, run };
+  MEASURED_VINTAGE, asLeg, isUSLine, readPopulation, readBoards, scan, estimate, measure, summarize, csv, report, run };
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length && (args.length !== 2 || args[0] !== '--population')) throw new Error('Usage: node script [--population DIRECTORY]');

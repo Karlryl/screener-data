@@ -141,6 +141,45 @@ test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei 
   assert.equal(U.sectorClass(null), 'unassigned');
 });
 
+// [REV5-6]/[REV7-3]: only explicit backfills are excluded. A present but invalid
+// stamp must never fall through to the historical provenance exception.
+// Der Stempel wird gegen den Digest geprueft, den Datei A AM DATUM DER ZEILE trug, nicht
+// gegen den heutigen. Sonst entwertet jede kuenftige Ergaenzung der Datei (und die Akte des
+// Gerichts zum Anker wird eine erzeugen) rueckwirkend jeden frueher gestempelten Eintrag —
+// und das Desk faellt rot aus einem Grund, der mit Konstanten nichts zu tun hat. Die Kette
+// steht im Changelog, den [REV3-5] ohnehin fuer jede Aenderung verlangt; beide historisch
+// benutzten Trenner (· und *) werden gelesen.
+const REG_A_REL = 'protocol/druckenmiller_loggers_registered_20260914.json';
+function digestChain(changelogText, dateiPfad) {
+  const kette = [];
+  for (const zeile of changelogText.split('\n')) {
+    const m = zeile.match(/^(\d{4}-\d{2}-\d{2})\s*[·*]\s*(\S+)\s*[·*]\s*([0-9a-f]{64})/);
+    if (m && m[2] === dateiPfad) kette.push({ date: m[1], digest: m[3] });
+  }
+  return kette;
+}
+function digestAmDatum(kette, datum) {
+  let treffer = null;
+  for (const e of kette) if (e.date <= datum) treffer = e;   // Dateireihenfolge entscheidet bei Datumsgleichheit
+  return treffer && treffer.digest;
+}
+
+function assertPostHashRows(rows, registration, digest, kette) {
+  const nachHash = rows.filter((r) => r.date > registration.registeredOn && r.backfilled !== true);
+  const verified = new Set((registration.verifiedPostHashRows || []).map((r) => r.date));
+  for (const row of nachHash) {
+    if (Object.prototype.hasOwnProperty.call(row, 'constants_sha256')) {
+      const erwartet = (kette && digestAmDatum(kette, row.date)) || digest;
+      assert.equal(row.constants_sha256, erwartet,
+        row.date + ': constants_sha256=' + String(row.constants_sha256) + ', erwartet (am Zeilendatum in Kraft)=' + erwartet);
+    } else {
+      assert.ok(verified.has(row.date),
+        row.date + ': no constants_sha256 and no verifiedPostHashRows provenance');
+    }
+  }
+  return nachHash.length;
+}
+
 test('R6 preRegistration: die Saat von Chunk 0 ist als vor-registriert deklariert und passt zur Reihe', () => {
   assert.equal(fileA.preRegistration, true, 'Datei A deklariert die Chunk-0-Zeilen nicht als vor-registriert');
   const p = fileA.preRegistrationRows;
@@ -156,12 +195,53 @@ test('R6 preRegistration: die Saat von Chunk 0 ist als vor-registriert deklarier
     + ' bis ' + p.throughDate);
   assert.ok(p.throughDate < fileA.registeredOn,
     'die letzte vor-registrierte Zeile (' + p.throughDate + ') liegt nicht vor dem Registrierungs-Datum');
-  // ... und KEINE Zeile nach dem Hash-Datum darf unter anderen Konstanten entstanden sein:
-  // die Reihe traegt keinen Parameter-Stempel, also wird die Menge geprueft, die es geben darf.
-  const nachHash = rows.filter((r) => r.date > fileA.registeredOn);
-  assert.equal(nachHash.length, 0,
-    'es gibt bereits ' + nachHash.length + ' Zeile(n) nach dem Registrierungs-Datum — sie muessen '
-    + 'gegen die Konstanten dieser Datei geprueft werden, bevor der Test sie durchwinkt');
+  assertPostHashRows(rows, fileA, sha256(fileAText), digestChain(lies(CHANGELOG), REG_A_REL));
+});
+
+test('R6b der Stempel gilt gegen den Digest, der AM ZEILENDATUM in Kraft war', () => {
+  const kette = digestChain(lies(CHANGELOG), REG_A_REL);
+  assert.ok(kette.length >= 2, 'die Changelog-Kette fuer Datei A ist zu kurz zum Pruefen: ' + kette.length);
+  const heute = kette[kette.length - 1];
+  const vorher = kette.filter((e) => e.date < heute.date).pop();
+  assert.ok(vorher, 'keine aeltere Datei-A-Zeile im Changelog — die Kette ist nicht pruefbar');
+  const reg = { registeredOn: fileA.registeredOn, verifiedPostHashRows: [] };
+  const zeile = (date, stempel) => ({ date, backfilled: false, constants_sha256: stempel });
+  const spaeter = '2099-01-02';
+  const frueher = '2026-09-17';
+  // heutiger Stempel auf einer Zeile NACH der Changelog-Zeile: gueltig
+  assertPostHashRows([zeile(spaeter, heute.digest)], reg, heute.digest, kette);
+  // derselbe Stempel auf einer Zeile VOR der Aenderung: ungueltig, und die Meldung nennt beides
+  assert.throws(() => assertPostHashRows([zeile(frueher, heute.digest)], reg, heute.digest, kette),
+    (e) => e.message.includes(frueher) && e.message.includes(vorher.digest) && e.message.includes('am Zeilendatum in Kraft'));
+  // der damals gueltige Stempel auf derselben Zeile: gueltig
+  assertPostHashRows([zeile(frueher, vorher.digest)], reg, heute.digest, kette);
+  // ein Stempel, den die Kette ueberhaupt nicht kennt: ungueltig
+  assert.throws(() => assertPostHashRows([zeile(spaeter, 'f'.repeat(64))], reg, heute.digest, kette),
+    (e) => e.message.includes(spaeter) && e.message.includes(heute.digest));
+});
+
+test('R6a BRUCHPROBEN: provenance, wrong digest, backfill and missing backfill flag', () => {
+  const digest = sha256(fileAText);
+  const date = '2099-01-02';
+  const registration = { registeredOn: fileA.registeredOn, verifiedPostHashRows: [{ date: '2026-09-18' }] };
+  const check = (row) => assertPostHashRows([row], registration, digest);
+  const missing = (e) => e.message.includes(date) && e.message.includes('no constants_sha256');
+  assert.throws(() => check({ date, backfilled: false }), missing);
+  const wrong = '0'.repeat(64);
+  const wrongDigest = (day) => (e) => e.message.includes(day)
+    && e.message.includes(wrong) && e.message.includes(digest);
+  assert.throws(() => check({ date, constants_sha256: wrong }), wrongDigest(date));
+  assert.equal(check({ date, backfilled: true, constants_sha256: wrong }), 0);
+  assert.throws(() => check({ date }), missing);
+  assert.equal(check({ date, constants_sha256: digest }), 1);
+  assert.equal(check({ date: '2026-09-18' }), 1);
+  assert.throws(() => check({ date: '2026-09-18', constants_sha256: wrong }), wrongDigest('2026-09-18'));
+  for (const invalid of [null, '']) {
+    assert.throws(() => check({ date: '2026-09-18', constants_sha256: invalid }), /2026-09-18/);
+  }
+  const logger = require('../../scripts/druckenmiller-log-internals.js');
+  assert.equal(logger.registrierungenLesen(path.dirname(FILE_A), () => {}).constants_sha256, digest,
+    'the logger must forward the digest returned by readHashed');
 });
 
 test('R7 Datei A registriert genau das, wofuer sie zustaendig ist — und nichts aus Datei B/C', () => {
