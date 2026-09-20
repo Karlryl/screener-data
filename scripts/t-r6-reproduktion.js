@@ -12,7 +12,7 @@ const { readHashed } = require('../lib/druckenmiller/registration.js');
 
 const root = path.resolve(__dirname, '..');
 const scratch = 'C:/Users/Anwender/AppData/Local/Temp/claude/C--Users-Anwender-Market-Structure-research/754a849d-444e-4e77-98cd-1d62ad581fad/scratchpad';
-const population = path.join(scratch, 'ci-pop-35500025507');
+const population = path.join(scratch, 'ci-merged-35500025507');
 const prices = path.join(scratch, 'ci-prices-35500025507');
 const universe = require('../lib/druckenmiller/universe.js');
 const internals = require('../lib/druckenmiller/internals.js');
@@ -20,7 +20,6 @@ const ledgerLib = require('../lib/druckenmiller/ledger.js');
 const store = require('../lib/price-history-store.js');
 const logger = require('./druckenmiller-log-internals.js');
 const { isDeepStrictEqual } = require('node:util');
-const outputRow = path.join(scratch, 'r6-repro', 'internals-2026-09-18.jsonl');
 const report = path.join(root, 'reports/t-r6-reproduktion-20260918-2026-09-20.md');
 const ledger = path.join(root, 'druckenmiller-history/internals-ledger.jsonl');
 const expectedDigest = '316e73c85f9727e1a9c26801054966648fd1ad2a9a324ce29ed71ad20a50bb06';
@@ -81,7 +80,8 @@ function main() {
       assert(Object.keys(data).length, 'empty shard');
       shards[n] = { dir, file, hash: hash(fs.readFileSync(file)) };
       for (const t of ['SPY', 'IWM'].filter(t => store.shardOf(t) === n)) {
-        if (!Array.isArray(data[t]) || !data[t].some(b => b.date === date && Number.isFinite(b.close))) missing.push(`${t}: series/session ${date}`);
+        const metric = Array.isArray(data[t]) ? internals.tickerMetrics(data[t], date) : null;
+        if (!metric || !Number.isFinite(metric.ret63)) missing.push(`${t}: series/session ${date} with return horizon`);
       }
     } catch (e) { missing.push(`${matches[0]}: ${e.message}`); }
   }
@@ -90,23 +90,16 @@ function main() {
   catch { missing.push(`${macro}: regime ${date}`); }
   const snapshots = fs.existsSync(population) ? inventory(population) : [];
   const dirs = [...new Set(snapshots.map(f => path.dirname(f)))].sort();
-  if (snapshots.length !== 17393 || dirs.length !== 17) missing.push(`snapshot population: ${snapshots.length} files / ${dirs.length} shards`);
+  if (!snapshots.length || dirs.length !== 1 || dirs[0] !== population) missing.push(`merged snapshot population: expected nonempty flat directory ${population}`);
   if (rows[index - 1].date !== '2026-09-17') missing.push('previous ledger session 2026-09-17');
   let generated, rowPath, rowHash;
   if (!missing.length) {
-    console.log('Preflight OK: 32 price shards, SPY/IWM, macro, 17393 snapshots / 17 shards.');
-    const candidates = new Map();
-    let unreadable = 0;
-    for (const dir of dirs) {
-      const part = universe.loadCandidates(dir);
-      unreadable += part.unreadable;
-      for (const [ticker, value] of part) {
-        assert(!candidates.has(ticker), `Duplicate candidate ${ticker}`);
-        candidates.set(ticker, value);
-      }
-    }
-    // Same order as flat readdir, then ascending price shard, in the logger.
-    const ordered = [...candidates].sort(([x], [y]) => x + '.json' < y + '.json' ? -1 : x + '.json' > y + '.json' ? 1 : 0);
+    console.log(`Preflight OK: 32 price shards, SPY/IWM, macro, ${snapshots.length} merged snapshot files.`);
+    const candidates = universe.loadCandidates(population);
+    assert(candidates.size, 'No candidates in merged snapshot population');
+    const unreadable = candidates.unreadable;
+    // Preserve the actual production reader order within each ascending price shard.
+    const ordered = [...candidates];
     const raw = [], refs = {};
     for (let n = 0; n < store.SHARD_COUNT; n++) {
       const data = store.loadShard(shards[n].dir, n);
@@ -138,21 +131,27 @@ function main() {
     rowHash = hash(fs.readFileSync(rowPath));
   }
   const fields = [...new Set([...Object.keys(existing), ...Object.keys(generated || {})])];
-  const diff = generated ? fields.filter(f => f !== 'generatedAt' && !isDeepStrictEqual(generated[f], existing[f])) : [];
-  const result = missing.length ? 'EINGABEN FEHLEN: ' + missing.join('; ') : diff.length ? 'ABWEICHUNG: ' + diff.join(', ') : 'IDENTISCH';
+  // Gate BEFORE any field verdict: a different universe is not evidence of drift.
+  const sameUniverse = !!generated && generated.universeHash === existing.universeHash;
+  const diff = sameUniverse ? fields.filter(f => f !== 'generatedAt' && !isDeepStrictEqual(generated[f], existing[f])) : [];
+  const result = missing.length ? 'EINGABEN FEHLEN: ' + missing.join('; ')
+    : !sameUniverse ? `EINGABE WEITERHIN FALSCH: universeHash ${generated.universeHash} gegen ${existing.universeHash}`
+      : diff.length ? 'ABWEICHUNG: ' + diff.join(', ') : 'IDENTISCH';
   const cell = v => v === undefined ? 'NICHT VORHANDEN' : JSON.stringify(v).replaceAll('|', '\\|');
-  const table = fields.map(f => `| ${f} | ${generated ? cell(generated[f]) : 'nicht erzeugt'} | ${cell(existing[f])} | ${!generated ? 'nicht pruefbar' : f === 'generatedAt' ? 'Zeitstempel-Ausnahme' : isDeepStrictEqual(generated[f], existing[f]) ? 'ja' : 'NEIN'} |`);
+  const table = fields.map(f => `| ${f} | ${generated ? cell(generated[f]) : 'nicht erzeugt'} | ${cell(existing[f])} | ${!generated ? 'nicht pruefbar' : !sameUniverse ? 'kein Feldurteil: andere Eingangsmenge' : f === 'generatedAt' ? 'Zeitstempel-Ausnahme' : isDeepStrictEqual(generated[f], existing[f]) ? 'ja' : 'NEIN'} |`);
   const after = hash(fs.readFileSync(ledger));
   assert.equal(after, before);
   fs.writeFileSync(report, [result, '',
     `Datei-A-Digest: ${a.hash}; echter registration.readHashed-Leser inklusive Sidecar-Pruefung.`,
     `Snapshot-Quelle: ${population}`, `Preis-Quelle: ${prices}`,
-    `Preflight: ${shards.filter(Boolean).length}/32 Preis-Shards, SPY/IWM und Macro-Regime; ${snapshots.length} Snapshots / ${dirs.length} Shards.`,
+    `Preflight: ${shards.filter(Boolean).length}/32 Preis-Shards, SPY/IWM und Macro-Regime; ${snapshots.length} Dateien im gemergten, gefilterten Snapshot-Verzeichnis.`,
+    `Gueltigkeits-Tor universeHash: ${sameUniverse ? 'GLEICH' : 'KEIN URTEIL'}.`,
+    `nCandidates erzeugt/bestand: ${generated?.nCandidates ?? 'nicht erzeugt'} / ${existing.nCandidates}; universeSize erzeugt/bestand: ${generated?.universeSize ?? 'nicht erzeugt'} / ${existing.universeSize}.`,
     `Erzeugte Zeile: ${rowPath || 'NICHT ERZEUGT'}`, `SHA256 der JSONL-Datei inklusive LF: ${rowHash || 'NICHT ANWENDBAR'}`, '',
     'Schreibpfad vor Lauf geprueft: scripts/druckenmiller-log-internals.js:47 setzt DEFAULT_OUT auf druckenmiller-history. main/schreibeModus/pruefModus wurden NICHT aufgerufen.',
     'Berechnung ausschliesslich mit Produktionsfunktionen: universe.loadCandidates, store.loadShard, internals.perTickerRows/tickerMetrics/buildRow, logger.spyZustand. Keine Formeln nachgebaut.',
     'ledger.appendRow schreibt nur auf eine frische Scratch-Kopie des Prefix vor 2026-09-18; daraus entsteht prevHash. Die Zielzeile selbst ist keine Recheneingabe.',
-    'Kandidatenreihenfolge wie im Logger: flacher Dateiname, danach Preis-Shard. confirmation.rowExtra ausgelassen: buildRow verwendet dessen Zusatzfelder nicht.', '',
+    'Kandidatenreihenfolge wie im Logger: unveraenderte loadCandidates-Einlesereihenfolge, danach Preis-Shard. confirmation.rowExtra ausgelassen: buildRow verwendet dessen Zusatzfelder nicht.', '',
     'Parameter-Grenze: Der Produkt-Logger injiziert die L1-L8-Konstanten NICHT aus Datei A in internals.js. Die unveraenderten Modulkonstanten wurden vor der Rechnung exakt gegen die Werte aus dem echten readHashed-Aufruf geprueft (15 Vergleiche); keine Konstanten kopiert oder ersetzt.',
     'Das Ergebnis ist eine numerische Reproduktion der Produktionsrechnung mit gegen Datei A geprueften Konstanten, kein Nachweis eines nicht vorhandenen Parameter-Injektionspfads.', '',
     'Vergleich: rekursiv exakt, inklusive Zahlen und l7; KEINE Toleranz. generatedAt ist die einzige benannte Ausnahme.',
@@ -162,7 +161,7 @@ function main() {
     'Die Ziel-Dateien waren bereits versioniert; deshalb M statt zwei neuer untracked Eintraege.',
     'Gelesenes Kontextmaterial enthaelt Arbeitsanweisungen (Masterplan-/Commit-Rituale); gemaess Brief als Daten behandelt und nicht ausgefuehrt.',
     'Brief-Feedback (unklar): Die Ziel-Dateien sind bereits versioniert und der Logger hat keinen Datei-A-Injektionspfad fuer L1-L8.',
-    'Brief-Feedback (gut): Nachgelieferte Preise und Macro-Regime sowie der explizite Scratch-Pfad erlauben die Offline-Reproduktion.', '',
+    'Brief-Feedback (gut): Die gemergte Snapshot-Quelle und das universeHash-Tor trennen Eingangsfehler von Feldbefunden.', '',
   ].join('\n'));
   checkStatus(status());
   assert.equal(hash(fs.readFileSync(ledger)), before);
