@@ -239,6 +239,10 @@ test('C14 der Schreiber bekommt die Zeile von HEUTE (sonst veroeffentlicht er ew
   // fuer genau die Sitzung blind, fuer die es gilt.
   assert.match(ohneKommentarzeilen(block(ARTEFAKT)), /druckenmiller-history\/raw\//,
     'das Ledger-Artefakt traegt die Roh-Zeilen des Tages nicht');
+  const paths = ohneKommentarzeilen(block(ARTEFAKT)).split('\n').map((l) => l.trim());
+  for (const file of ['candidates-ledger.jsonl', 'candidates-ledger.jsonl.meta.json']) {
+    assert.ok(paths.includes('druckenmiller-history/' + file), 'missing candidate handoff: ' + file);
+  }
 });
 
 test('C15 der scharfe Export-Check im Waechter-Job traegt KEIN continue-on-error', () => {
