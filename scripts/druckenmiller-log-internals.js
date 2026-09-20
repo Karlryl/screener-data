@@ -353,7 +353,7 @@ function registrierungenLesen(protocolDir, log) {
   // Kandidaten-Zeile fuer immer unnachtragbar (appendRow verbietet Rueckdatierung) -
   // gemessen: Innereien bei 2026-09-14, Kandidaten bei 2026-09-11.
   if (chunk2 && chunk2.barrier) scoreboard.assertScalingBranch(chunk2.barrier.sigmaScaling);
-  return { churnMax, chunk2 };
+  return { churnMax, chunk2, constants_sha256: a.hash };
 }
 
 function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir, backfill, log }) {
@@ -384,7 +384,7 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
   }
   // Chunk 2: Registrierungen und der Kandidaten-Ledger VOR dem Preis-Durchgang, weil der
   // Durchgang wissen muss, fuer welche Ticker er den Aufloese-Schwanz mitnehmen soll.
-  const { churnMax, chunk2 } = registrierungenLesen(protocolDir, log);
+  const { churnMax, chunk2, constants_sha256 } = registrierungenLesen(protocolDir, log);
   const kandidatenLedgerFile = path.join(outDir, KANDIDATEN_LEDGER);
   const kChain = ledgerLib.verifyChain(kandidatenLedgerFile);
   if (!kChain.ok) throw new Error(kChain.error);
@@ -485,6 +485,7 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
       rawDir: path.join(outDir, 'raw'),
       histK, churnMax, chunk2, schwaenze, log,
     });
+    row.constants_sha256 = constants_sha256;
     ledgerLib.appendRow(ledgerFile, row);
     ledgerLib.appendRow(kandidatenLedgerFile, kZeile);
     history.push(row);
