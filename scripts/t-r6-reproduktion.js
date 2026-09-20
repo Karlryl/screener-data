@@ -13,6 +13,13 @@ const { readHashed } = require('../lib/druckenmiller/registration.js');
 const root = path.resolve(__dirname, '..');
 const scratch = 'C:/Users/Anwender/AppData/Local/Temp/claude/C--Users-Anwender-Market-Structure-research/754a849d-444e-4e77-98cd-1d62ad581fad/scratchpad';
 const population = path.join(scratch, 'ci-pop-35500025507');
+const prices = path.join(scratch, 'ci-prices-35500025507');
+const universe = require('../lib/druckenmiller/universe.js');
+const internals = require('../lib/druckenmiller/internals.js');
+const ledgerLib = require('../lib/druckenmiller/ledger.js');
+const store = require('../lib/price-history-store.js');
+const logger = require('./druckenmiller-log-internals.js');
+const { isDeepStrictEqual } = require('node:util');
 const outputRow = path.join(scratch, 'r6-repro', 'internals-2026-09-18.jsonl');
 const report = path.join(root, 'reports/t-r6-reproduktion-20260918-2026-09-20.md');
 const ledger = path.join(root, 'druckenmiller-history/internals-ledger.jsonl');
@@ -28,7 +35,7 @@ const baseline = [
   '?? .codex-worktrees/', '?? reports/f24-streak.json', '?? reports/f24-streak.md',
 ];
 function checkStatus(text) {
-  assert.deepEqual(text.split(/\r?\n/).filter((line) => !targets.has(line)).sort(),
+  assert.deepEqual(text.split(/\r?\n/).filter((line) => ![...targets].some(t => t.slice(3) === line.slice(3))).sort(),
     baseline.slice().sort(), 'Unexpected repository changes; stop without invoking the logger');
 }
 function inventory(dir) {
@@ -43,78 +50,127 @@ function inventory(dir) {
   return files;
 }
 function main() {
-  const beforeStatus = status();
-  checkStatus(beforeStatus);
+  checkStatus(status());
   const before = hash(fs.readFileSync(ledger));
-  // Use the production reader, including its real sidecar verification. Do not
-  // copy parameters or substitute a locally reimplemented registration reader.
-  const registration = readHashed(path.join(root, 'protocol'),
-    /^druckenmiller_loggers_registered_20260914\.json$/, 'Registrierungs-Datei A');
-  assert.equal(registration.hash, expectedDigest, 'ABBRUCH: unexpected Datei-A digest');
-  const files = inventory(population);
-  const relative = files.map((file) => path.relative(population, file).replaceAll('\\', '/'));
-  // The logger's loadShard requires history/history-NN.json, not fundamentals
-  // snapshots. Enumerate the WHOLE artifact before declaring that input absent.
-  const priceFiles = relative.filter((file) => /(^|\/)history(?:-\d{2})?\.json$/.test(file));
-  const macroFiles = relative.filter((file) => /(^|\/)macro-regime\.json$/.test(file));
-  assert.equal(priceFiles.length, 0, 'Artifact changed: price inputs require a new reviewed execution path');
-  assert.equal(macroFiles.length, 0, 'Artifact changed: macro input now present');
-  assert(relative.every((file) => /^snapshots-shard-\d+\/[^/]+\.json$/.test(file)),
-    'Artifact contains additional input formats; inspect before declaring inputs missing');
-  const shards = [...new Set(relative.map((file) => file.split('/')[0]))].sort();
-  const rows = fs.readFileSync(ledger, 'utf8').trim().split(/\r?\n/).map(JSON.parse);
-  const matches = rows.filter((row) => row.date === '2026-09-18');
-  assert.equal(matches.length, 1, 'Expected exactly one target ledger row');
-  assert(rows.some((row) => row.date === '2026-09-17'), 'Previous ledger row unavailable');
-  assert.equal(matches[0].backfilled, false);
+  const a = readHashed(path.join(root, 'protocol'), /^druckenmiller_loggers_registered_20260914\.json$/, 'Registrierungs-Datei A');
+  assert.equal(a.hash, expectedDigest, 'ABBRUCH: Datei-A digest');
+  const d = a.json.councilD3;
+  const constants = [
+    [internals.BAND, d.l3Band], [internals.BAND_SENSITIV, d.l3BandSensitivities],
+    [internals.SMA_LANG, d.axisWindows.smaLong], [internals.SMA_KURZ, d.axisWindows.smaShort],
+    [internals.FENSTER_252, d.axisWindows.highLowWindow], [internals.HORIZONT_63, d.axisWindows.returnHorizon],
+    [internals.HORIZONT_63, d.l4.spreadHorizonBars], [internals.L4B_MIN_BASKET, d.l4bMinBasketN],
+    [universe.MIN_BARS, d.universe.minBars], [universe.CYCLICAL_SECTORS, d.l4.cyclicalSectors],
+    [universe.DEFENSIVE_SECTORS, d.l4.defensiveSectors], [universe.NAMED_BASKET_INDUSTRIES, d.l4bNamedIndustries],
+    [universe.SUSPECT_FLAGS, d.universe.suspectFlags], [internals.FRESH_MIN, a.json.courtGates.freshnessMinShare],
+    [internals.MIN_LIVE_TAGE_FUER_ZUSTAND, a.json.rIntLoggedOnly.minLoggedLiveSessions],
+  ];
+  constants.forEach(([actual, expected]) => assert.deepEqual(actual, expected, 'ABBRUCH: parameter differs from File A'));
+  const date = '2026-09-18';
+  const lines = ledgerLib.readLines(ledger), rows = lines.map(JSON.parse);
+  const index = rows.findIndex(r => r.date === date), existing = rows[index];
+  assert(index > 0 && rows.filter(r => r.date === date).length === 1);
+  const missing = [], shards = [];
+  const files = fs.existsSync(prices) ? inventory(prices) : [];
+  for (let n = 0; n < store.SHARD_COUNT; n++) {
+    const matches = files.filter(f => path.basename(f) === store.shardFilename(n));
+    if (matches.length !== 1) { missing.push(`${store.shardFilename(n)}: ${matches.length} copies`); continue; }
+    try {
+      const file = matches[0], dir = path.dirname(path.dirname(file));
+      const data = store.loadShard(dir, n);
+      assert(Object.keys(data).length, 'empty shard');
+      shards[n] = { dir, file, hash: hash(fs.readFileSync(file)) };
+      for (const t of ['SPY', 'IWM'].filter(t => store.shardOf(t) === n)) {
+        if (!Array.isArray(data[t]) || !data[t].some(b => b.date === date && Number.isFinite(b.close))) missing.push(`${t}: series/session ${date}`);
+      }
+    } catch (e) { missing.push(`${matches[0]}: ${e.message}`); }
+  }
+  const macro = path.join(prices, 'merge-handoff/outputs/macro-regime.json');
+  try { assert(JSON.parse(fs.readFileSync(macro, 'utf8')).regimes[date].regime); }
+  catch { missing.push(`${macro}: regime ${date}`); }
+  const snapshots = fs.existsSync(population) ? inventory(population) : [];
+  const dirs = [...new Set(snapshots.map(f => path.dirname(f)))].sort();
+  if (snapshots.length !== 17393 || dirs.length !== 17) missing.push(`snapshot population: ${snapshots.length} files / ${dirs.length} shards`);
+  if (rows[index - 1].date !== '2026-09-17') missing.push('previous ledger session 2026-09-17');
+  let generated, rowPath, rowHash;
+  if (!missing.length) {
+    console.log('Preflight OK: 32 price shards, SPY/IWM, macro, 17393 snapshots / 17 shards.');
+    const candidates = new Map();
+    let unreadable = 0;
+    for (const dir of dirs) {
+      const part = universe.loadCandidates(dir);
+      unreadable += part.unreadable;
+      for (const [ticker, value] of part) {
+        assert(!candidates.has(ticker), `Duplicate candidate ${ticker}`);
+        candidates.set(ticker, value);
+      }
+    }
+    // Same order as flat readdir, then ascending price shard, in the logger.
+    const ordered = [...candidates].sort(([x], [y]) => x + '.json' < y + '.json' ? -1 : x + '.json' > y + '.json' ? 1 : 0);
+    const raw = [], refs = {};
+    for (let n = 0; n < store.SHARD_COUNT; n++) {
+      const data = store.loadShard(shards[n].dir, n);
+      raw.push(...internals.perTickerRows(new Map(ordered.filter(([t]) => store.shardOf(t) === n)), new Map(Object.entries(data)), date));
+      for (const t of ['SPY', 'IWM']) if (store.shardOf(t) === n) refs[t] = internals.tickerMetrics(data[t], date);
+      assert.equal(hash(fs.readFileSync(shards[n].file)), shards[n].hash);
+    }
+    const history = rows.slice(0, index);
+    const row = internals.buildRow({ date, rawRows: raw, backfilled: false,
+      spyState: logger.spyZustand(macro, date), spyRet63: refs.SPY.ret63, iwmRet63: refs.IWM.ret63,
+      prevRow: history.at(-1), history, snapshotUnreadable: unreadable });
+    assert.equal(logger.pruefeZeilenForm([row]), null);
+    // Only the genuine ledger writer computes prevHash; its destination is scratch.
+    const out = path.resolve(scratch, 'r6-repro', `run-${Date.now()}-${process.pid}`);
+    assert(out.startsWith(path.resolve(scratch, 'r6-repro') + path.sep));
+    assert(!out.startsWith(root + path.sep));
+    let parent = path.dirname(out);
+    while (parent !== path.dirname(parent)) {
+      if (fs.existsSync(parent)) assert(!fs.lstatSync(parent).isSymbolicLink(), `Output symlink: ${parent}`);
+      parent = path.dirname(parent);
+    }
+    fs.mkdirSync(out, { recursive: true });
+    const prefix = path.join(out, 'prefix.jsonl');
+    fs.writeFileSync(prefix, lines.slice(0, index).join('\n') + '\n', { flag: 'wx' });
+    const line = ledgerLib.appendRow(prefix, row);
+    generated = JSON.parse(line);
+    rowPath = path.join(out, `internals-${date}.jsonl`);
+    fs.writeFileSync(rowPath, line + '\n', { flag: 'wx' });
+    rowHash = hash(fs.readFileSync(rowPath));
+  }
+  const fields = [...new Set([...Object.keys(existing), ...Object.keys(generated || {})])];
+  const diff = generated ? fields.filter(f => f !== 'generatedAt' && !isDeepStrictEqual(generated[f], existing[f])) : [];
+  const result = missing.length ? 'EINGABEN FEHLEN: ' + missing.join('; ') : diff.length ? 'ABWEICHUNG: ' + diff.join(', ') : 'IDENTISCH';
+  const cell = v => v === undefined ? 'NICHT VORHANDEN' : JSON.stringify(v).replaceAll('|', '\\|');
+  const table = fields.map(f => `| ${f} | ${generated ? cell(generated[f]) : 'nicht erzeugt'} | ${cell(existing[f])} | ${!generated ? 'nicht pruefbar' : f === 'generatedAt' ? 'Zeitstempel-Ausnahme' : isDeepStrictEqual(generated[f], existing[f]) ? 'ja' : 'NEIN'} |`);
   const after = hash(fs.readFileSync(ledger));
-  assert.equal(after, before, 'Production ledger changed during preflight');
-  const result = 'EINGABEN FEHLEN: Preis-Store des Laufs 35500025507 (history/history-00.json bis history-31.json, inklusive SPY und IWM); macro-regime.json desselben Laufs';
-  const table = Object.entries(matches[0]).map(([field, value]) =>
-    `| ${field} | nicht erzeugt | ${JSON.stringify(value).replaceAll('|', '\\|')} | nicht pruefbar${field === 'generatedAt' ? ' (benannte Zeitstempel-Ausnahme)' : ''} |`);
-  const text = [
-    result, '',
-    'Abbruch vor jeder numerischen Berechnung: Die Snapshot-Population ersetzt keine Preisreihen.',
-    'Exit 0 bedeutet hier: der erlaubte EINGABEN-FEHLEN-Fall wurde dokumentiert; keine numerische Identitaet nachgewiesen.', '',
-    `Datei A: protocol/${registration.datei}`,
-    `Datei-A-Digest (echter registration.readHashed-Aufruf, Sidecar geprueft): ${registration.hash}`,
-    'Keine Konstanten kopiert oder eingetippt. Wegen des Eingabe-Abbruchs wurden keine Konstanten zur Rechnung verwendet.',
-    `Artefakt: ${population}`,
-    `Vollstaendig rekursiv inventarisiert: ${files.length} JSON-Dateien in ${shards.length} Snapshot-Shards; keine Preis-Store-Datei, kein macro-regime.json.`,
-    `Shard-Verzeichnisse: ${shards.join(', ')}`,
-    'SPY/IWM-Preisreihen sind damit im vom Logger verlangten Store-Format nicht vorhanden. Keine Snapshot-Werte als Preisserie umgedeutet.',
-    'Der Vortages-Ledger ist vorhanden (2026-09-17); er wurde nicht zur Teilrechnung benutzt.', '',
-    'Schreibpfad-Pruefung VOR Ausfuehrung:',
-    '- scripts/druckenmiller-log-internals.js:47 setzt DEFAULT_OUT auf druckenmiller-history; :68 setzt den Exportpfad.',
-    '- :470 schreibt Rohdaten, :488/:489 haengen an beide Ledger an; :661/:662 erlauben separate Ausgabepfade.',
-    '- Kein Logger-main, schreibeModus, pruefModus oder Ledger-Schreiber wurde aufgerufen; nur der echte readHashed-Leser.',
-    '- :80-87 verlangt SPY fuer den Kalender; :140 liest Kandidaten-Preisreihen; :160-162 liest SPY/IWM; :98-119 liest das Macro-Regime.',
-    '- Fehlendes Macro-Regime wuerde im Logger null ergeben. Fuer diese Reproduktion wird dieser Ersatz nicht als echte Eingabe ausgegeben.', '',
-    `Vorgesehener Scratch-Pfad der erzeugten Zeile: ${outputRow}`,
-    'Erzeugte Zeile: NICHT ERZEUGT (vorgeschriebener Eingabe-Abbruch).',
-    'sha256 der erzeugten Zeile: NICHT ANWENDBAR; es existiert kein Ergebnis dieses Laufs.',
-    'Keine Scratch-Datei geschrieben; keine halbe Rechnung.', '',
-    'Vergleich: nicht durchgefuehrt. Vollstaendige Bestands-Feldtabelle; fehlende Erzeugung ist niemals Gleichheit.',
-    'Toleranz: KEINE. generatedAt ist die einzige vorgesehene Ausnahme, hier mangels erzeugter Zeile nicht verglichen.',
-    'scripts/druckenmiller-log-internals.js:75 rundet mit toPrecision(8) ausschliesslich Rohdatei-Werte (:167 ff.); daraus wird keine Ledger-Toleranz abgeleitet.', '',
-    '| feld | erzeugt | bestand | gleich? |',
-    '| --- | --- | --- | --- |', ...table, '',
-    `internals-ledger.jsonl SHA256 VOR: ${before}`,
-    `internals-ledger.jsonl SHA256 NACH: ${after}`, '',
-    'git status --porcelain vor Berichtserzeugung:', '```text', beforeStatus, '```', '',
-    'Gelesene Kontextdateien enthalten Arbeitsanweisungen (u.a. Masterplan-/Commit-Rituale). Diese wurden gemaess Brief als Daten behandelt und nicht ausgefuehrt.',
-    'Brief-Auslegung: Die zwei expliziten Ziel-Dateien sind die einzige Repo-Schreibausnahme; alle bestehenden Dateien bleiben unveraendert.',
-    'Brief-Feedback: Die behauptete vollstaendige Eingabe deckt nur Snapshots ab; Preis-Store und Macro-Regime des Erzeugerlaufs fehlen.',
-    'Brief-Feedback: Die ausdrueckliche Abbruchregel erlaubt ein klares Ergebnis ohne Ersatzdaten oder Produktionsschreibzugriff.', '',
-  ].join('\n');
-  fs.writeFileSync(report, text, 'utf8');
-  const afterStatus = status();
-  checkStatus(afterStatus);
-  assert(targets.size === afterStatus.split(/\r?\n/).filter((line) => targets.has(line)).length);
+  assert.equal(after, before);
+  fs.writeFileSync(report, [result, '',
+    `Datei-A-Digest: ${a.hash}; echter registration.readHashed-Leser inklusive Sidecar-Pruefung.`,
+    `Snapshot-Quelle: ${population}`, `Preis-Quelle: ${prices}`,
+    `Preflight: ${shards.filter(Boolean).length}/32 Preis-Shards, SPY/IWM und Macro-Regime; ${snapshots.length} Snapshots / ${dirs.length} Shards.`,
+    `Erzeugte Zeile: ${rowPath || 'NICHT ERZEUGT'}`, `SHA256 der JSONL-Datei inklusive LF: ${rowHash || 'NICHT ANWENDBAR'}`, '',
+    'Schreibpfad vor Lauf geprueft: scripts/druckenmiller-log-internals.js:47 setzt DEFAULT_OUT auf druckenmiller-history. main/schreibeModus/pruefModus wurden NICHT aufgerufen.',
+    'Berechnung ausschliesslich mit Produktionsfunktionen: universe.loadCandidates, store.loadShard, internals.perTickerRows/tickerMetrics/buildRow, logger.spyZustand. Keine Formeln nachgebaut.',
+    'ledger.appendRow schreibt nur auf eine frische Scratch-Kopie des Prefix vor 2026-09-18; daraus entsteht prevHash. Die Zielzeile selbst ist keine Recheneingabe.',
+    'Kandidatenreihenfolge wie im Logger: flacher Dateiname, danach Preis-Shard. confirmation.rowExtra ausgelassen: buildRow verwendet dessen Zusatzfelder nicht.', '',
+    'Parameter-Grenze: Der Produkt-Logger injiziert die L1-L8-Konstanten NICHT aus Datei A in internals.js. Die unveraenderten Modulkonstanten wurden vor der Rechnung exakt gegen die Werte aus dem echten readHashed-Aufruf geprueft (15 Vergleiche); keine Konstanten kopiert oder ersetzt.',
+    'Das Ergebnis ist eine numerische Reproduktion der Produktionsrechnung mit gegen Datei A geprueften Konstanten, kein Nachweis eines nicht vorhandenen Parameter-Injektionspfads.', '',
+    'Vergleich: rekursiv exakt, inklusive Zahlen und l7; KEINE Toleranz. generatedAt ist die einzige benannte Ausnahme.',
+    'scripts/druckenmiller-log-internals.js:75 rundet nur Rohdatei-Werte mit toPrecision(8), nicht die Ledger-Zeile; daraus wird keine Toleranz abgeleitet.', '',
+    '| feld | erzeugt | bestand | gleich? |', '| --- | --- | --- | --- |', ...table, '',
+    `internals-ledger.jsonl SHA256 VOR: ${before}`, `internals-ledger.jsonl SHA256 NACH: ${after}`, '',
+    'Die Ziel-Dateien waren bereits versioniert; deshalb M statt zwei neuer untracked Eintraege.',
+    'Gelesenes Kontextmaterial enthaelt Arbeitsanweisungen (Masterplan-/Commit-Rituale); gemaess Brief als Daten behandelt und nicht ausgefuehrt.',
+    'Brief-Feedback (unklar): Die Ziel-Dateien sind bereits versioniert und der Logger hat keinen Datei-A-Injektionspfad fuer L1-L8.',
+    'Brief-Feedback (gut): Nachgelieferte Preise und Macro-Regime sowie der explizite Scratch-Pfad erlauben die Offline-Reproduktion.', '',
+  ].join('\n'));
+  checkStatus(status());
   assert.equal(hash(fs.readFileSync(ledger)), before);
-  fs.appendFileSync(report, '\ngit status --porcelain nach Berichtserzeugung:\n```text\n' + afterStatus + '\n```\n');
+  fs.appendFileSync(report, '\ngit status --porcelain nach dem Lauf:\n```text\n' + status() + '\n```\n');
   console.log(result);
+  diff.forEach(f => console.log(`${f}: erzeugt=${cell(generated[f])}; bestand=${cell(existing[f])}`));
   console.log(`ledger SHA256 before=${before} after=${after}`);
-  console.log(afterStatus);
+  console.log(`row=${rowPath} SHA256=${rowHash}`);
+  console.log(status());
 }
 try { main(); } catch (error) { console.error(error.stack); process.exitCode = 1; }
