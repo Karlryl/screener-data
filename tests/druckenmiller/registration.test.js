@@ -199,12 +199,18 @@ test('R6 preRegistration: die Saat von Chunk 0 ist als vor-registriert deklarier
 });
 
 test('R6b der Stempel gilt gegen den Digest, der AM ZEILENDATUM in Kraft war', () => {
-  const kette = digestChain(lies(CHANGELOG), REG_A_REL);
+  // Fixed synthetic history: regular File A changes must not move this historical oracle.
+  const changelog = [
+    `2026-09-14 \u00b7 ${REG_A_REL} \u00b7 ${'a'.repeat(64)} \u00b7 Initial registration`,
+    `2026-09-14 * ${REG_A_REL} * ${'b'.repeat(64)} * Same-day replacement`,
+    `2026-09-20 * ${REG_A_REL} * ${'c'.repeat(64)} * Later registration`,
+  ].join('\n');
+  const kette = digestChain(changelog, REG_A_REL);
   assert.ok(kette.length >= 2, 'die Changelog-Kette fuer Datei A ist zu kurz zum Pruefen: ' + kette.length);
   const heute = kette[kette.length - 1];
-  const vorher = kette.filter((e) => e.date < heute.date).pop();
+  const vorher = kette.find((e) => e.date === '2026-09-14' && e.digest === 'b'.repeat(64));
   assert.ok(vorher, 'keine aeltere Datei-A-Zeile im Changelog — die Kette ist nicht pruefbar');
-  const reg = { registeredOn: fileA.registeredOn, verifiedPostHashRows: [] };
+  const reg = { registeredOn: '2026-09-14', verifiedPostHashRows: [] };
   const zeile = (date, stempel) => ({ date, backfilled: false, constants_sha256: stempel });
   const spaeter = '2099-01-02';
   const frueher = '2026-09-17';
