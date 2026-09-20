@@ -30,21 +30,21 @@
     "BENENNEN waere eine neue Erkennungs-Semantik und damit Methodik: die gehoert vor ein",
     "Gericht, nicht in eine Meldeform."
   ],
-  "stand": "2026-09-19",
-  "gelesen": 16046,
+  "stand": "2026-09-20",
+  "gelesen": 16047,
   "unlesbar": 0,
   "messebene": "vor den Umbenennungs-Stufen U2/U3/T179 dieses Laufs",
   "zaehlung": {
-    "ankerA": 1553,
+    "ankerA": 1552,
     "ankerA_ausgenommen": 19,
-    "ankerA_ohneBasis": 881,
+    "ankerA_ohneBasis": 882,
     "ankerA_klassen": 9,
-    "ankerB": 19,
+    "ankerB": 20,
     "ankerB_klassen": 1
   },
   "ankerA": {
     "ausgefallen": false,
-    "gemeldet": 1553,
+    "gemeldet": 1552,
     "klassen": [
       {
         "klasse": "Groessenordnung 1e0",
@@ -264,22 +264,9 @@
       },
       {
         "klasse": "Groessenordnung 1e+1",
-        "gemeldet": 30,
+        "gemeldet": 29,
         "gelistet": 5,
         "beispiele": [
-          {
-            "anker": "A",
-            "wert": 30.998986473659063,
-            "ticker": "SGLD",
-            "name": "Scorpio Gold Corporation",
-            "nameSource": "longName",
-            "schluessel": "scorpiogoldcorp",
-            "fingerabdruck": "[52026000,54646000,52615320,0]|null",
-            "shares": 346164194,
-            "jahresAktien": 11166952,
-            "gegenstueck": null,
-            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
-          },
           {
             "anker": "A",
             "wert": 24.60619347339486,
@@ -329,6 +316,19 @@
             "fingerabdruck": "[0,0,0,0]|null",
             "shares": 25840425,
             "jahresAktien": 1260772,
+            "gegenstueck": null,
+            "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
+          },
+          {
+            "anker": "A",
+            "wert": 16.878666202506466,
+            "ticker": "KPLT",
+            "name": "Katapult Holdings, Inc.",
+            "nameSource": "longName",
+            "schluessel": "katapultholdingsinc",
+            "fingerabdruck": "[291761000,247194000,221588000,209497000]|null",
+            "shares": 84849055,
+            "jahresAktien": 5027000,
             "gegenstueck": null,
             "gegenstueckGrund": "Selbstwiderspruch EINER Zeile — dieser Anker hat strukturell kein Partner-Bein"
           }
@@ -620,11 +620,11 @@
   },
   "ankerB": {
     "ausgefallen": false,
-    "gemeldet": 19,
+    "gemeldet": 20,
     "klassen": [
       {
         "klasse": "2 Emittentengruppen",
-        "gemeldet": 19,
+        "gemeldet": 20,
         "gelistet": 5,
         "beispiele": [
           {
@@ -691,6 +691,62 @@
                 "name": "LVMH Moët Hennessy - Louis Vuitton, Société Européenne",
                 "nameSource": "fehlt",
                 "schluessel": "lvmhmoëthennessylouisvuittonsociétéeuropéenne"
+              }
+            ],
+            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
+          },
+          {
+            "anker": "B",
+            "wert": 2,
+            "fingerabdruck": "[331839000000,281724000000,245122000000,211915000000]|null",
+            "beine": [
+              {
+                "ticker": "1MSFT.MI",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "4338.HK",
+                "name": "MICROSOFT-T",
+                "nameSource": "longName",
+                "schluessel": "microsoftt"
+              },
+              {
+                "ticker": "MSF.DE",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "MSFT",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "MSFT.SW",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "MSFT.TO",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "MSFT.VI",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
+              },
+              {
+                "ticker": "MSFT.WA",
+                "name": "Microsoft Corporation",
+                "nameSource": "fehlt",
+                "schluessel": "microsoftcorp"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
@@ -811,38 +867,6 @@
                 "name": "DHL AG",
                 "nameSource": "longName",
                 "schluessel": "dhlag"
-              }
-            ],
-            "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
-          },
-          {
-            "anker": "B",
-            "wert": 2,
-            "fingerabdruck": "[45855000000,38702000000,35348000000,29139000000]|null",
-            "beine": [
-              {
-                "ticker": "1GE.MI",
-                "name": "General Electric Company",
-                "nameSource": "fehlt",
-                "schluessel": "generalelectricco"
-              },
-              {
-                "ticker": "GCP.DE",
-                "name": "General Electric Company",
-                "nameSource": "fehlt",
-                "schluessel": "generalelectricco"
-              },
-              {
-                "ticker": "GE",
-                "name": "GE Aerospace",
-                "nameSource": "longName",
-                "schluessel": "geaerospace"
-              },
-              {
-                "ticker": "GE.VI",
-                "name": "General Electric Company",
-                "nameSource": "fehlt",
-                "schluessel": "generalelectricco"
               }
             ],
             "hinweis": "MELDUNG, KEIN BELEG (M13): bei Zweitnotierungen ist die geteilte Reihe der Normalfall"
