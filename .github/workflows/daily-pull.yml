@@ -1342,6 +1342,8 @@ jobs:
           path: |
             druckenmiller-history/internals-ledger.jsonl
             druckenmiller-history/internals-ledger.jsonl.meta.json
+            druckenmiller-history/candidates-ledger.jsonl
+            druckenmiller-history/candidates-ledger.jsonl.meta.json
             druckenmiller-history/raw/
           if-no-files-found: error
           retention-days: 7
