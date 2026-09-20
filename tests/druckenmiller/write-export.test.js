@@ -333,6 +333,65 @@ test('W14 --check ROT: der Hash der Registrierung passt nicht mehr (paramsHash)'
   assert.match(m.reason, /paramsHash|Registrierung/i);
 });
 
+// Isolate both registration and changelog under the existing temporary fixture root.
+function registrationWorld() {
+  const w = welt();
+  const registration = W.leseRegistrierung(PROTOCOL);
+  const protocolDir = path.join(w.dir, 'protocol');
+  const fixtureDir = path.join(w.dir, 'tests', 'druckenmiller', 'fixtures');
+  fs.mkdirSync(protocolDir, { recursive: true });
+  fs.mkdirSync(fixtureDir, { recursive: true });
+  fs.copyFileSync(path.join(PROTOCOL, registration.datei), path.join(protocolDir, registration.datei));
+  fs.writeFileSync(path.join(protocolDir, registration.datei + '.sha256'), registration.hash);
+  fs.copyFileSync(path.join(__dirname, 'fixtures', 'registration.CHANGELOG.md'),
+    path.join(fixtureDir, 'registration.CHANGELOG.md'));
+  const options = opts(w, { protocolDir });
+  assert.equal(W.writeExport(options), 0);
+  const metaPath = path.join(w.exportDir, 'meta.json');
+  return { w, registration, options, metaPath, meta: liesJson(metaPath) };
+}
+
+test('W14a --check RED: earlier registered digest identifies a stale export', () => {
+  // Both earlier states use the middle-dot separator; the current amendment uses '*'.
+  for (const digest of [
+    '6c7e810037a6339c70b3a510756a6921d44a5ee49c5af0c3ac42a35a82edb619',
+    '316e73c85f9727e1a9c26801054966648fd1ad2a9a324ce29ed71ad20a50bb06',
+  ]) {
+    const { w, registration, options, metaPath, meta } = registrationWorld();
+    meta.paramsHash = digest;
+    fs.writeFileSync(metaPath, JSON.stringify(meta));
+    const messages = [];
+    assert.equal(W.checkExport({ ...options, log: (line) => messages.push(line) }), 1);
+    const reason = liesJson(path.join(w.exportDir, '_FAILED.json')).reason;
+    assert.match(reason, /aelter als die Registrierung/);
+    for (const text of [digest.slice(0, 12), registration.hash.slice(0, 12),
+      'Registrierungsstand vom 2026-09-14', meta.generated_at, 'Schritt 20', 'KEIN Registrierungsbruch']) {
+      assert.ok(reason.includes(text), 'Missing diagnostic detail: ' + text);
+    }
+    assert.ok(messages.includes('::error::' + reason));
+    assert.deepEqual(fs.readdirSync(w.exportDir), ['_FAILED.json']);
+  }
+});
+
+test('W14b --check RED: unknown digest retains the exact registration-break message', () => {
+  const { w, registration, options, metaPath, meta } = registrationWorld();
+  meta.paramsHash = 'f'.repeat(64);
+  fs.writeFileSync(metaPath, JSON.stringify(meta));
+  assert.equal(W.checkExport(options), 1);
+  assert.equal(liesJson(path.join(w.exportDir, '_FAILED.json')).reason,
+    '[druckenmiller] paramsHash der Auslieferung (' + meta.paramsHash.slice(0, 12)
+    + '\u2026) ist nicht der Hash der Registrierung ' + registration.datei + ' ('
+    + registration.hash.slice(0, 12) + '\u2026) \u2014 entweder wurde die Registrierung angefasst oder der '
+    + 'Export stammt von einem anderen Parameter-Stand.');
+});
+
+test('W14c --check GREEN: current registered digest still passes', () => {
+  const { w, registration, options, meta } = registrationWorld();
+  assert.equal(meta.paramsHash, registration.hash);
+  assert.equal(W.checkExport(options), 0);
+  assert.ok(!fs.existsSync(path.join(w.exportDir, '_FAILED.json')));
+});
+
 test('W15 --check ROT: zwei verschiedene generated_at', () => {
   const w = welt();
   W.writeExport(opts(w));
