@@ -1055,6 +1055,33 @@ function checkExportRumpf({ outDir, exportDir, pricesDir, protocolDir }, say) {
   try { registrierung = leseRegistrierung(protocolDir); }
   catch (e) { return rot(e.message); }
   if (meta.paramsHash !== registrierung.hash) {
+    // The canonical changelog lives with the registration fixtures, not in protocol/.
+    // registration.js exposes only readHashed; the test runner's digestChain is not importable.
+    const changelogPath = path.resolve(protocolDir, '..', 'tests', 'druckenmiller', 'fixtures',
+      'registration.CHANGELOG.md');
+    let chain = [];
+    try {
+      for (const line of fs.readFileSync(changelogPath, 'utf8').split('\n')) {
+        const match = line.match(/^(\d{4}-\d{2}-\d{2})\s*[\u00b7*]\s*(\S+)\s*[\u00b7*]\s*([0-9a-f]{64})\s*[\u00b7*]/);
+        if (match && match[2] === 'protocol/' + registrierung.datei) {
+          chain.push({ date: match[1], digest: match[3] });
+        }
+      }
+    } catch {
+      // Without readable provenance, retain the existing registration-break diagnostic.
+      chain = [];
+    }
+    // File order defines the states, including amendments on the same date.
+    const current = chain[chain.length - 1];
+    const earlier = current && current.digest === registrierung.hash
+      && chain.slice(0, -1).find((entry) => entry.digest === meta.paramsHash);
+    if (earlier) {
+      return rot('[druckenmiller] Export ist aelter als die Registrierung: Export-Stand '
+        + meta.paramsHash.slice(0, 12) + ' (Registrierungsstand vom ' + earlier.date
+        + ', Export erzeugt ' + meta.generated_at + ') gegen aktuellen Stand '
+        + registrierung.hash.slice(0, 12) + ' - Export neu schreiben (Schritt 20), '
+        + 'das ist KEIN Registrierungsbruch.');
+    }
     return rot('[druckenmiller] paramsHash der Auslieferung (' + String(meta.paramsHash).slice(0, 12)
       + '…) ist nicht der Hash der Registrierung ' + registrierung.datei + ' ('
       + registrierung.hash.slice(0, 12) + '…) — entweder wurde die Registrierung angefasst oder der '
