@@ -446,8 +446,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 82,
-      "scoreShrunk": 81.8,
+      "scoreBase": 82.1,
+      "scoreShrunk": 81.9,
       "factors": {
         "burn": 1,
         "growth": 1.027,
@@ -471,7 +471,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 56.8,
+          "pct": 57.1,
           "weight": 1.5
         },
         {
@@ -1420,7 +1420,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
-      "scoreBase": 75.2,
+      "scoreBase": 75.3,
       "scoreShrunk": 75.1,
       "factors": {
         "burn": 1,
@@ -1445,7 +1445,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 63.6,
+          "pct": 63.9,
           "weight": 1.5
         },
         {
@@ -1730,7 +1730,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 78.8,
+      "scoreBase": 78.9,
       "scoreShrunk": 76,
       "factors": {
         "burn": 1,
@@ -1755,7 +1755,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 53.5,
+          "pct": 53.8,
           "weight": 1.5
         },
         {
@@ -1955,7 +1955,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 6962701996.450816,
+      "marketCap": 6963502566.853324,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -2209,7 +2209,7 @@
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
       "scoreBase": 74.6,
-      "scoreShrunk": 74.4,
+      "scoreShrunk": 74.5,
       "factors": {
         "burn": 1,
         "growth": 1.01,
@@ -2233,7 +2233,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 62.4,
+          "pct": 62.7,
           "weight": 1.5
         },
         {
@@ -2269,7 +2269,7 @@
       "country": "Austria",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 27116815082.207233,
+      "marketCap": 27119932969.426327,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -2509,7 +2509,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Energy",
-      "marketCap": 4991336622.093311,
+      "marketCap": 4953122410.648576,
       "phase": "established",
       "mcapBand": "large",
       "mcapKlasse": "mid",
@@ -3150,7 +3150,7 @@
       "country": "Portugal",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 18182966127.855618,
+      "marketCap": 18185056802.498764,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -3202,6 +3202,84 @@
         {
           "key": "capitalEfficiency",
           "pct": 93.2,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ]
+    },
+    {
+      "ticker": "HINDPETRO.NS",
+      "score": 71,
+      "track": "profitable",
+      "lamps": [
+        "peakMargin",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.409,
+        "companion": 62
+      },
+      "name": "Hindustan Petroleum Corporation Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Energy",
+      "marketCap": 7967128559.356477,
+      "phase": "inflected",
+      "mcapBand": "large",
+      "mcapKlasse": "mid",
+      "ipoRecency": "veteran",
+      "profitTier": "seit-kurzem-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 340,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 26.943359382970655,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 71.9,
+      "scoreShrunk": 70.6,
+      "factors": {
+        "burn": 1,
+        "growth": 1.006,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 63.3,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 76.5,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 86.1,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 60,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 5.4,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 76.7,
           "weight": 2.4
         },
         {
@@ -3284,84 +3362,6 @@
         {
           "key": "dilution",
           "pct": 97.7,
-          "weight": 0.55
-        }
-      ]
-    },
-    {
-      "ticker": "HINDPETRO.NS",
-      "score": 71,
-      "track": "profitable",
-      "lamps": [
-        "peakMargin",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.409,
-        "companion": 62
-      },
-      "name": "Hindustan Petroleum Corporation Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Energy",
-      "marketCap": 7967128559.356477,
-      "phase": "inflected",
-      "mcapBand": "large",
-      "mcapKlasse": "mid",
-      "ipoRecency": "veteran",
-      "profitTier": "seit-kurzem-profitabel",
-      "ipoYear": 1996,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 340,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 26.943359382970655,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 71.8,
-      "scoreShrunk": 70.5,
-      "factors": {
-        "burn": 1,
-        "growth": 1.006,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 63.3,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 76.5,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 86.1,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 59.7,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 5.4,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 76.7,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
           "weight": 0.55
         }
       ]
@@ -4111,7 +4111,7 @@
     },
     {
       "ticker": "AAV.TO",
-      "score": 68.3,
+      "score": 68.4,
       "track": "profitable",
       "lamps": [
         "burning",
@@ -4144,8 +4144,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 66.5,
-      "scoreShrunk": 66.4,
+      "scoreBase": 66.6,
+      "scoreShrunk": 66.5,
       "factors": {
         "burn": 1,
         "growth": 1.028,
@@ -4169,7 +4169,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 55,
+          "pct": 55.3,
           "weight": 1.5
         },
         {
@@ -4221,8 +4221,8 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
-      "scoreBase": 67,
-      "scoreShrunk": 66.9,
+      "scoreBase": 67.1,
+      "scoreShrunk": 67,
       "factors": {
         "burn": 1,
         "growth": 1.02,
@@ -4246,7 +4246,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 62.1,
+          "pct": 62.4,
           "weight": 1.5
         },
         {
@@ -4345,7 +4345,7 @@
     },
     {
       "ticker": "002353.SZ",
-      "score": 66.8,
+      "score": 66.9,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -4376,7 +4376,7 @@
       "einmalertragBewertbarkeit": "zuWenigQuartale",
       "shareDilution": null,
       "scoreBase": 66.5,
-      "scoreShrunk": 65.5,
+      "scoreShrunk": 65.6,
       "factors": {
         "burn": 1,
         "growth": 1.02,
@@ -4400,7 +4400,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 51.5,
+          "pct": 51.8,
           "weight": 1.5
         },
         {
@@ -4986,6 +4986,83 @@
       ]
     },
     {
+      "ticker": "VAR.OL",
+      "score": 66.2,
+      "track": "profitable",
+      "lamps": [
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": -0.023,
+        "companion": 65
+      },
+      "name": "Vår Energi ASA",
+      "country": "Norway",
+      "region": "Europe",
+      "sector": "Energy",
+      "marketCap": 14270195127.992321,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "recent",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 2022,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 340,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 8.04769203640654,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "zuWenigQuartale",
+      "shareDilution": null,
+      "scoreBase": 67.2,
+      "scoreShrunk": 66.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 40,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 93.6,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 22.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 63.6,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 64.3,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 79.7,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ]
+    },
+    {
       "ticker": "CNX",
       "score": 66.2,
       "track": "profitable",
@@ -5064,83 +5141,6 @@
         {
           "key": "dilution",
           "pct": 25.6,
-          "weight": 0.55
-        }
-      ]
-    },
-    {
-      "ticker": "VAR.OL",
-      "score": 66.2,
-      "track": "profitable",
-      "lamps": [
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": -0.023,
-        "companion": 65
-      },
-      "name": "Vår Energi ASA",
-      "country": "Norway",
-      "region": "Europe",
-      "sector": "Energy",
-      "marketCap": 14270195127.992321,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "recent",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 2022,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 340,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 8.04769203640654,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "zuWenigQuartale",
-      "shareDilution": null,
-      "scoreBase": 67.2,
-      "scoreShrunk": 66.2,
-      "factors": {
-        "burn": 1,
-        "growth": 1,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 40,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 93.6,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 22.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 63.3,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 64.3,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 79.7,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
           "weight": 0.55
         }
       ]
@@ -5242,7 +5242,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Energy",
-      "marketCap": 1646119123388.727,
+      "marketCap": 1638391033006.129,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mega",
@@ -5554,7 +5554,7 @@
       "country": "Spain",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 36328489904.6871,
+      "marketCap": 36332666948.85765,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -6185,7 +6185,7 @@
     },
     {
       "ticker": "TPL",
-      "score": 62.8,
+      "score": 62.9,
       "track": "profitable",
       "lamps": [
         "arDivergence",
@@ -6223,7 +6223,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "scoreBase": 61.6,
-      "scoreShrunk": 61.5,
+      "scoreShrunk": 61.6,
       "factors": {
         "burn": 1,
         "growth": 1.021,
@@ -6247,7 +6247,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 62.7,
+          "pct": 63,
           "weight": 1.5
         },
         {
@@ -6366,7 +6366,7 @@
       "country": "United Kingdom",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 271175176704.06555,
+      "marketCap": 271206356384.0913,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mega",
@@ -6418,6 +6418,85 @@
         {
           "key": "capitalEfficiency",
           "pct": 76.1,
+          "weight": 2.4
+        },
+        {
+          "key": "dilution",
+          "pct": null,
+          "weight": 0.55
+        }
+      ]
+    },
+    {
+      "ticker": "RELIANCE.NS",
+      "score": 62.1,
+      "track": "profitable",
+      "lamps": [
+        "lowRoic",
+        "arDivergence",
+        "opIncYahooAdjusted"
+      ],
+      "overview": {
+        "kind": "gp",
+        "value": 0.117,
+        "companion": 62.2
+      },
+      "name": "Reliance Industries Limited",
+      "country": "India",
+      "region": "Asia",
+      "sector": "Energy",
+      "marketCap": 175724741836.21387,
+      "phase": "established",
+      "mcapBand": "mega",
+      "mcapKlasse": "large",
+      "ipoRecency": "veteran",
+      "profitTier": "langfristig-profitabel",
+      "ipoYear": 1996,
+      "coverageAxes": "6/7",
+      "coverageWeight": 0.95,
+      "cohortN": 340,
+      "cohortFallback": false,
+      "revGrowthYoYPct": 27.022722795035126,
+      "profitStreak": null,
+      "einmalertragPrognose": null,
+      "einmalertragBewertbarkeit": "ungleicheKadenz",
+      "shareDilution": null,
+      "scoreBase": 61.9,
+      "scoreShrunk": 61.2,
+      "factors": {
+        "burn": 1,
+        "growth": 1.015,
+        "cycle": 1
+      },
+      "axisBreakdown": [
+        {
+          "key": "revGrowthLevel",
+          "pct": 63.6,
+          "weight": 0.8
+        },
+        {
+          "key": "revAcceleration",
+          "pct": 71.2,
+          "weight": 3
+        },
+        {
+          "key": "gpGrowth",
+          "pct": 68.4,
+          "weight": 1.8
+        },
+        {
+          "key": "ruleOfX",
+          "pct": 60.3,
+          "weight": 1.5
+        },
+        {
+          "key": "marginTrajectory",
+          "pct": 26.3,
+          "weight": 0.4
+        },
+        {
+          "key": "capitalEfficiency",
+          "pct": 51.8,
           "weight": 2.4
         },
         {
@@ -6584,85 +6663,6 @@
         {
           "key": "dilution",
           "pct": 17.2,
-          "weight": 0.55
-        }
-      ]
-    },
-    {
-      "ticker": "RELIANCE.NS",
-      "score": 62,
-      "track": "profitable",
-      "lamps": [
-        "lowRoic",
-        "arDivergence",
-        "opIncYahooAdjusted"
-      ],
-      "overview": {
-        "kind": "gp",
-        "value": 0.117,
-        "companion": 62.2
-      },
-      "name": "Reliance Industries Limited",
-      "country": "India",
-      "region": "Asia",
-      "sector": "Energy",
-      "marketCap": 175724741836.21387,
-      "phase": "established",
-      "mcapBand": "mega",
-      "mcapKlasse": "large",
-      "ipoRecency": "veteran",
-      "profitTier": "langfristig-profitabel",
-      "ipoYear": 1996,
-      "coverageAxes": "6/7",
-      "coverageWeight": 0.95,
-      "cohortN": 340,
-      "cohortFallback": false,
-      "revGrowthYoYPct": 27.022722795035126,
-      "profitStreak": null,
-      "einmalertragPrognose": null,
-      "einmalertragBewertbarkeit": "ungleicheKadenz",
-      "shareDilution": null,
-      "scoreBase": 61.9,
-      "scoreShrunk": 61.1,
-      "factors": {
-        "burn": 1,
-        "growth": 1.015,
-        "cycle": 1
-      },
-      "axisBreakdown": [
-        {
-          "key": "revGrowthLevel",
-          "pct": 63.6,
-          "weight": 0.8
-        },
-        {
-          "key": "revAcceleration",
-          "pct": 71.2,
-          "weight": 3
-        },
-        {
-          "key": "gpGrowth",
-          "pct": 68.4,
-          "weight": 1.8
-        },
-        {
-          "key": "ruleOfX",
-          "pct": 60,
-          "weight": 1.5
-        },
-        {
-          "key": "marginTrajectory",
-          "pct": 26.3,
-          "weight": 0.4
-        },
-        {
-          "key": "capitalEfficiency",
-          "pct": 51.8,
-          "weight": 2.4
-        },
-        {
-          "key": "dilution",
-          "pct": null,
           "weight": 0.55
         }
       ]
@@ -6930,7 +6930,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 9601954214.262272,
+      "marketCap": 9603058245.47804,
       "phase": "established",
       "mcapBand": "mega",
       "mcapKlasse": "mid",
@@ -7110,7 +7110,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "scoreBase": 60.5,
-      "scoreShrunk": 60.4,
+      "scoreShrunk": 60.5,
       "factors": {
         "burn": 1,
         "growth": 1.009,
@@ -7134,7 +7134,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 59.4,
+          "pct": 59.7,
           "weight": 1.5
         },
         {
@@ -7881,7 +7881,7 @@
     },
     {
       "ticker": "BSM",
-      "score": 59.6,
+      "score": 59.7,
       "track": "profitable",
       "lamps": [
         "opIncYahooAdjusted"
@@ -7918,7 +7918,7 @@
       "einmalertragBewertbarkeit": null,
       "shareDilution": null,
       "scoreBase": 59.7,
-      "scoreShrunk": 59.6,
+      "scoreShrunk": 59.7,
       "factors": {
         "burn": 1,
         "growth": 1,
@@ -7942,7 +7942,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 58.3,
+          "pct": 58.6,
           "weight": 1.5
         },
         {
@@ -7996,7 +7996,7 @@
       "einmalertragPrognose": null,
       "einmalertragBewertbarkeit": "ungleicheKadenz",
       "shareDilution": null,
-      "scoreBase": 59.4,
+      "scoreBase": 59.5,
       "scoreShrunk": 58.9,
       "factors": {
         "burn": 1,
@@ -8021,7 +8021,7 @@
         },
         {
           "key": "ruleOfX",
-          "pct": 60.9,
+          "pct": 61.2,
           "weight": 1.5
         },
         {
@@ -8396,7 +8396,7 @@
       "country": "Saudi Arabia",
       "region": "Middle East",
       "sector": "Energy",
-      "marketCap": 10682041075.937279,
+      "marketCap": 10594292548.921343,
       "phase": "unprofitable",
       "mcapBand": "mega",
       "mcapKlasse": "large",
@@ -8641,7 +8641,7 @@
       "country": "China",
       "region": "Asia",
       "sector": "Energy",
-      "marketCap": 870826311.4250649,
+      "marketCap": 898853446.815744,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -9388,7 +9388,7 @@
       "country": "Poland",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 1163817025.9700327,
+      "marketCap": 1163663802.8450816,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -9882,7 +9882,7 @@
       "country": "Netherlands",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 1032247447.148928,
+      "marketCap": 1032366134.8013183,
       "phase": "unprofitable",
       "mcapBand": "micro",
       "mcapKlasse": "small",
@@ -10305,7 +10305,7 @@
       "country": "France",
       "region": "Europe",
       "sector": "Energy",
-      "marketCap": 1494580952.8892162,
+      "marketCap": 1494752799.5768447,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
@@ -10385,7 +10385,7 @@
       "country": "United States",
       "region": "North America",
       "sector": "Energy",
-      "marketCap": 1692470656,
+      "marketCap": 1693796736,
       "phase": "unprofitable",
       "mcapBand": "small",
       "mcapKlasse": "small",
