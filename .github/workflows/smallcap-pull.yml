@@ -357,3 +357,21 @@ jobs:
         with:
           path: snapshots-smallcap
           key: snapshots-smallcap-store-${{ github.run_id }}
+
+      # T135 Option B (Afternoon-Lauf 21.09.2026, Master-Entscheid): der gemergte Store liegt sonst NUR im
+      # Actions-Cache, den nur ein Workflow wiederherstellen kann; die Shard-Artefakte leben 1 Tag und sind
+      # nicht der ganze Store. Dieses Artefakt ist dieselbe Population, die der Scoring-Job von
+      # daily-pull.yml per restore-keys 'snapshots-smallcap-store-' liest — damit laesst sich die
+      # Paritaetsluecke (scripts/t135-paritaetsluecke.js) auf der CI-Population messen.
+      # tests/smallcap-store-artifact-wiring.test.js haelt Pfad und Key-Praefix an beiden Enden fest.
+      # continue-on-error: ein fehlender Store ist eine ::error::-Zeile (if-no-files-found: error),
+      # kippt aber nicht den Pull — das Artefakt ist Messbeleg, kein Lieferweg.
+      - name: Upload merged small-cap store (T135 measurement)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: smallcap-store-merged
+          path: snapshots-smallcap
+          if-no-files-found: error
+          retention-days: 3
