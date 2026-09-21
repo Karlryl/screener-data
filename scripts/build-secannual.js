@@ -84,6 +84,10 @@ function get(url, depth = 0) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const newestPresent = (arr) => { for (const x of (arr || [])) { const v = x && typeof x === 'object' ? x.value : x; if (Number.isFinite(v)) return v; } return null; };
 const plain = (arr) => (arr || []).map(x => x && typeof x === 'object' ? x.value : x).filter(Number.isFinite);
+// T174: wie plain(), aber OHNE Filter — eine Luecke bleibt eine Luecke an ihrer Position.
+// plain() verschiebt jedes Folgejahr um eins nach vorn; fuer den positionsweisen
+// Vergleich waere das ein hausgemachter Jahres-Versatz.
+const plainMitLuecken = (arr) => (arr || []).map(x => x && typeof x === 'object' ? x.value : x).map(v => Number.isFinite(v) ? v : null);
 // Grobmuell-Sanity: signFlips/revMaxDrawdown sind vorzeichen-/verhaeltnis-basiert -> robust gegen FY-Versatz +
 // Level-Restatement (kein positional-overlap-Guard, der flaggt FY-Versatz falsch). Minimal gegen GENUIN falsches
 // Konzept: (1) neuestes OpInc gleiches Vorzeichen; (2) neuester Umsatz ~2x-Skala (RGEN 141M vs 738M); (3) kein
@@ -105,14 +109,89 @@ function yahooOpIncOf(snap) {
   return Array.isArray(a.annualOpIncYahoo) ? a.annualOpIncYahoo : a.annualOpInc;
 }
 
+// T174 (19.09.2026) — Ausrichtungs-Regel VOR dem positionsweisen Vergleich.
+// Vorbedingung aus reports/t168-t174-schicht-diff-2026-08-29.md ("Was T174 wirklich
+// braucht"): eine positionsweise Wache ohne Ausrichtung bestraft die ~19 % der Firmen
+// mit Jahres-Versatz — 4 der 5 Kipp-Faelle der verengten Variante waren genau das
+// (ASM -1, BVC -2, VIR -2, WDC -1), nur VYX trug Versatz 0.
+// Methode WOERTLICH wie die Messung (scripts/t168-layer-diff.js besterVersatz, Methode
+// der 28.07.-Erhebung): je Versatz -2..+2 zaehlen, wie viele Umsatzpaare auf < 2 %
+// zusammenfallen; Ausrichtung gilt nur bei EINDEUTIGER Spitze mit mindestens
+// VERSATZ_MIN_PAARE Treffern.
+// Vergaberegel H5 (ENTSCHIED 52): eine leere oder mehrdeutige Messmenge belegt NICHTS.
+// Dann gibt es keine ausgerichtete Reihe und die Ganzserien-Pruefung entfaellt fuer
+// diesen Namen — sie faellt auf die alte newest-only-Wache zurueck, statt auf gut Glueck
+// Jahr gegen Nachbarjahr zu vergleichen.
+// ponytail: bekannte Decke — Namen ohne belegbare Ausrichtung (kein einziges passendes
+// Umsatzpaar) bleiben auf der alten Abdeckung. Aufwerten erst, wenn eine Messung zeigt,
+// dass diese Klasse echte Tag-Divergenzen verbirgt.
+const VERSATZ_TOL = 0.02;
+const VERSATZ_MIN_PAARE = 2;
+function besterVersatz(yRevArr, sRevArr) {
+  const y = plainMitLuecken(yRevArr), s = plainMitLuecken(sRevArr);
+  const jeVersatz = new Map();
+  for (let off = -2; off <= 2; off++) {
+    let hits = 0;
+    for (let i = 0; i < y.length; i++) {
+      const a = y[i], b = s[i + off];
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a === 0) continue;
+      if (Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) < VERSATZ_TOL) hits++;
+    }
+    jeVersatz.set(off, hits);
+  }
+  const maxHits = Math.max(...jeVersatz.values());
+  const spitze = [...jeVersatz.keys()].filter((o) => jeVersatz.get(o) === maxHits);
+  if (spitze.length !== 1 || maxHits < VERSATZ_MIN_PAARE) return { off: null, hits: maxHits, lage: 'unaufgeloest' };
+  return { off: spitze[0], hits: maxHits, lage: spitze[0] === 0 ? 'null-versatz' : 'versatz' };
+}
+
+/**
+ * T174: die Umsatz-Skalen-Wache zieht ueber die GANZE Reihe statt nur ueber das juengste
+ * Jahr. Anlass T168/CWCO: die falsche Tag-Wahl (IncludingAssessedTax vor Revenues) stand
+ * in den VORJAHREN und war fuer eine newest-only-Wache unsichtbar.
+ * Verengte Variante (ENTSCHIED 14 Punkt 2): Umsatz-Skala ueber die ganze Reihe, das
+ * OpInc-VORZEICHEN bleibt beim neuesten Jahr. Die vier Ganzserien-Vorzeichen-Faelle
+ * (BB, CODI, CORZ, SFD) sind die Yahoo-gegen-GAAP-Frage selbst — die gehoert ans
+ * T164/165/166-Gericht und nicht in eine Wache, die das Urteil vorwegnimmt.
+ * Schwellen UNVERAENDERT (Faktor 2, 10x-V-Dip); kein Konzept-Wechsel, keine
+ * REV_CONCEPTS-Umsortierung.
+ */
 function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   const yOp = newestPresent(yOpArr), sOp = newestPresent(sOpArr);
   if (yOp !== null && sOp !== null && Math.sign(yOp) !== Math.sign(sOp) && yOp !== 0 && sOp !== 0) return false;
   const yR = newestPresent(yRevArr), sR = newestPresent(sRevArr);
   if (yR !== null && sR !== null && yR > 0 && sR > 0) { if (Math.max(yR, sR) / Math.min(yR, sR) > 2) return false; }
+  const vs = besterVersatz(yRevArr, sRevArr);
+  if (vs.lage !== 'unaufgeloest') {
+    const y = plainMitLuecken(yRevArr), s = plainMitLuecken(sRevArr);
+    for (let i = 0; i < y.length; i++) {
+      const a = y[i], b = s[i + vs.off];
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) continue;
+      if (Math.max(a, b) / Math.min(a, b) > 2) return false;
+    }
+  }
   const r = plain(sRevArr);
   for (let i = 1; i < r.length - 1; i++) { if (r[i] > 0 && r[i] * 10 < r[i - 1] && r[i] * 10 < r[i + 1]) return false; }
   return true;
+}
+
+// T174-Zaehler (21.09.2026, Merge-Desk-Auflage zu #304): bei `lage === 'unaufgeloest'` faellt
+// die Ganzserien-Pruefung STILL auf newest-only zurueck (~13 % der Namen laut Review 20.09.).
+// Ohne Zaehler saehe ein Lauf, in dem die Wache fuer die Haelfte der Namen abgeschaltet ist,
+// genauso aus wie einer mit voller Abdeckung. Der Wrapper zaehlt JEDEN geprueften Namen ohne
+// Ausrichtung — bestanden oder abgewiesen —, damit die Luecke im Summenlog steht.
+// Nenner `geprueft` = alle Namen, die die Wache gesehen haben; die Quote N/geprueft ist die Aussage.
+function sanityMitZaehler(zaehler, tk, yOpArr, sOpArr, yRevArr, sRevArr) {
+  zaehler.geprueft = (zaehler.geprueft || 0) + 1;
+  if (besterVersatz(yRevArr, sRevArr).lage === 'unaufgeloest') {
+    zaehler.versatzUnaufgeloest = (zaehler.versatzUnaufgeloest || 0) + 1;
+    (zaehler.unaufgeloestNamen = zaehler.unaufgeloestNamen || []).push(tk);
+  }
+  return looseSanity(yOpArr, sOpArr, yRevArr, sRevArr);
+}
+function zaehlerZeile(zaehler) {
+  const n = zaehler.versatzUnaufgeloest || 0;
+  return `versatzUnaufgeloest=${n}/${zaehler.geprueft || 0}` + (n ? ` (Ganzserie aus, newest-only: ${zaehler.unaufgeloestNamen.join(',')})` : '');
 }
 
 // BH-009 fix: fail closed on a fully-missing series. newestPresent() returns
@@ -177,6 +256,7 @@ async function run() {
   console.log('US-routed>=3y:', routedUS.length, '| p75=' + p75.toFixed(4), '| Kandidaten:', cands.length);
   const tmap = await fetchSecTickers();
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, ohneReihe = 0, parseErr = 0;
+  const versatzZaehler = {};
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
     const entry = tmap.get(tk); const cik = entry && entry.cik;
@@ -211,7 +291,13 @@ async function run() {
     // echter Abdeckung. Kein Wert ist ehrlicher als ein leeres Geruest, das wie Abdeckung aussieht.
     if (!sec.taxonomie) { ohneReihe++; continue; }
     const snap = uni.find(x => x.meta.ticker === tk);
-    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) { divergent++; continue; }
+    // T174: der Zaehler allein sagt nicht, WER stehen bleibt. Ein abgewiesener Name behaelt
+    // via Merge-Basis seinen Altstand — das ist genau die Sorte Stillstand, die man im Log sehen
+    // muss, seit die Wache ueber die ganze Reihe zieht (mehr Abweisungen als newest-only).
+    if (!sanityMitZaehler(versatzZaehler, tk, yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
+      console.log('  divergent (behaelt Altstand)', tk, 'Versatz', JSON.stringify(besterVersatz(snap && snap.annual && snap.annual.annualRev, sec.annual.annualRev)));
+      divergent++; continue;
+    }
     // taxonomie = HERKUNFT der Reihen, gleiche Ebene wie cik/nfy. Ohne sie waeren us-gaap-
     // und ifrs-full-Werte im Store nicht auseinanderzuhalten — und dieselbe Firma kann sich
     // unter zwei Standards um Prozente unterscheiden.
@@ -227,7 +313,7 @@ async function run() {
   }
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
-  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr}`);
+  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr} ${zaehlerZeile(versatzZaehler)}`);
 }
 
 // BH-036-adjacent hardening (in-scope, minimal): guard direct execution so
@@ -237,4 +323,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, yahooOpIncOf, plain, loadUniverse, ladeMergeBasis };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, besterVersatz, sanityMitZaehler, zaehlerZeile, yahooOpIncOf, plain, plainMitLuecken, loadUniverse, ladeMergeBasis };
