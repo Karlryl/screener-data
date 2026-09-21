@@ -74,10 +74,14 @@ function main() {
   fs.rmSync(tmp, { recursive: true, force: true });
   if (!zeilen.length) fail('nichts verglichen — keine Formel-ID, kein Urteil');
   const mitLuecke = zeilen.filter((z) => z.ueberhang.length || z.fehlt.length || !z.reihenfolgeGleich);
-  const out = arg('--out') || path.join(__dirname, '..', 'reports', `t135-paritaetsluecke-${vintage}.md`);
+  // Kreuz-Review 21.09. (P2): ein Rauchtest auf Altbestand darf weder eine echte Messung ueberschreiben
+  // noch spaeter als Vintage-Beleg gelesen werden — eigener Standardpfad und Kopfzeile.
+  const rauchtest = process.argv.includes('--lokal-kein-beleg');
+  const out = arg('--out') || path.join(__dirname, '..', 'reports', `t135-paritaetsluecke-${vintage}${rauchtest ? '-RAUCHTEST' : ''}.md`);
   const md = [
-    `# T135 Paritaetsluecke productionCohortRanking vs. runSmallcapPass — Vintage ${vintage}`,
+    `# T135 Paritaetsluecke productionCohortRanking vs. runSmallcapPass — Vintage ${vintage}${rauchtest ? ' — RAUCHTEST, KEIN BELEG' : ''}`,
     '',
+    ...(rauchtest ? ['**RAUCHTEST auf lokalem Altbestand (--lokal-kein-beleg): keine CI-Population, keine zitierfaehige Zahl.**', ''] : []),
     `Population: \`${snap}\` (${uBoard.length} Small-Cap-Zeilen nach loadSmallcapUniverse), Coverage-Floor dieses Laufs (aus index.json des Board-Pfads): ${index.coverageFloor}.`,
     'Beide versiegelten Funktionen wurden aufgerufen, keine nachgebaut. Bekannte Abweichung bis zur naechsten GQS-00-Transition.',
     '',
