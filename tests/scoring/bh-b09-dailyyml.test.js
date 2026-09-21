@@ -149,7 +149,11 @@ test('BH-121: echter Workflow-Einzeiler meldet fehlenden/kaputten Stempel und fe
 const gateModule = require(path.join(ROOT, 'scripts', 'test-gate.js'));
 const gateSrc = fs.readFileSync(path.join(ROOT, 'scripts', 'test-gate.js'), 'utf8');
 test('BH-035: blockierende Globs nutzen *test.js (faengt .test.js UND -test.js)', () => {
-  assert.deepEqual(gateModule.BLOCKING_GLOBS, ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js']);
+  // 14.09.2026: tests/druckenmiller/ dazu (Druckenmiller-Modul, Chunk 0). Die Liste bleibt
+  // gepinnt — ein neuer Testordner soll bewusst hier nachgezogen werden, nicht still
+  // dazukommen; genau das ist der Zweck dieses Ankers.
+  assert.deepEqual(gateModule.BLOCKING_GLOBS, ['tests/*test.js', 'tests/scoring/*test.js', 'lib/*test.js',
+    'tests/druckenmiller/*test.js']);
 });
 test('BH-035: Waechter-Enumeration nutzt dasselbe erweiterte Pattern', () => {
   assert.match(gateSrc, /'ls-files', '\*test\.js'/);

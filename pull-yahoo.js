@@ -94,6 +94,26 @@ const FUNDAMENTALS_MAX_AGE_MS = FUNDAMENTALS_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 // again → fundamentals freeze indefinitely while asOf shows "today". Fix: stamp
 // meta.fundamentalsAsOf ONLY on a successful full pull, NEVER touch it in
 // _priceOnlyUpdate, and force a full pull when it ages past FUNDAMENTALS_REFRESH_DAYS.
+// Lane A 19.09.: ein Ziel-Pull ueber eine Teilliste loeschte das committete _manifest.json
+// und schrieb seine eigene Bilanz hinein (n_total 21728 -> 16). Jeder nachgelagerte Job
+// — coverage-gate, Merge, Scoring — haette 16 fuer die Tageswahrheit gehalten. Unterhalb
+// dieses Anteils am zuletzt bekannten Universum bleibt _manifest.json unberuehrt und die
+// Bilanz geht nach _manifest.subset-<version>.json.
+const MANIFEST_SUBSET_MIN_SHARE = 0.5;
+// Die Regel steht hier und wird exportiert, damit der Waechter sie ausfuehrt statt sie
+// nachzubauen (dasselbe Muster wie parseVollPullTicker).
+function istTeilmengenLauf(anzahlListe, bekanntesNTotal) {
+  const n = Number(anzahlListe), bekannt = Number(bekanntesNTotal);
+  if (!Number.isFinite(n) || n < 0) return false;
+  // Review 19.09. (KRITISCH): n === 0 gab hier bis eben `false` zurueck und lief damit in den
+  // Loeschpfad — die leere Liste ist aber der MAXIMALE Schadensfall, nicht die Ausnahme. Eine
+  // abgeschnittene oder leer gefilterte Watchlist haette das Tagesmanifest geloescht und mit
+  // n_total 0 ueberschrieben. Kein Lauf ueber null Ticker spricht je fuer das Universum.
+  if (!Number.isFinite(bekannt) || bekannt <= 0) return false;   // ohne Nenner nichts zu schuetzen
+  return n < MANIFEST_SUBSET_MIN_SHARE * bekannt;
+}
+let _manifestSubsetTag = null;   // gesetzt in main(), gelesen an der Schreibstelle
+let _manifestSchutzUmgangen = null;  // Grund, falls das Altmanifest nicht lesbar war
 const FUNDAMENTALS_REFRESH_DAYS = parseInt(process.env.FUNDAMENTALS_REFRESH_DAYS || '30', 10);
 const FUNDAMENTALS_REFRESH_MS = FUNDAMENTALS_REFRESH_DAYS * 24 * 60 * 60 * 1000;
 
@@ -126,6 +146,35 @@ const FUNDAMENTALS_REFRESH_BUDGET = (() => {
 })();
 let _fundamentalsRefreshUsed = 0;   // per-run counter, reset at the top of pullAll
 let _fundamentalsRefreshDeferred = 0; // tickers deferred to price-only this run (logged)
+
+// Durchsatz-Diagnose (19.09.2026, Messung agent-reports/daylauf-2026-09-19/throughput.md):
+// der Lauf zieht ~274 Voll-Abrufe, davon 135 zeit-basiert, bei einem Budget von 3000 (4,5 %
+// genutzt, "none deferred") — waehrend 8.750 von 15.040 Snapshots auf der Platte eine
+// fundamentalsAsOf-Uhr aelter als die eigene 30-Tage-Schwelle tragen (58,2 %). Keiner der
+// beiden Deckel bremst also; die Frage ist, welche Ticker der Auswahl-Schritt ueberhaupt
+// ANBIETET. Diese vier Zaehler messen genau das und aendern das Verhalten nicht:
+//   _selYoungEnough        wie viele Ticker das 7-Tage-Tor (youngEnough) passieren
+//   _selYoungAndStale      davon: wie viele fundamentalsStaleness().stale liefern
+//   _selNotYoungButStale   Ticker, die das Tor NICHT passieren, deren fundamentalsAsOf aber
+//                          aelter als FUNDAMENTALS_REFRESH_DAYS ist — die Population, die der
+//                          Kandidaten-Mechanismus verstecken wuerde
+//   _selNotYoungUnknown    Ticker ohne Tor-Durchgang, bei denen die Uhr nicht lesbar war —
+//                          eigener Eimer, damit der Zaehler darueber nie ein Unbekanntes
+//                          als "nicht faellig" verbucht (Rueckfallwert-Regel)
+let _selYoungEnough = 0;
+let _selYoungAndStale = 0;
+let _selNotYoungButStale = 0;
+let _selNotYoungUnknown = 0;
+// EINE Feldliste fuer BEIDE Manifest-Schreiber. In Chunk 2 hat genau diese Klasse zugeschlagen:
+// zwei getrennte Feldlisten, und der zweite Schreiber liess die neuen Zahlen still fallen.
+function _selectorCounters() {
+  return {
+    n_sel_young_enough: _selYoungEnough,
+    n_sel_young_and_stale: _selYoungAndStale,
+    n_sel_not_young_but_stale: _selNotYoungButStale,
+    n_sel_not_young_unknown: _selNotYoungUnknown,
+  };
+}
 
 // TASK 0.11 (Stille-Fehler-Härtung): per-run silent-error counters. Every catch that
 // previously SWALLOWED a real error now bumps one of these, so its AUSFALL is countable
@@ -249,6 +298,63 @@ function fundamentalsStaleness(meta, now = Date.now()) {
     if (Number.isFinite(parsed)) return { stale: (now - parsed) > FUNDAMENTALS_REFRESH_MS, unparseable: false };
   }
   return { stale: true, unparseable: true };
+}
+
+// Durchsatz-Diagnose (19.09.2026): der Voll-Abruf-Stempel eines Snapshots, ohne die Datei ganz zu
+// parsen. Kopf-Leseweite 4096 Bytes, weil `fundamentalsAsOf` am Live-Bestand spaetestens bei Byte
+// 1.331 steht (gemessen ueber 400 Snapshots, 0 Fehltreffer) — dreifache Reserve. `null` heisst
+// ausdruecklich "nicht lesbar", nie "nicht faellig": der Aufrufer verbucht das in einem eigenen
+// Eimer. Steht NICHT im Entscheidungspfad; kein Voll-Abruf haengt an dieser Zahl.
+function fundamentalsAsOfAgeFromFile(fp, now = Date.now()) {
+  const head = readFileHead(fp, 4096);
+  if (head == null) return null;
+  const m = head.match(/"fundamentalsAsOf"\s*:\s*"([^"]+)"/);
+  if (!m) return null;
+  const ms = new Date(m[1]).getTime();
+  if (!Number.isFinite(ms)) return null;
+  return now - ms;
+}
+
+// T325 (Merge-Desk-Fund an PR #323, 19.09.2026): der Dateikopf-Leser. Das alte Muster
+// openSync -> readSync -> closeSync INNERHALB eines try/catch LECKT den Handle, sobald readSync
+// wirft: der catch kehrt zurueck, ohne zu schliessen. Auf OneDrive ist das der Normalfall und
+// nicht die Ausnahme — eine Cloud-Platzhalter-Datei scheitert genau beim Lesen. In der
+// Ticker-Schleife ist das ein Handle pro Ticker, bis EMFILE den Lauf killt. Eine DIAGNOSE darf
+// den Lauf niemals umbringen, deshalb steht das Schliessen in einem finally.
+// Derselbe Fehler stand seit Tag 166 im Produktionspfad `_getExistingSnapshotAge` (jeder Ticker,
+// jeder Lauf) — beide Aufrufer gehen jetzt durch DIESE Funktion, damit es nur eine Stelle gibt.
+// `null` heisst durchgehend "nicht lesbar", nie 0 und nie "nicht faellig".
+function readFileHead(fp, bytes) {
+  let fd = null;
+  try {
+    if (!fs.existsSync(fp)) return null;
+    const buf = Buffer.alloc(bytes);
+    fd = fs.openSync(fp, 'r');
+    const read = fs.readSync(fd, buf, 0, bytes, 0);
+    return buf.toString('utf8', 0, read);
+  } catch {
+    return null;
+  } finally {
+    if (fd !== null) {
+      try { fs.closeSync(fd); } catch { /* ein zweites Scheitern darf den Lauf nicht kippen */ }
+    }
+  }
+}
+
+// Welcher Diagnose-Eimer eine Zeile trifft. Rein, damit die Zuordnung pruefbar ist, ohne den
+// Abruf zu fahren. `ageMs` ist die asOf-Uhr (die der Preis-Pfad taeglich zuruecksetzt),
+// `fundamentalsAgeMs` die separate Voll-Abruf-Uhr.
+//   'young'    -> passiert das Tor, wird von der Staleness-Probe gesehen
+//   'overdue'  -> jenseits des Tors UND ueberfaellig: die Population, die der Kandidaten-
+//                 Mechanismus verstecken wuerde
+//   'unknown'  -> jenseits des Tors, Uhr nicht lesbar (nie als 'nicht faellig' verbucht)
+//   'none'     -> kein Snapshot vorhanden: es gibt nichts zu verstecken
+function selectorBucket(ageMs, fundamentalsAgeMs,
+                        maxAgeMs = FUNDAMENTALS_MAX_AGE_MS, refreshMs = FUNDAMENTALS_REFRESH_MS) {
+  if (ageMs == null) return 'none';
+  if (ageMs < maxAgeMs) return 'young';
+  if (fundamentalsAgeMs == null) return 'unknown';
+  return fundamentalsAgeMs > refreshMs ? 'overdue' : 'young-enough-clock';
 }
 
 function ftsFailureSummary(fts) {
@@ -2841,11 +2947,12 @@ function sortByStaleness(stocks, outputDir, earningsCalendar, today) {
       const fp = path.join(outputDir, safeSnapshotFilename(ticker));
       if (fs.existsSync(fp)) {
         age = 0; // hat einen Snapshot: default "aeltester" (refresh), bis ein echter Timestamp gelesen wird
-        const buf = Buffer.alloc(1024);
-        const fd = fs.openSync(fp, 'r');
-        fs.readSync(fd, buf, 0, 1024, 0);
-        fs.closeSync(fd);
-        const hdr = buf.toString('utf8');
+        // T325: auch dieser Kopf-Leser lief als openSync -> readSync -> closeSync in einem
+        // try/catch und leckte den Handle bei einem werfenden readSync. Er ist der TEUERSTE
+        // der drei: die Sortier-Vorrunde beruehrt JEDEN Ticker der Scheibe, bevor der Abruf
+        // ueberhaupt beginnt (~1.280 pro Shard). Verhalten unveraendert: ein vorhandener,
+        // aber unlesbarer Snapshot behaelt age = 0 und wird zuerst aufgefrischt.
+        const hdr = readFileHead(fp, 1024) || '';
         const m = hdr.match(asOfRegex) || hdr.match(fetchedAtRegex);
         if (m) {
           const t = new Date(m[1]).getTime();
@@ -3017,6 +3124,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _fundamentalsRefreshDeferred = 0;
   // TASK 0.11: reset the silent-error counters so each pullAll reports its own tally.
   _lampErrors = 0;
+  // JS-Review 19.09.: geteilten Zustand hier aufraeumen wie die Zaehler daneben. (Beim ersten
+  // Versuch landete diese Zeile in _recordGpZeroCoding — also in einer Funktion, die JE ZEILE
+  // laeuft und den Schutz mitten im Lauf abgeraeumt haette. Anker war mehrdeutig.)
+  _manifestSubsetTag = null; _manifestSchutzUmgangen = null;
   _needsFullPullThrew = 0;
   _corruptYoungSnapshots = 0;
   _schemaProbeErrors = 0;
@@ -3026,6 +3137,10 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   _symbolsNormalized = 0;
   _unparseableTimeAnchors = 0;
   _unparseableTimeAnchorsDue = 0;
+  _selYoungEnough = 0;
+  _selYoungAndStale = 0;
+  _selNotYoungButStale = 0;
+  _selNotYoungUnknown = 0;
   _ftsPartialTickers = 0;
   _ftsFailedSeries = 0;
   _ftsAllEmptyTickers = 0;
@@ -3177,6 +3292,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
         n_ok: okResults.length,
         n_full: nFull,
         n_priceonly: nPriceOnly,
+        ..._selectorCounters(),
         n_skipped_mcap: skippedMcap,
         n_ccy_missing_completely: results.filter(r => r && r.status === 'ccy-missing-completely').length,
         // Tag 464: vor dem Abruf aus DIESER Scheibe entfernt (Small-Cap-Eigentumsgrenze).
@@ -3204,18 +3320,22 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
 
   // Tag 166: read existing snapshot's asOf to decide price-only vs full pull
   function _getExistingSnapshotAge(ticker) {
-    try {
-      const fp = path.join(outputDir, safeSnapshotFilename(ticker));
-      if (!fs.existsSync(fp)) return null;
-      const buf = Buffer.alloc(500);
-      const fd = fs.openSync(fp, 'r');
-      fs.readSync(fd, buf, 0, 500, 0);
-      fs.closeSync(fd);
-      const m = buf.toString('utf8').match(/"asOf"\s*:\s*"([^"]+)"/);
-      if (!m) return null;
-      const age = Date.now() - new Date(m[1]).getTime();
-      return age;
-    } catch { return null; }
+    // T325: liest ueber readFileHead, damit der Handle auch bei einem werfenden readSync
+    // geschlossen wird (OneDrive-Platzhalter). Leseweite 500 Byte wie seit Tag 166 —
+    // `asOf` steht im meta-Kopf, die Weite ist hier NICHT die Aenderung.
+    const head = readFileHead(path.join(outputDir, safeSnapshotFilename(ticker)), 500);
+    if (head == null) return null;
+    const m = head.match(/"asOf"\s*:\s*"([^"]+)"/);
+    if (!m) return null;
+    const ms = new Date(m[1]).getTime();
+    if (!Number.isFinite(ms)) return null;
+    return Date.now() - ms;
+  }
+
+  // Durchsatz-Diagnose: der SEPARATE Voll-Abruf-Stempel eines vorhandenen Snapshots. Die Arbeit
+  // steckt in der modulweiten, testbaren Funktion; hier wird nur der Pfad gebildet.
+  function _snapshotFundamentalsAsOfAge(ticker) {
+    return fundamentalsAsOfAgeFromFile(path.join(outputDir, safeSnapshotFilename(ticker)));
   }
 
   // Tag 226a-2 Schema-Melder: steht seit T181 auf Modul-Ebene (s. oben, direkt vor
@@ -3385,6 +3505,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // geschrieben). Ausserhalb von Pence sind beide Faktoren identisch, die ADR-Klasse
       // rechnet also unveraendert. Waechter: tests/waehrung-pence-aggregat.test.js.
       existing.marketCap.value = q.marketCap * tradingAggFactor;
+      // Lane A 19.09.: der Schnellpfad schrieb den WERT und liess den STEMPEL stehen. Ein
+      // Stempel, der nicht mitgefuehrt wird, luegt: die 16 GBp-Beine trugen asOf aus dem
+      // August, obwohl ihr Wert von diesem Weg stammte — und die Alters-Diagnose lief
+      // deshalb in die falsche Richtung. Wer den Wert schreibt, schreibt den Stempel.
+      // JS-Review 19.09.: derselbe Durchgang hat oben schon `newAsOf` gebildet und stempelt
+      // meta.asOf damit. Ein zweiter Date()-Aufruf liesse die beiden Stempel desselben
+      // Vorgangs um Millisekunden auseinanderlaufen — zwei Wahrheiten fuer einen Schreibakt.
+      existing.marketCap.asOf = newAsOf;
+      // Review 19.09.: das `||` liess die alte Herkunft `yahoo_quoteSummary` auf einem Wert
+      // stehen, den GERADE der Quote-Weg geschrieben hat — dieselbe Luege wie beim Stempel,
+      // nur ein Feld weiter. Wer den Wert schreibt, schreibt auch die Herkunft.
+      existing.marketCap.source = 'yahoo_quote';
     }
     // F-DQ-009 (Tag 183): price-only path previously skipped the MIN_MCAP floor —
     // a stock that drifted below $1B post-last-full-pull stayed in the universe
@@ -3471,6 +3603,18 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       // Begruendung und Messung stehen bei _existingSnapshotMissingTag211lFields.
       const age = _getExistingSnapshotAge(stock.ticker);
       const youngEnough = age != null && age < FUNDAMENTALS_MAX_AGE_MS;
+      // Durchsatz-Diagnose (reines Zaehlen, keine Entscheidung haengt daran): wer passiert das
+      // 7-Tage-Tor, und welche ueberfaelligen Ticker liegen JENSEITS des Tors? Nur Ticker mit
+      // vorhandenem Snapshot (age != null) koennen eine Uhr tragen; ohne Snapshot gibt es
+      // nichts zu verstecken, sie werden hier gar nicht gezaehlt.
+      {
+        const bucket = youngEnough
+          ? 'young'
+          : selectorBucket(age, age == null ? null : _snapshotFundamentalsAsOfAge(stock.ticker));
+        if (bucket === 'young') _selYoungEnough++;
+        else if (bucket === 'overdue') _selNotYoungButStale++;
+        else if (bucket === 'unknown') _selNotYoungUnknown++;
+      }
       // audit F-A-2026-06-21: parse the young snapshot ONCE here and share the
       // object across both staleness probes AND _priceOnlyUpdate. Previously
       // each of the three did its own readFileSync+JSON.parse → 3× parse per
@@ -3521,6 +3665,7 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
       const staleFundamentals = (youngEnough && _parsedSnapshot && _parsedSnapshot.meta)
         ? (() => {
             const decision = fundamentalsStaleness(_parsedSnapshot.meta);
+            if (decision.stale) _selYoungAndStale++;   // Durchsatz-Diagnose, siehe Zaehler-Block
             if (decision.unparseable) {
               _unparseableTimeAnchors++;
               if (decision.stale) _unparseableTimeAnchorsDue++;
@@ -4515,6 +4660,12 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   } else {
     _log('INFO', `Fundamentals-refresh budget: ${_fundamentalsRefreshUsed}/${FUNDAMENTALS_REFRESH_BUDGET} time-based full pulls used; none deferred.`);
   }
+  {
+    // Durchsatz-Diagnose: die vier Zahlen, die entscheiden, ob der Auswahl-Schritt oder ein
+    // Deckel bremst. Erwartung nach der Messung vom 19.09.: n_sel_young_and_stale muesste
+    // weit ueber den gezogenen zeit-basierten Voll-Abrufen liegen, wenn das Tor nicht bremst.
+    _log('INFO', `Selector-Diagnose: ${_selYoungEnough} Ticker durch das ${FUNDAMENTALS_MAX_AGE_DAYS}-Tage-Tor, davon ${_selYoungAndStale} mit fundamentalsAsOf > ${FUNDAMENTALS_REFRESH_DAYS}d; jenseits des Tors ${_selNotYoungButStale} ueberfaellig und ${_selNotYoungUnknown} mit nicht lesbarer Uhr.`);
+  }
   // Nachzug Tag 622 (Review-Fund HOCH): rohes console.warn statt _log — siehe oben,
   // ein '[ts] [WARN] '-Praefix macht die GitHub-Annotation wirkungslos.
   // T182: der Melder-Stand gehoert in die Zusammenfassung, nicht nur in die Ticker-Zeilen -
@@ -4588,11 +4739,21 @@ async function pullAll(watchlist, outputDir, rateLimitMs) {
   // diesem Manifest bereits die gefilterte Liste. Nur der Merge, der n_total durch das volle
   // Universum ersetzt, muss die Zahl abziehen. Doppelt abziehen hiesse: Nenner zu klein,
   // Coverage zu optimistisch — und genau das schaltete Karls einzigen Alarm still.
-  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
+  const slim = { pulled_at: manifest.pulled_at, watchlist_version: manifest.watchlist_version, n_total: manifest.n_total, n_ok: manifest.n_ok, n_full: nFullFinal, n_priceonly: okResultsFinal.length - nFullFinal, ..._selectorCounters(), n_skipped_mcap: manifest.n_skipped_mcap, n_ccy_missing_completely: nCcyMissingCompletely, n_skipped_owned: (watchlist._skippedOwned || 0), n_addressable: manifest.n_total - manifest.n_skipped_mcap, n_failed: manifest.n_failed, _silentErrors, partial: false };
   // Tag 189: factored into writeFileAtomic helper.
-  const slimPath = path.join(outputDir, '_manifest.json');
+  const slimPath = path.join(outputDir, _manifestSubsetTag
+    ? '_manifest.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest.json');
+  if (_manifestSubsetTag) {
+    _log('WARN', 'Teilmengen-Lauf: Tagesmanifest bleibt unberuehrt, Bilanz nach ' + path.basename(slimPath));
+  }
   writeFileAtomic(slimPath, JSON.stringify(slim));
-  const fullPath = path.join(outputDir, '_manifest-full.json');
+  // JS-Review 19.09.: dieselbe Fehlerklasse stand auf der Schwesterdatei noch offen. Heute liest
+  // sie niemand als Wahrheit (coverage-gate nimmt nur das schlanke Manifest, der Shard-Upload
+  // schliesst sie aus) — aber wer sie morgen als Wahrheit liest, erbt den Fehler lautlos.
+  const fullPath = path.join(outputDir, _manifestSubsetTag
+    ? '_manifest-full.subset-' + _manifestSubsetTag + '.json'
+    : '_manifest-full.json');
   writeFileAtomic(fullPath, JSON.stringify(manifest));
   _log('INFO', `Pull complete: ${okResultsFinal.length}/${watchlist.stocks.length} ok (${skippedMcapFinal} skipped-mcap), ${failures.length} failed`);
   return manifest;
@@ -4666,17 +4827,53 @@ async function main() {
   // Lauf bricht danach vor dem ersten Checkpoint ab, steht das ALTE Erfolgs-Manifest
   // unveraendert auf Platte und jeder nachgelagerte Job (coverage-gate, Merge, Scoring)
   // haelt den Altstand fuer frisch — bei Exit 0. Fail-loud VOR dem Pull statt Warnung.
-  if (fs.existsSync(manifestPath)) {
-    try { fs.unlinkSync(manifestPath); _log('INFO', 'Deleted stale _manifest.json'); }
-    catch (e) {
-      throw new Error('Stale _manifest.json konnte nicht geloescht werden (' + e.message
-        + ') — Abbruch VOR dem Pull, sonst gilt der Altstand nachgelagert als frisch');
-    }
-  }
   const watchlist = JSON.parse(fs.readFileSync(args.watchlist, 'utf8'));
   if (!watchlist.stocks || !Array.isArray(watchlist.stocks)) {
     _log('ERROR', 'Watchlist must have .stocks array');
     process.exit(1);
+  }
+  // Lane A 19.09.: erst entscheiden, ob dieser Lauf ueberhaupt fuer das Tagesmanifest
+  // spricht. Eine Teilliste spricht nicht fuer das Universum — sie darf es weder
+  // loeschen noch ueberschreiben. Nenner ist das n_total des zuletzt bekannten
+  // Manifests; ohne Manifest gibt es nichts zu schuetzen.
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const vorher = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      const bekannt = Number(vorher && vorher.n_total);
+      // SCOPE (Rats-Entscheid 19.09., nach Widerspruch zweier Reviewer): verglichen wird die
+      // VOLLE Watchlist-Laenge gegen das n_total des VOLLEN Manifests — beide Seiten also im
+      // selben Bezugsrahmen. Das ist Absicht, kein Versehen: jeder der 17 Shard-Prozesse liest
+      // dieselbe volle Liste und schneidet sie ERST danach auf ~1/17. Wuerde hier stattdessen
+      // das gemessen, was der Shard am Ende schreibt, feuerte die Regel an jedem normalen
+      // Tageslauf 17 Mal — ein Schutz, der taeglich falsch ausloest, wird abgeschaltet.
+      if (istTeilmengenLauf(watchlist.stocks.length, bekannt)) {
+        _manifestSubsetTag = String((watchlist._meta && watchlist._meta.version) || 'teilmenge')
+          .replace(/[^A-Za-z0-9._-]/g, '-');
+        _log('WARN', 'Teilmengen-Lauf erkannt (' + watchlist.stocks.length + ' von zuletzt '
+          + bekannt + '): _manifest.json wird NICHT geloescht.');
+      }
+    } catch (e) {
+      // Review 19.09. (HOCH): schlucken ist hier richtig — ein unlesbares Manifest kann die
+      // Entscheidung nicht tragen, und der Altcode loeschte es ohnehin. Lautlos schlucken ist
+      // es NICHT: seit dieser Aenderung ist der Manifest-Inhalt die einzige Eingabe der
+      // Schutzentscheidung. Faellt sie aus, wird der Schutz umgangen, und das darf im Log
+      // nicht wie ein gewoehnlicher Loeschvorgang aussehen.
+      _manifestSchutzUmgangen = e && e.message ? e.message : String(e);
+      _log('WARN', 'Teilmengen-Schutz UMGANGEN: _manifest.json nicht lesbar (' +
+        _manifestSchutzUmgangen + ') — der Lauf darf es ueberschreiben, obwohl niemand geprueft hat, '
+        + 'ob er fuer das Universum spricht.');
+    }
+  }
+  if (!_manifestSubsetTag && fs.existsSync(manifestPath)) {
+    try {
+      fs.unlinkSync(manifestPath);
+      _log('INFO', 'Deleted stale _manifest.json'
+        + (_manifestSchutzUmgangen ? ' (OHNE Teilmengen-Pruefung, s. WARN oben)' : ''));
+    }
+    catch (e) {
+      throw new Error('Stale _manifest.json konnte nicht geloescht werden (' + e.message
+        + ') — Abbruch VOR dem Pull, sonst gilt der Altstand nachgelagert als frisch');
+    }
   }
   // Gezielter Voll-Pull: VOR dem Sharding pruefen. shardStocks schneidet die Liste gleich
   // auf ~1/17; gegen die Scheibe geprueft waere derselbe gueltige Ticker in 16 von 17
@@ -4942,10 +5139,13 @@ if (require.main === module) {
 
 module.exports = { mapYahooToCanonical, pullAll, normalizeRegion, _convertSnapshotToUSD, safeSnapshotFilename, _realignFtsAnchoredSeries, needsFullPull, sortByStaleness,
   fundamentalsStaleness, ftsFailureSummary,
+  fundamentalsAsOfAgeFromFile, selectorBucket,   // Durchsatz-Diagnose (19.09.2026)
+  readFileHead,                                 // T325 (Handle-Leck)
   // Gezielter Voll-Pull: die Regel steht auf Modul-Ebene und wird exportiert, damit der
   // Waechter (tests/voll-pull-ticker.test.js) sie AUSFUEHRT statt sie nachzubauen —
   // dieselbe Begruendung wie beim _nonNullCount-Hub in T142 (Fehlerklasse F1334).
   parseVollPullTicker, VOLL_PULL_CAP,
+  istTeilmengenLauf, MANIFEST_SUBSET_MIN_SHARE,
   // T142: Inhalts-Zaehler der FTS-Reihen. Exportiert, damit die Ausschuettungs-Wache
   // (tests/t142-ausschuettungsreihen-inhalt.test.js) die ECHTE Regel misst statt sie
   // nachzubauen (Fehler F1334).

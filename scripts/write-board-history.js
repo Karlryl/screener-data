@@ -48,6 +48,7 @@ const path = require('path');
 const { writeJsonAtomic } = require('../lib/atomic-write.js');
 const { safeSnapshotFilename } = require('../lib/snapshot-fs.js');
 const { boardStatus } = require('../src/scoring/board-status.js');
+const priceStore = require('../lib/price-history-store.js');   // LT1: Quelle der PIT-Preisfelder
 
 // ── benannte Konstanten (keine Magic Numbers; Herkunft dokumentiert) ─────────
 const REPO_ROOT = path.resolve(__dirname, '..');
@@ -81,6 +82,11 @@ function resolvePaths(base) {
     // T155/W3: Träger des Universums-Hashes, geschrieben von scripts/write-excluded-list.js.
     UNIVERSE_HASH_FILE: path.join(base, 'outputs', 'universe-hash.json'),
     SNAP_DIR: path.join(base, 'snapshots'),
+    // LT1 (Rat 10 vom 19.09.2026): Quelle der beiden PIT-Matching-Felder je Kohorten-Zeile.
+    // Derselbe kumulative Store, den backfill-prices/rank-ic schreiben bzw. lesen
+    // (lib/price-history-store.js) — hier AUSSCHLIESSLICH lesend und ausschliesslich mit
+    // Balken, deren Datum <= Vintage-Datum ist.
+    PRICES_DIR: path.join(base, 'prices'),
     // WB-4' (c): der Beweis eines Quell-Upgrades Yahoo -> SEC-GAAP ist die Anwesenheit des
     // Tickers in den SEC-Jahresreihen, die opinc-source-migrate.js im Scoring-Job liest.
     EXTERNAL_DIR: path.join(base, 'external-data'),
@@ -115,7 +121,7 @@ function resolvePaths(base) {
   };
 }
 let P = resolvePaths(REPO_ROOT);
-function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); _earningsCache = null; return P; }
+function _setPaths(base) { P = resolvePaths(base || REPO_ROOT); _earningsCache = null; _priceFeatCache = null; return P; }
 
 // 2.3-Gate-Kalibrierung: Anzahl messbarer Tages-Deltas, bevor eine board-eigene Schwelle
 // eingefroren wird. Ein Vintage ist erst messbar, wenn es einen Vorgänger hat (Vintage #1
@@ -235,6 +241,16 @@ const MIN_COHORT_OVERLAP = 0.5;
 // Rang-Perzentil um bis zu x der Skala verschieben. Obere Heuristik, kein Beweis — und
 // sie wirkt nur nach UNTEN begrenzend (min gegen den Deckel), nie aufweitend.
 const SCORE_SKALA = 100;
+// ── LT1-PIT-Matching-Felder (Rat 10 vom 19.09.2026, Option ii) ───────────────
+// Die Marktstruktur-Studie LT1 matcht Board-Eintritte gegen Kontrollen auf
+// Sektor × MarketCap-Dezil × Vol-Dezil × Momentum-Dezil. Die ersten beiden liegen
+// im Archiv (board + pit.marketCap), die beiden Preis-Dezile nicht — deshalb rechnet
+// der Writer sie ab jetzt JE VINTAGE aus der eigenen Preis-Historie mit. Die Fenster
+// sind die vom Rat deklarierten und dürfen nicht ohne neuen Vertrags-Hash wandern.
+const VOL_WINDOW_BARS = 60;          // Vol: 60 tägliche Log-Return-Balken (= 61 Schlusskurse)
+const MOMENTUM_LOOKBACK_BARS = 250;  // Momentum: 12 Monate Handelstage (= 251 Schlusskurse)
+const MOMENTUM_GAP_BARS = 21;        // 1 Monat Lücke vor dem Vintage-Datum (Standard-12-1)
+const PIT_DECILES = 10;
 // A12: Kompaktierung frühestens nach t0+2Q ≈ 180 Kalendertage (NICHT 84 — §4b/§7-Kopplung).
 const RETENTION_DAYS = 180;
 const MS_PER_DAY = 86400000;
@@ -571,6 +587,155 @@ function pitCoverageBlock(rows, date) {
   return cov;
 }
 
+// ── LT1-PIT-Preisfelder (Rat 10, Option ii) ─────────────────────────────────
+// vol_60d und das 12-1-Momentum EINER Zeile, gerechnet am Vintage-Datum.
+// STRIKT PIT: nur Balken mit Datum <= date. Reicht das Fenster nicht, ist der Wert
+// null — NIE ein kürzeres Ersatzfenster; ein aufgefülltes Dezil wäre ein erfundenes
+// Matching-Feld und genau das, was der Rat als „Substitution" verboten hat.
+function pitPriceFeatures(series, date) {
+  const leer = { vol60d: null, momentumRaw: null };
+  if (!Array.isArray(series) || typeof date !== 'string') return leer;
+  const bars = [];
+  for (const b of series) {
+    if (!b || typeof b.date !== 'string') continue;
+    if (b.date.slice(0, 10) > date) continue;          // DIE MAUER: kein Balken von nach dem Stichtag
+    if (!Number.isFinite(b.close) || b.close <= 0) continue;  // log braucht einen positiven Kurs
+    bars.push(b);
+  }
+  // Die Reihenfolge im Store ist nicht vertraglich zugesichert; ISO-Daten sortieren
+  // lexikografisch korrekt.
+  bars.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const n = bars.length;
+  let vol60d = null;
+  if (n >= VOL_WINDOW_BARS + 1) {
+    const rets = [];
+    for (let i = n - VOL_WINDOW_BARS; i < n; i++) rets.push(Math.log(bars[i].close / bars[i - 1].close));
+    let mean = 0;
+    for (const r of rets) mean += r;
+    mean /= rets.length;
+    let ss = 0;
+    for (const r of rets) ss += (r - mean) * (r - mean);
+    const sd = Math.sqrt(ss / (rets.length - 1));      // Stichproben-SD (ddof=1), wie representation.local_vol
+    if (Number.isFinite(sd)) vol60d = sd;
+  }
+  let momentumRaw = null;
+  if (n >= MOMENTUM_LOOKBACK_BARS + 1) {
+    const ende = bars[n - 1 - MOMENTUM_GAP_BARS].close;
+    const start = bars[n - 1 - MOMENTUM_LOOKBACK_BARS].close;
+    const m = Math.log(ende / start);
+    if (Number.isFinite(m)) momentumRaw = m;
+  }
+  return { vol60d, momentumRaw };
+}
+
+// Ein Durchgang über die Shards je Lauf, Ergebnis im Modul gecacht: geladen wird
+// IMMER nur ein Shard (~12 MB), nie der ganze 400-MB-Store — loadAll() wäre hier ein
+// zweiter Vollabzug neben dem, was der Tageslauf ohnehin hält; andere Shard-Leser im
+// Repo fahren aus demselben Grund shard-weise. Der Cache hängt am Datum, weil das Datum
+// die PIT-Grenze IST.
+let _priceFeatCache = null;
+function priceFeaturesForRun(date) {
+  // Schlüssel ist Datum UND Store-Pfad: _setPaths leert den Cache zwar, aber ein falsch
+  // wiederverwendeter Eintrag hiesse ein dauerhaft falscher Wert in der Messreihe — der
+  // Schlüssel macht die Bedingung an Ort und Stelle prüfbar statt drei Funktionen weiter.
+  if (_priceFeatCache && _priceFeatCache.date === date && _priceFeatCache.dir === P.PRICES_DIR) {
+    return _priceFeatCache.byTicker;
+  }
+  // VOLLSTÄNDIGKEITS-WACHE, bevor ein einziger Balken gelesen wird.
+  // loadShard() liefert für eine FEHLENDE Datei {} — ohne diese Wache setzt ein halb
+  // ausgecheckter Store (abgebrochener Checkout, OneDrive-Teilsynchronisation) jeden Ticker
+  // dieses Shards still auf null, ununterscheidbar von „hat keine 12 Monate Historie", und
+  // zwar DAUERHAFT in der committeten Messreihe. Nachgestellt am 19.09.: ein gelöschter
+  // Shard machte aus vol_60d = 0,01513 ein null, ohne eine einzige Meldung.
+  // loadAll() hat genau diese Prüfung (BH-139) — der shard-weise Weg hier nicht, also
+  // steht sie hier. Ein Store, den es gar nicht gibt, ist dagegen kein Fehler: hermetische
+  // Testläufe haben keinen, und volle Null-Coverage ist dort die ehrliche Antwort.
+  const meta = priceStore.loadMeta(P.PRICES_DIR);
+  const fehlendeShards = [];
+  for (let n = 0; n < priceStore.SHARD_COUNT; n++) {
+    if (!fs.existsSync(priceStore.shardPath(P.PRICES_DIR, n))) fehlendeShards.push(priceStore.shardFilename(n));
+  }
+  const gibtEsEinenStore = !!meta || fs.existsSync(priceStore.legacyPath(P.PRICES_DIR))
+    || fehlendeShards.length < priceStore.SHARD_COUNT;
+  if (gibtEsEinenStore && (!meta || fehlendeShards.length > 0)) {
+    throw new Error('write-board-history: Preis-Store unvollstaendig — '
+      + (meta ? fehlendeShards.length + ' Shard(s) fehlen (' + fehlendeShards.join(', ') + ')'
+        : 'kein _meta.json (unmigrierter oder halb ausgecheckter Store)')
+      + ' in ' + P.PRICES_DIR + '. Ein teilweiser Store wuerde die PIT-Matchingfelder jedes '
+      + 'betroffenen Tickers still auf null setzen und damit dauerhaft falsche Nullen in die '
+      + 'Messreihe schreiben. Store vollstaendig auschecken (bzw. migrieren), dann erneut laufen.');
+  }
+  const byTicker = new Map();
+  for (let n = 0; n < priceStore.SHARD_COUNT; n++) {
+    // Kein try/catch: ein kaputter Shard ist ein kaputter INPUT (Exit-Vertrag 1) —
+    // stillschweigend genullte Matching-Felder wären in der Messreihe nicht mehr von
+    // „Ticker hat keine 12 Monate Historie" zu unterscheiden.
+    // ponytail: es wird JEDER Ticker jedes Shards gerechnet, nicht nur die Kohorten-Ticker
+    // (34.926 statt ~9.600; gemessen 1,6 s und 435 MB RSS für den ganzen Store). Die
+    // Kohorten verteilen sich ohnehin über alle 32 Shards, ein Vorlauf zum Einsammeln der
+    // Ticker spart also keinen Shard-Ladevorgang. Nachziehen, falls der Store je so wächst,
+    // dass die zwei Sekunden zählen.
+    const shard = priceStore.loadShard(P.PRICES_DIR, n);
+    for (const t of Object.keys(shard)) {
+      const f = pitPriceFeatures(shard[t], date);
+      if (f.vol60d != null || f.momentumRaw != null) byTicker.set(t, f);
+    }
+  }
+  _priceFeatCache = { date, dir: P.PRICES_DIR, byTicker };
+  return byTicker;
+}
+
+// Gleich besetzte Dezile 1..10 (1 = kleinster Wert) über die Zeilen der Kohorte MIT Wert.
+// Position statt Wertgrenzen, Gleichstände nach Ticker aufgelöst: damit hängt die Ausgabe
+// nicht an der Zeilenreihenfolge und ein Lauf ist reproduzierbar.
+function pitDecileByIndex(entries) {
+  const sorted = entries.slice().sort((a, b) => (a.value - b.value)
+    || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0)
+    || (a.i - b.i));
+  const out = new Map();
+  for (let k = 0; k < sorted.length; k++) {
+    out.set(sorted[k].i, 1 + Math.floor((k * PIT_DECILES) / sorted.length));
+  }
+  return out;
+}
+
+// Hängt die vier LT1-Felder an JEDE Kohorten-Zeile — auf ZEILEN-Ebene, nicht in den
+// pit-Block: compact() strippt pit nach ~2Q (A12), die Matching-Felder müssen die
+// Kompaktierung aber überleben (der erste LT1-Read liegt Jahre nach dem Vintage).
+// Bezugsgesamtheit für Residualisierung UND Dezile ist die VOLLE Kohorte dieses Boards
+// (beide Tracks zusammen), wie vom Rat deklariert.
+function attachPitPriceFields(rows, date) {
+  const feats = priceFeaturesForRun(date);
+  const volEntries = [];
+  const momRaw = [];
+  rows.forEach((r, i) => {
+    const f = feats.get(r.ticker) || { vol60d: null, momentumRaw: null };
+    r.vol_60d = f.vol60d;
+    r.vol_decile = null;
+    r.momentum_12m_residual = null;
+    r.momentum_12m_residual_decile = null;
+    if (f.vol60d != null) volEntries.push({ i, ticker: r.ticker, value: f.vol60d });
+    momRaw.push(f.momentumRaw);
+  });
+  const vorhanden = momRaw.filter((x) => x != null);
+  // Residualisierung = einfaches querschnittliches Zentrieren am Kohorten-Mittel
+  // (kein Markt-Beta-Regress — die Kohorte IST der Querschnitt dieses Vintages).
+  const mittel = vorhanden.length ? vorhanden.reduce((a, b) => a + b, 0) / vorhanden.length : null;
+  const momEntries = [];
+  rows.forEach((r, i) => {
+    if (momRaw[i] == null || mittel == null) return;
+    r.momentum_12m_residual = momRaw[i] - mittel;
+    momEntries.push({ i, ticker: r.ticker, value: r.momentum_12m_residual });
+  });
+  for (const [i, d] of pitDecileByIndex(volEntries)) rows[i].vol_decile = d;
+  for (const [i, d] of pitDecileByIndex(momEntries)) rows[i].momentum_12m_residual_decile = d;
+  const n = rows.length || 1;
+  return {
+    vol_decile: volEntries.length / n,
+    momentum_12m_residual_decile: momEntries.length / n,
+  };
+}
+
 // ── Vintage-Aufbau für EIN Board ─────────────────────────────────────────────
 function buildBoardVintage(board, boardData, date, calibMeta, universeHash = null) {
   const pitGaps = new Set();
@@ -604,6 +769,9 @@ function buildBoardVintage(board, boardData, date, calibMeta, universeHash = nul
   const profitable = isFlat ? buildTrack(boardData, 'flat') : buildTrack(boardData.profitable, 'profitable');
   const unprofitable = isFlat ? [] : buildTrack(boardData.unprofitable, 'unprofitable');
   const allRows = profitable.concat(unprofitable);
+  // LT1 (Rat 10): erst NACH dem Bau aller Zeilen — Residualisierung und Dezile brauchen
+  // die volle Kohorte, nicht die einzelne Zeile.
+  const pitFieldCoverage = attachPitPriceFields(allRows, date);
   return {
     date,
     board,
@@ -633,6 +801,9 @@ function buildBoardVintage(board, boardData, date, calibMeta, universeHash = nul
     calibrationGeneratedAt: calibMeta.generatedAt,
     cohortCount: { profitable: profitable.length, unprofitable: unprofitable.length },
     pitCoverage: pitCoverageBlock(allRows, date),
+    // LT1 (Rat 10): Anteil der Kohorten-Zeilen MIT je Dezil — die Null-Quote der beiden
+    // neuen Matching-Felder ist damit je Vintage ablesbar, ohne die Zeilen zu zählen.
+    pitFieldCoverage,
     pitGaps: Array.from(pitGaps).sort(),
     // gate wird nach der Gate-Auswertung befüllt (calibrating/threshold/suspect/...)
     gate: null,
@@ -1734,11 +1905,13 @@ module.exports = {
   updateP99DeltaHistory,
   compact, readOrScaffoldExcluded, regimeForDate, priceGrossProfit, pitCoverageBlock,
   quantile, assertNoPicksHistory, buildPit,
+  pitPriceFeatures, pitDecileByIndex, attachPitPriceFields,   // LT1 (Rat 10)
   priorVintageDate, excludedDates, massstabBruchFuer, bruchProtokollZeilen,
   integritaetsVerfall, lampenBeobachtung, secTickerLesen, kopplungProtokollZeilen,   // WB-4'
   _setPaths, resolvePaths,
   frozenThresholdOf,
   isValidDateStr, requiresBackfillContract, resolveFullCalibration,   // BH-147/BH-155
   tagesabstand,
-  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE },
+  _const: { CALIBRATION_SAMPLES, THRESHOLD_MULTIPLIER, MIN_GATE_THRESHOLD, COVERAGE_COLLAPSE_DROP, RETENTION_DAYS, MIN_COHORT_OVERLAP, GATE_CALIB_QUANTILE, GATE_MAX_ABSTAND_TAGE, GATE_FANOUT_CAP, GATE_SERIE_ALARM_TAGE, QUELL_LAMPEN, KOPF_ACHSE,
+    VOL_WINDOW_BARS, MOMENTUM_LOOKBACK_BARS, MOMENTUM_GAP_BARS, PIT_DECILES },
 };

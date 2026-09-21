@@ -33,6 +33,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const REPO = path.resolve(__dirname, '..');
 
@@ -183,8 +184,16 @@ function main(argv) {
     frozenCodeComparison,
     publishedComparison,
   };
-  fs.writeFileSync(outFile, JSON.stringify(evidence, null, 2) + '\n', 'utf8');
+  writeEvidenceArtifact(outFile, evidence);
   return evidence;
+}
+
+// T204 Welle 6: eigener, exportierter Schreibpunkt - atomar (tmp+rename) und
+// damit ueber die Fixture-Messebene (tests/fixtures/t204-remainder) erreichbar.
+// Ein abgebrochener Lauf hinterliess bisher ein gekuerztes Evidence-JSON, das
+// wie ein vollstaendiger Gleichwertigkeitsbeleg aussieht.
+function writeEvidenceArtifact(outFile, evidence) {
+  writeFileAtomic(outFile, JSON.stringify(evidence, null, 2) + '\n', 'utf8');
 }
 
 if (require.main === module) {
@@ -205,4 +214,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { main, compareRawResults, compareFullRanks, comparePublished };
+module.exports = { main, compareRawResults, compareFullRanks, comparePublished, writeEvidenceArtifact };

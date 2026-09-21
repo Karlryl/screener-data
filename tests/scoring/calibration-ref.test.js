@@ -240,26 +240,24 @@ test('R2.9 Test A — 2-Hop-Kette: A-Namen halten ueber zwei Ref-Kettenglieder E
   assert.equal(mism, 0, `${mism}/${compared} A-Namen driften am 2. Kettenglied (maxAbs ${maxAbs.toFixed(2)}) — muss 0 sein`);
 });
 
-// Test B — neue Kohorte darf NICHT aus dem Artefakt fallen. Ziel-Kohorte K aus dem
-// vollen Universum (via `grown`) waehlen und aus A entfernen -> K fehlt im Lineal
-// calA_edge, taucht im gewachsenen (vollen) Universum wieder auf.
-const keyOf = (e) => e.formulaId + '|' + e.track;
-const fullKeyTickers = new Map(); // K -> Set(ticker), aus dem vollen Ref-Lauf `grown`
-for (const e of grown) {
-  if (e.action === 'route' && Number.isFinite(e.score) && e.formulaId && e.track) {
-    const k = keyOf(e);
-    if (!fullKeyTickers.has(k)) fullKeyTickers.set(k, new Set());
-    fullKeyTickers.get(k).add(e.ticker);
-  }
-}
-// kleinste normale Kohorte (in beiden Artefakt-Maps von chimera1) waehlen -> minimale Entfernung.
+// Test B — neue Kohorte darf NICHT aus dem Artefakt fallen. Der Edge-Zustand ("K fehlt im Lineal,
+// ist im Universum praesent") wird SYNTHETISCH gebaut: calA_edge = chimera1 (das volle Lineal) als
+// Deep-Copy MINUS dem Kohorten-Key K — derselbe Schnitt wie R2.7 Test C (Z.163).
+// VORHER war er datengetrieben (Universum ohne K's geroutete Namen -> Lineal neu lernen). Das hing am
+// Live-Universum und starb am 19.09.2026 bei 15.044 Snapshots: nicht-geroutete Namen derselben Kohorte
+// blieben im Universum und lernten K wieder ins Lineal -> Vorbedingung weg, Test rot, ohne dass sich am
+// Pruefgegenstand etwas geaendert haette (dieselbe Klasse wie eine an die Wanduhr gepinnte Fixture).
+// Die Assertionen unten sind UNVERAENDERT; nur die Herkunft des Edge-Zustands ist universums-unabhaengig.
+// K = erste Kohorte, die roh-live (Voll-Universum, calibrationLive = vor dem mergeFrozenByKey) UND im
+// Lineal voll besetzt ist -> es gibt garantiert eine Live-Basis, die im Artefakt verloren gehen KANN.
+const liveCB = (grown.calibrationLive && grown.calibrationLive.cohortBases) || {};
+const liveGD = (grown.calibrationLive && grown.calibrationLive.gDistByCohort) || {};
 const cb1 = chimera1.cohortBases || {}, gd1 = chimera1.gDistByCohort || {};
-let edgeKey = null, edgeTix = null;
-for (const [k, tix] of [...fullKeyTickers.entries()].sort((a, b) => a[1].size - b[1].size)) {
-  if (cb1[k] && gd1[k]) { edgeKey = k; edgeTix = tix; break; }
-}
-const Aedge = edgeTix ? universe.filter((s) => !edgeTix.has(s.meta.ticker)) : universe;
-const calAedge = roundtrip(scoreUniverse(Aedge, formulas).calibration);
+const edgeKey = Object.keys(liveCB).sort().find((k) =>
+  liveCB[k] && Object.keys(liveCB[k].axes || {}).length > 0 && Number.isFinite(liveCB[k].n) &&
+  Array.isArray(liveGD[k]) && liveGD[k].length > 0 && cb1[k] && gd1[k]) || null;
+const calAedge = roundtrip(chimera1);
+if (edgeKey) { delete calAedge.cohortBases[edgeKey]; delete calAedge.gDistByCohort[edgeKey]; } // <- Bruchstelle fuer den Break-once
 const chimeraEdge = roundtrip(scoreUniverse(universe, formulas, { refCalibration: calAedge }).calibration);
 test('R2.9 Test B — neue Kohorte behaelt LIVE-Basis im Artefakt (Ganzobjekt-Ternary-Falle)', () => {
   assert.ok(edgeKey, 'eine Ziel-Kohorte K gefunden');
@@ -268,6 +266,13 @@ test('R2.9 Test B — neue Kohorte behaelt LIVE-Basis im Artefakt (Ganzobjekt-Te
     `Vorbedingung: Kohorte ${edgeKey} fehlt in calA_edge.cohortBases`);
   assert.ok(!(calAedge.gDistByCohort && calAedge.gDistByCohort[edgeKey]),
     `Vorbedingung: Kohorte ${edgeKey} fehlt in calA_edge.gDistByCohort`);
+  // Gegenprobe zur Vorbedingung: K ist im LIVE-Lauf ueber dasselbe Universum besetzt. Ohne diese zwei
+  // Zeilen koennte der Test gegen eine live leere Kohorte laufen und waere gegenstandslos gruen (er
+  // pruefte dann F-B, nicht R2.9 Test B). Absent im Lineal + praesent live == der gemeinte Edge-Fall.
+  assert.ok(liveCB[edgeKey] && Object.keys(liveCB[edgeKey].axes || {}).length > 0 && Number.isFinite(liveCB[edgeKey].n),
+    `Vorbedingung: Kohorte ${edgeKey} ist roh-live besetzt (calibrationLive.cohortBases, axes+n)`);
+  assert.ok(Array.isArray(liveGD[edgeKey]) && liveGD[edgeKey].length > 0,
+    `Vorbedingung: Kohorte ${edgeKey} ist roh-live besetzt (calibrationLive.gDistByCohort)`);
   // Kern: die im Lineal fehlende, im vollen Universum praesente Kohorte MUSS live im Artefakt stehen.
   const cb = chimeraEdge.cohortBases && chimeraEdge.cohortBases[edgeKey];
   assert.ok(cb, `chimeraEdge.cohortBases[${edgeKey}] existiert (nicht aus dem Artefakt verloren)`);

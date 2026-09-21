@@ -117,6 +117,11 @@ const JOB_REIHENFOLGE = [
   // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt
   // stehen und nicht die Diagnose — sonst sucht Karl am falschen Job.
   'jahres-ausreisser-waechter',
+  // 14.09.2026 (Gericht Runde 1, Anklage A1): der Druckenmiller-Waechter laeuft als
+  // eigener Job HINTER scoring — ein scharfer Schritt in merge haette den Board-Deploy
+  // mitgenommen. Er steht am ENDE bei den Diagnose-Waechtern und nie vor merge/scoring:
+  // faellt er zusammen mit einem Datenschritt aus, soll im Banner der Datenschritt stehen.
+  'druckenmiller-guard',
 ];
 
 /**

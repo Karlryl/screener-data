@@ -37,6 +37,11 @@ const SEC_SCRIPTS = [
   path.join('scripts', 'pull-insider-form4-daily.js'),
   path.join('scripts', 'backfill-form345.js'),
   path.join('scripts', 'pull-13f-institutional.js'),
+  // Chunk 3 (19.09.2026): der manuelle Druckenmiller-13F-Lauf holt bei der SEC und braucht
+  // denselben Kontakt-User-Agent - also gehoert er unter denselben PII-Waechter (Befund des
+  // security-reviewer: der Waechter, der genau diese Klasse einmal gefangen hat, deckte das
+  // neue Skript nicht ab).
+  path.join('scripts', 'druckenmiller-13f.js'),
 ];
 
 // Any email-like string literal in the source. example.* is a permitted

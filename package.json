@@ -8,7 +8,10 @@
     "pull": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 2000",
     "pull:fast": "node pull-yahoo.js --watchlist watchlist.json --output snapshots --rate-limit 500",
     "pull:single": "node pull-yahoo.js --watchlist watchlist.json --output snapshots-single --rate-limit 100",
-    "test:offline": "node scripts/test-offline-fixtures.js"
+    "test:offline": "node scripts/test-offline-fixtures.js",
+    "test:offline:intake": "node scripts/test-offline-fixtures.js intake",
+    "test:offline:preis": "node scripts/test-offline-fixtures.js preis",
+    "test:offline:earnings": "node scripts/test-offline-fixtures.js earnings"
   },
   "engines": {
     "node": ">=22"
