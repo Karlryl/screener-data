@@ -34,7 +34,7 @@ const { writeFileAtomic } = require(path.join(ROOT, 'lib/atomic-write.js'));
 // `catch (_) { out = {} }` machte eine VORHANDENE, aber unlesbare
 // external-data/sec-secannual-smallcap.json von "gibt es noch nicht" ununterscheidbar —
 // der Lauf schrieb seinen Teilbestand darueber und ging mit Exit 0 raus.
-const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, looseSanity, besterVersatz, yahooOpIncOf, ladeMergeBasis } = require('./build-secannual.js');
+const { newestPresent, bilanzGuardOk, chooseCacheSource, get, sleep, besterVersatz, sanityMitZaehler, zaehlerZeile, yahooOpIncOf, ladeMergeBasis } = require('./build-secannual.js');
 
 // T569-F4: derselbe blanke `catch (_) { continue; }` wie in build-secannual.js, nur auf der
 // KLEINEREN Population (watchlist-smallcap.json fuehrt 596 Namen, on-disk liegen ~100) — die
@@ -79,6 +79,7 @@ async function run() {
   console.log('Small-Cap geroutet:', cands.length, 'von', uni.length, 'Snapshots');
   const tmap = await fetchSecTickers();
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, noSeries = 0, ohneReihe = 0, parseErr = 0;
+  const versatzZaehler = {};
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
     const entry = tmap.get(tk); const cik = entry && entry.cik;
@@ -120,7 +121,7 @@ async function run() {
     // T174: der Zaehler allein sagt nicht, WER stehen bleibt. Ein abgewiesener Name behaelt
     // via Merge-Basis seinen Altstand — das ist genau die Sorte Stillstand, die man im Log sehen
     // muss, seit die Wache ueber die ganze Reihe zieht (mehr Abweisungen als newest-only).
-    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
+    if (!sanityMitZaehler(versatzZaehler, tk, yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
       console.log('  divergent (behaelt Altstand)', tk, 'Versatz', JSON.stringify(besterVersatz(snap && snap.annual && snap.annual.annualRev, sec.annual.annualRev)));
       divergent++; continue;
     }
@@ -135,7 +136,7 @@ async function run() {
   }
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
-  console.log(`secAnnual-smallcap: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} noSeries=${noSeries} parseErr=${parseErr}`);
+  console.log(`secAnnual-smallcap: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} noSeries=${noSeries} parseErr=${parseErr} ${zaehlerZeile(versatzZaehler)}`);
 }
 
 if (require.main === module) {

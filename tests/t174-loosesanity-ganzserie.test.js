@@ -24,7 +24,7 @@
  * Usage: node tests/t174-loosesanity-ganzserie.test.js   (Exit 0/1)
  */
 const assert = require('node:assert/strict');
-const { looseSanity, besterVersatz, plainMitLuecken } = require('../scripts/build-secannual.js');
+const { looseSanity, besterVersatz, plainMitLuecken, sanityMitZaehler, zaehlerZeile } = require('../scripts/build-secannual.js');
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -128,6 +128,40 @@ test('neuester Umsatz > Faktor 2 bleibt rot', () => {
 test('isolierter V-Dip (10x unter beiden Nachbarn) bleibt rot', () => {
   const s = zellen([M(829), M(3.5), M(240)]);
   assert.equal(looseSanity([M(50)], zellen([M(50)]), [M(829), M(3.5), M(240)], s), false);
+});
+
+// ── (6) Zaehler versatzUnaufgeloest (Merge-Desk-Auflage 20.09. zu #304) ──────
+// Ohne Ausrichtung schaltet sich die Ganzserien-Pruefung STILL ab. Der Zaehler muss
+// jeden solchen Namen erfassen — und keinen ausgerichteten.
+test('Zaehler erfasst den Namen ohne Ausrichtung und laesst das Urteil unveraendert', () => {
+  const z = {};
+  const yRev = [M(500), M(480), M(460)];
+  const sRev = zellen([M(499), M(300), M(100)]);
+  assert.equal(sanityMitZaehler(z, 'UNAUF', [M(50)], zellen([M(50)]), yRev, sRev),
+    looseSanity([M(50)], zellen([M(50)]), yRev, sRev));
+  assert.equal(z.versatzUnaufgeloest, 1);
+  assert.deepEqual(z.unaufgeloestNamen, ['UNAUF']);
+});
+test('Zaehler zaehlt auch einen ABGEWIESENEN Namen ohne Ausrichtung', () => {
+  const z = {};
+  // neuestes Jahr > Faktor 2 -> rot, und keine belegte Ausrichtung
+  assert.equal(sanityMitZaehler(z, 'ROT', [M(50)], zellen([M(50)]), [M(738)], zellen([M(141)])), false);
+  assert.equal(z.versatzUnaufgeloest, 1);
+});
+test('ausgerichteter Name wird NICHT gezaehlt', () => {
+  const z = {};
+  const yRev = [M(500), M(480), M(460)];
+  assert.equal(sanityMitZaehler(z, 'SAUBER', [M(50)], zellen([M(50)]), yRev, zellen(yRev)), true);
+  assert.equal(z.versatzUnaufgeloest || 0, 0);
+  assert.equal(zaehlerZeile(z), 'versatzUnaufgeloest=0/1');
+});
+test('Summenzeile nennt Zahl und Namen', () => {
+  const z = {};
+  const yRev = [M(500), M(480), M(460)], sRev = zellen([M(499), M(300), M(100)]);
+  sanityMitZaehler(z, 'AAA', [M(50)], zellen([M(50)]), yRev, sRev);
+  sanityMitZaehler(z, 'BBB', [M(50)], zellen([M(50)]), yRev, sRev);
+  sanityMitZaehler(z, 'CCC', [M(50)], zellen([M(50)]), yRev, zellen(yRev)); // ausgerichtet: nur Nenner
+  assert.equal(zaehlerZeile(z), 'versatzUnaufgeloest=2/3 (Ganzserie aus, newest-only: AAA,BBB)');
 });
 
 console.log(`\nt174-loosesanity-ganzserie.test.js: ${pass} ok, ${fail} fail`);

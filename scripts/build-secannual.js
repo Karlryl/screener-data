@@ -175,6 +175,25 @@ function looseSanity(yOpArr, sOpArr, yRevArr, sRevArr) {
   return true;
 }
 
+// T174-Zaehler (21.09.2026, Merge-Desk-Auflage zu #304): bei `lage === 'unaufgeloest'` faellt
+// die Ganzserien-Pruefung STILL auf newest-only zurueck (~13 % der Namen laut Review 20.09.).
+// Ohne Zaehler saehe ein Lauf, in dem die Wache fuer die Haelfte der Namen abgeschaltet ist,
+// genauso aus wie einer mit voller Abdeckung. Der Wrapper zaehlt JEDEN geprueften Namen ohne
+// Ausrichtung — bestanden oder abgewiesen —, damit die Luecke im Summenlog steht.
+// Nenner `geprueft` = alle Namen, die die Wache gesehen haben; die Quote N/geprueft ist die Aussage.
+function sanityMitZaehler(zaehler, tk, yOpArr, sOpArr, yRevArr, sRevArr) {
+  zaehler.geprueft = (zaehler.geprueft || 0) + 1;
+  if (besterVersatz(yRevArr, sRevArr).lage === 'unaufgeloest') {
+    zaehler.versatzUnaufgeloest = (zaehler.versatzUnaufgeloest || 0) + 1;
+    (zaehler.unaufgeloestNamen = zaehler.unaufgeloestNamen || []).push(tk);
+  }
+  return looseSanity(yOpArr, sOpArr, yRevArr, sRevArr);
+}
+function zaehlerZeile(zaehler) {
+  const n = zaehler.versatzUnaufgeloest || 0;
+  return `versatzUnaufgeloest=${n}/${zaehler.geprueft || 0}` + (n ? ` (Ganzserie aus, newest-only: ${zaehler.unaufgeloestNamen.join(',')})` : '');
+}
+
 // BH-009 fix: fail closed on a fully-missing series. newestPresent() returns
 // null when the array is empty/all-null; Number(null)>=0 is TRUE, so the old
 // inline guard (`Number(newestPresent(...))>=0`) let a completely absent
@@ -237,6 +256,7 @@ async function run() {
   console.log('US-routed>=3y:', routedUS.length, '| p75=' + p75.toFixed(4), '| Kandidaten:', cands.length);
   const tmap = await fetchSecTickers();
   let pulled = 0, cachedF = 0, noCik = 0, no404 = 0, divergent = 0, ohneReihe = 0, parseErr = 0;
+  const versatzZaehler = {};
   const repoDir = path.join(ROOT, 'external-data', 'sec-xbrl');
   for (const tk of cands) {
     const entry = tmap.get(tk); const cik = entry && entry.cik;
@@ -274,7 +294,7 @@ async function run() {
     // T174: der Zaehler allein sagt nicht, WER stehen bleibt. Ein abgewiesener Name behaelt
     // via Merge-Basis seinen Altstand — das ist genau die Sorte Stillstand, die man im Log sehen
     // muss, seit die Wache ueber die ganze Reihe zieht (mehr Abweisungen als newest-only).
-    if (!looseSanity(yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
+    if (!sanityMitZaehler(versatzZaehler, tk, yahooOpIncOf(snap), sec.annual.annualOpInc, snap.annual && snap.annual.annualRev, sec.annual.annualRev)) {
       console.log('  divergent (behaelt Altstand)', tk, 'Versatz', JSON.stringify(besterVersatz(snap && snap.annual && snap.annual.annualRev, sec.annual.annualRev)));
       divergent++; continue;
     }
@@ -293,7 +313,7 @@ async function run() {
   }
   writeFileAtomic(OUT, JSON.stringify(out));
   const postCount = Object.keys(out).length;
-  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr}`);
+  console.log(`secAnnual: ${postCount} Namen (${preCount}->${postCount}, +${postCount - preCount} akkumuliert) -> ${OUT} (${(fs.statSync(OUT).size / 1024).toFixed(0)}KB) | pulled=${pulled} cached=${cachedF} noCik=${noCik} 404=${no404} divergent=${divergent} ohneReihe=${ohneReihe} parseErr=${parseErr} ${zaehlerZeile(versatzZaehler)}`);
 }
 
 // BH-036-adjacent hardening (in-scope, minimal): guard direct execution so
@@ -303,4 +323,4 @@ if (require.main === module) {
   run().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, besterVersatz, yahooOpIncOf, plain, plainMitLuecken, loadUniverse, ladeMergeBasis };
+module.exports = { newestPresent, bilanzGuardOk, chooseCacheSource, run, get, sleep, looseSanity, besterVersatz, sanityMitZaehler, zaehlerZeile, yahooOpIncOf, plain, plainMitLuecken, loadUniverse, ladeMergeBasis };
