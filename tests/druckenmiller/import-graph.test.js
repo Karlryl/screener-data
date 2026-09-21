@@ -94,6 +94,18 @@ test('G2 BRUCHPROBE: derselbe Waechter feuert auf einem Sabotage-Baum', () => {
     'der Graph-Waechter sieht einen ZWEISTUFIGEN Weg nicht — dann ist er gegen den realen Fall blind');
 });
 
+// G3-Erlaubnisliste als Funktion, damit Meldung und Urteil dieselbe Regel lesen.
+function g3Erlaubt(f) {
+  return f.includes(path.join('tests', 'druckenmiller'))
+    || f.endsWith(path.join('scripts', 'druckenmiller-log-internals.js'))
+    || f.endsWith(path.join('scripts', 'write-druckenmiller-export.js'))
+    // Chunk 3: der MANUELLE 13F-Quartals-Lauf. Er steht bewusst mit auf dieser Liste und
+    // nicht in einem Glob — ein neues Skript soll hier nachgezogen werden, nicht still
+    // dazukommen (dieselbe Regel wie bei BLOCKING_GLOBS).
+    || f.endsWith(path.join('scripts', 'druckenmiller-13f.js'));
+}
+const g3Verletzer = (importeure) => importeure.filter((f) => !g3Erlaubt(f));
+
 test('G3 nur der Logger und die eigenen Tests importieren lib/druckenmiller', () => {
   const alle = [
     ...jsDateien(path.join(REPO, 'lib')),
@@ -103,17 +115,22 @@ test('G3 nur der Logger und die eigenen Tests importieren lib/druckenmiller', ()
   ];
   const importeure = alle.filter((f) => !f.includes(path.join('lib', 'druckenmiller'))
     && /require\(\s*['"][^'"]*druckenmiller[^'"]*['"]\s*\)/.test(fs.readFileSync(f, 'utf8')));
-  const erlaubt = importeure.every((f) => f.includes(path.join('tests', 'druckenmiller'))
-    || f.endsWith(path.join('scripts', 'druckenmiller-log-internals.js'))
-    || f.endsWith(path.join('scripts', 'write-druckenmiller-export.js'))
-    // Chunk 3: der MANUELLE 13F-Quartals-Lauf. Er steht bewusst mit auf dieser Liste und
-    // nicht in einem Glob — ein neues Skript soll hier nachgezogen werden, nicht still
-    // dazukommen (dieselbe Regel wie bei BLOCKING_GLOBS).
-    || f.endsWith(path.join('scripts', 'druckenmiller-13f.js')));
-  assert.ok(erlaubt, 'unerwarteter Importeur: ' + importeure.join(', '));
+  // Lane A 20.09. (Nebenbefund): die Meldung listete ALLE Importeure als "unerwartet", auch die
+  // erlaubten — im roten Fall musste man den Verletzer selbst heraussuchen. Jetzt nennt sie nur
+  // die echten Verletzer; die Erlaubnisliste steht unveraendert in g3Erlaubt().
+  const verletzer = g3Verletzer(importeure);
+  assert.deepEqual(verletzer, [], 'unerwarteter Importeur: ' + verletzer.join(', '));
   assert.ok(importeure.length >= 3, 'der Waechter findet gar keine Importeure — dann prueft er nichts');
   assert.ok(importeure.some((f) => f.endsWith('druckenmiller-13f.js')),
     'der 13F-Lauf ist kein Importeur mehr — dann ist diese Zeile toter Buchstabe');
+});
+
+test('G3b die G3-Meldung nennt nur Verletzer, keine erlaubten Importeure (beide Richtungen)', () => {
+  const erlaubt1 = path.join(REPO, 'scripts', 'druckenmiller-log-internals.js');
+  const erlaubt2 = path.join(REPO, 'tests', 'druckenmiller', 'x.test.js');
+  const fremd = path.join(REPO, 'scripts', 'fremd-importeur.js');
+  assert.deepEqual(g3Verletzer([erlaubt1, erlaubt2]), [], 'erlaubte Importeure duerfen nicht als Verletzer gelten');
+  assert.deepEqual(g3Verletzer([erlaubt1, fremd, erlaubt2]), [fremd], 'genau der fremde Importeur, nicht die erlaubten');
 });
 
 test('G4 ROW_FIELDS bekommt kein Preis-/Momentum-Feld', () => {
