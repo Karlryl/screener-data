@@ -213,24 +213,39 @@ check('(f1) 60 % delisted -> Sperre greift, Datei bleibt unveraendert', () => {
   assert.ok(/Ueberprune-Sperre/.test(r.out), 'Fehlermeldung fehlt: ' + r.out);
   assert.strictEqual(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'), vorher, 'Datei wurde trotz Sperre geschrieben');
 });
-check('(f2) 10 % delisted -> laeuft durch und schreibt', () => {
-  const base = mkFixture(20, 2);           // 2/20 = 10 % < 25 %
-  const r = runCli(base, []);
-  assert.strictEqual(r.code, 0, 'sollte durchlaufen, Ausgabe:\n' + r.out);
-  const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
-  assert.strictEqual(wl.stocks.length, 18);
-  assert.strictEqual(wl.lastReconcileRemoved.length, 2);
+check('(f2) 10% loss triggers collapse guard without writing the list', () => {
+  for (const count of [20, 500]) {
+    const base = mkFixture(count, count / 10);
+    const file = path.join(base, 'wl.json');
+    const before = fs.readFileSync(file, 'utf8');
+    const report = path.join(base, 'report.json');
+    const r = runCli(base, ['--report', report]);
+    assert.strictEqual(r.code, 1, r.out);
+    assert.strictEqual(fs.readFileSync(file, 'utf8'), before);
+    const message = r.out.split('\n').find(line => line.startsWith('::error::'));
+    assert.ok(message && message.includes('Collapse-Sperre'), r.out);
+    assert.ok(message.includes('von ' + count + ' Namen'), message);
+    assert.ok(message.includes('uebrig blieben ' + count * 0.9 + '.'), message);
+    const rep = JSON.parse(fs.readFileSync(report, 'utf8'));
+    assert.strictEqual(rep.gesperrt, 'unter-startschwelle-' + count * 0.9);
+    assert.strictEqual(rep.geschrieben, false);
+    assert.strictEqual(rep.vorher, count);
+    assert.strictEqual(rep.nachher, count);
+    assert.deepStrictEqual(rep.entfernt, []);
+    assert.strictEqual(rep.wuerde_entfernen.length, count / 10);
+  }
 });
-check('(f3) die Sperre ist RELATIV, nicht die absolute 200er-Grenze aus prune-watchlist.js', () => {
-  // 12 Namen gesamt (weit unter 200), 1 delisted = 8,3 % -> muss durchlaufen.
-  // Mit dem alten max(200, 50 %)-Floor waere jede Liste < 200 dauerhaft blockiert.
-  const base = mkFixture(12, 1);
+check('(f3) exactly 95% retained is allowed below the old absolute floor', () => {
+  // A small list can still be pruned: 1 of 20 is exactly the allowed 5% loss.
+  const base = mkFixture(20, 1);
   const r = runCli(base, []);
   assert.strictEqual(r.code, 0, 'kleine Liste darf nicht an einer absoluten Untergrenze scheitern:\n' + r.out);
-  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8')).stocks.length, 11);
+  const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
+  assert.strictEqual(wl.stocks.length, 19);
+  assert.strictEqual(wl.lastReconcileRemoved.length, 1);
 });
 check('(f4) --dry-run schreibt nicht', () => {
-  const base = mkFixture(20, 2);
+  const base = mkFixture(20, 1);
   const vorher = fs.readFileSync(path.join(base, 'wl.json'), 'utf8');
   const r = runCli(base, ['--dry-run']);
   assert.strictEqual(r.code, 0, r.out);
@@ -241,6 +256,35 @@ check('(f5) --force ueberstimmt die Sperre', () => {
   const r = runCli(base, ['--force']);
   assert.strictEqual(r.code, 0, r.out);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8')).stocks.length, 8);
+});
+
+check('(f6) exactly 500 entries losing two band exits are written as 498', () => {
+  const base = mkFixture(500, 0);
+  const asOf = new Date().toISOString();
+  for (const ticker of ['T000', 'T001']) {
+    const s = snap({
+      meta: { ticker, asOf, fetchedAt: asOf },
+      marketCap: { value: MAX_MCAP + 1e6, asOf },
+    });
+    s.identifier.ticker = ticker;
+    fs.writeFileSync(path.join(base, 'snaps', ticker + '.json'), JSON.stringify(s));
+  }
+  const r = runCli(base, []);
+  assert.strictEqual(r.code, 0, r.out);
+  const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
+  assert.strictEqual(wl.stocks.length, 498);
+  assert.deepStrictEqual(wl.lastReconcileRemoved.map(e => [e.ticker, e.grund]), [
+    ['T000', 'band-austritt-oben'], ['T001', 'band-austritt-oben'],
+  ]);
+  assert.ok(wl.stocks.every(e => !['T000', 'T001'].includes(e.ticker)));
+});
+check('(f7) --force overrides collapse guard below the first lock threshold', () => {
+  const base = mkFixture(20, 2);
+  const r = runCli(base, ['--force']);
+  assert.strictEqual(r.code, 0, r.out);
+  const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
+  assert.strictEqual(wl.stocks.length, 18);
+  assert.strictEqual(wl.lastReconcileRemoved.length, 2);
 });
 
 console.log(fail ? '\nFAILS: ' + fail : '\nalle Checks ok');
