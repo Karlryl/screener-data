@@ -213,8 +213,8 @@ check('(f1) 60 % delisted -> Sperre greift, Datei bleibt unveraendert', () => {
   assert.ok(/Ueberprune-Sperre/.test(r.out), 'Fehlermeldung fehlt: ' + r.out);
   assert.strictEqual(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'), vorher, 'Datei wurde trotz Sperre geschrieben');
 });
-check('(f2) 10% loss triggers collapse guard without writing the list', () => {
-  for (const count of [20, 500]) {
+check('(f2) 10% loss on an operational list triggers the collapse guard without writing', () => {
+  for (const count of [500]) {   // kleine Listen sind ausgenommen, siehe (f8)
     const base = mkFixture(count, count / 10);
     const file = path.join(base, 'wl.json');
     const before = fs.readFileSync(file, 'utf8');
@@ -285,6 +285,16 @@ check('(f7) --force overrides collapse guard below the first lock threshold', ()
   const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
   assert.strictEqual(wl.stocks.length, 18);
   assert.strictEqual(wl.lastReconcileRemoved.length, 2);
+});
+
+check('(f8) a small list is NOT subject to the collapse guard and can still be pruned', () => {
+  // 8 Namen, 1 entfernt = 12,5 % - auf einer Testliste ist das kein Kollaps, sondern Aufraeumen.
+  // Genau diesen Fall fuhr tests/p1-welle1-export-board-wahrheit.test.js gegen die Wand, als die
+  // Zustaendigkeitsgrenze kurzzeitig fehlte.
+  const base = mkFixture(8, 1);
+  const r = runCli(base, []);
+  assert.strictEqual(r.code, 0, 'kleine Liste darf nicht an der Kollaps-Sperre scheitern: ' + r.out);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8')).stocks.length, 7);
 });
 
 console.log(fail ? '\nFAILS: ' + fail : '\nalle Checks ok');

@@ -252,8 +252,16 @@ function main() {
   // NRGV and NUAI). The old absolute floor could not distinguish these cases
   // once the list sat at the target size of 500. The 5% loss limit intentionally
   // overlaps the first lock's default 25%; neither lock replaces the other.
+  // Die Sperre greift NUR auf einer betriebsgrossen Liste. Das ist KEINE Untergrenze fuer den
+  // Bestand (die verbietet Auflage 4), sondern eine Zustaendigkeitsgrenze: eine Test- oder bewusst
+  // kleine Liste soll weiter aufraeumbar sein, und auf acht Namen ist "ein Name weniger" schon
+  // 12,5 % - eine Kollaps-Quote, die dort nichts ueber einen Quellen-Ausfall aussagt. Diese
+  // Bedingung stand auch in der alten Fassung und bleibt; ersetzt wurde nur die absolute
+  // SCHWELLE (behalten < 500) durch die relative oben.
   const MIN_RETAINED_RATIO = 0.95;
-  if (!gesperrt && !args.force && behalten.length < vorher * MIN_RETAINED_RATIO) {
+  const SPERRE_AB_LISTENGROESSE = 500;
+  if (!gesperrt && !args.force && vorher >= SPERRE_AB_LISTENGROESSE
+      && behalten.length < vorher * MIN_RETAINED_RATIO) {
     // Preserve the existing report reason and numeric suffix for consumers.
     gesperrt = 'unter-startschwelle-' + behalten.length;
   }
