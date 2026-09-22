@@ -52,7 +52,7 @@
 # sie sind .md und fielen durch beide Muster oben. Ein Checkout mit autocrlf haette ihren sha256
 # gekippt und R9 auf der einen Maschine gruen, auf der anderen rot gemacht.
 /protocol/BUILD-SPEC-v1-AMENDMENT-*.md -text
-/protocol/BUILD-SPEC-v1-AMENDMENT-*.md.sha256 text eol=lf
+/protocol/BUILD-SPEC-v1-AMENDMENT-*.md.sha256 -text
 /tests/druckenmiller/fixtures/** text eol=lf
 
 # Chunk 3: die 13F-Fixtures sind ORIGINALE der SEC. Sie werden byte-gleich aufbewahrt, damit
