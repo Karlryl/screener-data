@@ -113,8 +113,19 @@ jobs:
           fi
           size=$(node -e "console.log((JSON.parse(require('fs').readFileSync('watchlist-smallcap.json','utf8')).stocks||[]).length)")
           echo "watchlist-smallcap size: $size"
-          if [ "$size" -lt 500 ]; then
-            echo "::error::watchlist-smallcap.json has only $size entries (expected ~775) — refusing to pull against a possibly corrupted list"
+          # KOLLAPS-Schwelle, nicht Zielgroesse (22.09.2026). Die Liste ZIELT auf 500 Namen,
+          # und ein normaler Handelstag tauscht davon etwa 0,4 % aus (Band-Austritte; am
+          # 22.09. NRGV und NUAI von 500). Eine Schwelle GENAU auf der Zielgroesse kann
+          # Band-Austritte nicht von einem Quellen-Ausfall unterscheiden: der Reconcile wollte
+          # 500 auf 498 bringen, die Skript-Sperre verhinderte den Schreibvorgang, und haette
+          # man nur sie gelockert, stuende die Liste auf 498 und DIESE Pruefung haette den
+          # naechsten Abruf ganz verweigert. Beide Zahlen muessen zusammen sinken.
+          # 475 = 95 % der Zielgroesse, dieselbe Regel wie MIN_RETAINED_RATIO in
+          # scripts/reconcile-smallcap.js (zweite Sperre). Ein Kollaps ist um Groessenordnungen
+          # groesser als die taegliche Bandbewegung. Wer eine der beiden aendert, aendert die
+          # andere mit.
+          if [ "$size" -lt 475 ]; then
+            echo "::error::watchlist-smallcap.json has only $size entries (Zielgroesse 500, Kollaps-Schwelle 475) - refusing to pull against a possibly corrupted list"
             exit 1
           fi
 
@@ -262,10 +273,10 @@ jobs:
       # die seit dem Aufbau der Liste drinstehen. Das liegt so knapp unter 25 %, dass die
       # Sperre grundlos ausloesen wuerde. Danach fallen die Zahlen auf einzelne Namen/Woche.
       # ⚠ continue-on-error ENTFERNT (unabhaengige Pruefung 27.07.): die Ueberprune- und die
-      # Startschwellen-Sperre im Skript beenden mit Exit 1 und einer ::error::-Zeile — und
+      # Collapse-Sperre im Skript beenden mit Exit 1 und einer ::error::-Zeile — und
       # genau das wurde hier verschluckt. Eine Sperre, die niemand sieht, ist keine Sperre,
       # sondern eine Beruhigung. Sie feuert nur, wenn wirklich etwas nicht stimmt (ein Viertel
-      # der Liste auf einmal, oder ein Prune unter die Betriebsschwelle) — dann gehoert der
+      # der Liste auf einmal, oder ein Verlust von mehr als 5 % in einem Lauf) — dann gehoert der
       # Lauf rot, auch an einem Tag, an dem nur der Bericht laeuft.
       - name: Small-Cap Reconciliation (Auflagen 4+5)
         run: |
