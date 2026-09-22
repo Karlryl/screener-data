@@ -30,6 +30,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const atomicWrite = require('../lib/atomic-write.js');
 
 const store = require('../lib/price-history-store.js');
 const universe = require('../lib/druckenmiller/universe.js');
@@ -179,7 +180,7 @@ function schreibeRoh(outDir, datum, zeilen) {
     // 2026-09-19: 2.197 Zeilen mit Zustand, alle ohne Kennzahl). Test L22.
     m1: r6(z.m1), m2: r6(z.m2), sigma63: r6(z.sigma63),
   })).join('\n') + '\n';
-  fs.writeFileSync(path.join(dir, datum + '.jsonl.gz'), zlib.gzipSync(Buffer.from(text, 'utf8')));
+  atomicWrite.writeFileAtomic(path.join(dir, datum + '.jsonl.gz'), zlib.gzipSync(Buffer.from(text, 'utf8')));
 }
 
 
@@ -518,7 +519,7 @@ function schreibeFehlermarker(exportDir, grund, log, failedAt) {
     for (const f of fs.readdirSync(exportDir)) {
       if (f !== FAILED_NAME) fs.rmSync(path.join(exportDir, f), { recursive: true, force: true });
     }
-    fs.writeFileSync(path.join(exportDir, FAILED_NAME), JSON.stringify({
+    atomicWrite.writeFileAtomic(path.join(exportDir, FAILED_NAME), JSON.stringify({
       schema: EXPORT_SCHEMA,
       generated_at: new Date().toISOString(),
       reason: grund,
@@ -671,7 +672,7 @@ function main(argv, log) {
 module.exports = {
   main, schreibeModus, pruefModus, sitzungen, spyZustand, schreibeFehlermarker, pruefeZeilenForm,
   LEDGER_NAME, KANDIDATEN_LEDGER, FAILED_NAME, EXPORT_SCHEMA, pruefeKandidatenLedger,
-  registrierungenLesen,
+  registrierungenLesen, schreibeRoh,
 };
 
 if (require.main === module) {
