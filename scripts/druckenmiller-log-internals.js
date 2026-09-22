@@ -41,6 +41,7 @@ const scoreboard = require('../lib/druckenmiller/scoreboard.js');
 const churnLib = require('../lib/druckenmiller/churn.js');
 const rawLib = require('../lib/druckenmiller/raw.js');
 const registrierungLib = require('../lib/druckenmiller/registration.js');
+const stampLib = require('../lib/druckenmiller/stamp.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_PRICES = path.join(REPO_ROOT, 'prices');
@@ -55,6 +56,11 @@ const LEDGER_NAME = 'internals-ledger.jsonl';
 const KANDIDATEN_LEDGER = 'candidates-ledger.jsonl';
 const REG_A_GLOB = /^druckenmiller_loggers_registered_\d{8}\.json$/;
 const REG_B_GLOB = /^druckenmiller_scoreboard_registered_\d{8}\.json$/;
+// T329: das Aenderungs-Protokoll der Registrierungs-Dateien. Es liegt historisch unter
+// tests/ (dort entstand das Tor [REV3-5]), ist aber kein Fixture: es IST die append-only
+// Kette, gegen die der Stempel geprueft wird. Der Pfad ist relativ zum Repo-Wurzelordner,
+// weil die Eintragungszeit aus `git log` dieses Pfades kommt.
+const CHANGELOG_REL = 'tests/druckenmiller/fixtures/registration.CHANGELOG.md';
 // Wie viele Balken hinter einem Eintritt der Logger im Speicher haelt, um ihn aufzuloesen:
 // der laengste Arm plus Luft. Gesammelt wird nur fuer Ticker mit OFFENEN Eintraegen.
 // (126 = laengster Arm, plus rund drei Monate Luft. Review-Fund: bei 140 reichte ein
@@ -354,7 +360,37 @@ function registrierungenLesen(protocolDir, log) {
   // Kandidaten-Zeile fuer immer unnachtragbar (appendRow verbietet Rueckdatierung) -
   // gemessen: Innereien bei 2026-09-14, Kandidaten bei 2026-09-11.
   if (chunk2 && chunk2.barrier) scoreboard.assertScalingBranch(chunk2.barrier.sigmaScaling);
-  return { churnMax, chunk2, constants_sha256: a.hash };
+  return { churnMax, chunk2, constants_sha256: a.hash, dateiA: a.datei };
+}
+
+/**
+ * T329 (Rat 2026-09-21): der Stempel ist der tatsaechlich verwendete Digest — und die Zeile
+ * muss sagen koennen, WANN dieser Digest nach main kam. Kette aus dem Changelog, Zeit aus
+ * dem Merge (nie von Hand). Das gehoert an den SCHREIB-Pfad, nicht ins blosse Lesen einer
+ * Registrierung: `registrierungenLesen` laeuft auch gegen einen reinen Protokoll-Ordner
+ * ohne Repo (Fixtures), und dort gibt es weder Changelog noch git-Historie.
+ */
+function stempelProvenienz(protocolDir, dateiA, hash, log) {
+  const repoRoot = path.dirname(protocolDir);
+  const dateiARel = path.basename(protocolDir) + '/' + dateiA;
+  const changelogPfad = path.join(repoRoot, CHANGELOG_REL);
+  if (!fs.existsSync(changelogPfad)) {
+    throw new Error('[druckenmiller] ' + changelogPfad + ' fehlt — ohne das Aenderungs-Protokoll '
+      + 'ist der Stempel ' + hash.slice(0, 12) + '… an nichts gebunden. Es wird nichts geschrieben.');
+  }
+  const kette = stampLib.digestChain(fs.readFileSync(changelogPfad, 'utf8'), dateiARel);
+  const eintrag = stampLib.entryTimes(repoRoot, CHANGELOG_REL, kette).get(hash);
+  if (!eintrag) {
+    throw new Error('[druckenmiller] ' + dateiA + ' hat den Hash ' + hash + ', aber keine '
+      + 'Changelog-Zeile nennt ihn — die Datei wurde geaendert, ohne den Eintrag nachzuziehen '
+      + '(BUILD-SPEC [REV3-5]). Es wird nichts geschrieben.');
+  }
+  if (log && eintrag.precision === 'day') {
+    log('::warning::[druckenmiller] Eintragungszeit von ' + hash.slice(0, 12) + '… nur in '
+      + 'Tagesaufloesung (' + eintrag.reason + ') — keine erfundene Uhrzeit, die Zeilen werden '
+      + 'als Tagesaufloesung markiert (T329).');
+  }
+  return { kette, eintrag };
 }
 
 function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir, backfill, log }) {
@@ -385,7 +421,8 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
   }
   // Chunk 2: Registrierungen und der Kandidaten-Ledger VOR dem Preis-Durchgang, weil der
   // Durchgang wissen muss, fuer welche Ticker er den Aufloese-Schwanz mitnehmen soll.
-  const { churnMax, chunk2, constants_sha256 } = registrierungenLesen(protocolDir, log);
+  const { churnMax, chunk2, constants_sha256, dateiA } = registrierungenLesen(protocolDir, log);
+  const { eintrag: constantsEntry } = stempelProvenienz(protocolDir, dateiA, constants_sha256, log);
   const kandidatenLedgerFile = path.join(outDir, KANDIDATEN_LEDGER);
   const kChain = ledgerLib.verifyChain(kandidatenLedgerFile);
   if (!kChain.ok) throw new Error(kChain.error);
@@ -487,6 +524,14 @@ function schreibeModus({ pricesDir, snapshotsDir, outDir, macroFile, protocolDir
       histK, churnMax, chunk2, schwaenze, log,
     });
     row.constants_sha256 = constants_sha256;
+    // T329 Bruecken-Flag: wurde dieser Konstanten-Stand erst NACH Handelsschluss des
+    // Handelstages eingetragen, ist die Zeile nicht ungueltig — sie ist eine eigene
+    // SCHICHT. Blockiert wird nichts (Tor C wurde nicht uebernommen); gezaehlt schon.
+    const felder = stampLib.stampFields(constantsEntry, d, row.generatedAt);
+    row.constantsAfterClose = felder.constantsAfterClose;
+    row.constantsEntryPrecision = felder.constantsEntryPrecision;
+    // Kein stilles false: "nicht entscheidbar" ist etwas anderes als "vor Schluss".
+    if (felder.warn) log('::warning::' + felder.warn);
     ledgerLib.appendRow(ledgerFile, row);
     ledgerLib.appendRow(kandidatenLedgerFile, kZeile);
     history.push(row);
@@ -535,6 +580,42 @@ function schreibeFehlermarker(exportDir, grund, log, failedAt) {
   }
 }
 
+/**
+ * T329: die Stempel-Regel gegen die echte Reihe. Gibt einen Fehlertext oder null zurueck.
+ *
+ * Was hier NICHT passiert: an der Tagesaufloesung scheitern. Dieser Job laeuft mit flachem
+ * Klon, und ein flacher Klon kann den Eintritt nicht ableiten. Die Pruefung widerlegt dann
+ * nur noch (Changelog-Datum hinter generatedAt) — Kettenzugehoerigkeit und Monotonie
+ * greifen unveraendert. Die Zahl der unverifizierten Zeilen wird gemeldet, damit die
+ * Schwaeche sichtbar ist statt still.
+ */
+function pruefeStempel(rows, protocolDir, log) {
+  let a;
+  try { a = registrierungLib.readHashed(protocolDir, REG_A_GLOB, 'Registrierungs-Datei A'); }
+  catch (e) { return '[druckenmiller] Stempel-Pruefung ohne Registrierungs-Datei A: ' + e.message; }
+  const repoRoot = path.dirname(protocolDir);
+  const changelogPfad = path.join(repoRoot, CHANGELOG_REL);
+  if (!fs.existsSync(changelogPfad)) {
+    return '[druckenmiller] ' + changelogPfad + ' fehlt — ohne das Aenderungs-Protokoll ist kein '
+      + 'Stempel der Reihe pruefbar.';
+  }
+  const kette = stampLib.digestChain(fs.readFileSync(changelogPfad, 'utf8'),
+    path.basename(protocolDir) + '/' + a.datei);
+  const zeiten = stampLib.entryTimes(repoRoot, CHANGELOG_REL, kette);
+  let ergebnis;
+  try { ergebnis = stampLib.assertStampedRows(rows, a.json, kette, zeiten); }
+  catch (e) { return '[druckenmiller] Stempel-Regel verletzt (T329): ' + e.message; }
+  if (log) {
+    log('[druckenmiller] Stempel (T329): ' + ergebnis.stamped + ' gestempelte Zeile(n) geprueft'
+      + ' von ' + ergebnis.checked + ' nach der Registrierung'
+      + (ergebnis.unverified.length
+        ? ' — davon ' + ergebnis.unverified.length + ' NUR auf Tagesaufloesung (' 
+          + ergebnis.unverified[0].detail + ')'
+        : ''));
+  }
+  return null;
+}
+
 /** Jede Zeile traegt genau die eingefrorenen Felder, und keine Zahl ist nicht-endlich. */
 function pruefeZeilenForm(rows) {
   const pflicht = internals.LEDGER_ROW_FIELDS;
@@ -557,6 +638,24 @@ function pruefeZeilenForm(rows) {
       if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, p + '.' + k);
     })(r, 'row');
     if (fund) return `Zeile ${r.date}: ${fund} ist keine endliche Zahl.`;
+  }
+  // T329, never-shrink fuer die Stempel-Felder: sobald EINE Zeile `constantsEntryPrecision`
+  // traegt, muss jede spaetere gestempelte Zeile es auch tragen. Ohne diese Regel koennte man
+  // die drei Schreiber-Zeilen loeschen, und keine Pruefung wuerde es merken — das Flag ist
+  // laut Rat verpflichtend, stand aber in keiner Pflichtfeld-Liste (es entsteht NACH
+  // buildRow, deshalb kennt LEDGER_ROW_FIELDS es nicht). Rueckwirkend gilt sie nicht: die
+  // Zeilen vor T329 haben das Feld nie gehabt.
+  let stempelFelderAb = null;
+  for (const r of rows) {
+    if (Object.prototype.hasOwnProperty.call(r, 'constantsEntryPrecision')) {
+      if (!stempelFelderAb) stempelFelderAb = r.date;
+      continue;
+    }
+    if (stempelFelderAb && Object.prototype.hasOwnProperty.call(r, 'constants_sha256')) {
+      return `Zeile ${r.date}: gestempelt, aber ohne constantsEntryPrecision — seit ${stempelFelderAb} `
+        + 'traegt die Reihe die T329-Felder, und eine append-only Reihe verliert ein Feld nie '
+        + 'wieder. Entweder schreibt der Logger sie nicht mehr, oder die Zeile kam von woanders.';
+    }
   }
   return null;
 }
@@ -592,7 +691,7 @@ function pruefeKandidatenLedger(outDir) {
   return null;
 }
 
-function pruefModus({ pricesDir, outDir, exportDir, log }) {
+function pruefModus({ pricesDir, outDir, exportDir, protocolDir, log }) {
   const ledgerFile = ledgerPfad(outDir);
   const rot = (grund) => {
     log('::error::' + grund);
@@ -613,6 +712,13 @@ function pruefModus({ pricesDir, outDir, exportDir, log }) {
   }
   const formFehler = pruefeZeilenForm(rows);
   if (formFehler) return rot('[druckenmiller] ' + formFehler);
+  // T329: die Stempel-Regel wird HIER auf das tatsaechlich geschriebene Artefakt angewandt,
+  // nicht nur im PR-Test. Review-Fund: lebte die Durchsetzung allein im Test, sah der Lauf,
+  // der die Zeile schreibt, sie nie an — ein schlechter Stempel waere erst am naechsten Tag
+  // aufgefallen. Die Tagesaufloesung (flacher Klon in diesem Job) kann nur widerlegen; die
+  // Zahl der unverifizierten Zeilen wird deshalb gezaehlt und gemeldet, nicht verschwiegen.
+  const stempelFehler = pruefeStempel(rows, protocolDir, log);
+  if (stempelFehler) return rot(stempelFehler);
   const kFehler = pruefeKandidatenLedger(outDir);
   if (kFehler) return rot(kFehler);
   if (fs.existsSync(path.join(exportDir, FAILED_NAME))) {
@@ -672,7 +778,7 @@ function main(argv, log) {
 module.exports = {
   main, schreibeModus, pruefModus, sitzungen, spyZustand, schreibeFehlermarker, pruefeZeilenForm,
   LEDGER_NAME, KANDIDATEN_LEDGER, FAILED_NAME, EXPORT_SCHEMA, pruefeKandidatenLedger,
-  registrierungenLesen, schreibeRoh,
+  registrierungenLesen, schreibeRoh, stempelProvenienz, CHANGELOG_REL,
 };
 
 if (require.main === module) {

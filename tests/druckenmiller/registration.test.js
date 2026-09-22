@@ -143,42 +143,16 @@ test('R5 der laufende Code rechnet mit genau diesen Werten (nicht nur die Datei 
 
 // [REV5-6]/[REV7-3]: only explicit backfills are excluded. A present but invalid
 // stamp must never fall through to the historical provenance exception.
-// Der Stempel wird gegen den Digest geprueft, den Datei A AM DATUM DER ZEILE trug, nicht
-// gegen den heutigen. Sonst entwertet jede kuenftige Ergaenzung der Datei (und die Akte des
-// Gerichts zum Anker wird eine erzeugen) rueckwirkend jeden frueher gestempelten Eintrag —
-// und das Desk faellt rot aus einem Grund, der mit Konstanten nichts zu tun hat. Die Kette
-// steht im Changelog, den [REV3-5] ohnehin fuer jede Aenderung verlangt; beide historisch
-// benutzten Trenner (· und *) werden gelesen.
+// T329 (Rat 2026-09-21, ratifiziert): der Stempel ist der TATSAECHLICH VERWENDETE Digest.
+// Die alte Regel verlangte den Digest, der am Zeilendatum in Kraft war — das faellt bei
+// einem GitHub-Re-Run falsch rot aus (alter Commit, neues generatedAt) und schreibt der
+// Zeile einen Stand vor, unter dem sie nie gerechnet wurde. Geprueft wird jetzt
+// Kettenzugehoerigkeit, Eintragungszeit <= generatedAt und Monotonie; die Regel selbst
+// lebt in lib/druckenmiller/stamp.js, damit Schreiber und Test EINE Implementierung teilen.
+const stamp = require('../../lib/druckenmiller/stamp.js');
 const REG_A_REL = 'protocol/druckenmiller_loggers_registered_20260914.json';
-function digestChain(changelogText, dateiPfad) {
-  const kette = [];
-  for (const zeile of changelogText.split('\n')) {
-    const m = zeile.match(/^(\d{4}-\d{2}-\d{2})\s*[·*]\s*(\S+)\s*[·*]\s*([0-9a-f]{64})/);
-    if (m && m[2] === dateiPfad) kette.push({ date: m[1], digest: m[3] });
-  }
-  return kette;
-}
-function digestAmDatum(kette, datum) {
-  let treffer = null;
-  for (const e of kette) if (e.date <= datum) treffer = e;   // Dateireihenfolge entscheidet bei Datumsgleichheit
-  return treffer && treffer.digest;
-}
-
-function assertPostHashRows(rows, registration, digest, kette) {
-  const nachHash = rows.filter((r) => r.date > registration.registeredOn && r.backfilled !== true);
-  const verified = new Set((registration.verifiedPostHashRows || []).map((r) => r.date));
-  for (const row of nachHash) {
-    if (Object.prototype.hasOwnProperty.call(row, 'constants_sha256')) {
-      const erwartet = (kette && digestAmDatum(kette, row.date)) || digest;
-      assert.equal(row.constants_sha256, erwartet,
-        row.date + ': constants_sha256=' + String(row.constants_sha256) + ', erwartet (am Zeilendatum in Kraft)=' + erwartet);
-    } else {
-      assert.ok(verified.has(row.date),
-        row.date + ': no constants_sha256 and no verifiedPostHashRows provenance');
-    }
-  }
-  return nachHash.length;
-}
+const CHANGELOG_REL = 'tests/druckenmiller/fixtures/registration.CHANGELOG.md';
+const assertPostHashRows = stamp.assertStampedRows;
 
 test('R6 preRegistration: die Saat von Chunk 0 ist als vor-registriert deklariert und passt zur Reihe', () => {
   assert.equal(fileA.preRegistration, true, 'Datei A deklariert die Chunk-0-Zeilen nicht als vor-registriert');
@@ -195,59 +169,274 @@ test('R6 preRegistration: die Saat von Chunk 0 ist als vor-registriert deklarier
     + ' bis ' + p.throughDate);
   assert.ok(p.throughDate < fileA.registeredOn,
     'die letzte vor-registrierte Zeile (' + p.throughDate + ') liegt nicht vor dem Registrierungs-Datum');
-  assertPostHashRows(rows, fileA, sha256(fileAText), digestChain(lies(CHANGELOG), REG_A_REL));
+  const kette = stamp.digestChain(lies(CHANGELOG), REG_A_REL);
+  assert.ok(kette.length, 'kein Changelog-Eintrag fuer ' + REG_A_REL + ' — der Stempel haette keine Kette');
+  const heutiger = kette[kette.length - 1].digest;
+  assert.equal(heutiger, sha256(fileAText),
+    'die letzte Changelog-Zeile nennt ' + heutiger + ', Datei A ist ' + sha256(fileAText)
+    + ' — die Datei wurde ohne Changelog-Zeile angefasst');
+  const ergebnis = assertPostHashRows(rows, fileA, kette, stamp.entryTimes(REPO, CHANGELOG_REL, kette));
+  // LEERLAUF-SPERRE: faellt die Zahl der geprueften Stempel je auf 0 (Filter verrutscht, ein
+  // backfilled-Regress, ein verschobenes registeredOn), meldete die Pruefung frueher gruen,
+  // ohne irgendetwas angesehen zu haben.
+  assert.ok(ergebnis.stamped >= 1,
+    'kein einziger Stempel geprueft (' + ergebnis.checked + ' Zeilen nach der Registrierung) — '
+    + 'die T329-Pruefung laeuft auf dieser Reihe leer');
+  assert.deepEqual(ergebnis.unverified, [],
+    'diese Zeilen konnten nur auf Tagesaufloesung geprueft werden: '
+    + JSON.stringify(ergebnis.unverified));
 });
 
-test('R6b der Stempel gilt gegen den Digest, der AM ZEILENDATUM in Kraft war', () => {
-  // Fixed synthetic history: regular File A changes must not move this historical oracle.
+// Feste synthetische Historie: echte Aenderungen an Datei A duerfen dieses Orakel nie bewegen.
+const A_DIGEST = 'a'.repeat(64), B_DIGEST = 'b'.repeat(64), C_DIGEST = 'c'.repeat(64);
+const FREMD_DIGEST = 'f'.repeat(64);
+const SYNTH_CHANGELOG = [
+  `2026-09-14 · ${REG_A_REL} · ${A_DIGEST} · Initial registration`,
+  `2026-09-14 * ${REG_A_REL} * ${B_DIGEST} * Same-day replacement`,
+  `2026-09-20 * ${REG_A_REL} * ${C_DIGEST} * Later registration`,
+].join('\n');
+/** Ein utc-Eintrag, wie ihn entryTimes baut: Anwesenheits-Ereignisse, nicht ein Zeitpunkt. */
+const utcEintrag = (date, ...ereignisse) => ({
+  date,
+  precision: 'utc',
+  at: ereignisse[0][0],
+  events: ereignisse.map(([at, kind]) => ({ at, ms: Date.parse(at), kind: kind || 'add' })),
+});
+const tagEintrag = (date, reason) => ({
+  date, precision: 'day', at: null, events: null, reason: reason || 'Testfall ohne Ableitung',
+});
+const SYNTH_ZEITEN = new Map([
+  [A_DIGEST, utcEintrag('2026-09-14', ['2026-09-14T10:00:00.000Z'])],
+  [B_DIGEST, utcEintrag('2026-09-14', ['2026-09-14T18:00:00.000Z'])],
+  [C_DIGEST, utcEintrag('2026-09-20', ['2026-09-20T11:40:47.000Z'])],
+]);
+const SYNTH_REG = { registeredOn: '2026-09-14', verifiedPostHashRows: [] };
+const synthZeile = (date, stempel, generatedAt) => ({
+  date, backfilled: false, constants_sha256: stempel, generatedAt,
+});
+
+test('R6b T329: Kettenzugehoerigkeit, Anwesenheit bei generatedAt, Monotonie', () => {
+  const kette = stamp.digestChain(SYNTH_CHANGELOG, REG_A_REL);
+  assert.deepEqual(kette.map((e) => e.digest), [A_DIGEST, B_DIGEST, C_DIGEST],
+    'beide historischen Trenner muessen gelesen werden, und die Dateireihenfolge entscheidet');
+  const pruefe = (rows) => assertPostHashRows(rows, SYNTH_REG, kette, SYNTH_ZEITEN);
+
+  // (1) Kettenzugehoerigkeit: ein Stempel, den das Changelog nie nennt.
+  assert.throws(() => pruefe([synthZeile('2026-09-21', FREMD_DIGEST, '2026-09-22T09:00:00Z')]),
+    (e) => e.message.includes('2026-09-21') && e.message.includes(FREMD_DIGEST)
+      && e.message.includes('keiner'));
+
+  // (2) Anwesenheit: den Stand gab es beim Rechnen noch nicht.
+  assert.throws(() => pruefe([synthZeile('2026-09-21', C_DIGEST, '2026-09-20T09:00:00Z')]),
+    (e) => e.message.includes('nicht in main') && e.message.includes('2026-09-20T11:40:47'));
+  assert.equal(pruefe([synthZeile('2026-09-21', C_DIGEST, '2026-09-22T09:00:00Z')]).stamped, 1);
+  // Genau auf der Millisekunde ist noch erlaubt (<=, nicht <).
+  assert.equal(pruefe([synthZeile('2026-09-21', C_DIGEST, '2026-09-20T11:40:47.000Z')]).stamped, 1);
+
+  // (3) Monotonie: nach C darf keine spaetere Zeile auf B zurueckfallen.
+  assert.throws(() => pruefe([
+    synthZeile('2026-09-21', C_DIGEST, '2026-09-22T09:00:00Z'),
+    synthZeile('2026-09-22', B_DIGEST, '2026-09-23T09:00:00Z'),
+  ]), (e) => e.message.includes('rueckwaerts') && e.message.includes('2026-09-22'));
+  // Derselbe Stempel zweimal ist kein Rueckwaertslauf, und die Pruefung sortiert selbst.
+  assert.equal(pruefe([
+    synthZeile('2026-09-22', C_DIGEST, '2026-09-23T09:00:00Z'),
+    synthZeile('2026-09-21', C_DIGEST, '2026-09-22T09:00:00Z'),
+  ]).stamped, 2);
+
+  // Ohne verwertbares generatedAt ist gar nichts pruefbar — das sagt die Meldung auch.
+  for (const schlecht of [undefined, '2026-09-21T10:00:00', '2026-09-21', 'gestern']) {
+    assert.throws(() => pruefe([synthZeile('2026-09-21', C_DIGEST, schlecht)]),
+      (e) => e.message.includes('generatedAt') && e.message.includes('2026-09-21'),
+      'ein generatedAt ohne Zone darf nicht durchgehen: ' + String(schlecht));
+  }
+});
+
+test('R6b2 T329 Revert: derselbe Digest zweimal in der Kette', () => {
+  // Ein Revert von Datei A auf einen frueheren Stand erzeugt BYTE-GLEICH denselben Digest.
+  // Die Rueckkehr zu ihm IST ein Rueckwaertslauf und muss auffallen; der Weg vorwaerts nicht.
   const changelog = [
-    `2026-09-14 \u00b7 ${REG_A_REL} \u00b7 ${'a'.repeat(64)} \u00b7 Initial registration`,
-    `2026-09-14 * ${REG_A_REL} * ${'b'.repeat(64)} * Same-day replacement`,
-    `2026-09-20 * ${REG_A_REL} * ${'c'.repeat(64)} * Later registration`,
+    `2026-09-01 * ${REG_A_REL} * ${A_DIGEST} * erste`,
+    `2026-09-02 * ${REG_A_REL} * ${B_DIGEST} * zweite`,
+    `2026-09-03 * ${REG_A_REL} * ${A_DIGEST} * Revert auf die erste`,
   ].join('\n');
-  const kette = digestChain(changelog, REG_A_REL);
-  assert.ok(kette.length >= 2, 'die Changelog-Kette fuer Datei A ist zu kurz zum Pruefen: ' + kette.length);
-  const heute = kette[kette.length - 1];
-  const vorher = kette.find((e) => e.date === '2026-09-14' && e.digest === 'b'.repeat(64));
-  assert.ok(vorher, 'keine aeltere Datei-A-Zeile im Changelog — die Kette ist nicht pruefbar');
-  const reg = { registeredOn: '2026-09-14', verifiedPostHashRows: [] };
-  const zeile = (date, stempel) => ({ date, backfilled: false, constants_sha256: stempel });
-  const spaeter = '2099-01-02';
-  const frueher = '2026-09-17';
-  // heutiger Stempel auf einer Zeile NACH der Changelog-Zeile: gueltig
-  assertPostHashRows([zeile(spaeter, heute.digest)], reg, heute.digest, kette);
-  // derselbe Stempel auf einer Zeile VOR der Aenderung: ungueltig, und die Meldung nennt beides
-  assert.throws(() => assertPostHashRows([zeile(frueher, heute.digest)], reg, heute.digest, kette),
-    (e) => e.message.includes(frueher) && e.message.includes(vorher.digest) && e.message.includes('am Zeilendatum in Kraft'));
-  // der damals gueltige Stempel auf derselben Zeile: gueltig
-  assertPostHashRows([zeile(frueher, vorher.digest)], reg, heute.digest, kette);
-  // ein Stempel, den die Kette ueberhaupt nicht kennt: ungueltig
-  assert.throws(() => assertPostHashRows([zeile(spaeter, 'f'.repeat(64))], reg, heute.digest, kette),
-    (e) => e.message.includes(spaeter) && e.message.includes(heute.digest));
+  const kette = stamp.digestChain(changelog, REG_A_REL);
+  const zeiten = new Map([
+    [A_DIGEST, utcEintrag('2026-09-01', ['2026-09-01T00:00:00.000Z'], ['2026-09-03T00:00:00.000Z'])],
+    [B_DIGEST, utcEintrag('2026-09-02', ['2026-09-02T00:00:00.000Z'])],
+  ]);
+  const reg = { registeredOn: '2026-08-01', verifiedPostHashRows: [] };
+  const gen = '2026-09-30T00:00:00Z';
+  assert.throws(() => assertPostHashRows(
+    [synthZeile('2026-09-20', B_DIGEST, gen), synthZeile('2026-09-21', A_DIGEST, gen)], reg, kette, zeiten),
+  (e) => e.message.includes('rueckwaerts'), 'der echte Rueckschritt B -> A wurde durchgelassen');
+  assert.equal(assertPostHashRows(
+    [synthZeile('2026-09-20', A_DIGEST, gen), synthZeile('2026-09-21', B_DIGEST, gen)], reg, kette, zeiten).stamped,
+  2, 'der legitime Weg A -> B wurde faelschlich rot');
+});
+
+test('R6b3 T329 Luecke: hinzugefuegt, entfernt, wieder hinzugefuegt', () => {
+  // Die Zeile war im Januar da, im Februar weg, im Juni wieder da. Eine Zeile, die in der
+  // Luecke gerechnet wurde, beruft sich auf einen Stand, den main damals nicht trug.
+  const mitLuecke = utcEintrag('2026-01-02',
+    ['2026-01-02T10:00:00.000Z', 'add'], ['2026-02-01T10:00:00.000Z', 'del'],
+    ['2026-06-01T10:00:00.000Z', 'add']);
+  assert.equal(stamp.presentAt(mitLuecke, Date.parse('2026-01-15T00:00:00Z')), true);
+  assert.equal(stamp.presentAt(mitLuecke, Date.parse('2026-03-15T00:00:00Z')), false,
+    'in der Luecke gilt der Stand als anwesend — genau der Falsch-Freispruch');
+  assert.equal(stamp.presentAt(mitLuecke, Date.parse('2026-07-15T00:00:00Z')), true);
+  assert.equal(stamp.presentAt(mitLuecke, Date.parse('2026-01-01T00:00:00Z')), false);
+  assert.equal(stamp.entryNotAfterGenerated(mitLuecke, '2026-03-15T00:00:00Z').ok, false);
+  assert.equal(stamp.entryNotAfterGenerated(mitLuecke, '2026-07-15T00:00:00Z').ok, true);
+  // Und das Flag nimmt den Eintritt, der FUER DIESE ZEILE gilt, nicht den ersten.
+  assert.equal(stamp.afterClose(mitLuecke, '2026-06-01', '2026-07-15T00:00:00Z').at,
+    '2026-06-01T10:00:00.000Z');
+});
+
+test('R6c T329 GitHub-Re-Run: alter Commit mit neuem generatedAt — beide Richtungen', () => {
+  const kette = stamp.digestChain(SYNTH_CHANGELOG, REG_A_REL);
+  const pruefe = (rows) => assertPostHashRows(rows, SYNTH_REG, kette, SYNTH_ZEITEN);
+  // GRUEN: der Re-Run laeuft auf dem alten Commit (Stempel B), das Zeilendatum liegt HINTER
+  // der spaeteren Registrierung C. Die alte Gleichheitsregel verlangte hier C und faerbte
+  // das Desk rot, obwohl an den Konstanten der Zeile nichts falsch ist.
+  assert.equal(pruefe([synthZeile('2026-09-21', B_DIGEST, '2026-09-22T09:07:12.775Z')]).stamped, 1,
+    'ein Re-Run auf altem Commit muss gruen sein — er stempelt den Stand, unter dem er rechnete');
+  // ROT: derselbe Re-Run darf NICHT einen Stand stempeln, den es zur Rechenzeit noch nicht
+  // gab. Das ist die Richtung, die die Regel weiterhin fangen muss.
+  assert.throws(() => pruefe([synthZeile('2026-09-19', C_DIGEST, '2026-09-19T23:00:00Z')]),
+    (e) => e.message.includes('nicht in main'));
+});
+
+test('R6d T329 Bruecken-Flag: nach Handelsschluss eingetragen, aber nie blockiert', () => {
+  // 16:00 America/New_York, ueber beide Zeitzonen-Haelften UND ueber die Umstellungstage.
+  const schluss = (d) => new Date(stamp.closeOfTradingDayUTC(d)).toISOString();
+  assert.equal(schluss('2026-09-21'), '2026-09-21T20:00:00.000Z');
+  assert.equal(schluss('2026-12-15'), '2026-12-15T21:00:00.000Z');
+  assert.equal(schluss('2026-03-07'), '2026-03-07T21:00:00.000Z', 'Tag VOR der Umstellung');
+  assert.equal(schluss('2026-03-08'), '2026-03-08T20:00:00.000Z', 'Umstellungstag im Fruehjahr');
+  assert.equal(schluss('2026-10-31'), '2026-10-31T20:00:00.000Z');
+  assert.equal(schluss('2026-11-01'), '2026-11-01T21:00:00.000Z', 'Umstellungstag im Herbst');
+  // Ein Datum, das es nicht gibt, liefert KEINE Zahl (Number('') waere 0 und endlich).
+  for (const kaputt of ['kein-datum', '--', '2026-13-45', '2026-02-30', '', '2026-9-1']) {
+    assert.throws(() => stamp.closeOfTradingDayUTC(kaputt), /Datum|Kalendertag/,
+      'unlesbares Datum still akzeptiert: ' + JSON.stringify(kaputt));
+  }
+
+  const gen = '2026-09-22T09:00:00Z';
+  const vorSchluss = utcEintrag('2026-09-21', ['2026-09-21T19:59:59.000Z']);
+  const nachSchluss = utcEintrag('2026-09-21', ['2026-09-21T20:00:01.000Z']);
+  assert.equal(stamp.afterClose(vorSchluss, '2026-09-21', gen).value, false);
+  assert.equal(stamp.afterClose(nachSchluss, '2026-09-21', gen).value, true);
+
+  // TAGESAUFLOESUNG: nur die Richtung "danach" ist entscheidbar. Ein FRUEHERES Datum sagt
+  // gar nichts — in diesem Repo lagen zwischen Zeilendatum und Eintritt fuenf Tage.
+  assert.equal(stamp.afterClose(tagEintrag('2026-09-22'), '2026-09-21', gen).value, true);
+  for (const d of ['2026-09-20', '2026-09-21']) {
+    const r = stamp.afterClose(tagEintrag(d), '2026-09-21', gen);
+    assert.equal(r.value, null, 'aus dem Zeilendatum ' + d + ' wurde ein gemessenes false gemacht');
+    assert.match(r.detail, /nicht entscheidbar/);
+  }
+
+  // Die zwei Felder, die der Schreiber anhaengt — genau die Entscheidung, keine Kulisse.
+  assert.deepEqual(stamp.stampFields(nachSchluss, '2026-09-21', gen),
+    { constantsAfterClose: true, constantsEntryPrecision: 'utc' });
+  assert.deepEqual(stamp.stampFields(vorSchluss, '2026-09-21', gen),
+    { constantsAfterClose: false, constantsEntryPrecision: 'utc' });
+  const unklar = stamp.stampFields(tagEintrag('2026-09-20'), '2026-09-21', gen);
+  assert.equal(unklar.constantsAfterClose, null, 'unentscheidbar darf nie false werden');
+  assert.match(unklar.warn, /nicht gemessen/);
+  assert.equal(stamp.stampFields(vorSchluss, '2026-09-21', gen).warn, undefined,
+    'ein entschiedener Fall darf keine Warnung erzeugen — sonst verliert die Warnung ihren Wert');
+
+  // Tor C wurde NICHT uebernommen: eine nach Handelsschluss gestempelte Zeile ist gueltig.
+  const kette = stamp.digestChain(SYNTH_CHANGELOG, REG_A_REL);
+  assert.equal(assertPostHashRows(
+    [synthZeile('2026-09-19', C_DIGEST, '2026-09-21T09:00:00Z')], SYNTH_REG, kette,
+    new Map([[C_DIGEST, utcEintrag('2026-09-20', ['2026-09-19T23:30:00.000Z'])]]),
+  ).stamped, 1, 'eine nach Handelsschluss eingetragene Konstante blockiert die Zeile nicht');
+});
+
+test('R6e T329 die Eintragungszeit wird WIRKLICH aus dem Merge abgeleitet', () => {
+  // Der Kern des Ratsbeschlusses. Ohne diesen Test bliebe die Suite gruen, wenn die
+  // Ableitung gar nicht liefe — der Tages-Rueckfall wuerde jede Zeile stillschweigend
+  // durchwinken (Review-Fund, mit gestopfter git-Funktion reproduziert).
+  assert.equal(stamp.derivationBlocker(REPO, CHANGELOG_REL), null,
+    'auf diesem Repo darf nichts die Ableitung blockieren (flacher Klon? Umbenennung?)');
+  const kette = stamp.digestChain(lies(CHANGELOG), REG_A_REL);
+  const zeiten = stamp.entryTimes(REPO, CHANGELOG_REL, kette);
+  assert.equal(zeiten.size, kette.length, 'jede Kettenzeile braucht einen Zeiteintrag');
+  const utc = [...zeiten.values()].filter((z) => z.precision === 'utc');
+  assert.equal(utc.length, kette.length,
+    'nur ' + utc.length + ' von ' + kette.length + ' Digests haben eine abgeleitete Zeit — '
+    + 'die Merge-Ableitung liefert hier nicht, und der Rest liefe auf Tagesaufloesung');
+  for (const e of kette) {
+    const z = zeiten.get(e.digest);
+    assert.ok(Array.isArray(z.events) && z.events.length, 'keine Ereignisse fuer ' + e.digest);
+    assert.match(z.at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    // Der Merge kann NACH dem Datum der Zeile liegen (die Saat kam gesammelt nach main),
+    // aber niemals davor: dann waere der Eintrag aelter als der Text, der ihn einfuehrt.
+    assert.ok(z.at.slice(0, 10) >= e.date,
+      e.digest + ': Merge ' + z.at + ' liegt vor der Changelog-Zeile ' + e.date);
+  }
+  // BRUCHPROBE: ohne brauchbares Repo gibt es KEINE erfundene Uhrzeit, sondern
+  // Tagesaufloesung MIT Grund — und die Pruefung verliert sichtbar ihre Verifikation.
+  const kaputt = stamp.entryTimes(path.join(REPO, 'gibt-es-nicht'), CHANGELOG_REL, kette);
+  for (const z of kaputt.values()) {
+    assert.equal(z.precision, 'day');
+    assert.equal(z.at, null, 'ohne Ableitung darf keine Uhrzeit dastehen');
+    assert.ok(z.reason && z.reason.length > 10, 'Tagesaufloesung ohne Begruendung');
+  }
+  assert.equal(stamp.entryNotAfterGenerated([...kaputt.values()][0], '2099-01-01T00:00:00Z').verified,
+    false, 'eine nicht abgeleitete Zeit darf sich nicht als verifiziert ausgeben');
 });
 
 test('R6a BRUCHPROBEN: provenance, wrong digest, backfill and missing backfill flag', () => {
   const digest = sha256(fileAText);
+  const kette = stamp.digestChain(lies(CHANGELOG), REG_A_REL);
+  const zeiten = stamp.entryTimes(REPO, CHANGELOG_REL, kette);
   const date = '2099-01-02';
+  const gen = '2099-01-03T00:00:00.000Z';
   const registration = { registeredOn: fileA.registeredOn, verifiedPostHashRows: [{ date: '2026-09-18' }] };
-  const check = (row) => assertPostHashRows([row], registration, digest);
+  const check = (row) => assertPostHashRows([row], registration, kette, zeiten);
   const missing = (e) => e.message.includes(date) && e.message.includes('no constants_sha256');
-  assert.throws(() => check({ date, backfilled: false }), missing);
+  assert.throws(() => check({ date, backfilled: false, generatedAt: gen }), missing);
   const wrong = '0'.repeat(64);
   const wrongDigest = (day) => (e) => e.message.includes(day)
     && e.message.includes(wrong) && e.message.includes(digest);
-  assert.throws(() => check({ date, constants_sha256: wrong }), wrongDigest(date));
-  assert.equal(check({ date, backfilled: true, constants_sha256: wrong }), 0);
-  assert.throws(() => check({ date }), missing);
-  assert.equal(check({ date, constants_sha256: digest }), 1);
-  assert.equal(check({ date: '2026-09-18' }), 1);
-  assert.throws(() => check({ date: '2026-09-18', constants_sha256: wrong }), wrongDigest('2026-09-18'));
+  assert.throws(() => check({ date, constants_sha256: wrong, generatedAt: gen }), wrongDigest(date));
+  assert.equal(check({ date, backfilled: true, constants_sha256: wrong, generatedAt: gen }).checked, 0);
+  assert.throws(() => check({ date, generatedAt: gen }), missing);
+  assert.equal(check({ date, constants_sha256: digest, generatedAt: gen }).stamped, 1);
+  assert.equal(check({ date: '2026-09-18', generatedAt: gen }).stamped, 0, 'Provenienz-Zeile traegt keinen Stempel');
+  assert.throws(() => check({ date: '2026-09-18', constants_sha256: wrong, generatedAt: gen }),
+    wrongDigest('2026-09-18'));
   for (const invalid of [null, '']) {
-    assert.throws(() => check({ date: '2026-09-18', constants_sha256: invalid }), /2026-09-18/);
+    assert.throws(() => check({ date: '2026-09-18', constants_sha256: invalid, generatedAt: gen }),
+      /2026-09-18/);
   }
+  // LEERLAUF-SPERRE: ohne gueltiges registeredOn filtert die Pruefung jede Zeile weg und
+  // meldete frueher gruen. Ein Stempel, den die Kette nicht kennt, muss auffallen.
+  for (const kaputt of [{}, { registeredOn: undefined }, { registeredOn: 'irgendwann' }]) {
+    assert.throws(() => assertPostHashRows(
+      [{ date, constants_sha256: wrong, generatedAt: gen }], kaputt, kette, zeiten),
+    /registeredOn/, 'ein kaputtes registeredOn lief leer durch: ' + JSON.stringify(kaputt));
+  }
+  assert.throws(() => assertPostHashRows(null, registration, kette, zeiten), /Zeilen-Array/);
+
   const logger = require('../../scripts/druckenmiller-log-internals.js');
-  assert.equal(logger.registrierungenLesen(path.dirname(FILE_A), () => {}).constants_sha256, digest,
-    'the logger must forward the digest returned by readHashed');
+  const gelesen = logger.registrierungenLesen(path.dirname(FILE_A), () => {});
+  assert.equal(gelesen.constants_sha256, digest, 'the logger must forward the digest returned by readHashed');
+  assert.equal(logger.CHANGELOG_REL, CHANGELOG_REL,
+    'Schreiber und Waechter stempeln gegen verschiedene Changelog-Pfade');
+  // T329: der Schreiber braucht die Eintragungszeit, sonst kann er das Flag nicht setzen.
+  const prov = logger.stempelProvenienz(path.dirname(FILE_A), gelesen.dateiA, digest, () => {});
+  assert.equal(prov.eintrag.precision, 'utc',
+    'der Schreiber bekaeme nur Tagesaufloesung — dann stuende im Ledger ein ungemessenes Flag');
+  assert.ok(prov.kette.some((e) => e.digest === digest),
+    'die Kette des Schreibers enthaelt den heutigen Stempel nicht');
+  // BRUCHPROBE: ein Stempel ohne Changelog-Zeile darf NICHT stillschweigend durchgehen.
+  assert.throws(() => logger.stempelProvenienz(path.dirname(FILE_A), gelesen.dateiA, wrong, () => {}),
+    (e) => e.message.includes(wrong) && e.message.includes('Changelog-Zeile'));
 });
 
 test('R7 Datei A registriert genau das, wofuer sie zustaendig ist — und nichts aus Datei B/C', () => {
