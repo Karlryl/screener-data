@@ -31,6 +31,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+const { writeFileAtomic } = require('../lib/atomic-write.js');
 
 const internals = require('../lib/druckenmiller/internals.js');
 const { MIN_BARS, universeHash } = require('../lib/druckenmiller/universe.js');
@@ -599,8 +600,8 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   fs.mkdirSync(exportDir, { recursive: true });
   const alterMarker = path.join(exportDir, FAILED_NAME);
   if (fs.existsSync(alterMarker)) fs.rmSync(alterMarker);
-  fs.writeFileSync(path.join(exportDir, 'regime.json'), JSON.stringify(regime) + '\n');
-  fs.writeFileSync(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
+  writeFileAtomic(path.join(exportDir, 'regime.json'), JSON.stringify(regime) + '\n');
+  writeFileAtomic(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
   // Chunk 2: candidates.json, wenn der Kandidaten-Ledger existiert. Es gibt KEINEN
   // Platzhalter - eine leere candidates.json waere eine Aussage ueber Kandidaten, die es
   // noch nicht gibt (dieselbe Regel wie in Chunk 1 fuer die fehlenden zwei Dateien).
@@ -609,10 +610,10 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
   const dreizehn = gelesen13f ? baue13f({ gelesen: gelesen13f, now: jetzt }) : null;
   if (dreizehn) {
     ledgerLib.assertFinite(dreizehn, 'duquesne13f.json');
-    fs.writeFileSync(path.join(exportDir, 'duquesne13f.json'), JSON.stringify(dreizehn) + '\n');
+    writeFileAtomic(path.join(exportDir, 'duquesne13f.json'), JSON.stringify(dreizehn) + '\n');
     // Die Abdeckung gehoert auch in meta.json (arch-spec: auf der Tafel UND je Zeile).
     meta.duquesne13fCoverage = dreizehn.coverage;
-    fs.writeFileSync(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
+    writeFileAtomic(path.join(exportDir, 'meta.json'), JSON.stringify(meta) + '\n');
   }
   let kandidatenZahl = null;
   const kLedger = path.join(outDir, 'candidates-ledger.jsonl');
@@ -625,7 +626,7 @@ function writeExport({ outDir, exportDir, pricesDir, protocolDir, now, log }) {
       dreizehnF: dreizehn,
     });
     ledgerLib.assertFinite(candidates, 'candidates.json');
-    fs.writeFileSync(path.join(exportDir, 'candidates.json'), JSON.stringify(candidates) + '\n');
+    writeFileAtomic(path.join(exportDir, 'candidates.json'), JSON.stringify(candidates) + '\n');
     kandidatenZahl = candidates.rows.length;
   }
   say('[druckenmiller] Export geschrieben: asOf=' + regime.asOf + ' · Serie=' + regime.series.length
@@ -716,7 +717,7 @@ function schreibeMarkerEinmal(exportDir, grund, say) {
   // genau der Zustand, den der Vertrag ausschliesst.
   if (alt !== null) {
     try {
-      fs.writeFileSync(marker, alt);
+      writeFileAtomic(marker, alt);
       say('[druckenmiller] der bereits vorhandene ' + FAILED_NAME + ' bleibt woertlich stehen — '
         + 'sein Grund nennt die Ursache, dieser Lauf nur ihre Folge.');
     } catch (e) {
