@@ -160,7 +160,16 @@ function main() {
       ...ms.map(m => m ? fmt(m.span) + (m.zeroMismatch ? '; Nullbasis verändert' : '') : 'n/a'),
       hits.map(h => h ? 'Fund' : 'kein Fund').join(' / ')]));
   }
-  const summary = `**Gesamturteil (vorläufig): drift ${counts.drift} / sprung ${counts.sprung} / nicht entscheidbar ${counts[UNKNOWN]} (Feldzeilen der Ticker-Schnittmenge). Zwei Stände können eine Drift-Richtung nicht belegen.**`;
+  // Der Schlusssatz haengt an der ANZAHL der Staende, nicht an einer festen 2 (22.09.2026):
+  // der Lauf nimmt beliebig viele Staende entgegen, und der alte Satz behauptete auch bei drei
+  // Eingaben noch, es seien zwei. Ein Verdikt, das seine eigene Eingabe falsch benennt, schickt
+  // den naechsten Leser in die falsche Richtung. Der Klassenname (UNKNOWN) bleibt bewusst
+  // eingefroren, siehe Abschnitt "Messregel und Grenzen" - nur dieser Satz wird ehrlich.
+  const genugStaende = runs.length >= 3;
+  const urteilsHinweis = genugStaende
+    ? `${runs.length} Stände verglichen; drift verlangt zusätzlich in JEDEM Schritt eine Veränderung ungleich null.`
+    : `${runs.length} Stände können eine Drift-Richtung nicht belegen.`;
+  const summary = `**Gesamturteil (vorläufig): drift ${counts.drift} / sprung ${counts.sprung} / nicht entscheidbar ${counts[UNKNOWN]} (Feldzeilen der Ticker-Schnittmenge). ${urteilsHinweis}**`;
   const labels = runs.map((_, i) => `Lauf ${i + 1}`);
   const lines = [summary, '', '# Signatur-Quotienten — 20.09.2026', '',
     'AUF EINEN BLICK: Rein deskriptive Offline-Messung aller Wächter-Feldfunde in mindestens einem Lauf. Keine Verankerung, keine Baseline-Änderung und keine Aussage zur Ursache. Konfidenz 100 % für die reproduzierten Zähler dieser Eingaben; keine quantifizierte FX-/Quellenwahrscheinlichkeit.', '',
@@ -179,7 +188,7 @@ function main() {
     'Mehrere Baseline-Einträge: Auswahl anhand des nächstliegenden Ausreisserfaktors zum ersten vorhandenen Fund (wie im Klassifikationsskript); Gleichstand lexikographisch. Dieser Eintrag bleibt über ALLE Läufe fest. Die gewählte Signatur und Kandidatenzahl stehen unten. Die Baseline enthält keinen Jahresindex: gleiche Indexposition ist ein Proxy, keine gesicherte Jahresidentität; Rollovers können daher wie Quellenänderungen aussehen.', '',
     `Schwelle: |delta_k| > ${LIMIT} je aufeinanderfolgenden Lauf und je definierter Komponente ergibt sprung; ebenso ein Vorzeichenwechsel der Schritte einer Komponente (numerisches Rauschen bis ${EPS} ignoriert). Die absolute Schwelle entspricht bei k nahe 1 ungefähr 1 %: bewusst doppelt so groß wie die im Brief genannten 0,5 %, eine transparente heuristische Trennlinie, keine validierte FX-Grenze (Konfidenz 60 % für ihre Eignung). Sie wird nicht an die Messwerte angepasst und ist nicht zeitnormalisiert; bei längeren Abständen nur eingeschränkt vergleichbar.`, '',
     `drift verlangt mindestens drei vollständige Stände, jeden Schritt ungleich null, gleiches Vorzeichen in allen definierten Komponenten, |delta_k| <= ${LIMIT} und je Lauf Komponentenspanne <= ${EPS}. Konstante Reihen, uneinheitliche Komponenten oder fehlende Beobachtungen bleiben unentscheidbar. Der vorgegebene Klassenname „${UNKNOWN}“ bleibt aus Formatgründen auch bei mehr als zwei unzureichenden Ständen bestehen.`, '',
-    'Zwei Stände können eine Drift-Richtung nicht belegen. Ein großer Schritt kann bereits mit zwei Ständen als sprung markiert werden; kleine Schritte belegen noch keine drift. Auch monotone k-Werte beweisen keine FX-Ursache, und Sprünge beweisen keinen Quellenwechsel. Wiederholte CI-Snapshots können denselben alten Abruf enthalten und sind dann keine unabhängigen Aktualisierungen. Keine Empfehlung zu Weg C.', '',
+    `${urteilsHinweis} Ein großer Schritt kann bereits mit zwei Ständen als sprung markiert werden; kleine Schritte belegen noch keine drift. Auch monotone k-Werte beweisen keine FX-Ursache, und Sprünge beweisen keinen Quellenwechsel. Wiederholte CI-Snapshots können denselben alten Abruf enthalten und sind dann keine unabhängigen Aktualisierungen. Keine Empfehlung zu Weg C.`, '',
     '## Vergleich der Feldzeilen in der Schnittmenge', '',
     'Je k- und delta_k-Zelle: links / wert / rechts. Delta-Zellen stehen für aufeinanderfolgende Läufe, nicht nur für Endpunkt minus Startpunkt. Exakt-Spalte folgt der Laufreihenfolge.', '',
     row(['ticker', 'feld', 'index', ...labels.map(l => `k(${l})`), ...labels.slice(1).map((_, i) => `delta_k(${i + 1}→${i + 2})`), 'exakt?', 'Urteil']),

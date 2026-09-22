@@ -1,4 +1,4 @@
-**Gesamturteil (vorläufig): drift 0 / sprung 0 / nicht entscheidbar 152 (Feldzeilen der Ticker-Schnittmenge). Zwei Stände können eine Drift-Richtung nicht belegen.**
+**Gesamturteil (vorläufig): drift 0 / sprung 0 / nicht entscheidbar 152 (Feldzeilen der Ticker-Schnittmenge). 3 Stände verglichen; drift verlangt zusätzlich in JEDEM Schritt eine Veränderung ungleich null.**
 
 # Signatur-Quotienten — 20.09.2026
 
@@ -32,7 +32,7 @@ Schwelle: |delta_k| > 0.01 je aufeinanderfolgenden Lauf und je definierter Kompo
 
 drift verlangt mindestens drei vollständige Stände, jeden Schritt ungleich null, gleiches Vorzeichen in allen definierten Komponenten, |delta_k| <= 0.01 und je Lauf Komponentenspanne <= 1e-10. Konstante Reihen, uneinheitliche Komponenten oder fehlende Beobachtungen bleiben unentscheidbar. Der vorgegebene Klassenname „nicht entscheidbar mit 2 Ständen“ bleibt aus Formatgründen auch bei mehr als zwei unzureichenden Ständen bestehen.
 
-Zwei Stände können eine Drift-Richtung nicht belegen. Ein großer Schritt kann bereits mit zwei Ständen als sprung markiert werden; kleine Schritte belegen noch keine drift. Auch monotone k-Werte beweisen keine FX-Ursache, und Sprünge beweisen keinen Quellenwechsel. Wiederholte CI-Snapshots können denselben alten Abruf enthalten und sind dann keine unabhängigen Aktualisierungen. Keine Empfehlung zu Weg C.
+3 Stände verglichen; drift verlangt zusätzlich in JEDEM Schritt eine Veränderung ungleich null. Ein großer Schritt kann bereits mit zwei Ständen als sprung markiert werden; kleine Schritte belegen noch keine drift. Auch monotone k-Werte beweisen keine FX-Ursache, und Sprünge beweisen keinen Quellenwechsel. Wiederholte CI-Snapshots können denselben alten Abruf enthalten und sind dann keine unabhängigen Aktualisierungen. Keine Empfehlung zu Weg C.
 
 ## Vergleich der Feldzeilen in der Schnittmenge
 
