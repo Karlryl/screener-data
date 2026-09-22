@@ -25,7 +25,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const https = require('node:https');
-const { writeFileAtomic } = require('../lib/atomic-write.js');
+const atomicWrite = require('../lib/atomic-write.js');
 
 const T = require('../lib/druckenmiller/thirteenf.js');
 const universe = require('../lib/druckenmiller/universe.js');
@@ -149,7 +149,7 @@ function schreibeQuartal(outDir, quartal) {
   if (path.dirname(path.resolve(p)) !== path.resolve(outDir)) {
     throw new Error('[druckenmiller] 13F: der Zielpfad ' + p + ' liegt nicht in ' + outDir + '.');
   }
-  writeFileAtomic(p, JSON.stringify(quartal, null, 1) + '\n');
+  atomicWrite.writeFileAtomic(p, JSON.stringify(quartal, null, 1) + '\n');
   return p;
 }
 
@@ -362,7 +362,7 @@ function abdeckungMessen({ csvPfad, outDir, snapshotsDir, log }) {
     identityRejected: ergebnis.identityRejected,
   };
   fs.mkdirSync(outDir, { recursive: true });
-  writeFileAtomic(path.join(outDir, '_coverage.json'), JSON.stringify(bericht, null, 1) + '\n');
+  atomicWrite.writeFileAtomic(path.join(outDir, '_coverage.json'), JSON.stringify(bericht, null, 1) + '\n');
   log('[druckenmiller] 13F-Abdeckung: ' + ergebnis.matched + ' von ' + ergebnis.n + ' Emittenten ('
     + (ergebnis.share * 100).toFixed(1) + ' %) ueber ' + karte.size + ' lokale Namen; '
     + ergebnis.ambiguous + ' mehrdeutig, ' + ergebnis.identityRejected + ' von der Identitaets-Wache abgelehnt.');
