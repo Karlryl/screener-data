@@ -143,7 +143,7 @@ test('AS-SK-002 E2E: reconcile-smallcap zieht _meta.count auf die geschriebene L
 
   const argv = process.argv;
   process.argv = ['node', 'reconcile-smallcap.js', '--watchlist', wlPfad, '--snapshots', snaps, '--main-watchlist', mainPfad];
-  try { delete require.cache[require.resolve('../scripts/reconcile-smallcap.js')]; require('../scripts/reconcile-smallcap.js').main(); }
+  try { delete require.cache[require.resolve('../scripts/reconcile-smallcap.js')]; require('../scripts/reconcile-smallcap.js').main({ operational: false }); }
   finally { process.argv = argv; }
 
   const nach = JSON.parse(fs.readFileSync(wlPfad, 'utf8'));

@@ -193,11 +193,15 @@ function mkFixture(n, delistedAnteil) {
   fs.writeFileSync(path.join(base, 'main.json'), JSON.stringify({ stocks: [] }));
   return base;
 }
-function runCli(base, extra) {
+function runCli(base, extra, options) {
   const args = [path.join(__dirname, '..', 'scripts', 'reconcile-smallcap.js'),
     '--watchlist', path.join(base, 'wl.json'),
     '--snapshots', path.join(base, 'snaps'),
     '--main-watchlist', path.join(base, 'main.json')].concat(extra || []);
+  if (options) {
+    const script = args.shift();
+    args.unshift('-e', 'require(process.argv[1]).main(' + JSON.stringify(options) + ');', script);
+  }
   try {
     return { code: 0, out: execFileSync(process.execPath, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }) };
   } catch (e) {
@@ -238,7 +242,7 @@ check('(f2) 10% loss on an operational list triggers the collapse guard without 
 check('(f3) exactly 95% retained is allowed below the old absolute floor', () => {
   // A small list can still be pruned: 1 of 20 is exactly the allowed 5% loss.
   const base = mkFixture(20, 1);
-  const r = runCli(base, []);
+  const r = runCli(base, [], { operational: false });
   assert.strictEqual(r.code, 0, 'kleine Liste darf nicht an einer absoluten Untergrenze scheitern:\n' + r.out);
   const wl = JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'));
   assert.strictEqual(wl.stocks.length, 19);
@@ -247,7 +251,7 @@ check('(f3) exactly 95% retained is allowed below the old absolute floor', () =>
 check('(f4) --dry-run schreibt nicht', () => {
   const base = mkFixture(20, 1);
   const vorher = fs.readFileSync(path.join(base, 'wl.json'), 'utf8');
-  const r = runCli(base, ['--dry-run']);
+  const r = runCli(base, ['--dry-run'], { operational: false });
   assert.strictEqual(r.code, 0, r.out);
   assert.strictEqual(fs.readFileSync(path.join(base, 'wl.json'), 'utf8'), vorher);
 });
@@ -292,9 +296,122 @@ check('(f8) a small list is NOT subject to the collapse guard and can still be p
   // Genau diesen Fall fuhr tests/p1-welle1-export-board-wahrheit.test.js gegen die Wand, als die
   // Zustaendigkeitsgrenze kurzzeitig fehlte.
   const base = mkFixture(8, 1);
-  const r = runCli(base, []);
+  const r = runCli(base, [], { operational: false });
   assert.strictEqual(r.code, 0, 'kleine Liste darf nicht an der Kollaps-Sperre scheitern: ' + r.out);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(base, 'wl.json'), 'utf8')).stocks.length, 7);
+});
+
+// Exercise the real entry point with entirely in-memory watchlists and writes.
+function runMemory(stocks, removeCount, options, extra = []) {
+  const Module = require('module');
+  const script = require.resolve('../scripts/reconcile-smallcap.js');
+  const original = { load: Module._load, cache: require.cache[script], argv: process.argv,
+    exit: process.exit, log: console.log, error: console.error };
+  const files = new Map([
+    ['memory-watchlist.json', JSON.stringify({ stocks })],
+    ['memory-main.json', JSON.stringify({ stocks: [] })],
+  ]);
+  const removed = new Set(stocks.slice(0, removeCount).map(e => e.ticker));
+  const writes = new Map();
+  const exited = Symbol('exit');
+  let code = 0;
+  try {
+    Module._load = function(request, parent, isMain) {
+      if (parent && parent.filename === script && request === 'fs') {
+        return { readFileSync(file) {
+          if (files.has(file)) return files.get(file);
+          const ticker = path.basename(file, '.json');
+          return JSON.stringify(removed.has(ticker) ? { meta: { delisted: true } } : {});
+        } };
+      }
+      if (parent && parent.filename === script && request === '../lib/atomic-write.js') {
+        return { writeFileAtomic(file, body) { writes.set(file, body); } };
+      }
+      return original.load.call(this, request, parent, isMain);
+    };
+    delete require.cache[script];
+    const reconcile = require(script);
+    process.argv = ['node', script, '--watchlist', 'memory-watchlist.json',
+      '--main-watchlist', 'memory-main.json', '--snapshots', 'memory-snaps',
+      '--report', 'memory-report.json', ...extra];
+    process.exit = (status) => { code = status; throw exited; };
+    console.log = console.error = () => {};
+    reconcile.main(options);
+  } catch (e) {
+    if (e !== exited) throw e;
+  } finally {
+    Module._load = original.load;
+    require.cache[script] = original.cache;
+    process.argv = original.argv;
+    process.exit = original.exit;
+    console.log = original.log;
+    console.error = original.error;
+  }
+  return { code, writes,
+    stocks: writes.has('memory-watchlist.json')
+      ? JSON.parse(writes.get('memory-watchlist.json')).stocks : stocks,
+    report: JSON.parse(writes.get('memory-report.json')) };
+}
+const memoryStocks = count => Array.from({ length: count }, (_, i) => ({ ticker: 'MEM' + i }));
+
+check('(g1) operational 500 -> 498 stays guarded against a later 498 -> 448', () => {
+  const first = runMemory(memoryStocks(500), 2);
+  assert.strictEqual(first.code, 0);
+  assert.strictEqual(first.stocks.length, 498);
+  const second = runMemory(first.stocks, 50);
+  assert.strictEqual(second.code, 1, '498 -> 448 must be refused');
+  assert.strictEqual(second.writes.has('memory-watchlist.json'), false);
+  assert.strictEqual(second.report.gesperrt, 'unter-startschwelle-448');
+  assert.strictEqual(second.report.nachher, 498);
+  assert.deepStrictEqual(second.report.entfernt, []);
+  assert.strictEqual(second.report.wuerde_entfernen.length, 50);
+});
+check('(g2) ordinary operational attrition 476 -> 474 is refused', () => {
+  const result = runMemory(memoryStocks(476), 2);
+  assert.strictEqual(result.code, 1);
+  assert.strictEqual(result.writes.has('memory-watchlist.json'), false);
+  assert.strictEqual(result.report.gesperrt, 'unter-startschwelle-474');
+});
+check('(g3) 8 -> 7 requires an explicit non-operational declaration', () => {
+  const stocks = memoryStocks(8);
+  const operational = runMemory(stocks, 1);
+  assert.strictEqual(operational.code, 1);
+  assert.strictEqual(operational.writes.has('memory-watchlist.json'), false);
+  const fixture = runMemory(stocks, 1, { operational: false });
+  assert.strictEqual(fixture.code, 0);
+  assert.strictEqual(fixture.stocks.length, 7);
+});
+
+check('(g4) every unforced operational acceptance meets the workflow admission floor', () => {
+  const floor = Math.ceil(R.TARGET_SIZE * R.MIN_RETAINED_RATIO);
+  const workflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'smallcap-pull.yml'), 'utf8');
+  const workflowFloor = workflow.match(/if \[ "\$size" -lt (\d+) \]; then/);
+  assert.ok(workflowFloor, 'workflow admission check must remain identifiable');
+  assert.strictEqual(Number(workflowFloor[1]), floor);
+  for (let retained = 0; retained <= R.TARGET_SIZE + 1; retained++) {
+    for (const removed of [0, 2]) {
+      const result = runMemory(memoryStocks(retained + removed), removed);
+      if (result.code === 0) {
+        assert.ok(result.stocks.length >= floor, 'accepted operational list below floor');
+      } else {
+        assert.strictEqual(result.writes.has('memory-watchlist.json'), false);
+      }
+      // Both sides of the boundary matter: rejecting everything is not a fix.
+      assert.strictEqual(result.code, retained >= floor ? 0 : 1,
+        `${retained + removed} -> ${retained}`);
+    }
+  }
+});
+check('(g5) explicit fixture exemption preserves overprune; force still overrides collapse', () => {
+  const overprune = runMemory(memoryStocks(8), 3, { operational: false });
+  assert.strictEqual(overprune.code, 1);
+  assert.ok(overprune.report.gesperrt.startsWith('ueberprune-'));
+  const forced = runMemory(memoryStocks(498), 50, undefined, ['--force']);
+  assert.strictEqual(forced.code, 0);
+  assert.strictEqual(forced.stocks.length, 448);
+  const dryRun = runMemory(memoryStocks(476), 2, undefined, ['--dry-run']);
+  assert.strictEqual(dryRun.code, 1);
+  assert.strictEqual(dryRun.writes.has('memory-watchlist.json'), false);
 });
 
 console.log(fail ? '\nFAILS: ' + fail : '\nalle Checks ok');
