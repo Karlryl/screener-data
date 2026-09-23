@@ -72,7 +72,7 @@ function runMainWatchlist(mainFixture) {
     "if (useReport) argv.push('--report', reportPath);",
     "if (useDryRun) argv.push('--dry-run');",
     "process.argv = argv;",
-    "reconcile.main();",
+    "reconcile.main({ operational: false });",
     "if (guard.attempts.length) throw new Error('__NETWORK_ATTEMPT__:' + guard.attempts.join(','));",
   ].join('\n');
 
